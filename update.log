@@ -1,3 +1,43 @@
+
+Wed Apr 21 12:14:54 BST 1999 djr
+================================
+
+- Use dedicated classes for sequence of string. Template version
+  gave incorrect constructors.
+
+include/omniORB2/stringtypes.h  -- NEW
+include/omniORB2/CORBA.h
+src/lib/omniORB2/orbcore/corbaString.cc
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/dir.mk
+src/tool/omniidl2/omniORB2_be/o2be_stringbuf.h  -- NEW
+src/tool/omniidl2/omniORB2_be/o2be_stringbuf.cc -- NEW
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_name_mangle.cc
+
+- Added marshalling operators to CORBA::Context. Updated various
+  code to use these.
+
+include/omniORB2/CORBA.h
+src/lib/omniORB2/dynamic/context.h
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/request.h
+src/lib/omniORB2/dynamic/request.cc
+src/lib/omniORB2/dynamic/pseudo.h
+src/lib/omniORB2/dynamic/serverRequest.cc
+
+- Proxy call wrapper now supports contexts.
+
+include/omniORB2/proxyCall.h
+src/lib/omniORB2/orbcore/proxyCall.cc
+
+- Fixed bug in typecode alignment tables for arrays, and use of
+  the same in sequences.
+
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/tcParser.cc
+
+
 Tue Apr 20 17:30:43 BST 1999 dpg1
 =================================
 
