@@ -1,7 +1,6 @@
 #ifndef _COS_NOTIFY_COMM_I_H_
 #define _COS_NOTIFY_COMM_I_H_
 
-#include "RDIDefs.h"
 #include "CosNotifyComm.hh"
 
 // ------------------------------------------------------------- //
@@ -295,8 +294,8 @@ protected:
 
 inline 
 StructuredPullSupplier_i::StructuredPullSupplier_i() : num_events(0)
-{ event_type.domain_name = CORBA_STRING_DUP("DummyDomain");
-  event_type.type_name   = CORBA_STRING_DUP("DummyType");
+{ event_type.domain_name = CORBA::string_dup("DummyDomain");
+  event_type.type_name   = CORBA::string_dup("DummyType");
 }
 
 inline 
@@ -495,8 +494,8 @@ protected:
 
 inline 
 SequencePullSupplier_i::SequencePullSupplier_i() : num_events(0)
-{ event_type.domain_name = CORBA_STRING_DUP("DummyDomain");
-  event_type.type_name   = CORBA_STRING_DUP("DummyType");
+{ event_type.domain_name = CORBA::string_dup("DummyDomain");
+  event_type.type_name   = CORBA::string_dup("DummyType");
 }
 
 inline 
