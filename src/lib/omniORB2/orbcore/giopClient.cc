@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.12  1999/08/30 16:50:17  sll
+  Added call to Strand::Sync::clicksSet to control how long a call is
+  allowed to progress or how long an idle connection is to stay open.
+
   Revision 1.11  1999/03/11 16:25:53  djr
   Updated copyright notice
 
@@ -52,7 +56,7 @@
   */
 
 #include <omniORB2/CORBA.h>
-
+#include <scavenger.h>
 
 GIOP_C::GIOP_C(Rope *r)
   : NetBufferedStream(r,1,1,0)
@@ -128,7 +132,10 @@ GIOP_C::InitialiseRequest(const void          *objkey,
 {
   if (pd_state != GIOP_C::Idle)
     throw omniORB::fatalException(__FILE__,__LINE__,
-      "GIOP_C::InitialiseRequest() entered with the wrong state.");				  
+      "GIOP_C::InitialiseRequest() entered with the wrong state.");
+ 
+  clicksSet(StrandScavenger::clientCallTimeLimit());
+
   size_t bodysize =msgsize-sizeof(MessageHeader::Request)-sizeof(CORBA::ULong);
   if (bodysize > MaxMessageSize()) {
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
@@ -320,6 +327,7 @@ GIOP_C::RequestCompleted(CORBA::Boolean skip_msg)
 	skip(0,1);
       }
     }
+  clicksSet(StrandScavenger::outIdleTimeLimit());
   pd_state = GIOP_C::Idle;
   return;
 }
@@ -331,6 +339,8 @@ GIOP_C::IssueLocateRequest(const void   *objkey,
   if (pd_state != GIOP_C::Idle)
     throw omniORB::fatalException(__FILE__,__LINE__,
       "GIOP_C::IssueLocateRequest() entered with the wrong state.");
+
+  clicksSet(StrandScavenger::clientCallTimeLimit());
 
   CORBA::ULong msgsize = sizeof(MessageHeader::LocateRequest) + 
                          sizeof(CORBA::ULong);
