@@ -1,7 +1,7 @@
 # dir.mk for omniORB
 #
 # Build a shared library in this directory
-# **** DO NOT forget to update the $(VERSION) number.
+# **** DO NOT forget to update the version number.
 # **** Remember to change <top>/mk/unix.mk and <top>/mk/win32.mk too
 #
 
@@ -20,7 +20,7 @@
 # corresponds to a pure bug fix release.
 #
 # 
-VERSION = OMNIORB_VERSION
+VERSION = $(OMNIORB_VERSION)
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
