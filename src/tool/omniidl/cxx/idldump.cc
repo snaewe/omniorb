@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.2  2003/09/04 14:00:28  dgrisby
+// ValueType IDL updates.
+//
 // Revision 1.16.2.1  2003/03/23 21:01:46  dgrisby
 // Start of omniORB 4.1.x development branch.
 //
@@ -675,6 +678,17 @@ visitFactory(Factory* f)
     if (p->next()) printf(", ");
   }
   printf(")");
+  if (f->raises()) {
+    printf(" raises (");
+    char* ssn;
+    for (RaisesSpec* r = f->raises(); r; r = r->next()) {
+      ssn = r->exception()->scopedName()->toString();
+      printf("%s", ssn);
+      delete [] ssn;
+      if (r->next()) printf(", ");
+    }
+    printf(")");
+  }
 }
 
 void

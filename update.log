@@ -1,3 +1,18 @@
+Thu Sep  4 14:56:05 BST 2003 dgrisby
+====================================
+
+- ValueType IDL updates.
+
+src/tool/omniidl/cxx/idl.yy
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/y.tab.cc
+src/tool/omniidl/cxx/y.tab.h
+src/tool/omniidl/python/omniidl/idlast.py
+
+
 Thu Jul 10 22:44:36 BST 2003 dgrisby
 ====================================
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.4  2003/09/04 14:00:35  dgrisby
+# ValueType IDL updates.
+#
 # Revision 1.20.2.3  2003/07/10 21:54:47  dgrisby
 # Missed methods in ValueAbs.
 #
@@ -872,17 +875,19 @@ Functions:
   parameters() -- list of Parameter objects."""
 
     def __init__(self, file, line, mainFile, pragmas, comments,
-                 identifier, parameters):
+                 identifier, parameters, raises):
 
         Decl.__init__(self, file, line, mainFile, pragmas, comments)
 
         self.__identifier = identifier
         self.__parameters = parameters
+        self.__raises     = raises
 
     def accept(self, visitor): visitor.visitFactory(self)
 
     def identifier(): return self.__identifier
     def parameters(): return self.__parameters
+    def raises(self): return self.__raises
 
 
 class ValueForward (Decl, DeclRepoId):

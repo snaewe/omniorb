@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.22.2.2  2003/09/04 14:00:24  dgrisby
+// ValueType IDL updates.
+//
 // Revision 1.22.2.1  2003/03/23 21:01:48  dgrisby
 // Start of omniORB 4.1.x development branch.
 //
@@ -704,6 +707,20 @@ Interface::
   if (contents_) delete contents_;
   delete thisType_;
 }
+
+IDL_Boolean
+Interface::isDerived(const Interface* base) const
+{
+  if (base == this)
+    return 1;
+
+  for (InheritSpec* is = inherits_; is; is = is->next()) {
+    if (is->interface() == base || is->interface()->isDerived(base))
+      return 1;
+  }
+  return 0;
+}
+
 
 void
 Interface::
@@ -2322,9 +2339,10 @@ closeParens()
 
 void
 Factory::
-finishConstruction(Parameter* parameters)
+finishConstruction(Parameter* parameters, RaisesSpec* raises)
 {
-  parameters_ = parameters_;
+  parameters_ = parameters;
+  raises_     = raises;
   Scope::endScope();
 }
 
@@ -2636,19 +2654,36 @@ ValueAbs(const char* file, int line, IDL_Boolean mainFile,
   thisType_ = new DeclaredType(IdlType::tk_value, this, this);
 
   // Check that all inherited valuetypes are abstract
-  for (ValueInheritSpec* vinh = inherits; vinh; vinh = vinh->next()) {
-    if (vinh->value()->kind() == D_VALUE) {
-      char* ssn = vinh->scope()->scopedName()->toString();
-      IdlError(file, line,
-	       "In declaration of abstract valuetype '%s', inherited "
-	       "valuetype '%s' is not abstract", identifier, ssn);
-      IdlErrorCont(vinh->value()->file(), vinh->value()->line(),
-		   "(%s declared here)", ssn);
-      delete [] ssn;
+  if (inherits) {
+    for (ValueInheritSpec* vinh = inherits; vinh; vinh = vinh->next()) {
+      if (vinh->value()->kind() == D_VALUE) {
+	char* ssn = vinh->scope()->scopedName()->toString();
+	IdlError(file, line,
+		 "In declaration of abstract valuetype '%s', inherited "
+		 "valuetype '%s' is not abstract", identifier, ssn);
+	IdlErrorCont(vinh->value()->file(), vinh->value()->line(),
+		     "(%s declared here)", ssn);
+	delete [] ssn;
+      }
     }
+    scope_->setInherited(inherits, file, line);
   }
-  scope_->setInherited(inherits, file, line);
-  scope_->setInherited(supports, file, line);
+  // Supports rules
+  if (supports) {
+    for (InheritSpec* inh = supports->next(); inh; inh = inh->next()) {
+      if (!inh->interface()->abstract()) {
+	char* ssn = inh->scope()->scopedName()->toString();
+	IdlError(file, line,
+		 "In declaration of abstract valuetype '%s', supported "
+		 "interface '%s' is non-abstract but is not specified first",
+		 identifier, ssn);
+	IdlErrorCont(inh->interface()->file(), inh->interface()->line(),
+		     "(%s declared here)", ssn);
+	delete [] ssn;
+      }
+    }
+    scope_->setInherited(supports, file, line);
+  }
   Scope::current()->addDecl(identifier, scope_, this, thisType_, file, line);
   Scope::startScope(scope_);
   Prefix::newScope(identifier);
@@ -2770,8 +2805,111 @@ Value(const char* file, int line, IDL_Boolean mainFile,
 	delete [] ssn;
       }
     }
+    if (!supports->interface()->abstract() && inherits) {
+      // Check that supported interface does not conflict with any
+      // inherited supported interfaces.
+      Interface*   thisi = (Interface*)supports->interface();
+      InheritSpec* baseis;
+      ValueBase*   iv;
+
+      for (ValueInheritSpec* vinh = inherits; vinh; vinh = vinh->next()) {
+	iv = vinh->value();
+
+	do {
+	  ValueInheritSpec* parent;
+
+	  if (iv->kind() == D_VALUE) {
+	    baseis = ((Value*)iv)->supports();
+	    parent = ((Value*)iv)->inherits();
+	  }
+	  else {
+	    baseis = ((ValueAbs*)iv)->supports();
+	    parent = ((ValueAbs*)iv)->inherits();
+	  }
+	  if (!baseis || baseis->interface()->abstract()) {
+	    if (parent)
+	      iv = parent->value();
+	    else
+	      break;
+	  }
+	} while (!baseis && iv);
+
+	if (baseis &&
+	    ! baseis->interface()->abstract() &&
+	    ! thisi->isDerived(baseis->interface())) {
+
+	  char* tsssn = supports->scope()->scopedName()->toString();
+	  char* isssn = baseis->scope()->scopedName()->toString();
+	  char* ivssn = vinh->scope()->scopedName()->toString();
+	  const char* indirectly;
+	  if (iv == vinh->value())
+	    indirectly = "";
+	  else
+	    indirectly = "indirectly ";
+
+	  IdlError(file, line,
+		   "In declaration of valuetype '%s', supported "
+		   "interface '%s' is not derived from interface '%s' %s"
+		   "supported by inherited valuetype '%s'",
+		   identifier, tsssn, isssn, indirectly, ivssn);
+	  IdlErrorCont(vinh->value()->file(), vinh->value()->line(),
+		       "(%s declared here)", ivssn);
+	  delete [] tsssn;
+	  delete [] isssn;
+	  delete [] ivssn;
+	}
+      }
+    }
     scope_->setInherited(supports, file, line);
   }
+  else {
+    // Check that inherited values do not have conflicting supports
+    InheritSpec* baseis;
+    ValueBase*   iv;
+    Interface*   ii = 0;
+
+    for (ValueInheritSpec* vinh = inherits; vinh; vinh = vinh->next()) {
+      iv = vinh->value();
+
+      do {
+	ValueInheritSpec* parent;
+
+	if (iv->kind() == D_VALUE) {
+	  baseis = ((Value*)iv)->supports();
+	  parent = ((Value*)iv)->inherits();
+	}
+	else {
+	  baseis = ((ValueAbs*)iv)->supports();
+	  parent = ((ValueAbs*)iv)->inherits();
+	}
+	if (!baseis || baseis->interface()->abstract()) {
+	  if (parent)
+	    iv = parent->value();
+	  else
+	    break;
+	}
+      } while (!baseis && iv);
+
+      if (baseis && ! baseis->interface()->abstract()) {
+	if (ii) {
+	  if (baseis->interface() != ii) {
+	    char* ssn1 = ii->scope()->scopedName()->toString();
+	    char* ssn2 = baseis->scope()->scopedName()->toString();
+	    IdlError(file, line,
+		     "In declaration of valuetype '%s', supported "
+		     "interfaces '%s' and '%s' clash",
+		     identifier, ssn1, ssn2);
+	    delete [] ssn1;
+	    delete [] ssn2;
+	  }
+	}
+	else {
+	  ii = baseis->interface();
+	}
+      }
+    }
+  }
+
   Scope::current()->addDecl(identifier, scope_, this, thisType_, file, line);
   Scope::startScope(scope_);
   Prefix::newScope(identifier);
