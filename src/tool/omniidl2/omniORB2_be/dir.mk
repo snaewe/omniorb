@@ -21,7 +21,8 @@ CXXSRCS       = \
 		o2be_union_branch.cc \
 		o2be_buildDesc.cc \
 		o2be_name_mangle.cc \
-		o2be_call_desc.cc
+		o2be_call_desc.cc \
+		o2be_stringbuf.cc
 
 OBJS         = \
 		o2be_array.o \
@@ -46,7 +47,8 @@ OBJS         = \
 		o2be_union_branch.o \
 		o2be_buildDesc.o \
 		o2be_name_mangle.o \
-		o2be_call_desc.o
+		o2be_call_desc.o \
+		o2be_stringbuf.o
 
 DIR_CPPFLAGS = -I. -I../include $(patsubst %,-I%/../include,$(VPATH))
 
