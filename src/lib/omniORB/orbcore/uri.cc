@@ -30,6 +30,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.2  2000/09/27 18:24:14  sll
+// Use omniObjRef::_toString and _fromString. Use the new omniIOR class and
+// createObjRef().
+//
 // Revision 1.2.2.1  2000/07/17 10:36:00  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -60,13 +64,12 @@
 //
 
 #include <stdlib.h>
-#include <omniORB3/CORBA.h>
-#include <omniORB3/Naming.hh>
+#include <omniORB4/CORBA.h>
 #include <initialiser.h>
 #include <ropeFactory.h>
 #include <tcpSocket.h>
 #include <exceptiondefs.h>
-#include <omniORB3/omniURI.h>
+#include <omniORB4/omniURI.h>
 #include <initRefs.h>
 #include <ctype.h>
 
@@ -100,15 +103,7 @@ omniURI::objectToString(CORBA::Object_ptr obj)
 
   omniObjRef* objref = obj ? obj->_PR_getobj() : 0;
 
-  if (objref) {
-    return (char*) IOP::iorToEncapStr((const CORBA::Char*)
-				      objref->_mostDerivedRepoId(),
-				      objref->_iopProfiles());
-  }
-  else {
-    IOP::TaggedProfileList p;
-    return (char*) IOP::iorToEncapStr((const CORBA::Char*)"", &p);
-  }
+  return omniObjRef::_toString(objref);
 }
 
 
@@ -206,7 +201,7 @@ deleteURIHandlers()
 class iorURIHandler : public omniURI::URIHandler {
 public:
   CORBA::Boolean    supports     (const char* uri);
-  CORBA::Object_ptr toObject     (const char* uri, unsigned int cycles);
+  CORBA::Object_ptr toObject     (const char* uri, unsigned int);
   CORBA::Boolean    syntaxIsValid(const char* uri);
 };
 
@@ -220,30 +215,9 @@ iorURIHandler::supports(const char* uri)
 }
 
 CORBA::Object_ptr
-iorURIHandler::toObject(const char* sior, unsigned int cycles)
+iorURIHandler::toObject(const char* sior, unsigned int)
 {
-  _CORBA_Char* repoId; // Instead of using CORBA::Char because
-                       // some brain-dead compilers does not realise
-                       // _CORBA_Char and CORBA::Char are the same type
-                       // and would not take a CORBA::Char* as an
-                       // argument that requires a _CORBA_Char*&.
-  IOP::TaggedProfileList* profiles;
-
-  IOP::EncapStrToIor((const CORBA::Char*) sior,
-		     repoId,
-		     profiles);
-
-  if( *repoId == '\0' && profiles->length() == 0 ) {
-    // nil object reference
-    delete[] repoId;
-    delete profiles;
-    return CORBA::Object::_nil();
-  }
-  omniObjRef* objref = omni::createObjRef((const char*)repoId, 
-					  CORBA::Object::_PD_repoId,
-					  profiles, 1, 0);
-  delete[] repoId;
-
+  omniObjRef* objref = omniObjRef::_fromString(sior);
   if (objref)
     return (CORBA::Object_ptr)objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
   else
@@ -254,17 +228,7 @@ CORBA::Boolean
 iorURIHandler::syntaxIsValid(const char* sior)
 {
   try {
-    _CORBA_Char* repoId; // Instead of using CORBA::Char because
-                       // some brain-dead compilers does not realise
-                       // _CORBA_Char and CORBA::Char are the same type
-                       // and would not take a CORBA::Char* as an
-                       // argument that requires a _CORBA_Char*&.
-    IOP::TaggedProfileList* profiles;
-    IOP::EncapStrToIor((const CORBA::Char*)sior,
-		       repoId,
-		       profiles);
-    delete [] repoId;
-    delete profiles;
+    CORBA::Object_var obj = toObject(sior,0);
     return 1;
   }
   catch (...) {
@@ -613,46 +577,39 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
   }
   else {
     // Protocols other than rir
-    const ropeFactoryType* iiopFactory;
-    {
-      ropeFactory_iterator next(globalOutgoingRopeFactories);
-      const ropeFactory* f;
-      while ((f = next())) {
-	iiopFactory = f->getType();
-	if (iiopFactory->is_IOPprofileId(IOP::TAG_INTERNET_IOP))
-	  break;
-      }
-      if (!f) OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
-    }
-    IOP::TaggedProfileList* profiles =
-      new IOP::TaggedProfileList(parsed.addr_count_);
 
-    if (!profiles) OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
+    IIOP::Address* addrlist = new IIOP::Address[parsed.addr_count_];
 
-    profiles->length(parsed.addr_count_);
-
-    int i;
     ObjAddr* addr;
-    for (i=0, addr = parsed.addrList_.head_; addr; addr = addr->next_, i++) {
-      switch (addr->kind()) {
-      case ObjAddr::iiop:
-	{
-	  IiopObjAddr* iaddr = (IiopObjAddr*)addr;
-	  tcpSocketEndpoint ep((CORBA::Char*)iaddr->host(), iaddr->port());
-
-	  iiopFactory->
-            encodeIOPprofile((Endpoint*)&ep,
-			     (const CORBA::Octet*)(const char*)parsed.key_,
-			     parsed.key_size_,
-			     (*profiles)[i]);
+    int i;
+    for (i=0, addr = parsed.addrList_.head_; 
+	 addr; 
+	 addr = addr->next_, i++) 
+      {
+	switch (addr->kind()) {
+	case ObjAddr::iiop:
+	  {
+	    IiopObjAddr* iaddr = (IiopObjAddr*)addr;
+	    addrlist[i].host = iaddr->host();
+	    addrlist[i].port = iaddr->port();
+	  }
+	  break;
+	default:
+	  OMNIORB_ASSERT(0);
 	}
-	break;
-      default:
-	OMNIORB_ASSERT(0);
       }
-    }
-    omniObjRef* objref = omni::createObjRef("", CORBA::Object::_PD_repoId,
-					    profiles, 1, 0);
+    
+    _CORBA_Unbounded_Sequence_Octet key;
+    key.replace(parsed.key_size_,
+		parsed.key_size_,
+		(CORBA::Octet*)(const char*)parsed.key_,0);
+
+    omniIOR* ior= new omniIOR((const char*)"",key,addrlist,parsed.addr_count_);
+
+    delete [] addrlist;
+
+    omniObjRef* objref = omni::createObjRef(CORBA::Object::_PD_repoId,ior,0);
+
     if (objref) {
       return (CORBA::Object_ptr)objref->
 	                           _ptrToObjRef(CORBA::Object::_PD_repoId);
