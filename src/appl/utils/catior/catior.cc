@@ -393,13 +393,13 @@ int main(int argc, char* argv[])
   }
 
 
-  char* str_ior = argv[optind];
+  _CORBA_Char* str_ior = (CORBA::Char*)argv[optind];
 
-  CORBA::Char* repoID;
+  _CORBA_Char* repoID;
   IOP::TaggedProfileList* profiles;
 
   try {
-    IOP::EncapStrToIor((CORBA::Char*) str_ior, repoID, profiles);
+    IOP::EncapStrToIor(str_ior, repoID, profiles);
 
     if (*repoID == '\0' && profiles->length() == 0) {
       cerr << "IOR is a nil object reference." << endl;

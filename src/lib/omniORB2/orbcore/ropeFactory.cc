@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.9.6.3  2000/06/27 15:40:58  sll
+ Workaround for Cygnus gcc's inability to recognise _CORBA_Octet*& and
+ CORBA::Octet*& are the same type.
+
  Revision 1.9.6.2  1999/09/24 15:01:36  djr
  Added module initialisers, and sll's new scavenger implementation.
 
@@ -97,7 +101,7 @@ ropeFactoryList* globalOutgoingRopeFactories = 0;
 
 int
 ropeFactory::iopProfilesToRope(const IOP::TaggedProfileList& profiles,
-			       _CORBA_Octet*& key, int& keysize,
+			       CORBA::Octet*& key, int& keysize,
 			       Rope*& rope, _CORBA_Boolean& is_local)
 {
   is_local = 0;

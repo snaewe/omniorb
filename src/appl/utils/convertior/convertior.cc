@@ -331,7 +331,7 @@ int main(int argc, char* argv[])
 
 CORBA::Char* convertRef(char* old_ior, char* hostname)
 {
-  CORBA::Char* repoID;
+  _CORBA_Char* repoID;
   IOP::TaggedProfileList* old_profiles;
   IOP::TaggedProfileList* new_profiles = new IOP::TaggedProfileList;
 

@@ -30,6 +30,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.5  2000/06/27 15:40:58  sll
+// Workaround for Cygnus gcc's inability to recognise _CORBA_Octet*& and
+// CORBA::Octet*& are the same type.
+//
 // Revision 1.1.2.4  2000/06/22 10:40:17  dpg1
 // exception.h renamed to exceptiondefs.h to avoid name clash on some
 // platforms.
@@ -209,11 +213,15 @@ iorURIHandler::supports(const char* uri)
 CORBA::Object_ptr
 iorURIHandler::toObject(const char* sior, unsigned int cycles)
 {
-  char* repoId;
+  _CORBA_Char* repoId; // Instead of using CORBA::Char because
+                       // some brain-dead compilers does not realise
+                       // _CORBA_Char and CORBA::Char are the same type
+                       // and would not take a CORBA::Char* as an
+                       // argument that requires a _CORBA_Char*&.
   IOP::TaggedProfileList* profiles;
 
   IOP::EncapStrToIor((const CORBA::Char*) sior,
-		     (CORBA::Char*&) repoId,
+		     repoId,
 		     profiles);
 
   if( *repoId == '\0' && profiles->length() == 0 ) {
@@ -222,7 +230,8 @@ iorURIHandler::toObject(const char* sior, unsigned int cycles)
     delete profiles;
     return CORBA::Object::_nil();
   }
-  omniObjRef* objref = omni::createObjRef(repoId, CORBA::Object::_PD_repoId,
+  omniObjRef* objref = omni::createObjRef((const char*)repoId, 
+					  CORBA::Object::_PD_repoId,
 					  profiles, 1, 0);
   delete[] repoId;
 
@@ -236,10 +245,14 @@ CORBA::Boolean
 iorURIHandler::syntaxIsValid(const char* sior)
 {
   try {
-    char* repoId;
+    _CORBA_Char* repoId; // Instead of using CORBA::Char because
+                       // some brain-dead compilers does not realise
+                       // _CORBA_Char and CORBA::Char are the same type
+                       // and would not take a CORBA::Char* as an
+                       // argument that requires a _CORBA_Char*&.
     IOP::TaggedProfileList* profiles;
     IOP::EncapStrToIor((const CORBA::Char*)sior,
-		       (CORBA::Char*&)repoId,
+		       repoId,
 		       profiles);
     delete [] repoId;
     delete profiles;

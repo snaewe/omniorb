@@ -1,3 +1,15 @@
+Tue Jun 27 16:35:20 BST 2000 sll
+================================
+
+- trival fixes to workaround Cygnus gcc's inability to recognise
+   _CORBA_Octet*& and CORBA::Octet*& are the same type.
+
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/lib/omniORB2/orbcore/omniInternal.cc
+src/lib/omniORB2/orbcore/ropeFactory.cc
+src/lib/omniORB2/orbcore/uri.cc
+
 Tue Jun 27 16:26:15 BST 2000 sll
 ================================
 
