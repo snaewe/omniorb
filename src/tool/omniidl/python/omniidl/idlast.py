@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13.2.6  2001/01/16 11:50:51  dpg1
+# The potential bug wasn't a potential bug after all.
+#
 # Revision 1.13.2.5  2001/01/15 15:56:06  dpg1
 # Potential bug in forward-declared AST nodes.
 #
@@ -991,7 +994,6 @@ def registerDecl(scopedName, decl):
               isinstance(rdecl, ValueForward)):
             
             # repeat forward declaration
-            decl._fullDecl = rdecl
             rdecl._more.append(decl)
 
         elif (isinstance(decl, Forward) and isinstance(rdecl, Interface)) or \
