@@ -131,7 +131,7 @@ interface Container : IRObject {
                         in Identifier name,
                         in VersionSpec version,
                         in IDLType discriminator_type,
-                        in StructMemberSeq members);
+                        in UnionMemberSeq members);
 
   EnumDef create_enum(in RepositoryId id,
                       in Identifier name,
