@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/05/24 17:10:57  dpg1
+  Rename IIOP::DEFAULT_PORT IIOP::DEFAULT_CORBALOC_PORT
+
   Revision 1.1.2.2  2000/04/27 10:35:49  dpg1
   Interoperable Naming Service
 
@@ -88,7 +91,7 @@ public:
     ~ProfileBody() { if (host) delete [] host; }
   };
 
-  static const _CORBA_UShort DEFAULT_PORT;
+  static const _CORBA_UShort DEFAULT_CORBALOC_PORT;
 };
 
 
