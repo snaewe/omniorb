@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/10/03 17:39:25  sll
+  Cleanup the_argsServiceList and the_fileServiceList in module detach().
+
   Revision 1.2.2.2  2000/09/27 18:15:16  sll
   Use the new omniIOR class and createObjRef() to create the object reference
   for the bootagent.
@@ -741,6 +744,11 @@ public:
   }
 
   void detach() {
+    serviceRecord* sl;
+    sl = the_argsServiceList.get_buffer(1);
+    delete [] sl;
+    sl = the_fileServiceList.get_buffer(1);
+    delete [] sl;
     if (the_argsDefaultInitRef) CORBA::string_free(the_argsDefaultInitRef);
     the_argsDefaultInitRef = 0;
     if (the_fileDefaultInitRef) CORBA::string_free(the_fileDefaultInitRef);
