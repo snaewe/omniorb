@@ -1,138 +1,186 @@
 ifeq ($(ThreadSystem),Solaris)
 CXXSRCS = solaris.cc
-OBJS = solaris.o
 DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
 endif
 
 ifeq ($(ThreadSystem),Posix)
 CXXSRCS = posix.cc
-OBJS = posix.o
 DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS) $(OMNITHREAD_POSIX_CPPFLAGS)
 endif
 
 ifeq ($(ThreadSystem),NT)
 CXXSRCS = nt.cc
-OBJS = nt.o
-DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS) -D "_WINSTATIC"
+DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
+MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
+MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC
+MSVC_DLL_CXXNODEBUGFLAGS += -D_OMNITHREAD_DLL
+MSVC_DLL_CXXDEBUGFLAGS += -D_OMNITHREAD_DLL
 endif
 
 ifeq ($(ThreadSystem),NTPosix)
 CXXSRCS = posix.cc
-OBJS = posix.o
-DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS) -D "_WINSTATIC"
+DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
+MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
+MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC
+MSVC_DLL_CXXNODEBUGFLAGS += -D_OMNITHREAD_DLL
+MSVC_DLL_CXXDEBUGFLAGS += -D_OMNITHREAD_DLL
 endif
 
 ifeq ($(ThreadSystem),Mach)
 CXXSRCS = mach.cc
-OBJS = mach.o
 DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
 endif
 
+LIB_NAME     := omnithread
+LIB_VERSION  := $(OMNITHREAD_VERSION)
+LIB_OBJS     := $(CXXSRCS:.cc=.o)
+LIB_IMPORTS  := $(OMNITHREAD_PLATFORM_LIB)
 
-#############################################################################
-#   Make variables common to all platforms                                  #
-#############################################################################
+all:: mkstatic mkshared
 
-lib     = $(patsubst %,$(LibPattern),omnithread)
-SUBDIRS = sharedlib
+export:: mkstatic mkshared
 
-#############################################################################
-#   Make variables for Win32 platforms                                      #
-#############################################################################
-
-ifdef Win32Platform
-
-ifndef BuildWin32DebugLibraries
-
-lib = $(patsubst %,$(LibPattern),omnithread)
-CXXOPTIONS     = $(MSVC_STATICLIB_CXXNODEBUGFLAGS)
-CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS)
-
-SUBDIRS = debug
-
-ifndef EmbeddedSystem
-SUBDIRS +=sharedlib
-endif
-
+vers := $(subst ., ,$(LIB_VERSION))
+ifeq ($(words $(vers)), 2)
+  vers  := _ $(vers)
+  major := ""
 else
-
-# Building the debug version of the library in the debug subdirectory.
-# Notice that this dir.mk is recursively used in the debug directory to build
-# this library. The BuildWin32DebugLibraries make variable is set to 1 in
-# the dir.mk generated in the debug directory.
-#
-lib = $(patsubst %,$(LibDebugPattern),omnithread)
-CXXDEBUGFLAGS = 
-CXXOPTIONS = $(MSVC_STATICLIB_CXXDEBUGFLAGS)
-CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKDEBUGOPTIONS)
-
-SUBDIRS =
-
-vpath %.cc ..
-
+  major := $(word 1, $(vers))
 endif
 
+namespec := $(LIB_NAME) $(vers)
 
-endif
+##############################################################################
+# Build Static library
+##############################################################################
 
-#############################################################################
-#   Make rules for to Win32 platforms                                       #
-#############################################################################
+staticlib := static/$(patsubst %,$(LibNoDebugPattern),$(LIB_NAME)$(major))
 
-ifdef Win32Platform
+mkstatic::
+	@(dir=static; $(CreateDir))
 
-ifndef BuildWin32DebugLibraries
-# Prepare a debug directory for building the debug version of the library.
-# Essentially, we create a debug directory in the current directory, create
-# a dir.mk and optionally a GNUmakefile in that directory and then calling
-# omake (GNU make) in that directory.
-# The confusing bit is that this dir.mk is recursively used in the debug 
-# directory to build this library. The BuildWin32DebugLibraries make variable,
-# which is set to 1 in the dir.mk generated in the debug directory,
-# is used to identify this case.
-#
-all:: mkdebugdir
+mkstatic:: $(staticlib)
 
-mkdebugdir:
-	@(if [ ! -f debug/dir.mk ]; then \
-            file=dir.mk; $(FindFileInVpath); \
-            case "$$fullfile" in /*) ;; *) fullfile=../$$fullfile;; esac; \
-            dir=debug; $(CreateDir); \
-            echo 'BuildWin32DebugLibraries = 1' > debug/dir.mk; \
-            echo 'override VPATH := $$(VPATH:/debug=)' >> debug/dir.mk; \
-            echo include $$fullfile >> debug/dir.mk; \
-            if [ -f GNUmakefile ]; then \
-               echo 'TOP=../../../..' > debug/GNUmakefile; \
-               echo 'CURRENT=src/lib/omnithread/debug' >> debug/GNUmakefile; \
-               echo 'include $$(TOP)/config/config.mk' >> debug/GNUmakefile; \
-            fi \
-          fi \
-         )
-
-export:: mkdebugdir
-
-endif
-
-endif
-
-
-#############################################################################
-#   Make rules common to all platforms                                      #
-#############################################################################
-
-all:: $(lib)
-
-$(lib): $(OBJS)
+$(staticlib): $(patsubst %, static/%, $(LIB_OBJS))
 	@$(StaticLinkLibrary)
 
-export:: $(lib)
+export:: $(staticlib)
 	@$(ExportLibrary)
 
 clean::
-	$(RM) $(lib)
+	$(RM) static/*.o
+	$(RM) $(staticlib)
 
-all::
-	@$(MakeSubdirs)
+veryclean::
+	$(RM) static/*.o
+	$(RM) $(staticlib)
 
-export::
-	@$(MakeSubdirs)
+
+##############################################################################
+# Build Shared library
+##############################################################################
+ifdef BuildSharedLibrary
+
+shlib := shared/$(shell $(SharedLibraryFullName) $(namespec))
+
+ifdef Win32Platform
+# in case of Win32 lossage:
+  imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
+          $(LIB_IMPORTS))
+else
+  imps := $(LIB_IMPORTS)
+endif
+
+mkshared::
+	@(dir=shared; $(CreateDir))
+
+mkshared:: $(shlib)
+
+$(shlib): $(patsubst %, shared/%, $(LIB_OBJS))
+	@(namespec="$(namespec)" extralibs="$(imps)" nodeffile=1; \
+         $(MakeCXXSharedLibrary))
+
+export:: $(shlib)
+	@(namespec="$(namespec)"; \
+          $(ExportSharedLibrary))
+
+clean::
+	$(RM) shared/*.o
+	(dir=shared; $(CleanSharedLibrary))
+
+veryclean::
+	$(RM) shared/*.o
+	@(dir=shared; $(CleanSharedLibrary))
+
+else
+
+mkshared::
+
+endif
+
+##############################################################################
+# Build debug libraries for Win32
+##############################################################################
+ifdef Win32Platform
+
+all:: mkstaticdbug mkshareddbug
+
+export:: mkstaticdbug mkshareddbug
+
+#####################################################
+#      Static debug libraries
+#####################################################
+
+dbuglib := debug/$(patsubst %,$(LibDebugPattern),$(LIB_NAME)$(major))
+
+mkstaticdbug::
+	@(dir=debug; $(CreateDir))
+
+mkstaticdbug:: $(dbuglib)
+
+$(dbuglib): $(patsubst %, debug/%, $(LIB_OBJS))
+	@$(StaticLinkLibrary)
+
+export:: $(dbuglib)
+	@$(ExportLibrary)
+
+clean::
+	$(RM) debug/*.o
+	$(RM) $(dbuglib)
+
+veryclean::
+	$(RM) debug/*.o
+	$(RM) $(dbuglib)
+
+#####################################################
+#      DLL debug libraries
+#####################################################
+
+dbugshlib := shareddebug/$(shell $(SharedLibraryDebugFullName) $(namespec))
+
+dbugimps  := $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), \
+               $(LIB_IMPORTS))
+
+mkshareddbug::
+	@(dir=shareddebug; $(CreateDir))
+
+mkshareddbug:: $(dbugshlib)
+
+$(dbugshlib): $(patsubst %, shareddebug/%, $(LIB_OBJS))
+	(namespec="$(namespec)" debug=1 extralibs="$(dbugimps)" nodeffile=1; \
+         $(MakeCXXSharedLibrary))
+
+export:: $(dbugshlib)
+	@(namespec="$(namespec)" debug=1; \
+          $(ExportSharedLibrary))
+
+clean::
+	$(RM) shareddebug/*.o
+	@(dir=shareddebug; $(CleanSharedLibrary))
+
+veryclean::
+	$(RM) shareddebug/*.o
+	@(dir=shareddebug; $(CleanSharedLibrary))
+
+endif
+
