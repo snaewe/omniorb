@@ -22,7 +22,7 @@
   you have omniORBpy installed, you must also recompile that.
   Unfortunately, its make rules do not realise that a recompile is
   necessary (I don't know why), so you must explicitly "<code>make
-  clean</code>" before "<code>make export</code>".
+  clean</code>" before "<code>make export</code>".</p>
   </text>
 
 </bug>
