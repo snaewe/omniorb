@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2001/08/24 10:10:44  dpg1
+  Fix braindead bound check bug in string unmarshalling.
+
   Revision 1.1.2.11  2001/08/17 17:12:36  sll
   Modularise ORB configuration parameters.
 
@@ -527,7 +530,7 @@ TCS_C_UTF_8::unmarshalString(cdrStream& stream,
     }
   }
 
-  if (bound && len >= bound)
+  if (bound && len-1 > bound)
     OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
 		  (CORBA::CompletionStatus)stream.completion());
 
@@ -665,7 +668,7 @@ TCS_C_UTF_8::fastMarshalString(cdrStream&          stream,
     b.insert(0); // Null terminator
     _CORBA_ULong mlen = b.length();
 
-    if (bound && mlen >= bound)
+    if (bound && mlen-1 > bound)
       OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
 		    (CORBA::CompletionStatus)stream.completion());
 
@@ -716,7 +719,7 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
       }
     }
 
-    if (bound && mlen >= bound)
+    if (bound && mlen-1 > bound)
       OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
 		    (CORBA::CompletionStatus)stream.completion());
 
@@ -760,7 +763,7 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
       }
     }
 
-    if (bound && mlen >= bound)
+    if (bound && mlen-1 > bound)
       OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
 		    (CORBA::CompletionStatus)stream.completion());
 

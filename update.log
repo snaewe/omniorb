@@ -1,3 +1,12 @@
+Fri Aug 24 11:06:40 BST 2001 dpg1
+=================================
+
+- Fix braindead bound check bug in string unmarshalling.
+
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+
 Thu Aug 23 17:44:18 BST 2001 sll
 ================================
 
