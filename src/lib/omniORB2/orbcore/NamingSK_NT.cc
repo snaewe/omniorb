@@ -1,3 +1,8 @@
+/* NamingSK_NT.cc                                       */
+/*                                                      */
+/* Manually Edited NamingSK for Windows NT/ MSVC++ 4.2  */
+/* Includes work-arounds for MSVC++ 4.3 bugs            */
+
 #include "omniORB2/Naming_NT.hh"
 
 
@@ -43,7 +48,7 @@ CosNaming::Binding::NP_alignedSize(size_t _initialoffset) const
 {
   CORBA::ULong _msgsize = _initialoffset;
   _msgsize = binding_name.NP_alignedSize(_msgsize);
-  _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+  _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
   _msgsize += 4;
   return _msgsize;
 }
@@ -99,7 +104,7 @@ size_t
 CosNaming::NamingContext::NotFound::NP_alignedSize(size_t _initialoffset)
 {
   size_t _msgsize = _initialoffset;
-  _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+  _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
   _msgsize += 4;
   _msgsize = rest_of_name.NP_alignedSize(_msgsize);
   return _msgsize;
@@ -886,11 +891,11 @@ void CosNaming::_proxy_NamingContext::destroy (  )
   }
 }
 
-void CosNaming::_proxy_NamingContext::list ( CORBA::ULong  how_many, CosNaming::BindingList *& bl, CosNaming::BindingIterator_ptr & bi )
+void CosNaming::_proxy_NamingContext::___list ( CORBA::ULong  how_many, CosNaming::BindingList *& bl, CosNaming::BindingIterator_ptr & bi )
 {
   GIOP_C _c(_rope());
   CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),5);
-  _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+  _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
   _msgsize += 4;
   CosNaming::BindingList * _bl= 0;
   CosNaming::BindingIterator_ptr _bi= 0;
@@ -953,7 +958,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::NotFound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 48;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -966,7 +971,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::CannotProceed &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 53;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -979,7 +984,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::InvalidName &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 51;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -992,7 +997,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::AlreadyBound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 52;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1023,7 +1028,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::NotFound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 48;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1036,7 +1041,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::CannotProceed &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 53;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1049,7 +1054,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::InvalidName &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 51;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1080,7 +1085,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::NotFound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 48;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1093,7 +1098,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::CannotProceed &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 53;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1106,7 +1111,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::InvalidName &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 51;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1119,7 +1124,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::AlreadyBound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 52;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1150,7 +1155,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::NotFound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 48;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1163,7 +1168,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::CannotProceed &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 53;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1176,7 +1181,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::InvalidName &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 51;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1206,7 +1211,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::NotFound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 48;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1219,7 +1224,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::CannotProceed &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 53;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1232,7 +1237,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::InvalidName &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 51;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1263,7 +1268,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::NotFound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 48;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1276,7 +1281,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::CannotProceed &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 53;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1289,7 +1294,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::InvalidName &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 51;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1334,7 +1339,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::NotFound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 48;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1347,7 +1352,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::CannotProceed &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 53;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1360,7 +1365,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::InvalidName &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 51;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1373,7 +1378,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::AlreadyBound &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 52;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1402,7 +1407,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     }
     catch ( CosNaming::NamingContext::NotEmpty &ex) {
       size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+      _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
       _msgsize += 48;
       _msgsize = ex.NP_alignedSize(_msgsize);
       _s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);
@@ -1428,7 +1433,7 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
     CosNaming::BindingList_var bl;
     CosNaming::BindingIterator_var bi;
     _s.RequestReceived();
-        list ( how_many, bl, bi );
+        CosNaming_NamingContext::list ( how_many, bl, bi );
     size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
     _msgsize = (bl.operator->())->NP_alignedSize(_msgsize);
     _msgsize = CosNaming::BindingIterator::NP_alignedSize((bi.operator->()),_msgsize);
@@ -1467,7 +1472,7 @@ CosNaming::NamingContext::_narrow(CORBA::Object_ptr obj)
 }
 
 void *
-CosNaming::NamingContext::_widenFromTheMostDerivedIntf(const char *repoId) throw()
+CosNaming::NamingContext::_widenFromTheMostDerivedIntf(const char *repoId)
 {
   if (!repoId)
     return (void *)((CORBA::Object_ptr)this);
@@ -1560,7 +1565,7 @@ CosNaming::NamingContext::_nil() {
 static const CosNaming::NamingContext_proxyObjectFactory CosNaming_NamingContext_proxyObjectFactory;
 CosNaming::NamingContext_ptr CosNaming::NamingContext_proxyObjectFactory::__nil_NamingContext = 0;
 
-CORBA::Boolean  CosNaming::_proxy_BindingIterator::next_one ( CosNaming::Binding *& b )
+CORBA::Boolean  CosNaming::_proxy_BindingIterator::___next_one ( CosNaming::Binding *& b )
 {
   GIOP_C _c(_rope());
   CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),9);
@@ -1609,11 +1614,11 @@ CORBA::Boolean  CosNaming::_proxy_BindingIterator::next_one ( CosNaming::Binding
   }
 }
 
-CORBA::Boolean  CosNaming::_proxy_BindingIterator::next_n ( CORBA::ULong  how_many, CosNaming::BindingList *& bl )
+CORBA::Boolean  CosNaming::_proxy_BindingIterator::___next_n ( CORBA::ULong  how_many, CosNaming::BindingList *& bl )
 {
   GIOP_C _c(_rope());
   CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),7);
-  _msgsize = omniORB::align_to(_msgsize,omniORB::ALIGN_4);
+  _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
   _msgsize += 4;
   CosNaming::BindingList * _bl= 0;
   CORBA::Boolean _result;
@@ -1704,7 +1709,7 @@ CosNaming::_sk_BindingIterator::dispatch(GIOP_S &_s,const char *_op,CORBA::Boole
     CosNaming::Binding_var b;
     _s.RequestReceived();
     CORBA::Boolean _result;
-    _result = next_one ( b );
+    _result = CosNaming_BindingIterator::next_one ( b );
     size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
     _msgsize += 1;
     _msgsize = (b.operator->())->NP_alignedSize(_msgsize);
@@ -1724,7 +1729,7 @@ CosNaming::_sk_BindingIterator::dispatch(GIOP_S &_s,const char *_op,CORBA::Boole
     CosNaming::BindingList_var bl;
     _s.RequestReceived();
     CORBA::Boolean _result;
-    _result = next_n ( how_many, bl );
+    _result = CosNaming_BindingIterator::next_n ( how_many, bl );
     size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();
     _msgsize += 1;
     _msgsize = (bl.operator->())->NP_alignedSize(_msgsize);
@@ -1775,7 +1780,7 @@ CosNaming::BindingIterator::_narrow(CORBA::Object_ptr obj)
 }
 
 void *
-CosNaming::BindingIterator::_widenFromTheMostDerivedIntf(const char *repoId) throw()
+CosNaming::BindingIterator::_widenFromTheMostDerivedIntf(const char *repoId)
 {
   if (!repoId)
     return (void *)((CORBA::Object_ptr)this);
