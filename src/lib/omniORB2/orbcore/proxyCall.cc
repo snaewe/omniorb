@@ -35,6 +35,10 @@
 
 /*
  $Log$
+ Revision 1.6  1999/06/26 18:09:45  sll
+ Added check on the status of verifyObjectExistsAndType before calling
+ assertObjectExistent.
+
  Revision 1.5  1999/05/20 18:36:03  sll
  Revert to non-context version. Support for context is now in
  an equivalent version in the dynamic library.
@@ -62,7 +66,8 @@ _again:
 #else
   while(1) {
 #endif
-    o->assertObjectExistent();
+    if (omniORB::verifyObjectExistsAndType)
+      o->assertObjectExistent();
     omniRopeAndKey ropeAndKey;
     CORBA::Boolean fwd = o->getRopeAndKey(ropeAndKey);
     CORBA::Boolean reuse = 0;
