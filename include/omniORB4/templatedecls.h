@@ -847,7 +847,7 @@ template <class T, class T_var>
 class _CORBA_ConstrType_Fix_OUT_arg {
 public:
   typedef _CORBA_ConstrType_Fix_OUT_arg<T,T_var> T_out;
-  inline _CORBA_ConstrType_Fix_OUT_arg(T*& p) : _data(p) { _data = 0; }
+  inline _CORBA_ConstrType_Fix_OUT_arg(T*& p) : _data(p) {}
   inline _CORBA_ConstrType_Fix_OUT_arg(T_var& p) : _data(&p.pd_data) {}
   inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
   inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
@@ -968,20 +968,20 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////
-////////////////////////// _CORBA_Array_Var //////////////////////////
+////////////////////////// _CORBA_Array_Variable_Var  ////////////////
 //////////////////////////////////////////////////////////////////////
 
 template <class T, class T_var>
-class _CORBA_Array_OUT_arg;
+class _CORBA_Array_Variable_OUT_arg;
 
 template <class T_Helper, class T>
-class _CORBA_Array_Var {
+class _CORBA_Array_Variable_Var {
 public:
-  typedef _CORBA_Array_Var<T_Helper,T> T_var;
+  typedef _CORBA_Array_Variable_Var<T_Helper,T> T_var;
 
-  inline _CORBA_Array_Var () { pd_data = 0; }
-  inline _CORBA_Array_Var (T* p) { pd_data = p; }
-  inline _CORBA_Array_Var (const T_var& p) {
+  inline _CORBA_Array_Variable_Var () { pd_data = 0; }
+  inline _CORBA_Array_Variable_Var (T* p) { pd_data = p; }
+  inline _CORBA_Array_Variable_Var (const T_var& p) {
     if( !p.pd_data )  pd_data = 0;
     else {
       pd_data = T_Helper::dup(p.pd_data);
@@ -989,7 +989,7 @@ public:
     }
   }
 
-  inline ~_CORBA_Array_Var() { if( pd_data )  T_Helper::free(pd_data); }
+  inline ~_CORBA_Array_Variable_Var() { if( pd_data )  T_Helper::free(pd_data); }
 
   inline T_var& operator= (T* p) {
     if (pd_data) T_Helper::free(pd_data);
@@ -1011,14 +1011,15 @@ public:
     return *this;
   }
 
-
+#if !defined(_MSC_VER)
   inline T& operator[] (_CORBA_ULong index) {
     return *(pd_data + index);
   }
   inline const T& operator[] (_CORBA_ULong index) const {
     return *((const T*) (pd_data + index));
   }
-#if 0
+#endif
+
   // Remove T* operator. Array _var type can no longer be used as IN
   // arguments.
   inline operator T* () const { return pd_data; }
@@ -1027,7 +1028,6 @@ public:
   // reinstate it and #ifdef it with the right compiler specific macro.
   //
   //  inline operator const T* () const { return (const T*) pd_data; }
-#endif
 
   const T* in() const { return (const T*)pd_data; }
   T*       inout()    { return pd_data; }
@@ -1040,25 +1040,100 @@ public:
   }
   T* _retn() { T* tmp = pd_data; pd_data = 0; return tmp; }
 
-  friend class _CORBA_Array_OUT_arg<T, T_var>;
+  friend class _CORBA_Array_Variable_OUT_arg<T, T_var>;
+
+private:
+  T* pd_data;
+};
+
+
+//////////////////////////////////////////////////////////////////////
+////////////////////////// _CORBA_Array_Fix_Var     ////////////////
+//////////////////////////////////////////////////////////////////////
+
+template <class T, class T_var>
+class _CORBA_Array_Fix_OUT_arg;
+
+
+template <class T_Helper, class T>
+class _CORBA_Array_Fix_Var {
+public:
+  typedef _CORBA_Array_Fix_Var<T_Helper,T> T_var;
+
+  inline _CORBA_Array_Fix_Var () { pd_data = 0; }
+  inline _CORBA_Array_Fix_Var (T* p) { pd_data = p; }
+  inline _CORBA_Array_Fix_Var (const T_var& p) {
+    if( !p.pd_data )  pd_data = 0;
+    else {
+      pd_data = T_Helper::dup(p.pd_data);
+      if( !pd_data )  _CORBA_new_operator_return_null();
+    }
+  }
+
+  inline ~_CORBA_Array_Fix_Var() { if( pd_data )  T_Helper::free(pd_data); }
+
+  inline T_var& operator= (T* p) {
+    if (pd_data) T_Helper::free(pd_data);
+    pd_data = p;
+    return *this;
+  }
+
+  inline T_var& operator= (const T_var& p) {
+    if( &p == this )  return *this;
+    if( pd_data )  T_Helper::free(pd_data);
+
+    if( p.pd_data ) {
+      pd_data = T_Helper::dup(p.pd_data);
+      if( !pd_data )  _CORBA_new_operator_return_null();
+    }
+    else {
+      pd_data = 0;
+    }
+    return *this;
+  }
+
+#if !defined(_MSC_VER)
+  inline T& operator[] (_CORBA_ULong index) {
+    return *(pd_data + index);
+  }
+  inline const T& operator[] (_CORBA_ULong index) const {
+    return *((const T*) (pd_data + index));
+  }
+#endif
+
+  // Remove T* operator. Array _var type can no longer be used as IN
+  // arguments.
+  inline operator T* () const { return pd_data; }
+  // Define the const T* operator() causes conversion operator ambiguity with 
+  // some compilers. Should be alright to leave this operator out. If not,
+  // reinstate it and #ifdef it with the right compiler specific macro.
+  //
+  //  inline operator const T* () const { return (const T*) pd_data; }
+
+  const T* in() const { return (const T*)pd_data; }
+  T*       inout()    { return pd_data; }
+  T* out() { return pd_data; }
+  T* _retn() { T* tmp = pd_data; pd_data = 0; return tmp; }
+
+  friend class _CORBA_Array_Fix_OUT_arg<T, T_var>;
 
 private:
   T* pd_data;
 };
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////// _CORBA_Array_OUT_arg ////////////////////////
+//////////////////// _CORBA_Array_Variable_OUT_arg ///////////////////
 //////////////////////////////////////////////////////////////////////
 
 template <class T, class T_var>
-class _CORBA_Array_OUT_arg {
+class _CORBA_Array_Variable_OUT_arg {
 public:
-  typedef _CORBA_Array_OUT_arg<T,T_var> T_out;
-  inline _CORBA_Array_OUT_arg(T*& p) : _data(p) { _data = 0; }
-  inline _CORBA_Array_OUT_arg(T_var& p) : _data(p.pd_data) {
+  typedef _CORBA_Array_Variable_OUT_arg<T,T_var> T_out;
+  inline _CORBA_Array_Variable_OUT_arg(T*& p) : _data(p) { _data = 0; }
+  inline _CORBA_Array_Variable_OUT_arg(T_var& p) : _data(p.pd_data) {
     p = (T*)0;
   }
-  inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
+  inline _CORBA_Array_Variable_OUT_arg(const T_out& p) : _data(p._data) {}
   inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
   inline T_out& operator=(T* p) { _data = p; return *this; }
   inline operator T*&() { return _data; }
@@ -1069,7 +1144,32 @@ public:
 
   T*& _data;
 private:
-  _CORBA_Array_OUT_arg();
+  _CORBA_Array_Variable_OUT_arg();
+  T_out& operator=(const T_var&);
+};
+
+//////////////////////////////////////////////////////////////////////
+//////////////////// _CORBA_Array_Fix_OUT_arg ///////////////////
+//////////////////////////////////////////////////////////////////////
+
+template <class T, class T_var>
+class _CORBA_Array_Fix_OUT_arg {
+public:
+  typedef _CORBA_Array_Fix_OUT_arg<T,T_var> T_out;
+  inline _CORBA_Array_Fix_OUT_arg(T*& p) : _data(p) { }
+  inline _CORBA_Array_Fix_OUT_arg(T_var& p) : _data(p.pd_data) { }
+  inline _CORBA_Array_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
+  inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+  inline T_out& operator=(T* p) { _data = p; return *this; }
+  inline operator T*&() { return _data; }
+  inline T*& ptr() { return _data; }
+  inline T& operator[] (_CORBA_ULong index) {
+    return _data[index];
+  }
+
+  T*& _data;
+private:
+  _CORBA_Array_Fix_OUT_arg();
   T_out& operator=(const T_var&);
 };
 

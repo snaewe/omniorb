@@ -1,3 +1,13 @@
+Tue Jul 31 20:23:03 BST 2001 sll
+================================
+
+- Array _var should be separated into fixed and variable size ones.
+
+include/omniORB4/templatedecls.h
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+
 Tue Jul 31 18:40:08 BST 2001 sll
 ================================
 

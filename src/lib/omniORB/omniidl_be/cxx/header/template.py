@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.10  2001/07/31 19:25:11  sll
+#  Array _var should be separated into fixed and variable size ones.
+#
 # Revision 1.5.2.9  2001/06/18 20:30:51  sll
 # Only define 1 conversion operator from T_var to T* if the compiler is
 # gcc. Previously, this is only done for gcc 2.7.2. It seems that gcc 3.0
@@ -542,8 +545,8 @@ public:
   static inline void free(@name@_slice* p) { @name@_free(p); }
 };
 
-typedef _CORBA_Array_Var<@name@_copyHelper,@name@_slice> @name@_var;
-typedef _CORBA_Array_OUT_arg<@name@_slice,@name@_var > @name@_out;
+typedef _CORBA_Array_@var_or_fix@_Var<@name@_copyHelper,@name@_slice> @name@_var;
+typedef _CORBA_Array_@var_or_fix@_OUT_arg<@name@_slice,@name@_var > @name@_out;
 typedef _CORBA_Array_Forany<@name@_copyHelper,@name@_slice> @name@_forany;
 """
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.10  2001/07/31 19:25:11  sll
+#  Array _var should be separated into fixed and variable size ones.
+#
 # Revision 1.33.2.9  2001/07/26 11:27:26  dpg1
 # Typo in C++ back-end broke wstring constants.
 #
@@ -798,7 +801,11 @@ def visitTypedef(node):
                            dup_loop = dup_loop,
                            copy_loop = copy_loop)                            
             # output the _copyHelper class
+            var_or_fix = "Fix"
+            if types.variableDecl(node):
+                var_or_fix = "Variable"
             stream.out(template.typedef_array_copyHelper,
+                       var_or_fix = var_or_fix,
                        name = derivedName)
                 
      
