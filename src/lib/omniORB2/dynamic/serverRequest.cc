@@ -27,6 +27,13 @@
 //   Implementation of CORBA::ServerRequest.
 //
 
+/*
+ $Log$
+ Revision 1.5  1999/04/21 13:40:10  djr
+ Use CORBA::Context::unmarshalContext() for unmarshalling context ...
+
+*/
+
 #include <dynamicImplementation.h>
 #include <pseudo.h>
 #include <context.h>
@@ -65,33 +72,12 @@ ServerRequestImpl::ctx()
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
   }
 
-  pd_context = new ContextImpl("", CORBA::Context::_nil());
-
-  if( pd_giopS->RdMessageUnRead() >= 4 ){
-    CORBA::ULong num_strings;
-    num_strings <<= *pd_giopS;
-    // This gives the number of strings - names and values - so must be
-    // an even number.
-    if( num_strings % 1 ) {
-      pd_state = SR_ERROR;
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
-    }
-    CORBA::ULong num_ctxts = num_strings / 2;
-    CORBA::ULong len;
-
-    for( CORBA::ULong i = 0; i < num_ctxts; i++ ){
-      len <<= *pd_giopS;
-      CORBA::String_var name(CORBA::string_alloc(len - 1));
-      pd_giopS->get_char_array((CORBA::Char*)(char*)name, len);
-
-      len <<= *pd_giopS;
-      CORBA::String_var value(CORBA::string_alloc(len - 1));
-      pd_giopS->get_char_array((CORBA::Char*)(char*)value, len);
-
-      ((ContextImpl*)(CORBA::Context_ptr)pd_context)->
-	insert_single_consume(name._retn(), value._retn());
-    }
-  }
+  if( pd_giopS->RdMessageUnRead() >= 4 ) {
+    pd_state = SR_ERROR;
+    pd_context = CORBA::Context::unmarshalContext(*pd_giopS);
+    pd_state = SR_GOT_PARAMS;
+  } else
+    pd_context = new ContextImpl("", CORBA::Context::_nil());
 
   return pd_context;
 }
