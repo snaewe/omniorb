@@ -10,7 +10,7 @@ AlphaProcessor = 1
 #
 # You must set a path to a Python 1.5.2 interpreter.
 
-#PYTHON = C:\\progra~1\\Python\python
+#PYTHON = //c/progra~1/Python/python
 
 
 BINDIR = bin/alpha_win32
