@@ -11,19 +11,27 @@
 
 /*
   $Log$
-  Revision 1.1  1997/01/08 17:26:29  sll
-  Initial revision
+  Revision 1.2  1997/01/08 18:12:39  ewc
+  Added support for ATMos
 
+ * Revision 1.1  1996/10/10  14:37:53  sll
+ * Initial revision
+ *
   */
 
 #ifndef __LIBCWRAPPER_H__
 #define __LIBCWRAPPER_H__
 
+
 #define _HAS_NETDB_
 
-#ifdef _HAS_NETDB_
+
+#ifdef __NT__
+#include <winsock.h>
+#else
 #include <netdb.h>
 #endif
+
 
 class LibcWrapper {
 public:
@@ -31,6 +39,7 @@ public:
   class hostent_var;
 
   static int gethostbyname(const char *,hostent_var &,int &);
+  static int isipaddr(const char* hname);
 
   class hostent_var {
   public:
