@@ -186,20 +186,20 @@ endif
 ifdef EXPORT_TREE
 define ExportATMosInterfaces
 (dir=$(EXPORT_TREE)/$(BINDIR); $(CreateDir); \
- allpackage="$(EXPORT_TREE)/$(BINDIR)/all_if.pkg"; \
- if [ -f $$allpackage ]; then \
-   (set -x; $(RM) $$allpackage); \
+ allinterfaces="$(EXPORT_TREE)/$(BINDIR)/all_interfaces"; \
+ if [ -f $$allinterfaces ]; then \
+   (set -x; $(RM) $$allinterfaces); \
  fi; \
  for module in $$modules; do \
-   echo echo "Module $$module >> $$allpackage"; \
-   echo "Module $$module" >> $$allpackage; \
+   echo echo "Module $$module >> $$allinterfaces"; \
+   echo "Module $$module" >> $$allinterfaces; \
    file="$$module.module"; \
    dir="$(EXPORT_TREE)/$(BINDIR)/$$module"; \
    $(ExportFileToDir); \
  done; \
  for hardware in $$hardwares; do \
-   echo echo "Hardware $$hardware >> $$allpackage"; \
-   echo "Hardware $$hardware" >> $$allpackage; \
+   echo echo "Hardware $$hardware >> $$allinterfaces"; \
+   echo "Hardware $$hardware" >> $$allinterfaces; \
    file="$$hardware.hw"; \
    dir="$(EXPORT_TREE)/$(BINDIR)/hardware"; \
    $(ExportFileToDir); \
@@ -216,13 +216,11 @@ define ExportATMosInterfaces
  echo "Package core" >> $$systemfile; \
  importtrees="$(IMPORT_TREES)"; \
  for importtree in $$importtrees; do \
-   if [ -f "$$importtree/$(BINDIR)/all_if.pkg" ]; then \
+   if [ -f "$$importtree/$(BINDIR)/all_interfaces" ]; then \
      echo echo "Path $$importtree/$(BINDIR) >> $$systemfile"; \
      echo "Path $$importtree/$(BINDIR)" >> $$systemfile; \
-     echo echo "Package all_if from $$importtree/$(BINDIR) >> $$systemfile"; \
-     echo "Package all_if from $$importtree/$(BINDIR)" >> $$systemfile; \
-     echo echo "Unset all_if.pkg >> $$systemfile"; \
-     echo "Unset all_if.pkg" >> $$systemfile; \
+     echo "cat $$importtree/$(BINDIR)/all_interfaces >> $$systemfile"; \
+     cat $$importtree/$(BINDIR)/all_interfaces >> $$systemfile; \
    fi; \
  done; \
  (set -x; cd $(EXPORT_TREE)/$(BINDIR); aconfig); \
