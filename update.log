@@ -1,3 +1,15 @@
+Thu Apr 19 12:14:33 BST 2001 sll
+================================
+
+- missing -ORBhelp listing for -ORBmaxGIOPVersion
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+- Compile COS libraries
+
+src/dir.mk
+
+
 Thu Apr 19 11:02:32 BST 2001 dpg1
 =================================
 
