@@ -1,5 +1,35 @@
+# -*- python -*-
+#                           Package   : omniidl
+# idldump.py                Created on: 1999/10/29
+#			    Author    : Duncan Grisby (dpg1)
 #
-# Back-end which just dumps the IDL tree
+#    Copyright (C) 1999 AT&T Laboratories Cambridge
+#
+#  This file is part of omniidl.
+#
+#  omniidl is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA.
+#
+# Description:
+#   
+#   Back-end which just dumps the IDL tree
+
+# $Id$
+# $Log$
+# Revision 1.2  1999/11/01 10:06:07  dpg1
+# Various clean-ups.
 #
 
 """Dumps the IDL tree"""
@@ -62,9 +92,12 @@ interface @id@;""", id = node.identifier())
     def visitConst(self, node):
         node.constType().accept(self)
         type  = self.__result_type
-        value = str(node.value())
-        if node.constType().kind() == idltype.tk_string:
-            value = '"' + value + '"'
+        if node.constType().kind() == idltype.tk_enum:
+            value = "::" + idlutil.ccolonName(node.value().scopedName())
+        elif node.constType().kind() == idltype.tk_string:
+            value = '"' + node.value() + '"'
+        else:
+            value = str(node.value())
         
         self.st.out("""\
 const @type@ @id@ = @value@;""",
@@ -162,7 +195,7 @@ union @id@ switch (@stype@) {""",
   default:""")
                 else:
                     if l.labelKind() == idltype.tk_enum:
-                        lv = idlutil.ccolonName(l.value().scopedName())
+                        lv = "::" + idlutil.ccolonName(l.value().scopedName())
                     else:
                         lv = str(l.value())
                         
@@ -283,20 +316,20 @@ enum @id@ {@enums@};""",
         if type.bound() == 0:
             self.__result_type = "string"
         else:
-            self.__result_type = "string <" + str(type.bound()) + ">"
+            self.__result_type = "string<" + str(type.bound()) + ">"
 
     def visitWStringType(self, type):
         if type.bound() == 0:
             self.__result_type = "wstring"
         else:
-            self.__result_type = "wstring <" + str(type.bound()) + ">"
+            self.__result_type = "wstring<" + str(type.bound()) + ">"
 
     def visitSequenceType(self, type):
         type.seqType().accept(self)
         if type.bound() == 0:
-            self.__result_type = "sequence <" + self.__result_type + ">"
+            self.__result_type = "sequence<" + self.__result_type + ">"
         else:
-            self.__result_type = "sequence <" + self.__result_type + ", " +\
+            self.__result_type = "sequence<" + self.__result_type + ", " +\
                                  str(type.bound()) + ">"
 
     def visitFixedType(self, type):
@@ -308,7 +341,7 @@ enum @id@ {@enums@};""",
                              idlutil.ccolonName(type.decl().scopedName())
 
 
-def run(tree):
+def run(tree, args):
     print "\n\n\n\nRunning...\n\n\n"
 
     st = output.Stream(sys.stdout, 2)
