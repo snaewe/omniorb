@@ -112,11 +112,13 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	      TypeCode_union_helper::unmarshalLabel(discrimTC, ibuf);
 	    TypeCode_union_helper::marshalLabel(discrim, discrimTC, obuf);
 
-	    // Copy the value, using the type for the selected member.
+	    // Copy the value, using the type for the selected member,
+	    // unless we have an implicit default, in which case no
+	    // value is copied.
 	    CORBA::Long i =
 	      ((TypeCode_union*)tc)->NP_index_from_discriminator(discrim);
-	    if( i < 0 )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
-	    fastCopyUsingTC(tc->NP_member_type(i), ibuf, obuf);
+	    if( i >= 0 )
+	      fastCopyUsingTC(tc->NP_member_type(i), ibuf, obuf);
 	    break;
 	  }
 
@@ -264,11 +266,13 @@ inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	  TypeCode_union_helper::unmarshalLabel(discrimTC, ibuf);
 	TypeCode_union_helper::marshalLabel(discrim, discrimTC, obuf);
 
-	// Copy the value, using the type for the selected member
+	// Copy the value, using the type for the selected member,
+	// unless we have an implicit default, in which case no
+	// value is copied.
 	CORBA::Long i =
 	  ((TypeCode_union*)tc)->NP_index_from_discriminator(discrim);
-	if( i < 0 )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
-	copyUsingTC(tc->NP_member_type(i), ibuf, obuf);
+	if( i >= 0 )
+	  copyUsingTC(tc->NP_member_type(i), ibuf, obuf);
 
 	return;
       }
@@ -397,8 +401,7 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 	    // Skip the value, using the type for the selected member.
 	    CORBA::Long i =
 	      ((TypeCode_union*)tc)->NP_index_from_discriminator(discrim);
-	    if( i < 0 )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
-	    skipUsingTC(tc->NP_member_type(i), buf);
+	    if( i >= 0 )  skipUsingTC(tc->NP_member_type(i), buf);
 	    break;
 	  }
 
@@ -926,35 +929,35 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
   case CORBA::tk_union:
     {
       // Allocate some space to load the discriminator into.
-      tcUnionDiscriminatorType     disc_val;
-      tcDescriptor                 disc_desc;
+      tcUnionDiscriminatorType disc_val;
+      tcDescriptor             disc_desc;
 
-      disc_desc.p_char = (CORBA::Char*)&disc_val;
+      disc_desc.p_char = (CORBA::Char*) &disc_val;
       fetchSimpleItem(tc->NP_discriminator_type()->NP_kind(), disc_desc);
 
       // Determine the discriminator value.
       CORBA::PR_unionDiscriminator discrim = 0;
       switch( tc->NP_discriminator_type()->NP_kind() ) {
       case CORBA::tk_char:
-	discrim = (CORBA::PR_unionDiscriminator)*disc_desc.p_char;
+	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_char;
 	break;
       case CORBA::tk_boolean:
-	discrim = (CORBA::PR_unionDiscriminator)*disc_desc.p_boolean;
+	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_boolean;
 	break;
       case CORBA::tk_short:
-	discrim = (CORBA::PR_unionDiscriminator)*disc_desc.p_short;
+	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_short;
 	break;
       case CORBA::tk_ushort:
-	discrim = (CORBA::PR_unionDiscriminator)*disc_desc.p_ushort;
+	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_ushort;
 	break;
       case CORBA::tk_long:
-	discrim = (CORBA::PR_unionDiscriminator)*disc_desc.p_long;
+	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_long;
 	break;
       case CORBA::tk_ulong:
-	discrim = (CORBA::PR_unionDiscriminator)*disc_desc.p_ulong;
+	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_ulong;
 	break;
       case CORBA::tk_enum:
-	discrim = (CORBA::PR_unionDiscriminator)*disc_desc.p_enum;
+	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_enum;
 	break;
       // case CORBA::tk_wchar:
       default:
@@ -965,13 +968,14 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
       // Determine the index of the selected member.
       CORBA::Long index =
 	((TypeCode_union*)tc)->NP_index_from_discriminator(discrim);
-      if( index < 0 )
-	// Implicit default - so no member to fetch
-	break;
 
       // Tell the union the new discriminator value.
       tcdata.p_union.setDiscriminator(&tcdata.p_union, discrim,
 				      index == tc->NP_default_index());
+
+      if( index < 0 )
+	// Implicit default - so no member to fetch
+	break;
 
       // Unmarshal the union data.
       tcDescriptor data_desc;
@@ -1176,9 +1180,8 @@ tcParser::calculateItemSize(const TypeCode_base*tc, const size_t initialoffset)
 	CORBA::Long index =
 	  ((TypeCode_union*)tc)->NP_index_from_discriminator(discrim);
 	if( index < 0 ){
-	  // If the index < 0, then the union has not been properly
-	  // initialised.
-	  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+	  // Implicit default, so no member.
+	  return _msgsize;
 	}
 
 	return calculateItemSize(tc->NP_member_type(index), _msgsize);
