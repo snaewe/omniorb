@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.2  2000/02/15 15:28:35  djs
+# Stupid bug in powerpc aix workaround fixed
+#
 # Revision 1.27.2.1  2000/02/14 18:34:53  dpg1
 # New omniidl merged in.
 #
@@ -231,11 +234,22 @@ def visitInterface(node):
         this_inherits_str = inherits_objref_name + "(mdri, p, id, lid),\n"
         
         # powerpc-aix workaround
-        inherits_scope_prefix = tyutil.scope(inherits_objref_scopedName)
-        if inherits_scope_prefix != []:
-            inherits_scope_prefix = string.join(inherits_scope_prefix, "::") + "::"
-            this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix + ")" + \
+        # (needed iff the fully qualified name is not the unambiguous name)
+        if inherits_objref_relName != inherits_objref_scopedName:
+            prefix = []
+            for x in inherits_objref_scopedName[:]:
+                if x == inherits_objref_relName[0]:
+                    break
+                prefix.append(x)
+            inherits_scope_prefix = string.join(prefix, "::") + "::"
+            this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix + ")" +\
                                 this_inherits_str
+            
+        #inherits_scope_prefix = tyutil.scope(inherits_objref_scopedName)
+        #if inherits_scope_prefix != []:
+        #    inherits_scope_prefix = string.join(inherits_scope_prefix, "::") + "::"
+        #    this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix + ")" + \
+        #                        this_inherits_str
         
         inherits_str = inherits_str + this_inherits_str
         
