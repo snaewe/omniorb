@@ -4,6 +4,34 @@
 #
 
 #############################################################################
+#   Make variables common to all platforms                                  #
+#############################################################################
+
+ORB2_SRCS = constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
+            corbaString.cc \
+          exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
+          libcWrapper.cc mbufferedStream.cc nbufferedStream.cc NamingSK.cc \
+          object.cc objectKey.cc objectRef.cc ropeFactory.cc \
+          strand.cc scavenger.cc \
+          $(NETLIBSRCS)
+
+ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
+            corbaString.o \
+            exception.o giopClient.o giopServer.o initFile.o ior.o \
+            libcWrapper.o mbufferedStream.o nbufferedStream.o NamingSK.o \
+            object.o objectRef.o objectKey.o ropeFactory.o \
+	    strand.o scavenger.o \
+            $(NETLIBOBJS)
+
+LC_SRCS = omniLifeCycle.cc reDirect.cc omniLifeCycleSK.cc
+LC_OBJS = omniLifeCycle.o reDirect.o omniLifeCycleSK.o
+
+DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS) -I. -I./.. 
+
+CXXSRCS = $(ORB2_SRCS) $(LC_SRCS)
+
+
+#############################################################################
 #   Make variables for Unix platforms                                       #
 #############################################################################
 ifdef UnixPlatform
@@ -11,7 +39,7 @@ ifdef UnixPlatform
 # Default location of the omniORB2 configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 #
-CONFIG_DEFAULT_LOCATION = \"/project/omni/var/omniORB.cfg\"
+CONFIG_DEFAULT_LOCATION = \"/project/omni/var/omniORB_NEW.cfg\"
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
 NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
 DIR_CPPFLAGS = -DUnixArchitecture
@@ -20,9 +48,7 @@ DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION=$(CONFIG_DEFAULT_LOCATION)
 lib = $(patsubst %,$(LibPattern),omniORB2)
 lclib = $(patsubst %,$(LibPattern),omniLC)
 
-ifndef Linux
-SUBDIRS = sharedlib
-endif
+SUBDIRS = sharedlib gatekeepers
 
 endif
 
@@ -48,7 +74,7 @@ lclib = $(patsubst %,$(LibPattern),omniLC)
 CXXOPTIONS  = $(MSVC_CXXNODEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_CXXLINKNODEBUGOPTIONS)
 
-SUBDIRS = debug sharedlib
+SUBDIRS += debug sharedlib gatekeepers
 
 else
 
@@ -83,39 +109,11 @@ NETLIBOBJS = relStream.o tcpATMos.o tcpATMosMTfactory.o
 DIR_CPPFLAGS = -DATMosArchitecture
 CONFIG_DEFAULT_LOCATION = \"//isfs/omniORB.cfg\"
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION=$(CONFIG_DEFAULT_LOCATION)
-
+SUBDIRS = gatekeepers
 lib = $(patsubst %,$(LibPattern),omniORB2)
 lclib = $(patsubst %,$(LibPattern),omniLC)
 
 endif
-
-#############################################################################
-#   Make variables common to all platforms                                  #
-#############################################################################
-
-ORB2_SRCS = constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
-            corbaString.cc \
-          exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
-          libcWrapper.cc mbufferedStream.cc nbufferedStream.cc NamingSK.cc \
-          object.cc objectKey.cc objectRef.cc ropeFactory.cc \
-          strand.cc scavenger.cc \
-          $(NETLIBSRCS)
-
-ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
-            corbaString.o \
-            exception.o giopClient.o giopServer.o initFile.o ior.o \
-            libcWrapper.o mbufferedStream.o nbufferedStream.o NamingSK.o \
-            object.o objectRef.o objectKey.o ropeFactory.o \
-	    strand.o scavenger.o \
-            $(NETLIBOBJS)
-
-LC_SRCS = omniLifeCycle.cc reDirect.cc omniLifeCycleSK.cc
-LC_OBJS = omniLifeCycle.o reDirect.o omniLifeCycleSK.o
-
-DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS) -I. -I./.. 
-
-CXXSRCS = $(ORB2_SRCS) $(LC_SRCS)
-
 
 #############################################################################
 #   Make rules for to Win32 platforms                                       #
