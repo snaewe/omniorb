@@ -1,3 +1,11 @@
+Fri May  5 19:57:44 BST 2000 dpg1
+=================================
+
+- Back out the INS POA change since it doesn't work!
+
+src/lib/omniORB2/orbcore/poa.cc
+
+
 Fri May  5 17:53:47 BST 2000 dpg1
 =================================
 

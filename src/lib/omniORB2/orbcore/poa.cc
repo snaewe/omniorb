@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.18  2000/05/05 18:59:36  dpg1
+  Back out last change, since it doesn't work.
+
   Revision 1.1.2.17  2000/05/05 17:00:46  dpg1
   INS POA now has the USE_SERVANT_MANAGER policy, with the small
   exception that it raises OBJECT_NOT_EXIST rather than OBJ_ADAPTER if
@@ -1834,7 +1837,7 @@ omniOrbPOA::omniINSPOA()
     policy.multiple_id         = 0;
     policy.user_assigned_id    = 1;
     policy.retain_servants     = 1;
-    policy.req_processing      = omniOrbPOA::RPP_SERVANT_MANAGER;
+    policy.req_processing      = omniOrbPOA::RPP_ACTIVE_OBJ_MAP;
     policy.implicit_activation = 1;
 
     omni_tracedmutex_lock sync2(theRootPOA->pd_lock);
@@ -2307,10 +2310,7 @@ omniOrbPOA::dispatch_to_sa(GIOP_S& giop_s, const CORBA::Octet* key,
   if( !pd_servantActivator ) {
     pd_lock.unlock();
     servant_activator_lock.unlock();
-    if (this == theINSPOA)
-      OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
-    else
-      OMNIORB_THROW(OBJ_ADAPTER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(OBJ_ADAPTER,0, CORBA::COMPLETED_NO);
   }
   PortableServer::ServantActivator::_duplicate(pd_servantActivator);
   PortableServer::ServantActivator_var sa(pd_servantActivator);
