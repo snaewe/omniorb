@@ -1,3 +1,11 @@
+Mon Jan 25 18:27:15 GMT 1999 sll
+===============================
+
+- Fixed a rarely occurred race condition between the outgoing Scavenger and a
+  client thread doing invocation which happens to fail with COMM_FAILURE.
+  
+include/omniORB2/rope.h
+src/lib/omniORB2/orbcore/strand.cc
 
 Wed Jan 20 11:38:36 GMT 1999 tjr
 ================================
