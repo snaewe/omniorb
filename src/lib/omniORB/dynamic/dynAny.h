@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.3  2000/10/06 16:40:53  sll
+ Changed to use cdrStream.
+
  Revision 1.5.2.2  2000/09/27 17:25:41  sll
  Changed include/omniORB3 to include/omniORB4.
 
@@ -121,13 +124,13 @@ public:
   * internal *
   ***********/
 
-  virtual int copy_to(MemBufferedStream& mbs) = 0;
+  virtual int copy_to(cdrMemoryStream& mbs) = 0;
   // Copies our value into the given stream. Does not flush <mbs>,
   // but does rewind our buffer first. Returns 0 if we are not
   // properly initialised.
   //  Concurrency: hold DynAnyImplBase::lock
 
-  virtual int copy_from(MemBufferedStream& mbs) = 0;
+  virtual int copy_from(cdrMemoryStream& mbs) = 0;
   // Copies the value from the given stream into this DynAny. Does
   // not rewind the input stream, but does flush our buffer first.
   // Returns 0 if there was a problem reading the value out of the
@@ -162,7 +165,7 @@ public:
   // the content type.
 
 
-  MemBufferedStream pd_buf;
+  cdrMemoryStream pd_buf;
   // The value held by the DynAny. Basic DynAny values are
   // always stored in the buffer. For complex types it is stored
   // in the buffer when convenient - otherwise in sub-components.
@@ -238,8 +241,8 @@ public:
   /***********
   * internal *
   ***********/
-  virtual int copy_to(MemBufferedStream& mbs);
-  virtual int copy_from(MemBufferedStream& mbs);
+  virtual int copy_to(cdrMemoryStream& mbs);
+  virtual int copy_from(cdrMemoryStream& mbs);
 
   CORBA::Boolean isValid() const { return pd_isValid; }
   // If true it indicates that the value in the internal
@@ -251,16 +254,16 @@ public:
   // Must hold DynAnyImplBase::lock.
 
 protected:
-  MemBufferedStream& doWrite(CORBA::TCKind kind) {
+  cdrMemoryStream& doWrite(CORBA::TCKind kind) {
     if( tckind() != kind )  throw CORBA::DynAny::InvalidValue();
-    pd_buf.rewind_inout_mkr();
+    pd_buf.rewindPtrs();
     setValid();
     return pd_buf;
   }
 
-  MemBufferedStream& doRead(CORBA::TCKind kind) {
+  cdrMemoryStream& doRead(CORBA::TCKind kind) {
     if( tckind() != kind || !isValid())  throw CORBA::DynAny::TypeMismatch();
-    pd_buf.rewind_in_mkr();
+    pd_buf.rewindInputPtr();
     return pd_buf;
   }
 
@@ -384,8 +387,8 @@ public:
   /***********
   * internal *
   ***********/
-  virtual int copy_to(MemBufferedStream& mbs);
-  virtual int copy_from(MemBufferedStream& mbs);
+  virtual int copy_to(cdrMemoryStream& mbs);
+  virtual int copy_from(cdrMemoryStream& mbs);
   virtual void onDispose();
 
 protected:
@@ -415,7 +418,7 @@ protected:
   // The result is only valid if <i> is in range.
   //  Must hold DynAnyImplBase::lock.
 
-  MemBufferedStream& writeCurrent(CORBA::TCKind kind) {
+  cdrMemoryStream& writeCurrent(CORBA::TCKind kind) {
     if( pd_curr_index < 0 || currentKind() != kind )
       throw CORBA::DynAny::InvalidValue();
     if( canAppendComponent(pd_curr_index) ) {
@@ -426,7 +429,7 @@ protected:
       return pd_buf;
     } else {
       DynAnyImpl* cc = ToDynAnyImpl(getCurrent());
-      cc->pd_buf.rewind_inout_mkr();
+      cc->pd_buf.rewindPtrs();
       cc->setValid();
       if( pd_curr_index + 1 < (int)pd_n_components )  pd_curr_index++;
       else                                            pd_curr_index = -1;
@@ -442,7 +445,7 @@ protected:
   // is the same as the value being inserted.
   //  Must hold DynAnyImplBase::lock.
 
-  MemBufferedStream& readCurrent(CORBA::TCKind kind) {
+  cdrMemoryStream& readCurrent(CORBA::TCKind kind) {
     if( pd_curr_index < 0 || currentKind() != kind )
       throw CORBA::DynAny::TypeMismatch();
     if( pd_curr_index < (int)pd_n_in_buf ) {
@@ -455,7 +458,7 @@ protected:
     else if( pd_curr_index >= (int)pd_first_in_comp ) {
       DynAnyImpl* cc = ToDynAnyImpl(getCurrent());
       if( !cc->isValid() )  throw CORBA::DynAny::TypeMismatch();
-      cc->pd_buf.rewind_in_mkr();
+      cc->pd_buf.rewindInputPtr();
       if( pd_curr_index + 1 < (int)pd_n_components )  pd_curr_index++;
       else                                            pd_curr_index = -1;
       return cc->pd_buf;
@@ -743,8 +746,8 @@ public:
   /***********
   * internal *
   ***********/
-  virtual int copy_to(MemBufferedStream& mbs);
-  virtual int copy_from(MemBufferedStream& mbs);
+  virtual int copy_to(cdrMemoryStream& mbs);
+  virtual int copy_from(cdrMemoryStream& mbs);
   virtual void onDispose();
 
   void discriminatorHasChanged();
@@ -763,17 +766,17 @@ private:
     return (TypeCode_union*) DynAnyImplBase::actualTc();
   }
 
-  MemBufferedStream& writeCurrent(CORBA::TCKind kind) {
+  cdrMemoryStream& writeCurrent(CORBA::TCKind kind) {
     switch( pd_curr_index ) {
     case 0:
       if( kind != pd_disc_kind )  throw CORBA::DynAny::InvalidValue();
-      pd_disc->pd_buf.rewind_inout_mkr();
+      pd_disc->pd_buf.rewindPtrs();
       pd_disc->setValid();
       pd_curr_index = 1;
       return pd_disc->pd_buf;
     case 1:
       if( pd_member_kind != kind )  throw CORBA::DynAny::InvalidValue();
-      pd_member->pd_buf.rewind_inout_mkr();
+      pd_member->pd_buf.rewindPtrs();
       // Must be a DynAnyImpl ...
       ToDynAnyImpl(pd_member)->setValid();
       pd_curr_index = -1;
@@ -786,19 +789,19 @@ private:
 #endif
   }
 
-  MemBufferedStream& readCurrent(CORBA::TCKind kind) {
+  cdrMemoryStream& readCurrent(CORBA::TCKind kind) {
     switch( pd_curr_index ) {
     case 0:
       if( kind != pd_disc_kind || !pd_disc->isValid() )
 	throw CORBA::DynAny::TypeMismatch();
-      pd_disc->pd_buf.rewind_in_mkr();
+      pd_disc->pd_buf.rewindInputPtr();
       pd_curr_index = 1;
       return pd_disc->pd_buf;
     case 1:
       // If !pd_member, then pd_member_kind == tk_null.
       if( pd_member_kind != kind || !ToDynAnyImpl(pd_member)->isValid() )
 	throw CORBA::DynAny::TypeMismatch();
-      pd_member->pd_buf.rewind_in_mkr();
+      pd_member->pd_buf.rewindInputPtr();
       pd_curr_index = -1;
       return pd_member->pd_buf;
     default:
@@ -866,8 +869,8 @@ public:
   /***********
   * internal *
   ***********/
-  virtual int copy_to(MemBufferedStream& mbs);
-  virtual int copy_from(MemBufferedStream& mbs);
+  virtual int copy_to(cdrMemoryStream& mbs);
+  virtual int copy_from(cdrMemoryStream& mbs);
   virtual TypeCode_base* nthComponentTC(unsigned n);
   // Overrides DynAnyConstrBase
 

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.12.2.3  2000/10/06 16:40:53  sll
+ Changed to use cdrStream.
+
  Revision 1.12.2.2  2000/09/27 17:25:40  sll
  Changed include/omniORB3 to include/omniORB4.
 
@@ -576,42 +579,10 @@ CORBA::Context::_nil()
   return _the_nil_ptr;
 }
 
-
-size_t
-CORBA::Context::_NP_alignedSize(CORBA::Context_ptr ctxt,
-				const char*const* which,
-				int whichlen, size_t offset)
-{
-  // Space for the number of context entries ...
-  offset = omni::align_to(offset, omni::ALIGN_4) + 4;
-
-  if( CORBA::is_nil(ctxt) )  return offset;
-  ContextImpl* c = (ContextImpl*) ctxt;
-
-  for( int i = 0; i < whichlen; i++ ) {
-
-    const char* value = c->lookup_single(which[i]);
-
-    // Missing context strings are silently not passed...
-    // See Henning & Vinoski p97.
-    if( !value )  continue;
-
-    int len = strlen(which[i]) + 1;
-    offset = omni::align_to(offset, omni::ALIGN_4) + 4 + len;
-
-    len = strlen(value) + 1;
-    offset = omni::align_to(offset, omni::ALIGN_4) + 4 + len;
-
-  }
-
-  return offset;
-}
-
-
-template<class buf_t>
-inline void
-marshal(CORBA::Context_ptr ctxt, const char*const* which,
-	int whichlen, buf_t& s)
+void
+CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
+			       const char*const* which,
+			       int whichlen, cdrStream& s)
 {
   if( CORBA::is_nil(ctxt) ) {
     CORBA::ULong(0) >>= s;
@@ -645,28 +616,8 @@ marshal(CORBA::Context_ptr ctxt, const char*const* which,
   }
 }
 
-
-void
-CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
-			       const char*const* which,
-			       int whichlen, NetBufferedStream& s)
-{
-  marshal(ctxt, which, whichlen, s);
-}
-
-
-void
-CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
-			       const char*const* which,
-			       int whichlen, MemBufferedStream& s)
-{
-  marshal(ctxt, which, whichlen, s);
-}
-
-
-template<class buf_t>
-inline CORBA::Context_ptr
-unmarshal(buf_t& s)
+CORBA::Context_ptr
+CORBA::Context::unmarshalContext(cdrStream& s)
 {
   CORBA::ULong nentries;
   nentries <<= s;
@@ -692,20 +643,6 @@ unmarshal(buf_t& s)
   }
 
   return c;
-}
-
-
-CORBA::Context_ptr
-CORBA::Context::unmarshalContext(NetBufferedStream& s)
-{
-  return unmarshal(s);
-}
-
-
-CORBA::Context_ptr
-CORBA::Context::unmarshalContext(MemBufferedStream& s)
-{
-  return unmarshal(s);
 }
 
 //////////////////////////////////////////////////////////////////////

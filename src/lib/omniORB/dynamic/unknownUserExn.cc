@@ -104,20 +104,11 @@ CORBA::UnknownUserException::_NP_repoId(int* size) const
 
 
 void
-CORBA::UnknownUserException::_NP_marshal(NetBufferedStream&) const
+CORBA::UnknownUserException::_NP_marshal(cdrStream&) const
 {
   // I don't think we can be called.
   OMNIORB_ASSERT(0);
 }
-
-
-void
-CORBA::UnknownUserException::_NP_marshal(MemBufferedStream&) const
-{
-  // I don't think we can be called.
-  OMNIORB_ASSERT(0);
-}
-
 
 static 
 CORBA::PR_structMember mUnknownUserException[] = {

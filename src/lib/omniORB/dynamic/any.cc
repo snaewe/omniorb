@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.19.2.3  2000/10/06 16:40:52  sll
+ * Changed to use cdrStream.
+ *
  * Revision 1.19.2.2  2000/09/27 17:25:39  sll
  * Changed include/omniORB3 to include/omniORB4.
  *
@@ -209,7 +212,7 @@ Any::Any(TypeCode_ptr tc, void* value, Boolean release)
 
 // Marshalling operators
 void
-CORBA::Any::operator>>= (NetBufferedStream& s) const
+CORBA::Any::operator>>= (cdrStream& s) const
 {
   if( omniORB::tcAliasExpand ) {
     CORBA::TypeCode_var tc =
@@ -223,7 +226,7 @@ CORBA::Any::operator>>= (NetBufferedStream& s) const
 }
 
 void
-CORBA::Any::operator<<= (NetBufferedStream& s)
+CORBA::Any::operator<<= (cdrStream& s)
 {
   CORBA::TypeCode_member newtc;
   newtc <<= s;
@@ -231,72 +234,17 @@ CORBA::Any::operator<<= (NetBufferedStream& s)
   pdAnyP()->getTC_parser()->copyFrom(s);
 }
 
+// omniORB2 data-only marshalling functions
 void
-CORBA::Any::operator>>= (MemBufferedStream& s) const
-{
-  if( omniORB::tcAliasExpand ) {
-    CORBA::TypeCode_var tc =
-      TypeCode_base::aliasExpand(ToTcBase(pdAnyP()->getTC_parser()->getTC()));
-    CORBA::TypeCode::marshalTypeCode(tc, s);
-  }
-  else
-    CORBA::TypeCode::marshalTypeCode(pdAnyP()->getTC_parser()->getTC(), s);
-
-  pdAnyP()->getTC_parser()->copyTo(s);
-}
-
-void
-CORBA::Any::operator<<= (MemBufferedStream& s)
-{
-  CORBA::TypeCode_member newtc;
-  newtc <<= s;
-  pdAnyP()->setTC_and_reset(newtc);
-  pdAnyP()->getTC_parser()->copyFrom(s);
-}
-
-size_t
-CORBA::Any::_NP_alignedSize(size_t initialoffset) const
-{
-  size_t _msgsize = initialoffset;
-  if ( omniORB::tcAliasExpand ) {
-    CORBA::TypeCode_var tc =
-      TypeCode_base::aliasExpand(ToTcBase(pdAnyP()->getTC_parser()->getTC()));
-    _msgsize = tc->_NP_alignedSize(_msgsize);
-  }
-  else 
-    _msgsize = pdAnyP()->getTC_parser()->getTC()->_NP_alignedSize(_msgsize);
-  return NP_alignedDataOnlySize(_msgsize);
-}
-
-// omniORB data-only marshalling functions
-void
-CORBA::Any::NP_marshalDataOnly(NetBufferedStream& s) const
+CORBA::Any::NP_marshalDataOnly(cdrStream& s) const
 {
   pdAnyP()->getTC_parser()->copyTo(s);
 }
 
 void
-CORBA::Any::NP_unmarshalDataOnly(NetBufferedStream& s)
+CORBA::Any::NP_unmarshalDataOnly(cdrStream& s)
 {
   pdAnyP()->getTC_parser()->copyFrom(s);
-}
-
-void
-CORBA::Any::NP_marshalDataOnly(MemBufferedStream& s) const
-{
-  pdAnyP()->getTC_parser()->copyTo(s);
-}
-
-void
-CORBA::Any::NP_unmarshalDataOnly(MemBufferedStream& s)
-{
-  pdAnyP()->getTC_parser()->copyFrom(s);
-}
-
-size_t
-CORBA::Any::NP_alignedDataOnlySize(size_t initialoffset) const
-{
-  return pdAnyP()->alignedSize(initialoffset);
 }
 
 // omniORB internal data packing functions, for use only by stub code

@@ -38,11 +38,11 @@ public:
   // CREATION/DESTRUCTION
 
   AnyP(CORBA::TypeCode_ptr tc);
-  // Constructor.  Creates a membufferedstream and duplicates & saves
+  // Constructor.  Creates a cdrMemoryStream and duplicates & saves
   // the typecode passed in.
 
   AnyP(CORBA::TypeCode_ptr tc, void * value, CORBA::Boolean release);
-  // Constructor.  Creates a read-only membufferedstream & duplicates &
+  // Constructor.  Creates a read-only cdrMemoryStream & duplicates &
   // saves the typecode.  The stream uses the given value to read from.
   // NEVER CALL THIS FUNCTION WITH A NULL value POINTER!
 
@@ -92,9 +92,9 @@ public:
       pd_cached_data_destructor(pd_cached_data_ptr);
     pd_cached_data_ptr = 0;
 
-    // Allocate a new membuffered stream & parser
+    // Allocate a new cdrMemoryStream & parser
     if (pd_mbuf == 0)
-      pd_mbuf = new MemBufferedStream();
+      pd_mbuf = new cdrMemoryStream();
     pd_releaseptr = 0;
     if (pd_parser == 0)
       pd_parser = new tcParser(*pd_mbuf, tc);
@@ -105,18 +105,13 @@ public:
   // Get a tcParser through which to manipulate the data.
 
   inline const void *getBuffer() {
-    pd_mbuf->rewind_in_mkr();
-    return pd_mbuf->data();
+    pd_mbuf->rewindInputPtr();
+    return pd_mbuf->bufPtr();
   }
   // Return the start of the data buffer.
 
-  inline MemBufferedStream& getMemBufferedStream() { return *pd_mbuf; }
+  inline cdrMemoryStream& getcdrMemoryStream() { return *pd_mbuf; }
   // Get the internal stream.
-
-  inline size_t alignedSize(size_t io) {
-    return pd_parser->alignedSize(io);
-  }
-  // Return the size of the data contained in the buffer.
 
   inline void *getCachedData() { return pd_cached_data_ptr; }
   // Retrieve the cached data pointer.
@@ -130,7 +125,7 @@ public:
 private:
   // PRIVATE DATA
 
-  MemBufferedStream* pd_mbuf;
+  cdrMemoryStream* pd_mbuf;
   tcParser* pd_parser;
 
   // If the AnyP was created using a void* pointer and TypeCode.

@@ -29,6 +29,9 @@
 
 /* 
    $Log$
+   Revision 1.11.2.3  2000/10/06 16:40:53  sll
+   Changed to use cdrStream.
+
    Revision 1.11.2.2  2000/09/27 17:25:41  sll
    Changed include/omniORB3 to include/omniORB4.
 
@@ -348,8 +351,8 @@ DynAnyImplBase::from_any(const CORBA::Any& value)
   CORBA::TypeCode_var value_tc = value.type();
   if( !value_tc->equivalent(tc()) )  throw CORBA::DynAny::Invalid();
 
-  MemBufferedStream& buf = ((AnyP*)value.NP_pd())->getMemBufferedStream();
-  buf.rewind_in_mkr();
+  cdrMemoryStream& buf = ((AnyP*)value.NP_pd())->getcdrMemoryStream();
+  buf.rewindInputPtr();
 
   if( !copy_from(buf) )  throw CORBA::DynAny::Invalid();
 }
@@ -359,7 +362,7 @@ CORBA::Any*
 DynAnyImplBase::to_any()
 {
   CORBA::Any* a = new CORBA::Any(tc(), 0);
-  MemBufferedStream& buf = ((AnyP*)a->NP_pd())->getMemBufferedStream();
+  cdrMemoryStream& buf = ((AnyP*)a->NP_pd())->getcdrMemoryStream();
 
   // <buf> should already be rewound.
 
@@ -453,9 +456,9 @@ DynAnyImpl::assign(CORBA::DynAny_ptr da)
 
   if( !dai->isValid() )  throw CORBA::DynAny::Invalid();
 
-  dai->pd_buf.rewind_in_mkr();
-  pd_buf.rewind_inout_mkr();
-  pd_buf.copy_from(dai->pd_buf, dai->pd_buf.RdMessageUnRead());
+  dai->pd_buf.rewindInputPtr();
+  pd_buf.rewindPtrs();
+  dai->pd_buf.copy_to(pd_buf,dai->pd_buf.bufSize());
   setValid();
 }
 
@@ -548,7 +551,7 @@ DynAnyImpl::insert_string(const char* value)
   if( maxlen && length - 1 > maxlen )
     throw CORBA::DynAny::InvalidValue();
 
-  MemBufferedStream& buf = doWrite(CORBA::tk_string);
+  cdrMemoryStream& buf = doWrite(CORBA::tk_string);
   length >>= buf;
   buf.put_char_array((const CORBA::Char*)value, length);
 }
@@ -667,7 +670,7 @@ DynAnyImpl::get_double()
 char*
 DynAnyImpl::get_string()
 {
-  MemBufferedStream& buf = doRead(CORBA::tk_string);
+  cdrMemoryStream& buf = doRead(CORBA::tk_string);
 
   CORBA::ULong length;
   CORBA::ULong maxlen = actualTc()->NP_length();
@@ -708,7 +711,7 @@ DynAnyImpl::get_typecode()
 CORBA::Any*
 DynAnyImpl::get_any()
 {
-  MemBufferedStream& buf = doRead(CORBA::tk_any);
+  cdrMemoryStream& buf = doRead(CORBA::tk_any);
 
   CORBA::Any* value = new CORBA::Any();
   *value <<= buf;
@@ -767,7 +770,7 @@ DynAnyImpl::NP_narrow()
 //////////////
 
 int
-DynAnyImpl::copy_to(MemBufferedStream& mbs)
+DynAnyImpl::copy_to(cdrMemoryStream& mbs)
 {
   tcParser tcp(pd_buf, tc());
   try {
@@ -781,7 +784,7 @@ DynAnyImpl::copy_to(MemBufferedStream& mbs)
 
 
 int
-DynAnyImpl::copy_from(MemBufferedStream& mbs)
+DynAnyImpl::copy_from(cdrMemoryStream& mbs)
 {
   tcParser tcp(pd_buf, tc());
   try {
@@ -835,7 +838,7 @@ DynEnumImpl::value_as_string()
   CORBA::ULong val;
   {
     if( !isValid() )  return CORBA::string_dup("");
-    pd_buf.rewind_in_mkr();
+    pd_buf.rewindInputPtr();
     val <<= pd_buf;
   }
 
@@ -853,7 +856,7 @@ DynEnumImpl::value_as_string(const char* value)
   CORBA::Long index = actualTc()->NP_member_index(value);
   if( index < 0 )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
-  pd_buf.rewind_inout_mkr();
+  pd_buf.rewindPtrs();
   CORBA::ULong(index) >>= pd_buf;
   setValid();
 }
@@ -865,7 +868,7 @@ DynEnumImpl::value_as_ulong()
   CORBA::ULong val;
   {
     if( !isValid() )  OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
-    pd_buf.rewind_in_mkr();
+    pd_buf.rewindInputPtr();
     val <<= pd_buf;
   }
 
@@ -882,7 +885,7 @@ DynEnumImpl::value_as_ulong(CORBA::ULong value)
   if( value >= actualTc()->NP_member_count() )
     OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
-  pd_buf.rewind_inout_mkr();
+  pd_buf.rewindPtrs();
   value >>= pd_buf;
   setValid();
 }
@@ -958,7 +961,7 @@ DynAnyConstrBase::assign(CORBA::DynAny_ptr da)
 
   // We do the copy via an intermediate buffer.
 
-  MemBufferedStream buf;
+  cdrMemoryStream buf;
 
   if( !daib->copy_to(buf) )  throw CORBA::DynAny::Invalid();
 
@@ -1047,7 +1050,7 @@ DynAnyConstrBase::insert_string(const char* value)
   if( maxlen && length - 1 > maxlen )
     throw CORBA::DynAny::InvalidValue();
 
-  MemBufferedStream& buf = writeCurrent(CORBA::tk_string);
+  cdrMemoryStream& buf = writeCurrent(CORBA::tk_string);
   length >>= buf;
   buf.put_char_array((const CORBA::Char*)value, length);
 }
@@ -1166,7 +1169,7 @@ DynAnyConstrBase::get_double()
 char*
 DynAnyConstrBase::get_string()
 {
-  MemBufferedStream& buf = readCurrent(CORBA::tk_string);
+  cdrMemoryStream& buf = readCurrent(CORBA::tk_string);
 
   TypeCode_base* tc = (TypeCode_base*)TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
   CORBA::ULong maxlen = tc->NP_length();
@@ -1267,11 +1270,11 @@ DynAnyConstrBase::rewind()
 //////////////
 
 int
-DynAnyConstrBase::copy_to(MemBufferedStream& mbs)
+DynAnyConstrBase::copy_to(cdrMemoryStream& mbs)
 {
   if( pd_n_in_buf != pd_first_in_comp )  return 0;
 
-  pd_buf.rewind_in_mkr();
+  pd_buf.rewindInputPtr();
   pd_read_index = -1;
 
   unsigned i;
@@ -1297,9 +1300,9 @@ DynAnyConstrBase::copy_to(MemBufferedStream& mbs)
 
 
 int
-DynAnyConstrBase::copy_from(MemBufferedStream& mbs)
+DynAnyConstrBase::copy_from(cdrMemoryStream& mbs)
 {
-  pd_buf.rewind_inout_mkr();
+  pd_buf.rewindPtrs();
   pd_read_index = 0;
 
   unsigned i;
@@ -1312,7 +1315,7 @@ DynAnyConstrBase::copy_from(MemBufferedStream& mbs)
     }
   }
   catch(CORBA::MARSHAL&) {
-    pd_buf.rewind_inout_mkr();
+    pd_buf.rewindPtrs();
     pd_n_in_buf = 0;
     pd_n_really_in_buf = 0;
     return 0;
@@ -1425,7 +1428,7 @@ DynAnyConstrBase::seekTo(unsigned n)
 	"DynAnyConstrBase::seekTo() - <n> out of bounds");
   }
 
-  pd_buf.rewind_in_mkr();
+  pd_buf.rewindInputPtr();
 
   for( unsigned i = 0; i < n; i++ ) {
     TypeCode_base* ctc = nthComponentTC(i);
@@ -1460,8 +1463,8 @@ DynAnyConstrBase::component_to_any(unsigned i, CORBA::Any& a)
     return 1;
   }
   else if( i >= pd_first_in_comp ) {
-    MemBufferedStream& buf = ((AnyP*)a.NP_pd())->getMemBufferedStream();
-    buf.rewind_inout_mkr();
+    cdrMemoryStream& buf = ((AnyP*)a.NP_pd())->getcdrMemoryStream();
+    buf.rewindPtrs();
     return pd_components[i]->copy_to(buf);
   }
   else
@@ -1494,8 +1497,8 @@ DynAnyConstrBase::component_from_any(unsigned i, const CORBA::Any& a)
 
   if( i < pd_first_in_comp )  createComponent(i);
 
-  MemBufferedStream& buf = ((AnyP*)a.NP_pd())->getMemBufferedStream();
-  buf.rewind_in_mkr();
+  cdrMemoryStream& buf = ((AnyP*)a.NP_pd())->getcdrMemoryStream();
+  buf.rewindInputPtr();
   return pd_components[i]->copy_from(buf);
 }
 
@@ -1659,7 +1662,7 @@ DynUnionImpl::assign(CORBA::DynAny_ptr da)
 
   // We do the copy via an intermediate buffer.
 
-  MemBufferedStream buf;
+  cdrMemoryStream buf;
 
   if( !daib->copy_to(buf) )  throw CORBA::DynAny::Invalid();
 
@@ -1768,7 +1771,7 @@ DynUnionImpl::insert_string(const char* value)
   if( maxlen && length - 1 > maxlen )
     throw CORBA::DynAny::InvalidValue();
 
-  MemBufferedStream& buf = writeCurrent(CORBA::tk_string);
+  cdrMemoryStream& buf = writeCurrent(CORBA::tk_string);
   length >>= buf;
   buf.put_char_array((const CORBA::Char*)value, length);
   discriminatorHasChanged();
@@ -1891,7 +1894,7 @@ DynUnionImpl::get_double()
 char*
 DynUnionImpl::get_string()
 {
-  MemBufferedStream& buf = readCurrent(CORBA::tk_string);
+  cdrMemoryStream& buf = readCurrent(CORBA::tk_string);
 
   CORBA::ULong maxlen = pd_member->actualTc()->NP_length();
 
@@ -2014,14 +2017,14 @@ DynUnionImpl::set_as_default()
       return 0;
     case TYPECODE_UNION_IMPLICIT_DEFAULT:
       {
-	pd_disc->pd_buf.rewind_in_mkr();
+	pd_disc->pd_buf.rewindInputPtr();
 	TypeCode_union::Discriminator disc_value =
 	  TypeCode_union_helper::unmarshalLabel(pd_disc_type, pd_disc->pd_buf);
 	return actualTc()->NP_index_from_discriminator(disc_value) < 0;
       }
     default:
       {
-	pd_disc->pd_buf.rewind_in_mkr();
+	pd_disc->pd_buf.rewindInputPtr();
 	TypeCode_union::Discriminator disc_value =
 	  TypeCode_union_helper::unmarshalLabel(pd_disc_type, pd_disc->pd_buf);
 	return actualTc()->NP_index_from_discriminator(disc_value) == defaulti;
@@ -2144,7 +2147,7 @@ DynUnionImpl::NP_narrow()
 //////////////
 
 int
-DynUnionImpl::copy_to(MemBufferedStream& mbs)
+DynUnionImpl::copy_to(cdrMemoryStream& mbs)
 {
   if( !pd_disc->copy_to(mbs) )  return 0;
 
@@ -2153,7 +2156,7 @@ DynUnionImpl::copy_to(MemBufferedStream& mbs)
 
 
 int
-DynUnionImpl::copy_from(MemBufferedStream& mbs)
+DynUnionImpl::copy_from(cdrMemoryStream& mbs)
 {
   if( !pd_disc->copy_from(mbs) )  return 0;
 
@@ -2178,7 +2181,7 @@ DynUnionImpl::discriminatorHasChanged()
   // the buffer of the DynAny which it is stored in.
   TypeCode_union::Discriminator newdisc;
   try {
-    pd_disc->pd_buf.rewind_in_mkr();
+    pd_disc->pd_buf.rewindInputPtr();
     newdisc =
       TypeCode_union_helper::unmarshalLabel(pd_disc_type, pd_disc->pd_buf);
   }
@@ -2227,9 +2230,9 @@ DynUnionDisc::assign(CORBA::DynAny_ptr da)
 
   if( !dai->isValid() )  throw CORBA::DynAny::Invalid();
 
-  dai->pd_buf.rewind_in_mkr();
-  pd_buf.rewind_inout_mkr();
-  pd_buf.copy_from(dai->pd_buf, dai->pd_buf.RdMessageUnRead());
+  dai->pd_buf.rewindInputPtr();
+  pd_buf.rewindPtrs();
+  dai->pd_buf.copy_to(pd_buf,dai->pd_buf.bufSize());
   setValid();
 
   if( pd_union )  pd_union->discriminatorHasChanged();
@@ -2443,7 +2446,7 @@ DynUnionEnumDisc::value_as_string()
   CORBA::ULong val;
   {
     if( !isValid() )  return CORBA::string_dup("");
-    pd_buf.rewind_in_mkr();
+    pd_buf.rewindInputPtr();
     val <<= pd_buf;
   }
 
@@ -2461,7 +2464,7 @@ DynUnionEnumDisc::value_as_string(const char* value)
   CORBA::Long index = actualTc()->NP_member_index(value);
   if( index < 0 )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
-  pd_buf.rewind_inout_mkr();
+  pd_buf.rewindPtrs();
   CORBA::ULong(index) >>= pd_buf;
   setValid();
   if( pd_union )  pd_union->discriminatorHasChanged();
@@ -2474,7 +2477,7 @@ DynUnionEnumDisc::value_as_ulong()
   CORBA::ULong val;
   {
     if( !isValid() )  OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
-    pd_buf.rewind_in_mkr();
+    pd_buf.rewindInputPtr();
     val <<= pd_buf;
   }
 
@@ -2491,7 +2494,7 @@ DynUnionEnumDisc::value_as_ulong(CORBA::ULong value)
   if( value >= actualTc()->NP_member_count() )
     OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
-  pd_buf.rewind_inout_mkr();
+  pd_buf.rewindPtrs();
   value >>= pd_buf;
   setValid();
   if( pd_union )  pd_union->discriminatorHasChanged();
@@ -2518,7 +2521,7 @@ DynUnionEnumDisc::NP_narrow()
 void
 DynUnionEnumDisc::set_value(TypeCode_union::Discriminator v)
 {
-  pd_buf.rewind_inout_mkr();
+  pd_buf.rewindPtrs();
   CORBA::ULong(v) >>= pd_buf;
   setValid();
   if( pd_union )  pd_union->discriminatorHasChanged();
@@ -2628,7 +2631,7 @@ DynSequenceImpl::NP_narrow()
 //////////////
 
 int
-DynSequenceImpl::copy_to(MemBufferedStream& mbs)
+DynSequenceImpl::copy_to(cdrMemoryStream& mbs)
 {
   // Write the length of the sequence. This can't fail.
   CORBA::ULong(pd_n_components) >>= mbs;
@@ -2639,7 +2642,7 @@ DynSequenceImpl::copy_to(MemBufferedStream& mbs)
 
 
 int
-DynSequenceImpl::copy_from(MemBufferedStream& mbs)
+DynSequenceImpl::copy_from(cdrMemoryStream& mbs)
 {
   CORBA::ULong len;
   try {

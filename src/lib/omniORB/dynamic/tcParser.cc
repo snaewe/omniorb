@@ -54,8 +54,7 @@
 // ie. if( src_posn % 8 == dst_posn % 8 ) ...
 //  The only interesting question is knowing when to stop ...
 
-template <class ibuf_t, class obuf_t>
-inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
+inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 {
   // This can only be used if both streams have the same
   // byte order.
@@ -70,8 +69,8 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
     switch( alignTbl[i].type ) {
     case TypeCode_alignTable::it_simple:
       // Can copy data across as a block.
-      obuf.copy_from(ibuf, alignTbl[i].simple.size,
-		     alignTbl[i].simple.alignment);
+      ibuf.copy_to(obuf,alignTbl[i].simple.size,
+		   alignTbl[i].simple.alignment);
       break;
 
     case TypeCode_alignTable::it_nasty:
@@ -89,7 +88,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	    CORBA::ULong len;
 	    len <<= ibuf;
 	    len >>= obuf;
-	    obuf.copy_from(ibuf, len);
+	    ibuf.copy_to(obuf,len);
 	    break;
 	  }
 
@@ -104,7 +103,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	    CORBA::ULong len;
 	    len <<= ibuf;
 	    len >>= obuf;
-	    obuf.copy_from(ibuf, len);
+	    ibuf.copy_to(obuf,len);
 	    break;
 	  }
 
@@ -138,7 +137,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	      // Copy as a single block.
 	      CORBA::ULong size_aligned =
 		omni::align_to(eat[0].simple.size, eat[0].simple.alignment);
-	      obuf.copy_from(ibuf, eat[0].simple.size +
+	      ibuf.copy_to(obuf, eat[0].simple.size +
 			     (length - 1) * size_aligned,
 			     eat[0].simple.alignment);
 	    }
@@ -148,8 +147,8 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	      for( unsigned j = 0; j < eat.entries(); j++ ) {
 		start = omni::align_to(start, eat[j].simple.alignment);
 		start += eat[j].simple.size;
-		obuf.copy_from(ibuf, eat[j].simple.size,
-			       eat[j].simple.alignment);
+		ibuf.copy_to(obuf, eat[j].simple.size,
+			     eat[j].simple.alignment);
 	      }
 	      // Calculate the size of subsequent elements ...
 	      CORBA::ULong end = start;
@@ -158,7 +157,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 		end += eat[k].simple.size;
 	      }
 	      // ... then copy the rest as a block.
-	      obuf.copy_from(ibuf, (length - 1) * (end - start));
+	      ibuf.copy_to(obuf, (length - 1) * (end - start));
 	    }
 	    else {
 	      // We can't do better than copying element by element.
@@ -202,8 +201,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 }
 
 
-template <class ibuf_t, class obuf_t>
-inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
+void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 {
   // How to marshal the data depends entirely on the TypeCode
   switch (tc->NP_kind())
@@ -245,7 +243,7 @@ inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	CORBA::ULong len;
 	len <<= ibuf;
 	len >>= obuf;
-	obuf.copy_from(ibuf, len);
+	ibuf.copy_to(obuf,len);
 	return;
       }
 
@@ -260,7 +258,7 @@ inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	CORBA::ULong len;
 	len <<= ibuf;
 	len >>= obuf;
-	obuf.copy_from(ibuf, len);
+	ibuf.copy_to(obuf,len);
 	return;
       }
 
@@ -346,8 +344,7 @@ inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 }
 
 
-template <class buf_t>
-inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
+void skipUsingTC(TypeCode_base* tc, cdrStream& buf)
 {
   CORBA::Char dummy;
   const TypeCode_alignTable& alignTbl = tc->alignmentTable();
@@ -359,8 +356,8 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 
     switch( alignTbl[i].type ) {
     case TypeCode_alignTable::it_simple:
-      buf.get_char_array(&dummy, 0, alignTbl[i].simple.alignment);
-      buf.skip(alignTbl[i].simple.size);
+      buf.alignInput(alignTbl[i].simple.alignment);
+      buf.skipInput(alignTbl[i].simple.size);
       break;
 
     case TypeCode_alignTable::it_nasty:
@@ -378,7 +375,7 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 	  {
 	    CORBA::ULong len;
 	    len <<= buf;
-	    buf.skip(len);
+	    buf.skipInput(len);
 	    break;
 	  }
 
@@ -414,8 +411,8 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 	      // Skip as a single block.
 	      CORBA::ULong size_aligned =
 		omni::align_to(eat[0].simple.size, eat[0].simple.alignment);
-	      buf.get_char_array(&dummy, 0, eat[0].simple.alignment);
-	      buf.skip(eat[0].simple.size + (length - 1) * size_aligned);
+	      buf.alignInput(eat[0].simple.alignment);
+	      buf.skipInput(eat[0].simple.size + (length - 1) * size_aligned);
 	    }
 	    else if( eat.has_only_simple() ) {
 	      // Skip the first element ...
@@ -423,8 +420,8 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 	      for( unsigned j = 0; j < eat.entries(); j++ ) {
 		start = omni::align_to(start, eat[j].simple.alignment);
 		start += eat[j].simple.size;
-		buf.get_char_array(&dummy, 0, eat[j].simple.alignment);
-		buf.skip(eat[j].simple.size);
+		buf.alignInput(eat[j].simple.alignment);
+		buf.skipInput(eat[j].simple.size);
 	      }
 	      // Calculate the size of subsequent elements ...
 	      CORBA::ULong end = start;
@@ -433,7 +430,7 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 		end += eat[k].simple.size;
 	      }
 	      // ... then skip the rest as a block.
-	      buf.skip((length - 1) * (end - start));
+	      buf.skipInput((length - 1) * (end - start));
 	    }
 	    else {
 	      // We can't do better than skipping element by element.
@@ -481,10 +478,10 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 //////////////////////////////////////////////////////////////////////
 
 void
-tcParser::copyTo(MemBufferedStream& mbuf, int rewind)
+tcParser::copyTo(cdrStream& mbuf, int rewind)
 {
-  if( rewind )  pd_mbuf.rewind_in_mkr();
-  if( omni::myByteOrder == pd_mbuf.RdMessageByteOrder() )
+  if( rewind )  pd_mbuf.rewindInputPtr();
+  if( !pd_mbuf.unmarshal_byte_swap() )
     fastCopyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, mbuf);
   else
     copyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, mbuf);
@@ -492,29 +489,18 @@ tcParser::copyTo(MemBufferedStream& mbuf, int rewind)
 
 
 void
-tcParser::copyTo(NetBufferedStream& nbuf, int rewind)
-{
-  if( rewind )  pd_mbuf.rewind_in_mkr();
-  if( omni::myByteOrder == pd_mbuf.RdMessageByteOrder() )
-    fastCopyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, nbuf);
-  else
-    copyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, nbuf);
-}
-
-
-void
 tcParser::copyTo(tcDescriptor& desc, int rewind)
 {
-  if( rewind )  pd_mbuf.rewind_in_mkr();
+  if( rewind )  pd_mbuf.rewindInputPtr();
   fetchItem(ToTcBase_Checked(pd_tc), desc);
 }
 
 
 void
-tcParser::copyFrom(MemBufferedStream& mbuf, int flush)
+tcParser::copyFrom(cdrStream& mbuf, int flush)
 {
-  if( flush )  pd_mbuf.rewind_inout_mkr();
-  if( mbuf.RdMessageByteOrder() == pd_mbuf.RdMessageByteOrder() )
+  if( flush )  pd_mbuf.rewindPtrs();
+  if( mbuf.unmarshal_byte_swap() == pd_mbuf.marshal_byte_swap() )
     fastCopyUsingTC(ToTcBase_Checked(pd_tc), mbuf, pd_mbuf);
   else
     copyUsingTC(ToTcBase_Checked(pd_tc), mbuf, pd_mbuf);
@@ -522,35 +508,10 @@ tcParser::copyFrom(MemBufferedStream& mbuf, int flush)
 
 
 void
-tcParser::copyFrom(NetBufferedStream& nbuf, int flush)
-{
-  if( flush )  pd_mbuf.rewind_inout_mkr();
-  if( nbuf.RdMessageByteOrder() == pd_mbuf.RdMessageByteOrder() )
-    fastCopyUsingTC(ToTcBase_Checked(pd_tc), nbuf, pd_mbuf);
-  else
-    copyUsingTC(ToTcBase_Checked(pd_tc), nbuf, pd_mbuf);
-}
-
-
-void
 tcParser::copyFrom(tcDescriptor& desc, int flush)
 {
-  if( flush )  pd_mbuf.rewind_inout_mkr();
+  if( flush )  pd_mbuf.rewindPtrs();
   appendItem(ToTcBase_Checked(pd_tc), desc);
-}
-
-
-size_t
-tcParser::alignedSize(size_t initialoffset)
-{
-  pd_mbuf.rewind_in_mkr();
-
-  // MemBufferedStreams are 8 byte aligned, so if <initialoffset> is
-  // also 8 byte aligned, we can just use the size of the buffer ...
-  if( (initialoffset & 7) == 0 )
-    return initialoffset + pd_mbuf.RdMessageUnRead();
-  else
-    return calculateItemSize(ToTcBase_Checked(pd_tc), initialoffset);
 }
 
 
@@ -572,25 +533,11 @@ tcParser::replaceTC(CORBA::TypeCode_ptr tc)
 }
 
 void
-tcParser::setTC_and_reset(CORBA::TypeCode_ptr tc)
-{
-  // Clear the buffer & change the typecode
-  pd_mbuf.rewind_inout_mkr();
-  pd_tc = CORBA::TypeCode::_duplicate(tc);
-}
-
-void
-tcParser::skip(MemBufferedStream& mbs, CORBA::TypeCode_ptr tc)
+tcParser::skip(cdrStream& mbs, CORBA::TypeCode_ptr tc)
 {
   skipUsingTC(ToTcBase_Checked(tc), mbs);
 }
 
-
-void
-tcParser::skip(NetBufferedStream& nbs, CORBA::TypeCode_ptr tc)
-{
-  skipUsingTC(ToTcBase_Checked(tc), nbs);
-}
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////// Internal Implementation //////////////////////
@@ -967,15 +914,15 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
   case CORBA::tk_string:
     {
       if(tcdata.p_string.release )
-	omni::freeString(*tcdata.p_string.ptr);
+	_CORBA_String_helper::free(*tcdata.p_string.ptr);
       CORBA::ULong len;
       len <<= pd_mbuf;
       if( len ) {
-	*tcdata.p_string.ptr = omni::allocString(len - 1);
+	*tcdata.p_string.ptr = _CORBA_String_helper::alloc(len - 1);
 	pd_mbuf.get_char_array((unsigned char*) *tcdata.p_string.ptr, len);
       }
       else {
-	*tcdata.p_string.ptr = (char*) omni::empty_string;
+	*tcdata.p_string.ptr = (char*) _CORBA_String_helper::empty_string;
       }
       break;
     }
@@ -1172,167 +1119,6 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 }
 
 
-size_t
-tcParser::calculateItemSize(const TypeCode_base*tc, size_t offset)
-{
-  CORBA::Char dummy;
-  const TypeCode_alignTable& alignTbl = tc->alignmentTable();
-  unsigned at_i = 0;  // don't even ask ... just accept it.
-
-  OMNIORB_ASSERT(alignTbl.entries() > 0);
-
-  for( at_i = 0; at_i < alignTbl.entries(); at_i++ ) {
-
-    switch( alignTbl[at_i].type ) {
-    case TypeCode_alignTable::it_simple:
-      offset = omni::align_to(offset, alignTbl[at_i].simple.alignment) +
-	alignTbl[at_i].simple.size;
-      pd_mbuf.get_char_array(&dummy, 0, alignTbl[at_i].simple.alignment);
-      pd_mbuf.skip(alignTbl[at_i].simple.size);
-      break;
-
-    case TypeCode_alignTable::it_nasty:
-      {
-	tc = alignTbl[at_i].nasty.tc;
-
-	switch( tc->NP_kind() ) {
-
-	  //?? Some of these could be faster (Any, TypeCode, objref ...)
-	case CORBA::tk_any:
-	  {
-	    CORBA::Any tmp;
-	    tmp <<= pd_mbuf;
-	    offset = tmp._NP_alignedSize(offset);
-	    break;
-	  }
-
-	case CORBA::tk_Principal:
-	case CORBA::tk_string:
-	  {
-	    CORBA::ULong len;
-	    len <<= pd_mbuf;
-	    pd_mbuf.skip(len);
-	    offset = omni::align_to(offset, omni::ALIGN_4) + 4 + len;
-	    break;
-	  }
-
-	case CORBA::tk_objref:
-	  {
-	    CORBA::Object_Member tmp;
-	    tmp <<= pd_mbuf;
-	    offset = tmp._NP_alignedSize(offset);
-	    break;
-	  }
-
-	case CORBA::tk_TypeCode:
-	  {
-	    CORBA::TypeCode_member tmp;
-	    tmp <<= pd_mbuf;
-	    offset = tmp._NP_alignedSize(offset);
-	    break;
-	  }
-
-	case CORBA::tk_union:
-	  {
-	    // Fetch the discriminator value.
-	    TypeCode_base* discrimTC = tc->NP_discriminator_type();
-	    TypeCode_union::Discriminator discrim =
-	      TypeCode_union_helper::unmarshalLabel(discrimTC, pd_mbuf);
-
-	    offset = TypeCode_union_helper::labelAlignedSize(offset,
-							     discrimTC);
-
-	    // Skip the value, using the type for the selected member.
-	    CORBA::Long index =
-	      ((TypeCode_union*)tc)->NP_index_from_discriminator(discrim);
-	    if( index >= 0 )
-	      offset = calculateItemSize(tc->NP_member_type(index), offset);
-	    else
-	      ; // Implicit default -- so no member.
-	    break;
-	  }
-
-	case CORBA::tk_sequence:
-	  {
-	    CORBA::ULong length; length <<= pd_mbuf;
-	    offset = omni::align_to(offset, omni::ALIGN_4) + 4;
-	    if( !length )  break;
-
-	    TypeCode_base* elem_tc = tc->NP_content_type();
-	    const TypeCode_alignTable& eat = elem_tc->alignmentTable();
-
-	    if( eat.is_simple() ) {
-	      // Skip as a single block.
-	      CORBA::ULong size_aligned =
-		omni::align_to(eat[0].simple.size, eat[0].simple.alignment);
-	      pd_mbuf.get_char_array(&dummy, 0, eat[0].simple.alignment);
-	      pd_mbuf.skip(eat[0].simple.size + (length - 1) * size_aligned);
-	      offset = omni::align_to(offset, eat[0].simple.alignment);
-	      offset += eat[0].simple.size + (length - 1) * size_aligned;
-	    }
-	    else if( eat.has_only_simple() ) {
-	      // Skip the first element ...
-	      CORBA::ULong start = 0;
-	      for( unsigned j = 0; j < eat.entries(); j++ ) {
-		start = omni::align_to(start, eat[j].simple.alignment);
-		start += eat[j].simple.size;
-		pd_mbuf.get_char_array(&dummy, 0, eat[j].simple.alignment);
-		pd_mbuf.skip(eat[j].simple.size);
-		offset = omni::align_to(offset, eat[j].simple.alignment);
-		offset += eat[j].simple.size;
-	      }
-	      // Calculate the size of subsequent elements ...
-	      CORBA::ULong end = start;
-	      for( unsigned k = 0; k < eat.entries(); k++ ) {
-		end = omni::align_to(end, eat[k].simple.alignment);
-		end += eat[k].simple.size;
-	      }
-	      // ... then skip the rest as a block.
-	      pd_mbuf.skip((length - 1) * (end - start));
-	      offset += (length - 1) * (end - start);
-	    }
-	    else {
-	      // We can't do better than skipping element by element.
-	      for( CORBA::ULong j = 0; j < length; j++ )
-		offset = calculateItemSize(elem_tc, offset);
-	    }
-
-	    break;
-	  }
-
-	case CORBA::tk_array:
-	  {
-	    // If element type is_simple(), or has_only_simple()
-	    // then it will have been dealt with above. We only
-	    // get here if the best we can do is to copy element
-	    // by element.
-
-	    CORBA::ULong length = tc->NP_length();
-	    TypeCode_base* elemTC = tc->NP_content_type();
-
-	    for( CORBA::ULong j = 0; j < length; j++ )
-	      offset = calculateItemSize(elemTC, offset);
-
-	    break;
-	  }
-
-	case CORBA::tk_alias:
-	  offset = calculateItemSize(tc->NP_content_type(), offset);
-	  break;
-
-	default:
-	  OMNIORB_ASSERT(0);
-	}
-	break;
-      }
-
-    default:
-      OMNIORB_ASSERT(0);
-    }
-  }
-
-  return offset;
-}
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////// Data Descriptor Functions /////////////////////
