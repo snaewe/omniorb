@@ -1,3 +1,71 @@
+Wed May 24 18:30:11 BST 2000 dpg1
+=================================
+
+- Rename IIOP::DEFAULT_PORT to IIOP::DEFAULT_CORBALOC_PORT
+
+include/omniORB3/IIOP.h
+src/lib/omniORB2/orbcore/constants.cc
+src/lib/omniORB2/orbcore/uri.cc
+
+- Clarify comments
+
+include/omniORB3/omniORB.h
+
+- Add documented but non-existent -ORBobjectTableSize and
+  -ORBno_bootstrap_agent arguments
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+- Fix const-correctness in error reporting functions
+
+src/lib/omniORB2/orbcore/initFile.cc
+src/lib/omniORB2/orbcore/initFile.h
+
+- omniNames now creates a forwarding agent with object key
+  `NameService' if the root context doesn't already have that key.
+
+src/appl/omniNames/INSMapper.h -- new
+src/appl/omniNames/log.cc
+src/appl/omniNames/omniNames.cc
+
+- References to omniORB 2 manual removed from comments
+
+src/examples/echo/eg3_impl.cc
+src/examples/echo/eg3_clt.cc
+src/examples/echo/eg2_impl.cc
+src/examples/echo/eg2_clt.cc
+src/examples/echo/eg1.cc
+src/examples/anyExample/anyExample_impl.cc
+src/examples/anyExample/anyExample_clt.cc
+src/examples/anyExample/anyExample.idl
+
+- Added omniMapper.
+
+src/appl/omniMapper/omniMapper.cc               -- new
+src/appl/omniMapper/dir.mk                      -- new
+src/appl/dir.mk
+external_merge/src/appl/omniMapper/GNUmakefile  -- new
+
+- Minor omniidl usage message fix.
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+
+- Add draft omniORB 3 manual; remove omniORB 2 manual.
+
+doc/tex/omniORB.bib              -- new
+doc/tex/omniORB.tex              -- new
+doc/tex/omniORB2.tex             -- removed
+external_merge/doc/omniORB.pdf   -- new
+external_merge/doc/omniORB.ps    -- new
+external_merge/doc/omniORB2.dvi  -- removed
+external_merge/doc/omniORB2.pdf  -- removed
+external_merge/doc/omniORB2.ps   -- removed
+external_merge/doc/omniORB2.tex  -- removed
+external_merge/doc/omniORB/*     -- new
+external_merge/doc/omniORB2/*    -- removed
+
+
+
 Thu May 18 16:45:00 BST 2000 djs
 ================================
 
