@@ -555,6 +555,7 @@ omniNameslog::create(const PortableServer::ObjectId& id)
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
+      logf.clear();
       throw CORBA::PERSIST_STORE();
     }
     checkpointNeeded = 1;
@@ -571,6 +572,7 @@ omniNameslog::destroy(CosNaming::NamingContext_ptr nc)
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
+      logf.clear();
       throw CORBA::PERSIST_STORE();
     }
     checkpointNeeded = 1;
@@ -588,6 +590,7 @@ omniNameslog::bind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
+      logf.clear();
       throw CORBA::PERSIST_STORE();
     }
     checkpointNeeded = 1;
@@ -604,6 +607,7 @@ omniNameslog::unbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n)
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
+      logf.clear();
       throw CORBA::PERSIST_STORE();
     }
     checkpointNeeded = 1;
