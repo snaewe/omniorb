@@ -4,14 +4,13 @@ include ../libdefs.mk
 # Generate BOA skeleton
 DIR_IDLFLAGS += -WbBOA
 
-# Look for .idl files in <top>/idl plus ../../idl
-vpath %.idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../../idl)
+# Look for .idl files in <top>/idl
+vpath %.idl $(IMPORT_TREES:%=%/idl/COS)
 
-DIR_IDLFLAGS += -I. $(patsubst %,-I%/../../idl,$(VPATH)) \
-                   $(patsubst %,-I%/idl,$(IMPORT_TREES))
+DIR_IDLFLAGS += -I. $(patsubst %,-I%/idl/COS,$(IMPORT_TREES))
 
 
-COS_SKLIB_NAME    = COS_BOA
+COS_SKLIB_NAME    = COSBOA
 
 COS_SK_OBJS = $(COS_INTERFACES:%=%SK.o)
 COS_SK_SRCS = $(COS_INTERFACES:%=%SK.cc)
@@ -21,7 +20,7 @@ all:: mkstatic mkshared
 
 export:: mkstatic mkshared
 
-export:: $(COS_INTERFACES:%=%.hh)
+export:: $(COS_INTERFACES:%=%.hh) COS_sysdep.h
 	@(for i in $^; do \
             file="$$i"; \
             dir="$(EXPORT_TREE)/$(INCDIR)/COS/BOA"; \
@@ -40,6 +39,8 @@ version  := $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 
 sk = static/$(patsubst %,$(LibNoDebugPattern),$(COS_SKLIB_NAME)$(version))
 
+MDFLAGS += -p static/
+
 mkstatic::
 	@(dir=static; $(CreateDir))
 
@@ -55,11 +56,6 @@ clean::
 	$(RM) static/*.o
 	$(RM) $(sk)
 
-veryclean::
-	$(RM) static/*.o
-	$(RM) $(sk)
-
-
 ##############################################################################
 # Build Shared library
 ##############################################################################
@@ -70,13 +66,23 @@ sharedversion = $(OMNIORB_VERSION)
 sknamespec    = $(subst ., ,$(COS_SKLIB_NAME).$(sharedversion))
 skshared      = shared/$(shell $(SharedLibraryFullName) $(sknamespec))
 
+MDFLAGS += -p shared/
+
+ifdef Win32Platform
+# in case of Win32 lossage:
+imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
+         $(OMNIORB_LIB))
+else
+imps := $(OMNIORB_LIB)
+endif
+
 mkshared::
 	@(dir=shared; $(CreateDir))
 
 mkshared:: $(skshared)
 
 $(skshared): $(patsubst %, shared/%, $(COS_SK_OBJS))
-	@(namespec="$(sknamespec)" extralibs="$(OMNIORB_LIB)"; \
+	@(namespec="$(sknamespec)" extralibs="$(imps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshared)
@@ -86,10 +92,6 @@ export:: $(skshared)
 clean::
 	$(RM) shared/*.o
 	(dir=shared; $(CleanSharedLibrary))
-
-veryclean::
-	$(RM) shared/*.o
-	@(dir=shared; $(CleanSharedLibrary))
 
 endif
 
@@ -109,6 +111,8 @@ dbugversion = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 
 skdbug = debug/$(patsubst %,$(LibDebugPattern),$(COS_SKLIB_NAME)$(dbugversion))
 
+MDFLAGS += -p debug/
+
 mkstaticdbug::
 	@(dir=debug; $(CreateDir))
 
@@ -124,10 +128,6 @@ clean::
 	$(RM) debug/*.o
 	$(RM) $(skdbug)
 
-veryclean::
-	$(RM) debug/*.o
-	$(RM) $(skdbug)
-
 #####################################################
 #      DLL debug libraries
 #####################################################
@@ -136,13 +136,18 @@ shareddbugversion = $(OMNIORB_VERSION)
 sknamespec      = $(subst ., ,$(COS_SKLIB_NAME).$(shareddbugversion))
 skshareddbug    = shareddebug/$(shell $(SharedLibraryDebugFullName) $(sknamespec))
 
+MDFLAGS += -p shareddebug/
+
+dbugimps  := $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), \
+               $(OMNIORB_LIB))
+
 mkshareddbug::
 	@(dir=shareddebug; $(CreateDir))
 
 mkshareddbug:: $(skshareddbug)
 
 $(skshareddbug): $(patsubst %, shareddebug/%, $(COS_SK_OBJS))
-	(namespec="$(sknamespec)" debug=1 extralibs="$(OMNIORB_LIB)"; \
+	(namespec="$(sknamespec)" debug=1 extralibs="$(dbugimps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshareddbug)
@@ -150,10 +155,6 @@ export:: $(skshareddbug)
          $(ExportSharedLibrary))
 
 clean::
-	$(RM) shareddebug/*.o
-	@(dir=shareddebug; $(CleanSharedLibrary))
-
-veryclean::
 	$(RM) shareddebug/*.o
 	@(dir=shareddebug; $(CleanSharedLibrary))
 

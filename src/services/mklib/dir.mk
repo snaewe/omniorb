@@ -1,11 +1,10 @@
 include cosinterfaces.mk
 include libdefs.mk
 
-# Look for .idl files in <top>/idl plus ../idl
-vpath %.idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../idl)
+# Look for .idl files in <top>/idl
+vpath %.idl $(IMPORT_TREES:%=%/idl/COS)
 
-DIR_IDLFLAGS += -I. $(patsubst %,-I%/../idl,$(VPATH)) \
-                   $(patsubst %,-I%/idl,$(IMPORT_TREES))
+DIR_IDLFLAGS +=  -I. $(patsubst %,-I%/idl/COS,$(IMPORT_TREES))
 
 COS_SKLIB_NAME    = COS
 COS_DYNSKLIB_NAME = COSDynamic
@@ -22,7 +21,7 @@ all:: mkstatic mkshared
 
 export:: mkstatic mkshared
 
-export:: $(COS_INTERFACES:%=%.hh)
+export:: $(COS_INTERFACES:%=%.hh) COS_sysdep.h
 	@(for i in $^; do \
             file="$$i"; \
             dir="$(EXPORT_TREE)/$(INCDIR)/COS"; \
@@ -33,6 +32,7 @@ veryclean::
 	$(RM) $(COS_INTERFACES:%=%SK.cc) $(COS_INTERFACES:%=%DynSK.cc) \
               $(COS_INTERFACES:%=%.hh)
 
+
 ##############################################################################
 # Build Static library
 ##############################################################################
@@ -41,6 +41,7 @@ version  := $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 
 sk = static/$(patsubst %,$(LibNoDebugPattern),$(COS_SKLIB_NAME)$(version))
 dynsk = static/$(patsubst %,$(LibNoDebugPattern),$(COS_DYNSKLIB_NAME)$(version))
+MDFLAGS += -p static/
 
 mkstatic::
 	@(dir=static; $(CreateDir))
@@ -63,11 +64,6 @@ clean::
 	$(RM) static/*.o
 	$(RM) $(sk) $(dynsk)
 
-veryclean::
-	$(RM) static/*.o
-	$(RM) $(sk) $(dysk)
-
-
 ##############################################################################
 # Build Shared library
 ##############################################################################
@@ -81,17 +77,28 @@ skshared      = shared/$(shell $(SharedLibraryFullName) $(sknamespec))
 dynsknamespec = $(subst ., ,$(COS_DYNSKLIB_NAME).$(sharedversion))
 dynskshared   = shared/$(shell $(SharedLibraryFullName) $(dynsknamespec))
 
+MDFLAGS += -p shared/
+
+ifdef Win32Platform
+# in case of Win32 lossage:
+imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
+         $(OMNIORB_LIB))
+else
+imps := $(OMNIORB_LIB)
+endif
+
+
 mkshared::
 	@(dir=shared; $(CreateDir))
 
 mkshared:: $(skshared) $(dynskshared) 
 
 $(skshared): $(patsubst %, shared/%, $(COS_SK_OBJS))
-	@(namespec="$(sknamespec)" extralibs="$(OMNIORB_LIB)"; \
+	@(namespec="$(sknamespec)" extralibs="$(imps)"; \
          $(MakeCXXSharedLibrary))
 
 $(dynskshared): $(patsubst %, shared/%, $(COS_DYNSK_OBJS))
-	@(namespec="$(dynsknamespec)" extralibs="$(skshared) $(OMNIORB_LIB)"; \
+	@(namespec="$(dynsknamespec)" extralibs="$(skshared) $(imps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshared)
@@ -105,10 +112,6 @@ export:: $(dynskshared)
 clean::
 	$(RM) shared/*.o
 	(dir=shared; $(CleanSharedLibrary))
-
-veryclean::
-	$(RM) shared/*.o
-	@(dir=shared; $(CleanSharedLibrary))
 
 endif
 
@@ -128,6 +131,8 @@ dbugversion = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 
 skdbug = debug/$(patsubst %,$(LibDebugPattern),$(COS_SKLIB_NAME)$(dbugversion))
 dynskdbug = debug/$(patsubst %,$(LibDebugPattern),$(COS_DYNSKLIB_NAME)$(dbugversion))
+
+MDFLAGS += -p debug/
 
 mkstaticdbug::
 	@(dir=debug; $(CreateDir))
@@ -150,10 +155,6 @@ clean::
 	$(RM) debug/*.o
 	$(RM) $(skdbug) $(dynskdbug)
 
-veryclean::
-	$(RM) debug/*.o
-	$(RM) $(skdbug) $(dyskdbug)
-
 #####################################################
 #      DLL debug libraries
 #####################################################
@@ -165,17 +166,22 @@ skshareddbug    = shareddebug/$(shell $(SharedLibraryDebugFullName) $(sknamespec
 dynsknamespec   = $(subst ., ,$(COS_DYNSKLIB_NAME).$(shareddbugversion))
 dynskshareddbug = shareddebug/$(shell $(SharedLibraryDebugFullName) $(dynsknamespec))
 
+dbugimps  := $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), \
+               $(OMNIORB_LIB))
+
+MDFLAGS += -p shareddebug/
+
 mkshareddbug::
 	@(dir=shareddebug; $(CreateDir))
 
 mkshareddbug:: $(skshareddbug) $(dynskshareddbug) 
 
 $(skshareddbug): $(patsubst %, shareddebug/%, $(COS_SK_OBJS))
-	(namespec="$(sknamespec)" debug=1 extralibs="$(OMNIORB_LIB)"; \
+	(namespec="$(sknamespec)" debug=1 extralibs="$(dbugimps)"; \
          $(MakeCXXSharedLibrary))
 
 $(dynskshareddbug): $(patsubst %, shareddebug/%, $(COS_DYNSK_OBJS))
-	@(namespec="$(dynsknamespec)" debug=1 extralibs="$(skshareddbug) $(OMNIORB_LIB)"; \
+	@(namespec="$(dynsknamespec)" debug=1 extralibs="$(skshareddbug) $(dbugimps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshareddbug)
@@ -190,10 +196,6 @@ clean::
 	$(RM) shareddebug/*.o
 	@(dir=shareddebug; $(CleanSharedLibrary))
 
-veryclean::
-	$(RM) shareddebug/*.o
-	@(dir=shareddebug; $(CleanSharedLibrary))
-
 endif
 
 ##############################################################################
@@ -202,13 +204,8 @@ endif
 SUBDIRS = mkBOAlib
 
 all::
-	@(subdirs="$(SUBDIRS)"; target="export"; $(MakeSubdirs))
+	@$(MakeSubdirs)
 
 export::
-	@(subdirs="$(SUBDIRS)"; target="export"; $(MakeSubdirs))
+	@$(MakeSubdirs)
 
-clean::
-	@(subdirs="$(SUBDIRS)"; target="clean"; $(MakeSubdirs))
-
-veryclean::
-	@(subdirs="$(SUBDIRS)"; target="veryclean"; $(MakeSubdirs))

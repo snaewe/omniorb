@@ -5,7 +5,12 @@
 
 #include <iostream.h>
 #include "corba_wrappers.h"
-#include "CosNotifyComm.hh"
+
+#ifndef COS_USES_BOA
+#include "COS/CosNotifyComm.hh"
+#else
+#include "COS/BOA/CosNotifyComm.hh"
+#endif
 
 // ------------------------------------------------------------- //
 // Here, we define the implementation of the client skeletons so //

@@ -69,7 +69,10 @@ COS_NFY_INT = \
   CosNotifyFilter \
   CosNotifyChannelAdmin \
   CosTypedNotifyComm \
-  CosTypedNotifyChannelAdmin
+  CosTypedNotifyChannelAdmin \
+  AttNotifyChannelAdmin
+# Note: AttNotifyChannelAdmin defines non-standard extenions
+# to the CosNotifyChannelAdmin interface
 
 # Interfaces for Relationships
 COS_REL_INT = \
@@ -122,11 +125,16 @@ COS_EXT_INT = \
   CosExternalizationContainment \
   CosExternalizationReference
 
+# Interfaces for LifeCycle basic
+#  DEPENDS_ON:  CosNaming
+COS_LCB_INT = \
+   CosLifeCycle
+
 # Interfaces for LifeCycle
 #  DEPENDS_ON:  CosNaming
 #  DEPENDS_ON:  several interfaces in COS_REL_INT
 COS_LIF_INT = \
-  CosLifeCycle \
+  $(COS_LCB_INT) \
   CosCompoundLifeCycle \
   CosLifeCycleReference \
   CosLifeCycleContainment \

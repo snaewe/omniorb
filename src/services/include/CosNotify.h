@@ -7,14 +7,22 @@
 // x of module M (we use M_x instead).  This is needed to deal with
 // compilers that do not support namespaces. 
 
-#ifndef _COS_NOTIFY_SHORTHANDS_H_
-#define _COS_NOTIFY_SHORTHANDS_H_
+#ifndef _COS_NOTIFY_H_
+#define _COS_NOTIFY_H_
 
-#include "TimeBase.hh"
-#include "CosNotification.hh"
-#include "CosNotifyComm.hh"
-#include "CosNotifyChannelAdmin.hh"
-#include "CosNotifyFilter.hh"
+#ifndef COS_USES_BOA
+#include "COS/TimeBase.hh"
+#include "COS/CosNotification.hh"
+#include "COS/CosNotifyComm.hh"
+#include "COS/CosNotifyChannelAdmin.hh"
+#include "COS/CosNotifyFilter.hh"
+#else
+#include "COS/BOA/TimeBase.hh"
+#include "COS/BOA/CosNotification.hh"
+#include "COS/BOA/CosNotifyComm.hh"
+#include "COS/BOA/CosNotifyChannelAdmin.hh"
+#include "COS/BOA/CosNotifyFilter.hh"
+#endif
 
 #define CosN   CosNotification
 #define CosNC  CosNotifyComm

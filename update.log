@@ -1,3 +1,19 @@
+Mon Aug 21 13:51:41 BST 2000 sll
+================================
+
+- merged omni3_develop to build COS stub library.
+
+idl/COS/*.idl (NEW)
+src/services/idl/* (REMOVED)
+
+src/dir.mk
+src/services/include/CosNotify.h
+src/services/include/CosNotifyComm_i.h
+src/services/mklib/cosinterfaces.mk
+src/services/mklib/dir.mk
+src/services/mklib/libdefs.mk
+src/services/mklib/mkBOAlib/dir.mk
+
 Mon Aug 21 12:29:33 BST 2000 djs
 ================================
 
@@ -81,6 +97,7 @@ idl/omniMessaging.idl					(NEW)
 idl/Pollablle.idl					(NEW)
 
 -   Runtime modifications (new exceptions, new call descriptor type, etc)
+
 
 include/queue.h
 include/omniORB3/CORBA.h
