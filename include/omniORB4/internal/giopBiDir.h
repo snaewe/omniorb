@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2005/01/29 17:25:03  dgrisby
+  Memory leaks in bidir connection management.
+
   Revision 1.1.2.3  2002/01/02 18:15:41  dpg1
   Platform fixes/additions.
 
@@ -113,6 +116,8 @@ class BiDirServerRope : public giopRope {
   // All ropes created by addRope are linked together by this list.
 
   virtual void decrRefCount();
+
+  virtual ~BiDirServerRope();
 
  protected:
   virtual void realIncrRefCount();

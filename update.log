@@ -1,3 +1,12 @@
+Sat Jan 29 17:23:44 GMT 2005 dgrisby
+====================================
+
+- Memory leaks in bidir connection management.
+
+include/omniORB4/internal/giopBiDir.h
+src/lib/omniORB/orbcore/giopBiDir.cc
+
+
 Mon Jan 24 18:09:02 GMT 2005 dgrisby
 ====================================
 
