@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7.2.4  2000/06/05 18:12:25  dpg1
+// Support for __omni_pragma
+//
 // Revision 1.7.2.3  2000/04/26 09:55:48  dpg1
 // cccp escapes characters like \ in line directives, so
 // parseLineDirective() needs to use escapedStringToString().
@@ -103,6 +106,7 @@ int fixed(char* s);
 %x comment
 %s known_pragma
 %x unknown_pragma
+%x omni_pragma
 
 WS          [ \t\v\n\f\r]
 SPACE       [ \t]
@@ -347,6 +351,26 @@ L{STR} {
 <comment>"*"+[^*/\n]* { Comment::append(yytext); }
 <comment>\n           { Comment::append(yytext); }
 <comment>"*"+"/"      { Comment::append(yytext); BEGIN(INITIAL); }
+
+"__omni_pragma"{WS}+ {
+  BEGIN(omni_pragma);
+  return PRAGMA;
+}
+
+<omni_pragma>{WS}+"__omni_endpragma" {
+  BEGIN(INITIAL);
+  return END_PRAGMA;
+}
+
+<omni_pragma>[^ \t\v\n\f\r]+ {
+  yylval.string_val = idl_strdup(yytext);
+  return UNKNOWN_PRAGMA_BODY;
+}
+<omni_pragma>{WS}+ {
+  yylval.string_val = idl_strdup(yytext);
+  return UNKNOWN_PRAGMA_BODY;
+}
+
 
 ^{SPACE}*#{SPACE}*pragma{SPACE}*prefix{SPACE}* {
   BEGIN(known_pragma);
