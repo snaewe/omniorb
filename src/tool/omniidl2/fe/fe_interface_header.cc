@@ -72,8 +72,11 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include	<idl.hh>
 #include	<idl_extern.hh>
-
 #include	<fe_private.hh>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 /*
  * Constructor(s) and destructor

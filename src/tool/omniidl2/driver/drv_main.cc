@@ -73,14 +73,17 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 ** 4. Otherwise, for the single file, invoke DRV_drive
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-
 #include	<idl.hh>
 #include	<idl_extern.hh>
-
 #include	<drv_private.hh>
 #include    <drv_link.hh>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
+#include <stdlib.h>
+#include <stdio.h>
 
 #if defined(__VMS) && __VMS_VER < 70000000
 #include <omniVms/unlink.hxx>

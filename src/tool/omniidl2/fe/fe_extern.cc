@@ -65,16 +65,20 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 /*
  * fe_extern.cc - export FE interfaces to driver
  */
+
+#include	<idl.hh>
+#include	<idl_extern.hh>
+#include	<fe_private.hh>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <stdio.h>
 
 #ifdef __WIN32__
 #include <io.h>
 #endif
-
-#include	<idl.hh>
-#include	<idl_extern.hh>
-
-#include	<fe_private.hh>
 
 #include 	<utl_error.hh>
 #include	<utl_indenter.hh>

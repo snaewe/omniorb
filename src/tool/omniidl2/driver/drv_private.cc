@@ -66,8 +66,12 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include	<idl.hh>
 #include	<idl_extern.hh>
-
 #include	<drv_private.hh>
+#include        <drv_link.hh>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 // Storage for file names
 

@@ -73,9 +73,12 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include	<idl.hh>
 #include	<idl_extern.hh>
-
 #include	<drv_private.hh>
 #include        <drv_link.hh>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 DRV_PF_FE_init_stage1   DRV_FE_init_stage1;
 DRV_PF_FE_init_stage2   DRV_FE_init_stage2;

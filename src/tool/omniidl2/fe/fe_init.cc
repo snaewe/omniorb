@@ -79,8 +79,12 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include	<idl.hh>
 #include	<idl_extern.hh>
-
 #include	<fe_private.hh>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include        <../omniORB2_be/o2be.h>
 /*
  * Create a scoped name
