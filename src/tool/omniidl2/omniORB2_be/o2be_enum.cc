@@ -11,6 +11,10 @@
 
 /*
   $Log$
+  Revision 1.2  1997/01/13 15:42:16  sll
+  New member function produce_typdef_hdr(). It is called when a typedef
+  declaration is encountered.
+
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -123,6 +127,13 @@ o2be_enum::produce_skel(fstream &s)
 {
   return;
 }
+
+void
+o2be_enum::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
+{
+  IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
+}
+
 
 // Narrowing
 IMPL_NARROW_METHODS1(o2be_enum, AST_Enum)
