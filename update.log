@@ -1,3 +1,11 @@
+Tue Sep 25 10:56:01 BST 2001 dpg1
+=================================
+
+- Obey omniORB::verifyObjectExistsAndType in DII.
+
+src/lib/omniORB2/dynamic/request.cc
+
+
 Thu Aug 30 10:13:19 BST 2001 dpg1
 =================================
 

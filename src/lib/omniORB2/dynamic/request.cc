@@ -341,7 +341,8 @@ RequestImpl::invoke()
 #else
     while(1) {
 #endif
-      o->_assertExistsAndTypeVerified();
+      if (omniORB::verifyObjectExistsAndType)
+	o->_assertExistsAndTypeVerified();
 
       try{
 
@@ -548,7 +549,8 @@ RequestImpl::send_oneway()
 #else
     while(1) {
 #endif
-      o->_assertExistsAndTypeVerified();
+      if (omniORB::verifyObjectExistsAndType)
+	o->_assertExistsAndTypeVerified();
 
       try{
 
