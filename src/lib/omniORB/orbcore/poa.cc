@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 18:02:56  sll
+  Updated to use the new cdrStream abstraction.
+
   Revision 1.2.2.1  2000/07/17 10:35:56  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -111,15 +114,14 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
 #include <poaimpl.h>
-#include <omniORB3/omniObjRef.h>
-#include <omniORB3/callDescriptor.h>
+#include <omniORB4/callDescriptor.h>
 #include <localIdentity.h>
 #include <poamanager.h>
 #include <exceptiondefs.h>
@@ -313,33 +315,14 @@ PortableServer::POA::InvalidPolicy& PortableServer::POA::InvalidPolicy::operator
   return *this;
 }
 
-size_t
-PortableServer::POA::InvalidPolicy::_NP_alignedSize(size_t _msgsize) const
-{
-  _msgsize = omni::align_to(_msgsize, omni::ALIGN_2) + 2;
-  return _msgsize;
-}
-
 void
-PortableServer::POA::InvalidPolicy::operator>>= (NetBufferedStream& _n) const
+PortableServer::POA::InvalidPolicy::operator>>= (cdrStream& _n) const
 {
   index >>= _n;
 }
 
 void
-PortableServer::POA::InvalidPolicy::operator<<= (NetBufferedStream& _n)
-{
-  index <<= _n;
-}
-
-void
-PortableServer::POA::InvalidPolicy::operator>>= (MemBufferedStream& _n) const
-{
-  index >>= _n;
-}
-
-void
-PortableServer::POA::InvalidPolicy::operator<<= (MemBufferedStream& _n)
+PortableServer::POA::InvalidPolicy::operator<<= (cdrStream& _n)
 {
   index <<= _n;
 }
@@ -894,8 +877,7 @@ omniOrbPOA::create_reference(const char* intf)
   pd_lock.unlock();
 
   id = omni::locateIdentity(key.key(), key.size(), hash, 1);
-  omniObjRef* objref = omni::createObjRef(intf, CORBA::Object::_PD_repoId,
-					  id, 0, 0, key.return_key());
+  omniObjRef* objref = omni::createObjRef(intf, CORBA::Object::_PD_repoId,id);
   omni::internalLock->unlock();
 
   OMNIORB_ASSERT(objref);
@@ -920,8 +902,7 @@ omniOrbPOA::create_reference_with_id(const PortableServer::ObjectId& oid,
   omni::internalLock->lock();
 
   omniLocalIdentity* id = omni::locateIdentity(key.key(), key.size(), hash, 1);
-  omniObjRef* objref = omni::createObjRef(intf, CORBA::Object::_PD_repoId,
-					  id, 0, 0, key.return_key());
+  omniObjRef* objref = omni::createObjRef(intf, CORBA::Object::_PD_repoId,id);
   omni::internalLock->unlock();
 
   OMNIORB_ASSERT(objref);
@@ -1210,8 +1191,7 @@ omniOrbPOA::id_to_reference(const PortableServer::ObjectId& oid)
   }
 
   omniObjRef* objref = omni::createObjRef(id->servant()->_mostDerivedRepoId(),
-					  CORBA::Object::_PD_repoId, id,
-					  0, 0, key.return_key());
+					  CORBA::Object::_PD_repoId, id);
   omni::internalLock->unlock();
   OMNIORB_ASSERT(objref);
 
@@ -1319,7 +1299,7 @@ omniOrbPOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
-    l << "Dispatching remote call \'" << giop_s.operation() << "\' to: "
+    l << "Dispatching remote call \'" << giop_s.invokeInfo().operation() << "\' to: "
       << id << '\n';
   }
 
@@ -1491,7 +1471,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
     pd_parent = theRootPOA;
 
     int fnlen   = strlen(pd_parent->pd_fullname) + strlen(name) + 1;
-    pd_fullname = omni::allocString(fnlen);
+    pd_fullname = _CORBA_String_helper::alloc(fnlen);
     strcpy(pd_fullname, pd_parent->pd_fullname);
     strcat(pd_fullname, POA_NAME_SEP_STR);
     strcat(pd_fullname, name);
@@ -1501,14 +1481,14 @@ omniOrbPOA::omniOrbPOA(const char* name,
   }
   else if( pd_parent ) {
     int fnlen = strlen(parent->pd_fullname) + strlen(name) + 1;
-    pd_fullname = omni::allocString(fnlen);
+    pd_fullname = _CORBA_String_helper::alloc(fnlen);
     strcpy(pd_fullname, parent->pd_fullname);
     strcat(pd_fullname, POA_NAME_SEP_STR);
     strcat(pd_fullname, name);
 
     pd_poaIdSize = fnlen + 1;
     if( policies.transient )  pd_poaIdSize += TRANSIENT_SUFFIX_SIZE + 1;
-    pd_poaId = omni::allocString(pd_poaIdSize - 1);
+    pd_poaId = _CORBA_String_helper::alloc(pd_poaIdSize - 1);
     strcpy(pd_poaId, pd_fullname);
     if( policies.transient ) {
       ((char*) pd_poaId)[fnlen] = TRANSIENT_SUFFIX_SEP;
@@ -1521,7 +1501,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
     OMNIORB_ASSERT(policies.transient);
     pd_fullname = (const char*) "";
     pd_poaIdSize = 1 + TRANSIENT_SUFFIX_SIZE + 1;
-    pd_poaId = omni::allocString(pd_poaIdSize - 1);
+    pd_poaId = _CORBA_String_helper::alloc(pd_poaIdSize - 1);
     ((char*) pd_poaId)[0] = TRANSIENT_SUFFIX_SEP;
     generateUniqueId((_CORBA_Octet*) ((char*) pd_poaId + 1));
     ((char*) pd_poaId)[pd_poaIdSize - 1] = '\0';
@@ -2396,7 +2376,7 @@ omniOrbPOA::dispatch_to_sa(GIOP_S& giop_s, const CORBA::Octet* key,
     servant_activator_lock.unlock();
     exitAdapter();
     throw omniORB::LOCATION_FORWARD(
-			    CORBA::Object::_duplicate(fr.forward_reference));
+			    CORBA::Object::_duplicate(fr.forward_reference),0);
   }
   catch(...) {
     servant_activator_lock.unlock();
@@ -2485,12 +2465,12 @@ omniOrbPOA::dispatch_to_sl(GIOP_S& giop_s, const CORBA::Octet* key,
   PortableServer::Servant servant;
   PortableServer::ServantLocator::Cookie cookie = 0;
   try {
-    servant = sl->preinvoke(oid, this, giop_s.operation(), cookie);
+    servant = sl->preinvoke(oid, this, giop_s.invokeInfo().operation(), cookie);
   }
   catch(PortableServer::ForwardRequest& fr) {
     exitAdapter();
     throw omniORB::LOCATION_FORWARD(
-			    CORBA::Object::_duplicate(fr.forward_reference));
+			    CORBA::Object::_duplicate(fr.forward_reference),0);
   }
   catch(...) {
     exitAdapter();
@@ -2511,10 +2491,10 @@ omniOrbPOA::dispatch_to_sl(GIOP_S& giop_s, const CORBA::Octet* key,
     the_id.dispatch(giop_s);
   }
   catch(...) {
-    call_postinvoke(sl, oid, giop_s.operation(), cookie, servant);
+    call_postinvoke(sl, oid, giop_s.invokeInfo().operation(), cookie, servant);
     throw;
   }
-  call_postinvoke(sl, oid, giop_s.operation(), cookie, servant);
+  call_postinvoke(sl, oid, giop_s.invokeInfo().operation(), cookie, servant);
 }
 
 

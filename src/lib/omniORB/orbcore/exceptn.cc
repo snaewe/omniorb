@@ -27,7 +27,7 @@
 //  Implementation of the CORBA::Exception hierarchy.
 //
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -69,12 +69,6 @@ Exception::_NP_is_a(const Exception* e, const char* typeId)
 }
 
 
-size_t
-CORBA::Exception::_NP_alignedSize(size_t msgsize) const
-{
-  return msgsize;
-}
-
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// SystemException //////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -95,23 +89,8 @@ CORBA::SystemException::_downcast(const Exception* e)
 }
 
 
-size_t
-CORBA::SystemException::_NP_alignedSize(size_t msgsize) const
-{
-  return omni::align_to(msgsize, omni::ALIGN_4) + 8;
-}
-
-
 void
-CORBA::SystemException::_NP_marshal(NetBufferedStream& s) const
-{
-  pd_minor >>= s;
-  CORBA::ULong(pd_status) >>= s;
-}
-
-
-void
-CORBA::SystemException::_NP_marshal(MemBufferedStream& s) const
+CORBA::SystemException::_NP_marshal(cdrStream& s) const
 {
   pd_minor >>= s;
   CORBA::ULong(pd_status) >>= s;

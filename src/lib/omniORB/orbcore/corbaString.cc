@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.17.2.2  2000/09/27 18:02:21  sll
+  Updated to use the new cdrStream abstraction.
+
   Revision 1.17.2.1  2000/07/17 10:35:52  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -100,13 +103,15 @@
 //
  */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
 #include <exceptiondefs.h>
+
+const char*const _CORBA_String_helper::empty_string = "";
 
 
 char*
@@ -115,7 +120,7 @@ CORBA::string_alloc(CORBA::ULong len)
   // We initialise the string to zero length to help prevent errors
   // if this string is copied before it is initialised.  This is easy
   // to do when assigning the returned value to a CORBA::String_var.
-  char* s = omni::allocString(len);
+  char* s = _CORBA_String_helper::alloc(len);
   if( s )  *s = '\0';
   return s;
 }
@@ -124,7 +129,7 @@ CORBA::string_alloc(CORBA::ULong len)
 void
 CORBA::string_free(char* p)
 {
-  omni::freeString(p);
+  _CORBA_String_helper::free(p);
 }
 
 
@@ -132,7 +137,7 @@ char*
 CORBA::string_dup(const char* p)
 {
   if (p) {
-    char* q = omni::allocString(strlen(p));
+    char* q = _CORBA_String_helper::alloc(strlen(p));
     if (q) {
       strcpy(q,p);
       return q;
@@ -141,17 +146,13 @@ CORBA::string_dup(const char* p)
   return 0;
 }
 
-//////////////////////////////////////////////////////////////////////
-//////////////////////////// String_member ///////////////////////////
-//////////////////////////////////////////////////////////////////////
-
 void
-_CORBA_String_member::operator >>= (NetBufferedStream& s) const
+_CORBA_String_helper::marshal(const char* p, cdrStream& s)
 {
-  if( _ptr ) {
-    CORBA::ULong _len = strlen((char*)_ptr) + 1;
-    _len >>= s;
-    s.put_char_array((CORBA::Char*)_ptr, _len);
+  if( p ) {
+    CORBA::ULong len = strlen((char*)p) + 1;
+    len >>= s;
+    s.put_char_array((CORBA::Char*)p, len);
   }
   else {
     if (omniORB::traceLevel > 1) {
@@ -162,220 +163,92 @@ _CORBA_String_member::operator >>= (NetBufferedStream& s) const
   }
 }
 
-
-void
-_CORBA_String_member::operator <<= (NetBufferedStream& s)
+char*
+_CORBA_String_helper::unmarshal(cdrStream& s)
 {
-  if( _ptr && _ptr != omni::empty_string )  omni::freeString(_ptr);
-  _ptr = 0;
+  CORBA::String_var p;
 
   CORBA::ULong len;
   len <<= s;
   if( !len && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(1);
 
   CORBA::ULong nbytes = len ? len : 1;
-  char* p = omni::allocString(nbytes - 1);
-  if( !p )  OMNIORB_THROW(NO_MEMORY,0, CORBA::COMPLETED_MAYBE);
+
+  if (!s.checkInputOverrun(1,len)) {
+    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
+  }
+
+  p = _CORBA_String_helper::alloc(nbytes - 1);
+  if( !(char*)p )  OMNIORB_THROW(NO_MEMORY,0, CORBA::COMPLETED_MAYBE);
 
   if( len ) {
-    try {
-      s.get_char_array((CORBA::Char*)p, len);
-      if( p[len - 1] != '\0' )
-        OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-    }
-    catch(...) {
-      omni::freeString(p);
-      throw;
-    }
+    s.get_char_array((CORBA::Char*)((char*)p), len);
+    if( p[len - 1] != '\0' )
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
   }
-  else  *p = '\0';
+  else
+    p[0] = '\0';
 
-  _ptr = p;
+  return p._retn();
 }
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// String_member ///////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 void
-_CORBA_String_member::operator >>= (MemBufferedStream& s) const
+_CORBA_String_member::operator <<= (cdrStream& s)
 {
-  if( _ptr ) {
-    CORBA::ULong _len = strlen((char*)_ptr) + 1;
-    _len >>= s;
-    s.put_char_array((CORBA::Char*)_ptr, _len);
-  }
-  else {
-    if (omniORB::traceLevel > 1) {
-      _CORBA_null_string_ptr(0);
-    }
-    CORBA::ULong(1) >>= s;
-    CORBA::Char('\0') >>= s;
-  }
-}
-
-
-void
-_CORBA_String_member::operator <<= (MemBufferedStream& s)
-{
-  if( _ptr && _ptr != omni::empty_string )  omni::freeString(_ptr);
+  if( _ptr && _ptr != _CORBA_String_helper::empty_string )
+    _CORBA_String_helper::free(_ptr);
   _ptr = 0;
 
-  CORBA::ULong len;
-  len <<= s;
-  if( !len && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(1);
-
-  char* p = omni::allocString(len - 1);
-  if( !p )  OMNIORB_THROW(NO_MEMORY,0, CORBA::COMPLETED_MAYBE);
-
-  s.get_char_array((CORBA::Char*)p, len);
-  if( p[len - 1] != '\0' ) {
-    omni::freeString(p);
-    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_MAYBE);
-  }
-
-  _ptr = p;
-}
-
-
-size_t
-_CORBA_String_member::_NP_alignedSize(size_t initialoffset) const
-{
-  size_t alignedsize = omni::align_to(initialoffset,omni::ALIGN_4);
-  if (!_ptr) {
-    alignedsize += 4 + 1;
-  }
-  else {
-    alignedsize += 5 + strlen((char*)_ptr);
-  }
-  return alignedsize;
+  _ptr = _CORBA_String_helper::unmarshal(s);
 }
 
 //////////////////////////////////////////////////////////////////////
 ////////////////// _CORBA_Unbounded_Sequence__String /////////////////
 //////////////////////////////////////////////////////////////////////
 
-size_t
-_CORBA_Sequence__String::_NP_alignedSize(size_t size) const
+void
+_CORBA_Sequence__String::operator >>= (cdrStream& s) const
 {
-  size = omni::align_to(size, omni::ALIGN_4) + 4;
+  pd_len >>= s;
 
-  for( _CORBA_ULong i = 0; i < pd_len; i++ ) {
-    size = omni::align_to(size, omni::ALIGN_4);
-    if( pd_data[i] )  size += strlen(pd_data[i]) + 5;
-    else                  size += 5;
-  }
-
-  return size;
-}
-
-
-template<class buf_t>
-inline void marshal_ss(char** buf,
-		       _CORBA_ULong pd_len, buf_t& s)
-{
-  _CORBA_ULong(pd_len) >>= s;
-
-  for( _CORBA_ULong i = 0; i < pd_len; i++ ) {
-    char* p = buf[i];
-
-    if( p ) {
-      _CORBA_ULong len = strlen(p) + 1;
-      len >>= s;
-      s.put_char_array((CORBA::Char*) p, len);
-    }
-    else {
-      if( omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(0);
-      CORBA::ULong(1) >>= s;
-      CORBA::Char('\0') >>= s;
-    }
+  for( CORBA::ULong i = 0; i < pd_len; i++ ) {
+    char* p = pd_data[i];
+    _CORBA_String_helper::marshal(p,s);
   }
 }
 
 
 void
-_CORBA_Sequence__String::operator >>= (NetBufferedStream& s) const
+_CORBA_Sequence__String::operator <<= (cdrStream& s)
 {
-  marshal_ss(pd_data, pd_len, s);
-}
+  _CORBA_ULong slen;
+  slen <<= s;
 
+  if (!s.checkInputOverrun(1,slen) || (pd_bounded && slen > pd_max)) {
+    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
+  }
 
-void
-_CORBA_Sequence__String::operator >>= (MemBufferedStream& s) const
-{
-  marshal_ss(pd_data, pd_len, s);
-}
+  if (!pd_rel && slen <= pd_max) {
+    // obtain ownership of the array and its elements (note that this isn't
+    // the most effecient solution, but neither is invoking length!)
+    copybuffer(pd_len);
+  }
 
+  length(slen);
 
-template<class buf_t>
-inline void unmarshal_ss(char** buf,
-			 _CORBA_ULong slen, 
-			 _CORBA_Boolean rel,
-			 buf_t& s)
-{
   for( _CORBA_ULong i = 0; i < slen; i++ ) {
-    char*& p = (char*&) buf[i];
+    char*& p = (char*&) pd_data[i];
 
-    if( p ) { omni::freeString(p); p = 0; }
+    if( p ) { _CORBA_String_helper::free(p); p = 0; }
 
-    _CORBA_ULong len;
-    len <<= s;
-    if( !len && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(1);
-
-    _CORBA_ULong nbytes = len ? len : 1;
-    char* ps = omni::allocString(nbytes - 1);
-
-    if( len ) {
-      try {
-	s.get_char_array((CORBA::Char*) ps, len);
-	if( ps[len - 1] != '\0' )
-          OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-      }
-      catch(...) {
-	omni::freeString(ps);
-	throw;
-      }
-    }
-    else *ps = '\0';
-
-    p = ps;
+    p = _CORBA_String_helper::unmarshal(s);
   }
 }
 
-
-void
-_CORBA_Sequence__String::operator <<= (NetBufferedStream& s)
-{
-  _CORBA_ULong slen;
-  slen <<= s;
-  if (slen > s.RdMessageUnRead() || (pd_bounded && slen > pd_max)) {
-    _CORBA_marshal_error();
-    // never reach here
-  }
-  if (!pd_rel && slen <= pd_max) {
-    // obtain ownership of the array and its elements (note that this isn't
-    // the most effecient solution, but neither is invoking length!)
-    copybuffer(pd_len);
-  }
-  length(slen);
-  unmarshal_ss(pd_data, slen, pd_rel, s);
-}
-
-
-void
-_CORBA_Sequence__String::operator <<= (MemBufferedStream& s)
-{
-  _CORBA_ULong slen;
-  slen <<= s;
-  if (s.unRead() < slen || (pd_bounded && slen > pd_max)) {
-    _CORBA_marshal_error();
-    // never reach here
-  }
-  if (!pd_rel && slen <= pd_max) {
-    // obtain ownership of the array and its elements (note that this isn't
-    // the most effecient solution, but neither is invoking length!)
-    copybuffer(pd_len);
-  }
-  length(slen);
-  unmarshal_ss(pd_data, slen, pd_rel, s);
-}
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
