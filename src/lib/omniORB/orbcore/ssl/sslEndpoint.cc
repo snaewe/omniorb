@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/06/18 20:27:56  sll
+  Use strchr instead of index() for maximal portability.
+
   Revision 1.1.2.1  2001/06/11 18:11:06  sll
   *** empty log message ***
 
@@ -60,9 +63,9 @@ sslEndpoint::sslEndpoint(const char* address, sslContext* ctx) :
 
   pd_address_string = address;
   // OMNIORB_ASSERT(strncmp(address,"giop:ssl:",9) == 0);
-  const char* host = index(address,':');
-  host = index(host+1,':') + 1;
-  const char* port = index(host,':') + 1;
+  const char* host = strchr(address,':');
+  host = strchr(host+1,':') + 1;
+  const char* port = strchr(host,':') + 1;
   CORBA::ULong hostlen = port - host - 1;
   // OMNIORB_ASSERT(hostlen);
   pd_address.host = CORBA::string_alloc(hostlen);
