@@ -36,6 +36,7 @@
 #endif
 #include <NamingContext_i.h>
 #include <ObjectBinding.h>
+#include <INSMapper.h>
 #include <log.h>
 #include <iomanip.h>
 
@@ -454,6 +455,17 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
 
   CosNaming::NamingContext_ptr rootContext
     = NamingContext_i::headContext->_this();
+
+  {
+    // Check to see if we need an INS forwarding agent
+    omniObjKey key;
+    rootContext->_getTheKey(key);
+
+    if (strncmp((const char*)key.key(), "NameService", 11)) {
+      cerr << ts.t() << "(Pre-INS log file)" << endl;
+      new INSMapper(the_ins_poa, rootContext);
+    }
+  }
 
   char* p = orb->object_to_string(rootContext);
   cerr << ts.t() << "Root context is " << p << endl;

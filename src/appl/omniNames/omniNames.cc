@@ -62,7 +62,7 @@ usage()
   cerr << "\nUse -start option to start omniNames for the first time."
        << endl
        << "With no <port> argument, the standard default of "
-       << IIOP::DEFAULT_PORT << " is used."
+       << IIOP::DEFAULT_CORBALOC_PORT << " is used."
        << endl;
   cerr << "\nUse -logdir option to specify the directory where the log/data files are kept.\n";
   cerr << "\nUse -errlog option to specify where standard error output is redirected.\n";
@@ -118,7 +118,7 @@ main(int argc, char **argv)
   while (argc > 1) {
     if (strcmp(argv[1], "-start") == 0) {
       if (argc < 3 || argv[2][0] == '-') {
-	port = IIOP::DEFAULT_PORT;
+	port = IIOP::DEFAULT_CORBALOC_PORT;
 	removeArgs(argc, argv, 1, 1);
       }
       else {
