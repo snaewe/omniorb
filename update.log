@@ -1,4 +1,14 @@
 
+Mon Jan 18 13:49:31 GMT 1999 djr
+================================
+
+- Fixed bug in Any code for default cases in unions.
+
+src/lib/omniORB2/dynamic/tcParser.cc
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+
+
 Mon Jan 18 11:02:47 GMT 1999 tjr
 ================================
 
@@ -19,6 +29,7 @@ src/tool/omniidl2/omniORB2_be/o2be_union.cc
 - Added CORBA_*_PATTERN variables (which had been mistakenly removed).
 
 mk/beforedir.mk
+
 
 - Changes to sharedlib makefiles for HPUX.
 
