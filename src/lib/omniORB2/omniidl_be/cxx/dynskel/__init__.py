@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.2  2000/02/16 18:34:49  djs
+# Fixed problem generating fragments in DynSK.cc file
+#
 # Revision 1.6.2.1  2000/02/14 18:34:56  dpg1
 # New omniidl merged in.
 #
@@ -71,9 +74,12 @@ import omniidl_be.cxx.dynskel.typecode
 import omniidl_be.cxx.dynskel.main
 import omniidl_be.cxx.dynskel.template
 
-def monolithic(stream, tree):
-    stream.out(template.header,
+def generate(stream, tree):
+    stream.out(template.header_comment,
                Config = config)
+    if not(config.FragmentFlag()):
+        stream.out(template.header,
+                   Config = config)
 
     # This is the bit shared with the header file?
     tcstring = omniidl_be.cxx.dynskel.tcstring.__init__(stream)
@@ -91,6 +97,4 @@ def run(tree):
     
     stream = util.Stream(open(header_filename, "w"), 2)
 
-    # generate one big chunk of header
-    monolithic(stream, tree)
-
+    generate(stream, tree)
