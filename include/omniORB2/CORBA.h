@@ -29,6 +29,11 @@
 
 /*
  $Log$
+ Revision 1.30  1999/01/11 16:39:51  djr
+ Added guard to prevent attempt to include corbaidl.hh from ir.hh. This
+ fails as it is in omniORB2/corbaidl.hh. It doesn't need to be included
+ from ir.hh, since it has already been included into CORBA.h.
+
  Revision 1.29  1999/01/07 18:14:11  djr
  Changes to support
   - New implementation of TypeCode and Any
@@ -1208,6 +1213,9 @@ _CORBA_MODULE_END
 #  undef USE_stub_in_nt_dll
 # endif
 # define _LC_attr _OMNIORB_NTDLL_IMPORT
+#endif
+#ifndef __corbaidl_hh_EXTERNAL_GUARD__
+#define __corbaidl_hh_EXTERNAL_GUARD__
 #endif
 _CORBA_MODULE CORBA
 _CORBA_MODULE_BEG
