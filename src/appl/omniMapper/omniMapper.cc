@@ -23,6 +23,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.10  2004/05/25 13:47:58  dgrisby
+// Improved usage message.
+//
 // Revision 1.2.2.9  2003/06/03 17:36:58  dgrisby
 // Std stream patch broke some platforms.
 //
@@ -291,6 +294,7 @@ main(int argc, char** argv)
   }
   catch (CORBA::INITIALIZE& ex) {
     cerr << "Failed to initialise the ORB." << endl;
+    usage();
     return 1;
   }
 
@@ -305,6 +309,7 @@ main(int argc, char** argv)
   catch (CORBA::INITIALIZE& ex) {
     cerr << "Failed to initialise the POA. "
 	 << "Is omniMapper already running?" << endl;
+    usage();
     return 1;
   }
 
