@@ -29,8 +29,15 @@
  
 /*
   $Log$
+  Revision 1.13  1998/04/07 19:50:35  sll
+  Replace cerr with omniORB::log.
+
   Revision 1.12  1998/03/25 14:20:36  sll
   Temporary work-around for egcs compiler.
+
+  $Log$
+  Revision 1.13  1998/04/07 19:50:35  sll
+  Replace cerr with omniORB::log.
 
   Revision 1.11  1998/03/19 15:22:47  sll
   Fixed so that omniObject ctor would not reject zero length key.
@@ -380,18 +387,18 @@ omniObject::dispatch(GIOP_S &_s,const char *_op,
   else if (strcmp(_op,"_interface") == 0)
     {
       if (omniORB::traceLevel > 0) {
-	cerr << "Warning: received GIOP request - get_interface, this function is not supported yet.\n" 
-	     << "         A CORBA::BAD_OPERATION is raised."
-	     << endl;
+	omniORB::log << "Warning: received GIOP request - get_interface, this function is not supported yet.\n" 
+	     << "         A CORBA::BAD_OPERATION is raised.\n";
+	omniORB::log.flush();
       }
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
     }
   else if (strcmp(_op,"_implementation") == 0)
     {
       if (omniORB::traceLevel > 0) {
-	cerr << "Warning: received GIOP request - get_implementation, this function is not supported yet.\n" 
-	     << "         A CORBA::BAD_OPERATION is raised."
-	     << endl;
+	omniORB::log << "Warning: received GIOP request - get_implementation, this function is not supported yet.\n" 
+	     << "         A CORBA::BAD_OPERATION is raised.\n";
+	omniORB::log.flush();
       }
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
     }
@@ -427,10 +434,11 @@ omniObject::assertObjectExistent()
       // pd_original_repoId.
       if (!_real_is_a(pd_original_repoId)) {
 	if (omniORB::traceLevel > 0) {
-	  cerr << "Warning: in omniObject::assertObjectExistent(), the object with the IR repository ID:\n"
+	  omniORB::log << "Warning: in omniObject::assertObjectExistent(), the object with the IR repository ID:\n"
 	       << "         " << NP_IRRepositoryId() << " returns FALSE to the query\n"
 	       << "         is_a(\"" << pd_original_repoId << "\").\n"
-	       << "         A CORBA::INV_OBJREF is raised." << endl;
+	       << "         A CORBA::INV_OBJREF is raised.\n";
+	  omniORB::log.flush();
 	}
 	throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
       }
@@ -471,7 +479,8 @@ while (1) {
 		_c.RequestCompleted();
 		if (CORBA::is_nil(obj)) {
 		  if (omniORB::traceLevel > 10) {
-		    cerr << "Received GIOP::OBJECT_FORWARD in LocateReply message that contains a nil object reference." << endl;
+		    omniORB::log << "Received GIOP::OBJECT_FORWARD in LocateReply message that contains a nil object reference.\n";
+		    omniORB::log.flush();
 		  }
 		  throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
 		}
@@ -480,7 +489,8 @@ while (1) {
 		setRopeAndKey(_0RL_r);
 	      }
 	      if (omniORB::traceLevel > 10) {
-		cerr << "GIOP::OBJECT_FORWARD: retry request." << endl;
+		omniORB::log << "GIOP::OBJECT_FORWARD: retry request.\n";
+		omniORB::log.flush();
 	      }
 	      break;
 	    }
@@ -539,8 +549,9 @@ omniObject::_real_is_a(const char *repoId)
   // see if it really is an instance of the type identified by <repoId>.
 
   if (omniORB::traceLevel > 10) {
-    cerr << "Info: omniORB uses CORBA::Object::_is_a operation to check if "
-	 << NP_IRRepositoryId() << " is a " << repoId << endl;
+    omniORB::log << "Info: omniORB uses CORBA::Object::_is_a operation to check if "
+	 << NP_IRRepositoryId() << " is a " << repoId << "\n";
+    omniORB::log.flush();
   }
 
   CORBA::ULong   _retries = 0;
@@ -592,7 +603,8 @@ while(1) {
           _c.RequestCompleted();
           if (CORBA::is_nil(obj)) {
             if (omniORB::traceLevel > 10) {
-              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+              omniORB::log << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\n";
+	      omniORB::log.flush();
             }
             throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
           }
@@ -601,7 +613,8 @@ while(1) {
           setRopeAndKey(_0RL_r);
         }
         if (omniORB::traceLevel > 10) {
-          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+          omniORB::log << "GIOP::LOCATION_FORWARD: retry request.\n";
+	  omniORB::log.flush();
         }
 	break;
       }
