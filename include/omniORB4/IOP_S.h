@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/09/10 17:41:30  sll
+  Added WaitForRequestHeader in IOP_S::State. Reorder the enum labels inside
+  IOP_S::State, any label that is larger than WaitForRequestHeader now
+  indicates that the IOP_S is actively processing a request.
+
   Revision 1.1.2.2  2001/05/02 14:20:15  sll
   Make sure that getStream() is used instead of casting to get a cdrStream
   from a IOP_C and IOP_S.
@@ -58,14 +63,15 @@ public:
   virtual const char* operation_name() const = 0;
 
   enum State { UnUsed,
-	       InputFullyBuffered,
-	       InputPartiallyBuffered,
 	       Idle,
+	       Zombie,
+	       WaitForRequestHeader,
 	       RequestHeaderIsBeingProcessed,
 	       RequestIsBeingProcessed,
 	       WaitingForReply,
 	       ReplyIsBeingComposed,
-	       Zombie
+	       InputFullyBuffered,
+	       InputPartiallyBuffered
   };
 
   // A IOP_S instance operates in one of the following states:
