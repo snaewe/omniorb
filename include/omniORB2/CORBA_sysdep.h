@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.28  1999/01/05 12:31:14  sll
+ Correct typo in #error messages.
+
  Revision 1.27  1998/10/20 15:58:58  sll
  Added support for Alpha NT.
 
@@ -504,13 +507,13 @@ strdup (char* str)
 #ifndef _CORBA_MODULE_VARINT
 #define _CORBA_MODULE_VARINT static _LC_attr
 #else
-#error "Name conflict: _CORBA_MODULE_INTCONST is already defined."
+#error "Name conflict: _CORBA_MODULE_VARINT is already defined."
 #endif
 
 #ifndef _CORBA_GLOBAL_VARINT
 #define _CORBA_GLOBAL_VARINT extern _LC_attr
 #else
-#error "Name conflict: _CORBA_GLOBAL_INTCONST is already defined."
+#error "Name conflict: _CORBA_GLOBAL_VARINT is already defined."
 #endif
 
 #ifndef _init_in_decl_
