@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.8  1999/11/04 17:15:52  dpg1
+// Typo.
+//
 // Revision 1.7  1999/11/02 17:07:27  dpg1
 // Changes to compile on Solaris.
 //
@@ -1720,7 +1723,7 @@ ValueAbs(const char* file, int line, _CORBA_Boolean mainFile,
 
   // Check that all inherited valuetypes are abstract
   for (ValueInheritSpec* vinh = inherits; vinh; vinh = vinh->next()) {
-    if (!vinh->value()->kind() == D_VALUE) {
+    if (vinh->value()->kind() == D_VALUE) {
       char* ssn = vinh->scope()->scopedName()->toString();
       IdlError(file, line,
 	       "In declaration of abstract valuetype `%s', inherited "
