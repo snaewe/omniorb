@@ -30,6 +30,12 @@
 
 /* 
  * $Log$
+ * Revision 1.22  1999/03/04 09:54:24  djr
+ * Disabled cached parameter lists - they have a bug.
+ *
+ * Revision 1.22  1999/02/26 09:57:51  djr
+ * Disabled cached parameter lists, as they have a bug.
+ *
  * Revision 1.21  1999/02/23 11:46:07  djr
  * Fixed bugs in size calculation for TypeCodes.
  *
@@ -3281,12 +3287,16 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	  // The typecode is complex and wasn't found, so add it to the table
 	  otbl->addEntry(otbl->currentOffset(), tc);
 
+#if 0
+	  // This is broken!!!!!
+
 	  // Is there already a cached form of the parameter list?
 	  if( !tc->pd_loop_member ) {
 	    omni_mutex_lock l(*pd_cached_paramlist_lock);
 
 	    has_cached_paramlist = tc->pd_cached_paramlist != 0;
 	  }
+#endif
 
 	  if( has_cached_paramlist ) {
 	    paramlist = tc->pd_cached_paramlist;
@@ -3326,6 +3336,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	  s.put_char_array((CORBA::Char*) paramlist->data(),
 			   paramlist->alreadyWritten());
 
+#if 0
 	  // Ensure that the paramlist is freed, or saved as a cached
 	  // param list if not a part of a loop.
 	  if( !has_cached_paramlist ){
@@ -3341,6 +3352,9 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 		delete paramlist;
 	    }
 	  }
+#else
+	  delete paramlist;
+#endif
 	  break;
 	}
       } // switch( paramListType(tck) ) {
@@ -3563,12 +3577,16 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	  // The typecode is complex and wasn't found, so add it to the table
 	  otbl->addEntry(otbl->currentOffset(), tc);
 
+#if 0
+	  // This is broken!!!!!
+
 	  // Is there already a cached form of the parameter list?
 	  if (!tc->pd_loop_member) {
 	    omni_mutex_lock l(*pd_cached_paramlist_lock);
 
 	    has_cached_paramlist = tc->pd_cached_paramlist != 0;
 	  }
+#endif
 
 	  if (has_cached_paramlist) {
 	    paramlist = tc->pd_cached_paramlist;
@@ -3608,6 +3626,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	  s.put_char_array((CORBA::Char*) paramlist->data(),
 			   paramlist->alreadyWritten());
 
+#if 0
 	  // Ensure that the paramlist is freed, or saved as a cached
 	  // param list if not a part of a loop.
 	  if( !has_cached_paramlist ){
@@ -3623,6 +3642,9 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 		delete paramlist;
 	    }
 	  }
+#else
+	  delete paramlist;
+#endif
 	  break;
 	}
       } // switch( paramListType(tck) ) {
