@@ -1,10 +1,111 @@
+Fri Nov  3 19:14:21 GMT 2000 sll
+================================
+
+- C++ idl compiler backend updated.
+- Generate new call descriptor code.
+- Some code cleanup
+
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/config.py
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/__init__.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+src/examples/echo/dir.mk
+src/lib/omniORB/dir.mk
+src/lib/omniORB/dynamic/dir.mk
+
+Fri Nov  3 18:38:14 GMT 2000 sll
+================================
+
+- separate out the marshalling of byte, octet and char into 3 set of distinct
+  marshalling functions. This has the consequence on related types and 
+  templates, such as sequence of and sequence of array these types.
+
+- Moved string marshal functions into cdrStream. There will be an equivalent
+  for wstring.
+
+- Renamed cdrStream::put_char_array to cdrStream::put_octet_array.
+  Same goes to get_char_array.
+
+
+include/omniORB4/CORBA.h
+include/omniORB4/GIOP.h
+include/omniORB4/IOP.h
+include/omniORB4/omniInternal.h
+include/omniORB4/omniORB.h
+include/omniORB4/poa.h
+include/omniORB4/cdrStream.h
+include/omniORB4/giopDriver.h
+include/omniORB4/giopStream.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/callDescriptor.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/seqTemplatedefns.h
+include/omniORB4/stringtypes.h
+include/omniORB4/userexception.h
+
+src/lib/omniORB/omniIdentity.h
+
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+src/lib/omniORB/orbcore/callDescriptor.cc
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/cs-16bit.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/giopClient.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopStream10.cc
+src/lib/omniORB/orbcore/giopStream11.cc
+src/lib/omniORB/orbcore/giopStream12.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/objectStub.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/dynamicImplementation.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+
+Fri Nov  3 17:19:49 GMT 2000 sll
+================================
+
+- Use Sun/Forte C compiler by default.
+
+external_merge/mk/platforms/sun4_sosV_5.7.mk
+
 Fri Nov  3 17:19:49 GMT 2000 sll
 ================================
 
 - Removed temporary files as they are no longer needed once the idl compiler
   has been updated.
 
-src/lib/omniORB/omniORB4/*           REMOVED
+include/omniORB4/Naming.hh                        REMOVED
+include/omniORB4/corbaidl_defs.hh                   ""
+include/omniORB4/corbaidl_operators.hh              ""
+include/omniORB4/corbaidl_poa.hh                    ""
+include/omniORB4/ir_defs.hh                         ""
+include/omniORB4/ir_operators.hh                    ""
+include/omniORB4/ir_poa.hh                          ""
+
+src/lib/omniORB/omniORB4/*                       REMOVED
 src/examples/echo/echoSK.cc
 
 
