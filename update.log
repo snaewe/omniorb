@@ -1,3 +1,81 @@
+Wed Sep 19 18:19:58 BST 2001 dpg1
+=================================
+
+- Full clean-up after orb->destroy().
+
+include/omnithread.h
+include/omniORB4/finalCleanup.h                  -- new
+include/omniORB4/objTracker.h                    -- new
+include/omniORB4/omniInternal.h
+include/omniORB4/omniObjRef.h
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/contextList.cc
+src/lib/omniORB/dynamic/dynAnyNil.cc
+src/lib/omniORB/dynamic/environment.cc
+src/lib/omniORB/dynamic/exceptionList.cc
+src/lib/omniORB/dynamic/namedValue.cc
+src/lib/omniORB/dynamic/nvList.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/include/anyP.h
+src/lib/omniORB/include/corbaOrb.h
+src/lib/omniORB/include/giopRope.h
+src/lib/omniORB/include/giopStrand.h
+src/lib/omniORB/include/inProcessIdentity.h
+src/lib/omniORB/include/omniIdentity.h
+src/lib/omniORB/include/remoteIdentity.h
+src/lib/omniORB/include/shutdownIdentity.h       -- new
+src/lib/omniORB/omniidl_be/cxx/skel/__init__.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaObject.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/inProcessIdentity.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/omniIdentity.cc          -- new
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/omniTransport.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poamanager.cc
+src/lib/omniORB/orbcore/poastubs.cc
+src/lib/omniORB/orbcore/policy.cc
+src/lib/omniORB/orbcore/portableserver.cc
+src/lib/omniORB/orbcore/proxyFactory.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+src/lib/omniORB/orbcore/shutdownIdentity.cc      -- new
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+
+- Cosmetic changes
+
+include/omniORB4/CORBA_TypeCode.h
+include/omniORB4/cdrStream.h
+src/examples/poa/persistent_objref/eg2_impl.cc
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/orbcore/tracedthread.cc
+
+- New traceThreadId option to add omni_thread id to log messages.
+
+include/omniORB4/omniORB.h
+src/lib/omniORB/orbcore/logIOstream.cc
+
+- Update omniMapper and omniNames INS mapper to ORB core changes from
+  a while ago.
+
+src/appl/omniMapper/omniMapper.cc
+src/appl/omniNames/INSMapper.h
+
+
 Fri Sep 14 12:07:29 BST 2001 sll
 ================================
 
