@@ -1,3 +1,12 @@
+Mon Jul 26 10:55:58 BST 2004 dgrisby
+====================================
+
+- Code using getifaddrs didn't cope with null ifa_addr member. Thanks
+  Dirk Siebnich.
+
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Fri Jul 23 15:05:00 BST 2004 dgrisby
 ====================================
 
