@@ -1,3 +1,13 @@
+Tue Jun 26 10:45:03 BST 2001 dpg1
+=================================
+
+- Port of omnithread to OS/2 by David Schmidt.
+
+include/omnithread.h
+include/omnithread/os2.h
+src/lib/omnithread/os2.cc
+
+
 Thu Jun 21 14:42:32 BST 2001 dpg1
 =================================
 
