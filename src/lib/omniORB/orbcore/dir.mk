@@ -11,34 +11,31 @@ ORB2_SRCS = bootstrap_i.cc bootstrapSK.cc \
             constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
             corbaString.cc \
             exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
-            libcWrapper.cc mbufferedStream.cc nbufferedStream.cc NamingSK.cc \
+            libcWrapper.cc mbufferedStream.cc nbufferedStream.cc \
             object.cc objectKey.cc objectRef.cc ropeFactory.cc \
-            strand.cc scavenger.cc \
-	    typecode.cc any.cc tcParseEngine.cc \
-            dynAny.cc dynAnyP.cc \
-            $(NETLIBSRCS) $(LOG_SRCS)
+            strand.cc scavenger.cc exceptn.cc proxyCall.cc \
+            $(NETLIBSRCS) $(LOG_SRCS) NamingSK.cc
 
 ORB2_OBJS = bootstrap_i.o bootstrapSK.o \
             constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             corbaString.o \
             exception.o giopClient.o giopServer.o initFile.o ior.o \
-            libcWrapper.o mbufferedStream.o nbufferedStream.o NamingSK.o \
+            libcWrapper.o mbufferedStream.o nbufferedStream.o \
             object.o objectRef.o objectKey.o ropeFactory.o \
-	    strand.o scavenger.o \
-	    typecode.o any.o tcParseEngine.o \
-            dynAny.o dynAnyP.o \
-            $(NETLIBOBJS) $(LOG_OBJS)
-
-LC_SRCS = omniLifeCycle.cc reDirect.cc omniLifeCycleSK.cc
-LC_OBJS = omniLifeCycle.o reDirect.o omniLifeCycleSK.o
+            strand.o scavenger.o exceptn.o proxyCall.o \
+            $(NETLIBOBJS) $(LOG_OBJS) NamingSK.o
 
 LOG_SRCS = logIOstream.cc
 LOG_OBJS = logIOstream.o
 
-DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS) -I. -I./..
+DIR_CPPFLAGS += $(patsubst %,-I%/..,$(VPATH))
+DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
+DIR_CPPFLAGS += -I. -I./..
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
+DIR_CPPFLAGS += -D_OMNIORB2_LIBRARY
 
-CXXSRCS = $(ORB2_SRCS) $(LC_SRCS)
+CXXSRCS = $(ORB2_SRCS)
+
 
 #############################################################################
 #   Make variables for Unix platforms                                       #
@@ -60,7 +57,6 @@ DIR_CPPFLAGS += -DUnixArchitecture
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION=$(CONFIG_DEFAULT_LOCATION)
 
 lib = $(patsubst %,$(LibPattern),omniORB2)
-lclib = $(patsubst %,$(LibPattern),omniLC)
 
 SUBDIRS = sharedlib gatekeepers
 
@@ -82,7 +78,6 @@ DIR_CPPFLAGS += -D "NTArchitecture" -D "_WINSTATIC"
 ifndef BuildWin32DebugLibraries
 
 lib = $(patsubst %,$(LibPattern),omniORB2)
-lclib = $(patsubst %,$(LibPattern),omniLC)
 
 CXXOPTIONS  = $(MSVC_STATICLIB_CXXNODEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS)
@@ -101,7 +96,6 @@ else
 # the dir.mk generated in the debug directory.
 #
 lib = $(patsubst %,$(LibDebugPattern),omniORB2)
-lclib = $(patsubst %,$(LibDebugPattern),omniLC)
 CXXDEBUGFLAGS =
 CXXOPTIONS = $(MSVC_STATICLIB_CXXDEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKDEBUGOPTIONS)
@@ -129,7 +123,6 @@ endif
 
 endif
 
-
 #############################################################################
 #   Make variables for ATMos                                                #
 #############################################################################
@@ -141,7 +134,6 @@ CONFIG_DEFAULT_LOCATION = \"//isfs/omniORB.cfg\"
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION=$(CONFIG_DEFAULT_LOCATION)
 SUBDIRS = gatekeepers
 lib = $(patsubst %,$(LibPattern),omniORB2)
-lclib = $(patsubst %,$(LibPattern),omniLC)
 
 endif
 
@@ -172,8 +164,8 @@ mkdebugdir:
             echo 'override VPATH := $$(VPATH:/debug=)' >> debug/dir.mk; \
             echo include $$fullfile >> debug/dir.mk; \
             if [ -f GNUmakefile ]; then \
-               echo 'TOP=../../../..' > debug/GNUmakefile; \
-               echo 'CURRENT=src/lib/omniORB2/debug' >> debug/GNUmakefile; \
+               echo 'TOP=../../../../..' > debug/GNUmakefile; \
+               echo 'CURRENT=src/lib/omniORB2/orbcore/debug' >> debug/GNUmakefile; \
                echo 'include $$(TOP)/config/config.mk' >> debug/GNUmakefile; \
             fi \
           fi \
@@ -190,17 +182,12 @@ endif
 #############################################################################
 
 
-all:: $(lib) 
-
-all:: $(lclib)
+all:: $(lib)
 
 all::
 	@$(MakeSubdirs)
 
 $(lib): $(ORB2_OBJS)
-	@$(StaticLinkLibrary)
-
-$(lclib): $(LC_OBJS)
 	@$(StaticLinkLibrary)
 
 ifndef OMNIORB2_IDL_FPATH
@@ -209,34 +196,42 @@ endif
 
 ifndef BuildWin32DebugLibraries
 
-Naming.hh NamingSK.cc:	Naming.idl
+Naming.hh NamingSK.cc NamingDynSK.cc: Naming.idl
 	-if [ "$^" != Naming.idl ]; then $(CP) $^ . ; fi
 	$(OMNIORB2_IDL_FPATH) Naming.idl
 
-omniLifeCycle.hh omniLifeCycleSK.cc: omniLifeCycle.idl
-	-if [ "$^" != omniLifeCycle.idl ]; then $(CP) $^ . ; fi
-	$(OMNIORB2_IDL_FPATH) omniLifeCycle.idl
-
-bootstrap.hh bootstrapSK.cc: bootstrap.idl
+bootstrap.hh bootstrapSK.cc bootstrapDynSK.cc: bootstrap.idl
 	-if [ "$^" != bootstrap.idl ]; then $(CP) $^ . ; fi
 	$(OMNIORB2_IDL_FPATH) bootstrap.idl
 
-export:: Naming.hh
-	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
+ir.hh irSK.cc irDynSK.cc: corbaidl.hh ir.idl
+	-if [ "$^" != ir.idl ]; then $(CP) $^ . ; fi
+	$(OMNIORB2_IDL_FPATH) -m ir.idl
 
-export:: omniLifeCycle.hh
-	@(file="omniLifeCycle.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
+corbaidl.hh corbaidlSK.cc corbaidlDynSK.cc: corbaidl.idl
+	-if [ "$^" != ir.idl ]; then $(CP) $^ . ; fi
+	$(OMNIORB2_IDL_FPATH) -m corbaidl.idl
+
+export:: Naming.hh
+	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
+		$(ExportFileToDir))
+
+export:: ir.hh
+	@(file="ir.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
+		$(ExportFileToDir))
+
+export:: corbaidl.hh
+	@(file="corbaidl.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
+		$(ExportFileToDir))
 
 
 endif
 
 clean::
-	$(RM) $(lib) NamingSK.cc omniLifeCycleSK.cc bootstrapSK.cc
+	$(RM) $(lib) $(dynlib) NamingSK.cc bootstrapSK.cc \
+		NamingDynSK.cc bootstrapDynSK.cc
 
 export:: $(lib)
-	@$(ExportLibrary)
-
-export:: $(lclib)
 	@$(ExportLibrary)
 
 export::
@@ -250,7 +245,6 @@ ifdef Win32Platform
 # to be resolved when the DLL is build. For the moment, just workaround the
 # problem by building the stub directly into the library.
 #
-
 gatekeeper.o: gatekeepers/dummystub/gatekeeper.cc
 	$(CXX) -c $(CXXFLAGS) -Fo$@ $<
 
