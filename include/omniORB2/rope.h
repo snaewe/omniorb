@@ -29,9 +29,13 @@
 
 /*
   $Log$
-  Revision 1.3  1997/05/06 16:10:38  sll
-  Public release.
+  Revision 1.4  1997/12/09 20:34:36  sll
+  Interfaces extended to provide more hooks to support new transports.
+  Support for incoming and outgoing rope scavenger threads.
 
+ * Revision 1.3  1997/05/06  16:10:38  sll
+ * Public release.
+ *
   */
 
 #ifndef __ROPE_H__
@@ -53,6 +57,7 @@ class Rope;
 class Endpoint;
 class NetBufferedStream;
 class Strand_iterator;
+class Rope_iterator;
 
 class Strand {
 public:
@@ -81,7 +86,8 @@ public:
     size_t size;
   };
 
-  virtual sbuf receive(size_t size,_CORBA_Boolean exactly,int align)=0;
+  virtual sbuf receive(size_t size,_CORBA_Boolean exactly,
+		       int align,_CORBA_Boolean startMTU=0)=0;
   // Concurrency Control:
   //      RdLock()
   // Pre-condition:
@@ -93,6 +99,10 @@ public:
   // before returning. If <exactly> is false, receive at most <size> bytes
   // from this strand. If <exactly> is true, the value of <size> cannot be
   // larger than the return value of max_receive_buffer_size().
+  //
+  // If startMTU is TRUE (1), the caller expects what is coming in to be
+  // the start of a request message. If the strand detects that is not the
+  // case, it should shutdown itself and throw a COMM_FAILURE exception.
   //
   // The return structure <sbuf> contains a pointer to the data area and
   // the number of bytes actually received. The data pointer is guaranteed to
@@ -134,7 +144,7 @@ public:
   //      None required.
   // The maximum size of the data area that can be returned by receive()
 
-  virtual void receive_and_copy(sbuf b) = 0;
+  virtual void receive_and_copy(sbuf b,_CORBA_Boolean startMTU=0) = 0;
   // Concurrency Control:
   //      RdLock()
   // Pre-condition:
@@ -144,6 +154,10 @@ public:
   //
   // Copying incoming data directly to the buffer points to by <b>.
   // Exactly <b.size> bytes are copied before returning.
+  //
+  // If startMTU is TRUE (1), the caller expects what is coming in to be
+  // the start of a request message. If the strand detects that is not the
+  // case, it should shutdown itself and throw a COMM_FAILURE exception.
   //
   // The semantics of this function is equivalent to a receive() followed by
   // a memcpy().
@@ -155,7 +169,7 @@ public:
   // This function *should be* called only after the current thread has
   // acquired the read lock of this strand.
 
-  virtual void skip(size_t size) = 0;
+  virtual void skip(size_t size,_CORBA_Boolean startMTU=0) = 0;
   // Concurrency Control:
   //      RdLock()
   // Pre-condition:
@@ -168,9 +182,13 @@ public:
   // calls until <size> bytes are "received".
   // This function *should be* called only after the current thread has
   // acquired the read lock of this strand.
+  //
+  // If startMTU is TRUE (1), the caller expects what is coming in to be
+  // the start of a request message. If the strand detects that is not the
+  // case, it should shutdown itself and throw a COMM_FAILURE exception.
 
   virtual sbuf reserve(size_t size,_CORBA_Boolean exactly,int align,
-		       _CORBA_Boolean transmit=0)=0;
+		       _CORBA_Boolean transmit=0,_CORBA_Boolean endMTU=0)=0;
   // Concurrencty Control:
   //       WrLock()
   // Pre-condition:
@@ -182,6 +200,10 @@ public:
   // buffer of this strand. If <exactly> is false, reserve at most <size>
   // bytes from this strand. If <exactly> is true, the value of <size> cannot
   // be larger than the return value of max_reserve_buffer_size();
+  //
+  // If endMTU is TRUE(1), the caller indicates that it is reserving buffer
+  // to write the last part of a request message.
+  //
   //
   // The return structure <sbuf> contains a pointer to the data area and
   // the number of bytes actually reserved. The data pointer is guaranteed to
@@ -199,8 +221,15 @@ public:
   // This function *should be* called only after the current thread has
   // acquired the write lock of this strand.
 
+  virtual sbuf reserve_and_startMTU(size_t size,_CORBA_Boolean exactly,
+				    int align,_CORBA_Boolean transmit=0,
+				    _CORBA_Boolean at_most_once=0)=0;
+  // The function is the same as reserve() except that it is used by
+  // the caller to indicate that it is reserving buffer to write the beginning
+  // of a request message.
 
-  virtual void giveback_reserved(size_t leftover,_CORBA_Boolean transmit=0)=0;
+  virtual void giveback_reserved(size_t leftover,_CORBA_Boolean transmit=0,
+				 _CORBA_Boolean endMTU=0)=0;
   // Concurrencty Control:
   //       WrLock()
   // Pre-condition:
@@ -219,6 +248,9 @@ public:
   // The value of <leftover> must be less than or equal to the size of the 
   // data area reserved.
   //
+  // If endMTU is TRUE(1), the caller indicates that it has written
+  // the last part of a request message.
+  //
   // This function *should be* called only after the current thread has
   // acquired the write lock of this strand.
 
@@ -227,7 +259,8 @@ public:
   //       None required
   // The maximum size of the data area that can be returned by reserve()
 
-  virtual void reserve_and_copy(sbuf b,_CORBA_Boolean transmit=0) = 0;
+  virtual void reserve_and_copy(sbuf b,_CORBA_Boolean transmit=0,
+				_CORBA_Boolean endMTU=0) = 0;
   // Concurrency Control:
   //       WrLock()
   // Pre-condition:
@@ -244,6 +277,10 @@ public:
   // If <transmit> is true, any buffered data will be transmitted immediately. 
   // If <transmit> is false, any buffered data may be transmitted any time 
   // hereafter.
+  //
+  // If endMTU is TRUE(1), the caller indicates that it is reserving buffer
+  // to write the last part of a request message.
+  //
   // This function *should be* called only after the current thread has
   // acquired the write lock of this strand.
 
@@ -352,10 +389,29 @@ public:
     // closing down (Strand::StrandIsDying() returns TRUE), the dtor of the
     // strand is called.
 
-  protected:
+    _CORBA_Boolean isReUsingExistingConnection() const;
+    // Concurency Control:
+    //     None required.
+    //
+    // Returns true if this is not the first Sync object instantiated to
+    // use the Strand. False otherwise.
+    // This method is intended for the caller to decide on a course of
+    // action if a COMM_FAILURE has been thrown. If this method returns
+    // true, the COMM_FAILURE may be considered a soft failure because
+    // it is only a cached network connection that is broken. If this method
+    // returns false, then the connection to the remote end is really
+    // broken and may be considered as a hard failure.
 
+
+    static _CORBA_Boolean WrTimedLock(Strand* s,
+				      _CORBA_Boolean& heartbeat,
+				      unsigned long secs,
+				      unsigned long nanosecs);
+    static void WrUnlock(Strand* s);
+  protected:
     void RdLock(_CORBA_Boolean held_rope_mutex=0);
-    void WrLock(_CORBA_Boolean held_rope_mutex=0);
+    void WrLock(_CORBA_Boolean held_rope_mutex=0,
+		_CORBA_Boolean clear_heartbeat=1);
     void RdUnlock(_CORBA_Boolean held_rope_mutex=0);
     void WrUnlock(_CORBA_Boolean held_rope_mutex=0);
     // IMPORTANT: to avoid deadlock, the following protocol MUST BE obeyed.
@@ -363,34 +419,94 @@ public:
     //            2. Never acquire a Read lock while holding a Write lock.
     //               Must release the Read lock first.
     // Concurrency Control:
-    // 	  MUTEX = pd_strand->pd_rope->pd_lock
+    // 	  MUTEX = pd_strand->pd_rope->pd_lock or argument <s>->pd_rope->pd_lock
     // Pre-condition:
-    //      Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
-    //      Hold <MUTEX> on enter if held_rope_mutex == TRUE              
+    //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
+    //          Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
+    //          Hold <MUTEX> on enter if held_rope_mutex == TRUE
+    //      For WrTimedLock(), WrUnlock(Strand*):
+    //          Must hold <MUTEX> on enter
     // Post-condition:
-    //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
+    //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
+    //        Restore <MUTEX> to the same state as indicated by held_rope_mutex
+    //      For WrTimedLock(), WrUnlock(Strand*):
+    //        Still held <MUTEX> on exit
+    //
+    // There are two ways to acquire a Write Lock, 
+    //    i.e. WrLock and WrTimedLock.
+    //
+    // WrLock blocks until it has acquired a write lock on the strand.
+    // WrTimedLock tries to acquire a write lock on the strand until the
+    // current time is later than the absolute time given in the arguments
+    // <secs> and <nanosecs>. These time arguments are interpreted in the
+    // same way as omni_condition::timedwait(). If WrTimedLock returns 1,
+    // the write lock has been acquired, otherwise it has timeout and no
+    // lock has been acquired.
+    //
+    // A strand has a status boolean known as the 'heartbeat', this boolean
+    // value may be set/unset and read as a side-effect of WrLock and 
+    // WrTimeLock. The initial value of the boolean is 0.
+    //
+    // If <clear_heartbeat> is 1 (the default), WrLock will set the heartbeat
+    // boolean to 0 after it has acquired the write lock. If <clear_heartbeat>
+    // is 0, WrLock will leave the heartbeat boolean unchanged.
+    // 
+    // The heartbeat boolean will be updated by WrTimedLock with the value
+    // of <heartbeat> after it has acquired the write lock. The original value
+    // of the boolean is returned in <heartbeat>.
+    //
+    // The value of the heartbeat boolean *does not* affect the internal
+    // functions of the strand. However, it is used as a way to detect
+    // whether a strand is idle and can be closed down. The algorithm is as
+    // follows:
+    //      A scavenger thread periodically scans all the strands. It acquires
+    //      the write lock on the strand using WrTimedLock. It sets the
+    //      heartbeat boolean to 1 and examines the original value returned by 
+    //      WrTimedLock. If the original value is also 1, it knows the strand 
+    //      has been idle for at least one scan period. It may then shutdown
+    //      the strand.
+    // 
+    //      To prevent a strand from being shutdown, the thread that uses
+    //      the strand must reset the heartbeat boolean to 0 at least once
+    //      within the scan period. This can be done conveniently as a 
+    //      side-effect of WrLock, i.e. with the <clear_heartbeat> = 1. 
+    //      Typically, a thread acquires a write lock on the strand
+    //      when it is about to send a reply (on the server side) or a request
+    //      (on the client side). This is a good indication that the strand
+    //      is in active use.
 
     Strand *get_strand() { return pd_strand; }
     // Concurrency Control:
     //     None required.
 
-  void setStrandDying();
+    void setStrandIsDying();
+    // Concurrency Control:
+    //     None. Beware of race conditions!!!
+    // Same as Strand::_setStrandIsDying
 
+    _CORBA_Boolean strandIsDying();
+    // Concurrency Control:
+    //     None. Beware of race conditions!!!!
+    // Same as Strand::_strandIsDying.
+    
   private:
     Sync *pd_next;
     Strand *pd_strand;
-
+    _CORBA_Boolean pd_secondHand;
     Sync();
   };
 
+  _CORBA_Boolean _strandIsDying() { return pd_dying; }
+
 protected:
 
-  void setStrandIsDying() { pd_dying = 1; return; }
-  _CORBA_Boolean StrandIsDying() { return pd_dying; }
+  void _setStrandIsDying() { pd_dying = 1; return; }
 
   friend class Sync;
   friend class Strand_iterator;
   friend class Rope;
+  friend class Rope_iterator;
+
 private:
   omni_condition  pd_rdcond;
   int             pd_rd_nwaiting;
@@ -403,6 +519,7 @@ private:
   Rope           *pd_rope;
   _CORBA_Boolean  pd_dying;
   _CORBA_Boolean  pd_heapAllocated;
+  _CORBA_Boolean  pd_heartbeat;
   int		  pd_refcount;
   _CORBA_ULong     pd_seqNumber;
 
@@ -441,8 +558,8 @@ public:
     return;
   }
 
-  _CORBA_Boolean is_protocol(_CORBA_Char *name) {
-    if (strcmp((char *)name,(char *)pd_protocolname) == 0) {
+  _CORBA_Boolean is_protocol(const _CORBA_Char *name) const {
+    if (strcmp((const char *)name,(char *)pd_protocolname) == 0) {
       return 1;
     }
     else {
@@ -450,9 +567,29 @@ public:
     }
   }
 
+  _CORBA_Char* protocol() const {
+    return pd_protocolname;
+  }
+
 private:
   _CORBA_Char * pd_protocolname;
   Endpoint();
+};
+
+class Endpoint_var {
+public:
+  Endpoint_var() : pd_p(0) {}
+  Endpoint_var(Endpoint* p) : pd_p(p) {}
+  ~Endpoint_var() { if (pd_p) delete pd_p; }
+  Endpoint_var& operator=(Endpoint* p) {
+    if (pd_p) delete pd_p;
+    pd_p = p;
+    return *this;
+  }
+  operator Endpoint*() const { return pd_p; }
+private:
+  Endpoint* pd_p;
+  Endpoint_var& operator=(const Endpoint_var&);
 };
 
 class Strand_iterator {
@@ -484,15 +621,10 @@ private:
   Strand_iterator();
 };
 
-class Rope_iterator;
-
 class Anchor {
 public:
   Anchor();
   ~Anchor();
-
-  static Anchor incomingAnchor;
-  static Anchor outgoingAnchor;
 
 private:
   friend class Rope;
@@ -533,6 +665,16 @@ public:
   // Post-condition:
   //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
 
+  virtual _CORBA_Boolean is_incoming() const = 0;
+  // Return TRUE (1) if this is an incoming rope;
+  // Concurrency Control:
+  //      None required.
+
+  virtual _CORBA_Boolean is_outgoing() const = 0;
+  // Return TRUE (1) if this is an outgoing rope;
+  // Concurrency Control:
+  //      None required.
+
   virtual _CORBA_Boolean remote_is(Endpoint *&e) = 0;
   // Returns FALSE if this is not an outgoing rope.
   // If e == 0, returns the remote endpoint in e and returns TRUE
@@ -547,14 +689,6 @@ public:
   // else compare e with this endpoint and returns TRUE if they are the same.
   // Concurrency Control:
   //      None required.
-
-  virtual void iopProfile(const _CORBA_Octet *objkey,const size_t objkeysize,
-			  IOP::TaggedProfile &p) = 0;
-  // Use the supplied object key and the endpoint of this rope, produce
-  // a heap allocated IOP tagged profile.
-  // Concurrency Control:
-  //      None required
-			  
 
   void incrRefCount(_CORBA_Boolean held_anchor_mutex = 0);
   // Concurrency Control:
@@ -584,6 +718,8 @@ public:
   //      Restore <MUTEX> to the same state as indicated by held_anchor_mutex
 
 
+  Anchor* anchor() const { return pd_anchor; }
+
   friend class Strand;
   friend class Strand_iterator;
   friend class Rope_iterator;
@@ -599,7 +735,7 @@ protected:
 #endif
 
   omni_mutex pd_lock;
-  virtual Strand *getStrand();
+  virtual Strand *getStrand(_CORBA_Boolean& secondHand);
   // Concurrency Control:
   //     MUTEX = pd_lock
   // Pre-condition:
@@ -612,6 +748,11 @@ protected:
   // the number of strands has not exceeded pd_maxStrands, call newStrand()
   // to create a new one.
   // A thread may be blocked in this function until a free strand is available.
+  //
+  // Strands created as a side-effect of this call may be cached to serve
+  // subsequent calls. If the strand is created directly as a result of
+  // this call, i.e.  no request has gone through yet, <secondHand> is set
+  // to 0. Otherwise, this is a cached strand, <secondHand> is set to 1.
   //
 
   virtual Strand *newStrand() = 0;
@@ -637,6 +778,58 @@ private:
   Rope();
 };
 
+class Rope_var {
+public:
+  inline Rope_var() : _ptr(0) {}
+
+  inline Rope_var(Rope* p) { _ptr = p; }
+
+  inline ~Rope_var() {
+    if (_ptr)
+      _ptr->decrRefCount();
+  }
+
+  inline Rope_var(const Rope_var& p) {
+    if (_ptr) {
+      _ptr->decrRefCount();
+      _ptr = 0;
+    }
+    if (p._ptr) {
+      p._ptr->incrRefCount();
+    }
+    _ptr = p._ptr;
+  }
+
+  inline Rope_var& operator= (const Rope_var& p) {
+    if (_ptr) {
+      _ptr->decrRefCount();
+      _ptr = 0;
+    }
+    if (p._ptr) {
+      p._ptr->incrRefCount();
+    }
+    _ptr = p._ptr;
+    return *this;
+  }
+
+  inline Rope_var& operator= (Rope* p) {
+    if (_ptr) {
+      _ptr->decrRefCount();
+      _ptr = 0;
+    }
+    _ptr = p;
+    return *this;
+  }
+  
+  inline Rope* operator->() const { return _ptr; }
+
+  inline operator Rope*() const { return _ptr; }
+
+  Rope* _ptr;
+};
+
+class ropeFactory;
+
 class Rope_iterator {
 public:
   Rope_iterator(const Anchor *a);
@@ -646,6 +839,15 @@ public:
   //     Does not hold <MUTEX> on entry
   // Post-condition:
   //     Hold <MUTEX> on exit
+
+  Rope_iterator(ropeFactory* rf);
+  // Concurrency Control:
+  //     MUTEX = rf->anchor()->pd_lock
+  // Pre-condition:
+  //     Does not hold <MUTEX> on entry
+  // Post-condition:
+  //     Hold <MUTEX> on exit
+
 
   ~Rope_iterator();
   // Concurrency Control:
