@@ -1,3 +1,5 @@
+#ifndef _QUEUE_H
+#define _QUEUE_H
 
 #include <omnithread.h>
 
@@ -85,3 +87,5 @@ public:
     return d;
   }
 };
+
+#endif /* _QUEUE_H */
