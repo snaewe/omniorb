@@ -8,7 +8,7 @@
 \author{Tristan Richardson\\
         ORL\\
         Cambridge}
-\date{31 October 1996}
+\date{5 November 1996}
 
 \begin{document}
 
@@ -455,6 +455,13 @@ contain something like ``{\tt -lomnithread -lpthreads}'' and a variable
 libomnithread.a}.  By specifying such dependencies programs will automatically
 be relinked whenever relevant libraries change.
 
+In addition to the rules for creating the executables, you also need to specify
+what the C and C++ source files are.  The variables {\tt SRCS} and {\tt
+CXXSRCS} should contain a list of the C and C++ source files respectively.  The
+main effect of setting these variables is to cause header file dependency
+analysis to be performed.  The variable {\tt ASSRCS} can be used to specify
+assembly language source files.
+
 To specify the options that get given to the C or C++ compiler there are
 several variables you can use.  The most common one is \verb|DIR_CPPFLAGS|.
 This is used for passing C preprocessor flags (i.e. {\tt -D} and {\tt -I}) to
@@ -494,8 +501,9 @@ $(lib): <objects>
 \end{verbatim}}
 
 Again you can use \verb|DIR_CPPFLAGS|, {\tt CDEBUGFLAGS}, etc for controlling
-the flags given to the compiler.  To export the library and clean it out you
-should also have:
+the flags given to the compiler, and you should put the names of all the source
+files in {\tt SRCS} and {\tt CXXSRCS}.  To export the library and clean it out
+you should also have:
 
 {\small \begin{verbatim}
 clean::
@@ -624,12 +632,16 @@ files into {\tt include}.
 For your source files you must decide on an appropriate directory structure
 underneath {\tt src} and put the source files there.  You can have any
 structure there, but if you want a guide, take a look at the {\tt
-/project/omni/version4.0/src} structure.  This has firstly a directory with
-tools used in the building process (which are probably unlikely in your project
-tree), secondly a directory with ATMos interface files (again unlikely unless
-you are writing low-level ATMos code), thirdly a directory with libraries, and
-lastly a directory where executable programs are built.
-
+/project/omni/version4.0/src} structure.  This has (in order of processing by
+{\tt omake}):
+\begin{itemize}
+\item a directory with tools used in the building process (which are probably
+unlikely in your project tree).
+\item a directory with ATMos interface files (again unlikely unless you are
+writing low-level ATMos code).
+\item a directory with sources to be made into libraries.
+\item a directory with sources to be made into executable programs.
+\end{itemize}
 In your source tree you'll need an appropriate {\tt dir.mk} file in each
 directory (including one in {\tt src} itself).  At the top level you may not
 want ``{\tt omake all}'' to do anything since it is unlikely to do what people
@@ -641,21 +653,24 @@ exported.
 
 Once you have the structure and the {\tt dir.mk} files, you can now create a
 build tree for each platform.  Go into the {\tt build} directory and run ``{\tt
-obuildtree}''.  Nearly all the the defaults should be correct, but when
-prompted for import trees specify your top-level directory ({\tt
-/project/wobble/version1.0}), and make sure that the same tree is the export
-tree and also that the source tree is the same with {\tt src} appended ({\tt
-/project/wobble/version1.0/src}).
+obuildtree}''.  Nearly all the the defaults should be correct.  Make sure that
+your top-level directory ({\tt /project/wobble/version1.0}) is the export tree
+as well as the first import tree, and also that the source tree is the same
+with {\tt src} appended ({\tt /project/wobble/version1.0/src}).
 
 Go into the {\it platform} subdirectory and do ``{\tt oshadow}'' then ``{\tt
 omake export}''.  If you got your {\tt dir.mk} files correct everything will
 now build and be exported to your project import/export tree.
 
-Now that the project import/export tree is set up users can create their own
-build trees which import from the project import/export tree, but they should
-not export to it from their private build trees.  It may even be worth writing
-a project-specific version of {\tt obuildtree} to create a build tree which
-automatically imports from both the base OMNI tree and the project tree.
+Once the project import/export tree is set up, users can create their own build
+trees which import from the project import/export tree.  Note that they should
+not export to it from their private build trees -- only the ``official''
+project build trees should be used for this purpose.  It may be worth
+suggesting to your users that they set the environment variable
+\verb|OMNI_IMPORT_TREES| to contain your top-level directory (e.g. {\tt
+/project/wobble/version1.0}).  Whenever they run {\tt obuildtree} it will by
+default import from any trees specified in \verb|OMNI_IMPORT_TREES|, saving
+them from having to type the full path out each time they create a build tree.
 
 
 \section{CORBA}
@@ -839,6 +854,7 @@ programs, simply add a line ``{\tt Package calc}'' to the SYSTEM file and again
 run {\tt aconfig} followed by {\tt make}.
 
 \subsection{Hello World Revisited}
+\label{atmoshello}
 
 This section goes through the steps necessary to build and run the simple
 ``hello world'' example on an ATMos platform.  Your environment should be set
@@ -847,9 +863,9 @@ but this time specify the appropriate ATMos platform and make sure that the
 build tree {\em does} have an export tree. For example:
 
 {\small \begin{verbatim}
-$ cd /home/tjr
-$ mkdir wob
-$ cd wob
+$ cd /home/tjr/hello
+$ mkdir build
+$ cd build
 $ obuildtree
 
 Enter the base OMNI tree for this build tree
@@ -864,15 +880,15 @@ x86_nt_3.5
 > [alpha_osf1_3.2] arm_atmos_3.0/atb
 
 Enter the destination directory
-> [arm_atmos_3.0/atb] atmos_hello
+> [arm_atmos_3.0/atb] 
 
 Does this build tree have an export tree ?
-> [n] y
+> [y] 
 
 Enter the export tree
-> /home/tjr/wob
+> [/home/tjr/hello] 
 
-The first import tree will be /home/tjr/wob (the export tree)
+The first import tree will be /home/tjr/hello (the export tree)
 The final import tree will be /project/omni/version4.0 (the base OMNI tree)
 Enter any other import trees in search order
 > 
@@ -882,12 +898,12 @@ Does this build tree have any source trees ?
 
 ************************************************************************
 
-Creating OMNI build tree "atmos_hello" for platform "arm_atmos_3.0/atb"
+Creating OMNI build tree "arm_atmos_3.0/atb" for platform "arm_atmos_3.0/atb"
 
-Export tree is /home/tjr/wob
+Export tree is /home/tjr/hello
 
 Import trees are:
-/home/tjr/wob
+/home/tjr/hello
 /project/omni/version4.0
 
 No source trees
@@ -899,7 +915,9 @@ No source trees
 Now go into your new build tree and write the ``hello world'' program:
 
 {\small \begin{verbatim}
-$ cd atmos_hello
+$ cd arm_atmos_3.0/atb 
+$ mkdir hello
+$ cd hello
 $ cat >hello.c
 #include <stdio.h>
 int main()
@@ -940,7 +958,7 @@ $ omake all
 make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET='all' 'all'
 
 /project/omni/version4.0/mk/afterdir.mk:105: hello.d: No such file or directory
-/bin/sh -ec "arm-gcc -nostdinc -fno-common -fno-builtin -M  -I.  -I/home/tjr/wo
+/bin/sh -ec "arm-gcc -nostdinc -fno-common -fno-builtin -M  -I.  -I/home/tjr/he
     .
     .
     .
@@ -952,8 +970,9 @@ needs to be incorporated into an image file.  It is this stage where we cannot
 avoid using {\tt aconfig}.  To help {\tt aconfig} we need to write a {\em
 module} file describing our executable.  This module file should not contain
 any directives other than {\tt Object}, {\tt Executable} and {\tt ULibrary}.
-In particular it should not have any {\tt Make} or {\tt Message} directives.
-See section \ref{atmosmessages} for information on defining ATMos messages.
+In particular it should not have any {\tt Make} or {\tt Message}
+directives.\footnote{see section \ref{atmosmessages} for information on
+defining ATMos messages.}
 
 For a C program like {\tt hello.c} the module file should look like this:
 
@@ -973,11 +992,13 @@ to our export tree:
 {\small \begin{verbatim}
 $ omake export
 
-make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET='export' 'export'
+make -r -f ../config/config.mk VPATH= TOP=.. CURRENT=hello OMAKE_TARGET='export
+' 'export'
 
-+ mkdirhier /home/tjr/wob/bin/arm_atmos_3.0/atb/hello 
-+ installbsd -c -m 0644 hello.module /home/tjr/wob/bin/arm_atmos_3.0/atb/hello 
-+ installbsd -c -m 0644 hello_exe.o /home/tjr/wob/bin/arm_atmos_3.0/atb/hello 
++ mkdirhier /home/tjr/hello/bin/arm_atmos_3.0/atb/hello 
++ installbsd -c -m 0644 hello.module /home/tjr/hello/bin/arm_atmos_3.0/atb/hell
+o 
++ installbsd -c -m 0644 hello_exe.o /home/tjr/hello/bin/arm_atmos_3.0/atb/hello
 \end{verbatim}}
 
 At this stage we could create an image by writing a SYSTEM file with {\tt
@@ -1007,21 +1028,24 @@ Now run {\tt omake export} again:
 {\small \begin{verbatim}
 $ omake export
 
-make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET='export' 'export'
+make -r -f ../config/config.mk VPATH= TOP=.. CURRENT=hello OMAKE_TARGET='export
+' 'export'
 
 File hello.module hasn't changed.
 File hello_exe.o hasn't changed.
-+ mkdirhier /home/tjr/wob/bin/arm_atmos_3.0/atb/software 
-+ installbsd -c -m 0644 hello.pkg /home/tjr/wob/bin/arm_atmos_3.0/atb/software 
++ mkdirhier /home/tjr/hello/bin/arm_atmos_3.0/atb/software 
++ installbsd -c -m 0644 hello.pkg /home/tjr/hello/bin/arm_atmos_3.0/atb/softwar
+e 
 \end{verbatim}}
 
-Finally the {\tt hello.pkg} in \verb|/home/tjr/wob/bin/arm_atmos_3.0/atb| can
+Finally the {\tt hello.pkg} in \verb|/home/tjr/hello/bin/arm_atmos_3.0/atb| can
 be used to include the hello world program in an ATMos image.  As described in
 section \ref{imageanywhere}, this can be done in any directory.  For example
 you could make a directory {\tt image} inside this build tree and create the
 image there:
 
 {\small \begin{verbatim}
+$ cd ..
 $ mkdir image
 $ cd image
 $ cat >SYSTEM
@@ -1029,8 +1053,8 @@ Hardware atb
 Set Pthreads
 Package core
 
-ReleasePath /home/tjr/wob/bin/arm_atmos_3.0/atb
-Path /home/tjr/wob/bin/arm_atmos_3.0/atb
+ReleasePath /home/tjr/hello/bin/arm_atmos_3.0/atb
+Path /home/tjr/hello/bin/arm_atmos_3.0/atb
 
 Package hello
 
@@ -1080,9 +1104,154 @@ development environment.
 
 Other than creating an ATMos image there is one other situation in which we
 cannot avoid using {\tt aconfig}.  This is when writing low-level ATMos code
-which uses ATMos messages.
+which uses ATMos messages.  ATMos message definitions need to be put in module
+files, but in the ODE we do not allow these to be the same module files which
+describe executables.  Module files which define messages should instead be put
+in a separate directory at the top of the source or build tree.
 
-...to be continued
+One way of looking at it is that existing ATMos module files need to broken up
+into their three different functions:
+
+\begin{enumerate}
+\item Directives which say how to compile programs and libraries are replaced
+by rules in dir.mk.
+\item Directives describing particular executables are put into a module file
+in the same directory as the code and dir.mk (as described in section
+\ref{atmoshello} for the hello world example).
+\item Directives defining {\em interfaces}, i.e. messages (and possibly
+hardware configuration), are put into module files in a separate ``ATMos
+interface'' directory.
+\end{enumerate}
+
+So say you have a couple of ATMos messages you want to define.  Make a
+directory called \verb|atmos_if| at the top level of your build tree, and
+inside there write a module file which just defines the messages:
+
+{\small \begin{verbatim}
+$ cd /home/tjr/hello/build/arm_atmos_3.0/atb
+$ mkdir atmos_if
+$ cd atmos_if
+$ cat >mymsg.module
+MessageId 0x00200000
+
+Message ONE
+{
+  int a;
+}
+
+Message TWO
+{
+  char *b
+}
+\end{verbatim}}
+
+Note that it's preferable to use the {\tt MessageId} directive rather than
+allowing message IDs to be allocated automatically.  If you don't use the {\tt
+MessageId} directive then automatic allocation of message IDs happens in the
+normal way.  When you have multiple import trees each defining messages with
+automatically allocated IDs, it can be very difficult to ensure consistency
+between libraries and programs built in different places.
+
+Now you need to write a {\tt dir.mk} to specify that the messages in {\tt
+mymsg.module} should be exported and then run ``{\tt omake export}'':
+
+{\small \begin{verbatim}
+$ cat >dir.mk
+all::
+        @echo
+        @echo 'No "all" rule here.  Do "omake export" to export ATMos'
+        @echo 'interface files.'
+        @echo
+
+export::
+        @(modules="mymsg"; $(ExportATMosInterfaces))
+$ omake export
+
+make -r -f ../config/config.mk VPATH= TOP=.. CURRENT=atmos_if OMAKE_TARGET='exp
+ort' 'export'
+
+echo Module mymsg >> /home/tjr/hello/bin/arm_atmos_3.0/atb/all_interfaces
++ mkdirhier /home/tjr/hello/bin/arm_atmos_3.0/atb/mymsg 
++ installbsd -c -m 0644 mymsg.module /home/tjr/hello/bin/arm_atmos_3.0/atb/myms
+g 
+echo Hardware atb > /home/tjr/hello/bin/arm_atmos_3.0/atb/SYSTEM
+echo Set Pthreads >> /home/tjr/hello/bin/arm_atmos_3.0/atb/SYSTEM
+echo Package core >> /home/tjr/hello/bin/arm_atmos_3.0/atb/SYSTEM
+echo Path /home/tjr/hello/bin/arm_atmos_3.0/atb >> /home/tjr/hello/bin/arm_atmo
+s_3.0/atb/SYSTEM
+cat /home/tjr/hello/bin/arm_atmos_3.0/atb/all_interfaces >> /home/tjr/hello/bin
+/arm_atmos_3.0/atb/SYSTEM
++ cd /home/tjr/hello/bin/arm_atmos_3.0/atb 
++ aconfig 
+ATMos Config (Jul 24 1996, 13:24:41)
+   .
+   .
+Config completed successfully.
+\end{verbatim}}
+
+If you look in the ...\verb|/bin/arm_atmos_3.0/atb| directory you will see that
+the message definitions now appear in the \verb|init/messages.h| file.  Code in
+your build tree which tries to include \verb|messages.h| should find this file,
+and thus have access to all message definitions which were exported from the
+\verb|atmos_if| directory.
+
+One other thing to note is that we haven't written a top-level {\tt dir.mk} in
+this example yet.  It is important that when doing ``{\tt omake export}'' at
+the top of the build tree, the \verb|atmos_if| directory is processed before
+any directories with code which might use the message definitions.  In this
+case the top-level {\tt dir.mk} should be something like:
+
+{\small \begin{verbatim}
+SUBDIRS = atmos_if hello
+
+export::
+        @$(MakeSubdirs)
+\end{verbatim}}
+
+\subsubsection{Multiple import trees defining ATMos messages}
+
+Any ATMos build tree should pull in the \verb|messages.h| file from the first
+import tree it finds which has any message definitions.  So if only one import
+tree has any message definitions then things work fine.  However if two import
+trees both have message definitions then somehow all the messages defined in
+the two trees need to be combined into a single \verb|messages.h| file.  The
+{\tt ExportATMosInterfaces} rule should cope with this, but it is worth
+explaining how this is done so that potential problems can be avoided.
+
+Say you have an ATMos build tree which exports to and imports from your own
+import/export tree, and also imports from a project tree.  When you do ``{\tt
+omake export}'' inside the \verb|atmos_if| directory of your build tree, it
+generates a {\tt messages.h} file inside the \verb|bin/arm_atmos...| directory
+of your import/export tree, as explained above.  However, because this build
+tree also imports from the project tree, the {\tt messages.h} file generated
+contains not only the message definitions from your own \verb|atmos_if|
+directory, but also the message definitions from the project tree.
+
+There are two situations where you have to be careful:
+
+\begin{itemize}
+
+\item If someone changes message definitions in the project tree, they will do
+``{\tt omake export}'' inside the project build tree, thus updating the {\tt
+messages.h} file in the project import/export tree.  However, the {\tt
+messages.h} file in your import/export tree will continue to have the old
+message definitions from the project tree.  To keep things consistent you need
+to redo ``{\tt omake export}'' in the \verb|atmos_if| directory of your own
+build tree, even though none of your message definitions have changed.
+
+\item If you want to import from two unrelated project trees (say the streams
+tree and the spirit tree) then by default you will only get the messages from
+whichever tree you import from first.  If you want to combine the two sets of
+message definitions you will need to create your own import/export tree, and
+inside your build tree have an \verb|atmos_if| directory even if you don't
+define any messages yourself (the {\tt dir.mk} for such a directory would
+simply have an {\tt ExportATMosInterfaces} rule without specifying any module
+files).  Note that in this case it is imperative that the message definitions
+in the two project trees use {\tt MessageId} directives -- otherwise the same
+message will have a different ID in your local import/export tree from the ID
+it has in the project import/export tree.
+
+\end{itemize}
 
 
 \begin{thebibliography}{ward95}
