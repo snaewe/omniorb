@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/07/31 16:24:23  sll
+  Moved filtering and sorting of available addresses into a separate
+  function. Make acquireClient, decrRefCount and notifyCommFailure virtual.
+
   Revision 1.1.4.2  2001/06/13 20:11:37  sll
   Minor update to make the ORB compiles with MSVC++.
 
@@ -67,6 +71,7 @@ class giopRope : public Rope, public RopeLink {
  public:
 
   static int selectRope(const giopAddressList&,
+			omniIOR::IORInfo*,
 			Rope*&,
 			CORBA::Boolean& is_local);
   // Given an address list, return a rope that can be used to talk to
@@ -85,8 +90,9 @@ class giopRope : public Rope, public RopeLink {
   //    Caller must not hold omniTransportLock, it is used internally for
   //    synchronisation.
 
-  giopRope(const giopAddressList& list);
-  // <list> is copied.
+  giopRope(const giopAddressList& addrlist, 
+	   const omnivector<CORBA::ULong>& preferred);
+  // <list> & <preferred> are copied.
   // Reference count is initialised to 0.
   // No thread safety precondition
 
@@ -99,10 +105,10 @@ class giopRope : public Rope, public RopeLink {
   // No thread safety precondition
 
 
-  IOP_C* acquireClient(const omniIOR*,
-		       const CORBA::Octet* key,
-		       CORBA::ULong keysize,
-		       omniCallDescriptor*);
+  virtual IOP_C* acquireClient(const omniIOR*,
+			       const CORBA::Octet* key,
+			       CORBA::ULong keysize,
+			       omniCallDescriptor*);
   // Acquire a GIOP_C from this rope.
   //
   // Thread Safety preconditions:
@@ -126,7 +132,7 @@ class giopRope : public Rope, public RopeLink {
   //    Caller must not hold omniTransportLock, it is used internally for
   //    synchronisation.
 
-  void decrRefCount();
+  virtual void decrRefCount();
   // Decrement the reference count by 1. If the reference count becomes
   // 0, the rope will be deleted at the earliest convenient time.
   //
@@ -134,7 +140,7 @@ class giopRope : public Rope, public RopeLink {
   //    Caller must not hold omniTransportLock, it is used internally for
   //    synchronisation.
 
-  const giopAddress* notifyCommFailure(const giopAddress*);
+  virtual const giopAddress* notifyCommFailure(const giopAddress*);
   // Caller detects an error in sending or receiving data with this address.
   // It calls this function to indicate to the rope that the address is bad.
   // If the rope has other alternative addresses, it should select another
@@ -190,8 +196,7 @@ class giopRope : public Rope, public RopeLink {
   friend class giopStream;
   friend class giopStrand;
 
- private:
-
+ protected:
   int                  pd_refcount;  // reference count
   giopAddressList      pd_addresses; // Addresses of the remote address space
   omnivector<CORBA::ULong>              pd_addresses_order;
@@ -204,8 +209,7 @@ class giopRope : public Rope, public RopeLink {
   static _core_attr RopeLink ropes;
   // All ropes created by selectRope are linked together by this list.
 
-
-  void realIncrRefCount();
+  virtual void realIncrRefCount();
   // Really increment the reference count.
   //
   // Thread Safety preconditions:
@@ -215,6 +219,16 @@ class giopRope : public Rope, public RopeLink {
   // Return TRUE(1) if the address list matches EXACTLY those of this rope.
   // No thread safety precondition
 
+  static void filterAndSortAddressList(const giopAddressList& list,
+				       omnivector<CORBA::ULong>& ordered_list,
+				       CORBA::Boolean& use_bidir);
+  // Consult the configuration table, filter out the addresses in <list> that
+  // should not be used. Sort the remaining ones in the order of preference.
+  // Write out the *index* of the sorted addresses into <ordered_list>.
+  // Set use_bidir to 1 if bidirection GIOP is to be used for the sorted
+  // addresses.
+
+ private:
   giopRope();
   giopRope(const giopRope&);
   giopRope& operator=(const giopRope&);

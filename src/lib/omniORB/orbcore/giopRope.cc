@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/07/31 16:24:23  sll
+  Moved filtering and sorting of available addresses into a separate
+  function. Make acquireClient, decrRefCount and notifyCommFailure virtual.
+
   Revision 1.1.4.6  2001/07/13 15:26:58  sll
   Use safeDelete to remove a strand.
 
@@ -57,8 +61,11 @@
 #include <giopStream.h>
 #include <giopStrand.h>
 #include <giopStreamImpl.h>
+#include <giopBiDir.h>
 #include <GIOP_C.h>
 #include <objectAdapter.h>
+#include <exceptiondefs.h>
+#include <omniORB4/minorCode.h>
 
 #include <stdlib.h>
 
@@ -68,40 +75,31 @@ OMNI_NAMESPACE_BEGIN(omni)
 RopeLink giopRope::ropes;
 
 ////////////////////////////////////////////////////////////////////////
-giopRope::giopRope(const giopAddressList& addrlist) :
+giopRope::giopRope(const giopAddressList& addrlist,
+		   const omnivector<CORBA::ULong>& preferred) :
   pd_refcount(0),
+  pd_address_in_use(0),
   pd_maxStrands(omniORB::maxTcpConnectionPerServer),
   pd_oneCallPerConnection(omniORB::oneCallPerConnection),
   pd_nwaiting(0),
   pd_cond(omniTransportLock)
 {
-  giopAddressList::const_iterator i, last;
-  i    = addrlist.begin();
-  last = addrlist.end();
-  for (; i != last; i++) {
-    giopAddress* a = (*i)->duplicate();
-    pd_addresses.push_back(a);
+  {
+    giopAddressList::const_iterator i, last;
+    i    = addrlist.begin();
+    last = addrlist.end();
+    for (; i != last; i++) {
+      giopAddress* a = (*i)->duplicate();
+      pd_addresses.push_back(a);
+    }
   }
-  // We should consult the configuration table to decide which address is
-  // more preferable than the others. Some of the addresses in pd_addresses
-  // may not be usable anyway. We then record the order of addresses to use
-  // in pd_addresses_order.
 
-  // XXX Since we haven't got a configuration table yet, we use all the
-  //     addresses and use them in the order as supplied.
-  CORBA::ULong index;
-  CORBA::ULong total = pd_addresses.size();
-  for (index = 0; index < total; index++)
-    pd_addresses_order.push_back(index);
-  pd_address_in_use = 0;
-
-
-  // XXX Make SSL the first one to try if it is available.
-  for (index = 0; index < total; index++) {
-    if (strcmp(pd_addresses[index]->type(),"giop:ssl")==0) {
-      pd_addresses_order[index] = pd_addresses_order[0];
-      pd_addresses_order[0] = index;
-      break;
+  {
+    omnivector<CORBA::ULong>::const_iterator i, last;
+    i    = preferred.begin();
+    last = preferred.end();
+    for (; i != last; i++) {
+      pd_addresses_order.push_back(*i);
     }
   }
 }
@@ -213,6 +211,23 @@ giopRope::acquireClient(const omniIOR* ior,
     // Notice that we can have up to
     //  pd_maxStrands * <no. of supported GIOP versions> strands created.
     //
+    
+    // Do a sanity check here. It could be the case that this rope has
+    // no valid address to use. This can be the case if we have unmarshalled
+    // an IOR in which none of the profiles we can support. In theory it
+    // shouldn't happen because all IOR must support IIOP. However, this
+    // could be a special ORB version in which the IIOP transport is taken
+    // out. Notice that we do not raise an exception at the time when the IOR
+    // was unmarshalled because we would like to be able to receive and pass
+    // along object references that we ourselves cannot talk to.
+    //
+    // XXX Actually this is not quite true yet. If the IOR hasn't at
+    // least have an IIOP profile, MARSHAL exception is raised! This should
+    // be fixed.
+    if (pd_addresses_order.empty()) {
+      OMNIORB_THROW(TRANSIENT,TRANSIENT_NoUsableProfile,CORBA::COMPLETED_NO);
+    }
+
     giopStrand* s = new giopStrand(pd_addresses[pd_addresses_order[pd_address_in_use]]);
     s->state(giopStrand::ACTIVE);
     s->RopeLink::insert(pd_strands);
@@ -223,7 +238,7 @@ giopRope::acquireClient(const omniIOR* ior,
   else if (pd_oneCallPerConnection || ndying >= max) {
     // Wait for a strand to be unused.
     pd_nwaiting++;
-    pd_cond.wait();
+    pd_cond.wait();   // XXX Should do time want if deadline is set.
     pd_nwaiting--;
   }
   else {
@@ -313,7 +328,10 @@ giopRope::releaseClient(IOP_C* iop_c) {
                              // on the rope to have a chance to create
                              // another strand.
   }
-  else if ( !giopStreamList::is_empty(s->clients) ) {
+  else if ( (s->biDir && !s->isClient()) || 
+	    !giopStreamList::is_empty(s->clients) ) {
+    // We do not cache the GIOP_C if this is server side bidirectional or
+    // we already have other GIOP_Cs active or available.
     remove = 1;
     avail = 0;
   }
@@ -322,7 +340,7 @@ giopRope::releaseClient(IOP_C* iop_c) {
     giop_c->giopStreamList::insert(s->clients);
     // The strand is definitely idle from this point onwards, we
     // reset the idle counter so that it will be retired at the right time.
-    s->resetIdleCounter(giopStrand::idleOutgoingBeats);
+    if (s->isClient()) s->resetIdleCounter(giopStrand::idleOutgoingBeats);
   }
 
   if (remove) {
@@ -430,11 +448,18 @@ giopRope::notifyCommFailure(const giopAddress* addr) {
 ////////////////////////////////////////////////////////////////////////
 int
 giopRope::selectRope(const giopAddressList& addrlist,
+		     omniIOR::IORInfo* info,
 		     Rope*& r,CORBA::Boolean& loc) {
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
 
   omni_tracedmutex_lock sync(*omniTransportLock);
+
+  // Check if we have to use a bidirectional connection.
+  if (BiDirServerRope::selectRope(addrlist,info,r)) {
+    loc = 0;
+    return 1;
+  }
 
   // Check if these are our addresses
   giopAddressList::const_iterator i, last;
@@ -473,12 +498,24 @@ giopRope::selectRope(const giopAddressList& addrlist,
 
   // Reach here because we cannot find an existing rope that matches,
   // must create a new one.
-  gr = new giopRope(addrlist);
+
+  omnivector<CORBA::ULong> prefer_list;
+  CORBA::Boolean use_bidir;
+
+  filterAndSortAddressList(addrlist,prefer_list,use_bidir);
+
+  if (!use_bidir) {
+    gr = new giopRope(addrlist,prefer_list);
+  }
+  else {
+    gr = new BiDirClientRope(addrlist,prefer_list);
+  }
   gr->RopeLink::insert(giopRope::ropes);
   gr->realIncrRefCount();
   r = (Rope*)gr; loc = 0;
   return 1;
 }
+
 
 ////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
@@ -494,6 +531,40 @@ giopRope::match(const giopAddressList& addrlist) const
     if (!omni::ptrStrMatch((*i)->address(),(*j)->address())) return 0;
   }
   return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+void
+giopRope::filterAndSortAddressList(const giopAddressList& addrlist,
+				   omnivector<CORBA::ULong>& ordered_list,
+				   CORBA::Boolean& use_bidir)
+{
+  // We should consult the configuration table to decide which address is
+  // more preferable than the others. Some of the addresses in addrlist
+  // may not be usable anyway. We then record the order of addresses to use
+  // in pd_addresses_order.
+
+  // XXX Since we haven't got a configuration table yet, we use all the
+  //     addresses and use them in the order as supplied.
+  CORBA::ULong index;
+  CORBA::ULong total = addrlist.size();
+  for (index = 0; index < total; index++)
+    ordered_list.push_back(index);
+
+  // XXX Make SSL the first one to try if it is available.
+  for (index = 0; index < total; index++) {
+    if (strcmp(addrlist[index]->type(),"giop:ssl")==0) {
+      ordered_list[index] = ordered_list[0];
+      ordered_list[0] = index;
+      break;
+    }
+  }
+
+  if (omniORB::offerBiDirectionalGIOP) {
+    // XXX in future, we will be more selective as to which addresses will
+    // use bidirectional.
+    use_bidir = 1;
+  }
 }
 
 OMNI_NAMESPACE_END(omni)
