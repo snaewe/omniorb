@@ -1,0 +1,69 @@
+RELEASE NOTES for omniORB 4.0 beta 2
+====================================
+
+This is the second beta release of omniORB 4.0.
+
+See README.unix or README.win32 for building instructions.
+
+
+Major new features since omniORB 3.0.x
+--------------------------------------
+
+ - Updated to CORBA 2.6.
+ - Support for GIOP 1.1 and 1.2.
+ - Wide string and codeset negotiation.
+ - Unix domain and SSL transports.
+ - Bidirectional GIOP.
+ - Thread pool mode.
+ - PortableServer::Current.
+ - Interceptors.
+ - Fixed point.
+ - Complete freeing of all heap allocations.
+ - New comprehensive configuration mechanism.
+
+And many other improvements.
+
+
+Known issues
+------------
+
+This beta is almost feature complete, but it has the following known
+issues and omissions.
+
+These issues should be fixed/resolved before the full 4.0.0 release:
+
+ - Thread and mutex tracing is turned on by default, which has a
+   serious performance impact. If you are doing performance testing,
+   turn it off with the --disable-thread-tracing argument to
+   configure, or by editing include/omniconfig.h. Otherwise, please
+   leave it turned on, since it will help track down any threading
+   bugs in omniORB. Tracing will be turned off by default in the 4.0.0
+   release.
+
+ - If the SSL transport is linked in to the application but is not
+   initialised, ORB_init() fails.
+
+ - When using SSL, ORB shutdown hangs if the ORB does not have a valid
+   client certificate to connect to itself.
+
+ - If a client has the offerBiDirectionalGIOP parameter set true, but
+   it has not created a bidirectional POA, an exception is thrown on
+   the first call.
+
+
+These issues may not be resolved before the 4.0.0 release, but will be
+fixed by 4.0.1.
+
+ - Some interceptors are not implemented yet.
+
+ - The thread wrapper mechanism from omniORB 3.0, allowing the
+   application to wrap thread creation has not yet been
+   reimplemented.
+
+ - The planned per-thread call timeout is not implemented.
+
+ - iostream insertion and extraction operators for CORBA types are not
+   implemented.
+
+ - Optional locking of proxy object factories, to enable dynamic
+   loading/unloading of stubs is not implemented.
