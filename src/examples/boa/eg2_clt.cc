@@ -7,13 +7,14 @@
 // Usage: eg2_clt <object reference>
 //
 
+#include <becho.hh>
+
 #ifdef HAVE_STD
 #  include <iostream>
    using namespace std;
 #else
 #  include <iostream.h>
 #endif
-#include <becho.hh>
 
 
 static void hello(Echo_ptr e)

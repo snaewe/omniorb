@@ -7,6 +7,8 @@
 // Usage: eg2_clt <object reference>
 //
 
+#include <echo.hh>
+
 #ifdef HAVE_STD
 #  include <iostream>
 #  include <fstream>
@@ -14,8 +16,6 @@
 #else
 #  include <iostream.h>
 #endif
-
-#include <echo.hh>
 
 
 static void hello(Echo_ptr e)

@@ -15,6 +15,8 @@
 //        See <top>/src/appl/omniNames/omniNames.cc for an example.
 //
 
+#include <echo.hh>
+
 #ifdef HAVE_STD
 #  include <iostream>
    using namespace std;
@@ -22,7 +24,6 @@
 #  include <iostream.h>
 #endif
 #include <stdlib.h>
-#include <echo.hh>
 
 
 class Echo_i : public POA_Echo,

@@ -11,14 +11,14 @@
 //        anyExample_clt.
 //
 
+#include <anyExample.hh>
+
 #ifdef HAVE_STD
 #  include <iostream>
    using namespace std;
 #else
 #  include <iostream.h>
 #endif
-#include <anyExample.hh>
-
 
 class anyExample_i : public POA_anyExample {
 public:

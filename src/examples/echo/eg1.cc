@@ -7,13 +7,14 @@
 // Usage: eg1
 //
 
+#include <echo.hh>
+
 #ifdef HAVE_STD
 #  include <iostream>
    using namespace std;
 #else
 #  include <iostream.h>
 #endif
-#include <echo.hh>
 
 // This is the object implementation.
 
