@@ -65,7 +65,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #ifndef _DRV_EXTERN_DRV_EXTERN_HH
 #define _DRV_EXTERN_DRV_EXTERN_HH
 
-#pragma ident "%@(#)drv_extern.h	1.17% %92/06/10% Sun Microsystems"
 
 // drv_extern.h - External functions for the IDL compiler driver program
 
@@ -81,7 +80,7 @@ extern void		DRV_cpp_init();
 extern void		DRV_cpp_putarg(char *str);
 extern void		DRV_cpp_new_location(char *new_loc);
 
-#ifndef __NT__
+#ifndef __WIN32__
 extern void		DRV_fork();
 #endif
 

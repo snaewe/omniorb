@@ -65,9 +65,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #ifndef _FE_EXTERN_FE_EXTERN_HH
 #define _FE_EXTERN_FE_EXTERN_HH
 
-#pragma ident "%@(#)fe_extern.h	1.40% %92/06/10% Sun Microsystems"
-
-#ifdef __NT__
+#ifdef __WIN32__
 #include <stdio.h>
 #endif
 
@@ -96,7 +94,7 @@ extern "C" void			FE_init_stage2();	// Initialize stage 2
 
 // Interface to Yacc parser
 
-#ifdef __NT__
+#ifdef __WIN32__
 typedef FILE File;
 #else
 class File;

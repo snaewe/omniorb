@@ -72,7 +72,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  * Front end interface
  */
 
-#ifdef __NT__
+#ifdef __WIN32__
 #include <stdio.h>
 typedef FILE File;
 #else

@@ -65,8 +65,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #ifndef _IDL_IDL_HH
 #define _IDL_IDL_HH
 
-#pragma ident "%@(#)idl.hh	1.18% %92/06/10% Sun Microsystems"
-
 // idl.hh
 //
 // Main include file for IDL compiler. Includes the rest of the
@@ -76,6 +74,9 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include	<stdlib.h>		// POSIX standard defns
 #include	<string.h>		// POSIX string funcs
+#ifdef __aix__
+#include        <strings.h>
+#endif
 #include	<ctype.h>		// External functions
 
 #include	<iostream.h>		// Standard IO library

@@ -62,8 +62,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
  */
 
-#pragma ident "%@(#)utl_error.cc	1.18% %92/06/10% Sun Microsystems"
-
 // utl_error.cc - Implementation of error reporting object for IDL
 //		  compiler program
 

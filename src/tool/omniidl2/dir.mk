@@ -11,6 +11,11 @@ DRV_OBJS =      driver/drv_init.o \
 
 LIBS = advapi32.lib
 
+ifndef BuildDebugBinary
+CXXDEBUGFLAGS =
+SUBDIR_MAKEFLAGS = CXXDEBUGFLAGS=""
+endif
+
 else
 
 OBJ_LIBS = driver/$(patsubst %,$(LibPattern),drv)
