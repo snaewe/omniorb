@@ -26,6 +26,13 @@
 // Description:
 //
 
+/*
+ $Log$
+ Revision 1.3  1999/04/21 11:22:14  djr
+ CORBA::Context is a friend of ContextImpl
+
+*/
+
 #ifndef __CONTEXT_H__
 #define __CONTEXT_H__
 
@@ -69,6 +76,8 @@ public:
   //  Must not hold <pd_lock>.
 
 private:
+  friend class CORBA::Context;
+
   ContextImpl(const ContextImpl&);             // not implemented
   ContextImpl& operator=(const ContextImpl&);  // not implemented
 
