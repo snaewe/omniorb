@@ -1,3 +1,37 @@
+Wed Jan  9 11:22:19 GMT 2002 dpg1
+=================================
+
+- Remove separate omniAsyncInvoker library to save library overhead.
+
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/src/lib/dir.mk
+external_merge/src/lib/omniAsyncInvoker/GNUmakefile  -- deleted
+include/omniAsyncInvoker.h                           -- deleted
+include/omniORB4/CORBA.h
+include/omniORB4/omniAsyncInvoker.h                  -- new
+src/lib/dir.mk
+src/lib/omniAsyncInvoker/dir.mk                      -- deleted
+src/lib/omniAsyncInvoker/invoker.cc                  -- deleted
+src/lib/omniORB/include/invoker.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/invoker.cc                   -- new
+
+- Platform, constness fixes.
+
+include/omniORB4/CORBA_Any.h
+src/lib/omniORB/dynamic/dynException.cc
+src/lib/omniORB/dynamic/unknownUserExn.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+- New omniORB::setLogFunction() function.
+
+include/omniORB4/omniORB.h
+src/lib/omniORB/orbcore/logIOstream.cc
+
+
 Wed Jan  2 18:07:47 GMT 2002 dpg1
 =================================
 
