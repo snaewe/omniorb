@@ -1,3 +1,13 @@
+Fri Jun 18 23:33:13 BST 1999 sll
+================================
+
+- Update examples to use const char* for extraction of string from Any
+
+src/examples/dsi/echo_dsiimpl.cc
+src/examples/dii/echo_diiclt.cc
+src/examples/anyExample/anyExample_impl.cc
+
+
 Fri Jun 18 20:58:00 BST 1999 sll
 ================================
 
