@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  2000/01/19 17:05:11  djs
+# Modified to use an externally stored C++ output template.
+#
 # Revision 1.2  2000/01/19 11:23:29  djs
 # Moved most C++ code to template file
 #
@@ -38,8 +41,8 @@
 """Produce bounded string #ifdefs for .hh"""
 
 from omniidl import idlast, idltype, idlutil
-
 from omniidl.be.cxx import tyutil, util, config, name
+from omniidl.be.cxx.header import template
 
 import tcstring
 

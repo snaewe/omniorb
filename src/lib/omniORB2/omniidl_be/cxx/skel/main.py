@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.26  2000/01/19 17:05:15  djs
+# Modified to use an externally stored C++ output template.
+#
 # Revision 1.25  2000/01/19 11:21:52  djs
 # *** empty log message ***
 #
@@ -116,10 +119,9 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-
 from omniidl.be.cxx import tyutil, util, name, env, config, skutil
-
 from omniidl.be.cxx.skel import mangler, dispatch, proxy
+from omniidl.be.cxx.skel import template
 
 import main
 self = main
@@ -190,80 +192,14 @@ def visitInterface(node):
 
 
     # build the helper class methods
-    stream.out("""\
-@name@_ptr @name@_Helper::_nil() {
-  return @name@::_nil();
-}
-
-CORBA::Boolean @name@_Helper::is_nil(@name@_ptr p) {
-  return CORBA::is_nil(p);\n
-}
-
-void @name@_Helper::release(@name@_ptr p) {
-  CORBA::release(p);
-}
-
-void @name@_Helper::duplicate(@name@_ptr p) {
-  if( p )  omni::duplicateObjRef(p);
-}
-
-size_t @name@_Helper::NP_alignedSize(@name@_ptr obj, size_t offset) {
-  return @name@::_alignedSize(obj, offset);
-}
-
-void @name@_Helper::marshalObjRef(@name@_ptr obj, NetBufferedStream& s) {
-  @name@::_marshalObjRef(obj, s);
-}
-
-@name@_ptr @name@_Helper::unmarshalObjRef(NetBufferedStream& s) {
-  return @name@::_unmarshalObjRef(s);
-}
-
-void @name@_Helper::marshalObjRef(@name@_ptr obj, MemBufferedStream& s) {
-  @name@::_marshalObjRef(obj, s);
-}
-
-@name@_ptr @name@_Helper::unmarshalObjRef(MemBufferedStream& s) {
-  return @name@::_unmarshalObjRef(s);
-}""", name = id)
+    stream.out(template.interface_Helper,
+               name = id)
 
     # the class itself
-    stream.out("""\
-@name@_ptr
-@name@::_duplicate(@name@_ptr obj)
-{
-  if( obj )  omni::duplicateObjRef(obj);
-   return obj;
-  
-}
-
-
-@name@_ptr
-@name@::_narrow(CORBA::Object_ptr obj)
-{
-  if( !obj || obj->_NP_is_nil() || obj->_NP_is_pseudo() ) return _nil();
-  _ptr_type e = (_ptr_type) obj->_PR_getobj()->_realNarrow(_PD_repoId);
-  return e ? e : _nil();
-}
-
-
-@name@_ptr
-@name@::_nil()
-{
-  static @objref_name@* _the_nil_ptr = 0;
-  if( !_the_nil_ptr ) {
-    omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new @objref_name@;
-    omni::nilRefLock().unlock();
-  }
-  return _the_nil_ptr;
-}""", name = id, objref_name = objref_name)
-    
-
-    # output the repository ID
-    stream.out("""\
-const char* @name@::_PD_repoId = \"@repoID@\";""",
-               name = id, repoID = tyutil.mapRepoID(node.repoId()))
+    stream.out(template.interface_class,
+               name = id,
+               objref_name = objref_name,
+               repoID = tyutil.mapRepoID(node.repoId()))
 
     # gather information for possible interface inheritance
     # (needs to use the transitive closure of inheritance)
@@ -281,36 +217,18 @@ const char* @name@::_PD_repoId = \"@repoID@\";""",
     for i in node.inherits():
         inherits_scopedName = map(tyutil.mapID, i.scopedName())        
         inherits_objref_scopedName =  tyutil.scope(inherits_scopedName) + \
-                                     ["_objref_" + tyutil.name(inherits_scopedName)]
+                                     ["_objref_" + \
+                                      tyutil.name(inherits_scopedName)]
         inherits_objref_name = environment.nameToString(environment.relName(
             inherits_objref_scopedName))
-        inherits_str = inherits_str + inherits_objref_name + "(mdri, p, id, lid),\n"
+        inherits_str = inherits_str + inherits_objref_name +\
+                       "(mdri, p, id, lid),\n"
 
     # generate the _objref_ methods
-    stream.out("""\
-@fq_objref_name@::~@objref_name@() {}
-
-
-@fq_objref_name@::@objref_name@(const char* mdri,
-   IOP::TaggedProfileList* p, omniIdentity* id, omniLocalIdentity* lid) :
-   @inherits_str@
-   omniObjRef(@name@::_PD_repoId, mdri, p, id, lid)
-{
-  _PR_setobj(this);
-}
-
-void*
-@fq_objref_name@::_ptrToObjRef(const char* id)
-{
-  if( !strcmp(id, CORBA::Object::_PD_repoId) )
-    return (CORBA::Object_ptr) this;
-  if( !strcmp(id, @name@::_PD_repoId) )
-    return (@name@_ptr) this;
-  @inherited_repoIDs@
-  return 0;
-}
-""", name = id, fq_objref_name = objref_fqname, objref_name = objref_name,
-               inherits_str = inherits_str, inherited_repoIDs = inherited_repoIDs)
+    stream.out(template.interface_objref,
+               name = id, fq_objref_name = objref_fqname,
+               objref_name = objref_name, inherits_str = inherits_str,
+               inherited_repoIDs = inherited_repoIDs)
 
     # deal with callables (attributes and interfaces)
     callables = node.callables()
@@ -360,21 +278,21 @@ void*
         # deal with possible "context"s
         if operation.contexts() != []:
             # pinch the unique name first (!)
-            context_descriptor = mangler.generate_unique_name(mangler.CTX_DESC_PREFIX)
-            stream.out("""\
-static const char*const @context_descriptor@[] = {
-  """, context_descriptor = context_descriptor)
+            context_descriptor = mangler.generate_unique_name(
+                mangler.CTX_DESC_PREFIX)
+            contexts = util.StringStream()
             for context in operation.contexts():
-                stream.out("""\
-  "@context@",""", context = context)
-            stream.out("""\
-  0
-};""")
-            
+                contexts.out("\"" + context + "\",")
+            contexts.out("0")
+            stream.out(template.interface_context_array,
+                       context_descriptor = context_descriptor,
+                       contexts = str(contexts))
 
         # static call back function
-        local_call_descriptor = mangler.generate_unique_name(mangler.LCALL_DESC_PREFIX)
-        impl_args = map(lambda x: "tcd->arg_" + str(x), range(0, len(parameters)))
+        local_call_descriptor = mangler.generate_unique_name(
+            mangler.LCALL_DESC_PREFIX)
+        impl_args = map(lambda x: "tcd->arg_" + str(x),
+                        range(0, len(parameters)))
 
         if operation.contexts() != []:
             impl_args.append("cd->context_info()->context")
@@ -382,16 +300,7 @@ static const char*const @context_descriptor@[] = {
         result_string = ""
         if has_return_value:
             result_string = "tcd->pd_result = "
-        stream.out("""\
-// Local call call-back function.
-static void
-@local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
-{
-  @call_descriptor@* tcd = (@call_descriptor@*) cd;
-  @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
-  @result@impl->@cxx_operation_name@(@operation_arguments@);
-}
-""",
+        stream.out(template.interface_callback,
                    local_call_descriptor = local_call_descriptor,
                    call_descriptor = descriptor,
                    impl_name = impl_name,
@@ -427,17 +336,7 @@ static void
                         n = str(len(operation.contexts())))
 
 
-        stream.out("""\
-@result_type@ @objref_fqname@::@operation_name@(@arguments@)
-{
-  @call_descriptor@ _call_desc(@call_desc_args@);
-  @context@
-  _invoke(_call_desc);
-  @return_string@
-}
-
-
-""",
+        stream.out(template.interface_operation,
                    result_type = result_type,
                    objref_fqname = objref_fqname,
                    operation_name = cxx_operationName,
@@ -464,8 +363,10 @@ static void
         attrType_name = environment.principalID(attrType)
 
         # we need the type with and without its full scope
-        attrTypes = tyutil.operationArgumentType(attrType, self.__globalScope, 0)
-        scoped_attrTypes = tyutil.operationArgumentType(attrType, outer_environment,
+        attrTypes = tyutil.operationArgumentType(attrType,
+                                                 self.__globalScope, 0)
+        scoped_attrTypes = tyutil.operationArgumentType(attrType,
+                                                        outer_environment,
                                                         0)
         return_type = attrTypes[0]
 
@@ -482,73 +383,61 @@ static void
             cxx_attrib_name = tyutil.mapID(attrib_name)
 
             get_attrib_name = "_get_" + attrib_name
-            local_call_descriptor = mangler.generate_unique_name(mangler.LCALL_DESC_PREFIX)
+            local_call_descriptor = mangler.generate_unique_name(
+                mangler.LCALL_DESC_PREFIX)
 
-            stream.out("""\
-// Local call call-back function.
-static void
-@local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
-{
-  @read_descriptor@* tcd = (@read_descriptor@*) cd;
-  @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
-  tcd->pd_result = impl->@cxx_attrib_name@();
-}
-
-
-@return_type@ @objref_fqname@::@cxx_attrib_name@()
-{
-  @read_descriptor@ _call_desc(@local_call_descriptor@, \"@get_attrib_name@\", @len@, 0);
-  
-  _invoke(_call_desc);
-  return _call_desc.result();
-}
-""",
+            # generate the callback
+            stream.out(template.interface_callback,
                        local_call_descriptor = local_call_descriptor,
-                       read_descriptor = read,
-                       impl_name = impl_name,
+                       call_descriptor = read,
                        impl_fqname = impl_fqname,
-                       objref_fqname = objref_fqname,
                        name = id,
-                       attrib_name = attrib_name,
-                       cxx_attrib_name = cxx_attrib_name,
-                       get_attrib_name = get_attrib_name,
-                       len = str(len(get_attrib_name) + 1),
-                       return_type = return_type)
+                       result = "tcd->pd_result = ",
+                       cxx_operation_name = cxx_attrib_name,
+                       operation_arguments = "")
+            # generate the objref_method
+            call_desc_args = local_call_descriptor + ", \"" +\
+                             get_attrib_name + "\", " +\
+                             str(len(get_attrib_name) + 1) + ", 0"
+            stream.out(template.interface_operation,
+                       result_type = return_type,
+                       objref_fqname = objref_fqname,
+                       operation_name = cxx_attrib_name,
+                       arguments = "",
+                       call_descriptor = read,
+                       call_desc_args = call_desc_args,
+                       context = "",
+                       return_string = "return _call_desc.result();")
 
             if not(attribute.readonly()):
                 # make another one of these
-                local_call_descriptor = mangler.generate_unique_name(mangler.LCALL_DESC_PREFIX)
+                local_call_descriptor = mangler.generate_unique_name(
+                    mangler.LCALL_DESC_PREFIX)
                 set_attrib_name = "_set_" + attrib_name
-                stream.out("""\
-// Local call call-back function.
-static void
-@local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
-{
-  @write_descriptor@* tcd = (@write_descriptor@*) cd;
-  @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
-  impl->@cxx_attrib_name@(tcd->arg_0);
-}
-
-
-void @objref_fqname@::@cxx_attrib_name@(@in_type@ arg_0)
-{
-  @write_descriptor@ _call_desc(@local_call_descriptor@, \"@set_attrib_name@\", @len@, 0, arg_0);
-  
-  _invoke(_call_desc);
-}
-""",
+                # generate the callback
+                stream.out(template.interface_callback,
                            local_call_descriptor = local_call_descriptor,
-                           write_descriptor = write,
-                           impl_name = impl_name,
+                           call_descriptor = write,
                            impl_fqname = impl_fqname,
-                           objref_fqname = objref_fqname,
                            name = id,
-                           cxx_attrib_name = cxx_attrib_name,
-                           attrib_name = attrib_name,
-                           set_attrib_name = set_attrib_name,
-                           len = str(len(set_attrib_name) + 1),
-                           in_type = scoped_in_type)
+                           result = "",
+                           cxx_operation_name = cxx_attrib_name,
+                           operation_arguments = "tcd->arg_0")
 
+                # generate the objref_method
+                call_desc_args = local_call_descriptor + ", \"" + \
+                                 set_attrib_name + "\", " + \
+                                 str(len(set_attrib_name) + 1) + ", 0, arg_0"
+
+                stream.out(template.interface_operation,
+                           result_type = "void",
+                           objref_fqname = objref_fqname,
+                           operation_name = cxx_attrib_name,
+                           arguments = scoped_in_type + " arg_0",
+                           call_descriptor = write,
+                           call_desc_args = call_desc_args,
+                           context = "",
+                           return_string = "")
 
     # _pof_ class
     pof_scopedName = map(tyutil.mapID, tyutil.scope(scopedName)) + \
@@ -556,43 +445,19 @@ void @objref_fqname@::@cxx_attrib_name@(@in_type@ arg_0)
     pof_name = string.join(pof_scopedName, "::")
     u_name = tyutil.mapID(tyutil.name(scopedName))
 
-    stream.out("""\
-@pof_name@::~_pof_@uname@() {}
-
-
-omniObjRef*
-@pof_name@::newObjRef(const char* mdri, IOP::TaggedProfileList* p,
-               omniIdentity* id, omniLocalIdentity* lid)
-{
-  return new @objref_fqname@(mdri, p, id, lid);
-}
-
-
-CORBA::Boolean
-@pof_name@::is_a(const char* id) const
-{
-  if( !strcmp(id, @name@::_PD_repoId) )
-    return 1;
-    """,
+    # build the inheritance list
+    inherits_repoIDs = util.StringStream()
+    for i in all_inherits:
+        ancestor = string.join(map(tyutil.mapID, i.scopedName()), "::")
+        inherits_repoIDs.out(template.interface_pof_repoID,
+                             inherited = ancestor)
+    stream.out(template.interface_pof,
                pof_name = pof_name,
                objref_fqname = objref_fqname,
                name = id,
-               uname = u_name)
-    # again this must deal with _all_ inheritance
-    for i in all_inherits:
-        ancestor = string.join(map(tyutil.mapID, i.scopedName()), "::")
-        stream.out("""\
-  if( !strcmp(id, @inherited@::_PD_repoId) )
-    return 1;
-  """, inherited = ancestor)
-    stream.out("""\
-  return 0;
-}
-""")
-
-    stream.out("""\
-const @pof_name@ _the_pof_@idname@;""",
-               pof_name = pof_name, idname = mangler.produce_idname(scopedName))
+               uname = u_name,
+               Other_repoIDs = str(inherits_repoIDs),
+               idname = mangler.produce_idname(scopedName))
 
     # comment copied from src/tool/omniidl2/omniORB2_be/o2be_interface.cc:
 
@@ -618,37 +483,18 @@ const @pof_name@ _the_pof_@idname@;""",
           i_impl_fqname = self.__globalScope.nameToString(i_impl_scopedName)
           i_impl_flat_fqname = string.join(i_impl_scopedName, "_")
 
-          stream.out("""\
-#ifndef __@guard_name@__ALIAS__
-#define __@guard_name@__ALIAS__
-typedef @fqname@ @flat_fqname@;
-typedef @impl_fqname@ @impl_flat_fqname@;
-#endif""",
-          guard_name = i_guard_name,
-          fqname = i_fqname,
-          flat_fqname = i_flat_fqname,
-          impl_fqname = i_impl_fqname,
-          impl_flat_fqname = i_impl_flat_fqname)
+          stream.out(template.interface_ALIAS,
+                     guard_name = i_guard_name,
+                     fqname = i_fqname,
+                     flat_fqname = i_flat_fqname,
+                     impl_fqname = i_impl_fqname,
+                     impl_flat_fqname = i_impl_flat_fqname)
           
-          
-       
-
-    
-
-
     # _impl_ class (contains the callable dispatch code)
 
-    stream.out("""\
-@impl_fqname@::~_impl_@uname@() {}
-
-
-CORBA::Boolean
-@impl_fqname@::_dispatch(GIOP_S& giop_s)
-{""", impl_fqname = impl_fqname, uname = u_name)
-    stream.inc_indent()
-
-    dispatcher = dispatch.__init__(environment, stream)
-    
+    # dispatch operations and attributes from this class
+    this_dispatch = util.StringStream()
+    dispatcher = dispatch.__init__(environment, this_dispatch)
     for callable in node.callables():
         # This isn't quite as neat as it could be
         if isinstance(callable, idlast.Operation):
@@ -668,10 +514,8 @@ CORBA::Boolean
                 if not(callable.readonly()):
                     dispatcher.attribute_write(callable, ident)
 
-    stream.dec_indent()
-
-    # if we don't implement the operation/attrib ourselves, we need to
-    # call the objects we inherit from
+    # dispatch operations and attributes inherited from base classes
+    inherited_dispatch = util.StringStream()
     for i in node.inherits():
        inherited_name = tyutil.mapID(tyutil.name(i.scopedName()))
        impl_inherits = "_impl_" + inherited_name
@@ -684,28 +528,10 @@ CORBA::Boolean
                               ["_impl_" + tyutil.name(i_scopedName)]
           impl_inherits = string.join(i_impl_scopedName, "_")
           
-       stream.out("""\
-  if( @impl_inherited_name@::_dispatch(giop_s) ) {
-    return 1;
-  }""", impl_inherited_name = impl_inherits)
-        
-    stream.out("""\
-    return 0;
-}""")
-    
-    stream.out("""\
-    
-void*
-@impl_fqname@::_ptrToInterface(const char* id)
-{
-  if( !strcmp(id, CORBA::Object::_PD_repoId) )
-    return (void*) 1;
-  if( !strcmp(id, @name@::_PD_repoId) )
-    return (@impl_name@*) this;
-""",
-               impl_name = impl_name,
-               impl_fqname = impl_fqname,
-               name = id)
+       inherited_dispatch.out(template.interface_impl_inherit_dispatch,
+                              impl_inherited_name = impl_inherits)
+
+    Other_repoIDs = util.StringStream()
     # it's a bit odd that it will fully qualify the current class name
     # but it will strip off as much scope as possible for the inherited
     # ones
@@ -715,31 +541,25 @@ void*
        i_impl_name = name.prefixName(i_rel_scopedName, "_impl_")
        inherited_name = environment.nameToString(i_rel_scopedName)
        
-       stream.out("""\
-  if( !strcmp(id, @inherited_name@::_PD_repoId) )
-    return (@impl_inherited_name@*) this;""",
+       Other_repoIDs.out(template.interface_impl_repoID,
                   inherited_name = inherited_name,
                   impl_inherited_name = i_impl_name)
 
-    stream.out("""\
-    
-  return 0;
-}
 
-
-const char*
-@impl_fqname@::_mostDerivedRepoId()
-{
-  return @name@::_PD_repoId;
-}
-""",
+    # Output the _impl_ class
+    stream.out(template.interface_impl,
                impl_fqname = impl_fqname,
+               uname = u_name,
+               this_dispatch = str(this_dispatch),
+               inherited_dispatch = str(inherited_dispatch),
+               impl_name = impl_name,
+               Other_repoIDs = str(Other_repoIDs),
                name = id)
-
+               
+    
     # BOA compatible skeletons
     if config.BOAFlag():
-        stream.out("""\
-@sk_fqname@::~@sk_name@() {}""",
+        stream.out(template.interface_sk,
                    sk_fqname = sk_fqname,
                    sk_name = sk_name)
 
@@ -774,74 +594,27 @@ def visitTypedef(node):
         fq_derived = idlutil.ccolonName(map(tyutil.mapID, d.scopedName()))
 
         if is_global_scope and is_array_declarator:
-            
-            stream.out("""\
-@fq_derived@_slice* @fq_derived@_alloc() {
-  return new @fq_derived@_slice@decl_first_dim_str@;
-}
+            # build _dup and _copy loops
+            dup_loop = util.StringStream()
+            copy_loop = util.StringStream()
+            index = util.start_loop(dup_loop, full_dims,
+                                    iter_type = "unsigned int")
+            dup_loop.out("_data" + index + " = _s" + index + ";")
+            util.finish_loop(dup_loop, full_dims)
+            index = util.start_loop(copy_loop, full_dims,
+                                        iter_type = "unsigned int")
+            copy_loop.out("_to" + index + " = _from" + index + ";")
+            util.finish_loop(copy_loop, full_dims)
 
-@fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* _s)
-{
-  if (!_s) return 0;
-  @fq_derived@_slice* _data = @fq_derived@_alloc();
-  if (_data) {
-  """, fq_derived = fq_derived, decl_dims_str = decl_dims_str,
-                       decl_first_dim_str = decl_first_dim_str)
-            index_str = ""
-            i = 0
-            stream.inc_indent()
-            for dim in full_dims:
-                stream.out("for (unsigned int _i@i@ =0;_i@i@ < @n@;_i@i@++){",
-                           i = str(i), n = str(dim))
-                stream.inc_indent()
-                index_str = index_str + "[_i" + str(i) + "]"
-                i = i + 1
-            stream.out("_data@index@ = _s@index@;", index = index_str)
-            for dim in full_dims:
-                stream.dec_indent()
-                stream.out("}")
-            stream.dec_indent()
-            stream.out("""\
-  }
-  return _data;
-}
-
-void @fq_derived@_copy(@fq_derived@_slice* _to, const @fq_derived@_slice* _from) {
-  """, fq_derived = fq_derived)
-            
-            index = util.start_loop(stream, full_dims, iter_type = "unsigned int")
-            stream.out("""\
-  _to@index@ = _from@index@;""", index = index)
-            util.finish_loop(stream, full_dims)
-
-            stream.out("""\
-
-}
-
-void @fq_derived@_free(@fq_derived@_slice* _s) {
-  delete [] _s;
-}""", fq_derived = fq_derived)
-
-        
-        
+            stream.out(template.typedef_global_array_declarator,
+                       fq_derived = fq_derived,
+                       decl_dims_str = decl_dims_str,
+                       decl_first_dim_str = decl_first_dim_str,
+                       dup_loop = str(dup_loop),
+                       copy_loop = str(copy_loop))
 
         elif is_global_scope and is_array:
-            stream.out("""\
-extern @fq_derived@_slice* @fq_derived@_alloc() {
-  return @fq_aliased@_alloc();
-}
-
-extern @fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* p) {
-  return @fq_aliased@_dup(p);
-}
-
-extern void @fq_derived@_copy( @fq_derived@_slice* _to, const @fq_derived@_slice* _from){
-  @fq_aliased@_copy(_to, _from);
-}
-
-extern void @fq_derived@_free( @fq_derived@_slice* p) {
-   @fq_aliased@_free(p);
-}""",
+            stream.out(template.typedef_global_simple_array,
                        fq_derived = fq_derived,
                        fq_aliased = fq_aliased)
             
@@ -895,49 +668,17 @@ def visitStruct(node):
             # computation of aligned size
             size = skutil.sizeCalculation(outer_environment, memberType, d,
                                           "_msgsize", member_name)
-            msgsize.out("""\
-  @size_calculation@""", size_calculation = size)
+            msgsize.out(size)
             
             
             
-    stream.out("""\
-size_t
-@name@::_NP_alignedSize(size_t _initialoffset) const
-{
-  CORBA::ULong _msgsize = _initialoffset;
-  @size_calculation@
-  return _msgsize;
-}
-""", name = name, size_calculation = str(msgsize))
-    
-    stream.out("""\
-void
-@name@::operator>>= (NetBufferedStream &_n) const
-{
-  @marshall_code@
-}
-
-void
-@name@::operator<<= (NetBufferedStream &_n)
-{
-  @net_unmarshall_code@
-}
-
-void
-@name@::operator>>= (MemBufferedStream &_n) const
-{
-  @marshall_code@
-}
-
-void
-@name@::operator<<= (MemBufferedStream &_n)
-{
-  @mem_unmarshall_code@
-}
-""", name = name,
+    stream.out(template.struct,
+               name = name,
+               size_calculation = str(msgsize),
                marshall_code = str(marshall),
                mem_unmarshall_code = str(Mem_unmarshall),
                net_unmarshall_code = str(Net_unmarshall))
+
     stream.reset_indent()
     
 def visitUnion(node):
@@ -979,37 +720,9 @@ def visitUnion(node):
                                                      None,
                                                      "_msgsize", "")
 
-    stream.out("""\
-size_t
-@name@::_NP_alignedSize(size_t initialoffset) const
-{
-  CORBA::ULong _msgsize = initialoffset;
-  @discriminator_size_calc@""",
-               name = name,
-               discriminator_size_calc = discriminator_size_calc)
-
-    if not(exhaustive):
-        stream.out("""\
-  if (pd__default) {""")
-        if hasDefault:
-            caseType = defaultCase.caseType()
-            decl = defaultCase.declarator()
-            size_calc = skutil.sizeCalculation(environment, caseType,
-                                               decl, "_msgsize",
-                                               "pd_" + defaultMember)
-            stream.inc_indent()
-            stream.out("""\
-    @size_calc@""", size_calc = size_calc)
-            stream.dec_indent()
-
-        stream.out("""\
-  }
-  else {""")
-        stream.inc_indent()
-
-    stream.out("""\
-    switch(pd__d) {""")
-    stream.inc_indent()
+    # build the switch case in the alignedSize method
+    # build the cases...
+    cases = util.StringStream()
     for c in node.cases():
         caseType = c.caseType()
         deref_caseType = tyutil.deref(caseType)
@@ -1018,45 +731,48 @@ size_t
         for l in c.labels():
             # default case was already taken care of
             if not(l.default()):
-                value =l.value()
-                # FIXME: stupid special case. An explicit discriminator
-                # value of \0 -> 0000 whereas an implicit one (valueString)
-                # \0 -> '\000'
-                discrim_value = tyutil.valueString(switchType, value, environment)
-                if tyutil.isChar(switchType) and value == '\0':
+                 discrim_value = tyutil.valueString(switchType, l.value(),
+                                                    environment)
+                 # FIXME: stupid special case. An explicit discriminator
+                 # value of \0 -> 0000 whereas an implicit one (valueString)
+                 # \0 -> '\000'
+                 if tyutil.isChar(switchType) and l.value() == '\0':
                     discrim_value = "0000"
                     
-                stream.out("""\
-      case @value@:""", value = str(discrim_value))
-
-                size_calc = skutil.sizeCalculation(environment, caseType, decl,
-                                           "_msgsize", "pd_" + decl_name)
-                                           
-                stream.inc_indent()
-                stream.out("""\
-        @size_calc@
-        break;""", size_calc = size_calc)
-                stream.dec_indent()
-
+                 cases.out("case " + str(discrim_value) + ":")
+                 size_calc = skutil.sizeCalculation(environment, caseType,
+                                                    decl, "_msgsize",
+                                                    "pd_" + decl_name)
+                 cases.out(size_calc)
+                 cases.out("break;")
     if booleanWrap:
-        stream.niout("""\
-#ifndef HAS_Cplusplus_Bool""")
-    stream.out("""\
-     default: break;""")
-    if booleanWrap:
-        stream.niout("""\
-#endif""")
-        
-    stream.dec_indent()
-    stream.out("""\
-    }""")
+        cases.out(template.union_default_bool)
+    else:
+        cases.out(template.union_default)
+
+    # build the switch itself
+    switch = util.StringStream()
     if not(exhaustive):
-        stream.dec_indent()
-        stream.out("""\
-  }""")
-    stream.out("""\
-  return _msgsize;
-}""")
+        size_calc = ""
+        if hasDefault:
+            caseType = defaultCase.caseType()
+            decl = defaultCase.declarator()
+            size_calc = skutil.sizeCalculation(environment, caseType,
+                                               decl, "_msgsize",
+                                               "pd_" + defaultMember)
+        switch.out(template.union_align_nonexhaustive,
+                   size_calc = size_calc,
+                   cases = str(cases))
+    else:
+        switch.out(template.union_align_exhaustive,
+                   cases = str(cases))
+
+    # output the alignedSize method
+    stream.out(template.union,
+               name = name,
+               discriminator_size_calc = discriminator_size_calc,
+               switch = str(switch))
+    
 
     # --------------------------------------------------------------
     # union::operator{>>, <<}= ({Net, Mem}BufferedStream& _n) [const]
@@ -1066,137 +782,74 @@ size_t
     # from a MemBufferedStream (it is for a struct, but not for a union)
     # (This is probably due to a string-inconsistency with the old compiler
     # and can be sorted out later)
-    for where_to in ["NetBufferedStream", "MemBufferedStream"]:
-        #can_throw_marshall = where_to == "NetBufferedStream"
-        can_throw_marshall = 1
 
-        # marshalling
-        stream.out("""\
-void
-@name@::operator>>= (@where_to@& _n) const
-{
-  pd__d >>= _n;""", name = name, where_to = where_to)
+    # marshal/ unmarshal individual cases
+    marshal_cases = util.StringStream()
+    unmarshal_cases = util.StringStream()
+    for c in node.cases():
+        caseType = c.caseType()
+        decl = c.declarator()
+        decl_name = tyutil.name(map(tyutil.mapID, decl.scopedName()))
+        isDefault = defaultCase == c
         
-        if not(exhaustive):
-            stream.out("""\
-  if (pd__default) {""")
-            if hasDefault:
-                caseType = defaultCase.caseType()
-                decl = defaultCase.declarator()
-                decl_name =  tyutil.name(map(tyutil.mapID, decl.scopedName()))
-                stream.inc_indent()
-                skutil.marshall_struct_union(stream, environment, caseType,
-                                             decl, "pd_" + decl_name)
-                stream.dec_indent()
-            stream.out("""\
-  }
-  else {""")
-            stream.inc_indent()
-
-        stream.out("""\
-    switch(pd__d) {""")
-        stream.inc_indent()
-        
-        for c in node.cases():
-            caseType = c.caseType()
-            decl = c.declarator()
-            decl_name = tyutil.name(map(tyutil.mapID, decl.scopedName()))
-            for l in c.labels():
-                if not(l.default()):
-                   value =l.value()
-                   # FIXME: stupid special case. An explicit discriminator
-                   # value of \0 -> 0000 whereas an implicit one (valueString)
-                   # \0 -> '\000'
-                   discrim_value = tyutil.valueString(switchType, value, environment)
-                   if tyutil.isChar(switchType) and value == '\0':
-                       discrim_value = "0000"
-
-                   stream.out("""\
-      case @value@:""", value = str(discrim_value))
-                   stream.inc_indent()
-                   skutil.marshall_struct_union(stream, environment, caseType,
-                                                decl, "pd_" + decl_name)
-                   stream.out("""\
-        break;""")
-                   stream.dec_indent()
-                   
-        if booleanWrap:
-           stream.niout("""\
-#ifndef HAS_Cplusplus_Bool""")
-        stream.out("""\
-     default: break;""")
-        if booleanWrap:
-            stream.niout("""\
-#endif""")
-
-        stream.dec_indent()
-        stream.out("""\
-    }""")
-        
-
-        if not(exhaustive):
-            stream.dec_indent()
-            stream.out("""\
-  }""")
-
-        stream.dec_indent()
-        stream.out("""\
-}""")
-
-
-        # unmarshalling
-        stream.out("""\
-void
-@name@::operator<<= (@where_to@& _n)
-{
-  pd__d <<= _n;
-  switch(pd__d) {""", name = name, where_to = where_to)
-        stream.inc_indent()
-
-        for c in node.cases():
-            caseType = c.caseType()
-            decl = c.declarator()
-            decl_name = tyutil.name(map(tyutil.mapID, decl.scopedName()))
-            
-            isDefault = defaultCase == c
-            
-            for l in c.labels():
-                if l.default():
-                    stream.out("""\
-      default:""")
-                else:
-                    value =l.value()
-                    # FIXME: stupid special case. An explicit discriminator
-                    # value of \0 -> 0000 whereas an implicit one (valueString)
-                    # \0 -> '\000'
-                    discrim_value = tyutil.valueString(switchType, value, environment)
-                    if tyutil.isChar(switchType) and value == '\0':
+        for l in c.labels():
+            value = l.value()
+            # FIXME: stupid special case. An explicit discriminator
+            # value of \0 -> 0000 whereas an implicit one (valueString)
+            # \0 -> '\000'
+            discrim_value = tyutil.valueString(switchType, value,
+                                               environment)
+            if tyutil.isChar(switchType) and value == '\0':
                         discrim_value = "0000"
 
-                    stream.out("""\
-      case @value@:""", value = str(discrim_value))
+            if l.default():
+                unmarshal_cases.out("default:")
+            else:
+                unmarshal_cases.out("case " + discrim_value + ":")
 
-            stream.inc_indent()
-            stream.out("""\
-        pd__default = @isDefault@;""", isDefault = str(isDefault))
-            
-            skutil.unmarshall_struct_union(stream, environment, caseType, decl,
-                                           "pd_" + decl_name, can_throw_marshall)
-            stream.out("""\
-        break;""")
-            stream.dec_indent()
-            
-        if not(hasDefault) and not(exhaustive):
-            stream.out("""\
-      default: pd__default = 1; break;""")
+                marshal_cases.out("case " + discrim_value + ":")
+                skutil.marshall_struct_union(marshal_cases, environment,
+                                             caseType, decl, "pd_" + decl_name)
+                marshal_cases.out("break;")
 
-        stream.dec_indent()
-        stream.out("""\
-  }
-}""")
+            unmarshal_cases.out("pd__default = " + str(isDefault) + ";")
+            skutil.unmarshall_struct_union(unmarshal_cases, environment,
+                                           caseType, decl, "pd_" + decl_name,
+                                           can_throw_marshall = 1)
+            unmarshal_cases.out("break;")
+
+    if not(hasDefault) and not(exhaustive):
+        unmarshal_cases.out("default: pd__default = 1; break;")
         
+            
+    if booleanWrap:
+        marshal_cases.out(template.union_default_bool)
+    else:
+        marshal_cases.out(template.union_default)
 
-        
+
+    marshal = util.StringStream()
+    if not(exhaustive):
+        default = util.StringStream()
+        if hasDefault:
+            caseType = defaultCase.caseType()
+            decl = defaultCase.declarator()
+            decl_name =  tyutil.name(map(tyutil.mapID, decl.scopedName()))
+            skutil.marshall_struct_union(default, environment, caseType,
+                                         decl, "pd_" + decl_name)
+        marshal.out(template.union_operators_nonexhaustive,
+                    default = str(default),
+                    cases = str(marshal_cases))
+    else:
+        marshal.out(template.union_operators_exhaustive,
+                    cases = str(marshal_cases))
+
+    # write the operators
+    stream.out(template.union_operators,
+               name = name,
+               marshal_cases = str(marshal),
+               unmarshal_cases = str(unmarshal_cases))
+                
         
     return
     
@@ -1240,17 +893,9 @@ _init_in_def_( const @type@ @name@ = @value@; )""",
         scopedName = map(tyutil.mapID, scopedName)
         scope_str = idlutil.ccolonName(tyutil.scope(scopedName))
         name_str = tyutil.name(scopedName)
-        stream.out("""\
-#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
-// MSVC++ does not give the constant external linkage othewise.
-namespace @scope@ {
-  extern const @type@ @name@=@value@;
-}
-#else
-const @type@ @scopedName@ = @value@;
-#endif""",
-        type = type_string, scope = scope_str, name = name_str,
-        scopedName = name, value = value)
+        stream.out(template.const_namespace,
+                   type = type_string, scope = scope_str, name = name_str,
+                   scopedName = name, value = value)
         
     else:
         stream.out("""\
@@ -1304,9 +949,8 @@ def visitException(node):
                                       decl_name
             else:
                 # we normally use the utility function for this purpose
-                memberType_name_arg = tyutil.makeConstructorArgumentType(memberType,
-                                                                         environment,
-                                                                         d)
+                memberType_name_arg = tyutil.makeConstructorArgumentType(
+                    memberType, environment, d)
                 
             index = ""
 
@@ -1347,77 +991,22 @@ def visitException(node):
         
           
         
-    
-    stream.out("""\
-CORBA::Exception::insertExceptionToAny @scoped_name@::insertToAnyFn = 0;
-CORBA::Exception::insertExceptionToAnyNCP @scoped_name@::insertToAnyFnNCP = 0;
-
-@scoped_name@::@name@(const @scoped_name@& _s) : CORBA::UserException(_s)
-{
-  @copy_ctor_body@
-}
-""",
-               scoped_name = scoped_name,
-               name = name,
-               copy_ctor_body = str(copy_ctor_body))
+    default_ctor = util.StringStream()
     if has_default_ctor:
-        stream.out("""\
-@scoped_name@::@name@(@ctor_args@)
-{
-  pd_insertToAnyFn    = @scoped_name@::insertToAnyFn;
-  pd_insertToAnyFnNCP = @scoped_name@::insertToAnyFnNCP;
-  @default_ctor_body@
-}
-""",
-                   scoped_name = scoped_name,
-                   name = name,
-                   ctor_args = string.join(default_ctor_args, ", "),
-                   default_ctor_body = str(default_ctor_body))
-    stream.out("""\
-@scoped_name@& @scoped_name@::operator=(const @scoped_name@& _s)
-{
-  ((CORBA::UserException*) this)->operator=(_s);
-  @assign_op_body@
-  return *this;
-}
+        default_ctor.out(template.exception_default_ctor,
+                         scoped_name = scoped_name,
+                         name = name,
+                         ctor_args = string.join(default_ctor_args, ", "),
+                         default_ctor_body = str(default_ctor_body))
 
-@scoped_name@::~@name@() {}
-
-void @scoped_name@::_raise() { throw *this; }
-
-@scoped_name@* @scoped_name@::_downcast(CORBA::Exception* e) {
-  return (@name@*) _NP_is_a(e, \"Exception/UserException/@scoped_name@\");
-}
-
-const @scoped_name@* @scoped_name@::_downcast(const CORBA::Exception* e) {
-  return (const @name@*) _NP_is_a(e, \"Exception/UserException/@scoped_name@\");
-}
-
-const char* @scoped_name@::_PD_repoId = \"@repoID@\";
-
-CORBA::Exception* @scoped_name@::_NP_duplicate() const {
-  return new @name@(*this);
-}
-
-const char* @scoped_name@::_NP_typeId() const {
-  return \"Exception/UserException/@scoped_name@\";
-}
-
-const char* @scoped_name@::_NP_repoId(int* _size) const {
-  *_size = sizeof(\"@repoID@\");
-  return \"@repoID@\";
-}
- 
-void @scoped_name@::_NP_marshal(NetBufferedStream& _s) const {
-  *this >>= _s;
-}
-
-void @scoped_name@::_NP_marshal(MemBufferedStream& _s) const {
-  *this >>= _s;
-}
-""",
+    # write the main chunk
+    stream.out(template.exception,
                scoped_name = scoped_name,
                name = name,
+               copy_ctor_body = str(copy_ctor_body),
+               default_ctor = str(default_ctor),
+               ctor_args = string.join(default_ctor_args, ", "),
+               default_ctor_body = str(default_ctor_body),
                repoID = repoID,
                assign_op_body = str(assign_op_body))
     
@@ -1479,38 +1068,7 @@ void @scoped_name@::_NP_marshal(MemBufferedStream& _s) const {
                                                     fixme = 1))
 
     if needs_marshalling:
-        stream.out("""\
-size_t
-@scoped_name@::_NP_alignedSize(size_t _msgsize) const
-{
-  @aligned_size@
-  return _msgsize;
-}
-
-void
-@scoped_name@::operator>>= (NetBufferedStream& _n) const
-{
-  @net_marshal@
-}
-
-void
-@scoped_name@::operator<<= (NetBufferedStream& _n)
-{
-  @net_unmarshal@
-}
-
-void
-@scoped_name@::operator>>= (MemBufferedStream& _n) const
-{
-  @mem_marshal@
-}
-
-void
-@scoped_name@::operator<<= (MemBufferedStream& _n)
-{
-  @mem_unmarshal@
-}
-""",
+        stream.out(template.exception_operators,
                    scoped_name = scoped_name,
                    aligned_size = str(aligned_size),
                    net_marshal = str(net_marshal),

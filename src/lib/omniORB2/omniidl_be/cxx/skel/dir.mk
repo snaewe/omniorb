@@ -18,4 +18,6 @@ export:: dispatch.py
 export:: proxy.py
 	@(file="proxy.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: template.py
+	@(file="template.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 

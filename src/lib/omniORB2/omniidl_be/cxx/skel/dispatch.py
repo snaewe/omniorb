@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.16  2000/01/19 17:05:15  djs
+# Modified to use an externally stored C++ output template.
+#
 # Revision 1.15  2000/01/17 17:04:12  djs
 # Modified pointer handling in attribute dispatching
 #
@@ -90,10 +93,8 @@
 import string
 
 from omniidl import idlutil, idltype, idlast
-
 from omniidl.be.cxx import util, tyutil, skutil, name, config
-
-from omniidl.be.cxx.skel import proxy
+from omniidl.be.cxx.skel import proxy, template
 
 
 import dispatch
@@ -394,61 +395,28 @@ def operation(operation):
         # old compiler seems to order repoIDs by exception definition
         # no need to duplicate that behaviour here
         repoIDs = map(lambda x: "\"" + x.repoId() + "\"", raises_sorted)
-        exceptions.out("""\
-static const char* const _user_exns[] = {
-  @repoID_list@
-};
-giop_s.set_user_exceptions(_user_exns, @n@);""",
+        exceptions.out(template.interface_operation_exn,
                        repoID_list = string.join(repoIDs, ",\n"),
                        n = str(len(repoIDs)))
-        try_.out("""\
-#ifndef HAS_Cplusplus_catch_exception_by_base
-    try {
-#endif""")
         
-        catch.out("""\
-#ifndef HAS_Cplusplus_catch_exception_by_base
-    }""")
+        try_.out(template.interface_operation_try)
+        catch.out(template.interface_operation_catch_start)
         for exception in raises:
             exname = environment.nameToString(exception.scopedName())
-            catch.out("""\
-    catch(@exname@& ex) {
-      throw omniORB::StubUserException(ex._NP_duplicate());
-    }""", exname = exname)
-        catch.out("""\
-#endif""")
+            catch.out(template.interface_operation_catch_exn,
+                      exname = exname)
+            
+        catch.out(template.interface_operation_catch_end)
 
     # handle "context"s
     get_context = util.StringStream()
     if operation.contexts() != []:
-        get_context.out("""\
-  CORBA::Context_var _ctxt;
-  _ctxt = CORBA::Context::unmarshalContext(giop_s);
-""")
+        
+        get_context.out(template.interface_operation_context)
         argument_list.append("_ctxt")
 
     # main block of code goes here
-    stream.out("""\
-  if( !strcmp(giop_s.operation(), \"@idl_operation_name@\") ) {
-    @exception_decls@
-    @get_arguments@
-    @get_context@
-    giop_s.RequestReceived();
-    @decl_result@
-    @try_@
-    @result_assignment@this->@operation_name@(@argument_list@);
-    @catch@
-    if( giop_s.response_expected() ) {
-      size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      @size_calculation_results@
-      @size_calculation_arguments@
-      giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
-      @put_results@
-      @put_arguments@
-    }
-    giop_s.ReplyCompleted();
-    return 1;
-  }""",
+    stream.out(template.interface_operation_dispatch,
                operation_name = operation_name,
                idl_operation_name = idl_operation_name,
                exception_decls = str(exceptions),
@@ -535,19 +503,7 @@ def attribute_read(attribute, id):
         
     skutil.marshall(marshal, environment, attrType, None, result_name, "giop_s")
     
-    stream.out("""\
-if( !strcmp(giop_s.operation(), \"_get_@attrib_name@\") ) {    
-  giop_s.RequestReceived();
-  @attrib_type@ result = this->@cxx_attrib_name@();
-  if( giop_s.response_expected() ) {
-    size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-    @size_calculation@
-    giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
-    @marshall_result@
-  }
-  giop_s.ReplyCompleted();
-  return 1;
-}""",
+    stream.out(template.interface_attribute_read_dispatch,
                marshall_result = str(marshal),
                attrib_type = attrib_type_name,
                attrib_name = id,
@@ -597,31 +553,17 @@ def attribute_write(attribute, id):
 
     unmarshal = util.StringStream()
     if not(is_array) and tyutil.isString(deref_attrType):
-        unmarshal.out("""\
-{
-  CORBA::String_member @private_prefix@_str_tmp;
-  @private_prefix@_str_tmp <<= giop_s;
-  @item_name@ = @private_prefix@_str_tmp._ptr;
-  @private_prefix@_str_tmp._ptr = 0;
-}""", item_name = "value", private_prefix = config.privatePrefix())
+        unmarshal.out(template.unmarshal_string_tmp,
+                      item_name = "value",
+                      private_prefix = config.privatePrefix())
     else:
         skutil.unmarshall(unmarshal, environment, attrType, None, "value",
                           1, "giop_s")
     
-    stream.out("""\
-if( !strcmp(giop_s.operation(), \"_set_@attrib_name@\") ) {
-  @attrib_type@ value;
-  @unmarshall_value@
-  giop_s.RequestReceived();
-  this->@cxx_attrib_name@(value);
-  if( giop_s.response_expected() ) {
-    size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-    giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
-  }
-  giop_s.ReplyCompleted();
-  return 1;
-}""",
+    stream.out(template.interface_attribute_write_dispatch,
                unmarshall_value = str(unmarshal),
                attrib_type = attrib_type_name,
                attrib_name = id,
                cxx_attrib_name = cxx_id)    
+
+
