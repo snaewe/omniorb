@@ -45,7 +45,10 @@ o2be_buildDesc::produce_decls(std::fstream& s, AST_Decl* decl,
 
     // The following cases are already catered for in tcParser.h
   case AST_Decl::NT_pre_defined:
+    break;
+
   case AST_Decl::NT_string:
+    o2be_string::narrow_from_decl(decl)->produce_buildDesc_support(s);
     break;
 
     // Code for arrays and sequences is always generated where
