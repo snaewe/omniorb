@@ -18,7 +18,7 @@ OBJS = \
 		drv_preproc.o
 
 # IDL_CFE_VERSION       Defines what the current IDL CFE version is
-IDL_CFE_VERSION =       \"1.3.0\"
+IDL_CFE_VERSION =       1.3.0
 
 ifdef OSF1
 
@@ -53,12 +53,14 @@ ifdef Win32Platform
 # messages - should replace with a warning(disable,4068) pragma in the source
 # code
 CPP_LOCATION = CL
+
 DIR_CPPFLAGS = -I../include $(patsubst %,-I%/../include,$(VPATH)) \
-               -D"IDL_CFE_VERSION=\\\\\"$(IDL_CFE_VERSION)\\\\\"" \
-               -D"CPP_LOCATION=\\\\\"$(CPP_LOCATION)\\\\\""
+               -DIDL_CFE_VERSION='"$(IDL_CFE_VERSION)"' \
+               -DCPP_LOCATION=\"$(CPP_LOCATION)\"
+
 else
 DIR_CPPFLAGS = -I../include $(patsubst %,-I%/../include,$(VPATH)) \
-               -DIDL_CFE_VERSION=$(IDL_CFE_VERSION) \
+               -DIDL_CFE_VERSION='"$(IDL_CFE_VERSION)"' \
                -DCPP_LOCATION=\"$(CPP_LOCATION)\"
 
 ifdef SunOS
