@@ -17,7 +17,6 @@ int
 main (int argc, char **argv) 
 {
   CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
-  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
 
   if (argc < 2) {
     cerr << "usage: eg2_clt <object reference>" << endl;
@@ -42,6 +41,8 @@ main (int argc, char **argv)
   catch(...) {
     cerr << "Caught a system exception." << endl;
   }
+
+  orb->NP_destroy();
 
   return 0;
 }
