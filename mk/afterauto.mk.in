@@ -58,11 +58,13 @@ $(CORBA_STUB_HDR_PATTERN) $(CORBA_STUB_SRC_PATTERN) $(CORBA_DYN_STUB_SRC_PATTERN
 
 $(sort $(CORBA_STUB_OBJS))::
 	@( echo; echo cd $(CORBA_STUB_DIR); \
+           base_tree=`cd $(BASE_OMNI_TREE); pwd`; \
 	   cd $(CORBA_STUB_DIR); \
 	   if [ ! -f GNUmakefile ]; then \
              echo Creating stub/GNUmakefile; \
 	     echo  >GNUmakefile 'TOP=..'; \
              echo >>GNUmakefile 'CURRENT=stub'; \
+             echo >>GNUmakefile "BASE_OMNI_TREE=$$base_tree"; \
              echo >>GNUmakefile 'include $$(TOP)/mk/beforeauto.mk'; \
              echo >>GNUmakefile 'include $$(TOP)/mk/afterauto.mk'; \
 	   fi; \

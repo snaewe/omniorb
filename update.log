@@ -1,3 +1,11 @@
+Wed Feb 20 18:57:08 GMT 2002 dpg1
+=================================
+
+- Examples didn't build with autoconf.
+
+external_merge/mk/afterauto.mk.in
+
+
 Wed Feb 20 13:31:07 GMT 2002 dpg1
 =================================
 
