@@ -114,7 +114,7 @@ AST_Enum::lookup_by_value(const AST_Expression *v)
   while (!iter->is_done()) {
     i = iter->item();
     item = AST_EnumVal::narrow_from_decl(i);
-    if (item->constant_value() == v) {
+    if ((*(item->constant_value())) == ((AST_Expression *)v)) {
       delete iter;
       return item;
     }
