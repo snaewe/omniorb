@@ -1,3 +1,15 @@
+Mon Mar 18 12:37:01 GMT 2002 dpg1
+=================================
+
+- Lower trace(0) to trace(1), propagate fatalException.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopMonitor.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
 
 
 Thu Mar 14 15:08:53 GMT 2002 dpg1

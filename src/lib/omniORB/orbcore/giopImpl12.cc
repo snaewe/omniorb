@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2002/03/18 12:38:26  dpg1
+  Lower trace(0) to trace(1), propagate fatalException.
+
   Revision 1.1.4.13  2001/09/12 19:43:19  sll
   Enforce GIOP message size limit.
 
@@ -994,7 +997,7 @@ giopImpl12::getInputData(giopStream* g,omni::alignment_t align,size_t sz) {
 	}
 	// Very bad. Should never happen given our invariant.
 	{
-	  if( omniORB::trace(0) ) {
+	  if( omniORB::trace(1) ) {
 	    omniORB::logger l;
 	    l << "Fatal error in unmarshalling message from "
 	      << g->pd_strand->connection->peeraddress()
@@ -1084,7 +1087,7 @@ giopImpl12::copyInputData(giopStream* g,void* b, size_t sz,
       }
       // Very bad. Should never happen given our invariant.
       {
-	if( omniORB::trace(0) ) {
+	if( omniORB::trace(1) ) {
 	  omniORB::logger l;
 	  l << "Fatal error in unmarshalling message from "
 	    << g->pd_strand->connection->peeraddress()

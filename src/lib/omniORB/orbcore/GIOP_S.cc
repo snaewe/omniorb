@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.19  2002/03/18 12:38:25  dpg1
+  Lower trace(0) to trace(1), propagate fatalException.
+
   Revision 1.1.4.18  2002/03/13 16:05:38  dpg1
   Transport shutdown fixes. Reference count SocketCollections to avoid
   connections using them after they are deleted. Properly close
@@ -230,7 +233,7 @@ GIOP_S::dispatcher() {
     return 0;
   }
   catch(const omniORB::fatalException& ex) {
-    if( omniORB::trace(0) ) {
+    if( omniORB::trace(1) ) {
       omniORB::logger l;
       l << "omniORB fatalException caught by a server thread at "
 	<< ex.file() << ": line "
@@ -241,7 +244,7 @@ GIOP_S::dispatcher() {
     return 0;
   }
   catch (...) {
-    if ( omniORB::trace(0) ) {
+    if ( omniORB::trace(1) ) {
       omniORB::logger l;
       l << "Unknown exception caught by a server thread at "
 	<< __FILE__ << ": line " << __LINE__ << "\n";

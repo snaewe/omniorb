@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2002/03/18 12:38:26  dpg1
+  Lower trace(0) to trace(1), propagate fatalException.
+
   Revision 1.1.2.1  2001/07/31 16:36:01  sll
   Added GIOP BiDir support.
 
@@ -58,7 +61,7 @@ giopMonitor::execute() {
   catch(...) {
     // Catch all unexpected error conditions. Reach here means that we
     // should not continue!
-    if( omniORB::trace(0) ) {
+    if( omniORB::trace(1) ) {
       omniORB::logger l;
       l << "Unexpected exception caught by giopMonitor\n";
     }

@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.14  2002/03/18 12:38:27  dpg1
+ Lower trace(0) to trace(1), propagate fatalException.
+
  Revision 1.2.2.13  2001/09/20 09:27:44  dpg1
  Remove assertion failure on exit if not all POAs are deleted.
 
@@ -221,7 +224,7 @@ omniObjAdapter::initialise()
 						   (*i)->no_publish,
 						   (*i)->no_listen);
 	if (!address) {
-	  if (omniORB::trace(0)) {
+	  if (omniORB::trace(1)) {
 	    omniORB::logger log;
 	    log << "Error: Unable to create an endpoint of this description: "
 		<< (const char*)(*i)->uri
@@ -248,7 +251,7 @@ omniObjAdapter::initialise()
       const char* address = instantiate_endpoint(estr,0,0);
 
       if (!address) {
-	if (omniORB::trace(0)) {
+	if (omniORB::trace(1)) {
 	  omniORB::logger log;
 	  log << "Error: Unable to create an endpoint of this description: "
 	      << (const char*)estr
@@ -267,6 +270,9 @@ omniObjAdapter::initialise()
       omniInitialReferences::initialise_bootstrap_agentImpl();
   }
   catch (const CORBA::INITIALIZE&) {
+    throw;
+  }
+  catch (omniORB::fatalException&) {
     throw;
   }
   catch (...) {

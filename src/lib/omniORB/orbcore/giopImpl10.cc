@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2002/03/18 12:38:25  dpg1
+  Lower trace(0) to trace(1), propagate fatalException.
+
   Revision 1.1.4.13  2001/10/19 11:06:45  dpg1
   Principal support for GIOP 1.0. Correct some spelling mistakes.
 
@@ -621,7 +624,7 @@ giopImpl10::getInputData(giopStream* g,omni::alignment_t align,size_t sz) {
       else {
 	// Very bad. Should never happen given our invariant.
 	{
-	  if( omniORB::trace(0) ) {
+	  if( omniORB::trace(1) ) {
 	    omniORB::logger l;
 	    l << "Fatal error in unmarshalling message from "
 	      << g->pd_strand->connection->peeraddress()
@@ -719,7 +722,7 @@ giopImpl10::copyInputData(giopStream* g,void* b, size_t sz,
     else {
       // Very bad. Should never happen given our invariant.
       {
-	if( omniORB::trace(0) ) {
+	if( omniORB::trace(1) ) {
 	  omniORB::logger l;
 	  l << "Fatal error in unmarshalling message from "
 	    << g->pd_strand->connection->peeraddress()
@@ -1373,7 +1376,7 @@ giopImpl10::outputFlush(giopStream* g) {
     }
     else {
       // Any other message type should never caused this function to be called.
-      if( omniORB::trace(0) ) {
+      if( omniORB::trace(1) ) {
 	omniORB::logger l;
 	l << "Fatal error in sending message to "
 	  << g->pd_strand->connection->peeraddress()
