@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.30.2.1  2000/08/07 17:32:01  dpg1
+  sll's Win32 fix from omni3_develop.
+
   Revision 1.30  2000/07/13 15:25:54  dpg1
   Merge from omni3_develop for 3.0 release.
 
@@ -1300,6 +1303,7 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
     return RC_INVALID_SOCKET;
   }
 # else
+  v = 0;
   if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
     CLOSESOCKET(sock);
     return RC_INVALID_SOCKET;
