@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.13  2001/10/18 12:45:28  dpg1
+# IDL compiler tweaks.
+#
 # Revision 1.33.2.12  2001/08/17 13:45:55  dpg1
 # C++ mapping fixes.
 #
@@ -568,10 +571,6 @@ def visitTypedef(node):
 
             # Non-array of basic type
             elif isinstance(d_type.type(), idltype.Base):
-
-                # typedefs to basic types are always fully qualified?
-                # IDL oddity?
-                basicReferencedTypeID = aliasType.member()
                 stream.out(template.typedef_simple_basic,
                            base = basicReferencedTypeID,
                            derived = derivedName)

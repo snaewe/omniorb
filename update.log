@@ -1,3 +1,21 @@
+Thu Oct 18 13:43:01 BST 2001 dpg1
+=================================
+
+- IDL compiler tweaks.
+
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/id.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+- "interactive" omniidl back-end.
+
+src/tool/omniidl/python/omniidl_be/dir.mk
+src/tool/omniidl/python/omniidl_be/interactive.py  -- new
+
+
 Thu Oct 18 13:39:58 BST 2001 dpg1
 =================================
 

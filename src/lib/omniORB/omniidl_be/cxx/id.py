@@ -80,19 +80,19 @@ class Name:
         sn = self.__scopedName
         if cxx: sn = self.__map_cxx()
         sn = self.__apply_presuffix(sn)
-        sname = sn[len(sn) - 1]
+        sname = sn[-1]
         
         return sname
 
     def scope(self):
         """scope(id.Name): string list
            Returns the scope of the name"""
-        return self.__scopedName[0:len(self.__scopedName) - 1]
+        return self.__scopedName[:-1]
 
     def __apply_presuffix(self, scopedName):
         # internal function to apply the prefix and suffix to the IDL name
-        scope = scopedName[0:len(scopedName) - 1]
-        name = scopedName[len(scopedName) - 1]
+        scope = scopedName[:-1]
+        name = scopedName[-1]
         return scope + [ self.__prefix + name + self.__suffix ]
 
     def prefix(self, prefix):
@@ -257,7 +257,7 @@ class Environment:
            Returns an environment representing the outer scope. Defined
            names are kept"""
         new = Environment()
-        new.__scope = self.__scope[0: len(self.__scope) - 1]
+        new.__scope = self.__scope[:-1]
         new.__names = self.__names.copy()
         return new
 
@@ -284,7 +284,7 @@ class Environment:
                 return self.__names[name.hash()]
             if scope == []:
                 return None
-            del scope[len(scope) - 1]
+            del scope[-1]
 
     def scope(self):
         """scope(id.Environment): scope string list

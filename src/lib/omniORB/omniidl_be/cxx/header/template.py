@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.16  2001/10/18 12:45:28  dpg1
+# IDL compiler tweaks.
+#
 # Revision 1.5.2.15  2001/10/17 16:44:05  dpg1
 # Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 #
@@ -427,7 +430,7 @@ public:
 
 interface_marshal_forward = """\
 inline void
-@name@::_marshalObjRef(@name@_ptr obj, cdrStream& s) {
+@name@::_marshalObjRef(::@name@_ptr obj, cdrStream& s) {
   omniObjRef::_marshal(obj->_PR_getobj(),s);
 }
 
@@ -792,6 +795,7 @@ public:
   virtual CORBA::Exception* _NP_duplicate() const;
 
   static _core_attr const char* _PD_repoId;
+  static _core_attr const char* _PD_typeId;
 
 private:
   virtual const char* _NP_typeId() const;

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.5  2001/10/18 12:45:28  dpg1
+# IDL compiler tweaks.
+#
 # Revision 1.14.2.4  2001/03/26 11:11:54  dpg1
 # Python clean-ups. Output routine optimised.
 #
@@ -183,13 +186,13 @@ def monolithic(stream, tree):
 
     # Add in any direct C++ from toplevel pragma if present
     cxx_direct_include = []
-    directive = "hh"
+    directive = "hh "
     for pragma in tree.pragmas():
         # ignore all pragmas but those in the main file
         if pragma.file() != tree.file(): continue
         
-        if pragma.text()[0:len(directive)] == directive:
-            cxx_direct_include.append(pragma.text()[len(directive)+1:])
+        if pragma.text()[:len(directive)] == directive:
+            cxx_direct_include.append(pragma.text()[len(directive):])
     
     includes = output.StringStream()
 
@@ -207,12 +210,12 @@ def monolithic(stream, tree):
         # ext      == extension (typically .idl)
         (root, ext) = os.path.splitext(include)
         (dirname, filename) = os.path.split(root)
-        # make the C++ header filename
-        filename = filename + config.state['HH Suffix']
-        # s/\W/_/g
-        guardname = id.Name([filename]).guard()
 
-        cxx_include = filename
+        # Name for external include guard. Always use the same suffix,
+        # rather than taking suffix from the config.
+        guardname = id.Name([filename]).guard() + "_hh"
+
+        cxx_include = filename + config.state['HH Suffix']
         if config.state['Keep Include Path']:
             cxx_include = os.path.join(dirname, cxx_include)
 

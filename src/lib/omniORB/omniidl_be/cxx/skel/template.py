@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.15  2001/10/18 12:45:29  dpg1
+# IDL compiler tweaks.
+#
 # Revision 1.3.2.14  2001/10/17 16:44:06  dpg1
 # Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 #
@@ -160,33 +163,33 @@ POA_@fqname@::~@POA_prefix@@name@() {}
 
 interface_Helper = """\
 @name@_ptr @name@_Helper::_nil() {
-  return @name@::_nil();
+  return ::@name@::_nil();
 }
 
-CORBA::Boolean @name@_Helper::is_nil(@name@_ptr p) {
+CORBA::Boolean @name@_Helper::is_nil(::@name@_ptr p) {
   return CORBA::is_nil(p);\n
 }
 
-void @name@_Helper::release(@name@_ptr p) {
+void @name@_Helper::release(::@name@_ptr p) {
   CORBA::release(p);
 }
 
-void @name@_Helper::duplicate(@name@_ptr p) {
+void @name@_Helper::duplicate(::@name@_ptr p) {
   if( p && !p->_NP_is_nil() )  omni::duplicateObjRef(p);
 }
 
-void @name@_Helper::marshalObjRef(@name@_ptr obj, cdrStream& s) {
-  @name@::_marshalObjRef(obj, s);
+void @name@_Helper::marshalObjRef(::@name@_ptr obj, cdrStream& s) {
+  ::@name@::_marshalObjRef(obj, s);
 }
 
 @name@_ptr @name@_Helper::unmarshalObjRef(cdrStream& s) {
-  return @name@::_unmarshalObjRef(s);
+  return ::@name@::_unmarshalObjRef(s);
 }
 """
 
 interface_class = """\
 @name@_ptr
-@name@::_duplicate(@name@_ptr obj)
+@name@::_duplicate(::@name@_ptr obj)
 {
   if( obj && !obj->_NP_is_nil() )  omni::duplicateObjRef(obj);
 
@@ -216,7 +219,7 @@ interface_class = """\
   return _the_nil_ptr;
 }
 
-const char* @name@::_PD_repoId = \"@repoID@\";
+const char* @name@::_PD_repoId = "@repoID@";
 
 """
 
@@ -227,7 +230,7 @@ interface_objref = """\
 
 @fq_objref_name@::@objref_name@(omniIOR* ior, omniIdentity* id) :
    @inherits_str@
-   omniObjRef(@name@::_PD_repoId, ior, id, 1)
+   omniObjRef(::@name@::_PD_repoId, ior, id, 1)
 {
   _PR_setobj(this);
 }
@@ -235,8 +238,8 @@ interface_objref = """\
 void*
 @fq_objref_name@::_ptrToObjRef(const char* id)
 {
-  if( omni::ptrStrMatch(id, @name@::_PD_repoId) )
-    return (@name@_ptr) this;
+  if( omni::ptrStrMatch(id, ::@name@::_PD_repoId) )
+    return (::@name@_ptr) this;
   @_ptrToObjRef@
   if( omni::ptrStrMatch(id, CORBA::Object::_PD_repoId) )
     return (CORBA::Object_ptr) this;
@@ -380,14 +383,14 @@ interface_pof = """\
 omniObjRef*
 @pof_name@::newObjRef(omniIOR* ior, omniIdentity* id)
 {
-  return new @objref_fqname@(ior, id);
+  return new ::@objref_fqname@(ior, id);
 }
 
 
 CORBA::Boolean
 @pof_name@::is_a(const char* id) const
 {
-  if( omni::ptrStrMatch(id, @name@::_PD_repoId) )
+  if( omni::ptrStrMatch(id, ::@name@::_PD_repoId) )
     return 1;
   @Other_repoIDs@
   return 0;
@@ -423,7 +426,7 @@ CORBA::Boolean
 void*
 @impl_fqname@::_ptrToInterface(const char* id)
 {
-  if( omni::ptrStrMatch(id, @name@::_PD_repoId) )
+  if( omni::ptrStrMatch(id, ::@name@::_PD_repoId) )
     return (@impl_name@*) this;
   @_ptrToInterface@
   if( omni::ptrStrMatch(id, CORBA::Object::_PD_repoId) )
@@ -434,7 +437,7 @@ void*
 const char*
 @impl_fqname@::_mostDerivedRepoId()
 {
-  return @name@::_PD_repoId;
+  return ::@name@::_PD_repoId;
 }
 """
 
@@ -467,7 +470,7 @@ _ctxt = CORBA::Context::unmarshalContext(iop_s);
 """
 
 interface_operation_dispatch = """\
-if( omni::strMatch(op, \"@idl_operation_name@\") ) {
+if( omni::strMatch(op, "@idl_operation_name@") ) {
 
   @call_descriptor@ _call_desc(@call_desc_args@);
   @context@
@@ -641,27 +644,28 @@ CORBA::Exception::insertExceptionToAnyNCP @scoped_name@::insertToAnyFnNCP = 0;
 
 void @scoped_name@::_raise() const { throw *this; }
 
+const char* @scoped_name@::_PD_repoId = "@repoID@";
+const char* @scoped_name@::_PD_typeId = "Exception/UserException/@scoped_name@";
+
 @scoped_name@* @scoped_name@::_downcast(CORBA::Exception* _e) {
-  return (@name@*) _NP_is_a(_e, \"Exception/UserException/@scoped_name@\");
+  return (@name@*) _NP_is_a(_e, _PD_typeId);
 }
 
 const @scoped_name@* @scoped_name@::_downcast(const CORBA::Exception* _e) {
-  return (const @name@*) _NP_is_a(_e, \"Exception/UserException/@scoped_name@\");
+  return (const @name@*) _NP_is_a(_e, _PD_typeId);
 }
-
-const char* @scoped_name@::_PD_repoId = \"@repoID@\";
 
 CORBA::Exception* @scoped_name@::_NP_duplicate() const {
   return new @name@(*this);
 }
 
 const char* @scoped_name@::_NP_typeId() const {
-  return \"Exception/UserException/@scoped_name@\";
+  return _PD_typeId;
 }
 
 const char* @scoped_name@::_NP_repoId(int* _size) const {
-  *_size = sizeof(\"@repoID@\");
-  return \"@repoID@\";
+  *_size = sizeof("@repoID@");
+  return _PD_repoId;
 }
  
 void @scoped_name@::_NP_marshal(cdrStream& _s) const {
