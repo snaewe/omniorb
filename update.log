@@ -1,3 +1,11 @@
+Tue Feb  5 17:50:25 GMT 2002 djr
+================================
+
+- Fixed memory leak in string_to_object().
+
+src/lib/omniORB2/orbcore/uri.cc
+
+
 Wed Jan 16 11:59:58 GMT 2002 dpg1
 =================================
 
