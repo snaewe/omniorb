@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.5  2001/08/17 17:10:28  sll
+ Removed option noBootStrapAgent.
+
  Revision 1.1.4.4  2001/08/15 10:26:09  dpg1
  New object table behaviour, correct POA semantics.
 
@@ -219,11 +222,8 @@ public:
   static const omnivector<const char*>& listMyEndpoints();
 
   struct Options {
-    inline Options() : noBootstrapAgent(0) {}
-
+    inline Options() {}
     ~Options();
-
-    _CORBA_Boolean noBootstrapAgent;
 
     struct EndpointURI {
       _CORBA_String_var  uri;
