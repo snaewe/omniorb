@@ -464,17 +464,13 @@ msvc_work_around_stub = $(patsubst %,$(LibPattern),msvcstub) \
 
 OMNIORB_LIB = $(omniorb_dll_name) \
 		$(omnidynamic_dll_name) \
-                $(OMNIASYNCINVOKER_LIB) \
 		$(OMNITHREAD_LIB) $(SOCKET_LIB) advapi32.lib
 OMNIORB_LIB_NODYN = $(omniorb_dll_name) $(msvc_work_around_stub) \
-                $(OMNIASYNCINVOKER_LIB) \
 		$(OMNITHREAD_LIB) $(SOCKET_LIB) advapi32.lib
 
 OMNIORB_LIB_NODYN_DEPEND := $(omniORB_lib_depend) \
-                            $(OMNIASYNCINVOKER_LIB_DEPEND) \
                             $(OMNITHREAD_LIB_DEPEND)
 OMNIORB_LIB_DEPEND := $(omniORB_lib_depend) \
-                      $(OMNIASYNCINVOKER_LIB_DEPEND) \
                       $(OMNITHREAD_LIB_DEPEND) \
 		      $(omniDynamic_lib_depend)
 
@@ -522,17 +518,6 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 OMNITHREAD_PLATFORM_LIB =
 
-
-# omniAsyncInvoker
-#
-# 
-OMNIASYNCINVOKER_VERSION = 1.0
-OMNIASYNCINVOKER_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIASYNCINVOKER_VERSION)))
-OMNIASYNCINVOKER_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIASYNCINVOKER_VERSION)))
-
-OMNIASYNCINVOKER_LIB = $(patsubst %,$(DLLSearchPattern),omniAsyncInvoker$(OMNIASYNCINVOKER_MAJOR_VERSION)$(OMNIASYNCINVOKER_MINOR_VERSION))
-lib_depend := $(patsubst %,$(DLLPattern),omniAsyncInvoker$(OMNIASYNCINVOKER_MAJOR_VERSION)$(OMNIASYNCINVOKER_MINOR_VERSION))
-OMNIASYNCINVOKER_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 # omniORB SSL transport
 OMNIORB_SSL_VERSION = $(OMNIORB_MAJOR_VERSION).$(OMNIORB_MINOR_VERSION)

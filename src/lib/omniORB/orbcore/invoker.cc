@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.1  2002/01/09 11:35:23  dpg1
+  Remove separate omniAsyncInvoker library to save library overhead.
+
   Revision 1.1.2.7  2001/11/13 14:14:03  dpg1
   AsyncInvoker properly waits for threads to finish.
 
@@ -55,39 +58,33 @@
 
 */
 
-#include <omnithread.h>
-#include <omniAsyncInvoker.h>
+#include <omniORB4/CORBA.h>
+#include <omniORB4/omniAsyncInvoker.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 
 unsigned int omniAsyncInvoker::idle_timeout = 10;
-unsigned int omniAsyncInvoker::traceLevel   = 1;
-
-
-#define LOG(level,msg) do { \
-if (omniAsyncInvoker::traceLevel >= level) { \
-  fprintf(stderr,msg); \
-} \
-} while(0)
 
 class omniAsyncWorker : public omni_thread {
 public:
 
   omniAsyncWorker(omniAsyncInvoker* pool, omniTask* task) :
-    pd_pool(pool), pd_task(task), pd_cond(pool->pd_lock), pd_next(0),
-    pd_id(id())
+    pd_pool(pool), pd_task(task), pd_next(0), pd_id(id())
   {
+    pd_cond = new omni_tracedcondition(pool->pd_lock);
     start();
   }
 
-
   ~omniAsyncWorker() {
 
-    if (omniAsyncInvoker::traceLevel >= 10) {
-      fprintf(stderr,"omniAsyncInvoker: thread id=%d has exited. Total threads = %d\n",pd_id,pd_pool->pd_totalthreads);
+    if (omniORB::trace(10)) {
+      omniORB::logger l;
+      l << "AsyncInvoker: thread id = " << pd_id
+	<< " has exited. Total threads = " << pd_pool->pd_totalthreads
+	<< "\n";
     }
 
+    delete pd_cond;
     pd_pool->pd_lock->lock();
     if (pd_pool->pd_totalthreads == 0) {
       pd_pool->pd_lock->unlock();
@@ -99,11 +96,13 @@ public:
 
   void run(void*) {
 
-    if (omniAsyncInvoker::traceLevel >= 10) {
-      omni_mutex_lock sync(*pd_pool->pd_lock);
-      fprintf(stderr,"omniAsyncInvoker: thread id=%d has started. Total threads = %d\n",pd_id,pd_pool->pd_totalthreads);
+    if (omniORB::trace(10)) {
+      omni_tracedmutex_lock sync(*pd_pool->pd_lock);
+      omniORB::logger l;
+      l << "AsyncInvoker: thread id = " << pd_id
+	<< " has started. Total threads = " << pd_pool->pd_totalthreads
+	<< "\n";
     }
-
     pd_pool->pd_lock->lock();
 
     while (pd_task || pd_pool->pd_keep_working) {
@@ -119,15 +118,15 @@ public:
 	  unsigned long abs_sec,abs_nanosec;
 	  omni_thread::get_time(&abs_sec,&abs_nanosec,
 				omniAsyncInvoker::idle_timeout);
-	  if ( pd_cond.timedwait(abs_sec,abs_nanosec) == 0 && !pd_task) {
+	  if ( pd_cond->timedwait(abs_sec,abs_nanosec) == 0 && !pd_task) {
 	    // Has timeout and has not been assigned a task.
 
 	    // Remove this thread from the idle queue
 	    omniAsyncWorker** pp = &pd_pool->pd_idle_threads;
-	    while (*pp != this) {
+	    while (*pp && *pp != this) {
 	      pp = &((*pp)->pd_next);
 	    }
-	    *pp = pd_next;
+	    if (*pp) *pp = pd_next;
 	    pd_next = 0;
 	    break;
 	  }
@@ -144,7 +143,7 @@ public:
 	pd_task->execute();
       }
       catch(...) {
-	LOG(1,"omniAsyncInvoker: Warning- unexpected exception caught while executing a task.\n");
+	omniORB::logs(1, "AsyncInvoker: Warning: unexpected exception caught while executing a task.");
       }
       pd_task = 0;
       pd_pool->pd_lock->lock();
@@ -168,11 +167,11 @@ public:
   friend class omniAsyncInvoker;
 
 private:
-  omniAsyncInvoker* pd_pool;
-  omniTask*         pd_task;
-  omni_condition    pd_cond;
-  omniAsyncWorker*  pd_next;
-  int               pd_id;
+  omniAsyncInvoker*     pd_pool;
+  omniTask*             pd_task;
+  omni_tracedcondition* pd_cond;
+  omniAsyncWorker*      pd_next;
+  int                   pd_id;
 
   omniAsyncWorker();
   omniAsyncWorker(const omniAsyncWorker&);
@@ -183,8 +182,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////
 omniAsyncInvoker::omniAsyncInvoker(unsigned int max) {
   pd_keep_working = 1;
-  pd_lock  = new omni_mutex();
-  pd_cond  = new omni_condition(pd_lock);
+  pd_lock  = new omni_tracedmutex();
+  pd_cond  = new omni_tracedcondition(pd_lock);
   pd_idle_threads = 0;
   pd_nthreads = 0;
   pd_maxthreads = max;
@@ -200,7 +199,7 @@ omniAsyncInvoker::~omniAsyncInvoker() {
     omniAsyncWorker* t = pd_idle_threads;
     pd_idle_threads = t->pd_next;
     t->pd_next = 0;
-    t->pd_cond.signal();
+    t->pd_cond->signal();
   }
   // Wait for threads to exit
   while (pd_totalthreads) {
@@ -210,7 +209,7 @@ omniAsyncInvoker::~omniAsyncInvoker() {
 
   delete pd_cond;
   delete pd_lock;
-  LOG(10, "omniAsyncInvoker: deleted.\n");
+  omniORB::logs(10, "AsyncInvoker: deleted.");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -220,14 +219,14 @@ omniAsyncInvoker::insert(omniTask* t) {
   switch (t->category()) {
   case omniTask::AnyTime:
     {
-      omni_mutex_lock sync(*pd_lock);
+      omni_tracedmutex_lock sync(*pd_lock);
 
       if (pd_idle_threads) {
 	omniAsyncWorker* w = pd_idle_threads;
 	pd_idle_threads = w->pd_next;
 	w->pd_next = 0;
 	w->pd_task = t;
-	w->pd_cond.signal();
+	w->pd_cond->signal();
       }
       else {
 	if (pd_nthreads < pd_maxthreads) {
@@ -248,14 +247,14 @@ omniAsyncInvoker::insert(omniTask* t) {
     }
   case omniTask::ImmediateDispatch:
     {
-      omni_mutex_lock sync(*pd_lock);
+      omni_tracedmutex_lock sync(*pd_lock);
 
       if (pd_idle_threads) {
 	omniAsyncWorker* w = pd_idle_threads;
 	pd_idle_threads = w->pd_next;
 	w->pd_next = 0;
 	w->pd_task = t;
-	w->pd_cond.signal();
+	w->pd_cond->signal();
 	pd_nthreads--;
       }
       else {
@@ -284,7 +283,7 @@ int
 omniAsyncInvoker::cancel(omniTask* t) {
 
   if (t->category() == omniTask::AnyTime) {
-    omni_mutex_lock sync(*pd_lock);
+    omni_tracedmutex_lock sync(*pd_lock);
     omniTaskLink* l;
 
     for (l = pd_anytime_tq.next; l != &pd_anytime_tq; l =l->next) {
@@ -313,7 +312,7 @@ omniAsyncInvoker::work_pending()
 void
 omniAsyncInvoker::perform(unsigned long secs, unsigned long nanosecs)
 {
-  LOG(1, "omniAsyncInvoker::perform() not implemented. aborting...\n");
+  omniORB::logs(1, "omniAsyncInvoker::perform() not implemented. aborting...\n");
   abort();
 }
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2002/01/09 11:35:22  dpg1
+  Remove separate omniAsyncInvoker library to save library overhead.
+
   Revision 1.1.4.2  2001/08/01 10:08:20  dpg1
   Main thread policy.
 
@@ -42,8 +45,6 @@
 
 #ifndef __INVOKER_H__
 #define __INVOKER_H__
-
-#include <omniAsyncInvoker.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 

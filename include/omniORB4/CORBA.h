@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.22  2002/01/09 11:35:20  dpg1
+ Remove separate omniAsyncInvoker library to save library overhead.
+
  Revision 1.2.2.21  2001/11/08 16:33:49  dpg1
  Local servant POA shortcut policy.
 
@@ -441,6 +444,8 @@ extern void _omni_set_NameService(CORBA::Object_ptr);
 #include <omniORB4/dynAny.h>
 
 #include <omniORB4/minorCode.h>
+
+#include <omniORB4/omniAsyncInvoker.h>
 
 #include <omniORB4/corbaidl_operators.hh>
 

@@ -66,6 +66,7 @@ ORB_SRCS =  \
 	    exceptn.cc \
 	    initRefs.cc \
 	    interceptors.cc \
+            invoker.cc \
 	    ior.cc \
 	    libcWrapper.cc \
             omniIdentity.cc \
