@@ -41,33 +41,34 @@ public:
   // Spawns off a new thread which invokes the operation
   // given in the request.
 
-  CORBA::Boolean poll_response() {
-    CORBA::Boolean ready;
-    { omni_mutex_lock lock(pd_readyMutex);
-      ready = pd_ready;
-    }
-    if( ready )  done();
-    return ready;
+  inline CORBA::Boolean poll_response() {
+    omni_mutex_lock lock(pd_readyMutex);
+    return pd_ready;
   }
   // Returns true if the operation has completed, false otherwise.
-  // If the invocation generated a system exception it is thrown
-  // out of this function.
 
-  void get_response() {
-    { omni_mutex_lock lock(pd_readyMutex);
-      while( !pd_ready )  pd_readyCondition.wait();
-    }
-    done();
+  inline void get_response() {
+    omni_mutex_lock lock(pd_readyMutex);
+    while( !pd_ready )  pd_readyCondition.wait();
   }
-  // Blocks until the operation has completed, or if a system exception
-  // is generated it is thrown.
+  // Blocks until the operation has completed.
+
+  inline CORBA::Exception* get_exception() {
+    CORBA::Exception* e = pd_exception;
+    pd_exception = 0;
+    return e;
+  }
+  // If there is one, transfer ownership of a stored
+  // exception to the caller.
+
+  inline void die() { this->join(0); }
+  // Kill the thread, and release the storage (deletes this).
 
 protected:
   virtual ~DeferredRequest();
 
 private:
   virtual void* run_undetached(void* arg);
-  void done();
 
   CORBA::Request_ptr      pd_request;
   CORBA::Boolean          pd_ready;
