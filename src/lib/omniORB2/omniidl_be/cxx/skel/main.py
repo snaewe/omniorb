@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12  1999/12/24 18:18:32  djs
+# #include bug fixed
+#
 # Revision 1.11  1999/12/16 16:11:21  djs
 # Now uses transitive closure of inherits relation where appropriate
 #
@@ -100,7 +103,9 @@ def __init__(stream):
 
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        # check what happens with reopened modules
+        if n.mainFile():
+            n.accept(self)
 
 def visitModule(node):
     name = tyutil.mapID(node.identifier())
