@@ -11,6 +11,10 @@
 
 /*
   $Log$
+  Revision 1.2  1997/03/10 11:48:40  sll
+  Changed some variable names to accommodate the creation of a public API
+  for omniORB2.
+
   Revision 1.1  1997/01/08 17:26:01  sll
   Initial revision
 
@@ -23,8 +27,10 @@ const IOP::ProfileId       IOP::TAG_MULTIPLE_COMPONENTS = 1;
 const IOP::ServiceID       IOP::TransactionService = 0;
 const CORBA::Char          IIOP::current_major = 1;
 const CORBA::Char          IIOP::current_minor = 0;
-const CORBA::Boolean       omniORB::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
-const omniORB::alignment_t omniORB::max_alignment = ALIGN_8;
+const CORBA::Boolean       omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
+const char*                omni::myORBId = "omniORB2";
+const char*                omni::myBOAId = "omniORB2_BOA";
+const omni::alignment_t    omni::max_alignment = ALIGN_8;
 
 const GIOP_Basetypes::MessageHeader::HeaderType
          GIOP_Basetypes::MessageHeader::Request = {
@@ -201,7 +207,7 @@ const GIOP_Basetypes::_SysExceptRepoID
       GIOP_Basetypes::SysExceptRepoID::DATA_CONVERSION ((CORBA::Char *)
                                                         "IDL:CORBA/DATA_CONVERSION");
 
-const unsigned int omniObjectKey::hash_table_size = 103;
+const unsigned int omniORB::hash_table_size = 103;
 
 #if defined(__GNUG__)
 
