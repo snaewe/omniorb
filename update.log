@@ -1,3 +1,11 @@
+Thu Aug 16 10:51:00 BST 2001 sll
+================================
+
+- Fix compilation problems on Solaris or with Sun C++ 4.2
+
+include/omniORB4/BiDirPolicy.h
+src/lib/omniAsyncInvoker/invoker.cc
+
 Wed Aug 15 18:58:28 BST 2001 dpg1
 =================================
 
