@@ -151,8 +151,14 @@ AST_Module *AST_Module::fe_add_module(AST_Module *t)
       return NULL;
     }
     if (referenced(d)) {
-      idl_global->err()->error3(UTL_Error::EIDL_DEF_USE, t, this, d);
-      return NULL;
+      if (d->node_type() != NT_module || 
+	  !(idl_global->compile_flags() & IDL_CF_REOPENMODULE)) {
+	idl_global->err()->error3(UTL_Error::EIDL_DEF_USE, t, this, d);
+	return NULL;
+      }
+      d->set_file_name(t->file_name());
+      d->set_in_main_file(idl_global->in_main_file());
+      return AST_Module::narrow_from_decl(d);
     }
     if (t->has_ancestor(d)) {
       idl_global->err()->redefinition_in_scope(t, d);
@@ -536,7 +542,7 @@ AST_Typedef *AST_Module::fe_add_typedef(AST_Typedef *t)
  * Dump this AST_Module node to the ostream o
  */
 void
-AST_Module::dump(ostream &o)
+AST_Module::dump( std:: ostream &o)
 {
   o << "module ";
   local_name()->dump(o);
