@@ -85,9 +85,9 @@ include $(THIS_IMPORT_TREE)/mk/beforedir.mk
 endif
 
 ifndef EmbeddedSystem
-OMNIORB2_IDL_FPATH = $(TOP)/$(BINDIR)/$(OMNIORB2_IDL)
+OMNIORB_IDL_FPATH = $(TOP)/$(BINDIR)/$(OMNIORB_IDL)
 else
-OMNIORB2_IDL_FPATH = $(TOP)/$(HOSTBINDIR)/$(OMNIORB2_IDL)
+OMNIORB_IDL_FPATH = $(TOP)/$(HOSTBINDIR)/$(OMNIORB_IDL)
 endif
 
 include dir.mk

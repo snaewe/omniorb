@@ -1,10 +1,10 @@
 
-Release Notes for omniORB 3.0.0 pre1  (22nd September 1999)
+Release Notes for omniORB 3.0.0 pre1  (24th September 1999)
 ====================================
 
-The last release was 2.8.0 pre2 (31st August 1999).
+The last release was 2.8.0 (31st August 1999).
 
-Source code and binary distributions are available via anonymous CVS ...??
+Source code is available via anonymous CVS.  Please see:
 
       http://www.uk.research.att.com/omniORB/omniORB.html
       http://www.uk.research.att.com/omniORB/cvs.html
@@ -20,12 +20,34 @@ Key features include:
   o  identical semantics for local and remote object invocations
   o  location forwarding into and outof the local address space
   o  new dynamically growing object table (improves performance
-     for applications with large numbers of objects)
+    for applications with large numbers of objects)
   o  legacy support for the BOA (including using both BOA and POA
-     together in the same process)
+    together in the same process)
+  o  improved message logging, including logging application
+    level requests
+  o  lots of other stuff
+
+In theory I have merged all of the updates in the 2.8.0 release, and
+will continue to keep up-to-date with that.
 
 By default the shared runtime libraries are built with debugging
-information and no optimisation.  ?? How change this?
+information and no optimisation.  This is because I want you to find
+bugs!  The overhead is really not very great.  If you really need to
+build optimised libraries, then you need to take a number of steps to
+disable debug info:
+
+  o  comment out  '#define OMNIORB_ENABLE_LOCK_TRACES'  in
+    include/omniORB3/tracedthread.h
+  o  dissable the OMNIORB_ASSERT() macro in
+    include/omniORB3/omniInternal.h
+  o  do  'export subdir_makeflags="CXXDEBUGFLAGS=-O2"'  at
+    the command line before rebuilding all libraries and
+    applications.
+
+Note that if you don't rebuild all the libraries and applications after
+disabling the lock tracing code, you will certainly crash at some point.
+Please be very careful not to do this (I don't want it reported as a
+bug!).
 
 Please test it extensively!
 
@@ -70,11 +92,17 @@ Changes since 2.8.0
 
 3. New command line options and ORB configuration variables:
 
-    -ORBpoa_iiop_port <port number> to tells the POA the port number to use.
+    -ORBtraceInvocations
+    omniORB::traceInvocations
+      enable tracing of invocations of CORBA objects.
 
-    -ORBpoa_iiop_name_port <hostname[:port number]> to tells the POA the
-                  hostname and optionally the port number to use.
+    -ORBpoa_iiop_port <port number>
+      tells the POA the port number to use.
 
+    -ORBpoa_iiop_name_port <hostname[:port number]>
+      tells the POA the hostname and optionally the port number to use.
+
+      NB. The BOA and POA will both use the same port if used together.
 
     omniORB::objectTableSize
 
@@ -130,10 +158,26 @@ Changes since 2.8.0
     See include/omniORB3/omniORB.h
 
 
-7. The omniORB2 user guide has *not* been updated!!!
+7. Examples.
+
+    The standard echo examples have been updated to use the POA.
+    There is a 'boa' directory which uses the old-style BOA interface.
+    There is also a 'poa' directory which isn't very exciting yet,
+    but will soon have a few more samples of POA code.
 
 
-8. Things that don't work.
+8. omniNames.
+
+    This has been updated to use the POA.  Unfortunately the format of
+    the log file has changed slightly.  Eventually we may write a utility
+    to convert the log file to the new format.  But for now if this is a
+    problem for you, then please continue to use an older version.
+
+
+9. The omniORB user guide has *not* been updated :(
+
+
+10. Things that don't work.
 
     a) PortableServer::AdapterActivator is not supported.  You must
        not pass TRUE to the second argument of
