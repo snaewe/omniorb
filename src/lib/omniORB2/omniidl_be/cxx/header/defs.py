@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/11/04 19:05:08  djs
+# Finished moving code from tmp_omniidl. Regression tests ok.
+#
 # Revision 1.3  1999/11/03 18:18:12  djs
 # Struct and Exception fixes
 #
@@ -56,14 +59,17 @@ isFragment = 0
 # State information (used to be passed as arguments during recursion)
 self.__insideInterface = 0
 self.__insideModule = 0
+
+# IDL (not C++) scope, should be filtered through tyutil.mapID before
+# being used
 self.__scope = []
 
 def enter(scope):
     self.__scope.append(scope)
-def leave(scope):
+def leave():
     self.__scope = self.__scope[0:-1]
 def currentScope():
-    return self.__scope
+    return self.__scope[:]
 
 
 def __init__(stream):
@@ -74,23 +80,32 @@ def __init__(stream):
 # Control arrives here
 #
 def visitAST(node):
-    print "visitAST(" + repr(node) + ")"
-    print "stream = " + repr(stream)
+#    print "visitAST(" + repr(node) + ")"
+#    print "stream = " + repr(stream)
 
     for n in node.declarations():
         n.accept(self)
 
 def visitModule(node):
     # o2be_module::produce_hdr
-    name = node.identifier()
+    name = tyutil.mapID(node.identifier())
     if not(isFragment):
         stream.out("""\
 _CORBA_MODULE @name@
 _CORBA_MODULE_BEG""", name = name)
         stream.inc_indent()
-  
+
+    insideModule = self.__insideModule
+    self.__insideModule = 1
+
+    enter(node.identifier())
+    
     for n in node.definitions():
         n.accept(self)
+
+    leave()
+
+    self.__insideMoule = insideModule
 
     if not(isFragment):
         stream.dec_indent()
@@ -101,12 +116,19 @@ _CORBA_MODULE_END
 
 def visitInterface(node):
 #    print "[[[ visitInterface
-    scope = currentScope()
-    
+
     name = tyutil.mapID(node.identifier())
-    # the ifndef guard name contains scope information
-    guard = tyutil.guardName(scope + [name])
+    interface_scope = currentScope()
+#    print "[[[ interface scope = " + repr(interface_scope) + "]]]"
+    enter(node.identifier())    
+    scope = currentScope()
+
+    insideInterface = self.__insideInterface
+    self.__insideInterface = 1
     
+    # the ifndef guard name contains scope information
+    guard = tyutil.guardName(scope)
+
     stream.out("""\
 #ifndef __@guard@__
 #define __@guard@__
@@ -169,12 +191,17 @@ public:
   static _core_attr const char* _PD_repoId;
 
   // Other IDL defined within this scope.
-""",
+  """,
                name = name,
                guard = guard)
     # output code for other declarations within this scope
     for n in node.declarations():
+#        print "[[[ scope = " + repr(scope) + "  interface_scope = " + \
+#              repr(interface_scope) + "]]]"
         n.accept(self)
+#        print "[[[ scope = " + repr(scope) + "  interface_scope = " + \
+#              repr(interface_scope) + "]]]"
+#    print "[[[ ---- MARK ---- ]]]"
         
     # build methods corresponding to attributes, operations etc
     attributes = []
@@ -184,15 +211,24 @@ public:
     for c in node.callables():
         if isinstance(c, idlast.Attribute):
             attrType = c.attrType()
-            type = tyutil.argumentTypeToString(attrType, scope)[0]
+            derefAttrType = tyutil.deref(attrType)
+            
+            returnType = tyutil.operationArgumentType(attrType, scope)[0]
+            inType = tyutil.operationArgumentType(attrType, scope)[1]
+            
+            #if tyutil.isObjRef(derefAttrType):
+            #    type = tyutil.principalID(derefAttrType, scope) + "_ptr"
+            #
+            #else:
+            #    type = tyutil.operationArgumentType(attrType, interface_scope)[0]
             for i in c.identifiers():
                 attribname = tyutil.mapID(i)
-                attributes.append(type + " " + attribname + "()")
+                attributes.append(returnType + " " + attribname + "()")
                 if not(c.readonly()):
                     attributes.append("void " + attribname + "(" \
-                                      + type + ")")
+                                      + inType + ")")
         elif isinstance(c, idlast.Operation):
-            def argumentTypeToString(arg, virtual = 0, scope = scope):
+            def argumentTypeToString(arg, virtual = 0, scope = interface_scope):
                 return tyutil.operationArgumentType(arg, scope, virtual)
 
             params = []
@@ -208,9 +244,12 @@ public:
                     tuple = (types[1], virtual_types[1])
                 elif p.is_out():
                     tuple = (types[2], virtual_types[2])
+                else:
+                    assert 0
                 argname = tyutil.mapID(p.identifier())
                 params.append(tuple[0] + " " + argname)
                 virtual_params.append(tuple[1] + " " + argname)
+#                print "[[[ tuple = " + repr(tuple) + "]]]"
 
             return_type = argumentTypeToString(c.returnType())[0]
             opname = tyutil.mapID(c.identifier())
@@ -237,10 +276,10 @@ public:
     objref_inherits = []
     impl_inherits = []
     for i in node.inherits():
-        scope = idlutil.ccolonName(tyutil.scope(i.scopedName()), scope)
+        rel_scope = idlutil.ccolonName(tyutil.scope(i.scopedName()), scope)
         id = tyutil.mapID(i.identifier())
-        objref_inherits.append("public virtual " + scope + "_objref_" + id)
-        impl_inherits.append("public virtual " + scope + "_impl_" + id)
+        objref_inherits.append("public virtual " + rel_scope + "_objref_" + id)
+        impl_inherits.append("public virtual " + rel_scope + "_impl_" + id)
     # if already inheriting, the base classes will be present
     # (transitivity of the inherits-from relation)
     if node.inherits() == []:
@@ -315,16 +354,20 @@ private:
                name = name,
                virtual_operations = virtual_operations_str,
                virtual_attributes = virtual_attributes_str)
-    
+
+    self.__insideInterface = insideInterface
+
+    leave()
 
     
 
 def visitForward(node):
 #    print "[[[ visitForward ]]]"
-    scope = scope()
-    
     name = tyutil.mapID(node.identifier())
-    guard = tyutil.guardName(scope + name)
+
+    scope = currentScope()
+    
+    guard = tyutil.guardName(scope + [name])
     stream.out("""\
 #ifndef __@guard@__
 #define __@guard@__
@@ -358,7 +401,7 @@ def visitForward(node):
 
 def visitConst(node):
 #    print "[[[ visitConst ]]]"
-    scope = scope()
+    scope = currentScope()
     
     constType = node.constType()
     if isinstance(constType, idltype.String):
@@ -474,14 +517,14 @@ typedef @base@ @derived@;""",
 typedef @base@ @name@;
 typedef @base@_var @name@_var;
 typedef @base@_out @name@_out;""",
-                               base = derefTypeID,
+                               base = referencedTypeID,
                                name = derivedName)
                 elif derefType.kind() == idltype.tk_objref:
                     stream.out("""\
 typedef @base@ @name@;
 typedef @base@_ptr @name@_ptr;
 typedef @base@Ref @name@Ref;
-typedef _impl_@base@ _sk_@name@;
+typedef _impl_@base@ _impl_@name@;
 typedef @base@_Helper @name@_Helper;
 typedef _objref_@base@ _objref_@name@;
 typedef @base@_var @name@_var;
@@ -492,17 +535,19 @@ typedef @base@_out @name@_out;""",
                 else:
                     stream.out("""\
 typedef @base@ @name@;""",
-                               base = derefTypeID,
+                               base = referencedTypeID,
                                name = derivedName)
             elif isinstance(derefType, idltype.Sequence):
-                if tyutil.isString(derefType):
+                seqType = derefType.seqType()
+                seqDerefType = tyutil.deref(seqType)
+                if tyutil.isString(seqDerefType):
                     element = "_CORBA_String_member"
                     element_IN = "char *"
                 else:
-                    element = tyutil.principalID(derefType, scope)
+                    element = tyutil.principalID(seqType, scope)
                     element_IN = element
                     
-                dims = tyutil.typeDims(derefType)
+                dims = tyutil.typeDims(seqType)
                 is_array = (dims != [])
 
                 templateName = tyutil.sequenceTemplate(derefType, scope)
@@ -516,7 +561,8 @@ typedef @base@ @name@;""",
                 # marshalling operators are not yet defined (and are
                 # not part of the type itself).
                 # ----
-                if tyutil.isEnum(derefType):
+#                print "[[[ derefType = " + repr(derefType) + "]]]"
+                if tyutil.isEnum(seqDerefType):
                     stream.out("""\
 // Need to declare <<= for elem type, as GCC expands templates early
 #if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
@@ -568,7 +614,7 @@ typedef @base@ @name@;""",
       return (@element@_slice*) ((_data->NP_data())[i]);
     }""", element = element)
                 else:
-                    if tyutil.isString(derefType):
+                    if tyutil.isString(seqDerefType):
                         # special case alert
                         element_reference = element
                     else:
@@ -673,7 +719,7 @@ typedef @base@ @name@;""",
                 raise "No code for type = " + repr(type)
         # handle arrays
         elif d.sizes() != []:
-            print "[[[ dims = " + repr(dims) + "  d.sizes() = " + repr(d.sizes()) + "]]]"
+#            print "[[[ dims = " + repr(dims) + "  d.sizes() = " + repr(d.sizes()) + "]]]"
             dims = d.sizes() + dims
             append = lambda x,y: x + y
             dimsString = reduce(append,
@@ -748,8 +794,8 @@ typedef _CORBA_Array_Forany<@name@_copyHelper,@name@_slice> @name@_forany;
 def visitMember(node):
 #    print "[[[ visitMember ]]]"
     memberType = node.memberType()
-    print "memberType == " + repr(memberType)
-    print "constrType == " + repr(node.constrType())
+#    print "memberType == " + repr(memberType)
+#    print "constrType == " + repr(node.constrType())
 
     if node.constrType():
         # if the type was declared here, it must be an instance
@@ -763,9 +809,12 @@ def visitStruct(node):
 
 #        if (hasattr(node,"written")):
 #            return node.written
-    scope = currentScope()
-            
     name = tyutil.mapID(node.identifier())
+    enter(node.identifier())
+
+    scope = currentScope()
+#    print "[[[ scope = " + repr(scope) + "]]]"
+            
     stream.out("""\
 struct @name@ {""", name = name)
     stream.inc_indent()
@@ -800,10 +849,11 @@ typedef _CORBA_ConstrType_@type@_Var<@name@> _var_type;""",
         elif tyutil.isObjRef(derefType):
             memtype = tyutil.objRefTemplate(derefType, "Member", scope)    
         elif tyutil.isTypedef(memberType):
-            memtype = memberType.name()
+            memtype = tyutil.name(memberType.name())
+#            print "[[[ memtype = " + repr(memtype) + "]]]"
             # Deal with sequence members
         elif tyutil.isSequence(memberType):
-            sequence_template = util.sequenceTemplate(memberType, scope)
+            sequence_template = tyutil.sequenceTemplate(memberType, scope)
 
             for d in m.declarators():
                 instname = tyutil.mapID(d.identifier())
@@ -817,7 +867,8 @@ _@memtype@ @instname@;""",
             continue
 
         elif tyutil.isEnum(memberType):
-            memtype = tyutil.mapID(memberType.identifier())
+            memtype = tyutil.mapID(memberType.decl().identifier())
+#            print "[[[ memtype = " + repr(memtype) + "]]]"
         # If it's a user declared type then remember the type we assigned?
         elif isinstance(memberType, idltype.Declared) and \
              hasattr(m,"memtype"):
@@ -825,16 +876,16 @@ _@memtype@ @instname@;""",
 #                    print "[[[stored]]]"
                 memtype = m.memtype
             else:
-                memtype = tyutil.principalID(memberType)
+                memtype = tyutil.principalID(memberType, scope)
         else:
-            memtype = tyutil.principalID(memberType)                
+            memtype = tyutil.principalID(memberType, scope) 
         # FIXME: doesnt deal with eg arrays
         decll = []
         for d in m.declarators():
             decll.append(d.identifier())
         decls = util.delimitedlist(decll)
-
-#            print "[[[ memtype = " + repr(memtype) + "  decls = " + repr(decls) + "]]]"
+#        print "[[[ memberType = " + repr(memberType) + "]]]"
+#        print "[[[ memtype = " + repr(memtype) + "  decls = " + repr(decls) + "]]]"
         stream.out("""\
 @type@ @decls@;""",type = memtype, decls = decls)
 
@@ -852,34 +903,42 @@ typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
 """, type = type,name = name)
 
     node.written = name
+#    print "[[[ scope = " + repr(currentScope()) + "]]]"
+    leave()
 
 def visitException(node):
 #    print "[[[ visitException ]]]"
+    # the exception's name
+    exname = tyutil.mapID(node.identifier())
+
+    enter(node.identifier())
+
     scope = currentScope()
 
     # if the exception has no members, inline some no-ops
     no_members = (node.members() == [])
-    # the exception's name
-    exname = tyutil.mapID(node.identifier())
+
 
     # Used to build the types for exception constructors
     def makeConstructorArgumentType(type, scope = []):
         # idl.type -> string
-        param_type = tyutil.principalID(type, scope)
+        typeName = tyutil.principalID(type, scope)
         isVariable = tyutil.isVariableType(type)
         derefType = tyutil.deref(type)
-        if tyutil.isString(derefType):
-            return "const char*"
-        elif isinstance(type, idltype.Base):
-            return tyutil.principalID(type, scope)
-        elif tyutil.isEnum(derefType):
-            return param_type
-        elif tyutil.isSequence(type, 0):
+        derefTypeName = tyutil.principalID(derefType, scope)
+
+        if isinstance(derefType, idltype.Base) or \
+           tyutil.isEnum(derefType):
+            return typeName
+        if tyutil.isStruct(derefType)          or \
+           tyutil.isUnion(derefType):
+            return "const " + typeName + "&"
+        if tyutil.isObjRef(derefType):
+            return derefTypeName + "_ptr"
+        if tyutil.isSequence(type, 0):
             return "const " + tyutil.sequenceTemplate(derefType, scope)
         elif tyutil.isSequence(type, 1):
-            return "const " + param_type
-        elif tyutil.isTypedef(type):
-            return param_type
+            return "const " + typeName
         else:
             return tyutil.operationArgumentType(type, scope)[1]
 
@@ -894,11 +953,11 @@ def visitException(node):
             ctor_arg_type = makeConstructorArgumentType(memberType, scope)
 
             if tyutil.isObjRef(derefType):
-                type = tyutil.objRefTemplate(memberType, "Member", scope)
+                type = tyutil.objRefTemplate(derefType, "Member", scope)
             elif tyutil.isTypedef(memberType):
                 type = tyutil.principalID(memberType, scope)
             elif tyutil.isSequence(derefType):
-                type = tyutil.sequenceTemplate(derefType, scope())
+                type = tyutil.sequenceTemplate(derefType, scope)
             else:
                 type = tyutil.principalID(memberType, scope)
             name = tyutil.mapID(d.identifier())
@@ -964,12 +1023,557 @@ private:
                constructor = ctor,
                inline = inline, body = body,
                alignedSize = alignedSize)
+    leave()
 
 
 def visitUnion(node):
-    print "[[[ visitUnion ]]]"
+#    print "[[[ visitUnion ]]]"
+    enter(node.identifier())
+
+    scope = currentScope()
+
+    switchType = node.switchType()
+    
+    # returns a representation of the union discriminator in a form
+    # that is a legal value in C++
+    def discrimValueToString(switchType, caselabel, from_scope=[]):
+        # CORBA 2.3draft 3.10.2.2
+        #   switch type ::= <integer_type>
+        #               |   <char_type>
+        #               |   <boolean_type>
+        #               |   <enum_type>
+        #               |   <scoped_name>
+        # where scoped_name must be an already declared version of one
+        # of the simpler types
+        discrimvalue = caselabel.value()
+        
+        # CASE <integer_type>
+        if (switchType.kind() == idltype.tk_short     or
+            switchType.kind() == idltype.tk_ushort):
+            return str(discrimvalue)
+        elif (switchType.kind() == idltype.tk_long      or
+              switchType.kind() == idltype.tk_longlong  or
+              switchType.kind() == idltype.tk_ulong     or
+              switchType.kind() == idltype.tk_ulonglong):
+            # discrimvalue is of the form "\d+L"
+            string = str(int(eval(str(discrimvalue))))
+            return string
+        # CASE <char_type>
+        elif (switchType.kind() == idltype.tk_char    or
+              switchType.kind() == idltype.tk_wchar):
+            # HACK!
+            if (repr(discrimvalue) != "'None'"):
+                return "'" + discrimvalue + "'"
+            return "'" + "\\000" + "'"
+        # CASE <boolean_type>
+        elif (switchType.kind() == idltype.tk_boolean):
+            return str(discrimvalue)
+        # CASE <enum_type>
+        elif (switchType.kind() == idltype.tk_enum):
+            discrimvalue = tyutil.name(discrimvalue.scopedName())
+            target_scope = tyutil.scope(switchType.decl().scopedName())
+            rel_scope = idlutil.pruneScope(target_scope, from_scope)
+            return idlutil.ccolonName(rel_scope) + str(discrimvalue)
+        # CASE <scoped_name>
+        elif (switchType.kind() == idltype.tk_alias):
+            switchType = tyutil.deref(switchType)
+            return discrimValueToString(switchType, discrimvalue, from_scope)
+        else:
+            raise "discrimValueToString type="+repr(switchType)+ \
+                  " val="+repr(discrimvalue)
+
+    def allCaseValues(node = node):
+        list = []
+        for n in node.cases():
+            for l in n.labels():
+                if not(l.default()):
+                    list.append(l)
+        return list
+
+    # determines whether a set of cases represents an Exhaustive Match
+    def exhaustiveMatch(switchType = switchType,
+                        allCaseValues = allCaseValues):
+        # return all the used case values
+        
+        # dereference the switch_type (ie if CASE <scoped_name>)
+        switchType = tyutil.deref(switchType)
+            
+        # same as discrimValueToString
+        # CASE <integer_type>
+        if tyutil.isInteger(switchType):
+            # Assume that we can't possibly do an exhaustive match
+            # on the integers, since they're (mostly) very big.
+            # maybe should rethink this for the short ints...
+            return 0
+        # CASE <char_type>
+        elif tyutil.isChar(switchType):
+            # make a set with all the characters inside
+            s = []
+            for char in range(0,256):
+                s.append(chr(char))
+            # make a set with all the used characters
+            used = allCaseValues()
+            # subtract all the used ones from the possibilities
+            difference = util.minus(s, used)
+            # if the difference is empty, match is exhaustive
+            return (len(difference) == 0)
+        # CASE <boolean_type>
+        elif tyutil.isBoolean(switchType):
+            s = [0, 1]
+            used = map(lambda x: x.value(), allCaseValues())
+            difference = util.minus(s, used)
+            return (len(difference) == 0)
+        # CASE <enum_type>
+        elif tyutil.isEnum(switchType):
+            s = switchType.decl().enumerators()
+            used = map(lambda x: x.value(), allCaseValues())
+            difference = util.minus(s, used)
+            return (len(difference) == 0)
+        else:
+            raise "exhaustiveMatch type="+repr(switchType)+ \
+                  " val="+repr(discrimvalue)
+
+    # in the case where there is no default case and an implicit default
+    # member, choose a discriminator value to set. Note that attempting
+    # to access the data is undefined
+    #
+    # FIXME: The new AST representation now has
+    #   CaseLabel.default() : true if representing the default case
+    #   CaseLabel.value()   : if the default case, returns a value
+    #                         used by none of the other labels
+    # For the time being, keep the independent mechanism because it seems
+    # to closely match the old compiler's behaviour.
+    # Once this backend is trusted independantly, convert to use the
+    # new mechanism?
+    def chooseArbitraryDefault(switchType = switchType,
+                               allCaseValues = allCaseValues):
+        # dereference the switch_type (ie if CASE <scoped_name>)
+        switchType = tyutil.deref(switchType)
+                
+        # CASE <integer_type>
+        if switchType.kind() == idltype.tk_short:
+            # - [ 2 ^ (32-1) -1 ]
+            return "-32767"
+        elif switchType.kind() == idltype.tk_long:
+            # - [ 2 ^ (64-1) -1 ]
+            return "-2147483647"
+        elif switchType.kind() == idltype.tk_ushort    or \
+             switchType.kind() == idltype.tk_longlong  or \
+             switchType.kind() == idltype.tk_ulong     or \
+             switchType.kind() == idltype.tk_ulonglong:
+            return "1"
+        # CASE <char_type>
+        elif tyutil.isChar(switchType):
+            return "'\\000'"
+        # CASE <boolean_type>
+        elif tyutil.isBoolean(switchType):
+            return "0"
+        # CASE <enum_type>
+        elif tyutil.isEnum(switchType):
+            enums = switchType.decl().enumerators()
+            # pick the first enum not already in a case
+            allcases = map(lambda x: x.value(), allCaseValues())
+#            print "[[[ enums = " + repr(enums) + "]]]"
+#            print "[[[ allcases = " + repr(allcases) + "]]]"
+            difference = util.minus(enums, allcases)
+            return tyutil.name(difference[0].scopedName())
+        else:
+            raise "chooseArbitraryDefault type="+repr(switchType)+\
+                  " val="+repr(discrimvalue)            
+
+    # does the IDL union have any default case?
+    # It'll be handy to know which case is the default one later-
+    # so add a new attribute to mark it
+    hasDefault = 0
+    for c in node.cases():
+        c.isDefault = 0
+        for l in c.labels():
+            if l.default():
+                hasDefault = 1
+                c.isDefault = 1
+            
+    # CORBA 2.3 C++ Mapping 1-34
+    # "A union has an implicit default member if it does not have
+    # a default case and not all permissible values of the union
+    # discriminant are listed"
+    exhaustive = exhaustiveMatch()
+    implicitDefault = not(hasDefault) and not(exhaustive)
+    
+    name = tyutil.mapID(node.identifier())
+    if tyutil.isVariableDecl(node):
+        fixed = "Variable"
+    else:
+        fixed = "Fix"
+    stream.out("""\
+class @unionname@ {
+public:
+
+  typedef _CORBA_ConstrType_@fixed@_Var<@unionname@> _var_type;
+  @unionname@() {""",unionname = name, fixed = fixed)
+    stream.inc_indent()
+        
+    if implicitDefault:
+        stream.out("""\
+    _default();""")
+                      
+    elif hasDefault:
+        stream.out("""\
+    pd__default = 1;
+    pd__d = @default@;""", default = chooseArbitraryDefault())
+    stream.dec_indent()
+    stream.out("""\
+  }
+  """)
+    for section in ['copyconst', 'equalsop']:
+        if (section is 'copyconst'):
+            stream.out("""\
+  @unionname@(const @unionname@& _value) {""", unionname = name)
+        else:
+            stream.out("""\
+  @unionname@& operator=(const @unionname@& _value) {""", unionname = name)
+        stream.inc_indent()
+        if not(exhaustive):
+            stream.out("""\
+    if ((pd__default = _value.pd__default)) {
+      pd__d = _value.pd__d;""", unionname = name)
+            # the default case (if it exists) need initialising here
+            for c in node.cases():
+                if c.isDefault:
+                    stream.out("""\
+      @default@(_value.pd_@default@);""",
+                               default=tyutil.mapID(c.declarator().identifier()))
+            stream.dec_indent()
+            stream.out("""\
+    }
+    else {""")
+        stream.out("""\
+      switch(_value.pd__d) {""")
+        stream.inc_indent()
+        # iterate over cases
+        for c in node.cases():
+            # FIXME: multiple case labels not taken care of
+            # FIXME: need to represent discriminator value properly
+            for l in c.labels():
+                if l.default(): continue
+                stream.out("""\
+         case @discrimvalue@: @name@(_value.pd_@name@); break;""",
+                           discrimvalue = discrimValueToString(switchType,
+                                                               l,
+                                                               scope),
+                           name = tyutil.mapID(c.declarator().identifier()))
+        # Booleans are a special case (isn't everything?)
+        booleanWrap = tyutil.isBoolean(switchType) \
+                      and exhaustive
+        if booleanWrap:
+            stream.niout("""\
+#ifndef HAS_Cplusplus_Bool""")
+        stream.out("""\
+         default: break;""")
+        if booleanWrap:
+            stream.niout("""\
+#endif""")
+        stream.dec_indent()
+        stream.out("""\
+      }""")
+        if not(exhaustive):
+            stream.out("""\
+    }""")
+        if section is 'equalsop':
+            stream.out("""\
+    return *this;
+  }""")
+        else:
+            stream.dec_indent()
+            stream.out("""\
+  }
+
+  ~@unionname@() {}
+  """, unionname= name)
+            # deal with the discriminator
+    stream.out("""\
+  
+  @discrimtype@ _d() const { return pd__d;}
+  void _d(@discrimtype@ _value) {}
+  """, discrimtype = tyutil.principalID(switchType, scope))
+
+    if implicitDefault:
+        stream.out("""\
+  void _default()
+  {
+    pd__d = @arbitraryDefault@;
+    pd__default = 1;
+  }
+  """, arbitraryDefault = chooseArbitraryDefault())
+
+    # get and set functions for each case:
+    for c in node.cases():
+        # Following the typedef chain will deliver the base type of
+        # the alias. Whether or not it is an array is stored in an
+        # ast.Typedef node.
+        caseType = c.caseType()
+        dims = tyutil.typeDims(caseType)
+            
+        # find the dereferenced type of the member if its an alias
+        derefType = tyutil.deref(caseType)
+
+        # the mangled name of the member
+        decl = c.declarator()
+        member = tyutil.mapID(decl.identifier())
+        # the name of the member type (not flattened)
+        type = tyutil.principalID(caseType, scope)
+        # FIXME: multiple labels might be broken
+        for l in c.labels():
+            # depends entirely on the dereferenced type of the member
+            if l.default():
+                discrimvalue = chooseArbitraryDefault()
+            else:
+                discrimvalue = discrimValueToString(switchType,
+                                                    l, scope)
+                
+            if dims != []:
+                # arrays
+                # build the loop
+                loop = util.StringStream()
+                append = lambda x,y: x + y
+                dimsString = reduce(append, map(lambda x: "[_i"+repr(x)+"]",
+                                                (range(0,len(dims)))))
+                index = 0
+                for size in dims:
+                    loop.out("""\
+    for (unsigned int _i@index@ =0;_i@index@ < @size@;_i@index@++) {""",
+                             index = str(index), size = str(size))
+                    index = index + 1
+                    loop.inc_indent()
+                loop.out("""\
+      pd_@name@@dimsString@ = _value@dimsString@;""",
+                         name = member, dimsString = dimsString)
+                for size in dims:
+                    loop.dec_indent()
+                    loop.out("""\
+    }""")             
+                stream.out("""\
+  const @type@_slice *@name@ () const { return pd_@name@; }
+  void @name@ (const @type@ _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    @loop@
+  }""",
+                           type = type,
+                           name = member,
+                           isDefault = str(c.isDefault),
+                           discrimvalue = discrimvalue,
+                           loop = str(loop))
+            elif isinstance(derefType, idltype.Base) or \
+                            tyutil.isEnum(derefType):
+                # basic type
+                stream.out("""\
+  @type@ @name@ () const { return pd_@name@; }
+  void @name@ (@type@  _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = _value;
+  }""",
+                           type = type,
+                           name = member,
+                           isDefault = str(c.isDefault),
+                           discrimvalue = discrimvalue)
+            elif isinstance(derefType, idltype.Declared) and \
+                 (derefType.kind() == idltype.tk_struct or
+                  derefType.kind() == idltype.tk_union):
+                # structs
+                stream.out("""\
+  const @type@ &@name@ () const { return pd_@name@; }
+  @type@ &@name@ () { return pd_@name@; }
+  void @name@ (const @type@& _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = _value;
+  }""",
+                           type = type,
+                           name = member,
+                           isDefault = str(c.isDefault),
+                           discrimvalue = discrimvalue)
+
+            elif isinstance(derefType, idltype.String):
+                stream.out("""\
+  const char * @name@ () const { return (const char*) pd_@name@; }
+  void @name@(char* _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = _value;
+  }
+  void @name@(const char*  _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = _value;
+  }
+  void @name@(const CORBA::String_var& _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = _value;
+  }
+  void @name@(const CORBA::String_member& _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = _value;
+  }""",
+                           name = member,
+                           isDefault = str(c.isDefault),
+                           discrimvalue = discrimvalue)
+            elif isinstance(derefType, idltype.Sequence):
+                c.memtype = "_"+member+"_seq"
+                stream.out("""\
+  typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<CORBA::Char,1,1> _@member@_seq;
+  const _@member@_seq& somechars () const { return pd_somechars; }
+  _@member@_seq& somechars () { return pd_somechars; }
+  void @member@ (const _@member@_seq& _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_somechars = _value;
+  }""",
+                           member = member,
+                           isDefault = str(c.isDefault),
+                           discrimvalue = discrimvalue)
+            elif tyutil.isObjRef(derefType):
+                type = tyutil.principalID(derefType, scope)
+                objref = tyutil.objRefTemplate(derefType, "Member", scope)
+                stream.out("""\
+  @type@_ptr @member@ () const { return pd_@member@._ptr; }
+  void @member@(@type@_ptr _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    @type@_Helper::duplicate(_value);
+    pd_@member@ = _value;
+  }
+  void @member@(const @objref@& _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@member@ = _value;
+  }
+  void @member@(const @type@_var&  _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@member@ = _value;
+  }""",
+                           member = member,
+                           type = type,
+                           objref = objref,
+                           isDefault = str(c.isDefault),
+                           discrimvalue = discrimvalue)
+            else:
+                raise "Don't know how to output code for union type: "+type
+    stream.out("""\
+
+  size_t _NP_alignedSize(size_t initialoffset) const;
+  void operator>>= (NetBufferedStream&) const;
+  void operator<<= (NetBufferedStream&);
+  void operator>>= (MemBufferedStream&) const;
+  void operator<<= (MemBufferedStream&);
+
+private:
+  """)
+
+    # declare the instance of the discriminator and
+    # the actual data members (shock, horror)
+    # FIXME: there is some interesting behaviour in
+    # o2be_union::produce_hdr which I should examine more
+    # carefully
+    inside = util.StringStream()
+    outside = util.StringStream()
+    used_inside = 0
+    used_outside = 0
+    for c in node.cases():
+
+        # find the dereferenced type of the member if its an alias
+        caseType = c.caseType()
+        derefType = tyutil.deref(caseType)
+
+        if hasattr(c,"memtype"):
+            type_str = c.memtype
+        elif tyutil.isObjRef(derefType):
+            type_str = tyutil.objRefTemplate(derefType, "Member", scope)
+        else:
+            type_str = tyutil.principalID(caseType, scope)
+
+        member_name = tyutil.mapID(c.declarator().identifier())
+        # put fixed types inside the union and variable types
+        # outside. FIXME: is this if correct?
+#            if (((isinstance(c.type_spec(), idltypes.Declared))and
+#                not(c.type_spec().kind() == idltypes.tk_alias))or
+#                (util.isVariableType(c.type_spec()))):
+            # floats and doubles are special cases
+        if tyutil.isFloating(derefType):
+            inside.out("""\
+#ifndef USING_PROXY_FLOAT
+  @type@ pd_@name@;
+#endif""", type = type_str, name = member_name)
+            outside.out("""\
+#ifdef USING_PROXY_FLOAT
+  @type@ pd_@name@;
+#endif""", type = type_str, name = member_name)
+            used_inside = used_outside = 1
+        else:
+            if (isinstance(derefType, idltype.Declared) or  \
+                isinstance(derefType, idltype.Sequence) or  \
+                isinstance(derefType, idltype.String))  and \
+                not(tyutil.isEnum(derefType)):
+                this_stream = outside
+                used_outside = 1
+            else:
+                this_stream = inside
+                used_inside = 1
+            this_stream.out("""\
+    @type@ pd_@name@;""",
+                            type = type_str,
+                            name = member_name)
+  
+    discrimtype = tyutil.principalID(switchType, scope)
+        
+    if tyutil.isVariableDecl(node):
+        isVariable = "Variable"
+    else:
+        isVariable = "Fix"
+
+    stream.out("""\
+    @discrimtype@ pd__d;
+    CORBA::Boolean pd__default;""",
+               discrimtype = discrimtype)
+    if used_inside:
+        stream.out("""\
+    union {
+      @insideUnion@
+    };""",
+                   insideUnion=str(inside))
+    if used_outside:
+        stream.out("""\
+    @outsideUnion@
+  };""", outsideUnion = str(outside))
+    else:
+        stream.dec_indent()
+        stream.out("""\
+  };""")
+    stream.out("""\
+  
+  typedef @Name@::_var_type @Name@_var;
+
+  typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
+  """,
+               isVariable = isVariable,
+               Name = name)
+    leave()
+
 
 def visitEnum(node):
-    print "[[[ visitEnum ]]]"
-
+#    print "[[[ visitEnum ]]]"
+    if hasattr(node,"written"):
+        return node.written;
+    name = tyutil.mapID(node.identifier())
+    enumerators = node.enumerators()
+    memberlist = map(lambda x: tyutil.name(x.scopedName()), enumerators)
+    stream.out("""\
+enum @name@ { @memberlist@ };
+typedef @name@& @name@_out;
+""", name = name, memberlist = util.delimitedlist(memberlist))
+    node.written = name
+    return name
 

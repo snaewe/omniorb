@@ -9,3 +9,9 @@ export:: __init__.py
 export:: defs.py
 	@(file="defs.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: opers.py
+	@(file="opers.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
+export:: poa.py
+	@(file="poa.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+

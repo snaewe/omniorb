@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/11/04 19:05:08  djs
+# Finished moving code from tmp_omniidl. Regression tests ok.
+#
 # Revision 1.2  1999/11/03 17:35:11  djs
 # Brought more of the old tmp_omniidl code into the new tree
 #
@@ -39,6 +42,8 @@ from omniidl.be.cxx import config
 # -----------------------------
 # Output generation functions
 import omniidl.be.cxx.header.defs
+import omniidl.be.cxx.header.opers
+import omniidl.be.cxx.header.poa
 
 # -----------------------------
 # Utility functions
@@ -117,7 +122,9 @@ def monolithic(stream, tree):
     # generate the header definitions
     defs = omniidl.be.cxx.header.defs.__init__(stream)
     tree.accept(defs)
-    
+
+    poa = omniidl.be.cxx.header.poa.__init__(stream)
+    tree.accept(poa)
     #poa_defs(stream, node)
 
     stream.out("""\
@@ -126,7 +133,8 @@ def monolithic(stream, tree):
 
 """, Config = config)
     # see o2be_root::produce_hdr and o2be_root::produce_hdr_defs
-    #opers(stream, node)
+    opers = omniidl.be.cxx.header.opers.__init__(stream)
+    tree.accept(opers)
 
     # other stuff
     stream.out("""\

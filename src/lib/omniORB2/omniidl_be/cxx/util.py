@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/11/04 19:05:02  djs
+# Finished moving code from tmp_omniidl. Regression tests ok.
+#
 # Revision 1.2  1999/11/03 17:35:07  djs
 # Brought more of the old tmp_omniidl code into the new tree
 #
@@ -172,3 +175,28 @@ class StringStream(Stream):
 
     def __add__(self, other):
         return self.__buffer + str(other)
+
+
+# ------------------------------------------------------------------
+# Set manipulation functions
+
+def union(a, b):
+    result = a[:]
+    for x in b:
+        if not(x in result):
+            result.append(x)
+    return result
+
+def minus(a, b):
+    result = []
+    for x in a:
+        if not(x in b):
+            result.append(x)
+    return result
+
+def intersect(a, b):
+    result = []
+    for x in a:
+        if x in b:
+            result.append(x)
+    return result

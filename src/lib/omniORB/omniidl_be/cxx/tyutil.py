@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/11/04 19:05:02  djs
+# Finished moving code from tmp_omniidl. Regression tests ok.
+#
 # Revision 1.3  1999/11/03 17:35:07  djs
 # Brought more of the old tmp_omniidl code into the new tree
 #
@@ -91,6 +94,8 @@
 # isSequence  : type * boolean -> boolean
 # isTypeCode  : type * boolean -> boolean
 # isTypedef   : type * boolean -> boolean
+# isStruct    : type * boolean -> boolean
+# isUnion     : type * boolean -> boolean
 #   Type of type :) functions. If boolean argument is true, will
 #   perform a full dereference first. Default is false.
 #
@@ -185,10 +190,13 @@ def principalID(type, from_scope=[]):
     
     scopedName = type.scopedName()
 
+    scopedName = idlutil.pruneScope(scope(scopedName), from_scope) + \
+                 [name(scopedName)]
+    
     # escape all components of the name
     scopedName = map(mapID, scopedName)
-    
-    return idlutil.ccolonName(scopedName, from_scope)
+
+    return util.delimitedlist(scopedName, "::")
 
 # ------------------------------------------------------------------
 
@@ -333,6 +341,9 @@ def operationArgumentType(type, scope = [], virtualFn = 0):
     isVariable = isVariableType(type)
     deref_type = deref(type)
 
+#    print "[[[ type = " + repr(type) + " scope = " + repr(scope) + "]]]"
+#    print "[[[ param_type = "+ repr(param_type) + "]]]"
+
     if virtualFn:
         if isinstance(type, idltype.String):
             return [ "char *",
@@ -353,13 +364,14 @@ def operationArgumentType(type, scope = [], virtualFn = 0):
                  "const char* ",
                  "CORBA::String_out ",
                  "CORBA::String_INOUT_arg " ]
-    elif isinstance(type, idltype.Base) or \
-         type.kind() == idltype.tk_enum:
+    elif isinstance(deref_type, idltype.Base) or \
+         deref_type.kind() == idltype.tk_enum:
         return [ param_type,
                  param_type,
                  param_type + "& ",
                  param_type + "& " ]
-    elif type.kind() == idltype.tk_objref:
+    elif deref_type.kind() == idltype.tk_objref:
+        param_type =principalID(deref_type, scope)
         return [ param_type + "_ptr",
                  param_type + "_ptr",
                  "_CORBA_ObjRef_OUT_arg<_objref_" + param_type + "," + \
@@ -581,6 +593,16 @@ def isTypeCode(type, force_deref = 0):
 # Ignore the force_deref argument
 def isTypedef(type, force_deref = 0):
     return type.kind() == idltype.tk_alias
+
+def isStruct(type, force_deref = 0):
+    if force_deref:
+        type = deref(type)
+    return type.kind() == idltype.tk_struct
+
+def isUnion(type, force_deref = 0):
+    if force_deref:
+        type = deref(type)
+    return type.kind() == idltype.tk_union
 
 # ------------------------------------------------------------------
 
