@@ -1,3 +1,10 @@
+Fri Aug  8 10:36:36 BST 1997 sll
+================================
+
+Fixed problem with not passing the repository ID of the most derived type
+in an IOR.
+
+src/lib/omniORB2/objectRef.cc
 
 Wed Jul 30 15:47:49 BST 1997 tjr
 ================================
