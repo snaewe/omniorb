@@ -30,6 +30,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  2000/01/17 16:58:22  djs
+# Support for typedefs with constructed types
+# Support for unions with types constructed inside the switch()
+# Support for module reopening
+#
 # Revision 1.2  2000/01/13 14:16:20  djs
 # Properly clears state between processing separate IDL input files
 #
@@ -103,7 +108,8 @@ class WalkTree(idlvisitor.AstVisitor):
         self._cache(node)
         
         name = node.identifier()
-        self._add(name)
+        # already exists => reopening module
+        self._add(name, allow_already_exists = 1)
         
         self._enterScope(name)
         for n in node.definitions():
@@ -141,6 +147,9 @@ class WalkTree(idlvisitor.AstVisitor):
         
     def visitTypedef(self, node):
         self._cache(node)
+        
+        if node.constrType():
+            node.aliasType().decl().accept(self)
 
         for d in node.declarators():
             d.accept(self)
@@ -181,6 +190,18 @@ class WalkTree(idlvisitor.AstVisitor):
 
         name = node.identifier()
         self._add(name)
+
+        self._enterScope(name)
+        # deal with constructed switch type
+        if node.constrType():
+            node.switchType().decl().accept(self)
+
+        # deal with constructed member types
+        for n in node.cases():
+            if n.constrType():
+                n.caseType().decl().accept(self)
+
+        self._leaveScope()
 
     def visitCaseLabel(self, node):
         pass
