@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.15  1999/01/07 15:52:41  djr
+  Changes needed due to changes to interface of Net/MemBufferedStream.
+
   Revision 1.14  1998/08/21 19:08:50  sll
   Added hook to recognise the key 'INIT' of the special bootstrapping
   agent. Dispatch the invocation to the agent if it has been initialised.
@@ -241,8 +244,9 @@ GIOP_S::InitialiseReply(const GIOP::ReplyStatusType status,
  // Marshall the GIOP Message Header
 
   WrMessageSize(msgsize);
-  put_char_array((CORBA::Char *)MessageHeader::Reply,
-		 sizeof(MessageHeader::Reply),1,1);
+  put_char_array((CORBA::Char*) MessageHeader::Reply,
+		 sizeof(MessageHeader::Reply),
+		 omni::ALIGN_1, 1, 1);
 
   operator>>= ((CORBA::ULong)bodysize,*this);
 
@@ -302,8 +306,8 @@ GIOP_S::dispatcher(Strand *s)
   gs.RdMessageSize(sizeof(MessageHeader::HeaderType)+sizeof(CORBA::ULong),0);
 
   MessageHeader::HeaderType hdr;
-  gs.get_char_array((CORBA::Char *)hdr,
-		    sizeof(MessageHeader::HeaderType),1);
+  gs.get_char_array((CORBA::Char *)hdr, sizeof(MessageHeader::HeaderType),
+		    omni::ALIGN_1, 1);
 
   switch (hdr[7])
     {
@@ -395,7 +399,6 @@ GIOP_S::dispatcher(Strand *s)
 	gs.HandleCloseConnection();
 	break;
       }
-      break;
     default:
       {
 	// Wrong header or invalid message type
@@ -466,7 +469,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     CORBA::ULong keysize;
     keysize <<= *this;
     if (keysize == sizeof(omniObjectKey)) {
-      get_char_array((CORBA::Char *)&pd_objkey,keysize);
+      get_char_array((CORBA::Char*) &pd_objkey, keysize);
     }
     else {
       // This key did not come from this orb.
@@ -479,7 +482,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
       // the bootstrapping agent running, initialise obj to point to it. 
       if (keysize == 4) {
 	CORBA::Char k[4];
-	get_char_array(k,4);
+	get_char_array(k, 4);
 	if (k[0] == 'I' && k[1] == 'N' && k[2] == 'I' && k[3] == 'T') {
 	  obj = omniInitialReferences::singleton()->has_bootstrap_agentImpl();
 	}
@@ -503,7 +506,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 	  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
 	pd_operation = p;
       }
-    get_char_array((CORBA::Octet *)pd_operation,octetlen);
+    get_char_array((CORBA::Octet*) pd_operation, octetlen);
 
     octetlen <<= *this;
     if (octetlen > OMNIORB_GIOPDRIVER_GIOP_S_INLINE_BUF_SIZE)
@@ -518,7 +521,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 	  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
 	pd_principal = p;
       }
-    get_char_array((CORBA::Octet *)pd_principal,octetlen);
+    get_char_array((CORBA::Octet*) pd_principal, octetlen);
   }
   catch (const CORBA::MARSHAL &ex) {
     RequestReceived(1);
@@ -761,7 +764,7 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
       skip(keysize);
     }
     else {
-      get_char_array((CORBA::Char *)&pd_objkey,keysize);
+      get_char_array((CORBA::Char*) &pd_objkey, keysize);
     }
     RequestReceived();
   }
@@ -794,6 +797,7 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
       // has registered a loader, do an upcall to locate the object.
       // If the return value is not a nil object reference, reply with
       // OBJECT_FORWARD and the new object reference.
+      status = GIOP::UNKNOWN_OBJECT;
       CORBA::Object_var newDestination = MapKeyToObjectFunction(pd_objkey);
       if (!CORBA::is_nil(newDestination)) {
 	status = GIOP::OBJECT_FORWARD;
@@ -804,8 +808,9 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
 	msgsize = CORBA::Object::NP_alignedSize(newDestination,msgsize);
 	msgsize = msgsize - sizeof(MessageHeader::LocateReply) - 4;
 	WrMessageSize(0);
-	put_char_array((CORBA::Char *)MessageHeader::LocateReply,
-		       sizeof(MessageHeader::LocateReply),1,1);
+	put_char_array((CORBA::Char*) MessageHeader::LocateReply,
+		       sizeof(MessageHeader::LocateReply),
+		       omni::ALIGN_1, 1, 1);
 	operator>>= ((CORBA::ULong)msgsize,*this);
 	operator>>= (pd_request_id,*this);
 	operator>>= ((CORBA::ULong)status,*this);
@@ -829,8 +834,9 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
 
     size_t bodysize = 8;
     WrMessageSize(0);
-    put_char_array((CORBA::Char *)MessageHeader::LocateReply,
-		   sizeof(MessageHeader::LocateReply),1,1);
+    put_char_array((CORBA::Char*) MessageHeader::LocateReply,
+		   sizeof(MessageHeader::LocateReply),
+		   omni::ALIGN_1, 1, 1);
     operator>>= ((CORBA::ULong)bodysize,*this);
     operator>>= (pd_request_id,*this);
     operator>>= ((CORBA::ULong)status,*this);
@@ -886,8 +892,9 @@ GIOP_S::SendMsgErrorMessage()
 {
   WrLock();
   WrMessageSize(0);
-  put_char_array((CORBA::Char *)MessageHeader::MessageError,
-		 sizeof(MessageHeader::MessageError),1,0);
+  put_char_array((CORBA::Char*) MessageHeader::MessageError,
+		 sizeof(MessageHeader::MessageError),
+		 omni::ALIGN_1, 1, 0);
   operator>>= ((CORBA::ULong)0,*this);
   flush(1);
   WrUnlock();
@@ -912,9 +919,8 @@ MarshallSystemException(GIOP_S *s,
   s->InitialiseReply(GIOP::SYSTEM_EXCEPTION,msgsize);
 
   exsize >>= *s;
-  s->put_char_array(id.id,id.len);
-  s->put_char_array((CORBA::Char *)
-                    GIOP_Basetypes::SysExceptRepoID::version,
+  s->put_char_array(id.id, id.len);
+  s->put_char_array((CORBA::Char*)GIOP_Basetypes::SysExceptRepoID::version,
 		    GIOP_Basetypes::SysExceptRepoID::versionLen + 1);
   ex.minor() >>= *s;
   operator>>= ((CORBA::ULong)ex.completed(),*s);
@@ -933,4 +939,3 @@ omniORB::MaxMessageSize(size_t newvalue)
 {
   GIOP_Basetypes::max_giop_message_size = newvalue;
 }
-
