@@ -1,15 +1,9 @@
 #
-# alpha_linux_2.0.mk - make variables and rules specific to Linux 2.0.
+# ia64_linux_2.4.mk - make variables and rules specific to Linux on ia64
 #
-
-# WARNING!
-#
-# omniORB does not work properly on Alpha Linux. gcc does not generate
-# thread-safe exception handling code.
-
 
 Linux = 1
-AlphaProcessor = 1
+ItaniumProcessor = 1
 
 
 #
@@ -37,7 +31,7 @@ CPP = /usr/bin/cpp
 
 CXX = g++
 CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
-CXXDEBUGFLAGS = -O2
+CXXDEBUGFLAGS = -g
 
 CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) \
@@ -49,7 +43,7 @@ EgcsMinorVersion = 1
 
 CC           = gcc
 CMAKEDEPEND  += -D__GNUC__
-CDEBUGFLAGS  = -O2
+CDEBUGFLAGS  = -g
 
 CLINK        = $(CC)
 CLINKOPTIONS = $(CDEBUGFLAGS) $(COPTIONS) \
@@ -57,7 +51,7 @@ CLINKOPTIONS = $(CDEBUGFLAGS) $(COPTIONS) \
 
 INSTALL = install -c
 
-IMPORT_CPPFLAGS += -D__alpha__ -D__linux__ -D__OSVERSION__=2
+IMPORT_CPPFLAGS += -D__ia64__ -D__linux__ -D__OSVERSION__=2
 
 #
 # CORBA stuff
@@ -95,6 +89,3 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 BuildSharedLibrary = 1       # Enable
 SHAREDLIB_CPPFLAGS = -fPIC   # compiler flag
 
-ifeq ($(notdir $(CC)),KCC)
-SharedLibraryPlatformLinkFlagsTemplate = --thread_safe --soname $$soname
-endif

@@ -109,7 +109,7 @@ endef
 #CC                = gcc
 #CMAKEDEPEND       += __GNUC__
 #CDEBUGFLAGS       = -O
-#COPTIONS          = $(CDEBUGFLAGS) $(COPTIONS) \
+#COPTIONS          = $(CDEBUGFLAGS) \
 #              $(patsubst %,-Wl$(comma)-rpath$(comma)%,$(IMPORT_LIBRARY_DIRS))
 #CLINKOPTIONS      = 
 #CLINK             = $(CC)

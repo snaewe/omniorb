@@ -23,6 +23,7 @@
 #  powerpc_aix_4.2_xlc5      IBM AIX 4.2, XLC 5.0 (a.k.a. Visual Age 5.0)
 #  powerpc_aix_4.3_xlc5      IBM AIX 4.3, XLC 5.0 (a.k.a. Visual Age 5.0)
 #  powerpc_linux_2.2_glibc   PowerPC linux, Debian
+#  powerpc_lynxos_3.1        PowerPC LynxOS 3.1.0
 #  powerpc_darwin_1.3        PowerPC Darwin/Mac OS X
 #  hppa_hpux_10.20           HPUX 10.20, aC++ B3910B A.01.04
 #  hppa_hpux_11.00           HPUX 11.00, aC++ B3910B A.01.04
@@ -40,6 +41,7 @@
 #  x86_uw7                   SCO UnixWare 7 (7.1.0)
 #  x86_freebsd_3.2           x86 FreeBSD 3.2, egcs 1.1.2
 #  x86_freebsd_4.0           x86 FreeBSD 4.0, gcc 2.95
+#  x86_openbsd_3.0           x86 OpenBSD 3.0, gcc 2.95.3
 #  pc486_rtems_4.5.0         x86, RTEMS, gcc 2.95.2
 
 # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
@@ -63,6 +65,7 @@
 #platform = powerpc_aix_4.2_xlc5
 #platform = powerpc_aix_4.3_xlc5
 #platform = powerpc_linux_2.2_glibc
+#platform = powerpc_lynxos_3.1
 #platform = powerpc_darwin_1.3
 #platform = hppa_hpux_10.20
 #platform = hppa_hpux_11.00
@@ -80,7 +83,9 @@
 #platform = x86_uw7
 #platform = x86_freebsd_3.2
 #platform = x86_freebsd_4.0
+#platform = x86_openbsd_3.0
 #platform = pc486_rtems_4.5.0
+
 
 # On Win32 platforms, uncomment the following line to build all the binaries
 # with debugging information. Useful if you want to debug the binaries under

@@ -17,9 +17,13 @@ COS_DYNSK_SRCS = $(COS_INTERFACES:%=%DynSK.cc)
 
 CXXSRCS = $(COS_DYNSK_SRCS) $(COS_SK_SRCS) 
 
-all:: mkstatic mkshared
+all:: mkstatic
+export:: mkstatic
 
-export:: mkstatic mkshared
+ifdef BuildSharedLibrary
+all:: mkshared
+export:: mkshared
+endif
 
 export:: $(COS_INTERFACES:%=%.hh) COS_sysdep.h
 	@(for i in $^; do \

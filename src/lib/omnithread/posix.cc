@@ -601,6 +601,13 @@ omni_thread::join(void** status)
     if (detached)
 	throw omni_thread_invalid();
 
+#if defined(__lynxos__)
+    // LynxOs 3.1 requires a real void** status argument to pthread_join
+    void *newstatus;
+    if (status == 0)
+      status = &newstatus;
+#endif
+
     DB(cerr << "omni_thread::join: doing pthread_join\n");
 
     THROW_ERRORS(pthread_join(posix_thread, status));

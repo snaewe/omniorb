@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.25  2001/12/11 16:53:00  dpg1
+ Bunch of new platforms, plus other minor tweaks.
+
  Revision 1.1.2.24  2001/09/28 16:16:43  dpg1
  Support for Sun CC > 4.x in 4.x compatibility mode.
 
@@ -228,6 +231,10 @@
 // GNU G++ compiler
 
 #  if defined(__alpha) && !defined(__VMS)
+#     define SIZEOF_LONG 8
+#     define SIZEOF_INT  4
+#     define SIZEOF_PTR  8
+#  elif defined(__ia64__)
 #     define SIZEOF_LONG 8
 #     define SIZEOF_INT  4
 #     define SIZEOF_PTR  8
@@ -464,6 +471,11 @@
 # if !defined(__WIN32__)
 #  define _HAS_SIGNAL 1
 # endif
+#elif defined(__ia64__)
+# define _OMNIORB_HOST_BYTE_ORDER_ 1
+# if !defined(__WIN32__)
+#  define _HAS_SIGNAL 1
+# endif
 #elif defined(__sunos__) && defined(__sparc__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
@@ -484,16 +496,16 @@
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
 # define OMNI_REQUIRES_FQ_BASE_CTOR 1
-#elif defined(__hpux__) && defined(__hppa__)
+#elif defined(__hppa__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
-#if __OSVERSION__ < 11
+# if defined(__hpux__) && __OSVERSION__ < 11
 // Do we really need to include this here?   -SLL
 //  - not for HPUX 11.0
 //    need someone to check this for HPUX 10.20
-#include <stdio.h>
-#undef __ptr
-#endif
+#  include <stdio.h>
+#  undef __ptr
+# endif
 #elif defined(__m68k__) && defined(__nextstep__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1

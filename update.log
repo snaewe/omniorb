@@ -1,3 +1,29 @@
+Tue Dec 11 16:49:16 GMT 2001 dpg1
+=================================
+
+- Bunch of new platforms, plus other minor tweaks.
+
+external_merge/config/config.mk
+external_merge/mk/platforms/alpha_linux_2.0.mk
+external_merge/mk/platforms/hppa_hpux_10.20.mk
+external_merge/mk/platforms/hppa_linux_2.4.mk     -- new
+external_merge/mk/platforms/ia64_linux_2.4.mk     -- new
+external_merge/mk/platforms/powerpc_lynxos_3.1.mk -- new
+external_merge/mk/platforms/x86_openbsd_3.0.mk    -- new
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/alone/gatekeeper.cc
+include/omnithread.h
+include/omniORB3/.cvsignore  -- new
+include/omniORB3/CORBA_sysdep.h
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/lib/omnithread/posix.cc
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+src/tool/omniidl/cxx/cccp/config-linux.h
+src/tool/omniidl/cxx/cccp/config-lynxos.h         -- new
+src/tool/omniidl/cxx/cccp/config-openbsd.h        -- new
+src/tool/omniidl/cxx/cccp/config.h
+
+
 Wed Nov 28 11:39:49 GMT 2001 dpg1
 =================================
 

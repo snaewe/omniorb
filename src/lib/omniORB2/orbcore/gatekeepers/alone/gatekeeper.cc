@@ -99,7 +99,7 @@ gateKeeper::checkConnect( _tcpStrand *s) {
   // ********************************
   // retrieve the client name
   // ********************************
-#if (defined(__GLIBC__) && __GLIBC__ >= 2) || (defined(__freebsd__) && __OSVERSION__ >= 4)
+#if (defined(__GLIBC__) && __GLIBC__ >= 2) || (defined(__freebsd__) && __OSVERSION__ >= 4) || (defined(__openbsd__))
     // GNU C library uses socklen_t * instead of int* in getpeername().
     // This is suppose to be compatible with the upcoming POSIX standard.
     // FreeBSD 4.0 uses it too.

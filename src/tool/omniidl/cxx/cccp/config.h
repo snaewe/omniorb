@@ -13,6 +13,9 @@
 #elif defined(__freebsd__)
 #include "config-freebsd.h"
 
+#elif defined(__openbsd__)
+#include "config-openbsd.h"
+
 #elif defined(__hpux__)
 #include "config-hpux.h"
 
@@ -33,6 +36,9 @@
 
 #elif defined(__darwin__)
 #include "config-darwin.h"
+
+#elif defined(__lynxos__)
+#include "config-lynxos.h"
 
 #else
 #error "You must create a cccp config file for your platform"
