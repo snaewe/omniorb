@@ -1,3 +1,34 @@
+Wed Aug  5 18:50:18 BST 1998 sll
+================================
+
+- Version variable is now omniORB_2_6 (previously omniORB_2_5).
+- omniORB shared library version is now 2.6.0.
+- omniLC shared library version is now 1.2.2
+- DynAny implementation
+
+include/omniORB2/CORBA.h
+include/omniORB2/bufferedStream.h
+include/omniORB2/omniInternal.h
+
+src/lib/omniORB2/dynAny.cc     NEW
+src/lib/omniORB2/dynAnyP.h     NEW
+src/lib/omniORB2/dynAnyP.cc    NEW
+
+src/lib/omniORB2/sharedlib/dir.mk
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/tcParseEngine.h
+src/lib/omniORB2/tcParseEngine.cc
+src/lib/omniORB2/typecode.cc
+src/lib/omniORB2/any.cc
+src/lib/omniORB2/constants.cc
+
+src/tool/omniidl2/driver/dir.mk
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+src/tool/omniidl2/driver/drv_main.cc
+
+src/appl/omniNames/dir.mk
+
+
 Tue Aug  4 20:04:23 BST 1998 sll
 ================================
 
