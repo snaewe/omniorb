@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  1999/10/21 10:59:20  djr
+ *** empty log message ***
+
  Revision 1.1.2.2  1999/09/30 11:49:26  djr
  Implemented catching user-exceptions in GIOP_S for all compilers.
 
@@ -390,8 +393,8 @@ strdup (char* str)
 #if defined(_MSC_VER)
 
 //
-// _OMNIORB2_LIBRARY         is defined when the omniORB2 library is compiled.
-// _OMNIORB2_DYNAMIC_LIBRARY is defined when the dynamic library is compiled.
+// _OMNIORB_LIBRARY         is defined when the omniORB library is compiled.
+// _OMNIORB_DYNAMIC_LIBRARY is defined when the dynamic library is compiled.
 //  These are defined on the command line when compiling the libraries.
 //
 // _WINSTATIC                is defined when an application is compiled to
