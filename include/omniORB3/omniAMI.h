@@ -5,16 +5,6 @@
 #include <omniORB3/omniObjRef.h>
 #include "queue.h"
 
-#if 0
-// Requires ability to time events
-#if defined(__WIN32__)
-# error "Need to port time functions to non-UNIX"
-#else
-# include <sys/time.h>
-# include <unistd.h>
-#endif
-#endif
-
 // Analogue of an omniCallDescriptor: 
 //   * may provide storage for operation arguments between the request op
 //     and the reply op (or just external pointers to them)
@@ -52,8 +42,8 @@ public:
   private:
     //~Worker(){ }
     omniAMICall *first_task;
+    void reply_with_exception(omniAMICall&, CORBA::Exception&, CORBA::Boolean);
     
-    //struct timeval last_service_time;
 
   public:
     ~Worker() { } // stupid warning
@@ -61,23 +51,15 @@ public:
     void process(omniAMICall *cd);
     void shutdown();
 
-    static const unsigned int timeout;
-    //static const unsigned int thread_lifetime = 5;
-
     void *run_undetached(void *arg);
   };
 
-  static omni_mutex state_lock;
-  static int nWorkers;
-  static int nBusy;
-  
-  static const unsigned int maxWorkers;
-  
-  static Queue queue;
-  static unsigned long jobs_todo;
-  
   static void enqueue(omniAMICall *cd);
+
+  static void shutdown();
 };
 
 
 #endif /* __omniAMI_h__ */
+
+
