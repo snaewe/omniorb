@@ -1,3 +1,12 @@
+Thu Sep 12 20:05:47 BST 2002 dgrisby
+====================================
+
+- Use C for configure function checks, to avoid C++ type mismatches.
+
+configure
+configure.ac
+
+
 Wed Sep 11 20:55:30 BST 2002 dgrisby
 ====================================
 
