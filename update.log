@@ -1,3 +1,23 @@
+Fri Feb 23 19:33:13 GMT 2001 sll
+================================
+
+- SLL work in progress
+- merged interim FT client stuff
+
+include/FT/FT_sysdep.h                        DELETED
+
+ft_not_merged                                 MODIFIED
+
+These files are NEW.
+
+src/lib/omniFT/remoteGroupIdentity.h
+src/lib/omniFT/dummyFTClient/dir.mk
+src/lib/omniFT/dummyFTClient/remoteGroupIdentity.cc
+src/lib/omniFT/omniFTClient/FT_sysdep.h
+src/lib/omniFT/omniFTClient/dir.mk
+src/lib/omniFT/omniFTClient/remoteGroupIdentity.cc
+
+
 Fri Feb 23 19:21:56 GMT 2001 sll
 ================================
 
