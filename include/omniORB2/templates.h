@@ -9,6 +9,9 @@
 
 /*
   $Log$
+  Revision 1.3  1997/02/04 13:56:07  sll
+  Backup the previous change when DEC C++ compiler is used.
+
   Revision 1.2  1997/01/30 20:23:45  sll
   Remove reference to CORBA::is_nil() etc in _CORBA_ObjRef_Var and
   _CORBA_ObjRef_Member.
@@ -84,7 +87,11 @@ public:
   inline _CORBA_ObjRef_Var() { pd_objref = T_Helper::_nil(); }
   inline _CORBA_ObjRef_Var(T *p) { pd_objref = p; }
   inline ~_CORBA_ObjRef_Var() { 
-    if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref); 
+#ifndef __DECCXX
+    if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref);
+#else
+    if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
+#endif
   }
   inline _CORBA_ObjRef_Var(const _CORBA_ObjRef_Var<T,T_Helper> &p);
   inline _CORBA_ObjRef_Var(const _CORBA_ObjRef_Member<T,T_Helper>&);
@@ -108,8 +115,12 @@ public:
   inline _CORBA_ObjRef_Member() { _ptr = T_Helper::_nil(); }
   inline _CORBA_ObjRef_Member(T *p) { _ptr = p; }
   inline _CORBA_ObjRef_Member(const _CORBA_ObjRef_Member<T,T_Helper> &p);
-  inline ~_CORBA_ObjRef_Member() {
+  inline ~_CORBA_ObjRef_Member() { 
+#ifndef __DECCXX
     if (!T_Helper::is_nil(_ptr)) T_Helper::release(_ptr);
+#else
+    if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+#endif
   }
   inline _CORBA_ObjRef_Member<T,T_Helper> &operator= (T * p);
   inline _CORBA_ObjRef_Member<T,T_Helper> &operator= (const _CORBA_ObjRef_Member<T,T_Helper> &p);
