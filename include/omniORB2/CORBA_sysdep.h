@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.25  1998/09/23 15:25:51  sll
+ Workaround for SUN C++ compiler Template.DB code regeneration bug.
+
  Revision 1.24  1998/08/22 12:52:13  sll
  Added sysconfig for Irix + SGI C++ compiler.
 
@@ -129,9 +132,27 @@
 
 #elif defined(__SUNPRO_CC) 
 // SUN C++ compiler
-#if __SUNPRO_CC < 0x420
-#define NEED_DUMMY_RETURN
-#endif
+#  if __SUNPRO_CC < 0x420
+#    define NEED_DUMMY_RETURN
+#  endif
+
+// XXX
+// This is a hack to work around a bug in SUN C++ compiler (seen on 4.2).
+// When instantiating templates, the compiler may generate code in Template.DB.
+// It stores in the directory the dependency and compiler options to
+// regenerate the template code if necessary. Unfortunately, it stores the
+// option -D__OSVERSION__=5 as -D__OSVERSION__='5'. This of course causes
+// the compilation to fail because the source code assume that the CPP macro
+// __OSVERSION__ is an interger. The following hack detects this condition
+// and revert the macro to its expected form.
+#  ifdef __OSVERSION__
+#    if __OSVERSION__ != 5
+#       if __OSVERSION__ == '5'
+#          undef __OSVERSION__
+#          define __OSVERSION__ 5
+#       endif
+#    endif
+#  endif
 
 #elif defined(_MSC_VER)
 //  Microsoft Visual C++ compiler
