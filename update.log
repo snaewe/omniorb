@@ -1,3 +1,11 @@
+Mon Apr 28 11:17:43 BST 2003 dgrisby
+====================================
+
+- Install bootstrap.hh.
+
+src/lib/omniORB/dir.mk
+
+
 Fri Apr 25 16:48:09 BST 2003 dgrisby
 ====================================
 
