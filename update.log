@@ -1,3 +1,12 @@
+Fri Aug  4 12:33:25 BST 2000 dpg1
+=================================
+
+- Updates for AIX with xlC
+
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+src/tool/omniidl/cxx/idlast.h
+
+
 Fri Aug  4 10:00:42 BST 2000 dpg1
 =================================
 

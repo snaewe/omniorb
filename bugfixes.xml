@@ -8,6 +8,14 @@
 
 <buglist>
 
+<bug id="15" date="Fri Aug  4 12:33:25 BST 2000" user="dpg1">
+
+  <summary>Fixes for AIX with xlC</summary>
+  <reported>Michael Donahue</reported>
+
+  <text>Small updates to make rules and omniidl</text>
+</bug>
+
 <bug id="14" date="Fri Aug  4 10:00:42 BST 2000" user="dpg1">
 
   <summary>Fix to bug 4 broke escaped identifiers</summary>
