@@ -28,21 +28,24 @@
 
 /*
   $Log$
-  Revision 1.4  1997/09/20 16:48:34  dpg1
-  Added new #include generation for LifeCycle support.
+  Revision 1.5  1997/12/09 19:55:31  sll
+  *** empty log message ***
 
+// Revision 1.4  1997/09/20  16:48:34  dpg1
+// Added new #include generation for LifeCycle support.
+//
 // Revision 1.3  1997/05/06  14:04:50  sll
 // *** empty log message ***
 //
   */
 
-#include "idl.hh"
-#include "idl_extern.hh"
-#include "o2be.h"
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
 
 #include <iostream.h>
 
-#ifdef __NT__
+#ifdef __WIN32__
 #include <stdio.h>
 #else
 #include <unistd.h>
@@ -54,7 +57,7 @@ o2be_root::o2be_root(UTL_ScopedName *n, UTL_StrList *p)
     AST_Decl(AST_Decl::NT_module,n,p),
     UTL_Scope(AST_Decl::NT_module),
     o2be_module(n,p),
-    o2be_name(this)
+    o2be_name(AST_Decl::NT_module,n,p)
 {
   o2be_global::set_root(this);
   set_in_main_file(I_TRUE);
@@ -108,7 +111,7 @@ o2be_root::produce()
   catch(o2be_fileio_error &ex) {
 #endif
 
-#ifdef __NT__
+#ifdef __WIN32__
 	if (pd_hdr.is_open())
 #else
     if (pd_hdr)
@@ -118,14 +121,14 @@ o2be_root::produce()
 	stubfname[baselen] = '\0';
 	strcat(stubfname,o2be_global::hdrsuffix());
 
-#ifdef __NT__
+#ifdef __WIN32__
 	_unlink(stubfname);
 #else
 	unlink(stubfname);
 #endif
 	  }
 
-#ifdef __NT__
+#ifdef __WIN32__
 	if (pd_skel.is_open())
 #else
     if (pd_skel)
@@ -134,7 +137,7 @@ o2be_root::produce()
 	pd_skel.close();
 	stubfname[baselen] = '\0';
 	strcat(stubfname,o2be_global::skelsuffix());
-#ifdef __NT__
+#ifdef __WIN32__
 	_unlink(stubfname);
 #else
 	unlink(stubfname);
@@ -152,6 +155,7 @@ o2be_root::produce_hdr(fstream &hdr)
       << "#define __" << basename << "_hh__\n\n"
       << "#include <omniORB2/CORBA.h>\n\n";
 
+  // XXX LifeCycle compile flag
   if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
     hdr << "#include <omniORB2/omniLifeCycle.h>\n\n";
   }

@@ -26,16 +26,26 @@
 
 /* 
    $Log$
-   Revision 1.4  1997/05/06 13:59:35  sll
-   Public release.
+   Revision 1.5  1997/12/09 19:55:33  sll
+   *** empty log message ***
 
+// Revision 1.4  1997/05/06  13:59:35  sll
+// Public release.
+//
    */
 
-#include "idl.hh"
-#include "idl_extern.hh"
-#include "o2be.h"
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
 
 #include <iostream.h>
+
+o2be_module::o2be_module(UTL_ScopedName *n, UTL_StrList *p)
+                 : AST_Decl(AST_Decl::NT_module, n, p),
+		   UTL_Scope(AST_Decl::NT_module),
+                   o2be_name(AST_Decl::NT_module,n,p) 
+{
+}
 
 void
 o2be_module::produce_hdr(fstream &s)

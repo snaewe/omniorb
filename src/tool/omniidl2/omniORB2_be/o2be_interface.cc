@@ -27,13 +27,16 @@
 
 /*
   $Log$
-  Revision 1.13  1997/09/20 16:44:22  dpg1
-  Added new is_cxx_type argument to _widenFromTheMostDerivedIntf().
-  Added LifeCycle code generation.
+  Revision 1.14  1997/12/09 19:54:07  sll
+  *** empty log message ***
 
-// Revision 1.12  1997/08/27  17:54:31  sll
-// Added _var typedef for IDL typedef Object.
+// Revision 1.13  1997/09/20  16:44:22  dpg1
+// Added new is_cxx_type argument to _widenFromTheMostDerivedIntf().
+// Added LifeCycle code generation.
 //
+  Revision 1.12  1997/08/27 17:54:31  sll
+  Added _var typedef for IDL typedef Object.
+
   Revision 1.11  1997/08/22 12:43:23  sll
   Oh well, gcc does not like variable names starting with __, changed
   the prefix to _0RL_.
@@ -48,9 +51,9 @@
 //
   */
 
-#include "idl.hh"
-#include "idl_extern.hh"
-#include "o2be.h"
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
 
 #define PROXY_CLASS_PREFIX        "_proxy_"
 #define SERVER_CLASS_PREFIX       "_sk_"
@@ -71,22 +74,22 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
             : AST_Interface(n, ih, nih, p),
 	      AST_Decl(AST_Decl::NT_interface, n, p),
 	      UTL_Scope(AST_Decl::NT_interface),
-	      o2be_name(this),
-	      o2be_sequence_chain(this)
+	      o2be_name(AST_Decl::NT_interface,n,p),
+	      o2be_sequence_chain(AST_Decl::NT_interface,n,p)
 {
   if (strcmp(fqname(),"Object") == 0)
     {
       // This node is for the psuedo object "Object" and should be mapped
       // to CORBA::Object.
       // Set the names to properly scoped under "CORBA::".
-      set_uqname("Object");
+      set_uqname("CORBA::Object");
       set_fqname("CORBA::Object");
       set__fqname("CORBA_Object");
-      set_scopename("CORBA");
-      set__scopename("CORBA");
-      pd_objref_uqname = "Object_ptr";
+      set_scopename("");
+      set__scopename("");
+      pd_objref_uqname = "CORBA::Object_ptr";
       pd_objref_fqname = "CORBA::Object_ptr";
-      pd_fieldmem_uqname = "Object_member";
+      pd_fieldmem_uqname = "CORBA::Object_member";
       pd_fieldmem_fqname = "CORBA::Object_member";
       pd_inout_adptarg_name = "CORBA::Object_INOUT_arg";
       pd_out_adptarg_name = "CORBA::Object_OUT_arg";
@@ -285,7 +288,7 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
 o2be_interface_fwd::o2be_interface_fwd(UTL_ScopedName *n, UTL_StrList *p)
   : AST_InterfaceFwd(n, p),
     AST_Decl(AST_Decl::NT_interface_fwd, n, p),
-    o2be_name(this)
+    o2be_name(AST_Decl::NT_interface_fwd,n,p)
 {
 }
 
@@ -396,7 +399,7 @@ o2be_interface::produce_hdr(fstream &s)
 	for (j=0; j< ni; j++)
 	  {
 	    o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	    s << " public virtual " << intf->fqname() << ((j<(ni-1))?",":"");
+	    s << " public virtual " << intf->unambiguous_name(this) << ((j<(ni-1))?",":"");
 	  }
       }
     else
@@ -533,7 +536,7 @@ o2be_interface::produce_hdr(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << "static CORBA::Boolean _is_a(const char *base_repoId);\n\n";
+  IND(s); s << "static CORBA::Boolean _0RL_is_a(const char *base_repoId);\n\n";
 
   DEC_INDENT_LEVEL();
   IND(s); s << "protected:\n\n";
@@ -568,7 +571,7 @@ o2be_interface::produce_hdr(fstream &s)
     for (int j=0; j< ni; j++)
       {
 	o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	s << " public virtual " << intf->server_fqname() << ",";
+	s << " public virtual " << intf->unambiguous_server_name(this) << ",";
       }
   }
   s << " public virtual " << uqname() << " {\n";
@@ -651,7 +654,7 @@ o2be_interface::produce_hdr(fstream &s)
     for (int j=0; j< ni; j++)
       {
 	o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	s << " public virtual " << intf->proxy_fqname() << ",";
+	s << " public virtual " << intf->unambiguous_proxy_name(this) << ",";
       }
   }
   s << " public virtual " << uqname() << " {\n";
@@ -732,14 +735,14 @@ o2be_interface::produce_hdr(fstream &s)
 	  {
 	    o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
 	    s << " public virtual " 
-	      << intf->nil_fqname() << ", ";
+	      << intf->unambiguous_nil_name(this) << ", ";
 	  }
       }
   }
   IND(s); s << "public virtual " << uqname() << " {\n";
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
-  IND(s); s << nil_uqname() << "()"
+  IND(s); s << nil_uqname() << "() : omniObject(omniObject::nilObjectManager())" 
 	    << " { this->PR_setobj(0); }\n";
   IND(s); s << "virtual ~" << nil_uqname() << "() {}\n";
   {
@@ -782,7 +785,6 @@ o2be_interface::produce_hdr(fstream &s)
   IND(s); s << "}\n";	
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
-
   if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
     IND(s); s << "// *** Start of LifeCycle stuff:\n";
 
@@ -794,7 +796,7 @@ o2be_interface::produce_hdr(fstream &s)
       for (int j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	  s << " public virtual " << intf->lcserver_fqname() << ",";
+	  s << " public virtual " << intf->unambiguous_lcserver_name(this) << ",";
 	}
       if (ni==0)
 	s << " public virtual _lc_sk,";
@@ -893,7 +895,7 @@ o2be_interface::produce_hdr(fstream &s)
 	    {
 	      o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
 	      s << " public virtual " 
-		<< intf->dead_fqname() << ", ";
+		<< intf->unambiguous_dead_name(this) << ", ";
 	    }
 	}
     }
@@ -968,7 +970,7 @@ o2be_interface::produce_hdr(fstream &s)
 	    {
 	      o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
 	      s << " public virtual " 
-		<< intf->home_fqname() << ", ";
+		<< intf->unambiguous_home_name(this) << ", ";
 	    }
 	}
       else
@@ -1050,7 +1052,7 @@ o2be_interface::produce_hdr(fstream &s)
       for (int j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	  s << " public virtual " << intf->lcproxy_fqname() << ",";
+	  s << " public virtual " << intf->unambiguous_lcproxy_name(this) << ",";
 	}
     }
     s << " public virtual " << uqname() << " {\n";
@@ -1077,7 +1079,7 @@ o2be_interface::produce_hdr(fstream &s)
       for (int j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	  IND(s); s << intf->lcproxy_fqname() << "::_set_wrap_"
+	  IND(s); s << intf->unambiguous_lcproxy_name(this) << "::_set_wrap_"
 		    << intf->_fqname() << "((" << intf->wrapproxy_fqname()
 		    << " *)wrap);\n";
 	}
@@ -1158,7 +1160,8 @@ o2be_interface::produce_hdr(fstream &s)
 	for (int j=0; j< ni; j++)
 	  {
 	    o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	    s << " public virtual " << intf->wrapproxy_fqname() << ",";
+	    s << " public virtual " << intf->unambiguous_wrapproxy_name(this) 
+	      << ",";
 	  }
       }
       else
@@ -1239,11 +1242,11 @@ o2be_interface::produce_hdr(fstream &s)
   IND(s); s << "virtual CORBA::Object_ptr newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release);\n";
   IND(s); s << "virtual CORBA::Boolean is_a(const char *base_repoId) const;\n";
   // _nil()
-  IND(s); s << "static " << objref_fqname() << " _nil() {\n";
+  IND(s); s << "static " << objref_uqname() << " _nil() {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "if (!_" << nil_uqname() << ") {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "_" << nil_uqname() << " = new " << nil_fqname() << ";\n";
+  IND(s); s << "_" << nil_uqname() << " = new " << nil_uqname() << ";\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "return _" << nil_uqname() << ";\n";
@@ -1255,7 +1258,7 @@ o2be_interface::produce_hdr(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "private:\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "static " << objref_fqname() << " _" << nil_uqname() << ";\n";
+  IND(s); s << "static " << objref_uqname() << " _" << nil_uqname() << ";\n";
   if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
     IND(s); s << "static CORBA::Boolean _may_move_local;\n";
   }
@@ -1345,7 +1348,7 @@ o2be_interface::produce_skel(fstream &s)
 	i.next();
       }
   }
-  
+
   // proxy member functions
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1357,7 +1360,6 @@ o2be_interface::produce_skel(fstream &s)
 	    o2be_operation* op = o2be_operation::narrow_from_decl(d);
 	    if (op->has_variable_out_arg() || op->has_pointer_inout_arg()) {
 	      op->produce_proxy_skel(s,*this,"_0RL__");
-	      s << "\n";
 	      if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
 		op->produce_lcproxy_skel(s,*this,"_0RL__");
 	      }
@@ -1394,6 +1396,50 @@ o2be_interface::produce_skel(fstream &s)
       }
   }
   s << "\n";
+
+
+  if (o2be_global::mflag())
+    {
+      // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+      // of a base class using the member function's fully/partially
+      // scoped name. Have to use the alias for the base class in the
+      // global scope to refer to the virtual member function instead.
+      //
+      // We scan all the base interfaces to see if any of them has to
+      // be referred to by their fully/partially qualified names. If
+      // that is necessary, we generate a typedef to define an alias for
+      // this base interface. This alias is used in the stub generated below
+
+      AST_Interface **intftable = inherits();
+      int ni = n_inherits();
+      for (int j=0; j< ni; j++)
+	{
+	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  char* intf_name = intf->unambiguous_name(this);
+	  if (strcmp(intf_name,intf->uqname()) != 0) {
+	    s << "#ifndef __" << intf->_fqname() << "__ALIAS__\n";
+	    s << "#define __" << intf->_fqname() << "__ALIAS__\n";
+	    IND(s); s << "typedef " << intf->fqname() << " " 
+		      << intf->_fqname() << ";\n";
+	    IND(s); s << "typedef " << intf->server_fqname() << " "
+		      << intf->_scopename() << intf->server_uqname() << ";\n";
+	    if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+	      IND(s); s << "typedef " << intf->lcserver_fqname() << " "
+			<< intf->_scopename() << intf->lcserver_uqname() 
+			<< ";\n";
+	      IND(s); s << "typedef " << intf->home_fqname() << " "
+			<< intf->_scopename() << intf->home_uqname() 
+			<< ";\n";
+	      IND(s); s << "typedef " << intf->wrapproxy_fqname() << " "
+			<< intf->_scopename() << intf->wrapproxy_uqname() 
+			<< ";\n";
+
+	    }
+	    s << "#endif\n\n";
+	  }
+	}
+    }
+  
 
   // server skeleton dispatch function
   IND(s); s << "CORBA::Boolean\n";
@@ -1452,8 +1498,21 @@ o2be_interface::produce_skel(fstream &s)
       for (int j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	  char* intf_name = (char*)intf->unambiguous_server_name(this);
+	  if (o2be_global::mflag()) {
+	    // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	    // of a base class using the member function's fully/partially
+	    // scoped name. Have to use the alias for the base class in the
+	    // global scope to refer to the virtual member function instead.
+	    if (strcmp(intf_name,intf->server_uqname()) != 0) {
+	      intf_name = new char[strlen(intf->_scopename())+
+				  strlen(intf->server_uqname())+1];
+	      strcpy(intf_name,intf->_scopename());
+	      strcat(intf_name,intf->server_uqname());
+	    }
+	  }
 	  IND(s); s << ((notfirst)?"else ":"")
-		    << "if (" << intf->server_fqname() 
+		    << "if (" << intf_name
 		    << "::dispatch(_0RL_s,_0RL_op,_0RL_response_expected)) {\n";
 	  INC_INDENT_LEVEL();
 	  IND(s); s << "return 1;\n";
@@ -1515,15 +1574,12 @@ o2be_interface::produce_skel(fstream &s)
   INC_INDENT_LEVEL();
   IND(s); s << "return " << fqname() << "::_nil();\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << objref_fqname() << " e = (" 
-	    << objref_fqname() << ") ((obj->PR_getobj())->_widenFromTheMostDerivedIntf("
-	    << IRrepoId() << "));\n";
-  IND(s); s << "if (e) {\n";
+  IND(s); s << objref_fqname() << " e = (" << objref_fqname()
+	    << ") (obj->PR_getobj()->_realNarrow(" << IRrepoId() << "));\n";
+  IND(s); s << "if (e)\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::Object::_duplicate(e);\n";
   IND(s); s << "return e;\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
   IND(s); s << "else\n";
   INC_INDENT_LEVEL();
   IND(s); s << "return " << fqname() << "::_nil();\n";
@@ -1557,8 +1613,18 @@ o2be_interface::produce_skel(fstream &s)
 	for (j=0; j< ni; j++)
 	  {
 	    o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	    char* intf_name = intf->unambiguous_name(this);
+	    if (o2be_global::mflag()) {
+	      // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	      // of a base class using the member function's fully/partially
+	      // scoped name. Have to use the alias for the base class in the
+	      // global scope to refer to the virtual member function instead.
+	      if (strcmp(intf_name,intf->uqname()) != 0) {
+		intf_name = intf->_fqname();
+	      }
+	    }
 	    IND(s); s << ((j)?"else ":"") 
-		      << "if ((_p = " << intf->fqname() 
+		      << "if ((_p = " << intf_name 
 		      << "::_widenFromTheMostDerivedIntf(repoId))) {\n";
 	    INC_INDENT_LEVEL();
 	    IND(s); s << "return _p;\n";
@@ -1579,9 +1645,9 @@ o2be_interface::produce_skel(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  // _is_a();
+  // _0RL_is_a();
   IND(s); s << "CORBA::Boolean\n";
-  IND(s); s << fqname() << "::_is_a(const char *base_repoId) {\n";
+  IND(s); s << fqname() << "::_0RL_is_a(const char *base_repoId) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "if (strcmp(base_repoId,(const char *)" << IRrepoId() << ")==0)\n";
   INC_INDENT_LEVEL();
@@ -1594,7 +1660,7 @@ o2be_interface::produce_skel(fstream &s)
       {
 	o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
 	IND(s); s << "else if (" 
-		  << intf->fqname() << "::_is_a(base_repoId))\n";
+		  << intf->unambiguous_name(this) << "::_0RL_is_a(base_repoId))\n";
 	INC_INDENT_LEVEL();
 	IND(s); s << "return 1;\n";
 	DEC_INDENT_LEVEL();
@@ -1690,7 +1756,17 @@ o2be_interface::produce_skel(fstream &s)
   IND(s); s << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+  if (!(idl_global->compile_flags() & IDL_CF_LIFECYCLE)) {
+    IND(s); s << proxy_fqname() << " *p = new " << proxy_fqname()
+	      << "(r,key,keysize,profiles,release);\n";
+    IND(s); s << "if (!p) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "return (CORBA::Object_ptr) p;\n";
+  }
+  else {
     IND(s); s << "if (_may_move_local) {\n";
     INC_INDENT_LEVEL();
     IND(s); s << lcproxy_fqname() << " *p = new " << lcproxy_fqname()
@@ -1727,24 +1803,14 @@ o2be_interface::produce_skel(fstream &s)
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n";
   }
-  else {
-    IND(s); s << proxy_fqname() << " *p = new " << proxy_fqname()
-	      << "(r,key,keysize,profiles,release);\n";
-    IND(s); s << "if (!p) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    IND(s); s << "return (CORBA::Object_ptr) p;\n";
-  }
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
-  // _is_a()
+  // is_a()
   IND(s); s << "CORBA::Boolean\n";
   IND(s); s << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::is_a(const char *base_repoId) const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "return " << fqname() << "::_is_a(base_repoId);\n\n";
+  IND(s); s << "return " << fqname() << "::_0RL_is_a(base_repoId);\n\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
@@ -1762,6 +1828,7 @@ o2be_interface::produce_skel(fstream &s)
   IND(s); s << objref_fqname() << " " 
 	    << fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::_"
 	    << nil_uqname() << " = 0;\n\n";
+
   if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
     s << "\n// *** Start of LifeCycle stuff\n\n";
 
@@ -1827,8 +1894,21 @@ o2be_interface::produce_skel(fstream &s)
 	for (int j=0; j< ni; j++)
 	  {
 	    o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
+	    char* intf_name = (char*)intf->unambiguous_lcserver_name(this);
+	    if (o2be_global::mflag()) {
+	      // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	      // of a base class using the member function's fully/partially
+	      // scoped name. Have to use the alias for the base class in the
+	      // global scope to refer to the virtual member function instead.
+	      if (strcmp(intf_name,intf->lcserver_uqname()) != 0) {
+		intf_name = new char[strlen(intf->_scopename())+
+				    strlen(intf->lcserver_uqname())+1];
+		strcpy(intf_name,intf->_scopename());
+		strcat(intf_name,intf->lcserver_uqname());
+	      }
+	    }
 	    IND(s); s << ((notfirst)?"else ":"")
-		      << "if (" << intf->lcserver_fqname() 
+		      << "if (" << intf_name
 		      << "::dispatch(_0RL_s,_0RL_op,_0RL_response_expected)) {\n";
 	    INC_INDENT_LEVEL();
 	    IND(s); s << "return 1;\n";
@@ -1845,7 +1925,6 @@ o2be_interface::produce_skel(fstream &s)
     }
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n\n";
-  
 
     IND(s); s << lcserver_fqname() << "::" << lcserver_uqname() 
 	      << " (const omniORB::objectKey& k)\n";
@@ -1969,7 +2048,20 @@ o2be_interface::produce_skel(fstream &s)
       for (j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	  IND(s); s << intf->home_fqname() << "::_set_actual(p);\n";
+	  char* intf_name = (char*)intf->unambiguous_home_name(this);
+	  if (o2be_global::mflag()) {
+	    // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	    // of a base class using the member function's fully/partially
+	    // scoped name. Have to use the alias for the base class in the
+	    // global scope to refer to the virtual member function instead.
+	    if (strcmp(intf_name,intf->home_uqname()) != 0) {
+	      intf_name = new char[strlen(intf->_scopename())+
+				  strlen(intf->home_uqname())+1];
+	      strcpy(intf_name,intf->_scopename());
+	      strcat(intf_name,intf->home_uqname());
+	    }
+	  }
+	  IND(s); s << intf_name << "::_set_actual(p);\n";
 	}
     }
     DEC_INDENT_LEVEL();
@@ -1989,7 +2081,20 @@ o2be_interface::produce_skel(fstream &s)
       for (j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	  IND(s); s << intf->home_fqname() << "::_release_actual();\n";
+	  char* intf_name = (char*)intf->unambiguous_home_name(this);
+	  if (o2be_global::mflag()) {
+	    // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	    // of a base class using the member function's fully/partially
+	    // scoped name. Have to use the alias for the base class in the
+	    // global scope to refer to the virtual member function instead.
+	    if (strcmp(intf_name,intf->home_uqname()) != 0) {
+	      intf_name = new char[strlen(intf->_scopename())+
+				  strlen(intf->home_uqname())+1];
+	      strcpy(intf_name,intf->_scopename());
+	      strcat(intf_name,intf->home_uqname());
+	    }
+	  }
+	  IND(s); s << intf_name << "::_release_actual();\n";
 	}
     }
     DEC_INDENT_LEVEL();
@@ -2067,7 +2172,20 @@ o2be_interface::produce_skel(fstream &s)
       for (j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	  s << ", " << intf->wrapproxy_fqname() << "(proxy)";
+	  char* intf_name = (char*)intf->unambiguous_wrapproxy_name(this);
+	  if (o2be_global::mflag()) {
+	    // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	    // of a base class using the member function's fully/partially
+	    // scoped name. Have to use the alias for the base class in the
+	    // global scope to refer to the virtual member function instead.
+	    if (strcmp(intf_name,intf->wrapproxy_uqname()) != 0) {
+	      intf_name = new char[strlen(intf->_scopename())+
+				  strlen(intf->wrapproxy_uqname())+1];
+	      strcpy(intf_name,intf->_scopename());
+	      strcat(intf_name,intf->wrapproxy_uqname());
+	    }
+	  }
+	  s << ", " << intf_name << "(proxy)";
 	}
     }
     s << "\n";
@@ -2092,7 +2210,20 @@ o2be_interface::produce_skel(fstream &s)
       for (j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	  s << sep << intf->wrapproxy_fqname() << "(proxy)";
+	  char* intf_name = (char*)intf->unambiguous_wrapproxy_name(this);
+	  if (o2be_global::mflag()) {
+	    // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	    // of a base class using the member function's fully/partially
+	    // scoped name. Have to use the alias for the base class in the
+	    // global scope to refer to the virtual member function instead.
+	    if (strcmp(intf_name,intf->wrapproxy_uqname()) != 0) {
+	      intf_name = new char[strlen(intf->_scopename())+
+				  strlen(intf->wrapproxy_uqname())+1];
+	      strcpy(intf_name,intf->_scopename());
+	      strcat(intf_name,intf->wrapproxy_uqname());
+	    }
+	  }
+	  s << sep << intf_name << "(proxy)";
 	  sep = ", ";
 	}
     }
@@ -2159,7 +2290,20 @@ o2be_interface::produce_skel(fstream &s)
       for (j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	  IND(s); s << intf->wrapproxy_fqname() << "::_reset_proxy();\n";
+	  char* intf_name = (char*)intf->unambiguous_wrapproxy_name(this);
+	  if (o2be_global::mflag()) {
+	    // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	    // of a base class using the member function's fully/partially
+	    // scoped name. Have to use the alias for the base class in the
+	    // global scope to refer to the virtual member function instead.
+	    if (strcmp(intf_name,intf->wrapproxy_uqname()) != 0) {
+	      intf_name = new char[strlen(intf->_scopename())+
+				  strlen(intf->wrapproxy_uqname())+1];
+	      strcpy(intf_name,intf->_scopename());
+	      strcat(intf_name,intf->wrapproxy_uqname());
+	    }
+	  }
+	  IND(s); s << intf_name << "::_reset_proxy();\n";
 	}
     }
     IND(s); s << "_fwd = 0;\n";
@@ -2199,7 +2343,20 @@ o2be_interface::produce_skel(fstream &s)
       for (j=0; j< ni; j++)
 	{
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
-	  IND(s); s << intf->wrapproxy_fqname() << "::_set_actual(p);\n";
+	  char* intf_name = (char*)intf->unambiguous_wrapproxy_name(this);
+	  if (o2be_global::mflag()) {
+	    // MSVC {4.2,5.0} cannot deal with a call to a virtual member
+	    // of a base class using the member function's fully/partially
+	    // scoped name. Have to use the alias for the base class in the
+	    // global scope to refer to the virtual member function instead.
+	    if (strcmp(intf_name,intf->wrapproxy_uqname()) != 0) {
+	      intf_name = new char[strlen(intf->_scopename())+
+				  strlen(intf->wrapproxy_uqname())+1];
+	      strcpy(intf_name,intf->_scopename());
+	      strcat(intf_name,intf->wrapproxy_uqname());
+	    }
+	  }
+	  IND(s); s << intf_name << "::_set_actual(p);\n";
 	}
     }
     DEC_INDENT_LEVEL();
@@ -2211,21 +2368,312 @@ o2be_interface::produce_skel(fstream &s)
 void
 o2be_interface::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 {
-  IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
-  IND(s); s << "typedef " << objref_fqname() << " " << tdef->uqname() << "_ptr;\n";
-  IND(s); s << "typedef " << fqname() << "Ref " << tdef->uqname() << "Ref;\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef) 
+	    << " " << tdef->uqname() << ";\n";
+  IND(s); s << "typedef " << unambiguous_objref_name(tdef) 
+	    << " " << tdef->uqname() << "_ptr;\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef)
+	    << "Ref " << tdef->uqname() << "Ref;\n";
   if (strcmp(uqname(),"Object") != 0) {
-    IND(s); s << "typedef " << fqname() << "_Helper " << tdef->uqname() << "_Helper;\n";
-    IND(s); s << "typedef " << proxy_fqname()
+    IND(s); s << "typedef " << unambiguous_name(tdef)
+	      << "_Helper " << tdef->uqname() << "_Helper;\n";
+    IND(s); s << "typedef " << unambiguous_proxy_name(tdef)
 	      << " " << PROXY_CLASS_PREFIX << tdef->uqname() << ";\n";
-    IND(s); s << "typedef " << server_fqname()
+    IND(s); s << "typedef " << unambiguous_server_name(tdef)
 	      << " " << SERVER_CLASS_PREFIX << tdef->uqname() << ";\n";
-    IND(s); s << "typedef " << nil_fqname()
+    IND(s); s << "typedef " << unambiguous_nil_name(tdef)
 	      << " " << NIL_CLASS_PREFIX << tdef->uqname() << ";\n";
     s << "#define " << tdef->_fqname() << IRREPOID_POSTFIX << " " << IRrepoId()
       << ";\n";
   }
-  IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << "_var;\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef) 
+	    << "_var " << tdef->uqname() << "_var;\n";
+}
+
+
+const char*
+o2be_interface::fieldMemberType_fqname(AST_Decl* used_in) const
+{
+  if (o2be_global::qflag()) {
+    return pd_fieldmem_fqname;
+  }
+  else {
+    const char* ubname = unambiguous_name(used_in);
+    if (strcmp(fqname(),ubname) == 0) {
+      return pd_fieldmem_fqname;
+    }
+    else {
+      char* result = new char[strlen(ubname)+
+			        strlen(ubname)+strlen("_Helper")+
+			        strlen(FIELD_MEMBER_TEMPLATE)+4];
+      strcpy(result,FIELD_MEMBER_TEMPLATE);
+      strcat(result,"<");
+      strcat(result,ubname);
+      strcat(result,",");
+      strcat(result,ubname);
+      strcat(result,"_Helper");
+      strcat(result,">");
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::unambiguous_objref_name(AST_Decl* used_in,
+					idl_bool use_fqname) const
+{
+  if (o2be_global::qflag()) {
+    return objref_fqname();
+  }
+  else {
+    const char* ubname = unambiguous_name(used_in,use_fqname);
+    if (strcmp(fqname(),ubname) == 0) {
+      return objref_fqname();
+    }
+    else {
+      char* result = new char[strlen(ubname)+strlen("_ptr")+1];
+      strcpy(result,ubname);
+      strcat(result,"_ptr");
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::unambiguous_proxy_name(AST_Decl* used_in,
+				       idl_bool use_fqname) const
+{
+  if (o2be_global::qflag()) {
+    return proxy_fqname();
+  }
+  else {
+    const char* ubsname = unambiguous_scopename(used_in,use_fqname);
+    if (strcmp(scopename(),ubsname) == 0) {
+      return proxy_fqname();
+    }
+    else {
+      char* result = new char[strlen(ubsname)+strlen(pd_proxy_uqname)+1];
+      strcpy(result,ubsname);
+      strcat(result,pd_proxy_uqname);
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::unambiguous_server_name(AST_Decl* used_in,
+					idl_bool use_fqname) const
+{
+  if (o2be_global::qflag()) {
+    return server_fqname();
+  }
+  else {
+    const char* ubsname = unambiguous_scopename(used_in,use_fqname);
+    if (strcmp(scopename(),ubsname) == 0) {
+      return server_fqname();
+    }
+    else {
+      char* result = new char[strlen(ubsname)+strlen(pd_server_uqname)+1];
+      strcpy(result,ubsname);
+      strcat(result,pd_server_uqname);
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::unambiguous_nil_name(AST_Decl* used_in,
+				     idl_bool use_fqname) const
+{
+  if (o2be_global::qflag()) {
+    return nil_fqname();
+  }
+  else {
+    const char* ubsname = unambiguous_scopename(used_in,use_fqname);
+    if (strcmp(scopename(),ubsname) == 0) {
+      return nil_fqname();
+    }
+    else {
+      char* result = new char[strlen(ubsname)+strlen(pd_nil_uqname)+1];
+      strcpy(result,ubsname);
+      strcat(result,pd_nil_uqname);
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::unambiguous_lcproxy_name(AST_Decl* used_in,
+				       idl_bool use_fqname) const
+{
+  if (o2be_global::qflag()) {
+    return lcproxy_fqname();
+  }
+  else {
+    const char* ubsname = unambiguous_scopename(used_in,use_fqname);
+    if (strcmp(scopename(),ubsname) == 0) {
+      return lcproxy_fqname();
+    }
+    else {
+      char* result = new char[strlen(ubsname)+strlen(pd_lcproxy_uqname)+1];
+      strcpy(result,ubsname);
+      strcat(result,pd_lcproxy_uqname);
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::unambiguous_lcserver_name(AST_Decl* used_in,
+					  idl_bool use_fqname) const
+{
+  if (o2be_global::qflag()) {
+    return lcserver_fqname();
+  }
+  else {
+    const char* ubsname = unambiguous_scopename(used_in,use_fqname);
+    if (strcmp(scopename(),ubsname) == 0) {
+      return lcserver_fqname();
+    }
+    else {
+      char* result = new char[strlen(ubsname)+strlen(pd_lcserver_uqname)+1];
+      strcpy(result,ubsname);
+      strcat(result,pd_lcserver_uqname);
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::unambiguous_dead_name(AST_Decl* used_in,
+				      idl_bool use_fqname) const
+{
+  if (o2be_global::qflag()) {
+    return dead_fqname();
+  }
+  else {
+    const char* ubsname = unambiguous_scopename(used_in,use_fqname);
+    if (strcmp(scopename(),ubsname) == 0) {
+      return dead_fqname();
+    }
+    else {
+      char* result = new char[strlen(ubsname)+strlen(pd_dead_uqname)+1];
+      strcpy(result,ubsname);
+      strcat(result,pd_dead_uqname);
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::unambiguous_home_name(AST_Decl* used_in,
+				      idl_bool use_fqname) const
+{
+  if (o2be_global::qflag()) {
+    return home_fqname();
+  }
+  else {
+    const char* ubsname = unambiguous_scopename(used_in,use_fqname);
+    if (strcmp(scopename(),ubsname) == 0) {
+      return home_fqname();
+    }
+    else {
+      char* result = new char[strlen(ubsname)+strlen(pd_home_uqname)+1];
+      strcpy(result,ubsname);
+      strcat(result,pd_home_uqname);
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::unambiguous_wrapproxy_name(AST_Decl* used_in,
+					   idl_bool use_fqname) const
+{
+  if (o2be_global::qflag()) {
+    return wrapproxy_fqname();
+  }
+  else {
+    const char* ubsname = unambiguous_scopename(used_in,use_fqname);
+    if (strcmp(scopename(),ubsname) == 0) {
+      return wrapproxy_fqname();
+    }
+    else {
+      char* result = new char[strlen(ubsname)+strlen(pd_wrapproxy_uqname)+1];
+      strcpy(result,ubsname);
+      strcat(result,pd_wrapproxy_uqname);
+      return result;
+    }
+  }
+}
+
+
+
+
+const char *
+o2be_interface::inout_adptarg_name(AST_Decl* used_in) const
+{
+  if (o2be_global::qflag()) {
+    return pd_inout_adptarg_name;
+  }
+  else {
+    const char* ubname = unambiguous_name(used_in);
+    if (strcmp(fqname(),ubname) == 0) {
+      return pd_inout_adptarg_name;
+    }
+    else {
+      const char* fm = fieldMemberType_fqname(used_in);
+      char* result = new char[strlen(ADPT_INOUT_CLASS_TEMPLATE)+
+				   strlen("<,, >")+
+                                   strlen(ubname)+
+				   strlen(ubname)+strlen("_var")+
+				   strlen(fm)+1];
+      strcpy(result,ADPT_INOUT_CLASS_TEMPLATE);
+      strcat(result,"<");
+      strcat(result,ubname);
+      strcat(result,",");
+      strcat(result,ubname);
+      strcat(result,"_var,");
+      strcat(result,fm);
+      strcat(result," >");
+      return result;
+    }
+  }
+}
+
+const char *
+o2be_interface::out_adptarg_name(AST_Decl* used_in) const
+{
+  if (o2be_global::qflag()) {
+    return pd_out_adptarg_name;
+  }
+  else {
+    const char* ubname = unambiguous_name(used_in);
+    if (strcmp(fqname(),ubname) == 0) {
+      return pd_out_adptarg_name;
+    }
+    else {
+      const char* fm = fieldMemberType_fqname(used_in);
+      char* result = new char[strlen(ADPT_OUT_CLASS_TEMPLATE)+
+			     strlen("<,,, >")+
+			     strlen(ubname)+
+			     strlen(ubname)+strlen("_var")+
+			     strlen(fm)+
+			     strlen(ubname)+strlen("_Helper")+1];
+      strcpy(result,ADPT_OUT_CLASS_TEMPLATE);
+      strcat(result,"<");
+      strcat(result,ubname);
+      strcat(result,",");
+      strcat(result,ubname);
+      strcat(result,"_var,");
+      strcat(result,fm);
+      strcat(result,",");
+      strcat(result,ubname);
+      strcat(result,"_Helper");
+      strcat(result," >");
+      return result;
+    }
+  }
 }
 
 
@@ -2243,6 +2691,6 @@ o2be_argument::o2be_argument(AST_Argument::Direction d, AST_Type *ft,
 	   : AST_Argument(d, ft, n, p),
 	     AST_Field(AST_Decl::NT_argument, ft, n, p),
 	     AST_Decl(AST_Decl::NT_argument, n, p),
-             o2be_name(this)
+             o2be_name(AST_Decl::NT_argument,n,p)
 {
 }

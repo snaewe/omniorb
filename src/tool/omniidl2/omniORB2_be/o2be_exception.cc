@@ -25,6 +25,9 @@
 
 /*
   $Log$
+  Revision 1.6  1997/12/09 19:55:20  sll
+  *** empty log message ***
+
   Revision 1.5  1997/08/13 09:23:38  sll
   o2be_exception::repoIdConstLen() now returns the correct length of the
   repository ID. Previously, it wrongly returns the length of the header macro
@@ -45,7 +48,7 @@ o2be_exception::o2be_exception(UTL_ScopedName *n, UTL_StrList *p)
   : AST_Decl(AST_Decl::NT_except, n, p),
     AST_Structure(AST_Decl::NT_except, n, p),
     UTL_Scope(AST_Decl::NT_except),
-    o2be_name(this)
+    o2be_name(AST_Decl::NT_except,n,p)
 {
   pd_repoid = new char[strlen(_fqname())+strlen(IRREPOID_POSTFIX)+1];
   strcpy(pd_repoid,_fqname());
@@ -81,11 +84,11 @@ o2be_exception::produce_hdr(fstream &s)
 	    {
 	      while (decl->node_type() == AST_Decl::NT_typedef)
 		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	      s << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname();
+	      s << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(this);
 	    }
 	  break;
 	  default:
-	    o2be_operation::declareVarType(s,decl);
+	    s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
 	  }
 	s << " " << o2be_field::narrow_from_decl(d)->uqname() << ";\n";
 	i.next();
@@ -113,13 +116,13 @@ o2be_exception::produce_hdr(fstream &s)
 
 	s << ((mapping.is_const) ? "const ":"");
 	if (ntype == o2be_operation::tObjref) {
-	  s << o2be_interface::narrow_from_decl(decl)->objref_fqname();
+	  s << o2be_interface::narrow_from_decl(decl)->unambiguous_objref_name(this);
 	}
 	else if (ntype == o2be_operation::tString) {
 	  s << "char* ";
 	}
 	else {
-	  s << o2be_name::narrow_and_produce_fqname(decl)
+	  s << o2be_name::narrow_and_produce_unambiguous_name(decl,this)
 	    << ((mapping.is_arrayslice) ? "_slice":"")
 	    << " "
 	    << ((mapping.is_pointer)    ? "*":"")
@@ -423,6 +426,7 @@ o2be_exception::produce_skel(fstream &s)
 	o2be_operation::produceSizeCalculation(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "",
 		     "_msgsize",
 		     o2be_field::narrow_from_decl(d)->uqname(),
@@ -451,6 +455,7 @@ o2be_exception::produce_skel(fstream &s)
 	o2be_operation::produceMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
@@ -477,6 +482,7 @@ o2be_exception::produce_skel(fstream &s)
 	o2be_operation::produceUnMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
@@ -503,6 +509,7 @@ o2be_exception::produce_skel(fstream &s)
 	o2be_operation::produceMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
@@ -529,6 +536,7 @@ o2be_exception::produce_skel(fstream &s)
 	o2be_operation::produceUnMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,

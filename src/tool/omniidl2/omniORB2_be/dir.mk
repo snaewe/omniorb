@@ -42,15 +42,7 @@ OBJS         = \
 		o2be_union.o \
 		o2be_union_branch.o
 
-DIR_CPPFLAGS = -I../include $(patsubst %,-I%/../include,$(VPATH))
-
-ifdef Win32Platform
-# Note the use of -W0 in CXXOPTIONS - this is used to stop pragma warning 
-# messages - should replace with a warning(disable,4068) pragma in the source
-# code
-DIR_CPPFLAGS += -D "NDEBUG" -D "_WINDOWS" -D "_X86_" -D "NTArchitecture" 
-CXXOPTIONS = -ML -W0 -GX -O2 
-endif
+DIR_CPPFLAGS = -I. -I../include $(patsubst %,-I%/../include,$(VPATH))
 
 lib = $(patsubst %,$(LibPattern),omniORB2_be)
 

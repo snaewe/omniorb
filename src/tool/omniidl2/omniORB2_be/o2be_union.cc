@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.7  1997/12/09 19:55:11  sll
+  *** empty log message ***
+
   Revision 1.6  1997/08/21 21:13:57  sll
   Names of internal variables inside the stub code now all start with the
   prefix __ to avoid potential clash with identifiers defined in IDL.
@@ -105,14 +108,15 @@
   };
 */
 
-#include "idl.hh"
-#include "idl_extern.hh"
-#include "o2be.h"
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
 
 #define ADPT_CLASS_TEMPLATE  "_CORBA_ConstrType_Variable_OUT_arg"
 
 static void
-produce_disc_value(fstream &s,AST_ConcreteType *t,AST_Expression *exp);
+produce_disc_value(fstream &s,AST_ConcreteType *t,AST_Expression *exp,
+		   AST_Decl* used_in);
 
 static void
 produce_default_value(o2be_union &u,fstream& s);
@@ -139,8 +143,8 @@ o2be_union::o2be_union(AST_ConcreteType *dt,
 	  AST_Decl(AST_Decl::NT_union, n, p),
           AST_Structure(AST_Decl::NT_union, n, p),
 	  UTL_Scope(AST_Decl::NT_union),
-	  o2be_name(this),
-	  o2be_sequence_chain(this)
+	  o2be_name(AST_Decl::NT_union, n, p),
+	  o2be_sequence_chain(AST_Decl::NT_union, n, p)
 {
   pd_isvar = I_FALSE;
   pd_nodefault = I_TRUE;
@@ -339,7 +343,7 @@ o2be_union::produce_hdr(fstream &s)
 	      {
 		o2be_field *f = o2be_union_branch::narrow_from_decl(d);
 		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val());
+		produce_disc_value(s,disc_type(),l->label_val(),this);
 		s << ": "
 		  << f->uqname() << "(_value.pd_"
 		  << f->uqname() << "); break;\n";
@@ -405,7 +409,7 @@ o2be_union::produce_hdr(fstream &s)
 	      {
 		o2be_field *f = o2be_union_branch::narrow_from_decl(d);
 		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val());
+		produce_disc_value(s,disc_type(),l->label_val(),this);
 		s << ": "
 		  << f->uqname() << "(_value.pd_"
 		  << f->uqname() << "); break;\n";
@@ -425,10 +429,10 @@ o2be_union::produce_hdr(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
   
-  IND(s); s << o2be_name::narrow_and_produce_fqname(disc_type()) 
+  IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(disc_type(),this) 
 	    << " _d () const { return pd__d;}\n";
   IND(s); s << "void _d("
-	    << o2be_name::narrow_and_produce_fqname(disc_type())
+	    << o2be_name::narrow_and_produce_unambiguous_name(disc_type(),this)
 	    << " _value) {}\n\n";
 
   if (nodefault() && !no_missing_disc_value())
@@ -482,7 +486,7 @@ o2be_union::produce_hdr(fstream &s)
 		  while (decl->node_type() == AST_Decl::NT_typedef) {
 		    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 		  }
-		  IND(s); s << o2be_interface::narrow_from_decl(decl)->objref_fqname()
+		  IND(s); s << o2be_interface::narrow_from_decl(decl)->unambiguous_objref_name(this)
 			    << " " << f->uqname() << " () const { return "
 			    << "pd_" << f->uqname() << "._ptr; }\n";
 		  break;
@@ -493,11 +497,11 @@ o2be_union::produce_hdr(fstream &s)
 		  if (f->field_type()->node_type() == AST_Decl::NT_sequence)
 		    {
 		      IND(s); s << "const "
-				<< o2be_sequence::narrow_from_decl(f->field_type())->seq_template_name()
+				<< o2be_sequence::narrow_from_decl(f->field_type())->seq_template_name(this)
 				<< " &"
 				<< f->uqname() << " () const { return pd_"
 				<< f->uqname() << "; }\n";
-		      IND(s); s << o2be_sequence::narrow_from_decl(f->field_type())->seq_template_name()
+		      IND(s); s << o2be_sequence::narrow_from_decl(f->field_type())->seq_template_name(this)
 				<< " &"
 				<< f->uqname() << " () { return pd_"
 				<< f->uqname() << "; }\n";
@@ -505,11 +509,11 @@ o2be_union::produce_hdr(fstream &s)
 		  else
 		    {
 		      IND(s); s << "const "
-				<< o2be_name::narrow_and_produce_fqname(f->field_type())
+				<< o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 				<< " &"
 				<< f->uqname() << " () const { return pd_"
 				<< f->uqname() << "; }\n";
-		      IND(s); s << o2be_name::narrow_and_produce_fqname(f->field_type())
+		      IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 				<< " &"
 				<< f->uqname() << " () { return pd_"
 				<< f->uqname() << "; }\n";
@@ -523,11 +527,11 @@ o2be_union::produce_hdr(fstream &s)
 	      case o2be_operation::tUnionVariable:
 	      case o2be_operation::tAny:
 		IND(s); s << "const "
-			  << o2be_name::narrow_and_produce_fqname(f->field_type())
+			  << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " &"
 			  << f->uqname() << " () const { return pd_"
 			  << f->uqname() << "; }\n";
-		IND(s); s << o2be_name::narrow_and_produce_fqname(f->field_type())
+		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " &"
 			  << f->uqname() << " () { return pd_"
 			  << f->uqname() << "; }\n";
@@ -544,7 +548,7 @@ o2be_union::produce_hdr(fstream &s)
 		      char * tmpname = new char [strlen(f->uqname()) + 2];
 		      strcpy(tmpname,"_");
 		      strcat(tmpname,f->uqname());
-		      o2be_array::narrow_from_decl(decl)->produce_typedef_in_union(s,tmpname);
+		      o2be_array::narrow_from_decl(decl)->produce_typedef_in_union(s,tmpname,this);
 		      IND(s); s << "const " << tmpname << "_slice* " 
 				<< f->uqname() << "() const { return pd_"
 				<< f->uqname() << "; }\n";
@@ -553,7 +557,7 @@ o2be_union::produce_hdr(fstream &s)
 		  else
 		    {
 		      IND(s); s << "const "
-				<< o2be_name::narrow_and_produce_fqname(f->field_type())
+				<< o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 				<< ((mapping.is_arrayslice) ? "_slice":"")
 				<< " "
 				<< ((mapping.is_pointer)    ? "*":"")
@@ -564,7 +568,7 @@ o2be_union::produce_hdr(fstream &s)
 		  break;
 		}
 	      default: 
-		IND(s); s << o2be_name::narrow_and_produce_fqname(f->field_type())
+		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " "
 			  << ((mapping.is_pointer)    ? "*":"")
 			  << ((mapping.is_reference)  ? "&":"")
@@ -588,7 +592,7 @@ o2be_union::produce_hdr(fstream &s)
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
 		    IND(s); s << "pd__d = ";
-		    produce_disc_value(s,disc_type(),l->label_val());
+		    produce_disc_value(s,disc_type(),l->label_val(),this);
 		    s << ";\n";
 		    IND(s); s << "pd__default = 0;\n";
 		  }
@@ -608,7 +612,7 @@ o2be_union::produce_hdr(fstream &s)
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
 		    IND(s); s << "pd__d = ";
-		    produce_disc_value(s,disc_type(),l->label_val());
+		    produce_disc_value(s,disc_type(),l->label_val(),this);
 		    s << ";\n";
 		    IND(s); s << "pd__default = 0;\n";
 		  }
@@ -628,7 +632,7 @@ o2be_union::produce_hdr(fstream &s)
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
 		    IND(s); s << "pd__d = ";
-		    produce_disc_value(s,disc_type(),l->label_val());
+		    produce_disc_value(s,disc_type(),l->label_val(),this);
 		    s << ";\n";
 		    IND(s); s << "pd__default = 0;\n";
 		  }
@@ -650,7 +654,7 @@ o2be_union::produce_hdr(fstream &s)
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
 		    IND(s); s << "pd__d = ";
-		    produce_disc_value(s,disc_type(),l->label_val());
+		    produce_disc_value(s,disc_type(),l->label_val(),this);
 		    s << ";\n";
 		    IND(s); s << "pd__default = 0;\n";
 		  }
@@ -672,13 +676,13 @@ o2be_union::produce_hdr(fstream &s)
 		    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 		  }
 		  IND(s); s << "void " << f->uqname() << "(" 
-			    << o2be_interface::narrow_from_decl(decl)->objref_fqname()
+			    << o2be_interface::narrow_from_decl(decl)->unambiguous_objref_name(this)
 			    << " _value) {\n";
 		  INC_INDENT_LEVEL();
 		  if (l->label_kind() == AST_UnionLabel::UL_label)
 		    {
 		      IND(s); s << "pd__d = ";
-		      produce_disc_value(s,disc_type(),l->label_val());
+		      produce_disc_value(s,disc_type(),l->label_val(),this);
 		      s << ";\n";
 		      IND(s); s << "pd__default = 0;\n";
 		    }
@@ -690,18 +694,18 @@ o2be_union::produce_hdr(fstream &s)
 		      IND(s); s << "pd__default = 1;\n";
 		    }
 		  IND(s); s << "pd_" << f->uqname() << " = "
-			    << o2be_interface::narrow_from_decl(decl)->fqname()
+			    << o2be_interface::narrow_from_decl(decl)->unambiguous_name(this)
 			    << "::_duplicate(_value);\n";
 		  DEC_INDENT_LEVEL();
 		  IND(s); s << "}\n";
 		  IND(s); s << "void " << f->uqname() << "(const " 
-			    << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname()
+			    << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(this)
 			    << "& _value) {\n";
 		  INC_INDENT_LEVEL();
 		  if (l->label_kind() == AST_UnionLabel::UL_label)
 		    {
 		      IND(s); s << "pd__d = ";
-		      produce_disc_value(s,disc_type(),l->label_val());
+		      produce_disc_value(s,disc_type(),l->label_val(),this);
 		      s << ";\n";
 		      IND(s); s << "pd__default = 0;\n";
 		    }
@@ -716,13 +720,13 @@ o2be_union::produce_hdr(fstream &s)
 		  DEC_INDENT_LEVEL();
 		  IND(s); s << "}\n";
 		  IND(s); s << "void " << f->uqname() << "(const " 
-			    << o2be_interface::narrow_from_decl(decl)->fqname()
+			    << o2be_interface::narrow_from_decl(decl)->unambiguous_name(this)
 			    << "_var&  _value) {\n";
 		  INC_INDENT_LEVEL();
 		  if (l->label_kind() == AST_UnionLabel::UL_label)
 		    {
 		      IND(s); s << "pd__d = ";
-		      produce_disc_value(s,disc_type(),l->label_val());
+		      produce_disc_value(s,disc_type(),l->label_val(),this);
 		      s << ";\n";
 		      IND(s); s << "pd__default = 0;\n";
 		    }
@@ -744,13 +748,13 @@ o2be_union::produce_hdr(fstream &s)
 		  {
 		    IND(s); s << "void "
 			      << f->uqname() << " (const "
-			      << o2be_sequence::narrow_from_decl(f->field_type())->seq_template_name()
+			      << o2be_sequence::narrow_from_decl(f->field_type())->seq_template_name(this)
 			      << "& _value) {\n";
 		    INC_INDENT_LEVEL();
 		    if (l->label_kind() == AST_UnionLabel::UL_label)
 		      {
 			IND(s); s << "pd__d = ";
-			produce_disc_value(s,disc_type(),l->label_val());
+			produce_disc_value(s,disc_type(),l->label_val(),this);
 			s << ";\n";
 			IND(s); s << "pd__default = 0;\n";
 		      }
@@ -769,13 +773,13 @@ o2be_union::produce_hdr(fstream &s)
 		  {
 		    IND(s); s << "void "
 			      << f->uqname() << " (const "
-			      << o2be_name::narrow_and_produce_fqname(f->field_type())
+			      << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			      << "& _value) {\n";
 		    INC_INDENT_LEVEL();
 		    if (l->label_kind() == AST_UnionLabel::UL_label)
 		      {
 			IND(s); s << "pd__d = ";
-			produce_disc_value(s,disc_type(),l->label_val());
+			produce_disc_value(s,disc_type(),l->label_val(),this);
 			s << ";\n";
 			IND(s); s << "pd__default = 0;\n";
 		      }
@@ -799,13 +803,13 @@ o2be_union::produce_hdr(fstream &s)
 	      case o2be_operation::tAny:
 		IND(s); s << "void "
 			  << f->uqname() << " (const "
-			  << o2be_name::narrow_and_produce_fqname(f->field_type())
+			  << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << "& _value) {\n";
 		INC_INDENT_LEVEL();
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
 		    IND(s); s << "pd__d = ";
-		    produce_disc_value(s,disc_type(),l->label_val());
+		    produce_disc_value(s,disc_type(),l->label_val(),this);
 		    s << ";\n";
 		    IND(s); s << "pd__default = 0;\n";
 		  }
@@ -837,14 +841,14 @@ o2be_union::produce_hdr(fstream &s)
 		    {
 		      IND(s); s << "void "
 				<< f->uqname() << " (const "
-				<< o2be_name::narrow_and_produce_fqname(f->field_type())
+				<< o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 				<< " _value) {\n";
 		    }
 		  INC_INDENT_LEVEL();
 		  if (l->label_kind() == AST_UnionLabel::UL_label)
 		    {
 		      IND(s); s << "pd__d = ";
-		      produce_disc_value(s,disc_type(),l->label_val());
+		      produce_disc_value(s,disc_type(),l->label_val(),this);
 		      s << ";\n";
 		      IND(s); s << "pd__default = 0;\n";
 		    }
@@ -903,7 +907,7 @@ o2be_union::produce_hdr(fstream &s)
 		IND(s); s << "void " 
 			  << f->uqname() << " ("
 			  << ((mapping.is_const) ? "const ":"")
-			  << o2be_name::narrow_and_produce_fqname(f->field_type())
+			  << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " "
 			  << ((mapping.is_pointer)    ? "*":"")
 			  << ((mapping.is_reference)  ? "&":"")
@@ -912,7 +916,7 @@ o2be_union::produce_hdr(fstream &s)
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
 		    IND(s); s << "pd__d = ";
-		    produce_disc_value(s,disc_type(),l->label_val());
+		    produce_disc_value(s,disc_type(),l->label_val(),this);
 		    s << ";\n";
 		    IND(s); s << "pd__default = 0;\n";
 		  }
@@ -945,7 +949,8 @@ o2be_union::produce_hdr(fstream &s)
   IND(s); s << "private:\n\n";
   INC_INDENT_LEVEL();
 
-  IND(s); s << o2be_name::narrow_and_produce_fqname(disc_type()) << " pd__d;\n";
+  IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(disc_type(),this)
+	    << " pd__d;\n";
   IND(s); s << "CORBA::Boolean pd__default;\n";
 
   if (has_fix_member) {
@@ -976,18 +981,18 @@ o2be_union::produce_hdr(fstream &s)
 	      case o2be_operation::tOctet:
 	      case o2be_operation::tEnum:
 	      case o2be_operation::tStructFixed:
-		IND(s); s << o2be_name::narrow_and_produce_fqname(f->field_type())
+		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " pd_" << f->uqname() << ";\n";
 		break;
 	      case o2be_operation::tArrayFixed:
 		if (f->field_type()->node_type() == AST_Decl::NT_array)
 		  {
 		    IND(s);
-		    o2be_array::narrow_from_decl(f->field_type())->produce_union_member_decl(s,f);
+		    o2be_array::narrow_from_decl(f->field_type())->produce_union_member_decl(s,f,this);
 		  }
 		else
 		  {
-		    IND(s); s << o2be_typedef::narrow_from_decl(f->field_type())->fqname()
+		    IND(s); s << o2be_typedef::narrow_from_decl(f->field_type())->unambiguous_name(this)
 			      << " pd_" << f->uqname() << ";\n";
 		  }
 		break;
@@ -1022,12 +1027,12 @@ o2be_union::produce_hdr(fstream &s)
 	      case o2be_operation::tObjref:
 		if (f->field_type()->node_type() == AST_Decl::NT_interface)
 		  {
-		    IND(s); s << o2be_interface::narrow_from_decl(f->field_type())->fieldMemberType_fqname()
+		    IND(s); s << o2be_interface::narrow_from_decl(f->field_type())->fieldMemberType_fqname(this)
 			      << " pd_" << f->uqname() << ";\n";
 		  }
 		else
 		  {
-		    IND(s); s << o2be_typedef::narrow_from_decl(f->field_type())->fieldMemberType_fqname()
+		    IND(s); s << o2be_typedef::narrow_from_decl(f->field_type())->fieldMemberType_fqname(this)
 			      << " pd_" << f->uqname() << ";\n";
 		  }
 		break;
@@ -1035,23 +1040,23 @@ o2be_union::produce_hdr(fstream &s)
 	      case o2be_operation::tUnionFixed:
 	      case o2be_operation::tUnionVariable:
 	      case o2be_operation::tAny:
-		IND(s); s << o2be_name::narrow_and_produce_fqname(f->field_type())
+		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " pd_" << f->uqname() << ";\n";
 		break;
 	      case o2be_operation::tSequence:
 #ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
 		if (f->field_type()->node_type() == AST_Decl::NT_sequence) 
 		  {
-		    IND(s); s << o2be_sequence::narrow_from_decl(f->field_type())->seq_template_name()
+		    IND(s); s << o2be_sequence::narrow_from_decl(f->field_type())->seq_template_name(this)
 			      << " pd_" << f->uqname() << ";\n";
 		  }
 		else
 		  {
-		    IND(s); s << o2be_typedef::narrow_from_decl(f->field_type())->fqname()
+		    IND(s); s << o2be_typedef::narrow_from_decl(f->field_type())->unambiguous_name(this)
 			      << " pd_" << f->uqname() << ";\n";
 		  }
 #else
-		IND(s); s << o2be_name::narrow_and_produce_fqname(f->field_type())
+		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " pd_" << f->uqname() << ";\n";
 #endif
 		break;
@@ -1059,11 +1064,11 @@ o2be_union::produce_hdr(fstream &s)
 		if (f->field_type()->node_type() == AST_Decl::NT_array)
 		  {
 		    IND(s);
-		    o2be_array::narrow_from_decl(f->field_type())->produce_union_member_decl(s,f);
+		    o2be_array::narrow_from_decl(f->field_type())->produce_union_member_decl(s,f,this);
 		  }
 		else
 		  {
-		    IND(s); s << o2be_typedef::narrow_from_decl(f->field_type())->fqname()
+		    IND(s); s << o2be_typedef::narrow_from_decl(f->field_type())->unambiguous_name(this)
 			      << " pd_" << f->uqname() << ";\n";
 		  }
 		break;
@@ -1153,6 +1158,7 @@ o2be_union::produce_skel(fstream &s)
     o2be_operation::produceSizeCalculation(
 		     s,
 		     disc_type(),
+		     ScopeAsDecl(defined_in()),
 		     "",
 		     "_msgsize",
 		     "pd__d",
@@ -1194,6 +1200,7 @@ o2be_union::produce_skel(fstream &s)
 		    o2be_operation::produceSizeCalculation(
 							   s,
 							   f->field_type(),
+							   ScopeAsDecl(defined_in()),
 							   "",
 							   "_msgsize",
 							   tmpname,
@@ -1225,7 +1232,7 @@ o2be_union::produce_skel(fstream &s)
 	      {
 		o2be_field *f = o2be_union_branch::narrow_from_decl(d);
 		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val());
+		produce_disc_value(s,disc_type(),l->label_val(),this);
 		s << ":\n";
 		INC_INDENT_LEVEL();
 		o2be_operation::argMapping mapping;
@@ -1247,6 +1254,7 @@ o2be_union::produce_skel(fstream &s)
 		o2be_operation::produceSizeCalculation(
 		     s,
 		     f->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "",
 		     "_msgsize",
 		     tmpname,
@@ -1284,6 +1292,7 @@ o2be_union::produce_skel(fstream &s)
     o2be_operation::produceMarshalCode(
 		     s,
 		     disc_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     "pd__d",
 		     ntype,
@@ -1323,6 +1332,7 @@ o2be_union::produce_skel(fstream &s)
 		    o2be_operation::produceMarshalCode(
 						       s,
 						       f->field_type(),
+						       ScopeAsDecl(defined_in()),
 						       "_n",
 						       tmpname,
 						       ntype,
@@ -1353,7 +1363,7 @@ o2be_union::produce_skel(fstream &s)
 	      {
 		o2be_field *f = o2be_union_branch::narrow_from_decl(d);
 		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val());
+		produce_disc_value(s,disc_type(),l->label_val(),this);
 		s << ":\n";
 		INC_INDENT_LEVEL();
 		o2be_operation::argMapping mapping;
@@ -1375,6 +1385,7 @@ o2be_union::produce_skel(fstream &s)
 		o2be_operation::produceMarshalCode(
 		     s,
 		     f->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     tmpname,
 		     ntype,
@@ -1410,6 +1421,7 @@ o2be_union::produce_skel(fstream &s)
     o2be_operation::produceUnMarshalCode(
 		     s,
 		     disc_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     "pd__d",
 		     ntype,
@@ -1430,7 +1442,7 @@ o2be_union::produce_skel(fstream &s)
 	    if (l->label_kind() == AST_UnionLabel::UL_label)
 	      {
 		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val());
+		produce_disc_value(s,disc_type(),l->label_val(),this);
 		s << ":\n";
 		INC_INDENT_LEVEL();
 		IND(s); s << "pd__default = 0;\n";
@@ -1461,6 +1473,7 @@ o2be_union::produce_skel(fstream &s)
 	    o2be_operation::produceUnMarshalCode(
 		     s,
 		     f->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     tmpname,
 		     ntype,
@@ -1492,6 +1505,7 @@ o2be_union::produce_skel(fstream &s)
     o2be_operation::produceMarshalCode(
 		     s,
 		     disc_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     "pd__d",
 		     ntype,
@@ -1531,6 +1545,7 @@ o2be_union::produce_skel(fstream &s)
 		    o2be_operation::produceMarshalCode(
 						       s,
 						       f->field_type(),
+						       ScopeAsDecl(defined_in()),
 						       "_n",
 						       tmpname,
 						       ntype,
@@ -1561,7 +1576,7 @@ o2be_union::produce_skel(fstream &s)
 	      {
 		o2be_field *f = o2be_union_branch::narrow_from_decl(d);
 		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val());
+		produce_disc_value(s,disc_type(),l->label_val(),this);
 		s << ":\n";
 		INC_INDENT_LEVEL();
 		o2be_operation::argMapping mapping;
@@ -1583,6 +1598,7 @@ o2be_union::produce_skel(fstream &s)
 		o2be_operation::produceMarshalCode(
 		     s,
 		     f->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     tmpname,
 		     ntype,
@@ -1618,6 +1634,7 @@ o2be_union::produce_skel(fstream &s)
     o2be_operation::produceUnMarshalCode(
 		     s,
 		     disc_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     "pd__d",
 		     ntype,
@@ -1638,7 +1655,7 @@ o2be_union::produce_skel(fstream &s)
 	    if (l->label_kind() == AST_UnionLabel::UL_label)
 	      {
 		IND(s); s << "case ";
-		produce_disc_value(s,disc_type(),l->label_val());
+		produce_disc_value(s,disc_type(),l->label_val(),this);
 		s << ":\n";
 		INC_INDENT_LEVEL();
 		IND(s); s << "pd__default = 0;\n";
@@ -1668,6 +1685,7 @@ o2be_union::produce_skel(fstream &s)
 	    o2be_operation::produceUnMarshalCode(
 		     s,
 		     f->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     tmpname,
 		     ntype,
@@ -1692,8 +1710,10 @@ o2be_union::produce_skel(fstream &s)
 void
 o2be_union::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 {
-  IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
-  IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << "_var;\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef)
+	    << " " << tdef->uqname() << ";\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef)
+	    << "_var " << tdef->uqname() << "_var;\n";
 }
 
 idl_bool
@@ -1839,13 +1859,7 @@ produce_default_value(o2be_union &u,fstream& s)
 	while (!(i.is_done())) {
 	  v.e_val = i.item();
 	  if (!lookup_by_disc_value(u,v)) {
-	    if (strlen(o2be_name::narrow_and_produce_scopename(decl))) {
-	      s << o2be_name::narrow_and_produce_scopename(decl);
-	    }
-	    else {
-	      s << "::";
-	    }
-	    s << o2be_name::narrow_and_produce_uqname(v.e_val);
+	    s << o2be_name::narrow_and_produce_unambiguous_name(v.e_val,&u);
 	    break;
 	  }
 	  i.next();
@@ -1939,7 +1953,8 @@ produce_default_value(o2be_union &u,fstream& s)
 
 static
 void
-produce_disc_value(fstream &s,AST_ConcreteType *t,AST_Expression *exp)
+produce_disc_value(fstream &s,AST_ConcreteType *t,AST_Expression *exp,
+		   AST_Decl* used_in)
 {
 
   if (t->node_type() != AST_Decl::NT_enum)
@@ -1985,13 +2000,7 @@ produce_disc_value(fstream &s,AST_ConcreteType *t,AST_Expression *exp)
   else
     {
       AST_Decl *v = AST_Enum::narrow_from_decl(t)->lookup_by_value(exp);
-      if (strlen(o2be_name::narrow_and_produce_scopename(t))) {
-	s << o2be_name::narrow_and_produce_scopename(t);
-      }
-      else {
-	s << "::";
-      }
-      s << o2be_name::narrow_and_produce_uqname(v);
+      s << o2be_name::narrow_and_produce_unambiguous_name(v,used_in);
     }
 }
 
@@ -2076,6 +2085,32 @@ lookup_by_disc_value(o2be_union& u,disc_value_t v)
       i.next();
     }
   return 0;
+}
+
+const char *
+o2be_union::out_adptarg_name(AST_Decl* used_in) const
+{
+  if (o2be_global::qflag()) {
+    return pd_out_adptarg_name;
+  }
+  else {
+    const char* ubname = unambiguous_name(used_in);
+    if (strcmp(fqname(),ubname) == 0) {
+      return pd_out_adptarg_name;
+    }
+    else {
+      char* result = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
+		       strlen(ubname)+
+		       strlen(ubname)+strlen("_var")+1];
+      strcpy(result,ADPT_CLASS_TEMPLATE);
+      strcat(result,"<");
+      strcat(result,ubname);
+      strcat(result,",");
+      strcat(result,ubname);
+      strcat(result,"_var>");  
+      return result;
+    }
+  }
 }
 
 IMPL_NARROW_METHODS1(o2be_union, AST_Union)

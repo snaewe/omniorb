@@ -25,9 +25,12 @@
 
 /*
   $Log$
-  Revision 1.2  1997/05/06 13:58:00  sll
-  Public release.
+  Revision 1.3  1997/12/09 19:55:39  sll
+  *** empty log message ***
 
+// Revision 1.2  1997/05/06  13:58:00  sll
+// Public release.
+//
   */
 
 #include <idl.hh>
@@ -37,7 +40,7 @@
 o2be_field::o2be_field(AST_Type *ft, UTL_ScopedName *n, UTL_StrList *p)
 	: AST_Field(ft, n, p),
 	  AST_Decl(AST_Decl::NT_field, n, p),
-	  o2be_name(this)
+	  o2be_name(AST_Decl::NT_field,n,p)
 {
 }
 

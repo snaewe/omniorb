@@ -27,9 +27,12 @@
 
 /*
  $Log$
- Revision 1.8  1997/09/20 16:31:29  dpg1
- Added new name and produce functions for LifeCycle support.
+ Revision 1.9  1997/12/09 19:54:23  sll
+ *** empty log message ***
 
+ * Revision 1.8  1997/09/20  16:31:29  dpg1
+ * Added new name and produce functions for LifeCycle support.
+ *
  * Revision 1.7  1997/05/06  13:47:39  sll
  * Public release.
  *
@@ -44,27 +47,48 @@
 
 #define USE_SEQUENCE_TEMPLATE_IN_PLACE 1
 
-class o2be_name
+class o2be_name : public virtual AST_Decl
 {
 public:
-  o2be_name(AST_Decl *decl);
+  o2be_name(AST_Decl::NodeType t,UTL_ScopedName* n, UTL_StrList* p);
 
   // fully qualified name of the scope
-  virtual char *scopename() { return pd_scopename; }
+  virtual char *scopename() const { return pd_scopename; }
 
   // un-qualified name
-  virtual char *uqname()    { return pd_uqname; }
+  virtual char *uqname() const   { return pd_uqname; }
 
   // fully qualified name, scope name + un-qualified name
-  virtual char *fqname()    { return pd_fqname; }
+  virtual char *fqname() const   { return pd_fqname; }
 
   // same as scopename but with '_' as the separator
-  virtual char *_scopename() { return pd__scopename; }
+  virtual char *_scopename() const { return pd__scopename; }
 
   // same as fqname but with '_' as the separator
-  virtual char *_fqname()    { return pd__fqname; }
+  virtual char *_fqname() const   { return pd__fqname; }
 
-  virtual char *repositoryID();
+  virtual char *unambiguous_name(AST_Decl* used_in,
+				 idl_bool use_fqname = I_FALSE) const;
+  // Looks at the scope-name relation between this class and the one it
+  // is used in. 
+  // If use_fqname == I_FALSE, see if unscoped or partially scoped names
+  // can be used.
+  // If use_fqname == I_TRUE, use fully scoped name, also check to see
+  // if the prefix :: has to be added to avoid clashes with names defined
+  // in the inner scopes.
+  
+
+  virtual char *unambiguous_scopename(AST_Decl* used_in,
+				      idl_bool use_fqname = I_FALSE) const;
+  // Looks at the scope-name relation between this class and the one it
+  // is used in. 
+  // If use_fqname == I_FALSE, see if unscoped or partially scoped names
+  // can be used.
+  // If use_fqname == I_TRUE, use fully scoped name, also check to see
+  // if the prefix :: has to be added to avoid clashes with names defined
+  // in the inner scopes.
+
+  virtual char *repositoryID() const;
 
   void set_scopename(char *n) { pd_scopename = n; }
   void set_uqname(char *n)    { pd_uqname = n; }
@@ -72,37 +96,42 @@ public:
   void set__scopename(char *n){ pd__scopename = n; }
   void set__fqname(char *n)   { pd__fqname = n; }
 
+
   static char *narrow_and_produce_fqname(AST_Decl *type);
   static char *narrow_and_produce__fqname(AST_Decl *type);
   static char *narrow_and_produce_scopename(AST_Decl *type);
   static char *narrow_and_produce__scopename(AST_Decl *type);
   static char *narrow_and_produce_uqname(AST_Decl *type);
+  static char *narrow_and_produce_unambiguous_name(AST_Decl *type,
+						   AST_Decl *used_in,
+						   idl_bool use_fqname=I_FALSE);
+  static char *narrow_and_produce_unambiguous_scopename(AST_Decl *type,
+						   AST_Decl *used_in,
+						   idl_bool use_fqname=I_FALSE);
 
 private:
   o2be_name();
-
   char *pd_scopename;
   char *pd_uqname;
   char *pd_fqname;
   char *pd__scopename;
   char *pd__fqname;
   char *pd_repositoryID;
-  AST_Decl *pd_decl;
 };
 
 class o2be_typedef;
 class o2be_sequence;
-class o2be_sequence_chain {
+class o2be_sequence_chain : public virtual AST_Decl {
 public:
-  o2be_sequence_chain(AST_Decl *decl) { pd_seq_decl = 0; pd_decl = decl; }
+  o2be_sequence_chain(AST_Decl::NodeType t,UTL_ScopedName* n, UTL_StrList* p) :
+    AST_Decl(t,n,p) { pd_seq_decl = 0; }
   virtual ~o2be_sequence_chain() {}
   void set_seq_decl(o2be_sequence *d);
   o2be_sequence *get_seq_decl()  { return pd_seq_decl; }
   void produce_seq_hdr_if_defined(fstream &s);
 private:
-  o2be_sequence *pd_seq_decl;
-  AST_Decl *pd_decl;
   o2be_sequence_chain();
+  o2be_sequence *pd_seq_decl;
 };
 
 class o2be_predefined_type : public virtual AST_PredefinedType,
@@ -185,7 +214,6 @@ public:
 
 private:
   o2be_enum_val();
-
 };
 
 class o2be_string : public virtual AST_String,
@@ -253,7 +281,7 @@ public:
   void set_skel_produced_in_field() { pd_skel_produced_in_field = I_TRUE; }
   idl_bool get_skel_produced_in_field() { return pd_skel_produced_in_field; }
 
-  const char *out_adptarg_name() const { return pd_out_adptarg_name; }
+  const char *out_adptarg_name(AST_Decl* used_in) const;
 
 private:
   idl_bool pd_hdr_produced_in_field;
@@ -307,7 +335,7 @@ public:
   void set_skel_produced_in_field() { pd_skel_produced_in_field = I_TRUE; }
   idl_bool get_skel_produced_in_field() { return pd_skel_produced_in_field; }
 
-  const char *out_adptarg_name() const { return pd_out_adptarg_name; }
+  const char *out_adptarg_name(AST_Decl* used_in) const;
 
 private:
   idl_bool pd_hdr_produced_in_field;
@@ -389,15 +417,29 @@ public:
   void produce_skel(fstream &s, o2be_typedef *tdef);
   static void produce_typedef_hdr (fstream &s, o2be_typedef *tdef1,
 				   o2be_typedef *tdef2);
-  void produce_typedef_in_union(fstream &s, const char *tname);
-  void produce_struct_member_decl (fstream &s, AST_Decl *fieldtype);
-  void produce_union_member_decl (fstream &s, AST_Decl *fieldtype);
+  void produce_typedef_in_union(fstream &s, const char *tname,
+				AST_Decl* used_in);
+  // Looks at the scope-name relation between this node and the one it is
+  // used in. Generate the fieldmember type that used the unambiguous name
+  // of this node in the scope where it is used.
 
-  const char *out_adptarg_name(o2be_typedef* tdef) const;
+  void produce_struct_member_decl (fstream &s, AST_Decl *fieldtype,
+				   AST_Decl* used_in);
+  // Looks at the scope-name relation between <fieldtype> and the one it is
+  // used in. Generate the fieldmember type that used the unambiguous name
+  // of <fieldtype> in the scope where it is used.
+
+  void produce_union_member_decl (fstream &s, AST_Decl *fieldtype,
+				  AST_Decl* used_in);
+  // Looks at the scope-name relation between <fieldtype> and the one it is
+  // used in. Generate the fieldmember type that used the unambiguous name
+  // of <fieldtype> in the scope where it is used.
+
+  const char *out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in) const;
 
 private:
   o2be_array();
-  void _produce_member_decl(fstream &s, char *varname);
+  void _produce_member_decl(fstream &s, char *varname,AST_Decl* used_in);
 };
 
 class o2be_sequence : public virtual AST_Sequence,
@@ -409,8 +451,15 @@ public:
   o2be_sequence(AST_Expression *v, AST_Type *bt);
   ~o2be_sequence() {}
 
-  char* seq_template_name() { return pd_seq_template_name; }
-  const char* seq_member_name() { return pd_seq_baseclass_name; }
+  char* seq_template_name(AST_Decl* used_in);
+  // Looks at the scope-name relation between the element class and the one it
+  // is used in. Generate the template that used the unambiguous name of
+  // the element in the scope where this template name is used.
+
+  const char* seq_member_name(AST_Decl* used_in);
+  // Looks at the scope-name relation between the element class and the one it
+  // is used in. Generate the template that used the unambiguous name of
+  // the element in the scope where this template name is used.
 
   DEF_NARROW_METHODS1(o2be_sequence, AST_Sequence);
   DEF_NARROW_FROM_DECL(o2be_sequence);
@@ -423,11 +472,9 @@ public:
   static void produce_hdr_for_predefined_types(fstream &s);
   static AST_Sequence *attach_seq_to_base_type(AST_Sequence *se);
 
-  const char *out_adptarg_name(o2be_typedef* tdef) const;
+  const char *out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in) const;
 
 private:
-  char *pd_seq_template_name;
-  const char *pd_seq_baseclass_name;
   o2be_sequence();
   enum seqnametype { EFFECTIVE_TYPE, IMMEDIATE_TYPE };
   char *pd_effname;
@@ -464,11 +511,13 @@ public:
 
   void produce_decl_rd(fstream &s,
 		       const char *prefix = 0,
-		       idl_bool out_var_default = I_TRUE);
+		       idl_bool out_var_default = I_TRUE,
+		       idl_bool use_fully_qualified_names = I_FALSE);
 
   void produce_decl_wr(fstream &s,
 		       const char *prefix = 0,
-		       idl_bool out_var_default = I_TRUE);
+		       idl_bool out_var_default = I_TRUE,
+		       idl_bool use_fully_qualified_names = I_FALSE);
 
   void produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in);
   // produce the definition of the proxy's method to get this attribute
@@ -534,7 +583,8 @@ public:
   void produce_decl(fstream &s,
 		    const char *prefix = 0,
 		    const char *alias_prefix = 0,
-		    idl_bool out_var_default = I_TRUE);
+		    idl_bool out_var_default = I_TRUE,
+		    idl_bool use_fully_qualified_names = I_FALSE);
   // produce the declaration of the mapping of this operation
 
   void produce_proxy_skel(fstream &s,o2be_interface &defined_in,
@@ -618,24 +668,25 @@ private:
   argType ast2ArgMapping(AST_Decl *decl,argWhich dir,argMapping &mapping);
 
   static
-  void declareVarType(fstream &s, AST_Decl *decl, idl_bool is_var=0,
+  void declareVarType(fstream &s, AST_Decl *decl, AST_Decl* used_in,
+		      idl_bool is_var=0,
 		      idl_bool is_arrayslice=0);
 
   static
-  void produceUnMarshalCode(fstream &s, AST_Decl *decl,
+  void produceUnMarshalCode(fstream &s, AST_Decl *decl, AST_Decl* used_in,
 			    const char *netstream,
 			    const char *argname,
 			    argType type, argMapping mapping,
 			    idl_bool no_size_check=0);
 
   static
-  void produceMarshalCode(fstream &s, AST_Decl *decl,
+  void produceMarshalCode(fstream &s, AST_Decl *decl, AST_Decl* used_in,
 			  const char *netstream,
 			  const char *argname,
 			  argType type, argMapping mapping);
 
   static
-  void produceSizeCalculation(fstream &s, AST_Decl *decl,
+  void produceSizeCalculation(fstream &s, AST_Decl *decl, AST_Decl* used_in,
 			      const char *netstream,
 			      const char *sizevar,
 			      const char *argname,
@@ -666,11 +717,13 @@ public:
   void produce_hdr(fstream &s);
   void produce_skel(fstream &s);
   const char *fieldMemberType_uqname() const { return pd_fm_uqname; }
-  const char *fieldMemberType_fqname() const { return pd_fm_fqname; }
+  const char *fieldMemberType_fqname(AST_Decl* used_in);
+  // Looks at the scope-name relation between this node and the one it is
+  // used in. Generate the fieldmember type that used the unambiguous name
+  // of this node in the scope where this template name is used.
 
 private:
-  char *pd_fm_uqname;
-  char *pd_fm_fqname;
+  char* pd_fm_uqname;
   o2be_typedef();
 
 };
@@ -699,7 +752,11 @@ public:
   const char *server_uqname() const { return pd_server_uqname; }
   const char *server_fqname() const { return pd_server_fqname; }
   const char *fieldMemberType_uqname() const { return pd_fieldmem_uqname; }
-  const char *fieldMemberType_fqname() const { return pd_fieldmem_fqname; }
+  const char *fieldMemberType_fqname(AST_Decl* used_in) const;
+  // Looks at the scope-name relation between this node and the one it is
+  // used in. Generate the fieldmember type that used the unambiguous name
+  // of this node in the scope where this template name is used.
+
   const char *nil_uqname() const { return pd_nil_uqname; }
   const char *nil_fqname() const { return pd_nil_fqname; }
 
@@ -716,8 +773,29 @@ public:
 
   const char *IRrepoId() const { return pd_IRrepoId; }
   const size_t IRrepoIdSize() const { return pd_IRrepoIdSize; }
-  const char *inout_adptarg_name() const { return pd_inout_adptarg_name; }
-  const char *out_adptarg_name() const { return pd_out_adptarg_name; }
+  const char *inout_adptarg_name(AST_Decl* used_in) const;
+  const char *out_adptarg_name(AST_Decl* used_in) const;
+
+  const char *unambiguous_objref_name(AST_Decl* used_in,
+				      idl_bool use_fqname=I_FALSE) const;
+  const char *unambiguous_proxy_name(AST_Decl* used_in,
+				     idl_bool use_fqname=I_FALSE) const;
+  const char *unambiguous_server_name(AST_Decl* used_in,
+				      idl_bool use_fqname=I_FALSE) const;
+  const char *unambiguous_nil_name(AST_Decl* used_in,
+				   idl_bool use_fqname=I_FALSE) const;
+
+  const char *unambiguous_home_name(AST_Decl* used_in,
+				    idl_bool use_fqname=I_FALSE) const;
+  const char *unambiguous_dead_name(AST_Decl* used_in,
+				    idl_bool use_fqname=I_FALSE) const;
+
+  const char *unambiguous_wrapproxy_name(AST_Decl* used_in,
+					 idl_bool use_fqname=I_FALSE) const;
+  const char *unambiguous_lcserver_name(AST_Decl* used_in,
+					idl_bool use_fqname=I_FALSE) const;
+  const char *unambiguous_lcproxy_name(AST_Decl* used_in,
+				      idl_bool use_fqname=I_FALSE) const;
 
   static idl_bool check_opname_clash(o2be_interface *p,char *opname);
 
@@ -774,10 +852,7 @@ class o2be_module : public virtual AST_Module,
 		    public virtual o2be_name
 {
 public:
-  o2be_module(UTL_ScopedName *n, UTL_StrList *p)
-                 : AST_Decl(AST_Decl::NT_module, n, p),
-		   UTL_Scope(AST_Decl::NT_module),
-		   o2be_name(this) {}
+  o2be_module(UTL_ScopedName *n, UTL_StrList *p);
   ~o2be_module() {}
 
   DEF_NARROW_METHODS1(o2be_module, AST_Module);
@@ -834,6 +909,8 @@ private:
   static size_t    pd_suffixlen;
   static int       pd_aflag;      // generate stub for 'any' type
   static int       pd_fflag;      // generate stub for float and double
+  static int       pd_qflag;      // always use fully qualified name
+  static int       pd_mflag;      // generate stub to work around MSVC bugs
 
 public:
   static void set_aflag(int f) { pd_aflag = f; }
@@ -841,6 +918,12 @@ public:
 
   static void set_fflag(int f) { pd_fflag = f; }
   static int fflag() { return pd_fflag; }
+
+  static void set_qflag(int f) { pd_qflag = f; }
+  static int qflag() { return pd_qflag; }
+
+  static void set_mflag(int f) { pd_mflag = f; }
+  static int mflag() { return pd_mflag; }
 
   static int suffixlen() { return pd_suffixlen; }
 

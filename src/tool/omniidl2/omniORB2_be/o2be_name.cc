@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.7  1997/12/09 19:54:58  sll
+  *** empty log message ***
+
   Revision 1.6  1997/08/21 21:16:26  sll
   Minor cleanup.
 
@@ -35,9 +38,9 @@
 //
   */
 
-#include "idl.hh"
-#include "idl_extern.hh"
-#include "o2be.h"
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
 #include <iostream.h>
 
 static char *internal_produce_scope_name(UTL_ScopedName *n,char *separator);
@@ -45,11 +48,12 @@ static char *internal_check_name_for_reserved_words(char *p);
 static char *internal_produce_repositoryID(AST_Decl *decl,o2be_name *n);
 static UTL_String* internal_search_pragma(AST_Decl* decl,char* p);
 
-o2be_name::o2be_name(AST_Decl *decl)
+o2be_name::o2be_name(AST_Decl::NodeType t,UTL_ScopedName* n, UTL_StrList* up)
+  : AST_Decl(t,n,up)
 {
-  pd_scopename = internal_produce_scope_name(decl->name(),"::");
-  pd__scopename = internal_produce_scope_name(decl->name(),"_");
-  pd_uqname = internal_check_name_for_reserved_words(decl->local_name()
+  pd_scopename = internal_produce_scope_name(name(),"::");
+  pd__scopename = internal_produce_scope_name(name(),"_");
+  pd_uqname = internal_check_name_for_reserved_words(local_name()
 						     ->get_string());
   char *p = new char [strlen(pd_scopename)+strlen(pd_uqname)+1];
   strcpy(p,pd_scopename);
@@ -60,20 +64,222 @@ o2be_name::o2be_name(AST_Decl *decl)
   strcat(p,pd_uqname);
   pd__fqname = p;
 
-  pd_repositoryID = internal_produce_repositoryID(decl,this);
-  pd_decl = decl;
+  pd_repositoryID = internal_produce_repositoryID(this,this);
   return;
 }
 
+static
 char*
-o2be_name::repositoryID() {
+internal_produce_unambiguous_name(AST_Decl* me, AST_Decl* used_in,
+				  idl_bool return_scopename,
+				  idl_bool use_fqname)
+{
+  AST_Decl* common_ancestor = 0;
+
+  if (use_fqname)
+    goto UNAMBIGUOUS;
+
+  if (used_in->has_ancestor(me)) {
+    common_ancestor = me;
+  }
+  else {
+    UTL_Scope* parent = me->defined_in();
+    if (parent && ScopeAsDecl(parent)->node_type() != AST_Decl::NT_root) {
+      if (used_in->has_ancestor(ScopeAsDecl(parent))) {
+	common_ancestor = ScopeAsDecl(parent);
+      }
+      else {
+	if (ScopeAsDecl(parent)->node_type() == AST_Decl::NT_enum) {
+	  parent = ScopeAsDecl(parent)->defined_in();
+	  if (parent && 
+	      ScopeAsDecl(parent)->node_type() !=AST_Decl::NT_root &&
+	      used_in->has_ancestor(ScopeAsDecl(parent))) 
+	    {
+	      common_ancestor = ScopeAsDecl(parent);
+	    }
+	}
+      }
+    }
+  }
+
+  if (common_ancestor) {
+    // We may be able to use the unqualified name provided that there
+    // is no ambiguity
+    UTL_Scope* check;
+    if (DeclAsScope(used_in)) {
+      // Check should start in the scope of used_in.
+      check = DeclAsScope(used_in);
+    }
+    else {
+      check = used_in->defined_in();
+    }
+    while (check && ScopeAsDecl(check) != common_ancestor) {
+      if (check->lookup_by_name_local(me->local_name(),0) != 0) {
+	// There is a name clash, cannot use the unqualified name
+	goto UNAMBIGUOUS;
+      }
+      check = (ScopeAsDecl(check))->defined_in();
+    }
+    // Reach here means there is no name clash, we can use the unqualified
+    // name
+    
+    char* p;
+    if (return_scopename) {
+      p = "";
+    }
+    else {
+      p = o2be_name::narrow_and_produce_uqname(me);
+    }
+    return p;
+  }
+
+  // Reach here iff neither this node nor its parent is an ancestor
+  // Recursively search the ancestor of this node until we find the common
+  // ancestor.
+  {
+    UTL_Scope* parent = me->defined_in();
+    while (parent && ScopeAsDecl(parent)->node_type() != AST_Decl::NT_root) {
+      common_ancestor = ScopeAsDecl(parent);
+      if (used_in->has_ancestor(common_ancestor)) {
+	// bingo, now we have to check if we can use the partially scoped name
+	// starting from here. To be able to do so, there should be no
+	// name clash with the name of this ancestor node.
+	{
+	  AST_Decl* startnode = ScopeAsDecl(me->defined_in());
+	  while (ScopeAsDecl(startnode->defined_in()) != common_ancestor) {
+	    startnode = ScopeAsDecl(startnode->defined_in());
+	  }
+	  UTL_Scope* check;
+	  if (DeclAsScope(used_in)) {
+	    // Check should start in the scope of used_in.
+	    check = DeclAsScope(used_in);
+	  }
+	  else {
+	    check = used_in->defined_in();
+	  }
+	  while (check && ScopeAsDecl(check) != common_ancestor) {
+	    if (check->lookup_by_name_local(startnode->local_name(),0)) 
+	      {
+		// There is a name clash, cannot use the unqualified name
+		goto UNAMBIGUOUS;
+	      }
+	    check = (ScopeAsDecl(check))->defined_in();
+	  }
+	}
+	// Reach here means there is no name clash, we can construct
+	// the partially scoped name
+	UTL_ScopedName* pqname =  new UTL_ScopedName(me->local_name(),NULL);
+	parent = me->defined_in();
+	if (ScopeAsDecl(parent)->node_type() == AST_Decl::NT_enum) {
+	  parent = ScopeAsDecl(parent)->defined_in();
+	}
+	while (ScopeAsDecl(parent) != common_ancestor) {
+	  pqname = new UTL_ScopedName(ScopeAsDecl(parent)->local_name(),
+				      pqname);
+	  parent = ScopeAsDecl(parent)->defined_in();
+	}
+	char* pqstring = internal_produce_scope_name(pqname,"::");
+	if (return_scopename) {
+	  return pqstring;
+	}
+	else {
+	  char* uqname = o2be_name::narrow_and_produce_uqname(me);
+	  char* result = new char[strlen(pqstring)+strlen(uqname)+1];
+	  strcpy(result,pqstring);
+	  strcat(result,uqname);
+	  return result;
+	}
+      }
+      parent = common_ancestor->defined_in();
+    }
+  }
+
+UNAMBIGUOUS:
+  // have to generate the fully qualified name.
+  // Check if we need to put the prefix :: at the front to avoid a name
+  // clash
+  char* prefix = 0;
+  {
+    AST_Decl* topnode = me;
+    UTL_Scope* check;
+
+    if (me->node_type() != AST_Decl::NT_enum_val) {
+      check = me->defined_in();
+    }
+    else {
+      check = ScopeAsDecl(me->defined_in())->defined_in();
+    }
+    // Try to get to the first component of the fully qualified name
+    // If the backpointer returns by defined_in() terminate in a
+    // AST_root, we could just test for that to terminate the following
+    // loop. Unfortunately this strategy doesn't seem to work. So
+    // we check if the local name is a nil string instead.
+    while (check && ScopeAsDecl(check)->local_name()->get_string() &&
+	   strlen(ScopeAsDecl(check)->local_name()->get_string())) {
+      topnode = ScopeAsDecl(check);
+      check = topnode->defined_in();
+    }
+    if (DeclAsScope(used_in)) {
+      // Check should start in the scope of used_in.
+      check = DeclAsScope(used_in);
+    }
+    else {
+      check = used_in->defined_in();
+    }
+    Identifier* nameclash = topnode->local_name();
+    if (topnode->node_type() == AST_Decl::NT_enum_val) {
+      topnode = ScopeAsDecl(topnode->defined_in());
+    }
+    while (check != topnode->defined_in()) {
+      if (check->lookup_by_name_local(nameclash,0)) 
+	{
+	  // There is a name clash, must add :: at the front;
+	  prefix = "::";
+	}
+      check = (ScopeAsDecl(check))->defined_in();
+    }
+  }
+  char* result;
+  if (return_scopename) {
+    result = o2be_name::narrow_and_produce_scopename(me);
+  }
+  else {
+    result = o2be_name::narrow_and_produce_fqname(me);
+  }
+  if (prefix) {
+    char* pp = new char[strlen(result)+strlen(prefix)+1];
+    strcpy(pp,prefix);
+    strcat(pp,result);
+    result = pp;
+  }
+  return result;
+}
+
+
+char*
+o2be_name::unambiguous_name(AST_Decl* used_in,idl_bool use_fqname) const
+{
+  return internal_produce_unambiguous_name((AST_Decl*)this,
+					   used_in,0,use_fqname);
+}
+
+char*
+o2be_name::unambiguous_scopename(AST_Decl* used_in,idl_bool use_fqname) const
+{
+  return internal_produce_unambiguous_name((AST_Decl*)this,
+					   used_in,1,use_fqname);
+}
+
+
+char*
+o2be_name::repositoryID() const {
   // Check the pragmas attached to this node to see if
   // pragma ID is defined to override the default repositoryID.
   UTL_String* id;
-  if ((id = internal_search_pragma(pd_decl,"ID")) != 0) {
+  if ((id = internal_search_pragma((AST_Decl*)this,"ID")) != 0) {
     return id->get_string();
   }
-  else if ((id = internal_search_pragma(pd_decl,"version")) != 0) {
+  else if ((id = internal_search_pragma((AST_Decl*)this,"version")) != 0) {
     // Check if pragma version is defined to override the
     // version number in the default repositoryID.
     char* p = strrchr(pd_repositoryID,':') + 1;
@@ -495,6 +701,135 @@ o2be_name::narrow_and_produce_uqname(AST_Decl *decl)
       return o2be_typedef::narrow_from_decl(decl)->uqname();
     case AST_Decl::NT_pre_defined:
       return o2be_predefined_type::narrow_from_decl(decl)->uqname();
+    default:
+      throw o2be_internal_error(__FILE__,__LINE__,"Unrecognised argument type");
+    }
+return 0; // For MSVC++ 4.2
+}
+
+char*
+o2be_name::narrow_and_produce_unambiguous_name(AST_Decl *decl,
+					       AST_Decl *used_in,
+					       idl_bool use_fqname)
+{
+  switch(decl->node_type())
+    {
+    case AST_Decl::NT_module:
+      return o2be_module::narrow_from_decl(decl)->unambiguous_name(used_in,
+								   use_fqname);
+    case AST_Decl::NT_root:
+      return o2be_root::narrow_from_decl(decl)->unambiguous_name(used_in,
+								 use_fqname);
+    case AST_Decl::NT_interface:
+      return o2be_interface::narrow_from_decl(decl)->unambiguous_name(used_in,
+								      use_fqname);
+    case AST_Decl::NT_interface_fwd:
+      return o2be_interface_fwd::narrow_from_decl(decl)->unambiguous_name(used_in,
+									  use_fqname);
+    case AST_Decl::NT_const:
+      return o2be_constant::narrow_from_decl(decl)->unambiguous_name(used_in,
+								     use_fqname);
+    case AST_Decl::NT_except:
+      return o2be_exception::narrow_from_decl(decl)->unambiguous_name(used_in,
+								      use_fqname);
+    case AST_Decl::NT_attr:
+      return o2be_attribute::narrow_from_decl(decl)->unambiguous_name(used_in,
+								      use_fqname);
+    case AST_Decl::NT_op:
+      return o2be_operation::narrow_from_decl(decl)->unambiguous_name(used_in,
+								      use_fqname);
+    case AST_Decl::NT_argument:
+      return o2be_argument::narrow_from_decl(decl)->unambiguous_name(used_in,
+								     use_fqname);
+    case AST_Decl::NT_union:
+      return o2be_union::narrow_from_decl(decl)->unambiguous_name(used_in,
+								  use_fqname);
+    case AST_Decl::NT_union_branch:
+      return o2be_union_branch::narrow_from_decl(decl)->unambiguous_name(used_in,
+									 use_fqname);
+    case AST_Decl::NT_struct:
+      return o2be_structure::narrow_from_decl(decl)->unambiguous_name(used_in,
+								      use_fqname);
+    case AST_Decl::NT_field:
+      return o2be_field::narrow_from_decl(decl)->unambiguous_name(used_in,
+								  use_fqname);
+    case AST_Decl::NT_enum:
+      return o2be_enum::narrow_from_decl(decl)->unambiguous_name(used_in,
+								 use_fqname);
+    case AST_Decl::NT_enum_val:
+      return o2be_enum_val::narrow_from_decl(decl)->unambiguous_name(used_in,
+								     use_fqname);
+    case AST_Decl::NT_string:
+      return o2be_string::narrow_from_decl(decl)->unambiguous_name(used_in,
+								   use_fqname);
+    case AST_Decl::NT_array:
+      return o2be_array::narrow_from_decl(decl)->unambiguous_name(used_in,
+								  use_fqname);
+    case AST_Decl::NT_sequence:
+      return o2be_sequence::narrow_from_decl(decl)->unambiguous_name(used_in,
+								     use_fqname);
+    case AST_Decl::NT_typedef:
+      return o2be_typedef::narrow_from_decl(decl)->unambiguous_name(used_in,
+								    use_fqname);
+    case AST_Decl::NT_pre_defined:
+      return o2be_predefined_type::narrow_from_decl(decl)->unambiguous_name(used_in,
+									    use_fqname);
+    default:
+      throw o2be_internal_error(__FILE__,__LINE__,"Unrecognised argument type");
+    }
+return 0; // For MSVC++ 4.2
+}
+
+char *
+o2be_name::narrow_and_produce_unambiguous_scopename(AST_Decl *decl,
+						    AST_Decl *used_in,
+						    idl_bool use_fqname)
+{
+  switch(decl->node_type())
+    {
+    case AST_Decl::NT_module:
+      return o2be_module::narrow_from_decl(decl)->unambiguous_scopename(used_in,
+									use_fqname);
+    case AST_Decl::NT_root:
+      return o2be_root::narrow_from_decl(decl)->unambiguous_scopename(used_in,
+								      use_fqname);
+    case AST_Decl::NT_interface:
+      return o2be_interface::narrow_from_decl(decl)->unambiguous_scopename(used_in,
+									   use_fqname);
+    case AST_Decl::NT_interface_fwd:
+      return o2be_interface_fwd::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_const:
+      return o2be_constant::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_except:
+      return o2be_exception::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_attr:
+      return o2be_attribute::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_op:
+      return o2be_operation::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_argument:
+      return o2be_argument::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_union:
+      return o2be_union::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_union_branch:
+      return o2be_union_branch::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_struct:
+      return o2be_structure::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_field:
+      return o2be_field::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_enum:
+      return o2be_enum::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_enum_val:
+      return o2be_enum_val::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_string:
+      return o2be_string::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_array:
+      return o2be_array::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_sequence:
+      return o2be_sequence::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_typedef:
+      return o2be_typedef::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
+    case AST_Decl::NT_pre_defined:
+      return o2be_predefined_type::narrow_from_decl(decl)->unambiguous_scopename(used_in,use_fqname);
     default:
       throw o2be_internal_error(__FILE__,__LINE__,"Unrecognised argument type");
     }

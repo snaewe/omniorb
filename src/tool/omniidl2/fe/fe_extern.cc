@@ -67,7 +67,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  */
 #include <stdio.h>
 
-#ifdef __NT__
+#ifdef __WIN32__
 #include <io.h>
 #endif
 
@@ -98,7 +98,7 @@ FE_yyparse()
     idl_global->root()->call_add();
   }
 
-#ifdef __NT__
+#ifdef __WIN32__
 	fclose(yyin);
    _close(1); // Close the file [stdin points to the file] -- so NT can delete it.
 #endif

@@ -27,15 +27,18 @@
 
 /*
   $Log$
-  Revision 1.5  1997/05/06 13:49:08  sll
-  Public release.
+  Revision 1.6  1997/12/09 19:55:17  sll
+  *** empty log message ***
 
+// Revision 1.5  1997/05/06  13:49:08  sll
+// Public release.
+//
   */
 
 
-#include "idl.hh"
-#include "idl_extern.hh"
-#include "o2be.h"
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
 
 #define ADPT_CLASS_TEMPLATE "_CORBA_Array_OUT_arg"
 
@@ -44,7 +47,7 @@ o2be_array::o2be_array(UTL_ScopedName *n,
 		       UTL_ExprList *dims)
   : AST_Array(n, ndims, dims),
     AST_Decl(AST_Decl::NT_array, n, NULL),
-    o2be_name(this)
+    o2be_name(AST_Decl::NT_array,n,NULL)
 {
 }
 
@@ -252,18 +255,18 @@ o2be_array::produce_hdr (fstream &s, o2be_typedef *tdef)
       elm_fqname = o2be_string::fieldMemberTypeName();
       break;
     case AST_Decl::NT_interface:
-      elm_fqname = o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname();
+      elm_fqname = o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(tdef);
       break;
     case AST_Decl::NT_typedef:
-      elm_fqname = o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname();
+      elm_fqname = o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname(tdef);
       break;
 #if USE_SEQUENCE_TEMPLATE_IN_PLACE
     case AST_Decl::NT_sequence:
-      elm_fqname = o2be_sequence::narrow_from_decl(decl)->seq_template_name();
+      elm_fqname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(tdef);
       break;
 #endif
     default:
-      elm_fqname = o2be_name::narrow_and_produce_fqname(decl);
+      elm_fqname = o2be_name::narrow_and_produce_unambiguous_name(decl,tdef);
       break;
     }
 
@@ -522,30 +525,35 @@ void
 o2be_array::produce_typedef_hdr(fstream &s, o2be_typedef *tdef1,
 				o2be_typedef *tdef2)
 {
-  IND(s); s << "typedef " << tdef2->fqname() << " " << tdef1->uqname() << ";\n";
-  IND(s); s << "typedef " << tdef2->fqname() << "_slice " << tdef1->uqname() 
+  IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
+	    << " " << tdef1->uqname() << ";\n";
+  IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
+	    << "_slice " << tdef1->uqname() 
 	    << "_slice;\n";
-  IND(s); s << "typedef " << tdef2->fqname() << "_copyHelper "
-	    << tdef1->uqname() << "_copyHelper;\n";
-  IND(s); s << "typedef " << tdef2->fqname() << "_var "
-	    << tdef1->uqname() << "_var;\n";
-  IND(s); s << "typedef " << tdef2->fqname() << "_forany "
-	    << tdef1->uqname() << "_forany;\n";
+  IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
+	    << "_copyHelper " << tdef1->uqname() << "_copyHelper;\n";
+  IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
+	    << "_var " << tdef1->uqname() << "_var;\n";
+  IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
+	    << "_forany " << tdef1->uqname() << "_forany;\n";
   IND(s); s << ((!(tdef1->defined_in()==idl_global->root()))?"static ":"extern ")
 	    << tdef1->uqname() << "_slice* "<< tdef1->uqname() << "_alloc() "
-	    << "{ return " << tdef2->fqname() << "_alloc(); }\n";
+	    << "{ return " << tdef2->unambiguous_name(tdef1) 
+	    << "_alloc(); }\n";
   IND(s); s << ((!(tdef1->defined_in()==idl_global->root()))?"static ":"extern ")
 	    << tdef1->uqname() << "_slice* "<< tdef1->uqname() << "_dup(const "
 	    << tdef1->uqname() << "_slice* p) "
-	    << "{ return " << tdef2->fqname() << "_dup(p); }\n";
+	    << "{ return " << tdef2->unambiguous_name(tdef1) 
+	    << "_dup(p); }\n";
   IND(s); s << ((!(tdef1->defined_in()==idl_global->root()))?"static ":"extern ")
 	    << "void " << tdef1->uqname() << "_free( "
 	    << tdef1->uqname() << "_slice* p) "
-	    << "{ " << tdef2->fqname() << "_free(p); }\n\n";
+	    << "{ " << tdef2->unambiguous_name(tdef1) 
+	    << "_free(p); }\n\n";
 }
 
 void
-o2be_array::_produce_member_decl (fstream &s, char *varname)
+o2be_array::_produce_member_decl (fstream &s, char *varname,AST_Decl* used_in)
 {
   AST_Decl *decl = base_type();
 
@@ -557,18 +565,19 @@ o2be_array::_produce_member_decl (fstream &s, char *varname)
       elm_fqname = o2be_string::fieldMemberTypeName();
       break;
     case AST_Decl::NT_interface:
-      elm_fqname = o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname();
+      elm_fqname = o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(used_in);
       break;
     case AST_Decl::NT_typedef:
-      elm_fqname = o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname();
+      elm_fqname = o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname(used_in);
       break;
 #if USE_SEQUENCE_TEMPLATE_IN_PLACE
     case AST_Decl::NT_sequence:
-      elm_fqname = o2be_sequence::narrow_from_decl(decl)->seq_template_name();
+      elm_fqname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(used_in);
       break;
 #endif
     default:
-      elm_fqname = o2be_name::narrow_and_produce_fqname(decl);
+      elm_fqname = o2be_name::narrow_and_produce_unambiguous_name(decl,
+								  used_in);
       break;
     }
 
@@ -605,23 +614,27 @@ o2be_array::_produce_member_decl (fstream &s, char *varname)
 }
 
 void
-o2be_array::produce_struct_member_decl (fstream &s, AST_Decl *fieldtype)
+o2be_array::produce_struct_member_decl (fstream &s, AST_Decl *fieldtype,
+					AST_Decl* used_in)
 {
-  _produce_member_decl(s,o2be_name::narrow_and_produce_uqname(fieldtype));
+  _produce_member_decl(s,o2be_name::narrow_and_produce_uqname(fieldtype),
+		       used_in);
 }
 
 void
-o2be_array::produce_union_member_decl (fstream &s, AST_Decl *fieldtype)
+o2be_array::produce_union_member_decl (fstream &s, AST_Decl *fieldtype,
+				       AST_Decl* used_in)
 {
   char * varname = new char[strlen("pd_")+strlen(o2be_name::narrow_and_produce_uqname(fieldtype))+1];
   strcpy(varname,"pd_");
   strcat(varname,o2be_name::narrow_and_produce_uqname(fieldtype));
-  _produce_member_decl(s,varname);
+  _produce_member_decl(s,varname,used_in);
   delete [] varname;
 }
 
 void
-o2be_array::produce_typedef_in_union(fstream &s, const char *tname)
+o2be_array::produce_typedef_in_union(fstream &s, const char *tname,
+				     AST_Decl* used_in)
 {
   AST_Decl *decl = base_type();
 
@@ -633,18 +646,19 @@ o2be_array::produce_typedef_in_union(fstream &s, const char *tname)
       elm_fqname = o2be_string::fieldMemberTypeName();
       break;
     case AST_Decl::NT_interface:
-      elm_fqname = o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname();
+      elm_fqname = o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(used_in);
       break;
     case AST_Decl::NT_typedef:
-      elm_fqname = o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname();
+      elm_fqname = o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname(used_in);
       break;
 #if USE_SEQUENCE_TEMPLATE_IN_PLACE
     case AST_Decl::NT_sequence:
-      elm_fqname = o2be_sequence::narrow_from_decl(decl)->seq_template_name();
+      elm_fqname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(used_in);
       break;
 #endif
     default:
-      elm_fqname = o2be_name::narrow_and_produce_fqname(decl);
+      elm_fqname = o2be_name::narrow_and_produce_unambiguous_name(decl,
+								  used_in);
       break;
     }
 
@@ -714,17 +728,26 @@ o2be_array::produce_typedef_in_union(fstream &s, const char *tname)
 }
 
 const char*
-o2be_array::out_adptarg_name(o2be_typedef* tdef) const
+o2be_array::out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in) const
 {
+  const char* ubname;
+
+  if (o2be_global::qflag()) {
+    ubname = tdef->fqname();
+  }
+  else {
+    ubname = tdef->unambiguous_name(used_in);
+  }
+
   char* p = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<, >")+
-		     strlen(tdef->fqname()) + strlen("_slice") +
-		     strlen(tdef->fqname()) + strlen("_var")+1];
+		     strlen(ubname) + strlen("_slice") +
+		     strlen(ubname) + strlen("_var")+1];
   strcpy(p,ADPT_CLASS_TEMPLATE);
   strcat(p,"<");
-  strcat(p,tdef->fqname());
+  strcat(p,ubname);
   strcat(p,"_slice");
   strcat(p,",");
-  strcat(p,tdef->fqname());
+  strcat(p,ubname);
   strcat(p,"_var >");
   return p;  
 }

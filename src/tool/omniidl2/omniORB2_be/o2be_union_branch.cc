@@ -26,14 +26,17 @@
 
 /*
   $Log$
-  Revision 1.2  1997/05/06 14:10:45  sll
-  Public release.
+  Revision 1.3  1997/12/09 19:55:26  sll
+  *** empty log message ***
 
+// Revision 1.2  1997/05/06  14:10:45  sll
+// Public release.
+//
   */
 
-#include "idl.hh"
-#include "idl_extern.hh"
-#include "o2be.h"
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
 
 o2be_union_branch::o2be_union_branch(AST_UnionLabel *lab, AST_Type *ft,
 				     UTL_ScopedName *n, UTL_StrList *p)
@@ -41,7 +44,7 @@ o2be_union_branch::o2be_union_branch(AST_UnionLabel *lab, AST_Type *ft,
                       AST_Field(AST_Decl::NT_union_branch, ft, n, p),
                       AST_UnionBranch(lab, ft, n, p),
 		      o2be_field(ft,n,p),
-		      o2be_name(this)
+		      o2be_name(AST_Decl::NT_union_branch, n, p)
 {
 }
 

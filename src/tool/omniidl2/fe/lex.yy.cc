@@ -50,14 +50,6 @@ extern "C" {
 }
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-	void exit(int);
-#ifdef __cplusplus
-}
-#endif
-
 #endif
 # define unput(c) {yytchar= (c);if(yytchar=='\n')yylineno--;*yysptr++=yytchar;}
 # define yymore() (yymorfg=1)
@@ -160,7 +152,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include <fe_private.hh>
 
-#ifdef __NT__
+#ifdef __WIN32__
 #include "y.tab.hh"
 #else
 #include <y.tab.hh>
@@ -607,7 +599,7 @@ stripped_name(UTL_String *fn)
     if (n == NULL)
 	return NULL;
     l = strlen(n);
-#ifdef __NT__
+#ifdef __WIN32__
     for (n += l; l > 0 && *n != 92; l--, n--);
     if (*n == 92) n++;
 #else
@@ -2407,8 +2399,6 @@ char yyextra[] = {
 /*	THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF AT&T	*/
 /*	The copyright notice above does not evidence any   	*/
 /*	actual or intended publication of such source code.	*/
-
-#pragma ident	"@(#)ncform	6.8	95/02/11 SMI"
 
 int yylineno =1;
 # define YYU(x) x

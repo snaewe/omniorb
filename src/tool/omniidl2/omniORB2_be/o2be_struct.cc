@@ -28,9 +28,12 @@
 
 /*
   $Log$
-  Revision 1.4  1997/05/06 14:08:26  sll
-  Public release.
+  Revision 1.5  1997/12/09 19:55:08  sll
+  *** empty log message ***
 
+// Revision 1.4  1997/05/06  14:08:26  sll
+// Public release.
+//
   */
 
 /*
@@ -103,17 +106,17 @@
 
   */
 
-#include "idl.hh"
-#include "idl_extern.hh"
-#include "o2be.h"
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
 
 #define ADPT_CLASS_TEMPLATE  "_CORBA_ConstrType_Variable_OUT_arg"
 
 o2be_structure::o2be_structure(UTL_ScopedName *n, UTL_StrList *p)
 	    : AST_Decl(AST_Decl::NT_struct, n, p),
 	      UTL_Scope(AST_Decl::NT_struct),
-              o2be_name(this),
-	      o2be_sequence_chain(this)
+	      o2be_name(AST_Decl::NT_struct, n, p),
+	      o2be_sequence_chain(AST_Decl::NT_struct, n, p)
 {
   pd_isvar = I_FALSE;
   pd_hdr_produced_in_field = I_FALSE;
@@ -251,25 +254,25 @@ o2be_structure::produce_hdr(fstream &s)
 		  if (decl->node_type() == AST_Decl::NT_string)
 		    s << o2be_string::fieldMemberTypeName();
 		  else
-		    s << o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname();
+		    s << o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname(this);
 		  s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
 		  break;
 		}
 	      case AST_Decl::NT_interface:
 		{
 		  if (decl->node_type() == AST_Decl::NT_interface)
-		    s << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname();
+		    s << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(this);
 		  else
-		    s << o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname();
+		    s << o2be_typedef::narrow_from_decl(decl)->fieldMemberType_fqname(this);
 		  s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
 		  break;
 		}
 	      case AST_Decl::NT_array:
 		{
 		  if (decl->node_type() == AST_Decl::NT_array)
-		    o2be_array::narrow_from_decl(decl)->produce_struct_member_decl(s,d);
+		    o2be_array::narrow_from_decl(decl)->produce_struct_member_decl(s,d,this);
 		  else {
-		    s << o2be_typedef::narrow_from_decl(decl)->fqname();
+		    s << o2be_typedef::narrow_from_decl(decl)->unambiguous_name(this);
 		    s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
 		  }
 		  break;
@@ -278,20 +281,20 @@ o2be_structure::produce_hdr(fstream &s)
 	      case AST_Decl::NT_sequence:
 		{
 		  if (decl->node_type() == AST_Decl::NT_sequence) {
-		    s << o2be_sequence::narrow_from_decl(decl)->seq_template_name()
+		    s << o2be_sequence::narrow_from_decl(decl)->seq_template_name(this)
 		      << " "
 		      << o2be_field::narrow_from_decl(d)->uqname()
 		      << ";\n";
 		  }
 		  else {
-		    s << o2be_typedef::narrow_from_decl(decl)->fqname();
+		    s << o2be_typedef::narrow_from_decl(decl)->unambiguous_name(this);
 		    s <<" "<< o2be_field::narrow_from_decl(d)->uqname() << ";\n";
 		  }
 		  break;
 		}
 #endif
 	      default:
-		s << o2be_name::narrow_and_produce_fqname(decl)
+		s << o2be_name::narrow_and_produce_unambiguous_name(decl,this)
 		  << " " << o2be_field::narrow_from_decl(d)->uqname() << ";\n";
 	      }
 	  }
@@ -395,6 +398,7 @@ o2be_structure::produce_skel(fstream &s)
 	    o2be_operation::produceSizeCalculation(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "",
 		     "_msgsize",
 		     o2be_field::narrow_from_decl(d)->uqname(),
@@ -434,6 +438,7 @@ o2be_structure::produce_skel(fstream &s)
 	    o2be_operation::produceMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
@@ -471,6 +476,7 @@ o2be_structure::produce_skel(fstream &s)
 	    o2be_operation::produceUnMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
@@ -508,6 +514,7 @@ o2be_structure::produce_skel(fstream &s)
 	    o2be_operation::produceMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
@@ -545,6 +552,7 @@ o2be_structure::produce_skel(fstream &s)
 	    o2be_operation::produceUnMarshalCode(
                      s,
 		     AST_Field::narrow_from_decl(d)->field_type(),
+		     ScopeAsDecl(defined_in()),
 		     "_n",
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
@@ -564,9 +572,39 @@ o2be_structure::produce_skel(fstream &s)
 void
 o2be_structure::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 {
-  IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
-  IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << "_var;\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef)
+	    << " " << tdef->uqname() << ";\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef)
+	    << "_var " << tdef->uqname() << "_var;\n";
 }
+
+
+const char *
+o2be_structure::out_adptarg_name(AST_Decl* used_in) const
+{
+  if (o2be_global::qflag()) {
+    return pd_out_adptarg_name;
+  }
+  else {
+    const char* ubname = unambiguous_name(used_in);
+    if (strcmp(fqname(),ubname) == 0) {
+      return pd_out_adptarg_name;
+    }
+    else {
+      char* result = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
+		       strlen(ubname)+
+		       strlen(ubname)+strlen("_var")+1];
+      strcpy(result,ADPT_CLASS_TEMPLATE);
+      strcat(result,"<");
+      strcat(result,ubname);
+      strcat(result,",");
+      strcat(result,ubname);
+      strcat(result,"_var>");  
+      return result;
+    }
+  }
+}
+
 
 IMPL_NARROW_METHODS1(o2be_structure, AST_Structure)
 IMPL_NARROW_FROM_DECL(o2be_structure)

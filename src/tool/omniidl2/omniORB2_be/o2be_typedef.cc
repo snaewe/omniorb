@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.5  1997/12/09 19:55:01  sll
+  *** empty log message ***
+
   Revision 1.4  1997/08/27 17:55:07  sll
   If the true type of an interface is Object, use CORBA::Object_member as
   the field member type name.
@@ -37,9 +40,9 @@
   */
 
 
-#include "idl.hh"
-#include "idl_extern.hh"
-#include "o2be.h"
+#include <idl.hh>
+#include <idl_extern.hh>
+#include <o2be.h>
 
 #define OBJREF_MEMBER_TEMPLATE_NAME "_CORBA_ObjRef_Member"
 #define STRING_MEMBER_NAME          "CORBA::String_member"
@@ -48,11 +51,10 @@
 o2be_typedef::o2be_typedef(AST_Type *bt, UTL_ScopedName *n, UTL_StrList *p)
 	  : AST_Typedef(bt, n, p),
 	    AST_Decl(AST_Decl::NT_typedef, n, p),
-	    o2be_name(this),
-	    o2be_sequence_chain(this)
+	    o2be_name(AST_Decl::NT_typedef, n, p),
+	    o2be_sequence_chain(AST_Decl::NT_typedef, n, p)
 {
   AST_Decl *decl = base_type();
-  const char *tname = o2be_name::narrow_and_produce_fqname(decl);
 
   while (decl->node_type() == AST_Decl::NT_typedef) {
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
@@ -64,8 +66,6 @@ o2be_typedef::o2be_typedef(AST_Type *bt, UTL_ScopedName *n, UTL_StrList *p)
       if (strcmp(o2be_name::narrow_and_produce_uqname(decl),"Object") == 0) {
 	pd_fm_uqname = (char *)o2be_interface::narrow_from_decl(decl)->
 	                  fieldMemberType_uqname();
-	pd_fm_fqname = (char *)o2be_interface::narrow_from_decl(decl)->
-	                  fieldMemberType_fqname();
       }
       else {
 	pd_fm_uqname = new char[strlen(OBJREF_MEMBER_TEMPLATE_NAME)+
@@ -78,27 +78,14 @@ o2be_typedef::o2be_typedef(AST_Type *bt, UTL_ScopedName *n, UTL_StrList *p)
 	strcat(pd_fm_uqname,uqname());
 	strcat(pd_fm_uqname,"_Helper");
 	strcat(pd_fm_uqname,">");
-
-	pd_fm_fqname = new char[strlen(OBJREF_MEMBER_TEMPLATE_NAME)+
-			       strlen(fqname()) +
-			       strlen(fqname()) + strlen("_Helper") + 4];
-	strcpy(pd_fm_fqname,OBJREF_MEMBER_TEMPLATE_NAME);
-	strcat(pd_fm_fqname,"<");
-	strcat(pd_fm_fqname,fqname());
-	strcat(pd_fm_fqname,",");
-	strcat(pd_fm_fqname,fqname());
-	strcat(pd_fm_fqname,"_Helper");
-	strcat(pd_fm_fqname,">");
       }
       break;
     case AST_Decl::NT_string:
       pd_fm_uqname = new char[strlen(STRING_MEMBER_NAME)+1];
       strcpy(pd_fm_uqname,STRING_MEMBER_NAME);
-      pd_fm_fqname = pd_fm_uqname;
       break;
     default:
       pd_fm_uqname = uqname();
-      pd_fm_fqname = fqname();
       break;
     }
 }
@@ -156,6 +143,54 @@ o2be_typedef::produce_skel(fstream &s)
 
   if (decl->node_type() == AST_Decl::NT_array)
     o2be_array::narrow_from_decl(decl)->produce_skel(s,this);
+}
+
+const char*
+o2be_typedef::fieldMemberType_fqname(AST_Decl* used_in)
+{
+  const char* ubname;
+  char* result;
+
+  if (o2be_global::qflag()) {
+    ubname = fqname();
+  }
+  else {
+    ubname = unambiguous_name(used_in);
+  }
+
+  AST_Decl *decl = base_type();
+  while (decl->node_type() == AST_Decl::NT_typedef) {
+    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+  }
+  switch (decl->node_type())
+    {
+    case AST_Decl::NT_interface:
+      if (strcmp(o2be_name::narrow_and_produce_uqname(decl),"Object") == 0) {
+	result = (char *)o2be_interface::narrow_from_decl(decl)->
+	                             fieldMemberType_fqname(used_in);
+      }
+      else {
+	result = new char[strlen(OBJREF_MEMBER_TEMPLATE_NAME)+
+			       strlen(ubname) +
+			       strlen(ubname) + strlen("_Helper") + 4];
+	strcpy(result,OBJREF_MEMBER_TEMPLATE_NAME);
+	strcat(result,"<");
+	strcat(result,ubname);
+	strcat(result,",");
+	strcat(result,ubname);
+	strcat(result,"_Helper");
+	strcat(result,">");
+      }
+      break;
+    case AST_Decl::NT_string:
+      result = new char[strlen(STRING_MEMBER_NAME)+1];
+      strcpy(result,STRING_MEMBER_NAME);
+      break;
+    default:
+      result = (char*) ubname;
+      break;
+    }
+  return result;
 }
 
 IMPL_NARROW_METHODS1(o2be_typedef, AST_Typedef)

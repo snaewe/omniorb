@@ -28,9 +28,12 @@
 
 /*
   $Log$
-  Revision 1.4  1997/05/06 13:53:47  sll
-  Public release.
+  Revision 1.5  1997/12/09 19:55:06  sll
+  *** empty log message ***
 
+// Revision 1.4  1997/05/06  13:53:47  sll
+// Public release.
+//
   */
 
 #include <idl.hh>
@@ -41,8 +44,8 @@ o2be_enum::o2be_enum(UTL_ScopedName *n, UTL_StrList *p)
        : AST_Enum(n, p),
 	 AST_Decl(AST_Decl::NT_enum, n, p),
 	 UTL_Scope(AST_Decl::NT_enum),
-	 o2be_name(this),
-	 o2be_sequence_chain(this)
+	 o2be_name(AST_Decl::NT_enum,n,p),
+	 o2be_sequence_chain(AST_Decl::NT_enum,n,p)
 {
   pd_hdr_produced_in_field = I_FALSE;
   pd_skel_produced_in_field = I_FALSE;
@@ -144,7 +147,8 @@ o2be_enum::produce_skel(fstream &s)
 void
 o2be_enum::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 {
-  IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef) 
+	    << " " << tdef->uqname() << ";\n";
 }
 
 
@@ -152,6 +156,7 @@ o2be_enum::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 IMPL_NARROW_METHODS1(o2be_enum, AST_Enum)
 IMPL_NARROW_FROM_DECL(o2be_enum)
 IMPL_NARROW_FROM_SCOPE(o2be_enum)
+
 
 o2be_enum_val::o2be_enum_val(unsigned long v, 
 			     UTL_ScopedName *n, 
@@ -163,9 +168,22 @@ o2be_enum_val::o2be_enum_val(unsigned long v,
 		 n,
 		 p),
     AST_EnumVal(v,n,p),
-    o2be_name(this)
+    o2be_name(AST_Decl::NT_enum_val,n,p)
 {
+  o2be_enum* enum_decl = o2be_enum::narrow_from_decl(ScopeAsDecl(defined_in()));
+  set_scopename(enum_decl->scopename());
+  set__scopename(enum_decl->_scopename());
+  char* buf = new char [strlen(scopename())+strlen(uqname())+1];
+  strcpy(buf,scopename());
+  strcat(buf,uqname());
+  set_fqname(buf);
+  buf = new char [strlen(_scopename())+strlen(uqname())+1];
+  strcpy(buf,_scopename());
+  strcat(buf,uqname());
+  set__fqname(buf);
 }
+
+
 
 IMPL_NARROW_METHODS1(o2be_enum_val, AST_EnumVal)
 IMPL_NARROW_FROM_DECL(o2be_enum_val)
