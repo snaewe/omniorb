@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11  1999/12/16 16:11:21  djs
+# Now uses transitive closure of inherits relation where appropriate
+#
 # Revision 1.10  1999/12/14 11:53:22  djs
 # Support for CORBA::TypeCode and CORBA::Any
 # Exception member bugfix
@@ -224,17 +227,22 @@ const char* @name@::_PD_repoId = \"@repoID@\";""",
                name = name, repoID = node.repoId())
 
     # gather information for possible interface inheritance
+    # (needs to use the transitive closure of inheritance)
+    all_inherits = tyutil.allInherits(node)
     inherits_str = ""
     inherited_repoIDs = ""
-    for i in node.inherits():
+    for i in all_inherits:
         inherits_scopedName = map(tyutil.mapID, i.scopedName())
         inherits_name = string.join(inherits_scopedName, "::")
-        inherits_objref_scopedName =  tyutil.scope(inherits_scopedName) + \
-                                     ["_objref_" + tyutil.name(inherits_scopedName)]
+
         inherited_repoIDs = inherited_repoIDs + "\
         if( !strcmp(id, " + inherits_name + "::_PD_repoId) )\n\
           return (" + inherits_name + "_ptr) this;\n"
-        
+
+    for i in node.inherits():
+        inherits_scopedName = map(tyutil.mapID, i.scopedName())        
+        inherits_objref_scopedName =  tyutil.scope(inherits_scopedName) + \
+                                     ["_objref_" + tyutil.name(inherits_scopedName)]
         inherits_objref_name = environment.nameToString(environment.relName(
             inherits_objref_scopedName))
         inherits_str = inherits_str + inherits_objref_name + "(mdri, p, id, lid),\n"
@@ -391,10 +399,12 @@ static void
                                                  fully_scope = 0)
         return_type = attrTypes[0]
 
+        # FIXME: change to the old compiler might make this always use
+        # fully scoped names
         if is_array:
-            scoped_in_type = scoped_attrTypes[1]+"_slice*"
+            scoped_in_type = attrTypes[1]+"_slice*"
         else:
-            scoped_in_type = scoped_attrTypes[1]
+            scoped_in_type = attrTypes[1]
 
 
         for id in attribute.identifiers():
@@ -495,7 +505,8 @@ CORBA::Boolean
                objref_fqname = objref_fqname,
                name = name,
                uname = u_name)
-    for i in node.inherits():
+    # again this must deal with _all_ inheritance
+    for i in all_inherits:
         ancestor = string.join(map(tyutil.mapID, i.scopedName()), "::")
         stream.out("""\
   if( !strcmp(id, @inherited@::_PD_repoId) )
@@ -573,7 +584,7 @@ void*
                impl_fqname = impl_fqname,
                name = name)
     # again deal with inheritance
-    for i in node.inherits():
+    for i in all_inherits:
         inherited_name = tyutil.mapID(tyutil.name(i.scopedName()))
         stream.out("""\
   if( !strcmp(id, @inherited_name@::_PD_repoId) )
