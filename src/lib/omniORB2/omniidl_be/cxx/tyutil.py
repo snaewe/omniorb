@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.5  2000/03/24 16:25:10  djs
+# Added in " "s around "<" and ">" in templates to make the output parse
+# correctly when they are nested.
+#
 # Revision 1.30.2.4  2000/03/13 16:00:38  djs
 # Fixed problem with scoping (was emulating old problem)
 #
@@ -507,7 +511,7 @@ def objRefTemplate(type, suffix, environment):
     objref_rel_name_string = environment.nameToString(objref_rel_name)
     
     return "_CORBA_ObjRef_" + suffix + \
-           "<" + objref_rel_name_string + ", " + rel_name_string + "_Helper>"
+           "< " + objref_rel_name_string + ", " + rel_name_string + "_Helper> "
 
 # ------------------------------------------------------------------
 
@@ -577,8 +581,8 @@ def operationArgumentType(type, environment, virtualFn = 0):
             objref_name = environment.nameToString(objref_scopedName)
             return [ param_type + "_ptr",
                      param_type + "_ptr",
-                     "_CORBA_ObjRef_OUT_arg<" + objref_name + "," + \
-                     param_type + "_Helper >",
+                     "_CORBA_ObjRef_OUT_arg< " + objref_name + "," + \
+                     param_type + "_Helper > ",
                      param_type + "_ptr&" ]
         elif deref_type.kind() == idltype.tk_TypeCode:
             if config.OldFlag():
@@ -647,11 +651,11 @@ def operationArgumentType(type, environment, virtualFn = 0):
         objref_name = environment.nameToString(objref_scopedName)
         return [ param_type + "_ptr",
                  param_type + "_ptr",
-                 "_CORBA_ObjRef_OUT_arg<" + objref_name + "," + \
-                 param_type + "_Helper >",
-                 "_CORBA_ObjRef_INOUT_arg<" + objref_name + "," + \
-                 param_type + "_Helper >" ,
-                 param_type + "_Helper >" ]                 
+                 "_CORBA_ObjRef_OUT_arg< " + objref_name + "," + \
+                 param_type + "_Helper > ",
+                 "_CORBA_ObjRef_INOUT_arg< " + objref_name + "," + \
+                 param_type + "_Helper > " ,
+                 param_type + "_Helper > " ]                 
                  #param_type + "_ptr&" ]
 
     out_base_type = param_type
@@ -804,7 +808,7 @@ def templateToString(template):
     args_string = string.join(args, ", ")
 #    print "[[[ args = " + repr(args_string) + "]]]"
     if (args_string != ""):
-        name = name + "<" + args_string + ">"
+        name = name + "< " + args_string + "> "
         return name
 
     return name
