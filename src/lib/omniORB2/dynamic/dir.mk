@@ -13,6 +13,7 @@ ORB2_SRCS = constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
           libcWrapper.cc mbufferedStream.cc nbufferedStream.cc NamingSK.cc \
           object.cc objectKey.cc objectRef.cc ropeFactory.cc \
           strand.cc scavenger.cc \
+	  typecode.cc any.cc tcParseEngine.cc \
           $(NETLIBSRCS)
 
 ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
@@ -21,6 +22,7 @@ ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             libcWrapper.o mbufferedStream.o nbufferedStream.o NamingSK.o \
             object.o objectRef.o objectKey.o ropeFactory.o \
 	    strand.o scavenger.o \
+	    typecode.o any.o tcParseEngine.o \
             $(NETLIBOBJS)
 
 LC_SRCS = omniLifeCycle.cc reDirect.cc omniLifeCycleSK.cc
