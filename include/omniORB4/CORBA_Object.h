@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2002/02/25 11:15:14  dpg1
+  Typo in _unchecked_narrow().
+
   Revision 1.1.2.3  2001/11/12 13:46:07  dpg1
   _unchecked_narrow, improved _narrow.
 
@@ -97,7 +100,7 @@ public:
   static _ptr_type        _duplicate(_ptr_type);
   static inline _ptr_type _narrow(Object_ptr o) { return _duplicate(o); }
   static inline _ptr_type _unchecked_narrow(Object_ptr o) {
-    return _duplicate(0);
+    return _duplicate(o);
   }
   static _ptr_type        _nil();
 
