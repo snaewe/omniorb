@@ -316,6 +316,7 @@ class _AMI_Call_Descriptor(iface.Class):
                    common_constructor_ids = string.join(common_ctor_ids,","),
                    duplicate_handler = duplicate_handler,
                    result_store = store_result,
+                   poller_get_result = poller_get_result,
                    delete_sent_arguments = dtor_sent,
                    delete_replies = dtor_reply,
                    request_args = string.join(request_args, ", "),
