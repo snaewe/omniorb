@@ -25,6 +25,9 @@
 
 /*
   $Log$
+  Revision 1.19.6.2  1999/10/13 15:47:47  djr
+  Bug in omniidl3 - seg fault with typedef of interface as member of exception.
+
   Revision 1.19.6.1  1999/09/24 10:05:24  djr
   Updated for omniORB3.
 
@@ -573,8 +576,11 @@ o2be_exception::produce_skel(std::fstream& s)
 
 	      case o2be_operation::tObjref:
 		{
+		  AST_Decl* decl = dd->field_type();
+		  while (decl->node_type() == AST_Decl::NT_typedef)
+		    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 		  o2be_interface* intf =
-		    o2be_interface::narrow_from_decl(dd->field_type());
+		    o2be_interface::narrow_from_decl(decl);
 		  IND(s); s << intf->fqname() << "_Helper::duplicate(_"
 			    << dd->uqname() << ");\n";
 		  IND(s); s << dd->uqname() << " = _" << dd->uqname() << ";\n";
