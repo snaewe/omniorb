@@ -1,4 +1,12 @@
 
+Fri Feb 12 11:52:23 GMT 1999 djr
+================================
+
+- TypeCodes for arrays were marshalled incorrectly.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
 Thu Feb 11 13:17:41 GMT 1999 djr
 ================================
 
