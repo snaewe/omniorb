@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2001/08/06 15:50:27  sll
+  In filterAndSortAddressList, make unix transport as the first choice if
+  available. This is just a temporary solution until we have table driven
+  transport selection.
+
   Revision 1.1.4.9  2001/08/03 17:41:21  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -561,6 +566,15 @@ giopRope::filterAndSortAddressList(const giopAddressList& addrlist,
   // XXX Make SSL the first one to try if it is available.
   for (index = 0; index < total; index++) {
     if (strcmp(addrlist[index]->type(),"giop:ssl")==0) {
+      ordered_list[index] = ordered_list[0];
+      ordered_list[0] = index;
+      break;
+    }
+  }
+
+  // XXX Make unix socket the first one to try if it is available.
+  for (index = 0; index < total; index++) {
+    if (strcmp(addrlist[index]->type(),"giop:unix")==0) {
       ordered_list[index] = ordered_list[0];
       ordered_list[0] = index;
       break;
