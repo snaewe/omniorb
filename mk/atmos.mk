@@ -88,7 +88,12 @@ endef
 #
 
 define CleanRule
-$(RM) *.o *.d
+$(RM) *.o
+endef
+
+define VeryCleanRule
+$(RM) *.d
+$(RM) $(CORBA_STUB_FILES)
 endef
 
 
