@@ -1,3 +1,12 @@
+Wed Aug 27 18:55:28 BST 1997 sll
+================================
+
+- More (final!) fix for typedef Object X // IDL
+
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_typedef.cc
+
+
 Wed Aug 27 11:24:10 BST 1997 sll
 ================================
 
