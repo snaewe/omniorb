@@ -1,3 +1,11 @@
+Fri Aug 24 12:37:25 BST 2001 dpg1
+=================================
+
+- Don't define NULL as (void*)0.
+
+include/omnithread.h
+
+
 Wed Aug 22 11:07:12 BST 2001 sll
 ================================
 
