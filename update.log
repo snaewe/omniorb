@@ -1,3 +1,21 @@
+Mon Dec  3 18:44:37 GMT 2001 dpg1
+=================================
+
+- Race condition in giopWorker destruction.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopWorker.cc
+
+- Detect use after deletion in traced mutex and condition.
+
+include/omniORB4/tracedthread.h
+src/lib/omniORB/orbcore/tracedthread.cc
+
+- Clean up strange indentation.
+
+src/lib/omniORB/include/giopServer.h
+
+
 Mon Dec  3 13:22:30 GMT 2001 dpg1
 =================================
 

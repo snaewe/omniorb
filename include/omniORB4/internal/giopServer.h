@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/12/03 18:48:14  dpg1
+  Clean up strange indentation.
+
   Revision 1.1.4.6  2001/09/20 13:26:13  dpg1
   Allow ORB_init() after orb->destroy().
 
@@ -110,9 +113,9 @@ public:
     Link* prev;
 
     Link() {
-			next = this;
-			prev = this;
-		}
+      next = this;
+      prev = this;
+    }
 
     void insert(Link& head);
     void remove();
