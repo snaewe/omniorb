@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.15  1999/05/31 17:56:44  sll
+  Added C++ keyword export.
+
   Revision 1.14  1999/05/26 10:30:01  sll
   Added keyword bool.
   Minor bug fix.
@@ -515,7 +518,7 @@ static char *reserved_words[] = {
   "bool", "bitand", "bitor", "break", 
   "catch",  "class", "compl", "const_cast", "continue",
   "delete", "do", "dynamic_cast",
-  "else", "explicit", "extern",
+  "else", "explicit", "export", "extern",
   "false", "for", "friend", 
   "goto", "if", "inline", "int", 
   "mutable", 
