@@ -1,3 +1,44 @@
+Thu Jan  7 09:52:19 GMT 1999 djr
+================================
+
+- Major changes to omniidl2.
+   * Support for new implementation of TypeCode and Any
+   * A new output file ...DynSK.cc is generated containing
+   the code to support TypeCode and Any.
+   * New implementation of proxy calls.
+
+src/tool/omniidl2/omniORB2_be/dir.mk
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+src/tool/omniidl2/omniORB2_be/o2be_attribute.cc
+src/tool/omniidl2/omniORB2_be/o2be_buildDesc.cc
+src/tool/omniidl2/omniORB2_be/o2be_call_desc.cc
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_constant.cc
+src/tool/omniidl2/omniORB2_be/o2be_enum.cc
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_module.cc
+src/tool/omniidl2/omniORB2_be/o2be_name.cc
+src/tool/omniidl2/omniORB2_be/o2be_name_mangle.cc
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+src/tool/omniidl2/omniORB2_be/o2be_predefined_type.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_string.cc
+src/tool/omniidl2/omniORB2_be/o2be_struct.cc
+src/tool/omniidl2/omniORB2_be/o2be_typedef.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+
+
+Wed Jan  6 16:24:18 GMT 1999 djr
+================================
+
+- Fix in omniidl2 for VMS pre-processor.
+
+src/tool/omniidl2/driver/drv_preproc.cc
+
+
 Tue Jan  5 12:31:32 GMT 1999 sll
 ================================
 
