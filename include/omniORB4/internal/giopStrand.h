@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/08/29 17:51:06  sll
+  Updated description for gatekeeper_checked.
+
   Revision 1.1.4.6  2001/08/17 17:10:05  sll
   Modularise ORB configuration parameters.
 
@@ -257,8 +260,8 @@ public:
   // otherwise it is 0.
 
   CORBA::Boolean      gatekeeper_checked;
-  // only applies to passive strand. TRUE(1) means that the gatekeeper
-  // has checked this connection. This flag is set by giopWorker and is
+  // only applies to passive strand. TRUE(1) means that the serverTransportRule
+  // has been checked. This flag is set by giopWorker and is
   // not manipulated by the strand class.
 
   CORBA::Boolean      first_use;
