@@ -54,6 +54,8 @@ namespec := $(LIB_NAME) $(vers)
 # Build Static library
 ##############################################################################
 
+ifndef NoStaticLibrary
+
 staticlib := static/$(patsubst %,$(LibNoDebugPattern),$(LIB_NAME)$(major))
 
 mkstatic::
@@ -79,6 +81,12 @@ clean::
 veryclean::
 	$(RM) static/*.o
 	$(RM) $(staticlib)
+
+else
+
+mkstatic::
+
+endif
 
 
 ##############################################################################

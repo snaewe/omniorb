@@ -1,3 +1,11 @@
+Mon Feb 25 10:06:07 GMT 2002 dpg1
+=================================
+
+- Don't build static omnithread when static libs disabled.
+
+src/lib/omnithread/dir.mk
+
+
 Thu Feb 21 15:53:34 GMT 2002 dpg1
 =================================
 
