@@ -304,13 +304,18 @@ libname=$(SharedLibraryLibNameTemplate); \
 dllname=$$targetdir/$$libname.dll; \
 defname=$$targetdir/$(SharedLibraryExportSymbolFileNameTemplate); \
 version=$(SharedLibraryVersionStringTemplate); \
+if [ -n "$$debug" ]; then \
+extralinkoption="$(MSVC_DLL_CXXLINKDEBUGOPTIONS)"; \
+else \
+extralinkoption="$(MSVC_DLL_CXXLINKNODEBUGOPTIONS)"; \
+fi; \
 if [ -z "$$nodeffile" ]; then \
 $(MakeCXXExportSymbolDefinitionFile) \
 defflag="-def:$$defname"; \
 fi; \
 set -x; \
 $(RM) $@; \
-$(CXXLINK) -out:$$dllname -DLL $(MSVC_DLL_CXXLINKNODEBUGOPTIONS) \
+$(CXXLINK) -out:$$dllname -DLL $$extralinkoption \
 $$defflag -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
 $^ $$extralibs;
 endef

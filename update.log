@@ -1,3 +1,11 @@
+Wed Aug 22 10:44:18 BST 2001 sll
+================================
+
+- Fixed win32 shared library build rule to correctly include debug symbols in
+  debug dll.
+  
+external_merge/mk/win32.mk
+
 Tue Aug 21 12:08:07 BST 2001 sll
 ================================
 
@@ -5,7 +13,6 @@ Tue Aug 21 12:08:07 BST 2001 sll
 
 src/lib/omniORB/include/initFile.h
 src/lib/omniORB/orbcore/initFile.cc
-
 
 Tue Aug 21 11:58:29 BST 2001 sll
 ================================
