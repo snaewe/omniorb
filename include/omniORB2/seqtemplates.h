@@ -3,9 +3,9 @@
 // seqtemplates.h             Created on: 14/5/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
-//    This file is part of the omniORB library
+//    This file is part of the omniORB library.
 //
 //    The omniORB library is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Library General Public
@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.15  1999/04/21 13:15:31  djr
+ *** empty log message ***
+
  Revision 1.14  1999/01/07 18:44:55  djr
  *** empty log message ***
 
