@@ -3,7 +3,7 @@
 // IIOP.h                     Created on: 8/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.10  1999/06/18 21:13:24  sll
+  Updted to copyright notice.
+
   Revision 1.9  1999/06/18 20:35:53  sll
   Replaced _LC_attr with _core_attr
 
