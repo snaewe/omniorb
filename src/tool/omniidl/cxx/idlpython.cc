@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.2  2000/02/17 10:00:38  dpg1
+// More robust path discovery.
+//
 // Revision 1.15.2.1  2000/02/16 16:23:52  dpg1
 // Support things for Python neophytes.
 //
@@ -1185,7 +1188,7 @@ main(int argc, char** argv)
 "import sys, os, os.path\n"
 "\n"
 "pylibdir   = None\n"
-"binarchdir = os.path.dirname(sys.executable)\n"
+"binarchdir = os.path.abspath(os.path.dirname(sys.executable))\n"
 "\n"
 "if binarchdir != '':\n"
 "    sys.path.insert(0, binarchdir)\n"
