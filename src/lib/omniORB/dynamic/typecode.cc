@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.31  2004/10/17 22:29:06  dgrisby
+ * WChar TypeCode unmarshalling was missing. Thanks Luke Deller.
+ *
  * Revision 1.38.2.30  2003/03/10 11:13:52  dgrisby
  * BAD_PARAM with invalid fixed limits.
  *
@@ -4452,6 +4455,9 @@ TypeCode_marshaller::unmarshal(cdrStream& s,
     case CORBA::tk_char:
       otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_char));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_char));
+    case CORBA::tk_wchar:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_wchar));
+      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_wchar));
     case CORBA::tk_octet:
       otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_octet));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_octet));
