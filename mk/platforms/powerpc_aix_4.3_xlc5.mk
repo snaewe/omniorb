@@ -1,6 +1,6 @@
 #
-# powerpc_aix_4.2_xlc5.mk - make variables and rules specific to xlc version 5.0
-#                           on PowerPC AIX 4.2.
+# powerpc_aix_4.3_xlc5.mk - make variables and rules specific to xlc version 5.0
+#                           on PowerPC AIX 4.3.
 #
 
 AIX = 1
@@ -131,7 +131,7 @@ CorbaImplementation = OMNIORB
 #
 ThreadSystem = Posix
 
-OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=8
+OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=10
 OMNITHREAD_CPPFLAGS = -I$(TOP)/include -D_REENTRANT -D_THREAD_SAFE
 OMNITHREAD_LIB = -lomnithread2 -lpthreads
 OMNITHREAD_STATIC_LIB = -lomnithread-ar -lpthreads-ar
