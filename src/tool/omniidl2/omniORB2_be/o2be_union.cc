@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.31  1999/08/20 11:37:57  djr
+  Bug in generated MACRO -- too many )'s.
+
   Revision 1.30  1999/08/15 13:58:27  sll
   Updated for DEC C++ v6.0
 
@@ -1034,7 +1037,7 @@ o2be_union::produce_hdr(std::fstream& s)
   IND(s); s << "void operator<<= (MemBufferedStream&);\n\n";
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
-    s << "#if defined(__GNUG__) || defined(__DECCXX) && (__DECCXX_VER < 60000000))\n";
+    s << "#if defined(__GNUG__) || defined(__DECCXX) && (__DECCXX_VER < 60000000)\n";
     IND(s); s << "friend class _0RL_tcParser_unionhelper_" << _idname()
 	      << ";\n";
     s << "#else\n";
