@@ -82,17 +82,24 @@ public:
 
   inline void setTC_and_reset(CORBA::TypeCode_ptr tc) {
     // Free the parser & buffer
-    if (pd_parser != 0)  delete pd_parser;
-    if (pd_mbuf != 0)    delete pd_mbuf;
-    if (pd_releaseptr)   delete [] (char *) pd_dataptr;
+    if (pd_releaseptr) {
+      if (pd_parser != 0)  delete pd_parser;
+      if (pd_mbuf != 0)    delete pd_mbuf;
+      delete [] (char *) pd_dataptr;
+    } else {
+      pd_parser->setTC_and_reset(tc);
+    }
+      
     if (pd_cached_data_ptr != 0)
       pd_cached_data_destructor(pd_cached_data_ptr);
     pd_cached_data_ptr = 0;
 
     // Allocate a new membuffered stream & parser
-    pd_mbuf = new MemBufferedStream();
+    if (pd_mbuf == 0)
+      pd_mbuf = new MemBufferedStream();
     pd_releaseptr = 0;
-    pd_parser = new tcParser(*pd_mbuf, tc);
+    if (pd_parser == 0)
+      pd_parser = new tcParser(*pd_mbuf, tc);
   }
   // Change the TypeCode and reallocate the mbuf.
 
