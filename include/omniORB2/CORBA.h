@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.42  1999/08/15 13:51:33  sll
+ Define ImplmentationDef as an empty class to keep some compilers happy.
+
  Revision 1.41  1999/06/27 16:44:42  sll
  enclose Any extraction operator for string with test for macro
  _NO_ANY_STRING_EXTRACTION_. Define this macro as compiler option would
@@ -1411,7 +1414,8 @@ _CORBA_MODULE_BEG
 
   class InterfaceDef;
 
-  class ImplementationDef;
+  class ImplementationDef { // Not used. 
+  };
   typedef ImplementationDef* ImplementationDef_ptr;
 
   class OperationDef;
