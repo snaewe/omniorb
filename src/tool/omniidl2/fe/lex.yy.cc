@@ -2750,3 +2750,8 @@ idl_escape_reader(
 	break;
     }
 }
+#ifdef __VMS
+//  Some versions of DEC C++ for OpenVMS set the module name used by the
+//  librarian based on the last #line encountered.
+#line 2753 "lex_yy.cc"
+#endif
