@@ -1,3 +1,11 @@
+Wed Jun 28 14:18:05 BST 2000 sll
+================================
+
+- revert back to the original win32 registry path, i.e.
+  SOFTWARE\ORL\omniORB\2.0 to ensure backward compatibility.
+
+src/lib/omniORB2/orbcore/initFile.cc
+
 Wed Jun 28 12:50:18 BST 2000 sll
 ================================
 
