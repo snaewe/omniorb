@@ -1,3 +1,25 @@
+Tue Oct 10 16:03:03 BST 2000 djs
+================================
+
+- improved commenting
+
+idl/omniMessaging.idl
+src/lib/omniORB2/orbcore/Messaging.cc 
+
+- moved code from .h to .cc
+
+include/omniORB3/Messaging.h
+src/lib/omniORB2/orbcore/Messaging.cc 
+
+- AMI calldescriptor bug
+
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py
+
+- more tracing
+
+src/lib/omniORB2/orbcore/omniAMI.cc
+
+
 Fri Sep 29 00:16:51 BST 2000 djs
 ================================
 
