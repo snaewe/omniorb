@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.13.2.5  2000/11/03 19:12:05  sll
+  Use new marshalling functions for byte, octet and char. Use get_octet_array
+  instead of get_char_array and put_octet_array instead of put_char_array.
+
   Revision 1.13.2.4  2000/10/10 14:48:33  sll
   RequestCompleted() should not call inputMessageEnd if no response is
   expected.
@@ -271,7 +275,7 @@ GIOP_C::UnMarshallSystemException()
 
   CORBA::Char repoid[omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen];
 
-  pd_cdrStream->get_char_array(repoid, len);
+  pd_cdrStream->get_octet_array(repoid, len);
   CORBA::ULong m;
   CORBA::ULong s;
   m <<= *pd_cdrStream;

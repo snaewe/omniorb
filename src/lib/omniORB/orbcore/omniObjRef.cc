@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2000/11/03 19:12:07  sll
+  Use new marshalling functions for byte, octet and char. Use get_octet_array
+  instead of get_char_array and put_octet_array instead of put_char_array.
+
   Revision 1.2.2.4  2000/10/06 16:37:48  sll
   _invoke() can now cope with a call descriptor with no local call function.
 
@@ -544,7 +548,7 @@ omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
 
   if (!objref || objref->_is_nil()) {
     ::operator>>= ((CORBA::ULong)1,s);
-    ::operator>>= ((CORBA::Char) '\0',s);
+    s.marshalOctet('\0');
     ::operator>>= ((CORBA::ULong) 0,s);
     return;
   }
@@ -559,7 +563,7 @@ omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
   const char* repoId = ior->repositoryID;
   CORBA::ULong repoIdSize = strlen(repoId)+1;
   repoIdSize >>= s;
-  s.put_char_array((CORBA::Char*) repoId, repoIdSize);
+  s.put_octet_array((CORBA::Octet*) repoId, repoIdSize);
   (IOP::TaggedProfileList&)ior->iopProfiles >>= s;
 }
 
@@ -567,7 +571,7 @@ char*
 omniObjRef::_toString(omniObjRef* objref)
 {
   cdrMemoryStream buf(CORBA::ULong(0),1);
-  omni::myByteOrder >>= buf;
+  buf.marshalOctet(omni::myByteOrder);
   _marshal(objref,buf);
 
   // turn the encapsulation into a hex string with "IOR:" prepended
@@ -673,12 +677,11 @@ omniObjRef::_fromString(const char* str)
     }
     else
       OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
-    v >>= buf;
+    buf.marshalOctet(v);
   }
 
   buf.rewindInputPtr();
-  CORBA::Boolean b;
-  b <<= buf;
+  CORBA::Boolean b = buf.unmarshalBoolean();
   buf.setByteSwapFlag(b);
 
   return _unMarshal(CORBA::Object::_PD_repoId,buf);

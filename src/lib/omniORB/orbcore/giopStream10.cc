@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2000/11/03 19:12:06  sll
+  Use new marshalling functions for byte, octet and char. Use get_octet_array
+  instead of get_char_array and put_octet_array instead of put_char_array.
+
   Revision 1.1.4.1  2000/09/27 17:30:29  sll
   *** empty log message ***
 
@@ -1006,7 +1010,7 @@ private:
     r.requestID(vl);
 
     // response expected
-    vb <<= s;
+    vb = s.unmarshalBoolean();
     r.response_expected(vb);
     r.result_expected(1);
 
@@ -1016,7 +1020,7 @@ private:
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
     }
     r.keysize(vl);
-    s.get_char_array((CORBA::Char*)r.key(),vl);
+    s.get_octet_array(r.key(),vl);
 
     // operation
     vl <<= s;
@@ -1025,7 +1029,7 @@ private:
     }
     r.set_operation_size(vl);
     char* op = r.operation();
-    s.get_char_array((CORBA::Char*)op,vl);
+    s.get_octet_array((CORBA::Octet*)op,vl);
     op[vl-1] = '\0';
 
     // principal
@@ -1034,7 +1038,7 @@ private:
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
     }
     r.set_principal_size(vl);
-    s.get_char_array((CORBA::Char*)r.principal(), vl);
+    s.get_octet_array(r.principal(), vl);
   }
 
   //////////////////////////////////////////////////////////////////
@@ -1055,7 +1059,7 @@ private:
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
     }
     r.keysize(vl);
-    s.get_char_array((CORBA::Char*)r.key(),vl);
+    s.get_octet_array(r.key(),vl);
   }
 
   //////////////////////////////////////////////////////////////////
@@ -1167,14 +1171,14 @@ void giop_1_0_Impl::marshalRequestHeader::marshal(cdrStream& s)
 
   pd_request_id >>= s;
 
-  pd_response_expected >>= s;
+  s.marshalBoolean(pd_response_expected);
 
   // object key
   pd_ior->iiop.object_key >>= s;
 
   // operation
   operator>>= ((CORBA::ULong) pd_opsize, s);
-  s.put_char_array((CORBA::Char*) pd_op, pd_opsize);
+  s.put_octet_array((CORBA::Octet*) pd_op, pd_opsize);
 
   // principal
   operator>>= ((CORBA::ULong)0,s);

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2000/11/03 19:12:06  sll
+  Use new marshalling functions for byte, octet and char. Use get_octet_array
+  instead of get_char_array and put_octet_array instead of put_char_array.
+
   Revision 1.1.4.1  2000/09/27 17:30:28  sll
   *** empty log message ***
 
@@ -523,8 +527,8 @@ giopStream::giopStream(Strand* s) : pd_impl(giopStreamImpl::maxVersion()),
 //////////////////////////////////////////////////////////////////////////////
 
 void
-giopStream::get_char_array(CORBA::Char* b,int size,
-			   omni::alignment_t align)
+giopStream::get_octet_array(CORBA::Octet* b,int size,
+			    omni::alignment_t align)
 {
 #ifdef PARANOID
   if (pd_state == InputReplyHeader ||
@@ -678,9 +682,10 @@ giopStream::checkOutputOverrun(CORBA::ULong itemSize,
   return 1;
 }
 
+
 void
-giopStream::put_char_array(const CORBA::Char* b, int size,
-			   omni::alignment_t align)
+giopStream::put_octet_array(const CORBA::Octet* b, int size,
+			    omni::alignment_t align)
 {
 #ifdef PARANOID
   if (pd_state == OutputRequest ||
@@ -1563,7 +1568,7 @@ requestInfo::unmarshalIORAddressingInfo(cdrStream& s)
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
     }
     keysize(vl);
-    s.get_char_array((CORBA::Char*)key(),vl);
+    s.get_octet_array(key(),vl);
   }
   else {
     

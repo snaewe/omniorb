@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/11/03 19:12:07  sll
+  Use new marshalling functions for byte, octet and char. Use get_octet_array
+  instead of get_char_array and put_octet_array instead of put_char_array.
+
   Revision 1.2.2.2  2000/09/27 18:05:51  sll
   Use the new giop engine APIs to drive a remote call.
 
@@ -168,7 +172,7 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
       if (!s.checkInputOverrun(1,repoIdLen))
 	OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
       CORBA::String_var repoId(_CORBA_String_helper::alloc(repoIdLen - 1));
-      s.get_char_array((CORBA::Char*)(char*) repoId, repoIdLen);
+      s.get_octet_array((CORBA::Octet*)(char*) repoId, repoIdLen);
 
       call_desc.userException(giop_client, repoId);
       // Never get here - this must throw either a user exception
