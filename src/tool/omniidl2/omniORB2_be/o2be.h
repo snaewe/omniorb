@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.25  1999/06/03 17:11:36  sll
+ Make out_adptarg_name non-const in o2be_struct and o2be_union.
+
  Revision 1.24  1999/06/02 16:43:42  sll
  Added support for -F flag.
 
@@ -475,7 +478,7 @@ public:
   idl_bool isVariable() { return pd_isvar; }
   idl_bool nodefault() { return pd_nodefault; }
   idl_bool no_missing_disc_value();
-  const char* out_adptarg_name(AST_Decl* used_in) const;
+  const char* out_adptarg_name(AST_Decl* used_in);
 
 private:
   idl_bool pd_isvar;
@@ -533,11 +536,11 @@ public:
 
   idl_bool isVariable() { return pd_isvar; }
 
-  const char* out_adptarg_name(AST_Decl* used_in) const;
+  const char* out_adptarg_name(AST_Decl* used_in);
 
 private:
   idl_bool pd_isvar;
-  char* pd_out_adptarg_name;
+  char*    pd_out_adptarg_name;
 
   o2be_structure();
 
