@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2005/03/14 13:37:09  dgrisby
+  Reorder includes for compilers with pre-compiled headers.
+
   Revision 1.1.2.9  2002/09/09 22:11:51  dgrisby
   SSL transport cleanup even if certificates are wrong.
 
@@ -59,10 +62,10 @@
 
 */
 
+#include <omniORB4/CORBA.h>
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
 #include <objectAdapter.h>
 #include <omniORB4/sslContext.h>

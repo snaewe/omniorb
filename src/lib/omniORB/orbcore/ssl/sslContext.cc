@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2005/03/14 13:37:09  dgrisby
+  Reorder includes for compilers with pre-compiled headers.
+
   Revision 1.1.2.13  2004/02/11 15:44:54  dgrisby
   Hook to set SSL verify mode. Thanks Matthew Wood.
 
@@ -75,6 +78,8 @@
 
 */
 
+#include <omniORB4/CORBA.h>
+
 #include <stdlib.h>
 #ifndef __WIN32__
 #include <unistd.h>
@@ -82,7 +87,6 @@
 #include <process.h>
 #endif
 #include <sys/stat.h>
-#include <omniORB4/CORBA.h>
 #include <omniORB4/minorCode.h>
 #include <omniORB4/sslContext.h>
 #include <exceptiondefs.h>
