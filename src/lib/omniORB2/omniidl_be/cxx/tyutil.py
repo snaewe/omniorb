@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14  1999/12/09 20:41:25  djs
+# Now runs typecode and any generator
+#
 # Revision 1.13  1999/12/01 17:04:47  djs
 # Added utility function useful for Typecode declarations
 #
@@ -151,6 +154,19 @@ def deref(type):
     assert isinstance(type, idltype.Type)
     while type.kind() == idltype.tk_alias:
         type = type.decl().alias().aliasType()
+    return type
+
+# dereference type but keep dimensions (ie don't deref across
+# array declarators)
+def derefKeepDims(type):
+    assert isinstance(type, idltype.Type)
+
+    while tyutil.isTypedef(type):
+        decl = type.decl()
+        if decl.sizes() != []:
+            return type
+        type = decl.alias().aliasType()
+
     return type
 
 # ------------------------------------------------------------------
@@ -350,13 +366,13 @@ def typeDims(type):
     return []
 
 # ------------------------------------------------------------------
-
+def escapeChars(text):
+    # escape all escapes
+    text = re.sub(r"_", "__", text)
+    return re.sub(r"\W", "_", text)
+    
 def guardName(scopedName):
-    def escapeNonAlphanumChars(text):
-        # escape all escapes
-        text = re.sub(r"_", "__", text)
-        return re.sub(r"\W", "_", text)
-    scopedName = map(escapeNonAlphanumChars, scopedName)
+    scopedName = map(escapeChars, scopedName)
 
     # all but the identifier have _m appended (signifies a module?)
     scope = map(lambda x: x + "_m", scopedName[0:-1])

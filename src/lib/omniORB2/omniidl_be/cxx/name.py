@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/12/09 20:41:24  djs
+# Now runs typecode and any generator
+#
 # Revision 1.2  1999/11/23 18:49:25  djs
 # Lots of fixes, especially marshalling code
 # Added todo list to keep track of issues
@@ -43,6 +46,19 @@
 from omniidl import idltype, idlutil
 
 from omniidl.be.cxx import tyutil, config
+
+
+def prefixName(scopedName, prefix):
+    env = Environment()
+    prefix_scopedName = tyutil.scope(scopedName) + [prefix +\
+                                                    tyutil.name(scopedName)]
+    return env.nameToString(prefix_scopedName)
+
+def suffixName(scopedName, suffix):
+    env = Environment()
+    suffix_scopedName = tyutil.scope(scopedName) + [tyutil.name(scopedName) +\
+                                                    suffix]
+    return env.nameToString(suffix_scopedName)
 
 
 class Environment:
