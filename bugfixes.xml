@@ -8,6 +8,16 @@
 
 <buglist>
 
+<bug id="2" date="Tue Aug 22 10:59:21 BST 2000" user="dpg1">
+
+  <summary>Missing make rules for GCC on Solaris</summary>
+  <reported>Mark Borges</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-08/0170.html"/>
+  <text>Make rules for the omniDynamic shared library were missing, so
+  the new libCOS failed to link.</text>
+</bug>
+
+
 <bug id="1" date="Mon Aug 21 10:11:51 BST 2000" user="dpg1">
 
   <summary>Typo in omniidl.idltype.Declared.name()</summary>

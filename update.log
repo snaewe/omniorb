@@ -1,3 +1,12 @@
+Tue Aug 22 10:59:21 BST 2000 dpg1
+=================================
+
+- Make rules to build the shared omniDynamic library were missing for
+  Solaris GCC.
+
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+
+
 Mon Aug 21 10:26:45 BST 2000 dpg1
 =================================
 
