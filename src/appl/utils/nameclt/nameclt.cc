@@ -1,6 +1,6 @@
 #include <iostream.h>
 #include <stdlib.h>
-#include "Naming.hh"
+#include "omniORB2/Naming.hh"
 
 static void
 usage()
@@ -374,7 +374,7 @@ main(int argc, char **argv)
     context->list(first_n, bl, bi);
 
     do {
-      for (int i = 0; i < bl->length(); i++) {
+      for (unsigned int i = 0; i < bl->length(); i++) {
 	cerr << "(" << (*bl)[i].binding_name[0].id << ","
 	     << (*bl)[i].binding_name[0].kind << ") binding type "
 	     << (((*bl)[i].binding_type == CosNaming::nobject) ?
