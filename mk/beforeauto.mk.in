@@ -799,6 +799,7 @@ endif
 ###################
 ifdef HPUX
 IMPORT_CPPFLAGS += -D__hpux__
+INSTLIBFLAGS     = -m 0755
 
 ifeq (@OSVERSION@,10)
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=4
