@@ -96,7 +96,8 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 // Forward declaration of active iterator for UTL_Scope
 class UTL_ScopeActiveIterator;
 
-class	UTL_Scope : public virtual COMMON_Base
+class	UTL_Scope
+           COMMON_BASE_HACK
 {
 public:
   // Enum to denote the kind of iteration desired

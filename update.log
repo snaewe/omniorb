@@ -1,3 +1,15 @@
+Mon Sep 20 16:31:27 BST 1999 sll
+================================
+
+- make the source compile with SUN C++ 5.0 without the -g flag
+- (omniidl2 now works but all examples core dump when an exception is raised
+   in the runtime)
+
+src/lib/omniORB2/dynamic/dynException.cc
+src/tool/omniidl2/include/ast_decl.hh
+src/tool/omniidl2/include/utl_scope.hh
+
+
 Mon Sep 20 11:32:34 BST 1999 sll
 ================================
 
