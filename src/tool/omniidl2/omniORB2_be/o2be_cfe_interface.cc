@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.27  1999/06/03 17:12:23  sll
+  New flag -c.
+
   Revision 1.26  1999/06/02 16:43:32  sll
   New flag -F.
 
@@ -268,6 +271,7 @@ usage()
   std::cerr << GTDEVEL(" -V\t\t\tprints version info then exits\n");
   std::cerr << GTDEVEL(" -Y <cpp location>\t\tdefines location of preprocessor\n");
   std::cerr << GTDEVEL(" -a\t\t\tgenerates code required by type any\n");
+  std::cerr << GTDEVEL(" -c\t\t\tmap C++ reserved words with prefix _\n");
   std::cerr << GTDEVEL(" -h suffix\t\tspecify suffix for the generated header file(s)\n");
   std::cerr << GTDEVEL(" -l\t\t\tgenerates code required by LifeCycle service\n");
   std::cerr << GTDEVEL(" -m\t\t\tallow modules to be reopened\n");
@@ -319,7 +323,7 @@ BE_parse_args(int argc, char **argv)
 #endif
 
   idl_global->set_prog_name(argv[0]);
-  while ((c = getopt(argc,argv,"D:EFI:U:VY:uvwh:s:lamt")) != EOF)
+  while ((c = getopt(argc,argv,"D:EFI:U:VY:uvwh:s:lamtc")) != EOF)
     {
       switch (c) 
 	{
@@ -395,6 +399,11 @@ BE_parse_args(int argc, char **argv)
 	case 't':
 	  idl_global->set_compile_flags(idl_global->compile_flags() |
 					IDL_BE_GENERATE_TIE);
+	  break;
+
+	case 'c':
+	  idl_global->set_compile_flags(idl_global->compile_flags() |
+					IDL_BE_2_1_COMPATIBLE);
 	  break;
 
 	case '?':
