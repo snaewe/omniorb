@@ -296,10 +296,10 @@ AC_DEFUN([OMNI_DISABLE_THREAD_TRACING],
 [AC_CACHE_CHECK(whether to trace threads and locking,
 omni_cv_enable_thread_tracing,
 [AC_ARG_ENABLE(thread-tracing,
-               AC_HELP_STRING([--disable-thread-tracing],
-                  [disable thread and mutex tracing (default enable-thread-tracing)]),
+               AC_HELP_STRING([--enable-thread-tracing],
+                  [enable thread and mutex tracing (default disable-thread-tracing)]),
                omni_cv_enable_thread_tracing=$enableval,
-               omni_cv_enable_thread_tracing=yes)
+               omni_cv_enable_thread_tracing=no)
 ])
 if test "$omni_cv_enable_thread_tracing" = "yes"; then
   AC_DEFINE(OMNIORB_ENABLE_LOCK_TRACES,,[define if you want mutexes to be traced])

@@ -2,13 +2,13 @@ READ ME FIRST!
 
 This is version 4.0 of omniORB.
 
-omniORB is copyright AT&T Laboratories Cambridge and others. It is
-free software. The programs in omniORB are distributed under the GNU
-General Public Licence as published by the Free Software Foundation.
-See the file COPYING for copying permission of these programs. The
-libraries in omniORB are distributed under the GNU Library General
-Public Licence. See the file COPYING.LIB for copying permission of
-these libraries.
+omniORB is copyright AT&T Laboratories Cambridge, Apasphere Ltd and
+others. It is free software. The programs in omniORB are distributed
+under the GNU General Public Licence as published by the Free Software
+Foundation.  See the file COPYING for copying permission of these
+programs. The libraries in omniORB are distributed under the GNU
+Library General Public Licence. See the file COPYING.LIB for copying
+permission of these libraries.
 
 We impose no restriction on the use of the IDL compiler output. The
 stub code produced by the IDL compiler is not considered a derived
