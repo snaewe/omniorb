@@ -1,9 +1,17 @@
-RELEASE NOTES for omniORB 4.0.1
+RELEASE NOTES for omniORB 4.0.2
 ===============================
 
-This is omniORB 4.0.1. It is a stable release.
+This is omniORB 4.0.2. It is a stable release.
 
 See README.unix or README.win32 for building instructions.
+
+
+New features since omniORB 4.0.1
+--------------------------------
+
+ - Bug fixes.
+ - Use of standard iostreams in omniNames etc., if available.
+ - Performance improvements.
 
 
 New features since omniORB 4.0.0

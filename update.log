@@ -1,3 +1,34 @@
+Wed Aug  6 23:08:48 BST 2003 dgrisby
+====================================
+
+- Preparation for the 4.0.2 release.
+
+README.FIRST
+README.win32
+ReleaseNotes_4.0.1.txt   -- deleted
+ReleaseNotes_4.0.2.txt   -- new
+THIS_IS_OMNIORB_4_0_1    -- deleted
+THIS_IS_OMNIORB_4_0_2    -- new
+configure
+configure.ac
+contrib/RPMs/omniORB.spec
+mk/beforeauto.mk.in
+mk/rtems.mk
+mk/unix.mk
+mk/vxWorks.mk
+mk/win32.mk
+src/examples/anyExample/dir.mak
+src/examples/bidir/dir.mak
+src/examples/boa/dir.mak
+src/examples/call_back/dir.mak
+src/examples/dii/dir.mak
+src/examples/dsi/dir.mak
+src/examples/echo/dir.mak
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/servant_manager/dir.mak
+
+
 Wed Aug  6 21:40:59 BST 2003 dgrisby
 ====================================
 

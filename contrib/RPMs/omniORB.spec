@@ -1,4 +1,4 @@
-%define version       4.0.2pre1
+%define version       4.0.2
 %define release       1
 %define name          omniORB
 %define lib_major     4
@@ -172,6 +172,9 @@ cp sample.cfg $RPM_BUILD_ROOT/etc/omniORB.cfg
 
 
 %changelog
+* Wed Aug  6 2003 Duncan Grisby <dgrisby@apasphere.com> 4.0.2
+- Bump version number.
+
 * Tue Jun 10 2003 Duncan Grisby <dgrisby@apasphere.com> 4.0.2pre1
 - Fix some text, bump version number, add init script, minor tweaks.
 

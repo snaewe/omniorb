@@ -13,6 +13,9 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
+# Revision 1.2.4.5  2003/08/06 22:12:22  dgrisby
+# Preparation for the 4.0.2 release.
+#
 # Revision 1.2.4.4  2003/03/11 15:54:47  dgrisby
 # Bump version number.
 #
@@ -234,7 +237,7 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 #
 CorbaImplementation = OMNIORB
 
-OMNIORB_VERSION = 4.0.1
+OMNIORB_VERSION = 4.0.2
 OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
