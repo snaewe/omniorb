@@ -270,3 +270,11 @@ def copy_to_OUT(pType, src, dest):
     out_type = operation_argument(pType, types.RET, src)
     return dest + " = " + out_type + ";"
 
+def pointer(src, dst):
+    op = ""
+    if src:
+        if dst: return ""   # from pointer to pointer
+        else:   return "*"  # from pointer to non-pointer
+    else:
+        if dst: return "&"  # from non-pointer to pointer
+        else:   return ""   # from non-pointer to non-pointer

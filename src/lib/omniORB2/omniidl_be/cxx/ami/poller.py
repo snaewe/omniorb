@@ -46,58 +46,27 @@ import poller
 class_t = """\
 // Type-specific AMI Poller valuetype
 class @name@: public Messaging::Poller{
-protected:
-  @target_ptr@ pd_target;
 public:
-  @exceptionholder@ *exholder;
+  @exceptionholder@ *_exholder;
 
 public:
-  @name@(@target_ptr@);
-  virtual ~@name@();
+  @name@(@target_ptr@ _target, const char* _name):
+      Messaging::Poller(_target, _name), _exholder(NULL){ }
+  virtual ~@name@(){ delete _exholder; }
 
   @methods@
-
-  CORBA::Object_ptr operation_target();
-  virtual const char* operation_name() = 0;
-  Messaging::ReplyHandler_ptr associated_handler();
-  void associated_handler(Messaging::ReplyHandler_ptr);
 };
 """
 
-operation_name_t = """\
-const char *operation_name(){
-    return "@op_name@";
-}
-"""
-
-impl_t = """\
-@fqname@::@name@(@target_ptr@ target): pd_target(@target@::_duplicate(target)),
-                                     exholder(NULL)
-{
-  pd_associated_handler = Messaging::ReplyHandler::_nil();
-}
-
-@fqname@::~@name@()
-{
-  CORBA::release(pd_associated_handler);
-  CORBA::release(pd_target);
-  delete exholder;
-}
-
-CORBA::Object_ptr @fqname@::operation_target()
-{
-  return @target@::_duplicate(pd_target);
-}
-"""
-
+# This class is only visible inside the SK.cc file, so it doesn't matter
+# that all of it's members are public.
 specific_t = """\
 // Operation specific AMI Poller valuetype
 class @name@: public @inherits@{
-protected:
 public:
   @arg_storage@
 
-  @name@(@target_ptr@ _target): @inherits@(_target){ }
+  @name@(@target_ptr@ _target): @inherits@(_target, "@opname@"){ }
   @methods@
 };
 """
@@ -105,11 +74,11 @@ public:
 operation_t = """\
 void @op@(@args@) 
 {
-  if (!is_ready(timeout)) throw CORBA::TIMEOUT();
-  if (exholder != NULL) exholder->@raise_fn@();
-  {
-    @return_arguments@
-  }
+  _NP_do_timeout(timeout);
+  _NP_reply_obtained();
+  if (_exholder) _exholder->@raise_fn@();
+
+  @return_arguments@
 }
 """
 
@@ -138,7 +107,7 @@ class Poller(iface.Class):
             rType = types.Type(callable.returnType())
             if not(rType.void()):
                 args.append(rType.op(types.OUT, self._environment) +\
-                            " ami_return_val")
+                            " _ami_return_val")
             for parameter in callable.parameters():
                 if parameter.is_out():
                     # in the signature it's treated like an
@@ -160,16 +129,7 @@ class Poller(iface.Class):
                    methods = string.join(methods, "\n"))
 
     def cc(self, stream):
-        # Constructor and destructor
-        target = self.interface().name()
-        stream.out(impl_t,
-                   fqname = self.name().fullyQualify(),
-                   name = self.name().simple(),
-                   target_ptr = target.simple() + "_ptr",
-                   target = target.simple())
-
         return
-    
 
 class PollerOpSpecific(iface.Class):
     def __init__(self, interface, callable):
@@ -192,20 +152,19 @@ class PollerOpSpecific(iface.Class):
         
         rType = types.Type(self._callable.returnType())
         if not(rType.void()):
-            arg_storage.out(rType._var() + " ami_return_val;")
-            copy.out(ami.copy_to_OUT(rType, "this->ami_return_val",
-                                     "ami_return_val"))
+            arg_storage.out(rType._var() + " _ami_return_val;")
+            copy.out(ami.copy_to_OUT(rType, "this->_ami_return_val",
+                                     "_ami_return_val"))
             args.append(rType.op(types.OUT) +\
-                        " ami_return_val")
+                        " _ami_return_val")
 
         for parameter in self._callable.parameters():
             if parameter.is_out():
                 pType = types.Type(parameter.paramType())
-                id = parameter.identifier()
-                arg_storage.out(pType._var() + " " +  id + ";")
-                copy.out(ami.copy_to_OUT(pType, "this->" + id, id))
-                args.append(pType.op(types.OUT) + " " +\
-                            parameter.identifier())
+                ident = id.mapID(parameter.identifier())
+                arg_storage.out(pType._var() + " _" + ident + ";")
+                copy.out(ami.copy_to_OUT(pType, "this->_" + ident, ident))
+                args.append(pType.op(types.OUT) + " " + ident)
 
         # the specific operation
         methods.out(operation_t,
@@ -214,9 +173,6 @@ class PollerOpSpecific(iface.Class):
                     args = string.join(args, ", "),
                     return_arguments = copy)
         
-        # the operation name
-        methods.out(operation_name_t,
-                    op_name = self._callable.operation_name())
 
         poller_descriptor = ami.poller_descriptor(self.interface()._node,
                                                   self._callable)
@@ -226,7 +182,8 @@ class PollerOpSpecific(iface.Class):
                    target_ptr = self.interface().name().fullyQualify()+ "_ptr",
                    inherits = self._poller.fullyQualify(),
                    arg_storage = arg_storage,
-                   methods = methods)
+                   methods = methods,
+                   opname = self._callable.operation_name())
 
 
 # Poller ReplyHandler internal servant ###############################
@@ -236,12 +193,16 @@ class PollerOpSpecific(iface.Class):
 # when things happen.
 ReplyHandler_t = """\
 // Poller valuetype contains an internal callback replyhandler.
-class @servant@: public @poa_replyhandler@,
-                                 public PortableServer::RefCountServantBase{
+class @servant@:
+  public @poa_replyhandler@,
+  public PortableServer::RefCountServantBase{
 protected:
-  @poller_base@ *pd_poller;
+  @poller_base@ *_PD_poller;
+  @replyhandler@_ptr _NP_narrow_handler(){
+    return @replyhandler@::_narrow(_PD_poller->associated_handler());
+  }
 public:
-  @servant@(@poller_base@ *poller): pd_poller(poller) { }
+  @servant@(@poller_base@ *poller): _PD_poller(poller) { }
   virtual ~@servant@() { }
 
   @methods@
@@ -250,38 +211,23 @@ public:
 
 ReplyHandler_op_t = """\
 void @op@(@args@){
-  omni_mutex_lock lock(pd_poller->pd_state_lock);
+  @replyhandler@_ptr _handler = _NP_narrow_handler();
+  if (!_handler->_is_nil()) return _handler->@op@(@arglist@);
 
-  // grab a ref to the type specific callback
-  if (pd_poller->pd_associated_handler){
-    @replyhandler@_ptr realhandler = @replyhandler@::_narrow
-      (pd_poller->pd_associated_handler);
-    if (!realhandler->_is_nil()){
-      realhandler->@op@(@arglist@);
-      return;
-    }
-  }
-  @ts_poller@ *poller = (@ts_poller@*)pd_poller;
+  @ts_poller@ *poller = (@ts_poller@*)_PD_poller;
   @copy_args_to_poller@
-  pd_poller->reply_received = 1;
-  pd_poller->pd_state_cond.signal();
+  _PD_poller->_NP_reply_received();
 }
 """
 
 ReplyHandler_op_excep_t = """\
 void @op@_excep(const struct @exceptionholder@ &excep_holder){
-  omni_mutex_lock lock(pd_poller->pd_state_lock);
-    
-  // grab a ref to the type specific callback
-  @replyhandler@_ptr realhandler = @replyhandler@::_narrow
-    (pd_poller->pd_associated_handler);
-  if (!realhandler->_is_nil()){
-    realhandler->@op@_excep(excep_holder);
-    return;
-  }
-  pd_poller->exholder = new @exceptionholder@(excep_holder);
-  pd_poller->reply_received = 1;
-  pd_poller->pd_state_cond.signal();
+  @replyhandler@_ptr _handler = _NP_narrow_handler();
+  if (!_handler->_is_nil()) return _handler->@op@_excep(excep_holder);
+
+  @ts_poller@ *poller = (@ts_poller@*)_PD_poller;
+  poller->_exholder = new @exceptionholder@(excep_holder);
+  poller->_NP_reply_received();
 }
 """
 
@@ -306,10 +252,10 @@ class Poller_internal_servant(iface.Class):
             args = []
             arglist = []
             if not(rType.void()):
-                copy.out(rType.copy("ami_return_val",
-                                    "poller->ami_return_val"))
-                args.append(rType.op(types.IN) + " ami_return_val")
-                arglist.append("ami_return_val")
+                copy.out(rType.copy("_ami_return_val",
+                                    "poller->_ami_return_val"))
+                args.append(rType.op(types.IN) + " _ami_return_val")
+                arglist.append("_ami_return_val")
                 
 
             for parameter in callable.parameters():
@@ -334,6 +280,7 @@ class Poller_internal_servant(iface.Class):
                         copy_args_to_poller = copy)
             methods.out(ReplyHandler_op_excep_t,
                         op = callable.operation_name(),
+                        ts_poller = descriptor,
                         exceptionholder = self._ehname.fullyQualify(),
                         replyhandler = self._rhname.fullyQualify())
 
@@ -343,6 +290,7 @@ class Poller_internal_servant(iface.Class):
                    poller_base = self.name().fullyQualify(),
                    servant = descriptor,
                    poa_replyhandler = "POA_" + self._rhname.fullyQualify(),
+                   replyhandler = self._rhname.fullyQualify(),
                    methods = methods)
                    
 

@@ -71,8 +71,8 @@ void @fqname@::_NP_unmarshal_sequence_to_exception(){
 
   // turn the sequence<octet> into a MemBufferedStream
   MemBufferedStream stream;
-  stream.put_char_array(marshaled_exception.get_buffer(), 
-			marshaled_exception.length());
+  stream.put_char_array(pd_marshaled_exception.get_buffer(), 
+			pd_marshaled_exception.length());
   {
     CORBA::ULong repoIdLen;
     repoIdLen <<= stream;
