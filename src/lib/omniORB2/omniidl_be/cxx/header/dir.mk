@@ -15,6 +15,9 @@ export:: opers.py
 export:: poa.py
 	@(file="poa.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: tie.py
+	@(file="tie.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
 export:: forward.py
 	@(file="forward.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
