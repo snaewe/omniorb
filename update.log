@@ -1,3 +1,11 @@
+Fri Jan  9 17:11:45 GMT 1998 sll
+================================
+
+- Debug version of omniORB2  DLLs now link with debug version of omnithread dll.
+
+src/lib/omniORB2/sharedlib/dir.mk
+
+
 Fri Jan  9 16:15:03 GMT 1998 bjh
 ================================
 
