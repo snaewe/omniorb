@@ -1,3 +1,14 @@
+Wed Jul 16 15:14:50 BST 2003 dgrisby
+====================================
+
+- Speed up oneway handling a little. More tracing for split messages.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStream.cc
+
+
 Thu Jul  3 16:52:07 BST 2003 dgrisby
 ====================================
 

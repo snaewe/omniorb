@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.21  2003/07/16 14:22:38  dgrisby
+  Speed up oneway handling a little. More tracing for split messages.
+
   Revision 1.1.4.20  2003/01/22 11:40:12  dgrisby
   Correct serverSendException interceptor use.
 
@@ -453,8 +456,6 @@ giopImpl12::inputNewServerMessage(giopStream* g) {
 
   OMNIORB_ASSERT(g->pd_currentInputBuffer == 0);
 
- again:
-
   g->pd_currentInputBuffer = g->inputMessage();
 
   unsigned char* hdr = (unsigned char*)g->pd_currentInputBuffer + 
@@ -485,7 +486,7 @@ giopImpl12::inputNewServerMessage(giopStream* g) {
     break;
   }
 
-  // reach here if the message is destine to some other call in progress.
+  // reach here if the message is destined to some other call in progress.
   giopStream_Buffer* p = g->pd_currentInputBuffer;
   g->pd_currentInputBuffer = 0;
   inputQueueMessage(g,p);

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.25  2003/07/16 14:22:38  dgrisby
+  Speed up oneway handling a little. More tracing for split messages.
+
   Revision 1.1.4.24  2002/11/26 16:54:34  dgrisby
   Fix exception interception.
 
@@ -623,7 +626,10 @@ GIOP_S::SendReply() {
 
   OMNIORB_ASSERT(pd_state == WaitingForReply);
 
-  if (!response_expected()) throw terminateProcessing();
+  if (!response_expected()) {
+    pd_state = ReplyCompleted;
+    return;
+  }
 
   pd_service_contexts.length(0);
 
