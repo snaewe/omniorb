@@ -11,6 +11,9 @@
 
 /*
   $Log$
+  Revision 1.4  1997/01/23 18:03:49  sll
+  Fixed bug in marshalling of double. The alignment should be 8.
+
   Revision 1.3  1997/01/23 14:59:27  sll
   Now included template marshalling code for sequence template.
 
@@ -165,7 +168,7 @@ public:
   }
 
   friend inline void operator>>= (const _CORBA_Double a,NetBufferedStream &s) {
-    MARSHAL(s,_CORBA_Double,omniORB::ALIGN_4,a);
+    MARSHAL(s,_CORBA_Double,omniORB::ALIGN_8,a);
   }
 
   friend inline void operator<<= (_CORBA_Double &a,NetBufferedStream &s) {
@@ -420,7 +423,7 @@ public:
   }
 
   friend inline void operator>>= (const _CORBA_Double a,MemBufferedStream &s) {
-    MARSHAL(s,_CORBA_Double,omniORB::ALIGN_4,a);
+    MARSHAL(s,_CORBA_Double,omniORB::ALIGN_8,a);
   }
 
   friend inline void operator<<= (_CORBA_Double &a,MemBufferedStream &s) {
