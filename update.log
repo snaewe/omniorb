@@ -1,3 +1,11 @@
+Wed Jul 12 14:18:46 BST 2000 sll
+================================
+
+- Documented IRIX CPP macro for pthread
+
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+
 Wed Jul 12 14:03:17 BST 2000 dpg1
 =================================
 
