@@ -19,16 +19,21 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.22.2.10  2001/07/13 15:27:42  sll
+  Support for the thread-pool as well as the thread-per-connection policy
+  Support for serving multiple incoming calls on the same connection
+  simultaneously.
+
   Revision 1.22.2.9  2001/06/20 18:35:17  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -54,8 +59,14 @@
 OMNI_NAMESPACE_BEGIN(omni)
 
 ////////////////////////////////////////////////////////////////////////////
-giopServer::giopServer() : pd_state(IDLE), pd_cond(&pd_lock)
+  giopServer::giopServer() : pd_state(IDLE), pd_nconnections(0),
+			     pd_cond(&pd_lock), pd_n_temporary_workers(0)
 {
+  pd_thread_per_connection = omniORB::threadPerConnectionPolicy;
+  pd_connectionState = new connectionState*[connectionState::hashsize];
+  for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
+    pd_connectionState[i] = 0;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -72,7 +83,7 @@ giopServer::instantiate(const char* uri,
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,0);
   omni_tracedmutex_lock sync(pd_lock);
-    
+
   ensureNotInFlux();
 
   if (!no_listen) {
@@ -81,7 +92,7 @@ giopServer::instantiate(const char* uri,
     if (!ept) return 0;
 
     OMNIORB_ASSERT(pd_state != ZOMBIE);
-    
+
     if (ept->Bind()) {
       pd_endpoints.push_back(ept);
       if (pd_state == ACTIVE) activate();
@@ -161,7 +172,7 @@ giopServer::remove()
   case IDLE:
     {
       pd_state = ZOMBIE;
-    } 
+    }
     break;
   default:
     return;
@@ -169,7 +180,7 @@ giopServer::remove()
 
   giopEndpointList::iterator i;
   i    = pd_endpoints.begin();
-  
+
   while (i != pd_endpoints.end()) {
     (*i)->Shutdown();
     delete *i;
@@ -214,18 +225,20 @@ giopServer::deactivate()
   // Caller is holding pd_lock
 
   OMNIORB_ASSERT(pd_state == ACTIVE);
-  
+
   pd_state = INFLUX;
 
  again:
   CORBA::Boolean waitforcompletion = 0;
   {
-    Link* p = pd_workers.next;
-    if (p != &pd_workers) waitforcompletion = 1;
-
-    for (; p != &pd_workers; p = p->next) {
-      ((giopWorker*)p)->terminate();
+    for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
+      connectionState** head = &(pd_connectionState[i]);
+      while (*head) {
+	(*head)->connection->Shutdown();
+	head = &((*head)->next);
+      }
     }
+    if (pd_nconnections) waitforcompletion = 1;
   }
   {
     Link* p = pd_rendezvousers.next;
@@ -265,6 +278,117 @@ giopServer::ensureNotInFlux()
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
+CORBA::ULong giopServer::connectionState::hashsize = 103;
+
+////////////////////////////////////////////////////////////////////////////
+giopServer::
+connectionState::connectionState(giopConnection* c,giopStrand* s) :
+  connection(c), strand(s), next(0)
+{
+  omni_tracedmutex_lock sync(*omniTransportLock);
+  c->incrRefCount();
+}
+
+////////////////////////////////////////////////////////////////////////////
+giopServer::
+connectionState::~connectionState()
+{
+  OMNIORB_ASSERT(Link::is_empty(workers));
+  omni_tracedmutex_lock sync(*omniTransportLock);
+  strand->deleteStrandAndConnection();
+}
+
+////////////////////////////////////////////////////////////////////////////
+giopServer::connectionState*
+giopServer::csLocate(giopConnection* conn)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,1);
+
+  connectionState** head = &(pd_connectionState[((omni::ptr_arith_t)conn)%
+						connectionState::hashsize]);
+  while (*head) {
+    if ((*head)->connection == conn)
+      break;
+    else {
+      head = &((*head)->next);
+    }
+  }
+  return *head;
+}
+
+////////////////////////////////////////////////////////////////////////////
+giopServer::connectionState*
+giopServer::csRemove(giopConnection* conn)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,1);
+
+  connectionState* cs = 0;
+
+  connectionState** head = &(pd_connectionState[((omni::ptr_arith_t)conn)%
+						connectionState::hashsize]);
+  while (*head) {
+    if ((*head)->connection == conn) {
+      cs = *head;
+      *head = cs->next;
+      pd_nconnections--;
+      if (omniORB::threadPerConnectionPolicy) {
+	// Check the number of connection and decide if we need to
+	// re-enable the one thread per connection policy that has
+	// been temporarily suspended.
+	if (!pd_thread_per_connection &&
+	    pd_nconnections <= omniORB::threadPerConnectionLowerLimit) {
+	  pd_thread_per_connection = 1;
+	}
+      }
+      break;
+    }
+    else {
+      head = &((*head)->next);
+    }
+  }
+  return cs;
+}
+
+////////////////////////////////////////////////////////////////////////////
+giopServer::connectionState*
+giopServer::csInsert(giopConnection* conn)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,1);
+  
+
+  giopStrand* s = new giopStrand(conn,this);
+  {
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
+    omni_tracedmutex_lock sync(*omniTransportLock);
+    s->StrandList::insert(giopStrand::passive);
+  }
+
+  connectionState* cs =  new connectionState(conn,s);
+
+  connectionState** head = &(pd_connectionState[((omni::ptr_arith_t)conn)%
+						connectionState::hashsize]);
+  cs->next = *head;
+  *head = cs;
+
+  pd_nconnections++;
+
+  if (omniORB::threadPerConnectionPolicy) {
+    // Check the number of connection and decide if we need to
+    // turn off the one thread per connection policy temporarily.
+    if (pd_thread_per_connection && 
+	pd_nconnections >= omniORB::threadPerConnectionUpperLimit) {
+      pd_thread_per_connection = 0;
+    }
+  }
+
+  conn->pd_has_dedicated_thread = pd_thread_per_connection;
+
+  return cs;
+}
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
 ////////////////////////////////////////////////////////////////////////////
 void
 giopServer::notifyRzNewConnection(giopRendezvouser* r, giopConnection* conn)
@@ -275,29 +399,35 @@ giopServer::notifyRzNewConnection(giopRendezvouser* r, giopConnection* conn)
   switch (pd_state) {
   case ACTIVE:
     {
-      giopStrand* s = new giopStrand(conn);
-      {
-	ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
-	omni_tracedmutex_lock sync(*omniTransportLock);
-	s->StrandList::insert(giopStrand::passive);
-      }
-      giopWorker* task = new giopWorker(s,this);
-      if (!orbAsyncInvoker->insert(task)) {
-	// Cannot start serving this new connection.
-	omniORB::logger log;
-	log << "Cannot create a worker for this endpoint: "
-	    << conn->myaddress()
-	    << " from " 
-	    << conn->peeraddress()
-	    << "\n";
-	delete task;
+      connectionState* cs = csInsert(conn);
 
-	omni_tracedmutex_lock sync(*omniTransportLock);
-	s->StrandList::remove();
-	delete s;
-	throw outOfResource();
+      if (conn->pd_has_dedicated_thread) {
+	giopWorker* task = new giopWorker(cs->strand,this,
+					  !conn->pd_has_dedicated_thread);
+	if (!orbAsyncInvoker->insert(task)) {
+	  // Cannot start serving this new connection.
+	  omniORB::logger log;
+	  log << "Cannot create a worker for this endpoint: "
+	      << conn->myaddress()
+	      << " from "
+	      << conn->peeraddress()
+	      << "\n";
+	  delete task;
+	  {
+	    omni_tracedmutex_lock sync(*omniTransportLock);
+	    cs->strand->safeDelete();
+	  }
+	  csRemove(conn);
+	  delete cs;
+
+	  throw outOfResource();
+	}
+	task->insert(cs->workers);
+	conn->pd_n_workers++;
       }
-      task->insert(pd_workers);
+      else {
+	conn->setSelectable(1);
+      }
       break;
     }
   default:
@@ -326,7 +456,7 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
   r->remove();
 
   delete r;
-  
+
   if (exit_on_error) {
     omniORB::logger log;
     log << "Unrecoverable error for this endpoint: ";
@@ -342,43 +472,241 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
   }
 
   if (pd_state == INFLUX) {
-    if (Link::is_empty(pd_rendezvousers) && Link::is_empty(pd_workers)) {
+    if (Link::is_empty(pd_rendezvousers) && pd_nconnections == 0) {
       pd_cond.broadcast();
     }
   }
 }
 
+////////////////////////////////////////////////////////////////////////////
+void
+giopServer::notifyRzReadable(giopConnection* conn,
+			     CORBA::Boolean force_create)
+{
+  // Theory of operation: read the state diagrams at the end of this file.
+
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,0);
+  omni_tracedmutex_lock sync(pd_lock);
+
+  switch (pd_state) {
+  case ACTIVE:
+    {
+      if (conn->pd_dying) return;
+
+      if (!force_create &&
+	  conn->pd_n_workers >= (int)omniORB::maxServerThreadPerConnection) {
+	conn->pd_has_hit_n_workers_limit = 1;
+	return;
+      }
+
+      connectionState* cs = csLocate(conn);
+      if (!cs) return;
+
+      giopWorker* task = new giopWorker(cs->strand,this,1);
+      if (!orbAsyncInvoker->insert(task)) {
+	// Cannot start serving this new connection.
+	// Should never happen
+	OMNIORB_ASSERT(0);
+      }
+      task->insert(cs->workers);
+      conn->pd_n_workers++;
+      pd_n_temporary_workers++;
+    }
+  default:
+    break;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////
+void
+giopServer::notifyCallFullyBuffered(giopConnection* conn)
+{
+  notifyRzReadable(conn,1);
+}
+
+////////////////////////////////////////////////////////////////////////////
+void
+giopServer::removeConnectionAndWorker(giopWorker* w) {
+
+  giopConnection* conn = w->strand()->connection;
+
+  conn->pd_dying = 1; // From now on, the giopServer will not create
+                      // any more workers to serve this connection.
+
+  connectionState* cs = csLocate(conn);
+  // We remove the lock on pd_lock before calling the connection's
+  // clearSelectable(). This is necessary so that a simultaneous
+  // callback from the Rendezvouser thread will have a chance to
+  // look at the connectionState table.
+  pd_lock.unlock();
+
+  conn->clearSelectable();
+
+  // Once we reach here, it is certain that the rendezvouser thread
+  // would not take any interest in this connection anymore. It
+  // is therefore safe to delete this record.
+  pd_lock.lock();
+
+  if (w->singleshot()) pd_n_temporary_workers--;
+
+  w->remove();
+  delete w;
+
+  conn->pd_n_workers--;
+
+  if (Link::is_empty(cs->workers)) {
+    csRemove(conn);
+    delete cs;
+  }
+
+  if (pd_state == INFLUX) {
+    if (Link::is_empty(pd_rendezvousers) && pd_nconnections == 0) {
+      pd_cond.broadcast();
+    }
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////
 void
 giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 {
+  // Theory of operation: read the state diagrams at the end of this file.
+
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,0);
-  omni_tracedmutex_lock sync(pd_lock);
 
-  OMNIORB_ASSERT(exit_on_error == 1);
-  // For the moment, we do not instantiate giopWorker to do single shot.
-  // Therefore, this function will *NEVER* be called until giopWorker
-  // encounters some error condition and it would have set exit_on_error to
-  // 1.
+  if (exit_on_error) {
+    omni_tracedmutex_lock sync(pd_lock);
+    removeConnectionAndWorker(w);
+    return;
+  }
 
-  w->remove();
-  delete w;
-  // Do not do anything to the strand! It will be garbage collected
-  // in due course.
+  giopConnection* conn = w->strand()->connection;
 
-  if (pd_state == INFLUX) {
-    if (Link::is_empty(pd_rendezvousers) && Link::is_empty(pd_workers)) {
-      pd_cond.broadcast();
+  if (conn->pd_has_dedicated_thread) {
+
+    // This connection is managed with the thread-per-connection policy
+    if (!w->singleshot()) {
+      // This is the dedicated thread
+      conn->clearSelectable();
+      omni_tracedmutex_lock sync(pd_lock);
+      conn->pd_dedicated_thread_in_upcall = 0;
+      conn->pd_has_hit_n_workers_limit = 0;
+    }
+    else {
+      // This is a temporary worker thread
+      omni_tracedmutex_lock sync(pd_lock);
+      if (conn->pd_has_hit_n_workers_limit) {
+	// Previously we have hit the limit on the no. of worker threads,
+	// There is definitely a request pending. We re-cycle this
+	// worker to deal with it *UNLESS* the dedicated thread is already
+	// doing so.
+	conn->pd_has_hit_n_workers_limit = 0;
+	if (conn->pd_dedicated_thread_in_upcall ) {
+	  if (!orbAsyncInvoker->insert(w)) {
+	    OMNIORB_ASSERT(0);
+	  }
+	  return;
+	}
+      }
+      w->remove();
+      delete w;
+      conn->pd_n_workers--;
+      pd_n_temporary_workers--;
+    }
+  }
+  else {
+
+    // This connection is managed with the thread-pool policy
+    // setSelectable if this is the only worker thread.
+    OMNIORB_ASSERT(w->singleshot() == 1); // Never called by a dedicated thread
+    CORBA::Boolean doselect;
+    {
+      omni_tracedmutex_lock sync(pd_lock);
+
+      if (conn->pd_has_hit_n_workers_limit) {
+	// Previously we have hit the limit on the no. of worker threads,
+	// There is definitely a request pending. We re-cycle this
+	// worker to deal with it.
+	conn->pd_has_hit_n_workers_limit = 0;
+	if (!orbAsyncInvoker->insert(w)) {
+	  OMNIORB_ASSERT(0);
+	}
+	return;
+      }
+
+      w->remove();
+      delete w;
+      conn->pd_n_workers--;
+      pd_n_temporary_workers--;
+      // Set doselect if this is the last worker for this connection and
+      // there is no worker tasks that cannot be allocated to a thread from
+      // the pool.
+      doselect = (conn->pd_n_workers == 0 && 
+		  pd_n_temporary_workers < omniORB::maxServerThreadPoolSize);
+    }
+    if (doselect) {
+      // We could call conn->setSelectable(1). 
+      // Instead we call Peek(). This thread will be used for a short time to
+      // monitor the connection. If the connection is available for reading,
+      // the callback function peekCallBack is called. We can afford to
+      // call Peek() here because this thread is otherwise idle.
+      conn->Peek(peekCallBack,(void*)this);
     }
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////
+// Callback function used by giopConnection::Peek(). Called when the
+// connection indeed has something to read immediately.
 void
-giopServer::notifyWkPreUpCall(giopStrand*) {
-  // Do nothing at the moment.
-  return;
+giopServer::peekCallBack(void* cookie, giopConnection* conn) {
+  giopServer* this_ = (giopServer*)cookie;
+  this_->notifyRzReadable(conn);
+}
+
+////////////////////////////////////////////////////////////////////////////
+void
+giopServer::notifyWkPreUpCall(giopWorker* w, CORBA::Boolean data_in_buffer) {
+
+  // Theory of operation: read the state diagrams at the end of this file.
+
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock,0);
+
+  giopConnection* conn = w->strand()->connection;
+
+  if (conn->pd_has_dedicated_thread) {
+    // This connection is managed with the thread-per-connection policy
+    if (!w->singleshot()) {
+      // This is the dedicated thread.
+      // setSelectable unless another temporary worker thread is already
+      // present.
+      int n;
+      {
+	omni_tracedmutex_lock sync(pd_lock);
+	n = conn->pd_n_workers;
+	conn->pd_dedicated_thread_in_upcall = 1;
+      }
+      if (n == 1) {
+	conn->setSelectable(0,data_in_buffer);
+      }
+    }
+    else {
+      // This is a temporary worker thread
+      // setSelectable only if the dedicated thread is in upcall.
+      CORBA::Boolean n;
+      {
+	omni_tracedmutex_lock sync(pd_lock);
+	n = conn->pd_dedicated_thread_in_upcall;
+      }
+      if (n) {
+	conn->setSelectable(0,data_in_buffer);
+      }
+    }
+  }
+  else {
+    // This connection is managed with the thread-pool policy
+    conn->setSelectable(0,data_in_buffer);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -408,3 +736,220 @@ giopServer::Link::is_empty(giopServer::Link& head)
 
 
 OMNI_NAMESPACE_END(omni)
+
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+//   The following diagram illustrates the state transition of a connection
+//   when it is managed under the thread pool policy.
+//
+//   Under this policy, the connection is watched by the rendezvouser
+//   thread. When data arrive, the rendezvouser calls notifyRzReadable and
+//   a worker thread is dispatched.  The worker unmarshal data from the
+//   connection. When it finishes unmarshaling all the arguments, worker
+//   calls notifyWkPreUpCall before doing the upcall into the
+//   implementation.  In notifyWkPreUpCall, the connection is again
+//   registered to be watched by the rendezvouser. When the worker has
+//   finished the upcall, it calls notifyWkDone. If data for another call
+//   arrives, the whole cycle repeats again.
+//
+//   The state diagram below illustrates what happens:
+//
+//        Legend:
+//               +----------+     x = 1 : the connection is watched
+//               +  (x,y,z) +         0 : the connection is not watched
+//               +----------+     y = 1 : rendezvouser detected data arrival
+//                                    0 : no new data have arrived
+//                                z = n >= 0 : no. of threads serving the
+//                                             connection
+//
+
+//
+//                +---------+
+//                | (1,0,0) |<----------------------+
+//	          +----+----+                       |
+//		       |		   	    |
+//           	       | DataArrive	   	    |
+//		       |		   	    |
+//		       V		   	    |
+//                +---------+	   	            |notifyWkDone**
+//     	          | (0,1,0) |	   	            |  **-tell the rendezvouser
+//	          +----+----+	   	            |     to watch immediately
+//		       |		   	    |
+//		       | notifyRzReadable	    |
+//		       |		   	    |
+//     	       	       V		   	    |
+//                 +---------+       	          +-+-------+
+//     	       +-->| (0,0,1) +------------------->| (1,0,1) |
+//	       |   +---------+ notifyWkPreUpCall  +--+------+
+//	       | 	     	 	   	     | ^
+//     	       |     	  +--------------------------+ |
+//	       |	  |    	    DataArrive 	       |
+//             |	  V  		      	       |
+//             |   +---------+	      	       	       |
+//notifyWkDone |   | (0,1,1) |		       	       |
+//   	       |   +----+----+		       	       |notifyWkDone
+//   	       |	  |    			       |
+//   	       |	  | notifyRzReadable	       |
+//     	       |    	  |  		    	       |
+//	       |    	  V  		    	       |
+//             |   +---------+       	          +----+----+
+//     	       +---+ (0,0,2) +------------------->| (1,0,2) |
+//	       +-->+---------+ notifyWkPreUpCall  +--+------+
+//	       | 	     	 	   	     | ^
+//     	       |     	  +--------------------------+ |
+//	       |	  |    	    DataArrive 	       |
+//             |	  V  		      	       |
+//             |   +---------+	      	       	       |
+//notifyWkDone |   | (0,1,2) |		       	       |
+//   	       |   +----+----+		       	       |notifyWkDone
+//   	       |	  |    			       |
+//   	       |	  | notifyRzReadable	       |
+//     	       |    	  |  		    	       |
+//	       |    	  V  		    	       |
+//             |   +---------+       	          +----+----+
+//     	       +---+ (0,0,3) +------------------->| (1,0,3) |
+//	           +---------+ notifyWkPreUpCall  +--+------+
+//  .... And so on...
+//
+//
+
+//   To summarise, here are what the transition function should do:
+//     notifyRzReadable() 
+//        - Always create a temporary worker
+//
+//     notifyWkPreUpCall()
+//        - setSelectable
+//
+//     notifyWkDone()
+//        - setSelectable(1) if n worker == 1.
+//
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+//   The following diagram illustrates the state transition of a connection
+//   when it is managed under the thread-per-connection policy.
+//
+//   Under this policy, each connection has a dedicated worker thread.
+//   When a call arrives, the worker unmarshalls all the arguments and do
+//   an upcall. Before it does the upcall, it calls notifyWkPreUpCall.  In
+//   notifyWkPreUpCall, the connection is registered to be watched by
+//   the rendezvouser. When the worker has finished the upcall, it calls
+//   notifyWkDone, the connnection is un-registered with the rendezvouser.
+//   The worker then waits for another call to arrive and the whole cycle
+//   repeats again.
+//   If while the worker is performing the upcall another call has arrived,
+//   the rendezvouser calls notifyRzReadable and a temporary worker thread
+//   is dispatched. This thread is 'temporary' in the sense that it is only
+//   dispatched to serve one call.
+//   The interaction of the dedicated worker, the temporary worker and
+//   the rendezvouser is summarised by the state diagram below:
+//
+//        Legend:
+//               +----------+     x = 1 : the connection is watched
+//               +  (x,y,z) +         0 : the connection is not watched
+//               +----------+     y = 1 : rendezvouser detected data arrival
+//                                    0 : no new data have arrived
+//                                z = n >= 0 : no. of threads serving the
+//                                             connection. The dedicated thread
+//                                             is not watching the connection.
+//                                z* = same as z except that the dedicated
+//                                     thread is watching the connection.
+//
+//               notifyWkDone - transition executed by the temporary workers
+//
+//               notifyWkDone - transition executed by the dedicated worker
+//               ^^^^^^^^^^^^
+//
+
+//
+//                 +---------+
+//     	      +--->| (0,0,1*)|<--------------------+
+//     	      |    +----+----+			   |
+//     	      |	       	| notifyWkPreUpCall	   |
+//     	      |	    	| ^^^^^^^^^^^^^^^^^	   |
+//notifyWkDone|	       	|     			   |
+//^^^^^^^^^^^^|	    	|     			   |
+//	      |	    	V     			   |
+//            |    +---------+			   |
+//     	      +----+ (1,0,1) +			   |notifyWkDone
+//	      +--->+----+----+			   |
+//     	      |	       	|     			   |
+//	      |	   	|DataArrive		   |
+//	      |	   	|     	   		   |
+//	      |	   	V     	   		   |
+//            |    +---------+			   |
+//     	      |    | (0,1,1) +			   |
+//	      |    +----+----+			   |
+//	      |	       	|      		      	   |
+//	      |	       	|notifyRzReadable     	   |	notifyWkPreUpCall
+//notifyWkDone|	   	|      		      	   |   +--+
+//	      |	   	| +-----------------------+|   |  |
+//	      |	   	| | notifyWkPreUpCall(1)  ||   |  |
+//	      |	   	V V ^^^^^^^^^^^^^^^^^  	  ||   V  |
+//            |    +---------+         	          ++------+-+
+//     	    +-|--->| (0,0,2) +------------------->| (0,0,2*)|
+//	    | |    +----+----+    notifyWkDone    +---------+
+//	    | |	   	|      	  ^^^^^^^^^^^^	     ^ ^
+//	    | |	   	|  			     | |
+//	    | |	   	|notifyWkPreUpCall	     | |
+//	    | |	   	|  		  	     | |
+//	    | |	   	|      	       	  	     | |
+//	    | |	   	V  			     | |
+//          | |    +---------+			     | |
+//     	    | +----+ (1,0,2) +-----------------------+ |
+//	    |   +->+----+----+	   notifyWkDone	       |notifyWkDone
+//     	    +-+	|      	|  	   ^^^^^^^^^^^^	       |
+//     	      |	|      	|  			       |
+//	      |	|  	|DataArrive		       |
+//	      |	|  	|  			       |
+//	      |	|  	V  			       |
+//            | |  +---------+			       |
+//     	      |	|  | (0,1,2) +			       |
+//	      | |  +----+----+			   +---+
+//	      |	|      	|      		      	   |
+//	      |	|      	|notifyRzReadable     	   |	notifyWkPreUpCall
+//notifyWkDone|	|  	|      		      	   |   +--+
+//	      |	|  	|     		      	   |   |  |
+//	      |	|  	|      		      	   |   |  |
+//	      |	|  	V      		      	   |   V  |
+//            | |  +---------+       	          ++------+-+
+//     	      +----+ (0,0,3) +------------------->| (0,0,3*)|
+//	        |  +----+----+    notifyWkDone    +---------+
+//     	       	|      	|      	  ^^^^^^^^^^^^	   ^
+//	       	|      	|  		  	   |
+//  notifyWkDone|  	|notifyWkPreUpCall	   |
+//	       	|  	|  		  	   |
+//	       	|  	|      	       	  	   |
+//	       	|  	V  		  	   |
+//              |  +---------+		  	   |
+//     	        +--+ (1,0,3) +---------------------+
+//     	           +----+----+	   notifyWkDone
+//     	       	       	|      	   ^^^^^^^^^^^^
+//
+//   Note: (1) Race condition. Happen if dedicated thread gets the read lock
+//             before the temporary worker.
+//
+//   And So On...
+//
+//
+
+//   To summarise, here are what the transition function should do:
+//     notifyRzReadable() 
+//        - Always create a temporary worker
+//
+//     notifyWkPreUpCall()
+//        dedicated thread - setSelectable unless n workers != 1
+//        temporary thread - setSelectable only if the dedicated thread is
+//                           in the upcall
+//
+//     notifyWkDone()
+//        dedicated thread - clearSelectable
+//        temporary thread - Do nothing
+//
