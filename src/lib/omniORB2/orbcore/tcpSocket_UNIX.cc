@@ -11,10 +11,15 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/08 18:49:53  ewc
-  Added check to see if remote hostname embedded in IOR is IP address.
-  If it is, a gethostbyname() on the address is not now performed.
+  Revision 1.3  1997/01/13 15:01:11  sll
+  Use CORBA::ULong, which is always 32-bit, to store the return value of
+  inet_addr(). Check the return value of inet_addr() against (CORBA::ULong)-1
+  for error.
 
+// Revision 1.2  1997/01/08  18:49:53  ewc
+// Added check to see if remote hostname embedded in IOR is IP address.
+// If it is, a gethostbyname() on the address is not now performed.
+//
   Revision 1.1  1997/01/08 17:26:01  sll
   Initial revision
 
@@ -81,8 +86,8 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketRope *rope,
 else
       {
 	// The machine name is already an IP address
-	unsigned long int ip_p;
-	if ( (ip_p = inet_addr( (char*) r->host() )) < 0)
+	CORBA::ULong ip_p;
+	if ( (ip_p = inet_addr( (char*) r->host() )) == ((CORBA::ULong)-1))
 	  {
 	    throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
 	  }
@@ -618,7 +623,7 @@ tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketEndpoint *me)
   }
   
   {
-#if defined(__GNU_LIBRARY__)
+#if defined(__GLIBC__) && __GLIBC__ >= 2
   // GNU C library uses size_t* instead of int* in getsockname().
   // This is suppose to be compatible with the upcoming POSIX standard.
     size_t l;
@@ -685,7 +690,7 @@ tcpSocketRendezvous::accept()
   tcpSocketHandle_t new_sock;
   struct sockaddr_in raddr;
  
-#if defined(__GNU_LIBRARY__)
+#if defined(__GLIBC__) && __GLIBC__ >= 2
   // GNU C library uses size_t* instead of int* in accept().
   // This is suppose to be compatible with the upcoming POSIX standard.
   size_t l;
@@ -771,7 +776,7 @@ tcpSocketRope::remote_is(Endpoint *&e)
     tcpSocketEndpoint *te = tcpSocketEndpoint::castup(e);
     if (!te)
       return 0;
-    if (te == pd_endpoint.remote)
+    if (*te == pd_endpoint.remote)
       return 1;
     else
       return 0;
