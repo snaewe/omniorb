@@ -1,3 +1,16 @@
+Thu Mar  5 11:22:28 GMT 1998 sll
+================================
+
+- Modified sequence templates to remove warning on NP_data() given by some
+  compilers, e.g. HPUX C++.
+- Added the include headers for glibc2 to get the definition of struct timeval
+  and gettimeofday. Why do they keep changing the location of these typedefs.
+
+include/omniORB2/templates.h
+include/omniORB2/seqtemplates.h
+src/lib/omnithread/posix.cc
+
+
 Wed Mar  4 14:45:27 GMT 1998 sll
 ================================
 
