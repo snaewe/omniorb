@@ -1,3 +1,23 @@
+Fri Jun 15 11:07:03 BST 2001 sll
+===============================
+
+- Minor updates to make the ORB compiles with SUN C++ 4.2
+
+src/lib/omniORB/dynamic/dynAny.cc
+include/omniORB4/CORBA_sysdep.h
+
+- Added missing files to external_merge
+
+external_merge/src/lib/omniORB/orbcore/gatekeepers/dir.mk
+external_merge/src/lib/omniORB/orbcore/ssl/GNUmakefile
+
+- Work around for MSVC++ bug. Changed the casting of the array of base types 
+  when they are marshalled using the quick method. 
+
+include/omniORB4/templatedecls.h
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+
+
 Thu Jun 14 13:00:00 BST 2001 sll
 ================================
 
