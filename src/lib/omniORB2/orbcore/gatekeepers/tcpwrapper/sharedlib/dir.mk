@@ -61,14 +61,17 @@ DIR_CPPFLAGS = -DHOSTS_ACCESS $(LIBRARY_OPTIONS) -D_REENTRANT
 SRCS = hosts_access.c options.c shell_cmd.c rfc931.c eval.c \
        hosts_ctl.c refuse.c percent_x.c clean_exit.c $(AUX_SRCS) \
        fix_options.c socket.c workarounds.c \
-       update.c misc.c diag.c percent_m.c environ.c fakelog2.c
+       update.c misc.c diag.c percent_m.c setenv.c fakelog2.c
+#      update.c misc.c diag.c percent_m.c environ.c fakelog2.c
 
 CXXSRCS = gatekeeper.cc
 
 OBJS = hosts_access.o options.o shell_cmd.o rfc931.o eval.o \
        hosts_ctl.o refuse.o percent_x.o clean_exit.o $(AUX_OBJS) \
        fix_options.o socket.o workarounds.o \
-       update.o misc.o diag.o percent_m.o environ.o fakelog2.o
+       update.o misc.o diag.o percent_m.o setenv.o fakelog2.o
+#      update.o misc.o diag.o percent_m.o environ.o fakelog2.o
+
 CXXOBJS = gatekeeper.o
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/.,$(VPATH)) \
@@ -219,25 +222,21 @@ ifdef IRIX_64
 ADD_CPPFLAGS = -64
 endif
 
-libname = libomniORB$(major_version).so
+libname = libtcpwrapGK.so
 soname  = $(libname).$(minor_version)
 lib = $(soname).$(micro_version)
-
-lclibname = libomniLC.so
-lcsoname  = $(lclibname).$(lc_minor_version)
-lclib = $(lcsoname).$(lc_micro_version)
-
-all:: $(lib)
 
 $(lib): $(OBJS) $(CXXOBJS)
 	(set -x; \
         $(RM) $@; \
-        $(LINK.cc) -KPIC -shared -Wl,-h,$(libname) -Wl,-set_version,$(soname) -Wl,-rpath,$(LIBDIR) \
-         -o $@ $(IMPORT_LIBRARY_FLAGS) $^ $(LDLIBS); \
+        $(LINK.cc) -KPIC -shared -Wl,-h,$(libname) -Wl,-set_version,$(soname) \
+         -Wl,-rpath,$(LIBDIR) -o $@ $(IMPORT_LIBRARY_FLAGS) $^ $(LDLIBS); \
        )
 
+all:: $(lib)
+
 clean::
-	$(RM) $(lib) $(lclib)
+	$(RM) $(lib)
 
 export:: $(lib)
 	@$(ExportLibrary)
