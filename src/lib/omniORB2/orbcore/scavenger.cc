@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.10.4.5  2000/03/27 17:31:18  sll
+  Intermediate change to get rid of using Sync class.
+
   Revision 1.10.4.4  1999/11/04 20:20:22  sll
   GIOP engines can now do callback to the higher layer to calculate total
   message size if necessary.
@@ -372,8 +375,7 @@ omniORB_Scavenger::run_undetached(void*)
 	  Strand_iterator next_strand(r);
 	  Strand *s;
 	  while ((s = next_strand())) {
-	    Strand::Sync* q;
-	    if ((q = Strand::Sync::getSync(s)) && q->garbageCollect()) {
+	    if (s->garbageCollect()) {
 	      s->shutdown();
 	    }
 	  }
