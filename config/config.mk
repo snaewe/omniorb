@@ -47,17 +47,17 @@
 # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
 # edit the make variables, such as CC and CXX, in the file.
 
+#platform = x86_nt_4.0
+#platform = x86_nt_4.0_vs_7
+#platform = x86_nt_3.5
+#platform = x86_win95
+#platform = x86_win32_dmc
 #platform = sun4_sosV_5.5
 #platform = sun4_sosV_5.6
 #platform = sun4_sosV_5.7
 #platform = i586_linux_2.0
 #platform = i586_linux_2.0_glibc
 #platform = i586_linux_2.0_glibc2.1
-#platform = x86_nt_3.5
-#platform = x86_nt_4.0
-#platform = x86_nt_4.0_vs_7
-#platform = x86_win95
-#platform = x86_win32_dmc
 #platform = alpha_nt_4.0
 #platform = alpha_osf1_3.2
 #platform = alpha_osf1_4.0

@@ -1,3 +1,13 @@
+Thu Aug 21 16:41:38 BST 2003 dgrisby
+====================================
+
+- Rearrange config file to put Windows first; update windows platform file.
+
+update.log
+config/config.mk
+mk/platforms/x86_nt_4.0.mk
+
+
 Thu Aug 21 15:53:14 BST 2003 dgrisby
 ====================================
 
