@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.9  2002/04/25 23:12:44  dgrisby
+# Bug with invalid omniidl option reporting.
+#
 # Revision 1.17.2.8  2002/04/25 20:33:20  dgrisby
 # Better job of looking for omnicpp.
 #
@@ -180,7 +183,7 @@ def parseArgs(args):
     try:
         opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:n:kKC:dVuhvqp:iTP")
     except getopt.error, e:
-        sys.stderr.write("Error in arguments: " + e + "\n")
+        sys.stderr.write("Error in arguments: -" + e.opt + "\n")
         sys.stderr.write("Use '" + cmdname + " -u' for usage\n")
         sys.exit(1)
 
