@@ -27,6 +27,14 @@
 
 #include <NamingContext_i.h>
 
+
+#if defined(__sgi) && defined(_COMPILER_VERSION)
+# if _COMPILER_VERSION == 721
+#  define MIPSPRO_WORKAROUND
+# endif
+#endif
+
+
 class BindingIterator_i : public POA_CosNaming::BindingIterator,
 			  public PortableServer::RefCountServantBase
 {
@@ -47,7 +55,11 @@ public:
     if (ret)
       *b = (*bl)[0];
     else
+#ifndef MIPSPRO_WORKAROUND
       b->binding_type = CosNaming::nobject;
+#else
+      b.ptr()->binding_type = CosNaming::nobject;
+#endif
     delete bl;
     return ret;
   }

@@ -1,3 +1,12 @@
+
+Tue Feb 22 18:36:17 GMT 2000 djr
+================================
+
+- Workaround in omniNames for mips compiler bug.
+
+src/appl/omniNames/BindingIterator_i.h
+
+
 Tue Feb 22 17:06:52 GMT 2000 dpg1
 =================================
 
