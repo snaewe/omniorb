@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/03/27 17:38:56  sll
+  Changed interface to make it support call multiplex on the client side.
+
   Revision 1.1.2.1  1999/09/15 20:37:29  sll
   *** empty log message ***
 
@@ -81,6 +84,8 @@ public:
   inline GIOP::Version version() { return pd_version; }
 
   virtual void release(giopStream* g);
+
+  virtual CORBA::Boolean isBuffered(giopStream* g);
 
   //////////////////////////////////////////////////////////////////////////
   //       Support functions for message body processing
@@ -246,17 +251,13 @@ public:
   virtual GIOP::MsgType inputRequestMessageBegin(giopStream*,
 						 giopStream::requestInfo&,
 						 CORBA::Boolean) = 0;
-  virtual GIOP::ReplyStatusType inputReplyMessageBegin(giopStream*,
-						       CORBA::ULong,
-						       CORBA::Boolean) = 0;
-  virtual GIOP::LocateStatusType inputLocateReplyMessageBegin(giopStream*,
-							      CORBA::ULong,
-							      CORBA::Boolean) = 0;
+  // XXX Document the following 2 functions.
+  virtual _CORBA_Boolean inputReplyMessageBegin(giopStream*) = 0;
+  virtual _CORBA_Boolean inputLocateReplyMessageBegin(giopStream*) = 0;
+
   virtual void inputMessageEnd(giopStream* g,
 			       _CORBA_Boolean disgard=0,
 			       _CORBA_Boolean error=0) = 0;
-  virtual _CORBA_Boolean terminalError(const giopStream* g) const = 0;
-  virtual void setTerminalError(giopStream* g) = 0;
 
   //////////////////////////////////////////////////////////////////////////
   //       Real implementation of the giopStream fast copy functions
