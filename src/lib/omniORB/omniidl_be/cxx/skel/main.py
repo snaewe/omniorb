@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.23  2000/01/14 15:57:20  djs
+# Added MSVC workaround for interface inheritance
+#
 # Revision 1.22  2000/01/13 17:02:05  djs
 # Added support for operation contexts.
 #
@@ -142,11 +145,11 @@ def visitModule(node):
 
 
 def visitInterface(node):
-    name = node.identifier()
-    cxx_name = tyutil.mapID(name)
+    id = node.identifier()
+    cxx_id = tyutil.mapID(id)
     
     outer_environment = env.lookup(node)
-    environment = outer_environment.enterScope(name)
+    environment = outer_environment.enterScope(id)
 
     insideInterface = self.__insideInterface
     self.__insideInterface = 1
@@ -159,7 +162,7 @@ def visitInterface(node):
 
     scopedName = map(tyutil.mapID, node.scopedName())
     fqname = string.join(scopedName, "::")
-    name = environment.nameToString(scopedName)
+    id = environment.nameToString(scopedName)
 
     # we need to generate several useful classes for object
     # references
@@ -216,7 +219,7 @@ void @name@_Helper::marshalObjRef(@name@_ptr obj, MemBufferedStream& s) {
 
 @name@_ptr @name@_Helper::unmarshalObjRef(MemBufferedStream& s) {
   return @name@::_unmarshalObjRef(s);
-}""", name = name)
+}""", name = id)
 
     # the class itself
     stream.out("""\
@@ -248,13 +251,13 @@ void @name@_Helper::marshalObjRef(@name@_ptr obj, MemBufferedStream& s) {
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
-}""", name = name, objref_name = objref_name)
+}""", name = id, objref_name = objref_name)
     
 
     # output the repository ID
     stream.out("""\
 const char* @name@::_PD_repoId = \"@repoID@\";""",
-               name = name, repoID = tyutil.mapRepoID(node.repoId()))
+               name = id, repoID = tyutil.mapRepoID(node.repoId()))
 
     # gather information for possible interface inheritance
     # (needs to use the transitive closure of inheritance)
@@ -300,7 +303,7 @@ void*
   @inherited_repoIDs@
   return 0;
 }
-""", name = name, fq_objref_name = objref_fqname, objref_name = objref_name,
+""", name = id, fq_objref_name = objref_fqname, objref_name = objref_name,
                inherits_str = inherits_str, inherited_repoIDs = inherited_repoIDs)
 
     # deal with callables (attributes and interfaces)
@@ -387,7 +390,7 @@ static void
                    call_descriptor = descriptor,
                    impl_name = impl_name,
                    impl_fqname = impl_fqname,
-                   name = name,
+                   name = id,
                    cxx_operation_name = cxx_operationName,
                    operation_arguments = string.join(impl_args, ", "),
                    result = result_string)
@@ -468,8 +471,8 @@ static void
             scoped_in_type = attrTypes[1]
 
 
-        for id in attribute.identifiers():
-            attrib_name = id
+        for ident in attribute.identifiers():
+            attrib_name = ident
             cxx_attrib_name = tyutil.mapID(attrib_name)
 
             get_attrib_name = "_get_" + attrib_name
@@ -499,7 +502,7 @@ static void
                        impl_name = impl_name,
                        impl_fqname = impl_fqname,
                        objref_fqname = objref_fqname,
-                       name = name,
+                       name = id,
                        attrib_name = attrib_name,
                        cxx_attrib_name = cxx_attrib_name,
                        get_attrib_name = get_attrib_name,
@@ -533,7 +536,7 @@ void @objref_fqname@::@cxx_attrib_name@(@in_type@ arg_0)
                            impl_name = impl_name,
                            impl_fqname = impl_fqname,
                            objref_fqname = objref_fqname,
-                           name = name,
+                           name = id,
                            cxx_attrib_name = cxx_attrib_name,
                            attrib_name = attrib_name,
                            set_attrib_name = set_attrib_name,
@@ -567,7 +570,7 @@ CORBA::Boolean
     """,
                pof_name = pof_name,
                objref_fqname = objref_fqname,
-               name = name,
+               name = id,
                uname = u_name)
     # again this must deal with _all_ inheritance
     for i in all_inherits:
@@ -585,7 +588,47 @@ CORBA::Boolean
 const @pof_name@ _the_pof_@idname@;""",
                pof_name = pof_name, idname = mangler.produce_idname(scopedName))
 
-    # FIXME: There should be an MSVC workaround here.
+    # comment copied from src/tool/omniidl2/omniORB2_be/o2be_interface.cc:
+
+    # MSVC {4.2,5.0} cannot deal with a call to a virtual member
+    # of a base class using the member function's fully/partially
+    # scoped name. Have to use the alias for the base class in the
+    # global scope to refer to the virtual member function instead.
+    #
+    # We scan all the base interfaces to see if any of them has to
+    # be referred to by their fully/partially qualified names. If
+    # that is necessary, we generate a typedef to define an alias for
+    # this base interface. This alias is used in the stub generated below
+    for i in all_inherits:
+       i_scopedName = i.scopedName()
+       relName = environment.relName(i_scopedName)
+       # does this name have scope :: qualifiers?
+       if len(relName) > 1:
+          i_guard_name = tyutil.guardName(i_scopedName)
+          i_fqname = self.__globalScope.nameToString(i_scopedName)
+          i_flat_fqname = string.join(i_scopedName, "_")
+          i_impl_scopedName = tyutil.scope(i_scopedName) + \
+                              ["_impl_" + tyutil.name(i_scopedName)]
+          i_impl_fqname = self.__globalScope.nameToString(i_impl_scopedName)
+          i_impl_flat_fqname = string.join(i_impl_scopedName, "_")
+
+          stream.out("""\
+#ifndef __@guard_name@__ALIAS__
+#define __@guard_name@__ALIAS__
+typedef @fqname@ @flat_fqname@;
+typedef @impl_fqname@ @impl_flat_fqname@;
+#endif""",
+          guard_name = i_guard_name,
+          fqname = i_fqname,
+          flat_fqname = i_flat_fqname,
+          impl_fqname = i_impl_fqname,
+          impl_flat_fqname = i_impl_flat_fqname)
+          
+          
+       
+
+    
+
 
     # _impl_ class (contains the callable dispatch code)
 
@@ -608,27 +651,37 @@ CORBA::Boolean
             identifiers = callable.identifiers()
 
         # separate case for each callable thing
-        for id in identifiers:
-            id_name = tyutil.mapID(id)
+        for ident in identifiers:
+            id_name = tyutil.mapID(ident)
             if isinstance(callable, idlast.Operation):
                 dispatcher.operation(callable)
 
             elif isinstance(callable, idlast.Attribute):
-                dispatcher.attribute_read(callable, id)
+                dispatcher.attribute_read(callable, ident)
 
                 if not(callable.readonly()):
-                    dispatcher.attribute_write(callable, id)
+                    dispatcher.attribute_write(callable, ident)
 
     stream.dec_indent()
 
     # if we don't implement the operation/attrib ourselves, we need to
     # call the objects we inherit from
     for i in node.inherits():
-        inherited_name = tyutil.mapID(tyutil.name(i.scopedName()))
-        stream.out("""\
-  if( _impl_@inherited_name@::_dispatch(giop_s) ) {
+       inherited_name = tyutil.mapID(tyutil.name(i.scopedName()))
+       impl_inherits = "_impl_" + inherited_name
+       # The MSVC workaround might be needed here again
+       i_scopedName = i.scopedName()
+       relName = environment.relName(i_scopedName)
+       # does this name have scope :: qualifiers?
+       if len(relName) > 1:
+          i_impl_scopedName = tyutil.scope(i_scopedName) + \
+                              ["_impl_" + tyutil.name(i_scopedName)]
+          impl_inherits = string.join(i_impl_scopedName, "_")
+          
+       stream.out("""\
+  if( @impl_inherited_name@::_dispatch(giop_s) ) {
     return 1;
-  }""", inherited_name = inherited_name)
+  }""", impl_inherited_name = impl_inherits)
         
     stream.out("""\
     return 0;
@@ -646,14 +699,21 @@ void*
 """,
                impl_name = impl_name,
                impl_fqname = impl_fqname,
-               name = name)
-    # again deal with inheritance
+               name = id)
+    # it's a bit odd that it will fully qualify the current class name
+    # but it will strip off as much scope as possible for the inherited
+    # ones
     for i in all_inherits:
-        inherited_name = tyutil.mapID(tyutil.name(i.scopedName()))
-        stream.out("""\
+       i_scopedName = i.scopedName()
+       i_rel_scopedName = environment.relName(i_scopedName)
+       i_impl_name = name.prefixName(i_rel_scopedName, "_impl_")
+       inherited_name = environment.nameToString(i_rel_scopedName)
+       
+       stream.out("""\
   if( !strcmp(id, @inherited_name@::_PD_repoId) )
-    return (_impl_@inherited_name@*) this;""",
-                   inherited_name = inherited_name)
+    return (@impl_inherited_name@*) this;""",
+                  inherited_name = inherited_name,
+                  impl_inherited_name = i_impl_name)
 
     stream.out("""\
     
@@ -668,7 +728,7 @@ const char*
 }
 """,
                impl_fqname = impl_fqname,
-               name = name)
+               name = id)
 
     # BOA compatible skeletons
     if config.BOAFlag():
