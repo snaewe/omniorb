@@ -584,6 +584,14 @@ omni_thread::join(void** status)
 
     DB(cerr << "omni_thread::join: pthread_join succeeded\n");
 
+#if (PthreadDraftVersion == 4)
+    // With draft 4 pthreads implementations (HPUX 10.x and
+    // Digital Unix 3.2), have to detach the thread after 
+    // join. If not, the storage for the thread will not be
+    // be reclaimed.
+    THROW_ERRORS(pthread_detach(&posix_thread));
+#endif
+
     delete this;
 }
 
@@ -740,7 +748,7 @@ omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 	throw omni_thread_fatal(errno);
 #else
 
-#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS)
+#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS) || defined(__SINIX__)
 
     if (pthread_delay_np(&rqts) != 0)
 	throw omni_thread_fatal(errno);
@@ -768,7 +776,7 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 {
     timespec abs;
 
-#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS)
+#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS) || defined(__SINIX__)
 
     timespec rel;
     rel.tv_sec = rel_sec;
