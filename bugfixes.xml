@@ -23,7 +23,7 @@ turned back to blocking. Unfortunately, the ioctlsocket call is passed the
 wrong argument which leaves the socket in non-blocking state. The end
 result is that for CORBA calls with large arguments, the call may fail
 mysteriously (because windows says the send call would block and the ORB
-thinks it is wrong because it thinks the socket is blocking).
+thinks it is wrong because it thinks the socket is blocking).</p>
   </text>
 
 </bug>
