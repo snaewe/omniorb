@@ -109,6 +109,16 @@ extern "C" char * mktemp(char *);
 #include	<sys/wait.h>		// POSIX definition of wait()
 #endif		// defined(hpux) || defined(__hpux)
 
+#if defined(__aix__)
+#include        <unistd.h>              // POSIX standard types
+#include        <sys/wait.h>            // POSIX definition of wait()
+#endif
+
+#if defined(__GLIBC__) && __GLIBC__ >= 2
+#include <unistd.h>                     // POSIX standard types
+#include <wait.h>                       // POSIX definition of wait()
+#endif
+
 #ifdef __NT__
 #include <io.h>
 #include <process.h>
@@ -168,7 +178,6 @@ DRV_cpp_init()
   }
 
   DRV_cpp_putarg("-E");
-  DRV_cpp_putarg("-DIDL");
   DRV_cpp_putarg("-I.");
 }
 
