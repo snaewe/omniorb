@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/11/16 12:34:40  dpg1
+  Clarify marshalling of non-UTF-16 wchar.
+
   Revision 1.1.2.3  2000/11/10 15:41:35  dpg1
   Native code sets throw BAD_PARAM if they are given a null transmission
   code set.
@@ -169,21 +172,28 @@ omniCodeSet::TCS_W_16bit::marshalWChar(cdrStream& stream,
   // should be any padding. The 2.4 spec says that if TCS-W is UTF-16,
   // the wchar is marshalled big-endian, unless there is a Unicode
   // byte order mark telling us otherwise. That doesn't help us here,
-  // since we're not transmitting UTF-16, but it seems a fair
-  // assumption that we should always use big-endian. It also seems
-  // fair to assume that there should be no padding.
+  // since we're not transmitting UTF-16. We assume here that there is
+  // no padding, and we use the stream's endianness.
 
-  _CORBA_Octet o;
+  stream.marshalOctet(2);
 
-  o = 2;                  stream.marshalOctet(o);
-  o = (tc & 0xff00) >> 8; stream.marshalOctet(o);
-  o = (tc & 0x00ff);      stream.marshalOctet(o);
+  _CORBA_Octet* p = (_CORBA_Octet*)&tc;
+  _CORBA_Octet  o;
+
+  if (stream.marshal_byte_swap()) {
+    o = p[1]; stream.marshalOctet(o);
+    o = p[0]; stream.marshalOctet(o);
+  }
+  else {
+    o = p[0]; stream.marshalOctet(o);
+    o = p[1]; stream.marshalOctet(o);
+  }
 }
 
 void
 omniCodeSet::TCS_W_16bit::marshalWString(cdrStream& stream,
 					 _CORBA_ULong len,
-					 omniCodeSet::UniChar* us)
+					 const omniCodeSet::UniChar* us)
 {
   // Just to be different, wstring is marshalled without a terminating
   // null. Length is in octets.
@@ -205,29 +215,32 @@ omniCodeSet::UniChar
 omniCodeSet::TCS_W_16bit::unmarshalWChar(cdrStream& stream)
 {
   _CORBA_UShort tc;
-  _CORBA_Octet  len; len = stream.unmarshalOctet();
+  _CORBA_Octet  len = stream.unmarshalOctet();
   _CORBA_Octet  o;
-
-  // Just to be friendly, we'll skip any leading nulls if len > 2
-  while (len-- > 2) {
-    o = stream.unmarshalOctet();
-    if (o != 0)
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
-  }
 
   switch (len) {
   case 0:
     tc = 0; // Evil but it might happen, I suppose
     break;
   case 1:
-    o = stream.unmarshalOctet();
+    o  = stream.unmarshalOctet();
     tc = o;
     break;
   case 2:
-    // Again, we assume that wchar is always marshalled big-endian
-    o = stream.unmarshalOctet(); tc  = o << 8;
-    o = stream.unmarshalOctet(); tc |= o;
+    {
+      _CORBA_Octet* p = (_CORBA_Octet*)&tc;
+      if (stream.unmarshal_byte_swap()) {
+	o = stream.unmarshalOctet(); p[1] = o;
+	o = stream.unmarshalOctet(); p[0] = o;
+      }
+      else {
+	o = stream.unmarshalOctet(); p[0] = o;
+	o = stream.unmarshalOctet(); p[1] = o;
+      }
+    }
     break;
+  default:
+    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
   }
   omniCodeSet::UniChar uc = pd_toU[(tc & 0xff00) >> 8][tc & 0x00ff];
   if (tc && !uc) OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
@@ -253,7 +266,7 @@ omniCodeSet::TCS_W_16bit::unmarshalWString(cdrStream& stream,
   us = omniCodeSetUtil::allocU(len + 1);
   omniCodeSetUtil::HolderU uh(us);
 
-  _CORBA_Short         tc;
+  _CORBA_UShort        tc;
   omniCodeSet::UniChar uc;
   _CORBA_ULong         i;
 
@@ -280,15 +293,21 @@ omniCodeSet::TCS_W_16bit::fastMarshalWChar(cdrStream&          stream,
     if (wc > 0xffff)
       OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
 #endif
+
+    stream.marshalOctet(2);
+
     _CORBA_UShort tc = wc;
+    _CORBA_Octet* p  = (_CORBA_Octet*)&tc;
+    _CORBA_Octet  o;
 
-    _CORBA_Octet o;
-
-    // Assume big endian again
-    o = 2;                  stream.marshalOctet(o);
-    o = (wc & 0xff00) >> 8; stream.marshalOctet(o);
-    o = (wc & 0x00ff);      stream.marshalOctet(o);
-
+    if (stream.marshal_byte_swap()) {
+      o = p[1]; stream.marshalOctet(o);
+      o = p[0]; stream.marshalOctet(o);
+    }
+    else {
+      o = p[0]; stream.marshalOctet(o);
+      o = p[1]; stream.marshalOctet(o);
+    }
     return 1;
   }
   return 0;
@@ -317,7 +336,7 @@ omniCodeSet::TCS_W_16bit::fastMarshalWString(cdrStream&          stream,
       }
     }
     else {
-      stream.put_char_array((const _CORBA_Char*)ws, len*2, omni::ALIGN_2);
+      stream.put_octet_array((const _CORBA_Char*)ws, len*2, omni::ALIGN_2);
     }
 #else
     _CORBA_UShort tc;
@@ -337,15 +356,8 @@ omniCodeSet::TCS_W_16bit::fastUnmarshalWChar(cdrStream&          stream,
 					     _CORBA_WChar&       wc)
 {
   if (ncs->id() == id()) { // Null transformation
-    _CORBA_Octet  len; len = stream.unmarshalOctet();
+    _CORBA_Octet  len = stream.unmarshalOctet();
     _CORBA_Octet  o;
-
-    // Just to be friendly, we'll skip any leading nulls if len > 2
-    while (len-- > 2) {
-      o = stream.unmarshalOctet();
-      if (o != 0)
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
-    }
 
     switch (len) {
     case 0:
@@ -356,10 +368,22 @@ omniCodeSet::TCS_W_16bit::fastUnmarshalWChar(cdrStream&          stream,
       wc = o;
       break;
     case 2:
-      // Again, we assume that wchar is always marshalled big-endian
-      o = stream.unmarshalOctet(); wc  = o << 8;
-      o = stream.unmarshalOctet(); wc |= o;
+      {
+	_CORBA_UShort tc;
+	_CORBA_Octet* p = (_CORBA_Octet*)&tc;
+	if (stream.unmarshal_byte_swap()) {
+	  o = stream.unmarshalOctet(); p[1] = o;
+	  o = stream.unmarshalOctet(); p[0] = o;
+	}
+	else {
+	  o = stream.unmarshalOctet(); p[0] = o;
+	  o = stream.unmarshalOctet(); p[1] = o;
+	}
+	wc = tc;
+      }
       break;
+    default:
+      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
     }
     return 1;
   }
@@ -391,7 +415,7 @@ omniCodeSet::TCS_W_16bit::fastUnmarshalWString(cdrStream&          stream,
 #if (SIZEOF_WCHAR == 2)
     stream.unmarshalArrayUShort((_CORBA_UShort*)ws, len);
 #else
-    _CORBA_Short tc;
+    _CORBA_UShort tc;
     for (_CORBA_ULong i=0; i < len; i++) {
       tc <<= stream;
       ws[i] = tc;
