@@ -1,3 +1,52 @@
+Thu Jul 13 11:31:33 BST 2000 dpg1
+=================================
+
+- External documentation updates
+
+external_merge/doc/lifecycle.pdf              -- deleted
+external_merge/doc/lifecycle.ps               -- deleted
+external_merge/doc/omniNames.dvi              -- deleted
+external_merge/doc/omniNames.html             -- deleted
+external_merge/doc/omniNames.pdf
+external_merge/doc/omniNames.ps
+external_merge/doc/omniNames.tex
+external_merge/doc/omnithread.dvi             -- deleted
+external_merge/doc/omnithread.html            -- new
+external_merge/doc/omnithread.pdf
+external_merge/doc/omnithread.ps
+external_merge/doc/utilities.dvi              -- deleted
+external_merge/doc/utilities.html             -- new
+external_merge/doc/utilities.pdf
+external_merge/doc/utilities.ps
+external_merge/doc/utilities.tex
+external_merge/doc/omniNames/node1.html       -- deleted
+external_merge/doc/omniNames/node2.html       -- deleted
+external_merge/doc/omniNames/node3.html       -- deleted
+external_merge/doc/omniNames/omniNames.html   -- deleted
+external_merge/doc/omnithread/images.aux      -- deleted
+external_merge/doc/omnithread/images.log      -- deleted
+external_merge/doc/omnithread/images.pl       -- deleted
+external_merge/doc/omnithread/images.tex      -- deleted
+external_merge/doc/omnithread/img1.gif        -- deleted
+external_merge/doc/omnithread/node1.html      -- deleted
+external_merge/doc/omnithread/node2.html      -- deleted
+external_merge/doc/omnithread/node3.html      -- deleted
+external_merge/doc/omnithread/node4.html      -- deleted
+external_merge/doc/omnithread/node5.html      -- deleted
+external_merge/doc/omnithread/node6.html      -- deleted
+external_merge/doc/omnithread/omnithread.html -- deleted
+external_merge/doc/utilities/images.aux       -- deleted
+external_merge/doc/utilities/images.log       -- deleted
+external_merge/doc/utilities/images.pl        -- deleted
+external_merge/doc/utilities/images.tex       -- deleted
+external_merge/doc/utilities/img1.gif         -- deleted
+external_merge/doc/utilities/img2.gif         -- deleted
+external_merge/doc/utilities/node1.html       -- deleted
+external_merge/doc/utilities/node2.html       -- deleted
+external_merge/doc/utilities/node3.html       -- deleted
+external_merge/doc/utilities/utilities.html   -- deleted
+
+
 Wed Jul 12 15:14:33 BST 2000 djs
 ================================
 
