@@ -1,3 +1,64 @@
+Sat Sep 20 20:26:00 BST 1997 dpg1
+=================================
+
+Added LifeCycle support.
+
+Modified _widenFromTheMostDerivedIntf() to take a second argument,
+is_cxx_type. If this is true, the repoID string represents a C++ class
+name rather than a repository ID. This is required by the LifeCycle
+stuff.
+
+include/omniORB2/omniInternal.h		- change to _widen...; declare
+					  a new hash table of wrapped
+					  objects.
+include/omniORB2/Naming_NT.hh		- change to _widen...
+include/omniORB2/omniLifeCycle.h	- new
+include/omniORB2/reDirect.h		- new
+
+src/tool/omniidl2/include/idl_defines.h	- new compiler flag
+src/tool/omniidl2/omniORB2_be/o2be.h	- new name and produce functions
+
+src/tool/omniidl2/omniORB2_be/o2be_attribute.cc
+					- new LifeCycle code generation
+
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+					- new -l compile flag
+
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+					- change to _widen...; new
+					  LifeCycle code generation
+
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+					- new LifeCycle code generation
+
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+					- new #include generation
+
+src/lib/omniORB2/dir.mk			- new omniLC library
+src/lib/omniORB2/NamingSK_NT.cc		- change to _widen...
+src/lib/omniORB2/objectRef.cc		- change to _widen...;
+					  initialise new LifeCycle
+					  hash table
+src/lib/omniORB2/omniLifeCycle.cc	- new file
+src/lib/omniORB2/omniLifeCycle.idl	- new file
+src/lib/omniORB2/reDirect.cc		- new file
+src/lib/omniORB2/unshared.cc		- LifeCycle hash table
+src/lib/omniORB2/sharedlib/dir.mk	- version 2.3.1; new omniLC library
+
+mk/unix.mk				- new variables for LifeCycle stuff
+mk/win32.mk				- new variables for LifeCycle stuff
+
+src/examples/lifecycle			- new directory
+src/examples/lifecycle/client.cc	- new
+src/examples/lifecycle/dir.mk		- new
+src/examples/lifecycle/echolag.idl	- new
+src/examples/lifecycle/remove.cc	- new
+src/examples/lifecycle/server.cc	- new
+src/examples/dir.mk			- add lifecycle to SUBDIRS
+
+
+
+
 Wed Aug 27 18:55:28 BST 1997 sll
 ================================
 
