@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.11  1998/02/25 20:37:13  sll
+  Added hooks for dynamic object loader.
+
   Revision 1.10  1997/12/23 19:24:27  sll
   Removed unnecessary token concatination.
 
@@ -52,6 +55,17 @@
 #include <objectManager.h>
 
 size_t  GIOP_Basetypes::max_giop_message_size = 2048 * 1024;
+
+// Dynamic Object Loading
+// 
+static omniORB::loader::mapKeyToObject_t MapKeyToObjectFunction= 0;
+
+void 
+omniORB::loader::set(omniORB::loader::mapKeyToObject_t NewMapKeyToObject) 
+{
+  MapKeyToObjectFunction= NewMapKeyToObject;
+}
+
 
 static void 
 MarshallSystemException(GIOP_S *s,
@@ -508,6 +522,35 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     
   }
   catch (const CORBA::OBJECT_NOT_EXIST &ex) {
+
+    if (!obj && pd_response_expected && MapKeyToObjectFunction) {
+      // Cannot find the object in the object table. If the application
+      // has registered a loader, do an upcall to locate the object.
+      // If the returned value is not a nil object reference, send a
+      // LOCATION_FORWARD message to the client to instruct it to retry
+      // with the new object reference.
+      //
+      // Limitation: if this invocation is oneway, one cannot reply with
+      //             a LOCATION_FORWARD message, in that case, just
+      //             treat this as a normal OBJECT_NOT_EXIST and let
+      //             the code below to deal with it.
+      //
+      CORBA::Object_var newDestination= MapKeyToObjectFunction(pd_objkey);
+      if (!CORBA::is_nil(newDestination)) {
+	// Note that we have completed the object request
+	RequestReceived(1); 
+	
+	// Build and send the location forward message...
+	size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
+	msgsize = CORBA::Object::NP_alignedSize(newDestination, msgsize);
+	InitialiseReply(GIOP::LOCATION_FORWARD,(CORBA::ULong)msgsize);
+	CORBA::Object::marshalObjRef(newDestination, *this);
+	
+	// All done...
+	ReplyCompleted(); return;
+      }
+    }
+
     if (!obj) {
       RequestReceived(1);
       if (!pd_response_expected) {
@@ -707,27 +750,58 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
     obj = omni::locateObject(omniObjectManager::root(),pd_objkey);
     omni::objectRelease(obj);
     status = GIOP::OBJECT_HERE;
-    // XXX what if the object is relocated. We should do GIOP::OBJECT_FORWARD
-    // as well.
+  }
+  catch (const CORBA::OBJECT_NOT_EXIST&) {
+    if (MapKeyToObjectFunction) {
+      // Cannot find the object in the object table. If the application
+      // has registered a loader, do an upcall to locate the object.
+      // If the return value is not a nil object reference, reply with
+      // OBJECT_FORWARD and the new object reference.
+      CORBA::Object_var newDestination = MapKeyToObjectFunction(pd_objkey);
+      if (!CORBA::is_nil(newDestination)) {
+	status = GIOP::OBJECT_FORWARD;
+	WrLock();
+	pd_state = GIOP_S::ReplyIsBeingComposed;
+
+	size_t msgsize = sizeof(MessageHeader::LocateReply) + 4 + 8;
+	msgsize = CORBA::Object::NP_alignedSize(newDestination,msgsize);
+	msgsize = msgsize - sizeof(MessageHeader::LocateReply) - 4;
+	WrMessageSize(0);
+	put_char_array((CORBA::Char *)MessageHeader::LocateReply,
+		       sizeof(MessageHeader::LocateReply),1,1);
+	operator>>= ((CORBA::ULong)msgsize,*this);
+	operator>>= (pd_request_id,*this);
+	operator>>= ((CORBA::ULong)status,*this);
+	CORBA::Object::marshalObjRef(newDestination,*this);
+	flush(1);
+	pd_state = GIOP_S::Idle;
+	WrUnlock();
+      }
+    }
+    else {
+      status = GIOP::UNKNOWN_OBJECT;
+    }
   }
   catch(...) {
     status = GIOP::UNKNOWN_OBJECT;
   }
 
-  WrLock();
-  pd_state = GIOP_S::ReplyIsBeingComposed;
+  if (status != GIOP::OBJECT_FORWARD) {
+    WrLock();
+    pd_state = GIOP_S::ReplyIsBeingComposed;
 
-  size_t bodysize = 8;
-  WrMessageSize(0);
-  put_char_array((CORBA::Char *)MessageHeader::LocateReply,
-		 sizeof(MessageHeader::LocateReply),1,1);
-  operator>>= ((CORBA::ULong)bodysize,*this);
-  operator>>= (pd_request_id,*this);
-  operator>>= ((CORBA::ULong)status,*this);
+    size_t bodysize = 8;
+    WrMessageSize(0);
+    put_char_array((CORBA::Char *)MessageHeader::LocateReply,
+		   sizeof(MessageHeader::LocateReply),1,1);
+    operator>>= ((CORBA::ULong)bodysize,*this);
+    operator>>= (pd_request_id,*this);
+    operator>>= ((CORBA::ULong)status,*this);
 
-  flush(1);
-  pd_state = GIOP_S::Idle;
-  WrUnlock();
+    flush(1);
+    pd_state = GIOP_S::Idle;
+    WrUnlock();
+  }
 
   return;
 }
