@@ -3,7 +3,7 @@
 #include "Naming.hh"
 #include <omniORB4/tcDescriptor.h>
 
-static const char* _0RL_library_version = omniORB_3_0;
+static const char* _0RL_library_version = omniORB_4_0;
 
 static CORBA::TypeCode_ptr _0RL_tc_CosNaming_mIstring = CORBA::TypeCode::PR_alias_tc("IDL:omg.org/CosNaming/Istring:1.0", "Istring", CORBA::TypeCode::PR_string_tc(0));
 
