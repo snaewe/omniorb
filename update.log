@@ -1,3 +1,20 @@
+Wed Aug 26 19:36:32 BST 1998 sll
+================================
+
+- Now accept the following as valid IDL:
+
+   interface Y {
+        attribute double X;
+        void f(in long x);
+   };
+   Previously, omniidl2 wrongly thinks that X clashes with x.
+
+- Complete the previous fix for the bug in LifeCycle support.
+
+src/tool/omniidl2/ast/ast_operation.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Wed Aug 26 11:57:20 BST 1998 sll
 ================================
 
