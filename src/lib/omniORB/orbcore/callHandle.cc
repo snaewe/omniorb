@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  2001/07/31 16:29:40  sll
+ Make call descriptor available from omniCurrent in the unmarshalling of
+ arguments on the server side.
+
  Revision 1.1.2.2  2001/06/07 16:24:09  dpg1
  PortableServer::Current support.
 
@@ -61,9 +65,9 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
   desc.localId(pd_localId);
 
   if (pd_iop_s) { // Remote call
+    _OMNI_NS(poaCurrentStackInsert) _i(desc);
     pd_iop_s->ReceiveRequest(desc);
     {
-      _OMNI_NS(poaCurrentStackInsert) _i(desc);
       if (pd_upcall_hook)
 	pd_upcall_hook->upcall(servant, desc);
       else
