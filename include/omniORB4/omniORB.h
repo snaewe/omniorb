@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.15  2001/09/12 19:42:35  sll
+  Added back function to report max. GIOP message size.
+
   Revision 1.2.2.14  2001/08/17 17:03:23  sll
   Moved configuration parameters to orbParameters. Move old compatibility API
   to omniORBcompat.h.
@@ -238,6 +241,17 @@ _CORBA_MODULE_BEG
   //                                                                    //
   _CORBA_MODULE_FN void setMainThread();                                //
   ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // giopMaxMsgSize()                                                   //
+  //                                                                    //
+  // Return the ORB-wide limit on the size of GIOP message (excluding   //
+  // the header). This value is set by the ORB option giopMaxMsgSize.   //
+  //                                                                    //
+  _CORBA_MODULE_FN _CORBA_ULong giopMaxMsgSize();                       //
+  ////////////////////////////////////////////////////////////////////////
+
 
   //////////////////////////////////////////////////////////////////////
   /////////////////////////// omniORB::logger //////////////////////////

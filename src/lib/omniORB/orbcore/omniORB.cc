@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.11  2001/09/12 19:42:36  sll
+  Added back function to report max. GIOP message size.
+
   Revision 1.2.2.10  2001/08/22 13:31:31  dpg1
   Christof's fixes for gcc 3.0.1.
 
@@ -115,4 +118,11 @@ omniORB::setMainThread()
     OMNIORB_THROW(INITIALIZE, INITIALIZE_NotOmniThread, CORBA::COMPLETED_NO);
 
   omni::mainThreadId = self->id();
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+CORBA::ULong
+omniORB::giopMaxMsgSize() {
+  return orbParameters::giopMaxMsgSize;
 }
