@@ -1,3 +1,11 @@
+Fri Nov 22 12:12:57 GMT 2002 dgrisby
+====================================
+
+- Correct COMM_FAILURE minor code check.
+
+include/omniORB4/minorCode.h
+
+
 Thu Nov 21 15:48:26 GMT 2002 dgrisby
 ====================================
 

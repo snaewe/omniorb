@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2002/11/22 18:11:58  dgrisby
+  Correct COMM_FAILURE minor code check.
+
   Revision 1.1.4.13  2002/02/26 14:08:34  dpg1
   Minor codes for omniORBpy.
 
@@ -548,7 +551,7 @@ enum BAD_CONTEXT_minor {
 };
 
 inline CORBA::Boolean is_COMM_FAILURE_minor(CORBA::ULong w) {
-  return (w >= COMM_FAILURE_MarshalResults &&
+  return (w >= COMM_FAILURE_MarshalArguments &&
 	  w <= COMM_FAILURE_WaitingForReply);
 }
 
