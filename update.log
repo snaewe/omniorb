@@ -1,3 +1,11 @@
+Thu Mar 19 15:22:53 GMT 1998 sll
+================================
+
+- Bug fix. No longer rejects an IOR with zero length object key
+  This is in addition to the previous fix on the same problem.
+
+src/lib/omniORB2/object.cc
+
 Tue Mar 17 12:21:49 GMT 1998 ewc
 ================================
 
