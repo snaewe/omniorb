@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2001/09/19 17:29:04  dpg1
+  Cosmetic changes.
+
   Revision 1.1.2.14  2001/08/22 13:29:45  dpg1
   Re-entrant Any marshalling.
 
@@ -374,7 +377,7 @@ public:
   inline void marshalWString(const _CORBA_WChar* s,int bounded=0) {
     OMNIORB_USER_CHECK(s);
     pd_ncs_w->marshalWString(*this,pd_tcs_w,bounded,
-			  _CORBA_WString_helper::len(s),s);
+			     _CORBA_WString_helper::len(s),s);
   }
 
   inline _CORBA_WChar* unmarshalWString(int bounded=0) {

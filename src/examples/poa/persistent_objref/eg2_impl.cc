@@ -39,7 +39,7 @@ char* Echo_i::echoString(const char* mesg)
 
 void usage()
 {
-  cerr << "usage:  eg2_impl -ORBpoa_iiop_port <portnum>" << endl;
+  cerr << "usage:  eg2_impl -ORBendPoint ..." << endl;
   exit(-1);
 }
 
