@@ -1,3 +1,22 @@
+Wed Oct  2 21:06:51 BST 2002 dgrisby
+====================================
+
+- Fix Windows .mak files.
+
+bugfixes.xml
+src/examples/anyExample/dir.mak
+src/examples/bidir/dir.mak
+src/examples/boa/dir.mak
+src/examples/call_back/dir.mak
+src/examples/dii/dir.mak
+src/examples/dsi/dir.mak
+src/examples/echo/dir.mak
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/servant_manager/dir.mak
+src/examples/thread/dir.mak
+
+
 Sun Sep 22 22:06:56 BST 2002 dgrisby
 ====================================
 

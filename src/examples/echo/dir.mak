@@ -44,7 +44,7 @@ OMNI_DYNAMIC_LIB = msvcstub.lib -NODEFAULTLIB:libcmt.lib -NODEFAULTLIB:libcmtd.l
 
 CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ \
                  -D__OSVERSION__=4
-CORBA_LIB      = omniORB400_rt.lib omnithread2_rt.lib \
+CORBA_LIB      = omniORB400_rt.lib omnithread30_rt.lib \
                  $(OMNI_DYNAMIC_LIB) \
                  ws2_32.lib mswsock.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
@@ -63,7 +63,7 @@ CXXLINKOPTIONS =
 #OMNI_DYNAMIC_LIB = omniDynamic400_rtd.lib
 #OMNI_DYNAMIC_LIB = msvcstubd.lib -NODEFAULTLIB:libcmt.lib -NODEFAULTLIB:libcmtd.lib 
 #CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ -D__OSVERSION__=4
-#CORBA_LIB      = omniORB400_rtd.lib omnithread2_rtd.lib \
+#CORBA_LIB      = omniORB400_rtd.lib omnithread30_rtd.lib \
 #                 $(OMNI_DYNAMIC_LIB) \
 #                 ws2_32.lib mswsock.lib advapi32.lib -libpath:$(TOP)\lib\x86_win32
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
@@ -102,3 +102,6 @@ veryclean::
 
 echo.hh echoSK.cc: echo.idl
 	$(TOP)\bin\x86_win32\omniidl -T -bcxx -Wbh=.hh -Wbs=SK.cc -Wbtp echo.idl
+
+echo.idl: $(TOP)\idl\echo.idl
+	copy $(TOP)\idl\echo.idl .

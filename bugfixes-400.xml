@@ -8,6 +8,13 @@
 
 <buglist version="4.0.0">
 
-<nobugs/>
+<bug id="1" date="Wed Oct  2 21:06:51 BST 2002" user="dgrisby">
+  <summary>Broken .mak files for Windows</summary>
+  <reported>Jonathan Shaw</reported>
+  <text>
+  The .mak files for use with Windows nmake were broken. The Windows
+  binary distribution has been patched.
+  </text>
+</bug>
 
 </buglist>
