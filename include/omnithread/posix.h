@@ -27,7 +27,7 @@
 #ifndef __omnithread_posix_h_
 #define __omnithread_posix_h_
 
-#if defined(__alpha__) && defined(__osf1__)
+#if defined(__alpha__) && defined(__osf1__) || defined(__hpux__)
 // stop unnecessary definitions of TRY, etc on OSF
 #ifndef EXC_HANDLING
 #define EXC_HANDLING
