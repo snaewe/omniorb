@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.2.2.15  2002/02/13 16:03:17  dpg1
+// Memory leak due to missing virtual destructor.
+//
 // Revision 1.2.2.14  2002/02/01 11:20:40  dpg1
 // Silly bug in string_to_object wil nil objref.
 //
@@ -256,6 +259,8 @@ public:
   class ObjAddr {
   public:
     ObjAddr() : next_(0) {}
+
+    virtual ~ObjAddr() {}
 
     static ObjAddr* parse(const char*& c);
 
