@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.8  2001/06/07 16:26:10  dpg1
+ __WIN32__ misspelt as __win32__
+
  Revision 1.2.2.7  2001/04/18 17:50:45  sll
  Big checkin with the brand new internal APIs.
  Scoped where appropriate with the omni namespace.
@@ -443,7 +446,7 @@
    // Wide character size
 #  if defined(__linux__) || defined(__sunos__)
 #    define SIZEOF_WCHAR 4
-#  elif defined(__win32__)
+#  elif defined(__WIN32__)
 #    define SIZEOF_WCHAR 2
 #  else
 #    error "sizeof wchar_t not known for this platform"
