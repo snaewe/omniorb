@@ -8,6 +8,17 @@
 
 <buglist version="3.0.4">
 
+<bug id="7" date="Tue Aug 28 12:02:05 BST 2001" user="dpg1">
+  <summary>Deadlock when a worker thread can't be started</summary>
+  <reported>Gail Ollis</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-08/0246.html"/>
+  <text>
+  An attempt to re-lock a locked mutex lead to a deadlock when thread
+  creation failed.
+  </text>
+</bug>
+
 <bug id="6" date="Mon Aug 20 14:44:28 BST 2001" user="dpg1">
   <summary>Wrong _out type for fixed size structs/unions</summary>
   <reported>Vibhu Rishi</reported>

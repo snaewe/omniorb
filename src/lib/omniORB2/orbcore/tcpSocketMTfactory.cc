@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.22  2001/08/28 11:07:29  dpg1
+  Deadlock when a worker thread can't be started.
+
   Revision 1.22.6.21  2001/02/19 17:16:43  sll
   poll() on HPUX 10.20 is broken. The performance is terrible. Switch to use
   select().
@@ -1445,14 +1448,15 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
       PTRACE("Rendezvouser","accept new strand.");
 
-      omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
-      if (pd_factory->pd_shutdown_nthreads >= 0) {
-	pd_factory->pd_shutdown_nthreads++;
+      {
+	omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
+	if (pd_factory->pd_shutdown_nthreads >= 0) {
+	  pd_factory->pd_shutdown_nthreads++;
+	}
+	else {
+	  pd_factory->pd_shutdown_nthreads--;
+	}
       }
-      else {
-	pd_factory->pd_shutdown_nthreads--;
-      }
-
       try {
 	newthr = new tcpSocketWorker(newSt,pd_factory);
       }
@@ -1460,6 +1464,9 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	newthr = 0;
       }
       if (!newthr) {
+	omniORB::logs(5, "tcpSocketMT Rendezvouser thread cannot spawn a"
+		      " new server thread.");
+
 	// Cannot create a new thread to serve the strand
 	// We have no choice but to shutdown the strand.
 	// The long term solutions are:  start multiplexing the new strand
@@ -1477,7 +1484,6 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	  pd_factory->pd_shutdown_nthreads++;
 	  pd_factory->pd_shutdown_cond.signal();
 	}
-
       }
     }
     catch(omniConnectionBroken&) {

@@ -1,3 +1,11 @@
+Tue Aug 28 12:02:05 BST 2001 dpg1
+=================================
+
+- Deadlock when a worker thread can't be started.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
 Fri Aug 24 12:37:25 BST 2001 dpg1
 =================================
 
