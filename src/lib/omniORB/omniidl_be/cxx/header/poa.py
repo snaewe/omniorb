@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.2  2003/10/23 11:25:55  dgrisby
+# More valuetype support.
+#
 # Revision 1.20.2.1  2003/03/23 21:02:36  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -277,3 +280,9 @@ def visitMember(node):
     pass
 def visitException(node):
     pass
+
+def visitValue(node):
+    from omniidl_be.cxx import value
+    v = value.getValueType(node)
+
+    v.poa_module_decls(stream, self)

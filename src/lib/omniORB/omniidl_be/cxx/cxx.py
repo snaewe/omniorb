@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.2  2003/10/23 11:25:54  dgrisby
+# More valuetype support.
+#
 # Revision 1.1.6.1  2003/03/23 21:02:42  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -59,13 +62,13 @@ import sys, re, string
 #
 class For:
     def __init__(self, stream, bounds):
-        prefix = "_i"
+        prefix = "_0i"
         index = 0
         index_string = ""
         for bound in bounds:
             i = prefix + str(index)
             stream.out("""\
-for (CORBA::ULong @i@ = 0;@i@ < @bound@;@i@++){""", i = i, bound = bound)
+for (CORBA::ULong @i@ = 0; @i@ < @bound@; @i@++){""", i = i, bound = bound)
             stream.inc_indent()
             index_string = index_string + "[" + i + "]"
             index = index + 1

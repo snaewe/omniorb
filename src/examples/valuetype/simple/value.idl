@@ -11,7 +11,7 @@ module ValueTest {
   };
 
   interface Test {
-    One op1(in One a);
+    One op1(in One a, in One b);
     Two op2(in Two a);
   };
 };

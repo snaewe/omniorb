@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.3  2003/10/23 11:25:54  dgrisby
+# More valuetype support.
+#
 # Revision 1.20.2.2  2003/05/20 16:53:14  dgrisby
 # Valuetype marshalling support.
 #
@@ -288,7 +291,11 @@ else """,
       idltype.tk_TypeCode:
       "CORBA::TypeCode::marshalTypeCode(@element_name@,@to_where@);",
       idltype.tk_objref * 1000:
-      "@type@_Helper::marshalObjRef(@element_name@,@to_where@);"
+      "@type@_Helper::marshalObjRef(@element_name@,@to_where@);",
+      idltype.tk_value:
+      "@type@::_NP_marshal(@element_name@,@to_where@);",
+      idltype.tk_value_box:
+      "@type@::_NP_marshal(@element_name@,@to_where@);",
       }
     if special_marshal_functions.has_key(kind):
         out_template = special_marshal_functions[kind]
@@ -402,7 +409,11 @@ def unmarshall(to, environment, type, decl, name, from_where):
       idltype.tk_TypeCode:
       "@element_name@ = CORBA::TypeCode::unmarshalTypeCode(@where@);",
       idltype.tk_objref * 1000:
-      "@element_name@ = @type@_Helper::unmarshalObjRef(@where@);"
+      "@element_name@ = @type@_Helper::unmarshalObjRef(@where@);",
+      idltype.tk_value:
+      "@element_name@ = @type@::_NP_unmarshal(@where@);",
+      idltype.tk_value_box:
+      "@element_name@ = @type@::_NP_unmarshal(@where@);",
       }
 
     if special_unmarshal_functions.has_key(kind):

@@ -39,9 +39,7 @@ RET    = 3
 
 # we don't support these yet
 unsupported_typecodes =[idltype.tk_Principal,
-                        idltype.tk_value,
-                        idltype.tk_value_box, idltype.tk_native,
-                        idltype.tk_abstract_interface,
+                        idltype.tk_native,
                         idltype.tk_local_interface]
 
 class Type:
@@ -132,15 +130,18 @@ class Type:
         # CORBA2.3 P1-204 Table 1-3 Basic argument and result mapping
         array = self.array()
         variable = self.variable()
+
         if array and not variable:
             # array of fixed size elements
             return ( (1, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 1) )[direction]
+
         if array and variable:
             # array of variable size elements
             return ( (1, 0, 0), (0, 1, 1), (0, 0, 0), (0, 0, 1) )[direction]
 
         type = self.deref().__type
         kind = type.kind()
+
         if kind in [ idltype.tk_short, idltype.tk_long, idltype.tk_longlong,
                      idltype.tk_ushort, idltype.tk_ulong, idltype.tk_ulonglong,
                      idltype.tk_float, idltype.tk_double, idltype.tk_enum,
@@ -148,24 +149,29 @@ class Type:
                      idltype.tk_char, idltype.tk_wchar, idltype.tk_octet ]:
             # from short to enum the entries are the same
             return ( (0, 0, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
+
         if kind in [ idltype.tk_objref, idltype.tk_TypeCode ]:
             # objref_ptr objref_ptr& objref_ptr& objref_ptr
             return ( (0, 0, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
-        if (kind == idltype.tk_struct or kind == idltype.tk_union) and \
-           not variable:
-            # fixed struct or union
-            return ( (1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
-        if (kind == idltype.tk_struct or kind == idltype.tk_union) and \
-           variable:
-            # variable struct or union
-            return ( (1, 1, 0), (0, 1, 1), (0, 1, 0), (0, 0, 1) )[direction]
-        if kind == idltype.tk_string or kind == idltype.tk_wstring:
+
+        if kind in [ idltype.tk_struct, idltype.tk_union ]:
+            if variable:
+                # variable struct or union
+                return ((1, 1, 0), (0, 1, 1), (0, 1, 0), (0, 0, 1))[direction]
+            else:
+                # fixed struct or union
+                return ((1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0))[direction]
+                
+        if kind in [ idltype.tk_string, idltype.tk_wstring ]:
             return ( (1, 0, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
-        if kind == idltype.tk_sequence or kind == idltype.tk_any:
+
+        if kind in [ idltype.tk_sequence, idltype.tk_any ]:
             return ( (1, 1, 0), (0, 1, 1), (0, 1, 0), (0, 0, 1) )[direction]
+
         if kind == idltype.tk_fixed:
             return ( (1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
-        if kind == idltype.tk_value or kind == idltype.tk_value_box:
+
+        if kind in [ idltype.tk_value, idltype.tk_value_box ]:
             return ( (0, 0, 1), (0, 1, 1), (0, 1, 1), (0, 0, 1) )[direction]
 
         if kind == idltype.tk_void:
@@ -190,6 +196,7 @@ class Type:
         
         # CORBA2.3 P1-204 Table 1-4 T_var argument and result mapping
         kind = self.__type.kind()
+
         if kind in [ idltype.tk_objref, idltype.tk_struct, idltype.tk_union,
                      idltype.tk_string, idltype.tk_wstring,
                      idltype.tk_sequence, idltype.tk_any,
@@ -197,11 +204,11 @@ class Type:
                      self.array():
             return ( (1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
 
-        util.fatalError("T_var argmapping requested for type with no such " +\
+        util.fatalError("T_var argmapping requested for type with no such "
                         "concept")
         return
 
-    def base(self, environment = None):
+    def base(self, environment = None, gscope = 0):
         """base(types.Type, id.Environment option): C++ type string
            Returns a basic C++ mapped version of the type"""
         kind = self.kind()
@@ -224,9 +231,13 @@ class Type:
         if self.fixed():
             return "CORBA::Fixed"
         if self.sequence():
-            return self.sequenceTemplate(environment)
+            return self.sequenceTemplate(environment, gscope=gscope)
 
         name = id.Name(self.type().scopedName()).unambiguous(environment)
+        if gscope:
+            assert environment is None
+            name = "::" + name
+
         if d_type.objref() or d_type.typecode():
             return name + "_ptr"
         else:
@@ -395,9 +406,13 @@ class Type:
         
         return self.__apply_mapping(mapping, base)
 
-    def member(self, environment = None, decl = None):
+    def member(self, environment = None, decl = None, gscope = 0):
         """member(types.Type, id.Environment option, idlast.Declarator option):
            C++ member type"""
+
+        if gscope:
+            assert environment is None
+
         decl_dims = []
         if decl != None:
             assert isinstance(decl, idlast.Declarator)
@@ -412,20 +427,28 @@ class Type:
             if d_type.wstring():
                 return "CORBA::WString_member"
             if d_type.objref():
-                return d_type.objRefTemplate("Member", environment)
+                return d_type.objRefTemplate("Member", environment,
+                                             gscope=gscope)
             if d_type.typecode():
                 return "CORBA::TypeCode_member"
 
             if self.sequence():
-                return d_type.sequenceTemplate(environment)
-            
+                return d_type.sequenceTemplate(environment, gscope=gscope)
+
+            if self.value():
+                m = self.base(environment) + "_member"
+                if gscope: m = "::" + m
+                return m
+
         if self.typedef():
             # for the type to have dimensions, it must be a typedef
-            return id.Name(self.__type.scopedName()).unambiguous(environment)
+            m = id.Name(self.__type.scopedName()).unambiguous(environment)
+            if gscope: m = "::" + m
+            return m
 
-        return self.base(environment)
+        return self.base(environment, gscope=gscope)
 
-    def objRefTemplate(self, suffix, environment = None):
+    def objRefTemplate(self, suffix, environment = None, gscope = 0):
         """objRefTemplate(types.Type, suffix string, id.Environment option):
            Returns a template objref instance for the current type"""
         type = self.deref().__type
@@ -437,6 +460,10 @@ class Type:
         uname = name.unambiguous(environment)
         objref_name = name.prefix("_objref_")
         objref_uname = objref_name.unambiguous(environment)
+        if gscope:
+            uname = "::" + uname
+            objref_uname = "::" + objref_uname
+
         return "_CORBA_ObjRef_" + suffix + \
                "< " + objref_uname + ", " + uname + "_Helper> "
 
@@ -505,7 +532,7 @@ class Type:
         util.fatalError("Internal error when handling value (" +\
                         repr(value) +")" )
 
-    def sequenceTemplate(self, environment = None):
+    def sequenceTemplate(self, environment = None, gscope = 0):
         """sequenceTemplate(types.Type, id.Environment option): C++ template
            Returns a C++ template instance for the current type as a
            sequence"""
@@ -517,8 +544,8 @@ class Type:
         
         SeqType = Type(sequence.seqType())
         d_SeqType = SeqType.deref()
-        SeqTypeID = SeqType.base(environment)
-        d_SeqTypeID = d_SeqType.base(environment)
+        SeqTypeID = SeqType.base(environment, gscope=gscope)
+        d_SeqTypeID = d_SeqType.base(environment, gscope=gscope)
         if d_SeqType.typecode():
             d_SeqTypeID = "CORBA::TypeCode_member"
             SeqTypeID = "CORBA::TypeCode_member"
@@ -581,8 +608,7 @@ class Type:
         elif d_SeqType.structforward() or d_SeqType.unionforward():
             template["forward"] = 1
         elif typeSizeAlignMap.has_key(d_SeqType.type().kind()):
-            template["fixed"] = typeSizeAlignMap[d_SeqType.type().\
-                                                        kind()]
+            template["fixed"] = typeSizeAlignMap[d_SeqType.type().kind()]
         elif d_SeqType.objref():
             scopedName = d_SeqType.type().decl().scopedName()
             is_CORBA_Object = scopedName == ["CORBA", "Object"]
@@ -592,7 +618,7 @@ class Type:
                 # CORBA::Object doesn't have an _objref_xxx
                 scopedName = scopedName.prefix("_objref_")
            
-            objref_name = scopedName.unambiguous(environment)
+            objref_name = scopedName.unambiguous(environment, gscope=gscope)
 
             if not is_array:
                 objref_template = d_SeqType.objRefTemplate("Element", environment)
@@ -683,7 +709,8 @@ class Type:
 
         if self.array() or d_T.struct()    or d_T.union() or \
                            d_T.exception() or d_T.sequence() or \
-                           d_T.objref():
+                           d_T.objref()    or d_T.value() or \
+                           d_T.valuebox():
             name = id.Name(self.type().decl().scopedName()).suffix("_var")
             return name.unambiguous(environment)
 
@@ -871,6 +898,14 @@ class Type:
     def fixed(self):
         type = self.__type
         return type.kind() == idltype.tk_fixed
+
+    def value(self):
+        type = self.__type
+        return type.kind() == idltype.tk_value
+
+    def valuebox(self):
+        type = self.__type
+        return type.kind() == idltype.tk_value_box
 
 
 def variableDecl(decl):

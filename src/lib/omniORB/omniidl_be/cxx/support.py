@@ -40,10 +40,7 @@ def checkIDL(tree):
     tree.accept(ASTVisitor)
     return
 
-error_body = """\
-omniORB does not currently support:
-  IDL type valuetype, abstract interfaces
-"""
+error_body = ""
 
 def unsupportedIDL(found):
     error = "Unsupported IDL construct found in input (" + found + ")\n\n"
@@ -80,8 +77,8 @@ class SupportedASTVisitor(idlvisitor.AstVisitor):
         if seen.has_key(node): return
         seen[node] = 1
 
-        if node.abstract():
-            unsupportedIDL("abstract interfaces")
+#         if node.abstract():
+#             unsupportedIDL("abstract interfaces")
 
         for decl in node.contents():
             decl.accept(self)
@@ -90,8 +87,8 @@ class SupportedASTVisitor(idlvisitor.AstVisitor):
         if seen.has_key(node): return
         seen[node] = 1
         
-        if node.abstract():
-            unsupportedIDL("abstract interfaces")
+#         if node.abstract():
+#             unsupportedIDL("abstract interfaces")
 
     def visitConst(self, node):
         if seen.has_key(node): return
@@ -176,17 +173,35 @@ class SupportedASTVisitor(idlvisitor.AstVisitor):
         unsupportedIDL("native")
 
     def visitStateMember(self, node):
-        unsupportedIDL("valuetypes")
+        # *** FIXME
+        pass
+#         unsupportedIDL("valuetypes")
+
     def visitFactory(self, node):
-        unsupportedIDL("valuetypes")
+        # *** FIXME
+        pass
+#         unsupportedIDL("valuetypes")
+
     def visitValueForward(self, node):
-        unsupportedIDL("valuetypes")
+        # *** FIXME
+        pass
+#         unsupportedIDL("valuetypes")
+
     def visitValueBox(self, node):
-        unsupportedIDL("valuetypes")
+        # *** FIXME
+        pass
+#         unsupportedIDL("valuetypes")
+
     def visitValueAbs(self, node):
-        unsupportedIDL("valuetypes")
+        # *** FIXME
+        pass
+#         unsupportedIDL("valuetypes")
+
     def visitValue(self, node):
-        unsupportedIDL("valuetypes")
+        # *** FIXME
+        pass
+#         unsupportedIDL("valuetypes")
+
         
 
 

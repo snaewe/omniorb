@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.2  2003/10/23 11:25:55  dgrisby
+# More valuetype support.
+#
 # Revision 1.8.2.1  2003/03/23 21:02:36  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -184,10 +187,6 @@ footer = """\
 ## Main file
 ##
 main = """\
-#ifndef USE_omniORB_logStream
-#define USE_omniORB_logStream
-#endif
-
 #ifndef __CORBA_H_EXTERNAL_GUARD__
 #include <omniORB4/CORBA.h>
 #endif
@@ -239,6 +238,8 @@ main = """\
 @defs@
 
 @poa@
+
+@obv@
 
 @other_tie@
 
@@ -296,6 +297,16 @@ _CORBA_MODULE_BEG
 POA_module_end = """\
 _CORBA_MODULE_END
 """
+
+OBV_module_begin = """\
+_CORBA_MODULE @OBV_prefix@@name@
+_CORBA_MODULE_BEG
+"""
+
+OBV_module_end = """\
+_CORBA_MODULE_END
+"""
+
 
 POA_interface = """\
 class @POA_name@ :

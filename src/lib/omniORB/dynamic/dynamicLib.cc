@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2003/10/23 11:25:54  dgrisby
+  More valuetype support.
+
   Revision 1.4.2.1  2003/03/23 21:02:49  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -72,11 +75,18 @@
 #include <omniORB4/callDescriptor.h>
 #include <dynamicLib.h>
 #include <context.h>
+#include <initialiser.h>
 #include <omniORB4/linkHacks.h>
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(dynamicLib);
 
 OMNI_NAMESPACE_BEGIN(omni)
+
+//
+// Module initialisers
+
+extern omniInitialiser& omni_valueFactory_initialiser_;
+
 
 static void init();
 static void deinit();
@@ -103,6 +113,7 @@ static void
 init()
 {
   omniORB::logs(5, "Initialising omniDynamic library.");
+  omni_valueFactory_initialiser_.attach();
 }
 
 
@@ -111,6 +122,7 @@ deinit()
 {
   omniORB::logs(5, "Deinitialising omniDynamic library.");
   ContextImpl::releaseDefault();
+  omni_valueFactory_initialiser_.detach();
 }
 
 

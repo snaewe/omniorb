@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.2  2003/10/23 11:25:54  dgrisby
+# More valuetype support.
+#
 # Revision 1.1.6.1  2003/03/23 21:02:41  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -190,7 +193,6 @@ class Class(cxx.Class):
 class _objref_Method(cxx.Method):
   def __init__(self, callable, parent_class):
     assert isinstance(callable, call.Callable)
-    assert isinstance(parent_class, cxx.Class)
     self._callable = callable
     self._parent_class = parent_class
     self.from_Callable()

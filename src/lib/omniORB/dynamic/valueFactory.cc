@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2003/10/23 11:25:54  dgrisby
+  More valuetype support.
+
   Revision 1.1.2.1  2003/09/26 16:12:54  dgrisby
   Start of valuetype support.
 
@@ -61,17 +64,41 @@ namespace {
 
 static omni_tracedmutex         vf_lock;
 static ValueFactoryTableEntry** vf_table     = 0;
-static CORBA::ULong             vf_tablesize = 1033;
+static CORBA::ULong             vf_tablesize = 131;
 
 
 static void init_table()
 {
-  omniORB::logs(25, "Initialise value factory table");
+  omni_mutex_lock sync(vf_lock);
 
-  vf_table = new ValueFactoryTableEntry*[vf_tablesize];
+  if (!vf_table) {
+    omniORB::logs(25, "Initialise value factory table.");
 
-  for (CORBA::ULong i=0; i < vf_tablesize; i++)
-    vf_table[i] = 0;
+    vf_table = new ValueFactoryTableEntry*[vf_tablesize];
+
+    for (CORBA::ULong i=0; i < vf_tablesize; i++)
+      vf_table[i] = 0;
+  }
+}
+
+static void free_table()
+{
+  omni_mutex_lock sync(vf_lock);
+
+  if (vf_table) {
+    omniORB::logs(25, "Release value factory table.");
+
+    for (CORBA::ULong i=0; i < vf_tablesize; i++) {
+      ValueFactoryTableEntry *f, *n;
+      for (f = vf_table[i]; f; f = n) {
+	n = f->next;
+	f->factory->_remove_ref();
+	delete f;
+      }
+    }
+    delete [] vf_table;
+    vf_table = 0;
+  }
 }
 
 
@@ -256,11 +283,11 @@ CORBA::ValueFactory
 CORBA::ORB::
 register_value_factory(const char* id, CORBA::ValueFactory factory)
 {
-  CORBA::ULong h = omniValueType::hash_id(id);
-  {
+  if (omniORB::trace(25)) {
     omniORB::logger l;
-    l << "register value factory " << id << " hash " << h << "\n";
+    l << "Register value factory for '" << id << "'.\n";
   }
+  CORBA::ULong h = omniValueType::hash_id(id);
   return _omni_ValueFactoryManager::register_factory(id, h, factory);
 }
 
@@ -268,6 +295,10 @@ void
 CORBA::ORB::
 unregister_value_factory(const char* id)
 {
+  if (omniORB::trace(25)) {
+    omniORB::logger l;
+    l << "Unregister value factory for '" << id << "'.\n";
+  }
   CORBA::ULong h = omniValueType::hash_id(id);
   _omni_ValueFactoryManager::unregister_factory(id, h);
 }
@@ -281,16 +312,21 @@ lookup_value_factory(const char* id)
 }
 
 
-class valueFactory_initialiser : public omniInitialiser {
-public:
-  valueFactory_initialiser() {
-    omniInitialiser::install(this);
-  }
+OMNI_NAMESPACE_BEGIN(omni)
 
+class omni_valueFactory_initialiser : public omniInitialiser {
+public:
   void attach()
   {
     init_table();
   }
-  void detach() {}
+  void detach()
+  {
+    free_table();
+  }
 };
-static valueFactory_initialiser the_valueFactory_initialiser;
+static omni_valueFactory_initialiser initialiser;
+
+omniInitialiser& omni_valueFactory_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)

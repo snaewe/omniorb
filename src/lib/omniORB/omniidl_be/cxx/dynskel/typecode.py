@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.19.2.2  2003/10/23 11:25:55  dgrisby
+# More valuetype support.
+#
 # Revision 1.19.2.1  2003/03/23 21:02:39  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -885,3 +888,7 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_exception_tc("@r
 
 
     finishingNode()
+
+def visitValue(node):
+    print "*** value typecode"
+

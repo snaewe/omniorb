@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.2  2003/10/23 11:25:55  dgrisby
+# More valuetype support.
+#
 # Revision 1.8.2.1  2003/03/23 21:02:37  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -144,3 +147,7 @@ def visitDeclarator(node):
 def visitException(node):
     pass
 
+
+def visitValue(node):
+    # ***
+    pass

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.2  2003/10/23 11:25:55  dgrisby
+# More valuetype support.
+#
 # Revision 1.17.2.1  2003/03/23 21:02:39  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -118,6 +121,7 @@
 # output generation
 import omniidl_be.cxx.header.opers
 import omniidl_be.cxx.header.poa
+import omniidl_be.cxx.header.obv
 import omniidl_be.cxx.header.tie
 import omniidl_be.cxx.header.forward
 import omniidl_be.cxx.header.marshal
@@ -254,6 +258,10 @@ def monolithic(stream, tree):
         poa = omniidl_be.cxx.header.poa.__init__(stream)
         tree.accept(poa)
 
+    def main_obv(stream = stream, tree = tree):
+        obv = omniidl_be.cxx.header.obv.__init__(stream)
+        tree.accept(obv)
+
     def other_tie(stream = stream, tree = tree):
         if config.state['Normal Tie'] and config.state['BOA Skeletons']:
             tie = omniidl_be.cxx.header.tie.BOATieTemplates(stream)
@@ -280,6 +288,7 @@ def monolithic(stream, tree):
                string_tcParser_declarations = string_tcparser,
                defs = main_defs,
                poa = main_poa,
+               obv = main_obv,
                other_tie = other_tie,
                operators = main_opers,
                marshalling = main_marshal,

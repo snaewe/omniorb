@@ -1,3 +1,45 @@
+Thu Oct 23 12:08:43 BST 2003 dgrisby
+====================================
+
+- More valuetype support.
+
+include/omniORB4/CORBA.h
+src/examples/valuetype/simple/dir.mk
+src/examples/valuetype/simple/value.idl
+src/examples/valuetype/simple/vclient.cc
+src/examples/valuetype/simple/vserver.cc
+src/lib/omniORB/dynamic/dynamicLib.cc
+src/lib/omniORB/dynamic/valueFactory.cc
+src/lib/omniORB/omniidl_be/cxx/__init__.py
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/config.py
+src/lib/omniORB/omniidl_be/cxx/cxx.py
+src/lib/omniORB/omniidl_be/cxx/descriptor.py
+src/lib/omniORB/omniidl_be/cxx/dir.mk
+src/lib/omniORB/omniidl_be/cxx/id.py
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/mapping.py         -- new
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/lib/omniORB/omniidl_be/cxx/support.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/util.py
+src/lib/omniORB/omniidl_be/cxx/value.py           -- new
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/dir.mk
+src/lib/omniORB/omniidl_be/cxx/header/forward.py
+src/lib/omniORB/omniidl_be/cxx/header/marshal.py
+src/lib/omniORB/omniidl_be/cxx/header/obv.py       -- new
+src/lib/omniORB/omniidl_be/cxx/header/opers.py
+src/lib/omniORB/omniidl_be/cxx/header/poa.py
+src/lib/omniORB/omniidl_be/cxx/header/tcstring.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/poa.py
+
+
 Fri Sep 26 17:08:34 BST 2003 dgrisby
 ====================================
 
