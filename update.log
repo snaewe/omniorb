@@ -1,3 +1,11 @@
+Tue Jan 28 12:54:20 GMT 2003 dgrisby
+====================================
+
+- Send GIOP dumps to logger. Thanks Matej Kenda.
+
+src/lib/omniORB/orbcore/giopStream.cc
+
+
 Tue Jan 28 12:05:54 GMT 2003 dgrisby
 ====================================
 

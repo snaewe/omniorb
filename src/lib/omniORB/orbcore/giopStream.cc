@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.24  2003/01/28 13:37:06  dgrisby
+  Send GIOP dumps to logger. Thanks Matej Kenda.
+
   Revision 1.1.4.23  2002/11/12 16:40:11  dgrisby
   Fix incorrect delete.
 
@@ -1175,14 +1178,16 @@ static void dumpbuf(unsigned char* buf, size_t sz)
   omni_tracedmutex_lock sync(lock);
   unsigned i;
   char row[80];
+  omniORB::logger l;
 
   const size_t dumplimit = 128;
   if (!omniORB::trace(40) && sz > dumplimit) {
-    fprintf(stderr,"%u bytes out of %u\n",
-	    dumplimit, sz);
+    l << dumplimit << "bytes out of " << sz << "\n";
     sz = dumplimit;
   }
-
+  else {
+    l << "\n";
+  }
 
   // Do complete rows of 16 octets.
   while( sz >= 16u ) {
@@ -1192,23 +1197,30 @@ static void dumpbuf(unsigned char* buf, size_t sz)
             (int) buf[4], (int) buf[5], (int) buf[6], (int) buf[7],
             (int) buf[8], (int) buf[9], (int) buf[10], (int) buf[11],
             (int) buf[12], (int) buf[13], (int) buf[14], (int) buf[15]);
-    fprintf(stderr, "%s", row);
+    l << row;
     char* p = row;
     for( i = 0u; i < 16u; i++ )  *p++ = printable_char(*buf++);
     *p++ = '\0';
-    fprintf(stderr,"%s\n", row);
+    l << row << "\n";
     sz -= 16u;
   }
 
   if( sz ) {
+    unsigned row_pos = 0;
     // The final part-row.
-    for( i = 0u; i < sz; i++ )
-      fprintf(stderr, (i & 1u) ? "%02x ":"%02x", (int) buf[i]);
-    for( ; i < 16u; i++ )
-      fprintf(stderr, (i & 1u) ? "   ":"  ");
-    for( i = 0u; i < sz; i++ )
-      fprintf(stderr, "%c", printable_char(buf[i]));
-    fprintf(stderr,"\n");
+    for( i = 0u; i < sz; i++ ) {
+      sprintf(row+row_pos, (i & 1u) ? "%02x ":"%02x", (int) buf[i]);
+      row_pos += (i%2 == 0)? 2 : 3;
+    }
+    for( ; i < 16u; i++ ) {
+      sprintf(row+row_pos, (i & 1u) ? "   ":"  ");
+      row_pos += (i%2 == 0)? 2 : 3;
+    }
+    for( i = 0u; i < sz; i++ ) {
+      sprintf(row+row_pos, "%c", printable_char(buf[i]));
+      row_pos++;
+    }
+    l << row << "\n";
   }
 }
 
