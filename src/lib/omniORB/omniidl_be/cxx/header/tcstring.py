@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  2000/01/19 11:23:29  djs
+# Moved most C++ code to template file
+#
 # Revision 1.1  2000/01/17 17:02:48  djs
 # Support for tcParser #ifdefs in .hh
 #
@@ -77,12 +80,8 @@ def visitUnion(node):
 def visitStringType(type):
     if type.bound() == 0:
         return
-    stream.out("""\
-#if !defined(___tc_string_@n@__) && !defined(DISABLE_Unnamed_Bounded_String_TC)
-#define ___tc_string_@n@__
-_CORBA_GLOBAL_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_string_@n@;
-#endif
-""", n = str(type.bound()))    
+    stream.out(template.tcstring,
+               n = str(type.bound()))    
 
 def visitAttribute(node):
     attrType = node.attrType()

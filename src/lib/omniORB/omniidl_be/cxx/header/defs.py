@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.31  2000/01/19 11:23:27  djs
+# Moved most C++ code to template file
+#
 # Revision 1.30  2000/01/18 18:05:52  djs
 # Extracted most C++ from header/defs and put in a template file.
 # General refactoring.
@@ -988,29 +991,42 @@ def visitUnion(node):
     # Once this backend is trusted independantly, convert to use the
     # new mechanism?
     def chooseArbitraryDefault(switchType = switchType,
-                               allCaseValues = tyutil.allCaseValues(node),
+                               allCases = tyutil.allCases(node),
                                environment = environment):
         # dereference the switch_type (ie if CASE <scoped_name>)
         switchType = tyutil.deref(switchType)
+        # get the values from the cases
+        values = map(lambda x: x.value(), allCases)
+
+
+        # for integer types, find the lowest unused number
+        def min_unused(start, used = values):
+            x = start
+            while x in used:
+                x = x + 1
+            return x
                 
         # CASE <integer_type>
         if switchType.kind() == idltype.tk_short:
-            # - [ 2 ^ (32-1) -1 ]
-            return "-32767"
+            short_min = -32767 # - [ 2 ^ (32-1) -1 ]
+            return str(min_unused(short_min))
+        
         elif switchType.kind() == idltype.tk_long:
-            # - [ 2 ^ (64-1) -1 ]
-            return "-2147483647"
+            long_min = -2147483647 # - [ 2 ^ (64-1) -1 ]
+            return str(min_unused(long_min))
+        
         elif switchType.kind() == idltype.tk_ushort    or \
              switchType.kind() == idltype.tk_longlong  or \
              switchType.kind() == idltype.tk_ulong     or \
              switchType.kind() == idltype.tk_ulonglong:
-            return "0"
+            # unsigned values start at 0
+            return str(min_unused(0))
+            
         # CASE <char_type>
         elif tyutil.isChar(switchType):
             # choose the first one not already used
-            allcases = map(lambda x: x.value(), allCaseValues)
             possibles = map(chr, range(0, 255))
-            difference = util.minus(possibles, allcases)
+            difference = util.minus(possibles, values)
             # FIXME: stupid special case. An explicit discriminator
             # value of \0 -> 0000 whereas an implicit one (valueString)
             # \0 -> '\000'
@@ -1025,8 +1041,7 @@ def visitUnion(node):
         elif tyutil.isEnum(switchType):
             enums = switchType.decl().enumerators()
             # pick the first enum not already in a case
-            allcases = map(lambda x: x.value(), allCaseValues)
-            difference = util.minus(enums, allcases)
+            difference = util.minus(enums, values)
             scopedName = difference[0].scopedName()
             # need to be careful of scope
             rel_name = environment.relName(scopedName)
@@ -1045,7 +1060,7 @@ def visitUnion(node):
     # "A union has an implicit default member if it does not have
     # a default case and not all permissible values of the union
     # discriminant are listed"
-    exhaustive = tyutil.exhaustiveMatch(switchType, tyutil.allCaseValues(node))
+    exhaustive = tyutil.exhaustiveMatch(switchType, tyutil.allCases(node))
     implicitDefault = not(hasDefault) and not(exhaustive)
 
     fixed = "Fix"

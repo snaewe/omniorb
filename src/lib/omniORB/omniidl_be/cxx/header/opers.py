@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  2000/01/19 11:23:28  djs
+# Moved most C++ code to template file
+#
 # Revision 1.6  2000/01/17 17:03:14  djs
 # Support for constructed types in typedefs and unions
 #
@@ -57,8 +60,8 @@
 # similar to o2be_root::produce_hdr_operators in the old C++ BE
 
 from omniidl import idlast, idltype, idlutil
-
 from omniidl.be.cxx import tyutil, util, config, name
+from omniidl.be.cxx.header import template
 
 import opers
 
@@ -95,11 +98,7 @@ def visitStruct(node):
         env = name.Environment()
         fqname = env.nameToString(node.scopedName())
     
-        stream.out("""\
-extern void operator<<=(CORBA::Any& _a, const @fqname@& _s);
-extern void operator<<=(CORBA::Any& _a, @fqname@* _sp);
-extern CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);
-extern CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);""",
+        stream.out(template.any_struct,
                    fqname = fqname)
 
 def visitUnion(node):
@@ -120,11 +119,7 @@ def visitUnion(node):
         env = name.Environment()
         fqname = env.nameToString(node.scopedName())
     
-        stream.out("""\
-void operator<<=(CORBA::Any& _a, const @fqname@& _s);
-void operator<<=(CORBA::Any& _a, @fqname@* _sp);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);""",
+        stream.out(template.any_union,
                    fqname = fqname)
 
 
@@ -138,44 +133,23 @@ def visitMember(node):
 def visitEnum(node):
     if not(node.mainFile()):
         return
-    
-    for s in ["NetBufferedStream", "MemBufferedStream"]:
-        cxxname = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
-        stream.out("""\
-inline void operator >>=(@name@ _e, @stream@& s) {
-  ::operator>>=((CORBA::ULong)_e, s);
-}
 
-inline void operator <<= (@name@& _e, @stream@& s) {
-  CORBA::ULong @private_prefix@_e;
-  ::operator<<=(@private_prefix@_e,s);
-  switch (_0RL_e) {""", name = cxxname, stream = s,
-                   private_prefix = config.privatePrefix())
-        stream.inc_indent()
-        for d in node.enumerators():
-            labelname = idlutil.ccolonName(map(tyutil.mapID,
-                                               d.scopedName()))
-            stream.out("""\
-     case @label@:""", label = labelname)
-        stream.inc_indent()
-        stream.out("""\
-        _e = (@name@) @private_prefix@_e;
-        break;
-     default:
-        _CORBA_marshal_error();""", name = cxxname,
-                   private_prefix = config.privatePrefix())
-        stream.dec_indent()
-        stream.dec_indent()
-        stream.out("""\
-  }
-}
-""")
+    cxx_fqname = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
+    # build the cases
+    cases = util.StringStream()
+    for d in node.enumerators():
+        labelname = idlutil.ccolonName(map(tyutil.mapID, d.scopedName()))
+        cases.out("case " + labelname + ":")
+
+    stream.out(template.enum_operators,
+               name = cxx_fqname,
+               private_prefix = config.privatePrefix(),
+               cases = str(cases))
+
     # Typecode and Any
     if config.TypecodeFlag():
-        stream.out("""\
-void operator<<=(CORBA::Any& _a, @name@ _s);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @name@& _s);""",
-                   name = cxxname)
+        stream.out(template.any_enum,
+                   name = cxx_fqname)
 
 def visitInterface(node):
     if not(node.mainFile()):
@@ -192,11 +166,8 @@ def visitInterface(node):
         env = name.Environment()
         fqname = env.nameToString(node.scopedName())
     
-        stream.out("""\
-void operator<<=(CORBA::Any& _a, @fqname@_ptr _s);
-void operator<<=(CORBA::Any& _a, @fqname@_ptr* _s);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s);
-""", fqname = fqname)
+        stream.out(template.any_interface,
+                   fqname = fqname)
         
 
 def visitTypedef(node):
@@ -223,23 +194,15 @@ def visitTypedef(node):
         array_declarator = decl_dims != []
 
         if array_declarator:
-            stream.out("""\
-void operator<<=(CORBA::Any& _a, const @fqname@_forany& _s);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s);""",
+            
+            stream.out(template.any_array_declarator,
                        fqname = fqname)
         # only need to generate these operators if the typedef
         # introduces a new sequence- they already exist for a simple
         # typedef. Hence aliasType rather than deref_aliasType.
         elif tyutil.isSequence(aliasType):
-            stream.out("""\
-extern void operator <<= (CORBA::Any& a, const @fqname@& s);
-inline void operator <<= (CORBA::Any& a, @fqname@* sp) {
-  a <<= *sp;
-  delete sp;
-}
-extern _CORBA_Boolean operator >>= (const CORBA::Any& a, @fqname@*& sp);
-extern _CORBA_Boolean operator >>= (const CORBA::Any& a, const @fqname@*& sp);
-""", fqname = fqname)
+            stream.out(template.any_sequence,
+                       fqname = fqname)
             
             
         
@@ -264,9 +227,6 @@ def visitException(node):
     env = name.Environment()
     fqname = env.nameToString(node.scopedName())
 
-    stream.out("""\
-void operator<<=(CORBA::Any& _a, const @fqname@& _s);
-void operator<<=(CORBA::Any& _a, const @fqname@* _sp);
-CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);
-""", fqname = fqname)
+    stream.out(template.any_exception,
+               fqname = fqname)
 

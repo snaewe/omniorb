@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  2000/01/19 11:23:28  djs
+# Moved most C++ code to template file
+#
 # Revision 1.3  2000/01/07 20:31:28  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -48,8 +51,8 @@
   for the C++ backend"""
 
 from omniidl import idlast, idltype, idlutil
-
 from omniidl.be.cxx import tyutil, util, config, name
+from omniidl.be.cxx.header import template
 
 import marshal
 
@@ -95,23 +98,8 @@ def visitInterface(node):
 
     cxxname = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
     idLen = len(tyutil.mapRepoID(node.repoId())) + 1
-    stream.out("""\
-inline size_t
-@name@::_alignedSize(@name@_ptr obj, size_t offset) {
-  return CORBA::AlignedObjRef(obj, _PD_repoId, @idLen@, offset);
-}
-
-inline void
-@name@::_marshalObjRef(@name@_ptr obj, NetBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, @idLen@, s);
-}
-
-inline void
-@name@::_marshalObjRef(@name@_ptr obj, MemBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, @idLen@, s);
-}
-
-""", name = cxxname, idLen = str(idLen))        
+    stream.out(template.interface_marshal_forward,
+               name = cxxname, idLen = str(idLen))        
 
 def visitTypedef(node):
     pass

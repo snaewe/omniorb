@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.10  2000/01/19 11:23:29  djs
+# Moved most C++ code to template file
+#
 # Revision 1.9  2000/01/14 11:57:18  djs
 # Added (flattened) templates missing in BOA generation mode.
 #
@@ -66,8 +69,8 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-
 from omniidl.be.cxx import tyutil, name, env, config, util
+from omniidl.be.cxx.header import template
 
 import tie
 
@@ -84,55 +87,6 @@ def POA_prefix(nested):
         return "POA"
     return ""
 
-
-tie_template_template = """\
-template <class T>
-class @tie_name@ : public virtual @inherits@
-{
-public:
-  @tie_name@(T& t)
-    : pd_obj(&t), pd_poa(0), pd_rel(0) {}
-  @tie_name@(T& t, PortableServer::POA_ptr p)
-    : pd_obj(&t), pd_poa(p), pd_rel(0) {}
-  @tie_name@(T* t, CORBA::Boolean r=1)
-    : pd_obj(t), pd_poa(0), pd_rel(r) {}
-  @tie_name@(T* t, PortableServer::POA_ptr p,CORBA::Boolean r=1)
-    : pd_obj(t), pd_poa(p), pd_rel(r) {}
-  ~@tie_name@() {
-    if( pd_poa )  CORBA::release(pd_poa);
-    if( pd_rel )  delete pd_obj;
-  }
-
-  T* _tied_object() { return pd_obj; }
-
-  void _tied_object(T& t) {
-    if( pd_rel )  delete pd_obj;
-    pd_obj = &t;
-    pd_rel = 0;
-  }
-
-  void _tied_object(T* t, CORBA::Boolean r=1) {
-    if( pd_rel )  delete pd_obj;
-    pd_obj = t;
-    pd_rel = r;
-  }
-
-  CORBA::Boolean _is_owner()        { return pd_rel; }
-  void _is_owner(CORBA::Boolean io) { pd_rel = io;   }
-
-  PortableServer::POA_ptr _default_POA() {
-    if( !pd_poa )  return PortableServer::POA::_the_root_poa();
-    else           return PortableServer::POA::_duplicate(pd_poa);
-  }
-
-  @callables@
-
-private:
-  T*                      pd_obj;
-  PortableServer::POA_ptr pd_poa;
-  CORBA::Boolean          pd_rel;
-};
-"""
 
 
 # Control arrives here
@@ -261,14 +215,14 @@ def template(environment, node, nested = 0):
     buildCallables(node, where, environment, buildCallables)
                 
         
-    stream.out(tie_template_template,
+    stream.out(template.tie_template,
                tie_name = POA_tie_name,
                inherits = POA_name,
                callables = str(where))
     if config.FlatTieFlag() and config.BOAFlag():
         tie_name = "_tie_" + string.join(map(tyutil.mapID,scopedName), "_")
         sk_name = name.prefixName(map(tyutil.mapID,scopedName), "_sk_")
-        stream.out(tie_template_template,
+        stream.out(template.tie_templatee,
                    tie_name = tie_name,
                    inherits = sk_name,
                    callables = str(where))
