@@ -1,4 +1,18 @@
 
+Fri Mar 24 16:14:00 GMT 2000 djs
+================================
+
+- Fixed C++ Any extraction operators which stopped the DynSK.cc
+  file corresponding to this IDL fragment from parsing (due to a 
+  name clash)
+    typedef sequence<long> a;
+  (bug was copied accidentally from omniidl3)
+
+- minor formatting changes to DynSK.cc output templates
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
+
+
 Thu Mar 23 16:20:29 GMT 2000 djr
 ================================
 
