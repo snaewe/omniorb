@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.9  1999/01/07 18:11:58  djr
+ New functions: _CORBA_invoked_nil_pseudo_ref()
+ and            _CORBA_use_nil_ptr_as_nil_pseudo_objref()
+
  Revision 1.8  1998/08/11 16:34:47  sll
  Changed Float and Double representation on VMS.
 
@@ -122,4 +126,9 @@ extern void _CORBA_bound_check_error();
 extern void _CORBA_marshal_error();
 extern _CORBA_Boolean _CORBA_use_nil_ptr_as_nil_objref();
 extern void _CORBA_null_string_ptr(_CORBA_Boolean);
+extern void _CORBA_invoked_nil_pseudo_ref();
+extern _CORBA_Boolean
+_CORBA_use_nil_ptr_as_nil_pseudo_objref(const char* objType);
+
+
 #endif // __CORBA_BASETYPES_H__
