@@ -82,12 +82,12 @@ CORBA::fqname::_raise() \
 CORBA::fqname* \
 CORBA::fqname::_downcast(Exception* e) \
 { \
-  return (CORBA::fqname*)_NP_is_a(e, "IDL:omg.org/CORBA/" repostr ":1.0"); \
+  return (CORBA::fqname*)_NP_is_a(e, "Exception/UserException/" repostr ); \
 } \
 const CORBA::fqname* \
 CORBA::fqname::_downcast(const Exception* e) \
 { \
-  return (const fqname*)_NP_is_a(e, "IDL:omg.org/CORBA/" repostr ":1.0"); \
+  return (const fqname*)_NP_is_a(e, "Exception/UserException/" repostr ); \
 } \
 CORBA::fqname* \
 CORBA::fqname::_narrow(Exception* e) \
@@ -104,7 +104,7 @@ CORBA::fqname::_NP_duplicate() const \
 const char* \
 CORBA::fqname::_NP_mostDerivedTypeId() const \
 { \
-  return "IDL:omg.org/CORBA/" repostr ":1.0"; \
+  return "Exception/UserException/" repostr ; \
 } \
 CORBA::Exception::insertExceptionToAny CORBA::fqname::insertToAnyFn = 0; \
 CORBA::Exception::insertExceptionToAnyNCP CORBA::fqname::insertToAnyFnNCP = 0;

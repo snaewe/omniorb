@@ -81,7 +81,7 @@ const char*
 CORBA::
 UnknownUserException::_NP_mostDerivedTypeId() const
 {
-  return "IDL:omg.org/CORBA/UnknownUserException:1.0";
+  return "Exception/UserException/UnknownUserException";
 }
 
 
@@ -89,14 +89,14 @@ CORBA::UnknownUserException*
 CORBA::
 UnknownUserException::_downcast(Exception* e)
 {
-  return (UnknownUserException*)_NP_is_a(e, "IDL:omg.org/CORBA/UnknownUserException:1.0");
+  return (UnknownUserException*)_NP_is_a(e, "Exception/UserException/UnknownUserException");
 }
 
 const CORBA::UnknownUserException*
 CORBA::
 UnknownUserException::_downcast(const Exception* e)
 {
-  return (const UnknownUserException*)_NP_is_a(e, "IDL:omg.org/CORBA/UnknownUserException:1.0");
+  return (const UnknownUserException*)_NP_is_a(e, "Exception/UserException/UnknownUserException");
 }
 
 CORBA::UnknownUserException*
