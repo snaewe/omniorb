@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/12/14 17:38:19  djs
+# Fixed anonymous sequences of sequences bug
+#
 # Revision 1.1  1999/12/10 18:26:36  djs
 # Moved most #ifdef buildDesc code into a separate module
 # General tidying up
@@ -263,6 +266,10 @@ def sequence(type):
         objref_name = tyutil.objRefTemplate(deref_seqType, "Member", env)
         if not(is_array):
             desc.out(str(interface(seqType)))
+
+    elif tyutil.isSequence(seqType):
+        # element is an _anonymous_ sequence
+        desc.out(str(sequence(seqType)))
     
     desc.out("""\
 #ifndef __0RL_tcParser_buildDesc@cname@__

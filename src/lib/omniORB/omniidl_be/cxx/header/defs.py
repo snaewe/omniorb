@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13  1999/12/14 17:38:22  djs
+# Fixed anonymous sequences of sequences bug
+#
 # Revision 1.12  1999/12/14 11:52:30  djs
 # Support for CORBA::TypeCode and CORBA::Any
 #
@@ -687,6 +690,11 @@ typedef @base@ @name@;""",
                 elif tyutil.isObjRef(seqDerefType):
                     element = environment.principalID(seqType) + "_ptr"
                     element_IN = element
+                # only if an anonymous sequence
+                elif tyutil.isSequence(seqType):
+                    element = tyutil.sequenceTemplate(seqDerefType,
+                                                      environment)
+                    element_IN = element
                 else:
                     element = environment.principalID(seqType)
                     element_IN = element
@@ -697,6 +705,10 @@ typedef @base@ @name@;""",
                 elif tyutil.isObjRef(seqDerefType) and \
                      not(is_array):
                     element_ptr = environment.principalID(seqType) + "_ptr"
+                # only if an anonymous sequence
+                elif tyutil.isSequence(seqType) and \
+                     not(is_array):
+                    element_ptr = element
                 else:
                     element_ptr = environment.principalID(seqType)
                     
@@ -787,6 +799,9 @@ typedef @base@ @name@;""",
                         element_reference = tyutil.objRefTemplate(seqDerefType,
                                                                   "Member",
                                                                   environment)
+                    # only if an anonymous sequence
+                    elif tyutil.isSequence(seqType):
+                        element_reference = tyutil.sequenceTemplate(seqDerefType, environment) + "&"
                     else:
                         element_reference = element + "&"
                     subscript_operator_var.out("""\

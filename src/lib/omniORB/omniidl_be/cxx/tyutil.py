@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.16  1999/12/14 17:38:13  djs
+# Fixed anonymous sequences of sequences bug
+#
 # Revision 1.15  1999/12/14 11:53:57  djs
 # Support for CORBA::TypeCode and CORBA::Any
 #
@@ -612,7 +615,9 @@ def templateToString(template):
     args_string = string.join(args, ", ")
 #    print "[[[ args = " + repr(args_string) + "]]]"
     if (args_string != ""):
-        return name + "<" + args_string + ">"
+        name = name + "<" + args_string + ">"
+        return name
+
     return name
 
 def sequenceTemplate(sequence, environment):
@@ -637,6 +642,12 @@ def sequenceTemplate(sequence, environment):
     template["seqTypeID"] = seqTypeID
     template["derefSeqTypeID"] = derefSeqTypeID
 
+    # if the seqType is a typedef to a sequence, use the typedef name
+    # else if a direct sequence<sequence<...., do recursion
+    if isSequence(derefSeqType) and not(isTypedef(seqType)):
+        element_template = sequenceTemplate(derefSeqType, environment)
+        template["seqTypeID"] = element_template
+        template["derefSeqTypeID"] = element_template
 
     if is_array:
         if isSequence(derefSeqType):
