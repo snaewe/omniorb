@@ -28,7 +28,6 @@ VERSION = 1.1.0
 # need to do that as a special case with the vpath directive:
 #
 
-override VPATH := $(patsubst %,%/..,$(VPATH))
 vpath %.cc ..
 vpath %.c ..
 
