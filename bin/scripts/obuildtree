@@ -160,12 +160,12 @@ revimports="$baseomnitree $revimports"
 
 echo
 echo "Does this build tree have an export tree ?"
-echo -n "> [y] "
+echo -n "> [n] "
 
 myread isexporttree
 
 if [ "$isexporttree" = "" ]; then
-  isexporttree="y"
+  isexporttree="n"
 fi
 
 if [ "$isexporttree" = "y" ]; then
@@ -188,12 +188,12 @@ fi
 
 echo
 echo "Does this build tree have any source trees ?"
-echo -n "> [y] "
+echo -n "> [n] "
 
 myread issourcetree
 
 if [ "$issourcetree" = "" ]; then
-  issourcetree="y"
+  issourcetree="n"
 fi
 
 if [ "$issourcetree" = "y" ]; then
