@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.4  1998/01/20 17:32:38  sll
-  Added support for OpenVMS.
+  Revision 1.5  1998/03/04 14:44:36  sll
+  Updated to use omniORB::giopServerThreadWrapper.
 
+// Revision 1.4  1998/01/20  17:32:38  sll
+// Added support for OpenVMS.
+//
   Revision 1.3  1997/12/18 17:27:39  sll
   Updated to work under glibc-2.0.
 
@@ -113,6 +116,7 @@ public:
   }
   virtual ~tcpSocketWorker() { }
   virtual void run(void *arg);
+  static void _realRun(void* arg);
 
 private:
   Strand::Sync    pd_sync;
@@ -932,6 +936,15 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
 void
 tcpSocketWorker::run(void *arg)
+{
+  omniORB::giopServerThreadWrapper::
+        getGiopServerThreadWrapper()->run(tcpSocketWorker::_realRun,arg);
+  // the wrapper run() method will pass back control to tcpSocketWorker
+  // by calling  _realRun(arg) when it is ready.
+}
+
+void
+tcpSocketWorker::_realRun(void *arg)
 {
   tcpSocketStrand* s = (tcpSocketStrand*)arg;
 
