@@ -222,12 +222,11 @@ toIOR(const char* iorstr,IOP::IOR& ior)
     }
     else
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-    v >>= buf;
+    buf.marshalOctet(v);
   }
 
   buf.rewindInputPtr();
-  CORBA::Boolean b;
-  b <<= buf;
+  CORBA::Boolean b = buf.unmarshalBoolean();
   buf.setByteSwapFlag(b);
 
   ior.type_id = IOP::IOR::unmarshaltype_id(buf);
@@ -238,7 +237,7 @@ static
 char* toString(IOP::IOR& ior)
 {
   cdrMemoryStream buf(CORBA::ULong(0),1);
-  omni::myByteOrder >>= buf;
+  buf.marshalBoolean(omni::myByteOrder);
   ior.type_id >>= buf;
   ior.profiles >>= buf;
 

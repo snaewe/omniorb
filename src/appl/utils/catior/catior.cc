@@ -128,7 +128,7 @@ getopt(int num_args, char* const* args, const char* optstring)
 
 
 static void
-print_key(_CORBA_Unbounded_Sequence__Octet& key, int hexflag)
+print_key(_CORBA_Unbounded_Sequence_Octet& key, int hexflag)
 {
   if (hexflag) {
     // Output key in hexadecimal form.
@@ -172,10 +172,10 @@ print_key(_CORBA_Unbounded_Sequence__Octet& key, int hexflag)
 
 
 static int
-get_poa_info(_CORBA_Unbounded_Sequence__Octet& key,
-	     _CORBA_Unbounded_Sequence__String& poas_out,
+get_poa_info(_CORBA_Unbounded_Sequence_Octet& key,
+	     _CORBA_Unbounded_Sequence_String& poas_out,
 	     int& transient_out,
-	     _CORBA_Unbounded_Sequence__Octet& id_out)
+	     _CORBA_Unbounded_Sequence_Octet& id_out)
 {
   const char* k = (const char*) key.NP_data();
   int len = key.length();
@@ -221,11 +221,11 @@ get_poa_info(_CORBA_Unbounded_Sequence__Octet& key,
 
 
 static void
-print_omni_key(_CORBA_Unbounded_Sequence__Octet& key, int hexflag)
+print_omni_key(_CORBA_Unbounded_Sequence_Octet& key, int hexflag)
 {
-  _CORBA_Unbounded_Sequence__String poas;
+  _CORBA_Unbounded_Sequence_String poas;
   int is_transient;
-  _CORBA_Unbounded_Sequence__Octet id;
+  _CORBA_Unbounded_Sequence_Octet id;
 
   if( get_poa_info(key, poas, is_transient, id) ) {
     cout << "POA(" << (char*)poas[0];
@@ -309,12 +309,11 @@ toIOR(const char* iorstr,IOP::IOR& ior)
     }
     else
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-    v >>= buf;
+    buf.marshalOctet(v);
   }
 
   buf.rewindInputPtr();
-  CORBA::Boolean b;
-  b <<= buf;
+  CORBA::Boolean b = buf.unmarshalBoolean();
   buf.setByteSwapFlag(b);
 
   ior.type_id = IOP::IOR::unmarshaltype_id(buf);
