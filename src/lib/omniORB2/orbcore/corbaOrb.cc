@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.4.3  1999/10/02 18:31:55  sll
+  New internal function internal_init_BOA().
+
   Revision 1.29.4.2  1999/09/25 17:00:19  sll
   Merged changes from omni2_8_develop branch.
 
@@ -174,6 +177,7 @@ CORBA::Boolean           useTypeCodeIndirections = 1;
 CORBA::Boolean           acceptMisalignedTcIndirections = 0;
 CORBA::Boolean           verifyObjectExistsAndType = 1;
 CORBA::Boolean           abortOnInternalError = 0;
+CORBA::Boolean           noFirewallNavigation = 0;
 }
 
 #else
@@ -191,6 +195,7 @@ CORBA::Boolean                  omniORB::useTypeCodeIndirections = 1;
 CORBA::Boolean                  omniORB::acceptMisalignedTcIndirections = 0;
 CORBA::Boolean                  omniORB::verifyObjectExistsAndType = 1;
 CORBA::Boolean                  omniORB::abortOnInternalError = 0;
+CORBA::Boolean                  omniORB::noFirewallNavigation = 0;
 #endif
 
 _CORBA_Unbounded_Sequence_Octet omni::myPrincipalID;
@@ -204,6 +209,7 @@ static omni_mutex        internalLock;
 static const char*       bootstrapAgentHostname = 0;
 static CORBA::UShort     bootstrapAgentPort     = 900;
 
+static CORBA::Boolean    started_boa_internally = 0;
 
 #ifdef __SINIX__
 // Why haven't we got this signature from signal.h? - sll
@@ -418,6 +424,10 @@ ORB::NP_destroy()
 
   omni_mutex_lock sync(internalLock);
 
+  if (started_boa_internally) {
+    CORBA::BOA::getBOA()->destroy();
+  }
+
   // Call detach method of the initialisers in reverse order.
   omni_bootstrap_i_initialiser_.detach();
   omni_initFile_initialiser_.detach();
@@ -431,6 +441,22 @@ ORB::NP_destroy()
   delete orb;
   orb = 0;
 }
+
+void
+omni::internal_init_BOA() {
+
+  if (!orb) 
+    throw omniORB::fatalException(__FILE__,__LINE__,"Called internal_init_BOA() before ORB_init()");
+
+  omni_mutex_lock sync(internalLock);
+  if (!CORBA::BOA::getBOA(1)) {
+    char* argv[] = { 0 };  int argc = 0;
+    CORBA::BOA_var boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+    boa->impl_is_ready(0,1);
+    started_boa_internally = 1;
+  }
+}
+
 
 static
 void
