@@ -1,3 +1,11 @@
+Wed May  5 14:59:15 BST 2004 dgrisby
+====================================
+
+- Raise INV_OBJREF if setClientCallTimeout is given a nil objref.
+
+src/lib/omniORB/orbcore/omniORB.cc
+
+
 Wed May  5 11:52:34 BST 2004 dgrisby
 ====================================
 
