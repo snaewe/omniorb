@@ -1,3 +1,11 @@
+Fri Mar 17 16:26:42 GMT 2000 dpg1
+=================================
+
+- Another small improvement to omniidl's error reporting
+
+src/tool/omniidl/python/omniidl/main.py
+
+
 Thu Mar 16 17:25:53 GMT 2000 dpg1
 =================================
 
