@@ -53,7 +53,7 @@
 #ifndef __TCPARSER_H__
 #define __TCPARSER_H__
 
-#include <omniORB3/tcDescriptor.h>
+#include <omniORB/tcDescriptor.h>
 
 
 class TypeCode_base;

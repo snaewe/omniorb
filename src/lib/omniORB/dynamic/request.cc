@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB3
+//                            Package   : omniORB
 // request.cc                 Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,7 +27,7 @@
 //   Implementation of CORBA::Request.
 //
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -37,7 +37,7 @@
 #include <deferredRequest.h>
 #include <context.h>
 #include <string.h>
-#include <omniORB3/callDescriptor.h>
+#include <omniORB4/callDescriptor.h>
 #include <remoteIdentity.h>
 #include <exceptiondefs.h>
 

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB3
+//                            Package   : omniORB
 // dynAnyNil.cc               Created on: 11/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,7 +27,7 @@
 //   Implementation of nil DynAny objects.
 //
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop

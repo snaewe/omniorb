@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB3
+//                            Package   : omniORB
 // pseudo.h                   Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //

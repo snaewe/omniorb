@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB3
+//                            Package   : omniORB
 // dynamicImplementation.cc   Created on: 11/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -28,10 +28,10 @@
 //
 
 #define ENABLE_CLIENT_IR_SUPPORT
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #include <dynamicImplementation.h>
 #include <dynException.h>
-#include <omniORB3/callDescriptor.h>
+#include <omniORB4/callDescriptor.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>

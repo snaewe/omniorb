@@ -29,7 +29,7 @@
 //
 
 #define ENABLE_CLIENT_IR_SUPPORT
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #include <initRefs.h>
 #include <exceptiondefs.h>
 

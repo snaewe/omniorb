@@ -27,8 +27,8 @@
 //   Implementation of CORBA::UnknownUserException.
 //
 
-#include <omniORB3/CORBA.h>
-#include <omniORB3/tcDescriptor.h>
+#include <omniORB4/CORBA.h>
+#include <omniORB4/tcDescriptor.h>
 
 
 CORBA::UnknownUserException::UnknownUserException(Any* ex)

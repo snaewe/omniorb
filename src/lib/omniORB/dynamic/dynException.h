@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB3
+//                            Package   : omniORB
 // dynException.h             Created on: 6/99
 //                            Author    : Sai-Lai Lo (sll)
 //

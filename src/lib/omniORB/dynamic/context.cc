@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB3
+//                            Package   : omniORB
 // context.cc                 Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.12.2.2  2000/09/27 17:25:40  sll
+ Changed include/omniORB3 to include/omniORB4.
+
  Revision 1.12.2.1  2000/07/17 10:35:40  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -66,7 +69,7 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop

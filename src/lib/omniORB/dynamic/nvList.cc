@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // nvList.cc                  Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,7 +27,7 @@
 //   Implementation of CORBA::NVList.
 //
 
-#include <omniORB3/CORBA.h>
+#include <omniORB/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop

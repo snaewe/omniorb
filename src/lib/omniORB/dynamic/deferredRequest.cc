@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB3
+//                            Package   : omniORB
 // deferredRequest.cc         Created on: 10/1998
 //                            Author    : David Riddoch (djr)
 //

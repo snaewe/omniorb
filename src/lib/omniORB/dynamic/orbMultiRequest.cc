@@ -27,7 +27,7 @@
 //   Implementation of CORBA::ORB::send_multiple_requests_... etc.
 //
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #include <request.h>
 
 

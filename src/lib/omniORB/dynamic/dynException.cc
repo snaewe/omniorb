@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB3
+//                            Package   : omniORB
 // dynException.cc            Created on: 10/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,13 +27,13 @@
 //   Exceptions used in the Dynamic library.
 //
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
-#include <omniORB3/tcDescriptor.h>
+#include <omniORB4/tcDescriptor.h>
 #include <dynException.h>
 #include <exceptiondefs.h>
 

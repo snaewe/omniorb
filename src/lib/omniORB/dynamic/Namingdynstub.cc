@@ -27,4 +27,4 @@
 //
 
 #define USE_core_stub_in_nt_dll
-#include <omniORB3/NamingDynSK.cc>
+#include <omniORB/NamingDynSK.cc>
