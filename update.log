@@ -1,4 +1,12 @@
 
+Mon May 10 17:36:13 BST 1999 djr
+================================
+
+- Fixed bug in constructors for read-only streams.
+
+src/lib/omniORB2/orbcore/mbufferedStream.cc
+
+
 Fri Apr 30 18:20:12 BST 1999 tjr
 ================================
 
