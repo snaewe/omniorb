@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.3  2000/11/03 19:21:55  sll
+# Use include omniORB4 in the generated code.
+#
 # Revision 1.3.2.2  2000/10/12 15:37:50  sll
 # Updated from omni3_1_develop.
 #
@@ -85,7 +88,7 @@ header_comment = """\
 
 header = """\
 #include "@basename@@hh@"
-#include <omniORB3/tcDescriptor.h>
+#include <omniORB4/tcDescriptor.h>
 
 static const char* @prefix@_library_version = @library@;
 """
