@@ -1,3 +1,16 @@
+Fri Aug 18 10:50:14 BST 2000 sll
+================================
+
+- latest RTEMS updates
+
+external_merge/CREDITS
+external_merge/README.rtems
+external_merge/mk/rtems.mk
+external_merge/src/dir.mk
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/dir.mk
+src/lib/omnithread/dir.mk
+
+
 Fri Aug 18 10:40:54 BST 2000 djs
 ================================
 

@@ -13,6 +13,9 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
+# Revision 1.1.2.2  2000/08/18 09:53:01  sll
+# Latest RTEMS updates.
+#
 # Revision 1.1.2.1  2000/08/17 15:37:51  sll
 # Merged RTEMS port.
 #
@@ -47,14 +50,13 @@ NoGateKeeper = 1
 #
 # Global defines to build the ORB runtime libraries.
 #
-IMPORT_CPPFLAGS += -DPthreadDraftVersion=10 -DPthreadSupportThreadPriority \
-                   -DThreadStackSize=4096*4
-#Shouldn't these be put into OMNITHREAD_CPPFLAGS???
-#
-
 # IMPORT_CPPFLAGS += -D__rtems__
-# Is this necessary?
+# Not necessary because __rtems__ is builtin to the cross compiler
 
+
+#
+OMNITHREAD_CPPFLAGS += -DPthreadDraftVersion=10 -DPthreadSupportThreadPriority \
+                        -DThreadStackSize=4096*4
 
 #
 # The HOSTBINDIR variable is used to locate the HOST IDL compiler.
@@ -66,7 +68,7 @@ HOSTBINDIR = bin/x86_win32
 
 
 # BINDIR and LIBDIR contain the binaries and libraries of the target.
-BINDIR     = bin/$(platform)
+BINDIR     = $(HOSTBINDIR)
 LIBDIR     = lib/$(platform)
 #
 # Under Windows, when Microsoft VC+compiler is used, extra flags needs 
@@ -111,7 +113,7 @@ INSTEXEFLAGS	= -m 0755
 CP		 = cp
 MV		 = mv -f
 CPP = $(RTEMS_INSTALL_POINT)/bin/cpp
-CXXLINK  = $(RTEMS_INSTALL_POINT)/bin/$(RTEMS_CC_PREFIX)g+--pipe
+CXXLINK  = $(RTEMS_INSTALL_POINT)/bin/$(RTEMS_CC_PREFIX)g++ --pipe
 CFLAGS = -O4 -Wall -Wno-unused -fasm -g \
 -B$(RTEMS_BUILD)/$(RTEMS_BSP)/lib/ -specs bsp_specs -qrtems $(IMPORT_CPPFLAGS) \
 $(DIR_CPPFLAGS) -I$(RTEMS_BUILD)/$(RTEMS_BSP)/lib/include \
@@ -229,6 +231,7 @@ OMNIORB_IDL_ANY_FLAGS = -Wba
 endif
 OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
 OMNIORB_CPPFLAGS = -D__OMNIORB$(OMNIORB_MAJOR_VERSION)__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
+OMNIORB_IDL_OUTPUTDIR_PATTERN = -C%
 
 OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB$(OMNIORB_MAJOR_VERSION))
 ifdef OrbCoreOnly

@@ -10,7 +10,7 @@ configuration:
 
 - HOST OS           : NT 4.0 - Cygnus CygWin 1.1.2
 - RTOS              : RTEMS-4.5.0-beta3a
-- omniORB	    : omniORB-3.0.0 release
+- omniORB           : omniORB-3.0.1 release
 - Architecture      : i386 and BSP = pc486
 - Cross Compiler    : gcc 2.95.2 binutils-2.9.1, newlib 1.8.2 
 
@@ -92,9 +92,6 @@ the naming service ( omniNames ) and the examples that came with omniORB
 are working ok under your host.
 
 
-   - Apply the RTEMS patch to the source tree.
-     tr -d '\r' <omniORB-3.0.0-rtems-4.5.0-beta3a.patch | patch -p1
-
    - The source is ready to go.
 
 
@@ -102,9 +99,9 @@ Building omniORB for RTEMS
 ==========================
 
 Before you start building the system, you need to change the makefile
-mk/rtems.mk to localize your toolset to the proper location of the 
-RTEMS tree. If you have installed RTEMS on its default location, 
-everything might be ok. Please check.
+mk/rtems.mk to localize your toolset to point the proper location 
+of the RTEMS tree. If you have installed RTEMS on its 
+default location, everything might be ok. Please check.
 
 RTEMS_BUILD         = /opt/rtems
 RTEMS_INSTALL_POINT = /opt/rtems
@@ -148,6 +145,10 @@ A few other macros might need to be changed for your environment
      - Build the ORB run-time for RTEMS
      cd src/lib
      make export
+
+
+NOTE: To build the examples, you must unzip the archive $(TOP)/etc/rtems.zip.
+      See README under $(TOP)/etc for more details.
 
      - Build the examples
      cd src/examples
@@ -277,10 +278,12 @@ magnitude for it.
 What to do for Another BSP ?
 ============================
 
-  add a new platform to the file $(TOP)\config\config.mk
-  add the specific  $(TOP)\mk\platforms\your_new_BSP_specific.mk
-  it might rewuire some tweaking in $(TOP)\mk\rtems.mk
-  select your new target in $(TOP)\config\config.mk
+   + add the new platform to the file $(TOP)\config\config.mk
+
+   + add the specific file $(TOP)\mk\platforms\your_new_BSP_specific.mk.
+     It might require some tweaking in $(TOP)\mk\rtems.mk
+
+   + select your new target in $(TOP)\config\config.mk
 
 
 Issues

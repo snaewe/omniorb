@@ -34,7 +34,10 @@ endif
 #############################################################################
 
 lib     = $(patsubst %,$(LibPattern),omnithread)
+
+ifdef BuildSharedLibrary
 SUBDIRS = sharedlib
+endif
 
 #############################################################################
 #   Make variables for Win32 platforms                                      #
@@ -50,7 +53,7 @@ CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS)
 
 SUBDIRS = debug
 
-ifndef EmbeddedSystem
+ifdef BuildSharedLibrary
 SUBDIRS +=sharedlib
 endif
 

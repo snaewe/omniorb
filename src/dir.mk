@@ -6,7 +6,9 @@ export::
 	@$(NoPythonError)
 endif
 
+ifndef EmbeddedSystem
 SUBDIRS += tool
+endif
 
 SUBDIRS += lib appl
 
