@@ -395,7 +395,7 @@ do_check_in() {
       if [ "$line" = "" -o "$line" = "." ]; then
         break
       fi
-      message="$message${message+
+      message="$message${message:+
 }$line"
     done
 
@@ -440,7 +440,7 @@ do_check_in() {
     message="NEW FILE"
   fi
 
-  sourceFileFromTop=`echo "$sourceDir/$base" | sed 's|^.*\.\./|| s|^/.*/version.\../||'`
+  sourceFileFromTop=`echo "$sourceDir/$base" | sed 's|^.*\.\./||; s|^/.*/version.\../||'`
 
   updateLog="$updateLog
 $sourceFileFromTop - $message"
