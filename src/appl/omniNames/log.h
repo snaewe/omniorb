@@ -26,7 +26,13 @@
 #define _log_h_
 
 #include <omniORB4/CORBA.h>
-#include <fstream.h>
+
+#ifdef HAVE_STD
+#  include <fstream>
+   using namespace std;
+#else
+#  include <fstream.h>
+#endif
 
 #ifndef LOGDIR_ENV_VAR
 #define LOGDIR_ENV_VAR "OMNINAMES_LOGDIR"

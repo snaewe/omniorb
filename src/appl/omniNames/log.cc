@@ -22,13 +22,13 @@
 //  USA.
 //
 
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <time.h>
-#include <iostream.h>
 #include <fcntl.h>
 #if defined(__VMS) && __VMS_VER < 70000000
 #  include <omniVMS/unlink.hxx>
@@ -38,7 +38,17 @@
 #include <ObjectBinding.h>
 #include <INSMapper.h>
 #include <log.h>
-#include <iomanip.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+#  include <iomanip>
+   using namespace std;
+#  define IOS(x) ios::x
+#else
+#  include <iostream.h>
+#  include <iomanip.h>
+#  define IOS(x) x
+#endif
 
 #ifdef __WIN32__
 #  include <io.h>
@@ -61,15 +71,12 @@
 #  endif
 #endif
 
-#if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
+#ifdef HAVE_STD
+#  define USE_STREAM_OPEN
+#  define OPEN(name,mode,perm) open(name,mode)
+#elif defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
 #  define USE_STREAM_OPEN
 #  define OPEN(name,mode,perm) open(name,mode,perm)
-#elif defined(__KCC)
-#  define USE_STREAM_OPEN
-#  define OPEN(name,mode,perm) open(name,mode)
-#elif defined(__GNUG__) && __GNUG__ >= 3
-#  define USE_STREAM_OPEN
-#  define OPEN(name,mode,perm) open(name,mode)
 #elif defined(__DMC__)
 #  define USE_STREAM_OPEN
 #  define OPEN(name,mode,perm) open(name,mode,perm)
@@ -298,7 +305,11 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
     firstTime = 0;
 
 #ifdef __WIN32__
+#if _MSC_VER >= 1310
+    ifstream initf(active,ios::in);
+#else
     ifstream initf(active,ios::in | ios::nocreate);
+#endif
 #else
     ifstream initf(active);
 #endif
@@ -1054,7 +1065,7 @@ omniNameslog::getUnbind(istream& file)
 void
 omniNameslog::putKey(const PortableServer::ObjectId& id, ostream& file)
 {
-  file << hex;
+  file << IOS(hex);
   for (unsigned int i = 0; i < id.length(); i++) {
 #if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
     file << setfill('0') << setw(2) << (int)id[i];
@@ -1063,7 +1074,7 @@ omniNameslog::putKey(const PortableServer::ObjectId& id, ostream& file)
     file << std::setfill('0') << std::setw(2) << (int)id[i];
 #endif
   }
-  file << dec;
+  file << IOS(dec);
 }
 
 

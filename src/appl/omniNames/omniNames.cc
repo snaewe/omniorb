@@ -28,9 +28,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
-#include <iostream.h>
 #include <omnithread.h>
 #include <NamingContext_i.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 #ifdef __WIN32__
 #  include <io.h>
@@ -58,6 +64,7 @@ usage()
   cerr << "\nusage: omniNames [-start [<port>]]\n"
        <<   "                 [-logdir <directory name>]\n"
        <<   "                 [-errlog <file name>]\n"
+       <<   "                 [-ignoreport]\n"
        <<   "                 [<omniORB-options>...]" << endl;
   cerr << "\nUse -start option to start omniNames for the first time."
        << endl
@@ -66,6 +73,7 @@ usage()
        << endl;
   cerr << "\nUse -logdir option to specify the directory where the log/data files are kept.\n";
   cerr << "\nUse -errlog option to specify where standard error output is redirected.\n";
+  cerr << "\nUse -ignoreport option to ignore the port specification.\n";
   cerr << "\nYou can also set the environment variable " << LOGDIR_ENV_VAR
        << " to specify the\ndirectory where the log/data files are kept.\n"
        << endl;
@@ -114,6 +122,7 @@ main(int argc, char **argv)
 
   int port = 0;
   char* logdir = 0;
+  int ignoreport = 0;
 
   while (argc > 1) {
     if (strcmp(argv[1], "-start") == 0) {
@@ -125,6 +134,10 @@ main(int argc, char **argv)
 	port = atoi(argv[2]);
 	removeArgs(argc, argv, 1, 2);
       }
+    }
+    else if (strcmp(argv[1], "-ignoreport") == 0) {
+      ignoreport = 1;
+      removeArgs(argc, argv, 1, 1);
     }
     else if (strcmp(argv[1], "-logdir") == 0) {
       if (argc < 3) usage();
@@ -165,12 +178,17 @@ main(int argc, char **argv)
   // Add a fake command line option to tell the POA which port to use.
   //
 
-  insertArgs(argc, argv, 1, 4);
-  argv[1] = strdup("-ORBendPoint");
-  argv[2] = new char[20];
-  sprintf(argv[2], "giop:tcp::%d", port);
-  argv[3] = strdup("-ORBpoaUniquePersistentSystemIds");
-  argv[4] = strdup("1");
+  if (ignoreport) {
+    insertArgs(argc, argv, 1, 2);
+  }
+  else {
+    insertArgs(argc, argv, 1, 4);
+    argv[3] = strdup("-ORBendPoint");
+    argv[4] = new char[20];
+    sprintf(argv[4], "giop:tcp::%d", port);
+  }
+  argv[1] = strdup("-ORBpoaUniquePersistentSystemIds");
+  argv[2] = strdup("1");
 
   //
   // Initialize the ORB and the object adapter.

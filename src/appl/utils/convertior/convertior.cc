@@ -24,10 +24,17 @@
 //
 // Takes an IOR, hostname as arguments. Outputs IOR with new hostname.
 
-#include <iostream.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include <omniORB4/CORBA.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>

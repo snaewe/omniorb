@@ -24,11 +24,21 @@
 //
 // Lists contents of an IOR.
 
-#include <iostream.h>
-#include <iomanip.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include <omniORB4/CORBA.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+#  include <iomanip>
+   using namespace std;
+#  define IOS(x) ios::x
+#else
+#  include <iostream.h>
+#  include <iomanip.h>
+#  define IOS(x) x
+#endif
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
@@ -423,7 +433,7 @@ int main(int argc, char* argv[])
 	}
 	else {
 	  cout << "Unrecognised profile tag: 0x"
-	       << hex << (unsigned)(ior.profiles[count].tag)
+	       << IOS(hex) << (unsigned)(ior.profiles[count].tag)
 	       << endl;
 	}
       }
@@ -435,7 +445,7 @@ int main(int argc, char* argv[])
     if (ms)
       cerr << "(CORBA::MARSHAL: minor = " << ms << ")" << endl;
     else
-      cerr << "(CORBA::MARSHAL: minor = 0x" << hex << ex.minor() << ")"
+      cerr << "(CORBA::MARSHAL: minor = 0x" << IOS(hex) << ex.minor() << ")"
 	   << endl;
     return 1;
   }

@@ -23,6 +23,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.8  2003/05/09 13:32:59  dgrisby
+// Use standard iostreams if available.
+//
 // Revision 1.2.2.7  2002/01/16 12:35:46  dpg1
 // omniMapper used -ORBendpoint instead of -ORBendPoint.
 //
@@ -59,8 +62,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <iostream.h>
-#include <fstream.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+#  include <fstream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#  include <fstream.h>
+#endif
 
 static void
 usage()
@@ -186,7 +196,11 @@ static int
 processConfigFile(const char* configFile)
 {
 #ifdef __WIN32__
+#if _MSC_VER >= 1310
+  ifstream cfile(configFile, ios::in);
+#else
   ifstream cfile(configFile, ios::in | ios::nocreate);
+#endif
 #else
   ifstream cfile(configFile);
 #endif

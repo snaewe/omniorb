@@ -26,12 +26,19 @@
 // Program to generate IORs
 
 
-#include <iostream.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <omniORB4/CORBA.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
