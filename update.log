@@ -1,3 +1,14 @@
+Wed Jan 21 16:38:36 GMT 1998 sll
+================================
+
+- Final update for AIX build before the public release
+
+mk/platforms/powerpc_aix_4.2.mk
+mk/platforms/powerpc_aix_4.2_egcs.mk
+src/lib/omniORB2/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+
+
 Wed Jan 21 14:50:09 GMT 1998 sll
 ================================
 
