@@ -8,7 +8,7 @@
 \author{Tristan Richardson\\
         ORL\\
         Cambridge}
-\date{22 October 1996}
+\date{28 October 1996}
 
 \begin{document}
 
@@ -115,9 +115,9 @@ but no files).  Again these build trees need not have an export tree.
 
 \item
 \label{twoimporttrees}
-To share header files and libraries between several programs, the user
-needs their own import/export tree.  The build tree(s) should both import from
-and export to this import/export tree, as well as importing from the base OMNI
+To share header files and libraries between several programs, the user needs
+their own import/export tree.  The build tree(s) will both import from and
+export to this import/export tree, as well as importing from the base OMNI
 tree.  Note that if two programs want to share a library which is built in the
 same tree, the recommended way of doing this is to export the library to an
 import/export tree, rather than just pulling the library out of the build tree.
@@ -167,11 +167,11 @@ above.
 \subsection{Setting up Your Environment}
 
 Although not strictly necessary it is advisable to set the environment variable
-{\tt OMNI\_TREE} to point to the base OMNI tree you wish to use (for example
-{\tt /project/omni/version4.0}).  Then add the directories {\tt
-\$OMNI\_TREE/bin/}{\it platform} and {\tt \$OMNI\_TREE/bin/scripts} to your
+\verb|OMNI_TREE| to point to the base OMNI tree you wish to use (for example
+\verb|/project/omni/version4.0|).  Then add the directories
+\verb|$OMNI_TREE/bin|{\it platform} and \verb|$OMNI_TREE/bin/scripts| to your
 path in that order (so that platform-specific binaries will override scripts).
-You may also wish to add {\tt \$OMNI\_TREE/man} to your {\tt MANPATH}.  If the
+You may also wish to add \verb|$OMNI_TREE/man| to your {\tt MANPATH}.  If the
 version of make which is on your path is not GNU make then you need to set the
 environment variable {\tt GNUMAKE} to specify the command to run for GNU make.
 
@@ -183,7 +183,7 @@ brackets which will be used if you just hit RETURN.  In this case you want a
 build tree for whichever platform you're on with no source or export tree.  You
 can name the destination directory whatever you like.  For example:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 $ obuildtree
 
 Enter the base OMNI tree for this build tree
@@ -192,33 +192,44 @@ Enter the base OMNI tree for this build tree
 Enter the platform name from:
 alpha_osf1_3.2
 arm_atmos_3.0/atb
-i86_nt_3.5
+i586_linux_2.0
 sun4_sosV_5.5
-> sun4_sosV_5.5
+x86_nt_3.5
+> [sun4_sosV_5.5] 
 
 Enter the destination directory
 > [sun4_sosV_5.5] solaris_hello
 
-Enter the import trees in search order (the base OMNI tree
-"/project/omni/version4.0" will always be searched after these)
-> 
-
 Does this build tree have an export tree ?
-> [y] n
+> [n] 
+
+The final import tree will be /project/omni/version4.0 (the base OMNI tree)
+Enter any other import trees in search order
+> 
 
 Does this build tree have any source trees ?
 > [y] n
 
+************************************************************************
+
 Creating OMNI build tree "solaris_hello" for platform "sun4_sosV_5.5"
 
-$
-\end{verbatim}
+No export tree
+
+Import trees are:
+/project/omni/version4.0
+
+No source trees
+
+************************************************************************
+
+\end{verbatim}}
 
 Now go into your new build tree:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 $ cd solaris_hello
-\end{verbatim}
+\end{verbatim}}
 
 Notice that there is a directory called {\tt config} with files called {\tt
 config.mk} and {\tt sources}.  Generating these files is all that {\tt
@@ -226,7 +237,7 @@ obuildtree} does.
 
 Now you're ready to write your ``hello world'' program:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 $ cat >hello.c
 #include <stdio.h>
 int main()
@@ -234,8 +245,7 @@ int main()
   printf("Hello world!\n");
   return 0;
 }
-$
-\end{verbatim}
+\end{verbatim}}
 
 Now you need to specify how to make an executable from this C source file.
 This is done in a file called {\tt dir.mk}.  This is very similar in concept to
@@ -250,7 +260,7 @@ to define useful {\tt make} variables and rules which can then be used in your
 
 So for our example you need a {\tt dir.mk} like this:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 $ cat >dir.mk
 SRCS = hello.c
 
@@ -258,8 +268,7 @@ all:: hello
 
 hello: hello.o
         @$(CExecutable)
-$
-\end{verbatim}
+\end{verbatim}}
 
 Notice this looks just like a makefile -- except that the rule {\tt
 \$(CExecutable)} has been predefined for you so you don't need to worry about
@@ -267,34 +276,32 @@ compilers, linkers and their flags.  Note also that it is important to use a
 TAB rather than spaces in the make rule.  The ``@'' is there to tell make not
 to generate lots of irrelevant output.
 
-Now you can run ``{\tt omake}'' to build the executable:
+Now you can run ``{\tt omake}'' to build the executable\footnote{If you get a
+``missing separator'' error from make this is probably because you used spaces
+instead of a TAB in the rule}:
 
-{\small
-\begin{verbatim}
+{\small \begin{verbatim}
 $ omake
 
-make -r -f ./config/config.mk VPATH= TOP=. CURRENT=. MAKEARG1=
+make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET=
 
-/project/omni/version4.0/mk/afterdir.mk:26: hello.d: No such file or directory
-/bin/sh -ec "gcc -M -O   -I.  -I/project/omni/version4.0/include -D__sunos__ -D
-__sparc__ -D__OSVERSION__=5 -DSVR4 hello.c | sed 's/hello\\.o/& hello.d/g' > he
-llo.d"
-gcc -fpcc-struct-return -c -O   -I.  -I/project/omni/version4.0/include -D__sun
-os__ -D__sparc__ -D__OSVERSION__=5 -DSVR4 -o hello.o hello.c
+/project/omni/version4.0/mk/afterdir.mk:64: hello.d: No such file or directory
+/bin/sh -ec "gcc -M  -I.  -I/project/omni/version4.0/include -D__sunos__ -D__sp
+arc__ -D__OSVERSION__=5 -DSVR4 hello.c | sed 's/hello\\.o/& hello.d/g' > hello.
+d"
+gcc -c -O -fpcc-struct-return  -I.  -I/project/omni/version4.0/include -D__suno
+s__ -D__sparc__ -D__OSVERSION__=5 -DSVR4 -o hello.o hello.c
 + rm -f hello 
-+ gcc -fpcc-struct-return -o hello -L/project/omni/version4.0/lib/sun4_sosV_5.5
- hello.o 
-$
-\end{verbatim}
-}
++ gcc -o hello -L/project/omni/version4.0/lib/sun4_sosV_5.5 hello.o 
+\end{verbatim}}
 
 The result should be that three files are generated.  The file called
 {\tt hello} is the executable which you should be able to run:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 $ ./hello
 Hello world!
-\end{verbatim}
+\end{verbatim}}
 
 There should also be the object file {\tt hello.o}.  The third file is called
 {\tt hello.d}.  This contains the header file dependencies of {\tt hello.c}.
@@ -309,7 +316,7 @@ Because different platforms adopt different naming conventions for executables,
 the {\tt dir.mk} used above is not suitable for use on non-unix platforms.  To
 make it truly portable {\tt dir.mk} should look like this:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 SRCS = hello.c
 
 HELLO = $(patsubst %,$(BinPattern),hello)
@@ -321,7 +328,7 @@ $(HELLO): hello.o
 
 clean::
         $(RM) $(HELLO)
-\end{verbatim}
+\end{verbatim}}
 
 This uses GNU make's {\tt patsubst} feature together with a make variable {\tt
 BinPattern} to produce the name of the executable file.  For example on NT,
@@ -353,10 +360,10 @@ source files.
 For all but the most trivial of examples, your source tree will actually be a
 proper tree with several levels of subdirectories.  In this case each build
 tree needs to have the same directory structure as your source tree.  The
-``{\tt oshadow}'' utility can be used for this purpose.  Essentially it is just
-like ``{\tt lndir}'' but without the symbolic links.  When run at the top of an
-OMNI build tree, it uses the config/sources file to work out which directory
-you are likely to want to shadow.
+``{\tt oshadow}'' utility can be used for this purpose (in fact {\tt
+obuildtree} should ask if you want to run {\tt oshadow} for each of the source
+trees when you first create the build tree).  Essentially {\tt oshadow} is just
+like ``{\tt lndir}'' but without the symbolic links.
 
 \section{Creating an import/export tree}
 
@@ -374,17 +381,16 @@ into an import/export tree, this needs to be done by running ``{\tt omake
 export}'' inside a build tree.
 
 Suppose you want to export the {\tt hello} executable to your import/export
-tree.  When {\tt obuildtree} asks you for any import trees, specify the full
-path of your import/export tree.  When it also asks if the build tree has an
-export tree you should type ``y'' and again specify the full path of the
-import/export tree (with any luck this will be the default).  Now in your {\tt
-dir.mk} you need a rule which says how to export the {\tt hello} executable.
-Add the following:
+tree.  When {\tt obuildtree} asks you whether the build tree has an export tree
+you should type ``y'' and specify the full path of the import/export tree (with
+any luck this will be the default).  The export tree will automatically become
+the first import tree as well.  Now in your {\tt dir.mk} you need a rule which
+says how to export the {\tt hello} executable.  Add the following:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 export:: $(HELLO)
         @$(ExportExecutable)
-\end{verbatim}
+\end{verbatim}}
 
 When you run ``{\tt omake export}'' inside your build tree it should create a
 {\tt bin/}{\it platform} directory in your import/export tree and put the hello
@@ -407,11 +413,11 @@ LibPattern} and {\tt BinPattern} to generate the appropriate file name.
 Assigning a make variable to each library or executable name is probably a good
 idea, e.g.:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 lib = $(patsubst %,$(LibPattern),my_library)
 prog1 = $(patsubst %,$(BinPattern),my_program1)
 prog2 = $(patsubst %,$(BinPattern),my_program2)
-\end{verbatim}
+\end{verbatim}}
 
 These variables can then be used throughout the rest of {\tt dir.mk}.  All
 platforms support the extensions {\tt .c} for C source files, {\tt .cc} for C++
@@ -423,27 +429,27 @@ For building C or C++ programs use the ``rules'' CExecutable and CXXExecutable
 respectively (``rules'' like these are actually make variables which contain a
 canned sequence of shell commands).  The general forms are:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 $(prog1): <objects> <lib_depends>
         @(libs="<libs>"; $(CExecutable))
 
 $(prog2): <objects> <lib_depends>
         @(libs="<libs>"; $(CXXExecutable))
-\end{verbatim}
+\end{verbatim}}
 
 Here {\tt prog1} and {\tt prog2} have been assigned using BinPattern as
 suggested above, {\tt <objects>} is a list of object files and {\tt <libs>} is
-a list of libraries.  {\tt <lib\_depends>} is a list of library dependencies -
+a list of libraries.  \verb|<lib_depends>| is a list of library dependencies -
 for each library provided there should be a make variable both for the library
 itself and for putting in the dependencies of a program.  For example the
-omnithread library provides a variable {\tt OMNITHREAD\_LIB} which might
-contain something like ``{\tt -lomnithread -lpthreads}'' and a variable {\tt
-OMNITHREAD\_LIB\_DEPEND} which will contain the full pathname of {\tt
+omnithread library provides a variable \verb|OMNITHREAD_LIB| which might
+contain something like ``{\tt -lomnithread -lpthreads}'' and a variable
+\verb|OMNITHREAD_LIB_DEPEND| which will contain the full pathname of {\tt
 libomnithread.a}.  By specifying such dependencies programs will automatically
 be relinked whenever relevant libraries change.
 
 To specify the options that get given to the C or C++ compiler there are
-several variables you can use.  The most common one is {\tt DIR\_CPPFLAGS}.
+several variables you can use.  The most common one is \verb|DIR_CPPFLAGS|.
 This is used for passing C preprocessor flags (i.e. {\tt -D} and {\tt -I}) to
 both the C compiler and the C++ compiler.  The ``{\tt DIR}'' signifies that the
 flags are specific to this directory.  These flags will be used in addition to
@@ -462,35 +468,35 @@ As well as the rule to build the executable you should also have a rule to
 remove it when ``{\tt omake clean}'' is done and a rule to export it when
 ``{\tt omake export}'' is done, e.g.:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 clean::
         $(RM) $(prog1) $(prog2)
 
 export:: $(prog1) $(prog2)
         @$(ExportExecutable)
-\end{verbatim}
+\end{verbatim}}
 
 \subsection{Building libraries}
 
 To build a statically-linked (i.e. non-shared) library, use the rule
 {\tt StaticLinkLibrary}:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 $(lib): <objects>
         @$(StaticLinkLibrary)
-\end{verbatim}
+\end{verbatim}}
 
-Again you can use {\tt DIR\_CPPFLAGS}, {\tt CDEBUGFLAGS}, etc for controlling
+Again you can use \verb|DIR_CPPFLAGS|, {\tt CDEBUGFLAGS}, etc for controlling
 the flags given to the compiler.  To export the library and clean it out you
 should also have:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 clean::
         $(RM) $(lib)
 
 export:: $(lib)
         @$(ExportLibrary)
-\end{verbatim}
+\end{verbatim}}
 
 
 \subsection{Building in subdirectories}
@@ -498,7 +504,7 @@ export:: $(lib)
 Use the {\tt MakeSubdirs} rule.  Normally you just set the {\tt SUBDIRS}
 variable like this:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 SUBDIRS = wib wob
 
 all::
@@ -506,7 +512,7 @@ all::
 
 export::
         @$(MakeSubdirs)
-\end{verbatim}
+\end{verbatim}}
 
 This will cause both ``{\tt omake all}'' and ``{\tt omake export}'' to go down
 into the subdirectories {\tt wib} and {\tt wob}.  If you want to run {\tt
@@ -514,29 +520,29 @@ omake} with a different target in the subdirectories you can set the shell
 variable {\tt target}.  For example, if you want ``{\tt omake export}'' to
 actually perform ``{\tt omake all}'' in each of the subdirectories, do this:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 export::
         @(target=all; $(MakeSubdirs))
-\end{verbatim}
+\end{verbatim}}
 
 In fact you can use different subdirectories for different targets as well by
 using the {\tt subdirs} shell variable instead of the {\tt SUBDIRS} make
 variable:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 all::
         @(subdirs="a b"; $(MakeSubdirs))
 
 export::
         @(subdirs="c d"; $(MakeSubdirs))
-\end{verbatim}
+\end{verbatim}}
 
 If you want to pass make variable settings down to a subdirectory you can use
-the make variable {\tt SUBDIR\_MAKEFLAGS} (as with {\tt SUBDIRS} this can be
-overridden with a shell variable, in this case {\tt subdir\_makeflags}).  For
+the make variable \verb|SUBDIR_MAKEFLAGS| (as with {\tt SUBDIRS} this can be
+overridden with a shell variable, in this case \verb|subdir_makeflags|).  For
 example:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 SUBDIR_MAKEFLAGS = CDEBUGFLAGS=-g MY_MAKE_VARIABLE="foo bar"
 
 all::
@@ -544,27 +550,27 @@ all::
 
 export::
         @(subdir_makeflags='MY_MAKE_VARIABLE="wib wob"'; $(MakeSubdirs))
-\end{verbatim}
+\end{verbatim}}
 
 
 \subsection{Local include directories}
 
-One point to note is that when adding local include directories to {\tt
-DIR\_CPPFLAGS} you need to be aware of the way the VPATH mechanism works.  For
-example, putting:
+One point to note is that when adding local include directories to
+\verb|DIR_CPPFLAGS| you need to be aware of the way the VPATH mechanism works.
+For example, putting:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 DIR_CPPFLAGS = -I../include
-\end{verbatim}
+\end{verbatim}}
 
 will probably not do what you want since only this build tree will be searched
 for header files.  If you want to search through all the source trees for the
 equivalent include directories you need a ``patsubst'' expression to add the
 same relative path to each element of {\tt VPATH}:
 
-\begin{verbatim}
+{\small \begin{verbatim}
 DIR_CPPFLAGS = -I../include $(patsubst %,-I%/../include,$(VPATH))
-\end{verbatim}
+\end{verbatim}}
 
 
 \section{Creating a New Project Tree}
@@ -615,5 +621,55 @@ build trees which import from the project import/export tree, but they should
 not export to it from their private build trees.  It may even be worth writing
 a project-specific version of {\tt obuildtree} to create a build tree which
 automatically imports from both the base OMNI tree and the project tree.
+
+
+\section{CORBA}
+
+Using CORBA in your programs is easy.  In your {\tt dir.mk}:
+\begin{itemize}
+\item the make variable \verb|CORBA_INTERFACES| should contain a list of the
+IDL interfaces which your program uses.
+\item \verb|DIR_CPPFLAGS| should include \verb|$(CORBA_CPPFLAGS)|.
+\item Your rule for building the executable should have both
+\verb|$(CORBA_STUB_OBJS)| and \verb|$(CORBA_LIB_DEPEND)| in the dependencies.
+\item The rule should also specify \verb|$(CORBA_LIB)| as one of the libraries.
+\end{itemize}
+For example:
+
+{\small \begin{verbatim}
+CXXSRCS = foo.cc
+OBJS = foo.o
+FOO = $(patsubst %,$(BinPattern),foo)
+
+DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
+
+CORBA_INTERFACES = wib wob
+
+$(FOO): $(OBJS) $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
+\end{verbatim}}
+
+When you run ``{\tt omake}'' for the first time, a {\tt stub} directory should
+be created at the top level of the build tree.  The IDL compiler is invoked for
+each of the IDL files (in this case {\tt wib.idl} and {\tt wob.idl}), and the
+stubs generated are compiled and linked in to your executable binary.
+
+For each platform there should be a default implementation of CORBA to which
+the {\tt CorbaImplementation} variable is set (at present this will be either
+{\tt ORBIX} or {\tt OMNIORB}).  To override this setting you simply need to
+change {\tt CorbaImplementation} before the first rule in your {\tt dir.mk}.
+This can either be done inside {\tt dir.mk} itself (for a one-off hack), or in
+the {\tt beforedir.mk} of an import tree.  If you change {\tt
+CorbaImplementation} in this way you must be careful to make sure that all
+relevant libraries have also been built with the same CORBA implementation.
+
+\section{Building on NT}
+
+...to be continued
+
+
+\section{Building on ATMos}
+
+...to be continued
 
 \end{document}
