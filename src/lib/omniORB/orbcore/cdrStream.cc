@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2005/01/13 16:48:29  dgrisby
+  Typo in log message. Thanks Dirk Siebnich.
+
   Revision 1.1.2.16  2003/07/26 22:52:22  dgrisby
   Avoid spurious gcc warnings when sizeof pointer > sizeof int.
 
@@ -624,7 +627,7 @@ getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
 
       if (omniORB::trace(25)) {
 	omniORB::logger log;
-	log << " recieve codeset service context and set TCS to ("
+	log << " receive codeset service context and set TCS to ("
 	    << ((tcs_c) ? tcs_c->name() : "none") << "," 
 	    << ((tcs_w) ? tcs_w->name() : "none") << ")\n";
       }
