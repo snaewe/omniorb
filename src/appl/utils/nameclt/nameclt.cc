@@ -188,8 +188,8 @@ main(int argc, char **argv)
 
       do {
 	for (unsigned int i = 0; i < bl->length(); i++) {
-	  cerr << "(" << (*bl)[i].binding_name[0].id << ","
-	       << (*bl)[i].binding_name[0].kind << ") binding type "
+	  cerr << "(" << (char*)(*bl)[i].binding_name[0].id << ","
+	       << (char*)(*bl)[i].binding_name[0].kind << ") binding type "
 	       << (((*bl)[i].binding_type == CosNaming::nobject) ?
 		   "nobject" : "ncontext")
 	       << endl;
