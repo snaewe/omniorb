@@ -180,7 +180,7 @@ lib = $(soname).$(micro_version)
 $(lib): $(OBJS) $(CXXOBJS)
 	(set -x; \
         $(RM) $@; \
-        $(CXX) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+        $(CXX) $(CXXOPTIONS) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
        )
 
