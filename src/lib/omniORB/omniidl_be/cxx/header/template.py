@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.7  2001/04/19 09:30:12  sll
+#  Big checkin with the brand new internal APIs.
+# Scoped where appropriate with the omni namespace.
+#
 # Revision 1.5.2.6  2001/03/13 10:32:09  dpg1
 # Fixed point support.
 #
@@ -348,9 +352,9 @@ private:
 """
 
 interface_pof = """\
-class _pof_@name@ : public proxyObjectFactory {
+class _pof_@name@ : public _OMNI_NS(proxyObjectFactory) {
 public:
-  inline _pof_@name@() : proxyObjectFactory(@name@::_PD_repoId) {}
+  inline _pof_@name@() : _OMNI_NS(proxyObjectFactory)(@name@::_PD_repoId) {}
   virtual ~_pof_@name@();
 
   virtual omniObjRef* newObjRef(omniIOR*,omniIdentity*, omniLocalIdentity*);
@@ -368,7 +372,7 @@ public:
   @operations@
   
 public:  // Really protected, workaround for xlC
-  virtual _CORBA_Boolean _dispatch(GIOP_S&);
+  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
 
 private:
   virtual void* _ptrToInterface(const char*);

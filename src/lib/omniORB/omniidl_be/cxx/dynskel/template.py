@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.6  2001/04/19 09:30:12  sll
+#  Big checkin with the brand new internal APIs.
+# Scoped where appropriate with the omni namespace.
+#
 # Revision 1.3.2.5  2001/03/13 10:32:08  dpg1
 # Fixed point support.
 #
@@ -95,6 +99,8 @@ header_comment = """\
 header = """\
 #include "@basename@@hh@"
 #include <omniORB4/tcDescriptor.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 static const char* @prefix@_library_version = @library@;
 """
