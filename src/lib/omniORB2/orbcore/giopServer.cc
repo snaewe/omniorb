@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.21.6.10  2000/05/05 16:59:44  dpg1
+  Bug in HandleLocateRequest() when catching a LOCATION_FORWARD
+
   Revision 1.21.6.9  2000/04/27 10:48:00  dpg1
   Interoperable Naming Service
 
@@ -774,7 +777,7 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
 	  status = GIOP::OBJECT_HERE;
       }
       catch(omniORB::LOCATION_FORWARD& lf) {
-	status = GIOP::UNKNOWN_OBJECT;
+	status = GIOP::OBJECT_FORWARD;
 	WrLock();
 	pd_state = ReplyIsBeingComposed;
 
