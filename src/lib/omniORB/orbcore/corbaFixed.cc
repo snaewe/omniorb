@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.9  2002/01/21 17:40:05  dpg1
+// Lost sign in Fixed->double conversion. (Thanks Slava Garelin)
+//
 // Revision 1.1.2.8  2001/11/14 17:13:43  dpg1
 // Long double support.
 //
@@ -285,7 +288,10 @@ CORBA::Fixed::operator CORBA::LongDouble() const
     s = (s + pd_val[i]) / 10;
   }
 
-  return r + s;
+  if (pd_negative)
+    return -(r + s);
+  else
+    return r + s;
 }
 
 #  else
@@ -305,7 +311,10 @@ CORBA::Fixed::operator CORBA::Double() const
     s = (s + pd_val[i]) / 10;
   }
 
-  return r + s;
+  if (pd_negative)
+    return -(r + s);
+  else
+    return r + s;
 }
 
 #  endif

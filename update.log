@@ -1,3 +1,11 @@
+Mon Jan 21 17:37:03 GMT 2002 dpg1
+=================================
+
+- Lost sign in Fixed->double conversion. (Thanks Slava Garelin)
+
+src/lib/omniORB/orbcore/corbaFixed.cc
+
+
 Mon Jan 21 11:51:04 GMT 2002 dpg1
 =================================
 
