@@ -1,5 +1,9 @@
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
+ifeq ($(platform),x86_nt_3.5)
+CXXOPTIONS += -O2
+endif
+
 CXXSRCS = omniNames.cc NamingContext_i.cc log.cc
 
 omniNames = $(patsubst %,$(BinPattern),omniNames)
