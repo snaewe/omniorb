@@ -6,6 +6,10 @@ Thu Mar 14 14:38:23 GMT 2002 dpg1
 include/omniORB4/cdrStream.h
 src/lib/omniORB/orbcore/ior.cc
 
+- Scavenger locking bug.
+
+src/lib/omniORB/orbcore/giopStrand.cc
+
 
 Thu Mar 14 12:20:37 GMT 2002 dpg1
 =================================

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.15  2002/03/14 14:40:46  dpg1
+  Scavenger locking bug.
+
   Revision 1.1.4.14  2002/03/14 12:21:49  dpg1
   Undo accidental scavenger period change, remove invalid assertion.
 
@@ -724,12 +727,15 @@ Scavenger::execute()
  died:
   {
     mutex->lock();
+    theTask = 0;
     if (shutdown) {
       mutex->unlock();
       delete cond;
       delete mutex;
     }
-    theTask = 0;
+    else {
+      mutex->unlock();
+    }
     delete this;
   }
 }
@@ -749,7 +755,6 @@ Scavenger::notify()
 void
 Scavenger::terminate()
 {
-
   mutex->lock();
   if (theTask) {
     shutdown = 1;
