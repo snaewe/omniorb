@@ -26,6 +26,9 @@
 
 #include <iostream.h>
 #include <stdlib.h>
+#ifndef __WIN32__
+#include <unistd.h>
+#endif
 
 #include <omniORB2/CORBA.h>
 
