@@ -1,3 +1,25 @@
+Tue Sep  4 15:35:12 BST 2001 sll
+================================
+
+- Added the boolean argument to notifyCommFailure to indicate if
+  omniTransportLock is held by the caller.
+  Make sure reference count rd_nwaiting and wr_nwaiting are correct when a
+  timeout has occurred.
+
+
+src/lib/omniORB/include/GIOP_C.h
+src/lib/omniORB/include/GIOP_S.h
+src/lib/omniORB/include/giopRope.h
+src/lib/omniORB/include/giopStream.h
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopStream.cc
+
+
 Mon Sep  3 17:46:21 BST 2001 sll
 ================================
 
