@@ -27,6 +27,7 @@
 //   Implementation of CORBA::NVList.
 //
 
+#define ENABLE_CLIENT_IR_SUPPORT
 #include <pseudo.h>
 
 

@@ -27,6 +27,7 @@
 //   Dynamic Skeleton Interface (DSI).
 //
 
+#define ENABLE_CLIENT_IR_SUPPORT
 #include <dynamicImplementation.h>
 #include <pseudo.h>
 #include <string.h>

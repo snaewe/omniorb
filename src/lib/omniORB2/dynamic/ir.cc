@@ -28,11 +28,9 @@
 //   the Interface Repository stubs have been compiled in.
 //
 
+#define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB2/CORBA.h>
 #include <bootstrap_i.h>
-
-
-#if defined(ENABLE_CLIENT_IR_SUPPORT)
 
 
 CORBA::InterfaceDef_ptr
@@ -56,7 +54,7 @@ Object::_get_interface()
 }
 
 
-#else
+#if 0
 
 
 CORBA::InterfaceDef_ptr
