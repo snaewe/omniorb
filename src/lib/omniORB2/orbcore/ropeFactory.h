@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.6  1999/07/02 19:10:08  sll
+ Removed inlined virtual destructors. Some compilers generate a copy of
+ each destructor in each compilation unit.
+
  Revision 1.5  1999/03/11 16:25:55  djr
  Updated copyright notice
 
@@ -140,7 +144,7 @@ public:
 protected:
 
   ropeFactoryType() { next = ropeFactoryTypeList; ropeFactoryTypeList = this; }
-  virtual ~ropeFactoryType() {}
+  virtual ~ropeFactoryType();
 
   ropeFactoryType* next;
 };
@@ -186,7 +190,7 @@ public:
   friend class ropeFactoryList;
 
   ropeFactory() {}
-  virtual ~ropeFactory() {}
+  virtual ~ropeFactory();
 
   // To iterate through all the ropes instantiated by this factory, use the
   // Rope_iterator() (defined in rope.h) and pass this factory instance to
@@ -292,7 +296,7 @@ public:
   // This function is thread-safe.
 
   incomingRopeFactory() {}
-  virtual ~incomingRopeFactory() {}
+  virtual ~incomingRopeFactory();
 
 };
 
@@ -324,13 +328,13 @@ public:
   // This function is thread-safe.
 
   outgoingRopeFactory() {}
-  virtual ~outgoingRopeFactory() {}
+  virtual ~outgoingRopeFactory();
 };
 
 class ropeFactoryList {
 public:
   ropeFactoryList() : pd_head(0) {}
-  virtual ~ropeFactoryList() {}
+  virtual ~ropeFactoryList();
 
   virtual void insert(ropeFactory* p) { p->pd_next = pd_head; pd_head = p; }
 
@@ -345,7 +349,7 @@ private:
 class ropeFactoryList_ThreadSafe : public ropeFactoryList {
 public:
   ropeFactoryList_ThreadSafe() {}
-  virtual ~ropeFactoryList_ThreadSafe() {}
+  virtual ~ropeFactoryList_ThreadSafe();
 
   virtual void insert(ropeFactory* p) { 
     omni_mutex_lock sync(pd_lock);
@@ -365,7 +369,7 @@ public:
     l.lock(); 
     pd_this = l.pd_head; 
   }
-  virtual ~ropeFactory_iterator() { pd_l.unlock(); }
+  virtual ~ropeFactory_iterator();
   const ropeFactory* operator() () {
     ropeFactory* p = pd_this;
     if (pd_this)
