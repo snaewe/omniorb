@@ -210,7 +210,7 @@ DIR_CPPFLAGS += -I. -I/usr/local/include -DNO_STRCASECMP
 
 lib = _omniidlmodule.so
 libinit = init_omniidl
-py_exp = /usr/local/lib/python$(PYVERSION)/config/python.exp
+py_exp = $(PYPREFIX)/lib/python$(PYVERSION)/config/python.exp
 
 ifeq ($(notdir $(CXX)),xlC_r)
 

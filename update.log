@@ -1,3 +1,11 @@
+Fri Oct  5 15:27:13 BST 2001 dpg1
+=================================
+
+- Fix hard-coded Python path in AIX make rules.
+
+src/tool/omniidl/cxx/dir.mk
+
+
 Wed Oct  3 15:14:47 BST 2001 dpg1
 =================================
 
