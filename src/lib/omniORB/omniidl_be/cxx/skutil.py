@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.9  2001/06/19 16:41:49  sll
+# Type cast now correctly distinguishes between normal and array types.
+#
 # Revision 1.17.2.8  2001/06/19 14:23:21  sll
 # In the marshalling and unmarshalling code, only cast from a sequence T_var to
 # T&. Otherwise, the generate code is wrong with gcc 3.0. Suppose T is a
@@ -218,8 +221,10 @@ else """,
     indexing_string = loop.index()
     element_name = argname + indexing_string
 
- #   type_name = d_type.base(environment)
-    type_name = type.base(environment)
+    if dims != []:
+        type_name = d_type.base(environment)
+    else:
+        type_name = type.base(environment)
     bounded = ""
     kind = d_type.type().kind()
     
@@ -334,8 +339,11 @@ def unmarshall(to, environment, type, decl, name, from_where):
     indexing_string = loop.index()
     element_name = name + indexing_string
     
-#    type_name = d_type.base(environment)
-    type_name = type.base(environment)
+    if dims != []:
+        type_name = d_type.base(environment)
+    else:
+        type_name = type.base(environment)
+        
     bounded = ""
     kind = d_type.type().kind()
 
