@@ -69,6 +69,10 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include	<idl.hh>
 #include	<idl_extern.hh>
 
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #undef	INCREMENT
 #define	INCREMENT	64
 
