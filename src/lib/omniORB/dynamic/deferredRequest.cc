@@ -88,8 +88,8 @@ DeferredRequest::execute()
   {
     omni_tracedmutex_lock lock(pd_readyMutex);
     pd_ready = 1;
+    pd_readyCondition.signal();
   }
-  pd_readyCondition.signal();
 }
 
 OMNI_NAMESPACE_END(omni)
