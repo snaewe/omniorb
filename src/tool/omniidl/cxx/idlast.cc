@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/10/29 10:00:43  dpg1
+// Added code to find a value for the default case in a union.
+//
 // Revision 1.1  1999/10/27 14:05:59  dpg1
 // *** empty log message ***
 //
@@ -55,7 +58,7 @@ _CORBA_Boolean
 AST::
 process(FILE* f, const char* name)
 {
-  Scope::initCORBAScope();
+  Scope::init();
 
   yyin        = f;
   currentFile = idl_strdup(name);
@@ -72,6 +75,7 @@ AST::
 clear()
 {
   if (declarations_) delete declarations_;
+  Scope::clear();
   declarations_ = 0;
 }
 
@@ -763,9 +767,9 @@ void
 CaseLabel::
 setType(IdlType* type)
 {
-  if (!value_) return;
-
   labelKind_ = type->kind();
+
+  if (!value_) return;
 
   switch (labelKind_) {
   case IdlType::tk_short:     v_.short_     = value_->evalAsShort();     break;
@@ -889,27 +893,44 @@ Union::
   delete thisType_;
 }
 
-// Ugly code to set case label types and check for label
-// clashes. Clash detection is O(n^2). ***
-#define UNION_SWITCH(lt, op) { \
+// Ugly code to set case label types, check for label clashes, and
+// come up with a default label value. Loops are O(n^2), but n will
+// usually be quite small. ***
+#define UNION_SWITCH(lt, op, defstart, islastdef, nextdef) { \
   lt label; \
   for (c = cases; c; c = (UnionCase*)c->next()) { \
     for (l = c->labels(); l; l = (CaseLabel*)l->next()) { \
-      if (!l->isDefault()) { \
-        l->setType(t); \
-        label = l->op(); \
-      } \
+      l->setType(t); \
+      if (!l->isDefault()) \
+        label = l->labelAs ## op(); \
+      else \
+        defLabel = l; \
       for (d = cases; d != c->next(); d = (UnionCase*)d->next()) { \
         for (m = d->labels(); m && m != l; m = (CaseLabel*)m->next()) { \
           if (l->isDefault() || m->isDefault()) { \
             if (l->isDefault() && m->isDefault()) \
               ++clash; \
           } \
-	  else if (m->op() == label) \
-	    ++clash; \
+	  else if (m->labelAs ## op() == label) ++clash; \
         } \
       } \
     } \
+  } \
+  if (defLabel) { \
+    lt defVal = defstart; \
+  again ## op: \
+    for (c = cases; c; c = (UnionCase*)c->next()) { \
+      for (l = c->labels(); l; l = (CaseLabel*)l->next()) { \
+        if (!l->isDefault() && l->labelAs ## op() == defVal) { \
+          if (islastdef) goto nomore ## op; \
+          nextdef; \
+          goto again ## op; \
+        } \
+      } \
+    } \
+    foundDef = 1; \
+  nomore ## op: \
+    defLabel->setDefault ## op(defVal); \
   } \
   break; \
 }
@@ -935,26 +956,41 @@ finishConstruction(IdlType* switchType, UnionCase* cases)
     return;
   }
   UnionCase      *c, *d;
-  CaseLabel      *l, *m;
+  CaseLabel      *l, *m, *defLabel = 0;
   IdlType::Kind  k     = t->kind();
   int            clash = 0;
-
-  // *** Check enumerator enum
+  _CORBA_Boolean foundDef = 0;
 
   switch (k) {
-  case IdlType::tk_short:     UNION_SWITCH(_CORBA_Short,     labelAsShort)
-  case IdlType::tk_long:      UNION_SWITCH(_CORBA_Long,      labelAsLong)
-  case IdlType::tk_ushort:    UNION_SWITCH(_CORBA_UShort,    labelAsUShort)
-  case IdlType::tk_ulong:     UNION_SWITCH(_CORBA_ULong,     labelAsULong)
-  case IdlType::tk_boolean:   UNION_SWITCH(_CORBA_Boolean,   labelAsBoolean)
-  case IdlType::tk_char:      UNION_SWITCH(_CORBA_Char,      labelAsChar)
+  case IdlType::tk_short:
+    UNION_SWITCH(_CORBA_Short, Short, -0x8000, defVal==0x7fff, ++defVal)
+  case IdlType::tk_long:
+    UNION_SWITCH(_CORBA_Long, Long, -0x80000000, defVal==0x7fffffff, ++defVal)
+  case IdlType::tk_ushort:
+    UNION_SWITCH(_CORBA_UShort, UShort, 0xffff, defVal==0, --defVal)
+  case IdlType::tk_ulong:
+    UNION_SWITCH(_CORBA_ULong, ULong, 0xffffffff, defVal==0, --defVal)
+  case IdlType::tk_boolean:
+    UNION_SWITCH(_CORBA_Boolean, Boolean, 0, defVal==1, defVal=1)
+  case IdlType::tk_char:
+    UNION_SWITCH(_CORBA_Char, Char, 0xff, defVal==0, --defVal)
 #ifdef HAS_LongLong
-  case IdlType::tk_longlong:  UNION_SWITCH(_CORBA_LongLong,  labelAsLongLong)
-  case IdlType::tk_ulonglong: UNION_SWITCH(_CORBA_ULongLong, labelAsULongLong)
+  case IdlType::tk_longlong:
+    UNION_SWITCH(_CORBA_LongLong, LongLong,
+		 -0x8000000000000000LL, defVal==0x7fffffffffffffffLL, ++defVal)
+  case IdlType::tk_ulonglong:
+    UNION_SWITCH(_CORBA_ULongLong, ULongLong,
+		 0xffffffffffffffffLL, defVal==0LL, --defVal)
 #endif
-  case IdlType::tk_wchar:     UNION_SWITCH(_CORBA_WChar,     labelAsWChar)
-  case IdlType::tk_enum:      UNION_SWITCH(Enumerator*,      labelAsEnumerator)
+  case IdlType::tk_wchar:
+    UNION_SWITCH(_CORBA_WChar, WChar, 0xffff, defVal==0, --defVal)
 
+  case IdlType::tk_enum:
+    {
+      Enum *e = (Enum*)((DeclaredType*)t)->decl();
+      UNION_SWITCH(Enumerator*, Enumerator, e->enumerators(),
+		   !defVal->next(), defVal=(Enumerator*)defVal->next())
+    }
   default:
     IdlError(file(), line(), "Invalid type for union switch: %s",
 	     t->kindAsString());
@@ -963,6 +999,11 @@ finishConstruction(IdlType* switchType, UnionCase* cases)
   if (clash)
     IdlError(file(), line(), "Error in union `%s': %d repeated union label%s",
 	     identifier(), clash, clash == 1 ? "" : "s");
+
+  if (defLabel && !foundDef)
+    IdlError(defLabel->file(), defLabel->line(),
+	     "Error in union `%s': cannot declare default case since "
+	     "all cases are explicitly listed", identifier());
 
   Prefix::endScope();
   Scope::endScope();
@@ -976,13 +1017,10 @@ Enumerator(const char* file, int line, _CORBA_Boolean mainFile,
 	   const char* identifier)
 
   : Decl(D_ENUMERATOR, file, line, mainFile),
+    DeclRepoId(identifier),
     container_(0)
 {
-  if (identifier[0] == '_')
-    identifier_ = idl_strdup(identifier+1);
-  else
-    identifier_ = idl_strdup(identifier);
-
+  if (identifier[0] == '_') identifier;
   Scope::current()->addDecl(identifier, 0, this, 0, file, line);
 }
 

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/10/29 10:00:43  dpg1
+// Added code to find a value for the default case in a union.
+//
 // Revision 1.1  1999/10/27 14:05:59  dpg1
 // *** empty log message ***
 //
@@ -97,7 +100,7 @@ public:
   // Linked list
   Decl* next() { return next_; }
 
-  void  append(Decl* d) {
+  void append(Decl* d) {
     if (d) {
       last_->next_ = d;
       last_        = d;
@@ -552,6 +555,16 @@ public:
   void accept(AstVisitor& visitor) { visitor.visitCaseLabel(this); }
 
   void setType(IdlType* type);
+  void setDefaultShort     (_CORBA_Short     v) { v_.short_      = v; }
+  void setDefaultLong      (_CORBA_Long      v) { v_.long_       = v; }
+  void setDefaultUShort    (_CORBA_UShort    v) { v_.ushort_     = v; }
+  void setDefaultULong     (_CORBA_ULong     v) { v_.ulong_      = v; }
+  void setDefaultBoolean   (_CORBA_Boolean   v) { v_.boolean_    = v; }
+  void setDefaultChar      (_CORBA_Char      v) { v_.char_       = v; }
+  void setDefaultLongLong  (_CORBA_LongLong  v) { v_.longlong_   = v; }
+  void setDefaultULongLong (_CORBA_ULongLong v) { v_.ulonglong_  = v; }
+  void setDefaultWChar     (_CORBA_WChar     v) { v_.wchar_      = v; }
+  void setDefaultEnumerator(Enumerator*      v) { v_.enumerator_ = v; }
 
 private:
   IdlExpr*       value_;
@@ -633,7 +646,7 @@ private:
 // Enumerator
 class Enum;
 
-class Enumerator : public Decl {
+class Enumerator : public Decl, public DeclRepoId {
 public:
   Enumerator(const char* file, int line, _CORBA_Boolean mainFile,
 	     const char* identifier);
@@ -642,7 +655,6 @@ public:
   const char* kindAsString() const { return "enumerator"; }
 
   // Queries
-  const char* identifier() const { return identifier_; }
   Enum*       container()  const { return container_; }
 
   void accept(AstVisitor& visitor) { visitor.visitEnumerator(this); }
