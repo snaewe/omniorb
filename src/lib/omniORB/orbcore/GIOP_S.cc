@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.27  2005/01/04 18:09:29  dgrisby
+  SkipRequestBody did not call notifyWkPreUpCall, which meant requests
+  would be mislaid if they came in the same buffer as a skipped request.
+
   Revision 1.1.4.26  2004/10/17 21:48:38  dgrisby
   Support CancelRequest better.
 
@@ -217,7 +221,6 @@ GIOP_S::dispatcher() {
     impl()->inputMessageBegin(this,impl()->unmarshalWildCardRequestHeader);
 
     {
-      ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
       omni_tracedmutex_lock sync(*omniTransportLock);
       pd_state = RequestHeaderIsBeingProcessed;
       if (!pd_strand->stopIdleCounter()) {
@@ -622,6 +625,14 @@ GIOP_S::SkipRequestBody() {
   OMNIORB_ASSERT(pd_state == RequestIsBeingProcessed);
 
   pd_state = WaitingForReply;
+
+  CORBA::Boolean data_in_buffer = 0;
+  if (pd_rdlocked) {
+    giopStrand& s = (giopStrand&) *this;
+    data_in_buffer = ((s.head) ? 1 : 0);
+  }
+  pd_worker->server()->notifyWkPreUpCall(pd_worker,data_in_buffer);
+
   impl()->inputMessageEnd(this,1);
 }
 

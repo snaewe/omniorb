@@ -1,3 +1,13 @@
+Tue Jan  4 18:05:35 GMT 2005 dgrisby
+====================================
+
+- SkipRequestBody did not call notifyWkPreUpCall, which meant requests
+  would be mislaid if they came in the same buffer as a skipped
+  request.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+
+
 Tue Jan  4 14:47:42 GMT 2005 dgrisby
 ====================================
 
