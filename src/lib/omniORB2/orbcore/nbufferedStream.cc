@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.8  1998/04/07 19:35:50  sll
+  Updated signature of NetBufferedStream::RdMessageSize(...).
+
   Revision 1.7  1997/12/09 18:34:12  sll
   Updated to support the new rope and strand interface.
 
@@ -467,7 +470,7 @@ NetBufferedStream::WrMessageSize(size_t msgsize)
 }
 
 void
-NetBufferedStream::RdMessageSize(size_t msgsize,CORBA::Boolean byteorder)
+NetBufferedStream::RdMessageSize(size_t msgsize,CORBA::Char byteorder)
 {
   giveback_received();
   pd_read = 0;
