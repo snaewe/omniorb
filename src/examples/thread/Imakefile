@@ -1,4 +1,4 @@
-# appl/test/threadtests/Imakefile
+XCOMM appl/test/threadtests/Imakefile
 
 /* makedepend generates dependency rules for 
       C   files listed in $(SRCS) and
