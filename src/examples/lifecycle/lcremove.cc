@@ -3,7 +3,7 @@
 // See the LifeCycle tutorial for explanation.
 
 #include <stdlib.h>
-
+#include <iostream.h>
 #include "echolag.hh"
 
 int
