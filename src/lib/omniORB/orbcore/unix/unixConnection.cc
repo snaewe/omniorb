@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/03/02 12:10:48  dgrisby
+  setSelectable / Peek fixes.
+
   Revision 1.1.4.3  2005/01/13 21:10:16  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -294,8 +297,8 @@ unixConnection::~unixConnection() {
 
 /////////////////////////////////////////////////////////////////////////
 void
-unixConnection::setSelectable(CORBA::Boolean now,
-			     CORBA::Boolean data_in_buffer) {
+unixConnection::setSelectable(int now,
+			      CORBA::Boolean data_in_buffer) {
 
   SocketHolder::setSelectable(now,data_in_buffer);
 }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/03/02 12:10:49  dgrisby
+  setSelectable / Peek fixes.
+
   Revision 1.1.4.3  2005/01/13 21:10:01  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -377,7 +380,7 @@ sslConnection::~sslConnection() {
 
 /////////////////////////////////////////////////////////////////////////
 void
-sslConnection::setSelectable(CORBA::Boolean now,
+sslConnection::setSelectable(int now,
 			     CORBA::Boolean data_in_buffer) {
 
   if (SSL_pending(ssl_handle())) data_in_buffer = 1;

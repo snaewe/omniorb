@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2005/03/02 12:10:50  dgrisby
+  setSelectable / Peek fixes.
+
   Revision 1.1.4.4  2005/01/17 14:46:19  dgrisby
   Windows SocketCollection implementation.
 
@@ -274,14 +277,18 @@ public:
 
   virtual ~SocketHolder();
 
-  void setSelectable(CORBA::Boolean now,
+  void setSelectable(int now,
 		     CORBA::Boolean data_in_buffer,
 		     CORBA::Boolean hold_lock=0);
   // Indicate that this socket should be watched for readability.
   //
-  // If now is true, immediately make the socket selectable (if the
+  // If now is 1, immediately make the socket selectable (if the
   // platform permits it), rather than waiting until the select loop
   // rescans.
+  //
+  // If now is 2, immediately make the socket selectable (if the
+  // platform permits it), but only if it is already marked
+  // selectable.
   //
   // If data_in_buffer is true, the socket is considered to already
   // have data available to read.
@@ -294,9 +301,10 @@ public:
 
   CORBA::Boolean Peek();
   // Do nothing and return immediately if the socket has not been set
-  // to be watched by a previous setSelectable().
-  // Otherwise, monitor the socket's status for a short time. Return
-  // true if the socket becomes readable, otherwise returns false.
+  // to be watched by a previous setSelectable(). Otherwise, monitor
+  // the socket's status for a short time. Mark the socket as no
+  // longer selectable and return true if the socket becomes readable,
+  // otherwise return false.
 
   friend class SocketCollection;
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.4  2005/03/02 12:10:49  dgrisby
+  setSelectable / Peek fixes.
+
   Revision 1.25.2.3  2005/01/13 21:09:59  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -1010,7 +1013,8 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
     }
 
     // Connection is selectable now
-    conn->setSelectable(1);
+    if (!conn->pd_dying)
+      conn->setSelectable(2);
 
     // Worker is no longer needed.
     CORBA::Boolean dying = 0;
@@ -1479,7 +1483,7 @@ OMNI_NAMESPACE_END(omni)
 //        - setSelectable
 //
 //     notifyWkDone()
-//        - setSelectable(1) if n worker == 1.
+//        - setSelectable(2) if n worker == 1.
 //
 
 ////////////////////////////////////////////////////////////////////////////

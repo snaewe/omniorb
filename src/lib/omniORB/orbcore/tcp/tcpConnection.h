@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/03/02 12:10:48  dgrisby
+  setSelectable / Peek fixes.
+
   Revision 1.1.4.3  2005/01/13 21:10:03  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -90,7 +93,7 @@ public:
 
   const char* peeraddress();
 
-  void setSelectable(CORBA::Boolean now = 0,CORBA::Boolean data_in_buffer = 0);
+  void setSelectable(int now = 0,CORBA::Boolean data_in_buffer = 0);
 
   void clearSelectable();
 

@@ -1,3 +1,20 @@
+Wed Mar  2 11:58:46 GMT 2005 dgrisby
+====================================
+
+- setSelectable / Peek fixes.
+
+include/omniORB4/giopEndpoint.h
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.h
+
+
 Tue Jan 25 16:41:11 GMT 2005 dgrisby
 ====================================
 
