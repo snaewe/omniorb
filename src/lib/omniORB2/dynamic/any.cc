@@ -29,9 +29,12 @@
 
 
 /* $Log$
-/* Revision 1.16  1999/07/02 19:10:46  sll
-/* Typecode extraction is now non-copy as well.
+/* Revision 1.17  1999/07/02 19:33:30  sll
+/* Corrected typo in operator>>= for typecode.
 /*
+ * Revision 1.16  1999/07/02 19:10:46  sll
+ * Typecode extraction is now non-copy as well.
+ *
  * Revision 1.15  1999/06/28 17:38:19  sll
  * Fixed bug in Any marshalling when tcAliasExpand is set to 1.
  *
@@ -590,8 +593,8 @@ CORBA::Any::operator>>=(CORBA::TypeCode_ptr& tc) const
       if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
         PR_setCachedData((void*)tcm._ptr,delete_typecode);
       }
-      tc = tmp._ptr;
-      tmp._ptr = CORBA::TypeCode::_nil(); return 1;
+      tc = tcm._ptr;
+      tcm._ptr = CORBA::TypeCode::_nil(); return 1;
     } else {
       tc = CORBA::TypeCode::_nil(); return 0;
     }
