@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.21  2003/05/09 13:31:02  dgrisby
+  Restore LongLong ifdefs. Where did they go?
+
   Revision 1.1.2.20  2003/03/02 17:10:41  dgrisby
   AIX patches integrated in main tree.
 
@@ -286,6 +289,7 @@ public:
     }
   }
 
+#  ifdef HAS_LongLong
   friend inline void operator>>= (_CORBA_LongLong a, cdrStream& s) {
     if (s.pd_marshal_byte_swap) {
       _CORBA_LongLong t = Swap64(a);
@@ -317,6 +321,7 @@ public:
       a = t;
     }
   }
+#  endif
 #else
   friend inline void operator>>= (_CORBA_Short      a, cdrStream& s);
   friend inline void operator<<= (_CORBA_Short&     a, cdrStream& s);
@@ -326,10 +331,12 @@ public:
   friend inline void operator<<= (_CORBA_Long&      a, cdrStream& s);
   friend inline void operator>>= (_CORBA_ULong      a, cdrStream& s);
   friend inline void operator<<= (_CORBA_ULong&     a, cdrStream& s);
+#  ifdef HAS_LongLong
   friend inline void operator>>= (_CORBA_LongLong   a, cdrStream& s);
   friend inline void operator<<= (_CORBA_LongLong&  a, cdrStream& s);
   friend inline void operator>>= (_CORBA_ULongLong  a, cdrStream& s);
   friend inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s);
+#  endif
 #endif
 
 #if !defined(NO_FLOAT)
@@ -847,6 +854,7 @@ inline void operator<<= (_CORBA_ULong& a, cdrStream& s) {
   }
 }
 
+#ifdef HAS_LongLong
 inline void operator>>= (_CORBA_LongLong a, cdrStream& s) {
   if (s.pd_marshal_byte_swap) {
     _CORBA_LongLong t = Swap64(a);
@@ -878,6 +886,7 @@ inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s) {
     a = t;
   }
 }
+#endif
 
 #if !defined(NO_FLOAT)
 
