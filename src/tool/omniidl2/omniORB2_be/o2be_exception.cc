@@ -25,6 +25,11 @@
 
 /*
   $Log$
+  Revision 1.11  1998/08/19 15:52:20  sll
+  New member functions void produce_binary_operators_in_hdr and the like
+  are responsible for generating binary operators <<= etc in the global
+  namespace.
+
   Revision 1.10  1998/08/13 22:37:07  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -146,7 +151,6 @@ o2be_exception::produce_hdr(std::fstream &s)
 	      }
 	      break;
 	    }
-#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
 	  case AST_Decl::NT_sequence:
 	    {
 	      if (decl->node_type() == AST_Decl::NT_sequence) {
@@ -161,7 +165,6 @@ o2be_exception::produce_hdr(std::fstream &s)
 	      }
 	      break;
 	    }
-#endif
 	  default:
 	    s << o2be_name::narrow_and_produce_unambiguous_name(decl,this)
 	      << " " << o2be_field::narrow_from_decl(d)->uqname() << ";\n";
@@ -217,7 +220,6 @@ o2be_exception::produce_hdr(std::fstream &s)
 	    }
 	  break;
 	case o2be_operation::tSequence:
-#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
 	  if (decl->node_type() == AST_Decl::NT_sequence) {
 	    s << o2be_sequence::narrow_from_decl(decl)->seq_template_name(this);
 	  }
@@ -225,7 +227,6 @@ o2be_exception::produce_hdr(std::fstream &s)
 	    s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
 	  }
 	  break;
-#endif
 	default:
 	  s << o2be_name::narrow_and_produce_unambiguous_name(decl,this)
 	    << ((mapping.is_arrayslice) ? "_slice":"")
@@ -244,10 +245,10 @@ o2be_exception::produce_hdr(std::fstream &s)
   }
   IND(s); s << uqname() << " & operator=(const " << uqname() << " &);\n";
   IND(s); s << "virtual ~" << uqname() << "() {};\n";
-  IND(s); s << "size_t NP_alignedSize(size_t initialoffset);\n";
-  IND(s); s << "void operator>>= (NetBufferedStream &);\n";
+  IND(s); s << "size_t NP_alignedSize(size_t initialoffset) const;\n";
+  IND(s); s << "void operator>>= (NetBufferedStream &) const;\n";
   IND(s); s << "void operator<<= (NetBufferedStream &);\n";
-  IND(s); s << "void operator>>= (MemBufferedStream &);\n";
+  IND(s); s << "void operator>>= (MemBufferedStream &) const;\n";
   IND(s); s << "void operator<<= (MemBufferedStream &);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
@@ -256,37 +257,11 @@ o2be_exception::produce_hdr(std::fstream &s)
     if (check_recursive_seq() == I_FALSE) {
       set_recursive_seq(I_FALSE);
       // TypeCode_ptr declaration
-      IND(s); s << VarToken(*this)
+      IND(s); s << variable_qualifier()
 		<< " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
-
-    // any insertion operators (inline definitions)
-      IND(s); s << FriendToken(*this)
-		<< " inline void operator<<=(CORBA::Any& _a, const " << uqname() 
-		<< "& _s) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
-      IND(s); s << tcname() << "->NP_fillInit(_0RL_mbuf);\n";
-      IND(s); s << uqname() << " _0RL_s = _s;\n";
-      IND(s); s << "_0RL_s >>= _0RL_mbuf;\n";
-      IND(s); s << "_a.NP_replaceData(" << tcname() << ",_0RL_mbuf);\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
-
-      IND(s); s << FriendToken(*this)
-		<< " inline void operator<<=(CORBA::Any& _a, " << uqname() 
-		<< "* _sp) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "_a <<= *_sp;\n";
-      IND(s); s << "delete _sp;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
-
-      // any extraction operator (declaration)
-      IND(s); s << FriendToken(*this)
-		<< " CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
-		<< uqname() << "*& _sp);\n\n";
     }
-    else set_recursive_seq(I_TRUE);
+    else 
+      set_recursive_seq(I_TRUE);
   }
 }
 
@@ -409,7 +384,6 @@ o2be_exception::produce_skel(std::fstream &s)
 	    }
 	  break;
 	case o2be_operation::tSequence:
-#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
 	  if (decl->node_type() == AST_Decl::NT_sequence) {
 	    s << o2be_sequence::narrow_from_decl(decl)->seq_template_name(this);
 	  }
@@ -417,7 +391,6 @@ o2be_exception::produce_skel(std::fstream &s)
 	    s << o2be_name::narrow_and_produce_unambiguous_name(decl,this);
 	  }
 	  break;
-#endif
 	default:
 	  s << o2be_name::narrow_and_produce_unambiguous_name(decl,this)
 	    << ((mapping.is_arrayslice) ? "_slice":"")
@@ -582,7 +555,7 @@ o2be_exception::produce_skel(std::fstream &s)
   IND(s); s << "}\n\n";
 
   IND(s); s << "size_t\n";
-  IND(s); s << fqname() << "::NP_alignedSize(size_t _initialoffset)\n";
+  IND(s); s << fqname() << "::NP_alignedSize(size_t _initialoffset) const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "size_t _msgsize = _initialoffset;\n";
@@ -618,7 +591,7 @@ o2be_exception::produce_skel(std::fstream &s)
   IND(s); s << "}\n\n";
 
   IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator>>= (NetBufferedStream &_n)\n";
+  IND(s); s << fqname() << "::operator>>= (NetBufferedStream &_n) const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   {
@@ -684,7 +657,7 @@ o2be_exception::produce_skel(std::fstream &s)
   IND(s); s << "}\n\n";
 
   IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator>>= (MemBufferedStream &_n)\n";
+  IND(s); s << fqname() << "::operator>>= (MemBufferedStream &_n) const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   {
@@ -785,46 +758,94 @@ o2be_exception::produce_skel(std::fstream &s)
 	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
 		  << "_01RL_" << _fqtcname() << ";\n\n";
       }
-
-    IND(s); s << "void _03RL_" << _fqname() << "_delete(void* _data) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << fqname() << "*" << " _0RL_t = (" << fqname() << "*) _data;\n";
-    IND(s); s << "delete _0RL_t;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-        
-    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
-	      << fqname() << "*& _sp) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
-    IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
-	      << ",1)) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "_sp = 0;\n";
-    IND(s); s << "return 0;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    IND(s); s << "else {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
-    IND(s); s << "if (!_0RL_data) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
-    IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
-    IND(s); s << fqname() << "* _0RL_tmp = new " << fqname() << ";\n";
-    IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
-    IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
-    IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << _fqname() 
-	      << "_delete);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-    IND(s); s << "_sp = (" << fqname() << "*) _0RL_data;\n";
-    IND(s); s << "return 1;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
   } 
+}
+
+void
+o2be_exception::produce_binary_operators_in_hdr(std::fstream &s)
+{
+  if (idl_global->compile_flags() & IDL_CF_ANY) 
+    {
+      if (check_recursive_seq() == I_FALSE) 
+	{
+	  set_recursive_seq(I_FALSE);
+	  s << "\n";
+	  // any insertion and extraction operators
+	  IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
+		    << fqname() << "& _s);\n";
+	  IND(s); s << "void operator<<=(CORBA::Any& _a, " 
+		    << fqname() <<"* _sp);\n";
+	  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+		    << fqname() << "*& _sp);\n\n";
+	}
+      else 
+	set_recursive_seq(I_TRUE);
+    }
+}
+
+void
+o2be_exception::produce_binary_operators_in_skel(std::fstream &s)
+{
+  if ((idl_global->compile_flags() & IDL_CF_ANY)&& recursive_seq() == I_FALSE) 
+    {
+      IND(s); s << "void _03RL_" << _fqname() << "_delete(void* _data) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << fqname() << "* _0RL_t = (" << fqname() << "*) _data;\n";
+      IND(s); s << "delete _0RL_t;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      // any insertion and extraction operators
+      IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
+		<< fqname() << "& _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
+      IND(s); s << fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
+      IND(s); s << "_s >>= _0RL_mbuf;\n";
+      IND(s); s << "_a.NP_replaceData(" << fqtcname() << ",_0RL_mbuf);\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      IND(s); s << "void operator<<=(CORBA::Any& _a, " << fqname() 
+		<< "* _sp) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "_a <<= *_sp;\n";
+      IND(s); s << "delete _sp;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+		<< fqname() << "*& _sp) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
+      IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
+		<< ",1)) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "_sp = 0;\n";
+      IND(s); s << "return 0;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      IND(s); s << "else {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
+      IND(s); s << "if (!_0RL_data) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
+      IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
+      IND(s); s << fqname() << "* _0RL_tmp = new " << fqname() << ";\n";
+      IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
+      IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
+      IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << _fqname() 
+		<< "_delete);\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+      IND(s); s << "_sp = (" << fqname() << "*) _0RL_data;\n";
+      IND(s); s << "return 1;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+  }   
 }
 
 void

@@ -26,6 +26,11 @@
 
 /* 
    $Log$
+   Revision 1.10  1998/08/19 15:53:06  sll
+   New member functions void produce_binary_operators_in_hdr and the like
+   are responsible for generating binary operators <<= etc in the global
+   namespace.
+
    Revision 1.9  1998/08/13 22:38:08  sll
    Added pragma hdrstop to control pre-compile header if the compiler feature
    is available.
@@ -183,6 +188,109 @@ o2be_module::produce_skel(std::fstream &s)
     }
   return;
 }
+
+void
+o2be_module::produce_binary_operators_in_hdr(std::fstream &s)
+{
+  if (!(in_main_file()))
+    return;
+
+  UTL_ScopeActiveIterator  i(this,UTL_Scope::IK_decls);
+  AST_Decl                 *decl;
+
+  while (!(i.is_done()))
+    {
+      decl = i.item();
+      if ((decl->in_main_file()))
+	{
+	  switch(decl->node_type()) {
+	  case AST_Decl::NT_module:
+	    o2be_module::
+	      narrow_from_decl(decl)->produce_binary_operators_in_hdr(s); 
+	    break;
+	  case AST_Decl::NT_interface:
+	    o2be_interface::
+	      narrow_from_decl(decl)->produce_binary_operators_in_hdr(s);
+	    break;
+	  case AST_Decl::NT_except:
+	    o2be_exception::
+	      narrow_from_decl(decl)->produce_binary_operators_in_hdr(s);
+	    break;
+	  case AST_Decl::NT_struct:
+	    o2be_structure::
+	      narrow_from_decl(decl)->produce_binary_operators_in_hdr(s);
+	    break;
+	  case AST_Decl::NT_typedef:
+	    o2be_typedef::
+	      narrow_from_decl(decl)->produce_binary_operators_in_hdr(s);
+	    break;
+	  case AST_Decl::NT_union:
+	    o2be_union::
+	      narrow_from_decl(decl)->produce_binary_operators_in_hdr(s);
+	    break;
+	  case AST_Decl::NT_enum:
+	    o2be_enum::
+	      narrow_from_decl(decl)->produce_binary_operators_in_hdr(s);
+	    break;
+	  default:
+	    break;
+	  }
+	}
+      i.next();
+    }
+}
+
+void
+o2be_module::produce_binary_operators_in_skel(std::fstream &s)
+{
+  if (!(in_main_file()))
+    return;
+
+  UTL_ScopeActiveIterator  i(this,UTL_Scope::IK_decls);
+  AST_Decl                 *decl;
+
+  while (!(i.is_done()))
+    {
+      decl = i.item();
+      if ((decl->in_main_file()))
+	{
+	  switch(decl->node_type()) {
+	  case AST_Decl::NT_module:
+	    o2be_module::
+	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s); 
+	    break;
+	  case AST_Decl::NT_interface:
+	    o2be_interface::
+	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	    break;
+	  case AST_Decl::NT_except:
+	    o2be_exception::
+	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	    break;
+	  case AST_Decl::NT_struct:
+	    o2be_structure::
+	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	    break;
+	  case AST_Decl::NT_typedef:
+	    o2be_typedef::
+	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	    break;
+	  case AST_Decl::NT_union:
+	    o2be_union::
+	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	    break;
+	  case AST_Decl::NT_enum:
+	    o2be_enum::
+	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	    break;
+	  default:
+	    break;
+	  }
+	}
+      i.next();
+    }
+}
+
 
 void
 o2be_module::produce_tie_templates(std::fstream &s)

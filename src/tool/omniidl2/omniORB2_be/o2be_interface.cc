@@ -27,6 +27,11 @@
 
 /*
   $Log$
+  Revision 1.23  1998/08/19 15:52:44  sll
+  New member functions void produce_binary_operators_in_hdr and the like
+  are responsible for generating binary operators <<= etc in the global
+  namespace.
+
   Revision 1.22  1998/08/13 22:43:16  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -1308,35 +1313,8 @@ o2be_interface::produce_hdr(std::fstream &s)
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
-    IND(s); s << VarToken(*this)
+    IND(s); s << variable_qualifier()
 	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
-
-    // any insertion operators (inline definitions)
-    IND(s); s << FriendToken(*this)
-	      << " inline void operator<<=(CORBA::Any& _a, " << objref_uqname() 
-	      << " _s) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
-    IND(s); s << tcname() << "->NP_fillInit(_0RL_mbuf);\n";
-    IND(s); s << uqname() << "::marshalObjRef(_s,_0RL_mbuf);\n";
-    IND(s); s << "_a.NP_replaceData(" << tcname() << ",_0RL_mbuf);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-
-    IND(s); s << FriendToken(*this)
-	      << " inline void operator<<=(CORBA::Any& _a, " << objref_uqname() 
-	      << "* _sp) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "_a <<= *_sp;\n";
-    IND(s); s << "CORBA::release(*_sp);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-
-    // any extraction operator (declaration)
-    IND(s); s << FriendToken(*this)
-	      << " CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
-	      << objref_uqname() 
-	      << "& _s);\n\n";
   }
 
 
@@ -2461,6 +2439,114 @@ o2be_interface::produce_skel(std::fstream &s)
 	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
 		  << "_01RL_" << _fqtcname() << ";\n\n";
       }
+  } 
+}
+
+void
+o2be_interface::produce_binary_operators_in_hdr(std::fstream &s)
+{
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	AST_Decl *d = i.item();
+	switch(d->node_type()) {
+	case AST_Decl::NT_enum:
+	  o2be_enum::
+	    narrow_from_decl(d)->produce_binary_operators_in_hdr(s);
+	  break;
+	case AST_Decl::NT_except:
+	  o2be_exception::
+	    narrow_from_decl(d)->produce_binary_operators_in_hdr(s);
+	  break;
+	case AST_Decl::NT_struct:
+	  o2be_structure::
+	    narrow_from_decl(d)->produce_binary_operators_in_hdr(s);
+	  break;
+	case AST_Decl::NT_typedef:
+	  o2be_typedef::
+	    narrow_from_decl(d)->produce_binary_operators_in_hdr(s);
+	  break;
+	case AST_Decl::NT_union:
+	  o2be_union::
+	    narrow_from_decl(d)->produce_binary_operators_in_hdr(s);
+	  break;
+	default:
+	  break;
+	}
+	i.next();
+      }
+  }
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    s << "\n";
+    // any insertion and extraction operators
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
+	      << " _s);\n";
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
+	      << "* _s);\n";
+    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+	      << objref_fqname() 
+	      << "& _s);\n\n";
+  }
+}
+
+void
+o2be_interface::produce_binary_operators_in_skel(std::fstream &s)
+{
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	AST_Decl *d = i.item();
+	switch(d->node_type()) {
+	case AST_Decl::NT_enum:
+	  o2be_enum::
+	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	  break;
+	case AST_Decl::NT_except:
+	  o2be_exception::
+	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	  break;
+	case AST_Decl::NT_struct:
+	  o2be_structure::
+	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	  break;
+	case AST_Decl::NT_typedef:
+	  o2be_typedef::
+	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	  break;
+	case AST_Decl::NT_union:
+	  o2be_union::
+	    narrow_from_decl(d)->produce_binary_operators_in_skel(s);
+	  break;
+	default:
+	  break;
+	}
+	i.next();
+      }
+  }
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+
+
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
+	      << " _s) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
+    IND(s); s << fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
+    IND(s); s << fqname() << "::marshalObjRef(_s,_0RL_mbuf);\n";
+    IND(s); s << "_a.NP_replaceData(" << fqtcname() << ",_0RL_mbuf);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
+	      << "* _sp) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_a <<= *_sp;\n";
+    IND(s); s << "CORBA::release(*_sp);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+
     IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
 	      << objref_fqname() << "& _s) {\n";
     INC_INDENT_LEVEL();
@@ -2481,7 +2567,7 @@ o2be_interface::produce_skel(std::fstream &s)
     IND(s); s << "}\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n\n";
-  } 
+  }
 }
 
 void

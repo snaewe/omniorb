@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.16  1998/08/19 15:54:50  sll
+  New member functions void produce_binary_operators_in_hdr and the like
+  are responsible for generating binary operators <<= etc in the global
+  namespace.
+
   Revision 1.15  1998/08/13 22:47:28  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -188,6 +193,8 @@ o2be_union::o2be_union(AST_ConcreteType *dt,
   pd_nodefault = I_TRUE;
   pd_hdr_produced_in_field = I_FALSE;
   pd_skel_produced_in_field = I_FALSE;
+  pd_binary_operators_hdr_produced_in_field = I_FALSE;
+  pd_binary_operators_skel_produced_in_field = I_FALSE;
 
   pd_out_adptarg_name = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
 				 strlen(fqname())+
@@ -563,7 +570,6 @@ o2be_union::produce_hdr(std::fstream &s)
 		  break;
 		}
 	      case o2be_operation::tSequence:
-#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
 		{
 		  if (f->field_type()->node_type() == AST_Decl::NT_sequence)
 		    {
@@ -591,7 +597,6 @@ o2be_union::produce_hdr(std::fstream &s)
 		    }
 		  break;
 		}
-#endif
 	      case o2be_operation::tStructFixed:
 	      case o2be_operation::tStructVariable:
 	      case o2be_operation::tUnionFixed:
@@ -880,7 +885,6 @@ o2be_union::produce_hdr(std::fstream &s)
 		break;
 		}
 	      case o2be_operation::tSequence:
-#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
 		if (f->field_type()->node_type() == AST_Decl::NT_sequence)
 		  {
 		    IND(s); s << "void "
@@ -932,7 +936,6 @@ o2be_union::produce_hdr(std::fstream &s)
 		    IND(s); s << "}\n";
 		  }
 		break;
-#endif
 	      case o2be_operation::tStructFixed:
 	      case o2be_operation::tStructVariable:
 	      case o2be_operation::tUnionFixed:
@@ -1219,7 +1222,6 @@ o2be_union::produce_hdr(std::fstream &s)
 			  << " pd_" << f->uqname() << ";\n";
 		break;
 	      case o2be_operation::tSequence:
-#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
 		if (f->field_type()->node_type() == AST_Decl::NT_sequence) 
 		  {
 		    IND(s); s << o2be_sequence::narrow_from_decl(f->field_type())->seq_template_name(this)
@@ -1230,10 +1232,6 @@ o2be_union::produce_hdr(std::fstream &s)
 		    IND(s); s << o2be_typedef::narrow_from_decl(f->field_type())->unambiguous_name(this)
 			      << " pd_" << f->uqname() << ";\n";
 		  }
-#else
-		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
-			  << " pd_" << f->uqname() << ";\n";
-#endif
 		break;
 	      case o2be_operation::tArrayFixed:
 		// Array of fixed size union is a special case, the data
@@ -1291,34 +1289,8 @@ o2be_union::produce_hdr(std::fstream &s)
       set_recursive_seq(I_FALSE);
 
       // TypeCode_ptr declaration
-      IND(s); s << VarToken(*this)
+      IND(s); s << variable_qualifier()
 		<< " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
-
-    // any insertion operators (inline definitions)
-      IND(s); s << FriendToken(*this)
-		<< " inline void operator<<=(CORBA::Any& _a, const " << uqname() 
-		<< "& _s) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
-      IND(s); s << tcname() << "->NP_fillInit(_0RL_mbuf);\n";
-      IND(s); s << "_s >>= _0RL_mbuf;\n";
-      IND(s); s << "_a.NP_replaceData(" << tcname() << ",_0RL_mbuf);\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
-
-      IND(s); s << FriendToken(*this)
-		<< " inline void operator<<=(CORBA::Any& _a, " << uqname() 
-		<< "* _sp) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "_a <<= *_sp;\n";
-      IND(s); s << "delete _sp;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
-
-      // any extraction operator (declaration)
-      IND(s); s << FriendToken(*this)
-		<< " CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
-		<< uqname() << "*& _sp);\n\n";
     }
     else set_recursive_seq(I_TRUE);
   }
@@ -2009,46 +1981,196 @@ o2be_union::produce_skel(std::fstream &s)
 	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
 		  << "_01RL_" << _fqtcname() << ";\n\n";
       }
-    
-    IND(s); s << "void _03RL_" << _fqname() << "_delete(void* _data) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << fqname() << "*" << " _0RL_t = (" << fqname() << "*) _data;\n";
-    IND(s); s << "delete _0RL_t;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-        
-    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
-	      << fqname() << "*& _sp) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
-    IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
-	      << ",1)) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "_sp = 0;\n";
-    IND(s); s << "return 0;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    IND(s); s << "else {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
-    IND(s); s << "if (!_0RL_data) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
-    IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
-    IND(s); s << fqname() << "* _0RL_tmp = new " << fqname() << ";\n";
-    IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
-    IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
-    IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << _fqname() 
-	      << "_delete);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-    IND(s); s << "_sp = (" << fqname() << "*) _0RL_data;\n";
-    IND(s); s << "return 1;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
   } 
+}
+
+
+void
+o2be_union::produce_binary_operators_in_hdr(std::fstream &s)
+{
+  {
+    // declare any constructor types defined in this scope
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	AST_Decl *d = i.item();
+	if (d->node_type() == AST_Decl::NT_union_branch)
+	  {
+	    AST_Decl *decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
+	    if (decl->has_ancestor(this))
+	      {
+		switch (decl->node_type())
+		  {
+		  case AST_Decl::NT_enum:
+		    if (!o2be_enum::narrow_from_decl(decl)
+			  ->get_binary_operators_hdr_produced_in_field()) 
+		      {
+			o2be_enum::narrow_from_decl(decl)
+			  ->set_binary_operators_hdr_produced_in_field();
+			o2be_enum::narrow_from_decl(decl)
+			  ->produce_binary_operators_in_hdr(s);
+		      }
+		    break;
+		  case AST_Decl::NT_struct:
+		    if (!o2be_structure::narrow_from_decl(decl)
+			  ->get_binary_operators_hdr_produced_in_field()) 
+		      {
+			o2be_structure::narrow_from_decl(decl)
+			  ->set_binary_operators_hdr_produced_in_field();
+			o2be_structure::narrow_from_decl(decl)
+			  ->produce_binary_operators_in_hdr(s);
+		      }
+		    break;
+		  case AST_Decl::NT_union:
+		    if (!o2be_union::narrow_from_decl(decl)
+			  ->get_binary_operators_hdr_produced_in_field()) 
+		      {
+			o2be_union::narrow_from_decl(decl)
+			  ->set_binary_operators_hdr_produced_in_field();
+			o2be_union::narrow_from_decl(decl)
+			  ->produce_binary_operators_in_hdr(s);
+		      }
+		    break;
+		  default:
+		    break;
+		  }
+	      }
+	  }
+	i.next();
+      }
+  }
+  if (idl_global->compile_flags() & IDL_CF_ANY)
+    {
+    if (check_recursive_seq() == I_FALSE)
+      {
+	set_recursive_seq(I_FALSE);
+	s << "\n";
+	  // any insertion and extraction operators
+	  IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
+		    << fqname() << "& _s);\n";
+	  IND(s); s << "void operator<<=(CORBA::Any& _a, " 
+		    << fqname() <<"* _sp);\n";
+	  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+		    << fqname() << "*& _sp);\n\n";
+	}
+      else 
+	set_recursive_seq(I_TRUE);
+    }
+}
+
+void
+o2be_union::produce_binary_operators_in_skel(std::fstream &s)
+{
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	AST_Decl *d = i.item();
+	if (d->node_type() == AST_Decl::NT_union_branch)
+	  {
+	    AST_Decl *decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
+	    if (decl->has_ancestor(this))
+	      {
+		switch (decl->node_type())
+		  {
+		  case AST_Decl::NT_enum:
+		    if (!o2be_enum::narrow_from_decl(decl)
+			  ->get_binary_operators_skel_produced_in_field()) 
+		      {
+			o2be_enum::narrow_from_decl(decl)
+			  ->set_binary_operators_skel_produced_in_field();
+			o2be_enum::narrow_from_decl(decl)
+			  ->produce_binary_operators_in_skel(s);
+		      }
+		    break;
+		  case AST_Decl::NT_struct:
+		    if (!o2be_structure::narrow_from_decl(decl)
+			  ->get_binary_operators_skel_produced_in_field()) 
+		      {
+			o2be_structure::narrow_from_decl(decl)
+			  ->set_binary_operators_skel_produced_in_field();
+			o2be_structure::narrow_from_decl(decl)
+			  ->produce_binary_operators_in_skel(s);
+		      }
+		    break;
+		  case AST_Decl::NT_union:
+		    if (!o2be_union::narrow_from_decl(decl)
+			  ->get_binary_operators_skel_produced_in_field()) 
+		      {
+			o2be_union::narrow_from_decl(decl)
+			  ->set_binary_operators_skel_produced_in_field();
+			o2be_union::narrow_from_decl(decl)
+			  ->produce_binary_operators_in_skel(s);
+		      }
+		    break;
+		  default:
+		    break;
+		  }
+	      }
+	  }
+	i.next();
+      }
+  }
+  if ((idl_global->compile_flags() & IDL_CF_ANY)&& recursive_seq() == I_FALSE)
+    {
+      IND(s); s << "void _03RL_" << _fqname() << "_delete(void* _data) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << fqname() << "* _0RL_t = (" << fqname() << "*) _data;\n";
+      IND(s); s << "delete _0RL_t;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      // any insertion and extraction operators
+      IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
+		<< fqname() << "& _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
+      IND(s); s << fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
+      IND(s); s << "_s >>= _0RL_mbuf;\n";
+      IND(s); s << "_a.NP_replaceData(" << fqtcname() << ",_0RL_mbuf);\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      IND(s); s << "void operator<<=(CORBA::Any& _a, " << fqname() 
+		<< "* _sp) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "_a <<= *_sp;\n";
+      IND(s); s << "delete _sp;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+		<< fqname() << "*& _sp) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
+      IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
+		<< ",1)) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "_sp = 0;\n";
+      IND(s); s << "return 0;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      IND(s); s << "else {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
+      IND(s); s << "if (!_0RL_data) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
+      IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
+      IND(s); s << fqname() << "* _0RL_tmp = new " << fqname() << ";\n";
+      IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
+      IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
+      IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << _fqname() 
+		<< "_delete);\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+      IND(s); s << "_sp = (" << fqname() << "*) _0RL_data;\n";
+      IND(s); s << "return 1;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+  }
 }
 
 void

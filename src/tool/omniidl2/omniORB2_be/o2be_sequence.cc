@@ -27,6 +27,11 @@
 
 /*
   $Log$
+  Revision 1.14  1998/08/19 15:53:57  sll
+  New member functions void produce_binary_operators_in_hdr and the like
+  are responsible for generating binary operators <<= etc in the global
+  namespace.
+
   Revision 1.13  1998/08/13 22:44:56  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -636,271 +641,23 @@ o2be_sequence::seq_member_name(AST_Decl* used_in)
 void
 o2be_sequence::produce_hdr(std::fstream &s)
 {
-#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
-  return;
-#else
-  s << "#ifndef " << _fqname() << "_defined\n"
-    << "#define " << _fqname() << "_defined\n\n";
-  o2be_operation::argMapping mapping;
-  o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(base_type(),
-					        o2be_operation::wIN,mapping);
-
-  size_t s_max = astExpr2val(max_size());
-  switch (ntype)
-    {
-    case o2be_operation::tShort:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "2,2> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "2,2> ";
-	}
-	break;
-      }
-    case o2be_operation::tLong:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "4,4> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "4,4> ";
-	}
-	break;
-      }
-    case o2be_operation::tUShort:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "2,2> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "2,2> ";
-	}
-	break;
-      }
-    case o2be_operation::tULong:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "4,4> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "4,4> ";
-	}
-	break;
-      }
-    case o2be_operation::tFloat:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "4,4> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "4,4> ";
-	}
-	break;
-      }
-    case o2be_operation::tDouble:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "8,8> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "8,8> ";
-	}
-	break;
-      }
-    case o2be_operation::tBoolean:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "1,1> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "1,1> ";
-	}
-	break;
-      }
-    case o2be_operation::tChar:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "1,1> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "1,1> ";
-	}
-	break;
-      }
-    case o2be_operation::tOctet:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "1,1> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "1,1> ";
-	}
-	break;
-      }
-    case o2be_operation::tEnum:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << ","
-		    << "4,4> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << "4,4> ";
-	}
-	break;
-      }
-    case o2be_operation::tObjref:
-      {
-	AST_Decl *decl = base_type();
-	while (decl->node_type() == AST_Decl::NT_typedef)
-	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED << "<"
-		    << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname() << ","
-		    << s_max << "> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED << "<"
-		    << o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname() << " > ";
-	}
-	break;
-      }
-      break;
-    case o2be_operation::tString:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED << "<"
-		    << o2be_string::fieldMemberTypeName() << ","
-		    << s_max << "> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED << "<"
-		    << o2be_string::fieldMemberTypeName() << "> ";
-	}
-	break;
-      }
-    case o2be_operation::tTypeCode:
-      {
-	AST_Decl *decl = base_type();
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED << "<"
-		    << o2be_predefined_type::TypeCodeMemberName()
-		    << "," << s_max << "> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED << "<"
-		    << o2be_predefined_type::TypeCodeMemberName()
-		    << "> ";
-	}
-	break;
-      }
-    case o2be_operation::tAny:
-    default:
-      {
-	if (s_max) {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_BOUNDED << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type()) << ","
-		    << s_max << "> ";
-	}
-	else {
-	  IND(s); s << "typedef " 
-		    << SEQUENCE_TEMPLATE_UNBOUNDED << "<"
-		    << o2be_name::narrow_and_produce_uqname(base_type())<<"> ";
-	}
-	break;
-      }
-    }
-  s << uqname() << ";\n";
-
-  IND(s); s << "typedef " << SEQUENCE_VAR_TEMPLATE << "<"
-	    << uqname() << "> "  << uqname() << "_var;\n\n";
-  s << "#endif\n";
-
-  produce_seq_hdr_if_defined(s);
-#endif
 }
 
 void
 o2be_sequence::produce_skel(std::fstream &s)
 {  
-  return;
 }
+
+void
+o2be_sequence::produce_binary_operators_in_hdr(std::fstream &s)
+{
+}
+
+void
+o2be_sequence::produce_binary_operators_in_skel(std::fstream &s)
+{
+}
+
 
 void 
 o2be_sequence::produce_typecode_skel(std::fstream &s)
@@ -954,7 +711,6 @@ o2be_sequence::check_recursive_seq()
 void
 o2be_sequence::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 {
-#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
   IND(s); s << "typedef " << seq_template_name(tdef) 
 	    << " " << tdef->uqname() << ";\n";
 
@@ -974,7 +730,12 @@ o2be_sequence::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 		<< tdef->uqname() << "_var;\n\n";
       break;
     }
-  
+}
+
+void
+o2be_sequence::produce_typedef_binary_operators_in_hdr(std::fstream &s, 
+						       o2be_typedef *tdef)
+{
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     if (check_recursive_seq() == I_FALSE) {
       set_recursive_seq(I_FALSE);
@@ -1001,20 +762,18 @@ o2be_sequence::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
       s << "#define __04RL_" << guardName << "__\n" << std::endl;
     
       // any insertion operators (inline definitions)
-      IND(s); s << FriendToken(*this)
-		<< " inline void operator<<=(CORBA::Any& _a, const " 
-		<< tdef->uqname() << "& _s) {\n";
+      IND(s); s << "inline void operator<<=(CORBA::Any& _a, const " 
+		<< tdef->fqname() << "& _s) {\n";
       INC_INDENT_LEVEL();
       IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
-      IND(s); s << tdef->tcname() << "->NP_fillInit(_0RL_mbuf);\n";
+      IND(s); s << tdef->fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
       IND(s); s << "_s >>= _0RL_mbuf;\n";
-      IND(s); s << "_a.NP_replaceData(" << tdef->tcname() << ",_0RL_mbuf);\n";
+      IND(s); s << "_a.NP_replaceData(" << tdef->fqtcname() <<",_0RL_mbuf);\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
 
-      IND(s); s << FriendToken(*this)
-		<< " inline void operator<<=(CORBA::Any& _a, " << tdef->uqname() 
-		<< "* _sp) {\n";
+      IND(s); s << "inline void operator<<=(CORBA::Any& _a, " 
+		<< tdef->fqname() << "* _sp) {\n";
       INC_INDENT_LEVEL();
       IND(s); s << "_a <<= *_sp;\n";
       IND(s); s << "delete _sp;\n";
@@ -1022,23 +781,21 @@ o2be_sequence::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
       IND(s); s << "}\n\n";
 
       // deletion operator (inline definition)
-      IND(s); s << FriendToken(*this)
-		<< " inline void _03RL_" << tdef->_fqname() 
+      IND(s); s << "inline void _03RL_" << tdef->_fqname() 
 		<< "_delete(void* _data) {\n";
       INC_INDENT_LEVEL();
-      IND(s); s << tdef->uqname() << "* _0RL_t = (" << tdef->uqname() 
+      IND(s); s << tdef->fqname() << "* _0RL_t = (" << tdef->fqname() 
 		<< "*) _data;\n";
       IND(s); s << "delete _0RL_t;\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
 
       // any extraction operator (inline definition)
-      IND(s); s << FriendToken(*this)
-		<< " inline CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
-		<< tdef->uqname() << "*& _sp) {\n";
+      IND(s); s << "inline CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+		<< tdef->fqname() << "*& _sp) {\n";
       INC_INDENT_LEVEL();
       IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
-      IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << tdef->tcname() 
+      IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << tdef->fqtcname() 
 		<< ",1)) {\n";
       INC_INDENT_LEVEL();
       IND(s); s << "_sp = 0;\n";
@@ -1052,7 +809,7 @@ o2be_sequence::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
       INC_INDENT_LEVEL();
       IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
       IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
-      IND(s); s << tdef->uqname() << "* _0RL_tmp = new " << tdef->uqname() 
+      IND(s); s << tdef->fqname() << "* _0RL_tmp = new " << tdef->fqname() 
 		<< ";\n";
       IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
       IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
@@ -1060,7 +817,7 @@ o2be_sequence::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 		<< "_delete);\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
-      IND(s); s << "_sp = (" << tdef->uqname() << "*) _0RL_data;\n";
+      IND(s); s << "_sp = (" << tdef->fqname() << "*) _0RL_data;\n";
       IND(s); s << "return 1;\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n";
@@ -1069,13 +826,18 @@ o2be_sequence::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 
       s << "#endif\n\n";
     }
-    else set_recursive_seq(I_TRUE);
+    else
+      set_recursive_seq(I_TRUE);
   }
-#else
-  IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
-  IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << "_var;\n\n";
-#endif
+
 }
+
+void
+o2be_sequence::produce_typedef_binary_operators_in_skel(std::fstream &s,
+							o2be_typedef *tdef)
+{
+}
+
 
 const char*
 o2be_sequence::out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in) const
@@ -1265,10 +1027,6 @@ o2be_sequence::internal_produce_localname(enum seqnametype stype)
   return fullname;
 }
 
-#ifdef USE_NON_TEMPLATE_CODE
-static void check_and_produce_effective_type_sequence(o2be_sequence *s);
-#endif
-
 // The front end can produce multiple nodes for each pre-defined type and
 // string type. We just keep an internal pointer to one instance of each type.
 // produce_hdr_for_predefined_types() will use these pointers to invoke
@@ -1395,20 +1153,9 @@ o2be_sequence::attach_seq_to_base_type(AST_Sequence *se)
       // same base type. set_seq_decl() will sort this out.
 
       o2be_sequence::narrow_from_decl(d)->set_seq_decl(os);
-#ifdef USE_NON_TEMPLATE_CODE
-      // If the effective type and the immediate type differs, i.e. the
-      // base type is a typedef, we need to create sequence nodes for
-      // the effective type as well
-      check_and_produce_effective_type_sequence(os);
-#endif
       break;
     case AST_Decl::NT_typedef:
       o2be_typedef::narrow_from_decl(d)->set_seq_decl(os);
-#ifdef USE_NON_TEMPLATE_CODE
-      // effective type and the immediate type differs, we may need to create
-      // a sequence node for the effective type if it doesn't exist already.
-      check_and_produce_effective_type_sequence(os);
-#endif
       break;
     default:
       throw o2be_internal_error(__FILE__,__LINE__,"Unexpected argument type");
@@ -1416,161 +1163,6 @@ o2be_sequence::attach_seq_to_base_type(AST_Sequence *se)
     }
   return se;
 }
-
-#ifdef USE_NON_TEMPLATE_CODE
-static
-void
-check_and_produce_effective_type_sequence(o2be_sequence *s)
-{
-  // Get to the base type and determine how many levels of nesting
-  int level = 0;
-  AST_Decl *decl = s->base_type();
-  while (decl->node_type() == AST_Decl::NT_sequence)
-    {
-      level++;
-      decl = o2be_sequence::narrow_from_decl(decl)->base_type();
-    }
-  
-  // If the base type is a typedef, get the effective type and create
-  // sequence node for the effective type to the same level of nesting
-  // as the base type.
-  if (decl->node_type() == AST_Decl::NT_typedef)
-    {
-      o2be_sequence *sq,*eq;
-
-      sq = o2be_typedef::narrow_from_decl(decl)->get_seq_decl();
-      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-      switch (decl->node_type())
-	{
-	case AST_Decl::NT_pre_defined:
-	  {
-	    set_pd_predefined_type(o2be_predefined_type::narrow_from_decl(decl));
-	    o2be_predefined_type *p;
-	    p = get_pd_predefined_type(o2be_predefined_type::narrow_from_decl(decl)->pt());
-	    if (p->get_seq_decl() == NULL)
-	      {
-		AST_Sequence *newsq = idl_global->gen()
-		  ->create_sequence(sq->max_size(),p);
-		(void) o2be_root::narrow_from_decl(idl_global->root())
-		  ->add_sequence(newsq);
-	      }
-	    eq = p->get_seq_decl();
-	  }
-	  break;
-	case AST_Decl::NT_string:
-	  {
-	    set_pd_string(o2be_string::narrow_from_decl(decl));
-	    o2be_string *p = get_pd_string();
-	    if (p->get_seq_decl() == NULL)
-	      {
-		AST_Sequence *newsq = idl_global->gen()
-		  ->create_sequence(sq->max_size(),p);
-		(void) o2be_root::narrow_from_decl(idl_global->root())
-		  ->add_sequence(newsq);
-	      }
-	    eq = p->get_seq_decl();
-	  }
-	  break;
-	case AST_Decl::NT_enum:
-	  {
-	    o2be_enum *p = o2be_enum::narrow_from_decl(decl);
-	    if (p->get_seq_decl() == NULL)
-	      {
-		AST_Sequence *newsq = idl_global->gen()
-		  ->create_sequence(sq->max_size(),p);
-		(void) o2be_root::narrow_from_decl(idl_global->root())
-		  ->add_sequence(newsq);
-	      }
-	    eq = p->get_seq_decl();
-	  }
-	  break;
-	case AST_Decl::NT_struct:
-	  {
-	    o2be_structure *p = o2be_structure::narrow_from_decl(decl);
-	    if (p->get_seq_decl() == NULL)
-	      {
-		AST_Sequence *newsq = idl_global->gen()
-		  ->create_sequence(sq->max_size(),p);
-		(void) o2be_root::narrow_from_decl(idl_global->root())
-		  ->add_sequence(newsq);
-	      }
-	    eq = p->get_seq_decl();
-	  }
-	  break;
-	case AST_Decl::NT_union:
-	  {
-	    o2be_union *p = o2be_union::narrow_from_decl(decl);
-	    if (p->get_seq_decl() == NULL)
-	      {
-		AST_Sequence *newsq = idl_global->gen()
-		  ->create_sequence(sq->max_size(),p);
-		(void) o2be_root::narrow_from_decl(idl_global->root())
-		  ->add_sequence(newsq);
-	      }
-	    eq = p->get_seq_decl();
-	  }
-	  break;
-	case AST_Decl::NT_interface:
-	  {
-	    o2be_interface *p = o2be_interface::narrow_from_decl(decl);
-	    if (p->get_seq_decl() == NULL)
-	      {
-		AST_Sequence *newsq = idl_global->gen()
-		  ->create_sequence(sq->max_size(),p);
-		(void) o2be_root::narrow_from_decl(idl_global->root())
-		  ->add_sequence(newsq);
-	      }
-	    eq = p->get_seq_decl();
-	  }
-	  break;
-	case AST_Decl::NT_sequence:
-	  {
-	    o2be_sequence *p = o2be_sequence::narrow_from_decl(decl);
-	    if (p->get_seq_decl() == NULL)
-	      {
-		AST_Sequence *newsq = idl_global->gen()
-		  ->create_sequence(sq->max_size(),p);
-		(void) o2be_root::narrow_from_decl(idl_global->root())
-		  ->add_sequence(newsq);
-	      }
-	    eq = p->get_seq_decl();
-	  }
-	  break;
-	case AST_Decl::NT_typedef:
-	  {
-	    o2be_typedef *p = o2be_typedef::narrow_from_decl(decl);
-	    if (p->get_seq_decl() == NULL)
-	      {
-		AST_Sequence *newsq = idl_global->gen()
-		  ->create_sequence(sq->max_size(),p);
-		(void) o2be_root::narrow_from_decl(idl_global->root())
-		  ->add_sequence(newsq);
-	      }
-	    eq = p->get_seq_decl();
-	  }
-	  break;
-	case AST_Decl::NT_array:
-	  return;      // nothing to do
-	default:
-	  throw o2be_internal_error(__FILE__,__LINE__,"Unexpected argument type");
-	  return;
-	}
-      while (level-- > 0)
-	{
-	  sq = sq->get_seq_decl();
-	  if (eq->get_seq_decl() == NULL)
-	    {
-	      AST_Sequence *newsq = idl_global->gen()
-		->create_sequence(sq->max_size(),eq);
-	      (void) o2be_root::narrow_from_decl(idl_global->root())
-		->add_sequence(newsq);
-	    }
-	  eq = eq->get_seq_decl();
-	}
-    }
-  return;
-}
-#endif
 
 
 void
@@ -1686,16 +1278,7 @@ o2be_sequence_chain::set_seq_decl(o2be_sequence *d)
 void
 o2be_sequence_chain::produce_seq_hdr_if_defined(std::fstream &s)
 {
-#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
   return;
-#else
-  if (pd_seq_decl)
-    {
-      s << "\n";
-      pd_seq_decl->produce_hdr(s);
-    }
-  return;
-#endif
 }
 
 IMPL_NARROW_METHODS1(o2be_sequence, AST_Sequence)

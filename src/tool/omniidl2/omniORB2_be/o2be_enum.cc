@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.9  1998/08/19 15:51:37  sll
+  New member functions void produce_binary_operators_in_hdr and the like
+  are responsible for generating binary operators <<= etc in the global
+  namespace.
+
   Revision 1.8  1998/08/13 22:42:06  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -66,6 +71,8 @@ o2be_enum::o2be_enum(UTL_ScopedName *n, UTL_StrList *p)
 {
   pd_hdr_produced_in_field = I_FALSE;
   pd_skel_produced_in_field = I_FALSE;
+  pd_binary_operators_hdr_produced_in_field = I_FALSE;
+  pd_binary_operators_skel_produced_in_field = I_FALSE;
   set_recursive_seq(I_FALSE);
 }
 
@@ -84,97 +91,10 @@ o2be_enum::produce_hdr(std::fstream &s)
   }
   s << " };\n\n";
 
-  IND(s); s << FriendToken(*this) << " inline void operator>>= (" << uqname()
-	    << " _e,NetBufferedStream &s) {\n";
-
-  INC_INDENT_LEVEL();
-  IND(s); s << "::operator>>=((CORBA::ULong)_e,s);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << FriendToken(*this) << " inline void operator<<= (" << uqname()
-	    << " &_e,NetBufferedStream &s) {\n";
-
-  INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::ULong __e;\n";
-  IND(s); s << "::operator<<=(__e,s);\n";
-  IND(s); s << "switch (__e) {\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this, IK_decls);
-    while (!(i.is_done())) {
-      IND(s) s << "case " << o2be_name::narrow_and_produce_uqname(i.item()) << ":\n";
-      i.next();
-    }
-  }
-  INC_INDENT_LEVEL();
-  IND(s); s << "_e = (" << uqname() << ") __e;\n";
-  IND(s); s << "break;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "default:\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "_CORBA_marshal_error();\n";
-  DEC_INDENT_LEVEL();
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << FriendToken(*this) << " inline void operator>>= (" << uqname()
-	    << " _e,MemBufferedStream &s) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "::operator>>=((CORBA::ULong)_e,s);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << FriendToken(*this) << " inline void operator<<= (" << uqname()
-	    << " &_e,MemBufferedStream &s) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::ULong __e;\n";
-  IND(s); s << "::operator<<=(__e,s);\n";
-  IND(s); s << "switch (__e) {\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this, IK_decls);
-    while (!(i.is_done())) {
-      IND(s) s << "case " << o2be_name::narrow_and_produce_uqname(i.item()) << ":\n";
-      i.next();
-    }
-  }
-  INC_INDENT_LEVEL();
-  IND(s); s << "_e = (" << uqname() << ") __e;\n";
-  IND(s); s << "break;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "default:\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "_CORBA_marshal_error();\n";
-  DEC_INDENT_LEVEL();
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
-    IND(s); s << VarToken(*this)
+    IND(s); s << variable_qualifier()
 	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
-
-    // any insertion operator (inline definition)
-    IND(s); s << FriendToken(*this)
-	      << " inline void operator<<=(CORBA::Any& _a, " 
-	      << uqname() << " _s) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
-    IND(s); s << tcname() << "->NP_fillInit(_0RL_mbuf);\n";
-    IND(s); s << "_s >>= _0RL_mbuf;\n";
-    IND(s); s << "_a.NP_replaceData(" << tcname() << ",_0RL_mbuf);\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-
-    // any extraction operator (declaration)
-    IND(s); s << FriendToken(*this)
-	      << " CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
-	      << uqname() << "& _s);\n\n";
   }
 
   produce_seq_hdr_if_defined(s);
@@ -218,29 +138,128 @@ o2be_enum::produce_skel(std::fstream &s)
 	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
 		  << "_01RL_" << _fqtcname() << ";\n\n";
       }
-    
-    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
-	      << fqname() << "& _s) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
-    IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
-	      << ",1)) {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "return 0;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    IND(s); s << "else {\n";
-    INC_INDENT_LEVEL();
-    IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
-    IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
-    IND(s); s << "_s <<= _0RL_tmp_mbuf;\n";
-    IND(s); s << "return 1;\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n";
-    DEC_INDENT_LEVEL();
-    IND(s); s << "}\n\n";
-  } 
-  return;
+  }
+}
+
+void
+o2be_enum::produce_binary_operators_in_hdr(std::fstream &s)
+{
+  IND(s); s << "inline void operator>>= (" << fqname()
+	    << " _e,NetBufferedStream &s) {\n";
+
+  INC_INDENT_LEVEL();
+  IND(s); s << "::operator>>=((CORBA::ULong)_e,s);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "inline void operator<<= (" << fqname()
+	    << " &_e,NetBufferedStream &s) {\n";
+
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::ULong __e;\n";
+  IND(s); s << "::operator<<=(__e,s);\n";
+  IND(s); s << "switch (__e) {\n";
+  INC_INDENT_LEVEL();
+  {
+    UTL_ScopeActiveIterator i(this, IK_decls);
+    while (!(i.is_done())) {
+      IND(s) s << "case " << o2be_name::narrow_and_produce_fqname(i.item()) << ":\n";
+      i.next();
+    }
+  }
+  INC_INDENT_LEVEL();
+  IND(s); s << "_e = (" << fqname() << ") __e;\n";
+  IND(s); s << "break;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "default:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_CORBA_marshal_error();\n";
+  DEC_INDENT_LEVEL();
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "inline void operator>>= (" << fqname()
+	    << " _e,MemBufferedStream &s) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "::operator>>=((CORBA::ULong)_e,s);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "inline void operator<<= (" << fqname()
+	    << " &_e,MemBufferedStream &s) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::ULong __e;\n";
+  IND(s); s << "::operator<<=(__e,s);\n";
+  IND(s); s << "switch (__e) {\n";
+  INC_INDENT_LEVEL();
+  {
+    UTL_ScopeActiveIterator i(this, IK_decls);
+    while (!(i.is_done())) {
+      IND(s) s << "case " << o2be_name::narrow_and_produce_fqname(i.item()) << ":\n";
+      i.next();
+    }
+  }
+  INC_INDENT_LEVEL();
+  IND(s); s << "_e = (" << fqname() << ") __e;\n";
+  IND(s); s << "break;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "default:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_CORBA_marshal_error();\n";
+  DEC_INDENT_LEVEL();
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    // any insertion and extraction operator
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " 
+	      << fqname() << " _s);\n";
+    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+	      << fqname() << "& _s);\n\n";
+  }
+
+}
+
+void
+o2be_enum::produce_binary_operators_in_skel(std::fstream &s)
+{
+  if (idl_global->compile_flags() & IDL_CF_ANY)
+    {
+      IND(s); s << "void operator<<=(CORBA::Any& _a, " 
+		<< fqname() << " _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
+      IND(s); s << fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
+      IND(s); s << "_s >>= _0RL_mbuf;\n";
+      IND(s); s << "_a.NP_replaceData(" << fqtcname() << ",_0RL_mbuf);\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+		<< fqname() << "& _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
+      IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
+		<< ",1)) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "return 0;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      IND(s); s << "else {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
+      IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
+      IND(s); s << "_s <<= _0RL_tmp_mbuf;\n";
+      IND(s); s << "return 1;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+    } 
 }
 
 void
