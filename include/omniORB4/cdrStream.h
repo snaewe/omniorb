@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2001/08/17 17:02:22  sll
+  Removed static variables ncs_c, ncs_w, default_tcs_c, default_tcs_w.
+
   Revision 1.1.2.12  2001/07/31 16:32:02  sll
   Added virtual function is_giopStream to check if a cdrStream is a giopStream.
   That is, a poor man's substitute for dynamic_cast.
@@ -116,10 +119,7 @@ class cdrStreamAdapter;
 class cdrStream {
 public:
 
-  cdrStream() : pd_unmarshal_byte_swap(0), pd_marshal_byte_swap(0),
-		pd_inb_end(0), pd_inb_mkr(0),
-		pd_outb_end(0), pd_outb_mkr(0),
-		pd_tcs_c(0), pd_tcs_w(0) { }
+  cdrStream();
 
   virtual ~cdrStream() {}
 
@@ -160,19 +160,19 @@ public:
 #endif
 
   inline void marshalChar(_CORBA_Char a) {
-    ncs_c->marshalChar(*this,pd_tcs_c,a);
+    pd_ncs_c->marshalChar(*this,pd_tcs_c,a);
   }
 
   inline _CORBA_Char unmarshalChar() {
-    return ncs_c->unmarshalChar(*this,pd_tcs_c);
+    return pd_ncs_c->unmarshalChar(*this,pd_tcs_c);
   }
 
   inline void marshalWChar(_CORBA_WChar a) {
-    ncs_w->marshalWChar(*this,pd_tcs_w,a);
+    pd_ncs_w->marshalWChar(*this,pd_tcs_w,a);
   }
 
   inline _CORBA_WChar unmarshalWChar() {
-    return ncs_w->unmarshalWChar(*this,pd_tcs_w);
+    return pd_ncs_w->unmarshalWChar(*this,pd_tcs_w);
   }
 
   inline void marshalOctet(_CORBA_Octet a) {
@@ -350,12 +350,12 @@ public:
 
   inline void marshalString(const char* s,int bounded=0) {
     OMNIORB_USER_CHECK(s);
-    ncs_c->marshalString(*this,pd_tcs_c,bounded,strlen(s),s);
+    pd_ncs_c->marshalString(*this,pd_tcs_c,bounded,strlen(s),s);
   }
 
   inline char* unmarshalString(int bounded=0) {
     char* s;
-    ncs_c->unmarshalString(*this,pd_tcs_c,bounded,s);
+    pd_ncs_c->unmarshalString(*this,pd_tcs_c,bounded,s);
     return s;
   }
 
@@ -370,13 +370,13 @@ public:
 
   inline void marshalWString(const _CORBA_WChar* s,int bounded=0) {
     OMNIORB_USER_CHECK(s);
-    ncs_w->marshalWString(*this,pd_tcs_w,bounded,
+    pd_ncs_w->marshalWString(*this,pd_tcs_w,bounded,
 			  _CORBA_WString_helper::len(s),s);
   }
 
   inline _CORBA_WChar* unmarshalWString(int bounded=0) {
     _CORBA_WChar* s;
-    ncs_w->unmarshalWString(*this,pd_tcs_w,bounded,s);
+    pd_ncs_w->unmarshalWString(*this,pd_tcs_w,bounded,s);
     return s;
   }
 
@@ -532,6 +532,9 @@ protected:
   _OMNI_NS(omniCodeSet::TCS_W)* pd_tcs_w;
   // Transmission code set convertor for wchar and wstring
 
+  _OMNI_NS(omniCodeSet::NCS_C)* pd_ncs_c;
+  _OMNI_NS(omniCodeSet::NCS_W)* pd_ncs_w;
+
 public:
 
   // Access functions to the char and wchar code set convertors
@@ -540,9 +543,6 @@ public:
   inline _OMNI_NS(omniCodeSet::TCS_W)* TCS_W() const { return pd_tcs_w; }
   inline void TCS_W(_OMNI_NS(omniCodeSet::TCS_W)* c) { pd_tcs_w = c; }
 
-  // ORB wide native codes convertor
-  static _core_attr _OMNI_NS(omniCodeSet::NCS_C)* ncs_c;
-  static _core_attr _OMNI_NS(omniCodeSet::NCS_W)* ncs_w;
 
   inline void
   unmarshalArrayChar(_CORBA_Short* a, int length)
@@ -703,12 +703,6 @@ public:
   cdrMemoryStream(void* databuffer);
   cdrMemoryStream(void* databuffer, size_t maxLen);
   // Constructors for a read-only buffered stream.
-
-
-  // By default, all cdrMemoryStream are initialised to use these two
-  // tcs.
-  static _core_attr _OMNI_NS(omniCodeSet::TCS_C)* default_tcs_c;
-  static _core_attr _OMNI_NS(omniCodeSet::TCS_W)* default_tcs_w;
 
 protected:
   _CORBA_Boolean pd_readonly_and_external_buffer;
