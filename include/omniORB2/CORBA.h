@@ -31,6 +31,9 @@
 
 /*
  $Log$
+ Revision 1.15  1997/12/09 20:35:16  sll
+ New members BOA::impl_shutdown, BOA::destroy.
+
  Revision 1.14  1997/08/21 22:20:17  sll
  - String_member copy ctor bug fix.
  - New system exception TRANSACTION_REQUIRED, TRANSACTION_ROLLEDBACK,
@@ -51,8 +54,6 @@
 #define __CORBA_H__
 
 #include <omniORB2/omniInternal.h>
-
-#include <omniORB2/omniORB.h>
 
 class _OMNIORB2_NTDLL_ CORBA {
 
@@ -822,6 +823,8 @@ typedef _CORBA_Double  Double;
     static void marshalObjRef(Object_ptr obj,MemBufferedStream &s);
     static Object_ptr unmarshalObjRef(MemBufferedStream &s);
     static Object CORBA_Object_nil;
+    static const _CORBA_Char* repositoryID;
+
   private:
     omniObject *pd_obj;
   };
@@ -878,7 +881,41 @@ typedef _CORBA_Double  Double;
     // see omni::disposeObject()
 
     void impl_is_ready(ImplementationDef_ptr=0,Boolean NonBlocking=0);
-    // The argument <NonBlocking> is omniORB2 specific
+    // The argument <NonBlocking> is omniORB2 specific.
+    // Calling this function will cause the BOA to start accepting requests
+    // from other address spaces. 
+
+    void impl_shutdown();
+    // omniORB2 specific.
+    // This is the reverse of impl_is_ready().
+    // When this call returns, all the internal threads and network
+    // connections will be shutdown. 
+    // Any thread blocking on impl_is_ready is unblocked.
+    // When this call returns, requests from other address spaces will not
+    // be dispatched.
+    // The BOA can be reactivated by impl_is_ready(), it will continue to use 
+    // the existing network addresses when reactivated.
+    //
+    // Note: This function should not be called in the implementation of a
+    //       CORBA interface. Otherwise, this call will be blocked 
+    //       indefinitely waiting on itself to complete the request.
+
+
+    void destroy();
+    // omniORB2 specific.
+    // Calling this function will destroy this BOA. The function will call
+    // impl_shutdown() implicitly if it has not been called. When this call
+    // returns, the network addresses (endpoints) where this BOA listens on
+    // will be freed.
+    // Note: After this call, the BOA should not be used directly or
+    //       indirectly, otherwise the behaviour is undefined. If there is
+    //       any object implementation still registered with the BOA when this
+    //       function is called, the object implementation should not be called
+    //       afterwards. This function does not call the dispose method of
+    //       the implementations.
+    // Note: Initialisation of another BOA using ORB::BOA_init() is not 
+    //       supported. The behaviour of ORB::BOA_init() after this function 
+    //       is called is undefined.
 
     void obj_is_ready(Object_ptr, ImplementationDef_ptr p=0);
 
@@ -891,8 +928,6 @@ typedef _CORBA_Double  Double;
 
     BOA();
     ~BOA();
-    
-    static BOA boa;
   };
 
 ////////////////////////////////////////////////////////////////////////
@@ -1032,7 +1067,6 @@ typedef _CORBA_Double  Double;
     ORB();
     ~ORB();
 
-    static ORB orb;
   };
 
   typedef char *ORBid;
@@ -1317,14 +1351,34 @@ private:
 };
 
 
+#include <omniORB2/omniORB.h>
 #include <omniORB2/templates.h>
 #include <omniORB2/proxyFactory.h>
 
+// omniORB2 private functions
+extern CORBA::Boolean _omni_defaultTransientExceptionHandler(void* cookie,
+						   CORBA::ULong n_retries,
+						   const CORBA::TRANSIENT& ex);
+
+extern CORBA::Boolean _omni_defaultCommFailureExceptionHandler(void* cookie,
+						CORBA::ULong n_retries,
+						const CORBA::COMM_FAILURE& ex);
+
+extern CORBA::Boolean _omni_defaultSystemExceptionHandler(void* cookie,
+					    CORBA::ULong n_retries,
+					    const CORBA::SystemException& ex);
+
+extern CORBA::Boolean _omni_callTransientExceptionHandler(omniObject*,
+						CORBA::ULong,
+						const CORBA::TRANSIENT&);
+extern CORBA::Boolean _omni_callCommFailureExceptionHandler(omniObject*,
+						  CORBA::ULong,
+						  const CORBA::COMM_FAILURE&);
+extern CORBA::Boolean _omni_callSystemExceptionHandler(omniObject*,
+					     CORBA::ULong,
+					     const CORBA::SystemException&);
+
 // Include the COSS Naming Service header:
-#ifdef __NT__
-#include <omniORB2/Naming_NT.hh>
-#else
 #include <omniORB2/Naming.hh>
-#endif
 
 #endif // __CORBA_H__
