@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.11  1999/01/07 15:16:15  djr
+  Changed version to 2.7
+
   Revision 1.10  1998/08/05 18:05:05  sll
   Version variable is changed to omniORB_2_6 (previously omniORB_2_5).
 
@@ -56,8 +59,10 @@
 
 #include <omniORB2/CORBA.h>
 
+
 // See the description of this variable in omniInternal.h
-const char* omniORB_2_6 = "omniORB version 2.6.x";
+const char* omniORB_2_7 = "omniORB version 2.7.x";
+
 
 const IOP::ProfileId       IOP::TAG_INTERNET_IOP = 0;
 const IOP::ProfileId       IOP::TAG_MULTIPLE_COMPONENTS = 1;
@@ -67,7 +72,10 @@ const CORBA::Char          IIOP::current_minor = 0;
 const CORBA::Char          omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
 const omni::alignment_t    omni::max_alignment = ALIGN_8;
 
-const CORBA::Char* CORBA::Object::repositoryID = (CORBA::Char*) "IDL:omg.org/CORBA/Object:1.0";
+
+const CORBA::Char*
+CORBA::Object::repositoryID = (CORBA::Char*) "IDL:omg.org/CORBA/Object:1.0";
+
 
 const GIOP_Basetypes::MessageHeader::HeaderType
          GIOP_Basetypes::MessageHeader::Request = {
@@ -142,120 +150,124 @@ const CORBA::ULong
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::UNKNOWN ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/UNKNOWN");
+						"IDL:omg.org/CORBA/UNKNOWN");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::BAD_PARAM ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/BAD_PARAM");
+					  "IDL:omg.org/CORBA/BAD_PARAM");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::NO_MEMORY ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/NO_MEMORY");
+					  "IDL:omg.org/CORBA/NO_MEMORY");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::IMP_LIMIT ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/IMP_LIMIT");
+					  "IDL:omg.org/CORBA/IMP_LIMIT");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::COMM_FAILURE ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/COMM_FAILURE");
+					     "IDL:omg.org/CORBA/COMM_FAILURE");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::INV_OBJREF ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/INV_OBJREF");
+					   "IDL:omg.org/CORBA/INV_OBJREF");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::OBJECT_NOT_EXIST ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/OBJECT_NOT_EXIST");
+					 "IDL:omg.org/CORBA/OBJECT_NOT_EXIST");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::NO_PERMISSION ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/NO_PERMISSION");
+				      "IDL:omg.org/CORBA/NO_PERMISSION");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::INTERNAL ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/INTERNAL");
+						 "IDL:omg.org/CORBA/INTERNAL");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::MARSHAL ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/MARSHAL");
+						"IDL:omg.org/CORBA/MARSHAL");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::INITIALIZE ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/INITIALIZE");
+					   "IDL:omg.org/CORBA/INITIALIZE");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::NO_IMPLEMENT ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/NO_IMPLEMENT");
+					     "IDL:omg.org/CORBA/NO_IMPLEMENT");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::BAD_TYPECODE ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/BAD_TYPECODE");
+					     "IDL:omg.org/CORBA/BAD_TYPECODE");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::BAD_OPERATION ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/BAD_OPERATION");
+				      "IDL:omg.org/CORBA/BAD_OPERATION");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::NO_RESOURCES ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/NO_RESOURCES");
+					     "IDL:omg.org/CORBA/NO_RESOURCES");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::NO_RESPONSE ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/NO_RESPONSE");
+					    "IDL:omg.org/CORBA/NO_RESPONSE");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::PERSIST_STORE ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/PERSIST_STORE");
+				      "IDL:omg.org/CORBA/PERSIST_STORE");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::BAD_INV_ORDER ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/BAD_INV_ORDER");
+				      "IDL:omg.org/CORBA/BAD_INV_ORDER");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::TRANSIENT ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/TRANSIENT");
+					  "IDL:omg.org/CORBA/TRANSIENT");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::FREE_MEM ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/FREE_MEM");
+						 "IDL:omg.org/CORBA/FREE_MEM");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::INV_IDENT ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/INV_IDENT");
+					  "IDL:omg.org/CORBA/INV_IDENT");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::INV_FLAG ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/INV_FLAG");
+						 "IDL:omg.org/CORBA/INV_FLAG");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::INTF_REPOS ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/INTF_REPOS");
+					   "IDL:omg.org/CORBA/INTF_REPOS");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::BAD_CONTEXT ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/BAD_CONTEXT");
+					    "IDL:omg.org/CORBA/BAD_CONTEXT");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::OBJ_ADAPTER ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/OBJ_ADAPTER");
+					    "IDL:omg.org/CORBA/OBJ_ADAPTER");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::DATA_CONVERSION ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/DATA_CONVERSION");
+					"IDL:omg.org/CORBA/DATA_CONVERSION");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::TRANSACTION_REQUIRED ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/TRANSACTION_REQUIRED");
+				     "IDL:omg.org/CORBA/TRANSACTION_REQUIRED");
+
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::TRANSACTION_ROLLEDBACK ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/TRANSACTION_ROLLEDBACK");
+			       "IDL:omg.org/CORBA/TRANSACTION_ROLLEDBACK");
+
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::INVALID_TRANSACTION ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/INVALID_TRANSACTION");
+				    "IDL:omg.org/CORBA/INVALID_TRANSACTION");
+
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::WRONG_TRANSACTION ((CORBA::Char *)
-                                                        "IDL:omg.org/CORBA/WRONG_TRANSACTION");
+				  "IDL:omg.org/CORBA/WRONG_TRANSACTION");
+
 
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise. Its a bug.
@@ -276,7 +288,11 @@ const unsigned int omniORB::hash_table_size = 103;
 // The following is a workaround which explicitly instantiate the classes
 // again.
 
+#if 0
+//??
 template class _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Octet,1,1>;
 template class _CORBA_Sequence<_CORBA_Octet>;
+#endif
+
 
 #endif
