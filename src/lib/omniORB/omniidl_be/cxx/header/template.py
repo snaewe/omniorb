@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.9  2001/06/18 20:30:51  sll
+# Only define 1 conversion operator from T_var to T* if the compiler is
+# gcc. Previously, this is only done for gcc 2.7.2. It seems that gcc 3.0
+# requires this to be the case. This is the default for all versions of
+# gcc.
+#
 # Revision 1.5.2.8  2001/05/29 17:03:50  dpg1
 # In process identity.
 #
@@ -622,7 +628,7 @@ public:
   @subscript_operator@
 
   inline T* operator -> () { return _pd_seq; }
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+#if defined(__GNUG__)
   inline operator T& () const { return *_pd_seq; }
 #else
   inline operator const T& () const { return *_pd_seq; }

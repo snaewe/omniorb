@@ -29,6 +29,12 @@
 
 /*
  $Log$
+ Revision 1.2.2.15  2001/06/18 20:30:51  sll
+ Only define 1 conversion operator from T_var to T* if the compiler is
+ gcc. Previously, this is only done for gcc 2.7.2. It seems that gcc 3.0
+ requires this to be the case. This is the default for all versions of
+ gcc.
+
  Revision 1.2.2.14  2001/06/08 17:12:07  dpg1
  Merge all the bug fixes from omni3_develop.
 
@@ -683,7 +689,8 @@ _CORBA_MODULE_BEG
 
     inline Any* operator->() const { return (Any*)pd_data; }
 
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+    //#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+#if defined(__GNUG__)
     inline operator Any& () const { return (Any&) *pd_data; }
 #else
     inline operator const Any& () const { return *pd_data; }

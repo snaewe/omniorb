@@ -810,7 +810,8 @@ public:
   }
   inline T* operator->() const { return (T*) &pd_data; }
 
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+  //#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+#if defined(__GNUG__)
   inline operator T& () const       { return (T&) pd_data; }
 #else
   inline operator const T& () const { return pd_data; }
@@ -911,7 +912,8 @@ public:
 
   inline T* operator->() const { return (T*)pd_data; }
 
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+  //#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+#if defined(__GNUG__)
   inline operator T& () const { return (T&) *pd_data; }
 #else
   inline operator const T& () const { return *pd_data; }
