@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.30.6.6  2000/05/24 17:21:07  dpg1
+  Fix const-correctness in error functions
+
   Revision 1.30.6.5  2000/04/27 10:49:33  dpg1
   Interoperable Naming Service
 
@@ -557,7 +560,7 @@ int initFile::getRegistryEntry(CORBA::String_var& entryname,
 
 // Implementations of inline error-report functions:
 
-void initFile::multerr(char* entryname)
+void initFile::multerr(const char* entryname)
 {
   if (omniORB::traceLevel > 0) {
 #ifndef __atmos__
@@ -575,7 +578,7 @@ void initFile::multerr(char* entryname)
 }
 
 
-void initFile::dataerr(char* entryname)
+void initFile::dataerr(const char* entryname)
 {
   if (omniORB::traceLevel > 0) {
 #ifndef __atmos__
@@ -608,7 +611,7 @@ void initFile::parseerr()
 }
 
 
-void initFile::invref(char* entryname)
+void initFile::invref(const char* entryname)
 {
   if (omniORB::traceLevel > 0) {
 #ifndef __atmos__

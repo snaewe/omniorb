@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9.8.2  2000/05/24 17:21:07  dpg1
+  Fix const-correctness in error functions
+
   Revision 1.9.8.1  1999/09/22 14:26:50  djr
   Major rewrite of orbcore to support POA.
 
@@ -74,9 +77,9 @@ private:
   long fsize;
   long currpos;
 
-  inline void invref(char* entryname);
-  inline void multerr(char* entryname);      
-  inline void dataerr(char* entryname);
+  inline void invref(const char* entryname);
+  inline void multerr(const char* entryname);      
+  inline void dataerr(const char* entryname);
   inline void parseerr();
  
 #ifdef __WIN32__ 
