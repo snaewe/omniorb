@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.1  1997/01/08 17:26:01  sll
-  Initial revision
+  Revision 1.2  1997/01/08 18:15:21  ewc
+  Added work-around for Windows NT / Visual C++ 4.2 nested class bug
 
+// Revision 1.1  1996/10/10  14:37:53  sll
+// Initial revision
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -23,7 +26,7 @@ NetBufferedStream::NetBufferedStream(Strand *s,
 				     CORBA::Boolean Rdlock,
 				     CORBA::Boolean Wrlock,
 				     size_t Bufsize) 
-  : Strand::Sync(s,Rdlock,Wrlock)
+  : Strand_Sync(s,Rdlock,Wrlock)
 {
   if (Bufsize) {
     if (Bufsize > s->max_receive_buffer_size() ||
@@ -50,9 +53,9 @@ NetBufferedStream::NetBufferedStream(Rope *r,
 				     CORBA::Boolean Rdlock,
 				     CORBA::Boolean Wrlock,
 				     size_t Bufsize) 
-  : Strand::Sync(r,Rdlock,Wrlock)
+  : Strand_Sync(r,Rdlock,Wrlock)
 {
-  pd_strand = Strand::Sync::get_strand();
+  pd_strand = Strand_Sync::get_strand();
   if (Bufsize) 
     {
       if (Bufsize > pd_strand->max_receive_buffer_size() ||
@@ -321,7 +324,7 @@ void
 
 NetBufferedStream::RdLock() {
   if (!pd_RdLock) {
-    Strand::Sync::RdLock();
+    Strand_Sync::RdLock();
     rewind_inb_mkr((int)omniORB::max_alignment);
     pd_RdLock = 1;
   }
@@ -333,7 +336,7 @@ void
 NetBufferedStream::RdUnlock() {
   if (pd_RdLock) {
     giveback_received();
-    Strand::Sync::RdUnlock();
+    Strand_Sync::RdUnlock();
     pd_RdLock = 0;
   }
   return;
@@ -343,7 +346,7 @@ void
 
 NetBufferedStream::WrLock() {
   if (!pd_WrLock) {
-    Strand::Sync::WrLock();
+    Strand_Sync::WrLock();
     rewind_outb_mkr((int)omniORB::max_alignment);
     pd_WrLock = 1;
   }
@@ -355,7 +358,7 @@ void
 NetBufferedStream::WrUnlock() {
   if (pd_WrLock) {
     giveback_reserved();
-    Strand::Sync::WrUnlock();
+    Strand_Sync::WrUnlock();
     pd_WrLock = 0;
   }
   return;
