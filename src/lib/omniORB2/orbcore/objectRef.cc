@@ -29,6 +29,11 @@
  
 /*
   $Log$
+  Revision 1.26  1999/08/14 16:39:47  sll
+  Changed locateObject. It does not throw an exception when an object is
+  not found. Instead a nil pointer is returned.
+  New locateObject for searching the python object table.
+
   Revision 1.25  1999/06/02 16:57:07  sll
   Changed createObjRef(). In the case when the proxyObjectFactories for
   the targetRepoId and the mostDerivedRepoId are not available, we now create
@@ -161,6 +166,7 @@ using omniORB::operator==;
 omni_mutex          omniObject::objectTableLock;
 omniObject*         omniObject::proxyObjectTable = 0;
 omniObject**        omniObject::localObjectTable = 0;
+omniObject**        omniObject::localPyObjectTable = 0;
 omni_mutex          omniObject::wrappedObjectTableLock;
 void**              omniObject::wrappedObjectTable = 0;
 CORBA::proxyObjectFactory* CORBA::proxyObjectFactory::proxyStubs = 0;
@@ -326,7 +332,16 @@ omni::objectRelease(omniObject *obj)
       delete obj;
     }
     else {
-      omniObject **p = &omniObject::localObjectTable[omniORB::hash(obj->pd_objkey.native)];
+      omniObject **p;
+      p = &omniObject::localObjectTable[omniORB::hash(obj->pd_objkey.native)];
+      while (*p) {
+	if (*p == obj) {
+	  *p = obj->pd_next;
+	  break;
+	}
+	p = &((*p)->pd_next);
+      }
+      p = &omniObject::localPyObjectTable[omniORB::hash(obj->pd_objkey.native)];
       while (*p) {
 	if (*p == obj) {
 	  *p = obj->pd_next;
@@ -363,11 +378,20 @@ omni::disposeObject(omniObject *obj)
 
   if (obj->getRefCount() == 0) {
     // object has _NOT_ already been removed from the object table
-    omniObject **p = &omniObject::localObjectTable[omniORB::hash(obj->pd_objkey.native)];
+    omniObject **p;
+    p = &omniObject::localObjectTable[omniORB::hash(obj->pd_objkey.native)];
     while (*p) {
       if (*p == obj) {
-      *p = obj->pd_next;
-      break;
+	*p = obj->pd_next;
+	break;
+      }
+      p = &((*p)->pd_next);
+    }
+    p = &omniObject::localPyObjectTable[omniORB::hash(obj->pd_objkey.native)];
+    while (*p) {
+      if (*p == obj) {
+	*p = obj->pd_next;
+	break;
       }
       p = &((*p)->pd_next);
     }
@@ -395,10 +419,25 @@ omni::locateObject(omniObjectManager*,omniObjectKey &k)
     p = &((*p)->pd_next);
   }
   omniObject::objectTableLock.unlock();
-  throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
-#ifdef NEED_DUMMY_RETURN
-  return 0;  // MS VC++ 4.0 needs this.
-#endif
+  return 0;
+}
+
+
+omniObject *
+omni::locatePyObject(omniObjectManager*,omniObjectKey &k)
+{
+  omniObject::objectTableLock.lock();
+  omniObject **p = &omniObject::localPyObjectTable[omniORB::hash(k)];
+  while (*p) {
+    if ((*p)->pd_objkey.native == k) {
+      (*p)->setRefCount((*p)->getRefCount()+1);
+      omniObject::objectTableLock.unlock();
+      return *p;
+    }
+    p = &((*p)->pd_next);
+  }
+  omniObject::objectTableLock.unlock();
+  return 0;
 }
 
 
@@ -650,11 +689,15 @@ omniObject::globalInit()
 {
   if (omniObject::localObjectTable) return;
 
-  omniObject::proxyObjectTable = 0;
-  omniObject::localObjectTable = new omniObject * [omniORB::hash_table_size];
+  omniObject::proxyObjectTable   = 0;
+  omniObject::localObjectTable   = new omniObject * [omniORB::hash_table_size];
+  omniObject::localPyObjectTable = new omniObject * [omniORB::hash_table_size];
   unsigned int i;
   for (i=0; i<omniORB::hash_table_size; i++)
     omniObject::localObjectTable[i] = 0;
+
+  for (i=0; i<omniORB::hash_table_size; i++)
+    omniObject::localPyObjectTable[i] = 0;
 
   omniObject::wrappedObjectTable = (void**)
     (new void *[omniORB::hash_table_size]);
