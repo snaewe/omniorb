@@ -12,8 +12,6 @@ export:: Naming.hh
 		$(ExportFileToDir))
 
 export:: bootstrap.hh
-	@(file="bootstrap.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
-		$(ExportFileToDir))
 
 export:: ir_defs.hh
 	@(file="ir_defs.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \

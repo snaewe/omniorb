@@ -1,3 +1,119 @@
+Fri Jun 18 20:58:00 BST 1999 sll
+================================
+
+- Update mapping to conform to CORBA 2.3:
+
+1. For interface A, class A contains typedef _ptr_type and _var_type.
+
+2. For struct, union and sequence, each type contains typedef _var_type.
+
+3. Added T_out& operator=(const T_out&) for T_out types.
+
+4. Generate typedef for anonymous sequence in struct.
+      e.g. struct A {                 // IDL
+              sequence <long> s;
+           };
+           class A {                  // C++
+              typedef ... _s_seq;
+              _s_seq s;
+           };
+
+5. Generate typedef for anonymous sequence in union.
+      e.g. union node switch(long) {      // IDL
+            case 0: sequence<node> s;
+            default: long v;
+           };
+           class node {                    // C++
+               typedef ... _s_seq;
+           };
+
+6. New members for sequence:
+      - get_buffer, replace, release
+
+7. Any type
+      - new operator boolean operator>>=(const Any&, const T*&);
+      - new from_string(), to_string() ctors with const char* argument
+      - new void type(TypeCode_ptr) member.
+
+8. Exception
+      - new member _downcast()
+      - new Any insertion and extraction operators 
+
+9. TypeCode
+      - new members equivalent()
+                    get_compact_typecode()
+
+- Any string extraction now return a string which is still owned by Any.
+      New omniORB::copyStringInAnyExtraction variable is defined.
+      If set to 1, revert to the old behaviour. That is the returned string is
+      copied.
+
+- TypeCode equal() now returns true if the typecode is identical.
+  Internally, all typecode comparisons now use equivalent().
+
+- Sequence of object reference and string re-implemented. Previous version
+  cannot support the new member functions. 
+
+- _LC_attr CPP macro in stubs is now replaced with _core_attr and _dyn_attr.
+  This allows stubs to be separated into two NT DLLs, one for *SK.cc and the
+  other for *DynSK.cc.
+
+include/omniORB2/CORBA.h
+include/omniORB2/seqtemplates.h
+include/omniORB2/templatedefns.h
+include/omniORB2/CORBA_basetypes.h
+include/omniORB2/bufferedStream.h
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/IIOP.h
+include/omniORB2/IOP.h
+include/omniORB2/giopDriver.h
+include/omniORB2/omniInternal.h
+include/omniORB2/omniORB.h
+include/omniORB2/corba_operators.h      NEW
+
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_struct.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+src/tool/omniidl2/omniORB2_be/o2be_constant.cc
+src/tool/omniidl2/omniORB2_be/o2be_name.cc
+src/tool/omniidl2/omniORB2_be/o2be_enum.cc
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+src/tool/omniidl2/omniORB2_be/o2be_typedef.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+
+omniORB2/orbcore/sharedlib/dir.mk
+omniORB2/orbcore/corbaString.cc
+omniORB2/orbcore/corbaObject.cc
+omniORB2/orbcore/exception.cc
+omniORB2/orbcore/exceptn.cc
+omniORB2/orbcore/initFile.cc
+omniORB2/orbcore/dir.mk
+omniORB2/orbcore/gatekeepers/tcpwrapper/gatekeeper.cc
+omniORB2/dynamic/tcParser.cc
+omniORB2/dynamic/wrongTranExn.cc               DELETE
+omniORB2/dynamic/unknownUserExn.cc
+omniORB2/dynamic/dynException.cc
+omniORB2/dynamic/dir.mk
+omniORB2/dynamic/dynamicImplementation.cc
+omniORB2/dynamic/serverRequest.cc
+omniORB2/dynamic/any.cc
+omniORB2/dynamic/tcParser.h
+omniORB2/dynamic/typecode.cc
+omniORB2/dynamic/typecode.h
+omniORB2/dynamic/anyP.h
+omniORB2/dynamic/anyP.cc
+omniORB2/dynamic/dynAny.cc
+omniORB2/dynamic/sharedlib/dir.mk
+
+omniORB2/dynamic/dynException.h              NEW
+omniORB2/orbcore/Namingstub.cc               NEW
+omniORB2/orbcore/bootstrapstub.cc            NEW
+omniORB2/dynamic/Namingdynstub.cc            NEW
+omniORB2/dynamic/bootstrapdynstub.cc         NEW
 
 Tue Jun  8 10:42:37 BST 1999 djr
 ================================
