@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.22  2001/09/03 16:53:23  sll
+  In _invoke and _locateRequest, set the deadline from orbParameters into the
+  calldescriptor.
+
   Revision 1.2.2.21  2001/08/21 11:02:17  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -560,6 +564,18 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 
   call_desc.objref(this);
 
+  // XXX set the deadline. In future, we may use per-objref timeout setting
+  // as well as per-thread timeout setting.
+  if (orbParameters::clientCallTimeOutPeriod.secs ||
+      orbParameters::clientCallTimeOutPeriod.nanosecs) {
+
+    unsigned long abs_secs,abs_nanosecs;
+    omni_thread::get_time(&abs_secs,&abs_nanosecs,
+			  orbParameters::clientCallTimeOutPeriod.secs,
+			  orbParameters::clientCallTimeOutPeriod.nanosecs);
+    call_desc.setDeadline(abs_secs,abs_nanosecs);
+  }
+
   while(1) {
 
     if( orbParameters::verifyObjectExistsAndType && do_assert )
@@ -832,6 +848,19 @@ omniObjRef::_locateRequest()
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
 
+  omniCallDescriptor dummy_calldesc(0,0,0,0,0,0,0);
+  // XXX set the deadline. In future, we may use per-objref timeout setting
+  // as well as per-thread timeout setting.
+  if (orbParameters::clientCallTimeOutPeriod.secs ||
+      orbParameters::clientCallTimeOutPeriod.nanosecs) {
+
+    unsigned long abs_secs,abs_nanosecs;
+    omni_thread::get_time(&abs_secs,&abs_nanosecs,
+			  orbParameters::clientCallTimeOutPeriod.secs,
+			  orbParameters::clientCallTimeOutPeriod.nanosecs);
+    dummy_calldesc.setDeadline(abs_secs,abs_nanosecs);
+  }
+  
   while(1) {
 
     try{
@@ -843,7 +872,7 @@ omniObjRef::_locateRequest()
 	return;
       }
       fwd = pd_flags.forward_location;
-      _identity()->locateRequest();
+      _identity()->locateRequest(dummy_calldesc);
       return;
 
     }
