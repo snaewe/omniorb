@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.3.2.1  2000/08/17 15:52:25  sll
+  Merged RTEMS port.
+
   Revision 1.3  2000/07/13 15:26:05  dpg1
   Merge from omni3_develop for 3.0 release.
 
@@ -138,7 +141,7 @@
 
 #include <stddef.h>
 
-#if !defined(__atmos__) && !defined(_WIN32) && !defined(__VMS)
+#if !defined(__atmos__) && !defined(_WIN32) && !defined(__VMS) && !defined(__rtems__)
 #include <strings.h>
 #include <string.h>
 #else

@@ -38,6 +38,7 @@
 #  x86_uw7                   SCO UnixWare 7 (7.1.0)
 #  x86_freebsd_3.2           x86 FreeBSD 3.2, egcs 1.1.2
 #  x86_freebsd_4.0           x86 FreeBSD 4.0, gcc 2.95
+#  pc486_rtems_4.5.0         x86, RTEMS, gcc 2.95.2
 
 # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
 # edit the make variables, such as CC and CXX, in the file.
@@ -75,6 +76,7 @@
 #platform = x86_uw7
 #platform = x86_freebsd_3.2
 #platform = x86_freebsd_4.0
+#platform = pc486_rtems_4.5.0
 
 # On Win32 platforms, uncomment the following line to build all the binaries
 # with debugging information. Useful if you want to debug the binaries under
@@ -92,12 +94,6 @@ override VPATH := $(subst :, ,$(VPATH))
 THIS_IMPORT_TREE := $(TOP)
 ifneq ($(wildcard $(THIS_IMPORT_TREE)/mk/beforedir.mk),)
 include $(THIS_IMPORT_TREE)/mk/beforedir.mk
-endif
-
-ifndef EmbeddedSystem
-OMNIORB_IDL_FPATH = $(TOP)/$(BINDIR)/$(OMNIORB_IDL)
-else
-OMNIORB_IDL_FPATH = $(TOP)/$(HOSTBINDIR)/$(OMNIORB_IDL)
 endif
 
 include dir.mk

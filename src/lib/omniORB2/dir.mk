@@ -1,7 +1,15 @@
 # dir.mk for omniORB.
 #
 
-SUBDIRS = omniidl_be orbcore dynamic
+ifndef EmbeddedSystem
+SUBDIRS = omniidl_be
+endif
+
+SUBDIRS += orbcore
+
+ifndef OrbCoreOnly
+SUBDIRS += dynamic
+endif
 
 EXPORTHEADERS = omniORB3/Naming.hh \
                 omniORB3/corbaidl_defs.hh \

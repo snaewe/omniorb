@@ -1,3 +1,21 @@
+Thu Aug 17 16:50:13 BST 2000 sll
+================================
+
+- merged RTEMS updates from omni3_develop.
+
+external_merge/README.rtems         NEW
+external_merge/config/config.mk
+external_merge/etc/README
+external_merge/etc/rtems.zip        NEW
+external_merge/mk/platforms/pc486_rtems_4.5.0.mk  NEW
+external_merge/mk/rtems.mk  NEW
+
+include/omnithread.h
+include/omniORB3/omniInternal.h
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/lib/omnithread/posix.cc
+
 Wed Aug 16 17:20:26 BST 2000 sll
 ================================
 
