@@ -1,4 +1,13 @@
 
+Thu Apr 20 16:08:04 BST 2000 djr
+================================
+
+- Fixed bug when duplicating nil object references.
+  omni::duplicateObjRef should not be called for nil references.
+
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+
 Thu Apr 13 18:44:45 BST 2000 djr
 ================================
 
