@@ -27,6 +27,10 @@
 
 /*
  $Log$
+ Revision 1.19  1999/02/09 09:43:40  djr
+ Fixed bug where a union helper class was not being declared before
+ being declared as a friend.
+
  Revision 1.18  1999/01/07 09:32:16  djr
  Changes to support new version of TypeCode and Any.
  Code for TypeCode and Any are now generated in a separate
@@ -1057,6 +1061,8 @@ public:
   void produce_hdr(std::fstream& s);
   void produce_skel(std::fstream& s);
   void produce_dynskel(std::fstream& s);
+
+  void produce_decls_at_global_scope_in_hdr(std::fstream& s);
 
   void produce_binary_operators_in_hdr(std::fstream& s);
   void produce_binary_operators_in_dynskel(std::fstream& s);
