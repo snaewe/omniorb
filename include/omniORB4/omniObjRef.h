@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/10/03 17:37:07  sll
+  Changed omniIOR synchronisation mutex from omni::internalLock to its own
+  mutex.
+
   Revision 1.2.2.2  2000/09/27 17:16:20  sll
   Replaced data member pd_iopProfiles with pd_ior which contains decoded
   members of the IOR.
@@ -257,19 +261,14 @@ public:
   // and shouldn't be modified. The returned object should be
   // released by calling its release() method. This
   // function is atomic and thread-safe.
-  // Mutual exclusion by holding omni::InternalLock.
   
   static void _marshal(omniObjRef*, cdrStream&);
   // Marshal this object reference to the cdrStream.
-  // Use omni::InternalLock for internal synchronisation.
-  // Must not hold omni::InternalLock when calling.
 
   static omniObjRef* _unMarshal(const char* repoId, cdrStream& s);
   // Unmarshal from the cdrStream an object reference. The
   // object reference is expected to implement the interface identified
   // by the repository ID <repoId>.
-  // Use omni::InternalLock for internal synchronisation.
-  // Must not hold omni::InternalLock when calling.
 
   static char* _toString(omniObjRef*);
   static omniObjRef* _fromString(const char*);
@@ -343,7 +342,7 @@ private:
 
   omniIOR* pd_ior;
   // The decoded IOR of this object reference.
-  // Mutable. Protected by <omni::internalLock>.
+  // Mutable. Protected by <omniIOR::lock>.
 
   omniIdentity* pd_id;
   // An encapsulation of the current implementation of this

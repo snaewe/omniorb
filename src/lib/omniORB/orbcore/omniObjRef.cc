@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/10/03 17:37:08  sll
+  Changed omniIOR synchronisation mutex from omni::internalLock to its own
+  mutex.
+
   Revision 1.2.2.2  2000/09/27 18:40:38  sll
   Removed obsoluted _getRopeAndKey()
   New members _getIOR(), _marshal(), _unMarshal(), _toString,  _fromString(),
@@ -135,11 +139,17 @@ omniObjRef::_realNarrow(const char* repoId)
 
       omni::internalLock->lock();
 
-      if( _localId() )
-	objref = omni::createObjRef(repoId, _localId(),
-				    pd_ior->duplicateNoLock());
+      omniIOR* ior;
+
+      {
+	omni_tracedmutex_lock sync(*omniIOR::lock);
+	ior = pd_ior->duplicateNoLock();
+      }
+
+      if( _localId() ) 
+	objref = omni::createObjRef(repoId, _localId(),ior);
       else
-	objref = omni::createObjRef(repoId,pd_ior->duplicateNoLock(),1);
+	objref = omni::createObjRef(repoId,ior,1);
 
       omni::internalLock->unlock();
 
@@ -502,8 +512,7 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 omniIOR* 
 omniObjRef::_getIOR()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
-  omni_tracedmutex_lock sync(*omni::internalLock);
+  omni_tracedmutex_lock sync(*omniIOR::lock);
   // Must hold mutex before reading pd_ior.
   return pd_ior->duplicateNoLock();
 }
@@ -511,7 +520,6 @@ omniObjRef::_getIOR()
 void
 omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
   if (!objref || objref->_is_nil()) {
     ::operator>>= ((CORBA::ULong)1,s);
@@ -522,7 +530,7 @@ omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
 
   omniIOR_var ior;
   {
-    omni_tracedmutex_lock sync(*omni::internalLock);
+    omni_tracedmutex_lock sync(*omniIOR::lock);
     // Must hold mutex before reading pd_ior.
     ior =  objref->pd_ior->duplicateNoLock();
   }

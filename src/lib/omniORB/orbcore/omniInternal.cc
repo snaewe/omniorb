@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.2.2.3  2000/10/03 17:37:08  sll
+  Changed omniIOR synchronisation mutex from omni::internalLock to its own
+  mutex.
+
   Revision 1.2.2.2  2000/09/27 18:39:33  sll
   Updated to use omniIOR to store and pass the repository ID and IOP profiles
   of an IOR.
@@ -804,14 +808,10 @@ omni::revertToOriginalProfile(omniObjRef* objref)
   Rope*          rope = 0;
   CORBA::Boolean is_local = 0;
 
-  omniIOR* ior = objref->_getIOR();
+  omniIOR_var ior = objref->_getIOR();
 
   if( !ropeFactory::iorToRope(ior, rope, is_local) ) {
-    ior->release();
     OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
-  }
-  else {
-    ior->release();
   }
 
   omni_tracedmutex_lock sync(*internalLock);
@@ -834,8 +834,8 @@ omni::revertToOriginalProfile(omniObjRef* objref)
 
   if( is_local ) {
 
-    CORBA::Octet* key = objref->pd_ior->iiop.object_key.get_buffer();
-    int  keysize = objref->pd_ior->iiop.object_key.length();
+    CORBA::Octet* key = ior->iiop.object_key.get_buffer();
+    int  keysize = ior->iiop.object_key.length();
 
     CORBA::ULong hashv = hash(key, keysize);
     local_id = locateIdentity(key, keysize, hashv, 1);
@@ -857,8 +857,7 @@ omni::revertToOriginalProfile(omniObjRef* objref)
   }
 
   // Need to instantiate a properly typed proxy.
-  objref->pd_ior->duplicateNoLock();
-  omniIdentity* rid = new omniRemoteIdentity(objref->pd_ior,rope);
+  omniIdentity* rid = new omniRemoteIdentity(ior._retn(),rope);
   omniInternal::replaceImplementation(objref, rid, local_id);
 }
 
@@ -927,8 +926,12 @@ omni::locationForward(omniObjRef* objref, omniObjRef* new_location,
       else                   rope = ((omniRemoteIdentity*) nl_id)->rope();
       rope->incrRefCount();
 
-      new_location->pd_ior->duplicateNoLock();
-      omniIdentity* id = new omniRemoteIdentity(new_location->pd_ior, rope);
+      omniIOR_var ior;
+      {
+	omni_tracedmutex_lock sync(*omniIOR::lock);
+	ior = new_location->pd_ior->duplicateNoLock();
+      }
+      omniIdentity* id = new omniRemoteIdentity(ior._retn(), rope);
       omniInternal::replaceImplementation(objref, id, nl_lid);
     }
 
@@ -936,6 +939,8 @@ omni::locationForward(omniObjRef* objref, omniObjRef* new_location,
       // This location forwarding is permanent, replace the IOR of this
       // object reference with the new one. If this object reference is
       // later passed to another server, the new IOR will be transferred.
+      omni_tracedmutex_lock sync(*omniIOR::lock);
+
       new_location->pd_ior->duplicateNoLock();
       objref->pd_ior->releaseNoLock();
       objref->pd_ior = new_location->pd_ior;

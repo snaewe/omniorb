@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/10/03 17:37:07  sll
+  Changed omniIOR synchronisation mutex from omni::internalLock to its own
+  mutex.
+
   Revision 1.1.2.1  2000/09/27 16:54:08  sll
   *** empty log message ***
 
@@ -70,16 +74,6 @@ public:
   typedef _CORBA_PseudoValue_Sequence<opaque> opaque_sequence;
   opaque_sequence*                            opaque_data;
 
-  // The object is reference counted. Call duplcate() to increment the
-  // reference count. Call release() to decrement the reference count.
-  omniIOR* duplicate();
-  // return a pointer to this object.
-  // Atomic and thread safe. 
-
-  void release();
-  // If the reference count is 0, delete is called on the object.
-  // Atomic and thread safe.
-
   omniIOR(char* repoId, IOP::TaggedProfileList* iop);
   // Both repoId and iop are consumed by the object.
 
@@ -100,6 +94,23 @@ public:
 
   void marshalIORAddressingInfo(cdrStream& s);
 
+  // Synchronisation and reference counting:
+  //
+  // The object is reference counted. Call duplcate() to increment the
+  // reference count. Call release() to decrement the reference count.
+  //
+  // The reference count is protected by the mutex omniIOR::lock.
+  //
+  omniIOR* duplicate();
+  // return a pointer to this object.
+  // Atomic and thread safe. Caller must not hold omniIOR::lock.
+
+  void release();
+  // If the reference count is 0, delete is called on the object.
+  // Atomic and thread safe. Caller must not hold omniIOR::lock
+
+  static _core_attr omni_tracedmutex* lock;
+
 private:
   int pd_refCount;
   // Protected by <omni::internalLock>
@@ -113,10 +124,10 @@ public:
   // ORB internal functions.
 
   omniIOR* duplicateNoLock();
-  // Must hold <omni::internalLock>. Otherwise same semantics as duplicate().
+  // Must hold <omniIOR::lock>. Otherwise same semantics as duplicate().
 
   void releaseNoLock();
-  // Must hold <omni::internalLock>. Otherwise same semantics as release().
+  // Must hold <omniIOR::lock>. Otherwise same semantics as release().
 
   void clearDecodedMembers();
   // Reduce the memory foot print by clearing out all the decoded members.

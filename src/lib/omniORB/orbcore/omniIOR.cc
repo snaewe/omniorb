@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/10/03 17:37:07  sll
+  Changed omniIOR synchronisation mutex from omni::internalLock to its own
+  mutex.
+
   Revision 1.1.2.1  2000/09/27 17:30:30  sll
   *** empty log message ***
 
@@ -36,11 +40,19 @@
 #include <omniORB4/CORBA.h>
 #include <omniIdentity.h>
 #include <ropeFactory.h>
+#include <initialiser.h>
+
+omni_tracedmutex*                omniIOR::lock = 0;
 
 omniIOR::omniIOR(char* repoId, IOP::TaggedProfileList* iop) : 
   iopProfiles(iop), decoded(1), selectedRopeFactoryType(0),
   addr_mode(GIOP::KeyAddr),opaque_data(0),pd_refCount(1)
 {
+  {
+    omniORB::logger log;
+    log << "omniIOR ctor(1)\n";
+  }
+
   repositoryID = repoId;
   ropeFactoryType* f = ropeFactoryTypeList;
   while (f) {
@@ -54,6 +66,11 @@ omniIOR::omniIOR(char* repoId, IOP::TaggedProfile* iop, _CORBA_ULong niops,
   decoded(1), selectedRopeFactoryType(0), addr_mode(GIOP::KeyAddr), 
   opaque_data(0),pd_refCount(1)
 {
+  {
+    omniORB::logger log;
+    log << "omniIOR ctor(2)\n";
+  }
+
   repositoryID = repoId;
   iopProfiles = new IOP::TaggedProfileList(niops,niops,iop,1);
   addr_selected_profile_index = selected_profile_index;
@@ -66,6 +83,11 @@ omniIOR::omniIOR(const char* repoId, omniIdentity* id) :
   decoded(1), selectedRopeFactoryType(0), addr_mode(GIOP::KeyAddr), 
   opaque_data(0),pd_refCount(1)
 {
+  {
+    omniORB::logger log;
+    log << "omniIOR ctor(3)\n";
+  }
+
   repositoryID = repoId;   // copied.
 
   iiop.object_key.replace((CORBA::ULong)id->keysize(),
@@ -91,6 +113,11 @@ omniIOR::omniIOR(const char* repoId,
   decoded(1), selectedRopeFactoryType(0), addr_mode(GIOP::KeyAddr), 
   opaque_data(0),pd_refCount(1) 
 {
+  {
+    omniORB::logger log;
+    log << "omniIOR ctor(4)\n";
+  }
+
   repositoryID = repoId;
 
   iiop.object_key.replace(key.length(),key.length(),
@@ -105,17 +132,17 @@ omniIOR::omniIOR(const char* repoId,
     }
   }
 
-  ropeFactoryType* f = ropeFactoryType::findType(IOP::TAG_INTERNET_IOP);
-  f->encodeIOPprofile(this);
-
-  // This is a ctor for local objects. The ORB never looks at the
-  // decoded members again.
-  // To minimize memory footprint, clear out all decoded members.
-  clearDecodedMembers();
+  selectedRopeFactoryType = ropeFactoryType::findType(IOP::TAG_INTERNET_IOP);
+  selectedRopeFactoryType->encodeIOPprofile(this);
 }
 
 omniIOR::~omniIOR()
 {
+  {
+    omniORB::logger log;
+    log << "~omniIOR\n";
+  }
+
   OMNIORB_ASSERT(pd_refCount <= 0);
 
   if (opaque_data) {
@@ -134,7 +161,7 @@ omniIOR::~omniIOR()
 omniIOR*
 omniIOR::duplicateNoLock()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniIOR::lock, 1);
   OMNIORB_ASSERT(pd_refCount > 0);
   pd_refCount++;
   return this;
@@ -143,15 +170,15 @@ omniIOR::duplicateNoLock()
 omniIOR*
 omniIOR::duplicate()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
-  omni_tracedmutex_lock sync(*omni::internalLock);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniIOR::lock, 0);
+  omni_tracedmutex_lock sync(*omniIOR::lock);
   return duplicateNoLock();
 }
 
 void
 omniIOR::releaseNoLock()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniIOR::lock, 1);
   if (--pd_refCount <= 0)
     delete this;
 }
@@ -159,8 +186,8 @@ omniIOR::releaseNoLock()
 void
 omniIOR::release()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
-  omni_tracedmutex_lock sync(*omni::internalLock);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniIOR::lock, 0);
+  omni_tracedmutex_lock sync(*omniIOR::lock);
   releaseNoLock();
 }
 
@@ -201,3 +228,26 @@ omniIOR::clearDecodedMembers()
 
   decoded = 0;
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_omniIOR_initialiser : public omniInitialiser {
+public:
+
+  void attach() {
+
+    omniIOR::lock   = new omni_tracedmutex;
+  }
+
+  void detach() {
+    delete omniIOR::lock;
+    omniIOR::lock = 0;
+  }
+};
+
+static omni_omniIOR_initialiser initialiser;
+
+omniInitialiser& omni_omniIOR_initialiser_ = initialiser;
+
