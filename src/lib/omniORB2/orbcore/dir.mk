@@ -72,7 +72,7 @@ endif
 
 ifdef Win32Platform
 
-NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
+NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc 
 NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o gatekeeper.o
 # See extra comments on gatekeeper.o at the end of this file
 
