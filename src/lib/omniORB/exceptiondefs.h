@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:42:38  sll
+  Updated to use the new cdrStream abstraction
+
   Revision 1.2.2.1  2000/07/17 10:35:39  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -145,12 +148,7 @@ scope::name::_NP_repoId(int* size) const { \
 } \
  \
 void \
-scope::name::_NP_marshal(NetBufferedStream& s) const { \
-  *this >>= s; \
-} \
- \
-void \
-scope::name::_NP_marshal(MemBufferedStream& s) const { \
+scope::name::_NP_marshal(cdrStream& s) const { \
   *this >>= s; \
 } \
 
