@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.13  2002/12/19 13:55:14  dgrisby
+# Don't try to delete non-existent file when no preprocessor.
+#
 # Revision 1.17.2.12  2002/10/28 12:20:45  dgrisby
 # Editing mishap.
 #
@@ -494,7 +497,7 @@ def main(argv=None):
             if cd_to is not None:
                 os.chdir(old_wd)
 
-            if temp_file:
+            if temp_file and not no_preprocessor:
                 os.remove(temp_file)
 
             idlast.clear()
