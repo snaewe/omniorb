@@ -28,9 +28,12 @@
 
 /*
   $Log$
-  Revision 1.8  1998/01/20 19:13:46  sll
-  Added support for OpenVMS.
+  Revision 1.9  1998/01/27 16:52:59  ewc
+  Incremented version to 2.5
 
+// Revision 1.8  1998/01/20  19:13:46  sll
+// Added support for OpenVMS.
+//
   Revision 1.7  1997/12/12 20:02:33  sll
   Generate reference to version variable omniORB_x_y in skel file.
 
@@ -217,7 +220,7 @@ o2be_root::produce_skel(fstream &skel)
   // Do not forget to update the version number in omniORB_x_y below.
   // The variable is defined in omniInternal.h.
   skel << "static const char* _0RL_library_version = "
-       << "omniORB_2_4" 
+       << "omniORB_2_5" 
        << ";\n\n" << endl;
 
   if (idl_global->indent() == NULL)
