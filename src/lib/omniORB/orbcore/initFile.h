@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.8  1998/08/21 19:12:03  sll
+  Removed public member NameService().
+
   Revision 1.7  1998/08/11 17:58:10  sll
   Do not use registry if the platform is Phar Lap ETS Kernel.
 
@@ -60,7 +63,6 @@ public:
   void initialize();
 
 private:
-  CORBA::Object_var _NameService;
 
   char* fData;
   long fsize;
@@ -91,10 +93,6 @@ private:
 		       CORBA::String_var& data);
 #endif
 
-public:
-  CORBA::Object_ptr NameService() { 
-    return CORBA::Object::_duplicate(_NameService); 
-  }
 };
 
 
