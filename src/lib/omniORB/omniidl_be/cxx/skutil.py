@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.10  2003/07/27 19:24:32  dgrisby
+# Avoid name clash in struct marshalling with evil IDL.
+#
 # Revision 1.17.2.9  2001/06/19 16:41:49  sll
 # Type cast now correctly distinguishes between normal and array types.
 #
@@ -223,8 +226,13 @@ else """,
 
     if dims != []:
         type_name = d_type.base(environment)
+        if type_name == element_name:
+            type_name = d_type.base()
     else:
         type_name = type.base(environment)
+        if type_name == element_name:
+            type_name = type.base()
+            
     bounded = ""
     kind = d_type.type().kind()
     
@@ -341,8 +349,12 @@ def unmarshall(to, environment, type, decl, name, from_where):
     
     if dims != []:
         type_name = d_type.base(environment)
+        if type_name == element_name:
+            type_name = d_type.base()
     else:
         type_name = type.base(environment)
+        if type_name == element_name:
+            type_name = type.base()
         
     bounded = ""
     kind = d_type.type().kind()

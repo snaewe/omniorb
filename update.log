@@ -1,3 +1,11 @@
+Sun Jul 27 20:18:34 BST 2003 dgrisby
+====================================
+
+- Avoid name clash in struct marshalling with evil IDL.
+
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+
+
 Sat Jul 26 23:45:15 BST 2003 dgrisby
 ====================================
 
