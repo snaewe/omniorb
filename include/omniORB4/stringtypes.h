@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.10  2002/03/11 12:23:03  dpg1
+ Tweaks to avoid compiler warnings.
+
  Revision 1.2.2.9  2001/11/06 15:41:35  dpg1
  Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -243,10 +246,18 @@ public:
   typedef char* ptr_t;
 
   inline _CORBA_String_member()
+#ifdef HAS_Cplusplus_const_cast
+    : _ptr(const_cast<char*>(_CORBA_String_helper::empty_string)) {}
+#else
     : _ptr((char*) _CORBA_String_helper::empty_string) {}
+#endif
 
   inline _CORBA_String_member(const _CORBA_String_member& s) 
-           : _ptr((char*)_CORBA_String_helper::empty_string) {
+#ifdef HAS_Cplusplus_const_cast
+    : _ptr(const_cast<char*>(_CORBA_String_helper::empty_string)) {
+#else
+    : _ptr((char*)_CORBA_String_helper::empty_string) {
+#endif
     if (s._ptr && s._ptr != _CORBA_String_helper::empty_string)
       _ptr = _CORBA_String_helper::dup(s._ptr);
   }
@@ -384,8 +395,13 @@ public:
 	_CORBA_String_helper::free(pd_data);
       if (s.pd_data && s.pd_data != _CORBA_String_helper::empty_string)
 	pd_data = _CORBA_String_helper::dup(s.pd_data);
-      else
+      else {
+#ifdef HAS_Cplusplus_const_cast
+	pd_data = const_cast<char*>(s.pd_data);
+#else
 	pd_data = (char*)s.pd_data;
+#endif
+      }
     }
     return *this;
   }
@@ -406,8 +422,13 @@ public:
     if( (const char*)s &&
 	(const char*) s != _CORBA_String_helper::empty_string)
       pd_data = _CORBA_String_helper::dup((const char*)s);
-    else
+    else {
+#ifdef HAS_Cplusplus_const_cast
+      pd_data = const_cast<char*>((const char*)s);
+#else
       pd_data = (char*)(const char*)s;
+#endif
+    }
     return *this;
   }
 
@@ -607,9 +628,13 @@ public:
     }
 
     // If we've shrunk we need to clear the entries at the top.
-    for( _CORBA_ULong i = len; i < pd_len; i++ ) 
+    for( _CORBA_ULong i = len; i < pd_len; i++ ) {
+#ifdef HAS_Cplusplus_const_cast
+      operator[](i) = const_cast<char*>(_CORBA_String_helper::empty_string);
+#else
       operator[](i) = (char*) _CORBA_String_helper::empty_string;
-
+#endif
+    }
     if (len) {
       // Allocate buffer on-demand. Either pd_data == 0 
       //                            or pd_data = buffer for pd_max elements
@@ -643,8 +668,13 @@ public:
     ptr_arith_t l = nelems;
     b[0] = (char*) ((ptr_arith_t) 0x53515354U);
     b[1] = (char*) l;
-    for (_CORBA_ULong index = 2; index < (nelems+2); index++)
+    for (_CORBA_ULong index = 2; index < (nelems+2); index++) {
+#ifdef HAS_Cplusplus_const_cast
+      b[index] = const_cast<char*>(_CORBA_String_helper::empty_string);
+#else
       b[index] = (char*)_CORBA_String_helper::empty_string;
+#endif
+    }
     return b+2;
   }
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.18  2002/03/11 12:23:03  dpg1
+  Tweaks to avoid compiler warnings.
+
   Revision 1.1.2.17  2001/11/14 17:13:41  dpg1
   Long double support.
 
@@ -312,9 +315,13 @@ public:
 
   friend inline void operator>>= (_CORBA_Float a, cdrStream& s) {
     if (s.pd_marshal_byte_swap) {
-      _CORBA_ULong tl1 = *((_CORBA_ULong *)&a);
-      _CORBA_ULong tl2 = Swap32(tl1);
-      a = *((_CORBA_Float *) &tl2);
+      union {
+ 	_CORBA_Float f;
+ 	_CORBA_ULong l;
+      } u;
+      u.f = a;
+      u.l = Swap32(u.l);
+      a = u.f;
     }
     CdrMarshal(s,_CORBA_Float,omni::ALIGN_4,a);
   }
@@ -322,21 +329,26 @@ public:
   friend inline void operator<<= (_CORBA_Float& a, cdrStream& s) {
     CdrUnMarshal(s,_CORBA_Float,omni::ALIGN_4,a);
     if (s.pd_unmarshal_byte_swap) {
-      _CORBA_ULong tl1 = *((_CORBA_ULong *)&a);
-      _CORBA_ULong tl2 = Swap32(tl1);
-      a = *((_CORBA_Float *) &tl2);
+      union {
+	_CORBA_Float f;
+	_CORBA_ULong l;
+      } u;
+      u.f = a;
+      u.l = Swap32(u.l);
+      a = u.f;
     }
   }
 
   friend inline void operator>>= (_CORBA_Double a, cdrStream& s) {
     if (s.pd_marshal_byte_swap) {
-      _CORBA_Double t = a;
-      _CORBA_ULong tl1 = ((_CORBA_ULong *)&t)[1];
-      _CORBA_ULong tl2 = Swap32(tl1);
-      ((_CORBA_ULong *)&a)[0] = tl2;
-      tl1 = ((_CORBA_ULong *)&t)[0];
-      tl2 = Swap32(tl1);
-      ((_CORBA_ULong *)&a)[1] = tl2;
+      union {
+	_CORBA_Double d;
+	_CORBA_ULong l[2];
+      } u, v;
+      u.d = a;
+      v.l[0] = Swap32(u.l[1]);
+      v.l[1] = Swap32(u.l[0]);
+      a = v.d;
     }
     CdrMarshal(s,_CORBA_Double,omni::ALIGN_8,a);
   }
@@ -344,13 +356,14 @@ public:
   friend inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
     CdrUnMarshal(s,_CORBA_Double,omni::ALIGN_8,a);
     if (s.pd_unmarshal_byte_swap) {
-      _CORBA_Double t = a;
-      _CORBA_ULong tl1 = ((_CORBA_ULong *)&t)[1];
-      _CORBA_ULong tl2 = Swap32(tl1);
-      ((_CORBA_ULong *)&a)[0] = tl2;
-      tl1 = ((_CORBA_ULong *)&t)[0];
-      tl2 = Swap32(tl1);
-      ((_CORBA_ULong *)&a)[1] = tl2;
+      union {
+	_CORBA_Double d;
+	_CORBA_ULong l[2];
+      } u, v;
+      u.d = a;
+      v.l[0] = Swap32(u.l[1]);
+      v.l[1] = Swap32(u.l[0]);
+      a = v.d;
     }
   }
 
@@ -360,15 +373,16 @@ public:
 #if SIZEOF_LONG_DOUBLE == 16
   friend inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
     if (s.pd_marshal_byte_swap) {
-      _CORBA_LongDouble t = a;
-      _CORBA_ULong tl1, tl2;
-      _CORBA_ULong* tp = (_CORBA_ULong*)&t;
-      _CORBA_ULong* ap = (_CORBA_ULong*)&a;
-
-      tl1 = tp[3]; tl2 = Swap32(tl1); ap[0] = tl2;
-      tl1 = tp[2]; tl2 = Swap32(tl1); ap[1] = tl2;
-      tl1 = tp[1]; tl2 = Swap32(tl1); ap[2] = tl2;
-      tl1 = tp[0]; tl2 = Swap32(tl1); ap[3] = tl2;
+      union {
+	_CORBA_LongDouble d;
+	_CORBA_ULong l[4];
+      } u, v;
+      u.d = a;
+      v.l[0] = Swap32(u.l[3]);
+      v.l[1] = Swap32(u.l[2]);
+      v.l[2] = Swap32(u.l[1]);
+      v.l[3] = Swap32(u.l[0]);
+      a = v.d;
     }
     CdrMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
   }
@@ -376,15 +390,16 @@ public:
   friend inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
     CdrUnMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
     if (s.pd_unmarshal_byte_swap) {
-      _CORBA_LongDouble t = a;
-      _CORBA_ULong tl1, tl2;
-      _CORBA_ULong* tp = (_CORBA_ULong*)&t;
-      _CORBA_ULong* ap = (_CORBA_ULong*)&a;
-
-      tl1 = tp[3]; tl2 = Swap32(tl1); ap[0] = tl2;
-      tl1 = tp[2]; tl2 = Swap32(tl1); ap[1] = tl2;
-      tl1 = tp[1]; tl2 = Swap32(tl1); ap[2] = tl2;
-      tl1 = tp[0]; tl2 = Swap32(tl1); ap[3] = tl2;
+      union {
+	_CORBA_LongDouble d;
+	_CORBA_ULong l[4];
+      } u, v;
+      u.d = a;
+      v.l[0] = Swap32(u.l[3]);
+      v.l[1] = Swap32(u.l[2]);
+      v.l[2] = Swap32(u.l[1]);
+      v.l[3] = Swap32(u.l[0]);
+      a = v.d;
     }
   }
 #else
@@ -668,8 +683,13 @@ public:
 
     if( unmarshal_byte_swap() )
       for( int i = 0; i < length; i++ ) {
-	_CORBA_ULong tmp = Swap32(* (_CORBA_ULong*) (a + i));
-	a[i] = * (_CORBA_Float*) &tmp;
+	union {
+	  _CORBA_Float f;
+	  _CORBA_ULong l;
+	} u;
+	u.f = a[i];
+	u.l = Swap32(u.l);
+	a[i] = u.f;
       }
   }
 
@@ -681,10 +701,14 @@ public:
 
     if( unmarshal_byte_swap() )
       for( int i = 0; i < length; i++ ) {
-	_CORBA_ULong tmp0 = Swap32(((_CORBA_ULong*) (a + i))[0]);
-	_CORBA_ULong tmp1 = Swap32(((_CORBA_ULong*) (a + i))[1]);
-	((_CORBA_ULong*) (a + i))[1] = tmp0;
-	((_CORBA_ULong*) (a + i))[0] = tmp1;
+	union {
+	  _CORBA_Double d;
+	  _CORBA_ULong l[2];
+	} u, v;
+	u.d = a[i];
+	v.l[0] = Swap32(u.l[1]);
+	v.l[1] = Swap32(u.l[0]);
+	a[i] = v.d;
       }
   }
 #endif

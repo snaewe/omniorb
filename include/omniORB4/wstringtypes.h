@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2002/03/11 12:23:03  dpg1
+  Tweaks to avoid compiler warnings.
+
   Revision 1.1.2.7  2001/11/06 15:41:35  dpg1
   Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -216,10 +219,18 @@ public:
   typedef _CORBA_WChar* ptr_t;
 
   inline _CORBA_WString_member()
+#ifdef HAS_Cplusplus_const_cast
+    : _ptr(const_cast<_CORBA_WChar*>(_CORBA_WString_helper::empty_wstring)) {}
+#else
     : _ptr((_CORBA_WChar*) _CORBA_WString_helper::empty_wstring) {}
+#endif
 
-  inline _CORBA_WString_member(const _CORBA_WString_member& s) 
-           : _ptr((_CORBA_WChar*)_CORBA_WString_helper::empty_wstring) {
+  inline _CORBA_WString_member(const _CORBA_WString_member& s)  
+#ifdef HAS_Cplusplus_const_cast
+    : _ptr(const_cast<_CORBA_WChar*>(_CORBA_WString_helper::empty_wstring)) {
+#else
+    : _ptr((_CORBA_WChar*) _CORBA_WString_helper::empty_wstring) {
+#endif
     if (s._ptr && s._ptr != _CORBA_WString_helper::empty_wstring)
       _ptr = _CORBA_WString_helper::dup(s._ptr);
   }
@@ -379,8 +390,13 @@ public:
     if( (const _CORBA_WChar*)s &&
 	(const _CORBA_WChar*) s != _CORBA_WString_helper::empty_wstring)
       pd_data = _CORBA_WString_helper::dup((const _CORBA_WChar*)s);
-    else
+    else {
+#ifdef HAS_Cplusplus_const_cast
+      pd_data = const_cast<_CORBA_WChar*>((const _CORBA_WChar*)s);
+#else
       pd_data = (_CORBA_WChar*)(const _CORBA_WChar*)s;
+#endif
+    }
     return *this;
   }
 
@@ -582,8 +598,13 @@ public:
     }
 
     // If we've shrunk we need to clear the entries at the top.
-    for( _CORBA_ULong i = len; i < pd_len; i++ ) 
+    for( _CORBA_ULong i = len; i < pd_len; i++ ) {
+#ifdef HAS_Cplusplus_const_cast
+      operator[](i) = const_cast<_CORBA_WChar*>(_CORBA_WString_helper::empty_wstring);
+#else
       operator[](i) = (_CORBA_WChar*) _CORBA_WString_helper::empty_wstring;
+#endif
+    }
 
     if (len) {
       // Allocate buffer on-demand. Either pd_data == 0 
