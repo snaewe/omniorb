@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2001/11/08 16:31:19  dpg1
+  Minor tweaks.
+
   Revision 1.1.2.9  2001/09/19 17:26:49  dpg1
   Full clean-up after orb->destroy().
 
@@ -115,14 +118,29 @@ CORBA::Boolean orbParameters::offerBiDirectionalGIOP = 0;
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the variables external linkage otherwise. Its a bug.
+namespace BiDirPolicy {
+
+_init_in_def_( const CORBA::PolicyType
+	       BIDIRECTIONAL_POLICY_TYPE = 37; )
+
+_init_in_def_( const BidirectionalPolicyValue 
+               NORMAL = 0; )
+
+_init_in_def_( const BidirectionalPolicyValue 
+               BOTH = 1; )
+}
+#else
 _init_in_def_( const CORBA::PolicyType
 	       BiDirPolicy::BIDIRECTIONAL_POLICY_TYPE = 37; )
 
 _init_in_def_( const BiDirPolicy::BidirectionalPolicyValue 
-                BiDirPolicy::NORMAL = 0; )
+               BiDirPolicy::NORMAL = 0; )
 
 _init_in_def_( const BiDirPolicy::BidirectionalPolicyValue 
-                BiDirPolicy::BOTH = 1; )
+               BiDirPolicy::BOTH = 1; )
+#endif
 
 BiDirPolicy::BidirectionalPolicy::~BidirectionalPolicy() {}
 
