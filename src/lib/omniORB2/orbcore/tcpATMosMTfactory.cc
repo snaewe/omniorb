@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.4  1998/03/20 12:30:30  sll
+  Delay connect to the remote address space until the first send or recv.
+  Previously, connect was made inside the ctor of tcpATMosStrand.
+
   Revision 1.3  1998/03/04 14:44:51  sll
   Updated to use omniORB::giopServerThreadWrapper.
 
@@ -452,71 +456,36 @@ const
 unsigned int 
 tcpATMosStrand::buffer_size = 8192 + (int)omni::max_alignment;
 
+static tcpATMosHandle_t realConnect(tcpATMosEndpoint* r);
+
 tcpATMosStrand::tcpATMosStrand(tcpATMosOutgoingRope *rope,
 				 tcpATMosEndpoint   *r,
 				 CORBA::Boolean heapAllocated)
   : reliableStreamStrand(tcpATMosStrand::buffer_size,rope,heapAllocated),
-    pd_filehandle(0), pd_send_giop_closeConnection(0)
+    pd_filehandle(0), pd_send_giop_closeConnection(0), pd_delay_connect(0)
 {
+  // Do not try to connect to the remote host in this ctor.
+  // This is to avoid holding the mutex on rope->pd_lock while the connect
+  // is in progress. Holding the mutex for an extended period is bad as this 
+  // can have ***serious*** side effect. 
+  // One immediate consequence of holding the rope->pd_lock is that the
+  // outScavenger will be blocked on rope->pd_lock when it is scanning
+  // for idle strands. This in turn blockout any thread trying to lock
+  // rope->pd_anchor->pd_lock. This is really bad because no new rope
+  // can be added to the anchor.
 
-  // Get remote IP address:
-  char ipaddr[16];
-  
-  if (!	LibcWrapper::isipaddr((char*) r->host())) {
-    CORBA::String_var remote_host = (const char*)r->host();
 
-#ifdef NO_DNS
-    // ATMOS doesn't have a proper implementation of DNS functions.
-    // Strip away any domain from the hostname before calling gethostbyname()
-    char* remstr = strchr((char*)r->host(),'.');
-    if (remstr != 0) {
-      *((char*)remote_host + (remstr - (char*)r->host())) = '\0';
-    }
-#endif
-
-    LibcWrapper::hostent_var h;
-    int  rc;
-    if (LibcWrapper::gethostbyname((char*)remote_host,h,rc) < 0) {
-	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
-    }
-
-    unsigned long int ip_p;
-    memcpy((void*) &ip_p,(void*)h.hostent()->h_addr_list[0],sizeof(long));
-    sprintf(ipaddr,"%d.%d.%d.%d",
-	      (int)(ip_p & 0x000000ff),
-	      (int)((ip_p & 0x0000ff00) >> 8),
-	      (int)((ip_p & 0x00ff0000) >> 16),
-	      (int)((ip_p & 0xff000000) >> 24));
-  }
-  else {
-    strncpy(ipaddr,(char*) r->host(),sizeof(ipaddr));
-  }
-
-  // Set up file string (used to open TCP connection to remote host):
-  char ipfstr[128];
-  sprintf(ipfstr,"//ip/TYPE=TCP/RHOST=%s/RPORT=%d/RETRY_CONX=%d",ipaddr,r->port(),0);
-
-  // Open out-going connection:
-  int retry = 5;
-  do
-    {
-      if (omniORB::traceLevel >= 5) {
-	kprintf("TCP connect attempt: %d.\n",retry);
-      }
-      pd_filehandle = fopen(ipfstr,"wb+");
-    }
-  while(!pd_filehandle && retry--);
-
-  if (!pd_filehandle) {
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
-  }
+  pd_filehandle = 0;
+  pd_delay_connect = new tcpATMosEndpoint(r);
+  // Do the connect on first call to ll_recv or ll_send.
 }
 
 tcpATMosStrand::tcpATMosStrand(tcpATMosIncomingRope *r,
 				 tcpATMosHandle_t filehandle,
 				 CORBA::Boolean heapAllocated)
   : reliableStreamStrand(tcpATMosStrand::buffer_size,r,heapAllocated),
-    pd_filehandle(filehandle), pd_send_giop_closeConnection(1)
+    pd_filehandle(filehandle), pd_send_giop_closeConnection(1), 
+    pd_delay_connect(0)
 {
 }
 
@@ -529,12 +498,27 @@ tcpATMosStrand::~tcpATMosStrand()
   if (pd_filehandle != 0)
     fclose(pd_filehandle);
   pd_filehandle = 0;
+  if (pd_delay_connect)
+    delete pd_delay_connect;
+  pd_delay_connect = 0;
 }
 
 
 size_t
 tcpATMosStrand::ll_recv(void* buf, size_t sz)
 {
+  if (pd_delay_connect) {
+    // We have not connect to the remote host yet. Do the connect now.
+    // Note: May block on connect for sometime if the remote host is down
+    //
+    if ((pd_filehandle = realConnect(pd_delay_connect)) == 0) {
+      _setStrandIsDying();
+      throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+    }
+    delete pd_delay_connect;
+    pd_delay_connect = 0;
+  }
+
   int rx;
   while (1) {
     if (net_receive(pd_filehandle,(BYTE*)buf,sz,&rx) != 0) {
@@ -554,6 +538,18 @@ tcpATMosStrand::ll_recv(void* buf, size_t sz)
 void
 tcpATMosStrand::ll_send(void* buf,size_t sz) 
 {
+  if (pd_delay_connect) {
+    // We have not connect to the remote host yet. Do the connect now.
+    // Note: May block on connect for sometime if the remote host is down
+    //
+    if ((pd_filehandle = realConnect(pd_delay_connect)) == 0) {
+      _setStrandIsDying();
+      throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+    }
+    delete pd_delay_connect;
+    pd_delay_connect = 0;
+  }
+
   int tx;
   char *p = (char *)buf;
   while (sz) {
@@ -595,6 +591,63 @@ tcpATMosStrand::shutdown()
   _setStrandIsDying();
   net_disconnect(pd_filehandle,0);
   return;
+}
+
+
+static
+tcpATMosHandle_t
+realConnect(tcpATMosEndpoint* r)
+{
+  // Get remote IP address:
+  char ipaddr[16];
+  
+  if (!	LibcWrapper::isipaddr((char*) r->host())) {
+    CORBA::String_var remote_host = (const char*)r->host();
+
+#ifdef NO_DNS
+    // ATMOS doesn't have a proper implementation of DNS functions.
+    // Strip away any domain from the hostname before calling gethostbyname()
+    char* remstr = strchr((char*)r->host(),'.');
+    if (remstr != 0) {
+      *((char*)remote_host + (remstr - (char*)r->host())) = '\0';
+    }
+#endif
+
+    LibcWrapper::hostent_var h;
+    int  rc;
+    if (LibcWrapper::gethostbyname((char*)remote_host,h,rc) < 0) {
+	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+    }
+
+    unsigned long int ip_p;
+    memcpy((void*) &ip_p,(void*)h.hostent()->h_addr_list[0],sizeof(long));
+    sprintf(ipaddr,"%d.%d.%d.%d",
+	      (int)(ip_p & 0x000000ff),
+	      (int)((ip_p & 0x0000ff00) >> 8),
+	      (int)((ip_p & 0x00ff0000) >> 16),
+	      (int)((ip_p & 0xff000000) >> 24));
+  }
+  else {
+    strncpy(ipaddr,(char*) r->host(),sizeof(ipaddr));
+  }
+
+  // Set up file string (used to open TCP connection to remote host):
+  char ipfstr[128];
+  sprintf(ipfstr,"//ip/TYPE=TCP/RHOST=%s/RPORT=%d/RETRY_CONX=%d",ipaddr,r->port(),0);
+
+  // Open out-going connection:
+  int retry = 5;
+  tcpATMosHandle_t fh;
+  do
+    {
+      if (omniORB::traceLevel >= 5) {
+	kprintf("TCP connect attempt: %d.\n",retry);
+      }
+      fh = fopen(ipfstr,"wb+");
+    }
+  while(!fh && retry--);
+
+  return fh;
 }
 
 /////////////////////////////////////////////////////////////////////////////
