@@ -81,10 +81,15 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #define __EXTERN_C__
 #endif
 extern	"C" int yywrap();
+extern  "C" void yyerror(const char*);
 #endif
 
+extern int yylex();
 extern char yytext[];
 
+#ifndef alloca
+#define alloca malloc
+#endif
 %}
 
 /*
@@ -183,6 +188,7 @@ extern char yytext[];
 %type <dcval>	struct_type enum_type switch_type_spec union_type
 %type <dcval>	array_declarator op_type_spec seq_head wstring_type_spec
 %type <dcval>   param_type_spec
+%type <dcval>   type_dcl
 
 %type <idlist>	scoped_name
 %type <slval>	opt_context at_least_one_string_literal
