@@ -1,3 +1,33 @@
+Mon Mar 14 13:31:31 GMT 2005 dgrisby
+====================================
+
+- Avoid compiler warnings about empty for loop.
+
+include/omniORB4/wstringtypes.h
+
+- Call detach() not attach() on shutdown!
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+- Reorder includes for compilers with pre-compiled headers.
+
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
+- Add omniORB::versionString() and versionHex() functions.
+
+include/omniORB4/omniORB.h
+mk/beforeauto.mk.in
+mk/mingw.mk
+mk/rtems.mk
+mk/unix.mk
+mk/version.mk               -- new
+mk/vxWorks.mk
+mk/win32.mk
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/omniORB.cc
+
+
 Sat Mar 12 19:05:49 GMT 2005 dgrisby
 ====================================
 

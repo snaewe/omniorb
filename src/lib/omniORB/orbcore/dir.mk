@@ -113,6 +113,8 @@ DIR_CPPFLAGS += $(patsubst %,-I%/include/omniORB4/internal,$(IMPORT_TREES))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
 DIR_CPPFLAGS += -D_OMNIORB_LIBRARY
+DIR_CPPFLAGS += -DOMNIORB_VERSION_STRING='"$(OMNIORB_VERSION)"'
+DIR_CPPFLAGS += -DOMNIORB_VERSION_HEX='$(OMNIORB_VERSION_HEX)'
 
 ##########################################################################
 # Add magic to find tcp transport source files

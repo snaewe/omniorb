@@ -342,10 +342,7 @@ shareddebug/%.o: %.c
 
 # Note that the DLL version is being used, so link to omniorb3_rt.lib
 
-OMNIORB_VERSION = 4.0.5
-OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
+include $(BASE_OMNI_TREE)/mk/version.mk
 
 OMNIORB_DLL_NAME = $(shell $(SharedLibrarySearch) $(subst ., ,omniORB.$(OMNIORB_VERSION)))
 OMNIORB_DEBUG_DLL_NAME = $(shell $(SharedLibraryDebugSearch) $(subst ., ,omniORB.$(OMNIORB_VERSION)))

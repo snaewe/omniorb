@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.15  2005/03/14 13:38:24  dgrisby
+  Add omniORB::versionString() and versionHex() functions.
+
   Revision 1.2.2.14  2004/05/05 14:03:20  dgrisby
   Raise INV_OBJREF if setClientCallTimeout is given a nil objref.
 
@@ -104,6 +107,23 @@
 #include <exceptiondefs.h>
 
 OMNI_USING_NAMESPACE(omni)
+
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////// omniORB::version... //////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+const char*
+omniORB::versionString()
+{
+  return OMNIORB_VERSION_STRING;
+}
+
+_CORBA_ULong
+omniORB::versionHex()
+{
+  return OMNIORB_VERSION_HEX;
+}
 
 
 //////////////////////////////////////////////////////////////////////

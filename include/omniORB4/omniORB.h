@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.22  2005/03/14 13:38:26  dgrisby
+  Add omniORB::versionString() and versionHex() functions.
+
   Revision 1.2.2.21  2004/07/23 13:25:44  dgrisby
   New traceExceptions option.
 
@@ -204,6 +207,23 @@ _CORBA_MODULE omniORB
 
 _CORBA_MODULE_BEG
 
+  ///////////////////////////////////////////////////////////////////////
+  // omniORB version                                                   //
+  //                                                                   //
+  // versionString()                                                   //
+  //   Return the omniORB version as a string, e.g. 4.0.6. The caller  //
+  //   must not free the string.                                       //
+  _CORBA_MODULE_FN const char* versionString();                        //
+  //                                                                   //
+  // versionHex()                                                      //
+  //   Return the omniORB version as a hex integer. e.g. for omniORB   //
+  //   4.0.6 final, the hex string is 0x040006f0.                      //
+  //   The last byte represents the patch level -- a1 means alpha 1;   //
+  //   b2 means beta 2; c3 means release candidate 3; f0 means final;  //
+  //   f1 means final patch level 1, and so on.                        //
+  //                                                                   //
+  _CORBA_MODULE_FN _CORBA_ULong versionHex();                          //
+  ///////////////////////////////////////////////////////////////////////
 
   ///////////////////////////////////////////////////////////////////////
   // Tracing level                                                     //

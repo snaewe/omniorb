@@ -13,6 +13,9 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
+# Revision 1.2.4.9  2005/03/14 13:38:25  dgrisby
+# Add omniORB::versionString() and versionHex() functions.
+#
 # Revision 1.2.4.8  2004/10/18 00:44:56  dgrisby
 # Updates for 4.0.5 release.
 #
@@ -246,10 +249,7 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 #
 CorbaImplementation = OMNIORB
 
-OMNIORB_VERSION = 4.0.5
-OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
-OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
+include $(BASE_OMNI_TREE)/mk/version.mk
 
 lib_depend := $(patsubst %,$(LibPattern),omniORB$(OMNIORB_MAJOR_VERSION))
 omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
