@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.7  2000/11/15 17:03:14  sll
+ Moved include codeSets.h to omniInternal.h
+
  Revision 1.2.2.6  2000/11/09 12:27:48  dpg1
  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -2724,7 +2727,6 @@ _CORBA_MODULE_BEG
 _CORBA_MODULE_END
 
 #include <omniORB4/boa.h>
-#include <omniORB4/codeSets.h>
 
 #undef _core_attr
 #undef _dyn_attr
