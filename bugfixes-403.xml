@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.0.3     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.0.3">
+
+
+<bug id="8" date="Thu Jul  1 20:01:13 BST 2004" user="dgrisby">
+  <summary>Fixed point broken</summary>
+  <reported>Simon Viani</reported>
+  <text>
+  Numerous problems in fixed point rounding.
+  </text>
+</bug>
+
+<bug id="7" date="Fri Jun 18 15:43:49 BST 2004" user="dgrisby">
+  <summary>Rare failure in GIOP 1.2 system exception marshalling</summary>
+  <reported>Duncan Grisby</reported>
+  <text>
+  The GIOP message length was sometimes incorrectly set when
+  marshalling system exceptions in GIOP 1.2.
+  </text>
+</bug>
+
+<bug id="6" date="Wed May  5 11:52:34 BST 2004" user="dgrisby">
+  <summary>Bug in GIOP 1.1 SystemException marshalling</summary>
+  <reported>Paul Haesler</reported>
+  <text>
+  System exceptions were incorrectly marshalled in GIOP 1.1.
+  </text>
+</bug>
+
+<bug id="5" date="Wed Apr  7 18:45:34 BST 2004" user="dgrisby">
+  <summary>Incorrect retry semantics with location forwarding</summary>
+  <text>
+  Retries to IORs with multiple addresses in did not work correctly
+  after a location forward.
+  </text>
+</bug>
+
+<bug id="4" date="Tue Mar 30 10:51:03 BST 2004" user="dgrisby">
+  <summary>IfR access broken</summary>
+  <reported>Alex Tingle</reported>
+  <text>
+  _do_get_interface did not work.
+  </text>
+</bug>
+
+<bug id="3" date="Fri Feb 13 16:40:15 GMT 2004" user="dgrisby">
+  <summary>System id policy did not work with default servant</summary>
+  <reported>Duncan Grisby</reported>
+  <text>
+  An incorrect assertion in the POA meant default servants and servant
+  managers could not be used in POAs with the system id policy.
+  </text>
+</bug>
+
+<bug id="2" date="Fri Feb  6 16:18:15 GMT 2004" user="dgrisby">
+  <summary>Very large giopMaxMsgSize values did not work</summary>
+  <reported>Duncan Grisby</reported>
+  <text>
+  The way giopMaxMsgSize was handled meant that very large values were
+  handled incorrectly.
+  </text>
+</bug>
+
+<bug id="1" date="Wed Dec  3 14:38:55 GMT 2003" user="dgrisby">
+  <summary>SSL connections did not time out</summary>
+  <text>
+  Timeouts did not occur at the time SSL connections were established.
+  </text>
+</bug>
+
+</buglist>
