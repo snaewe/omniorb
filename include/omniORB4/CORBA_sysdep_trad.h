@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2004/02/11 17:00:19  dgrisby
+  HAVE_STD on Linux and Solaris.
+
   Revision 1.1.2.11  2003/08/21 15:00:28  dgrisby
   Patches for Borland compiler.
 
@@ -375,8 +378,10 @@
 #if defined(__linux__)
 #  define OMNI_SOCKNAME_SIZE_T socklen_t
 #  define HAVE_STRTOULL 1
+#  define HAVE_STD 1
 
 #elif defined(__sunos__)
+#  define HAVE_STD 1
 #  define HAVE_STRTOULL 1
 #  define HAVE_ISNANORINF
 #  define HAVE_NAN_H
