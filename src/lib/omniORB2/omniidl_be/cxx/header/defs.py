@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14  1999/12/15 12:13:16  djs
+# Multiple forward declarations of interface fix
+#
 # Revision 1.13  1999/12/14 17:38:22  djs
 # Fixed anonymous sequences of sequences bug
 #
@@ -433,8 +436,12 @@ private:
     
 
 def visitForward(node):
-#    print "[[[ visitForward ]]]"
-    addName(node.identifier())
+    # it's legal to have multiple forward declarations
+    # of the same name. ignore the duplicates here
+    try:
+        addName(node.identifier())
+    except KeyError:
+        return
     
     name = tyutil.mapID(node.identifier())
 
