@@ -497,7 +497,7 @@ $(dynlib): $(DYN2_OBJS)
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
            -lomniORB$(major_version) \
-           -ldce -lcma ; \
+           $(HPTHREADLIBS) ; \
         )
 
 clean::
@@ -597,6 +597,49 @@ $(dynlib): $(DYN2_OBJS)
            -o $@ $(IMPORT_LIBRARY_FLAGS) $^ $(LDLIBS); \
         )
 
+
+clean::
+	$(RM) $(dynlib)
+
+export:: $(dynlib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(dynsoname); \
+          ln -s $(dynlib) $(dynsoname); \
+          $(RM) $(dynlibname); \
+          ln -s $(dynsoname) $(dynlibname); \
+         )
+
+endif
+endif
+
+#############################################################################
+#   Make rules for FreeBSD 3.x egcs                                         #
+#############################################################################
+
+ifdef FreeBSD
+ifdef EgcsMajorVersion
+
+DIR_CPPFLAGS += -fPIC
+
+libname = libomniORB$(major_version).so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(mic
+
+dynlibname = libomniDynamic$(major_version).so
+dynsoname  = $(dynlibname).$(minor_version)
+dynlib = $(dynsoname).$(micro_version)
+
+
+all:: $(dynlib)
+
+$(dynlib): $(DYN2_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-soname,$(dynsoname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^); \
+       )
 
 clean::
 	$(RM) $(dynlib)
