@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.6  1997/12/09 18:23:18  sll
+  Updated interface to avoid memory leaks.
+
   Revision 1.5  1997/08/27 10:20:33  sll
   Moved from include/omniORB2. New private variables.
 
@@ -54,6 +57,8 @@ public:
   void initialize();
 
 private:
+  CORBA::Object_var _NameService;
+
   char* fData;
   long fsize;
   long currpos;
@@ -63,28 +68,30 @@ private:
   inline void dataerr(char* entryname);
   inline void parseerr();
  
-#ifdef __NT__ 
-// NT-specific error reporting functions:
+#ifdef __WIN32__ 
+// WIN32 -specific error reporting functions:
   inline void noValsFound();
   inline void formaterr(char* entryname);
 #endif
 
   int read_file(char* config_fname);
-  int getnextentry(char*& entryname, char*& data);
+  int getnextentry(CORBA::String_var& entryname,CORBA::String_var& data);
  
-#ifdef __NT__
+#ifdef __WIN32__
   int use_registry;
  
   HKEY init_hkey;
   DWORD init_maxValLen;
   DWORD init_maxDataLen;
   DWORD curr_index;
-  int getRegistryEntry(char*& entryname, char*& data);
+  int getRegistryEntry(CORBA::String_var& entryname,
+		       CORBA::String_var& data);
 #endif
 
 public:
-  
-  omniObject* NameService;
+  CORBA::Object_ptr NameService() { 
+    return CORBA::Object::_duplicate(_NameService); 
+  }
 };
 
 
