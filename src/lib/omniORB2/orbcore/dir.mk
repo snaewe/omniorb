@@ -210,9 +210,6 @@ ifndef BuildWin32DebugLibraries
 
 endif
 
-clean::
-	$(RM) $(lib) $(dynlib) bootstrapSK.cc NamingSK.cc
-
 export:: $(lib)
 	@$(ExportLibrary)
 

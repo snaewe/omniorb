@@ -30,7 +30,7 @@
 #include <time.h>
 #include <iostream.h>
 #include <fcntl.h>
-#if defined(__VMS) && __VMS_VER < 70000000
+#if defined(__VMS) && __CRTL_VER < 70000000
 #include <omniVMS/unlink.hxx>
 #include <omniVms/utsname.hxx>
 #endif
@@ -84,6 +84,12 @@ strdup (char* str)
   return newstr;
 }
 #endif  // _NO_STRDUP
+
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#ifndef __VMS
+#define USE_ATTACH_FD
+#endif
+#endif
 
 extern void usage();
 
@@ -338,7 +344,7 @@ omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
     cerr << ts.t() << "Starting omniNames for the first time." << endl;
 
     try {
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#if defined(USE_ATTACH_FD)
 #  ifdef __WIN32__
       int fd = _open(active, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
 #  else
@@ -460,7 +466,7 @@ omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
   CORBA::release(rootContext);	// dispose of the object reference
 
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#if defined(USE_ATTACH_FD)
 #  ifdef __WIN32__
   int fd = _open(active, O_WRONLY | O_APPEND);
 #  else
@@ -579,7 +585,7 @@ omniNameslog::checkpoint(void)
 
   try {
 
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#if defined(USE_ATTACH_FD)
 #  ifdef __WIN32__
     fd = _open(checkpt, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
 #  else
@@ -700,7 +706,7 @@ omniNameslog::checkpoint(void)
   }
 #endif
 
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#if defined(USE_ATTACH_FD)
 #  ifdef __WIN32__
   fd = _open(active, O_WRONLY | O_APPEND);
 #  else

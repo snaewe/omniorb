@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.11.4.2  1999/09/25 17:00:11  sll
+  Merged changes from omni2_8_develop branch.
+
   Revision 1.11.4.1  1999/09/15 20:18:13  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -36,6 +39,21 @@
   Derived class giopStream implements the cdrStream abstraction over a
   network connection whereas the cdrMemoryStream implements the abstraction
   with in memory buffer.
+
+  Revision 1.11.2.1  1999/09/21 20:37:15  sll
+  -Simplified the scavenger code and the mechanism in which connections
+   are shutdown. Now only one scavenger thread scans both incoming
+   and outgoing connections. A separate thread do the actual shutdown.
+  -omniORB::scanGranularity() now takes only one argument as there is
+   only one scan period parameter instead of 2.
+  -Trace messages in various modules have been updated to use the logger
+   class.
+  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                 -ORBscanIncomingPeriod.
+
+  Revision 1.11  1999/08/30 16:55:43  sll
+  Replaced WrTestLock and heartbeat in WrLock with clicksDecrAndGet,
+  clicksGet and clicksSet.
 
   Revision 1.10  1999/07/02 19:17:33  sll
   Removed inlined virtual dtor. Some compilers generate a copy of the
@@ -331,7 +349,7 @@ public:
   // from those returned in previous calls. A client may use this number
   // to tag the messages sent via a strand.
 
-  virtual void shutdown() = 0;
+  void shutdown();
   // Concurrency Control:
   //    MUTEX = pd_rope->pd_lock
   // Pre-condition:
@@ -342,6 +360,18 @@ public:
   // Signal to any thread currently using this strand to give up because
   // this strand is being shut down.
   // Never returns an exception and never blocks
+
+  virtual void real_shutdown() = 0;
+  // Concurrency Control:
+  //      None
+  //
+  // This helper function is provided by the strand implementation to 
+  // change the state of the network connection to "shutdown". In other
+  // words, any future OS calls to send or receive via the connection
+  // would return an error.
+  // Notice that this function may be called by one thread while another
+  // is blocking on a receive or a send on the network connection.
+
 
   void incrRefCount(_CORBA_Boolean held_rope_mutex = 0);
   // Concurrency Control:
@@ -535,6 +565,9 @@ private:
   _CORBA_ULong     pd_seqNumber;
 
   _CORBA_Boolean  pd_reuse;
+
+public:
+  Strand         *pd_ripper_next;
 
   // Make the default constructor private. This traps at compile time
   // any attempt to allocate an array of objects using the new operator.

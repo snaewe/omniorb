@@ -42,13 +42,14 @@ lc_micro_version = $(word 3,$(subst ., ,$(LC_VERSION)))
 
 override VPATH := $(patsubst %,%/..,$(VPATH))
 
+# Further override vpath for *.cc to make sure the stub files are found.
 ifndef BuildWin32DebugLibraries
 
-vpath %.cc ..
+vpath %.cc .. ../..
 
 else
 
-vpath %.cc ../..
+vpath %.cc ../.. ../../..
 
 endif
 
@@ -169,9 +170,6 @@ CXXSRCS = $(LC_SRCS)
 #############################################################################
 
 ifdef SunOS
-ifeq ($(notdir $(CXX)),CC)
-
-DIR_CPPFLAGS += -Kpic
 
 libname = libomniORB$(major_version).so
 soname  = $(libname).$(minor_version)
@@ -184,6 +182,11 @@ dynlib = $(dynsoname).$(micro_version)
 lclibname = libomniLC.so
 lcsoname  = $(lclibname).$(lc_minor_version)
 lclib = $(lcsoname).$(lc_micro_version)
+
+ifeq ($(notdir $(CXX)),CC)
+
+DIR_CPPFLAGS += -Kpic
+
 
 all:: $(lclib)
 
@@ -211,6 +214,37 @@ export:: $(lclib)
          )
 
 endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+DIR_CPPFLAGS += -fPIC
+
+all:: $(lclib)
+
+$(lclib): $(LC_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-h,$(lcsoname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
+         ../../orbcore/sharedlib/$(lib) ../../dynamic/sharedlib/$(dynlib); \
+       )
+
+
+clean::
+	$(RM) $(lclib)
+
+export:: $(lclib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(lcsoname); \
+          ln -s $(lclib) $(lcsoname); \
+          $(RM) $(lclibname); \
+          ln -s $(lcsoname) $(lclibname); \
+         )
+
+endif
+
 endif
 
 #############################################################################
@@ -348,7 +382,7 @@ ifeq ($(notdir $(CXX)),xlC_r)
 $(lclib): $(LC_OBJS)
 	(set -x; \
         $(RM) $@; \
-        /usr/lpp/xlC/bin/makeC++SharedLib_r \
+        $(MAKECPPSHAREDLIB) \
              -o $(lcsoname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
          -L../../orbcore/sharedlib -l$(libcorename) \

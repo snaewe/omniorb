@@ -29,6 +29,20 @@
 
 /*
   $Log$
+  Revision 1.4.4.2  1999/09/25 17:00:15  sll
+  Merged changes from omni2_8_develop branch.
+
+  Revision 1.4.2.1  1999/09/21 20:37:15  sll
+  -Simplified the scavenger code and the mechanism in which connections
+   are shutdown. Now only one scavenger thread scans both incoming
+   and outgoing connections. A separate thread do the actual shutdown.
+  -omniORB::scanGranularity() now takes only one argument as there is
+   only one scan period parameter instead of 2.
+  -Trace messages in various modules have been updated to use the logger
+   class.
+  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                 -ORBscanIncomingPeriod.
+
   Revision 1.4.4.1  1999/09/15 20:18:18  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -62,7 +76,7 @@
 class CORBA_InitialReferences_i;
 
 class omniInitialReferences {
- public:
+public:
   void set(const char* identifier,CORBA::Object_ptr obj);
   CORBA::Object_ptr get(const char* identifier);
   CORBA_InitialReferences::ObjIdList* list();
@@ -73,7 +87,13 @@ class omniInitialReferences {
   void initialise_bootstrap_agent(const char* host,CORBA::UShort port);
 
   static omniInitialReferences* singleton();
- private:
+
+  ~omniInitialReferences();
+
+protected:
+  omniInitialReferences();
+
+private:
 
   // pd_bootagent is the object reference to the initialisation agent
   // from which we can get initial object references for services such
@@ -97,7 +117,6 @@ class omniInitialReferences {
 
   _CORBA_Unbounded_Sequence< serviceRecord > pd_serviceList;
 
-  omniInitialReferences();
   omniInitialReferences(const omniInitialReferences&);
   omniInitialReferences& operator=(const omniInitialReferences&);
 };

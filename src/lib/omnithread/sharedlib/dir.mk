@@ -119,6 +119,7 @@ ifeq ($(notdir $(CXX)),CC)
 
 DIR_CPPFLAGS += -Kpic
 
+
 $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
@@ -152,7 +153,7 @@ $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) $(CXXOPTIONS) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
-         $(filter-out $(LibSuffixPattern),$^); \
+         $(filter-out $(LibSuffixPattern),$^) -lpthread -posix4; \
        )
 
 all:: $(lib)
@@ -169,6 +170,7 @@ export:: $(lib)
           $(RM) $(libname); \
           ln -s $(soname) $(libname); \
          )
+
 endif
 
 endif
@@ -269,7 +271,7 @@ ifeq ($(notdir $(CXX)),xlC_r)
 $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
-        /usr/lpp/xlC/bin/makeC++SharedLib_r \
+        $(MAKECPPSHAREDLIB) \
              -o $(soname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) \
          -p 40; \

@@ -412,6 +412,8 @@ omni_mutex* omni_thread::next_id_mutex;
 int omni_thread::next_id = 0;
 static DWORD self_tls_index;
 
+static unsigned int stack_size = 0;
+
 //
 // Initialisation function (gets called before any user code).
 //
@@ -594,7 +596,7 @@ omni_thread::start(void)
     unsigned int t;
     handle = (HANDLE)_beginthreadex(
                         NULL,
-			0,
+			stack_size,
 			omni_thread_wrapper,
 			(LPVOID)this,
 			CREATE_SUSPENDED, 
@@ -605,7 +607,7 @@ omni_thread::start(void)
 #else
     // Borland C++
     handle = (HANDLE)_beginthreadNT(omni_thread_wrapper,
-				    0,
+				    stack_size,
 				    (void*)this,
 				    NULL,
 				    CREATE_SUSPENDED,
@@ -863,4 +865,16 @@ get_time_now(unsigned long* abs_sec, unsigned long* abs_nsec)
 		  + st.wDay - 1);
 
     *abs_sec = st.wSecond + 60 * (st.wMinute + 60 * (st.wHour + 24 * days));
+}
+
+void
+omni_thread::stacksize(unsigned long sz)
+{
+  stack_size = sz;
+}
+
+unsigned long
+omni_thread::stacksize()
+{
+  return stack_size;
 }

@@ -29,6 +29,20 @@
 
 /*
   $Log$
+  Revision 1.10.4.3  1999/09/25 17:00:22  sll
+  Merged changes from omni2_8_develop branch.
+
+  Revision 1.10.2.1  1999/09/21 20:37:17  sll
+  -Simplified the scavenger code and the mechanism in which connections
+   are shutdown. Now only one scavenger thread scans both incoming
+   and outgoing connections. A separate thread do the actual shutdown.
+  -omniORB::scanGranularity() now takes only one argument as there is
+   only one scan period parameter instead of 2.
+  -Trace messages in various modules have been updated to use the logger
+   class.
+  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                 -ORBscanIncomingPeriod.
+
   Revision 1.10.4.2  1999/09/16 16:04:25  sll
   Bug fix. Rope_iterator now use Strand::Sync::is_unused() to test if the
   strand is not in use. giopStream::is_unused() now remove unused giopStream
@@ -42,6 +56,10 @@
   Derived class giopStream implements the cdrStream abstraction over a
   network connection whereas the cdrMemoryStream implements the abstraction
   with in memory buffer.
+
+  Revision 1.10  1999/08/30 16:51:59  sll
+  Removed WrTestLock and heartbeat argument in WrLock.
+  Replace with Sync::clicksSet, Sync::clicksDecrAndGet and Sync::clicksGet.
 
   Revision 1.9  1999/05/26 11:54:13  sll
   Replaced WrTimedLock with WrTestLock.
@@ -82,7 +100,20 @@
 #pragma hdrstop
 #endif
 
+#include <scavenger.h>
 #include <ropeFactory.h>
+
+#define LOGMESSAGE(level,prefix,message) do {\
+   if (omniORB::trace(level)) {\
+     omniORB::logger log("strand " ## prefix ## ": ");\
+	log << message ## "\n";\
+   }\
+} while (0)
+
+
+class omniORB_Ripper;
+
+static omniORB_Ripper* ripper = 0;
 
 Strand::Strand(Rope *r)
   : pd_rdcond(&r->pd_lock), pd_wrcond(&r->pd_lock)
@@ -99,6 +130,7 @@ Strand::Strand(Rope *r)
   pd_refcount = 0;
   pd_seqNumber = 1;
   pd_reuse = 0;
+  pd_ripper_next = this;
   return;
 }
 
@@ -432,9 +464,11 @@ Rope::incrRefCount(CORBA::Boolean held_anchor_mutex)
 {
   if (!held_anchor_mutex)
     pd_anchor->pd_lock.lock();
-  if (omniORB::traceLevel >= 20) {
-    omniORB::log << "Rope::incrRefCount: old value = " << pd_refcount << "\n";
-    omniORB::log.flush();
+  {
+    if (omniORB::trace(20)) {
+      omniORB::logger log("strand Rope::incrRefCount: ");
+      log << "old value = " << pd_refcount << "\n";
+    }
   }
   assert(pd_refcount >= 0);
   pd_refcount++;
@@ -448,10 +482,14 @@ Rope::decrRefCount(CORBA::Boolean held_anchor_mutex)
 {
   if (!held_anchor_mutex)
     pd_anchor->pd_lock.lock();
-  if (omniORB::traceLevel >= 20) {
-    omniORB::log << "Rope::decrRefCount: old value = " << pd_refcount << "\n";
-    omniORB::log.flush();
+
+  {
+    if (omniORB::trace(20)) {
+      omniORB::logger log("strand Rope::decrRefCount: ");
+      log << "old value = " << pd_refcount << "\n";
+    }
   }
+
   pd_refcount--;
   assert(pd_refcount >=0);
   if (!held_anchor_mutex)
@@ -558,6 +596,101 @@ Rope_iterator::~Rope_iterator()
   return;
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// omniORB_Ripper
+//
+// Instance of this class do the dirty work of calling real_shutdown on the
+// strand. The call may actually block for considerable time.
+// We do not want to hold up any thread that just want to indicate that
+// the strand should be shutdown and does not want to wait till it
+// is done.
+//
+class omniORB_Ripper : public omni_thread {
+public:
+  omniORB_Ripper() : pd_cond(&pd_mutex),
+		     pd_isdying(0), 
+		     pd_head(0) { start_undetached(); }
+
+  void enqueue(Strand* p) {
+    omni_mutex_lock sync(pd_mutex);
+    if (p->pd_ripper_next != p) return;   // Already queued
+    p->pd_ripper_next = pd_head;
+    pd_head = p;
+    p->incrRefCount(1);     // Note: caller has got the mutex on the strand
+    pd_cond.signal();
+  }
+
+  CORBA::Boolean isPending(Strand* p) {
+    omni_mutex_lock sync(pd_mutex);
+    return (p->pd_ripper_next == p) ? 0 : 1;
+  }
+
+  void* run_undetached(void*) {
+
+    LOGMESSAGE(15,"Ripper","start.");
+
+    while (1) {
+      
+      Strand* p;
+
+      {
+	omni_mutex_lock sync(pd_mutex);
+
+	while (!pd_head && !pd_isdying) {
+	  pd_cond.wait();
+	}
+
+	if (pd_isdying && !pd_head) break;
+
+	p = pd_head;
+	pd_head = 0;
+      }
+      
+      while (p) {
+	Strand* np = p->pd_ripper_next;
+	p->real_shutdown();
+	p->decrRefCount();
+	p = np;
+      }
+
+    }
+
+    LOGMESSAGE(15,"Ripper","exit.");
+    return 0;
+  }
+
+  void kill() {
+
+    {
+      omni_mutex_lock sync(pd_mutex);
+      pd_isdying = 1;
+      pd_cond.signal();
+    }
+    join(0);
+  }
+
+  virtual ~omniORB_Ripper() {}
+
+private:
+  omni_mutex     pd_mutex;
+  omni_condition pd_cond;
+  CORBA::Boolean pd_isdying;
+  Strand* pd_head;
+};
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+void
+Strand::shutdown()
+{
+  _setStrandIsDying();
+  assert(ripper);
+  ripper->enqueue(this);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 Rope *
 Rope_iterator::operator() ()
 {
@@ -572,27 +705,26 @@ Rope_iterator::operator() ()
 	    {
 	      // This Rope is not used by any object reference
 	      // First close down all the strands before calling the dtor of the Rope
-	      if (omniORB::traceLevel > 10) {
-		omniORB::log << "Rope_iterator::operator() (): delete unused Rope.\n";
-		omniORB::log.flush();
-	      }
-	      rp->pd_lock.lock();
-	      Strand *p = rp->pd_head;
-	      while (p)
-		{
+	      LOGMESSAGE(10,"Rope_iterator","delete unused Rope.");
+	      CORBA::Boolean can_delete = 1;
+
+	      {
+		Strand_iterator next_strand(rp);
+		Strand* p;
+		while ((p = next_strand())) {
+		  can_delete = 0;
 		  Strand::Sync* q;
 		  if ((q = Strand::Sync::getSync(p)) && !q->is_unused()) {
-		    // This is wrong, nobody should be using this strand.
-		    throw omniORB::fatalException(__FILE__,__LINE__,
-						  "Rope_iterator::operator() () tries to delete a strand that is not idle.");
+		    LOGMESSAGE(0,"Rope_iterator","Detected Application error. An object reference returned to the application has been released but it is currently being used to do a remote call. This thread will now raise a omniORB::fatalException.");
 		  }
-		  p->shutdown();
-		  Strand* np = p->pd_next;
-		  delete p;
-		  p = np;
+		  else {
+		    p->_setStrandIsDying();
+		  }
 		}
-	      rp->pd_lock.unlock();
-	      delete rp;
+	      }
+	      if (can_delete) {
+		delete rp;
+	      }
 	      continue;
 	    }
 	}
@@ -601,3 +733,24 @@ Rope_iterator::operator() ()
   return rp;
 }
 
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_strand_initialiser : public omniInitialiser {
+public:
+
+  void attach() {
+    ripper = new omniORB_Ripper();
+  }
+
+  void detach() {
+    ripper->kill();
+    ripper = 0;
+  }
+};
+
+static omni_strand_initialiser initialiser;
+
+omniInitialiser& omni_strand_initialiser_ = initialiser;

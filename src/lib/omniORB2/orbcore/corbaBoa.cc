@@ -29,6 +29,20 @@
 
 /*
   $Log$
+  Revision 1.13.4.1  1999/09/25 17:00:19  sll
+  Merged changes from omni2_8_develop branch.
+
+  Revision 1.13.2.1  1999/09/21 20:37:15  sll
+  -Simplified the scavenger code and the mechanism in which connections
+   are shutdown. Now only one scavenger thread scans both incoming
+   and outgoing connections. A separate thread do the actual shutdown.
+  -omniORB::scanGranularity() now takes only one argument as there is
+   only one scan period parameter instead of 2.
+  -Trace messages in various modules have been updated to use the logger
+   class.
+  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                 -ORBscanIncomingPeriod.
+
   Revision 1.13  1999/08/30 18:55:29  sll
   Added ENABLE_CLIENT_IR_SUPPORT.
 
@@ -284,7 +298,7 @@ BOA::impl_is_ready(CORBA::ImplementationDef_ptr p,CORBA::Boolean NonBlocking)
 	factory->startIncoming();
       }
     }
-    StrandScavenger::initInScavenger();
+    StrandScavenger::addRopeFactories(rootObjectManager->incomingRopeFactories());
   }
   if (!NonBlocking) {
     while (internalBlockingFlag > 0) {
@@ -319,7 +333,6 @@ BOA::impl_shutdown()
 	factory->stopIncoming();
       }
     }
-    StrandScavenger::killInScavenger();
     while (internalBlockingFlag) {
       internalCond.signal();
       internalBlockingFlag--;
@@ -347,7 +360,7 @@ BOA::destroy()
     }
   }
   if (internalBlockingFlag > 0) {
-    StrandScavenger::killInScavenger();
+    StrandScavenger::removeRopeFactories(rootObjectManager->incomingRopeFactories());
     while (internalBlockingFlag) {
       internalCond.signal();
       internalBlockingFlag--;

@@ -97,7 +97,16 @@ class	COMMON_Base
     DEF_NARROW_METHODS0(COMMON_Base);
 };
 
-class	AST_Decl : public virtual COMMON_Base
+
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#define COMMON_BASE_HACK : public virtual COMMON_Base
+#else
+#define COMMON_BASE_HACK
+#endif
+
+
+class   AST_Decl 
+           COMMON_BASE_HACK
 {
 public:
   // Enum defining the different kinds of AST nodes

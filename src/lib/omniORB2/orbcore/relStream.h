@@ -29,6 +29,20 @@
 
 /*
  $Log$
+ Revision 1.2.6.2  1999/09/25 17:00:20  sll
+ Merged changes from omni2_8_develop branch.
+
+ Revision 1.2.4.1  1999/09/21 20:37:16  sll
+ -Simplified the scavenger code and the mechanism in which connections
+  are shutdown. Now only one scavenger thread scans both incoming
+  and outgoing connections. A separate thread do the actual shutdown.
+ -omniORB::scanGranularity() now takes only one argument as there is
+  only one scan period parameter instead of 2.
+ -Trace messages in various modules have been updated to use the logger
+  class.
+ -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                -ORBscanIncomingPeriod.
+
  Revision 1.2.6.1  1999/09/15 20:25:43  sll
  Make sure that receive never receive more than max_receive_buffer_size().
 
@@ -76,7 +90,7 @@ public:
   void reserve_and_copy(Strand::sbuf b,CORBA::Boolean transmit=0,
 			CORBA::Boolean endMTU=0);
 
-  virtual void shutdown() = 0;
+  virtual void real_shutdown() = 0;
   virtual void ll_send(void* buf,size_t sz) = 0;
   virtual size_t ll_recv(void* buf,size_t sz) = 0;
 

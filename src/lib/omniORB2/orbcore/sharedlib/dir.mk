@@ -350,7 +350,7 @@ ifeq ($(notdir $(CXX)),xlC_r)
 $(lib): $(ORB2_OBJS)
 	(set -x; \
         $(RM) $@; \
-        /usr/lpp/xlC/bin/makeC++SharedLib_r \
+        $(MAKECPPSHAREDLIB) \
              -o $(soname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
          -p 40; \

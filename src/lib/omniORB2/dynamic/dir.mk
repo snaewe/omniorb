@@ -29,6 +29,7 @@ DYN2_OBJS = any.o typecode.o anyP.o tcParser.o \
             bootstrapdynstub.o Namingdynstub.o \
 	    orbMultiRequest.o
 
+
 DIR_CPPFLAGS += $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS +=  -I. -I./.. -I./../..
@@ -203,9 +204,6 @@ ifndef BuildWin32DebugLibraries
 #	$(CP) $< $@
 
 endif
-
-clean::
-	$(RM) $(dynlib) NamingDynSK.cc bootstrapDynSK.cc
 
 export:: $(dynlib)
 	@$(ExportLibrary)

@@ -29,6 +29,13 @@
 
 /*
   $Log$
+  Revision 1.2.6.2  1999/09/25 17:00:17  sll
+  Merged changes from omni2_8_develop branch.
+
+  Revision 1.2.4.1  1999/09/22 16:38:26  djr
+  Removed MT locking for 'DynAny's.
+  New methods DynUnionImpl::NP_disc_value() and NP_disc_index().
+
   Revision 1.2.6.1  1999/09/15 20:18:24  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -144,19 +151,6 @@ public:
   TypeCode_base* tc() const    { return pd_tc;            }
   CORBA::TCKind tckind() const { return pd_tc->NP_kind(); }
 
-  class Lock;
-  friend class Lock;
-
-  // Instantiating this class takes hold of the lock.
-  class Lock {
-  public:
-    Lock(DynAnyImplBase* p) {
-      lock.lock();
-    }
-    ~Lock() {
-      lock.unlock();
-    }
-  };
 
   cdrMemoryStream pd_buf;
   // The value held by the DynAny. Basic DynAny values are
@@ -171,9 +165,6 @@ private:
   static omni_mutex refCountLock;
   int               pd_refcount;
   CORBA::Boolean    pd_is_root;
-
-  // Global lock.
-  static omni_mutex lock;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -749,6 +740,13 @@ public:
   void discriminatorHasChanged();
   // If necassary detaches the old member, and creates a new member
   // of the appropriate type.
+
+  inline TypeCode_union::Discriminator NP_disc_value() const {
+    return pd_disc_value;
+  }
+  inline CORBA::Long NP_disc_index() const {
+    return pd_member ? pd_disc_index : -1;
+  }
 
 private:
   TypeCode_union* tc() const {

@@ -124,8 +124,6 @@ DRV_version()
 void
 DRV_drive(char *s)
 {
-  char	*fn;
-
   /*
    * Pass through CPP
    */

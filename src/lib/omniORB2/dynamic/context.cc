@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.9.4.2  1999/09/25 17:00:15  sll
+ Merged changes from omni2_8_develop branch.
+
  Revision 1.9.4.1  1999/09/15 20:18:25  sll
  Updated to use the new cdrStream abstraction.
  Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -36,6 +39,10 @@
  Derived class giopStream implements the cdrStream abstraction over a
  network connection whereas the cdrMemoryStream implements the abstraction
  with in memory buffer.
+
+ Revision 1.9.2.1  1999/09/15 19:35:22  dpg1
+ (djr) Fixed bug in marshalling of Contexts (when specified values are
+ missing).
 
  Revision 1.9  1999/06/26 18:03:30  sll
  Corrected minor bug in marshal.
@@ -561,18 +568,24 @@ CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
   }
   ContextImpl* c = (ContextImpl*) ctxt;
 
+  // First we need to count the number of context strings
+  // we actually have to pass.  This is very inefficient!
+  int n = 0;
+  for( int i = 0; i < whichlen; i++ )
+    if( c->lookup_single(which[i]) )  n++;
+
   // The length of the sequence of strings is twice the
   // number of context entries ...
-  CORBA::ULong(whichlen * 2) >>= s;
+  CORBA::ULong(n * 2) >>= s;
 
-  for( int i = 0; i < whichlen; i++ ) {
+  for( int j = 0; j < whichlen; j++ ) {
 
-    const char* value = c->lookup_single(which[i]);
+    const char* value = c->lookup_single(which[j]);
     if( !value )  continue;
 
-    CORBA::ULong len = strlen(which[i]) + 1;
+    CORBA::ULong len = strlen(which[j]) + 1;
     len >>= s;
-    s.put_char_array((CORBA::Char*) which[i], len);
+    s.put_char_array((CORBA::Char*) which[j], len);
 
     len = strlen(value) + 1;
     len >>= s;

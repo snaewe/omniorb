@@ -50,6 +50,7 @@ int omni_thread::next_id = 0;
 static int normal_priority;
 static int highest_priority;
 
+static size_t stack_size = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -641,3 +642,14 @@ omni_thread::mach_priority(priority_t pri)
   }
 }
 
+void
+omni_thread::stacksize(unsigned long sz)
+{
+  stack_size = sz;
+}
+
+unsigned long
+omni_thread::stacksize()
+{
+  return stack_size;
+}

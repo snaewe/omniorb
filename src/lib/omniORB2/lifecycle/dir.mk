@@ -17,6 +17,17 @@ DIR_CPPFLAGS += -D_OMNIORB2_LC_LIBRARY
 
 CXXSRCS = $(LC_SRCS)
 
+# Further override vpath for *.cc to make sure that stub files are found.
+ifndef BuildWin32DebugLibraries
+
+vpath %.cc ..
+
+else
+
+vpath %.cc .. ../..
+
+endif
+
 
 #############################################################################
 #   Make variables for Unix platforms                                       #
@@ -80,8 +91,6 @@ CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKDEBUGOPTIONS)
 
 DIR_CPPFLAGS += -I./.. -I./../.. 
 SUBDIRS =
-
-vpath %.cc ..
 
 endif
 
@@ -171,26 +180,9 @@ ifndef OMNIORB2_IDL_FPATH
 OMNIORB2_IDL_FPATH = $(OMNIORB2_IDL)
 endif
 
-ifndef BuildWin32DebugLibraries
-
-omniLifeCycleSK.cc: ../omniLifeCycleSK.cc
-	$(CP) $< $@
-
-omniLifeCycleDynSK.cc: ../omniLifeCycleDynSK.cc
-	$(CP) $< $@
-
-endif
-
-clean::
-	$(RM) $(lclib) omniLifeCycleSK.cc omniLifeCycleDynSK.cc
-
 export:: $(lclib)
 	@$(ExportLibrary)
 
 export::
 	@$(MakeSubdirs)
 
-ifdef Win32Platform
-
-
-endif

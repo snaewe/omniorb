@@ -29,6 +29,21 @@
 
 /*
   $Log$
+  Revision 1.9.4.2  1999/09/25 17:00:19  sll
+  Merged changes from omni2_8_develop branch.
+
+  Revision 1.9.2.1  1999/09/21 20:37:15  sll
+  -Simplified the scavenger code and the mechanism in which connections
+   are shutdown. Now only one scavenger thread scans both incoming
+   and outgoing connections. A separate thread do the actual shutdown.
+  -omniORB::scanGranularity() now takes only one argument as there is
+   only one scan period parameter instead of 2.
+  -Trace messages in various modules have been updated to use the logger
+   class.
+  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                 -ORBscanIncomingPeriod.
+
+
   Revision 1.9.4.1  1999/09/15 20:18:33  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -259,6 +274,10 @@ omniInitialReferences::singleton()
   return _singleton;
 }
 
+omniInitialReferences::~omniInitialReferences()
+{
+  if (pd_bootagentImpl) pd_bootagentImpl->_dispose();
+}
 
 void
 _omni_set_NameService(CORBA::Object_ptr ns)
@@ -278,23 +297,9 @@ public:
 
   void detach() {
 
-    if( !_singleton || omniORB::traceLevel < 15 )  return;
-
-    CORBA_InitialReferences::ObjIdList* list = _singleton->list();
-
-    omniORB::log << "omniORB: Initial references:\n";
-
-    for( CORBA::ULong i = 0; i < list->length(); i++ ) {
-      const char* name = (*list)[i];
-      CORBA::Object_var obj(_singleton->get(name));
-      CORBA::String_var sref(omni::objectToString(obj->PR_getobj()));
-      omniORB::log <<
-	"  Name  : " << name << "\n"
-	"  IR ID : " << obj->PR_getobj()->NP_IRRepositoryId() << "\n"
-	"  ObjRef: " << (const char*)sref << "\n";
-    }
-
-    omniORB::log.flush();
+    if (!_singleton) return;
+    delete _singleton;
+    _singleton = 0;
   }
 };
 

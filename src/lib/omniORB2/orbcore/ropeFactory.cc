@@ -28,6 +28,20 @@
 
 /*
  $Log$
+ Revision 1.9.4.2  1999/09/25 17:00:21  sll
+ Merged changes from omni2_8_develop branch.
+
+ Revision 1.9.2.1  1999/09/21 20:37:17  sll
+ -Simplified the scavenger code and the mechanism in which connections
+  are shutdown. Now only one scavenger thread scans both incoming
+  and outgoing connections. A separate thread do the actual shutdown.
+ -omniORB::scanGranularity() now takes only one argument as there is
+  only one scan period parameter instead of 2.
+ -Trace messages in various modules have been updated to use the logger
+  class.
+ -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                -ORBscanIncomingPeriod.
+
  Revision 1.9.4.1  1999/09/15 20:18:29  sll
  Updated to use the new cdrStream abstraction.
  Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -74,6 +88,7 @@
 #endif
 
 #include <ropeFactory.h>
+#include <scavenger.h>
 #include <objectManager.h>
 #ifndef __atmos__
 #include <tcpSocket.h>
@@ -218,9 +233,12 @@ public:
     // Initialise a giopServerThreadWrapper singelton
     omniORB::giopServerThreadWrapper::setGiopServerThreadWrapper(
        new omniORB::giopServerThreadWrapper);
+
+    StrandScavenger::addRopeFactories(globalOutgoingRopeFactories);
   }
 
   void detach() {
+    StrandScavenger::removeRopeFactories(globalOutgoingRopeFactories);
   }
 };
 

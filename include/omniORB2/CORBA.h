@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.46.4.2  1999/09/25 17:00:09  sll
+ Merged changes from omni2_8_develop branch.
+
  Revision 1.46.4.1  1999/09/15 20:18:15  sll
  Updated to use the new cdrStream abstraction.
  Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -3219,13 +3222,6 @@ private:
     virtual const char *irRepoId() const = 0;
     // returns the Interface Repository ID.
 
-#if 0       
-    virtual CORBA::Object_ptr newProxyObject(Rope *r,
-					     _CORBA_Octet *key,
-					     size_t keysize,
-					     IOP::TaggedProfileList *profiles,
-					     _CORBA_Boolean release) = 0;
-#endif
     virtual CORBA::Object_ptr newProxyObject(GIOPObjectInfo* objInfo) = 0;
     // returns a new proxy object.
 

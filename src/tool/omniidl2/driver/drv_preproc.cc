@@ -129,7 +129,7 @@ extern "C" char * mktemp(char *);
 typedef int pid_t;
 #endif
 
-#if defined(__irix__) 
+#if defined(__irix__) || defined(__uw7__)
 #include      <unistd.h>              // POSIX standard types
 #include      <wait.h>                // POSIX definition of wait()
 #endif
@@ -306,7 +306,6 @@ DRV_pre_proc(char *myfile)
 #else
   int	wait_status;
 #endif	// defined(apollo) || defined(SUNOS4)
-  long	readfromstdin = I_FALSE;
   pid_t	child_pid;
   char	catbuf[512];
   
@@ -476,8 +475,6 @@ DRV_pre_proc(char *myfile)
   }
 
   int	wait_status;
-
-  long	readfromstdin = I_FALSE;
 
   char	catbuf[512];
   
@@ -664,8 +661,6 @@ void
 DRV_pre_proc(char *myfile)
 {
     int	wait_status;
-
-    long	readfromstdin = I_FALSE;
 
     char	catbuf[512];
 

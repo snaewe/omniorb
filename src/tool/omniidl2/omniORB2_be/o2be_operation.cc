@@ -28,6 +28,21 @@
 
 /*
   $Log$
+  Revision 1.34.4.2  1999/09/25 17:00:31  sll
+  Merged changes from omni2_8_develop branch.
+
+  Revision 1.34.2.2  1999/09/23 16:45:43  djr
+  Fixed scoping bug in omniidl2.
+
+  Revision 1.34.2.1  1999/09/20 10:31:42  sll
+  MS VC++ 5.0 does not pick up the const char* conversion operator of a
+  StringBuf automagically when passed to an iostream. Have to do an explicit
+  casting.
+
+  Revision 1.34  1999/09/15 10:30:01  djr
+  produce_invoke() did not pass ctxt argument if operation had no
+  other arguments.
+
   Revision 1.34.4.1  1999/09/15 20:18:41  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -278,19 +293,17 @@ o2be_operation::produce_invoke(std::fstream &s)
   s << uqname() << "(";
 
   UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+  int first = 1;
 
   while( !i.is_done() ) {
-    o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
-    s << a->uqname();
+    o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+    s << (first ? "":", ") << a->uqname();
+    first = 0;
     i.next();
-    s << ((!i.is_done()) ? ", " : (context()?",":""));
   }
 
-  if (context()) {
-    s << "ctxt";
-  }
-
-  s << ")";
+  if( context() )   s << (first ? "ctxt" : ", ctxt");
+  s << ')';
 }
 
 
@@ -2309,9 +2322,10 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
 
     case tObjref:
       {
-	IND(s); s << argname << " = "
-		  << o2be_interface::narrow_from_decl(decl)->fqname()
-		  << "_Helper::unmarshalObjRef(" << netstream << ");\n";
+	IND(s);
+	s << argname << " = "
+	  << o2be_interface::narrow_from_decl(decl)->unambiguous_name(used_in)
+	  << "_Helper::unmarshalObjRef(" << netstream << ");\n";
       }
       break;
 
@@ -2353,48 +2367,48 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
 	  case tChar:
 	  case tOctet:
 	    IND(s); s << netstream << ".get_char_array((_CORBA_Char*) "
-		      << ptr_to_first_elm << ", " << total_length << ");\n";
+		      << (const char*) ptr_to_first_elm << ", " << total_length << ");\n";
 	    break;
 
 	  case tShort:
 	    IND(s); s << netstream << ".unmarshalArrayShort("
-		      << ptr_to_first_elm << ", "
+		      << (const char*) ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tUShort:
 	    IND(s); s << netstream << ".unmarshalArrayUShort("
-		      << ptr_to_first_elm << ", "
+		      << (const char*) ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tLong:
 	    IND(s); s << netstream << ".unmarshalArrayLong("
-		      << ptr_to_first_elm << ", "
+		      << (const char*) ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tULong:
 	    IND(s); s << netstream << ".unmarshalArrayULong("
-		      << ptr_to_first_elm << ", "
+		      << (const char*) ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tEnum:
 	    IND(s); s << netstream << ".unmarshalArrayULong("
 		      << " (_CORBA_ULong*) "
-		      << ptr_to_first_elm << ", " << total_length << ");\n";
+		      << (const char*) ptr_to_first_elm << ", " << total_length << ");\n";
 	    break;
 
 	  case tFloat:
 	    IND(s); s << netstream << ".unmarshalArrayFloat("
-		      << ptr_to_first_elm << ", "
+		      << (const char*) ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
 	  case tDouble:
 	    IND(s); s << netstream << ".unmarshalArrayDouble("
-		      << ptr_to_first_elm << ", "
+		      << (const char*) ptr_to_first_elm << ", "
 		      << total_length << ");\n";
 	    break;
 
@@ -2633,7 +2647,7 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
 		tdecl = o2be_typedef::narrow_from_decl(tdecl)->base_type();
 	      }
 	      s << " = "
-		<< o2be_interface::narrow_from_decl(tdecl)->fqname()
+		<< o2be_interface::narrow_from_decl(tdecl)->unambiguous_name(used_in)
 		<< "_Helper::unmarshalObjRef(" << netstream << ");\n";
  	    }
 	    break;
@@ -2747,9 +2761,10 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 
     case tObjref:
       {
-	IND(s); s << o2be_interface::narrow_from_decl(decl)->fqname()
-		  << "_Helper::marshalObjRef(" << argname << ","
-		  << netstream << ");\n";
+	IND(s);
+	s << o2be_interface::narrow_from_decl(decl)->unambiguous_name(used_in)
+	  << "_Helper::marshalObjRef(" << argname << ","
+	  << netstream << ");\n";
       }
       break;
 
@@ -2786,13 +2801,13 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 	  case tChar:
 	  case tOctet:
 	    IND(s); s << netstream << ".put_char_array((const _CORBA_Char*) "
-		      << ptr_to_first_elm << ", " << total_length << ");\n";
+		      << (const char*) ptr_to_first_elm << ", " << total_length << ");\n";
 	    break;
 
 	  case tShort:
 	  case tUShort:
 	    IND(s); s << netstream << ".put_char_array((const _CORBA_Char*) "
-		      << ptr_to_first_elm << ", " << (total_length * 2)
+		      << (const char*) ptr_to_first_elm << ", " << (total_length * 2)
 		      << ", omni::ALIGN_2);\n";
 	    break;
 
@@ -2801,13 +2816,13 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 	  case tEnum:
 	  case tFloat:
 	    IND(s); s << netstream << ".put_char_array((const _CORBA_Char*) "
-		      << ptr_to_first_elm << ", " << (total_length * 4)
+		      << (const char*) ptr_to_first_elm << ", " << (total_length * 4)
 		      << ", omni::ALIGN_4);\n";
 	    break;
 
 	  case tDouble:
 	    IND(s); s << netstream << ".put_char_array((const _CORBA_Char*) "
-		      << ptr_to_first_elm << ", " << (total_length * 8)
+		      << (const char*) ptr_to_first_elm << ", " << (total_length * 8)
 		      << ", omni::ALIGN_8);\n";
 	    break;
 
@@ -3011,7 +3026,7 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 	      while (tdecl->node_type() == AST_Decl::NT_typedef) {
 		tdecl = o2be_typedef::narrow_from_decl(tdecl)->base_type();
 	      }
-	      IND(s); s << o2be_interface::narrow_from_decl(tdecl)->fqname()
+	      IND(s); s << o2be_interface::narrow_from_decl(tdecl)->unambiguous_name(used_in)
 			<< "_Helper::marshalObjRef(";
 	      if (!mapping.is_arrayslice) {
 		s << argname;
@@ -3133,10 +3148,11 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 
     case tObjref:
       {
-	IND(s); s << sizevar << " = "
-		  << o2be_interface::narrow_from_decl(decl)->fqname()
-		  << "_Helper::NP_alignedSize("
-		  << argname << "," << sizevar << ");\n";
+	IND(s);
+	s << sizevar << " = "
+	  << o2be_interface::narrow_from_decl(decl)->unambiguous_name(used_in)
+	  << "_Helper::NP_alignedSize("
+	  << argname << "," << sizevar << ");\n";
       }
       break;
 
@@ -3332,7 +3348,7 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 		tdecl = o2be_typedef::narrow_from_decl(tdecl)->base_type();
 	      }
 	      IND(s); s << sizevar << " = "
-			<< o2be_interface::narrow_from_decl(tdecl)->fqname()
+			<< o2be_interface::narrow_from_decl(tdecl)->unambiguous_name(used_in)
 			<< "_Helper::NP_alignedSize(";
 	      if (!mapping.is_arrayslice) {
 		s << argname;

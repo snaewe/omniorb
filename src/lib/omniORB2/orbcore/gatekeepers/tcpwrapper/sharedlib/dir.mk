@@ -130,15 +130,12 @@ endif
 
 ifeq ($(notdir $(CXX)),g++)
 
-COPTIONS += -fpic
-CXXOPTIONS += -fpic
-
-all:: $(lib)
+DIR_CPPFLAGS += -fpic
 
 $(lib): $(OBJS) $(CXXOBJS)
 	(set -x; \
         $(RM) $@; \
-        $(CXX) $(CXXOPTIONS) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+        $(CXX) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
        )
 
@@ -156,6 +153,7 @@ export:: $(lib)
           $(RM) $(libname); \
           ln -s $(soname) $(libname); \
          )
+
 endif
 
 endif

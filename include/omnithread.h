@@ -136,6 +136,9 @@ class omni_thread;
 #elif defined(__osr5__)
 #include <omnithread/posix.h>
 
+#elif defined(__uw7__)
+#include <omnithread/posix.h>
+
 #elif defined(__irix__)
 #include <omnithread/posix.h>
 
@@ -441,6 +444,13 @@ public:
 	// calculates an absolute time in seconds and nanoseconds, suitable for
 	// use in timed_waits on condition variables, which is the current time
 	// plus the given relative offset.
+
+
+    static void stacksize(unsigned long sz);
+    static unsigned long stacksize();
+        // Use this value as the stack size when spawning a new thread.
+        // The default value (0) means that the thread library default is
+        // to be used.
 
 private:
 
