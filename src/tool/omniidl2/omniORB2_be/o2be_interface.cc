@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.34  1999/06/03 17:11:06  sll
+  Updated to CORBA 2.2
+
   Revision 1.33  1999/06/02 16:44:32  sll
   If module name is CORBA, use omniObjectKey instead of omniORB::objectKey.
 
@@ -478,7 +481,10 @@ o2be_interface::produce_hdr(std::fstream &s)
 	    << uqname()
 	    << ","
 	    << uqname() << "_Helper"
-	    << "> "<<uqname()<<"_var;\n\n";
+	    << "> "<<uqname()<<"_var;\n";
+  IND(s); s << "typedef " << out_adptarg_name(this)  << " "
+	    << uqname()
+	    <<"_out;\n\n";
   s << "#endif\n";
   s << "#define " << IRrepoId() << " \"" << repositoryID() << "\"\n\n";
 
@@ -1418,7 +1424,10 @@ o2be_interface_fwd::produce_hdr(std::fstream &s)
 	    << intf->uqname()
 	    << ","
 	    << uqname() << "_Helper"
-	    << "> "<< intf->uqname()<<"_var;\n\n";
+	    << "> "<< intf->uqname()<<"_var;\n";
+  IND(s); s << "typedef "
+	    << intf->out_adptarg_name(intf) << " "
+	    << intf->uqname()<<"_out;\n\n";
     s << "#endif\n";
   return;
 }
@@ -2984,6 +2993,8 @@ o2be_interface::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
   }
   IND(s); s << "typedef " << unambiguous_name(tdef) 
 	    << "_var " << tdef->uqname() << "_var;\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef) 
+	    << "_out " << tdef->uqname() << "_out;\n";
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.22  1999/06/03 17:10:58  sll
+  Updated to CORBA 2.2
+
   Revision 1.21  1999/05/26 15:57:00  sll
   sequence of object now uses a separate template.
 
@@ -1023,7 +1026,7 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
 
   IND(s); s << "inline const _T& in() const { return *pd_seq; }\n";
   IND(s); s << "inline _T& inout() { return *pd_seq; }\n";
-  IND(s); s << "inline _T*& out() { return pd_seq; }\n";
+  IND(s); s << "inline _T*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }\n";
   IND(s); s << "inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; "
 	    "return tmp; }\n\n";
 
@@ -1046,9 +1049,24 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   IND(s); s << "typedef " << tdef->uqname() << " _T;\n";
   IND(s); s << "typedef " << (const char*) var_type << " _T_var;\n\n";
 
-  IND(s); s << "inline " << (const char*) out_type << "(_T*& s) : _data(s) {}\n";
+  IND(s); s << "inline " << (const char*) out_type << "(_T*& s) : _data(s) { _data = 0; }\n";
   IND(s); s << "inline " << (const char*) out_type << "(_T_var& sv)\n";
-  IND(s); s << "  : _data(sv.pd_seq) { sv = (_T*) 0; }\n\n";
+  IND(s); s << "  : _data(sv.pd_seq) { sv = (_T*) 0; }\n";
+  IND(s); s << "inline " << (const char*) out_type << "("
+	    << (const char*) out_type  << "& s) : _data(s._data) { }\n";
+  IND(s); s << "inline " << (const char*) out_type << "& operator=("
+	    << (const char*) out_type << "& s) { _data = s._data; return *this; }\n";
+  IND(s); s << "inline " << (const char*) out_type << "& operator=(_T* s) { _data = s; return *this; }\n";
+  IND(s); s << "inline operator _T*&() { return _data; }\n";
+  IND(s); s << "inline _T*& ptr() { return _data; }\n";
+  IND(s); s << "inline _T* operator->() { return _data; }\n";
+  IND(s); s << "inline " << (const char*) index_ret_type
+	    << " operator [] (_CORBA_ULong i) { ";
+  if( is_seq_of_array )
+    s << "  return (" << (const char*) index_ret_type 
+      << ") ((_data->NP_data())[i]); }\n";
+  else
+    s << "  return (*_data)[i]; }\n";
 
   IND(s); s << "_T*& _data;\n\n";
 
@@ -1056,6 +1074,7 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   IND(s); s << "private:\n";
   INC_INDENT_LEVEL();
   IND(s); s << (const char*) out_type << "();\n";
+  IND(s); s << (const char*) out_type << " operator=( const _T_var&);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
 }
