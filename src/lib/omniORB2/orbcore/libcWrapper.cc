@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/08 18:10:50  ewc
-  Added support for ATMos, added IP check function
+  Revision 1.3  1997/01/23 16:41:48  sll
+  non_reentrant is now a static member of the LibcWrapper class.
 
+// Revision 1.2  1997/01/08  18:10:50  ewc
+// Added support for ATMos, added IP check function
+//
 // Revision 1.1  1996/10/10  14:37:53  sll
 // Initial revision
 //
@@ -22,8 +25,6 @@
 #include <omniORB2/CORBA.h>
 #include <errno.h>
 #include "libcWrapper.h"
-
-static omni_mutex non_reentrant;
 
 int
 LibcWrapper::gethostbyname(const char *name,
