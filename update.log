@@ -1,3 +1,60 @@
+Mon Feb 14 18:26:26 GMT 2000 dpg1
+=================================
+
+- New IDL compiler merged in from omniidl module. Not yet activated in
+  dir.mk files
+
+external_merge/src/lib/omniORB2/omniidl_be/GNUmakefile              -- new
+external_merge/src/lib/omniORB2/omniidl_be/cxx/dynskel/GNUmakefile  -- new
+external_merge/src/lib/omniORB2/omniidl_be/cxx/header/GNUmakefile   -- new
+external_merge/src/lib/omniORB2/omniidl_be/cxx/skel/GNUmakefile     -- new
+external_merge/src/tool/omniidl/GNUmakefile                         -- new
+external_merge/src/tool/omniidl/cxx/GNUmakefile                     -- new
+external_merge/src/tool/omniidl/cxx/cccp/GNUmakefile                -- new
+external_merge/src/tool/omniidl/python/GNUmakefile                  -- new
+external_merge/src/tool/omniidl/python/omniidl/GNUmakefile          -- new
+external_merge/src/tool/omniidl/python/omniidl_be/GNUmakefile       -- new
+external_merge/src/tool/omniidl/python/scripts/GNUmakefile          -- new
+src/lib/omniORB2/omniidl_be/dir.mk                                  -- new
+src/lib/omniORB2/omniidl_be/showast.py                              -- new
+src/lib/omniORB2/omniidl_be/cxx/__init__.py                         -- new
+src/lib/omniORB2/omniidl_be/cxx/dir.mk                              -- new
+src/lib/omniORB2/omniidl_be/cxx/env.py                              -- new
+src/lib/omniORB2/omniidl_be/cxx/name.py                             -- new
+src/lib/omniORB2/omniidl_be/cxx/skutil.py                           -- new
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py                           -- new
+src/lib/omniORB2/omniidl_be/cxx/util.py                             -- new
+src/lib/omniORB2/omniidl_be/cxx/dynskel/__init__.py                 -- new
+src/lib/omniORB2/omniidl_be/cxx/dynskel/bdesc.py                    -- new
+src/lib/omniORB2/omniidl_be/cxx/dynskel/dir.mk                      -- new
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py                     -- new
+src/lib/omniORB2/omniidl_be/cxx/dynskel/tcstring.py                 -- new
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py                 -- new
+src/lib/omniORB2/omniidl_be/cxx/header/__init__.py                  -- new
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py                      -- new
+src/lib/omniORB2/omniidl_be/cxx/header/dir.mk                       -- new
+src/lib/omniORB2/omniidl_be/cxx/header/forward.py                   -- new
+src/lib/omniORB2/omniidl_be/cxx/header/marshal.py                   -- new
+src/lib/omniORB2/omniidl_be/cxx/header/opers.py                     -- new
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py                       -- new
+src/lib/omniORB2/omniidl_be/cxx/header/tcstring.py                  -- new
+src/lib/omniORB2/omniidl_be/cxx/header/tie.py                       -- new
+src/lib/omniORB2/omniidl_be/cxx/impl/main.py                        -- new
+src/lib/omniORB2/omniidl_be/cxx/skel/__init__.py                    -- new
+src/lib/omniORB2/omniidl_be/cxx/skel/dir.mk                         -- new
+src/lib/omniORB2/omniidl_be/cxx/skel/dispatch.py                    -- new
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py                        -- new
+src/lib/omniORB2/omniidl_be/cxx/skel/mangler.py                     -- new
+src/lib/omniORB2/omniidl_be/cxx/skel/poa.py                         -- new
+src/lib/omniORB2/omniidl_be/cxx/skel/proxy.py                       -- new
+src/lib/omniORB2/omniidl_be/cxx/tools/genIDL                        -- new
+src/tool/omniidl/python/dir.mk                                      -- new
+src/tool/omniidl/python/omniidl/dir.mk                              -- new
+src/tool/omniidl/python/omniidl/main.py                             -- new
+src/tool/omniidl/python/omniidl_be/dir.mk                           -- new
+src/tool/omniidl/python/scripts/dir.mk                              -- new
+src/tool/omniidl/python/scripts/omniidl                             -- new
+
 
 Mon Feb 14 09:41:44 GMT 2000 djr
 ================================
