@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     // Make the async request
     CORBA::String_var message = (const char*)"Hello there";
     for (unsigned long int x = 0; x < nInvocations; x++)
-      echoref->sendc_echoString(handler_ref, message);
+      echoref->nocopy_sendc_echoString(handler_ref, message);
     cout << "I said, \"" << message << "\"";
     if (nInvocations > 1)
       cout << " " << nInvocations << " times";

@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 	  cout << "Received a different message!" << endl;
 	  abort();
 	}
-	delete pollers[x];
+	pollers[x]->_remove_ref();
       }
       cout << "Received all replies." << endl;
 
