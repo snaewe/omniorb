@@ -1,3 +1,33 @@
+Thu May 30 13:09:14 BST 2002 dgrisby
+====================================
+
+- Updates for 3.0.5 release.
+
+ReleaseNote_omniORB_304     -- deleted
+ReleaseNote_omniORB_305     -- new
+THIS_IS_omniORB_3_0_4       -- deleted
+THIS_IS_omniORB_3_0_5       -- new
+bugfixes-300.xml
+bugfixes-301.xml
+bugfixes-302.xml
+bugfixes-303.xml
+bugfixes-304.xml            -- new
+bugfixes-305.xml            -- new
+bugfixes.xml                -- deleted
+bugfixes.xsl                -- deleted
+mk/unix.mk
+mk/win32.mk
+src/examples/anyExample/dir.mak
+src/examples/boa/dir.mak
+src/examples/call_back/dir.mak
+src/examples/dii/dir.mak
+src/examples/dsi/dir.mak
+src/examples/echo/dir.mak
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/servant_manager/dir.mak
+
+
 Tue May 28 23:04:48 BST 2002 dgrisby
 ====================================
 

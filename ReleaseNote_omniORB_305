@@ -1,3 +1,37 @@
+Release Notes for omniORB 3.0.5 (31 May 2002)
+===============================
+
+This is a minor release since omniORB 3.0.4. The release notes of all
+the 3.0.x series are at the end.
+
+Changes since 3.0.4:
+
+ 1. Bug fixes. See bugfixes-304.xml.
+
+ 2. Support for Fujitsu Siemens BS2000 with patch in patches
+    directory.
+
+ 3. Support for _unchecked_narrow() thanks to Lars Immisch.
+
+ 4. Shared runtime version number change
+
+       On Windows NT/95, the omniORB runtime DLLs for this version are:
+        libomniORB305_rt.dll
+        libomniORB305_rt.lib
+        libomniDynamic305_rt.dll
+        libomniDynamic305_rt.lib
+
+       Make sure you update your Visual Studio to pick up the right
+       library.
+
+       On IBM AIX, the name is unchanged, i.e.
+        libomniORB30.a
+        libomniDynamic30.a
+
+       On various unices, the name is,
+         libomniORB3.so ---> libomniORB3.so.0 --> libomniORB3.so.0.5
+
+
 Release Notes for omniORB 3.0.4 (15 June 2001)
 ===============================
 

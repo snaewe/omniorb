@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
-<?xml-stylesheet type="text/xml" href="bugfixes.xsl"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
 
 <!-- The following bugs have been fixed since the omniORB 3.0.4     -->
 <!-- release. This file is transformed into html with bugfixes.xsl. -->
@@ -7,6 +7,15 @@
 <!-- Editors: make sure the content you add is well-formed XML.     -->
 
 <buglist version="3.0.4">
+
+<bug id="12" date="Tue May 28 23:04:48 BST 2002" user="dgrisby">
+  <summary>Incorrect repository ids in POA stubs</summary>
+  <reported>Kendall Bailey</reported>
+  <text>
+  Some POA definitions had repoIds with 2.3 in the version field. This
+  caused problems with omniORBpy, which used 1.0.
+  </text>
+</bug>
 
 <bug id="11" date="Fri Apr 26 14:35:31 BST 2002" user="dgrisby">
   <summary>Incorrect escaping of string constants</summary>
