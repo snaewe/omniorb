@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.18  2001/08/16 14:37:07  dpg1
+  Fix scoping of omni::internalLock.
+
   Revision 1.2.2.17  2001/08/15 17:59:11  dpg1
   Minor POA bugs.
 
@@ -373,7 +376,7 @@ omniObjTableEntry*
 omniObjTable::locateActive(const _CORBA_Octet* key, int keysize,
 			   _CORBA_ULong hashv, _CORBA_Boolean wait)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
  again:
   omniObjTableEntry** head  = objectTable + hashv % objectTableSize;
@@ -414,7 +417,7 @@ omniObjTableEntry*
 omniObjTable::locate(const _CORBA_Octet* key, int keysize,
 		     _CORBA_ULong hashv, _CORBA_ULong set)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
  again:
   omniObjTableEntry** head  = objectTable + hashv % objectTableSize;
@@ -453,7 +456,7 @@ omniObjTable::newEntry(omniObjKey& key)
 omniObjTableEntry*
 omniObjTable::newEntry(omniObjKey& key, _CORBA_ULong hashv)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
   omniObjTableEntry** head  = objectTable + hashv % objectTableSize;
   omniObjTableEntry*  entry = *head;
