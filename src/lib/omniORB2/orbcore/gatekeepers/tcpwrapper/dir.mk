@@ -6,10 +6,13 @@ SUBDIRS = sharedlib
 LIBRARY_OPTIONS = \
                -DLIBC_CALLS_STRTOK \
                -DBROKEN_FGETS \
-               -DSOLARIS_24_GETHOSTBYNAME_BUG \
                -DHOSTS_DENY=\"/etc/hosts.deny\" \
                -DHOSTS_ALLOW=\"/etc/hosts.allow\" \
                -DRFC931_TIMEOUT=10
+
+ifndef OSR5
+LIBRARY_OPTIONS += -DSOLARIS_24_GETHOSTBYNAME_BUG
+endif
 
 ifndef AIX
 LIBRARY_OPTIONS += -DGETPEERNAME_BUG
