@@ -1,3 +1,15 @@
+
+Wed Sep  1 13:58:24 BST 1999 djr
+================================
+
+- Added atomic logging class omniORB::logger, and methods
+  logf() and logs().
+
+include/omniORB2/omniORB.h
+src/lib/omniORB2/logIOstream.cc
+src/lib/omniORB2/corbaOrb.cc
+
+
 Tue Aug 31 20:19:50 BST 1999 sll
 ================================
 
@@ -5,6 +17,7 @@ Tue Aug 31 20:19:50 BST 1999 sll
   bug that causes occasional thread exit has been identified.
 
 src/lib/omniORB2/orbcore/scavenger.cc
+
 
 Mon Aug 30 19:46:21 BST 1999 sll
 ================================
@@ -26,6 +39,7 @@ src/lib/omniORB2/dynamic/corbaidldynstub.cc
 src/lib/omniORB2/orbcore/corbaBoa.cc
 src/lib/omniORB2/orbcore/policy.cc
 
+
 Mon Aug 30 19:16:15 BST 1999 sll
 ================================
 
@@ -44,7 +58,6 @@ src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/update.c
 src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/workarounds.c
 src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/hosts_access.c
 src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/fakelog2.c
-
 
 
 Mon Aug 30 17:41:36 BST 1999 sll
