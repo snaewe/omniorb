@@ -228,9 +228,26 @@ DRV_drive(char *s)
 	 << s
 	 << "\n";
   (*DRV_BE_produce)();
+
   /*
    * Exit cleanly
    */
+  if (idl_global->err_count() > 0) {
+    std::cerr << idl_global->prog_name()
+	 << ": "
+	 << s 
+	 << GTDEVEL(": found ");
+    std::cerr << idl_global->err_count()
+	 << GTDEVEL(" error");
+    std::cerr << (idl_global->err_count() > 1
+	    ? GTDEVEL("s") : "")
+    	 << "\n";
+    /*
+     * Call BE_abort to allow a BE to clean up after itself
+     */
+    (*DRV_BE_abort)();
+    exit(EXIT_FAILURE);
+  }
 
   exit(0);
 }
