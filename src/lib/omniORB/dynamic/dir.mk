@@ -15,7 +15,6 @@ CONFIG_DEFAULT_LOCATION = \"/project/omni/var/omniORB.cfg\"
 NETLIBSRCS = tcpSocket_UNIX.cc
 NETLIBOBJS = tcpSocket_UNIX.o
 DIR_CPPFLAGS = -DUnixArchitecture 
-CXXDEBUGFLAGS = -fast
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION=$(CONFIG_DEFAULT_LOCATION)
 endif
 
@@ -71,6 +70,10 @@ CXXDEBUGFLAGS = -g
 DIR_CPPFLAGS += -D__OMNIORB__ -fhandle-exceptions -Wall -Wno-unused 
 else 
 DIR_CPPFLAGS += -D__OMNIORB__
+endif
+
+ifeq($(CXX),CC)
+CXXDEBUGFLAGS = -fast
 endif
 
 ifeq ($(platform),arm_atmos_4.0/atb)
