@@ -1,3 +1,22 @@
+Thu May 10 16:00:48 BST 2001 dpg1
+=================================
+
+- Update cdrStreamAdapter to modified cdrStream interface.
+
+include/omniORB4/cdrStream.h
+src/lib/omniORB/orbcore/cdrStreamAdapter.cc
+src/lib/omniORB/orbcore/dir.mk
+
+- _compatibleServant() replaced with _localServantTarget().
+  createIdentity() now takes a target string.
+  djr's fix to deactivateObject().
+
+include/omniORB4/omniInternal.h
+include/omniORB4/omniObjRef.h
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Wed May  9 21:00:58 BST 2001 sll
 ================================
 
