@@ -1,7 +1,8 @@
 // -*- Mode: C++; -*-
 //                            Package   : omniORB2
 // any.cc                     Created on: 31/07/97
-//                            Author    : Eoin Carroll (ewc)
+//                            Author1   : Eoin Carroll (ewc)
+//                            Author2   : James Weatherall (jnw)
 //
 //    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
 //
@@ -28,10 +29,13 @@
 
 
 /* $Log$
-/* Revision 1.6  1998/08/14 13:43:04  sll
-/* Added pragma hdrstop to control pre-compile header if the compiler feature
-/* is available.
+/* Revision 1.7  1999/01/07 16:47:03  djr
+/* New implementation
 /*
+ * Revision 1.6  1998/08/14 13:43:04  sll
+ * Added pragma hdrstop to control pre-compile header if the compiler feature
+ * is available.
+ *
  * Revision 1.5  1998/08/10 18:08:26  sll
  * Fixed Any ctor and Any::replace() for untyped values. Now accept null
  * pointer for the value parameter for all typecode types.
@@ -55,759 +59,583 @@
 //
  */
 
-#include <omniORB2/CORBA.h>
+#include <anyP.h>
 
-#ifdef HAS_pch
-#pragma hdrstop
-#endif
 
-#include <string.h>
-#include "tcParseEngine.h"
+#define pdAnyP() ((AnyP*) (NP_pd()))
+#define pdAnyP2(a) ((AnyP*) ((a)->NP_pd()))
 
-CORBA::Any::Any() : pd_data(0)
-{ 
-  pd_tc = new TypeCode(tk_null,0); 
+
+// CONSTRUCTORS / DESTRUCTOR
+CORBA::Any::Any()
+{
+  pd_ptr = new AnyP(CORBA::_tc_null);
 }
+
 
 CORBA::Any::~Any()
-{ 
-  CORBA::release(pd_tc); 
-  PR_deleteData();
-}
-
-CORBA::Any::Any(const Any& a) : pd_data(0) 
 {
-  if ((a.pd_tc)->NP_is_nil()) pd_tc = TypeCode::_nil();
-  else pd_tc = new TypeCode(*(a.pd_tc));
-  pd_mbuf = a.pd_mbuf;
+  delete pdAnyP();
 }
 
 
-CORBA::Any::Any(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release,
- 		   CORBA::Boolean nocheck) : pd_data(0)
+CORBA::Any::Any(const Any& a) 
 {
-  if (nocheck) 
-    {
-      pd_tc = tc->NP_aliasExpand();
-      CORBA::release(tc);
-    }
-  else pd_tc = CORBA::TypeCode::_duplicate(tc);
+  // Replace the internal AnyP with a new one, based on the Any passed to us
+  pd_ptr = new AnyP(pdAnyP2(&a));
+}
 
-  CORBA::Char* _val = (CORBA::Char*) value; 
 
-  if (_val != 0)
-    {
-      MemBufferedStream mbuf(_val);
-      CORBA::ULong fillerLen = (pd_tc->pd_param).alreadyWritten() % 4;
-      
-      if (fillerLen > 0)
-	{
-	  if (!nocheck) mbuf.skip(fillerLen);  
-	  CORBA::Char* filler = new CORBA::Char[fillerLen];
-
-	  try
-	    {
-	      pd_mbuf.put_char_array(filler,fillerLen);
-	    }
-	  catch(...)
-	    {
-	      delete[] filler;
-	      throw;
-	    }
-
-	  delete[] filler;
-	}
-      
-      tcParseEngine tcEngine(pd_tc,&mbuf);
-      tcEngine.parse(pd_mbuf);
-
-      if (release) delete[] _val;
-    }
-  else {
-    // value == 0, If the typecode is not _tc_null or _tc_void, this
-    // any is partially initialised with only the typecode and no value.
-  }
-}  
-	  
-
-CORBA::Any& CORBA::Any::operator=(const CORBA::Any& a) {
-      if (this != &a) {
-	CORBA::release(pd_tc);
-	PR_deleteData();
-	if ((a.pd_tc)->NP_is_nil()) pd_tc = TypeCode::_nil();
-	else pd_tc = new TypeCode(*(a.pd_tc));
-	pd_mbuf = a.pd_mbuf;
-      }
-      return *this;
-    }    
-
-/**************************************************************************/
-
-void 
-CORBA::Any::NP_memAlignMarshal(MemBufferedStream& m)
+CORBA::
+Any::Any(TypeCode_ptr tc, void* value, Boolean release)
 {
-  *pd_tc >>= m;
-
-  if (pd_tc->pd_tck  <= CORBA::tk_void) return;
-  else if (pd_mbuf.alreadyWritten() == 0)
+  if (value == 0)
     {
-      if (pd_tc->pd_tck != CORBA::tk_alias && pd_tc->pd_tck != CORBA::tk_any &&
-	  pd_tc->pd_tck != CORBA::tk_except)
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);  
-      return;
-    }
-
-  CORBA::UShort fillerLen = 0;
-
-  if (pd_tc->pd_tck > CORBA::tk_Principal && pd_tc->pd_tck != 
-                                                            CORBA::tk_string) 
-    fillerLen = (pd_tc->pd_param).alreadyWritten() % 4;
-  
-#if !defined(NO_FLOAT)
-  if (pd_tc->pd_tck == CORBA::tk_double || pd_tc->pd_tck == CORBA::tk_any || 
-      pd_tc->pd_tck == CORBA::tk_struct || pd_tc->pd_tck == CORBA::tk_union ||
-      pd_tc->pd_tck > CORBA::tk_string)
-    {
-      MemBufferedStream tmpInBuf(pd_mbuf,1);
-      
-      tmpInBuf.skip(fillerLen);
-
-      tcParseEngine tcEngine(pd_tc,&tmpInBuf);
-      tcEngine.parse(m,1);
+      // No value, so just create an empty, writable buffer for the
+      // specified type.
+      pd_ptr = new AnyP(tc);
     }
   else
-#endif
     {
-      m.put_char_array((_CORBA_Char*) (omni::ptr_arith_t) pd_mbuf.data() +
-		       (omni::ptr_arith_t) fillerLen, 
-		       pd_mbuf.alreadyWritten() - fillerLen);
+      // Value specified, so create a read-only parser based on it
+      pd_ptr = new AnyP(tc, value, release);
     }
 }
 
-
+// Marshalling operators
 void
 CORBA::Any::operator>>= (NetBufferedStream& s) const
 {
-  *pd_tc >>= s;
-
-  if (pd_tc->pd_tck  <= CORBA::tk_void) return;
-  else if (pd_mbuf.alreadyWritten() == 0)
-    {
-      if (pd_tc->pd_tck != CORBA::tk_alias && pd_tc->pd_tck != CORBA::tk_any &&
-	  pd_tc->pd_tck != CORBA::tk_except)
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);  
-      return;
-    }
-
-  CORBA::UShort fillerLen = 0;
-
-  if (pd_tc->pd_tck > CORBA::tk_Principal && pd_tc->pd_tck != 
-                                                            CORBA::tk_string) 
-    fillerLen = (pd_tc->pd_param).alreadyWritten() % 4;
-
-  MemBufferedStream tmpInBuf(pd_mbuf,1);
-
-#if !defined(NO_FLOAT)
-  if ((pd_tc->pd_tck == CORBA::tk_double || pd_tc->pd_tck == CORBA::tk_any || 
-       pd_tc->pd_tck == CORBA::tk_struct || pd_tc->pd_tck == CORBA::tk_union ||
-       pd_tc->pd_tck > CORBA::tk_string) && 
-      s.WrMessageAlreadyWritten()%8 > 0 && s.WrMessageAlreadyWritten()%8 <= 4)
-    {
-      MemBufferedStream outBuf;
-
-      PR_fill(fillerLen,outBuf);
-      tmpInBuf.skip(fillerLen);
-
-      tcParseEngine tcEngine(pd_tc,&tmpInBuf);
-      tcEngine.parse(outBuf,1);
-
-      s.put_char_array((_CORBA_Char*) (omni::ptr_arith_t) outBuf.data() +
-		       (omni::ptr_arith_t) fillerLen,
-		       outBuf.alreadyWritten() - fillerLen );
-    }
-  else
-#endif
-    {
-      s.put_char_array((_CORBA_Char*) (omni::ptr_arith_t) tmpInBuf.data() +
-		       (omni::ptr_arith_t) fillerLen, 
-		       tmpInBuf.alreadyWritten() - fillerLen);
-    }
+  CORBA::TypeCode::marshalTypeCode(pdAnyP()->getTC_parser()->getTC(), s);
+  pdAnyP()->getTC_parser()->copyTo(s);
 }
-
 
 void
-CORBA::Any::operator>>= (MemBufferedStream& m) const
+CORBA::Any::operator<<= (NetBufferedStream& s)
 {
-  *pd_tc >>= m;
-  
-  if (pd_tc->pd_tck <= CORBA::tk_void) return;
-  else if (pd_mbuf.alreadyWritten() == 0)
-    {
-      if (pd_tc->pd_tck != CORBA::tk_alias && pd_tc->pd_tck != CORBA::tk_any &&
-	  pd_tc->pd_tck != CORBA::tk_except)
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-      return;
-    }
-
-  CORBA::UShort fillerLen = 0;
-
-  if (pd_tc->pd_tck > CORBA::tk_Principal && pd_tc->pd_tck != CORBA::tk_string)
-    fillerLen = (pd_tc->pd_param).alreadyWritten() % 4;
-
-  MemBufferedStream tmpInBuf(pd_mbuf,1);
-
-#if !defined(NO_FLOAT)
-  if ((pd_tc->pd_tck == CORBA::tk_double || pd_tc->pd_tck == CORBA::tk_any || 
-       pd_tc->pd_tck == CORBA::tk_struct || pd_tc->pd_tck == CORBA::tk_union ||
-       pd_tc->pd_tck > CORBA::tk_string) && 
-      m.alreadyWritten()%8 > 0 && m.alreadyWritten()%8 <= 4)
-   {
-     tmpInBuf.skip(fillerLen);
-
-     tcParseEngine tcEngine(pd_tc,&tmpInBuf);
-     tcEngine.parse(m);
-   }
-  else
-#endif  
-    {
-      m.put_char_array((_CORBA_Char*) (omni::ptr_arith_t) tmpInBuf.data() +
-		       (omni::ptr_arith_t) fillerLen, 
-		       tmpInBuf.alreadyWritten() - fillerLen);
-    }
+  CORBA::TypeCode_member newtc;
+  newtc <<= s;
+  pdAnyP()->setTC_and_reset(newtc);
+  pdAnyP()->getTC_parser()->copyFrom(s);
 }
 
-
-void 
-CORBA::Any::operator<<=(NetBufferedStream& s)
+void
+CORBA::Any::operator>>= (MemBufferedStream& s) const
 {
-  *pd_tc <<= s;
+  CORBA::TypeCode::marshalTypeCode(pdAnyP()->getTC_parser()->getTC(), s);
+  pdAnyP()->getTC_parser()->copyTo(s);
+}
 
-  pd_mbuf.rewind_inout_mkr();
-  if (pd_tc->pd_tck <= CORBA::tk_void) return;
-  else if (pd_tc->pd_tck > CORBA::tk_Principal && 
-	   pd_tc->pd_tck != CORBA::tk_string &&
-	   (pd_tc->pd_param).alreadyWritten() % 4 > 0)
-    PR_fill((pd_tc->pd_param).alreadyWritten() % 4,pd_mbuf);
-    
-  tcParseEngine tcEngine(pd_tc,&s);
-  tcEngine.parse(pd_mbuf);
-  PR_deleteData();
-}  
-
-
-void 
-CORBA::Any::operator<<=(MemBufferedStream& m)
+void
+CORBA::Any::operator<<= (MemBufferedStream& s)
 {
-  *pd_tc <<= m;
-
-  pd_mbuf.rewind_inout_mkr();
-  if (pd_tc->pd_tck <= CORBA::tk_void) return;
-  else if (pd_tc->pd_tck > CORBA::tk_Principal && 
-	   pd_tc->pd_tck != CORBA::tk_string &&
-	   (pd_tc->pd_param).alreadyWritten() % 4)
-    PR_fill((pd_tc->pd_param).alreadyWritten() % 4, pd_mbuf);
-
-  tcParseEngine tcEngine(pd_tc,&m);
-  tcEngine.parse(pd_mbuf);
-  PR_deleteData();
-}  
-
-
+  CORBA::TypeCode_member newtc;
+  newtc <<= s;
+  pdAnyP()->setTC_and_reset(newtc);
+  pdAnyP()->getTC_parser()->copyFrom(s);
+}
 
 size_t
-CORBA::Any::NP_alignedSize(size_t _initialoffset) const
+CORBA::Any::NP_alignedSize(size_t initialoffset) const
 {
-  CORBA::ULong _msgsize = _initialoffset;      
-  _msgsize = pd_tc->NP_alignedSize(_msgsize);
-
-  UShort fillerLen = 0;
-
-  if (pd_tc->pd_tck <= CORBA::tk_void) return _msgsize;
-  else if (pd_mbuf.alreadyWritten() == 0)
-    {
-      if (pd_tc->pd_tck != CORBA::tk_alias && pd_tc->pd_tck != CORBA::tk_any &&
-	  pd_tc->pd_tck != CORBA::tk_except)
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-      return _msgsize;
-    }
-  else if (pd_tc->pd_tck > CORBA::tk_Principal && 
-	   pd_tc->pd_tck != CORBA::tk_string)
-    fillerLen = (pd_tc->pd_param).alreadyWritten()%4;
-   
-#if !defined(NO_FLOAT)
-  if ((pd_tc->pd_tck == CORBA::tk_double || pd_tc->pd_tck == CORBA::tk_any || 
-       pd_tc->pd_tck == CORBA::tk_struct || pd_tc->pd_tck == CORBA::tk_union ||
-       pd_tc->pd_tck > CORBA::tk_string) && _msgsize%8 > 0 && _msgsize%8 <= 4)
-	{
-	  MemBufferedStream outBuf;
-	  MemBufferedStream tmpInBuf(pd_mbuf,1);
-
-	  PR_fill(fillerLen,outBuf);
-	  tmpInBuf.skip(fillerLen);
-
-	  tcParseEngine tcEngine(pd_tc,&tmpInBuf);
-	  tcEngine.parse(outBuf,1);
-
-	  _msgsize += (outBuf.alreadyWritten() - fillerLen);
-	}
-      else
-#endif
-	{
-	  _msgsize += (pd_mbuf.alreadyWritten() - fillerLen);
-	}
-  
-  return _msgsize;
+  size_t _msgsize = initialoffset;
+  _msgsize = pdAnyP()->getTC_parser()->getTC()->NP_alignedSize(_msgsize);
+  return NP_alignedDataOnlySize(_msgsize);
 }
 
-
-void 
-CORBA::Any::NP_holdData(void* data, void (*del)(void*)) const 
+// omniORB2 data-only marshalling functions
+void
+CORBA::Any::NP_marshalDataOnly(NetBufferedStream& s) const
 {
-  void** tmp_data = (void**) &pd_data; 
-  void (**tmp_del)(void*);
-  tmp_del = (void (**)(void*)) &deleteData;
-      
-  (*tmp_data) = data;
-  (*tmp_del) = del;
+  pdAnyP()->getTC_parser()->copyTo(s);
+}
+
+void
+CORBA::Any::NP_unmarshalDataOnly(NetBufferedStream& s)
+{
+  pdAnyP()->getTC_parser()->copyFrom(s);
+}
+
+void
+CORBA::Any::NP_marshalDataOnly(MemBufferedStream& s) const
+{
+  pdAnyP()->getTC_parser()->copyTo(s);
+}
+
+void
+CORBA::Any::NP_unmarshalDataOnly(MemBufferedStream& s)
+{
+  pdAnyP()->getTC_parser()->copyFrom(s);
+}
+
+size_t
+CORBA::Any::NP_alignedDataOnlySize(size_t initialoffset) const
+{
+  return pdAnyP()->alignedSize(initialoffset);
+}
+
+// omniORB2 internal data packing functions, for use only by stub code
+void
+CORBA::Any::PR_packFrom(CORBA::TypeCode_ptr newtc,
+			void* tcdesc)
+{
+  // Pack the tcDescriptor data into this Any
+  pdAnyP()->setData(newtc, *((tcDescriptor*)tcdesc));
+}
+
+CORBA::Boolean
+CORBA::Any::PR_unpackTo(CORBA::TypeCode_ptr tc,
+			void* tcdesc) const
+{
+  // Unpack the Any data out to the descriptor
+  return pdAnyP()->getData(tc, *((tcDescriptor*)tcdesc));
+}
+
+void*
+CORBA::Any::PR_getCachedData() const
+{
+  // Complex types, such as structures, have to have their storage
+  // handled by the Any, so the storage pointer is cached internally
+  // and this routine is used to retrieve the cached pointer
+  return pdAnyP()->getCachedData();
+}
+
+void
+CORBA::Any::PR_setCachedData(void* data, void (*destructor)(void*))
+{
+  // Complex types, such as structures, have to have their storage
+  // handled by the Any, so the storage pointer is cached internally
+  // and this routine is used to set the cached pointer & its destructor
+  pdAnyP()->setCachedData(data, destructor);
+}
+
+//////////////////////////////////////////////////////////////////////
+///////////////////////// INSERTION OPERATORS ////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+CORBA::Any&
+CORBA::Any::operator=(const CORBA::Any& a)
+{
+  // Delete the old internal AnyP and create a new one,
+  // based on the Any passed to us
+  delete pdAnyP();
+  pd_ptr = new AnyP(pdAnyP2(&a));
+  return *this;
 }
 
 
 void
-CORBA::Any::NP_getBuffer(MemBufferedStream& mbuf) const
+CORBA::Any::operator<<=(Short s)
 {
-  mbuf.shallowCopy(pd_mbuf);
- if (pd_tc->pd_tck > CORBA::tk_Principal && pd_tc->pd_tck != CORBA::tk_string) 
-    mbuf.skip((pd_tc->pd_param).alreadyWritten() % 4);
+  tcDescriptor tcd;
+  tcd.p_short = &s;
+  pdAnyP()->setData(CORBA::_tc_short, tcd);
 }
 
-void 
-CORBA::Any::NP_replaceData(CORBA::TypeCode_ptr tcp, 
-			                        const MemBufferedStream& mb) 
-{
-  CORBA::release(pd_tc);
-  PR_deleteData();
-    
-  if (omniORB::tcAliasExpand) pd_tc = tcp->NP_completeExpand();
-  else pd_tc = tcp->NP_aliasExpand();
-  pd_mbuf = mb;
-}
 
-/**************************************************************************/
-      
+void CORBA::Any::operator<<=(UShort u)
+{
+  tcDescriptor tcd;
+  tcd.p_ushort = &u;
+  pdAnyP()->setData(CORBA::_tc_ushort, tcd);
+}
 
 
 void
-CORBA::Any::operator<<=(CORBA::Any::from_string s)
+CORBA::Any::operator<<=(Long l)
 {
-  CORBA::ULong _len = strlen(s.val);
-
-  if (_len > s.bound && s.bound != 0)
-    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-  else
-    {
-      MemBufferedStream mbuf;
-      _len++;
-      _len >>= mbuf;
-      mbuf.put_char_array((Char*) s.val,_len);
-
-      CORBA::TypeCode_var boundedTC(
-			       new CORBA::TypeCode(CORBA::tk_string,s.bound));
-      NP_replaceData(boundedTC, mbuf);
-      
-      if (s.nc) delete[] s.val;
-    }
+  tcDescriptor tcd;
+  tcd.p_long = &l;
+  pdAnyP()->setData(CORBA::_tc_long, tcd);
 }
 
-
-
-CORBA::Boolean 
-CORBA::Any::operator>>=(CORBA::Any& a) const 
-{
-  if (!pd_tc->NP_expandEqual(_tc_any,1)) return 0;
-  else
-    {
-      if (this == &a) 
-	{
-	  MemBufferedStream tmp_mbuf(pd_mbuf);
-
-	  CORBA::release(a.pd_tc);
-	  a.PR_deleteData();
-	  a.pd_tc = new CORBA::TypeCode(CORBA::tk_null);
-	  MemBufferedStream mbuf;
-	  a.pd_mbuf = mbuf;
-       
-	  a <<= tmp_mbuf;
-	}
-      else
-	{
-	  CORBA::release(a.pd_tc);
-	  a.PR_deleteData();
-	  a.pd_tc = new CORBA::TypeCode(CORBA::tk_null);
-	  MemBufferedStream mbuf;
-	  a.pd_mbuf = mbuf;
-       
-	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	  a <<= tmp_mbuf;
-	}
-      return 1;
-    }
-}
-
-
-CORBA::Boolean 
-CORBA::Any::operator>>=(CORBA::TypeCode_ptr& tc) const 
-{
-  if (!pd_tc->NP_expandEqual(_tc_TypeCode,1)) return 0;
-  else 
-    {
-      MemBufferedStream tmp_mbuf;
-      NP_getBuffer(tmp_mbuf);
-	  
-      CORBA::TypeCode_ptr tmp_tc = new CORBA::TypeCode(CORBA::tk_null);
-      *tmp_tc <<= tmp_mbuf;
-      tc = tmp_tc;
-      return 1;
-    }
-}
-
-CORBA::Boolean 
-CORBA::Any::operator>>=(char*& s) const 
-{
-  if (!pd_tc->NP_expandEqual(_tc_string,1)) 
-    {
-      s = 0;
-      return 0;
-    }
-  else
-    {
-      MemBufferedStream tmp_mbuf(pd_mbuf,1);
-      CORBA::ULong _len;
-      _len <<= tmp_mbuf;
-      if (tmp_mbuf.overrun(_len)) throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-      // This check has already been performed by TC Parser.
-
-      s = string_alloc(_len - 1);
-      tmp_mbuf.get_char_array((Char*) s, _len);
-      return 1;
-    }
-}
-
-CORBA::Boolean 
-CORBA::Any::operator>>=(CORBA::Any::to_string s) const
-{
-  CORBA::TypeCode_ptr boundedStrTC = new CORBA::TypeCode(CORBA::tk_string,
-							 s.bound);
-
-  if (!pd_tc->NP_expandEqual(boundedStrTC,1)) 
-    {
-      CORBA::release(boundedStrTC);
-      s.val = 0;
-      return 0;
-    }
-  else
-    {
-      CORBA::release(boundedStrTC);
-
-      MemBufferedStream tmp_mbuf(pd_mbuf,1);
-      
-      CORBA::ULong _len;
-      _len <<= tmp_mbuf;
-      if (tmp_mbuf.overrun(_len)) throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-      // This check has already been performed by TC Parser.
-
-      s.val = string_alloc(_len - 1);
-      tmp_mbuf.get_char_array((Char*) s.val, _len);
-      return 1;
-    }
-}
-
-
-CORBA::Boolean 
-CORBA::Any::operator>>=(CORBA::Any::to_object o) const 
-{
-  CORBA::TypeCode_var expandedTC = pd_tc->NP_aliasExpand();
-  if (expandedTC->kind() != CORBA::tk_objref) return 0;
-  else 
-    {
-      MemBufferedStream tmp_mbuf;
-      NP_getBuffer(tmp_mbuf);
-      CORBA::Object_ptr tmpObjRef;
-      tmpObjRef = CORBA::Object::unmarshalObjRef(tmp_mbuf);
-      o.ref = tmpObjRef;
-      return 1;
-    }
-}
-
-void 
-CORBA::Any::replace(CORBA::TypeCode_ptr tc, void* value, 
-		    CORBA::Boolean release)
-{
-  CORBA::release(pd_tc);
-  PR_deleteData();
-  pd_tc = CORBA::TypeCode::_duplicate(tc);  
-
-  MemBufferedStream dbuf;
-  CORBA::Char* _val = (CORBA::Char*) value;  
-
-  if (_val != 0)
-    {
-      MemBufferedStream mbuf(_val);
-      CORBA::ULong fillerLen = (pd_tc->pd_param).alreadyWritten() % 4;
-      
-      if (fillerLen > 0)
-	{
-	  mbuf.skip(fillerLen);  
-	  CORBA::Char* filler = new CORBA::Char[fillerLen];
-
-	  try
-	    {
-	      dbuf.put_char_array(filler,fillerLen);
-	    }
-	  catch(...)
-	    {
-	      delete[] filler;
-	      throw;
-	    }
-	  delete[] filler;
-
-	} 
-
-      tcParseEngine tcEngine(pd_tc,&mbuf);
-      tcEngine.parse(dbuf);
-      if (release) delete[] _val;
-    }
-  else {
-    // value == 0, If the typecode is not _tc_null or _tc_void, this
-    // any is partially initialised with only the typecode and no value.
-  }
-  pd_mbuf = dbuf;
-}
-
-
-void 
-CORBA::Any::operator<<=(CORBA::Short s) 
-{
-  MemBufferedStream mbuf;
-  s >>= mbuf;
-  NP_replaceData(_tc_short, mbuf);
-}
 
 void
-CORBA::Any::operator<<=(CORBA::UShort u)
+CORBA::Any::operator<<=(ULong u)
 {
-  MemBufferedStream mbuf;
-  u >>= mbuf;
-  NP_replaceData(_tc_ushort, mbuf);
-}	
-
-void
-CORBA::Any::operator<<=(CORBA::Long l)
-{
-  MemBufferedStream mbuf;
-  l >>= mbuf;
-  NP_replaceData(_tc_long, mbuf);
+  tcDescriptor tcd;
+  tcd.p_ulong = &u;
+  pdAnyP()->setData(CORBA::_tc_ulong, tcd);
 }
 
-void
-CORBA::Any::operator<<=(CORBA::ULong u)
-{
-  MemBufferedStream mbuf;
-  u >>= mbuf;
-  NP_replaceData(_tc_ulong, mbuf);
-}
 
 #if !defined(NO_FLOAT)
 void
-CORBA::Any::operator<<=(CORBA::Float f)
+CORBA::Any::operator<<=(Float f)
 {
-  MemBufferedStream mbuf;
-  f >>= mbuf;
-  NP_replaceData(_tc_float, mbuf); 	
+  tcDescriptor tcd;
+  tcd.p_float = &f;
+  pdAnyP()->setData(CORBA::_tc_float, tcd);
 }
 
+
 void
-CORBA::Any::operator<<=(CORBA::Double d)
+CORBA::Any::operator<<=(Double d)
 {
-  MemBufferedStream mbuf;
-  d >>= mbuf;
-  NP_replaceData(_tc_double, mbuf);
+  tcDescriptor tcd;
+  tcd.p_double = &d;
+  pdAnyP()->setData(CORBA::_tc_double, tcd);
 }
 #endif
+
 
 void
 CORBA::Any::operator<<=(const Any& a)
 {
-  MemBufferedStream mbuf;
-  a >>= mbuf;
-  NP_replaceData(_tc_any,mbuf);
-}	
+  tcDescriptor tcd;
+  // *** Should we really subvert the 'const' stuff here?
+  tcd.p_any = (CORBA::Any*)&a;
+  pdAnyP()->setData(CORBA::_tc_any, tcd);
+}
+
+
+void
+CORBA::Any::operator<<=(TypeCode_ptr tc)
+{
+  CORBA::TypeCode_member tcm(tc);
+  tcDescriptor tcd;
+  tcd.p_TypeCode = &tcm;
+  pdAnyP()->setData(CORBA::_tc_TypeCode, tcd);
+  tcm._ptr = CORBA::TypeCode::_nil();
+}
+
+
+static void
+setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr)
+{
+  *((CORBA::Object_ptr*)desc->opq_objref) = ptr;
+}
+
+
+static CORBA::Object_ptr
+getObjectPtr(tcObjrefDesc* desc)
+{
+  return (CORBA::Object_ptr) desc->opq_objref;
+}
 
 
 void
-CORBA::Any::operator<<=(CORBA::TypeCode_ptr tc)
+CORBA::Any::operator<<=(Object_ptr obj)
 {
-  // Copying version
-  MemBufferedStream mbuf;
-  *tc >>= mbuf;
-  NP_replaceData(_tc_TypeCode, mbuf);
+  tcDescriptor tcd;
+  tcd.p_objref.opq_objref = (void*) &obj;
+  tcd.p_objref.setObjectPtr = setObjectPtr;
+  tcd.p_objref.getObjectPtr = getObjectPtr;
+  pdAnyP()->setData(CORBA::_tc_Object, tcd);
 }
 
-void
-CORBA::Any::operator<<=(CORBA::TypeCode_ptr* tcp) 
-{
-  // Non - copying version
-  this->operator<<=(*tcp);
-  CORBA::release(*tcp);
-}
-
-    
-void
-CORBA::Any::operator<<=(const char*& s) 
-{
-  MemBufferedStream mbuf;
-  ULong _len = strlen(s) + 1;
-  _len >>= mbuf;
-  mbuf.put_char_array((const CORBA::Char*) s, _len);
-  NP_replaceData(_tc_string, mbuf);
-}
 
 void
-CORBA::Any::operator<<=(CORBA::Any::from_boolean f) 
+CORBA::Any::operator<<=(from_boolean f)
 {
-  MemBufferedStream mbuf;
-  f.val >>= mbuf;
-  NP_replaceData(_tc_boolean, mbuf);
-}
-      
-void
-CORBA::Any::operator<<=(CORBA::Any::from_char c)
-{
-  MemBufferedStream mbuf;
-  c.val >>= mbuf;
-  NP_replaceData(_tc_char, mbuf);
-}
-	
-
-void
-CORBA::Any::operator<<=(CORBA::Any::from_octet o) 
-{
-  MemBufferedStream mbuf;
-  o.val >>= mbuf;
-  NP_replaceData(_tc_octet, mbuf);
-}
-    
-CORBA::Boolean
-CORBA::Any::operator>>=(CORBA::Short& s) const
-{
-  if (!pd_tc->NP_expandEqual(_tc_short,1)) return 0;
-  else {
-    MemBufferedStream tmp_mbuf(pd_mbuf,1);
-    s <<= tmp_mbuf;
-    return 1;
-  }
-}
-    
-CORBA::Boolean
-CORBA::Any::operator>>=(CORBA::UShort& u) const
-{
-  if (!pd_tc->NP_expandEqual(_tc_ushort,1)) return 0;
-  else {
-    MemBufferedStream tmp_mbuf(pd_mbuf,1);
-    u <<= tmp_mbuf;
-    return 1;
-  }
+  tcDescriptor tcd;
+  tcd.p_boolean = &(f.val);
+  pdAnyP()->setData(CORBA::_tc_boolean, tcd);
 }
 
-CORBA::Boolean
-CORBA::Any::operator>>=(CORBA::Long& l) const
+
+void
+CORBA::Any::operator<<=(from_char c)
 {
-  if (!pd_tc->NP_expandEqual(_tc_long,1)) return 0;
-  else {
-    MemBufferedStream tmp_mbuf(pd_mbuf,1);
-    l <<= tmp_mbuf;
-    return 1;
-  }
+  tcDescriptor tcd;
+  tcd.p_char = &(c.val);
+  pdAnyP()->setData(CORBA::_tc_char, tcd);
 }
+
+
+void 
+CORBA::Any::operator<<=(from_octet o)
+{
+  tcDescriptor tcd;
+  tcd.p_octet = &(o.val);
+  pdAnyP()->setData(CORBA::_tc_octet, tcd);
+}
+
+
+// Internal functions used when inserting raw string data
+static CORBA::ULong 
+tcParser_fromstring_getLength(tcStringDesc* tcsd)
+{
+  return tcsd->opq_len;
+}
+
+
+static char*
+tcParser_fromstring_getBuffer(tcStringDesc* tcsd)
+{
+  return (char*) (tcsd->opq_string);
+}
+
+
+void
+CORBA::Any::operator<<=(const char* s)
+{
+  tcDescriptor tcd;
+  tcd.p_string.getLength = tcParser_fromstring_getLength;
+  tcd.p_string.getBuffer = tcParser_fromstring_getBuffer;
+  tcd.p_string.opq_string = (void*)s;
+  tcd.p_string.opq_len = strlen(s);
+
+  pdAnyP()->setData(CORBA::_tc_string, tcd);
+}  
+
+
+void 
+CORBA::Any::operator<<=(from_string s)
+{
+  tcDescriptor tcd;
+  tcd.p_string.getLength = tcParser_fromstring_getLength;
+  tcd.p_string.getBuffer = tcParser_fromstring_getBuffer;
+  tcd.p_string.opq_string = s.val;
+  tcd.p_string.opq_len = strlen(s.val);
+
+  if( s.bound ) {
+    CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_string_tc(s.bound);
+    pdAnyP()->setData(newtc, tcd);
+  }else
+    pdAnyP()->setData(CORBA::_tc_string, tcd);
+
+  if( s.nc )  CORBA::string_free(s.val);
+}
+
+
+// EXTRACTION OPERATORS
 
 CORBA::Boolean 
-CORBA::Any::operator>>=(CORBA::ULong& u) const 
+CORBA::Any::operator>>=(Short& s) const
 {
-  if (!pd_tc->NP_expandEqual(_tc_ulong,1)) return 0;
-  else {
-    MemBufferedStream tmp_mbuf(pd_mbuf,1);
-    u <<= tmp_mbuf;
-    return 1;
-  }
+  tcDescriptor tcd;
+  tcd.p_short = &s;
+  return pdAnyP()->getData(CORBA::_tc_short, tcd);
 }
+
     
+CORBA::Boolean
+CORBA::Any::operator>>=(UShort& u) const
+{
+  tcDescriptor tcd;
+  tcd.p_ushort = &u;
+  return pdAnyP()->getData(CORBA::_tc_ushort, tcd);
+}
+
+
+CORBA::Boolean
+CORBA::Any::operator>>=(Long& l) const
+{
+  tcDescriptor tcd;
+  tcd.p_long = &l;
+  return pdAnyP()->getData(CORBA::_tc_long, tcd);
+}
+
+  
+CORBA::Boolean
+CORBA::Any::operator>>=(ULong& u) const
+{
+  tcDescriptor tcd;
+  tcd.p_ulong = &u;
+  return pdAnyP()->getData(CORBA::_tc_ulong, tcd);
+}
+
+
 #if !defined(NO_FLOAT)
 CORBA::Boolean
-CORBA::Any::operator>>=(CORBA::Float& f) const
+CORBA::Any::operator>>=(Float& f) const
 {
-  if (!pd_tc->NP_expandEqual(_tc_float,1)) return 0;
-  else {
-    MemBufferedStream tmp_mbuf(pd_mbuf,1);
-    f <<= tmp_mbuf;
-    return 1;
-  }
+  tcDescriptor tcd;
+  tcd.p_float = &f;
+  return pdAnyP()->getData(CORBA::_tc_float, tcd);
 }
+
 
 CORBA::Boolean
-CORBA::Any::operator>>=(CORBA::Double& d) const
+CORBA::Any::operator>>=(Double& d) const
 {
-  if (!pd_tc->NP_expandEqual(_tc_double,1)) return 0;
-  else {
-    MemBufferedStream tmp_mbuf(pd_mbuf,1);
-    d <<= tmp_mbuf;
-    return 1;
-  }
+  tcDescriptor tcd;
+  tcd.p_double = &d;
+  return pdAnyP()->getData(CORBA::_tc_double, tcd);
 }
-
 #endif
 
-CORBA::Boolean
-CORBA::Any::operator>>=(CORBA::Any::to_boolean b) const
+
+CORBA::Boolean CORBA::Any::operator>>=(Any& a) const
 {
-  if (!pd_tc->NP_expandEqual(_tc_boolean,1)) return 0;
-  else {
-    MemBufferedStream tmp_mbuf(pd_mbuf,1);
-    b.ref <<= tmp_mbuf;
-    return 1;
-  }
+  tcDescriptor tcd;
+  tcd.p_any = &a;
+  return pdAnyP()->getData(CORBA::_tc_any, tcd);
 }
 
+
 CORBA::Boolean
-CORBA::Any::operator>>=(CORBA::Any::to_char c) const
+CORBA::Any::operator>>=(TypeCode_ptr& tc) const
 {
-  if (!pd_tc->NP_expandEqual(_tc_char,1)) return 0;
-  else {
-    MemBufferedStream tmp_mbuf(pd_mbuf,1);
-    c.ref <<= tmp_mbuf;
-    return 1;
-  }
+  CORBA::TypeCode_member tcm;
+  tcDescriptor tcd;
+  tcd.p_TypeCode = &tcm;
+  CORBA::Boolean ret = pdAnyP()->getData(CORBA::_tc_TypeCode, tcd);
+  if( ret )
+    tc = tcm._ptr;
+  else
+    tc = CORBA::TypeCode::_nil();
+  tcm._ptr = CORBA::TypeCode::_nil();
+  return ret;
 }
+
+
+CORBA::Boolean
+CORBA::Any::operator>>=(Object_ptr& obj) const
+{
+  tcDescriptor tcd;
+  tcd.p_objref.opq_objref = (void*) &obj;
+  tcd.p_objref.setObjectPtr = setObjectPtr;
+  tcd.p_objref.getObjectPtr = getObjectPtr;
+  CORBA::Boolean ret = pdAnyP()->getData(CORBA::_tc_Object, tcd);
+  if( !ret )  obj = CORBA::Object::_nil();
+  return ret;
+}
+
+
+CORBA::Boolean
+CORBA::Any::operator>>=(to_boolean b) const
+{
+  tcDescriptor tcd;
+  tcd.p_boolean = &b.ref;
+  return pdAnyP()->getData(CORBA::_tc_boolean, tcd);
+}
+
+
+CORBA::Boolean
+CORBA::Any::operator>>=(to_char c) const
+{
+  tcDescriptor tcd;
+  tcd.p_char = &c.ref;
+  return pdAnyP()->getData(CORBA::_tc_char, tcd);
+}
+
     
 CORBA::Boolean
-CORBA::Any::operator>>=(CORBA::Any::to_octet o) const
+CORBA::Any::operator>>=(to_octet o) const
 {
-  if (!pd_tc->NP_expandEqual(_tc_octet,1)) return 0;
-  else {
-    MemBufferedStream tmp_mbuf(pd_mbuf,1);
-    o.ref <<= tmp_mbuf;
-    return 1;
-  }
+  tcDescriptor tcd;
+  tcd.p_octet = &o.ref;
+  return pdAnyP()->getData(CORBA::_tc_octet, tcd);
 }
 
-CORBA::TypeCode_ptr 
-CORBA::Any::type() const 
+
+// Internal functions used when inserting raw string data
+static void
+tcParser_tostring_setLength(tcStringDesc* tcsd, CORBA::ULong len)
 {
-  if (pd_tc->NP_is_nil()) return TypeCode::_nil();
-  else return new TypeCode(*pd_tc);
+  if (tcsd->opq_string != NULL)
+    CORBA::string_free((char*) tcsd->opq_string);
+  tcsd->opq_string = CORBA::string_alloc(len);
+  if (tcsd->opq_string != NULL)
+    tcsd->opq_len = len;
 }
 
-const void *
+
+static CORBA::ULong 
+tcParser_tostring_getLength(tcStringDesc* tcsd)
+{
+  return tcsd->opq_len;
+}
+
+
+static char*
+tcParser_tostring_getBuffer(tcStringDesc* tcsd)
+{
+  return (char*) (tcsd->opq_string);
+}
+
+
+CORBA::Boolean
+CORBA::Any::operator>>=(char*& s) const
+{
+  tcDescriptor tcd;
+  tcd.p_string.setLength = tcParser_tostring_setLength;
+  tcd.p_string.getLength = tcParser_tostring_getLength;
+  tcd.p_string.getBuffer = tcParser_tostring_getBuffer;
+  tcd.p_string.opq_string = 0;
+  tcd.p_string.opq_len = 0;
+
+  if (pdAnyP()->getData(CORBA::_tc_string, tcd))
+    {
+      s = (char*) tcd.p_string.opq_string;
+      return 1;
+    }
+
+  return 0;
+}
+
+
+CORBA::Boolean
+CORBA::Any::operator>>=(to_string s) const
+{
+  CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_string_tc(s.bound);
+
+  tcDescriptor tcd;
+  tcd.p_string.setLength = tcParser_tostring_setLength;
+  tcd.p_string.getLength = tcParser_tostring_getLength;
+  tcd.p_string.getBuffer = tcParser_tostring_getBuffer;
+  tcd.p_string.opq_string = 0;
+  tcd.p_string.opq_len = 0;
+
+  if (pdAnyP()->getData(newtc, tcd))
+    {
+      s.val = (char*) tcd.p_string.opq_string;
+      return 1;
+    }
+
+  return 0;
+}
+
+
+// Internal function used when inserting base object pointers
+void
+tcParser_toobject_setObjectPtr(tcObjrefDesc* tcsd,
+			       CORBA::Object_ptr _ptr)
+{
+  *((CORBA::Object_ptr*) tcsd->opq_objref) = _ptr;
+}
+
+
+CORBA::Boolean
+CORBA::Any::operator>>=(to_object o) const
+{
+  tcDescriptor tcd;
+  tcd.p_objref.setObjectPtr = tcParser_toobject_setObjectPtr;
+  tcd.p_objref.opq_objref = &o.ref;
+  return pdAnyP()->getData(CORBA::_tc_Object, tcd);
+}
+
+
+void
+CORBA::Any::replace(TypeCode_ptr TCp, void* value, Boolean release)
+{
+  // Get rid of the old implementation object
+  delete pdAnyP();
+
+  if (value == 0)
+    {
+      // Create a writable, empty implementation object for the desired type
+      pd_ptr = new AnyP(TCp);
+    }
+  else
+    {
+      // Create a read-only implementation for the supplied buffer
+      pd_ptr = new AnyP(TCp, value, release);
+    }
+}
+
+
+CORBA::TypeCode_ptr
+CORBA::Any::type() const
+{
+  return CORBA::TypeCode::_duplicate(pdAnyP()->getTC_parser()->getTC());
+}
+
+
+const void*
 CORBA::Any::value() const
 {
-  return pd_mbuf.data();
+  return pdAnyP()->getBuffer();
 }
-	
