@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.8  1997/12/23 19:27:51  sll
+  Bug fixes.
+
   Revision 1.7  1997/12/18 17:28:43  sll
   *** empty log message ***
 
@@ -540,19 +543,62 @@ o2be_array::produce_typedef_hdr(fstream &s, o2be_typedef *tdef1,
   IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
 	    << "_forany " << tdef1->uqname() << "_forany;\n";
   IND(s); s << ((!(tdef1->defined_in()==idl_global->root()))?"static ":"extern ")
-	    << tdef1->uqname() << "_slice* "<< tdef1->uqname() << "_alloc() "
-	    << "{ return " << tdef2->unambiguous_name(tdef1) 
-	    << "_alloc(); }\n";
+	    << tdef1->uqname() << "_slice* "<< tdef1->uqname() << "_alloc() ";
+  if (!(tdef1->defined_in()==idl_global->root())) {
+    s << "{ return " << tdef2->unambiguous_name(tdef1) << "_alloc(); }\n";
+  }
+  else {
+    s << ";\n";
+  }
   IND(s); s << ((!(tdef1->defined_in()==idl_global->root()))?"static ":"extern ")
 	    << tdef1->uqname() << "_slice* "<< tdef1->uqname() << "_dup(const "
-	    << tdef1->uqname() << "_slice* p) "
-	    << "{ return " << tdef2->unambiguous_name(tdef1) 
-	    << "_dup(p); }\n";
+	    << tdef1->uqname() << "_slice* p) ";
+  if (!(tdef1->defined_in()==idl_global->root())) {
+    s << "{ return " << tdef2->unambiguous_name(tdef1) 
+      << "_dup(p); }\n";
+  }
+  else {
+    s << ";\n";
+  }
   IND(s); s << ((!(tdef1->defined_in()==idl_global->root()))?"static ":"extern ")
 	    << "void " << tdef1->uqname() << "_free( "
-	    << tdef1->uqname() << "_slice* p) "
-	    << "{ " << tdef2->unambiguous_name(tdef1) 
-	    << "_free(p); }\n\n";
+	    << tdef1->uqname() << "_slice* p) ";
+  if (!(tdef1->defined_in()==idl_global->root())) {
+    s << "{ " << tdef2->unambiguous_name(tdef1) 
+      << "_free(p); }\n\n";
+  }
+  else {
+    s << ";\n\n";
+  }
+}
+
+void
+o2be_array::produce_typedef_skel(fstream &s, o2be_typedef *tdef1,
+				 o2be_typedef *tdef2)
+{
+  if (tdef1->defined_in() == idl_global->root()) {
+    IND(s); s << "extern " << tdef1->fqname() << "_slice* " 
+	      << tdef1->fqname() << "_alloc() {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return " << tdef2->fqname() << "_alloc();\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << "extern " << tdef1->fqname() << "_slice* " 
+	      << tdef1->fqname() << "_dup(const " << tdef1->fqname()
+	      << "_slice* p) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return " << tdef2->fqname() << "_dup(p);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << "extern void " << tdef1->fqname() << "_free( " 
+	      << tdef1->fqname() << "_slice* p) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << tdef2->fqname() << "_free(p);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+  }
 }
 
 void
@@ -665,7 +711,7 @@ o2be_array::produce_typedef_in_union(fstream &s, const char *tname,
       break;
     }
 
-  IND(s); s << "typedef " << elm_fqname << " " << tname;
+  IND(s); s << "typedef " << elm_fqname << " _0RL" << tname;
   {
     int nd = n_dims();
     AST_Expression **d = dims();
