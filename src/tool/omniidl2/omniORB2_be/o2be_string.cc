@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.12  1999/05/26 10:42:12  sll
+  Now generate a typecode constant for anonymous bounded string defined in
+  operation signature.
+
   Revision 1.11  1999/03/11 16:26:08  djr
   Updated copyright notice
 
@@ -84,12 +88,21 @@ o2be_string::o2be_string(AST_Expression *v)
   p = new char [strlen(local_name()->get_string())+1];
   strcpy(p,local_name()->get_string());
   set__fqname(p);
+
   set_scopename("");
   set__scopename("");
-
-  set_tcname("");
   set_fqtcname("");
   set__fqtcname("");
+
+  if (max_length()) {
+    p = new char [32];
+    *p = '\0';
+    sprintf(p,"_tc_string_%d",max_length());
+    set_tcname(p);
+  }
+  else {
+    set_tcname("");
+  }
 }
 
 
@@ -156,6 +169,24 @@ o2be_string::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 {
   IND(s); s << "typedef char* " << tdef->uqname() << ";\n";
   IND(s); s << "typedef CORBA::String_var " << tdef->uqname() << "_var;\n";
+}
+
+
+void
+o2be_string::produce_buildDesc_support(std::fstream& s)
+{
+  // Bounded strings have different canonical names from each
+  // other, and from unbounded strings - but can all use the
+  // same buildDesc code. Thus we just use a MACRO for simplicity.
+
+  size_t len = max_length();
+  if( !len )  return;
+
+  const char* canon_name = canonical_name();
+
+  s << "#ifndef _0RL_buildDesc" << canon_name << "\n";
+  s << "#define _0RL_buildDesc" << canon_name << " _0RL_buildDesc_cstring\n";
+  s << "#endif\n\n";
 }
 
 
