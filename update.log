@@ -1,3 +1,21 @@
+Wed Aug  8 16:52:59 BST 2001 sll
+================================
+
+- New options to control where the unix domain socket is created and what
+  permission mode should be applied.
+    -ORBunixTransportDirectory <directory name>  (default to /tmp/omni-<uid>)
+    -ORBunixTransportPermission <mode bits in octal radix>
+
+  Now accepts shorthand -ORBendpoint giop:unix:
+
+include/omniORB4/omniORB.h
+
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixTransportImpl.cc
+
 Tue Aug  7 16:39:47 BST 2001 sll
 ================================
 
