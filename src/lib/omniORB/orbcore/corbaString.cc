@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9  1999/01/07 15:41:29  djr
+  *** empty log message ***
+
   Revision 1.8  1998/04/07 19:33:01  sll
   Replace cerr with omniORB::log
 
@@ -51,23 +54,24 @@
 
 #include <omniORB2/CORBA.h>
 
-char *
+
+char*
 CORBA::string_alloc(CORBA::ULong len)
 {
   return new char[(int)len+1];
 }
 
 void
-CORBA::string_free(char *p)
+CORBA::string_free(char* p)
 {
   delete [] p;
 }
 
-char *
-CORBA::string_dup(const char *p)
+char*
+CORBA::string_dup(const char* p)
 {
   if (p) {
-    char *q = CORBA::string_alloc((CORBA::ULong)(strlen(p)+1));
+    char* q = CORBA::string_alloc((CORBA::ULong)(strlen(p)+1));
     if (q) {
       strcpy(q,p);
       return q;
@@ -76,21 +80,7 @@ CORBA::string_dup(const char *p)
   return 0;
 }
 
-CORBA::String_member&
-CORBA::String_member::operator= (const CORBA::String_var &s)
-{
-  if (_ptr) {
-    string_free(_ptr);
-    _ptr = 0;
-  }
-  if ((const char *)s) {
-    _ptr = string_alloc((ULong)(strlen(s)+1));
-    strcpy(_ptr,s);
-  }
-  return *this;
-}
-
-CORBA::String_var::String_var(const CORBA::String_member &s)
+CORBA::String_var::String_var(const CORBA::String_member& s)
 {
   if ((const char*)s) {
     _data = string_alloc((ULong)(strlen(s)+1));
@@ -102,7 +92,7 @@ CORBA::String_var::String_var(const CORBA::String_member &s)
 
 
 CORBA::String_var&
-CORBA::String_var::operator= (const CORBA::String_member &s)
+CORBA::String_var::operator= (const CORBA::String_member& s)
 {
   if (_data) {
     string_free(_data);
@@ -125,6 +115,7 @@ CORBA::String_var::operator[] (CORBA::ULong index)
   return _data[index];
 }
 
+
 char
 CORBA::String_var::operator[] (CORBA::ULong index) const
 {
@@ -134,102 +125,102 @@ CORBA::String_var::operator[] (CORBA::ULong index) const
   return _data[index];
 }
 
+
 void
-CORBA::String_member::operator>>= (NetBufferedStream &s) const
+CORBA::String_member::operator>>= (NetBufferedStream& s) const
 {
-  CORBA::ULong _len;
-  if (!_ptr) {
+  if( _ptr ) {
+    CORBA::ULong _len = strlen((char*)_ptr) + 1;
+    _len >>= s;
+    s.put_char_array((CORBA::Char*)_ptr, _len);
+  }
+  else {
     if (omniORB::traceLevel > 1) {
       _CORBA_null_string_ptr(0);
     }
-    _len = 1;
-    _len >>= s;
-    CORBA::Char _dummy = '\0';
-    _dummy >>= s;
+    CORBA::ULong(1) >>= s;
+    CORBA::Char('\0') >>= s;
   }
-  else {
-    _len = strlen((char *)_ptr)+1;
-    _len >>= s;
-    s.put_char_array((CORBA::Char *)_ptr,_len);
-  }
-  return;
 }
 
+
 void
-CORBA::String_member::operator<<= (NetBufferedStream &s)
-{  
-  CORBA::ULong _len;
-  _len <<= s;
-  if (!_len) {
-    if (omniORB::traceLevel > 1) {
-      _CORBA_null_string_ptr(1);
-    }
-    _len = 1;
-  }
-  else if (s.RdMessageUnRead() < _len)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  if (_ptr) {
+CORBA::String_member::operator<<= (NetBufferedStream& s)
+{
+  if( _ptr ) {
     CORBA::string_free(_ptr);
     _ptr = 0;
   }
-  _ptr = CORBA::string_alloc(_len);
-  if (!_ptr)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  if (_len > 1)
-    s.get_char_array((CORBA::Char *)_ptr,_len);
-  else
-    *((CORBA::Char*)_ptr) <<= s;
-    
-  return;
+
+  CORBA::ULong len;
+  len <<= s;
+  if( !len && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(1);
+
+  char* p = CORBA::string_alloc(len ? len - 1 : 1);
+  if( !p )  throw CORBA::NO_MEMORY(0, CORBA::COMPLETED_MAYBE);
+
+  if( len ) {
+    try {
+      s.get_char_array((CORBA::Char*)p, len);
+    }
+    catch(...) {
+      CORBA::string_free(p);
+      throw;
+    }
+    if( p[len - 1] != '\0' ) {
+      CORBA::string_free(p);
+      throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+    }
+  }
+  else  *p = '\0';
+
+  _ptr = p;
 }
 
+
 void
-CORBA::String_member::operator>>= (MemBufferedStream &s) const
+CORBA::String_member::operator>>= (MemBufferedStream& s) const
 {
-  CORBA::ULong _len;
-  if (!_ptr) {
+  if( _ptr ) {
+    CORBA::ULong _len = strlen((char*)_ptr) + 1;
+    _len >>= s;
+    s.put_char_array((CORBA::Char*)_ptr, _len);
+  }
+  else {
     if (omniORB::traceLevel > 1) {
       _CORBA_null_string_ptr(0);
     }
-    _len = 1;
-    _len >>= s;
-    CORBA::Char _dummy = '\0';
-    _dummy >>= s;
+    CORBA::ULong(1) >>= s;
+    CORBA::Char('\0') >>= s;
   }
-  else {
-    _len = strlen((char *)_ptr)+1;
-    _len >>= s;
-    s.put_char_array((CORBA::Char *)_ptr,_len);
-  }
-  return;
 }
 
+
 void
-CORBA::String_member::operator<<= (MemBufferedStream &s)
+CORBA::String_member::operator<<= (MemBufferedStream& s)
 {
-  CORBA::ULong _len;
-  _len <<= s;
-  if (!_len) {
-    if (omniORB::traceLevel > 1) {
-      _CORBA_null_string_ptr(1);
-    }
-    _len = 1;
-  }
-  else if (s.overrun(_len))
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  if (_ptr) {
+  if( _ptr ) {
     CORBA::string_free(_ptr);
     _ptr = 0;
   }
-  _ptr = CORBA::string_alloc(_len);
-  if (!_ptr)
+
+  CORBA::ULong len;
+  len <<= s;
+  if( !len || s.RdMessageUnRead() < len )
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  if (_len > 1)
-    s.get_char_array((CORBA::Char *)_ptr,_len);
-  else
-    *((CORBA::Char*)_ptr) <<= s;
-  return;
+
+  char* p = CORBA::string_alloc(len - 1);
+  if( !p )  throw CORBA::NO_MEMORY(0, CORBA::COMPLETED_MAYBE);
+
+  s.get_char_array((CORBA::Char*)p, len);
+  if( p[len - 1] != '\0' ) {
+    CORBA::string_free(p);
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+  }
+
+  _ptr = p;
 }
+
 
 size_t
 CORBA::String_member::NP_alignedSize(size_t initialoffset) const
@@ -239,7 +230,7 @@ CORBA::String_member::NP_alignedSize(size_t initialoffset) const
     alignedsize += 4 + 1;
   }
   else {
-    alignedsize += 4 + strlen((char *)_ptr) + 1;
+    alignedsize += 4 + strlen((char*)_ptr) + 1;
   }
   return alignedsize;
 }
