@@ -1,3 +1,13 @@
+Mon Sep 25 11:52:16 BST 2000 dpg1
+=================================
+
+- Remove use of _T as a template class name
+
+include/omniORB3/CORBA_sysdep.h
+include/omniORB3/poa.h
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
 Fri Sep 22 11:45:38 BST 2000 dpg1
 =================================
 

@@ -8,6 +8,18 @@
 
 <buglist>
 
+<bug id="14" date="Mon Sep 25 11:52:16 BST 2000" user="dpg1">
+
+  <summary>Clash with name _T</summary>
+  <reported>All sorts of people</reported>
+  <text>
+  omniORB used <code>_T</code> as a template class name in various
+  places. This causes problems with standard headers on some
+  platforms, which <code>#define _T</code>. All uses of
+  <code>_T</code> have been changed.
+  </text>
+</bug>
+
 <bug id="13" date="Tue Sep 21 15:13:05 BST 2000" user="sll">
 
   <summary>Workaround for the Sun C++ 5.0 or Forte WS 6.0 exception

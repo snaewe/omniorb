@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.18  2000/09/25 11:03:27  dpg1
+ Remove use of _T as a template class name
+
  Revision 1.1.2.17  2000/08/17 09:00:53  dpg1
  GCC claims to support long long on all platforms.
 
@@ -408,13 +411,6 @@
 // conflicts with the Status type defined in the CORBA namespace.
 // To remove this error, make sure that the offending header file is included
 // after omniORB2/CORBA.h.
-#endif
-
-#ifdef _T
-#error "Name conflict: _T is defined as a macro in a header file included before this."
-// FreeBSD's ctype.h, and maybe other files, define _T. omniORB uses
-// _T in various places as a class name. Fix this error by moving the
-// offending header after all omniORB includes.
 #endif
 
 
