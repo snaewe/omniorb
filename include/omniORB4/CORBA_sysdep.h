@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.11  2001/06/20 18:39:03  sll
+ On solaris with gcc 3.0, there is no need to provide a prototype for
+ gethostname.
+
  Revision 1.2.2.10  2001/06/15 10:23:40  sll
  Added wchar size for HPUX.
 
@@ -497,7 +501,7 @@
 #elif defined(__sunos__) && defined(__sparc__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
-# if __OSVERSION__ == 5
+# if __OSVERSION__ == 5 && (!defined(__GNUG__) || __GNUG__ < 3)
 #  define NEED_GETHOSTNAME_PROTOTYPE
 # endif
 #elif defined(__x86__)
