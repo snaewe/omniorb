@@ -63,6 +63,12 @@ lib = $(patsubst %,$(LibPattern),omnithread)
 endif
 endif
 
+ifeq ($(ThreadSystem),Mach)
+CXXSRCS = mach.cc
+OBJS = mach.o
+DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
+endif
+
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
 micro_version = $(word 3,$(subst ., ,$(VERSION)))
