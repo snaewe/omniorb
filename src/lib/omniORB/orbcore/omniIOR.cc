@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2002/09/08 21:12:39  dgrisby
+  Properly handle IORs with no usable profiles.
+
   Revision 1.1.2.12  2002/03/27 11:44:53  dpg1
   Check in interceptors things left over from last week.
 
@@ -313,27 +316,28 @@ omniIOR::getIORInfo() const {
 
   if (!pd_iorInfo) {
 
-    ASSERT_OMNI_TRACEDMUTEX_HELD(*omniIOR::lock, 0);
     omni_tracedmutex_lock sync(*omniIOR::lock);
 
-    if (!pd_iorInfo) {
-      if (pd_addr_selected_profile_index < 0) {
-	OMNIORB_ASSERT(0);
-      }
+    CORBA::Boolean is_iiop = 0;
 
+    if (!pd_iorInfo) {
       IIOP::ProfileBody iiop;
       const IOP::TaggedProfileList& profiles = pd_iopProfiles;
-      CORBA::Boolean is_iiop = (profiles[pd_addr_selected_profile_index].tag == IOP::TAG_INTERNET_IOP);
 
-      if ( is_iiop ) {
-	IIOP::unmarshalProfile(profiles[pd_addr_selected_profile_index],iiop);
-      }
+      if (pd_addr_selected_profile_index >= 0) {
+	is_iiop = (profiles[pd_addr_selected_profile_index].tag
+		   == IOP::TAG_INTERNET_IOP);
 
-      for (CORBA::ULong index = 0; index < profiles.length(); index++) {
-	if ( profiles[index].tag == IOP::TAG_MULTIPLE_COMPONENTS ) {
-	  IIOP::unmarshalMultiComponentProfile(profiles[index],
-					       iiop.components);
-	  is_iiop = 1;
+	if ( is_iiop )
+	  IIOP::unmarshalProfile(profiles[pd_addr_selected_profile_index],
+				 iiop);
+
+	for (CORBA::ULong index = 0; index < profiles.length(); index++) {
+	  if ( profiles[index].tag == IOP::TAG_MULTIPLE_COMPONENTS ) {
+	    IIOP::unmarshalMultiComponentProfile(profiles[index],
+						 iiop.components);
+	    is_iiop = 1;
+	  }
 	}
       }
       omniIOR* p = (omniIOR*)this;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2002/09/08 21:12:38  dgrisby
+  Properly handle IORs with no usable profiles.
+
   Revision 1.1.2.11  2002/01/02 18:13:43  dpg1
   Platform fixes/additions.
 
@@ -183,7 +186,7 @@ public:
     _OMNI_NS(giopAddressList)          pd_addresses;
     _CORBA_ULong                       pd_orb_type;
     _OMNI_NS(omniCodeSet::TCS_C)*      pd_tcs_c;
-    _OMNI_NS(omniCodeSet::TCS_W)*                pd_tcs_w;
+    _OMNI_NS(omniCodeSet::TCS_W)*      pd_tcs_w;
     IORExtraInfoList                   pd_extra_info;
   };
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.28  2002/09/08 21:12:39  dgrisby
+  Properly handle IORs with no usable profiles.
+
   Revision 1.2.2.27  2002/08/16 16:03:31  dgrisby
   Interceptor tweaks.
 
@@ -804,10 +807,10 @@ omni::createIdentity(omniIOR* ior, const char* target, CORBA::Boolean locked)
     for (index = 0; index < total; index++) {
       if ( profiles[index].tag == IOP::TAG_INTERNET_IOP ) break;
     }
-    if (index == total) {
-      return 0;
-    }
-    ior->addr_selected_profile_index(index);
+    if (index < total)
+      ior->addr_selected_profile_index(index);
+    else
+      omniORB::logs(25, "createIdentity for IOR with no IIOP profiles.");
   }
 
   omniIOR::IORInfo* info = ior->getIORInfo();
@@ -832,8 +835,9 @@ omni::createIdentity(omniIOR* ior, const char* target, CORBA::Boolean locked)
 
   _CORBA_Unbounded_Sequence_Octet object_key;
 
-  IIOP::unmarshalObjectKey(profiles[ior->addr_selected_profile_index()],
-			   object_key);
+  if (ior->addr_selected_profile_index() >= 0)
+    IIOP::unmarshalObjectKey(profiles[ior->addr_selected_profile_index()],
+			     object_key);
 
   if (is_local) {
 

@@ -1,3 +1,14 @@
+Sun Sep  8 22:04:49 BST 2002 dgrisby
+====================================
+
+- Properly handle IORs with no usable profiles.
+
+include/omniORB4/omniIOR.h
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
 Fri Sep  6 23:21:54 BST 2002 dgrisby
 ====================================
 

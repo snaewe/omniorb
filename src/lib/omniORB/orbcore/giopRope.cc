@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.22  2002/09/08 21:12:38  dgrisby
+  Properly handle IORs with no usable profiles.
+
   Revision 1.1.4.21  2002/08/23 14:15:02  dgrisby
   Avoid exception with bidir when no POA.
 
@@ -288,17 +291,14 @@ giopRope::acquireClient(const omniIOR* ior,
     //
     
     // Do a sanity check here. It could be the case that this rope has
-    // no valid address to use. This can be the case if we have unmarshalled
-    // an IOR in which none of the profiles we can support. In theory it
-    // shouldn't happen because all IOR must support IIOP. However, this
-    // could be a special ORB version in which the IIOP transport is taken
-    // out. Notice that we do not raise an exception at the time when the IOR
-    // was unmarshalled because we would like to be able to receive and pass
-    // along object references that we ourselves cannot talk to.
-    //
-    // XXX Actually this is not quite true yet. If the IOR hasn't at
-    // least have an IIOP profile, MARSHAL exception is raised! This should
-    // be fixed.
+    // no valid address to use. This can be the case if we have
+    // unmarshalled an IOR which has no profiles we can support. In
+    // theory it shouldn't happen because all IORs must support IIOP.
+    // However, this could be a special ORB version in which the IIOP
+    // transport is taken out. Notice that we do not raise an
+    // exception at the time when the IOR was unmarshalled because we
+    // would like to be able to receive and pass along object
+    // references that we ourselves cannot talk to.
     if (pd_addresses_order.empty()) {
       OMNIORB_THROW(TRANSIENT,TRANSIENT_NoUsableProfile,CORBA::COMPLETED_NO);
     }
@@ -546,8 +546,6 @@ int
 giopRope::selectRope(const giopAddressList& addrlist,
 		     omniIOR::IORInfo* info,
 		     Rope*& r,CORBA::Boolean& loc) {
-
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
 
   omni_tracedmutex_lock sync(*omniTransportLock);
 
