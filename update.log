@@ -1,3 +1,11 @@
+Fri Nov  3 10:28:33 GMT 2000 sll
+================================
+
+- Fixed race condition in locateObject()
+
+src/lib/omniORB2/orbcore/objectRef.cc
+
+
 Wed Jun  7 16:33:11 BST 2000 dpg1
 =================================
 

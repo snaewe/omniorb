@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.28.2.1  2000/11/03 10:28:18  sll
+  Fixed race condition in locateObject() and locatePyObject().
+
   Revision 1.28  1999/08/30 17:10:24  sll
   omniObject::wrappedObjectTable initialiser fixed for MSVC++.
 
@@ -417,17 +420,15 @@ omni::disposeObject(omniObject *obj)
 omniObject *
 omni::locateObject(omniObjectManager*,omniObjectKey &k)
 {
-  omniObject::objectTableLock.lock();
-  omniObject **p = &omniObject::localObjectTable[omniORB::hash(k)];
-  while (*p) {
-    if ((*p)->pd_objkey.native == k) {
-      (*p)->setRefCount((*p)->getRefCount()+1);
-      omniObject::objectTableLock.unlock();
-      return *p;
+  omni_mutex_lock sync(omniObject::objectTableLock);
+  omniObject* p = omniObject::localObjectTable[omniORB::hash(k)];
+  while (p) {
+    if (p->pd_objkey.native == k) {
+      p->setRefCount(p->getRefCount()+1);
+      return p;
     }
-    p = &((*p)->pd_next);
+    p = p->pd_next;
   }
-  omniObject::objectTableLock.unlock();
   return 0;
 }
 
@@ -435,17 +436,15 @@ omni::locateObject(omniObjectManager*,omniObjectKey &k)
 omniObject *
 omni::locatePyObject(omniObjectManager*,omniObjectKey &k)
 {
-  omniObject::objectTableLock.lock();
-  omniObject **p = &omniObject::localPyObjectTable[omniORB::hash(k)];
-  while (*p) {
-    if ((*p)->pd_objkey.native == k) {
-      (*p)->setRefCount((*p)->getRefCount()+1);
-      omniObject::objectTableLock.unlock();
-      return *p;
+  omni_mutex_lock sync(omniObject::objectTableLock);
+  omniObject* p = omniObject::localPyObjectTable[omniORB::hash(k)];
+  while (p) {
+    if (p->pd_objkey.native == k) {
+      p->setRefCount(p->getRefCount()+1);
+      return p;
     }
-    p = &((*p)->pd_next);
+    p = p->pd_next;
   }
-  omniObject::objectTableLock.unlock();
   return 0;
 }
 
@@ -456,7 +455,7 @@ omni::createObjRef(const char* mostDerivedRepoId,
 		   IOP::TaggedProfileList* profiles,
 		   CORBA::Boolean release)
 {
-  CORBA::Octet *objkey = 0;
+  _CORBA_Octet *objkey = 0;
 
   CORBA::proxyObjectFactory *p;
   {
@@ -665,7 +664,7 @@ omni::stringToObject(const char* str)
   char* repoId;
   IOP::TaggedProfileList* profiles;
 
-  IOP::EncapStrToIor((const CORBA::Char*)str, (CORBA::Char*&)repoId, profiles);
+  IOP::EncapStrToIor((const CORBA::Char*)str, (_CORBA_Char*&)repoId, profiles);
   if (*repoId == '\0' && profiles->length() == 0) {
     // nil object reference
     delete [] repoId;
