@@ -1,3 +1,11 @@
+Tue Mar 17 12:21:49 GMT 1998 ewc
+================================
+
+- Bug fix to alias expand function for TypeCodes.
+
+src/lib/omniORB2/typecode.cc
+
+
 Fri Mar 13 17:36:00 GMT 1998 sll
 ================================
 
