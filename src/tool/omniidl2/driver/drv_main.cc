@@ -93,10 +93,10 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 static void
 DRV_version()
 {
-  cerr << "Omniidl 2.4.1\n"
+  std::cerr << "Omniidl 2.4.1\n"
        << "Copyright (C) 1996, 1997 Olivetti & Oracle Research Laborartory, Cambridge, UK.\n"
        << "Omniidl comes with ABSOLUTELY NO WARRANTY.\n"
-       << endl;
+       << std::endl;
 }
 
 /*
@@ -123,7 +123,7 @@ DRV_drive(char *s)
    * Pass through CPP
    */
   if (idl_global->compile_flags() & IDL_CF_INFORMATIVE)
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": preprocessing ")
 	 << s
 	 << "\n";
@@ -144,7 +144,7 @@ DRV_drive(char *s)
    * Parse
    */
   if (idl_global->compile_flags() & IDL_CF_INFORMATIVE)
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": parsing ")
 	 << s
 	 << "\n";
@@ -157,7 +157,7 @@ DRV_drive(char *s)
  
   if (_unlink((idl_global->temp_filename())->get_string()) == -1)
 	{
-	 cerr << idl_global->prog_name()
+	 std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": Could not remove cpp output file ")
 	 << (idl_global->temp_filename())->get_string()
 	 << "\n";
@@ -170,7 +170,7 @@ DRV_drive(char *s)
     // Remove the temporary file (containing the preprocessor output).
  
   if (unlink((idl_global->temp_filename())->get_string()) == -1) {
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
          << GTDEVEL(": Could not remove cpp output file ")
          << (idl_global->temp_filename())->get_string()
          << "\n";
@@ -184,13 +184,13 @@ DRV_drive(char *s)
    * If there were any errors, stop
    */
   if (idl_global->err_count() > 0) {
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
 	 << ": "
 	 << s 
 	 << GTDEVEL(": found ");
-    cerr << idl_global->err_count()
+    std::cerr << idl_global->err_count()
 	 << GTDEVEL(" error");
-    cerr << (idl_global->err_count() > 1
+    std::cerr << (idl_global->err_count() > 1
 	    ? GTDEVEL("s") : "")
     	 << "\n";
     /*
@@ -204,19 +204,19 @@ DRV_drive(char *s)
    */
   if ((idl_global->compile_flags() & IDL_CF_INFORMATIVE)
       && (idl_global->compile_flags() & IDL_CF_DUMP_AST))
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": dump ")
 	 << s
 	 << "\n";
   if (idl_global->compile_flags() & IDL_CF_DUMP_AST) {
-    cerr << GTDEVEL("Dump of AST:\n");
-    idl_global->root()->dump(cerr);
+    std::cerr << GTDEVEL("Dump of AST:\n");
+    idl_global->root()->dump(std::cerr);
   }
   /*
    * Call the main entry point for the BE
    */
   if (idl_global->compile_flags() & IDL_CF_INFORMATIVE)
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": BE processing on ")
 	 << s
 	 << "\n";
@@ -273,9 +273,9 @@ main(int argc, char **argv)
 
 #if defined(__WIN32__) || defined(__VMS)
 
-	  cerr << idl_global->prog_name()
+	  std::cerr << idl_global->prog_name()
 		   << ": Only one IDL file may be specified at the command line."
-	 	   << endl;
+	 	   << std::endl;
 	  exit(EXIT_FAILURE);
 #else
 

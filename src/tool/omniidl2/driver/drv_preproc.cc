@@ -159,7 +159,7 @@ void
 DRV_cpp_putarg(char *str)
 {
   if (argcount >= MAX_ARGLIST) {
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
          << GTDEVEL(": More than ")
 	 << MAX_ARGLIST
 	 << GTDEVEL(" arguments to preprocessor\n");
@@ -228,14 +228,14 @@ DRV_copy_input(FILE *fin, char *fn)
   FILE	*f = fopen(fn, "w");
 
   if (f == NULL) {
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": cannot open temp file ")
 	 << fn
 	 << GTDEVEL(" for writing\n");
     exit(EXIT_FAILURE);
   }
   if (fin == NULL) {
-      cerr << idl_global->prog_name()
+      std::cerr << idl_global->prog_name()
            << GTDEVEL(": cannot open input file\n");
       exit(EXIT_FAILURE);
   }
@@ -338,14 +338,14 @@ DRV_pre_proc(char *myfile)
     {
       int fd = open(tmp_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);
       if (fd < 0) {
-        cerr << idl_global->prog_name()
+        std::cerr << idl_global->prog_name()
     	  << GTDEVEL(": cannot open temp file ")
  	  << tmp_file << " for writing\n";
         exit(EXIT_FAILURE);
       }
       int result = dup2(fd, 1);
       if (result < 0) {
-        cerr << idl_global->prog_name()
+        std::cerr << idl_global->prog_name()
     	  << GTDEVEL(": temp file ")
   	  << tmp_file << " dup error\n";
         exit(EXIT_FAILURE);
@@ -353,13 +353,13 @@ DRV_pre_proc(char *myfile)
       close(fd);
     }
     execvp(arglist[0], arglist);
-    cerr << idl_global->prog_name() 
+    std::cerr << idl_global->prog_name() 
          << GTDEVEL(": execvp of ")
 	 << arglist[0]
 	 << GTDEVEL(" failed\n");
     exit(EXIT_FAILURE);
   case -1:
-    cerr << idl_global->prog_name() << GTDEVEL(": fork failed\n");
+    std::cerr << idl_global->prog_name() << GTDEVEL(": fork failed\n");
     exit(EXIT_FAILURE);
   default:	/* Parent - wait */
 #if defined(hpux) || defined(__hpux)
@@ -369,7 +369,7 @@ DRV_pre_proc(char *myfile)
 #if defined(WIFEXITED) && defined(WEXITSTATUS)
     if (WIFEXITED(wait_status)) {
       if (WEXITSTATUS(wait_status) != 0) {
-        cerr << idl_global->prog_name()
+        std::cerr << idl_global->prog_name()
 	     << GTDEVEL(": Preprocessor returned non-zero status ")
 	     << (int) WEXITSTATUS(wait_status)
 	     << "\n";
@@ -379,7 +379,7 @@ DRV_pre_proc(char *myfile)
       }
     } else {
       // child terminated abnormally - wait_status is meaningless
-      cerr << idl_global->prog_name()
+      std::cerr << idl_global->prog_name()
 	   << GTDEVEL(": Preprocessor terminated abnormally")
 	   << "\n";
       if (copy_src) unlink(tmp_ifile);
@@ -392,7 +392,7 @@ DRV_pre_proc(char *myfile)
 #else
     if (wait_status != 0) {
 #endif	// defined(apollo) || defined(SUNOS4)
-      cerr << idl_global->prog_name()
+      std::cerr << idl_global->prog_name()
 	   << GTDEVEL(": Preprocessor returned non-zero status ")
 #if defined(apollo) || defined(SUNOS4)
 	   << wait_status.w_status
@@ -412,7 +412,7 @@ DRV_pre_proc(char *myfile)
   }
   FILE * yyin = fopen(tmp_file, "r");
   if (yyin == NULL) {
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": Could not open cpp output file ")
 	 << tmp_file
 	 << "\n";
@@ -425,7 +425,7 @@ DRV_pre_proc(char *myfile)
   }
   if (copy_src) {
     if (unlink(tmp_ifile) != 0) {
-      cerr << idl_global->prog_name()
+      std::cerr << idl_global->prog_name()
 	   << GTDEVEL(": Could not remove cpp input file ")
 	   << tmp_ifile
 	   << "\n";
@@ -433,7 +433,7 @@ DRV_pre_proc(char *myfile)
     }
   }
   if (unlink(tmp_file) != 0) {
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": Could not remove cpp output file ")
 	 << tmp_file
 	 << "\n";
@@ -464,12 +464,12 @@ DRV_pre_proc(char *myfile)
   tmpfn = _tempnam(NULL,"idl_");
   if (tmpfn == NULL)
     {
-      cerr << "Error creating temporary filename." << endl;
+      std::cerr << "Error creating temporary filename." << std::endl;
       exit(-1);
     }
   else if (strlen(tmpfn) > 127)
     {
-      cerr << "Temporary filename too large." << endl;
+      std::cerr << "Temporary filename too large." << std::endl;
       exit(-1);
     }
   
@@ -480,12 +480,12 @@ DRV_pre_proc(char *myfile)
 
   if (tmpfn == NULL)
     {
-      cerr << "Error creating temporary filename." << endl;
+      std::cerr << "Error creating temporary filename." << std::endl;
       exit(-1);
     }
   else if (strlen(tmpfn) > 127)
     {
-      cerr << "Temporary filename too large." << endl;
+      std::cerr << "Temporary filename too large." << std::endl;
       exit(-1);
     }
   strcpy(tmp_ifile,tmpfn);
@@ -532,14 +532,14 @@ DRV_pre_proc(char *myfile)
       int fd = _open(tmp_file, _O_RDWR | _O_CREAT | _O_TRUNC, 
 			                                        _S_IWRITE);
       if (fd < 0) {
-        cerr << idl_global->prog_name()
+        std::cerr << idl_global->prog_name()
     	  << GTDEVEL(": cannot open temp file ")
  	  << tmp_file << " for writing\n";
         exit(EXIT_FAILURE);
       }
       int result = _dup2(fd, _fileno(stdout));
       if (result < 0) {
-        cerr << idl_global->prog_name()
+        std::cerr << idl_global->prog_name()
     	  << GTDEVEL(": temp file ")
   	  << tmp_file << " dup error\n";
         exit(EXIT_FAILURE);
@@ -550,16 +550,16 @@ DRV_pre_proc(char *myfile)
 			                 (const char* const*) arglist);
 	if (spawn_rc != 0)
 		{
-			cerr << idl_global->prog_name() 
+			std::cerr << idl_global->prog_name() 
 				 << GTDEVEL(": spawnvp of ")
 				 << arglist[0]
 				 << GTDEVEL(" failed\n");
-			cerr << "Preprocessor returned non-zero status " << spawn_rc << endl;
+			std::cerr << "Preprocessor returned non-zero status " << spawn_rc << std::endl;
 			
 			_close(1);
 			if (copy_src) {
 				 if (_unlink(tmp_ifile) == -1) {
-					cerr << idl_global->prog_name()
+					std::cerr << idl_global->prog_name()
 						 << GTDEVEL(": Could not remove cpp input file ")
 						 << tmp_ifile
 						 << "\n";
@@ -568,7 +568,7 @@ DRV_pre_proc(char *myfile)
 			 }
 
 			if (_unlink(tmp_file) == -1) {
-				 cerr << idl_global->prog_name()
+				 std::cerr << idl_global->prog_name()
 					  << GTDEVEL(": Could not remove cpp output file ")
 					  << tmp_file
 					  << "\n";
@@ -581,7 +581,7 @@ DRV_pre_proc(char *myfile)
   }
   FILE * yyin = fopen(tmp_file, "r+");
   if (yyin == NULL) {
-    cerr << idl_global->prog_name()
+    std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": Could not open cpp output file ")
 	 << tmp_file
 	 << "\n";
@@ -597,7 +597,7 @@ DRV_pre_proc(char *myfile)
   }
   if (copy_src) {
     if (_unlink(tmp_ifile) == -1) {
-      cerr << idl_global->prog_name()
+      std::cerr << idl_global->prog_name()
 	   << GTDEVEL(": Could not remove cpp input file ")
 	   << tmp_ifile
 	   << "\n";
@@ -614,7 +614,7 @@ DRV_pre_proc(char *myfile)
   fclose(yyin);
   if (_unlink((idl_global->temp_filename())->get_string()) == -1)
 	{
-	 cerr << idl_global->prog_name()
+	 std::cerr << idl_global->prog_name()
 	 << GTDEVEL(": Could not remove cpp output file ")
 	 << (idl_global->temp_filename())->get_string()
 	 << "\n";
@@ -713,10 +713,10 @@ DRV_pre_proc(char *myfile)
 			vmsArg = "/Defi=\"" + unixArg.substr(2) + "\"";
 		    } break;
 		    default: {
-			cerr << "Unix preprocessor switch: "
+			std::cerr << "Unix preprocessor switch: "
 			     << unixArg
 			     << " does not have corresponding VMS qualifier."
-			     << endl;
+			     << std::endl;
 		    }
 		}
 	    } else {
@@ -728,16 +728,16 @@ DRV_pre_proc(char *myfile)
 
 	int spawn_rc = system(commandLine.c_str());
 	if (spawn_rc != 0 && spawn_rc & 1==0) {
-	    cerr << idl_global->prog_name() 
+	    std::cerr << idl_global->prog_name() 
 		     << GTDEVEL(": command ")
 		     << commandLine
 		     << GTDEVEL(" failed\n");
-	    cerr << "Preprocessor returned non-zero status " << spawn_rc
-		 << endl;
+	    std::cerr << "Preprocessor returned non-zero status " << spawn_rc
+		 << std::endl;
 			
 	    if (copy_src) {
 		if (unlink(tmp_ifile) == -1) {
-		    cerr << idl_global->prog_name()
+		    std::cerr << idl_global->prog_name()
 			     << GTDEVEL(": Could not remove cpp input file ")
 			     << tmp_ifile
 			     << "\n";
@@ -746,7 +746,7 @@ DRV_pre_proc(char *myfile)
 	    }
 
 	    if (unlink(tmp_file) == -1) {
-		     cerr << idl_global->prog_name()
+		     std::cerr << idl_global->prog_name()
 			      << GTDEVEL(": Could not remove cpp output file ")
 			      << tmp_file
 			      << "\n";
@@ -759,7 +759,7 @@ DRV_pre_proc(char *myfile)
     }	// scope for no apparent reason.
     FILE * yyin = fopen(tmp_file, "r+");
     if (yyin == NULL) {
-	cerr << idl_global->prog_name()
+	std::cerr << idl_global->prog_name()
 	     << GTDEVEL(": Could not open cpp output file ")
 	     << tmp_file
 	     << "\n";
@@ -775,7 +775,7 @@ DRV_pre_proc(char *myfile)
     }
     if (copy_src) {
 	if (unlink(tmp_ifile) == -1) {
-	    cerr << idl_global->prog_name()
+	    std::cerr << idl_global->prog_name()
 	       << GTDEVEL(": Could not remove cpp input file ")
 	       << tmp_ifile
 	       << "\n";
@@ -790,7 +790,7 @@ DRV_pre_proc(char *myfile)
 	/* Remove the temporary file [containing the preprocessor output. */
 	fclose(yyin);
 	if (unlink((idl_global->temp_filename())->get_string()) == -1) {
-	    cerr << idl_global->prog_name()
+	    std::cerr << idl_global->prog_name()
 	    << GTDEVEL(": Could not remove cpp output file ")
 	    << (idl_global->temp_filename())->get_string()
 	    << "\n";

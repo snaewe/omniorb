@@ -343,7 +343,7 @@ FE_init_stage1()
 {
   idl_global->set_scopes(new UTL_ScopeStack());
   if (idl_global->scopes() == NULL) {
-    cerr << GTDEVEL("IDL: FE init failed to create scope stack, exiting\n");
+    std::cerr << GTDEVEL("IDL: FE init failed to create scope stack, exiting\n");
     exit(99);
   }
 }
@@ -360,7 +360,7 @@ FE_init_stage2()
    * Check that the BE init created a generator object
    */
   if (idl_global->gen() == NULL) {
-    cerr << GTDEVEL("IDL: BE did not initialize idl_global->gen(), exiting\n");
+    std::cerr << GTDEVEL("IDL: BE did not initialize idl_global->gen(), exiting\n");
     exit(99);
   }
   /*
@@ -370,7 +370,7 @@ FE_init_stage2()
   r = idl_global->gen()->create_root(create_scoped_name(""), NULL);
   idl_global->set_root(r);
   if (r == NULL) {
-    cerr << GTDEVEL("IDL: FE init failed to create AST root, exiting\n");
+    std::cerr << GTDEVEL("IDL: FE init failed to create AST root, exiting\n");
     exit(99);
   }
   /*

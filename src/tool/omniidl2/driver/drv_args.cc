@@ -107,23 +107,23 @@ DRV_usage()
       return;
     }
 
-  cerr << idl_global->prog_name()
+  std::cerr << idl_global->prog_name()
        << GTDEVEL(": usage: ")
        << idl_global->prog_name()
        << GTDEVEL(" [flag | file]*\n");
-  cerr << GTDEVEL("Legal flags:\n");
-  cerr << GTDEVEL(" -A...\t\t\tlocal implementation-specific escape\n");
-  cerr << GTDEVEL(" -Dname[=value]\t\tdefines name for preprocessor\n");
-  cerr << GTDEVEL(" -E\t\t\truns preprocessor only, prints on stdout\n");
-  cerr << GTDEVEL(" -Idir\t\t\tincludes dir in search path for preprocessor\n");
-  cerr << GTDEVEL(" -Uname\t\t\tundefines name for preprocessor\n");
-  cerr << GTDEVEL(" -V\t\t\tprints version info then exits\n");
-  cerr << GTDEVEL(" -W[p|b],arg1,argn\tpasses args to preprocessor or BE\n");
-  cerr << GTDEVEL(" -Yp,path\t\tdefines location of preprocessor\n");
-  cerr << GTDEVEL(" -bback_end\t\tcauses specified back end to be used\n");
-  cerr << GTDEVEL(" -u\t\t\tprints usage message and exits\n");
-  cerr << GTDEVEL(" -v\t\t\ttraces compilation stages\n");
-  cerr << GTDEVEL(" -w\t\t\tsuppresses IDL compiler warning messages\n");
+  std::cerr << GTDEVEL("Legal flags:\n");
+  std::cerr << GTDEVEL(" -A...\t\t\tlocal implementation-specific escape\n");
+  std::cerr << GTDEVEL(" -Dname[=value]\t\tdefines name for preprocessor\n");
+  std::cerr << GTDEVEL(" -E\t\t\truns preprocessor only, prints on stdout\n");
+  std::cerr << GTDEVEL(" -Idir\t\t\tincludes dir in search path for preprocessor\n");
+  std::cerr << GTDEVEL(" -Uname\t\t\tundefines name for preprocessor\n");
+  std::cerr << GTDEVEL(" -V\t\t\tprints version info then exits\n");
+  std::cerr << GTDEVEL(" -W[p|b],arg1,argn\tpasses args to preprocessor or BE\n");
+  std::cerr << GTDEVEL(" -Yp,path\t\tdefines location of preprocessor\n");
+  std::cerr << GTDEVEL(" -bback_end\t\tcauses specified back end to be used\n");
+  std::cerr << GTDEVEL(" -u\t\t\tprints usage message and exits\n");
+  std::cerr << GTDEVEL(" -v\t\t\ttraces compilation stages\n");
+  std::cerr << GTDEVEL(" -w\t\t\tsuppresses IDL compiler warning messages\n");
 }
 
 /*
@@ -172,7 +172,7 @@ DRV_parse_args(long ac, char **av)
 	    DRV_cpp_putarg(buffer);
 	    i++;
 	  } else {
-	    cerr << GTDEVEL("IDL: missing argument after '")
+	    std::cerr << GTDEVEL("IDL: missing argument after '")
 		 << av[i] 
 		 << GTDEVEL("' flag\n");
 	    exit(99);
@@ -194,7 +194,7 @@ DRV_parse_args(long ac, char **av)
 	    i++;
 	    s = av[i];
 	  } else {
-	    cerr << GTDEVEL("IDL: missing argument after '")
+	    std::cerr << GTDEVEL("IDL: missing argument after '")
 		 << av[i]
 		 << GTDEVEL("' flag\n");
 	    exit(99);
@@ -203,7 +203,7 @@ DRV_parse_args(long ac, char **av)
 	  s = av[i] + 2;
 	switch (*s) {
 	default:
-	    cerr << GTDEVEL("IDL: -W must be followed by 'p' or 'b'\n");
+	    std::cerr << GTDEVEL("IDL: -W must be followed by 'p' or 'b'\n");
 	    exit(99);
 	case 'p':
 	  if (*(s + 1) == ',')
@@ -221,7 +221,7 @@ DRV_parse_args(long ac, char **av)
 	    i++;
 	    s = av[i];
 	  } else {
-	    cerr << GTDEVEL("IDL: missing argument after '")
+	    std::cerr << GTDEVEL("IDL: missing argument after '")
 		 << av[i]
 		 << GTDEVEL("' flag\n");
 	    exit(99);
@@ -245,7 +245,7 @@ DRV_parse_args(long ac, char **av)
 	    i++;
 	    s = av[i];
 	  } else {
-	    cerr << GTDEVEL("IDL: missing argument after '")
+	    std::cerr << GTDEVEL("IDL: missing argument after '")
 		 << av[i]
 		 << GTDEVEL("' flag\n");
 	    exit(99);
@@ -272,7 +272,7 @@ DRV_parse_args(long ac, char **av)
 				      IDL_CF_NOWARNINGS);
 	break;
       default:
-	cerr << GTDEVEL("IDL: Illegal option '") << av[i] << "'\n";
+	std::cerr << GTDEVEL("IDL: Illegal option '") << av[i] << "'\n";
 	idl_global->set_compile_flags(idl_global->compile_flags() |
 				      IDL_CF_ONLY_USAGE);
 	break;
