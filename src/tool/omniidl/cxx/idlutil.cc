@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3.2.6  2001/06/21 10:09:48  sll
+// HPUX does not have strtoul, use sscanf as a replacement.
+//
 // Revision 1.3.2.5  2001/06/18 17:42:59  dpg1
 // Preliminary support for Darwin / Mac OS X.
 //
@@ -164,6 +167,28 @@ IdlIntLiteral
 idl_strtoul(const char* text, int base)
 {
   return strtouq(text, 0, base);
+}
+
+#  elif defined(__hpux__)
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  IdlIntLiteral ull;
+  switch (base) {
+  case 8:
+    sscanf(text, "%llo", &ull);
+    break;
+  case 10:
+    sscanf(text, "%lld", &ull);
+    break;
+  case 16:
+    sscanf(text, "%llx", &ull);
+    break;
+  default:
+    abort();
+  }
+  return ull;
 }
 
 #  else

@@ -1,3 +1,11 @@
+Thu Jun 21 11:08:39 BST 2001 sll
+================================
+
+- HPUX does not have strtoul, use sscanf as a replacement.c
+
+src/tool/omniidl/cxx/idlutil.cc
+
+
 Wed Jun 20 16:11:24 BST 2001 sll
 ================================
 
