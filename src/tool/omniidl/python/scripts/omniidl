@@ -1,0 +1,143 @@
+#!/usr/bin/env python
+
+# IDL compiler
+
+import _omniidl
+import sys, getopt, os, os.path, string
+
+def version():
+    print "omniidl version 0.1"
+
+omniidl = os.path.basename(sys.argv[0])
+
+def usage():
+    print "\nUsage:", omniidl, " [flags] file1 file2 ..."
+    print """
+The supported flags are:
+
+  -Dname[=value]  Defines name for preprocessor
+  -Idir           Includes dir in search path for preprocessor
+  -Uname          Undefines name for preprocessor
+  -E              Runs preprocessor only, prints of stdout
+  -Ypath          Sets path for the preprocessor
+  -N              Does not run pre-processor
+  -Wparg          Sends arg to the preprocessor
+  -Wbarg          Sends arg to the back-end
+  -bback_end      Selects the back-end to be used
+  -d              Dumps the syntax tree then exits
+  -V              Prints version info then exits
+  -u              Prints usage message and exits
+  -v              Traces compilation stages
+"""
+
+preprocessor_args = ["-D__OMNIIDL__"]
+preprocessor_only = 0
+preprocessor_path = "/lib/cpp"
+no_preprocessor   = 0
+backend           = "dump"
+backend_args      = []
+dump_only         = 0
+verbose           = 0
+
+def parseArgs(args):
+    global preprocessor_args, preprocessor_only, preprocessor_path
+    global no_preprocessor, backend, backend_args, dump_only, verbose
+
+    try:
+        opts,files = getopt.getopt(args, "D:I:U:EY:N:W:b:dVuv")
+    except getopt.error, e:
+        sys.stderr.write("Error in arguments: " + e + "\n")
+        sys.stderr.write("Use " + omniidl + " -u for usage\n")
+        sys.exit(1)
+
+    for opt in opts:
+        o,a = opt
+
+        if o == "-D":
+            preprocessor_args.append("-D" + a)
+
+        elif o == "-I":
+            preprocessor_args.append("-I" + a)
+
+        elif o == "-U":
+            preprocessor_args.append("-U" + a)
+
+        elif o == "-E":
+            preprocessor_only = 1
+
+        elif o == "-Y":
+            preprocessor_path = a
+
+        elif o == "-N":
+            no_preprocessor = 1
+
+        elif o == "-W":
+            if   a[0] == "p": preprocessor_args.append(a[1:])
+            elif a[0] == "b": backend_args.append(a[1:])
+            else:
+                sys.stderr.write("Error in arguments: option " + o + \
+                                 " not recognized\n")
+                sys.stderr.write("Use " + omniidl + " -u for usage\n")
+
+        elif o == "-b":
+            backend = a
+
+        elif o == "-d":
+            dump_only = 1
+
+        elif o == "-V":
+            version()
+            sys.exit(0)
+
+        elif o == "-u":
+            usage()
+            sys.exit(0)
+
+        elif o == "-v":
+            verbose = verbose + 1
+
+    return files
+
+
+def main(argv):
+    global preprocessor_args, preprocessor_only, preprocessor_path
+    global no_preprocessor, backend, backend_args, dump_only, verbose
+
+    files = parseArgs(argv[1:])
+
+    for file in files:
+        if not os.path.isfile(file):
+            sys.stderr.write(omniidl + ": `" + file + "' does not exist\n")
+
+        preproc_cmd = preprocessor_path + " " + \
+                      string.join(preprocessor_args, " ") + " " + file
+
+        if not no_preprocessor:
+            if verbose: print omniidl + ": Preprocessing `" + file + "'"
+
+            if preprocessor_only:
+                err = os.system(preproc_cmd)
+                if err:
+                    sys.stderr.write(omniidl + \
+                                     ": Error running preprocessor\n")
+                    sys.exit(1)
+                sys.exit(0)
+
+            file = os.popen(preproc_cmd, "r")
+        else:
+            file = open(file, "r")
+
+        if verbose: print omniidl + ": Running front end"
+
+        if dump_only:
+            _omniidl.dump(file)
+        else:
+            tree = _omniidl.compile(file)
+
+            if verbose: print omniidl + ": Running back-end `" + backend + "'"
+
+            exec "import be." + backend
+            exec "be." + backend + ".run(tree)"
+
+
+main(sys.argv)
