@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.22  1998/08/11 18:14:24  sll
+  Added support for Phar Lap ETS kernel. It supports win32 API but do not
+  have registry.
+
   Revision 1.21  1998/04/18 10:10:16  sll
   Added support for Borland C++.
 
@@ -112,7 +116,7 @@ static const CosNaming::NamingContext_proxyObjectFactory CosNaming_NamingContext
 
 initFile::initFile() : fData(0), fsize(0), currpos(0)
 {
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__ETS_KERNEL__)
   use_registry = 0;
   curr_index = 0;
 #endif
@@ -142,7 +146,7 @@ void initFile::initialize()
 
   if ((tmp_fname = getenv(INIT_ENV_VAR)) == NULL)
     {
-#if defined(UnixArchitecture) || defined(__VMS)
+#if defined(UnixArchitecture) || defined(__VMS) || defined(__ETS_KERNEL__)
       config_fname = CORBA::string_dup(CONFIG_DEFAULT_LOCATION);
 #elif defined(NTArchitecture)
 
@@ -190,7 +194,7 @@ void initFile::initialize()
 
 #endif
 
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__ETS_KERNEL__)
   if (!use_registry) 
     {
 #endif
@@ -202,7 +206,7 @@ void initFile::initialize()
 	  // the information is made.
 	  return;
 	}
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__ETS_KERNEL__)
     }
 #endif
 
@@ -338,7 +342,7 @@ int initFile::getnextentry(CORBA::String_var& entryname,
 {
   // Get next entry in config file, and associated data
 
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__ETS_KERNEL__)
   // Use registry for NT if environment variable for config file not set:
   if (use_registry)
     return getRegistryEntry(entryname,data);
@@ -413,7 +417,7 @@ int initFile::getnextentry(CORBA::String_var& entryname,
 
 
 
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__ETS_KERNEL__)
 
 // NT member function to use registry:
 
@@ -512,7 +516,7 @@ void initFile::invref(char* entryname)
 }
 
 
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__ETS_KERNEL__)
 
 // NT-specific error reporting functions:
 
