@@ -328,7 +328,7 @@ ifeq ($(notdir $(CXX)),aCC)
 
 DIR_CPPFLAGS += +Z
 
-libname = _omniidlmodule.so
+libname = _omniidlmodule.sl
 soname = $(libname).$(IDLMODULE_MAJOR)
 lib = $(soname).$(IDLMODULE_MINOR)
 
