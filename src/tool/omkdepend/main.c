@@ -106,7 +106,7 @@ catch (sig)
 	fatalerr ("got signal %d\n", sig);
 }
 
-#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32)
+#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32) || defined(__nextstep__)
 #define USGISH
 #endif
 

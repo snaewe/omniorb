@@ -106,8 +106,8 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #endif
 
 #if defined(__nextstep__)
-#include <unistd.h>
-#include <wait.h>
+#include <sys/types.h>
+typedef int pid_t;
 #endif
 
 #if !defined(__WIN32__) && !defined(__VMS)
