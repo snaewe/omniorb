@@ -28,11 +28,15 @@
 
 
 /* $Log$
-/* Revision 1.4  1998/08/05 18:03:36  sll
-/* Fixed bug in Any::operator>>=(NetBufferedStream|MemBufferedStream).
-/* Previously, basic data types other than any, objref and typecode would be
-/* marshalled incorrectly.
+/* Revision 1.5  1998/08/10 18:08:26  sll
+/* Fixed Any ctor and Any::replace() for untyped values. Now accept null
+/* pointer for the value parameter for all typecode types.
 /*
+ * Revision 1.4  1998/08/05 18:03:36  sll
+ * Fixed bug in Any::operator>>=(NetBufferedStream|MemBufferedStream).
+ * Previously, basic data types other than any, objref and typecode would be
+ * marshalled incorrectly.
+ *
  * Revision 1.3  1998/04/08 16:07:32  sll
  * Minor change to help some compiler to find the right TypeCode ctor.
  *
@@ -111,13 +115,10 @@ CORBA::Any::Any(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release,
 
       if (release) delete[] _val;
     }
-  else if (!tc->NP_expandEqual(CORBA::_tc_null,1) && 
-	   !tc->NP_expandEqual(CORBA::_tc_void,1))
-    {
-      CORBA::release(pd_tc);
-      pd_tc = 0;
-      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-    }
+  else {
+    // value == 0, If the typecode is not _tc_null or _tc_void, this
+    // any is partially initialised with only the typecode and no value.
+  }
 }  
 	  
 
@@ -567,14 +568,10 @@ CORBA::Any::replace(CORBA::TypeCode_ptr tc, void* value,
       tcEngine.parse(dbuf);
       if (release) delete[] _val;
     }
-  else if (!tc->NP_expandEqual(CORBA::_tc_null,1) && 
-	   !tc->NP_expandEqual(CORBA::_tc_void,1))
-    {
-      CORBA::release(pd_tc);
-      pd_tc = 0;
-      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-    }
-
+  else {
+    // value == 0, If the typecode is not _tc_null or _tc_void, this
+    // any is partially initialised with only the typecode and no value.
+  }
   pd_mbuf = dbuf;
 }
 
