@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/08/03 17:45:09  sll
+  Moved OMNIORB_THROW so that it can be used in stub headers
+
   Revision 1.1.4.1  2001/04/18 17:18:17  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -70,37 +73,6 @@
 
 #ifndef __OMNIORB_EXCEPTION_H__
 #define __OMNIORB_EXCEPTION_H__
-
-
-#ifndef OMNIORB_NO_EXCEPTION_LOGGING
-
-OMNI_NAMESPACE_BEGIN(omni)
-
-class omniExHelper {
-public:
-
-#define OMNIORB_EX(name) \
-  static void name(const char*, int, CORBA::ULong, CORBA::CompletionStatus);
-
-  OMNIORB_FOR_EACH_SYS_EXCEPTION(OMNIORB_EX)
-
-#undef OMNIORB_EX
-
-  static const char* strip(const char*);
-};
-
-OMNI_NAMESPACE_END(omni)
-
-#define OMNIORB_THROW(name, minor, completion) \
-  _OMNI_NS(omniExHelper)::name(__FILE__, __LINE__, minor, completion)
-
-#else
-
-
-#define OMNIORB_THROW(name, minor, completion) \
-  throw CORBA::name(minor, completion)
-
-#endif
 
 
 #define OMNIORB_DEFINE_USER_EX_COMMON_FNS(scope, name, repoid) \
