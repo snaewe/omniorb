@@ -28,6 +28,12 @@
 
 /*
   $Log$
+  Revision 1.1.4.17  2001/09/04 14:44:25  sll
+  Added the boolean argument to notifyCommFailure to indicate if
+  omniTransportLock is held by the caller.
+  Make sure reference count rd_nwaiting and wr_nwaiting are correct when a
+  timeout has occurred.
+
   Revision 1.1.4.16  2001/09/03 16:51:01  sll
   Added the deadline parameter and access functions. All member functions
   that previously had deadline arguments now use the per-object deadline
@@ -173,21 +179,25 @@ giopStream::rdLock() {
   while (pd_strand->rd_nwaiting < 0) {
     pd_strand->rd_nwaiting--;
 
+    CORBA::Boolean hastimeout = 0;
+
     // Now blocks.
     if (!(pd_deadline_secs || pd_deadline_nanosecs))
       pd_strand->rdcond.wait();
     else {
-      if (!pd_strand->rdcond.timedwait(pd_deadline_secs,
-				       pd_deadline_nanosecs)) {
-	// Timeout. 
-	errorOnReceive(0,__FILE__,__LINE__,0);
-      }
+      hastimeout = !(pd_strand->rdcond.timedwait(pd_deadline_secs,
+						 pd_deadline_nanosecs));
     }
 
     if (pd_strand->rd_nwaiting >= 0)
       pd_strand->rd_nwaiting--;
     else
       pd_strand->rd_nwaiting++;
+
+    if (hastimeout) {
+      // Timeout. 
+      errorOnReceive(0,__FILE__,__LINE__,0,1);
+    }
   }
   pd_strand->rd_nwaiting = -pd_strand->rd_nwaiting - 1;
 
@@ -234,21 +244,25 @@ giopStream::wrLock() {
   while (pd_strand->wr_nwaiting < 0) {
     pd_strand->wr_nwaiting--;
 
+    CORBA::Boolean hastimeout = 0;
+
     // Now blocks.
     if (!(pd_deadline_secs || pd_deadline_nanosecs))
       pd_strand->wrcond.wait();
     else {
-      if (!pd_strand->wrcond.timedwait(pd_deadline_secs,
-				       pd_deadline_nanosecs)) {
-	// Timeout. 
-	errorOnReceive(0,__FILE__,__LINE__,0);
-      }
+      hastimeout = !(pd_strand->wrcond.timedwait(pd_deadline_secs,
+						 pd_deadline_nanosecs));
     }
 
     if (pd_strand->wr_nwaiting >= 0)
       pd_strand->wr_nwaiting--;
     else
       pd_strand->wr_nwaiting++;
+
+    if (hastimeout) {
+      // Timeout. 
+      errorOnReceive(0,__FILE__,__LINE__,0,1);
+    }
   }
   pd_strand->wr_nwaiting = -pd_strand->wr_nwaiting - 1;
 
@@ -320,21 +334,25 @@ giopStream::sleepOnRdLock() {
   if (pd_strand->rd_nwaiting < 0) {
     pd_strand->rd_nwaiting--;
 
+    CORBA::Boolean hastimeout = 0;
+
     // Now blocks.
     if (!(pd_deadline_secs || pd_deadline_nanosecs))
       pd_strand->rdcond.wait();
     else {
-      if (!pd_strand->rdcond.timedwait(pd_deadline_secs,
-				       pd_deadline_nanosecs)) {
-	// Timeout. 
-	errorOnReceive(0,__FILE__,__LINE__,0);
-      }
+      hastimeout = !(pd_strand->rdcond.timedwait(pd_deadline_secs,
+						 pd_deadline_nanosecs));
     }
 
     if (pd_strand->rd_nwaiting >= 0)
       pd_strand->rd_nwaiting--;
     else
       pd_strand->rd_nwaiting++;
+
+    if (hastimeout) {
+      // Timeout. 
+      errorOnReceive(0,__FILE__,__LINE__,0,1);
+    }
   }
 }
 
@@ -367,15 +385,14 @@ giopStream::sleepOnRdLockAlways() {
 
   pd_strand->rd_n_justwaiting++;
 
+  CORBA::Boolean hastimeout = 0;
+
   // Now blocks.
   if (!(pd_deadline_secs || pd_deadline_nanosecs))
     pd_strand->rdcond.wait();
   else {
-    if (!pd_strand->rdcond.timedwait(pd_deadline_secs,
-				     pd_deadline_nanosecs)) {
-      // Timeout. 
-      errorOnReceive(0,__FILE__,__LINE__,0);
-    }
+      hastimeout = !(pd_strand->rdcond.timedwait(pd_deadline_secs,
+						 pd_deadline_nanosecs));
   }
 
   pd_strand->rd_n_justwaiting--;
@@ -384,6 +401,11 @@ giopStream::sleepOnRdLockAlways() {
     pd_strand->rd_nwaiting--;
   else
     pd_strand->rd_nwaiting++;
+
+  if (hastimeout) {
+    // Timeout. 
+    errorOnReceive(0,__FILE__,__LINE__,0,1);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -436,7 +458,8 @@ giopStream::RdLockIsHeld(giopStrand* strand) {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::notifyCommFailure(CORBA::ULong& minor,
+giopStream::notifyCommFailure(CORBA::Boolean,
+			      CORBA::ULong& minor,
 			      CORBA::Boolean& retry)
 {
   minor = 0;
@@ -646,12 +669,12 @@ giopStream::releaseInputBuffer(giopStream_Buffer* p) {
 ////////////////////////////////////////////////////////////////////////
 void
 giopStream::errorOnReceive(int rc, const char* filename, CORBA::ULong lineno,
-			   giopStream_Buffer* buf) {
+			   giopStream_Buffer* buf,CORBA::Boolean heldlock) {
 
   CORBA::ULong minor;
   CORBA::Boolean retry;
 
-  notifyCommFailure(minor,retry);
+  notifyCommFailure(heldlock,minor,retry);
   if (rc == 0) {
     // Timeout.
     // We do not use the return code from the function.
@@ -686,7 +709,7 @@ giopStream::ensureSaneHeader(const char* filename, CORBA::ULong lineno,
   if (hdr[0] != 'G' || hdr[1] != 'I' || hdr[2] != 'O' || hdr[3] != 'P') {
     // Terrible! This is not a GIOP header.
     pd_strand->state(giopStrand::DYING);
-    notifyCommFailure(minor,retry);
+    notifyCommFailure(0,minor,retry);
     giopStream_Buffer::deleteBuffer(buf);
     CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
 			filename,lineno);
@@ -714,7 +737,7 @@ giopStream::inputMessage() {
   if (pd_strand->state() == giopStrand::DYING) {
     CORBA::ULong minor;
     CORBA::Boolean retry;
-    notifyCommFailure(minor,retry);
+    notifyCommFailure(0,minor,retry);
     CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
 			__FILE__,__LINE__);
     // never reaches here.
@@ -748,7 +771,7 @@ giopStream::inputMessage() {
       buf->last += rsz;
     }
     else {
-      errorOnReceive(rsz,__FILE__,__LINE__,buf);
+      errorOnReceive(rsz,__FILE__,__LINE__,buf,0);
       // never reaches here.
     }
   }
@@ -793,7 +816,7 @@ giopStream::inputMessage() {
 	total -= rsz;
       }
       else {
-	errorOnReceive(rsz,__FILE__,__LINE__,buf);
+	errorOnReceive(rsz,__FILE__,__LINE__,buf,0);
 	// never reaches here.
       }
     }
@@ -859,7 +882,7 @@ giopStream::inputChunk(CORBA::ULong maxsize) {
     pd_strand->state(giopStrand::DYING);
     CORBA::ULong minor;
     CORBA::Boolean retry;
-    notifyCommFailure(minor,retry);
+    notifyCommFailure(0,minor,retry);
     CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
 			__FILE__,__LINE__);
     // never reaches here.
@@ -889,7 +912,7 @@ giopStream::inputChunk(CORBA::ULong maxsize) {
       maxsize -= rsz;
     }
     else {
-      errorOnReceive(rsz,__FILE__,__LINE__,buf);
+      errorOnReceive(rsz,__FILE__,__LINE__,buf,0);
       // never reaches here.
     }
   }
@@ -918,7 +941,7 @@ giopStream::inputCopyChunk(void* dest, CORBA::ULong size) {
     pd_strand->state(giopStrand::DYING);
     CORBA::ULong minor;
     CORBA::Boolean retry;
-    notifyCommFailure(minor,retry);
+    notifyCommFailure(0,minor,retry);
     CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
 			__FILE__,__LINE__);
     // never reaches here.
@@ -946,7 +969,7 @@ giopStream::inputCopyChunk(void* dest, CORBA::ULong size) {
 
     }
     else {
-      errorOnReceive(rsz,__FILE__,__LINE__,0);
+      errorOnReceive(rsz,__FILE__,__LINE__,0,0);
       // never reaches here.
     }
   }
@@ -964,7 +987,7 @@ giopStream::sendChunk(giopStream_Buffer* buf) {
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {
-      errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__);
+      errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__,0);
     }
     if (omniORB::trace(20)) {
       omniORB::logger log;
@@ -997,7 +1020,7 @@ giopStream::sendChunk(giopStream_Buffer* buf) {
       first += ssz;
     }
     else {
-      errorOnSend(ssz,__FILE__,__LINE__);
+      errorOnSend(ssz,__FILE__,__LINE__,0);
       // never reaches here.
     }
   }
@@ -1015,7 +1038,7 @@ giopStream::sendCopyChunk(void* buf,CORBA::ULong size) {
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {
-      errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__);
+      errorOnSend(TRANSIENT_ConnectFailed,__FILE__,__LINE__,0);
     }
     if (omniORB::trace(20)) {
       omniORB::logger log;
@@ -1045,7 +1068,7 @@ giopStream::sendCopyChunk(void* buf,CORBA::ULong size) {
       buf = (void*)((omni::ptr_arith_t)buf + ssz);
     }
     else {
-      errorOnSend(ssz,__FILE__,__LINE__);
+      errorOnSend(ssz,__FILE__,__LINE__,0);
       // never reaches here.
     }
   }
@@ -1054,12 +1077,13 @@ giopStream::sendCopyChunk(void* buf,CORBA::ULong size) {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::errorOnSend(int rc, const char* filename, CORBA::ULong lineno) {
+giopStream::errorOnSend(int rc, const char* filename, CORBA::ULong lineno,
+			CORBA::Boolean heldlock) {
 
   CORBA::ULong minor;
   CORBA::Boolean retry;
 
-  notifyCommFailure(minor,retry);
+  notifyCommFailure(heldlock,minor,retry);
   if (rc == 0) {
     // Timeout.
     // We do not use the return code from the function.
