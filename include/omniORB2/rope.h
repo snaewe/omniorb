@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.11  1999/08/30 16:55:43  sll
+  Replaced WrTestLock and heartbeat in WrLock with clicksDecrAndGet,
+  clicksGet and clicksSet.
+
   Revision 1.10  1999/07/02 19:17:33  sll
   Removed inlined virtual dtor. Some compilers generate a copy of the
   dtor per compilation unit.
@@ -440,12 +444,9 @@ public:
     // returns false, then the connection to the remote end is really
     // broken and may be considered as a hard failure.
 
-    static _CORBA_Boolean WrTestLock(Strand*s,_CORBA_Boolean& heartbeat);
-
   protected:
     void RdLock(_CORBA_Boolean held_rope_mutex=0);
-    void WrLock(_CORBA_Boolean held_rope_mutex=0,
-		_CORBA_Boolean clear_heartbeat=1);
+    void WrLock(_CORBA_Boolean held_rope_mutex=0);
     void RdUnlock(_CORBA_Boolean held_rope_mutex=0);
     void WrUnlock(_CORBA_Boolean held_rope_mutex=0);
     // IMPORTANT: to avoid deadlock, the following protocol MUST BE obeyed.
@@ -458,49 +459,44 @@ public:
     //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
     //          Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
     //          Hold <MUTEX> on enter if held_rope_mutex == TRUE
-    //      For WrTestLock()
-    //          Must hold <MUTEX> on enter
+    //
     // Post-condition:
     //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
     //        Restore <MUTEX> to the same state as indicated by held_rope_mutex
-    //      For WrTestLock()
-    //        Still held <MUTEX> on exit
     //
     // WrLock blocks until it has acquired a write lock on the strand.
-    // WrTestLock checks if a write lock is currently held on the strand.
-    // It returns 1 if no write lock is held or 0 otherwise.
+    // The same applies to RdLock.
     //
-    // A strand has a status boolean known as the 'heartbeat', this boolean
-    // value may be set/unset and read as a side-effect of WrLock and 
-    // WrTestLock. The initial value of the boolean is 0.
-    //
-    // If <clear_heartbeat> is 1 (the default), WrLock will set the heartbeat
-    // boolean to 0 after it has acquired the write lock. If <clear_heartbeat>
-    // is 0, WrLock will leave the heartbeat boolean unchanged.
-    // 
-    // The heartbeat boolean will be updated by WrTestLock with the value
-    // of <heartbeat> if no write lock is held on the strand. The original 
-    // value of the boolean is returned in <heartbeat>.
-    //
-    // The value of the heartbeat boolean *does not* affect the internal
-    // functions of the strand. However, it is used as a way to detect
-    // whether a strand is idle and can be closed down. The algorithm is as
-    // follows:
-    //      A scavenger thread periodically scans all the strands. It tests
-    //      the write lock on the strand using WrTestLock. It sets the
-    //     heartbeat boolean to 1 and examines the original value returned by 
-    //      WrTestLock. If the original value is also 1, it knows the strand 
-    //      has been idle for at least one scan period. It may then shutdown
-    //      the strand.
-    // 
-    //      To prevent a strand from being shutdown, the thread that uses
-    //      the strand must reset the heartbeat boolean to 0 at least once
-    //      within the scan period. This can be done conveniently as a 
-    //      side-effect of WrLock, i.e. with the <clear_heartbeat> = 1. 
-    //      Typically, a thread acquires a write lock on the strand
-    //      when it is about to send a reply (on the server side) or a request
-    //      (on the client side). This is a good indication that the strand
-    //      is in active use.
+
+  public:
+    static int clicksDecrAndGet(Strand*s);
+    // Atomic operation. Decrement pd_clicks and returns its new value.
+    // Concurrency Control:
+    // 	  MUTEX = <s>->pd_rope->pd_lock
+    // Pre-condition:
+    //          Must hold <MUTEX> on enter
+    // Post-condition:
+    //        Still held <MUTEX> on exit
+
+    static int clicksGet(Strand*s);
+    // Atomic operation. Get the value of pd_clicks.
+    // Concurrency Control:
+    // 	  MUTEX = <s>->pd_rope->pd_lock
+    // Pre-condition:
+    //          Must hold <MUTEX> on enter
+    // Post-condition:
+    //        Still held <MUTEX> on exit
+
+  protected:
+    void clicksSet(int clicks, _CORBA_Boolean held_rope_mutex=0);
+    // Atomic operation. Set the value of pd_clicks with <clicks>
+    // Concurrency Control:
+    // 	  MUTEX = pd_strand->pd_rope->pd_lock
+    // Pre-condition:
+    //          Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
+    //          Hold <MUTEX> on enter if held_rope_mutex == TRUE
+    // Post-condition:
+    //        Restore <MUTEX> to the same state as indicated by held_rope_mutex
 
     Strand *get_strand() { return pd_strand; }
     // Concurrency Control:
@@ -546,9 +542,9 @@ private:
   Rope           *pd_rope;
   _CORBA_Boolean  pd_dying;
   _CORBA_Boolean  pd_heapAllocated;
-  _CORBA_Boolean  pd_heartbeat;
   int		  pd_refcount;
-  _CORBA_ULong     pd_seqNumber;
+  _CORBA_ULong    pd_seqNumber;
+  int             pd_clicks;
 
   // Make the default constructor private. This traps at compile time
   // any attempt to allocate an array of objects using the new operator.
