@@ -180,7 +180,7 @@ c) Set up macros and libraries:
 
    If you are building a debug executable, the debug version of the
    libraries: omniORB400_rtd.lib, omniDynamic400_rtd.lib and
-   omnithread3_rtd.lib should be used.
+   omnithread30_rtd.lib should be used.
 
 d) Your project is now set up, and you can build it.
 
@@ -188,8 +188,8 @@ d) Your project is now set up, and you can build it.
 If you want to use the static versions of omniORB and omnithread, you
 must add the macro _WINSTATIC (see step (c) 4, above), and replace the
 libraries omniORB4_rt.lib, omniDynamic400_rt.lib and
-omnithread3_rt.lib with omniORB4.lib, omniDynamic4.lib and
-omnithread3.lib (see step (c) 6, above).
+omnithread30_rt.lib with omniORB4.lib, omniDynamic4.lib and
+omnithread.lib (see step (c) 6, above).
 
 
 
