@@ -32,7 +32,7 @@
 #define LOGDIR_ENV_VAR "OMNINAMES_LOGDIR"
 #endif
 
-class log {
+class omniNameslog {
 
   CORBA::ORB_ptr orb;
   CORBA::BOA_ptr boa;
@@ -97,7 +97,7 @@ public:
   class IOError {};
   class ParseError {};
 
-  log(int& port,char* logdir=0);
+  omniNameslog(int& port,char* logdir=0);
 
   void init(CORBA::ORB_ptr o, CORBA::BOA_ptr b);
 
