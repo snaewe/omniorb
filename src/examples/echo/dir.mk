@@ -4,19 +4,6 @@ CXXSRCS = greeting.cc eg1.cc \
 
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
-ifeq ($(CXX),g++)
-CXXDEBUGFLAGS = -g
-DIR_CPPFLAGS += -fhandle-exceptions -Wall -Wno-unused 
-endif
-
-ifeq ($(CXX),CC)
-CXXDEBUGFLAGS = -g
-endif
-
-ifeq ($(CXX),/usr/bin/cxx)
-CXXDEBUGFLAGS = -g
-endif
-
 CORBA_INTERFACES = echo
 
 eg1        = $(patsubst %,$(BinPattern),eg1)
@@ -29,6 +16,9 @@ all:: $(eg1) $(eg2_impl) $(eg2_clt)  $(eg3_impl) $(eg3_clt)
 
 clean::
 	$(RM) $(eg1) $(eg2_impl) $(eg2_clt) $(eg3_impl) $(eg3_clt)
+
+export:: $(eg1) $(eg2_impl) $(eg2_clt) $(eg3_impl) $(eg3_clt)
+	@(module="echoexamples"; $(ExportExecutable))
 
 $(eg1): eg1.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
 	@(libs="$(CORBA_LIB)"; $(CXXExecutable))

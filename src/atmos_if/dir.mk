@@ -6,5 +6,3 @@ all::
 export::
 	@$(ExportATMosInterfaces)
 
-export::
-	@(packages="omniORB"; $(ExportATMosPackages))

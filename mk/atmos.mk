@@ -19,7 +19,7 @@ ATMosArchitecture = 1
 
 ATMOS_RELEASE_DIR = /project/atmos/release$(ATMOS_VERSION)/$(ATMOS_HARDWARE)
 
-ATMOS_INCLUDES += pthreads llibc llibc++ timer uart atm console isfs colours
+ATMOS_INCLUDES += pthreads llibc llibc++ timer uart atm console isfs colours ip
 
 
 #
@@ -33,8 +33,8 @@ COPTIONS          = -nostdinc -fno-common -fno-builtin -Wall -Wno-format -Wwrite
 CMAKEDEPEND       = $(CC) -M
 
 CXX               = arm-gcc
-CXXDEBUGFLAGS     = -O3
-CXXOPTIONS        = -nostdinc -nostdinc++ -fno-common -fno-builtin -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses
+CXXDEBUGFLAGS     = 
+CXXOPTIONS        = -D__cplusplus -nostdinc -nostdinc++ -fno-common -fno-builtin -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses -Wno-unused -fhandle-exceptions
 CXXMAKEDEPEND     = $(CXX) -M
 
 CATOBJ            = catobj
@@ -275,20 +275,18 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 # CORBA stuff
 #
 
-CorbaImplementation = OMNIORB
+CorbaImplementation = OMNIORB2
 
 define CompileCorbaStubRule
 $(CXX) $(CXXDEBUGFLAGS) $(CXXOPTIONS) $(CORBA_CPPFLAGS) $(IMPORT_CPPFLAGS) \
     -c $< -o $@
 endef
 
-OMNIORB_IDL = omniidl -c C.cc -s S.cc -B
-OMNIORB_CPPFLAGS = -D__OMNIORB__ -I$(CORBA_STUB_DIR) \
-		   $(patsubst %,-I%/include/omniORB,$(IMPORT_TREES))
-OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB) $(OMNITHREAD_LIB)
-lib_depend := $(patsubst %,$(LibPattern),omniORB)
-OMNIORB_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
-OMNIORB_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
-OMNIORB_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%S.cc
-OMNIORB_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%S.o
-OMNIORB_EXTRA_STUB_FILES = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%C.cc)
+OMNIORB2_IDL = omniidl2
+OMNIORB2_CPPFLAGS = -D__OMNIORB2__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
+OMNIORB2_LIB = $(patsubst %,$(LibSearchPattern),omniORB2) $(OMNITHREAD_LIB) $(SOCKET_LIB)
+lib_depend := $(patsubst %,$(LibPattern),omniORB2)
+OMNIORB2_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
+OMNIORB2_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
+OMNIORB2_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%SK.cc
+OMNIORB2_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%SK.o

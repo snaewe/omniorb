@@ -22,7 +22,7 @@ AR = libwrapper
 
 CXX = clwrapper
 CXXDEBUGFLAGS =
-CXXOPTIONS = -MD
+CXXOPTIONS = -MD -GX
 CXXMAKEDEPEND = gcc -M -undef -nostdinc -D_WIN32 -D_MT -D__cplusplus \
 		-DMSC_VER=1000 -D_M_IX86=400
 
@@ -83,7 +83,9 @@ endef
 #
 
 LibPattern = %.lib
+DLLPattern = %_rt.lib
 LibSearchPattern = %.lib
+DLLSearchPattern = %_rt.lib
 BinPattern = %.exe
 
 
@@ -146,29 +148,39 @@ endif
 # CORBA stuff
 #
 
-CorbaImplementation = ORBIX
-
 define CompileCorbaStubRule
 $(CXX) $(CXXDEBUGFLAGS) $(CXXOPTIONS) $(CORBA_CPPFLAGS) $(IMPORT_CPPFLAGS) \
     -c $< -Fo$@
 endef
 
-ORBIX_ROOT = /win32app/x86/ORBIX
-ORBIX_IDL = idl -c C.cc -s S.cc -B
-ORBIX_CPPFLAGS = -D__ORBIX__ -D__ORBIX_1_3 -DORBIX_MT -D_REENTRANT \
-		 -I$(ORBIX_ROOT)/include -I$(CORBA_STUB_DIR)
-ORBIX_LIB = $(ORBIX_ROOT)/LIB/ITSRVM.LIB WSOCK32.LIB ADVAPI32.LIB OLDNAMES.LIB
-ORBIX_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
-ORBIX_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%S.cc
-ORBIX_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%S.o
-ORBIX_EXTRA_STUB_FILES = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%C.cc)
+# Note that the DLL version is being used, so link to omniorb2_rt.lib
+OMNIORB2_IDL = /project/omni/version5.1/bin/x86_nt_3.5/omniidl2 -h .hh -s SK.cc
+OMNIORB2_CPPFLAGS = -D__OMNIORB2__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS) -D "WIN32" -D "_X86_"
+OMNIORB2_LIB = $(patsubst %,$(DLLSearchPattern),omniORB2) $(OMNITHREAD_LIB) wsock32.lib advapi32.lib
+lib_depend := $(patsubst %,$(DLLPattern),omniORB2)
+OMNIORB2_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
+OMNIORB2_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
+OMNIORB2_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%SK.cc
+OMNIORB2_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%SK.o
 
 
+ORBIX2_ROOT = /win32app/x86/ORBIX
+ORBIX2_IDL = idl -c C.cc -s S.cc -B
+ORBIX2_CPPFLAGS = -D__ORBIX__ -D__ORBIX_2_1 -DORBIX_MT -D_REENTRANT \
+		 -I$(ORBIX2_ROOT)/include -I$(CORBA_STUB_DIR)
+ORBIX2_LIB = $(ORBIX2_ROOT)/LIB/ITSRVM.LIB WSOCK32.LIB ADVAPI32.LIB OLDNAMES.LIB
+ORBIX2_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
+ORBIX2_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%S.cc
+ORBIX2_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%S.o
+ORBIX2_EXTRA_STUB_FILES = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%C.cc)
+
+CorbaImplementation = OMNIORB2
 #
 # OMNI thread stuff
 #
+# Note that the DLL version is being used, so link to omnithread_rt.lib
 
 ThreadSystem = NT
-OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread)
-lib_depend := $(patsubst %,$(LibPattern),omnithread)
+OMNITHREAD_LIB = $(patsubst %,$(DLLSearchPattern),omnithread)
+lib_depend := $(patsubst %,$(DLLPattern),omnithread)
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)

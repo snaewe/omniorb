@@ -17,13 +17,6 @@ OBJ_LIBS = \
            narrow/$(patsubst %,$(LibPattern),narrow)
 endif
 
-
-ifeq ($(CXX),g++)
-SUBDIR_MAKEFLAGS = "CXXDEBUGFLAGS=-g -fhandle-exceptions"
-else
-SUBDIR_MAKEFLAGS = "CXXDEBUGFLAGS=-g"
-endif
-
 all::
 	@$(MakeSubdirs)
 
