@@ -1,3 +1,13 @@
+Tue May 29 12:06:29 BST 2001 sll
+================================
+
+- Scavenger now get the real time after each scan. This is to cope with
+  the system clock set backward by a large amount. Seems to happen a lot to
+  some system..
+
+src/lib/omniORB2/orbcore/scavenger.cc
+
+
 Wed May 23 11:45:31 BST 2001 dpg1
 =================================
 
