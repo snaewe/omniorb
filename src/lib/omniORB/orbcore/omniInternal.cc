@@ -29,11 +29,13 @@
  
 /*
   $Log$
-  Revision 1.2.2.1  2000/07/17 10:35:56  sll
-  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+  Revision 1.2.2.2  2000/09/27 18:39:33  sll
+  Updated to use omniIOR to store and pass the repository ID and IOP profiles
+  of an IOR.
 
-  Revision 1.3  2000/07/13 15:25:56  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.1.2.16  2000/07/21 15:35:47  dpg1
+  Incorrectly rejected object references with incompatible target and
+  most-derived repoIds.
 
   Revision 1.1.2.15  2000/06/27 15:40:57  sll
   Workaround for Cygnus gcc's inability to recognise _CORBA_Octet*& and
@@ -89,15 +91,14 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
-#include <omniORB3/proxyFactory.h>
-#include <omniORB3/omniServant.h>
-#include <omniORB3/omniObjRef.h>
+#include <omniORB4/proxyFactory.h>
+#include <omniORB4/omniServant.h>
 #include <localIdentity.h>
 #include <remoteIdentity.h>
 #include <objectAdapter.h>
@@ -117,7 +118,6 @@ omni_tracedmutex*                omni::internalLock = 0;
 omni_tracedmutex*                omni::poRcLock = 0;
 _CORBA_Unbounded_Sequence__Octet omni::myPrincipalID;
 const omni::alignment_t          omni::max_alignment = ALIGN_8;
-const char*const                 omni::empty_string = "";
 
 int                              omni::remoteInvocationCount = 0;
 int                              omni::localInvocationCount = 0;
@@ -533,7 +533,8 @@ omni::deactivateObject(const CORBA::Octet* key, int keysize)
 	if( !remote_id ) {
 	  Rope* rope = omniObjAdapter::defaultLoopBack();
 	  rope->incrRefCount();
-	  remote_id = new omniRemoteIdentity(id->key(), id->keysize(), rope);
+	  omniIOR* ior = new omniIOR(objreflist->_mostDerivedRepoId(),newid);
+	  remote_id = new omniRemoteIdentity(ior, rope);
 	}
 	omniInternal::replaceImplementation(objreflist, remote_id, newid);
       }
@@ -562,37 +563,31 @@ omni::deactivateObject(const CORBA::Octet* key, int keysize)
 
 
 omniObjRef*
-omni::createObjRef(const char* mostDerivedRepoId,
-		   const char* targetRepoId,
-		   IOP::TaggedProfileList* profiles,
-		   CORBA::Boolean release_profiles,
+omni::createObjRef(const char* targetRepoId,
+		   omniIOR* ior,
 		   CORBA::Boolean locked)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, locked);
-  OMNIORB_ASSERT(mostDerivedRepoId);
   OMNIORB_ASSERT(targetRepoId);
-  OMNIORB_ASSERT(profiles);
+  OMNIORB_ASSERT(ior);
 
-  // NB. <mostDerivedRepoId> can be the empty string "".
-
-  int            keysize = 0;
-  _CORBA_Octet*  key = 0; // Instead of using CORBA::Octet because
-                          // some brain-dead compilers does not realise
-                          // _CORBA_Octet and CORBA::Octet are the same type
-                          // and would not take a CORBA::Octet* as an
-                          // argument that requires a _CORBA_Octet*&.
   Rope*          rope = 0;
   CORBA::Boolean is_local = 0;
 
-  if( !ropeFactory::iopProfilesToRope(*profiles, key, keysize,
-				      rope, is_local) ) {
-    if( release_profiles )  delete profiles;
+  if( !ropeFactory::iorToRope(ior, rope, is_local) ) {
+    if (locked)
+      ior->releaseNoLock();
+    else
+      ior->release();
     return 0;
   }
 
   if( is_local ) {
 
-    CORBA::ULong hashv = hash(key, keysize);
+    CORBA::Octet* key = ior->iiop.object_key.get_buffer();
+    int  keysize = ior->iiop.object_key.length();
+
+    CORBA::ULong hashv = hash(key,keysize);
 
     omni_optional_lock sync(*internalLock, locked, locked);
 
@@ -601,34 +596,33 @@ omni::createObjRef(const char* mostDerivedRepoId,
 
     omniLocalIdentity* local_id = locateIdentity(key, keysize, hashv, 1);
 
-    return createObjRef(mostDerivedRepoId, targetRepoId, local_id,
-			profiles, release_profiles, key);
+    return createObjRef(targetRepoId, local_id, ior);
   }
 
-  proxyObjectFactory* pof = proxyObjectFactory::lookup(mostDerivedRepoId);
+  proxyObjectFactory* pof = proxyObjectFactory::lookup(ior->repositoryID);
 
   if( pof && !pof->is_a(targetRepoId) &&
       strcmp(targetRepoId, CORBA::Object::_PD_repoId) ) {
 
-    if( omniORB::trace(10) )
-      omniORB::logf("Cannot create reference -- %s is\n"
-		    " not a base for %s.", targetRepoId, mostDerivedRepoId);
-
-    if( release_profiles )  delete profiles;
-    delete[] key;
-    rope->decrRefCount();
-    return 0;
+    // We know that <mostDerivedRepoId> is not derived from
+    // <targetRepoId>. We need to carry on regardless...
+    pof = 0;
   }
 
   // Once we reach here:
   // if (pof != 0)
   //    pof points to the proxy factory that is an exact match to
-  //    the interface identified by <mostDerivedRepoId> and it has been
+  //    the interface identified by the ior's repository ID and it has been
   //    verified that the interface identified by <targetRepoId> is
-  //    equal to or is a base class of <mostDerivedRepoId>.
+  //    equal to or is a base class of the ior's repository ID.
   // else
   //    there is no proxy factory linked into this executable that
-  //    matches the interface identified by <mostDerivedRepoId>
+  //    matches the interface identified by the ior's repository ID.
+  // or
+  //    there _is_ a proxy factory for ior's repository ID, but we
+  //    know that it is not derived from <targetRepoId>. We must
+  //    contact the object, in case it actually supports an interface
+  //    derived from both the ior's type and <targetRepoId>.
 
   int target_intf_not_confirmed = 0;
 
@@ -639,20 +633,23 @@ omni::createObjRef(const char* mostDerivedRepoId,
       target_intf_not_confirmed = 1;
   }
 
-  if( !release_profiles )  profiles = new IOP::TaggedProfileList(*profiles);
+  if (locked)
+    ior->duplicateNoLock();
+  else
+    ior->duplicate();
 
-  omniRemoteIdentity* id = new omniRemoteIdentity(rope, key, keysize);
+  omniRemoteIdentity* id = new omniRemoteIdentity(ior,rope);
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
     l << "Creating ref to remote: " << id << "\n"
       " target id      : " << targetRepoId << "\n"
-      " most derived id: " << mostDerivedRepoId << "\n";
+      " most derived id: " << (const char*)ior->repositoryID << "\n";
   }
 
   // Now create the object reference itself.
 
-  omniObjRef* objref = pof->newObjRef(mostDerivedRepoId, profiles, id, 0);
+  omniObjRef* objref = pof->newObjRef(ior, id, 0);
   if( target_intf_not_confirmed )  objref->pd_flags.type_verified = 0;
 
   if( !locked )  internalLock->lock();
@@ -660,22 +657,26 @@ omni::createObjRef(const char* mostDerivedRepoId,
   if( !locked )  internalLock->unlock();
 
   return objref;
-}
 
+}
 
 omniObjRef*
 omni::createObjRef(const char* mostDerivedRepoId,
 		   const char* targetRepoId,
+		   omniLocalIdentity* local_id)
+{
+  omniIOR* ior = new omniIOR(mostDerivedRepoId,local_id);
+  return createObjRef(targetRepoId,local_id,ior);
+}
+
+omniObjRef*
+omni::createObjRef(const char* targetRepoId,
 		   omniLocalIdentity* local_id,
-		   IOP::TaggedProfileList* profiles,
-		   _CORBA_Boolean release_profiles,
-		   _CORBA_Octet* key)
+		   omniIOR* ior)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 1);
-  OMNIORB_ASSERT(mostDerivedRepoId);
   OMNIORB_ASSERT(targetRepoId);
-
-  // NB. <mostDerivedRepoId> can be the empty string "".
+  OMNIORB_ASSERT(ior);
 
   omniIdentity* remote_id = 0;
 
@@ -687,7 +688,7 @@ omni::createObjRef(const char* mostDerivedRepoId,
 
     while( objref ) {
 
-      if( !strcmp(mostDerivedRepoId, objref->_mostDerivedRepoId()) &&
+      if( !strcmp(ior->repositoryID, objref->_mostDerivedRepoId()) &&
 	  objref->_ptrToObjRef(targetRepoId) ) {
 
 	omniORB::logs(15, "createObjRef -- reusing reference from local"
@@ -703,8 +704,7 @@ omni::createObjRef(const char* mostDerivedRepoId,
 	objref_rc_lock->unlock();
 
 	if( !dying ) {
-	  if( key )  delete[] key;
-	  if( profiles && release_profiles )  delete profiles;
+	  ior->releaseNoLock();
 	  return objref;
 	}
       }
@@ -718,7 +718,7 @@ omni::createObjRef(const char* mostDerivedRepoId,
     }
   }
 
-  proxyObjectFactory* pof = proxyObjectFactory::lookup(mostDerivedRepoId);
+  proxyObjectFactory* pof = proxyObjectFactory::lookup(ior->repositoryID);
 
   if( pof && !pof->is_a(targetRepoId) &&
       strcmp(targetRepoId, CORBA::Object::_PD_repoId) ) {
@@ -727,11 +727,10 @@ omni::createObjRef(const char* mostDerivedRepoId,
       omniORB::logger l;
       l << "Cannot create ref to: " << local_id << "\n"
 	" as " << targetRepoId << " is not a base for "
-	<< mostDerivedRepoId << ".\n";
+	<< (const char*)ior->repositoryID << ".\n";
     }
 
-    if( key )  delete[] key;
-    if( profiles && release_profiles )  delete profiles;
+    ior->releaseNoLock();
     return 0;
   }
 
@@ -749,7 +748,7 @@ omni::createObjRef(const char* mostDerivedRepoId,
     omniORB::logger l;
     l << "Creating ref to local: " << local_id << "\n"
       " target id      : " << targetRepoId << "\n"
-      " most derived id: " << mostDerivedRepoId << "\n";
+      " most derived id: " << (const char*) ior->repositoryID << "\n";
   }
 
   if( servant && !servant->_ptrToInterface(targetRepoId) )
@@ -757,7 +756,6 @@ omni::createObjRef(const char* mostDerivedRepoId,
 
   if( servant ) {
     remote_id = 0;
-    if( key )  delete[] key;
   }
   else {
 
@@ -775,37 +773,12 @@ omni::createObjRef(const char* mostDerivedRepoId,
     if( !remote_id ) {
       Rope* rope = omniObjAdapter::defaultLoopBack();
       rope->incrRefCount();
-      if( !key ) {
-	key = new CORBA::Octet[local_id->keysize()];
-	memcpy(key, local_id->key(), local_id->keysize());
-      }
-
-      remote_id = new omniRemoteIdentity(rope, key, local_id->keysize());
-    }
-    else
-      if( key )  delete[] key;
-  }
-
-  if( profiles ) {
-    if( !release_profiles )  profiles = new IOP::TaggedProfileList(*profiles);
-  }
-  else {
-    omniObjRef* other_local_ref = local_id->localRefList();
-    if( other_local_ref )
-      profiles = new IOP::TaggedProfileList(*other_local_ref->_iopProfiles());
-    else {
-      profiles = new IOP::TaggedProfileList;
-      ropeFactory_iterator iter(omniObjAdapter::incomingRopeFactories());
-      incomingRopeFactory* rp;
-      while( (rp = (incomingRopeFactory*) iter()) )
-	rp->getIncomingIOPprofiles(local_id->key(),
-				   local_id->keysize(),
-				   *profiles);
+      ior->duplicateNoLock();
+      remote_id = new omniRemoteIdentity(ior, rope);
     }
   }
 
-  omniObjRef* objref = pof->newObjRef(mostDerivedRepoId, profiles,
-				      remote_id ? remote_id : local_id,
+  omniObjRef* objref = pof->newObjRef(ior,remote_id ? remote_id : local_id,
 				      local_id);
 
   if( target_intf_not_confirmed && remote_id )
@@ -818,6 +791,8 @@ omni::createObjRef(const char* mostDerivedRepoId,
 }
 
 
+
+
 void
 omni::revertToOriginalProfile(omniObjRef* objref)
 {
@@ -826,14 +801,18 @@ omni::revertToOriginalProfile(omniObjRef* objref)
 
   omniORB::logs(10, "Reverting object reference to original profile");
 
-  int            keysize = 0;
-  _CORBA_Octet*  key = 0;
   Rope*          rope = 0;
   CORBA::Boolean is_local = 0;
 
-  if( !ropeFactory::iopProfilesToRope(*objref->pd_iopprofiles, key, keysize,
-				      rope, is_local) )
+  omniIOR* ior = objref->_getIOR();
+
+  if( !ropeFactory::iorToRope(ior, rope, is_local) ) {
+    ior->release();
     OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
+  }
+  else {
+    ior->release();
+  }
 
   omni_tracedmutex_lock sync(*internalLock);
 
@@ -841,7 +820,6 @@ omni::revertToOriginalProfile(omniObjRef* objref)
   // rather than sooner, so as to avoid holding <internalLock>
   // longer than necassary.
   if( !objref->pd_flags.forward_location ) {
-    delete[] key;
     if( rope )  rope->decrRefCount();
     return;
   }
@@ -856,13 +834,15 @@ omni::revertToOriginalProfile(omniObjRef* objref)
 
   if( is_local ) {
 
+    CORBA::Octet* key = objref->pd_ior->iiop.object_key.get_buffer();
+    int  keysize = objref->pd_ior->iiop.object_key.length();
+
     CORBA::ULong hashv = hash(key, keysize);
     local_id = locateIdentity(key, keysize, hashv, 1);
 
     omniServant* servant = local_id->servant();
 
     if (objref->_compatibleServant(servant)) {
-      delete[] key;
       omniInternal::replaceImplementation(objref, local_id, local_id);
       return;
     }
@@ -877,14 +857,15 @@ omni::revertToOriginalProfile(omniObjRef* objref)
   }
 
   // Need to instantiate a properly typed proxy.
-
-  omniIdentity* rid = new omniRemoteIdentity(rope, key, keysize);
+  objref->pd_ior->duplicateNoLock();
+  omniIdentity* rid = new omniRemoteIdentity(objref->pd_ior,rope);
   omniInternal::replaceImplementation(objref, rid, local_id);
 }
 
 
 void
-omni::locationForward(omniObjRef* objref, omniObjRef* new_location)
+omni::locationForward(omniObjRef* objref, omniObjRef* new_location,
+		      CORBA::Boolean permanent)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*internalLock, 0);
   OMNIORB_ASSERT(objref);
@@ -946,10 +927,19 @@ omni::locationForward(omniObjRef* objref, omniObjRef* new_location)
       else                   rope = ((omniRemoteIdentity*) nl_id)->rope();
       rope->incrRefCount();
 
-      omniIdentity* id = new omniRemoteIdentity(nl_id->key(),
-						nl_id->keysize(),
-						rope);
+      new_location->pd_ior->duplicateNoLock();
+      omniIdentity* id = new omniRemoteIdentity(new_location->pd_ior, rope);
       omniInternal::replaceImplementation(objref, id, nl_lid);
+    }
+
+    if (permanent) {
+      // This location forwarding is permanent, replace the IOR of this
+      // object reference with the new one. If this object reference is
+      // later passed to another server, the new IOR will be transferred.
+      new_location->pd_ior->duplicateNoLock();
+      objref->pd_ior->releaseNoLock();
+      objref->pd_ior = new_location->pd_ior;
+      objref->pd_flags.forward_location = 0;
     }
   }
   releaseObjRef(new_location);
