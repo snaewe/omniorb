@@ -1,15 +1,12 @@
 # dir.mk for omniORB dynamic library
 
 ORB_SRCS = \
-           irstub.cc \
            any.cc \
            anyP.cc \
            bootstrapdynstub.cc \
            constants.cc \
            context.cc \
            contextList.cc \
-           corbaidldynstub.cc \
-           corbaidlstub.cc \
            deferredRequest.cc \
            dynamicImplementation.cc \
            dynamicLib.cc \
@@ -18,8 +15,6 @@ ORB_SRCS = \
            dynException.cc \
 	   environment.cc \
            exceptionList.cc \
-           ir.cc \
-           irdynstub.cc \
 	   namedValue.cc \
            nvList.cc \
            Namingdynstub.cc \
@@ -30,6 +25,14 @@ ORB_SRCS = \
            tcParser.cc \
            typecode.cc \
            unknownUserExn.cc
+
+NOT_DONE = \
+           corbaidldynstub.cc \
+           corbaidlstub.cc \
+           irstub.cc \
+           ir.cc \
+           irdynstub.cc
+
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)

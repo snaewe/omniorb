@@ -27,7 +27,8 @@
 //   Dynamic Skeleton Interface (DSI).
 //
 
-#define ENABLE_CLIENT_IR_SUPPORT
+// XXX Temporary disable ENABLE_CLIENT_IR_SUPPORT
+//#define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB4/CORBA.h>
 #include <dynamicImplementation.h>
 #include <dynException.h>
@@ -206,6 +207,12 @@ PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
 omniObjRef*
 PortableServer::DynamicImplementation::_do_get_interface()
 {
+  //XXX
+  throw omniORB::fatalException(__FILE__,__LINE__,
+				"Not ported yet.");
+
+  return 0;
+#if 0
   CORBA::_objref_InterfaceDef* p = _get_interface();
   if( p )  return p->_PR_getobj();
 
@@ -236,5 +243,6 @@ PortableServer::DynamicImplementation::_do_get_interface()
   repository->_PR_getobj()->_invoke(call_desc);
 
   return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
+#endif
 #endif
 }
