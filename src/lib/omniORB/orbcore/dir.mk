@@ -35,7 +35,6 @@ UNIXSOCK_SRCS = \
             unixEndpoint.cc \
             unixAddress.cc \
             unixActive.cc
-      
 
 CODESET_SRCS = \
 	    codeSets.cc \
@@ -127,7 +126,7 @@ DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 
 ##########################################################################
 ifdef UnixPlatform
-  CXXDEBUGFLAGS = -g
+#  CXXDEBUGFLAGS = -g
   DIR_CPPFLAGS += -DUnixArchitecture
   ifdef AIX
     NoGateKeeper = 1

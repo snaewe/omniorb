@@ -7,6 +7,10 @@ src/lib/omniORB/orbcore/omniInternal.cc
 src/lib/omniORB/orbcore/omniObjRef.cc
 src/lib/omniORB/orbcore/poa.cc
 
+- Accidentally set -g in orbcore make.
+
+src/lib/omniORB/orbcore/dir.mk
+
 
 Wed Aug 15 11:13:08 BST 2001 dpg1
 =================================
