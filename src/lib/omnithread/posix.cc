@@ -233,12 +233,12 @@ omni_semaphore::trywait(void)
 void
 omni_semaphore::post(void)
 {
-    omni_mutex_lock l(m);
+    {
+        omni_mutex_lock l(m);
+        value++;
+    }
 
-    if (value == 0)
-	c.signal();
-
-    value++;
+    c.signal();
 }
 
 
