@@ -1,3 +1,12 @@
+Mon Sep 24 17:13:34 BST 2001 sll
+================================
+
+- Allow serverTransportRule and clientTransportRule to be specified as
+  -ORB initialisation options.
+
+src/lib/omniORB/orbcore/transportRules.cc
+
+
 Mon Sep 24 15:23:55 BST 2001 dpg1
 =================================
 

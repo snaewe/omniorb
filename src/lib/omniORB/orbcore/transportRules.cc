@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/09/24 16:16:10  sll
+  Allow serverTransportRule and clientTransportRule to be specified as
+  -ORB initialisation options.
+
   Revision 1.1.2.4  2001/08/31 16:59:59  sll
   Support '^' prefix in address field.
   Do host address lookup in extractIPv4 if necessary.
@@ -453,8 +457,8 @@ public:
   clientTransportRuleHandler() : 
     orbOptions::Handler("clientTransportRule",
 			"clientTransportRule = <address mask>  [action]+",
-			0,
-			0) {}
+			1,
+			"-ORBclientTransportRule \"<address mask>  [action]+\"") {}
 
   void visit(const char* value,
 	     orbOptions::Source)  throw (orbOptions::BadParam) {
@@ -488,8 +492,8 @@ public:
   serverTransportRuleHandler() : 
     orbOptions::Handler("serverTransportRule",
 			"serverTransportRule = <address mask>  [action]+",
-			0,
-			0) {}
+			1,
+			"-ORBserverTransportRule \"<address mask>  [action]+\"") {}
 
   void visit(const char* value,
 	     orbOptions::Source) throw (orbOptions::BadParam) {
