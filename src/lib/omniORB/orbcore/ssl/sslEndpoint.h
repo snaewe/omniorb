@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/13 21:10:01  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.1  2003/03/23 21:01:59  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -63,7 +67,9 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class sslConnection;
 
-class sslEndpoint : public giopEndpoint, public SocketCollection {
+class sslEndpoint : public giopEndpoint,
+		    public SocketCollection,
+		    public SocketHolder {
 public:
 
   sslEndpoint(const IIOP::Address& address, sslContext* ctx);
@@ -78,11 +84,10 @@ public:
   ~sslEndpoint();
 
 protected:
-  CORBA::Boolean notifyReadable(SocketHandle_t);
+  CORBA::Boolean notifyReadable(SocketHolder*);
   // implement SocketCollection::notifyReadable
 
  private:
-  SocketHandle_t     pd_socket;
   IIOP::Address      pd_address;
   CORBA::String_var  pd_address_string;
   sslContext*        pd_ctx;
@@ -121,7 +126,7 @@ public:
   friend class sslActiveConnection;
 
 protected:
-  CORBA::Boolean notifyReadable(SocketHandle_t);
+  CORBA::Boolean notifyReadable(SocketHolder*);
   // implement SocketCollection::notifyReadable
 
   void addMonitor(SocketHandle_t);

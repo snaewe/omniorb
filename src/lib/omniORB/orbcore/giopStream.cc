@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2005/01/13 21:10:00  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.6.2  2005/01/06 23:10:29  dgrisby
   Big merge from omni4_0_develop.
 
@@ -930,9 +934,9 @@ giopStream::inputMessage() {
     } while (first != buf->last);
     buf->last = buf->start + buf->size;
 
-    if (omniORB::trace(30)) {
+    if (omniORB::trace(25)) {
       omniORB::logger log;
-      log << "Split input data into " << splitcount << " messages\n";
+      log << "Split input data into " << splitcount+1 << " messages\n";
     }
   }
   return buf;

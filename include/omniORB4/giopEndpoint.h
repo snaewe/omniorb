@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2005/01/13 21:09:57  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.6.2  2005/01/06 23:08:09  dgrisby
   Big merge from omni4_0_develop.
 
@@ -117,14 +121,11 @@ public:
   // more file descriptors in use than available in a select() fd_set.
 
 
-  virtual void Peek(notifyReadable_t func,void* cookie) = 0;
-  // Do nothing and returns immediately if the connection has not been
-  // set to be watched by a previous setSelectable().
-  // Otherwise, monitor the connection's status for a short time.
-  // If data have arrived at the connection, call the callback function
-  // <func> with the <cookie> and the pointer to the connection as the
-  // arguments. This function is similar to giopEndpoint::AcceptAndMonitor
-  // except that it only monitor one connection.
+  virtual _CORBA_Boolean Peek() = 0;
+  // Do nothing and return immediately if the socket has not been set
+  // to be watched by a previous setSelectable().  Otherwise, monitor
+  // the connection's status for a short time. Return true if it
+  // becomes readable, otherwise returns false.
 
   giopConnection() : pd_refcount(1), pd_dying(0), 
 		     pd_has_dedicated_thread(0), 

@@ -24,11 +24,15 @@
 //
 //
 // Description:
-//	*** PROPRIETORY INTERFACE ***
+//	*** PROPRIETARY INTERFACE ***
 // 
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/13 21:09:59  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.2  2005/01/06 23:10:12  dgrisby
   Big merge from omni4_0_develop.
 
@@ -100,8 +104,15 @@
 
 #if !defined(__WIN32__)
 #  define SELECTABLE_FD_LIMIT FD_SETSIZE
+#  define IS_SELECTABLE(fd) (fd < FD_SETSIZE)
+#else
+#  define IS_SELECTABLE(fd) (1)
 #endif
 
+
+#ifdef USE_POLL
+#  define INITIAL_POLLFD_LEN 64
+#endif
 
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -110,8 +121,8 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 /////////////////////////////////////////////////////////////////////////
 void
-SocketSetTimeOut(unsigned long abs_sec,
-		 unsigned long abs_nsec,struct timeval& t)
+SocketSetTimeOut(unsigned long abs_sec, unsigned long abs_nsec,
+		 struct timeval& t)
 {
   unsigned long now_sec, now_nsec;
   omni_thread::get_time(&now_sec,&now_nsec);
@@ -214,391 +225,676 @@ SocketSetCloseOnExec(SocketHandle_t sock) {
 /////////////////////////////////////////////////////////////////////////
 unsigned long SocketCollection::scan_interval_sec  = 0;
 unsigned long SocketCollection::scan_interval_nsec = 50*1000*1000;
-CORBA::ULong  SocketCollection::hashsize           = 103;
+unsigned      SocketCollection::idle_scans         = 20;
 
 /////////////////////////////////////////////////////////////////////////
-SocketCollection::SocketCollection() :
-  pd_n_fdset_1(0), pd_n_fdset_2(0), pd_n_fdset_dib(0),
-  pd_select_cond(&pd_fdset_lock),
-  pd_abs_sec(0), pd_abs_nsec(0),
-  pd_pipe_read(-1), pd_pipe_write(-1), pd_pipe_full(0),
-  pd_refcount(1)
-{
-  FD_ZERO(&pd_fdset_1);
-  FD_ZERO(&pd_fdset_2);
-  FD_ZERO(&pd_fdset_dib);
+// pipe creation
 
 #ifdef UnixArchitecture
 #  ifdef __vxWorks__
-    if (pipeDrv() == OK) {
-      if (pipeDevCreate("/pipe/SocketCollection",10,sizeof(int)) == OK) {
-	pd_pipe_read = pd_pipe_write = open("/pipe/SocketCollection",
-					    O_RDWR,0);
-      }
+static void initPipe(int& pipe_read, int& pipe_write)
+{
+  if (pipeDrv() == OK) {
+    if (pipeDevCreate("/pipe/SocketCollection",10,sizeof(int)) == OK) {
+      pipe_read = pipe_write = open("/pipe/SocketCollection", O_RDWR,0);
     }
-    if (pd_pipe_read <= 0) {
-      omniORB::logs(5, "Unable to create pipe for SocketCollection.");
-    }
+  }
+  if (pipe_read <= 0) {
+    omniORB::logs(5, "Unable to create pipe for SocketCollection.");
+    pipe_read = pipe_write = -1;
+  }
+}
+static void closePipe(int pipe_read, int pipe_write)
+{
+  // *** How do we clean up on vxWorks?
+}
 #  else
-    int filedes[2];
-    int r = pipe(filedes);
-    if (r != -1) {
-      pd_pipe_read  = filedes[0];
-      pd_pipe_write = filedes[1];
-    }
-    else {
-      omniORB::logs(5, "Unable to create pipe for SocketCollection.");
-    }
+static void initPipe(int& pipe_read, int& pipe_write)
+{
+  int filedes[2];
+  int r = pipe(filedes);
+  if (r != -1) {
+    pipe_read  = filedes[0];
+    pipe_write = filedes[1];
+  }
+  else {
+    omniORB::logs(5, "Unable to create pipe for SocketCollection.");
+    pipe_read = pipe_write = -1;
+  }
+}
+static void closePipe(int pipe_read, int pipe_write)
+{
+  if (pipe_read  > 0) close(pipe_read);
+  if (pipe_write > 0) close(pipe_write);
+}
 #  endif
+#else
+static void initPipe(int& pipe_read, int& pipe_write)
+{
+  pipe_read = pipe_write = -1;
+}
+static void closePipe(int pipe_read, int pipe_write)
+{
+}
 #endif
 
-  if (pd_pipe_read > 0) {
-    pd_n_fdset_1++;
-    pd_n_fdset_2++;
-    FD_SET(pd_pipe_read, &pd_fdset_1);
-    FD_SET(pd_pipe_read, &pd_fdset_2);
-  }
 
-  pd_hash_table = new SocketLink* [hashsize];
-  for (CORBA::ULong i=0; i < hashsize; i++)
-    pd_hash_table[i] = 0;
-}
-
+#if defined(USE_POLL)
 
 /////////////////////////////////////////////////////////////////////////
+// poll() based implementation
+
+SocketCollection::SocketCollection()
+  : pd_refcount(1),
+    pd_select_cond(&pd_collection_lock),
+    pd_abs_sec(0), pd_abs_nsec(0),
+    pd_pipe_full(0),
+    pd_idle_count(idle_scans),
+    pd_pollfd_n(0),
+    pd_pollfd_len(INITIAL_POLLFD_LEN),
+    pd_collection(0),
+    pd_changed(0)
+{
+  pd_pollfds     = new struct pollfd[pd_pollfd_len];
+  pd_pollsockets = new SocketHolder*[pd_pollfd_len];
+
+  initPipe(pd_pipe_read, pd_pipe_write);
+}
+
 SocketCollection::~SocketCollection()
 {
   pd_refcount = -1;
-  delete [] pd_hash_table;
-
-#ifdef UnixArchitecture
-#  ifdef __vxWorks__
-  // *** How do we clean up on vxWorks?
-#  else
-  if (pd_pipe_read > 0)  close(pd_pipe_read);
-  if (pd_pipe_write > 0) close(pd_pipe_write);
-#  endif
-#endif
+  delete [] pd_pollsockets;
+  delete [] pd_pollfds;
+  closePipe(pd_pipe_read, pd_pipe_write);
 }
 
-
-/////////////////////////////////////////////////////////////////////////
-void
-SocketCollection::setSelectable(SocketHandle_t sock, 
-				CORBA::Boolean now,
-				CORBA::Boolean data_in_buffer,
-				CORBA::Boolean hold_lock) {
-
-#ifdef SELECTABLE_FD_LIMIT
-  if (sock >= SELECTABLE_FD_LIMIT)
-    return;
-#endif
-
-  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_fdset_lock, hold_lock);
-
-  if (!hold_lock) pd_fdset_lock.lock();
-
-  if (data_in_buffer && !FD_ISSET(sock,&pd_fdset_dib)) {
-    pd_n_fdset_dib++;
-    FD_SET(sock,&pd_fdset_dib);
-  }
-
-  if (!FD_ISSET(sock,&pd_fdset_1)) {
-    pd_n_fdset_1++;
-    FD_SET(sock,&pd_fdset_1);
-  }
-  if (now || data_in_buffer) {
-    if (!FD_ISSET(sock,&pd_fdset_2)) {
-      pd_n_fdset_2++;
-      FD_SET(sock,&pd_fdset_2);
-    }
-    // Wake up the thread blocked in select() if we can.
-    if (pd_pipe_write > 0) {
-#ifdef UnixArchitecture
-      if (!pd_pipe_full) {
-	char data = '\0';
-	pd_pipe_full = 1;
-	write(pd_pipe_write, &data, 1);
-      }
-#endif
-    }
-    else {
-      pd_select_cond.signal();
-    }
-  }
-  if (!hold_lock) pd_fdset_lock.unlock();
-}
-
-/////////////////////////////////////////////////////////////////////////
-void
-SocketCollection::clearSelectable(SocketHandle_t sock)
-{
-
-#ifdef SELECTABLE_FD_LIMIT
-  if (sock >= SELECTABLE_FD_LIMIT)
-    return;
-#endif
-
-  omni_tracedmutex_lock sync(pd_fdset_lock);
-
-  if (FD_ISSET(sock,&pd_fdset_1)) {
-    pd_n_fdset_1--;
-    FD_CLR(sock,&pd_fdset_1);
-  }
-  if (FD_ISSET(sock,&pd_fdset_2)) {
-    pd_n_fdset_2--;
-    FD_CLR(sock,&pd_fdset_2);
-  }
-  if (FD_ISSET(sock,&pd_fdset_dib)) {
-    pd_n_fdset_dib--;
-    FD_CLR(sock,&pd_fdset_dib);
-  }
-}
-
-/////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 SocketCollection::isSelectable(SocketHandle_t sock)
 {
-#ifdef SELECTABLE_FD_LIMIT
-  return sock < SELECTABLE_FD_LIMIT;
-#else
+  // All sockets are selectable with poll()
   return 1;
-#endif
+}
+
+void
+SocketCollection::growPollLists()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_collection_lock, 1);
+
+  // Grow the lists
+  struct pollfd* new_pollfds     = new struct pollfd[pd_pollfd_len*2];
+  SocketHolder** new_pollsockets = new SocketHolder*[pd_pollfd_len*2];
+
+  for (unsigned i=0; i < pd_pollfd_len; i++) {
+    new_pollfds[i]     = pd_pollfds[i];
+    new_pollsockets[i] = pd_pollsockets[i];
+  }
+  delete [] pd_pollfds;
+  delete [] pd_pollsockets;
+
+  pd_pollfds     = new_pollfds;
+  pd_pollsockets = new_pollsockets;
+  pd_pollfd_len  = pd_pollfd_len * 2;
 }
 
 
-#ifdef GDB_DEBUG
-
-static
-int
-do_select(int maxfd,fd_set* r, fd_set* w, fd_set* e, struct timeval* t) {
-  return select(maxfd,r,w,e,t);
-}
-
-#endif
-
-/////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 SocketCollection::Select() {
 
   struct timeval timeout;
-  fd_set         rfds;
-  int            total;
+  int timeout_millis;
+  int count;
+  unsigned index;
 
- again:
-
-  // (pd_abs_sec,pd_abs_nsec) define the absolute time when we switch fdset
+  // (pd_abs_sec,pd_abs_nsec) defines the absolute time at which we
+  // process the socket list.
   SocketSetTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
 
   if (timeout.tv_sec == 0 && timeout.tv_usec == 0) {
+
+    // Time to scan the socket list...
 
     omni_thread::get_time(&pd_abs_sec,&pd_abs_nsec,
 			  scan_interval_sec,scan_interval_nsec);
     timeout.tv_sec  = scan_interval_sec;
     timeout.tv_usec = scan_interval_nsec / 1000;
 
-    omni_tracedmutex_lock sync(pd_fdset_lock);
-    rfds  = pd_fdset_2;
-    total = pd_n_fdset_2;
-    pd_fdset_2 = pd_fdset_1;
-    pd_n_fdset_2 = pd_n_fdset_1;
-  }
-  else {
-    omni_tracedmutex_lock sync(pd_fdset_lock);
-    rfds  = pd_fdset_2;
-    total = pd_n_fdset_2;
-  }
+    index = 0;
+    {
+      omni_tracedmutex_lock sync(pd_collection_lock);
+      if (pd_changed) {
 
-  int maxfd = 0;
-  int fd = 0;
+	// Add our pipe
+	if (pd_pipe_read >= 0) {
+	  pd_pollfds[index].fd      = pd_pipe_read;
+	  pd_pollfds[index].events  = POLLIN;
+	  pd_pollsockets[index]     = 0;
+	  index++;
+	}
 
-#ifndef __WIN32__
-  // Win32 ignores the first argument to select()
-  while (total) {
-    if (FD_ISSET(fd,&rfds)) {
-      maxfd = fd;
-      total--;
-    }
-    fd++;
-  }
-#else
-  fd = total;
-#endif
+	// Add all the selectable sockets
+	for (SocketHolder* s = pd_collection; s; s = s->pd_next) {
+	  if (s->pd_selectable) {
+	    if (s->pd_data_in_buffer) {
+	      // Socket is readable now
+	      s->pd_selectable = s->pd_data_in_buffer = 0;
+	      notifyReadable(s);
+	    }
+	    else {
+	      // Add to the pollfds
+	      s->pd_selected = 1;
+	      if (index == pd_pollfd_len)
+		growPollLists();
 
-  int nready;
-
-  if (fd != 0) {
-#ifndef GDB_DEBUG
-    nready = select(maxfd+1,&rfds,0,0,&timeout);
-#else
-    nready = do_select(maxfd+1,&rfds,0,0,&timeout);
-#endif
-  }
-  else {
-    omni_tracedmutex_lock sync(pd_fdset_lock);
-    pd_select_cond.timedwait(pd_abs_sec,pd_abs_nsec);
-    // The condition variable should be poked so we are woken up
-    // immediately when there is something to monitor.  We cannot use
-    // select(0,0,0,0,&timeout) because win32 doesn't like it.
-    nready = 0; // simulate a timeout
-  }
-
-  if (nready == RC_SOCKET_ERROR) {
-    if (ERRNO == RC_EBADF) {
-      omniORB::logs(20, "select() returned EBADF, retrying");
-      goto again;
-    }
-    else if (ERRNO != RC_EINTR) {
-      return 0;
-    }
-    else {
-      return 1;
-    }
-  }
-
-  {
-    omni_tracedmutex_lock sync(pd_fdset_lock);
-    SocketHandle_t fd = 0;
-
-    if (nready > 0) {
-      // Process the result from the select.
-      while (nready) {
-	if (FD_ISSET(fd,&rfds)) {
-	  nready--;
-
-          if (fd == pd_pipe_read) {
-#ifdef UnixArchitecture
-            char data;
-            read(pd_pipe_read, &data, 1);
-            pd_pipe_full = 0;
-#endif
-          }
-	  else {
-	    if (FD_ISSET(fd,&pd_fdset_2)) {
-	      pd_n_fdset_2--;
-	      FD_CLR(fd,&pd_fdset_2);
-	      if (FD_ISSET(fd,&pd_fdset_1)) {
-		pd_n_fdset_1--;
-		FD_CLR(fd,&pd_fdset_1);
-	      }
-	      if (FD_ISSET(fd,&pd_fdset_dib)) {
-		pd_n_fdset_dib--;
-		FD_CLR(fd,&pd_fdset_dib);
-	      }
-	      if (!notifyReadable(fd)) return 0;
+	      pd_pollfds[index].fd      = s->pd_socket;
+	      pd_pollfds[index].events  = POLLIN;
+	      pd_pollsockets[index]     = s;
+	      index++;
 	    }
 	  }
 	}
-	fd++;
+	pd_pollfd_n = index;
+	pd_changed  = 0;
+      }
+      if (pd_idle_count > 0 || pd_pipe_read < 0) {
+	timeout_millis = timeout.tv_sec * 1000 + timeout.tv_usec / 1000;
+      }
+      else {
+	omniORB::logs(25, "SocketCollection idle. Sleeping.");
+	timeout_millis = -1;
       }
     }
+  }
+  else {
+    timeout_millis = timeout.tv_sec * 1000 + timeout.tv_usec / 1000;
+  }
 
-    // Process pd_fdset_dib. Those sockets with their bit set have
-    // already got data in buffer. We do a call back for these sockets if
-    // their entries in pd_fdset_2 is also set.
-    fd = 0;
-    nready = pd_n_fdset_dib;
-    while (nready) {
-      if (FD_ISSET(fd,&pd_fdset_dib)) {
-	if (FD_ISSET(fd,&pd_fdset_2)) {
-	  pd_n_fdset_2--;
-	  FD_CLR(fd,&pd_fdset_2);
-	  pd_n_fdset_dib--;
-	  FD_CLR(fd,&pd_fdset_dib);
-	  if (FD_ISSET(fd,&pd_fdset_1)) {
-	    pd_n_fdset_1--;
-	    FD_CLR(fd,&pd_fdset_1);
-	  }
-	  if (!notifyReadable(fd)) return 0;
+  count = poll(pd_pollfds, pd_pollfd_n, timeout_millis);
+
+  if (count > 0) {
+    // Some sockets are readable
+    omni_tracedmutex_lock sync(pd_collection_lock);
+
+    pd_idle_count = idle_scans;
+
+    index = 0;
+    while (count) {
+      OMNIORB_ASSERT(index < pd_pollfd_n);
+
+      short revents = pd_pollfds[index].revents;
+
+      if (revents)
+	count--;
+
+      if (revents & POLLERR) {
+	if (omniORB::trace(2)) {
+	  omniORB::logger l;
+	  l << "Error polling socket number " << (int)pd_pollfds[index].fd
+	    << "\n";
 	}
-	nready--;
+	// *** HERE: what now?
       }
-      fd++;
+      if (revents & POLLIN) {
+	SocketHolder* s = pd_pollsockets[index];
+
+	if (s) {
+	  s->pd_selectable = s->pd_data_in_buffer = s->pd_selected = 0;
+
+	  // Remove from pollfds by swapping in the last item in the array
+	  pd_pollfd_n--;
+	  pd_pollfds[index]     = pd_pollfds[pd_pollfd_n];
+	  pd_pollsockets[index] = pd_pollsockets[pd_pollfd_n];
+
+	  notifyReadable(s);
+	  continue; // without incrementing index
+	}
+	else {
+	  OMNIORB_ASSERT(pd_pollfds[index].fd == pd_pipe_read);
+#ifdef UnixArchitecture
+	  char data;
+	  read(pd_pipe_read, &data, 1);
+	  pd_pipe_full = 0;
+#endif
+	}
+      }
+      index++;
+    }
+  }
+  else if (count == 0) {
+    // Nothing to read.
+    omni_tracedmutex_lock sync(pd_collection_lock);
+    if (pd_idle_count > 0)
+      pd_idle_count--;
+  }
+  else {
+    // Negative return means error
+    if (ERRNO == RC_EBADF) {
+      omniORB::logs(20, "poll() returned EBADF.");
+      pd_abs_sec = pd_abs_nsec = 0; // Force a list scan next time
+    }
+    else if (ERRNO != RC_EINTR) {
+      if (omniORB::trace(1)) {
+	omniORB::logger l;
+	l << "Error return from poll(). errno = " << (int)ERRNO << "\n";
+      }
+      return 0;
     }
   }
   return 1;
-
 }
 
-/////////////////////////////////////////////////////////////////////////
+void
+SocketHolder::setSelectable(CORBA::Boolean now,
+			    CORBA::Boolean data_in_buffer,
+			    CORBA::Boolean hold_lock)
+{
+  OMNIORB_ASSERT(pd_belong_to);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_belong_to->pd_collection_lock, hold_lock);
+
+  omni_optional_lock l(pd_belong_to->pd_collection_lock, hold_lock, hold_lock);
+
+  if (now && !pd_selected) {
+    // Add socket to the list of pollfds
+    pd_selected = 1;
+
+    unsigned index = pd_belong_to->pd_pollfd_n;
+
+    if (index == pd_belong_to->pd_pollfd_len)
+      pd_belong_to->growPollLists();
+
+    pd_belong_to->pd_pollfds[index].fd      = pd_socket;
+    pd_belong_to->pd_pollfds[index].events  = POLLIN;
+    pd_belong_to->pd_pollsockets[index]     = this;
+    pd_belong_to->pd_pollfd_n = index + 1;
+  }
+
+  pd_selectable     = 1;
+  pd_data_in_buffer = data_in_buffer;
+
+  pd_belong_to->pd_changed = 1;
+
+  if (data_in_buffer) {
+    // Force Select() to scan through the connections right away
+    pd_belong_to->pd_abs_sec = pd_belong_to->pd_abs_nsec = 0;
+  }
+
+#ifdef UnixArchitecture
+  if (!hold_lock &&
+      (now || data_in_buffer || pd_belong_to->pd_idle_count == 0)) {
+
+    // Wake up the Select thread by writing to the pipe.
+    if (pd_belong_to->pd_pipe_write >= 0 && !pd_belong_to->pd_pipe_full) {
+      char data = '\0';
+      pd_belong_to->pd_pipe_full = 1;
+      write(pd_belong_to->pd_pipe_write, &data, 1);
+    }
+  }
+#endif
+}
+
+void
+SocketHolder::clearSelectable()
+{
+  OMNIORB_ASSERT(pd_belong_to);
+  omni_tracedmutex_lock l(pd_belong_to->pd_collection_lock);
+  pd_selectable = 0;
+
+#ifdef UnixArchitecture
+  if (pd_belong_to->pd_idle_count == 0) {
+    // Wake up the Select thread by writing to the pipe.
+    if (pd_belong_to->pd_pipe_write >= 0 && !pd_belong_to->pd_pipe_full) {
+      char data = '\0';
+      pd_belong_to->pd_pipe_full = 1;
+      write(pd_belong_to->pd_pipe_write, &data, 1);
+    }
+  }
+#endif
+}
+
 CORBA::Boolean
-SocketCollection::Peek(SocketHandle_t sock) {
+SocketHolder::Peek()
+{
+  if (!pd_selectable) {
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Socket " << (int)pd_socket << " in Peek() is not selectable.\n";
+    }
+    return 0;
+  }
+  int timeout = (SocketCollection::scan_interval_sec * 1000 +
+		 SocketCollection::scan_interval_nsec / 1000000) / 2;
 
-  {
-    omni_tracedmutex_lock sync(pd_fdset_lock);
-   
-    // Do nothing if this socket is not set to be monitored.
-    if (!FD_ISSET(sock,&pd_fdset_1))
+  pollfd pfd;
+  pfd.fd = pd_socket;
+  pfd.events = POLLIN;
+
+  while (1) {
+    int r = poll(&pfd, 1, timeout);
+
+    if (r > 0) {
+      if (pfd.revents & POLLIN) {
+	if (pd_selectable) {
+	  // Still selectable?
+	  return 1;
+	}
+	else {
+	  return 0;
+	}
+      }
+    }
+    else if (r == 0) {
+      // Timed out
       return 0;
+    }
+    else {
+      if (ERRNO != RC_EINTR)
+	return 0;
+    }
+  }
+}
 
-    // If data in buffer is set, do callback straight away.
-    if (FD_ISSET(sock,&pd_fdset_dib)) {
-      if (FD_ISSET(sock,&pd_fdset_1)) {
-	pd_n_fdset_1--;
-	FD_CLR(sock,&pd_fdset_1);
+
+
+#elif defined(__WIN32__XXX)
+
+/////////////////////////////////////////////////////////////////////////
+// Windows select() based implementation
+
+
+
+#else
+
+/////////////////////////////////////////////////////////////////////////
+// Posix select() based implementation
+
+SocketCollection::SocketCollection()
+  : pd_refcount(1),
+    pd_select_cond(&pd_collection_lock),
+    pd_abs_sec(0), pd_abs_nsec(0),
+    pd_pipe_full(0),
+    pd_idle_count(idle_scans),
+    pd_fd_set_n(0),
+    pd_collection(0),
+    pd_changed(0)
+{
+  FD_ZERO(&pd_fd_set);
+  initPipe(pd_pipe_read, pd_pipe_write);
+}
+
+SocketCollection::~SocketCollection()
+{
+  pd_refcount = -1;
+  closePipe(pd_pipe_read, pd_pipe_write);
+}
+
+CORBA::Boolean
+SocketCollection::isSelectable(SocketHandle_t sock)
+{
+  return IS_SELECTABLE(sock);
+}
+
+#ifdef GDB_DEBUG
+static
+int
+do_select(int maxfd,fd_set* r, fd_set* w, fd_set* e, struct timeval* t) {
+  return select(maxfd,r,w,e,t);
+}
+#else
+#  define do_select select
+#endif
+
+
+CORBA::Boolean
+SocketCollection::Select() {
+
+  struct timeval  timeout;
+  struct timeval* timeout_p;
+  int count;
+  unsigned index;
+
+  // (pd_abs_sec,pd_abs_nsec) defines the absolute time at which we
+  // process the socket list.
+  SocketSetTimeOut(pd_abs_sec,pd_abs_nsec,timeout);
+
+  if (timeout.tv_sec == 0 && timeout.tv_usec == 0) {
+
+    // Time to scan the socket list...
+
+    omni_thread::get_time(&pd_abs_sec,&pd_abs_nsec,
+			  scan_interval_sec,scan_interval_nsec);
+    timeout.tv_sec  = scan_interval_sec;
+    timeout.tv_usec = scan_interval_nsec / 1000;
+
+    {
+      omni_tracedmutex_lock sync(pd_collection_lock);
+      if (pd_changed) {
+
+	FD_ZERO(&pd_fd_set);
+	pd_fd_set_n = 0;
+
+	// Add our pipe
+	if (pd_pipe_read >= 0) {
+	  FD_SET(pd_pipe_read, &pd_fd_set);
+	  pd_fd_set_n = pd_pipe_read + 1;
+	}
+
+	// Add all the selectable sockets
+	for (SocketHolder* s = pd_collection; s; s = s->pd_next) {
+	  if (s->pd_selectable) {
+	    if (s->pd_data_in_buffer) {
+	      // Socket is readable now
+	      s->pd_selectable = s->pd_data_in_buffer = 0;
+	      notifyReadable(s);
+	    }
+	    else {
+	      // Add to the fd_set
+	      s->pd_selected = 1;
+
+	      if (IS_SELECTABLE(s->pd_socket)) {
+		FD_SET(s->pd_socket, &pd_fd_set);
+		if (pd_fd_set_n <= s->pd_socket)
+		  pd_fd_set_n = s->pd_socket + 1;
+	      }
+	    }
+	  }
+	}
+	pd_changed = 0;
       }
-      if (FD_ISSET(sock,&pd_fdset_2)) {
-	pd_n_fdset_2--;
-	FD_CLR(sock,&pd_fdset_2);
+      if (pd_idle_count > 0 || pd_pipe_read < 0) {
+	timeout_p = &timeout;
       }
-      pd_n_fdset_dib--;
-      FD_CLR(sock,&pd_fdset_dib);
-      return 1;
+      else {
+	omniORB::logs(25, "SocketCollection idle. Sleeping.");
+	timeout_p = 0;
+      }
+    }
+  }
+  else {
+    timeout_p = &timeout;
+  }
+
+  fd_set rfds = pd_fd_set;
+  count = do_select(pd_fd_set_n, &rfds, 0, 0, timeout_p);
+
+  if (count > 0) {
+    // Some sockets are readable
+    omni_tracedmutex_lock sync(pd_collection_lock);
+
+    pd_idle_count = idle_scans;
+
+    pd_fd_set_n = 0;
+
+#ifdef UnixArchitecture
+    if (pd_pipe_read >= 0 && FD_ISSET(pd_pipe_read, &rfds)) {
+      char data;
+      read(pd_pipe_read, &data, 1);
+      pd_pipe_full = 0;
+      pd_fd_set_n = pd_pipe_read + 1;
+      count--;
+    }
+#endif
+
+    for (SocketHolder* s = pd_collection; s; s = s->pd_next) {
+
+      if (s->pd_selectable) {
+	if (FD_ISSET(s->pd_socket, &rfds)) {
+	  s->pd_selectable = s->pd_data_in_buffer = s->pd_selected = 0;
+	  FD_CLR(s->pd_socket, &pd_fd_set);
+
+	  notifyReadable(s);
+	  count--;
+	}
+	else if (pd_fd_set_n <= s->pd_socket) {
+	  pd_fd_set_n = s->pd_socket + 1;
+	}
+      }
+    }
+  }
+  else if (count == 0) {
+    // Nothing to read.
+    omni_tracedmutex_lock sync(pd_collection_lock);
+    if (pd_idle_count > 0)
+      pd_idle_count--;
+  }
+  else {
+    // Negative return means error
+    if (ERRNO == RC_EBADF) {
+      omniORB::logs(20, "select() returned EBADF.");
+      pd_abs_sec = pd_abs_nsec = 0; // Force a list scan next time
+    }
+    else if (ERRNO != RC_EINTR) {
+      if (omniORB::trace(1)) {
+	omniORB::logger l;
+	l << "Error return from select(). errno = " << (int)ERRNO << "\n";
+      }
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void
+SocketHolder::setSelectable(CORBA::Boolean now,
+			    CORBA::Boolean data_in_buffer,
+			    CORBA::Boolean hold_lock)
+{
+  OMNIORB_ASSERT(pd_belong_to);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(pd_belong_to->pd_collection_lock, hold_lock);
+
+  omni_optional_lock l(pd_belong_to->pd_collection_lock, hold_lock, hold_lock);
+
+  if (now && !pd_selected) {
+    // Add socket to the fd_set
+    pd_selected = 1;
+
+    if (IS_SELECTABLE(pd_socket)) {
+      FD_SET(pd_socket, &pd_belong_to->pd_fd_set);
+      if (pd_belong_to->pd_fd_set_n <= pd_socket)
+	pd_belong_to->pd_fd_set_n = pd_socket + 1;
     }
   }
 
+  pd_selectable     = 1;
+  pd_data_in_buffer = data_in_buffer;
+
+  pd_belong_to->pd_changed = 1;
+
+  if (data_in_buffer) {
+    // Force Select() to scan through the connections right away
+    pd_belong_to->pd_abs_sec = pd_belong_to->pd_abs_nsec = 0;
+  }
+
+#ifdef UnixArchitecture
+  if (!hold_lock &&
+      (now || data_in_buffer || pd_belong_to->pd_idle_count == 0)) {
+
+    // Wake up the Select thread by writing to the pipe.
+    if (pd_belong_to->pd_pipe_write >= 0 && !pd_belong_to->pd_pipe_full) {
+      char data = '\0';
+      pd_belong_to->pd_pipe_full = 1;
+      write(pd_belong_to->pd_pipe_write, &data, 1);
+    }
+  }
+#endif
+}
+
+void
+SocketHolder::clearSelectable()
+{
+  OMNIORB_ASSERT(pd_belong_to);
+  omni_tracedmutex_lock l(pd_belong_to->pd_collection_lock);
+  pd_selectable = 0;
+
+#ifdef UnixArchitecture
+  if (pd_belong_to->pd_idle_count == 0) {
+    // Wake up the Select thread by writing to the pipe.
+    if (pd_belong_to->pd_pipe_write >= 0 && !pd_belong_to->pd_pipe_full) {
+      char data = '\0';
+      pd_belong_to->pd_pipe_full = 1;
+      write(pd_belong_to->pd_pipe_write, &data, 1);
+    }
+  }
+#endif
+}
+
+
+CORBA::Boolean
+SocketHolder::Peek()
+{
+  if (!pd_selectable) {
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Socket " << (int)pd_socket << " in Peek() is not selectable.\n";
+    }
+    return 0;
+  }
+
   struct timeval timeout;
-  // select on the socket for half the time of scan_interval, if no request
-  // arrives in this interval, we just let AcceptAndMonitor take care
-  // of it.
-  timeout.tv_sec  = scan_interval_sec / 2;
-  timeout.tv_usec = scan_interval_nsec / 1000 / 2;
-  if (scan_interval_sec % 2) timeout.tv_usec += 500000;
+  timeout.tv_sec  = SocketCollection::scan_interval_sec / 2;
+  timeout.tv_usec = SocketCollection::scan_interval_nsec / 1000 / 2;
+  if (SocketCollection::scan_interval_sec % 2) timeout.tv_usec += 500000;
   fd_set rfds;
 
-  do {
+  while (1) {
     FD_ZERO(&rfds);
-    FD_SET(sock,&rfds);
-#ifndef GDB_DEBUG
-    int nready = select(sock+1,&rfds,0,0,&timeout);
-#else
-    int nready = do_select(sock+1,&rfds,0,0,&timeout);
+    FD_SET(pd_socket, &rfds);
+
+    int r = do_select(pd_socket + 1, &rfds, 0, 0, &timeout);
+
+    if (r > 0) {
+      if (FD_ISSET(pd_socket, &rfds)) {
+	if (pd_selectable) {
+	  // Still selectable?
+	  return 1;
+	}
+	else {
+	  return 0;
+	}
+      }
+    }
+    else if (r == 0) {
+      // Timed out
+      return 0;
+    }
+    else {
+      if (ERRNO != RC_EINTR)
+	return 0;
+    }
+  }
+}
+
+
 #endif
 
-    if (nready == RC_SOCKET_ERROR) {
-      if (ERRNO != RC_EINTR) {
-	break;
-      }
-      else {
-	continue;
-      }
-    }
 
-    // Reach here if nready >= 0
+/////////////////////////////////////////////////////////////////////////
+// Common functions
 
-    if (FD_ISSET(sock,&rfds)) {
-      omni_tracedmutex_lock sync(pd_fdset_lock);
 
-      // Are we still interested?
-      if (FD_ISSET(sock,&pd_fdset_1)) {
-	if (FD_ISSET(sock,&pd_fdset_2)) {
-	  pd_n_fdset_2--;
-	  FD_CLR(sock,&pd_fdset_2);
-	}
-	pd_n_fdset_1--;
-	FD_CLR(sock,&pd_fdset_1);
-	if (FD_ISSET(sock,&pd_fdset_dib)) {
-	  pd_n_fdset_dib--;
-	  FD_CLR(sock,&pd_fdset_dib);
-	}
-	return 1;
-      }
-    }
-    break;
-
-  } while(1);
-
-  return 0;
+/////////////////////////////////////////////////////////////////////////
+SocketHolder::~SocketHolder()
+{
+  // *** HERE: assertions
 }
 
 
@@ -606,7 +902,7 @@ SocketCollection::Peek(SocketHandle_t sock) {
 void
 SocketCollection::incrRefCount()
 {
-  omni_tracedmutex_lock sync(pd_fdset_lock);
+  omni_tracedmutex_lock sync(pd_collection_lock);
   OMNIORB_ASSERT(pd_refcount > 0);
   pd_refcount++;
 }
@@ -617,7 +913,7 @@ SocketCollection::decrRefCount()
 {
   int refcount;
   {
-    omni_tracedmutex_lock sync(pd_fdset_lock);
+    omni_tracedmutex_lock sync(pd_collection_lock);
     OMNIORB_ASSERT(pd_refcount > 0);
     refcount = --pd_refcount;
   }
@@ -626,60 +922,45 @@ SocketCollection::decrRefCount()
 
 /////////////////////////////////////////////////////////////////////////
 void
-SocketCollection::addSocket(SocketLink* conn)
+SocketCollection::addSocket(SocketHolder* s)
 {
-  omni_tracedmutex_lock sync(pd_fdset_lock);
-  SocketLink** head = &(pd_hash_table[conn->pd_socket % hashsize]);
-  conn->pd_next = *head;
-  *head = conn;
+  omni_tracedmutex_lock sync(pd_collection_lock);
+
   OMNIORB_ASSERT(pd_refcount > 0);
   pd_refcount++;
+
+  s->pd_belong_to = this;
+
+  if (pd_collection)
+    pd_collection->pd_prev = &s->pd_next;
+
+  s->pd_next = pd_collection;
+  s->pd_prev = &pd_collection;
+  pd_collection = s;
 }
 
 /////////////////////////////////////////////////////////////////////////
-SocketLink*
-SocketCollection::removeSocket(SocketHandle_t sock)
+void
+SocketCollection::removeSocket(SocketHolder* s)
 {
-  int refcount  = 0; // Initialise to stop over-enthusiastic compiler warnings
-  SocketLink* l = 0;
+  OMNIORB_ASSERT(s->pd_belong_to == this);
+
+  int refcount = 0; // Initialise to stop over-enthusiastic compiler warnings
   {
-    omni_tracedmutex_lock sync(pd_fdset_lock);
-    SocketLink** head = &(pd_hash_table[sock % hashsize]);
-    while (*head) {
-      if ((*head)->pd_socket == sock) {
-	l = *head;
-	*head = (*head)->pd_next;
-	OMNIORB_ASSERT(pd_refcount > 0);
-	refcount = --pd_refcount;
-	break;
-      }
-      head = &((*head)->pd_next);
-    }
+    omni_tracedmutex_lock sync(pd_collection_lock);
+
+    OMNIORB_ASSERT(pd_refcount > 0);
+    refcount = --pd_refcount;
+
+    *(s->pd_prev) = s->pd_next;
+
+    if (s->pd_next)
+      s->pd_next->pd_prev = s->pd_prev;
+
+    s->pd_belong_to = 0;
   }
-  if (l && refcount == 0) delete this;
-  return l;
+  if (refcount == 0) delete this;
 }
 
-/////////////////////////////////////////////////////////////////////////
-SocketLink*
-SocketCollection::findSocket(SocketHandle_t sock,
-			     CORBA::Boolean hold_lock) {
-
-  if (!hold_lock) pd_fdset_lock.lock();
-
-  SocketLink* l = 0;
-  SocketLink** head = &(pd_hash_table[sock % hashsize]);
-  while (*head) {
-    if ((*head)->pd_socket == sock) {
-      l = *head;
-      break;
-    }
-    head = &((*head)->pd_next);
-  }
-
-  if (!hold_lock) pd_fdset_lock.unlock();
-
-  return l;
-}
 
 OMNI_NAMESPACE_END(omni)

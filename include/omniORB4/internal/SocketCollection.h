@@ -2,8 +2,10 @@
 //                            Package   : omniORB
 // SocketCollection.h         Created on: 23 Jul 2001
 //                            Author    : Sai Lai Lo (sll)
+//                            Author    : Duncan Grisby
 //
 //    Copyright (C) 2001 AT&T Laboratories Cambridge
+//    Copyright (C) 2005 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/13 21:09:57  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.2  2005/01/06 23:08:25  dgrisby
   Big merge from omni4_0_develop.
 
@@ -101,31 +107,19 @@
 
 #define USE_NONBLOCKING_CONNECT
 
-#if defined(__linux__)
-#   define USE_POLL
-#endif
-
-#if defined(__sunos__)
+#ifdef HAVE_POLL
 #   define USE_POLL
 #endif
 
 #if defined(__hpux__)
-#   if __OSVERSION__ >= 11
-#       define USE_POLL
+#   if __OSVERSION__ < 11
+#       undef USE_POLL
 #   endif
 #   define USE_FAKE_INTERRUPTABLE_RECV
 #endif
 
-#if defined(__freebsd__)
-#  define USE_POLL
-#endif
-
 #if defined(__WIN32__)
 #   define USE_FAKE_INTERRUPTABLE_RECV
-#endif
-
-#if defined(__irix__)
-#   define USE_POLL
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -150,12 +144,10 @@
 #  define EINPROGRESS        WSAEWOULDBLOCK
 #  define RC_EINTR           WSAEINTR
 #  define RC_EBADF           WSAENOTSOCK
-#  define NEED_SOCKET_SHUTDOWN_FLAG 1
 
 OMNI_NAMESPACE_BEGIN(omni)
 
 typedef SOCKET SocketHandle_t;
-typedef fd_set SocketHandleSet_t;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -212,7 +204,7 @@ extern "C" int select (int,fd_set*,fd_set*,fd_set*,struct timeval *);
 #  define RC_INVALID_SOCKET  (-1)
 #  define RC_SOCKET_ERROR    (-1)
 #  define INETSOCKET         AF_INET
-#  define CLOSESOCKET(sock)   close(sock)
+#  define CLOSESOCKET(sock)  close(sock)
 
 #  if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
 #    define SHUTDOWNSOCKET(sock)  ::shutdown(sock,2)
@@ -233,7 +225,6 @@ extern "C" int select (int,fd_set*,fd_set*,fd_set*,struct timeval *);
 OMNI_NAMESPACE_BEGIN(omni)
 
 typedef int    SocketHandle_t;
-typedef fd_set SocketHandleSet_t;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -256,123 +247,154 @@ extern int SocketSetblocking(SocketHandle_t sock);
 
 extern int SocketSetCloseOnExec(SocketHandle_t sock);
 
-class SocketLink {
+
+//
+// Class SocketHolder holds a socket inside a collection. It contains
+// flags to indicate whether the socket is selectable, and so on.
+// Connection classes (e.g. tcpConnection) derive from this class.
+
+class SocketHolder {
 
 public:
-  SocketLink(SocketHandle_t s)
+  SocketHolder(SocketHandle_t s)
     : pd_socket(s),
-#ifdef NEED_SOCKET_SHUTDOWN_FLAG
+      pd_belong_to(0),
       pd_shutdown(0),
-#endif
-      pd_next(0) {}
+      pd_selectable(0),
+      pd_data_in_buffer(0),
+      pd_selected(0),
+      pd_next(0),
+      pd_prev(0) { }
 
-  ~SocketLink() {}
+  virtual ~SocketHolder();
+
+  void setSelectable(CORBA::Boolean now,
+		     CORBA::Boolean data_in_buffer,
+		     CORBA::Boolean hold_lock=0);
+  // Indicate that this socket should be watched for readability.
+  //
+  // If now is true, immediately make the socket selectable (if the
+  // platform permits it), rather than waiting until the select loop
+  // rescans.
+  //
+  // If data_in_buffer is true, the socket is considered to already
+  // have data available to read.
+  //
+  // If hold_lock is true, the associated SocketCollection's lock is
+  // already held.
+
+  void clearSelectable();
+  // Indicate that this socket should not be watched any more.
+
+  CORBA::Boolean Peek();
+  // Do nothing and return immediately if the socket has not been set
+  // to be watched by a previous setSelectable().
+  // Otherwise, monitor the socket's status for a short time. Return
+  // true if the socket becomes readable, otherwise returns false.
 
   friend class SocketCollection;
 
 protected:
-  SocketHandle_t pd_socket;
-
-#ifdef NEED_SOCKET_SHUTDOWN_FLAG
-  // select() on Windows does not return an error after the socket has
-  // shutdown, so we have to store an extra flag here.
-  CORBA::Boolean pd_shutdown;
-#endif
+  SocketHandle_t    pd_socket;
+  SocketCollection* pd_belong_to;
+  CORBA::Boolean    pd_shutdown;
 
 private:
-  SocketLink*    pd_next;
+  CORBA::Boolean    pd_selectable;
+  CORBA::Boolean    pd_data_in_buffer;
+  CORBA::Boolean    pd_selected;
+  SocketHolder*     pd_next;
+  SocketHolder**    pd_prev;
 };
+
+
+//
+// SocketCollection manages a collection of sockets.
 
 class SocketCollection {
 public:
 
   SocketCollection();
 
-protected:
   virtual ~SocketCollection();
 
-  virtual CORBA::Boolean notifyReadable(SocketHandle_t) = 0;
-  // Callback used by Select(). This method is called while holding
-  // pd_fdset_lock.
-
-public:
-  void setSelectable(SocketHandle_t sock, CORBA::Boolean now,
-		     CORBA::Boolean data_in_buffer,
-		     CORBA::Boolean hold_lock=0);
-  // Indicates that this socket should be watched by a select()
-  // so that any new data arriving on the connection will be noted.
-  // If now == 1, immediately make this socket part of the select
-  // set.
-  // If data_in_buffer == 1, treat this socket as if there are
-  // data available from the connection already.
-  // If hold_lock == 1, pd_fdset_lock is already held.
-
-  void clearSelectable(SocketHandle_t);
-  // Indicates that this connection need not be watched any more.
+  virtual CORBA::Boolean notifyReadable(SocketHolder*) = 0;
+  // Callback used by Select(). If it returns false, something has
+  // gone very wrong with the collection and exits the Select loop.
+  // This method is called while holding pd_collection_lock.
 
   CORBA::Boolean isSelectable(SocketHandle_t sock);
   // Indicates whether the given socket can be selected upon.
 
   CORBA::Boolean Select();
-  // Returns TRUE(1) if the Select() has successfully done a scan.
-  // otherwise returns false(0) to indicate that an error has been
+  // Returns true if the Select() has successfully done a scan.
+  // otherwise returns false to indicate that an error has been
   // detected and this function should not be called again.
   //
   // For each of the sockets that has been marked watchable and indeed
-  // has become readable, call notifyReadable() with the socket no.
-  // as the argument.
-
-  CORBA::Boolean Peek(SocketHandle_t sock);
-  // Do nothing and returns immediately if the socket has not been
-  // set to be watched by a previous setSelectable().
-  // Otherwise, monitor the socket's status for a short time.
-  // Returns TRUE(1) if the socket becomes readable.
-  // otherwise returns FALSE(0).
+  // has become readable, call notifyReadable() with the socket as the
+  // argument.
 
   void incrRefCount();
   void decrRefCount();
 
-  void addSocket(SocketLink* conn);
-  // Add this socket to the collection. <conn> is associated with the
-  // socket and should be added to the table hashed by the socket number.
-  // Increments this collection's refcount.
+  void addSocket(SocketHolder* sock);
+  // Add this socket to the collection. Increments this collection's
+  // refcount.
 
-  SocketLink* removeSocket(SocketHandle_t sock);
-  // Remove the socket from this collection. Return the socket which has
-  // been removed. Return 0 if the socket is not found.
-  // Decrements this collection's refcount if a socket is removed.
-
-  SocketLink* findSocket(SocketHandle_t sock,
-			 CORBA::Boolean hold_lock=0);
-  // Returns the connection that is associated with this socket.
-  // Return 0 if this socket cannot be found in the hash table.
-  // if hold_lock == 1, the caller has already got the lock on pd_fdset_lock.
-  // (use purely by member functions.)
+  void removeSocket(SocketHolder* sock);
+  // Remove the socket from this collection. Returns the socket which
+  // has been removed. Decrements this collection's refcount.
 
   static unsigned long scan_interval_sec;
   static unsigned long scan_interval_nsec;
-
-  static CORBA::ULong  hashsize;
+  static unsigned      idle_scans;
 
 private:
-  SocketHandleSet_t    pd_fdset_1;
-  SocketHandleSet_t    pd_fdset_2;
-  SocketHandleSet_t    pd_fdset_dib; // data in buffer
-  int                  pd_n_fdset_1;
-  int                  pd_n_fdset_2;
-  int                  pd_n_fdset_dib;
-  omni_tracedmutex     pd_fdset_lock;
+  int                  pd_refcount;
+  omni_tracedmutex     pd_collection_lock;
   omni_tracedcondition pd_select_cond; // timedwait on if nothing to select
+
+  // Absolute time at which we scan through the socket list choosing
+  // the selectable ones.
   unsigned long        pd_abs_sec;
   unsigned long        pd_abs_nsec;
+
+  // On platforms that support it, we use a pipe to wake up the select.
   int                  pd_pipe_read;
   int                  pd_pipe_write;
   CORBA::Boolean       pd_pipe_full;
-  int                  pd_refcount;
 
-protected:
-  SocketLink**         pd_hash_table;
+  // On platforms that support pipes, after scanning a while with no
+  // activity, we poll / select with an infinite timeout to prevent
+  // unnecessary processing.
+  unsigned             pd_idle_count;
 
+#ifdef USE_POLL
+  // On platforms where we use poll(), we maintain a pre-allocated
+  // array of pollfd structures and a parallel array of pointers to
+  // SocketHolders. pd_pollfd_n is the number of populated pollfds.
+  // pd_pollfd_len is the current length of both arrays.
+  struct pollfd*       pd_pollfds;
+  SocketHolder**       pd_pollsockets;
+  unsigned             pd_pollfd_n;
+  unsigned             pd_pollfd_len;
+
+  void growPollLists();
+  // Expand the pd_pollfds and pd_pollsockets to fit more values.
+  
+#else
+  // On platforms using select(), we maintain an fd_set and the
+  // highest socket number set in it plus 1.
+  fd_set               pd_fd_set;
+  int                  pd_fd_set_n;
+#endif
+
+  // Linked list of registered sockets.
+  SocketHolder*        pd_collection;
+  CORBA::Boolean       pd_changed;
+
+  friend class SocketHolder;
 };
 
 OMNI_NAMESPACE_END(omni)

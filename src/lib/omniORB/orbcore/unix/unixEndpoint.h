@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/13 21:10:17  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.1  2003/03/23 21:01:57  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -47,7 +51,9 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class unixConnection;
 
-class unixEndpoint : public giopEndpoint, public SocketCollection {
+class unixEndpoint : public giopEndpoint,
+		     public SocketCollection,
+		     public SocketHolder {
 public:
 
   unixEndpoint(const char* filename);
@@ -63,7 +69,7 @@ public:
   ~unixEndpoint();
 
 protected:
-  CORBA::Boolean notifyReadable(SocketHandle_t);
+  CORBA::Boolean notifyReadable(SocketHolder*);
   // implement SocketCollection::notifyReadable
   
 
@@ -105,7 +111,7 @@ public:
   friend class unixActiveConnection;
 
 protected:
-  CORBA::Boolean notifyReadable(SocketHandle_t);
+  CORBA::Boolean notifyReadable(SocketHolder*);
   // implement SocketCollection::notifyReadable
 
   void addMonitor(SocketHandle_t);

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/13 21:10:03  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.2  2005/01/06 23:10:55  dgrisby
   Big merge from omni4_0_develop.
 
@@ -69,7 +73,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class tcpEndpoint;
 
-class tcpConnection : public giopConnection, public SocketLink {
+class tcpConnection : public giopConnection, public SocketHolder {
 public:
 
   int Send(void* buf, size_t sz,
@@ -92,7 +96,7 @@ public:
 
   CORBA::Boolean isSelectable();
 
-  void Peek(notifyReadable_t func,void* cookie);
+  CORBA::Boolean Peek();
 
   SocketHandle_t handle() const { return pd_socket; }
 
@@ -106,7 +110,6 @@ public:
   friend class tcpEndpoint;
 
 private:
-  SocketCollection* pd_belong_to;
   CORBA::String_var pd_myaddress;
   CORBA::String_var pd_peeraddress;
 };

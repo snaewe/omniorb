@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.25.2.3  2005/01/13 21:09:59  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.25.2.2  2005/01/06 23:10:27  dgrisby
   Big merge from omni4_0_develop.
 
@@ -999,9 +1003,7 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       // probably afford to call Peek() here because this thread is
       // otherwise idle.
 
-      CORBA::Boolean readable = 0;
-      conn->Peek(peekCallBack,(void*)&readable);
-      if (readable) {
+      if (conn->Peek()) {
 	// There is data to be read. Tell the worker to go around again.
 	return 1;
       }

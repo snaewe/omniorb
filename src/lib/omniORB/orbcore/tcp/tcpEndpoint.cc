@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/13 21:10:03  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.2  2005/01/06 23:10:56  dgrisby
   Big merge from omni4_0_develop.
 
@@ -111,7 +115,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 /////////////////////////////////////////////////////////////////////////
 tcpEndpoint::tcpEndpoint(const IIOP::Address& address) :
-  pd_socket(RC_INVALID_SOCKET), pd_address(address),
+  SocketHolder(RC_INVALID_SOCKET), pd_address(address),
   pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
   pd_callback_cookie(0), pd_poked(0) {
 
@@ -121,7 +125,7 @@ tcpEndpoint::tcpEndpoint(const IIOP::Address& address) :
 
 /////////////////////////////////////////////////////////////////////////
 tcpEndpoint::tcpEndpoint(const char* address) :
-  pd_socket(RC_INVALID_SOCKET),
+  SocketHolder(RC_INVALID_SOCKET),
   pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
   pd_callback_cookie(0) {
 
@@ -306,6 +310,9 @@ tcpEndpoint::Bind() {
   sprintf((char*)pd_address_string,format,
 	  (const char*)pd_address.host,(int)pd_address.port);
 
+  // Add the socket to our SocketCollection.
+  addSocket(this);
+
   return 1;
 }
 
@@ -333,6 +340,7 @@ tcpEndpoint::Poke() {
 void
 tcpEndpoint::Shutdown() {
   SHUTDOWNSOCKET(pd_socket);
+  removeSocket(this);
   decrRefCount();
   omniORB::logs(20, "TCP endpoint shut down.");
 }
@@ -346,7 +354,7 @@ tcpEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 
   pd_callback_func = func;
   pd_callback_cookie = cookie;
-  setSelectable(pd_socket,1,0,0);
+  setSelectable(1,0,0);
 
   while (1) {
     pd_new_conn_socket = RC_INVALID_SOCKET;
@@ -362,9 +370,9 @@ tcpEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 
 /////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
-tcpEndpoint::notifyReadable(SocketHandle_t fd) {
+tcpEndpoint::notifyReadable(SocketHolder* sh) {
 
-  if (fd == pd_socket) {
+  if (sh == (SocketHolder*)this) {
     // New connection
     SocketHandle_t sock;
 again:
@@ -400,15 +408,12 @@ again:
 #endif
       pd_new_conn_socket = sock;
     }
-    setSelectable(pd_socket,1,0,1);
+    setSelectable(1,0,1);
     return 1;
   }
   else {
     // Existing connection
-    SocketLink* conn = findSocket(fd,1);
-    if (conn) {
-      pd_callback_func(pd_callback_cookie,(tcpConnection*)conn);
-    }
+    pd_callback_func(pd_callback_cookie,(tcpConnection*)sh);
     return 1;
   }
 }

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/13 21:10:03  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.1  2003/03/23 21:01:58  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -86,12 +90,9 @@ unixActiveCollection::Monitor(giopConnection::notifyReadable_t func,
 
 /////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
-unixActiveCollection::notifyReadable(SocketHandle_t fd) {
+unixActiveCollection::notifyReadable(SocketHolder* conn) {
 
-  SocketLink* conn = findSocket(fd,1);
-  if (conn) {
-    pd_callback_func(pd_callback_cookie,(unixConnection*)conn);
-  }
+  pd_callback_func(pd_callback_cookie,(unixConnection*)conn);
   return 1;
 }
 

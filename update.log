@@ -1,3 +1,35 @@
+Thu Jan 13 20:56:09 GMT 2005 dgrisby
+====================================
+
+- New SocketCollection implementation, using poll() where available
+  and select() otherwise. Windows specific version to follow.
+
+configure
+configure.ac
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/acconfig.h.in
+include/omniORB4/giopEndpoint.h
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/ssl/sslActive.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.h
+src/lib/omniORB/orbcore/tcp/tcpActive.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.h
+src/lib/omniORB/orbcore/unix/unixActive.cc
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.h
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.h
+
+
 Fri Jan  7 00:15:43 GMT 2005 dgrisby
 ====================================
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/13 21:10:16  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.2  2005/01/06 23:10:57  dgrisby
   Big merge from omni4_0_develop.
 
@@ -160,6 +164,9 @@ unixConnection::Recv(void* buf, size_t sz,
 
   do {
 
+    if (pd_shutdown)
+      return -1;
+
     struct timeval t;
 
     if (deadline_secs || deadline_nanosecs) {
@@ -237,6 +244,7 @@ unixConnection::Recv(void* buf, size_t sz,
 void
 unixConnection::Shutdown() {
   SHUTDOWNSOCKET(pd_socket);
+  pd_shutdown = 1;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -256,7 +264,7 @@ unixConnection::unixConnection(SocketHandle_t sock,
 			       SocketCollection* belong_to,
 			       const char* filename,
 			       CORBA::Boolean isActive) : 
-  SocketLink(sock), pd_belong_to(belong_to) {
+  SocketHolder(sock) {
 
   static CORBA::ULong suffix = 0;
 
@@ -280,7 +288,7 @@ unixConnection::unixConnection(SocketHandle_t sock,
 
 /////////////////////////////////////////////////////////////////////////
 unixConnection::~unixConnection() {
-  pd_belong_to->removeSocket(pd_socket);
+  pd_belong_to->removeSocket(this);
   CLOSESOCKET(pd_socket);
 }
 
@@ -289,7 +297,7 @@ void
 unixConnection::setSelectable(CORBA::Boolean now,
 			     CORBA::Boolean data_in_buffer) {
 
-  pd_belong_to->setSelectable(pd_socket,now,data_in_buffer);
+  SocketHolder::setSelectable(now,data_in_buffer);
 }
 
 
@@ -297,7 +305,7 @@ unixConnection::setSelectable(CORBA::Boolean now,
 void
 unixConnection::clearSelectable() {
 
-  pd_belong_to->clearSelectable(pd_socket);
+  SocketHolder::clearSelectable();
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -307,12 +315,9 @@ unixConnection::isSelectable() {
 }
 
 /////////////////////////////////////////////////////////////////////////
-void
-unixConnection::Peek(giopConnection::notifyReadable_t func, void* cookie) {
-
-  if (pd_belong_to->Peek(pd_socket)) {
-    func(cookie,this);
-  }
+CORBA::Boolean
+unixConnection::Peek() {
+  return SocketHolder::Peek();
 }
 
 /////////////////////////////////////////////////////////////////////////

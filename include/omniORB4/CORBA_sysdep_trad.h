@@ -30,6 +30,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/13 21:09:57  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.2  2005/01/06 23:08:09  dgrisby
   Big merge from omni4_0_develop.
 
@@ -468,6 +472,7 @@
 #  undef HAVE_STRNCASECMP
 #  undef HAVE_UNAME
 #  undef HAVE_GETHOSTNAME
+#  undef HAVE_POLL
 
 #ifdef __MINGW32__
 #  define HAVE_STRCASECMP

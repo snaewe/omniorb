@@ -4288,7 +4288,8 @@ fi
 done
 
 
-for ac_header in ifaddrs.h
+
+for ac_header in sys/poll.h ifaddrs.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then
@@ -11031,7 +11032,8 @@ done
 
 
 
-for ac_func in isinf insinff isinfl nanosleep sigaction sigvec snprintf
+
+for ac_func in isinf insinff isinfl nanosleep poll sigaction sigvec snprintf
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5

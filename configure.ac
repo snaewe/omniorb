@@ -36,7 +36,7 @@ dnl ** Headers
 
 AC_CHECK_HEADERS(errno.h fcntl.h netdb.h signal.h stdlib.h string.h strings.h)
 AC_CHECK_HEADERS(unistd.h nan.h sys/if.h sys/ioctl.h sys/param.h sys/time.h)
-AC_CHECK_HEADERS(ifaddrs.h)
+AC_CHECK_HEADERS(sys/poll.h ifaddrs.h)
 AC_HEADER_TIME
 
 
@@ -85,7 +85,7 @@ dnl ** Functions
 
 AC_LANG(C)
 AC_CHECK_FUNCS(getaddrinfo gethostname getopt getpid gettimeofday)
-AC_CHECK_FUNCS(isinf insinff isinfl nanosleep sigaction sigvec snprintf)
+AC_CHECK_FUNCS(isinf insinff isinfl nanosleep poll sigaction sigvec snprintf)
 AC_CHECK_FUNCS(strcasecmp strdup strerror stricmp strncasecmp strtoul)
 AC_CHECK_FUNCS(strtoull strtouq uname vprintf vsnprintf)
 AC_LANG(C++)

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/13 21:10:01  dgrisby
+  New SocketCollection implementation, using poll() where available and
+  select() otherwise. Windows specific version to follow.
+
   Revision 1.1.4.2  2005/01/06 23:10:52  dgrisby
   Big merge from omni4_0_develop.
 
@@ -201,12 +205,8 @@ sslConnection::Recv(void* buf, size_t sz,
 
   do {
 
-#ifdef NEED_SOCKET_SHUTDOWN_FLAG
-    // Unfortunately, select() on Windows does not return an error
-    // after the socket has shutdown. We have to use this hack.
     if (pd_shutdown)
       return -1;
-#endif
 
     struct timeval t;
 
@@ -309,9 +309,7 @@ sslConnection::Shutdown() {
   SSL_set_shutdown(pd_ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
   SSL_shutdown(pd_ssl);
   SHUTDOWNSOCKET(pd_socket);
-#ifdef NEED_SOCKET_SHUTDOWN_FLAG
   pd_shutdown = 1;
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -329,7 +327,7 @@ sslConnection::peeraddress() {
 /////////////////////////////////////////////////////////////////////////
 sslConnection::sslConnection(SocketHandle_t sock,::SSL* ssl, 
 			     SocketCollection* belong_to) : 
-  SocketLink(sock), pd_ssl(ssl), pd_belong_to(belong_to) {
+  SocketHolder(sock), pd_ssl(ssl) {
 
   struct sockaddr_in addr;
   SOCKNAME_SIZE_T l;
@@ -363,7 +361,7 @@ sslConnection::sslConnection(SocketHandle_t sock,::SSL* ssl,
 /////////////////////////////////////////////////////////////////////////
 sslConnection::~sslConnection() {
 
-  pd_belong_to->removeSocket(pd_socket);
+  pd_belong_to->removeSocket(this);
 
   if(pd_ssl != 0) {
     if (SSL_get_shutdown(pd_ssl) == 0) {
@@ -384,7 +382,7 @@ sslConnection::setSelectable(CORBA::Boolean now,
 
   if (SSL_pending(ssl_handle())) data_in_buffer = 1;
 
-  pd_belong_to->setSelectable(pd_socket,now,data_in_buffer);
+  SocketHolder::setSelectable(now,data_in_buffer);
 }
 
 
@@ -392,7 +390,7 @@ sslConnection::setSelectable(CORBA::Boolean now,
 void
 sslConnection::clearSelectable() {
 
-  pd_belong_to->clearSelectable(pd_socket);
+  SocketHolder::clearSelectable();
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -403,17 +401,13 @@ sslConnection::isSelectable() {
 
 
 /////////////////////////////////////////////////////////////////////////
-void
-sslConnection::Peek(giopConnection::notifyReadable_t func, void* cookie) {
+CORBA::Boolean
+sslConnection::Peek() {
 
   if (SSL_pending(ssl_handle())) {
-    func(cookie,this);
-    return;
+    return 1;
   }
-
-  if (pd_belong_to->Peek(pd_socket)) {
-    func(cookie,this);
-  }
+  return SocketHolder::Peek();
 }
 
 
