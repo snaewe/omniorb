@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.1  1997/01/08 17:28:30  sll
-  Initial revision
+  Revision 1.2  1997/01/08 19:10:53  ewc
+  Added typedef to work around VC++ 4.2 nested class bug
 
+ * Revision 1.1  1997/01/08  17:28:30  sll
+ * Initial revision
+ *
   */
 
 #ifndef __BUFFEREDSTREAM_H__
@@ -52,8 +55,9 @@
 #error "UMARSHAL has already been defined"
 #endif
 
+typedef Strand::Sync Strand_Sync;
 
-class NetBufferedStream : public Strand::Sync {
+class NetBufferedStream : public Strand_Sync {
 public:
   NetBufferedStream(Strand *s,
 		    _CORBA_Boolean RdLock=1,
