@@ -156,6 +156,8 @@ public:
   virtual CORBA::Boolean NP_is_nil() const;
   virtual CORBA::ContextList_ptr NP_duplicate();
 
+  inline const char*const* NP_list() { return pd_list.NP_data(); }
+
 private:
   void free_entries();
 
