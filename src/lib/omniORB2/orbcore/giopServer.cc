@@ -11,10 +11,17 @@
  
 /*
   $Log$
-  Revision 1.5  1997/04/08 17:10:45  sll
-  Relaxed the integrity check on incoming IIOP messages to cope with sloppy
-  IIOP implementation.
+  Revision 1.6  1997/04/22 17:22:15  sll
+  - Now support GIOP LocateRequest message.
+  - omni::locateObject() now throws OBJECT_NOT_EXIST instead of INV_OBJREF.
+    Catch this exception in HandleRequest().
+  - Use non-zero message size when calling GIOP_S::RdMessageSize() in the
+    initial processing inside GIOP_S::dispatcher().
 
+// Revision 1.5  1997/04/08  17:10:45  sll
+// Relaxed the integrity check on incoming IIOP messages to cope with sloppy
+// IIOP implementation.
+//
 // Revision 1.4  1997/03/10  11:56:44  sll
 // Minor changes to accomodate the creation of a public API for omniORB2.
 //
@@ -111,11 +118,7 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
 	  if (omniORB::traceLevel >= 15) {
 	    cerr << "GIOP_S::RequestReceived: garbage left at the end of message." << endl;
 	  }
-#if 0
 	  if (!omniORB::strictIIOP) {
-#else
-	  if (1) {
-#endif
 	    skip(RdMessageUnRead());
 	  }
 	  else {
@@ -233,7 +236,7 @@ GIOP_S::dispatcher(Strand *s)
 
   gs.pd_state = GIOP_S::RequestIsBeingProcessed;
 
-  gs.RdMessageSize(0,0);
+  gs.RdMessageSize(sizeof(MessageHeader::HeaderType)+sizeof(CORBA::ULong),0);
 
   MessageHeader::HeaderType hdr;
   gs.get_char_array((CORBA::Char *)hdr,
@@ -255,7 +258,7 @@ GIOP_S::dispatcher(Strand *s)
 	    gs.setStrandDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
 	  }
-	gs.RdMessageSize(0,hdr[6]);
+	gs.RdMessageSize(sizeof(CORBA::ULong),hdr[6]);
 	gs.HandleRequest(hdr[6]);
 	break;
       }
@@ -273,7 +276,7 @@ GIOP_S::dispatcher(Strand *s)
 	    gs.setStrandDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
 	  }
-	gs.RdMessageSize(0,hdr[6]);
+	gs.RdMessageSize(sizeof(CORBA::ULong),hdr[6]);
 	gs.HandleLocateRequest(hdr[6]);
 	break;
       }
@@ -291,7 +294,7 @@ GIOP_S::dispatcher(Strand *s)
 	    gs.setStrandDying();
 	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
 	  }
-	gs.RdMessageSize(0,hdr[6]);
+	gs.RdMessageSize(sizeof(CORBA::ULong),hdr[6]);
 	gs.HandleCancelRequest(hdr[6]);
 	break;
       }
@@ -453,13 +456,17 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
   omniObject *obj = 0;    
   try {
     obj = omni::locateObject(pd_objkey);
-    if (!obj->dispatch(*this,(const char *)pd_operation,pd_response_expected)) 
-      {
-	RequestReceived(1);
-	throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      }
+    if (!obj->dispatch(*this,(const char *)pd_operation,pd_response_expected))
+	{
+	  if (!obj->omniObject::dispatch(*this,(const char*)pd_operation,
+					pd_response_expected))
+	    {
+	      RequestReceived(1);
+	      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+	    }
+	}
   }
-  catch (CORBA::INV_OBJREF &ex) {
+  catch (CORBA::OBJECT_NOT_EXIST &ex) {
     if (!obj) {
       RequestReceived(1);
       if (!pd_response_expected) {
@@ -470,11 +477,11 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 	ReplyCompleted();
       }
       else {
-	MarshallSystemException(this,SysExceptRepoID::INV_OBJREF,ex);
+	MarshallSystemException(this,SysExceptRepoID::OBJECT_NOT_EXIST,ex);
       }
     }
     else {
-      CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INV_OBJREF,ex);
+      CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (OBJECT_NOT_EXIST,ex);
     }      
   }
   catch (CORBA::UNKNOWN &ex) {
@@ -493,8 +500,8 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     setStrandDying();
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (COMM_FAILURE,ex);
   }
-  catch (CORBA::OBJECT_NOT_EXIST &ex) {
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (OBJECT_NOT_EXIST,ex);
+  catch (CORBA::INV_OBJREF &ex) {
+    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INV_OBJREF,ex);
   }
   catch (CORBA::NO_PERMISSION &ex) {
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_PERMISSION,ex);
@@ -567,24 +574,77 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 void
 GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
 {
-  // XXX Not supported yet!!!
-  // For the moment, just send a MessageError message in response
- 
-  // Remove the rest of the message from the input as if they have been
-  // processed.
   CORBA::ULong msgsize;
-  msgsize <<= *this;
-  if (msgsize > MaxMessageSize()) {
+
+  try {
+    // This try block catches any exception that might raise during
+    // the processing of the request header
+    msgsize <<= *this;
+    if (msgsize > MaxMessageSize()) {
+      SendMsgErrorMessage();
+      setStrandDying();
+      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+    }
+
+    RdMessageSize(msgsize,byteorder);  // Set the size of the message body.
+
+    pd_request_id <<= *this;
+
+    CORBA::ULong keysize;
+    keysize <<= *this;
+    if (keysize != sizeof(omniObjectKey)) {
+      // This key did not come from this orb.
+      // silently skip the key. Initialise pd_objkey to all zeros and
+      // let the call to locateObject() below to raise the proper exception
+      pd_objkey = omniORB::nullkey();
+      skip(keysize);
+    }
+    else {
+      get_char_array((CORBA::Char *)&pd_objkey,keysize);
+    }
+    RequestReceived();
+  }
+  catch (CORBA::MARSHAL &ex) {
+    RequestReceived(1);
     SendMsgErrorMessage();
-    setStrandDying();
-    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+    pd_state = GIOP_S::Idle;
+    return;
+  }
+  catch (CORBA::NO_MEMORY &ex) {
+    RequestReceived(1);
+    MarshallSystemException(this,SysExceptRepoID::NO_MEMORY,ex);
+    return;
   }
 
-  RdMessageSize(msgsize,byteorder); // set the size of the message body
-  RequestReceived(1);
+  omniObject *obj = 0;
+  GIOP::LocateStatusType status;
 
-  SendMsgErrorMessage();
+  try {
+    obj = omni::locateObject(pd_objkey);
+    omni::objectRelease(obj);
+    status = GIOP::OBJECT_HERE;
+    // XXX what if the object is relocated. We should do GIOP::OBJECT_FORWARD
+    // as well.
+  }
+  catch(...) {
+    status = GIOP::UNKNOWN_OBJECT;
+  }
+
+  WrLock();
+  pd_state = GIOP_S::ReplyIsBeingComposed;
+
+  size_t bodysize = 8;
+  WrMessageSize(0);
+  put_char_array((CORBA::Char *)MessageHeader::LocateReply,
+		 sizeof(MessageHeader::LocateReply));
+  operator>>= ((CORBA::ULong)bodysize,*this);
+  operator>>= (pd_request_id,*this);
+  operator>>= ((CORBA::ULong)status,*this);
+
+  flush();
   pd_state = GIOP_S::Idle;
+  WrUnlock();
+
   return;
 }
 
