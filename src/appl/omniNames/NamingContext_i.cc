@@ -43,7 +43,7 @@ NamingContext_i* NamingContext_i::tailContext = (NamingContext_i*)0;
 // Ctor.
 //
 
-#if defined(__NT__) && defined(_MSC_VER)
+#if defined(__WIN32__) && defined(_MSC_VER)
 
 // Work-around MSVC++ 4.2 nested class bug
 typedef CosNaming::_sk_NamingContext CosNaming__sk_NamingContext;
