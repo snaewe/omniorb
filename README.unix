@@ -136,9 +136,6 @@ Configuration
   5. Configure the Naming service
   -------------------------------
 
-  If you are upgrading from 2.2.0, please read the important information about
-  omniNames at the end of this note.
- 
   You also have to configure the omniORB3 runtime and the naming
   service, consult the user guides in ./doc for details. For a quick
   start, follow these steps:
@@ -148,26 +145,24 @@ Configuration
           OMNINAMES_LOGDIR=/wib/wob; export OMNINAMES_LOGDIR
 
     o Start omniNames. The binary is in ./bin/<platform>/. For example:
-         $ ./bin/sun4_sosV_5.5/omniNames -start 12345 &
-      Notice that you have to give as a parameter to the option -start
-      the TCP/IP port number omniNames will use to receive IIOP requests.
+         $ ./bin/sun4_sosV_5.5/omniNames -start
 
-    o omniNames writes the stringified object reference for its root context 
-      on standard error. You should copy this string into a file omniORB.cfg.
-      The format of the entry is the word NAMESERVICE followed by 
-      space and the stringified IOR all on one line.  For example:
-  
-      NAMESERVICE IOR:00fff71c0000002849444c3a6f6d672e6f72672f436f734e616d696e672f4e616d696e67436f6e746578743a312e300000000001000000000000002c0001000000000012776962626c652e776f62626c652e636f6d0004d20000000c34c35a8305a931a200000001
+      That starts omniNames on the default port of 2809. If you want
+      it to start on a different port, give the port number as an
+      argument to -start:
 
-    o Since 2.6.0, an alternative way set up omniORB.cfg is as follows:
-         If omniNames has been started on host wobble and port 1234,
-         add to omniORB.cfg the following lines:
+         $ ./bin/sun4_sosV_5.5/omniNames -start 12345
 
-      ORBInitialHost wobble
-      ORBInitialPort 1234
+    o You need to tell other omniORB programs where to find the Naming
+      service. With omniORB 3 and later, you use the interoperable
+      naming service. Create a file omniORB.cfg containing:
 
-      Any omniORB clients of release 2.6.0 or later is able to use this
-      information to locate the root context of the Naming Service. 
+         ORBInitRef NameService=corbaname::my.host.name
+
+      where my.host.name is the name of the machine running omniNames.
+      If you have specified a non-default port, use something like
+
+         ORBInitRef NameService=corbaname::my.host.name:12345
 
     o Set the environment variable OMNIORB_CONFIG to contain the full
       path name of the file omniORB.cfg. For example,

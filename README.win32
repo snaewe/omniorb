@@ -89,9 +89,6 @@ files in the bin, lib and include directories.
 Configure the naming service
 =============================
  
-  If you are upgrading from 2.2.0, please read the important
-  information about omniNames at the end of this note.
-
   You have to configure the omniORB runtime and the naming service,
   consult the user guides in ./doc for details. For a quick start,
   follow these steps:
@@ -105,35 +102,26 @@ Configure the naming service
 
     o Start omniNames. The binary is in <Install Location>\bin\win32_x86. 
       For example:
-         omniNames -start 12345
-      Notice that you have to give as a parameter to the option -start
-      the TCP/IP port number omniNames will use to receive IIOP requests.
 
-    o omniNames writes the stringified object reference for its root context 
-      on standard error.
-      Copy the IOR. (including the IOR: prefix).
+         omniNames -start
+
+      That starts omniNames on the default port of 2809. If you want
+      it to start on a different port, give the port number as an
+      argument to -start:
+
+         omniNames -start 12345
 
     o Start the tool REGEDT32.EXE (on NT) or REGEDIT.EXE (on Windows '95). 
       Select the key  HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0 (or create
       it if it doesn't exist). Add a string value (known as a REG_SZ data type
-      when using REGEDT32) called NAMESERVICE  , and paste the IOR in to the 
-      value field associated with it.
+      when using REGEDT32) called ORBInitRef , and give it the value
 
-    o Since 2.6.0, an alternative way to set up the configuration data is
-      as follows:
+         NameService=corbaname::my.host.name
 
-         If omniNames has been started on host wobble and port 1234,
-         use REGEDT32.EXE to enter the following keys into
+      where my.host.name is the name of the machine running omniNames.
+      If you have specified a non-default port, use something like
 
-            HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0
-
-              Name                   Value (REG_SZ)
-         ------------------------------------------
-         ORBInitialHost                 wobble
-         ORBInitialPort                 1234
-
-      Any omniORB clients of release 2.6.0 or later is able to use this
-      information to locate the root context of the Naming Service.
+         NameService=corbaname::my.host.name:12345
 
     o The registry entries must be duplicated on all machines that
       will run omniORB programs. It is only necessary to run one
