@@ -11,10 +11,13 @@
  
 /*
   $Log$
-  Revision 1.4  1997/04/08 17:11:12  sll
-  Relaxed the integrity check on incoming IIOP messages to cope with sloppy
-  IIOP implementation.
+  Revision 1.5  1997/04/22 17:12:00  sll
+  - new member IssueLocateRequest() to issue GIOP LocateRequest message
 
+// Revision 1.4  1997/04/08  17:11:12  sll
+// Relaxed the integrity check on incoming IIOP messages to cope with sloppy
+// IIOP implementation.
+//
 // Revision 1.3  1997/03/10  11:53:33  sll
 // Minor changes to accomodate the creation of a public API for omniORB2.
 //
@@ -46,8 +49,12 @@ GIOP_C::GIOP_C(Rope *r)
 
 GIOP_C::~GIOP_C()
 {
-  if (pd_state == GIOP_C::Zombie)
+  if (pd_state == GIOP_C::Zombie) {
+    if (omniORB::traceLevel >= 15) {
+      cerr << "GIOP_C dtor re-entered." << endl;
+    }
     return;
+  }
   if (pd_state != GIOP_C::Idle) {
     setStrandDying();
   }
@@ -56,7 +63,6 @@ GIOP_C::~GIOP_C()
 }
 
 size_t
-
 GIOP_C::RequestHeaderSize(const size_t objkeysize, const size_t opnamesize)
 {
   // Compute the header size, this includes the GIOP Message header and
@@ -91,7 +97,6 @@ GIOP_C::RequestHeaderSize(const size_t objkeysize, const size_t opnamesize)
 }
 
 void 
-
 GIOP_C::InitialiseRequest(const void          *objkey,
 			  const size_t         objkeysize,
 			  const char          *opname,
@@ -147,7 +152,6 @@ GIOP_C::InitialiseRequest(const void          *objkey,
 }
 
 GIOP::ReplyStatusType 
-
 GIOP_C::ReceiveReply()
 {
   if (pd_state != GIOP_C::RequestInProgress)
@@ -242,7 +246,6 @@ GIOP_C::ReceiveReply()
 }
 
 void
-
 GIOP_C::RequestCompleted(CORBA::Boolean skip_msg)
 {
   if (pd_state != GIOP_C::ReplyIsBeingProcessed)
@@ -276,11 +279,7 @@ GIOP_C::RequestCompleted(CORBA::Boolean skip_msg)
 	  if (omniORB::traceLevel >= 15) {
 	    cerr << "GIOP_C::RequestCompleted: garbage left at the end of message." << endl;
 	  }
-#if 0
 	  if (!omniORB::strictIIOP) {
-#else
-	  if (1) {
-#endif
 	    skip(RdMessageUnRead());
 	  }
 	  else {
@@ -294,8 +293,106 @@ GIOP_C::RequestCompleted(CORBA::Boolean skip_msg)
   return;
 }
 
-void
+GIOP::LocateStatusType
+GIOP_C::IssueLocateRequest(const void   *objkey,
+			   const size_t  objkeysize)
+{
+  if (pd_state != GIOP_C::Idle)
+    throw omniORB::fatalException(__FILE__,__LINE__,
+      "GIOP_C::IssueLocateRequest() entered with the wrong state.");
 
+  CORBA::ULong msgsize = sizeof(MessageHeader::LocateRequest) + 
+                         sizeof(CORBA::ULong);
+  CORBA::ULong bodysize = omni::align_to(msgsize,omni::ALIGN_4) - msgsize;
+
+  bodysize += sizeof (CORBA::ULong) + sizeof(CORBA::ULong) + objkeysize;
+  msgsize += bodysize;
+
+  pd_state = GIOP_C::RequestInProgress;
+  pd_request_id = newRequestID();
+
+  WrMessageSize(msgsize);
+  put_char_array((CORBA::Char *)MessageHeader::LocateRequest,
+		 sizeof(MessageHeader::LocateRequest));
+  operator>>= ((CORBA::ULong)bodysize,*this);
+
+  operator>>= (pd_request_id,*this);
+
+  operator>>= ((CORBA::ULong) objkeysize,*this);
+  put_char_array((CORBA::Char *) objkey,objkeysize);
+
+  pd_state = GIOP_C::WaitingForReply;
+  flush();
+
+  do {
+    RdMessageSize(0,omni::myByteOrder);
+
+    MessageHeader::HeaderType hdr;
+    get_char_array((CORBA::Char *)hdr,sizeof(MessageHeader::HeaderType));
+
+    pd_state = GIOP_C::ReplyIsBeingProcessed;
+
+    if (hdr[0] != MessageHeader::LocateReply[0] ||
+	hdr[1] != MessageHeader::LocateReply[1] ||
+	hdr[2] != MessageHeader::LocateReply[2] ||
+	hdr[3] != MessageHeader::LocateReply[3] ||
+	hdr[4] != MessageHeader::LocateReply[4] ||
+	hdr[5] != MessageHeader::LocateReply[5] ||
+	hdr[7] != MessageHeader::LocateReply[7])
+      {
+	// Wrong header
+	setStrandDying();
+	throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+      }
+
+    CORBA::ULong msgsize;
+    msgsize <<= *this;
+    if (hdr[6] != omni::myByteOrder) {
+      msgsize =  ((((msgsize) & 0xff000000) >> 24) | 
+		  (((msgsize) & 0x00ff0000) >> 8)  | 
+		  (((msgsize) & 0x0000ff00) << 8)  | 
+		  (((msgsize) & 0x000000ff) << 24));
+    }
+
+    if (msgsize > MaxMessageSize()) {
+      // message size has exceeded the limit
+      setStrandDying();
+      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+    }
+
+    RdMessageSize(msgsize,hdr[6]);
+
+    CORBA::ULong req_id;
+    req_id <<= *this;
+    if (req_id != pd_request_id) {
+      // Not the expected reply, skip the entire message
+      skip(RdMessageUnRead());
+      pd_state = GIOP_C::RequestInProgress;
+      continue;
+    }
+  } while (0);
+  
+  CORBA::ULong rc;
+  rc <<= *this;
+
+  switch (rc) {
+  case GIOP::UNKNOWN_OBJECT:
+  case GIOP::OBJECT_HERE:
+  case GIOP::OBJECT_FORWARD:
+    break;
+  default:
+    // Should never receive anything other that the above
+    // Same treatment as wrong header
+    setStrandDying();
+    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
+    break;
+  }
+  return (GIOP::LocateStatusType)rc;
+}
+
+
+
+void
 GIOP_C::UnMarshallSystemException()
 {
 
