@@ -27,7 +27,9 @@
 //   Implementation of CORBA::Request.
 //
 
-#include <pseudo.h>
+#include <request.h>
+#include <deferredRequest.h>
+#include <context.h>
 #include <string.h>
 
 
@@ -49,6 +51,7 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation)
 
   pd_state = RS_READY;
   pd_deferredRequest = 0;
+  pd_sysExceptionToThrow = 0;
 
   if( CORBA::is_nil(target) )
     throw omniORB::fatalException(__FILE__,__LINE__,
@@ -85,6 +88,7 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation,
 
   pd_state = RS_READY;
   pd_deferredRequest = 0;
+  pd_sysExceptionToThrow = 0;
 
   if( CORBA::is_nil(target) )
     throw omniORB::fatalException(__FILE__,__LINE__,
@@ -125,6 +129,7 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation,
 
   pd_state = RS_READY;
   pd_deferredRequest = 0;
+  pd_sysExceptionToThrow = 0;
 
   if( CORBA::is_nil(target) )
     throw omniORB::fatalException(__FILE__,__LINE__,
@@ -144,6 +149,7 @@ RequestImpl::~RequestImpl()
     omniORB::log << " Use Request::get_response() or poll_response().\n";
     omniORB::log.flush();
   }
+  if( pd_sysExceptionToThrow )  delete pd_sysExceptionToThrow;
 }
 
 
@@ -164,6 +170,8 @@ RequestImpl::operation() const
 CORBA::NVList_ptr
 RequestImpl::arguments()
 {
+  if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
+
   return pd_arguments;
 }
 
@@ -171,6 +179,8 @@ RequestImpl::arguments()
 CORBA::NamedValue_ptr
 RequestImpl::result()
 {
+  if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
+
   return pd_result;
 }
 
@@ -178,6 +188,8 @@ RequestImpl::result()
 CORBA::Environment_ptr
 RequestImpl::env()
 {
+  if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
+
   return pd_environment;
 }
 
@@ -206,6 +218,9 @@ RequestImpl::ctxt() const
 void
 RequestImpl::ctx(CORBA::Context_ptr context)
 {
+  if( pd_state != RS_READY )
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+
   pd_context = context;
 }
 
@@ -273,6 +288,9 @@ RequestImpl::add_out_arg(const char* name)
 void
 RequestImpl::set_return_type(CORBA::TypeCode_ptr tc)
 {
+  if( pd_state != RS_READY )
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+
   pd_result->value()->replace(tc, (void*)0);
 }
 
@@ -280,6 +298,8 @@ RequestImpl::set_return_type(CORBA::TypeCode_ptr tc)
 CORBA::Any&
 RequestImpl::return_value()
 {
+  if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
+
   return *(pd_result->value());
 }
 
@@ -457,8 +477,11 @@ RequestImpl::invoke()
   // Either throw system exceptions, or store in pd_environment
   catch(CORBA::SystemException& ex){
     INVOKE_DONE();
-    if( omniORB::diiThrowsSysExceptions )  throw;
-    pd_environment->exception(CORBA::Exception::_duplicate(&ex));
+    if( omniORB::diiThrowsSysExceptions ) {
+      pd_sysExceptionToThrow = CORBA::Exception::_duplicate(&ex);
+      throw;
+    } else
+      pd_environment->exception(CORBA::Exception::_duplicate(&ex));
   }
   INVOKE_DONE();
   RETURN_CORBA_STATUS;
@@ -556,11 +579,11 @@ RequestImpl::send_oneway()
   // Either throw system exceptions, or store in pd_environment
   catch(CORBA::SystemException& ex){
     INVOKE_DONE();
-    if( omniORB::diiThrowsSysExceptions )  throw;
-    try{
+    if( omniORB::diiThrowsSysExceptions ) {
+      pd_sysExceptionToThrow = CORBA::Exception::_duplicate(&ex);
+      throw;
+    } else
       pd_environment->exception(CORBA::Exception::_duplicate(&ex));
-    }
-    catch(...){}
   }
   INVOKE_DONE();
   RETURN_CORBA_STATUS;
@@ -582,21 +605,19 @@ RequestImpl::send_deferred()
 CORBA::Status
 RequestImpl::get_response()
 {
+  if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
+
   if( pd_state == RS_DONE )  RETURN_CORBA_STATUS;
 
   if( pd_state != RS_DEFERRED || !pd_deferredRequest )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
-  try{
-    pd_deferredRequest->get_response();
-  }
-  catch(...){
-    pd_deferredRequest = 0;
-    pd_state = RS_DONE;
-    throw;
-  }
+  pd_deferredRequest->get_response();
+  pd_sysExceptionToThrow = pd_deferredRequest->get_exception();
+  pd_deferredRequest->die();
   pd_deferredRequest = 0;
   pd_state = RS_DONE;
+  if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
   RETURN_CORBA_STATUS;
 }
 
@@ -609,19 +630,15 @@ RequestImpl::poll_response()
   if( pd_state != RS_DEFERRED || !pd_deferredRequest )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
-  CORBA::Boolean result;
-  try{
-    result = pd_deferredRequest->poll_response();
-  }
-  catch(...){
-    pd_deferredRequest = 0;
-    pd_state = RS_DONE;
-    throw;
-  }
-  if( result ){
+  CORBA::Boolean result = pd_deferredRequest->poll_response();
+
+  if( result ) {
+    pd_sysExceptionToThrow = pd_deferredRequest->get_exception();
+    pd_deferredRequest->die();
     pd_deferredRequest = 0;
     pd_state = RS_DONE;
   }
+
   return result;
 }
 
