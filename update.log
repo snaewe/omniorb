@@ -1,3 +1,283 @@
+Tue Dec  9 12:08:44 GMT 1997 sll
+================================
+
+- Replaced testing for macro __NT__ with __WIN32__
+
+
+- New make variables to build debug versions libraries and executables
+- To build debug executables, add BuildDebugBinary = 1 at the top of
+  config/config.mk in a build tree.
+
+mk/win32.mk
+
+
+omnithread
+-----------
+
+- Build debug DLL for win32 automatically
+- Added support for HPUX
+- Added support for Mach (nextstep)
+- Patched for different thread creation behaviour in Posix Draft 8
+
+lib/omnithread/dir.mk
+lib/omnithread/posix.cc
+lib/omnithread/mach.cc                 NEW
+lib/omnithread/sharedlib/dir.mk
+
+include/omnithread.h
+include/omnithread/posix.h
+include/omnithread/mach.h               NEW
+
+
+omniORB2 Runtime
+------------------
+- Support for system exception handlers (NEW)
+- Full support for late binding (NEW)
+- Rope factory interface (NEW) to provide the scarfolding for new transports
+- Scavenger threads to close down idle incoming and outgoing ropes (NEW).
+- Proper BOA shutdown and destroy (NEW)
+
+include/omniORB2/omniInternal.h
+include/omniORB2/rope.h
+include/omniORB2/CORBA.h
+include/omniORB2/omniORB.h
+include/omniORB2/IOP.h
+include/omniORB2/bufferedStream.h
+include/omniORB2/IIOP.h
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/seqtemplates.h
+include/omniORB2/templates.h
+include/omniORB2/omniLifeCycle.h
+include/omniORB2/reDirect.h
+
+include/omniORB2/Naming_NT.hh        DELETED
+
+lib/omniORB2/dir.mk
+lib/omniORB2/sharedlib/dir.mk
+lib/omniORB2/constants.cc
+lib/omniORB2/corbaBoa.cc
+lib/omniORB2/corbaObject.cc
+lib/omniORB2/corbaOrb.cc
+lib/omniORB2/exception.cc
+lib/omniORB2/initFile.cc
+lib/omniORB2/initFile.h
+lib/omniORB2/ior.cc
+lib/omniORB2/giopClient.cc
+lib/omniORB2/giopServer.cc
+lib/omniORB2/libcWrapper.cc
+lib/omniORB2/libcWrapper.h
+lib/omniORB2/nbufferedStream.cc
+lib/omniORB2/object.cc
+lib/omniORB2/objectKey.cc
+lib/omniORB2/objectRef.cc
+lib/omniORB2/ropeFactory.h
+lib/omniORB2/strand.cc
+
+lib/omniORB2/excepthandler.h NEW
+lib/omniORB2/objectManager.h NEW
+lib/omniORB2/relStream.h NEW
+lib/omniORB2/scavenger.h NEW
+lib/omniORB2/tcpATMos.h NEW
+lib/omniORB2/tcpSocket.h NEW
+lib/omniORB2/relStream.cc NEW
+lib/omniORB2/ropeFactory.cc NEW
+lib/omniORB2/scavenger.cc NEW
+lib/omniORB2/tcpATMos.cc NEW
+lib/omniORB2/tcpATMosMTfactory.cc NEW
+lib/omniORB2/tcpSocket.cc NEW
+lib/omniORB2/tcpSocketMTfactory.cc NEW
+
+lib/omniORB2/orb.cc                  DELETED
+lib/omniORB2/tcpSocket_NT.cc         DELETED
+lib/omniORB2/tcpSocket_ATMos.cc      DELETED
+lib/omniORB2/tcpSocket_UNIX.cc       DELETED
+lib/omniORB2/tcpSocket_NT.h         DELETED
+lib/omniORB2/tcpSocket_ATMos.h      DELETED
+lib/omniORB2/tcpSocket_UNIX.h       DELETED
+lib/omniORB2/unshared.cc            DELETED
+lib/omniORB2/NamingSK_NT.cc         DELETED
+
+omniidl2
+---------
+- Updated to generate new stubs to use the new runtime
+- Updated to generate stubs that works around MSVC nested class bug.
+- Updated to support new platforms.
+- General cleanup to remove #pragma ident from the frontend.
+
+tool/omniidl2/dir.mk
+tool/omniidl2/omniORB2_be/o2be_interface.cc
+tool/omniidl2/omniORB2_be/o2be_operation.cc
+tool/omniidl2/omniORB2_be/o2be_attribute.cc
+tool/omniidl2/omniORB2_be/o2be.h
+tool/omniidl2/omniORB2_be/o2be_name.cc
+tool/omniidl2/omniORB2_be/o2be_typedef.cc
+tool/omniidl2/omniORB2_be/o2be_predefined_type.cc
+tool/omniidl2/omniORB2_be/o2be_enum.cc
+tool/omniidl2/omniORB2_be/o2be_struct.cc
+tool/omniidl2/omniORB2_be/o2be_union.cc
+tool/omniidl2/omniORB2_be/o2be_sequence.cc
+tool/omniidl2/omniORB2_be/o2be_array.cc
+tool/omniidl2/omniORB2_be/o2be_exception.cc
+tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+tool/omniidl2/omniORB2_be/o2be_constant.cc
+tool/omniidl2/omniORB2_be/o2be_union_branch.cc
+tool/omniidl2/omniORB2_be/o2be_string.cc
+tool/omniidl2/omniORB2_be/o2be_root.cc
+tool/omniidl2/omniORB2_be/o2be_module.cc
+tool/omniidl2/omniORB2_be/o2be_generator.cc
+tool/omniidl2/omniORB2_be/dir.mk
+tool/omniidl2/omniORB2_be/o2be_field.cc
+tool/omniidl2/driver/drv_main.cc
+tool/omniidl2/driver/dir.mk
+tool/omniidl2/driver/drv_args.cc
+tool/omniidl2/driver/drv_fork.cc
+tool/omniidl2/driver/drv_init.cc
+tool/omniidl2/driver/drv_preproc.cc
+tool/omniidl2/driver/drv_private.cc
+tool/omniidl2/fe/dir.mk
+tool/omniidl2/fe/fe_declarator.cc
+tool/omniidl2/fe/fe_init.cc
+tool/omniidl2/fe/fe_interface_header.cc
+tool/omniidl2/fe/fe_private.cc
+tool/omniidl2/fe/lex.yy.cc
+tool/omniidl2/fe/y.tab.cc
+tool/omniidl2/fe/idl.ll
+tool/omniidl2/fe/fe_extern.cc
+tool/omniidl2/narrow/dir.mk
+tool/omniidl2/narrow/nr_narrow.cc
+tool/omniidl2/ast/dir.mk
+tool/omniidl2/ast/ast_argument.cc
+tool/omniidl2/ast/ast_array.cc
+tool/omniidl2/ast/ast_attribute.cc
+tool/omniidl2/ast/ast_check.cc
+tool/omniidl2/ast/ast_concrete_type.cc
+tool/omniidl2/ast/ast_constant.cc
+tool/omniidl2/ast/ast_decl.cc
+tool/omniidl2/ast/ast_enum.cc
+tool/omniidl2/ast/ast_enum_val.cc
+tool/omniidl2/ast/ast_exception.cc
+tool/omniidl2/ast/ast_expression.cc
+tool/omniidl2/ast/ast_field.cc
+tool/omniidl2/ast/ast_generator.cc
+tool/omniidl2/ast/ast_interface.cc
+tool/omniidl2/ast/ast_intf_fwd.cc
+tool/omniidl2/ast/ast_module.cc
+tool/omniidl2/ast/ast_operation.cc
+tool/omniidl2/ast/ast_predefined_type.cc
+tool/omniidl2/ast/ast_recursive.cc
+tool/omniidl2/ast/ast_redef.cc
+tool/omniidl2/ast/ast_root.cc
+tool/omniidl2/ast/ast_sequence.cc
+tool/omniidl2/ast/ast_string.cc
+tool/omniidl2/ast/ast_structure.cc
+tool/omniidl2/ast/ast_type.cc
+tool/omniidl2/ast/ast_union.cc
+tool/omniidl2/ast/ast_union_branch.cc
+tool/omniidl2/ast/ast_union_label.cc
+tool/omniidl2/util/dir.mk
+tool/omniidl2/util/utl_decllist.cc
+tool/omniidl2/util/utl_error.cc
+tool/omniidl2/util/utl_exceptlist.cc
+tool/omniidl2/util/utl_exprlist.cc
+tool/omniidl2/util/utl_global.cc
+tool/omniidl2/util/utl_identifier.cc
+tool/omniidl2/util/utl_idlist.cc
+tool/omniidl2/util/utl_indenter.cc
+tool/omniidl2/util/utl_labellist.cc
+tool/omniidl2/util/utl_list.cc
+tool/omniidl2/util/utl_namelist.cc
+tool/omniidl2/util/utl_scope.cc
+tool/omniidl2/util/utl_stack.cc
+tool/omniidl2/util/utl_string.cc
+tool/omniidl2/util/utl_strlist.cc
+tool/omniidl2/include/ast.hh
+tool/omniidl2/include/ast_argument.hh
+tool/omniidl2/include/ast_array.hh
+tool/omniidl2/include/ast_attribute.hh
+tool/omniidl2/include/ast_concrete_type.hh
+tool/omniidl2/include/ast_constant.hh
+tool/omniidl2/include/ast_decl.hh
+tool/omniidl2/include/ast_enum.hh
+tool/omniidl2/include/ast_enum_val.hh
+tool/omniidl2/include/ast_exception.hh
+tool/omniidl2/include/ast_expression.hh
+tool/omniidl2/include/ast_extern.hh
+tool/omniidl2/include/ast_field.hh
+tool/omniidl2/include/ast_generator.hh
+tool/omniidl2/include/ast_interface.hh
+tool/omniidl2/include/ast_interface_fwd.hh
+tool/omniidl2/include/ast_module.hh
+tool/omniidl2/include/ast_operation.hh
+tool/omniidl2/include/ast_predefined_type.hh
+tool/omniidl2/include/ast_root.hh
+tool/omniidl2/include/ast_sequence.hh
+tool/omniidl2/include/ast_string.hh
+tool/omniidl2/include/ast_structure.hh
+tool/omniidl2/include/ast_type.hh
+tool/omniidl2/include/ast_typedef.hh
+tool/omniidl2/include/ast_union.hh
+tool/omniidl2/include/ast_union_branch.hh
+tool/omniidl2/include/ast_union_label.hh
+tool/omniidl2/include/be_extern.hh
+tool/omniidl2/include/drv_extern.hh
+tool/omniidl2/include/drv_link.hh
+tool/omniidl2/include/drv_private.hh
+tool/omniidl2/include/fe_declarator.hh
+tool/omniidl2/include/fe_extern.hh
+tool/omniidl2/include/fe_interface_header.hh
+tool/omniidl2/include/fe_private.hh
+tool/omniidl2/include/global_extern.hh
+tool/omniidl2/include/idl.hh
+tool/omniidl2/include/idl_bool.hh
+tool/omniidl2/include/idl_defines.hh
+tool/omniidl2/include/idl_extern.hh
+tool/omniidl2/include/idl_fwd.hh
+tool/omniidl2/include/idl_global.hh
+tool/omniidl2/include/idl_narrow.hh
+tool/omniidl2/include/intlmacros.hh
+tool/omniidl2/include/nr_extern.hh
+tool/omniidl2/include/util.hh
+tool/omniidl2/include/utl_decllist.hh
+tool/omniidl2/include/utl_error.hh
+tool/omniidl2/include/utl_exceptlist.hh
+tool/omniidl2/include/utl_exprlist.hh
+tool/omniidl2/include/utl_identifier.hh
+tool/omniidl2/include/utl_idlist.hh
+tool/omniidl2/include/utl_indenter.hh
+tool/omniidl2/include/utl_labellist.hh
+tool/omniidl2/include/utl_list.hh
+tool/omniidl2/include/utl_namelist.hh
+tool/omniidl2/include/utl_scope.hh
+tool/omniidl2/include/utl_scoped_name.hh
+tool/omniidl2/include/utl_stack.hh
+tool/omniidl2/include/utl_string.hh
+tool/omniidl2/include/utl_strlist.hh
+
+omniNames
+---------
+
+- Updated to support new platforms
+- Removed reference to hacked Naming_NT.hh
+
+appl/omniNames/NamingContext_i.h
+appl/omniNames/log.cc
+appl/omniNames/dir.mk
+appl/omniNames/NamingContext_i.cc
+
+utils
+-----
+
+appl/utils/genior/genior.cc
+appl/utils/catior/catior.cc
+appl/utils/convertior/convertior.cc
+appl/utils/nameclt/nameclt.cc
+
+examples
+--------
+
+examples/echo/echoexamples.module
+examples/thread/diner.cc
+
 Mon Dec  8 11:46:48 GMT 1997 sll
 ================================
 
