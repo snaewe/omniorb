@@ -111,9 +111,12 @@ MDFLAGS += -p shared/
 ifdef Win32Platform
 # in case of Win32 lossage:
 imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
+         $(OMNIORB_LIB_NODYN))
+dynimps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
          $(OMNIORB_LIB))
 else
-imps := $(OMNIORB_LIB)
+imps := $(OMNIORB_LIB_NODYN)
+dynimps := $(OMNIORB_LIB)
 endif
 
 
@@ -127,7 +130,7 @@ $(skshared): $(patsubst %, shared/%, $(COS_SK_OBJS))
          $(MakeCXXSharedLibrary))
 
 $(dynskshared): $(patsubst %, shared/%, $(COS_DYNSK_OBJS))
-	@(namespec="$(dynsknamespec)" extralibs="$(skshared) $(imps)"; \
+	@(namespec="$(dynsknamespec)" extralibs="$(skshared) $(dynimps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshared)

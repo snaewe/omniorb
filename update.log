@@ -1,3 +1,11 @@
+Mon Feb 18 14:45:10 GMT 2002 dpg1
+=================================
+
+- Don't link libCOS with libomniDynamic.
+
+src/services/mklib/dir.mk
+
+
 Mon Feb 18 13:51:54 GMT 2002 dpg1
 =================================
 
