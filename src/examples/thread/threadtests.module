@@ -1,35 +1,32 @@
-Object diner_a.o
+
+Object diner_exe.o
 {
     Executable diner
     ULibrary libpthreads.o
     ULibrary plibc.o
     ULibrary llibc++.o
-    ULibrary llibc.o
 }
 
-Object prodcons_a.o
+Object prodcons_exe.o
 {
     Executable prodcons
     ULibrary libpthreads.o
     ULibrary plibc.o
     ULibrary llibc++.o
-    ULibrary llibc.o
 }
 
-Object thrspecdata_a.o
+Object thrspecdata_exe.o
 {
     Executable thrspecdata
     ULibrary libpthreads.o
     ULibrary plibc.o
     ULibrary llibc++.o
-    ULibrary llibc.o
 }
 
-Object prio_a.o
+Object prio_exe.o
 {
     Executable prio
     ULibrary libpthreads.o
     ULibrary plibc.o
     ULibrary llibc++.o
-    ULibrary llibc.o
 }
