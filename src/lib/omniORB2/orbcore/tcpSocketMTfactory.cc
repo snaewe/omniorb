@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.6  1999/12/06 14:06:09  djr
+  Fixed bug in tcpSocketMTfactory.cc:dumpbuf().
+
   Revision 1.22.2.5  1999/10/27 18:17:36  sll
   Fixed the ctor of tcpSocketWorker so that if thread create fails, the
   exception raised by omnithread does not cause assertion failure in the
@@ -808,30 +811,48 @@ tcpSocketStrand::~tcpSocketStrand()
   pd_delay_connect = 0;
 }
 
-static omni_mutex dumplock;
+
+static inline char printable_char(char c) {
+  return (c < 32 || c > 126) ? '.' : c;
+}
+
+
 static void dumpbuf(unsigned char* buf, size_t sz)
 {
-  omni_mutex_lock sync(dumplock);
-  // Dumping buffer
-  unsigned int i, k, j = 0;
-  for (i=0; i < ((sz < 16) ? sz : 16); i+=2, j+=2)
-    fprintf(stderr,"%02x%02x ", buf[i], buf[i+1]);
-  for (; i < sz; i+=2) {
-    if (j % 16 == 0) {
-      for (k=i-16; k<i; k++)
-	fprintf(stderr,"%c", (buf[k] < 32 || buf[k] > 126) ? '.' : buf[k]);
-      fprintf(stderr,"\n");
-    }
-    fprintf(stderr,"%02x%02x ", buf[i], buf[i+1]);
-    j+=2;
+  static omni_mutex lock;
+  omni_mutex_lock sync(lock);
+  int i;
+  char row[80];
+
+  // Do complete rows of 16 octets.
+  while( sz >= 16 ) {
+    sprintf(row, "%02x%02x %02x%02x %02x%02x %02x%02x "
+	         "%02x%02x %02x%02x %02x%02x %02x%02x ",
+	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++,
+	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++,
+	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++,
+	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++);
+    fprintf(stderr, "%s", row);
+    buf -= 16;
+    char* p = row;
+    for( i = 0; i < 16; i++ )  *p++ = printable_char(*buf++);
+    *p++ = '\0';
+    fprintf(stderr,"%s\n", row);
+    sz -= 16;
   }
-  if (j % 16 || j==16) {
-    for (k=(j%16); k < 16; k+=2) fprintf(stderr,"     ");
-    for (k=i-((j==16)? 0: (j%16)); k<i; k++)
-      fprintf(stderr,"%c", (buf[k] < 32 || buf[k] > 126) ? '.' : buf[k]);
+
+  if( sz ) {
+    // The final part-row.
+    for( i = 0; i < sz; i++ )
+      fprintf(stderr, (i & 1) ? "%02x ":"%02x", (int) buf[i]);
+    for( ; i < 16; i++ )
+      fprintf(stderr, (i & 1) ? "   ":"  ");
+    for( i = 0; i < sz; i++ )
+      fprintf(stderr, "%c", printable_char(buf[i]));
+    fprintf(stderr,"\n");
   }
-  fprintf(stderr,"\n");
 }
+
 
 size_t
 tcpSocketStrand::ll_recv(void* buf, size_t sz)
