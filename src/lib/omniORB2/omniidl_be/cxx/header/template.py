@@ -28,10 +28,6 @@
 
 # $Id$
 # $Log$
-# Revision 1.3.2.14  2000/07/24 09:35:20  dpg1
-# Adding the missing constructor meant that there was no longer a
-# default constructor.
-#
 # Revision 1.3.2.13  2000/07/24 10:17:31  djs
 # Added missing BOA skeleton constructor
 #
@@ -351,7 +347,6 @@ class _sk_@name@ :
   @sk_inherits@
 {
 public:
-  _sk_@name@() {}
   _sk_@name@(const omniOrbBoaKey&);
   virtual ~_sk_@name@();
   inline @name@::_ptr_type _this() {
