@@ -1,3 +1,15 @@
+Thu Aug 10 12:04:07 BST 2000 sll
+================================
+
+- fixed a typo in the shared library export rule
+
+external_merge/mk/unix.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+
+
 Thu Aug 10 11:41:31 BST 2000 sll
 ================================
 

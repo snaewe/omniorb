@@ -147,7 +147,7 @@ fn() { \
  set -x; \
  cd $(EXPORT_TREE)/$(LIBDIR); \
  $(RM) $$libname; \
- ln -s $^ $$libname; \
+ ln -s $(<F) $$libname; \
 }; \
 fn $$namespec;
 endef

@@ -294,7 +294,7 @@ fn() { \
  set -x; \
  cd $(EXPORT_TREE)/$(LIBDIR); \
  $(RM) $$soname; \
- ln -s $^ $$soname; \
+ ln -s $(<F) $$soname; \
  $(RM) $$libname; \
  ln -s $$soname $$libname; \
 }; \
