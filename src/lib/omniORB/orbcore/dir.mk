@@ -88,6 +88,7 @@ ORB_SRCS =  \
 	    inProcessIdentity.cc \
             callHandle.cc \
 	    tracedthread.cc \
+            transportRules.cc \
 	    rmutex.cc \
 	    uri.cc \
             $(GIOP_SRCS) \
@@ -140,6 +141,9 @@ ifdef UnixPlatform
   DIR_CPPFLAGS += -DUnixArchitecture
   ifdef AIX
     NoGateKeeper = 1
+  endif
+  ifdef SunOS
+    DIR_CPPFLAGS += -DBSD_COMP   # include BSD flags in ioctl.h
   endif
 endif
 
