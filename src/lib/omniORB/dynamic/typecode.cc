@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.38.2.8  2000/11/22 14:39:01  dpg1
+ * Missed out PR_wstring_tc() function.
+ *
  * Revision 1.38.2.7  2000/11/20 14:40:04  sll
  * Added TypeCode::PR_wstring_tc(CORBA::ULong bound).
  *
@@ -704,6 +707,10 @@ CORBA::TypeCode_ptr CORBA::TypeCode::PR_Object_tc() {
 CORBA::TypeCode_ptr CORBA::TypeCode::PR_string_tc() {
   check_static_data_is_initialised();
   return CORBA::_tc_string;
+}
+CORBA::TypeCode_ptr CORBA::TypeCode::PR_wstring_tc() {
+  check_static_data_is_initialised();
+  return CORBA::_tc_wstring;
 }
 #ifdef HAS_LongLong
 CORBA::TypeCode_ptr CORBA::TypeCode::PR_longlong_tc() {
