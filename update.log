@@ -1,3 +1,20 @@
+Thu May 20 16:24:42 BST 1999 sll
+================================
+
+- Fixed bugs to make the tree works again on win32 with MSVC++
+
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+include/omniORB2/templatedecls.h
+
+- Separated proxyCall into without context and with context versions
+  Otherwise the orbcore library becomes dependent on the dynamic library
+
+include/omniORB2/proxyCall.h
+src/lib/omniORB2/orbcore/proxyCall.cc
+src/lib/omniORB2/dynamic/proxyCall.cc             NEW
+src/lib/omniORB2/dynamic/dir.mk
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+
 
 Mon May 10 17:36:13 BST 1999 djr
 ================================
