@@ -1,3 +1,13 @@
+Fri Jun 25 16:18:33 BST 1999 sll
+===============================
+
+- more omni_thread update to avoid fatal exception when a blocking thread
+  is interrupted by a unix signal.
+
+src/lib/omnithread/posix.cc
+src/lib/omnithread/solaris.cc
+
+
 Fri Jun 25 14:55:48 BST 1999 sll
 ================================
 
