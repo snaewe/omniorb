@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2002/09/05 14:29:01  dgrisby
+  Link force mechanism wasn't working with gcc.
+
   Revision 1.1.2.4  2002/02/25 11:17:11  dpg1
   Use tracedmutexes everywhere.
 
@@ -47,6 +50,11 @@
 
 #ifndef __SSLCONTEXT_H__
 #define __SSLCONTEXT_H__
+
+#include <omniORB4/linkHacks.h>
+
+OMNI_FORCE_LINK(omnisslTP);
+
 
 #ifdef _core_attr
 # error "A local CPP macro _core_attr has already been defined."

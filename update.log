@@ -1,3 +1,12 @@
+Thu Sep  5 15:25:47 BST 2002 dgrisby
+====================================
+
+- Link force mechanism wasn't working with gcc.
+
+include/omniORB4/linkHacks.h
+include/omniORB4/sslContext.h
+
+
 Thu Sep  5 00:22:25 BST 2002 dgrisby
 ====================================
 
