@@ -3,7 +3,25 @@
 // corbaOrb.cc                Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //      Implementation of the ORB interface
@@ -11,21 +29,9 @@
 
 /*
   $Log$
-  Revision 1.5  1997/04/21 10:24:52  ewc
-  Bug fix to resolve_initial_references()
+  Revision 1.6  1997/05/06 15:11:03  sll
+  Public release.
 
-// Revision 1.4  1997/03/10  11:54:28  sll
-// Minor changes to accomodate the creation of a public API for omniORB2.
-//
-  Revision 1.3  1997/01/23 16:38:33  sll
-  Locals like boa_initialised are now static members of the omniORB class.
-
-// Revision 1.2  1997/01/21  14:19:44  ewc
-// Added support for initial references interface.
-//
-// Revision 1.1  1997/01/08  17:26:01  sll
-// Initial revision
-//
  */
 
 #include <omniORB2/CORBA.h>
