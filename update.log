@@ -1,3 +1,15 @@
+Tue Mar 29 17:08:40 BST 2005 dgrisby
+====================================
+
+- Copying too many digits if truncating a fixed point value.
+
+src/lib/omniORB/orbcore/corbaFixed.cc
+
+- Update omniidl fixed point support with fixes from ORB core.
+
+src/tool/omniidl/cxx/idlfixed.cc
+
+
 Tue Mar 29 16:50:53 BST 2005 dgrisby
 ====================================
 
