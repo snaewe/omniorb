@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.31  2003/05/28 09:59:25  dgrisby
+  HPUX fixes broke some platforms.
+
   Revision 1.2.2.30  2003/05/22 13:41:41  dgrisby
   HPUX patches.
 
@@ -242,7 +245,7 @@ const CORBA::Char                omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
 omni_tracedmutex*                omni::internalLock = 0;
 omni_tracedmutex*                omni::poRcLock = 0;
 _CORBA_Unbounded_Sequence_Octet  omni::myPrincipalID;
-const omni::alignment_t          omni::max_alignment = ALIGN_8;
+const omni::alignment_t          omni::max_alignment = omni::ALIGN_8;
 
 int                              omni::remoteInvocationCount = 0;
 int                              omni::localInvocationCount = 0;
