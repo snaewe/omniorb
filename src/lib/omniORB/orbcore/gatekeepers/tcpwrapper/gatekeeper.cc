@@ -87,15 +87,20 @@ gateKeeper::checkConnect(tcpSocketStrand *s) {
     if (!hosts_access(&request)) {
       // refuse just exits, which is no good.
       // refuse(&request);
-      if (omniORB::traceLevel >= 1)
-	cerr << "refused connect from " << eval_client(&request) << endl;
+      if (omniORB::traceLevel >= 1) {
+	omniORB::log << "refused connect from " << eval_client(&request) 
+		     << "\n";
+	omniORB::log.flush();
+      }
       // syslog(deny_severity, "refused connect from %s", eval_client(request));
       return 0;
       // What happens if I throw CORBA::NO_PERMISSION here?
     } else {
       // syslog(allow_severity, "connect from %s", eval_client(&request));
-      if (omniORB::traceLevel >= 5)
-	cerr << "connect from " << eval_client(&request) << endl;
+      if (omniORB::traceLevel >= 5) {
+	omniORB::log << "connect from " << eval_client(&request) << "\n";
+	omniORB::log.flush();
+      }
       return 1;
     }
   }
