@@ -35,6 +35,10 @@ src/lib/omniORB/omniidl_be/cxx/skel/template.py
 src/lib/omniORB/orbcore/corbaOrb.cc
 src/lib/omniORB/orbcore/dynamicLib.cc
 
+- Add msvcstub to ssl.
+
+src/lib/omniORB/orbcore/ssl/msvcdllstub.cc   -- new
+
 
 Thu Nov  1 12:02:30 GMT 2001 dpg1
 =================================
