@@ -31,9 +31,12 @@
 
 /*
  $Log$
- Revision 1.17  1998/01/27 16:02:34  ewc
- Added TypeCode and type Any
+ Revision 1.18  1998/02/03 16:47:09  ewc
+ Updated some interfaces.
 
+ * Revision 1.17  1998/01/27  16:02:34  ewc
+ * Added TypeCode and type Any
+ *
  Revision 1.16  1997/12/18 17:37:20  sll
  Added (const char*) type casting to help strcpy().
 
@@ -1485,7 +1488,8 @@ typedef _CORBA_Double  Double;
 
   class _nil_IDLType : public virtual IDLType {
   public:
-    _nil_IDLType() { this->PR_setobj(0); }
+    _nil_IDLType() : omniObject(omniObject::nilObjectManager()) 
+      { this->PR_setobj(0); }
     virtual ~_nil_IDLType() {}
     
     TypeCode_ptr type (){
