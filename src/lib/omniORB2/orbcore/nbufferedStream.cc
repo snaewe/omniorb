@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.12  1999/09/08 11:41:39  sll
+  In RdUnlock and WrUnlock, do not call into gaveback_* if the strand is
+  already dying.
+
   Revision 1.11  1999/03/11 16:25:54  djr
   Updated copyright notice
 
@@ -416,7 +420,7 @@ NetBufferedStream::RdLock() {
 void
 NetBufferedStream::RdUnlock() {
   if (pd_RdLock) {
-    giveback_received();
+    if (!strandIsDying()) giveback_received();
     Strand_Sync::RdUnlock();
     pd_RdLock = 0;
   }
@@ -436,7 +440,7 @@ NetBufferedStream::WrLock() {
 void
 NetBufferedStream::WrUnlock() {
   if (pd_WrLock) {
-    giveback_reserved();
+    if (!strandIsDying()) giveback_reserved();
     Strand_Sync::WrUnlock();
     pd_WrLock = 0;
   }
