@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29  1999/08/16 19:33:07  sll
+  New per-compilation unit initialiser class omniInitialiser.
+
   Revision 1.28  1999/08/14 16:37:31  sll
   Added support for the python binding.
   locateObject no longer throw an exception when the object is not found.
@@ -526,7 +529,6 @@ public:
   static omni_mutex          wrappedObjectTableLock;
   static void**              wrappedObjectTable;
 
-  static void                globalInit();
   // This function is not thread-safe and should be called once only.
 
   static omniObjectManager*  nilObjectManager();
@@ -568,11 +570,20 @@ private:
   friend omniObject* omni::locatePyObject(omniObjectManager*,omniObjectKey &k);
   friend void omni::disposeObject(omniObject* obj);
   friend void omni::objectRelease(omniObject* obj);
-  friend class ProxyObjectTableCleaner;
+  friend class omni_objectRef_initialiser;
 
   friend void omniPy_objectIsReady(omniObject* obj);
 };
 
+
+// Singletons created per compilation unit. The attach method is called
+// when the ORB is initialised. The detach method is called when the ORB
+// is destroyed.
+class omniInitialiser {
+public:
+  virtual void attach() = 0;
+  virtual void detach() = 0;
+};
 
 #include <omniORB2/bufferedStream.h>
 #include <omniORB2/giopDriver.h>
