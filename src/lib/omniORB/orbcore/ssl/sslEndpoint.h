@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/07/13 15:36:53  sll
+  Added the ability to monitor connections and callback to the giopServer
+  when data has arrived at a connection.
+
   Revision 1.1.2.2  2001/06/20 18:35:16  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -45,6 +49,8 @@
 
 OMNI_NAMESPACE_BEGIN(omni)
 
+class sslConnection;
+
 class sslEndpoint : public giopEndpoint {
 public:
 
@@ -53,20 +59,36 @@ public:
   const char* type() const;
   const char* address() const;
   CORBA::Boolean Bind();
-  giopConnection* Accept();
+  giopConnection* AcceptAndMonitor(notifyReadable_t,void*);
   void Poke();
   void Shutdown();
 
   ~sslEndpoint();
+
+  friend class sslConnection;
 
  private:
   tcpSocketHandle_t  pd_socket;
   IIOP::Address      pd_address;
   CORBA::String_var  pd_address_string;
   sslContext*        pd_ctx;
+  tcpSocketHandleSet_t pd_fdset_1;
+  tcpSocketHandleSet_t pd_fdset_2;
+  tcpSocketHandleSet_t pd_fdset_dib; // data in buffer
+  int                  pd_n_fdset_1;
+  int                  pd_n_fdset_2;
+  int                  pd_n_fdset_dib;
+  omni_tracedmutex     pd_fdset_lock;
+  unsigned long        pd_abs_sec;
+  unsigned long        pd_abs_nsec;
+  sslConnection**      pd_hash_table;      
 
   sslEndpoint();
   sslEndpoint(const sslEndpoint&);
+
+  void notifyReadable(tcpSocketHandle_t,
+		      giopEndpoint::notifyReadable_t func,
+		      void*);
 };
 
 OMNI_NAMESPACE_END(omni)
