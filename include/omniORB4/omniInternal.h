@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.14  2002/02/13 16:04:01  dpg1
+  Rearrange includes so omnithread sees system dependencies.
+
   Revision 1.2.2.13  2001/09/24 14:26:01  dpg1
   Safer static translation unit counts for omnithread and final clean-up.
 
@@ -191,8 +194,8 @@
 #else
 #include <string.h>
 #endif
-#include <omnithread.h>
 #include <omniORB4/CORBA_sysdep.h>
+#include <omnithread.h>
 #include <omniORB4/finalCleanup.h>
 #include <omniORB4/CORBA_basetypes.h>
 #include <omniORB4/seqTemplatedecls.h>
