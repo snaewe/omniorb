@@ -25,7 +25,6 @@
 // Implementation of OMNI thread abstraction for mach threads
 //
 // to the author's pleasure, mach cthreads are very similar to posix threads
-// ah. the beauty of mach
 //
 
 #include <stdlib.h>
@@ -80,7 +79,6 @@ void omni_mutex::lock(void)
 void omni_mutex::unlock(void)
 {
   mutex_unlock(&mach_mutex);
-  return 0;
 }
 
 
