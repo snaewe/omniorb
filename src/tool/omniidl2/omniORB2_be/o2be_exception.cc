@@ -25,6 +25,11 @@
 
 /*
   $Log$
+  Revision 1.15  1999/05/26 10:28:12  sll
+  Use o2be_nested_typedef to generate stubs for nested types.
+  Added code to generate _narrow and _raise code in the stub.
+  Fixed typecode constant bug.
+
   Revision 1.14  1999/03/11 16:26:11  djr
   Updated copyright notice
 
@@ -89,7 +94,6 @@ o2be_exception::o2be_exception(UTL_ScopedName *n, UTL_StrList *p)
   strcpy(pd_repoid,_fqname());
   strcat(pd_repoid,IRREPOID_POSTFIX);
   pd_repoidsize = strlen(repositoryID())+1;
-  pd_have_produced_typecode_skel = I_FALSE;
 }
 
 
@@ -101,43 +105,7 @@ o2be_exception::produce_hdr(std::fstream &s)
   IND(s); s << "public:\n\n";
   INC_INDENT_LEVEL();
 
-  { // Declare any constructed types defined in this scope.
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-
-    while( !i.is_done() ) {
-      AST_Decl* d = i.item();
-      i.next();
-      if( d->node_type() != AST_Decl::NT_field )  continue;
-
-      AST_Decl* decl = AST_Field::narrow_from_decl(d)->field_type();
-      if( !decl->has_ancestor(this) )  continue;
-
-      switch( decl->node_type() ) {
-      case AST_Decl::NT_enum:
-	if( !o2be_enum::narrow_from_decl(decl)->get_hdr_produced_in_field() ) {
-	  o2be_enum::narrow_from_decl(decl)->set_hdr_produced_in_field();
-	  o2be_enum::narrow_from_decl(decl)->produce_hdr(s);
-	}
-	break;
-      case AST_Decl::NT_struct:
-	if( !o2be_structure::narrow_from_decl(decl)
-	    ->get_hdr_produced_in_field() ) {
-	  o2be_structure::narrow_from_decl(decl)->set_hdr_produced_in_field();
-	  o2be_structure::narrow_from_decl(decl)->produce_hdr(s);
-	}
-	break;
-      case AST_Decl::NT_union:
-	if( !o2be_union::narrow_from_decl(decl)
-	    ->get_hdr_produced_in_field() ) {
-	  o2be_union::narrow_from_decl(decl)->set_hdr_produced_in_field();
-	  o2be_union::narrow_from_decl(decl)->produce_hdr(s);
-	}
-	break;
-      default:
-	break;
-      }
-    }
-  }
+  o2be_nested_typedef::produce_hdr(s,this);
 
   {
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
@@ -231,7 +199,7 @@ o2be_exception::produce_hdr(std::fstream &s)
   }
 
   IND(s); s << "\n";
-  IND(s); s << uqname() << "() {};\n";
+  IND(s); s << uqname() << "() {}\n";
   IND(s); s << uqname() << "(const " << uqname() << " &);\n";
   {
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
@@ -304,12 +272,36 @@ o2be_exception::produce_hdr(std::fstream &s)
     };
   }
   IND(s); s << uqname() << " & operator=(const " << uqname() << " &);\n";
-  IND(s); s << "virtual ~" << uqname() << "() {};\n";
+  IND(s); s << "virtual ~" << uqname() << "() {}\n";
+  IND(s); s << "virtual void _raise() { throw *this; }\n";
+  IND(s); s << "static " << uqname()
+	    << "* _narrow(CORBA::Exception* e) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return ("
+	    << uqname()
+	    << "*)_NP_is_a(e,\""
+	    << _fqname()
+	    << "\");\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
   IND(s); s << "size_t NP_alignedSize(size_t initialoffset) const;\n";
   IND(s); s << "void operator>>= (NetBufferedStream &) const;\n";
   IND(s); s << "void operator<<= (NetBufferedStream &);\n";
   IND(s); s << "void operator>>= (MemBufferedStream &) const;\n";
   IND(s); s << "void operator<<= (MemBufferedStream &);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "private:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "virtual CORBA::Exception* _NP_duplicate() const {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return new "
+	    << uqname()
+	    << "(*this);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "virtual const char* _NP_mostDerivedTypeId() const {\n";
+  IND(s); s << "return \"" << _fqname() << "\";\n";
+  IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
 
@@ -324,44 +316,7 @@ o2be_exception::produce_hdr(std::fstream &s)
 void
 o2be_exception::produce_skel(std::fstream &s)
 {
-  { // Declare any constructed types defined in this scope.
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-
-    while( !i.is_done() ) {
-      AST_Decl* d = i.item();
-      i.next();
-      if( d->node_type() != AST_Decl::NT_field )  continue;
-
-      AST_Decl* decl = AST_Field::narrow_from_decl(d)->field_type();
-      if( !decl->has_ancestor(this) )  continue;
-
-      switch( decl->node_type() ) {
-      case AST_Decl::NT_enum:
-	if( !o2be_enum::narrow_from_decl(decl)
-	    ->get_skel_produced_in_field() ) {
-	  o2be_enum::narrow_from_decl(decl)->set_skel_produced_in_field();
-	  o2be_enum::narrow_from_decl(decl)->produce_skel(s);
-	}
-	break;
-      case AST_Decl::NT_struct:
-	if( !o2be_structure::narrow_from_decl(decl)
-	    ->get_skel_produced_in_field() ) {
-	  o2be_structure::narrow_from_decl(decl)->set_skel_produced_in_field();
-	  o2be_structure::narrow_from_decl(decl)->produce_skel(s);
-	}
-	break;
-      case AST_Decl::NT_union:
-	if( !o2be_union::narrow_from_decl(decl)
-	    ->get_skel_produced_in_field() ) {
-	  o2be_union::narrow_from_decl(decl)->set_skel_produced_in_field();
-	  o2be_union::narrow_from_decl(decl)->produce_skel(s);
-	}
-	break;
-      default:
-	break;
-      }
-    }
-  }
+  o2be_nested_typedef::produce_skel(s,this);
 
   IND(s); s << fqname() << "::" << uqname()
 	    << "(const " << fqname() << " &_s)\n";
@@ -847,48 +802,10 @@ o2be_exception::produce_skel(std::fstream &s)
 void
 o2be_exception::produce_dynskel(std::fstream &s)
 {
-  { // Declare any constructed types defined in this scope.
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-
-    while( !i.is_done() ) {
-      AST_Decl* d = i.item();
-      i.next();
-      if( d->node_type() != AST_Decl::NT_field )  continue;
-
-      AST_Decl* decl = AST_Field::narrow_from_decl(d)->field_type();
-      if( !decl->has_ancestor(this) )  continue;
-
-      switch( decl->node_type() ) {
-      case AST_Decl::NT_enum:
-	if( !o2be_enum::narrow_from_decl(decl)
-	    ->get_dynskel_produced_in_field() ) {
-	  o2be_enum::narrow_from_decl(decl)->set_dynskel_produced_in_field();
-	  o2be_enum::narrow_from_decl(decl)->produce_dynskel(s);
-	}
-	break;
-      case AST_Decl::NT_struct:
-	if( !o2be_structure::narrow_from_decl(decl)
-	    ->get_dynskel_produced_in_field() ) {
-	  o2be_structure::narrow_from_decl(decl)
-	    ->set_dynskel_produced_in_field();
-	  o2be_structure::narrow_from_decl(decl)->produce_dynskel(s);
-	}
-	break;
-      case AST_Decl::NT_union:
-	if( !o2be_union::narrow_from_decl(decl)
-	    ->get_dynskel_produced_in_field() ) {
-	  o2be_union::narrow_from_decl(decl)->set_dynskel_produced_in_field();
-	  o2be_union::narrow_from_decl(decl)->produce_dynskel(s);
-	}
-	break;
-      default:
-	break;
-      }
-    }
-  }
-
   // Produce code for types any and TypeCode
   this->produce_typecode_skel(s);
+
+  o2be_nested_typedef::produce_dynskel(s,this);
 
   if (defined_in() != idl_global->root() &&
       defined_in()->scope_node_type() == AST_Decl::NT_module)
@@ -927,50 +844,7 @@ o2be_exception::produce_dynskel(std::fstream &s)
 void
 o2be_exception::produce_binary_operators_in_hdr(std::fstream &s)
 {
-  { // Declare any constructed types defined in this scope.
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-
-    while( !i.is_done() ) {
-      AST_Decl* d = i.item();
-      i.next();
-      if( d->node_type() != AST_Decl::NT_field )  continue;
-
-      AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-      if( !decl->has_ancestor(this) )  continue;
-
-      switch( decl->node_type() ) {
-      case AST_Decl::NT_enum:
-	if( !o2be_enum::narrow_from_decl(decl)
-	    ->get_binary_operators_hdr_produced_in_field() ) {
-	  o2be_enum::narrow_from_decl(decl)
-	    ->set_binary_operators_hdr_produced_in_field();
-	  o2be_enum::narrow_from_decl(decl)
-	    ->produce_binary_operators_in_hdr(s);
-	}
-	break;
-      case AST_Decl::NT_struct:
-	if( !o2be_structure::narrow_from_decl(decl)
-	    ->get_binary_operators_hdr_produced_in_field() ) {
-	  o2be_structure::narrow_from_decl(decl)
-	    ->set_binary_operators_hdr_produced_in_field();
-	  o2be_structure::narrow_from_decl(decl)
-	    ->produce_binary_operators_in_hdr(s);
-	}
-	break;
-      case AST_Decl::NT_union:
-	if( !o2be_union::narrow_from_decl(decl)
-	    ->get_binary_operators_hdr_produced_in_field() ) {
-	  o2be_union::narrow_from_decl(decl)
-	    ->set_binary_operators_hdr_produced_in_field();
-	  o2be_union::narrow_from_decl(decl)
-	    ->produce_binary_operators_in_hdr(s);
-	}
-	break;
-      default:
-	break;
-      }
-    }
-  }
+  o2be_nested_typedef::produce_binary_operators_in_hdr(s,this);
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // any insertion and extraction operators
@@ -987,50 +861,7 @@ o2be_exception::produce_binary_operators_in_hdr(std::fstream &s)
 void
 o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
 {
-  { // Declare any constructed types defined in this scope.
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-
-    while( !i.is_done() ) {
-      AST_Decl* d = i.item();
-      i.next();
-      if( d->node_type() != AST_Decl::NT_field )  continue;
-
-      AST_Decl *decl = AST_Field::narrow_from_decl(d)->field_type();
-      if( !decl->has_ancestor(this) )  continue;
-
-      switch( decl->node_type() ) {
-      case AST_Decl::NT_enum:
-	if( !o2be_enum::narrow_from_decl(decl)
-	    ->get_binary_operators_skel_produced_in_field() ) {
-	  o2be_enum::narrow_from_decl(decl)
-	    ->set_binary_operators_skel_produced_in_field();
-	  o2be_enum::narrow_from_decl(decl)
-	    ->produce_binary_operators_in_dynskel(s);
-	}
-	break;
-      case AST_Decl::NT_struct:
-	if( !o2be_structure::narrow_from_decl(decl)
-	    ->get_binary_operators_skel_produced_in_field() ) {
-	  o2be_structure::narrow_from_decl(decl)
-	    ->set_binary_operators_skel_produced_in_field();
-	  o2be_structure::narrow_from_decl(decl)
-	    ->produce_binary_operators_in_dynskel(s);
-	}
-	break;
-      case AST_Decl::NT_union:
-	if( !o2be_union::narrow_from_decl(decl)
-	    ->get_binary_operators_skel_produced_in_field() ) {
-	  o2be_union::narrow_from_decl(decl)
-	    ->set_binary_operators_skel_produced_in_field();
-	  o2be_union::narrow_from_decl(decl)
-	    ->produce_binary_operators_in_dynskel(s);
-	}
-	break;
-      default:
-	break;
-      }
-    }
-  }
+  o2be_nested_typedef::produce_binary_operators_in_dynskel(s,this);
 
   //////////////////////////////////////////////////////////////////////
   //////////////////////// tcDescriptor generation /////////////////////
@@ -1198,21 +1029,11 @@ o2be_exception::produce_typecode_skel(std::fstream &s)
   if( have_produced_typecode_skel() )  return;
   set_have_produced_typecode_skel();
 
-  unsigned long memberCount = this->nmembers();
+  o2be_nested_typedef::produce_typecode_skel(s,this);
 
-  if (memberCount > 0) {
+  unsigned long memberCount = 0;
 
-    { // Ensure we have the typecodes of the members
-      UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-      while( !i.is_done() ) {
-	AST_Decl* d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )
-	  continue;
-	d = AST_Field::narrow_from_decl(d)->field_type();
-	o2be_name::narrow_and_produce_typecode_skel(d, s);
-      }
-    }
+  if (this->nmembers() > 0) {
 
     IND(s); s << "static CORBA::PR_structMember _0RL_structmember_"
 	      << _idname() << "[] = {\n";
@@ -1226,6 +1047,8 @@ o2be_exception::produce_typecode_skel(std::fstream &s)
 	i.next();
 	if( d->node_type() != AST_Decl::NT_field )
 	  continue;
+	else
+	  memberCount++;
 
 	IND(s); s << "{\"" << o2be_field::narrow_from_decl(d)->uqname()
 		  << "\", ";
