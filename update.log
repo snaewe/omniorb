@@ -1,3 +1,16 @@
+Sun Feb 13 20:48:41 GMT 2005 dgrisby
+====================================
+
+- Change threadPoolWatchConnection parameter to be an integer rather
+  than a boolean. Value is the count of threads that can be handling a
+  connection when one decides to watch it.
+
+sample.cfg
+sample.reg
+include/omniORB4/internal/orbParameters.h
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Wed Feb  2 00:20:01 GMT 2005 dgrisby
 ====================================
 

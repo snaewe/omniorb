@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2005/02/13 20:53:08  dgrisby
+  Change threadPoolWatchConnection parameter to be an integer rather
+  than a boolean. Value is the count of threads that can be handling a
+  connection when one decides to watch it.
+
   Revision 1.1.2.5  2004/03/02 15:31:22  dgrisby
   Support for persistent server identifier.
 
@@ -372,14 +377,20 @@ _CORBA_MODULE_VAR _core_attr CORBA::ULong   maxServerThreadPoolSize;
 //
 //   Valid values = (n >= 1) 
 
-_CORBA_MODULE_VAR _core_attr CORBA::Boolean threadPoolWatchConnection;
-//   1 means that after dispatching an upcall in thread pool mode, the
-//   thread should watch the connection for a short time before
-//   returning to the pool. This leads to less thread switching for
-//   series of calls from a single client, but is less fair if there
-//   are concurrent clients.
+_CORBA_MODULE_VAR _core_attr CORBA::ULong   threadPoolWatchConnection;
+//   After dispatching an upcall in thread pool mode, the thread that
+//   has just performed the call can watch the connection for a short
+//   time before returning to the pool. This leads to less thread
+//   switching for a series of calls from a single client, but is less
+//   fair if there are concurrent clients. The connection is watched
+//   if the number of threads concurrently handling the connection is
+//   <= the value of this parameter. i.e. if the parameter is zero,
+//   the connection is never watched; if it is 1, the last thread
+//   managing a connection watches it; if 2, the connection is still
+//   watched if there is one other thread still in an upcall for the
+//   connection, and so on.
 //
-//  Valid values = 0 or 1
+//  Valid values = (n >= 0)
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean acceptBiDirectionalGIOP;
 //   Applies to the server side. Set to 1 to indicates that the
