@@ -1,3 +1,20 @@
+Tue Aug 31 16:18:53 BST 2004 dgrisby
+====================================
+
+- Silly mistake in configure for AIX.o
+
+configure
+configure.ac
+
+- Cast to ptr_arith_t not int in align_to. Thanks Alex Tingle.
+
+include/omniORB4/omniInternal.h
+
+- Make catior more robust against broken IORs.
+
+src/appl/utils/catior/catior.cc
+
+
 Tue Aug 31 15:58:22 BST 2004 dgrisby
 ====================================
 

@@ -262,20 +262,25 @@ void
 print_tagged_components(IOP::MultipleComponentProfile& components)
 {
   CORBA::ULong total = components.length();
-  
+
   for (CORBA::ULong index=0; index < total; index++) {
-    CORBA::String_var content;
-    content = IOP::dumpComponent(components[index]);
-    char* p = content;
-    char* q;
-    do {
-      q = strchr(p,'\n');
-      if (q) {
-	*q++ = '\0';
-      }
-      cout << "            " << (const char*) p << endl;
-      p = q;
-    } while (q);
+    try {
+      CORBA::String_var content;
+      content = IOP::dumpComponent(components[index]);
+      char* p = content;
+      char* q;
+      do {
+	q = strchr(p,'\n');
+	if (q) {
+	  *q++ = '\0';
+	}
+	cout << "            " << (const char*) p << endl;
+	p = q;
+      } while (q);
+    }
+    catch (CORBA::MARSHAL& ex) {
+      cout << "            Broken component" << endl;
+    }
   }
 }
 
