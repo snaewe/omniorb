@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.4  2000/05/05 16:50:53  djs
+# Existing workaround for MSVC5 scoping problems extended to help with
+# base class initialisers. Instead of using the fully qualified or unambiguous
+# name, a flat typedef is generated at global scope and that is used instead.
+# This was a solution to a previous bug wrt operation dispatch()ing.
+# This does not affect the OMNI_BASE_CTOR powerpc/aix workaround.
+#
 # Revision 1.1.2.3  2000/04/26 18:22:57  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -267,6 +274,7 @@ interface_ALIAS = """\
 #define __@guard_name@__ALIAS__
 typedef @fqname@ @flat_fqname@;
 typedef @impl_fqname@ @impl_flat_fqname@;
+typedef @objref_fqname@ @objref_flat_fqname@;
 #endif
 """
 

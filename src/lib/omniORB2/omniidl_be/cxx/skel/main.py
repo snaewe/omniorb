@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.7  2000/05/05 16:50:51  djs
+# Existing workaround for MSVC5 scoping problems extended to help with
+# base class initialisers. Instead of using the fully qualified or unambiguous
+# name, a flat typedef is generated at global scope and that is used instead.
+# This was a solution to a previous bug wrt operation dispatch()ing.
+# This does not affect the OMNI_BASE_CTOR powerpc/aix workaround.
+#
 # Revision 1.27.2.6  2000/04/26 18:22:54  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -212,6 +219,48 @@ def visitInterface(node):
                objref_name = objref_name.unambiguous(environment),
                repoID = node.repoId())
 
+    # comment copied from src/tool/omniidl2/omniORB2_be/o2be_interface.cc:
+
+    # MSVC {4.2,5.0} cannot deal with a call to a virtual member
+    # of a base class using the member function's fully/partially
+    # scoped name. Have to use the alias for the base class in the
+    # global scope to refer to the virtual member function instead.
+    #
+    # We scan all the base interfaces to see if any of them has to
+    # be referred to by their fully/partially qualified names. If
+    # that is necessary, we generate a typedef to define an alias for
+    # this base interface. This alias is used in the stub generated below
+    #
+    # FIXME: is this a solution to the OMNI_BASE_CTOR stuff below?
+    #
+    def flatName(name):
+        return string.join(name.fullName(), "_")
+    def needFlatName(name, environment = environment):
+        # does the name have scope :: qualifiers
+        return len(name.relName(environment)) > 1
+    
+    for i in node.inherits():
+        inherits_name = id.Name(i.scopedName())
+        if needFlatName(inherits_name):
+            guard_name = inherits_name.guard()
+            flat_fqname = string.join(i.scopedName(), "_")
+            inherits_impl_name = inherits_name.prefix("_impl_")
+            inherits_objref_name = inherits_name.prefix("_objref_")
+
+            impl_flat_fqname = flatName(inherits_impl_name)
+            objref_flat_fqname = flatName(inherits_objref_name)
+            
+            stream.out(template.interface_ALIAS,
+                       guard_name = guard_name,
+                       fqname = inherits_name.fullyQualify(),
+                       flat_fqname = flat_fqname,
+                       impl_fqname = inherits_impl_name.fullyQualify(),
+                       impl_flat_fqname = impl_flat_fqname,
+                       objref_fqname = inherits_objref_name.fullyQualify(),
+                       objref_flat_fqname = objref_flat_fqname)
+          
+
+
     # gather information for possible interface inheritance
     # (needs to use the transitive closure of inheritance)
     all_inherits = tyutil.allInherits(node)
@@ -224,14 +273,18 @@ def visitInterface(node):
           return (" + inherits_fqname + "_ptr) this;\n"
 
     for i in node.inherits():
-        inherits_objref_name = id.Name(i.scopedName()).prefix("_objref_")
-        
-        this_inherits_str = inherits_objref_name.unambiguous(environment) +\
-                            "(mdri, p, id, lid),\n"
+        inherits_name = id.Name(i.scopedName())
+        inherits_objref_name = inherits_name.prefix("_objref_")
 
-        # FIXME:
-        # powerpc-aix workaround
-        # (needed iff the fully qualified name is not the unambiguous name)
+        inherits_objref_str = inherits_objref_name.unambiguous(environment)
+        if needFlatName(inherits_name):
+            inherits_objref_str = flatName(inherits_objref_name)
+            
+        this_inherits_str = inherits_objref_str + "(mdri, p, id, lid),\n"
+
+        # The powerpc-aix OMNIORB_BASE_CTOR workaround still works here
+        # (in precendence to the flattened base name) but lacking a
+        # powerpc-aix test machine I can't properly test it
         if inherits_objref_name.relName(environment) != i.scopedName():
             prefix = []
             for x in inherits_objref_name.fullName():
@@ -467,37 +520,6 @@ def visitInterface(node):
                Other_repoIDs = str(inherits_repoIDs),
                idname = mangler.produce_idname(node_name.fullName()))
 
-    # comment copied from src/tool/omniidl2/omniORB2_be/o2be_interface.cc:
-
-    # MSVC {4.2,5.0} cannot deal with a call to a virtual member
-    # of a base class using the member function's fully/partially
-    # scoped name. Have to use the alias for the base class in the
-    # global scope to refer to the virtual member function instead.
-    #
-    # We scan all the base interfaces to see if any of them has to
-    # be referred to by their fully/partially qualified names. If
-    # that is necessary, we generate a typedef to define an alias for
-    # this base interface. This alias is used in the stub generated below
-    #
-    # FIXME: is this a solution to the OMNI_BASE_CTOR stuff above?
-    #
-    for i in node.inherits():
-        inherits_name = id.Name(i.scopedName())
-        inherits_relName = inherits_name.relName(environment)
-        # does this name have scope :: qualifiers?
-        if len(inherits_relName) > 1:
-          guard_name = inherits_name.guard()
-          flat_fqname = string.join(i.scopedName(), "_")
-          inherits_impl_name = inherits_name.prefix("_impl_")
-          impl_flat_fqname = string.join(inherits_impl_name.fullName(), "_")
-
-          stream.out(template.interface_ALIAS,
-                     guard_name = guard_name,
-                     fqname = inherits_name.fullyQualify(),
-                     flat_fqname = flat_fqname,
-                     impl_fqname = inherits_impl_name.fullyQualify(),
-                     impl_flat_fqname = impl_flat_fqname)
-          
     # _impl_ class (contains the callable dispatch code)
 
     # dispatch operations and attributes from this class
@@ -526,28 +548,38 @@ def visitInterface(node):
     
     # dispatch operations and attributes inherited from base classes
     def inherited_dispatch(stream = stream, node = node,
-                           environment = environment):
+                           environment = environment,
+                           needFlatName = needFlatName,
+                           flatName = flatName):
         for i in node.inherits():
             inherited_name = id.Name(i.scopedName()).prefix("_impl_")
             impl_inherits = inherited_name.simple()
             # The MSVC workaround might be needed here again
-            relName = inherited_name.relName(environment)
-            # does this name have scope :: qualifiers?
-            if len(relName) > 1:
-                impl_inherits = string.join(inherited_name.fullName(), "_")
+            if needFlatName(inherited_name):
+                impl_inherits = flatName(inherited_name)
+            #relName = inherited_name.relName(environment)
+            ## does this name have scope :: qualifiers?
+            #if len(relName) > 1:
+            #    impl_inherits = string.join(inherited_name.fullName(), "_")
           
             stream.out(template.interface_impl_inherit_dispatch,
                        impl_inherited_name = impl_inherits)
 
     def Other_repoIDs(stream = stream, all_inherits = all_inherits,
-                      environment = environment):
+                      environment = environment,
+                      needFlatName = needFlatName,
+                      flatName = flatName):
         for i in all_inherits:
             inherited_name = id.Name(i.scopedName())
+            inherited_str = inherited_name.unambiguous(environment)
             impl_inherited_name = inherited_name.prefix("_impl_")
-            
+            impl_str = impl_inherited_name.unambiguous(environment)
+            if needFlatName(inherited_name):
+                inherited_str = flatName(inherited_name)
+                impl_str = flatName(impl_inherited_name)
             stream.out(template.interface_impl_repoID,
-                       inherited_name = inherited_name.unambiguous(environment),
-                       impl_inherited_name = impl_inherited_name.unambiguous(environment))
+                       inherited_name = inherited_str,
+                       impl_inherited_name = impl_str)
 
 
     # Output the _impl_ class
