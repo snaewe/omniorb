@@ -28,7 +28,7 @@ AR = ar cq
 
 CPP = /usr/libexec/cpp
 
-CXX = g++295
+CXX = g++
 CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = -O2
 
@@ -39,7 +39,7 @@ CXXOPTIONS      = -Wall -Wno-unused
 EgcsMajorVersion = 1
 EgcsMinorVersion = 1        # This is actually a post-1.0 egcs snapshot.
 
-CC           = gcc295
+CC           = gcc
 CMAKEDEPEND  += -D__GNUC__
 CDEBUGFLAGS  = -O2
 

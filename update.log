@@ -1,3 +1,25 @@
+Sun Apr 28 21:37:48 BST 2002 dgrisby
+====================================
+
+- autoconf, install location tweaks.
+
+acinclude.m4
+aclocal.m4
+configure
+configure.ac
+idl/GNUmakefile.in
+idl/COS/GNUmakefile.in
+include/omniconfig.h
+include/omniconfig.h.in
+include/omniORB4/tracedthread.h
+
+- Windows, FreeBSD, ETS fixes.
+
+include/omniORB4/internal/SocketCollection.h
+mk/platforms/x86_freebsd_4.0.mk
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Fri Apr 26 21:20:58 BST 2002 dgrisby
 ====================================
 

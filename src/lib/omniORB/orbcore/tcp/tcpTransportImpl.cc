@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2002/04/28 20:43:25  dgrisby
+  Windows, FreeBSD, ETS fixes.
+
   Revision 1.1.2.10  2002/03/28 17:44:35  dpg1
   return in wrong place.
 
@@ -308,7 +311,7 @@ extern "C" int WSAAPI ETS_WSAIoctl(
   LPWSAOVERLAPPED lpOverlapped,
   LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 );
-#define WSAIoctl ETS_ESAIoctl
+#define WSAIoctl ETS_WSAIoctl
 #endif
 
 static
@@ -318,50 +321,35 @@ void win32_get_ifinfo(omnivector<const char*>& ifaddrs) {
 
   sock = socket(INETSOCKET,SOCK_STREAM,0);
 
-  DWORD lastlen = 0;
-  DWORD len = sizeof(SOCKET_ADDRESS_LIST) + 99 * sizeof(SOCKET_ADDRESS);
-  SOCKET_ADDRESS_LIST* ifr;
-
-  while ( 1 ) {
-    // There is no way to know for sure the buffer is big enough to get
-    // the info for all the interfaces. We work around this by calling
-    // the ioctl 2 times and increases the buffer size in the 2nd call.
-    ifr = (SOCKET_ADDRESS_LIST*) malloc(len);
-    DWORD retlen;
-
-    if ( WSAIoctl(sock,SIO_ADDRESS_LIST_QUERY,
-                  NULL,0,
-                  (LPVOID)ifr,(DWORD)len,(LPDWORD)&retlen,
-                  NULL,NULL) == SOCKET_ERROR ) {
-
-      if ( WSAGetLastError() != WSAEFAULT || lastlen != 0 ) {
-	if ( omniORB::trace(2) ) {
-	  omniORB::logger log;
-	  log << "Warning: WSAIoctl SIO_ADDRESS_LIST_QUERY failed. Unable to obtain the list of all interface addresses.\n";
-	}
-	return;
-      }
+  INTERFACE_INFO info[64];  // Assume max 64 interfaces
+  DWORD retlen;
+  
+  if ( WSAIoctl(sock, SIO_GET_INTERFACE_LIST, NULL,0,
+                (LPVOID)&info, sizeof(info), (LPDWORD)&retlen,
+		NULL,NULL) == SOCKET_ERROR ) {
+    if ( omniORB::trace(1) ) {
+      omniORB::logger log;
+      int err = WSAGetLastError();
+      log << "Warning: WSAIoctl SIO_GET_INTERFACE_LIST failed.\n"
+	  << "Unable to obtain the list of all interface addresses.\n"
+	  << "WSAGetLastError() = " << err << endl;
     }
-    else {
-      if ( retlen == lastlen ) break; // Success, len has not changed.
-      lastlen = retlen;
-    }
-    len += 10 * sizeof(SOCKET_ADDRESS);
-    free(ifr);
+    return;
   }
   CLOSESOCKET(sock);
 
-  int total = ifr->iAddressCount;
-  for (int i = 0; i < total; i++) {
-
-    if ( ifr->Address[i].lpSockaddr->sa_family == INETSOCKET ) {
-      struct sockaddr_in* iaddr = (struct sockaddr_in*)ifr->Address[i].lpSockaddr;
-      CORBA::String_var s;
-      s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
-      ifaddrs.push_back(s._retn());
+  int numAddresses = retlen / sizeof(INTERFACE_INFO);
+  for (int i = 0; i < numAddresses; i++) {
+    // Only add the address if the interface is running
+    if (info[i].iiFlags & IFF_UP) {
+      if (info[i].iiAddress.Address.sa_family == INETSOCKET) {
+	struct sockaddr_in* iaddr = &info[i].iiAddress.AddressIn;
+	CORBA::String_var s;
+	s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
+	ifaddrs.push_back(s._retn());
+      }
     }
   }
-  free(ifr);
 
   if ( orbParameters::dumpConfiguration || omniORB::trace(20) ) {
     omniORB::logger log;
