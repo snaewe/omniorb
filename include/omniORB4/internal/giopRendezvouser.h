@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/07/13 15:18:17  sll
+  New internal function notifyReadable.
+
   Revision 1.1.4.1  2001/04/18 17:19:00  sll
   Big checkin with the brand new internal APIs.
 
@@ -56,6 +59,8 @@ public:
   // finish off this task, call by another thread
 
   giopEndpoint* endpoint() const { return pd_endpoint; }
+
+  static void notifyReadable(void*,giopConnection*);
 
 private:
   giopEndpoint*          pd_endpoint;
