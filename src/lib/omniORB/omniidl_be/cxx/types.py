@@ -222,7 +222,7 @@ class Type:
             return self.sequenceTemplate(environment)
 
         name = id.Name(self.type().scopedName()).unambiguous(environment)
-        if self.objref():
+        if d_type.objref() or d_type.typecode():
             return name + "_ptr"
         else:
             return name
