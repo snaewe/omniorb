@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.34.2.4  2000/09/27 17:13:06  djs
+  Struct member renaming
+  Added command line options
+  Added CORBA::ValueBase (just to do reference counting)
+  General refactoring
+
   Revision 1.34.2.3  2000/09/14 16:04:15  djs
   Added module initialiser for AMI module
 
@@ -211,6 +217,7 @@
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
 #include <omniORB3/omniURI.h>
+#include <omniORB3/omniAMI.h>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -331,7 +338,6 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     // Call attach method of each initialiser object.
     // The order of these calls must take into account of the dependency
     // among the modules.
-    omni_AMI_initialiser_.attach();
     omni_omniInternal_initialiser_.attach();
     omni_corbaOrb_initialiser_.attach();
     omni_strand_initialiser_.attach();
@@ -340,6 +346,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_initFile_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
     omni_hooked_initialiser_.attach();
+    omni_AMI_initialiser_.attach();
 
     if( bootstrapAgentHostname ) {
       // The command-line option -ORBInitialHost has been specified.
@@ -365,6 +372,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
 
   the_orb = new omniOrbORB(0);
   the_orb->_NP_incrRefCount();
+
   return the_orb;
 }
 
@@ -580,6 +588,7 @@ omniOrbORB::actual_shutdown()
   omniObjAdapter::shutdown();
 
   // Call detach method of the initialisers in reverse order.
+  omni_AMI_initialiser_.detach();
   omni_hooked_initialiser_.detach();
   omni_initRefs_initialiser_.detach();
   omni_initFile_initialiser_.detach();
@@ -589,7 +598,6 @@ omniOrbORB::actual_shutdown()
   omni_corbaOrb_initialiser_.detach();
   omni_omniInternal_initialiser_.detach();
   omni_uri_initialiser_.detach();
-  omni_AMI_initialiser_.detach();
 
   proxyObjectFactory::shutdown();
 
@@ -942,6 +950,60 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	continue;
       }
 
+      // -ORBAMIMaxQueueSize
+      if( strcmp(argv[idx],"-ORBAMIMaxQueueSize") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBAMIMaxQueueSize parameter.");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBAMIMaxQueueSize parameter.");
+	  return 0;
+	}
+	omniORB::AMIMaxQueueSize = v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBAMIMaxWorkerThreads
+      if( strcmp(argv[idx],"-ORBAMIMaxWorkerThreads") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBAMIMaxWorkerThreads parameter.");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBAMIMaxWorkerThreads parameter.");
+	  return 0;
+	}
+	omniORB::AMIMaxWorkerThreads = v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBAMIWorkerTimeout
+      if( strcmp(argv[idx],"-ORBAMIWorkerTimeout") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBAMIWorkerTimeout parameter.");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBAMIWorkerTimeout parameter.");
+	  return 0;
+	}
+	omniORB::AMIWorkerTimeout = v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
       // -ORBdiiThrowsSysExceptions
       if( strcmp(argv[idx],"-ORBdiiThrowsSysExceptions") == 0 ) {
 	if( idx + 1 >= argc ) {
@@ -1115,6 +1177,9 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  "    -ORBInitialHost <name>\n"
 	  "    -ORBInitialPort <1-65535>\n"
 	  "    -ORBno_bootstrap_agent\n"
+	  "    -ORBAMIMaxQueueSize <n entries, n == 0 for unbounded>\n"
+	  "    -ORBAMIMaxWorkerThreads <n threads>\n"
+	  "    -ORBAMIWorkerTimeout <n seconds>\n"
 	  "    -ORBdiiThrowsSysExceptions <0|1>\n"
 	  "    -ORBabortOnInternalError <0|1>\n"
 	  "    -ORBverifyObjectExistsAndType <0|1>\n"

@@ -29,6 +29,12 @@
 
 /* 
   $Log$
+  Revision 1.1.2.5  2000/09/27 17:13:08  djs
+  Struct member renaming
+  Added command line options
+  Added CORBA::ValueBase (just to do reference counting)
+  General refactoring
+
   Revision 1.1.2.4  2000/09/21 16:36:24  djs
   Set max queue length to 65536 (arbitrary)
 
@@ -44,7 +50,9 @@
 
 #include <omniORB3/CORBA.h>
 #include <omniORB3/Messaging.h>
+#include <omniORB3/omniAMICallDescriptor.h>
 #include <omniORB3/omniAMI.h>
+
 #include "initialiser.h"
 
 
@@ -67,9 +75,29 @@ static AMI::Queue     *queue        = NULL;
 static unsigned long  queue_length  = 0; // number of call descriptors in q 
 
 
-const  unsigned int   maxWorkers    = 5;
-const  unsigned int   timeout       = 30;
-const  unsigned int   queueMax      = 65536;
+///////////////////////////////////////////////////////////////////////
+// Call Descriptor code ///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+void omniAMIDescriptor::sendReply(){
+  if (_is_polling) return giveReplyToPoller();
+  omniObjRef *handler = get_handler();
+
+  // A nil reply handler means don't send the reply anywhere.
+  if (handler->_is_nil()) return;
+
+  get_handler()->_invoke(*get_reply_cd());
+}
+
+void omniAMIDescriptor::sendException(CORBA::Exception &e, 
+				      CORBA::Boolean is_system_exception){
+  Messaging::ExceptionHolder *holder = get_exception_holder();
+  holder->pd_is_system_exception = is_system_exception;
+  holder->local_exception_object = CORBA::Exception::_duplicate(&e);
+  
+  get_handler()->_invoke(*get_exc_cd(*holder));
+}
+
 
 ///////////////////////////////////////////////////////////////////////
 // AMI::Worker (implementation of worker thread) //////////////////////
@@ -87,14 +115,12 @@ void *AMI::Worker::run_undetached(void *arg){
   // First request of this thread can avoid the queue
   if (first_task){
     omniAMICall_var task = first_task;
-    process(first_task);
-    //first_task = NULL;
+    process(*first_task);
   }
 
   while (1){
     AMITRACE("AMI::Worker", "dequeue");
-    //omniAMICall *call = queue->dequeue(timeout);
-    omniAMICall *call = queue->dequeue(timeout);
+    omniAMICall *call = queue->dequeue(omniORB::AMIWorkerTimeout);
     omniAMICall_var store = call;
     
     if (call){
@@ -102,7 +128,7 @@ void *AMI::Worker::run_undetached(void *arg){
 	omni_mutex_lock lock(state_lock);
 	queue_length --;
       }
-      process(call);
+      process(*call);
       continue;
     }
 
@@ -120,60 +146,31 @@ void *AMI::Worker::run_undetached(void *arg){
   }
   return NULL;
 }
-void AMI::Worker::process(omniAMICall *cd){
+void AMI::Worker::process(omniAMICall& call){
   AMITRACE("AMI::Worker", "processing request");
 
-  // ObjRefs target and handler are owned by the call descriptor
-  // so we don't need to worry about deallocating them.
-  omniObjRef *target = cd->get_target();
-
-  // omniCallDescriptors are deallocated when the omniAMICall is
-  // deleted.
-  omniCallDescriptor *request = cd->get_request_cd();
-  
+  // Actual sending and receiving requests is done in the call descriptor
+  // class itself.
   try{
-    // block this thread to make the synchronous request invocation
-    target->_invoke(*request, 1);
-    {
-      // received a non-exceptional reply from server
-      omniObjRef *handler = cd->get_handler();
-      omniCallDescriptor *reply = cd->get_reply_cd();
-      // FIXME: exceptions here?
-      handler->_invoke(*reply, 1);
-    }
+    call.sendRequest();
+
+    // received a non-exceptional reply from server
+    call.sendReply();
 
   }catch(CORBA::UserException &e){
-    reply_with_exception(*cd, e, 0);
-    
+    call.sendException(e, 0);
   }catch(CORBA::SystemException &e){
-    reply_with_exception(*cd, e, 1);      
+    call.sendException(e, 1);
   }
 
-  // finished processing, delete storage
-  //delete cd;
   AMITRACE("AMI::Worker", "Request completed");
-}
-
-void AMI::Worker::reply_with_exception(omniAMICall& cd, CORBA::Exception &e,
-				       CORBA::Boolean is_system_exception){
-
-  Messaging::ExceptionHolder *holder = cd.get_exception_holder();
-  holder->is_system_exception = is_system_exception;
-  holder->local_exception_object = CORBA::Exception::_duplicate(&e);
-
-  omniObjRef *handler = cd.get_handler();
-  omniCallDescriptor *calldesc = cd.get_exc_cd(*holder);
-  handler->_invoke(*calldesc, 1);
-
-  // user code deletes exceptionholder
-  // delete call descriptor?
-  // release handler reference?
 }
 
 
 void AMI::Worker::shutdown(){
   AMITRACE("AMI::Worker", "shutting down");
 }
+
 
 ///////////////////////////////////////////////////////////////////////
 // AMI subsystem //////////////////////////////////////////////////////
@@ -188,7 +185,7 @@ void AMI::enqueue(omniAMICall *cd){
     // the ORB is shutting down while user threads are using it...
     if (shutting_down) return;
 
-    if ((nWorkers < maxWorkers)){
+    if ((nWorkers < omniORB::AMIMaxWorkerThreads)){
       // spawn a new worker thread directly for this request
       AMITRACE("AMI", "Spawning a new worker");
       Worker *newWorker = new Worker(cd);
@@ -229,13 +226,17 @@ void AMI::shutdown(){
 
 class omni_AMI_initialiser : public omniInitialiser {
 public:
+
   void attach() {
-    queue = new AMI::Queue(queueMax);
+    AMITRACE("AMI Initialiser", "Creating request Queue");
+    queue = new AMI::Queue(omniORB::AMIMaxQueueSize);
   }
   void detach() {
     AMI::shutdown();
+    AMITRACE("AMI Initaliser", "Destroying request Queue");
     delete queue;
   }
+
 };
 
 static omni_AMI_initialiser initialiser;
