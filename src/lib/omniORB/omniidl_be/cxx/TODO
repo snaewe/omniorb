@@ -23,3 +23,5 @@
 
 * Unify marshalling/ unmarshalling code (it happens both in skutil and in 
   proxy)
+  
+* Check typecode/bdesc code esp wrt enums (which are a scoping special case)

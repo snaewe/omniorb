@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.11  1999/12/24 18:20:12  djs
+# Builds list of IDL files #included by walking the AST and examining the
+# file() of each Decl node.
+#
 # Revision 1.10  1999/12/09 20:41:24  djs
 # Now runs typecode and any generator
 #
@@ -126,6 +130,10 @@ def run(tree, args):
         config.setBasename(match.group(2))
     else:
         raise "Unable to work out basename of input file"
+
+    # build the list of include files
+    walker = config.WalkTreeForIncludes()
+    tree.accept(walker)
 
     # set the default behaviour
     config.setTypecodeFlag(0)
