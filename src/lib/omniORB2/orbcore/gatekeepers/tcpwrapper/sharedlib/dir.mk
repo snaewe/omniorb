@@ -28,6 +28,7 @@ VERSION = 1.1.0
 # need to do that as a special case with the vpath directive:
 #
 
+override VPATH := $(patsubst %,%/..,$(VPATH))
 vpath %.cc ..
 vpath %.c ..
 
@@ -62,8 +63,8 @@ OBJS = hosts_access.o options.o shell_cmd.o rfc931.o eval.o \
        update.o misc.o diag.o percent_m.o environ.o fakelog2.o
 CXXOBJS = gatekeeper.o
 
-DIR_CPPFLAGS += -I.. $(patsubst %,-I..,$(VPATH)) \
-                -I../../.. $(patsubst %,-I%/../../..,$(VPATH))
+DIR_CPPFLAGS += -I.. $(patsubst %,-I%/.,$(VPATH)) \
+                -I../../.. $(patsubst %,-I%/../..,$(VPATH))
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
