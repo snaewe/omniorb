@@ -1,3 +1,13 @@
+Tue Aug  1 18:28:25 BST 2000 sll
+================================
+
+- Remove OSF1 platform files from internal mk/platforms as this is
+  no longer used or maintained.
+
+mk/platforms/alpha_osf1_3.2.mk              delete
+mk/platforms/alpha_osf1_4.0.mk              delete
+mk/platforms/alpha_osf1_4.0_oldcxx.mk       delete
+
 Tue Aug  1 18:15:25 BST 2000 sll
 ================================
 
