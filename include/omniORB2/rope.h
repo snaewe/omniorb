@@ -29,6 +29,15 @@
 
 /*
   $Log$
+  Revision 1.8  1999/05/26 11:46:30  sll
+  Replaced WrTimedLock with WrTestLock.
+  Changed the operator() of Strand_iterator to increment the ref count
+  of the strand it returns.
+  Added new member is_unused() to class Strand. This is used to check
+  if no Sync object is parking on the strand. This member is necessary
+  because given the change in the Strand_iterator, is_idle() is no
+  longer appropriate to test if no Sync object is using the strand.
+
   Revision 1.7  1999/03/17 12:43:40  djr
   Corrected error in Rope_var copy constructor.
 
@@ -336,6 +345,19 @@ public:
   //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
 
   _CORBA_Boolean is_idle(_CORBA_Boolean held_rope_mutex = 0);
+  // Return TRUE(1) if the reference count is zero.
+  //
+  // Concurrency Control:
+  //      MUTEX = pd_rope->pd_lock
+  // Pre-condition:
+  //      Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
+  //      Hold <MUTEX> on enter if held_rope_mutex == TRUE              
+  // Post-condition:
+  //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
+
+  _CORBA_Boolean is_unused(_CORBA_Boolean held_rope_mutex = 0);
+  // Return TRUE(1) if  !is_idle() && no Sync object is parking on this strand
+  //
   // Concurrency Control:
   //      MUTEX = pd_rope->pd_lock
   // Pre-condition:
@@ -411,12 +433,8 @@ public:
     // returns false, then the connection to the remote end is really
     // broken and may be considered as a hard failure.
 
+    static _CORBA_Boolean WrTestLock(Strand*s,_CORBA_Boolean& heartbeat);
 
-    static _CORBA_Boolean WrTimedLock(Strand* s,
-				      _CORBA_Boolean& heartbeat,
-				      unsigned long secs,
-				      unsigned long nanosecs);
-    static void WrUnlock(Strand* s);
   protected:
     void RdLock(_CORBA_Boolean held_rope_mutex=0);
     void WrLock(_CORBA_Boolean held_rope_mutex=0,
@@ -433,49 +451,38 @@ public:
     //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
     //          Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
     //          Hold <MUTEX> on enter if held_rope_mutex == TRUE
-    //      For WrTimedLock(), WrUnlock(Strand*):
+    //      For WrTestLock()
     //          Must hold <MUTEX> on enter
     // Post-condition:
     //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
     //        Restore <MUTEX> to the same state as indicated by held_rope_mutex
-    //      For WrTimedLock(), WrUnlock(Strand*):
+    //      For WrTestLock()
     //        Still held <MUTEX> on exit
-    // XXX  For WrTimedLock(), if the write lock has been acquired, the
-    //                         reference count of the strand is increment by 1.
-    // XXX  For WrUnlock(Strand*), the reference count of the strand is
-    //                         decrement by 1.
-    //
-    // There are two ways to acquire a Write Lock, 
-    //    i.e. WrLock and WrTimedLock.
     //
     // WrLock blocks until it has acquired a write lock on the strand.
-    // WrTimedLock tries to acquire a write lock on the strand until the
-    // current time is later than the absolute time given in the arguments
-    // <secs> and <nanosecs>. These time arguments are interpreted in the
-    // same way as omni_condition::timedwait(). If WrTimedLock returns 1,
-    // the write lock has been acquired, otherwise it has timeout and no
-    // lock has been acquired.
+    // WrTestLock checks if a write lock is currently held on the strand.
+    // It returns 1 if no write lock is held or 0 otherwise.
     //
     // A strand has a status boolean known as the 'heartbeat', this boolean
     // value may be set/unset and read as a side-effect of WrLock and 
-    // WrTimeLock. The initial value of the boolean is 0.
+    // WrTestLock. The initial value of the boolean is 0.
     //
     // If <clear_heartbeat> is 1 (the default), WrLock will set the heartbeat
     // boolean to 0 after it has acquired the write lock. If <clear_heartbeat>
     // is 0, WrLock will leave the heartbeat boolean unchanged.
     // 
-    // The heartbeat boolean will be updated by WrTimedLock with the value
-    // of <heartbeat> after it has acquired the write lock. The original value
-    // of the boolean is returned in <heartbeat>.
+    // The heartbeat boolean will be updated by WrTestLock with the value
+    // of <heartbeat> if no write lock is held on the strand. The original 
+    // value of the boolean is returned in <heartbeat>.
     //
     // The value of the heartbeat boolean *does not* affect the internal
     // functions of the strand. However, it is used as a way to detect
     // whether a strand is idle and can be closed down. The algorithm is as
     // follows:
-    //      A scavenger thread periodically scans all the strands. It acquires
-    //      the write lock on the strand using WrTimedLock. It sets the
-    //      heartbeat boolean to 1 and examines the original value returned by 
-    //      WrTimedLock. If the original value is also 1, it knows the strand 
+    //      A scavenger thread periodically scans all the strands. It tests
+    //      the write lock on the strand using WrTestLock. It sets the
+    //     heartbeat boolean to 1 and examines the original value returned by 
+    //      WrTestLock. If the original value is also 1, it knows the strand 
     //      has been idle for at least one scan period. It may then shutdown
     //      the strand.
     // 
@@ -626,10 +633,14 @@ public:
   //	  Hold <MUTEX> on exit if pd_leave_mutex == TRUE
 
   Strand *operator() ();
+  // Return the next Strand. The reference count of the returned strand
+  // has been incremented by 1. In the next call to operator(), or in the
+  // dtor of Strand_iterator, the reference count will be decremented.
 
 private:
-  const Rope   *pd_rope;
+  const Rope    *pd_rope;
   _CORBA_Boolean pd_leave_mutex;
+  _CORBA_Boolean pd_initialised;
   Strand *pd_s;
   Strand_iterator();
 };
