@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.3.2.5  2000/09/27 22:48:50  djs
+ Minor CORBA::ValueBase modification
+
  Revision 1.3.2.4  2000/09/27 17:09:23  djs
  Renamed ExceptionHolder_base struct members
  Added CORBA::ValueBase
@@ -1118,10 +1121,10 @@ _CORBA_MODULE_BEG
 
   class ValueBase {
   public:
-    virtual ValueBase *_add_ref() = 0;
-    virtual void _remove_ref()    = 0;
-    virtual ValueBase* _copy_value() = 0;
-    virtual ULong _refcount_value() = 0;
+    virtual ValueBase *_add_ref();
+    virtual void _remove_ref();
+    virtual ValueBase* _copy_value();
+    virtual ULong _refcount_value();
 
     static ValueBase* _downcast(ValueBase*);
 
