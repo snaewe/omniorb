@@ -1,4 +1,28 @@
 
+Wed Oct 13 13:38:21 BST 1999 djr
+================================
+
+- Don't use virtual inheritance in examples (not needed).
+
+src/examples/echo/eg1.cc
+src/examples/echo/eg2_impl.cc
+src/examples/echo/eg3_impl.cc
+src/examples/poa/implicit_activation/eg1.cc
+
+- Fixed repository id returned by CORBA::Exception::_NP_repoId().
+  It did not include the version number of system exceptions.
+
+src/lib/omniORB2/orbcore/exceptn.cc
+
+- Out-of-date name for tcDescriptor for CORBA::Object.
+
+include/omniORB3/tcDescriptor.h
+
+- Added typedef for TypeCode_out.
+
+include/omniORB3/CORBA_vartypes.h
+
+
 Mon Oct  4 18:05:57 BST 1999 djr
 ================================
 
