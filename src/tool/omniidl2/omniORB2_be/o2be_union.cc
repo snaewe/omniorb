@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.21  1999/02/02 16:59:07  djr
+  *** empty log message ***
+
   Revision 1.20  1999/01/14 10:19:17  djr
   Fixed bug with name scoping problems in IDL unions which are not
   declared at the global scope.
@@ -2424,8 +2427,8 @@ o2be_union::produce_typecode_skel(std::fstream& s)
   o2be_name::narrow_and_produce_typecode_skel(disc_type(), s);
 
   // Create an array of PR_unionMember to describe the members.
-  unsigned int memberCount = 0;
-  unsigned int defaultMember = 0;
+  unsigned long memberCount = 0;
+  unsigned long defaultMember = 0;
 
   IND(s); s << "static CORBA::PR_unionMember _0RL_unionMember_"
 	    << _idname() << "[] = {\n";
@@ -2450,7 +2453,7 @@ o2be_union::produce_typecode_skel(std::fstream& s)
       s << ", ";
 
       AST_UnionLabel *l = o2be_union_branch::narrow_from_decl(d)->label();
-      if (l->label_kind() == AST_UnionLabel::UL_label) {
+      if( l->label_kind() == AST_UnionLabel::UL_label ) {
 	AST_ConcreteType *ct = disc_type();
 	if (ct->node_type() == AST_Decl::NT_enum) {
 	  AST_Decl* v = 
@@ -2458,7 +2461,7 @@ o2be_union::produce_typecode_skel(std::fstream& s)
 	  s << o2be_name::narrow_and_produce_fqname(v);
 	} else
 	  produce_disc_value(s, disc_type(), l->label_val(), this, I_TRUE);
-      } else {
+      } else if( l->label_kind() == AST_UnionLabel::UL_default ) {
 	// this label is default
 	s << "0";
 	defaultMember = memberCount;
