@@ -1,4 +1,15 @@
 
+Tue Feb  9 09:41:08 GMT 1999 djr
+================================
+
+- Fixed bug where a union helper class was not being declared before
+  being declared as a friend.
+
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_module.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Mon Feb  8 18:53:46 GMT 1999 djr
 ================================
 
