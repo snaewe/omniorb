@@ -26,10 +26,7 @@
 // Description:
 //
 
-#include <omniORB2/CORBA_sysdep.h>
-
-#if defined(ENABLE_CLIENT_IR_SUPPORT)
+#define ENABLE_CLIENT_IR_SUPPORT
 # include <omniORB2/CORBA.h>
 # include <omniORB2/tcDescriptor.h>
 # include <../corbaidlDynSK.cc>
-#endif
