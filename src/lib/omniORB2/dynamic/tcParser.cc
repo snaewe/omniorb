@@ -484,7 +484,7 @@ void
 tcParser::copyTo(MemBufferedStream& mbuf, int rewind)
 {
   if( rewind )  pd_mbuf.rewind_in_mkr();
-  if( mbuf.RdMessageByteOrder() == pd_mbuf.RdMessageByteOrder() )
+  if( omni::myByteOrder == pd_mbuf.RdMessageByteOrder() )
     fastCopyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, mbuf);
   else
     copyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, mbuf);
@@ -495,7 +495,7 @@ void
 tcParser::copyTo(NetBufferedStream& nbuf, int rewind)
 {
   if( rewind )  pd_mbuf.rewind_in_mkr();
-  if( nbuf.RdMessageByteOrder() == pd_mbuf.RdMessageByteOrder() )
+  if( omni::myByteOrder == pd_mbuf.RdMessageByteOrder() )
     fastCopyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, nbuf);
   else
     copyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, nbuf);
