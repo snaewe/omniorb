@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.2  2000/12/05 17:44:10  dpg1
+# Remove dead repoId checking code.
+#
 # Revision 1.1.4.1  2000/10/12 15:37:46  sll
 # Updated from omni3_1_develop.
 #
@@ -244,32 +247,3 @@ def allInherits(interface):
     list = start + bfs(start, bfs)
 
     return util.setify(list)
-
-# From the CORBA IR spec (Ch. 10):
-#  Repository IDs are of the form:
-#      <format>:<string>
-# where <format> doesn't contain any ':' characters.
-#
-# The <format> string is usually something like 'IDL:'
-# and the corresponding <string> part is this case:
-#      <idlist>:<version>
-def splitRepoId(repoId):
-    regex = re.compile(r"(.+?):(.+)")
-    search = regex.search(repoId)
-    if not(search):
-        util.fatalError("repository ID not in the form <format>:<string>")
-    (format, str) = (search.group(1), search.group(2))
-
-    search = regex.search(str)
-    if not(search):
-        # assume #pragme ID "a/b/c:1.0", technically legal but dodgy
-        return ("", string.split(format, "/"), str)
-
-    return (format, string.split(search.group(1), "/"), search.group(2))
-
-# Joins a repoId back up again
-#
-def joinRepoId(x):
-    (prefix, scope, version) = x
-    if prefix != "": prefix = prefix + ":"
-    return prefix + string.join(scope, "/") + ":" + version
