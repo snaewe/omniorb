@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.28  2000/01/14 17:38:27  djs
+# Preliminary support for unions with multiple case labels
+#
 # Revision 1.27  2000/01/13 17:02:00  djs
 # Added support for operation contexts.
 #
@@ -1354,22 +1357,6 @@ def visitUnion(node):
     
     switchType = node.switchType()
     
-    # returns a representation of the union discriminator in a form
-    # that is a legal value in C++
-    #def discrimValueToString(switchType, caselabel, environment):
-        # CORBA 2.3draft 3.10.2.2
-        #   switch type ::= <integer_type>
-        #               |   <char_type>
-        #               |   <boolean_type>
-        #               |   <enum_type>
-        #               |   <scoped_name>
-        # where scoped_name must be an already declared version of one
-        # of the simpler types
-    #    discrimvalue = caselabel.value()#
-
-    #    return tyutil.valueString(switchType, discrimvalue, environment)
-        
-
     # in the case where there is no default case and an implicit default
     # member, choose a discriminator value to set. Note that attempting
     # to access the data is undefined
@@ -1572,19 +1559,45 @@ public:
         member = tyutil.mapID(decl.identifier())
         # the name of the member type (not flattened)
         type = environment.principalID(caseType)
-        # FIXME: multiple labels might be broken
-        for l in c.labels():
-            # depends entirely on the dereferenced type of the member
-            if l.default():
+
+        # CORBA 2.3 C++ language mapping (June, 1999) 1-34:
+        # ... Setting the union value through a modifier function
+        # automatically sets the discriminant and may release the
+        # storage associated with the previous value ... If a
+        # modifier for a union member with multiple legal
+        # discriminant values is used to set the value of the
+        # discriminant, the union implementation is free to set
+        # the discriminant to any one of the legal values for that
+        # member. The actual discriminant value chose under these
+        # circumstances is implementation-dependent. ...
+
+        # Do we pick the first element (seems obvious)?
+        # Or pick another one, hoping to trip-up people who write
+        # non-compliant code and make an incorrect assumption?
+
+        labels = c.labels()
+        if labels != []:
+            non_default_labels = filter(lambda x:not(x.default()), labels)
+            if non_default_labels == []:
+                # only one label and it's the default
+                label = labels[0]
+                discrimvalue = chooseArbitraryDefault()
+            elif len(non_default_labels) > 1:
+                # oooh, we have a choice. Let's pick the second one.
+                # no-one will be expecting that
+                label = non_default_labels[1]
+            else:
+                # just the one interesting label
+                label = non_default_labels[0]
+
+            if label.default():
                 discrimvalue = chooseArbitraryDefault()
             else:
-                discrimvalue = tyutil.valueString(switchType, l.value(),
+                discrimvalue = tyutil.valueString(switchType, label.value(),
                                                   environment)
-                #discrimvalue = discrimValueToString(switchType,
-                #                                    l, environment)
 
             # FIXME: stupid special case, see above
-            if tyutil.isChar(switchType) and l.value() == '\0':
+            if tyutil.isChar(switchType) and label.value() == '\0':
                 discrimvalue = "0000"
 
             type_str = type
@@ -1606,7 +1619,6 @@ public:
                     type_str = environment.principalID(derefType)
             elif tyutil.isSequence(caseType):
                 type_str = tyutil.sequenceTemplate(caseType, environment)
-                #type_str = "_" + member + "_seq"
 
             # only different when array is anonymous
             const_type_str = type_str
