@@ -1,3 +1,16 @@
+Mon Sep 24 15:23:55 BST 2001 dpg1
+=================================
+
+- Safer static translation unit counts for omnithread and final clean-up.
+
+include/omnithread.h
+include/omniORB4/finalCleanup.h
+include/omniORB4/omniInternal.h
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+
+
 Mon Sep 24 11:07:30 BST 2001 dpg1
 =================================
 

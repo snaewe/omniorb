@@ -608,7 +608,6 @@ public:
     // some initialisation code before main() is called.
 
     class _OMNITHREAD_NTDLL_ init_t {
-	static int count;
     public:
 	init_t(void);
         ~init_t(void);

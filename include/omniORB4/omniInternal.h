@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.13  2001/09/24 14:26:01  dpg1
+  Safer static translation unit counts for omnithread and final clean-up.
+
   Revision 1.2.2.12  2001/09/19 17:26:43  dpg1
   Full clean-up after orb->destroy().
 
@@ -189,8 +192,8 @@
 #include <string.h>
 #endif
 #include <omnithread.h>
-#include <omniORB4/finalCleanup.h>
 #include <omniORB4/CORBA_sysdep.h>
+#include <omniORB4/finalCleanup.h>
 #include <omniORB4/CORBA_basetypes.h>
 #include <omniORB4/seqTemplatedecls.h>
 #include <omniORB4/templatedecls.h>

@@ -394,8 +394,6 @@ omni_semaphore::post(void)
 // Static variables
 //
 
-int omni_thread::init_t::count = 0;
-
 omni_mutex* omni_thread::next_id_mutex;
 int omni_thread::next_id = 0;
 static DWORD self_tls_index;
@@ -406,9 +404,14 @@ static unsigned int stack_size = 0;
 // Initialisation function (gets called before any user code).
 //
 
+static int& count() {
+  static int the_count = 0;
+  return the_count;
+}
+
 omni_thread::init_t::init_t(void)
 {
-    if (count++ != 0)	// only do it once however many objects get created.
+    if (count()++ != 0)	// only do it once however many objects get created.
 	return;
 
     DB(cerr << "omni_thread::init: NT implementation initialising\n");
@@ -447,7 +450,7 @@ omni_thread::init_t::init_t(void)
 
 omni_thread::init_t::~init_t(void)
 {
-    if (--count != 0) return;
+    if (--count() != 0) return;
 
     omni_thread* self = omni_thread::self();
     if (!self) return;

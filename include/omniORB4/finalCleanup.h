@@ -34,17 +34,8 @@
 
 class _omniFinalCleanup {
 public:
-  inline _omniFinalCleanup() {
-    count++;
-  }
-  inline ~_omniFinalCleanup() {
-    if (--count == 0)
-      cleanup();
-  }
-  void cleanup();
-
-private:
-  static int count;
+  _omniFinalCleanup();
+  ~_omniFinalCleanup();
 };
 
 static _omniFinalCleanup _the_omniFinalCleanup;
