@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:57:05  sll
+  Changed include/omniORB3 to include/omniORB4
+
   Revision 1.2.2.1  2000/07/17 10:35:54  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -52,16 +55,14 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
 #include <localIdentity.h>
-#include <omniORB3/omniObjRef.h>
-#include <omniORB3/omniServant.h>
-#include <omniORB3/callDescriptor.h>
+#include <omniORB4/callDescriptor.h>
 #include <objectAdapter.h>
 #include <ropeFactory.h>
 #include <exceptiondefs.h>
