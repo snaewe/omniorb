@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.22.6.21  2001/02/19 17:16:43  sll
+  poll() on HPUX 10.20 is broken. The performance is terrible. Switch to use
+  select().
+
   Revision 1.22.6.20  2001/02/05 12:22:35  dpg1
   Failed to properly cope with an interrupted recv() call on Windows.
 
@@ -289,8 +293,12 @@
 
 
 #if defined(__hpux__)
-#include <poll.h>
-#define USE_POLL_ON_RECV
+#  if __OSVERSION__ >= 11
+#    include <poll.h>
+#    define USE_POLL_ON_RECV
+#  else
+#    define USE_SELECT_ON_RECV
+#  endif
 #endif
 
 #if !defined(__VMS)
