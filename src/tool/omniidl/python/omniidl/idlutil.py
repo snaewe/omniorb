@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/01 20:18:30  dpg1
+# Added string escaping
+#
 # Revision 1.1  1999/10/29 15:47:07  dpg1
 # First revision.
 #
@@ -55,3 +58,11 @@ def pruneScope(target_scope, our_scope):
         del tscope[0]
         i = i + 1
     return tscope
+
+def escapifyString(str):
+    l = list(str)
+    vis = string.letters + string.digits + " _!$%^&*()-=+[]{};'#:@~,./<>?|`"
+    for i in range(len(l)):
+        if l[i] not in vis:
+            l[i] = "\\%03o" % ord(l[i])
+    return string.join(l, "")
