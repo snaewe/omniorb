@@ -1,3 +1,14 @@
+Tue Jun  6 16:49:43 BST 2000 dpg1
+=================================
+
+- Add draft omniidl developers manual
+
+doc/tex/omniidl.tex                  -- new
+external_merge/doc/omniidl.html      -- new
+external_merge/doc/omniidl.pdf       -- new
+external_merge/doc/omniidl.ps        -- new
+
+
 Tue Jun  6 16:17:00 BST 2000 dpg1
 =================================
 

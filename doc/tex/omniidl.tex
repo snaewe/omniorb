@@ -1,0 +1,1238 @@
+\documentclass[11pt,twoside,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{palatino}
+
+\pagestyle{headings}
+\raggedbottom
+
+
+% Semantic mark-up
+\newcommand{\omniidl}{\textsf{omniidl}}
+\newcommand{\func}[1]{\texttt{#1}}
+\newcommand{\sfunc}[1]{\texttt{\small{#1}}}
+\newcommand{\var}[1]{\texttt{#1}}
+\newcommand{\class}[1]{\texttt{#1}}
+\newcommand{\intf}[1]{\texttt{#1}}
+\newcommand{\op}[1]{\texttt{#1()}}
+\newcommand{\cmdline}[1]{\texttt{#1}}
+
+\newcommand{\dfunc}[1]{\item[\func{#1}]\mbox{}\\}
+\newcommand{\cfunc}[1]{\item[\func{#1}]}
+
+\newenvironment{funcdesc}[1]%
+  {\vspace{\baselineskip}%
+   \noindent\begin{minipage}{\textwidth}%
+   \noindent\rule{\textwidth}{1.5pt}\\%
+   \centerline{\textbf{\texttt{#1}}}%
+   \vspace{-.5\baselineskip}%
+   \begin{description}}
+  {\vspace{-\baselineskip}\end{description}%
+   \noindent\rule{\textwidth}{1.5pt}\end{minipage}}
+
+\newenvironment{classdesc}[2]%
+  {\vspace{\baselineskip}%
+   \noindent\begin{minipage}{\textwidth}%
+   \noindent\rule{\textwidth}{1.5pt}\\%
+   \centerline{\textbf{\texttt{#1}}}\\%
+   \centerline{\textit{#2}}%
+   \vspace{-.5\baselineskip}%
+   \begin{description}}
+  {\vspace{-\baselineskip}\end{description}%
+   \noindent\rule{\textwidth}{1.5pt}\end{minipage}}
+
+
+% URL-like things:
+\usepackage[T1]{url}
+\newcommand{\weburl}{\url}
+\newcommand{\email}{\begingroup \urlstyle{rm}\Url}
+\newcommand{\file}{\begingroup \urlstyle{tt}\Url}
+\newcommand{\envvar}{\begingroup \urlstyle{tt}\Url}
+\newcommand{\makevar}{\begingroup \urlstyle{tt}\Url}
+\newcommand{\corbauri}{\begingroup \urlstyle{tt}\Url}
+
+
+% HeVeA barfs at the following:
+
+%BEGIN LATEX
+
+\addtolength{\oddsidemargin}{-0.2in}
+\addtolength{\evensidemargin}{-0.6in}
+\addtolength{\textwidth}{0.5in}
+
+\newcommand{\dsc}{\discretionary{}{}{}}
+\usepackage{listings}
+
+\lstdefinelanguage{idl}%
+  {keywords={any,attribute,boolean,case,char,const,context,default,double,enum,exception,FALSE,float,in,inout,interface,long,module,Object,octet,oneway,out,raises,readonly,sequence,short,string,struct,switch,TRUE,typedef,unsigned,union,void},%
+  sensitive,%
+  singlecomment={/*}{*/},%
+  commentline=//,%
+  stringizer=[b]",%
+  directives={define,elif,else,endif,error,if,ifdef,ifndef,line,include,pragma,undef,warning}%
+  }[keywords,comments,strings,directives]
+
+\lstset{basicstyle=\ttfamily\small,
+        keywordstyle=,
+        commentstyle=\itshape,
+        labelstyle=\tiny,
+        stringspaces=false,
+        abovecaptionskip=0pt,
+        belowcaptionskip=0pt,
+        indent=\parindent,
+        fontadjust}
+
+\lstnewenvironment{idllisting}{\lstset{language=idl}}{}
+\lstnewenvironment{cxxlisting}{\lstset{language=C++}}{}
+\lstnewenvironment{makelisting}{\lstset{language=[gnu]make}}{}
+\lstnewenvironment{pylisting}{\lstset{language=python}}{}
+%END LATEX
+
+% These things make up for HeVeA's lack of understanding:
+
+%HEVEA\newcommand{\dsc}{}
+%HEVEA\newcommand{\lstset}[1]{}
+%HEVEA\usepackage{verbatim}
+%HEVEA\newenvironment{idllisting}{\verbatim}{\endverbatim}
+%HEVEA\newenvironment{cxxlisting}{\verbatim}{\endverbatim}
+%HEVEA\newenvironment{makelisting}{\verbatim}{\endverbatim}
+%HEVEA\newenvironment{pylisting}{\verbatim}{\endverbatim}
+
+% Hyperref things for pdf and html:
+\usepackage{hyperref}
+
+\newif\ifpdf
+\ifx\pdfoutput\undefined
+  \pdffalse
+\else
+  \pdfoutput=1
+  \pdftrue
+\fi
+\ifpdf
+  \hypersetup{colorlinks,citecolor=red,urlcolor=blue}
+\fi
+
+
+\title{\omniidl\ --- The omniORB IDL Compiler}
+
+\author{Duncan Grisby\\
+AT\&T Laboratories Cambridge\\
+}
+
+\date{June 2000}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Introduction}
+
+This manual describes \omniidl, the omniORB IDL compiler. It is
+intended for developers who wish to write their own IDL compiler
+back-ends, or to modify existing ones. It also documents the design of
+the compiler front-end for those poor souls who have to track the IDL
+specification.
+
+If you just wish to use \omniidl\ to create stubs for C++ or Python,
+you should read the omniORB or omniORBpy manuals instead of this one.
+
+
+\subsection{Requirements}
+
+Back-ends for \omniidl\ are written in Python, so to use it you must
+have an up-to-date Python interpreter. You must also understand Python
+to be able to follow this manual and write back-ends. You can download
+Python and associated documentation from
+\weburl{http://www.python.org/}.
+
+The front-end scanner and parser are written using flex and bison; the
+rest of the front-end is written in C++. The code intentionally avoids
+using any advanced (and useful) features of C++, such as templates, so
+as to make it as portable as possible.
+
+
+\subsection{Running \omniidl}
+
+On all platforms, there is a command named \omniidl. On Unix
+platforms, \omniidl\ is a Python script which runs Python via the
+\verb|#!| mechanism. On Windows NT, there is an executable named
+\file{omniidl.exe}.
+
+The \omniidl\ command line has the form:
+
+\begin{quote} % Not the clearest bit of mark-up ever... :-)
+\cmdline{omniidl }[\textit{options}]\cmdline{ -b}%
+<\textit{back-end}>\cmdline{ }[\textit{back-end options}]%
+\cmdline{ }<\textit{file 1}>\cmdline{ }<\textit{file 2}>%
+\cmdline{ }\dots
+\end{quote}
+
+The supported flags are:
+
+\begin{tabbing}
+\cmdline{-D}\textit{name}[\cmdline{=}\textit{value}]~~ \= \kill
+%HEVEA\\
+
+\cmdline{-D}\textit{name}[\cmdline{=}\textit{value}]
+     \> Define \textit{name} for the preprocessor.\\
+
+\cmdline{-U}\textit{name}
+     \> Undefine \textit{name} for the preprocessor.\\
+
+\cmdline{-I}\textit{dir}
+     \> Include \textit{dir} in the preprocessor search path.\\
+
+\cmdline{-E}
+     \> Only run the preprocessor, sending its output to stdout.\\
+
+\cmdline{-Y}\textit{cmd}
+     \> Use \textit{cmd} as the preprocessor, rather than the normal C
+        preprocessor.\\
+
+\cmdline{-N}
+     \> Do not run the preprocessor.\\
+
+\cmdline{-Wp}\textit{arg}[,\textit{arg}\dots]
+     \> Send arguments to the preprocessor.\\
+
+\cmdline{-b}\textit{back-end}
+     \> Run the specified back-end. For the C++ ORB, use \cmdline{-bcxx}.\\
+
+\cmdline{-Wb}\textit{arg}[,\textit{arg}\dots]
+     \> Send arguments to the back-end.\\
+
+\cmdline{-nf}
+     \> Do not warn about unresolved forward declarations.\\
+
+\cmdline{-k}
+     \> Keep comments after declarations, to be used by some back-ends.\\
+
+\cmdline{-K}
+     \> Keep comments before declarations, to be used by some back-ends.\\
+
+\cmdline{-C}\textit{dir}
+     \> Change directory to \textit{dir} before writing output files.\\
+
+\cmdline{-d}
+     \> Dump the parsed IDL then exit, without running a back-end.\\
+
+\cmdline{-p}\textit{dir}
+     \> Use \textit{dir} as a path to find omniidl back-ends.\\
+
+\cmdline{-V}
+     \> Print version information then exit.\\
+
+\cmdline{-u}
+     \> Print usage information.\\
+
+\cmdline{-v}
+     \> Verbose: trace compilation stages.\\
+
+\end{tabbing}
+
+
+If you do not specify any back-ends (with the \cmdline{-b} flag),
+\omniidl\ just runs the compiler front-end, checking that the IDL is
+valid. If you specify more than one back-end, the back-ends are run in
+turn on the abstract syntax tree of each file. This permits you to
+generate stubs for more than one language in a single run. It also
+permits you to write back-ends which annotate or modify the abstract
+syntax tree to be used by later back-ends.
+
+For example, the command:
+
+\begin{quote}
+\cmdline{omniidl -bdump -bpython foo.idl bar.idl}
+\end{quote}
+
+\noindent first reads and parses \file{foo.idl}, and runs the
+\file{dump} and \file{python} back-ends on it in turn. Then it reads
+and parses \file{bar.idl} and runs the two back-ends on that.
+
+
+\subsection{Preprocessor interactions}
+
+IDL is processed by the C preprocessor before \omniidl\ parses it.
+Unlike the old IDL compiler, which used different C preprocessors on
+different platforms, \omniidl\ always uses the GNU C preprocessor
+(which it builds with the name omnicpp). The \cmdline{-D},
+\cmdline{-U}, and \cmdline{-I} options are just sent to the
+preprocessor. Note that the current directory is not on the include
+search path by default---use `\cmdline{-I.}' for that. The
+\cmdline{-Y} option can be used to specify a different preprocessor to
+omnicpp. Beware that line directives inserted by other preprocessors
+are likely to confuse \omniidl.
+
+
+\subsection{Forward-declared interfaces}
+
+If you have an IDL file like:
+
+\begin{idllisting}
+interface I;
+interface J {
+  attribute I the_I;
+};
+\end{idllisting}
+
+\noindent then \omniidl\ will normally issue a warning:
+
+{\small
+\begin{verbatim}
+  test.idl:1: Warning: Forward declared interface `::I' was never
+  fully defined
+\end{verbatim}
+}
+
+\noindent It is illegal to declare such IDL in isolation, but it
+\emph{is} valid to define interface \intf{I} in a separate file. If
+you have a lot of IDL with this sort of construct, you will drown
+under the warning messages. Use the \cmdline{-nf} option to suppress
+them.
+
+
+\subsection{Comments}
+\label{sec:comments}
+
+By default, \omniidl\ discards comments in the input IDL. However,
+with the \cmdline{-k} and \cmdline{-K} options, it preserves the
+comments for use by the back-ends.
+
+The two different options relate to how comments are attached to
+declarations within the IDL. Given IDL like:
+
+\begin{idllisting}
+interface I {
+  void op1();
+  // A comment
+  void op2();
+};
+\end{idllisting}
+
+\noindent the \cmdline{-k} flag will attach the comment to \op{op1};
+the \cmdline{-K} flag will attach it to \op{op2}.
+
+
+
+\subsection{Copyright}
+
+All parts of \omniidl\ are licensed under the GNU General Public
+License, available in the file \file{COPYING}.
+
+As a special exception to the terms of the GPL, we do not consider
+back-ends to be derived works of \omniidl. This means that you may
+distribute back-ends you write under any terms you like. The back-ends
+we distribute are licensed under the GPL, so you must abide by its
+terms if you distribute or modify our back-ends.
+
+As another exception, we do not consider the output of the back-ends
+we distribute to be derived works of those back-ends. You may
+therefore use generated stubs with no restrictions.
+
+
+\section{Back-end interface}
+\label{sec:backend}
+
+There are three elements to the back-end interface: requirements on
+the back-end modules themselves, a set of output and utility
+functions, and the interface to the parsed IDL.
+
+\subsection{Back-end modules}
+\label{sec:bemodules}
+
+\omniidl\ back-ends are just normal Python modules. When you specify a
+back-end with \cmdline{-bfoo}, \omniidl\ first tries to open the
+Python module named \file{omniidl_be.foo}. If that fails, it tries to
+open the module just named \file{foo}, using the normal
+\texttt{PYTHONPATH} mechanism. As with any Python module, the module
+\file{foo} can either be implemented as a single file named
+\file{foo.py}, or as a directory \file{foo} containing a file named
+\file{__init__.py}.
+
+The only requirement on back-end modules is that they contain a
+function with the signature \func{run(tree, args)}, where \var{tree}
+is an \class{AST} object as described in section~\ref{sec:astclass},
+and \var{args} is a list of argument strings passed to the back-end.
+
+Back-ends may also optionally provide a variable named \var{cpp\_args}
+which contains a list of strings containing arguments to be given to
+the C preprocessor. For example, the Python back-end contains the
+line:
+
+\begin{pylisting}
+cpp_args = ["-D__OMNIIDL_PYTHON__"]
+\end{pylisting}
+
+
+
+\subsection{Output and utility functions}
+
+The purpose of most back-ends is to output source code in some
+language. It is often the case that much of the output is independent
+of the specifics of the IDL input. The output for an IDL interface,
+for example, might be an extensive class definition containing
+configuration and initialisation code which is largely independent of
+the specifics of the interface. At various places throughout the class
+definition, there would be items which \emph{were} dependent on the
+interface definition.
+
+\omniidl\ supports this with \emph{template} based output functions.
+Templates are simply strings containing the code to be output,
+including expressions surrounded by `\texttt{@}' characters. When the
+templates are output, the keys inside the `\texttt{@}' expressions are
+replaced with values according to the output arguments. An
+`\texttt{@}' symbol can be output by putting `\texttt{@@}' in the
+template.
+
+The output facilities are provided in the \file{omniidl.output} module
+by the \class{Stream} class. The primary method of \class{Stream}
+objects is \func{out()}, which takes arguments of a template string
+and a set of key/value pairs to be used in \texttt{@} substitutions.
+For example, if \var{st} is a \class{Stream} object, then the code:
+
+\begin{pylisting}
+    template = """\
+  class @id@ {
+  public:
+    @id@(@type@ a) : a_(a) {}
+  private:
+    @type@ a_;
+  };"""
+
+    st.out(template, id="foo", type="int")
+\end{pylisting}
+
+
+\noindent would result in output:
+
+\begin{cxxlisting}
+  class foo {
+  public:
+    foo(int a) : a_(a) {}
+  private:
+    int a_;
+  };
+\end{cxxlisting}
+
+
+When \texttt{@} expressions are substituted, the expression is
+actually \emph{evaluated}, not just textually replaced. This means
+that you can write templates containing strings like
+`\texttt{@obj.name()@}'. Expressions must evaluate to strings. This
+feature should not be over-used---it is very easy to write
+incomprehensible template expressions. The vast majority of templates
+should only use simple string substitutions.
+
+Commonly, it is necessary to nest definitions which are output inside
+other definitions. \class{Stream} objects keep track of a current
+indentation level to aid this. The methods \func{inc\_indent()} and
+\func{dec\_indent()} increment and decrement the current indent level
+respectively. The number of spaces corresponding to a single indent
+level is configured when the \class{Stream} is created. Occasionally,
+you may need to output code which ignores the current indent level
+(preprocessor directives in C, for example). The \func{niout()} method
+is identical to \func{out()} except that it performs no indentation.
+
+The \class{Stream} constructor takes two arguments, a file opened for
+writing, and an integer specifying how many spaces to use for each
+indent level.
+
+
+\begin{funcdesc}{omniidl.output.Stream}
+
+\dfunc{Stream(file,indent\_size)}
+  Initialise a \class{Stream} with the given output file and indent
+  size.
+
+\dfunc{inc\_indent()}
+  Increment the indent level.
+
+\dfunc{dec\_indent()}
+  Decrement the indent level.
+
+\dfunc{out(template,key=val,\dots)}
+  Output the template string \var{template} with key/value
+  substitution and indenting.
+
+\dfunc{niout(template,key=val,\dots)}
+  As \func{out()}, but with no indenting.
+
+\end{funcdesc}
+
+
+\subsubsection{Utility functions}
+
+The \file{omniidl.idlutil} module contains a number of useful
+functions:
+
+
+\begin{funcdesc}{omniidl.idlutil}
+
+\dfunc{escapifyString(str)}
+  Convert any non-printable characters in string \var{str} into octal
+  escape sequences.
+
+\dfunc{pruneScope(target,from)}
+  Given two scoped names represented as lists of strings, return
+  \var{target} with any prefix it shares with \var{from} removed. For
+  example:
+  %
+\begin{verbatim}
+  >>> pruneScope(['A','B','C','D'],['A','B','D'])
+  ['C','D']
+\end{verbatim}
+
+\cfunc{slashName(sn,from)}
+\cfunc{dotName(sn,from)}
+\dfunc{ccolonName(sn,from)}
+  Prune scoped name list \var{sn} with \func{pruneScope(sn,from)},
+  then convert into a string with name components separated by
+  `\texttt{/}', `\texttt{.}'  or `\texttt{::}'.
+
+\end{funcdesc}
+
+
+\subsection{Abstract Syntax Tree}
+\label{sec:ast}
+
+The main meat of the back-end interface is in the
+\file{omniidl.idlast} and \file{omniidl.idltype} modules. When the
+compiler parses an IDL file, it creates a tree of objects representing
+the IDL declarations. The classes for these declarations are defined
+in the \file{idlast} module. The way an IDL declaration is split into
+objects closely follows the terms within the IDL grammar presented in
+chapter~3 of the CORBA 2.3 specification.
+
+
+\subsubsection{Visitor pattern}
+
+All objects within the back-end interface support the \emph{visitor}
+pattern. They have an \func{accept(visitor)} method which acts on a
+visitor adhering to the interfaces in the \file{omniidl.idlvisitor}
+module. Note that Python's dynamic type system means that visitor
+objects need not actually derive from the classes defined in
+\file{idlvisitor}\footnote{It is even possible to use a Python module
+as a visitor object.}. Also note that you do not have to use the
+visitor pattern if you do not wish to.
+
+
+\subsubsection{The root of the tree}
+\label{sec:astclass}
+
+The back-end's \func{run()} function (described in
+section~\ref{sec:bemodules}) is passed an object of class \class{AST}.
+
+\begin{funcdesc}{omniidl.idlast.AST}
+
+\dfunc{file()}
+  The file name of the main IDL file being compiled.
+
+\dfunc{declarations()}
+  List of \class{Decl} objects corresponding to declarations at file
+  scope.
+
+\dfunc{pragmas()}
+  List of strings containing \texttt{\#pragma}s which occurred before
+  any declarations. Later \texttt{\#pragma}s are attached to
+  \class{Decl} objects.
+
+\dfunc{comments()}
+  List of strings containing comments which were not attached to
+  declarations (see section~\ref{sec:comments}).
+
+\dfunc{accept(visitor)}
+  Visitor pattern accept.
+
+\end{funcdesc}
+
+
+\subsubsection{Base declaration}
+
+All declarations in the tree are derived from the \class{Decl} class:
+
+\begin{funcdesc}{omniidl.idlast.Decl}
+
+\dfunc{file()}
+  The name of the file in which this declaration was made.
+
+\dfunc{line()}
+  The line number within the file.
+
+\dfunc{mainFile()}
+  Boolean: true if the declaration is in the main IDL file; false if
+  it is in an included file.
+
+\dfunc{pragmas()}
+  List of strings containing \texttt{\#pragma}s which occurred after
+  this declaration, but before any others.
+
+\dfunc{comments()}
+  List of strings containing comments attached to this declaration
+  (see section~\ref{sec:comments}).
+
+\dfunc{accept(visitor)}
+  Visitor pattern accept.
+
+\end{funcdesc}
+
+
+\subsubsection{Declarations with a repository identifier}
+
+Some classes of declaration object also inherit from the
+\class{DeclRepoId} mixin class:
+
+\begin{funcdesc}{omniidl.idlast.DeclRepoId}
+
+\dfunc{identifier()}
+  Name of the declaration as a string.
+
+\dfunc{scopedName()}
+  List of strings forming the fully-scoped name of the declaration.
+  e.g.\ \var{::foo::bar::baz} is represented as
+  \texttt{['foo','bar','baz']}.
+
+\dfunc{repoId()}
+  Repository identifier of the declaration.
+
+\end{funcdesc}
+
+
+\subsubsection{Declaration classes}
+
+The declaration objects making up the tree have the following classes:
+
+\begin{classdesc}
+  {omniidl.idlast.Module (Decl,DeclRepoId)}
+  {Module declaration}
+
+\dfunc{definitions()}
+  List of \class{Decl} objects declared within this module, in the
+  order they were declared.
+
+\dfunc{continuations()}
+  List containing \class{Module} objects which are continuations of
+  this module.  When modules are re-opened, multiple \class{Module}
+  objects with the same name appear in the enclosing \class{Module} or
+  \class{AST} object. In case it's useful, the first \class{Module}
+  object for a particular module has a list containing continuations
+  of that module. You will probably not have any use for this.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Interface (Decl,DeclRepoId)}
+  {Interface declaration}
+
+\dfunc{abstract()}
+  Boolean: true if the interface is declared abstract.
+
+\dfunc{inherits()}
+  List of \class{Interface} objects from which this one inherits.
+
+\dfunc{contents()}
+  List of \class{Decl} objects for all items declared within this
+  interface.
+
+\dfunc{declarations()}
+  Subset of \func{contents()} containing types, constants and
+  exceptions.
+
+\dfunc{callables()}
+  Subset of \func{contents()} containing \class{Operation}s and
+  \class{Attribute}s.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Forward (Decl,DeclRepoId)}
+  {Forward-declared interface}
+
+\dfunc{abstract()}
+  Boolean: true if the interface is declared abstract.
+
+\dfunc{fullDecl()}
+  \class{Interface} object corresponding to the full interface
+  declaration or \var{None} if there is no full declaration.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Const (Decl,DeclRepoId)}
+  {Constant declaration}
+
+\dfunc{constType()}
+  \class{IdlType.Type} object of the constant. Aliases not stripped.
+
+\dfunc{constKind()}
+  TypeCode kind of the constant with aliases stripped. So for a
+  constant declared with:
+  %
+\begin{verbatim}
+  typedef long MyLong;
+  const MyLong foo = 123;
+\end{verbatim}
+  %
+  \func{constKind()} will return \var{tk\_long}, but
+  \func{constType()} will return an \class{IdlType.Declared} object
+  (see page~\pageref{cls:typeDeclared}) which refers to \var{MyLong}'s
+  typedef \class{Declarator} object.
+
+\dfunc{value()}
+  Value of the constant. Either an integer or an \class{Enumerator}
+  object.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Declarator (Decl,DeclRepoId)}
+  {Declarator used in typedefs, struct members, etc.}
+
+\dfunc{sizes()}
+  List of array sizes, or \var{None} if it is a simple declarator.
+
+\dfunc{alias()}
+  \class{Typedef} object that the declarator is part of, or \var{None}
+  if the object is not a typedef declarator.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Typedef (Decl)}
+  {Typedef declaration}
+
+\dfunc{aliasType()}
+  \class{IdlType.Type} object that this is an alias to.
+
+\dfunc{constrType()}
+  Boolean: true if the alias type was constructed within this typedef
+  declaration, like
+  %
+\begin{verbatim}
+  typedef struct foo { long l; } bar;
+\end{verbatim}
+
+\dfunc{declarators()}
+  List of \class{Declarator} objects.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Member (Decl)}
+  {Member of a struct or exception}
+
+\dfunc{memberType()}
+  \class{IdlType.Type} object for the type of this member.
+
+\dfunc{constrType()}
+  Boolean: true if the member type was constructed within the member
+  declaration. e.g.
+
+\begin{verbatim}
+  struct S {
+    struct T {
+      long l;
+    } the_T;
+  };
+\end{verbatim}
+
+\dfunc{declarators()}
+  List of \class{Declarator} objects.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Struct (Decl,DeclRepoId)}
+  {Struct declaration}
+
+\dfunc{members()}
+  List of \class{Member} objects for the struct contents.
+
+\dfunc{recursive()}
+  Boolean: true if the struct is recursive, e.g.
+
+\begin{verbatim}
+  struct S {
+    long l;
+    sequence <S> ss;
+  };
+\end{verbatim}
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Exception (Decl,DeclRepoId)}
+  {Exception declaration}
+
+\dfunc{members()}
+  List of \class{Member} objects for the exception contents.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.CaseLabel (Decl)}
+  {One label within a union}
+
+\dfunc{default()}
+  Boolean: true if this is the default label.
+
+\dfunc{value()}
+  Label value. Either an integer or an \class{Enumerator} object. For
+  the default case, returns a value used by none of the other union
+  labels.
+
+\dfunc{labelKind()}
+  TypeCode kind of the label.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.UnionCase (Decl)}
+  {One case within a union}
+
+\dfunc{labels()}
+  List of \class{CaseLabel} objects.
+
+\dfunc{caseType()}
+  \class{IdlType.Type} object for the case type.
+
+\dfunc{constrType()}
+  Boolean: true if the case type was constructed within the case.
+
+\dfunc{declarator()}
+  \class{Declarator} object
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Union (Decl,DeclRepoId)}
+  {Union declaration}
+
+\dfunc{switchType()}
+  \class{IdlType.Type} object corresponding to the switch type.
+
+\dfunc{constrType()}
+  Boolean: true if the switch type was declared within the switch
+  statement. Only possible for Enums.
+
+\dfunc{cases()}
+  List of \class{UnionCase} objects.
+
+\dfunc{recursive()}
+  Boolean: true if the union is recursive.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Enumerator (Decl,DeclRepoId)}
+  {Enumerator of an enum}
+
+\dfunc{}
+No non-inherited functions.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Enum (Decl,DeclRepoId)}
+  {Enum declaration}
+
+\dfunc{enumerators()}
+  List of \class{Enumerator} objects.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Attribute (Decl)}
+  {Attribute declaration}
+
+\dfunc{readonly()}
+  Boolean: true if the attribute is read only.
+
+\dfunc{attrType()}
+  \class{IdlType.Type} object for the attribute's type.
+
+\dfunc{identifiers()}
+  List of strings containing the attribute identifiers. e.g.\ for the
+  declaration
+
+\begin{verbatim}
+  attribute long a, b;
+\end{verbatim}
+
+  \func{identifiers()} will return \texttt{['a','b']}.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Parameter (Decl)}
+  {Parameter of an operation}
+
+\dfunc{direction()}
+  Integer: 0 == in, 1 == out, 2 == inout.
+
+\dfunc{is\_in()}
+  Boolean: true if in or inout.
+
+\dfunc{is\_out()}
+  Boolean: true if out or inout.
+
+\dfunc{paramType()}
+  \class{IdlType.Type} object for the parameter type.
+
+\dfunc{identifier()}
+  String containing the parameter identifier.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Operation (Decl)}
+  {Operation declaration}
+
+\dfunc{oneway()}
+  Boolean: true if the operation is one way.
+
+\dfunc{returnType()}
+  \class{IdlType.Type} object for the return type.
+
+\dfunc{identifier()}
+  String containing the operation identifier.
+
+\dfunc{parameters()}
+  List of \class{Parameter} objects.
+
+\dfunc{raises()}
+  List of \class{Exception} objects which the operation can raise.
+
+\dfunc{contexts()}
+  List of strings declared as context for the operation.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Native (Decl)}
+  {Native declaration}
+
+\dfunc{}
+Native should not be used in normal IDL.
+
+No non-inherited functions.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.StateMember (Decl)}
+  {State member of a concrete valuetype}
+
+\dfunc{memberAccess()}
+  Integer: 0 == public, 1 == private.
+
+\dfunc{memberType()}
+  \class{IdlType.Type} object for member type.
+
+\dfunc{constrType()}
+  Boolean: true if the member type is declared within the StateMember.
+
+\dfunc{declarators()}
+  List of \class{Declarator} objects.
+
+\end{classdesc}
+
+
+
+\begin{classdesc}
+  {omniidl.idlast.Factory (Decl)}
+  {Factory method of a valuetype}
+
+\dfunc{identifier()}
+  String containing the factory identifier.
+
+\dfunc{parameters()}
+  List of \class{Parameter} objects.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.ValueForward (Decl,DeclRepoId)}
+  {Forward-declared valuetype}
+
+\dfunc{abstract()}
+  Boolean: true if declared abstract.
+
+\dfunc{fullDecl()}
+  \class{Value} or \class{ValueAbs} object corresponding to the full
+  valuetype declaration or \var{None} if there is no full declaration.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.ValueBox (Decl,DeclRepoId)}
+  {Boxed valuetype declaration}
+
+\dfunc{boxedType()}
+  \class{IdlType.Type} object for the boxed type.
+
+\dfunc{constrType()}
+  Boolean: true if boxed type is declared inside the valuetype
+  declaration.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.ValueAbs (Decl,DeclRepoId)}
+  {Abstract valuetype declaration}
+
+\dfunc{inherits()}
+  List of \class{ValueAbs} objects from which this inherits.
+
+\dfunc{supports()}
+  List of \class{Interface} objects which this valuetype supports.
+
+\dfunc{contents()}
+  List of \class{Decl} objects for all items defined within this
+  valuetype.
+
+\dfunc{declarations()}
+  Subset of \func{contents()} containing types, constants and
+  exceptions.
+
+\dfunc{callables()}
+  Subset of contents() containing \class{Operation}s and
+  \class{Attribute}s.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idlast.Value (Decl,DeclRepoId)}
+  {Valuetype declaration}
+
+\dfunc{custom()}
+  Boolean: true if declared custom.
+
+\dfunc{inherits()}
+  List of valuetypes from which this inherits. The first may be a
+  \class{Value} object or a \class{ValueAbs} object; any others will
+  be \class{ValueAbs} objects.
+
+\dfunc{truncatable()}
+  Boolean: true if the inherited \class{Value} is declared
+  truncatable; false if not, or there is no inherited \class{Value}.
+
+\dfunc{supports()}
+  List of \class{Interface} objects which this valuetype supports.
+
+\dfunc{contents()}
+  List of \class{Decl} objects for all items defined within this
+  valuetype.
+
+\dfunc{declarations()}
+  Subset of \func{contents()} containing types, constants and
+  exceptions.
+
+\dfunc{callables()}
+  Subset of \func{contents()} containing \class{Operation}s,
+  \class{Attribute}s, \class{StateMember}s and \class{Factory}s.
+
+\end{classdesc}
+
+
+
+\subsubsection{Type objects}
+
+All type objects are derived from the base class \class{Type}:
+
+\begin{classdesc}
+  {omniidl.idltype.Type}
+  {Base class for types}
+
+\dfunc{kind()}
+  TypeCode kind of type.
+
+\dfunc{accept(visitor)}
+  Visitor pattern accept.
+
+\end{classdesc}
+
+\vspace{\baselineskip}
+
+\noindent
+The basic CORBA types (null, void, short, long, unsigned short,
+unsigned long, float, double, boolean, char, octet, any, TypeCode,
+Principal, long long, unsigned long long, long double, and wide char)
+are represented by objects of type \class{omniidl.idltype.Base},
+derived from \class{Type}, with no extra methods.
+
+The template types---string, wstring, sequence, and fixed---do not
+have associated \class{Decl} objects since they are not explicitly
+declared. They are always implicitly declared as part of another
+declaration.
+
+\begin{classdesc}
+  {omniidl.idltype.String (Type)}
+  {String type}
+
+\dfunc{bound()}
+  Bound of a bounded string, or 0 for unbounded strings.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idltype.WString (Type)}
+  {Wide string type}
+
+\dfunc{bound()}
+  Bound of a bounded wstring, or 0 for unbounded wstrings.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idltype.Sequence (Type)}
+  {Sequence type}
+
+\dfunc{seqType()}
+  \class{IdlType.Type} object representing what the sequence contains.
+
+\dfunc{bound()}
+  Bound of a bounded sequence, or 0 for unbounded sequences.
+
+\end{classdesc}
+
+
+\begin{classdesc}
+  {omniidl.idltype.Fixed (Type)}
+  {Fixed point type}
+
+\dfunc{digits()}
+  Number of digits in number.
+
+\dfunc{scale()}
+  Scale of number.
+
+\end{classdesc}
+
+\vspace{\baselineskip}
+
+\noindent
+All other types (interface, struct, union, enum, typedef, exception,
+valuetype) must be explicitly declared. They are represented with
+\class{Declared} objects:
+
+\begin{classdesc}
+  {omniidl.idltype.Declared (Type)}
+  {Explicitly declared type}
+  \label{cls:typeDeclared}
+
+\dfunc{decl()}
+  \class{omniidl.idlast.Decl} object which corresponds to this type.
+
+\dfunc{scopedName()}
+  Fully scoped name of the type as a list of strings.
+
+\dfunc{name()}
+  Simple name of the type, i.e.\ the last element of the scoped name.
+
+\end{classdesc}
+
+
+
+\subsubsection{Finding a named \class{Decl}}
+
+Normally, back-ends walk over the tree of \class{Decl} objects,
+dealing with the declarations as they encounter them. Occasionally,
+however, it may be useful to find a declaration by its scoped name.
+Only \class{Decl}s which inherit from \class{DeclRepoId} can be found
+in this way.
+
+\begin{funcdesc}{omniidl.idlast}
+
+\dfunc{findDecl(scopedName)}
+  Find the \class{Decl} object which has the scoped name list
+  \var{scopedName}. If a declaration with the specified name does not
+  exist, the \class{DeclNotFound} exception is raised.
+
+\end{funcdesc}
+
+
+
+\subsection{An example back-end}
+
+The following code is an extremely simple back-end which just prints
+the names of all operations declared within an IDL file.
+Unfortunately, it is so simple that it does not show many features of
+the back-end interface. You should look at the \file{dump.py} and
+\file{python.py} back-ends for a more extensive example.
+
+\begin{verbatim}
+from omniidl import idlast, idlvisitor, idlutil
+import string
+
+class ExampleVisitor (idlvisitor.AstVisitor):
+
+    def visitAST(self, node):
+        for n in node.declarations():
+            n.accept(self)
+
+    def visitModule(self, node):
+        for n in node.definitions():
+            n.accept(self)
+
+    def visitInterface(self, node):
+        name = idlutil.ccolonName(node.scopedName())
+
+        if node.mainFile():
+            for c in node.callables():
+                if isinstance(c, idlast.Operation):
+                    print name + "::" + \
+                          c.identifier() + "()"
+
+def run(tree, args):
+    visitor = ExampleVisitor()
+    tree.accept(visitor)
+\end{verbatim}
+
+\noindent
+The visitor object simple recurses through the \class{AST} and
+\class{Module} objects, and prints the operation names it finds in
+\class{Interface} objects.
+
+Note that since \class{AstVisitor} (and similarly \class{TypeVisitor}
+which is not used in the example) has all operations declared to be
+no-ops, the \class{ExampleVisitor} class does not have to declare
+visit functions for all node types. This can be a disadvantage if your
+back-end is supposed to perform some action for all node types, since
+there will be no error if you accidentally miss a node type. In those
+situations it is better to declare a visitor class which does not
+derive from the visitor base classes.
+
+
+
+\section{Front-end architecture}
+
+Not here yet.
+
+
+\end{document}
+
