@@ -142,10 +142,21 @@ my $GREEN = "\033[01;32m";
 my $YELLOW = "\033[01;33m";
 my $RESET = "\033[0m";
 
-@failed = ();
+%failed = ();
+sub getFailList{
+    my $key = shift;
+    if (!$failed{$key}){
+	$failed{$key} = [];
+    }
+    return $failed{$key};
+}
+
+my $numFailed = 0;
+my $numTried = 0;
 foreach $idl (@sorted_test_idl){
     last if ($numTests == 0);
     $numTests --;
+    $numTried ++;
 
     print padto("\nFile: $idl",40);
     $idl =~ /(.+)\.idl$/;
@@ -154,39 +165,68 @@ foreach $idl (@sorted_test_idl){
     chdir("$test_suite/old");
     print jright("OLD",10);
     if (system("$old_compiler $old_args ../$idl 2>/dev/null") != 0){
-	push @failed, $idl;
+	my $failures = getFailList("Old compiler");
+	push @$failures, $idl;
 	print jright("[ ".$RED."FAIL".$RESET." ]",20);
+	$numFailed ++;
 	next;
     }
 
     chdir("$test_suite/new");
     print jright("NEW",10);
     if (system("$new_compiler $new_args ../$idl 2>/dev/null") != 0){
-	push @failed, $idl;
+	my $failures = getFailList("New compiler");
+	push @$failures, $idl;
 	print jright("[ ".$RED."FAIL".$RESET." ]",25);
+	$numFailed ++;
 	next;
     }
 
     chdir("$test_suite");
     foreach $suffix (".hh", "SK.cc", "DynSK.cc"){
+	my $failures = getFailList($suffix);
 	if ((!-e "old/$basename$suffix")or(!-e "new/$basename$suffix")){
 	    print jright("[ ".$YELLOW.$suffix.$RESET." ]", 30);
-	    if (!member($idl, @failed)){
-		push @failed, $idl;
+	    
+	    if (!member($idl, @failures)){
+		push @$failures, $idl;
 	    }
+	    $numFailed ++;
 	    next;
 	}
 	if (`$compare_program old/$basename$suffix new/$basename$suffix`){
 	    print jright("[ ".$RED.$suffix.$RESET." ]", 30);
-	    push @failed, $idl;
+	    push @$failures, $idl;
+	    $numFailed ++;
 	}else{
 	    print jright("[ ".$GREEN.$suffix.$RESET." ]", 30);
 	}
     }
 }
 
-if ($#failed == -1){
+if ($numFailed == 0){
     print "\n\nAll tests successful.\n";
 }else{
-    print "\n\nThe following tests failed: @failed\n";
+    print "\n\nThe following tests failed:\n";
+    foreach $key (keys(%failed)){
+	my $failures = $failed{$key};
+	my @f = @$failures;
+	if (@$failures){
+	    print padto("[ ".($#f+1)." : $key ]", 20);
+	    print "-->\t  @$failures\n";
+	}
+    }
 }
+
+if ($numTried == ($#sorted_test_idl+1)){
+    open(FILE, ">>$test_suite/results.txt");
+    print FILE "$#sorted_test_idl ";
+    my $hh_ = getFailList(".hh"); my @hh  = @$hh_;
+    my $sk_ = getFailList("SK.cc"); my @sk = @$sk_;
+    my $dyn_ = getFailList("DynSK.cc"); my @dyn = @$dyn_;
+    print FILE ($#hh+1)." ".($#sk+1)." ".($#dyn+1)."  ";
+    print FILE time();
+    print FILE "\n";
+    close(FILE);
+}
+
