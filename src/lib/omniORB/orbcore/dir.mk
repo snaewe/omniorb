@@ -196,40 +196,16 @@ endif
 
 ifndef BuildWin32DebugLibraries
 
-Naming.hh NamingSK.cc NamingDynSK.cc: Naming.idl
-	-if [ "$^" != Naming.idl ]; then $(CP) $^ . ; fi
-	$(OMNIORB2_IDL_FPATH) Naming.idl
+bootstrapSK.cc: ../bootstrapSK.cc
+	$(CP) $< $@
 
-bootstrap.hh bootstrapSK.cc bootstrapDynSK.cc: bootstrap.idl
-	-if [ "$^" != bootstrap.idl ]; then $(CP) $^ . ; fi
-	$(OMNIORB2_IDL_FPATH) bootstrap.idl
-
-ir.hh irSK.cc irDynSK.cc: corbaidl.hh ir.idl
-	-if [ "$^" != ir.idl ]; then $(CP) $^ . ; fi
-	$(OMNIORB2_IDL_FPATH) -m ir.idl
-
-corbaidl.hh corbaidlSK.cc corbaidlDynSK.cc: corbaidl.idl
-	-if [ "$^" != ir.idl ]; then $(CP) $^ . ; fi
-	$(OMNIORB2_IDL_FPATH) -m corbaidl.idl
-
-export:: Naming.hh
-	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
-		$(ExportFileToDir))
-
-export:: ir.hh
-	@(file="ir.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
-		$(ExportFileToDir))
-
-export:: corbaidl.hh
-	@(file="corbaidl.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
-		$(ExportFileToDir))
-
+NamingSK.cc: ../NamingSK.cc
+	$(CP) $< $@
 
 endif
 
 clean::
-	$(RM) $(lib) $(dynlib) NamingSK.cc bootstrapSK.cc \
-		NamingDynSK.cc bootstrapDynSK.cc
+	$(RM) $(lib) $(dynlib) bootstrapSK.cc NamingSK.cc
 
 export:: $(lib)
 	@$(ExportLibrary)
