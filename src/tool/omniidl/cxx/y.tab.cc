@@ -1,5 +1,5 @@
 
-/*  A Bison parser, made from /local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy
+/*  A Bison parser, made from /net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy
     by GNU Bison version 1.28  */
 
 #define YYBISON 1  /* Identify Bison output.  */
@@ -70,7 +70,7 @@
 #define	LEFT_SHIFT	320
 #define	RIGHT_SHIFT	321
 
-#line 80 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 83 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 
 
 #include <stdlib.h>
@@ -110,7 +110,7 @@ ValueAbs* valueabs_hack = 0;
 #endif
 
 
-#line 120 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 123 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 typedef union {
   char*                    id_val;
   int                      int_val;
@@ -346,37 +346,37 @@ static const short yyrhs[] = {    -1,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-   384,   386,   392,   394,   400,   402,   403,   404,   405,   406,
-   407,   408,   409,   415,   420,   423,   427,   435,   439,   441,
-   444,   449,   452,   456,   464,   470,   477,   479,   482,   486,
-   488,   494,   496,   497,   498,   499,   500,   501,   507,   509,
-   512,   516,   520,   528,   535,   539,   543,   546,   556,   558,
-   559,   560,   563,   567,   572,   580,   583,   588,   592,   597,
-   609,   616,   622,   627,   630,   635,   639,   642,   647,   654,
-   656,   659,   663,   673,   677,   679,   685,   687,   688,   691,
-   699,   701,   704,   707,   711,   713,   721,   727,   729,   732,
-   734,   740,   748,   754,   756,   757,   758,   759,   760,   761,
-   762,   763,   766,   769,   773,   775,   778,   780,   783,   785,
-   790,   792,   795,   800,   802,   803,   806,   808,   811,   814,
-   819,   825,   828,   830,   831,   834,   838,   839,   842,   846,
-   849,   852,   855,   858,   861,   864,   869,   871,   880,   882,
-   891,   893,   896,   904,   906,   907,   908,   909,   914,   922,
-   924,   927,   929,   930,   935,   937,   938,   939,   940,   941,
-   942,   943,   944,   947,   949,   950,   951,   954,   956,   957,
-   960,   962,   968,   970,   973,   979,   983,   985,   986,   989,
-   991,   994,   996,   997,  1000,  1004,  1008,  1012,  1014,  1015,
-  1018,  1022,  1026,  1030,  1034,  1038,  1042,  1046,  1050,  1054,
-  1059,  1067,  1073,  1075,  1081,  1087,  1094,  1103,  1111,  1117,
-  1119,  1120,  1121,  1122,  1128,  1132,  1134,  1140,  1147,  1149,
-  1155,  1159,  1164,  1171,  1176,  1183,  1189,  1191,  1197,  1203,
-  1207,  1212,  1214,  1219,  1221,  1226,  1232,  1234,  1240,  1244,
-  1250,  1252,  1255,  1257,  1263,  1268,  1276,  1282,  1284,  1290,
-  1293,  1297,  1306,  1312,  1314,  1317,  1321,  1323,  1326,  1328,
-  1329,  1336,  1338,  1344,  1350,  1352,  1353,  1356,  1358,  1361,
-  1365,  1369,  1375,  1377,  1380,  1384,  1388,  1394,  1396,  1397,
-  1398,  1403,  1420,  1428,  1432,  1434,  1435,  1436,  1439,  1441,
-  1444,  1446,  1449,  1453,  1458,  1463,  1468,  1473,  1478,  1484,
-  1490,  1492
+   387,   389,   395,   397,   403,   405,   406,   407,   408,   409,
+   410,   411,   412,   418,   423,   426,   430,   438,   442,   444,
+   447,   452,   455,   459,   467,   473,   480,   482,   485,   489,
+   491,   497,   499,   500,   501,   502,   503,   504,   510,   512,
+   515,   519,   523,   531,   538,   542,   546,   549,   559,   561,
+   562,   563,   566,   570,   575,   583,   586,   591,   595,   600,
+   612,   619,   625,   630,   633,   638,   642,   645,   650,   657,
+   659,   662,   666,   676,   680,   682,   688,   690,   691,   694,
+   702,   704,   707,   710,   714,   716,   724,   730,   732,   735,
+   737,   743,   751,   757,   759,   760,   761,   762,   763,   764,
+   765,   766,   769,   772,   776,   778,   781,   783,   786,   788,
+   793,   795,   798,   803,   805,   806,   809,   811,   814,   817,
+   822,   828,   831,   833,   834,   837,   841,   842,   845,   849,
+   852,   855,   858,   861,   864,   867,   872,   874,   883,   885,
+   894,   896,   899,   907,   909,   910,   911,   912,   917,   925,
+   927,   930,   932,   933,   938,   940,   941,   942,   943,   944,
+   945,   946,   947,   950,   952,   953,   954,   957,   959,   960,
+   963,   965,   971,   973,   976,   982,   986,   988,   989,   992,
+   994,   997,   999,  1000,  1003,  1007,  1011,  1015,  1017,  1018,
+  1021,  1025,  1029,  1033,  1037,  1041,  1045,  1049,  1053,  1057,
+  1062,  1070,  1076,  1078,  1084,  1090,  1097,  1106,  1114,  1120,
+  1122,  1123,  1124,  1125,  1131,  1135,  1137,  1143,  1150,  1152,
+  1158,  1162,  1167,  1174,  1179,  1186,  1192,  1194,  1200,  1206,
+  1210,  1215,  1217,  1222,  1224,  1229,  1235,  1237,  1243,  1247,
+  1253,  1255,  1258,  1260,  1266,  1271,  1279,  1285,  1287,  1293,
+  1296,  1300,  1309,  1315,  1317,  1320,  1324,  1326,  1329,  1331,
+  1332,  1339,  1341,  1347,  1353,  1355,  1356,  1359,  1361,  1364,
+  1368,  1372,  1378,  1380,  1383,  1387,  1391,  1397,  1399,  1400,
+  1401,  1406,  1423,  1431,  1435,  1437,  1438,  1439,  1442,  1444,
+  1447,  1449,  1452,  1456,  1461,  1466,  1471,  1476,  1481,  1487,
+  1493,  1495
 };
 #endif
 
@@ -1474,89 +1474,89 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 385 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 388 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 2:
-#line 386 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 389 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.decl_val = yyvsp[0].decl_val;
       AST::tree()->setDeclarations(yyvsp[0].decl_val);
     ;
     break;}
 case 3:
-#line 393 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 396 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].decl_val; ;
     break;}
 case 4:
-#line 394 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 397 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].decl_val) { yyvsp[-1].decl_val->append(yyvsp[0].decl_val); yyval.decl_val = yyvsp[-1].decl_val; }
       else yyval.decl_val = yyvsp[0].decl_val;
     ;
     break;}
 case 5:
-#line 401 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 404 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].decl_val; ;
     break;}
 case 6:
-#line 402 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 405 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].const_val; ;
     break;}
 case 7:
-#line 403 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 406 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].exception_val; ;
     break;}
 case 8:
-#line 404 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 407 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].decl_val; ;
     break;}
 case 9:
-#line 405 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 408 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].module_val; ;
     break;}
 case 10:
-#line 406 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 409 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].value_base_val; ;
     break;}
 case 11:
-#line 407 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 410 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 12:
-#line 408 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 411 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 13:
-#line 409 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 412 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Syntax error in definition");
       yyval.decl_val = 0;
     ;
     break;}
 case 14:
-#line 416 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 419 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-4].module_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.module_val = yyvsp[-4].module_val;
     ;
     break;}
 case 15:
-#line 420 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 423 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in module definition");
     ;
     break;}
 case 16:
-#line 423 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 426 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].module_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.module_val = yyvsp[-5].module_val;
     ;
     break;}
 case 17:
-#line 427 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 430 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in module definition (no body found)");
@@ -1565,40 +1565,40 @@ case 17:
     ;
     break;}
 case 18:
-#line 436 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 439 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.module_val = new Module(currentFile, yylineno, mainFile, yyvsp[0].id_val); ;
     break;}
 case 19:
-#line 440 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 443 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].interface_val; ;
     break;}
 case 20:
-#line 441 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 444 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].forward_val; ;
     break;}
 case 21:
-#line 445 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 448 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-3].interface_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.interface_val = yyvsp[-3].interface_val;
     ;
     break;}
 case 22:
-#line 449 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 452 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in interface definition");
     ;
     break;}
 case 23:
-#line 452 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 455 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].interface_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.interface_val = yyvsp[-5].interface_val;
     ;
     break;}
 case 24:
-#line 456 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 459 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in interface definition (no body found)");
@@ -1607,91 +1607,91 @@ case 24:
     ;
     break;}
 case 25:
-#line 465 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 468 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.forward_val = new Forward(currentFile, yylineno, mainFile, yyvsp[0].id_val, yyvsp[-2].boolean_val);
     ;
     break;}
 case 26:
-#line 472 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 475 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.interface_val = new Interface(currentFile, yylineno, mainFile, yyvsp[-2].id_val, yyvsp[-4].boolean_val, yyvsp[0].inheritspec_val);
     ;
     break;}
 case 27:
-#line 478 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 481 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 0; ;
     break;}
 case 28:
-#line 479 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 482 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 1; ;
     break;}
 case 29:
-#line 483 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 486 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].decl_val; ;
     break;}
 case 30:
-#line 487 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 490 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 31:
-#line 488 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 491 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].decl_val) { yyvsp[-1].decl_val->append(yyvsp[0].decl_val); yyval.decl_val = yyvsp[-1].decl_val; }
       else yyval.decl_val = yyvsp[0].decl_val;
     ;
     break;}
 case 32:
-#line 495 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 498 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].decl_val; ;
     break;}
 case 33:
-#line 496 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 499 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].const_val; ;
     break;}
 case 34:
-#line 497 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 500 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].exception_val; ;
     break;}
 case 35:
-#line 498 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 501 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].attribute_val; ;
     break;}
 case 36:
-#line 499 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 502 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].operation_val; ;
     break;}
 case 37:
-#line 500 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 503 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 38:
-#line 501 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 504 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Syntax error in interface body");
       yyval.decl_val = 0;
     ;
     break;}
 case 39:
-#line 508 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 511 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.inheritspec_val = 0; ;
     break;}
 case 40:
-#line 509 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 512 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.inheritspec_val = yyvsp[0].inheritspec_val; ;
     break;}
 case 41:
-#line 513 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 516 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.inheritspec_val = yyvsp[0].inheritspec_val; ;
     break;}
 case 42:
-#line 517 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 520 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.inheritspec_val = new InheritSpec(yyvsp[-1].scopedname_val, currentFile, yylineno);
     ;
     break;}
 case 43:
-#line 520 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 523 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-4].inheritspec_val) {
 	yyvsp[-4].inheritspec_val->append(new InheritSpec(yyvsp[-1].scopedname_val, currentFile, yylineno),
@@ -1702,7 +1702,7 @@ case 43:
     ;
     break;}
 case 44:
-#line 528 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 531 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in inheritance list");
@@ -1710,58 +1710,58 @@ case 44:
     ;
     break;}
 case 45:
-#line 536 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 539 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.scopedname_val = yyvsp[0].scopedname_val; ;
     break;}
 case 46:
-#line 540 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 543 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.scopedname_val = new ScopedName(yyvsp[0].id_val, 0);
     ;
     break;}
 case 47:
-#line 543 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 546 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.scopedname_val = new ScopedName(yyvsp[0].id_val, 1);
     ;
     break;}
 case 48:
-#line 546 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 549 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-2].scopedname_val->append(yyvsp[0].id_val);
       yyval.scopedname_val=yyvsp[-2].scopedname_val;
     ;
     break;}
 case 49:
-#line 557 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 560 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.value_base_val = yyvsp[0].value_val; ;
     break;}
 case 50:
-#line 558 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 561 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.value_base_val = yyvsp[0].value_abs_val; ;
     break;}
 case 51:
-#line 559 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 562 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.value_base_val = yyvsp[0].value_box_val; ;
     break;}
 case 52:
-#line 560 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 563 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.value_base_val = yyvsp[0].value_forward_val; ;
     break;}
 case 53:
-#line 564 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 567 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_forward_val = new ValueForward(currentFile, yylineno, mainFile, 0, yyvsp[0].id_val);
     ;
     break;}
 case 54:
-#line 567 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 570 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_forward_val = new ValueForward(currentFile, yylineno, mainFile, 1, yyvsp[0].id_val);
     ;
     break;}
 case 55:
-#line 573 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 576 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_box_val = new ValueBox(currentFile, yylineno, mainFile,
 			yyvsp[-1].id_val, yyvsp[0].type_spec_val->type(), yyvsp[0].type_spec_val->constr());
@@ -1769,13 +1769,13 @@ case 55:
     ;
     break;}
 case 56:
-#line 581 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 584 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       valueabs_hack = new ValueAbs(currentFile, yylineno, mainFile, yyvsp[0].id_val, 0, 0);
     ;
     break;}
 case 57:
-#line 583 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 586 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       valueabs_hack->finishConstruction(yyvsp[-1].decl_val);
       yyval.value_abs_val = valueabs_hack;
@@ -1783,7 +1783,7 @@ case 57:
     ;
     break;}
 case 58:
-#line 588 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 591 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       valueabs_hack = new ValueAbs(currentFile, yylineno, mainFile, yyvsp[-1].id_val,
 				   yyvsp[0].valueinheritsupportspec_val->inherits(), yyvsp[0].valueinheritsupportspec_val->supports());
@@ -1791,7 +1791,7 @@ case 58:
     ;
     break;}
 case 59:
-#line 592 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 595 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       valueabs_hack->finishConstruction(yyvsp[-1].decl_val);
       yyval.value_abs_val = valueabs_hack;
@@ -1799,7 +1799,7 @@ case 59:
     ;
     break;}
 case 60:
-#line 597 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 600 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in abstract valuetype");
@@ -1812,14 +1812,14 @@ case 60:
     ;
     break;}
 case 61:
-#line 610 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 613 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-3].value_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.value_val = yyvsp[-3].value_val;
     ;
     break;}
 case 62:
-#line 617 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 620 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_val = new Value(currentFile, yylineno, mainFile, 0, yyvsp[-1].id_val,
 		     yyvsp[0].valueinheritsupportspec_val->inherits(), yyvsp[0].valueinheritsupportspec_val->supports());
@@ -1827,7 +1827,7 @@ case 62:
     ;
     break;}
 case 63:
-#line 622 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 625 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_val = new Value(currentFile, yylineno, mainFile, 1, yyvsp[-1].id_val,
 		     yyvsp[0].valueinheritsupportspec_val->inherits(), yyvsp[0].valueinheritsupportspec_val->supports());
@@ -1835,58 +1835,58 @@ case 63:
     ;
     break;}
 case 64:
-#line 627 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 630 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_val = new Value(currentFile, yylineno, mainFile, 0, yyvsp[0].id_val, 0, 0);
     ;
     break;}
 case 65:
-#line 630 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 633 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_val = new Value(currentFile, yylineno, mainFile, 1, yyvsp[0].id_val, 0, 0);
     ;
     break;}
 case 66:
-#line 636 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 639 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.valueinheritsupportspec_val = new ValueInheritSupportSpec(yyvsp[-2].valueinheritspec_val, yyvsp[0].inheritspec_val);
     ;
     break;}
 case 67:
-#line 639 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 642 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.valueinheritsupportspec_val = new ValueInheritSupportSpec(yyvsp[0].valueinheritspec_val, 0);
     ;
     break;}
 case 68:
-#line 642 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 645 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.valueinheritsupportspec_val = new ValueInheritSupportSpec(0, yyvsp[0].inheritspec_val);
     ;
     break;}
 case 69:
-#line 648 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 651 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].boolean_val) yyvsp[0].valueinheritspec_val->setTruncatable();
       yyval.valueinheritspec_val = yyvsp[0].valueinheritspec_val;
     ;
     break;}
 case 70:
-#line 655 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 658 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 0; ;
     break;}
 case 71:
-#line 656 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 659 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 1; ;
     break;}
 case 72:
-#line 660 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 663 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.valueinheritspec_val = new ValueInheritSpec(yyvsp[0].scopedname_val, currentFile, yylineno);
     ;
     break;}
 case 73:
-#line 663 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 666 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-2].valueinheritspec_val) {
 	yyvsp[-2].valueinheritspec_val->append(new ValueInheritSpec(yyvsp[0].scopedname_val, currentFile, yylineno),
@@ -1897,34 +1897,34 @@ case 73:
     ;
     break;}
 case 74:
-#line 674 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 677 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.scopedname_val = yyvsp[0].scopedname_val; ;
     break;}
 case 75:
-#line 678 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 681 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 76:
-#line 679 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 682 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].decl_val) { yyvsp[-1].decl_val->append(yyvsp[0].decl_val); yyval.decl_val = yyvsp[-1].decl_val; }
       else yyval.decl_val = yyvsp[0].decl_val;
     ;
     break;}
 case 77:
-#line 686 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 689 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].decl_val; ;
     break;}
 case 78:
-#line 687 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 690 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].statemember_val; ;
     break;}
 case 79:
-#line 688 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 691 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].factory_val; ;
     break;}
 case 80:
-#line 692 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 695 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.statemember_val = new StateMember(currentFile, yylineno, mainFile,
 			   yyvsp[-3].ulong_val, yyvsp[-2].type_spec_val->type(), yyvsp[-2].type_spec_val->constr(), yyvsp[-1].declarator_val);
@@ -1932,34 +1932,34 @@ case 80:
     ;
     break;}
 case 81:
-#line 700 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 703 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.ulong_val = 0; ;
     break;}
 case 82:
-#line 701 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 704 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.ulong_val = 1; ;
     break;}
 case 83:
-#line 705 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 708 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-3].factory_val->closeParens();
     ;
     break;}
 case 84:
-#line 707 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 710 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].factory_val->finishConstruction(yyvsp[-3].parameter_val);
       yyval.factory_val = yyvsp[-5].factory_val;
     ;
     break;}
 case 85:
-#line 711 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 714 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-3].factory_val->closeParens();
     ;
     break;}
 case 86:
-#line 713 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 716 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in factory parameters");
@@ -1968,166 +1968,166 @@ case 86:
     ;
     break;}
 case 87:
-#line 722 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 725 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.factory_val = new Factory(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 88:
-#line 728 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 731 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = 0; ;
     break;}
 case 89:
-#line 729 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 732 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = yyvsp[0].parameter_val; ;
     break;}
 case 90:
-#line 733 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 736 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = yyvsp[0].parameter_val; ;
     break;}
 case 91:
-#line 734 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 737 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-2].parameter_val) { yyvsp[-2].parameter_val->append(yyvsp[0].parameter_val); yyval.parameter_val = yyvsp[-2].parameter_val; }
       else yyval.parameter_val = yyvsp[0].parameter_val;
     ;
     break;}
 case 92:
-#line 741 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 744 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.parameter_val = new Parameter(currentFile, yylineno, mainFile, 0, yyvsp[-1].type_val, yyvsp[0].id_val);
     ;
     break;}
 case 93:
-#line 749 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 752 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.const_val = new Const(currentFile, yylineno, mainFile, yyvsp[-3].type_val, yyvsp[-2].id_val, yyvsp[0].expr_val);
     ;
     break;}
 case 94:
-#line 755 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 758 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 95:
-#line 756 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 759 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 96:
-#line 757 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 760 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 97:
-#line 758 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 761 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 98:
-#line 759 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 762 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 99:
-#line 760 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 763 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 100:
-#line 761 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 764 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 101:
-#line 762 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 765 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 102:
-#line 763 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 766 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = IdlType::scopedNameToType(currentFile, yylineno, yyvsp[0].scopedname_val);
     ;
     break;}
 case 103:
-#line 766 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 769 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 104:
-#line 770 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 773 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 105:
-#line 774 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 777 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 106:
-#line 775 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 778 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = new OrExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val); ;
     break;}
 case 107:
-#line 779 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 782 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 108:
-#line 780 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 783 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = new XorExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val); ;
     break;}
 case 109:
-#line 784 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 787 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 110:
-#line 785 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 788 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new AndExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
     ;
     break;}
 case 111:
-#line 791 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 794 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 112:
-#line 792 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 795 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
     yyval.expr_val = new RShiftExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
   ;
     break;}
 case 113:
-#line 795 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 798 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
     yyval.expr_val = new LShiftExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
   ;
     break;}
 case 114:
-#line 801 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 804 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 115:
-#line 802 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 805 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = new AddExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val); ;
     break;}
 case 116:
-#line 803 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 806 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = new SubExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val); ;
     break;}
 case 117:
-#line 807 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 810 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 118:
-#line 808 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 811 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new MultExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
     ;
     break;}
 case 119:
-#line 811 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 814 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new DivExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
     ;
     break;}
 case 120:
-#line 814 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 817 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new ModExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
     ;
     break;}
 case 121:
-#line 820 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 823 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].char_val == '-') yyval.expr_val = new MinusExpr(currentFile, yylineno, yyvsp[0].expr_val);
       if (yyvsp[-1].char_val == '+') yyval.expr_val = new PlusExpr(currentFile, yylineno, yyvsp[0].expr_val);
@@ -2135,89 +2135,89 @@ case 121:
     ;
     break;}
 case 122:
-#line 825 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 828 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 123:
-#line 829 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 832 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.char_val = '-'; ;
     break;}
 case 124:
-#line 830 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 833 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.char_val = '+'; ;
     break;}
 case 125:
-#line 831 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 834 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.char_val = '~'; ;
     break;}
 case 126:
-#line 835 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 838 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = IdlExpr::scopedNameToExpr(currentFile, yylineno, yyvsp[0].scopedname_val);
     ;
     break;}
 case 127:
-#line 838 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 841 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 128:
-#line 839 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 842 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[-1].expr_val; ;
     break;}
 case 129:
-#line 843 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 846 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new IntegerExpr(currentFile, yylineno, yyvsp[0].int_literal_val);
     ;
     break;}
 case 130:
-#line 846 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 849 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new StringExpr(currentFile, yylineno, yyvsp[0].string_val);
     ;
     break;}
 case 131:
-#line 849 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 852 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new WStringExpr(currentFile, yylineno, yyvsp[0].wstring_val);
     ;
     break;}
 case 132:
-#line 852 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 855 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new CharExpr(currentFile, yylineno, yyvsp[0].char_val);
     ;
     break;}
 case 133:
-#line 855 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 858 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new WCharExpr(currentFile, yylineno, yyvsp[0].wchar_val);
     ;
     break;}
 case 134:
-#line 858 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 861 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new FixedExpr(currentFile, yylineno, yyvsp[0].fixed_val);
     ;
     break;}
 case 135:
-#line 861 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 864 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new FloatExpr(currentFile, yylineno, yyvsp[0].float_literal_val);
     ;
     break;}
 case 136:
-#line 864 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 867 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new BooleanExpr(currentFile, yylineno, yyvsp[0].boolean_val);
     ;
     break;}
 case 137:
-#line 870 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 873 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.string_val = yyvsp[0].string_val; ;
     break;}
 case 138:
-#line 871 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 874 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.string_val = new char [strlen(yyvsp[-1].string_val) + strlen(yyvsp[0].string_val) + 1];
       strcpy(yyval.string_val, yyvsp[-1].string_val);
@@ -2227,11 +2227,11 @@ case 138:
     ;
     break;}
 case 139:
-#line 881 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 884 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.wstring_val = yyvsp[0].wstring_val; ;
     break;}
 case 140:
-#line 882 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 885 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.wstring_val = new IDL_WChar [idl_wstrlen(yyvsp[-1].wstring_val) + idl_wstrlen(yyvsp[0].wstring_val) + 1];
       idl_wstrcpy(yyval.wstring_val, yyvsp[-1].wstring_val);
@@ -2241,15 +2241,15 @@ case 140:
     ;
     break;}
 case 141:
-#line 892 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 895 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 1; ;
     break;}
 case 142:
-#line 893 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 896 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 0; ;
     break;}
 case 143:
-#line 897 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 900 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.ulong_val = yyvsp[0].expr_val->evalAsULong();
       if (yyval.ulong_val < 1)
@@ -2257,29 +2257,29 @@ case 143:
     ;
     break;}
 case 144:
-#line 905 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 908 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].typedef_val; ;
     break;}
 case 145:
-#line 906 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 909 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].struct_val; ;
     break;}
 case 146:
-#line 907 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 910 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].union_val; ;
     break;}
 case 147:
-#line 908 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 911 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].enum_val; ;
     break;}
 case 148:
-#line 909 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 912 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.decl_val = new Native(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 149:
-#line 915 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 918 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.typedef_val = new Typedef(currentFile, yylineno, mainFile,
 		       yyvsp[-1].type_spec_val->type(), yyvsp[-1].type_spec_val->constr(), yyvsp[0].declarator_val);
@@ -2287,221 +2287,221 @@ case 149:
     ;
     break;}
 case 150:
-#line 923 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 926 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 0); ;
     break;}
 case 151:
-#line 924 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 927 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 1); ;
     break;}
 case 152:
-#line 928 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 931 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 153:
-#line 929 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 932 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 154:
-#line 930 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 933 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = IdlType::scopedNameToType(currentFile, yylineno, yyvsp[0].scopedname_val);
     ;
     break;}
 case 155:
-#line 936 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 939 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 156:
-#line 937 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 940 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 157:
-#line 938 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 941 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 158:
-#line 939 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 942 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 159:
-#line 940 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 943 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 160:
-#line 941 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 944 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 161:
-#line 942 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 945 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 162:
-#line 943 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 946 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 163:
-#line 944 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 947 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 164:
-#line 948 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 951 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 165:
-#line 949 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 952 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 166:
-#line 950 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 953 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 167:
-#line 951 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 954 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 168:
-#line 955 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 958 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].struct_val->thisType(); ;
     break;}
 case 169:
-#line 956 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 959 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].union_val->thisType(); ;
     break;}
 case 170:
-#line 957 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 960 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].enum_val->thisType(); ;
     break;}
 case 171:
-#line 961 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 964 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[-1].declarator_val; ;
     break;}
 case 172:
-#line 962 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 965 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-4].declarator_val) { yyvsp[-4].declarator_val->append(yyvsp[-1].declarator_val); yyval.declarator_val = yyvsp[-4].declarator_val; }
       else yyval.declarator_val = yyvsp[-1].declarator_val;
     ;
     break;}
 case 173:
-#line 969 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 972 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[0].declarator_val; ;
     break;}
 case 174:
-#line 970 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 973 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[0].declarator_val; ;
     break;}
 case 175:
-#line 974 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 977 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.declarator_val = new Declarator(currentFile, yylineno, mainFile, yyvsp[0].id_val, 0);
     ;
     break;}
 case 176:
-#line 980 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 983 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[0].declarator_val; ;
     break;}
 case 177:
-#line 984 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 987 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::floatType; ;
     break;}
 case 178:
-#line 985 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 988 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::doubleType; ;
     break;}
 case 179:
-#line 986 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 989 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::longdoubleType; ;
     break;}
 case 180:
-#line 990 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 993 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 181:
-#line 991 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 994 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 182:
-#line 995 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 998 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 183:
-#line 996 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 999 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 184:
-#line 997 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1000 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 185:
-#line 1001 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1004 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::shortType; ;
     break;}
 case 186:
-#line 1005 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1008 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::longType; ;
     break;}
 case 187:
-#line 1009 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1012 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::longlongType; ;
     break;}
 case 188:
-#line 1013 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1016 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 189:
-#line 1014 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1017 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 190:
-#line 1015 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1018 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 191:
-#line 1019 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1022 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::ushortType; ;
     break;}
 case 192:
-#line 1023 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1026 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::ulongType; ;
     break;}
 case 193:
-#line 1027 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1030 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::ulonglongType; ;
     break;}
 case 194:
-#line 1031 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1034 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::charType; ;
     break;}
 case 195:
-#line 1035 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1038 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::wcharType; ;
     break;}
 case 196:
-#line 1039 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1042 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::booleanType; ;
     break;}
 case 197:
-#line 1043 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1046 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::octetType; ;
     break;}
 case 198:
-#line 1047 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1050 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::anyType; ;
     break;}
 case 199:
-#line 1051 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1054 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = DeclaredType::corbaObjectType; ;
     break;}
 case 200:
-#line 1055 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1058 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].struct_val->finishConstruction(yyvsp[-1].member_val);
       yyval.struct_val = yyvsp[-5].struct_val;
     ;
     break;}
 case 201:
-#line 1059 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1062 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in struct definition");
@@ -2510,24 +2510,24 @@ case 201:
     ;
     break;}
 case 202:
-#line 1068 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1071 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.struct_val = new Struct(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 203:
-#line 1074 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1077 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.member_val = yyvsp[-1].member_val; ;
     break;}
 case 204:
-#line 1075 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1078 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-2].member_val) { yyvsp[-2].member_val->append(yyvsp[-1].member_val); yyval.member_val = yyvsp[-2].member_val; }
       else yyval.member_val = yyvsp[-1].member_val;
     ;
     break;}
 case 205:
-#line 1082 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1085 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.member_val = new Member(currentFile, yylineno, mainFile,
 		      yyvsp[-2].type_spec_val->type(), yyvsp[-2].type_spec_val->constr(), yyvsp[-1].declarator_val);
@@ -2535,7 +2535,7 @@ case 205:
     ;
     break;}
 case 206:
-#line 1087 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1090 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in member declaration");
@@ -2543,7 +2543,7 @@ case 206:
     ;
     break;}
 case 207:
-#line 1097 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1100 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
 
       yyvsp[-12].union_val->finishConstruction(yyvsp[-7].type_spec_val->type(), yyvsp[-7].type_spec_val->constr(), yyvsp[-1].union_case_val);
@@ -2552,7 +2552,7 @@ case 207:
     ;
     break;}
 case 208:
-#line 1103 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1106 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in union declaration");
@@ -2561,95 +2561,95 @@ case 208:
     ;
     break;}
 case 209:
-#line 1112 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1115 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.union_val = new Union(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 210:
-#line 1118 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1121 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 0); ;
     break;}
 case 211:
-#line 1119 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1122 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 0); ;
     break;}
 case 212:
-#line 1120 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1123 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 0); ;
     break;}
 case 213:
-#line 1121 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1124 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].enum_val->thisType(), 1); ;
     break;}
 case 214:
-#line 1122 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1125 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_spec_val = new TypeSpec(IdlType::scopedNameToType(currentFile, yylineno, yyvsp[0].scopedname_val),
 			0);
     ;
     break;}
 case 215:
-#line 1129 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1132 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.union_case_val = yyvsp[0].union_case_val; ;
     break;}
 case 216:
-#line 1133 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1136 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.union_case_val = yyvsp[-1].union_case_val; ;
     break;}
 case 217:
-#line 1134 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1137 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-2].union_case_val->append(yyvsp[-1].union_case_val);
       yyval.union_case_val = yyvsp[-2].union_case_val;
     ;
     break;}
 case 218:
-#line 1141 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1144 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-1].union_case_val->finishConstruction(yyvsp[-2].case_label_val);
       yyval.union_case_val = yyvsp[-1].union_case_val;
     ;
     break;}
 case 219:
-#line 1148 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1151 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.case_label_val = yyvsp[0].case_label_val; ;
     break;}
 case 220:
-#line 1149 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1152 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-1].case_label_val->append(yyvsp[0].case_label_val);
       yyval.case_label_val = yyvsp[-1].case_label_val;
     ;
     break;}
 case 221:
-#line 1156 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1159 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.case_label_val = new CaseLabel(currentFile, yylineno, mainFile, yyvsp[-2].expr_val);
     ;
     break;}
 case 222:
-#line 1159 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1162 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.case_label_val = new CaseLabel(currentFile, yylineno, mainFile, 0);
     ;
     break;}
 case 223:
-#line 1165 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1168 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.union_case_val = new UnionCase(currentFile, yylineno, mainFile,
 			 yyvsp[-1].type_spec_val->type(), yyvsp[-1].type_spec_val->constr(), yyvsp[0].declarator_val);
     ;
     break;}
 case 224:
-#line 1172 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1175 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].enum_val->finishConstruction(yyvsp[-1].enumerator_val);
       yyval.enum_val = yyvsp[-5].enum_val;
     ;
     break;}
 case 225:
-#line 1176 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1179 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Syntax error in enum definition");
       yyvsp[-1].enum_val->finishConstruction(0);
@@ -2657,115 +2657,115 @@ case 225:
     ;
     break;}
 case 226:
-#line 1184 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1187 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.enum_val = new Enum(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 227:
-#line 1190 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1193 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.enumerator_val = yyvsp[-1].enumerator_val; ;
     break;}
 case 228:
-#line 1191 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1194 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-4].enumerator_val->append(yyvsp[-1].enumerator_val);
       yyval.enumerator_val = yyvsp[-4].enumerator_val;
     ;
     break;}
 case 229:
-#line 1198 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1201 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.enumerator_val = new Enumerator(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 230:
-#line 1204 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1207 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = new SequenceType(yyvsp[-3].type_val, yyvsp[-1].ulong_val);
     ;
     break;}
 case 231:
-#line 1207 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1210 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = new SequenceType(yyvsp[-1].type_val, 0);
     ;
     break;}
 case 232:
-#line 1213 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1216 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = new StringType(yyvsp[-1].ulong_val); ;
     break;}
 case 233:
-#line 1214 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1217 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = StringType::unboundedStringType;
     ;
     break;}
 case 234:
-#line 1220 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1223 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = new WStringType(yyvsp[-1].ulong_val); ;
     break;}
 case 235:
-#line 1221 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1224 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = WStringType::unboundedWStringType;
     ;
     break;}
 case 236:
-#line 1227 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1230 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.declarator_val = new Declarator(currentFile, yylineno, mainFile, yyvsp[-1].id_val, yyvsp[0].array_size_val);
     ;
     break;}
 case 237:
-#line 1233 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1236 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.array_size_val = yyvsp[0].array_size_val; ;
     break;}
 case 238:
-#line 1234 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1237 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-1].array_size_val->append(yyvsp[0].array_size_val);
       yyval.array_size_val = yyvsp[-1].array_size_val;
     ;
     break;}
 case 239:
-#line 1241 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1244 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.array_size_val = new ArraySize(yyvsp[-1].ulong_val); ;
     break;}
 case 240:
-#line 1245 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1248 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.attribute_val = new Attribute(currentFile, yylineno, mainFile, yyvsp[-3].boolean_val, yyvsp[-1].type_val, yyvsp[0].declarator_val);
     ;
     break;}
 case 241:
-#line 1251 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1254 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 0; ;
     break;}
 case 242:
-#line 1252 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1255 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 1; ;
     break;}
 case 243:
-#line 1256 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1259 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[-1].declarator_val; ;
     break;}
 case 244:
-#line 1257 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1260 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-4].declarator_val) { yyvsp[-4].declarator_val->append(yyvsp[-1].declarator_val); yyval.declarator_val = yyvsp[-4].declarator_val; }
       else yyval.declarator_val = yyvsp[-1].declarator_val;
     ;
     break;}
 case 245:
-#line 1264 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1267 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].exception_val->finishConstruction(yyvsp[-1].member_val);
       yyval.exception_val = yyvsp[-5].exception_val;
     ;
     break;}
 case 246:
-#line 1268 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1271 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in exception definition");
@@ -2774,37 +2774,37 @@ case 246:
     ;
     break;}
 case 247:
-#line 1277 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1280 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.exception_val = new Exception(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 248:
-#line 1283 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1286 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.member_val = 0; ;
     break;}
 case 249:
-#line 1284 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1287 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].member_val) { yyvsp[-1].member_val->append(yyvsp[0].member_val);	yyval.member_val = yyvsp[-1].member_val; }
       else yyval.member_val = yyvsp[0].member_val;
     ;
     break;}
 case 250:
-#line 1291 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1294 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-2].operation_val->closeParens();
     ;
     break;}
 case 251:
-#line 1293 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1296 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-6].operation_val->finishConstruction(yyvsp[-4].parameter_val, yyvsp[-1].raisesspec_val, yyvsp[0].contextspec_val);
       yyval.operation_val = yyvsp[-6].operation_val;
     ;
     break;}
 case 252:
-#line 1297 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1300 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in operation declaration");
@@ -2814,41 +2814,41 @@ case 252:
     ;
     break;}
 case 253:
-#line 1307 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1310 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.operation_val = new Operation(currentFile, yylineno, mainFile, yyvsp[-2].boolean_val, yyvsp[-1].type_val, yyvsp[0].id_val);
     ;
     break;}
 case 254:
-#line 1313 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1316 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 0; ;
     break;}
 case 255:
-#line 1314 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1317 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = yyvsp[0].boolean_val; ;
     break;}
 case 256:
-#line 1318 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1321 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 1; ;
     break;}
 case 257:
-#line 1322 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1325 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 258:
-#line 1323 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1326 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::voidType; ;
     break;}
 case 259:
-#line 1327 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1330 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = yyvsp[-1].parameter_val; ;
     break;}
 case 260:
-#line 1328 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1331 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = 0; ;
     break;}
 case 261:
-#line 1329 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1332 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in operation parameters");
@@ -2856,104 +2856,104 @@ case 261:
     ;
     break;}
 case 262:
-#line 1337 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1340 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = yyvsp[-1].parameter_val; ;
     break;}
 case 263:
-#line 1338 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1341 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-4].parameter_val) { yyvsp[-4].parameter_val->append(yyvsp[-1].parameter_val); yyval.parameter_val = yyvsp[-4].parameter_val; }
       else yyval.parameter_val = yyvsp[-1].parameter_val;
     ;
     break;}
 case 264:
-#line 1345 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1348 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.parameter_val = new Parameter(currentFile, yylineno, mainFile, yyvsp[-2].int_val, yyvsp[-1].type_val, yyvsp[0].id_val);
     ;
     break;}
 case 265:
-#line 1351 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1354 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.int_val = 0; ;
     break;}
 case 266:
-#line 1352 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1355 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.int_val = 1; ;
     break;}
 case 267:
-#line 1353 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1356 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.int_val = 2; ;
     break;}
 case 268:
-#line 1357 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1360 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.raisesspec_val = 0; ;
     break;}
 case 269:
-#line 1358 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1361 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.raisesspec_val = yyvsp[-1].raisesspec_val; ;
     break;}
 case 270:
-#line 1362 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1365 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.raisesspec_val = yyvsp[-1].raisesspec_val; ;
     break;}
 case 271:
-#line 1366 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1369 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.raisesspec_val = new RaisesSpec(yyvsp[-1].scopedname_val, currentFile, yylineno);
     ;
     break;}
 case 272:
-#line 1369 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1372 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-4].raisesspec_val->append(new RaisesSpec(yyvsp[-1].scopedname_val, currentFile, yylineno));
       yyval.raisesspec_val = yyvsp[-4].raisesspec_val;
     ;
     break;}
 case 273:
-#line 1376 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1379 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.contextspec_val = 0; ;
     break;}
 case 274:
-#line 1377 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1380 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.contextspec_val = yyvsp[-1].contextspec_val; ;
     break;}
 case 275:
-#line 1381 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1384 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.contextspec_val = yyvsp[-1].contextspec_val; ;
     break;}
 case 276:
-#line 1385 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1388 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.contextspec_val = new ContextSpec(yyvsp[-1].string_val, currentFile, yylineno);
     ;
     break;}
 case 277:
-#line 1388 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1391 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-4].contextspec_val->append(new ContextSpec(yyvsp[-1].string_val, currentFile, yylineno));
       yyval.contextspec_val = yyvsp[-4].contextspec_val;
     ;
     break;}
 case 278:
-#line 1395 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1398 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 279:
-#line 1396 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1399 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 280:
-#line 1397 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1400 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 281:
-#line 1398 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1401 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = IdlType::scopedNameToType(currentFile, yylineno, yyvsp[0].scopedname_val);
     ;
     break;}
 case 282:
-#line 1404 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1407 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IDL_ULong scale = yyvsp[-1].expr_val->evalAsULong();
 
@@ -2970,7 +2970,7 @@ case 282:
     ;
     break;}
 case 283:
-#line 1421 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1424 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlError(currentFile, yylineno,
 	       "Fixed point constants are not supported yet");
@@ -2978,65 +2978,65 @@ case 283:
     ;
     break;}
 case 284:
-#line 1429 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1432 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = new DeclaredType(IdlType::tk_value, 0, 0); ;
     break;}
 case 293:
-#line 1450 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1453 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       Prefix::setPrefix(idl_strdup(yyvsp[-1].string_val));
     ;
     break;}
 case 294:
-#line 1453 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1456 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Malformed #pragma prefix");
     ;
     break;}
 case 295:
-#line 1459 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1462 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       Decl* d = Decl::scopedNameToDecl(currentFile, yylineno, yyvsp[-2].scopedname_val);
       if (d) DeclRepoId::setRepoId(d, yyvsp[-1].string_val, currentFile, yylineno);
     ;
     break;}
 case 296:
-#line 1463 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1466 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Malformed #pragma id");
     ;
     break;}
 case 297:
-#line 1469 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1472 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       Decl* d = Decl::scopedNameToDecl(currentFile, yylineno, yyvsp[-4].scopedname_val);
       if (d) DeclRepoId::setVersion(d, yyvsp[-3].int_literal_val, yyvsp[-1].int_literal_val, currentFile, yylineno);
     ;
     break;}
 case 298:
-#line 1473 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1476 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Malformed #pragma version");
     ;
     break;}
 case 299:
-#line 1479 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1482 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       Pragma::add(yyvsp[-1].string_val, currentFile, yylineno-1);
     ;
     break;}
 case 300:
-#line 1485 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1488 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       Pragma::add(yyvsp[-1].string_val, currentFile, yylineno);
     ;
     break;}
 case 301:
-#line 1491 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1494 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 { yyval.string_val = yyvsp[0].string_val; ;
     break;}
 case 302:
-#line 1492 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1495 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.string_val = new char [strlen(yyvsp[-1].string_val) + strlen(yyvsp[0].string_val) + 1];
       strcpy(yyval.string_val, yyvsp[-1].string_val);
@@ -3267,5 +3267,5 @@ yyerrhandle:
     }
   return 1;
 }
-#line 1501 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
+#line 1504 "/net/pineapple/mnt/rh5var/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7.2.10  2001/10/22 10:38:33  dpg1
+// Cope with DOS line endings in all IDL situations.
+//
 // Revision 1.7.2.9  2000/10/24 09:53:27  dpg1
 // Clean up omniidl system dependencies. Replace use of _CORBA_ types
 // with IDL_ types.
@@ -399,16 +402,16 @@ L{STR} {
   return PRAGMA;
 }
 
-<unknown_pragma>([^\\\n]|(\\[^\n]))+ {
+<unknown_pragma>([^\\\n\r]|(\\[^\n\r]))+ {
   yylval.string_val = idl_strdup(yytext);
   return UNKNOWN_PRAGMA_BODY;
 }
 
-<INITIAL,known_pragma,unknown_pragma>\\\n {
+<INITIAL,known_pragma,unknown_pragma>\\(\n|(\r\n)) {
   /* Continue line if it ends with \ */
 }
 
-<known_pragma,unknown_pragma>\n {
+<known_pragma,unknown_pragma>\n|(\r\n) {
   BEGIN(INITIAL);
   return END_PRAGMA;
 }

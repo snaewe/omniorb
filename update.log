@@ -1,3 +1,13 @@
+Mon Oct 22 11:34:48 BST 2001 dpg1
+=================================
+
+- Cope with DOS line endings in all IDL situations.
+
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+
+
 Wed Oct 17 10:30:11 BST 2001 dpg1
 =================================
 
