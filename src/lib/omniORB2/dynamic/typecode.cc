@@ -29,9 +29,12 @@
 
 
 /* $Log$
-/* Revision 1.4  1998/03/17 12:52:19  sll
-/* Corrected typo.
+/* Revision 1.5  1998/04/07 19:40:53  sll
+/* Moved inline member functions to this module.
 /*
+ * Revision 1.4  1998/03/17 12:52:19  sll
+ * Corrected typo.
+ *
  * Revision 1.3  1998/03/17 12:12:31  ewc
  * Bug fix to NP_aliasExpand()
  *
@@ -47,8 +50,15 @@
 #include <omniORB2/CORBA.h>
 #include "tcParseEngine.h"
 
-#include <iostream.h>
+static CORBA::TypeCode_ptr        _nil_TypeCodeV = 0;
+static CORBA::IDLType_ptr         _nil_IDLTypeV = 0;
 
+#ifndef HAS_Cplusplus_Namespace
+// deprecated. Left here for backward compatability
+static CORBA::_nil_TypeCode __nil_TypeCode__;
+const CORBA::TypeCode_ptr CORBA::__nil_TypeCode = &__nil_TypeCode__;
+CORBA::IDLType_ptr        CORBA::__nil_IDLType;
+#endif
 
 CORBA::TypeCode::TypeCode(CORBA::TCKind t, CORBA::ULong maxLen)
 {
@@ -524,8 +534,10 @@ CORBA::TypeCode::operator<<= (MemBufferedStream& s)
   tcExtr <<= s;           // Extract typecode
   if (tcExtr > (CORBA::ULong) CORBA::tk_except)
     {
-      if (tcExtr == (CORBA::ULong) 0xffffffff && omniORB::traceLevel >= 10)
-	cerr << "\nIndirection TypeCodes not yet handled." << endl;
+      if (tcExtr == (CORBA::ULong) 0xffffffff && omniORB::traceLevel >= 10) {
+	omniORB::log << "\nIndirection TypeCodes not yet handled.\n";
+	omniORB::log.flush();
+      }
       throw CORBA::BAD_TYPECODE(0,CORBA::COMPLETED_NO);
     }
 
@@ -1867,7 +1879,10 @@ CORBA::TypeCode::_duplicate(CORBA::TypeCode_ptr t)
 CORBA::TypeCode_ptr
 CORBA::TypeCode::_nil()
 {
-  return CORBA::__nil_TypeCode;
+  if (!_nil_TypeCodeV) {
+    _nil_TypeCodeV == new CORBA::_nil_TypeCode;
+  }
+  return _nil_TypeCodeV;
 }
 
 
@@ -1951,6 +1966,108 @@ CORBA::ORB::create_recursive_sequence_tc(CORBA::ULong bound,
   // Not implemented yet
   throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
   return 0;
+}
+
+/**************************************************************************/
+
+CORBA::TypeCode_member::TypeCode_member() 
+{ 
+  _ptr = CORBA::TypeCode::_nil();
+}
+
+CORBA::TypeCode_member::TypeCode_member(CORBA::TypeCode_ptr p) 
+{ 
+  _ptr = p;
+}
+
+
+CORBA::TypeCode_member::TypeCode_member(const CORBA::TypeCode_member& p)
+{
+  if ((p._ptr)->NP_is_nil()) _ptr = CORBA::TypeCode::_nil(); 
+  else _ptr = new TypeCode(*(p._ptr));
+}
+
+CORBA::TypeCode_member::~TypeCode_member()
+{
+  CORBA::release(_ptr);
+}
+
+    
+CORBA::TypeCode_member& 
+CORBA::TypeCode_member::operator=(CORBA::TypeCode_ptr p)
+{
+  CORBA::release(_ptr);
+  _ptr = p;
+  return *this;
+}
+
+    
+CORBA::TypeCode_member&
+CORBA::TypeCode_member::operator=(const CORBA::TypeCode_member& p)
+{
+  if (this != &p) {
+    CORBA::release(_ptr);
+    if ((p._ptr)->NP_is_nil()) _ptr = CORBA::TypeCode::_nil(); 
+    else _ptr = new TypeCode(*(p._ptr));
+  }
+  return *this;
+}
+
+CORBA::TypeCode_member&
+CORBA::TypeCode_member::operator=(const CORBA::TypeCode_var& p)
+{
+  CORBA::release(_ptr);
+  if ((p.pd_TC)->NP_is_nil()) _ptr = CORBA::TypeCode::_nil();
+  else _ptr = new TypeCode(*(p.pd_TC));
+  return *this;
+}
+
+void
+CORBA::TypeCode_member::operator>>=(NetBufferedStream& s) const
+{ 
+  *_ptr >>= s;
+}
+
+void
+CORBA::TypeCode_member::operator<<=(NetBufferedStream& s)
+{
+  TypeCode_ptr _result = new TypeCode(tk_null);
+  *_result <<= s;
+  CORBA::release(_ptr);
+  _ptr = _result;
+}
+
+void
+CORBA::TypeCode_member::operator>>=(MemBufferedStream& s) const
+{ 
+  *_ptr >>= s;
+}
+
+void
+CORBA::TypeCode_member::operator<<=(MemBufferedStream& s)
+{
+  TypeCode_ptr _result = new TypeCode(tk_null);
+  *_result <<= s;
+  CORBA::release(_ptr);
+  _ptr = _result;
+}
+      
+size_t
+CORBA::TypeCode_member::NP_alignedSize(size_t initialoffset) const
+{
+  return _ptr->NP_alignedSize(initialoffset);
+}
+
+    
+CORBA::TypeCode_ptr
+CORBA::TypeCode_member::operator->() const
+{ 
+  return (TypeCode_ptr) _ptr;
+}
+
+CORBA::TypeCode_member::operator CORBA::TypeCode_ptr() const
+{ 
+  return _ptr;
 }
 
 
@@ -2050,13 +2167,122 @@ CORBA::_nil_TypeCode::NP_is_nil() const
 
 /**************************************************************************/
 
+CORBA::IDLType::~IDLType()
+{
+}
+
+CORBA::TypeCode_ptr
+CORBA::IDLType::type()
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
+}
+
+CORBA::IDLType_ptr
+CORBA::IDLType::_duplicate(CORBA::IDLType_ptr obj)
+{
+  if (CORBA::is_nil(obj))
+    return IDLType::_nil();
+  else {
+    throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO); 
+#ifdef NEED_DUMMY_RETURN
+   return 0;
+#endif
+  }
+}
+    
+CORBA::IDLType_ptr
+CORBA::IDLType::_narrow(CORBA::Object_ptr obj)
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO); 
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
+}
+    
+CORBA::IDLType_ptr
+CORBA::IDLType::_nil() 
+{
+  if (!_nil_IDLTypeV) {
+    _nil_IDLTypeV = new _nil_IDLType;
+#ifndef HAS_Cplusplus_Namespace
+    // deprecated. Left here for backward compatiability.
+    CORBA::__nil_IDLType = _nil_IDLTypeV;
+#endif
+  }
+  return _nil_IDLTypeV;
+}
+
+size_t
+CORBA::IDLType::NP_alignedSize(CORBA::IDLType_ptr obj,size_t initialoffset)
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  return 0;      
+#endif
+}
+
+void
+CORBA::IDLType::marshalObjRef(CORBA::IDLType_ptr obj,NetBufferedStream &s)
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+}
+
+CORBA::IDLType_ptr
+CORBA::IDLType::unmarshalObjRef(NetBufferedStream &s)
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
+}
+
+void
+CORBA::IDLType::marshalObjRef(IDLType_ptr obj,MemBufferedStream &s)
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+}
+
+CORBA::IDLType_ptr
+CORBA::IDLType::unmarshalObjRef(MemBufferedStream &s)
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
+}
+
+CORBA::_nil_IDLType::_nil_IDLType() 
+     : omniObject(omniObject::nilObjectManager())
+{ 
+  this->PR_setobj(0);
+}
+
+CORBA::_nil_IDLType::~_nil_IDLType()
+{
+}
+    
+CORBA::TypeCode_ptr
+CORBA::
+_nil_IDLType::type ()
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  CORBA::TypeCode_ptr _result= 0;
+  return _result;
+#endif
+}
+
+
+/**************************************************************************/
+
 
 // TypeCode Constants:
 
-CORBA::IDLType_ptr CORBA::__nil_IDLType = 0;
 
-static CORBA::_nil_TypeCode __nil_TypeCode__;
-const CORBA::TypeCode_ptr CORBA::__nil_TypeCode = &__nil_TypeCode__;
 
 static CORBA::TypeCode _01RL__tc_null__(CORBA::tk_null);
 static CORBA::TypeCode _01RL__tc_void__(CORBA::tk_void);
@@ -2075,7 +2301,29 @@ static CORBA::TypeCode _01RL__tc_Principal__(CORBA::tk_Principal);
 static CORBA::TypeCode _01RL__tc_Object__("IDL:CORBA/Object:1.0","Object");
 static CORBA::TypeCode _01RL__tc_string__(CORBA::tk_string,0);
 				   
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the constants external linkage otherwise. Its a bug.
+namespace CORBA {
 
+extern const TypeCode_ptr         _tc_null = &_01RL__tc_null__;
+extern const TypeCode_ptr         _tc_void = &_01RL__tc_void__;
+extern const TypeCode_ptr         _tc_short = &_01RL__tc_short__;
+extern const TypeCode_ptr         _tc_long = &_01RL__tc_long__;
+extern const TypeCode_ptr         _tc_ushort = &_01RL__tc_ushort__;
+extern const TypeCode_ptr         _tc_ulong = &_01RL__tc_ulong__;
+extern const TypeCode_ptr         _tc_float = &_01RL__tc_float__;
+extern const TypeCode_ptr         _tc_double = &_01RL__tc_double__;
+extern const TypeCode_ptr         _tc_boolean = &_01RL__tc_boolean__;
+extern const TypeCode_ptr         _tc_char = &_01RL__tc_char__;
+extern const TypeCode_ptr         _tc_octet = &_01RL__tc_octet__;
+extern const TypeCode_ptr         _tc_any = &_01RL__tc_any__;
+extern const TypeCode_ptr         _tc_TypeCode = &_01RL__tc_TypeCode__;
+extern const TypeCode_ptr         _tc_Principal = &_01RL__tc_Principal__;
+extern const TypeCode_ptr         _tc_Object = &_01RL__tc_Object__;
+extern const TypeCode_ptr         _tc_string = &_01RL__tc_string__;
+
+}
+#else
 const CORBA::TypeCode_ptr         CORBA::_tc_null = &_01RL__tc_null__;
 const CORBA::TypeCode_ptr         CORBA::_tc_void = &_01RL__tc_void__;
 const CORBA::TypeCode_ptr         CORBA::_tc_short = &_01RL__tc_short__;
@@ -2093,3 +2341,4 @@ const CORBA::TypeCode_ptr         CORBA::_tc_Principal =
                                                        &_01RL__tc_Principal__;
 const CORBA::TypeCode_ptr         CORBA::_tc_Object = &_01RL__tc_Object__;
 const CORBA::TypeCode_ptr         CORBA::_tc_string = &_01RL__tc_string__;
+#endif
