@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/07/13 15:23:51  sll
+  Call notifyCallFullyBuffered when a request has arrived and fully buffered.
+
   Revision 1.1.4.6  2001/06/20 18:35:18  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -60,6 +63,7 @@
 #include <giopStreamImpl.h>
 #include <giopStrand.h>
 #include <giopRope.h>
+#include <giopServer.h>
 #include <GIOP_S.h>
 #include <GIOP_C.h>
 #include <omniORB4/minorCode.h>
@@ -354,8 +358,17 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
     if (isfull) {
       omni_tracedmutex_lock sync(*omniTransportLock);
       matched_target->inputFullyBuffered(isfull);
+
       if (!matched_target_is_client) {
+
 	((GIOP_S*)matched_target)->state(IOP_S::InputFullyBuffered);
+	if (omniORB::trace(40)) {
+	  omniORB::logger log;
+	  log << "Changed GIOP_S to InputFullyBuffered\n";
+	}
+	if (!g->pd_strand->isClient()) {
+	  g->pd_strand->server->notifyCallFullyBuffered(g->pd_strand->connection);
+	}
       }
       giopStream::wakeUpRdLock(g->pd_strand);
     }
