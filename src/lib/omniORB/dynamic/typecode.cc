@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.27  2002/12/10 17:17:07  dgrisby
+ * Yet another indirection problem.
+ *
  * Revision 1.38.2.26  2002/12/05 12:22:22  dgrisby
  * More indirection problems.
  *
@@ -284,6 +287,24 @@ OMNI_USING_NAMESPACE(omni)
 // interface must check any typecodes passed to it and raise
 // CORBA::BAD_TYPECODE if a _nil() value is encountered.
 
+
+static inline const TypeCode_base*
+stripIndirections(const TypeCode_base* tc)
+{
+  while (tc->NP_kind() == CORBA::_np_tk_indirect)
+    tc = ((TypeCode_indirect*)tc)->NP_resolved();
+  return tc;
+}
+
+static inline TypeCode_base*
+stripIndirections(TypeCode_base* tc)
+{
+  while (tc->NP_kind() == CORBA::_np_tk_indirect)
+    tc = ((TypeCode_indirect*)tc)->NP_resolved();
+  return tc;
+}
+
+
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// CORBA::TypeCode //////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -304,13 +325,8 @@ CORBA::TypeCode::~TypeCode() {
 CORBA::TCKind
 CORBA::TypeCode::kind() const
 {
-  const TypeCode_base* tc = ToConstTcBase_Checked(this);
-  CORBA::TCKind k = tc->NP_kind();
-  while (k == CORBA::_np_tk_indirect) {
-    tc = ((TypeCode_indirect*)tc)->NP_resolved();
-    k = tc->NP_kind();
-  }
-  return k;
+  const TypeCode_base* tc = stripIndirections(ToConstTcBase_Checked(this));
+  return tc->NP_kind();
 }
 
 CORBA::Boolean
@@ -1078,13 +1094,11 @@ TypeCode_base::NP_equal(const TypeCode_base* TCp,
 			CORBA::Boolean is_equivalent,
 			const TypeCode_pairlist* tcpl) const
 {
-  while (TCp->NP_kind() == CORBA::_np_tk_indirect)
-    TCp = ((TypeCode_indirect*)TCp)->NP_resolved();
-
   if (NP_kind() == CORBA::_np_tk_indirect)
-    return ((TypeCode_indirect*)this)->NP_resolved()->NP_equal(TCp,
-							       is_equivalent,
-							       tcpl);
+    return stripIndirections(this)->NP_equal(TCp, is_equivalent, tcpl);
+
+  TCp = stripIndirections(TCp);
+
   // Check for trivial pointer-based equality
   if (this == TCp) return 1;
 
@@ -1831,7 +1845,7 @@ TypeCode_alias::NP_name() const
 TypeCode_base*
 TypeCode_alias::NP_content_type() const
 {
-  return ToTcBase(pd_content);
+  return stripIndirections(ToTcBase(pd_content));
 }
 
 
@@ -2055,7 +2069,7 @@ TypeCode_sequence::NP_content_type() const
 {
   // Sanity check that recursive sequences have been properly completed
   OMNIORB_ASSERT(!CORBA::is_nil(pd_content));
-  return ToTcBase(pd_content);
+  return stripIndirections(ToTcBase(pd_content));
 }
 
 
@@ -2244,7 +2258,7 @@ TypeCode_array::NP_length() const
 TypeCode_base*
 TypeCode_array::NP_content_type() const
 {
-  return ToTcBase(pd_content);
+  return stripIndirections(ToTcBase(pd_content));
 }
 
 
@@ -2536,7 +2550,7 @@ TypeCode_base*
 TypeCode_struct::NP_member_type(CORBA::ULong index) const
 {
   if( index >= pd_nmembers )  throw CORBA::TypeCode::Bounds();
-  return ToTcBase(pd_members[index].type);
+  return stripIndirections(ToTcBase(pd_members[index].type));
 }
 
 
@@ -2905,7 +2919,7 @@ TypeCode_base*
 TypeCode_except::NP_member_type(CORBA::ULong index) const
 {
   if( index >= pd_nmembers )  throw CORBA::TypeCode::Bounds();
-  return ToTcBase(pd_members[index].type);
+  return stripIndirections(ToTcBase(pd_members[index].type));
 }
 
 
@@ -3611,7 +3625,7 @@ TypeCode_union::NP_member_type(CORBA::ULong index) const
   if (pd_members.length() <= index)
     throw CORBA::TypeCode::Bounds();
 
-  return ToTcBase(pd_members[index].atype);
+  return stripIndirections(ToTcBase(pd_members[index].atype));
 }
 
 

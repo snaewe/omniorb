@@ -1,3 +1,11 @@
+Tue Dec 10 17:07:16 GMT 2002 dgrisby
+====================================
+
+- Yet another indirection problem.
+
+src/lib/omniORB/dynamic/typecode.cc
+
+
 Thu Dec  5 12:16:33 GMT 2002 dgrisby
 ====================================
 
