@@ -14,10 +14,11 @@ ORB_SRCS = \
 	    poa.cc portableserver.cc poamanager.cc \
 	    poastubs.cc \
 	    proxyFactory.cc omniInternal.cc anonObject.cc \
-            bootstrap_i.cc \
+            initRefs.cc \
             constants.cc corbaObject.cc corbaOrb.cc corbaBoa.cc \
             corbaString.cc \
-            exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
+            exception.cc giopClient.cc giopServer.cc initFile.cc \
+            ior.cc uri.cc \
             libcWrapper.cc mbufferedStream.cc nbufferedStream.cc \
             ropeFactory.cc \
             strand.cc scavenger.cc exceptn.cc omniORB.cc tracedthread.cc \
