@@ -72,6 +72,7 @@ interface Contained : IRObject {
 };
 
 
+#ifndef __VAX
 interface ModuleDef;
 interface ConstantDef;
 interface IDLType;
@@ -81,11 +82,13 @@ interface EnumDef;
 interface AliasDef;
 interface InterfaceDef;
 interface ExceptionDef;
+#endif
 interface WstringDef;
 interface FixedDef;
 
-
+#ifndef __VAX
 typedef sequence<InterfaceDef> InterfaceDefSeq;
+#endif
 typedef sequence<Contained> ContainedSeq;
 
 
@@ -111,6 +114,8 @@ interface Container : IRObject {
   DescriptionSeq describe_contents(in DefinitionKind limit_type,
                                    in boolean exclude_inherited,
                                    in long max_returned_objs);
+
+#ifndef __VAX
 
   ModuleDef create_module(in RepositoryId id,
                           in Identifier name,
@@ -152,13 +157,15 @@ interface Container : IRObject {
                                 in Identifier name,
                                 in VersionSpec version,
                                 in StructMemberSeq members);
+
+#endif
+
 };
 
 
 interface IDLType : IRObject {
   readonly attribute TypeCode type;
 };
-
 
 interface PrimitiveDef;
 interface StringDef;
@@ -211,10 +218,11 @@ interface Repository : Container {
 };
 
 
+#ifndef __VAX
+
 interface ModuleDef : Container, Contained {
   // empty
 };
-
 
 struct ModuleDescription {
   Identifier name;
@@ -276,6 +284,7 @@ interface AliasDef : TypedefDef {
   attribute IDLType original_type_def;
 };
 
+#endif
 
 interface PrimitiveDef : IDLType {
   readonly attribute PrimitiveKind kind;
@@ -286,11 +295,9 @@ interface StringDef : IDLType {
   attribute unsigned long bound;
 };
 
-
 interface WstringDef : IDLType {
   attribute unsigned long bound;
 };
-
 
 interface FixedDef : IDLType {
   attribute unsigned short digits;
@@ -304,13 +311,13 @@ interface SequenceDef : IDLType {
   attribute IDLType element_type_def;
 };
 
-
 interface ArrayDef : IDLType {
   attribute unsigned long length;
   readonly attribute TypeCode element_type;
   attribute IDLType element_type_def;
 };
 
+#ifndef __VAX
 
 interface ExceptionDef : Contained, Container {
   readonly attribute TypeCode type;
@@ -395,7 +402,6 @@ typedef sequence<RepositoryId> RepositoryIdSeq;
 typedef sequence<OperationDescription> OpDescriptionSeq;
 typedef sequence<AttributeDescription> AttrDescriptionSeq;
 
-
 interface InterfaceDef : Container, Contained, IDLType {
 
   attribute InterfaceDefSeq base_interfaces;
@@ -431,6 +437,13 @@ interface InterfaceDef : Container, Contained, IDLType {
                                 in ContextIdSeq contexts);
 };
 
+#else
+
+interface InterfaceDef {};
+interface OperationDef {};
+typedef sequence<RepositoryId> RepositoryIdSeq;
+
+#endif
 
 struct InterfaceDescription {
   Identifier name;
