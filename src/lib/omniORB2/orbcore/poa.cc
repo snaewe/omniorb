@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  1999/10/21 12:34:06  djr
+  Removed duplicate include of exception.h.
+
   Revision 1.1.2.6  1999/10/14 16:22:14  djr
   Implemented logging when system exceptions are thrown.
 
@@ -62,7 +65,6 @@
 #include <poamanager.h>
 #include <exception.h>
 #include <ropeFactory.h>
-#include <exception.h>
 
 #include <ctype.h>
 #include <stdio.h>
