@@ -1,4 +1,13 @@
 
+Fri Jul 23 12:24:32 BST 1999 djr
+================================
+
+- Efficient marshalling/unmarshalling of array of basic types.
+
+include/omniORB2/bufferedStream.h
+src/tool/omniidl2/o2be_operation.cc
+
+
 Thu Jul 22 15:05:25 BST 1999 tjr
 ================================
 
