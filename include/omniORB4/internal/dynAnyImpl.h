@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  2001/10/19 11:04:03  dpg1
+ Avoid confusing (to gcc 2.95) inheritance of refcount functions.
+
  Revision 1.1.2.2  2001/10/17 18:51:51  dpg1
  Fix inevitable Windows problems.
 
@@ -405,6 +408,10 @@ public:
     return (TypeCode_fixed*) DynAnyImplBase::actualTc();
   }
 
+  virtual void _NP_incrRefCount();
+  virtual void _NP_decrRefCount();
+  // Must not hold DynAnyImplBase::refCountLock.
+
   virtual void* _ptrToObjRef(const char* repoId);
 
 private:
@@ -443,6 +450,10 @@ public:
   TypeCode_enum* actualTc() const {
     return (TypeCode_enum*) DynAnyImplBase::actualTc();
   }
+
+  virtual void _NP_incrRefCount();
+  virtual void _NP_decrRefCount();
+  // Must not hold DynAnyImplBase::refCountLock.
 
   virtual void* _ptrToObjRef(const char* repoId);
 };
@@ -788,6 +799,10 @@ public:
 					   CORBA::ULong len);
   virtual SeqLocation prepareSequenceRead(CORBA::TCKind kind);
 
+  virtual void _NP_incrRefCount();
+  virtual void _NP_decrRefCount();
+  // Must not hold DynAnyImplBase::refCountLock.
+
   virtual void* _ptrToObjRef(const char* repoId);
 };
 
@@ -900,6 +915,10 @@ public:
   TypeCode_enum* actualTc() const {
     return (TypeCode_enum*) DynAnyImplBase::actualTc();
   }
+
+  virtual void _NP_incrRefCount();
+  virtual void _NP_decrRefCount();
+  // Must not hold DynAnyImplBase::refCountLock.
 
   virtual void* _ptrToObjRef(const char* repoId);
 };
@@ -1036,6 +1055,10 @@ public:
   ****************************/
   virtual int NP_nodetype() const;
 
+  virtual void _NP_incrRefCount();
+  virtual void _NP_decrRefCount();
+  // Must not hold DynAnyImplBase::refCountLock.
+
   virtual void* _ptrToObjRef(const char* repoId);
 
   static const char* _PD_repoId;
@@ -1163,6 +1186,10 @@ public:
   ****************************/
   virtual int NP_nodetype() const;
 
+  virtual void _NP_incrRefCount();
+  virtual void _NP_decrRefCount();
+  // Must not hold DynAnyImplBase::refCountLock.
+
   virtual void* _ptrToObjRef(const char* repoId);
 
   /***********
@@ -1208,6 +1235,10 @@ public:
   * exposed private interface *
   ****************************/
   virtual int NP_nodetype() const;
+
+  virtual void _NP_incrRefCount();
+  virtual void _NP_decrRefCount();
+  // Must not hold DynAnyImplBase::refCountLock.
 
   virtual void* _ptrToObjRef(const char* repoId);
 
