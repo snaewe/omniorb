@@ -150,14 +150,16 @@ static NilNamedValue _nilNamedValue;
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::NamedValue::~NamedValue() {}
+CORBA::NamedValue::~NamedValue() { pd_magic = 0; }
 
 
 CORBA::NamedValue_ptr
 CORBA::
 NamedValue::_duplicate(NamedValue_ptr p)
 {
-  if( p )  return p->NP_duplicate();
+  if (!PR_is_valid(p))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
 
@@ -176,7 +178,7 @@ NamedValue::_nil()
 void
 CORBA::release(NamedValue_ptr p)
 {
-  if( !p->NP_is_nil() )
+  if( CORBA::NamedValue::PR_is_valid(p) && !CORBA::is_nil(p) )
     ((NamedValueImpl*)p)->decrRefCount();
 }
 

@@ -56,7 +56,7 @@ ExceptionListImpl::count() const
 void
 ExceptionListImpl::add(CORBA::TypeCode_ptr tc)
 {
-  if( CORBA::is_nil(tc) )
+  if( !CORBA::TypeCode::PR_is_valid(tc) || CORBA::is_nil(tc) )
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
@@ -74,7 +74,7 @@ ExceptionListImpl::add(CORBA::TypeCode_ptr tc)
 void
 ExceptionListImpl::add_consume(CORBA::TypeCode_ptr tc)
 {
-  if( CORBA::is_nil(tc) )
+  if( !CORBA::TypeCode::PR_is_valid(tc) || CORBA::is_nil(tc) )
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
@@ -91,6 +91,9 @@ ExceptionListImpl::add_consume(CORBA::TypeCode_ptr tc)
 CORBA::TypeCode_ptr
 ExceptionListImpl::item(CORBA::ULong index)
 {
+  if (index >= pd_list.length())
+    throw CORBA::ExceptionList::Bounds();
+
   return pd_list[index];
 }
 
@@ -98,6 +101,9 @@ ExceptionListImpl::item(CORBA::ULong index)
 CORBA::Status
 ExceptionListImpl::remove(CORBA::ULong index)
 {
+  if (index >= pd_list.length())
+    throw CORBA::ExceptionList::Bounds();
+
   // operator[] on the sequence will do the bounds check for us here
   CORBA::release(pd_list[index]);
 
@@ -169,14 +175,16 @@ static NilExList _nilExceptionList;
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::ExceptionList::~ExceptionList() {}
+CORBA::ExceptionList::~ExceptionList() { pd_magic = 0; }
 
 
 CORBA::ExceptionList_ptr
 CORBA::
 ExceptionList::_duplicate(ExceptionList_ptr p)
 {
-  if( p )  return p->NP_duplicate();
+  if (!PR_is_valid(p))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
 
@@ -195,7 +203,7 @@ ExceptionList::_nil()
 void
 CORBA::release(ExceptionList_ptr p)
 {
-  if( !p->NP_is_nil() )
+  if( CORBA::ExceptionList::PR_is_valid(p) && !CORBA::is_nil(p) )
     ((ExceptionListImpl*)p)->decrRefCount();
 }
 

@@ -130,6 +130,9 @@ NVListImpl::add_value_consume(char* name, CORBA::Any* value,
 CORBA::NamedValue_ptr
 NVListImpl::item(CORBA::ULong index)
 {
+  if (index >= pd_list.length())
+    throw CORBA::NVList::Bounds();
+
   return pd_list[index];
 }
 
@@ -137,6 +140,9 @@ NVListImpl::item(CORBA::ULong index)
 CORBA::Status
 NVListImpl::remove(CORBA::ULong index)
 {
+  if (index >= pd_list.length())
+    throw CORBA::NVList::Bounds();
+
   // operator[] on the sequence will do the bounds check for us here
   CORBA::release(pd_list[index]);
 
@@ -216,14 +222,16 @@ static NilNVList _nilNVList;
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::NVList::~NVList() {}
+CORBA::NVList::~NVList() { pd_magic = 0; }
 
 
 CORBA::NVList_ptr
 CORBA::
 NVList::_duplicate(NVList_ptr p)
 {
-  if( p )  return p->NP_duplicate();
+  if (!PR_is_valid(p))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
 
@@ -242,7 +250,7 @@ NVList::_nil()
 void
 CORBA::release(NVList_ptr p)
 {
-  if( !p->NP_is_nil() )
+  if( CORBA::NVList::PR_is_valid(p) && !CORBA::is_nil(p) )
     ((NVListImpl*)p)->decrRefCount();
 }
 
@@ -251,6 +259,9 @@ CORBA::Status
 CORBA::
 ORB::create_list(Long count, NVList_out new_list)
 {
+  if (count < 0)
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+
   new_list = new NVListImpl();
 
   for( Long i = 0; i < count; i++ )
