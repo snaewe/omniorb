@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html253 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html251 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html245 HREF="node2.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html255 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html254 HREF="node4.html"> IDL to C++ </A>
-<B>Up:</B> <A NAME=tex2html252 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html246 HREF="node2.html"> Introduction</A>
+ <BR> <HR><A NAME=tex2html254 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html252 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html246 HREF="node2.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html256 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html255 HREF="node4.html"> IDL to C++ </A>
+<B>Up:</B> <A NAME=tex2html253 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html247 HREF="node2.html"> Introduction</A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION00300000000000000000> The Basics</A></H1>
 <P>
@@ -36,7 +36,7 @@ Our example is an object which has only one method. The method simply echos
 the argument string. We have to:
 <P>
 <OL><LI> define the object interface in IDL;
-<LI> use the IDL compiler to generate the stub code<A NAME=tex2html3 HREF="footnode.html#92"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>;
+<LI> use the IDL compiler to generate the stub code<A NAME=tex2html3 HREF="footnode.html#95"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>;
 <LI> provide the object implementation;
 <LI> write the client code.
 <P>
@@ -225,13 +225,13 @@ please read the CORBA specification [<A HREF="node15.html#corba2spec">OMG99a</A>
 Since object references must be released explicitly, their usage is prone
 to error and can lead to memory leakage. The mapping defines the <b>
 object reference variable</b> type to make life easier. In our example, the
-variable type <tt> Echo_var</tt> is defined<A NAME=tex2html4 HREF="footnode.html#155"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
+variable type <tt> Echo_var</tt> is defined<A NAME=tex2html4 HREF="footnode.html#158"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
 <P>
 The <tt> Echo_var</tt> is more convenient to use because it will automatically
 release its object reference when it is deallocated or when assigned a new
 object reference. For many operations, mixing data of type <tt> Echo_var</tt> and
 <tt> Echo_ptr</tt> is possible without any explicit operations or castings
-<A NAME=tex2html5 HREF="footnode.html#159"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. For instance, the
+<A NAME=tex2html5 HREF="footnode.html#162"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. For instance, the
 operation <tt> echoString</tt> can be called using the arrow
 (``<IMG  ALIGN=BOTTOM ALT="" SRC="img12.gif">'') on a <tt> Echo_var</tt>, as one can do with a <tt> Echo_ptr</tt>.
 <P>
@@ -307,7 +307,7 @@ See <A HREF="node3.html#objeg1">2.7</A> for an example of how this function is u
 <P>
 <DT>_obj_is_ready
 <DD> this function tells the Basic Object
-Adaptor<A NAME=tex2html6 HREF="footnode.html#179"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A> (BOA) that the object is ready to serve. Until this
+Adaptor<A NAME=tex2html6 HREF="footnode.html#182"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A> (BOA) that the object is ready to serve. Until this
 function is called, the BOA would not serve any incoming calls to this
 object. See <A HREF="node3.html#objeg1">2.7</A> for an example of how this function is used.
 <P>
@@ -436,11 +436,11 @@ strings managed by the variables are deallocated by the destructor of
 <tt> CORBA::String_var</tt>. It is called automatically when the function
 returns. Line 5 shows how <tt> CORBA::String_var</tt> variables are used. They
 can be used in place of a string (for which the mapping is <tt> char*
-</tt>)<A NAME=tex2html7 HREF="footnode.html#214"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. As used in line 3, assigning a constant
+</tt>)<A NAME=tex2html7 HREF="footnode.html#217"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. As used in line 3, assigning a constant
 string (<tt> const char*</tt>) to a <tt> CORBA::String_var</tt> causes the string
 to be copied. On the otherhand, assigning a <tt> char*</tt> to a <tt>
 CORBA::String_var</tt>, as used in line 5, causes the latter to assume
-the ownership of the string<A NAME=tex2html8 HREF="footnode.html#219"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
+the ownership of the string<A NAME=tex2html8 HREF="footnode.html#222"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
 <P>
 Under the C++ mapping, T_var types are provided for all the non-basic data
 types.  It is obvious that one should use automatic variables whenever
@@ -477,6 +477,11 @@ main(int argc, char **argv)
   CORBA::release(myobjRef);                                     // line 8
 
   myobj-&gt;_dispose();                                            // line 9
+
+  boa-&gt;destory();                                               // line 10
+
+  orb-&gt;NP_destory();                                            // line 11
+
   return 0;
 }
 </PRE>
@@ -512,7 +517,23 @@ initialisation will fail and a nil BOA_ptr will be returned. Like
 <tt> ORB_init</tt>, any command-line arguments understood by <tt> BOA_init</tt>
 will be removed from <tt> argv</tt>.
 <P>
- </DL><H2><A NAME=SECTION00372000000000000000> Object initialisation</A></H2>
+ </DL><H2><A NAME=SECTION00372000000000000000> ORB/BOA shutdown</A></H2>
+<P>
+<DL ><DT>line 10
+<DD> Shutdown the BOA permanently. This call causes the ORB to
+               release all its BOA resources, e.g. worker threads.
+<P>
+<DT>line 11
+<DD> Shutdown the ORB permanently. This call causes the ORB to
+               release its internal resources, e.g. internal threads.
+<P>
+ </DL>
+<P>
+These two calls are particularly important when writing a CORBA DLL on
+Windows NT that is to be used from ActiveX. If these calls are absent, the
+application will hang when the CORBA DLL is unloaded.
+<P>
+<H2><A NAME=SECTION00373000000000000000> Object initialisation</A></H2>
 <P>
 <DL ><DT>line 3
 <DD> An instance of the Echo object is initialised using the <tt>
@@ -530,7 +551,7 @@ IIOP requests from other address spaces. There are 2 points to note here:
 <tt> BOA_init</tt> is called (line 2). In other words, object instances can be
 initialised and advertised to the BOA before or after this function is
 called. 
-<LI> The 2nd argument<A NAME=tex2html9 HREF="footnode.html#245"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A> to <tt>
+<LI> The 2nd argument<A NAME=tex2html9 HREF="footnode.html#251"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A> to <tt>
 impl_is_ready</tt> tells the ORB whether this call should be
 non-blocking. The default value of this argument is FALSE(0) and the call
 will block indefinitely within the ORB. If there are more things the main
@@ -539,10 +560,10 @@ this example, the non-blocking option (TRUE=1) should be specified. Whether
 the main thread blocks in this call or not, the ORB is not affected because
 its functions are provided by other threads spawned internally.  Notice
 that the signature of <tt> impl_is_ready</tt> in the CORBA specification does
-not have the 2nd argument<A NAME=tex2html10 HREF="footnode.html#1266"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. Therefore, calling
+not have the 2nd argument<A NAME=tex2html10 HREF="footnode.html#1280"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. Therefore, calling
 <tt> impl_is_ready</tt> with the non-blocking option is omniORB2 specific.
 </OL> 
- </DL><H2><A NAME=SECTION00373000000000000000> Client invocation</A></H2>
+ </DL><H2><A NAME=SECTION00374000000000000000> Client invocation</A></H2>
 <P>
 <DL ><DT>line 6
 <DD> The object reference is obtained from the implementation by
@@ -570,7 +591,7 @@ references returned by the _this function but to any object references
 that are passed around within the same address space or received from other
 address spaces via IIOP calls.
 <P>
-<H2><A NAME=SECTION00374000000000000000> Object disposal</A></H2>
+<H2><A NAME=SECTION00375000000000000000> Object disposal</A></H2>
 <P>
 <DL ><DT>line 9
 <DD> To dispose of an object implementation and release all the
@@ -593,7 +614,7 @@ initialised using the new operator (section <A HREF="node3.html#objimpl">2.5</A>
 <P>
 The disposal of an object implementation by omniORB2 may also be deferred
 when <b> colocated</b> clients continue to hold on to copies of the object's
-reference<A NAME=tex2html11 HREF="footnode.html#271"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. This behavior is to prevent the
+reference<A NAME=tex2html11 HREF="footnode.html#277"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. This behavior is to prevent the
 short-circuited calls from the clients to fail unpredictably.
 <P>
 To summarise, an application can make no assumption as to when the object
@@ -655,7 +676,7 @@ signature ``IOR:'' and followed by a hexadecimal string. All CORBA 2.0
 compliant ORBs are able to convert the string into its internal
 representation of a so-called Interoperable Object Reference (IOR). The IOR
 contains the location information and a key to uniquely identify the object
-implementation in its own address space<A NAME=tex2html12 HREF="footnode.html#279"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. From the IOR, an
+implementation in its own address space<A NAME=tex2html12 HREF="footnode.html#285"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. From the IOR, an
 object reference can be constructed.
 <P>
 <H2><A NAME=SECTION00382000000000000000> Client: Using a Stringified Object Reference</A></H2>
@@ -685,13 +706,13 @@ catch(CORBA::COMM_FAILURE&amp; ex) {
 When omniORB2 detects an error condition, it may raise a system exception.
 The CORBA specification defines a series of exceptions covering most of the
 error conditions that an ORB may encounter. The client may choose to catch
-these exceptions and recover from the error condition<A NAME=tex2html13 HREF="footnode.html#1267"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. For instance, the code
+these exceptions and recover from the error condition<A NAME=tex2html13 HREF="footnode.html#1281"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. For instance, the code
 fragment, shown in section <A HREF="node3.html#clnt2">2.8.2</A>, catches the system exception
 COMM_FAILURE which indicates that communication with the object
 implementation in another address space has failed.
 <P>
 All system exceptions inherit from the class
-<tt> CORBA::SystemException</tt>. With compilers that support RTTI<A NAME=tex2html14 HREF="footnode.html#290"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A><A NAME=tex2html15 HREF="footnode.html#291"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>, a single catch <tt> CORBA::SystemException</tt> will
+<tt> CORBA::SystemException</tt>. With compilers that support RTTI<A NAME=tex2html14 HREF="footnode.html#296"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A><A NAME=tex2html15 HREF="footnode.html#297"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>, a single catch <tt> CORBA::SystemException</tt> will
 catch all the different system exceptions thrown by omniORB2.
 <P>
 When omniORB2 detects an internal inconsistency that is most likely to be
@@ -744,7 +765,7 @@ the object implementation (<tt> eg3_impl.cc</tt>) and the client (<tt>
 eg3_clt.cc</tt>) can be found at the end of this chapter.
 <P>
 The object reference is bound to the pathname ``<b>
-test</b>/<b> Echo</b>''<A NAME=tex2html16 HREF="footnode.html#1268"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. The pathname
+test</b>/<b> Echo</b>''<A NAME=tex2html16 HREF="footnode.html#1282"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. The pathname
 consists of the context <b> test</b> and the object name <b> Echo</b>. Both the
 context and the object name has an attribute <b> kind</b>. This attribute is
 a string that is intended to be used to describe the name in a
@@ -951,6 +972,10 @@ main(int argc, char **argv)
   //     boa-&gt;dispose(myobjRef);
   //     CORBA::release(myobjRef);
 
+  boa-&gt;destory();
+
+  orb-&gt;NP_destory();
+
   return 0;
 }
 </PRE>
@@ -992,6 +1017,15 @@ main(int argc, char **argv)
   boa-&gt;impl_is_ready();
   // Tell the BOA we are ready. The BOA's default behaviour is to block
   // on this call indefinitely.
+
+  // Call boa-&gt;impl_shutdown() from another thread would unblock the
+  // main thread from impl_is_ready().
+  //
+  // To properly shutdown the BOA and the ORB, add the following calls
+  // after impl_is_ready() returns.
+  //
+  // boa-&gt;destroy();
+  // orb-&gt;NP_destory();
 
   return 0;
 }
@@ -1043,6 +1077,8 @@ main (int argc, char **argv)
   catch(...) {
     cerr &lt;&lt; &quot;Caught a system exception.&quot; &lt;&lt; endl;
   }
+
+  orb-&gt;NP_destory();
 
   return 0;
 }
@@ -1096,6 +1132,15 @@ main(int argc, char **argv)
   boa-&gt;impl_is_ready();
   // Tell the BOA we are ready. The BOA's default behaviour is to block
   // on this call indefinitely.
+
+  // Call boa-&gt;impl_shutdown() from another thread would unblock the
+  // main thread from impl_is_ready().
+  //
+  // To properly shutdown the BOA and the ORB, add the following calls
+  // after impl_is_ready() returns.
+  //
+  // boa-&gt;destroy();
+  // orb-&gt;NP_destory();
 
   return 0;
 }
@@ -1252,6 +1297,8 @@ main (int argc, char **argv)
   catch(...) {
     cerr &lt;&lt; &quot;Caught a system exception.&quot; &lt;&lt; endl;
   }
+
+  orb-&gt;NP_destory();
 
   return 0;
 }
@@ -1530,14 +1577,14 @@ $(eg3_clt): eg3_clt.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
 </PRE>
 <P>
 
-<BR> <HR><A NAME=tex2html253 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html251 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html245 HREF="node2.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html255 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html254 HREF="node4.html"> IDL to C++ </A>
-<B>Up:</B> <A NAME=tex2html252 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html246 HREF="node2.html"> Introduction</A>
+<BR> <HR><A NAME=tex2html254 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html252 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html246 HREF="node2.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html256 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html255 HREF="node4.html"> IDL to C++ </A>
+<B>Up:</B> <A NAME=tex2html253 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html247 HREF="node2.html"> Introduction</A>
 <BR> <HR> <P>
 <BR> <HR>
 <P><ADDRESS>
 <I>Sai Lai Lo <BR>
-Fri Jul  2 17:38:50 BST 1999</I>
+Wed Sep 22 19:28:07 BST 1999</I>
 </ADDRESS>
 </BODY>

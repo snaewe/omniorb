@@ -156,8 +156,7 @@ Changes since 2.7.1
     -ORBoutConScanPeriod <n seconds>
     -ORBclientCallTimeOutPeriod <n seconds>
     -ORBserverCallTimeOutPeriod <n seconds>
-    -ORBscanOutgoingPeriod <n seconds>
-    -ORBscanIncomingPeriod <n seconds>
+    -ORBscanGranularity <n seconds>
         See 8) Connection management.
       
 6. New omniidl2 options:
@@ -198,24 +197,31 @@ Changes since 2.7.1
         -ORBoutConScanPeriod <n seconds>
         -ORBclientCallTimeOutPeriod <n seconds>
         -ORBserverCallTimeOutPeriod <n seconds>
-        -ORBscanOutgoingPeriod <n seconds>
-        -ORBscanIncomingPeriod <n seconds>
+        -ORBscanGranularity <n seconds>
 
   Refer to omniORB.h for their usage.
 
 9.New member function CORBA::ORB::NP_destroy() is provided. This member
   should be called by the application to cleanup the ORB before exit.
+
   In particular, applications written for Windows 95/98 or using the ORB
   runtime DLL with Visual Basic should call this function (as well as
   CORBA::BOA::destory()) to ensure all internal threads are cleaned up
-  before the runtime DLL is unloaded. 
+  before the runtime DLL is unloaded.  To summarise, the following call
+  sequence should be used to exit:
+
+    CORBA::ORB_ptr orb;
+    CORBA::BOA_ptr boa;
+        ....
+     boa->destory();
+     orb->NP_destory();
 
 10. New platforms
 
    The platform files for Irix 6.4 and 6.5 has been updated to perform
    program linkage in the right order.
    
-   Support for HPUX 11.00 and FreeBSD 3.2 have been added.
+   Support for HPUX 11.00, SCO Unixware 7 and FreeBSD 3.2 have been added.
 
 11. The omniORB2 user guide has been updated. 
 

@@ -1,3 +1,201 @@
+Wed Sep 22 19:50:20 BST 1999 sll
+================================
+
+- Documentation update
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+doc/tex/omniORB2.tex
+external_merge/README.FIRST
+external_merge/README.Linux
+external_merge/README.SunC++5
+external_merge/README.egcs
+external_merge/README.unix
+external_merge/ReleaseNote_omniORB_270 DELETED
+external_merge/ReleaseNote_omniORB_271 DEKETED
+external_merge/ReleaseNote_omniORB_280
+external_merge/THIS_IS_2_8_0_PRERELEASE_2 DELETED
+external_merge/THIS_IS_2_8_0_RELEASE
+external_merge/doc/omniORB2.dvi
+external_merge/doc/omniORB2.pdf
+external_merge/doc/omniORB2.ps
+external_merge/doc/omniORB2.tex
+external_merge/doc/omniORB2/.ID_MAP.pag
+external_merge/doc/omniORB2/.IMG_PARAMS.pag
+external_merge/doc/omniORB2/.ORIG_MAP.pag
+external_merge/doc/omniORB2/footnode.html
+external_merge/doc/omniORB2/images.log
+external_merge/doc/omniORB2/images.pl
+external_merge/doc/omniORB2/images.tex
+external_merge/doc/omniORB2/img12.gif DELETED
+external_merge/doc/omniORB2/img8.gif DELETED 
+external_merge/doc/omniORB2/img9.gif
+external_merge/doc/omniORB2/node1.html
+external_merge/doc/omniORB2/node10.html
+external_merge/doc/omniORB2/node11.html
+external_merge/doc/omniORB2/node12.html
+external_merge/doc/omniORB2/node13.html
+external_merge/doc/omniORB2/node14.html
+external_merge/doc/omniORB2/node15.html
+external_merge/doc/omniORB2/node2.html
+external_merge/doc/omniORB2/node3.html
+external_merge/doc/omniORB2/node4.html
+external_merge/doc/omniORB2/node5.html
+external_merge/doc/omniORB2/node6.html
+external_merge/doc/omniORB2/node7.html
+external_merge/doc/omniORB2/node8.html
+external_merge/doc/omniORB2/node9.html
+external_merge/doc/omniORB2/omniORB2.html
+
+
+Wed Sep 22 17:27:15 BST 1999 djr
+================================
+
+- Removed MT locking from DynAny.
+
+src/lib/omniORB2/dynamic/dynAny.h
+src/lib/omniORB2/dynamic/dynAny.cc
+
+Wed Sep 22 17:09:13 BST 1999 sll
+================================
+
+- Documentation update
+
+external_merge/ReleaseNote_omniORB_280
+external_merge/THIS_IS_2_8_0_PRERELEASE_2   DELETED
+
+src/lib/omniORB2/corbaOrb.cc
+
+
+Wed Sep 22 17:06:56 BST 1999 sll
+================================
+
+- updated for openVMS
+
+src/appl/omniNames/log.cc
+src/appl/utils/catior/catior.cc
+src/appl/utils/genior/genior.cc
+src/appl/utils/convertior/convertior.cc
+
+external_merge/etc/openvms.zip
+
+
+Wed Sep 22 15:16:55 BST 1999 sll
+================================
+
+- updated for Solaris and IRIX 6.x
+- now built shared library under Solaris with gcc
+
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+
+external_merge/config/config.mk
+external_merge/mk/platforms/mips_irix_6.3_n32.mk
+external_merge/mk/platforms/mips_irix_6.4_64.mk
+external_merge/mk/platforms/mips_irix_6.4_n32.mk
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/alone/gatekeeper.cc
+
+
+Wed Sep 22 14:40:39 BST 1999 sll
+================================
+
+- updated for AIX 4.2/3
+
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.3.mk   NEW
+
+include/omniORB2/CORBA_sysdep.h
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+
+
+Wed Sep 22 13:06:18 BST 1999 sll
+================================
+
+- merged port to SCO Unixware 7
+
+include/omnithread.h
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/lib/omnithread/posix.cc
+src/tool/omniidl2/driver/drv_fork.cc
+src/tool/omniidl2/driver/drv_main.cc
+src/tool/omniidl2/driver/drv_preproc.cc
+src/tool/omniidl2/fe/idl.ll
+src/tool/omniidl2/fe/lex.yy.cc
+src/tool/omniidl2/include/idl.hh
+
+external_merge/config/config.mk
+external_merge/mk/afterdir.mk
+external_merge/mk/platforms/x86_uw7.mk   NEW
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/alone/gatekeeper.cc
+
+
+Tue Sep 21 21:27:31 BST 1999 sll
+================================
+
+- Simplified the scavenger code and the mechanism in which connections
+  are shutdown. Now only one scavenger thread scans both incoming
+  and outgoing connections. A separate thread do the actual shutdown.
+
+- Trace messages in various modules have been updated to use the logger class.
+
+- omniORB::scanGranularity() now takes only one argument as there is
+  only one scan period parameter instead of 2.
+
+- -ORBscanGranularity replaces -ORBscanOutgoingPeriod and 
+                               -ORBscanIncomingPeriod.
+
+
+include/omniORB2/omniORB.h
+include/omniORB2/rope.h
+
+src/lib/omniORB2/bootstrap_i.h
+src/lib/omniORB2/orbcore/bootstrap_i.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/relStream.h
+src/lib/omniORB2/orbcore/ropeFactory.cc
+src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/scavenger.h
+src/lib/omniORB2/orbcore/strand.cc
+src/lib/omniORB2/orbcore/tcpSocket.cc
+src/lib/omniORB2/orbcore/tcpSocket.h
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+Tue Sep 21 18:02:39 BST 1999 sll
+================================
+
+- removed unnecessary file
+
+src/lib/omniORB2/orbcore/unshared.cc
+
+
+Mon Sep 20 16:31:27 BST 1999 sll
+================================
+
+- make the source compile with SUN C++ 5.0 without the -g flag
+- (omniidl2 now works but all examples core dump when an exception is raised
+   in the runtime)
+
+src/lib/omniORB2/dynamic/dynException.cc
+src/tool/omniidl2/include/ast_decl.hh
+src/tool/omniidl2/include/utl_scope.hh
+
+
+Mon Sep 20 11:32:34 BST 1999 sll
+================================
+
+- MS VC++ 5.0 does not pick up the const char* conversion operator of a
+  StringBuf automagically when passed to an iostream. Have to do an explicit
+  casting.
+
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
 
 Wed Sep 15 19:04:14 BST 1999 djr
 ================================

@@ -1,4 +1,4 @@
-This is TeX, Version 3.1415 (C version 6.1) (format=latex 94.10.6)  2 JUL 1999 17:39
+This is TeX, Version 3.1415 (C version 6.1) (format=latex 94.10.6)  22 SEP 1999 19:28
 **&latex2e images.tex
 (images.tex
 LaTeX2e <1994/06/01> patch level 4
@@ -47,96 +47,33 @@ LaTeX Font Info:    Try loading font information for OT1+ppl on input line 19.
 LaTeX Info: Redefining \" on input line 19.
 LaTeX Info: Redefining \" on input line 19.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <10.95> on input line 32.
+(Font)              <10.95> on input line 33.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 32.
+(Font)              <8> on input line 33.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 32.
-latex2htmlSize :tex2html_wrap_inline2360: 8.2125pt::2.73749pt.
+(Font)              <6> on input line 33.
+LaTeX Font Info:    Try loading font information for OT1+pcr on input line 37.
+(/usr/local/lib/texmf/tex/latex2e/base/OT1pcr.fd)
+Overfull \hbox (48.95953pt too wide) in paragraph at lines 33--75
+[][]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--75
+
+ []
+
 [1
 
 
-]
-latex2htmlSize :tex2html_wrap_inline2362: 8.2125pt::2.73749pt.
-[2
-
-]
-latex2htmlSize :tex2html_wrap_inline2364: 8.2125pt::2.73749pt.
-[3
-
-]
-latex2htmlSize :tex2html_wrap_inline2366: 8.2125pt::2.73749pt.
-[4
-
-]
-latex2htmlSize :tex2html_wrap_inline2368: 8.2125pt::2.73749pt.
-[5
-
-]
-latex2htmlSize :tex2html_wrap_inline2370: 8.2125pt::2.73749pt.
-[6
-
-]
-latex2htmlSize :tex2html_wrap_inline2372: 8.2125pt::2.73749pt.
-[7
-
-]
-latex2htmlSize :tex2html_wrap_inline2374: 8.2125pt::2.73749pt.
-[8
-
-]
-LaTeX Font Info:    Try loading font information for OT1+pcr on input line 77.
-(/usr/local/lib/texmf/tex/latex2e/base/OT1pcr.fd)
-Overfull \hbox (48.95953pt too wide) in paragraph at lines 73--111
-[][]
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 73--111
-
- []
-
-[9
-
-]
-latex2htmlSize :tex2html_wrap_inline2376: 4.01727pt::0.0pt.
-[10
-
-]
-latex2htmlSize :tex2html_wrap_inline2378: 4.01727pt::0.0pt.
-[11
-
-]
-latex2htmlSize :tex2html_wrap_inline2380: 4.01727pt::0.0pt.
-[12
-
-]
-latex2htmlSize :tex2html_wrap_inline2382: 4.01727pt::0.0pt.
-[13
-
-]
-LaTeX Font Info:    Font shape `OT1/ppl/bx/n' in size <10.95> not available
-(Font)              Font shape `OT1/ppl/b/n' tried instead on input line 210.
-
-Overfull \hbox (1.27081pt too wide) in paragraph at lines 209--216
-[][]
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 209--216
-
- []
-
-[14
-
 ] (images.aux) ) 
 Here is how much of TeX's memory you used:
- 390 strings out of 11043
- 4183 string characters out of 75311
+ 387 strings out of 11043
+ 4142 string characters out of 75311
  48098 words of memory out of 262141
- 3207 multiletter control sequences out of 9500
- 7405 words of font info for 26 fonts, out of 100000 for 255
+ 3205 multiletter control sequences out of 9500
+ 7023 words of font info for 25 fonts, out of 100000 for 255
  14 hyphenation exceptions out of 607
- 21i,7n,21p,189b,244s stack positions out of 300i,40n,60p,3000b,4000s
+ 21i,7n,21p,172b,244s stack positions out of 300i,40n,60p,3000b,4000s
 
-Output written on images.dvi (14 pages, 3788 bytes).
+Output written on images.dvi (1 page, 2804 bytes).

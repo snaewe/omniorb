@@ -89,7 +89,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #endif
 #endif
 
-#if defined(__osf1__) || defined(__VMS)
+#if defined(__osf1__) || defined(__VMS) || defined(__uw7__)
 #include	<unistd.h>		// POSIX standard types
 #include	<wait.h>		// POSIX definition of wait()
 #endif

@@ -13,7 +13,7 @@ omniORB2 has been tested on the following Unix platforms:
   o Solaris 2.{5,6}/ Sun SparcCompiler C++ version 4.2
   o Windows NT / Windows 95 / Visual C++ version 5.0 (and also version 6.0)
   o Linux 2.0 (x86)/ GNU C++ compiler version 2.7.2 /libc-5/ Linuxthreads 0.5
-  o Linux 2.0 (x86)/egcs-1.1b/binutils-2.9.1.0.14/GNU Libc version 2
+  o Linux 2.0 (x86)/gcc-2.95/binutils-2.9.1.0.14/GNU Libc version 2
   o Digital Unix 3.2/ DEC C++ compiler version 5.5
   o Digital Unix 4.0D/ DEC C++ compiler version 6.0
 
@@ -21,10 +21,13 @@ It has also been tested by external contributors on the following platforms:
 
   o IBM AIX 4.2/ IBM C Set++ 3.1.4
   o HPUX 10.20/ aC++ (B3910 A.01.04)
+  o HPUX 11.00/ aC++
   o NextStep 3.3/ gcc-2.7.2
   o Reliant Unix 5.43/CDS++
   o SCO OpenServer 5/g++
+  o SCO Unixware 7
   o SGI Irix 6.x/SGI C++ compiler 7.2
+  o Linux 2.x powerpc/Debian
 
 Roadmap
 =======
@@ -64,6 +67,15 @@ Configuration
             platform = sun4_sosV_5.5
 
    All the platform files are in ./mk/platforms.
+
+   If you are using gcc or the default compiler for your platform is
+   gcc, it is most likely that you have to edit the CXX and CC make
+   variables in the platform file. Moreover, only the most recent versions
+   of gcc, i.e. egcs-1.1.2 and gcc-2.95 has proper support for multithreaded
+   exception handling. Moreover, the gcc compiler has to be configured with
+   the --enable-threads option or else the code generated would not work
+   reliably. The default version of gcc compiler that comes with your
+   platform may not be the right version. 
 
  
   2. Building and installing
@@ -166,6 +178,7 @@ OpenVMS 6.x (alpha) |__alpha__  __vms      __OSVERSION__=6           |
 OpenVMS 6.x (vax)   |__vax__    __vms      __OSVERSION__=6           |
 ATMos 4.0           |__arm__    __atmos__  __OSVERSION__=4           |
 NextStep 3.x        |__m68k__  __nextstep__   __OSVERSION__=3        |
+Unixware 7          |__x86__   __uw7__     __OSVERSION__=5           |
 
 You should also specify the preprocessor defines (e.g. -D\_REENTRANT) for
 compiling multithreaded programs.

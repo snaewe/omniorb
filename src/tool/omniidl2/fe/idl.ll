@@ -221,6 +221,11 @@ oneway		return ONEWAY;
 		  /* ignore cpp ident */
   		  idl_global->set_lineno(idl_global->lineno() + 1);
 		}
+^#[ \t]*file.*\n	{
+		/* ignore "#file" provided by SCO UDK 7.x.x preprocessor */
+		idl_global->set_lineno(idl_global->lineno() + 1);
+		}
+
 \/\/.*\n	{
 		  /* ignore comments */
   		  idl_global->set_lineno(idl_global->lineno() + 1);

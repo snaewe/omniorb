@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html275 HREF="node6.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html273 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html267 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html277 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html276 HREF="node6.html"> The Basic Object </A>
-<B>Up:</B> <A NAME=tex2html274 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html268 HREF="node4.html"> IDL to C++ </A>
+ <BR> <HR><A NAME=tex2html276 HREF="node6.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html274 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html268 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html278 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html277 HREF="node6.html"> The Basic Object </A>
+<B>Up:</B> <A NAME=tex2html275 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html269 HREF="node4.html"> IDL to C++ </A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION00500000000000000000> The omniORB2 API</A></H1>
 <P>
@@ -25,7 +25,7 @@ functionalities that are not covered by the CORBA specification.
 Obviously, if you use this API in your application, that part of your code
 is not going to be portable to run unchanged on other vendors' ORBs. To
 make it easier to identify omniORB2 dependent code, this API is defined
-under the name space ``omniORB''<A NAME=tex2html17 HREF="footnode.html#360"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
+under the name space ``omniORB''<A NAME=tex2html17 HREF="footnode.html#366"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
 <P>
 <H1><A NAME=SECTION00510000000000000000> ORB and BOA initialisation options</A></H1>
 <P>
@@ -49,9 +49,15 @@ under the name space ``omniORB''<A NAME=tex2html17 HREF="footnode.html#360"><IMG
 <DD> See section <A HREF="node5.html#bootstrap">4.6</A>.
 <DT><tt> -ORBdiiThrowsSysExceptions &lt;0 or 1&gt;
 <DD> See section <A HREF="node12.html#dii_invoke">11.4</A>.
-<DT><tt> -ORBinConScanPeriod &lt;0-65535&gt;
+<DT><tt> -ORBinConScanPeriod &lt;0-max integer&gt;
 <DD> See section <A HREF="node8.html#sec_shut">7.3</A>.
-<DT><tt> -ORBoutConScanPeriod &lt;0-65535&gt;
+<DT><tt> -ORBoutConScanPeriod &lt;0-max integer&gt;
+<DD> See section <A HREF="node8.html#sec_shut">7.3</A>.
+<DT><tt> -ORBclientCallTimeOutPeriod &lt;0-max integer&gt;
+<DD> See section <A HREF="node8.html#sec_shut">7.3</A>.
+<DT><tt> -ORBserverCallTimeOutPeriod &lt;0-max integer&gt;
+<DD> See section <A HREF="node8.html#sec_shut">7.3</A>.
+<DT><tt> -ORBscanGranularity &lt;0-max integer&gt;
 <DD> See section <A HREF="node8.html#sec_shut">7.3</A>.
 <DT><tt> -ORBverifyObjectExistsAndType &lt;0 or 1&gt;
 <DD> See section <A HREF="node5.html#sec_lcd">4.7</A>.
@@ -59,6 +65,8 @@ under the name space ``omniORB''<A NAME=tex2html17 HREF="footnode.html#360"><IMG
 <DD> See secion <A HREF="node5.html#sec_lcd">4.7</A>
 <DT><tt> -ORBabortOnInternalError &lt;0 or 1&gt;
 <DD> See section <A HREF="node5.html#sec_fatal">4.8</A>.
+<DT><tt> -ORBhelp
+<DD> List all ORB command line options.
 <P>
  </DL>
 <P>
@@ -76,6 +84,8 @@ the BOA will use an arbitrary port assigned by the operating system.
 <DD> This options
 tells the BOA the hostname and optionally the port number to use. See below
 for details.
+<DT><tt> -BOAhelp
+<DD> List all BOA command line options.
 <P>
  </DL>
 <P>
@@ -93,7 +103,7 @@ understood by the ORB/BOA will be removed from <tt> argv</tt> when the
 initialisation functions return. Therefore, an application is not required
 to handle any command-line arguments it does not understand.
 <P>
-</tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt><H1><A NAME=SECTION00520000000000000000> Run-time Tracing and Diagnostic Messages</A></H1>
+</tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt><H1><A NAME=SECTION00520000000000000000> Run-time Tracing and Diagnostic Messages</A></H1>
 <P>
 <A NAME=rttrace>&#160;</A>
 <P>
@@ -250,7 +260,7 @@ obtain the initial object references to CORBA services. Previously, it is
 necessary to write the IOR string of these services in the configuration
 file (section <A HREF="node2.html#setup">1.2</A>). Now the object references can be obtained from
 a bootstrap service. The bootstrap service is a special object with the
-object key 'INIT' and the following interface<A NAME=tex2html18 HREF="footnode.html#434"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.:
+object key 'INIT' and the following interface<A NAME=tex2html18 HREF="footnode.html#443"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.:
 <P>
 
 <P>
@@ -376,14 +386,14 @@ where the exception was thrown. This can be done by setting the variable
 via the command line option <tt> -ORBabortOnInternalError</tt>.
 <P>
 
-<BR> <HR><A NAME=tex2html275 HREF="node6.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html273 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html267 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html277 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html276 HREF="node6.html"> The Basic Object </A>
-<B>Up:</B> <A NAME=tex2html274 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html268 HREF="node4.html"> IDL to C++ </A>
+<BR> <HR><A NAME=tex2html276 HREF="node6.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html274 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html268 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html278 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html277 HREF="node6.html"> The Basic Object </A>
+<B>Up:</B> <A NAME=tex2html275 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html269 HREF="node4.html"> IDL to C++ </A>
 <BR> <HR> <P>
 <BR> <HR>
 <P><ADDRESS>
 <I>Sai Lai Lo <BR>
-Fri Jul  2 17:38:50 BST 1999</I>
+Wed Sep 22 19:28:07 BST 1999</I>
 </ADDRESS>
 </BODY>

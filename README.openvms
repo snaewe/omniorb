@@ -94,7 +94,9 @@ following logical names:
 
 (Note that the resulting logical names and translations will be in all upper
 case.)  With the above definitions in place, you should add
-/include=([],omni:)/exceptions to your CXX compiles.
+/include=([],omni:)/exceptions to your CXX compiles.  In addition, if the
+compiler version is 5.6 or below, you may need to add
+/Warnings=(Disable=CANTCOMPLETE) to your command line.
 
 The logical name omnilib is used as a convenience for the cxxlink command line.
 You will link against omnilib:omniORB2.olb/library, and the POSIX threads

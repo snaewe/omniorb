@@ -9,5 +9,5 @@ IRIX_64 = 1
 # Include common IRIX 6.4, 6.5 things
 #
 
-include $(THIS_IMPORT_TREE)/mk/platform/mips_irix_6.4_6.5_common.mk
+include $(THIS_IMPORT_TREE)/mk/platforms/mips_irix_6.4_6.5_common.mk
 

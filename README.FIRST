@@ -96,16 +96,27 @@ specification 2.3 of the Common Object Request Broker Architecture (CORBA).
 
   o Digital Unix 4.0D/ DEC C++ compiler version 6.0
   o IBM AIX 4.2/ IBM C Set++ 3.1.4
+  o IBM AIX 4.3/ IBM C Set++ 3.6.6
   o HPUX 10.20/ aC++ (B3910 A.01.04)
+  o HPUX 11.00/ aC++
   o OpenVMS Alpha 6.2/ DEC C++ compiler 6.2/5.5 (UCX 4.1 ECO 8)
   o OpenVMS Vax 6.1/ DEC C++ compiler 5.5 (UCX 4.0 ECO 1)
   o NextStep 3.3/ gcc-2.7.2
   o Reliant Unix 5.43/CDS++
-  o SCO OpenServer 5/g++
   o Phar Lap's Real Time ETS Kernel
   o SGI Irix 6.x/SGI C++ compiler 7.2
+  o SCO Unixware 7
+  o Linux 2.x powerpc/Debian
+
+  o A port to MacOS exists but has not been fully integrated into the source
+    tree. An adaption kit is available here:
+            http://www.cia.com.au/stevec/
+ 
+  o A port to the embedded OS RTEMS exists. More information is available here:
+            http://www.connecttel.com/corba/rtems_omni.html
 
   o Linux 2.0 (x86)/ GNU C++ compiler version 2.7.2 /libc-5/ Linuxthreads 0.5
+  o SCO OpenServer 5/g++
     (May need some changes in the source to work around compiler bugs.
      The compiler can compile omniORB 2.7.1 unchanged.)
 
@@ -113,8 +124,9 @@ specification 2.3 of the Common Object Request Broker Architecture (CORBA).
      (Need to apply the patch in patches/dec_CXX_5.6.patch to work around
       compiler bugs.)
 
-  Ports to LynOS and Mac OS are known to exist but they have not been
-  integrated into the source tree.
+  
+  Ports to LynOS is known to exist but they have not been integrated into 
+  the source tree.
 
   It should be straightforward to port omniORB2 to any platform which
   supports POSIX style threads, BSD style sockets and has a decent C++ 
@@ -130,7 +142,7 @@ Work in progress
 omniORB2 is not yet a complete implementation of the CORBA core. The
 following features are not supported in the current release. 
 
-- The Portable Object Adapter.
+- The Portable Object Adapter (in beta soon)
 - Support for IDL type longlong, longdouble, wchar, wstring, fixed, valuetype
 
 Missing features
@@ -187,7 +199,7 @@ omniORB2 is based on the following OMG specifications.
          http://www.omg.org/corba/corbiiop.htm
 
   In particular, omniORB2 users will find chapter 3 "OMG IDL Syntax and
-  Semantics" and chapter 16 "Mapping of OMG IDL to C++" particularly
+  Semantics" and chapter 23 "Mapping of OMG IDL to C++" particularly
   relevant.
 
 - The COS Naming Service Specification. The current version is available

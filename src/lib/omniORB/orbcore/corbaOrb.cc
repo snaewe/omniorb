@@ -29,6 +29,23 @@
 
 /*
   $Log$
+  Revision 1.30  1999/09/22 19:21:47  sll
+  omniORB 2.8.0 public release.
+
+  Revision 1.29.2.2  1999/09/22 18:43:58  sll
+  Updated documentation
+
+  Revision 1.29.2.1  1999/09/21 20:37:16  sll
+  -Simplified the scavenger code and the mechanism in which connections
+   are shutdown. Now only one scavenger thread scans both incoming
+   and outgoing connections. A separate thread do the actual shutdown.
+  -omniORB::scanGranularity() now takes only one argument as there is
+   only one scan period parameter instead of 2.
+  -Trace messages in various modules have been updated to use the logger
+   class.
+  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                 -ORBscanIncomingPeriod.
+
   Revision 1.29  1999/09/01 13:17:11  djr
   Update to use new logging support.
 
@@ -128,7 +145,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <bootstrap_i.h>
-#include <scavenger.h>
 #ifdef _HAS_SIGNAL
 #include <signal.h>
 #include <errno.h>
@@ -196,6 +212,7 @@ extern omniInitialiser& omni_ropeFactory_initialiser_;
 extern omniInitialiser& omni_objectRef_initialiser_;
 extern omniInitialiser& omni_initFile_initialiser_;
 extern omniInitialiser& omni_bootstrap_i_initialiser_;
+extern omniInitialiser& omni_strand_initialiser_;
 extern omniInitialiser& omni_scavenger_initialiser_;
 
 static
@@ -230,19 +247,33 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
     omniORB::serverName = CORBA::string_dup("unknown");
   }
 
+  omniORB::seed.hi = omniORB::seed.med = 0;
+
   try {
 
     // Call attach method of each initialiser object.
     // The order of these calls must take into account of the dependency
     // amount the modules.
+    omni_corbaOrb_initialiser_.attach();
+    omni_strand_initialiser_.attach();
+    omni_scavenger_initialiser_.attach();
     omni_ropeFactory_initialiser_.attach();
     omni_objectRef_initialiser_.attach();
     omni_initFile_initialiser_.attach();
     omni_bootstrap_i_initialiser_.attach();
-    omni_corbaOrb_initialiser_.attach();
-    omni_scavenger_initialiser_.attach();
 
-    omniORB::seed.hi = omniORB::seed.med = 0;
+    if (bootstrapAgentHostname) {
+      // The command-line option -ORBInitialHost has been specified.
+      // Override any previous NamesService object reference
+      // that may have been read from the configuration file.
+      omniInitialReferences::singleton()->set("NameService",
+					      CORBA::Object::_nil());
+      omniInitialReferences::singleton()->set("InterfaceRepository",
+					      CORBA::Object::_nil());
+      omniInitialReferences::singleton()
+	->initialise_bootstrap_agent(bootstrapAgentHostname,
+				     bootstrapAgentPort);
+    }
   }
   catch (const CORBA::INITIALIZE &ex) {
     throw;
@@ -378,12 +409,13 @@ ORB::NP_destroy()
   omni_mutex_lock sync(internalLock);
 
   // Call detach method of the initialisers in reverse order.
-  omni_scavenger_initialiser_.detach();
-  omni_corbaOrb_initialiser_.detach();
   omni_bootstrap_i_initialiser_.detach();
   omni_initFile_initialiser_.detach();
   omni_objectRef_initialiser_.detach();
   omni_ropeFactory_initialiser_.detach();
+  omni_scavenger_initialiser_.detach();
+  omni_strand_initialiser_.detach();
+  omni_corbaOrb_initialiser_.detach();
 
   delete orb;
   orb = 0;
@@ -712,38 +744,20 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	continue;
       }
 
-      // -ORBscanOutgoingPeriod
-      if( strcmp(argv[idx],"-ORBscanOutgoingPeriod") == 0 ) {
+      // -ORBscanGranularity
+      if( strcmp(argv[idx],"-ORBscanGranularity") == 0 ) {
 	if( idx + 1 >= argc ) {
 	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBscanOutgoingPeriod parameter.");
+			" -ORBscanGranularity parameter.");
 	  return 0;
 	}
 	unsigned int v;
 	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
 	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBscanOutgoingPeriod parameter.");
+			" -ORBscanGranularity parameter.");
 	  return 0;
 	}
-	omniORB::scanGranularity(omniORB::scanOutgoing, v);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBscanIncomingPeriod
-      if( strcmp(argv[idx],"-ORBscanIncomingPeriod") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBscanIncomingPeriod parameter.");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBscanIncomingPeriod parameter.");
-	  return 0;
-	}
-	omniORB::scanGranularity(omniORB::scanIncoming, v);
+	omniORB::scanGranularity(v);
 	move_args(argc,argv,idx,2);
 	continue;
       }
@@ -775,9 +789,8 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	  "    -ORBoutConScanPeriod <n seconds>\n"
 	  "    -ORBclientCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
-	  "    -ORBscanOutgoingPeriod <n seconds>\n"
-	  "    -ORBscanIncomingPeriod <n seconds>\n"
-	  "    -ORBlcdMode <0|1>\n";
+	  "    -ORBscanGranularity <n seconds>\n"
+	  "    -ORBlcdMode\n";
 	move_args(argc,argv,idx,1);
 	continue;
       }
@@ -826,19 +839,6 @@ class omni_corbaOrb_initialiser : public omniInitialiser {
 public:
 
   void attach() {
-
-    if (bootstrapAgentHostname) {
-      // The command-line option -ORBInitialHost has been specified.
-      // Override any previous NamesService object reference
-      // that may have been read from the configuration file.
-      omniInitialReferences::singleton()->set("NameService",
-					      CORBA::Object::_nil());
-      omniInitialReferences::singleton()->set("InterfaceRepository",
-					      CORBA::Object::_nil());
-      omniInitialReferences::singleton()
-	->initialise_bootstrap_agent(bootstrapAgentHostname,
-				     bootstrapAgentPort);
-    }
 
     // myPrincipalID, to be used in the principal field of IIOP calls
     CORBA::ULong l = strlen("nobody")+1;
@@ -923,6 +923,9 @@ public:
   }
 
   void detach() {
+#ifdef __WIN32__
+    (void) WSACleanup();
+#endif
   }
 };
 

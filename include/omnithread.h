@@ -136,6 +136,9 @@ class omni_thread;
 #elif defined(__osr5__)
 #include <omnithread/posix.h>
 
+#elif defined(__uw7__)
+#include <omnithread/posix.h>
+
 #elif defined(__irix__)
 #include <omnithread/posix.h>
 

@@ -1,5 +1,5 @@
 #
-# powerpc_aix_4.2.mk - make variables and rules specific to AIX 4.2 on 
+# powerpc_aix_4.3.mk - make variables and rules specific to AIX 4.3 on 
 #                      PowerPC.
 #
 
@@ -46,6 +46,7 @@ CXXMAKEDEPEND   = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D_AIX
 CXX             = xlC_r
 CXXDEBUGFLAGS   = -O
 CXXLINK		= xlC_r
+CXXOPTIONS      = -qmaxmem=8192
 
 # Use C Set++ to compile your C source.
 #
@@ -117,8 +118,8 @@ CorbaImplementation = OMNIORB2
 #
 ThreadSystem = Posix
 
-OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=8
-OMNITHREAD_CPPFLAGS = -I$(TOP)/include -D_REENTRANT -D_THREAD_SAFE
+OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=10
+OMNITHREAD_CPPFLAGS = -I$(TOP)/include -D_REENTRANT -D_THREAD_SAFE $(MTFLAGS)
 OMNITHREAD_LIB = -lomnithread2 -lpthreads
 OMNITHREAD_STATIC_LIB = -lomnithread-ar -lpthreads-ar
 

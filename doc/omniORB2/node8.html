@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html308 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html306 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html300 HREF="node7.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html310 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html309 HREF="node9.html"> Proxy Objects</A>
-<B>Up:</B> <A NAME=tex2html307 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html301 HREF="node7.html"> Interface Type Checking</A>
+ <BR> <HR><A NAME=tex2html309 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html307 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html301 HREF="node7.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html311 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html310 HREF="node9.html"> Proxy Objects</A>
+<B>Up:</B> <A NAME=tex2html308 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html302 HREF="node7.html"> Interface Type Checking</A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION00800000000000000000> Connection Management</A></H1>
 <P>
@@ -95,31 +95,50 @@ file handles a process can open. 64 is the usual default limit. The
 value can be increased to a maximum of a thousand or more by changing the
 ``ulimit'' in the shell.
 <P>
-<H1><A NAME=SECTION00830000000000000000> Idle Connection Shutdown</A></H1>
+<H1><A NAME=SECTION00830000000000000000> Idle Connection Shutdown and Remote Call Timeout</A></H1>
 <P>
 <A NAME=sec_shut>&#160;</A>
 <P>
-Inside the ORB, two separate threads are dedicated to scan for idle
-connections. One thread is responsible for outgoing connections and the
-other looks after incoming connections. The thread for incoming connections
-is only created when the BOA is initialised because only then will there be
-any incoming connections.
+Inside the ORB, a thread is dedicated to scan for idle
+connections. The thread looks after both the outgoing connections and the
+incoming connections.
 <P>
-The threads scan all opened connections once every ``scan period''. If a
-connection is found to be idle for two consecutive periods, it will be
-closed. The threads use mark-and-swipe to detect if a connection is idle.
-When a connection is checked, a status flag attached to the connection is
-set. Every remote invocation using that connection would clear the flag. So
-if a connection's status flag is found to be set in two consecutive scans,
-the connection has been idled during the  scan period.
+When a connection is idled for a period of time, the connection is
+shutdown. Similarly, if a remote call has not completed within a defined
+period of time, the connection is shutdown and the ORB will return
+<tt> COMM_FAILURE</tt> to the client.
 <P>
-The scan period for incoming and outgoing connections can be individually
-controlled by the following API:
+How often the internal thread scan the connections is determined by the
+value of the <em> scan granularity</em>. This value is default to 5 seconds and
+can be changed using the command-line option <tt> -ORBscanGranularity</tt> or
+using the <tt> omniORB::scanGranularity()</tt> call. Notice that this value
+determines the precision the ORB is able to keep to the value of the idle
+connection or remote call timeout.
+<P>
+How long the ORB will wait before it shuts down an idle connection is
+determined by the idleConnectionPeriods. There are separate values for
+incoming and outgoing connections. The default values are 180 and 120
+seconds for incoming and outgoing connections respectively. These values
+can be changed using the command-line options <tt> -ORBinConScanPeriod</tt> and
+<tt> -ORBoutConScanPeriod</tt>. They can also be controlled by the
+<tt> omniORB::idleConnectionScanPeriod()</tt> call.
+<P>
+Similary, how long the ORB will wait for a remote call to complete is
+determined by the parameter clientCallTimeOutPeriod for the client side and
+the serverCallTimeOutPeroid for the server side. The default values are 60
+and 90 seconds for the client and the server side respectively. These
+values can be changed using the command-line option <tt>
+-ORBclientCallTimeOutPeriod</tt> and <tt> -ORBserverCallTimeOutPeriod</tt>. They
+can also be controlled by the <tt> omniORB::callTimeOutPeriod()</tt> call.
 <P>
 
 <PRE>class omniORB {
 
 public:
+
+  static void scanGranularity(CORBA::ULong sec);
+  
+  static CORBA::ULong scanGranularity();
 
   enum idleConnType { idleIncoming, idleOutgoing };
 
@@ -128,21 +147,18 @@ public:
 
   static CORBA::ULong idleConnectionScanPeriod(idleConnType direction);
 
+  enum callTimeOutType { clientSide, serverSide };
+
+  static void callTimeOutPeriod(callTimeOutType direction,
+	                        CORBA::ULong sec);
+
+  static CORBA::ULong callTimeOutPeriod(callTimeOutType direction);
+
 };
 </PRE>
 
 <P>
-The current value of the scan period (in seconds) is returned by the
-read-only <tt> idleConnectionScanPeriod</tt>. The scan period can be changed by
-the write-only <tt> idleConnectionScanPeriod</tt>. The scan period can be changed
-at any time but the write function is non-thread safe. Concurrent calls to this
-function could result in undefined behaviour.
-The scan periods may also be specified on the command-line by using the
-options <tt> -ORBinConScanPeriod</tt> and <tt> -ORBoutConScanPeriod</tt>. See
-section <A HREF="node5.html#omniorbapioptions">4.1</A>.
-<P>
-The default value for both incoming and outgoing connections is 30 seconds.
-The scan can be disabled completely by setting the scan period to 0.
+The scan can be disabled completely by setting the scan granularity to 0.
 <P>
 <H1><A NAME=SECTION00840000000000000000> Interoperability Considerations</A></H1>
 <P>
@@ -233,14 +249,14 @@ I said,&quot;Hello!&quot;. The Object said,&quot;Hello!&quot;
 
 <P>
 
-<BR> <HR><A NAME=tex2html308 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html306 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html300 HREF="node7.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html310 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html309 HREF="node9.html"> Proxy Objects</A>
-<B>Up:</B> <A NAME=tex2html307 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html301 HREF="node7.html"> Interface Type Checking</A>
+<BR> <HR><A NAME=tex2html309 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html307 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html301 HREF="node7.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html311 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html310 HREF="node9.html"> Proxy Objects</A>
+<B>Up:</B> <A NAME=tex2html308 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html302 HREF="node7.html"> Interface Type Checking</A>
 <BR> <HR> <P>
 <BR> <HR>
 <P><ADDRESS>
 <I>Sai Lai Lo <BR>
-Fri Jul  2 17:38:50 BST 1999</I>
+Wed Sep 22 19:28:07 BST 1999</I>
 </ADDRESS>
 </BODY>

@@ -37,12 +37,20 @@ AT\&T Laboratories Cambridge\\
 
 \vfill
 \vfill
-1st July, 1999
+22nd Sept, 1999
 \vfill
 
 \end{center}
 
 \pagebreak
+
+{\Large \bf \sf Changes and Additions, 22nd Sept 1999}
+\begin{itemize}
+\item chapter 2 - added description on BOA and ORB shutdown.
+\item Chapter 4 - updates to command-line options
+\item Chapter 7 - updates to idle connection shutdown. Added desciption on
+the new remote call timeout feature.
+\end{itemize}
 
 {\Large \bf \sf Changes and Additions, 1st July 1999}
 
@@ -290,6 +298,8 @@ Linux 2.0 (x86)  & \verb|__x86__    __linux__  __OSVERSION__=2| \\
 \hline
 Linux 2.0 (alpha)  & \verb|__alpha__    __linux__  __OSVERSION__=2| \\
 \hline
+Linux 2.0 (powerpc) & \verb|__powerpc__    __linux__  __OSVERSION__=2| \\
+\hline
 Windows/NT 3.5   & \verb|__x86__    __NT__     __OSVERSION__=3  __WIN32__| \\
 \hline
 Windows/NT 4.0   & \verb|__x86__    __NT__     __OSVERSION__=4  __WIN32__| \\
@@ -307,6 +317,8 @@ Reliant Unix 5.43 & \verb|__mips__    __SINIX__     __OSVERSION__=5 | \\
 ATMos 4.0        & \verb|__arm__    __atmos__  __OSVERSION__=4| \\
 \hline
 NextStep 3.x & \verb|__m68k__  __nextstep__   __OSVERSION__=3| \\
+\hline
+Unixware 7 & \verb|__x86__   __uw7__     __OSVERSION__=5| \\
 \hline
 \end{tabular}
 \end{flushleft}
@@ -823,6 +835,11 @@ main(int argc, char **argv)
   CORBA::release(myobjRef);                                     // line 8
 
   myobj->_dispose();                                            // line 9
+
+  boa->destory();                                               // line 10
+
+  orb->NP_destory();                                            // line 11
+
   return 0;
 }
 \end{verbatim}
@@ -860,6 +877,23 @@ initialisation will fail and a nil BOA\_ptr will be returned. Like
 will be removed from {\tt argv}.
 
 \end{description}
+
+\subsection{ORB/BOA shutdown}
+
+\begin{description}
+
+\item[line 10] Shutdown the BOA permanently. This call causes the ORB to
+               release all its BOA resources, e.g. worker threads.
+
+\item[line 11] Shutdown the ORB permanently. This call causes the ORB to
+               release its internal resources, e.g. internal threads.
+
+\end{description}
+
+These two calls are particularly important when writing a CORBA DLL on
+Windows NT that is to be used from ActiveX. If these calls are absent, the
+application will hang when the CORBA DLL is unloaded.
+
 
 \subsection{Object initialisation}
 
@@ -1332,6 +1366,10 @@ main(int argc, char **argv)
   //     boa->dispose(myobjRef);
   //     CORBA::release(myobjRef);
 
+  boa->destory();
+
+  orb->NP_destory();
+
   return 0;
 }
 \end{verbatim}
@@ -1374,6 +1412,15 @@ main(int argc, char **argv)
   boa->impl_is_ready();
   // Tell the BOA we are ready. The BOA's default behaviour is to block
   // on this call indefinitely.
+
+  // Call boa->impl_shutdown() from another thread would unblock the
+  // main thread from impl_is_ready().
+  //
+  // To properly shutdown the BOA and the ORB, add the following calls
+  // after impl_is_ready() returns.
+  //
+  // boa->destroy();
+  // orb->NP_destory();
 
   return 0;
 }
@@ -1426,6 +1473,8 @@ main (int argc, char **argv)
   catch(...) {
     cerr << "Caught a system exception." << endl;
   }
+
+  orb->NP_destory();
 
   return 0;
 }
@@ -1480,6 +1529,15 @@ main(int argc, char **argv)
   boa->impl_is_ready();
   // Tell the BOA we are ready. The BOA's default behaviour is to block
   // on this call indefinitely.
+
+  // Call boa->impl_shutdown() from another thread would unblock the
+  // main thread from impl_is_ready().
+  //
+  // To properly shutdown the BOA and the ORB, add the following calls
+  // after impl_is_ready() returns.
+  //
+  // boa->destroy();
+  // orb->NP_destory();
 
   return 0;
 }
@@ -1637,6 +1695,8 @@ main (int argc, char **argv)
   catch(...) {
     cerr << "Caught a system exception." << endl;
   }
+
+  orb->NP_destory();
 
   return 0;
 }
@@ -1993,11 +2053,15 @@ C++ compiler does not support the namespace keyword.}.
 \item[\tt -ORBInitialHost <string>] See section~\ref{bootstrap}.
 \item[\tt -ORBInitialPort <1-65535>] See section~\ref{bootstrap}.
 \item[\tt -ORBdiiThrowsSysExceptions <0 or 1>] See section~\ref{dii_invoke}.
-\item[\tt -ORBinConScanPeriod <0-65535>] See section~\ref{sec_shut}.
-\item[\tt -ORBoutConScanPeriod <0-65535>] See section~\ref{sec_shut}.
+\item[\tt -ORBinConScanPeriod <0-max integer>] See section~\ref{sec_shut}.
+\item[\tt -ORBoutConScanPeriod <0-max integer>] See section~\ref{sec_shut}.
+\item[\tt -ORBclientCallTimeOutPeriod <0-max integer>] See section~\ref{sec_shut}.
+\item[\tt -ORBserverCallTimeOutPeriod <0-max integer>] See section~\ref{sec_shut}.
+\item[\tt -ORBscanGranularity <0-max integer>] See section~\ref{sec_shut}.
 \item[\tt -ORBverifyObjectExistsAndType <0 or 1>] See section~\ref{sec_lcd}.
 \item[\tt -ORBlcdMode] See secion~\ref{sec_lcd}
 \item[\tt -ORBabortOnInternalError <0 or 1>] See section~\ref{sec_fatal}.
+\item[\tt -ORBhelp] List all ORB command line options.
 \end{description}
 
 {\tt BOA\_init} accepts the following command-line arguments:
@@ -2012,6 +2076,7 @@ the BOA will use an arbitrary port assigned by the operating system.
 \item[\tt -BOAiiop\_name\_port <hostname{[:port number]}>] This options
 tells the BOA the hostname and optionally the port number to use. See below
 for details.
+\item[\tt -BOAhelp] List all BOA command line options.
 \end{description}
 
 By default, the BOA can work out the IP address of the host machine. This
@@ -2941,25 +3006,41 @@ file handles a process can open. 64 is the usual default limit. The
 value can be increased to a maximum of a thousand or more by changing the
 ``ulimit'' in the shell.
 
-\section{Idle Connection Shutdown}
+\section{Idle Connection Shutdown and Remote Call Timeout}
 \label{sec_shut}
 
-Inside the ORB, two separate threads are dedicated to scan for idle
-connections. One thread is responsible for outgoing connections and the
-other looks after incoming connections. The thread for incoming connections
-is only created when the BOA is initialised because only then will there be
-any incoming connections.
+Inside the ORB, a thread is dedicated to scan for idle
+connections. The thread looks after both the outgoing connections and the
+incoming connections. 
 
-The threads scan all opened connections once every ``scan period''. If a
-connection is found to be idle for two consecutive periods, it will be
-closed. The threads use mark-and-swipe to detect if a connection is idle.
-When a connection is checked, a status flag attached to the connection is
-set. Every remote invocation using that connection would clear the flag. So
-if a connection's status flag is found to be set in two consecutive scans,
-the connection has been idled during the  scan period.
+When a connection is idled for a period of time, the connection is
+shutdown. Similarly, if a remote call has not completed within a defined
+period of time, the connection is shutdown and the ORB will return
+{\tt COMM\_FAILURE} to the client.
 
-The scan period for incoming and outgoing connections can be individually
-controlled by the following API:
+How often the internal thread scan the connections is determined by the
+value of the {\em scan granularity}. This value is default to 5 seconds and
+can be changed using the command-line option {\tt -ORBscanGranularity} or
+using the {\tt omniORB::scanGranularity()} call. Notice that this value
+determines the precision the ORB is able to keep to the value of the idle
+connection or remote call timeout.
+
+How long the ORB will wait before it shuts down an idle connection is
+determined by the idleConnectionPeriods. There are separate values for
+incoming and outgoing connections. The default values are 180 and 120
+seconds for incoming and outgoing connections respectively. These values
+can be changed using the command-line options {\tt -ORBinConScanPeriod} and
+{\tt -ORBoutConScanPeriod}. They can also be controlled by the
+{\tt omniORB::idleConnectionScanPeriod()} call.
+
+Similary, how long the ORB will wait for a remote call to complete is
+determined by the parameter clientCallTimeOutPeriod for the client side and
+the serverCallTimeOutPeroid for the server side. The default values are 60
+and 90 seconds for the client and the server side respectively. These
+values can be changed using the command-line option {\tt
+-ORBclientCallTimeOutPeriod} and {\tt -ORBserverCallTimeOutPeriod}. They
+can also be controlled by the {\tt omniORB::callTimeOutPeriod()} call.
+
 
 {\small
 \begin{verbatim}
@@ -2968,6 +3049,10 @@ class omniORB {
 
 public:
 
+  static void scanGranularity(CORBA::ULong sec);
+  
+  static CORBA::ULong scanGranularity();
+
   enum idleConnType { idleIncoming, idleOutgoing };
 
   static void idleConnectionScanPeriod(idleConnType direction,
@@ -2975,22 +3060,19 @@ public:
 
   static CORBA::ULong idleConnectionScanPeriod(idleConnType direction);
 
+  enum callTimeOutType { clientSide, serverSide };
+
+  static void callTimeOutPeriod(callTimeOutType direction,
+	                        CORBA::ULong sec);
+
+  static CORBA::ULong callTimeOutPeriod(callTimeOutType direction);
+
 };
 
 \end{verbatim}
 }
 
-The current value of the scan period (in seconds) is returned by the
-read-only {\tt idleConnectionScanPeriod}. The scan period can be changed by
-the write-only {\tt idleConnectionScanPeriod}. The scan period can be changed
-at any time but the write function is non-thread safe. Concurrent calls to this
-function could result in undefined behaviour.
-The scan periods may also be specified on the command-line by using the
-options {\tt -ORBinConScanPeriod} and {\tt -ORBoutConScanPeriod}. See
-section~\ref{omniorbapioptions}.
-
-The default value for both incoming and outgoing connections is 30 seconds.
-The scan can be disabled completely by setting the scan period to 0.
+The scan can be disabled completely by setting the scan granularity to 0.
 
 \section{Interoperability Considerations}
 
