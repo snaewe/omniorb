@@ -59,7 +59,7 @@ idlc = $(patsubst %,$(BinPattern),idlc)
 
 ifdef UnixPlatform
 CXXDEBUGFLAGS = -g
-PYPREFIX := $(shell $(PYTHON) -c 'import sys; print sys.prefix')
+PYPREFIX := $(shell $(PYTHON) -c 'import sys; print sys.exec_prefix')
 PYINCDIR := $(PYPREFIX)/include
 DIR_CPPFLAGS += -I$(PYINCDIR)
 endif
@@ -449,6 +449,39 @@ export:: $(lib)
 endif
 endif
 
+
+#############################################################################
+#   Make rules for NextStep                                                 #
+#############################################################################
+
+ifdef NextStep
+
+PYPREFIX = $(shell $(PYTHON) -c "import sys; print sys.exec_prefix")
+CXXOPTIONS += -I$(PYPREFIX)/include
+CXXLINKOPTIONS += -nostdlib -r
+SO = .so
+libname = _omniidlmodule$(SO)
+soname  = $(libname).$(IDLMODULE_MAJOR)
+lib     = $(soname).$(IDLMODULE_MINOR)
+
+$(lib): $(OBJS) $(PYOBJS)
+      $(CXXLINK) $(CXXLINKOPTIONS) $(OBJS) $(PYOBJS) -o $(lib)
+
+all:: $(lib)
+
+clean::
+      $(RM) $(lib)
+
+export:: $(lib)
+      @$(ExportLibrary)
+      @(set -x; 
+              cd $(EXPORT_TREE)/$(LIBDIR); 
+              $(RM) $(soname); 
+              ln -s $(lib) $(soname); 
+              $(RM) $(libname); 
+              ln -s $(soname) $(libname); 
+      )
+endif
 
 
 

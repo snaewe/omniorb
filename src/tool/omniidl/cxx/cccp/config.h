@@ -28,6 +28,9 @@
 #elif defined(__irix__)
 #include "config-irix.h"
 
+#elif defined(__nextstep__)
+#include "config-nextstep.h"
+
 #endif
 
 #define BITS_PER_UNIT SIZEOF_UNSIGNED_CHAR

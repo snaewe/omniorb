@@ -1,3 +1,17 @@
+Wed Feb 23 12:53:39 GMT 2000 dpg1
+=================================
+
+- Some support for NextStep x86. ORB core doesn't have make rules for
+  it, though.
+
+external_merge/config/config.mk
+external_merge/mk/platforms/x86_nextstep_3.3.mk  -- new
+include/omniORB3/CORBA_sysdep.h
+src/lib/omnithread/mach.cc
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/cccp/config-nextstep.h      -- new
+src/tool/omniidl/cxx/cccp/config.h
+
 
 Tue Feb 22 18:36:17 GMT 2000 djr
 ================================

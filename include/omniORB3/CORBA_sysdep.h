@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.7  2000/02/23 12:57:15  dpg1
+ Some support for NextStep x86.
+
  Revision 1.1.2.6  2000/02/04 14:48:09  djr
  Added a couple of feature test macros.
 
@@ -357,6 +360,11 @@
 # define _OMNIORB_HOST_BYTE_ORDER_ 1
 # if !defined(__WIN32__)
 #  define _HAS_SIGNAL 1
+# endif
+# if defined(__nextstep__)
+#  define _USE_MACH_SIGNAL 1
+#  define _NO_STRDUP 1
+#  define _USE_GETHOSTNAME 1
 # endif
 #elif defined(__aix__) && defined(__powerpc__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
