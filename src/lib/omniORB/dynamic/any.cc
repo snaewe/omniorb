@@ -29,9 +29,13 @@
 
 
 /* $Log$
-/* Revision 1.12  1999/05/25 18:07:51  sll
-/* In value(), return 0 if typecode is _tc_null.
+/* Revision 1.13  1999/06/18 20:59:48  sll
+/* Updated to CORBA 2.3 mapping.
+/* Semantics of extraction operator for string has changed.
 /*
+ * Revision 1.12  1999/05/25 18:07:51  sll
+ * In value(), return 0 if typecode is _tc_null.
+ *
  * Revision 1.11  1999/03/11 16:25:58  djr
  * Updated copyright notice
  *
@@ -77,6 +81,25 @@
 #include <anyP.h>
 #include <typecode.h>
 
+////////////////////////////////////////////////////////////////////////
+// In pre-2.8.0 versions, the CORBA::Any extraction operator for
+// unbounded string ( operator>>= (char*&) ) copy the returned string.
+// In other words the caller must free the string later.              
+// With 2.8.0 and later, the semantics becomes non-copy, i.e. the Any
+// still own the storage of the returned string.
+// This would cause problem in programs that is written to use the
+// pre-2.8.0 semantics. To make it easier for the transition,
+// set copyStringInAnyExtraction to 1. This would revert the
+// semantics to the pre-2.8.0 versions.
+// Globals defined in class omniORB
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the variables external linkage otherwise. Its a bug.
+namespace omniORB {
+CORBA::Boolean copyStringInAnyExtraction = 0;
+}
+#else
+CORBA::Boolean omniORB::copyStringInAnyExtraction = 0;
+#endif
 
 #define pdAnyP() ((AnyP*) (NP_pd()))
 #define pdAnyP2(a) ((AnyP*) ((a)->NP_pd()))
@@ -318,6 +341,14 @@ CORBA::Any::operator<<=(const Any& a)
   pdAnyP()->setData(CORBA::_tc_any, tcd);
 }
 
+void
+CORBA::Any::operator<<=(Any* a)
+{
+  tcDescriptor tcd;
+  tcd.p_any = a;
+  pdAnyP()->setData(CORBA::_tc_any, tcd);
+  delete a;
+}
 
 void
 CORBA::Any::operator<<=(TypeCode_ptr tc)
@@ -485,12 +516,42 @@ CORBA::Any::operator>>=(Double& d) const
 }
 #endif
 
-
-CORBA::Boolean CORBA::Any::operator>>=(Any& a) const
+CORBA::Boolean CORBA::Any::operator>>=(CORBA::Any*& a) const
 {
-  tcDescriptor tcd;
-  tcd.p_any = &a;
-  return pdAnyP()->getData(CORBA::_tc_any, tcd);
+  return this->operator>>=((const CORBA::Any*&) a);
+}
+
+static 
+void delete_any(void* data) {
+  CORBA::Any* ap = (CORBA::Any*) data;
+  delete ap;
+}
+
+CORBA::Boolean CORBA::Any::operator>>=(const CORBA::Any*& a) const
+{
+  CORBA::Any* ap = (CORBA::Any*) PR_getCachedData();
+  if (ap == 0) {
+    tcDescriptor tcd;
+    ap = new CORBA::Any();
+    tcd.p_any = ap;
+    if (pdAnyP()->getData(CORBA::_tc_any, tcd)) {
+      ((CORBA::Any*) this)->PR_setCachedData(ap,delete_any);
+      a = ap; return 1;
+    }
+    else {
+      delete ap; 
+      a = 0; return 0;
+    }
+  }
+  else {
+    CORBA::TypeCode_var tc = type();
+    if (tc->equivalent(CORBA::_tc_any)) {
+      a = ap; return 1;
+    }
+    else {
+      a = 0; return 0;
+    }
+  }
 }
 
 
@@ -572,26 +633,67 @@ tcParser_tostring_getBuffer(tcStringDesc* tcsd)
   return (char*) (tcsd->opq_string);
 }
 
-
 CORBA::Boolean
 CORBA::Any::operator>>=(char*& s) const
 {
-  tcDescriptor tcd;
-  tcd.p_string.setLength = tcParser_tostring_setLength;
-  tcd.p_string.getLength = tcParser_tostring_getLength;
-  tcd.p_string.getBuffer = tcParser_tostring_getBuffer;
-  tcd.p_string.opq_string = 0;
-  tcd.p_string.opq_len = 0;
+  if (!omniORB::copyStringInAnyExtraction) {
+    return this->operator>>=((const char*&) s);
+  }
+  else {
+    tcDescriptor tcd;
+    tcd.p_string.setLength = tcParser_tostring_setLength;
+    tcd.p_string.getLength = tcParser_tostring_getLength;
+    tcd.p_string.getBuffer = tcParser_tostring_getBuffer;
+    tcd.p_string.opq_string = 0;
+    tcd.p_string.opq_len = 0;
 
-  if (pdAnyP()->getData(CORBA::_tc_string, tcd))
+    if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
       s = (char*) tcd.p_string.opq_string;
       return 1;
     }
+  }
 
   return 0;
 }
 
+static
+void delete_string(void* data) {
+  char* sp = (char*) data;
+  CORBA::string_free(sp);
+}
+
+CORBA::Boolean
+CORBA::Any::operator>>=(const char*& s) const
+{
+  char* sp = (char*) PR_getCachedData();
+  if (sp == 0) {
+    tcDescriptor tcd;
+    tcd.p_string.setLength = tcParser_tostring_setLength;
+    tcd.p_string.getLength = tcParser_tostring_getLength;
+    tcd.p_string.getBuffer = tcParser_tostring_getBuffer;
+    tcd.p_string.opq_string = 0;
+    tcd.p_string.opq_len = 0;
+    if (pdAnyP()->getData(CORBA::_tc_string, tcd))
+    {
+      sp = (char*) tcd.p_string.opq_string;
+      ((CORBA::Any*)this)->PR_setCachedData(sp,delete_string);
+      s = sp; return 1;
+    }
+    else {
+      s = 0; return 0;
+    }
+  }
+  else {
+    CORBA::TypeCode_var tc = type();
+    if (tc->equivalent(CORBA::_tc_string)) {
+      s = sp; return 1;
+    }
+    else {
+      s = 0; return 0;
+    }
+  }
+}
 
 CORBA::Boolean
 CORBA::Any::operator>>=(to_string s) const
@@ -650,6 +752,11 @@ CORBA::Any::type() const
   return CORBA::TypeCode::_duplicate(pdAnyP()->getTC_parser()->getTC());
 }
 
+void
+CORBA::Any::type(CORBA::TypeCode_ptr tc)
+{
+  pdAnyP()->getTC_parser()->replaceTC(tc);
+}
 
 const void*
 CORBA::Any::value() const
