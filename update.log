@@ -1,3 +1,11 @@
+Thu Feb 21 15:53:34 GMT 2002 dpg1
+=================================
+
+- Remove dead code.
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+
 Wed Feb 20 18:57:08 GMT 2002 dpg1
 =================================
 

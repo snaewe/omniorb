@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.37  2002/02/21 15:57:46  dpg1
+  Remove dead code.
+
   Revision 1.33.2.36  2002/02/11 15:15:50  dpg1
   Things for ETS kernel.
 
@@ -923,40 +926,6 @@ omniOrbORB::_NP_decrRefCount()
 
   delete this;
 }
-
-
-#ifdef HAS_Cplusplus_Namespace
-namespace {
-#endif
-  class WakeupRunTask : public omniTask {
-  public:
-    inline WakeupRunTask(omni_tracedmutex* mu)
-      : omniTask(omniTask::DedicatedThread),
-	pd_mu(mu),
-	pd_cond(mu),
-	pd_done(0)
-    { }
-
-    void execute() {
-      omni_tracedmutex_lock sync(*pd_mu);
-      pd_done = 1;
-      pd_cond.signal();
-    }
-
-    void wait() {
-      omni_tracedmutex_lock sync(*pd_mu);
-      while (!pd_done)
-	pd_cond.wait();
-    }
-
-  private:
-    omni_tracedmutex*     pd_mu;
-    omni_tracedcondition  pd_cond;
-    int                   pd_done;
-  };
-#ifdef HAS_Cplusplus_Namespace
-};
-#endif
 
 
 void
