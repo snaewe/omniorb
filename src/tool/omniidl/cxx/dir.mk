@@ -173,7 +173,7 @@ DIR_CPPFLAGS += -DMSDOS -DOMNIIDL_EXECUTABLE
 
 PYPREFIX1 := "$(shell $(PYTHON) -c 'import sys,string; sys.stdout.write(string.lower(sys.prefix))')"
 PYPREFIX  := $(subst program files,progra~1,$(subst \,/,$(PYPREFIX1)))
-PYVERSION := $(shell $(PYTHON) -c 'import sys; print sys.version[:3]')
+PYVERSION := $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.version[:3])')
 PYINCDIR  := $(PYPREFIX)/include
 PYLIBDIR  := $(PYPREFIX)/libs $(PYPREFIX)/lib/x86_win32
 PYLIB     := python$(subst .,,$(PYVERSION)).lib
