@@ -362,7 +362,7 @@ _0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_member const& data)
 {
   desc.p_string.ptr = (char**)&data._ptr;
   desc.p_string.release
-    = (data._ptr==omni::empty_string) ? 0 : 1;
+    = (data._ptr==_CORBA_String_helper::empty_string) ? 0 : 1;
 }
 
 inline void
