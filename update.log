@@ -1,3 +1,15 @@
+Mon Jun  9 18:23:15 BST 2003 dgrisby
+====================================
+
+- Add omniNames init script.
+
+configure
+configure.ac
+etc/init.d/omninames.in                -- new
+src/appl/omniNames/dir.mk
+src/appl/omniNames/omniNames-daemon.in -- new
+
+
 Mon Jun  9 17:52:27 BST 2003 dgrisby
 ====================================
 

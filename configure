@@ -9899,6 +9899,9 @@ ac_config_files="$ac_config_files include/GNUmakefile include/omniconfig.h inclu
 ac_config_files="$ac_config_files idl/GNUmakefile idl/COS/GNUmakefile"
 
 
+ac_config_files="$ac_config_files etc/init.d/omninames src/appl/omniNames/omniNames-daemon"
+
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -10431,6 +10434,8 @@ do
   "include/omniORB4/internal/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES include/omniORB4/internal/GNUmakefile" ;;
   "idl/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES idl/GNUmakefile" ;;
   "idl/COS/GNUmakefile" ) CONFIG_FILES="$CONFIG_FILES idl/COS/GNUmakefile" ;;
+  "etc/init.d/omninames" ) CONFIG_FILES="$CONFIG_FILES etc/init.d/omninames" ;;
+  "src/appl/omniNames/omniNames-daemon" ) CONFIG_FILES="$CONFIG_FILES src/appl/omniNames/omniNames-daemon" ;;
   "include/omniORB4/acconfig.h" ) CONFIG_HEADERS="$CONFIG_HEADERS include/omniORB4/acconfig.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

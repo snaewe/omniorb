@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export LD_LIBRARY_PATH=@prefix@/lib
+@prefix@/bin/omniNames $@ &
+echo $! >/var/run/omniNames.pid

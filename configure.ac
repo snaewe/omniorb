@@ -252,4 +252,6 @@ AC_CONFIG_FILES(include/GNUmakefile
 AC_CONFIG_FILES(idl/GNUmakefile
                 idl/COS/GNUmakefile)
 
+AC_CONFIG_FILES(etc/init.d/omninames src/appl/omniNames/omniNames-daemon)
+
 AC_OUTPUT

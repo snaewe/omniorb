@@ -40,7 +40,7 @@ export:: $(omniNames)
 	@$(ExportExecutable)
 
 ifdef INSTALLTARGET
-install:: $(omniNames)
+install:: $(omniNames) omniNames-daemon
 	@$(InstallExecutable)
 endif
 
