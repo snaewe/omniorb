@@ -14,13 +14,12 @@
 
 /*
  $Log$
- Revision 1.6  1997/03/19 15:43:50  sll
- Added check for macro Status. If it is defined by a header file included
- before this, stop the preprocessing with the #error directive.
+ Revision 1.7  1997/03/26 17:33:48  ewc
+  Runtime converted to Win32 DLL
 
- * Revision 1.5  1997/03/14  10:19:10  sll
- * Use namespace instead of class for modules if the compiler supports it.
- *
+ Revision 1.5  1997/03/14 10:19:10  sll
+ Use namespace instead of class for modules if the compiler supports it.
+
  * Revision 1.4  1997/03/09  14:35:59  sll
  * Minor cleanup.
  *
@@ -60,8 +59,10 @@
 #elif defined(__SUNPRO_CC)
 // SUN C++ compiler
 
+#endif
+
 #elif defined(_MSC_VER)
-// VC++ compiler
+//  Microsoft Visual C++ compiler
 #endif
 
 #if defined(arm)
@@ -122,6 +123,28 @@
 #endif
 
 
+// Define macro for NT DLL import/export:
+// Note that if an application is being compiled (using MSVC++ on NT or '95) 
+// to use the static library, the macro _WINSTATIC should be defined.
+
+#if defined(__NT__) && defined(_MSC_VER)
+
+#if defined(_OMNIORB2_DLL) && defined(_WINSTATIC)
+#error "Both _OMNIORB2_DLL and _WINSTATIC are defined."
+#elif defined(_OMNIORB2_DLL)
+#define _OMNIORB2_NTDLL_ __declspec(dllexport) 
+#elif !defined(_WINSTATIC)
+#define _OMNIORB2_NTDLL_ __declspec(dllimport)
+#elif defined(_WINSTATIC)
+#define _OMNIORB2_NTDLL_
+#endif 
+ // _OMNIORB2_DLL && _WINSTATIC
+
+#else
+#define _OMNIORB2_NTDLL_
+#endif
+   // __NT__ && _MSC_VER
+ 
 // This implementation *DOES NOT* support the Dynamic Invocation Interface
 // and the Dynamic Skeleton Interface. Hence some of the psuedo objects are
 // not or only partially implemented. The declaration of the unimplemented
