@@ -4,7 +4,7 @@ Wed Jun 28 14:53:27 BST 2000 dpg1
 - omnipython distribution doesn't have the traceback module, so remove
   C++ back-end's dependency on it.
 
-src/tool/omniidl/python/omniidl_be/dump.py
+src/lib/omniORB2/omniidl_be/cxx/util.py
 
 
 Wed Jun 28 14:18:05 BST 2000 sll

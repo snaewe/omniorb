@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.8  2000/06/28 13:59:04  dpg1
+# Remove dependency on traceback module.
+#
 # Revision 1.12.2.7  2000/06/26 16:23:11  djs
 # Added new backend arguments.
 # Better error handling when encountering unsupported IDL (eg valuetypes)
@@ -105,7 +108,14 @@
 from omniidl import idlutil, idltype
 from omniidl_be.cxx import config
 
-import sys, re, string, traceback
+import sys, re, string
+
+try:
+    import traceback
+    have_traceback = 1
+except:
+    have_traceback = 0
+
 
 # -----------------------------------------------------------------
 # Fatal error handling function
@@ -118,14 +128,16 @@ def fatalError(explanation):
         print "Configuration state:"
         print "-------------------------"
         config.state.dump()
-        print "Stack:"
-        print "-------------------------"
-        traceback.print_stack()
-        print "Exception:"
-        print "-------------------------"
-        traceback.print_exc()
-        sys.exit(-1)
-        return
+
+        if have_traceback:
+            print "Stack:"
+            print "-------------------------"
+            traceback.print_stack()
+            print "Exception:"
+            print "-------------------------"
+            traceback.print_exc()
+            sys.exit(-1)
+            return
     
     lines = string.split(explanation, "\n")
     lines = [ "Fatal error in C++ backend", "" ] + lines
