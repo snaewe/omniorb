@@ -30,6 +30,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.5  2004/07/31 23:44:55  dgrisby
+# Properly handle null and void Anys; store omniObjRef pointer for
+# objrefs in Anys.
+#
 # Revision 1.5.2.4  2004/07/23 10:29:58  dgrisby
 # Completely new, much simpler Any implementation.
 #
@@ -147,18 +151,19 @@ static CORBA::TypeCode::_Tracker @prefix@_tcTrack(__FILE__);
 interface = """\
 static void @private_prefix@_@guard_name@_marshal_fn(cdrStream& _s, void* _v)
 {
-  @fqname@_ptr _o = (@fqname@_ptr)_v;
-  @fqname@::_marshalObjRef(_o, _s);
+  omniObjRef* _o = (omniObjRef*)_v;
+  omniObjRef::_marshal(_o, _s);
 }
 static void @private_prefix@_@guard_name@_unmarshal_fn(cdrStream& _s, void*& _v)
 {
-  @fqname@_ptr _o = @fqname@::_unmarshalObjRef(_s);
+  omniObjRef* _o = omniObjRef::_unMarshal(@fqname@::_PD_repoId, _s);
   _v = _o;
 }
 static void @private_prefix@_@guard_name@_destructor_fn(void* _v)
 {
-  @fqname@_ptr _o = (@fqname@_ptr)_v;
-  CORBA::release(_o);
+  omniObjRef* _o = (omniObjRef*)_v;
+  if (_o)
+    omni::releaseObjRef(_o);
 }
 
 void operator<<=(CORBA::Any& _a, @fqname@_ptr _o)
@@ -167,14 +172,14 @@ void operator<<=(CORBA::Any& _a, @fqname@_ptr _o)
   _a.PR_insert(@tc_name@,
                @private_prefix@_@guard_name@_marshal_fn,
                @private_prefix@_@guard_name@_destructor_fn,
-               _no);
+               _no->_PR_getobj());
 }
 void operator<<=(CORBA::Any& _a, @fqname@_ptr* _op)
 {
   _a.PR_insert(@tc_name@,
                @private_prefix@_@guard_name@_marshal_fn,
                @private_prefix@_@guard_name@_destructor_fn,
-               *_op);
+               (*_op)->_PR_getobj());
   *_op = @fqname@::_nil();
 }
 
@@ -186,7 +191,11 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _o)
                     @private_prefix@_@guard_name@_marshal_fn,
                     @private_prefix@_@guard_name@_destructor_fn,
                     _v)) {
-    _o = (@fqname@_ptr)_v;
+    omniObjRef* _r = (omniObjRef*)_v;
+    if (_r)
+      _o = (@fqname@_ptr)_r->_ptrToObjRef(@fqname@::_PD_repoId);
+    else
+      _o = @fqname@::_nil();
     return 1;
   }
   return 0;
@@ -418,7 +427,7 @@ static void @private_prefix@_@guard_name@_destructor_fn(void* _v)
 void operator<<=(CORBA::Any& _a, const @fqname@_forany& _s)
 {
   @fqname@_slice* _v;
-  if (_s.NP_nocopy())
+  if (!_s.NP_nocopy())
     _v = @fqname@_dup(_s);
   else
     _v = _s.NP_getSlice();
