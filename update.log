@@ -1,3 +1,10 @@
+Tue Aug 17 20:16:38 BST 1999 sll
+================================
+
+- Fix to bug introduced in python binding change
+
+src/lib/omniORB2/orbcore/giopServer.cc
+
 Mon Aug 16 20:18:08 BST 1999 sll
 ================================
 
