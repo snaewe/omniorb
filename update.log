@@ -1,3 +1,13 @@
+Tue Aug 22 15:53:40 BST 2000 sll
+================================
+
+- If -ORBpoa_iiop_port specified a port which is already in use, throws
+  CORBA::INITIALIZE out of the ORB APIs rather than the internal omniORB
+  exception omniConnectionBroken.
+
+src/lib/omniORB2/orbcore/objectAdapter.cc
+bugfixes.xml
+
 Tue Aug 22 10:59:21 BST 2000 dpg1
 =================================
 
