@@ -8,6 +8,19 @@
 
 <buglist>
 
+<bug id="10" date="Wed Sep 13 10:09:43 BST 2000" user="djs">
+
+  <summary>omniidl/C++ bug with unions with implicit default members</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-09/0054.html"/>
+  <text>
+  The generated <code>_d(...)</code> method was incomplete, preventing
+  the discriminant from being changed within the set of legal default
+  values after calling <code>_default()</code> on a union with an implicit
+  default member.
+  </text>
+</bug>
+
 <bug id="9" date="Mon Sep 11 15:12:38 BST 2000" user="dpg1">
 
   <summary>omniidl produces no useful output on Windows 98</summary>
