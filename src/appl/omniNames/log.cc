@@ -691,11 +691,11 @@ log::getBind(istream& file)
       cerr << ts.t() << "bind: IOR not a NamingContext." << endl;
       throw ParseError();
     }
-    nc->bind_context(name, nc2);
+    nc->rebind_context(name, nc2);
 
   } else {
 
-    nc->bind(name, o);
+    nc->rebind(name, o);
 
   }
 
