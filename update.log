@@ -1,3 +1,93 @@
+Wed Sep 27 23:46:18 BST 2000 djs
+================================
+
+- CORBA::ValueBase included in build
+
+include/omniORB3/CORBA.h
+src/lib/omniORB2/orbcore/value.cc
+src/lib/omniORB2/orbcore/dir.mk
+
+- Chunk of code missing from AMI call descriptor
+
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py
+
+Wed Sep 27 18:03:10 BST 2000 djs
+================================
+
+- Renamed struct members is ExceptionHolder_base idl to allow union-type
+  accessor functions to be added (valuetype data members look like union
+  members)
+
+idl/omniMessaging.idl
+include/omniORB3/Messaging.h
+src/lib/omniORB2/omniidl_be/cxx/ami/exholder.py
+src/lib/omniORB2/orbcore/Messaging.cc
+
+- External guards round the queue implementation
+
+include/queue.h
+
+- Added CORBA::ValueBase, to derive Polling valuetype from it.
+  Memory management is now by _add_ref and _remove_ref with automatic
+  deletion when reference count drops to 0
+
+include/omniORB3/CORBA.h
+src/lib/omniORB2/orbcore/value.cc                       (NEW)
+src/lib/omniORB2/orbcore/dir.mk?
+include/omniORB3/Messaging.h
+src/lib/omniORB2/orbcore/Messaging.cc
+src/examples/ami/echo/echo_poller.cc
+
+- Added associated_replyhandler objref to Poller
+- Added more concurrency control to Poller
+
+include/omniORB3/Messaging.h
+src/lib/omniORB2/orbcore/Messaging.cc
+
+- Refactored omniAMICall (split up, moved code from AMI system to Descriptor)
+- Poller now is contacted directly instead of through an internal 
+  ReplyHandler servant (as originally suggested by the spec)
+
+include/omniORB3/omniAMI.h
+include/omniORB3/omniAMICallDescriptor.h                (NEW)
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/omniidl_be/cxx/ami/objref.py
+src/lib/omniORB2/omniidl_be/cxx/ami/poller.py
+src/lib/omniORB2/omniidl_be/cxx/skel/__init__.py
+
+- Command line options to configure the AMI system
+
+include/omniORB3/omniORB.h
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/omniORB.cc
+src/lib/omniORB2/orbcore/omniAMI.cc
+
+- Added omniInitialiser
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/omniAMI.cc
+
+- IDL compiler fixes:
+-   Added no-copy forms of sendc_ and sendp_ to objref
+
+src/lib/omniORB2/omniidl_be/cxx/ami/objref.py
+
+-   Call descriptor does memory management by hand, to avoid unnecessary
+    copies
+
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py
+
+-   Corrected CORBA::String_free -> CORBA::string_free
+-   Allocates fixed length structs, unions on the stack rather than the
+    heap
+
+src/lib/omniORB2/omniidl_be/cxx/ami/types.py
+
+-   Pointer munging functions added
+
+src/lib/omniORB3/omniidl_be/cxx/ami/ami.py
+
+
 Thu Sep 21 17:31:34 BST 2000 djs
 ================================
 
