@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2004/04/02 13:26:24  dgrisby
+  Start refactoring TypeCode to support value TypeCodes, start of
+  abstract interfaces support.
+
   Revision 1.1.4.2  2003/09/26 16:12:54  dgrisby
   Start of valuetype support.
 
@@ -53,8 +57,10 @@ OMNI_USING_NAMESPACE(omni)
 
 static const char* _0RL_library_version = omniORB_4_1;
 
+static CORBA::TypeCode::_Tracker _tcTrack(__FILE__);
+
 static const char* _0RL_enumMember_PortableServer_mThreadPolicyValue[] = { "ORB_CTRL_MODEL", "SINGLE_THREAD_MODEL", "MAIN_THREAD_MODEL" };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mThreadPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/ThreadPolicyValue" PS_VERSION, "ThreadPolicyValue", _0RL_enumMember_PortableServer_mThreadPolicyValue, 3);
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mThreadPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/ThreadPolicyValue" PS_VERSION, "ThreadPolicyValue", _0RL_enumMember_PortableServer_mThreadPolicyValue, 3, &_tcTrack);
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
 namespace PortableServer { 
@@ -65,7 +71,7 @@ const CORBA::TypeCode_ptr PortableServer::_tc_ThreadPolicyValue = _0RL_tc_Portab
 #endif
 
 static const char* _0RL_enumMember_PortableServer_mLifespanPolicyValue[] = { "TRANSIENT", "PERSISTENT" };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mLifespanPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/LifespanPolicyValue" PS_VERSION, "LifespanPolicyValue", _0RL_enumMember_PortableServer_mLifespanPolicyValue, 2);
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mLifespanPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/LifespanPolicyValue" PS_VERSION, "LifespanPolicyValue", _0RL_enumMember_PortableServer_mLifespanPolicyValue, 2, &_tcTrack);
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
 namespace PortableServer { 
@@ -76,7 +82,7 @@ const CORBA::TypeCode_ptr PortableServer::_tc_LifespanPolicyValue = _0RL_tc_Port
 #endif
 
 static const char* _0RL_enumMember_PortableServer_mIdUniquenessPolicyValue[] = { "UNIQUE_ID", "MULTIPLE_ID" };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mIdUniquenessPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/IdUniquenessPolicyValue" PS_VERSION, "IdUniquenessPolicyValue", _0RL_enumMember_PortableServer_mIdUniquenessPolicyValue, 2);
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mIdUniquenessPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/IdUniquenessPolicyValue" PS_VERSION, "IdUniquenessPolicyValue", _0RL_enumMember_PortableServer_mIdUniquenessPolicyValue, 2, &_tcTrack);
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
 namespace PortableServer { 
@@ -87,7 +93,7 @@ const CORBA::TypeCode_ptr PortableServer::_tc_IdUniquenessPolicyValue = _0RL_tc_
 #endif
 
 static const char* _0RL_enumMember_PortableServer_mIdAssignmentPolicyValue[] = { "USER_ID", "SYSTEM_ID" };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mIdAssignmentPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/IdAssignmentPolicyValue" PS_VERSION, "IdAssignmentPolicyValue", _0RL_enumMember_PortableServer_mIdAssignmentPolicyValue, 2);
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mIdAssignmentPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/IdAssignmentPolicyValue" PS_VERSION, "IdAssignmentPolicyValue", _0RL_enumMember_PortableServer_mIdAssignmentPolicyValue, 2, &_tcTrack);
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
 namespace PortableServer { 
@@ -98,7 +104,7 @@ const CORBA::TypeCode_ptr PortableServer::_tc_IdAssignmentPolicyValue = _0RL_tc_
 #endif
 
 static const char* _0RL_enumMember_PortableServer_mImplicitActivationPolicyValue[] = { "IMPLICIT_ACTIVATION", "NO_IMPLICIT_ACTIVATION" };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mImplicitActivationPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/ImplicitActivationPolicyValue" PS_VERSION, "ImplicitActivationPolicyValue", _0RL_enumMember_PortableServer_mImplicitActivationPolicyValue, 2);
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mImplicitActivationPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/ImplicitActivationPolicyValue" PS_VERSION, "ImplicitActivationPolicyValue", _0RL_enumMember_PortableServer_mImplicitActivationPolicyValue, 2, &_tcTrack);
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
 namespace PortableServer { 
@@ -109,7 +115,7 @@ const CORBA::TypeCode_ptr PortableServer::_tc_ImplicitActivationPolicyValue = _0
 #endif
 
 static const char* _0RL_enumMember_PortableServer_mServantRetentionPolicyValue[] = { "RETAIN", "NON_RETAIN" };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mServantRetentionPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/ServantRetentionPolicyValue" PS_VERSION, "ServantRetentionPolicyValue", _0RL_enumMember_PortableServer_mServantRetentionPolicyValue, 2);
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mServantRetentionPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/ServantRetentionPolicyValue" PS_VERSION, "ServantRetentionPolicyValue", _0RL_enumMember_PortableServer_mServantRetentionPolicyValue, 2, &_tcTrack);
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
 namespace PortableServer { 
@@ -120,7 +126,7 @@ const CORBA::TypeCode_ptr PortableServer::_tc_ServantRetentionPolicyValue = _0RL
 #endif
 
 static const char* _0RL_enumMember_PortableServer_mRequestProcessingPolicyValue[] = { "USE_ACTIVE_OBJECT_MAP_ONLY", "USE_DEFAULT_SERVANT", "USE_SERVANT_MANAGER" };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mRequestProcessingPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/RequestProcessingPolicyValue" PS_VERSION, "RequestProcessingPolicyValue", _0RL_enumMember_PortableServer_mRequestProcessingPolicyValue, 3);
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mRequestProcessingPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/RequestProcessingPolicyValue" PS_VERSION, "RequestProcessingPolicyValue", _0RL_enumMember_PortableServer_mRequestProcessingPolicyValue, 3, &_tcTrack);
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
 namespace PortableServer { 

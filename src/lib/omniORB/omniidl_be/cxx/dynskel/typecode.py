@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.19.2.4  2004/04/02 13:26:22  dgrisby
+# Start refactoring TypeCode to support value TypeCodes, start of
+# abstract interfaces support.
+#
 # Revision 1.19.2.3  2004/02/16 10:10:31  dgrisby
 # More valuetype, including value boxes. C++ mapping updates.
 #
@@ -159,7 +163,8 @@ self = typecode
 
 # For a given type declaration, creates (private) static instances of
 # CORBA::TypeCode_ptr for that type, and any necessary for contained
-# constructed types.
+# constructed types. Contained types from other files cannot be used
+# because the order of static initialiser execution is not defined.
 # eg
 #   IDL:   struct testStruct{
 #            char a;
@@ -310,7 +315,8 @@ const CORBA::TypeCode_ptr @tc_name@ = @mangled_name@;
 def mkTypeCode(type, declarator = None, node = None):
     assert isinstance(type, types.Type)
 
-    prefix = "CORBA::TypeCode::PR_"
+    prefix   = "CORBA::TypeCode::PR_"
+    tctrack  = ", &" + config.state['Private Prefix'] + "_tcTrack"
 
     if declarator:
         assert isinstance(declarator, idlast.Declarator)
@@ -319,7 +325,7 @@ def mkTypeCode(type, declarator = None, node = None):
         post_str = ""
         for dim in dims:
             pre_str = pre_str + prefix + "array_tc(" + str(dim) + ", "
-            post_str = post_str + ")"
+            post_str = post_str + tctrack + ")"
 
         return pre_str + mkTypeCode(type, None, node) + post_str
 
@@ -352,46 +358,31 @@ def mkTypeCode(type, declarator = None, node = None):
               repr(type.kind())
 
     if isinstance(type, idltype.String):
-        return prefix + "string_tc(" + str(type.bound()) + ")"
+        return prefix + "string_tc(" + str(type.bound()) + tctrack + ")"
 
     if isinstance(type, idltype.WString):
-        return prefix + "wstring_tc(" + str(type.bound()) + ")"
+        return prefix + "wstring_tc(" + str(type.bound()) + tctrack + ")"
 
     if isinstance(type, idltype.Sequence):
         seqType = type.seqType()
         if isinstance(seqType, idltype.Declared):
             decl = seqType.decl()
-            if isinstance(decl, idlast.StructForward) or \
-               isinstance(decl, idlast.UnionForward) :
-
-                forwardUsed(decl)
-                scopedName = decl.scopedName()
-                mangled_name = mangleName(config.state['Private Prefix'] +\
-                                          "_fs_", scopedName)
-                if not alreadyDefined(mangled_name):
-                    defineName(mangled_name)
-                    tophalf.out("""\
-static CORBA::TypeCode_ptr @name@ = @prefix@forward_sequence_tc(@bound@);
-""",
-                                name=mangled_name, prefix=prefix,
-                                bound=type.bound())
-                return mangled_name
-
-            elif hasattr(decl, "recursive") and decl.recursive() and \
+            if hasattr(decl, "recursive") and decl.recursive() and \
                  currently_being_defined(decl):
 
                 depth = recursive_Depth(decl)
                 return prefix + "recursive_sequence_tc(" +\
-                       str(type.bound()) + ", " + str(depth) + ")"
+                       str(type.bound()) + ", " + str(depth) + tctrack + ")"
             
         startingNode(type)
         ret = prefix + "sequence_tc(" + str(type.bound()) + ", " +\
-              mkTypeCode(types.Type(type.seqType())) + ")"
+              mkTypeCode(types.Type(type.seqType())) + tctrack + ")"
         finishingNode()
         return ret
 
     if isinstance(type, idltype.Fixed):
-        return prefix + "fixed_tc(%d,%d)" % (type.digits(),type.scale())
+        return (prefix + "fixed_tc(%d,%d%s)" %
+                (type.digits(),type.scale(),tctrack))
 
     assert isinstance(type, idltype.Declared)
 
@@ -403,7 +394,8 @@ static CORBA::TypeCode_ptr @name@ = @prefix@forward_sequence_tc(@bound@);
         
         repoID = type.decl().repoId()
         iname = scopedName.simple()
-        return prefix + 'interface_tc("' + repoID + '", "' + iname + '")'
+        return (prefix + 'interface_tc("' + repoID + '", "' +
+                iname + '"' + tctrack + ')')
 
     guard_name = id.Name(type.scopedName()).guard()
 
@@ -542,21 +534,15 @@ def visitStruct(node):
         struct_name = id.Name(scopedName).simple()
 
         tophalf.out("""\
-static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_struct_tc("@repoID@", "@name@", @structmember_mangled_name@, @n@);""",
+#ifdef @mangled_name@
+#  undef @mangled_name@
+#endif
+static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_struct_tc("@repoID@", "@name@", @structmember_mangled_name@, @n@, &@pprefix@_tcTrack);
+""",
                     mangled_name = mangled_name,
                     structmember_mangled_name = structmember_mangled_name,
                     name = struct_name, n = str(num),
-                    repoID = repoID)   
-
-        if resolveForward(node):
-            fwname  = mangleName(config.state['Private Prefix'] +\
-                                 "_fs_", scopedName)
-            resname = mangleName(config.state['Private Prefix'] +\
-                                 "_rf_", scopedName)
-            tophalf.out("""\
-static int @resname@ = @fwname@->PR_resolve_forward(@mangled_name@);""",
-                        fwname=fwname, resname=resname,
-                        mangled_name=mangled_name)
+                    repoID = repoID, pprefix=config.state['Private Prefix'])
 
     self.__immediatelyInsideModule = insideModule
 
@@ -568,7 +554,23 @@ static int @resname@ = @fwname@->PR_resolve_forward(@mangled_name@);""",
     return
 
 def visitStructForward(node):
-    pass
+    scopedName = node.scopedName()
+    mangled_name = mangleName(config.state['Private Prefix'] +
+                              "_tc_", scopedName)
+    fmangled_name = mangleName(config.state['Private Prefix'] +
+                               "_ft_", scopedName)
+
+    if not alreadyDefined(fmangled_name):
+        defineName(fmangled_name)
+
+        tophalf.out("""\
+static CORBA::TypeCode_ptr @fmangled_name@ = CORBA::TypeCode::PR_forward_tc("@repoId@", &@pprefix@_tcTrack);
+#define @mangled_name@ @fmangled_name@
+""",
+                    mangled_name = mangled_name,
+                    fmangled_name = fmangled_name,
+                    repoId = node.repoId(),
+                    pprefix=config.state['Private Prefix'])
 
 def visitUnion(node):
     scopedName = node.scopedName()
@@ -644,14 +646,16 @@ def visitUnion(node):
                                           "_unionMember_", scopedName)
     
     default_str = ""
-    if hasDefault != None:
-        default_str = ", " + str(hasDefault)
+    if hasDefault is None:
+        default_str = "-1"
+    else:
+        default_str = str(hasDefault)
 
     tophalf.out("""\
 static CORBA::PR_unionMember @unionmember_mangled_name@[] = {
   @members@
 };
-static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_union_tc("@repoID@", "@name@", @discrim_tc@, @unionmember_mangled_name@, @labels@@default_str@);""",
+static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_union_tc("@repoID@", "@name@", @discrim_tc@, @unionmember_mangled_name@, @labels@, @default_str@, &@pprefix@_tcTrack);""",
                 mangled_name = mangled_name,
                 repoID = repoID,
                 discrim_tc = discrim_tc,
@@ -659,22 +663,12 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_union_tc("@repoI
                 name = union_name,
                 labels = str(numlabels),
                 default_str = default_str,
-                members = string.join(array, ",\n"))
+                members = string.join(array, ",\n"),
+                pprefix = config.state['Private Prefix'])
     
     defineName(unionmember_mangled_name)
     defineName(mangled_name)
 
-    if resolveForward(node):
-        fwname  = mangleName(config.state['Private Prefix'] +\
-                             "_fs_", scopedName)
-        resname = mangleName(config.state['Private Prefix'] +\
-                             "_rf_", scopedName)
-        tophalf.out("""\
-static int @resname@ = @fwname@->PR_resolve_forward(@mangled_name@);""",
-                    fwname=fwname, resname=resname,
-                    mangled_name=mangled_name)
-
-    
     self.__immediatelyInsideModule = insideModule
 
     external_linkage(node)
@@ -686,7 +680,25 @@ static int @resname@ = @fwname@->PR_resolve_forward(@mangled_name@);""",
     finishingNode()
 
 def visitUnionForward(node):
-    pass
+    scopedName = node.scopedName()
+    mangled_name = mangleName(config.state['Private Prefix'] +
+                              "_tc_", scopedName)
+    fmangled_name = mangleName(config.state['Private Prefix'] +
+                               "_ft_", scopedName)
+
+    if not alreadyDefined(fmangled_name):
+        defineName(fmangled_name)
+
+        tophalf.out("""\
+static CORBA::TypeCode_ptr @fmangled_name@ = CORBA::TypeCode::PR_forward_tc("@repoId@", &@pprefix@_tcTrack);
+#define @mangled_name@ @fmangled_name@
+""",
+                    mangled_name = mangled_name,
+                    fmangled_name = fmangled_name,
+                    repoId = node.repoId(),
+                    pprefix=config.state['Private Prefix'])
+
+
 
 def visitEnum(node):
     scopedName = node.scopedName()
@@ -711,13 +723,14 @@ def visitEnum(node):
 
     tophalf.out("""\
 static const char* @enummember_mangled_name@[] = { @elements@ };
-static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_enum_tc("@repoID@", "@name@", @enummember_mangled_name@, @numcases@);""",
+static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_enum_tc("@repoID@", "@name@", @enummember_mangled_name@, @numcases@, &@pprefix@_tcTrack);""",
                 enummember_mangled_name = enummember_mangled_name,
                 mangled_name = mangled_name,
                 elements = string.join(names, ", "),
                 repoID = repoID,
                 name = enum_name,
-                numcases = str(len(names)))
+                numcases = str(len(names)),
+                pprefix = config.state['Private Prefix'])
 
     defineName(mangled_name)
     defineName(enummember_mangled_name)
@@ -749,8 +762,8 @@ def visitInterface(node):
     
     repoID = node.repoId()
     iname = id.Name(node.scopedName()).simple()
-    typecode = "CORBA::TypeCode::PR_interface_tc(\"" + repoID + "\", \"" +\
-               iname + "\")"
+    typecode = 'CORBA::TypeCode::PR_interface_tc("' + repoID + '", "' +\
+               iname + '", &' + config.state['Private Prefix'] + '_tcTrack)'
 
     node.accept(tcstring)
 
@@ -804,13 +817,14 @@ def visitDeclarator(declarator):
     typedef_name = id.Name(scopedName).simple()
     
     tophalf.out("""\
-static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_alias_tc("@repoID@", "@name@", @typecode@);
+static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_alias_tc("@repoID@", "@name@", @typecode@, &@pprefix@_tcTrack);
 
 """,
                 mangled_name = mangled_name,
                 repoID = repoID,
                 name = typedef_name,
-                typecode = typecode)
+                typecode = typecode,
+                pprefix = config.state['Private Prefix'])
     defineName(mangled_name)
 
 
@@ -818,8 +832,6 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_alias_tc("@repoI
 
 def visitTypedef(node):
     aliasType = types.Type(node.aliasType())
-
-    prefix = "CORBA::TypeCode::PR_"
 
     recurse(aliasType)
 
@@ -877,11 +889,12 @@ def visitException(node):
     if num == 0:
         structmember_mangled_name = "(CORBA::PR_structMember*) 0"
     tophalf.out("""\
-static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_exception_tc("@repoID@", "@name@", @structmember_mangled_name@, @n@);""",
+static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_exception_tc("@repoID@", "@name@", @structmember_mangled_name@, @n@, &@pprefix@_tcTrack);""",
                 mangled_name = mangled_name,
                 name = ex_name, n = str(num),
                 structmember_mangled_name = structmember_mangled_name,
-                repoID = repoID)
+                repoID = repoID,
+                pprefix = config.state['Private Prefix'])
 
     external_linkage(node)
 

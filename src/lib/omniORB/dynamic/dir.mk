@@ -5,6 +5,7 @@ ORB_SRCS = \
            valueFactory.cc \
            valueTracker.cc \
            valueType.cc \
+           abstractBase.cc \
            any.cc \
            anyP.cc \
            constants.cc \

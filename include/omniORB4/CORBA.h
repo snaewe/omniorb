@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.5.2.5  2004/04/02 13:26:25  dgrisby
+ Start refactoring TypeCode to support value TypeCodes, start of
+ abstract interfaces support.
+
  Revision 1.5.2.4  2004/02/16 10:10:28  dgrisby
  More valuetype, including value boxes. C++ mapping updates.
 
@@ -397,6 +401,7 @@ _CORBA_MODULE_BEG
 # include "CORBA_ServerRequest.h"
 # include "CORBA_ValueBase.h"
 # include "CORBA_ValueBase_vartypes.h"
+# include "CORBA_AbstractBase.h"
 # include "CORBA_UnknownUserException.h"
 # include "CORBA_Policy.h"
 # include "CORBA_Current.h"

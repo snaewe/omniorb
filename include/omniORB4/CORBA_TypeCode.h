@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2004/04/02 13:26:25  dgrisby
+  Start refactoring TypeCode to support value TypeCodes, start of
+  abstract interfaces support.
+
   Revision 1.1.4.2  2003/05/20 16:53:12  dgrisby
   Valuetype marshalling support.
 
@@ -75,6 +79,13 @@ struct PR_unionMember {
   const char*           name;
   TypeCode_ptr          type;
   PR_unionDiscriminator label;
+};
+
+struct PR_valueMember {
+  const char*  name;
+  const char*  id;
+  TypeCode_ptr type;
+  _CORBA_Short access;
 };
 
 enum TCKind {
@@ -131,7 +142,6 @@ const ValueModifier VM_ABSTRACT    _init_in_decl_( = 2 );
 _CORBA_MODULE_VARINT
 const ValueModifier VM_TRUNCATABLE _init_in_decl_( = 3 );
 
-
 class TypeCode {
 public:
   virtual ~TypeCode();
@@ -168,7 +178,7 @@ public:
   Long param_count() const;             // obsolete
   Any* parameter(Long index) const;     // obsolete
 
-  _CORBA_Short member_visibility(ULong index) const;
+  Short member_visibility(ULong index) const;
   // Return type is really Visibility
 
   ValueModifier type_modifier() const;
@@ -185,6 +195,20 @@ public:
   static void marshalTypeCode(TypeCode_ptr obj,cdrStream& s);
   static TypeCode_ptr unmarshalTypeCode(cdrStream& s);
 
+  //
+  // omniORB specific parts
+  //
+
+  class _Tracker {
+  public:
+    _Tracker(const char* file) : pd_file(file), pd_head(0) {}
+    ~_Tracker();
+    void add(TypeCode_ptr tc);
+  private:
+    const char*  pd_file;
+    TypeCode_ptr pd_head;
+  };
+
   // omniORB only static constructors
   // 1) These constructors are used by omniORB stubs & libraries to produce
   //    typecodes for complex types.  They should not be used in CORBA
@@ -198,10 +222,10 @@ public:
 				   const StructMemberSeq& members);
   static TypeCode_ptr NP_exception_tc(const char* id, const char* name,
 				      const StructMemberSeq& members);
-#endif
   static TypeCode_ptr NP_union_tc(const char* id, const char* name,
 				  TypeCode_ptr discriminator_type,
 				  const UnionMemberSeq& members);
+#endif
   static TypeCode_ptr NP_enum_tc(const char* id, const char* name,
 				 const EnumMemberSeq& members);
   static TypeCode_ptr NP_alias_tc(const char* id, const char* name,
@@ -214,33 +238,73 @@ public:
   static TypeCode_ptr NP_array_tc(ULong length, TypeCode_ptr element_type);
   static TypeCode_ptr NP_recursive_sequence_tc(ULong bound, ULong offset);
   static TypeCode_ptr NP_recursive_tc(const char* id);
+  static TypeCode_ptr NP_value_tc(const char* id, const char* name,
+				  ValueModifier type_modifier,
+				  TypeCode_ptr concrete_base,
+				  const ValueMemberSeq& members);
+  static TypeCode_ptr NP_value_box_tc(const char* id, const char* name,
+				      TypeCode_ptr boxed_type);
+  static TypeCode_ptr NP_native_tc(const char* id, const char* name);
+  static TypeCode_ptr NP_abstract_interface_tc(const char* id,
+					       const char* name);
+  static TypeCode_ptr NP_local_interface_tc(const char* id, const char* name);
 
-  // omniORB only static constructors for stubs
+
+  // omniORB only static constructors for stubs. Either allocate a new
+  // TypeCode or return an existing one. Calling module releases via
+  // the tracker.
+
+  // TypeCodes for named types. Calling module must release.
   static TypeCode_ptr PR_struct_tc(const char* id, const char* name,
 				   const PR_structMember* members,
-				   ULong memberCount);
-  // Duplicates <id> and <name>. Duplicates the names in <members>,
-  // but consumes the types.
+				   ULong memberCount, _Tracker* tracker);
+  static TypeCode_ptr PR_exception_tc(const char* id, const char* name,
+				      const PR_structMember* members,
+				      ULong memberCount, _Tracker* tracker);
   static TypeCode_ptr PR_union_tc(const char* id, const char* name,
 				  TypeCode_ptr discriminator_type,
 				  const PR_unionMember* members,
-				  ULong memberCount, Long deflt = -1);
+				  ULong memberCount, Long deflt,
+				  _Tracker* tracker);
   static TypeCode_ptr PR_enum_tc(const char* id, const char* name,
-				 const char** members, ULong memberCount);
+				 const char** members, ULong memberCount,
+				 _Tracker* tracker);
   static TypeCode_ptr PR_alias_tc(const char* id, const char* name,
-				  TypeCode_ptr original_type);
-  static TypeCode_ptr PR_exception_tc(const char* id, const char* name,
-				      const PR_structMember* members,
-				      ULong memberCount);
-  // Duplicates <id> and <name>. Duplicates the names in <members>,
-  // but consumes the types.
-  static TypeCode_ptr PR_interface_tc(const char* id, const char* name);
-  static TypeCode_ptr PR_string_tc(ULong bound);
-  static TypeCode_ptr PR_wstring_tc(ULong bound);
-  static TypeCode_ptr PR_sequence_tc(ULong bound, TypeCode_ptr element_type);
-  static TypeCode_ptr PR_array_tc(ULong length, TypeCode_ptr element_type);
-  static TypeCode_ptr PR_recursive_sequence_tc(ULong bound, ULong offset);
-  static TypeCode_ptr PR_forward_sequence_tc(ULong bound);
+				  TypeCode_ptr original_type,
+				  _Tracker* tracker);
+  static TypeCode_ptr PR_interface_tc(const char* id, const char* name,
+				      _Tracker* tracker);
+
+  static TypeCode_ptr PR_value_tc(const char* id, const char* name,
+				  ValueModifier type_modifier,
+				  TypeCode_ptr concrete_base,
+				  const PR_valueMember* members,
+				  _Tracker* tracker);
+
+  static TypeCode_ptr PR_value_box_tc(const char* id, const char* name,
+				      TypeCode_ptr boxed_type,
+				      _Tracker* tracker);
+  static TypeCode_ptr PR_abstract_interface_tc(const char* id,
+					       const char* name,
+					       _Tracker* tracker);
+  static TypeCode_ptr PR_local_interface_tc(const char* id, const char* name,
+					    _Tracker* tracker);
+
+  static TypeCode_ptr PR_forward_tc(const char* id, _Tracker* tracker);
+
+  // TypeCodes for anonymous types.
+  static TypeCode_ptr PR_string_tc(ULong bound, _Tracker* tracker);
+  static TypeCode_ptr PR_wstring_tc(ULong bound, _Tracker* tracker);
+  static TypeCode_ptr PR_fixed_tc(UShort digits, UShort scale,
+				  _Tracker* tracker);
+  static TypeCode_ptr PR_sequence_tc(ULong bound, TypeCode_ptr element_type,
+				     _Tracker* tracker);
+  static TypeCode_ptr PR_array_tc(ULong length, TypeCode_ptr element_type,
+				  _Tracker* tracker);
+  static TypeCode_ptr PR_recursive_sequence_tc(ULong bound, ULong offset,
+					       _Tracker* tracker);
+
+  // Static base TypeCodes. Caller does not release.
   static TypeCode_ptr PR_null_tc();
   static TypeCode_ptr PR_void_tc();
   static TypeCode_ptr PR_short_tc();
@@ -259,7 +323,6 @@ public:
   static TypeCode_ptr PR_Object_tc();
   static TypeCode_ptr PR_string_tc();
   static TypeCode_ptr PR_wstring_tc();
-  static TypeCode_ptr PR_fixed_tc(UShort digits, UShort scale);
 #ifdef HAS_LongLong
   static TypeCode_ptr PR_longlong_tc();
   static TypeCode_ptr PR_ulonglong_tc();
@@ -270,11 +333,6 @@ public:
 
   // omniORB internal functions
   virtual CORBA::Boolean NP_is_nil() const;
-
-  virtual int PR_resolve_forward(TypeCode_ptr tc);
-  // Used to fill in the definition of a sequence to a forward struct
-  // or union. Returns a dummy int to allow it to be called in static
-  // initialisers.
 
   static inline _CORBA_Boolean PR_is_valid(TypeCode_ptr p ) {
     return ((p) ? (p->pd_magic == PR_magic) : 1);

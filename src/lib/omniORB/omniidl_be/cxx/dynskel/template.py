@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.2  2004/04/02 13:26:22  dgrisby
+# Start refactoring TypeCode to support value TypeCodes, start of
+# abstract interfaces support.
+#
 # Revision 1.5.2.1  2003/03/23 21:02:39  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -124,6 +128,12 @@ header = """\
 OMNI_USING_NAMESPACE(omni)
 
 static const char* @prefix@_dyn_library_version = @library@;
+
+static CORBA::TypeCode::_Tracker @prefix@_tcTrack(__FILE__);
+"""
+
+fragment_header = """\
+static CORBA::TypeCode::_Tracker @prefix@_tcTrack(__FILE__);
 """
 
 # Required symbols:
@@ -694,14 +704,14 @@ static @private_prefix@_insertToAny_Singleton__c@guard_name@ @private_prefix@_in
 tc_string = """\
 #if !defined(___tc_string_@n@_value__) && !defined(DISABLE_Unnamed_Bounded_String_TC)
 #define ___tc_string_@n@_value__
-const CORBA::TypeCode_ptr _tc_string_@n@ = CORBA::TypeCode::PR_string_tc(@n@);
+const CORBA::TypeCode_ptr _tc_string_@n@ = CORBA::TypeCode::PR_string_tc(@n@, &@prefix@_tcTrack);
 #endif
 """
 
 tc_wstring = """\
 #if !defined(___tc_wstring_@n@_value__) && !defined(DISABLE_Unnamed_Bounded_WString_TC)
 #define ___tc_wstring_@n@_value__
-const CORBA::TypeCode_ptr _tc_wstring_@n@ = CORBA::TypeCode::PR_wstring_tc(@n@);
+const CORBA::TypeCode_ptr _tc_wstring_@n@ = CORBA::TypeCode::PR_wstring_tc(@n@, &@prefix@_tcTrack);
 #endif
 """
 

@@ -175,6 +175,8 @@ extractUserExceptionFromAny(const CORBA::Any& a, CORBA::TypeCode_ptr tc,
   return 0;
 }
 
+static CORBA::TypeCode::_Tracker _tcTrack(__FILE__);
+
 #define USER_EXCEPTION_1(name) \
       USER_EXCEPTION(CORBA,name,name,name,#name)
 
@@ -185,7 +187,7 @@ extractUserExceptionFromAny(const CORBA::Any& a, CORBA::TypeCode_ptr tc,
       USER_EXCEPTION(module,scope::name,scope##_##name,name,#scope "/" #name)
 
 #define USER_EXCEPTION(module,fqname,_fqname,uqname,repostr) \
-static const CORBA::TypeCode_ptr _tc_##module##_##_fqname = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/" #module "/" repostr ":1.0", #uqname, (CORBA::PR_structMember*) 0, 0); \
+static const CORBA::TypeCode_ptr _tc_##module##_##_fqname = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/" #module "/" repostr ":1.0", #uqname, (CORBA::PR_structMember*) 0, 0, &_tcTrack); \
  \
 void operator<<=(CORBA::Any& _a, const module::fqname& _s) { \
   insertUserExceptionToAny(_a,_tc_##module##_##_fqname,_s); \
@@ -272,7 +274,7 @@ static CORBA::PR_structMember
 _0RL_structmember_PortableServer_mForwardRequest[] = {
   {"forward_reference", CORBA::TypeCode::PR_Object_tc()}
 };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mForwardRequest = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/PortableServer/ForwardRequest:1.0", "ForwardRequest", _0RL_structmember_PortableServer_mForwardRequest, 1);
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mForwardRequest = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/PortableServer/ForwardRequest:1.0", "ForwardRequest", _0RL_structmember_PortableServer_mForwardRequest, 1, &_tcTrack);
 
 CORBA::Boolean
 _0RL_tcParser_getMemberDesc_PortableServer_mForwardRequest(const tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){
@@ -349,7 +351,7 @@ static void PortableServer_ForwardRequest_insertToAnyNCP(CORBA::Any& _a,const CO
 static CORBA::PR_structMember _0RL_structmember_PortableServer_mPOA_mInvalidPolicy[] = {
   {"index", CORBA::TypeCode::PR_ushort_tc()}
 };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mPOA_mInvalidPolicy = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/PortableServer/POA/InvalidPolicy:1.0", "InvalidPolicy", _0RL_structmember_PortableServer_mPOA_mInvalidPolicy, 1);
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mPOA_mInvalidPolicy = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/PortableServer/POA/InvalidPolicy:1.0", "InvalidPolicy", _0RL_structmember_PortableServer_mPOA_mInvalidPolicy, 1, &_tcTrack);
 
 CORBA::Boolean
 _0RL_tcParser_getMemberDesc_PortableServer_mPOA_mInvalidPolicy(const tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){
@@ -435,7 +437,8 @@ static const char* mCompletionStatus[] = { "COMPLETED_YES",
 
 static CORBA::TypeCode_ptr _tc_CompletionStatus =
 CORBA::TypeCode::PR_enum_tc("IDL:omg.org/CORBA/completion_status:1.0",
-			    "completion_status", mCompletionStatus, 3);
+			    "completion_status", mCompletionStatus, 3,
+			    &_tcTrack);
 
 
 static CORBA::PR_structMember mSystemException[] = {
@@ -562,7 +565,7 @@ extractSystemExceptionFromAny(const CORBA::Any& a, CORBA::TypeCode_ptr tc,
 
 
 #define STD_EXCEPTION(name) \
-CORBA::TypeCode_ptr CORBA::_tc_##name = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/CORBA/" #name ":1.0", #name, mSystemException, 2); \
+CORBA::TypeCode_ptr CORBA::_tc_##name = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/CORBA/" #name ":1.0", #name, mSystemException, 2, &_tcTrack); \
  \
 void operator<<=(CORBA::Any& _a, const CORBA::name & _s) { \
   insertSystemExceptionToAny(_a,CORBA::_tc_##name,_s); \

@@ -28,6 +28,10 @@
 //
 
 // $Log$
+// Revision 1.1.2.3  2004/04/02 13:26:24  dgrisby
+// Start refactoring TypeCode to support value TypeCodes, start of
+// abstract interfaces support.
+//
 // Revision 1.1.2.2  2003/11/06 11:56:55  dgrisby
 // Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 //
@@ -56,7 +60,7 @@ struct InputTableEntry;
 
 class OutputValueTracker : public ValueIndirectionTracker {
 public:
-  inline OutputValueTracker();
+  OutputValueTracker();
   virtual ~OutputValueTracker();
 
   inline CORBA::Boolean valid()

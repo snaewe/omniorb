@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2004/04/02 13:26:23  dgrisby
+  Start refactoring TypeCode to support value TypeCodes, start of
+  abstract interfaces support.
+
   Revision 1.1.2.3  2004/02/16 10:10:29  dgrisby
   More valuetype, including value boxes. C++ mapping updates.
 
@@ -75,22 +79,23 @@ namespace {
 #endif
 
 
-static omni_tracedmutex         vf_lock;
+static omni_tracedmutex*        vf_lock;
 static ValueFactoryTableEntry** vf_table     = 0;
 static CORBA::ULong             vf_tablesize = 131;
 
 
 static inline void init_table()
 {
-  OMNIORB_ASSERT(!vf_table);
-  valueFactoryTableTracker* vft = new valueFactoryTableTracker();
-  registerTrackedObject(vft);
+  if (!vf_table) {
+    valueFactoryTableTracker* vft = new valueFactoryTableTracker();
+    registerTrackedObject(vft);
+  }
 }
 
 valueFactoryTableTracker::
 valueFactoryTableTracker()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(vf_lock, 1);
+  vf_lock = new omni_tracedmutex();
 
   omniORB::logs(25, "Initialise value factory table.");
   vf_table = new ValueFactoryTableEntry*[vf_tablesize];
@@ -103,8 +108,6 @@ valueFactoryTableTracker()
 valueFactoryTableTracker::
 ~valueFactoryTableTracker()
 {
-  omni_tracedmutex_lock sync(vf_lock);
-
   OMNIORB_ASSERT(vf_table);
 
   omniORB::logs(25, "Release value factory table.");
@@ -123,6 +126,8 @@ valueFactoryTableTracker::
   }
   delete [] vf_table;
   vf_table = 0;
+  delete vf_lock;
+  vf_lock = 0;
 }
 
 
@@ -131,6 +136,8 @@ _omni_ValueFactoryManager::
 register_factory(const char* id, CORBA::ULong hashval,
 		 CORBA::ValueFactory f, CORBA::Boolean internal)
 {
+  init_table();
+
   if (!id)
     OMNIORB_THROW(BAD_PARAM,
 		  BAD_PARAM_NullStringUnexpected,
@@ -151,10 +158,7 @@ register_factory(const char* id, CORBA::ULong hashval,
   f->_add_ref();
 
   {
-    omni_tracedmutex_lock sync(vf_lock);
-
-    if (!vf_table)
-      init_table();
+    omni_tracedmutex_lock sync(*vf_lock);
 
     CORBA::ULong h = hashval % vf_tablesize;
 
@@ -196,7 +200,7 @@ unregister_factory(const char* id, CORBA::ULong hashval)
   }
 
   {
-    omni_tracedmutex_lock sync(vf_lock);
+    omni_tracedmutex_lock sync(*vf_lock);
 
     CORBA::ULong h = hashval % vf_tablesize;
 
@@ -234,7 +238,7 @@ lookup(const char* id, CORBA::ULong hashval)
 		  CORBA::COMPLETED_NO);
 
   {
-    omni_tracedmutex_lock sync(vf_lock);
+    omni_tracedmutex_lock sync(*vf_lock);
 
     if (!vf_table)
       return 0;
@@ -258,15 +262,13 @@ _omni_ValueFactoryManager::
 create_for_unmarshal(const char* id, CORBA::ULong hashval)
 {
   OMNIORB_ASSERT(id);
+  OMNIORB_ASSERT(vf_table);
 
   CORBA::ValueBase*   r;
   CORBA::ValueFactory f = 0;
 
   {
-    omni_tracedmutex_lock sync(vf_lock);
-
-    if (!vf_table)
-      return 0;
+    omni_tracedmutex_lock sync(*vf_lock);
 
     CORBA::ULong h = hashval % vf_tablesize;
 
@@ -351,11 +353,12 @@ OMNI_NAMESPACE_BEGIN(omni)
 class omni_valueFactory_initialiser : public omniInitialiser {
 public:
 
-  omni_valueFactory_initialiser() { }
-
+  omni_valueFactory_initialiser() {
+    init_table(); // In case no factories are registered elsewhere.
+  }
   void attach() { }
   void detach() {
-    omni_tracedmutex_lock sync(vf_lock);
+    omni_tracedmutex_lock sync(*vf_lock);
 
     if (vf_table) {
       omniORB::logs(25, "Release registered value factories.");

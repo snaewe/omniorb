@@ -1,3 +1,37 @@
+Fri Apr  2 14:27:05 BST 2004 dgrisby
+====================================
+
+- Remove obsolete pragma.
+
+idl/echo.idl
+
+- Start refactoring TypeCode to support value TypeCodes, start of
+  abstract interfaces support.
+
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_AbstractBase.h        -- new
+include/omniORB4/CORBA_ORB.h
+include/omniORB4/CORBA_TypeCode.h
+include/omniORB4/internal/typecode.h
+include/omniORB4/internal/valueTrackerImpl.h
+src/lib/omniORB/dynamic/abstractBase.cc      -- new
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/dynException.cc
+src/lib/omniORB/dynamic/poastub.cc
+src/lib/omniORB/dynamic/policy.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/dynamic/unknownUserExn.cc
+src/lib/omniORB/dynamic/valueFactory.cc
+src/lib/omniORB/omniidl_be/cxx/dynskel/__init__.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/tcstring.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+
+- Rearrange paths.
+
+src/tool/omniidl/python/scripts/omniidl.in
+
+
 Fri Feb 20 00:04:22 GMT 2004 dgrisby
 ====================================
 

@@ -111,6 +111,8 @@ CORBA::UnknownUserException::_NP_marshal(cdrStream&) const
   OMNIORB_ASSERT(0);
 }
 
+static CORBA::TypeCode::_Tracker _tcTrack(__FILE__);
+
 static 
 CORBA::PR_structMember mUnknownUserException[] = {
   {"exception", CORBA::TypeCode::PR_any_tc()}
@@ -121,7 +123,7 @@ const CORBA::TypeCode_ptr
 _tc_UnknownUserException = CORBA::TypeCode::PR_exception_tc(
 	      "IDL:omg.org/CORBA/UnknownUserException:1.0", 
 	      "UnknownUserException", 
-	      mUnknownUserException, 1);
+	      mUnknownUserException, 1, &_tcTrack);
 
 
 static

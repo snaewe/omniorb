@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2004/04/02 13:26:25  dgrisby
+  Start refactoring TypeCode to support value TypeCodes, start of
+  abstract interfaces support.
+
   Revision 1.1.4.2  2003/09/26 16:12:53  dgrisby
   Start of valuetype support.
 
@@ -248,16 +252,29 @@ public:
   TypeCode_ptr create_fixed_tc(UShort digits, Short scale);
   TypeCode_ptr create_sequence_tc(ULong bound,
 				  TypeCode_ptr element_type);
-  TypeCode_ptr create_array_tc(ULong length, TypeCode_ptr etype);
   TypeCode_ptr create_recursive_sequence_tc(ULong bound, ULong offset);
   // deprecated
 
-  TypeCode_ptr create_recursive_tc(const char* id);
+  TypeCode_ptr create_array_tc(ULong length, TypeCode_ptr etype);
 
   TypeCode_ptr create_value_tc(const char* id, const char* name,
 			       ValueModifier type_modifier,
 			       TypeCode_ptr concrete_base,
 			       const ValueMemberSeq& members);
+
+  TypeCode_ptr create_value_box_tc(const char* id, const char* name,
+				   TypeCode_ptr boxed_type);
+
+#if 0
+  TypeCode_ptr create_native_tc(const char* id, const char* name);
+#endif
+
+  TypeCode_ptr create_recursive_tc(const char* id);
+
+  TypeCode_ptr create_abstract_interface_tc(const char* id, const char* name);
+
+  TypeCode_ptr create_local_interface_tc(const char* id, const char* name);
+  
 
   Policy_ptr create_policy(PolicyType,const Any&);
 

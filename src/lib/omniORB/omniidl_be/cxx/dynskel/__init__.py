@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.10.2.2  2004/04/02 13:26:22  dgrisby
+# Start refactoring TypeCode to support value TypeCodes, start of
+# abstract interfaces support.
+#
 # Revision 1.10.2.1  2003/03/23 21:02:40  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -114,7 +118,11 @@ def generate(stream, tree):
     stream.out(template.header_comment,
                program = config.state['Program Name'],
                library = config.state['Library Version'])
-    if not config.state['Fragment']:
+
+    if config.state['Fragment']:
+        stream.out(template.fragment_header,
+                   prefix = config.state['Private Prefix'])
+    else:
         stream.out(template.header,
                    basename = config.state['Basename'],
                    hh = config.state['HH Suffix'],
