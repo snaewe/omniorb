@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.21  1999/08/15 13:54:01  sll
+ Added tyepdef ... BaseT to various sequence templates.
+
  Revision 1.20  1999/06/18 20:33:42  sll
  Updated to CORBA 2.3 mapping.
 
@@ -287,6 +290,7 @@ private:
 template <class T>
 class _CORBA_Unbounded_Sequence : public _CORBA_Sequence<T> {
 public:
+  typedef _CORBA_Sequence<T> BaseT ;
   inline _CORBA_Unbounded_Sequence() {}
   inline _CORBA_Unbounded_Sequence(_CORBA_ULong max) : _CORBA_Sequence<T>(max) {}
   inline _CORBA_Unbounded_Sequence(const _CORBA_Unbounded_Sequence<T>& s) 
@@ -312,12 +316,11 @@ public:
 
   inline size_t NP_alignedSize(size_t initialoffset) const {
     size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
-    for (unsigned long i=0; i < length(); i++) {
-      alignedsize = _CORBA_Sequence<T>::NP_data()[i].NP_alignedSize(alignedsize);
+    for (unsigned long i=0; i < BaseT::length(); i++) {
+      alignedsize = BaseT::NP_data()[i].NP_alignedSize(alignedsize);
     }
     return alignedsize;
   }
-
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -329,6 +332,7 @@ class _CORBA_Unbounded_Sequence_w_FixSizeElement
    : public _CORBA_Sequence<T> 
 {
 public:
+  typedef _CORBA_Sequence<T> BaseT ;
   inline _CORBA_Unbounded_Sequence_w_FixSizeElement() {}
   inline _CORBA_Unbounded_Sequence_w_FixSizeElement(_CORBA_ULong max)
     : _CORBA_Sequence<T>(max) {}
@@ -360,9 +364,9 @@ public:
 
   inline size_t NP_alignedSize(size_t initialoffset) const {
     size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
-    if (_CORBA_Sequence<T>::length()) {
+    if (BaseT::length()) {
       alignedsize = ((alignedsize+(elmAlignment-1)) & ~(elmAlignment-1));
-      alignedsize += _CORBA_Sequence<T>::length() * elmSize;
+      alignedsize += BaseT::length() * elmSize;
     }
     return alignedsize;
   }
@@ -381,6 +385,7 @@ class _CORBA_Unbounded_Sequence__Boolean
    : public _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Boolean,1,1>
 {
 public:
+  typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Boolean,1,1> BaseT ;  
   inline _CORBA_Unbounded_Sequence__Boolean() {}
   inline _CORBA_Unbounded_Sequence__Boolean(_CORBA_ULong max)
     : _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Boolean,1,1>(max) {}
@@ -440,6 +445,7 @@ public:
 template <class T,int max>
 class _CORBA_Bounded_Sequence : public _CORBA_Sequence<T> {
 public:
+  typedef _CORBA_Sequence<T> BaseT ;
   inline _CORBA_Bounded_Sequence() : _CORBA_Sequence<T>(max,1) {}
   inline _CORBA_Bounded_Sequence(_CORBA_ULong len,
 				 T           *value,
@@ -461,8 +467,8 @@ public:
   // omniORB2 extensions
   inline size_t NP_alignedSize(size_t initialoffset) const {
     size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
-    for (unsigned long i=0; i < length(); i++) {
-      alignedsize = _CORBA_Sequence<T>::NP_data()[i].NP_alignedSize(alignedsize);
+    for (unsigned long i=0; i < BaseT::length(); i++) {
+      alignedsize = BaseT::NP_data()[i].NP_alignedSize(alignedsize);
     }
     return alignedsize;
   }
@@ -478,6 +484,7 @@ class _CORBA_Bounded_Sequence_w_FixSizeElement
   : public _CORBA_Sequence<T> 
 {
 public:
+  typedef _CORBA_Sequence<T> BaseT ;
   inline _CORBA_Bounded_Sequence_w_FixSizeElement() : _CORBA_Sequence<T>(max,1)  {}
   inline _CORBA_Bounded_Sequence_w_FixSizeElement(_CORBA_ULong len,
 					   T           *value,
@@ -502,9 +509,9 @@ public:
   // omniORB2 extensions
   inline size_t NP_alignedSize(size_t initialoffset) const {
     size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
-    if (length()) {
+    if (BaseT::length()) {
       alignedsize = ((alignedsize+(elmAlignment-1)) & ~(elmAlignment-1));
-      alignedsize += length() * elmSize;
+      alignedsize += BaseT::length() * elmSize;
     }
     return alignedsize;
   }
@@ -524,20 +531,20 @@ class _CORBA_Bounded_Sequence__Boolean
    : public _CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Boolean,max,1,1>
 {
 public:
+  typedef _CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Boolean,max,1,1> BaseT ;
   inline _CORBA_Bounded_Sequence__Boolean() {}
   inline _CORBA_Bounded_Sequence__Boolean(_CORBA_ULong len,
 					   _CORBA_Boolean    *value,
 					   _CORBA_Boolean release = 0)
-    : _CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Boolean,max,1,1>(len,value,release) {}
+    : BaseT(len,value,release) {}
   inline _CORBA_Bounded_Sequence__Boolean(const 
 			       _CORBA_Bounded_Sequence__Boolean<max>& s) 
     :  _CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Boolean,max,1,1>(s) {}
   inline _CORBA_Bounded_Sequence__Boolean& operator= (const 
 		 _CORBA_Bounded_Sequence__Boolean& s) {
-     _CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Boolean,max,1,1>::operator= (s);
+     BaseT::operator= (s);
      return *this;
   }
-
 
   inline ~_CORBA_Bounded_Sequence__Boolean() {}
 #ifdef HAS_Cplusplus_Bool
@@ -785,6 +792,7 @@ private:
 template <class T,class T_slice,class Telm,int dimension>
 class _CORBA_Unbounded_Sequence_Array : public _CORBA_Sequence_Array<T,T_slice,Telm,dimension> {
 public:
+  typedef  _CORBA_Sequence_Array<T,T_slice,Telm,dimension> BaseT ;
   inline _CORBA_Unbounded_Sequence_Array() {}
   inline _CORBA_Unbounded_Sequence_Array(_CORBA_ULong max) : _CORBA_Sequence_Array<T,T_slice,Telm,dimension>(max) {}
   inline _CORBA_Unbounded_Sequence_Array(const _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>& s) 
@@ -795,7 +803,7 @@ public:
 					 _CORBA_Boolean release = 0)
      : _CORBA_Sequence_Array<T,T_slice,Telm,dimension>(max,len,value,release) {}
   inline _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension> &operator= (const _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension> &s) {
-    _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator= (s);
+    BaseT::operator= (s);
     return *this;
   }
   inline ~_CORBA_Unbounded_Sequence_Array() {}
@@ -804,21 +812,16 @@ public:
 
   inline void replace(_CORBA_ULong max, _CORBA_ULong len, T* data,
 		      _CORBA_Boolean release = 0) {
-    _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::replace(max,len,data,release);
+    BaseT::replace(max,len,data,release);
   }
 
-#if 0
-  inline T *NP_data() const {
-      return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::NP_data();
-  }
-#endif
   inline size_t NP_alignedSize(size_t initialoffset) const {
     size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
     for (_CORBA_ULong i=0; 
-	 i < _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length(); 
+	 i < BaseT::length(); 
 	 i++) {
       for (_CORBA_ULong j=0; j<dimension; j++) {
-	alignedsize = ((Telm*)(NP_data()[i]) + j)->NP_alignedSize(alignedsize);
+	alignedsize = ((Telm*)(BaseT::NP_data()[i]) + j)->NP_alignedSize(alignedsize);
       }
     }
     return alignedsize;
@@ -834,6 +837,7 @@ class _CORBA_Unbounded_Sequence_Array_w_FixSizeElement
    : public _CORBA_Sequence_Array<T,T_slice,Telm,dimension> 
 {
 public:
+  typedef _CORBA_Sequence_Array<T,T_slice,Telm,dimension> BaseT ;
   inline _CORBA_Unbounded_Sequence_Array_w_FixSizeElement() {}
   inline _CORBA_Unbounded_Sequence_Array_w_FixSizeElement(_CORBA_ULong max)
     : _CORBA_Sequence_Array<T,T_slice,Telm,dimension>(max) {}
@@ -851,7 +855,7 @@ public:
 	  _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment> &
 	 s) 
   {
-    _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator= (s);
+    BaseT::operator= (s);
     return *this;
   }
   inline ~_CORBA_Unbounded_Sequence_Array_w_FixSizeElement() {}
@@ -860,19 +864,14 @@ public:
 
   inline void replace(_CORBA_ULong max, _CORBA_ULong len, T* data,
 		      _CORBA_Boolean release = 0) {
-    _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::replace(max,len,data,release);
+    BaseT::replace(max,len,data,release);
   }
 
-#if 0
-  inline T *NP_data() const {
-      return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::NP_data();
-  }
-#endif
   inline size_t NP_alignedSize(size_t initialoffset) const {
     size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
-    if (_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length()) {
+    if (BaseT::length()) {
       alignedsize = ((alignedsize+(elmAlignment-1)) & ~(elmAlignment-1));
-      alignedsize +=_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length() * 
+      alignedsize +=BaseT::length() * 
 	dimension * elmSize;
     }
     return alignedsize;
@@ -957,6 +956,7 @@ public:
 template <class T,class T_slice,class Telm,int dimension,int max>
 class _CORBA_Bounded_Sequence_Array : public _CORBA_Sequence_Array<T,T_slice,Telm,dimension> {
 public:
+  typedef  _CORBA_Sequence_Array<T,T_slice,Telm,dimension> BaseT ;
   inline _CORBA_Bounded_Sequence_Array() : _CORBA_Sequence_Array<T,T_slice,Telm,dimension>(max,1) {}
   inline _CORBA_Bounded_Sequence_Array(_CORBA_ULong len,
 				       T           *value,
@@ -965,7 +965,7 @@ public:
   inline _CORBA_Bounded_Sequence_Array(const _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>& s)
             : _CORBA_Sequence_Array<T,T_slice,Telm,dimension>(s) {}
   inline _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max> &operator= (const _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max> &s) {
-    _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator= (s);
+    BaseT::operator= (s);
     return *this;
   }
 
@@ -974,19 +974,14 @@ public:
   // CORBA 2.3 additions
 
   inline void replace(_CORBA_ULong len, T* data,_CORBA_Boolean release = 0) {
-    _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::replace(max,len,data,release);
+    BaseT::replace(max,len,data,release);
   }
 
-#if 0
-  inline T *NP_data() const {
-      return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::NP_data();
-  }
-#endif
   inline size_t NP_alignedSize(size_t initialoffset) const {
     size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
-    for (_CORBA_ULong i=0; i < length(); i++) {
+    for (_CORBA_ULong i=0; i < BaseT::length(); i++) {
       for (_CORBA_ULong j=0; j < dimension; j++) {
-	alignedsize = ((Telm*)(NP_data()[i])+j)->NP_alignedSize(alignedsize);
+	alignedsize = ((Telm*)(BaseT::NP_data()[i])+j)->NP_alignedSize(alignedsize);
       }
     }
     return alignedsize;
@@ -1002,6 +997,7 @@ class _CORBA_Bounded_Sequence_Array_w_FixSizeElement
   : public _CORBA_Sequence_Array<T,T_slice,Telm,dimension> 
 {
 public:
+  typedef _CORBA_Sequence_Array<T,T_slice,Telm,dimension> BaseT ;
   inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement()
     : _CORBA_Sequence_Array<T,T_slice,Telm,dimension>(max,1) {}
   inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement(_CORBA_ULong len,
@@ -1024,18 +1020,12 @@ public:
     _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::replace(max,len,data,release);
   }
 
-#if 0
-  inline T *NP_data() const {
-      return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::NP_data();
-  }
-#endif
-
   // omniORB2 extensions
   inline size_t NP_alignedSize(size_t initialoffset) const {
     size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
-    if (length()) {
+    if (BaseT::length()) {
       alignedsize = ((alignedsize+(elmAlignment-1)) & ~(elmAlignment-1));
-      alignedsize += length() * dimension * elmSize;
+      alignedsize += BaseT::length() * dimension * elmSize;
     }
     return alignedsize;
   }
@@ -1055,18 +1045,16 @@ class _CORBA_Bounded_Sequence_Array__Boolean
    : public _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,max,1,1>
 {
 public:
+  typedef _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,max,1,1> BaseT ;  
   inline _CORBA_Bounded_Sequence_Array__Boolean() {}
-  inline _CORBA_Bounded_Sequence_Array__Boolean(_CORBA_ULong len,
-						T* value,
-						_CORBA_Boolean release=0)
-    :  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,max,1,1>(len,value,release) {}
-  inline _CORBA_Bounded_Sequence_Array__Boolean(const 
-      _CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>& s) 
-    :  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,max,1,1>(s) {}
+  inline _CORBA_Bounded_Sequence_Array__Boolean(_CORBA_ULong len, T* value, _CORBA_Boolean release=0)
+    :  BaseT (len,value,release) {}
+  inline _CORBA_Bounded_Sequence_Array__Boolean(const _CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>& s) 
+    :  BaseT (s) {}
   inline _CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>&
       operator= (const
 	_CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>& s) {
-	  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,max,1,1>::operator= (s);
+	  BaseT ::operator= (s);
 	  return *this;
   }
 
@@ -1088,18 +1076,16 @@ class _CORBA_Bounded_Sequence_Array__Octet
    : public _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Octet,dimension,max,1,1>
 {
 public:
+  typedef _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Octet,dimension,max,1,1> BaseT ;
   inline _CORBA_Bounded_Sequence_Array__Octet() {}
-  inline _CORBA_Bounded_Sequence_Array__Octet(_CORBA_ULong len,
-					      T *value,
-					      _CORBA_Boolean release = 0)
-    :  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Octet,dimension,max,1,1>(len,value,release) {}
-  inline _CORBA_Bounded_Sequence_Array__Octet(const 
-      _CORBA_Bounded_Sequence_Array__Octet<T,T_slice,dimension,max>& s) 
-    :  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Octet,dimension,max,1,1>(s) {}
+  inline _CORBA_Bounded_Sequence_Array__Octet(_CORBA_ULong len, T *value, _CORBA_Boolean release = 0)
+    :  BaseT (len,value,release) {}
+  inline _CORBA_Bounded_Sequence_Array__Octet(const _CORBA_Bounded_Sequence_Array__Octet<T,T_slice,dimension,max>& s) 
+    :  BaseT  (s) {}
   inline _CORBA_Bounded_Sequence_Array__Octet<T,T_slice,dimension,max>&
       operator= (const
 	_CORBA_Bounded_Sequence_Array__Octet<T,T_slice,dimension,max>& s) {
-	  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Octet,dimension,max,1,1>::operator= (s);
+	  BaseT ::operator= (s);
 	  return *this;
   }
 
