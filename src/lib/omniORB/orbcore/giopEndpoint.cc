@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2003/11/06 10:19:19  dgrisby
+  Remove transports from linked list when they are deleted.
+
   Revision 1.1.2.14  2003/05/22 13:41:41  dgrisby
   HPUX patches.
 
@@ -243,6 +246,11 @@ giopTransportImpl::giopTransportImpl(const char* t) : type(t), next(0) {
 
 ////////////////////////////////////////////////////////////////////////
 giopTransportImpl::~giopTransportImpl() {
+
+  giopTransportImpl** pp = &implHead();
+  while (*pp && *pp != this) pp = &((*pp)->next);
+
+  if (*pp == this) *pp = this->next;
 }
 
 ////////////////////////////////////////////////////////////////////////
