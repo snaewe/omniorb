@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/08 19:10:53  ewc
-  Added typedef to work around VC++ 4.2 nested class bug
+  Revision 1.3  1997/01/23 14:59:27  sll
+  Now included template marshalling code for sequence template.
 
+ * Revision 1.2  1997/01/08  19:10:53  ewc
+ * Added typedef to work around VC++ 4.2 nested class bug
+ *
  * Revision 1.1  1997/01/08  17:28:30  sll
  * Initial revision
  *
@@ -54,8 +57,6 @@
 #else
 #error "UMARSHAL has already been defined"
 #endif
-
-typedef Strand::Sync Strand_Sync;
 
 class NetBufferedStream : public Strand_Sync {
 public:
@@ -509,5 +510,62 @@ private:
 #undef Swap32
 #undef MARSHAL
 #undef UMARSHAL
+
+template <class T>
+inline void
+_CORBA_Sequence<T>::operator>>= (NetBufferedStream &s) const
+{
+  pd_len >>= s;
+  for (int i=0; i<(int)pd_len; i++) {
+    pd_buf[i] >>= s;
+  }
+  return;
+}
+
+template <class T>
+inline void
+_CORBA_Sequence<T>::operator<<= (NetBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l > s.RdMessageUnRead()) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    pd_buf[i] <<= s;
+  }
+  return;
+}
+
+template <class T>
+inline void
+_CORBA_Sequence<T>::operator>>= (MemBufferedStream &s) const
+{
+  pd_len >>= s;
+  for (int i=0; i<(int)pd_len; i++) {
+    pd_buf[i] >>= s;
+  }
+  return;
+}
+
+template <class T>
+inline void
+_CORBA_Sequence<T>::operator<<= (MemBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l > s.unRead()) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    pd_buf[i] <<= s;
+  }
+  return;
+}
+
 
 #endif // __BUFFEREDSTREAM_H__
