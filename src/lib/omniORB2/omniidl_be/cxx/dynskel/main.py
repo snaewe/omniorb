@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  2000/01/11 11:33:55  djs
+# Tidied up
+#
 # Revision 1.5  2000/01/07 20:31:24  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -219,10 +222,7 @@ def visitTypedef(node):
     # The old backend does something funny with output order
     # this helps recreate it
     first_is_array_decl = node.declarators()[0].sizes() != []
-    #print "first = " + repr(first_is_array_decl)
     if not(first_is_array_decl):
-        #print repr(node.declarators()[0].scopedName()) + "is not an array"
-        #stream.out("but why? it is = " + repr(node.declarators()[0].sizes()))
         if type_dims != []:
             node.accept(bdesc)
         
@@ -249,7 +249,6 @@ void _0RL_delete_@guard_name@(void* _data) {
 """, fqname = fqname, guard_name = guard_name)
 
             if first_declarator:
-                #stream.out("coming up!")
                 node.accept(bdesc)
                 pass
             stream.out(str(bdesc.array(aliasType, declarator)))
@@ -427,7 +426,6 @@ def visitStruct(node):
     member_code = util.StringStream()
 
     for m in node.members():
-        # recurse
         m.accept(self)
 
     member_desc = bdesc.member(node)    
@@ -555,14 +553,6 @@ def visitUnion(node):
         # handle cases which are themselves anonymous array
         # or sequence declarators
         if tyutil.isSequence(caseType):
-            
-            # recursive sequences are handled by the sequence itself
-            # is the sequence recursive?
-            #seqType = caseType.seqType()
-            #if isinstance(seqType, idltype.Declared) and \
-            #   seqType.decl() == node:
-            #    stream.out(str(bdesc.external(seqType)))
-                
             stream.out(str(bdesc.sequence(caseType)))
         # handle uses of sequences through typedefs but where the
         # actual declaration is in anothe file
@@ -580,18 +570,7 @@ def visitUnion(node):
             # only if not defined in this file
             if not(caseType.decl().mainFile()):
                 stream.out(str(bdesc.external(caseType)))
-            if 0:
-                mem_scopedName = caseType.decl().scopedName()
-                mem_guard_name = tyutil.guardName(mem_scopedName)
-                mem_fqname = env.nameToString(mem_scopedName)
-                fn_name = "_0RL_buildDesc_c" + mem_guard_name
-                if alreadyDefined(fn_name):
-                    return
-                defineName(fn_name)
-                stream.out("""\
-extern void _0RL_buildDesc_c@guard_name@(tcDescriptor &, const @fqname@&);""",
-                           guard_name = mem_guard_name,
-                           fqname = mem_fqname)
+
         if tyutil.isString(caseType) and caseType.bound() != 0:
             stream.out("""\
 #ifndef _0RL_buildDesc_c@bound@string
@@ -634,17 +613,6 @@ extern void _0RL_buildDesc_c@guard_name@(tcDescriptor &, const @fqname@&);""",
         sw_guard_name = tyutil.guardName(sw_scopedName)
         sw_fqname = env.nameToString(sw_scopedName)
         fn_name = "_0RL_buildDesc_c" + sw_guard_name
-        # something wrong here
-        if 0:
-        
-            if alreadyDefined(fn_name):
-                return
-            defineName(fn_name)
-            stream.out("""\
-extern void _0RL_buildDesc_c@guard_name@(tcDescriptor &, const @fqname@&);""",
-                       guard_name = sw_guard_name,
-                       fqname = sw_fqname)
-            
         
     stream.out("""\
 class _0RL_tcParser_unionhelper_@guard_name@ {

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  2000/01/11 11:33:55  djs
+# Tidied up
+#
 # Revision 1.7  2000/01/07 20:31:24  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -509,11 +512,6 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_union_tc("@repoI
     
     external_linkage(node)
 
-
-def visitMember(node):
-    assert 0
-    if node.constrType():
-        node.memberType().decl().accept(self)
 
 def visitEnum(node):
     if not(node.mainFile()) and not(self.__override):
