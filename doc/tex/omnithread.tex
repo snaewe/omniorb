@@ -10,7 +10,7 @@ Olivetti Research Laboratory \\
 Cambridge \\
 }
 
-\date{17 August 1995}
+\date{22 October 1996}
 
 \begin{document}
 
@@ -25,7 +25,7 @@ different underlying threads primitives.
 
 The programming interface is designed to be similar to the C language interface
 to POSIX threads (IEEE draft standard 1003.1c - previously 1003.4a, often known
-as ``pthreads'').
+as ``pthreads'' \cite{pthreads}).
 
 Much of the abstraction consists of simple C++ object wrappers around pthread
 calls.  However for some features such as thread-specific data, a better
@@ -41,20 +41,20 @@ The abstraction layer is currently implemented for the following architectures
 
 \begin{itemize}
 
-\item Solaris 2.3/2.4 (solaris threads)
-\item Solaris 2.3/2.4 (pthreads draft 6)
-\item Alpha OSF1 (pthreads draft 4)
-\item Windows NT (NT threads)
-\item ATMos (pthreads draft 6)
+\item Solaris 2.x using pthreads draft 10
+\item Solaris 2.x using solaris threads (but pthreads version is now standard)
+\item Alpha OSF1 using pthreads draft 4
+\item Windows NT using NT threads
+\item ATMos using pthreads draft 6
 
 \end{itemize}
 
 See the {\tt omnithread.h} header file for full details of the API.  The
 descriptions below assume you have some previous knowledge of threads, mutexes,
-condition variables and semaphores.  Also refer to the POSIX threads
-documentation for further explanation of these ideas (particularly condition
-variables, the use of which may not be particularly intuitive when first
-encountered).
+condition variables and semaphores.  Also refer to other documentation
+(\cite{birrell}, \cite{pthreads}) for further explanation of these ideas
+(particularly condition variables, the use of which may not be particularly
+intuitive when first encountered).
 
 
 \section{Synchronisation objects}
@@ -170,60 +170,28 @@ in debugging, {\tt state()}, {\tt sleep()} and {\tt get\_time()}.
 
 All you need to do is include the {\tt omnithread.h} header file in your source
 code, and then link in the omnithread library in to your executable.  The
-details of what you need to put in your Imakefile to make the header files and
-library available is best explained by example.  If your program doesn't use
-CORBA then you just need something like this:
+details of what you need to put in your dir.mk to make the header files and
+library available is best explained by example.  You just need something like
+this:
 
 \begin{verbatim}
-XCOMM
-XCOMM Non-CORBA Imakefile
-XCOMM
 
 CXXSRCS = wob.cc
 
-DEFINES = $(OMNITHREADDEFINE)
+CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
 
-NormalCplusplusProgramTarget(wob,wob.o,$(OMNITHREADDEPEND),\
-        $(OMNITHREADLIB),NullParameter)
+wob = $(patsubst %,$(BinPattern),wob)
 
-\end{verbatim}
-
-If you use CORBA then things are slightly more complicated in that the details
-differ according to whether OmniORB or Orbix is being used (this is because
-OmniORB uses OMNI threads internally).  Your Imakefile should be written to
-cope with both:
-
-\begin{verbatim}
-XCOMM
-XCOMM CORBA Imakefile
-XCOMM
-
-CXXSRCS = wob.cc
-
-DEFINES = $(CORBA_DEFINE) $(OMNITHREADDEFINE)
-
-CORBAInterface(wobble)
-
-#ifdef UseOmniORB
-
-NormalCplusplusProgramTarget(wob,wob.o,$(CORBA_LIBDEPEND),\
-        $(CORBA_CLTLIB),NullParameter)
-
-#else
-
-NormalCplusplusProgramTarget(wob,wob.o,\
-        $(CORBA_LIBDEPEND) $(OMNITHREADDEPEND),\
-        $(CORBA_CLTLIB) $(OMNITHREADLIB),NullParameter)
-
-#endif
+$(wob): wob.o $(OMNITHREAD_LIB_DEPEND)
+        @(libs="$(OMNITHREAD_LIB)"; $(CXXExecutable))
 
 \end{verbatim}
 
-Note that it is important that {\tt \$(CORBA\_CLTLIB)} or {\tt
-\$(CORBA\_SRVLIB)} appears before {\tt \$(OMNITHREADLIB)} in the
-NormalCplusplusProgramTarget rule.  This is because linking the Solaris
-thread library before the Orbix library results in a binary which segmentation
-faults inside the Orbix library initialisation.
+Note that if you use CORBA then it is important that {\tt
+\$(CORBA\_CLIENT\_LIB)} or {\tt \$(CORBA\_SERVER\_LIB)} appears before {\tt
+\$(OMNITHREAD\_LIB)} in the {\tt libs="..."} assignment.  This is because
+linking the Solaris thread library before the Orbix library results in a binary
+which segmentation faults inside the Orbix library initialisation.
 
 
 
@@ -353,5 +321,22 @@ An alternative method is similar but to use polling instead of the pipe.
 Thread B justs sets a flag and thread A calls select with a timeout,
 periodically waking up to see if the flag has been set.
 
+
+\begin{thebibliography}{lo}
+
+\bibitem[POSIX94]{pthreads}
+{\em Portable Operating System Interface (POSIX) Threads Extension},
+P1003.1c Draft 10,
+IEEE,
+September 1994.
+
+\bibitem[Birrell89]{birrell}
+{\em An Introduction to Programming with Threads},
+Research Report 35,
+DEC Systems Research Center,
+Palo Alto, CA,
+January 1989.
+
+\end{thebibliography}
 
 \end{document}
