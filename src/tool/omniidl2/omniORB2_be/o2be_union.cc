@@ -28,9 +28,13 @@
 
 /*
   $Log$
-  Revision 1.5  1997/05/06 14:10:02  sll
-  Public release.
+  Revision 1.6  1997/08/21 21:13:57  sll
+  Names of internal variables inside the stub code now all start with the
+  prefix __ to avoid potential clash with identifiers defined in IDL.
 
+// Revision 1.5  1997/05/06  14:10:02  sll
+// Public release.
+//
   */
 
 /*
@@ -282,8 +286,8 @@ o2be_union::produce_hdr(fstream &s)
     }
   else
     {
-      IND(s); s << "pd_default = 1;\n";
-      IND(s); s << "pd_d = ";
+      IND(s); s << "pd__default = 1;\n";
+      IND(s); s << "pd__d = ";
       produce_default_value(*this,s);
       s << ";\n";
     }
@@ -294,10 +298,10 @@ o2be_union::produce_hdr(fstream &s)
   INC_INDENT_LEVEL();
   if (!(nodefault() && no_missing_disc_value()))
     {
-      IND(s); s << "if ((pd_default = _value.pd_default)) {\n";
+      IND(s); s << "if ((pd__default = _value.pd__default)) {\n";
       INC_INDENT_LEVEL();
       {
-	IND(s); s << "pd_d = _value.pd_d;\n";
+	IND(s); s << "pd__d = _value.pd__d;\n";
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
 	while (!i.is_done())
 	  {
@@ -321,7 +325,7 @@ o2be_union::produce_hdr(fstream &s)
       IND(s); s << "else {\n";
     }
   INC_INDENT_LEVEL();
-  IND(s); s << "switch(_value.pd_d) {\n";
+  IND(s); s << "switch(_value.pd__d) {\n";
   INC_INDENT_LEVEL();
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -360,10 +364,10 @@ o2be_union::produce_hdr(fstream &s)
   INC_INDENT_LEVEL();
   if (!(nodefault() && no_missing_disc_value()))
     {
-      IND(s); s << "if ((pd_default = _value.pd_default)) {\n";
+      IND(s); s << "if ((pd__default = _value.pd__default)) {\n";
       INC_INDENT_LEVEL();
       {
-	IND(s); s << "pd_d = _value.pd_d;\n";
+	IND(s); s << "pd__d = _value.pd__d;\n";
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
 	while (!i.is_done())
 	  {
@@ -387,7 +391,7 @@ o2be_union::produce_hdr(fstream &s)
       IND(s); s << "else {\n";
     }
   INC_INDENT_LEVEL();
-  IND(s); s << "switch(_value.pd_d) {\n";
+  IND(s); s << "switch(_value.pd__d) {\n";
   INC_INDENT_LEVEL();
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -422,7 +426,7 @@ o2be_union::produce_hdr(fstream &s)
   IND(s); s << "}\n\n";
   
   IND(s); s << o2be_name::narrow_and_produce_fqname(disc_type()) 
-	    << " _d () const { return pd_d;}\n";
+	    << " _d () const { return pd__d;}\n";
   IND(s); s << "void _d("
 	    << o2be_name::narrow_and_produce_fqname(disc_type())
 	    << " _value) {}\n\n";
@@ -433,10 +437,10 @@ o2be_union::produce_hdr(fstream &s)
       IND(s); s << "void _default()\n";
       IND(s); s << "{\n";
       INC_INDENT_LEVEL();
-      IND(s); s << "pd_d = ";
+      IND(s); s << "pd__d = ";
       produce_default_value(*this,s);
       s << ";\n";
-      IND(s); s << "pd_default = 1;\n";
+      IND(s); s << "pd__default = 1;\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
     }
@@ -583,17 +587,17 @@ o2be_union::produce_hdr(fstream &s)
 		INC_INDENT_LEVEL();
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_disc_value(s,disc_type(),l->label_val());
 		    s << ";\n";
-		    IND(s); s << "pd_default = 0;\n";
+		    IND(s); s << "pd__default = 0;\n";
 		  }
 		else
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_default_value(*this,s);
 		    s << ";\n";
-		    IND(s); s << "pd_default = 1;\n";
+		    IND(s); s << "pd__default = 1;\n";
 		  }
 		IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		DEC_INDENT_LEVEL();
@@ -603,17 +607,17 @@ o2be_union::produce_hdr(fstream &s)
 		INC_INDENT_LEVEL();
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_disc_value(s,disc_type(),l->label_val());
 		    s << ";\n";
-		    IND(s); s << "pd_default = 0;\n";
+		    IND(s); s << "pd__default = 0;\n";
 		  }
 		else
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_default_value(*this,s);
 		    s << ";\n";
-		    IND(s); s << "pd_default = 1;\n";
+		    IND(s); s << "pd__default = 1;\n";
 		  }
 		IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		DEC_INDENT_LEVEL();
@@ -623,17 +627,17 @@ o2be_union::produce_hdr(fstream &s)
 		INC_INDENT_LEVEL();
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_disc_value(s,disc_type(),l->label_val());
 		    s << ";\n";
-		    IND(s); s << "pd_default = 0;\n";
+		    IND(s); s << "pd__default = 0;\n";
 		  }
 		else
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_default_value(*this,s);
 		    s << ";\n";
-		    IND(s); s << "pd_default = 1;\n";
+		    IND(s); s << "pd__default = 1;\n";
 		  }
 		IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		DEC_INDENT_LEVEL();
@@ -645,17 +649,17 @@ o2be_union::produce_hdr(fstream &s)
 		INC_INDENT_LEVEL();
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_disc_value(s,disc_type(),l->label_val());
 		    s << ";\n";
-		    IND(s); s << "pd_default = 0;\n";
+		    IND(s); s << "pd__default = 0;\n";
 		  }
 		else
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_default_value(*this,s);
 		    s << ";\n";
-		    IND(s); s << "pd_default = 1;\n";
+		    IND(s); s << "pd__default = 1;\n";
 		  }
 		IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		DEC_INDENT_LEVEL();
@@ -673,17 +677,17 @@ o2be_union::produce_hdr(fstream &s)
 		  INC_INDENT_LEVEL();
 		  if (l->label_kind() == AST_UnionLabel::UL_label)
 		    {
-		      IND(s); s << "pd_d = ";
+		      IND(s); s << "pd__d = ";
 		      produce_disc_value(s,disc_type(),l->label_val());
 		      s << ";\n";
-		      IND(s); s << "pd_default = 0;\n";
+		      IND(s); s << "pd__default = 0;\n";
 		    }
 		  else
 		    {
-		      IND(s); s << "pd_d = ";
+		      IND(s); s << "pd__d = ";
 		      produce_default_value(*this,s);
 		      s << ";\n";
-		      IND(s); s << "pd_default = 1;\n";
+		      IND(s); s << "pd__default = 1;\n";
 		    }
 		  IND(s); s << "pd_" << f->uqname() << " = "
 			    << o2be_interface::narrow_from_decl(decl)->fqname()
@@ -696,17 +700,17 @@ o2be_union::produce_hdr(fstream &s)
 		  INC_INDENT_LEVEL();
 		  if (l->label_kind() == AST_UnionLabel::UL_label)
 		    {
-		      IND(s); s << "pd_d = ";
+		      IND(s); s << "pd__d = ";
 		      produce_disc_value(s,disc_type(),l->label_val());
 		      s << ";\n";
-		      IND(s); s << "pd_default = 0;\n";
+		      IND(s); s << "pd__default = 0;\n";
 		    }
 		  else
 		    {
-		      IND(s); s << "pd_d = ";
+		      IND(s); s << "pd__d = ";
 		      produce_default_value(*this,s);
 		      s << ";\n";
-		      IND(s); s << "pd_default = 1;\n";
+		      IND(s); s << "pd__default = 1;\n";
 		    }
 		  IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		  DEC_INDENT_LEVEL();
@@ -717,17 +721,17 @@ o2be_union::produce_hdr(fstream &s)
 		  INC_INDENT_LEVEL();
 		  if (l->label_kind() == AST_UnionLabel::UL_label)
 		    {
-		      IND(s); s << "pd_d = ";
+		      IND(s); s << "pd__d = ";
 		      produce_disc_value(s,disc_type(),l->label_val());
 		      s << ";\n";
-		      IND(s); s << "pd_default = 0;\n";
+		      IND(s); s << "pd__default = 0;\n";
 		    }
 		  else
 		    {
-		      IND(s); s << "pd_d = ";
+		      IND(s); s << "pd__d = ";
 		      produce_default_value(*this,s);
 		      s << ";\n";
-		      IND(s); s << "pd_default = 1;\n";
+		      IND(s); s << "pd__default = 1;\n";
 		    }
 		  IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		  DEC_INDENT_LEVEL();
@@ -745,17 +749,17 @@ o2be_union::produce_hdr(fstream &s)
 		    INC_INDENT_LEVEL();
 		    if (l->label_kind() == AST_UnionLabel::UL_label)
 		      {
-			IND(s); s << "pd_d = ";
+			IND(s); s << "pd__d = ";
 			produce_disc_value(s,disc_type(),l->label_val());
 			s << ";\n";
-			IND(s); s << "pd_default = 0;\n";
+			IND(s); s << "pd__default = 0;\n";
 		      }
 		    else
 		      {
-			IND(s); s << "pd_d = ";
+			IND(s); s << "pd__d = ";
 			produce_default_value(*this,s);
 			s << ";\n";
-			IND(s); s << "pd_default = 1;\n";
+			IND(s); s << "pd__default = 1;\n";
 		      }
 		    IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		    DEC_INDENT_LEVEL();
@@ -770,17 +774,17 @@ o2be_union::produce_hdr(fstream &s)
 		    INC_INDENT_LEVEL();
 		    if (l->label_kind() == AST_UnionLabel::UL_label)
 		      {
-			IND(s); s << "pd_d = ";
+			IND(s); s << "pd__d = ";
 			produce_disc_value(s,disc_type(),l->label_val());
 			s << ";\n";
-			IND(s); s << "pd_default = 0;\n";
+			IND(s); s << "pd__default = 0;\n";
 		      }
 		    else
 		      {
-			IND(s); s << "pd_d = ";
+			IND(s); s << "pd__d = ";
 			produce_default_value(*this,s);
 			s << ";\n";
-			IND(s); s << "pd_default = 1;\n";
+			IND(s); s << "pd__default = 1;\n";
 		      }
 		    IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		    DEC_INDENT_LEVEL();
@@ -800,17 +804,17 @@ o2be_union::produce_hdr(fstream &s)
 		INC_INDENT_LEVEL();
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_disc_value(s,disc_type(),l->label_val());
 		    s << ";\n";
-		    IND(s); s << "pd_default = 0;\n";
+		    IND(s); s << "pd__default = 0;\n";
 		  }
 		else
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_default_value(*this,s);
 		    s << ";\n";
-		    IND(s); s << "pd_default = 1;\n";
+		    IND(s); s << "pd__default = 1;\n";
 		  }
 		IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		DEC_INDENT_LEVEL();
@@ -839,17 +843,17 @@ o2be_union::produce_hdr(fstream &s)
 		  INC_INDENT_LEVEL();
 		  if (l->label_kind() == AST_UnionLabel::UL_label)
 		    {
-		      IND(s); s << "pd_d = ";
+		      IND(s); s << "pd__d = ";
 		      produce_disc_value(s,disc_type(),l->label_val());
 		      s << ";\n";
-		      IND(s); s << "pd_default = 0;\n";
+		      IND(s); s << "pd__default = 0;\n";
 		    }
 		  else
 		    {
-		      IND(s); s << "pd_d = ";
+		      IND(s); s << "pd__d = ";
 		      produce_default_value(*this,s);
 		      s << ";\n";
-		      IND(s); s << "pd_default = 1;\n";
+		      IND(s); s << "pd__default = 1;\n";
 		    }
 		  {
 		    unsigned int ndim = 0;
@@ -907,17 +911,17 @@ o2be_union::produce_hdr(fstream &s)
 		INC_INDENT_LEVEL();
 		if (l->label_kind() == AST_UnionLabel::UL_label)
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_disc_value(s,disc_type(),l->label_val());
 		    s << ";\n";
-		    IND(s); s << "pd_default = 0;\n";
+		    IND(s); s << "pd__default = 0;\n";
 		  }
 		else
 		  {
-		    IND(s); s << "pd_d = ";
+		    IND(s); s << "pd__d = ";
 		    produce_default_value(*this,s);
 		    s << ";\n";
-		    IND(s); s << "pd_default = 1;\n";
+		    IND(s); s << "pd__default = 1;\n";
 		  }
 		IND(s); s << "pd_" << f->uqname() << " = _value;\n";
 		DEC_INDENT_LEVEL();
@@ -941,8 +945,8 @@ o2be_union::produce_hdr(fstream &s)
   IND(s); s << "private:\n\n";
   INC_INDENT_LEVEL();
 
-  IND(s); s << o2be_name::narrow_and_produce_fqname(disc_type()) << " pd_d;\n";
-  IND(s); s << "CORBA::Boolean pd_default;\n";
+  IND(s); s << o2be_name::narrow_and_produce_fqname(disc_type()) << " pd__d;\n";
+  IND(s); s << "CORBA::Boolean pd__default;\n";
 
   if (has_fix_member) {
     IND(s); s << "union {\n";
@@ -1151,14 +1155,14 @@ o2be_union::produce_skel(fstream &s)
 		     disc_type(),
 		     "",
 		     "_msgsize",
-		     "pd_d",
+		     "pd__d",
 		     ntype,
 		     mapping);
   }
 
   if (!(nodefault() && no_missing_disc_value()))
     {
-      IND(s); s << "if (pd_default) {\n";
+      IND(s); s << "if (pd__default) {\n";
       INC_INDENT_LEVEL();
       {
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1207,7 +1211,7 @@ o2be_union::produce_skel(fstream &s)
       IND(s); s << "else {\n";
     }
   INC_INDENT_LEVEL();
-  IND(s); s << "switch(pd_d) {\n";
+  IND(s); s << "switch(pd__d) {\n";
   INC_INDENT_LEVEL();
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1281,13 +1285,13 @@ o2be_union::produce_skel(fstream &s)
 		     s,
 		     disc_type(),
 		     "_n",
-		     "pd_d",
+		     "pd__d",
 		     ntype,
 		     mapping);
   }
   if (!(nodefault() && no_missing_disc_value()))
     {
-      IND(s); s << "if (pd_default) {\n";
+      IND(s); s << "if (pd__default) {\n";
       INC_INDENT_LEVEL();
       {
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1335,7 +1339,7 @@ o2be_union::produce_skel(fstream &s)
       IND(s); s << "else {\n";
     }
   INC_INDENT_LEVEL();
-  IND(s); s << "switch(pd_d) {\n";
+  IND(s); s << "switch(pd__d) {\n";
   INC_INDENT_LEVEL();
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1407,12 +1411,12 @@ o2be_union::produce_skel(fstream &s)
 		     s,
 		     disc_type(),
 		     "_n",
-		     "pd_d",
+		     "pd__d",
 		     ntype,
 		     mapping);
   }
 
-  IND(s); s << "switch(pd_d) {\n";
+  IND(s); s << "switch(pd__d) {\n";
   INC_INDENT_LEVEL();
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1429,13 +1433,13 @@ o2be_union::produce_skel(fstream &s)
 		produce_disc_value(s,disc_type(),l->label_val());
 		s << ":\n";
 		INC_INDENT_LEVEL();
-		IND(s); s << "pd_default = 0;\n";
+		IND(s); s << "pd__default = 0;\n";
 	      }
 	    else
 	      {
 		IND(s); s << "default:\n";
 		INC_INDENT_LEVEL();
-		IND(s); s << "pd_default = 1;\n";
+		IND(s); s << "pd__default = 1;\n";
 	      }
 
 	    o2be_operation::argMapping mapping;
@@ -1469,7 +1473,7 @@ o2be_union::produce_skel(fstream &s)
       }
   }
   if (nodefault() && !no_missing_disc_value()) {
-    IND(s); s << "default: pd_default = 1; break;\n";
+    IND(s); s << "default: pd__default = 1; break;\n";
   }
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
@@ -1489,13 +1493,13 @@ o2be_union::produce_skel(fstream &s)
 		     s,
 		     disc_type(),
 		     "_n",
-		     "pd_d",
+		     "pd__d",
 		     ntype,
 		     mapping);
   }
   if (!(nodefault() && no_missing_disc_value()))
     {
-      IND(s); s << "if (pd_default) {\n";
+      IND(s); s << "if (pd__default) {\n";
       INC_INDENT_LEVEL();
       {
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1543,7 +1547,7 @@ o2be_union::produce_skel(fstream &s)
       IND(s); s << "else {\n";
     }
   INC_INDENT_LEVEL();
-  IND(s); s << "switch(pd_d) {\n";
+  IND(s); s << "switch(pd__d) {\n";
   INC_INDENT_LEVEL();
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1615,12 +1619,12 @@ o2be_union::produce_skel(fstream &s)
 		     s,
 		     disc_type(),
 		     "_n",
-		     "pd_d",
+		     "pd__d",
 		     ntype,
 		     mapping);
   }
 
-  IND(s); s << "switch(pd_d) {\n";
+  IND(s); s << "switch(pd__d) {\n";
   INC_INDENT_LEVEL();
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -1637,13 +1641,13 @@ o2be_union::produce_skel(fstream &s)
 		produce_disc_value(s,disc_type(),l->label_val());
 		s << ":\n";
 		INC_INDENT_LEVEL();
-		IND(s); s << "pd_default = 0;\n";
+		IND(s); s << "pd__default = 0;\n";
 	      }
 	    else
 	      {
 		IND(s); s << "default:\n";
 		INC_INDENT_LEVEL();
-		IND(s); s << "pd_default = 1;\n";
+		IND(s); s << "pd__default = 1;\n";
 	      }
 	    o2be_operation::argMapping mapping;
 	    o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
@@ -1676,7 +1680,7 @@ o2be_union::produce_skel(fstream &s)
       }
   }
   if (nodefault() && !no_missing_disc_value()) {
-    IND(s); s << "default: pd_default = 1; break;\n";
+    IND(s); s << "default: pd__default = 1; break;\n";
   }
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";

@@ -28,9 +28,13 @@
 
 /*
   $Log$
-  Revision 1.11  1997/05/06 14:03:08  sll
-  Public release.
+  Revision 1.12  1997/08/21 21:13:09  sll
+  Names of internal variables inside the stub code now all start with the
+  prefix __ to avoid potential clash with identifiers defined in IDL.
 
+// Revision 1.11  1997/05/06  14:03:08  sll
+// Public release.
+//
   */
 
 #include "idl.hh"
@@ -180,8 +184,8 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "assertObjectExistent();\n";
-  IND(s); s << "omniRopeAndKey _r;\n";
-  IND(s); s << "CORBA::Boolean _fwd = getRopeAndKey(_r);\n";
+  IND(s); s << "omniRopeAndKey __r;\n";
+  IND(s); s << "CORBA::Boolean __fwd = getRopeAndKey(__r);\n";
 
   // Declare a local variable for result and variable length OUT arguments.
   {
@@ -222,23 +226,23 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 	  IND(s);
 	  declareVarType(s,return_type(),0,mapping.is_arrayslice);
 	  s << ((ntype != tObjref && ntype != tString)?" *":"") 
-	    << " _result" << "= 0;\n";
+	    << " __result" << "= 0;\n";
 	}
       else
 	{
 	  IND(s);
 	  declareVarType(s,return_type());
-	  s << " _result;\n";
+	  s << " __result;\n";
 	}
     }
 
   IND(s); s << "try {\n";
   INC_INDENT_LEVEL();
 
-  IND(s); s << "GIOP_C _c(_r.rope());\n";
+  IND(s); s << "GIOP_C __c(__r.rope());\n";
   
   // calculate request message size
-  IND(s); s << "CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),"
+  IND(s); s << "CORBA::ULong __msgsize = GIOP_C::RequestHeaderSize(__r.keysize(),"
 	    << strlen(local_name()->get_string()) + 1 
 	    << ");\n";
 
@@ -255,14 +259,14 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 	  case AST_Argument::dir_IN:
 	    {
 	      ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
-	      produceSizeCalculation(s,a->field_type(),"_c","_msgsize",
+	      produceSizeCalculation(s,a->field_type(),"__c","__msgsize",
 				     a->uqname(),ntype,mapping);
 	      break;
 	    }
 	  case AST_Argument::dir_INOUT:
 	    {
 	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      produceSizeCalculation(s,a->field_type(),"_c","_msgsize",
+	      produceSizeCalculation(s,a->field_type(),"__c","__msgsize",
 				     a->uqname(),ntype,mapping);
 	      break;
 	    }
@@ -274,8 +278,8 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   }
 
 
-  IND(s); s << "_c.InitialiseRequest(_r.key(),_r.keysize(),(char *)\""
-	    << local_name()->get_string() << "\"," << strlen(local_name()->get_string()) + 1 << ",_msgsize,"
+  IND(s); s << "__c.InitialiseRequest(__r.key(),__r.keysize(),(char *)\""
+	    << local_name()->get_string() << "\"," << strlen(local_name()->get_string()) + 1 << ",__msgsize,"
 	    << ((flags() == AST_Operation::OP_oneway)?"1":"0")
 	    << ");\n";
 
@@ -293,14 +297,14 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 	  case AST_Argument::dir_IN:
 	    {
 	      ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
-	      produceMarshalCode(s,a->field_type(),"_c",
+	      produceMarshalCode(s,a->field_type(),"__c",
 				 a->uqname(),ntype,mapping);
 	      break;
 	    }
 	  case AST_Argument::dir_INOUT:
 	    {
 	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      produceMarshalCode(s,a->field_type(),"_c",
+	      produceMarshalCode(s,a->field_type(),"__c",
 				 a->uqname(),ntype,mapping);
 	      break;
 	    }
@@ -311,7 +315,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
       }
   }
 
-  IND(s); s << "switch (_c.ReceiveReply())\n";  // invoke method
+  IND(s); s << "switch (__c.ReceiveReply())\n";  // invoke method
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
 
@@ -355,7 +359,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 	  argMapping mapping;
 	  argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
 	  if (mapping.is_arrayslice) {
-	    IND(s); s << "_result = ";
+	    IND(s); s << "__result = ";
 	    AST_Decl *truetype = return_type();
 	    while (truetype->node_type() == AST_Decl::NT_typedef) {
 	      truetype = o2be_typedef::narrow_from_decl(truetype)->base_type();
@@ -365,7 +369,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 
 	  }
 	  else if (mapping.is_pointer) {
-	    IND(s); s << "_result = new ";
+	    IND(s); s << "__result = new ";
 	    declareVarType(s,return_type());
 	    s << ";\n";
 	  }
@@ -376,7 +380,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
     {
       argMapping mapping;
       argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
-      produceUnMarshalCode(s,return_type(),"_c","_result",ntype,mapping);
+      produceUnMarshalCode(s,return_type(),"__c","__result",ntype,mapping);
     }
 
 
@@ -403,7 +407,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 		    IND(s);
 		    declareVarType(s,a->field_type(),0,0);
 		    s << " " << _argname << ";\n";
-		    produceUnMarshalCode(s,a->field_type(),"_c",_argname,
+		    produceUnMarshalCode(s,a->field_type(),"__c",_argname,
 					 ntype,mapping);
 		    IND(s); s << "CORBA::release(" << a->uqname() << ");\n";
 		    IND(s); s << a->uqname() << " = " << _argname << ";\n";
@@ -418,7 +422,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 		    IND(s);
 		    declareVarType(s,a->field_type(),0,0);
 		    s << " " << _argname << ";\n";
-		    produceUnMarshalCode(s,a->field_type(),"_c",_argname,
+		    produceUnMarshalCode(s,a->field_type(),"__c",_argname,
 					 ntype,mapping);
 		    IND(s); s << "CORBA::string_free(" << a->uqname() << ");\n";
 		    IND(s); s << a->uqname() << " = " << _argname << ";\n";
@@ -426,7 +430,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 		  }
 		  break;
 		default:
-		  produceUnMarshalCode(s,a->field_type(),"_c",a->uqname(),
+		  produceUnMarshalCode(s,a->field_type(),"__c",a->uqname(),
 				       ntype,mapping);
 		  break;
 		}
@@ -442,13 +446,13 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 		  char *_argname = new char[strlen(a->uqname())+2];
 		  strcpy(_argname,"_");
 		  strcat(_argname,a->uqname());
-		  produceUnMarshalCode(s,a->field_type(),"_c",_argname,
+		  produceUnMarshalCode(s,a->field_type(),"__c",_argname,
 				       ntype,mapping);
 		  delete [] _argname;
 		}
 	      else
 		{
-		  produceUnMarshalCode(s,a->field_type(),"_c",a->uqname(),
+		  produceUnMarshalCode(s,a->field_type(),"__c",a->uqname(),
 				       ntype,mapping);
 		}
 	      break;
@@ -460,7 +464,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
       }
   }
 
-  IND(s); s << "_c.RequestCompleted();\n";
+  IND(s); s << "__c.RequestCompleted();\n";
 
   if (hasVariableLenOutArgs)
     {
@@ -486,13 +490,13 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 	  }
       }
       if (!return_is_void()) {
-	IND(s); s << "return _result;\n";
+	IND(s); s << "return __result;\n";
       }
     }
   else
     {
       if (!return_is_void()) {
-	IND(s); s << "return _result;\n";
+	IND(s); s << "return __result;\n";
       }
     }
   IND(s); s << "break;\n";
@@ -503,7 +507,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   if (no_user_exception()) {
-    IND(s); s << "_c.RequestCompleted(1);\n";
+    IND(s); s << "__c.RequestCompleted(1);\n";
     IND(s); s << "throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);\n";
   }
   else {
@@ -519,18 +523,18 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 	  i.next();
 	}
     }
-    IND(s); s << "CORBA::Char _excId[" << maxIdsize << "];\n";
-    IND(s); s << "CORBA::ULong _len;\n";
-    IND(s); s << "_len <<= _c;\n";
-    IND(s); s << "if (_len > " << maxIdsize << ") {\n";
+    IND(s); s << "CORBA::Char __excId[" << maxIdsize << "];\n";
+    IND(s); s << "CORBA::ULong __len;\n";
+    IND(s); s << "__len <<= __c;\n";
+    IND(s); s << "if (__len > " << maxIdsize << ") {\n";
     INC_INDENT_LEVEL();
-    IND(s); s << "_c.RequestCompleted(1);\n";
+    IND(s); s << "__c.RequestCompleted(1);\n";
     IND(s); s << "throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n";
     IND(s); s << "else {\n";
     INC_INDENT_LEVEL();
-    IND(s); s << "_c.get_char_array(_excId,_len);\n";
+    IND(s); s << "__c.get_char_array(__excId,__len);\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n";
 
@@ -540,16 +544,16 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
       {
 	o2be_exception *excpt = o2be_exception::narrow_from_decl(i.item());
 	IND(s); s << ((firstexc)? "if" : "else if") 
-		  << " (strcmp((const char *)_excId,"
+		  << " (strcmp((const char *)__excId,"
 		  << excpt->repoIdConstName()
 		  << ") == 0) {\n";
 	INC_INDENT_LEVEL();
-	IND(s); s << excpt->fqname() << " _ex;\n";
+	IND(s); s << excpt->fqname() << " __ex;\n";
 	argType ntype = tStructVariable;
 	argMapping mapping = {I_FALSE,I_TRUE,I_FALSE,I_FALSE};
-	produceUnMarshalCode(s,i.item(),"_c","_ex",ntype,mapping);
-	IND(s); s << "_c.RequestCompleted();\n";
-	IND(s); s << "throw _ex;\n";
+	produceUnMarshalCode(s,i.item(),"__c","__ex",ntype,mapping);
+	IND(s); s << "__c.RequestCompleted();\n";
+	IND(s); s << "throw __ex;\n";
 	DEC_INDENT_LEVEL();
 	IND(s); s << "}\n";
 	i.next();
@@ -557,7 +561,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
       }
     IND(s); s << "else {\n";
     INC_INDENT_LEVEL();
-    IND(s); s << "_c.RequestCompleted(1);\n";
+    IND(s); s << "__c.RequestCompleted(1);\n";
     IND(s); s << "throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n";
@@ -569,7 +573,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   IND(s); s << "case GIOP::SYSTEM_EXCEPTION:\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "_c.RequestCompleted(1);\n";
+  IND(s); s << "__c.RequestCompleted(1);\n";
   IND(s); s << "throw omniORB::fatalException(__FILE__,__LINE__,\"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()\");\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
@@ -579,8 +583,8 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   INC_INDENT_LEVEL();
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);\n";
-  IND(s); s << "_c.RequestCompleted();\n";
+  IND(s); s << "CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(__c);\n";
+  IND(s); s << "__c.RequestCompleted();\n";
   IND(s); s << "if (CORBA::is_nil(obj)) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
@@ -591,10 +595,10 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   IND(s); s << "throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
-  IND(s); s << "omniRopeAndKey __r;\n";
-  IND(s); s << "obj->PR_getobj()->getRopeAndKey(__r);\n";
-  IND(s); s << "setRopeAndKey(__r);\n";
-  IND(s); s << "_c.~GIOP_C();\n";
+  IND(s); s << "omniRopeAndKey ___r;\n";
+  IND(s); s << "obj->PR_getobj()->getRopeAndKey(___r);\n";
+  IND(s); s << "setRopeAndKey(___r);\n";
+  IND(s); s << "__c.~GIOP_C();\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   IND(s); s << "if (omniORB::traceLevel > 10) {\n";
@@ -665,22 +669,22 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
       
       if (mapping.is_arrayslice)
 	{
-	  IND(s); s << "if (_result) delete [] _result;\n";
+	  IND(s); s << "if (__result) delete [] __result;\n";
 	}
       else if (ntype == tObjref)
 	{
-	  IND(s); s << "if (_result) CORBA::release(_result);\n";
+	  IND(s); s << "if (__result) CORBA::release(__result);\n";
 	}
       else if (ntype == tString)
 	{
-	  IND(s); s << "if (_result) CORBA::string_free(_result);\n";
+	  IND(s); s << "if (__result) CORBA::string_free(__result);\n";
 	}
       else if (mapping.is_pointer)
 	{
-	  IND(s); s << "if (_result) delete _result;\n";
+	  IND(s); s << "if (__result) delete __result;\n";
 	}
     }
-  IND(s); s << "if (_fwd) {\n";
+  IND(s); s << "if (__fwd) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "resetRopeAndKey();\n";
   IND(s); s << "throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);\n";
@@ -733,19 +737,19 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
       
       if (mapping.is_arrayslice)
 	{
-	  IND(s); s << "if (_result) delete [] _result;\n";
+	  IND(s); s << "if (__result) delete [] __result;\n";
 	}
       else if (ntype == tObjref)
 	{
-	  IND(s); s << "if (_result) CORBA::release(_result);\n";
+	  IND(s); s << "if (__result) CORBA::release(__result);\n";
 	}
       else if (ntype == tString)
 	{
-	  IND(s); s << "if (_result) CORBA::string_free(_result);\n";
+	  IND(s); s << "if (__result) CORBA::string_free(__result);\n";
 	}
       else if (mapping.is_pointer)
 	{
-	  IND(s); s << "if (_result) delete _result;\n";
+	  IND(s); s << "if (__result) delete __result;\n";
 	}
     }
   IND(s); s << "throw;\n";
@@ -766,13 +770,13 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 	  IND(s);
 	  declareVarType(s,return_type(),0,mapping.is_arrayslice);
 	  s << ((ntype != tObjref && ntype != tString)?" *":"") 
-	    << " _result" << "= 0;\n";
+	    << " __result" << "= 0;\n";
 	}
       else
 	{
 	  IND(s);
 	  declareVarType(s,return_type());
-	  s << " _result";
+	  s << " __result";
 	  switch (ntype)
 	    {
 	    case tShort:
@@ -806,14 +810,14 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
 	      break;
 	    case tStructFixed:
 	      s << ";\n";
-	      s << "memset((void *)&_result,0,sizeof(_result));\n";
+	      s << "memset((void *)&__result,0,sizeof(__result));\n";
 	      break;
 	    default:
 	      s << ";\n";
 	      break;
 	    }
 	}
-      IND(s); s << "return _result;\n";
+      IND(s); s << "return __result;\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n";
     }
@@ -827,14 +831,14 @@ void
 o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 {
   if (flags() == AST_Operation::OP_oneway) {
-    IND(s); s << "if (_response_expected) {\n";
+    IND(s); s << "if (__response_expected) {\n";
     INC_INDENT_LEVEL();
     IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n";
   }
   else {
-    IND(s); s << "if (!_response_expected) {\n";
+    IND(s); s << "if (!__response_expected) {\n";
     INC_INDENT_LEVEL();
     IND(s); s << "throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);\n";
     DEC_INDENT_LEVEL();
@@ -862,7 +866,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 	      else
 		declareVarType(s,a->field_type());
 	      s << " " << a->uqname() << ";\n";
-	      produceUnMarshalCode(s,a->field_type(),"_s",a->uqname(),
+	      produceUnMarshalCode(s,a->field_type(),"__s",a->uqname(),
 				   ntype,mapping);
 	      break;
 	    }
@@ -892,7 +896,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 	      else
 		  declareVarType(s,a->field_type());
 	      s << " " << a->uqname() << ";\n";
-	      produceUnMarshalCode(s,a->field_type(),"_s",a->uqname(),
+	      produceUnMarshalCode(s,a->field_type(),"__s",a->uqname(),
 				   ntype,mapping);
 	      break;
 	    }
@@ -901,7 +905,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
       }
   }
 
-  IND(s); s << "_s.RequestReceived();\n";
+  IND(s); s << "__s.RequestReceived();\n";
 
   IND(s);
   if (!return_is_void()) {
@@ -918,7 +922,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
       {
 	declareVarType(s,return_type());
       }
-    s << " _result;\n";
+    s << " __result;\n";
   }
 
   if (!no_user_exception()) {
@@ -927,7 +931,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
   }
   IND(s);
   if (!return_is_void()) {
-    s << "_result = ";
+    s << "__result = ";
     if (has_variable_out_arg() || has_pointer_inout_arg()) {
       // Use the indirection function in the base class
       s << defined_in.fqname() << "::";
@@ -945,7 +949,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
   }
 
   if (flags() == AST_Operation::OP_oneway) {
-    IND(s); s << "_s.ReplyCompleted();\n";
+    IND(s); s << "__s.ReplyCompleted();\n";
     IND(s); s << "return 1;\n";
     return;
   }
@@ -958,22 +962,22 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
     while (!i.is_done())
       {
 	o2be_exception *excpt = o2be_exception::narrow_from_decl(i.item());
-	IND(s); s << "catch ( " << excpt->fqname() << " &ex) {\n";
+	IND(s); s << "catch ( " << excpt->fqname() << " &__ex) {\n";
 	INC_INDENT_LEVEL();
 
 	argType ntype = tStructVariable;
 	argMapping mapping = {I_FALSE,I_TRUE,I_FALSE,I_FALSE};
 
-	IND(s); s << "size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
+	IND(s); s << "size_t __msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
 
-	produceConstStringSizeCalculation(s,"_msgsize",excpt->repoIdConstLen());
-	produceSizeCalculation(s,i.item(),"_s","_msgsize","ex",ntype,mapping);
+	produceConstStringSizeCalculation(s,"__msgsize",excpt->repoIdConstLen());
+	produceSizeCalculation(s,i.item(),"__s","__msgsize","__ex",ntype,mapping);
 
-	IND(s); s << "_s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)_msgsize);\n"; 
-	produceConstStringMarshalCode(s,"_s",excpt->repoIdConstName(),
+	IND(s); s << "__s.InitialiseReply(GIOP::USER_EXCEPTION,(CORBA::ULong)__msgsize);\n"; 
+	produceConstStringMarshalCode(s,"__s",excpt->repoIdConstName(),
 				      excpt->repoIdConstLen());
-	produceMarshalCode(s,i.item(),"_s","ex",ntype,mapping);
-	IND(s); s << "_s.ReplyCompleted();\n";
+	produceMarshalCode(s,i.item(),"__s","__ex",ntype,mapping);
+	IND(s); s << "__s.ReplyCompleted();\n";
 	IND(s); s << "return 1;\n";
 	DEC_INDENT_LEVEL();
 	IND(s); s << "}\n";
@@ -982,7 +986,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
   }
 
   // calculate reply message size
-  IND(s); s << "size_t _msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
+  IND(s); s << "size_t __msgsize = (size_t) GIOP_S::ReplyHeaderSize();\n";
   if (!return_is_void())
     {
       argMapping mapping;
@@ -992,19 +996,19 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 	{
 	  // These are declared as <type>_var variable 
 	  if (ntype == tString) {
-	    produceSizeCalculation(s,return_type(),"_s","_msgsize",
-				   "_result",ntype,mapping);
+	    produceSizeCalculation(s,return_type(),"__s","__msgsize",
+				   "__result",ntype,mapping);
 	  }
 	  else {
 	    // use operator->() to get to the pointer
-	    produceSizeCalculation(s,return_type(),"_s","_msgsize",
-				   "(_result.operator->())",ntype,mapping);
+	    produceSizeCalculation(s,return_type(),"__s","__msgsize",
+				   "(__result.operator->())",ntype,mapping);
 	  }
 	}
       else
 	{
-	  produceSizeCalculation(s,return_type(),"_s","_msgsize",
-				 "_result",ntype,mapping);
+	  produceSizeCalculation(s,return_type(),"__s","__msgsize",
+				 "__result",ntype,mapping);
 	}
 
     }
@@ -1027,7 +1031,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 		{
 		  // These are declared as <type>_var variable 
 		  if (ntype == tString) {
-		    produceSizeCalculation(s,a->field_type(),"_s","_msgsize",
+		    produceSizeCalculation(s,a->field_type(),"__s","__msgsize",
 					   a->uqname(),ntype,mapping);
 		  }
 		  else {
@@ -1037,14 +1041,14 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 		    strcpy(_argname,"(");
 		    strcat(_argname,a->uqname());
 		    strcat(_argname,".operator->())");
-		    produceSizeCalculation(s,a->field_type(),"_s","_msgsize",
+		    produceSizeCalculation(s,a->field_type(),"__s","__msgsize",
 					   _argname,ntype,mapping);
 		    delete [] _argname;
 		  }
 		}
 	      else
 		{
-		  produceSizeCalculation(s,a->field_type(),"_s","_msgsize",
+		  produceSizeCalculation(s,a->field_type(),"__s","__msgsize",
 					 a->uqname(),ntype,mapping);
 		}
 	      break;
@@ -1052,7 +1056,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 	  case AST_Argument::dir_INOUT:
 	    {
 	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      produceSizeCalculation(s,a->field_type(),"_s","_msgsize",
+	      produceSizeCalculation(s,a->field_type(),"__s","__msgsize",
 				     a->uqname(),ntype,mapping);
 	      break;
 	    }
@@ -1063,7 +1067,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
       }
   }
 
-  IND(s); s << "_s.InitialiseReply(GIOP::NO_EXCEPTION,(CORBA::ULong)_msgsize);\n";
+  IND(s); s << "__s.InitialiseReply(GIOP::NO_EXCEPTION,(CORBA::ULong)__msgsize);\n";
 
   // marshall results
   if (!return_is_void())
@@ -1076,19 +1080,19 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 	  // These are declared as <type>_var variable 
 	  if (ntype == tString) 
 	    {
-	      produceMarshalCode(s,return_type(),"_s",
-				 "_result",ntype,mapping);
+	      produceMarshalCode(s,return_type(),"__s",
+				 "__result",ntype,mapping);
 	    }
 	  else 
 	    {
 	      // use operator->() to get to the pointer
-	      produceMarshalCode(s,return_type(),"_s",
-				 "(_result.operator->())",ntype,mapping);
+	      produceMarshalCode(s,return_type(),"__s",
+				 "(__result.operator->())",ntype,mapping);
 	    }
 	}
       else
 	{
-	  produceMarshalCode(s,return_type(),"_s","_result",ntype,mapping);
+	  produceMarshalCode(s,return_type(),"__s","__result",ntype,mapping);
 	}
     }
   {
@@ -1111,7 +1115,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 		  // These are declared as <type>_var variable 
 		  if (ntype == tString) 
 		    {
-		      produceMarshalCode(s,a->field_type(),"_s",
+		      produceMarshalCode(s,a->field_type(),"__s",
 					 a->uqname(),ntype,mapping);
 		    }
 		  else
@@ -1122,21 +1126,21 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
 		      strcpy(_argname,"(");
 		      strcat(_argname,a->uqname());
 		      strcat(_argname,".operator->())");
-		      produceMarshalCode(s,a->field_type(),"_s",
+		      produceMarshalCode(s,a->field_type(),"__s",
 					 _argname,ntype,mapping);
 		      delete [] _argname;
 		    }
 		}
 	      else
 		{
-		  produceMarshalCode(s,a->field_type(),"_s",a->uqname(),ntype,mapping);
+		  produceMarshalCode(s,a->field_type(),"__s",a->uqname(),ntype,mapping);
 		}
 	      break;
 	    }
 	  case AST_Argument::dir_INOUT:
 	    {
 	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      produceMarshalCode(s,a->field_type(),"_s",a->uqname(),ntype,mapping);
+	      produceMarshalCode(s,a->field_type(),"__s",a->uqname(),ntype,mapping);
 	      break;
 	    }
 	  case AST_Argument::dir_IN:
@@ -1146,7 +1150,7 @@ o2be_operation::produce_server_skel(fstream &s,o2be_interface &defined_in)
       }
   }
 
-  IND(s); s << "_s.ReplyCompleted();\n";
+  IND(s); s << "__s.ReplyCompleted();\n";
   IND(s); s << "return 1;\n";
   return;
 }
@@ -1170,13 +1174,13 @@ o2be_operation::produce_nil_skel(fstream &s,const char* alias_prefix)
 	  IND(s);
 	  declareVarType(s,return_type(),0,mapping.is_arrayslice);
 	  s << ((ntype != tObjref && ntype != tString)?" *":"") 
-	    << " _result" << "= 0;\n";
+	    << " __result" << "= 0;\n";
 	}
       else
 	{
 	  IND(s);
 	  declareVarType(s,return_type());
-	  s << " _result";
+	  s << " __result";
 	  switch (ntype)
 	    {
 	    case tShort:
@@ -1210,14 +1214,14 @@ o2be_operation::produce_nil_skel(fstream &s,const char* alias_prefix)
 	      break;
 	    case tStructFixed:
 	      s << ";\n";
-	      s << "memset((void *)&_result,0,sizeof(_result));\n";
+	      s << "memset((void *)&__result,0,sizeof(__result));\n";
 	      break;
 	    default:
 	      s << ";\n";
 	      break;
 	    }
 	}
-      IND(s); s << "return _result;\n";
+      IND(s); s << "return __result;\n";
     }
   else
     {
