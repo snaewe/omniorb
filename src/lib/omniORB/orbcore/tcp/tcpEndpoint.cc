@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2003/01/06 11:11:55  dgrisby
+  New AddrInfo instead of gethostbyname.
+
   Revision 1.1.2.16  2002/10/04 11:11:46  dgrisby
   Transport fixes: ENOTSOCK for Windows, SOMAXCONN in listen().
 
@@ -157,7 +160,6 @@ tcpEndpoint::Bind() {
 
   OMNIORB_ASSERT(pd_socket == RC_INVALID_SOCKET);
 
-  struct sockaddr_in addr;
   if ((pd_socket = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
     return 0;
   }
@@ -173,39 +175,30 @@ tcpEndpoint::Bind() {
     }
   }
 
-  addr.sin_family = INETSOCKET;
-  addr.sin_addr.s_addr = INADDR_ANY;
-  addr.sin_port = htons(pd_address.port);
-#ifdef HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
-  addr.sin_len = sizeof(struct sockaddr_in);
-#endif
-#ifdef HAVE_STRUCT_SOCKADDR_IN_SIN_ZERO
-  memset((void *)&addr.sin_zero, 0, sizeof(addr.sin_zero));
-#endif
-
+  const char* host;
   if ((char*)pd_address.host && strlen(pd_address.host) != 0) {
-    LibcWrapper::hostent_var h;
-    int rc;
-
     if (omniORB::trace(25)) {
       omniORB::logger log;
-      log << "Explicit bind to host " << pd_address.host << "\n";
+      log << "Explicit bind to host " << pd_address.host << ".\n";
     }
-
-    if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
-      if (omniORB::trace(1)) {
-	omniORB::logger log;
-	log << "Cannot get the address of host " << pd_address.host << "\n";
-      }
-      CLOSESOCKET(pd_socket);
-      return 0;
-    }
-    memcpy((void *)&addr.sin_addr,
-	   (void *)h.hostent()->h_addr_list[0],
-	   sizeof(addr.sin_addr));
+    host = pd_address.host;
   }
-  
-  if (addr.sin_port) {
+  else {
+    host = 0;
+  }
+
+  LibcWrapper::AddrInfo_var ai;
+  ai = LibcWrapper::getaddrinfo(host, pd_address.port);
+
+  if ((LibcWrapper::AddrInfo*)ai == 0) {
+    if (omniORB::trace(1)) {
+      omniORB::logger log;
+      log << "Cannot get the address of host " << host << ".\n";
+    }
+    CLOSESOCKET(pd_socket);
+    return 0;
+  }
+  if (pd_address.port) {
     int valtrue = 1;
     if (setsockopt(pd_socket,SOL_SOCKET,SO_REUSEADDR,
 		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
@@ -214,9 +207,12 @@ tcpEndpoint::Bind() {
       return 0;
     }
   }
-
-  if (::bind(pd_socket,(struct sockaddr *)&addr,
-	     sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) {
+  if (omniORB::trace(25)) {
+    omniORB::logger l;
+    CORBA::String_var addr(ai->asString());
+    l << "Bind to address " << addr << ".\n";
+  }
+  if (::bind(pd_socket, ai->addr(), ai->addrSize()) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
     return 0;
   }
@@ -226,6 +222,9 @@ tcpEndpoint::Bind() {
     return 0;
   }
 
+  // Now figure out the details to put in IORs
+
+  struct sockaddr_in addr;
   SOCKNAME_SIZE_T l;
   l = sizeof(struct sockaddr_in);
   if (getsockname(pd_socket,
@@ -238,9 +237,6 @@ tcpEndpoint::Bind() {
   if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
 
     // Try to find the first interface that isn't the loopback
-
-    const char* selected_hostname;
-    char self[64];
 
     const omnivector<const char*>* ifaddrs
       = giopTransportImpl::getInterfaceAddress("giop:tcp");
@@ -258,39 +254,33 @@ tcpEndpoint::Bind() {
 	i = ifaddrs->begin();
       }
       pd_address.host = CORBA::string_dup(*i);
-      selected_hostname = pd_address.host;
     }
     else {
       omniORB::logs(5, "No list of interface addresses; fall back to "
 		    "system hostname.");
+      char self[64];
 
       if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+	omniORB::logs(1, "Cannot get the name of this host.");
+	CLOSESOCKET(pd_socket);
+	return 0;
+      }
+      if (omniORB::trace(10)) {
+	omniORB::logger l;
+	l << "My hostname is " << self << ".\n";
+      }
+      LibcWrapper::AddrInfo_var ai;
+      ai = LibcWrapper::getaddrinfo(self, pd_address.port);
+      if ((LibcWrapper::AddrInfo*)ai == 0) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger log;
-	  log << "Cannot get the name of this host\n";
+	  log << "Cannot get the address of my hostname " << self << ".\n";
 	}
 	CLOSESOCKET(pd_socket);
 	return 0;
       }
-      selected_hostname = self;
+      pd_address.host = ai->asString();
     }
-
-    LibcWrapper::hostent_var h;
-    int rc;
-    if (LibcWrapper::gethostbyname(selected_hostname,h,rc) < 0) {
-      if (omniORB::trace(1)) {
-	omniORB::logger log;
-	log << "Cannot get the address of host " << pd_address.host << "\n";
-      }
-      CLOSESOCKET(pd_socket);
-      return 0;
-    }
-    memcpy((void *)&addr.sin_addr,
-	   (void *)h.hostent()->h_addr_list[0],
-	   sizeof(addr.sin_addr));
-  }
-  if (!(char*)pd_address.host || strlen(pd_address.host) == 0) {
-    pd_address.host = tcpConnection::ip4ToString(addr.sin_addr.s_addr);
   }
   if (omniORB::trace(1) && strcmp(pd_address.host,"127.0.0.1") == 0) {
     omniORB::logger log;

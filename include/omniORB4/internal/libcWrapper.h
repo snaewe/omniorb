@@ -3,6 +3,7 @@
 // LibcWrapper.h              Created on: 19/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2003 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2003/01/06 11:11:55  dgrisby
+  New AddrInfo instead of gethostbyname.
+
   Revision 1.1.4.7  2002/11/06 11:31:21  dgrisby
   Old ETS patches that got lost; updates patches README.
 
@@ -75,10 +79,6 @@
 #ifndef __LIBCWRAPPER_H__
 #define __LIBCWRAPPER_H__
 
-
-#define _HAS_NETDB_
-
-
 #if defined(__WIN32__)
 #  include <winsock2.h>
 #else
@@ -89,36 +89,62 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class LibcWrapper {
 public:
-#ifdef _HAS_NETDB_
-  class hostent_var;
+  class AddrInfo;
 
-  static omni_tracedmutex non_reentrant;
-  static int gethostbyname(const char *,hostent_var &,int &);
-  static int isipaddr(const char* hname);
+  static int isipaddr(const char* node);
+  // True if node is an IPv4 address.
 
-  class hostent_var {
+  static AddrInfo* getaddrinfo(const char* node, CORBA::UShort port);
+  // Return an AddrInfo object for the specified node and port. If
+  // node is zero, address is INADDR_ANY. If node is invalid, returns
+  // zero.
+
+  static void freeaddrinfo(AddrInfo* ai);
+  // Release the AddrInfo object returned by getaddrinfo(), and any in
+  // its linked list.
+
+  class AddrInfo {
   public:
-    hostent_var () { pd_buffer = 0; pd_buflen = 0; }
-    ~hostent_var() { if (pd_buffer) delete [] pd_buffer; }
+    AddrInfo() {}
 
-    const struct hostent * hostent() {
-      if (pd_buffer) {
-	return &pd_ent;
-      }
-      else {
-	return 0;
-      }
-    }
+    virtual ~AddrInfo();
+
+    virtual struct sockaddr* addr() = 0;
+    // sockaddr struct suitable for passing to bind(), connect()
+
+    virtual int addrSize() = 0;
+    // size of sockaddr struct returned.
+
+    virtual char* asString() = 0;
+    // String form of address. Free with CORBA::string_free().
+
+    virtual AddrInfo* next() = 0;
+    // Linked list of AddrInfos for multi-homed hosts.
 
   private:
-    friend class LibcWrapper;
-    struct hostent pd_ent;
-    char          *pd_buffer;
-    int            pd_buflen;
+    // Not implemented:
+    AddrInfo(const AddrInfo&);
+    AddrInfo& operator=(const AddrInfo&);
   };
 
-#endif // _HAS_NETDB_
-
+  class AddrInfo_var {
+    // Partial _var type.
+  public:
+    inline AddrInfo_var() : pd_ai(0) {}
+    inline AddrInfo_var(AddrInfo* ai) : pd_ai(ai) {}
+    inline ~AddrInfo_var() {
+      if (pd_ai) LibcWrapper::freeaddrinfo(pd_ai);
+    }
+    inline AddrInfo_var& operator=(AddrInfo* ai) {
+      if (pd_ai) LibcWrapper::freeaddrinfo(pd_ai);
+      pd_ai = ai;
+      return *this;
+    }
+    inline AddrInfo* operator->() const { return pd_ai; }
+    inline operator AddrInfo*() const   { return pd_ai; }
+  private:
+    AddrInfo* pd_ai;
+  };
 };
 
 

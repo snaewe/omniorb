@@ -79,10 +79,10 @@ OMNI_CXX_LONG_IS_INT
 dnl ** Functions
 
 AC_LANG(C)
-AC_CHECK_FUNCS(gethostname getopt getpid gettimeofday isinf insinff isinfl)
-AC_CHECK_FUNCS(nanosleep sigaction sigvec snprintf strcasecmp strdup)
-AC_CHECK_FUNCS(strerror stricmp strncasecmp strtoul strtoull strtouq)
-AC_CHECK_FUNCS(uname vsnprintf)
+AC_CHECK_FUNCS(getaddrinfo gethostname getopt getpid gettimeofday)
+AC_CHECK_FUNCS(isinf insinff isinfl nanosleep sigaction sigvec snprintf)
+AC_CHECK_FUNCS(strcasecmp strdup strerror stricmp strncasecmp strtoul)
+AC_CHECK_FUNCS(strtoull strtouq uname vsnprintf)
 AC_LANG(C++)
 
 OMNI_HAVE_ISNANORINF

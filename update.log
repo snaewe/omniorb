@@ -1,3 +1,21 @@
+Mon Jan  6 11:05:34 GMT 2003 dgrisby
+====================================
+
+- New AddrInfo instead of gethostbyname.
+
+configure
+configure.ac
+include/omniORB4/acconfig.h.in
+include/omniORB4/internal/libcWrapper.h
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/transportRules.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Thu Dec 19 13:54:17 GMT 2002 dgrisby
 ====================================
 

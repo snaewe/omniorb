@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2003/01/06 11:11:55  dgrisby
+  New AddrInfo instead of gethostbyname.
+
   Revision 1.1.2.12  2002/09/06 21:16:59  dgrisby
   Bail out if port number is 0.
 
@@ -137,39 +140,19 @@ giopActiveConnection*
 tcpAddress::Connect(unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) const {
 
-  struct sockaddr_in raddr;
-  LibcWrapper::hostent_var h;
-  int  rc;
   SocketHandle_t sock;
 
   if (pd_address.port == 0) return 0;
 
-  if (! LibcWrapper::isipaddr(pd_address.host)) {
-    if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
-      return 0;
-    }
-    // We just pick the first address in the list, may be we should go
-    // through the list and if possible pick the one that is on the same
-    // subnet.
-    memcpy((void*)&raddr.sin_addr,
-	   (void*)h.hostent()->h_addr_list[0],
-	   sizeof(raddr.sin_addr));
-  }
-  else {
-    // The machine name is already an IP address
-    CORBA::ULong ip_p;
-    if ( (ip_p = inet_addr(pd_address.host)) == RC_INADDR_NONE) {
-      return 0;
-    }
-    memcpy((void*) &raddr.sin_addr, (void*) &ip_p, sizeof(raddr.sin_addr));
-  }
+  LibcWrapper::AddrInfo_var ai;
+  ai = LibcWrapper::getaddrinfo(pd_address.host, pd_address.port);
 
-  raddr.sin_family = INETSOCKET;
-  raddr.sin_port   = htons(pd_address.port);
-
-  if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
+  if ((LibcWrapper::AddrInfo*)ai == 0)
     return 0;
-  }
+
+  if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET)
+    return 0;
+
   {
     // Prevent Nagle's algorithm
     int valtrue = 1;
@@ -182,8 +165,7 @@ tcpAddress::Connect(unsigned long deadline_secs,
 
 #if !defined(USE_NONBLOCKING_CONNECT)
 
-  if (::connect(sock,(struct sockaddr *)&raddr,
-		sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) {
+  if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
     CLOSESOCKET(sock);
     return 0;
   }
@@ -196,8 +178,7 @@ tcpAddress::Connect(unsigned long deadline_secs,
     return 0;
   }
 
-  if (::connect(sock,(struct sockaddr *)&raddr,
-		sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) {
+  if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
 
     if (ERRNO != EINPROGRESS) {
       CLOSESOCKET(sock);

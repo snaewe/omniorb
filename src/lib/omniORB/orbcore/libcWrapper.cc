@@ -3,6 +3,7 @@
 // libcWrapper.cc             Created on: 19/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
+//    Copyright (C) 2003 Apasphere Ltd
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
@@ -29,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.9  2003/01/06 11:11:55  dgrisby
+  New AddrInfo instead of gethostbyname.
+
   Revision 1.19.2.8  2002/11/04 17:41:42  dgrisby
   Don't use gethostbyname for IP addresses on Win32.
 
@@ -109,297 +113,234 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #if !defined(HAVE_STRCASECMP) || !defined(HAVE_STRNCASECMP)
 #  include <ctype.h>  //  for toupper and tolower.
 #endif
 
 #include "libcWrapper.h"
+#include "SocketCollection.h"
 
 OMNI_NAMESPACE_BEGIN(omni)
 
 
-omni_tracedmutex LibcWrapper::non_reentrant;
+static omni_tracedmutex non_reentrant;
 
+LibcWrapper::AddrInfo::~AddrInfo() {}
+
+
+// *** USE ::getaddrinfo() if it's available.
+
+
+class IP4AddrInfo : public LibcWrapper::AddrInfo
+{
+public:
+  IP4AddrInfo(CORBA::ULong ip4addr, CORBA::UShort port);
+  virtual ~IP4AddrInfo();
+
+  virtual struct sockaddr* addr();
+  virtual int addrSize();
+  virtual char* asString();
+  virtual LibcWrapper::AddrInfo* next();
+
+private:
+  struct sockaddr_in pd_addr;
+};
+
+IP4AddrInfo::IP4AddrInfo(CORBA::ULong ip4addr, CORBA::UShort port)
+{
+  pd_addr.sin_family      = INETSOCKET;
+  pd_addr.sin_addr.s_addr = ip4addr;
+  pd_addr.sin_port        = htons(port);
+#ifdef HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
+  pd_addr.sin_len = sizeof(struct sockaddr_in);
+#endif
+#ifdef HAVE_STRUCT_SOCKADDR_IN_SIN_ZERO
+  memset((void *)&pd_addr.sin_zero, 0, sizeof(pd_addr.sin_zero));
+#endif
+}
+
+IP4AddrInfo::~IP4AddrInfo() {}
+
+struct sockaddr*
+IP4AddrInfo::addr()
+{
+  return (struct sockaddr*)&pd_addr;
+}
 
 int
-LibcWrapper::gethostbyname(const char *name,
-			   LibcWrapper::hostent_var &h,
-			   int &rc)
+IP4AddrInfo::addrSize()
 {
+  return sizeof(struct sockaddr_in);
+}
+
+char*
+IP4AddrInfo::asString()
+{
+  CORBA::ULong hipv4 = ntohl(pd_addr.sin_addr.s_addr);
+  int ip1 = (int)((hipv4 & 0xff000000) >> 24);
+  int ip2 = (int)((hipv4 & 0x00ff0000) >> 16);
+  int ip3 = (int)((hipv4 & 0x0000ff00) >> 8);
+  int ip4 = (int)((hipv4 & 0x000000ff));
+
+  char* result = CORBA::string_alloc(16);
+  sprintf(result,"%d.%d.%d.%d",ip1,ip2,ip3,ip4);
+  return result;
+}
+
+
+LibcWrapper::AddrInfo*
+IP4AddrInfo::next()
+{
+  return 0; // Not implemented
+}
+
+
+static inline CORBA::ULong hostent_to_ip4(struct hostent* entp)
+{
+  CORBA::ULong ip4;
+  memcpy((void*)&ip4, (void*)entp->h_addr_list[0], sizeof(CORBA::ULong));
+  return ip4;
+}
+
+
+LibcWrapper::AddrInfo* LibcWrapper::getaddrinfo(const char* node,
+						CORBA::UShort port)
+{
+  if (!node) {
+    // No node address -- used to bind to INADDR_ANY
+    return new IP4AddrInfo(INADDR_ANY, port);
+  }
+  if (isipaddr(node)) {
+    // Already an IPv4 address.
+    CORBA::ULong ip4 = inet_addr(node);
+
+    if (ip4 == RC_INADDR_NONE)
+      return 0;
+    else
+      return new IP4AddrInfo(ip4, port);
+  }
+
 #if defined(__sunos__) && __OSVERSION__ >= 5
 
   // Use gethostbyname_r() on Solaris 2
-  if (!h.pd_buffer) {
-    h.pd_buffer = new char[256];
-    h.pd_buflen = 256;
-  }
+
+  struct hostent ent;
+  char* buffer = new char[256];
+  int buflen = 256;
+  int rc;
+
 again:
-  if (gethostbyname_r(name,&h.pd_ent,h.pd_buffer,h.pd_buflen,&rc) == 0) {
+  if (gethostbyname_r(node,&ent,buffer,buflen,&rc) == 0) {
     if (errno == ERANGE) {
       // buffer is too small to store the result, try again
-      delete [] h.pd_buffer;
-      h.pd_buflen = h.pd_buflen * 2;
-      h.pd_buffer = new char [h.pd_buflen];
+      delete [] buffer;
+      buflen = buflen * 2;
+      buffer = new char [buflen];
       goto again;
     }
-    return -1;
+    else
+      return 0;
   }
+  return new IP4AddrInfo(hostent_to_ip4(&ent), port);
 
 #elif defined(__osf1__)
 
   // Use gethostbyname_r() on Digital UNIX
-  if (!h.pd_buffer) {
-    h.pd_buffer = new char[sizeof(struct hostent_data)];
-    memset(h.pd_buffer,0,sizeof(struct hostent_data));
-    // XXX Is it possible that the pointer h.pd_buffer is at a wrong alignment
-    //     for a struct hostent_data?
-    h.pd_buflen = sizeof(struct hostent_data);
-  }
-  if (gethostbyname_r(name,&h.pd_ent,(struct hostent_data *)h.pd_buffer) < 0) {
-    if (errno) {
-      rc = HOST_NOT_FOUND;
-    }
-    else {
-      rc = h_errno;
-    }
-    return -1;
-  }
+
+  struct hostent ent;
+  char* buffer = new char[sizeof(struct hostent_data)];
+  memset((void*)buffer,0,sizeof(struct hostent_data));
+  // XXX Is it possible that the pointer buffer is at a wrong alignment
+  //     for a struct hostent_data?
+
+  if (gethostbyname_r(node,&ent,(struct hostent_data *)buffer) < 0)
+    return 0;
+
+  return new IP4AddrInfo(hostent_to_ip4(&ent), port);
 
 #elif defined(__hpux__)
 
 # if __OSVERSION__ >= 11
   // gethostbyname is thread safe and reentrant under HPUX 11.00
   struct hostent *hp;
-  if ((hp = ::gethostbyname(name)) == NULL) {
-    rc = errno;
-    return -1;
+  if ((hp = ::gethostbyname(node)) == NULL) {
+    return 0;
   }
-  else {
-    // the hostent_var object needs a dummy buffer here otherwise
-    // the hostent() member returns NULL
-    if (h.pd_buffer == NULL)
-      h.pd_buffer = new char[0];
-    h.pd_ent = *hp;
-  }
+  return new IP4AddrInfo(hostent_to_ip4(hp), port);
+
 # else
   // Use gethostbyname_r() on HPUX 10.20
-  //  int gethostbyname_r(const char *name, struct hostent *result,
+  //  int gethostbyname_r(const char *node, struct hostent *result,
   //                       struct hostent_data *buffer);
   // -1 = Error, 0 is OK
-  extern int h_errno;
-  if (!h.pd_buffer) {
-    h.pd_buffer = new char[sizeof(hostent_data)];
-    memset((void*)h.pd_buffer,0,sizeof(hostent_data));
-  }
-  if (gethostbyname_r(name,&h.pd_ent,(hostent_data*)h.pd_buffer) == -1) {
-    rc = h_errno;  // Error
-    return -1;
-  }
+
+  struct hostent ent;
+  char* buffer = new char[sizeof(hostent_data)];
+  memset((void*)buffer,0,sizeof(hostent_data));
+
+  if (gethostbyname_r(node,&ent,(hostent_data*)buffer) == -1)
+    return 0;
+
+  return new IP4AddrInfo(hostent_to_ip4(&ent), port);
+
 # endif
 
 #else
-
   // Use non-reentrant gethostbyname()
-  non_reentrant.lock();
+  omni_tracedmutex_lock sync(non_reentrant);
 
-  struct hostent *hp;
-
-#ifdef __WIN32__
-  long ip;
-
-  // avoid using a numeric address with gethostbyname()
-  if ((ip = ::inet_addr(name)) != INADDR_NONE)
-    hp = ::gethostbyaddr((char*)&ip, sizeof(ip), AF_INET);
-  else
-    hp = ::gethostbyname(name);
-#else
-  hp = ::gethostbyname(name);
-#endif
+  struct hostent *hp = ::gethostbyname(node);
   
-#ifdef __atmos__
+# ifdef __atmos__
   if (hp <= 0)
-    {
-      rc = 0;
-      non_reentrant.unlock();
-      return -1;
-    }
-#else
+    return 0
+# else
   if (hp == NULL)
-    {
-#if defined(__WIN32__) || defined(__vms) && __VMS_VER < 70000000
-    rc = 0;
-#else
-#ifdef __osr5__
-    extern int h_errno;
+    return 0;
+# endif
+
+  return new IP4AddrInfo(hostent_to_ip4(hp), port);
 #endif
-    rc = h_errno;
-#endif
+}
 
-    non_reentrant.unlock();
-    return -1;
-    }
-#endif
-
-  // Have to copy the data point to by struct hostent *hp into h.pd_buffer
-  //
-  // The code below assumes that struct hostent looks like this:
-  //
-  // struct hostent {
-  //        char    *h_name;        /* official name of host */
-  //        char    **h_aliases;    /* alias list */
-  //        int     h_addrtype;     /* host address type */
-  //        int     h_length;       /* length of address */
-  //        char    **h_addr_list;  /* list of addresses from name server */
-  // };
-  //
-  //
-
-  int total = 0;
-  int naliases = 1;
-  int naddrs = 1;
-  char **p;
-
-  total += strlen(hp->h_name) + 1;
-#ifndef __atmos__
-  p = hp->h_aliases;
-  while (*p) {
-    total += strlen(*p) + 1;
-    naliases++;
-    p++;
-  }
-#endif
-  total += naliases * sizeof(char *);
-  p = hp->h_addr_list;
-  while (*p) {
-    total += hp->h_length;
-    naddrs++;
-    p++;
-  }
-  total += naddrs * sizeof(char *);
-
-  if (h.pd_buffer) {
-    delete [] h.pd_buffer;
-    h.pd_buffer = 0;
-  }
-  h.pd_buffer = new char[total];
-  h.pd_buflen = total;
-
-  h.pd_ent.h_addrtype = hp->h_addrtype;
-  h.pd_ent.h_length = hp->h_length;
-  char *q = h.pd_buffer;
-  h.pd_ent.h_aliases = (char **) q;
-  q += naliases * sizeof(char *);
-
-  h.pd_ent.h_addr_list = (char **) q;
-  q += naddrs * sizeof(char *);
-
-  h.pd_ent.h_name = q;
-  q += strlen(hp->h_name) + 1;
-  strcpy((char *)h.pd_ent.h_name,hp->h_name);
-
-  int idx = 0;
-#ifndef __atmos__
-  p = hp->h_aliases;
-  while (*p) {
-    h.pd_ent.h_aliases[idx] = q;
-    q += strlen(*p) + 1;
-    strcpy(h.pd_ent.h_aliases[idx],*p);
-    idx++;
-    p++;
-  }
-#endif
-
-  h.pd_ent.h_aliases[idx] = 0;
-  p = hp->h_addr_list;
-  idx = 0;
-  while (*p) {
-    h.pd_ent.h_addr_list[idx] = q;
-    q += hp->h_length;
-    memcpy((void *) h.pd_ent.h_addr_list[idx],(void *)*p,hp->h_length);
-    idx++;
-    p++;
-#ifdef __atmos__
-    // ATMos h_addr_list is not terminated by a null - and
-    // only has one IP address per hostname.
-    break;
-#endif
-  }
-
-  h.pd_ent.h_addr_list[idx] = 0;
-   non_reentrant.unlock();
-#endif
-  return 0;
+void LibcWrapper::freeaddrinfo(LibcWrapper::AddrInfo* ai)
+{
+  delete ai;
 }
 
 
 int LibcWrapper::isipaddr(const char* hname)
 {
-  // Test if string contained hname is ipaddress
+  // Test if string hname is an ip address
   // Return: 0: not ip address,  1: is ip address
 
-  int hlen = strlen(hname);
+  const char* c;
+  int len, dots;
 
-  // Quick tests for invalidity:
+  for (c=hname, len=0, dots=0; *c; c++,len++) {
+    if (*c == '.')
+      dots++;
+    else if (*c < '0' || *c > '9')
+      return 0;
+  }
+  if (dots != 3 || len < 7 || len > 15) return 0;
 
-  if (hlen < 7 || hlen > 15) return 0;
-  if ((int) hname[0] < 48 || (int) hname[0] > 57) return 0;
+  char comp[4];
+  int i, j, val;
+  c = hname;
 
+  for (i=0; i < 4; i++) {
+    for (j=0; *c && *c != '.'; j++, c++)
+      comp[j] = *c;
 
-  // Full test:
+    comp[j] = '\0';
 
-  char* orig_pos = new char[hlen+1];
-  strcpy(orig_pos,hname);
-  char* curr_pos = orig_pos;
-
-  for(int count = 0; count <4; count++)
-    {
-      char* dot_pos;
-
-      if (((dot_pos = strchr(curr_pos,'.')) == 0) && count < 3)
-	{
-	  delete[] orig_pos;
-	  return 0;
-	}
-      else if (count == 3) dot_pos = orig_pos+hlen;
-
-      int ip_component_len = (dot_pos - curr_pos) / sizeof(char);
-      if (ip_component_len <1 || ip_component_len > 3)
-	{
-	  delete[] orig_pos;
-	  return 0;
-	}
-
-      char* ip_component = new char[ip_component_len+1];
-      strncpy(ip_component,curr_pos,ip_component_len);
-      ip_component[ip_component_len] = '\0';
-
-      for(int str_iter=0; str_iter < ip_component_len; str_iter++)
-	{
-	  if ((int) ip_component[str_iter] < 48 ||
-	                       (int) ip_component[str_iter] > 57)
-	    {
-	      delete[] ip_component;
-	      delete[] orig_pos;
-
-	      return 0;
-	    }
-	}
-
-      int ip_value = atoi(ip_component);
-      delete[] ip_component;
-
-      if (ip_value < 0 || ip_value > 255)
-	{
-	  delete[] orig_pos;
-	  return 0;
-	}
-
-      curr_pos = dot_pos+1;
-    }
-
-  delete[] orig_pos;
-
+    val = atoi(comp);
+    if (val < 0 || val > 255)
+      return 0;
+  }
   return 1;
 }
 

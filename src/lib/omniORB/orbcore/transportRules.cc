@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2003/01/06 11:11:55  dgrisby
+  New AddrInfo instead of gethostbyname.
+
   Revision 1.1.2.5  2001/09/24 16:16:10  sll
   Allow serverTransportRule and clientTransportRule to be specified as
   -ORB initialisation options.
@@ -190,13 +193,10 @@ static char* extractIPv4(const char* endpoint) {
 	return ipv4._retn();
       else if (strncmp(endpoint,"giop",4) == 0) {
 	// try treating this as a hostname
-	LibcWrapper::hostent_var h;
-	int  rc;
-	if (LibcWrapper::gethostbyname(ipv4,h,rc) == 0) {
-	  ipv4 = tcpConnection::ip4ToString(*((CORBA::ULong*)
-					      h.hostent()->h_addr_list[0]));
-	  return ipv4._retn();
-	}
+	LibcWrapper::AddrInfo_var ai;
+	ai = LibcWrapper::getaddrinfo(ipv4, 0);
+	if ((LibcWrapper::AddrInfo*)ai)
+	  return ai->asString();
       }
     }
   }

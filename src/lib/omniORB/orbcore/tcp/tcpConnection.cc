@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2003/01/06 11:11:55  dgrisby
+  New AddrInfo instead of gethostbyname.
+
   Revision 1.1.2.10  2001/12/03 13:39:55  dpg1
   Explicit socket shutdown flag for Windows.
 
@@ -82,14 +85,15 @@ OMNI_NAMESPACE_BEGIN(omni)
 /////////////////////////////////////////////////////////////////////////
 char*
 tcpConnection::ip4ToString(CORBA::ULong ipv4) {
-  int ip1 = (int)((ntohl(ipv4) & 0xff000000) >> 24);
-  int ip2 = (int)((ntohl(ipv4) & 0x00ff0000) >> 16);
-  int ip3 = (int)((ntohl(ipv4) & 0x0000ff00) >> 8);
-  int ip4 = (int)(ntohl(ipv4) & 0x000000ff);
-  CORBA::String_var result;
-  result = CORBA::string_alloc(16);
-  sprintf((char*)result,"%d.%d.%d.%d",ip1,ip2,ip3,ip4);
-  return result._retn();
+  CORBA::ULong hipv4 = ntohl(ipv4);
+  int ip1 = (int)((hipv4 & 0xff000000) >> 24);
+  int ip2 = (int)((hipv4 & 0x00ff0000) >> 16);
+  int ip3 = (int)((hipv4 & 0x0000ff00) >> 8);
+  int ip4 = (int)((hipv4 & 0x000000ff));
+
+  char* result = CORBA::string_alloc(16);
+  sprintf(result,"%d.%d.%d.%d",ip1,ip2,ip3,ip4);
+  return result;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -97,11 +101,13 @@ char*
 tcpConnection::ip4ToString(CORBA::ULong ipv4,CORBA::UShort port,
 			   const char* prefix) {
 
-  int ip1 = (int)((ntohl(ipv4) & 0xff000000) >> 24);
-  int ip2 = (int)((ntohl(ipv4) & 0x00ff0000) >> 16);
-  int ip3 = (int)((ntohl(ipv4) & 0x0000ff00) >> 8);
-  int ip4 = (int)(ntohl(ipv4) & 0x000000ff);
-  CORBA::String_var result;
+  CORBA::ULong hipv4 = ntohl(ipv4);
+  int ip1 = (int)((hipv4 & 0xff000000) >> 24);
+  int ip2 = (int)((hipv4 & 0x00ff0000) >> 16);
+  int ip3 = (int)((hipv4 & 0x0000ff00) >> 8);
+  int ip4 = (int)((hipv4 & 0x000000ff));
+
+  char* result;
   if (!prefix) {
     result = CORBA::string_alloc(24);
     sprintf((char*)result,"%d.%d.%d.%d:%d",ip1,ip2,ip3,ip4,ntohs(port));
@@ -112,7 +118,7 @@ tcpConnection::ip4ToString(CORBA::ULong ipv4,CORBA::UShort port,
     sprintf((char*)result,"%s%d.%d.%d.%d:%d",prefix,ip1,ip2,ip3,ip4,
 	    ntohs(port));
   }
-  return result._retn();
+  return result;
 }
 
 
@@ -121,7 +127,6 @@ int
 tcpConnection::Send(void* buf, size_t sz,
 		    unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) {
-
 
 #ifdef __VMS
   // OpenVMS socket library cannot handle more than 64K buffer.

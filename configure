@@ -9037,9 +9037,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-
-
-for ac_func in gethostname getopt getpid gettimeofday isinf insinff isinfl
+for ac_func in getaddrinfo gethostname getopt getpid gettimeofday
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5
@@ -9120,7 +9118,8 @@ done
 
 
 
-for ac_func in nanosleep sigaction sigvec snprintf strcasecmp strdup
+
+for ac_func in isinf insinff isinfl nanosleep sigaction sigvec snprintf
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5
@@ -9201,7 +9200,7 @@ done
 
 
 
-for ac_func in strerror stricmp strncasecmp strtoul strtoull strtouq
+for ac_func in strcasecmp strdup strerror stricmp strncasecmp strtoul
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5
@@ -9278,7 +9277,9 @@ done
 
 
 
-for ac_func in uname vsnprintf
+
+
+for ac_func in strtoull strtouq uname vsnprintf
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5
