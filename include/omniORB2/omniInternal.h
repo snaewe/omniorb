@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.21  1998/08/21 19:27:08  sll
+  New omniObject member noExistentCheck.
+
   Revision 1.20  1998/08/05 18:11:09  sll
   Updated version variable to omniORB_2_6 (previously omniORB_2_5).
 
@@ -462,6 +465,10 @@ public:
   // Returns the object manager of this object.
   // Calling this function for a proxy object would result in undefined
   // behaviour.
+
+  void noExistentCheck() { pd_flags.existent_and_type_verified = 1; }
+  // This function instructs the ORB to skip the existence test performed
+  // in assertObjectExistent().
 
   static omni_mutex          objectTableLock;
   static omniObject*         proxyObjectTable;
