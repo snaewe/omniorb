@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.14  2004/10/17 22:29:42  dgrisby
+# Stubs for typedef to sequence of forward-declared struct / union
+# were broken. Thanks Jeremy Van Grinsven.
+#
 # Revision 1.29.2.13  2004/07/29 10:45:22  dgrisby
 # Bug with unmarshalling unions with multiple case labels.
 #
@@ -371,7 +375,7 @@ def visitTypedef(node):
 
         fq_derived = scopedName.fullyQualify()
 
-        if d_type.sequence():
+        if d_type.sequence() and not aliasType.typedef():
             seqType = types.Type(d_type.type().seqType())
             d_seqType = seqType.deref()
             if d_seqType.structforward() or d_seqType.unionforward():
