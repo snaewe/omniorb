@@ -1,3 +1,13 @@
+Fri Sep 24 12:30:49 BST 1999 sll
+================================
+
+- Removed else if nesting in stub dispatch function. This makes life
+  easier for MS VC++ when compiling an interface with a pathologically large
+  number of members.
+
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Thu Sep 23 20:52:03 BST 1999 sll
 ===============================
 
