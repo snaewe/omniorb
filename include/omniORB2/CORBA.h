@@ -13,9 +13,13 @@
 
 /*
  $Log$
- Revision 1.2  1997/01/13 15:06:51  sll
- Added marshalling routines for CORBA::Object.
+ Revision 1.3  1997/01/21 14:49:15  ewc
+ Added support for initial reference interface and also includes
+ the COSS Naming Service Interface.
 
+ * Revision 1.2  1997/01/13  15:06:51  sll
+ * Added marshalling routines for CORBA::Object.
+ *
  Revision 1.1  1997/01/08 17:28:30  sll
  Initial revision
 
@@ -803,20 +807,33 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
     
     BOA_ptr BOA_init(int &argc, char **argv, const char *boa_identifier=0) ;
 
-#ifdef NOT_SUPPORTED_YET
-    typedef Char * ObjectId;
-   
-    class ObjectIdList {
+
+    // Initial Object Reference definitions:
+
+    typedef char* ObjectId;
+    typedef String_var ObjectId_var;
+
+    typedef _CORBA_Unbounded_Sequence<CORBA::String_member > ObjectIdList;
+    typedef _CORBA_ConstrType_Variable_Var<ObjectIdList> ObjectIdList_var;
+
+    class InvalidName : public CORBA::UserException {
     public:
+
+      InvalidName() { }
+      InvalidName(const InvalidName &);
+
+      InvalidName & operator=(const InvalidName &);
+      virtual ~InvalidName() { }
+      size_t NP_alignedSize(size_t initialoffset);
+      void operator>>= (NetBufferedStream &);
+      void operator<<= (NetBufferedStream &);
+      void operator>>= (MemBufferedStream &);
+      void operator<<= (MemBufferedStream &);
     };
 
-    class InvalidName {
-    public:
-    };
-
-    ObjectIdList *list_initial_services() ;
+    ObjectIdList* list_initial_services() ;
     Object_ptr resolve_initial_references(const char *identifier) ;
-#endif
+
 
     static ORB_ptr _duplicate(ORB_ptr p);
     static ORB_ptr _nil();
@@ -881,5 +898,9 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 			    size_t repoIdSize,
 			    MemBufferedStream &s);
 };
+
+
+// Include the COSS Naming Service header:
+#include <Naming.hh>
 
 #endif // __CORBA_H__
