@@ -7,7 +7,7 @@ INSTALL=@INSTALL@
 INSTALLDIR = $(INSTALLIDLDIR)/omniORB
 
 FILES = Naming.idl bootstrap.idl corbaidl.idl echo.idl ir.idl orb.idl \
-        poa.idl poa_include.idl
+        poa.idl poa_include.idl boxes.idl
 
 SUBDIRS = COS
 

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.8  2005/01/17 14:33:22  dgrisby
+ Standard StringValue and WStringValue typedefs.
+
  Revision 1.5.2.7  2004/10/13 17:58:18  dgrisby
  Abstract interfaces support; values support interfaces; value bug fixes.
 
@@ -444,6 +447,26 @@ _CORBA_MODULE_BEG
 #endif
 #endif
 
+  //////////////////////////////////////////////////////////////////////
+  ////////////////////// Generated from boxes.idl //////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+#if defined(_OMNIORB_LIBRARY)
+#    undef   _core_attr
+#    define  _core_attr  _OMNIORB_NTDLL_IMPORT
+#include <omniORB4/boxes_defs.hh>
+#    undef   _core_attr
+#    define  _core_attr
+#elif defined(_OMNIORB_DYNAMIC_LIBRARY)
+#    undef   _core_attr
+#    define  _core_attr
+#include <omniORB4/boxes_defs.hh>
+#    undef   _core_attr
+#    define  _core_attr  _OMNIORB_NTDLL_IMPORT
+#else
+#include <omniORB4/boxes_defs.hh>
+#endif
+
 #  undef INSIDE_OMNIORB_CORBA_MODULE
 
 _CORBA_MODULE_END
@@ -483,8 +506,10 @@ extern void _omni_set_NameService(CORBA::Object_ptr);
 #include <omniORB4/corbaidl_operators.hh>
 
 #if defined(ENABLE_CLIENT_IR_SUPPORT)
-#include <omniORB4/ir_operators.hh>
+#  include <omniORB4/ir_operators.hh>
 #endif
+
+#include <omniORB4/boxes_operators.hh>
 
 
 _CORBA_MODULE POA_CORBA
@@ -492,8 +517,9 @@ _CORBA_MODULE_BEG
 
 #include <omniORB4/corbaidl_poa.hh>
 #if defined(ENABLE_CLIENT_IR_SUPPORT)
-#include <omniORB4/ir_poa.hh>
+#  include <omniORB4/ir_poa.hh>
 #endif
+#include <omniORB4/boxes_poa.hh>
 
 _CORBA_MODULE_END
 
@@ -540,6 +566,9 @@ _CORBA_MODULE_END
 #ifndef __ir_hh_EXTERNAL_GUARD__
 #define __ir_hh_EXTERNAL_GUARD__
 #endif
+#endif
+#ifndef __boxes_hh_EXTERNAL_GUARD__
+#define __boxes_hh_EXTERNAL_GUARD__
 #endif
 
 #endif // __CORBA_H__
