@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.3  2000/11/03 19:22:56  sll
+# Replace the old set of marshalling operators in the generated code with
+# a couple of unified operators for cdrStream.
+#
 # Revision 1.29.2.2  2000/10/12 15:37:53  sll
 # Updated from omni3_1_develop.
 #
@@ -369,8 +373,6 @@ def visitStruct(node):
     
     scopedName = id.Name(node.scopedName())
 
-    size_calculation = "omni::align_to(_msgsize, omni::ALIGN_4) + 4"
-
     for n in node.members():
         n.accept(self)
 
@@ -381,49 +383,25 @@ def visitStruct(node):
             for d in n.declarators():
                 scopedName = id.Name(d.scopedName())
                 member_name = scopedName.simple()
-                skutil.marshall_struct_union(stream, outer_env,
-                                             memberType, d, member_name)
+                skutil.marshall(stream, outer_env,
+                                memberType, d, member_name, "_n")
         return
 
-    def Mem_unmarshal(stream = stream, node = node,
-                      outer_env = outer_environment):
+    def unmarshal(stream = stream, node = node,
+                  outer_env = outer_environment):
         for n in node.members():
             memberType = types.Type(n.memberType())
             for d in n.declarators():
                 scopedName = id.Name(d.scopedName())
                 member_name = scopedName.simple()
-                skutil.unmarshall_struct_union(stream, outer_env,
-                                               memberType, d, member_name, 0)
-        return
-
-    def Net_unmarshal(stream = stream, node = node,
-                      outer_env = outer_environment):
-        for n in node.members():
-            memberType = types.Type(n.memberType())
-            for d in n.declarators():
-                scopedName = id.Name(d.scopedName())
-                member_name = scopedName.simple()
-                skutil.unmarshall_struct_union(stream, outer_env,
-                                               memberType, d, member_name, 1)
-        return
-
-    def msgsize(stream = stream, node = node, outer_env = outer_environment):
-        for n in node.members():
-            memberType = types.Type(n.memberType())
-            for d in n.declarators():
-                scopedName = id.Name(d.scopedName())
-                member_name = scopedName.simple()
-                size = skutil.sizeCalculation(outer_env, memberType, d,
-                                              "_msgsize", member_name)
-                stream.out(size)
+                skutil.unmarshall(stream, outer_env,
+                                  memberType, d, member_name, "_n")
         return
 
     stream.out(template.struct,
                name = scopedName.fullyQualify(),
-               size_calculation = msgsize,
                marshall_code = marshal,
-               mem_unmarshall_code = Mem_unmarshal,
-               net_unmarshall_code = Net_unmarshal)
+               unmarshall_code = unmarshal)
 
     stream.reset_indent()
     
@@ -460,78 +438,17 @@ def visitUnion(node):
             n.caseType().decl().accept(self)
 
     # --------------------------------------------------------------
-    # union::_NP_alignedSize(size_t initialoffset) const
+    # union::operator{>>, <<}= (cdrStream& _n) [const]
     #
-    discriminator_size_calc = skutil.sizeCalculation(environment,
-                                                     switchType,
-                                                     None,
-                                                     "_msgsize", "")
-
-    # build the switch case in the alignedSize method
-    # build the cases...
-    def cases(stream = stream, node = node, switchType = switchType,
-              environment = environment, booleanWrap = booleanWrap):
-        for c in node.cases():
-            caseType = types.Type(c.caseType())
-            d_caseType = caseType.deref()
-            decl = c.declarator()
-            decl_scopedName = id.Name(decl.scopedName())
-            decl_name = decl_scopedName.simple()
-            for l in c.labels():
-                # default case was already taken care of
-                if not(l.default()):
-                    discrim_value = switchType.literal(l.value(), environment)
-                    
-                    stream.out("case " + str(discrim_value) + ":\n")
-                    stream.inc_indent()
-                    size_calc = skutil.sizeCalculation(environment, caseType,
-                                                       decl, "_msgsize",
-                                                       "_pd_" + decl_name)
-                    stream.out(size_calc)
-                    stream.dec_indent()
-                    stream.out("\nbreak;\n")
-        if booleanWrap:
-            stream.out(template.union_default_bool)
-        else:
-            stream.out(template.union_default)
-
-    # build the switch itself
-    def switch(stream = stream, exhaustive = exhaustive,
-               hasDefault = hasDefault, defaultCase = defaultCase,
-               environment = environment, defaultMember = defaultMember,
-               cases = cases):
-        if not(exhaustive):
-            size_calc = "\n"
-            if hasDefault:
-                caseType = types.Type(defaultCase.caseType())
-                decl = defaultCase.declarator()
-                size_calc = skutil.sizeCalculation(environment, caseType,
-                                                   decl, "_msgsize",
-                                                   "_pd_" + defaultMember)
-            stream.out(template.union_align_nonexhaustive,
-                       size_calc = size_calc,
-                       cases = cases)
-        else:
-            stream.out(template.union_align_exhaustive,
-                       cases = cases)
-
-    # output the alignedSize method
-    stream.out(template.union,
-               name = name,
-               discriminator_size_calc = discriminator_size_calc,
-               switch = switch)
-    
-
-    # --------------------------------------------------------------
-    # union::operator{>>, <<}= ({Net, Mem}BufferedStream& _n) [const]
-    #
-    # FIXME: I thought the CORBA::MARSHAL exception thrown when
-    # unmarshalling an array of strings was skipped when unmarshalling
-    # from a MemBufferedStream (it is for a struct, but not for a union)
-    # (This is probably due to a string-inconsistency with the old compiler
-    # and can be sorted out later)
-
     # marshal/ unmarshal individual cases
+    marshal_discriminator = output.StringStream()
+    unmarshal_discriminator = output.StringStream()
+    
+    skutil.marshall(marshal_discriminator,environment,
+                    switchType, None, "_pd__d", "_n")
+    skutil.unmarshall(unmarshal_discriminator,environment,
+                      switchType, None, "_pd__d", "_n")
+
     marshal_cases = output.StringStream()
     unmarshal_cases = output.StringStream()
     for c in node.cases():
@@ -551,16 +468,15 @@ def visitUnion(node):
 
                 marshal_cases.out("case " + discrim_value + ":")
                 marshal_cases.inc_indent()
-                skutil.marshall_struct_union(marshal_cases, environment,
-                                             caseType, decl, "_pd_" + decl_name)
+                skutil.marshall(marshal_cases, environment,
+                                caseType, decl, "_pd_" + decl_name, "_n")
                 marshal_cases.dec_indent()
                 marshal_cases.out("break;")
 
             unmarshal_cases.inc_indent()
             unmarshal_cases.out("_pd__default = " + str(isDefault) + ";")
-            skutil.unmarshall_struct_union(unmarshal_cases, environment,
-                                           caseType, decl, "_pd_" + decl_name,
-                                           can_throw_marshall = 1)
+            skutil.unmarshall(unmarshal_cases, environment,
+                              caseType, decl, "_pd_" + decl_name, "_n")
             unmarshal_cases.dec_indent()
             unmarshal_cases.out("break;")
 
@@ -589,18 +505,20 @@ def visitUnion(node):
                     decl = defaultCase.declarator()
                     decl_scopedName = id.Name(decl.scopedName())
                     decl_name = decl_scopedName.simple()
-                    skutil.marshall_struct_union(stream, environment, caseType,
-                                                 decl, "_pd_" + decl_name)
+                    skutil.marshall(stream, environment, caseType,
+                                    decl, "_pd_" + decl_name, "_n")
             stream.out(template.union_operators_nonexhaustive,
-                        default = default,
-                        cases = str(marshal_cases))
+                       default = default,
+                       cases = str(marshal_cases))
         else:
             stream.out(template.union_operators_exhaustive,
-                        cases = str(marshal_cases))
+                       cases = str(marshal_cases))
 
     # write the operators
     stream.out(template.union_operators,
                name = name,
+               marshal_discriminator = str(marshal_discriminator),
+               unmarshal_discriminator = str(unmarshal_discriminator),
                marshal_cases = marshal,
                unmarshal_cases = str(unmarshal_cases))
                 
@@ -733,8 +651,8 @@ def visitException(node):
                 # these are special resources which need to be explicitly
                 # duplicated (but not if an array?)
                 default_ctor_body.out("""\
-@member_type_name@_Helper::duplicate(_@member_name@@index@);""",
-                                      member_type_name = memberType_fqname,
+@member_type_name@::_duplicate(_@member_name@@index@);""",
+                                      member_type_name = string.replace(memberType_fqname,"_ptr",""),
                                       member_name = decl_name,
                                       index = index)
             
@@ -772,13 +690,10 @@ def visitException(node):
                assign_op_body = str(assign_op_body))
     
 
-    # deal with alignment, marshalling and demarshalling
+    # deal with marshalling and demarshalling
     needs_marshalling = node.members() != []
-    aligned_size = output.StringStream()
-    mem_marshal = output.StringStream()
-    net_marshal = output.StringStream()
-    mem_unmarshal = output.StringStream()
-    net_unmarshal = output.StringStream()
+    marshal = output.StringStream()
+    unmarshal = output.StringStream()
     
     for m in node.members():
         memberType = types.Type(m.memberType())
@@ -788,55 +703,17 @@ def visitException(node):
             decl_name = decl_scopedName.simple()
             is_array_declarator = d.sizes() != []
             
-            if memberType.string() and not(is_array_declarator):
-                tmp = skutil.unmarshal_string_via_temporary(decl_name, "_n")
-                mem_unmarshal.out(tmp)
-                net_unmarshal.out(tmp)
-            # TypeCodes seem to be other exceptions
-            elif d_memberType.typecode():
-                skutil.unmarshall_struct_union(mem_unmarshal, environment,
-                                               memberType, d, decl_name, 0,
-                                               "_n")
-                skutil.unmarshall_struct_union(net_unmarshal, environment,
-                                               memberType, d, decl_name, 0,
-                                               "_n")
-                
-            else:
-                skutil.unmarshall(mem_unmarshal, environment,
-                                  memberType, d, decl_name, 0, "_n",
-                                  string_via_member = 1)
-                skutil.unmarshall(net_unmarshal, environment,
-                                  memberType, d, decl_name, 1, "_n",
-                                  string_via_member = 1)
+            skutil.unmarshall(unmarshal, environment,
+                              memberType, d, decl_name, "_n")
 
-            if d_memberType.typecode():
-                skutil.marshall_struct_union(mem_marshal, environment,
-                                             memberType, d, decl_name, "_n")
-                skutil.marshall_struct_union(net_marshal, environment,
-                                             memberType, d, decl_name, "_n")
-            else:
-                exception = "BAD_PARAM"
-                if is_array_declarator:
-                    exception = "MARSHAL"
-                skutil.marshall(mem_marshal, environment,
-                                memberType, d, decl_name, "_n",
-                                exception = exception)
-                skutil.marshall(net_marshal, environment,
-                                memberType, d, decl_name, "_n",
-                                exception = exception)
-
-            aligned_size.out(skutil.sizeCalculation(environment, memberType,
-                                                    d, "_msgsize", decl_name,
-                                                    fixme = 1))
+            skutil.marshall(marshal, environment,
+                            memberType, d, decl_name, "_n")
 
     if needs_marshalling:
         stream.out(template.exception_operators,
                    scoped_name = scoped_name,
-                   aligned_size = str(aligned_size),
-                   net_marshal = str(net_marshal),
-                   mem_marshal = str(mem_marshal),
-                   net_unmarshal = str(net_unmarshal),
-                   mem_unmarshal = str(mem_unmarshal))
+                   marshal = str(marshal),
+                   unmarshal = str(unmarshal))
 
 
     return
