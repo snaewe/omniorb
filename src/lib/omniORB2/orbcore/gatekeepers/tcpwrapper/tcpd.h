@@ -11,6 +11,10 @@
 #ifndef _TCPD_H
 #define _TCPD_H
 
+#if defined(__nextstep__)
+#include <sys/types.h>
+#endif
+
 #include <netinet/in.h>
 #include <stdio.h>
 
