@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14.2.3  2000/10/03 17:40:26  sll
+  Merged missing bits in Rope iterator.
+
   Revision 1.14.2.2  2000/09/27 18:30:03  sll
   Updated to use the new cdrStream abstraction.
   Removed Sync class.
@@ -432,8 +435,9 @@ Strand_iterator::operator() ()
 Rope_iterator::Rope_iterator(const Anchor *a)
 {
   ((Anchor *)a)->pd_lock.lock();
-  pd_r = a->pd_head;
   pd_anchor = a;
+  pd_initialised = 0;
+  pd_r = 0;
 }
 
 
@@ -441,8 +445,9 @@ Rope_iterator::Rope_iterator(const Anchor *a)
 Rope_iterator::Rope_iterator(ropeFactory* rf)
 {
   rf->anchor()->pd_lock.lock();
-  pd_r = rf->anchor()->pd_head;
   pd_anchor = rf->anchor();
+  pd_initialised = 0;
+  pd_r = 0;
 }
 
 
@@ -454,7 +459,6 @@ Rope_iterator::~Rope_iterator()
     pd_r = 0;
   }
   ((Anchor *)pd_anchor)->pd_lock.unlock();
-  return;
 }
 
 //#########################################################################
