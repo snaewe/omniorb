@@ -58,8 +58,8 @@ public:
   inline T_ptr operator->() const { return pd_data; }
   inline operator T_ptr () const  { return pd_data; }
 
-  inline const T* in() const { return pd_data; }
-  inline T_ptr&   inout()    { return pd_data; }
+  inline T*     in() const { return pd_data; }
+  inline T_ptr& inout()    { return pd_data; }
   inline T_ptr& out();
   inline T_ptr _retn();
 
@@ -183,6 +183,10 @@ public:
   }
 
   inline T_seq& operator= (const T_seq& s) {
+#if 0
+    // Disabled until sure okay for all compilers.
+    if( &s == this )  return *this;
+#endif
     if( pd_max < s.pd_max ) {
       ElemT* newbuf = new ElemT[s.pd_max];
       if( !newbuf )  _CORBA_new_operator_return_null();
@@ -276,6 +280,10 @@ public:
   }
 
   inline T_seq& operator= (const T_seq& s) {
+#if 0
+    // Disabled until sure okay for all compilers.
+    if( &s == this )  return *this;
+#endif
     if( pd_max < s.pd_max ) {
       T* newbuf = allocbuf(s.pd_max);
       if( !newbuf )  _CORBA_new_operator_return_null();
@@ -368,9 +376,18 @@ public:
   }
 
   inline T_var& operator= (const T_var& p) {
+#if 0
+    // Disabled until sure okay for all compilers.
+    if( &p != this ) {
+      T_Helper::duplicate(p.pd_objref);
+      T_Helper::release(pd_objref);
+      pd_objref = p.pd_objref;
+    }
+#else
     T_Helper::duplicate(p.pd_objref);
     T_Helper::release(pd_objref);
     pd_objref = p.pd_objref;
+#endif
     return *this;
   }
 
@@ -378,8 +395,8 @@ public:
   inline T_ptr operator->() const { return pd_objref; }
   inline operator T_ptr () const  { return pd_objref; }
 
-  inline const T* in() const { return pd_objref; }
-  inline T_ptr& inout()      { return pd_objref; }
+  inline T_ptr  in() const { return pd_objref; }
+  inline T_ptr& inout()    { return pd_objref; }
   inline T_ptr& out() {
     T_Helper::release(pd_objref);
     pd_objref = T_Helper::_nil();
@@ -440,9 +457,18 @@ public:
   }
 
   inline T_member& operator= (const T_member& p) {
+#if 0
+    // Disabled until sure okay for all compilers.
+    if( &p != this ) {
+      if( pd_rel )  T_Helper::release(_ptr);
+      T_Helper::duplicate(p._ptr);
+      _ptr = p._ptr;
+    }
+#else
     if( pd_rel )  T_Helper::release(_ptr);
     T_Helper::duplicate(p._ptr);
     _ptr = p._ptr;
+#endif
     return *this;
   }
 
@@ -582,11 +608,14 @@ public:
 
   inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
   inline T_out& operator=(T* p) { _data = p; return *this; }
+#if 0
+  // CORBA 2.3 p23-26 says that T_var assignment should be disallowed.
   inline T_out& operator=(const T_var& p) { 
     T_Helper::duplicate(p); 
     _data = (T*) p;
     return *this;
   }
+#endif
   inline T_out& operator=(const T_member& p) {
     T_Helper::duplicate(p); 
     _data = ((T*)p);
@@ -719,6 +748,10 @@ public:
   }
 
   inline T_var& operator= (const T_var& p) {
+#if 0
+    // Disabled until sure okay for all compilers.
+    if( &p == this )  return *this;
+#endif
     if( p.pd_data ) {
       if( !pd_data ) {
 	pd_data = new T;
@@ -820,6 +853,10 @@ public:
   }
 
   inline T_var& operator= (const T_var& p) {
+#if 0
+    // Disabled until sure okay for all compilers.
+    if( &p == this )  return *this;
+#endif
     if( pd_data )  T_Helper::free(pd_data);
 
     if( p.pd_data ) {
