@@ -1,3 +1,11 @@
+Tue Mar  7 11:27:46 GMT 2000 dpg1
+=================================
+
+- Bug with derived NamingContext IORs in init file
+
+src/lib/omniORB2/orbcore/initFile.cc
+
+
 Wed Feb 23 12:08:52 GMT 2000 dpg1
 =================================
 
