@@ -1,3 +1,43 @@
+Fri Oct 27 16:31:03 BST 2000 dpg1
+=================================
+
+- Initial code set conversion support. Not yet enabled or fully
+  tested.
+
+bin/scripts/make16bitcs.py                -- new
+bin/scripts/make8bitcs.py                 -- new
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_basetypes.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/codeSets.h               -- new
+include/omniORB4/omniInternal.h
+include/omniORB4/wstringtypes.h           -- new
+src/lib/dir.mk
+src/lib/omniORB/codeSetUtil.h             -- new
+src/lib/omniORB/dir.mk
+src/lib/omniORB/codesets/cs-8859-10.cc    -- new
+src/lib/omniORB/codesets/cs-8859-2.cc     -- new
+src/lib/omniORB/codesets/cs-8859-3.cc     -- new
+src/lib/omniORB/codesets/cs-8859-4.cc     -- new
+src/lib/omniORB/codesets/cs-8859-5.cc     -- new
+src/lib/omniORB/codesets/cs-8859-6.cc     -- new
+src/lib/omniORB/codesets/cs-8859-7.cc     -- new
+src/lib/omniORB/codesets/cs-8859-8.cc     -- new
+src/lib/omniORB/codesets/cs-8859-9.cc     -- new
+src/lib/omniORB/codesets/cs-big5.cc       -- new
+src/lib/omniORB/codesets/dir.mk           -- new
+src/lib/omniORB/orbcore/codeSets.cc       -- new
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/corbaWString.cc   -- new
+src/lib/omniORB/orbcore/cs-16bit.cc       -- new
+src/lib/omniORB/orbcore/cs-8859-1.cc      -- new
+src/lib/omniORB/orbcore/cs-8bit.cc        -- new
+src/lib/omniORB/orbcore/cs-UCS-4.cc       -- new
+src/lib/omniORB/orbcore/cs-UTF-16.cc      -- new
+src/lib/omniORB/orbcore/cs-UTF-8.cc       -- new
+src/lib/omniORB/orbcore/dir.mk
+
+
 Thu Oct 12 16:32:48 BST 2000 sll
 ================================
 

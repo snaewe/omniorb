@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.5  2000/10/27 15:42:07  dpg1
+  Initial code set conversion support. Not yet enabled or fully tested.
+
   Revision 1.33.2.4  2000/10/04 16:54:41  sll
   Added omni_omniIOR_initialiser_.
 
@@ -255,6 +258,7 @@ extern omniInitialiser& omni_scavenger_initialiser_;
 extern omniInitialiser& omni_hooked_initialiser_;
 extern omniInitialiser& omni_interceptor_initialiser_;
 extern omniInitialiser& omni_ior_initialiser_;
+extern omniInitialiser& omni_codeSet_initialiser_;
 
 static CORBA::Boolean
 parse_ORB_args(int& argc, char** argv, const char* orb_identifier);
@@ -344,6 +348,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_ior_initialiser_.attach();
     omni_initFile_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
+    omni_codeSet_initialiser_.attach();
     omni_hooked_initialiser_.attach();
 
     if( bootstrapAgentHostname ) {
@@ -586,6 +591,7 @@ omniOrbORB::actual_shutdown()
 
   // Call detach method of the initialisers in reverse order.
   omni_hooked_initialiser_.detach();
+  omni_codeSet_initialiser_.detach();
   omni_initRefs_initialiser_.detach();
   omni_initFile_initialiser_.detach();
   omni_ior_initialiser_.detach();

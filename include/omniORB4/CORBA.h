@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.3  2000/10/27 15:42:02  dpg1
+ Initial code set conversion support. Not yet enabled or fully tested.
+
  Revision 1.2.2.2  2000/09/27 17:19:12  sll
  Updated to use the new cdrStream abstraction.
  Replace include/omniORB3 with include/omniORB4.
@@ -270,6 +273,7 @@ _CORBA_MODULE_BEG
   typedef _CORBA_UShort  UShort;
   typedef _CORBA_Long    Long;
   typedef _CORBA_ULong   ULong;
+  typedef _CORBA_WChar   WChar;
 # ifndef NO_FLOAT
   typedef _CORBA_Float   Float;
   typedef _CORBA_Double  Double;
@@ -301,6 +305,20 @@ _CORBA_MODULE_BEG
   typedef _CORBA_String_inout String_INOUT_arg;
   typedef _CORBA_String_out String_OUT_arg;
   typedef String_OUT_arg String_out;
+
+  //////////////////////////////////////////////////////////////////////
+  /////////////////////////////// WString //////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  _CORBA_MODULE_FN _CORBA_WChar* wstring_alloc(ULong len);
+  _CORBA_MODULE_FN void          wstring_free(_CORBA_WChar*);
+  _CORBA_MODULE_FN _CORBA_WChar* wstring_dup(const _CORBA_WChar*);
+
+  typedef _CORBA_WString_var    WString_var;
+  typedef _CORBA_WString_member WString_member;
+  typedef _CORBA_WString_inout  WString_INOUT_arg;
+  typedef _CORBA_WString_out    WString_OUT_arg;
+  typedef WString_OUT_arg       WString_out;
 
 
   //////////////////////////////////////////////////////////////////////
@@ -2572,7 +2590,7 @@ _CORBA_MODULE_BEG
 _CORBA_MODULE_END
 
 #include <omniORB4/boa.h>
-
+#include <omniORB4/codeSets.h>
 
 #undef _core_attr
 #undef _dyn_attr

@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.3  2000/10/27 15:42:03  dpg1
+ Initial code set conversion support. Not yet enabled or fully tested.
+
  Revision 1.2.2.2  2000/10/03 17:34:47  sll
  Temporary debugging #define for gcc. To be removed before final release.
 
@@ -227,6 +230,13 @@
 #     define HAS_Cplusplus_Bool
 #  endif
 
+// GCC claims to support long long on all platforms
+#  define HAS_LongLong
+#  define _CORBA_LONGLONG_DECL   long long
+#  define _CORBA_ULONGLONG_DECL  unsigned long long
+#  define _CORBA_LONGDOUBLE_DECL long double 
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
+
 // XXX Temporary define to be removed in final release.
 #define Suppress_Spurious_gcc_Warnings
 
@@ -239,6 +249,12 @@
 #     define SIZEOF_PTR  8
 #  endif
 #  if __DECCXX_VER >= 60000000
+#     define HAS_LongLong
+//#     define HAS_LongDouble
+#     define _CORBA_LONGLONG_DECL   long long
+#     define _CORBA_ULONGLONG_DECL  unsigned long long
+#     define _CORBA_LONGDOUBLE_DECL long double
+#     define _CORBA_LONGLONG_CONST(x) (x##LL)
 #     ifndef NO_Cplusplus_Bool
 #       define HAS_Cplusplus_Bool
 #     endif
@@ -282,6 +298,13 @@
 #    define HAS_Std_Namespace
 #  endif
 
+#  define HAS_LongLong
+//#  define HAS_LongDouble
+#  define _CORBA_LONGLONG_DECL   long long
+#  define _CORBA_ULONGLONG_DECL  unsigned long long
+#  define _CORBA_LONGDOUBLE_DECL long double 
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
+
 // XXX
 // This is a hack to work around a bug in SUN C++ compiler (seen on 4.2).
 // When instantiating templates, the compiler may generate code in Template.DB.
@@ -312,8 +335,11 @@
 #endif
 #define _HAS_NOT_GOT_strcasecmp
 #define _HAS_NOT_GOT_strncasecmp
-// No current version of MSVC++ can catch exceptions by base class
-#undef HAS_Cplusplus_catch_exception_by_base
+
+#define HAS_LongLong
+#define _CORBA_LONGLONG_DECL   __int64
+#define _CORBA_ULONGLONG_DECL  unsigned __int64
+#define _CORBA_LONGLONG_CONST(x) (x)
 
 
 #elif defined(__BCPLUSPLUS__)
@@ -387,13 +413,6 @@
 // after omniORB2/CORBA.h.
 #endif
 
-#ifdef _T
-#error "Name conflict: _T is defined as a macro in a header file included before this."
-// FreeBSD's ctype.h, and maybe other files, define _T. omniORB uses
-// _T in various places as a class name. Fix this error by moving the
-// offending header after all omniORB includes.
-#endif
-
 
 // Default flag values if not already overridden above
 
@@ -408,6 +427,16 @@
 #ifndef SIZEOF_PTR
 #define SIZEOF_PTR  4
 #endif
+
+// Wide character size
+#if defined(__linux__) || defined(__sunos__)
+#  define SIZEOF_WCHAR 4
+#elif defined(__win32__)
+#  define SIZEOF_WCHAR 2
+#else
+#  error "sizeof wchar_t not known for this platform"
+#endif
+
 
 #if defined(__arm__) && defined(__atmos__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 1

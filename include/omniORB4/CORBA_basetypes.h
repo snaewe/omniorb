@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/10/27 15:42:02  dpg1
+ Initial code set conversion support. Not yet enabled or fully tested.
+
  Revision 1.2.2.1  2000/07/17 10:35:33  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -100,6 +103,14 @@ typedef unsigned int              _CORBA_ULong;
 # error "Can't map Long (32 bits) to a native type."
 #endif
 
+typedef wchar_t                   _CORBA_WChar;
+
+#ifdef HAS_LongLong
+typedef _CORBA_LONGLONG_DECL      _CORBA_LongLong;
+typedef _CORBA_ULONGLONG_DECL     _CORBA_ULongLong;
+#endif
+
+
 #ifndef NO_FLOAT
 
 #ifndef __VMS
@@ -107,6 +118,10 @@ typedef unsigned int              _CORBA_ULong;
 // This platform uses IEEE float
 typedef float                     _CORBA_Float;
 typedef double                    _CORBA_Double;
+
+#ifdef HAS_LongDouble
+typedef _CORBA_LONGDOUBLE_DECL    _CORBA_LongDouble;
+#endif
 
 #else	// VMS float test
 
@@ -157,6 +172,12 @@ public:
 };
 
 #undef cvt_
+
+//  Assume long double type is compatible with the CORBA standard.
+
+#ifdef HAS_LongDouble
+typedef _CORBA_LONGDOUBLE_DECL    _CORBA_LongDouble;
+#endif
 
 #endif   // VMS float test
 #endif   // !defined(NO_FLOAT)

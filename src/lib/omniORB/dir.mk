@@ -8,7 +8,7 @@
 SUBDIRS += orbcore
 
 ifndef OrbCoreOnly
-SUBDIRS += dynamic
+SUBDIRS += dynamic codesets
 endif
 
 #EXPORTHEADERS = omniORB4/Naming.hh \

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/10/27 15:42:03  dpg1
+  Initial code set conversion support. Not yet enabled or fully tested.
+
   Revision 1.2.2.2  2000/09/27 17:21:02  sll
   Updated to use the new cdrStream abstraction.
   Replace include/omniORB3 with include/omniORB4.
@@ -160,6 +163,7 @@
 #include <omniORB4/seqTemplatedecls.h>
 #include <omniORB4/templatedecls.h>
 #include <omniORB4/stringtypes.h>
+#include <omniORB4/wstringtypes.h>
 #ifndef __IOP_hh_EXTERNAL_GUARD__
 #include <omniORB4/IOP.h>
 #define __IOP_hh_EXTERNAL_GUARD__

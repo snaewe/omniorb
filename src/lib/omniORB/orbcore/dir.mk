@@ -10,6 +10,7 @@ ORB_SRCS = \
             corbaObject.cc \
             corbaOrb.cc \
             corbaString.cc \
+            corbaWString.cc \
             dynamicLib.cc \
             exception.cc \
             exceptn.cc \
@@ -50,7 +51,14 @@ ORB_SRCS = \
             tcpSocketAux.cc \
             tcpSocketMTfactory.cc \
             tracedthread.cc \
-            uri.cc
+            uri.cc \
+            codeSets.cc \
+            cs-8bit.cc \
+            cs-16bit.cc \
+            cs-8859-1.cc \
+            cs-UTF-8.cc \
+            cs-UTF-16.cc \
+            cs-UCS-4.cc
 
 NOT_DONE =  \
             firewallProxy.cc \
@@ -78,6 +86,7 @@ DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 
 ##########################################################################
 ifdef UnixPlatform
+#  CXXDEBUGFLAGS = -g
   DIR_CPPFLAGS += -DUnixArchitecture
   ifdef AIX
     NoGateKeeper = 1
