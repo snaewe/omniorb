@@ -703,117 +703,131 @@ DRV_pre_proc(char *myfile)
 
 
     {
-	if (copy_src)
-	  DRV_cpp_putarg(tmp_ifile);
-	else 
-	  DRV_cpp_putarg(myfile);
-	std::string commandLine(arglist[0]);
-	for (int i(1); arglist[i]; ++i) {
-	    std::string unixArg(arglist[i]);
-	    std::string vmsArg;
+      //  Modification: 1998-12-17
+      //  Enhancement:  Accumulate unix style switches that have values so
+      //  that (e.g.) -Dfoo -Dbar becomes /Defi=("foo","bar").  Here, I make
+      //  the assumption that the first four characters of a qualifier are
+      //  unique (this was once guaranteed...alas, it is no longer...)
+      if (copy_src)
+	DRV_cpp_putarg(tmp_ifile);
+      else 
+	DRV_cpp_putarg(myfile);
+      std::string preprocessOnlySwitch;
+      std::string includePath;
+      std::string macroDefs;
+      std::string inputFiles;
+      for (int i(1); arglist[i]; ++i) {
+	std::string unixArg(arglist[i]);
 
-	    if (unixArg[0]=='-') {
-		switch(unixArg[1]) {
-		    case 'E': {
-			vmsArg = std::string("/Prep=") + tmp_file;
-		    } break;
-		    case 'I': {
-			vmsArg = "/Incl=\"";
-			std::string includePath(unixArg.substr(2));
-			if (!includePath.empty() && includePath != ".") {
-			    vmsArg += includePath;
-			}
-			vmsArg += "\"";
-		    } break;
-		    case 'D': {
-			vmsArg = "/Defi=\"" + unixArg.substr(2) + "\"";
-		    } break;
-		    default: {
-			std::cerr << "Unix preprocessor switch: "
-			     << unixArg
-			     << " does not have corresponding VMS qualifier."
-			     << std::endl;
-		    }
-		}
-	    } else {
-		vmsArg = unixArg;
-	    }
-	    commandLine += " ";
-	    commandLine += vmsArg;
+	if (unixArg[0]=='-') {
+	  switch(unixArg[1]) {
+	  case 'E': {
+	    preprocessOnlySwitch = std::string("/Prep=") + tmp_file;
+	  } break;
+	  case 'I': {
+	    if (!includePath.empty())
+	      includePath += ',';
+	    includePath += '"' + unixArg.substr(2) + '"';
+	  } break;
+	  case 'D': {
+	    if (!macroDefs.empty())
+	      macroDefs += ',';
+	    macroDefs += '"' + unixArg.substr(2) + '"';
+	  } break;
+	  default: {
+	    std::cerr << "Unix preprocessor switch: "
+		      << unixArg
+		      << " does not have corresponding VMS qualifier."
+		      << std::endl;
+	  }
+	  }
+	} else {
+	  if (!inputFiles.empty())
+	    inputFiles += ',';
+	  inputFiles += unixArg;
+	}
+      }
+
+      std::string commandLine = std::string(arglist[0]) + ' ' + inputFiles;
+      if (!preprocessOnlySwitch.empty()) {
+	commandLine += preprocessOnlySwitch;
+      }
+      if (!includePath.empty()) {
+	commandLine += "/Incl=(" + includePath + ')';
+      }
+      if (!macroDefs.empty()) {
+	commandLine += "/Defi=(" + macroDefs + ')';
+      }
+
+      int spawn_rc = system(commandLine.c_str());
+      if (spawn_rc != 0 && spawn_rc & 1==0) {
+	std::cerr << idl_global->prog_name() 
+		  << GTDEVEL(": command ")
+		  << commandLine
+		  << GTDEVEL(" failed\n");
+	std::cerr << "Preprocessor returned non-zero status " << spawn_rc
+		  << std::endl;
+
+	if (copy_src) {
+	  if (unlink(tmp_ifile) == -1) {
+	    std::cerr << idl_global->prog_name()
+		      << GTDEVEL(": Could not remove cpp input file ")
+		      << tmp_ifile
+		      << "\n";
+	    exit(EXIT_FAILURE);	
+	  }
 	}
 
-	int spawn_rc = system(commandLine.c_str());
-	if (spawn_rc != 0 && spawn_rc & 1==0) {
-	    std::cerr << idl_global->prog_name() 
-		     << GTDEVEL(": command ")
-		     << commandLine
-		     << GTDEVEL(" failed\n");
-	    std::cerr << "Preprocessor returned non-zero status " << spawn_rc
-		 << std::endl;
-			
-	    if (copy_src) {
-		if (unlink(tmp_ifile) == -1) {
-		    std::cerr << idl_global->prog_name()
-			     << GTDEVEL(": Could not remove cpp input file ")
-			     << tmp_ifile
-			     << "\n";
-		    exit(EXIT_FAILURE);	
-		}
-	    }
+	if (unlink(tmp_file) == -1) {
+	  std::cerr << idl_global->prog_name()
+		    << GTDEVEL(": Could not remove cpp output file ")
+		    << tmp_file
+		    << "\n";
+	  exit(EXIT_FAILURE);
+	}
 
-	    if (unlink(tmp_file) == -1) {
-		     std::cerr << idl_global->prog_name()
-			      << GTDEVEL(": Could not remove cpp output file ")
-			      << tmp_file
-			      << "\n";
-		 exit(EXIT_FAILURE);
-	    }
-
-
-	    exit(EXIT_FAILURE);
-	}   // system(...) failed
+	exit(EXIT_FAILURE);
+      }   // system(...) failed
     }	// scope for no apparent reason.
     FILE * yyin = fopen(tmp_file, "r+");
     if (yyin == NULL) {
-	std::cerr << idl_global->prog_name()
-	     << GTDEVEL(": Could not open cpp output file ")
-	     << tmp_file
-	     << "\n";
-	exit(EXIT_FAILURE);
+      std::cerr << idl_global->prog_name()
+		<< GTDEVEL(": Could not open cpp output file ")
+		<< tmp_file
+		<< "\n";
+      exit(EXIT_FAILURE);
     }
 
     (*DRV_FE_set_yyin)((File *) yyin);
     if (idl_global->compile_flags() & IDL_CF_ONLY_PREPROC) {
-	std::string command(
-	    std::string("type ") + tmp_file
-	);
-	system(command.c_str());
+      std::string command(std::string("type ") + tmp_file);
+      system(command.c_str());
     }
     if (copy_src) {
-	if (unlink(tmp_ifile) == -1) {
-	    std::cerr << idl_global->prog_name()
-	       << GTDEVEL(": Could not remove cpp input file ")
-	       << tmp_ifile
-	       << "\n";
-	    exit(EXIT_FAILURE);
-	}
+      if (unlink(tmp_ifile) == -1) {
+	std::cerr << idl_global->prog_name()
+		  << GTDEVEL(": Could not remove cpp input file ")
+		  << tmp_ifile
+		  << "\n";
+	exit(EXIT_FAILURE);
+      }
     }
 
 
     idl_global->set_temp_filename((*DRV_FE_new_UTL_String)(tmp_file));
 
     if (idl_global->compile_flags() & IDL_CF_ONLY_PREPROC) {
-	/* Remove the temporary file [containing the preprocessor output. */
-	fclose(yyin);
-	if (unlink((idl_global->temp_filename())->get_string()) == -1) {
-	    std::cerr << idl_global->prog_name()
-	    << GTDEVEL(": Could not remove cpp output file ")
-	    << (idl_global->temp_filename())->get_string()
-	    << "\n";
-	    exit(EXIT_FAILURE);
-	}
-  
-	exit(0);
+      /* Remove the temporary file [containing the preprocessor output. */
+      fclose(yyin);
+      if (unlink((idl_global->temp_filename())->get_string()) == -1) {
+	std::cerr << idl_global->prog_name()
+		  << GTDEVEL(": Could not remove cpp output file ")
+		  << (idl_global->temp_filename())->get_string()
+		  << "\n";
+	exit(EXIT_FAILURE);
+      }
+
+      exit(0);
     }
 }
 #endif
