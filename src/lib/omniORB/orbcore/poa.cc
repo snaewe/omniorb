@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.36  2002/11/08 17:26:26  dgrisby
+  Hang on shutdown with servant locators.
+
   Revision 1.2.2.35  2002/11/08 01:20:46  dgrisby
   Initialise oid prefix member in nil POA.
 
@@ -3388,9 +3391,21 @@ postinvoke()
   }
   catch (...) {
     pd_poa->exitAdapter();
+    pd_poa = 0;
     throw;
   }
   pd_poa->exitAdapter();
+  pd_poa = 0;
+}
+
+omniOrbPOA::
+SLPostInvokeHook::
+~SLPostInvokeHook()
+{
+  if (pd_poa) {
+    // Postinvoke hasn't run yet. Do it now
+    postinvoke();
+  }
 }
 
 

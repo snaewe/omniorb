@@ -8,6 +8,17 @@
 
 <buglist version="4.0.0">
 
+<bug id="6" date="Fri Nov  8 17:17:14 GMT 2002" user="dgrisby">
+  <summary>Hang on shutdown</summary>
+  <reported>Norrie Quinn</reported>
+  <listlink
+  href="http://www.omniorb-support.com/pipermail/omniorb-list/2002-November/022208.html"/>
+  <text>
+  In some circumstances, shutdown could hang if servant locators were
+  in use.
+  </text>
+</bug>
+
 <bug id="5" date="Wed Oct 30 16:41:56 GMT 2002" user="dgrisby">
   <summary>Log flush bug</summary>
   <reported>John Fardo</reported>
