@@ -267,6 +267,12 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 
 void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 {
+  // Follow any TypeCode_indirect objects created by
+  // ORB::create_recursive_tc().
+  while (tc->NP_kind() == 0xffffffff) {
+    tc = ((TypeCode_indirect*)tc)->NP_resolved();
+  }
+
   // How to marshal the data depends entirely on the TypeCode
   switch (tc->NP_kind())
     {
@@ -464,6 +470,12 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 
 void skipUsingTC(TypeCode_base* tc, cdrStream& buf)
 {
+  // Follow any TypeCode_indirect objects created by
+  // ORB::create_recursive_tc().
+  while (tc->NP_kind() == 0xffffffff) {
+    tc = ((TypeCode_indirect*)tc)->NP_resolved();
+  }
+
   CORBA::Char dummy;
   const TypeCode_alignTable& alignTbl = tc->alignmentTable();
   unsigned i = 0;  // don't even ask ... just accept it.
@@ -745,6 +757,12 @@ void appendSimpleItem(CORBA::TCKind tck, const tcDescriptor &tcdata, cdrStream& 
 
 void appendItem(const TypeCode_base* tc, const tcDescriptor& tcdata, cdrStream& buf)
 {
+  // Follow any TypeCode_indirect objects created by
+  // ORB::create_recursive_tc().
+  while (tc->NP_kind() == 0xffffffff) {
+    tc = ((TypeCode_indirect*)tc)->NP_resolved();
+  }
+
   // How to marshal the data depends entirely on the TypeCode
   switch (tc->NP_kind()) {
 
@@ -1049,6 +1067,12 @@ void fetchSimpleItem(CORBA::TCKind tck, cdrStream &src, tcDescriptor &tcdata)
 
 void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
 {
+  // Follow any TypeCode_indirect objects created by
+  // ORB::create_recursive_tc().
+  while (tc->NP_kind() == 0xffffffff) {
+    tc = ((TypeCode_indirect*)tc)->NP_resolved();
+  }
+
   // How to unmarshal the data depends entirely on the TypeCode
   switch( tc->NP_kind() ) {
 
@@ -1325,8 +1349,9 @@ void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
     break;
 
   default:
+    // Unexpected kind
     OMNIORB_ASSERT(0);
-  }  // switch( tc->NP_kind() ) {
+  }
 }
 
 

@@ -1,3 +1,11 @@
+Wed Dec  4 17:44:11 GMT 2002 dgrisby
+====================================
+
+- Missed handling of indirection TypeCodes.
+
+src/lib/omniORB/dynamic/tcParser.cc
+
+
 Fri Nov 29 13:56:19 GMT 2002 dgrisby
 ====================================
 
