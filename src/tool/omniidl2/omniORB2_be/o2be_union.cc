@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.14  1998/08/10 15:34:12  sll
+  Now include octet as a valid discriminant type.
+
   Revision 1.13  1998/04/07 18:53:50  sll
   Stub code modified to accommodate the use of namespace to represent module.
   Use std::fstream instead of fstream.
@@ -154,6 +157,7 @@ typedef union {
   unsigned short us_val;
   char c_val;
   idl_bool b_val;
+  unsigned char o_val;
   AST_Decl* e_val;
 } disc_value_t;
 
@@ -2278,6 +2282,20 @@ o2be_union::no_missing_disc_value()
 	      }
 	    break;
 	  }
+	case AST_PredefinedType::PT_octet:
+	  {
+	    disc_value_t v;
+	    v.o_val = 0;
+	    while (v.o_val < 255) {
+	      if (!lookup_by_disc_value(*this,v)) {
+		return I_FALSE;
+	      }
+	      v.o_val++;
+	    }
+	    if (!lookup_by_disc_value(*this,v))
+	      return I_FALSE;
+	    break;
+	  }
 	default:
 	  throw o2be_internal_error(__FILE__,__LINE__,
 				    "Unexpected union discriminant value");
@@ -2379,6 +2397,16 @@ produce_default_value(o2be_union &u,std::fstream& s)
 	    }
 	    break;
 	  }
+	case AST_PredefinedType::PT_octet:
+	  {
+	    disc_value_t v;
+	    v.o_val = 0;
+	    while (lookup_by_disc_value(u,v)) {
+	      v.o_val++;
+	    }
+	    s << (unsigned int)v.o_val;
+	    break;
+	  }
 	case AST_PredefinedType::PT_boolean:
 	  {
 	    disc_value_t v;
@@ -2428,6 +2456,9 @@ produce_disc_value(std::fstream &s,AST_ConcreteType *t,AST_Expression *exp,
 	  break;
 	case AST_Expression::EV_bool:
 	  s << ((v->u.bval == 0) ? "0" : "1");
+	  break;
+	case AST_Expression::EV_octet:
+	  s << (unsigned int)v->u.oval;
 	  break;
 	case AST_Expression::EV_char:
 	  {
@@ -2503,6 +2534,10 @@ match_disc_value(o2be_union_branch& b,AST_Decl *decl,disc_value_t v)
 	    break;
 	  case AST_PredefinedType::PT_boolean:
 	    if (bv->u.bval == (unsigned long)v.b_val)
+	      return I_TRUE;
+	    break;
+	  case AST_PredefinedType::PT_octet:
+	    if (bv->u.oval == v.o_val)
 	      return I_TRUE;
 	    break;
 	  default:
