@@ -157,7 +157,7 @@ class omni_thread;
 #elif defined(__darwin__)
 #include <omnithread/posix.h>
 
-#elif defined(__os2__)
+#elif defined(__OS2__)
 #include <omnithread/os2_impl.h>
 
 #else

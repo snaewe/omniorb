@@ -1,0 +1,47 @@
+The omnithread library has been ported to OS/2.  The port mirrors the
+approach taken in the Win32 port in terms of functionality and OS
+primitives. It will build using EMX, and the only thing keeping it
+from building using IBM Visual Age C++ compilers is the gettimeofday
+function.  If it is changed to use an OS/2 primitive, it'll compile
+there too.
+
+Obviously the rest of omniORB has not been ported yet, but the
+omnithread abstraction layer is useful in other cross-platform
+projects in and of itself.
+
+A basic makefile that will compile the omnithread library (starting
+from within the omnithread source directory) is this:
+
+--- Begin Makefile ---
+
+all: omnithread
+
+GCCFLAGS=-Zomf
+GCCFLAGS+=-Zmt
+GCCFLAGS+=-g
+GCCFLAGS+=-Zstack 0xA000
+
+DEFINES	=-D __OS2__
+DEFINES+=-D HAVE_ENDIAN_H
+DEFINES+=-D OMNI_THREAD_EXPOSE=public
+DEFINES+=-D INCL_DOS
+DEFINES+=-D INCL_ERRORS
+
+INCLUDES =-I../../../include
+INCLUDES+=-I../../../include/omnithread
+
+THREAD_SRC=os2.cc
+
+omnithread: $(THREAD_SRC)
+	gcc -c $(GCCFLAGS) $(INCLUDES) $(DEFINES) $(THREAD_SRC) -o omnithread.obj
+# Now you have a choice of archivers... you can make an a.out format one:
+	ar cr libomni.a omnithread.obj
+	ranlib libomni.a
+# Or you can create an OMF one...
+	ilib /NOBACKUP libomni.lib + omnithread.obj;
+
+--- End Makefile ---
+
+The only thing you need to do is compile the os2.cc code, which will
+in turn pull in ../../../include/omnithread.h and then
+../../../include/omnithread/os2impl.h.
