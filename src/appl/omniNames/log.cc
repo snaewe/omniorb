@@ -429,6 +429,10 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
   char* p = orb->object_to_string(rootContext);
   cerr << ts.t() << "Root context is " << p << endl;
+  // Now use the backdoor to tell the bootstrap agent in this
+  // address space to return this root context in response to
+  // CORBA::InitialReferences::get("NameService");
+  _omni_set_NameService(rootContext);
   delete p;
 
   CORBA::release(rootContext);	// dispose of the object reference
