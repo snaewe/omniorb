@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.33  1999/05/31 14:07:34  sll
+ Added flags for SUN C++ 5.0.
+
  Revision 1.32  1999/05/26 12:41:51  sll
  ENABLE_CLIENT_IR_SUPPORT again.
 
@@ -165,6 +168,9 @@
 // SUN C++ compiler
 #  if __SUNPRO_CC < 0x420
 #    define NEED_DUMMY_RETURN
+#  elif __SUNPRO_CC >= 0x500
+#    define HAS_Cplusplus_Namespace
+#    define HAS_Std_Namespace
 #  endif
 
 // XXX
