@@ -1,3 +1,11 @@
+Thu Mar  3 12:44:46 GMT 2005 dgrisby
+====================================
+
+- Bug in fixed point multiplication. Thanks Simone Viani.
+
+src/lib/omniORB/orbcore/corbaFixed.cc
+
+
 Thu Mar  3 12:09:47 GMT 2005 dgrisby
 ====================================
 

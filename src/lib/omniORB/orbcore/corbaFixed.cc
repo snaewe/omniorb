@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.17  2005/03/03 12:45:56  dgrisby
+// Bug in fixed point multiplication. Thanks Simone Viani.
+//
 // Revision 1.1.2.16  2004/10/17 20:14:32  dgrisby
 // Updated support for OpenVMS. Many thanks to Bruce Visscher.
 //
@@ -868,6 +871,7 @@ realMul(const CORBA::Fixed& a, const CORBA::Fixed& b, CORBA::Boolean negative)
 
     for (bi=0; bi < b.fixed_digits(); ++bi) {
       bd = b.PR_val()[bi];
+      if (bd == 0 && carry == 0) continue;
       wi       = ai + bi;
       v        = work[wi] + ad * bd + carry;
       carry    = v / 10;
