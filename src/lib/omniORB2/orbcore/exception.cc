@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.9.2.1  2000/06/07 15:34:34  dpg1
+  Cookie was not passed to global exception handlers
+
   Revision 1.9  1999/06/18 20:53:10  sll
   New function _CORBA_bad_param_freebuf().
 
@@ -219,6 +222,7 @@ _omni_callTransientExceptionHandler(omniObject* obj,
 							    ex);
   }
   else {
+    cookie = omni_globalTransientExcHandlerCookie;
     return (*omni_globalTransientExcHandler)(cookie,
 					     nretries,
 					     ex);
@@ -238,6 +242,7 @@ _omni_callCommFailureExceptionHandler(omniObject* obj,
 							      ex);
   }
   else {
+    cookie = omni_globalCommFailureExcHandlerCookie;
     return (*omni_globalCommFailureExcHandler)(cookie,
 					       nretries,
 					       ex);
@@ -257,6 +262,7 @@ _omni_callSystemExceptionHandler(omniObject* obj,
 							 ex);
   }
   else {
+    cookie = omni_globalSystemExcHandlerCookie;
     return (*omni_globalSystemExcHandler)(cookie,
 					  nretries,
 					  ex);
