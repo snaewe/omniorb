@@ -155,7 +155,11 @@ define MakeCXXSharedLibrary
  $(RM) $@; \
  $(LINK.cc) -KPIC -shared -Wl,-h,$$libname -Wl,-set_version,$$soname -o $@ \
  $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) \
- $$extralibs $(LDLIBS); \
+ $$extralibs $(LDLIBS);
 endef
+
+ifeq ($(notdir $(CC)),gcc)
+SHAREDLIB_CFLAGS = -fPIC
+endif
 
 endif

@@ -92,6 +92,10 @@ veryclean::
 	$(RM) shared/*.o
 	@(dir=shared; $(CleanSharedLibrary))
 
+else
+
+mkshared::
+
 endif
 
 ##############################################################################

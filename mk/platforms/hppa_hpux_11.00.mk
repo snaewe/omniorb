@@ -179,4 +179,8 @@ SHAREDLIB_CPPFLAGS += +Z
 SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname
 # May need  $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS))
 
+ifeq ($(notdir $(CC)),gcc)
+SHAREDLIB_CFLAGS = -fPIC
+endif
+
 endif

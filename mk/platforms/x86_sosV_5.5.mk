@@ -137,6 +137,10 @@ SHAREDLIB_CPPFLAGS = -KPIC
 
 SharedLibraryPlatformLinkFlagsTemplate = -G -h $$soname
 
+ifeq ($(notdir $(CC)),gcc)
+SHAREDLIB_CFLAGS = -fPIC
+endif
+
 endif
 
 ifeq ($(notdir $(CXX)),g++)

@@ -1,3 +1,24 @@
+Wed Aug 16 12:16:02 BST 2000 sll
+================================
+
+- shared library make rule update. The C and C++ compiler may be different
+  and hence may need different flags to compile PIC code.
+
+external_merge/mk/mklib.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+external_merge/mk/platforms/hppa_hpux_10.20.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/mips_irix_6.2_n32.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/sun4_sosV_5.5.mk
+external_merge/mk/platforms/sun4_sosV_5.6.mk
+external_merge/mk/platforms/sun4_sosV_5.7.mk
+external_merge/mk/platforms/x86_sosV_5.5.mk
+
 Tue Aug 15 20:17:30 BST 2000 reg
 ================================
 
