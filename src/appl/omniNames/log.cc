@@ -163,6 +163,16 @@ log::log(int& p,char* logdir) : port(p)
 			   + strlen(un.nodename) + 1];
   sprintf(logname, "%s/omninames-%s", logdir, un.nodename);
 #else
+
+  // Apparently on some AIX versions, MAXHOSTNAMELEN is too small (32) to
+  // reflect the true size a hostname can be. Check and fix the value.
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 256
+#elif   MAXHOSTNAMELEN < 64
+#undef  MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 256
+#endif
+
   char hostname[MAXHOSTNAMELEN+1];
 
   if (gethostname(hostname, MAXHOSTNAMELEN) < 0) {
