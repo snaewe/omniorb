@@ -1,5 +1,7 @@
-%define omnigid 255
-%define omniuid 255
+# defined empty to enable automatic uid/gid selection.
+# set values to select specific user/group ids.
+%define omniuid -1
+%define omnigid -1
 
 Summary: Object Request Broker (ORB)
 Name:    omniORB
@@ -9,15 +11,12 @@ License: GPL / LGPL
 Group:   System/Libraries
 Source0: %{name}-%{version}.tar.gz
 Prefix:  /usr
-%if "%{_vendor}" != "suse"
-Prereq:  /sbin/chkconfig
-%endif
 Prereq:  /sbin/ldconfig
 URL:     http://omniorb.sourceforge.net/
 #Provides:       corba
 BuildRequires:  python glibc-devel
 %if "%{_vendor}" == "MandrakeSoft"
-BuildRequires:  openssl
+BuildRequires:  openssl-devel
 %endif
 %if "%{_vendor}" == "redhat"
 BuildRequires:  python-devel openssl-devel
@@ -39,7 +38,11 @@ linked with %{name}.
 %package servers
 Summary: Utility programs
 Group:          Development/C++
+%if "%{_vendor}" == "suse"
+Prereq:         /sbin/insserv
+%else
 Prereq:         /sbin/service /sbin/chkconfig
+%endif
 Prereq:         /usr/sbin/groupadd /usr/sbin/groupdel
 Prereq:         /usr/sbin/useradd /usr/sbin/userdel
 Requires:       %{name} = %{version}-%{release}
@@ -94,13 +97,13 @@ Developer documentation and examples.
 %define py_ver    %(python -c 'import sys;print(sys.version[0:3])')
 
 
-%prep 
+%prep
 %setup -n %{name}-%{version}
 
 %if "%{_vendor}" == "suse"
-# Replace the init script with something appropriate for SuSE
-# FIXME Note that we hardcode a relative path here,
-# since we do not have that available directly from RPM.
+# Replace the init script with something appropriate for SUSE.
+# Note that we hardcode a relative path here, since we are replacing
+# a file in the source distribution tree.
 cp -f etc/init.d/omniNames.SuSE.in etc/init.d/omniNames.in
 %endif
 
@@ -119,15 +122,21 @@ mkdir -p %{buildroot}%{_initrddir}
 cp sample.cfg %{buildroot}%{_sysconfdir}/omniORB.cfg
 cp etc/init.d/omniNames %{buildroot}%{_initrddir}
 
-mkdir -p %{buildroot}/%{_mandir}/man{1,5}
-cp -r man/* %{buildroot}/%{_mandir}
+mkdir -p %{buildroot}%{_mandir}/man{1,5}
+cp -r man/* %{buildroot}%{_mandir}
 
 mkdir -p %{buildroot}%{_var}/omniNames
 mkdir -p %{buildroot}%{_localstatedir}/omniMapper
 
 # Rename catior to avoid naming conflict with TAO
 mv %{buildroot}%{_bindir}/catior %{buildroot}%{_bindir}/catior.omni
-mv %{buildroot}/%{_mandir}/man1/catior.1 %{buildroot}/%{_mandir}/man1/catior.omni.1
+mv %{buildroot}%{_mandir}/man1/catior.1 %{buildroot}%{_mandir}/man1/catior.omni.1
+
+%if "%{_vendor}" == "suse"
+  # Most SUSE service scripts have a corresponding link into /usr/sbin
+  mkdir -p %{buildroot}%{_sbindir}
+  ln -sf %{_initrddir}/omniNames %{buildroot}%{_sbindir}/rcomniNames
+%endif
 
 
 %clean
@@ -140,46 +149,57 @@ mv %{buildroot}/%{_mandir}/man1/catior.1 %{buildroot}/%{_mandir}/man1/catior.omn
 /sbin/ldconfig
 
 %pre servers
-/usr/sbin/groupadd -g %{omnigid} -o -r omni >/dev/null 2>&1 || :
-/usr/sbin/useradd -M -n -g omni -o -r -d /var/omniNames -s /bin/bash \
-  -c "omniORB Servers" -u %{omniuid} omni >/dev/null 2>&1 || :
-
-%post servers
-/sbin/ldconfig
+%if "%{omnigid}" == "-1"
+OMNIGIDOPT="-r"
+%else
+OMNIGIDOPT="-g %{omnigid}"
+%endif
+%if "%{omniuid}" == "-1"
+OMNIUIDOPT="-r"
+%else
+OMNIUIDOPT="-u %{omniuid}"
+%endif
+/usr/sbin/groupadd ${OMNIGIDOPT} omni >/dev/null 2>&1 || :
+/usr/sbin/useradd ${OMNIUIDOPT} -M -g omni -d /var/omniNames \
+  -s /bin/bash -c "omniORB servers" omni >/dev/null 2>&1 || :
 
 %pre bootscripts
-# a previous version is already installed?
-#if [ $1 -ge 2 ]; then
-#  /sbin/service omniNames stop >/dev/null 2>&1
-#fi
+# A previous version is already installed?
+if [ $1 -ge 2 ]; then
+%if "%{_vendor}" == "suse"
+  %{_sbindir}/rcomniNames stop >/dev/null 2>&1
+%else
+  /sbin/service omniNames stop >/dev/null 2>&1
+%endif
+fi
 
 %post bootscripts
 %if "%{_vendor}" == "suse"
-# Most SuSE service scripts have a corresponding link into /usr/sbin
-mkdir -p %{prefix}/sbin
-ln -sf %{_initrddir}/omniNames %{prefix}/sbin/rcomniNames
 /sbin/insserv omniNames
+#%{_sbindir}/rcomniNames restart >/dev/null 2>&1
 %else
 /sbin/chkconfig --add omniNames
-%endif
 #/sbin/service omniNames restart >/dev/null 2>&1
+%endif
 
 %preun bootscripts
+# Are we removing the package completely?
+if [ $1 -eq 0 ]; then
 %if "%{_vendor}" == "suse"
-/sbin/insserv -r omniNames
-rm -rf %{prefix}/sbin/rcomniNames
+  %{_sbindir}/rcomniNames stop >/dev/null 2>&1
+  /sbin/insserv -r omniNames
 %else
-/sbin/chkconfig --del omniNames
+  /sbin/service omniNames stop >/dev/null 2>&1
+  /sbin/chkconfig --del omniNames
 %endif
-/sbin/service omniNames stop >/dev/null 2>&1
-rm -rf /var/omniNames/*
-rm -rf /var/lib/omniMapper/*
+  rm -rf /var/omniNames/*
+  rm -rf /var/lib/omniMapper/*
+fi
 
 %postun
 /sbin/ldconfig
 
 %postun servers
-/sbin/ldconfig
 # uninstalling all versions?
 if [ $1 -eq 0 ] ; then
   /usr/sbin/userdel omni >/dev/null 2>&1 || :
@@ -210,6 +230,9 @@ fi
 %files bootscripts
 %defattr (-,root,root)
 %config(noreplace) %attr(775,root,root) %{_initrddir}/*
+%if "%{_vendor}" == "suse"
+%{_sbindir}/rcomniNames
+%endif
 
 
 %files utils
@@ -252,11 +275,11 @@ fi
 
 %changelog
 * Mon Jul 26 2004 Duncan Grisby <duncan@grisby.org> 4.0.4-1
-- Bump version number; integrate SuSE changes. Don't automatically
+- Bump version number; integrate SUSE changes. Don't automatically
   start omniNames upon RPM install.
 
 * Thu Jul 22 2004 Thomas Lockhart <lockhart@fourpalms.org> 4.0.3-7
-- Incorporate additional SuSE features per Dirk O. Siebnich <dok@dok-net.net>
+- Incorporate additional SUSE features per Dirk O. Siebnich <dok@dok-net.net>
 - Use additional standard RPM substitution parameters rather than
   hardcoded paths
 
@@ -297,3 +320,4 @@ fi
 * Wed Jul 03 2002 Thomas Lockhart <lockhart@fourpalms.org> 4.0.0beta
 - Start from 3.04 spec files
 - Strip workarounds from the spec file since 4.0 builds more cleanly
+
