@@ -11,10 +11,13 @@
  
 /*
   $Log$
-  Revision 1.5  1997/03/11 16:48:43  sll
-  objectRelease now does not throw any exception. This is the compliant
-  behaviour.
+  Revision 1.6  1997/04/22 17:39:05  sll
+  UnMarshalObjRef now accepts sloppy nil object reference.
 
+// Revision 1.5  1997/03/11  16:48:43  sll
+// objectRelease now does not throw any exception. This is the compliant
+// behaviour.
+//
 // Revision 1.4  1997/03/10  12:46:41  sll
 // - Changed to use the static member variables in the omniObject class etc.
 //   Previously they were static local variables.
@@ -287,7 +290,7 @@ omni::locateObject(omniObjectKey &k)
     p = &((*p)->pd_next);
   }
   omniObject::objectTableLock.unlock();
-  throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
+  throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
   return 0;  // MS VC++ 4.0 needs this.
 }
 
@@ -468,32 +471,50 @@ CORBA::UnMarshalObjRef(const char *repoId,
 
   try {
     idlen <<= s;
-    if (idlen == 1) {
+    if (idlen <= 1) {
       // nil object reference
-      CORBA::Char _id;
-      _id <<= s;
-      if ((char)_id != '\0')
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      if (!idlen) {
+#ifdef NO_SLOPPY_NIL_REFERENCE
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+#else
+	// According to the CORBA specification 2.0 section 10.6.2:
+	//   Null object references are indicated by an empty set of
+	//   profiles, and by a NULL type ID (a string which contain
+	//   only *** a single terminating character ***).
+        //
+        // Therefore the idlen should be 1.
+	// Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
+	// and sends out a 0 len string.
+        // We quietly accept it here. Turn this off by defining
+	//   NO_SLOPPY_NIL_REFERENCE
+#endif
+      }
+      else {
+	CORBA::Char _id;
+	_id <<= s;
+	if ((char)_id != '\0')
+	  throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      }
       CORBA::ULong _v;
       _v <<= s;
       if (_v != 0)
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
       return CORBA::Object::_nil();
     }
     if (idlen > s.RdMessageUnRead()) {
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     }
     id = new CORBA::Char[idlen];
     if (!id)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
     s.get_char_array(id,idlen);
     if (id[idlen-1] != '\0') {
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     }
     
     profiles = new IOP::TaggedProfileList();
     if (!profiles)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
     *profiles <<= s;
 
     omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
@@ -560,32 +581,51 @@ CORBA::UnMarshalObjRef(const char *repoId,
 
   try {
     idlen <<= s;
-    if (idlen == 1) {
+    if (idlen <= 1) {
       // nil object reference
-      CORBA::Char _id;
-      _id <<= s;
-      if ((char)_id != '\0')
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      if (!idlen) {
+#ifdef NO_SLOPPY_NIL_REFERENCE
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+#else
+	// According to the CORBA specification 2.0 section 10.6.2:
+	//   Null object references are indicated by an empty set of
+	//   profiles, and by a NULL type ID (a string which contain
+	//   only *** a single terminating character ***).
+        //
+        // Therefore the idlen should be 1.
+	// Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
+	// and sends out a 0 len string.
+        // We quietly accept it here. Turn this off by defining
+	//   NO_SLOPPY_NIL_REFERENCE
+#endif
+      }
+      else {
+	CORBA::Char _id;
+	_id <<= s;
+	if ((char)_id != '\0')
+	  throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      }
+
       CORBA::ULong _v;
       _v <<= s;
       if (_v != 0)
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
       return CORBA::Object::_nil();
     }
     if (idlen > s.unRead()) {
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     }
     id = new CORBA::Char[idlen];
     if (!id)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
     s.get_char_array(id,idlen);
     if (id[idlen-1] != '\0') {
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     }
     
     profiles = new IOP::TaggedProfileList();
     if (!profiles)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
     *profiles <<= s;
 
     omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
