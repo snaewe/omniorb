@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.12  2001/09/03 16:49:43  sll
+ Added the deadline parameter and access functions.
+
  Revision 1.2.2.11  2001/09/03 13:28:09  sll
  In the calldescriptor, in addition to the first address, record the current
  address in use.
@@ -112,7 +115,9 @@ public:
       pd_current_next(0),
       pd_objref(0),
       pd_poa(0),
-      pd_localId(0) {}
+      pd_localId(0),
+      pd_deadline_secs(0),
+      pd_deadline_nanosecs(0) {}
 
   virtual ~omniCallDescriptor()
   {
@@ -177,6 +182,17 @@ public:
   inline void currentAddress(const _OMNI_NS(giopAddress)* a) { 
     pd_current_address = a;
   }
+
+  inline void getDeadline(unsigned long& secs, unsigned long& nanosecs) const {
+    secs = pd_deadline_secs;
+    nanosecs = pd_deadline_nanosecs;
+  }
+
+  inline void setDeadline(unsigned long secs, unsigned long nanosecs) {
+    pd_deadline_secs = secs;
+    pd_deadline_nanosecs = nanosecs;
+  }
+  
 
   /////////////////////
   // Context support //
@@ -246,6 +262,13 @@ private:
   omniLocalIdentity*           pd_localId;
   // Both always set on the way through the POA during an upcall.
 
+  ////////////////////////////
+  // Deadline for this call //
+  ////////////////////////////
+  // This is a state holder for the call. Not manipulated by this class
+  // other than the access functions. Initialised to 0 in ctor.
+  unsigned long                pd_deadline_secs;
+  unsigned long                pd_deadline_nanosecs;
 
   omniCallDescriptor(const omniCallDescriptor&);
   omniCallDescriptor& operator = (const omniCallDescriptor&);
