@@ -29,10 +29,24 @@
 
 
 /* $Log$
-/* Revision 1.13  1999/06/18 20:59:48  sll
-/* Updated to CORBA 2.3 mapping.
-/* Semantics of extraction operator for string has changed.
+/* Revision 1.14  1999/06/25 13:47:19  sll
+/* Rename copyStringInAnyExtraction to omniORB_27_CompatibleAnyExtraction.
+/* operator<<=(Object_ptr) now marshal the real repository ID of the object.
+/* operator<<=(const char*) changed to use new format of string data in tcDescriptor.
+/* operator<<=(from_string)
+/* Removed operator>>=(Object_ptr&) const
+/* operator>>=(char*&)  Default to non-copy semantics. Override by
+/* omniORB_27_CompatibleAnyExtraction.
+/* operator>>=(const char*&) const
+/* operator>>=(tostring) const Default to non-copy semantics. Override by
+/* omniORB_27_CompatibleAnyExtraction.
+/* operator>>=(to_object) const Use _0RL_tcParser_objref_setObjectPtr in
+/* the redundent setObjectPtr.
 /*
+ * Revision 1.13  1999/06/18 20:59:48  sll
+ * Updated to CORBA 2.3 mapping.
+ * Semantics of extraction operator for string has changed.
+ *
  * Revision 1.12  1999/05/25 18:07:51  sll
  * In value(), return 0 if typecode is _tc_null.
  *
@@ -83,22 +97,27 @@
 
 ////////////////////////////////////////////////////////////////////////
 // In pre-2.8.0 versions, the CORBA::Any extraction operator for
-// unbounded string ( operator>>= (char*&) ) copy the returned string.
-// In other words the caller must free the string later.              
+//   1. unbounded string operator>>=(char*&)                    
+//   2. bounded string   operator>>=(to_string)                 
+//   3. object reference operator>>=(A_ptr&) for interface A
+// Returns a copy of the value. The caller must free the returned
+// value later.                                                 
+//
 // With 2.8.0 and later, the semantics becomes non-copy, i.e. the Any
-// still own the storage of the returned string.
+// still own the storage of the returned value.
 // This would cause problem in programs that is written to use the
-// pre-2.8.0 semantics. To make it easier for the transition,
-// set copyStringInAnyExtraction to 1. This would revert the
-// semantics to the pre-2.8.0 versions.
+// pre-2.8.0 semantics. To make it easier for the transition,	  
+// set omniORB_27_CompatibleAnyExtraction to 1.
+// This would revert the semantics to the pre-2.8.0 versions.
+//
 // Globals defined in class omniORB
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the variables external linkage otherwise. Its a bug.
 namespace omniORB {
-CORBA::Boolean copyStringInAnyExtraction = 0;
+CORBA::Boolean omniORB_27_CompatibleAnyExtraction = 0;
 }
 #else
-CORBA::Boolean omniORB::copyStringInAnyExtraction = 0;
+CORBA::Boolean omniORB::omniORB_27_CompatibleAnyExtraction = 0;
 #endif
 
 #define pdAnyP() ((AnyP*) (NP_pd()))
@@ -353,6 +372,9 @@ CORBA::Any::operator<<=(Any* a)
 void
 CORBA::Any::operator<<=(TypeCode_ptr tc)
 {
+  if (!CORBA::TypeCode::PR_is_valid(tc)) {
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  }
   CORBA::TypeCode_member tcm(tc);
   tcDescriptor tcd;
   tcd.p_TypeCode = &tcm;
@@ -360,28 +382,23 @@ CORBA::Any::operator<<=(TypeCode_ptr tc)
   tcm._ptr = CORBA::TypeCode::_nil();
 }
 
-
-static void
-setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr)
-{
-  *((CORBA::Object_ptr*)desc->opq_objref) = ptr;
-}
-
-
-static CORBA::Object_ptr
-getObjectPtr(tcObjrefDesc* desc)
-{
-  return * (CORBA::Object_ptr*) desc->opq_objref;
-}
-
-
 void
 CORBA::Any::operator<<=(Object_ptr obj)
 {
+  if (!CORBA::Object::PR_is_valid(obj)) {
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  }
+  const char* repoid = (const char*)CORBA::Object::repositoryID;
+  const char* name   = (const char*)"";
+  if (!CORBA::is_nil(obj)) {
+    repoid = obj->PR_getobj()->NP_IRRepositoryId();
+  }
+  CORBA::TypeCode_var tc = CORBA::TypeCode::NP_interface_tc(repoid,name);
   tcDescriptor tcd;
   tcd.p_objref.opq_objref = (void*) &obj;
-  tcd.p_objref.getObjectPtr = getObjectPtr;
-  pdAnyP()->setData(CORBA::_tc_Object, tcd);
+  tcd.p_objref.opq_release = 0;
+  tcd.p_objref.getObjectPtr = _0RL_tcParser_objref_getObjectPtr;
+  pdAnyP()->setData(tc, tcd);
 }
 
 
@@ -412,30 +429,11 @@ CORBA::Any::operator<<=(from_octet o)
 }
 
 
-// Internal functions used when inserting raw string data
-static CORBA::ULong 
-tcParser_fromstring_getLength(tcStringDesc* tcsd)
-{
-  return tcsd->opq_len;
-}
-
-
-static char*
-tcParser_fromstring_getBuffer(tcStringDesc* tcsd)
-{
-  return (char*) (tcsd->opq_string);
-}
-
-
 void
 CORBA::Any::operator<<=(const char* s)
 {
   tcDescriptor tcd;
-  tcd.p_string.getLength = tcParser_fromstring_getLength;
-  tcd.p_string.getBuffer = tcParser_fromstring_getBuffer;
-  tcd.p_string.opq_string = (void*) s;
-  tcd.p_string.opq_len = s ? strlen(s) : 0;
-
+  tcd.p_string = (char**) &s;
   pdAnyP()->setData(CORBA::_tc_string, tcd);
 }  
 
@@ -444,10 +442,7 @@ void
 CORBA::Any::operator<<=(from_string s)
 {
   tcDescriptor tcd;
-  tcd.p_string.getLength = tcParser_fromstring_getLength;
-  tcd.p_string.getBuffer = tcParser_fromstring_getBuffer;
-  tcd.p_string.opq_string = s.val;
-  tcd.p_string.opq_len = s.val ? strlen(s.val) : 0;
+  tcd.p_string = &s.val;
 
   if( s.bound ) {
     CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_string_tc(s.bound);
@@ -554,6 +549,14 @@ CORBA::Boolean CORBA::Any::operator>>=(const CORBA::Any*& a) const
   }
 }
 
+// pre- CORBA 2.3 operator. Obsoluted.
+CORBA::Boolean CORBA::Any::operator>>=(Any& a) const
+{
+  tcDescriptor tcd;
+  tcd.p_any = &a;
+  return pdAnyP()->getData(CORBA::_tc_any, tcd);
+}
+
 
 CORBA::Boolean
 CORBA::Any::operator>>=(TypeCode_ptr& tc) const
@@ -569,17 +572,6 @@ CORBA::Any::operator>>=(TypeCode_ptr& tc) const
   tcm._ptr = CORBA::TypeCode::_nil();
   return ret;
 }
-
-
-CORBA::Boolean
-CORBA::Any::operator>>=(Object_ptr& obj) const
-{
-  tcDescriptor tcd;
-  tcd.p_objref.opq_objref = (void*) &obj;
-  tcd.p_objref.setObjectPtr = setObjectPtr;
-  return pdAnyP()->getData(CORBA::_tc_Object, tcd);
-}
-
 
 CORBA::Boolean
 CORBA::Any::operator>>=(to_boolean b) const
@@ -607,49 +599,20 @@ CORBA::Any::operator>>=(to_octet o) const
   return pdAnyP()->getData(CORBA::_tc_octet, tcd);
 }
 
-
-// Internal functions used when extracting string data
-static void
-tcParser_tostring_setLength(tcStringDesc* tcsd, CORBA::ULong len)
-{
-  if (tcsd->opq_string != NULL)
-    CORBA::string_free((char*) tcsd->opq_string);
-  tcsd->opq_string = CORBA::string_alloc(len);
-  if (tcsd->opq_string != NULL)
-    tcsd->opq_len = len;
-}
-
-
-static CORBA::ULong 
-tcParser_tostring_getLength(tcStringDesc* tcsd)
-{
-  return tcsd->opq_len;
-}
-
-
-static char*
-tcParser_tostring_getBuffer(tcStringDesc* tcsd)
-{
-  return (char*) (tcsd->opq_string);
-}
-
 CORBA::Boolean
 CORBA::Any::operator>>=(char*& s) const
 {
-  if (!omniORB::copyStringInAnyExtraction) {
+  if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
     return this->operator>>=((const char*&) s);
   }
   else {
+    char* p = 0;
     tcDescriptor tcd;
-    tcd.p_string.setLength = tcParser_tostring_setLength;
-    tcd.p_string.getLength = tcParser_tostring_getLength;
-    tcd.p_string.getBuffer = tcParser_tostring_getBuffer;
-    tcd.p_string.opq_string = 0;
-    tcd.p_string.opq_len = 0;
+    tcd.p_string = &p;
 
     if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
-      s = (char*) tcd.p_string.opq_string;
+      s = p;
       return 1;
     }
   }
@@ -669,14 +632,10 @@ CORBA::Any::operator>>=(const char*& s) const
   char* sp = (char*) PR_getCachedData();
   if (sp == 0) {
     tcDescriptor tcd;
-    tcd.p_string.setLength = tcParser_tostring_setLength;
-    tcd.p_string.getLength = tcParser_tostring_getLength;
-    tcd.p_string.getBuffer = tcParser_tostring_getBuffer;
-    tcd.p_string.opq_string = 0;
-    tcd.p_string.opq_len = 0;
+    tcd.p_string = &sp;
+
     if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
-      sp = (char*) tcd.p_string.opq_string;
       ((CORBA::Any*)this)->PR_setCachedData(sp,delete_string);
       s = sp; return 1;
     }
@@ -700,20 +659,31 @@ CORBA::Any::operator>>=(to_string s) const
 {
   CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_string_tc(s.bound);
 
-  tcDescriptor tcd;
-  tcd.p_string.setLength = tcParser_tostring_setLength;
-  tcd.p_string.getLength = tcParser_tostring_getLength;
-  tcd.p_string.getBuffer = tcParser_tostring_getBuffer;
-  tcd.p_string.opq_string = 0;
-  tcd.p_string.opq_len = 0;
+  char* sp = (char*) PR_getCachedData();
+  if (sp == 0) {
+    tcDescriptor tcd;
+    tcd.p_string = &sp;
 
-  if (pdAnyP()->getData(newtc, tcd))
+    if (pdAnyP()->getData(newtc, tcd))
     {
-      s.val = (char*) tcd.p_string.opq_string;
-      return 1;
+      if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
+	((CORBA::Any*)this)->PR_setCachedData(sp,delete_string);
+      }
+      s.val = sp; return 1;
     }
-
-  return 0;
+    else {
+      s.val = 0; return 0;
+    }
+  }
+  else {
+    CORBA::TypeCode_var tc = type();
+    if (tc->equivalent(newtc)) {
+      s.val = sp; return 1;
+    }
+    else {
+      s.val = 0; return 0;
+    }
+  }
 }
 
 
@@ -722,7 +692,8 @@ CORBA::Any::operator>>=(to_object o) const
 {
   tcDescriptor tcd;
   tcd.p_objref.opq_objref = (void*) &o.ref;
-  tcd.p_objref.setObjectPtr = setObjectPtr;
+  tcd.p_objref.opq_release = 0;
+  tcd.p_objref.setObjectPtr = _0RL_tcParser_objref_setObjectPtr;
   return pdAnyP()->getObjRef(tcd);
 }
 
