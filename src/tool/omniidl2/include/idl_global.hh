@@ -237,6 +237,10 @@ public:
   virtual void			set_stripped_filename(String *);
 							// Set it
 
+  virtual String		*temp_filename();	// Temporary filename
+  virtual void			set_temp_filename(String *);
+							// Set it
+
   virtual idl_bool		imported();		// Are we imported?
   virtual idl_bool		import();		// Is import on?
   virtual void			set_import(idl_bool);	// Set it
@@ -298,6 +302,7 @@ private:
   String			*pd_main_filename;	// What main filename
   String			*pd_real_filename;	// What real filename
   String			*pd_stripped_filename;	// Stripped filename
+  String                        *pd_temp_filename;      // Temporary filename
   idl_bool			pd_import;		// Is import on?
   idl_bool			pd_in_main_file;	// Are we in it?
   char				*pd_prog_name;		// Argv[0]
