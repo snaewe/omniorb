@@ -210,6 +210,7 @@ PortableServer::DynamicImplementation::_dispatch(omniCallHandle& handle)
 
 
   case omniServerRequest::SR_GOT_PARAMS:
+  case omniServerRequest::SR_GOT_CTX:
   case omniServerRequest::SR_GOT_RESULT:
   case omniServerRequest::SR_EXCEPTION:
     sreq.do_reply();

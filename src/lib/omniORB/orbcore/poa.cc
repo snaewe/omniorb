@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.25  2001/11/13 14:11:45  dpg1
+  Tweaks for CORBA 2.5 compliance.
+
   Revision 1.2.2.24  2001/11/08 16:33:52  dpg1
   Local servant POA shortcut policy.
 
@@ -548,7 +551,18 @@ omniOrbPOA::find_POA(const char* adapter_name, CORBA::Boolean activate_it)
 
   if( !activate_it || !pd_adapterActivator )  throw AdapterNonExistent();
 
-  poa = attempt_to_activate_adapter(adapter_name);
+  try {
+    poa = attempt_to_activate_adapter(adapter_name);
+  }
+#ifdef HAS_Cplusplus_catch_exception_by_base
+  catch (CORBA::SystemException&)
+#else
+  catch (...)
+#endif
+  {
+    OMNIORB_THROW(OBJ_ADAPTER, OBJ_ADAPTER_POAUnknownAdapter,
+		  CORBA::COMPLETED_NO);
+  }
 
   if( poa && !poa->pd_dying ) {
     poa->incrRefCount();
@@ -587,7 +601,7 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
   }
 
   // Mark self as being in the process of destruction, sever links
-  // with poa manager, destroy childer, deactivate all objects
+  // with poa manager, destroy children, deactivate all objects
   // (possibly waiting for completion of outstanding method
   // invocations) and then remove self from parent.
 
@@ -610,10 +624,27 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
     pd_dying = 1;
   }
 
+  {
+    // If we're not already in the INACTIVE state, change state to DISCARDING
+
+    omni::internalLock->lock();
+
+    int old_state = pd_rq_state;
+
+    if (pd_rq_state != (int) PortableServer::POAManager::INACTIVE)
+      pd_rq_state = (int) PortableServer::POAManager::DISCARDING;
+
+    omni::internalLock->unlock();
+
+    if( old_state == (int) PortableServer::POAManager::HOLDING )
+      pd_signal->broadcast();
+  }
+
   // From this point on we can be sure that no other threads will
   // try and:
   //   o  create child POAs
   //   o  activate objects
+  //   o  perform upcalls
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
@@ -1451,6 +1482,24 @@ omniOrbPOA::id_to_reference(const PortableServer::ObjectId& oid)
   return (CORBA::Object_ptr) objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
 }
 
+CORBA::OctetSeq*
+omniOrbPOA::id()
+{
+  CHECK_NOT_NIL_OR_DESTROYED();
+
+  CORBA::OctetSeq* seq = new CORBA::OctetSeq(pd_poaIdSize);
+  seq->length(pd_poaIdSize);
+
+  const char* ids = (const char*)pd_poaId;
+
+  for (int i=0; i<pd_poaIdSize; i++)
+    (*seq)[i] = ids[i];
+
+  return seq;
+}
+
+
+
 ///////////////////
 // CORBA::Object //
 ///////////////////
@@ -1910,18 +1959,7 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
       << ").\n";
   }
 
-  // There may still be requests blocked in synchronise_request(),
-  // so we change the state here to INACTIVE so that they will
-  // throw an appropriate exception and complete.  This also allows
-  // other threads to block waiting for us to change state or be
-  // destroyed.
-  int old_state = pd_rq_state;
   pd_rq_state = (int) PortableServer::POAManager::INACTIVE;
-  if( old_state == (int) PortableServer::POAManager::HOLDING ) {
-    omni::internalLock->unlock();
-    pd_signal->broadcast();
-    omni::internalLock->lock();
-  }
 
   waitForAllRequestsToComplete(1);
 
@@ -3171,9 +3209,25 @@ omniOrbPOA::attempt_to_activate_adapter(const char* name)
   try {
     ret = pd_adapterActivator->unknown_adapter(this, name);
   }
-  catch(...) {
+#ifdef HAS_Cplusplus_catch_exception_by_base
+  catch (CORBA::SystemException&) {
+    poa_lock.lock();
+    throw;
+  }
+#else
+#define RETHROW_IT(name) \
+  catch (CORBA::name&) { \
+    poa_lock.lock(); \
+    throw; \
+  }
+  OMNIORB_FOR_EACH_SYS_EXCEPTION(RETHROW_IT)
+#undef RETHROW_IT
+#endif
+  catch (...) {
     omniORB::logs(5,
 		  "AdapterActivator::unknown_adapter() raised an exception!");
+    poa_lock.lock();
+    OMNIORB_THROW(UNKNOWN, UNKNOWN_UserException, CORBA::COMPLETED_NO);
   }
 
   poa_lock.lock();

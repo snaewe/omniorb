@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.32  2001/11/13 14:11:45  dpg1
+  Tweaks for CORBA 2.5 compliance.
+
   Revision 1.33.2.31  2001/11/06 15:41:38  dpg1
   Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -840,6 +843,16 @@ omniOrbORB::destroy()
   }
   CORBA::release(orb);
 }
+
+
+void
+omniOrbORB::register_initial_reference(const char* id, CORBA::Object_ptr obj)
+{
+  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
+
+  omniInitialReferences::setFromORB(id, obj);
+}
+
 
 
 CORBA::Boolean

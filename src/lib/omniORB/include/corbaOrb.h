@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/11/13 14:11:44  dpg1
+  Tweaks for CORBA 2.5 compliance.
+
   Revision 1.1.4.4  2001/11/06 15:41:37  dpg1
   Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -82,6 +85,9 @@ public:
   virtual void run();
   virtual void shutdown(CORBA::Boolean);
   virtual void destroy();
+
+  virtual void register_initial_reference(const char* id,
+					  CORBA::Object_ptr obj);
 
   virtual CORBA::Boolean _non_existent();
   virtual void* _ptrToObjRef(const char*);

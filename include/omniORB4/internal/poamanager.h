@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/11/13 14:11:44  dpg1
+  Tweaks for CORBA 2.5 compliance.
+
   Revision 1.1.4.1  2001/04/18 17:18:15  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -71,7 +74,8 @@ public:
   inline omniOrbPOAManager(int is_nil = 0)
     : OMNIORB_BASE_CTOR(PortableServer::)POAManager(is_nil),
       pd_refCount(1),
-      pd_state(HOLDING)
+      pd_state(HOLDING),
+      pd_deactivated(0)
     {}
 
   ////////////////////////////////
@@ -111,6 +115,7 @@ private:
 
   int    pd_refCount;
   State  pd_state;
+  int    pd_deactivated; // Becomes true when deactivation has finished
 };
 
 OMNI_NAMESPACE_END(omni)

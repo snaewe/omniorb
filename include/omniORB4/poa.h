@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.12  2001/11/13 14:11:44  dpg1
+  Tweaks for CORBA 2.5 compliance.
+
   Revision 1.2.2.11  2001/10/19 11:05:25  dpg1
   ObjectId to/from wstring
 
@@ -571,6 +574,8 @@ _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ThreadPolicyValue;
     virtual ObjectId* reference_to_id(CORBA::Object_ptr reference) = 0;
     virtual Servant id_to_servant(const ObjectId& oid) = 0;
     virtual CORBA::Object_ptr id_to_reference(const ObjectId& oid) = 0;
+
+    virtual CORBA::OctetSeq* id() = 0;
 
     //////////////////////////
     // CORBA Object members //

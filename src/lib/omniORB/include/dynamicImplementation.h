@@ -53,7 +53,7 @@ public:
     SR_READY,        // initial state
     SR_GOT_PARAMS,   // user has retrieved params AND there is context info
                      // left to be retrieved.
-    //    SR_GOT_CTX,      // user has retrieved params and context
+    SR_GOT_CTX,      // user has retrieved params and context
     SR_GOT_RESULT,   // user has given a result value
     SR_EXCEPTION,    // user has set an exception
     SR_DSI_ERROR,    // usage error

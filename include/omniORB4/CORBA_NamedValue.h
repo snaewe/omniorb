@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/11/13 14:11:43  dpg1
+  Tweaks for CORBA 2.5 compliance.
+
   Revision 1.1.2.2  2001/11/06 15:41:34  dpg1
   Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -48,8 +51,8 @@
 enum _Flags {
   ARG_IN              = 0x1,
   ARG_OUT             = 0x2,
-  ARG_INOUT           = 0x4,
-  CTX_RESTRICT_SCOPE  = 0x8,
+  ARG_INOUT           = 0x3, //?  Defined in CORBA 2.5. Odd.
+  CTX_RESTRICT_SCOPE  = 0xF, //?  Defined in CORBA 2.5. Odd.
   OUT_LIST_MEMORY     = 0x10,
   IN_COPY_VALUE       = 0x20
 };

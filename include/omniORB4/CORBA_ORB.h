@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/11/13 14:11:43  dpg1
+  Tweaks for CORBA 2.5 compliance.
+
   Revision 1.1.2.5  2001/11/06 15:41:34  dpg1
   Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -246,6 +249,8 @@ public:
   TypeCode_ptr create_recursive_tc(const char* id);
 
   Policy_ptr create_policy(PolicyType,const Any&);
+
+  virtual void register_initial_reference(const char* id, Object_ptr obj) = 0;
     
   // omniORB internal.
   static _core_attr const char* _PD_repoId;

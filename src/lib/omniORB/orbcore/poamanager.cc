@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/11/13 14:11:46  dpg1
+  Tweaks for CORBA 2.5 compliance.
+
   Revision 1.2.2.7  2001/09/19 17:26:52  dpg1
   Full clean-up after orb->destroy().
 
@@ -154,8 +157,9 @@ const char* PortableServer::POAManager::_PD_repoId =
   if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref()
 
 
-static omni_tracedmutex pm_lock;
-
+static omni_tracedmutex     pm_lock;
+static omni_tracedcondition pm_cond(&pm_lock);
+// Condition variable used to signal deactivations
 
 omniOrbPOAManager::~omniOrbPOAManager() {}
 
@@ -276,14 +280,17 @@ deactivate_thread_fn(void* args)
   omniOrbPOAManager::POASeq* ppoas = (omniOrbPOAManager::POASeq*) targs[0];
   omniOrbPOAManager::POASeq& poas = *ppoas;
   CORBA::Boolean etherealise = (CORBA::Boolean) (unsigned long) targs[1];
+  int* deactivated = (int*)targs[2];
   delete[] targs;
 
   for( CORBA::ULong i = 0; i < poas.length(); i++ ) {
     poas[i]->pm_deactivate(etherealise);
     poas[i]->decrRefCount();
   }
-
   delete ppoas;
+
+  *deactivated = 1;
+  pm_cond.broadcast();
 }
 
 
@@ -311,7 +318,10 @@ omniOrbPOAManager::deactivate(CORBA::Boolean etherealize_objects,
   {
     omni_tracedmutex_lock sync(pm_lock);
 
-    if( pd_state == INACTIVE   )  throw AdapterInactive();
+    if( pd_state == INACTIVE ) {
+      while( !pd_deactivated )	pm_cond.wait();
+      return;
+    }
 
     pd_state = INACTIVE;
     poas.length(pd_poas.length());
@@ -323,9 +333,10 @@ omniOrbPOAManager::deactivate(CORBA::Boolean etherealize_objects,
     }
   }
 
-  void** args = new void* [2];
+  void** args = new void* [3];
   args[0] = ppoas;
   args[1] = (void*) (int) etherealize_objects;
+  args[2] = &pd_deactivated;
 
   if( wait_for_completion )
     deactivate_thread_fn(args);
