@@ -1,3 +1,40 @@
+Fri Feb 23 16:19:47 GMT 2001 sll
+================================
+
+- SLL work in progress snapshot
+  The tree is now broken temporarily until sll has finished all the changes
+  This checkin goes into the sll-tmp branch.
+  Eventually all the changes to this branch will be re-checkin to
+  omni4_0_develop.
+
+
+ALL these files are REMOVED!
+
+include/omniORB4/giopDriver.h
+include/omniORB4/giopStream.h
+include/omniORB4/rope.h
+src/lib/omniORB/orbcore/firewallProxy.cc
+src/lib/omniORB/orbcore/firewallProxy.h
+src/lib/omniORB/orbcore/giopClient.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopStream10.cc
+src/lib/omniORB/orbcore/giopStream11.cc
+src/lib/omniORB/orbcore/giopStream12.cc
+src/lib/omniORB/orbcore/giopStreamImpl.h
+src/lib/omniORB/orbcore/relStream.cc
+src/lib/omniORB/orbcore/relStream.h
+src/lib/omniORB/orbcore/ropeFactory.cc
+src/lib/omniORB/orbcore/ropeFactory.h
+src/lib/omniORB/orbcore/scavenger.cc
+src/lib/omniORB/orbcore/scavenger.h
+src/lib/omniORB/orbcore/strand.cc
+src/lib/omniORB/orbcore/tcpSocket.cc
+src/lib/omniORB/orbcore/tcpSocket.h
+src/lib/omniORB/orbcore/tcpSocketAux.cc
+src/lib/omniORB/orbcore/tcpSocketMTfactory.cc
+
+
 Thu Jan 25 12:59:58 GMT 2001 sll
 ================================
 
