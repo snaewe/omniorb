@@ -96,8 +96,7 @@ public:
 };
 ],
 [C c;],
- omni_cv_cxx_need_fq_base_ctor=no, omni_cv_cxx_need_fq_base_ctor=yes,
- omni_cv_cxx_need_fq_base_ctor=no)
+ omni_cv_cxx_need_fq_base_ctor=no, omni_cv_cxx_need_fq_base_ctor=yes)
  AC_LANG_POP(C++)
 ])
 if test "$omni_cv_cxx_need_fq_base_ctor" = yes; then
@@ -114,7 +113,7 @@ omni_cv_cxx_long_is_int,
 int f(int  x){return 1;}
 int f(long x){return 1;}
 ],[long l = 5; return f(l);],
- omni_cv_cxx_long_is_int=yes, omni_cv_cxx_long_is_int=no)
+ omni_cv_cxx_long_is_int=no, omni_cv_cxx_long_is_int=yes)
  AC_LANG_POP(C++)
 ])
 if test "$omni_cv_cxx_long_is_int" = yes; then

@@ -8997,11 +8997,11 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  omni_cv_cxx_long_is_int=yes
+  omni_cv_cxx_long_is_int=no
 else
   echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
-omni_cv_cxx_long_is_int=no
+omni_cv_cxx_long_is_int=yes
 fi
 rm -f conftest.$ac_objext conftest.$ac_ext
  ac_ext=cc
