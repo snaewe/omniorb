@@ -26,6 +26,9 @@
 
 /* 
    $Log$
+   Revision 1.11  1999/01/07 09:45:58  djr
+   Changes for new output file ...DynSK.cc
+
    Revision 1.10  1998/08/19 15:53:06  sll
    New member functions void produce_binary_operators_in_hdr and the like
    are responsible for generating binary operators <<= etc in the global
@@ -67,6 +70,7 @@ o2be_module::o2be_module(UTL_ScopedName *n, UTL_StrList *p)
                    o2be_name(AST_Decl::NT_module,n,p) 
 {
 }
+
 
 void
 o2be_module::produce_hdr(std::fstream &s)
@@ -121,7 +125,8 @@ o2be_module::produce_hdr(std::fstream &s)
 	  case AST_Decl::NT_enum_val:
 	    break;
 	  default:
-	    throw o2be_internal_error(__FILE__,__LINE__,"Unrecognised node type");
+	    throw o2be_internal_error(__FILE__, __LINE__,
+				      "Unrecognised node type");
 	  }
 	}
       i.next();
@@ -133,9 +138,8 @@ o2be_module::produce_hdr(std::fstream &s)
       s << "\n";
       IND(s); s << "_CORBA_MODULE_END\n\n";
     }
-
-  return;
 }
+
 
 void
 o2be_module::produce_skel(std::fstream &s)
@@ -174,6 +178,7 @@ o2be_module::produce_skel(std::fstream &s)
 	    o2be_constant::narrow_from_decl(decl)->produce_skel(s);
 	    break;
 	  case AST_Decl::NT_interface_fwd:
+	    o2be_interface_fwd::narrow_from_decl(decl)->produce_skel(s);
 	    break;
 	  case AST_Decl::NT_enum:
 	    o2be_enum::narrow_from_decl(decl)->produce_skel(s);
@@ -181,13 +186,107 @@ o2be_module::produce_skel(std::fstream &s)
 	  case AST_Decl::NT_enum_val:
 	    break;
 	  default:
-	    throw o2be_internal_error(__FILE__,__LINE__,"Unrecognised node type");
+	    throw o2be_internal_error(__FILE__,__LINE__,
+				      "Unrecognised node type");
 	  }
 	}
       i.next();
     }
   return;
 }
+
+
+void
+o2be_module::produce_dynskel(std::fstream &s)
+{
+  if (!(in_main_file()))
+    return;
+
+  UTL_ScopeActiveIterator  i(this,UTL_Scope::IK_decls);
+  AST_Decl                 *decl;
+
+  while (!(i.is_done()))
+    {
+      decl = i.item();
+      if ((decl->in_main_file()))
+	{
+	  switch(decl->node_type()) {
+	  case AST_Decl::NT_module:
+	    o2be_module::narrow_from_decl(decl)->produce_dynskel(s); 
+	    break;
+	  case AST_Decl::NT_interface:
+	    o2be_interface::narrow_from_decl(decl)->produce_dynskel(s);
+	    break;
+	  case AST_Decl::NT_except:
+	    o2be_exception::narrow_from_decl(decl)->produce_dynskel(s);
+	    break;
+	  case AST_Decl::NT_struct:
+	    o2be_structure::narrow_from_decl(decl)->produce_dynskel(s);
+	    break;
+	  case AST_Decl::NT_typedef:
+	    o2be_typedef::narrow_from_decl(decl)->produce_dynskel(s);
+	    break;
+	  case AST_Decl::NT_union:
+	    o2be_union::narrow_from_decl(decl)->produce_dynskel(s);
+	    break;
+	  case AST_Decl::NT_const:
+	    o2be_constant::narrow_from_decl(decl)->produce_dynskel(s);
+	    break;
+	  case AST_Decl::NT_interface_fwd:
+	    o2be_interface_fwd::narrow_from_decl(decl)->produce_dynskel(s);
+	    break;
+	  case AST_Decl::NT_enum:
+	    o2be_enum::narrow_from_decl(decl)->produce_dynskel(s);
+	    break;
+	  case AST_Decl::NT_enum_val:
+	    break;
+	  default:
+	    throw o2be_internal_error(__FILE__,__LINE__,
+				      "Unrecognised node type");
+	  }
+	}
+      i.next();
+    }
+  return;
+}
+
+
+void
+o2be_module::produce_decls_at_global_scope_in_hdr(std::fstream& s)
+{
+  if( !(in_main_file()) )  return;
+
+  UTL_ScopeActiveIterator  i(this,UTL_Scope::IK_decls);
+  AST_Decl*                decl;
+
+  while( !i.is_done() ) {
+
+    decl = i.item();
+    i.next();
+
+    if ((decl->in_main_file())) {
+
+      switch(decl->node_type()) {
+      case AST_Decl::NT_module:
+	o2be_module::
+	  narrow_from_decl(decl)->produce_decls_at_global_scope_in_hdr(s); 
+	break;
+      case AST_Decl::NT_union:
+	o2be_union::
+	  narrow_from_decl(decl)->produce_decls_at_global_scope_in_hdr(s);
+	break;
+      case AST_Decl::NT_struct:
+	o2be_structure::
+	  narrow_from_decl(decl)->produce_decls_at_global_scope_in_hdr(s);
+	break;
+      default:
+	break;
+      }
+
+    }
+  }
+}
+
 
 void
 o2be_module::produce_binary_operators_in_hdr(std::fstream &s)
@@ -241,7 +340,7 @@ o2be_module::produce_binary_operators_in_hdr(std::fstream &s)
 }
 
 void
-o2be_module::produce_binary_operators_in_skel(std::fstream &s)
+o2be_module::produce_binary_operators_in_dynskel(std::fstream &s)
 {
   if (!(in_main_file()))
     return;
@@ -257,31 +356,31 @@ o2be_module::produce_binary_operators_in_skel(std::fstream &s)
 	  switch(decl->node_type()) {
 	  case AST_Decl::NT_module:
 	    o2be_module::
-	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s); 
+	      narrow_from_decl(decl)->produce_binary_operators_in_dynskel(s); 
 	    break;
 	  case AST_Decl::NT_interface:
 	    o2be_interface::
-	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	      narrow_from_decl(decl)->produce_binary_operators_in_dynskel(s);
 	    break;
 	  case AST_Decl::NT_except:
 	    o2be_exception::
-	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	      narrow_from_decl(decl)->produce_binary_operators_in_dynskel(s);
 	    break;
 	  case AST_Decl::NT_struct:
 	    o2be_structure::
-	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	      narrow_from_decl(decl)->produce_binary_operators_in_dynskel(s);
 	    break;
 	  case AST_Decl::NT_typedef:
 	    o2be_typedef::
-	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	      narrow_from_decl(decl)->produce_binary_operators_in_dynskel(s);
 	    break;
 	  case AST_Decl::NT_union:
 	    o2be_union::
-	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	      narrow_from_decl(decl)->produce_binary_operators_in_dynskel(s);
 	    break;
 	  case AST_Decl::NT_enum:
 	    o2be_enum::
-	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s);
+	      narrow_from_decl(decl)->produce_binary_operators_in_dynskel(s);
 	    break;
 	  default:
 	    break;
