@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2004/11/04 14:43:59  dgrisby
+  Fix VxWorks issues. Thanks Dirk Siebnich.
+
   Revision 1.1.2.16  2004/10/17 20:14:28  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -492,6 +495,8 @@
 
 #elif defined(__vxWorks__)
 #  undef HAVE_GETTIMEOFDAY
+#  undef HAVE_STRCASECMP
+#  undef HAVE_STRNCASECMP
 
 #elif defined(__macos__)
 #  define SIZEOF_WCHAR 2

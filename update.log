@@ -1,3 +1,12 @@
+Thu Nov  4 14:41:39 GMT 2004 dgrisby
+====================================
+
+- Fix VxWorks issues. Thanks Dirk Siebnich.
+
+include/omniORB4/CORBA_sysdep_trad.h
+src/lib/omniORB/dynamic/policy.cc
+
+
 Fri Oct 22 21:45:16 BST 2004 dgrisby
 ====================================
 

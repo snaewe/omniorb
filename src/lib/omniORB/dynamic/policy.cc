@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.7  2004/11/04 14:44:00  dgrisby
+  Fix VxWorks issues. Thanks Dirk Siebnich.
+
   Revision 1.1.2.6  2004/10/17 20:14:32  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -155,13 +158,6 @@ _init_in_def_( const PolicyErrorCode BAD_POLICY_VALUE = 3; )
 _init_in_def_( const PolicyErrorCode UNSUPPORTED_POLICY_VALUE = 4; )
 
 }
-#elif defined(__vxWorks__)
-//?? Is this really necessary?
-_init_in_decl_( const PolicyErrorCode CORBA::BAD_POLICY = 0; )
-_init_in_decl_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY = 1; )
-_init_in_decl_( const PolicyErrorCode CORBA::BAD_POLICY_TYPE = 2; )
-_init_in_decl_( const PolicyErrorCode CORBA::BAD_POLICY_VALUE = 3; )
-_init_in_decl_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY_VALUE = 4; )
 #else
 _init_in_def_( const PolicyErrorCode CORBA::BAD_POLICY = 0; )
 _init_in_def_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY = 1; )
