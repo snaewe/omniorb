@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.19  2003/01/22 11:40:12  dgrisby
+  Correct serverSendException interceptor use.
+
   Revision 1.1.4.18  2002/11/26 16:54:34  dgrisby
   Fix exception interception.
 
@@ -1182,7 +1185,7 @@ giopImpl10::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 
   giop_s.service_contexts().length(0);
 
-  if (omniInterceptorP::serverSendReply) {
+  if (omniInterceptorP::serverSendException) {
     omniInterceptors::serverSendException_T::info_T info(giop_s, &ex);
     omniInterceptorP::visit(info);
 
@@ -1245,7 +1248,7 @@ giopImpl10::sendUserException(giopStream* g,const CORBA::UserException& ex) {
 
   giop_s.service_contexts().length(0);
 
-  if (omniInterceptorP::serverSendReply) {
+  if (omniInterceptorP::serverSendException) {
     omniInterceptors::serverSendException_T::info_T info(giop_s, &ex);
     omniInterceptorP::visit(info);
   }
