@@ -83,7 +83,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include	<idl_extern.hh>
 
 #include	<fe_private.hh>
-
+#include        <../omniORB2_be/o2be.h>
 /*
  * Create a scoped name
  */
@@ -174,6 +174,7 @@ fe_populate(AST_Module *m)
 						  create_scoped_name("void"),
 						  NULL);
   m->fe_add_predefined_type(pdt);
+#if 0
   pdt = idl_global->gen()
 		->create_predefined_type(AST_PredefinedType::PT_pseudo,
 					 create_scoped_name("Object"),
@@ -184,7 +185,7 @@ fe_populate(AST_Module *m)
 					 create_scoped_name("TypeCode"),
 					 NULL);
   m->fe_add_predefined_type(pdt);
-
+#endif
   /*
    * Add these to make all keywords protected even in different spellings
    */
@@ -314,6 +315,13 @@ fe_populate(AST_Module *m)
 					 create_scoped_name("FALSE"),
 					 NULL);
   m->fe_add_predefined_type(pdt);
+
+  // Now the pseudo object types
+  AST_Interface *intf;
+  intf = idl_global->gen()->create_interface(create_scoped_name("Object"),
+					     0,0,NULL);
+  
+  m->fe_add_interface(intf);
 }
 
 /*
