@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.4  2000/03/10 10:04:40  dpg1
+// Windows file/directory names are case insensitive.
+//
 // Revision 1.15.2.3  2000/03/06 15:03:48  dpg1
 // Minor bug fixes to omniidl. New -nf and -k flags.
 //
@@ -1264,7 +1267,7 @@ int
 main(int argc, char** argv)
 {
   const char* omniidl_string =
-"import sys, os, os.path\n"
+"import sys, os, os.path, string\n"
 "\n"
 "pylibdir   = None\n"
 "binarchdir = os.path.abspath(os.path.dirname(sys.executable))\n"
@@ -1273,8 +1276,8 @@ main(int argc, char** argv)
 "    sys.path.insert(0, binarchdir)\n"
 "    bindir, archname = os.path.split(binarchdir)\n"
 "    treedir, bin     = os.path.split(bindir)\n"
-"    if bin == 'bin':\n"
-"        pylibdir   = os.path.join(treedir, 'lib', 'python')\n"
+"    if string.lower(bin) == 'bin':\n"
+"        pylibdir = os.path.join(treedir, 'lib', 'python')\n"
 "\n"
 "        if os.path.isdir(pylibdir):\n"
 "            sys.path.insert(0, pylibdir)\n"
