@@ -1,4 +1,11 @@
-Fri Aug  8 10:36:36 BST 1997 sll
+Wed Aug 13 10:23:55 BST 1997 sll
+================================
+
+Fixed problem with omniidl2 generates the wrong stub for user exceptions.
+
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+
+Fr Aug  8 10:36:36 BST 1997 sll
 ================================
 
 Fixed problem with not passing the repository ID of the most derived type
