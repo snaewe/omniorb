@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.9  1998/01/27 16:33:34  ewc
+   Added support for type any and TypeCode
+
   Revision 1.8  1997/12/23 19:27:51  sll
   Bug fixes.
 
@@ -55,6 +58,7 @@ o2be_array::o2be_array(UTL_ScopedName *n,
     AST_Decl(AST_Decl::NT_array, n, NULL),
     o2be_name(AST_Decl::NT_array,n,NULL)
 {
+  set_recursive_seq(I_FALSE);
 }
 
 idl_bool
@@ -78,7 +82,9 @@ o2be_array::isVariable()
       break;
     case AST_Decl::NT_pre_defined:
       if (o2be_predefined_type::narrow_from_decl(decl)->pt() ==
-	  AST_PredefinedType::PT_any)
+	  AST_PredefinedType::PT_any || 
+	  o2be_predefined_type::narrow_from_decl(decl)->pt() == 
+	  AST_PredefinedType::PT_TypeCode)
 	isvar = I_TRUE;
       else
 	isvar = I_FALSE;
@@ -271,6 +277,10 @@ o2be_array::produce_hdr (fstream &s, o2be_typedef *tdef)
       elm_fqname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(tdef);
       break;
 #endif
+    case AST_Decl::NT_pre_defined:
+      elm_fqname = o2be_predefined_type::narrow_from_decl(decl)->fieldMemberTypeName();
+      break;
+
     default:
       elm_fqname = o2be_name::narrow_and_produce_unambiguous_name(decl,tdef);
       break;
@@ -448,6 +458,23 @@ o2be_array::produce_hdr (fstream &s, o2be_typedef *tdef)
 	    << tdef->uqname() << "_copyHelper,"
 	    << tdef->uqname() << "_slice> "
 	    << tdef->uqname() << "_forany;\n\n";
+
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    if (check_recursive_seq() == I_FALSE) {
+      set_recursive_seq(I_FALSE);
+      // Produce declarations of Any insertion and extraction operator.
+      // Note that unlike most other types, insertion operator is not inline,
+      // but is defined in skeleton file.
+      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+		<< "void operator<<=(CORBA::Any& _a, const " 
+		<< tdef->uqname() 
+		<< "_forany& _s);\n";
+      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+		<< "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+		<< tdef->uqname() << "_forany& _s);\n\n";
+    }
+    else set_recursive_seq(I_TRUE);
+  }
 }
 
 void
@@ -525,6 +552,153 @@ o2be_array::produce_skel (fstream &s, o2be_typedef *tdef)
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
     }
+
+  if ((idl_global->compile_flags() & IDL_CF_ANY) && 
+      recursive_seq() == I_FALSE) {
+    // Definitions of any insertion and extraction operators, and deletion
+    // function.
+
+    IND(s); s << "void _03RL_" << tdef->_fqname() 
+	      << "_delete(void* _data) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << tdef->fqname() << "_slice* _0RL_t = (" << tdef->fqname() 
+	      << "_slice*) _data;\n";
+    IND(s); s << tdef->fqname() << "_free(_0RL_t);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << "void operator<<=(CORBA::Any& _a, const " << tdef->fqname() 
+	      << "_forany& _s) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
+    IND(s); s << tdef->fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
+    
+    {
+      o2be_operation::argMapping mapping;
+      o2be_operation::argType ntype = 
+	o2be_operation::ast2ArgMapping(this,o2be_operation::wIN,mapping);
+      o2be_operation::produceMarshalCode(
+					 s,
+					 this,
+					 ScopeAsDecl(defined_in()),
+					 "_0RL_mbuf",
+					 "_s",
+					 ntype,
+					 mapping);
+    }
+
+    IND(s); s << "_a.NP_replaceData(" << tdef->fqtcname() << ",_0RL_mbuf);\n";
+    IND(s); s << tdef->fqname() << "_free(_s.operator " << fqname() 
+	      << "_slice*());\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";    
+
+    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+	      << tdef->fqname() << "_forany& _s) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
+    IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << tdef->fqtcname() 
+	      << ",1)) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return 0;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "else {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
+    IND(s); s << "if (!_0RL_data) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
+    IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
+    IND(s); s << tdef->fqname() << "_slice* _0RL_tmp = " << tdef->fqname()
+	      << "_alloc();\n";
+
+    {
+      o2be_operation::argMapping mapping;
+      o2be_operation::argType ntype = 
+	o2be_operation::ast2ArgMapping(this,o2be_operation::wIN,mapping);
+      o2be_operation::produceUnMarshalCode(
+					   s,
+					   this,
+					   ScopeAsDecl(defined_in()),
+					   "_0RL_tmp_mbuf",
+					   "_0RL_tmp",
+					   ntype,
+					   mapping);
+    }
+
+    IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
+    IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << tdef->_fqname() 
+	      << "_delete);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+    IND(s); s << "_s = (" << tdef->fqname() << "_slice*) _0RL_data;\n";
+    IND(s); s << "return 1;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+  }
+}
+
+void
+o2be_array::produce_typecode_skel(fstream &s)
+{
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    // All array TypeCodes are generated in-place when they are used.
+    // Produce any static TypeCodes that are required by the array TypeCode
+    AST_Decl *decl = base_type();
+    if (!decl->in_main_file() || 
+	decl->node_type() == AST_Decl::NT_array || 
+	decl->node_type() == AST_Decl::NT_sequence)
+      o2be_name::narrow_and_produce_typecode_skel(decl,s);	       
+    }
+}
+
+void 
+o2be_array::produce_typecode_member(fstream &s, idl_bool new_ptr)
+{
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    if (new_ptr) s << "new ";
+
+    AST_Expression **d = dims();
+    int count;
+    for(count = 0; count < n_dims(); count++)
+      {
+	s << "CORBA::TypeCode(CORBA::tk_array, ";
+	AST_Expression::AST_ExprValue *v = d[count]->ev();
+	switch (v->et) 
+	  {
+	  case AST_Expression::EV_short:
+	    s << v->u.sval;
+	    break;
+	  case AST_Expression::EV_ushort:
+	    s << v->u.usval;
+	    break;
+	  case AST_Expression::EV_long:
+	    s << v->u.lval;
+	    break;
+	  case AST_Expression::EV_ulong:
+	    s << v->u.ulval;
+	    break;
+	  default:
+	    throw o2be_internal_error(__FILE__,__LINE__,"unexpected type in array expression");
+	  }
+	s << ", ";
+      }    
+
+    AST_Decl *decl = base_type();
+    o2be_name::produce_typecode_member(decl,s,I_FALSE);
+
+    for (count = 0; count < n_dims(); count++) s << ")";
+  }
+}
+
+idl_bool 
+o2be_array::check_recursive_seq()
+{
+  AST_Decl *base_decl = base_type();
+  return o2be_name::narrow_and_check_recursive_seq(base_decl);
 }
 
 void
@@ -624,6 +798,9 @@ o2be_array::_produce_member_decl (fstream &s, char *varname,AST_Decl* used_in)
       elm_fqname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(used_in);
       break;
 #endif
+    case AST_Decl::NT_pre_defined:
+      elm_fqname = o2be_predefined_type::narrow_from_decl(decl)->fieldMemberTypeName();
+      break;
     default:
       elm_fqname = o2be_name::narrow_and_produce_unambiguous_name(decl,
 								  used_in);
@@ -705,6 +882,9 @@ o2be_array::produce_typedef_in_union(fstream &s, const char *tname,
       elm_fqname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(used_in);
       break;
 #endif
+    case AST_Decl::NT_pre_defined:
+      elm_fqname = o2be_predefined_type::narrow_from_decl(decl)->fieldMemberTypeName();
+      break;
     default:
       elm_fqname = o2be_name::narrow_and_produce_unambiguous_name(decl,
 								  used_in);

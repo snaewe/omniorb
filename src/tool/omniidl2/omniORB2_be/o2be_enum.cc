@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.6  1998/01/27 16:35:19  ewc
+   Added support for type any and TypeCode
+
   Revision 1.5  1997/12/09 19:55:06  sll
   *** empty log message ***
 
@@ -49,6 +52,7 @@ o2be_enum::o2be_enum(UTL_ScopedName *n, UTL_StrList *p)
 {
   pd_hdr_produced_in_field = I_FALSE;
   pd_skel_produced_in_field = I_FALSE;
+  set_recursive_seq(I_FALSE);
 }
 
 void
@@ -134,6 +138,30 @@ o2be_enum::produce_hdr(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    // TypeCode_ptr declaration
+    IND(s); s << ((defined_in() == idl_global->root()) ? "extern " :
+		  "static ") 
+	      << "const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+
+    // any insertion operator (inline definition)
+    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+	      << "inline void operator<<=(CORBA::Any& _a, " 
+	      << uqname() << " _s) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
+    IND(s); s << tcname() << "->NP_fillInit(_0RL_mbuf);\n";
+    IND(s); s << "_s >>= _0RL_mbuf;\n";
+    IND(s); s << "_a.NP_replaceData(" << tcname() << ",_0RL_mbuf);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // any extraction operator (declaration)
+    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+	      << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+	      << uqname() << "& _s);\n\n";
+  }
+
   produce_seq_hdr_if_defined(s);
   return;
 }
@@ -141,6 +169,34 @@ o2be_enum::produce_hdr(fstream &s)
 void
 o2be_enum::produce_skel(fstream &s)
 {
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    // Produce code for types any and TypeCode
+    this->produce_typecode_skel(s);
+    
+    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+	      << "_01RL_" << _fqtcname() << ";\n\n";
+    
+    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+	      << fqname() << "& _s) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
+    IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
+	      << ",1)) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return 0;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "else {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
+    IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
+    IND(s); s << "_s <<= _0RL_tmp_mbuf;\n";
+    IND(s); s << "return 1;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+  } 
   return;
 }
 
@@ -151,6 +207,32 @@ o2be_enum::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 	    << " " << tdef->uqname() << ";\n";
 }
 
+void
+o2be_enum::produce_typecode_skel(fstream &s)
+{
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
+    s << "#define " << "__01RL_" << _fqtcname() << "__\n";
+    IND(s); s << "static char *_02RL_" << _fqtcname() << "[] = { ";
+    unsigned int valueCount = 0;
+    {
+      UTL_ScopeActiveIterator i(this, IK_decls);
+      while (!(i.is_done())) {
+	s << "\"" << o2be_name::narrow_and_produce_uqname(i.item()) << "\"";
+	valueCount++;
+	i.next();
+	if (!(i.is_done()))
+	  s << ", ";
+      }
+    }
+    s << "};\n";
+
+    IND(s); s << "static CORBA::TypeCode _01RL_" << _fqtcname() << "(\""
+	      << repositoryID() << "\", \"" << uqname() << "\", "
+	      << "_02RL_" << _fqtcname() << ", " << valueCount << ");\n";
+    s << "#endif\n\n";
+  }
+}
 
 // Narrowing
 IMPL_NARROW_METHODS1(o2be_enum, AST_Enum)
@@ -181,6 +263,10 @@ o2be_enum_val::o2be_enum_val(unsigned long v,
   strcpy(buf,_scopename());
   strcat(buf,uqname());
   set__fqname(buf);
+
+  set_tcname("");
+  set_fqtcname("");
+  set__fqtcname("");
 }
 
 
