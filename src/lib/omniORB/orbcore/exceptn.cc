@@ -198,9 +198,10 @@ _OMNI_NS(omniExHelper)::strip(const char* fn)
   { \
     if( omniORB::trace(10) ) { \
       omniORB::logger l; \
-      l << "throw " #name << " from " << strip(file) << ":" << line << '\n'; \
+      l << "throw " #name << " from " << strip(file) << ":" << line \
+        << " (" << omniORB::logger::exceptionStatus(status,minor) << ")\n"; \
     } \
-    throw CORBA::name(minor, status); \
+    throw CORBA::name(minor,status); \
   }
 
 OMNIORB_FOR_EACH_SYS_EXCEPTION(STD_EXCEPTION)

@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2001/05/11 14:25:53  sll
+  Added operator for omniORB::logger to report system exception status and
+  minor code.
+
   Revision 1.1.4.8  2001/05/01 17:15:17  sll
   Non-copy input now works correctly.
 
@@ -301,15 +305,18 @@ giopStream::CommFailure::_raise(CORBA::ULong minor,
 				const char* filename,
 				CORBA::ULong linenumber)
 {
+  if (status != CORBA::COMPLETED_NO) retry = 0;
 #ifndef OMNIORB_NO_EXCEPTION_LOGGING
   if( omniORB::trace(10) ) {
     omniORB::logger l;
     l << "throw giopStream::CommFailure from "
       << omniExHelper::strip(filename) 	
-      << ":" << linenumber << '\n';
+      << ":" << linenumber 
+      << "(" << retry << ","
+      << omniORB::logger::exceptionStatus(status,minor)
+      << ")\n";
   }
 #endif
-  if (status != CORBA::COMPLETED_NO) retry = 0;
   throw CommFailure(minor,status,retry,filename,linenumber);
 }
 

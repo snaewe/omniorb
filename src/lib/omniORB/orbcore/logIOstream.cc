@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.8.2.3  2001/05/11 14:25:53  sll
+  Added operator for omniORB::logger to report system exception status and
+  minor code.
+
   Revision 1.8.2.2  2000/09/27 17:35:49  sll
   Updated include/omniORB3 to include/omniORB4
 
@@ -320,6 +324,49 @@ omniORB::logger::operator<<(omniObjKey& k)
   return *this;
 }
 
+
+omniORB::logger&
+omniORB::logger::operator<<(const omniORB::logger::exceptionStatus& ex)
+{
+  switch (ex.status) {
+  case CORBA::COMPLETED_YES:
+    *this << "YES,";
+    break;
+  case CORBA::COMPLETED_NO:
+    *this << "NO,";
+    break;
+  case CORBA::COMPLETED_MAYBE:
+    *this << "MAYBE,";
+    break;
+  }
+  reserve(30);
+  sprintf(pd_p, "0x%08x", (int)ex.minor);
+  pd_p += strlen(pd_p);
+  return *this;
+}
+
+
+omniORB::logger&
+omniORB::logger::operator<<(const CORBA::SystemException& ex)
+{
+  int sz;
+  *this << ex._NP_repoId(&sz);
+  switch (ex.completed()) {
+  case CORBA::COMPLETED_YES:
+    *this << ",YES,";
+    break;
+  case CORBA::COMPLETED_NO:
+    *this << ",NO,";
+    break;
+  case CORBA::COMPLETED_MAYBE:
+    *this << ",MAYBE,";
+    break;
+  }
+  reserve(30);
+  sprintf(pd_p, "0x%08x", (int)ex.minor());
+  pd_p += strlen(pd_p);
+  return *this;
+}
 
 void
 omniORB::logger::flush()

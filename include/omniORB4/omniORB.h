@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2001/05/11 14:25:54  sll
+  Added operator for omniORB::logger to report system exception status and
+  minor code.
+
   Revision 1.2.2.5  2001/04/18 17:50:44  sll
   Big checkin with the brand new internal APIs.
   Scoped where appropriate with the omni namespace.
@@ -898,6 +902,21 @@ _CORBA_MODULE_BEG
     logger& operator<<(omniLocalIdentity*);
     logger& operator<<(omniIdentity*);
     logger& operator<<(omniObjKey&);
+
+    logger& operator<<(const CORBA::SystemException&);
+
+    class exceptionStatus {
+    public:
+      exceptionStatus(CORBA::CompletionStatus s, CORBA::ULong m) :
+	status(s), minor(m) {}
+      
+      CORBA::CompletionStatus status;
+      CORBA::ULong            minor;
+    private:
+      exceptionStatus();
+    };
+
+    logger& operator<<(const exceptionStatus&);
 
     void flush();
     // Flushes the logger -- it can then be re-used for another
