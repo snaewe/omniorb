@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.20  2004/04/19 09:29:40  dgrisby
+  Only close pipes if they were opened successfully.
+
   Revision 1.1.2.19  2004/04/08 10:02:20  dgrisby
   In thread pool mode, close connections that will not be selectable.
 
@@ -266,8 +269,8 @@ SocketCollection::~SocketCollection()
 #  ifdef __vxWorks__
   // *** How do we clean up on vxWorks?
 #  else
-  close(pd_pipe_read);
-  close(pd_pipe_write);
+  if (pd_pipe_read > 0)  close(pd_pipe_read);
+  if (pd_pipe_write > 0) close(pd_pipe_write);
 #  endif
 #endif
 }
@@ -639,7 +642,7 @@ SocketCollection::removeSocket(SocketHandle_t sock)
 /////////////////////////////////////////////////////////////////////////
 SocketLink*
 SocketCollection::findSocket(SocketHandle_t sock,
-				CORBA::Boolean hold_lock) {
+			     CORBA::Boolean hold_lock) {
 
   if (!hold_lock) pd_fdset_lock.lock();
 
