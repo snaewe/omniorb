@@ -1,3 +1,15 @@
+Wed Feb 23 12:05:39 GMT 2005 dgrisby
+====================================
+
+- Another race in setSelectable with connection shutdown. Thanks
+  Peter Klotz.
+
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+
+
 Fri Feb 18 11:57:03 GMT 2005 dgrisby
 ====================================
 

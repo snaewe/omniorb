@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2005/02/23 12:27:30  dgrisby
+  Another race in setSelectable with connection shutdown. Thanks Peter
+  Klotz.
+
   Revision 1.1.2.9  2004/04/08 10:02:22  dgrisby
   In thread pool mode, close connections that will not be selectable.
 
@@ -283,6 +287,7 @@ unixConnection::unixConnection(SocketHandle_t sock,
 
 /////////////////////////////////////////////////////////////////////////
 unixConnection::~unixConnection() {
+  pd_belong_to->clearSelectable(pd_socket);
   pd_belong_to->removeSocket(pd_socket);
   CLOSESOCKET(pd_socket);
 }
