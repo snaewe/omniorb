@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.3  2000/05/31 18:03:38  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+# Calling an exception "e" resulted in a name clash (and resultant C++
+# compile failure)
+#
 # Revision 1.5.2.2  2000/03/20 11:50:25  djs
 # Removed excess buffering- output templates have code attached which is
 # lazily evaluated when required.
@@ -100,7 +106,7 @@ def fragment(stream, tree):
 def run(tree):
     # create somewhere to put the output
     skel_filename = config.basename() + config.skelsuffix()
-    stream = util.LazyStream(open(skel_filename, "w"), 2)
+    stream = util.Stream(open(skel_filename, "w"), 2)
 
     # clear all state
     mangler.__init__()

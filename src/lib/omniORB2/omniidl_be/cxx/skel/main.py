@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.8  2000/05/31 18:03:38  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+# Calling an exception "e" resulted in a name clash (and resultant C++
+# compile failure)
+#
 # Revision 1.27.2.7  2000/05/05 16:50:51  djs
 # Existing workaround for MSVC5 scoping problems extended to help with
 # base class initialisers. Instead of using the fully qualified or unambiguous
@@ -269,8 +275,8 @@ def visitInterface(node):
     for i in all_inherits:
         inherits_fqname = id.Name(i.scopedName()).fullyQualify()
         inherited_repoIDs = inherited_repoIDs + "\
-        if( !strcmp(id, " + inherits_fqname + "::_PD_repoId) )\n\
-          return (" + inherits_fqname + "_ptr) this;\n"
+if( !strcmp(id, " + inherits_fqname + "::_PD_repoId) )\n\
+  return (" + inherits_fqname + "_ptr) this;\n"
 
     for i in node.inherits():
         inherits_name = id.Name(i.scopedName())
@@ -403,8 +409,8 @@ def visitInterface(node):
         if operation.contexts() != []:
             objref_args.append("CORBA::Context_ptr _ctxt")
             context.out("""\
-  omniCallDescriptor::ContextInfo _ctxt_info(_ctxt, @context_descriptor@, @n@);
-  _call_desc.set_context_info(&_ctxt_info);""",
+omniCallDescriptor::ContextInfo _ctxt_info(_ctxt, @context_descriptor@, @n@);
+_call_desc.set_context_info(&_ctxt_info);""",
                         context_descriptor = context_descriptor,
                         n = str(len(operation.contexts())))
 
@@ -783,10 +789,12 @@ def visitUnion(node):
                         discrim_value = "0000"
                     
                     stream.out("case " + str(discrim_value) + ":\n")
+                    stream.inc_indent()
                     size_calc = skutil.sizeCalculation(environment, caseType,
                                                        decl, "_msgsize",
                                                        "pd_" + decl_name)
                     stream.out(size_calc)
+                    stream.dec_indent()
                     stream.out("\nbreak;\n")
         if booleanWrap:
             stream.out(template.union_default_bool)
@@ -854,14 +862,18 @@ def visitUnion(node):
                 unmarshal_cases.out("case " + discrim_value + ":")
 
                 marshal_cases.out("case " + discrim_value + ":")
+                marshal_cases.inc_indent()
                 skutil.marshall_struct_union(marshal_cases, environment,
                                              caseType, decl, "pd_" + decl_name)
+                marshal_cases.dec_indent()
                 marshal_cases.out("break;")
 
+            unmarshal_cases.inc_indent()
             unmarshal_cases.out("pd__default = " + str(isDefault) + ";")
             skutil.unmarshall_struct_union(unmarshal_cases, environment,
                                            caseType, decl, "pd_" + decl_name,
                                            can_throw_marshall = 1)
+            unmarshal_cases.dec_indent()
             unmarshal_cases.out("break;")
 
     if not(hasDefault) and not(exhaustive):

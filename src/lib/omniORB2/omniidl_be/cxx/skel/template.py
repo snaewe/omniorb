@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.5  2000/05/31 18:03:40  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+# Calling an exception "e" resulted in a name clash (and resultant C++
+# compile failure)
+#
 # Revision 1.1.2.4  2000/05/05 16:50:53  djs
 # Existing workaround for MSVC5 scoping problems extended to help with
 # base class initialisers. Instead of using the fully qualified or unambiguous
@@ -123,7 +129,7 @@ interface_class = """\
   static @objref_name@* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new @objref_name@;
+  if( !_the_nil_ptr )  _the_nil_ptr = new @objref_name@;
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -332,13 +338,13 @@ giop_s.set_user_exceptions(_user_exns, @n@);
 
 interface_operation_try = """\
 #ifndef HAS_Cplusplus_catch_exception_by_base
-    try {
+try {
 #endif
 """
 
 interface_operation_catch_start = """\
 #ifndef HAS_Cplusplus_catch_exception_by_base
-    }
+}
 """
 interface_operation_catch_exn = """\
 catch(@exname@& ex) {
@@ -626,12 +632,12 @@ CORBA::Exception::insertExceptionToAnyNCP @scoped_name@::insertToAnyFnNCP = 0;
 
 void @scoped_name@::_raise() { throw *this; }
 
-@scoped_name@* @scoped_name@::_downcast(CORBA::Exception* e) {
-  return (@name@*) _NP_is_a(e, \"Exception/UserException/@scoped_name@\");
+@scoped_name@* @scoped_name@::_downcast(CORBA::Exception* _e) {
+  return (@name@*) _NP_is_a(_e, \"Exception/UserException/@scoped_name@\");
 }
 
-const @scoped_name@* @scoped_name@::_downcast(const CORBA::Exception* e) {
-  return (const @name@*) _NP_is_a(e, \"Exception/UserException/@scoped_name@\");
+const @scoped_name@* @scoped_name@::_downcast(const CORBA::Exception* _e) {
+  return (const @name@*) _NP_is_a(_e, \"Exception/UserException/@scoped_name@\");
 }
 
 const char* @scoped_name@::_PD_repoId = \"@repoID@\";
