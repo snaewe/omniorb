@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.21  1998/08/14 13:56:21  sll
+ Added HAS_pch if the compiler is DEC C++ v6.0
+
  Revision 1.20  1998/08/11 11:44:42  sll
  Added #include <stdlib.h> for pre 7.x VMS platform.
 
@@ -103,6 +106,7 @@
 #     endif
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Std_Namespace
+#     define HAS_pch
 #  endif
 
 #elif defined(__SUNPRO_CC) 
