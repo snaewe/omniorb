@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.3  2000/03/10 16:16:32  djs
+# Improper handling of scopes when performing name prefixes in ObjRef_OUT
+# arguments fixed.
+#
 # Revision 1.30.2.2  2000/03/09 15:21:41  djs
 # Better handling of internal compiler exceptions (eg attempts to use
 # wide string types)
@@ -560,9 +564,14 @@ def operationArgumentType(type, environment, virtualFn = 0):
                          param_type + "_ptr",
                          param_type + "_ptr&",
                          param_type + "_ptr&" ]
+            
+            scopedName = deref_type.decl().scopedName()
+            objref_scopedName = scope(scopedName) + \
+                                ["_objref_" + name(scopedName)]
+            objref_name = environment.nameToString(objref_scopedName)
             return [ param_type + "_ptr",
                      param_type + "_ptr",
-                     "_CORBA_ObjRef_OUT_arg<_objref_" + param_type + "," + \
+                     "_CORBA_ObjRef_OUT_arg<" + objref_name + "," + \
                      param_type + "_Helper >",
                      param_type + "_ptr&" ]
         elif deref_type.kind() == idltype.tk_TypeCode:
@@ -627,11 +636,14 @@ def operationArgumentType(type, environment, virtualFn = 0):
                      "CORBA::Object_OUT_arg",
                      "CORBA::Object_INOUT_arg" ]
         param_type = environment.principalID(deref_type)
+        scopedName = deref_type.decl().scopedName()
+        objref_scopedName = scope(scopedName) + ["_objref_" + name(scopedName)]
+        objref_name = environment.nameToString(objref_scopedName)
         return [ param_type + "_ptr",
                  param_type + "_ptr",
-                 "_CORBA_ObjRef_OUT_arg<_objref_" + param_type + "," + \
+                 "_CORBA_ObjRef_OUT_arg<" + objref_name + "," + \
                  param_type + "_Helper >",
-                 "_CORBA_ObjRef_INOUT_arg<_objref_" + param_type + "," + \
+                 "_CORBA_ObjRef_INOUT_arg<" + objref_name + "," + \
                  param_type + "_Helper >" ,
                  param_type + "_Helper >" ]                 
                  #param_type + "_ptr&" ]
