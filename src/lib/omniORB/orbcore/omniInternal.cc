@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.5  2000/11/03 19:14:03  sll
+  Use _CORBA_Unbounded_Sequence_Octet instead of _CORBA_Unbounded_Sequence__Octet
+
   Revision 1.2.2.4  2000/10/09 16:22:47  sll
   Updated the usage of omniIOR duplicate and release to conform to the
   current locking requirement.
@@ -124,7 +127,7 @@ using omniORB::operator==;
 const CORBA::Char                omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
 omni_tracedmutex*                omni::internalLock = 0;
 omni_tracedmutex*                omni::poRcLock = 0;
-_CORBA_Unbounded_Sequence__Octet omni::myPrincipalID;
+_CORBA_Unbounded_Sequence_Octet  omni::myPrincipalID;
 const omni::alignment_t          omni::max_alignment = ALIGN_8;
 
 int                              omni::remoteInvocationCount = 0;
