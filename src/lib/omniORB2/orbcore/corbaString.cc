@@ -24,11 +24,14 @@
 //
 //
 // Description:
-//      Implementation of the String interface
+//    Implementation of the String interface.
 //	
 
 /*
   $Log$
+  Revision 1.13  1999/04/21 11:17:43  djr
+  Strings now defined outside CORBA scope, and typedefed. New sequence types.
+
   Revision 1.12  1999/03/11 16:25:52  djr
   Updated copyright notice
 
@@ -68,6 +71,12 @@
  */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
+#include <string.h>
 
 
 #define ALLOC_BYTES(len)  new char[(int)(len)]
@@ -110,7 +119,7 @@ CORBA::string_dup(const char* p)
 ///////////////////////////// String_var /////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::String_var::String_var(const CORBA::String_member& s)
+_CORBA_String_var::_CORBA_String_var(const _CORBA_String_member& s)
 {
   if ((const char*)s) {
     _data = ALLOC_BYTES(strlen(s) + 1);
@@ -121,8 +130,8 @@ CORBA::String_var::String_var(const CORBA::String_member& s)
 }
 
 
-CORBA::String_var&
-CORBA::String_var::operator= (const CORBA::String_member& s)
+_CORBA_String_var&
+_CORBA_String_var::operator= (const _CORBA_String_member& s)
 {
   if (_data) {
     FREE_BYTES(_data);
@@ -137,7 +146,7 @@ CORBA::String_var::operator= (const CORBA::String_member& s)
 
 
 char &
-CORBA::String_var::operator[] (CORBA::ULong index) 
+_CORBA_String_var::operator[] (CORBA::ULong index) 
 {
   if (!_data || (CORBA::ULong)strlen(_data) < index) {
     _CORBA_bound_check_error();	// never return
@@ -147,7 +156,7 @@ CORBA::String_var::operator[] (CORBA::ULong index)
 
 
 char
-CORBA::String_var::operator[] (CORBA::ULong index) const
+_CORBA_String_var::operator[] (CORBA::ULong index) const
 {
   if (!_data || (CORBA::ULong)strlen(_data) < index) {
     _CORBA_bound_check_error();	// never return
@@ -155,9 +164,12 @@ CORBA::String_var::operator[] (CORBA::ULong index) const
   return _data[index];
 }
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// String_member ///////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 void
-CORBA::String_member::operator>>= (NetBufferedStream& s) const
+_CORBA_String_member::operator >>= (NetBufferedStream& s) const
 {
   if( _ptr ) {
     CORBA::ULong _len = strlen((char*)_ptr) + 1;
@@ -175,7 +187,7 @@ CORBA::String_member::operator>>= (NetBufferedStream& s) const
 
 
 void
-CORBA::String_member::operator<<= (NetBufferedStream& s)
+_CORBA_String_member::operator <<= (NetBufferedStream& s)
 {
   if( _ptr ) {
     FREE_BYTES(_ptr);
@@ -193,14 +205,12 @@ CORBA::String_member::operator<<= (NetBufferedStream& s)
   if( len ) {
     try {
       s.get_char_array((CORBA::Char*)p, len);
+      if( p[len - 1] != '\0' )
+        throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
     }
     catch(...) {
       FREE_BYTES(p);
       throw;
-    }
-    if( p[len - 1] != '\0' ) {
-      FREE_BYTES(p);
-      throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
     }
   }
   else  *p = '\0';
@@ -210,7 +220,7 @@ CORBA::String_member::operator<<= (NetBufferedStream& s)
 
 
 void
-CORBA::String_member::operator>>= (MemBufferedStream& s) const
+_CORBA_String_member::operator >>= (MemBufferedStream& s) const
 {
   if( _ptr ) {
     CORBA::ULong _len = strlen((char*)_ptr) + 1;
@@ -228,7 +238,7 @@ CORBA::String_member::operator>>= (MemBufferedStream& s) const
 
 
 void
-CORBA::String_member::operator<<= (MemBufferedStream& s)
+_CORBA_String_member::operator <<= (MemBufferedStream& s)
 {
   if( _ptr ) {
     FREE_BYTES(_ptr);
@@ -237,8 +247,7 @@ CORBA::String_member::operator<<= (MemBufferedStream& s)
 
   CORBA::ULong len;
   len <<= s;
-  if( !len || s.RdMessageUnRead() < len )
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+  if( !len && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(1);
 
   char* p = ALLOC_BYTES(len);
   if( !p )  throw CORBA::NO_MEMORY(0, CORBA::COMPLETED_MAYBE);
@@ -254,18 +263,182 @@ CORBA::String_member::operator<<= (MemBufferedStream& s)
 
 
 size_t
-CORBA::String_member::NP_alignedSize(size_t initialoffset) const
+_CORBA_String_member::NP_alignedSize(size_t initialoffset) const
 {
   size_t alignedsize = omni::align_to(initialoffset,omni::ALIGN_4);
   if (!_ptr) {
     alignedsize += 4 + 1;
   }
   else {
-    alignedsize += 4 + strlen((char*)_ptr) + 1;
+    alignedsize += 5 + strlen((char*)_ptr);
   }
   return alignedsize;
 }
 
+//////////////////////////////////////////////////////////////////////
+////////////////// _CORBA_Unbounded_Sequence__String /////////////////
+//////////////////////////////////////////////////////////////////////
+
+_CORBA_Unbounded_Sequence__String::
+_CORBA_Unbounded_Sequence__String(_CORBA_ULong max,
+				  _CORBA_ULong length,
+				  char**       value,
+				  _CORBA_Boolean release)
+  : pd_max(max), pd_len(length), pd_buf(new _CORBA_String_member[max])
+{
+  if( release ) {
+    for( _CORBA_ULong i = 0; i < length; i++ )  pd_buf[i]._ptr = value[i];
+    delete[] value;
+  }
+  else {
+    for( _CORBA_ULong i = 0; i < length; i++ )
+      pd_buf[i] = (const char*) value[i];
+  }
+}
+
+
+_CORBA_Unbounded_Sequence__String&
+_CORBA_Unbounded_Sequence__String::operator= (
+			      const _CORBA_Unbounded_Sequence__String& s)
+{
+  if( pd_max < s.pd_max ) {
+    delete[] pd_buf;
+    pd_buf = new _CORBA_String_member[s.pd_max];
+  }
+  pd_max = s.pd_max;
+  pd_len = s.pd_len;
+  for( _CORBA_ULong i = 0; i < pd_len; i++ )  pd_buf[i] = s.pd_buf[i];
+  return *this;
+}
+
+
+void
+_CORBA_Unbounded_Sequence__String::length(_CORBA_ULong len)
+{
+  if( len > pd_max ) {
+    _CORBA_String_member* newbuf = new _CORBA_String_member[len];
+    for( _CORBA_ULong i = 0; i < pd_len; i++ ) {
+      newbuf[i]._ptr = pd_buf[i]._ptr;
+      pd_buf[i]._ptr = 0;
+    }
+    pd_max = len;
+    delete[] pd_buf;
+    pd_buf = newbuf;
+  }
+  // If we've shrunk we need to clear the entries at the top.
+  for( _CORBA_ULong i = len; i < pd_len; i++ )  pd_buf[i] = (char*) 0;
+  pd_len = len;
+}
+
+
+size_t
+_CORBA_Unbounded_Sequence__String::NP_alignedSize(size_t size) const
+{
+  size = omni::align_to(size, omni::ALIGN_4) + 4;
+
+  for( _CORBA_ULong i = 0; i < pd_len; i++ ) {
+    size = omni::align_to(size, omni::ALIGN_4);
+    if( pd_buf[i]._ptr )  size += strlen(pd_buf[i]) + 5;
+    else                  size += 5;
+  }
+
+  return size;
+}
+
+
+template<class buf_t>
+inline void marshal_ss(const _CORBA_String_member* pd_buf,
+		       _CORBA_ULong pd_len, buf_t& s)
+{
+  _CORBA_ULong(pd_len) >>= s;
+
+  for( _CORBA_ULong i = 0; i < pd_len; i++ ) {
+    char* p = pd_buf[i]._ptr;
+
+    if( p ) {
+      _CORBA_ULong len = strlen(p) + 1;
+      len >>= s;
+      s.put_char_array((CORBA::Char*) p, len);
+    }
+    else {
+      if( omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(0);
+      CORBA::ULong(1) >>= s;
+      CORBA::Char('\0') >>= s;
+    }
+  }
+}
+
+
+void
+_CORBA_Unbounded_Sequence__String::operator >>= (NetBufferedStream& s) const
+{
+  marshal_ss(pd_buf, pd_len, s);
+}
+
+
+void
+_CORBA_Unbounded_Sequence__String::operator >>= (MemBufferedStream& s) const
+{
+  marshal_ss(pd_buf, pd_len, s);
+}
+
+
+template<class buf_t>
+inline void unmarshal_ss(_CORBA_String_member* pd_buf,
+			 _CORBA_ULong slen, buf_t& s)
+{
+  for( _CORBA_ULong i = 0; i < slen; i++ ) {
+    char*& p = pd_buf[i]._ptr;
+
+    if( p ) { FREE_BYTES(p); p = 0; }
+
+    _CORBA_ULong len;
+    len <<= s;
+    if( !len && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(1);
+
+    _CORBA_ULong nbytes = len ? len : 1;
+    char* ps = ALLOC_BYTES(nbytes);
+
+    if( len ) {
+      try {
+	s.get_char_array((CORBA::Char*) ps, len);
+	if( ps[len - 1] != '\0' )
+          throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+      }
+      catch(...) {
+	FREE_BYTES(ps);
+	throw;
+      }
+    }
+    else *ps = '\0';
+
+    p = ps;
+  }
+}
+
+
+void
+_CORBA_Unbounded_Sequence__String::operator <<= (NetBufferedStream& s)
+{
+  _CORBA_ULong slen;
+  slen <<= s;
+  length(slen);
+  unmarshal_ss(pd_buf, slen, s);
+}
+
+
+void
+_CORBA_Unbounded_Sequence__String::operator <<= (MemBufferedStream& s)
+{
+  _CORBA_ULong slen;
+  slen <<= s;
+  length(slen);
+  unmarshal_ss(pd_buf, slen, s);
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 void 
 _CORBA_null_string_ptr(_CORBA_Boolean unmarshal)
