@@ -11,13 +11,13 @@ CXXSRCS = threadcancel.cc diner.cc
 INCLUDES = $(OMNITHREADDEFINE)
 
 
-all:: diner
+all:: ProgramTargetName(diner)
 
-NormalCplusplusProgramTarget(diner,diner.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),$(OMNIEXTRASYSLIB))
+NormalCplusplusProgramTarget(diner,diner.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),$(OMNIEXTRASYSLIB)) 
 
 InstallProgram(diner,$(BINDIR))
 
-all:: threadcancel
+all:: ProgramTargetName(threadcancel)
 
 NormalCplusplusProgramTarget(threadcancel,threadcancel.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),$(OMNIEXTRASYSLIB))
 
