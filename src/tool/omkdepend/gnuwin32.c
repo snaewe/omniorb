@@ -94,11 +94,17 @@ char *TranslateFileNameD2U(char *in, int offset)
      resp.   to /[A-Za-z] on mingw
    */
   if (strlen(out) >= 2 && out[1] == ':') {
-    char* newout = malloc(strlen(out) + 2);
+    char* newout;
     int io = 0;
+#ifdef __MINGW32__
+    newout = malloc(strlen(out) + 1);
     newout[io++] = '/';
-#ifndef __MINGW32__
-    newout[io++] = '/';
+    newout[io++] = out[0];
+    newout[io++] = '\0';
+#else
+    newout = malloc(strlen(out) + 11);
+    strcpy(newout, "/cygdrive/");
+    io = strlen(newout);
 #endif
     newout[io++] = out[0];
     newout[io++] = '\0';

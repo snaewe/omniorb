@@ -7,13 +7,14 @@
 // Usage: anyExample_clt <object reference>
 //
 
+#include <anyExample.hh>
+
 #ifdef HAVE_STD
 #  include <iostream>
    using namespace std;
 #else
 #  include <iostream.h>
 #endif
-#include <anyExample.hh>
 
 
 static void invokeOp(anyExample_ptr& tobj, const CORBA::Any& a)

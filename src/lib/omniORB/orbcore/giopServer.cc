@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.5  2005/03/02 12:39:17  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.25.2.4  2005/03/02 12:10:49  dgrisby
   setSelectable / Peek fixes.
 
@@ -162,14 +165,20 @@ CORBA::ULong   orbParameters::maxServerThreadPoolSize        = 100;
 //
 //   Valid values = (n >= 1) 
 
-CORBA::Boolean orbParameters::threadPoolWatchConnection      = 1;
-//   1 means that after dispatching an upcall in thread pool mode, the
-//   thread should watch the connection for a short time before
-//   returning to the pool. This leads to less thread switching for
-//   series of calls from a single client, but is less fair if there
-//   are concurrent clients.
+CORBA::ULong   orbParameters::threadPoolWatchConnection      = 1;
+//   After dispatching an upcall in thread pool mode, the thread that
+//   has just performed the call can watch the connection for a short
+//   time before returning to the pool. This leads to less thread
+//   switching for a series of calls from a single client, but is less
+//   fair if there are concurrent clients. The connection is watched
+//   if the number of threads concurrently handling the connection is
+//   <= the value of this parameter. i.e. if the parameter is zero,
+//   the connection is never watched; if it is 1, the last thread
+//   managing a connection watches it; if 2, the connection is still
+//   watched if there is one other thread still in an upcall for the
+//   connection, and so on.
 //
-//  Valid values = 0 or 1
+//  Valid values = (n >= 0)
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -992,14 +1001,14 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       // If there are other workers for this connection, or there are
       // too many temporary workers, let this worker finish.
 
-      if (conn->pd_n_workers > 1 ||
+      if (conn->pd_n_workers > orbParameters::threadPoolWatchConnection ||
 	  pd_n_temporary_workers > orbParameters::maxServerThreadPoolSize) {
 
 	select_and_return = 1;
       }
     }
 
-    if (orbParameters::threadPoolWatchConnection && !select_and_return) {
+    if (!select_and_return) {
       // Call Peek(). This thread will be used for a short time to
       // monitor the connection. If the connection is available for
       // reading, the callback function peekCallBack is called. We can
@@ -1339,24 +1348,24 @@ public:
 
   threadPoolWatchConnectionHandler() : 
     orbOptions::Handler("threadPoolWatchConnection",
-			"threadPoolWatchConnection = 0 or 1",
+			"threadPoolWatchConnection = n >= 0",
 			1,
-			"-ORBthreadPoolWatchConnection < 0 | 1 >") {}
+			"-ORBthreadPoolWatchConnection < n >= 0 >") {}
 
 
   void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
-    CORBA::Boolean v;
-    if (!orbOptions::getBoolean(value,v)) {
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
       throw orbOptions::BadParam(key(),value,
-				 orbOptions::expect_boolean_msg);
+				 orbOptions::expect_ulong_msg);
     }
     orbParameters::threadPoolWatchConnection = v;
   }
 
   void dump(orbOptions::sequenceString& result) {
-    orbOptions::addKVBoolean(key(),orbParameters::threadPoolWatchConnection,
-			     result);
+    orbOptions::addKVULong(key(),orbParameters::threadPoolWatchConnection,
+			   result);
   }
 };
 

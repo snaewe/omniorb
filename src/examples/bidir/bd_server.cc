@@ -1,5 +1,11 @@
-#include <iostream.h>
 #include <echo_callback.hh>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 
 static CORBA::ORB_ptr orb;

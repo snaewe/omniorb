@@ -18,13 +18,14 @@
 //              Echo  [object]  kind [Object]
 //
 
+#include <echo.hh>
+
 #ifdef HAVE_STD
 #  include <iostream>
    using namespace std;
 #else
 #  include <iostream.h>
 #endif
-#include <echo.hh>
 
 static CORBA::Object_ptr getObjectReference(CORBA::ORB_ptr orb);
 

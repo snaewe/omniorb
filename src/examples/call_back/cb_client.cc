@@ -1,3 +1,5 @@
+#include <echo_callback.hh>
+
 #ifdef HAVE_STD
 #  include <iostream>
    using namespace std;
@@ -5,7 +7,6 @@
 #  include <iostream.h>
 #endif
 #include <stdlib.h>
-#include <echo_callback.hh>
 
 
 // Implementation of cb::CallBack.

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/03/02 12:39:38  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:03:49  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -116,6 +119,8 @@ class BiDirServerRope : public giopRope {
   // All ropes created by addRope are linked together by this list.
 
   virtual void decrRefCount();
+
+  virtual ~BiDirServerRope();
 
  protected:
   virtual void realIncrRefCount();

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2005/03/02 12:39:16  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.4  2005/03/02 12:10:48  dgrisby
   setSelectable / Peek fixes.
 
@@ -291,6 +294,7 @@ unixConnection::unixConnection(SocketHandle_t sock,
 
 /////////////////////////////////////////////////////////////////////////
 unixConnection::~unixConnection() {
+  clearSelectable();
   pd_belong_to->removeSocket(this);
   CLOSESOCKET(pd_socket);
 }

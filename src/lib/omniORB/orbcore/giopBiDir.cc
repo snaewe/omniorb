@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/03/02 12:39:18  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.2  2005/01/06 23:10:15  dgrisby
   Big merge from omni4_0_develop.
 
@@ -247,6 +250,18 @@ BiDirServerRope::BiDirServerRope(giopStrand* strand, giopAddress* addr) :
   pd_oneCallPerConnection = 0;
   strand->RopeLink::insert(pd_strands);
 }
+
+////////////////////////////////////////////////////////////////////////
+BiDirServerRope::~BiDirServerRope()
+{
+  giopAddressList::const_iterator i, last;
+  i    = pd_redirect_addresses.begin();
+  last = pd_redirect_addresses.end();
+  for (; i != last; i++) {
+    delete (*i);
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 BiDirServerRope*
@@ -559,7 +574,8 @@ BiDirClientRope::acquireClient(const omniIOR* ior,
 /////////////////////////////////////////////////////////////////////////////
 static
 CORBA::Boolean
-getBiDirServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info) {
+getBiDirServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
+{
 
   if (!orbParameters::acceptBiDirectionalGIOP) {
     // XXX If the ORB policy is "don't support bidirectional", don't bother 
@@ -572,7 +588,8 @@ getBiDirServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info) {
   giopStrand& strand = (giopStrand&)((giopStream&)info.giop_s);
 
   if (ver.minor != 2 || strand.isClient()) {
-    // Only parse service context if the GIOP version is 1.2, on the server side
+    // Only parse service context if the GIOP version is 1.2, on the
+    // server side
     return 1;
   }
 
@@ -694,7 +711,13 @@ getBiDirServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info) {
 	}
 
 	BiDirServerRope* r = BiDirServerRope::addRope(&strand,addrList);
-
+      }
+      
+      giopAddressList::const_iterator i, last;
+      i    = addrList.begin();
+      last = addrList.end();
+      for (; i != last; i++) {
+	delete (*i);
       }
     }
   }

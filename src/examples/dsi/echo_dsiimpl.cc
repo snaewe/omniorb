@@ -12,13 +12,15 @@
 //        eg2_clt or echo_diiclt.
 //
 
+#include <omniORB4/CORBA.h>
+
 #ifdef HAVE_STD
 #  include <iostream>
    using namespace std;
 #else
 #  include <iostream.h>
 #endif
-#include <omniORB4/CORBA.h>
+
 
 CORBA::ORB_var orb;
 

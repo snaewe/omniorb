@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2005/03/02 12:39:17  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.4  2005/03/02 12:10:49  dgrisby
   setSelectable / Peek fixes.
 
@@ -364,6 +367,7 @@ sslConnection::sslConnection(SocketHandle_t sock,::SSL* ssl,
 /////////////////////////////////////////////////////////////////////////
 sslConnection::~sslConnection() {
 
+  clearSelectable();
   pd_belong_to->removeSocket(this);
 
   if(pd_ssl != 0) {
