@@ -237,14 +237,25 @@ endif
 
 # Note that the DLL version is being used, so link to omniorb3_rt.lib
 
+OMNIORB_VERSION = 3.0.0
+OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
+OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
+OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
+
 lib_depend := $(patsubst %,$(DLLPattern),omniORB300)
 omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
 lib_depend := $(patsubst %,$(DLLPattern),omniDynamic300)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
+ifndef OpenNTBuildTree
+# GNU-WIN32 wrapper
+OMNIORB_IDL_ONLY = $(BASE_OMNI_TREE)/$(BINDIR)/oidlwrapper.exe -gnuwin32 -bcxx -Wbh=.hh -Wbs=SK.cc
+else
+# OpenNT wrapper
+OMNIORB_IDL_ONLY = $(BASE_OMNI_TREE)/$(BINDIR)/oidlwrapper.exe -opennt -bcxx -Wbh=.hh -Wbs=SK.cc
+endif
 
-OMNIORB_IDL_ONLY = $(BASE_OMNI_TREE)/$(BINDIR)/omniidl3.exe -h .hh -s SK.cc
-OMNIORB_IDL_ANY_FLAGS = -a
+OMNIORB_IDL_ANY_FLAGS = -Wba
 OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
 OMNIORB_CPPFLAGS = -D__OMNIORB3__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
 

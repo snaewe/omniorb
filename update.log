@@ -1,3 +1,36 @@
+Tue Feb 22 17:06:52 GMT 2000 dpg1
+=================================
+
+- Documentation and makefile updates for omniORB 3 pre 2 release
+- OMNIORB_VERSION defined in unix.mk and win32.mk
+
+external_merge/PORTING
+external_merge/README.FIRST
+external_merge/README.unix
+external_merge/README.win32
+external_merge/ReleaseNote_omniORB_300_pre1    -- deleted
+external_merge/ReleaseNote_omniORB_300_pre2    -- new
+external_merge/THIS_IS_3_0_0_PRERELEASE_1      -- deleted
+external_merge/THIS_IS_3_0_0_PRERELEASE_2      -- new
+external_merge/mk/beforedir.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/src/dir.mk
+external_merge/src/tool/dir.mk
+mk/beforedir.mk
+mk/unix.mk
+mk/win32.mk
+src/dir.mk
+src/examples/boa/dir.mk
+src/examples/echo/dir.mk
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/tool/dir.mk
+src/tool/omniidl2/OBSOLETE                      -- new
+src/tool/win32/dir.mk
+src/tool/win32/oidlwrapper.c                    -- new
+
+
 Tue Feb 22 12:23:01 GMT 2000 dpg1
 =================================
 

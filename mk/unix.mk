@@ -134,14 +134,18 @@ endif
 # CORBA stuff
 #
 
+OMNIORB_VERSION = 3.0.0
+OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
+OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
+OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
+
 lib_depend := $(patsubst %,$(LibPattern),omniORB3)
 omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
 lib_depend := $(patsubst %,$(LibPattern),omniDynamic3)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
-
-OMNIORB_IDL_ONLY = omniidl3
-OMNIORB_IDL_ANY_FLAGS = -a
+OMNIORB_IDL_ONLY = omniidl -bcxx
+OMNIORB_IDL_ANY_FLAGS = -Wba
 OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
 OMNIORB_CPPFLAGS = -D__OMNIORB3__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
 

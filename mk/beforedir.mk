@@ -250,7 +250,7 @@ endef
 # Complain about the lack of a PYTHON define
 #
 define NoPythonError
-(echo -e '\n\n\n\a'; \
+(echo -e '\a'; echo; echo; \
  echo '*** SORRY! ***'; \
  echo; \
  echo 'You have not told me where to find a Python interpreter.'; \
@@ -259,7 +259,7 @@ define NoPythonError
  echo; \
  echo 'If you do not have Python 1.5.2, you can download a minimal version'; \
  echo 'from ftp://ftp.uk.research.att.com/pub/omniORB/python/'; \
- echo -e '\n\n\n'; \
+ echo; echo; echo; \
  exit 1; \
 )
 endef
@@ -314,4 +314,29 @@ GENERATED_CXX_HDRS += $(CORBA_STUB_HDRS)
 # Now include the platform specific "mk" file.
 #
 
+ifeq ($(platform),)
+
+define NoPlatformError
+(echo -e '\a'; echo; echo; \
+ echo '*** SORRY! ***'; \
+ echo; \
+ echo 'You have not told me what platform you are using.'; \
+ echo 'Please edit $$TOP/config/config.mk to set the platform.'; \
+ echo; \
+ echo 'Note that you also need to set the location of Python'; \
+ echo 'in the $$TOP/mk/platforms/<platform>.mk file.'; \
+ echo; echo; echo; \
+ exit 1; \
+)
+endef
+
+all::
+	@$(NoPlatformError)
+export::
+	@$(NoPlatformError)
+
+else
+
 include $(THIS_IMPORT_TREE)/mk/platforms/$(platform).mk
+
+endif

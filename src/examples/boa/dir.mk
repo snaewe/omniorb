@@ -5,8 +5,8 @@ DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
 CORBA_INTERFACES = becho
 
-# -Bboa tells the compiler to generate BOA skeletons
-OMNIORB_IDL += -Bboa
+# -WbBOA tells the IDL compiler to generate BOA skeletons
+OMNIORB_IDL += -WbBOA
 
 
 eg2_impl   = $(patsubst %,$(BinPattern),eg2_impl)

@@ -1,5 +1,5 @@
 
-Release Notes for omniORB 3.0.0 pre1  (27th September 1999)
+Release Notes for omniORB 3.0.0 pre2  (22 February 2000)
 ====================================
 
 The last release was 2.8.0 (31st August 1999).
@@ -8,6 +8,9 @@ Source code is available via anonymous CVS.  Please see:
 
       http://www.uk.research.att.com/omniORB/omniORB.html
       http://www.uk.research.att.com/omniORB/cvs.html
+
+
+NOTE the new section about omniidl and Python below.
 
 
 Introduction
@@ -50,6 +53,80 @@ Please be very careful not to do this (I don't want it reported as a
 bug!).
 
 Please test it extensively!
+
+
+Changes since 3.0.0 pre 1
+-------------------------
+
+1. New IDL compiler
+
+   omniidl3 has been replaced by a new general-purpose IDL compiler
+   simply named omniidl. This has several important consequences:
+
+    o omniidl requires Python 1.5.2 to build and run. We recommend
+      that you use a full Python installation, but we have made
+      minimal binary versions for Windows, Solaris and Linux available
+      at:
+
+         ftp://ftp.uk.research.att.com/pub/omniORB/python/
+
+      You must point the makefiles to your Python installation. See
+      README.unix or README.win32 for details.
+
+    o omniidl aims for strict compliance to the IDL specification.
+      You may find that some IDL which used to pass omniidl3 now has
+      compilation errors.
+
+    o omniidl's command-line flags are different. Where before you
+      said
+
+        omniidl3 echo.idl
+
+      to generate the basic stubs and skeletons, you must now say
+
+        omniidl -bcxx echo.idl
+
+      (The -bcxx tells the compiler to use the C++ back-end. If you
+      have omniORBpy installed, you can also say -bpython to generate
+      Python stubs.)
+
+      The following table shows how omniidl3's flags have changed. You
+      can get a list of all omniidl's flags with omniidl -bcxx -u.
+
+      omniidl3 flag    omniidl flag    Meaning
+
+      -Dname[=value]   -Dname[=value]  Define name for preprocessor
+      -Uname           -Uname          Undefine name for preprocessor
+      -E               -E              Run preprocessor only
+      -Idir            -Idir           Include dir in preprocessor search
+      -Ycmd            -Ycmd           Command to run for preprocessor
+      -a               -Wba            Generate code for Typecode and any
+      -h suffix        -Wbh=suffix     Specify suffix for generated headers
+      -s suffix        -Wbs=suffix     Specify suffix for generated stubs
+      -tp              -Wbtp           Generate tie implementation skeletons
+      -tf              -Wbtf           Generate flattened tie skeletons
+      -F               -WbF            Generate code fragments (experts only)
+      -Bboa            -WbBOA          Generate BOA compatible skeletons
+      -Bold_signatures -Wbold          Use CORBA 2.1 signatures
+      -Bold_reserved_prefix
+                       -Wbold_prefix   Prefix C++ reserved words with _
+
+      -u               -u              Print usage information
+      -v               -v              Trace compilation stages
+
+
+    o If you move omniidl out of the omniORB tree, it may be unable to
+      find Python files which it requires. In this case, either use
+      the -p flag to give the full path to the lib/python directory,
+      or set the PYTHONPATH environment variable to contain that
+      location.
+
+    o The make rules for omniidl have not been tested on all platforms
+      (since we don't have access to them). If you encounter build
+      difficulties on your platform, please look at
+      src/tool/omniidl/cxx/dir.mk to see if it is obvious how to fix
+      it.
+
 
 
 Changes since 2.8.0
@@ -253,3 +330,6 @@ Changes since 2.8.0
 ---------------------------
 David Riddoch
 <djr@uk.research.att.com>
+
+Duncan Grisby
+<dgrisby@uk.research.att.com>

@@ -12,8 +12,8 @@ endif
 endif
 
 ifndef NoTieExample
-# -t tells the compiler to generate tie implementation template
-OMNIORB_IDL += -tp
+# -Wbtp tells the compiler to generate tie implementation template
+OMNIORB_IDL += -Wbtp
 eg3_tieimpl = $(patsubst %,$(BinPattern),eg3_tieimpl)
 endif
 

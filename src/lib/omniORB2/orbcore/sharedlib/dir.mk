@@ -2,6 +2,7 @@
 #
 # Build a shared library in this directory
 # **** DO NOT forget to update the $(VERSION) number.
+# **** Remember to change <top>/mk/unix.mk and <top>/mk/win32.mk too
 #
 
 # The Version number is constructed as follows:
@@ -19,7 +20,7 @@
 # corresponds to a pure bug fix release.
 #
 # 
-VERSION = 3.0.0
+VERSION = OMNIORB_VERSION
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
