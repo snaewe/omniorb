@@ -5,8 +5,8 @@ DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
 CORBA_INTERFACES = anyExample
 
-# -b tells the compiler to generate BOA skeletons
-OMNIORB_IDL += -b
+# -Bboa tells the compiler to generate BOA skeletons
+OMNIORB_IDL += -Bboa
 
 
 anyExample_impl   = $(patsubst %,$(BinPattern),anyExample_impl)
