@@ -8,6 +8,18 @@
 
 <buglist>
 
+<bug id="12" date="Tue Aug  1 12:21:35 BST 2000" user="dpg1">
+
+  <summary>Comments are incorrectly attached to struct
+  members</summary>
+
+  <reported>Stefan Seefeld</reported>
+
+  <text>omniidl attached comments which should have been attached to
+  struct members to the wrong nodes.</text>
+
+</bug>
+
 <bug id="11" date="Wed Jul 26 16:21:09 BST 2000" user="djs">
 
   <summary>omniidl C++ backend missed some forward declarations and
