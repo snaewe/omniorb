@@ -570,14 +570,15 @@ omniNameslog::checkpoint(void)
   NamingContext_i::lock.readerIn();
 
   ofstream ckpf;
+  int fd = -1;
 
   try {
 
 #if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
 #  ifdef __WIN32__
-  int fd = _open(checkpt, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
+    fd = _open(checkpt, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
 #  else
-  int fd = open(checkpt, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
+    fd = open(checkpt, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
 #  endif
 
     if (fd < 0) {
