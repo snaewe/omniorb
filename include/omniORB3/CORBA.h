@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.9  2000/07/10 13:06:44  dpg1
+ Initialisation of Any insertion functions was missing from system
+ exceptions.
+
  Revision 1.1.2.8  2000/06/27 16:15:07  sll
  New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
  _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
@@ -878,7 +882,10 @@ _CORBA_MODULE_BEG
   class name : public SystemException { \
   public: \
     inline name(ULong minor = 0, CompletionStatus completed = COMPLETED_NO) \
-      : SystemException (minor, completed) {} \
+      : SystemException (minor, completed) { \
+          pd_insertToAnyFn    = insertToAnyFn; \
+          pd_insertToAnyFnNCP = insertToAnyFnNCP; \
+    } \
     inline name(const name& ex) : SystemException(ex) {} \
     inline name& operator=(const name& ex) { \
       SystemException::operator=(ex); \

@@ -1,3 +1,12 @@
+Mon Jul 10 14:03:49 BST 2000 dpg1
+=================================
+
+- Initialisation of Any insertion functions was missing from system
+  exceptions.
+
+include/omniORB3/CORBA.h
+
+
 Mon Jul 10 12:22:08 BST 2000 dpg1
 =================================
 
