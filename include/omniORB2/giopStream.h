@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/03/27 17:42:39  sll
+  Changed interface. No longer inherit from Sync. New way to acquire and
+  release giopStream. Changed some call signatures to suite call
+  multiplexing on the client side.
+
   Revision 1.1.2.4  2000/02/14 18:06:44  sll
   Support GIOP 1.2 fragment interleaving. This requires minor access control
   changes to the relevant classes.
@@ -58,18 +63,18 @@ class giop_1_1_Impl;
 class giop_1_2_Impl;
 class giop_1_2_buffered_Impl;
 
-class giopStream : public cdrStream, Strand_Sync {
+class giopStream : public cdrStream {
 public:
 
   class requestInfo;
 
-  static giopStream* acquire(Rope* r, GIOP::Version v);
+  static giopStream* acquireClient(Rope* r, GIOP::Version v);
   // Acquire a giopStream for use as a GIOP client.
   // The protocol version to be used is specified in v.
   // When finished, the giopStream must be returned with release.
   // This function is atomic and thread safe.
 
-  static giopStream* acquire(Strand* s);
+  static giopStream* acquireServer(Strand* s);
   // Acquire a giopStream for use as a GIOP server.
   // The protocol version to be used is determined by the incoming
   // message.
@@ -77,7 +82,7 @@ public:
   // This function is atomic and thread safe.
 
   void release();
-  // Release the giopStream.
+  // Release the giopStream obtained by acquireClient or acquireServer.
   // This function resets the giopStream to an idle state. Any
   // exclusive lock on the underlying strand would be released.
   // This function is atomic and thread safe.
@@ -276,18 +281,15 @@ public:
   // argument.
   // 
 
-  GIOP::ReplyStatusType inputReplyMessageBegin(_CORBA_ULong reqid);
+  GIOP::ReplyStatusType inputReplyMessageBegin();
   // Begin reading a GIOP Reply message. The Reply header is read from the
   // stream at the end of this call.
-  // The value of the request id field in the reply message header should 
-  // be the same as the argument <reqid>.
   // Return the status field of the Reply header.
 
-  GIOP::LocateStatusType inputLocateReplyMessageBegin(_CORBA_ULong reqid);
+  GIOP::LocateStatusType inputLocateReplyMessageBegin();
   // Begin reading a GIOP Locate Reply message. The Reply header is read
-  // from the stream at the end of this call.  The value of the request id
-  // field in the reply message header should be the same as the argument
-  // <reqid>.  Return the status field of the Reply header.
+  // from the stream at the end of this call. 
+  // Return the status field of the Reply header.
 
   void inputMessageEnd(_CORBA_Boolean disgard=0,
 		       _CORBA_Boolean error=0);
@@ -387,14 +389,155 @@ private:
   giopStream(const giopStream&);
   giopStream& operator=(const giopStream&);
 
+  omni_mutex& getSyncMutex();
+
+  void rdLock();
+  void wrLock();
+  void rdUnlock();
+  void wrUnlock();
+  static _CORBA_Boolean rdLockNonBlocking(Strand*);
+  // Try to acquire the read lock. Returns TRUE if the lock is acquired
+  // without blocking. Returns FALSE if the lock has already been taken.
+  //
+  static void sleepOnRdLock(Strand*);
+  // Block until a read lock is released or no thread currently holds the
+  // read lock.
+  //
+
+  static void wakeUpRdLock(Strand*);
+  // Wake up all threads currently block on getting a read lock.
+
+    // IMPORTANT: to avoid deadlock, the following protocol MUST BE obeyed.
+    //            1. Acquire Read lock before Write Lock.
+    //            2. Never acquire a Read lock while holding a Write lock.
+    //               Must release the Read lock first.
+    // Concurrency Control:
+    // 	  MUTEX = pd_strand->pd_rope->pd_lock
+    // Pre-condition:
+    //    Must Hold <MUTEX> on enter.
+    // Post-condition:
+    //    Still hold <MUTEX> on exit.
+    //
+
+  static giopStream* findOnly(Strand* s,_CORBA_ULong reqid);
+  // Search the giopStream instances attached to the strand <s>.
+  // Return the instance with the same reqid in pd_request_id.
+  // If none is found, return 0.
+  // Concurrency Control:
+  // 	  MUTEX = s->pd_rope->pd_lock
+  // Pre-condition:
+  //    MUST hold <MUTEX> on enter.
+  // Post-condition:
+  //    Still hold <MUTEX> on exit.
+  //
+  static giopStream* findOrCreateBuffered(Strand* s,_CORBA_ULong reqid,
+					  _CORBA_Boolean& new1);
+  // Search the giopStream instances attached to the strand <s>.
+  // Return the instance with the same reqid in pd_request_id and set
+  // new1 to FALSE(0).
+  // If none is find, create and return a new instance, set its pd_state to
+  // InputPartiallyBuffered and set new1 to TRUE(1).
+  //
+  // Concurrency Control:
+  // 	  MUTEX = s->pd_rope->pd_lock
+  // Pre-condition:
+  //    Does not hold <MUTEX> on enter.
+  // Post-condition:
+  //    Does not hold <MUTEX> on exit.
+  //
+
+
+  void changeToFullyBuffered();
+  //
+  // Concurrency Control:
+  // 	  MUTEX = pd_strand->pd_rope->pd_lock
+  // Pre-condition:
+  //     Does not hold <MUTEX> on enter.
+  //     pd_state == InputPartiallyBuffered.
+  // Post-condition:
+  //     pd_state == InputFullyBuffered
+  //     Does not hold <MUTEX> on exit.
+  // 
+  // Call this function if this instance fully buffered a giop message.
+
+  void transferReplyState(giopStream* dest);
+  // Helper function for giopStream implementation classes.
+  // Swap the input state of this instance with that of <dest>
+  //
+  // Concurrency Control:
+  // 	  MUTEX = pd_strand->pd_rope->pd_lock
+  // Pre-condition:
+  //    MUST hold <MUTEX> on enter.
+  //    pd_state == InputReplyHeader
+  //    (dest->pd_state == OutputRequestCompleted ||
+  //     dest->pd_state == OutputRequest ||
+  //     dest->pd_state == OutputLocateRequest)
+  //    Held read lock on strand (pd_rdlocked == 1)
+  //    
+  // Post-condition:
+  //    Still hold <MUTEX> on exit.
+  //    pd_state == OutputRequestCompleted
+  //    dest->pd_state == InputReply
+  //    Does not hold read lock on strand.
+  //    The read lock now belongs to dest (dest->pd_rdlocked == 1)
+
+  void deleteThis();
+  // Delete this giopStream instances.
+  // Caller must ensure that no thread is holding a reference to this instance.
+  // On return, the instance is deleted.
+  // 
+  // Concurrency Control:
+  // 	  MUTEX = s->pd_rope->pd_lock
+  // Pre-condition:
+  //    Do not Hold <MUTEX> on enter.
+  // Post-condition:
+  //    Do not hold <MUTEX> on exit.
+
+public:
+  static void deleteAll(Strand* s);
+  // Delete all giopStream instances associated with this strand.
+  // Caller must ensure that no thread is holding a reference to any
+  // of the instances.
+  // 
+  // Concurrency Control:
+  // 	  MUTEX = s->pd_rope->pd_lock
+  // Pre-condition:
+  //    Must Hold <MUTEX> on enter.
+  // Post-condition:
+  //    Still hold <MUTEX> on exit.
+
+private:
   giopStreamImpl* pd_impl;
   _CORBA_Boolean  pd_rdlocked;
   _CORBA_Boolean  pd_wrlocked;
 
-  omni_condition  pd_cond;
-  int             pd_nwaiting;
+  giopStream*     pd_next;
+  Strand*         pd_strand;
 
-  int             pd_clicks;
+  enum { UnUsed,
+	 OutputIdle, 
+	 OutputRequest, 
+	 OutputLocateRequest,
+	 OutputReply, 
+	 OutputLocateReply,
+	 OutputRequestCompleted,
+	 InputIdle,
+	 InputRequest,
+	 InputReplyHeader,
+	 InputReply,
+	 InputLocateReplyHeader,
+	 InputLocateReply,
+         InputRequestCompleted,
+         InputPartiallyBuffered,
+         InputFullyBuffered } pd_state;
+
+  _CORBA_ULong    pd_request_id;
+
+  union {
+    GIOP::ReplyStatusType replyStatus;
+    GIOP::LocateStatusType locateReplyStatus;
+  } pd_reply_status;
+
 
   //----------------------------------------------------------
   // The following data members are **strictly private** to
@@ -438,22 +581,7 @@ private:
   giopMarshaller*  pd_output_body_marshaller;
   // Call back object to calculate the message body size
 
-  _CORBA_ULong      pd_request_id;
 
-  enum { UnUsed,
-	 OutputIdle, 
-	 OutputRequest, 
-	 OutputLocateRequest,
-	 OutputReply, 
-	 OutputLocateReply,
-	 OutputRequestCompleted,
-	 InputIdle,
-	 InputRequest,
-	 InputReply,
-	 InputLocateReply,
-         InputRequestCompleted,
-         InputPartiallyBuffered,
-         InputFullyBuffered } pd_state;
 	       
 public:
   // The following implement the abstract functions defined in cdrStream
@@ -473,9 +601,6 @@ public:
   _CORBA_ULong currentInputPtr() const;
   _CORBA_ULong currentOutputPtr() const;
 
-  // Overload the following virtual functions in Sync class
-  _CORBA_Boolean garbageCollect();
-  _CORBA_Boolean is_unused();
 };
 
 // The giopMarshaller interface is implemented by the stub
