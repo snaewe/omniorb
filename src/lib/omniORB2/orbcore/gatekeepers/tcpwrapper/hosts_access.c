@@ -161,7 +161,7 @@ struct request_info *request;
 	}
 	(void) fclose(fp);
     } else if (errno != ENOENT) {
-	tcpd_warn("cannot open %s: %m", table);
+/*		tcpd_warn("cannot open %s: %m", table); */
     }
     if (match) {
 	if (hosts_access_verbose > 1)
