@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/12/01 17:01:09  djs
+# Moved ancillary marshalling and alignment code to another module
+# Added operator overloads for Typecodes and Anys
+#
 # Revision 1.1  1999/11/04 19:05:09  djs
 # Finished moving code from tmp_omniidl. Regression tests ok.
 #
@@ -37,7 +41,7 @@
 
 from omniidl import idlast, idltype, idlutil
 
-from omniidl.be.cxx import tyutil, util
+from omniidl.be.cxx import tyutil, util, config, name
 
 import opers
 
@@ -50,31 +54,43 @@ def __init__(stream):
 # Control arrives here
 #
 def visitAST(node):
-    orderedList = node.declarations()[:]
-    orderedList.sort(partialOrder)
-    for n in orderedList:
+    for n in node.declarations():
         n.accept(self)
 
-# The old back end generates the code for all enums at a level
-# before the interfaces.
-# partialOrder defines a partial ordering over the set of AST node
-# types. Any topological sort of such an ordered set will produce
-# the same output as the old BE.
-def partialOrder(a, b):
-    if isinstance(a, idlast.Enum) and isinstance(b, idlast.Interface): return -1
-    if isinstance(a, idlast.Interface) and isinstance(b, idlast.Enum): return 1
-    return 0
-
-
 def visitModule(node):
-    orderedList = node.definitions()[:]
-    orderedList.sort(partialOrder)
-    for n in orderedList:
+    for n in node.definitions():
         n.accept(self)
 
 def visitStruct(node):
     for n in node.members():
         n.accept(self)
+
+    # TypeCode and Any
+    if config.TypecodeFlag():
+        env = name.Environment()
+        fqname = env.nameToString(node.scopedName())
+    
+        stream.out("""\
+extern void operator<<=(CORBA::Any& _a, const @fqname@& _s);
+extern void operator<<=(CORBA::Any& _a, @fqname@* _sp);
+extern CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);
+extern CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);""",
+                   fqname = fqname)
+
+def visitUnion(node):
+
+    # TypeCode and Any
+    if config.TypecodeFlag():
+        env = name.Environment()
+        fqname = env.nameToString(node.scopedName())
+    
+        stream.out("""\
+void operator<<=(CORBA::Any& _a, const @fqname@& _s);
+void operator<<=(CORBA::Any& _a, @fqname@* _sp);
+CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
+CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);""",
+                   fqname = fqname)
+
 
 def visitMember(node):
     if node.constrType():
@@ -82,7 +98,7 @@ def visitMember(node):
 
 def visitEnum(node):
     for s in ["NetBufferedStream", "MemBufferedStream"]:
-        name = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
+        cxxname = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
         stream.out("""\
 inline void operator >>=(@name@ _e, @stream@& s) {
   ::operator>>=((CORBA::ULong)_e, s);
@@ -91,7 +107,7 @@ inline void operator >>=(@name@ _e, @stream@& s) {
 inline void operator <<= (@name@& _e, @stream@& s) {
   CORBA::ULong _0RL_e;
   ::operator<<=(_0RL_e,s);
-  switch (_0RL_e) {""", name = name, stream = s)
+  switch (_0RL_e) {""", name = cxxname, stream = s)
         stream.inc_indent()
         for d in node.enumerators():
             labelname = idlutil.ccolonName(map(tyutil.mapID,
@@ -103,43 +119,76 @@ inline void operator <<= (@name@& _e, @stream@& s) {
         _e = (@name@) _0RL_e;
         break;
      default:
-        _CORBA_marshal_error();""", name = name)
+        _CORBA_marshal_error();""", name = cxxname)
         stream.dec_indent()
         stream.dec_indent()
         stream.out("""\
   }
 }
 """)
+    # Typecode and Any
+    if config.TypecodeFlag():
+        stream.out("""\
+void operator<<=(CORBA::Any& _a, @name@ _s);
+CORBA::Boolean operator>>=(const CORBA::Any& _a, @name@& _s);""",
+                   name = cxxname)
 
 def visitInterface(node):
     # interfaces act as containers for other declarations
     # output their operators here
     for d in node.declarations():
         d.accept(self)
-            
-    name = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
-    idLen = len(node.repoId()) + 1
-    stream.out("""\
-inline size_t
-@name@::_alignedSize(@name@_ptr obj, size_t offset) {
-  return CORBA::AlignedObjRef(obj, _PD_repoId, @idLen@, offset);
-}
 
-inline void
-@name@::_marshalObjRef(@name@_ptr obj, NetBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, @idLen@, s);
-}
 
-inline void
-@name@::_marshalObjRef(@name@_ptr obj, MemBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, @idLen@, s);
-}
-
-""", name = name, idLen = str(idLen))        
-               
+    # Typecode and Any
+    if config.TypecodeFlag():
+        env = name.Environment()
+        fqname = env.nameToString(node.scopedName())
+    
+        stream.out("""\
+void operator<<=(CORBA::Any& _a, @fqname@_ptr _s);
+void operator<<=(CORBA::Any& _a, @fqname@_ptr* _s);
+CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s);
+""", fqname = fqname)
         
-def visitUnion(node):
-    pass
+
+def visitTypedef(node):
+    # don't need to do anything unless generating TypeCodes and Any
+    if not(config.TypecodeFlag()):
+        return
+    
+    aliasType = node.aliasType()
+    deref_aliasType = tyutil.deref(aliasType)
+    type_dims = tyutil.typeDims(aliasType)
+
+    env = name.Environment()
+    for d in node.declarators():
+        decl_dims = d.sizes()
+        fqname = env.nameToString(d.scopedName())
+
+        array_declarator = decl_dims != []
+
+        if array_declarator:
+            stream.out("""\
+void operator<<=(CORBA::Any& _a, const @fqname@_forany& _s);
+CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s);""",
+                       fqname = fqname)
+        # only need to generate these operators if the typedef
+        # introduces a new sequence- they already exist for a simple
+        # typedef. Hence aliasType rather than deref_aliasType.
+        elif tyutil.isSequence(aliasType):
+            stream.out("""\
+extern void operator <<= (CORBA::Any& a, const @fqname@& s);
+inline void operator <<= (CORBA::Any& a, @fqname@* sp) {
+  a <<= *sp;
+  delete sp;
+}
+extern _CORBA_Boolean operator >>= (const CORBA::Any& a, @fqname@*& sp);
+extern _CORBA_Boolean operator >>= (const CORBA::Any& a, const @fqname@*& sp);
+""", fqname = fqname)
+            
+            
+        
 def visitForward(node):
     pass
 def visitConst(node):
@@ -147,6 +196,16 @@ def visitConst(node):
 def visitDeclarator(node):
     pass
 def visitException(node):
-    pass
-def visitTypedef(node):
-    pass
+    # don't need to do anything unless generating TypeCodes and Any
+    if not(config.TypecodeFlag()):
+        return
+
+    env = name.Environment()
+    fqname = env.nameToString(node.scopedName())
+
+    stream.out("""\
+void operator<<=(CORBA::Any& _a, const @fqname@& _s);
+void operator<<=(CORBA::Any& _a, const @fqname@* _sp);
+CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);
+""", fqname = fqname)
+
