@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.4  2000/11/07 18:30:35  sll
+# exception copy ctor must use helper duplicate function if the interface is
+# a forward declaration.
+#
 # Revision 1.29.2.3  2000/11/03 19:22:56  sll
 # Replace the old set of marshalling operators in the generated code with
 # a couple of unified operators for cdrStream.
@@ -650,9 +654,14 @@ def visitException(node):
             if d_memberType.objref() and not(is_array):
                 # these are special resources which need to be explicitly
                 # duplicated (but not if an array?)
+                duplicate = string.replace(memberType_fqname,"_ptr","") + \
+                            "::_duplicate"
+                if isinstance(d_memberType.type().decl(),idlast.Forward):
+                    duplicate = string.replace(duplicate,"::_dup",\
+                                               "_Helper::dup")
                 default_ctor_body.out("""\
-@member_type_name@::_duplicate(_@member_name@@index@);""",
-                                      member_type_name = string.replace(memberType_fqname,"_ptr",""),
+@duplicate@(_@member_name@@index@);""",
+                                      duplicate = duplicate,
                                       member_name = decl_name,
                                       index = index)
             
