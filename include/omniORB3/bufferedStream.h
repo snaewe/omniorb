@@ -29,8 +29,14 @@
 
 /*
   $Log$
+  Revision 1.4  2000/08/18 14:09:20  dpg1
+  Merge from omni3_develop for 3.0.1 release.
+
   Revision 1.3  2000/07/13 15:26:05  dpg1
   Merge from omni3_develop for 3.0 release.
+
+  Revision 1.1.2.3  2000/08/07 15:34:33  dpg1
+  Partial back-port of long long from omni3_1_develop.
 
   Revision 1.1.2.2  2000/02/10 18:03:04  djr
   tcParser::calculateItemSize and tcParser::alignedSize optimised.
@@ -122,6 +128,22 @@
 		   (((l) & 0x000000ff) << 24))
 #else
 #error "Swap32 has already been defined"
+#endif
+
+#ifdef HAS_LongLong
+#ifndef Swap64
+#define Swap64(l) \
+  ((((l) & _CORBA_LONGLONG_CONST(0xff00000000000000)) >> 56) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x00ff000000000000)) >> 40) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x0000ff0000000000)) >> 24) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x000000ff00000000)) >> 8)  | \
+   (((l) & _CORBA_LONGLONG_CONST(0x00000000ff000000)) << 8)  | \
+   (((l) & _CORBA_LONGLONG_CONST(0x0000000000ff0000)) << 24) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x000000000000ff00)) << 40) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x00000000000000ff)) << 56))
+#else
+#error "Swap64 has already been defined"
+#endif
 #endif
 
 #ifndef MARSHAL
@@ -247,6 +269,42 @@ public:
     return;
   }
 
+#ifdef HAS_LongLong
+
+  friend inline void operator>>= (_CORBA_LongLong a, NetBufferedStream& s) {
+    MARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
+  }
+
+  friend inline void operator<<= (_CORBA_LongLong& a, NetBufferedStream& s) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
+      _CORBA_LongLong t;
+      UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,t);
+      a = Swap64(t);
+    }
+    else {
+      UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
+    }
+    return;
+  }
+
+  friend inline void operator>>= (_CORBA_ULongLong a, NetBufferedStream& s) {
+    MARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+  }
+
+  friend inline void operator<<= (_CORBA_ULongLong& a, NetBufferedStream& s) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
+      _CORBA_ULongLong t;
+      UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,t);
+      a = Swap64(t);
+    }
+    else {
+      UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+    }
+    return;
+  }
+
+#endif
+
 #if !defined(NO_FLOAT)
 
   friend inline void operator>>= (_CORBA_Float a, NetBufferedStream& s) {
@@ -287,6 +345,10 @@ public:
     }
     return;
   }
+
+#ifdef HAS_LongDouble
+#error "long double is not supported yet"
+#endif
 
 #endif
 
@@ -578,6 +640,42 @@ public:
     return;
   }
 
+#ifdef HAS_LongLong
+
+  friend inline void operator>>= (_CORBA_LongLong a, MemBufferedStream& s) {
+    MARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
+  }
+
+  friend inline void operator<<= (_CORBA_LongLong& a, MemBufferedStream& s) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
+      _CORBA_LongLong t;
+      UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,t);
+      a = Swap64(t);
+    }
+    else {
+      UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
+    }
+    return;
+  }
+
+  friend inline void operator>>= (_CORBA_ULongLong a, MemBufferedStream& s) {
+    MARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+  }
+
+  friend inline void operator<<= (_CORBA_ULongLong& a, MemBufferedStream& s) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
+      _CORBA_ULongLong t;
+      UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,t);
+      a = Swap64(t);
+    }
+    else {
+      UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+    }
+    return;
+  }
+
+#endif
+
 #if !defined(NO_FLOAT)
 
   friend inline void operator>>= (_CORBA_Float a, MemBufferedStream& s) {
@@ -618,6 +716,10 @@ public:
     }
     return;
   }
+
+#ifdef HAS_LongDouble
+#error "long double is not supported yet"
+#endif
 
 #endif
 
@@ -834,6 +936,37 @@ CdrStreamHelper_unmarshalArrayDouble(buf_t& s, _CORBA_Double* a, int length)
       ((_CORBA_ULong*) (a + i))[0] = tmp1;
     }
 }
+
+#ifdef HAS_LongLong
+template <class buf_t>
+inline void
+CdrStreamHelper_unmarshalArrayLongLong(buf_t& s, _CORBA_LongLong* a,
+				       int length)
+{
+  s.get_char_array((_CORBA_Char*) a, length * 8, omni::ALIGN_8);
+
+  if( s.RdMessageByteOrder() != omni::myByteOrder )
+    for( int i = 0; i < length; i++ )
+      a[i] = Swap64(a[i]);
+}
+
+
+template <class buf_t>
+inline void
+CdrStreamHelper_unmarshalArrayULongLong(buf_t& s, _CORBA_ULongLong* a,
+					int length)
+{
+  s.get_char_array((_CORBA_Char*) a, length * 8, omni::ALIGN_8);
+
+  if( s.RdMessageByteOrder() != omni::myByteOrder )
+    for( int i = 0; i < length; i++ )
+      a[i] = Swap64(a[i]);
+}
+#endif
+
+#ifdef HAS_LongDouble
+#error Long double not implemented yet.
+#endif
 
 
 #undef MARSHAL
@@ -1731,6 +1864,8 @@ _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>::operator<<= (MemBufferedStream& s)
 
 #undef Swap16
 #undef Swap32
-
+#ifdef Swap64
+#  undef Swap64
+#endif
 
 #endif // __BUFFEREDSTREAM_H__

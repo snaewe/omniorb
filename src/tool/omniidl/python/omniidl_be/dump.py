@@ -28,8 +28,14 @@
 
 # $Id$
 # $Log$
+# Revision 1.10  2000/08/18 14:09:05  dpg1
+# Merge from omni3_develop for 3.0.1 release.
+#
 # Revision 1.9  2000/07/13 15:25:51  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.6.2.3  2000/08/14 14:35:14  dpg1
+# IDL dumping now properly escapes string and char constants
 #
 # Revision 1.6.2.2  2000/06/28 14:02:55  dpg1
 # Checked in wrong file. Changes backed out.
@@ -113,17 +119,20 @@ interface @id@;""", id = node.identifier())
 
     def visitConst(self, node):
         node.constType().accept(self)
-        type  = self.__result_type
-        if node.constType().kind() == idltype.tk_enum:
+        type = self.__result_type
+
+        if node.constKind() == idltype.tk_enum:
             value = "::" + idlutil.ccolonName(node.value().scopedName())
-        elif node.constType().kind() == idltype.tk_string:
-            value = '"' + node.value() + '"'
+        elif node.constKind() == idltype.tk_string:
+            value = '"' + repr(node.value())[1:-1] + '"'
+        elif node.constKind() == idltype.tk_char:
+            value = "'" + repr(node.value())[1:-1] + "'"
         else:
             value = str(node.value())
         
         self.st.out("""\
 const @type@ @id@ = @value@;""",
-               type=type, id=node.identifier(), value=value)
+                    type=type, id=node.identifier(), value=value)
 
 
     def visitTypedef(self, node):
@@ -232,6 +241,8 @@ union @id@ switch (@stype@) {""",
                 else:
                     if l.labelKind() == idltype.tk_enum:
                         lv = "::" + idlutil.ccolonName(l.value().scopedName())
+                    elif l.labelKind() == idltype.tk_char:
+                        lv = "'" + repr(l.value())[1:-1] + "'"
                     else:
                         lv = str(l.value())
                         

@@ -1,3 +1,1035 @@
+Fri Aug 18 14:19:01 BST 2000 sll
+================================
+
+- new omkdepend binary for external win32 distribution
+
+external_merge/bin/x86_win32/omkdepend.exe
+
+
+Fri Aug 18 14:09:22 BST 2000 dpg1
+=================================
+
+- Note about why long long is not supported in Anys
+
+external_merge/ReleaseNote_omniORB_301
+
+
+Fri Aug 18 13:35:26 BST 2000 sll
+================================
+
+- Updated COS library make rule to generate correct dependency
+
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+
+- Update make file to keep in sync with latest omniORB version number.
+
+src/lib/omniORB/dynamic/sharedlib/dir.mk
+
+- Documentation updates
+
+external_merge/ReleaseNote_omniORB_301
+bugfixes-300.xml
+bugfixes.xml
+bugfixes.xsl
+
+
+Fri Aug 18 13:11:36 BST 2000 dme
+================================
+- Allow replacement of proxyObjectFactories
+- Don't mask omniORB::fatalException on server side
+
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/proxyFactory.cc
+
+
+Fri Aug 18 13:05:14 BST 2000 dme
+================================
+- Fix omkdepend output for static/%.o etc.
+
+external_merge/mk/afterdir.mk
+external_merge/mk/mklib.mk
+src/tool/omkdepend/main.c
+src/tool/omkdepend/pr.c
+
+
+Fri Aug 18 12:25:31 BST 2000 dpg1
+=================================
+
+- Fix references to www.omg.org in omniORB documentation.
+
+doc/tex/omniORB.bib
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniORB/omniORB014.html
+
+
+Fri Aug 18 12:11:48 BST 2000 sll
+================================
+
+- Make current tree into omniORB 3.0.1 release
+- Turns on <top>/src/services build by default.
+
+external_merge/README.FIRST
+external_merge/ReleaseNote_omniORB_300       REMOVED
+external_merge/ReleaseNote_omniORB_301       NEW
+external_merge/THIS_IS_omniORB_3_0_0         REMOVED
+external_merge/THIS_IS_omniORB_3_0_1         NEW
+external_merge/mk/rtems.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/src/dir.mk
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak
+src/dir.mk
+
+
+Fri Aug 18 10:50:14 BST 2000 sll
+================================
+
+- latest RTEMS updates
+
+external_merge/CREDITS
+external_merge/README.rtems
+external_merge/mk/rtems.mk
+external_merge/src/dir.mk
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/dir.mk
+src/lib/omnithread/dir.mk
+
+
+Fri Aug 18 10:40:54 BST 2000 djs
+================================
+
+- Silly typo in yesterdays bugfix (fix = s/definied/defined/)
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
+
+Thu Aug 17 18:11:14 BST 2000 djs
+================================
+
+- omniIDL/C++ generated incorrect DynSK.cc typecode data for "recursive"
+  interfaces
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
+
+Thu Aug 17 16:30:16 BST 2000 sll
+================================
+
+- merged RTEMS updates
+
+external_merge/README.rtems         NEW
+external_merge/config/config.mk
+external_merge/etc/README
+external_merge/etc/rtems.zip        NEW
+external_merge/mk/platforms/pc486_rtems_4.5.0.mk  NEW
+
+include/omnithread.h
+include/omniORB3/omniInternal.h
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/dynamic/dir.mk
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/lib/omniORB2/orbcore/gatekeepers/dir.mk
+src/lib/omnithread/posix.cc
+
+Thu Aug 17 09:57:57 BST 2000 dpg1
+=================================
+
+- GCC claims to support long long on all platforms.
+
+include/omniORB3/CORBA_sysdep.h
+src/tool/omniidl/cxx/CORBA_sysdep.h
+
+
+Wed Aug 16 17:56:43 BST 2000 sll
+================================
+
+- shared library make rule update.
+- Don't build shared library if platform is ETS kernel
+- Use gcc (instead of the bundled cc) on hpux 11.00 at ALC and FP
+
+external_merge/mk/mklib.mk
+external_merge/mk/win32.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/hppa_hpux_11.00.mk
+
+
+Wed Aug 16 12:16:02 BST 2000 sll
+================================
+
+- shared library make rule update. The C and C++ compiler may be different
+  and hence may need different flags to compile PIC code.
+
+external_merge/mk/mklib.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+external_merge/mk/platforms/hppa_hpux_10.20.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/mips_irix_6.2_n32.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/sun4_sosV_5.5.mk
+external_merge/mk/platforms/sun4_sosV_5.6.mk
+external_merge/mk/platforms/sun4_sosV_5.7.mk
+external_merge/mk/platforms/x86_sosV_5.5.mk
+
+Tue Aug 15 20:17:30 BST 2000 reg
+================================
+
+- Modified ATT extensions to NotifyChannel
+
+idl/COS/AttNotifyChannelAdmin.idl
+
+Tue Aug 15 16:28:30 BST 2000 sll
+================================
+
+- Back-off previous update and use the root name COSBOA for the COS BOA 
+  library
+
+external_merge/mk/cos.mk
+src/services/mklib/mkBOAlib/dir.mk
+
+Tue Aug 15 16:16:42 BST 2000 sll
+================================
+
+- match up the name of the BOA version of the COS library in the build 
+ directory and cos.mk
+
+external_merge/mk/cos.mk
+
+
+Tue Aug 15 14:11:37 BST 2000 dpg1
+=================================
+
+- Add Any insertion functions for exceptions declared in the
+  PortableServer module
+
+src/lib/omniORB2/dynamic/dynException.cc
+
+
+Tue Aug 15 12:20:54 BST 2000 sll
+================================
+
+- Make rules overhaul. Rearranged pattern rules ordering. This is necessary
+  to keep gnumake 3.78 happy when compiling the COS library. 
+
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+
+Tue Aug 15 10:30:06 BST 2000 sll
+================================
+
+- AIX platform file update. Add platform specific flags to IMPORT_CPPFLAGS 
+  instead of overwrite its value.
+
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+
+Mon Aug 14 20:29:57 BST 2000 djs
+================================
+
+- omniIDL/C++ backend now does a quick pass of the AST and immediately
+  gives an error if it finds unsupported IDL
+
+src/lib/omniORB/omniidl_be/cxx/support.py -- new
+src/lib/omniORB/omniidl_be/cxx/__init__.py
+src/lib/omniORB/omniidl_be/cxx/util.py
+
+
+Mon Aug 14 17:06:16 BST 2000 dpg1
+=================================
+
+- Error message now says "Could not open..." rather than "Could not
+  find..." when Python imports fail.
+
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/python/scripts/omniidlrun.py
+
+
+Mon Aug 14 15:32:04 BST 2000 dpg1
+=================================
+
+- Slightly more clever path guessing in omniidl. It now copes with
+  omniidl in /usr/local/bin and Python modules in /usr/local/lib, for
+  example.
+
+src/tool/omniidl/python/scripts/omniidlrun.py
+
+- IDL dumping now properly escapes string and char constants
+
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idldump.h
+src/tool/omniidl/python/omniidl/idltype.py
+src/tool/omniidl/python/omniidl_be/dump.py
+
+
+Mon Aug 14 12:47:07 BST 2000 sll
+================================
+
+- Added AttNotifyChannelAdmin to COS library
+  Can optionally define make variable CosUsesBoa before include cos.mk to
+  use the BOA version of the COS library
+
+- optionally include local modifications to make rules, for use in FP.
+
+external_merge/mk/cos.mk
+
+mk/beforedir.mk
+src/services/include/CosNotify.h
+src/services/include/CosNofifyComm_i.h
+src/services/mklib/cosinterfaces.mk
+
+Fri Aug 11 16:55:32 BST 2000 sll
+================================
+
+- Moved COS idls to a place that can be included by application IDLs.
+
+external_merge/mk/cos.mk
+
+idl/COS/*                  NEW
+src/services/idl/*         REMOVED
+
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+
+
+Fri Aug 11 14:52:49 BST 2000 sll
+================================
+
+- Fixed queue handling bug in DII interface. If responses to 
+  send_multiple_requests_deferred() come back not in the order as the
+  requests are sent, the internal request queue may be corrupted.
+
+src/lib/omniORB2/dynamic/orbMultiRequest.cc
+
+
+Fri Aug 11 14:40:57 BST 2000 sll
+================================
+
+- Added CosLifeCycle.idl to the list of stubs in the COS library.
+  (Required by users of omniEvents).
+- Defined an external guard on CosNaming.hh to ensure that
+  any idl that include CosNaming.idl will compile as expected.
+
+include/omniORB3/CORBA.h
+src/services/mklib/cosinterfaces.mk
+src/services/mklib/libdefs.mk
+
+
+Thu Aug 10 18:05:42 BST 2000 sll
+================================
+
+- Shared library rules improvement.
+  Now support library version number with only 2 fields instead of 3.
+   e.g. foo with version number 3.0.2 produce libfoo3.a and libfoo3.so.0.2
+        foo with version number 1.2 produce libfoo.a and libfoo.so.1.2
+
+- mklib.mk provides the boilerplate to build and install a library using
+  the shared library rules.
+
+external_merge/mk/mklib.mk          NEW
+
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+external_merge/mk/platforms/mips_irix_6.2_n32.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+
+mk/mklib.mk                         NEW
+
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+
+Thu Aug 10 15:58:06 BST 2000 sll
+================================
+
+- Added .mk to use COS stub library
+
+external_merge/mk/cos.mk       NEW
+mk/cos.mk                      NEW
+
+Thu Aug 10 12:04:07 BST 2000 sll
+================================
+
+- fixed a typo in the shared library export rule
+
+external_merge/mk/unix.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+
+
+Thu Aug 10 11:41:31 BST 2000 sll
+================================
+
+- Added pragma hh to COS IDLs so that COS_sysdep.h is included
+  by the stub headers. This is necessary so that the right
+  CPP macros can be inserted to instruct the compiler to use the
+  DLL version of the COS stub library on win32 platforms.
+
+src/services/idl/AttNotifyChannelAdmin.idl
+src/services/idl/CosCollection.idl
+src/services/idl/CosCompoundLifeCycle.idl
+src/services/idl/CosConcurrencyControl.idl
+src/services/idl/CosContainment.idl
+src/services/idl/CosEventChannelAdmin.idl
+src/services/idl/CosEventComm.idl
+src/services/idl/CosExternalization.idl
+src/services/idl/CosExternalizationContainment.idl
+src/services/idl/CosExternalizationReference.idl
+src/services/idl/CosGraphs.idl
+src/services/idl/CosLicensingManager.idl
+src/services/idl/CosLifeCycle.idl
+src/services/idl/CosLifeCycleContainment.idl
+src/services/idl/CosLifeCycleReference.idl
+src/services/idl/CosNaming.idl
+src/services/idl/CosNotification.idl
+src/services/idl/CosNotifyChannelAdmin.idl
+src/services/idl/CosNotifyComm.idl
+src/services/idl/CosNotifyFilter.idl
+src/services/idl/CosObjectIdentity.idl
+src/services/idl/CosPersistenceDDO.idl
+src/services/idl/CosPersistenceDS_CLI.idl
+src/services/idl/CosPersistencePDS.idl
+src/services/idl/CosPersistencePDS_DA.idl
+src/services/idl/CosPersistencePID.idl
+src/services/idl/CosPersistencePO.idl
+src/services/idl/CosPersistencePOM.idl
+src/services/idl/CosPropertyService.idl
+src/services/idl/CosQuery.idl
+src/services/idl/CosQueryCollection.idl
+src/services/idl/CosReference.idl
+src/services/idl/CosRelationships.idl
+src/services/idl/CosStream.idl
+src/services/idl/CosTSPortability.idl
+src/services/idl/CosTime.idl
+src/services/idl/CosTimerEvent.idl
+src/services/idl/CosTrading.idl
+src/services/idl/CosTradingDynamic.idl
+src/services/idl/CosTradingRepos.idl
+src/services/idl/CosTransactions.idl
+src/services/idl/CosTypedEventChannelAdmin.idl
+src/services/idl/CosTypedEventComm.idl
+src/services/idl/CosTypedNotifyChannelAdmin.idl
+src/services/idl/CosTypedNotifyComm.idl
+src/services/idl/DCE_CIOPSecurity.idl
+src/services/idl/LifeCycleService.idl
+src/services/idl/Lname-library.idl
+src/services/idl/NRService.idl
+src/services/idl/RDITestTypes.idl
+src/services/idl/SECIOP.idl
+src/services/idl/SSLIOP.idl
+src/services/idl/Security.idl
+src/services/idl/SecurityAdmin.idl
+src/services/idl/SecurityLevel1.idl
+src/services/idl/SecurityLevel2.idl
+src/services/idl/SecurityReplaceable.idl
+src/services/idl/TimeBase.idl
+src/services/mklib/COS_sysdep.h                    NEW
+src/services/mklib/dir.mk
+src/services/mklib/libdefs.mk
+src/services/mklib/mkBOAlib/COS_sysdep.h           NEW
+src/services/mklib/mkBOAlib/dir.mk
+
+Thu Aug 10 11:29:11 BST 2000 djs (ci by sll)
+============================================
+
+- Support new pragma hh in the cxx omniidl backend.
+e.g.
+
+//IDL                                       // C++ stub header
+#pragma hh #ifndef __SITEDEF_H__	    #ifndef __SITEDEF_H__
+#pragma hh #define __SITEDEF_H__	    #define __SITEDEF_H__
+#pragma hh #include "sitedef.h"     -->     #include "sitedef.h"
+#pragma hh #endif			    #endif
+
+The pragmas are recognised only at the beginning of the IDL file (minus
+comments). They are ignored if they appeared in the included IDL files or
+other parts of the IDL file.
+
+- Added CPP macro guards to stub header to preserve the value of
+  USE_core_stub_in_nt_dll and USE_dyn_stub_in_nt_dll. This is useful
+  when stub headers include others which may have been compiled into DLLs.
+
+src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
+Thu Aug 10 11:14:19 BST 2000 sll
+================================
+
+- Found the workaround for MSVC++ so that exceptions can be caught by base
+  class. All the copy ctor from the most derived to the base classes must be
+  public. Previously it was protected.
+  CORBA exceptions can now be caught by base class on win32 platforms.
+
+include/omniORB3/CORBA.h
+include/omniORB3/CORBA_sysdep.h
+
+Thu Aug 10 11:03:13 BST 2000 sll
+================================
+
+- For those platforms which cannot be unblocked from a recv() by a shutdown(),
+  now do poll() or select() for both incoming and outgoing strands.
+  This is necessary especialy for win32 or else the server side socket will not
+  shutdown until the client side close the socket. This wasn't done previously
+  as it was thought that shutdown() does have an effect on recv() if this is
+  a passive socket. This turns out to be wrong.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+Thu Aug 10 10:07:42 BST 2000 sll
+================================
+
+- Added missing script for ODE
+
+bin/scripts/install.sh
+
+Wed Aug  9 16:35:37 BST 2000 sll
+================================
+
+- Make rules overhaul (part II).
+
+external_merge/mk/platforms/alpha_linux_2.0.mk
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+external_merge/mk/platforms/hppa_hpux_10.20.mk
+external_merge/mk/platforms/i586_linux_2.0.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc.mk
+external_merge/mk/platforms/m68k_nextstep_3.3.mk
+external_merge/mk/platforms/mips_irix_6.2_n32.mk
+external_merge/mk/platforms/mips_sinux_5.43.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+external_merge/mk/platforms/sun4_sosV_5.6.mk
+external_merge/mk/platforms/sun4_sosV_5.7.mk
+external_merge/mk/platforms/x86_freebsd_3.2.mk
+external_merge/mk/platforms/x86_freebsd_4.0.mk
+external_merge/mk/platforms/x86_nextstep_3.3.mk
+external_merge/mk/platforms/x86_osr5.mk
+external_merge/mk/platforms/x86_sosV_5.5.mk
+external_merge/mk/platforms/x86_win95.mk
+
+mk/platforms/alpha_linux_2.0.mk
+mk/platforms/alpha_nt_4.0.mk
+mk/platforms/i586_linux_2.0.mk
+mk/platforms/i586_linux_2.0_glibc.mk
+mk/platforms/mips_irix_6.2_n32.mk
+mk/platforms/mips_irix_6.4_64.mk
+mk/platforms/mips_irix_6.4_n32.mk
+mk/platforms/mips_irix_6.5_64.mk
+mk/platforms/sun4_sosV_5.6.mk
+mk/platforms/sun4_sosV_5.7.mk
+mk/platforms/x86_nt_3.5.mk
+mk/platforms/x86_win95.mk
+
+Wed Aug  9 16:15:40 BST 2000 sll
+================================
+
+- Make rules overhaul. Remove the need to keep 2 copies of the same rules for
+  ODE and the external distribution. The definitive version is in the external
+  distribution (external_merge/mk). ODE specific customerisations are added on top
+  in mk.
+
+
+external_merge/config/config.mk
+external_merge/mk/afterdir.mk
+external_merge/mk/beforedir.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc2.1.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/sun4_sosV_5.5.mk
+external_merge/src/services/mklib/mkBOAlib/sharedlib/GNUmakefile  REMOVED
+external_merge/src/services/mklib/sharedlib/GNUmakefile           REMOVED
+
+mk/afterdir.mk
+mk/beforedir.mk
+mk/unix.mk
+mk/win32.mk
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+mk/platforms/mips_irix_6.5_n32.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/x86_nt_4.0.mk
+
+src/appl/omniMapper/dir.mk
+src/appl/omniNames/dir.mk
+src/appl/utils/catior/dir.mk
+src/appl/utils/convertior/dir.mk
+src/appl/utils/genior/dir.mk
+src/appl/utils/nameclt/dir.mk
+src/lib/omniORB2/dir.mk
+
+src/services/dir.mk
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+
+
+Tue Aug  8 16:13:12 BST 2000 sll
+================================
+
+- On win32 platforms, if the server is not present, a CORBA call may block
+  for 30 seconds before returning a COMM_FAILURE. This is because win32
+  uses a different way to report the socket error in a select() call.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
+Tue Aug  8 15:55:35 BST 2000 dpg1
+=================================
+
+- -ORBpoa_iiop_port no longer overrides OMNIORB_USEHOSTNAME env var
+
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/objectAdapter.cc
+src/lib/omniORB2/orbcore/objectAdapter.h
+
+- "lock" renamed "mu" to avoid name clash with iostream on some
+  platforms.
+
+src/examples/call_back/cb_server.cc
+
+
+Mon Aug  7 18:07:29 BST 2000 dpg1
+=================================
+
+- Error messages if platform defines aren't made in cccp's config.h
+
+src/tool/omniidl/cxx/cccp/config-freebsd.h
+src/tool/omniidl/cxx/cccp/config-linux.h
+src/tool/omniidl/cxx/cccp/config-solaris.h
+src/tool/omniidl/cxx/cccp/config.h
+
+
+Mon Aug  7 16:31:15 BST 2000 dpg1
+=================================
+
+- Partial back-port of long long from omni3_1_develop. Long longs
+  inside Anys not supported because that would lead to binary
+  incompatibility.
+
+include/omniORB3/CORBA.h
+include/omniORB3/CORBA_basetypes.h
+include/omniORB3/CORBA_sysdep.h
+include/omniORB3/Naming.hh
+include/omniORB3/bufferedStream.h
+include/omniORB3/omniORB.h
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/skutil.py
+src/lib/omniORB2/omniidl_be/cxx/types.py
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
+src/lib/omniORB2/omniidl_be/cxx/util.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB2/orbcore/logIOstream.cc
+src/tool/omniidl/cxx/CORBA_basetypes.h
+src/tool/omniidl/cxx/CORBA_sysdep.h
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlexpr.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlutil.cc
+src/tool/omniidl/cxx/idlutil.h
+src/tool/omniidl/cxx/lex.yy.cc
+
+
+Mon Aug  7 15:16:23 BST 2000 sll
+================================
+
+- Make shared library rules updates.
+  Unified unix and win32 make rules. Now build shared, static and debug
+  libraries in their own subdirectories. Use pattern rules to ensure the
+  right compiler flags are passed to the compiler for each library.
+
+mk/unix.mk
+mk/win32.mk
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/i586_linux_2.0_glibc.mk
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+mk/platforms/mips_irix_6.2_n32.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/sun4_sosV_5.6.mk
+mk/platforms/sun4_sosV_5.7.mk
+
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+
+src/services/mklib/sharedlib                      REMOVED
+src/services/mklib/sharedlib/dir.mk               REMOVED
+src/services/mklib/mkBOAlib/sharedlib             REMOVED
+src/services/mklib/mkBOAlib/sharedlib/dir.mk      REMOVED
+
+
+Mon Aug  7 11:28:55 BST 2000 sll
+================================
+
+- On win32 platforms, client side socket was left in non-blocking state
+  after connect() succeeded. Bug is now fixed.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+Fri Aug  4 16:23:29 BST 2000 dpg1
+=================================
+
+- ORB_init() now defaults ORB id to empty string, and accepts empty
+  string as valid.
+
+include/omniORB3/CORBA.h
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
+Fri Aug  4 12:33:25 BST 2000 dpg1
+=================================
+
+- Updates for AIX with xlC
+
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+src/tool/omniidl/cxx/idlast.h
+
+
+Fri Aug  4 10:00:42 BST 2000 dpg1
+=================================
+
+- Fix look-up of escaped identifiers broken on 19 July. (Bug 14.)
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
+Thu Aug  3 22:22:24 BST 2000 djs
+================================
+
+- Fixed omniidl/C++ bug causing _objref_I operation signature mismatch
+  (a typo in the -Wbvirtual_objref mode)
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+
+
+Tue Aug  1 18:28:25 BST 2000 sll
+================================
+
+- Remove OSF1 platform files from internal mk/platforms as this is
+  no longer used or maintained.
+
+mk/platforms/alpha_osf1_3.2.mk              delete
+mk/platforms/alpha_osf1_4.0.mk              delete
+mk/platforms/alpha_osf1_4.0_oldcxx.mk       delete
+
+Tue Aug  1 18:15:25 BST 2000 sll
+================================
+
+- Make shared library rules updates.
+  Now a single set of rules in dir.mk applies to all unix platforms that
+  can build shared libraries.
+
+mk/unix.mk
+
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/i586_linux_2.0_glibc.mk
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/sun4_sosV_5.6.mk
+mk/platforms/sun4_sosV_5.7.mk
+external_merge/mk/unix.mk
+external_merge/mk/platforms/hppa_hpux_10.20.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc2.1.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/sun4_sosV_5.5.mk
+external_merge/mk/platforms/sun4_sosV_5.6.mk
+external_merge/mk/platforms/sun4_sosV_5.7.mk
+external_merge/mk/platforms/x86_freebsd_3.2.mk
+external_merge/mk/platforms/x86_freebsd_4.0.mk
+external_merge/mk/platforms/x86_sosV_5.5.mk
+
+src/services/mklib/mkBOAlib/sharedlib/dir.mk
+src/services/mklib/sharedlib/dir.mk
+
+
+Tue Aug  1 12:21:35 BST 2000 dpg1
+=================================
+
+- Better comment handling for structs and unions
+
+src/tool/omniidl/cxx/idl.yy
+src/tool/omniidl/cxx/y.tab.cc
+
+
+Tue Aug  1 10:38:56 BST 2000 dpg1
+=================================
+
+- IDL compiler no longer complains about inheriting an operation into
+  an interface with the same name
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
+Mon Jul 31 18:34:21 BST 2000 sll
+================================
+
+- Make shared library for COS idl stub libraries.
+- name stub libraries with the same version number as the omniORB run time.
+     e.g. for omniORB 3.0.0, the library name is libCOS3.a, libCOS3.so.0.0
+
+external_merge/src/services/GNUmakefile                            NEW
+external_merge/src/services/mklib/GNUmakefile                      NEW
+external_merge/src/services/mklib/mkBOAlib/GNUmakefile             NEW
+external_merge/src/services/mklib/mkBOAlib/sharedlib/GNUmakefile   NEW
+external_merge/src/services/mklib/sharedlib/GNUmakefile
+
+src/services/mklib/dir.mk
+src/services/mklib/libdefs.mk
+src/services/mklib/mkBOAlib/dir.mk
+src/services/mklib/mkBOAlib/sharedlib/dir.mk                      NEW
+src/services/mklib/sharedlib/dir.mk                               NEW
+
+
+Mon Jul 31 18:27:49 BST 2000 sll
+================================
+
+- New make rules for making shared library:
+     MakeCXXSharedLibrary
+     ExportSharedLibrary
+
+  For the moment, only used in services/mklib.
+
+ external_merge/mk/platforms/alpha_osf1_3.2.mk
+ external_merge/mk/platforms/alpha_osf1_4.0.mk
+ external_merge/mk/platforms/hppa_hpux_10.20.mk
+ external_merge/mk/platforms/hppa_hpux_11.00.mk
+ external_merge/mk/platforms/i586_linux_2.0_glibc.mk
+ external_merge/mk/platforms/i586_linux_2.0_glibc2.1.mk
+ external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+ external_merge/mk/platforms/powerpc_aix_4.2.mk
+ external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+ external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+ external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+ external_merge/mk/platforms/sun4_sosV_5.5.mk
+ external_merge/mk/platforms/sun4_sosV_5.6.mk
+ external_merge/mk/platforms/sun4_sosV_5.7.mk
+ external_merge/mk/platforms/x86_freebsd_3.2.mk
+ external_merge/mk/platforms/x86_freebsd_4.0.mk
+ external_merge/mk/platforms/x86_sosV_5.5.mk
+ mk/platforms/hppa_hpux_11.00.mk
+ mk/platforms/i586_linux_2.0_glibc.mk
+ mk/platforms/i586_linux_2.0_glibc2.1.mk
+ mk/platforms/mips_irix_6.4_6.5_common.mk
+ mk/platforms/sun4_sosV_5.5.mk
+ mk/platforms/sun4_sosV_5.6.mk
+ mk/platforms/sun4_sosV_5.7.mk
+
+
+Mon Jul 31 14:12:54 BST 2000 djr
+================================
+
+- Added new examples for ServantLocator and ServantActivator.
+
+external_merge/src/examples/poa/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak       NEW
+external_merge/src/examples/poa/servant_manager/GNUmakefile   NEW
+src/examples/poa/dir.mk
+src/examples/poa/servant_manager/dir.mk                       NEW
+src/examples/poa/servant_manager/servant_activator.cc         NEW
+src/examples/poa/servant_manager/servant_locator.cc           NEW
+
+- Added optional command line arg to specify the message.
+
+src/examples/echo/eg2_clt.cc
+
+- Check that -ORBpoa_iiop_port is given on command line (ish).
+
+src/examples/poa/persistent_objref/eg2_impl.cc
+
+
+Fri Jul 28 20:20:23 BST 2000 sll
+================================
+
+- New COS idl stub library added. At the moment, this is not built
+  by the top level make rules.
+
+src/services/mklib/dir.mk                   NEW
+src/services/mklib/libdefs.mk               NEW
+src/services/mklib/cosinterfaces.mk         NEW
+src/services/mklib/mkBOAlib/dir.mk          NEW
+
+src/services/idl/*                          NEW
+src/services/include/*                      NEW
+src/services/dir.mk                         NEW
+
+
+Fri Jul 28 17:37:49 BST 2000 sll
+================================
+
+- Rearranged the make rules to put the linker flags for omnithread and its
+  related libraries after all the omniORB libraries.
+
+mk/unix.mk
+external_merge/mk/unix.mk
+
+
+Wed Jul 26 16:21:09 BST 2000 djs
+================================
+
+- omniidl C++ backend missed forward declarations and typedefs of old
+  BOA skeletons
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
+Wed Jul 26 11:46:16 BST 2000 dpg1
+=================================
+
+- omniidl front-end incorrect error report when inheriting typedef to
+  forward declared interface
+
+src/tool/omniidl/cxx/idlast.cc
+
+
+Mon Jul 24 16:09:20 BST 2000 djs
+================================
+
+- Slight typo in BOA skeleton template fix (s/fq_name/name/)
+
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+- Suppressed compiler warning about an unused variable with stubs compiled
+  using gcc -Wall when an operation has no arguments and no return value.
+
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+
+Mon Jul 24 10:33:50 BST 2000 dpg1
+=================================
+
+- Adding the missing constructor meant that there was no longer a
+  default constructor.
+
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
+Mon Jul 24 11:14:00 BST 2000 djs
+================================
+
+- Added missing constructor to BOA compatibile skeletons in omniidl C++
+  backend
+
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+
+Fri Jul 21 16:20:43 BST 2000 dpg1
+=================================
+
+- Incorrectly rejected object references with incompatible target and
+  most-derived repoIds.
+
+src/lib/omniORB2/orbcore/omniInternal.cc
+
+
+Fri Jul 21 10:48:44 BST 2000 dpg1
+=================================
+
+- String_var copy initialisations changed to direct initialisations
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/initFile.cc
+
+
+Wed Jul 19 18:21:28 BST 2000 dpg1
+=================================
+
+- Thread tracing turned off.
+
+include/omniORB3/tracedthread.h
+
+- omniidl complains if a name which differs only in case is found
+  during name look-up
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
+Tue Jul 18 16:46:09 BST 2000 dpg1
+=================================
+
+- Add bugfix list
+
+bugfixes.xml  -- new
+bugfixes.xsl  -- new
+
+
+Tue Jul 18 16:32:01 BST 2000 djs
+================================
+
+- added C++ backend option
+   -Wbvirtual_objref
+  which causes operation& attribute methods in the _objref to be virtual
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/config.py
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+
+
+Mon Jul 17 15:20:18 BST 2000 dpg1
+=================================
+
+- OpenVMS patches
+
+external_merge/etc/openvms.zip
+
+
+Mon Jul 17 14:22:25 BST 2000 dpg1
+=================================
+
+- Fix string freeing bug in genior
+
+src/appl/utils/genior/genior.cc
+
+
+Mon Jul 17 10:30:00 BST 2000 djs
+================================
+
+- omniidl C++ backend (author) didn't realise an interface could
+  inherit from a typedef to another interface.
+
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+src/lib/omniORB2/omniidl_be/cxx/header/tie.py
+
+
 Thu Jul 13 19:12:53 BST 2000 sll
 ================================
 
@@ -162,7 +1194,7 @@ Tue Jul 11 20:58:59 BST 2000 sll
 
 - Create a new lib on Win32- msvcstub.lib. This can be used to resolve
   unnecessary reference from stub *SK.cc files to a few functions in
-  omniDynamic300_rt.dll. 
+  omniDynamic300_rt.dll.
 - Updated nmake examples to use the stub lib.
 
 external_merge/src/examples/boa/dir.mak
@@ -404,7 +1436,7 @@ Mon Jul 02 15:55:00 BST 2000 djs
   anonymous sequences
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
- 
+
 
 Fri Jun 30 17:03:43 BST 2000 sll
 ================================
@@ -446,7 +1478,7 @@ src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
 Fri Jun 30 10:30:00 BST 2000 djs
 ================================
 
-- Couple of minor possibilities for nameclashes with user code removed 
+- Couple of minor possibilities for nameclashes with user code removed
   from omniIDL/C++ DynSK.cc file generation templates
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
@@ -635,7 +1667,7 @@ src/lib/omniORB2/orbcore/uri.cc
 Tue Jun 27 16:26:15 BST 2000 sll
 ================================
 
-- Fixes to library runtime build rules. 
+- Fixes to library runtime build rules.
 
 src/lib/omniORB2/dir.mk
 src/lib/omniORB2/initRefs.h
@@ -918,7 +1950,7 @@ Mon Jun 12 14:17:00 BST 2000 djs
 
 src/lib/omniORB2/omniidl_be/cxx/header/tie.py
 
-- Nolonger claims code was generated by "omniidl3" in the headers of 
+- Nolonger claims code was generated by "omniidl3" in the headers of
   generated files- now takes responsibilty for its own actions :)
 
 src/lib/omniORB2/omniidl_be/cxx/config.py
@@ -1038,7 +2070,7 @@ Mon Jun  5 13:55:00 BST 2000 djs
 
 src/lib/omniORB2/omniidl_be/cxx/header/forward.py
 
--   Name clash caused by having union members called "x" and "pd_x" 
+-   Name clash caused by having union members called "x" and "pd_x"
     (for any value of x) in the same union
 
 src/lib/omniORB2/omniidl_be/cxx/header/defs.py
@@ -1063,7 +2095,7 @@ src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
 
 src/lib/omniORB2/omniidl_be/cxx/header/template.py
 
--   Tie template generation tidied up and now actually generates templates 
+-   Tie template generation tidied up and now actually generates templates
     for BOA non-flat templates (-WbBOA -Wbtp)
 
 src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
@@ -1135,7 +2167,7 @@ src/lib/omniORB2/orbcore/corbaBoa.h
 Wed May 31 19:00:00 BST 2000 djs
 ================================
 
-- C++ back-end now indents output more correctly (including pre-processor 
+- C++ back-end now indents output more correctly (including pre-processor
   directives)
 
 src/lib/omniORB2/omniidl_be/cxx/skutil.py
@@ -1304,9 +2336,9 @@ src/lib/omniORB2/orbcore/poa.cc
 Fri May  5 17:32:00 BST 2000 djs
 ================================
 
-- Extended an existing omniIDL/C++ fix for MSVC5 to help with base class 
+- Extended an existing omniIDL/C++ fix for MSVC5 to help with base class
   initialisers with scope resolution operators (::)
-  A fix already existed for the method dispatch()ing, using a typedef with 
+  A fix already existed for the method dispatch()ing, using a typedef with
   a flattened name. This does not change the powerpc/aix workaround using
   OMNI_BASE_CTOR (no test platform to check against).
   Problem was reported on the mailing list in article:
@@ -1316,7 +2348,7 @@ src/lib/omniORB2/omniidl_be/cxx/skel/main.py
 src/lib/omniORB2/omniidl_be/cxx/skel/template.py
 
 - Removed omniIDL/C++ operation argument mapping special case:
-  A non-array typedef to a variable struct or union previously used a 
+  A non-array typedef to a variable struct or union previously used a
   dereferenced _out argument. Now the _out argument is not dereferenced.
 
 src/lib/omniORB2/omniidl_be/cxx/types.py
@@ -1550,7 +2582,7 @@ src/tool/omniidl/cxx/dir.mk
 Fri Mar 24 16:19:00 GMT 2000 djs
 ================================
 
-- omniIDL output some invalid C++ typedefs in the case of typedefs 
+- omniIDL output some invalid C++ typedefs in the case of typedefs
   to object references
 
 src/lib/omniORB2/omniidl_be/cxx/header/defs.py
@@ -1565,7 +2597,7 @@ Fri Mar 24 16:14:00 GMT 2000 djs
 ================================
 
 - Fixed C++ Any extraction operators which stopped the DynSK.cc
-  file corresponding to this IDL fragment from parsing (due to a 
+  file corresponding to this IDL fragment from parsing (due to a
   name clash)
     typedef sequence<long> a;
   (bug was copied accidentally from omniidl3)
@@ -1588,7 +2620,7 @@ Thu Mar 23 15:27:00 GMT 2000 djs
 
 - omniidl C++ backend failed to handle recursive unions where
   there was more than one node in the cycle
-  (even though it has functions specifically to handle this 
+  (even though it has functions specifically to handle this
   properly)
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
@@ -1647,7 +2679,7 @@ src/tool/omniidl/cxx/idlast.cc
 Thu Mar 16 16:17:00 GMT 2000 djs
 ================================
 
-- omniidl missed an extern declaration because it failed to 
+- omniidl missed an extern declaration because it failed to
   dereference a typedef chain leading to a structure defined
   in another file
 
@@ -1675,9 +2707,9 @@ src/tool/omniidl/python/scripts/omniidl
 Wed Mar 15 20:46:00 GMT 2000 djs
 ================================
 
-- Fixed IDL->C++ problem with using a typedef to an array 
-  declarator or a sequence in another file (DynSK.cc problem) 
-  within a struct or union. Some refactoring in the DynSK code 
+- Fixed IDL->C++ problem with using a typedef to an array
+  declarator or a sequence in another file (DynSK.cc problem)
+  within a struct or union. Some refactoring in the DynSK code
   is required.
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
@@ -1988,7 +3020,7 @@ src/tool/omniidl/python/scripts/omniidl.py  -- new
 Tue Feb 15 13:50:03 GMT 2000 djr
 ================================
 
-- Strip aliases from sequence elements when determining whether we can	
+- Strip aliases from sequence elements when determining whether we can
   optimise inserion into / extraction from Anys.
 
 src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
@@ -2228,7 +3260,7 @@ Thu Jan 27 16:27:08 GMT 2000 djr
 ================================
 
 - Fixed bug in String_member.  It is now initialised with an
-  empty string by default (rather than null).  This reflects	
+  empty string by default (rather than null).  This reflects
   a change in the mapping.
 
 include/omniORB3/stringtypes.h

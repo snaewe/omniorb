@@ -29,8 +29,14 @@
 
 /*
   $Log$
+  Revision 1.4  2000/08/18 14:09:20  dpg1
+  Merge from omni3_develop for 3.0.1 release.
+
   Revision 1.3  2000/07/13 15:26:05  dpg1
   Merge from omni3_develop for 3.0 release.
+
+  Revision 1.1.2.9  2000/08/07 15:34:33  dpg1
+  Partial back-port of long long from omni3_1_develop.
 
   Revision 1.1.2.8  2000/05/24 17:11:18  dpg1
   Comments clarified.
@@ -739,12 +745,19 @@ _CORBA_MODULE_BEG
     logStream& operator<<(unsigned long n);
     logStream& operator<<(short n) {return operator<<((int)n);}
     logStream& operator<<(unsigned short n) {return operator<<((unsigned int)n);}
+#ifdef HAS_LongLong
+    logStream& operator<<(_CORBA_LONGLONG_DECL n);
+    logStream& operator<<(_CORBA_ULONGLONG_DECL n);
+#endif
 #ifdef HAS_Cplusplus_Bool
     logStream& operator<<(bool b) { return operator<<((int)b); }
 #endif
 #ifndef NO_FLOAT
     logStream& operator<<(double n);
     logStream& operator<<(float n) { return operator<<((double)n); }
+#ifdef HAS_LongDouble
+    logStream& operator<<(_CORBA_LONGDOUBLE_DECL n);
+#endif
 #endif
     logStream& flush();
   private:
@@ -783,12 +796,19 @@ _CORBA_MODULE_BEG
     logger& operator<<(unsigned long n);
     logger& operator<<(short n) {return operator<<((int)n);}
     logger& operator<<(unsigned short n) {return operator<<((unsigned int)n);}
+#ifdef HAS_LongLong
+    logger& operator<<(_CORBA_LONGLONG_DECL n);
+    logger& operator<<(_CORBA_ULONGLONG_DECL n);
+#endif
 #ifdef HAS_Cplusplus_Bool
     logger& operator<<(bool b) { return operator<<((int)b); }
 #endif
 #ifndef NO_FLOAT
     logger& operator<<(double n);
     logger& operator<<(float n) { return operator<<((double)n); }
+#ifdef HAS_LongDouble
+    logger& operator<<(_CORBA_LONGDOUBLE_DECL n);
+#endif
 #endif
     logger& operator<<(omniLocalIdentity*);
     logger& operator<<(omniIdentity*);

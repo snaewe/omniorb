@@ -1,0 +1,27 @@
+//File: CosObjectIdentity.idl
+//Part of the Relationship Service
+
+#ifndef _COS_OBJECT_IDENTITY_IDL_
+#define _COS_OBJECT_IDENTITY_IDL_
+
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #ifndef __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #define __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #include "COS_sysdep.h"
+#pragma hh #endif
+
+#pragma prefix "omg.org"
+
+module CosObjectIdentity {
+
+	typedef unsigned long ObjectIdentifier;
+
+	interface IdentifiableObject {
+		readonly attribute ObjectIdentifier constant_random_id;
+		boolean is_identical (
+			in IdentifiableObject other_object);
+	};
+
+};
+        
+#endif /* ifndef _COS_OBJECT_IDENTITY_IDL_ */

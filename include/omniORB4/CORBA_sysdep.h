@@ -32,8 +32,23 @@
 
 /*
  $Log$
+ Revision 1.4  2000/08/18 14:09:20  dpg1
+ Merge from omni3_develop for 3.0.1 release.
+
  Revision 1.3  2000/07/13 15:26:06  dpg1
  Merge from omni3_develop for 3.0 release.
+
+ Revision 1.1.2.17  2000/08/17 09:00:53  dpg1
+ GCC claims to support long long on all platforms.
+
+ Revision 1.1.2.16  2000/08/10 10:17:53  sll
+ Found the workaround for MSVC++ so that exceptions can be caught by base
+ class. All the copy ctor from the most derived to the base classes must be
+ public. Previously it was protected. CORBA exceptions can now be caught by
+ base class on win32 platforms.
+
+ Revision 1.1.2.15  2000/08/07 15:34:33  dpg1
+ Partial back-port of long long from omni3_1_develop.
 
  Revision 1.1.2.14  2000/07/07 10:31:33  sll
  DEC C++ 6.{0,1} on Digital Unix needs OMNI_REQUIRES_FQ_BASE_CTOR.
@@ -221,6 +236,13 @@
 #     define HAS_Cplusplus_Bool
 #  endif
 
+// GCC claims to support long long on all platforms
+#  define HAS_LongLong
+#  define _CORBA_LONGLONG_DECL   long long
+#  define _CORBA_ULONGLONG_DECL  unsigned long long
+#  define _CORBA_LONGDOUBLE_DECL long double 
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
+
 #elif defined(__DECCXX)
 // DEC C++ compiler
 
@@ -230,6 +252,12 @@
 #     define SIZEOF_PTR  8
 #  endif
 #  if __DECCXX_VER >= 60000000
+#     define HAS_LongLong
+//#     define HAS_LongDouble
+#     define _CORBA_LONGLONG_DECL   long long
+#     define _CORBA_ULONGLONG_DECL  unsigned long long
+#     define _CORBA_LONGDOUBLE_DECL long double
+#     define _CORBA_LONGLONG_CONST(x) (x##LL)
 #     ifndef NO_Cplusplus_Bool
 #       define HAS_Cplusplus_Bool
 #     endif
@@ -273,6 +301,13 @@
 #    define HAS_Std_Namespace
 #  endif
 
+#  define HAS_LongLong
+//#  define HAS_LongDouble
+#  define _CORBA_LONGLONG_DECL   long long
+#  define _CORBA_ULONGLONG_DECL  unsigned long long
+#  define _CORBA_LONGDOUBLE_DECL long double 
+#  define _CORBA_LONGLONG_CONST(x) (x##LL)
+
 // XXX
 // This is a hack to work around a bug in SUN C++ compiler (seen on 4.2).
 // When instantiating templates, the compiler may generate code in Template.DB.
@@ -303,8 +338,11 @@
 #endif
 #define _HAS_NOT_GOT_strcasecmp
 #define _HAS_NOT_GOT_strncasecmp
-// No current version of MSVC++ can catch exceptions by base class
-#undef HAS_Cplusplus_catch_exception_by_base
+
+#define HAS_LongLong
+#define _CORBA_LONGLONG_DECL   __int64
+#define _CORBA_ULONGLONG_DECL  unsigned __int64
+#define _CORBA_LONGLONG_CONST(x) (x)
 
 
 #elif defined(__BCPLUSPLUS__)

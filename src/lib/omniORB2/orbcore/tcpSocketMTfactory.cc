@@ -29,8 +29,30 @@
 
 /*
   $Log$
+  Revision 1.31  2000/08/18 14:09:12  dpg1
+  Merge from omni3_develop for 3.0.1 release.
+
   Revision 1.30  2000/07/13 15:25:54  dpg1
   Merge from omni3_develop for 3.0 release.
+
+  Revision 1.22.6.18  2000/08/17 15:37:52  sll
+  Merged RTEMS port.
+
+  Revision 1.22.6.17  2000/08/10 10:10:56  sll
+  For those platforms which cannot be unblocked from a recv() by a
+  shutdown(), now do poll() or select() for both incoming and outgoing
+  strands.  This is necessary especialy for win32 or else the server side
+  socket will not shutdown until the client side close the socket. This
+  wasn't done previously as it was thought that shutdown() does have an
+  effect on recv() if this is a passive socket. This turns out to be wrong.
+
+  Revision 1.22.6.16  2000/08/08 15:22:17  sll
+  In realConnect(), now checks the exception fd_set in the select() call for an
+  error condition. This is necessary because win32 differs from other
+  platforms in that it reports a connect() failure via the exception fd_set.
+
+  Revision 1.22.6.15  2000/08/07 10:34:19  sll
+  Fixed bug with Win32 tcp socket being left in non-blocking state.
 
   Revision 1.22.6.14  2000/07/03 15:38:20  dpg1
   Support for FreeBSD 4.0. FreeBSD 3.2 hopefully works too.
@@ -314,6 +336,10 @@ extern "C" int gethostname(char *name, int namelen);
 #define send(a,b,c,d) tcpSocketVaxSend(a,b,c,d)
 #endif
 
+#ifdef __rtems__
+extern "C" 
+int select (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *tv);
+#endif
 
 #define PTRACE(prefix,message)  \
   omniORB::logs(15, "tcpSocketMTfactory " prefix ": " message)
@@ -978,46 +1004,43 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
   while (1) {
 
 # if defined(USE_POLL_ON_RECV)
-    if (isOutgoing()) {
-      struct pollfd fds;
-      fds.fd = pd_socket;
-      fds.events = POLLIN;
+    struct pollfd fds;
+    fds.fd = pd_socket;
+    fds.events = POLLIN;
 
-      while (!(rx = poll(&fds,1,omniORB::scanGranularity()*1000) > 0)) {
-	if (rx == RC_SOCKET_ERROR && errno != EINTR) 
-	  break;
-      }
+    while (!(rx = poll(&fds,1,omniORB::scanGranularity()*1000) > 0)) {
+      if (rx == RC_SOCKET_ERROR && errno != EINTR) 
+	break;
     }
-# elif defined(USE_SELECT_ON_RECV)
-    if (isOutgoing()) {
-      do {
-	fd_set fds, efds;
-	FD_ZERO(&fds);
-	FD_ZERO(&efds);
-	FD_SET(pd_socket,&fds);
-	FD_SET(pd_socket,&efds);
-	struct timeval t;
-	t.tv_sec = omniORB::scanGranularity();
-	t.tv_usec = 0;
-	rx = select(pd_socket+1,&fds,0,&efds,&t);
-#   ifndef __WIN32__
-	if (rx == RC_SOCKET_ERROR && errno != EINTR)
-	  break;
-#   else
-	if (rx == RC_SOCKET_ERROR && ::WSAGetLastError() != WSAEINTR)
-	  break;
 
-	// Unfortunately, select() in WIN32 does not return with an error even
-	// when the socket has been shutdown. As a workaround, we
-	// check also if the strand is dying. Notice that reading the
-	// state of the strand is not synchronised. In the worst case,
-	// we may wait for an extra omniORB::scanGranularity() period before
-	// noticing that the strand is dying.
-	if (_strandIsDying()) break;
+# elif defined(USE_SELECT_ON_RECV)
+    do {
+      fd_set fds, efds;
+      FD_ZERO(&fds);
+      FD_ZERO(&efds);
+      FD_SET(pd_socket,&fds);
+      FD_SET(pd_socket,&efds);
+      struct timeval t;
+      t.tv_sec = omniORB::scanGranularity();
+      t.tv_usec = 0;
+      rx = select(pd_socket+1,&fds,0,&efds,&t);
+#   ifndef __WIN32__
+      if (rx == RC_SOCKET_ERROR && errno != EINTR)
+	break;
+#   else
+      if (rx == RC_SOCKET_ERROR && ::WSAGetLastError() != WSAEINTR)
+	break;
+
+      // Unfortunately, select() in WIN32 does not return with an error even
+      // when the socket has been shutdown. As a workaround, we
+      // check also if the strand is dying. Notice that reading the
+      // state of the strand is not synchronised. In the worst case,
+      // we may wait for an extra omniORB::scanGranularity() period before
+      // noticing that the strand is dying.
+      if (_strandIsDying()) break;
 
 #   endif
-      } while (rx <= 0);
-    }
+    } while (rx <= 0);
 # endif
     
     if ((rx = ::recv(pd_socket,(char*)buf,sz,0)) == RC_SOCKET_ERROR) {
@@ -1252,10 +1275,12 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
     int rc;
     while (tremain) {
 
-      fd_set wrfds;
+      fd_set wrfds, exfds;
 # ifndef __CIAO__
       FD_ZERO(&wrfds);
+      FD_ZERO(&exfds);
       FD_SET(sock,&wrfds);
+      FD_SET(sock,&exfds);
 # endif
       struct timeval t;
       int tselect = omniORB::scanGranularity();
@@ -1263,7 +1288,7 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
       t.tv_sec = tselect;
       t.tv_usec = 0;
     again:
-      rc = select(sock+1,0,&wrfds,0,&t);
+      rc = select(sock+1,0,&wrfds,&exfds,&t);
 
       if (rc == 0) {
 	tremain -= tselect;
@@ -1272,7 +1297,7 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
 #   ifndef __WIN32__
 	if (errno == EINTR)
 	  continue;
-#   else
+#   else 
 	if (::WSAGetLastError() == WSAEINTR)
 	  continue;
 #   endif
@@ -1280,6 +1305,9 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
 	  break;
       }
       else {
+	if (FD_ISSET(sock,&exfds)) {
+	  rc = RC_SOCKET_ERROR;
+	}
 	break;
       }
       if (s->_strandIsDying()) {
@@ -1300,6 +1328,7 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
     return RC_INVALID_SOCKET;
   }
 # else
+  v = 0;
   if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
     CLOSESOCKET(sock);
     return RC_INVALID_SOCKET;

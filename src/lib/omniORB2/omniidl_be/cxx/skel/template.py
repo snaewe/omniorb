@@ -28,8 +28,19 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  2000/08/18 14:09:13  dpg1
+# Merge from omni3_develop for 3.0.1 release.
+#
 # Revision 1.4  2000/07/13 15:25:59  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.1.2.8  2000/07/24 16:32:19  djs
+# Fixed typo in previous BOA skeleton bugfix.
+# Suppressed compiler warning (from gcc -Wall) when encountering a call with
+# no arguments and no return value.
+#
+# Revision 1.1.2.7  2000/07/24 10:17:34  djs
+# Added missing BOA skeleton constructor
 #
 # Revision 1.1.2.6  2000/06/05 13:04:20  djs
 # Removed union member name clash (x & pd_x, pd__default, pd__d)
@@ -182,7 +193,7 @@ interface_callback = """\
 static void
 @local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
 {
-  @call_descriptor@* tcd = (@call_descriptor@*) cd;
+  @get_call_descriptor@
   @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
   @result@impl->@cxx_operation_name@(@operation_arguments@);
 }
@@ -333,6 +344,8 @@ if( !strcmp(id, @inherited_name@::_PD_repoId) )
 """
 
 interface_sk = """\
+@sk_fqname@::@sk_name@(const omniOrbBoaKey& k): omniOrbBoaServant(k) {}
+
 @sk_fqname@::~@sk_name@() {}
 """
 

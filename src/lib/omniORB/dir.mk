@@ -1,8 +1,15 @@
 # dir.mk for omniORB.
 #
 
-#SUBDIRS = orbcore dynamic lifecycle
-SUBDIRS = omniidl_be orbcore dynamic
+ifndef EmbeddedSystem
+SUBDIRS = omniidl_be
+endif
+
+SUBDIRS += orbcore
+
+ifndef OrbCoreOnly
+SUBDIRS += dynamic
+endif
 
 STUBHEADERS = omniORB3/Naming.hh \
               omniORB3/bootstrap.hh \
@@ -101,7 +108,7 @@ omniORB3/omniLifeCycle.hh : omniLifeCycle.idl
 ciao:: $(STUBHEADERS)
 	@$(MakeSubdirs)
 
-lastveryclean::
+veryclean::
 	$(RM) $(STUBHEADERS) omniORB3/*SK.cc
 
 

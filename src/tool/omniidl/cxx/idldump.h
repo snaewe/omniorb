@@ -28,8 +28,14 @@
 
 // $Id$
 // $Log$
+// Revision 1.5  2000/08/18 14:09:07  dpg1
+// Merge from omni3_develop for 3.0.1 release.
+//
 // Revision 1.4  2000/07/13 15:25:53  dpg1
 // Merge from omni3_develop for 3.0 release.
+//
+// Revision 1.1.2.1  2000/08/14 14:35:14  dpg1
+// IDL dumping now properly escapes string and char constants
 //
 // Revision 1.1  1999/10/27 14:05:58  dpg1
 // *** empty log message ***
@@ -83,6 +89,8 @@ private:
   int indent_;
   void printIndent();
   void printScopedName(const ScopedName* sn);
+  void printString(const char* str);
+  void printChar(const char c);
 };
 
 

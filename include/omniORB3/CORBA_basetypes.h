@@ -28,8 +28,14 @@
 
 /*
  $Log$
+ Revision 1.4  2000/08/18 14:09:20  dpg1
+ Merge from omni3_develop for 3.0.1 release.
+
  Revision 1.3  2000/07/13 15:26:06  dpg1
  Merge from omni3_develop for 3.0 release.
+
+ Revision 1.1.2.2  2000/08/07 15:34:32  dpg1
+ Partial back-port of long long from omni3_1_develop.
 
  Revision 1.1.2.1  1999/09/24 09:51:37  djr
  Moved from omniORB2 + some new files.
@@ -97,6 +103,12 @@ typedef unsigned int              _CORBA_ULong;
 # error "Can't map Long (32 bits) to a native type."
 #endif
 
+#ifdef HAS_LongLong
+typedef _CORBA_LONGLONG_DECL      _CORBA_LongLong;
+typedef _CORBA_ULONGLONG_DECL     _CORBA_ULongLong;
+#endif
+
+
 #ifndef NO_FLOAT
 
 #ifndef __VMS
@@ -104,6 +116,10 @@ typedef unsigned int              _CORBA_ULong;
 // This platform uses IEEE float
 typedef float                     _CORBA_Float;
 typedef double                    _CORBA_Double;
+
+#ifdef HAS_LongDouble
+typedef _CORBA_LONGDOUBLE_DECL    _CORBA_LongDouble;
+#endif
 
 #else	// VMS float test
 
@@ -154,6 +170,12 @@ public:
 };
 
 #undef cvt_
+
+//  Assume long double type is compatible with the CORBA standard.
+
+#ifdef HAS_LongDouble
+typedef _CORBA_LONGDOUBLE_DECL    _CORBA_LongDouble;
+#endif
 
 #endif   // VMS float test
 #endif   // !defined(NO_FLOAT)

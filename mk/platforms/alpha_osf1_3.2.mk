@@ -36,14 +36,14 @@ IMPORT_CPPFLAGS += -D__alpha__ -D__osf1__ -D__OSVERSION__=3
 AR = ar clq
 
 CXX = /usr/bin/cxx
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__DECCXX -D__cplusplus
+CXXMAKEDEPEND += -D__DECCXX -D__cplusplus
 CXXDEBUGFLAGS = -O
 
 CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -call_shared
 
 CC = gcc
-CMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND += -D__GNUC__
 CDEBUGFLAGS = -O
 
 CLINK = $(CC)
@@ -117,3 +117,32 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
+
+#
+# Shared Library support.     
+#
+# Platform specific customerisation.
+# everything else is default from unix.mk
+#
+
+ifeq ($(notdir $(CXX)),cxx)
+
+BuildSharedLibrary = 1       # Enable
+
+SHAREDLIB_CPPFLAGS =
+
+define MakeCXXSharedLibrary
+ $(ParseNameSpec); \
+ soname=$(SharedLibrarySoNameTemplate); \
+ set -x; \
+ $(RM) $@; \
+  ld -shared -soname $$soname -set_version $$soname -o $@ \
+ $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs; \
+  -lcxxstd -lcxx -lexc -lots -lc;
+endef
+
+ifeq ($(notdir $(CC)),gcc)
+SHAREDLIB_CFLAGS = -fPIC
+endif
+
+endif

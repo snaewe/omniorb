@@ -29,8 +29,15 @@
 
 /*
   $Log$
+  Revision 1.4  2000/08/18 14:09:12  dpg1
+  Merge from omni3_develop for 3.0.1 release.
+
   Revision 1.3  2000/07/13 15:25:55  dpg1
   Merge from omni3_develop for 3.0 release.
+
+  Revision 1.1.2.2  2000/08/18 12:14:20  dme
+  Allow replacement of proxyObjectFactories
+  Don't mask omniORB::fatalException on server side
 
   Revision 1.1.2.1  1999/09/22 14:27:05  djr
   Major rewrite of orbcore to support POA.
@@ -91,9 +98,12 @@ proxyObjectFactory::proxyObjectFactory(const char* repoId)
 
     if( cmp < 0 )       top = middle;
     else if( cmp > 0 )  bottom = middle + 1;
-    else
-      throw omniORB::fatalException(__FILE__, __LINE__,
-			    "Duplicate proxyObjectFactory registered.");
+    else {
+      ofl[middle] = this;
+      if( omniORB::trace(15) )
+	  omniORB::logf("Replaced proxyObjectFactory for %s.", repoId);
+      return;
+    }
   }
 
   OMNIORB_ASSERT(top == bottom);

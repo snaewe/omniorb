@@ -28,8 +28,14 @@
 
 # $Id$
 # $Log$
+# Revision 1.19  2000/08/18 14:09:15  dpg1
+# Merge from omni3_develop for 3.0.1 release.
+#
 # Revision 1.18  2000/07/13 15:26:01  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.15.2.5  2000/08/07 15:34:34  dpg1
+# Partial back-port of long long from omni3_1_develop.
 #
 # Revision 1.15.2.4  2000/05/31 18:02:16  djs
 # Better output indenting (and preprocessor directives now correctly output at
@@ -319,6 +325,8 @@ def unmarshall(to, environment, type, decl, name,
             idltype.tk_float:  "Float",
             idltype.tk_double: "Double",
             idltype.tk_enum:   "ULong",
+            idltype.tk_longlong: "LongLong",
+            idltype.tk_ulonglong: "ULongLong"
             }
         if array_helper_suffix.has_key(d_type.type().kind()):
             typecast = "((" + type_name + "*) " + element_name + ")"

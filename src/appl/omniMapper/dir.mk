@@ -25,5 +25,5 @@ clean::
 export:: $(omniMapper)
 	@$(ExportExecutable)
 
-$(omniMapper): omniMapper.o $(CORBA_LIB_DEPEND)
+$(omniMapper): omniMapper.o $(CORBA_LIB_NODYN_DEPEND)
 	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))

@@ -47,9 +47,8 @@ IMPORT_CPPFLAGS += -D__hppa__ -D__hpux__ -D__OSVERSION__=10
 AR = ar cq
 RANLIB = ranlib
 MKDIRHIER = mkdir -p
-INSTALL		= cp -f
-INSTLIBFLAGS	= 
-INSTEXEFLAGS	= 
+INSTALL         = $(BASE_OMNI_TREE)/bin/scripts/install-sh -c
+INSTLIBFLAGS    = -m 0755    # shared library must have executable flag set.
 
 CPP = /lib/cpp
 
@@ -61,14 +60,13 @@ CPP = /lib/cpp
 #        HP aC++ B3910B A.01.01 Support Library
 #
 CXX = aCC
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus
+CXXMAKEDEPEND += -D__cplusplus
 CXXDEBUGFLAGS = -O2
-CXXOPTIONS   += -I /opt/aCC/include +inst_v +DAportable -D_CMA_NOWRAPPERS_ 
+CXXOPTIONS   +=  +inst_v +DAportable -D_CMA_NOWRAPPERS_ 
 CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -Wl,+s
 
 CC                = cc
-CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend
 CDEBUGFLAGS       = -O2
 COPTIONS	  = -Aa -D_HPUX_SOURCE +DAportable
 CLINKOPTIONS      = -Wl,+s
@@ -90,7 +88,7 @@ endef
 # To use gcc uncomment the following lines:                                #
 ############################################################################
 #CXX = g++
-#CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+#CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 #CXXDEBUGFLAGS = 
 # -D_CMA_NOWRAPPERS_ is needed otherwise linking omniNames results in
 #                    /opt/aCC/lbin/ld: Unsatisfied symbols:
@@ -109,7 +107,7 @@ endef
 #			 -show-directory=yes -show-pc=yes -show-pc-offset=yes
 #
 #CC                = gcc
-#CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend __GNUC__
+#CMAKEDEPEND       += __GNUC__
 #CDEBUGFLAGS       = -O
 #COPTIONS          = $(CDEBUGFLAGS) $(COPTIONS) \
 #              $(patsubst %,-Wl$(comma)-rpath$(comma)%,$(IMPORT_LIBRARY_DIRS))
@@ -146,23 +144,6 @@ HPTHREADLIBS = -ldce -lcma
 lib_depend := $(patsubst %,$(LibPattern),omnithread)
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
-
-#
-# OMNI ParTcl stuff
-#
-
-TCLTK_CPPFLAGS = -I/usr/local/include/Tcl7.4Tk4.0
-TCLTK_LIB = -L/usr/local/lib -ltk4.0 -ltcl7.4 -lm -R /usr/local/lib
-X11_CPPFLAGS = -I/usr/openwin/include
-X11_LIB = -L/usr/openwin/lib -lX11 -R /usr/openwin/lib
-WISH4 = /usr/local/bin/wish4.0
-
-OMNIPARTCL_CPPFLAGS = $(TCLTK_CPPFLAGS) $(X11_CPPFLAGS) $(OMNITHREAD_CPPFLAGS)
-OMNIPARTCL_LIB = $(patsubst %,$(LibSearchPattern),omniParTcl) $(TCLTK_LIB) \
-		 $(X11_LIB) $(OMNITHREAD_LIB)
-lib_depend := $(patsubst %,$(LibPattern),omniParTcl)
-OMNIPARTCL_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
-
 # Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
@@ -170,3 +151,26 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
+
+#
+# Shared Library support.     
+#
+# Platform specific customerisation.
+# everything else is default from unix.mk
+#
+SHAREDLIB_SUFFIX   = sl
+
+ifeq ($(notdir $(CXX)),aCC)
+
+BuildSharedLibrary = 1
+
+SHAREDLIB_CPPFLAGS += +Z
+
+SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname
+# May need  $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS))
+
+ifeq ($(notdir $(CC)),gcc)
+SHAREDLIB_CFLAGS = -fPIC
+endif
+
+endif

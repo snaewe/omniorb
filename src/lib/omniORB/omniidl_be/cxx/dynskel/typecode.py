@@ -28,8 +28,23 @@
 
 # $Id$
 # $Log$
+# Revision 1.18  2000/08/18 14:09:14  dpg1
+# Merge from omni3_develop for 3.0.1 release.
+#
 # Revision 1.17  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.14.2.10  2000/08/18 09:42:44  djs
+# Fixed silly typo in last fix (fix == s/definied/defined/)
+#
+# Revision 1.14.2.9  2000/08/17 18:22:32  djs
+# Fixed typecode generation bug which caused an error for
+#  interface I{
+#    typedef sequence<I> t_I;
+#  };
+#
+# Revision 1.14.2.8  2000/08/07 15:34:35  dpg1
+# Partial back-port of long long from omni3_1_develop.
 #
 # Revision 1.14.2.7  2000/07/03 14:56:43  djs
 # Fixed bug generating typecodes for struct members which are anonymous
@@ -162,8 +177,10 @@ def mangleName(prefix, scopedName):
     mangled = prefix + id.Name(scopedName).guard()
     return mangled
 
-# We need to be able to detect recursive types so keep track of the current
-# node here
+# Note: The AST has a notion of recursive structs and unions, but it can only
+# say whether it is recursive, and not tell you how many nodes up the tree
+# the recursive definition is. So we keep track of currently being-defined
+# nodes here for that purpose.
 self.__currentNodes = []
 
 def startingNode(node):
@@ -171,10 +188,9 @@ def startingNode(node):
 def finishingNode():
     assert(self.__currentNodes != [])
     self.__currentNodes = self.__currentNodes[0:len(self.__currentNodes)-1]
-def recursive(node):
+def currently_being_defined(node):
     return node in self.__currentNodes
 def recursive_Depth(node):
-    assert recursive(node)
     outer = self.__currentNodes[:]
     depth = 1
 
@@ -300,6 +316,11 @@ def mkTypeCode(type, declarator = None, node = None):
         return prefix + basic[type.kind()] + "_tc()"
 
     if isinstance(type, idltype.Base):
+        if type.kind() in [idltype.tk_longlong, idltype.tk_ulonglong] :
+            util.fatalError("Long long type is not supported with -Wba " \
+                            "in this release")
+            raise "Long long not supported"
+
         util.fatalError("Internal error generating TypeCode data")
         raise "Don't know how to generate TypeCode for Base kind = " +\
               repr(type.kind())
@@ -313,13 +334,15 @@ def mkTypeCode(type, declarator = None, node = None):
 
     if isinstance(type, idltype.Sequence):
         seqType = type.seqType()
-        # is the sequence type the same as the current node being defined
-        # (ie is it recursive)
-        if isinstance(seqType, idltype.Declared) and \
-           recursive(seqType.decl()):
-            depth = recursive_Depth(seqType.decl())
-            return prefix + "recursive_sequence_tc(" + str(type.bound()) +\
-                   ", " + str(depth) + ")"
+        if isinstance(seqType, idltype.Declared):
+            decl = seqType.decl()
+            if hasattr(decl, "recursive"):
+                # ONLY use a recursive typecode if we're actually defining
+                # it. Otherwise a normal reference will do...
+                if decl.recursive() and currently_being_defined(decl):
+                    depth = recursive_Depth(decl)
+                    return prefix + "recursive_sequence_tc(" +\
+                           str(type.bound()) + ", " + str(depth) + ")"
             
         return prefix + "sequence_tc(" + str(type.bound()) + ", " +\
                mkTypeCode(types.Type(type.seqType())) + ")"
@@ -454,10 +477,11 @@ def visitStruct(node):
             while isinstance(base_type, idltype.Sequence):
                 base_type = base_type.seqType()
 
-            # careful of recursive structs
-            if isinstance(base_type, idltype.Declared) and \
-               not(recursive(base_type.decl())):
-                base_type.decl().accept(self)
+            # if a struct is recursive, don't loop forever :)
+            if isinstance(base_type, idltype.Declared):
+                decl = base_type.decl()
+                if not(currently_being_defined(decl)):
+                    base_type.decl().accept(self)
                         
     self.__override = override
 
@@ -548,10 +572,10 @@ def visitUnion(node):
             seqType = caseType.type().seqType()
             while isinstance(seqType, idltype.Sequence):
                 seqType = seqType.seqType()
-            # careful of recursive unions
-            if isinstance(seqType, idltype.Declared) and \
-               not(recursive(seqType.decl())):
-                seqType.decl().accept(self)
+            if isinstance(seqType, idltype.Declared):
+                # don't loop forever
+                if not(currently_being_defined(seqType.decl())):
+                    seqType.decl().accept(self)
                 
         self.__override = override
         

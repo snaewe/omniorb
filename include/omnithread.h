@@ -150,6 +150,10 @@ class omni_thread;
 #elif defined(__freebsd__)
 #include <omnithread/posix.h>
 
+#elif defined(__rtems__)
+#include <omnithread/posix.h>
+#include <sched.h>
+
 #else
 #error "No implementation header file"
 #endif
@@ -521,6 +525,14 @@ OMNI_THREAD_EXPOSE:
     OMNI_THREAD_IMPLEMENTATION
 };
 
+#ifndef __rtems__
 static omni_thread::init_t omni_thread_init;
+#else
+// RTEMS calls global Ctor/Dtor in a context that is not
+// a posix thread. Calls to functions to pthread_self() in
+// that context returns NULL. 
+// So, for RTEMS we will make the thread initialization at the
+// beginning of the Init task that has a posix context.
+#endif
 
 #endif

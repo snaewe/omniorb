@@ -29,8 +29,14 @@
 
 /*
   $Log$
+  Revision 1.4  2000/08/18 14:09:20  dpg1
+  Merge from omni3_develop for 3.0.1 release.
+
   Revision 1.3  2000/07/13 15:26:05  dpg1
   Merge from omni3_develop for 3.0 release.
+
+  Revision 1.1.2.11  2000/08/17 15:37:51  sll
+  Merged RTEMS port.
 
   Revision 1.1.2.10  2000/06/27 16:15:08  sll
   New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
@@ -138,7 +144,7 @@
 
 #include <stddef.h>
 
-#if !defined(__atmos__) && !defined(_WIN32) && !defined(__VMS)
+#if !defined(__atmos__) && !defined(_WIN32) && !defined(__VMS) && !defined(__rtems__)
 #include <strings.h>
 #include <string.h>
 #else

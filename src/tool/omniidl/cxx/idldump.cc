@@ -28,8 +28,14 @@
 
 // $Id$
 // $Log$
+// Revision 1.13  2000/08/18 14:09:07  dpg1
+// Merge from omni3_develop for 3.0.1 release.
+//
 // Revision 1.12  2000/07/13 15:25:53  dpg1
 // Merge from omni3_develop for 3.0 release.
+//
+// Revision 1.9.2.1  2000/08/14 14:35:13  dpg1
+// IDL dumping now properly escapes string and char constants
 //
 // Revision 1.9  2000/02/03 14:50:08  dpg1
 // Native declarations can now be used as types.
@@ -65,6 +71,7 @@
 #include <idltype.h>
 
 #include <stdio.h>
+#include <ctype.h>
 
 DumpVisitor::
 DumpVisitor()
@@ -92,6 +99,33 @@ printScopedName(const ScopedName* sn)
   char* ssn = sn->toString();
   printf("%s", ssn);
   delete [] ssn;
+}
+
+void
+DumpVisitor::
+printString(const char* str)
+{
+  const char* c;
+  for (c=str; *c; c++) {
+    if (*c == '\\')
+      printf("\\\\");
+    else if (isprint(*c))
+      putchar(*c);
+    else
+      printf("\\%03o", (int)(unsigned char)*c);
+  }
+}
+
+void
+DumpVisitor::
+printChar(const char c)
+{
+  if (c == '\\')
+    printf("\\\\");
+  else if (isprint(c))
+    putchar(c);
+  else
+    printf("\\%03o", (int)(unsigned char)c);
 }
 
 
@@ -178,9 +212,17 @@ visitConst(Const* c)
   case IdlType::tk_boolean:
     printf("%s", c->constAsBoolean() ? "TRUE" : "FALSE");
     break;
-  case IdlType::tk_char:    printf("'%c'",   c->constAsChar());        break;
+  case IdlType::tk_char:
+    printf("'");
+    printChar(c->constAsChar());
+    printf("'");
+    break;
   case IdlType::tk_octet:   printf("%d",     (int)c->constAsOctet());  break;
-  case IdlType::tk_string:  printf("\"%s\"", c->constAsString());      break;
+  case IdlType::tk_string:
+    printf("\"");
+    printString(c->constAsString());
+    printf("\"");
+    break;
 #ifdef HAS_LongLong
   case IdlType::tk_longlong:  printf("%Ld", c->constAsLongLong());     break;
   case IdlType::tk_ulonglong: printf("%Lu", c->constAsULongLong());    break;
@@ -304,7 +346,11 @@ visitCaseLabel(CaseLabel* l)
   case IdlType::tk_boolean:
     printf("%s", l->labelAsBoolean() ? "TRUE" : "FALSE");
     break;
-  case IdlType::tk_char:      printf("'%c'", l->labelAsChar());     break;
+  case IdlType::tk_char:
+    printf("'");
+    printChar(l->labelAsChar());
+    printf("'");
+    break;
 #ifdef HAS_LongLong
   case IdlType::tk_longlong:  printf("%Ld", l->labelAsLongLong());  break;
   case IdlType::tk_ulonglong: printf("%Lu", l->labelAsULongLong()); break;

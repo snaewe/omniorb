@@ -206,7 +206,8 @@ int main(int argc, char* argv[])
 	  return 1;
 	}
       IRTypeId = strdup(argv[2]);
-      hostname = strdup(argv[3]);
+      hostname = new char[strlen(argv[3]) + 1];
+      strcpy(hostname, argv[3]);
       port = atoi(argv[4]);
       objKey = strdup(argv[5]);
     }
@@ -219,7 +220,8 @@ int main(int argc, char* argv[])
 	}
 
       IRTypeId = strdup(argv[1]);
-      hostname = strdup(argv[2]);
+      hostname = new char[strlen(argv[2]) + 1];
+      strcpy(hostname, argv[2]);
       port = atoi(argv[3]);
 
       if (argc < 5) objKey = 0;
@@ -247,7 +249,6 @@ int main(int argc, char* argv[])
     }
 
   free(IRTypeId);
-  free(hostname);
   if (objKey != 0)  free(objKey);
 
   delete[] ior;

@@ -29,7 +29,7 @@ AR = ar cq
 CPP = /usr/libexec/cpp
 
 CXX = g++295
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
+CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = -O2
 
 CXXLINK		= $(CXX) -pthread -s
@@ -40,7 +40,7 @@ EgcsMajorVersion = 1
 EgcsMinorVersion = 1        # This is actually a post-1.0 egcs snapshot.
 
 CC           = gcc295
-CMAKEDEPEND  = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
+CMAKEDEPEND  += -D__GNUC__
 CDEBUGFLAGS  = -O2
 
 CLINK        = $(CC)
@@ -88,3 +88,11 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 #CORBA_LIB_NODYN	+= -lomniORB3 -ltcpwrapGK -lomnithread
 #CORBA_LIB_NODYN	+= -Wl,-Bdynamic
 #OMNITHREAD_LIB_NODYN = -lomnithread
+
+#
+# Shared Library support.     
+#
+BuildSharedLibrary = 1       # Enable
+SHAREDLIB_CPPFLAGS = -fPIC
+#
+# everything else is default from unix.mk

@@ -119,6 +119,7 @@ CORBA::ORB::poll_next_response()
   if( incoming_q )  return 1;
 
   RequestLink** rlp = &outgoing_q;
+  RequestLink*  rlp_1 = 0;
 
   while( *rlp ) {
     RequestLink* rl = *rlp;
@@ -133,8 +134,12 @@ CORBA::ORB::poll_next_response()
       } else
 	incoming_q = incoming_q_tail = rl;
       *rlp = next;
-    } else
+      if (outgoing_q_tail == rl)
+	outgoing_q_tail = rlp_1;
+    } else {
       rlp = &rl->next;
+      rlp_1 = rl;
+    }
   }
 
   return incoming_q != 0;
@@ -179,17 +184,23 @@ CORBA::ORB::get_next_response(Request_out req_out)
 
     // Check the outgoing queue to see if any of them have completed.
     RequestLink** rlp = &outgoing_q;
+    RequestLink*  rlp_1 = 0;
+
     while( *rlp ) {
       RequestLink* rl = *rlp;
 
       if( rl->request->poll_response() ) {
 	*rlp = rl->next;
 	req_out = rl->request;
+	if (outgoing_q_tail == rl)
+	  outgoing_q_tail = rlp_1;
 	delete rl;
 	internal_get_response(req_out._data);
 	RETURN_CORBA_STATUS;
-      } else
+      } else {
 	rlp = &rl->next;
+	rlp_1 = rl;
+      }
     }
 
     // Otherwise just block on the first one in the outgoing queue.

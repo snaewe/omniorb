@@ -29,8 +29,21 @@
 
 /*
   $Log$
+  Revision 1.35  2000/08/18 14:09:13  dpg1
+  Merge from omni3_develop for 3.0.1 release.
+
   Revision 1.34  2000/07/13 15:25:58  dpg1
   Merge from omni3_develop for 3.0 release.
+
+  Revision 1.29.6.23  2000/08/08 15:01:43  dpg1
+  -ORBpoa_iiop_port no longer overrides OMNIORB_USEHOSTNAME.
+
+  Revision 1.29.6.22  2000/08/04 15:26:11  dpg1
+  ORB_init() now defaults ORB id to empty string, and accepts empty
+  string as valid.
+
+  Revision 1.29.6.21  2000/07/21 10:03:08  dpg1
+  String_var copy initialisations changed to direct initialisations.
 
   Revision 1.29.6.20  2000/07/10 10:56:43  sll
   Minor rearrangement to keep DEC C++ 5.6 happy.
@@ -201,6 +214,7 @@
 #include <errno.h>
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 
 
 #define MY_ORB_ID           "omniORB3"
@@ -655,6 +669,9 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 {
   CORBA::Boolean orbId_match = 0;
 
+  if (orb_identifier[0] == '\0')
+    orb_identifier = MY_ORB_ID;
+
   if( orb_identifier && strcmp(orb_identifier, MY_ORB_ID)
                      && strcmp(orb_identifier, OLD_ORB_ID) ) {
     if( omniORB::trace(1) ) {
@@ -731,8 +748,8 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	}
 	{
 	  unsigned int slen = strlen(argv[idx+1]) + 1;
-	  CORBA::String_var id  = CORBA::string_alloc(slen);
-	  CORBA::String_var uri = CORBA::string_alloc(slen);
+	  CORBA::String_var id(CORBA::string_alloc(slen));
+	  CORBA::String_var uri(CORBA::string_alloc(slen));
 	  if (sscanf(argv[idx+1], "%[^=]=%s", (char*)id, (char*)uri) != 2) {
 	    if (omniORB::trace(1)) {
 	      omniORB::logger l;
@@ -1132,8 +1149,10 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  return 0;
 	}
 
+	const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
+	if( !hostname )  hostname = "";
 	omniObjAdapter::options.
-	  incomingPorts.push_back(omniObjAdapter::ListenPort("", port));
+	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
 
 	move_args(argc, argv, idx, 2);
 	continue;

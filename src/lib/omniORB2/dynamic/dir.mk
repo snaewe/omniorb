@@ -52,7 +52,9 @@ lib = $(patsubst %,$(LibPattern),omniORB3)
 dynlib = $(patsubst %,$(LibPattern),omniDynamic3)
 lclib = $(patsubst %,$(LibPattern),omniLC)
 
-SUBDIRS = sharedlib
+ifdef BuildSharedLibrary
+SUBDIRS =sharedlib
+endif
 
 endif
 
@@ -76,7 +78,7 @@ CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS)
 
 SUBDIRS += debug
 
-ifndef ETSKernel
+ifdef BuildSharedLibrary
 SUBDIRS +=sharedlib
 endif
 

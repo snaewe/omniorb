@@ -29,8 +29,14 @@
 
 /*
   $Log$
+  Revision 1.34  2000/08/18 14:09:13  dpg1
+  Merge from omni3_develop for 3.0.1 release.
+
   Revision 1.33  2000/07/13 15:25:57  dpg1
   Merge from omni3_develop for 3.0 release.
+
+  Revision 1.30.6.10  2000/07/21 10:03:09  dpg1
+  String_var copy initialisations changed to direct initialisations.
 
   Revision 1.30.6.9  2000/06/28 13:20:33  sll
   Pre-release 3 updates
@@ -300,8 +306,8 @@ void initFile::initialize()
 
     if (strcmp((const char*)entryname,"ORBInitRef") == 0) {
       unsigned int slen = strlen(data) + 1;
-      CORBA::String_var id  = CORBA::string_alloc(slen);
-      CORBA::String_var uri = CORBA::string_alloc(slen);
+      CORBA::String_var id(CORBA::string_alloc(slen));
+      CORBA::String_var uri(CORBA::string_alloc(slen));
       if (sscanf(data, "%[^=]=%s", (char*)id, (char*)uri) != 2) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger l;

@@ -28,8 +28,19 @@
 
 # $Id$
 # $Log$
-# Revision 1.21  2000/07/13 15:26:02  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.22  2000/08/18 14:09:15  dpg1
+# Merge from omni3_develop for 3.0.1 release.
+#
+# Revision 1.18.2.10  2000/08/14 19:34:44  djs
+# Performs a quick scan of the AST looking for unsupported IDL constructs
+# before doing anything else.
+#
+# Revision 1.18.2.9  2000/08/07 15:34:34  dpg1
+# Partial back-port of long long from omni3_1_develop.
+#
+# Revision 1.18.2.8  2000/07/18 15:34:17  djs
+# Added -Wbvirtual_objref option to make attribute and operation _objref
+# methods virtual
 #
 # Revision 1.18.2.7  2000/06/26 16:23:09  djs
 # Added new backend arguments.
@@ -133,6 +144,7 @@ from omniidl_be.cxx import impl
 
 from omniidl_be.cxx import id
 
+from omniidl_be.cxx import support
 from omniidl_be.cxx import config
 
 import re, sys, os.path
@@ -184,6 +196,8 @@ def process_args(args):
             config.state['Keep Include Path'] = 1
         elif arg == "use_quotes":
             config.state['Use Quotes']        = 1
+        elif arg == "virtual_objref":
+            config.state['Virtual Objref Methods'] = 1
         elif arg == "debug":
             config.state['Debug']             = 1
         elif arg[:2] == "h=":
@@ -206,6 +220,9 @@ def run(tree, args):
     process_args(args)
 
     try:
+        # Check the input tree only contains stuff we understand
+        support.checkIDL(tree)
+        
         # build the list of include files
         walker = config.WalkTreeForIncludes()
         tree.accept(walker)
@@ -233,8 +250,9 @@ def run(tree, args):
             util.unsupportedIDL()
             
         util.fatalError("An AttributeError exception was caught")
-    except SystemExit:
+    except SystemExit, e:
         # fatalError function throws SystemExit exception
-        pass
+        # *** Should delete partial output files here
+        raise e
     except:
         util.fatalError("An internal exception was caught")

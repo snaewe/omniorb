@@ -28,8 +28,18 @@
 
 # $Id$
 # $Log$
+# Revision 1.16  2000/08/18 14:09:14  dpg1
+# Merge from omni3_develop for 3.0.1 release.
+#
 # Revision 1.15  2000/07/13 15:26:01  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.12.2.10  2000/08/14 19:34:45  djs
+# Performs a quick scan of the AST looking for unsupported IDL constructs
+# before doing anything else.
+#
+# Revision 1.12.2.9  2000/08/07 15:34:35  dpg1
+# Partial back-port of long long from omni3_1_develop.
 #
 # Revision 1.12.2.8  2000/06/28 13:59:04  dpg1
 # Remove dependency on traceback module.
@@ -139,12 +149,11 @@ def fatalError(explanation):
             print "Exception:"
             print "-------------------------"
             traceback.print_exc()
-            sys.exit(-1)
-            return
+        sys.exit(1)
     
     lines = string.split(explanation, "\n")
     lines = [ "Fatal error in C++ backend", "" ] + lines
-    lines = lines + [ "Debug mode is currently off" ]
+    #lines = lines + [ "Debug mode is currently off" ]
 
     for line in lines:
         sys.stderr.write("omniidl: " + line + "\n")
@@ -155,7 +164,7 @@ For more information (mailing list archives, bug reports etc) please visit
 the webpage:
   http://www.uk.research.att.com/omniORB/omniORB.html
 """)
-    sys.exit(-1)
+    sys.exit(1)
 
 # Called whenever an unsupported IDL construct is found in the input
 # (necessary because the front end supports all the new CORBA 2.3
@@ -165,7 +174,7 @@ def unsupportedIDL():
 Unsupported IDL construct encountered in input.
 
 omniORB does not currently support:
-  IDL types longlong, longdouble, wchar, wstring, fixed, valuetype
+  IDL types longdouble, wchar, wstring, fixed, valuetype
 """
     fatalError(e)
     

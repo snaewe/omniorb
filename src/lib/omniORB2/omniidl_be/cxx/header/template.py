@@ -28,8 +28,26 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  2000/08/18 14:09:14  dpg1
+# Merge from omni3_develop for 3.0.1 release.
+#
 # Revision 1.6  2000/07/13 15:26:00  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.3.2.16  2000/08/10 10:38:23  sll
+# Support new pragma hh in the cxx omniidl backend.  Added CPP macro guards
+# to stub header to preserve the value of USE_core_stub_in_nt_dll and
+# USE_dyn_stub_in_nt_dll.
+#
+# Revision 1.3.2.15  2000/07/26 15:29:11  djs
+# Missing typedef and forward when generating BOA skeletons
+#
+# Revision 1.3.2.14  2000/07/24 09:35:20  dpg1
+# Adding the missing constructor meant that there was no longer a
+# default constructor.
+#
+# Revision 1.3.2.13  2000/07/24 10:17:31  djs
+# Added missing BOA skeleton constructor
 #
 # Revision 1.3.2.12  2000/07/04 12:57:55  djs
 # Fixed Any insertion/extraction operators for unions and exceptions
@@ -114,6 +132,15 @@ main = """\
 #include <omniORB3/CORBA.h>
 #endif
 
+#ifndef  USE_core_stub_in_nt_dll
+# define USE_core_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+#ifndef  USE_dyn_stub_in_nt_dll
+# define USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+
+@cxx_direct_include@
+
 @includes@
 
 #ifdef USE_stub_in_nt_dll
@@ -161,6 +188,16 @@ main = """\
 @operators@
 
 @marshalling@
+
+#ifdef   USE_core_stub_in_nt_dll_NOT_DEFINED_@guard@
+# undef  USE_core_stub_in_nt_dll
+# undef  USE_core_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+#ifdef   USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
+# undef  USE_dyn_stub_in_nt_dll
+# undef  USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+
 
 #endif  // __@guard@_hh__
 """
@@ -226,6 +263,7 @@ interface_begin = """\
 class @name@;
 class _objref_@name@;
 class _impl_@name@;
+@class_sk_name@
 typedef _objref_@name@* @name@_ptr;
 typedef @name@_ptr @name@Ref;
 
@@ -347,6 +385,8 @@ class _sk_@name@ :
   @sk_inherits@
 {
 public:
+  _sk_@name@() {}
+  _sk_@name@(const omniOrbBoaKey&);
   virtual ~_sk_@name@();
   inline @name@::_ptr_type _this() {
     return (@name@::_ptr_type) omniOrbBoaServant::_this(@name@::_PD_repoId);
@@ -434,6 +474,7 @@ typedef @base@_Helper @name@_Helper;
 typedef @base@_var @name@_var;
 typedef @base@_out @name@_out;
 """
+
 
 typedef_enum_oper_friend = """\
 // Need to declare <<= for elem type, as GCC expands templates early

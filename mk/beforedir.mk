@@ -16,7 +16,7 @@ ifdef BASE_OMNI_TREE
 	@exit 1
 forceabort: ;
 else
-BASE_OMNI_TREE = $(THIS_IMPORT_TREE)
+BASE_OMNI_TREE := $(THIS_IMPORT_TREE)
 endif
 
 
@@ -121,6 +121,25 @@ ExportExecutable=$(NoExportTreeError)
 ExportLibrary=$(NoExportTreeError)
 endif
 
+#############################################################################
+#
+# MAKECMDGOALS is defined from gnumake 3.77 onwards.
+# If an earlier gnumake version is used, we fall back to use the OMAKE_TARGET
+# variable passed in by omake.
+# 
+#
+ifndef MAKECMDGOALS
+ifdef OMAKE_TARGET
+MAKECMDGOALS = $(OMAKE_TARGET)
+endif
+endif
+
+# When ODE is used, OMAKE will be defined. Otherwise falls back to gnumake.
+#
+ifndef OMAKE
+OMAKE=$(MAKE)
+endif
+
 
 #############################################################################
 #
@@ -144,7 +163,7 @@ define MakeSubdirs
  for dir in $$subdirs ; do \
    $(CreateDir); \
    (cd $$dir ; echo "making $$target in $(CURRENT)/$$dir..." ; \
-    eval $(MAKE) $$subdir_makeflags $$target ) ; \
+    eval $(OMAKE) $$subdir_makeflags $$target ) ; \
    if [ $$? != 0 ]; then \
      exit 1; \
    fi; \
@@ -295,7 +314,6 @@ IMPORT_IDLFLAGS += -I. $(patsubst %,-I%,$(VPATH)) \
 CORBA_IDL_FILES = $(CORBA_INTERFACES:%=%.idl)
 
 CORBA_STUB_DIR = $(TOP)/stub
-CORBA_STUB_DIR_TO_TOP = ..
 
 CorbaImplementation = NO_CORBA_IMPLEMENTATION
 
@@ -305,6 +323,7 @@ CORBA_LIB		= $($(CorbaImplementation)_LIB)
 CORBA_LIB_DEPEND	= $($(CorbaImplementation)_LIB_DEPEND)
 CORBA_LIB_NODYN		= $($(CorbaImplementation)_LIB_NODYN)
 CORBA_LIB_NODYN_DEPEND	= $($(CorbaImplementation)_LIB_NODYN_DEPEND)
+CORBA_IDL_OUTPUTDIR_PATTERN = $($(CorbaImplementation)_IDL_OUTPUTDIR_PATTERN)
 
 CORBA_STUB_HDR_PATTERN	= $($(CorbaImplementation)_STUB_HDR_PATTERN)
 CORBA_STUB_SRC_PATTERN	= $($(CorbaImplementation)_STUB_SRC_PATTERN)

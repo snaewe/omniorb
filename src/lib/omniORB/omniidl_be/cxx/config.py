@@ -64,6 +64,8 @@ class ConfigurationState:
             # Do we #include files using double-quotes rather than
             # angled brackets (the default)
             'Use Quotes':            0,
+            # Do we make all the objref methods virtual
+            'Virtual Objref Methods':0,
             # Are we in DEBUG mode?
             'Debug':                 0
                        
