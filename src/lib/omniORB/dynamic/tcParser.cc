@@ -226,11 +226,12 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
     case CORBA::tk_double:
       { CORBA::Double d;  d <<= ibuf; d >>= obuf; return; }
     case CORBA::tk_boolean:
-      { CORBA::Boolean d; d <<= ibuf; d >>= obuf; return; }
+      { CORBA::Boolean d; d = ibuf.unmarshalBoolean(); 
+        obuf.marshalBoolean(d); return; }
     case CORBA::tk_char:
-      { CORBA::Char d;    d <<= ibuf; d >>= obuf; return; }
+      { CORBA::Char d; d = ibuf.unmarshalChar(); obuf.marshalChar(d); }
     case CORBA::tk_octet:
-      { CORBA::Octet d;   d <<= ibuf; d >>= obuf; return; }
+      { CORBA::Octet d; d = ibuf.unmarshalOctet(); obuf.marshalOctet(d); }
     case CORBA::tk_enum:
       { CORBA::ULong d;   d <<= ibuf; d >>= obuf; return; }
 
@@ -576,13 +577,13 @@ tcParser::appendSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
       *tcdata.p_double  >>= pd_mbuf;
       break;
     case CORBA::tk_boolean:
-      *tcdata.p_boolean >>= pd_mbuf;
+      pd_mbuf.marshalBoolean(*tcdata.p_boolean);
       break;
     case CORBA::tk_char:
-      *tcdata.p_char    >>= pd_mbuf;
+      pd_mbuf.marshalChar(*tcdata.p_char);
       break;
     case CORBA::tk_octet:
-      *tcdata.p_octet   >>= pd_mbuf;
+      pd_mbuf.marshalOctet(*tcdata.p_octet);
       break;
     case CORBA::tk_enum:
       *tcdata.p_enum    >>= pd_mbuf;
@@ -644,17 +645,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
   case CORBA::tk_string:
     {
-      if (*tcdata.p_string.ptr) {
-	CORBA::ULong len = strlen(*tcdata.p_string.ptr) + 1;
-	len >>= pd_mbuf;
-	pd_mbuf.put_char_array((unsigned char*) *tcdata.p_string.ptr, len);
-      }
-      else {
-	CORBA::ULong len = 1;
-	len >>= pd_mbuf;
-	CORBA::Char(0) >>= pd_mbuf;
-	if( omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(0);	
-      }
+      pd_mbuf.marshalString(*tcdata.p_string.ptr);
       break;
     }
 
@@ -766,9 +757,9 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    // - Pointer to initial element is stored in same
 	    //   place as p_streamdata by the compiler (see tcDescriptor)
 	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
-	    pd_mbuf.put_char_array((CORBA::Char*)desc.p_streamdata,
-				   contiguous * (alignTable[0].simple.size),
-				   alignTable[0].simple.alignment);
+	    pd_mbuf.put_octet_array((CORBA::Char*)desc.p_streamdata,
+				    contiguous * (alignTable[0].simple.size),
+				    alignTable[0].simple.alignment);
 	    i += contiguous;
 	  }
 	}
@@ -804,7 +795,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    // - Pointer to initial element is stored in same
 	    //   place as p_streamdata by the compiler (see tcDescriptor)
 	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
-	    pd_mbuf.get_char_array((CORBA::Char*)desc.p_streamdata,
+	    pd_mbuf.get_octet_array((CORBA::Char*)desc.p_streamdata,
 				   contiguous * (alignTable[0].simple.size),
 				   alignTable[0].simple.alignment);
 	    i += contiguous;
@@ -849,13 +840,13 @@ tcParser::fetchSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
       *tcdata.p_double  <<= pd_mbuf;
       break;
     case CORBA::tk_boolean:
-      *tcdata.p_boolean <<= pd_mbuf;
+      *tcdata.p_boolean = pd_mbuf.unmarshalBoolean(); 
       break;
     case CORBA::tk_char:
-      *tcdata.p_char    <<= pd_mbuf;
+      *tcdata.p_char = pd_mbuf.unmarshalChar();
       break;
     case CORBA::tk_octet:
-      *tcdata.p_octet   <<= pd_mbuf;
+      *tcdata.p_octet = pd_mbuf.unmarshalOctet();
       break;
     case CORBA::tk_enum:
       *tcdata.p_enum    <<= pd_mbuf;
@@ -923,15 +914,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
     {
       if(tcdata.p_string.release )
 	_CORBA_String_helper::free(*tcdata.p_string.ptr);
-      CORBA::ULong len;
-      len <<= pd_mbuf;
-      if( len ) {
-	*tcdata.p_string.ptr = _CORBA_String_helper::alloc(len - 1);
-	pd_mbuf.get_char_array((unsigned char*) *tcdata.p_string.ptr, len);
-      }
-      else {
-	*tcdata.p_string.ptr = (char*) _CORBA_String_helper::empty_string;
-      }
+      *tcdata.p_string.ptr = pd_mbuf.unmarshalString();
       break;
     }
 
@@ -1071,9 +1054,9 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    //   place as p_streamdata by the compiler (see tcDescriptor)
 	    // - Contiguous buffer is large enough & suitably aligned
 	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
-	    pd_mbuf.get_char_array((CORBA::Char*)desc.p_streamdata,
-				   contiguous * (alignTable[0].simple.size),
-				   alignTable[0].simple.alignment);
+	    pd_mbuf.get_octet_array((CORBA::Char*)desc.p_streamdata,
+				    contiguous * (alignTable[0].simple.size),
+				    alignTable[0].simple.alignment);
 	    i += contiguous;
 	  }
 	}
@@ -1108,9 +1091,9 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    //   place as p_streamdata by the compiler (see tcDescriptor)
 	    // - Contiguous buffer is large enough & suitably aligned
 	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
-	    pd_mbuf.get_char_array((CORBA::Char*)desc.p_streamdata,
-				   contiguous * (alignTable[0].simple.size),
-				   alignTable[0].simple.alignment);
+	    pd_mbuf.get_octet_array((CORBA::Char*)desc.p_streamdata,
+				    contiguous * (alignTable[0].simple.size),
+				    alignTable[0].simple.alignment);
 	    i += contiguous;
 	  }
 	}

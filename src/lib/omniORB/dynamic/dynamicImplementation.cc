@@ -107,7 +107,9 @@ public:
 
   void marshal(cdrStream& s) {
     CORBA::TypeCode_var tc = pd_req.exception().type();
-    _CORBA_String_helper::marshal(tc->id(),s);
+    CORBA::ULong repoIdSize = strlen(tc->id())+1;
+    repoIdSize >>= s;
+    s.put_octet_array((CORBA::Octet*) tc->id(), repoIdSize);
     pd_req.exception().NP_marshalDataOnly(s);
   }
 

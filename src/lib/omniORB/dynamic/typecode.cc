@@ -30,6 +30,10 @@
 
 /* 
  * $Log$
+ * Revision 1.38.2.4  2000/11/03 19:07:32  sll
+ * Use new marshalling functions for byte, octet and char. Use get_octet_array
+ * instead of get_char_array.
+ *
  * Revision 1.38.2.3  2000/10/06 16:40:54  sll
  * Changed to use cdrStream.
  *
@@ -3501,7 +3505,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	      TypeCode_offsetTable offsetTbl(otbl, -8);
 
 	      // Write out the byteorder
-	      omni::myByteOrder >>= *paramlist;
+	      (*paramlist).marshalOctet(omni::myByteOrder);
 
 	      // Call the supplied typecode object to marshal its complex
 	      // parameter data into the temporary stream.
@@ -3519,8 +3523,8 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 	  ::operator>>= ((CORBA::ULong)paramlist->bufSize(), s);
 
 	  // And copy the data out to the main stream
-	  s.put_char_array((CORBA::Char*) paramlist->bufPtr(),
-			   paramlist->bufSize());
+	  s.put_octet_array((CORBA::Char*) paramlist->bufPtr(),
+			    paramlist->bufSize());
 
 #if 0
 	  // Ensure that the paramlist is freed, or saved as a cached
@@ -3680,8 +3684,7 @@ TypeCode_marshaller::unmarshal(cdrStream& s,
       s.copy_to(mbs, size);
 
       // Get the byte order
-      CORBA::Boolean byteorder;
-      byteorder <<= mbs;
+      CORBA::Boolean byteorder = mbs.unmarshalBoolean();
       mbs.setByteSwapFlag(byteorder);
 
       // Now switch on the Kind to call the appropriate
@@ -4267,19 +4270,19 @@ TypeCode_union_helper::marshalLabel(TypeCode_union::Discriminator l,
   case CORBA::tk_char:
     {
       CORBA::Char c = CORBA::Char(l);
-      c >>= s;
+      s.marshalChar(c);
       break;
     }
   case CORBA::tk_boolean:
     {
       CORBA::Boolean c = CORBA::Boolean(l);
-      c >>= s;
+      s.marshalBoolean(c);
       break;
     }
   case CORBA::tk_octet:
     {
       CORBA::Octet c = CORBA::Octet(l);
-      c >>= s;
+      s.marshalOctet(c);
       break;
     }
   case CORBA::tk_short:
@@ -4324,20 +4327,17 @@ TypeCode_union_helper::unmarshalLabel(CORBA::TypeCode_ptr tc,
   switch( aetc->NP_kind() ) {
   case CORBA::tk_char:
     {
-      CORBA::Char c;
-      c <<= s;
+      CORBA::Char c = s.unmarshalChar();
       return TypeCode_union::Discriminator(c);
     }
   case CORBA::tk_boolean:
     {
-      CORBA::Boolean c;
-      c <<= s;
+      CORBA::Boolean c = s.unmarshalBoolean();
       return TypeCode_union::Discriminator(c);
     }
   case CORBA::tk_octet:
     {
-      CORBA::Octet c;
-      c <<= s;
+      CORBA::Octet c = s.unmarshalOctet();
       return TypeCode_union::Discriminator(c);
     }
   case CORBA::tk_short:

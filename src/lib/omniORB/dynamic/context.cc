@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.12.2.4  2000/11/03 19:07:31  sll
+ Use new marshalling functions for byte, octet and char. Use get_octet_array
+ instead of get_char_array.
+
  Revision 1.12.2.3  2000/10/06 16:40:53  sll
  Changed to use cdrStream.
 
@@ -607,11 +611,11 @@ CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
 
     CORBA::ULong len = strlen(which[j]) + 1;
     len >>= s;
-    s.put_char_array((CORBA::Char*) which[j], len);
+    s.put_octet_array((CORBA::Octet*) which[j], len);
 
     len = strlen(value) + 1;
     len >>= s;
-    s.put_char_array((CORBA::Char*) value, len);
+    s.put_octet_array((CORBA::Octet*) value, len);
 
   }
 }
