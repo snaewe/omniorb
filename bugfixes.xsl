@@ -128,12 +128,13 @@
 
 <xsl:template match="bug">
 
-    <a><xsl:attribute name="name">bug<xsl:value-of select="@id"/>
-       </xsl:attribute>
-    </a>
     <tr><td>Summary:</td>
         <td><b><xsl:value-of select="summary"/></b>
-            (bug number <xsl:value-of select="@id"/>)</td>
+            (bug number <xsl:value-of select="@id"/>)
+            <a><xsl:attribute name="name">bug<xsl:value-of select="@id"/>
+               </xsl:attribute>
+            </a>
+        </td>
     </tr>
 
     <tr><td>Date:      </td><td><xsl:value-of select="@date"/></td></tr>
