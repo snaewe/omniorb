@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/23 18:49:25  djs
+# Lots of fixes, especially marshalling code
+# Added todo list to keep track of issues
+#
 # Revision 1.1  1999/11/10 20:19:31  djs
 # Option to emulate scope bug in old backend
 # Array struct element fix
@@ -78,6 +82,11 @@ class Environment:
             raise KeyError
         self.__names[slashName] = 1
 
+    def __str__(self):
+        s = "current scope = " + repr(self.__scope) +\
+            "names defined = " + repr(self.__names)
+        return s
+
     # partialNames consist of a list [A, B, C, D] and are searched
     # for in scope moving outward from the current scope.
     # a name of the form [None, A, B, C, D] is a globally scoped name
@@ -119,6 +128,7 @@ class Environment:
     #   typedef ::alias test;
     # surely this clashes with the innermost typedef?
     def relName(self, scopedName):
+        #print "\n\nrelName(" + repr(scopedName) + ")"
         # add the name to the environment anyway. Not the job of the
         # backend to find IDL name problems
         slashName = idlutil.slashName(scopedName)
@@ -128,6 +138,9 @@ class Environment:
             return [None]
         
         prunedName = idlutil.pruneScope(scopedName, self.__scope)
+        # if we just pruned the whole name away, add a bit back
+        prunedName = [scopedName[-1]]
+        
         # Add an extra sentinel element (the other none is a global
         # scope marker)
         bitPruned = [None, None] +\
@@ -137,7 +150,7 @@ class Environment:
 
         # a scopedName such as [A, B, C, D] in a scope [A, B] leaves
         # bitPruned = [None, A, B] prunedName = [C, D]
-
+        #print "scopedName = " + repr(scopedName)
         #print "names = " + repr(self.__names.keys())
         #print "prunedname = " + repr(prunedName)
         #print "bitpruned = " + repr(bitPruned)
