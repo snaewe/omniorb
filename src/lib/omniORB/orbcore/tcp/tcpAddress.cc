@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2001/08/23 16:47:01  sll
+  Fixed missing cleanup in the switch to use orbParameters to store all
+   configuration parameters.
+
   Revision 1.1.2.6  2001/07/31 16:16:18  sll
   New transport interface to support the monitoring of active connections.
 
@@ -54,6 +58,7 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <orbParameters.h>
 #include <tcp/tcpConnection.h>
 #include <tcp/tcpAddress.h>
 #include <stdio.h>
@@ -186,14 +191,14 @@ tcpAddress::Connect(unsigned long deadline_secs,
 	return 0;
       }
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      if (t.tv_sec > giopStrand::scanPeriod) {
-	t.tv_sec = giopStrand::scanPeriod;
+      if (t.tv_sec > orbParameters::scanGranularity) {
+	t.tv_sec = orbParameters::scanGranularity;
       }
 #endif
     }
     else {
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      t.tv_sec = giopStrand::scanPeriod;
+      t.tv_sec = orbParameters::scanGranularity;
       t.tv_usec = 0;
 #else
       t.tv_sec = t.tv_usec = 0;

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2001/08/23 16:47:01  sll
+  Fixed missing cleanup in the switch to use orbParameters to store all
+   configuration parameters.
+
   Revision 1.1.2.6  2001/07/31 16:16:17  sll
   New transport interface to support the monitoring of active connections.
 
@@ -55,6 +59,7 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <orbParameters.h>
 #include <SocketCollection.h>
 #include <tcp/tcpConnection.h>
 #include <stdio.h>
@@ -194,14 +199,14 @@ tcpConnection::Recv(void* buf, size_t sz,
 	return 0;
       }
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      if (t.tv_sec > giopStrand::scanPeriod) {
-	t.tv_sec = giopStrand::scanPeriod;
+      if (t.tv_sec > orbParameters::scanGranularity) {
+	t.tv_sec = orbParameters::scanGranularity;
       }
 #endif
     }
     else {
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      t.tv_sec = giopStrand::scanPeriod;
+      t.tv_sec = orbParameters::scanGranularity;
       t.tv_usec = 0;
 #else
       t.tv_sec = t.tv_usec = 0;
@@ -274,8 +279,8 @@ tcpConnection::peeraddress() {
 }
 
 /////////////////////////////////////////////////////////////////////////
-tcpConnection::tcpConnection(SocketHandle_t sock, 
-			     SocketCollection* belong_to) : 
+tcpConnection::tcpConnection(SocketHandle_t sock,
+			     SocketCollection* belong_to) :
   SocketLink(sock), pd_belong_to(belong_to) {
 
   struct sockaddr_in addr;

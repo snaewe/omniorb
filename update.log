@@ -1,3 +1,13 @@
+Thu Aug 23 17:44:18 BST 2001 sll
+================================
+
+- Fixed missing cleanup in the switch to use orbParameters to store all
+  configuration parameters.
+  
+src/lib/omniORB/orbcore/tcp/tcpConnnection.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+
+
 Thu Aug 23 16:54:55 BST 2001 sll
 ================================
 
