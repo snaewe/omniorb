@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/11/17 19:12:07  dpg1
+  Better choice of exceptions in UTF-8.
+
   Revision 1.1.2.4  2000/11/16 12:33:44  dpg1
   Minor fixes to permit use of UShort as WChar.
 
@@ -236,7 +239,7 @@ NCS_C_UTF_8::marshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
     // processors. Cases 3, 2 and 1 should drop through with no
     // branching code.
     switch (bytes) {
-    case 6: OMNIORB_THROW(MARSHAL,         0, CORBA::COMPLETED_MAYBE);
+    case 6: OMNIORB_THROW(BAD_PARAM,       0, CORBA::COMPLETED_MAYBE);
     case 5:
     case 4: OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
     case 3: c = *s++; lc = (lc << 6) | (c & 0x3f); error |= (c & 0xc0) ^ 0x80;
@@ -258,7 +261,7 @@ NCS_C_UTF_8::marshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
     // to become available.
     if (error) {
       // At least one extension byte was not of the form 10xxxxxx
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
     }
   }
   // Null terminator
@@ -321,12 +324,12 @@ NCS_C_UTF_8::unmarshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
       _CORBA_ULong lc = (uc - 0xd800) << 10;
       if (++i == len) {
 	// No second half to surrogate pair
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
       }
       uc = us[i];
       if (uc < 0xdc00 || uc > 0xdfff) {
 	// Value is not a valid second half to a surrogate pair
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
       }
       lc = lc + uc - 0xdc00 + 0x10000;
 
@@ -337,7 +340,7 @@ NCS_C_UTF_8::unmarshalString(cdrStream& stream, omniCodeSet::TCS_C* tcs,
     }
     else if (uc < 0xe000) {
       // Second half of surrogate pair not allowed on its own
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
     }
     else {
       b.insert(0xe0 | ((uc & 0xf000) >> 12));
@@ -395,12 +398,12 @@ TCS_C_UTF_8::marshalString(cdrStream& stream,
       _CORBA_ULong lc = (uc - 0xd800) << 10;
       if (++i == len) {
 	// No second half to surrogate pair
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
       }
       uc = us[i];
       if (uc < 0xdc00 || uc > 0xdfff) {
 	// Value is not a valid second half to a surrogate pair
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
       }
       lc = lc + uc - 0xdc00 + 0x10000;
 
@@ -411,7 +414,7 @@ TCS_C_UTF_8::marshalString(cdrStream& stream,
     }
     else if (uc < 0xe000) {
       // Second half of surrogate pair not allowed on its own
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
     }
     else {
       b.insert(0xe0 | ((uc & 0xf000) >> 12));
@@ -467,7 +470,7 @@ TCS_C_UTF_8::unmarshalString(cdrStream& stream,
     // processors. Cases 3, 2 and 1 should drop through with no
     // branching code.
     switch (bytes) {
-    case 6: OMNIORB_THROW(MARSHAL,         0, CORBA::COMPLETED_MAYBE);
+    case 6: OMNIORB_THROW(BAD_PARAM,       0, CORBA::COMPLETED_MAYBE);
     case 5:
     case 4: OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
     case 3:
@@ -495,7 +498,7 @@ TCS_C_UTF_8::unmarshalString(cdrStream& stream,
     // to become available.
     if (error) {
       // At least one extension byte was not of the form 10xxxxxx
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
     }
   }
   if (lc != 0) // Check for null-terminator
@@ -643,7 +646,7 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
       // processors. Cases 2 and 1 should drop through with no
       // branching code.
       switch (bytes) {
-      case 6: OMNIORB_THROW(MARSHAL,         0, CORBA::COMPLETED_MAYBE);
+      case 6: OMNIORB_THROW(BAD_PARAM,       0, CORBA::COMPLETED_MAYBE);
       case 5:
       case 4:
       case 3: OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
@@ -660,7 +663,7 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
 
       if (error) {
 	// At least one extension byte was not of the form 10xxxxxx
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
       }
     }
     if (uc != 0) // Check for null-terminator
