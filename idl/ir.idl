@@ -429,14 +429,15 @@ interface InterfaceDef : Container, Contained, IDLType {
                                 in ParDescriptionSeq params,
                                 in ExceptionDefSeq exceptions,
                                 in ContextIdSeq contexts);
+};
 
-  struct InterfaceDescription {
-    Identifier name;
-    RepositoryId id;
-    RepositoryId defined_in;
-    VersionSpec version;
-    RepositoryIdSeq base_interfaces;
-  };
+
+struct InterfaceDescription {
+  Identifier name;
+  RepositoryId id;
+  RepositoryId defined_in;
+  VersionSpec version;
+  RepositoryIdSeq base_interfaces;
 };
 
 
