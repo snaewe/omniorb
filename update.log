@@ -1,3 +1,19 @@
+Mon Dec 22 18:09:26 GMT 1997 sll
+================================
+
+version5.2 is now /project/omni/release.
+
+Added the following symlink:
+
+slib --> ../version5.1/slib
+sbin --> ../version5.1/sbin
+
+This is a temporary setup and should be changed when the old instance of
+omniNames is retired.
+
+At the moment, the startup script on marrow only starts the old instance.
+The new instance is started by hand.  
+
 Fri Dec 19 17:47:04 GMT 1997 bjh
 ================================
 
