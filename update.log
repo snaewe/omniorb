@@ -1,3 +1,11 @@
+Mon Aug  7 11:28:55 BST 2000 sll
+================================
+
+- On win32 platforms, client side socket was left in non-blocking state
+  after connect() succeeded. Bug is now fixed.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
 Fri Aug  4 16:23:29 BST 2000 dpg1
 =================================
 
