@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.14.2.3  2000/11/03 19:25:42  sll
+# Updated library name to omniORB4.
+#
 # Revision 1.14.2.2  2000/10/12 15:37:46  sll
 # Updated from omni3_1_develop.
 #
@@ -50,7 +53,7 @@ class ConfigurationState:
             # Useful data from CVS
             'CVS ID':                '$Id$',
             # Relevant omniORB C++ library version
-            'Library Version':       'omniORB_3_0',
+            'Library Version':       'omniORB_4_0',
             # Suffix of generated header file
             'HH Suffix':             '.hh',
             # Suffix of generated Skeleton file
