@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.17.2.3  2000/10/27 16:31:09  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.17.2.2  2000/10/10 10:18:51  dpg1
 // Update omniidl front-end from omni3_develop.
 //
@@ -158,12 +161,12 @@
 
 // Don't know when it was fixed -- certainly in 2.0.0
 
-static inline PyObject* MyPyLong_FromLongLong(_CORBA_LongLong ll)
+static inline PyObject* MyPyLong_FromLongLong(IDL_LongLong ll)
 {
   if (ll >= 0) // Positive numbers work OK
     return PyLong_FromLongLong(ll);
   else {
-    _CORBA_ULongLong ull = (~ll) + 1; // Hope integers are 2's complement...
+    IDL_ULongLong ull = (~ll) + 1; // Hope integers are 2's complement...
     PyObject* p = PyLong_FromUnsignedLongLong(ull);
     PyObject* n = PyNumber_Negative(p);
     Py_DECREF(p);
@@ -220,7 +223,7 @@ public:
   PyObject* result() { return result_; }
 
   static PyObject* scopedNameToList(const ScopedName* sn);
-  static PyObject* wstringToList(const _CORBA_WChar* ws);
+  static PyObject* wstringToList(const IDL_WChar* ws);
 
 private:
   PyObject* pragmasToList(const Pragma* ps);
@@ -337,10 +340,10 @@ findPyDecl(const ScopedName* sn)
 
 PyObject*
 PythonVisitor::
-wstringToList(const _CORBA_WChar* ws)
+wstringToList(const IDL_WChar* ws)
 {
   int i;
-  const _CORBA_WChar* wc;
+  const IDL_WChar* wc;
 
   for (i=0, wc=ws; *wc; ++wc, ++i);
   PyObject* pyl = PyList_New(i);
@@ -1257,7 +1260,7 @@ extern "C" {
     PyObject*   pyname = PyFile_Name(pyfile);
     const char* name   = PyString_AsString(pyname);
 
-    _CORBA_Boolean success = AST::process(file, name);
+    IDL_Boolean success = AST::process(file, name);
 
     PyObject* result;
 
@@ -1294,7 +1297,7 @@ extern "C" {
     PyObject*   pyname = PyFile_Name(pyfile);
     const char* name   = PyString_AsString(pyname);
 
-    _CORBA_Boolean success = AST::process(file, name);
+    IDL_Boolean success = AST::process(file, name);
 
     if (success) {
       DumpVisitor v;

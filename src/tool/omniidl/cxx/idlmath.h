@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.2  2000/10/27 16:31:09  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.4.2.1  2000/07/17 10:36:04  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -49,14 +52,14 @@
 
 #if defined(__linux__)
 
-inline _CORBA_Boolean IdlFPOverflow(_CORBA_Float f) {
+inline IDL_Boolean IdlFPOverflow(IDL_Float f) {
   return isinff(f) || isnanf(f);
 }
-inline _CORBA_Boolean IdlFPOverflow(_CORBA_Double f) {
+inline IDL_Boolean IdlFPOverflow(IDL_Double f) {
   return isinf(f) || isnan(f);
 }
 #ifdef HAS_LongDouble
-inline _CORBA_Boolean IdlFPOverflow(_CORBA_LongDouble f) {
+inline IDL_Boolean IdlFPOverflow(IDL_LongDouble f) {
   return isinfl(f) || isnanl(f);
 }
 #endif
@@ -65,29 +68,29 @@ inline _CORBA_Boolean IdlFPOverflow(_CORBA_LongDouble f) {
 
 #include <nan.h>
 
-inline _CORBA_Boolean IdlFPOverflow(_CORBA_Float f) {
+inline IDL_Boolean IdlFPOverflow(IDL_Float f) {
   double d = f;
   return IsNANorINF(d);
 }
-inline _CORBA_Boolean IdlFPOverflow(_CORBA_Double f) {
+inline IDL_Boolean IdlFPOverflow(IDL_Double f) {
   return IsNANorINF(f);
 }
 #ifdef HAS_LongDouble
-inline _CORBA_Boolean IdlFPOverflow(_CORBA_LongDouble f) {
+inline IDL_Boolean IdlFPOverflow(IDL_LongDouble f) {
   return 0;
 }
 #endif
 
 #else // No FP overflow detection
 
-inline _CORBA_Boolean IdlFPOverflow(_CORBA_Float f) {
+inline IDL_Boolean IdlFPOverflow(IDL_Float f) {
   return 0;
 }
-inline _CORBA_Boolean IdlFPOverflow(_CORBA_Double f) {
+inline IDL_Boolean IdlFPOverflow(IDL_Double f) {
   return 0;
 }
 #ifdef HAS_LongDouble
-inline _CORBA_Boolean IdlFPOverflow(_CORBA_LongDouble f) {
+inline IDL_Boolean IdlFPOverflow(IDL_LongDouble f) {
   return 0;
 }
 #endif

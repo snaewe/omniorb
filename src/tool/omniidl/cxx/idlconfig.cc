@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.2  2000/10/27 16:31:08  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.2.2.1  2000/07/17 10:36:02  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -45,7 +48,7 @@
 #include <idlconfig.h>
 
 
-_CORBA_Boolean Config::quiet          = 0;
-_CORBA_Boolean Config::forwardWarning = 1;
-_CORBA_Boolean Config::keepComments   = 0;
-_CORBA_Boolean Config::commentsFirst  = 0;
+IDL_Boolean Config::quiet          = 0;
+IDL_Boolean Config::forwardWarning = 1;
+IDL_Boolean Config::keepComments   = 0;
+IDL_Boolean Config::commentsFirst  = 0;

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.2  2000/10/27 16:31:09  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.4.2.1  2000/07/17 10:36:03  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -47,7 +50,7 @@
 #include <idlutil.h>
 #include <idlscope.h>
 
-typedef int _CORBA_Fixed; // ***
+typedef int IDL_Fixed; // ***
 
 class Enumerator;
 class Enum;
@@ -59,27 +62,27 @@ public:
   IdlExpr(const char* file, int line) : file_(idl_strdup(file)), line_(line) {}
   virtual ~IdlExpr() { delete [] file_; }
 
-  virtual _CORBA_Short        evalAsShort();
-  virtual _CORBA_Long         evalAsLong();
-  virtual _CORBA_UShort       evalAsUShort();
-  virtual _CORBA_ULong        evalAsULong();
-  virtual _CORBA_Float        evalAsFloat();
-  virtual _CORBA_Double       evalAsDouble();
-  virtual _CORBA_Boolean      evalAsBoolean();
-  virtual _CORBA_Char         evalAsChar();
-  virtual _CORBA_Octet        evalAsOctet();
+  virtual IDL_Short        evalAsShort();
+  virtual IDL_Long         evalAsLong();
+  virtual IDL_UShort       evalAsUShort();
+  virtual IDL_ULong        evalAsULong();
+  virtual IDL_Float        evalAsFloat();
+  virtual IDL_Double       evalAsDouble();
+  virtual IDL_Boolean      evalAsBoolean();
+  virtual IDL_Char         evalAsChar();
+  virtual IDL_Octet        evalAsOctet();
   virtual const char*         evalAsString();
   virtual Enumerator*         evalAsEnumerator(const Enum* target);
 #ifdef HAS_LongLong
-  virtual _CORBA_LongLong     evalAsLongLong();
-  virtual _CORBA_ULongLong    evalAsULongLong();
+  virtual IDL_LongLong     evalAsLongLong();
+  virtual IDL_ULongLong    evalAsULongLong();
 #endif
 #ifdef HAS_LongDouble
-  virtual _CORBA_LongDouble   evalAsLongDouble();
+  virtual IDL_LongDouble   evalAsLongDouble();
 #endif
-  virtual _CORBA_WChar        evalAsWChar();
-  virtual const _CORBA_WChar* evalAsWString();
-  virtual _CORBA_Fixed        evalAsFixed();
+  virtual IDL_WChar        evalAsWChar();
+  virtual const IDL_WChar* evalAsWString();
+  virtual IDL_Fixed        evalAsFixed();
 
   inline const char* file() { return file_; }
   inline int         line() { return line_; }
@@ -100,27 +103,27 @@ public:
   DummyExpr(const char* file, int line) : IdlExpr(file, line) {}
   virtual ~DummyExpr() {}
 
-  _CORBA_Short        evalAsShort()                        { return 1; }
-  _CORBA_Long         evalAsLong()                         { return 1; }
-  _CORBA_UShort       evalAsUShort()                       { return 1; }
-  _CORBA_ULong        evalAsULong()                        { return 1; }
-  _CORBA_Float        evalAsFloat()                        { return 1.0; }
-  _CORBA_Double       evalAsDouble()                       { return 1.0; }
-  _CORBA_Boolean      evalAsBoolean()                      { return 0; }
-  _CORBA_Char         evalAsChar()                         { return '!'; }
-  _CORBA_Octet        evalAsOctet()                        { return 1; }
+  IDL_Short        evalAsShort()                        { return 1; }
+  IDL_Long         evalAsLong()                         { return 1; }
+  IDL_UShort       evalAsUShort()                       { return 1; }
+  IDL_ULong        evalAsULong()                        { return 1; }
+  IDL_Float        evalAsFloat()                        { return 1.0; }
+  IDL_Double       evalAsDouble()                       { return 1.0; }
+  IDL_Boolean      evalAsBoolean()                      { return 0; }
+  IDL_Char         evalAsChar()                         { return '!'; }
+  IDL_Octet        evalAsOctet()                        { return 1; }
   const char*         evalAsString()                       { return "!"; }
   Enumerator*         evalAsEnumerator(const Enum* target) { return 0; }
 #ifdef HAS_LongLong
-  _CORBA_LongLong     evalAsLongLong()                     { return 1; }
-  _CORBA_ULongLong    evalAsULongLong()                    { return 1; }
+  IDL_LongLong     evalAsLongLong()                     { return 1; }
+  IDL_ULongLong    evalAsULongLong()                    { return 1; }
 #endif
 #ifdef HAS_LongDouble
-  _CORBA_LongDouble   evalAsLongDouble()                   { return 1.0; }
+  IDL_LongDouble   evalAsLongDouble()                   { return 1.0; }
 #endif
-  _CORBA_WChar        evalAsWChar()                        { return '!'; }
-  const _CORBA_WChar* evalAsWString();
-  _CORBA_Fixed        evalAsFixed()                        { return 1; }
+  IDL_WChar        evalAsWChar()                        { return '!'; }
+  const IDL_WChar* evalAsWString();
+  IDL_Fixed        evalAsFixed()                        { return 1; }
 
   const char* errText() { return "dummy"; }
 };
@@ -134,14 +137,14 @@ public:
     : IdlExpr(file, line), value_(v) { }
   ~IntegerExpr() {}
 
-  _CORBA_Short        evalAsShort();
-  _CORBA_Long         evalAsLong();
-  _CORBA_UShort       evalAsUShort();
-  _CORBA_ULong        evalAsULong();
-  _CORBA_Octet        evalAsOctet();
+  IDL_Short        evalAsShort();
+  IDL_Long         evalAsLong();
+  IDL_UShort       evalAsUShort();
+  IDL_ULong        evalAsULong();
+  IDL_Octet        evalAsOctet();
 #ifdef HAS_LongLong
-  _CORBA_LongLong     evalAsLongLong();
-  _CORBA_ULongLong    evalAsULongLong();
+  IDL_LongLong     evalAsLongLong();
+  IDL_ULongLong    evalAsULongLong();
 #endif
   const char*         errText() { return "integer literal"; }
 private:
@@ -162,50 +165,50 @@ private:
 
 class WStringExpr : public IdlExpr {
 public:
-  WStringExpr(const char* file, int line, const _CORBA_WChar* v)
+  WStringExpr(const char* file, int line, const IDL_WChar* v)
     : IdlExpr(file, line), value_(idl_wstrdup(v)) {}
   ~WStringExpr() { delete [] value_; }
 
-  const _CORBA_WChar* evalAsWString();
+  const IDL_WChar* evalAsWString();
   const char*         errText() { return "wide string literal"; }
 private:
-  _CORBA_WChar* value_;
+  IDL_WChar* value_;
 };
 
 class CharExpr : public IdlExpr {
 public:
-  CharExpr(const char* file, int line, _CORBA_Char v)
+  CharExpr(const char* file, int line, IDL_Char v)
     : IdlExpr(file, line), value_(v) { }
   ~CharExpr() {}
 
-  _CORBA_Char         evalAsChar();
+  IDL_Char         evalAsChar();
   const char*         errText() { return "character literal"; }
 private:
-  _CORBA_Char value_;
+  IDL_Char value_;
 };
 
 class WCharExpr : public IdlExpr {
 public:
-  WCharExpr(const char* file, int line, _CORBA_WChar v)
+  WCharExpr(const char* file, int line, IDL_WChar v)
     : IdlExpr(file, line), value_(v) {}
   ~WCharExpr() {}
 
-  _CORBA_WChar        evalAsWChar();
+  IDL_WChar        evalAsWChar();
   const char*         errText() { return "wide character literal"; }
 private:
-  _CORBA_WChar value_;
+  IDL_WChar value_;
 };
 
 class FixedExpr : public IdlExpr {
 public:
-  FixedExpr(const char* file, int line, _CORBA_Fixed v)
+  FixedExpr(const char* file, int line, IDL_Fixed v)
     : IdlExpr(file, line), value_(v) {}
   ~FixedExpr() {}
 
-  _CORBA_Fixed        evalAsFixed();
+  IDL_Fixed        evalAsFixed();
   const char*         errText() { return "fixed point literal"; }
 private:
-  _CORBA_Fixed value_;
+  IDL_Fixed value_;
 };
 
 class FloatExpr : public IdlExpr {
@@ -214,10 +217,10 @@ public:
     : IdlExpr(file, line), value_(v) { }
   ~FloatExpr() {}
 
-  _CORBA_Float        evalAsFloat();
-  _CORBA_Double       evalAsDouble();
+  IDL_Float        evalAsFloat();
+  IDL_Double       evalAsDouble();
 #ifdef HAS_LongDouble
-  _CORBA_LongDouble   evalAsLongDouble();
+  IDL_LongDouble   evalAsLongDouble();
 #endif
   const char*         errText() { return "floating point literal"; }
 private:
@@ -226,14 +229,14 @@ private:
 
 class BooleanExpr : public IdlExpr {
 public:
-  BooleanExpr(const char* file, int line, _CORBA_Boolean v)
+  BooleanExpr(const char* file, int line, IDL_Boolean v)
     : IdlExpr(file, line), value_(v) { }
   ~BooleanExpr() {}
 
-  _CORBA_Boolean      evalAsBoolean();
+  IDL_Boolean      evalAsBoolean();
   const char*         errText() { return "boolean literal"; }
 private:
-  _CORBA_Boolean value_;
+  IDL_Boolean value_;
 };
 
 // Enumerator referred to by scoped name
@@ -257,27 +260,27 @@ public:
     : IdlExpr(file, line), c_(c), scopedName_(sn) {}
   ~ConstExpr() {}
 
-  _CORBA_Short        evalAsShort();
-  _CORBA_Long         evalAsLong();
-  _CORBA_UShort       evalAsUShort();
-  _CORBA_ULong        evalAsULong();
-  _CORBA_Float        evalAsFloat();
-  _CORBA_Double       evalAsDouble();
-  _CORBA_Boolean      evalAsBoolean();
-  _CORBA_Char         evalAsChar();
-  _CORBA_Octet        evalAsOctet();
+  IDL_Short        evalAsShort();
+  IDL_Long         evalAsLong();
+  IDL_UShort       evalAsUShort();
+  IDL_ULong        evalAsULong();
+  IDL_Float        evalAsFloat();
+  IDL_Double       evalAsDouble();
+  IDL_Boolean      evalAsBoolean();
+  IDL_Char         evalAsChar();
+  IDL_Octet        evalAsOctet();
   const char*         evalAsString();
   Enumerator*         evalAsEnumerator(const Enum* target);
 #ifdef HAS_LongLong
-  _CORBA_LongLong     evalAsLongLong();
-  _CORBA_ULongLong    evalAsULongLong();
+  IDL_LongLong     evalAsLongLong();
+  IDL_ULongLong    evalAsULongLong();
 #endif
 #ifdef HAS_LongDouble
-  _CORBA_LongDouble   evalAsLongDouble();
+  IDL_LongDouble   evalAsLongDouble();
 #endif
-  _CORBA_WChar        evalAsWChar();
-  const _CORBA_WChar* evalAsWString();
-  _CORBA_Fixed        evalAsFixed();
+  IDL_WChar        evalAsWChar();
+  const IDL_WChar* evalAsWString();
+  IDL_Fixed        evalAsFixed();
 
   const char* errText() { return "constant"; }
 private:
@@ -292,25 +295,25 @@ private:
 #ifdef HAS_LongLong
 
 #define EXPR_S_INT_CONVERSION_FUNCTIONS \
-  _CORBA_Short        evalAsShort();    \
-  _CORBA_Long         evalAsLong();     \
-  _CORBA_LongLong     evalAsLongLong();
+  IDL_Short        evalAsShort();    \
+  IDL_Long         evalAsLong();     \
+  IDL_LongLong     evalAsLongLong();
 
 #define EXPR_U_INT_CONVERSION_FUNCTIONS \
-  _CORBA_UShort       evalAsUShort();   \
-  _CORBA_ULong        evalAsULong();    \
-  _CORBA_Octet        evalAsOctet();    \
-  _CORBA_ULongLong    evalAsULongLong();
+  IDL_UShort       evalAsUShort();   \
+  IDL_ULong        evalAsULong();    \
+  IDL_Octet        evalAsOctet();    \
+  IDL_ULongLong    evalAsULongLong();
 
 #else
 #define EXPR_S_INT_CONVERSION_FUNCTIONS \
-  _CORBA_Short        evalAsShort();    \
-  _CORBA_Long         evalAsLong();
+  IDL_Short        evalAsShort();    \
+  IDL_Long         evalAsLong();
 
 #define EXPR_U_INT_CONVERSION_FUNCTIONS \
-  _CORBA_UShort       evalAsUShort();   \
-  _CORBA_ULong        evalAsULong();    \
-  _CORBA_Octet        evalAsOctet();
+  IDL_UShort       evalAsUShort();   \
+  IDL_ULong        evalAsULong();    \
+  IDL_Octet        evalAsOctet();
 
 #endif
 
@@ -320,13 +323,13 @@ private:
 
 #ifdef HAS_LongDouble
 #define EXPR_FLOAT_CONVERSION_FUNCTIONS \
-  _CORBA_Float        evalAsFloat();    \
-  _CORBA_Double       evalAsDouble();   \
-  _CORBA_LongDouble   evalAsLongDouble();
+  IDL_Float        evalAsFloat();    \
+  IDL_Double       evalAsDouble();   \
+  IDL_LongDouble   evalAsLongDouble();
 #else
 #define EXPR_FLOAT_CONVERSION_FUNCTIONS \
-  _CORBA_Float        evalAsFloat();    \
-  _CORBA_Double       evalAsDouble();
+  IDL_Float        evalAsFloat();    \
+  IDL_Double       evalAsDouble();
 #endif
 
 #define EXPR_CONVERSION_FUNCTIONS    \

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3.2.2  2000/10/27 16:31:08  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.3.2.1  2000/07/17 10:36:02  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -76,7 +79,7 @@ int main(int argc, char** argv)
     f    = stdin;
   }
 
-  _CORBA_Boolean success = AST::process(f, name);
+  IDL_Boolean success = AST::process(f, name);
 
   fclose(f);
 

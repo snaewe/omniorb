@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.2  2000/10/27 16:31:10  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.4.2.1  2000/07/17 10:36:05  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -44,9 +47,8 @@
 #ifndef _idlsysdep_h_
 #define _idlsysdep_h_
 
-// Types
-#include <CORBA_sysdep.h>    // ***
-#include <CORBA_basetypes.h> // ***
+#define USE_omniORB_logStream
+#include <omniORB4/CORBA_sysdep.h>
 
 
 // As usual, Windows manages to be different...
@@ -57,5 +59,112 @@
 #define DLL_EXPORT
 #include <strings.h>
 #endif
+
+
+#ifdef HAS_Cplusplus_Bool
+typedef bool                      IDL_Boolean;
+#else
+typedef unsigned char             IDL_Boolean;
+#endif
+
+typedef unsigned char             IDL_Char;
+
+typedef unsigned char             IDL_Octet;
+
+typedef short                     IDL_Short;
+
+typedef unsigned short            IDL_UShort;
+
+typedef unsigned short            IDL_WChar;
+
+#if SIZEOF_LONG == 4
+typedef long                      IDL_Long;
+
+typedef unsigned long             IDL_ULong;
+#elif SIZEOF_INT == 4
+typedef int                       IDL_Long;
+
+typedef unsigned int              IDL_ULong;
+#else
+# error "Can't map Long (32 bits) to a native type."
+#endif
+
+#ifdef HAS_LongLong
+typedef _CORBA_LONGLONG_DECL      IDL_LongLong;
+typedef _CORBA_ULONGLONG_DECL     IDL_ULongLong;
+#endif
+
+
+#ifndef NO_FLOAT
+
+#ifndef __VMS
+
+// This platform uses IEEE float
+typedef float                     IDL_Float;
+typedef double                    IDL_Double;
+
+#ifdef HAS_LongDouble
+typedef _CORBA_LONGDOUBLE_DECL    IDL_LongDouble;
+#endif
+
+#else	// VMS float test
+
+// VMS now always uses proxies for float.
+#define USING_PROXY_FLOAT
+
+#undef cvt_
+#if __D_FLOAT
+#define cvt_ cvt_d_
+#elif __G_FLOAT
+#define cvt_ cvt_g_
+#else
+#define cvt_ cvt_ieee_
+#endif
+
+class IDL_Float {
+  IDL_Long pd_f;
+  void cvt_d_(float f);
+  float cvt_d_() const;
+  void cvt_g_(float f);
+  float cvt_g_() const;
+#ifndef __VAX
+  void cvt_ieee_(float f);
+  float cvt_ieee_() const;
+#endif
+public:
+  // using compiler generated copy constructor and copy assignment
+  inline IDL_Float() {cvt_(0.0f);}
+  inline IDL_Float(float f) {cvt_(f);}
+  inline operator float() const {return cvt_();}
+};
+
+class IDL_Double {
+  IDL_Long pd_d[2];
+  void cvt_d_(double d);
+  double cvt_d_() const;
+  void cvt_g_(double d);
+  double cvt_g_() const;
+#ifndef __VAX
+  void cvt_ieee_(double d);
+  double cvt_ieee_() const;
+#endif
+public:
+  // using compiler generated copy constructor and copy assignment
+  inline IDL_Double() {cvt_(0.0);}
+  inline IDL_Double(double d) {cvt_(d);}
+  inline operator double() const {return cvt_();}
+};
+
+#undef cvt_
+
+//  Assume long double type is compatible with the CORBA standard.
+
+#ifdef HAS_LongDouble
+typedef _CORBA_LONGDOUBLE_DECL    IDL_LongDouble;
+#endif
+
+#endif   // VMS float test
+#endif   // !defined(NO_FLOAT)
+
 
 #endif // _idlsysdep_h_

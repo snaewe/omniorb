@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.3  2000/10/27 16:31:10  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.5.2.2  2000/10/10 10:18:51  dpg1
 // Update omniidl front-end from omni3_develop.
 //
@@ -63,12 +66,12 @@ char* idl_strdup(const char* s)
     return 0;
 }
 
-_CORBA_WChar* idl_wstrdup(const _CORBA_WChar* s)
+IDL_WChar* idl_wstrdup(const IDL_WChar* s)
 {
   if (s) {
     int i, len;
     for (len=0; s[len]; len++);
-    _CORBA_WChar* ret = new _CORBA_WChar[len+1];
+    IDL_WChar* ret = new IDL_WChar[len+1];
     for (i=0; i<len; i++)
       ret[i] = s[i];
     ret[i] = 0;
@@ -78,25 +81,25 @@ _CORBA_WChar* idl_wstrdup(const _CORBA_WChar* s)
     return 0;
 }
 
-int idl_wstrlen(const _CORBA_WChar* s)
+int idl_wstrlen(const IDL_WChar* s)
 {
   int l;
   for (l=0; *s; ++s, ++l);
   return l;
 }
 
-_CORBA_WChar* idl_wstrcpy(_CORBA_WChar* a, const _CORBA_WChar* b)
+IDL_WChar* idl_wstrcpy(IDL_WChar* a, const IDL_WChar* b)
 {
-  _CORBA_WChar* r = a;
+  IDL_WChar* r = a;
   for (; *b; ++a, ++b) *a = *b;
   *a = 0;
   return r;
 }
 
 
-_CORBA_WChar* idl_wstrcat(_CORBA_WChar* a, const _CORBA_WChar* b)
+IDL_WChar* idl_wstrcat(IDL_WChar* a, const IDL_WChar* b)
 {
-  _CORBA_WChar* r = a;
+  IDL_WChar* r = a;
   for (; *a; ++a);
   for (; *b; ++a, ++b) *a = *b;
   *a = 0;

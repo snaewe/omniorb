@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7.2.2  2000/10/27 16:31:10  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.7.2.1  2000/07/17 10:36:05  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -119,7 +122,7 @@ scopedNameToType(const char* file, int line, const ScopedName* sn)
 }
 
 // Static type object pointers
-_CORBA_Boolean IdlType::initialised_             = 0;
+IDL_Boolean    IdlType::initialised_             = 0;
 BaseType*      BaseType::nullType                = 0;
 BaseType*      BaseType::voidType                = 0;
 BaseType*      BaseType::shortType               = 0;

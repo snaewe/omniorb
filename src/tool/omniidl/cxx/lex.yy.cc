@@ -835,6 +835,9 @@ char *yytext;
 
 // $Id$
 // $Log$
+// Revision 1.10.2.3  2000/10/27 16:31:11  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.10.2.2  2000/10/10 10:18:52  dpg1
 // Update omniidl front-end from omni3_develop.
 //
@@ -909,18 +912,18 @@ char *yytext;
 #include <y_tab.h>
 #endif
 
-char*          currentFile;
-_CORBA_Boolean mainFile  = 1; // Are we processing the main file
-int            nestDepth = 0; // #include nesting depth
+char*       currentFile;
+IDL_Boolean mainFile  = 1; // Are we processing the main file
+int         nestDepth = 0; // #include nesting depth
 
 char octalToChar(char* s);
 char hexToChar(char* s);
 char escapeToChar(char* s);
-_CORBA_UShort octalToWChar(char* s);
-_CORBA_UShort hexToWChar(char* s);
-_CORBA_UShort escapeToWChar(char* s);
+IDL_UShort octalToWChar(char* s);
+IDL_UShort hexToWChar(char* s);
+IDL_UShort escapeToWChar(char* s);
 char* escapedStringToString(char* s);
-_CORBA_UShort* escapedStringToWString(char* s);
+IDL_UShort* escapedStringToWString(char* s);
 void parseLineDirective(char* s);
 int fixed(char* s);
 
@@ -2740,7 +2743,7 @@ char escapeToChar(char* s) {
   return s[1];
 }
 
-_CORBA_UShort octalToWChar(char* s) {
+IDL_UShort octalToWChar(char* s) {
   unsigned long ret = strtoul(s+1, 0, 8);
 
   if (ret > 255) { // This really is meant to be 255
@@ -2750,13 +2753,13 @@ _CORBA_UShort octalToWChar(char* s) {
   return ret;
 }
 
-_CORBA_UShort hexToWChar(char* s) {
+IDL_UShort hexToWChar(char* s) {
   unsigned long ret = strtoul(s+2, 0, 16);
 
   return ret;
 }
 
-_CORBA_UShort escapeToWChar(char* s) {
+IDL_UShort escapeToWChar(char* s) {
   switch (s[1]) {
   case 'n':  return '\n';
   case 't':  return '\t';
@@ -2830,10 +2833,10 @@ char* escapedStringToString(char* s) {
   return ret;
 }
 
-_CORBA_UShort* escapedStringToWString(char* s) {
-  int            len = strlen(s);
-  _CORBA_UShort* ret = new _CORBA_UShort[len+1];
-  char           tmp[8];
+IDL_UShort* escapedStringToWString(char* s) {
+  int         len = strlen(s);
+  IDL_UShort* ret = new IDL_UShort[len+1];
+  char        tmp[8];
 
   int from, to, i;
 

@@ -29,6 +29,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.2  2000/10/27 16:31:08  dpg1
+// Clean up of omniidl dependencies and types, from omni3_develop.
+//
 // Revision 1.5.2.1  2000/07/17 10:36:03  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -135,7 +138,7 @@ void IdlWarningCont(const char* file, int line, const char* fmt ...)
   }
 }
 
-_CORBA_Boolean
+IDL_Boolean
 IdlReportErrors()
 {
   if (!Config::quiet) {
@@ -156,8 +159,8 @@ IdlReportErrors()
       fprintf(stderr, ".\n");
   }
 
-  _CORBA_Boolean ret = (errorCount == 0);
-  errorCount         = 0;
-  warningCount       = 0;
+  IDL_Boolean ret = (errorCount == 0);
+  errorCount      = 0;
+  warningCount    = 0;
   return ret;
 }
