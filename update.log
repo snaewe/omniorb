@@ -1,3 +1,27 @@
+Thu Nov 16 12:30:58 GMT 2000 dpg1
+=================================
+
+- Minor fixes to permit use of UShort as WChar.
+
+include/omniORB4/codeSets.h
+src/lib/omniORB/orbcore/corbaWString.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+- Clarify marshalling of non-UTF-16 wchar
+
+src/lib/omniORB/orbcore/cs-16bit.cc
+
+- Implement UCS-4 transmission code set, and move it to the codeSets
+  library.
+
+src/lib/omniORB/codesets/cs-UCS-4.cc    NEW
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/orbcore/cs-UCS-4.cc     DELETED
+src/lib/omniORB/orbcore/dir.mk
+
+
 Wed Nov 15 19:13:12 GMT 2000 sll
 ================================
 
