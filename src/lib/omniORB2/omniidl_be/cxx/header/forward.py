@@ -28,8 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.10  2001/02/21 14:12:16  dpg1
-# Merge from omni3_develop for 3.0.3 release.
+# Revision 1.11  2001/06/15 14:38:09  dpg1
+# Merge from omni3_develop for 3.0.4 release.
+#
+# Revision 1.6.2.5  2001/04/25 16:55:10  dpg1
+# Properly handle files #included at non-file scope.
 #
 # Revision 1.6.2.4  2000/06/26 16:23:59  djs
 # Better handling of #include'd files (via new commandline options)
@@ -90,29 +93,21 @@ def __init__(stream):
 #
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if config.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
     # again check what happens here wrt reopening modules spanning
     # multiple files
-    if not(node.mainFile()):
-        return
-    
     for n in node.definitions():
         n.accept(self)
 
 
 def visitStruct(node):
-    if not(node.mainFile()):
-        return
-    
     for n in node.members():
         n.accept(self)
 
 def visitUnion(node):
-    if not(node.mainFile()):
-        return
-
     for n in node.cases():
         if n.constrType():
             n.caseType().decl().accept(self)
@@ -129,25 +124,16 @@ def visitUnion(node):
 
             
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-
     for n in node.declarations():
         n.accept(self)
 
 
 
 def visitException(node):
-    if not(node.mainFile()):
-        return
-    
     for n in node.members():
         n.accept(self)
         
 def visitMember(node):
-    if not(node.mainFile()):
-        return
-    
     if node.constrType():
         node.memberType().decl().accept(self)
 

@@ -28,8 +28,11 @@
 #
 # $Id$
 # $Log$
-# Revision 1.16  2001/02/21 14:12:16  dpg1
-# Merge from omni3_develop for 3.0.3 release.
+# Revision 1.17  2001/06/15 14:38:09  dpg1
+# Merge from omni3_develop for 3.0.4 release.
+#
+# Revision 1.11.2.10  2001/04/25 16:55:11  dpg1
+# Properly handle files #included at non-file scope.
 #
 # Revision 1.11.2.9  2000/10/16 18:05:58  djs
 # Tie templates used wrong operation argument mapping (bug #3)
@@ -233,11 +236,11 @@ class BOATieTemplates(idlvisitor.AstVisitor):
     def __init__(self, stream):
         self.stream = stream
     def visitAST(self, node):
-        for d in node.declarations(): d.accept(self)
+        for d in node.declarations():
+            if config.shouldGenerateCodeForDecl(d):
+                d.accept(self)
 
     def visitModule(self, node):
-        if not(node.mainFile()): return
-
         name = id.Name(node.scopedName())
         
         self.stream.out(template.module_begin,
@@ -251,8 +254,6 @@ class BOATieTemplates(idlvisitor.AstVisitor):
         
 
     def visitInterface(self, node):
-        if not(node.mainFile()): return
-        
         name = id.Name(node.scopedName())
 
         tie_name = name.simple()
@@ -270,12 +271,13 @@ class FlatTieTemplates(idlvisitor.AstVisitor):
     def __init__(self, stream):
         self.stream = stream
     def visitAST(self, node):
-        for d in node.declarations(): d.accept(self)
+        for d in node.declarations():
+            if config.shouldGenerateCodeForDecl(d):
+                d.accept(self)
     def visitModule(self, node):
-        for d in node.definitions(): d.accept(self)
+        for d in node.definitions():
+            d.accept(self)
     def visitInterface(self, node):
-        if not(node.mainFile()): return
-        
         self.generate_POA_tie(node)
         if config.state['BOA Skeletons']:
             self.generate_BOA_tie(node)

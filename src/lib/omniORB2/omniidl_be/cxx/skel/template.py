@@ -28,8 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.7  2001/02/21 14:12:15  dpg1
-# Merge from omni3_develop for 3.0.3 release.
+# Revision 1.8  2001/06/15 14:38:10  dpg1
+# Merge from omni3_develop for 3.0.4 release.
+#
+# Revision 1.1.2.11  2001/04/27 11:03:56  dpg1
+# Fix scoping bug in MSVC work-around for external constant linkage.
 #
 # Revision 1.1.2.10  2001/01/29 10:52:47  djs
 # In order to fix interface inheritance name ambiguity problem the
@@ -623,12 +626,24 @@ switch(_pd__d) {
 const_namespace = """\
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage othewise.
-namespace @scope@ {
-  extern const @type@ @name@=@value@;
-}
+@open_namespace@
+  extern const @type@ @simple_name@ = @value@;
+@close_namespace@
 #else
-const @type@ @scopedName@ = @value@;
+const @type@ @name@ = @value@;
 #endif
+"""
+
+const_simple = """\
+const @type@ @name@ = @value@;
+"""
+
+const_in_interface = """\
+const @type@ @name@ _init_in_cldef_( = @value@ );
+"""
+
+const_init_in_def = """\
+_init_in_def_( const @type@ @name@ = @value@; )
 """
 
 ##

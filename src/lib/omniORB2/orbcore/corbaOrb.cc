@@ -29,8 +29,11 @@
 
 /*
   $Log$
-  Revision 1.37  2001/02/21 14:12:14  dpg1
-  Merge from omni3_develop for 3.0.3 release.
+  Revision 1.38  2001/06/15 14:38:10  dpg1
+  Merge from omni3_develop for 3.0.4 release.
+
+  Revision 1.29.6.26  2001/06/07 16:11:37  dpg1
+  Segfault with zero ORB identifier in ORB_init().
 
   Revision 1.29.6.25  2000/09/21 14:22:48  sll
   Workaround for Sun C++ 5.0 or Forte WS 6.0 compiler bug.
@@ -699,7 +702,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 {
   CORBA::Boolean orbId_match = 0;
 
-  if (orb_identifier[0] == '\0')
+  if (orb_identifier && orb_identifier[0] == '\0')
     orb_identifier = MY_ORB_ID;
 
   if( orb_identifier && strcmp(orb_identifier, MY_ORB_ID)

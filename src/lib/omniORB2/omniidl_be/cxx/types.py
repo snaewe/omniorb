@@ -452,8 +452,12 @@ class Type:
             if s[-1] == 'L':
                 s = s[:-1]
             return "_CORBA_LONGLONG_CONST(" + s + ")"
-        if kind in [ idltype.tk_float, idltype.tk_double ]:
+        if kind in [ idltype.tk_float ]:
+            return str(value) + "F"
+
+        if kind in [ idltype.tk_double ]:
             return str(value)
+
         # chars are single-quoted
         if kind in [ idltype.tk_char, idltype.tk_wchar ]:
             if not(value in printable):

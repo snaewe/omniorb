@@ -66,6 +66,8 @@ class ConfigurationState:
             'Use Quotes':            0,
             # Do we make all the objref methods virtual
             'Virtual Objref Methods':0,
+            # Are #included files output inline with the main output?
+            'Inline Includes':       0,
             # Are we in DEBUG mode?
             'Debug':                 0
                        
@@ -92,36 +94,159 @@ class ConfigurationState:
             print string.ljust(key, max), ":  ", repr(self._config[key])
 
 # Create state-holding singleton object
-if not(hasattr(config, "state")):
+if not hasattr(config, "state"):
     config.state = ConfigurationState()
 
 # list of all files #included in the IDL
 includes = []
 
-# Traverses the AST compiling the list of files #included by the main
-# IDL file. Note that types constructed within other types must necessarily
-# be in the same IDL file
+# Traverses the AST compiling the list of files #included at top level
+# in the main IDL file. Marks all nodes for which code should be
+# generated.
+
 class WalkTreeForIncludes(idlvisitor.AstVisitor):
     def __init__(self):
-        config.includes = []
+        global includes
+        includes = []
+
     def add(self, node):
+        global includes
         file = node.file()
-        if not(file in config.includes):
-            config.includes.append(file)
+        if not file in includes:
+            includes.append(file)
 
     def visitAST(self, node):
+        global state
         self.add(node)
-        for d in node.declarations(): d.accept(self)
-    def visitModule(self, node):
-        self.add(node)
-        for d in node.definitions(): d.accept(self)
-    def visitInterface(self, node): self.add(node)
-    def visitForward(self, node):   self.add(node)
-    def visitConst(self, node):     self.add(node)
-    def visitTypedef(self, node):   self.add(node)
-    def visitStruct(self, node):    self.add(node)
-    def visitException(self, node): self.add(node)
-    def visitUnion(self, node):     self.add(node)
-    def visitEnum(self, node):      self.add(node)
-    
+        for d in node.declarations():
+            if not state['Inline Includes']:
+                self.add(d)
+            if d.mainFile() or state['Inline Includes']:
+                d.accept(self)
 
+    def visitModule(self, node):
+        node.cxx_generate = 1
+        for n in node.definitions():
+            n.accept(self)
+
+    def visitInterface(self, node):
+        node.cxx_generate = 1
+        for n in node.contents():
+            n.accept(self)
+
+    def visitForward(self, node):
+        node.cxx_generate = 1
+
+    def visitConst(self, node):
+        node.cxx_generate = 1
+
+    def visitDeclarator(self, node):
+        node.cxx_generate = 1
+
+    def visitTypedef(self, node):
+        node.cxx_generate = 1
+        for n in node.declarators():
+            n.accept(self)
+
+        if node.constrType():
+            node.aliasType().decl().accept(self)
+
+    def visitMember(self, node):
+        node.cxx_generate = 1
+        for n in node.declarators():
+            n.accept(self)
+
+        if node.constrType():
+            node.memberType().decl().accept(self)
+
+    def visitStruct(self, node):
+        node.cxx_generate = 1
+        for n in node.members():
+            n.accept(self)
+
+    def visitException(self, node):
+        node.cxx_generate = 1
+        for n in node.members():
+            n.accept(self)
+
+    def visitCaseLabel(self, node):
+        node.cxx_generate = 1
+
+    def visitUnionCase(self, node):
+        node.cxx_generate = 1
+        for n in node.labels():
+            n.accept(self)
+
+        if node.constrType():
+            node.caseType().decl().accept(self)
+
+    def visitUnion(self, node):
+        node.cxx_generate = 1
+        for n in node.cases():
+            n.accept(self)
+
+        if node.constrType():
+            node.switchType().decl().accept(self)
+
+    def visitEnumerator(self, node):
+        node.cxx_generate = 1
+
+    def visitEnum(self, node):
+        node.cxx_generate = 1
+        for n in node.enumerators():
+            n.accept(self)
+
+    def visitAttribute(self, node):
+        node.cxx_generate = 1
+        for n in node.declarators():
+            n.accept(self)
+
+    def visitParameter(self, node):
+        node.cxx_generate = 1
+
+    def visitOperation(self, node):
+        node.cxx_generate = 1
+        for n in node.parameters():
+            n.accept(self)
+
+    def visitNative(self, node):
+        node.cxx_generate = 1
+
+    def visitStateMember(self, node):
+        node.cxx_generate = 1
+        for n in node.declarators():
+            n.accept(self)
+
+        if node.constrType():
+            node.memberType().decl().accept(self)
+
+    def visitFactory(self, node):
+        node.cxx_generate = 1
+        for n in node.parameters():
+            n.accept(self)
+
+    def visitValueForward(self, node):
+        node.cxx_generate = 1
+
+    def visitValueBox(self, node):
+        node.cxx_generate = 1
+
+        if node.constrType():
+            node.boxedType().decl().accept(self)
+
+    def visitValueAbs(self, node):
+        node.cxx_generate = 1
+        for n in node.contents():
+            n.accept(self)
+
+    def visitValue(self, node):
+        node.cxx_generate = 1
+        for n in node.contents():
+            n.accept(self)
+
+def shouldGenerateCodeForDecl(decl):
+
+    """Return true if full code should be generated for the specified
+    Decl node"""
+
+    return hasattr(decl, "cxx_generate")

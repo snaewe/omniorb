@@ -1,3 +1,223 @@
+Fri Jun 15 15:36:20 BST 2001 dpg1
+=================================
+
+- Merge from omni3_develop for 3.0.4 release.
+
+
+Fri Jun 15 14:24:53 BST 2001 dpg1
+=================================
+
+- Updates for 3.0.4 release.
+
+bugfixes-300.xml
+bugfixes-301.xml
+bugfixes-302.xml
+bugfixes-303.xml                            -- new
+bugfixes.xml
+bugfixes.xsl
+external_merge/ReleaseNote_omniORB_303      -- deleted
+external_merge/ReleaseNote_omniORB_304      -- new
+external_merge/THIS_IS_omniORB_3_0_3        -- deleted
+external_merge/THIS_IS_omniORB_3_0_4        -- new
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak
+
+
+Thu Jun  7 17:09:48 BST 2001 dpg1
+=================================
+
+- Segfault with zero ORB identifier in ORB_init().
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
+Fri Jun  1 14:54:24 BST 2001 sll
+================================
+
+- Long long defines for HPUX aCC.
+
+include/omniORB3/CORBA_sysdep.h
+
+- added missing external guard for ir.h
+
+include/omniORB3/CORBA.h
+
+
+Tue May 29 12:06:29 BST 2001 sll
+================================
+
+- Scavenger now get the real time after each scan. This is to cope with
+  the system clock set backward by a large amount. Seems to happen a lot to
+  some system..
+
+src/lib/omniORB2/orbcore/scavenger.cc
+
+
+Wed May 23 11:45:31 BST 2001 dpg1
+=================================
+
+- Long long defines for SGI.
+
+include/omniORB3/CORBA_sysdep.h
+
+
+Tue May 22 10:43:13 BST 2001 dpg1
+=================================
+
+- Use "$@" rather than just $@ in omniidl script
+
+src/tool/omniidl/python/scripts/omniidl
+
+
+Tue May  8 15:57:07 BST 2001 dpg1
+=================================
+
+- Bug in exception downcasting. Downcasting exception FooBar to
+  exception Foo would incorrectly succeed since they share a prefix.
+
+src/lib/omniORB2/orbcore/exceptn.cc
+
+
+Fri May  4 17:51:59 BST 2001 dpg1
+=================================
+
+- Work-around for Compaq C++ optimiser bug.
+
+src/lib/omniORB2/orbcore/omniObjRef.cc
+
+
+Fri Apr 27 11:58:25 BST 2001 dpg1
+=================================
+
+- Fix scoping bug in MSVC work-around for external constant linkage.
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+
+Wed Apr 25 17:49:17 BST 2001 dpg1
+=================================
+
+- Properly handle files #included at non-file scope.
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/config.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/tcstring.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/forward.py
+src/lib/omniORB2/omniidl_be/cxx/header/marshal.py
+src/lib/omniORB2/omniidl_be/cxx/header/opers.py
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+src/lib/omniORB2/omniidl_be/cxx/header/tcstring.py
+src/lib/omniORB2/omniidl_be/cxx/header/tie.py
+src/lib/omniORB2/omniidl_be/cxx/impl/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/poa.py
+src/tool/omniidl/python/omniidl/idlast.py
+
+- Append F to float constants.
+
+src/lib/omniORB2/omniidl_be/cxx/types.py
+
+
+Mon Apr 23 15:47:39 BST 2001 dpg1
+=================================
+
+- Null pointer dereference in BOA_init()
+
+src/lib/omniORB2/orbcore/corbaBoa.cc
+
+- Extend GCC check to cope with GCC 3.
+
+include/omniORB3/CORBA_sysdep.h
+
+
+Mon Apr 23 15:13:31 BST 2001 dpg1
+=================================
+
+- OpenVMS updates from Bruce Visscher.
+
+external_merge/etc/openvms.zip
+src/lib/omniORB2/orbcore/corbaFloat.cc  -- deleted
+src/tool/omniidl/cxx/idlsysdep.h
+
+
+Mon Apr 23 14:53:26 BST 2001 dpg1
+=================================
+
+- Bug in sort_exceptions().
+
+src/lib/omniORB2/omniidl_be/cxx/skutil.py
+
+
+Tue Apr  3 19:22:34 BST 2001 djs
+================================
+
+- Fixed bug caused by the unexpected interaction between two previous
+  omniidl/C++ fixes. 
+
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+
+
+Tue Mar 27 17:56:31 BST 2001 djr
+================================
+
+- Bug in omniORB core causes assertion failure.
+
+src/lib/omniORB2/orbcore/omniInternal.cc
+
+
+Mon Mar 26 10:33:27 BST 2001 dpg1
+=================================
+
+- Segfault with invalid IDL.
+
+src/tool/omniidl/cxx/idlast.cc
+
+
+Wed Mar 21 16:31:13 GMT 2001 dpg1
+=================================
+
+- Wrong member count in TypeCode for union with multiple case labels.
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
+
+Tue Mar 20 16:55:07 GMT 2001 dpg1
+=================================
+
+- Memory corruption with multiply-recursive TypeCode.
+
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+
+- Incorrect TypeCode constants for some recursive sequences.
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
+
+Wed Mar  7 12:27:05 GMT 2001 djr
+================================
+
+- A couple of minor fixes.  operator->() _must_ return a T*.
+
+include/omniORB3/templatedecls.h
+include/omniORB3/seqtemplates.h
+
+
 Wed Feb 21 14:10:25 GMT 2001 dpg1
 =================================
 

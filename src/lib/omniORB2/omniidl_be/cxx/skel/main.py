@@ -28,8 +28,20 @@
 
 # $Id$
 # $Log$
-# Revision 1.32  2001/02/21 14:12:15  dpg1
-# Merge from omni3_develop for 3.0.3 release.
+# Revision 1.33  2001/06/15 14:38:09  dpg1
+# Merge from omni3_develop for 3.0.4 release.
+#
+# Revision 1.27.2.16  2001/04/27 11:03:56  dpg1
+# Fix scoping bug in MSVC work-around for external constant linkage.
+#
+# Revision 1.27.2.15  2001/04/25 16:55:11  dpg1
+# Properly handle files #included at non-file scope.
+#
+# Revision 1.27.2.14  2001/04/03 18:29:47  djs
+# A previous fix of referring to an interface's ancestors by a flat typedef
+# rather than a scoped name fell over when the interface was inherited from
+# a typedef to an interface. The fix is to remove the typedefs and then
+# continue as before.
 #
 # Revision 1.27.2.13  2001/01/29 10:52:45  djs
 # In order to fix interface inheritance name ambiguity problem the
@@ -210,7 +222,7 @@ def __init__(stream):
 def visitAST(node):
     for n in node.declarations():
         # Not sure what should happen when modules are reopened
-        if n.mainFile():
+        if config.shouldGenerateCodeForDecl(n):
             n.accept(self)
 
 def visitModule(node):
@@ -260,6 +272,15 @@ def visitInterface(node):
     def flatName(name):
         return "_" + string.join(name.fullName(), "_")
 
+    # In the AST, an interface node can list typedef and forward decl nodes
+    # in its inherits() list. Make a list of the real interfaces we
+    # are inheriting from.
+    interface_inherits = map(tyutil.remove_ast_typedefs_and_forwards,
+                             node.inherits())
+    
+
+    # Note that this loops over all the inherited interfaces, after removing
+    # any typedef chains and forwards.
     for i in tyutil.allInherits(node):
         # Make sure we only generate one set of typedefs max, otherwise the
         # compiler will rightly complain about the redefinition
@@ -320,7 +341,7 @@ def visitInterface(node):
 if( !strcmp(id, " + inherits_fqname + "::_PD_repoId) )\n\
   return (" + inherits_fqname + "_ptr) this;\n"
 
-    for i in node.inherits():
+    for i in interface_inherits:
         inherits_name = id.Name(i.scopedName())
         inherits_objref_name = inherits_name.prefix("_objref_")
 
@@ -595,11 +616,12 @@ _call_desc.set_context_info(&_ctxt_info);""",
         return
     
     # dispatch operations and attributes inherited from base classes
-    def inherited_dispatch(stream = stream, node = node,
+    def inherited_dispatch(stream = stream,
+                           interface_inherits = interface_inherits,
                            environment = environment,
                            needFlatName = needFlatName,
                            flatName = flatName):
-        for i in node.inherits():
+        for i in interface_inherits:
             inherited_name = id.Name(i.scopedName()).prefix("_impl_")
             impl_inherits = inherited_name.simple()
             # The MSVC workaround might be needed here again
@@ -981,31 +1003,35 @@ def visitConst(node):
     
     if init_in_def:
         if self.__insideInterface:
-            stream.out("""\
-const @type@ @name@ _init_in_cldef_( = @value@ );
-""",
+            stream.out(template.const_in_interface,
                        type = type_string, name = name, value = value)
         else:
-            stream.out("""\
-_init_in_def_( const @type@ @name@ = @value@; )
-""",
+            stream.out(template.const_init_in_def,
                        type = type_string, name = name, value = value)
         return
 
     # not init_in_def
-    if self.__insideModule and not(self.__insideInterface):
+    if self.__insideModule and not self.__insideInterface:
         scopedName = node.scopedName()
         scopedName = map(id.mapID, scopedName)
-        scope_str = idlutil.ccolonName(scopedName[0:len(scopedName)-1])
-        name_str = scopedName[len(scopedName)-1]
+
+        open_namespace  = ""
+        close_namespace = ""
+
+        for s in scopedName[:-1]:
+            open_namespace  = open_namespace  + "namespace " + s + " { "
+            close_namespace = close_namespace + "} "
+
+        simple_name = scopedName[-1]
+
         stream.out(template.const_namespace,
-                   type = type_string, scope = scope_str, name = name_str,
-                   scopedName = name, value = value)
+                   open_namespace = open_namespace,
+                   close_namespace = close_namespace,
+                   type = type_string, simple_name = simple_name,
+                   name = name, value = value)
         
     else:
-        stream.out("""\
-const @type@ @name@ = @value@;
-""",
+        stream.out(template.const_simple,
                    type = type_string, name = name, value = value)
         
 

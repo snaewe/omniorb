@@ -30,8 +30,11 @@
 
 /*
  * $Log$
- * Revision 1.13  2001/02/21 14:12:18  dpg1
- * Merge from omni3_develop for 3.0.3 release.
+ * Revision 1.14  2001/06/15 14:38:07  dpg1
+ * Merge from omni3_develop for 3.0.4 release.
+ *
+ * Revision 1.8.6.7  2001/03/20 17:26:51  dpg1
+ * Memory corruption with multiply-recursive TypeCode.
  *
  * Revision 1.8.6.6  2000/09/19 09:11:21  dpg1
  * Standard C++ does not permit type definitions in anonymous unions
@@ -588,6 +591,10 @@ public:
   virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
+
+  inline CORBA::Boolean  PR_content_is_assigned() const {
+    return !CORBA::is_nil(pd_content);
+  }
 
 private:
   TypeCode_sequence();

@@ -27,7 +27,7 @@ omnipython=$dir/omnipython
 omniidl=$dir/omniidlrun.py
 
 if test -x $omnipython ; then
-    $omnipython $omniidl $@
+    $omnipython $omniidl "$@"
 else
-    $omniidl $@
+    $omniidl "$@"
 fi

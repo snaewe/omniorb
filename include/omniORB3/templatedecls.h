@@ -842,7 +842,7 @@ public:
   inline T_out& operator=(T* p) { _data = p; return *this; }
   inline operator T*&() { return _data; }
   inline T*& ptr() { return _data; }
-  inline T*& operator->() { return _data; }
+  inline T* operator->() { return _data; }
 
   T*& _data;
 
@@ -945,7 +945,7 @@ public:
   inline T_out& operator=(T* p) { _data = p; return *this; }
   inline operator T*&() { return _data; }
   inline T*& ptr() { return _data; }
-  inline T*& operator->() { return _data; }
+  inline T* operator->() { return _data; }
 
   T*& _data;
 

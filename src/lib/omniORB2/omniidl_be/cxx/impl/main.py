@@ -28,8 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.5  2001/02/21 14:12:16  dpg1
-# Merge from omni3_develop for 3.0.3 release.
+# Revision 1.6  2001/06/15 14:38:09  dpg1
+# Merge from omni3_develop for 3.0.4 release.
+#
+# Revision 1.1.2.6  2001/04/25 16:55:11  dpg1
+# Properly handle files #included at non-file scope.
 #
 # Revision 1.1.2.5  2000/05/16 11:16:01  djs
 # Updated to simplify memory management, correct errors in function prototypes,
@@ -56,7 +59,7 @@
 import string
 
 from omniidl import idlast, idlvisitor
-from omniidl_be.cxx import tyutil, util, id, types
+from omniidl_be.cxx import tyutil, util, id, types, config
 from omniidl_be.cxx.impl import template
 
 import main
@@ -145,21 +148,16 @@ class BuildInterfaceImplementations(idlvisitor.AstVisitor):
     # Tree walking code
     def visitAST(self, node):
         for n in node.declarations():
-            n.accept(self)
+            if config.shouldGenerateCodeForDecl(n):
+                n.accept(self)
 
     # modules can contain interfaces
     def visitModule(self, node):
-        if not(node.mainFile()):
-            return
-
         for n in node.definitions():
             n.accept(self)
 
     # interfaces cannot be further nested
     def visitInterface(self, node):
-        if not(node.mainFile()):
-            return
-
         self.__allInterfaces.append(node)
     
         scopedName = id.Name(node.scopedName())

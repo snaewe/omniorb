@@ -28,8 +28,11 @@
 
 /*
   $Log$
-  Revision 1.4  2001/02/21 14:12:12  dpg1
-  Merge from omni3_develop for 3.0.3 release.
+  Revision 1.5  2001/06/15 14:38:10  dpg1
+  Merge from omni3_develop for 3.0.4 release.
+
+  Revision 1.1.2.7  2001/05/04 16:53:08  dpg1
+  Work-around for Compaq C++ optimiser bug.
 
   Revision 1.1.2.6  2000/06/22 10:40:16  dpg1
   exception.h renamed to exceptiondefs.h to avoid name clash on some
@@ -89,6 +92,10 @@ omniObjRef::_getRopeAndKey(omniRopeAndKey& rak, CORBA::Boolean* is_local) const
 
   if( is_local )  *is_local = 0;
 
+#if defined(__DECCXX) && __DECCXX_VER < 60300000
+  // Work-around for bug in Compaq C++ optimiser
+  volatile
+#endif
   int fwd;
   int use_loopback = 0;
 
@@ -504,6 +511,11 @@ void
 omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 {
   int retries = 0;
+
+#if defined(__DECCXX) && __DECCXX_VER < 60300000
+  // Work-around for bug in Compaq C++ optimiser
+  volatile
+#endif
   int fwd;
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
@@ -578,6 +590,11 @@ void
 omniObjRef::_locateRequest()
 {
   int retries = 0;
+
+#if defined(__DECCXX) && __DECCXX_VER < 60300000
+  // Work-around for bug in Compaq C++ optimiser
+  volatile
+#endif
   int fwd;
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();

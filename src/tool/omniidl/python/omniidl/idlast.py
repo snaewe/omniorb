@@ -28,8 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.18  2001/02/21 14:12:04  dpg1
-# Merge from omni3_develop for 3.0.3 release.
+# Revision 1.19  2001/06/15 14:38:11  dpg1
+# Merge from omni3_develop for 3.0.4 release.
+#
+# Revision 1.13.2.7  2001/04/25 16:55:12  dpg1
+# Properly handle files #included at non-file scope.
 #
 # Revision 1.13.2.6  2001/01/16 11:50:51  dpg1
 # The potential bug wasn't a potential bug after all.
@@ -181,6 +184,7 @@ Functions:
         self.__file     = file
         self.__line     = line
         self.__mainFile = mainFile
+        self.__builtIn  = 0
         self.__pragmas  = pragmas
         self.__comments = comments
 
@@ -189,6 +193,7 @@ Functions:
     def file(self):     return self.__file
     def line(self):     return self.__line
     def mainFile(self): return self.__mainFile
+    def builtIn(self):  return self.__builtIn
     def pragmas(self):  return self.__pragmas
     def comments(self): return self.__comments
 
@@ -1049,6 +1054,7 @@ CORBAObject = Interface("<built in>", 0, 0, [], [],
                         "Object", ["CORBA", "Object"],
                         "IDL:omg.org/CORBA/Object:1.0",
                         0, [])
+CORBAObject._Decl__builtIn = 1
 registerDecl(["CORBA", "Object"], CORBAObject)
 
 CORBAModule = Module("<built in>", 0, 0, [], [], "CORBA", ["CORBA"],

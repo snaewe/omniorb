@@ -28,8 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.16  2001/02/21 14:12:17  dpg1
-# Merge from omni3_develop for 3.0.3 release.
+# Revision 1.17  2001/06/15 14:38:08  dpg1
+# Merge from omni3_develop for 3.0.4 release.
+#
+# Revision 1.12.2.11  2001/04/25 16:55:08  dpg1
+# Properly handle files #included at non-file scope.
 #
 # Revision 1.12.2.10  2000/06/27 16:15:09  sll
 # New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
@@ -136,7 +139,6 @@ def __init__(stream):
     self.__symbols = {}
     initSymbols()
     self.__nodes = []
-    self.__override = 0
 
     return self
 
@@ -197,24 +199,19 @@ def isRecursive(node):
 
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if config.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 # ------------------------------------
 
 def visitModule(node):
     # consider reopening modules spanning files here?
-    if not(node.mainFile()):
-        return
-    
     for n in node.definitions():
         n.accept(self)
 
 # -----------------------------------
 
 def visitInterface(node):
-    if not(node.mainFile()) and not(self.__override):
-        return
-
     startingNode(node)
 
     for n in node.declarations():
@@ -252,9 +249,6 @@ def visitInterface(node):
 # -----------------------------------
 
 def visitEnum(node):
-    if not(node.mainFile()) and not(self.__override):
-        return
-
     startingNode(node)
     
     scopedName = id.Name(node.scopedName())
@@ -349,7 +343,9 @@ def visitFixedType(type):
 def visitDeclaredType(type):
     decl = type.decl()
     type = types.Type(type)
-    if decl.mainFile() and not(isRecursive(decl)) and not(type.typedef()):
+
+    if config.shouldGenerateCodeForDecl(decl) \
+       and not isRecursive(decl) and not type.typedef():
         # types declared in the same file will be handled
         #   unless type is recursive -> forward declaration required
         #   unless type is an alias in this file to something in another file
@@ -701,9 +697,6 @@ case @n@:
 
 
 def visitStruct(node):
-    if not(node.mainFile()) and not(self.__override):
-        return
-
     startingNode(node)
 
     scopedName = id.Name(node.scopedName())
@@ -743,9 +736,6 @@ def visitStruct(node):
 
     
 def visitTypedef(node):
-    if not(node.mainFile()) and not(self.__override):
-        return
-
     startingNode(node)
     
     aliasType = types.Type(node.aliasType())
@@ -833,9 +823,6 @@ def visitTypedef(node):
 
 
 def visitUnion(node):
-    if not(node.mainFile()) and not(self.__override):
-        return
-
     startingNode(node)
     
     scopedName = id.Name(node.scopedName())
@@ -983,8 +970,6 @@ default: return 0;""")
 
 
 def visitForward(node):
-    if not(node.mainFile()) and not(self.__override):
-        return
     scopedName = id.Name(node.scopedName())
     guard_name = scopedName.guard()
     prefix = config.state['Private Prefix']
@@ -1007,9 +992,6 @@ def visitMember(node):
     pass
 
 def visitException(node):
-    if not(node.mainFile()) and not(self.__override):
-        return
-
     startingNode(node)
     
     scopedName = id.Name(node.scopedName())
