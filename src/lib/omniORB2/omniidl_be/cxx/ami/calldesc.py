@@ -26,21 +26,48 @@
 #
 #   Internal AMI call descriptor used to package up the state of an
 #   AMI request
-
+#
+# $Id$
+# $Log$
+# Revision 1.1.2.6  2000/09/28 18:29:21  djs
+# Bugfixes in Poller (wrt timout behaviour and is_ready function)
+# Removed traces of Private POA/ internal ReplyHandler servant for Poller
+# strategy
+# Fixed nameclash problem in Call Descriptor, Poller etc
+# Uses reference counting internally rather than calling delete()
+# General comment tidying
+#
+#
 import string
 
 from omniidl_be.cxx import id, types, output, cxx, ast, call, iface
 from omniidl_be.cxx.ami import ami
 
 # Operation-specific AMI call descriptor  ############################
-#                                                                    #
-# When constructed, if _own_sent == 1, the descriptor copies the arguments
-# and will call delete_sent_arguments() when it is destructed to clean
-# up after itself. If _own_sent == 0, the descriptor will not copy
-# its arguments, but only keep a reference to them. It will not destroy
-# them (as the client program still owns them)
-# The descriptor will always own the return arguments, as ownership of them
-# cannot be transferred to the callback interface as in arguments.
+#
+# Descriptor is common to both callback and polling AMI requests. It
+# keeps track of who owns both the arguments sent to the remote server
+# and who owns the received replies, to minimised the number of data
+# copies.
+# If it is instantiated with _own_sent set to 1, it will duplicate the
+# calling arguments and release its own copies on destruction. If _own_sent
+# is set to 0 it will sneakily store pointers to the calling arguments,
+# trusting they won't be deleted until after it's finished. It won't
+# attempt to delete them when it finishes.
+# Instead of invoke()ing on an internal ReplyHandler servant to deliver
+# replies when Polling (as suggested in the Messaging spec) it keeps
+# a direct pointer, since the Poller is a valuetype and therefore local.
+# If it hands results to a Poller, it gives up ownership and will not
+# try to delete them itself.
+#
+# One problem is that if we take store pointers to the arguments then
+# we have to cast away their const-ness. We guarantee dynamically not to
+# free or otherwise modify the data, but the compiler cannot tell that
+# statically (it's stored in the boolean _own_sent flag)
+#
+# We could solve this by splitting this class into two- more output but
+# the cast could end up hiding a nasty bug.
+
 call_descriptor_t = """\
 class @classname@: public omniAMIDescriptor{
 private:
@@ -81,7 +108,7 @@ public:
     @delete_sent_arguments@
   }
   virtual void delete_replies(){
-    delete _pd_holder;
+    _pd_holder->_remove_ref();
     @delete_replies@
   }
   
@@ -120,14 +147,15 @@ public:
 
     @copy_to_poller@
     poller->_exholder = _pd_holder;
-    own_replies = 0; // poller stores them in _var types
-    poller->_NP_reply_received();
+    own_replies = 0; // poller owns all the storage now
+    poller->_NP_tell_poller_reply_received();
   }
 };
 """
 
 
-
+# AMI call descriptor generator ######################################
+#
 class _AMI_Call_Descriptor(iface.Class):
     def __init__(self, target, handler, request, reply, exception):
         assert isinstance(target, iface.Interface)
@@ -145,7 +173,6 @@ class _AMI_Call_Descriptor(iface.Class):
                                               request.operation_name(),
                                               request.signature())
 
-
     def cc(self, stream):
         handler_t = self.handler.name().fullyQualify()
         target_t = self.target.name().fullyQualify()
@@ -158,8 +185,9 @@ class _AMI_Call_Descriptor(iface.Class):
         arg_storage = output.StringStream()
         for parameter in self.request.parameters():
             pType = types.Type(parameter.paramType())
-            ident = id.mapID(parameter.identifier())
-            arg_storage.out(pType._ptr() + " _" + ident + ";")
+            ident = ami.paramID(parameter)
+            arg_storage.out(pType._ptr() + " " + ident + ";")
+
         rType = types.Type(self.request.returnType())
 
         # ... and the result value
@@ -173,7 +201,7 @@ class _AMI_Call_Descriptor(iface.Class):
         
         common_ctor_args = ["CORBA::Boolean _own_sent",
                             target_t + "_ptr _target"]
-        common_ctor_ids  = ["_own_sent", "_target"]
+        common_ctor_ids  = ["_own_sent", "_pd_target"]
 
         # The common code is factored out into an init() fn
         common_ctor = output.StringStream()
@@ -206,7 +234,7 @@ class _AMI_Call_Descriptor(iface.Class):
 
         for parameter in self.request.parameters():
             pType = types.Type(parameter.paramType())
-            ident = "_" + id.mapID(parameter.identifier())
+            ident = ami.paramID(parameter)
 
             # Consider args going --server-> (in and inout)
             if parameter.is_in():
@@ -225,7 +253,7 @@ class _AMI_Call_Descriptor(iface.Class):
                 # pointer conversion
                 op = ami.pointer(pType._ptr_is_pointer(),
                         pType.op_is_pointer(types.direction(parameter)))
-                request_args.append(op+"_" + id.mapID(parameter.identifier()))
+                request_args.append(op + ident)
 
                 # free copied arguments
                 dtor_sent.out(pType.free(ident))
@@ -235,7 +263,7 @@ class _AMI_Call_Descriptor(iface.Class):
                 if not(pType.array()): # everything is a slice
                     op = ami.pointer(pType._ptr_is_pointer(),
                        pType.op_is_pointer(types.direction(parameter)))
-                request_args.append(op+"_" + id.mapID(parameter.identifier()))
+                request_args.append(op  + ident)
 
                 dtor_reply.out(pType.free(ident))
 
@@ -267,7 +295,6 @@ class _AMI_Call_Descriptor(iface.Class):
             store_result = "_result = derived_request->result();"
 
             dtor_reply.out(rType.free("_result"))
-            copy_to_poller.out("poller->_ami_return_val= _result;")
 
             poller_get_result = "_result = ((" + request_cd + "*)request)" +\
                                 "->result();\n" +\
@@ -276,12 +303,13 @@ class _AMI_Call_Descriptor(iface.Class):
             
         # reply only concerns -inout- and -out- params
         for parameter in self.reply.parameters():
+            ident = ami.paramID(parameter)
             if parameter.identifier() != "ami_return_val": # hack!
                 #reply_args.append("_" + ami.parameter(parameter))
                 pType = types.Type(parameter.paramType())
                 op = ami.pointer(pType._ptr_is_pointer(),
                         pType.op_is_pointer(types.direction(parameter)))
-                reply_args.append(op+"_" + id.mapID(parameter.identifier()))
+                reply_args.append(op + ident)
 
 
                 

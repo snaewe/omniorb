@@ -25,6 +25,18 @@
 # Description:
 #
 #   Create AMI ExceptionHolder 'valuetype' for an interface
+#
+# $Id$
+# $Log$
+# Revision 1.1.2.5  2000/09/28 18:29:21  djs
+# Bugfixes in Poller (wrt timout behaviour and is_ready function)
+# Removed traces of Private POA/ internal ReplyHandler servant for Poller
+# strategy
+# Fixed nameclash problem in Call Descriptor, Poller etc
+# Uses reference counting internally rather than calling delete()
+# General comment tidying
+#
+#
 
 import string
 
@@ -33,7 +45,12 @@ from omniidl_be.cxx import header, id, output, iface, cxx, types
 from omniidl_be.cxx.ami import ami
 
 # ExceptionHolder valuetype interface ################################
-#                                                                    #
+#
+# ExceptionHolders (like Pollers) are defined in the spec as interface
+# specific but they really are also operation specific. However since
+# we don't need to store anything op specific (we can use a typeless
+# sequence<octet> for a marshaled exception and a CORBA::Exception* for
+# an exception instance) it's easier to use one class.
 class_t = """\
 // Type-specific ExceptionHolder valuetype
 struct @name@: public Messaging::ExceptionHolder{
@@ -52,7 +69,10 @@ typedef Messaging::ExceptionHolder_out @name@_out;
 """
 
 # ExceptionHolder valuetype implementation ###########################
-#                                                                    #
+#
+# Pretend the ExceptionHolder is a struct and allow its contents to be
+# marshaled. This probably isn't valuetype compliant, but it's the best
+# that can be done until valuetypes are properly implemented.
 marshal_t = """\
 void @fqname@::operator >>= (NetBufferedStream &_n) const{
   ((Messaging::ExceptionHolder*)this)->operator >>= (_n);
@@ -62,9 +82,8 @@ void @fqname@::operator >>= (MemBufferedStream &_n) const{
 }
 """
 
+# Internal function which unmarshals an exception from the sequence<octet>
 unmarshal_sequence_t = """\
-// The spec mandates that the Exception is transported marshalled inside a
-// sequence<octet>. Exception unmarshal function:
 void @fqname@::_NP_unmarshal_sequence_to_exception(){
   // only do this once
   OMNIORB_ASSERT(local_exception_object == NULL);
@@ -84,6 +103,9 @@ void @fqname@::_NP_unmarshal_sequence_to_exception(){
   }
 }
 """
+
+# For each exception it could be (all exceptions raised by all operations
+# in the interface are possible), look for its repoID
 repoId_strcmp_t = """\
 if( strcmp(repoId, @exception@::_PD_repoId) == 0 ) {
   @exception@ *_ex = new @exception@();
@@ -91,12 +113,17 @@ if( strcmp(repoId, @exception@::_PD_repoId) == 0 ) {
   local_exception_object = _ex;
 }else
 """
+
+# If no repoId matches then the ExceptionHolder wasn't associated with
+# this interface.
 repoId_unknown_t = """\
 {
   throw omniORB::fatalException(__FILE__, __LINE__,
   "Exception with unknown repoId received");
 }
 """
+
+# Called by the client to raise the exception received in the ExceptionHolder
 raise_t = """\
 // Method exception raising function:
 void @fqname@::@op@(){
@@ -108,6 +135,8 @@ void @fqname@::@op@(){
 }
 """
 
+# The spec defines the operation-specific raise methods to be "raise_op" for
+# an interface and "raise_get_attr" for an attribute.
 def callable_raise_name(callable):
     op_name = callable.operation_name()
     if op_name[0] != "_": op_name = "_" + op_name
@@ -116,6 +145,8 @@ def callable_raise_name(callable):
     return op_name
 
 
+# ExceptionHolder valuetype generation ###############################
+#
 class ExceptionHolder(iface.Class):
     def __init__(self, interface):
         iface.Class.__init__(self, interface)
@@ -123,6 +154,8 @@ class ExceptionHolder(iface.Class):
         self._name = id.Name(interface._node.ExceptionHolder.scopedName())
 
         voidType = types.Type(idltype.Base(idltype.tk_void))
+
+        # Generate the method signatures for the raise method
         for callable in self.interface().callables():
             method = cxx.Method(self, callable_raise_name(callable),
                                 voidType, [], [])
@@ -136,7 +169,7 @@ class ExceptionHolder(iface.Class):
 
     def cc(self, stream):
 
-        # built the code which checks the repoId of the marshalled exception
+        # build the code which checks the repoId of the marshalled exception
         exceptions = ami.list_exceptions(self.interface()._node)
         switch_repoId = output.StringStream()
         for e in exceptions:

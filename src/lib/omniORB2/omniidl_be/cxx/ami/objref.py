@@ -26,6 +26,17 @@
 #
 #   Modified _objref_I for an IDL interface
 #   Responsible for adding sendc_ and sendp_ method calls
+#
+# $Id$
+# $Log$
+# Revision 1.1.2.5  2000/09/28 18:29:22  djs
+# Bugfixes in Poller (wrt timout behaviour and is_ready function)
+# Removed traces of Private POA/ internal ReplyHandler servant for Poller
+# strategy
+# Fixed nameclash problem in Call Descriptor, Poller etc
+# Uses reference counting internally rather than calling delete()
+# General comment tidying
+#
 
 from omniidl import idlast, idltype
 from omniidl_be.cxx import iface, id, types, call, cxx, output
@@ -33,24 +44,35 @@ from omniidl_be.cxx.ami import ami, calldesc, rhandler, poller
 
 import string
 
+# New _objref_I class with extra methods #############################
+#
+# We add AMI callback-based methods (sendc_operation) and polling-based
+# methods (sendp_operation) to the standard objref class.
+#
+# We also add omniORB-specific no-copy version of these; the system
+# normally has to copy the arguments in case the client modifies them
+# while they're in use. If the client can guarantee not to do this, it
+# can increase efficiency by using the new methods.
+#
+# This code forces generation of operation and interface-specific
+# ExceptionHolders and CallDescriptors as required.
+
+# The body of the sendc_ callback-based AMI call
 sendc_cc_t = """\
 omniAMICall *call_desc = new @name@(@args@);
 AMI::enqueue(call_desc);
 """
 
+# The body of the sendp_ polling-based AMI call
 sendp_cc_t = """\
-// return this "valuetype" to the user
 @poller_descriptor@ *poller = new @poller_descriptor@(this);
-
+poller->_add_ref();
 omniAMICall *call_desc = new @name@(@args@);
 AMI::enqueue(call_desc);
 
 return poller;
 """
 
-
-
-# _objref class has a couple of extra methods for each operation invocation
 class _objref_I(iface._objref_I):
     def __init__(self, I):
         iface._objref_I.__init__(self, I)
@@ -137,7 +159,7 @@ class _objref_I(iface._objref_I):
 
     def hh(self, stream):
         # Add the pseudo IDL methods in temporarily (signature generating
-        # code is still useful)
+        # code is still fine)
         old_methods = self._methods[:]
         for extra in (self.sendc + self.sendc_nocopy +\
                       self.sendp + self.sendp_nocopy):
@@ -220,15 +242,14 @@ class _objref_I(iface._objref_I):
             # store _ptr types in the call descriptor.
             op_arg_names = []
             for p in callable.parameters():
-                ident = id.mapID(parameter.identifier())
-                pType = types.Type(parameter.paramType())
+                ident = id.mapID(p.identifier())
+                pType = types.Type(p.paramType())
                 op = ami.pointer(pType.op_is_pointer(types.direction(p)),
                                  pType._ptr_is_pointer())
                 op_arg_names.append(op + ident)
 
             poller_descriptor = ami.poller_descriptor(self.interface()._node,
                                                       callable.original)
-            servant = ami.servant(self.interface()._node)
             arg_names = [ "poller", "1", "this"] + op_arg_names
             body = output.StringStream()
             body.out(sendp_cc_t,

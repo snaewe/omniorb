@@ -25,6 +25,26 @@
 # Description:
 #
 #   Hooks into the main code generation routines
+#
+# $Id$
+# $Log$
+# Revision 1.1.2.4  2000/09/28 18:29:21  djs
+# Bugfixes in Poller (wrt timout behaviour and is_ready function)
+# Removed traces of Private POA/ internal ReplyHandler servant for Poller
+# strategy
+# Fixed nameclash problem in Call Descriptor, Poller etc
+# Uses reference counting internally rather than calling delete()
+# General comment tidying
+#
+
+# We take over some of the main code generation routines and supplement
+# them with the AMI stubs. This is necessary because the AMI code is
+# inside the original modules as the real stubs, and we have to assume we
+# can't re-open modules (mapped to classes)
+#
+# It's nice that we don't have to place this code inline in the main routines
+# surrounded by (if doing AMI... else... blocks). Not too much is actually
+# duplicated here either.
 
 import string
 from omniidl import idlast
@@ -34,6 +54,7 @@ import hooks
 
 self = hooks
 
+# The main part of the header file
 def Interface_defs(node):
     assert isinstance(node, idlast.Interface)
 
@@ -84,8 +105,6 @@ class @I_Helper@;
     Poller = poller.Poller(interface)
     Poller.hh(stream)
 
-
-    
     _objref = rhandler._objref_IHandler(handler)
     _objref.hh(stream)
 
@@ -101,7 +120,7 @@ class @I_Helper@;
         _sk_I.hh(stream)
 
     
-    
+# Extra operators in the header file    
 def Interface_opers(node):
     assert isinstance(node, idlast.Interface)
     self.opers_visitInterface(node)
@@ -121,7 +140,7 @@ def Interface_opers(node):
                             idLen = str(idLen))  
     
 
-
+# The ReplyHandler POA servant code
 def Interface_poa(node):
     assert isinstance(node, idlast.Interface)
     self.poa_visitInterface(node)
@@ -144,7 +163,7 @@ def Interface_poa(node):
                 scopedID = ami_name.fullyQualify())
 
 
-
+# Lots of extra code in the SK.cc file
 def Implementation(node):
     assert isinstance(node, idlast.Interface)
     if not(node.mainFile()): return
@@ -206,6 +225,7 @@ def Implementation(node):
         _sk_I = iface._sk_I(handler)
         _sk_I.hh(stream)
 
+# A bit of extra POA code
 def Implementation_poa(node):
     assert isinstance(node, idlast.Interface)
     self.skel_poa_visitInterface(node)

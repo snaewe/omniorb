@@ -25,6 +25,18 @@
 # Description:
 #
 #   General AMI utility functions
+#
+# $Id$
+# $Log$
+# Revision 1.1.2.5  2000/09/28 18:29:20  djs
+# Bugfixes in Poller (wrt timout behaviour and is_ready function)
+# Removed traces of Private POA/ internal ReplyHandler servant for Poller
+# strategy
+# Fixed nameclash problem in Call Descriptor, Poller etc
+# Uses reference counting internally rather than calling delete()
+# General comment tidying
+#
+#
 
 import string
 
@@ -225,7 +237,8 @@ def list_exceptions(node):
 
 
 
-# Return an internal name for an AMI call descriptor
+# Return an internal descriptor names ####################################
+#
 def call_descriptor(iface, opname, sig):
     iname = id.Name(iface.scopedName())
     return config.state["Private Prefix"] + "_amicd_" +\
@@ -239,12 +252,8 @@ def poller_descriptor(iface, callable):
     return  config.state["Private Prefix"] + "_amipoller_" +\
            descriptor.get_interface_operation_descriptor(iname, opname, sig)
 
-def servant(iface):
-    name = string.join(iface.scopedName(), "_")
-    return config.state["Private Prefix"] + "_amisvt_" +\
-           descriptor.get_signature_descriptor(name)
-
-
+# Allows a _var type to be returned from an operation using the type
+# conversion functions (.in(), .out() etc)
 def operation_argument(type, direction, ident):
     d_type = type.deref()
     
@@ -278,3 +287,10 @@ def pointer(src, dst):
     else:
         if dst: return "&"  # from non-pointer to pointer
         else:   return ""   # from non-pointer to non-pointer
+
+# Inside descriptors, name an operation argument x _arg_x to prevent
+# name clashes with our internal data.
+def paramID(parameter):
+    return "_arg_" + parameter.identifier()
+
+

@@ -25,6 +25,17 @@
 # Description:
 #
 #   Initialise the AMI module
+#
+# $Id$
+# $Log$
+# Revision 1.1.2.3  2000/09/28 18:29:20  djs
+# Bugfixes in Poller (wrt timout behaviour and is_ready function)
+# Removed traces of Private POA/ internal ReplyHandler servant for Poller
+# strategy
+# Fixed nameclash problem in Call Descriptor, Poller etc
+# Uses reference counting internally rather than calling delete()
+# General comment tidying
+#
 
 # Once __init__ has been called, AMI code will automagically be output
 # along with the normal stubs.

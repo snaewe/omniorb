@@ -25,6 +25,17 @@
 # Description:
 #
 #   Generate AMI ReplyHandler for an IDL interface
+#
+# $Id$
+# $Log$
+# Revision 1.1.2.3  2000/09/28 18:29:22  djs
+# Bugfixes in Poller (wrt timout behaviour and is_ready function)
+# Removed traces of Private POA/ internal ReplyHandler servant for Poller
+# strategy
+# Fixed nameclash problem in Call Descriptor, Poller etc
+# Uses reference counting internally rather than calling delete()
+# General comment tidying
+#
 
 import string
 from omniidl import idlast, idltype
@@ -34,21 +45,23 @@ import rhandler
 
 self = rhandler
 
-  
-# Problem: The exceptionholder is a valuetype. It has been implemented
-# as a base IDL struct (Messaging::ExceptionHolder) with methods added to
-# the _type-specific_ valuetype by inheritance. For the _impl_ methods of
-# the reply handler interface we have an internal function to cast the
-# exceptionholder to the exact type.
 
-impl_internal_method_t = """\
-void _@op@(const Messaging::ExceptionHolder& _e)
-  { @op@(*((const @exceptionholder@*)&_e)); }
-"""
+# FIXME: I think this is now redundant:
+#
+## Problem: The exceptionholder is a valuetype. It has been implemented
+## as a base IDL struct (Messaging::ExceptionHolder) with methods added to
+## the _type-specific_ valuetype by inheritance. For the _impl_ methods of
+## the reply handler interface we have an internal function to cast the
+## exceptionholder to the exact type.
+#
+#impl_internal_method_t = """\
+#void _@op@(const Messaging::ExceptionHolder& _e)
+#  { @op@(*((const @exceptionholder@*)&_e)); }
+#"""
 
 
-# AMI Type-Specific ReplyHandler class
-
+# AMI Type-Specific ReplyHandler class ####################################
+#
 class IHandler(iface.Interface):
     def __init__(self, node):
         iface.Interface.__init__(self, node)
@@ -141,23 +154,23 @@ class _impl_IHandler(iface._impl_I):
     def __init__(self, I):
         iface._impl_I.__init__(self, I)
 
-        class FakeMethod:
-            def __init__(self, name, exceptionholder):
-                self.exceptionholder = exceptionholder
-                self.name = name
-            def hh(self, virtual = 1, pure = 1):
-                fake = output.StringStream()
-                fake.out(impl_internal_method_t, op = self.name,
-                         exceptionholder = self.exceptionholder)
-                return str(fake)
-            def cc(self, stream, body):
-                pass # it was inline
-
-        # and for the exceptional replies, add an extra internal glue function
-        for callable in self.interface().exceptional_callables:
-            method = FakeMethod(callable.method_name(),
-                                self.interface().exception_holder.simple())
-            self._methods.append(method)
-            self._callables[method] = callable
+        #class FakeMethod:
+        #    def __init__(self, name, exceptionholder):
+        #        self.exceptionholder = exceptionholder
+        #        self.name = name
+        #    def hh(self, virtual = 1, pure = 1):
+        #        fake = output.StringStream()
+        #        fake.out(impl_internal_method_t, op = self.name,
+        #                 exceptionholder = self.exceptionholder)
+        #        return str(fake)
+        #    def cc(self, stream, body):
+        #        pass # it was inline
+        #
+        ## and for the exceptional replies, add an extra internal glue function
+        #for callable in self.interface().exceptional_callables:
+        #    method = FakeMethod(callable.method_name(),
+        #                        self.interface().exception_holder.simple())
+        #    self._methods.append(method)
+        #    self._callables[method] = callable
 
 
