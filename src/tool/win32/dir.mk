@@ -1,7 +1,7 @@
 all:: clwrapper.exe libwrapper.exe linkwrapper.exe omake.exe
 
 define CompileWrapper
-$(CP) $< tmp.c
+cat $< >tmp.c
 cl tmp.c advapi32.lib
 $(MV) tmp.exe $@
 $(RM) tmp.obj tmp.c
