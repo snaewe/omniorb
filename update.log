@@ -1,3 +1,13 @@
+Tue Jul 11 21:04:36 BST 2000 sll
+================================
+
+- Fixed a bug in dir.mk caused by a recent change that omnit gatekeeper.o
+  from those platforms that are built with no gatekeeper support.
+  The affected platforms are HPUX, AIX and SINIX.
+
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+
+
 Tue Jul 11 20:58:59 BST 2000 sll
 ================================
 
