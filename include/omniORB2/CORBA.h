@@ -31,6 +31,9 @@
 
 /*
  $Log$
+ Revision 1.28  1998/08/25 18:55:33  sll
+ Added dummy marshalling functions in DynAny_member to keep gcc-2.7.2 happy.
+
  Revision 1.27  1998/08/21 19:26:48  sll
  New private function _omni_set_NameService.
 
@@ -1674,6 +1677,16 @@ typedef _CORBA_Double  Double;
     DynAny_ptr operator->() const;
     operator DynAny_ptr () const;
     DynAny_ptr _ptr;
+
+    // The following functions are not implemented.
+    // Defined to make some compilers happy to instantiate
+    // the sequence template.
+    void operator>>= (NetBufferedStream &s) const;
+    void operator<<= (NetBufferedStream &s);
+    void operator>>= (MemBufferedStream &s) const;
+    void operator<<= (MemBufferedStream &s);
+    size_t NP_alignedSize(size_t initialoffset) const;
+
   };
 
 #if 0
