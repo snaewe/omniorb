@@ -468,10 +468,10 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
 
   {
     // Check to see if we need an INS forwarding agent
-    omniObjKey key;
-    rootContext->_getTheKey(key);
-
-    if (strncmp((const char*)key.key(), "NameService", 11)) {
+    omniIOR_var ior;
+    ior = rootContext->_getIOR();
+    if (strncmp((const char*)ior->iiop.object_key.get_buffer(),
+		"NameService", 11)) {
       cerr << ts.t() << "(Pre-INS log file)" << endl;
       new INSMapper(the_ins_poa, rootContext);
     }

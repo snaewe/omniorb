@@ -9,7 +9,7 @@
 //
 
 #include <iostream.h>
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 
 static void hello(CORBA::Object_ptr obj)
@@ -64,16 +64,18 @@ static void hello_deferred(CORBA::Object_ptr obj)
 int main(int argc, char** argv)
 {
   try {
-    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+    CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB4");
 
     if( argc != 2 ) {
       cerr << "usage:  eg2_clt <object reference>" << endl;
       return 1;
     }
 
-    CORBA::Object_var obj = orb->string_to_object(argv[1]);
-    hello(obj);
-    hello_deferred(obj);
+    {
+      CORBA::Object_var obj = orb->string_to_object(argv[1]);
+      hello(obj);
+      hello_deferred(obj);
+    }
 
     orb->destroy();
   }

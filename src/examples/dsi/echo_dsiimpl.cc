@@ -13,7 +13,7 @@
 //
 
 #include <iostream.h>
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 
 CORBA::ORB_var orb;
@@ -78,45 +78,47 @@ MyDynImpl::_primary_interface(const PortableServer::ObjectId&,
 int main(int argc, char** argv)
 {
   try {
-    orb = CORBA::ORB_init(argc, argv, "omniORB3");
+    orb = CORBA::ORB_init(argc, argv, "omniORB4");
 
-    CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
-    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+    {
+      CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+      PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
 
-    MyDynImpl* myimpl = new MyDynImpl;
+      MyDynImpl* myimpl = new MyDynImpl;
 
 #if 0
-    PortableServer::ObjectId_var myimplid = poa->activate_object(myimpl);
+      PortableServer::ObjectId_var myimplid = poa->activate_object(myimpl);
 
-    // NB. PortableServer::DynamicImplementation::_this() can
-    // only be used in the context of an invocation, so we cannot
-    // use it to get a reference here.
-    obj = poa->servant_to_reference(myimpl);
+      // NB. PortableServer::DynamicImplementation::_this() can
+      // only be used in the context of an invocation, so we cannot
+      // use it to get a reference here.
+      obj = poa->servant_to_reference(myimpl);
 #else
-    // Although servant_to_reference(myimpl) above will suceed, it
-    // will return a typeless reference.  When the client attempts
-    // to narrow this, it will contact the object and ask it if it
-    // is really an Echo object.  This is not currently implemented
-    // for DSI servants, since it requires the support of the
-    // PortableServer::Current interface.
-    //  We get round it here by specifying the interface that we
-    // want for the reference, then using the object id encapsulated
-    // by the reference to incarnate the object.
+      // Although servant_to_reference(myimpl) above will suceed, it
+      // will return a typeless reference.  When the client attempts
+      // to narrow this, it will contact the object and ask it if it
+      // is really an Echo object.  This is not currently implemented
+      // for DSI servants, since it requires the support of the
+      // PortableServer::Current interface.
+      //  We get round it here by specifying the interface that we
+      // want for the reference, then using the object id encapsulated
+      // by the reference to incarnate the object.
 
-    obj = poa->create_reference("IDL:Echo:1.0");
-    PortableServer::ObjectId_var myimplid = poa->reference_to_id(obj);
-    poa->activate_object_with_id(myimplid, myimpl);
+      obj = poa->create_reference("IDL:Echo:1.0");
+      PortableServer::ObjectId_var myimplid = poa->reference_to_id(obj);
+      poa->activate_object_with_id(myimplid, myimpl);
 #endif
 
-    CORBA::String_var sior(orb->object_to_string(obj));
-    cerr << "'" << (char*)sior << "'" << endl;
+      CORBA::String_var sior(orb->object_to_string(obj));
+      cerr << "'" << (char*)sior << "'" << endl;
 
-    myimpl->_remove_ref();
+      myimpl->_remove_ref();
 
-    PortableServer::POAManager_var pman = poa->the_POAManager();
-    pman->activate();
+      PortableServer::POAManager_var pman = poa->the_POAManager();
+      pman->activate();
 
-    orb->run();
+      orb->run();
+    }
     orb->destroy();
   }
   catch(CORBA::SystemException&) {

@@ -27,7 +27,7 @@
 #include <NamingContext_i.h>
 #include <ObjectBinding.h>
 #include <BindingIterator_i.h>
-#include <omniORB3/omniURI.h>
+#include <omniORB4/omniURI.h>
 
 #ifdef DEBUG_NC
 #define DB(x) x

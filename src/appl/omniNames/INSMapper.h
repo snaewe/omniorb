@@ -24,6 +24,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.2  2000/10/09 16:20:56  sll
+// Ported to omniORB 4 API.
+//
 // Revision 1.2.2.1  2000/07/17 10:35:38  sll
 // Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 //
@@ -35,7 +38,7 @@
 // if the root context doesn't already have that key.
 //
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 class INSMapper :
   public PortableServer::RefCountServantBase
@@ -52,11 +55,11 @@ public:
   ~INSMapper() {}
 
   CORBA::Boolean _dispatch(GIOP_S& giop_s) {
-    throw omniORB::LOCATION_FORWARD(CORBA::Object::_duplicate(obj_));
+    throw omniORB::LOCATION_FORWARD(CORBA::Object::_duplicate(obj_),0);
     return 1;
   }
   CORBA::Boolean _is_a(const char* id) {
-    throw omniORB::LOCATION_FORWARD(CORBA::Object::_duplicate(obj_));
+    throw omniORB::LOCATION_FORWARD(CORBA::Object::_duplicate(obj_),0);
     return 1;
   }
 private:

@@ -25,7 +25,7 @@
 #ifndef _log_h_
 #define _log_h_
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #include <fstream.h>
 
 #ifndef LOGDIR_ENV_VAR

@@ -27,7 +27,7 @@
 
 #include <ReadersWritersLock.h>
 #include <log.h>
-#include <omniORB3/Naming.hh>
+#include <omniORB4/Naming.hh>
 
 extern PortableServer::POA_var the_poa;
 extern PortableServer::POA_var the_ins_poa;
