@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.36.2.7  2004/10/13 17:58:23  dgrisby
+# Abstract interfaces support; values support interfaces; value bug fixes.
+#
 # Revision 1.36.2.6  2004/07/23 10:29:59  dgrisby
 # Completely new, much simpler Any implementation.
 #
@@ -412,9 +415,8 @@ def visitInterface(node):
             n.accept(self)
 
     # Output the this interface's corresponding class
-    stream.out(template.interface_type,
-               name = cxx_name,
-               Other_IDL = Other_IDL)
+    Ibase = iface.instance("I")(I,Other_IDL)
+    Ibase.hh(stream)
 
     _objref_I = iface.instance("_objref_I")(I)
     _objref_I.hh(stream)
@@ -423,6 +425,7 @@ def visitInterface(node):
     _pof_I = iface.instance("_pof_I")(I)
     _pof_I.hh(stream)
 
+    # Skeleton class
     _impl_I = iface.instance("_impl_I")(I)
     _impl_I.hh(stream)
 
@@ -1610,7 +1613,9 @@ def visitUnion(node):
                      idltype.tk_except, idltype.tk_string,
                      idltype.tk_wstring,
                      idltype.tk_sequence, idltype.tk_any,
-                     idltype.tk_TypeCode, idltype.tk_objref ]:
+                     idltype.tk_TypeCode, idltype.tk_objref,
+                     idltype.tk_value, idltype.tk_value_box,
+                     idltype.tk_abstract_interface ]:
                                                  
                     this_stream = outside
                     used_outside = 1

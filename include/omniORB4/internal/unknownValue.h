@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2004/10/13 17:58:19  dgrisby
+  Abstract interfaces support; values support interfaces; value bug fixes.
+
   Revision 1.1.2.1  2004/07/26 22:56:38  dgrisby
   Support valuetypes in Anys.
 
@@ -83,15 +86,15 @@ public:
 
   static _dyn_attr const char* _PD_repoId;
 
+  cdrAnyMemoryStream  pd_mbuf;
+  // Marshalled state members of the value.
+
 private:
   CORBA::TypeCode_var pd_tc;
   // TypeCode of this value.
 
   CORBA::ULong        pd_hash;
   // Hash value of repository id in TypeCode.
-
-  cdrAnyMemoryStream  pd_mbuf;
-  // Marshalled state members of the value.
 
   UnknownValue(const UnknownValue &);
   // Internal copy constructor.

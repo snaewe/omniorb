@@ -77,9 +77,6 @@ class SupportedASTVisitor(idlvisitor.AstVisitor):
         if seen.has_key(node): return
         seen[node] = 1
 
-#         if node.abstract():
-#             unsupportedIDL("abstract interfaces")
-
         for decl in node.contents():
             decl.accept(self)
 
@@ -87,9 +84,6 @@ class SupportedASTVisitor(idlvisitor.AstVisitor):
         if seen.has_key(node): return
         seen[node] = 1
         
-#         if node.abstract():
-#             unsupportedIDL("abstract interfaces")
-
     def visitConst(self, node):
         if seen.has_key(node): return
         seen[node] = 1

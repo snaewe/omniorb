@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.4  2004/10/13 17:58:22  dgrisby
+# Abstract interfaces support; values support interfaces; value bug fixes.
+#
 # Revision 1.1.6.3  2003/11/06 11:56:56  dgrisby
 # Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 #
@@ -152,6 +155,12 @@ class Interface:
   def allInherits(self):
     return map(lambda x:Interface(x), ast.allInherits(self._node))
 
+  def local(self):
+    return self._node.local()
+
+  def abstract(self):
+    return self._node.abstract()
+
   def name(self):
     return self._node_name
     
@@ -261,7 +270,13 @@ class I_Helper(Class):
     if config.state['BOA Skeletons']:
       class_sk_name = "class " + \
                       self.interface().name().prefix("_sk_").simple() + ";"
-    stream.out(omniidl_be.cxx.header.template.interface_Helper,
+
+    if self.interface().abstract():
+      helper_tpl = omniidl_be.cxx.header.template.abstract_interface_Helper
+    else:
+      helper_tpl = omniidl_be.cxx.header.template.interface_Helper
+
+    stream.out(helper_tpl,
                class_sk_name = class_sk_name,
                name = self.interface().name().simple(),
                guard = self.interface().name().guard())
@@ -271,29 +286,81 @@ class I_Helper(Class):
                name = self.interface().name().fullyQualify())
 
 
+class I(Class):
+  def __init__(self, i, other_idl):
+    Class.__init__(self, i)
+    self._other_idl = other_idl
+
+  def hh(self, stream):
+    if self.interface().abstract():
+
+      for callable in self.interface().callables():
+        method = _impl_Method(callable, self)
+        self._methods.append(method)
+        self._callables[method] = callable
+
+      methodl = []
+      for method in self.methods():
+          methodl.append(method.hh(virtual = 1, pure = 1))
+
+      inh = self.interface().inherits()
+      if inh:
+        inheritl = []
+        for i in inh:
+          iname = i.name().unambiguous(self._environment)
+          inheritl.append("public virtual " + iname)
+      else:
+        inheritl = [ "public virtual CORBA::AbstractBase" ]
+
+      stream.out(omniidl_be.cxx.header.template.abstract_interface_type,
+                 name=self.interface().name().simple(),
+                 Other_IDL = self._other_idl,
+                 inherits = string.join(inheritl, ",\n"),
+                 operations = string.join(methodl, "\n"))
+
+    else:
+      stream.out(omniidl_be.cxx.header.template.interface_type,
+                 name=self.interface().name().simple(),
+                 Other_IDL = self._other_idl)
+
+
+
 class _objref_I(Class):
   def __init__(self, I):
     Class.__init__(self, I)
     self._name = self._name.prefix("_objref_")
 
+    # In abstract interfaces, signatures are like _impl classes, not
+    # normal _objref classes.
+    if self.interface().abstract():
+      cls = _impl_Method
+    else:
+      cls = _objref_Method
+
     for callable in self.interface().callables():
-      method = _objref_Method(callable, self)
+      method = cls(callable, self)
       self._methods.append(method)
       self._callables[method] = callable
 
 
   def hh(self, stream):
     # build the inheritance list
+
     objref_inherits = []
-    for i in self.interface().inherits():
+
+    inh = self.interface().inherits()
+    if inh:
+      for i in inh:
         objref_inherited_name = i.name().prefix("_objref_")
         uname = objref_inherited_name.unambiguous(self._environment)
         objref_inherits.append("public virtual " + uname)
-
-    # if already inheriting, the base class will be present
-    # (transitivity of the inherits-from relation)
-    if self.interface().inherits() == []:
-        objref_inherits = [ "public virtual CORBA::Object, " + \
+    else:
+      if self.interface().abstract():
+        objref_inherits = [ "public virtual CORBA::_omni_AbstractBaseObjref",
+                            "public virtual omniObjRef",
+                            "public virtual " + self.interface().name().simple() ]
+      else:
+        objref_inherits = [ "public virtual CORBA::Object",
                             "public virtual omniObjRef" ]
 
     methods = []
@@ -323,14 +390,30 @@ class _objref_I(Class):
   def cc(self, stream):
 
     def _ptrToObjRef_ptr(self = self, stream = stream):
+      has_abstract = self.interface().abstract()
+
       for i in self.interface().allInherits():
+        if i.abstract(): has_abstract = 1
+
         stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_ptr,
                    inherits_fqname = i.name().fullyQualify())
 
+      if has_abstract:
+        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_ptr,
+                   inherits_fqname = "CORBA::AbstractBase")
+
     def _ptrToObjRef_str(self = self, stream = stream):
+      has_abstract = self.interface().abstract()
+
       for i in self.interface().allInherits():
+        if i.abstract(): has_abstract = 1
+
         stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_str,
                    inherits_fqname = i.name().fullyQualify())
+
+      if has_abstract:
+        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_str,
+                   inherits_fqname = "CORBA::AbstractBase")
 
     # build the inherits list
     inherits_str = ""
@@ -488,7 +571,12 @@ class _impl_I(Class):
     # build the inheritance list
     environment = self._environment
     impl_inherits = []
+    inherit_abstract = 0
+    
     for i in self.interface().inherits():
+      if i.abstract():
+        inherit_abstract = 1
+
       impl_inherited_name = i.name().prefix("_impl_")
       uname = impl_inherited_name.unambiguous(environment)
       impl_inherits.append("public virtual " + uname)
@@ -498,15 +586,22 @@ class _impl_I(Class):
     if self.interface().inherits() == []:
       impl_inherits   = [ "public virtual omniServant" ]
 
-
     methods = []
     for method in self.methods():
         methods.append(method.hh(virtual = 1, pure = 1))
+
+    if self.interface().abstract():
+      abstract = omniidl_be.cxx.header.template.interface_impl_abstract
+    elif inherit_abstract:
+      abstract = omniidl_be.cxx.header.template.interface_impl_not_abstract
+    else:
+      abstract = ""
         
     stream.out(omniidl_be.cxx.header.template.interface_impl,
                name = self.interface().name().simple(),
                inherits = string.join(impl_inherits, ",\n"),
-               operations = string.join(methods, "\n"))
+               operations = string.join(methods, "\n"),
+               abstract = abstract)
 
   def cc(self, stream):
 
@@ -578,6 +673,17 @@ class _impl_I(Class):
                _ptrToInterface_ptr = _ptrToInterface_ptr,
                _ptrToInterface_str = _ptrToInterface_str,
                name = node_name.fullyQualify())
+
+    if not self.interface().abstract():
+      # Are we derived from an abstract interface
+      inherit_abstract = 0
+      for i in self.interface().inherits():
+        if i.abstract():
+          inherit_abstract = 1
+          break
+      if inherit_abstract:
+        stream.out(omniidl_be.cxx.skel.template.interface_impl_not_abstract,
+                   impl_fqname = impl_name.fullyQualify())
           
 
 class _sk_I(Class):

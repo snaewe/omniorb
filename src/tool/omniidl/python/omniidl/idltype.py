@@ -274,8 +274,10 @@ def containsValueType(t):
     if isinstance(t, Declared):
         d = t.decl()
 
-        if isinstance(d, idlast.Typedef):
-            return containsValueType(d.aliasType())
+        if isinstance(d, idlast.Declarator):
+            alias = d.alias()
+            if alias:
+                return containsValueType(alias.aliasType())
 
         if isinstance(d, idlast.Struct):
             for m in d.members():
@@ -291,6 +293,9 @@ def containsValueType(t):
             return 1
 
         if isinstance(d, idlast.Value):
+            return 1
+
+        if isinstance(d, idlast.ValueBox):
             return 1
 
         if isinstance(d, idlast.Interface) and d.abstract():

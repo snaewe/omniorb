@@ -8,7 +8,7 @@ class One_i : public virtual OBV_ValueTest::One,
 	      public virtual CORBA::DefaultValueRefCountBase
 {
 public:
-  One_i(const char*s, long l)
+  One_i(const char* s, long l)
     : OBV_ValueTest::One(s, l)
   {
     cout << "One_i created with values" << endl;

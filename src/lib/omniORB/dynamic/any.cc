@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.21.2.4  2004/10/13 17:58:20  dgrisby
+ * Abstract interfaces support; values support interfaces; value bug fixes.
+ *
  * Revision 1.21.2.3  2004/07/31 23:44:55  dgrisby
  * Properly handle null and void Anys; store omniObjRef pointer for
  * objrefs in Anys.
@@ -480,7 +483,7 @@ PR_extract(CORBA::TypeCode_ptr     tc,
     {
       omni_tracedmutex_lock l(anyLock);
 
-      if (pd_mbuf) {
+      if (!pd_data) {
 	CORBA::Any* me = OMNI_CONST_CAST(CORBA::Any*, this);
 
 	me->pd_data = data;
@@ -1044,33 +1047,177 @@ CORBA::Any::operator>>=(CORBA::Object_ptr& obj) const
   return 0;
 }
 
+
+// Abstract Interface
+
+static void marshalAbstractInterface_fn(cdrStream& s, void* v)
+{
+  CORBA::AbstractBase* a = (CORBA::AbstractBase*)v;
+  if (v) {
+    CORBA::ValueBase* b = a->_NP_to_value();
+    if (b) {
+      s.marshalBoolean(0);
+      CORBA::ValueBase::_NP_marshal(b,s);
+      return;
+    }
+    CORBA::Object_ptr o = a->_NP_to_object();
+    if (o) {
+      s.marshalBoolean(1);
+      omniObjRef::_marshal(o->_PR_getobj(),s);
+      return;
+    }
+  }
+  s.marshalBoolean(0);
+  CORBA::ValueBase::_NP_marshal(0,s);
+}
+static void unmarshalAbstractInterface_fn(cdrStream& s, void*& v)
+{
+  CORBA::AbstractBase* a;
+  CORBA::Boolean c = s.unmarshalBoolean();
+  if (c) {
+    omniObjRef* o = omniObjRef::_unMarshal(CORBA::Object::_PD_repoId,s);
+    if (o) {
+      a = (CORBA::AbstractBase*)o->_ptrToObjRef(CORBA::AbstractBase::_PD_repoId);
+      if (!a)
+	OMNIORB_THROW(BAD_PARAM,
+		      BAD_PARAM_IncorrectAbstractIntfType,
+		      (CORBA::CompletionStatus)s.completion());
+    }
+    else
+      a = 0;
+  }
+  else {
+    CORBA::ValueBase* b = CORBA::ValueBase::_NP_unmarshal(s);
+    if (b) {
+      a = (CORBA::AbstractBase*)b->_ptrToValue(CORBA::AbstractBase::_PD_repoId);
+      if (!a)
+	OMNIORB_THROW(BAD_PARAM,
+		      BAD_PARAM_IncorrectAbstractIntfType,
+		      (CORBA::CompletionStatus)s.completion());
+    }
+    else
+      a = 0;
+  }
+  v = a;
+}
+static void deleteAbstractInterface_fn(void* v)
+{
+  CORBA::AbstractBase_ptr a = (CORBA::AbstractBase_ptr)v;
+  if (a)
+    CORBA::release(a);
+}
+
+
+// to_object, to_abstract_base, to_value
+
 CORBA::Boolean
 CORBA::Any::operator>>=(to_object o) const
 {
   void* v;
 
-  if (pd_tc->kind() != CORBA::tk_objref)
+  CORBA::TCKind kind = pd_tc->kind();
+  
+  if (kind == CORBA::tk_objref) {
+    // We call PR_extract giving it our own TypeCode, so its type check
+    // always succeeds, whatever specific object reference type we
+    // contain.
+    //
+    // Unlike other extraction operators, the caller takes ownership
+    // of the returned reference here.
+
+    if (PR_extract(pd_tc,
+		   unmarshalObject_fn, marshalObject_fn, deleteObject_fn,
+		   v)) {
+
+      omniObjRef* r = (omniObjRef*)v;
+      if (r)
+	o.ref = CORBA::Object::_duplicate(
+	        (CORBA::Object_ptr)r->_ptrToObjRef(CORBA::Object::_PD_repoId));
+      else
+	o.ref = CORBA::Object::_nil();
+
+      return 1;
+    }
+  }
+  else if (kind == CORBA::tk_abstract_interface) {
+    if (PR_extract(pd_tc,
+		   unmarshalAbstractInterface_fn,
+		   marshalAbstractInterface_fn,
+		   deleteAbstractInterface_fn,
+		   v)) {
+      CORBA::AbstractBase* a = (CORBA::AbstractBase*)v;
+      if (a) {
+	if (a->_NP_to_value())
+	  return 0;
+	o.ref = a->_to_object();
+      }
+      else
+	o.ref = CORBA::Object::_nil();
+      return 1;
+    }
+  }
+  return 0;
+}
+
+CORBA::Boolean
+CORBA::Any::operator>>=(to_abstract_base a) const
+{
+  void* v;
+
+  if (pd_tc->kind() != CORBA::tk_abstract_interface)
     return 0;
 
-  // We call PR_extract giving it our own TypeCode, so its type check
-  // always succeeds, whatever specific object reference type we
-  // contain.
-  //
-  // Unlike other extraction operators, the caller takes ownership
-  // of the returned reference here.
-
   if (PR_extract(pd_tc,
-		 unmarshalObject_fn, marshalObject_fn, deleteObject_fn,
+		 unmarshalAbstractInterface_fn,
+		 marshalAbstractInterface_fn,
+		 deleteAbstractInterface_fn,
 		 v)) {
-
-    omniObjRef* r = (omniObjRef*)v;
-    if (r)
-      o.ref = CORBA::Object::_duplicate(
-                (CORBA::Object_ptr)r->_ptrToObjRef(CORBA::Object::_PD_repoId));
-    else
-      o.ref = CORBA::Object::_nil();
-
+    a.ref = CORBA::AbstractBase::_duplicate((CORBA::AbstractBase*)v);
     return 1;
+  }
+  return 0;
+}
+
+CORBA::Boolean
+CORBA::Any::operator>>=(to_value o) const
+{
+  void* v;
+
+  CORBA::TCKind kind = pd_tc->kind();
+  
+  if (kind == CORBA::tk_value || kind == CORBA::tk_value_box) {
+    // When values are stored by pointer in pd_data, they are stored
+    // as the most derived type. That means we can't use the pointer
+    // as ValueBase here. Instead, we use a temporar memory buffer.
+    // That's not as inefficient as it might seem, because the
+    // cdrAnyMemoryStream stores valuetypes by pointer anyway.
+    if (pd_mbuf) {
+      o.ref = CORBA::ValueBase::_NP_unmarshal(*pd_mbuf);
+    }
+    else {
+      OMNIORB_ASSERT(pd_data);
+      OMNIORB_ASSERT(pd_marshal);
+      cdrAnyMemoryStream tmp;
+      pd_marshal(tmp, pd_data);
+      o.ref = CORBA::ValueBase::_NP_unmarshal(tmp);
+    }
+  }
+  else if (kind == CORBA::tk_abstract_interface) {
+    if (PR_extract(pd_tc,
+		   unmarshalAbstractInterface_fn,
+		   marshalAbstractInterface_fn,
+		   deleteAbstractInterface_fn,
+		   v)) {
+      CORBA::AbstractBase* a = (CORBA::AbstractBase*)v;
+      if (a) {
+	o.ref = a->_to_value();
+	if (o.ref == 0)
+	  return 0;
+      }
+      else
+	o.ref = 0;
+      return 1;
+    }
   }
   return 0;
 }

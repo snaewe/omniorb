@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.5  2004/10/13 17:58:22  dgrisby
+# Abstract interfaces support; values support interfaces; value bug fixes.
+#
 # Revision 1.20.2.4  2004/02/16 10:10:30  dgrisby
 # More valuetype, including value boxes. C++ mapping updates.
 #
@@ -299,6 +302,8 @@ else """,
       "@type@::_NP_marshal(@element_name@,@to_where@);",
       idltype.tk_value_box:
       "@type@::_NP_marshal(@element_name@,@to_where@);",
+      idltype.tk_abstract_interface:
+      "@type@::_marshalObjRef(@element_name@,@to_where@);",
       }
     if special_marshal_functions.has_key(kind):
         out_template = special_marshal_functions[kind]
@@ -417,6 +422,8 @@ def unmarshall(to, environment, type, decl, name, from_where):
       "@element_name@ = @type@::_NP_unmarshal(@where@);",
       idltype.tk_value_box:
       "@element_name@ = @type@::_NP_unmarshal(@where@);",
+      idltype.tk_abstract_interface:
+      "@element_name@ = @type@::_unmarshalObjRef(@where@);",
       }
 
     if special_unmarshal_functions.has_key(kind):

@@ -171,7 +171,10 @@ class Type:
         if kind == idltype.tk_fixed:
             return ( (1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
 
-        if kind in [ idltype.tk_value, idltype.tk_value_box ]:
+        if kind in [ idltype.tk_value,
+                     idltype.tk_value_box,
+                     idltype.tk_abstract_interface]:
+
             return ( (0, 0, 1), (0, 1, 1), (0, 1, 1), (0, 0, 1) )[direction]
 
         if kind == idltype.tk_void:
@@ -197,11 +200,14 @@ class Type:
         # CORBA2.3 P1-204 Table 1-4 T_var argument and result mapping
         kind = self.__type.kind()
 
-        if kind in [ idltype.tk_objref, idltype.tk_struct, idltype.tk_union,
-                     idltype.tk_string, idltype.tk_wstring,
-                     idltype.tk_sequence, idltype.tk_any,
-                     idltype.tk_value, idltype.tk_value_box ] or \
-                     self.array():
+        if (kind in [ idltype.tk_objref, idltype.tk_struct, idltype.tk_union,
+                      idltype.tk_string, idltype.tk_wstring,
+                      idltype.tk_sequence, idltype.tk_any,
+                      idltype.tk_value, idltype.tk_value_box,
+                      idltype.tk_abstract_interface ]
+            or
+            self.array()):
+
             return ( (1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
 
         util.fatalError("T_var argmapping requested for type with no such "
@@ -749,7 +755,7 @@ class Type:
         if self.array() or d_T.struct()    or d_T.union() or \
                            d_T.exception() or d_T.sequence() or \
                            d_T.objref()    or d_T.value() or \
-                           d_T.valuebox():
+                           d_T.valuebox()  or d_T.abstract_interface():
             name = id.Name(self.type().decl().scopedName()).suffix("_var")
             return name.unambiguous(environment)
 
@@ -945,6 +951,10 @@ class Type:
     def valuebox(self):
         type = self.__type
         return type.kind() == idltype.tk_value_box
+
+    def abstract_interface(self):
+        type = self.__type
+        return type.kind() == idltype.tk_abstract_interface
 
 
 def variableDecl(decl):

@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.6  2004/10/13 17:58:20  dgrisby
+ * Abstract interfaces support; values support interfaces; value bug fixes.
+ *
  * Revision 1.40.2.5  2004/07/23 10:29:58  dgrisby
  * Completely new, much simpler Any implementation.
  *
@@ -467,7 +470,8 @@ CORBA::TypeCode::type_modifier() const
 CORBA::TypeCode_ptr
 CORBA::TypeCode::concrete_base_type() const
 {
-  return ToConstTcBase_Checked(this)->NP_concrete_base_type();
+  return TypeCode_collector::duplicateRef(ToConstTcBase_Checked(this)
+					  ->NP_concrete_base_type());
 }
 
 
@@ -992,6 +996,22 @@ CORBA::TypeCode::PR_value_box_tc(const char* id, const char* name,
   return r;
 }
 
+CORBA::TypeCode_ptr
+CORBA::TypeCode::PR_abstract_interface_tc(const char* id, const char* name,
+					  CORBA::TypeCode::_Tracker* tracker)
+{
+  check_static_data_is_initialised();
+
+  CORBA::TypeCode_ptr r = the_typecodes->find(id);
+  if (r) return r;
+
+  r = new TypeCode_abstract_interface(id, name);
+  tracker->add(r);
+  the_typecodes->add(id, r);
+  return r;
+}
+
+
 
 CORBA::TypeCode_ptr
 CORBA::TypeCode::PR_string_tc(CORBA::ULong bound,
@@ -1507,7 +1527,7 @@ TypeCode_base::NP_type_modifier() const
 TypeCode_base*
 TypeCode_base::NP_concrete_base_type() const
 {
-  throw CORBA::TypeCode::Bounds();
+  throw CORBA::TypeCode::BadKind();
 #ifdef NEED_DUMMY_RETURN
   return 0;
 #endif
@@ -4684,6 +4704,7 @@ TypeCode_indirect::TypeCode_indirect(const char* repoId)
 TypeCode_indirect::~TypeCode_indirect()
 {
   if (pd_resolved) TypeCode_collector::releaseRef(pd_resolved);
+  the_typecodes->remove(pd_repoId, this);
 }
 
 void
@@ -5366,6 +5387,15 @@ TypeCode_marshaller::unmarshal(cdrStream& s,
 
       case CORBA::tk_union:
 	return TypeCode_union::NP_unmarshalComplexParams(mbs, &tbl);
+
+      case CORBA::tk_value:
+	return TypeCode_value::NP_unmarshalComplexParams(mbs, &tbl);
+
+      case CORBA::tk_value_box:
+	return TypeCode_value_box::NP_unmarshalComplexParams(mbs, &tbl);
+
+      case CORBA::tk_abstract_interface:
+	return TypeCode_abstract_interface::NP_unmarshalComplexParams(mbs, &tbl);
 
       default:
 	OMNIORB_THROW(MARSHAL,

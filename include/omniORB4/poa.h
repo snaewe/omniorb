@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.4  2004/10/13 17:58:18  dgrisby
+  Abstract interfaces support; values support interfaces; value bug fixes.
+
   Revision 1.4.2.3  2004/07/23 10:29:57  dgrisby
   Completely new, much simpler Any implementation.
 
@@ -668,7 +671,7 @@ _CORBA_MODULE_BEG
       public virtual ServantBase
   {
   public:
-    ValueRefCountBase();
+    ValueRefCountBase() {}
 
     virtual void  _add_ref();
     virtual void  _remove_ref();

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.7  2004/10/13 17:58:18  dgrisby
+ Abstract interfaces support; values support interfaces; value bug fixes.
+
  Revision 1.5.2.6  2004/07/23 10:29:56  dgrisby
  Completely new, much simpler Any implementation.
 
@@ -357,6 +360,9 @@ _CORBA_MODULE_BEG
   class Fixed;
   class Any;
   class ValueBase;
+
+  class AbstractBase;
+  typedef AbstractBase* AbstractBase_ptr;
 
   //////////////////////////////////////////////////////////////////////
   ////////////////////// Definitions ///////////////////////////////////

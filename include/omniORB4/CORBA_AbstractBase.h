@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2004/10/13 17:58:18  dgrisby
+  Abstract interfaces support; values support interfaces; value bug fixes.
+
   Revision 1.1.2.1  2004/04/02 13:26:25  dgrisby
   Start refactoring TypeCode to support value TypeCodes, start of
   abstract interfaces support.
@@ -43,9 +46,7 @@
 //////////////////////////// AbstractBase ////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class AbstractBase;
 class AbstractBase_var;
-typedef AbstractBase* AbstractBase_ptr;
 
 class AbstractBase {
 public:
@@ -56,9 +57,11 @@ public:
   static _ptr_type _narrow(_ptr_type);
   static _ptr_type _nil();
 
-  Object_ptr _to_object() { return Object::_duplicate(_NP_to_object()); }
+  inline Object_ptr _to_object() {
+    return Object::_duplicate(_NP_to_object());
+  }
 
-  ValueBase* _to_value() {
+  inline ValueBase* _to_value() {
     ValueBase* v = _NP_to_value();
     add_ref(v);
     return v;
@@ -75,6 +78,8 @@ protected:
 
 public:
   virtual Boolean _NP_is_nil() const;
+
+  static _dyn_attr const char* _PD_repoId;
 
   virtual Object_ptr _NP_to_object();
   virtual ValueBase* _NP_to_value();
@@ -95,9 +100,9 @@ _CORBA_MODULE_FN void release(AbstractBase_ptr);
 // Object reference classes for abstract interfaces (and thus object
 // references for interfaces derived from abstract interfaces) inherit
 // from both Object and AbstractBase, meaning that is_nil() and
-// release() are ambiguous between Object and AbstractBase
-// versions. This class and the associated functions resolve the
-// ambiguity.
+// release() are ambiguous between Object and AbstractBase versions.
+// This class and the associated functions resolve the ambiguity.
+
 class _omni_AbstractBaseObjref :
   public virtual Object,
   public virtual AbstractBase
@@ -116,3 +121,53 @@ _CORBA_MODULE_FN inline void release(_omni_AbstractBaseObjref* a)
 {
   release(a->_NP_to_object());
 }
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// AbstractBase_var ////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class AbstractBase_var {
+public:
+  typedef AbstractBase         T;
+  typedef AbstractBase_ptr     T_ptr;
+  typedef AbstractBase_var     T_var;
+
+  inline AbstractBase_var() : pd_ref(T::_nil()) {}
+  inline AbstractBase_var(T_ptr p) { pd_ref = p; }
+  inline AbstractBase_var(const T_var& p) : pd_ref(T::_duplicate(p.pd_ref)) {}
+  inline ~AbstractBase_var() { release(pd_ref); }
+
+  inline T_var& operator= (T_ptr p) {
+    release(pd_ref);
+    pd_ref = p;
+    return *this;
+  }
+  inline T_var& operator= (const T_var& p) {
+    if( pd_ref != p.pd_ref ) {
+      release(pd_ref);
+      pd_ref = T::_duplicate(p.pd_ref);
+    }
+    return *this;
+  }
+  inline T_ptr operator->() const { return pd_ref; }
+  inline operator T_ptr() const   { return pd_ref; }
+
+  inline T_ptr in() const { return pd_ref; }
+  inline T_ptr& inout()   { return pd_ref; }
+  inline T_ptr& out() {
+    if( !is_nil(pd_ref) ) {
+      release(pd_ref);
+      pd_ref = T::_nil();
+    }
+    return pd_ref;
+  }
+  inline T_ptr _retn() {
+    T_ptr tmp = pd_ref;
+    pd_ref = T::_nil();
+    return tmp;
+  }
+
+private:
+  T_ptr pd_ref;
+};

@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.4  2004/10/13 17:58:24  dgrisby
+# Abstract interfaces support; values support interfaces; value bug fixes.
+#
 # Revision 1.8.2.3  2003/11/06 11:56:56  dgrisby
 # Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 #
@@ -112,7 +115,6 @@ def visitStructForward(node):
     pass
 
 def visitUnion(node):
-    # *** Recurse?
     pass
 
 def visitUnionForward(node):
@@ -133,10 +135,13 @@ def visitInterface(node):
 
     name = id.Name(node.scopedName())
     cxx_name = name.fullyQualify()
-    idLen = len(node.repoId()) + 1
 
-    stream.out(template.interface_marshal_forward,
-               name = cxx_name, idLen = str(idLen))        
+    if node.abstract():
+        stream.out(template.abstract_interface_marshal_forward,
+                   name = cxx_name)
+    else:
+        stream.out(template.interface_marshal_forward,
+                   name = cxx_name)
 
 def visitTypedef(node):
     pass
@@ -149,20 +154,11 @@ def visitDeclarator(node):
     pass
 def visitException(node):
     pass
-
-
 def visitValue(node):
-    # ***
     pass
-
 def visitValueForward(node):
-    # ***
     pass
-
 def visitValueAbs(node):
-    # ***
     pass
-
 def visitValueBox(node):
-    # ***
     pass

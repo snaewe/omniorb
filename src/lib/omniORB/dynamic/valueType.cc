@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2004/10/13 17:58:21  dgrisby
+  Abstract interfaces support; values support interfaces; value bug fixes.
+
   Revision 1.1.2.5  2004/07/26 22:56:39  dgrisby
   Support valuetypes in Anys.
 
@@ -65,7 +68,7 @@
 OMNI_USING_NAMESPACE(omni)
 
 
-static void
+static inline void
 marshalIndirection(cdrStream& stream, CORBA::Long pos)
 {
   stream.declareArrayLength(omni::ALIGN_4, 8);
@@ -227,6 +230,7 @@ marshalHeaderAndBody(cdrStream& stream, cdrValueChunkStream* cstreamp,
     if (pos == -1) {
       valTruncIds->idcount >>= stream;
       for (CORBA::Long i=0; i < valTruncIds->idcount; i++) {
+	stream.alignOutput(omni::ALIGN_4);
 	_omni_ValueId* b = &(valTruncIds->repoIds[i]);
 	pos = tracker->addRepoId(b->repoId, b->hashval,
 				 stream.currentOutputPtr());
@@ -451,6 +455,11 @@ unmarshalHeaderAndBody(cdrStream&           stream,
       repoIds = newIds;
     }
 
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Unmarshal value '" << repoIds->repoIds[0].repoId << "'.\n";
+    }
+
     // Try to find a factory that can create the value.
     CORBA::Long i;
     for (i=0; i < repoIds->idcount; i++) {
@@ -472,21 +481,34 @@ unmarshalHeaderAndBody(cdrStream&           stream,
   }
   else if ((tag & REPOID_MASK) == REPOID_SINGLE) {
     repoId = unmarshalRepoId(stream, tracker);
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Unmarshal value '" << repoId << "'.\n";
+    }
     CORBA::ULong hashval = omniValueType::hash_id(repoId);
     result = _omni_ValueFactoryManager::create_for_unmarshal(repoId, hashval);
   }
   else {
+    // No repoId marshalled -- it's the target type
     repoId = targetId;
 
-    // No repoId marshalled -- it's the target type
     if (omni::ptrStrMatch(targetId, CORBA::ValueBase::_PD_repoId)) {
       // If we're expecting ValueBase, the sender must specify a repoId.
       OMNIORB_THROW(MARSHAL, MARSHAL_NoRepoIdInValueType,
 		    (CORBA::CompletionStatus)stream.completion());
     }
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Unmarshal value '" << repoId << "'.\n";
+    }
     result = _omni_ValueFactoryManager::create_for_unmarshal(targetId,
 							     targetHash);
   }
+
+  // If the value is chunked, tell the chunk stream we're about to
+  // unmarshal the value body.
+  if (cstreamp)
+    cstreamp->startInputValueBody();
 
   // After all that, did we manage to create a value?
   if (!result) {
@@ -498,15 +520,14 @@ unmarshalHeaderAndBody(cdrStream&           stream,
       result = new UnknownValue(tc);
     }
     else {
+      if (omniORB::trace(10)) {
+	omniORB::logger l;
+	l << "No value factory for '" << repoId << "'.\n";
+      }
       OMNIORB_THROW(MARSHAL, MARSHAL_NoValueFactory,
 		    (CORBA::CompletionStatus)stream.completion());
     }
   }
-
-  // If the value is chunked, tell the chunk stream we're about to
-  // unmarshal the value body.
-  if (cstreamp)
-    cstreamp->startInputValueBody();
 
   tracker->addValue(result, pos);
 
@@ -535,9 +556,11 @@ unmarshalHeaderAndBody(cdrStream&           stream,
       // Unmarshal a nested value, in case there's a later indirection to it.
 
       try {
+	omniORB::logs(30, "Unmarshal value nested inside truncated value...");
 	nested = omniValueType::unmarshal(CORBA::ValueBase::_PD_repoId,
 					  0, 0, stream);
 	CORBA::remove_ref(nested);
+	omniORB::logs(30, "Unmarshalled value nested inside truncated value.");
       }
       catch (CORBA::MARSHAL& ex) {
 	omniORB::logs(25, "Ignore MARSHAL exception while truncating value.");
@@ -548,5 +571,55 @@ unmarshalHeaderAndBody(cdrStream&           stream,
   // The tracker holds the single reference to the value. Add one for
   // our caller.
   CORBA::add_ref(result);
+
   return result;
+}
+
+
+CORBA::ValueBase*
+omniValueType::
+handleIncompatibleValue(const char* repoId, CORBA::ULong hashval,
+			CORBA::ValueBase* val,
+			CORBA::CompletionStatus completion)
+{
+  CORBA::ValueBase_var holder(val); // Release val when we're done
+
+  UnknownValue* unknown = UnknownValue::_downcast(val);
+  
+  if (unknown) {
+    // Incompatible value was unknown when we unmarshalled an Any. Do
+    // we have a factory for it now?
+
+    CORBA::ValueBase* result;
+    result = _omni_ValueFactoryManager::create_for_unmarshal(repoId, hashval);
+    if (!result) {
+      if (omniORB::trace(10)) {
+	omniORB::logger l;
+	l << "No value factory for '" << repoId << "'.\n";
+      }
+      OMNIORB_THROW(MARSHAL, MARSHAL_NoValueFactory, completion);
+    }
+
+    // Factory is now available. Did it make a suitable value?
+    if (!result->_ptrToValue(repoId))
+      OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure, completion);
+
+    if (omniORB::trace(25)) {
+      omniORB::logger l;
+      l << "Convert UnknownValue to '" << repoId << "'.\n";
+    }
+
+    // Convert the state.
+    CORBA::ValueBase_var rholder(result); // In case unmarshal throws
+    cdrAnyMemoryStream buf(unknown->pd_mbuf, 1);
+    result->_PR_unmarshal_state(buf);
+
+    return rholder._retn();
+  }
+  else {
+    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure, completion);
+  }
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
 }

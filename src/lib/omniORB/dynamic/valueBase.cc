@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2004/10/13 17:58:21  dgrisby
+  Abstract interfaces support; values support interfaces; value bug fixes.
+
   Revision 1.1.2.4  2004/07/26 22:56:39  dgrisby
   Support valuetypes in Anys.
 
@@ -120,6 +123,33 @@ CORBA::DefaultValueRefCountBase::_refcount_value()
 
 CORBA::DefaultValueRefCountBase::~DefaultValueRefCountBase() {
   OMNIORB_ASSERT(_pd_refCount == 0);
+}
+
+
+//////////////////////////////////////////////////////////////////////
+///////////////// PortableServer::ValueRefCountBase //////////////////
+//////////////////////////////////////////////////////////////////////
+
+
+void
+PortableServer::ValueRefCountBase::_add_ref()
+{
+  PortableServer::ServantBase::_add_ref();
+}
+
+void
+PortableServer::ValueRefCountBase::_remove_ref()
+{
+  PortableServer::ServantBase::_remove_ref();
+}
+
+CORBA::ULong
+PortableServer::ValueRefCountBase::_refcount_value()
+{
+  return PortableServer::ServantBase::_refcount_value();
+}
+
+PortableServer::ValueRefCountBase::~ValueRefCountBase() {
 }
 
 

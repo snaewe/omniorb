@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.3  2004/10/13 17:58:24  dgrisby
+# Abstract interfaces support; values support interfaces; value bug fixes.
+#
 # Revision 1.1.2.2  2003/11/06 11:56:56  dgrisby
 # Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 #
@@ -103,9 +106,7 @@ def visitModule(node):
     return
 
 def visitInterface(node):
-    # *** HERE: Abstract interface?
     pass
-
 def visitTypedef(node):
     pass
 def visitEnum(node):

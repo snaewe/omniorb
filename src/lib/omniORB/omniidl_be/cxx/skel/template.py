@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.3  2004/10/13 17:58:25  dgrisby
+# Abstract interfaces support; values support interfaces; value bug fixes.
+#
 # Revision 1.6.2.2  2003/11/06 11:56:56  dgrisby
 # Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 #
@@ -205,10 +208,6 @@ void @name@_Helper::release(::@name@_ptr p) {
   CORBA::release(p);
 }
 
-void @name@_Helper::duplicate(::@name@_ptr p) {
-  if( p && !p->_NP_is_nil() )  omni::duplicateObjRef(p);
-}
-
 void @name@_Helper::marshalObjRef(::@name@_ptr obj, cdrStream& s) {
   ::@name@::_marshalObjRef(obj, s);
 }
@@ -218,16 +217,40 @@ void @name@_Helper::marshalObjRef(::@name@_ptr obj, cdrStream& s) {
 }
 """
 
-interface_class = """\
+interface_duplicate = """\
+void @name@_Helper::duplicate(::@name@_ptr obj) {
+  if( obj && !obj->_NP_is_nil() )  omni::duplicateObjRef(obj);
+}
+
 @name@_ptr
 @name@::_duplicate(::@name@_ptr obj)
 {
   if( obj && !obj->_NP_is_nil() )  omni::duplicateObjRef(obj);
-
   return obj;
 }
+"""
+
+abstract_interface_duplicate = """\
+void @name@_Helper::duplicate(::@name@_ptr obj) {
+  if (obj) {
+    if (!obj->_to_value())
+      obj->_to_object();
+  }
+}
+
+@name@_ptr
+@name@::_duplicate(::@name@_ptr obj)
+{
+  if (obj) {
+    if (!obj->_to_value())
+      obj->_to_object();
+  }
+  return obj;
+}
+"""
 
 
+interface_class = """\
 @name@_ptr
 @name@::_narrow(CORBA::Object_ptr obj)
 {
@@ -546,6 +569,10 @@ interface_impl_inherit_dispatch = """\
 if( @impl_inherited_name@::_dispatch(_handle) ) {
   return 1;
 }
+"""
+
+interface_impl_not_abstract = """\
+void @impl_fqname@::_interface_is_abstract() {}
 """
 
 interface_impl_repoID_ptr = """\

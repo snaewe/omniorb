@@ -267,6 +267,26 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 							   tc, ibuf);
 	    omniValueType::marshal(v, tc->id(), obuf);
 	    CORBA::remove_ref(v);
+	    break;
+	  }
+
+	case CORBA::tk_abstract_interface:
+	  {
+	    CORBA::Boolean b = ibuf.unmarshalBoolean();
+	    obuf.marshalBoolean(b);
+	    if (b) {
+	      CORBA::Object_Member d;
+	      d <<= ibuf;
+	      d >>= obuf;
+	    }
+	    else {
+	      CORBA::ULong hash = omniValueType::hash_id(tc->id());
+	      CORBA::ValueBase* v = omniValueType::unmarshal(tc->id(), hash,
+							     tc, ibuf);
+	      omniValueType::marshal(v, tc->id(), obuf);
+	      CORBA::remove_ref(v);
+	    }
+	    break;
 	  }
 
 	default:
@@ -482,6 +502,26 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 						       tc, ibuf);
 	omniValueType::marshal(v, tc->id(), obuf);
 	CORBA::remove_ref(v);
+	break;
+      }
+
+    case CORBA::tk_abstract_interface:
+      {
+	CORBA::Boolean b = ibuf.unmarshalBoolean();
+	obuf.marshalBoolean(b);
+	if (b) {
+	  CORBA::Object_Member d;
+	  d <<= ibuf;
+	  d >>= obuf;
+	}
+	else {
+	  CORBA::ULong hash = omniValueType::hash_id(tc->id());
+	  CORBA::ValueBase* v = omniValueType::unmarshal(tc->id(), hash,
+							 tc, ibuf);
+	  omniValueType::marshal(v, tc->id(), obuf);
+	  CORBA::remove_ref(v);
+	}
+	break;
       }
 
     default:
@@ -643,6 +683,23 @@ void skipUsingTC(TypeCode_base* tc, cdrStream& buf)
 	    CORBA::ValueBase* v = omniValueType::unmarshal(tc->id(), hash,
 							   tc, buf);
 	    CORBA::remove_ref(v);
+	    break;
+	  }
+
+	case CORBA::tk_abstract_interface:
+	  {
+	    CORBA::Boolean b = buf.unmarshalBoolean();
+	    if (b) {
+	      CORBA::Object_Member d;
+	      d <<= buf;
+	    }
+	    else {
+	      CORBA::ULong hash = omniValueType::hash_id(tc->id());
+	      CORBA::ValueBase* v = omniValueType::unmarshal(tc->id(), hash,
+							     tc, buf);
+	      CORBA::remove_ref(v);
+	    }
+	    break;
 	  }
 
 	default:

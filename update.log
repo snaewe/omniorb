@@ -1,3 +1,53 @@
+Wed Oct 13 18:47:42 BST 2004 dgrisby
+====================================
+
+- Abstract interfaces support; values support interfaces; value bug
+  fixes. Still need to implement _narrow for abstract interfaces and
+  DynValue, etc.
+
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_AbstractBase.h
+include/omniORB4/CORBA_Any.h
+include/omniORB4/CORBA_Any_vartypes.h
+include/omniORB4/CORBA_ValueBase_vartypes.h
+include/omniORB4/omniORBcompat.h
+include/omniORB4/poa.h
+include/omniORB4/valueTemplatedecls.h
+include/omniORB4/valueType.h
+include/omniORB4/internal/unknownValue.h
+src/examples/anyExample/anyExample.idl
+src/examples/valuetype/simple/valimpl.h
+src/lib/omniORB/dynamic/abstractBase.cc
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/dynamic/unknownValue.cc
+src/lib/omniORB/dynamic/valueBase.cc
+src/lib/omniORB/dynamic/valueType.cc
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/lib/omniORB/omniidl_be/cxx/support.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/value.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/marshal.py
+src/lib/omniORB/omniidl_be/cxx/header/obv.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+src/lib/omniORB/orbcore/dynamicLib.cc
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/python/omniidl/idlast.py
+src/tool/omniidl/python/omniidl/idltype.py
+
+
+
 Sun Aug  1 00:42:42 BST 2004 dgrisby
 ====================================
 

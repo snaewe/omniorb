@@ -30,6 +30,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.6  2004/10/13 17:58:23  dgrisby
+# Abstract interfaces support; values support interfaces; value bug fixes.
+#
 # Revision 1.5.2.5  2004/07/31 23:44:55  dgrisby
 # Properly handle null and void Anys; store omniObjRef pointer for
 # objrefs in Anys.
@@ -201,6 +204,99 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _o)
   return 0;
 }
 """
+
+abstract_interface = """\
+static void @private_prefix@_@guard_name@_marshal_fn(cdrStream& _s, void* _v)
+{
+  CORBA::AbstractBase* _a = (CORBA::AbstractBase*)_v;
+  if (_v) {
+    CORBA::ValueBase* _b = _a->_NP_to_value();
+    if (_b) {
+      _s.marshalBoolean(0);
+      CORBA::ValueBase::_NP_marshal(_b,_s);
+      return;
+    }
+    CORBA::Object_ptr _o = _a->_NP_to_object();
+    if (_o) {
+      _s.marshalBoolean(1);
+      omniObjRef::_marshal(_o->_PR_getobj(),_s);
+      return;
+    }
+  }
+  _s.marshalBoolean(0);
+  CORBA::ValueBase::_NP_marshal(0,_s);
+}
+static void @private_prefix@_@guard_name@_unmarshal_fn(cdrStream& _s, void*& _v)
+{
+  CORBA::AbstractBase* _a;
+  CORBA::Boolean _c = _s.unmarshalBoolean();
+  if (_c) {
+    omniObjRef* _o = omniObjRef::_unMarshal(@fqname@::_PD_repoId,_s);
+    if (_o)
+      _a = (@fqname@_ptr)_o->_ptrToObjRef(@fqname@::_PD_repoId);
+    else
+      _a = @fqname@::_nil();
+  }
+  else {
+    CORBA::ValueBase* _b = CORBA::ValueBase::_NP_unmarshal(_s);
+    if (_b)
+      _a = (@fqname@_ptr)_b->_ptrToValue(@fqname@::_PD_repoId);
+    else
+      _a = 0;
+  }
+  _v = _a;
+}
+static void @private_prefix@_@guard_name@_destructor_fn(void* _v)
+{
+  CORBA::AbstractBase* _a = (CORBA::AbstractBase*)_v;
+  CORBA::release(_a);
+}
+
+void operator<<=(CORBA::Any& _a, @fqname@_ptr _o)
+{
+  @fqname@_ptr _no = @fqname@::_duplicate(_o);
+  _a.PR_insert(@tc_name@,
+               @private_prefix@_@guard_name@_marshal_fn,
+               @private_prefix@_@guard_name@_destructor_fn,
+               (CORBA::AbstractBase*)_no);
+}
+void operator<<=(CORBA::Any& _a, @fqname@_ptr* _op)
+{
+  _a.PR_insert(@tc_name@,
+               @private_prefix@_@guard_name@_marshal_fn,
+               @private_prefix@_@guard_name@_destructor_fn,
+               (CORBA::AbstractBase*)*_op);
+  *_op = @fqname@::_nil();
+}
+
+CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _o)
+{
+  void* _v;
+  if (_a.PR_extract(@tc_name@,
+                    @private_prefix@_@guard_name@_unmarshal_fn,
+                    @private_prefix@_@guard_name@_marshal_fn,
+                    @private_prefix@_@guard_name@_destructor_fn,
+                    _v)) {
+    CORBA::AbstractBase* _a = (CORBA::AbstractBase*)_v;
+    if (_a) {
+      CORBA::ValueBase* _b = _a->_NP_to_value();
+      if (_b) {
+        _o = (@fqname@_ptr)_b->_ptrToValue(@fqname@::_PD_repoId);
+        return 1;
+      }
+      CORBA::Object_ptr _p = _a->_NP_to_object();
+      if (_p) {
+        _o = (@fqname@_ptr)_p->_ptrToObjRef(@fqname@::_PD_repoId);
+        return 1;
+      }
+    }
+    _o = 0;
+    return 1;
+  }
+  return 0;
+}
+"""
+
 
 enum = """\
 static void @private_prefix@_@guard_name@_marshal_fn(cdrStream& _s, void* _v)

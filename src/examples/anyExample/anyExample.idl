@@ -1,7 +1,7 @@
 #ifndef __ANYEXAMPLE_IDL__
 #define __ANYEXAMPLE_IDL__
 
-// Note that when compiling this IDL with omniidl, the -WBa
+// Note that when compiling this IDL with omniidl, the -Wba
 // command-line flag should be specified.
 
 struct testStruct {

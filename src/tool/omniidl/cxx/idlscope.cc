@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.18.2.3  2004/10/13 17:58:25  dgrisby
+// Abstract interfaces support; values support interfaces; value bug fixes.
+//
 // Revision 1.18.2.2  2004/02/16 10:10:33  dgrisby
 // More valuetype, including value boxes. C++ mapping updates.
 //
@@ -426,8 +429,11 @@ setInherited(ValueInheritSpec* inherited, const char* file, int line)
 
       switch (e->kind()) {
       case Entry::E_CALLABLE:
-      case Entry::E_INHERITED:
 	addInherited(e->identifier(), e->scope(), e->decl(), e, file, line);
+	break;
+      case Entry::E_INHERITED:
+	addInherited(e->identifier(), e->scope(), e->decl(), e->inh_from(),
+		     file, line);
 	break;
       default:
 	break;
@@ -1162,11 +1168,11 @@ addInherited(const char* id, Scope* scope, Decl* decl,
 	// It's not clear whether this is OK, but the spec doesn't say
 	// it's definitely illegal
 
-//  	IdlWarning(file, line,
-//  		   "Inherited %s '%s' clashes with interface name '%s'",
-//  		   decl->kindAsString(), id, clash->identifier());
-//  	IdlWarningCont(decl->file(), decl->line(),
-//  		       "(%s '%s' declared here)", decl->kindAsString(), id);
+ 	IdlWarning(file, line,
+ 		   "Inherited %s '%s' clashes with interface name '%s'",
+ 		   decl->kindAsString(), id, clash->identifier());
+ 	IdlWarningCont(decl->file(), decl->line(),
+ 		       "(%s '%s' declared here)", decl->kindAsString(), id);
 	break;
       }
     }

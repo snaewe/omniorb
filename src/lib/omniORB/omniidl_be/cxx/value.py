@@ -88,6 +88,7 @@ public:
 
   static void _NP_marshal(@name@*, cdrStream&);
   static @name@* _NP_unmarshal(cdrStream&);
+  @np_to_value@
 
   virtual void _PR_marshal_state(cdrStream&) const;
   virtual void _PR_unmarshal_state(cdrStream&);
@@ -105,6 +106,10 @@ private:
   void operator=(const @name@ &);
 };
 """
+
+value_class_np_to_value = """\
+virtual CORBA::ValueBase* _NP_to_value();"""
+
 
 valuefactory_class_initialisers = """\
 class @name@_init : public CORBA::ValueFactoryBase
@@ -136,13 +141,24 @@ public:
 """
 
 
+value_poa_class = """\
+class @poa_name@ :
+  public virtual @intf_poa@,
+  public virtual @value_name@
+{
+public:
+  virtual ~@poa_name@();
+};
+"""
+
+
 value_obv_class = """\
 class @obv_name@ :
   @inherits@
 {
 @constructor_access@:
   @obv_name@();
-  @obv_name@(@init_params@);
+  @init_constructor@
   virtual ~@obv_name@();
 
 public:
@@ -221,9 +237,10 @@ void
 						  @idhash@U, 0, _0s);
   @fqname@* _d = @fqname@::_downcast(_b);
   if (_b && !_d) {
-    CORBA::remove_ref(_b);
-    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_ValueFactoryFailure,
-		  (CORBA::CompletionStatus)_0s.completion());
+    _b = omniValueType::handleIncompatibleValue(
+           @fqname@::_PD_repoId,
+           @idhash@U, _b, (CORBA::CompletionStatus)_0s.completion());
+    _d = @fqname@::_downcast(_b);
   }
   return _d;
 }
@@ -270,9 +287,24 @@ void
 @fqname@::~@name@() {}
 """
 
+value_np_to_value_function = """\
+CORBA::ValueBase*
+@fqname@::_NP_to_value()
+{
+  return (CORBA::ValueBase*)this;
+}
+"""
+
+value_poa_functions = """\
+POA_@fqname@::~@name@() {}
+"""
+
 value_obv_functions = """\
 OBV_@fqname@::@name@() {}
 OBV_@fqname@::~@name@() {}
+"""
+
+value_obv_init_function = """\
 OBV_@fqname@::@name@(@init_params@)
 @base_init@
 {
@@ -361,7 +393,7 @@ statemember_copy_value = """\
 @name@(_v->@name@()->_copy_value());
 #else
 CORBA::ValueBase* _0v_@name@ = _v->@name@()->_copy_value();
-@name@(@type@::_downcast(_0v_@name@);
+@name@(@type@::_downcast(_0v_@name@));
 #endif"""
 
 statemember_init = """\
@@ -495,6 +527,15 @@ statemember_basic_marshal = """\
 statemember_basic_unmarshal = """\
 @type@ _@name@;
 _@name@ <<= _0s;
+@name@(_@name@);
+"""
+
+statemember_basic_kind_marshal = """\
+_0s.marshal@kind@(@name@());"""
+
+statemember_basic_kind_unmarshal = """\
+@type@ _@name@;
+_@name@ = _0s.unmarshal@kind@();
 @name@(_@name@);
 """
 
@@ -766,7 +807,7 @@ public:
 
   virtual void* _ptrToValue(const char* id);
 
-  static void _NP_marshal(const @name@*, cdrStream&);
+  static void _NP_marshal(@name@*, cdrStream&);
   static @name@* _NP_unmarshal(cdrStream&);
 
   virtual void _PR_marshal_state(cdrStream&) const;
@@ -1081,7 +1122,7 @@ inline @name@& operator=(const @boxedtype@& _v) {
 }
 
 inline const @boxedtype@& _value() const {
-  return _pd_boxed.inout();
+  return _pd_boxed.in();
 }
 inline @boxedtype@& _value() {
   return _pd_boxed.inout();
@@ -1109,7 +1150,9 @@ void type(CORBA::TypeCode_ptr _t) {
 """
 
 valuebox_member_funcs_sequence = """\
-inline @name@() {}
+inline @name@() {
+  _pd_boxed = new @boxedtype@;
+}
 inline @name@(const @boxedtype@& _v) {
   _pd_boxed = new @boxedtype@(_v);
 }
@@ -1124,7 +1167,7 @@ inline @name@& operator=(const @boxedtype@& _v) {
 }
 
 inline const @boxedtype@& _value() const {
-  return _pd_boxed.inout();
+  return _pd_boxed.in();
 }
 inline @boxedtype@& _value() {
   return _pd_boxed.inout();
@@ -1329,7 +1372,7 @@ inline @name@& operator=(const @boxedtype@& _v) {
 }
 
 inline const @boxedtype@& _value() const {
-  return _pd_boxed.inout();
+  return _pd_boxed.in();
 }
 inline @boxedtype@& _value() {
   return _pd_boxed.inout();
@@ -1387,7 +1430,7 @@ inline void @name@(const @type@& _value)
 valuebox_structmember_typecode = """\
 inline CORBA::TypeCode_ptr @name@() const
 {
-  return _pd_boxed->@name@.in();
+  return CORBA::TypeCode::_duplicate(_pd_boxed->@name@);
 }
 inline void @name@(CORBA::TypeCode_ptr _value)
 {
@@ -1740,7 +1783,7 @@ void*
 }
 
 void
-@fqname@::_NP_marshal(const @fqname@* _v, cdrStream& _0s)
+@fqname@::_NP_marshal(@fqname@* _v, cdrStream& _0s)
 {
   omniValueType::marshal(_v, @fqname@::_PD_repoId, _0s);
 }
@@ -2069,9 +2112,34 @@ class ValueType (mapping.Decl):
                       abs = "")
 
             copy_s.out(statemember_copy, name=member)
-            marshal_s.out(statemember_basic_marshal, name=member)
-            unmarshal_s.out(statemember_basic_unmarshal,
-                            name=member, type=bmemtype)
+
+            if d_mType.char():
+                marshal_s.out(statemember_basic_kind_marshal, name=member,
+                              kind="Char")
+                unmarshal_s.out(statemember_basic_kind_unmarshal,
+                                name=member, type=bmemtype, kind="Char")
+            elif d_mType.octet():
+                marshal_s.out(statemember_basic_kind_marshal, name=member,
+                              kind="Octet")
+                unmarshal_s.out(statemember_basic_kind_unmarshal,
+                                name=member, type=bmemtype, kind="Octet")
+            elif d_mType.boolean():
+                marshal_s.out(statemember_basic_kind_marshal, name=member,
+                              kind="Boolean")
+                unmarshal_s.out(statemember_basic_kind_unmarshal,
+                                name=member, type=bmemtype, kind="Boolean")
+            elif d_mType.wchar():
+                marshal_s.out(statemember_basic_kind_marshal, name=member,
+                              kind="WChar")
+                unmarshal_s.out(statemember_basic_kind_unmarshal,
+                                name=member, type=bmemtype, kind="WChar")
+
+                
+            else:
+                marshal_s.out(statemember_basic_marshal, name=member)
+                unmarshal_s.out(statemember_basic_unmarshal,
+                                name=member, type=bmemtype)
+
             init_s.out(statemember_init, name=member)
             impl_s.out(statemember_basic_impl, name=member, type=omemtype,
                        value_name=value_name)
@@ -2247,7 +2315,7 @@ class ValueType (mapping.Decl):
                        value_name=value_name)
 
             decl._cxx_holder   = omemtype + " _pd_" + member + ";"
-            decl._cxx_init_arg = omemtype + "* _" + member
+            decl._cxx_init_arg = otype + "* _" + member
 
         else:
             util.fatalError("Unknown statemember type encountered")
@@ -2275,8 +2343,9 @@ class ValueType (mapping.Decl):
             for n in node.declarations():
                 n.accept(visitor)
 
-        has_callables = 0
-        has_factories = 0
+        has_callables     = 0
+        has_factories     = 0
+        supports_abstract = 0
 
         if astdecl.callables():
             has_callables = 1
@@ -2297,10 +2366,21 @@ class ValueType (mapping.Decl):
         if not inheritl:
             inheritl.append("public virtual CORBA::ValueBase")
 
+        if astdecl.supports():
+            has_callables = 1
+
+            for intf in astdecl.supports():
+                if intf.abstract():
+                    supports_abstract = 1
+                    iname = id.Name(intf.scopedName())
+                    uname = iname.unambiguous(environment)
+                    inheritl.append("public virtual " + uname)
+
         inherits = string.join(inheritl, ",\n")
 
-        astdecl._cxx_has_callables = has_callables
-        astdecl._cxx_has_factories = has_factories
+        astdecl._cxx_has_callables     = has_callables
+        astdecl._cxx_has_factories     = has_factories
+        astdecl._cxx_supports_abstract = supports_abstract
 
         public_accessors  = output.StringStream()
         private_accessors = output.StringStream()
@@ -2317,7 +2397,14 @@ class ValueType (mapping.Decl):
                         private_accessors.out(d._cxx_base_sig)
 
         operationl = []
-        for c in astdecl.callables():
+        callables  = []
+
+        for intf in astdecl.supports():
+            callables.extend(intf.all_callables())
+
+        callables.extend(astdecl.callables())
+
+        for c in callables:
             if isinstance(c, idlast.Operation):
                 op = call.operation(self, c)
                 method = iface._impl_Method(op, self)
@@ -2333,12 +2420,18 @@ class ValueType (mapping.Decl):
                 
         operations = string.join(operationl, "\n")
 
+        if supports_abstract:
+            np_to_value = value_class_np_to_value
+        else:
+            np_to_value = ""
+
         stream.out(value_forward, name=cxx_name, guard=guard)
 
         stream.out(value_class, name=cxx_name, inherits=inherits,
                    public_accessors=public_accessors,
                    private_accessors=private_accessors,
-                   operations=operations, other_idl=gen_other_idl)
+                   operations=operations, np_to_value=np_to_value,
+                   other_idl=gen_other_idl)
 
         if astdecl.factories():
             funcs = []
@@ -2369,8 +2462,28 @@ class ValueType (mapping.Decl):
 
 
     def poa_module_decls(self, stream, visitor):
-        # *** POA module defs if supports an interface
-        pass
+        astdecl = self._astdecl
+
+        if astdecl.supports() and not astdecl.supports()[0].abstract():
+            name       = astdecl.identifier()
+            poa_name   = visitor.POA_prefix() + name
+            value_name = self._fullname.fullyQualify()
+
+            intf     = astdecl.supports()[0]
+            isname   = intf.scopedName()
+            irname   = id.Name(isname).relName(self._environment)
+
+            if irname is None:
+                iname = "::POA_" + string.join(isname, "::")
+            elif irname == isname:
+                iname = "POA_" + string.join(irname, "::")
+            else:
+                iname = string.join(irname, "::")
+            
+            stream.out(value_poa_class,
+                       poa_name=poa_name, intf_poa=iname,
+                       value_name=value_name);
+
 
     def obv_module_decls(self, stream, visitor):
         if self._abstract:
@@ -2389,16 +2502,17 @@ class ValueType (mapping.Decl):
         inheritl = ["public virtual " + value_name]
 
         for v in astdecl.inherits():
-            isname = v.scopedName()
-            irname = id.Name(isname).relName(self._environment)
-            if irname is None:
-                iname = "::OBV_" + string.join(isname, "::")
-            elif irname == isname:
-                iname = "OBV_" + string.join(irname, "::")
-            else:
-                iname = string.join(irname, "::")
+            if isinstance(v, idlast.Value):
+                isname = v.scopedName()
+                irname = id.Name(isname).relName(self._environment)
+                if irname is None:
+                    iname = "::OBV_" + string.join(isname, "::")
+                elif irname == isname:
+                    iname = "OBV_" + string.join(irname, "::")
+                else:
+                    iname = string.join(irname, "::")
 
-            inheritl.append("public virtual " + iname)
+                inheritl.append("public virtual " + iname)
 
         if not (astdecl.inherits() or
                 astdecl._cxx_has_callables or
@@ -2454,9 +2568,14 @@ class ValueType (mapping.Decl):
         else:
             constructor_access = "public"
 
+        if init_params:
+            init_constructor = obv_name + "(" + init_params + ");"
+        else:
+            init_constructor = ""
+
         stream.out(value_obv_class, obv_name=obv_name,
                    inherits=inherits,
-                   init_params=init_params,
+                   init_constructor = init_constructor,
                    constructor_access=constructor_access,
                    public_accessors=public_accessors,
                    private_accessors=private_accessors,
@@ -2489,6 +2608,16 @@ class ValueType (mapping.Decl):
             iname  = "::" + string.join(v.scopedName(), "::")
             ptrToValuePtr.out(value_ptrToValuePtr, iname=iname)
             ptrToValueStr.out(value_ptrToValueStr, iname=iname)
+
+        for i in astdecl.supports():
+            if i.abstract():
+                iname  = "::" + string.join(i.scopedName(), "::")
+                ptrToValuePtr.out(value_ptrToValuePtr, iname=iname)
+                ptrToValueStr.out(value_ptrToValueStr, iname=iname)
+
+        if astdecl._cxx_supports_abstract:
+            ptrToValuePtr.out(value_ptrToValuePtr, iname="CORBA::AbstractBase")
+            ptrToValueStr.out(value_ptrToValueStr, iname="CORBA::AbstractBase")
 
         if (astdecl.inherits() and
             isinstance(astdecl.inherits()[0], idlast.Value)):
@@ -2523,10 +2652,29 @@ class ValueType (mapping.Decl):
                    marshal_members=marshal_members,
                    unmarshal_members=unmarshal_members)
 
+        if astdecl._cxx_supports_abstract:
+            stream.out(value_np_to_value_function, fqname=value_name)
+
         if not self._abstract:
-            stream.out(value_obv_functions, fqname=value_name, name=cxx_name,
-                       init_params=init_params, base_init=base_init,
-                       member_initialisers=member_initialisers)
+            vname = cxx_name
+            if vname == value_name:
+                vname = "OBV_" + vname
+                
+            stream.out(value_obv_functions, fqname=value_name, name=vname)
+
+            if init_params:
+                stream.out(value_obv_init_function, fqname=value_name,
+                           name=vname, init_params=init_params,
+                           base_init=base_init,
+                           member_initialisers=member_initialisers)
+
+        if astdecl.supports() and not astdecl.supports()[0].abstract():
+            # POA functions
+            vname = cxx_name
+            if vname == value_name:
+                vname = "POA_" + vname
+                
+            stream.out(value_poa_functions, fqname=value_name, name=vname)
 
         if not self._abstract and astdecl.truncatable():
             flatname  = string.join(astdecl.scopedName(), "_")

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2004/10/13 17:58:18  dgrisby
+  Abstract interfaces support; values support interfaces; value bug fixes.
+
   Revision 1.1.2.2  2003/11/06 11:56:55  dgrisby
   Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 
@@ -393,6 +396,10 @@ public:
 	_pd_val->_add_ref();
     }
     return *this; 
+  }
+
+  operator ValueFactoryBase*() const {
+    return _pd_val;
   }
   ValueFactoryBase* operator->() const {
     return _pd_val;

@@ -29,6 +29,9 @@
 //
 
 // $Log$
+// Revision 1.1.2.4  2004/10/13 17:58:25  dgrisby
+// Abstract interfaces support; values support interfaces; value bug fixes.
+//
 // Revision 1.1.2.3  2003/11/06 11:56:57  dgrisby
 // Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 //
@@ -500,7 +503,8 @@ void
 cdrValueChunkStream::
 chunkStreamDeclareArrayLength(omni::alignment_t align, size_t size)
 {
-  OMNIORB_ASSERT(!pd_inHeader);
+  if (pd_inHeader)
+    return;
 
   if (!pd_inChunk) {
     // Start a new chunk

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2004/10/13 17:58:18  dgrisby
+  Abstract interfaces support; values support interfaces; value bug fixes.
+
   Revision 1.1.4.2  2004/07/23 10:29:56  dgrisby
   Completely new, much simpler Any implementation.
 
@@ -271,6 +274,12 @@ public:
   }
   inline Boolean operator>>=(Any::to_object o) const {
     return (*pd_data >>= o);
+  }
+  inline Boolean operator>>=(Any::to_abstract_base a) const {
+    return (*pd_data >>= a);
+  }
+  inline Boolean operator>>=(Any::to_value v) const {
+    return (*pd_data >>= v);
   }
   inline Boolean operator>>=(const CORBA::SystemException*& e) const {
     return (*pd_data >>= e);

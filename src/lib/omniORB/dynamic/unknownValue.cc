@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2004/10/13 17:58:21  dgrisby
+  Abstract interfaces support; values support interfaces; value bug fixes.
+
   Revision 1.1.2.1  2004/07/26 22:56:39  dgrisby
   Support valuetypes in Anys.
 
@@ -59,7 +62,7 @@ UnknownValue::UnknownValue(CORBA::TypeCode_ptr tc)
 }
 
 UnknownValue::UnknownValue(const UnknownValue& v)
-  : pd_tc(v.pd_tc), pd_hash(v.pd_hash), pd_mbuf(v.pd_mbuf)
+  : pd_mbuf(v.pd_mbuf), pd_tc(v.pd_tc), pd_hash(v.pd_hash)
 {
 }
 
@@ -92,6 +95,26 @@ UnknownValue::_NP_custom() const
   return 0;
 }
 
+
+static void
+marshal_value_state(cdrStream& from, cdrStream& to, CORBA::TypeCode_ptr tc)
+{
+  // Marshal / unmarshal state for value, recursively handling inheritance.
+
+  CORBA::TypeCode_var base = tc->concrete_base_type();
+  if (base->kind() == CORBA::tk_value)
+    marshal_value_state(from, to, base.in());
+
+  CORBA::ULong nmembers = tc->member_count();
+
+  CORBA::TypeCode_var mtc;
+
+  for (CORBA::ULong i=0; i < nmembers; i++) {
+    mtc = tc->member_type(i);
+    tcParser::copyStreamToStream(mtc, from, to);
+  }
+}
+
 void
 UnknownValue::_PR_marshal_state(cdrStream& s) const
 {
@@ -100,22 +123,15 @@ UnknownValue::_PR_marshal_state(cdrStream& s) const
     l << "Marshal UnknownValue for '" << pd_tc->id() << "'.\n";
   }
 
-  CORBA::ULong nmembers = pd_tc->member_count();
-
   // Read only stream wrapper for thread safety
   cdrAnyMemoryStream tmps(pd_mbuf, 1);
 
-  CORBA::TypeCode_var mtc;
-
   if (pd_tc->kind() == CORBA::tk_value) {
-    // Copy members
-    for (CORBA::ULong i=0; i < nmembers; i++) {
-      mtc = pd_tc->member_type(i);
-      tcParser::copyStreamToStream(mtc, tmps, s);
-    }
+    marshal_value_state(tmps, s, pd_tc);
   }
   else {
-    mtc = pd_tc->content_type();
+    // Value Box
+    CORBA::TypeCode_var mtc = pd_tc->content_type();
     tcParser::copyStreamToStream(mtc, tmps, s);
   }
 }
@@ -128,19 +144,11 @@ UnknownValue::_PR_unmarshal_state(cdrStream& s)
     l << "Unmarshal UnknownValue for '" << pd_tc->id() << "'.\n";
   }
 
-  CORBA::ULong nmembers = pd_tc->member_count();
-
-  CORBA::TypeCode_var mtc;
-
   if (pd_tc->kind() == CORBA::tk_value) {
-    // Copy members
-    for (CORBA::ULong i=0; i < nmembers; i++) {
-      mtc = pd_tc->member_type(i);
-      tcParser::copyStreamToStream(mtc, s, pd_mbuf);
-    }
+    marshal_value_state(s, pd_mbuf, pd_tc);
   }
   else {
-    mtc = pd_tc->content_type();
+    CORBA::TypeCode_var mtc = pd_tc->content_type();
     tcParser::copyStreamToStream(mtc, s, pd_mbuf);
   }
 }

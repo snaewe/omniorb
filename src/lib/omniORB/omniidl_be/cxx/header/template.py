@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.7  2004/10/13 17:58:24  dgrisby
+# Abstract interfaces support; values support interfaces; value bug fixes.
+#
 # Revision 1.8.2.6  2004/07/31 23:46:27  dgrisby
 # Correct constness of exception Any insertion operator.
 #
@@ -360,6 +363,7 @@ typedef _CORBA_ObjRef_OUT_arg<_objref_@name@,@name@_Helper > @name@_out;
 """
 
 interface_type = """\
+// interface @name@
 class @name@ {
 public:
   // Declarations for this interface type.
@@ -387,6 +391,86 @@ public:
   @Other_IDL@
 };
 """
+
+##
+## Abstract Interfaces
+##
+
+abstract_interface_Helper = """\
+#ifndef __@guard@__
+#define __@guard@__
+
+class @name@;
+class _objref_@name@;
+typedef @name@* @name@_ptr;
+typedef @name@_ptr @name@Ref;
+
+class @name@_Helper {
+public:
+  typedef @name@_ptr _ptr_type;
+
+  static _ptr_type _nil();
+  static _CORBA_Boolean is_nil(_ptr_type);
+  static void release(_ptr_type);
+  static void duplicate(_ptr_type);
+  static void marshalObjRef(_ptr_type, cdrStream&);
+  static _ptr_type unmarshalObjRef(cdrStream&);
+};
+
+typedef _CORBA_ObjRef_Var<@name@, @name@_Helper> @name@_var;
+typedef _CORBA_ObjRef_OUT_arg<@name@,@name@_Helper > @name@_out;
+
+#endif
+"""
+
+abstract_interface_type = """\
+// abstract interface @name@
+class @name@ :
+  @inherits@
+{
+public:
+  // Declarations for this interface type.
+  typedef @name@_ptr _ptr_type;
+  typedef @name@_var _var_type;
+
+  static _ptr_type _duplicate(_ptr_type);
+  static _ptr_type _narrow(CORBA::Object_ptr);
+  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
+  static _ptr_type _nil();
+
+  static inline void _marshalObjRef(_ptr_type, cdrStream&);
+
+  static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
+    CORBA::Boolean b = s.unmarshalBoolean();
+    if (b) {
+      omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
+      if (o)
+        return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
+      else
+        return _nil();
+    }
+    else {
+      CORBA::ValueBase* v = CORBA::ValueBase::_NP_unmarshal(s);
+      if (v)
+        return (_ptr_type) v->_ptrToValue(_PD_repoId);
+      else
+        return 0;
+    }
+  }
+
+  // Operations declared in this abstract interface
+  @operations@  
+
+  static _core_attr const char* _PD_repoId;
+
+  // Other IDL defined within this scope.
+  @Other_IDL@
+};
+"""
+
+##
+## Object reference
+##
 
 interface_objref = """\
 class _objref_@name@ :
@@ -417,6 +501,10 @@ _impl_@name@* _shortcut;
 const _CORBA_Boolean* _invalid;\
 """
 
+##
+## Proxy Object Factory
+##
+
 interface_pof = """\
 class _pof_@name@ : public _OMNI_NS(proxyObjectFactory) {
 public:
@@ -427,6 +515,10 @@ public:
   virtual _CORBA_Boolean is_a(const char*) const;
 };
 """
+
+##
+## Interface Impl class
+##
 
 interface_impl = """\
 class _impl_@name@ :
@@ -443,9 +535,21 @@ public:  // Really protected, workaround for xlC
 private:
   virtual void* _ptrToInterface(const char*);
   virtual const char* _mostDerivedRepoId();
+  @abstract@
 };
 
 """
+
+interface_impl_abstract = """\
+virtual void _interface_is_abstract() = 0;"""
+
+interface_impl_not_abstract = """\
+virtual void _interface_is_abstract();"""
+
+
+##
+## Old BOA skeleton class
+##
 
 interface_sk = """\
 class _sk_@name@ :
@@ -463,6 +567,10 @@ public:
 };
 """
 
+##
+## Objref marshal function
+##
+
 interface_marshal_forward = """\
 inline void
 @name@::_marshalObjRef(::@name@_ptr obj, cdrStream& s) {
@@ -470,6 +578,30 @@ inline void
 }
 
 """
+
+abstract_interface_marshal_forward = """\
+inline void
+@name@::_marshalObjRef(::@name@_ptr obj, cdrStream& s) {
+  if (obj) {
+    CORBA::ValueBase* v = obj->_NP_to_value();
+    if (v) {
+      s.marshalBoolean(0);
+      CORBA::ValueBase::_NP_marshal(v,s);
+      return;
+    }
+    CORBA::Object_ptr o = obj->_NP_to_object();
+    if (o) {
+      s.marshalBoolean(1);
+      omniObjRef::_marshal(o->_PR_getobj(),s);
+      return;
+    }
+  }
+  s.marshalBoolean(0);
+  CORBA::ValueBase::_NP_marshal(0, s);
+}
+"""
+
+
 
 ##
 ## Typedefs
@@ -717,6 +849,7 @@ public:
   @subscript_operator@
 
   inline @name@* operator -> () { return _pd_seq; }
+  inline const @name@* operator -> () const { return _pd_seq; }
 #if defined(__GNUG__)
   inline operator @name@& () const { return *_pd_seq; }
 #else

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.14.2.2  2004/10/13 17:58:20  dgrisby
+ Abstract interfaces support; values support interfaces; value bug fixes.
+
  Revision 1.14.2.1  2003/03/23 21:02:51  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -223,9 +226,7 @@ ContextImpl::set_one_value(const char* prop_name, const CORBA::Any& value)
 		  BAD_PARAM_AnyDoesNotContainAString,
 		  CORBA::COMPLETED_NO);
 
-  insert_single_consume(name._retn(),
-			((omniORB::omniORB_27_CompatibleAnyExtraction)?
-			 (char*)strval:CORBA::string_dup(strval)));
+  insert_single_consume(name._retn(), CORBA::string_dup(strval));
 }
 
 

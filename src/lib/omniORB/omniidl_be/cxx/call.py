@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.4  2004/10/13 17:58:21  dgrisby
+# Abstract interfaces support; values support interfaces; value bug fixes.
+#
 # Revision 1.1.6.3  2003/11/06 11:56:56  dgrisby
 # Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 #
@@ -387,8 +390,13 @@ class CallDescriptor:
                 rvalue = args[n]
                 if argtype.array():
                     rvalue = "&" + rvalue + "[0]"
+                if (argtype.value() or argtype.valuebox() or
+                    argtype.abstract_interface()):
+                    star = "*"
+                else:
+                    star = ""
                 if h_is_ptr:
-                    rvalue = "&(" + argtype.base(environment) + "&) " \
+                    rvalue = "&(" + argtype.base(environment) + star + "&) " \
                              + rvalue
                 assign_args.append(arg_n + " = " + rvalue + ";")
 
@@ -501,8 +509,10 @@ class CallDescriptor:
                     holder = holder + "_slice*"
                 if h_is_ptr:
                     holder = holder + "*"
-                if argtype.value() or argtype.valuebox():
+                if (argtype.value() or argtype.valuebox() or
+                    argtype.abstract_interface()):
                     holder = holder + "*"
+
                 data_members.append(holder + " " + holder_n + ";")
 
         if self.__has_return_value:
@@ -622,6 +632,7 @@ class CallDescriptor:
             if s_is_var:
                 alloc = ""
                 d_type = argtype.deref(1)
+
                 if argtype.array():
                     alloc = argtype.base() + "_alloc()"
                 elif not (d_type.typecode() or
@@ -629,7 +640,8 @@ class CallDescriptor:
                           d_type.wstring()  or
                           d_type.objref()   or
                           d_type.value()    or
-                          d_type.valuebox()):
+                          d_type.valuebox() or
+                          d_type.abstract_interface()):
                     alloc = "new " + argtype.base()
                 if alloc != "":
                     marshal_block.out(storage_n + " = " + alloc + ";")
@@ -676,12 +688,13 @@ class CallDescriptor:
                 d_type = argtype.deref(1)
                 if argtype.array():
                     alloc = argtype.base() + "_alloc()"
-                elif not (d_type.typecode() or \
-                          d_type.string() or \
-                          d_type.wstring() or \
-                          d_type.objref() or \
-                          d_type.value() or \
-                          d_type.valuebox()):
+                elif not (d_type.typecode() or
+                          d_type.string()   or
+                          d_type.wstring()  or
+                          d_type.objref()   or
+                          d_type.value()    or
+                          d_type.valuebox() or
+                          d_type.abstract_interface()):
                     alloc = "new " + argtype.base()
                 if alloc != "":
                     marshal_block.out(argname + " = " + alloc + ";")
@@ -705,12 +718,13 @@ class CallDescriptor:
                     alloc = ""
                     if argtype.array():
                         alloc = argtype.base() + "_alloc()"
-                    elif not (d_type.typecode() or \
-                              d_type.string() or \
-                              d_type.wstring() or \
-                              d_type.objref() or \
-                              d_type.value() or \
-                              d_type.valuebox()):
+                    elif not (d_type.typecode() or
+                              d_type.string()   or
+                              d_type.wstring()  or
+                              d_type.objref()   or
+                              d_type.value()    or
+                              d_type.valuebox() or
+                              d_type.abstract_interface()):
                         alloc = "new " + argtype.base()
                     if alloc != "":
                         marshal_block.out(arg_n + " = " + alloc + ";")
@@ -847,6 +861,8 @@ _arg_mapping = {
     idltype.tk_value:
     ( ((0,0),(0,1)), ((0,0),(1,1)), ((0,1),(0,1)), ((0,0),(1,1)) ),
     idltype.tk_value_box:
+    ( ((0,0),(0,1)), ((0,0),(1,1)), ((0,1),(0,1)), ((0,0),(1,1)) ),
+    idltype.tk_abstract_interface:
     ( ((0,0),(0,1)), ((0,0),(1,1)), ((0,1),(0,1)), ((0,0),(1,1)) ),
     }
 

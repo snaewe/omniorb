@@ -36,25 +36,6 @@
 
   ////////////////////////////////////////////////////////////////////////
   //                                                                    //
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean omniORB_27_CompatibleAnyExtraction;
-  // In omniORB pre-2.8.0 versions, the CORBA::Any extraction operator for
-  //   1. unbounded string operator>>=(char*&)
-  //   2. bounded string   operator>>=(to_string)
-  //   3. object reference operator>>=(A_ptr&) for interface A
-  // Returns a copy of the value. The caller must free the returned
-  // value later.
-  //
-  // With 2.8.0 and later, the semantics becomes non-copy, i.e. the Any
-  // still own the storage of the returned value.
-  // This would cause problem in programs that is written to use the
-  // pre-2.8.0 semantics. To make it easier for the transition,
-  // set omniORB_27_CompatibleAnyExtraction to 1.
-  // This would revert the semantics to the pre-2.8.0 versions.
-  //
-  // Valid values = 0 or 1
-
-  ////////////////////////////////////////////////////////////////////////
-  //                                                                    //
   // This section is only for omniORB 2.x compatibility. Do not use for //
   // new code.                                                          //
   //                                                                    //

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2004/10/13 17:58:19  dgrisby
+  Abstract interfaces support; values support interfaces; value bug fixes.
+
   Revision 1.1.2.3  2004/07/04 23:53:35  dgrisby
   More ValueType TypeCode and Any support.
 
@@ -80,7 +83,7 @@ public:
   inline _CORBA_Value_Var() : _pd_val(0) {}
   inline _CORBA_Value_Var(T* p) { _pd_val = p; }
   inline _CORBA_Value_Var(const T_var& p) : _pd_val(p._pd_val) {
-    if (_pd_val) _pd_val->add_ref();
+    if (_pd_val) _pd_val->_add_ref();
   }
   inline _CORBA_Value_Var(const T_member& p);
   inline _CORBA_Value_Var(const T_element& p);
