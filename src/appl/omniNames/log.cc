@@ -1,3 +1,27 @@
+// -*- Mode: C++; -*-
+//                          Package   : omniNames
+// log.cc                   Author    : Tristan Richardson (tjr)
+//
+//    Copyright (C) 1997 Olivetti & Oracle Research Laboratory
+//
+//  This file is part of omniNames.
+//
+//  omniNames is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+//  USA.
+//
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -6,11 +30,10 @@
 #include <time.h>
 #include <iostream.h>
 #include <fcntl.h>
-#include "NamingContext_i.h"
-#include "ObjectBinding.h"
-#include "log.h"
-#include "iomanip.h"
-#include "default.h"
+#include <NamingContext_i.h>
+#include <ObjectBinding.h>
+#include <log.h>
+#include <iomanip.h>
 
 #ifdef __NT__
 
@@ -26,6 +49,9 @@
 #include <sys/utsname.h>
 
 #endif
+
+extern void usage();
+
 
 //
 // This class can be used to generate timestamps.  The t() method normally
@@ -83,12 +109,12 @@ log::log(int& p) : port(p)
 
   char* logdir;
 
-  if ((logdir = getenv("OMNINAMES_LOGDIR")) == NULL)
-    logdir = DEFAULT_LOGDIR;
+  if ((logdir = getenv(LOGDIR_ENV_VAR)) == NULL)
+    logdir = strdup(DEFAULT_LOGDIR);
 
 #ifndef __NT__  
   if (logdir[0] != '/') {
-    cerr << ts.t() << "Error: OMNINAMES_LOGDIR (" << logdir
+    cerr << ts.t() << "Error: " << LOGDIR_ENV_VAR << " (" << logdir
 	 << ") is not an absolute path name." << endl;
     exit(1);
   }
@@ -172,9 +198,7 @@ log::log(int& p) : port(p)
 	     << "This must be removed if you want to use the -start option."
 	     << endl;
       }
-      cerr << "Use -start option to start omniNames for the first time."
-	   << endl;
-      exit(1);
+      usage();
     }
 
     try {
@@ -248,8 +272,11 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
     } catch (IOError& ex) {
       cerr << ts.t() << "Error: cannot create initial log file '" << active
-	   << "': " << flush;
+	   << "': " << endl;
       perror("");
+      cerr << "\nYou can set the environment variable " << LOGDIR_ENV_VAR
+	   << " to specify the\ndirectory where the log files are kept.\n"
+	   << endl;
       logf.close();
       unlink(active);
       exit(1);
