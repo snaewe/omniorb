@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/12/14 11:51:53  djs
+# Support for CORBA::TypeCode, CORBA::Any and CORBA::Object
+#
 # Revision 1.2  1999/12/10 18:26:36  djs
 # Moved most #ifdef buildDesc code into a separate module
 # General tidying up
@@ -67,17 +70,20 @@ def visitAST(node):
 # broken
 def mapRepoID(id):
     # extract the naming part of the ID
-    regex = re.compile(r"IDL:(.+):(.+)")
+    regex = re.compile(r"(IDL:)*(.+):(.+)")
     match = regex.match(id)
-    the_name = match.group(1)
-    ver = match.group(2)
+    first_bit = match.group(1)
+    if not(first_bit):
+        first_bit = ""
+    the_name = match.group(2)
+    ver = match.group(3)
     # extract the name 
     elements = re.split(r"/", the_name)
     mapped_elements = []
     for element in elements:
         mapped_elements.append(tyutil.mapID(element))
     # put it all back together again
-    return "IDL:" + string.join(mapped_elements, "/") + ":" + ver
+    return first_bit + string.join(mapped_elements, "/") + ":" + ver
 
 # Places TypeCode symbol in appropriate namespace
 def external_linkage(decl, mangled_name = ""):
@@ -162,7 +168,9 @@ def mkTypeCode(type, declarator = None):
         idltype.tk_double:  "double",
         idltype.tk_boolean: "boolean",
         idltype.tk_char:    "char",
-        idltype.tk_octet:   "octet"
+        idltype.tk_octet:   "octet",
+        idltype.tk_any:     "any",
+        idltype.tk_TypeCode: "TypeCode",
         }
     if basic.has_key(type.kind()):
         return prefix + basic[type.kind()] + "_tc()"
@@ -188,10 +196,13 @@ def mkTypeCode(type, declarator = None):
     assert isinstance(type, idltype.Declared)
 
     if tyutil.isObjRef(type):
+        scopedName = type.decl().scopedName()
+        if scopedName == ["CORBA", "Object"]:
+            return prefix + "Object_tc()"
         repoID = type.decl().repoId()
         if config.EMULATE_BUGS():
             repoID = mapRepoID(repoID)
-        iname = tyutil.mapID(tyutil.name(type.decl().scopedName()))
+        iname = tyutil.mapID(tyutil.name(scopedName))
         return prefix + "interface_tc(\"" + repoID + "\", " +\
                    "\"" + iname + "\")"
 
