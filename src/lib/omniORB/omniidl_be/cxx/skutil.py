@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.7  2001/06/15 10:22:09  sll
+# Work around for MSVC++ bug. Changed the casting of the array of base types
+# when they are marshalled using the quick method.
+#
 # Revision 1.17.2.6  2001/06/08 17:12:13  dpg1
 # Merge all the bug fixes from omni3_develop.
 #
@@ -138,13 +142,30 @@ from omniidl_be.cxx import util, types, id, ast, output, cxx
 def marshall(to, environment, type, decl, argname, to_where,
              exception = "BAD_PARAM"):
     assert isinstance(type, types.Type)
+
+    d_type = type.deref()
+
+    # If this is an array of base types, the quick marshalling option is used.
+    # slice_cast is set to the casting required to cast the variable to a
+    # pointer to the beginning of the array. There are 3 possibilities:
+    #  1. The variable is a declarator, e.g. it is a member of a struct or a
+    #     union. No casting is required. slice_cast = ""
+    #  2. The variable is not a declarator and its dimension is > 1,
+    #     cast the variable to its array slice pointer.
+    #  3. Same as 2 but its dimension == 1, just cast the variable to a pointer
+    #     to its base class (because the type's array slice may not be
+    #     defined).
+
     if decl:
         assert isinstance(decl, idlast.Declarator)
         dims = decl.sizes() + type.dims()
+        slice_cast = ""
     else:
         dims = type.dims()
-
-    d_type = type.deref()
+        if len(dims) != 1:
+            slice_cast = "(" + type.base(environment) + "_slice" + "*)"
+        else:
+            slice_cast = "(" + d_type.base(environment) + "*)"
 
     if dims != []:
         n_elements = reduce(lambda x,y:x*y, dims, 1)
@@ -165,19 +186,21 @@ def marshall(to, environment, type, decl, argname, to_where,
             if alignment != "omni::ALIGN_1":
                 to.out("""\
 if (! @where@.marshal_byte_swap()) {
-  @where@.put_octet_array((CORBA::Octet*)&@name@[0],@num@,@align@);
+  @where@.put_octet_array((CORBA::Octet*)(@slice_cast@@name@),@num@,@align@);
 }
 else """,
                        where = to_where,
                        name = argname,
+                       slice_cast = slice_cast,
                        num = str(n_elements * elmsize),
                        align = alignment)
                 # Do not return here.
                 # let the code below to deal with the else block.
             else:
-                to.out("@where@.put_octet_array((CORBA::Octet*)&@name@[0],@num@);",
+                to.out("@where@.put_octet_array((CORBA::Octet*)(@slice_cast@@name@),@num@);",
                        where = to_where,
                        name = argname,
+                       slice_cast = slice_cast,
                        num = str(n_elements))
                 return
 
@@ -246,15 +269,33 @@ else """,
         
 def unmarshall(to, environment, type, decl, name, from_where):
     assert isinstance(type, types.Type)
-    if decl:
-        assert isinstance(decl, idlast.Declarator)
-        dims = decl.sizes() + type.dims()
-    else:
-        dims = type.dims()
 
     d_type = type.deref()
 
+    # If this is an array of base types, the quick marshalling option is used.
+    # slice_cast is set to the casting required to cast the variable to a
+    # pointer to the beginning of the array. There are 3 possibilities:
+    #  1. The variable is a declarator, e.g. it is a member of a struct or a
+    #     union. No casting is required. slice_cast = ""
+    #  2. The variable is not a declarator and its dimension is > 1,
+    #     cast the variable to its array slice pointer.
+    #  3. Same as 2 but its dimension == 1, just cast the variable to a pointer
+    #     to its base class (because the type's array slice may not be
+    #     defined).
+
+    if decl:
+        assert isinstance(decl, idlast.Declarator)
+        dims = decl.sizes() + type.dims()
+        slice_cast = ""
+    else:
+        dims = type.dims()
+        if len(dims) != 1:
+            slice_cast = "(" + type.base(environment) + "_slice" + "*)"
+        else:
+            slice_cast = "(" + d_type.base(environment) + "*)"
+
     if dims != []:
+
         n_elements = reduce(lambda x,y:x*y, dims, 1)
         array_unmarshal_helpers = {
           idltype.tk_octet:  ("get_octet_array","(CORBA::Octet*)"),
@@ -270,10 +311,11 @@ def unmarshall(to, environment, type, decl, name, from_where):
           }
         if array_unmarshal_helpers.has_key(d_type.type().kind()):
             (helper,typecast) = array_unmarshal_helpers[d_type.type().kind()]
-            to.out("@where@.@helper@(@typecast@&@name@[0], @num@);",
+            to.out("@where@.@helper@(@typecast@(@slice_cast@@name@), @num@);",
                    helper = helper,
                    where = from_where, typecast = typecast,
                    name = name,
+                   slice_cast = slice_cast,
                    num = str(n_elements))
             return
 
