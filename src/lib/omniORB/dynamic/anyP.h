@@ -57,7 +57,7 @@ public:
   // METHODS
 
   inline CORBA::Boolean getData(CORBA::TypeCode_ptr tc, tcDescriptor &data) {
-    if (!tc->equal(pd_parser->getTC()))
+    if (!tc->equivalent(pd_parser->getTC()))
       return 0;
     pd_parser->copyTo(data);
     return 1;
