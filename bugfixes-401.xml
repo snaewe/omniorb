@@ -8,6 +8,15 @@
 
 <buglist version="4.0.1">
 
+<bug id="5" date="Tue May 27 12:15:31 BST 2003" user="dgrisby">
+  <summary>Deferred DII requests fail on Windows</summary>
+  <reported>Emmanuel Taurel</reported>
+  <text>
+  The ORB invoker object was not exported from the core DLL, so use of
+  it from the dynamic DLL failed.
+  </text>
+</bug>
+
 <bug id="4" date="Thu May 22 15:47:16 BST 2003" user="dgrisby">
   <summary>Crash in registry reading code</summary>
   <reported>Titus von Boxberg</reported>
