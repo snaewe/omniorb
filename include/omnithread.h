@@ -441,9 +441,10 @@ public:
 	// causes the calling thread to terminate.
 
     static omni_thread* self(void);
-	// returns the calling thread's omni_thread object.
-	// If the calling thread is not the main thread and
-	// is not created using this library, returns 0.
+	// returns the calling thread's omni_thread object.  If the
+	// calling thread is not the main thread and is not created
+	// using this library, returns 0. (But see create_dummy()
+	// below.)
 
     static void yield(void);
 	// allows another thread to run.
@@ -501,6 +502,53 @@ public:
         // returns zero.
 
 
+    // Dummy omni_thread
+    //
+    // Sometimes, an application finds itself with threads created
+    // outside of omnithread which must interact with omnithread
+    // features such as the per-thread data. In this situation,
+    // omni_thread::self() would normally return 0. These functions
+    // allow the application to create a suitable dummy omni_thread
+    // object.
+
+    static omni_thread* create_dummy(void);
+        // creates a dummy omni_thread for the calling thread. Future
+        // calls to self() will return the dummy omni_thread. Throws
+        // omni_thread_invalid if this thread already has an
+        // associated omni_thread (real or dummy).
+
+    static void release_dummy();
+        // release the dummy omni_thread for this thread. This
+        // function MUST be called before the thread exits. Throws
+        // omni_thread_invalid if the calling thread does not have a
+        // dummy omni_thread.
+
+    // class ensure_self should be created on the stack. If created in
+    // a thread without an associated omni_thread, it creates a dummy
+    // thread which is released when the ensure_self object is deleted.
+
+    class ensure_self {
+    public:
+      inline ensure_self() : _dummy(0)
+      {
+	_self = omni_thread::self();
+	if (!_self) {
+	  _dummy = 1;
+	  _self  = omni_thread::create_dummy();
+	}
+      }
+      inline ~ensure_self()
+      {
+	if (_dummy)
+	  omni_thread::release_dummy();
+      }
+      inline omni_thread* self() { return _self; }
+    private:
+      omni_thread* _self;
+      int          _dummy;
+    };
+
+
 private:
 
     virtual void run(void* arg) {}
@@ -527,6 +575,7 @@ private:
     void* (*fn_ret)(void*);
     void* thread_arg;
     int detached;
+    int _dummy;
     value_t**     _values;
     unsigned long _value_alloc;
 
@@ -562,6 +611,7 @@ public:
     };
 
     friend class init_t;
+    friend class omni_thread_dummy;
 
 OMNI_THREAD_EXPOSE:
     OMNI_THREAD_IMPLEMENTATION

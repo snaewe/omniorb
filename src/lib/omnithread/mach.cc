@@ -391,6 +391,7 @@ void omni_thread::common_constructor(void* arg, priority_t pri, int det)
   thread_arg = arg;
   detached = det;	// may be altered in start_undetached()
 
+  _dummy       = 0;
   _values      = 0;
   _value_alloc = 0;
   // posix_thread is set up in initialisation routine or start().
@@ -663,6 +664,48 @@ unsigned long
 omni_thread::stacksize()
 {
   return stack_size;
+}
+
+
+//
+// Dummy thread
+//
+
+#error This dummy thread code is not tested. It might work if you're lucky.
+
+class omni_thread_dummy : public omni_thread {
+public:
+  inline omni_thread_dummy() : omni_thread()
+  {
+    _dummy = 1;
+    _state = STATE_RUNNING;
+    mach_thread = cthread_self();
+    cthread_set_data(mach_thread, (any_t)this));
+  }
+  inline ~omni_thread_dummy()
+  {
+    cthread_set_data(mach_thread, (any_t)0));
+  }
+};
+
+omni_thread*
+omni_thread::create_dummy()
+{
+  if (omni_thread::self())
+    throw omni_thread_invalid();
+
+  return new omni_thread_dummy;
+}
+
+void
+omni_thread::release_dummy()
+{
+  omni_thread* self = omni_thread::self();
+  if (!self || !self->_dummy)
+    throw omni_thread_invalid();
+
+  omni_thread_dummy* dummy = (omni_thread_dummy*)self;
+  delete dummy;
 }
 
 

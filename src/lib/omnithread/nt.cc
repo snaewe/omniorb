@@ -551,6 +551,7 @@ omni_thread::common_constructor(void* arg, priority_t pri, int det)
 
     handle = NULL;
 
+    _dummy       = 0;
     _values      = 0;
     _value_alloc = 0;
 }
@@ -876,6 +877,54 @@ unsigned long
 omni_thread::stacksize()
 {
   return stack_size;
+}
+
+//
+// Dummy thread
+//
+
+class omni_thread_dummy : public omni_thread {
+public:
+  inline omni_thread_dummy() : omni_thread()
+  {
+    _dummy = 1;
+    _state = STATE_RUNNING;
+
+    if (!DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
+			 GetCurrentProcess(), &handle,
+			 0, FALSE, DUPLICATE_SAME_ACCESS))
+      throw omni_thread_fatal(GetLastError());
+
+    nt_id = GetCurrentThreadId();
+
+    if (!TlsSetValue(self_tls_index, (LPVOID)this))
+      throw omni_thread_fatal(GetLastError());
+  }
+  inline ~omni_thread_dummy()
+  {
+    if (!TlsSetValue(self_tls_index, (LPVOID)0))
+      throw omni_thread_fatal(GetLastError());
+  }
+};
+
+omni_thread*
+omni_thread::create_dummy()
+{
+  if (omni_thread::self())
+    throw omni_thread_invalid();
+
+  return new omni_thread_dummy;
+}
+
+void
+omni_thread::release_dummy()
+{
+  omni_thread* self = omni_thread::self();
+  if (!self || !self->_dummy)
+    throw omni_thread_invalid();
+
+  omni_thread_dummy* dummy = (omni_thread_dummy*)self;
+  delete dummy;
 }
 
 
