@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.20  2004/10/17 22:27:23  dgrisby
+  Handle errors in accept() properly. Thanks Kamaldeep Singh Khanuja and
+  Jeremy Van Grinsven.
+
   Revision 1.1.2.19  2004/10/17 20:14:28  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -230,6 +234,11 @@ extern "C" int select (int,fd_set*,fd_set*,fd_set*,struct timeval *);
 #  define ERRNO              errno
 #  define RC_EINTR           EINTR
 #  define RC_EBADF           EBADF
+#  define RC_EAGAIN          EAGAIN
+#  define RC_EFAULT          EFAULT
+#  define RC_EINVAL          EINVAL
+#  define RC_EPROTO          EPROTO
+#  define RC_ECONNABORTED    ECONNABORTED
 
 
 OMNI_NAMESPACE_BEGIN(omni)

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.22  2004/10/17 22:27:23  dgrisby
+  Handle errors in accept() properly. Thanks Kamaldeep Singh Khanuja and
+  Jeremy Van Grinsven.
+
   Revision 1.1.2.21  2004/10/17 20:14:33  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -410,21 +414,48 @@ sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 CORBA::Boolean
 sslEndpoint::notifyReadable(SocketHandle_t fd) {
 
+again:
+
   if (fd == pd_socket) {
     SocketHandle_t sock;
     sock = ::accept(pd_socket,0,0);
     if (sock == RC_SOCKET_ERROR) {
+      if (ERRNO == RC_EBADF) {
+        omniORB::logs(20, "accept() returned EBADF, unable to continue");
+        return 0;
+      }
+      else if (ERRNO == RC_EINTR ) {
+        omniORB::logs(20, "accept() returned EINTR, trying again");
+        goto again;
+      }
+#ifdef UnixArchitecture
+      else if (ERRNO == RC_ECONNABORTED || ERRNO == RC_EPROTO ) {
+        omniORB::logs(20, "accept() returned ECONNABORTED, ignoring accept");
+        goto ignore;
+      }
+      else if (ERRNO == RC_EAGAIN ) {
+        omniORB::logs(20, "accept() returned EAGAIN, trying again");
+        goto again;
+      }
+#endif
+      if (omniORB::trace(1)) {
+        omniORB::logger log;
+        log << "Error: accept failed with unknown error " << ERRNO << "\n";
+      }
       return 0;
     }
 #if defined(__vxWorks__)
     // vxWorks "forgets" socket options
     static const int valtrue = 1;
     if(setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,
-		  (const char*)&valtrue, sizeof(valtrue)) == ERROR) {
+		  (char*)&valtrue, sizeof(valtrue)) == ERROR) {
       return 0;
     }
 #endif
     pd_new_conn_socket = sock;
+
+ignore:
+
     setSelectable(pd_socket,1,0,1);
     return 1;
   }
