@@ -11,6 +11,10 @@
 
 /*
   $Log$
+  Revision 1.2  1997/01/13 15:25:04  sll
+  New member function produce_typedef_hdr(). Called when a typedef declaration
+  is encountered.
+
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -74,6 +78,13 @@ const char *
 o2be_string::fieldMemberTypeName()
 {
   return "CORBA::String_member";
+}
+
+void
+o2be_string::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
+{
+  IND(s); s << "typedef char* " << tdef->uqname() << ";\n";
+  IND(s); s << "typedef CORBA::String_var " << tdef->uqname() << "_var;\n";
 }
 
 size_t
