@@ -175,6 +175,9 @@ again:
 	return 0;
 
     throw omni_thread_fatal(rc);
+#ifdef _MSC_VER
+    return 0;
+#endif
 }
 
 void
@@ -787,7 +790,7 @@ omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
     }
 #else
 
-#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS) || defined(__SINIX__)
+#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS) || defined(__SINIX__) || defined (__POSIX_NT__)
 
     if (pthread_delay_np(&rqts) != 0)
 	throw omni_thread_fatal(errno);
@@ -815,7 +818,7 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 {
     timespec abs;
 
-#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS) || defined(__SINIX__)
+#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS) || defined(__SINIX__) || defined(__POSIX_NT__)
 
     timespec rel;
     rel.tv_sec = rel_sec;
@@ -867,6 +870,9 @@ omni_thread::posix_priority(priority_t pri)
 #endif
 
     throw omni_thread_invalid();
+#ifdef _MSC_VER
+    return 0;
+#endif
 }
 
 void

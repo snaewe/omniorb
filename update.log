@@ -1,3 +1,16 @@
+Tue Jun 27 16:21:39 BST 2000 sll
+================================
+
+- Partial support for using pthread library on Windows NT
+  Actual implementation of pthread library over WIN 32 API is still missing.
+
+mk/win32.mk
+src/lib/omnithread/dir.mk
+src/lib/omnithread/posix.cc
+include/omnithread.h
+include/omnithread/posix.h
+include/omnithread/pthread_nt.h
+
 Tue Jun 27 16:09:30 BST 2000 sll
 ================================
 
