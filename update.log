@@ -1,3 +1,19 @@
+Fri Sep 29 00:16:51 BST 2000 djs
+================================
+
+- Removed an accidental reference to <iostream>
+
+include/queue.h
+
+- Reordered initialiser list to match declaration order
+
+include/omniORB3/Messaging.h
+
+- Stupid syntax error
+
+src/lib/omniORB2/orbcore/Messaging.cc
+
+
 Thu Sep 28 19:26:28 BST 2000 djs
 ================================
 
