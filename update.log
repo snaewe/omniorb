@@ -1,3 +1,12 @@
+Mon Feb 18 17:24:15 GMT 2002 dpg1
+=================================
+
+- More autoconf updates.
+
+external_merge/include/GNUmakefile.in
+external_merge/include/omnithread/GNUmakefile.in		-- new
+
+
 Mon Feb 18 14:45:10 GMT 2002 dpg1
 =================================
 

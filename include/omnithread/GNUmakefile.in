@@ -1,13 +1,11 @@
-TOP=..
-CURRENT=include
+TOP=../..
+CURRENT=include/omnithread
 BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
 
-INSTALLDIR = $(INSTALLINCDIR)
+INSTALLDIR = $(INSTALLINCDIR)/omnithread
 
-HEADERS = omnithread.h omniconfig.h
-
-SUBDIRS = omnithread omniORB4
+HEADERS = mach.h nt.h posix.h pthread_nt.h solaris.h
 
 include $(TOP)/mk/beforeauto.mk
 
@@ -17,8 +15,5 @@ install:: $(HEADERS)
             dir="$(INSTALLDIR)"; \
             $(ExportFileToDir) \
           done )
-
-install::
-	@$(MakeSubdirs)
 
 include $(TOP)/mk/afterauto.mk
