@@ -1,3 +1,46 @@
+Mon Jun  5 13:55:00 BST 2000 djs
+================================
+
+- omniIDL C++ backend fixes:
+
+-   Nested union (within union) fix
+
+src/lib/omniORB2/omniidl_be/cxx/header/forward.py
+
+-   Name clash caused by having union members called "x" and "pd_x" 
+    (for any value of x) in the same union
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
+
+-   More name clashes with internal identifiers removed:
+      Union member called "pd__default"
+      Union member called "pd__d"
+      Sequence called "pd_seq"
+
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
+
+-   Tie template class name parameter changed from T to _T
+
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+-   Tie template generation tidied up and now actually generates templates 
+    for BOA non-flat templates (-WbBOA -Wbtp)
+
+src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+src/lib/omniORB2/omniidl_be/cxx/header/tie.py
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
 Fri Jun  2 17:56:16 BST 2000 dpg1
 =================================
 
