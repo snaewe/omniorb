@@ -1,3 +1,11 @@
+Tue Feb  3 16:48:44 GMT 1998 ewc
+================================
+
+- Updated _nil_IDLType constructor
+
+include/omniORB2/CORBA.h
+
+
 Tue Jan 27 17:02:38 GMT 1998 ewc
 ================================
 
