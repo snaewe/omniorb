@@ -1,3 +1,14 @@
+Thu Jul 13 15:42:03 BST 2000 sll
+================================
+
+- Documentation update. Remove pre-release status
+
+external_merge/ReleaseNote_omniORB_300              new
+external_merge/ReleaseNote_omniORB_300_per3         removed
+external_merge/THIS_IS_3_0_0_PRERELEASE_3           removed
+external_merge/THIS_IS_omniORB_3_0_0                new
+
+
 Thu Jul 13 11:51:22 BST 2000 sll
 ================================
 
