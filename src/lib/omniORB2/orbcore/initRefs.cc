@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/06/19 13:56:25  dpg1
+  Explicit cast to (const char*) when using String_var with logger.
+
   Revision 1.1.2.1  2000/04/27 10:50:04  dpg1
   Interoperable Naming Service
 
@@ -414,7 +417,7 @@ resolveArgsDefault(const char* id, unsigned int cycles)
     if (omniORB::trace(10)) {
       omniORB::logger l;
       l << "Trying to resolve initial reference `" << id << "'\n";
-      l << " with default `" << uri << "'\n";
+      l << " with default `" << (const char*)uri << "'\n";
     }
     CORBA::Object_ptr obj = omniURI::stringToObject(uri, cycles);
 
@@ -458,7 +461,7 @@ resolveFileDefault(const char* id, unsigned int cycles)
     if (omniORB::trace(10)) {
       omniORB::logger l;
       l << "Trying to resolve initial reference `" << id << "'\n";
-      l << " with configuration file default `" << uri << "'\n";
+      l << " with configuration file default `" << (const char*)uri << "'\n";
     }
     CORBA::Object_ptr obj = omniURI::stringToObject(uri, cycles);
 
