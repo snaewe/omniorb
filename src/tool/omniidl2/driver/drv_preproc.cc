@@ -191,19 +191,6 @@ void
 DRV_cpp_init()
 {
   DRV_cpp_putarg(idl_global->cpp_location());
-  // If this is gcc, we need to put in a -x c flag to stop it from
-  // guessing from the file extension what language this file is
-  char *p = strrchr(idl_global->cpp_location(),'g');
-  if (p != NULL && (strcmp(p,"gcc") == 0 || strcmp(p,"g++") == 0)) {
-    DRV_cpp_putarg("-xc++");
-    copy_src = I_FALSE;
-  }
-  else if(strcmp(idl_global->cpp_location(),"CL") == 0 || strcmp(idl_global->cpp_location(),"cl") == 0) {
-	  // MSVC++ 4.2 ignores the file extension for preprocessing.
-	  copy_src = I_FALSE;
-	  DRV_cpp_putarg("-nologo");
-  }
-
   DRV_cpp_putarg("-E");
   DRV_cpp_putarg("-I.");
 }
@@ -301,6 +288,14 @@ static char	tmp_ifile[128];
 void
 DRV_pre_proc(char *myfile)
 {
+  // If this is gcc, we need to put in a -x c flag to stop it from
+  // guessing from the file extension what language this file is
+  char *p = strrchr(arglist[0],'g');
+  if (p != NULL && (strcmp(p,"gcc") == 0 || strcmp(p,"g++") == 0)) {
+    DRV_cpp_putarg("-xc++");
+    copy_src = I_FALSE;
+  }
+
 #if defined(apollo) || defined(SUNOS4)
   union wait wait_status;
 #else
@@ -469,6 +464,12 @@ DRV_pre_proc(char *myfile)
 void
 DRV_pre_proc(char *myfile)
 {
+  if(strcmp(arglist[0],"CL") == 0 || strcmp(arglist[0],"cl") == 0) {
+    // MSVC++ 4.2 ignores the file extension for preprocessing.
+    copy_src = I_FALSE;
+    DRV_cpp_putarg("-nologo");
+  }
+
   int	wait_status;
 
   long	readfromstdin = I_FALSE;
