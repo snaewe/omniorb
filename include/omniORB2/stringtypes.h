@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.5  1999/08/30 17:14:59  sll
+ Added workaround for gcc-2.95 in the conversion operators for string_var
+ and string_member.
+
  Revision 1.4  1999/06/18 20:28:30  sll
  New Sequence string implementation. New string_member.
 
@@ -110,8 +114,12 @@ public:
 
   inline _CORBA_String_var& operator=(const _CORBA_String_member& s);
 
+#if ! (defined(__GNUG__) && __GNUC_MINOR__ == 95)
   inline operator char* ()             { return _data; }
   inline operator const char* () const { return _data; }
+#else
+  inline operator char* () const { return _data; }
+#endif
 
   inline char& operator[] (_CORBA_ULong index) {
     if (!_data || (_CORBA_ULong)strlen(_data) < index) {
@@ -221,8 +229,12 @@ public:
     return _ptr[index];
   }
 
+#if ! (defined(__GNUG__) && __GNUC_MINOR__ == 95)
   inline operator char* ()             { return _ptr; }
   inline operator const char* () const { return _ptr; }
+#else
+  inline operator char* () const { return _ptr; }
+#endif
 
   inline char* _retn() {
     char *tmp;
