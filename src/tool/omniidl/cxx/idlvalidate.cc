@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/11/02 17:07:24  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.1  1999/10/27 14:05:53  dpg1
 // *** empty log message ***
 //
@@ -57,7 +60,7 @@ AstValidateVisitor::
 visitForward(Forward* f)
 {
   if (f->isFirst() && !f->definition()) {
-    const char* ssn = f->scopedName()->toString();
+    char* ssn = f->scopedName()->toString();
     IdlWarning(f->file(), f->line(),
 	       "Forward declared interface `%s' was never fully defined",
 	       ssn);
@@ -70,7 +73,7 @@ AstValidateVisitor::
 visitValueForward(ValueForward* f)
 {
   if (f->isFirst() && !f->definition()) {
-    const char* ssn = f->scopedName()->toString();
+    char* ssn = f->scopedName()->toString();
     IdlWarning(f->file(), f->line(),
 	       "Forward declared valuetype `%s' was never fully defined",
 	       ssn);

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/11/02 17:07:25  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.2  1999/10/29 10:01:50  dpg1
 // Global scope initialisation changed.
 //
@@ -62,7 +65,7 @@ public:
     Fragment* next_;
 
   private:
-    const char* identifier_;
+    char* identifier_;
 
     friend class ScopedName;
   };
@@ -261,13 +264,13 @@ public:
   private:
     const Scope*      container_;
     Kind              kind_;
-    const char*       identifier_;
+    char*             identifier_;
     ScopedName*       scopedName_;
     Scope*            scope_;
     Decl*             decl_;
     IdlType*          idltype_;
     Entry*            inh_from_;
-    const char*       file_;
+    char*             file_;
     int               line_;
     Entry*            next_;
     
@@ -300,7 +303,7 @@ public:
 private:
   Scope*            parent_;
   Kind              kind_;
-  const char*       identifier_;
+  char*             identifier_;
   ScopedName*       scopedName_;
   _CORBA_Boolean    nestedUse_;
   Entry*            entries_;

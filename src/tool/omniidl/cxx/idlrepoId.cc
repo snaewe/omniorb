@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/11/02 17:07:25  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.1  1999/10/27 14:05:56  dpg1
 // *** empty log message ***
 //
@@ -42,13 +45,13 @@
 #include <stdio.h>
 
 // Globals from lexer/parser
-extern int         yylineno;
-extern const char* currentFile;
+extern int   yylineno;
+extern char* currentFile;
 
 Prefix* Prefix::current_ = 0;
 
 Prefix::
-Prefix(const char* str, _CORBA_Boolean isfile) :
+Prefix(char* str, _CORBA_Boolean isfile) :
   str_(str), parent_(current_), isfile_(isfile)
 {
   current_ = this;

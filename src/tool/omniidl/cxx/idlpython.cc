@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6  1999/11/02 17:07:26  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.5  1999/11/02 10:01:47  dpg1
 // Minor fixes.
 //
@@ -100,7 +103,7 @@ public:
 
 private:
   PyObject* scopedNameToList(const ScopedName* sn);
-  PyObject* pragmasToList(const Decl::Pragma* ps);
+  PyObject* pragmasToList(const Pragma* ps);
   void      registerPyDecl(const ScopedName* sn, PyObject* pydecl);
   PyObject* findPyDecl(const ScopedName* sn);
   PyObject* wstringToList(const _CORBA_WChar* ws);
@@ -146,9 +149,9 @@ scopedNameToList(const ScopedName* sn)
 
 PyObject*
 PythonVisitor::
-pragmasToList(const Decl::Pragma* ps)
+pragmasToList(const Pragma* ps)
 {
-  const Decl::Pragma* p;
+  const Pragma* p;
   int i;
 
   for (i=0, p = ps; p; p = p->next(), ++i);
@@ -215,7 +218,8 @@ visitAST(AST* a)
     d->accept(*this);
     PyList_SetItem(pydecls, i, result_);
   }
-  result_ = PyObject_CallMethod(idlast_, "AST", "sN", a->file(), pydecls);
+  result_ = PyObject_CallMethod(idlast_, "AST", "sNN", a->file(), pydecls,
+				pragmasToList(a->pragmas()));
   ASSERT_RESULT;
 }
 
@@ -924,5 +928,9 @@ extern "C" {
   void init_omniidl()
   {
     PyObject* m = Py_InitModule("_omniidl", omniidl_methods);
+    PyObject_SetAttrString(m, "cpp_location",
+			   PyString_FromString(CPP_LOCATION));
+    PyObject_SetAttrString(m, "cpp_flags",
+			   PyString_FromString(CPP_FLAGS));
   }
 }

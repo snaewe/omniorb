@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/11/02 17:07:26  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.1  1999/10/27 14:05:56  dpg1
 // *** empty log message ***
 //
@@ -80,8 +83,8 @@ public:
   static IdlExpr* scopedNameToExpr(const char* file, int line, ScopedName* sn);
 
 private:
-  const char* file_;
-  int         line_;
+  char* file_;
+  int   line_;
 };
 
 
@@ -148,7 +151,7 @@ public:
   const char*         evalAsString();
   const char*         errText() { return "string literal"; }
 private:
-  const char* value_;
+  char* value_;
 };
 
 class WStringExpr : public IdlExpr {
@@ -160,7 +163,7 @@ public:
   const _CORBA_WChar* evalAsWString();
   const char*         errText() { return "wide string literal"; }
 private:
-  const _CORBA_WChar* value_;
+  _CORBA_WChar* value_;
 };
 
 class CharExpr : public IdlExpr {

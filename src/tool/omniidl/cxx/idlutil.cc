@@ -28,10 +28,14 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/11/02 17:07:24  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.1  1999/10/27 14:05:54  dpg1
 // *** empty log message ***
 //
 
+#include <string.h>
 #include <idlutil.h>
 
 char* idl_strdup(const char* s)

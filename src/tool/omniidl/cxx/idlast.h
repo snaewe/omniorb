@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6  1999/11/02 17:07:27  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.5  1999/11/01 20:19:56  dpg1
 // Support for union switch types declared inside the switch statement.
 //
@@ -57,6 +60,31 @@
 
 class Decl;
 
+// Pragma class stores a list of pragmas:
+class Pragma {
+public:
+  Pragma(const char* pragmaText)
+    : pragmaText_(idl_strdup(pragmaText)), next_(0) {}
+
+  ~Pragma() {
+    delete [] pragmaText_;
+    if (next_) delete next_;
+  }
+
+  const char* pragmaText() const { return pragmaText_; }
+  Pragma*     next()       const { return next_; }
+
+  static void add(const char* pragmaText);
+
+private:
+  char*   pragmaText_;
+  Pragma* next_;
+
+  friend class AST;
+  friend class Decl;
+};
+
+
 // AST class represents the whole IDL definition
 class AST {
 public:
@@ -67,17 +95,22 @@ public:
 
   Decl*       declarations()              { return declarations_; }
   const char* file()                      { return file_; }
+  Pragma*     pragmas()                   { return pragmas_; }
   void        clear();
+
   void        accept(AstVisitor& visitor) { visitor.visitAST(this); }
 
   void        setFile(const char* f);
+  void        addPragma(const char* pragmaText);
 
 private:
   void        setDeclarations(Decl* d);
 
   Decl*       declarations_;
-  const char* file_;
+  char*       file_;
   static AST  tree_;
+  Pragma*     pragmas_;
+  Pragma*     lastPragma_;
   friend int  yyparse();
 };
 
@@ -85,8 +118,6 @@ private:
 // Base declaration abstract class
 class Decl {
 public:
-  class Pragma;
-
   // Declaration kinds
   enum Kind {
     D_MODULE, D_INTERFACE, D_FORWARD, D_CONST, D_DECLARATOR,
@@ -133,23 +164,9 @@ public:
 
   void addPragma(const char* pragmaText);
 
-  class Pragma {
-  public:
-    Pragma(const char* pragmaText)
-      : pragmaText_(idl_strdup(pragmaText)), next_(0) {}
-    ~Pragma() { delete [] pragmaText_; }
-
-    const char* pragmaText() const { return pragmaText_; }
-    Pragma*     next()       const { return next_; }
-  private:
-    const char* pragmaText_;
-    Pragma*     next_;
-    friend class Decl;
-  };
-
 private:
   Kind              kind_;
-  const char*       file_;
+  char*             file_;
   int               line_;
   _CORBA_Boolean    mainFile_;
   const Scope*      inScope_;
@@ -196,13 +213,13 @@ public:
 private:
   void genRepoId();
 
-  const char*    identifier_;
-  const char*    eidentifier_;
+  char*          identifier_;
+  char*          eidentifier_;
   ScopedName*    scopedName_;
-  const char*    repoId_;
-  const char*    prefix_; // Prefix in force at time of declaration
+  char*          repoId_;
+  char*          prefix_; // Prefix in force at time of declaration
   _CORBA_Boolean set_;    // True if repoId or version has been manually set
-  const char*    rifile_; // File where repoId or version was set
+  char*          rifile_; // File where repoId or version was set
   int            riline_; // Line where repoId or version was set
   _CORBA_Short   maj_;
   _CORBA_Short   min_;
@@ -372,7 +389,7 @@ private:
     _CORBA_Boolean      boolean_;
     _CORBA_Char         char_;
     _CORBA_Octet        octet_;
-    const char*         string_;
+    char*               string_;
 #ifdef HAS_LongLong
     _CORBA_LongLong     longlong_;
     _CORBA_ULongLong    ulonglong_;
@@ -381,7 +398,7 @@ private:
     _CORBA_LongDouble   longdouble_;
 #endif
     _CORBA_WChar        wchar_;
-    const _CORBA_WChar* wstring_;
+    _CORBA_WChar*       wstring_;
     _CORBA_Fixed        fixed_;
     Enumerator*         enumerator_;
   } v_;
@@ -579,8 +596,10 @@ public:
   void setDefaultULong     (_CORBA_ULong     v) { v_.ulong_      = v; }
   void setDefaultBoolean   (_CORBA_Boolean   v) { v_.boolean_    = v; }
   void setDefaultChar      (_CORBA_Char      v) { v_.char_       = v; }
+#ifdef HAS_LongLong
   void setDefaultLongLong  (_CORBA_LongLong  v) { v_.longlong_   = v; }
   void setDefaultULongLong (_CORBA_ULongLong v) { v_.ulonglong_  = v; }
+#endif
   void setDefaultWChar     (_CORBA_WChar     v) { v_.wchar_      = v; }
   void setDefaultEnumerator(Enumerator*      v) { v_.enumerator_ = v; }
 
@@ -762,7 +781,7 @@ private:
   int            direction_;
   IdlType*       paramType_;
   _CORBA_Boolean delType_;
-  const char*    identifier_;
+  char*          identifier_;
 };
 
 
@@ -804,7 +823,7 @@ public:
   }
 
 private:
-  const char*  context_;
+  char*  context_;
 
 protected:
   ContextSpec* next_;
@@ -839,7 +858,7 @@ private:
   _CORBA_Boolean oneway_;
   IdlType*       returnType_;
   _CORBA_Boolean delType_;
-  const char*    identifier_;
+  char*          identifier_;
   Parameter*     parameters_;
   RaisesSpec*    raises_;
   ContextSpec*   contexts_;
@@ -904,7 +923,7 @@ public:
   void finishConstruction(Parameter* parameters);
 
 private:
-  const char* identifier_;
+  char*       identifier_;
   Parameter*  parameters_;
 };
 

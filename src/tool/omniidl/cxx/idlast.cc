@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7  1999/11/02 17:07:27  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.6  1999/11/01 20:19:57  dpg1
 // Support for union switch types declared inside the switch statement.
 //
@@ -53,19 +56,48 @@
 #include <idlvalidate.h>
 #include <idlerr.h>
 
+#include <string.h>
 #include <ctype.h>
 
 // Globals from lexer
-extern FILE*       yyin;
-extern const char* currentFile;
-extern int         yylineno;
+extern FILE* yyin;
+extern char* currentFile;
+extern int   yylineno;
 
 AST   AST::tree_;
 Decl* Decl::mostRecent_;
 
+// Pragma
+void
+Pragma::
+add(const char* pragmaText)
+{
+  if (Decl::mostRecent())
+    Decl::mostRecent()->addPragma(pragmaText);
+  else
+    AST::tree()->addPragma(pragmaText);
+}
+
 // AST
-AST::AST() : declarations_(0), file_(0) {}
-AST::~AST() { if (declarations_) delete declarations_; }
+AST::AST() : declarations_(0), file_(0), pragmas_(0), lastPragma_(0) {}
+
+AST::~AST() {
+  if (declarations_) delete declarations_;
+  if (file_)         delete [] file_;
+  if (pragmas_)      delete pragmas_;
+}
+
+void
+AST::
+addPragma(const char* pragmaText)
+{
+  Pragma* p = new Pragma(pragmaText);
+  if (pragmas_)
+    lastPragma_->next_ = p;
+  else
+    pragmas_ = p;
+  lastPragma_ = p;
+}
 
 _CORBA_Boolean
 AST::
@@ -147,7 +179,7 @@ scopedNameToDecl(const char* file, int line, const ScopedName* sn)
     if (se->kind() == Scope::Entry::E_DECL) {
       return se->decl();
     }
-    const char* ssn = sn->toString();
+    char* ssn = sn->toString();
     IdlError(file, line, "`%s' is not a declaration", ssn);
     IdlErrorCont(se->file(), se->line(), "(`%s' created here)", ssn);
     delete [] ssn;
@@ -231,12 +263,12 @@ InheritSpec(const ScopedName* sn, const char* file, int line)
 	  return;
 	}
 	else if (d->kind() == Decl::D_FORWARD) {
-	  const char* ssn = ((Forward*)d)->scopedName()->toString();
+	  char* ssn = ((Forward*)d)->scopedName()->toString();
 	  IdlError(file, line,
 		   "Inherited interface `%s' must be fully defined", ssn);
 
 	  if (decl_ != d) {
-	    const char* tssn = sn->toString();
+	    char* tssn = sn->toString();
 	    IdlErrorCont(se->file(), se->line(),
 			 "(`%s' reached through typedef `%s')",
 			 ssn, tssn);
@@ -249,7 +281,7 @@ InheritSpec(const ScopedName* sn, const char* file, int line)
 	}
       }
     }
-    const char* ssn = sn->toString();
+    char* ssn = sn->toString();
     IdlError(file, line,
 	     "`%s' used in inheritance specification is not an interface",
 	     ssn);
@@ -267,7 +299,7 @@ append(InheritSpec* is, const char* file, int line)
   for (i=this; i; i = i->next_) {
     last = i;
     if (is->interface() == i->interface()) {
-      const char* ssn = is->interface()->scopedName()->toString();
+      char* ssn = is->interface()->scopedName()->toString();
       IdlError(file, line,
 	       "Cannot specify `%s' as a direct base interface "
 	       "more than once", ssn);
@@ -337,7 +369,7 @@ Interface(const char* file, int line, _CORBA_Boolean mainFile,
     // Check that all inherited interfaces are abstract
     for (InheritSpec* inh = inherits; inh; inh = inh->next()) {
       if (!inh->interface()->abstract()) {
-	const char* ssn = inh->scope()->scopedName()->toString();
+	char* ssn = inh->scope()->scopedName()->toString();
 	IdlError(file, line,
 		 "In declaration of abstract interface `%s', inherited "
 		 "interface `%s' is not abstract", identifier, ssn);
@@ -1202,7 +1234,7 @@ RaisesSpec(const ScopedName* sn, const char* file, int line)
       exception_ = (Exception*)se->decl();
     }
     else {
-      const char* ssn = sn->toString();
+      char* ssn = sn->toString();
       IdlError(file, line,
 	       "`%s' used in raises expression is not an exception",
 	       ssn);
@@ -1592,12 +1624,12 @@ ValueInheritSpec(ScopedName* sn, const char* file, int line)
 	  return;
 	}
 	else if (d->kind() == Decl::D_VALUEFORWARD) {
-	  const char* ssn = ((ValueForward*)d)->scopedName()->toString();
+	  char* ssn = ((ValueForward*)d)->scopedName()->toString();
 	  IdlError(file, line,
 		   "Inherited valuetype `%s' must be fully defined", ssn);
 
 	  if (decl_ != d) {
-	    const char* tssn = sn->toString();
+	    char* tssn = sn->toString();
 	    IdlErrorCont(se->file(), se->line(),
 			 "(`%s' reached through typedef `%s')",
 			 ssn, tssn);
@@ -1610,7 +1642,7 @@ ValueInheritSpec(ScopedName* sn, const char* file, int line)
 	}
       }
     }
-    const char* ssn = sn->toString();
+    char* ssn = sn->toString();
     IdlError(file, line,
 	     "`%s' used in inheritance specification is not a valuetype",
 	     ssn);
@@ -1629,7 +1661,7 @@ append(ValueInheritSpec* is, const char* file, int line)
   for (i=this; i; i = i->next_) {
     last = i;
     if (is->value() == i->value()) {
-      const char* ssn = is->value()->scopedName()->toString();
+      char* ssn = is->value()->scopedName()->toString();
       IdlError(file, line,
 	       "Cannot specify `%s' as a direct base valuetype "
 	       "more than once", ssn);
@@ -1689,7 +1721,7 @@ ValueAbs(const char* file, int line, _CORBA_Boolean mainFile,
   // Check that all inherited valuetypes are abstract
   for (ValueInheritSpec* vinh = inherits; vinh; vinh = vinh->next()) {
     if (!vinh->value()->kind() == D_VALUE) {
-      const char* ssn = vinh->scope()->scopedName()->toString();
+      char* ssn = vinh->scope()->scopedName()->toString();
       IdlError(file, line,
 	       "In declaration of abstract valuetype `%s', inherited "
 	       "valuetype `%s' is not abstract", identifier, ssn);
@@ -1779,7 +1811,7 @@ Value(const char* file, int line, _CORBA_Boolean mainFile,
     else {
       if (inherits->value()->kind() == D_VALUE) {
 	if (((Value*)inherits->value())->custom()) {
-	  const char* ssn = inherits->scope()->scopedName()->toString();
+	  char* ssn = inherits->scope()->scopedName()->toString();
 	  IdlError(file, line,
 		   "In declaration of non-custom valuetype `%s', inherited "
 		   "valuetype `%s' is custom", identifier, ssn);
@@ -1794,7 +1826,7 @@ Value(const char* file, int line, _CORBA_Boolean mainFile,
 	 vinh = vinh->next()) {
 
       if (vinh->value()->kind() == D_VALUE) {
-	const char* ssn = vinh->scope()->scopedName()->toString();
+	char* ssn = vinh->scope()->scopedName()->toString();
 	IdlError(file, line,
 		 "In declaration of valuetype `%s', inherited valuetype "
 		 "`%s' is non-abstract but is not specified first",
@@ -1810,7 +1842,7 @@ Value(const char* file, int line, _CORBA_Boolean mainFile,
   if (supports) {
     for (InheritSpec* inh = supports->next(); inh; inh = inh->next()) {
       if (!inh->interface()->abstract()) {
-	const char* ssn = inh->scope()->scopedName()->toString();
+	char* ssn = inh->scope()->scopedName()->toString();
 	IdlError(file, line,
 		 "In declaration of valuetype `%s', supported interface "
 		 "`%s' is non-abstract but is not specified first",

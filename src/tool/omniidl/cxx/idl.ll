@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/11/02 17:07:28  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.2  1999/11/01 10:05:00  dpg1
 // New file attribute to AST.
 //
@@ -49,7 +52,7 @@
 
 #include <y.tab.h>
 
-const char*    currentFile;
+char*          currentFile;
 _CORBA_Boolean mainFile  = 1; // Are we processing the main file
 int            nestDepth = 0; // #include nesting depth
 

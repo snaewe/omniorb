@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/11/02 17:07:26  dpg1
+// Changes to compile on Solaris.
+//
 // Revision 1.2  1999/10/29 10:01:31  dpg1
 // Nicer error reporting.
 //
@@ -101,7 +104,7 @@ scopedNameToExpr(const char* file, int line, ScopedName* sn)
       return new ConstExpr(file, line, (Const*)se->decl(), sn);
     }
     else {
-      const char* ssn = sn->toString();
+      char* ssn = sn->toString();
       IdlError(file, line, "`%s' is not valid in an expression", ssn);
       IdlErrorCont(se->file(), se->line(), "(`%s' declared here)", ssn);
       delete [] ssn;
@@ -190,8 +193,8 @@ _CORBA_Float FloatExpr::evalAsFloat() {
   return f;
 }
 _CORBA_Double FloatExpr::evalAsDouble() {
-#ifdef HAS_LongDouble
   _CORBA_Double   f = value_;
+#ifdef HAS_LongDouble
   IdlFloatLiteral g = f;
   if (f != g)
     IdlWarning(file(), line(), "Loss of precision converting literal "
@@ -214,8 +217,8 @@ _CORBA_Boolean BooleanExpr::evalAsBoolean() {
 Enumerator* EnumExpr::evalAsEnumerator(const Enum* target) {
 
   if (value_->container() != target) {
-    const char* vssn = value_->scopedName()->toString();
-    const char* essn  = target->scopedName()->toString();
+    char* vssn = value_->scopedName()->toString();
+    char* essn  = target->scopedName()->toString();
     IdlError(file(), line(), "Enumerator `%s' does not belong to enum `%s'",
 	     vssn, essn);
     delete [] essn;
@@ -267,14 +270,14 @@ _CORBA_Short ConstExpr::evalAsShort() {
 #endif
   default:
     r = 1; p = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(), "Cannot interpret constant `%s' as short", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
   if (!p) {
     r = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Value of constant `%s' exceeds precision of short", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -311,14 +314,14 @@ _CORBA_Long ConstExpr::evalAsLong() {
 #endif
   default:
     r = 1; p = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(), "Cannot interpret constant `%s' as long", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
   if (!p) {
     r = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Value of constant `%s' exceeds precision of long", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -363,7 +366,7 @@ _CORBA_UShort ConstExpr::evalAsUShort() {
 #endif
   default:
     r = 1; p = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Cannot interpret constant `%s' as unsigned short", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -371,7 +374,7 @@ _CORBA_UShort ConstExpr::evalAsUShort() {
   }
   if (!p) {
     r = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Value of constant `%s' exceeds precision of unsigned short",
 	     ssn);
@@ -413,7 +416,7 @@ _CORBA_ULong ConstExpr::evalAsULong() {
 #endif
   default:
     r = 1; p = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Cannot interpret constant `%s' as unsigned long", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -421,7 +424,7 @@ _CORBA_ULong ConstExpr::evalAsULong() {
   }
   if (!p) {
     r = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Value of constant `%s' exceeds precision of unsigned long", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -470,14 +473,14 @@ _CORBA_Octet ConstExpr::evalAsOctet() {
 #endif
   default:
     r = 1; p = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(), "Cannot interpret constant `%s' as octet", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
   if (!p) {
     r = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Value of constant `%s' exceeds precision of octet", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -506,7 +509,7 @@ _CORBA_LongLong ConstExpr::evalAsLongLong() {
   }
   default:
     r = 1; p = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Cannot interpret constant `%s' as long long", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -514,7 +517,7 @@ _CORBA_LongLong ConstExpr::evalAsLongLong() {
   }
   if (!p) {
     r = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Value of constant `%s' exceeds precision of long long", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -549,7 +552,7 @@ _CORBA_ULongLong ConstExpr::evalAsULongLong() {
   case IdlType::tk_ulonglong: r = c_->constAsULongLong(); break;
   default:
     r = 1; p = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Cannot interpret constant `%s' as unsigned long long", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -557,7 +560,7 @@ _CORBA_ULongLong ConstExpr::evalAsULongLong() {
   }
   if (!p) {
     r = 1;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Value of constant `%s' exceeds precision of unsigned long long",
 	     ssn);
@@ -579,13 +582,13 @@ _CORBA_Float ConstExpr::evalAsFloat() {
 #endif
   default:
     r = 1.0;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(), "Cannot interpret constant `%s' as float", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
   if (IdlFPOverflow(r)) {
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(), "Value of constant `%s' overflows float", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
@@ -604,13 +607,13 @@ _CORBA_Double ConstExpr::evalAsDouble() {
 #endif
   default:
     r = 1.0;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(), "Cannot interpret constant `%s' as double", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
   if (IdlFPOverflow(r)) {
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(), "Value of constant `%s' overflows double", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
@@ -628,14 +631,14 @@ _CORBA_LongDouble ConstExpr::evalAsLongDouble() {
   case IdlType::tk_longdouble: r = c_->constAsLongDouble(); break;
   default:
     r = 1.0;
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Cannot interpret constant `%s' as long double", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
     delete [] ssn;
   }
   if (IdlFPOverflow(r)) { // Don't see how this could happen...
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Value of constant `%s' overflows long double", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
@@ -651,7 +654,7 @@ rt ConstExpr::eop() { \
   if (c_->constKind() == IdlType::tk) \
     return c_->cop(); \
   else { \
-    const char* ssn = scopedName_->toString(); \
+    char* ssn = scopedName_->toString(); \
     IdlError(file(), line(), \
 	     "Cannot interpret constant `%s' as " str, ssn); \
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn); \
@@ -678,7 +681,7 @@ Enumerator* ConstExpr::evalAsEnumerator(const Enum* target) {
 
     Enumerator* e = c_->constAsEnumerator();
     if (e->container() != target) {
-      const char* ssn = target->scopedName()->toString();
+      char* ssn = target->scopedName()->toString();
       IdlError(file(), line(), "Enumerator `%s' does not belong to enum `%s'",
 	       e->identifier(), ssn);
       delete [] ssn;
@@ -691,7 +694,7 @@ Enumerator* ConstExpr::evalAsEnumerator(const Enum* target) {
     return c_->constAsEnumerator();
   }
   else {
-    const char* ssn = scopedName_->toString();
+    char* ssn = scopedName_->toString();
     IdlError(file(), line(),
 	     "Cannot interpret constant `%s' as enumerator", ssn);
     IdlErrorCont(c_->file(), c_->line(), "(%s declared here)", ssn);
