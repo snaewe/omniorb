@@ -29,6 +29,11 @@
  
 /*
   $Log$
+  Revision 1.1.2.13  2000/04/27 10:51:13  dpg1
+  Interoperable Naming Service
+
+  stringToObject() and objectToString() moved to uri.cc.
+
   Revision 1.1.2.12  2000/04/13 17:48:58  djr
   Minor improvement -- reduces times when need to verify object's type.
 
@@ -933,49 +938,8 @@ omni::locationForward(omniObjRef* objref, omniObjRef* new_location)
 }
 
 
-int
-omni::stringToObject(omniObjRef*& objref, const char* sior)
-{
-  char* repoId;
-  IOP::TaggedProfileList* profiles;
-
-  try {
-    IOP::EncapStrToIor((const CORBA::Char*) sior,
-		       (CORBA::Char*&) repoId,
-		       profiles);
-  }
-  catch(...) {
-    return 0;
-  }
-
-  if( *repoId == '\0' && profiles->length() == 0 ) {
-    // nil object reference
-    delete[] repoId;
-    delete profiles;
-    objref = 0;
-    return 1;
-  }
-
-  objref = omni::createObjRef(repoId, CORBA::Object::_PD_repoId,
-			      profiles, 1, 0);
-  delete[] repoId;
-
-  return objref ? 1 : 0;
-}
-
-
-char*
-omni::objectToString(omniObjRef* objref)
-{
-  if( !objref ) {
-    IOP::TaggedProfileList p;
-    return (char*) IOP::iorToEncapStr((const CORBA::Char*) "", &p);
-  }
-  else
-    return (char*) IOP::iorToEncapStr((const CORBA::Char*)
-				      objref->_mostDerivedRepoId(),
-				      objref->_iopProfiles());
-}
+// omni::stringToObject() and omni::objectToString are replaced by
+// functions in omniURI::
 
 
 void
