@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.2.2  1999/09/22 18:43:58  sll
+  Updated documentation
+
   Revision 1.29.2.1  1999/09/21 20:37:16  sll
   -Simplified the scavenger code and the mechanism in which connections
    are shutdown. Now only one scavenger thread scans both incoming
@@ -784,7 +787,7 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	  "    -ORBclientCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBscanGranularity <n seconds>\n"
-	  "    -ORBlcdMode <0|1>\n";
+	  "    -ORBlcdMode\n";
 	move_args(argc,argv,idx,1);
 	continue;
       }

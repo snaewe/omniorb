@@ -1,0 +1,269 @@
+This file contains information on installing, building and using omniORB2
+on Unix platforms. 
+
+If you are upgrading from 2.2.0, do not miss the important information about
+omniNames at the end of this note.
+
+Unless specified otherwise, the information applies to all Unix
+platforms. Linux users should also consult the file README.Linux.
+Users intended to use egcs or gcc should also read README.egcs and README.gcc
+
+omniORB2 has been tested on the following Unix platforms:
+
+  o Solaris 2.{5,6}/ Sun SparcCompiler C++ version 4.2
+  o Windows NT / Windows 95 / Visual C++ version 5.0 (and also version 6.0)
+  o Linux 2.0 (x86)/ GNU C++ compiler version 2.7.2 /libc-5/ Linuxthreads 0.5
+  o Linux 2.0 (x86)/gcc-2.95/binutils-2.9.1.0.14/GNU Libc version 2
+  o Digital Unix 3.2/ DEC C++ compiler version 5.5
+  o Digital Unix 4.0D/ DEC C++ compiler version 6.0
+
+It has also been tested by external contributors on the following platforms:
+
+  o IBM AIX 4.2/ IBM C Set++ 3.1.4
+  o HPUX 10.20/ aC++ (B3910 A.01.04)
+  o HPUX 11.00/ aC++
+  o NextStep 3.3/ gcc-2.7.2
+  o Reliant Unix 5.43/CDS++
+  o SCO OpenServer 5/g++
+  o SCO Unixware 7
+  o SGI Irix 6.x/SGI C++ compiler 7.2
+  o Linux 2.x powerpc/Debian
+
+Roadmap
+=======
+
+The directory structure of this distribution looks as follows:
+
+./doc                             : omniORB2 documentation
+./man                             : omniORB2 manual pages
+./mk                              : make configuration files
+./config                          : configuration files for target platform
+./include                         : include files
+./src                             : source files
+./src/lib/omnithread              : source files for the omnithread library
+./src/lib/omniORB2                : source files for the ORB runtime library
+./src/tool/omniidl2               : source files for the IDL compiler
+./src/appl/omniNames              : source files for the COS Naming service
+./src/appl/utils                  : source files for utilities
+./src/examples                    : source files for examples
+
+If this is a pre-compiled binary distribution, the binaries are located in the
+following directories:
+
+./lib                             : static and shared libraries
+./bin                             : executables
+
+
+Configuration
+=============
+ 
+  1. select the appropriate platform configuration file
+  ------------------------------------------------------
+
+  Edit ./config/config.mk to select the appropriate platform file
+
+      e.g. For Solaris 2.5 onwards and with Sunspro C++
+      
+            platform = sun4_sosV_5.5
+
+   All the platform files are in ./mk/platforms.
+
+   If you are using gcc or the default compiler for your platform is
+   gcc, it is most likely that you have to edit the CXX and CC make
+   variables in the platform file. Moreover, only the most recent versions
+   of gcc, i.e. egcs-1.1.2 and gcc-2.95 has proper support for multithreaded
+   exception handling. Moreover, the gcc compiler has to be configured with
+   the --enable-threads option or else the code generated would not work
+   reliably. The default version of gcc compiler that comes with your
+   platform may not be the right version. 
+
+ 
+  2. Building and installing
+  --------------------------
+
+  The makefiles in this distribution only works with GNUmake. Make sure
+  that you have the program installed and invokes it directly.
+
+  You can skip this step if this is a pre-compiled binary distribution.
+  To build and install everything, go into the directory ./src and type 
+  'make export'. If all goes well, the libraries and executables will be
+  installed into ./lib/<platform>/ and ./bin/<platform>/.
+
+
+  3. add omniORB2 libraries to search path
+  ----------------------------------------
+
+  Since the shared libraries libomniORB2.so and libomnithread.so are not in
+  the directories searched by the dynamic loader by default, you must add 
+  the library directory to the search path. For example:
+ 
+    On Solaris 2.5
+       $ LD_LIBRARY_PATH=<absolute pathname of ./lib/sun4_sosV_5.5>
+       $ export LD_LIBRARY_PATH
+ 
+
+  4. configure the naming service
+  -------------------------------
+
+  If you are upgrading from 2.2.0, please read the important information about
+  omniNames at the end of this note.
+ 
+  You also have to configure the omniORB2 runtime and the naming service,
+  consult the user guides in ./doc for details. For a quick start, follow
+  these steps:
+
+    o Set the environment variable OMNINAMES_LOGDIR to a directory where
+      the naming service omniNames can store its data. For example:
+          OMNINAMES_LOGDIR=/wib/wob; export OMNINAMES_LOGDIR
+
+    o Start omniNames. The binary is in ./bin/<platform>/. For example:
+         $ ./bin/sun4_sosV_5.5/omniNames -start 12345 &
+      Notice that you have to give as a parameter to the option -start
+      the TCP/IP port number omniNames will use to receive IIOP requests.
+
+    o omniNames writes the stringified object reference for its root context 
+      on standard error. You should copy this string into a file omniORB.cfg.
+      The format of the entry is the word NAMESERVICE followed by 
+      space and the stringified IOR all on one line.  For example:
+  
+      NAMESERVICE IOR:00fff71c0000002849444c3a6f6d672e6f72672f436f734e616d696e672f4e616d696e67436f6e746578743a312e300000000001000000000000002c0001000000000012776962626c652e776f62626c652e636f6d0004d20000000c34c35a8305a931a200000001
+
+    o Since 2.6.0, an alternative way set up omniORB.cfg is as follows:
+         If omniNames has been started on host wobble and port 1234,
+         add to omniORB.cfg the following lines:
+
+      ORBInitialHost wobble
+      ORBInitialPort 1234
+
+      Any omniORB2 clients of release 2.6.0 or later is able to use this
+      information to locate the root context of the Naming Service. 
+
+    o Set the environment variable OMNIORB_CONFIG to contain the full
+      path name of the file omniORB.cfg. For example,
+          OMNIORB_CONFIG=/wib/wob/omniORB.cfg; export OMNIORB_CONFIG
+
+Building the examples
+=====================
+
+You are strongly encouraged to try out the examples provided in ./examples.
+Go into ./examples and type 'make all'. Make sure that 'make' is GNUmake
+because the makefiles are all GNUmake specific.
+
+Study the documentations in ./doc before you run any of the example
+programs.
+
+
+Writing your own Makefile
+=========================
+
+The distribution makefiles may be a bit much to digest.
+Here is a few tips of what to put into your makefiles to compile omniORB2
+programs:
+
+1. Compiler flags:
+
+To compile omniORB2 programs correctly, several C++ preprocessor defines
+must be specified to identify the target platform.
+
+Sun Solaris 2.5     |__sparc__  __sunos__  __OSVERSION__=5           |
+Digital Unix 3.2    |__alpha__  __osf1__   __OSVERSION__=3           |
+HPUX 10.x           |__hppa__  __hpux__   __OSVERSION__=10           |
+IBM AIX 4.x &       |__aix__  __powerpc__   __OSVERSION__=4          |
+Linux 2.0 (x86)     |__x86__    __linux__  __OSVERSION__=2           |
+Linux 2.0 (alpha)   |__alpha__  __linux__  __OSVERSION__=2           |
+Windows/NT 3.5      |__x86__    __NT__     __OSVERSION__=3  __WIN32__|
+Windows/NT 4.0      |__x86__    __NT__     __OSVERSION__=4  __WIN32__|
+Windows/95          |__x86__    __WIN32__                            |
+OpenVMS 6.x (alpha) |__alpha__  __vms      __OSVERSION__=6           |
+OpenVMS 6.x (vax)   |__vax__    __vms      __OSVERSION__=6           |
+ATMos 4.0           |__arm__    __atmos__  __OSVERSION__=4           |
+NextStep 3.x        |__m68k__  __nextstep__   __OSVERSION__=3        |
+Unixware 7          |__x86__   __uw7__     __OSVERSION__=5           |
+
+You should also specify the preprocessor defines (e.g. -D\_REENTRANT) for
+compiling multithreaded programs.
+
+Have a look at the <platform>.mk file in <top>/mk/platforms. And see what
+OMNITHREAD_LIB and OMNIORB2_LIB is set to. 
+
+2. Libraries:
+
+The runtime libraries that you have to link to your executables are:
+
+libomnithread.so   - omnithread share library
+libomniORB2.so     - omniORB2 runtime shared library
+libomniDynamic2.so - omniORB2 runtime shared library for dynamic features
+libomniLC.so       - lifecycle service runtime shared library
+
+One of the following gatekeeper libraries:
+ - libtcpwrapGK.so   - implemented using tcpwrapper
+ - libomniGK_stub.a  - dummy stub.
+
+Either link with -ltcpwrapGK or -lomniGK_stub but not both.
+(At the moment, only linux, solaris and digital unix have tcpwrapGK enabled.)
+
+The name of the libraries may be have different suffixes on different
+platforms, you can figure it out.
+
+3. IDL compiler:
+
+IDL stubs can be compiled like this:
+
+  omniidl2 echo.idl
+
+The product is the files: echo.hh and echoSK.cc
+
+
+Documentation
+=============
+
+You must read the omniORB2 and the OMNI naming service user guides. Follow
+the instructions in the guides to complete the configuration process.
+
+Important Change to omniNames for users upgrading from version 2.2.0
+====================================================================
+
+Since release 2.4.0, the naming service uses the prefix pragma "omg.org" in 
+its IDL. 
+
+Unfortunately, this is not compatible on-the-wire with clients that are
+linked with the old library, i.e. any programs linked before version 2.4.0
+was released.
+
+The implications of this change are as follows:
+
+a) omniNames built in this release *CANNOT* read the data file of the
+   version 2.2.0 omniNames . A new instance must be started from scratch.
+   If you start omniNames and tell it to use the old data file, it will 
+   certainly crash.
+
+   Possible migration path:
+     At AT&T Laboratories Cambridge, we are running the old and the new
+     omniNames in parallel.
+     The new instance is setup to run on a different port. Also the
+     new tree is built to read by default a different configuration file:
+     (/project/omni/var/omniORB_NEW.cfg instead of 
+     /project/omni/var/omniORB.cfg) so that a client will pick up the
+     IOR of the old or the new omniNames depending on whether it is compiled
+     with the old or the new library. When all our services have been
+     recompiled, the old omniNames will be withdrawn.
+
+
+b) If you want to continue to use the old omniNames, you can undo this
+   change with the following steps:
+     1. Edit <top>/src/lib/omniORB2/Naming.idl and remove the 
+        #pragma prefix "omg.org" line.
+     2. Do the same to <top>/idl/Naming.idl.
+     3. Remove <top>/include/omniORB2/Naming.hh.
+     4. Rebuild everything. You should do a gnumake/make veryclean at the
+        top of <top>/src to make sure that the naming service stubs are
+        regenerated.
+
+
+Last minute news
+================
+
+- For the moment, connection screening using tcpwrapper is only available
+  on linux, solaris and digital unix. The build process on other platforms
+  still have to be sorted.
+
