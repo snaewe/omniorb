@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.7  1999/01/07 15:44:03  djr
+  Added _CORBA_invoked_nil_pseudo_ref() and
+  _CORBA_use_nil_ptr_as_nil_pseudo_objref().
+
   Revision 1.6  1998/08/14 13:46:37  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -366,6 +370,25 @@ void
 _CORBA_marshal_error()
 {
   throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+}
+
+void
+_CORBA_invoked_nil_pseudo_ref()
+{
+  throw CORBA::BAD_OPERATION(0, CORBA::COMPLETED_NO);
+}
+
+CORBA::Boolean 
+_CORBA_use_nil_ptr_as_nil_pseudo_objref(const char* objType)
+{
+  if (omniORB::traceLevel > 10) {
+    omniORB::log <<
+      "Warning: omniORB2 detects that a nil (0) pointer is wrongly used as\n"
+      " a nil CORBA::" << objType << " object reference.\n"
+      " Use CORBA::" << objType << "::_nil()\n";
+    omniORB::log.flush();
+  }
+  return 1;
 }
 
 const char *
