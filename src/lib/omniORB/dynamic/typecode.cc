@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.18  1999/02/09 17:45:34  djr
+ * Fixed bug in TypeCode_alignTable generation for structures and exceptions.
+ *
  * Revision 1.17  1999/02/08 18:55:45  djr
  * Fixed bug in marshalling of TypeCodes for sequences. The sequence
  * bound and the content TypeCode were marshalled in the wrong order.
@@ -1924,6 +1927,7 @@ TypeCode_struct::generateAlignmentTable()
 {
   unsigned num_entries = 0;
   int simple_size = 0;
+  omni::alignment_t simple_alignment = omni::ALIGN_8;
 
   // Determine how many table entries we will need.
   for( CORBA::ULong i = 0; i < pd_nmembers; i++ ) {
@@ -1933,11 +1937,14 @@ TypeCode_struct::generateAlignmentTable()
     for( unsigned j = 0; j < mat.entries(); j++ ) {
       switch( mat[j].type ) {
       case TypeCode_alignTable::it_simple:
-	if( simple_size % mat[j].simple.alignment == 0 ) {
+	if( simple_size % mat[j].simple.alignment == 0 &&
+	    mat[j].simple.alignment <= simple_alignment ) {
 	  // If can, add onto existing simple ...
+	  if( simple_size == 0 )  simple_alignment = mat[j].simple.alignment;
 	  simple_size += mat[j].simple.size;
 	} else {
 	  simple_size = mat[j].simple.size;
+	  simple_alignment = mat[j].simple.alignment;
 	  num_entries++;
 	}
 	break;
@@ -1945,6 +1952,7 @@ TypeCode_struct::generateAlignmentTable()
       default:
 	if( simple_size > 0 ) {
 	  simple_size = 0;
+	  simple_alignment = omni::ALIGN_8;
 	  num_entries++;
 	}
 	num_entries++;
@@ -1962,7 +1970,7 @@ TypeCode_struct::generateAlignmentTable()
   } else {
     pd_alignmentTable.setNumEntries(num_entries);
     simple_size = 0;
-    omni::alignment_t simple_alignment = omni::ALIGN_1;
+    simple_alignment = omni::ALIGN_8;
 
     for( CORBA::ULong ii = 0; ii < pd_nmembers; ii++ ) {
       TypeCode_base* mtc = ToTcBase(pd_members[ii].type);
@@ -1971,7 +1979,8 @@ TypeCode_struct::generateAlignmentTable()
       for( unsigned j = 0; j < mat.entries(); j++ ) {
 	switch( mat[j].type ) {
 	case TypeCode_alignTable::it_simple:
-	  if( simple_size % mat[j].simple.alignment == 0 ) {
+	  if( simple_size % mat[j].simple.alignment == 0 &&
+	      mat[j].simple.alignment <= simple_alignment ) {
 	    // If can add onto existing simple ...
 	    if( simple_size == 0 )  simple_alignment = mat[j].simple.alignment;
 	    simple_size += mat[j].simple.size;
@@ -1986,6 +1995,7 @@ TypeCode_struct::generateAlignmentTable()
 	  if( simple_size > 0 ) {
 	    pd_alignmentTable.addSimple(simple_alignment, simple_size);
 	    simple_size = 0;
+	    simple_alignment = omni::ALIGN_8;
 	  }
 	  pd_alignmentTable.add(mat, j);
 	  break;
@@ -1993,8 +2003,9 @@ TypeCode_struct::generateAlignmentTable()
       }
     }
     // And there may be an extra simple one at the end ...
-    if( simple_size > 0 )
+    if( simple_size > 0 ) {
       pd_alignmentTable.addSimple(simple_alignment, simple_size);
+    }
   }
 }
 
@@ -2272,6 +2283,7 @@ TypeCode_except::generateAlignmentTable()
 {
   unsigned num_entries = 0;
   int simple_size = 0;
+  omni::alignment_t simple_alignment = omni::ALIGN_8;
 
   // Determine how many table entries we will need.
   for( CORBA::ULong i = 0; i < pd_nmembers; i++ ) {
@@ -2281,25 +2293,31 @@ TypeCode_except::generateAlignmentTable()
     for( unsigned j = 0; j < mat.entries(); j++ ) {
       switch( mat[j].type ) {
       case TypeCode_alignTable::it_simple:
-	if( simple_size % mat[j].simple.alignment == 0 ) {
+	if( simple_size % mat[j].simple.alignment == 0 &&
+	    mat[j].simple.alignment <= simple_alignment ) {
 	  // If can add onto existing simple ...
+	  if( simple_size == 0 )  simple_alignment = mat[j].simple.alignment;
 	  simple_size += mat[j].simple.size;
 	} else {
 	  simple_size = mat[j].simple.size;
+	  simple_alignment = mat[j].simple.alignment;
 	  num_entries++;
 	}
 	break;
 
       default:
 	if( simple_size > 0 ) {
-	  num_entries++;
 	  simple_size = 0;
+	  simple_alignment = omni::ALIGN_8;
+	  num_entries++;
 	}
 	num_entries++;
 	break;
       }
     }
   }
+  // And there may be an extra simple one at the end ...
+  if( simple_size > 0 )  num_entries++;
 
   // Generate the entries.
   if( num_entries == 0 ) {
@@ -2308,7 +2326,7 @@ TypeCode_except::generateAlignmentTable()
   } else {
     pd_alignmentTable.setNumEntries(num_entries);
     simple_size = 0;
-    omni::alignment_t simple_alignment = omni::ALIGN_1;
+    simple_alignment = omni::ALIGN_8;
 
     for( CORBA::ULong ii = 0; ii < pd_nmembers; ii++ ) {
       TypeCode_base* mtc = ToTcBase(pd_members[ii].type);
@@ -2317,7 +2335,8 @@ TypeCode_except::generateAlignmentTable()
       for( unsigned j = 0; j < mat.entries(); j++ ) {
 	switch( mat[j].type ) {
 	case TypeCode_alignTable::it_simple:
-	  if( simple_size % mat[j].simple.alignment == 0 ) {
+	  if( simple_size % mat[j].simple.alignment == 0 &&
+	      mat[j].simple.alignment <= simple_alignment ) {
 	    // If can add onto existing simple ...
 	    if( simple_size == 0 )  simple_alignment = mat[j].simple.alignment;
 	    simple_size += mat[j].simple.size;
@@ -2332,11 +2351,16 @@ TypeCode_except::generateAlignmentTable()
 	  if( simple_size > 0 ) {
 	    pd_alignmentTable.addSimple(simple_alignment, simple_size);
 	    simple_size = 0;
+	    simple_alignment = omni::ALIGN_8;
 	  }
 	  pd_alignmentTable.add(mat, j);
 	  break;
 	}
       }
+    }
+    // And there may be an extra simple one at the end ...
+    if( simple_size > 0 ) {
+      pd_alignmentTable.addSimple(simple_alignment, simple_size);
     }
   }
 }
