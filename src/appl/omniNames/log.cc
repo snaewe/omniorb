@@ -1001,7 +1001,7 @@ log::getString(char*& buf, istream& file)
       }
     }
 
-    if (p >= (buf + bufsz)) {
+    if (p == (buf + bufsz)) {
 
       // buffer is too small
 
@@ -1009,6 +1009,7 @@ log::getString(char*& buf, istream& file)
       buf = new char[bufsz+bufsz];
       memcpy(buf, obuf, bufsz);
       delete [] obuf;
+      p = buf + bufsz;
       bufsz += bufsz;
     }
   }
