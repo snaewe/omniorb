@@ -29,6 +29,7 @@
 
 #include <dynamicImplementation.h>
 #include <pseudo.h>
+#include <context.h>
 
 
 CORBA::ServerRequest::~ServerRequest() {}

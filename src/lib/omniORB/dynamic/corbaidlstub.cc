@@ -26,9 +26,9 @@
 // Description:
 //
 
-#include <omniORB2/CORBA.h>
-
+#include <omniORB2/CORBA_sysdep.h>
 
 #if defined(HAS_Cplusplus_Namespace) && defined(ENABLE_CLIENT_IR_SUPPORT)
+# include <omniORB2/CORBA.h>
 # include <../corbaidlSK.cc>
 #endif

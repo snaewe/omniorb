@@ -27,6 +27,7 @@
 //   Implementation of CORBA::Context.
 //
 
+#include <context.h>
 #include <pseudo.h>
 #include <string.h>
 #include <ctype.h>
