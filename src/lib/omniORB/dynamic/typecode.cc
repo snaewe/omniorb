@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.29  2003/03/05 15:26:54  dgrisby
+ * Missing Fixed typecode unmarshal. Thanks Renzo Tomaselli.
+ *
  * Revision 1.38.2.28  2002/12/18 15:59:15  dgrisby
  * Proper clean-up of recursive TypeCodes.
  *
@@ -4482,6 +4485,9 @@ TypeCode_marshaller::unmarshal(cdrStream& s,
 
     case CORBA::tk_wstring:
       return TypeCode_wstring::NP_unmarshalSimpleParams(s, otbl);
+
+    case CORBA::tk_fixed:
+      return TypeCode_fixed::NP_unmarshalSimpleParams(s, otbl);
 
     default:
       OMNIORB_THROW(MARSHAL,MARSHAL_InvalidTypeCodeKind, CORBA::COMPLETED_NO);
