@@ -1,3 +1,11 @@
+Mon Jul  5 01:04:09 BST 2004 dgrisby
+====================================
+
+- Set path to omniidl backend.
+
+src/lib/omniORB/dir.mk
+
+
 Mon Jul  5 00:44:14 BST 2004 dgrisby
 ====================================
 

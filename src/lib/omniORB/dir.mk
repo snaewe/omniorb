@@ -66,6 +66,7 @@ endif
 ######################################################################
 
 OMNIORB_IDL += -p$(BASE_OMNI_TREE)/src/lib/omniORB -Wbdebug
+OMNIORB_IDL_ONLY += -p$(BASE_OMNI_TREE)/src/lib/omniORB -Wbdebug
 
 omniORB4/distdate.hh : $(BASE_OMNI_TREE)/update.log
 	@(dir=omniORB4; $(CreateDir))
