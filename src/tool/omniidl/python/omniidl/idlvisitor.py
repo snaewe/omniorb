@@ -28,42 +28,45 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/10/29 18:20:01  dpg1
+# Clean up
+#
 # Revision 1.1  1999/10/29 15:47:07  dpg1
 # First revision.
 #
 
 class AstVisitor :
-    def visitAST(self):          return
-    def visitModule(self):       return
-    def visitInterface(self):    return
-    def visitForward(self):      return
-    def visitConst(self):        return
-    def visitDeclarator(self):   return
-    def visitTypedef(self):      return
-    def visitMember(self):       return
-    def visitStruct(self):       return
-    def visitException(self):    return
-    def visitCaseLabel(self):    return
-    def visitUnionCase(self):    return
-    def visitUnion(self):        return
-    def visitEnumerator(self):   return
-    def visitEnum(self):         return
-    def visitAttribute(self):    return
-    def visitParameter(self):    return
-    def visitOperation(self):    return
-    def visitNative(self):       return
-    def visitStateMember(self):  return
-    def visitFactory(self):      return
-    def visitValueForward(self): return
-    def visitValueBox(self):     return
-    def visitValueAbs(self):     return
-    def visitValue(self):        return
+    def visitAST(self, node):          return
+    def visitModule(self, node):       return
+    def visitInterface(self, node):    return
+    def visitForward(self, node):      return
+    def visitConst(self, node):        return
+    def visitDeclarator(self, node):   return
+    def visitTypedef(self, node):      return
+    def visitMember(self, node):       return
+    def visitStruct(self, node):       return
+    def visitException(self, node):    return
+    def visitCaseLabel(self, node):    return
+    def visitUnionCase(self, node):    return
+    def visitUnion(self, node):        return
+    def visitEnumerator(self, node):   return
+    def visitEnum(self, node):         return
+    def visitAttribute(self, node):    return
+    def visitParameter(self, node):    return
+    def visitOperation(self, node):    return
+    def visitNative(self, node):       return
+    def visitStateMember(self, node):  return
+    def visitFactory(self, node):      return
+    def visitValueForward(self, node): return
+    def visitValueBox(self, node):     return
+    def visitValueAbs(self, node):     return
+    def visitValue(self, node):        return
 
 
 class TypeVisitor:
-    def visitBaseType(self):     return
-    def visitStringType(self):   return
-    def visitWStringType(self):  return
-    def visitSequenceType(self): return
-    def visitFixedType(self):    return
-    def visitDeclaredType(self): return
+    def visitBaseType(self, type):     return
+    def visitStringType(self, type):   return
+    def visitWStringType(self, type):  return
+    def visitSequenceType(self, type): return
+    def visitFixedType(self, type):    return
+    def visitDeclaredType(self, type): return

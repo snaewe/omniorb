@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/10/29 18:19:39  dpg1
+# Clean up
+#
 # Revision 1.1  1999/10/29 15:47:08  dpg1
 # First revision.
 #
@@ -38,8 +41,7 @@ import idlvisitor
 class AST:
     def __init__(self, declarations):
         self.__declarations = declarations
-
-        print "AST init:", declarations
+        #print "AST init:", declarations
 
     def declarations(self):    return self.__declarations
     def accept(self, visitor): visitor.visitAST(self)
@@ -93,13 +95,16 @@ class Module (Decl, DeclRepoId):
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__definitions  = definitions
-
-        print line, "Module init:", identifier, definitions
+        self._continuations = []
+        #print line, "Module init:", identifier, definitions
 
     def accept(self, visitor): visitor.visitModule(self)
 
     # List containing contents of module:
-    def definitions(self):  return self.__definitions
+    def definitions(self):   return self.__definitions
+
+    # List containing continuations of this module
+    def continuations(self): return self._continuations
 
 
 # Interface
@@ -116,7 +121,7 @@ class Interface (Decl, DeclRepoId):
         self.__contents     = []
         self.__declarations = []
         self.__callables    = []
-        print line, "Interface init:", identifier, inherits
+        #print line, "Interface init:", identifier, inherits
 
     def _setContents(self, contents):
         self.__contents     = contents
@@ -155,8 +160,7 @@ class Forward (Decl, DeclRepoId):
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__abstract   = abstract
-
-        print line, "Forward init:", identifier
+        #print line, "Forward init:", identifier
 
     def accept(self, visitor): visitor.visitForward(self)
 
@@ -175,8 +179,7 @@ class Const (Decl, DeclRepoId):
 
         self.__constType = constType
         self.__value     = value
-
-        print line, "Const init:", constType, identifier, value
+        #print line, "Const init:", constType, identifier, value
 
     def accept(self, visitor): visitor.visitConst(self)
 
@@ -220,8 +223,7 @@ class Typedef (Decl):
         self.__aliasType   = aliasType
         self.__constrType  = constrType
         self.__declarators = declarators
-
-        print line, "Typedef init:", aliasType
+        #print line, "Typedef init:", aliasType
 
     def accept(self, visitor): visitor.visitTypedef(self)
 
@@ -245,8 +247,7 @@ class Member (Decl):
         self.__memberType  = memberType
         self.__constrType  = constrType
         self.__declarators = declarators
-
-        print line, "Member init:", memberType
+        #print line, "Member init:", memberType
 
     def accept(self, visitor): visitor.visitMember(self)
 
@@ -269,8 +270,7 @@ class Struct (Decl, DeclRepoId):
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__recursive = recursive
-
-        print line, "Struct init:", identifier
+        #print line, "Struct init:", identifier
 
     def _setMembers(self, members):
         self.__members = members
@@ -293,8 +293,7 @@ class Exception (Decl, DeclRepoId):
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__members    = members
-
-        print line, "Exception init:", identifier, members
+        #print line, "Exception init:", identifier, members
 
     def accept(self, visitor): visitor.visitException(self)
 
@@ -335,8 +334,7 @@ class UnionCase (Decl):
         self.__caseType   = caseType
         self.__constrType = constrType
         self.__declarator = declarator
-
-        print line, "UnionCase init"
+        #print line, "UnionCase init"
 
     def accept(self, visitor): visitor.visitUnionCase(self)
 
@@ -356,8 +354,7 @@ class Union (Decl, DeclRepoId):
 
         self.__switchType = switchType
         self.__recursive  = recursive
-
-        print line, "Union init:", identifier
+        #print line, "Union init:", identifier
 
     def _setCases(self, cases):
         self.__cases = cases
@@ -377,8 +374,7 @@ class Enumerator (Decl, DeclRepoId):
 
         Decl.__init__(self, file, line, mainFile, pragmas)
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
-
-        print line, "Enumerator:", identifier
+        #print line, "Enumerator:", identifier
 
     def accept(self, visitor): visitor.visitEnumerator(self)
 
@@ -392,8 +388,7 @@ class Enum (Decl, DeclRepoId):
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__enumerators = enumerators
-
-        print line, "Enum: ", identifier
+        #print line, "Enum: ", identifier
 
     def accept(self, visitor): visitor.visitEnum(self)
 
@@ -409,8 +404,7 @@ class Attribute (Decl):
         self.__readonly = readonly
         self.__attrType = attrType
         self.__identifiers = identifiers
-
-        print line, "Attribute init:", readonly, identifiers
+        #print line, "Attribute init:", readonly, identifiers
 
     def accept(self, visitor): visitor.visitAttribute(self)
 
@@ -430,8 +424,7 @@ class Parameter (Decl):
         self.__is_out     = (direction == 1 or direction == 2)
         self.__paramType  = paramType
         self.__identifier = identifier
-
-        print line, "Parameter init:", identifier
+        #print line, "Parameter init:", identifier
 
     def accept(self, visitor): visitor.visitParameter(self)
 
@@ -455,8 +448,9 @@ class Operation (Decl):
         self.__parameters = parameters
         self.__raises     = raises
         self.__contexts   = contexts
+        #print line, "Operation init:", identifier, raises, contexts
 
-        print line, "Operation init:", identifier, raises, contexts
+    def accept(self, visitor): visitor.visitParameter(self)
 
     def oneway(self):     return self.__oneway
     def returnType(self): return self.__returnType

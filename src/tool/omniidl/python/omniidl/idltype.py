@@ -157,7 +157,6 @@ class Declared (Type):
         Type.__init__(self, kind)
         self.__decl       = decl
         self.__scopedName = scopedName
-        print "Declared init:", decl, scopedName
 
     def accept(self, visitor): visitor.visitDeclaredType(self)
 
@@ -245,7 +244,6 @@ def fixedType(digits, scale):
 
 def declaredType(decl, scopedName, kind):
     sname = idlutil.slashName(scopedName)
-    print "declaredType:", decl, sname
     try:
         return declaredTypeMap[sname]
     except KeyError:
