@@ -1,3 +1,11 @@
+Tue Aug 31 20:19:50 BST 1999 sll
+================================
+
+- Scavenger class inheritance revert to single inheritance because the
+  bug that causes occasional thread exit has been identified.
+
+src/lib/omniORB2/orbcore/scavenger.cc
+
 Mon Aug 30 19:46:21 BST 1999 sll
 ================================
 
