@@ -76,13 +76,15 @@ except ImportError, msg:
 
 try:
     import omniidl.main
-except ImportError:
+except ImportError, msg:
     sys.stderr.write("\n\n")
     sys.stderr.write("omniidl: ERROR!\n\n")
     sys.stderr.write("omniidl: Could not find Python files for IDL compiler\n")
     sys.stderr.write("omniidl: Please put them in directory " + \
                      (pylibdir or binarchdir) + "\n")
     sys.stderr.write("omniidl: (or set the PYTHONPATH environment variable)\n")
+    sys.stderr.write("\n")
+    sys.stderr.write("omniidl: (The error was `" + str(msg) + "')\n")
     sys.stderr.write("\n\n")
     sys.stderr.flush()
     sys.exit(1)
