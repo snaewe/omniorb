@@ -7,3 +7,6 @@ all::
 
 export::
 	@$(MakeSubdirs)
+
+ciao::
+	@$(MakeSubdirs)

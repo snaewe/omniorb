@@ -74,3 +74,8 @@ corbaidl.hh corbaidlSK.cc corbaidlDynSK.cc: corbaidl.idl
 omniLifeCycle.hh omniLifeCycleSK.cc omniLifeCycleDynSK.cc: omniLifeCycle.idl
 	-if [ "$<" != omniLifeCycle.idl ]; then $(CP) $< . ; fi
 	$(OMNIORB2_IDL_FPATH) -m omniLifeCycle.idl
+
+
+ciao:: Naming.hh bootstrap.hh ir.hh corbaidl.hh omniLifeCycle.hh
+	@$(MakeSubdirs)
+
