@@ -1,3 +1,20 @@
+Mon Apr 15 15:28:54 BST 2002 dpg1
+=================================
+
+- Minor doc tweaks.
+
+doc/tex/omniNames.tex  -- new
+doc/tex/omniORB.tex
+doc/tex/omnithread.tex
+doc/tex/utilities.tex  -- new
+external_merge/CREDITS
+external_merge/doc/lifecycle.pdf  -- deleted
+external_merge/doc/lifecycle.ps   -- deleted
+external_merge/doc/omniNames.tex  -- deleted
+external_merge/doc/omnithread.tex -- deleted
+external_merge/doc/utilities.tex  -- deleted
+
+
 Thu Mar 28 17:34:47 GMT 2002 dpg1
 =================================
 

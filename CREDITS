@@ -29,9 +29,9 @@ Email:        ilfranze@techfak.uni-bielefeld.de
 Description:  Irix port
 
 Name:         Duncan Grisby
-Email:        dgrisby@uk.research.att.com
+Email:        duncan@grisby.org
 Organisation: AT&T Laboratories, Cambridge
-Description:  Lifecycle support, Interoperable Naming Service, New IDL compiler
+Description:  Interoperable Naming Service, IDL compiler, ORB core maintainer
 
 Name:         Ben Harris
 Email:        bjh@orl.co.uk

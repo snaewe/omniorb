@@ -2914,6 +2914,9 @@ The following options are common to all back-ends:
 \cmdline{-D}\textit{name}[\cmdline{=}\textit{value}]~~ \= \kill
 %HEVEA\\
 
+\cmdline{-b}\textit{back-end}
+     \> Run the specified back-end. For the C++ ORB, use \cmdline{-bcxx}.\\
+
 \cmdline{-D}\textit{name}[\cmdline{=}\textit{value}]
      \> Define \textit{name} for the preprocessor.\\
 
@@ -2938,9 +2941,6 @@ The following options are common to all back-ends:
 
 \cmdline{-Wp}\textit{arg}[,\textit{arg}\dots]
      \> Send arguments to the preprocessor.\\
-
-\cmdline{-b}\textit{back-end}
-     \> Run the specified back-end. For the C++ ORB, use \cmdline{-bcxx}.\\
 
 \cmdline{-Wb}\textit{arg}[,\textit{arg}\dots]
      \> Send arguments to the back-end.\\
@@ -3078,6 +3078,10 @@ arguments to.
 
 \cmdline{-Wba}
      \> Generate stubs for TypeCode and Any.\\
+
+\cmdline{-Wbinline}
+     \> Output stubs for \code{\#include}d IDL files in line with the
+        main file.\\
 
 \cmdline{-Wbtp}
      \> Generate `tie' implementation skeletons.\\
