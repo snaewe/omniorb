@@ -45,6 +45,7 @@ endef
 #
 # Patterns for various file types
 #
+LibPathPattern    = -L%
 LibNoDebugPattern = lib%.a
 LibDebugPattern = lib%.a
 LibPattern = lib%.a
@@ -92,7 +93,7 @@ endif
 # i.e. we need to filter out the lib_depends from the command
 #
 
-IMPORT_LIBRARY_FLAGS = $(patsubst %,-L%,$(IMPORT_LIBRARY_DIRS))
+IMPORT_LIBRARY_FLAGS = $(patsubst %,$(LibPathPattern),$(IMPORT_LIBRARY_DIRS))
 
 define CXXExecutable
 (set -x; \
@@ -314,8 +315,10 @@ shared/%.o: %.cc
 static/%.o: %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
+SHAREDLIB_CFLAGS = $(SHAREDLIB_CPPFLAGS)
+
 shared/%.o: %.c
-	$(CC) -c $(SHAREDLIB_CPPFLAGS) $(CFLAGS)  -o $@ $<
+	$(CC) -c $(SHAREDLIB_CFLAGS) $(CFLAGS)  -o $@ $<
 
 #
 # Replacements for implicit rules

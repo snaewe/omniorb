@@ -127,6 +127,7 @@ endef
 # Patterns for various file types
 #
 
+LibPathPattern = -libpath:%/$(LIBDIR)
 LibNoDebugPattern = %.lib
 LibDebugPattern = %d.lib
 DLLNoDebugPattern = %_rt.lib
@@ -183,7 +184,7 @@ endif
 # Stuff to generate executable binaries.
 #
 
-IMPORT_LIBRARY_FLAGS = $(patsubst %,-libpath:%/$(LIBDIR),$(IMPORT_TREES))
+IMPORT_LIBRARY_FLAGS = $(patsubst %,$(LibPathPattern),$(IMPORT_TREES))
 
 define CXXExecutable
 (set -x; \
