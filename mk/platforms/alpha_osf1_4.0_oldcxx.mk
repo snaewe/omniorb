@@ -42,14 +42,14 @@ DecCxxMinorVersion = 6
 #
 # CXXOPTIONS += -ttimestamp -pch
 
-CXXMAKEDEPEND = omkdepend -D__DECCXX -D__cplusplus
+CXXMAKEDEPEND = $(OMKDEPEND) -D__DECCXX -D__cplusplus
 CXXDEBUGFLAGS = -O
 
 CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -call_shared
 
 CC = cc
-CMAKEDEPEND = omkdepend
+CMAKEDEPEND = $(OMKDEPEND)
 CDEBUGFLAGS = -O
 
 CLINK = $(CC)
