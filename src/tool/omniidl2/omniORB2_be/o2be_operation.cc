@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.28  1999/05/26 11:05:24  sll
+  Added code to support context.
+  Added code to generate typecode constant for anonymous bounded string
+  used as arguments.
+
   Revision 1.27  1999/03/11 16:26:08  djr
   Updated copyright notice
 
@@ -126,10 +131,6 @@ o2be_operation::produce_decl(std::fstream &s, const char* prefix,
 			     const char* alias_prefix, idl_bool/* ignored */,
 			     idl_bool use_fully_qualified_names)
 {
-  if (context())
-    throw o2be_unsupported(idl_global->stripped_filename()->get_string(),
-			   line(), "context argument");
-
   // return type
   if (!return_is_void())
     {
@@ -230,9 +231,18 @@ o2be_operation::produce_decl(std::fstream &s, const char* prefix,
 	  << ((mapping.is_reference)  ? "&":"");
 	s << " " << a->uqname();
 	i.next();
-	s << ((!i.is_done()) ? ", " :"");
+	s << ((!i.is_done()) ? ", " : (context()?",":""));
       }
   }
+
+  // context
+  {
+    if (context()) 
+    {
+      s << "CORBA::Context_ptr ctxt";
+    }
+  }
+
   s << ")";
 }
 
@@ -248,7 +258,11 @@ o2be_operation::produce_invoke(std::fstream &s)
     o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
     s << a->uqname();
     i.next();
-    s << ((!i.is_done()) ? ", " :"");
+    s << ((!i.is_done()) ? ", " : (context()?",":""));
+  }
+
+  if (context()) {
+    s << "ctxt";
   }
 
   s << ")";
@@ -362,10 +376,18 @@ o2be_operation::produce_proxy_call_desc(std::fstream& s,
 					const char* class_name)
 {
   const char* call_desc_base_class;
-  if( flags() == AST_Operation::OP_oneway )
-    call_desc_base_class = "OmniOWProxyCallDesc";
-  else
-    call_desc_base_class = "OmniProxyCallDesc";
+  if (!context()) {
+    if( flags() == AST_Operation::OP_oneway )
+      call_desc_base_class = "OmniOWProxyCallDesc";
+    else
+      call_desc_base_class = "OmniProxyCallDesc";
+  }
+  else {
+    if( flags() == AST_Operation::OP_oneway )
+      call_desc_base_class = "OmniOWProxyCallDescWithContext";
+    else
+      call_desc_base_class = "OmniProxyCallDescWithContext";
+  }
 
   IND(s); s << "// Proxy call descriptor class. Mangled signature:\n";
   IND(s); s << "//  " << mangled_signature() << '\n';
@@ -803,6 +825,23 @@ o2be_operation::produce_proxy_skel(std::fstream& s, o2be_interface& def_in,
   o2be_call_desc::produce_descriptor(s, *this);
   const char* call_desc_class = o2be_call_desc::descriptor_name(*this);
 
+  char* ctxt_un = 0;
+  int   ctxt_len = 0;
+  if (context()) {
+    ctxt_un = o2be_call_desc::generate_unique_name("_0RL_ctx_");
+    IND(s); s << "static const char* " << ctxt_un << "[] = {\n";
+    ctxt_len = 0;
+    UTL_StrlistActiveIterator iter(context());
+
+    while (!iter.is_done()) {
+      String* p = iter.item();
+      IND(s); s  << "\"" << p->get_string() << "\",\n";
+      ctxt_len++;
+      iter.next();
+    }
+    IND(s); s << " 0 };\n\n";
+  }
+
   IND(s); produce_decl(s, def_in.proxy_fqname(), alias_prefix,
 		       I_FALSE, I_TRUE);
   s << "\n";
@@ -820,6 +859,13 @@ o2be_operation::produce_proxy_skel(std::fstream& s, o2be_interface& def_in,
     }
   }
   s << ");\n\n";
+
+  if (context()) {
+    IND(s); s << "_call_desc.set_context(ctxt,"
+      <<                                 ctxt_un  << ","
+      <<                                 ctxt_len << ");\n\n";
+  }
+
   if( flags() == AST_Operation::OP_oneway ) {
     IND(s); s << "OmniProxyCallWrapper::one_way(this, _call_desc);\n";
   } else {
@@ -924,7 +970,19 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
 	i.next();
       }
   }
+  {
+    if (context()) {
+      IND(s); s << "CORBA::Context_var ctxt;\n";
 
+      argMapping mapping;
+      mapping.is_const = mapping.is_reference = mapping.is_arrayslice = 0;
+      mapping.is_pointer = 1;
+      produceUnMarshalCode(s,this,
+			   (AST_Decl*)&def_in,
+			   "_0RL_s","ctxt",
+			   tContext,mapping);
+    }
+  }
   IND(s); s << "_0RL_s.RequestReceived();\n";
 
   IND(s);
@@ -2675,13 +2733,19 @@ o2be_operation::produce_mapping_with_indirection(std::fstream& s,
 	    s << " " << a->uqname();
 	  }
 	i.next();
-	if (!i.is_done()) {
+	if (!i.is_done() || context()) {
 	  s << ",\n";
 	  IND(s);
 	  for (unsigned int j=0; j < indent_pos; j++)
 	    s << " ";
 	}
       }
+  }
+
+  {
+    if (context()) {
+      s << "CORBA::Context_ptr ctxt";
+    }
   }
 
   s << " )\n";
@@ -2724,16 +2788,113 @@ o2be_operation::produce_mapping_with_indirection(std::fstream& s,
 	  }
 	}
 	i.next();
-	s << ((!i.is_done()) ? ", " :"");
+	s << ((!i.is_done()) ? ", " :(context()?", ":""));
       }
   }
-  s << " )";
+  if (context())
+    s << "ctxt)";
+  else
+    s << " )";
 
   s << ";\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 }
 
+void
+o2be_operation::check_and_produce_unnamed_argument_tc_decl(std::fstream&s,
+							   AST_Decl* d)
+{
+  // Check the argument <d>, for each unamed, bounded string, produce
+  // a typecode constant
+  // for instance:
+  //       string<4> op();
+  // produce:
+  //   CORBA::TypeCode_ptr _tc_string_4;
+
+  if (d->node_type() == AST_Decl::NT_string &&
+      o2be_string::narrow_from_decl(d)->max_length()) {
+
+    // XXX Check how to avoid name clash with either guards.
+    s << "\n#if !defined(__" 
+      << o2be_string::narrow_from_decl(d)->tcname()
+      << "__) && !defined(DISABLE_Unnamed_Bounded_String_TC)\n";
+    s << "#define __" 
+      << o2be_string::narrow_from_decl(d)->tcname()
+      << "__\n";
+    IND(s); s << o2be_global::root()->variable_qualifier()
+	      << " const CORBA::TypeCode_ptr " 
+	      << o2be_string::narrow_from_decl(d)->tcname() << ";\n";
+    s << "#endif\n\n";
+  }
+}
+
+void
+o2be_operation::produce_decls_at_global_scope_in_hdr(std::fstream& s)
+{
+  if (!return_is_void()) {
+    check_and_produce_unnamed_argument_tc_decl(s,return_type());
+  }
+
+  {
+    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+	check_and_produce_unnamed_argument_tc_decl(s,a->field_type());
+	i.next();
+      }
+  }
+
+}
+
+void
+o2be_operation::check_and_produce_unnamed_argument_tc_value(std::fstream& s,
+							    AST_Decl* d)
+{
+  // Check the argument <d>, for each unamed, bounded string, produce
+  // a typecode constant
+  // for instance:
+  //       string<4> op();
+  // produce:
+  //   CORBA::TypeCode_ptr _tc_string_4 = CORBA::TypeCode::PR_string_tc(4);
+
+  if (d->node_type() == AST_Decl::NT_string &&
+      o2be_string::narrow_from_decl(d)->max_length()) {
+
+    s << "\n#if !defined(__" 
+      << o2be_string::narrow_from_decl(d)->tcname()
+      << "_value__) && !defined(DISABLE_Unnamed_Bounded_String_TC)\n";
+    s << "#define __" 
+      << o2be_string::narrow_from_decl(d)->tcname()
+      << "_value__\n";
+    IND(s); s << "const CORBA::TypeCode_ptr " 
+	      << o2be_string::narrow_from_decl(d)->tcname()
+	      << " = " 
+	      << "CORBA::TypeCode::PR_string_tc("
+	      << o2be_string::narrow_from_decl(d)->max_length()
+	      << ");\n\n";
+    s << "#endif\n\n";
+  }
+}
+
+void
+o2be_operation::produce_dynskel(std::fstream& s)
+{
+  if (!return_is_void()) {
+    check_and_produce_unnamed_argument_tc_value(s,return_type());
+  }
+
+  {
+    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	o2be_argument* a = o2be_argument::narrow_from_decl(i.item());
+	check_and_produce_unnamed_argument_tc_value(s,a->field_type());
+	i.next();
+      }
+  }
+}
 
 idl_bool
 o2be_operation::has_variable_out_arg()
@@ -3527,6 +3688,13 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
       }
       break;
 
+    case tContext:
+      {
+	IND(s); s << argname << " = CORBA::Context::unmarshalContext("
+		  << netstream << ");\n";
+      }
+      break;
+
     default:
       throw o2be_internal_error(__FILE__,__LINE__,"Unexpected argument type");
       break;
@@ -3587,7 +3755,7 @@ o2be_operation::produceMarshalCode(std::fstream &s, AST_Decl *decl,
 		    << o2be_string::narrow_from_decl(decl)->max_length()
 		    << "+1) {\n";
 	  INC_INDENT_LEVEL();
-	  IND(s); s << "throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);\n";
+	  IND(s); s << "throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_MAYBE);\n";
 	  DEC_INDENT_LEVEL();
 	  IND(s); s << "}\n";
 	}
