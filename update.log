@@ -1,3 +1,11 @@
+Mon Sep 13 11:01:56 BST 2004 dgrisby
+====================================
+
+- Fix for giopServer shutdown issue. Thanks Serguei Kolos.
+
+src/lib/omniORB/orbcore/giopServer.cc
+
+
 Mon Sep 13 10:41:28 BST 2004 dgrisby
 ====================================
 

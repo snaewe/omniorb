@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.31  2004/09/13 10:03:13  dgrisby
+  Fix for giopServer shutdown issue. Thanks Serguei Kolos.
+
   Revision 1.22.2.30  2004/04/08 10:02:20  dgrisby
   In thread pool mode, close connections that will not be selectable.
 
@@ -500,8 +503,10 @@ giopServer::deactivate()
     Link* p = pd_rendezvousers.next;
     if (p != &pd_rendezvousers) waitforcompletion = 1;
 
-    for (; p != &pd_rendezvousers; p = p->next) {
-      ((giopRendezvouser*)p)->terminate();
+    if (!pd_nconnections) {
+      for (; p != &pd_rendezvousers; p = p->next) {
+        ((giopRendezvouser*)p)->terminate();
+      }
     }
   }
 
@@ -812,9 +817,8 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
   }
 
   if (pd_state == INFLUX) {
-    if (Link::is_empty(pd_rendezvousers) &&
-	pd_nconnections == 0             &&
-	Link::is_empty(pd_bidir_monitors)   ) {
+    if ((Link::is_empty(pd_rendezvousers) || pd_nconnections == 0) &&
+	Link::is_empty(pd_bidir_monitors)) {
       pd_cond.broadcast();
     }
   }
@@ -912,9 +916,8 @@ giopServer::removeConnectionAndWorker(giopWorker* w)
     }
 
     if (pd_state == INFLUX) {
-      if (Link::is_empty(pd_rendezvousers) &&
-	  pd_nconnections == 0             &&
-	  Link::is_empty(pd_bidir_monitors)   ) {
+      if ( ( Link::is_empty(pd_rendezvousers) || pd_nconnections == 0 ) &&
+	   Link::is_empty(pd_bidir_monitors ) ) {
 	pd_cond.broadcast();
       }
     }
@@ -1148,9 +1151,8 @@ giopServer::notifyMrDone(giopMonitor* m, CORBA::Boolean exit_on_error)
   m->remove();
   delete m;
   if (pd_state == INFLUX) {
-    if (Link::is_empty(pd_rendezvousers) &&
-	pd_nconnections == 0             &&
-	Link::is_empty(pd_bidir_monitors)   ) {
+    if ( ( Link::is_empty(pd_rendezvousers) || pd_nconnections == 0 ) &&
+	   Link::is_empty(pd_bidir_monitors ) ) {
       pd_cond.broadcast();
     }
   }
