@@ -1,14 +1,18 @@
-\documentclass[11pt]{article}
+\documentclass[11pt,twoside,onecolumn]{article}
+\usepackage[]{fontenc}
+\usepackage{palatino}
 \usepackage{a4}
 
-\addtolength{\oddsidemargin}{-0.5in}
-\addtolength{\textwidth}{1.0in}
+\addtolength{\oddsidemargin}{-0.4in}
+\addtolength{\evensidemargin}{-0.4in}
+\addtolength{\textwidth}{0.5in}
 \addtolength{\headheight}{0.2in}
 
 % So that the headers use the new dimensions, the package is
 % included after the dimensions are reset:
-\usepackage{fancyheadings}
-\pagestyle{fancyplain}
+\pagestyle{headings}
+%\usepackage{fancyheadings}
+%\pagestyle{fancyplain}
 
 \def\omniParTcl{{\tt omniParTcl}}
 \def\tcltk{{\tt Tcl/Tk}}
@@ -24,7 +28,7 @@
 \author{Kenneth R.\ Wood\\
         ORL\\
 	{\small (ODE version 4.0 revisions by Tristan Richardson)}}
-\date{\today} 
+\date{13 Mar, 1997} 
 \maketitle
 
 \begin{abstract}
@@ -95,13 +99,14 @@ of code:
 
 \begin{enumerate}
 
+\sloppy{
 \item The application code.  This is the \CXX\ source of your
 application, which will consist of any number of \CXX\ functions and
 may, of course, include Orbix code.  Your application code must define
 {\tt Tcl\_Appinit()} and {\tt main()}.  Your {\tt Tcl\_Appinit()} must
 call {\tt omniParTcl\_Init()} which takes the same form as {\tt
 Tcl\_Init()} and {\tt Tk\_Init()}.  Your {\tt main()} must call
-{\tt Tk\_Main()}.
+{\tt Tk\_Main()}.}
 
 By using {\tt Tcl\_CreateCommand} within your definition of {\tt
 Tcl\_Appinit}, you will nominate certain of your \CXX\ functions as
@@ -220,11 +225,11 @@ other threads.
 
 \begin{itemize}
 
-\item Each of the two {\tt TclMe} functions puts the supplied
+\sloppy{ \item Each of the two {\tt TclMe} functions puts the supplied
 script onto the same FIFO queue of scripts awaiting evaluation, and
 writes a byte to the pipe.  {\tt omniTclMeAndRun()} simply returns at
 this point, while {\tt omniTclMeAndWait()} creates a condition variable,
-puts it on the queue with the script, and then waits on it.
+puts it on the queue with the script, and then waits on it.}
 
 \item {\tt cxxTclScriptHandler()} is invoked within the primary
 \tcltk\ thread when there is something to read from the pipe.  It
@@ -307,6 +312,7 @@ and which have much more complex user interfaces can be found by asking the
 author of this document.
 
 \newpage
+{\small
 \begin{verbatim}
 //---------------------------------------------------------------------------
 // pttwish.cc - Simple test of omniParTcl. We just repeatedly update a couple
@@ -353,7 +359,9 @@ void threadOneFunc(void *arg)
   }
 }
 \end{verbatim}
+}
 \newpage
+{\small
 \begin{verbatim}
 //---------------------------------------------------------------------------
 
@@ -401,7 +409,9 @@ int startThreadTwo(ClientData clientData, Tcl_Interp *interp,
   return TCL_OK;
 }
 \end{verbatim}
+}
 \newpage
+{\small
 \begin{verbatim}
 //---------------------------------------------------------------------------
 
@@ -496,9 +506,10 @@ int main(int argc, char *argv[])
   return 0;	                     // Make the compiler happy.
 }
 \end{verbatim}
-
+}
 
 \newpage
+{\small
 \begin{verbatim}
 #
 # Simple test of omniParTcl.  We just repeatedly update a couple of 
@@ -533,9 +544,11 @@ proc changeFormat {} {
                      pack .b; update}
 }
 \end{verbatim}
+}
 
 
 \newpage
+{\small
 \begin{verbatim}
 #
 # dir.mk for simple omniParTcl test.
@@ -563,7 +576,7 @@ export: $(wish) $(script)
 clean::
         $(RM) $(wish) $(script)
 \end{verbatim}
-
+}
 
 \end{document}
 

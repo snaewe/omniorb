@@ -1,7 +1,8 @@
-\documentclass[11pt]{article}
+\documentclass[11pt,twoside,onecolumn]{article}
+\usepackage[]{fontenc}
+\usepackage{palatino}
 \usepackage{a4}
-\usepackage{fancyheadings}
-\pagestyle{fancyplain}
+\pagestyle{headings}
 
 \title{The OMNI Thread Abstraction}
 
@@ -10,7 +11,7 @@ Olivetti Research Laboratory \\
 Cambridge \\
 }
 
-\date{22 October 1996}
+\date{{\it Revised} 13 March 1997}
 
 \begin{document}
 
@@ -45,6 +46,8 @@ The abstraction layer is currently implemented for the following architectures
 \item Solaris 2.x using solaris threads (but pthreads version is now standard)
 \item Alpha OSF1 using pthreads draft 4
 \item Windows NT using NT threads
+\item Linux 2.x using Linuxthread 0.5 (which is based on pthreads draft 10)
+\item Linux 2.x using MIT pthreads (which is based on draft 8)
 \item ATMos using pthreads draft 6
 
 \end{itemize}

@@ -1,14 +1,20 @@
-\documentclass[11pt]{article}
+\documentclass[11pt,twoside,onecolumn]{article}
+\usepackage[]{fontenc}
+\usepackage{palatino}
 \usepackage{a4}
-\usepackage{fancyheadings}
-\pagestyle{fancyplain}
+\addtolength{\oddsidemargin}{-0.4in}
+\addtolength{\evensidemargin}{-0.4in}
+\addtolength{\textwidth}{0.5in}
+\addtolength{\headheight}{0.2in}
+
+\pagestyle{headings}
 \parskip 1ex
 \parindent 0pt
-\title{The OMNI Development Environment Version 4.0}
+\title{The OMNI Development Environment}
 \author{Tristan Richardson\\
         ORL\\
         Cambridge}
-\date{5 November 1996}
+\date{{\it Revised} 13 March 1997}
 
 \begin{document}
 
@@ -16,11 +22,16 @@
 
 \begin{center}
 {\it Note: this document replaces~\cite{lo95} and~\cite{ward95}.}
+
 \end{center}
 
 \vspace{0.2in}
 
-{\Large Summary of Differences from the ODE Versions 2 and 3}
+\section{Introduction}
+
+The OMNI Development Environment (ODE)\footnote{This version replaces
+the older imake based development environment that was used in the OMNI
+tree version 2.x and 3.0. The main differences are:
 
 \begin{itemize}
 
@@ -37,11 +48,7 @@ source files in an arbitrary number of {\em source trees}.
 uses Cygnus's GNU-WIN32 environment for {\em make}, but all compilation and
 linking is still done using MS Visual C++ tools.
 
-\end{itemize}
-
-\section{Introduction}
-
-The OMNI Development Environment (ODE) provides a mechanism for building
+\end{itemize}} provides a mechanism for building
 software across all our diverse platforms.
 
 The idea is that you create a {\em build tree} for a particular platform where
@@ -173,14 +180,15 @@ above.
 \subsection{Setting up Your Environment}
 \label{settingenv}
 
-Although not strictly necessary it is advisable to set the environment variable
-\verb|OMNI_TREE| to point to the base OMNI tree you wish to use (for example
-\verb|/project/omni/version4.0|).  Then add the directories
-\verb|$OMNI_TREE/bin|{\it platform} and \verb|$OMNI_TREE/bin/scripts| to your
-path in that order (so that platform-specific binaries will override scripts).
-You may also wish to add \verb|$OMNI_TREE/man| to your {\tt MANPATH}.  If the
-version of make which is on your path is not GNU make then you need to set the
-environment variable {\tt GNUMAKE} to specify the command to run for GNU make.
+\sloppy{Although not strictly necessary it is advisable to set the
+environment variable \verb|OMNI_TREE| to point to the base OMNI tree you
+wish to use (for example \verb|/project/omni/release|).  Then add the
+directories \verb|$OMNI_TREE/bin/|{\it platform} and
+\verb|$OMNI_TREE/bin/scripts| to your path in that order (so that
+platform-specific binaries will override scripts).  You may also wish to
+add \verb|$OMNI_TREE/man| to your {\tt MANPATH}.  If the version of make
+which is on your path is not GNU make then you need to set the environment
+variable {\tt GNUMAKE} to specify the command to run for GNU make.}
 
 \subsection{Creating a build tree}
 
@@ -194,7 +202,7 @@ can name the destination directory whatever you like.  For example:
 $ obuildtree
 
 Enter the base OMNI tree for this build tree
-> [/project/omni/version4.0] 
+> [/project/omni/release] 
 
 Enter the platform name from:
 alpha_osf1_3.2
@@ -210,7 +218,7 @@ Enter the destination directory
 Does this build tree have an export tree ?
 > [n] 
 
-The final import tree will be /project/omni/version4.0 (the base OMNI tree)
+The final import tree will be /project/omni/release (the base OMNI tree)
 Enter any other import trees in search order
 > 
 
@@ -224,7 +232,7 @@ Creating OMNI build tree "solaris_hello" for platform "sun4_sosV_5.5"
 No export tree
 
 Import trees are:
-/project/omni/version4.0
+/project/omni/release
 
 No source trees
 
@@ -292,14 +300,14 @@ $ omake
 
 make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET=
 
-/project/omni/version4.0/mk/afterdir.mk:64: hello.d: No such file or directory
-/bin/sh -ec "gcc -M  -I.  -I/project/omni/version4.0/include -D__sunos__ -D__sp
+/project/omni/release/mk/afterdir.mk:64: hello.d: No such file or directory
+/bin/sh -ec "gcc -M  -I.  -I/project/omni/release/include -D__sunos__ -D__sp
 arc__ -D__OSVERSION__=5 -DSVR4 hello.c | sed 's/hello\\.o/& hello.d/g' > hello.
 d"
-gcc -c -O -fpcc-struct-return  -I.  -I/project/omni/version4.0/include -D__suno
+gcc -c -O -fpcc-struct-return  -I.  -I/project/omni/release/include -D__suno
 s__ -D__sparc__ -D__OSVERSION__=5 -DSVR4 -o hello.o hello.c
 + rm -f hello 
-+ gcc -o hello -L/project/omni/version4.0/lib/sun4_sosV_5.5 hello.o 
++ gcc -o hello -L/project/omni/release/lib/sun4_sosV_5.5 hello.o 
 \end{verbatim}}
 
 The result should be that three files are generated.  The file called
@@ -624,7 +632,7 @@ source tree is put in a subdirectory of the import/export tree called {\tt src}
 and the build trees are put in subdirectories named {\tt build/}{\it platform}.
 
 Let's assume for your project that you have some idl files and header files as
-well as some source files.  Create your top-level directory, say {\tt
+well as some source files.  Create your top-level directory, say {\small \tt
 /project/wobble/version1.0}.  Then make directories {\tt idl}, {\tt include},
 {\tt src} and {\tt build}.  Copy your idl files into {\tt idl} and your header
 files into {\tt include}.
@@ -632,7 +640,7 @@ files into {\tt include}.
 For your source files you must decide on an appropriate directory structure
 underneath {\tt src} and put the source files there.  You can have any
 structure there, but if you want a guide, take a look at the {\tt
-/project/omni/version4.0/src} structure.  This has (in order of processing by
+/project/omni/release/src} structure.  This has (in order of processing by
 {\tt omake}):
 \begin{itemize}
 \item a directory with tools used in the building process (which are probably
@@ -705,9 +713,11 @@ each of the IDL files (in this case {\tt wib.idl} and {\tt wob.idl}), and the
 stubs generated are compiled and linked in to your executable binary.
 
 For each platform there should be a default implementation of CORBA to which
-the {\tt CorbaImplementation} variable is set (at present this will be either
-{\tt ORBIX} or {\tt OMNIORB}).  To override this setting you simply need to
-change {\tt CorbaImplementation} before the first rule in your {\tt dir.mk}.
+the {\tt CorbaImplementation} variable is set. At present this is 
+{\tt OMNIORB2} on Solaris, Digital UNIX, Linux, ATMos and
+NT. Alternatively, {\tt ORBIX} is available on Solaris, Digital UNIX and NT.
+You can override the default simply by setting
+{\tt CorbaImplementation} before the first rule in your {\tt dir.mk}.
 This can either be done inside {\tt dir.mk} itself (for a one-off hack), or in
 the {\tt beforedir.mk} of an import tree.  If you change {\tt
 CorbaImplementation} in this way you must be careful to make sure that all
@@ -722,10 +732,10 @@ It's best to set up the GNU-WIN32 tools on a machine's local disk as this makes
 a noticeable difference to the speed at which they operate.  The tools are
 usually put into \verb|C:\gw14| and take up about 17 Mbytes.  If you need to
 install them on a new machine you can use a gzip'd tar file from
-\verb|/project/omni/version4.0/misc/gw14.tar.gz|:
+\verb|/project/omni/release/misc/gw14.tar.gz|:
 
 {\small \begin{verbatim}
-C:\>\\hazel\win32app\x86\bin\gunzip -c \\shallot\omni\version4.0\misc\gw14.tar.
+C:\>\\hazel\win32app\x86\bin\gunzip -c \\shallot\omni\release\misc\gw14.tar.
 gz | \\hazel\win32app\x86\bin\tar xf -
 \end{verbatim}}
 
@@ -786,10 +796,10 @@ etc just as on any unix platform.
 
 \subsection{Other stuff}
 
-At the time of writing, the use of CORBA on NT has not really been tested
-fully.  Beano's scoping stuff is still needed, I believe (see section 4.2 of
-\cite{ward95}).  None of his Windows GUI stuff has yet been implemented in the
-new ODE (see section 5 of \cite{ward95}).
+At the time of writing, none of Beano's Windows GUI stuff has yet been
+implemented in the new ODE (see section 5 of \cite{ward95}). If you are
+using Orbix on NT, his scoping stuff is still needed, I believe (see
+section 4.2 of \cite{ward95}).
 
 \section{Building on ATMos}
 
@@ -828,7 +838,7 @@ contains the program can be done in any directory -- not necessarily underneath
 an OMNI build tree or import/export tree.  Generating the image should be
 a simple matter of creating an {\tt aconfig} SYSTEM file which includes the
 package file.  For example, to create an ATMos image which contains the
-``diner'' program from the {\tt /project/omni/version4.0} tree, simply write a
+``diner'' program from the {\tt /project/omni/release} tree, simply write a
 SYSTEM file like this:
 
 {\small \begin{verbatim}
@@ -836,8 +846,8 @@ Hardware atb
 Set Pthreads
 Package core
 
-ReleasePath /project/omni/version4.0/bin/arm_atmos_3.0/atb
-Path /project/omni/version4.0/bin/arm_atmos_3.0/atb
+ReleasePath /project/omni/release/bin/arm_atmos_3.0/atb
+Path /project/omni/release/bin/arm_atmos_3.0/atb
 
 Package diner
 \end{verbatim}}
@@ -869,7 +879,7 @@ $ cd build
 $ obuildtree
 
 Enter the base OMNI tree for this build tree
-> [/project/omni/version4.0] 
+> [/project/omni/release] 
 
 Enter the platform name from:
 alpha_osf1_3.2
@@ -889,7 +899,7 @@ Enter the export tree
 > [/home/tjr/hello] 
 
 The first import tree will be /home/tjr/hello (the export tree)
-The final import tree will be /project/omni/version4.0 (the base OMNI tree)
+The final import tree will be /project/omni/release (the base OMNI tree)
 Enter any other import trees in search order
 > 
 
@@ -904,7 +914,7 @@ Export tree is /home/tjr/hello
 
 Import trees are:
 /home/tjr/hello
-/project/omni/version4.0
+/project/omni/release
 
 No source trees
 
@@ -957,7 +967,7 @@ $ omake all
 
 make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET='all' 'all'
 
-/project/omni/version4.0/mk/afterdir.mk:105: hello.d: No such file or directory
+/project/omni/release/mk/afterdir.mk:105: hello.d: No such file or directory
 /bin/sh -ec "arm-gcc -nostdinc -fno-common -fno-builtin -M  -I.  -I/home/tjr/he
     .
     .
