@@ -260,6 +260,8 @@ static int highest_priority;
 static size_t stack_size = 32768;
 #elif defined(__rtems__)
 static size_t stack_size = ThreadStackSize;
+#elif defined(__aix__)
+static size_t stack_size = 262144;
 #else
 static size_t stack_size = 0;
 #endif

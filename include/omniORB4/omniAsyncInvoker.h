@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2002/11/06 11:58:28  dgrisby
+  Partial AIX patches.
+
   Revision 1.1.2.1  2002/01/09 11:35:21  dpg1
   Remove separate omniAsyncInvoker library to save library overhead.
 
@@ -149,6 +152,9 @@ class omniTask : public omniTaskLink {
 
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
+
+class omniAsyncWorker;
+
 class omniAsyncInvoker {
  public:
   omniAsyncInvoker(unsigned int max=10000);

@@ -910,8 +910,40 @@ IMPORT_CPPFLAGS += -D__aix__
 
 CMAKEDEPEND     += -D_AIX
 CXXMAKEDEPEND   += -D_AIX
+CDEBUGFLAGS      =
+CXXDEBUGFLAGS    =
 
-error Not supported yet. Too nasty.
+CXXOPTIONS	= -qstaticinline -qmaxmem=8192 -qlonglong -qlongdouble
+
+COPTIONS	= -qmaxmem=8192 -qlonglong -qlongdouble
+
+OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=10
+OMNITHREAD_CPPFLAGS = -D_REENTRANT
+OMNITHREAD_LIB += -lpthread
+
+SHAREDLIB_SUFFIX = a
+PythonSHAREDLIB_SUFFIX = a
+
+SharedLibraryFullNameTemplate = lib$$1$$2.$$3.$$4.$(SHAREDLIB_SUFFIX)
+SharedLibrarySoNameTemplate = lib$$1$$2.$$3.$(SHAREDLIB_SUFFIX)
+SharedLibraryLibNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX)
+
+MAKECPPSHAREDLIB = /usr/vacpp/bin/makeC++SharedLib_r
+
+define MakeCXXSharedLibrary
+ $(ParseNameSpec); \
+ soname=$(SharedLibrarySoNameTemplate); \
+ set -x; \
+ $(RM) $@; \
+ $(MAKECPPSHAREDLIB) \
+    -o $$soname $(IMPORT_LIBRARY_FLAGS) \
+    $(filter-out $(LibSuffixPattern),$^) $$extralibs \
+         -p 40; \
+ ar cq $@ $$soname; \
+ $(RM) $$soname;
+endef
+
+
 endif
 
 ###################

@@ -76,7 +76,7 @@ ifeq ($(platform),autoconf)
 namespec := _omniidlmodule _ $(IDLMODULE_MAJOR) $(IDLMODULE_MINOR)
 
 ifdef PythonSHAREDLIB_SUFFIX
-SHAREDLIB_SUFFIX = PythonSHAREDLIB_SUFFIX
+SHAREDLIB_SUFFIX = $(PythonSHAREDLIB_SUFFIX)
 endif
 
 SharedLibraryFullNameTemplate = $$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
@@ -256,7 +256,7 @@ ifdef AIX
 
 DIR_CPPFLAGS += -I. -I/usr/local/include -DNO_STRCASECMP
 
-lib = _omniidlmodule.so
+lib = _omniidlmodule.a
 libinit = init_omniidl
 py_exp = $(PYPREFIX)/lib/python$(PYVERSION)/config/python.exp
 

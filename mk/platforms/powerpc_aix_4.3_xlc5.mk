@@ -54,14 +54,15 @@ CXXMAKEDEPEND   += -D__cplusplus -D_AIX
 CXX             = xlC_r
 CXXDEBUGFLAGS   =
 CXXLINK		= xlC_r
-CXXOPTIONS      = -qstaticinline -qmaxmem=8192
+CXXOPTIONS      = -qstaticinline -qmaxmem=8192 -qlonglong -qlongdouble
+# -qlanglvl=compat366:oldfriend:typedefclass
 
 # Use C Set++ to compile your C source.
 #
 CC		= xlC_r
 CDEBUGFLAGS	=
 CLINK		= xlC_r
-COPTIONS	=
+COPTIONS	= -qlonglong -qlongdouble
 
 # Get the compiler version
 XLCVERSION := $(shell echo "__xlC__" > /tmp/testAIXCompilerVersion.C )
@@ -94,10 +95,10 @@ endif
 #############################################################################
 
 
-# Name all static libraries with -ar.a suffix.
-LibPattern = lib%-ar.a
-LibSuffixPattern = %-ar.a
-LibSearchPattern = -l%-ar
+# Name all static libraries with -.a suffix.
+LibPattern = lib%-.a
+LibSuffixPattern = %.a
+LibSearchPattern = -l%
 
 # Name all shared libraries with .a suffix
 LibSharedPattern = lib%.a
@@ -108,13 +109,13 @@ LibSharedSearchPattern = -l%
 #
 
 #
-# Notice that the version number 3.0 is hardwired in OMNIORB_LIB.
+# Notice that the version number 4.0 is hardwired in OMNIORB_LIB.
 #
-OMNIORB_LIB = $(patsubst %,$(LibSharedSearchPattern),omniORB30) \
-               $(patsubst %,$(LibSharedSearchPattern),omniDynamic30) \
+OMNIORB_LIB = $(patsubst %,$(LibSharedSearchPattern),omniORB40) \
+               $(patsubst %,$(LibSharedSearchPattern),omniDynamic40) \
                $(OMNITHREAD_LIB) $(SOCKET_LIB)
-lib_depend := $(patsubst %,$(LibSharedPattern),omniORB30) \
-              $(patsubst %,$(LibSharedPattern),omniDynamic30)
+lib_depend := $(patsubst %,$(LibSharedPattern),omniORB40) \
+              $(patsubst %,$(LibSharedPattern),omniDynamic40)
 OMNIORB_LIB_DEPEND1 := $(GENERATE_LIB_DEPEND)
 OMNIORB_LIB_DEPEND = $(OMNIORB_LIB_DEPEND1) $(OMNITHREAD_LIB_DEPEND)
 
@@ -129,7 +130,8 @@ ThreadSystem = Posix
 
 OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=10
 OMNITHREAD_CPPFLAGS = -D_REENTRANT -D_THREAD_SAFE
-OMNITHREAD_LIB = -lomnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION) $(OMNITHREAD_PLATFORM_LIB)
+#OMNITHREAD_LIB = -lomnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION) $(OMNITHREAD_PLATFORM_LIB)
+OMNITHREAD_LIB = -lomnithread$(OMNITHREAD_MAJOR_VERSION) $(OMNITHREAD_PLATFORM_LIB)
 OMNITHREAD_STATIC_LIB = -lomnithread-ar -lpthreads-ar
 OMNITHREAD_PLATFORM_LIB = -lpthreads
 
