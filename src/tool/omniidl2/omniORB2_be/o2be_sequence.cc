@@ -10,6 +10,10 @@
 
 /*
   $Log$
+  Revision 1.2  1997/01/13 15:25:34  sll
+  New member function produce_typedef_hdr(). Called when a typedef
+  declaration is encountered.
+
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -533,6 +537,20 @@ void
 o2be_sequence::produce_skel(fstream &s)
 {
   return;
+}
+
+void
+o2be_sequence::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
+{
+#ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
+  IND(s); s << "typedef " << seq_template_name() << " " << tdef->uqname() << ";\n";
+  IND(s); s << "typedef _CORBA_ConstrType_Variable_Var<"
+	    << tdef->uqname() << "> " 
+	    << tdef->uqname() << "_var;\n\n";
+#else
+  IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
+  IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << "_var;\n\n";
+#endif
 }
 
 char *
