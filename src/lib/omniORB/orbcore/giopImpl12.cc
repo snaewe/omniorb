@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2001/09/03 16:55:41  sll
+  Modified to match the new signature of the giopStream member functions that
+  previously accept explicit deadline parameters. The deadline is now
+  implicit in the giopStream.
+
   Revision 1.1.4.9  2001/08/17 17:12:37  sll
   Modularise ORB configuration parameters.
 
@@ -353,7 +358,7 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
     CORBA::ULong fetchsz = b->size - (b->last - b->start);
     while (fetchsz) {
       // fetch the rest of the message;
-      giopStream_Buffer* p = g->inputChunk(fetchsz,0,0);// XXX no deadline set.
+      giopStream_Buffer* p = g->inputChunk(fetchsz);
       pp = &((*pp)->next);
       *pp = p;
       fetchsz -= (p->last - p->start);
@@ -387,7 +392,7 @@ giopImpl12::inputQueueMessage(giopStream* g,giopStream_Buffer* b) {
     giopStream_Buffer::deleteBuffer(b);
     while (fetchsz) {
       // fetch the rest of the message;
-      b = g->inputChunk(fetchsz,0,0); // XXX no deadline set.
+      b = g->inputChunk(fetchsz);
       fetchsz -= (b->last - b->start);
       giopStream_Buffer::deleteBuffer(b);
     }
@@ -403,7 +408,7 @@ giopImpl12::inputNewServerMessage(giopStream* g) {
 
  again:
 
-  g->pd_currentInputBuffer = g->inputMessage(0,0); // XXX no deadline set
+  g->pd_currentInputBuffer = g->inputMessage();
 
   unsigned char* hdr = (unsigned char*)g->pd_currentInputBuffer + 
                                        g->pd_currentInputBuffer->start;
@@ -449,7 +454,7 @@ giopImpl12::inputNewFragment(giopStream* g) {
 
  again:
   if (!g->pd_input) {
-    giopStream_Buffer* p = g->inputMessage(0,0); // no deadline set yet
+    giopStream_Buffer* p = g->inputMessage();
     inputQueueMessage(g,p);
     goto again;
   }
@@ -505,8 +510,7 @@ giopImpl12::inputReplyBegin(giopStream* g,
 
       while (!(g->inputFullyBuffered() || g->pd_rdlocked)) {
 	if (!g->rdLockNonBlocking()) {
-	  g->sleepOnRdLock(0,0);
-	  // XXX no deadline set yet.
+	  g->sleepOnRdLock();
 	}
       }
     }
@@ -519,7 +523,7 @@ giopImpl12::inputReplyBegin(giopStream* g,
       while (!(g->pd_strand->state() == giopStrand::DYING ||
 	       g->inputFullyBuffered() ) ) {
 	OMNIORB_ASSERT(g->pd_rdlocked == 0);
-	g->sleepOnRdLockAlways(0,0); // XXX no deadline set yet.
+	g->sleepOnRdLockAlways();
       }
       if (g->pd_strand->state() == giopStrand::DYING) {
 	CORBA::ULong minor;
@@ -537,7 +541,7 @@ giopImpl12::inputReplyBegin(giopStream* g,
   if (!g->pd_currentInputBuffer) {
   again:
     if (!g->pd_input) {
-      giopStream_Buffer* p = g->inputMessage(0,0); // XXX no deadline set yet.
+      giopStream_Buffer* p = g->inputMessage();
       inputQueueMessage(g,p);
       goto again;
     }
@@ -644,9 +648,7 @@ giopImpl12::inputSkipWholeMessage(giopStream* g) {
     if (g->inputFragmentToCome()) {
 
       if (!g->pd_input) {
-	g->pd_currentInputBuffer = g->inputChunk(g->inputFragmentToCome(),
-						 0,0);
-	// XXX no deadline set.
+	g->pd_currentInputBuffer = g->inputChunk(g->inputFragmentToCome());
       }
       else {
 	g->pd_currentInputBuffer = g->pd_input;
@@ -982,9 +984,7 @@ giopImpl12::getInputData(giopStream* g,omni::alignment_t align,size_t sz) {
   g->releaseInputBuffer(g->pd_currentInputBuffer);
   g->pd_currentInputBuffer = 0;
   if (!g->pd_input) {
-    g->pd_currentInputBuffer = g->inputChunk(g->inputFragmentToCome(),
-					     0,0);
-    // XXX no deadline set.
+    g->pd_currentInputBuffer = g->inputChunk(g->inputFragmentToCome());
   }
   else {
     g->pd_currentInputBuffer = g->pd_input;
@@ -1098,17 +1098,14 @@ giopImpl12::copyInputData(giopStream* g,void* b, size_t sz,
 	  CORBA::ULong transz = g->inputFragmentToCome();
 	  if (transz > sz) transz = sz;
 	  transz = (transz >> 3) << 3;
-	  g->inputCopyChunk(b,transz,0,0);
-	  // XXX no deadline set
+	  g->inputCopyChunk(b,transz);
 	  sz -= transz;
 	  b = (void*)((omni::ptr_arith_t)b + transz);
 	  g->inputFragmentToCome(g->inputFragmentToCome() - transz);
 	  continue;
 	}
 	else {
-	  g->pd_currentInputBuffer = g->inputChunk(g->inputFragmentToCome(),
-						   0,0);
-	  // XXX no deadline set.
+	  g->pd_currentInputBuffer = g->inputChunk(g->inputFragmentToCome());
 	}
       }
 
@@ -1160,7 +1157,7 @@ giopImpl12::outputNewMessage(giopStream* g) {
 
   if (!g->pd_wrlocked) {
     omni_tracedmutex_lock sync(*omniTransportLock);
-    g->wrLock(0,0); // XXX no deadline set yet
+    g->wrLock();
   }
 
   if (!g->pd_currentOutputBuffer) {
@@ -1228,8 +1225,7 @@ giopImpl12::outputMessageEnd(giopStream* g) {
 					(omni::ptr_arith_t) 
                                         g->pd_currentOutputBuffer;
 
-      g->sendChunk(g->pd_currentOutputBuffer,0,0);
-      // XXX deadline not set
+      g->sendChunk(g->pd_currentOutputBuffer);
     
     }
     // Notice that we do not release the buffer. Next time this giopStream
@@ -1280,8 +1276,7 @@ giopImpl12::sendMsgErrorMessage(giopStream* g) {
   hdr[7] = (char)GIOP::MessageError;
   hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
 
-  (void)  g->pd_strand->connection->Send(hdr,12, 0, 0);
-  // XXX no deadline set.
+  (void)  g->pd_strand->connection->Send(hdr,12);
 
   g->pd_strand->state(giopStrand::DYING);
 
@@ -1728,8 +1723,7 @@ giopImpl12::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
   }
 
   g->pd_currentOutputBuffer->last = g->pd_currentOutputBuffer->start + fsz;
-  g->sendChunk(g->pd_currentOutputBuffer,0,0);
-  // XXX deadline not set
+  g->sendChunk(g->pd_currentOutputBuffer);
 
   if (outbuf_begin & 0x7) {
     // start has previously been changed to non 8-bytes aligned
@@ -1845,8 +1839,7 @@ giopImpl12::copyOutputData(giopStream* g,void* b, size_t sz,
 
     outputFlush(g,1);
 
-    g->sendCopyChunk(b,sz - leftover,0,0);
-    // XXX no deadline set.
+    g->sendCopyChunk(b,sz - leftover);
 
     if (leftover) {
       if (outputHasReachedLimit(g)) {
