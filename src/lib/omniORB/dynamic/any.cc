@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.19.2.10  2001/08/22 13:29:45  dpg1
+ * Re-entrant Any marshalling.
+ *
  * Revision 1.19.2.9  2001/08/17 17:08:05  sll
  * Modularise ORB configuration parameters.
  *
@@ -170,7 +173,6 @@ OMNI_USING_NAMESPACE(omni)
 #define pdAnyP() ((AnyP*) (NP_pd()))
 #define pdAnyP2(a) ((AnyP*) ((a)->NP_pd()))
 
-
 // CONSTRUCTORS / DESTRUCTOR
 CORBA::Any::Any()
 {
@@ -213,13 +215,13 @@ CORBA::Any::operator>>= (cdrStream& s) const
 {
   if( orbParameters::tcAliasExpand ) {
     CORBA::TypeCode_var tc =
-      TypeCode_base::aliasExpand(ToTcBase(pdAnyP()->getTC_parser()->getTC()));
+      TypeCode_base::aliasExpand(ToTcBase(pdAnyP()->getTC()));
     CORBA::TypeCode::marshalTypeCode(tc, s);
   }
   else
-    CORBA::TypeCode::marshalTypeCode(pdAnyP()->getTC_parser()->getTC(), s);
+    CORBA::TypeCode::marshalTypeCode(pdAnyP()->getTC(), s);
 
-  pdAnyP()->getTC_parser()->copyTo(s);
+  pdAnyP()->copyTo(s);
 }
 
 void
@@ -228,20 +230,20 @@ CORBA::Any::operator<<= (cdrStream& s)
   CORBA::TypeCode_member newtc;
   newtc <<= s;
   pdAnyP()->setTC_and_reset(newtc);
-  pdAnyP()->getTC_parser()->copyFrom(s);
+  pdAnyP()->copyFrom(s);
 }
 
-// omniORB2 data-only marshalling functions
+// omniORB data-only marshalling functions
 void
 CORBA::Any::NP_marshalDataOnly(cdrStream& s) const
 {
-  pdAnyP()->getTC_parser()->copyTo(s);
+  pdAnyP()->copyTo(s);
 }
 
 void
 CORBA::Any::NP_unmarshalDataOnly(cdrStream& s)
 {
-  pdAnyP()->getTC_parser()->copyFrom(s);
+  pdAnyP()->copyFrom(s);
 }
 
 // omniORB internal data packing functions, for use only by stub code
@@ -376,12 +378,12 @@ CORBA::Any::operator<<=(LongDouble d)
 
 #endif
 
-
 void
 CORBA::Any::operator<<=(const Any& a)
 {
   tcDescriptor tcd;
   // *** Should we really subvert the 'const' stuff here?
+  // *** Should be safe - marshalling Any is now re-entrant
   tcd.p_any = (CORBA::Any*)&a;
   pdAnyP()->setData(CORBA::_tc_any, tcd);
 }
@@ -527,7 +529,6 @@ CORBA::Any::operator<<=(from_fixed f)
   CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_fixed_tc(f.digits,f.scale);
   pdAnyP()->setData(newtc, tcd);
 }
-
 
 // EXTRACTION OPERATORS
 
@@ -693,10 +694,10 @@ CORBA::Any::operator>>=(CORBA::TypeCode_ptr& tc) const
   else {
     CORBA::TypeCode_var t = type();
     if (t->equivalent(CORBA::_tc_TypeCode)) {
-    tc = sp; return 1;
+      tc = sp; return 1;
     }
     else {
-    tc = CORBA::TypeCode::_nil(); return 0;
+      tc = CORBA::TypeCode::_nil(); return 0;
     }
   }
 }
@@ -747,7 +748,7 @@ CORBA::Any::operator>>=(char*& s) const
     tcDescriptor tcd;
     tcd.p_string.ptr = &p;
     tcd.p_string.release = 0;
-
+    
     if (pdAnyP()->getData(CORBA::_tc_string, tcd))
     {
       s = p;
@@ -975,19 +976,19 @@ CORBA::Any::replace(TypeCode_ptr TCp, void* value, Boolean release)
 CORBA::TypeCode_ptr
 CORBA::Any::type() const
 {
-  return CORBA::TypeCode::_duplicate(pdAnyP()->getTC_parser()->getTC());
+  return CORBA::TypeCode::_duplicate(pdAnyP()->getTC());
 }
 
 void
 CORBA::Any::type(CORBA::TypeCode_ptr tc)
 {
-  pdAnyP()->getTC_parser()->replaceTC(tc);
+  pdAnyP()->replaceTC(tc);
 }
 
 const void*
 CORBA::Any::value() const
 {
-  if (pdAnyP()->getTC_parser()->getTC() == CORBA::_tc_null)
+  if (pdAnyP()->getTC() == CORBA::_tc_null)
     return 0;
   else
     return pdAnyP()->getBuffer();

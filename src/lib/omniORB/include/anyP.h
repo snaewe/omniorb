@@ -36,83 +36,89 @@ OMNI_NAMESPACE_BEGIN(omni)
 class AnyP {
 public:
 
-  // CREATION/DESTRUCTION
+  // -=- CREATION/DESTRUCTION
 
-  AnyP(CORBA::TypeCode_ptr tc);
-  // Constructor.  Creates a cdrMemoryStream and duplicates & saves
-  // the typecode passed in.
+  AnyP(const CORBA::TypeCode_ptr tc);
+  // Constructor.  Duplicates and saves <tc>
 
-  AnyP(CORBA::TypeCode_ptr tc, void * value, CORBA::Boolean release);
-  // Constructor.  Creates a read-only cdrMemoryStream & duplicates &
-  // saves the typecode.  The stream uses the given value to read from.
+  AnyP(const CORBA::TypeCode_ptr tc, void * value, CORBA::Boolean release);
+  // Constructor.  Duplicates and saves <tc>.  Makes internal
+  // mbuf read-only, linked to the supplied data <value>.
+  // <value> is "owned" by anyP if <release> is set.
   // NEVER CALL THIS FUNCTION WITH A NULL value POINTER!
 
   AnyP(const AnyP *existing);
-  // Constructor.  Copies the typecode from the supplied AnyP and copies
-  // the MBufferedStream data into the new internal stream.
+  // Constructor.  Copies typecode from existing anyP and
+  // fills internal buffer with source anyP's contents.
 
   ~AnyP();
 
-  // METHODS
+  // -=- RECREATION
 
-  inline CORBA::Boolean getData(CORBA::TypeCode_ptr tc, tcDescriptor &data) {
-    if (!tc->equivalent(pd_parser->getTC()))
+  void setTC_and_reset(const CORBA::TypeCode_ptr tc);
+  // Change the TypeCode and flush the buffer
+
+  // -=- tcDescriptor MANIPULATION
+
+  inline CORBA::Boolean getData(const CORBA::TypeCode_ptr tc, tcDescriptor &data) {
+    if (!tc->equivalent(pd_tc))
       return 0;
-    pd_parser->copyTo(data);
+    tcParser::copyMemStreamToTcDescriptor_rdonly(pd_tc, pd_mbuf, data);
     return 1;
   }
-  // Routine to check the TypeCode and get the data from the mbuf.
+  // Check the TypeCode and fetch the data into a tcDescriptor
 
   inline CORBA::Boolean getObjRef(tcDescriptor& data) {
-    if( pd_parser->getTC()->kind() != CORBA::tk_objref )  return 0;
-    pd_parser->copyTo(data);
+    if( pd_tc->kind() != CORBA::tk_objref )  return 0;
+    tcParser::copyMemStreamToTcDescriptor_rdonly(pd_tc, pd_mbuf, data);
     return 1;
   }
   // Routine to extract an object reference from the Any. Checks that we
   // contain an object ref, but not that the interface repo id is correct.
   // This is done further down the line ...
 
-  inline void setData(CORBA::TypeCode_ptr tc, tcDescriptor &data) {
+  inline void setData(const CORBA::TypeCode_ptr tc, const tcDescriptor &data) {
     setTC_and_reset(tc);
-    pd_parser->copyFrom(data);
+    tcParser::copyTcDescriptorToMemStream_flush(pd_tc, data, pd_mbuf);
   }
   // Routine to change the TypeCode and fill the mbuf from the
   // given tcDescriptor.
 
-  inline void setTC_and_reset(CORBA::TypeCode_ptr tc) {
-    // Free the parser & buffer
-    if (pd_releaseptr) {
-      if (pd_parser != 0)  delete pd_parser;
-      if (pd_mbuf != 0)    delete pd_mbuf;
-      delete [] (char *) pd_dataptr;
-    } else {
-      pd_parser->setTC_and_reset(tc);
-    }
-      
-    if (pd_cached_data_ptr != 0)
-      pd_cached_data_destructor(pd_cached_data_ptr);
-    pd_cached_data_ptr = 0;
+  // -=- TYPECODE OPERATIONS
 
-    // Allocate a new cdrMemoryStream & parser
-    if (pd_mbuf == 0)
-      pd_mbuf = new cdrMemoryStream();
-    pd_releaseptr = 0;
-    if (pd_parser == 0)
-      pd_parser = new tcParser(*pd_mbuf, tc);
+  inline const CORBA::TypeCode_ptr getTC() {
+    return pd_tc;
   }
-  // Change the TypeCode and reallocate the mbuf.
+  // Return the actual typecode in use - NOT A DUPLICATE
 
-  inline tcParser *getTC_parser() { return pd_parser; }
-  // Get a tcParser through which to manipulate the data.
+  inline void replaceTC(const CORBA::TypeCode_ptr tc) {
+    if (tc->equivalent(pd_tc))
+      pd_tc = CORBA::TypeCode::_duplicate(tc);
+    else
+      throw CORBA::TypeCode::BadKind();
+  }
+  // If the tc is equivalent to pd_tc, use it instead of pd_tc
+
+  // -=- BUFFER OPERATIONS
 
   inline const void *getBuffer() {
-    pd_mbuf->rewindInputPtr();
-    return pd_mbuf->bufPtr();
+    return pd_mbuf.bufPtr();
   }
   // Return the start of the data buffer.
 
-  inline cdrMemoryStream& getcdrMemoryStream() { return *pd_mbuf; }
-  // Get the internal stream.
+  inline cdrMemoryStream& getWRableMemoryStream() {
+    pd_mbuf.rewindPtrs(); return pd_mbuf;
+  }
+  // Returns a reference to the internal MemoryStream.
+  // NOTE: The stream is emptied before being returned.
+
+  inline const cdrMemoryStream& theMemoryStream() {
+    return pd_mbuf;
+  }
+  // Returns a reference to the internal MemoryStream. It may only be
+  // read from, not written to.
+
+  // -=- CACHED DATA HANDLING
 
   inline void *getCachedData() { return pd_cached_data_ptr; }
   // Retrieve the cached data pointer.
@@ -123,11 +129,23 @@ public:
   }
   // Set the cached data pointer and provide a destructor function.
 
+  // -=- MARSHALLING TO/FROM STREAMS
+
+  inline void copyTo(cdrStream &s) {
+    tcParser::copyMemStreamToStream_rdonly(pd_tc, pd_mbuf, s);
+  }
+  // Copy the internal buffer out to a stream (re-entrant)
+
+  inline void copyFrom(cdrStream &s) {
+    tcParser::copyStreamToMemStream_flush(pd_tc, s, pd_mbuf);
+  }
+  // Fill the internal buffer from a stream (replaces contents)
+
 private:
   // PRIVATE DATA
 
-  cdrMemoryStream* pd_mbuf;
-  tcParser* pd_parser;
+  cdrMemoryStream pd_mbuf;
+  CORBA::TypeCode_ptr pd_tc;
 
   // If the AnyP was created using a void* pointer and TypeCode.
   void * pd_dataptr;

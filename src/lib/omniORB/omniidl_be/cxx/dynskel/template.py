@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.10  2001/08/22 13:29:48  dpg1
+# Re-entrant Any marshalling.
+#
 # Revision 1.3.2.9  2001/08/15 10:29:53  dpg1
 # Update DSI to use Current, inProcessIdentity.
 #
@@ -152,7 +155,7 @@ getdesc_array = """\
 #ifndef _@private_prefix@_tcParser_getElementDesc@this_cname@__
 #define _@private_prefix@_tcParser_getElementDesc@this_cname@__
 static CORBA::Boolean
-@private_prefix@_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _index, tcDescriptor &_desc, _CORBA_ULong& _contiguous)
+@private_prefix@_tcParser_getElementDesc@this_cname@(const tcArrayDesc* _adesc, CORBA::ULong _index, tcDescriptor &_desc, _CORBA_ULong& _contiguous)
 {
   @type@ (&@private_prefix@_tmp)@tail_dims@ = (*((@type@(*)@index_string@)_adesc->opq_array))[_index];
   @builddesc@
@@ -216,19 +219,19 @@ anon_sequence = """\
 #ifndef _@private_prefix@_tcParser_buildDesc@cname@__
 #define _@private_prefix@_tcParser_buildDesc@cname@__
 static void
-@private_prefix@_tcParser_setElementCount@cname@(tcSequenceDesc* _desc, CORBA::ULong _len)
+@private_prefix@_tcParser_setElementCount@cname@(const tcSequenceDesc* _desc, CORBA::ULong _len)
 {
   ((@sequence_template@*)_desc->opq_seq)->length(_len);
 }
 
 static CORBA::ULong
-@private_prefix@_tcParser_getElementCount@cname@(tcSequenceDesc* _desc)
+@private_prefix@_tcParser_getElementCount@cname@(const tcSequenceDesc* _desc)
 {
   return ((@sequence_template@*)_desc->opq_seq)->length();
 }
 
 static CORBA::Boolean
-@private_prefix@_tcParser_getElementDesc@cname@(tcSequenceDesc* _desc, CORBA::ULong _index, tcDescriptor& _newdesc, _CORBA_ULong& _contiguous)
+@private_prefix@_tcParser_getElementDesc@cname@(const tcSequenceDesc* _desc, CORBA::ULong _index, tcDescriptor& _newdesc, _CORBA_ULong& _contiguous)
 {
   @elementDesc@
   return 1;
@@ -254,7 +257,7 @@ static void
 #   @private_prefix@_tcParser_getMemberCount_@guard_name@
 #   @private_prefix@_buildDesc_c@guard_name@
 builddesc_member = """\
-@private_prefix@_tcParser_getMemberCount_@guard_name@(tcStructDesc *_desc)
+@private_prefix@_tcParser_getMemberCount_@guard_name@(const tcStructDesc *_desc)
 {
   return @num_members@;
 }
@@ -278,7 +281,7 @@ void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor &_desc, const @fqname
 #   @private_prefix@_delete_@guard_name@
 interface = """\
 static void
-@private_prefix@_tcParser_setObjectPtr_@guard_name@(tcObjrefDesc *_desc, CORBA::Object_ptr _ptr)
+@private_prefix@_tcParser_setObjectPtr_@guard_name@(const tcObjrefDesc *_desc, CORBA::Object_ptr _ptr)
 {
   @fqname@_ptr _p = @fqname@::_narrow(_ptr);
   @fqname@_ptr* pp = (@fqname@_ptr*)_desc->opq_objref;
@@ -288,7 +291,7 @@ static void
 }
 
 static CORBA::Object_ptr
-@private_prefix@_tcParser_getObjectPtr_@guard_name@(tcObjrefDesc *_desc)
+@private_prefix@_tcParser_getObjectPtr_@guard_name@(const tcObjrefDesc *_desc)
 {
   return (CORBA::Object_ptr) *((@fqname@_ptr*)_desc->opq_objref);
 }
@@ -528,19 +531,19 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp) {
 union_tcParser = """\
 class @private_prefix@_tcParser_unionhelper_@guard_name@ {
 public:
-  static void getDiscriminator(tcUnionDesc* _desc, tcDescriptor& _newdesc, CORBA::PR_unionDiscriminator& _discrim) {
+  static void getDiscriminator(const tcUnionDesc* _desc, tcDescriptor& _newdesc, CORBA::PR_unionDiscriminator& _discrim) {
     @fqname@* _u = (@fqname@*)_desc->opq_union;
     @private_prefix@_buildDesc@discrim_cname@(_newdesc, _u->_pd__d);
     _discrim = (CORBA::PR_unionDiscriminator)_u->_pd__d;
   }
 
-  static void setDiscriminator(tcUnionDesc* _desc, CORBA::PR_unionDiscriminator _discrim, int _is_default) {
+  static void setDiscriminator(const tcUnionDesc* _desc, CORBA::PR_unionDiscriminator _discrim, int _is_default) {
     @fqname@* _u = (@fqname@*)_desc->opq_union;
     _u->_pd__d = (@discrim_type@)_discrim;
     _u->_pd__default = _is_default;
   }
 
-  static CORBA::Boolean getValueDesc(tcUnionDesc* _desc, tcDescriptor& _newdesc) {
+  static CORBA::Boolean getValueDesc(const tcUnionDesc* _desc, tcDescriptor& _newdesc) {
     @fqname@* _u = (@fqname@*)_desc->opq_union;
     @switch@
     return 1;

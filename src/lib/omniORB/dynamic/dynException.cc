@@ -101,14 +101,14 @@ OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::ORB, InconsistentTypeCode,
 
 static
 CORBA::Boolean 
-getMemberDesc_UserException(tcStructDesc *,CORBA::ULong,tcDescriptor &)
+getMemberDesc_UserException(const tcStructDesc *,CORBA::ULong,tcDescriptor &)
 {
   return 0;
 }
 
 static
 CORBA::ULong
-getMemberCount_UserException(tcStructDesc *)
+getMemberCount_UserException(const tcStructDesc *)
 {
   return 0;
 }
@@ -277,7 +277,7 @@ _0RL_structmember_PortableServer_mForwardRequest[] = {
 static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mForwardRequest = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/PortableServer/ForwardRequest:1.0", "ForwardRequest", _0RL_structmember_PortableServer_mForwardRequest, 1);
 
 CORBA::Boolean
-_0RL_tcParser_getMemberDesc_PortableServer_mForwardRequest(tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){
+_0RL_tcParser_getMemberDesc_PortableServer_mForwardRequest(const tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){
   switch (_index) {
   case 0:
     _0RL_buildDesc_cCORBA_mObject(_newdesc, ((PortableServer::ForwardRequest*)_desc->opq_struct)->forward_reference);
@@ -287,7 +287,7 @@ _0RL_tcParser_getMemberDesc_PortableServer_mForwardRequest(tcStructDesc *_desc, 
   };
 }
 CORBA::ULong
-_0RL_tcParser_getMemberCount_PortableServer_mForwardRequest(tcStructDesc *_desc)
+_0RL_tcParser_getMemberCount_PortableServer_mForwardRequest(const tcStructDesc *_desc)
 {
   return 1;
 }
@@ -354,7 +354,7 @@ static CORBA::PR_structMember _0RL_structmember_PortableServer_mPOA_mInvalidPoli
 static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mPOA_mInvalidPolicy = CORBA::TypeCode::PR_exception_tc("IDL:omg.org/PortableServer/POA/InvalidPolicy:1.0", "InvalidPolicy", _0RL_structmember_PortableServer_mPOA_mInvalidPolicy, 1);
 
 CORBA::Boolean
-_0RL_tcParser_getMemberDesc_PortableServer_mPOA_mInvalidPolicy(tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){
+_0RL_tcParser_getMemberDesc_PortableServer_mPOA_mInvalidPolicy(const tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){
   switch (_index) {
   case 0:
     _0RL_buildDesc_cunsigned_pshort(_newdesc, ((PortableServer::POA::InvalidPolicy*)_desc->opq_struct)->index);
@@ -364,7 +364,7 @@ _0RL_tcParser_getMemberDesc_PortableServer_mPOA_mInvalidPolicy(tcStructDesc *_de
   };
 }
 CORBA::ULong
-_0RL_tcParser_getMemberCount_PortableServer_mPOA_mInvalidPolicy(tcStructDesc *_desc)
+_0RL_tcParser_getMemberCount_PortableServer_mPOA_mInvalidPolicy(const tcStructDesc *_desc)
 {
   return 1;
 }
@@ -461,7 +461,7 @@ buildDesc_mCompletionStatus(tcDescriptor& _desc,
 
 static
 CORBA::Boolean 
-getMemberDesc_mSystemException(tcStructDesc *_desc,
+getMemberDesc_mSystemException(const tcStructDesc *_desc,
 			       CORBA::ULong _index,
 			       tcDescriptor &_newdesc)
 {
@@ -483,7 +483,7 @@ getMemberDesc_mSystemException(tcStructDesc *_desc,
 
 static
 CORBA::ULong
-getMemberCount_mSystemException(tcStructDesc *_desc)
+getMemberCount_mSystemException(const tcStructDesc *_desc)
 {
   return 2;
 }

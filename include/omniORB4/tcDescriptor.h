@@ -100,7 +100,7 @@ struct tcArrayDesc;
 
 typedef void (*tcObjrefSetReferenceFn)(tcObjrefDesc*, CORBA::Object_ptr);
 
-typedef CORBA::Object_ptr (*tcObjrefGetReferenceFn)(tcObjrefDesc*);
+typedef CORBA::Object_ptr (*tcObjrefGetReferenceFn)(const tcObjrefDesc*);
 
 struct tcObjrefDesc
 {
@@ -124,11 +124,11 @@ struct tcObjrefDesc
 /////////////
 
 typedef void (*tcUnionGetDiscriminatorFn)
-  (tcUnionDesc*, tcDescriptor&, CORBA::PR_unionDiscriminator&);
+  (const tcUnionDesc*, tcDescriptor&, CORBA::PR_unionDiscriminator&);
 typedef void (*tcUnionSetDiscriminatorFn)
-  (tcUnionDesc*, CORBA::PR_unionDiscriminator, int is_default);
+  (const tcUnionDesc*, CORBA::PR_unionDiscriminator, int is_default);
 typedef CORBA::Boolean (*tcUnionGetValueDescFn)
-  (tcUnionDesc*, tcDescriptor& data_desc);
+  (const tcUnionDesc*, tcDescriptor& data_desc);
 
 // This type is used to allocate storage for the maximum
 // possible size of discriminator.
@@ -172,9 +172,9 @@ struct tcUnionDesc
 //////////////
 
 typedef CORBA::Boolean (*tcStructGetMemberDescFn)
-  (tcStructDesc *, CORBA::ULong, tcDescriptor&);
+  (const tcStructDesc *, CORBA::ULong, tcDescriptor&);
 typedef CORBA::ULong (*tcStructGetMemberCountFn)
-  (tcStructDesc *);
+  (const tcStructDesc *);
 
 struct tcStructDesc
 {
@@ -188,11 +188,11 @@ struct tcStructDesc
 ////////////////
 
 typedef CORBA::Boolean (*tcSeqGetElementDescFn)
-  (tcSequenceDesc *, CORBA::ULong, tcDescriptor&, CORBA::ULong&);
+  (const tcSequenceDesc *, CORBA::ULong, tcDescriptor&, CORBA::ULong&);
 typedef CORBA::ULong (*tcSeqGetElementCountFn)
-  (tcSequenceDesc *);
+  (const tcSequenceDesc *);
 typedef void (*tcSeqSetElementCountFn)
-  (tcSequenceDesc *, CORBA::ULong);
+  (const tcSequenceDesc *, CORBA::ULong);
 
 struct tcSequenceDesc
 {
@@ -210,7 +210,7 @@ struct tcSequenceDesc
 /////////////
 
 typedef CORBA::Boolean (*tcArrayGetElementDescFn)
-  (tcArrayDesc*, CORBA::ULong, tcDescriptor&, CORBA::ULong&);
+  (const tcArrayDesc*, CORBA::ULong, tcDescriptor&, CORBA::ULong&);
 
 struct tcArrayDesc
 {
@@ -459,7 +459,7 @@ extern void
 _0RL_tcParser_objref_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr);
 
 extern CORBA::Object_ptr
-_0RL_tcParser_objref_getObjectPtr(tcObjrefDesc* desc);
+_0RL_tcParser_objref_getObjectPtr(const tcObjrefDesc* desc);
 
 inline void
 _0RL_buildDesc_cCORBA_mObject(tcDescriptor& desc, 

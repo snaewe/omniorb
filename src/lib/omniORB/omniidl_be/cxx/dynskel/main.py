@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.8  2001/08/22 13:29:47  dpg1
+# Re-entrant Any marshalling.
+#
 # Revision 1.14.2.7  2001/08/17 13:47:31  dpg1
 # Small bug fixes.
 #
@@ -721,7 +724,7 @@ case @n@:
 
     stream.out("""\
 @static@ CORBA::Boolean
-@private_prefix@_tcParser_getMemberDesc_@guard_name@(tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){
+@private_prefix@_tcParser_getMemberDesc_@guard_name@(const tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){
   switch (_index) {
   @cases@
   default:

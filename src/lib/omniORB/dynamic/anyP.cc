@@ -35,47 +35,40 @@ OMNI_NAMESPACE_BEGIN(omni)
 // Constructor/destructor
 
 
-AnyP::AnyP(CORBA::TypeCode_ptr tc)
+AnyP::AnyP(const CORBA::TypeCode_ptr tc)
 {
-  pd_mbuf = new cdrMemoryStream();
+  pd_tc = CORBA::TypeCode::_duplicate(tc);
   pd_releaseptr = 0;
-  pd_parser = new tcParser(*pd_mbuf, tc);
   pd_cached_data_ptr = 0;
 }
 
 
-AnyP::AnyP(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release)
+AnyP::AnyP(const CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release)
 {
-  // Create a read-only membufferedstream to read from the supplied buffer
-  pd_mbuf = new cdrMemoryStream(value);
+  cdrMemoryStream tmpmbs(value);
+  pd_mbuf = tmpmbs;
+  pd_tc = CORBA::TypeCode::_duplicate(tc);
   pd_dataptr = value;
   pd_releaseptr = release;
-  pd_parser = new tcParser(*pd_mbuf, tc);
   pd_cached_data_ptr = 0;
 }
 
 
 AnyP::AnyP(const AnyP* existing)
 {
-  pd_mbuf = new cdrMemoryStream();
   pd_releaseptr = 0;
-  pd_parser = new tcParser(*pd_mbuf, existing->pd_parser->getTC());
-  existing->pd_mbuf->rewindInputPtr();
+  pd_tc = CORBA::TypeCode::_duplicate(existing->pd_tc);
   try {
-    pd_parser->copyFrom(*existing->pd_mbuf);
+    tcParser::copyMemStreamToStream_rdonly(pd_tc, existing->pd_mbuf, pd_mbuf);
   }
-  catch(CORBA::MARSHAL&) {
-    pd_mbuf->rewindPtrs();
+  catch (CORBA::MARSHAL&) {
+    pd_mbuf.rewindPtrs();
   }
   pd_cached_data_ptr = 0;
 }
 
 AnyP::~AnyP()
 {
-  if (pd_parser != 0)
-    delete pd_parser;
-  if (pd_mbuf != 0)
-    delete pd_mbuf;
   if (pd_releaseptr)
     delete [] (char*) pd_dataptr;
   if (pd_cached_data_ptr != 0)
@@ -83,4 +76,26 @@ AnyP::~AnyP()
   pd_cached_data_ptr = 0;
 }
 
+void
+AnyP::setTC_and_reset(const CORBA::TypeCode_ptr tc) {
+  // Free the data pointer, if any
+  if (pd_releaseptr)
+    delete [] (char *) pd_dataptr;
+  
+  // Empty the buffer and replace the typecode
+  pd_mbuf.rewindPtrs();
+  pd_tc = CORBA::TypeCode::_duplicate(tc);
+  
+  // Free the cached data
+  if (pd_cached_data_ptr != 0)
+    pd_cached_data_destructor(pd_cached_data_ptr);
+  pd_cached_data_ptr = 0;
+  pd_releaseptr = 0;
+}
+
 OMNI_NAMESPACE_END(omni)
+
+
+
+
+

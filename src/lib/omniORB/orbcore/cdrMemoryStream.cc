@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2001/08/22 13:29:48  dpg1
+  Re-entrant Any marshalling.
+
   Revision 1.1.4.7  2001/08/17 17:12:34  sll
   Modularise ORB configuration parameters.
 
@@ -326,15 +329,35 @@ cdrMemoryStream::cdrMemoryStream(void* databuffer, size_t maxLen)
   rewindPtrs();
 }
 
-cdrMemoryStream::cdrMemoryStream(const cdrMemoryStream& s)
+cdrMemoryStream::cdrMemoryStream(const cdrMemoryStream& s,
+				 _CORBA_Boolean read_only)
 {
   pd_tcs_c = s.pd_tcs_c;
   pd_tcs_w = s.pd_tcs_w;
 
-  pd_readonly_and_external_buffer = s.pd_readonly_and_external_buffer;
+  pd_readonly_and_external_buffer = (read_only ||
+				     s.pd_readonly_and_external_buffer);
+
   pd_marshal_byte_swap = pd_unmarshal_byte_swap = s.pd_marshal_byte_swap;
 
-  if (!pd_readonly_and_external_buffer) {
+  if (s.pd_readonly_and_external_buffer) {
+    // For an external buffer the storage is managed elsewhere. We
+    // assume that it will continue to exist for the lifetime of this
+    // buffered stream, and just use the buffer directly.
+    pd_bufp    = s.pd_bufp;
+    pd_inb_end = s.pd_inb_end;
+    rewindPtrs();
+  }
+  else if (read_only) {
+    // Original MemoryStream is read/write.  We assume that the
+    // original stream will exist at least as long as us, intact, so
+    // that we can safely refer to its buffer directly.
+    pd_bufp = s.bufPtr();
+    pd_inb_end = (void*)((omni::ptr_arith_t)pd_bufp + s.bufSize());
+    rewindPtrs();
+  }
+  else {
+    // Copy the contents of the original stream
     pd_bufp     = pd_inline_buffer;
     pd_outb_end = (pd_inline_buffer + sizeof(pd_inline_buffer));
     rewindPtrs();
@@ -343,14 +366,6 @@ cdrMemoryStream::cdrMemoryStream(const cdrMemoryStream& s)
       memcpy(pd_outb_mkr,s.bufPtr(),s.bufSize());
       pd_outb_mkr = (void*)((omni::ptr_arith_t)pd_outb_mkr + s.bufSize());
     }
-  }
-  else {
-    // For an external buffer the storage is managed elsewhere. We assume
-    // that it will continue to exist for the lifetime of this buffered
-    // stream also - so just copy the pointer.
-    pd_bufp     = s.pd_bufp;
-    pd_inb_end = s.pd_inb_end;
-    rewindPtrs();
   }
 }
 

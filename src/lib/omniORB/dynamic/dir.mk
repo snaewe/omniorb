@@ -46,6 +46,7 @@ DIR_CPPFLAGS += -D_OMNIORB_DYNAMIC_LIBRARY
 ##########################################################################
 ifdef UnixPlatform
   DIR_CPPFLAGS += -DUnixArchitecture
+#  CXXDEBUGFLAGS = -g
 endif
 
 ifdef Win32Platform

@@ -271,7 +271,6 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
   }
 }
 
-
 void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 {
   // How to marshal the data depends entirely on the TypeCode
@@ -627,131 +626,92 @@ void skipUsingTC(TypeCode_base* tc, cdrStream& buf)
 ////////////////////////////// tcParser //////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+void appendItem(const TypeCode_base *tc, const tcDescriptor& src, cdrStream& dest);
+void fetchItem(const TypeCode_base *tc, cdrStream& src, tcDescriptor& dest);
+
 void
-tcParser::copyTo(cdrStream& mbuf, int rewind)
-{
-  if( rewind )  pd_mbuf.rewindInputPtr();
-  if( !pd_mbuf.unmarshal_byte_swap() )
-    fastCopyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, mbuf);
+tcParser::copyStreamToStream(const CORBA::TypeCode_ptr tc,
+			     cdrStream& src,
+			     cdrStream& dest) {
+  if (src.unmarshal_byte_swap() == dest.marshal_byte_swap())
+    fastCopyUsingTC(ToTcBase_Checked(tc), src, dest);
   else
-    copyUsingTC(ToTcBase_Checked(pd_tc), pd_mbuf, mbuf);
-}
-
-
-void
-tcParser::copyTo(tcDescriptor& desc, int rewind)
-{
-  if( rewind )  pd_mbuf.rewindInputPtr();
-  fetchItem(ToTcBase_Checked(pd_tc), desc);
-}
-
-
-void
-tcParser::copyFrom(cdrStream& mbuf, int flush)
-{
-  if( flush )  pd_mbuf.rewindPtrs();
-  if( mbuf.unmarshal_byte_swap() == pd_mbuf.marshal_byte_swap() )
-    fastCopyUsingTC(ToTcBase_Checked(pd_tc), mbuf, pd_mbuf);
-  else
-    copyUsingTC(ToTcBase_Checked(pd_tc), mbuf, pd_mbuf);
-}
-
-
-void
-tcParser::copyFrom(tcDescriptor& desc, int flush)
-{
-  if( flush )  pd_mbuf.rewindPtrs();
-  appendItem(ToTcBase_Checked(pd_tc), desc);
-}
-
-
-CORBA::TypeCode_ptr
-tcParser::getTC() const
-{
-  return pd_tc;
+    copyUsingTC(ToTcBase_Checked(tc), src, dest);
 }
 
 void
-tcParser::replaceTC(CORBA::TypeCode_ptr tc)
-{
-  if (pd_tc->equivalent(tc)) {
-    pd_tc = CORBA::TypeCode::_duplicate(tc);
-  }
-  else {
-    throw CORBA::TypeCode::BadKind();
-  }
+tcParser::copyTcDescriptorToStream(const CORBA::TypeCode_ptr tc,
+				   const tcDescriptor &src,
+				   cdrStream& dest) {
+  appendItem(ToTcBase_Checked(tc), src, dest);
 }
 
 void
-tcParser::setTC_and_reset(CORBA::TypeCode_ptr tc)
-{
-  // Clear the buffer & change the typecode
-  pd_mbuf.rewindPtrs();
-  pd_tc = CORBA::TypeCode::_duplicate(tc);
+tcParser::copyStreamToTcDescriptor(const CORBA::TypeCode_ptr tc,
+				   cdrStream& src,
+				   tcDescriptor& dest) {
+  fetchItem(ToTcBase_Checked(tc), src, dest);
 }
-
+  
 void
-tcParser::skip(cdrStream& mbs, CORBA::TypeCode_ptr tc)
-{
-  skipUsingTC(ToTcBase_Checked(tc), mbs);
+tcParser::skip(const CORBA::TypeCode_ptr tc, cdrStream &s) {
+  skipUsingTC(ToTcBase_Checked(tc), s);
 }
-
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////// Internal Implementation //////////////////////
 //////////////////////////////////////////////////////////////////////
 
-void
-tcParser::appendSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
+void appendSimpleItem(CORBA::TCKind tck, const tcDescriptor &tcdata, cdrStream& buf)
 {
   switch (tck)
     {
       // SIMPLE TYPES
     case CORBA::tk_short:
-      *tcdata.p_short   >>= pd_mbuf;
+      *tcdata.p_short   >>= buf;
       break;
     case CORBA::tk_ushort:
-      *tcdata.p_ushort  >>= pd_mbuf;
+      *tcdata.p_ushort  >>= buf;
       break;
     case CORBA::tk_long:
-      *tcdata.p_long    >>= pd_mbuf;
+      *tcdata.p_long    >>= buf;
       break;
     case CORBA::tk_ulong:
-      *tcdata.p_ulong   >>= pd_mbuf;
+      *tcdata.p_ulong   >>= buf;
       break;
     case CORBA::tk_float:
-      *tcdata.p_float   >>= pd_mbuf;
+      *tcdata.p_float   >>= buf;
       break;
     case CORBA::tk_double:
-      *tcdata.p_double  >>= pd_mbuf;
+      *tcdata.p_double  >>= buf;
       break;
     case CORBA::tk_boolean:
-      pd_mbuf.marshalBoolean(*tcdata.p_boolean);
+      buf.marshalBoolean(*tcdata.p_boolean);
       break;
     case CORBA::tk_char:
-      pd_mbuf.marshalChar(*tcdata.p_char);
+      buf.marshalChar(*tcdata.p_char);
       break;
     case CORBA::tk_wchar:
-      pd_mbuf.marshalWChar(*tcdata.p_wchar);
+      buf.marshalWChar(*tcdata.p_wchar);
       break;
     case CORBA::tk_octet:
-      pd_mbuf.marshalOctet(*tcdata.p_octet);
+      buf.marshalOctet(*tcdata.p_octet);
       break;
     case CORBA::tk_enum:
-      *tcdata.p_enum    >>= pd_mbuf;
+      *tcdata.p_enum    >>= buf;
       break;
 
 #ifdef HAS_LongLong
     case CORBA::tk_longlong:
-      *tcdata.p_longlong    >>= pd_mbuf;
+      *tcdata.p_longlong    >>= buf;
       break;
     case CORBA::tk_ulonglong:
-      *tcdata.p_ulonglong   >>= pd_mbuf;
+      *tcdata.p_ulonglong   >>= buf;
       break;
 #endif
 #ifdef HAS_LongDouble
     case CORBA::tk_longdouble:
-      *tcdata.p_longdouble  >>= pd_mbuf;
+      *tcdata.p_longdouble  >>= buf;
       break;
 #endif
 
@@ -762,8 +722,7 @@ tcParser::appendSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
 }
 
 
-void
-tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
+void appendItem(const TypeCode_base* tc, const tcDescriptor& tcdata, cdrStream& buf)
 {
   // How to marshal the data depends entirely on the TypeCode
   switch (tc->NP_kind()) {
@@ -792,40 +751,40 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 #ifdef HAS_LongDouble
   case CORBA::tk_longdouble:
 #endif
-    appendSimpleItem(tc->NP_kind(), tcdata);
+    appendSimpleItem(tc->NP_kind(), tcdata, buf);
     break;
 
   case CORBA::tk_any:
-    *tcdata.p_any >>= pd_mbuf;
+    *tcdata.p_any >>= buf;
     break;
 
     // COMPLEX TYPES
   case CORBA::tk_Principal:
     // For the principal type, the caller passes us a CORBA::PrincipalId,
     // which will directly marshal itself to the wire.
-    *tcdata.p_Principal >>= pd_mbuf;
+    *tcdata.p_Principal >>= buf;
     break;
 
   case CORBA::tk_objref:
     // Call the user-defined callback to get the ptr in a suitable form
     CORBA::Object_Helper::
       marshalObjRef(tcdata.p_objref.getObjectPtr(&tcdata.p_objref),
-		    pd_mbuf);
+		    buf);
     break;
 
   case CORBA::tk_TypeCode:
-    CORBA::TypeCode::marshalTypeCode(tcdata.p_TypeCode->_ptr, pd_mbuf);
+    CORBA::TypeCode::marshalTypeCode(tcdata.p_TypeCode->_ptr, buf);
     break;
 
   case CORBA::tk_string:
     {
-      pd_mbuf.marshalString(*tcdata.p_string.ptr);
+      buf.marshalString(*tcdata.p_string.ptr);
       break;
     }
 
   case CORBA::tk_wstring:
     {
-      pd_mbuf.marshalWString(*tcdata.p_wstring.ptr);
+      buf.marshalWString(*tcdata.p_wstring.ptr);
       break;
     }
 
@@ -833,7 +792,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
     {
       CORBA::Fixed f(*tcdata.p_fixed);
       f.PR_setLimits(tc->fixed_digits(), tc->fixed_scale());
-      f >>= pd_mbuf;
+      f >>= buf;
       break;
     }
 
@@ -849,7 +808,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
       // Get a descriptor for the discriminator, and marshal it
       // into the buffer.
       tcdata.p_union.getDiscriminator(&tcdata.p_union, disc_desc, discrim);
-      appendSimpleItem(tc->NP_discriminator_type()->NP_kind(), disc_desc);
+      appendSimpleItem(tc->NP_discriminator_type()->NP_kind(), disc_desc, buf);
 
       // Determine the index of the selected member.
       CORBA::Long index =
@@ -864,7 +823,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
       if( !tcdata.p_union.getValueDesc(&tcdata.p_union, data_desc) )
 	OMNIORB_ASSERT(0);
 
-      appendItem(tc->NP_member_type(index), data_desc);
+      appendItem(tc->NP_member_type(index), data_desc, buf);
       break;
     }
 
@@ -883,7 +842,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
 	  // Append the element to the mbuf.
 	  TypeCode_base* tctmp = tc->NP_member_type(i);
-	  appendItem(tctmp, desc);
+	  appendItem(tctmp, desc, buf);
 	}
       break;
     }
@@ -908,7 +867,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
 	  // Append the element to the mbuf.
 	  TypeCode_base* tctmp = tc->NP_member_type(i);
-	  appendItem(tctmp, desc);
+	  appendItem(tctmp, desc, buf);
 	}
       break;
     }
@@ -919,7 +878,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
       TypeCode_base* tctmp = tc->NP_content_type();
 
       // Save the length of the sequence.
-      max >>= pd_mbuf;
+      max >>= buf;
 
       // Save the sequence data.
       for (CORBA::ULong i=0; i < max; i++)
@@ -933,7 +892,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    OMNIORB_ASSERT(0);
 
 	  if (contiguous <= 1) {
-	    appendItem(tctmp, desc);
+	    appendItem(tctmp, desc, buf);
 	  } else {
 	    const TypeCode_alignTable& alignTable = tctmp->alignmentTable();
 	    
@@ -945,7 +904,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    // - Pointer to initial element is stored in same
 	    //   place as p_streamdata by the compiler (see tcDescriptor)
 	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
-	    pd_mbuf.put_octet_array((CORBA::Char*)desc.p_streamdata,
+	    buf.put_octet_array((CORBA::Char*)desc.p_streamdata,
 				    contiguous * (alignTable[0].simple.size),
 				    alignTable[0].simple.alignment);
 	    i += contiguous;
@@ -971,7 +930,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
 	  // Append the element to the mbuf.
 	  if (contiguous <= 1) {
-	    appendItem(tctmp, desc);
+	    appendItem(tctmp, desc, buf);
 	  } else {
 	    const TypeCode_alignTable& alignTable = tctmp->alignmentTable();
 	    
@@ -983,7 +942,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    // - Pointer to initial element is stored in same
 	    //   place as p_streamdata by the compiler (see tcDescriptor)
 	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
-	    pd_mbuf.get_octet_array((CORBA::Char*)desc.p_streamdata,
+	    buf.get_octet_array((CORBA::Char*)desc.p_streamdata,
 				   contiguous * (alignTable[0].simple.size),
 				   alignTable[0].simple.alignment);
 	    i += contiguous;
@@ -993,7 +952,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
     }
 
   case CORBA::tk_alias:
-    appendItem(tc->NP_content_type(), tcdata);
+    appendItem(tc->NP_content_type(), tcdata, buf);
     break;
 
   default:
@@ -1002,58 +961,57 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 }
 
 
-void
-tcParser::fetchSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
+void fetchSimpleItem(CORBA::TCKind tck, cdrStream &src, tcDescriptor &tcdata)
 {
   switch (tck)
     {
 
       // SIMPLE TYPES
     case CORBA::tk_short:
-      *tcdata.p_short   <<= pd_mbuf;
+      *tcdata.p_short   <<= src;
       break;
     case CORBA::tk_ushort:
-      *tcdata.p_ushort  <<= pd_mbuf;
+      *tcdata.p_ushort  <<= src;
       break;
     case CORBA::tk_long:
-      *tcdata.p_long    <<= pd_mbuf;
+      *tcdata.p_long    <<= src;
       break;
     case CORBA::tk_ulong:
-      *tcdata.p_ulong   <<= pd_mbuf;
+      *tcdata.p_ulong   <<= src;
       break;
     case CORBA::tk_float:
-      *tcdata.p_float   <<= pd_mbuf;
+      *tcdata.p_float   <<= src;
       break;
     case CORBA::tk_double:
-      *tcdata.p_double  <<= pd_mbuf;
+      *tcdata.p_double  <<= src;
       break;
     case CORBA::tk_boolean:
-      *tcdata.p_boolean = pd_mbuf.unmarshalBoolean(); 
+      *tcdata.p_boolean = src.unmarshalBoolean(); 
       break;
     case CORBA::tk_char:
-      *tcdata.p_char = pd_mbuf.unmarshalChar();
+      *tcdata.p_char = src.unmarshalChar();
       break;
     case CORBA::tk_wchar:
-      *tcdata.p_wchar = pd_mbuf.unmarshalWChar();
+      *tcdata.p_wchar = src.unmarshalWChar();
       break;
     case CORBA::tk_octet:
-      *tcdata.p_octet = pd_mbuf.unmarshalOctet();
+      *tcdata.p_octet = src.unmarshalOctet();
       break;
     case CORBA::tk_enum:
-      *tcdata.p_enum    <<= pd_mbuf;
+      *tcdata.p_enum    <<= src;
       break;
 
 #ifdef HAS_LongLong
     case CORBA::tk_longlong:
-      *tcdata.p_longlong    <<= pd_mbuf;
+      *tcdata.p_longlong    <<= src;
       break;
     case CORBA::tk_ulonglong:
-      *tcdata.p_ulonglong   <<= pd_mbuf;
+      *tcdata.p_ulonglong   <<= src;
       break;
 #endif
 #ifdef HAS_LongDouble
     case CORBA::tk_longdouble:
-      *tcdata.p_longdouble  <<= pd_mbuf;
+      *tcdata.p_longdouble  <<= src;
       break;
 #endif
 
@@ -1064,8 +1022,7 @@ tcParser::fetchSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
 }
 
 
-void
-tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
+void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
 {
   // How to unmarshal the data depends entirely on the TypeCode
   switch( tc->NP_kind() ) {
@@ -1094,13 +1051,13 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 #ifdef HAS_LongDouble
   case CORBA::tk_longdouble:
 #endif
-    fetchSimpleItem(tc->NP_kind(), tcdata);
+    fetchSimpleItem(tc->NP_kind(), src, tcdata);
     break;
 
   case CORBA::tk_any:
     // Fetch the any.  Note that the caller must have allocated
     // the Any for, already.
-    *tcdata.p_any <<= pd_mbuf;
+    *tcdata.p_any <<= src;
     break;
 
     // COMPLEX TYPES
@@ -1108,26 +1065,26 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
     // For the Principal type, we just fill in the supplied
     // CORBA::PrincipalId.
     tcdata.p_Principal = new CORBA::PrincipalID;
-    *tcdata.p_Principal <<= pd_mbuf;
+    *tcdata.p_Principal <<= src;
     break;
 
   case CORBA::tk_objref:
     // Call the user-defined callback to set the object reference with
     // appropriate narrowing.
     tcdata.p_objref.setObjectPtr(&tcdata.p_objref,
-		    CORBA::Object_Helper::unmarshalObjRef(pd_mbuf));
+		    CORBA::Object_Helper::unmarshalObjRef(src));
     break;
 
   case CORBA::tk_TypeCode:
     // Overwrite the TypeCode_ptr to point to the new typecode object
-    *tcdata.p_TypeCode = CORBA::TypeCode::unmarshalTypeCode(pd_mbuf);
+    *tcdata.p_TypeCode = CORBA::TypeCode::unmarshalTypeCode(src);
     break;
 
   case CORBA::tk_string:
     {
       if(tcdata.p_string.release )
 	_CORBA_String_helper::free(*tcdata.p_string.ptr);
-      *tcdata.p_string.ptr = pd_mbuf.unmarshalString();
+      *tcdata.p_string.ptr = src.unmarshalString();
       break;
     }
 
@@ -1135,7 +1092,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
     {
       if(tcdata.p_wstring.release )
 	_CORBA_WString_helper::free(*tcdata.p_wstring.ptr);
-      *tcdata.p_wstring.ptr = pd_mbuf.unmarshalWString();
+      *tcdata.p_wstring.ptr = src.unmarshalWString();
       break;
     }
 
@@ -1143,7 +1100,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
     {
       CORBA::Fixed f;
       f.PR_setLimits(tc->fixed_digits(), tc->fixed_scale());
-      f <<= pd_mbuf;
+      f <<= src;
       *tcdata.p_fixed = f;
       break;
     }
@@ -1156,7 +1113,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
       tcDescriptor             disc_desc;
 
       disc_desc.p_char = (CORBA::Char*) &disc_val;
-      fetchSimpleItem(tc->NP_discriminator_type()->NP_kind(), disc_desc);
+      fetchSimpleItem(tc->NP_discriminator_type()->NP_kind(), src, disc_desc);
 
       // Determine the discriminator value.
       CORBA::PR_unionDiscriminator discrim = 0;
@@ -1213,7 +1170,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
       if( !tcdata.p_union.getValueDesc(&tcdata.p_union, data_desc) )
 	OMNIORB_ASSERT(0);
 
-      fetchItem(tc->NP_member_type(index), data_desc);
+      fetchItem(tc->NP_member_type(index), src, data_desc);
       break;
     }
 
@@ -1230,7 +1187,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	  if( !tcdata.p_struct.getMemberDesc(&tcdata.p_struct, i, desc) )
 	    OMNIORB_ASSERT(0);
 
-	  fetchItem(tc->NP_member_type(i), desc);
+	  fetchItem(tc->NP_member_type(i), src, desc);
 	}
       break;
     }
@@ -1252,7 +1209,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	  if( !tcdata.p_except.getMemberDesc(&tcdata.p_except, i, desc) )
 	    OMNIORB_ASSERT(0);
 
-	  fetchItem(tc->NP_member_type(i), desc);
+	  fetchItem(tc->NP_member_type(i), src, desc);
 	}
       break;
     }
@@ -1263,7 +1220,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
       // Get the sequence length
       CORBA::ULong nelem;
-      nelem <<= pd_mbuf;
+      nelem <<= src;
 
       // Allocate space for it
       tcdata.p_sequence.setElementCount(&tcdata.p_sequence, nelem);
@@ -1279,7 +1236,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    OMNIORB_ASSERT(0);
 
 	  if (contiguous <= 1) {
-	    fetchItem(tctmp, desc);
+	    fetchItem(tctmp, src, desc);
 	  } else {
 	    const TypeCode_alignTable& alignTable = tctmp->alignmentTable();
 	   
@@ -1292,7 +1249,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    //   place as p_streamdata by the compiler (see tcDescriptor)
 	    // - Contiguous buffer is large enough & suitably aligned
 	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
-	    pd_mbuf.get_octet_array((CORBA::Char*)desc.p_streamdata,
+	    src.get_octet_array((CORBA::Char*)desc.p_streamdata,
 				    contiguous * (alignTable[0].simple.size),
 				    alignTable[0].simple.alignment);
 	    i += contiguous;
@@ -1316,7 +1273,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    OMNIORB_ASSERT(0);
 
 	  if (contiguous <= 1) {
-	    fetchItem(tctmp, desc);
+	    fetchItem(tctmp, src, desc);
 	  } else {
 	    const TypeCode_alignTable& alignTable = tctmp->alignmentTable();
 	   
@@ -1329,7 +1286,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    //   place as p_streamdata by the compiler (see tcDescriptor)
 	    // - Contiguous buffer is large enough & suitably aligned
 	    // IF ANY OF THESE AREN'T TRUE, THIS FAILS!!!
-	    pd_mbuf.get_octet_array((CORBA::Char*)desc.p_streamdata,
+	    src.get_octet_array((CORBA::Char*)desc.p_streamdata,
 				    contiguous * (alignTable[0].simple.size),
 				    alignTable[0].simple.alignment);
 	    i += contiguous;
@@ -1339,7 +1296,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
     }
 
   case CORBA::tk_alias:
-    fetchItem(tc->NP_content_type(), tcdata);
+    fetchItem(tc->NP_content_type(), src, tcdata);
     break;
 
   default:
@@ -1364,7 +1321,7 @@ _0RL_tcParser_objref_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr)
 
 
 CORBA::Object_ptr
-_0RL_tcParser_objref_getObjectPtr(tcObjrefDesc* desc)
+_0RL_tcParser_objref_getObjectPtr(const tcObjrefDesc* desc)
 {
   return *((CORBA::Object_ptr*)desc->opq_objref);
 }

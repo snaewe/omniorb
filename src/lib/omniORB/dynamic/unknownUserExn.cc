@@ -126,7 +126,7 @@ _tc_UnknownUserException = CORBA::TypeCode::PR_exception_tc(
 
 static
 CORBA::Boolean
-getMemberDesc_UnknownUserException(tcStructDesc *_desc,
+getMemberDesc_UnknownUserException(const tcStructDesc *_desc,
 				   CORBA::ULong _index,
 				   tcDescriptor &_newdesc)
 {
@@ -142,7 +142,7 @@ getMemberDesc_UnknownUserException(tcStructDesc *_desc,
 
 static
 CORBA::ULong
-getMemberCount_UnknownUserException(tcStructDesc *_desc)
+getMemberCount_UnknownUserException(const tcStructDesc *_desc)
 {
   return 1;
 }
