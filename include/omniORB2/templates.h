@@ -28,9 +28,12 @@
 
 /*
   $Log$
-  Revision 1.7  1997/05/06 16:11:33  sll
-  Public release.
+  Revision 1.8  1997/08/21 22:22:45  sll
+  New templates for sequence of array.
 
+ * Revision 1.7  1997/05/06  16:11:33  sll
+ * Public release.
+ *
   */
 
 #ifndef __TEMPLATES_H__
@@ -369,6 +372,28 @@ _CORBA_Bounded_Sequence<T,max>::length(_CORBA_ULong len)
   return;
 }
 
+template <class T,class Telm,int dimension,int max>
+inline 
+_CORBA_Bounded_Sequence_Array<T,Telm,dimension,max>&
+_CORBA_Bounded_Sequence_Array<T,Telm,dimension,max>::operator= (const _CORBA_Bounded_Sequence_Array<T,Telm,dimension,max> &s)
+{
+  _CORBA_Sequence_Array<T,Telm,dimension>::operator= (s);
+  return *this;
+}
+
+template <class T,class Telm,int dimension,int max>
+inline 
+void
+_CORBA_Bounded_Sequence_Array<T,Telm,dimension,max>::length(_CORBA_ULong len)
+{
+  if (len > max) {
+    _CORBA_bound_check_error();
+    // never reach here
+  }
+  _CORBA_Sequence_Array<T,Telm,dimension>::length(len);
+  return;
+}
+
 
 template <class T,int max,int elmSize, int elmAlignment>
 inline
@@ -398,6 +423,37 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::length(_CO
     // never reach here
   }
   _CORBA_Sequence<T>::length(len);
+  return;
+}
+
+template <class T,class Telm,int dimension,int max,int elmSize, int elmAlignment>
+inline
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>&
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>::operator=(const 
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>& s) 
+{
+  _CORBA_Sequence_Array<T,Telm,dimension>::operator=(s);
+  return *this;
+}
+
+template <class T,class Telm,int dimension,int max,int elmSize, int elmAlignment>
+inline
+_CORBA_ULong
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>::length() const
+{ 
+  return _CORBA_Sequence_Array<T,Telm,dimension>::length();
+}
+
+template <class T,class Telm,int dimension,int max,int elmSize, int elmAlignment>
+inline
+void
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>::length(_CORBA_ULong len)
+{
+  if (len > max) {
+    _CORBA_bound_check_error();
+    // never reach here
+  }
+  _CORBA_Sequence_Array<T,Telm,dimension>::length(len);
   return;
 }
 
