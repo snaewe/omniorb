@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // giopClient.cc              Created on: 26/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.12.6.1  1999/09/22 14:26:49  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.12  1999/08/30 16:50:17  sll
   Added call to Strand::Sync::clicksSet to control how long a call is
   allowed to progress or how long an idle connection is to stay open.
@@ -55,7 +58,7 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 #include <scavenger.h>
 
 GIOP_C::GIOP_C(Rope *r)

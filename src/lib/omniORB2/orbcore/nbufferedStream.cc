@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // nbufferedStream.cc         Created on: 14/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.12.6.1  1999/09/22 14:26:54  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.12  1999/09/08 11:41:39  sll
   In RdUnlock and WrUnlock, do not call into gaveback_* if the strand is
   already dying.
@@ -55,7 +58,7 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop

@@ -1,7 +1,7 @@
 // -*- Mode: C++; -*-
 //                            Package   : omniORB2
-// corbaBoa.cc                Created on: 6/2/96
-//                            Author    : Sai Lai Lo (sll)
+// corbaBoa.cc                Created on: 23/7/99
+//                            Author    : David Riddoch (djr)
 //
 //    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
@@ -24,436 +24,858 @@
 //
 //
 // Description:
-//      Implementation of the BOA interface
+//    Implementation of the BOA interface.
 //	
 
 /*
   $Log$
-  Revision 1.13  1999/08/30 18:55:29  sll
-  Added ENABLE_CLIENT_IR_SUPPORT.
+  Revision 1.13.6.1  1999/09/22 14:26:44  djr
+  Major rewrite of orbcore to support POA.
 
-  Revision 1.12  1999/08/30 16:53:16  sll
-  New option -BOAhelp.
-
-  Revision 1.11  1999/08/16 19:23:52  sll
-  The ctor of ropeFactory_iterator now takes a pointer argument.
-
-  Revision 1.10  1999/06/26 18:05:03  sll
-  New option -BOAiiop_name_port.
-
-  Revision 1.9  1999/05/25 17:17:41  sll
-  Added check for invalid argument in static member functions.
-
-  Revision 1.8  1999/03/11 16:25:51  djr
-  Updated copyright notice
-
-  Revision 1.7  1998/08/21 19:15:07  sll
-  Added new command line option: -BOAno_bootstrap_agent. If this option
-  is specified, do not initialise the special object that can respond to
-  incoming request for initial object references.
-
-  Revision 1.6  1998/08/14 13:43:39  sll
-  Added pragma hdrstop to control pre-compile header if the compiler feature
-  is available.
-
-  Revision 1.5  1998/04/07 19:31:46  sll
-  Replace cerr with omniORB::log.
-
-  Revision 1.4  1997/12/09 18:19:09  sll
-  New members BOA::impl_shutdown and BOA::destroy
-  Merged code from orb.cc.
-  Updated to use the new rope factory interfaces.
-
-// Revision 1.3  1997/05/06  15:09:04  sll
-// Public release.
-//
- */
+*/
 
 #define ENABLE_CLIENT_IR_SUPPORT
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
+#include <corbaBoa.h>
+#include <omniORB3/callDescriptor.h>
+#include <localIdentity.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <bootstrap_i.h>
-#include <ropeFactory.h>
-#include <objectManager.h>
-#ifndef __atmos__
-#include <tcpSocket.h>
-#define _tcpIncomingFactory tcpSocketMTincomingFactory
-#define _tcpIncomingRope    tcpSocketIncomingRope
-#define _tcpEndpoint        tcpSocketEndpoint
-#else
-#include <tcpATMos.h>
-#define _tcpIncomingFactory tcpATMosMTincomingFactory
-#define _tcpIncomingRope    tcpATMosIncomingRope
-#define _tcpEndpoint        tcpATMosEndpoint
-#endif
-#include <scavenger.h>
 
 #ifndef OMNIORB_USEHOSTNAME_VAR
 #define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
 #endif
 
-static CORBA::BOA_ptr     boa = 0;
-static const char*        myBOAId = "omniORB2_BOA";
-static omni_mutex         internalLock;
-static omni_condition     internalCond(&internalLock);
-static int                internalBlockingFlag = 0;
-static omniObjectManager* rootObjectManager = 0;
-static CORBA::Boolean     noBootStrapAgent = 0;
 
-omniObjectManager*
-omniObjectManager::root(CORBA::Boolean no_exception) throw (CORBA::OBJ_ADAPTER)
-{
-  if (!rootObjectManager) {
-    if (!no_exception)
-      throw CORBA::OBJ_ADAPTER(0,CORBA::COMPLETED_NO);
-    else
-      return 0;
-  }
-  return rootObjectManager;
-}
+#define MY_BOA_ID                      "omniORB3_BOA"
+#define OLD_BOA_ID                     "omniORB2_BOA"
 
 
-class BOAobjectManager : public omniObjectManager {
-public:
-  ropeFactoryList* incomingRopeFactories() { return &pd_factories; }
-  Rope* defaultLoopBack();
-
-  BOAobjectManager();
-  virtual ~BOAobjectManager() {}
-private:
-  ropeFactoryList  pd_factories;
-  Rope*            pd_loopback;
-};
-
-BOAobjectManager::BOAobjectManager() : pd_loopback(0) {
-  pd_factories.insert(new _tcpIncomingFactory);
-}
-
-Rope*
-BOAobjectManager::defaultLoopBack()
-{
-  omni_mutex_lock sync(internalLock);
-  if (!pd_loopback) {
-    Endpoint* myaddr = 0;
-
-    // Locate the incoming tcpSocket Rope, read its address and
-    // use this address to create a new outgoing tcpSocket Rope.
-    {
-      ropeFactory_iterator iter(&pd_factories);
-      incomingRopeFactory* factory;
-      while ((factory = (incomingRopeFactory*) iter())) {
-	if (factory->getType()->is_protocol( _tcpEndpoint ::protocol_name))
-	  {
-	    Rope_iterator riter(factory);
-	    _tcpIncomingRope * r = ( _tcpIncomingRope *) riter();
-	    if (r) {
-	      r->this_is(myaddr);
-	    }
-	    else {
-	      // This is tough!!! Haven't got a loop back!
-	      // May be the BOA has been destroyed!!!
-	      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
-	    }
-	  }
-      }
-    }
-
-    {
-      ropeFactory_iterator iter(globalOutgoingRopeFactories);
-      outgoingRopeFactory* factory;
-      while ((factory = (outgoingRopeFactory*) iter())) {
-	if ((pd_loopback = factory->findOrCreateOutgoing((Endpoint*)myaddr))) {
-	  break;
-	}
-      }
-    }
-    delete myaddr;
-  }
-  return pd_loopback;
-}
+static omniOrbBOA*                       the_boa = 0;
+static omni_tracedmutex                  boa_lock;
+static omniORB::loader::mapKeyToObject_t MapKeyToObjectFunction = 0;
 
 
 static
 CORBA::Boolean
 parse_BOA_args(int &argc,char **argv,const char *orb_identifier);
 
-CORBA::
-BOA::BOA()
-{
-  pd_magic = CORBA::BOA::PR_magic;
-}
+//////////////////////////////////////////////////////////////////////
+///////////////////////////// CORBA::BOA /////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
-CORBA::
-BOA::~BOA()
-{
-  pd_magic = 0;
-}
+CORBA::BOA::~BOA() {}
+
 
 CORBA::BOA_ptr
-CORBA::
-ORB::BOA_init(int &argc, char **argv, const char *boa_identifier)
+CORBA::ORB::BOA_init(int& argc, char** argv, const char* boa_identifier)
 {
-  omni_mutex_lock sync(internalLock);
-  if (boa)
-    return CORBA::BOA::_duplicate(boa);
+  omni_tracedmutex_lock sync(boa_lock);
+
+  if( the_boa ) {
+    the_boa->incrRefCount_locked();
+    return the_boa;
+  }
+
+  if( !parse_BOA_args(argc, argv, boa_identifier) )
+    throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
 
   try {
-    rootObjectManager = new BOAobjectManager;
-    if (!parse_BOA_args(argc,argv,boa_identifier)) {
-      throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
-    }
-
-    ropeFactory_iterator iter(rootObjectManager->incomingRopeFactories());
-    incomingRopeFactory* factory;
-
-    while ((factory = (incomingRopeFactory*)iter())) {
-      if (factory->getType()->is_protocol( _tcpEndpoint ::protocol_name)) {
-	CORBA::Boolean install_iiop_port = 1;
-	{
-	  // Do not call factory->instantiateIncoming() while the
-	  // Rope_iterator is still in scope. Otherwise deadlock will occur
-	  Rope_iterator iter(factory);
-	  if (iter() != 0) {
-	    // iiop port has already been specified by -BOAiiop_port
-	    install_iiop_port = 0;
-	  }
-	}
-	if (install_iiop_port) {
-	  CORBA::Char* hostname;
-	  if ((hostname=(CORBA::Char*)getenv(OMNIORB_USEHOSTNAME_VAR))==NULL){
-	    hostname = (CORBA::Char*)"";
-	  }
-	  _tcpEndpoint e (hostname,0);
-	  // instantiate a rope. Let the OS pick a port number.
-	  factory->instantiateIncoming(&e,1);
-	}
-      }
-    }
-    boa = new CORBA::BOA;
-    if (!noBootStrapAgent) {
-      	omniInitialReferences::singleton()->initialise_bootstrap_agentImpl();
-    }
+    omniObjAdapter::initialise();
   }
-  catch (...) {
-    if (rootObjectManager) {
-      delete rootObjectManager;
-      rootObjectManager = 0;
-    }
-    if (boa) {
-      delete boa;
-      boa = 0;
-    }
-    throw;
+  catch(...) {
+    throw CORBA::INITIALIZE(0, CORBA::COMPLETED_NO);
   }
-  return boa;
+
+  the_boa = new omniOrbBOA(0 /* not nil */);
+  the_boa->incrRefCount_locked();
+  return the_boa;
 }
+
 
 CORBA::BOA_ptr
-CORBA::
-BOA::getBOA()
+CORBA::BOA::getBOA()
 {
-  if (!boa) {
-    throw CORBA::OBJ_ADAPTER(0,CORBA::COMPLETED_NO);
-  }
-  return CORBA::BOA::_duplicate(boa);
-}
+  boa_lock.lock();
+  omniOrbBOA* boa = the_boa;
+  if( boa )  boa->incrRefCount_locked();
+  boa_lock.unlock();
 
-void
-CORBA::
-BOA::impl_is_ready(CORBA::ImplementationDef_ptr p,CORBA::Boolean NonBlocking)
-{
-  omni_mutex_lock sync(internalLock);
-  internalBlockingFlag++;
-  if (internalBlockingFlag == 1) {
-
-    {
-      // Beware of a possible deadlock where the scavenger thread and this
-      // thread both try to grep the mutex in factory->anchor().
-      // To prevent this from happening, put this block of code in a separate
-      // scope.
-      ropeFactory_iterator iter(rootObjectManager->incomingRopeFactories());
-      incomingRopeFactory* factory;
-      while ((factory = (incomingRopeFactory*)iter())) {
-	factory->startIncoming();
-      }
-    }
-    StrandScavenger::initInScavenger();
-  }
-  if (!NonBlocking) {
-    while (internalBlockingFlag > 0) {
-      internalCond.wait();	// block here until impl_shutdown()
-    }
-  }
-  else {
-    if (internalBlockingFlag != 1) {
-      internalBlockingFlag--;
-    }
-  }
-  // If impl_is_ready() has been called, internalBlockingFlag is >=1.
-  // If internalBlockFlag > 1, its value n indicates that n or n-1 threads
-  // are blocking inside impl_is_ready().
-  return;
-}
-
-void
-CORBA::
-BOA::impl_shutdown()
-{
-  omni_mutex_lock sync(internalLock);
-  if (internalBlockingFlag > 0) {
-    {
-      // Beware of a possible deadlock where the scavenger thread and this
-      // thread both try to grep the mutex in factory->anchor().
-      // To prevent this from happening, put this block of code in a separate
-      // scope.
-      ropeFactory_iterator iter(rootObjectManager->incomingRopeFactories());
-      incomingRopeFactory* factory;
-      while ((factory = (incomingRopeFactory*)iter())) {
-	factory->stopIncoming();
-      }
-    }
-    StrandScavenger::killInScavenger();
-    while (internalBlockingFlag) {
-      internalCond.signal();
-      internalBlockingFlag--;
-    }
-  }
-}
-
-void
-CORBA::
-BOA::destroy()
-{
-  omni_mutex_lock sync(internalLock);
-  {
-    // Beware of a possible deadlock where the scavenger thread and this
-    // thread both try to grep the mutex in factory->anchor().
-    // To prevent this from happening, put this block of code in a separate
-    // scope.
-    ropeFactory_iterator iter(rootObjectManager->incomingRopeFactories());
-    incomingRopeFactory* factory;
-    while ((factory = (incomingRopeFactory*)iter())) {
-      if (internalBlockingFlag > 0) {
-	factory->stopIncoming();
-      }
-      factory->removeIncoming();
-    }
-  }
-  if (internalBlockingFlag > 0) {
-    StrandScavenger::killInScavenger();
-    while (internalBlockingFlag) {
-      internalCond.signal();
-      internalBlockingFlag--;
-    }
-  }
-}
-
-
-void
-CORBA::
-BOA::dispose(CORBA::Object_ptr p)
-{
-  omni::disposeObject(p->PR_getobj());
-  return;
-}
-
-void 
-CORBA::
-BOA::obj_is_ready(Object_ptr op, ImplementationDef_ptr ip /* ignored */)
-{
-  omniObject *obj = op->PR_getobj();
-  omni::objectIsReady(obj);
-  return;
+  if( !boa )  throw CORBA::OBJ_ADAPTER(0, CORBA::COMPLETED_NO);
+  return boa;
 }
 
 
 CORBA::BOA_ptr 
-CORBA::
-BOA::_duplicate(CORBA::BOA_ptr p)
+CORBA::BOA::_duplicate(CORBA::BOA_ptr obj)
 {
-  if (!PR_is_valid(p)) throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-  return p;
+  if( !CORBA::is_nil(obj) )  obj->_NP_incrRefCount();
+
+  return obj;
 }
+
 
 CORBA::BOA_ptr
-CORBA::
-BOA::_nil()
+CORBA::BOA::_narrow(CORBA::Object_ptr obj)
 {
-  return 0;
+  if( CORBA::is_nil(obj) || !obj->_NP_is_pseudo() )  return _nil();
+
+  BOA_ptr p = (BOA_ptr) obj->_ptrToObjRef(_PD_repoId);
+
+  if( p )  p->_NP_incrRefCount();
+
+  return p ? p : _nil();
 }
 
-CORBA::Boolean
-CORBA::is_nil(CORBA::BOA_ptr p)
+
+static omniOrbBOA the_nil_boa(1 /* is nil */);
+
+
+CORBA::BOA_ptr
+CORBA::BOA::_nil()
 {
-  if (!CORBA::BOA::PR_is_valid(p))
-    return 0;
-  else
-    return ((p==0) ? 1 : 0);
+  return &the_nil_boa;
 }
+
+
+const char* CORBA::BOA::_PD_repoId = "IDL:omg.org/CORBA/BOA:1.0";
+
+//////////////////////////////////////////////////////////////////////
+///////////////////////////// omniOrbBOA /////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+#define CHECK_NOT_NIL_OR_DESTROYED()  \
+  if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();  \
+  if( pd_state == DESTROYED )  \
+    throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);  \
+
+
+omniOrbBOA::~omniOrbBOA()  {}
+
+
+omniOrbBOA::omniOrbBOA(int nil)
+  : BOA(nil),
+    pd_state(IDLE),
+    pd_refCount(1),
+    pd_activeObjList(0),
+    pd_nblocked(0),
+    pd_nwaiting(0),
+    pd_state_signal(&omni::internalLock)
+{
+}
+
 
 void
-CORBA::release(CORBA::BOA_ptr p)
+omniOrbBOA::impl_is_ready(CORBA::ImplementationDef_ptr,
+			  CORBA::Boolean dont_block)
 {
-  return;
+  if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
+
+  int state_changed = 0;
+  boa_lock.lock();
+  {
+    omni::internalLock.lock();
+
+    switch( pd_state ) {
+    case IDLE:
+      state_changed = 1;
+      pd_state = ACTIVE;
+      break;
+
+    case ACTIVE:
+      break;
+
+    case DESTROYED:
+      omni::internalLock.unlock();
+      boa_lock.unlock();
+      throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+      break;
+    }
+
+    omni::internalLock.unlock();
+  }
+
+  if( state_changed ) {
+    try { adapterActive(); }
+    catch(...) {
+      boa_lock.unlock();
+      throw;
+    }
+
+    // Wake-up anyone stuck in synchronise_request().
+    if( /* anyone stuck */ 1 )  pd_state_signal.broadcast();
+  }
+
+  if( !dont_block ) {
+    pd_nblocked++;
+
+    omni::internalLock.lock();
+    boa_lock.unlock();
+    pd_state_signal.wait();
+    omni::internalLock.unlock();
+
+    boa_lock.lock();
+    --pd_nblocked;
+    boa_lock.unlock();
+  }
+  else
+    boa_lock.unlock();
 }
+
+
+void
+omniOrbBOA::impl_shutdown()
+{
+  if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
+
+  int wake_blockers = 0;
+
+  {
+    omni_tracedmutex_lock sync(boa_lock);
+    int state_changed = 0;
+
+    omni::internalLock.lock();
+
+    switch( pd_state ) {
+    case IDLE:
+      break;
+
+    case ACTIVE:
+      state_changed = 1;
+      pd_state = IDLE;
+      break;
+
+    case DESTROYED:
+      omni::internalLock.unlock();
+      throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+      break;
+    }
+
+    omni::internalLock.unlock();
+
+    wake_blockers = state_changed && pd_nblocked > 0;
+
+    if( state_changed ) {
+      try { adapterInactive(); }
+      catch(...) {
+	if( wake_blockers )  pd_state_signal.broadcast();
+	throw;
+      }
+    }
+  }
+
+  // We cannot wait for request completion -- since if this is
+  // called from a CORBA operation we would block forever.
+  //  However, if the application is using the BOA only, then
+  // adapterInactive will give us the behaviour we desire.
+  // There is only a problem if using both POA and BOA.
+
+  // Wake-up anyone stuck in impl_is_ready().
+  if( wake_blockers )  pd_state_signal.broadcast();
+}
+
+
+void
+omniOrbBOA::destroy()
+{
+  if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
+
+  omniOrbBOA* boa = 0;
+  omniLocalIdentity* obj_list = 0;
+  int do_inactive = 0;
+
+  {
+    boa_lock.lock();
+    {
+      omni::internalLock.lock();
+
+      switch( pd_state ) {
+      case IDLE:
+	pd_state = DESTROYED;
+	break;
+
+      case ACTIVE:
+	do_inactive = 1;
+	pd_state = DESTROYED;
+	break;
+
+      case DESTROYED:
+	omni::internalLock.unlock();
+	boa_lock.unlock();
+	throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+	break;
+      }
+
+      omni::internalLock.unlock();
+    }
+
+    OMNIORB_ASSERT(the_boa == this);
+    boa = the_boa;
+    the_boa = 0;
+
+    // Grab the list of active objects.
+    if( pd_activeObjList )  pd_activeObjList->reRootOAObjList(&obj_list);
+
+    boa_lock.unlock();
+  }
+
+  // This can go outside of the <boa_lock> critical section,
+  // since once we are in the DESTROYED state, we will never
+  // return to the active state.
+  if( do_inactive ) {
+    try { adapterInactive(); }
+    catch(...) {}
+  }
+
+  // Remove all my objects from the object table.
+  omni::internalLock.lock();
+  omniLocalIdentity* id = obj_list;
+  while( id ) {
+    omni::deactivateObject(id->key(), id->keysize());
+    id = id->nextInOAObjList();
+  }
+  omni::internalLock.unlock();
+
+  // We need to kick anyone stuck in synchronise_request(),
+  // or impl_is_ready().
+  pd_state_signal.broadcast();
+
+  // Wait until outstanding invocations have completed.
+  waitForAllRequestsToComplete(0);
+
+  // Delete the identities, but not the servant itself.
+  // (See user's guide 5.4).
+  {
+    omniLocalIdentity* id = obj_list;
+    while( id ) {
+      omniLocalIdentity* next = id->nextInOAObjList();
+      id->deactivate();
+      OMNIORB_ASSERT(id->is_idle());
+      id->die();
+      id = next;
+    }
+  }
+
+  // Wait for objects which have been detached to complete
+  // their etherealisations.
+  wait_for_detached_objects();
+
+  CORBA::release(boa);
+}
+
+
+void 
+omniOrbBOA::obj_is_ready(omniOrbBoaServant* servant,
+			 CORBA::ImplementationDef_ptr /* ignored */)
+{
+  CHECK_NOT_NIL_OR_DESTROYED();
+  if( !servant )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+
+  servant->_obj_is_ready();
+}
+
+
+void 
+omniOrbBOA::obj_is_ready(CORBA::Object_ptr, CORBA::ImplementationDef_ptr)
+{
+  CHECK_NOT_NIL_OR_DESTROYED();
+
+  omniORB::logs(1, "CORBA::BOA::obj_is_ready() is not supported.  Use\n"
+		" _obj_is_ready(boa) on the object implementation instead.");
+
+  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
+}
+
+
+void
+omniOrbBOA::dispose(CORBA::Object_ptr obj)
+{
+  if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
+
+  if( !obj || obj->_NP_is_nil() )  return;
+  if( obj->_NP_is_pseudo() )
+    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+
+  boa_lock.lock();
+  omni::internalLock.lock();
+  dispose(obj->_PR_getobj()->_localId());
+  // The locks will have been released on return.
+}
+
 
 CORBA::Object_ptr
-CORBA::
-BOA::create(const CORBA::ReferenceData& ref,
-	    CORBA::InterfaceDef_ptr intf,
-	    CORBA::ImplementationDef_ptr impl)
+omniOrbBOA::create(const CORBA::ReferenceData& ref,
+		   CORBA::_objref_InterfaceDef* intf,
+		   CORBA::ImplementationDef_ptr impl)
 {
   // XXX not implemented yet
   return 0;
 }
 
-CORBA::ReferenceData *
-CORBA::
-BOA::get_id(CORBA::Object_ptr obj)
+
+CORBA::ReferenceData*
+omniOrbBOA::get_id(CORBA::Object_ptr obj)
 {
   // XXX not implemented yet
   return 0;
 }
+
 
 void
-CORBA::
-BOA::change_implementation(CORBA::Object_ptr obj,
-			   CORBA::ImplementationDef_ptr impl)
+omniOrbBOA::change_implementation(CORBA::Object_ptr obj,
+				  CORBA::ImplementationDef_ptr impl)
 {
   // XXX not implemented yet
   return;
 }
+
 
 CORBA::Principal_ptr
-CORBA::
-BOA::get_principal(CORBA::Object_ptr obj, CORBA::Environment_ptr env)
+omniOrbBOA::get_principal(CORBA::Object_ptr obj, CORBA::Environment_ptr env)
 {
   // XXX not implemented yet
   return 0;
 }
 
+
 void
-CORBA::
-BOA::deactivate_impl(CORBA::ImplementationDef_ptr impl)
+omniOrbBOA::deactivate_impl(CORBA::ImplementationDef_ptr impl)
 {
   // XXX not implemented yet
   return;
 }
 
+
 void
-CORBA::
-BOA::deactivate_obj(CORBA::Object_ptr obj)
+omniOrbBOA::deactivate_obj(CORBA::Object_ptr obj)
 {
   // XXX not implemented yet
   return;
 }
+
+///////////////////
+// CORBA::Object //
+///////////////////
+
+_CORBA_Boolean
+omniOrbBOA::_non_existent()
+{
+  if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
+
+  omni_tracedmutex_lock sync(omni::internalLock);
+
+  return pd_state == DESTROYED ? 1 : 0;
+}
+
+
+void*
+omniOrbBOA::_ptrToObjRef(const char* repoId)
+{
+  OMNIORB_ASSERT(repoId);
+
+  if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
+  if( !strcmp(repoId, CORBA::BOA::_PD_repoId) )
+    return (CORBA::BOA_ptr) this;
+
+  return 0;
+}
+
+
+void
+omniOrbBOA::_NP_incrRefCount()
+{
+  boa_lock.lock();
+  pd_refCount++;
+  boa_lock.unlock();
+}
+
+
+void
+omniOrbBOA::_NP_decrRefCount()
+{
+  boa_lock.lock();
+  int done = --pd_refCount > 0;
+  boa_lock.unlock();
+  if( done )  return;
+
+  omniORB::logs(15, "No more references to the BOA -- deleted.");
+
+  delete this;
+}
+
+/////////////////////////////
+// Override omniObjAdapter //
+/////////////////////////////
+
+void
+omniOrbBOA::incrRefCount()
+{
+  boa_lock.lock();
+  pd_refCount++;
+  boa_lock.unlock();
+}
+
+
+void
+omniOrbBOA::decrRefCount()
+{
+  boa_lock.lock();
+  int done = --pd_refCount > 0;
+  boa_lock.unlock();
+  if( done )  return;
+
+  omniORB::logs(15, "No more references to the BOA -- deleted.");
+
+  delete this;
+}
+
+
+void
+omniOrbBOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  OMNIORB_ASSERT(id);  OMNIORB_ASSERT(id->servant());
+  OMNIORB_ASSERT(id->adapter() == this);
+
+  enterAdapter();
+
+  if( pd_state != ACTIVE )  synchronise_request();
+
+  startRequest();
+
+  omni::internalLock.unlock();
+
+  if( omniORB::trace(10) ) {
+    omniORB::logger l;
+    l << "Dispatching remote call \'" << giop_s.operation() << "\' to "
+      << id << '\n';
+  }
+
+  if( !id->servant()->_dispatch(giop_s) ) {
+    if( !id->servant()->omniServant::_dispatch(giop_s) ) {
+      giop_s.RequestReceived(1);
+      throw CORBA::BAD_OPERATION(0, CORBA::COMPLETED_NO);
+    }
+  }
+}
+
+
+void
+omniOrbBOA::dispatch(GIOP_S& giop_s, const CORBA::Octet* key, int keysize)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  OMNIORB_ASSERT(key && keysize == sizeof(omniOrbBoaKey));
+
+  omniORB::loader::mapKeyToObject_t loader = MapKeyToObjectFunction;
+  if( !loader )  throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+
+  omniOrbBoaKey k;
+  memcpy(&k, key, sizeof(omniOrbBoaKey));
+
+  CORBA::Object_ptr obj = loader(k);
+
+  if( CORBA::is_nil(obj) )  CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+  else                      throw omniORB::LOCATION_FORWARD(obj);
+}
+
+
+void
+omniOrbBOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  OMNIORB_ASSERT(id);  OMNIORB_ASSERT(id->servant());
+  OMNIORB_ASSERT(id->adapter() == this);
+
+  enterAdapter();
+
+  if( pd_state != ACTIVE )  synchronise_request();
+
+  startRequest();
+
+  omni::internalLock.unlock();
+
+  if( omniORB::trace(10) ) {
+    omniORB::logger l;
+    l << "Dispatching local call \'" << call_desc.op() << "\' to "
+      << id << '\n';
+  }
+
+  call_desc.doLocalCall(id->servant());
+}
+
+
+int
+omniOrbBOA::objectExists(const _CORBA_Octet* key, int keysize)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  OMNIORB_ASSERT(key && keysize == sizeof(omniOrbBoaKey));
+
+  omniORB::loader::mapKeyToObject_t loader = MapKeyToObjectFunction;
+  if( !loader )  return 0;
+
+  omniOrbBoaKey k;
+  memcpy(&k, key, sizeof(omniOrbBoaKey));
+
+  CORBA::Object_ptr obj = loader(k);
+
+  if( CORBA::is_nil(obj) )  return 0;
+  else                      throw omniORB::LOCATION_FORWARD(obj);
+}
+
+
+void
+omniOrbBOA::lastInvocationHasCompleted(omniLocalIdentity* id)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+
+  if( omniORB::trace(15) ) {
+    omniORB::logger l;
+    l << "BOA etherealising detached object.\n"
+      << " id: " << id->servant()->_mostDerivedRepoId() << "\n";
+  }
+
+  delete id->servant();
+  met_detached_object();
+  id->die();
+}
+
+
+char*
+omniOrbBOA::ppObject(omniLocalIdentity* id)
+{
+  // output: boa<key-in-hex>
+
+  static char cm[] = { '0', '1', '2', '3', '4', '5', '6', '7',
+		       '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+  int size = 6 + id->keysize() * 2;
+  char* ret = new char[size];
+  char* s = ret;
+  strcpy(s, "boa<");
+  s += strlen(s);
+
+  const unsigned char* k = (const unsigned char*) id->key();
+
+  for( int i = 0; i < id->keysize(); i++, k++ ) {
+    *s++ = cm[*k >> 4];
+    *s++ = cm[*k & 0xf];
+  }
+  *s++ = '>';
+  *s++ = '\0';
+
+  return ret;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+omniOrbBOA*
+omniOrbBOA::theBOA()
+{
+  boa_lock.lock();
+  omniOrbBOA* boa = the_boa;
+  if( boa )  boa->incrRefCount_locked();
+  boa_lock.unlock();
+
+  return boa;
+}
+
+
+void
+omniOrbBOA::dispose(omniLocalIdentity* lid)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(boa_lock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+
+  if( pd_state == DESTROYED ) {
+    omni::internalLock.unlock();
+    boa_lock.unlock();
+    throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+  }
+
+  if( !lid || !lid->servant() ) {
+    omni::internalLock.unlock();
+    boa_lock.unlock();
+    return;
+  }
+
+  omniLocalIdentity* id = omni::deactivateObject(lid->key(), lid->keysize());
+  if( !id ) {
+    omni::internalLock.unlock();
+    boa_lock.unlock();
+    return;
+  }
+  OMNIORB_ASSERT(id == lid);
+
+  id->deactivate();
+  id->removeFromOAObjList();
+
+  if( id->is_idle() ) {
+    omni::internalLock.unlock();
+    boa_lock.unlock();
+
+    omniORB::logs(15, "Object is idle -- delete now.");
+
+    delete id->servant();
+    id->die();
+  }
+  else {
+    // When outstanding requests have completed the object
+    // will be etherealised.
+    omni::internalLock.unlock();
+    detached_object();
+    boa_lock.unlock();
+
+    omniORB::logs(15, "Object is still busy -- etherealise later.");
+  }
+}
+
+
+void
+omniOrbBOA::synchronise_request()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+
+  // Wait until the request can proceed, or discard it.
+
+  // We limit the number of threads stuck here, so as to more
+  // closely match the semantics of the old BOA -- where
+  // clients would be stuck in a queue on the socket, waiting
+  // to be allowed to connect.
+  //  NB. If only the BOA is used, then the old semantics are
+  // preserved anyway.  This will only apply when the BOA and
+  // POA are used together.
+  if( pd_nwaiting == /*??* max */ 5 ) {
+    startRequest();
+    omni::internalLock.unlock();
+    throw CORBA::COMM_FAILURE(0, CORBA::COMPLETED_NO);
+  }
+
+  pd_nwaiting++;
+  while( pd_state == IDLE )  pd_state_signal.wait();
+  pd_nwaiting--;
+
+  switch( pd_state ) {
+  case IDLE: // get rid of warnings!
+  case ACTIVE:
+    break;
+
+  case DESTROYED:
+    startRequest();
+    omni::internalLock.unlock();
+    throw CORBA::OBJ_ADAPTER(0, CORBA::COMPLETED_NO);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+////////////////////////// omniOrbBoaServant /////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+omniOrbBoaServant::~omniOrbBoaServant()  {}
+
+
+omniOrbBoaServant::omniOrbBoaServant()
+{
+  omniORB::generateNewKey(pd_key);
+}
+
+
+void
+omniOrbBoaServant::_dispose()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(boa_lock, 0);
+
+  boa_lock.lock();
+
+  if( !the_boa ) {
+    boa_lock.unlock();
+    throw CORBA::OBJ_ADAPTER(0, CORBA::COMPLETED_NO);
+  }
+  // We have to grab a ref to the boa here, since <boa_lock> is
+  // released during omniOrbBOA::dispose() -- thus the_boa could
+  // be released under our feet!
+  the_boa->incrRefCount_locked();
+  omniOrbBOA* boa = the_boa;
+  CORBA::BOA_var ref_holder(boa);
+
+  omni::internalLock.lock();
+  boa->dispose(_identities());
+}
+
+
+void
+omniOrbBoaServant::_obj_is_ready()
+{
+  boa_lock.lock();
+
+  // Why not throw OBJ_ADAPTER?
+  if( !the_boa ) {
+    boa_lock.unlock();
+    throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+  }
+
+  omniObjKey key((const CORBA::Octet*) &pd_key, sizeof(omniOrbBoaKey));
+
+  omni::internalLock.lock();
+
+  omniLocalIdentity* id = omni::activateObject(this, the_boa, key);
+
+  // Why throw this?
+  if( !id ) {
+    omni::internalLock.unlock();
+    boa_lock.unlock();
+    throw CORBA::INV_OBJREF(0, CORBA::COMPLETED_NO);
+  }
+
+  omni::internalLock.unlock();
+  id->insertIntoOAObjList(the_boa->activeObjList());
+  boa_lock.unlock();
+}
+
+
+void*
+omniOrbBoaServant::_this(const char* repoId)
+{
+  OMNIORB_ASSERT(repoId);
+
+  CORBA::ULong hash = omni::hash((const CORBA::Octet*) &pd_key,
+				 sizeof(omniOrbBoaKey));
+
+  omni::internalLock.lock();
+  omniLocalIdentity* id = _identities();
+  if( !id )
+    // We do know the key, so we can generate a reference anyway.
+    id = omni::locateIdentity((const CORBA::Octet*) &pd_key,
+			      sizeof(omniOrbBoaKey), hash, 1);
+
+  omniObjRef* objref = omni::createObjRef(_mostDerivedRepoId(), repoId, id);
+  omni::internalLock.unlock();
+
+  OMNIORB_ASSERT(objref);
+
+  return objref->_ptrToObjRef(repoId);
+}
+
+
+omniObjRef*
+omniOrbBoaServant::_do_get_interface()
+{
+  OMNIORB_ASSERT(0);//??
+  return 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 static
 void
@@ -468,25 +890,28 @@ move_args(int& argc,char **argv,int idx,int nargs)
     }
 }
 
+
 static
 CORBA::Boolean
-parse_BOA_args(int &argc,char **argv,const char *orb_identifier)
+parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
 {
   CORBA::Boolean orbId_match = 0;
-  if (orb_identifier && strcmp(orb_identifier,myBOAId) != 0)
-    {
-      if (omniORB::traceLevel > 0) {
-	omniORB::log << "BOA_init failed: the BOAid ("
-		     << orb_identifier << ") is not " <<  myBOAId << "\n";
-	omniORB::log.flush();
-      }
-      return 0;
+  if( orb_identifier && strcmp(orb_identifier, MY_BOA_ID)
+                     && strcmp(orb_identifier, OLD_BOA_ID) ) {
+    if( omniORB::trace(1) ) {
+      omniORB::logger l;
+      l << "BOA_init failed -- the BOAid (" << orb_identifier << ")"
+	" is not " << MY_BOA_ID << "\n";
     }
+    return 0;
+  }
+  if( omniORB::trace(1) && !strcmp(orb_identifier, OLD_BOA_ID) )
+    omniORB::logs(1, "WARNING -- using BOAid omniORB2_BOA with omniORB3.");
 
   int idx = 1;
   while (argc > idx)
     {
-      // -BOAxxxxxxxx ??
+      // -BOAxxxxxxxx ?
       if (strlen(argv[idx]) < 4 ||
 	  !(argv[idx][0] == '-' && argv[idx][1] == 'B' &&
 	    argv[idx][2] == 'O' && argv[idx][3] == 'A'))
@@ -498,18 +923,15 @@ parse_BOA_args(int &argc,char **argv,const char *orb_identifier)
       // -BOAid <id>
       if (strcmp(argv[idx],"-BOAid") == 0) {
 	if ((idx+1) >= argc) {
-	  if (omniORB::traceLevel > 0) {
-	    omniORB::log << "BOA_init failed: missing -BOAid parameter.\n";
-	    omniORB::log.flush();
-	  }
+	  omniORB::logs(1, "BOA_init failed: missing -BOAid parameter.");
 	  return 0;
 	}
-	if (strcmp(argv[idx+1],myBOAId) != 0)
+	if (strcmp(argv[idx+1], MY_BOA_ID) != 0)
 	  {
-	    if (omniORB::traceLevel > 0) {
-	      omniORB::log << "BOA_init failed: the BOAid ("
-			   << argv[idx+1] << ") is not " << myBOAId << "\n";
-	      omniORB::log.flush();
+	    if ( omniORB::trace(1) ) {
+	      omniORB::logger l;
+	      l << "BOA_init failed -- the BOAid (" <<
+		argv[idx+1] << ") is not " << MY_BOA_ID << "\n";
 	    }
 	    return 0;
 	  }
@@ -521,53 +943,23 @@ parse_BOA_args(int &argc,char **argv,const char *orb_identifier)
       // -BOAiiop_port <port number>[,<port number>]*
       if (strcmp(argv[idx],"-BOAiiop_port") == 0) {
 	if ((idx+1) >= argc) {
-	  if (omniORB::traceLevel > 0) {
-	    omniORB::log << "BOA_init failed: missing -BOAiiop_port parameter.\n";
-	    omniORB::log.flush();
-	  }
+	  omniORB::logs(1, "BOA_init failed -- missing -BOAiiop_port"
+			" parameter.");
 	  return 0;
 	}
         unsigned int port;
 	if (sscanf(argv[idx+1],"%u",&port) != 1 ||
-            (port == 0 || port >= 65536)) {
-	  if (omniORB::traceLevel > 0) {
-	    omniORB::log << "BOA_init failed: invalid -BOAiiop_port parameter.\n";
-	    omniORB::log.flush();
-	  }
+	    (port == 0 || port >= 65536)) {
+	  omniORB::logs(1, "BOA_init failed -- invalid -BOAiiop_port"
+			" parameter.");
 	  return 0;
 	}
 
-	CORBA::Char* hostname;
-	if ((hostname = (CORBA::Char*)getenv(OMNIORB_USEHOSTNAME_VAR))==NULL) {
-	  hostname = (CORBA::Char*)"";
-	}
-	try {
-	  _tcpEndpoint e (hostname,(CORBA::UShort)port);
-	  ropeFactory_iterator iter(rootObjectManager->incomingRopeFactories());
-	  incomingRopeFactory* factory;
-	  while ((factory = (incomingRopeFactory*)iter())) {
-	    if (factory->getType()->is_protocol( _tcpEndpoint ::protocol_name)) {
-	      if (!factory->isIncoming(&e)) {
-		// This port has not been instantiated
-		factory->instantiateIncoming(&e,1);
-		if (omniORB::traceLevel >= 2) {
-		  omniORB::log << "Accept IIOP calls on port " << e.port()
-			       << "\n";
-		  omniORB::log.flush();
-		}
-	      }
-	      break;
-	    }
-	  }
-	}
-	catch (...) {
-	  if (omniORB::traceLevel > 0) {
-	    omniORB::log << "BOA_init falied: cannot use port " << port
-			 << " to accept incoming IIOP calls.\n";
-	    omniORB::log.flush();
-	  }
-	  return 0;
-	}
+	const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
+	if( !hostname )  hostname = "";
+	omniObjAdapter::options.
+	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
+
 	move_args(argc,argv,idx,2);
 	continue;
       }
@@ -575,74 +967,49 @@ parse_BOA_args(int &argc,char **argv,const char *orb_identifier)
       // -BOAiiop_name_port <hostname[:port number]>
       if (strcmp(argv[idx],"-BOAiiop_name_port") == 0) {
         if ((idx+1) >= argc) {
-          if (omniORB::traceLevel > 0) {
-            omniORB::log << "BOA_init failed: missing -BOAiiop_name_port parameter.\n";
-	    omniORB::log << "usage: -BOAiiop_name_port <hostname[:port number]>+\n";
-            omniORB::log.flush();
-          }
+	  omniORB::logs(1, "BOA_init failed -- missing -BOAiiop_name_port"
+			" parameter.\n"
+		" usage: -BOAiiop_name_port <hostname[:port number]>+");
           return 0;
         }
 
-        // copy the hostname part of the argument (including :port)
+        // Copy the hostname part of the argument (including :port).
         char hostname[255+1];
-        strncpy(hostname, argv[idx+1],255);
+        strncpy(hostname, argv[idx+1], 255);
 	hostname[255] = '\0';
 
-        // find the :port part of the argument
-        // if the port is not specified, we default to 0 which lets the OS pick a number
+        // Find the :port part of the argument.  If the port is
+	// not specified, we default to 0 which lets the OS pick
+	// a number.
         int port = 0;
-        char *port_str = strchr(hostname, ':');
-        if (port_str != 0) {
-           // if the port-number is not specified, fall back to port=0
-           if (port_str[1] == '\0')
-              port = 0;
-           else if (sscanf(port_str+1,"%u",&port) != 1 || (port < 0 || port >= 65536)) {
-              if (omniORB::traceLevel > 0) {
-                 omniORB::log << "BOA_init failed: invalid -BOAiiop_name_port parameter. "
-                              << "Portnumber out of range : " << port << ".\n";
-                 omniORB::log.flush();
-              }
-              return 0;
-           }
+        char* port_str = strchr(hostname, ':');
+        if( port_str != 0 ) {
+	  // if the port-number is not specified, fall back to port=0
+	  if (port_str[1] == '\0')  port = 0;
+	  else if( sscanf(port_str+1, "%u", &port) != 1 ||
+		   (port < 0 || port >= 65536) ) {
+	    if ( omniORB::trace(1) ) {
+	      omniORB::logger l;
+	      l << "BOA_init failed -- invalid -BOAiiop_name_port\n"
+		" parameter.  Port number out of range: " << port << ".\n";
+	    }
+	    return 0;
+	  }
 
-           // null terminate and isolate hostname argument
-           *port_str = 0;
+	  // null terminate and isolate hostname argument
+	  *port_str = 0;
         }
 
-        try {
-          _tcpEndpoint e ((CORBA::Char*)hostname,(CORBA::UShort)port);
-          ropeFactory_iterator iter(rootObjectManager->incomingRopeFactories());
-          incomingRopeFactory* factory;
-          while ((factory = (incomingRopeFactory*)iter())) {
-            if (factory->getType()->is_protocol( _tcpEndpoint ::protocol_name)) {
-              if (!factory->isIncoming(&e)) {
-                // This port has not been instantiated
-                factory->instantiateIncoming(&e,1);
-                if (omniORB::traceLevel >= 2) {
-                  omniORB::log << "Accept IIOP calls on port " << e.port()
-                               << "\n";
-                  omniORB::log.flush();
-                }
-              }
-              break;
-            }
-          }
-        }
-        catch (...) {
-          if (omniORB::traceLevel > 0) {
-            omniORB::log << "BOA_init falied: cannot use port " << port
-                         << " to accept incoming IIOP calls.\n";
-            omniORB::log.flush();
-          }
-          return 0;
-        }
+	omniObjAdapter::options.
+	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
+
         move_args(argc,argv,idx,2);
         continue;
       }
 
       // -BOAno_bootstrap_agent
       if (strcmp(argv[idx],"-BOAno_bootstrap_agent") == 0) {
-	noBootStrapAgent = 1;
+	omniObjAdapter::options.noBootstrapAgent = 1;
 	move_args(argc,argv,idx,1);
 	continue;
       }
@@ -658,24 +1025,29 @@ parse_BOA_args(int &argc,char **argv,const char *orb_identifier)
 	move_args(argc,argv,idx,1);
 	continue;
       }
-      
 
       // Reach here only if the argument in this form: -BOAxxxxx
       // is not recognised.
-      if (omniORB::traceLevel > 0) {
-	omniORB::log << "BOA_init failed: unknown BOA argument ("
-		     << argv[idx] << ")\n";
-	omniORB::log.flush();
+      if ( omniORB::trace(1) ) {
+	omniORB::logger l;
+	l << "BOA_init failed: unknown BOA argument (" << argv[idx] << ")\n";
       }
       return 0;
     }
 
   if (!orb_identifier && !orbId_match) {
-    if (omniORB::traceLevel > 0) {
-      omniORB::log << "BOA_init failed: BOAid is not specified.\n";
-      omniORB::log.flush();
-    }
+    omniORB::logs(1, "BOA_init failed: BOAid is not specified.");
     return 0;
   }
   return 1;
+}
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// omniORB::loader //////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+void 
+omniORB::loader::set(omniORB::loader::mapKeyToObject_t NewMapKeyToObject) 
+{
+  MapKeyToObjectFunction = NewMapKeyToObject;
 }

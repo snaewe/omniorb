@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // LibcWrapper.h              Created on: 19/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.6.8.1  1999/09/22 14:26:52  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.6  1999/03/11 16:25:54  djr
   Updated copyright notice
 

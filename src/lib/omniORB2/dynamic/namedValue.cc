@@ -27,6 +27,12 @@
 //   Implementation of CORBA::NamedValue.
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <pseudo.h>
 
 
@@ -184,8 +190,7 @@ CORBA::release(NamedValue_ptr p)
 
 
 CORBA::Status
-CORBA::
-ORB::create_named_value(NamedValue_out nmval)
+CORBA::ORB::create_named_value(NamedValue_out nmval)
 {
   nmval = new NamedValueImpl((CORBA::Flags)0);
   RETURN_CORBA_STATUS;

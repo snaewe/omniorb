@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // tcParser.h                 Created on: 8/1998
 //                            Author1   : James Weatherall (jnw)
 //                            Author2   : David Riddoch (djr)
@@ -53,7 +53,7 @@
 #ifndef __TCPARSER_H__
 #define __TCPARSER_H__
 
-#include <omniORB2/tcDescriptor.h>
+#include <omniORB3/tcDescriptor.h>
 
 
 class TypeCode_base;

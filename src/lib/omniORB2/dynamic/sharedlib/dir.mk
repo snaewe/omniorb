@@ -1,4 +1,4 @@
-# dir.mk for omniORB2
+# dir.mk for omniORB
 #
 # Build a shared library in this directory
 # **** DO NOT forget to update the $(VERSION) number.
@@ -7,7 +7,7 @@
 # The Version number is constructed as follows:
 #    <major version no.>.<minor version no.>.<micro version no.>
 #
-# The <major version no.> is always 2 for omniORB2.
+# The <major version no.> is always 3 for omniORB3.
 #
 # The <minor version no.> changes when:
 #   1. Public interfaces have been extended but remains backward compatible
@@ -19,7 +19,7 @@
 # corresponds to a pure bug fix release.
 #
 # 
-VERSION = 2.8.0
+VERSION = 3.0.0
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
@@ -71,13 +71,13 @@ DIR_CPPFLAGS += -DNTArchitecture
 ifndef BuildWin32DebugLibraries
 
 # Temporary added micro version number to the name of the dll.
-implib = $(patsubst %,$(DLLPattern),omniORB2$(minor_version)$(micro_version))
-#implib = $(patsubst %,$(DLLPattern),omniORB2$(minor_version))
-staticlib = ../$(patsubst %,$(LibPattern),omniORB2)
+implib = $(patsubst %,$(DLLPattern),omniORB3$(minor_version)$(micro_version))
+#implib = $(patsubst %,$(DLLPattern),omniORB3$(minor_version))
+staticlib = ../$(patsubst %,$(LibPattern),omniORB3)
 
-dynimplib = $(patsubst %,$(DLLPattern),omniDynamic2$(minor_version)$(micro_version))
-#dynimplib = $(patsubst %,$(DLLPattern),omniDynamic2$(minor_version))
-dynstaticlib = ../$(patsubst %,$(LibPattern),omniDynamic2)
+dynimplib = $(patsubst %,$(DLLPattern),omniDynamic3$(minor_version)$(micro_version))
+#dynimplib = $(patsubst %,$(DLLPattern),omniDynamic3$(minor_version))
+dynstaticlib = ../$(patsubst %,$(LibPattern),omniDynamic3)
 
 CXXOPTIONS  = $(MSVC_DLL_CXXNODEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_DLL_CXXLINKNODEBUGOPTIONS)
@@ -93,13 +93,13 @@ else
 #
 
 # Temporary added micro version number to the name of the dll.
-implib = $(patsubst %,$(DLLDebugPattern),omniORB2$(minor_version)$(micro_version))
-#implib = $(patsubst %,$(DLLDebugPattern),omniORB2$(minor_version))
-staticlib = ../../debug/$(patsubst %,$(LibDebugPattern),omniORB2)
+implib = $(patsubst %,$(DLLDebugPattern),omniORB3$(minor_version)$(micro_version))
+#implib = $(patsubst %,$(DLLDebugPattern),omniORB3$(minor_version))
+staticlib = ../../debug/$(patsubst %,$(LibDebugPattern),omniORB3)
 
-dynimplib = $(patsubst %,$(DLLDebugPattern),omniDynamic2$(minor_version)$(micro_version))
-#dynimplib = $(patsubst %,$(DLLDebugPattern),omniDynamic2$(minor_version))
-dynstaticlib = ../../debug/$(patsubst %,$(LibDebugPattern),omniDynamic2)
+dynimplib = $(patsubst %,$(DLLDebugPattern),omniDynamic3$(minor_version)$(micro_version))
+#dynimplib = $(patsubst %,$(DLLDebugPattern),omniDynamic3$(minor_version))
+dynstaticlib = ../../debug/$(patsubst %,$(LibDebugPattern),omniDynamic3)
 
 CXXDEBUGFLAGS = 
 CXXOPTIONS = $(MSVC_DLL_CXXDEBUGFLAGS)
@@ -136,35 +136,25 @@ endif
 #   Make variables common to all platforms                                  #
 #############################################################################
 
-DYN2_SRCS = any.cc typecode.cc anyP.cc tcParser.cc \
-	    dynAny.cc dynAnyNil.cc \
-	    namedValue.cc nvList.cc exceptionList.cc contextList.cc \
-	    environment.cc context.cc deferredRequest.cc unknownUserExn.cc \
-            proxyCall.cc \
-	    request.cc serverRequest.cc dynamicImplementation.cc \
-	    pseudoBase.cc dynException.cc ir.cc \
-	    irstub.cc irdynstub.cc corbaidlstub.cc corbaidldynstub.cc \
-            bootstrapdynstub.cc Namingdynstub.cc \
-	    orbMultiRequest.cc
+DYN_SRCS = any.cc typecode.cc anyP.cc tcParser.cc \
+	   dynAny.cc dynAnyNil.cc \
+	   namedValue.cc nvList.cc exceptionList.cc contextList.cc \
+	   environment.cc context.cc deferredRequest.cc unknownUserExn.cc \
+	   request.cc serverRequest.cc dynamicImplementation.cc \
+	   pseudoBase.cc dynException.cc ir.cc \
+	   irstub.cc irdynstub.cc corbaidlstub.cc corbaidldynstub.cc \
+           bootstrapdynstub.cc Namingdynstub.cc \
+	   orbMultiRequest.cc constants.cc dynamicLib.cc
 
-DYN2_OBJS = any.o typecode.o anyP.o tcParser.o \
-	    dynAny.o dynAnyNil.o \
-	    namedValue.o nvList.o exceptionList.o contextList.o \
-	    environment.o context.o deferredRequest.o unknownUserExn.o \
-            proxyCall.o \
-	    request.o serverRequest.o dynamicImplementation.o \
-	    pseudoBase.o dynException.o ir.o \
-	    irstub.o irdynstub.o corbaidlstub.o corbaidldynstub.o \
-            bootstrapdynstub.o Namingdynstub.o \
-	    orbMultiRequest.o
+DYN_OBJS =  $(DYN_SRCS:.cc=.o)
 
 DIR_CPPFLAGS += $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -I./.. -I./../.. -I./../../..
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
-DIR_CPPFLAGS += -D_OMNIORB2_DYNAMIC_LIBRARY
+DIR_CPPFLAGS += -D_OMNIORB_DYNAMIC_LIBRARY
 
-CXXSRCS = $(DYN2_SRCS)
+CXXSRCS = $(DYN_SRCS)
 
 #############################################################################
 #   Make rules for Solaris 2.x                                              #
@@ -186,7 +176,7 @@ dynlib = $(dynsoname).$(micro_version)
 
 all:: $(dynlib)
 
-$(dynlib): $(DYN2_OBJS)
+$(dynlib): $(DYN_OBJS)
 	(set -x; \
         $(RM) $@; \
         CC -G -o $@ -h $(dynsoname) $(IMPORT_LIBRARY_FLAGS) \
@@ -233,7 +223,7 @@ dynlib = $(dynsoname).$(micro_version)
 
 all:: $(dynlib)
 
-$(dynlib): $(DYN2_OBJS)
+$(dynlib): $(DYN_OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) -shared -Wl,-soname,$(dynsoname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
@@ -276,7 +266,7 @@ dynlib = $(dynsoname).$(micro_version)
 
 all:: $(dynlib)
 
-$(dynlib): $(DYN2_OBJS)
+$(dynlib): $(DYN_OBJS)
 	(rpath="$(RPATH)"; \
          for arg in $(OMNITHREAD_LIB) /usr/lib/cmplrs/cxx; do \
          if expr "$$arg" : "-L" >/dev/null; then \
@@ -330,7 +320,7 @@ all:: $(dynlib)
 
 ifeq ($(notdir $(CXX)),xlC_r)
 
-$(dynlib): $(DYN2_OBJS)
+$(dynlib): $(DYN_OBJS)
 	(set -x; \
         $(RM) $@; \
         /usr/lpp/xlC/bin/makeC++SharedLib_r \
@@ -345,7 +335,7 @@ endif
 
 ifeq ($(notdir $(CXX)),g++)
 
-$(dynlib): $(DYN2_OBJS)
+$(dynlib): $(DYN_OBJS)
 	(set -x; \
          $(RM) $@; \
          $(CXXLINK) -shared -mthreads \
@@ -415,13 +405,13 @@ all:: $(dynlib)
 all::
 	@$(MakeSubdirs)
 
-$(dynlib): $(DYN2_OBJS) omniDynamic2.def
+$(dynlib): $(DYN_OBJS) omniDynamic3.def
 	(libs="$(NT_EXTRA_LIBS) $(OMNITHREAD_LIB) $(implib)"; \
          $(RM) $@; \
-         $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) -def:omniDynamic2.def -IMPLIB:$(dynimplib) $(IMPORT_LIBRARY_FLAGS) $(DYN2_OBJS) $$libs; \
+         $(CXXLINK) -out:$@ -DLL $(CXXLINKOPTIONS) -def:omniDynamic3.def -IMPLIB:$(dynimplib) $(IMPORT_LIBRARY_FLAGS) $(DYN_OBJS) $$libs; \
         )
 
-# omniORB2.def
+# omniORB3.def
 #  - This file contains all the functions and static class variables
 #    exported by the DLL. The symbols are extracted from the output of
 #    dumpbin.
@@ -439,16 +429,16 @@ $(dynlib): $(DYN2_OBJS) omniDynamic2.def
 #    and class static variable and static function symbols start with one ?.
 #                                                             - SLL
 #
-omniDynamic2.def: $(dynstaticlib)
+omniDynamic3.def: $(dynstaticlib)
 	(set -x; \
-         echo "LIBRARY $(dynlibname)" > omniDynamic2.def; \
-         echo "VERSION $(minor_version).$(micro_version)" >> omniDynamic2.def; \
-         echo "EXPORTS" >> omniDynamic2.def; \
+         echo "LIBRARY $(dynlibname)" > omniDynamic3.def; \
+         echo "VERSION $(minor_version).$(micro_version)" >> omniDynamic3.def; \
+         echo "EXPORTS" >> omniDynamic3.def; \
          DUMPBIN.EXE /SYMBOLS $(dynstaticlib) | \
          egrep '^[^ ]+ +[^ ]+ +SECT[^ ]+ +[^ ]+ +\(\) +External +\| +\?[^ ]*|^[^ ]+ +[^ ]+ +SECT[^ ]+ +[^ ]+ +External +\| +\?[^?][^ ]*'|\
          egrep -v 'deleting destructor[^(]+\(unsigned int\)' | \
          cut -d'|' -f2 | \
-         cut -d' ' -f2 | $(SORT) -u >> omniDynamic2.def; )
+         cut -d' ' -f2 | $(SORT) -u >> omniDynamic3.def; )
 
 
 clean::
@@ -490,7 +480,7 @@ dynlib     = $(dynsoname).$(micro_version)
 
 all:: $(dynlib)
 
-$(dynlib): $(DYN2_OBJS)
+$(dynlib): $(DYN_OBJS)
 	(set -x; \
          $(RM) $@; \
          aCC -b -Wl,+h$(dynsoname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
@@ -534,7 +524,7 @@ dynsoname  = $(dynlibname).$(minor_version)
 dynlib     = $(dynsoname).$(micro_version)
 
 
-$(dynlib): $(DYN2_OBJS)
+$(dynlib): $(DYN_OBJS)
 	(set -x; \
          $(RM) $@; \
          CC -G -z text -Kthread -KPIC -o $@ -h $(dynsoname) \
@@ -589,7 +579,7 @@ dynlib = $(dynsoname).$(micro_version)
 
 all:: $(dynlib)
 
-$(dynlib): $(DYN2_OBJS)
+$(dynlib): $(DYN_OBJS)
 	(set -x; \
          $(RM) $@; \
          $(LINK.cc) -KPIC -shared -Wl,-h,$(dynlibname) \
@@ -634,7 +624,7 @@ dynlib = $(dynsoname).$(micro_version)
 
 all:: $(dynlib)
 
-$(dynlib): $(DYN2_OBJS)
+$(dynlib): $(DYN_OBJS)
 	(set -x; \
         $(RM) $@; \
         $(CXX) -shared -Wl,-soname,$(dynsoname) -o $@ $(IMPORT_LIBRARY_FLAGS) \

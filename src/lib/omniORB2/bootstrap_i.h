@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.6.1  1999/09/22 14:26:24  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.4  1999/05/25 18:10:46  sll
   Now CORBA::ORB::ObjectIdList and CORBA_InitialReference::ObjIdList
   are different types.
@@ -42,7 +45,7 @@
   Revision 1.1  1998/08/21 19:28:15  sll
   Initial revision
 
-  */
+*/
 
 
 #ifndef __BOOTSTRAP_I_H__
@@ -51,69 +54,32 @@
 
 #include <bootstrap.hh>
 
+
 class CORBA_InitialReferences_i;
 
+
 class omniInitialReferences {
- public:
-  void set(const char* identifier,CORBA::Object_ptr obj);
-  CORBA::Object_ptr get(const char* identifier);
-  CORBA_InitialReferences::ObjIdList* list();
+public:
+  static void set(const char* identifier,CORBA::Object_ptr obj);
+  static CORBA::Object_ptr get(const char* identifier);
+  static CORBA::ORB::ObjectIdList* list();
 
-  void initialise_bootstrap_agentImpl();
-  CORBA_InitialReferences_i* has_bootstrap_agentImpl();
+  static void initialise_bootstrap_agentImpl();
 
-  void initialise_bootstrap_agent(const char* host,CORBA::UShort port);
+  static int invoke_bootstrap_agentImpl(GIOP_S&);
+  // Returns 0 if there is no bootstrap agent.  May throw
+  // the usual exceptions for an object invocation...
 
-  static omniInitialReferences* singleton();
- private:
+  static int is_bootstrap_agentImpl_initialised();
+  // Returns true if a boostrap agent exists.
 
-  // pd_bootagent is the object reference to the initialisation agent
-  // from which we can get initial object references for services such
-  // as the NameService.
-  CORBA_InitialReferences_var pd_bootagent;
+  static void initialise_bootstrap_agent(const char* host, CORBA::UShort port);
 
-  // pd_bootagentImpl, if initialised, is the implementation of the
-  // interface of the initialisation agent in this address space. Once
-  // the object is initialised, this address space will respond to
-  // remote invocations from client requests for initial object references.
-  CORBA_InitialReferences_i*  pd_bootagentImpl;
-
-  struct serviceRecord {
-    CORBA::String_member id;
-    CORBA::Object_member ref;
-
-    // The following marshalling functions are not implemented.
-    size_t NP_alignedSize(size_t initialoffset) const;
-    void operator>>= (NetBufferedStream &s) const;
-    void operator<<= (NetBufferedStream &s);
-    void operator>>= (MemBufferedStream &s) const;
-    void operator<<= (MemBufferedStream &s);
-  };
-
-  _CORBA_Unbounded_Sequence< serviceRecord > pd_serviceList;
-
-  omniInitialReferences();
+private:
+  inline omniInitialReferences() {}
   omniInitialReferences(const omniInitialReferences&);
   omniInitialReferences& operator=(const omniInitialReferences&);
 };
 
-class CORBA_InitialReferences_i : public _sk_CORBA_InitialReferences {
-public:
-  CORBA::Object_ptr get (const char* id) {
-    return omniInitialReferences::singleton()->get(id);
-  }
-  ObjIdList* list () {
-    return omniInitialReferences::singleton()->list();
-  }
-  CORBA_InitialReferences_i(CORBA::BOA_ptr boa) {
-    _obj_is_ready(boa);
-  }
-private:
-  CORBA_InitialReferences_i();
-  CORBA_InitialReferences_i(const CORBA_InitialReferences_i&);
-  CORBA_InitialReferences_i& operator=(const CORBA_InitialReferences_i&);
-};
-
 
 #endif  
-

@@ -27,7 +27,12 @@
 //   Implementation of CORBA::NVList.
 //
 
-#define ENABLE_CLIENT_IR_SUPPORT
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <pseudo.h>
 
 
@@ -257,8 +262,7 @@ CORBA::release(NVList_ptr p)
 
 
 CORBA::Status
-CORBA::
-ORB::create_list(Long count, NVList_out new_list)
+CORBA::ORB::create_list(Long count, NVList_out new_list)
 {
   if (count < 0)
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
@@ -273,10 +277,9 @@ ORB::create_list(Long count, NVList_out new_list)
 
 
 CORBA::Status
-CORBA::
-ORB::create_operation_list(OperationDef_ptr p, NVList_out new_list)
+CORBA::ORB::create_operation_list(_objref_OperationDef* p, NVList_out new_list)
 {
-  new_list = NVList::_nil();
+  new_list = CORBA::NVList::_nil();
 
   throw NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
 

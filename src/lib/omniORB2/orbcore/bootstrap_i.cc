@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // bootstrap_i.cc             Created on: 20/08/98
 //                            Author    : Sai-Lai Lo
 //
@@ -29,11 +29,8 @@
 
 /*
   $Log$
-  Revision 1.9  1999/08/16 19:23:21  sll
-  Replace static variable dtor with initialiser object to enumerate the
-  list of initial object reference on shutdown.
-  This new scheme avoids the problem that dtor of static variables on
-  different compilation units may be called in different order.
+  Revision 1.9.6.1  1999/09/22 14:26:42  djr
+  Major rewrite of orbcore to support POA.
 
   Revision 1.8  1999/05/25 17:24:39  sll
   CORBA::ORB::ObjectIdList and CORBA_InitialReferences::ObjIdList are
@@ -64,41 +61,92 @@
 
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
+#include <bootstrap_i.h>
 #include <ropeFactory.h>
 #include <tcpSocket.h>
-#include <bootstrap_i.h>
 
 
-static omni_mutex lock;
-static omniInitialReferences* _singleton;
+static omni_mutex the_lock;
+static CORBA_InitialReferences_ptr the_bootagent = 0;
+static CORBA_InitialReferences_i*  the_bootagentImpl = 0;
 
-omniInitialReferences::omniInitialReferences()
+struct serviceRecord {
+  CORBA::String_member id;
+  CORBA::Object_member ref;
+};
+
+static _CORBA_Pseudo_Unbounded_Sequence<serviceRecord,serviceRecord>
+                                   the_serviceList;
+
+
+//////////////////////////////////////////////////////////////////////
+////////////////////// CORBA_InitialReferences_i /////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class CORBA_InitialReferences_i : public POA_CORBA_InitialReferences {
+public:
+  CORBA::Object_ptr get(const char* id);
+  CORBA_InitialReferences::ObjIdList* list();
+  inline CORBA_InitialReferences_i()   {}
+  virtual ~CORBA_InitialReferences_i() {}
+
+private:
+  CORBA_InitialReferences_i(const CORBA_InitialReferences_i&);
+  CORBA_InitialReferences_i& operator=(const CORBA_InitialReferences_i&);
+};
+
+
+CORBA::Object_ptr
+CORBA_InitialReferences_i::get(const char* id)
 {
-  pd_bootagentImpl = 0;
+  return omniInitialReferences::get(id);
 }
 
+
+CORBA_InitialReferences::ObjIdList*
+CORBA_InitialReferences_i::list()
+{
+  omni_mutex_lock sync(the_lock);
+
+  CORBA_InitialReferences::ObjIdList* result =
+    new CORBA_InitialReferences::ObjIdList(the_serviceList.length());
+  CORBA_InitialReferences::ObjIdList& l(*result);
+
+  l.length(the_serviceList.length());
+
+  for( CORBA::ULong index = 0; index < the_serviceList.length(); index++ )
+    l[index] = CORBA::string_dup(the_serviceList[index].id);
+
+  // XXX Should we go out to find the listing from the boot agent?
+
+  return result;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 void
 omniInitialReferences::set(const char* identifier, CORBA::Object_ptr obj)
 {
-  omni_mutex_lock sync(lock);
+  omni_mutex_lock sync(the_lock);
 
   CORBA::ULong index;
-  for (index=0; index < pd_serviceList.length(); index++) {
-    if (strcmp((const char*)pd_serviceList[index].id,identifier) == 0)
+  for (index=0; index < the_serviceList.length(); index++) {
+    if (strcmp((const char*)the_serviceList[index].id,identifier) == 0)
       break;
   }
-  if (index == pd_serviceList.length()) {
-    pd_serviceList.length(index+1);
-    pd_serviceList[index].id = identifier;
+  if (index == the_serviceList.length()) {
+    the_serviceList.length(index+1);
+    the_serviceList[index].id = identifier;
   }
-  pd_serviceList[index].ref = CORBA::Object::_duplicate(obj);
+  the_serviceList[index].ref = CORBA::Object::_duplicate(obj);
 }
 
 
@@ -110,66 +158,68 @@ omniInitialReferences::get(const char* identifier)
   CORBA::Object_ptr result = CORBA::Object::_nil();
   CORBA::Boolean    update = 0;
   {
-    omni_mutex_lock sync(lock);
+    omni_mutex_lock sync(the_lock);
 
-    for( CORBA::ULong index = 0; index < pd_serviceList.length(); index++ ) {
-      if( !strcmp((const char*)pd_serviceList[index].id,identifier) ) {
-	result = CORBA::Object::_duplicate(pd_serviceList[index].ref);
+    for( CORBA::ULong index = 0; index < the_serviceList.length(); index++ ) {
+      if( !strcmp((const char*)the_serviceList[index].id,identifier) ) {
+	result = CORBA::Object::_duplicate(the_serviceList[index].ref);
 	break;
       }
     }
-    if (CORBA::is_nil(result) && !CORBA::is_nil(pd_bootagent)) {
+    if( CORBA::is_nil(result) && !CORBA::is_nil(the_bootagent) ) {
       try {
 	// XXX we will end up in a deadlock if this invocation turns
 	//     out to be a chain of invocations and eventually go back
 	//     to us.
 	if (omniORB::traceLevel >= 10) {
-	  CORBA::String_var ior(omni::objectToString(pd_bootagent->PR_getobj()));
-	  omniORB::log << "omniORB: Getting initial object reference for "
-		       << identifier << " from '"
-		       << (const char*) ior << "'...";
+	  CORBA::String_var ior(
+			omni::objectToString(the_bootagent->_PR_getobj()));
+	  omniORB::log <<
+	    "omniORB: Getting initial object reference for: " << identifier <<
+	    "\n"
+	    " from: " << (const char*) ior << "\n";
 	  omniORB::log.flush();
 	}
 
-	result = pd_bootagent->get(identifier);
+	result = the_bootagent->get(identifier);
 	if( !CORBA::is_nil(result) )
 	  update = 1;
 
 	if (omniORB::traceLevel >= 10) {
 	  omniORB::log << "Done CORBA::InitialReferences::get()."
-		       << ((CORBA::is_nil(result))?" Return value is nil.\n"
+		       << (CORBA::is_nil(result) ? " Return value is nil.\n"
 			   : "\n");
 	  omniORB::log.flush();
 	}
       }
       catch(...) {
 	if (omniORB::traceLevel >= 10) {
-	  omniORB::log << "omniORB: Caught exception in"
-	    " CORBA::InitialReferences::get().\n";
+	  omniORB::log <<
+	    "omniORB: Caught exception in CORBA::InitialReferences::get().\n";
 	  omniORB::log.flush();
 	}
       }
     }
   }
-  if (update) 
-    set(identifier,result);
+  if( update )  set(identifier,result);
 
   return result;
 }
 
 
-CORBA_InitialReferences::ObjIdList*
+CORBA::ORB::ObjectIdList*
 omniInitialReferences::list()
 {
-  omni_mutex_lock sync(lock);
+  omni_mutex_lock sync(the_lock);
 
-  CORBA_InitialReferences::ObjIdList* result = new CORBA_InitialReferences::ObjIdList;
+  CORBA::ORB::ObjectIdList* result =
+    new CORBA::ORB::ObjectIdList(the_serviceList.length());
+  CORBA::ORB::ObjectIdList& l(*result);
 
-  result->length(pd_serviceList.length());
+  l.length(the_serviceList.length());
 
-  for (CORBA::ULong index=0; index < pd_serviceList.length(); index++) {
-    (*result)[index] = CORBA::string_dup(pd_serviceList[index].id);
-  }
+  for( CORBA::ULong index = 0; index < the_serviceList.length(); index++ )
+    l[index] = CORBA::string_dup(the_serviceList[index].id);
 
   // XXX Should we go out to find the listing from the boot agent?
 
@@ -180,24 +230,31 @@ omniInitialReferences::list()
 void
 omniInitialReferences::initialise_bootstrap_agentImpl()
 {
-  omni_mutex_lock sync(lock);
+  the_lock.lock();
 
-  if (!pd_bootagentImpl) {
-    try {
-      CORBA::BOA_var boa(CORBA::BOA::getBOA());
-      pd_bootagentImpl = new CORBA_InitialReferences_i(boa);
-    }
-    catch(...) {
-    }
-  }
+  if( !the_bootagentImpl )
+    the_bootagentImpl = new CORBA_InitialReferences_i();
+
+  the_lock.unlock();
 }
 
 
-CORBA_InitialReferences_i*
-omniInitialReferences::has_bootstrap_agentImpl()
+int
+omniInitialReferences::invoke_bootstrap_agentImpl(GIOP_S& giop_s)
 {
-  omni_mutex_lock sync(lock);
-  return pd_bootagentImpl;
+  omni_mutex_lock sync(the_lock);
+
+  if( !the_bootagentImpl )  return 0;
+
+  ((omniServant*) the_bootagentImpl)->_dispatch(giop_s);
+  return 1;
+}
+
+
+int
+omniInitialReferences::is_bootstrap_agentImpl_initialised()
+{
+  return the_bootagentImpl ? 1 : 0;
 }
 
 
@@ -205,7 +262,7 @@ void
 omniInitialReferences::initialise_bootstrap_agent(const char* host,
 						  CORBA::UShort port)
 {
-  omni_mutex_lock sync(lock);
+  omni_mutex_lock sync(the_lock);
 
   try {
     
@@ -219,79 +276,34 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
 	if (t->is_IOPprofileId(IOP::TAG_INTERNET_IOP))
 	  break;
       }
-      if (!f) return; // Error no IIOP ropefactory has been initialised.
+      if( !f )  return;  // Error no IIOP ropefactory has been initialised.
     }
 
-    tcpSocketEndpoint addr((CORBA::Char*)host,port);
+    tcpSocketEndpoint addr((CORBA::Char*) host, port);
     CORBA::Char objkey[4];
     objkey[0] = 'I'; objkey[1] = 'N'; objkey[2] = 'I'; objkey[3] = 'T';
     IOP::TaggedProfileList p;
     p.length(1);
 
-    t->encodeIOPprofile((Endpoint*)&addr,objkey,4,p[0]);
+    t->encodeIOPprofile((Endpoint*) &addr, objkey, 4, p[0]);
 
     CORBA::String_var ior((char*) IOP::iorToEncapStr((const CORBA::Char*)
-				CORBA_InitialReferences_IntfRepoID,&p));
-    CORBA::Object_var o((CORBA::Object_ptr) (omni::stringToObject(ior)
-                               ->_widenFromTheMostDerivedIntf(0)));
-    pd_bootagent = CORBA_InitialReferences::_narrow(o);
-    pd_bootagent->noExistentCheck();
+				     CORBA_InitialReferences::_PD_repoId, &p));
+    omniObjRef* obj;
+    if( !omni::stringToObject(obj, ior) )  return;
+    CORBA::Object_var o;
+    if( obj )
+      o = (CORBA::Object_ptr) obj->_ptrToObjRef(CORBA::Object::_PD_repoId);
+    the_bootagent = CORBA_InitialReferences::_narrow(o);
+    the_bootagent->_noExistentCheck();
   }
   catch (...) {
   }
 }
 
 
-omniInitialReferences*
-omniInitialReferences::singleton()
-{
-  if (!_singleton) {
-    _singleton = new omniInitialReferences;
-  }
-  return _singleton;
-}
-
-
 void
 _omni_set_NameService(CORBA::Object_ptr ns)
 {
-  omniInitialReferences::singleton()->set((const char*)"NameService", ns);
+  omniInitialReferences::set((const char*) "NameService", ns);
 }
-
-
-/////////////////////////////////////////////////////////////////////////////
-//            Module initialiser                                           //
-/////////////////////////////////////////////////////////////////////////////
-
-class omni_bootstrap_i_initialiser : public omniInitialiser {
-public:
-  void attach() {
-  }
-
-  void detach() {
-
-    if( !_singleton || omniORB::traceLevel < 15 )  return;
-
-    CORBA_InitialReferences::ObjIdList* list = _singleton->list();
-
-    omniORB::log << "omniORB: Initial references:\n";
-
-    for( CORBA::ULong i = 0; i < list->length(); i++ ) {
-      const char* name = (*list)[i];
-      CORBA::Object_var obj(_singleton->get(name));
-      CORBA::String_var sref(omni::objectToString(obj->PR_getobj()));
-      omniORB::log <<
-	"  Name  : " << name << "\n"
-	"  IR ID : " << obj->PR_getobj()->NP_IRRepositoryId() << "\n"
-	"  ObjRef: " << (char*)sref << "\n";
-    }
-
-    omniORB::log.flush();
-  }
-};
-
-static omni_bootstrap_i_initialiser initialiser;
-
-omniInitialiser& omni_bootstrap_i_initialiser_ = initialiser;
-
-

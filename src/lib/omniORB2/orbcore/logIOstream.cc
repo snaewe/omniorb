@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // logIOstream.cc             Created on: 31/3/1998
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -28,8 +28,8 @@
  
 /*
   $Log$
-  Revision 1.7  1999/09/02 11:24:21  djr
-  Minor bug in omniORB::logger::flush().
+  Revision 1.7.6.1  1999/09/22 14:26:54  djr
+  Major rewrite of orbcore to support POA.
 
   Revision 1.6  1999/09/01 12:57:46  djr
   Added atomic logging class omniORB::logger, and methods logf() and logs().
@@ -58,14 +58,17 @@
 
 // Macros to handle std namespace and streams header files
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
+#include <localIdentity.h>
+#include <objectAdapter.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 static omniORB::logStream _log;
 
@@ -272,6 +275,90 @@ omniORB::logger::operator<<(double n)
 #endif
 
 
+static int is_poa_key(const CORBA::Octet*, int);
+static int is_boa_key(const CORBA::Octet*, int);
+static char* pp_poa_key(const CORBA::Octet*, int);
+static char* pp_boa_key(const CORBA::Octet*, int);
+static char* pp_key(const CORBA::Octet*, int);
+
+
+omniORB::logger&
+omniORB::logger::operator<<(omniLocalIdentity* id)
+{
+  OMNIORB_ASSERT(id);
+
+  if( id->adapter() ) {
+    char* p = id->adapter()->ppObject(id);
+    *this << p;
+    delete[] p;
+  }
+  else {
+    // Let's try and guess whether this is a poa or boa
+    // id, and ask them to pp it.
+
+    char* p;
+
+    if( is_poa_key(id->key(), id->keysize()) )
+      p = pp_poa_key(id->key(), id->keysize());
+    else if( is_boa_key(id->key(), id->keysize()) )
+      p = pp_boa_key(id->key(), id->keysize());
+    else
+      p = pp_key(id->key(), id->keysize());
+
+    *this << p << " (not activated)";
+    delete[] p;
+  }
+
+  return *this;
+}
+
+
+omniORB::logger&
+omniORB::logger::operator<<(omniIdentity* id)
+{
+  OMNIORB_ASSERT(id);
+
+  // Let's try and guess whether this is a poa or boa
+  // id, and ask them to pp it.
+
+  char* p;
+
+  if( is_poa_key(id->key(), id->keysize()) )
+    p = pp_poa_key(id->key(), id->keysize());
+  else if( is_boa_key(id->key(), id->keysize()) )
+    p = pp_boa_key(id->key(), id->keysize());
+  else
+    p = pp_key(id->key(), id->keysize());
+
+  *this << p;
+  delete[] p;
+
+  return *this;
+}
+
+
+omniORB::logger&
+omniORB::logger::operator<<(omniObjKey& k)
+{
+  // Let's try and guess whether this is a poa or boa
+  // id, and ask them to pp it.
+
+  char* p;
+
+  if( is_poa_key(k.key(), k.size()) )
+    p = pp_poa_key(k.key(), k.size());
+  else if( is_boa_key(k.key(), k.size()) )
+    p = pp_boa_key(k.key(), k.size());
+  else
+    p = pp_key(k.key(), k.size());
+
+  *this << p;
+  delete[] p;
+
+  return *this;
+}
+
+
 void
 omniORB::logger::flush()
 {
@@ -349,4 +436,139 @@ omniORB::do_logs(const char* fmt)
   fprintf(stderr, "%s", buf);
 
   if( buf != inlinebuf )  delete[] buf;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+// These should of course not be here ...
+#define POA_NAME_SEP            '\xff'
+#define POA_NAME_SEP_STR        "\xff"
+#define TRANSIENT_SUFFIX_SEP    '\xfe'
+#define TRANSIENT_SUFFIX_SIZE   8
+
+static int is_poa_key(const CORBA::Octet* key, int keysize)
+{
+  const char* k = (const char*) key;
+  const char* kend = k + keysize;
+
+  if( *k != TRANSIENT_SUFFIX_SEP && *k != POA_NAME_SEP )  return 0;
+
+  while( k < kend && *k == POA_NAME_SEP ) {
+    k++;
+    while( k < kend && *k && *k != POA_NAME_SEP && *k != TRANSIENT_SUFFIX_SEP )
+      k++;
+  }
+
+  if( k == kend )  return 0;
+
+  if( *k == TRANSIENT_SUFFIX_SEP )
+    k += TRANSIENT_SUFFIX_SIZE + 1;
+  if( k >= kend || *k )  return 0;
+
+  return 1;
+}
+
+
+static int is_boa_key(const CORBA::Octet* key, int keysize)
+{
+  return keysize == sizeof(omniOrbBoaKey);
+}
+
+
+static char* pp_poa_key(const CORBA::Octet* key, int keysize)
+{
+  // output: root/poa/name<key>
+
+  const char* k = (const char*) key;
+  const char* kend = k + keysize;
+
+  // We play safe with the size.  It can be slightly bigger than
+  // the key because we prefix 'root', and the object id may be
+  // pretty printed larger than its octet representation.
+  char* ret = new char[keysize + 20];
+  char* s = ret;
+
+  strcpy(s, "root");  s += 4;
+
+  while( k < kend && *k == POA_NAME_SEP ) {
+    *s++ = '/';
+    k++;
+
+    while( *k && *k != POA_NAME_SEP && *k != TRANSIENT_SUFFIX_SEP )
+      *s++ = *k++;
+  }
+
+  if( *k == TRANSIENT_SUFFIX_SEP )
+    k += TRANSIENT_SUFFIX_SIZE + 1;
+
+  k++;
+  *s++ = '<';
+  int idsize = kend - k;
+  if( idsize == 4 ) {
+    CORBA::ULong val;
+    char* p = (char*) &val;
+    *p++ = *k++;  *p++ = *k++;  *p++ = *k++;  *p++ = *k++;
+    sprintf(s, "%lu", (unsigned long) val);
+    s += strlen(s);
+  }
+  else {
+    while( idsize-- )  { *s++ = isalnum(*k) ? *k : '.'; k++; }
+  }
+
+  *s++ = '>';
+  *s++ = '\0';
+
+  return ret;
+}
+
+
+static char cm[] = { '0', '1', '2', '3', '4', '5', '6', '7',
+		     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+
+static char* pp_boa_key(const CORBA::Octet* key, int keysize)
+{
+  // output: boa<key-in-hex>
+
+  int size = 8 + keysize * 2;
+  char* ret = new char[size];
+  char* s = ret;
+  strcpy(s, "boa<0x");
+  s += strlen(s);
+
+  const unsigned char* k = (const unsigned char*) key;
+
+  for( int i = 0; i < keysize; i++, k++ ) {
+    *s++ = cm[*k >> 4];
+    *s++ = cm[*k & 0xf];
+  }
+  *s++ = '>';
+  *s++ = '\0';
+
+  return ret;
+}
+
+
+static char* pp_key(const CORBA::Octet* key, int keysize)
+{
+  // output: key<key-in-hex>
+
+  int size = 8 + keysize * 2;
+  char* ret = new char[size];
+  char* s = ret;
+  strcpy(s, "key<0x");
+  s += strlen(s);
+
+  const unsigned char* k = (const unsigned char*) key;
+
+  for( int i = 0; i < keysize; i++, k++ ) {
+    *s++ = cm[*k >> 4];
+    *s++ = cm[*k & 0xf];
+  }
+  *s++ = '>';
+  *s++ = '\0';
+
+  return ret;
 }

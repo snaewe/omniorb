@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // tcParser.cc                Created on: 8/1998
 //                            Author1   : James Weatherall (jnw)
 //                            Author2   : David Riddoch (djr)
@@ -1134,7 +1134,7 @@ tcParser::calculateItemSize(const TypeCode_base*tc, const size_t initialoffset)
       {
 	CORBA::Any tmp;
 	tmp <<= pd_mbuf;
-	return tmp.NP_alignedSize(initialoffset);
+	return tmp._NP_alignedSize(initialoffset);
       }
 
     // COMPLEX TYPES
@@ -1154,14 +1154,14 @@ tcParser::calculateItemSize(const TypeCode_base*tc, const size_t initialoffset)
       {
 	CORBA::Object_member tmp;
 	tmp <<= pd_mbuf;
-	return tmp.NP_alignedSize(initialoffset);
+	return tmp._NP_alignedSize(initialoffset);
       }
 
     case CORBA::tk_TypeCode:
       {
 	CORBA::TypeCode_member tmp;
 	tmp <<= pd_mbuf;
-	return tmp.NP_alignedSize(initialoffset);
+	return tmp._NP_alignedSize(initialoffset);
       }
 
     case CORBA::tk_string:

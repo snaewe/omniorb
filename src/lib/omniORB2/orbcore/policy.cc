@@ -1,11 +1,11 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
-// policy.cc                  Created on: 30/4/1999
-//                            Author    : Sai-Lai Lo (sll)
+//                            Package   : omniORB
+// policy.cc                  Created on: 11/5/99
+//                            Author    : David Riddoch (djr)
 //
-//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
+//    Copyright (C) 1996-1999 AT&T Research Cambridge
 //
-//    This file is part of the omniORB library
+//    This file is part of the omniORB library.
 //
 //    The omniORB library is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Library General Public
@@ -24,96 +24,138 @@
 //
 //
 // Description:
-//  The implementation of CORBA::Policy object
-//    XXX - Just scaffolding at the moment
+//    Implementation of CORBA::Policy.
 //
-
+ 
 /*
- $Log$
- Revision 1.2  1999/08/30 18:56:52  sll
- Added ENABLE_CLIENT_IR_SUPPORT.
-
- Revision 1.1  1999/05/25 17:04:02  sll
- Initial revision
+  $Log$
+  Revision 1.2.6.1  1999/09/22 14:27:03  djr
+  Major rewrite of orbcore to support POA.
 
 */
 
-#define ENABLE_CLIENT_IR_SUPPORT
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
-_init_in_def_( const CORBA::ULong CORBA::SecConstruction = 1;)
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// CORBA::Policy ///////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+static omni_mutex ref_count_lock;
+
+
+CORBA::Policy::~Policy() {}
+
 
 CORBA::PolicyType
-CORBA::
-Policy::policy_type() {
+CORBA::Policy::policy_type()
+{
+  return pd_type;
+}
+
+
+CORBA::Policy_ptr
+CORBA::Policy::copy()
+{
+  OMNIORB_ASSERT(_NP_is_nil());
+  _CORBA_invoked_nil_pseudo_ref();
   return 0;
 }
 
-CORBA::Policy_ptr
-CORBA::
-Policy::copy() {
-  return _duplicate(this);
-}
 
 void
-CORBA::
-Policy::destroy() {
+CORBA::Policy::destroy()
+{
+  if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
+
+  // We use reference counting -- don't allow destroying.
+  throw NO_PERMISSION();
 }
 
-CORBA::Policy_ptr
-CORBA::
-Policy::_duplicate(CORBA::Policy_ptr p) {
-  return p;
-}
 
 CORBA::Policy_ptr
-CORBA::
-Policy::_nil() {
+CORBA::Policy::_duplicate(CORBA::Policy_ptr obj)
+{
+  if( !CORBA::is_nil(obj) )  obj->_NP_incrRefCount();
+
+  return obj;
+}
+
+
+CORBA::Policy_ptr
+CORBA::Policy::_narrow(CORBA::Object_ptr obj)
+{
+  if( CORBA::is_nil(obj) )  return _nil();
+
+  Policy_ptr p = (Policy_ptr) obj->_ptrToObjRef(Policy::_PD_repoId);
+
+  if( p )  p->_NP_incrRefCount();
+
+  return p ? p : _nil();
+}
+
+
+static CORBA::Policy the_nil_policy;
+
+
+CORBA::Policy_ptr
+CORBA::Policy::_nil()
+{
+  return &the_nil_policy;
+}
+
+
+CORBA::Policy::Policy(CORBA::PolicyType type)
+  : pd_refCount(1), pd_type(type)
+{
+}
+
+
+CORBA::Policy::Policy()
+  : pd_type(0), pd_refCount(0)
+{
+}
+
+
+void*
+CORBA::Policy::_ptrToObjRef(const char* repoId)
+{
+  OMNIORB_ASSERT(repoId);
+
+  if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
+  if( !strcmp(repoId, CORBA::Policy::_PD_repoId) )
+    return (CORBA::Policy_ptr) this;
+
   return 0;
 }
 
-CORBA::Boolean
-CORBA::
-is_nil(CORBA::Policy_ptr p)
-{
-  return (p)?0:1;
-}
 
 void
-CORBA::release(CORBA::Policy_ptr)
+CORBA::Policy::_NP_incrRefCount()
 {
-  return;
+  OMNIORB_ASSERT(!_NP_is_nil());
+
+  omni_mutex_lock sync(ref_count_lock);
+  pd_refCount++;
 }
+
 
 void
-CORBA::
-ConstructionPolicy::make_domain_manager(CORBA::InterfaceDef_ptr,
-					CORBA::Boolean)
+CORBA::Policy::_NP_decrRefCount()
 {
-  return;
+  {
+    omni_mutex_lock sync(ref_count_lock);
+    if( --pd_refCount > 0 )  return;
+  }
+
+  delete this;
 }
 
-CORBA::ConstructionPolicy_ptr
-CORBA::
-ConstructionPolicy::_duplicate(CORBA::ConstructionPolicy_ptr p) {
-  return p;
-}
 
-CORBA::ConstructionPolicy_ptr
-CORBA::
-ConstructionPolicy::_nil() {
-  return 0;
-}
-
-CORBA::Boolean
-CORBA::
-is_nil(CORBA::ConstructionPolicy_ptr p)
-{
-  return (p)?0:1;
-}
-
-void
-CORBA::release(CORBA::ConstructionPolicy_ptr)
-{
-  return;
-}
+const char*
+CORBA::Policy::_PD_repoId = "IDL:omg.org/CORBA/Policy:1.0";

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // typecode.h                 Created on: 03/09/98
 //                            Author1   : James Weatherall (jnw)
 //                            Author2   : David Riddoch (djr)
@@ -30,8 +30,8 @@
 
 /*
  * $Log$
- * Revision 1.8  1999/08/24 12:37:20  djr
- * TypeCode_struct and TypeCode_except modified to use 'const char*' properly.
+ * Revision 1.8.6.1  1999/09/22 14:26:39  djr
+ * Major rewrite of orbcore to support POA.
  *
  * Revision 1.7  1999/07/01 10:28:14  djr
  * Added two methods to TypeCode_pairlist.
@@ -60,7 +60,7 @@
 #ifndef __TYPECODE_H__
 #define __TYPECODE_H__
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 #include <omniutilities.h>
 
 

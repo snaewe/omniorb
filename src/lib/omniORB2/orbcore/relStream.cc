@@ -1,9 +1,9 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // relStream.cc               Created on: 18/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
 //
 //    This file is part of the omniORB library
 //
@@ -28,8 +28,8 @@
 
 /*
   $Log$
-  Revision 1.3  1999/03/11 16:25:55  djr
-  Updated copyright notice
+  Revision 1.3.8.1  1999/09/22 14:27:05  djr
+  Major rewrite of orbcore to support POA.
 
   Revision 1.2  1998/08/14 13:50:58  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
@@ -40,7 +40,7 @@
 
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // scavenger.h                Created on: 5/8/97
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.3.6.1  1999/09/22 14:27:08  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.3  1999/08/30 16:47:46  sll
   New member functions.
 

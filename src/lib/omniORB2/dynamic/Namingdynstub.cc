@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // Namingdynstub.cc           Created on: 6/1999
 //                            Author    : Sai-Lai Lo (sll)
 //

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // ropeFactory.h              Created on: 30/9/97
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.7.6.1  1999/09/22 14:27:07  djr
+ Major rewrite of orbcore to support POA.
+
  Revision 1.7  1999/08/16 19:27:41  sll
  The ctor of ropeFactory_iterator now takes a pointer argument.
 
@@ -92,11 +95,17 @@ class ropeFactory_iterator;
 class ropeFactory;
 class ropeFactoryType;
 
+
 // This is the list of rope factory types the ORB understands. 
 // For instance, the ORB will use the ropeFactoryType::is_IOPprofileID() to
 // match a IOP::ProfileId it finds in an IOR.
 // Notice that a ropeFactoryType instance should be a singleton.
 extern ropeFactoryType* ropeFactoryTypeList;
+
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// ropeFactoryType //////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 class ropeFactoryType {
 public:
@@ -146,11 +155,17 @@ public:
 
 protected:
 
-  ropeFactoryType() { next = ropeFactoryTypeList; ropeFactoryTypeList = this; }
+  inline ropeFactoryType() {
+    next = ropeFactoryTypeList; ropeFactoryTypeList = this;
+  }
   virtual ~ropeFactoryType();
 
   ropeFactoryType* next;
 };
+
+//////////////////////////////////////////////////////////////////////
+///////////////////////////// ropeFactory ////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 class ropeFactory {
 public:
@@ -187,12 +202,12 @@ public:
 
   virtual const ropeFactoryType* getType() const = 0;
 
-  Anchor* anchor() { return &pd_anchor; }
+  inline Anchor* anchor() { return &pd_anchor; }
   
   friend class ropeFactory_iterator;
   friend class ropeFactoryList;
 
-  ropeFactory() {}
+  inline ropeFactory() {}
   virtual ~ropeFactory();
 
   // To iterate through all the ropes instantiated by this factory, use the
@@ -200,25 +215,28 @@ public:
   // its ctor.
 
 
-  static omniObject* iopProfilesToRope(const IOP::TaggedProfileList *profiles,
-				       _CORBA_Octet *&objkey,
-				       size_t &keysize,
-				       Rope_var& rope);
+  static int iopProfilesToRope(const IOP::TaggedProfileList& profiles,
+			_CORBA_Octet*& key, int& keysize,
+			Rope*& rope, _CORBA_Boolean& is_local);
   // Look at the IOP tagged profile list <profiles>, returns the most
-  // most suitable Rope to talk to the object and its object key.
-  // If no suitable Rope can be found, throw an exception.
-  // If the object is in fact a local object, return the object as well.
-  // Otherwise, return a nil (0) pointer. The caller should use <objkey>,
-  // <keysize> and <rope> to create a proxy object.
-  // The returned value <objkey> is heap allocated by this function and
-  // should be freed by the caller. The reference count of <rope> is
-  // incremented. 
+  // most suitable Rope to talk to the object, and its object key.
+  // The reference count of the rope returned is first incremented.
+  // The caller is responsible for the storage allocated for the key.
+  //  If the object is in fact a local object, set <is_local> to TRUE.
+  // In this case <rope> will be 0 on return.
+  //  Returns 0 on failure.
+  //  This function does not throw any exceptions.
+
 
 protected:
   Anchor       pd_anchor;
   ropeFactory* pd_next;
 
 };
+
+//////////////////////////////////////////////////////////////////////
+///////////////////////// incomingRopeFactory ////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 class incomingRopeFactory : public ropeFactory {
 public:
@@ -231,7 +249,7 @@ public:
   //
   // This function is thread-safe.
 
-  virtual CORBA::Boolean isOutgoing(Endpoint* addr) const { return 0; }
+  virtual CORBA::Boolean isOutgoing(Endpoint* addr) const;
 
   virtual void instantiateIncoming(Endpoint* addr,
 				   CORBA::Boolean exportflag) = 0;
@@ -298,16 +316,19 @@ public:
   //
   // This function is thread-safe.
 
-  incomingRopeFactory() {}
+  inline incomingRopeFactory() {}
   virtual ~incomingRopeFactory();
 
 };
 
+//////////////////////////////////////////////////////////////////////
+///////////////////////// outgoingRopeFactory ////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 class outgoingRopeFactory : public ropeFactory {
 public:
 
-  virtual CORBA::Boolean isIncoming(Endpoint* addr) const { return 0; }
+  virtual CORBA::Boolean isIncoming(Endpoint* addr) const;
 
   virtual CORBA::Boolean isOutgoing(Endpoint* addr) const = 0;
   // Returns TRUE (1) if the endpoint <addr> identifies one of the outgoing
@@ -330,55 +351,66 @@ public:
   //
   // This function is thread-safe.
 
-  outgoingRopeFactory() {}
+  inline outgoingRopeFactory() {}
   virtual ~outgoingRopeFactory();
 };
 
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// ropeFactoryList //////////////////////////
+//////////////////////////////////////////////////////////////////////
+
 class ropeFactoryList {
 public:
-  ropeFactoryList() : pd_head(0) {}
+  inline ropeFactoryList() : pd_head(0) {}
   virtual ~ropeFactoryList();
 
   virtual void insert(ropeFactory* p) { p->pd_next = pd_head; pd_head = p; }
 
   friend class ropeFactory_iterator;
+
 private:
   virtual void lock() {}
   virtual void unlock() {}
+
   ropeFactory* pd_head;
 };
 
 
 class ropeFactoryList_ThreadSafe : public ropeFactoryList {
 public:
-  ropeFactoryList_ThreadSafe() {}
+  inline ropeFactoryList_ThreadSafe()  {}
   virtual ~ropeFactoryList_ThreadSafe();
 
   virtual void insert(ropeFactory* p) { 
     omni_mutex_lock sync(pd_lock);
     ropeFactoryList::insert(p);
   }
-  
 
 private:
-  virtual void lock() { pd_lock.lock(); }
+  virtual void lock()   { pd_lock.lock();   }
   virtual void unlock() { pd_lock.unlock(); }
+
   omni_mutex pd_lock;
 };
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////// ropeFactory_iterator ////////////////////////
+//////////////////////////////////////////////////////////////////////
+
 class ropeFactory_iterator {
 public:
-  ropeFactory_iterator(ropeFactoryList* l) : pd_l(*l) { 
+  inline ropeFactory_iterator(ropeFactoryList* l) : pd_l(*l) { 
     pd_l.lock(); 
     pd_this = pd_l.pd_head; 
   }
-  virtual ~ropeFactory_iterator();
-  const ropeFactory* operator() () {
+  inline ~ropeFactory_iterator() { pd_l.unlock(); }
+  inline ropeFactory* operator() () {
     ropeFactory* p = pd_this;
     if (pd_this)
       pd_this = pd_this->pd_next;
     return p;
   }
+
 private:
   ropeFactoryList& pd_l;
   ropeFactory* pd_this;
@@ -390,5 +422,6 @@ private:
 // factory instance, the instance must be registered using:
 //   globalRopeFactories.insert().
 extern ropeFactoryList* globalOutgoingRopeFactories;
+
 
 #endif // __ROPEFACTORY_H__

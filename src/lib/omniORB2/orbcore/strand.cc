@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // Strand.cc                  Created on: 18/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.6.1  1999/09/22 14:27:08  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.10  1999/08/30 16:51:59  sll
   Removed WrTestLock and heartbeat argument in WrLock.
   Replace with Sync::clicksSet, Sync::clicksDecrAndGet and Sync::clicksGet.
@@ -66,7 +69,7 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -102,7 +105,7 @@ Strand::~Strand()
   
   // When this destructor is called, there should be no Strand::Sync 
   // objects remain on the Sync queue.
-  assert(is_idle(1));
+  OMNIORB_ASSERT(is_idle(1));
 
   // remove this from the list in rope <pd_rope>
   Strand **p = &pd_rope->pd_head;
@@ -122,7 +125,7 @@ Strand::incrRefCount(CORBA::Boolean held_rope_mutex)
 {
   if (!held_rope_mutex)
     pd_rope->pd_lock.lock();
-  assert(pd_refcount >= 0);
+  OMNIORB_ASSERT(pd_refcount >= 0);
   pd_refcount++;
   if (!held_rope_mutex)
     pd_rope->pd_lock.unlock();
@@ -135,7 +138,7 @@ Strand::decrRefCount(CORBA::Boolean held_rope_mutex)
   if (!held_rope_mutex)
     pd_rope->pd_lock.lock();
   pd_refcount--;
-  assert(pd_refcount >= 0);
+  OMNIORB_ASSERT(pd_refcount >= 0);
   if (!held_rope_mutex)
     pd_rope->pd_lock.unlock();
   return;
@@ -299,7 +302,7 @@ Sync::RdUnlock(CORBA::Boolean held_rope_mutex)
   if (!held_rope_mutex)
     pd_strand->pd_rope->pd_lock.lock();
 
-  assert(pd_strand->pd_rd_nwaiting < 0);
+  OMNIORB_ASSERT(pd_strand->pd_rd_nwaiting < 0);
   pd_strand->pd_rd_nwaiting = -pd_strand->pd_rd_nwaiting - 1;
   if (pd_strand->pd_rd_nwaiting > 0)
     pd_strand->pd_rdcond.signal();
@@ -340,7 +343,7 @@ Sync::WrUnlock(CORBA::Boolean held_rope_mutex)
   if (!held_rope_mutex)
     pd_strand->pd_rope->pd_lock.lock();
 
-  assert(pd_strand->pd_wr_nwaiting < 0);
+  OMNIORB_ASSERT(pd_strand->pd_wr_nwaiting < 0);
   pd_strand->pd_wr_nwaiting = -pd_strand->pd_wr_nwaiting - 1;
   if (pd_strand->pd_wr_nwaiting > 0)
     pd_strand->pd_wrcond.signal();
@@ -423,7 +426,7 @@ Rope::~Rope()
 
   // When this destructor is called, there should be no Strand objects
   // remain on the strand queue
-  assert(is_idle(1));
+  OMNIORB_ASSERT(is_idle(1));
 
   // remove this from the list in anchor <pd_anchor>
   Rope **p = &pd_anchor->pd_head;
@@ -488,7 +491,7 @@ Rope::incrRefCount(CORBA::Boolean held_anchor_mutex)
     omniORB::log << "Rope::incrRefCount: old value = " << pd_refcount << "\n";
     omniORB::log.flush();
   }
-  assert(pd_refcount >= 0);
+  OMNIORB_ASSERT(pd_refcount >= 0);
   pd_refcount++;
   if (!held_anchor_mutex)
     pd_anchor->pd_lock.unlock();
@@ -505,7 +508,7 @@ Rope::decrRefCount(CORBA::Boolean held_anchor_mutex)
     omniORB::log.flush();
   }
   pd_refcount--;
-  assert(pd_refcount >=0);
+  OMNIORB_ASSERT(pd_refcount >=0);
   if (!held_anchor_mutex)
     pd_anchor->pd_lock.unlock();
   return;
@@ -533,7 +536,7 @@ Anchor::Anchor() : pd_lock()
 
 Anchor::~Anchor()
 {
-  //  assert(pd_head == 0);
+  //  OMNIORB_ASSERT(pd_head == 0);
   //  XXX we should really check here whether all the ropes has been
   //      shutdown.
   return;

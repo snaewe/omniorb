@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // ior.cc                     Created on: 5/7/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.9.6.1  1999/09/22 14:26:51  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.9  1999/05/25 17:06:14  sll
   Make sure all padding bytes are converted to 0s in the stringified IOR.
 
@@ -52,11 +55,12 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
+
 
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
@@ -74,10 +78,13 @@
 #endif
 
 
-CORBA::Char * 
-IOP::iorToEncapStr(const CORBA::Char *type_id,
-		   const IOP::TaggedProfileList *profiles)
+CORBA::Char*
+IOP::iorToEncapStr(const CORBA::Char* type_id,
+		   const IOP::TaggedProfileList* profiles)
 {
+  OMNIORB_ASSERT(type_id);
+  OMNIORB_ASSERT(profiles);
+
   MemBufferedStream buf;
 
   CORBA::ULong l = strlen((const char *)type_id) + 1;
@@ -85,7 +92,7 @@ IOP::iorToEncapStr(const CORBA::Char *type_id,
   // lets make an effort to ensure that all the padding bytes are zero'ed.
   {
     size_t bufsize = 8 + l;
-    bufsize = profiles->NP_alignedSize(bufsize);
+    bufsize = profiles->_NP_alignedSize(bufsize);
     CORBA::Char dummy = 0;
     for (int i=0; i < bufsize; i++) dummy >>= buf;
     buf.rewind_inout_mkr();
@@ -124,13 +131,14 @@ IOP::iorToEncapStr(const CORBA::Char *type_id,
     else
       result[j+1] = 'a' + (v - 10);
   }
-  return (CORBA::Char *)result;
+  return (CORBA::Char*) result;
 }
 
+
 void
-IOP::EncapStrToIor(const CORBA::Char *str,
-		   CORBA::Char *&type_id,
-		   IOP::TaggedProfileList *&profiles)
+IOP::EncapStrToIor(const CORBA::Char* str,
+		   CORBA::Char*& type_id,
+		   IOP::TaggedProfileList*& profiles)
 {
   size_t s = (str ? strlen((const char *)str) : 0);
   if (s<4)
@@ -149,7 +157,7 @@ IOP::EncapStrToIor(const CORBA::Char *str,
   for (int i=0; i<(int)s; i++) {
     int j = i*2;
     CORBA::Octet v;
-    
+
     if (p[j] >= '0' && p[j] <= '9') {
       v = ((p[j] - '0') << 4);
     }
@@ -207,7 +215,7 @@ IOP::EncapStrToIor(const CORBA::Char *str,
       //   NO_SLOPPY_NIL_REFERENCE
       type_id = new CORBA::Char[1];
       type_id[0] = (CORBA::Char)'\0';
-#endif	
+#endif
       break;
 
     case 1:
@@ -237,11 +245,13 @@ IOP::EncapStrToIor(const CORBA::Char *str,
   return;
 }
 
+
 void
 IOP::TaggedProfile::operator>>= (NetBufferedStream &s) {
     tag >>= s;
     profile_data >>= s;
 }
+
 
 void
 IOP::TaggedProfile::operator<<= (NetBufferedStream &s) {
@@ -249,17 +259,20 @@ IOP::TaggedProfile::operator<<= (NetBufferedStream &s) {
   profile_data <<= s;
 }
 
+
 void
 IOP::TaggedProfile::operator>>= (MemBufferedStream &s) {
     tag >>= s;
     profile_data >>= s;
 }
 
+
 void
 IOP::TaggedProfile::operator<<= (MemBufferedStream &s) {
   tag <<= s;
   profile_data <<= s;
 }
+
 
 #undef Swap16
 #undef Swap32
@@ -278,4 +291,3 @@ template class _CORBA_Sequence<IOP::TaggedProfile>;
 template class _CORBA_Unbounded_Sequence<IOP::TaggedProfile>;
 
 #endif
-

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // initFile.h                 Created on: 10/01/97
 //                            Author    : Eoin Carroll  (ewc)
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9.8.1  1999/09/22 14:26:50  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.9  1999/03/11 16:25:53  djr
   Updated copyright notice
 

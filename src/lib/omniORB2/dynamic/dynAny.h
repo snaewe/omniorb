@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // dynAny.h                   Created on: 11/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -737,6 +737,13 @@ public:
   void discriminatorHasChanged();
   // If necassary detaches the old member, and creates a new member
   // of the appropriate type.
+
+  inline TypeCode_union::Discriminator NP_disc_value() const {
+    return pd_disc_value;
+  }
+  inline CORBA::Long NP_disc_index() const {
+    return pd_member ? pd_disc_index : -1;
+  }
 
 private:
   TypeCode_union* tc() const {

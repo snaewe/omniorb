@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // context.cc                 Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -29,8 +29,8 @@
 
 /*
  $Log$
- Revision 1.10  1999/09/15 18:02:21  djr
- Fixed bug in marshalling of Contexts (when specified values are missing).
+ Revision 1.9.6.1  1999/09/22 14:26:29  djr
+ Major rewrite of orbcore to support POA.
 
  Revision 1.9  1999/06/26 18:03:30  sll
  Corrected minor bug in marshal.
@@ -50,7 +50,7 @@
 
 */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -60,6 +60,7 @@
 #include <pseudo.h>
 #include <string.h>
 #include <ctype.h>
+#include <dynamicLib.h>
 
 
 #define INIT_MAX_SEQ_LENGTH  6
@@ -553,9 +554,9 @@ CORBA::Context::_nil()
 
 
 size_t
-CORBA::Context::NP_alignedSize(CORBA::Context_ptr ctxt,
-			       const char*const* which,
-			       int whichlen, size_t offset)
+CORBA::Context::_NP_alignedSize(CORBA::Context_ptr ctxt,
+				const char*const* which,
+				int whichlen, size_t offset)
 {
   // Space for the number of context entries ...
   offset = omni::align_to(offset, omni::ALIGN_4) + 4;

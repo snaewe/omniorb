@@ -30,7 +30,7 @@
 #define __ANYP_H__
 
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 #include <tcParser.h>
 
 

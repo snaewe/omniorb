@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // ropeFactory.cc             Created on: 30/9/97
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -28,12 +28,8 @@
 
 /*
  $Log$
- Revision 1.9  1999/08/16 19:26:56  sll
- Added a per-compilation unit initialiser object.
-
- Revision 1.8  1999/08/14 16:38:53  sll
- Changed as locateObject no longer throws an exception when the object is
- not found.
+ Revision 1.9.6.1  1999/09/22 14:27:07  djr
+ Major rewrite of orbcore to support POA.
 
  Revision 1.7  1999/07/02 19:27:21  sll
  Fixed typo in ropeFactory_iterator.
@@ -59,14 +55,14 @@
 
 */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
 #include <ropeFactory.h>
-#include <objectManager.h>
+#include <objectAdapter.h>
 #ifndef __atmos__
 #include <tcpSocket.h>
 #define _tcpOutgoingFactory tcpSocketMToutgoingFactory
@@ -75,85 +71,88 @@
 #define _tcpOutgoingFactory tcpATMosMToutgoingFactory
 #endif
 
-ropeFactoryType* ropeFactoryTypeList = 0;
-ropeFactoryList* globalOutgoingRopeFactories;
 
-omniObject*
-ropeFactory::iopProfilesToRope(const IOP::TaggedProfileList *profiles,
-			       CORBA::Octet *&objkey,
-			       size_t &keysize,
-			       Rope_var& rope)
+ropeFactoryType* ropeFactoryTypeList = 0;
+ropeFactoryList* globalOutgoingRopeFactories = 0;
+
+
+int
+ropeFactory::iopProfilesToRope(const IOP::TaggedProfileList& profiles,
+			       _CORBA_Octet*& key, int& keysize,
+			       Rope*& rope, _CORBA_Boolean& is_local)
 {
+  is_local = 0;
   ropeFactoryType* factorytype = ropeFactoryTypeList;
 
-  while (factorytype) {
-    CORBA::ULong i;
-    for (i=0; i < profiles->length(); i++) {
-      if (factorytype->is_IOPprofileId((*profiles)[i].tag)) {
+  while( factorytype ) {
+
+    for( CORBA::ULong i = 0; i < profiles.length(); i++ ) {
+
+      if( factorytype->is_IOPprofileId(profiles[i].tag) ) {
+
 	Endpoint_var addr;
-	Endpoint* addrp;
-	(void) factorytype->decodeIOPprofile((*profiles)[i],addrp,objkey,
-					     keysize);
-	addr = addrp;
-
 	{
+	  Endpoint* addrp;
+	  size_t ks;
+	  (void) factorytype->decodeIOPprofile(profiles[i], addrp, key, ks);
+	  addr = addrp;
+	  keysize = ks;
+	}
+
 	// Determine if this is a local object
-	// In future, we have to partially decode the object key to
-	// determine which object manager it belongs to.
-	// For the moment, there is only one object manager- rootObjectManager.
 
-	  omniObjectManager* manager = omniObjectManager::root(1);
-	  if (manager) {
+	if( omniObjAdapter::isInitialised() ) {
 
-	    ropeFactory_iterator iter(manager->incomingRopeFactories());
-	    incomingRopeFactory* factory;
-	    while ((factory = (incomingRopeFactory*) iter())) {
-	      if (rope = factory->findIncoming((Endpoint*)addr)) {
-		// The endpoint is actually one of those exported by this 
-		// address space.
-		rope = 0;
-		omniObject* result = omni::locateObject(manager,
-						  *((omniObjectKey*)objkey));
-		if (result) { // Got it
-		  return result;
-		}
-		// the object cannot be found by locateObject().
-		// Instead of letting the exception propagate all the way 
-		// upwards, treat this as a foreign object and creates a 
-		// proxy object.
-	      }
-	    }
-	  }
-	  else {
-	    // root object manager has not been initialised, this object
-	    // cannot be a local object. Treat this as a foreign object
-	    rope = 0;
-	  }
-	}
-	{
-	  // Reach here because this is not a local object
-	  ropeFactory_iterator iter(globalOutgoingRopeFactories);
-	  outgoingRopeFactory* factory;
-	  while ((factory = (outgoingRopeFactory*) iter())) {
-	    if (rope = factory->findOrCreateOutgoing((Endpoint*)addr)) {
-	      // Got it
-	      return 0;
+	  ropeFactory_iterator iter(omniObjAdapter::incomingRopeFactories());
+
+	  incomingRopeFactory* factory;
+
+	  while( (factory = (incomingRopeFactory*) iter()) ) {
+	    if( (rope = factory->findIncoming((Endpoint*) addr)) ) {
+	      // The endpoint is actually one of those exported by this 
+	      // address space.
+	      rope->decrRefCount();
+	      rope = 0;
+	      is_local = 1;
+	      return 1;
 	    }
 	  }
 	}
+	else {
+	  // Root object manager has not been initialised, this object
+	  // cannot be a local object. Treat this as a foreign object.
+	  rope = 0;
+	}
+
+	// Reach here because this is not a local object.
+	ropeFactory_iterator iter(globalOutgoingRopeFactories);
+	outgoingRopeFactory* factory;
+	while( (factory = (outgoingRopeFactory*) iter()) ) {
+	  if( (rope = factory->findOrCreateOutgoing((Endpoint*)addr)) ) {
+	    // Got it
+	    return 1;
+	  }
+	}
+
+	// Reach here because for some reason we could not instantiate
+	// a rope. Continue and see if we can use another factory type.
+	delete[] key;
+	key = 0;
       }
-    }
+
+    } // for( ... )
+
     factorytype = factorytype->next;
-  }
+
+  } // while( factorytype )
+
   // Reach here if none of the ropeFactories support the profiles.
-  throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
-#ifdef NEED_DUMMY_RETURN
   return 0;
-#endif
 }
 
 
 static omniORB::giopServerThreadWrapper* giopServerThreadWrapperP = 0;
+
 
 void
 omniORB::
@@ -166,6 +165,7 @@ giopServerThreadWrapper::setGiopServerThreadWrapper(
   if (p) delete p;
 }
 
+
 omniORB::giopServerThreadWrapper*
 omniORB::
 giopServerThreadWrapper::getGiopServerThreadWrapper()
@@ -173,52 +173,39 @@ giopServerThreadWrapper::getGiopServerThreadWrapper()
   return giopServerThreadWrapperP;
 }
 
+
 ropeFactoryType::~ropeFactoryType() {}
+
 
 ropeFactory::~ropeFactory() {}
 
+
 incomingRopeFactory::~incomingRopeFactory() {}
+
+
+CORBA::Boolean
+incomingRopeFactory::isOutgoing(Endpoint* addr) const
+{
+  return 0;
+}
+
 
 outgoingRopeFactory::~outgoingRopeFactory() {}
 
-ropeFactoryList::~ropeFactoryList() {}
 
-ropeFactoryList_ThreadSafe::~ropeFactoryList_ThreadSafe() {}
+CORBA::Boolean
+outgoingRopeFactory::isIncoming(Endpoint* addr) const
+{
+  return 0;
+}
 
-ropeFactory_iterator::~ropeFactory_iterator() { pd_l.unlock(); }
+
+ropeFactoryList::~ropeFactoryList()  {}
+
+
+ropeFactoryList_ThreadSafe::~ropeFactoryList_ThreadSafe()  {}
 
 
 Endpoint::~Endpoint() {
   delete [] pd_protocolname;
 }
-
-
-/////////////////////////////////////////////////////////////////////////////
-//            Module initialiser                                           //
-/////////////////////////////////////////////////////////////////////////////
-
-class omni_ropeFactory_initialiser : public omniInitialiser {
-public:
-
-  void attach() {
-
-    globalOutgoingRopeFactories = new ropeFactoryList;
-
-    // Initialise all the rope factories that will be used to
-    // create outgoing ropes.
-    globalOutgoingRopeFactories->insert(new _tcpOutgoingFactory );
-
-    // Add rope factories for other transports here.
-
-    // Initialise a giopServerThreadWrapper singelton
-    omniORB::giopServerThreadWrapper::setGiopServerThreadWrapper(
-       new omniORB::giopServerThreadWrapper);
-  }
-
-  void detach() {
-  }
-};
-
-static omni_ropeFactory_initialiser initialiser;
-
-omniInitialiser& omni_ropeFactory_initialiser_ = initialiser;

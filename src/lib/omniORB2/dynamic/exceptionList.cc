@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // exceptionList.cc           Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -26,6 +26,12 @@
 // Description:
 //   Implementation of CORBA::ExceptionList.
 //
+
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #include <pseudo.h>
 
@@ -209,8 +215,7 @@ CORBA::release(ExceptionList_ptr p)
 
 
 CORBA::Status
-CORBA::
-ORB::create_exception_list(ExceptionList_out exclist)
+CORBA::ORB::create_exception_list(ExceptionList_out exclist)
 {
   exclist = new ExceptionListImpl();
   RETURN_CORBA_STATUS;

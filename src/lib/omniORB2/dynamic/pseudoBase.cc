@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // pseudoBase.cc              Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -28,6 +28,12 @@
 //   types.
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <pseudo.h>
 
 
@@ -44,9 +50,8 @@ PseudoObjBase::decrRefCount()
   if( !pd_refCount ) {
     if( omniORB::traceLevel > 0 ) {
       omniORB::log <<
-	"Warning: omniORB2 has detected that CORBA::release() was called too\n"
-	" many times for a pseudo object - the object has already been\n"
-	" destroyed.\n";
+	"omniORB: WARNING -- CORBA::release() has been called too many times\n"
+	" for a pseudo object.  The object has already been destroyed.\n";
       omniORB::log.flush();
     }
     return;

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // giopServer.cc              Created on: 26/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.21.6.1  1999/09/22 14:26:49  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.21  1999/08/30 16:50:56  sll
   Added calls to Strand::Sync::clicksSet to control how long a call is
   allowed to progress or how long an idle connection is to stay open.
@@ -89,7 +92,7 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -97,20 +100,12 @@
 
 #include <scavenger.h>
 #include <ropeFactory.h>
-#include <objectManager.h>
+#include <objectAdapter.h>
+#include <omniORB3/omniServant.h>
+#include <localIdentity.h>
 #include <bootstrap_i.h>
 
 size_t  GIOP_Basetypes::max_giop_message_size = 2048 * 1024;
-
-// Dynamic Object Loading
-// 
-static omniORB::loader::mapKeyToObject_t MapKeyToObjectFunction= 0;
-
-void 
-omniORB::loader::set(omniORB::loader::mapKeyToObject_t NewMapKeyToObject) 
-{
-  MapKeyToObjectFunction= NewMapKeyToObject;
-}
 
 
 static void 
@@ -131,7 +126,9 @@ GIOP_S::GIOP_S(Strand *s)
   if (pd_max_message_size > omniORB::MaxMessageSize()) {
     pd_max_message_size = omniORB::MaxMessageSize();
   }
-  return;
+
+  pd_user_exns = 0;
+  pd_n_user_exns = 0;
 }
 
 
@@ -187,10 +184,8 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
 	  //
 	  // If omniORB::strictIIOP non-zero, we expect incoming calls to
 	  // be well behaved and rejects anything that is not.
-	  if (omniORB::traceLevel >= 15) {
-	    omniORB::log << "GIOP_S::RequestReceived: garbage left at the end of message.\n";
-	    omniORB::log.flush();
-	  }
+	  omniORB::logs(15, "GIOP_S::RequestReceived: garbage left at the"
+			" end of message.");
 	  if (!omniORB::strictIIOP) {
 	    skip(RdMessageUnRead(),1);
 	  }
@@ -242,8 +237,7 @@ GIOP_S::ReplyHeaderSize()
 }
 
 void
-GIOP_S::InitialiseReply(const GIOP::ReplyStatusType status,
-			const size_t  msgsize)
+GIOP_S::InitialiseReply(const GIOP::ReplyStatusType status, size_t msgsize)
 {
   if (!pd_response_expected)
     throw terminateProcessing();
@@ -470,11 +464,11 @@ void
 GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 {
   CORBA::ULong msgsize;
-  omniObject *obj = 0;    
 
   try {
     // This try block catches any exception that might raise during
-    // the processing of the request header
+    // the processing of the request header.
+
     msgsize <<= *this;
     if (msgsize > MaxMessageSize()) {
       SendMsgErrorMessage();
@@ -483,9 +477,9 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     }
 
     RdMessageSize(msgsize,byteorder);  // Set the size of the message body.
-  
-    // XXX Do not support any service context yet, 
-    // XXX For the moment, skips the service context
+
+    // XXX Do not support any service context yet.
+    // XXX For the moment, skips the service context.
     CORBA::ULong svcccount;
     CORBA::ULong svcctag;
     CORBA::ULong svcctxtsize;
@@ -500,47 +494,24 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 
     pd_response_expected <<= *this;
 
-    CORBA::ULong keysize;
-    keysize <<= *this;
-    if (keysize == sizeof(omniObjectKey)) {
-      get_char_array((CORBA::Char*) &pd_objkey, keysize);
-    }
-    else {
-      // This key did not come from this orb.
-      // silently skip the key. Initialise pd_objkey to all zeros and
-      // let the call to locateObject() below to raise the proper exception
-      pd_objkey = omniORB::nullkey();
-      
-      // However, we make a special case for the bootstrapping agent.
-      // The object key is "INIT". If the key match and we do have
-      // the bootstrapping agent running, initialise obj to point to it. 
-      if (keysize == 4) {
-	CORBA::Char k[4];
-	get_char_array(k, 4);
-	if (k[0] == 'I' && k[1] == 'N' && k[2] == 'I' && k[3] == 'T') {
-	  obj = omniInitialReferences::singleton()->has_bootstrap_agentImpl();
-	}
-      }
-      else {
-	skip(keysize);
-      }
-    }
+    pd_key <<= *this;
 
     CORBA::ULong octetlen;
     octetlen <<= *this;
     if (octetlen > OMNIORB_GIOPDRIVER_GIOP_S_INLINE_BUF_SIZE)
       {
 	// Do not blindly allocate a buffer for the operation string
-	// a poison packet might set this to a huge value
+	// a poison packet might set this to a huge value.
 	if (octetlen > RdMessageUnRead()) {
 	  throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 	}
-	CORBA::Octet *p = new CORBA::Octet[octetlen];
-	if (!p)
-	  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+	CORBA::Octet* p = new CORBA::Octet[octetlen];
+	if (!p)  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
 	pd_operation = p;
       }
     get_char_array((CORBA::Octet*) pd_operation, octetlen);
+    if( pd_operation[octetlen - 1] != '\0' )
+      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
 
     octetlen <<= *this;
     if (octetlen > OMNIORB_GIOPDRIVER_GIOP_S_INLINE_BUF_SIZE)
@@ -550,237 +521,223 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 	if (octetlen > RdMessageUnRead()) {
 	  throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 	}
-	CORBA::Octet *p = new CORBA::Octet[octetlen];
-	if (!p)
-	  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+	CORBA::Octet* p = new CORBA::Octet[octetlen];
+	if (!p)  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
 	pd_principal = p;
       }
     get_char_array((CORBA::Octet*) pd_principal, octetlen);
+    if( pd_principal[octetlen - 1] != '\0' )
+      throw CORBA::MARSHAL(0, CORBA::COMPLETED_NO);
   }
-  catch (const CORBA::MARSHAL &ex) {
+  catch (CORBA::MARSHAL& ex) {
     RequestReceived(1);
     SendMsgErrorMessage();
     pd_state = GIOP_S::Idle;
     return;
   }
-  catch (const CORBA::NO_MEMORY &ex) {
+  catch (CORBA::NO_MEMORY& ex) {
     RequestReceived(1);
-    MarshallSystemException(this,SysExceptRepoID::NO_MEMORY,ex);
+    MarshallSystemException(this, SysExceptRepoID::NO_MEMORY, ex);
     return;
   }
 
-  // Note: If this is a one way invocation, we choose to return a 
-  // MessageError Message instead of returning a Reply with System Exception
-  // message because the other-end says do not send me a reply!
-
   try {
-    // In future, we have to partially decode the object key to
-    // determine which object manager it belongs to.
-    // For the moment, there is only one object manager- the rootObjectManager.
-    if (obj)
-      omni::objectDuplicate(obj);
 
-    if (!obj)
-      obj = omni::locateObject(omniObjectManager::root(),pd_objkey);
+    // Can we find the object in the local object table?
 
-    if (!obj)
-      obj = omni::locatePyObject(omniObjectManager::root(),pd_objkey);
+    CORBA::ULong hash = omni::hash(pd_key.key(), pd_key.size());
+    omni::internalLock.lock();
+    omniLocalIdentity* id;
+    id = omni::locateIdentity(pd_key.key(), pd_key.size(), hash);
 
-    if (obj) {
-      if (!obj->dispatch(*this,
-			 (const char *)pd_operation,
-			 pd_response_expected)) {
-
-	// Try built-in operations...
-	if (!obj->omniObject::dispatch(*this,
-				       (const char*)pd_operation,
-				       pd_response_expected)) {
-	  // No luck
-	  RequestReceived(1);
-	  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-	}
-      }
+    if( id && id->servant() ) {
+      id->dispatch(*this);
+      return;
     }
-    else { // !obj
 
-      if (pd_response_expected && MapKeyToObjectFunction) {
-	// Cannot find the object in the object table. If the application
-	// has registered a loader, do an upcall to locate the object.
-	// If the returned value is not a nil object reference, send a
-	// LOCATION_FORWARD message to the client to instruct it to retry
-	// with the new object reference.
-	//
-	// Limitation: if this invocation is oneway, one cannot reply with
-	//             a LOCATION_FORWARD message, in that case, just
-	//             treat this as a normal OBJECT_NOT_EXIST and let
-	//             the code below to deal with it.
-	//
-	CORBA::Object_var newDestination= MapKeyToObjectFunction(pd_objkey);
-	if (!CORBA::is_nil(newDestination)) {
-	  // Note that we have completed the object request
-	  RequestReceived(1); 
-	
-	  // Build and send the location forward message...
-	  size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-	  msgsize = CORBA::Object::NP_alignedSize(newDestination, msgsize);
-	  InitialiseReply(GIOP::LOCATION_FORWARD,(CORBA::ULong)msgsize);
-	  CORBA::Object::marshalObjRef(newDestination, *this);
-	
-	  // All done...
-	  ReplyCompleted();
-	  return;
-	}
-      }
+    omni::internalLock.unlock();
 
-      // No application-defined loader, or the loader returned nil
-      RequestReceived(1);
-      if (!pd_response_expected) {
-	// This is a one way invocation, we choose to return a MessageError
-	// Message instead of returning a Reply with System Exception
-	// message because the other-end says do not send me a reply!
+    // Can we create a suitable object on demand?
+
+    omniObjAdapter_var adapter(
+	  omniObjAdapter::getAdapter(pd_key.key(), pd_key.size()));
+
+    if( adapter ) {
+      adapter->dispatch(*this, pd_key.key(), pd_key.size());
+      return;
+    }
+
+    // Or is it the bootstrap agent?
+
+    if( pd_key.size() == 4 && !memcmp(pd_key.key(), "INIT", 4) &&
+	omniInitialReferences::invoke_bootstrap_agentImpl(*this) )
+      return;
+
+    // Oh dear.
+
+    throw CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
+
+  }
+
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+
+  // We have to catch each type of system exception separately
+  // here to support gcc 2.7.2, which cannot catch more derived
+  // types.
+
+#define CATCH_AND_MAYBE_MARSHAL(name)  \
+  catch (CORBA::name& ex) {  \
+    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (name, ex);  \
+  }
+
+  CATCH_AND_MAYBE_MARSHAL(OBJECT_NOT_EXIST)
+  CATCH_AND_MAYBE_MARSHAL(UNKNOWN)
+  CATCH_AND_MAYBE_MARSHAL(BAD_PARAM)
+  CATCH_AND_MAYBE_MARSHAL(NO_MEMORY)
+  CATCH_AND_MAYBE_MARSHAL(IMP_LIMIT)
+  CATCH_AND_MAYBE_MARSHAL(COMM_FAILURE)
+  CATCH_AND_MAYBE_MARSHAL(INV_OBJREF)
+  CATCH_AND_MAYBE_MARSHAL(NO_PERMISSION)
+  CATCH_AND_MAYBE_MARSHAL(INTERNAL)
+  CATCH_AND_MAYBE_MARSHAL(MARSHAL)
+  CATCH_AND_MAYBE_MARSHAL(INITIALIZE)
+  CATCH_AND_MAYBE_MARSHAL(NO_IMPLEMENT)
+  CATCH_AND_MAYBE_MARSHAL(BAD_TYPECODE)
+  CATCH_AND_MAYBE_MARSHAL(BAD_OPERATION)
+  CATCH_AND_MAYBE_MARSHAL(NO_RESOURCES)
+  CATCH_AND_MAYBE_MARSHAL(NO_RESPONSE)
+  CATCH_AND_MAYBE_MARSHAL(PERSIST_STORE)
+  CATCH_AND_MAYBE_MARSHAL(BAD_INV_ORDER)
+  CATCH_AND_MAYBE_MARSHAL(TRANSIENT)
+  CATCH_AND_MAYBE_MARSHAL(FREE_MEM)
+  CATCH_AND_MAYBE_MARSHAL(INV_IDENT)
+  CATCH_AND_MAYBE_MARSHAL(INV_FLAG)
+  CATCH_AND_MAYBE_MARSHAL(INTF_REPOS)
+  CATCH_AND_MAYBE_MARSHAL(BAD_CONTEXT)
+  CATCH_AND_MAYBE_MARSHAL(OBJ_ADAPTER)
+  CATCH_AND_MAYBE_MARSHAL(DATA_CONVERSION)
+  CATCH_AND_MAYBE_MARSHAL(TRANSACTION_REQUIRED)
+  CATCH_AND_MAYBE_MARSHAL(TRANSACTION_ROLLEDBACK)
+  CATCH_AND_MAYBE_MARSHAL(INVALID_TRANSACTION)
+  CATCH_AND_MAYBE_MARSHAL(WRONG_TRANSACTION)
+#undef CATCH_AND_MAYBE_MARSHAL
+
+  catch(const UserException& ex) {
+    //?? user-defined exceptions ...
+  }
+
+#else
+
+  catch(CORBA::SystemException& ex) {
+    if (!strandIsDying() && (pd_state == RequestIsBeingProcessed ||
+			     pd_state == WaitingForReply)) {
+      if( pd_state == RequestIsBeingProcessed )
+	RequestReceived(1);
+      if( !pd_response_expected ) {
 	SendMsgErrorMessage();
 	ReplyCompleted();
       }
       else {
-	CORBA::OBJECT_NOT_EXIST ex(0,CORBA::COMPLETED_NO);
-	MarshallSystemException(this,SysExceptRepoID::OBJECT_NOT_EXIST,ex);
+	int repoid_size;
+	const char* repoid = ex._NP_repoId(&repoid_size);
+	size_t msgsize = GIOP_S::ReplyHeaderSize();
+	msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4 + repoid_size;
+	msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 8;
+
+	InitialiseReply(GIOP::SYSTEM_EXCEPTION, msgsize);
+
+	CORBA::ULong(repoid_size) >>= *this;
+	put_char_array((const CORBA::Char*) repoid, repoid_size);
+	ex.minor() >>= *this;
+	CORBA::ULong(ex.completed()) >>= *this;
+	ReplyCompleted();
       }
     }
+    else
+      throw;
   }
-  catch (const CORBA::OBJECT_NOT_EXIST &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (OBJECT_NOT_EXIST,ex);
-  }
-  catch (const CORBA::UNKNOWN &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN,ex);
-  }
-  catch (const CORBA::BAD_PARAM &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_PARAM,ex);
-  }
-  catch (const CORBA::NO_MEMORY &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_MEMORY,ex);
-  }
-  catch (const CORBA::IMP_LIMIT &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (IMP_LIMIT,ex);
-  }
-  catch (const CORBA::COMM_FAILURE &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (COMM_FAILURE,ex);
-  }
-  catch (const CORBA::INV_OBJREF &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INV_OBJREF,ex);
-  }
-  catch (const CORBA::NO_PERMISSION &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_PERMISSION,ex);
-  }
-  catch (const CORBA::INTERNAL &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INTERNAL,ex);
-  }
-  catch (const CORBA::MARSHAL &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (MARSHAL,ex);
-  }
-  catch (const CORBA::INITIALIZE &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INITIALIZE,ex);
-  }
-  catch (const CORBA::NO_IMPLEMENT &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_IMPLEMENT,ex);
-  }
-  catch (const CORBA::BAD_TYPECODE &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_TYPECODE,ex);
-  }
-  catch (const CORBA::BAD_OPERATION &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_OPERATION,ex);
-  }
-  catch (const CORBA::NO_RESOURCES &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_RESOURCES,ex);
-  }
-  catch (const CORBA::NO_RESPONSE &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (NO_RESPONSE,ex);
-  }
-  catch (const CORBA::PERSIST_STORE &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (PERSIST_STORE,ex);
-  }
-  catch (const CORBA::BAD_INV_ORDER &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_INV_ORDER,ex);
-  }
-  catch (const CORBA::TRANSIENT &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (TRANSIENT,ex);
-  }
-  catch (const CORBA::FREE_MEM &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (FREE_MEM,ex);
-  }
-  catch (const CORBA::INV_IDENT &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INV_IDENT,ex);
-  }
-  catch (const CORBA::INV_FLAG &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INV_FLAG,ex);
-  }
-  catch (const CORBA::INTF_REPOS &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INTF_REPOS,ex);
-  }
-  catch (const CORBA::BAD_CONTEXT &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (BAD_CONTEXT,ex);
-  }
-  catch (const CORBA::OBJ_ADAPTER &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (OBJ_ADAPTER,ex);
-  }
-  catch (const CORBA::DATA_CONVERSION &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (DATA_CONVERSION,ex);
-  }
-  catch (const CORBA::TRANSACTION_REQUIRED &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (TRANSACTION_REQUIRED,ex);
-  }
-  catch (const CORBA::TRANSACTION_ROLLEDBACK &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (TRANSACTION_ROLLEDBACK,ex);
-  }
-  catch (const CORBA::INVALID_TRANSACTION &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (INVALID_TRANSACTION,ex);
-  }
-  catch (const CORBA::WRONG_TRANSACTION &ex) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (WRONG_TRANSACTION,ex);
-  }
-  catch (const terminateProcessing &) {
-    if (pd_state == GIOP_S::WaitingForReply) {
-      pd_state = GIOP_S::Idle;
+
+  catch(CORBA::UserException& ex) {
+    int i, repoid_size;
+    const char* repoid = ex._NP_repoId(&repoid_size);
+
+    //?? Turn this into a binary search (list is sorted).
+    for( i = 0; i < pd_n_user_exns; i++ )
+      if( !strcmp(pd_user_exns[i], repoid) ) {
+	size_t msgsize = ReplyHeaderSize();
+	msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4 + repoid_size;
+	msgsize = ex._NP_alignedSize(msgsize);
+	InitialiseReply(GIOP::USER_EXCEPTION, msgsize);
+	CORBA::ULong(repoid_size) >>= *this;
+	put_char_array((const CORBA::Char*) repoid, repoid_size);
+	ex._NP_marshal(*this);
+	ReplyCompleted();
+	break;
+      }
+
+    if( i == pd_n_user_exns ) {
+      if( omniORB::trace(1) ) {
+	omniORB::logger l;
+	l << "WARNING -- method \'" << operation() << "\' on: " << pd_key
+	  << "\n raised the exception: " << repoid << '\n';
+      }
+      CORBA::UNKNOWN ex(0, CORBA::COMPLETED_MAYBE);
+      CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN, ex);
     }
   }
-  catch (...) {
-    if (obj) omni::objectRelease(obj); obj = 0;
-    CORBA::UNKNOWN ex(0,CORBA::COMPLETED_MAYBE);
+
+#endif
+
+  catch(omniORB::LOCATION_FORWARD& ex) {
+    // This is here to provide a convenient way to implement
+    // location forwarding. The object implementation can throw
+    // a location forward exception to re-direct the request
+    // to another location.
+
+    if( omniORB::trace(10) )
+      omniORB::logf("Implementation of \'%s\' generated LOCATION_FORWARD.",
+		    operation());
+
+    CORBA::Object_var release_it(ex.get_obj());
+
+    if( !strandIsDying() && pd_response_expected &&
+	(pd_state == RequestIsBeingProcessed ||
+	 pd_state == WaitingForReply) ) {
+
+      if( CORBA::is_nil(ex.get_obj()) ) {
+	CORBA::UNKNOWN ex(0, CORBA::COMPLETED_MAYBE);
+	CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN,ex);
+      }
+      else {
+	if( pd_state == RequestIsBeingProcessed )  RequestReceived(1);
+	// Marshal the location forward message.
+	size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
+	msgsize = CORBA::Object::_NP_alignedSize(ex.get_obj(), msgsize);
+	InitialiseReply(GIOP::LOCATION_FORWARD, CORBA::ULong(msgsize));
+	CORBA::Object::_marshalObjRef(ex.get_obj(), *this);
+	ReplyCompleted();
+      }
+    }
+    else {
+      CORBA::UNKNOWN ex(0, CORBA::COMPLETED_MAYBE);
+      CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN,ex);
+    }
+  }
+
+  catch(...) {
+    if( omniORB::traceLevel > 1 ) {
+      omniORB::logger l;
+      l << "WARNING -- method \'" << operation() << "\' raised an unexpected\n"
+	" exception (not a CORBA exception).\n";
+    }
+    CORBA::UNKNOWN ex(0, CORBA::COMPLETED_MAYBE);
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN,ex);
   }
-  if (obj) omni::objectRelease(obj);
-  return;
 }
+
+
 #undef CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION
+
 
 void
 GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
@@ -789,7 +746,7 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
 
   try {
     // This try block catches any exception that might raise during
-    // the processing of the request header
+    // the processing of the request header.
     msgsize <<= *this;
     if (msgsize > MaxMessageSize()) {
       SendMsgErrorMessage();
@@ -797,85 +754,82 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
       throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
     }
 
-    RdMessageSize(msgsize,byteorder);  // Set the size of the message body.
+    RdMessageSize(msgsize, byteorder);  // Set the size of the message body.
 
     pd_request_id <<= *this;
 
-    CORBA::ULong keysize;
-    keysize <<= *this;
-    if (keysize != sizeof(omniObjectKey)) {
-      // This key did not come from this orb.
-      // silently skip the key. Initialise pd_objkey to all zeros and
-      // let the call to locateObject() below to raise the proper exception
-      pd_objkey = omniORB::nullkey();
-      skip(keysize);
-    }
-    else {
-      get_char_array((CORBA::Char*) &pd_objkey, keysize);
-    }
+    pd_key <<= *this;
+
     RequestReceived();
   }
-  catch (const CORBA::MARSHAL &ex) {
+  catch (CORBA::MARSHAL& ex) {
     RequestReceived(1);
     SendMsgErrorMessage();
     pd_state = GIOP_S::Idle;
     return;
   }
-  catch (const CORBA::NO_MEMORY &ex) {
+  catch (CORBA::NO_MEMORY& ex) {
     RequestReceived(1);
     MarshallSystemException(this,SysExceptRepoID::NO_MEMORY,ex);
     return;
   }
 
-  omniObject *obj = 0;
-  GIOP::LocateStatusType status;
+  omniORB::logs(10, "Handling a GIOP LOCATE_REQUEST.");
 
-  if ((obj = omni::locateObject(omniObjectManager::root(),pd_objkey))) {
-    omni::objectRelease(obj);
-    status = GIOP::OBJECT_HERE;
-  }
-  else if ((obj = omni::locatePyObject(omniObjectManager::root(),pd_objkey))) {
-    omni::objectRelease(obj);
-    status = GIOP::OBJECT_HERE;
-  }
-  else if (MapKeyToObjectFunction) {
-    // Cannot find the object in the object tables. If the application
-    // has registered a loader, do an upcall to locate the object.  If
-    // the return value is not a nil object reference, reply with
-    // OBJECT_FORWARD and the new object reference.
-    status = GIOP::UNKNOWN_OBJECT;
+  GIOP::LocateStatusType status = GIOP::UNKNOWN_OBJECT;
 
-    try {
-      CORBA::Object_var newDestination = MapKeyToObjectFunction(pd_objkey);
-      if (!CORBA::is_nil(newDestination)) {
-	status = GIOP::OBJECT_FORWARD;
+  CORBA::ULong hash = omni::hash(pd_key.key(), pd_key.size());
+  omni::internalLock.lock();
+  omniLocalIdentity* id;
+  id = omni::locateIdentity(pd_key.key(), pd_key.size(), hash);
+  if( id && id->servant() )  status = GIOP::OBJECT_HERE;
+  omni::internalLock.unlock();
+
+  if( status == GIOP::UNKNOWN_OBJECT ) {
+
+    // We attempt to find the object adapter (activate it if necassary)
+    // and ask it if the object exists, or if it has the *capability*
+    // to activate such an object.  ie. is it able to do object loading
+    // on demand?
+
+    omniObjAdapter_var adapter(
+	  omniObjAdapter::getAdapter(pd_key.key(), pd_key.size()));
+
+    if( adapter ) {
+      try {
+	if( adapter->objectExists(pd_key.key(), pd_key.size()) )
+	  status = GIOP::OBJECT_HERE;
+      }
+      catch(omniORB::LOCATION_FORWARD& lf) {
+	status = GIOP::UNKNOWN_OBJECT;
 	WrLock();
-	pd_state = GIOP_S::ReplyIsBeingComposed;
+	pd_state = ReplyIsBeingComposed;
 
-	size_t msgsize = sizeof(MessageHeader::LocateReply) + 4 + 8;
-	msgsize = CORBA::Object::NP_alignedSize(newDestination,msgsize);
+	int msgsize = sizeof(MessageHeader::LocateReply) + 4 + 8;
+	msgsize = CORBA::Object::_NP_alignedSize(lf.get_obj(), msgsize);
 	msgsize = msgsize - sizeof(MessageHeader::LocateReply) - 4;
 	WrMessageSize(0);
 	put_char_array((CORBA::Char*) MessageHeader::LocateReply,
 		       sizeof(MessageHeader::LocateReply),
 		       omni::ALIGN_1, 1, 1);
-	operator>>= ((CORBA::ULong)msgsize,*this);
-	operator>>= (pd_request_id,*this);
-	operator>>= ((CORBA::ULong)status,*this);
-	CORBA::Object::marshalObjRef(newDestination,*this);
+	CORBA::ULong(msgsize) >>= *this;
+	pd_request_id         >>= *this;
+	CORBA::ULong(status)  >>= *this;
+	CORBA::Object::_marshalObjRef(lf.get_obj(), *this);
 	flush(1);
 	pd_state = GIOP_S::Idle;
 	WrUnlock();
       }
+      catch(...) {
+	// status == GIOP::UNKNOWN_OBJECT
+      }
     }
-    catch (...) {
-    }
-  }
-  else {
-    status = GIOP::UNKNOWN_OBJECT;
+    else if( pd_key.size() == 4 && !memcmp(pd_key.key(), "INIT", 4) &&
+	     omniInitialReferences::is_bootstrap_agentImpl_initialised() )
+      status = GIOP::OBJECT_HERE;
   }
 
-  if (status != GIOP::OBJECT_FORWARD) {
+  if( status != GIOP::OBJECT_FORWARD ) {
     WrLock();
     pd_state = GIOP_S::ReplyIsBeingComposed;
 
@@ -884,17 +838,16 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
     put_char_array((CORBA::Char*) MessageHeader::LocateReply,
 		   sizeof(MessageHeader::LocateReply),
 		   omni::ALIGN_1, 1, 1);
-    operator>>= ((CORBA::ULong)bodysize,*this);
-    operator>>= (pd_request_id,*this);
-    operator>>= ((CORBA::ULong)status,*this);
+    CORBA::ULong(bodysize) >>= *this;
+    pd_request_id          >>= *this;
+    CORBA::ULong(status)   >>= *this;
 
     flush(1);
     pd_state = GIOP_S::Idle;
     WrUnlock();
   }
-
-  return;
 }
+
 
 void
 GIOP_S::HandleCancelRequest(CORBA::Boolean byteorder)

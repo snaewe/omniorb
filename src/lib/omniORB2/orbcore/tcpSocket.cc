@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // tcpSocket.cc               Created on: 18/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -28,9 +28,8 @@
 
 /*
   $Log$
-  Revision 1.8  1999/08/23 08:35:59  sll
-  Do not prepend the tcpSocketFactoryType singleton onto the
-  ropeFactoryTypeList. This has been done by the ctor of ropeFactoryType.
+  Revision 1.8.6.1  1999/09/22 14:27:10  djr
+  Major rewrite of orbcore to support POA.
 
   Revision 1.7  1999/03/11 16:25:56  djr
   Updated copyright notice
@@ -57,7 +56,7 @@
 
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -65,7 +64,7 @@
 
 #include <ropeFactory.h>
 #include <tcpSocket.h>
-#include <gatekeeper.h>
+//#include <gatekeeper.h>
 
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
@@ -91,12 +90,15 @@ tcpSocketFactoryType::init()
 {
   if (singleton) return;
   singleton = new tcpSocketFactoryType;
+  singleton->next = ropeFactoryTypeList;
+  ropeFactoryTypeList = singleton;
 
+#if 0
   if (omniORB::traceLevel >= 2) {
-    omniORB::log << "omniORB2 gateKeeper is " << gateKeeper::version() 
-		 << "\n";
+    omniORB::log << "omniORB: GateKeeper is " << gateKeeper::version() << "\n";
     omniORB::log.flush();
   }
+#endif
 }
 
 tcpSocketFactoryType::tcpSocketFactoryType()
@@ -293,7 +295,7 @@ tcpSocketFactoryType::encodeIOPprofile(const Endpoint* addr,
 }
 
 
-tcpSocketEndpoint::tcpSocketEndpoint(CORBA::Char *h,CORBA::UShort p)
+tcpSocketEndpoint::tcpSocketEndpoint(const CORBA::Char *h,CORBA::UShort p)
     : Endpoint((CORBA::Char *)tcpSocketEndpoint::protocol_name) 
 {
   pd_host = 0;

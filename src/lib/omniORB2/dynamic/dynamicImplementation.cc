@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // dynamicImplementation.cc   Created on: 11/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -28,215 +28,201 @@
 //
 
 #define ENABLE_CLIENT_IR_SUPPORT
+#include <omniORB3/CORBA.h>
 #include <dynamicImplementation.h>
-#include <pseudo.h>
-#include <string.h>
 #include <dynException.h>
+#include <omniORB3/callDescriptor.h>
+#include <bootstrap_i.h>
+#include <dynamicLib.h>
 
-//////////////////////////////////////////////////////////////////////
-////////////////////////////// DsiObject /////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-DsiObject::DsiObject(CORBA::BOA::DynamicImplementation_ptr dynImpl,
-		     const char* intfRepoId)
-{
-  omniObject::PR_IRRepositoryId(intfRepoId);
-  this->PR_setobj(this);
-  pd_dynImpl = dynImpl;
-}
-
-
-DsiObject::~DsiObject()
-{
-  delete pd_dynImpl;
-}
-
-
-CORBA::Boolean
-DsiObject::dispatch(GIOP_S& s,const char *op, CORBA::Boolean response_expected)
-{
-  ServerRequestImpl server_request(op, &s, response_expected);
-  CORBA::Environment_var env = new EnvironmentImpl();
-  if( !env )  throw CORBA::NO_MEMORY(0, CORBA::COMPLETED_MAYBE);
-
-  // Systems exceptions are passed via <env>. We throw them on to the
-  // next level to deal with. BAD_OPERATION just returns 0, so that
-  // GIOP_S::dispatch() can go on to check if <op> is one of the
-  // standard Object operations.
-  try{
-    // Upcall into application supplied implementation.
-    pd_dynImpl->invoke(&server_request, *env);
-
-    if( env->exception() )
-      env->exception()->_raise();
-  }
-  catch(CORBA::BAD_OPERATION&) {
-    return 0;
-  }
-
-  // Check that server_request has gotten to a legal state.
-  if( server_request.state() == ServerRequestImpl::SR_READY ){
-    if( omniORB::traceLevel > 0 ){
-      omniORB::log <<
-	"Warning: omniORB2 has detected that a Dynamic Implementation\n"
-	" Routine (DynamicImplementation::invoke()) failed to call\n"
-	" params() on the ServerRequest object.\n";
-      omniORB::log.flush();
-    }
-    throw CORBA::UNKNOWN(0, CORBA::COMPLETED_NO);
-  }
-  if( server_request.state() == ServerRequestImpl::SR_ERROR ) {
-    if( omniORB::traceLevel > 0 ){
-      omniORB::log <<
-	"Warning: omniORB2 has detected that a Dynamic Implementation\n"
-	" Routine (DynamicImplementation::invoke()) did not properly\n"
-	" implement the Dynamic Skeleton Interface.\n";
-      omniORB::log.flush();
-    }
-    throw CORBA::UNKNOWN(0, CORBA::COMPLETED_NO);
-  }
-
-  // It is legal for the caller to ask for no response even if the
-  // operation is not <oneway>. If no response is required, we do
-  // nothing.
-
-  if( response_expected ){
-    switch( server_request.state() ){
-    case ServerRequestImpl::SR_GOT_PARAMS:
-    case ServerRequestImpl::SR_GOT_CTX:
-    case ServerRequestImpl::SR_GOT_RESULT:
-      {
-	// Calculate the message size.
-	CORBA::ULong msgsize = (CORBA::ULong) GIOP_S::ReplyHeaderSize();
-	if( server_request.result() )
-	  msgsize = server_request.result()->NP_alignedDataOnlySize(msgsize);
-	CORBA::ULong num_args = server_request.params()->count();
-	for( CORBA::ULong i = 0; i < num_args; i++ ){
-	  CORBA::NamedValue_ptr arg = server_request.params()->item(i);
-	  if( arg->flags() & CORBA::ARG_OUT ||
-	      arg->flags() & CORBA::ARG_INOUT )
-	    msgsize = arg->value()->NP_alignedDataOnlySize(msgsize);
-	}
-
-	s.InitialiseReply(GIOP::NO_EXCEPTION, msgsize);
-
-	// Marshal the result and OUT/INOUT parameters.
-	if( server_request.result() )
-	  server_request.result()->NP_marshalDataOnly(s);
-	for( CORBA::ULong j = 0; j < num_args; j++ ){
-	  CORBA::NamedValue_ptr arg = server_request.params()->item(j);
-	  if( arg->flags() & CORBA::ARG_OUT ||
-	      arg->flags() & CORBA::ARG_INOUT )
-	    arg->value()->NP_marshalDataOnly(s);
-	}
-	break;
-      }
-
-    case ServerRequestImpl::SR_EXCEPTION:  // User & System exception
-      {
-	CORBA::ULong msgsize = (CORBA::ULong) GIOP_S::ReplyHeaderSize();
-
-	CORBA::TypeCode_var tc = server_request.exception()->type();
-
-	// Exception TypeCodes are guarenteed to have a non-empty id().
-	const char* intfRepoId = tc->id();
-	CORBA::ULong len = strlen(intfRepoId) + 1;
-	msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4 + len;
-	msgsize = server_request.exception()->NP_alignedDataOnlySize(msgsize);
-
-	if (isaSystemException(server_request.exception())) {
-	  s.InitialiseReply(GIOP::SYSTEM_EXCEPTION, msgsize);
-	}
-	else {
-	  s.InitialiseReply(GIOP::USER_EXCEPTION, msgsize);
-	}
-
-	len >>= s;
-	s.put_char_array((CORBA::Char*)intfRepoId, len);
-	server_request.exception()->NP_marshalDataOnly(s);
-	break;
-      }
-
-    default:
-      // Never get here
-      break;
-    }
-  }
-
-  s.ReplyCompleted();
-
-  return 1;
-}
-
-
-void*
-DsiObject::_widenFromTheMostDerivedIntf(const char* type_id,
-					_CORBA_Boolean is_cxx_type_id)
-{
-  if( is_cxx_type_id )  return 0;
-  if( !type_id )  return (CORBA::Object_ptr) this;
-  if( strcmp(type_id, NP_IRRepositoryId()) )  return 0;
-  return (DsiObject_ptr) this;
-}
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////// DynamicImplementation ///////////////////////
 //////////////////////////////////////////////////////////////////////
 
-
-#define pd_boa         (((DynamicImplementation_pd*)pd)->boa)
-#define pd_object      (((DynamicImplementation_pd*)pd)->object)
-
-
-CORBA::BOA::
-DynamicImplementation::DynamicImplementation()
-{
-  pd = new DynamicImplementation_pd;
-  pd_boa = 0;
-  pd_object = 0;
-}
-
-
-CORBA::BOA::
-DynamicImplementation::~DynamicImplementation()
-{
-  delete (DynamicImplementation_pd*)pd;
-}
+PortableServer::DynamicImplementation::~DynamicImplementation() {}
 
 
 CORBA::Object_ptr
-CORBA::BOA::
-DynamicImplementation::_this()
+PortableServer::DynamicImplementation::_this()
 {
-  // This must only be called from within invoke().
-  return pd_object->_this();
+#if 1
+  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);//??
+  return 0;
+#else
+  if( 1 /*?? not in context of invocation */ )
+    throw PortableServer::POA::WrongPolicy(); //WrongPolicy? eh?
+
+
+#endif
 }
 
 
-CORBA::BOA_ptr
-CORBA::BOA::
-DynamicImplementation::_boa()
+CORBA::Boolean
+PortableServer::DynamicImplementation::_is_a(const char* logical_type_id)
 {
-  // This must only be called from within invoke().
-  return pd_boa;
+#if 1
+  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);//??
+  return 0;
+#else
+  // nb. need POACurrent to do this.
+  const char* repoId = _primary_interface(oid, poa);
+  if( !repoId ) {
+    omniORB::logs(1, "The _primary_interface() of a dynamic implementation"
+		  " returned 0.");
+    return 0;
+  }
+
+  return !strcmp(repoId, logical_type_id);
+#endif
+}
+
+
+_CORBA_Boolean
+PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
+{
+  // We do not want to handle standard object operations ...
+  if( !strcmp(giop_s.operation(), "_is_a"          ) ||
+      !strcmp(giop_s.operation(), "_non_existent"  ) ||
+      !strcmp(giop_s.operation(), "_interface"     ) ||
+      !strcmp(giop_s.operation(), "_implementation") )
+    return 0;
+
+  omniServerRequest sreq(giop_s);
+
+  // Upcall into application's DIR.
+  invoke(&sreq);
+
+  // It is legal for the caller to ask for no response even if the
+  // operation is not <oneway>.  If no response is required, we do
+  // nothing.
+
+  switch( sreq.state() ){
+  case omniServerRequest::SR_READY:
+    if( omniORB::trace(1) ){
+      omniORB::log <<
+	"omniORB: WARNING -- A Dynamic Implementation Routine\n"
+	" (DynamicImplementation::invoke()) failed to call arguments()\n"
+	" on the ServerRequest object.\n";
+      omniORB::log.flush();
+    }
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+
+  case omniServerRequest::SR_GOT_PARAMS:
+  case omniServerRequest::SR_GOT_CTX:
+  case omniServerRequest::SR_GOT_RESULT:
+    if( giop_s.response_expected() ){
+      // Calculate the message size.
+      CORBA::ULong msgsize = (CORBA::ULong) GIOP_S::ReplyHeaderSize();
+      msgsize = sreq.result().NP_alignedDataOnlySize(msgsize);
+      CORBA::ULong num_args = sreq.params()->count();
+      for( CORBA::ULong i = 0; i < num_args; i++ ){
+	CORBA::NamedValue_ptr arg = sreq.params()->item(i);
+	if( arg->flags() & CORBA::ARG_OUT ||
+	    arg->flags() & CORBA::ARG_INOUT )
+	  msgsize = arg->value()->NP_alignedDataOnlySize(msgsize);
+      }
+
+      giop_s.InitialiseReply(GIOP::NO_EXCEPTION, msgsize);
+
+      // Marshal the result and OUT/INOUT parameters.
+      sreq.result().NP_marshalDataOnly(giop_s);
+      for( CORBA::ULong j = 0; j < num_args; j++ ){
+	CORBA::NamedValue_ptr arg = sreq.params()->item(j);
+	if( arg->flags() & CORBA::ARG_OUT ||
+	    arg->flags() & CORBA::ARG_INOUT )
+	  arg->value()->NP_marshalDataOnly(giop_s);
+      }
+    }
+    break;
+
+  case omniServerRequest::SR_EXCEPTION:  // User & System exception
+    if( giop_s.response_expected() ){
+      int msgsize = GIOP_S::ReplyHeaderSize();
+
+      CORBA::TypeCode_var tc = sreq.exception().type();
+
+      // Exception TypeCodes are guarenteed to have a non-empty id().
+      const char* intfRepoId = tc->id();
+      CORBA::ULong len = strlen(intfRepoId) + 1;
+      msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4 + len;
+      msgsize = sreq.exception().NP_alignedDataOnlySize(msgsize);
+
+      if (isaSystemException(&sreq.exception()))
+	giop_s.InitialiseReply(GIOP::SYSTEM_EXCEPTION, msgsize);
+      else
+	giop_s.InitialiseReply(GIOP::USER_EXCEPTION, msgsize);
+
+      len >>= giop_s;
+      giop_s.put_char_array((CORBA::Char*)intfRepoId, len);
+      sreq.exception().NP_marshalDataOnly(giop_s);
+    }
+    else
+      giop_s.SendMsgErrorMessage();
+    break;
+
+  case omniServerRequest::SR_DSI_ERROR:
+    if( omniORB::trace(1) ){
+      omniORB::log <<
+	"omniORB: WARNING -- A Dynamic Implementation Routine\n"
+	" (DynamicImplementation::invoke()) did not properly implement\n"
+	" the Dynamic Skeleton Interface.\n";
+      omniORB::log.flush();
+    }
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+
+  case omniServerRequest::SR_ERROR:
+    if( omniORB::trace(1) ) {
+      omniORB::log <<
+	"omniORB: WARNING -- A system exception was thrown when\n"
+	" unmarshalling arguments for a DSI servant.  However the Dynamic\n"
+	" Implementation Routine (DynamicImplementation::invoke()) did not\n"
+	" propagate the exception or pass it to the server request.\n"
+	" CORBA::MARSHAL is being passed back to the client anyway.\n";
+      omniORB::log.flush();
+    }
+    throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+  }
+
+  giop_s.ReplyCompleted();
+
+  return 1;
 }
 
 //////////////////////////////////////////////////////////////////////
-///////////////////////////// CORBA::BOA /////////////////////////////
-//////////////////////////////////////////////////////////////////////
 
-CORBA::Object_ptr
-CORBA::
-BOA::create_dynamic_object(DynamicImplementation_ptr dir,
-			   const char* intfRepoId)
+omniObjRef*
+PortableServer::DynamicImplementation::_do_get_interface()
 {
-  if( !dir )  throw BAD_PARAM(0, COMPLETED_NO);
+  CORBA::_objref_InterfaceDef* p = _get_interface();
+  if( p )  return p->_PR_getobj();
 
-  DsiObject_ptr obj = new DsiObject(dir, intfRepoId);
-  if( !obj )  _CORBA_new_operator_return_null();
+  // If we get here then we assume that _get_interface has not
+  // been overriden, and provide the default implementation.
 
-  ((DynamicImplementation_pd*)dir->NP_pd())->object = obj;
-  ((DynamicImplementation_pd*)dir->NP_pd())->boa = this;
+#if 1
+  throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);//??
+  return 0;
+#else
+  // nb. need POACurrent to do this.
+  const char* repoId = _primary_interface(oid, poa);
+  if( !repoId ) {
+    omniORB::logs(1, "The _primary_interface() of a dynamic implementation"
+		  " returned 0.");
+    throw CORBA::INTF_REPOS(0, CORBA::COMPLETED_NO);
+  }
 
-  return obj;
+  // Obtain the object reference for the interface repository.
+  CORBA::Object_var repository =
+    omniInitialReferences::get("InterfaceRepository");
+  if( CORBA::is_nil(repository) )
+    throw CORBA::INTF_REPOS(0, CORBA::COMPLETED_NO);
+
+  // Make a call to the interface repository.
+  omniStdCallDesc::_cCORBA_mObject_i_cstring
+    call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, 0, repoId);
+  repository->_PR_getobj()->_invoke(call_desc);
+
+  return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
+#endif
 }

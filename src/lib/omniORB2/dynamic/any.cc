@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // any.cc                     Created on: 31/07/97
 //                            Author1   : Eoin Carroll (ewc)
 //                            Author2   : James Weatherall (jnw)
@@ -29,9 +29,12 @@
 
 
 /* $Log$
-/* Revision 1.18  1999/07/02 19:35:16  sll
-/* Corrected typo in operator>>= for typecode.
+/* Revision 1.18.6.1  1999/09/22 14:26:27  djr
+/* Major rewrite of orbcore to support POA.
 /*
+ * Revision 1.18  1999/07/02 19:35:16  sll
+ * Corrected typo in operator>>= for typecode.
+ *
  * Revision 1.16  1999/07/02 19:10:46  sll
  * Typecode extraction is now non-copy as well.
  *
@@ -217,20 +220,20 @@ CORBA::Any::operator<<= (MemBufferedStream& s)
 }
 
 size_t
-CORBA::Any::NP_alignedSize(size_t initialoffset) const
+CORBA::Any::_NP_alignedSize(size_t initialoffset) const
 {
   size_t _msgsize = initialoffset;
   if ( omniORB::tcAliasExpand ) {
     CORBA::TypeCode_var tc =
       TypeCode_base::aliasExpand(ToTcBase(pdAnyP()->getTC_parser()->getTC()));
-    _msgsize = tc->NP_alignedSize(_msgsize);
+    _msgsize = tc->_NP_alignedSize(_msgsize);
   }
   else 
-    _msgsize = pdAnyP()->getTC_parser()->getTC()->NP_alignedSize(_msgsize);
+    _msgsize = pdAnyP()->getTC_parser()->getTC()->_NP_alignedSize(_msgsize);
   return NP_alignedDataOnlySize(_msgsize);
 }
 
-// omniORB2 data-only marshalling functions
+// omniORB data-only marshalling functions
 void
 CORBA::Any::NP_marshalDataOnly(NetBufferedStream& s) const
 {
@@ -261,7 +264,7 @@ CORBA::Any::NP_alignedDataOnlySize(size_t initialoffset) const
   return pdAnyP()->alignedSize(initialoffset);
 }
 
-// omniORB2 internal data packing functions, for use only by stub code
+// omniORB internal data packing functions, for use only by stub code
 void
 CORBA::Any::PR_packFrom(CORBA::TypeCode_ptr newtc,
 			void* tcdesc)
@@ -400,14 +403,13 @@ CORBA::Any::operator<<=(TypeCode_ptr tc)
 void
 CORBA::Any::operator<<=(Object_ptr obj)
 {
-  if (!CORBA::Object::PR_is_valid(obj)) {
+  if (!CORBA::Object::_PR_is_valid(obj)) {
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
   }
-  const char* repoid = (const char*)CORBA::Object::repositoryID;
-  const char* name   = (const char*)"";
-  if (!CORBA::is_nil(obj)) {
-    repoid = obj->PR_getobj()->NP_IRRepositoryId();
-  }
+  const char* repoid = CORBA::Object::_PD_repoId;
+  const char* name   = "";
+  if (!CORBA::is_nil(obj))
+    repoid = obj->_PR_getobj()->_mostDerivedRepoId();
   CORBA::TypeCode_var tc = CORBA::TypeCode::NP_interface_tc(repoid,name);
   tcDescriptor tcd;
   tcd.p_objref.opq_objref = (void*) &obj;

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // mbufferedStream.cc         Created on: 6/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9.6.1  1999/09/22 14:26:54  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.9  1999/05/10 16:36:04  djr
   Fixed bug in constructors for read-only streams.
 
@@ -50,7 +53,7 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 #include <limits.h>
 
 

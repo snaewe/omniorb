@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // exception.cc               Created on: 13/5/96
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -19,16 +19,18 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
-//      
-//      
- 
+//
+
 /*
   $Log$
+  Revision 1.9.6.1  1999/09/22 14:26:48  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.9  1999/06/18 20:53:10  sll
   New function _CORBA_bad_param_freebuf().
 
@@ -60,13 +62,15 @@
 //
   */
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
 #include <excepthandler.h>
+#include <omniORB3/omniObjRef.h>
+
 
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the variables external linkage otherwise. Its a bug.
@@ -86,41 +90,44 @@ omniORB::defaultTransientRetryDelayIncrement = 1;
 
 #endif
 
-omniORB::transientExceptionHandler_t
+
+static CORBA::Boolean
+omni_defaultTransientExcHandler(void*, CORBA::ULong n_retries,
+				const CORBA::TRANSIENT& ex);
+static CORBA::Boolean
+omni_defaultCommFailureExcHandler(void*, CORBA::ULong n_retries,
+				  const CORBA::COMM_FAILURE& ex);
+static CORBA::Boolean
+omni_defaultSystemExcHandler(void*, CORBA::ULong n_retries,
+			     const CORBA::SystemException& ex);
+
+
+static omniORB::transientExceptionHandler_t
 omni_globalTransientExcHandler = omni_defaultTransientExcHandler;
 
-omniORB::commFailureExceptionHandler_t
+static omniORB::commFailureExceptionHandler_t
 omni_globalCommFailureExcHandler = omni_defaultCommFailureExcHandler;
 
-omniORB::systemExceptionHandler_t
+static omniORB::systemExceptionHandler_t
 omni_globalSystemExcHandler = omni_defaultSystemExcHandler;
 
-void* 
-omni_globalTransientExcHandlerCookie = 0;
-
-void*
-omni_globalCommFailureExcHandlerCookie =0;
-
-void*
-omni_globalSystemExcHandlerCookie = 0;
-
-omniExHandlers**
-omniExHandlers::Table = 0;
-
-omni_mutex
-omniExHandlers::TableLock;
+static void* omni_globalTransientExcHandlerCookie = 0;
+static void* omni_globalCommFailureExcHandlerCookie =0;
+static void* omni_globalSystemExcHandlerCookie = 0;
 
 
-CORBA::Boolean
+omniExHandlers** omniExHandlers::Table = 0;
+omni_mutex       omniExHandlers::TableLock;
+
+
+static CORBA::Boolean
 omni_defaultTransientExcHandler(void*,
 				CORBA::ULong n_retries,
 				const CORBA::TRANSIENT& ex)
 {
-  if (omniORB::traceLevel > 10) {
-    omniORB::log << "omniORB::defaultTransientExceptionHandler: retry "
-		 << n_retries << "th times.\n";
-    omniORB::log.flush();
-  }
+  if (omniORB::trace(10))
+    omniORB::logf("defaultTransientExceptionHandler: retry %dth times.",
+		  int(n_retries));
 
   unsigned long secs = n_retries*omniORB::defaultTransientRetryDelayIncrement;
   if (secs > omniORB::defaultTransientRetryDelayMaximum) {
@@ -140,6 +147,7 @@ omniORB::installTransientExceptionHandler(void* cookie,
   omni_globalTransientExcHandlerCookie = cookie;
 }
 
+
 void
 omniORB::installTransientExceptionHandler(CORBA::Object_ptr obj,
 				   void* cookie,
@@ -147,11 +155,11 @@ omniORB::installTransientExceptionHandler(CORBA::Object_ptr obj,
 {
   if (CORBA::is_nil(obj)) 
     return;
-  obj->PR_getobj()->_transientExceptionHandler((void*)fn,cookie);
+  obj->_PR_getobj()->_transientExceptionHandler((void*)fn,cookie);
 }
 
 
-CORBA::Boolean
+static CORBA::Boolean
 omni_defaultCommFailureExcHandler(void*,
 				   CORBA::ULong,
 				   const CORBA::COMM_FAILURE&)
@@ -168,6 +176,7 @@ omniORB::installCommFailureExceptionHandler(void* cookie,
   omni_globalCommFailureExcHandlerCookie = cookie;
 }
 
+
 void
 omniORB::installCommFailureExceptionHandler(CORBA::Object_ptr obj,
 				   void* cookie,
@@ -175,10 +184,11 @@ omniORB::installCommFailureExceptionHandler(CORBA::Object_ptr obj,
 {
   if (CORBA::is_nil(obj)) 
     return;
-  obj->PR_getobj()->_commFailureExceptionHandler((void*)fn,cookie);
+  obj->_PR_getobj()->_commFailureExceptionHandler((void*)fn,cookie);
 }
 
-CORBA::Boolean
+
+static CORBA::Boolean
 omni_defaultSystemExcHandler(void*,
 			     CORBA::ULong,
 			     const CORBA::SystemException&)
@@ -195,6 +205,7 @@ omniORB::installSystemExceptionHandler(void* cookie,
  omni_globalSystemExcHandlerCookie = cookie;
 }
 
+
 void
 omniORB::installSystemExceptionHandler(CORBA::Object_ptr obj,
 				       void* cookie,
@@ -202,12 +213,12 @@ omniORB::installSystemExceptionHandler(CORBA::Object_ptr obj,
 {
   if (CORBA::is_nil(obj)) 
     return;
-  obj->PR_getobj()->_systemExceptionHandler((void*)fn,cookie);
+  obj->_PR_getobj()->_systemExceptionHandler((void*)fn,cookie);
 }
 
 
 CORBA::Boolean
-_omni_callTransientExceptionHandler(omniObject* obj,
+_omni_callTransientExceptionHandler(omniObjRef* obj,
 				    CORBA::ULong nretries,
 				    const CORBA::TRANSIENT& ex)
 {
@@ -225,8 +236,9 @@ _omni_callTransientExceptionHandler(omniObject* obj,
   }
 }
 
+
 CORBA::Boolean
-_omni_callCommFailureExceptionHandler(omniObject* obj,
+_omni_callCommFailureExceptionHandler(omniObjRef* obj,
 				      CORBA::ULong nretries,
 				      const CORBA::COMM_FAILURE& ex)
 {
@@ -244,8 +256,9 @@ _omni_callCommFailureExceptionHandler(omniObject* obj,
   }
 }
 
+
 CORBA::Boolean
-_omni_callSystemExceptionHandler(omniObject* obj,
+_omni_callSystemExceptionHandler(omniObjRef* obj,
 				 CORBA::ULong nretries,
 				 const CORBA::SystemException& ex)
 {
@@ -263,13 +276,19 @@ _omni_callSystemExceptionHandler(omniObject* obj,
   }
 }
 
-#ifndef EXHANDLER_HASH  
-#define EXHANDLER_HASH(p) ((omni::ptr_arith_t)p % omniORB::hash_table_size)
-#else
-#error "EXHANDLER_HASH has already been defined"
+
+//?? This should really be extensible ...
+static int exHandlersTableSize = 103;
+
+
+#ifdef EXHANDLER_HASH
+#undef EXHANDLER_HASH
 #endif
 
-omniExHandlers::omniExHandlers() : 
+#define EXHANDLER_HASH(p) ((omni::ptr_arith_t) p % exHandlersTableSize)
+
+
+omniExHandlers::omniExHandlers() :
   transient_hdr(0), transient_cookie(0),
   commfail_hdr(0), commfail_cookie(0), 
   sysexcpt_hdr(0), sysexcpt_cookie(0),
@@ -283,18 +302,19 @@ omniExHandlers_iterator::omniExHandlers_iterator()
   omniExHandlers::TableLock.lock();
 }
 
+
 omniExHandlers_iterator::~omniExHandlers_iterator()
 {
   omniExHandlers::TableLock.unlock();
 }
 
+
 omniExHandlers*
-omniExHandlers_iterator::find_or_create(omniObject* p)
+omniExHandlers_iterator::find_or_create(omniObjRef* p)
 {
   if (omniExHandlers::Table == 0) {
-    omniExHandlers::Table = new omniExHandlers* [omniORB::hash_table_size];
-    unsigned int i;
-    for (i=0; i<omniORB::hash_table_size; i++)
+    omniExHandlers::Table = new omniExHandlers* [exHandlersTableSize];
+    for( int i = 0; i < exHandlersTableSize; i++ )
       omniExHandlers::Table[i] = 0;
   }
   omniExHandlers* exlist = omniExHandlers::Table[EXHANDLER_HASH(p)];
@@ -316,8 +336,9 @@ omniExHandlers_iterator::find_or_create(omniObject* p)
   }
 }
 
+
 omniExHandlers*
-omniExHandlers_iterator::find(omniObject* p)
+omniExHandlers_iterator::find(omniObjRef* p)
 {
   if (omniExHandlers::Table == 0) return 0;
   omniExHandlers* exlist = omniExHandlers::Table[EXHANDLER_HASH(p)];
@@ -329,8 +350,9 @@ omniExHandlers_iterator::find(omniObject* p)
   return exlist;
 }
 
+
 void
-omniExHandlers_iterator::remove(omniObject* p)
+omniExHandlers_iterator::remove(omniObjRef* p)
 {
   if (omniExHandlers::Table == 0) return;
   omniExHandlers** exlistp = &(omniExHandlers::Table[EXHANDLER_HASH(p)]);
@@ -349,16 +371,19 @@ omniExHandlers_iterator::remove(omniObject* p)
 
 #undef EXHANDLER_HASH
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 CORBA::Boolean 
 _CORBA_use_nil_ptr_as_nil_objref()
 {
-  if (omniORB::traceLevel > 10) {
-    omniORB::log << "Warning: omniORB2 detects that a nil pointer is wrongly used as a nil object reference.\n";
-    omniORB::log.flush();
-  }
+  omniORB::logs(10, "WARNING -- a nil (0) pointer is wrongly used as a\n"
+		" nil object reference.");
+
   return 1;
 }
+
 
 void
 _CORBA_new_operator_return_null()
@@ -366,11 +391,13 @@ _CORBA_new_operator_return_null()
   throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
 }
 
+
 void
 _CORBA_bound_check_error()
 {
   throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 }
+
 
 void
 _CORBA_marshal_error()
@@ -378,238 +405,44 @@ _CORBA_marshal_error()
   throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 }
 
+
 void
 _CORBA_invoked_nil_pseudo_ref()
 {
-  throw CORBA::BAD_OPERATION(0, CORBA::COMPLETED_NO);
+  omniORB::logs(1, "ERROR -- the application attempted to invoke an"
+		" operation\n"
+		" on a nil pseudo-object reference.");
+
+  throw CORBA::INV_OBJREF(0, CORBA::COMPLETED_NO);
 }
 
-CORBA::Boolean 
+
+CORBA::Boolean
 _CORBA_use_nil_ptr_as_nil_pseudo_objref(const char* objType)
 {
-  if (omniORB::traceLevel > 10) {
-    omniORB::log <<
-      "Warning: omniORB2 detects that a nil (0) pointer is wrongly used as\n"
-      " a nil CORBA::" << objType << " object reference.\n"
-      " Use CORBA::" << objType << "::_nil()\n";
-    omniORB::log.flush();
-  }
+  if( omniORB::trace(10) )
+    omniORB::logf("WARNING -- a nil (0) pointer is wrongly used as a\n"
+		  " nil CORBA::%s object reference.\n"
+		  " Use CORBA::%s::_nil()", objType, objType);
+
   return 1;
 }
+
+
+void
+_CORBA_invoked_nil_objref()
+{
+  omniORB::logs(1, "ERROR -- the application attempted to invoke an"
+		" operation\n"
+		" on a nil reference.");
+
+  throw CORBA::INV_OBJREF(0, CORBA::COMPLETED_NO);
+}
+
 
 void
 _CORBA_bad_param_freebuf()
 {
-  if (omniORB::traceLevel > 1) {
-    omniORB::log << "Warning: omniORB2 detects that an invalid buffer pointer is passed to freebuf of string or object sequence\n";
-    omniORB::log.flush();
-  }
+  omniORB::logs(1, "ERROR -- an invalid buffer pointer is passed to freebuf\n"
+		" of string or object sequence");
 }
-
-const char *
-CORBA::
-UNKNOWN::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::UNKNOWN.id;
-}
-
-const char *
-CORBA::
-BAD_PARAM::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::BAD_PARAM.id;
-}
-
-const char *
-CORBA::
-NO_MEMORY::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::NO_MEMORY.id;
-}
-
-const char *
-CORBA::
-IMP_LIMIT::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::IMP_LIMIT.id;
-}
-
-const char *
-CORBA::
-COMM_FAILURE::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::COMM_FAILURE.id;
-}
-
-const char *
-CORBA::
-INV_OBJREF::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::INV_OBJREF.id;
-}
-
-const char *
-CORBA::
-OBJECT_NOT_EXIST::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::OBJECT_NOT_EXIST.id;
-}
-
-const char *
-CORBA::
-NO_PERMISSION::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::NO_PERMISSION.id;
-}
-
-const char *
-CORBA::
-INTERNAL::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::INTERNAL.id;
-}
-
-const char *
-CORBA::
-MARSHAL::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::MARSHAL.id;
-}
-
-const char *
-CORBA::
-INITIALIZE::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::INITIALIZE.id;
-}
-
-const char *
-CORBA::
-NO_IMPLEMENT::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::NO_IMPLEMENT.id;
-}
-
-const char *
-CORBA::
-BAD_TYPECODE::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::BAD_TYPECODE.id;
-}
-
-const char *
-CORBA::
-BAD_OPERATION::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::BAD_OPERATION.id;
-}
-
-const char *
-CORBA::
-NO_RESOURCES::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::NO_RESOURCES.id;
-}
-
-const char *
-CORBA::
-NO_RESPONSE::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::NO_RESPONSE.id;
-}
-
-const char *
-CORBA::
-PERSIST_STORE::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::PERSIST_STORE.id;
-}
-
-const char *
-CORBA::
-BAD_INV_ORDER::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::BAD_INV_ORDER.id;
-}
-
-const char *
-CORBA::
-TRANSIENT::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::TRANSIENT.id;
-}
-
-const char *
-CORBA::
-FREE_MEM::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::FREE_MEM.id;
-}
-
-const char *
-CORBA::
-INV_IDENT::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::INV_IDENT.id;
-}
-
-const char *
-CORBA::
-INV_FLAG::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::INV_FLAG.id;
-}
-
-const char *
-CORBA::
-INTF_REPOS::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::INTF_REPOS.id;
-}
-
-const char *
-CORBA::
-BAD_CONTEXT::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::BAD_CONTEXT.id;
-}
-
-const char *
-CORBA::
-OBJ_ADAPTER::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::OBJ_ADAPTER.id;
-}
-
-const char *
-CORBA::
-DATA_CONVERSION::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::DATA_CONVERSION.id;
-}
-
-const char *
-CORBA::
-TRANSACTION_REQUIRED::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::TRANSACTION_REQUIRED.id;
-}
-const char *
-CORBA::
-TRANSACTION_ROLLEDBACK::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::TRANSACTION_ROLLEDBACK.id;
-}
-const char *
-CORBA::
-INVALID_TRANSACTION::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::INVALID_TRANSACTION.id;
-}
-const char *
-CORBA::
-WRONG_TRANSACTION::NP_RepositoryId() const
-{
-  return (const char *) GIOP_Basetypes::SysExceptRepoID::WRONG_TRANSACTION.id;
-}
-

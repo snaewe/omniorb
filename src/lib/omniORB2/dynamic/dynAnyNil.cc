@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // dynAnyNil.cc               Created on: 11/1998
 //                            Author    : David Riddoch (djr)
 //

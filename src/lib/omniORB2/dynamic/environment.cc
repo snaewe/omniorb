@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // environment.cc             Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -27,7 +27,14 @@
 //   Implementation of CORBA::Environment.
 //
 
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <pseudo.h>
+
 
 // The correct way of creating an environment object is to use
 // the ORB::create_environment() method. The environment objects

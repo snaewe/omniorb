@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // relStream.h                Created on: 30/9/97
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.8.1  1999/09/22 14:27:06  djr
+ Major rewrite of orbcore to support POA.
+
  Revision 1.2  1999/03/11 16:25:55  djr
  Updated copyright notice
 

@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // scavenger.cc               Created on: 5/8/97
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.10.6.1  1999/09/22 14:27:07  djr
+  Major rewrite of orbcore to support POA.
+
   Revision 1.10  1999/08/31 19:22:37  sll
   Revert back to single inheritance. The bug that causes occasional thread
   exit on startup has been identified. start_undetached() should be called
@@ -67,7 +70,7 @@
   */
 
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -76,7 +79,7 @@
 #include <limits.h>
 
 #include <ropeFactory.h>
-#include <objectManager.h>
+#include <objectAdapter.h>
 #include <scavenger.h>
 
 class _Scavenger : public omni_thread {
@@ -281,11 +284,12 @@ void*
 inScavenger_t::run_undetached(void *)
 {
   if (omniORB::traceLevel >= 15) {
-    omniORB::log << "inScavenger: start.\n";
+    omniORB::log << "omniORB: inScavenger: start.\n";
     omniORB::log.flush();
   }
 
-  Ripper_t* ripper = new Ripper_t("in",omniObjectManager::root()->incomingRopeFactories());
+  Ripper_t* ripper = new Ripper_t("in",
+				  omniObjAdapter::incomingRopeFactories());
   pd_mutex.lock();
   while (!isDying())
     {
@@ -295,7 +299,7 @@ inScavenger_t::run_undetached(void *)
 	int poke = pd_cond.timedwait(abs_sec,abs_nsec);
 	if (omniORB::traceLevel >= 15) {
 	  if (poke) {
-	    omniORB::log << "inScavenger: woken by poke()\n";
+	    omniORB::log << "omniORB: inScavenger: woken by poke()\n";
 	    omniORB::log.flush();
 	  }
 	}
@@ -310,12 +314,13 @@ inScavenger_t::run_undetached(void *)
       pd_mutex.unlock();
 
       if (omniORB::traceLevel >  10) {
-	omniORB::log << "inScavenger: scanning incoming connections\n";
+	omniORB::log <<
+	  "omniORB: inScavenger: scanning incoming connections\n";
 	omniORB::log.flush();
       }
 
       {
-	ropeFactory_iterator iter(omniObjectManager::root()->incomingRopeFactories());
+	ropeFactory_iterator iter(omniObjAdapter::incomingRopeFactories());
 	ropeFactory* rp;
 	CORBA::Boolean doshutdown = 0;
 
@@ -349,7 +354,7 @@ inScavenger_t::run_undetached(void *)
   ripper = 0;
 
   if (omniORB::traceLevel >= 15) {
-    omniORB::log << "inScavenger: exit.\n";
+    omniORB::log << "omniORB: inScavenger: exit.\n";
     omniORB::log.flush();
   }
   return 0;
@@ -359,7 +364,7 @@ void*
 outScavenger_t::run_undetached(void *)
 {
   if (omniORB::traceLevel >= 15) {
-    omniORB::log << "outScavenger: start.\n";
+    omniORB::log << "omniORB: outScavenger: start.\n";
     omniORB::log.flush();
   }
 
@@ -374,7 +379,7 @@ outScavenger_t::run_undetached(void *)
 	int poke = pd_cond.timedwait(abs_sec,abs_nsec);
 	if (omniORB::traceLevel >= 15) {
 	  if (poke) {
-	    omniORB::log << "outScavenger: woken by poke()\n";
+	    omniORB::log << "omniORB: outScavenger: woken by poke()\n";
 	    omniORB::log.flush();
 	  }
 	}
@@ -389,7 +394,8 @@ outScavenger_t::run_undetached(void *)
       pd_mutex.unlock();
 
       if (omniORB::traceLevel > 10) {
-	omniORB::log << "outScavenger: scanning outgoing connections\n";
+	omniORB::log <<
+	  "omniORB: outScavenger: scanning outgoing connections\n";
 	omniORB::log.flush();
       }
       {
@@ -427,7 +433,7 @@ outScavenger_t::run_undetached(void *)
   ripper = 0;
 
   if (omniORB::traceLevel >= 15) {
-    omniORB::log << "outScavenger: exit.\n";
+    omniORB::log << "omniORB: outScavenger: exit.\n";
     omniORB::log.flush();
   }
   return 0;
@@ -565,23 +571,19 @@ omniORB::scanGranularity(omniORB::scanType direction)
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////
-//            Module initialiser                                           //
-/////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
-class omni_scavenger_initialiser : public omniInitialiser {
+// Kill the out scavenger thread.
+
+class OutScavengerThreadKiller {
 public:
-
-  void attach() {
-    StrandScavenger::initOutScavenger();
-  }
-
-  void detach() {
+  ~OutScavengerThreadKiller() {
     StrandScavenger::killOutScavenger();
-    StrandScavenger::killInScavenger();
   }
+  static OutScavengerThreadKiller theInstance;
 };
 
-static omni_scavenger_initialiser initialiser;
 
-omniInitialiser& omni_scavenger_initialiser_ = initialiser;
+OutScavengerThreadKiller OutScavengerThreadKiller::theInstance;

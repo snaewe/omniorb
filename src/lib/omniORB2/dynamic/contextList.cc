@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB3
 // contextList.cc             Created on: 9/1998
 //                            Author    : David Riddoch (djr)
 //
@@ -26,6 +26,12 @@
 // Description:
 //   Implementation of CORBA::ContextList.
 //
+
+#include <omniORB3/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #include <pseudo.h>
 
@@ -209,8 +215,7 @@ CORBA::release(CORBA::ContextList_ptr p)
 
 
 CORBA::Status
-CORBA::
-ORB::create_context_list(ContextList_out ctxtlist)
+CORBA::ORB::create_context_list(ContextList_out ctxtlist)
 {
   ctxtlist = new ContextListImpl();
   RETURN_CORBA_STATUS;

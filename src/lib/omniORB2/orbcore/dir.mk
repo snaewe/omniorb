@@ -1,4 +1,4 @@
-# dir.mk for omniORB2.
+# dir.mk for omniORB.
 #
 # Build a static library in this directory and a shared library in ./sharedlib
 #
@@ -7,25 +7,24 @@
 #   Make variables common to all platforms                                  #
 #############################################################################
 
-ORB2_SRCS = bootstrap_i.cc \
-            constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
+ORB_SRCS = \
+	    taskqueue.cc omniServant.cc omniObjRef.cc \
+	    localIdentity.cc remoteIdentity.cc \
+	    objectAdapter.cc callDescriptor.cc \
+	    poa.cc portableserver.cc poamanager.cc \
+	    poastubs.cc \
+	    proxyFactory.cc omniInternal.cc anonObject.cc \
+            bootstrap_i.cc \
+            constants.cc corbaObject.cc corbaOrb.cc corbaBoa.cc \
             corbaString.cc \
             exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
             libcWrapper.cc mbufferedStream.cc nbufferedStream.cc \
-            object.cc objectKey.cc objectRef.cc ropeFactory.cc \
-            strand.cc scavenger.cc exceptn.cc proxyCall.cc \
-            current.cc policy.cc orbservice.cc domainManager.cc \
+            ropeFactory.cc \
+            strand.cc scavenger.cc exceptn.cc omniORB.cc tracedthread.cc \
+            policy.cc dynamicLib.cc \
             $(NETLIBSRCS) $(LOG_SRCS) bootstrapstub.cc Namingstub.cc
 
-ORB2_OBJS = bootstrap_i.o \
-            constants.o corbaBoa.o corbaObject.o corbaOrb.o \
-            corbaString.o \
-            exception.o giopClient.o giopServer.o initFile.o ior.o \
-            libcWrapper.o mbufferedStream.o nbufferedStream.o \
-            object.o objectRef.o objectKey.o ropeFactory.o \
-            strand.o scavenger.o exceptn.o proxyCall.o \
-            current.o policy.o orbservice.o domainManager.o \
-            $(NETLIBOBJS) $(LOG_OBJS) bootstrapstub.o Namingstub.o
+ORB_OBJS =  $(ORB_SRCS:.cc=.o)
 
 LOG_SRCS = logIOstream.cc
 LOG_OBJS = logIOstream.o
@@ -34,9 +33,9 @@ DIR_CPPFLAGS += $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -I. -I./.. -I./../..
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
-DIR_CPPFLAGS += -D_OMNIORB2_LIBRARY
+DIR_CPPFLAGS += -D_OMNIORB_LIBRARY
 
-CXXSRCS = $(ORB2_SRCS)
+CXXSRCS = $(ORB_SRCS)
 
 
 #############################################################################
@@ -44,7 +43,7 @@ CXXSRCS = $(ORB2_SRCS)
 #############################################################################
 ifdef UnixPlatform
 
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 #
 ifdef OMNIORB_CONFIG_DEFAULT_LOCATION
@@ -58,7 +57,7 @@ NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
 DIR_CPPFLAGS += -DUnixArchitecture
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 
-lib = $(patsubst %,$(LibPattern),omniORB2)
+lib = $(patsubst %,$(LibPattern),omniORB3)
 
 SUBDIRS = sharedlib gatekeepers
 
@@ -79,7 +78,7 @@ DIR_CPPFLAGS += -D "NTArchitecture" -D "_WINSTATIC"
 
 ifndef BuildWin32DebugLibraries
 
-lib = $(patsubst %,$(LibPattern),omniORB2)
+lib = $(patsubst %,$(LibPattern),omniORB3)
 
 CXXOPTIONS  = $(MSVC_STATICLIB_CXXNODEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS)
@@ -97,7 +96,7 @@ else
 # this library. The BuildWin32DebugLibraries make variable is set to 1 in
 # the dir.mk generated in the debug directory.
 #
-lib = $(patsubst %,$(LibDebugPattern),omniORB2)
+lib = $(patsubst %,$(LibDebugPattern),omniORB3)
 CXXDEBUGFLAGS =
 CXXOPTIONS = $(MSVC_STATICLIB_CXXDEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKDEBUGOPTIONS)
@@ -110,7 +109,7 @@ vpath %.cc ..
 endif
 
 ifdef ETSKernel
-# Default location of the omniORB2 configuration file [falls back to this if
+# Default location of the omniORB configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 #
 ifdef OMNIORB_CONFIG_DEFAULT_LOCATION
@@ -135,7 +134,7 @@ DIR_CPPFLAGS = -DATMosArchitecture
 CONFIG_DEFAULT_LOCATION = \"//isfs/omniORB.cfg\"
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION=$(CONFIG_DEFAULT_LOCATION)
 SUBDIRS = gatekeepers
-lib = $(patsubst %,$(LibPattern),omniORB2)
+lib = $(patsubst %,$(LibPattern),omniORB3)
 
 endif
 
@@ -189,11 +188,11 @@ all:: $(lib)
 all::
 	@$(MakeSubdirs)
 
-$(lib): $(ORB2_OBJS)
+$(lib): $(ORB_OBJS)
 	@$(StaticLinkLibrary)
 
-ifndef OMNIORB2_IDL_FPATH
-OMNIORB2_IDL_FPATH = $(OMNIORB2_IDL)
+ifndef OMNIORB_IDL_FPATH
+OMNIORB_IDL_FPATH = $(OMNIORB_IDL)
 endif
 
 ifndef BuildWin32DebugLibraries
@@ -219,7 +218,7 @@ ifdef Win32Platform
 
 # Ideally, we would like to build the dummy gatekeeper stub just like other
 # platforms, i.e. as a separate static library. However, it proves to be quite
-# tricky because the omniORB2 DLL needs the symbols provided by gatekeeper.o
+# tricky because the omniORB DLL needs the symbols provided by gatekeeper.o
 # to be resolved when the DLL is build. For the moment, just workaround the
 # problem by building the stub directly into the library.
 #
