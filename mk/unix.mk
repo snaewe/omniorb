@@ -156,6 +156,9 @@ omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
 lib_depend := $(patsubst %,$(LibPattern),omniDynamic$(OMNIORB_MAJOR_VERSION))
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
+OMNIORB_DLL_NAME = $(patsubst %,$(LibSearchPattern),omniORB$(OMNIORB_MAJOR_VERSION))
+OMNIORB_DYNAMIC_DLL_NAME = $(patsubst %,$(LibSearchPattern),omniDynamic$(OMNIORB_MAJOR_VERSION))
+
 
 OMNIORB_IDL_ONLY = $(BASE_OMNI_TREE)/$(BINDIR)/omniidl -bcxx
 OMNIORB_IDL_ANY_FLAGS = -Wba
@@ -163,10 +166,8 @@ OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
 OMNIORB_CPPFLAGS = -D__OMNIORB$(OMNIORB_MAJOR_VERSION)__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
 OMNIORB_IDL_OUTPUTDIR_PATTERN = -C%
 
-OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB$(OMNIORB_MAJOR_VERSION)) \
-		$(patsubst %,$(LibSearchPattern),omniDynamic$(OMNIORB_MAJOR_VERSION))
-OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB$(OMNIORB_MAJOR_VERSION))
-
+OMNIORB_LIB = $(OMNIORB_DLL_NAME) $(OMNIORB_DYNAMIC_DLL_NAME)
+OMNIORB_LIB_NODYN = $(OMNIORB_DLL_NAME)
 
 OMNIORB_LIB_NODYN_DEPEND = $(omniORB_lib_depend)
 OMNIORB_LIB_DEPEND = $(omniORB_lib_depend) $(omniDynamic_lib_depend)
