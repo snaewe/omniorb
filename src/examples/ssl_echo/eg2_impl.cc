@@ -6,7 +6,7 @@
 // Usage: eg2_impl
 //
 //        On startup, the object reference is printed to cerr as a
-//        stringified IOR. This string should be used as the argument to 
+//        stringified IOR. This string should be used as the argument to
 //        eg2_clt.
 //
 
@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
   struct stat sb;
   if (stat(sslContext::certificate_authority_file,&sb) < 0) {
-    cerr << "Cannot open certificate file: " 
+    cerr << "Cannot open certificate file: "
 	 << sslContext::certificate_authority_file << endl;
     return 1;
   }
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
   }
 
   int    my_argc = argc + 2;
-  char** my_argv = new (char*)[my_argc];
+  char** my_argv = new char*[my_argc];
   memcpy(my_argv,argv,sizeof(char*)*argc);
   my_argv[my_argc - 2] = "-ORBendPoint";
   my_argv[my_argc - 1] = "giop:ssl::";
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
       PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
 
       Echo_i* myecho = new Echo_i();
-      
+
       PortableServer::ObjectId_var myechoid = poa->activate_object(myecho);
 
       // Obtain a reference to the object, and print it out as a
