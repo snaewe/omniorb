@@ -26,6 +26,9 @@
 
 /*
   $Log$
+  Revision 1.6  1999/05/26 10:30:55  sll
+  Changed create_union to use the new signature.
+
   Revision 1.5  1999/03/11 16:26:08  djr
   Updated copyright notice
 
@@ -136,11 +139,10 @@ o2be_generator::create_attribute(idl_bool ro,
 }
 
 AST_Union *
-o2be_generator::create_union(AST_ConcreteType *dt,
-			   UTL_ScopedName *n,
+o2be_generator::create_union(UTL_ScopedName *n,
 			   UTL_StrList *p)
 {
-  return (AST_Union *) new o2be_union(dt, n, p);
+  return (AST_Union *) new o2be_union(n, p);
 }
 
 AST_UnionBranch *
