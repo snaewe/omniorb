@@ -5,6 +5,13 @@ Fri Mar 10 16:43:09 GMT 2000 dpg1
 
 include/omniORB3/CORBA_sysdep.h
 
+Fri Mar 10 16:16:32 GMT 2000 djs
+================================
+
+- Fixed to omniidl C++ backend when generating ObjRef_OUT names
+  (prefix added to wrong place, ie prefix_A::B rather than A::prefix_B)
+
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
 
 Fri Mar 10 11:57:45 GMT 2000 djr
 ================================
