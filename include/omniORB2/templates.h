@@ -6,9 +6,20 @@
 // Copyright (C) Olivetti Research Limited, 1996
 //
 // Description:
+//       *** PROPRIETORY INTERFACE ***
 
 /*
   $Log$
+  Revision 1.4  1997/03/10 11:34:24  sll
+  - T_var types can now be passed directly as arguments to operations that
+    have variable length data types as INOUT and OUT parameters.
+  - New templates: _CORBA_ObjRef_INOUT_arg, _CORBA_ObjRef_OUT_arg,
+                   _CORBA_ConstrType_Variable_OUT_arg,
+                   _CORBA_Sequence_OUT_arg, _CORBA_Array_OUT_arg
+                   _CORBA_Sequence_Var
+  - template _CORBA_ObjRef_Member now has the missing operator->
+  - other minor cleanups.
+
   Revision 1.3  1997/02/04 13:56:07  sll
   Backup the previous change when DEC C++ compiler is used.
 
@@ -80,6 +91,12 @@ public:
 template <class T,class T_Helper>
 class _CORBA_ObjRef_Member;
 
+template <class T,class T_var,class T_member>
+class _CORBA_ObjRef_INOUT_arg;
+
+template <class T,class T_var,class T_member,class T_Helper>
+class _CORBA_ObjRef_OUT_arg;
+
 template <class T,class T_Helper>
 class _CORBA_ObjRef_Var {
 public:
@@ -99,11 +116,18 @@ public:
   inline _CORBA_ObjRef_Var<T,T_Helper> &operator= (const _CORBA_ObjRef_Var<T,T_Helper> &p);
  inline _CORBA_ObjRef_Var<T,T_Helper> &operator= (const _CORBA_ObjRef_Member<T,T_Helper>&);
   inline T* operator->() { return pd_objref; }
-  inline operator ptr_t& () { return pd_objref; }
-#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
-  inline operator const ptr_t () const { return pd_objref; }
-#endif
+
+  inline operator T* () { return pd_objref; }
+
   friend class _CORBA_ObjRef_Member<T,T_Helper>;
+  friend class _CORBA_ObjRef_INOUT_arg<T,
+                                       _CORBA_ObjRef_Var<T,T_Helper>,
+                                       _CORBA_ObjRef_Member<T,T_Helper> >;
+  friend class _CORBA_ObjRef_OUT_arg<T,
+                                     _CORBA_ObjRef_Var<T,T_Helper>,
+                                     _CORBA_ObjRef_Member<T,T_Helper>,
+                                     T_Helper>;
+  
 private:
   T* pd_objref;
 };
@@ -111,7 +135,6 @@ private:
 template <class T,class T_Helper>
 class _CORBA_ObjRef_Member {
 public:
-  typedef T* ptr_t;
   inline _CORBA_ObjRef_Member() { _ptr = T_Helper::_nil(); }
   inline _CORBA_ObjRef_Member(T *p) { _ptr = p; }
   inline _CORBA_ObjRef_Member(const _CORBA_ObjRef_Member<T,T_Helper> &p);
@@ -125,43 +148,101 @@ public:
   inline _CORBA_ObjRef_Member<T,T_Helper> &operator= (T * p);
   inline _CORBA_ObjRef_Member<T,T_Helper> &operator= (const _CORBA_ObjRef_Member<T,T_Helper> &p);
   inline _CORBA_ObjRef_Member<T,T_Helper> &operator= (const _CORBA_ObjRef_Var<T,T_Helper> &p);
+
+  inline T* operator->() { return _ptr; }
+
   inline size_t NP_alignedSize(size_t initialoffset) const;
   inline void operator>>= (NetBufferedStream &s) const;
   inline void operator<<= (NetBufferedStream &s);
   inline void operator>>= (MemBufferedStream &s) const;
   inline void operator<<= (MemBufferedStream &s);
-#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
-  inline operator const ptr_t () const { return _ptr; }
-#endif
-  inline operator ptr_t &() { return _ptr; }
+
+  // The following conversion operators are needed to support the
+  // implicit conversion from this type to its T* data member.
+  // They are used when this type is used as the rvalue of an expression.
+  inline operator T* () { return _ptr; }
+
   T *_ptr;
+};
+
+template <class T,class T_var,class T_member>
+class _CORBA_ObjRef_INOUT_arg {
+public:
+  inline _CORBA_ObjRef_INOUT_arg(T*& p) : _data(p) {}
+  inline _CORBA_ObjRef_INOUT_arg(T_var& p) : _data(p.pd_objref) {}
+  inline _CORBA_ObjRef_INOUT_arg(T_member& p) : _data(p._ptr) {}
+  T*& _data;
+private:
+  _CORBA_ObjRef_INOUT_arg();
+};
+
+template <class T,class T_var,class T_member,class T_Helper>
+class _CORBA_ObjRef_OUT_arg {
+public:
+  inline _CORBA_ObjRef_OUT_arg(T*& p) : _data(p) {}
+  inline _CORBA_ObjRef_OUT_arg(T_var& p) : _data(p.pd_objref) {
+    p = T_Helper::_nil();
+  }
+  inline _CORBA_ObjRef_OUT_arg(T_member& p) : _data(p._ptr) {
+    p = T_Helper::_nil();
+  }
+  T*& _data;
+private:
+  _CORBA_ObjRef_OUT_arg();
 };
 
 
 template <class T>
 class _CORBA_ConstrType_Fix_Var {
 public:
-  typedef T* ptr_t;
-  inline _CORBA_ConstrType_Fix_Var() { pd_data = 0; }
-  inline _CORBA_ConstrType_Fix_Var(T* p) { pd_data = p; }
-  inline _CORBA_ConstrType_Fix_Var(const _CORBA_ConstrType_Fix_Var<T> &p);
-  inline ~_CORBA_ConstrType_Fix_Var() {  if (pd_data) delete pd_data; }
-  inline _CORBA_ConstrType_Fix_Var<T> &operator= (T* p);
-  inline _CORBA_ConstrType_Fix_Var<T> &operator= (const _CORBA_ConstrType_Fix_Var<T> &p);
-  inline T* operator->() { return pd_data; }
-  inline operator T &() { return *pd_data; }
-#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
-  inline operator const ptr_t () const { return pd_data; }
+  inline _CORBA_ConstrType_Fix_Var() { }
+  inline _CORBA_ConstrType_Fix_Var(T* p) { pd_data = *p; delete p; }
+  inline _CORBA_ConstrType_Fix_Var(const _CORBA_ConstrType_Fix_Var<T> &p) {
+    pd_data = p.pd_data;
+  }
+  inline ~_CORBA_ConstrType_Fix_Var() {  }
+  inline _CORBA_ConstrType_Fix_Var<T> &operator= (T* p) {
+    pd_data = *p;
+    delete p;
+    return *this;
+  }
+  inline _CORBA_ConstrType_Fix_Var<T> &operator= (const _CORBA_ConstrType_Fix_Var<T> &p) {
+    pd_data = p.pd_data;
+    return *this;
+  }
+  inline _CORBA_ConstrType_Fix_Var<T> &operator= (T p) {
+    pd_data = p;
+    return *this;
+  }
+  inline T* operator->() { return &pd_data; }
+
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+  inline operator T& ()  { return pd_data; }
+#else
+  inline operator const T& () const { return pd_data; }
+  inline operator T& () { return pd_data; }
 #endif
-  inline operator ptr_t& () { return pd_data; }
+  // This conversion operator is necessary to support the implicit conversion
+  // when this var type is used as the IN or INOUT argument of an operation.
+
+  // The following coversion operators are needed to support the casting
+  // of this var type to a const T* or a T*. The CORBA spec. doesn't say
+  // these castings must be supported so they are deliberately left out.
+  // In fact, the operator->() can always be used to get to the T*.
+  //
+  // inline operator const T* () const { return pd_data; }
+  // inline operator T* () { return pd_data; }
+
 private:
-  T* pd_data;
+  T pd_data;
 };
+
+template <class T,class T_var>
+class _CORBA_ConstrType_Variable_OUT_arg;
 
 template <class T>
 class _CORBA_ConstrType_Variable_Var {
 public:
-  typedef T* ptr_t;
   inline _CORBA_ConstrType_Variable_Var() { pd_data = 0; }
   inline _CORBA_ConstrType_Variable_Var(T* p) { pd_data = p; }
   inline _CORBA_ConstrType_Variable_Var(const _CORBA_ConstrType_Variable_Var<T> &p);
@@ -169,20 +250,104 @@ public:
   inline _CORBA_ConstrType_Variable_Var<T> &operator= (T* p);
   inline _CORBA_ConstrType_Variable_Var<T> &operator= (const _CORBA_ConstrType_Variable_Var<T> &p);
   inline T* operator->() { return pd_data; }
+
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+  inline operator T& () const { return *pd_data; }
+#else
+  inline operator const T& () const { return *pd_data; }
   inline operator T& () { return *pd_data; }
-#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
-  inline operator const ptr_t () const { return pd_data; }
 #endif
-  inline operator ptr_t& () { return pd_data; }
+  // This conversion operator is necessary to support the implicit conversion
+  // when this var type is used as the IN or INOUT argument of an operation.
+
+  // The following coversion operators are needed to support the casting
+  // of this var type to a const T* or a T*. The CORBA spec. doesn't say
+  // these castings must be supported so they are deliberately left out.
+  // In fact, the operator->() can always be used to get to the T*.
+  //
+  // inline operator const T* () const { return pd_data; }
+  // inline operator T* () { return pd_data; }
+
+  friend class _CORBA_ConstrType_Variable_OUT_arg<T,_CORBA_ConstrType_Variable_Var<T> >;
 private:
   T* pd_data;
 };
 
 
+template <class T, class T_var>
+class _CORBA_ConstrType_Variable_OUT_arg {
+public:
+  inline _CORBA_ConstrType_Variable_OUT_arg(T*& p) : _data(p) {}
+  inline _CORBA_ConstrType_Variable_OUT_arg(T_var& p) : _data(p.pd_data) {
+    p = (T*)0;
+  }
+  T*& _data;
+private:
+  _CORBA_ConstrType_Variable_OUT_arg();
+};
+
+
+template <class T,class T_var>
+class _CORBA_Sequence_OUT_arg;
+
+template <class T,class ElmType>
+class _CORBA_Sequence_Var {
+public:
+  typedef T* ptr_t;
+  inline _CORBA_Sequence_Var() { pd_data = 0; }
+  inline _CORBA_Sequence_Var(T* p) { pd_data = p; }
+  inline _CORBA_Sequence_Var(const _CORBA_Sequence_Var<T,ElmType> &p);
+  inline ~_CORBA_Sequence_Var() {  if (pd_data) delete pd_data; }
+  inline _CORBA_Sequence_Var<T,ElmType> &operator= (T* p);
+  inline _CORBA_Sequence_Var<T,ElmType> &operator= (const _CORBA_Sequence_Var<T,ElmType> &p);
+  inline ElmType &operator[] (_CORBA_ULong index) { return (pd_data->NP_data())[index]; }
+  inline const ElmType &operator[] (_CORBA_ULong index) const {
+    return (pd_data->NP_data())[index];
+  }
+  inline T* operator->() { return pd_data; }
+
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+  inline operator T& () const { return *pd_data; }
+#else
+  inline operator const T& () const { return *pd_data; }
+  inline operator T& () { return *pd_data; }
+#endif
+  // This conversion operator is necessary to support the implicit conversion
+  // when this var type is used as the IN or INOUT argument of an operation.
+
+  // The following coversion operators are needed to support the casting
+  // of this var type to a const T* or a T*. The CORBA spec. doesn't say
+  // these castings must be supported so they are deliberately left out.
+  // In fact, the operator->() can always be used to get to the T*.
+  //
+  // inline operator const T* () const { return pd_data; }
+  // inline operator T* () { return pd_data; }
+
+  friend class _CORBA_Sequence_OUT_arg<T,_CORBA_Sequence_Var<T,ElmType> >;
+
+private:
+  T* pd_data;
+};
+
+
+template <class T, class T_var>
+class _CORBA_Sequence_OUT_arg {
+public:
+  inline _CORBA_Sequence_OUT_arg(T*& p) : _data(p) {}
+  inline _CORBA_Sequence_OUT_arg(T_var& p) : _data(p.pd_data) {
+    p = (T*)0;
+  }
+  T*& _data;
+private:
+  _CORBA_Sequence_OUT_arg();
+};
+
+template <class T, class T_var>
+class _CORBA_Array_OUT_arg;
+
 template <class T_Helper,class T>
 class _CORBA_Array_Var {
 public:
-  typedef T* ptr_t;
   inline _CORBA_Array_Var () { pd_data = 0; }
   inline _CORBA_Array_Var (T* p) { pd_data = p; }
   inline _CORBA_Array_Var (const _CORBA_Array_Var<T_Helper,T>& p);
@@ -191,15 +356,30 @@ public:
   inline _CORBA_Array_Var<T_Helper,T> &operator= (const _CORBA_Array_Var<T_Helper,T>& p);
   inline T& operator[] (_CORBA_ULong index) { return *(pd_data + index); }
   inline const T& operator[] (_CORBA_ULong index) const { return *(pd_data + index);  }
-  inline operator ptr_t& () { return pd_data; }
+  inline operator T* () { return pd_data; }
+  inline operator const T* () const { return pd_data; }
+
+  friend class _CORBA_Array_OUT_arg<T, _CORBA_Array_Var<T_Helper,T> >;
+
 private:
   T* pd_data;
+};
+
+template <class T, class T_var>
+class _CORBA_Array_OUT_arg {
+public:
+  inline _CORBA_Array_OUT_arg(T*& p) : _data(p) {}
+  inline _CORBA_Array_OUT_arg(T_var& p) : _data(p.pd_data) {
+    p = (T*)0;
+  }
+  T*& _data;
+private:
+  _CORBA_Array_OUT_arg();
 };
 
 template <class T_Helper,class T>
 class _CORBA_Array_Forany {
 public:
-  typedef T* ptr_t;
   inline _CORBA_Array_Forany () { pd_data = 0; }
   inline _CORBA_Array_Forany (T* p,_CORBA_Boolean nocopy = 0);
   inline _CORBA_Array_Forany (const _CORBA_Array_Forany<T_Helper,T>& p);
@@ -208,7 +388,8 @@ public:
   }
   inline T& operator[] (_CORBA_ULong index) { return *(pd_data + index); }
   inline const T& operator[] (_CORBA_ULong index) const { return *(pd_data + index); }
-  inline operator ptr_t& () { return pd_data; }
+  inline operator T* () { return pd_data; }
+  inline operator const T* () const { return pd_data; }
 private:
   T* pd_data;
 };
@@ -553,57 +734,6 @@ _CORBA_ObjRef_Member<T,T_Helper>::operator<<= (MemBufferedStream &s)
   _ptr = _result;
 }
 
-
-template <class T>
-inline 
-_CORBA_ConstrType_Fix_Var<T>::_CORBA_ConstrType_Fix_Var(const _CORBA_ConstrType_Fix_Var<T>& p) 
-{
-  if (!p.pd_data) {
-    pd_data = 0;
-    return;
-  }
-  else {
-    pd_data = new T;
-    if (!pd_data) {
-      _CORBA_new_operator_return_null();
-      // never reach here
-    }
-    *pd_data = *p.pd_data;
-  }
-}
-
-template <class T>
-inline 
-_CORBA_ConstrType_Fix_Var<T>&
-_CORBA_ConstrType_Fix_Var<T>::operator= (T* p) 
-{
-  if (pd_data) delete pd_data;
-  pd_data = p;
-  return *this;
-}
-
-template <class T>
-inline 
-_CORBA_ConstrType_Fix_Var<T>&
-_CORBA_ConstrType_Fix_Var<T>::operator= (const _CORBA_ConstrType_Fix_Var<T> &p) 
-{
-  if (p.pd_data) {
-    if (!pd_data) {
-      pd_data = new T;
-	if (!pd_data) {
-	  _CORBA_new_operator_return_null();
-	  // never reach here
-	}	
-    }
-    *pd_data = *p.pd_data;
-  }
-  else {
-    if (pd_data) delete pd_data;
-    pd_data = 0;
-  }
-  return *this;
-}
-
 template <class T>
 inline 
 _CORBA_ConstrType_Variable_Var<T>::_CORBA_ConstrType_Variable_Var(const _CORBA_ConstrType_Variable_Var<T> &p) 
@@ -636,6 +766,56 @@ template <class T>
 inline
 _CORBA_ConstrType_Variable_Var<T> &
 _CORBA_ConstrType_Variable_Var<T>::operator= (const _CORBA_ConstrType_Variable_Var<T> &p)
+{
+  if (p.pd_data) {
+    if (!pd_data) {
+      pd_data = new T;
+      if (!pd_data) {
+	_CORBA_new_operator_return_null();
+	// never reach here
+      }
+    }
+    *pd_data = *p.pd_data;
+  }
+  else {
+    if (pd_data) delete pd_data;
+    pd_data = 0;
+  }
+  return *this;
+}
+
+template <class T,class ElmType>
+inline 
+_CORBA_Sequence_Var<T,ElmType>::_CORBA_Sequence_Var(const _CORBA_Sequence_Var<T,ElmType> &p) 
+{
+  if (!p.pd_data) {
+    pd_data = 0;
+    return;
+  }
+  else {
+    pd_data = new T;
+    if (!pd_data) {
+      _CORBA_new_operator_return_null();
+      // never reach here
+    }
+    *pd_data = *p.pd_data;
+  }
+}
+
+template <class T,class ElmType>
+inline
+_CORBA_Sequence_Var<T,ElmType> &
+_CORBA_Sequence_Var<T,ElmType>::operator= (T* p)
+{
+  if (pd_data) delete pd_data;
+  pd_data = p;
+  return *this;
+}
+
+template <class T,class ElmType>
+inline
+_CORBA_Sequence_Var<T,ElmType> &
+_CORBA_Sequence_Var<T,ElmType>::operator= (const _CORBA_Sequence_Var<T,ElmType> &p)
 {
   if (p.pd_data) {
     if (!pd_data) {
