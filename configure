@@ -9849,6 +9849,7 @@ case "$host" in
   *-*-darwin*)   plat_name="Darwin";   plat_def="__darwin__";   os_v="1";;
   *-*-freebsd3*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="3";;
   *-*-freebsd4*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="4";;
+  *-*-freebsd5*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="5";;
   *-*-sco*)      plat_name="OSR5";     plat_def="__osr5__";     os_v="5";;
 esac
 
