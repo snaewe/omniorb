@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/08/31 16:59:59  sll
+  Support '^' prefix in address field.
+  Do host address lookup in extractIPv4 if necessary.
+
   Revision 1.1.2.3  2001/08/31 11:56:52  sll
   Change the default preference to unix,tcp,ssl.
   Minor fix to extractIPv4.
@@ -180,6 +184,16 @@ static char* extractIPv4(const char* endpoint) {
       *((char*)ipv4+l) = '\0';
       if ( LibcWrapper::isipaddr(ipv4) ) 
 	return ipv4._retn();
+      else if (strncmp(endpoint,"giop",4) == 0) {
+	// try treating this as a hostname
+	LibcWrapper::hostent_var h;
+	int  rc;
+	if (LibcWrapper::gethostbyname(ipv4,h,rc) == 0) {
+	  ipv4 = tcpConnection::ip4ToString(*((CORBA::ULong*)
+					      h.hostent()->h_addr_list[0]));
+	  return ipv4._retn();
+	}
+      }
     }
   }
   return 0;
@@ -327,6 +341,7 @@ parseAndAddRuleString(omnivector<transportRules::RuleActionPair*>& ruleStore,
 
   transportRules::sequenceString action(4);
   CORBA::String_var address_mask;
+  CORBA::Boolean reset_list = 0;
 
   CORBA::String_var rs(rule_string);  // make a copy
 
@@ -343,6 +358,12 @@ parseAndAddRuleString(omnivector<transportRules::RuleActionPair*>& ruleStore,
     return 0;
 
   *p = '\0';
+
+  if ( *q == '^' ) {
+    reset_list = 1;
+    q++;
+    if (*q == '\0') return 0;
+  }
   address_mask = CORBA::string_dup(q);
   p++;
 
@@ -390,6 +411,7 @@ parseAndAddRuleString(omnivector<transportRules::RuleActionPair*>& ruleStore,
     if (rule) {
       transportRules::RuleActionPair* ra;
       ra = new transportRules::RuleActionPair(rule,action);
+      if (reset_list) ruleStore.erase(ruleStore.begin(),ruleStore.end());
       ruleStore.push_back(ra);
       return 1;
     }
