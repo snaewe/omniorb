@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2003/05/02 09:58:14  dgrisby
+  Ensure shutdown happens even if the TCP stack has broken.
+
   Revision 1.1.2.5  2002/08/21 06:23:16  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -85,6 +88,7 @@ private:
   SocketHandle_t                   pd_new_conn_socket;
   giopConnection::notifyReadable_t pd_callback_func;
   void*                            pd_callback_cookie;
+  CORBA::Boolean                   pd_poked;
 
   tcpEndpoint();
   tcpEndpoint(const tcpEndpoint&);
