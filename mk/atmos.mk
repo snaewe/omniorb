@@ -26,15 +26,15 @@ ATMOS_INCLUDES += pthreads llibc llibc++ timer uart atm console isfs colours
 # Standard programs
 #
 
-CC                = arm-gcc -nostdinc -fno-common -fno-builtin
-CDEBUGFLAGS       = -O
-COPTIONS          = -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses
+CC                = arm-gcc
+CDEBUGFLAGS       = -O3
+COPTIONS          = -nostdinc -fno-common -fno-builtin -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses
 
 CMAKEDEPEND       = $(CC) -M
 
-CXX               = arm-gcc -nostdinc -nostdinc++ -fno-common -fno-builtin
-CXXDEBUGFLAGS     = -O
-CXXOPTIONS        = -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses
+CXX               = arm-gcc
+CXXDEBUGFLAGS     = -O3
+CXXOPTIONS        = -nostdinc -nostdinc++ -fno-common -fno-builtin -Wall -Wno-format -Wwrite-strings -Wpointer-arith -Wtraditional -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wno-parentheses
 CXXMAKEDEPEND     = $(CXX) -M
 
 CATOBJ            = catobj
