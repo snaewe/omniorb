@@ -100,10 +100,11 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 static void
 DRV_version()
 {
-  std::cerr << "Omniidl 2.6.1\n"
-       << "Copyright (C) 1996-1998 Olivetti & Oracle Research Laborartory, Cambridge, UK.\n"
-       << "Omniidl comes with ABSOLUTELY NO WARRANTY.\n"
-       << std::endl;
+  std::cerr <<
+    "Omniidl 2.7.0\n"
+    "Copyright (C) 1996-1999 Olivetti & Oracle Research Laborartory,"
+    " Cambridge, UK.\n"
+    "Omniidl comes with ABSOLUTELY NO WARRANTY.\n" << std::endl;
 }
 
 /*
