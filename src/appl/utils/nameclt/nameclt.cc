@@ -1,7 +1,7 @@
 #include <iostream.h>
 #include <stdlib.h>
 #ifdef __NT__
-#include "omniORB2/Naming_NT.hh
+#include "omniORB2/Naming_NT.hh"
 #else
 #include "omniORB2/Naming.hh"
 #endif
