@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/11/22 14:37:58  dpg1
+  Code set marshalling functions now take a string length argument.
+
   Revision 1.1.2.4  2000/11/16 12:33:43  dpg1
   Minor fixes to permit use of UShort as WChar.
 
@@ -103,6 +106,9 @@ public:
 // implementations must always call the TCS's fast...() function
 // before resorting to UTF-16, in case the TCS can deal with the NCS
 // data directly.
+//
+// In all functions involving string lengths, the length does not
+// include the terminating null.
 
 class cdrStream;
 
@@ -203,7 +209,8 @@ public:
     virtual void marshalChar(cdrStream& stream, TCS_C* tcs, _CORBA_Char c) = 0;
 
     virtual void marshalString(cdrStream& stream, TCS_C* tcs,
-			       _CORBA_ULong bound, const char* s) = 0;
+			       _CORBA_ULong bound, _CORBA_ULong len,
+			       const char* s) = 0;
 
     virtual _CORBA_Char unmarshalChar(cdrStream& stream, TCS_C* tcs) = 0;
 
@@ -238,6 +245,7 @@ public:
     virtual _CORBA_Boolean fastMarshalString  (cdrStream&    stream,
 					       NCS_C*        ncs,
 					       _CORBA_ULong  bound,
+					       _CORBA_ULong  len,
 					       const char*   s);
 
     virtual _CORBA_Boolean fastUnmarshalChar  (cdrStream&    stream,
@@ -265,7 +273,8 @@ public:
 			      _CORBA_WChar c) = 0;
 
     virtual void marshalWString(cdrStream& stream, TCS_W* tcs,
-				_CORBA_ULong bound, const _CORBA_WChar* s) = 0;
+				_CORBA_ULong bound, _CORBA_ULong len,
+				const _CORBA_WChar* s) = 0;
 
     virtual _CORBA_WChar unmarshalWChar(cdrStream& stream, TCS_W* tcs) = 0;
 
@@ -302,6 +311,7 @@ public:
     virtual _CORBA_Boolean fastMarshalWString  (cdrStream&          stream,
 						NCS_W*              ncs,
 						_CORBA_ULong        bound,
+						_CORBA_ULong        len,
 						const _CORBA_WChar* s);
 
     virtual _CORBA_Boolean fastUnmarshalWChar  (cdrStream&          stream,
@@ -352,7 +362,8 @@ public:
 			     _CORBA_Char c);
 
     virtual void marshalString(cdrStream& stream, TCS_C* tcs,
-			       _CORBA_ULong bound, const char* s);
+			       _CORBA_ULong bound, _CORBA_ULong len,
+			       const char* s);
 
     virtual _CORBA_Char unmarshalChar(cdrStream& stream, TCS_C* tcs);
 
@@ -401,6 +412,7 @@ public:
     virtual _CORBA_Boolean fastMarshalString  (cdrStream&    stream,
 					       NCS_C*        ncs,
 					       _CORBA_ULong  bound,
+					       _CORBA_ULong  len,
 					       const char*   s);
 
     virtual _CORBA_Boolean fastUnmarshalChar  (cdrStream&    stream,
@@ -456,7 +468,8 @@ public:
 			      _CORBA_WChar c);
 
     virtual void marshalWString(cdrStream& stream, TCS_W* tcs,
-				_CORBA_ULong bound, const _CORBA_WChar* s);
+				_CORBA_ULong bound, _CORBA_ULong len,
+				const _CORBA_WChar* s);
 
     virtual _CORBA_WChar unmarshalWChar(cdrStream& stream, TCS_W* tcs);
 
@@ -506,6 +519,7 @@ public:
     virtual _CORBA_Boolean fastMarshalWString  (cdrStream&          stream,
 						NCS_W*              ncs,
 						_CORBA_ULong        bound,
+						_CORBA_ULong        len,
 						const _CORBA_WChar* s);
 
     virtual _CORBA_Boolean fastUnmarshalWChar  (cdrStream&          stream,

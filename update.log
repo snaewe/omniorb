@@ -1,3 +1,20 @@
+Wed Nov 22 14:31:58 GMT 2000 dpg1
+=================================
+
+- Code set marshalling functions now take a string length argument.
+
+include/omniORB4/cdrStream.h
+include/omniORB4/codeSets.h
+include/omniORB4/stringtypes.h
+src/lib/omniORB/codesets/cs-UCS-4.cc
+src/lib/omniORB/orbcore/codeSets.cc
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/cs-16bit.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+
 Mon Nov 20 18:55:07 GMT 2000 sll
 ================================
 

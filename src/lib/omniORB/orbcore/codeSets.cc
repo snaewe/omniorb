@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/11/22 14:37:59  dpg1
+  Code set marshalling functions now take a string length argument.
+
   Revision 1.1.2.3  2000/11/15 17:18:47  sll
   Added marshalling operators for the TAG_CODE_SETS component.
 
@@ -265,6 +268,7 @@ _CORBA_Boolean
 omniCodeSet::TCS_C::fastMarshalString(cdrStream&    stream,
 				      NCS_C*        ncs,
 				      _CORBA_ULong  bound,
+				      _CORBA_ULong  len,
 				      const char*   s)
 {
   return 0;
@@ -300,6 +304,7 @@ _CORBA_Boolean
 omniCodeSet::TCS_W::fastMarshalWString(cdrStream&          stream,
 				       NCS_W*              ncs,
 				       _CORBA_ULong        bound,
+				       _CORBA_ULong        len,
 				       const _CORBA_WChar* s)
 {
   return 0;

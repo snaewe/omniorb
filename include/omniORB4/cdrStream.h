@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2000/11/22 14:37:58  dpg1
+  Code set marshalling functions now take a string length argument.
+
   Revision 1.1.2.5  2000/11/15 17:16:23  sll
   Added char, wchar codeset convertor support to cdrStream.
 
@@ -324,7 +327,8 @@ public:
 #endif
 
   inline void marshalString(const char* s,int bounded=0) {
-    ncs_c->marshalString(*this,pd_tcs_c,bounded,s);
+    OMNIORB_USER_CHECK(s);
+    ncs_c->marshalString(*this,pd_tcs_c,bounded,strlen(s),s);
   }
 
   inline char* unmarshalString(int bounded=0) {
@@ -334,7 +338,9 @@ public:
   }
   
   inline void marshalWString(const _CORBA_WChar* s,int bounded=0) {
-    ncs_w->marshalWString(*this,pd_tcs_w,bounded,s);
+    OMNIORB_USER_CHECK(s);
+    ncs_w->marshalWString(*this,pd_tcs_w,bounded,
+			  _CORBA_WString_helper::len(s),s);
   }
 
   inline _CORBA_WChar* unmarshalWString(int bounded=0) {

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/11/22 14:37:59  dpg1
+  Code set marshalling functions now take a string length argument.
+
   Revision 1.1.2.4  2000/11/16 12:34:40  dpg1
   Clarify marshalling of non-UTF-16 wchar.
 
@@ -75,25 +78,24 @@ omniCodeSet::NCS_W_16bit::marshalWChar(cdrStream& stream,
 }
 
 void
-omniCodeSet::NCS_W_16bit::marshalWString(cdrStream& stream,
+omniCodeSet::NCS_W_16bit::marshalWString(cdrStream&          stream,
 					 omniCodeSet::TCS_W* tcs,
-					 _CORBA_ULong bound,
+					 _CORBA_ULong        bound,
+					 _CORBA_ULong        len,
 					 const _CORBA_WChar* ws)
 {
   if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
-  if (tcs->fastMarshalWString(stream, this, bound, ws)) return;
+  if (tcs->fastMarshalWString(stream, this, bound, len, ws)) return;
 
-  _CORBA_ULong len = _CORBA_WString_helper::len(ws) + 1;
-
-  if (bound && len >= bound)
+  if (bound && len > bound)
     OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
 
-  omniCodeSet::UniChar*    us = omniCodeSetUtil::allocU(len);
+  omniCodeSet::UniChar*    us = omniCodeSetUtil::allocU(len+1);
   omniCodeSetUtil::HolderU uh(us);
   omniCodeSet::UniChar     uc;
   _CORBA_WChar             wc;
 
-  for (_CORBA_ULong i=0; i<len; i++) {
+  for (_CORBA_ULong i=0; i<=len; i++) {
     wc = ws[i];
 #if (SIZEOF_WCHAR == 4)
     if (wc > 0xffff) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
@@ -134,17 +136,16 @@ omniCodeSet::NCS_W_16bit::unmarshalWString(cdrStream& stream,
   omniCodeSet::UniChar* us;
   len = tcs->unmarshalWString(stream, bound, us);
   OMNIORB_ASSERT(us);
-  OMNIORB_ASSERT(len > 0);
 
   omniCodeSetUtil::HolderU uh(us);
 
-  ws = omniCodeSetUtil::allocW(len);
+  ws = omniCodeSetUtil::allocW(len+1);
   omniCodeSetUtil::HolderW wh(ws);
 
   omniCodeSet::UniChar uc;
   _CORBA_WChar         wc;
 
-  for (_CORBA_ULong i=0; i<len; i++) {
+  for (_CORBA_ULong i=0; i<=len; i++) {
     uc = us[i];
     wc  = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];
     if (uc && !wc) OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
@@ -197,7 +198,7 @@ omniCodeSet::TCS_W_16bit::marshalWString(cdrStream& stream,
 {
   // Just to be different, wstring is marshalled without a terminating
   // null. Length is in octets.
-  _CORBA_ULong mlen = --len * 2;
+  _CORBA_ULong mlen = len * 2;
   mlen >>= stream;
 
   _CORBA_UShort        tc;
@@ -279,7 +280,7 @@ omniCodeSet::TCS_W_16bit::unmarshalWString(cdrStream& stream,
   us[i] = 0; // Null terminator
 
   uh.drop();
-  return len + 1;
+  return len;
 }
 
 
@@ -317,11 +318,10 @@ _CORBA_Boolean
 omniCodeSet::TCS_W_16bit::fastMarshalWString(cdrStream&          stream,
 					     omniCodeSet::NCS_W* ncs,
 					     _CORBA_ULong        bound,
+					     _CORBA_ULong        len,
 					     const _CORBA_WChar* ws)
 {
   if (ncs->id() == id()) { // Null transformation
-
-    _CORBA_ULong len = _CORBA_WString_helper::len(ws); // No terminating null
 
     if (bound && len > bound)
       OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
@@ -336,7 +336,7 @@ omniCodeSet::TCS_W_16bit::fastMarshalWString(cdrStream&          stream,
       }
     }
     else {
-      stream.put_octet_array((const _CORBA_Char*)ws, len*2, omni::ALIGN_2);
+      stream.put_octet_array((const _CORBA_Char*)ws, mlen, omni::ALIGN_2);
     }
 #else
     _CORBA_UShort tc;
@@ -356,8 +356,8 @@ omniCodeSet::TCS_W_16bit::fastUnmarshalWChar(cdrStream&          stream,
 					     _CORBA_WChar&       wc)
 {
   if (ncs->id() == id()) { // Null transformation
-    _CORBA_Octet  len = stream.unmarshalOctet();
-    _CORBA_Octet  o;
+    _CORBA_Octet len = stream.unmarshalOctet();
+    _CORBA_Octet o;
 
     switch (len) {
     case 0:
@@ -421,7 +421,7 @@ omniCodeSet::TCS_W_16bit::fastUnmarshalWString(cdrStream&          stream,
       ws[i] = tc;
     }
 #endif
-    ws[len++] = 0; // Null terminator
+    ws[len] = 0; // Null terminator
 
     wh.drop();
     return 1;
