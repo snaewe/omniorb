@@ -1,9 +1,7 @@
 #
 # i586_linux_2.0_glibc.mk - make variables and rules specific to Linux 2.0
-#                           and glibc-2.0  (e.g. Redhat 5.2)
-#  Check the compiler variable CXX and CC to match the path of your compiler.
-#  You should use egcs-1.1.2 (compiled with the --enable-threads option) or
-#  later versions.
+#                           and glibc-2.1  (e.g. Redhat 6.x systems)
+#                            
 #
 
 Linux = 1
@@ -25,7 +23,7 @@ AR = ar cq
 
 CPP = /usr/bin/cpp
 
-CXX = /usr/local/egcs/bin/g++
+CXX = /usr/bin/g++
 CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = -O2 
 
@@ -37,7 +35,7 @@ CXXOPTIONS      = -Wall -Wno-unused
 EgcsMajorVersion = 1
 EgcsMinorVersion = 1        # This is actually a post-1.0 egcs snapshot.
 
-CC           = /usr/local/egcs/bin/gcc
+CC           = /usr/bin/gcc
 CMAKEDEPEND  = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
 CDEBUGFLAGS  = -O
 
