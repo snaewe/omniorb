@@ -1,3 +1,16 @@
+Wed Nov 15 19:13:12 GMT 2000 sll
+================================
+
+- Changed default native wchar from UCS-4 to UTF-16.
+- Added provision to override default mapping of CORBA::WChar to C++ wchar_t.
+
+include/omniORB4/CORBA_basetypes.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/local_config.h            NEW
+
+src/lib/omniORB/orbcore/cdrStream.cc
+
+
 Wed Nov 15 17:46:07 GMT 2000 dpg1
 =================================
 

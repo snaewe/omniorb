@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.3  2000/11/15 19:16:30  sll
+ Added provision to override default mapping of CORBA::WChar to C++ wchar_t.
+
  Revision 1.2.2.2  2000/10/27 15:42:02  dpg1
  Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -103,7 +106,7 @@ typedef unsigned int              _CORBA_ULong;
 # error "Can't map Long (32 bits) to a native type."
 #endif
 
-typedef wchar_t                   _CORBA_WChar;
+typedef _CORBA_WCHAR_DECL         _CORBA_WChar;
 
 #ifdef HAS_LongLong
 typedef _CORBA_LONGLONG_DECL      _CORBA_LongLong;

@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.6  2000/11/15 19:16:30  sll
+ Added provision to override default mapping of CORBA::WChar to C++ wchar_t.
+
  Revision 1.2.2.5  2000/11/09 12:27:49  dpg1
  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -199,6 +202,7 @@
 #ifndef __CORBA_SYSDEP_H__
 #define __CORBA_SYSDEP_H__
 
+#include <omniORB4/local_config.h>
 
 #define HAS_Cplusplus_const_cast
 // Unset this define if the compiler does not support const_cast<T*>
@@ -430,13 +434,33 @@
 #define SIZEOF_PTR  4
 #endif
 
-// Wide character size
-#if defined(__linux__) || defined(__sunos__)
-#  define SIZEOF_WCHAR 4
-#elif defined(__win32__)
-#  define SIZEOF_WCHAR 2
+#ifndef _CORBA_WCHAR_DECL
+#  define _CORBA_WCHAR_DECL wchar_t
+   // Wide character size
+#  if defined(__linux__) || defined(__sunos__)
+#    define SIZEOF_WCHAR 4
+#  elif defined(__win32__)
+#    define SIZEOF_WCHAR 2
+#  else
+#    error "sizeof wchar_t not known for this platform"
+#  endif
+
 #else
-#  error "sizeof wchar_t not known for this platform"
+
+// Define _CORBA_WCHAR_DECL to override the default mapping above.
+// Instead of mapping to wchar_t, override the mapping with your own
+// type declaration. 
+// For instance, you want to use UTF16 and each wchar to be represented
+// as a 16-bit entity. There is no guarantee that wchar_t would fit the bill,
+// in fact, it may be a 32-bit entity!
+//
+// Should also define SIZEOF_WCHAR to indicate the size of the type you
+// have chosen.
+#ifndef SIZEOF_WCHAR
+#    error "sizeof wchar_t not known for this platform"
+#endif
+
+
 #endif
 
 
