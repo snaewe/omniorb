@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/07/13 15:19:30  sll
+  Manage the state of each connection internally. Added new callback
+  functions.
+
   Revision 1.1.4.2  2001/06/13 20:11:37  sll
   Minor update to make the ORB compiles with MSVC++.
 
@@ -99,9 +103,11 @@ private:
   enum { IDLE, ACTIVE, ZOMBIE, INFLUX }  pd_state;
   giopEndpointList                       pd_endpoints;
   Link                                   pd_rendezvousers;
-  Link                                   pd_workers;
+  CORBA::ULong                           pd_nconnections;
   omni_tracedmutex                       pd_lock;
   omni_tracedcondition                   pd_cond;
+  CORBA::Boolean                         pd_thread_per_connection;
+  CORBA::ULong                           pd_n_temporary_workers;
 
   void activate();
   // Activate all endpoints in pd_endpoints. This involves instantiating a
@@ -138,7 +144,8 @@ private:
   //
   void notifyRzNewConnection(giopRendezvouser*,giopConnection*);
   // Callback by giopRendezvouser when a new connection is accepted.
-  // If no exception is raised by the call, the connection is consumed.
+  // If no exception or outOfResource is raised by the call, the connection 
+  // is consumed.
   // Otherwise the caller must free the connection.
   //
   // notifyRzNewConnection could throw:
@@ -162,13 +169,24 @@ private:
   //
 
 
+  void notifyRzReadable(giopConnection*,
+			CORBA::Boolean force_create = 0);
+  // Callback by giopRendezvouser when a connection is readable.
+  // If <force_create> is true(1), the server must dispatch a giopWorker
+  // to the connection immediately. Otherwise, it may delay the dispatch
+  // if the no. of giopWorkers for the connection has already reach the
+  // limit set in omniORB::maxServerThreadPerConnection.
+  //
+  // Thread Safety preconditions:
+  //    Caller MUST NOT hold pd_lock. The lock is acquired by this method.
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   //
   // Callback functions used by giopWorker
   //
   void notifyWkDone(giopWorker*,CORBA::Boolean exit_on_error);
-  // Callback by giopWorker when the task is about to end.
+  // Callback by giopWorker when it finishes one upcall.
   //
   // The flag exit_on_error indicates whether the task ends because it
   // was told or trigged by an error.
@@ -178,17 +196,57 @@ private:
   //
 
 public:
-  void notifyWkPreUpCall(giopStrand*);
+  static void peekCallBack(void*, giopConnection*);
+
+  void notifyWkPreUpCall(giopWorker*,
+			 CORBA::Boolean data_in_buffer);
   // Callback by the thread performing the giopWorker task when it
   // is about to perform an upcall to the applicaton level code.
   // This is an indication that from this point onwards, the thread will not
   // be reading from the strand. The server may want to start watching the
   // strand for any new request coming in.
+  // If <data_in_buffer> == 1, there are data pending already. The server
+  // should treat this case as if there are new data to be read from the 
+  // strand.
   //
   // Thread Safety preconditions:
   //    Caller MUST NOT hold pd_lock. The lock may be acquired by this method.
   //
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+  //
+  // Callback functions used by giopImpl12
+  //
+  void notifyCallFullyBuffered(giopConnection*);
+  // GIOP 1.2 and above allows fragments of different requests to interleave
+  // on a connection. It may happens that while a giopWorker is processing
+  // one request, it encounters fragments for another request. These fragments
+  // are set aside. If these set-aside fragments actually constitute a 
+  // complete request, this callback function is invoked. The server should
+  // dispatch a giopWorker task to deal with this callback. 
+
+private:
+
+  struct connectionState {
+    giopConnection*  connection;
+    giopStrand*      strand;
+    Link             workers;
+    connectionState* next;
+
+    connectionState(giopConnection* c,giopStrand* s);
+    ~connectionState();
+
+    static CORBA::ULong hashsize;
+  };
+
+  connectionState** pd_connectionState;
+
+  connectionState* csLocate(giopConnection*);
+  connectionState* csRemove(giopConnection*);
+  connectionState* csInsert(giopConnection*);
+
+  void removeConnectionAndWorker(giopWorker* conn);
 };
 
 OMNI_NAMESPACE_END(omni)
