@@ -26,6 +26,9 @@
 
 /*
   $Log$
+  Revision 1.4  1998/08/13 22:53:06  sll
+  Finish off last check-in.
+
   Revision 1.3  1998/08/13 22:37:38  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -35,9 +38,9 @@
 
   */
 
-#include  "idl.hh"
-#include  "idl_extern.hh"
-#include  "o2be.h"
+#include  <idl.hh>
+#include  <idl_extern.hh>
+#include  <o2be.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
