@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.11  2002/11/25 21:07:25  dgrisby
+// Add new to_string() function to Fixed.
+//
 // Revision 1.1.2.10  2002/07/12 10:17:30  dgrisby
 // Bug in fixed point unmarshal.
 //
@@ -465,6 +468,37 @@ CORBA::Boolean
 CORBA::Fixed::operator!() const
 {
   return pd_digits == 0;
+}
+
+char*
+CORBA::Fixed::to_string() const
+{
+  int len = pd_digits + 1;
+  if (pd_negative)                      ++len; // for '-'
+  if (pd_digits == pd_scale)            ++len; // for '0'
+  if (pd_scale > 0 || pd_idl_scale > 0) ++len; // for '.'
+  if (pd_idl_scale > pd_scale)          len += pd_idl_scale - pd_scale;
+
+  char* r = CORBA::string_alloc(len);
+  int i = 0, j;
+
+  if (pd_negative)           r[i++] = '-';
+  if (pd_digits == pd_scale) r[i++] = '0';
+
+  for (j=pd_digits; j; ) {
+    if (j-- == pd_scale)
+      r[i++] = '.';
+    r[i++] = pd_val[j] + '0';
+  }
+  if (pd_idl_scale > pd_scale) {
+    if (pd_scale == 0)
+      r[i++] = '.';
+
+    for (j = pd_idl_scale - pd_scale; j; j--)
+      r[i++] = '0';
+  }
+  r[i] = '\0';
+  return r;
 }
 
 char*
