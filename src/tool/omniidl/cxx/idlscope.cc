@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.11.2.8  2000/11/30 11:40:48  dpg1
+// Add -nc option to omniidl to accept invalid IDL with identifiers
+// differing only by case.
+//
 // Revision 1.11.2.7  2000/10/24 09:53:30  dpg1
 // Clean up omniidl system dependencies. Replace use of _CORBA_ types
 // with IDL_ types.
@@ -94,6 +98,7 @@
 #include <idlast.h>
 #include <idlerr.h>
 #include <idlutil.h>
+#include <idlconfig.h>
 
 #include <string.h>
 
@@ -530,8 +535,14 @@ iFind(const char* identifier) const
   Entry* e;
   if (identifier[0] == '_') ++identifier;
   for (e = entries_; e; e = e->next()) {
-    if (!(strcasecmp(identifier, e->identifier())))
-      return e;
+    if (Config::caseSensitive) {
+      if (!(strcmp(identifier, e->identifier())))
+	return e;
+    }
+    else {
+      if (!(strcasecmp(identifier, e->identifier())))
+	return e;
+    }
   }
   return 0;
 }
@@ -1275,10 +1286,19 @@ keywordClash(const char* identifier, const char* file, int line)
   };
 
   for (const char** k = keywords; *k; k++) {
-    if (!strcasecmp(*k, identifier)) {
-      IdlError(file, line, "Identifier `%s' clashes with keyword `%s'",
-	       identifier, *k);
-      return 1;
+    if (Config::caseSensitive) {
+      if (!strcmp(*k, identifier)) {
+	IdlError(file, line, "Identifier `%s' is identical to keyword `%s'",
+		 identifier, *k);
+	return 1;
+      }
+    }
+    else {
+      if (!strcasecmp(*k, identifier)) {
+	IdlError(file, line, "Identifier `%s' clashes with keyword `%s'",
+		 identifier, *k);
+	return 1;
+      }
     }
   }
   return 0;

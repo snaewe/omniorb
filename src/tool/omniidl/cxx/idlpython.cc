@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.17  2000/11/30 11:40:47  dpg1
+// Add -nc option to omniidl to accept invalid IDL with identifiers
+// differing only by case.
+//
 // Revision 1.15.2.16  2000/10/24 09:53:29  dpg1
 // Clean up omniidl system dependencies. Replace use of _CORBA_ types
 // with IDL_ types.
@@ -1213,7 +1217,7 @@ void
 PythonVisitor::
 visitFixedType(FixedType* t)
 {
-  result_ = PyObject_CallMethod(idltype_, (char*)"fixedType", (char*)"i",
+  result_ = PyObject_CallMethod(idltype_, (char*)"fixedType", (char*)"ii",
 				t->digits(), t->scale());
   ASSERT_RESULT;
 }
@@ -1406,6 +1410,13 @@ extern "C" {
     return Py_None;
   }
 
+  static PyObject* IdlPyCaseSensitive(PyObject* self, PyObject* args)
+  {
+    if (!PyArg_ParseTuple(args, (char*)"")) return 0;
+    Config::caseSensitive = 1;
+    Py_INCREF(Py_None); return Py_None;
+  }
+
   static PyMethodDef omniidl_methods[] = {
     {(char*)"compile",            IdlPyCompile,            METH_VARARGS},
     {(char*)"clear",              IdlPyClear,              METH_VARARGS},
@@ -1415,6 +1426,7 @@ extern "C" {
     {(char*)"keepComments",       IdlPyKeepComments,       METH_VARARGS},
     {(char*)"relativeScopedName", IdlPyRelativeScopedName, METH_VARARGS},
     {(char*)"runInteractiveLoop", IdlPyRunInteractiveLoop, METH_VARARGS},
+    {(char*)"caseSensitive",      IdlPyCaseSensitive,      METH_VARARGS},
     {NULL, NULL}
   };
 

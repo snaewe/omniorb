@@ -29,6 +29,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.18  2000/11/30 11:40:48  dpg1
+# Add -nc option to omniidl to accept invalid IDL with identifiers
+# differing only by case.
+#
 # Revision 1.15.2.17  2000/09/11 14:36:50  dpg1
 # New -T option to work around Win98 pipe problems.
 #
@@ -83,6 +87,7 @@ The supported flags are:
   -bback_end      Select a back-end to be used. More than one permitted
   -Wbarg[,arg...] Send args to the back-end
   -nf             Do not warn about unresolved forward declarations
+  -nc             Do not treat identifiers differing only in case as an error
   -k              Comments after declarations are kept for the back-ends
   -K              Comments before declarations are kept for the back-ends
   -Cdir           Change directory to dir before writing output
@@ -200,9 +205,15 @@ def parseArgs(args):
         elif o == "-n":
             if a == "f":
                 _omniidl.noForwardWarning()
+            elif a == "c":
+                sys.stderr.write(cmdname + \
+                                 ": Warning: -nc option means omniidl will " \
+                                 "silently accept invalid IDL.\n")
+                _omniidl.caseSensitive()
             else:
                 if not quiet:
-                    sys.stderr.write(cmdname + ": unknown warning option `" + \
+                    sys.stderr.write(cmdname + \
+                                     ": unknown error suppresion option `" + \
                                      a + "'\n")
                     sys.stderr.write("Use " + cmdname + " -u for usage\n")
                 sys.exit(1)

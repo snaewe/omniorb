@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.4  2000/11/30 11:40:47  dpg1
+// Add -nc option to omniidl to accept invalid IDL with identifiers
+// differing only by case.
+//
 // Revision 1.1.2.3  2000/10/24 09:53:29  dpg1
 // Clean up omniidl system dependencies. Replace use of _CORBA_ types
 // with IDL_ types.
@@ -52,6 +56,8 @@ public:
   static IDL_Boolean forwardWarning;  // Warn about unresolved forwards
   static IDL_Boolean keepComments;    // Keep comments from source
   static IDL_Boolean commentsFirst;   // Comments come before declarations
+  static IDL_Boolean caseSensitive;   // Do not treat identifiers differing
+                                      //  only in case as errors
 };
 
 
