@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.6  2002/03/11 12:23:45  dpg1
+# -Wbe option for example code suffix.
+#
 # Revision 1.20.2.5  2002/02/20 13:37:18  dpg1
 # C++ back-end old signatures option did not work.
 #
@@ -221,6 +224,8 @@ def process_args(args):
             config.state['SK Suffix']         = arg[2:]
         elif arg[:2] == "d=":
             config.state['DYNSK Suffix']      = arg[2:]
+        elif arg[:2] == "e=":
+            config.state['IMPL Suffix']       = arg[2:]
         elif arg == "inline":
             config.state['Inline Includes']   = 1
         elif arg == "shortcut":
