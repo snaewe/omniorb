@@ -29,6 +29,10 @@
 /*
  $Id$
  $Log$
+ Revision 1.1.2.6  2000/10/10 15:07:12  djs
+ Improved comments & tracing
+ Moved code from header file to here
+
  Revision 1.1.2.5  2000/09/28 23:18:26  djs
  Removed a spurious closing curly bracket
 
@@ -46,6 +50,9 @@
 #include <exceptiondefs.h>
 #include "PollableSet.h"
 
+/////////////////////////////////////////////////////////////////////////
+// Messaging::ExceptionHolder ///////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 
 Messaging::ExceptionHolder::~ExceptionHolder(){
   if (local_exception_object)
@@ -115,6 +122,54 @@ Messaging::ExceptionHolder::operator<<= (MemBufferedStream &_n){
   local_exception_object = NULL;
 }
 
+/////////////////////////////////////////////////////////////////////////
+// Messaging::Poller //////// ///////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+
+void Messaging::Poller::_NP_throw_exception_from_poller
+  (const CORBA::Exception& e, CORBA::Boolean locked){
+  if (!locked) pd_state_lock.lock();
+  pd_is_from_poller = 1;
+  if (!locked) pd_state_lock.unlock();
+  e._raise();
+  //throw e;
+}
+
+void Messaging::Poller::_NP_wait_and_throw_exception(CORBA::ULong timeout){
+  if (!is_ready(timeout)) {
+    // NO_RESPONSE is generated for the no-timeout case
+    if (timeout == 0) 
+      _NP_throw_exception_from_poller(CORBA::NO_RESPONSE(), 0);
+
+    _NP_throw_exception_from_poller(CORBA::TIMEOUT(), 0);
+  }
+  
+  // Data must have arrived within the timeout period.
+  {
+    omni_mutex_lock lock(pd_state_lock);
+    // Has someone else got it?
+    if (reply_already_read)
+      _NP_throw_exception_from_poller(CORBA::OBJECT_NOT_EXIST(), 1);
+    // Claim it for ourselves
+    reply_already_read = 1;
+    // Everyone else who tries to get this data will get an exception instead
+  }
+}
+
+void Messaging::Poller::_NP_throw_wrong_transaction(){
+  _NP_throw_exception_from_poller(CORBA::WRONG_TRANSACTION(), 0);
+}
+
+void Messaging::Poller::_NP_tell_poller_reply_received(){
+  omni_mutex_lock lock(pd_state_lock);
+  reply_received = 1;
+  // The client could have lots of threads blocked on this event, better wake
+  // them all up. They can fight over ownership of the data and the loser(s)
+  // can return with OBJECT_NOT_EXIST
+  pd_state_cond.broadcast();
+}
+
 Messaging::ReplyHandler_ptr Messaging::Poller::associated_handler(){
   Messaging::ReplyHandler_ptr handler;
   {
@@ -124,24 +179,26 @@ Messaging::ReplyHandler_ptr Messaging::Poller::associated_handler(){
   return handler;
 }
 
-
 void Messaging::Poller::associated_handler(Messaging::ReplyHandler_ptr handler){
   omni_mutex_lock lock(pd_state_lock);
   pd_associated_handler = handler;
 }
 
-// Returns TRUE iff the results are ready to be consumed.
-// timeout is in seconds, ULONG_MAX means forever
+// timeout is in seconds, ULONG_MAX means block forever.
+// *** According to CORBA Messaging 6.6 Generic Poller Value
+//   returns TRUE iff a reply is currently available for the request
+//   returns FALSE iff a reply has not been received
+//   throws OBJECT_NOT_EXIST if the reply has already been consumed
+// Section 9.3.4.1 doesn't mention the exception at all.
 CORBA::Boolean Messaging::Poller::is_ready(CORBA::ULong timeout){
   omni_mutex_lock lock(pd_state_lock);
   // It's not clear from the spec what to do if the value has already
-  // been consumed. FALSE would probably mean try again later, which
-  // would never work. Therefore return TRUE, causing the client to
-  // attempt to acquire the data and OBJECT_NOT_EXIST being thrown.
-  if (reply_already_read) return 1;
+  // been consumed. Section 6.6 suggests throw CORBA::OBJECT_NOT_EXIST
+  if (reply_already_read) 
+    _NP_throw_exception_from_poller(CORBA::OBJECT_NOT_EXIST(), 1);
   
   // Note that just because the data is available doesn't mean this
-  // thread will be able to get it.
+  // thread will be able to get it. Once the lock is gone, all bets are off.
   if (reply_received) return 1;
   
   // Reply must not have been received yet.
@@ -156,13 +213,19 @@ CORBA::Boolean Messaging::Poller::is_ready(CORBA::ULong timeout){
     omni_thread::get_time(&sec, &nsec, 0, timeout*1000);
     pd_state_cond.timedwait(sec, nsec);
   }
+  // After waiting we might have lost out to someoen else
+  if (reply_already_read) 
+    _NP_throw_exception_from_poller(CORBA::OBJECT_NOT_EXIST(), 1);
   // Again remember that just because the data has arrived, doesn't
-  // give this thread any right to it (First-Come-First-Served)
+  // give this thread any right to it...
   return reply_received;
 }
 
 CORBA::Boolean Messaging::Poller::is_from_poller(){
   omni_mutex_lock lock(pd_state_lock);
+
+  if (!reply_received) 
+    _NP_throw_exception_from_poller(CORBA::BAD_INV_ORDER(), 1);
 
   return pd_is_from_poller;
 }

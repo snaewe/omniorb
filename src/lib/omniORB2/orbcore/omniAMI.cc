@@ -29,6 +29,10 @@
 
 /* 
   $Log$
+  Revision 1.1.2.7  2000/10/10 15:07:13  djs
+  Improved comments & tracing
+  Moved code from header file to here
+
   Revision 1.1.2.6  2000/09/28 18:29:40  djs
   Bugfixes in Poller (wrt timout behaviour and is_ready function)
   Removed traces of Private POA/ internal ReplyHandler servant for Poller
@@ -96,6 +100,7 @@ static unsigned long  queue_length  = 0; // number of call descriptors in q
 // Called by the AMI runtime when the invocation on the target has completed
 // and the results are available.
 void omniAMIDescriptor::sendReply(){
+  AMITRACE("omniAMIDescriptor", "sendReply()");
   if (_is_polling) return giveReplyToPoller();
 
   omniObjRef *handler = get_handler();
@@ -109,6 +114,7 @@ void omniAMIDescriptor::sendReply(){
 // Called whenever an exceptional reply is available
 void omniAMIDescriptor::sendException(CORBA::Exception &e, 
 				      CORBA::Boolean is_system_exception){
+  AMITRACE("omniAMIDescriptror", "sendException");
   // package up the caught exception object into a Type-Specific
   // ExceptionHolder valuetype
   Messaging::ExceptionHolder *holder = get_exception_holder();
