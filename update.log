@@ -1,3 +1,10 @@
+Mon Nov  8 14:37:18 GMT 1999 sll
+================================
+
+- Change test program to use the modified GIOP_S interface.
+
+src/test/giopproxy/server.cc
+
 Fri Nov  5 18:57:50 GMT 1999 sll
 ================================
 

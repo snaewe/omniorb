@@ -164,6 +164,14 @@ relayCallDesc::marshalArguments(cdrStream& giop_client)
   giop_s_.RequestReceived();
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+class relayCall_null_marshaller : public giopMarshaller {
+public:
+  void marshalData() {}
+  size_t dataSize(size_t initialoffset) { return 0; }
+};
+
 //////////////////////////////////////////////////////////////////////////
 void
 relayCallDesc::unmarshalReturnedValues(cdrStream& giop_client)
@@ -173,7 +181,8 @@ relayCallDesc::unmarshalReturnedValues(cdrStream& giop_client)
 
   s1.startSavingInputMessageBody();
   s2.prepareCopyMessageBodyFrom(s1);
-  giop_s_.InitialiseReply(GIOP::NO_EXCEPTION);
+  relayCall_null_marshaller m;
+  giop_s_.InitialiseReply(GIOP::NO_EXCEPTION,m);
   s2.copyMessageBodyFrom(s1);
   giop_s_.ReplyCompleted();
 }
@@ -187,7 +196,8 @@ relayCallDesc::userException(GIOP_C& giop_client, const char* repoId)
 
   s1.startSavingInputMessageBody();
   s2.prepareCopyMessageBodyFrom(s1);
-  giop_s_.InitialiseReply(GIOP::USER_EXCEPTION);
+  relayCall_null_marshaller m;
+  giop_s_.InitialiseReply(GIOP::USER_EXCEPTION,m);
   CORBA::ULong repoIdLen = strlen(repoId) + 1;
   repoIdLen <<= s2;
   s2.put_char_array((CORBA::Char*)repoId,repoIdLen);
