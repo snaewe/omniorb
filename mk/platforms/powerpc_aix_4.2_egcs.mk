@@ -88,8 +88,9 @@ ThreadSystem = Posix
 
 OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=8
 OMNITHREAD_CPPFLAGS = -D_REENTRANT -D_THREAD_SAFE
-OMNITHREAD_LIB = -lomnithread2 -lpthreads
+OMNITHREAD_LIB = -lomnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION) $(OMNITHREAD_PLATFORM_LIB)
 OMNITHREAD_STATIC_LIB = -lomnithread-ar -lpthreads-ar
+OMNITHREAD_PLATFORM_LIB = -lpthreads
 
 
 # Default location of the omniORB configuration file [falls back to this if

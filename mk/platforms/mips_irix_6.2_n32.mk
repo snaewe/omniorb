@@ -135,4 +135,8 @@ define MakeCXXSharedLibrary
  $$extralibs $(LDLIBS); \
 endef
 
+ifeq ($(notdir $(CC)),gcc)
+SHAREDLIB_CFLAGS = -fPIC
+endif
+
 endif

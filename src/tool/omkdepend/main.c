@@ -86,7 +86,8 @@ struct	inclist inclist[ MAXFILES ],
 char	*filelist[ MAXFILES ];
 char	*includedirs[ MAXDIRS + 1 ];
 char	*notdotdot[ MAXDIRS ];
-char	*objprefix = "";
+char	*objprefix[ MAXDIRS ];
+int	n_objprefix = 0;
 char	*objsuffix = ".o";
 int	width = 78;
 boolean	append = FALSE;
@@ -276,13 +277,15 @@ main(argc, argv)
 				objsuffix = argv[0]+2;
 			break;
 		case 'p':
+			if (n_objprefix == MAXDIRS)
+			    fatalerr("Too many -p flags.\n");
 			if (endmarker) break;
 			if (argv[0][2] == '\0') {
 				argv++;
 				argc--;
-				objprefix = argv[0];
+				objprefix[n_objprefix++] = argv[0];
 			} else
-				objprefix = argv[0]+2;
+				objprefix[n_objprefix++] = argv[0]+2;
 			break;
 		case 'v':
 			if (endmarker) break;
@@ -314,7 +317,8 @@ main(argc, argv)
 		fatalerr("Too many -I flags.\n");
 	    *incp++ = defincdir;
 	}
-
+	if (n_objprefix == 0)
+	    objprefix[n_objprefix++] = "";
 	/*
 	 * catch signals.
 	 */

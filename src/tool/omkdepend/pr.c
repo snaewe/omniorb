@@ -30,7 +30,8 @@ in this Software without prior written authorization from the X Consortium.
 
 extern struct	inclist	inclist[ MAXFILES ],
 			*inclistp;
-extern char	*objprefix;
+extern char	*objprefix[ MAXDIRS ];
+extern int	n_objprefix;
 extern char	*objsuffix;
 extern int	width;
 extern boolean	printed;
@@ -105,9 +106,13 @@ pr(ip, file, base)
 
 	printed = TRUE;
 	if (file != lastfile) {
+		char *p = buf;
 		lastfile = file;
-		sprintf(buf, "%s%s%s %s.d: %s", objprefix, base, objsuffix,
-			base, transfile);
+		for (i = 0; i < n_objprefix; i++) {
+		    sprintf(p, "%s%s%s ", objprefix[i], base, objsuffix);
+		    p += strlen(p);
+		}
+		sprintf(p, "%s.d: %s", base, transfile);
 	}
 	else {
 		sprintf(buf, " \\\n %s", transfile);

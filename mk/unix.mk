@@ -45,6 +45,7 @@ endef
 #
 # Patterns for various file types
 #
+LibPathPattern    = -L%
 LibNoDebugPattern = lib%.a
 LibDebugPattern = lib%.a
 LibPattern = lib%.a
@@ -92,7 +93,7 @@ endif
 # i.e. we need to filter out the lib_depends from the command
 #
 
-IMPORT_LIBRARY_FLAGS = $(patsubst %,-L%,$(IMPORT_LIBRARY_DIRS))
+IMPORT_LIBRARY_FLAGS = $(patsubst %,$(LibPathPattern),$(IMPORT_LIBRARY_DIRS))
 
 define CXXExecutable
 (set -x; \
@@ -121,31 +122,39 @@ define ExportExecutable
 endef
 endif
 
+# omnithread - platform libraries required by omnithread.
+# Use when building omnithread.
+OMNITHREAD_VERSION = 2.1
+OMNITHREAD_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNITHREAD_VERSION)))
+OMNITHREAD_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNITHREAD_VERSION)))
+
+OMNITHREAD_PLATFORM_LIB = $(filter-out $(patsubst %,$(LibSearchPattern),omnithread), $(OMNITHREAD_LIB))
 
 #
 # CORBA stuff
 #
 
-OMNIORB_VERSION = 3.0.0
+OMNIORB_VERSION = 3.1.0
 OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
 
-lib_depend := $(patsubst %,$(LibPattern),omniORB3)
+lib_depend := $(patsubst %,$(LibPattern),omniORB$(OMNIORB_MAJOR_VERSION))
 omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
-lib_depend := $(patsubst %,$(LibPattern),omniDynamic3)
+lib_depend := $(patsubst %,$(LibPattern),omniDynamic$(OMNIORB_MAJOR_VERSION))
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
 
 OMNIORB_IDL_ONLY = $(BASE_OMNI_TREE)/$(BINDIR)/omniidl -bcxx
 OMNIORB_IDL_ANY_FLAGS = -Wba
 OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
-OMNIORB_CPPFLAGS = -D__OMNIORB3__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
+OMNIORB_CPPFLAGS = -D__OMNIORB$(OMNIORB_MAJOR_VERSION)__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
 OMNIORB_IDL_OUTPUTDIR_PATTERN = -C%
 
-OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
-		$(patsubst %,$(LibSearchPattern),omniDynamic3)
-OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3)
+OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB$(OMNIORB_MAJOR_VERSION)) \
+		$(patsubst %,$(LibSearchPattern),omniDynamic$(OMNIORB_MAJOR_VERSION))
+OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB$(OMNIORB_MAJOR_VERSION))
+
 
 OMNIORB_LIB_NODYN_DEPEND = $(omniORB_lib_depend)
 OMNIORB_LIB_DEPEND = $(omniORB_lib_depend) $(omniDynamic_lib_depend)
@@ -313,8 +322,10 @@ shared/%.o: %.cc
 static/%.o: %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
+SHAREDLIB_CFLAGS = $(SHAREDLIB_CPPFLAGS)
+
 shared/%.o: %.c
-	$(CC) -c $(SHAREDLIB_CPPFLAGS) $(CFLAGS)  -o $@ $<
+	$(CC) -c $(SHAREDLIB_CFLAGS) $(CFLAGS)  -o $@ $<
 
 #
 # Replacements for implicit rules

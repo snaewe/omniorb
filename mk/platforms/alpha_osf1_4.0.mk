@@ -162,4 +162,8 @@ define MakeCXXSharedLibrary
   -lcxxstd -lcxx -lexc -lots -lc;
 endef
 
+ifeq ($(notdir $(CC)),gcc)
+SHAREDLIB_CFLAGS = -fPIC
+endif
+
 endif

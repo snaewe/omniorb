@@ -35,6 +35,7 @@ namespec := $(LIB_NAME) $(vers)
 ##############################################################################
 
 staticlib := static/$(patsubst %,$(LibNoDebugPattern),$(LIB_NAME)$(major))
+MDFLAGS += -p static/
 
 mkstatic::
 	@(dir=static; $(CreateDir))
@@ -62,6 +63,7 @@ veryclean::
 ifdef BuildSharedLibrary
 
 shlib := shared/$(shell $(SharedLibraryFullName) $(namespec))
+MDFLAGS += -p shared/
 
 ifdef Win32Platform
 # in case of Win32 lossage:
@@ -76,7 +78,7 @@ mkshared::
 
 mkshared:: $(shlib)
 
-$(shlib): $(patsubst %, shared/%, $(LIB_OBJS))
+$(shlib): $(patsubst %, shared/%, $(LIB_OBJS) $(LIB_SHARED_ONLY_OBJS))
 	@(namespec="$(namespec)" extralibs="$(imps)"; \
          $(MakeCXXSharedLibrary))
 
@@ -91,6 +93,10 @@ clean::
 veryclean::
 	$(RM) shared/*.o
 	@(dir=shared; $(CleanSharedLibrary))
+
+else
+
+mkshared::
 
 endif
 
@@ -108,6 +114,7 @@ export:: mkstaticdbug mkshareddbug
 #####################################################
 
 dbuglib := debug/$(patsubst %,$(LibDebugPattern),$(LIB_NAME)$(major))
+MDFLAGS += -p debug/
 
 mkstaticdbug::
 	@(dir=debug; $(CreateDir))
@@ -133,6 +140,7 @@ veryclean::
 #####################################################
 
 dbugshlib := shareddebug/$(shell $(SharedLibraryDebugFullName) $(namespec))
+MDFLAGS += -p shareddebug/
 
 dbugimps  := $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), \
                $(LIB_IMPORTS))
@@ -142,7 +150,7 @@ mkshareddbug::
 
 mkshareddbug:: $(dbugshlib)
 
-$(dbugshlib): $(patsubst %, shareddebug/%, $(LIB_OBJS))
+$(dbugshlib): $(patsubst %, shareddebug/%, $(LIB_OBJS) $(LIB_SHARED_ONLY_OBJS))
 	(namespec="$(namespec)" debug=1 extralibs="$(dbugimps)"; \
          $(MakeCXXSharedLibrary))
 
