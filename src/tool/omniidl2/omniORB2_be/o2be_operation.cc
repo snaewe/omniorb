@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.20  1998/03/25 14:18:57  sll
+  Temporary work-around for egcs compiler.
+
   Revision 1.19  1998/01/27 16:47:25  ewc
   Added support for type Any and TypeCode
 
@@ -254,7 +257,11 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &def_in,
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong _0RL_retries = 0;\n";
+  s << "#ifndef EGCS_WORKAROUND\n"
   s << "_0RL_again:\n";
+  s << "#else\n";
+  s << "while(1) {\n";
+  s << "#endif\n";
   IND(s); s << "assertObjectExistent();\n";
   IND(s); s << "omniRopeAndKey _0RL_r;\n";
   IND(s); s << "CORBA::Boolean _0RL_fwd = getRopeAndKey(_0RL_r);\n";
@@ -1133,7 +1140,11 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &def_in,
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 
+  s << "#ifndef EGCS_WORKAROUND\n";
   IND(s); s << "goto _0RL_again;\n";
+  s << "#else\n";
+  s << "}\n";
+  s << "#endif\n";
 
   if (!return_is_void())
     {
@@ -1671,7 +1682,11 @@ o2be_operation::produce_lcproxy_skel(fstream &s,o2be_interface &def_in,
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong _0RL_retries = 0;\n";
+  s << "#ifndef EGCS_WORKAROUND\n"
   s << "_0RL_again:\n";
+  s << "#else\n";
+  s << "while(1) {\n";
+  s << "#endif\n";
   IND(s); s << "assertObjectExistent();\n";
   IND(s); s << "omniRopeAndKey _0RL_r;\n";
   IND(s); s << "CORBA::Boolean _0RL_fwd = getRopeAndKey(_0RL_r);\n";
@@ -2613,7 +2628,11 @@ o2be_operation::produce_lcproxy_skel(fstream &s,o2be_interface &def_in,
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 
+  s << "#ifndef EGCS_WORKAROUND\n";
   IND(s); s << "goto _0RL_again;\n";
+  s << "#else\n";
+  s << "}\n";
+  s << "#endif\n";
 
   if (!return_is_void())
     {

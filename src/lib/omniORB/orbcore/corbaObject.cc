@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.11  1998/03/25 14:20:51  sll
+  Temporary work-around for egcs compiler.
+
   Revision 1.10  1998/02/27 13:58:55  sll
   _is_equivalent() now returns the correct answer when a proxy object
   is tested against its colocated object implmentation. This situation will
@@ -232,7 +235,11 @@ Object::_non_existent()
   }
 
   CORBA::ULong   _retries = 0;
+#ifndef EGCS_WORKAROUND
 NONEXIST_again:
+#else
+while(1) {
+#endif
   omniRopeAndKey _r;
   CORBA::Boolean _fwd = objptr->getRopeAndKey(_r);
   CORBA::Boolean _reuse = 0;
@@ -309,7 +316,11 @@ NONEXIST_again:
     if (!_omni_callSystemExceptionHandler(objptr,_retries++,ex))
       throw;
   }
+#ifndef EGCS_WORKAROUND
   goto NONEXIST_again;
+#else
+}
+#endif
 #ifdef NEED_DUMMY_RETURN
   {
     // never reach here! Dummy return to keep some compilers happy.
