@@ -1,3 +1,22 @@
+Thu Jul 13 11:51:22 BST 2000 sll
+================================
+
+- README updates
+
+external_merge/CHANGES_280  (previously ReleaseNote_omniORB_280)
+external_merge/CREDITS
+external_merge/README.FIRST
+external_merge/README.unix
+external_merge/README.win32
+external_merge/README.SGI
+exteranl_merge/README.FreeBSD
+
+external_merge/ReleaseNote_981223        removed
+external_merge/ReleaseNote_omniORB_270   removed
+external_merge/ReleaseNote_omniORB_271   removed
+external_merge/ReleaseNote_omniORB_280   removed
+
+
 Thu Jul 13 11:31:33 BST 2000 dpg1
 =================================
 

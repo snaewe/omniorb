@@ -4,16 +4,16 @@
 This file contains information on installing, building, and using omniORB3
 on Win32 (Windows NT and Windows '9x) platforms.
 
-If you are upgrading from 2.2.0, do not miss the important information about
-omniNames at the end of this note.
+If you are upgrading from 2.7.1 or earlier, please read CHANGES_280 for a
+description of the incompatibility change in the semantics of Any since 2.8.0.
 
 OmniORB has been tested with the following software configuration:
 
-- Operating System  : Windows NT 4.0
-- Architecture      : x86 and alpha
-- Compiler          : Visual C++ 5.0
+- Operating System  : Windows NT 4.0 and Windows 2000
+- Architecture      : x86 (and alpha in earlier versions)
+- Compiler          : Visual C++ 5.0 and Visual C++ 6.0
 
-The omniORB binaries, when compiled using VC++ 5.0 on Windows NT, will 
+The omniORB binaries, when compiled using VC++ 6.0 on Windows NT, will 
 execute on Windows '95 machines and vice-versa.
 
 As of 2.6.1, Alpha Windows NT is also supported. Unless otherwise stated,
@@ -23,7 +23,7 @@ reference to "x86" has to be changed to "alpha".
 Roadmap
 =======
 
-When the omniORB2 distribution is unpacked, the following are created:
+When the omniORB3 distribution is unpacked, the following are created:
 
 <Top-Level Directory>\                     : Directory where distribution was 
                                              unpacked
@@ -77,7 +77,8 @@ distribution from
 
 Alternatively, for Windows on x86, you can install a minimal
 version of Python which contains just the functionality required
-by omniidl. Download it from
+by omniidl. The Win32 binary distribution of omniORB comes with this
+minimal python package. Download it from
 
      ftp://ftp.uk.research.att.com/pub/omniORB/python/omnipython-x86_win32.zip
 
@@ -201,18 +202,19 @@ c) Set up macros and libraries:
     5. Select the "Link" tab.
     6. In the "Category" box, select "Input". In the "Object/library modules"
        box, add the following libraries: wsock32.lib, advapi32.lib, 
-       omniORB300_rt.lib, omnithread2_rt.lib
+       omniORB300_rt.lib, omniDynamic300_rt.lib, omnithread2_rt.lib
 
    If you are building a debug executable, the debug version of the libraries:
-   omniORB300_rtd.lib and omnithread2_rtd.lib should be used.
+   omniORB300_rtd.lib, omniDynamic300_rtd.lib and omnithread2_rtd.lib
+   should be used.
 
 d) Your project is now set up, and you can build it.
 
 
 If you want to use the static versions of omniORB and omnithread, you must
 add the macro _WINSTATIC (see step (c) 4, above), and replace the libraries
-omniORB3_rt.lib and omnithread2_rt.lib with omniORB3.lib and omnithread.lib 
-(see step (c) 6, above).
+omniORB3_rt.lib, omniDynamic300_rt.lib and omnithread2_rt.lib with
+omniORB3.lib, omniDynamic3.lib and omnithread.lib (see step (c) 6, above).
 
 
 Important Change to omniNames for users upgrading from version 2.2.0
