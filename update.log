@@ -1,3 +1,11 @@
+Wed May 31 16:06:02 BST 2000 dpg1
+=================================
+
+- C++ back-end properly handles Windows paths
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+
+
 Tue May 20 16:57:00 BST 2000 djs
 ================================
 
