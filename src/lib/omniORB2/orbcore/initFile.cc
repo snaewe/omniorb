@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.21  1998/04/18 10:10:16  sll
+  Added support for Borland C++.
+
   Revision 1.20  1998/04/07 19:34:45  sll
   Replace cerr with omniORB::log.
 
@@ -269,7 +272,7 @@ void initFile::initialize()
 int initFile::read_file(char* config_fname)
 {
   // Test if the specified file exists and is not a directory
-#if defined(UnixArchitecture) || defined(__VMS) || defined(__nextstep__)
+#if defined(UnixArchitecture) || defined(__VMS) || defined(__nextstep__) || defined(__BCPLUSPLUS__)
   {
     struct stat stbuf;
 #if defined(__nextstep__)
@@ -287,7 +290,7 @@ int initFile::read_file(char* config_fname)
   }
 #endif
 
-#ifdef __WIN32__
+#if defined(__WIN32__) && defined(_MSC_VER)
   {
     struct _stat stbuf;
     if (_stat(config_fname,&stbuf) != 0 || ! (_S_IFREG && stbuf.st_mode)) {
