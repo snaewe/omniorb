@@ -1,4 +1,21 @@
 
+Wed Feb  9 14:16:51 GMT 2000 djr
+================================
+
+- Reverted to String_member initialising to zero by default, since
+  using a static "" broke Any in a way which cannot be fixed without
+  an incompatible change to library interfaces.
+
+  Initialisation to empty string can now be enabled by defining the
+  macro OMNI_EMPTY_STRING_MEMBERS, when compiling all libraries and
+  applications.
+
+- Minor bug fixes in assignment to String_member (which don't matter
+  much as we no longer use statically allocated empty strings!).
+
+include/omniORB2/stringtypes.h
+
+
 Mon Jan 31 10:53:23 GMT 2000 djr
 ================================
 
