@@ -35,7 +35,7 @@
 
 #include <tcpSocket.h>
 
-#include "poll.h"
+#include "select.h"
 #include "queue.h"
 
 class tcpSocketIncomingRope;

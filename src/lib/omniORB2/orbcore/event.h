@@ -5,6 +5,11 @@
 
 typedef int socket_t;
 
+#define SOCKET_UNDEFINED -1
+
+#define MAXFDS (getdtablesize())
+
+
 class SocketSet_Iterator;
 class SocketSet{ /* abstract interface */
  public:

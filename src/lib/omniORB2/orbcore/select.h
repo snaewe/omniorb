@@ -1,8 +1,8 @@
-#ifndef _POLL_H
-#define _POLL_H
+#ifndef _SELECT_H
+#define _SELECT_H
 
-#include <sys/poll.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <iostream.h>
 #include <assert.h>
 #include <stdio.h>
@@ -18,22 +18,23 @@ class PollSet_Active_Iterator;
 class PollSet: public SocketSet{
  private:
   int maxfds;
-  int nactive; // number of active entries in the array
-  struct pollfd *ufds;
+
+  struct fd_set rfds;
+  int maxFD;
+
   mutable omni_mutex guard;
 
-  int where(socket_t);
-
-  PollSet(const PollSet&);
  public:
 
   PollSet(const int maxfds);
+  PollSet(const PollSet&);
   ~PollSet();
 
   void add(const socket_t fd);
   void remove(const socket_t fd);
 
   friend ostream &operator << (ostream& s, const PollSet& set);
+  PollSet& operator = (const PollSet &set);
 
   friend PollSet_Iterator;
   friend PollSet_Active_Iterator;
@@ -50,15 +51,13 @@ class PollSet_Iterator: public SocketSet_Iterator{
   virtual socket_t operator() ();
 };
 
-class PollSet_Active_Iterator: public PollSet_Iterator{
- public:
-  PollSet_Active_Iterator(PollSet&);
-  socket_t operator() ();
-};
+#define PollSet_Active_Iterator PollSet_Iterator
 
 
 class Poller: public EventMonitor{
   PollSet ps;
+  PollSet active_ps;
+
   omni_mutex ps_guard;
 
   enum State { awake, asleep };

@@ -55,9 +55,9 @@ endif
 CXXDEBUGFLAGS = -g
 
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc \
-             tcpSocketMTImpl.cc poll.cc
+             tcpSocketMTImpl.cc select.cc
 NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o    \
-             tcpSocketMTImpl.o poll.o
+             tcpSocketMTImpl.o select.o
 DIR_CPPFLAGS += -DUnixArchitecture
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 
@@ -75,9 +75,9 @@ endif
 ifdef Win32Platform
 
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc \
-             tcpSocketMTImpl.cc poll.cc
+             tcpSocketMTImpl.cc select.cc
 NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o    \
-             tcpSocketMTImpl.o gatekeeper.o poll.o
+             tcpSocketMTImpl.o gatekeeper.o select.o
 # See extra comments on gatekeeper.o at the end of this file
 
 DIR_CPPFLAGS += -D "NTArchitecture" -D "_WINSTATIC"

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.10.2.8  2000/06/11 14:48:25  djs
+  Changed file descriptor monitoring code to use select() rather than poll()
+
   Revision 1.22.6.10.2.7  2000/05/24 20:16:54  djs
   * Restructured connections -> thread mapping code
         (tcpSocketMTImpl.cc tcpSocketMTInterface.h)
@@ -223,11 +226,11 @@
 // include the polling code
 #include "event.h"
 #include "poll.h"
-#endif
 
 // we need semaphores to modify data in a signal handler
 // (not on sparc though)
 #include <semaphore.h>
+#endif /* OLD */
 
 #if defined(__WIN32__)
 

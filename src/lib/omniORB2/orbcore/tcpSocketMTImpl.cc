@@ -358,6 +358,16 @@ void SelectDispatcher::waitForEvents(CORBA::Boolean loop_forever){
   while (alive){
     alive = loop_forever;
 
+    /*
+    {
+      PollSet_Active_Iterator set = poller.wait();
+      cerr << "Active fds = {";
+      socket_t fd;
+      while ((fd = set()) != SOCKET_UNDEFINED)
+	cerr << fd << " ";
+      cerr << "}" << endl;
+    }
+    */
     //cerr << "Waiting {\n" << poller << "\n}\n";
     PollSet_Active_Iterator set = poller.wait();
     socket_t fd;
