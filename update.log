@@ -1,3 +1,11 @@
+Wed Sep  8 12:42:25 BST 1999 sll
+===============================
+
+- ensure that NetBufferedStream cleanup properly when the underlying strand
+  has been closed.
+
+src/lib/omniORB2/orbcore/nbufferedStream.cc
+
 Wed Sep  1 15:56:42 BST 1999 sll
 ================================
 
