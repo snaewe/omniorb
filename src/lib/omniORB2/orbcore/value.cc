@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  2000/09/27 22:49:33  djs
+ CORBA::ValueBase now included in build with more dummy methods
+
  Revision 1.1.2.1  2000/09/27 17:13:09  djs
  Struct member renaming
  Added command line options
@@ -39,7 +42,9 @@
 */
 
 #include <omniORB3/CORBA.h>
+#include <exceptiondefs.h>
 
+CORBA::ValueBase::ValueBase(const CORBA::ValueBase& v){ }
 
 CORBA::ValueBase *CORBA::ValueBase::_add_ref(){
   omni_mutex_lock lock(pd_state_lock);

@@ -49,6 +49,7 @@ ORB_SRCS = \
             Messaging.cc \
             omniAMI.cc \
             PollableSet.cc \
+	    value.cc
 
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
