@@ -8,7 +8,7 @@
 \author{Tristan Richardson\\
         ORL\\
         Cambridge}
-\date{15 October 1996}
+\date{22 October 1996}
 
 \begin{document}
 
@@ -349,6 +349,14 @@ links from the build tree back to the source tree.
 You should also now be able to create a similar build tree for another platform
 using the same source tree, thereby compiling for both platforms from the same
 source files.
+
+For all but the most trivial of examples, your source tree will actually be a
+proper tree with several levels of subdirectories.  In this case each build
+tree needs to have the same directory structure as your source tree.  The
+``{\tt oshadow}'' utility can be used for this purpose.  Essentially it is just
+like ``{\tt lndir}'' but without the symbolic links.  When run at the top of an
+OMNI build tree, it uses the config/sources file to work out which directory
+you are likely to want to shadow.
 
 \section{Creating an import/export tree}
 
