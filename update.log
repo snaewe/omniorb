@@ -1,3 +1,40 @@
+Sat Aug 14 17:40:58 BST 1999 sll
+================================
+
+- Merge updates for non-supported platforms: HPUX, Irix, OpenVMS, AIX
+  All are just compiler flag or workarounds for specific compilers.
+
+idl/ir.idl
+include/omniORB2/CORBA.h
+include/omniORB2/CORBA_basetypes.h
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/bufferedStream.h
+include/omniORB2/seqtemplates.h
+include/omniORB2/templatedecls.h
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/gatekeepers/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+
+
+Sat Aug 14 17:34:31 BST 1999 sll
+================================
+
+- Merged changes necessary to support the python binding.
+  (omni::locateObject no longer throw an exception when the object is not
+   found. It returns a nil pointer instead.)
+
+include/omniORB2/omniInternal.h
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/ropeFactory.cc
+src/lib/omniORB2/orbcore/unshared.cc
+src/lib/omniORB2/orbcore/objectRef.cc
+
+
+
 Mon Aug  9 12:20:28 BST 1999 sll
 ================================
 
