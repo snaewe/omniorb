@@ -1,3 +1,11 @@
+Wed Nov  1 11:20:52 GMT 2000 dpg1
+=================================
+
+- Cut-and-paste error in wstring type creation
+
+src/tool/omniidl/python/omniidl/idltype.py
+
+
 Tue Oct 24 10:44:08 BST 2000 dpg1
 =================================
 
