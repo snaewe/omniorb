@@ -13,12 +13,18 @@
 
 /*
  $Log$
- Revision 1.10  1997/03/26 17:32:38  ewc
- Runtime converted to Win32 DLL
+ Revision 1.11  1997/04/23 14:00:47  sll
+ Added BOA_var and ORB_var.
 
- Revision 1.8  1997/03/14 10:18:29  sll
- operator->() in T_var types is const. Fixed.
-
+ * Revision 1.10  1997/03/26  17:32:38  ewc
+ * Runtime converted to Win32 DLL
+ *
+ * Revision 1.9  1997/03/19  18:54:04  sll
+ * Status is now typedef to void*.
+ *
+ * Revision 1.8  1997/03/14  10:18:29  sll
+ * operator->() in T_var types is const. Fixed.
+ *
  * Revision 1.7  1997/03/09  14:42:50  sll
  * String_var and Object_var can now be passed directly as arguments
  * to operations that have string and Object as INOUT and OUT parameters.
@@ -50,7 +56,6 @@
 #include <omniORB2/omniInternal.h>
 
 #include <omniORB2/omniORB.h>
-
 
 class _OMNIORB2_NTDLL_ CORBA {
 
@@ -872,7 +877,7 @@ typedef _CORBA_Double  Double;
 
     void obj_is_ready(Object_ptr, ImplementationDef_ptr p=0);
 
-    static BOA_ptr _duplicate(BOA_ptr p);
+    static BOA_ptr _duplicate(BOA_ptr);
     static BOA_ptr _nil();
 
     static BOA_ptr getBOA();
@@ -1036,8 +1041,8 @@ typedef _CORBA_Double  Double;
   static Boolean is_nil(Context_ptr);
   static Boolean is_nil(Principal_ptr);
   static inline Boolean is_nil(Object_ptr o) { return o->NP_is_nil(); }
-  static Boolean is_nil(BOA_ptr);
-  static Boolean is_nil(ORB_ptr);
+  static Boolean is_nil(BOA_ptr p);
+  static Boolean is_nil(ORB_ptr p);
   static Boolean is_nil(NamedValue_ptr);
   static Boolean is_nil(NVList_ptr);
   static Boolean is_nil(Request_ptr);
@@ -1224,6 +1229,73 @@ private:
   private:
     Object_OUT_arg();
   };
+
+  class BOA_var {
+  public:
+    inline BOA_var() : pd_boaref(BOA::_nil()) {}
+    inline BOA_var(BOA_ptr p) { pd_boaref = p; }
+    inline ~BOA_var() {
+      if (!CORBA::is_nil(pd_boaref)) {
+	CORBA::release(pd_boaref);
+      }
+    }
+    inline BOA_var(const BOA_var& p) { 
+      pd_boaref = BOA::_duplicate(p.pd_boaref); 
+    }
+    inline BOA_var& operator= (BOA_ptr p) {
+      if (!CORBA::is_nil(pd_boaref)) {
+	CORBA::release(pd_boaref);
+      }
+      pd_boaref = p; 
+      return *this; 
+    }
+    inline BOA_var& operator= (const BOA_var& p) {
+      if (!CORBA::is_nil(pd_boaref)) {
+	CORBA::release(pd_boaref);
+      }
+      pd_boaref = BOA::_duplicate(p.pd_boaref);
+      return *this;
+    }
+    inline BOA_ptr operator->() const { return (BOA_ptr)pd_boaref; }
+    inline operator BOA_ptr() const { return pd_boaref; }
+
+  private:
+    BOA_ptr pd_boaref;
+  };
+
+  class ORB_var {
+  public:
+    inline ORB_var() : pd_orbref(ORB::_nil()) {}
+    inline ORB_var(ORB_ptr p) { pd_orbref = p; }
+    inline ~ORB_var() {
+      if (!CORBA::is_nil(pd_orbref)) {
+	CORBA::release(pd_orbref);
+      }
+    }
+    inline ORB_var(const ORB_var& p) { 
+      pd_orbref = ORB::_duplicate(p.pd_orbref); 
+    }
+    inline ORB_var& operator= (ORB_ptr p) { 
+      if (!CORBA::is_nil(pd_orbref)) {
+	CORBA::release(pd_orbref);
+      }
+      pd_orbref = p; 
+      return *this; 
+    }
+    inline ORB_var& operator= (const ORB_var& p) {
+      if (!CORBA::is_nil(pd_orbref)) {
+	CORBA::release(pd_orbref);
+      }
+      pd_orbref = ORB::_duplicate(p.pd_orbref);
+      return *this;
+    }
+    inline ORB_ptr operator->() const { return (ORB_ptr)pd_orbref; }
+    inline operator ORB_ptr() const { return pd_orbref; }
+
+  private:
+    ORB_ptr pd_orbref;
+  };
+
 };
 
 
