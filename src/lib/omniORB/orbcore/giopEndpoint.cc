@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2001/08/24 16:45:42  sll
+  Switch to use Winsock 2. Moved winsock initialisation to this module.
+
   Revision 1.1.2.10  2001/08/23 16:00:50  sll
   Added method in giopTransportImpl to return the addresses of the host
   interfaces.
@@ -244,7 +247,7 @@ giopConnection::incrRefCount() {
 ////////////////////////////////////////////////////////////////////////
 int
 giopConnection::decrRefCount(CORBA::Boolean forced) {
-  
+
   if (!forced) {
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
   }
@@ -299,7 +302,7 @@ CORBA::UShort   orbParameters::unixTransportPermission = 0777;
 class unixTransportDirectoryHandler : public orbOptions::Handler {
 public:
 
-  unixTransportDirectoryHandler() : 
+  unixTransportDirectoryHandler() :
     orbOptions::Handler("unixTransportDirectory",
 			"unixTransportDirectory = <dir name>",
 			1,
@@ -314,7 +317,7 @@ public:
 
     CORBA::String_var kv;
     CORBA::ULong l;
-    
+
     const char* format = "unixTransportDirectory = %s";
 
     l = strlen(format) + strlen(orbParameters::unixTransportDirectory);
@@ -333,7 +336,7 @@ static unixTransportDirectoryHandler unixTransportDirectoryHandler_;
 class unixTransportPermissionHandler : public orbOptions::Handler {
 public:
 
-  unixTransportPermissionHandler() : 
+  unixTransportPermissionHandler() :
     orbOptions::Handler("unixTransportPermission",
 			"unixTransportPermission = <mode bits in octal radix>",
 			1,
@@ -354,7 +357,7 @@ public:
 
     CORBA::String_var kv;
     CORBA::ULong l;
-    
+
     const char* format = "unixTransportPermission = %4o";
 
     l = strlen(format) + 10;
@@ -381,9 +384,38 @@ public:
     orbOptions::singleton().registerHandler(unixTransportPermissionHandler_);
   }
 
-  void attach() { 
+  void attach() {
     static CORBA::Boolean once = 0;
     if (once) return;
+
+#ifdef __WIN32__
+
+    // Initialize WinSock:
+
+    WORD versionReq;
+    WSADATA wData;
+    versionReq = MAKEWORD(2, 0);  // Must use 2.2 in order to use
+                                  // SIO_ADDRESS_LIST_QUERY
+
+    int rc = WSAStartup(versionReq, &wData);
+
+    if (rc != 0) {
+	    // Couldn't find a usable DLL.
+	    OMNIORB_THROW(INITIALIZE,INITIALIZE_FailedLoadLibrary,
+	                  CORBA::COMPLETED_NO);
+	  }
+
+    // Confirm that the returned Windows Sockets DLL supports 2.0
+
+    if ( LOBYTE( wData.wVersion ) != 2 ||
+         HIBYTE( wData.wVersion ) != 0 )  {
+	    // Couldn't find a usable DLL
+	    WSACleanup();
+	    OMNIORB_THROW(INITIALIZE,INITIALIZE_FailedLoadLibrary,
+		                 CORBA::COMPLETED_NO);
+    }
+
+#endif
 
     giopTransportImpl* impl = implHead();
     while (impl) {
