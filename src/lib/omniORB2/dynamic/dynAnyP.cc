@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.4  1998/08/26 11:12:22  sll
+   Minor updates to remove warnings when compiled with standard C++ compilers.
+
    Revision 1.3  1998/08/25 18:52:39  sll
    Added sign-unsigned castings to keep gcc-2.7.2 and egcs happy.
 
@@ -292,12 +295,25 @@ dynAnyP::currentComponentFromBasetype(CORBA::TCKind k,Bval& v)
 	v.ulv >>= pd_buf;
 	break;
 #ifndef NO_FLOAT
+#ifndef USING_PROXY_FLOAT
       case CORBA::tk_float:
 	v.fv >>= pd_buf;
 	break;
       case CORBA::tk_double:
 	v.dv >>= pd_buf;
 	break;
+#else
+      case CORBA::tk_float: {
+	CORBA::Float tmp(v.fv);
+	tmp >>=3D pd_buf;
+      } 
+      break;
+      case CORBA::tk_double: {
+	CORBA::Double tmp(v.dv);
+	tmp >>=3D pd_buf;
+      } 
+      break;
+#endif
 #endif
       case CORBA::tk_boolean:
 	v.bv >>= pd_buf;
@@ -392,12 +408,27 @@ dynAnyP::currentComponentToBasetype(CORBA::TCKind k,Bval& v)
 	v.ulv <<= pd_buf;
 	break;
 #ifndef NO_FLOAT
+#ifndef USING_PROXY_FLOAT
       case CORBA::tk_float:
 	v.fv <<= pd_buf;
 	break;
       case CORBA::tk_double:
 	v.dv <<= pd_buf;
 	break;
+#else
+      case CORBA::tk_float: {
+	CORBA::Float tmp;
+	tmp <<=3D pd_buf;
+	v.fv =3D tmp;
+      } 
+      break;
+      case CORBA::tk_double: {
+	CORBA::Double tmp;
+	tmp <<=3D pd_buf;
+	v.dv =3D tmp;
+      } 
+      break;
+#endif
 #endif
       case CORBA::tk_boolean:
 	v.bv <<= pd_buf;
@@ -972,9 +1003,7 @@ dynAnyP::beginReadComponent()
     case Invalid:
       return 0;
     }
-#ifdef NEED_DUMMY_RETURN
    return 0;
-#endif
 }
 
 void
@@ -1026,9 +1055,7 @@ dynAnyP::beginWriteComponent()
     case Invalid:
       return 0;
     }
-#ifdef NEED_DUMMY_RETURN
    return 0;
-#endif
 }
 
 void
