@@ -1,4 +1,14 @@
 
+Thu Feb 11 13:17:41 GMT 1999 djr
+================================
+
+- Fixed bugs in Any insertion/extraction of object references.
+
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/anyP.h
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Wed Feb 10 15:15:01 GMT 1999 djr
 ================================
 
