@@ -1,15 +1,7 @@
 SUBDIRS = ast driver fe narrow util omniORB2_be
 
-OBJ_LIBS = \
-           omniORB2_be/$(patsubst %,$(LibPattern),omniORB2_be) \
-           fe/$(patsubst %,$(LibPattern),fe) \
-           ast/$(patsubst %,$(LibPattern),ast) \
-           util/$(patsubst %,$(LibPattern),util) \
-           narrow/$(patsubst %,$(LibPattern),narrow)
-
 ifdef Win32Platform
-DRV_OBJS = \
-                driver/drv_init.o \
+DRV_OBJS =      driver/drv_init.o \
                 driver/drv_private.o \
                 driver/drv_main.o \
                 driver/drv_args.o \
@@ -17,15 +9,23 @@ DRV_OBJS = \
                 driver/drv_link.o \
                 driver/drv_preproc.o
 
-LIBS = advapi32.lib $(OBJ_LIBS)
+LIBS = advapi32.lib
 
 else
 
-OBJ_LIBS += driver/$(patsubst %,$(LibPattern),drv)
-
-LIBS = $(OBJ_LIBS)
+OBJ_LIBS = driver/$(patsubst %,$(LibPattern),drv)
 
 endif
+
+OBJ_LIBS += \
+           omniORB2_be/$(patsubst %,$(LibPattern),omniORB2_be) \
+           fe/$(patsubst %,$(LibPattern),fe) \
+           ast/$(patsubst %,$(LibPattern),ast) \
+           util/$(patsubst %,$(LibPattern),util) \
+           narrow/$(patsubst %,$(LibPattern),narrow)
+
+LIBS += $(OBJ_LIBS)
+
 
 all::
 	@$(MakeSubdirs)
