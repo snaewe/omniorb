@@ -59,6 +59,12 @@
 #include <pthread/mit/sys/timers.h>
 #endif
 
+#if defined(__irix__) && defined(PthreadSupportThreadPriority)
+#if _POSIX_THREAD_PRIORITY_SCHEDULING
+#include <sched.h>
+#endif
+#endif
+
 #define DB(x) // x
 //#include <iostream.h> or #include <iostream> if DB is on.
 
