@@ -1,11 +1,17 @@
+
 CXXSRCS = anyExample_impl.cc anyExample_clt.cc
 
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
 CORBA_INTERFACES = anyExample
 
+# -b tells the compiler to generate BOA skeletons
+OMNIORB_IDL += -b
+
+
 anyExample_impl   = $(patsubst %,$(BinPattern),anyExample_impl)
 anyExample_clt    = $(patsubst %,$(BinPattern),anyExample_clt)
+
 
 all:: $(anyExample_impl) $(anyExample_clt)
 
