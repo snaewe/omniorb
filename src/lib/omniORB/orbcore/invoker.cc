@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2002/09/10 23:17:11  dgrisby
+  Thread interceptors.
+
   Revision 1.1.2.4  2002/02/25 11:18:02  dpg1
   Avoid thread churn in invoker.
 
@@ -69,11 +72,30 @@
 */
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/omniInterceptors.h>
 #include <omniORB4/omniAsyncInvoker.h>
+#include <interceptors.h>
 #include <stdlib.h>
 
+OMNI_USING_NAMESPACE(omni);
 
 unsigned int omniAsyncInvoker::idle_timeout = 10;
+
+class omniAsyncWorker;
+
+class omniAsyncWorkerInfo
+  : public omniInterceptors::createThread_T::info_T {
+public:
+  omniAsyncWorkerInfo(omniAsyncWorker* worker) :
+    pd_worker(worker), pd_elmt(omniInterceptorP::createThread) {}
+
+  void run();
+
+private:
+  omniAsyncWorker*        pd_worker;
+  omniInterceptorP::elmT* pd_elmt;
+};
+
 
 class omniAsyncWorker : public omni_thread {
 public:
@@ -104,6 +126,11 @@ public:
   }
 
   void run(void*) {
+    omniAsyncWorkerInfo info(this);
+    info.run();
+  }
+
+  void real_run() {
 
     if (omniORB::trace(10)) {
       omni_tracedmutex_lock sync(*pd_pool->pd_lock);
@@ -185,6 +212,20 @@ private:
   omniAsyncWorker(const omniAsyncWorker&);
   omniAsyncWorker& operator=(const omniAsyncWorker&);
 };
+
+void
+omniAsyncWorkerInfo::run()
+{
+  if (pd_elmt) {
+    omniInterceptors::createThread_T::interceptFunc f =
+      (omniInterceptors::createThread_T::interceptFunc)pd_elmt->func;
+    pd_elmt = pd_elmt->next;
+    f(*this);
+  }
+  else
+    pd_worker->real_run();
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////

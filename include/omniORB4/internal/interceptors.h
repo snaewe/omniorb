@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2002/09/10 23:17:11  dgrisby
+  Thread interceptors.
+
   Revision 1.1.2.1  2002/03/27 11:44:51  dpg1
   Check in interceptors things left over from last week.
 
@@ -67,6 +70,8 @@ public:
   static _core_attr elmT* serverSendException;
   static _core_attr elmT* createIdentity;
   static _core_attr elmT* createORBServer;
+  static _core_attr elmT* createThread;
+  static _core_attr elmT* assignUpcallThread;
 
 #define VISIT_FUNCTION(name) \
   static inline void visit(omniInterceptors::name##_T::info_T& info) { \

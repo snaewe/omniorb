@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2002/09/10 23:17:11  dgrisby
+  Thread interceptors.
+
   Revision 1.1.4.2  2001/07/13 15:21:22  sll
   Added access functions.
 
@@ -51,6 +54,7 @@ public:
 	     CORBA::Boolean singleshot=0);
 
   void execute();
+  void real_execute();
 
   void terminate();
   // finish off this task, call by another thread.

@@ -1,3 +1,23 @@
+Wed Sep 11 00:11:18 BST 2002 dgrisby
+====================================
+
+- Thread interceptors.
+
+doc/omniORB.pdf
+doc/omniORB.ps
+doc/omniORB/omniORB006.html
+doc/omniORB/omniORB010.html
+doc/omniORB/omniORB011.html
+doc/tex/omniORB.tex
+include/omniORB4/omniInterceptors.h
+include/omniORB4/omniORBcompat.h
+include/omniORB4/internal/giopWorker.h
+include/omniORB4/internal/interceptors.h
+src/lib/omniORB/orbcore/giopWorker.cc
+src/lib/omniORB/orbcore/interceptors.cc
+src/lib/omniORB/orbcore/invoker.cc
+
+
 Mon Sep  9 22:57:44 BST 2002 dgrisby
 ====================================
 

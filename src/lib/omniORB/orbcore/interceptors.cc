@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/09/10 23:17:11  dgrisby
+  Thread interceptors.
+
   Revision 1.1.2.5  2002/03/27 11:44:52  dpg1
   Check in interceptors things left over from last week.
 
@@ -71,6 +74,8 @@ omniInterceptorP::elmT* omniInterceptorP::serverSendReply        = 0;
 omniInterceptorP::elmT* omniInterceptorP::serverSendException    = 0;
 omniInterceptorP::elmT* omniInterceptorP::createIdentity         = 0;
 omniInterceptorP::elmT* omniInterceptorP::createORBServer        = 0;
+omniInterceptorP::elmT* omniInterceptorP::createThread           = 0;
+omniInterceptorP::elmT* omniInterceptorP::assignUpcallThread     = 0;
 
 
 static void list_add(omniInterceptorP::elmT** ep, void* func)
@@ -129,6 +134,8 @@ INTERCEPTOR_IMPLEMENTATION(serverSendReply)
 INTERCEPTOR_IMPLEMENTATION(serverSendException)
 INTERCEPTOR_IMPLEMENTATION(createIdentity)
 INTERCEPTOR_IMPLEMENTATION(createORBServer)
+INTERCEPTOR_IMPLEMENTATION(createThread)
+INTERCEPTOR_IMPLEMENTATION(assignUpcallThread)
 
 #undef INTERCEPTOR_IMPLEMENTATION
 
@@ -159,6 +166,8 @@ public:
       list_del(&omniInterceptorP::serverSendException);
       list_del(&omniInterceptorP::createIdentity);
       list_del(&omniInterceptorP::createORBServer);
+      list_del(&omniInterceptorP::createThread);
+      list_del(&omniInterceptorP::assignUpcallThread);
     }
   }
 

@@ -4663,7 +4663,7 @@ class omniInterceptors {
 \end{cxxlisting}
 
 \noindent You can see that the interceptors themselves are functions
-which take the \code{info\_T} object as their argument and return
+that take the \code{info\_T} object as their argument and return
 boolean. Interceptors are called in the order they are registered;
 normally, all interceptor functions return true, meaning that
 processing should continue with subsequent interceptors. If an
@@ -4680,8 +4680,9 @@ header files within \file{include/omniORB4} and
 
 All the interceptor singletons are registered within another singleton
 object of class \code{omniInterceptors}. You retrieve a pointer to
-that singleton with the \op{omniORB::\dsc{}getInterceptors} function.
-The code to register an interceptor looks, for example, like:
+that singleton with the \op{omniORB::\dsc{}getInterceptors} function,
+which must be called after \op{CORBA::ORB\_init}, but before the ORB
+is used. The code to register an interceptor looks, for example, like:
 
 \begin{cxxlisting}
 omniInterceptors* interceptors = omniORB::getInterceptors();
@@ -4767,6 +4768,56 @@ will need to do this.
 Used internally by the ORB to register different kinds of server. At
 present, only a GIOP server is registered. It is very unlikely that
 application code will need to do this.
+
+
+\item[createThread]\mbox{}\\
+%
+Called whenever the ORB creates a thread. The \type{info\_T} class for
+this interceptor is
+
+\begin{cxxlisting}
+    class info_T {
+    public:
+      virtual void run() = 0;
+    };
+\end{cxxlisting}
+
+\noindent
+The interceptor function is called in the context of the newly created
+thread. The function \emph{must} call the \type{info\_T}'s \op{run}
+method, to pass control to the thread body. \op{run} returns just
+before the thread exits. This arrangement allows the interceptor to
+initialise some per-thread state before the thread body runs, then
+release it just before the thread exits.
+
+
+\item[assignUpcallThread]\mbox{}\\
+%
+The ORB maintains a general thread pool, from which threads are drawn
+for various purposes. One purpose is for performing upcalls to
+application code, in response to incoming CORBA calls. The
+assignUpcallThread interceptor is called when a thread is assigned to
+perform upcalls. In the thread per connection model, the thread stays
+assigned to performing upcalls for the entire lifetime of the
+underlying network connection; in the thread pool model, threads are
+assigned for upcalls on a per call basis, so this interceptor is
+triggered for every incoming call\footnote{Except that with the
+threadPoolWatchConnection parameter set true, a thread can perform
+multiple upcalls even when thread pool mode is active.}. As with the
+createThread interceptor, the interceptor function must call the
+\type{info\_T}'s \op{run} method to pass control to the upcall.
+
+When a thread finishes its assignment of processing upcalls, it
+returns to the pool (even in thread per connection mode), so the same
+thread can be reassigned to perform more upcalls, or reused for a
+different purpose.
+
+Unlike the other interceptors, the interceptor functions for
+createThread and assignUpcallThread have no return value. Interceptor
+chaining is performed by calls through the \op{info\_T::run} method,
+rather than by visiting interceptor functions in turn.
+
+
 
 \end{description}
 

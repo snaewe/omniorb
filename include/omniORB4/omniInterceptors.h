@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2002/09/10 23:17:10  dgrisby
+  Thread interceptors.
+
   Revision 1.1.2.6  2002/08/16 16:03:30  dgrisby
   Interceptor tweaks.
 
@@ -290,6 +293,37 @@ public:
   };
 
   //////////////////////////////////////////////////////////////////
+  class createThread_T {
+  public:
+    
+    class info_T {
+    public:
+      virtual void run() = 0;
+    };
+
+    typedef void (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+  };
+
+  //////////////////////////////////////////////////////////////////
+  class assignUpcallThread_T {
+  public:
+    
+    class info_T {
+    public:
+      virtual void run() = 0;
+    };
+
+    typedef void (*interceptFunc)(info_T& info);
+
+    void add(interceptFunc);
+    void remove(interceptFunc);
+  };
+
+
+  //////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////
   encodeIOR_T                encodeIOR;
   decodeIOR_T                decodeIOR;
@@ -301,6 +335,8 @@ public:
   serverSendException_T      serverSendException;
   createIdentity_T           createIdentity;
   createORBServer_T          createORBServer;
+  createThread_T             createThread;
+  assignUpcallThread_T       assignUpcallThread;
 
   //////////////////////////////////////////////////////////////////
   friend class omni_interceptor_initialiser;

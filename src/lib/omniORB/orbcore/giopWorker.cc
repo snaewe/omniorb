@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2002/09/10 23:17:11  dgrisby
+  Thread interceptors.
+
   Revision 1.1.4.7  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -58,6 +61,8 @@
 */
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/omniInterceptors.h>
+#include <interceptors.h>
 #include <invoker.h>
 #include <giopServer.h>
 #include <giopWorker.h>
@@ -68,6 +73,34 @@
 
 OMNI_NAMESPACE_BEGIN(omni)
 
+
+class giopWorkerInfo
+  : public omniInterceptors::assignUpcallThread_T::info_T {
+public:
+  giopWorkerInfo(giopWorker* worker) :
+    pd_worker(worker), pd_elmt(omniInterceptorP::assignUpcallThread) {}
+
+  void run();
+  
+private:
+  giopWorker*             pd_worker;
+  omniInterceptorP::elmT* pd_elmt;
+};
+
+void
+giopWorkerInfo::run()
+{
+  if (pd_elmt) {
+    omniInterceptors::assignUpcallThread_T::interceptFunc f =
+      (omniInterceptors::assignUpcallThread_T::interceptFunc)pd_elmt->func;
+    pd_elmt = pd_elmt->next;
+    f(*this);
+  }
+  else
+    pd_worker->real_execute();
+}
+
+
 giopWorker::giopWorker(giopStrand* r, giopServer* s, CORBA::Boolean h) :
     omniTask(((h)?omniTask::AnyTime:omniTask::ImmediateDispatch)),
     pd_strand(r),
@@ -77,11 +110,14 @@ giopWorker::giopWorker(giopStrand* r, giopServer* s, CORBA::Boolean h) :
 void
 giopWorker::execute()
 {
-  omniORB::logs(25, "giopWorker task execute.");
+  giopWorkerInfo info(this);
+  info.run();
+}
 
-  // XXX We do not call  omniORB::giopServerThreadWrapper here.
-  //     Should be replaced by an interceptor called before dispatching the
-  //     upcall.
+void
+giopWorker::real_execute()
+{
+  omniORB::logs(25, "giopWorker task execute.");
 
   CORBA::Boolean exit_on_error;
 
