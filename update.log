@@ -1,3 +1,11 @@
+Tue May 28 23:04:48 BST 2002 dgrisby
+====================================
+
+- Incorrect repoIds.
+
+src/lib/omniORB2/orbcore/poastubs.cc
+
+
 Wed May 15 18:31:33 BST 2002 dgrisby
 ====================================
 

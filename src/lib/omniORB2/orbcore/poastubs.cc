@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.6  2002/05/28 22:07:47  dgrisby
+  Incorrect repoIds.
+
   Revision 1.1.2.5  2000/01/27 10:55:47  djr
   Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
   fqname for base class constructor for some compilers.
@@ -93,7 +96,7 @@ const PortableServer::ForwardRequest* PortableServer::ForwardRequest::_downcast(
   return (const ForwardRequest*) _NP_is_a(e, "Exception/UserException/PortableServer::ForwardRequest");
 }
 
-const char* PortableServer::ForwardRequest::_PD_repoId = "IDL:omg.org/PortableServer/ForwardRequest:2.3";
+const char* PortableServer::ForwardRequest::_PD_repoId = "IDL:omg.org/PortableServer/ForwardRequest:1.0";
 
 CORBA::Exception* PortableServer::ForwardRequest::_NP_duplicate() const {
   return new ForwardRequest(*this);
@@ -104,8 +107,8 @@ const char* PortableServer::ForwardRequest::_NP_typeId() const {
 }
 
 const char* PortableServer::ForwardRequest::_NP_repoId(int* _size) const {
-  *_size = sizeof("IDL:omg.org/PortableServer/ForwardRequest:2.3");
-  return "IDL:omg.org/PortableServer/ForwardRequest:2.3";
+  *_size = sizeof("IDL:omg.org/PortableServer/ForwardRequest:1.0");
+  return "IDL:omg.org/PortableServer/ForwardRequest:1.0";
 }
 
 void PortableServer::ForwardRequest::_NP_marshal(NetBufferedStream& _s) const {
@@ -215,7 +218,7 @@ PortableServer::AdapterActivator::_nil()
 }
 
 
-const char* PortableServer::AdapterActivator::_PD_repoId = "IDL:omg.org/PortableServer/AdapterActivator:2.3";
+const char* PortableServer::AdapterActivator::_PD_repoId = "IDL:omg.org/PortableServer/AdapterActivator:1.0";
 
 
 PortableServer::_objref_AdapterActivator::~_objref_AdapterActivator() {}
@@ -399,7 +402,7 @@ PortableServer::ServantManager::_nil()
 }
 
 
-const char* PortableServer::ServantManager::_PD_repoId = "IDL:omg.org/PortableServer/ServantManager:2.3";
+const char* PortableServer::ServantManager::_PD_repoId = "IDL:omg.org/PortableServer/ServantManager:1.0";
 
 
 PortableServer::_objref_ServantManager::~_objref_ServantManager() {}
@@ -545,7 +548,7 @@ PortableServer::ServantActivator::_nil()
 }
 
 
-const char* PortableServer::ServantActivator::_PD_repoId = "IDL:omg.org/PortableServer/ServantActivator:2.3";
+const char* PortableServer::ServantActivator::_PD_repoId = "IDL:omg.org/PortableServer/ServantActivator:1.0";
 
 
 PortableServer::_objref_ServantActivator::~_objref_ServantActivator() {}
@@ -776,7 +779,7 @@ PortableServer::ServantLocator::_nil()
 }
 
 
-const char* PortableServer::ServantLocator::_PD_repoId = "IDL:omg.org/PortableServer/ServantLocator:2.3";
+const char* PortableServer::ServantLocator::_PD_repoId = "IDL:omg.org/PortableServer/ServantLocator:1.0";
 
 
 PortableServer::_objref_ServantLocator::~_objref_ServantLocator() {}
