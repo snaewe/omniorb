@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.27  1998/10/20 15:58:58  sll
+ Added support for Alpha NT.
+
  Revision 1.26  1998/10/08 10:53:19  sll
  Disable MSVC++ warnings C4768 and C4250.
 
@@ -227,7 +230,9 @@
 #define _OMNIORB_HOST_BYTE_ORDER_ 1
 #elif defined(__alpha__) && !defined(__VMS)
 #define _OMNIORB_HOST_BYTE_ORDER_ 1
+#if !defined(__WIN32__)
 #define _HAS_SIGNAL 1
+#endif
 #elif defined(__sunos__) && defined(__sparc__)
 #define _OMNIORB_HOST_BYTE_ORDER_ 0
 #define _HAS_SIGNAL 1
