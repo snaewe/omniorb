@@ -29,4 +29,4 @@
 #define ENABLE_CLIENT_IR_SUPPORT
 # include <omniORB3/CORBA.h>
 # include <omniORB3/callDescriptor.h>
-# include <../corbaidlSK.cc>
+# include <omniORB3/corbaidlSK.cc>

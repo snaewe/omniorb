@@ -4,42 +4,60 @@
 #SUBDIRS = orbcore dynamic lifecycle
 SUBDIRS = omniidl_be orbcore dynamic
 
+STUBHEADERS = omniORB3/Naming.hh \
+              omniORB3/bootstrap.hh \
+              omniORB3/corbaidl_defs.hh \
+              omniORB3/corbaidl_operators.hh \
+              omniORB3/corbaidl_poa.hh \
+              omniORB3/ir_defs.hh \
+              omniORB3/ir_operators.hh \
+              omniORB3/ir_poa.hh \
+              omniORB3/omniLifeCycle.hh
 
-all:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh omniLifeCycle.hh
+
+all:: $(STUBHEADERS)
 
 
-export:: Naming.hh
-	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
+export:: omniORB3/Naming.hh
+	@(file="omniORB3/Naming.hh"; \
+          dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
 		$(ExportFileToDir))
 
-export:: bootstrap.hh
+export:: omniORB3/bootstrap.hh
 
-export:: ir_defs.hh
-	@(file="ir_defs.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
+export:: omniORB3/ir_defs.hh
+	@(file="omniORB3/ir_defs.hh"; \
+          dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3";\
 		$(ExportFileToDir))
 
-export:: ir_operators.hh
-	@(file="ir_operators.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
+export:: omniORB3/ir_operators.hh
+	@(file="omniORB3/ir_operators.hh"; \
+          dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
 		$(ExportFileToDir))
 
-export:: ir_poa.hh
-	@(file="ir_poa.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
+export:: omniORB3/ir_poa.hh
+	@(file="omniORB3/ir_poa.hh"; \
+          dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
 		$(ExportFileToDir))
 
-export:: corbaidl_defs.hh
-	@(file="corbaidl_defs.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
+export:: omniORB3/corbaidl_defs.hh
+	@(file="omniORB3/corbaidl_defs.hh"; \
+          dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
 		$(ExportFileToDir))
 
-export:: corbaidl_operators.hh
-	@(file="corbaidl_operators.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
+export:: omniORB3/corbaidl_operators.hh
+	@(file="omniORB3/corbaidl_operators.hh"; \
+          dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
 		$(ExportFileToDir))
 
-export:: corbaidl_poa.hh
-	@(file="corbaidl_poa.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
+export:: omniORB3/corbaidl_poa.hh
+	@(file="omniORB3/corbaidl_poa.hh"; \
+          dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
 		$(ExportFileToDir))
 
-export:: omniLifeCycle.hh
-	@(file="omniLifeCycle.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
+export:: omniORB3/omniLifeCycle.hh
+	@(file="omniORB3/omniLifeCycle.hh"; \
+          dir="$(EXPORT_TREE)/$(INCDIR)/omniORB3"; \
 		$(ExportFileToDir))
 
 
@@ -58,38 +76,32 @@ ifndef OMNIORB_IDL_FPATH
 OMNIORB_IDL_FPATH = $(OMNIORB_IDL)
 endif
 
-OMNIORB_IDL_FPATH += -p$(BASE_OMNI_TREE)/src/lib/omniORB2
+OMNIORB_IDL_FPATH += -p$(BASE_OMNI_TREE)/src/lib/omniORB2 
 
-Naming.hh NamingSK.cc NamingDynSK.cc: Naming.idl
-	-if [ "$<" != Naming.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB_IDL_FPATH) Naming.idl
+omniORB3/Naming.hh : Naming.idl
+	@(dir=omniORB3; $(CreateDir))
+	$(OMNIORB_IDL_FPATH) -ComniORB3 $<
 
-bootstrap.hh bootstrapSK.cc bootstrapDynSK.cc: bootstrap.idl
-	-if [ "$<" != bootstrap.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB_IDL_FPATH) bootstrap.idl
+omniORB3/bootstrap.hh : bootstrap.idl
+	@(dir=omniORB3; $(CreateDir))
+	$(OMNIORB_IDL_FPATH) -ComniORB3 $<
 
-ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc: ir.idl corbaidl_defs.hh
-	-if [ "$<" != ir.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB_IDL_FPATH) -WbF -I. ir.idl
+omniORB3/ir_defs.hh omniORB3/ir_oprators.hh omniORB3/ir_poa.hh: ir.idl
+	@(dir=omniORB3; $(CreateDir))
+	$(OMNIORB_IDL_FPATH) -WbF $(IMPORT_IDLFLAGS) -ComniORB3 $<
 
-corbaidl_defs.hh corbaidl_operators.hh corbaidlSK.cc corbaidlDynSK.cc: corbaidl.idl
-	-if [ "$<" != corbaidl.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB_IDL_FPATH) -WbF corbaidl.idl
+omniORB3/corbaidl_defs.hh corbaidl_operators.hh corbaidl_poa.hh: corbaidl.idl
+	@(dir=omniORB3; $(CreateDir))
+	$(OMNIORB_IDL_FPATH) -WbF -ComniORB3 $<
 
-omniLifeCycle.hh omniLifeCycleSK.cc omniLifeCycleDynSK.cc: omniLifeCycle.idl
-	-if [ "$<" != omniLifeCycle.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB_IDL_FPATH) omniLifeCycle.idl
+omniORB3/omniLifeCycle.hh : omniLifeCycle.idl
+	@(dir=omniORB3; $(CreateDir))
+	$(OMNIORB_IDL_FPATH) -ComniORB3 $<
 
-ciao:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh omniLifeCycle.hh
+ciao:: $(STUBHEADERS)
 	@$(MakeSubdirs)
 
 lastveryclean::
-	$(RM)	Naming.idl Naming.hh NamingSK.cc NamingDynSK.cc \
-		bootstrap.idl bootstrap.hh bootstrapSK.cc bootstrapDynSK.cc \
-		ir.idl ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc \
-		corbaidl.idl corbaidl_defs.hh corbaidl_operators.hh \
-                corbaidlSK.cc corbaidlDynSK.cc \
-		omniLifeCycle.idl omniLifeCycle.hh omniLifeCycleSK.cc \
-			omniLifeCycleDynSK.cc
+	$(RM) $(STUBHEADERS) omniORB3/*SK.cc
 
 

@@ -1,3 +1,19 @@
+Tue Jun 27 16:26:15 BST 2000 sll
+================================
+
+- Fixes to library runtime build rules. 
+
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/initRefs.h
+src/lib/omniORB2/dynamic/Namingdynstub.cc
+src/lib/omniORB2/dynamic/bootstrapdynstub.cc
+src/lib/omniORB2/dynamic/corbaidldynstub.cc
+src/lib/omniORB2/dynamic/corbaidlstub.cc
+src/lib/omniORB2/dynamic/irdynstub.cc
+src/lib/omniORB2/dynamic/irstub.cc
+src/lib/omniORB2/orbcore/Namingstub.cc
+src/lib/omniORB2/orbcore/bootstrapstub.cc
+
 Tue Jun 27 16:21:39 BST 2000 sll
 ================================
 

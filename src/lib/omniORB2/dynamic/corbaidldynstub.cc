@@ -29,4 +29,4 @@
 #define ENABLE_CLIENT_IR_SUPPORT
 # include <omniORB3/CORBA.h>
 # include <omniORB3/tcDescriptor.h>
-# include <../corbaidlDynSK.cc>
+# include <omniORB3/corbaidlDynSK.cc>

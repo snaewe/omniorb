@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/06/27 15:33:53  sll
+  Changed #include to match the new location of the stubs.
+
   Revision 1.1.2.1  2000/04/27 10:39:18  dpg1
   Interoperable Naming Service
 
@@ -60,7 +63,7 @@
 #define __INITREFS_H__
 
 
-#include <bootstrap.hh>
+#include <omniORB3/bootstrap.hh>
 
 
 class CORBA_InitialReferences_i;
