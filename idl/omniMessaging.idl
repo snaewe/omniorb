@@ -7,9 +7,9 @@ module Messaging{
   interface ReplyHandler {};
 
   struct ExceptionHolder_base{ /* should be value */
-    boolean         is_system_exception;
-    boolean         byte_order;
-    sequence<octet> marshaled_exception;
+    boolean         pd_is_system_exception;
+    boolean         pd_byte_order;
+    sequence<octet> pd_marshaled_exception;
   };
 
 };
