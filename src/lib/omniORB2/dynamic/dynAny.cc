@@ -29,6 +29,9 @@
 
 /* 
    $Log$
+   Revision 1.3  1998/08/25 18:52:59  sll
+   Added signed-unsigned cast to keep egcs and gcc-2.7.2 happy.
+
    Revision 1.2  1998/08/14 13:45:31  sll
    Added pragma hdrstop to control pre-compile header if the compiler feature
    is available.
@@ -918,7 +921,7 @@ CORBA::Boolean
 CORBA::DynAny::seek(CORBA::Long index)
 {
   omni_mutex_lock sync(dynAnyP::lock);
-  if (index >= CvtDynAnyP()->totalComponents())
+  if ((CORBA::ULong)index >= CvtDynAnyP()->totalComponents())
     return 0;
   CvtDynAnyP()->nthComponent(index);
   return 1;
