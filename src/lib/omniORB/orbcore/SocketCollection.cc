@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/01 15:56:07  sll
+  Workaround MSVC++ bug. It generates wrong code with FD_ISSET and FD_SET
+  under certain conditions.
+
   Revision 1.1.2.1  2001/07/31 16:16:26  sll
   New transport interface to support the monitoring of active connections.
 
@@ -143,13 +147,15 @@ SocketCollection::setSelectable(SocketHandle_t sock,
     FD_SET(sock,&pd_fdset_dib);
   }
 
-  if (!FD_ISSET(sock,&pd_fdset_1))
+  if (!FD_ISSET(sock,&pd_fdset_1)) {
     pd_n_fdset_1++;
-  FD_SET(sock,&pd_fdset_1);
+    FD_SET(sock,&pd_fdset_1);
+  }
   if (now) {
-    if (!FD_ISSET(sock,&pd_fdset_2))
+    if (!FD_ISSET(sock,&pd_fdset_2)) {
       pd_n_fdset_2++;
-    FD_SET(sock,&pd_fdset_2);
+      FD_SET(sock,&pd_fdset_2);
+    }
     // XXX poke the thread doing accept to look at the fdset immediately.
   }
 
@@ -162,15 +168,18 @@ SocketCollection::clearSelectable(SocketHandle_t sock) {
 
   omni_tracedmutex_lock sync(pd_fdset_lock);
 
-  if (FD_ISSET(sock,&pd_fdset_1))
+  if (FD_ISSET(sock,&pd_fdset_1)) {
     pd_n_fdset_1--;
-  FD_CLR(sock,&pd_fdset_1);
-  if (FD_ISSET(sock,&pd_fdset_2))
+    FD_CLR(sock,&pd_fdset_1);
+  }
+  if (FD_ISSET(sock,&pd_fdset_2)) {
     pd_n_fdset_2--;
-  FD_CLR(sock,&pd_fdset_2);
-  if (FD_ISSET(sock,&pd_fdset_dib))
+    FD_CLR(sock,&pd_fdset_2);
+  }
+  if (FD_ISSET(sock,&pd_fdset_dib)) {
     pd_n_fdset_dib--;
-  FD_CLR(sock,&pd_fdset_dib);
+    FD_CLR(sock,&pd_fdset_dib);
+  }
 }
 
 #ifdef GDB_DEBUG
