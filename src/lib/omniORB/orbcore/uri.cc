@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.2.2.19  2004/09/13 09:43:11  dgrisby
+// Limited support for ssliop scheme in corbaloc. Thanks Martin Laporte.
+//
 // Revision 1.2.2.18  2003/11/20 13:39:59  dgrisby
 // corbaloc handler for Unix sockets. Uses omniunix scheme name.
 //
@@ -274,7 +277,7 @@ public:
 
     static ObjAddr* parse(const char*& c);
 
-    enum AddrKind { rir, iiop, uiop };
+    enum AddrKind { rir, iiop, uiop, ssliop };
     virtual AddrKind kind() = 0;
 
     ObjAddr* next_;
@@ -326,6 +329,15 @@ public:
     CORBA::Char       minver_;
     CORBA::String_var host_;
     CORBA::UShort     port_;
+  };
+
+  class SsliopObjAddr : public IiopObjAddr {
+  public:
+    SsliopObjAddr(const char*& c) : IiopObjAddr(c) {};
+
+    ObjAddr::AddrKind kind() { return ObjAddr::ssliop; }
+    
+  private:
   };
 
   class UiopObjAddr : public ObjAddr {
@@ -409,6 +421,10 @@ corbalocURIHandler::ObjAddr::parse(const char*& c)
   if (!strncmp(c, "iiop:", 5)) {
     c += 5;
     return new corbalocURIHandler::IiopObjAddr(c);
+  }
+  if (!strncmp(c, "ssliop:", 7)) {
+    c += 7;
+    return new corbalocURIHandler::SsliopObjAddr(c);
   }
   if (!strncmp(c, "omniunix:", 9)) {
     c += 9;
@@ -665,6 +681,7 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
       {
 	switch (addr->kind()) {
 	case ObjAddr::iiop:
+	case ObjAddr::ssliop:
 	  {
 	    IiopObjAddr* iaddr = (IiopObjAddr*)addr;
 	    addrlist[iiop_addr_count].host = iaddr->host();
@@ -675,6 +692,27 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
 	      ver.minor = iaddr->minver();
 	    }
             ++iiop_addr_count;
+            
+            if (addr->kind() == ObjAddr::ssliop) {
+	      addrlist[iiop_addr_count - 1].port = 0;
+	      ver.major = 1;
+	      ver.minor = 2;
+
+	      CORBA::ULong index = tagged_components.length();
+	      tagged_components.length(index+1);
+	      IOP::TaggedComponent& c = tagged_components[index];
+	      c.tag = IOP::TAG_SSL_SEC_TRANS;
+	      cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
+	      CORBA::UShort zero = 0;
+	      zero >>= s;
+	      zero >>= s;
+	      iaddr->port() >>= s;
+
+	      CORBA::Octet* p;
+	      CORBA::ULong max, len;
+	      s.getOctetStream(p,max,len);
+	      c.component_data.replace(max,len,p,1);
+            }
 	  }
 	  break;
 	case ObjAddr::uiop:
@@ -694,7 +732,10 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
             cdrEncapsulationStream s(CORBA::ULong(0),CORBA::Boolean(1));
             s.marshalRawString(self);
             s.marshalRawString(uiop_addr->filename());
-            CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+
+            CORBA::Octet* p;
+	    CORBA::ULong max, len;
+	    s.getOctetStream(p,max,len);
             c.component_data.replace(max,len,p,1);
 	  }
 	  break;
