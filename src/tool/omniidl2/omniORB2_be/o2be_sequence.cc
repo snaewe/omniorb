@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.16  1999/01/07 09:33:46  djr
+  Changes to support new TypeCode/Any implementation, which is now
+  placed in a new file ...DynSK.cc (by default).
+
   Revision 1.15  1998/08/19 19:12:09  sll
   Catch the illegal IDL: a sequence of exception, in the ctor. The frontend
   grammer let this go through. Should really fix the frontend.
@@ -183,7 +187,6 @@
 #define SEQUENCE_TEMPLATE_BOUNDED_ARRAY__OCTET "_CORBA_Bounded_Sequence_Array__Octet"
 #define SEQUENCE_TEMPLATE_ADPT_CLASS "_CORBA_Sequence_OUT_arg"
 
-static size_t astExpr2val(AST_Expression *v);
 
 o2be_sequence::o2be_sequence(AST_Expression *v, AST_Type *t)
 	   : AST_Sequence(v, t),
@@ -203,64 +206,8 @@ o2be_sequence::o2be_sequence(AST_Expression *v, AST_Type *t)
 				NULL),
 		      NULL)
 {
-
-  // we want a sequence to be defined in the same scope as its elements.
-  //    i.e. sequence<a::b>   ==>   a::_IDL_SEQUENCE_a_b
-  // unless its elements are pre-defined types, in which case
-  // the sequence should be defined in the global scope
-  //    e.g. sequence <long>  ==>   _IDL_SEQUENCE_long
-
-  // Sequences are always entered into idl_global->root()
-  // Determine the correct scope by looking at its elements.
-  AST_Decl *d = base_type();
-  while (d->node_type() == AST_Decl::NT_sequence)
-    {
-      o2be_sequence *s = o2be_sequence::narrow_from_decl(d);
-      d = s->base_type();
-    }
-
-  if (d->node_type() == AST_Decl::NT_except) {
-    // XXX The source contains sequence of exceptions. This is illegal syntax
-    //     but the frontend grammer let this through. For the moment, we
-    //     trap this error here.
-    idl_global->err()->syntax_error(IDL_GlobalData::PS_SequenceTypeSeen);
-    return;
-  }
-  
-  char *p,*q;
-  // Don't look for the scope name if the type is pre-defined
-  if (d->node_type() != AST_Decl::NT_pre_defined)
-    {
-      p = o2be_name::narrow_and_produce_scopename(d);
-      q = new char [strlen(p)+1];
-      strcpy(q,p);
-      set_scopename(p);
-      p = o2be_name::narrow_and_produce__scopename(d);
-      q = new char [strlen(p)+1];
-      strcpy(q,p);
-      set__scopename(p);
-    }
-  else
-    {
-      set_scopename("");
-      set__scopename("");
-    }
-  set_uqname(internal_produce_localname(o2be_sequence::IMMEDIATE_TYPE));
-  pd_effname = internal_produce_localname(o2be_sequence::EFFECTIVE_TYPE);
-  p = new char [strlen(scopename())+strlen(uqname())+1];
-  strcpy(p,scopename());
-  strcat(p,uqname());
-  set_fqname(p);
-  p = new char [strlen(_scopename())+strlen(uqname())+1];
-  strcpy(p,_scopename());
-  strcat(p,uqname());
-  set__fqname(p);
-
-  set_tcname("");
-  set_fqtcname("");
-  set__fqtcname("");
-
-  set_recursive_seq(I_FALSE);
+  pd_have_produced_tcParser_buildDesc_code = I_FALSE;
+  pd_have_calc_rec_seq_offset = I_FALSE;
 }
 
 
@@ -271,8 +218,8 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
   o2be_operation::argMapping mapping;
   o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(base_type(),
 					        o2be_operation::wIN,mapping);
-  size_t s_max = astExpr2val(max_size()); // non-zero means 
-                                          // this is a bounded seq
+  size_t s_max = bound(); // non-zero means
+                          // this is a bounded seq
   size_t dimension = 0;       // non-zero means this is a sequence of array
   size_t elmsize = 0;         // non-zero means this is a primitive type seq
   size_t alignment = 0;
@@ -650,23 +597,77 @@ o2be_sequence::seq_member_name(AST_Decl* used_in)
   return baseclassname;
 }
 
+size_t
+o2be_sequence::bound()
+{
+  AST_Expression::AST_ExprValue *v = max_size()->ev();
+
+  switch( v->et ) {
+  case AST_Expression::EV_short:
+    return (size_t)v->u.sval;
+  case AST_Expression::EV_ushort:
+    return (size_t)v->u.usval;
+  case AST_Expression::EV_long:
+    return (size_t)v->u.lval;
+  case AST_Expression::EV_ulong:
+    return (size_t)v->u.ulval;
+  default:
+    throw o2be_internal_error(__FILE__,__LINE__,
+			      "unexpected type for sequence bound");
+  }
+  return 0;
+}
+
+size_t
+calc_recursive_sequence_offset(AST_Decl *node, AST_Decl *base_type,
+			       size_t offset = 0)
+{
+  if (node == base_type)
+    return offset;
+  if (node->defined_in() == NULL)
+    return 0;
+  return calc_recursive_sequence_offset(ScopeAsDecl(node->defined_in()),
+					base_type, offset+1);
+}
+
+size_t
+o2be_sequence::recursive_sequence_offset()
+{
+  if( !pd_have_calc_rec_seq_offset ) {
+    pd_rec_seq_offset = calc_recursive_sequence_offset(this, base_type());
+    pd_have_calc_rec_seq_offset = 1;
+  }
+
+  return pd_rec_seq_offset;
+}
+
+
 void
 o2be_sequence::produce_hdr(std::fstream &s)
 {
 }
+
 
 void
 o2be_sequence::produce_skel(std::fstream &s)
 {  
 }
 
+
+void
+o2be_sequence::produce_dynskel(std::fstream &s)
+{  
+}
+
+
 void
 o2be_sequence::produce_binary_operators_in_hdr(std::fstream &s)
 {
 }
 
+
 void
-o2be_sequence::produce_binary_operators_in_skel(std::fstream &s)
+o2be_sequence::produce_binary_operators_in_dynskel(std::fstream &s)
 {
 }
 
@@ -674,180 +675,239 @@ o2be_sequence::produce_binary_operators_in_skel(std::fstream &s)
 void 
 o2be_sequence::produce_typecode_skel(std::fstream &s)
 {
-  if (idl_global->compile_flags() & IDL_CF_ANY) {
-    // All array TypeCodes are generated in-place when they are used.
-    // Produce any static TypeCodes that are required by the array TypeCode
-    AST_Decl *decl = base_type();
-    if (!decl->in_main_file() || 
-	decl->node_type() == AST_Decl::NT_array || 
-	decl->node_type() == AST_Decl::NT_sequence)
-      {
-	o2be_name::narrow_and_produce_typecode_skel(decl,s);	       
-      }
-    }
-  return;
+  // We are safe even if this is a recursive sequence, as there
+  // is a guard in o2be_structure::produce_typecode_skel() (and
+  // the like) to ensure the body is only executed once.
+  o2be_name::narrow_and_produce_typecode_skel(base_type(), s);
 }
 
+
 void 
-o2be_sequence::produce_typecode_member(std::fstream &s, idl_bool new_ptr)
+o2be_sequence::produce_typecode_member(std::fstream &s)
 {
-  if (idl_global->compile_flags() & IDL_CF_ANY) {
-    AST_Decl *decl = base_type();
-    size_t s_max = astExpr2val(max_size());
-    if (new_ptr) s << "new ";
-    s << "CORBA::TypeCode(CORBA::tk_sequence, " << s_max << ", ";     
-    o2be_name::produce_typecode_member(decl,s,I_FALSE);
+  AST_Decl* base = base_type();
+  size_t s_rec_offset = recursive_sequence_offset();
+
+  if (s_rec_offset) {
+    // Recursive sequence!
+    s << "CORBA::TypeCode::PR_recursive_sequence_tc("
+      << bound() << ", " << s_rec_offset << ")";
+  } else {
+    // Normal sequence!
+    s << "CORBA::TypeCode::PR_sequence_tc(" << bound() << ", ";
+    o2be_name::produce_typecode_member(base, s);
     s << ")";
   }
 }
 
 
-idl_bool 
-o2be_sequence::check_recursive_seq()
-{
-  AST_Decl *decl = base_type();
-  if (decl->node_type() == AST_Decl::NT_struct) {
-    // Catch recursive struct
-    if (o2be_structure::narrow_from_decl(decl) == defined_in())
-      return I_TRUE;
-  }	    
-  else if (decl->node_type() == AST_Decl::NT_union) {
-    // Catch recursive union
-    if (o2be_union::narrow_from_decl(decl) == defined_in())
-      return I_TRUE;
-  }	    
-
-  return o2be_name::narrow_and_check_recursive_seq(decl);
-}
-
 void
-o2be_sequence::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
+o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
 {
+  {
+    // gcc requires that the marshalling operators for the element
+    // be declared before the sequence template is typedef'd.
+    //  This is a problem for enums, as the marshalling operators
+    // are not yet defined (and are not part of the type itself).
+
+    AST_Decl* decl = base_type();
+    while( decl->node_type() == AST_Decl::NT_typedef)
+      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+
+    if( decl->node_type() == AST_Decl::NT_enum ) {
+      s << "// Need to declare <<= for elem type, as GCC expands templates"
+	<< " early\n";
+      s << "#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7\n";
+
+      o2be_enum* e = o2be_enum::narrow_from_decl(decl);
+      idl_bool in_root = tdef->defined_in() == idl_global->root();
+
+      IND(s); s << (in_root ? "":"friend ")
+		<< "inline void operator >>= (" << e->unambiguous_name(tdef)
+		<< ", NetBufferedStream&);\n";
+
+      IND(s); s << (in_root ? "":"friend ")
+		<< "inline void operator <<= (" << e->unambiguous_name(tdef)
+		<< "&, NetBufferedStream&);\n";
+
+      IND(s); s << (in_root ? "":"friend ")
+		<< "inline void operator >>= (" << e->unambiguous_name(tdef)
+		<< ", MemBufferedStream&);\n";
+
+      IND(s); s << (in_root ? "":"friend ")
+		<< "inline void operator <<= (" << e->unambiguous_name(tdef)
+		<< "&, MemBufferedStream&);\n";
+
+      s << "#endif\n";
+    }
+  }
+
+  o2be_operation::argMapping mapping;
+  o2be_operation::argType ntype =
+    o2be_operation::ast2ArgMapping(base_type(), o2be_operation::wIN, mapping);
+
   IND(s); s << "typedef " << seq_template_name(tdef) 
 	    << " " << tdef->uqname() << ";\n";
 
-  o2be_operation::argMapping mapping;
-  switch (o2be_operation::ast2ArgMapping(base_type(),o2be_operation::wIN,
-					 mapping))
-    {
-    case o2be_operation::tArrayFixed:
-    case o2be_operation::tArrayVariable:
-      IND(s); s << "typedef _CORBA_Sequence_Array_Var<"
-		<< tdef->uqname() << ", " << seq_member_name(tdef) <<  "_slice > " 
-		<< tdef->uqname() << "_var;\n\n";
-      break;
-    default:
-      IND(s); s << "typedef _CORBA_Sequence_Var<"
-		<< tdef->uqname() << ", " << seq_member_name(tdef) <<  " > " 
-		<< tdef->uqname() << "_var;\n\n";
-      break;
-    }
+  switch( ntype ) {
+  case o2be_operation::tArrayFixed:
+  case o2be_operation::tArrayVariable:
+    IND(s); s << "typedef _CORBA_Sequence_Array_Var<"
+	      << tdef->uqname() << ", " << seq_member_name(tdef)
+	      <<  "_slice > " << tdef->uqname() << "_var;\n\n";
+    break;
+  default:
+    IND(s); s << "typedef _CORBA_Sequence_Var<"
+	      << tdef->uqname() << ", " << seq_member_name(tdef) <<  " > " 
+	      << tdef->uqname() << "_var;\n\n";
+    break;
+  }
 }
+
 
 void
 o2be_sequence::produce_typedef_binary_operators_in_hdr(std::fstream &s, 
 						       o2be_typedef *tdef)
 {
-  if (idl_global->compile_flags() & IDL_CF_ANY) {
-    if (check_recursive_seq() == I_FALSE) {
-      set_recursive_seq(I_FALSE);
-      // Produce inline definitions of Any insertion and extraction operator,
-      // and deletion function.
-      // Note that both insertion and extraction operators are inline.
-      char* guardName = internal_produce_localname(o2be_sequence::BASE_TYPE);
+  if( idl_global->compile_flags() & IDL_CF_ANY ) {
+    // Generate the Any insertion and extraction operators.
+    //
+    // These are difficult for sequences since identical sequence
+    // types are not distinguishable by the comiler. This means that
+    // we cannot have global versions of the operators - since it is
+    // impossible to be sure they won't be redefined in another
+    // source file.
+    //  Thus the operators themselves must be inlined. To prevent the
+    // buildDesc mechanism from being exposed in the header file the
+    // work of the operator is done in a globally visible function,
+    // which is given a unique name to prevent clashes with identical
+    // types.
+    //  Further guards are used to prevent multiple clashing declar-
+    // ations of the operators, and to prevent generation of more code
+    // than is strictly necessary.
 
-      size_t s_max = astExpr2val(max_size());
-      if (s_max) 
-	{
-	  char* dstr = new char[12];
-	  sprintf(dstr,"_%d",(int) s_max);
+    const char* canon_name = canonical_name();
+    const char* seq_type_name = seq_template_name(o2be_global::root());
+    const char* tdef_idname = tdef->_idname();
 
-	  char* tmpName = guardName;
-	  guardName = new char[strlen(guardName) + 12];
-	  strcpy(guardName,tmpName);
-	  strcat(guardName,dstr);
-	  delete[] dstr;
-	  delete[] tmpName;
-	  }
+    s << "#ifndef __0RL_seq_any" << canon_name << "__\n";
+    s << "#define __0RL_seq_any" << canon_name << "__\n";
+    s << "#define __0RL_seq_anyimpl_" << tdef_idname << "__\n";
 
-      s << "#ifndef __04RL_" << guardName << "__" << std::endl;
-      s << "#define __04RL_" << guardName << "__\n" << std::endl;
-    
-      // any insertion operators (inline definitions)
-      IND(s); s << "inline void operator<<=(CORBA::Any& _a, const " 
-		<< tdef->fqname() << "& _s) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
-      IND(s); s << tdef->fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
-      IND(s); s << "_s >>= _0RL_mbuf;\n";
-      IND(s); s << "_a.NP_replaceData(" << tdef->fqtcname() <<",_0RL_mbuf);\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+    IND(s); s << "extern void _0RL_seq_anyinsert_" << tdef_idname
+	      << "(CORBA::Any&, const " << seq_type_name << "&);\n\n";
 
-      IND(s); s << "inline void operator<<=(CORBA::Any& _a, " 
-		<< tdef->fqname() << "* _sp) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "_a <<= *_sp;\n";
-      IND(s); s << "delete _sp;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+    IND(s); s << "inline void operator<<=(CORBA::Any& a, const "
+	      << seq_type_name << "& s)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_0RL_seq_anyinsert_" << tdef_idname << "(a, s);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
 
-      // deletion operator (inline definition)
-      IND(s); s << "inline void _03RL_" << tdef->_fqname() 
-		<< "_delete(void* _data) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << tdef->fqname() << "* _0RL_t = (" << tdef->fqname() 
-		<< "*) _data;\n";
-      IND(s); s << "delete _0RL_t;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+    IND(s); s << "inline void operator<<=(CORBA::Any& a, "
+	      << seq_type_name << "* sp)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_0RL_seq_anyinsert_" << tdef_idname << "(a, *sp);\n";
+    IND(s); s << "delete sp;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
 
-      // any extraction operator (inline definition)
-      IND(s); s << "inline CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
-		<< tdef->fqname() << "*& _sp) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
-      IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << tdef->fqtcname() 
-		<< ",1)) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "_sp = 0;\n";
-      IND(s); s << "return 0;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      IND(s); s << "else {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
-      IND(s); s << "if (!_0RL_data) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
-      IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
-      IND(s); s << tdef->fqname() << "* _0RL_tmp = new " << tdef->fqname() 
-		<< ";\n";
-      IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
-      IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
-      IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << tdef->_fqname() 
-		<< "_delete);\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
-      IND(s); s << "_sp = (" << tdef->fqname() << "*) _0RL_data;\n";
-      IND(s); s << "return 1;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+    IND(s); s << "extern CORBA::Boolean _0RL_seq_anyextract_" << tdef_idname
+	      << "(const CORBA::Any&, " << seq_type_name << "*&);\n\n";
 
-      s << "#endif\n\n";
-    }
-    else
-      set_recursive_seq(I_TRUE);
+    IND(s); s << "inline CORBA::Boolean operator>>=(const CORBA::Any& a, "
+	      << seq_type_name << "*& sp)\n";
+    IND(s); s << "{\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return _0RL_seq_anyextract_" << tdef_idname << "(a, sp);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    s << "#endif\n\n";
   }
-
 }
 
 void
-o2be_sequence::produce_typedef_binary_operators_in_skel(std::fstream &s,
-							o2be_typedef *tdef)
+o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream &s,
+							   o2be_typedef *tdef)
 {
+  const char* canon_name = canonical_name();
+  const char* seq_type_name = seq_template_name(o2be_global::root());
+  const char* tdef_idname = tdef->_idname();
+  const char* tdef_fqname = tdef->fqname();
+
+  produce_buildDesc_support(s);
+
+  s << "#if defined(__0RL_seq_any" << canon_name << "__) && "
+    "defined(__0RL_seq_anyimpl_" << tdef_idname << "__)\n";
+  s << "#undef __0RL_seq_any" << canon_name << "__\n\n";
+
+  IND(s); s << "void _0RL_seq_anyinsert_" << tdef_idname
+	    << "(CORBA::Any& a, const " << seq_type_name << "& s)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "tcDescriptor tcdesc;\n";
+  o2be_buildDesc::call_buildDesc(s, this, "tcdesc", "s");
+  IND(s); s << "a.PR_packFrom(" << tdef->fqtcname() << ", &tcdesc);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "void _0RL_seq_delete_" << tdef_idname
+	    << "(void* data)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "delete (" << tdef_fqname << "*)data;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "CORBA::Boolean _0RL_seq_anyextract_" << tdef_idname
+	    << "(const CORBA::Any& a, " << seq_type_name << "*& s_out)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "s_out = 0;\n";
+  IND(s); s << tdef_fqname << "* stmp = (" << tdef_fqname
+	    <<"*) a.PR_getCachedData();\n";
+  IND(s); s << "if( stmp == 0 ) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "tcDescriptor tcdesc;\n";
+  IND(s); s << "stmp = new " << tdef_fqname << ";\n";
+  o2be_buildDesc::call_buildDesc(s, this, "tcdesc", "*stmp");
+  IND(s); s << "if( a.PR_unpackTo(" << tdef->fqtcname()
+	    << ", &tcdesc)) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "((CORBA::Any*)&a)->PR_setCachedData(stmp, "
+	    << "_0RL_seq_delete_" << tdef_idname << ");\n";
+  IND(s); s << "s_out = stmp;\n";
+  IND(s); s << "return 1;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "} else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "delete stmp;\n";
+  IND(s); s << "return 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "} else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::TypeCode_var tctmp = a.type();\n";
+  IND(s); s << "if( tctmp->equal(" << tdef->fqtcname() << ") ) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "s_out = stmp;\n";
+  IND(s); s << "return 1;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "} else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  s << "#endif\n\n";
 }
 
 
@@ -875,178 +935,14 @@ o2be_sequence::out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in) const
 }
 
 
-char *
-o2be_sequence::internal_produce_seqname(AST_Decl *d,enum seqnametype stype)
-{
-  char *iname;
-  switch(d->node_type())
-    {
-    case AST_Decl::NT_sequence:
-      {
-	o2be_sequence *s = o2be_sequence::narrow_from_decl(d);
-	char *iiname = o2be_sequence::internal_produce_seqname(s->base_type(),
-							      stype);
-	size_t s_max = astExpr2val(s->max_size());
-	if (stype == o2be_sequence::BASE_TYPE && s_max) 
-	  {
-	    char* dstr = new char[12];
-	    sprintf(dstr,"_%d",(int) s_max);
-
-	    iname = new char [strlen("sequence_")+strlen(iiname)+12];
-	    strcpy(iname,"sequence_");
-	    strcat(iname,iiname);
-	    strcat(iname,dstr);
-	    delete[] dstr;
-	  }
-	else
-	  {
-	    iname = new char [strlen("sequence_")+strlen(iiname)+1];
-	    strcpy(iname,"sequence_");
-	    strcat(iname,iiname);
-	  }
-	delete [] iiname;
-      }
-      break;
-    case AST_Decl::NT_pre_defined:
-      {
-	// pre-defined types are special because their uqname() actually
-	// returns a scoped name, e.g. ULong --> CORBA::ULong.
-	// Therefore, we use _fqname() instead.
-	char *iiname = o2be_name::narrow_and_produce__fqname(d);
-	iname = new char [strlen(iiname)+1];
-	strcpy(iname,iiname);
-	char *p = iname;
-	while (*p != '\0')
-	  {
-	    if (*p == ' ')
-	      *p = '_';
-	    p++;
-	  };
-      }
-      break;
-    case AST_Decl::NT_string:
-      {
-	iname = new char [strlen("string") + 1];
-	strcpy(iname,"string");
-      }
-      break;
-    case AST_Decl::NT_typedef:
-      {
-	o2be_typedef *s = o2be_typedef::narrow_from_decl(d);
-	if (stype == o2be_sequence::EFFECTIVE_TYPE || 
-	    stype == o2be_sequence::BASE_TYPE)
-	  {
-	    AST_Decl *efftype = s->base_type();
-	    if (efftype->node_type() != AST_Decl::NT_array)
-	      {
-		iname = o2be_sequence::internal_produce_seqname(efftype,stype);
-		break;
-	      }
-	    else if (efftype->node_type() == AST_Decl::NT_array &&
-		     stype == o2be_sequence::BASE_TYPE) 
-	      {
-		// Produce string using base element of array
-		o2be_array* arrType = o2be_array::narrow_from_decl(efftype);
-		char* arrBaseName = o2be_sequence::internal_produce_seqname(arrType->base_type(),stype);
-		int arrNumDims = arrType->n_dims();
-		if (arrNumDims < 1)  throw o2be_internal_error(__FILE__,__LINE__,"unexpected number of dimensions in array expression");
-
-		iname = new char[strlen(arrBaseName) + (arrNumDims*11) + 3];
-		strcpy(iname,"");
-
-		char* dimString = new char[12];
-		AST_Expression **arrDims = arrType->dims();
-		int count;
-
-		for(count = 0; count < arrNumDims; count++)
-		  {
-		    AST_Expression::AST_ExprValue *v = arrDims[count]->ev();
-		    switch(v->et)
-		      {
-		      case AST_Expression::EV_short:
-			sprintf(dimString,"%d_",v->u.sval);
-			strcat(iname,dimString);			
-			break;
-		      case AST_Expression::EV_ushort:
-			sprintf(dimString,"%d_",v->u.usval);
-			strcat(iname,dimString);			
-			break;
-		      case AST_Expression::EV_long:
-			sprintf(dimString,"%d_",v->u.lval);
-			strcat(iname,dimString);			
-			break;
-		      case AST_Expression::EV_ulong:
-			sprintf(dimString,"%d_",v->u.ulval);
-			strcat(iname,dimString);			
-			break;
-		      default:
-			throw o2be_internal_error(__FILE__,__LINE__,"unexpected type in array expression");
-		      }
-		  }
-		strcat(iname,arrBaseName);
-		break;
-	      }
-	  }
-	iname = new char [strlen(s->_fqname()) + 1];
-	strcpy(iname,s->_fqname());
-      }
-      break;
-    case AST_Decl::NT_enum:
-      {
-	o2be_enum *s = o2be_enum::narrow_from_decl(d);
-	iname = new char [strlen(s->_fqname()) + 1];
-	strcpy(iname,s->_fqname());
-      }
-      break;
-    case AST_Decl::NT_struct:
-      {
-	o2be_structure *s = o2be_structure::narrow_from_decl(d);
-	iname = new char [strlen(s->_fqname()) + 1];
-	strcpy(iname,s->_fqname());
-
-      }
-      break;
-    case AST_Decl::NT_union:
-      {
-	o2be_union *s = o2be_union::narrow_from_decl(d);
-	iname = new char [strlen(s->_fqname()) + 1];
-	strcpy(iname,s->_fqname());
-      }
-      break;
-    case AST_Decl::NT_interface:
-      {
-	o2be_interface *s = o2be_interface::narrow_from_decl(d);
-	iname = new char [strlen(s->_fqname()) + 1];
-	strcpy(iname,s->_fqname());
-      }
-      break;
-    default:
-      throw o2be_internal_error(__FILE__,__LINE__,"Unexpected argument type");
-      iname = 0; // Just to suppress the compiler's warning.
-      break;
-    }
-  return iname;
-}
-
-char *
-o2be_sequence::internal_produce_localname(enum seqnametype stype)
-{
-  char *iname = o2be_sequence::internal_produce_seqname(base_type(),stype);
-  char *fullname = new char [strlen(SEQUENCE_TYPE_PREFIX)+strlen(iname)+1];
-  strcpy(fullname,SEQUENCE_TYPE_PREFIX);
-  strcat(fullname,iname);
-  delete [] iname;
-  return fullname;
-}
-
 // The front end can produce multiple nodes for each pre-defined type and
 // string type. We just keep an internal pointer to one instance of each type.
 // produce_hdr_for_predefined_types() will use these pointers to invoke
 // produce_seq_hdr_if_defined() for that pre-defined type.
 
-static int                   pd_sizeof_predefined_type = 0;
-static o2be_predefined_type **pd_predefined_type = NULL;
-static o2be_string *          pd_string = NULL;
+static int                    pd_sizeof_predefined_type = 0;
+static o2be_predefined_type** pd_predefined_type = NULL;
+static o2be_string*           pd_string = NULL;
 
 static
 void
@@ -1114,6 +1010,92 @@ o2be_sequence::produce_hdr_for_predefined_types(std::fstream &s)
       pd_string->produce_seq_hdr_if_defined(s);
     }
   return;
+}
+
+
+void
+o2be_sequence::produce_buildDesc_support(std::fstream& s)
+{
+  // Ensure we only generate the code for this sequence type
+  // once in this source file.
+  if( pd_have_produced_tcParser_buildDesc_code )
+    return;
+
+  if( recursive_sequence_offset() != 0 )
+    // For recursive sequences we must declare the buildDesc for
+    // the base_type - even if it is in this file.
+    o2be_buildDesc::produce_decls(s, base_type(), I_TRUE);
+  else
+    // If the component type is not declared in the same
+    // file then we must declare the external buildDesc function for it.
+    o2be_buildDesc::produce_decls(s, base_type());
+
+  const char* canon_name = canonical_name();
+  const char* seq_type_name = seq_template_name(o2be_global::root());
+
+  s << std::endl;
+  s << "#ifndef __0RL_tcParser_buildDesc" << canon_name << "__\n";
+  s << "#define __0RL_tcParser_buildDesc" << canon_name << "__\n";
+
+  // setElementCount
+  IND(s); s << "static void\n";
+  IND(s); s << "_0RL_tcParser_setElementCount" << canon_name
+	    << "(tcSequenceDesc* _desc, CORBA::ULong _len)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "((" << seq_type_name << "*)_desc->opq_seq)->length(_len);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  // getElementCount
+  IND(s); s << "static CORBA::ULong\n";
+  IND(s); s << "_0RL_tcParser_getElementCount" << canon_name
+	    << "(tcSequenceDesc* _desc)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return ((" << seq_type_name
+	    << "*)_desc->opq_seq)->length();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  // getElementDesc
+  IND(s); s << "static CORBA::Boolean\n";
+  IND(s); s << "_0RL_tcParser_getElementDesc" << canon_name
+	    << "(tcSequenceDesc* _desc, CORBA::ULong _index, "
+	    "tcDescriptor& _newdesc)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  {
+    char* tmp = new char[1 + 4 + strlen(seq_type_name) + 26];
+    strcpy(tmp, "(*((");
+    strcat(tmp, seq_type_name);
+    strcat(tmp, "*)_desc->opq_seq))[_index]");
+    o2be_buildDesc::call_buildDesc(s, base_type(), "_newdesc", tmp);
+    delete[] tmp;
+  }
+  IND(s); s << "return 1;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  // buildDesc function
+  IND(s); s << "static void\n";
+  IND(s); s << "_0RL_buildDesc" << canon_name << "(tcDescriptor &_desc, ";
+  s << "const " << seq_type_name << "& _data)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_desc.p_sequence.opq_seq = (void*) &_data;\n";
+  IND(s); s << "_desc.p_sequence.setElementCount =\n";
+  IND(s); s << "  _0RL_tcParser_setElementCount" << canon_name << ";\n";
+  IND(s); s << "_desc.p_sequence.getElementCount =\n";
+  IND(s); s << "  _0RL_tcParser_getElementCount" << canon_name << ";\n";
+  IND(s); s << "_desc.p_sequence.getElementDesc =\n";
+  IND(s); s << "  _0RL_tcParser_getElementDesc" << canon_name << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  s << "#endif\n\n";
+
+  pd_have_produced_tcParser_buildDesc_code = I_TRUE;
 }
 
 
@@ -1293,29 +1275,7 @@ o2be_sequence_chain::produce_seq_hdr_if_defined(std::fstream &s)
   return;
 }
 
+
 IMPL_NARROW_METHODS1(o2be_sequence, AST_Sequence)
 IMPL_NARROW_FROM_DECL(o2be_sequence)
 IMPL_NARROW_FROM_SCOPE(o2be_sequence)
-
-static 
-size_t
-astExpr2val(AST_Expression *e)
-{
-  AST_Expression::AST_ExprValue *v = e->ev();
-  switch (v->et) 
-    {
-    case AST_Expression::EV_short:
-      return (size_t)v->u.sval;
-    case AST_Expression::EV_ushort:
-      return (size_t)v->u.usval;
-    case AST_Expression::EV_long:
-      return (size_t)v->u.lval;
-    case AST_Expression::EV_ulong:
-      return (size_t)v->u.ulval;
-    default:
-      throw o2be_internal_error(__FILE__,__LINE__,"unexpected type for array dimension");
-    }
-  return 0; // For MSVC++ 4.2
-}
-
-

@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.11  1999/01/07 09:35:57  djr
+  Changes to support new TypeCode/Any implementation, which is now
+  placed in a new file ...DynSK.cc (by default).
+
   Revision 1.10  1998/08/19 15:54:30  sll
   New member functions void produce_binary_operators_in_hdr and the like
   are responsible for generating binary operators <<= etc in the global
@@ -80,6 +84,8 @@ o2be_typedef::o2be_typedef(AST_Type *bt, UTL_ScopedName *n, UTL_StrList *p)
 	    o2be_name(AST_Decl::NT_typedef, n, p),
 	    o2be_sequence_chain(AST_Decl::NT_typedef, n, p)
 {
+  pd_have_produced_typecode_skel = I_FALSE;
+
   AST_Decl *decl = base_type();
 
   while (decl->node_type() == AST_Decl::NT_typedef) {
@@ -114,9 +120,8 @@ o2be_typedef::o2be_typedef(AST_Type *bt, UTL_ScopedName *n, UTL_StrList *p)
       pd_fm_uqname = uqname();
       break;
     }
-
-  set_recursive_seq(I_FALSE);
 }
+
 
 void
 o2be_typedef::produce_hdr(std::fstream &s)
@@ -129,50 +134,47 @@ o2be_typedef::produce_hdr(std::fstream &s)
   }
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
-    if (check_recursive_seq() == I_FALSE) {
-      set_recursive_seq(I_FALSE);
-      // TypeCode_ptr declaration
-      IND(s); s << variable_qualifier()
-		<< " const CORBA::TypeCode_ptr " << tcname() << ";\n";
-    }
-    else set_recursive_seq(I_TRUE);
+    // TypeCode_ptr declaration
+    IND(s); s << variable_qualifier()
+	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n";
   }
 
   switch (decl->node_type())
     {
     case AST_Decl::NT_pre_defined:
-      o2be_predefined_type::narrow_from_decl(decl)->produce_typedef_hdr(s,this);
+      o2be_predefined_type::narrow_from_decl(decl)
+	->produce_typedef_hdr(s, this);
       break;
     case AST_Decl::NT_enum:
-      o2be_enum::narrow_from_decl(decl)->produce_typedef_hdr(s,this);
+      o2be_enum::narrow_from_decl(decl)->produce_typedef_hdr(s, this);
       break;
     case AST_Decl::NT_interface:
-      o2be_interface::narrow_from_decl(decl)->produce_typedef_hdr(s,this);
+      o2be_interface::narrow_from_decl(decl)->produce_typedef_hdr(s, this);
       break;
     case AST_Decl::NT_union:
-      o2be_union::narrow_from_decl(decl)->produce_typedef_hdr(s,this);
+      o2be_union::narrow_from_decl(decl)->produce_typedef_hdr(s, this);
       break;
     case AST_Decl::NT_struct:
-      o2be_structure::narrow_from_decl(decl)->produce_typedef_hdr(s,this);
+      o2be_structure::narrow_from_decl(decl)->produce_typedef_hdr(s, this);
       break;
     case AST_Decl::NT_string:
-      o2be_string::produce_typedef_hdr(s,this);
+      o2be_string::produce_typedef_hdr(s, this);
       break;
     case AST_Decl::NT_sequence:
-      o2be_sequence::narrow_from_decl(decl)->produce_typedef_hdr(s,this);
+      o2be_sequence::narrow_from_decl(decl)->produce_typedef_hdr(s, this);
       break;
     case AST_Decl::NT_array:
       if (base_type()->node_type() == AST_Decl::NT_array)
-	o2be_array::narrow_from_decl(decl)->produce_hdr(s,this);
+	o2be_array::narrow_from_decl(decl)->produce_hdr(s, this);
       else
-	o2be_array::produce_typedef_hdr(s,this,
-					o2be_typedef::narrow_from_decl(base_type()));
+	o2be_array::produce_typedef_hdr(s, this,
+				o2be_typedef::narrow_from_decl(base_type()));
       break;
     default:
       throw o2be_internal_error(__FILE__,__LINE__,"Unexpected argument type");
     }
-
 }
+
 
 void
 o2be_typedef::produce_skel(std::fstream &s)
@@ -183,147 +185,127 @@ o2be_typedef::produce_skel(std::fstream &s)
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
   }
 
-  if (decl->node_type() == AST_Decl::NT_array)
+  switch (decl->node_type())
     {
+    case AST_Decl::NT_array:
       if (base_type()->node_type() == AST_Decl::NT_array)
 	o2be_array::narrow_from_decl(decl)->produce_skel(s,this);
       else
 	o2be_array::produce_typedef_skel(s,this,
-					 o2be_typedef::narrow_from_decl(base_type()));
-    }
+			    o2be_typedef::narrow_from_decl(base_type()));
+      break;
+    default:
+      break;
+    };
+}
 
-  if ((idl_global->compile_flags() & IDL_CF_ANY) && 
-      recursive_seq() == I_FALSE) {
-    // Produce code for types any and TypeCode
-    this->produce_typecode_skel(s);
 
-    if (defined_in() != idl_global->root() &&
-	defined_in()->scope_node_type() == AST_Decl::NT_module)
+void
+o2be_typedef::produce_dynskel(std::fstream &s)
+{
+  AST_Decl *decl = base_type();
+
+  while (decl->node_type() == AST_Decl::NT_typedef) {
+    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+  }
+
+  // Produce code for types any and TypeCode
+  this->produce_typecode_skel(s);
+
+  if( defined_in() != idl_global->root() &&
+      defined_in()->scope_node_type() == AST_Decl::NT_module) {
+
+    s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
+    IND(s); s << "// MSVC++ does not give the constant external"
+	      " linkage othewise.\n";
+    AST_Decl* inscope = ScopeAsDecl(defined_in());
+    char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
+    if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
       {
-	s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
-	IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
-	AST_Decl* inscope = ScopeAsDecl(defined_in());
-	char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
-	if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
-	  {
-	    scopename = o2be_name::narrow_and_produce__fqname(inscope);
-	    IND(s); s << "namespace " << scopename << " = " 
-		      << o2be_name::narrow_and_produce_fqname(inscope)
-		      << ";\n";
-	  }
-	IND(s); s << "namespace " << scopename << " {\n";
-	INC_INDENT_LEVEL();
-	IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-	DEC_INDENT_LEVEL();
-	IND(s); s << "}\n";
-	s << "#else\n";
-	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-	s << "#endif\n";
+	scopename = o2be_name::narrow_and_produce__fqname(inscope);
+	IND(s); s << "namespace " << scopename << " = " 
+		  << o2be_name::narrow_and_produce_fqname(inscope)
+		  << ";\n";
       }
-    else
-      {
-	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-      }
+    IND(s); s << "namespace " << scopename << " {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = " 
+	      << "_0RL_tc_" << _idname() << ";\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    s << "#else\n";
+    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+	      << "_0RL_tc_" << _idname() << ";\n";
+    s << "#endif\n\n";
+  }
+  else {
+    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+	      << "_0RL_tc_" << _idname() << ";\n\n";
   }
 }
+
 
 void
 o2be_typedef::produce_binary_operators_in_hdr(std::fstream &s)
 {
-  if (idl_global->compile_flags() & IDL_CF_ANY)
-    {
-      if (check_recursive_seq() == I_FALSE)
-	{
-	  set_recursive_seq(I_FALSE);
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    AST_Decl *decl = base_type();
 
-	  AST_Decl *decl = base_type();
-	  
-	  while (decl->node_type() == AST_Decl::NT_typedef) {
-	    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	  }
-
-	  switch (decl->node_type())
-	    {
-	    case AST_Decl::NT_sequence:
-	      o2be_sequence::narrow_from_decl(decl)
-		->produce_typedef_binary_operators_in_hdr(s,this);
-	      break;
-	    case AST_Decl::NT_array:
-	      if (base_type()->node_type() == AST_Decl::NT_array)
-		o2be_array::narrow_from_decl(decl)
-		  ->produce_binary_operators_in_hdr(s,this);
-	      break;
-	    default:
-	      break;
-	    }
-	}
-      else
-	set_recursive_seq(I_TRUE);
-    }
+    switch (decl->node_type())
+      {
+      case AST_Decl::NT_sequence:
+	o2be_sequence::narrow_from_decl(decl)
+	  ->produce_typedef_binary_operators_in_hdr(s, this);
+	break;
+      case AST_Decl::NT_array:
+	o2be_array::narrow_from_decl(decl)
+	  ->produce_binary_operators_in_hdr(s, this);
+	break;
+      default:
+	break;
+      }
+  }
 }
+
 
 void
-o2be_typedef::produce_binary_operators_in_skel(std::fstream &s)
+o2be_typedef::produce_binary_operators_in_dynskel(std::fstream &s)
 {
-  if ((idl_global->compile_flags() &IDL_CF_ANY) && recursive_seq() == I_FALSE)
+  AST_Decl *decl = base_type();
+
+  switch (decl->node_type())
     {
-      AST_Decl *decl = base_type();
-
-      while (decl->node_type() == AST_Decl::NT_typedef) {
-	decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-      }
-
-      switch (decl->node_type())
-	{
-	case AST_Decl::NT_sequence:
-	  o2be_sequence::
-	    narrow_from_decl(decl)->produce_typedef_binary_operators_in_skel(s,this);
-	  break;
-	case AST_Decl::NT_array:
-	  if (base_type()->node_type() == AST_Decl::NT_array)
-	    o2be_array::
-	      narrow_from_decl(decl)->produce_binary_operators_in_skel(s,this);
-	  break;
-	default:
-	  break;
-	}
+    case AST_Decl::NT_sequence:
+      o2be_sequence::narrow_from_decl(decl)
+	->produce_typedef_binary_operators_in_dynskel(s, this);
+      break;
+    case AST_Decl::NT_array:
+      o2be_array::narrow_from_decl(decl)
+	->produce_binary_operators_in_dynskel(s, this);
+      break;
+    default:
+      break;
     }
 }
+
 
 void
 o2be_typedef::produce_typecode_skel(std::fstream &s)
-{  
-  if (idl_global->compile_flags() & IDL_CF_ANY) {
-    s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
-    s << "#define " << "__01RL_" << _fqtcname() << "__\n\n";
-    
-    AST_Decl *decl = base_type();
-    
-    if (!decl->in_main_file() || 
-	decl->node_type() == AST_Decl::NT_array || 
-	decl->node_type() == AST_Decl::NT_sequence)
-      o2be_name::narrow_and_produce_typecode_skel(decl,s);	       
-    
-    IND(s); s << "static CORBA::TypeCode _01RL_" << _fqtcname()
-	      << "(\""<< repositoryID() << "\", \"" << uqname() 
-	      << "\", ";
-    o2be_name::produce_typecode_member(decl,s,I_FALSE);
-    s << ");\n\n";
-	
-
-    s << "#endif\n\n";
-  }
-  return;
-}
-
-idl_bool 
-o2be_typedef::check_recursive_seq()
 {
-  AST_Decl *base_decl = base_type();
-  return o2be_name::narrow_and_check_recursive_seq(base_decl);
+  if( have_produced_typecode_skel() )  return;
+  set_have_produced_typecode_skel();
+
+  AST_Decl* base = base_type();
+
+  // Generate typecode for the base_type().
+  o2be_name::narrow_and_produce_typecode_skel(base, s);
+
+  IND(s); s << "static CORBA::TypeCode_ptr _0RL_tc_" << _idname() << " = "
+	    << "CORBA::TypeCode::PR_alias_tc("
+	    << "\""<< repositoryID() << "\", \"" << uqname() 
+	    << "\", ";
+  o2be_name::produce_typecode_member(base, s);
+  s << ");\n\n";
 }
 
 const char*

@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.19  1999/01/07 09:35:34  djr
+  Changes to support new TypeCode/Any implementation, which is now
+  placed in a new file ...DynSK.cc (by default).
+
   Revision 1.18  1998/10/16 11:26:21  sll
   Previously, if a fixed size union branch is followed by an array of union
   branch, the data member of the fixed size branch is not defined in the
@@ -179,12 +183,11 @@ typedef union {
   unsigned short us_val;
   char c_val;
   idl_bool b_val;
-  unsigned char o_val;
   AST_Decl* e_val;
 } disc_value_t;
 
 static idl_bool
-match_disc_value(o2be_union_branch& b,AST_Decl *disc_type,disc_value_t v);
+match_disc_value(o2be_union_branch& b,AST_Decl* disc_type,disc_value_t v);
 
 static o2be_union_branch*
 lookup_by_disc_value(o2be_union& u,disc_value_t v);
@@ -204,6 +207,7 @@ o2be_union::o2be_union(AST_ConcreteType *dt,
   pd_skel_produced_in_field = I_FALSE;
   pd_binary_operators_hdr_produced_in_field = I_FALSE;
   pd_binary_operators_skel_produced_in_field = I_FALSE;
+  pd_have_produced_typecode_skel = I_FALSE;
 
   pd_out_adptarg_name = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
 				 strlen(fqname())+
@@ -214,7 +218,6 @@ o2be_union::o2be_union(AST_ConcreteType *dt,
   strcat(pd_out_adptarg_name,",");
   strcat(pd_out_adptarg_name,fqname());
   strcat(pd_out_adptarg_name,"_var>");  
-  set_recursive_seq(I_FALSE);
 }
 
 AST_UnionBranch *
@@ -232,7 +235,7 @@ o2be_union::add_union_branch(AST_UnionBranch *un)
   if (isVariable())
     return un;
 
-  AST_Decl *decl = un->field_type();
+  AST_Decl* decl = un->field_type();
   while (decl->node_type() == AST_Decl::NT_typedef)
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 
@@ -267,9 +270,53 @@ o2be_union::add_union_branch(AST_UnionBranch *un)
   return un;
 }
 
+// Returns TRUE if the field is an array of fixed size
+// unions. This case is important as such a field cannot
+// be placed inside the anonymous union.
+static idl_bool
+is_array_of_fixed_size_union(o2be_operation::argType ntype, o2be_field* f)
+{
+  if( ntype == o2be_operation::tArrayFixed ) {
+    AST_Decl* dd = f->field_type();
+    // Skip all typedef to get to the array node
+    while( dd->node_type() == AST_Decl::NT_typedef ) {
+      dd = o2be_typedef::narrow_from_decl(dd)->base_type();
+    }
+    // Get the element type
+    dd = o2be_array::narrow_from_decl(dd)->getElementType();
+    // Skip all typedef to get to the real element node
+    while( dd->node_type() == AST_Decl::NT_typedef ) {
+      dd = o2be_typedef::narrow_from_decl(dd)->base_type();
+    }
+    if( dd->node_type() == AST_Decl::NT_union ) {
+      // The element is a union. Do not define the data member
+      // in the anonymous union.
+      return I_TRUE;
+    }
+  }
+  return I_FALSE;
+}
+
 void
 o2be_union::produce_hdr(std::fstream &s)
 {
+  // Front end erroneously lets Octet through as a
+  // discriminator type. Catch here.
+  {
+    AST_Decl* decl = disc_type();
+
+    while( decl->node_type() == AST_Decl::NT_typedef )
+      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+
+    if( decl->node_type() == AST_Decl::NT_pre_defined &&
+	AST_PredefinedType::narrow_from_decl(decl)->pt() ==
+	AST_PredefinedType::PT_octet ) {
+      UTL_String msg("octet may not be used as a union discriminator.");
+      idl_global->err()->back_end(line(), &msg);
+      return;
+    }
+  }
+
   if (!nodefault())
     {
       if (no_missing_disc_value())
@@ -277,7 +324,7 @@ o2be_union::produce_hdr(std::fstream &s)
 	  // Wrong, all legal discriminant value has been specified
 	  // there should not be a default case.
 	  UTL_String msg("default case defined where none is needed.");
-	  idl_global->err()->back_end(line(),&msg);
+	  idl_global->err()->back_end(line(), &msg);
 	  return;
 	}
     }
@@ -293,10 +340,10 @@ o2be_union::produce_hdr(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
-	    AST_Decl *decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
+	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
 	    if (decl->has_ancestor(this))
 	      {
 		switch (decl->node_type())
@@ -366,7 +413,7 @@ o2be_union::produce_hdr(std::fstream &s)
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
 	while (!i.is_done())
 	  {
-	    AST_Decl *d = i.item();
+	    AST_Decl* d = i.item();
 	    if (d->node_type() == AST_Decl::NT_union_branch)
 	      {
 		AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -392,7 +439,7 @@ o2be_union::produce_hdr(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -432,7 +479,7 @@ o2be_union::produce_hdr(std::fstream &s)
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
 	while (!i.is_done())
 	  {
-	    AST_Decl *d = i.item();
+	    AST_Decl* d = i.item();
 	    if (d->node_type() == AST_Decl::NT_union_branch)
 	      {
 		AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -458,7 +505,7 @@ o2be_union::produce_hdr(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -510,7 +557,7 @@ o2be_union::produce_hdr(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    o2be_field *f = o2be_union_branch::narrow_from_decl(d);
@@ -529,36 +576,11 @@ o2be_union::produce_hdr(std::fstream &s)
 		ntype != o2be_operation::tSequence &&
 		ntype != o2be_operation::tArrayVariable &&
 		ntype != o2be_operation::tAny &&
-		ntype != o2be_operation::tTypeCode)
-	      {
-		if (ntype == o2be_operation::tArrayFixed) 
-		  {
-		    // Array of fixed size union is a special case, the data
-		    // member cannot be put into the anonymous union.
-		    // Trap it here.
-		    AST_Decl* dd = f->field_type();
-		    // Skip all typedef to get to the array node
-		    while (dd->node_type() == AST_Decl::NT_typedef) {
-		      dd = o2be_typedef::narrow_from_decl(dd)->base_type();
-		    }
-		    // Get the element type
-		    dd = o2be_array::narrow_from_decl(dd)->getElementType();
-		    // Skip all typedef to get to the real element node
-		    while (dd->node_type() == AST_Decl::NT_typedef) {
-		      dd = o2be_typedef::narrow_from_decl(dd)->base_type();
-		    }
-		    if (dd->node_type() == AST_Decl::NT_union ||
-			dd->node_type() == AST_Decl::NT_struct) {
-		      // The element is a union or a struct. 
-		      // Do not define the data member
-		      // in the anonymous union.
-		    }
-		    else
-		      has_fix_member = I_TRUE;
-		  }
-		else
-		  has_fix_member = I_TRUE;
-	      }
+		ntype != o2be_operation::tTypeCode &&
+		!is_array_of_fixed_size_union(ntype, f) ) {
+
+	      has_fix_member = I_TRUE;
+	    }
 
 	    switch (ntype)
 	      {
@@ -567,7 +589,7 @@ o2be_union::produce_hdr(std::fstream &s)
 		break;
 	      case o2be_operation::tObjref:
 		{
-		  AST_Decl *decl = f->field_type();
+		  AST_Decl* decl = f->field_type();
 		  while (decl->node_type() == AST_Decl::NT_typedef) {
 		    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 		  }
@@ -631,7 +653,7 @@ o2be_union::produce_hdr(std::fstream &s)
 		{
 		  // Check if this is an anonymous array type, if so
 		  // generate the supporting typedef for the array slice
-		  AST_Decl *decl = f->field_type();
+		  AST_Decl* decl = f->field_type();
 		  if (decl->node_type() == AST_Decl::NT_array &&
 		      decl->has_ancestor(this)) 
 		    {
@@ -761,7 +783,7 @@ o2be_union::produce_hdr(std::fstream &s)
 		break;
 	      case o2be_operation::tObjref:
 		{
-		  AST_Decl *decl = f->field_type();
+		  AST_Decl* decl = f->field_type();
 		  while (decl->node_type() == AST_Decl::NT_typedef) {
 		    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 		  }
@@ -983,7 +1005,7 @@ o2be_union::produce_hdr(std::fstream &s)
 		{
 		  // Check if this is an anonymous array type, if so
 		  // generate the supporting typedef for the array slice
-		  AST_Decl *decl = f->field_type();
+		  AST_Decl* decl = f->field_type();
 		  if (decl->node_type() == AST_Decl::NT_array &&
 		      decl->has_ancestor(this)) 
 		    {
@@ -1099,6 +1121,17 @@ o2be_union::produce_hdr(std::fstream &s)
   IND(s); s << "void operator<<= (NetBufferedStream &);\n";
   IND(s); s << "void operator>>= (MemBufferedStream &) const;\n";
   IND(s); s << "void operator<<= (MemBufferedStream &);\n\n";
+
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    s << "#if defined(__GNUG__) || defined(__DECCXX)\n";
+    IND(s); s << "friend class _0RL_tcParser_unionhelper_" << _idname()
+	      << ";\n";
+    s << "#else\n";
+    IND(s); s << "friend class ::_0RL_tcParser_unionhelper_" << _idname()
+	      << ";\n";
+    s << "#endif\n";
+  }
+
   DEC_INDENT_LEVEL();
   IND(s); s << "private:\n\n";
   INC_INDENT_LEVEL();
@@ -1107,13 +1140,15 @@ o2be_union::produce_hdr(std::fstream &s)
 	    << " pd__d;\n";
   IND(s); s << "CORBA::Boolean pd__default;\n";
 
+  // Generate members which can go into the anonymous union.
+  //
   if (has_fix_member) {
     IND(s); s << "union {\n";
     INC_INDENT_LEVEL();
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    o2be_field *f = o2be_union_branch::narrow_from_decl(d);
@@ -1150,27 +1185,12 @@ o2be_union::produce_hdr(std::fstream &s)
 			  << " pd_" << f->uqname() << ";\n";
 		break;
 	      case o2be_operation::tArrayFixed:
-		  {
-		    // Array of fixed size union is a special case, the data
-		    // member cannot be put into the anonymous union.
-		    // Trap it here.
-		    AST_Decl* dd = f->field_type();
-		    // Skip all typedef to get to the array node
-		    while (dd->node_type() == AST_Decl::NT_typedef) {
-		      dd = o2be_typedef::narrow_from_decl(dd)->base_type();
-		    }
-		    // Get the element type
-		    dd = o2be_array::narrow_from_decl(dd)->getElementType();
-		    // Skip all typedef to get to the real element node
-		    while (dd->node_type() == AST_Decl::NT_typedef) {
-		      dd = o2be_typedef::narrow_from_decl(dd)->base_type();
-		    }
-		    if (dd->node_type() == AST_Decl::NT_union) {
-		      // The element is a union. Do not define the data member
-		      // here.
-		      break;
-		    }
-		  }
+		// Array of fixed size union is a special case, the data
+		// member cannot be put into the anonymous union.
+		// Trap it here.
+		if( is_array_of_fixed_size_union(o2be_operation::tArrayFixed, f) )
+		  break;
+
 		if (f->field_type()->node_type() == AST_Decl::NT_array)
 		  {
 		    IND(s);
@@ -1191,11 +1211,13 @@ o2be_union::produce_hdr(std::fstream &s)
     DEC_INDENT_LEVEL();
     IND(s); s << "};\n";
   }
+  // Generate members which don't go into the anonymous union.
+  //
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    o2be_field *f = o2be_union_branch::narrow_from_decl(d);
@@ -1259,26 +1281,11 @@ o2be_union::produce_hdr(std::fstream &s)
 		// Array of fixed size union is a special case, the data
 		// member cannot be put into the anonymous union.
 		// Trap it here.
-		{
-		  AST_Decl* dd = f->field_type();
-		  // Skip all typedef to get to the array node
-		  while (dd->node_type() == AST_Decl::NT_typedef) {
-		    dd = o2be_typedef::narrow_from_decl(dd)->base_type();
-		  }
-		  // Get the element type
-		  dd = o2be_array::narrow_from_decl(dd)->getElementType();
-		  // Skip all typedef to get to the real element node
-		  while (dd->node_type() == AST_Decl::NT_typedef) {
-		    dd = o2be_typedef::narrow_from_decl(dd)->base_type();
-		  }
-		  if (dd->node_type() != AST_Decl::NT_union) {
-		    // The element is not a union. 
-		    // Do not define data member here as it has been defined
-		    // in the anonymous union above.
-		    break;
-		  }
-		  // falls through to tArrayVariable.
-		}
+		if( !is_array_of_fixed_size_union(o2be_operation::tArrayFixed, f) )
+		  break;
+
+		// falls through to tArrayVariable.
+
 	      case o2be_operation::tArrayVariable:
 		if (f->field_type()->node_type() == AST_Decl::NT_array)
 		  {
@@ -1307,18 +1314,14 @@ o2be_union::produce_hdr(std::fstream &s)
 	      << uqname() << "_var;\n\n";
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
-    if (check_recursive_seq() == I_FALSE) {
-      set_recursive_seq(I_FALSE);
-
-      // TypeCode_ptr declaration
-      IND(s); s << variable_qualifier()
-		<< " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
-    }
-    else set_recursive_seq(I_TRUE);
+    // TypeCode_ptr declaration
+    IND(s); s << variable_qualifier()
+	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
   }
 
   produce_seq_hdr_if_defined(s);
 }
+
 
 void
 o2be_union::produce_skel(std::fstream &s)
@@ -1329,40 +1332,37 @@ o2be_union::produce_skel(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
-	    AST_Decl *decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
+	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
 	    if (decl->has_ancestor(this))
 	      {
 		switch (decl->node_type())
 		  {
 		  case AST_Decl::NT_enum:
 		    if (!o2be_enum::narrow_from_decl(decl)
-			       ->get_skel_produced_in_field()) 
-		      {
-			o2be_enum::narrow_from_decl(decl)
-			       ->set_skel_produced_in_field();
-			o2be_enum::narrow_from_decl(decl)->produce_skel(s);
-		      }
+			       ->get_skel_produced_in_field()) {
+		      o2be_enum::narrow_from_decl(decl)
+			->set_skel_produced_in_field();
+		      o2be_enum::narrow_from_decl(decl)->produce_skel(s);
+		    }
 		    break;
 		  case AST_Decl::NT_struct:
 		    if (!o2be_structure::narrow_from_decl(decl)
-			       ->get_skel_produced_in_field()) 
-		      {
-			o2be_structure::narrow_from_decl(decl)
-			       ->set_skel_produced_in_field();
-			o2be_structure::narrow_from_decl(decl)->produce_skel(s);
-		      }
+			       ->get_skel_produced_in_field()) {
+		      o2be_structure::narrow_from_decl(decl)
+			->set_skel_produced_in_field();
+		      o2be_structure::narrow_from_decl(decl)->produce_skel(s);
+		    }
 		    break;
 		  case AST_Decl::NT_union:
 		    if (!o2be_union::narrow_from_decl(decl)
-			       ->get_skel_produced_in_field()) 
-		      {
-			o2be_union::narrow_from_decl(decl)
-			       ->set_skel_produced_in_field();
-			o2be_union::narrow_from_decl(decl)->produce_skel(s);
-		      }
+			       ->get_skel_produced_in_field()) {
+		      o2be_union::narrow_from_decl(decl)
+			->set_skel_produced_in_field();
+		      o2be_union::narrow_from_decl(decl)->produce_skel(s);
+		    }
 		    break;
 		  default:
 		    break;
@@ -1404,7 +1404,7 @@ o2be_union::produce_skel(std::fstream &s)
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
 	while (!i.is_done())
 	  {
-	    AST_Decl *d = i.item();
+	    AST_Decl* d = i.item();
 	    if (d->node_type() == AST_Decl::NT_union_branch)
 	      {
 		AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -1458,7 +1458,7 @@ o2be_union::produce_skel(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -1544,7 +1544,7 @@ o2be_union::produce_skel(std::fstream &s)
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
 	while (!i.is_done())
 	  {
-	    AST_Decl *d = i.item();
+	    AST_Decl* d = i.item();
 	    if (d->node_type() == AST_Decl::NT_union_branch)
 	      {
 		AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -1597,7 +1597,7 @@ o2be_union::produce_skel(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -1680,7 +1680,7 @@ o2be_union::produce_skel(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -1769,7 +1769,7 @@ o2be_union::produce_skel(std::fstream &s)
 	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
 	while (!i.is_done())
 	  {
-	    AST_Decl *d = i.item();
+	    AST_Decl* d = i.item();
 	    if (d->node_type() == AST_Decl::NT_union_branch)
 	      {
 		AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -1822,7 +1822,7 @@ o2be_union::produce_skel(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -1905,7 +1905,7 @@ o2be_union::produce_skel(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
 	    AST_UnionLabel* l =o2be_union_branch::narrow_from_decl(d)->label();
@@ -1966,44 +1966,93 @@ o2be_union::produce_skel(std::fstream &s)
   IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
+}
 
 
-  if ((idl_global->compile_flags() & IDL_CF_ANY) && 
-      recursive_seq() == I_FALSE) {
-    // Produce code for types any and TypeCode
-    this->produce_typecode_skel(s);
-
-    if (defined_in() != idl_global->root() &&
-	defined_in()->scope_node_type() == AST_Decl::NT_module)
+void
+o2be_union::produce_dynskel(std::fstream &s)
+{
+  {
+    // declare any constructor types defined in this scope
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
       {
-	s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
-	IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
-	AST_Decl* inscope = ScopeAsDecl(defined_in());
-	char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
-	if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
+	AST_Decl* d = i.item();
+	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
-	    scopename = o2be_name::narrow_and_produce__fqname(inscope);
-	    IND(s); s << "namespace " << scopename << " = " 
-		      << o2be_name::narrow_and_produce_fqname(inscope)
-		      << ";\n";
+	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
+	    if (decl->has_ancestor(this))
+	      {
+		switch (decl->node_type())
+		  {
+		  case AST_Decl::NT_enum:
+		    if (!o2be_enum::narrow_from_decl(decl)
+			       ->get_dynskel_produced_in_field()) {
+		      o2be_enum::narrow_from_decl(decl)
+			->set_dynskel_produced_in_field();
+		      o2be_enum::narrow_from_decl(decl)->produce_dynskel(s);
+		    }
+		    break;
+		  case AST_Decl::NT_struct:
+		    if (!o2be_structure::narrow_from_decl(decl)
+			       ->get_dynskel_produced_in_field()) {
+		      o2be_structure::narrow_from_decl(decl)
+			->set_dynskel_produced_in_field();
+		      o2be_structure::narrow_from_decl(decl)
+			->produce_dynskel(s);
+		    }
+		    break;
+		  case AST_Decl::NT_union:
+		    if (!o2be_union::narrow_from_decl(decl)
+			       ->get_dynskel_produced_in_field()) {
+		      o2be_union::narrow_from_decl(decl)
+			->set_dynskel_produced_in_field();
+		      o2be_union::narrow_from_decl(decl)->produce_dynskel(s);
+		    }
+		    break;
+		  default:
+		    break;
+		  }
+	      }
 	  }
-	IND(s); s << "namespace " << scopename << " {\n";
-	INC_INDENT_LEVEL();
-	IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-	DEC_INDENT_LEVEL();
-	IND(s); s << "}\n";
-	s << "#else\n";
-	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-	s << "#endif\n";
+	i.next();
       }
-    else
-      {
-	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-		  << "_01RL_" << _fqtcname() << ";\n\n";
-      }
-  } 
+  }
+
+  // Produce code for types any and TypeCode
+  this->produce_typecode_skel(s);
+
+  if (defined_in() != idl_global->root() &&
+      defined_in()->scope_node_type() == AST_Decl::NT_module)
+    {
+      s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
+      IND(s); s << "// MSVC++ does not give the constant external"
+		" linkage otherwise.\n";
+      AST_Decl* inscope = ScopeAsDecl(defined_in());
+      char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
+      if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
+	{
+	  scopename = o2be_name::narrow_and_produce__fqname(inscope);
+	  IND(s); s << "namespace " << scopename << " = " 
+		    << o2be_name::narrow_and_produce_fqname(inscope)
+		    << ";\n";
+	}
+      IND(s); s << "namespace " << scopename << " {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = " 
+		<< "_0RL_tc_" << _idname() << ";\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      s << "#else\n";
+      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+		<< "_0RL_tc_" << _idname() << ";\n";
+      s << "#endif\n\n";
+    }
+  else
+    {
+      IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = " 
+		<< "_0RL_tc_" << _idname() << ";\n\n";
+    }
 }
 
 
@@ -2015,10 +2064,10 @@ o2be_union::produce_binary_operators_in_hdr(std::fstream &s)
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
-	    AST_Decl *decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
+	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
 	    if (decl->has_ancestor(this))
 	      {
 		switch (decl->node_type())
@@ -2061,36 +2110,30 @@ o2be_union::produce_binary_operators_in_hdr(std::fstream &s)
 	i.next();
       }
   }
-  if (idl_global->compile_flags() & IDL_CF_ANY)
-    {
-    if (check_recursive_seq() == I_FALSE)
-      {
-	set_recursive_seq(I_FALSE);
-	s << "\n";
-	  // any insertion and extraction operators
-	  IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
-		    << fqname() << "& _s);\n";
-	  IND(s); s << "void operator<<=(CORBA::Any& _a, " 
-		    << fqname() <<"* _sp);\n";
-	  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
-		    << fqname() << "*& _sp);\n\n";
-	}
-      else 
-	set_recursive_seq(I_TRUE);
-    }
+
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    // any insertion and extraction operators
+    IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
+	      << fqname() << "& _s);\n";
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " 
+	      << fqname() <<"* _sp);\n";
+    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+	      << fqname() << "*& _sp);\n\n";
+  }
 }
 
+
 void
-o2be_union::produce_binary_operators_in_skel(std::fstream &s)
+o2be_union::produce_binary_operators_in_dynskel(std::fstream &s)
 {
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
       {
-	AST_Decl *d = i.item();
+	AST_Decl* d = i.item();
 	if (d->node_type() == AST_Decl::NT_union_branch)
 	  {
-	    AST_Decl *decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
+	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
 	    if (decl->has_ancestor(this))
 	      {
 		switch (decl->node_type())
@@ -2102,7 +2145,7 @@ o2be_union::produce_binary_operators_in_skel(std::fstream &s)
 			o2be_enum::narrow_from_decl(decl)
 			  ->set_binary_operators_skel_produced_in_field();
 			o2be_enum::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_skel(s);
+			  ->produce_binary_operators_in_dynskel(s);
 		      }
 		    break;
 		  case AST_Decl::NT_struct:
@@ -2112,7 +2155,7 @@ o2be_union::produce_binary_operators_in_skel(std::fstream &s)
 			o2be_structure::narrow_from_decl(decl)
 			  ->set_binary_operators_skel_produced_in_field();
 			o2be_structure::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_skel(s);
+			  ->produce_binary_operators_in_dynskel(s);
 		      }
 		    break;
 		  case AST_Decl::NT_union:
@@ -2122,7 +2165,7 @@ o2be_union::produce_binary_operators_in_skel(std::fstream &s)
 			o2be_union::narrow_from_decl(decl)
 			  ->set_binary_operators_skel_produced_in_field();
 			o2be_union::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_skel(s);
+			  ->produce_binary_operators_in_dynskel(s);
 		      }
 		    break;
 		  default:
@@ -2133,187 +2176,348 @@ o2be_union::produce_binary_operators_in_skel(std::fstream &s)
 	i.next();
       }
   }
-  if ((idl_global->compile_flags() & IDL_CF_ANY)&& recursive_seq() == I_FALSE)
-    {
-      IND(s); s << "void _03RL_" << _fqname() << "_delete(void* _data) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << fqname() << "* _0RL_t = (" << fqname() << "*) _data;\n";
-      IND(s); s << "delete _0RL_t;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
 
-      // any insertion and extraction operators
-      IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
-		<< fqname() << "& _s) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
-      IND(s); s << fqtcname() << "->NP_fillInit(_0RL_mbuf);\n";
-      IND(s); s << "_s >>= _0RL_mbuf;\n";
-      IND(s); s << "_a.NP_replaceData(" << fqtcname() << ",_0RL_mbuf);\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////// tcDescriptor generation /////////////////////
+  //////////////////////////////////////////////////////////////////////
 
-      IND(s); s << "void operator<<=(CORBA::Any& _a, " << fqname() 
-		<< "* _sp) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "_a <<= *_sp;\n";
-      IND(s); s << "delete _sp;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+  // Pre-declare tcParser_buildDesc functions for types defined
+  // elsewhere, and generate code for anonymous array members.
+  // Ensure we have buildDesc support for all the members.
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while( !i.is_done() ) {
+      AST_Decl* d = i.item();
 
-      IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
-		<< fqname() << "*& _sp) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
-      IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
-		<< ",1)) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "_sp = 0;\n";
-      IND(s); s << "return 0;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      IND(s); s << "else {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
-      IND(s); s << "if (!_0RL_data) {\n";
-      INC_INDENT_LEVEL();
-      IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
-      IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
-      IND(s); s << fqname() << "* _0RL_tmp = new " << fqname() << ";\n";
-      IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
-      IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
-      IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << _fqname() 
-		<< "_delete);\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
-      IND(s); s << "_sp = (" << fqname() << "*) _0RL_data;\n";
-      IND(s); s << "return 1;\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n";
-      DEC_INDENT_LEVEL();
-      IND(s); s << "}\n\n";
+      if( d->node_type() == AST_Decl::NT_union_branch ) {
+	AST_Decl* ft = o2be_union_branch::narrow_from_decl(d)->field_type();
+	o2be_buildDesc::produce_decls(s, ft);
+      }
+
+      i.next();
+    }
   }
+  // If the discriminator type is defined in another file
+  // then we also need to declare the buildDesc function
+  // for it.
+  o2be_buildDesc::produce_decls(s, disc_type());
+
+  s << '\n';
+
+  // Put the buildDesc helper functions into a helper class. This means
+  // that the union class need only have one friend, and avoids a bug
+  // in MSVC.
+  IND(s); s << "class _0RL_tcParser_unionhelper_" << _idname() << " {\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+
+  // getDiscriminator - build a tcDescriptor for the
+  // union discriminator. Also return the value of the
+  // discriminator in <_discrim>.
+  IND(s); s << "static void getDiscriminator(tcUnionDesc* _desc, "
+	    "tcDescriptor& _newdesc, CORBA::PR_unionDiscriminator& _discrim)"
+	    " {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << fqname() << "* _u = (" << fqname() << "*)_desc->opq_union;\n";
+  o2be_buildDesc::call_buildDesc(s, disc_type(), "_newdesc", "_u->pd__d");
+  IND(s); s << "_discrim = (CORBA::PR_unionDiscriminator)_u->pd__d;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  // setDiscriminator - set the value of the union discriminator.
+  IND(s); s << "static void setDiscriminator(tcUnionDesc* _desc, "
+	    "CORBA::PR_unionDiscriminator _discrim, int _is_default) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << fqname() << "* _u = (" << fqname() << "*)_desc->opq_union;\n";
+  IND(s); s << "_u->pd__d = ("
+	    << o2be_name::narrow_and_produce_unambiguous_name(disc_type(),
+							      this)
+	    << ")_discrim;\n";
+  IND(s); s << "_u->pd__default = _is_default;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  // getValueDesc - build a tcDescriptor for the union's
+  // selected value.
+  IND(s); s << "static CORBA::Boolean getValueDesc(tcUnionDesc* _desc, "
+	    "tcDescriptor& _newdesc) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << fqname() << "* _u = (" << fqname() << "*)_desc->opq_union;\n";
+  if( !nodefault() ) {
+    IND(s); s << "if( _u->pd__default ) {\n";
+    INC_INDENT_LEVEL();
+    {
+      UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+      while( !i.is_done() ) {
+	AST_Decl* d = i.item();
+	if (d->node_type() == AST_Decl::NT_union_branch) {
+	  o2be_union_branch* ub = o2be_union_branch::narrow_from_decl(d);
+	  AST_UnionLabel* l = ub->label();
+	  if( l->label_kind() == AST_UnionLabel::UL_default ) {
+	    char* val = new char[1 + 7 + strlen(ub->uqname())];
+	    strcpy(val, "_u->pd_");
+	    strcat(val, ub->uqname());
+	    o2be_buildDesc::call_buildDesc(s, ub->field_type(),
+					   "_newdesc", val);
+	    delete[] val;
+	    break;
+	  }
+	}
+	i.next();
+      }
+    }
+    DEC_INDENT_LEVEL();
+    IND(s); s << "} else {\n";
+    INC_INDENT_LEVEL();
+  }
+  IND(s); s << "switch( _u->pd__d ) {\n";
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while( !i.is_done() ) {
+      AST_Decl* d = i.item();
+      if (d->node_type() == AST_Decl::NT_union_branch)
+	{
+	  o2be_union_branch* ub = o2be_union_branch::narrow_from_decl(d);
+	  AST_UnionLabel* l = ub->label();
+	  if (l->label_kind() == AST_UnionLabel::UL_label)
+	    {
+	      IND(s); s << "case ";
+	      produce_disc_value(s, disc_type(), l->label_val(), this);
+	      s << ":\n";
+	      INC_INDENT_LEVEL();
+	      char* val = new char[1 + 7 + strlen(ub->uqname())];
+	      strcpy(val, "_u->pd_");
+	      strcat(val, ub->uqname());
+	      o2be_buildDesc::call_buildDesc(s, ub->field_type(),
+					     "_newdesc", val);
+	      delete[] val;
+	      IND(s); s << "break;\n";
+	      DEC_INDENT_LEVEL();
+	    }
+	}
+      i.next();
+    }
+  }
+  if( !no_missing_disc_value() ) {
+    IND(s); s << "default: return 0;\n";
+  }
+  IND(s); s << "}\n";
+  if( !nodefault() ) {
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+  }
+  IND(s); s << "return 1;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  // End of helper class.
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n\n";
+
+  // tcParser function to build a tcDescriptor for this class.
+  IND(s); s << "void _0RL_buildDesc" << canonical_name()
+	    << "(tcDescriptor& _desc, "
+	    << "const " << fqname() << "& _data)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_desc.p_union.getDiscriminator = _0RL_tcParser_unionhelper_"
+	    << _idname() << "::getDiscriminator;\n";
+  IND(s); s << "_desc.p_union.setDiscriminator = _0RL_tcParser_unionhelper_"
+	    << _idname() << "::setDiscriminator;\n";
+  IND(s); s << "_desc.p_union.getValueDesc = _0RL_tcParser_unionhelper_"
+	    << _idname() << "::getValueDesc;\n";
+  IND(s); s << "_desc.p_union.opq_union = (void*)&_data;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  // Any storage management function - Any has to manage
+  // the data extracted from it. This function is needed
+  // to release the storage and call the d'tor.
+  IND(s); s << "void _0RL_delete_" << _idname() << "(void* _data)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << fqname() << "* _0RL_t = (" << fqname() << "*) _data;\n";
+  IND(s); s << "delete _0RL_t;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  //////////////////////////////////////////////////////////////////////
+  /////////////////////// Any insertion operators //////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  IND(s); s << "void operator<<=(CORBA::Any& _a, const "
+	    << fqname() << "& _s)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
+  o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "_s");
+  IND(s); s << "_a.PR_packFrom(_0RL_tc_" << _idname()
+	    << ", &_0RL_tcdesc);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  //////////////////////////////////////////////////////////////////////
+  //////////////////////// Any extraction operator /////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+	    << fqname() << "*& _sp) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_sp = (" << fqname() << " *) _a.PR_getCachedData();\n";
+  IND(s); s << "if (_sp == 0) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
+  IND(s); s << "_sp = new " << fqname() << ";\n";
+  o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "*_sp");
+  IND(s); s << "if( _a.PR_unpackTo(_0RL_tc_" << _idname()
+	    << ", &_0RL_tcdesc) ) {\n";
+  INC_INDENT_LEVEL();
+  // We take the address and cast to get past the
+  // const qualifier on <_a>.
+  IND(s); s << "((CORBA::Any*)&_a)->PR_setCachedData(_sp, "
+	    << "_0RL_delete_" << _idname() << ");\n";
+  IND(s); s << "return 1;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "} else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "delete _sp;\n";
+  IND(s); s << "_sp = 0;\n";
+  IND(s); s << "return 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "} else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::TypeCode_var _0RL_tctmp = _a.type();\n";
+  IND(s); s << "if (_0RL_tctmp->equal(_0RL_tc_" << _idname()
+	    << ")) return 1;\n";
+  IND(s); s << "_sp = 0;\n";
+  IND(s); s << "return 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
 }
+
 
 void
 o2be_union::produce_typecode_skel(std::fstream &s)
 {
-  if (idl_global->compile_flags() & IDL_CF_ANY) {
-    s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
-    s << "#define " << "__01RL_" << _fqtcname() << "__\n\n";
- 
-   {
-     // Produce static TypeCodes for members that are not
-     // defined in this file.
+  if( have_produced_typecode_skel() )  return;
+  set_have_produced_typecode_skel();
 
-     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-     while (!i.is_done())
-       {
-	 AST_Decl *d = i.item();
-	 if (d->node_type() == AST_Decl::NT_union_branch)
-	   {
-	     AST_Decl *decl = 
-	       AST_UnionBranch::narrow_from_decl(d)->field_type();
-	      if (!decl->in_main_file() || 
-		  decl->node_type() == AST_Decl::NT_array || 
-		  decl->node_type() == AST_Decl::NT_sequence)
-		o2be_name::narrow_and_produce_typecode_skel(decl,s);	       
-	   }
-	 i.next();
-       }
-   }
-
-   // Produce static TypeCode for discriminant type (if necessary).
-   AST_ConcreteType *discrimt = disc_type();
-   if (!discrimt->in_main_file()) 
-     o2be_name::narrow_and_produce_typecode_skel(discrimt,s);
-     
-   
-   unsigned int memberCount = 0;
-   unsigned int defaultMember = 0;
-
-   IND(s); s << "static CORBA::PR_unionMember _02RL_" << _fqtcname()
-	     << "[] = {\n";
-   INC_INDENT_LEVEL();
-   {
-     // Produce entries in PR_unionMember for union members
-     // (name, TypeCode_ptr, and label value)
-     
-     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-     while (!i.is_done())
-       {
-	 AST_Decl *d = i.item();
-	 if (d->node_type() == AST_Decl::NT_union_branch)
-	   {
-	     IND(s); s << "{\"" 
-		       << o2be_union_branch::narrow_from_decl(d)->uqname() 
-		       << "\", ";
-
-	     AST_Decl *decl = 
-	       AST_UnionBranch::narrow_from_decl(d)->field_type();
-	     o2be_name::produce_typecode_member(decl,s);
-	     s << ", ";
-
-	     AST_UnionLabel *l = 
-	       o2be_union_branch::narrow_from_decl(d)->label();
-	     if (l->label_kind() == AST_UnionLabel::UL_label)
-	       {
-		 AST_ConcreteType *ct = disc_type();
-		 if (ct->node_type() == AST_Decl::NT_enum)
-		   {
-		     AST_Decl *v = 
-		    AST_Enum::narrow_from_decl(ct)->lookup_by_value(l->label_val());
-		     s << o2be_name::narrow_and_produce_fqname(v);
-		   }
-		 else produce_disc_value(s,disc_type(),l->label_val(),this);
-	       }
-	     else 
-	       {
-		 // this label is default
-		 s << "0";
-		 defaultMember = memberCount;
-	       }
-	     s << "}";
-	     memberCount++;
-	     i.next();
-	     if (i.is_done()) s << " };\n";
-	     else s << ",\n";    
-	   }
-	 else i.next();
-       }
-   }
-   DEC_INDENT_LEVEL();
-
-   IND(s); s << "static CORBA::TypeCode _01RL_" << _fqtcname()
-	     << "(\"" << repositoryID() << "\", \"" << uqname() << "\", ";
-   o2be_name::produce_typecode_member(discrimt,s,I_FALSE);
-   s << ", _02RL_" << _fqtcname() << ", " << memberCount;
-   if (!nodefault()) s << ", " << defaultMember;
-   s << ");\n\n";
-
-   s << "#endif\n\n";
-  }
-  return;
-}
-
-idl_bool 
-o2be_union::check_recursive_seq()
-{
-  UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-  while (!i.is_done())
-    {
-      AST_Decl *d = i.item();
-      if (d->node_type() == AST_Decl::NT_union_branch)
-	{
-	  AST_Decl *decl = 
-	    AST_UnionBranch::narrow_from_decl(d)->field_type();
-	  if (o2be_name::narrow_and_check_recursive_seq(decl) == I_TRUE)
-	    return I_TRUE;
-	}
+  { // Ensure we have the typecodes of the members ...
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while( !i.is_done() ) {
+      AST_Decl* d = i.item();
       i.next();
+      if( d->node_type() != AST_Decl::NT_union_branch )
+	continue;
+      d = AST_UnionBranch::narrow_from_decl(d)->field_type();
+      o2be_name::narrow_and_produce_typecode_skel(d, s);
     }
-  return I_FALSE;
+  }
+  // ... and the discriminant type.
+  o2be_name::narrow_and_produce_typecode_skel(disc_type(), s);
+
+  // Create an array of PR_unionMember to describe the members.
+  unsigned int memberCount = 0;
+  unsigned int defaultMember = 0;
+
+  IND(s); s << "static CORBA::PR_unionMember _0RL_unionMember_"
+	    << _idname() << "[] = {\n";
+  INC_INDENT_LEVEL();
+  {
+    // Produce entries in PR_unionMember for union members
+    // (name, TypeCode_ptr, and label value)
+
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while( !i.is_done() ) {
+      AST_Decl* d = i.item();
+      i.next();
+      if( d->node_type() != AST_Decl::NT_union_branch )
+	continue;
+
+      IND(s); s << "{\"" 
+		<< o2be_union_branch::narrow_from_decl(d)->uqname() 
+		<< "\", ";
+
+      AST_Decl* decl = AST_UnionBranch::narrow_from_decl(d)->field_type();
+      o2be_name::produce_typecode_member(decl,s);
+      s << ", ";
+
+      AST_UnionLabel *l = o2be_union_branch::narrow_from_decl(d)->label();
+      if (l->label_kind() == AST_UnionLabel::UL_label) {
+	AST_ConcreteType *ct = disc_type();
+	if (ct->node_type() == AST_Decl::NT_enum) {
+	  AST_Decl* v = 
+	    AST_Enum::narrow_from_decl(ct)->lookup_by_value(l->label_val());
+	  s << o2be_name::narrow_and_produce_fqname(v);
+	}else
+	  produce_disc_value(s, disc_type(), l->label_val(), this);
+      } else {
+	// this label is default
+	s << "0";
+	defaultMember = memberCount;
+      }
+      s << "}";
+      memberCount++;
+      if( i.is_done() )  s << '\n';
+      else               s << ",\n";    
+    }
+  }
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n";
+  
+  IND(s); s << "static CORBA::TypeCode_ptr _0RL_tc_" << _idname() << " = "
+	    << "CORBA::TypeCode::PR_union_tc(\"" << repositoryID()
+	    << "\", \"" << uqname() << "\", ";
+  o2be_name::produce_typecode_member(disc_type(), s);
+  s << ", _0RL_unionMember_" << _idname() << ", " << memberCount;
+  if( !nodefault() )  s << ", " << defaultMember;
+  s << ");\n\n";
 }
+
+
+void
+o2be_union::produce_decls_at_global_scope_in_hdr(std::fstream& s)
+{
+  {
+    // declare any constructor types defined in this scope
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+        AST_Decl* d = i.item();
+        if (d->node_type() == AST_Decl::NT_union_branch)
+          {
+            AST_Decl* decl =AST_UnionBranch::narrow_from_decl(d)->field_type();
+            if (decl->has_ancestor(this))
+              {
+                switch (decl->node_type())
+                  {
+                  case AST_Decl::NT_struct:
+		    o2be_structure::narrow_from_decl(decl)
+		      ->produce_decls_at_global_scope_in_hdr(s);
+		    break;
+                  case AST_Decl::NT_union:
+		    o2be_union::narrow_from_decl(decl)
+		      ->produce_decls_at_global_scope_in_hdr(s);
+		    break;
+                  default:
+                    break;
+                  }
+              }
+          }
+        i.next();
+      }
+  }
+
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    IND(s); s << "// Declare helper class for union type " << fqname() << "\n";
+    IND(s); s << "class _0RL_tcParser_unionhelper_" << _idname() << ";\n\n";
+  }
+}
+
 
 void
 o2be_union::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
@@ -2324,10 +2528,14 @@ o2be_union::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 	    << "_var " << tdef->uqname() << "_var;\n";
 }
 
+
 idl_bool
 o2be_union::no_missing_disc_value()
 {
-  AST_Decl *decl = disc_type();
+  //?? We should cache the result of this computation. It is
+  // called quite a few times for any particular union.
+
+  AST_Decl* decl = disc_type();
   while (decl->node_type() == AST_Decl::NT_typedef)
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 
@@ -2434,21 +2642,8 @@ o2be_union::no_missing_disc_value()
 	      }
 	    break;
 	  }
-	case AST_PredefinedType::PT_octet:
-	  {
-	    disc_value_t v;
-	    v.o_val = 0;
-	    while (v.o_val < 255) {
-	      if (!lookup_by_disc_value(*this,v)) {
-		return I_FALSE;
-	      }
-	      v.o_val++;
-	    }
-	    if (!lookup_by_disc_value(*this,v))
-	      return I_FALSE;
-	    break;
-	  }
 	default:
+	  //?? This ought to be caught earlier - but it isn't!!!
 	  throw o2be_internal_error(__FILE__,__LINE__,
 				    "Unexpected union discriminant value");
 	  break;
@@ -2467,7 +2662,7 @@ static
 void
 produce_default_value(o2be_union &u,std::fstream& s)
 {
-  AST_Decl *decl = u.disc_type();
+  AST_Decl* decl = u.disc_type();
   while (decl->node_type() == AST_Decl::NT_typedef)
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 
@@ -2549,16 +2744,6 @@ produce_default_value(o2be_union &u,std::fstream& s)
 	    }
 	    break;
 	  }
-	case AST_PredefinedType::PT_octet:
-	  {
-	    disc_value_t v;
-	    v.o_val = 0;
-	    while (lookup_by_disc_value(u,v)) {
-	      v.o_val++;
-	    }
-	    s << (unsigned int)v.o_val;
-	    break;
-	  }
 	case AST_PredefinedType::PT_boolean:
 	  {
 	    disc_value_t v;
@@ -2609,9 +2794,6 @@ produce_disc_value(std::fstream &s,AST_ConcreteType *t,AST_Expression *exp,
 	case AST_Expression::EV_bool:
 	  s << ((v->u.bval == 0) ? "0" : "1");
 	  break;
-	case AST_Expression::EV_octet:
-	  s << (unsigned int)v->u.oval;
-	  break;
 	case AST_Expression::EV_char:
 	  {
 	    char c = v->u.cval;
@@ -2634,13 +2816,13 @@ produce_disc_value(std::fstream &s,AST_ConcreteType *t,AST_Expression *exp,
     }
   else
     {
-      AST_Decl *v = AST_Enum::narrow_from_decl(t)->lookup_by_value(exp);
+      AST_Decl* v = AST_Enum::narrow_from_decl(t)->lookup_by_value(exp);
       s << o2be_name::narrow_and_produce_unambiguous_name(v,used_in);
     }
 }
 
 static idl_bool
-match_disc_value(o2be_union_branch& b,AST_Decl *decl,disc_value_t v)
+match_disc_value(o2be_union_branch& b,AST_Decl* decl,disc_value_t v)
 {
   AST_UnionLabel* l = b.label();
   
@@ -2654,7 +2836,7 @@ match_disc_value(o2be_union_branch& b,AST_Decl *decl,disc_value_t v)
     {
     case AST_Decl::NT_enum:
       {
-	AST_Decl *bv = AST_Enum::narrow_from_decl(decl)->lookup_by_value(l->label_val());
+	AST_Decl* bv = AST_Enum::narrow_from_decl(decl)->lookup_by_value(l->label_val());
 	if (bv == v.e_val)
 	  return I_TRUE;
 	break;
@@ -2688,10 +2870,6 @@ match_disc_value(o2be_union_branch& b,AST_Decl *decl,disc_value_t v)
 	    if (bv->u.bval == (unsigned long)v.b_val)
 	      return I_TRUE;
 	    break;
-	  case AST_PredefinedType::PT_octet:
-	    if (bv->u.oval == v.o_val)
-	      return I_TRUE;
-	    break;
 	  default:
 	    throw o2be_internal_error(__FILE__,__LINE__,
 				      "Unexpected union discriminant value");
@@ -2714,7 +2892,7 @@ lookup_by_disc_value(o2be_union& u,disc_value_t v)
   UTL_ScopeActiveIterator i(&u,UTL_Scope::IK_decls);
   while (!i.is_done())
     {
-      AST_Decl *d = i.item();
+      AST_Decl* d = i.item();
       if (d->node_type() == AST_Decl::NT_union_branch)
 	{
 	  o2be_union_branch *b = o2be_union_branch::narrow_from_decl(d);
@@ -2733,14 +2911,15 @@ produce_default_break(o2be_union& u, std::fstream& s)
 
 // I actually question whether this was needed at all.  In each call the line
 // "default: break;" is generated at the very end of the switch statement.
-// Semantically this is useless code, but maybe there was a reason it was there.
+// Semantically this is useless code, but maybe there was a reason it was
+// there.
 // In particular, if both true and false are specified for a boolean
 // discriminator, this causes a warning on MSVC when CORBA::Boolean is a "real"
 // C++ bool type.
 
 // bcv 23-FEB-1998 12:59:02.59
 
-  AST_Decl *decl = u.disc_type();
+  AST_Decl* decl = u.disc_type();
   while (decl->node_type() == AST_Decl::NT_typedef)
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
 
@@ -2757,7 +2936,7 @@ produce_default_break(o2be_union& u, std::fstream& s)
   }
 }
 
-const char *
+const char*
 o2be_union::out_adptarg_name(AST_Decl* used_in) const
 {
   if (o2be_global::qflag()) {
@@ -2787,4 +2966,3 @@ o2be_union::out_adptarg_name(AST_Decl* used_in) const
 IMPL_NARROW_METHODS1(o2be_union, AST_Union)
 IMPL_NARROW_FROM_DECL(o2be_union)
 IMPL_NARROW_FROM_SCOPE(o2be_union)
-
