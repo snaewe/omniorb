@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.11  2000/03/16 14:28:34  djr
+  Fixed signed/unsigned comparison warning.
+
   Revision 1.22.6.10  2000/01/28 15:57:10  djr
   Removed superflouous ref counting in Strand_iterator.
   Removed flags to indicate that Ropes and Strands are heap allocated.
@@ -846,11 +849,11 @@ static void dumpbuf(unsigned char* buf, size_t sz)
 {
   static omni_mutex lock;
   omni_mutex_lock sync(lock);
-  int i;
+  unsigned i;
   char row[80];
 
   // Do complete rows of 16 octets.
-  while( sz >= 16 ) {
+  while( sz >= 16u ) {
     sprintf(row, "%02x%02x %02x%02x %02x%02x %02x%02x "
 	         "%02x%02x %02x%02x %02x%02x %02x%02x ",
             (int) buf[0], (int) buf[1], (int) buf[2], (int) buf[3],
@@ -859,19 +862,19 @@ static void dumpbuf(unsigned char* buf, size_t sz)
             (int) buf[12], (int) buf[13], (int) buf[14], (int) buf[15]);
     fprintf(stderr, "%s", row);
     char* p = row;
-    for( i = 0; i < 16; i++ )  *p++ = printable_char(*buf++);
+    for( i = 0u; i < 16u; i++ )  *p++ = printable_char(*buf++);
     *p++ = '\0';
     fprintf(stderr,"%s\n", row);
-    sz -= 16;
+    sz -= 16u;
   }
 
   if( sz ) {
     // The final part-row.
-    for( i = 0; i < sz; i++ )
-      fprintf(stderr, (i & 1) ? "%02x ":"%02x", (int) buf[i]);
-    for( ; i < 16; i++ )
-      fprintf(stderr, (i & 1) ? "   ":"  ");
-    for( i = 0; i < sz; i++ )
+    for( i = 0u; i < sz; i++ )
+      fprintf(stderr, (i & 1u) ? "%02x ":"%02x", (int) buf[i]);
+    for( ; i < 16u; i++ )
+      fprintf(stderr, (i & 1u) ? "   ":"  ");
+    for( i = 0u; i < sz; i++ )
       fprintf(stderr, "%c", printable_char(buf[i]));
     fprintf(stderr,"\n");
   }
