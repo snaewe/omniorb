@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.18  2002/01/02 18:17:00  dpg1
+  Relax IOR strictness when strictIIOP not set.
+
   Revision 1.10.2.17  2001/08/21 10:50:46  dpg1
   Incorrect length calculation if no components.
 
@@ -383,9 +386,16 @@ IIOP::unmarshalProfile(const IOP::TaggedProfile& profile,
       }
     }
   }
-  // Check if the profile body ends here.
-  if (s.checkInputOverrun(1,1))
-    OMNIORB_THROW(MARSHAL,MARSHAL_InvalidIOR,CORBA::COMPLETED_NO);
+
+  // Check that the profile body ends here.
+  if (s.checkInputOverrun(1,1)) {
+    if (orbParameters::strictIIOP) {
+      omniORB::logs(10, "IIOP Profile has garbage at end");
+      OMNIORB_THROW(MARSHAL,MARSHAL_InvalidIOR,CORBA::COMPLETED_NO);
+    }
+    else
+      omniORB::logs(1, "Warning: IIOP Profile has garbage at end. Ignoring.");
+  }
 }
 
 void
@@ -409,9 +419,16 @@ IIOP::unmarshalMultiComponentProfile(const IOP::TaggedProfile& profile,
       body[index] <<= s;
     }
   }
-  // Check if the profile body ends here.
-  if (s.checkInputOverrun(1,1))
-    OMNIORB_THROW(MARSHAL,MARSHAL_InvalidIOR,CORBA::COMPLETED_NO);
+  // Check that the profile body ends here.
+  if (s.checkInputOverrun(1,1)) {
+    if (orbParameters::strictIIOP) {
+      omniORB::logs(10, "Multi-component profile has garbage at end");
+      OMNIORB_THROW(MARSHAL,MARSHAL_InvalidIOR,CORBA::COMPLETED_NO);
+    }
+    else
+      omniORB::logs(1, "Warning: Multi-component profile has "
+		    "garbage at end. Ignoring.");
+  }
 }
 
 
