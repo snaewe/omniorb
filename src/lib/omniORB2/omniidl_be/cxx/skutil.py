@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12  1999/12/26 16:38:06  djs
+# Support for bounded strings (specifically a bounds check raising
+# CORBA::BAD_PARAM)
+#
 # Revision 1.11  1999/12/16 16:08:02  djs
 # More TypeCode and Any fixes
 #
@@ -157,8 +161,16 @@ CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
        
     elif tyutil.isString(deref_type):
         indexing_string = util.block_begin_loop(string, full_dims)
+        bounds = util.StringStream()
+        if deref_type.bound() != 0:
+            bounds.out("""\
+    if (_len > @n@+1) {
+      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_MAYBE);
+    }""", n = str(deref_type.bound()))
+
         string.out("""\
     CORBA::ULong _len = (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);
+    @bound@
     _len >>= @to@;
     if (_len > 1)
       @to@.put_char_array((const CORBA::Char *)((const char*)@argname@@indexing_string@),_len);
@@ -167,6 +179,7 @@ CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
         _CORBA_null_string_ptr(0);
       CORBA::Char('\\0') >>= @to@;
     }""",
+                   bound = str(bounds),
                    argname = argname,
                    indexing_string = indexing_string,
                    to = to)
