@@ -1,6 +1,9 @@
 /*
  * libwrapper.c - wrapper around Visual C++'s "LIB" program to perform
- * GNU-WIN32 file name translation (from unix-like to dos-like names).
+ * file name translation (from unix-like to dos-like names).
+ *
+ * Both GNUWIN32 and OpenNT file names are supported - the first argument
+ * to this program specifies which.
  *
  * Compile this program with "cl libwrapper.c advapi32.lib".
  */
@@ -12,15 +15,33 @@
 
 #define MAX_MOUNTS 256
 
-void GetMounts(void);
+void GetGnuwin32Mounts(void);
+void GetOpenNTMounts(void);
 char *TranslateFileName(char *in, int offset);
+char *EscapeDoubleQuotes(char *in);
+int gnuwin32 = 0;
+int opennt = 0;
 
 int main(int argc, char **argv)
 {
   int rc;
   int i;
 
-  GetMounts();
+  if (argc > 1 && strcmp(argv[1], "-gnuwin32") == 0) {
+    GetGnuwin32Mounts();
+    gnuwin32 = 1;
+  } else if (argc > 1 && strcmp(argv[1], "-opennt") == 0) {
+    GetOpenNTMounts();
+    opennt = 1;
+  } else {
+    fprintf(stderr,
+	    "%s: must specify either -gnuwin32 or -opennt as first argument",
+	    argv[0]);
+    return 1;
+  }
+
+  argv++;
+  argc--;
 
   argv[0] = "lib";
 
@@ -56,6 +77,10 @@ int main(int argc, char **argv)
       }
     }
 
+    if (strchr(argv[i], '"')) {
+      argv[i] = EscapeDoubleQuotes(argv[i]);
+    }
+
     printf(" %s", argv[i]);
   }
 
@@ -68,6 +93,25 @@ int main(int argc, char **argv)
     return 1;
   }
   return rc;
+}
+
+
+char *EscapeDoubleQuotes(char *in)
+{
+  int i, j;
+  char *out = malloc(strlen(in) * 2 + 1);
+
+  j = 0;
+  for (i = 0; i < strlen(in); i++) {
+    if (in[i] == '"') {
+      out[j++] = '\\';
+    }
+    out[j++] = in[i];
+  }
+
+  out[j] = '\0';
+
+  return out;
 }
 
 
@@ -104,7 +148,30 @@ char *TranslateFileName(char *in, int offset)
   return out;
 }
 
-void GetMounts(void)
+void GetOpenNTMounts(void)
+{
+  char c;
+
+  nmounts = 0;
+
+  for (c = 'A'; c <= 'Z'; c++) {
+    unix[nmounts] = (char *)malloc(5);
+    sprintf(unix[nmounts], "//%c/", c);
+    dos[nmounts] = (char *)malloc(4);
+    sprintf(dos[nmounts], "%c:/", c);
+    nmounts++;
+  }
+
+  for (c = 'a'; c <= 'z'; c++) {
+    unix[nmounts] = (char *)malloc(5);
+    sprintf(unix[nmounts], "//%c/", c);
+    dos[nmounts] = (char *)malloc(4);
+    sprintf(dos[nmounts], "%c:/", c);
+    nmounts++;
+  }
+}
+
+void GetGnuwin32Mounts(void)
 {
   HKEY hkey;
   LONG rc;
