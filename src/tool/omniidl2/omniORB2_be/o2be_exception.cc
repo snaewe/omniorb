@@ -25,6 +25,9 @@
 
 /*
   $Log$
+  Revision 1.18  1999/07/19 09:49:32  djr
+  Put back prefix Exception/UserException onto type id of exceptions.
+
   Revision 1.17  1999/06/22 14:53:00  sll
   Fixed core dump when a member of an exception is a typedef of an interface.
   Cleanup any extraction operator signature and type casting.
@@ -645,7 +648,7 @@ o2be_exception::produce_skel(std::fstream &s)
   INC_INDENT_LEVEL();
   IND(s); s << "return ("
 	    << fqname()
-	    << "*)_NP_is_a(e,\""
+	    << "*)_NP_is_a(e,\"Exception/UserException/"
 	    << _fqname()
 	    << "\");\n";
   DEC_INDENT_LEVEL();
@@ -656,7 +659,7 @@ o2be_exception::produce_skel(std::fstream &s)
   INC_INDENT_LEVEL();
   IND(s); s << "return (const "
 	    << fqname()
-	    << "*)_NP_is_a(e,\""
+	    << "*)_NP_is_a(e,\"Exception/UserException/"
 	    << _fqname()
 	    << "\");\n";
   DEC_INDENT_LEVEL();
@@ -675,7 +678,7 @@ o2be_exception::produce_skel(std::fstream &s)
 
   IND(s); s << "const char* " << fqname() << "::_NP_mostDerivedTypeId() const {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "return \"" << _fqname() << "\";\n";
+  IND(s); s << "return \"Exception/UserException/" << _fqname() << "\";\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
