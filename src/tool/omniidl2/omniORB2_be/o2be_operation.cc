@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.21  1998/03/25 14:40:11  sll
+  *** empty log message ***
+
   Revision 1.20  1998/03/25 14:18:57  sll
   Temporary work-around for egcs compiler.
 
@@ -257,7 +260,7 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &def_in,
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong _0RL_retries = 0;\n";
-  s << "#ifndef EGCS_WORKAROUND\n"
+  s << "#ifndef EGCS_WORKAROUND\n";
   s << "_0RL_again:\n";
   s << "#else\n";
   s << "while(1) {\n";
@@ -1682,7 +1685,7 @@ o2be_operation::produce_lcproxy_skel(fstream &s,o2be_interface &def_in,
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong _0RL_retries = 0;\n";
-  s << "#ifndef EGCS_WORKAROUND\n"
+  s << "#ifndef EGCS_WORKAROUND\n";
   s << "_0RL_again:\n";
   s << "#else\n";
   s << "while(1) {\n";
