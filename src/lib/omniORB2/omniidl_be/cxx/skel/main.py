@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/15 19:13:38  djs
+# Union skeletons working
+#
 # Revision 1.1  1999/11/12 17:18:58  djs
 # Struct skeleton code added
 #
@@ -37,10 +40,12 @@
 
 from omniidl import idlast, idltype, idlutil
 
-from omniidl.be.cxx import tyutil, util, name, config
+from omniidl.be.cxx import tyutil, util, name, config, skutil
+
+#import omniidl.be.cxx.skel.util
+#skutil = omniidl.be.cxx.skel.util
 
 import main
-
 self = main
 
 # ------------------------------------
@@ -108,7 +113,8 @@ def visitStruct(node):
     size_calculation = "omni::align_to(_msgsize, omni::ALIGN_4) + 4"
 
     marshall = util.StringStream()
-    unmarshall = util.StringStream()
+    Mem_unmarshall = util.StringStream()
+    Net_unmarshall = util.StringStream()
     msgsize = util.StringStream()
     
     for n in node.members():
@@ -117,17 +123,20 @@ def visitStruct(node):
         for d in n.declarators():
             # marshall and unmarshall the struct members
             member_name = tyutil.name(d.scopedName())
-            marshall.out("""\
-  @member_name@ >>= _n;""", member_name = member_name)
-            unmarshall.out("""\
-  @member_name@ <<= _n;""", member_name = member_name)
+            memberType = n.memberType()
+
+            skutil.marshall(marshall, environment, memberType, d,
+                            member_name)
+            skutil.unmarshall(Mem_unmarshall, environment, memberType, d,
+                              member_name, 0)
+            skutil.unmarshall(Net_unmarshall, environment, memberType, d,
+                              member_name, 1)  
 
             # computation of aligned size
-            memberType = n.memberType()
-            size = tyutil.sizeCalculation(environment, memberType, d,
+            size = skutil.sizeCalculation(environment, memberType, d,
                                           "_msgsize", member_name)
             msgsize.out("""\
-  @size_calculation@;""", size_calculation = size)
+  @size_calculation@""", size_calculation = size)
             
             
             
@@ -141,26 +150,272 @@ size_t
 }
 """, name = name, size_calculation = str(msgsize))
     
-    for where_to in ["NetBufferedStream", "MemBufferedStream"]:
-        stream.out("""\
+    stream.out("""\
 void
-@name@::operator>>= (@where_to@ &_n) const
+@name@::operator>>= (NetBufferedStream &_n) const
 {
   @marshall_code@
 }
 
 void
-@name@::operator<<= (@where_to@ &_n)
+@name@::operator<<= (NetBufferedStream &_n)
 {
-  @unmarshall_code@
+  @net_unmarshall_code@
 }
-""", name = name, where_to = where_to,
-                   marshall_code = str(marshall),
-                   unmarshall_code = str(unmarshall))
 
+void
+@name@::operator>>= (MemBufferedStream &_n) const
+{
+  @marshall_code@
+}
+
+void
+@name@::operator<<= (MemBufferedStream &_n)
+{
+  @mem_unmarshall_code@
+}
+""", name = name,
+               marshall_code = str(marshall),
+               mem_unmarshall_code = str(Mem_unmarshall),
+               net_unmarshall_code = str(Net_unmarshall))
+    stream.reset_indent()
     
 def visitUnion(node):
-    pass
+    environment = self.__environment
+    
+    name = map(tyutil.mapID, node.scopedName())
+    name = util.delimitedlist(name, "::")
+
+    switchType = node.switchType()
+    deref_switchType = tyutil.deref(switchType)
+
+    exhaustive = tyutil.exhaustiveMatch(switchType,
+                                        tyutil.allCaseValues(node))
+    defaultCase = tyutil.getDefaultCaseAndMark(node)
+    if defaultCase:
+        defaultLabel = tyutil.getDefaultLabel(defaultCase)
+        defaultMember = tyutil.name(map(tyutil.mapID,
+                                        defaultCase.declarator().scopedName()))
+        
+    hasDefault = defaultCase != None
+
+    # Booleans are a special case (isn't everything?)
+    booleanWrap = tyutil.isBoolean(switchType) and exhaustive
+
+
+
+    # --------------------------------------------------------------
+    # union::_NP_alignedSize(size_t initialoffset) const
+    #
+    discriminator_size_calc = skutil.sizeCalculation(environment,
+                                                     switchType,
+                                                     None,
+                                                     "_msgsize", "")
+
+    stream.out("""\
+size_t
+@name@::_NP_alignedSize(size_t initialoffset) const
+{
+  CORBA::ULong _msgsize = initialoffset;
+  @discriminator_size_calc@""",
+               name = name,
+               discriminator_size_calc = discriminator_size_calc)
+
+    if not(exhaustive):
+        stream.out("""\
+  if (pd__default) {""")
+        if hasDefault:
+            caseType = defaultCase.caseType()
+            decl = defaultCase.declarator()
+            size_calc = skutil.sizeCalculation(environment, caseType,
+                                               decl, "_msgsize",
+                                               "pd_" + defaultMember)
+            stream.inc_indent()
+            stream.out("""\
+    @size_calc@""", size_calc = size_calc)
+            stream.dec_indent()
+
+        stream.out("""\
+  }
+  else {""")
+        stream.inc_indent()
+
+    stream.out("""\
+    switch(pd__d) {""")
+    stream.inc_indent()
+    for c in node.cases():
+        caseType = c.caseType()
+        deref_caseType = tyutil.deref(caseType)
+        decl = c.declarator()
+        decl_name =  tyutil.name(map(tyutil.mapID, decl.scopedName()))
+        for l in c.labels():
+            # default case was already taken care of
+            if not(l.default()):
+                value =l.value()
+                discrim_value = tyutil.valueString(switchType, value, environment)
+                stream.out("""\
+      case @value@:""", value = str(discrim_value))
+
+                size_calc = skutil.sizeCalculation(environment, caseType, decl,
+                                           "_msgsize", "pd_" + decl_name)
+                                           
+                stream.inc_indent()
+                stream.out("""\
+        @size_calc@
+        break;""", size_calc = size_calc)
+                stream.dec_indent()
+
+    if booleanWrap:
+        stream.niout("""\
+#ifndef HAS_Cplusplus_Bool""")
+    stream.out("""\
+     default: break;""")
+    if booleanWrap:
+        stream.niout("""\
+#endif""")
+        
+    stream.dec_indent()
+    stream.out("""\
+    }""")
+    if not(exhaustive):
+        stream.dec_indent()
+        stream.out("""\
+  }""")
+    stream.out("""\
+  return _msgsize;
+}""")
+
+    # --------------------------------------------------------------
+    # union::operator{>>, <<}= ({Net, Mem}BufferedStream& _n) [const]
+    #
+    # FIXME: I thought the CORBA::MARSHAL exception thrown when
+    # unmarshalling an array of strings was skipped when unmarshalling
+    # from a MemBufferedStream (it is for a struct, but not for a union)
+    for where_to in ["NetBufferedStream", "MemBufferedStream"]:
+        #can_throw_marshall = where_to == "NetBufferedStream"
+        can_throw_marshall = 1
+
+        # marshalling
+        stream.out("""\
+void
+@name@::operator>>= (@where_to@& _n) const
+{
+  pd__d >>= _n;""", name = name, where_to = where_to)
+        
+        if not(exhaustive):
+            stream.out("""\
+  if (pd__default) {""")
+            if hasDefault:
+                caseType = defaultCase.caseType()
+                decl = defaultCase.declarator()
+                decl_name =  tyutil.name(map(tyutil.mapID, decl.scopedName()))
+                stream.inc_indent()
+                skutil.marshall(stream, environment, caseType,
+                                decl, "pd_" + decl_name)
+                stream.dec_indent()
+            stream.out("""\
+  }
+  else {""")
+            stream.inc_indent()
+
+        stream.out("""\
+    switch(pd__d) {""")
+        stream.inc_indent()
+        
+        for c in node.cases():
+            caseType = c.caseType()
+            decl = c.declarator()
+            decl_name = tyutil.name(map(tyutil.mapID, decl.scopedName()))
+            for l in c.labels():
+                if not(l.default()):
+                   value =l.value()
+                   discrim_value = tyutil.valueString(switchType, value,
+                                                      environment)
+                   stream.out("""\
+      case @value@:""", value = str(discrim_value))
+                   stream.inc_indent()
+                   skutil.marshall(stream, environment, caseType,
+                                   decl, "pd_" + decl_name)
+                   stream.out("""\
+        break;""")
+                   stream.dec_indent()
+                   
+        if booleanWrap:
+           stream.niout("""\
+#ifndef HAS_Cplusplus_Bool""")
+        stream.out("""\
+     default: break;""")
+        if booleanWrap:
+            stream.niout("""\
+#endif""")
+
+        stream.dec_indent()
+        stream.out("""\
+    }""")
+        
+
+        if not(exhaustive):
+            stream.dec_indent()
+            stream.out("""\
+  }""")
+
+        stream.dec_indent()
+        stream.out("""\
+}""")
+
+
+        # unmarshalling
+        stream.out("""\
+void
+@name@::operator<<= (@where_to@& _n)
+{
+  pd__d <<= _n;
+  switch(pd__d) {""", name = name, where_to = where_to)
+        stream.inc_indent()
+
+        for c in node.cases():
+            caseType = c.caseType()
+            decl = c.declarator()
+            decl_name = tyutil.name(map(tyutil.mapID, decl.scopedName()))
+            
+            isDefault = defaultCase == c
+            
+            for l in c.labels():
+                if l.default():
+                    stream.out("""\
+      default:""")
+                else:
+                    value =l.value()
+                    discrim_value = tyutil.valueString(switchType, value,
+                                                       environment)
+                    stream.out("""\
+      case @value@:""", value = str(discrim_value))
+
+            stream.inc_indent()
+            stream.out("""\
+        pd__default = @isDefault@;""", isDefault = str(isDefault))
+            
+            skutil.unmarshall(stream, environment, caseType, decl,
+                              "pd_" + decl_name, can_throw_marshall)
+            stream.out("""\
+        break;""")
+            stream.dec_indent()
+            
+        if not(hasDefault) and not(exhaustive):
+            stream.out("""\
+      default: pd__default = 1; break;""")
+
+        stream.dec_indent()
+        stream.out("""\
+  }
+}""")
+        
+
+        
+        
+    return
+    
+    
 def visitForward(node):
     pass
 def visitConst(node):
