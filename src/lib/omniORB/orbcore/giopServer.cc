@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.25  2003/05/22 13:47:40  dgrisby
+  Failed to setSelectable in some cases.
+
   Revision 1.22.2.24  2003/02/17 01:46:23  dgrisby
   Pipe to kick select thread (on Unix).
 
@@ -988,10 +991,9 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 	return 1;
       }
     }
-    else {
-      // Connection is selectable now
-      conn->setSelectable(1);
-    }
+
+    // Connection is selectable now
+    conn->setSelectable(1);
 
     // Worker is no longer needed.
     {

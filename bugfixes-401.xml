@@ -8,12 +8,16 @@
 
 <buglist version="4.0.1">
 
-<bug id="1" date="Sun Mar 23 20:36:13 GMT 2003" user="dgrisby">
-  <summary>Deallocation bug assigning an Any to itself</summary>
-  <reported>Vasily Tchekalkin</reported>
+<bug id="3" date="Thu May 22 14:30:47 BST 2003" user="dgrisby">
+  <summary>Connections ignored after exceptions in thread pool
+  mode.</summary>
+  <reported>Malge Nishant</reported>
+  <listlink
+  href="http://www.omniorb-support.com/pipermail/omniorb-list/2003-May/023631.html"/>
   <text>
-  Assigning an Any to itself would cause it to be incorrectly
-  deallocated.
+  In some circumstances, a connections were not marked selectable
+  after an exception, meaning future requests on them were not noticed
+  in thread pool mode.
   </text>
 </bug>
 
@@ -25,6 +29,15 @@
   <text>
   A bug in connection handling meant that integer timeouts could be
   ignored if the scan granularity was set to zero.
+  </text>
+</bug>
+
+<bug id="1" date="Sun Mar 23 20:36:13 GMT 2003" user="dgrisby">
+  <summary>Deallocation bug assigning an Any to itself</summary>
+  <reported>Vasily Tchekalkin</reported>
+  <text>
+  Assigning an Any to itself would cause it to be incorrectly
+  deallocated.
   </text>
 </bug>
 
