@@ -202,19 +202,6 @@ static const char* strip(const char* fn)
     throw CORBA::name(minor, status); \
   }
 
-void omniExHelper::omniConnectionBroken(const char* file, int line,
-					CORBA::ULong minor,
-					CORBA::CompletionStatus status)
-{
-  if( omniORB::trace(10) ) {
-    omniORB::logger l;
-    l << "throw omniConnectionBroken from "
-      << strip(file) << ":" << line << '\n';
-  }
-  throw ::omniConnectionBroken(minor, status);
-}
-
-
 OMNIORB_FOR_EACH_SYS_EXCEPTION(STD_EXCEPTION)
 #undef STD_EXCEPTION
 

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2000/10/09 16:21:26  sll
+  Removed reference to omniConnectionBroken.
+
   Revision 1.2.2.3  2000/10/06 16:36:07  sll
   Removed omniConnectionBroken. Has been superceded by raiseException() in
   the strand interface.
@@ -78,25 +81,17 @@ public:
 
 #undef OMNIORB_EX
 
-  static void omniConnectionBroken(const char*, int, CORBA::ULong,
-				   CORBA::CompletionStatus);
 };
 
 
 #define OMNIORB_THROW(name, minor, completion) \
   omniExHelper::name(__FILE__, __LINE__, minor, completion)
 
-#define OMNIORB_THROW_CONNECTION_BROKEN(minor, completion) \
-  omniExHelper::omniConnectionBroken(__FILE__, __LINE__, minor, completion)
-
 #else
 
 
 #define OMNIORB_THROW(name, minor, completion) \
   throw CORBA::name(minor, completion)
-
-#define OMNIORB_THROW_CONNECTION_BROKEN(minor, completion) \
-  throw omniConnectionBroken(minor, completion)
 
 #endif
 
