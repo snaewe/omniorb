@@ -28,13 +28,17 @@ module AttNotifyChannelAdmin {
         long num_notifications;
   };
 
-  interface EventChannelFactory;
-
   interface EventChannel : CosNotifyChannelAdmin::EventChannel 
   {
 	CosNotification::EventTypeSeq obtain_subscription_types();
 	CosNotification::EventTypeSeq obtain_offered_types();
 	PerformanceStats              obtain_performance_stats();
+
+	// The following two operations provide a way to display
+	// performance and state related information. 
+
+	void display_stats();
+  	void display_state();
   };
 
 };

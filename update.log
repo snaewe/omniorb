@@ -1,3 +1,10 @@
+Tue Aug 15 20:17:30 BST 2000 reg
+================================
+
+- Modified ATT extensions to NotifyChannel
+
+idl/COS/AttNotifyChannelAdmin.idl
+
 Tue Aug 15 16:28:30 BST 2000 sll
 ================================
 
