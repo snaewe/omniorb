@@ -1,26 +1,27 @@
 XCOMM appl/test/threadtests/Imakefile
 
-/* makedepend generates dependency rules for 
-      C   files listed in $(SRCS) and
-      C++ files listed in $(CXXSRCS) 
-   Don't put C++ files in $(SRCS)
-*/
-SRCS    =
-CXXSRCS = threadcancel.cc diner.cc
+CXXSRCS = diner.cc prodcons.cc thrspecdata.cc prio.cc
 
-INCLUDES = $(OMNITHREADDEFINE)
+DEFINES = $(OMNITHREADDEFINE)
 
-
-all:: ProgramTargetName(diner)
-
-NormalCplusplusProgramTarget(diner,diner.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),$(OMNIEXTRASYSLIB)) 
-
+AllTarget(ProgramTargetName(diner))
+NormalCplusplusProgramTarget(diner,diner.o,$(OMNITHREADDEPEND),\
+			     $(OMNITHREADLIB),NullParameter)
 InstallProgram(diner,$(BINDIR))
 
-all:: ProgramTargetName(threadcancel)
+AllTarget(ProgramTargetName(prodcons))
+NormalCplusplusProgramTarget(prodcons,prodcons.o,$(OMNITHREADDEPEND),\
+			     $(OMNITHREADLIB),NullParameter)
+InstallProgram(prodcons,$(BINDIR))
 
-NormalCplusplusProgramTarget(threadcancel,threadcancel.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),$(OMNIEXTRASYSLIB))
+AllTarget(ProgramTargetName(thrspecdata))
+NormalCplusplusProgramTarget(thrspecdata,thrspecdata.o,$(OMNITHREADDEPEND),\
+			     $(OMNITHREADLIB),NullParameter) 
+InstallProgram(thrspecdata,$(BINDIR))
 
-InstallProgram(threadcancel,$(BINDIR))
+AllTarget(ProgramTargetName(prio))
+NormalCplusplusProgramTarget(prio,prio.o,$(OMNITHREADDEPEND),\
+			     $(OMNITHREADLIB),NullParameter) 
+InstallProgram(prio,$(BINDIR))
 
 DependTarget()
