@@ -27,6 +27,10 @@
 
 /*
  $Log$
+ Revision 1.23  1999/05/26 10:09:36  sll
+ New class o2be_nested_typedef to deal with recursive generation of stub
+ code for nested types in struct, union and exception.
+
  Revision 1.22  1999/04/21 13:01:05  djr
  *** empty log message ***
 
@@ -205,6 +209,87 @@ private:
   char* pd_canonical_name;
 };
 
+class o2be_nested_typedef
+{
+public:
+  o2be_nested_typedef() {
+    pd_hdr_produced_in_field = I_FALSE;
+    pd_skel_produced_in_field = I_FALSE;
+    pd_dynskel_produced_in_field = I_FALSE;
+    pd_binary_operators_hdr_produced_in_field = I_FALSE;
+    pd_binary_operators_skel_produced_in_field = I_FALSE;
+    pd_have_produced_typecode_skel = I_FALSE;
+  }
+
+  // produce the various bits of stub for all the nested types defined in d.
+  // d is either a struct, a union or an exception.
+
+  static void produce_hdr(std::fstream& s, AST_Decl* d);
+  // produce type definition
+
+  static void produce_skel(std::fstream& s, AST_Decl* d);
+  // produce skeleton code 
+
+  static void produce_dynskel(std::fstream& s, AST_Decl* d);
+  // produce dynamic skeleton code
+
+  static void produce_binary_operators_in_hdr(std::fstream& s, AST_Decl* d);
+  // produce binary operators declaration
+
+  static void produce_binary_operators_in_dynskel(std::fstream& s, AST_Decl* d);
+  // produce binary operators definition
+
+
+  static void produce_typecode_skel(std::fstream& s, AST_Decl* d);
+#if 0
+  static void produce_decls_at_global_scope_in_hdr(std::fstream& s, AST_Decl* d);
+#endif
+
+  void set_hdr_produced_in_field() { 
+    pd_hdr_produced_in_field = I_TRUE; 
+  }
+  idl_bool get_hdr_produced_in_field() { 
+    return pd_hdr_produced_in_field; 
+  }
+  void set_skel_produced_in_field() { 
+    pd_skel_produced_in_field = I_TRUE; 
+  }
+  idl_bool get_skel_produced_in_field() { 
+    return pd_skel_produced_in_field; 
+  }
+  void set_dynskel_produced_in_field() { 
+    pd_dynskel_produced_in_field = I_TRUE; 
+  }
+  idl_bool get_dynskel_produced_in_field() { 
+    return pd_dynskel_produced_in_field; 
+  }
+  void set_binary_operators_hdr_produced_in_field() {
+    pd_binary_operators_hdr_produced_in_field = I_TRUE;
+  }
+  idl_bool get_binary_operators_hdr_produced_in_field() {
+    return pd_binary_operators_hdr_produced_in_field;
+  }
+  void set_binary_operators_skel_produced_in_field() {
+    pd_binary_operators_skel_produced_in_field = I_TRUE;
+  }
+  idl_bool get_binary_operators_skel_produced_in_field() {
+    return pd_binary_operators_skel_produced_in_field;
+  }
+  void set_have_produced_typecode_skel() { 
+    pd_have_produced_typecode_skel = I_TRUE; 
+  }
+  idl_bool have_produced_typecode_skel() { 
+    return pd_have_produced_typecode_skel;
+  }
+
+private:
+  idl_bool pd_hdr_produced_in_field;
+  idl_bool pd_skel_produced_in_field;
+  idl_bool pd_dynskel_produced_in_field;
+  idl_bool pd_binary_operators_hdr_produced_in_field;
+  idl_bool pd_binary_operators_skel_produced_in_field;
+  idl_bool pd_have_produced_typecode_skel;
+};
 
 class o2be_typedef;
 class o2be_sequence;
@@ -276,6 +361,7 @@ private:
 
 class o2be_enum : public virtual AST_Enum,
 		  public virtual o2be_name,
+		  public virtual o2be_nested_typedef,
 		  public virtual o2be_sequence_chain
 {
 public:
@@ -296,41 +382,7 @@ public:
   void produce_binary_operators_in_hdr(std::fstream& s);
   void produce_binary_operators_in_dynskel(std::fstream& s);
 
-  void set_hdr_produced_in_field() { pd_hdr_produced_in_field = I_TRUE; }
-  idl_bool get_hdr_produced_in_field() { return pd_hdr_produced_in_field; }
-  void set_skel_produced_in_field() { pd_skel_produced_in_field = I_TRUE; }
-  idl_bool get_skel_produced_in_field() { return pd_skel_produced_in_field; }
-  void set_dynskel_produced_in_field()
-  { pd_dynskel_produced_in_field = I_TRUE; }
-  idl_bool get_dynskel_produced_in_field()
-  { return pd_dynskel_produced_in_field; }
-
-  void set_binary_operators_hdr_produced_in_field() {
-    pd_binary_operators_hdr_produced_in_field = I_TRUE;
-  }
-  idl_bool get_binary_operators_hdr_produced_in_field() {
-    return pd_binary_operators_hdr_produced_in_field;
-  }
-  void set_binary_operators_skel_produced_in_field() {
-    pd_binary_operators_skel_produced_in_field = I_TRUE;
-  }
-  idl_bool get_binary_operators_skel_produced_in_field() {
-    return pd_binary_operators_skel_produced_in_field;
-  }
-
-  void set_have_produced_typecode_skel()
-  { pd_have_produced_typecode_skel = I_TRUE; }
-  idl_bool have_produced_typecode_skel()
-  { return pd_have_produced_typecode_skel; }
-
 private:
-  idl_bool pd_hdr_produced_in_field;
-  idl_bool pd_skel_produced_in_field;
-  idl_bool pd_dynskel_produced_in_field;
-  idl_bool pd_binary_operators_hdr_produced_in_field;
-  idl_bool pd_binary_operators_skel_produced_in_field;
-  idl_bool pd_have_produced_typecode_skel;
-
   o2be_enum();
 };
 
@@ -365,6 +417,8 @@ public:
   static const char* fieldMemberTypeName();
   static void produce_typedef_hdr (std::fstream& s, o2be_typedef* tdef);
 
+  void produce_buildDesc_support(std::fstream& s);
+
   size_t max_length();
 
 private:
@@ -388,14 +442,14 @@ private:
 
 };
 
-
 class o2be_union : public virtual AST_Union,
 		   public virtual o2be_name,
+		   public virtual o2be_nested_typedef,
 		   public virtual o2be_sequence_chain
 {
 public:
 
-  o2be_union(AST_ConcreteType *dt, UTL_ScopedName *n, UTL_StrList *p);
+  o2be_union(UTL_ScopedName *n, UTL_StrList *p);
 
   DEF_NARROW_METHODS1(o2be_union, AST_Union);
   DEF_NARROW_FROM_DECL(o2be_union);
@@ -418,46 +472,12 @@ public:
   idl_bool isVariable() { return pd_isvar; }
   idl_bool nodefault() { return pd_nodefault; }
   idl_bool no_missing_disc_value();
-
-  void set_hdr_produced_in_field() { pd_hdr_produced_in_field = I_TRUE; }
-  idl_bool get_hdr_produced_in_field() { return pd_hdr_produced_in_field; }
-  void set_skel_produced_in_field() { pd_skel_produced_in_field = I_TRUE; }
-  idl_bool get_skel_produced_in_field() { return pd_skel_produced_in_field; }
-  void set_dynskel_produced_in_field()
-  { pd_dynskel_produced_in_field = I_TRUE; }
-  idl_bool get_dynskel_produced_in_field()
-  { return pd_dynskel_produced_in_field; }
-
-  void set_binary_operators_hdr_produced_in_field() {
-    pd_binary_operators_hdr_produced_in_field = I_TRUE;
-  }
-  idl_bool get_binary_operators_hdr_produced_in_field() {
-    return pd_binary_operators_hdr_produced_in_field;
-  }
-  void set_binary_operators_skel_produced_in_field() {
-    pd_binary_operators_skel_produced_in_field = I_TRUE;
-  }
-  idl_bool get_binary_operators_skel_produced_in_field() {
-    return pd_binary_operators_skel_produced_in_field;
-  }
-
-  void set_have_produced_typecode_skel()
-  { pd_have_produced_typecode_skel = I_TRUE; }
-  idl_bool have_produced_typecode_skel()
-  { return pd_have_produced_typecode_skel; }
-
   const char* out_adptarg_name(AST_Decl* used_in) const;
 
 private:
-  idl_bool pd_hdr_produced_in_field;
-  idl_bool pd_skel_produced_in_field;
-  idl_bool pd_dynskel_produced_in_field;
-  idl_bool pd_binary_operators_hdr_produced_in_field;
-  idl_bool pd_binary_operators_skel_produced_in_field;
   idl_bool pd_isvar;
   idl_bool pd_nodefault;
   char* pd_out_adptarg_name;
-  idl_bool pd_have_produced_typecode_skel;
 
   o2be_union();
 
@@ -483,6 +503,7 @@ private:
 
 class o2be_structure : public virtual AST_Structure,
 		       public virtual o2be_name,
+		       public virtual o2be_nested_typedef,
 		       public virtual o2be_sequence_chain
 {
 public:
@@ -509,44 +530,11 @@ public:
 
   idl_bool isVariable() { return pd_isvar; }
 
-  void set_hdr_produced_in_field() { pd_hdr_produced_in_field = I_TRUE; }
-  idl_bool get_hdr_produced_in_field() { return pd_hdr_produced_in_field; }
-  void set_skel_produced_in_field() { pd_skel_produced_in_field = I_TRUE; }
-  idl_bool get_skel_produced_in_field() { return pd_skel_produced_in_field; }
-  void set_dynskel_produced_in_field()
-  { pd_dynskel_produced_in_field = I_TRUE; }
-  idl_bool get_dynskel_produced_in_field()
-  { return pd_dynskel_produced_in_field; }
-
-  void set_binary_operators_hdr_produced_in_field() {
-    pd_binary_operators_hdr_produced_in_field = I_TRUE;
-  }
-  idl_bool get_binary_operators_hdr_produced_in_field() {
-    return pd_binary_operators_hdr_produced_in_field;
-  }
-  void set_binary_operators_skel_produced_in_field() {
-    pd_binary_operators_skel_produced_in_field = I_TRUE;
-  }
-  idl_bool get_binary_operators_skel_produced_in_field() {
-    return pd_binary_operators_skel_produced_in_field;
-  }
-
-  void set_have_produced_typecode_skel()
-  { pd_have_produced_typecode_skel = I_TRUE; }
-  idl_bool have_produced_typecode_skel()
-  { return pd_have_produced_typecode_skel; }
-
   const char* out_adptarg_name(AST_Decl* used_in) const;
 
 private:
-  idl_bool pd_hdr_produced_in_field;
-  idl_bool pd_skel_produced_in_field;
-  idl_bool pd_dynskel_produced_in_field;
-  idl_bool pd_binary_operators_hdr_produced_in_field;
-  idl_bool pd_binary_operators_skel_produced_in_field;
   idl_bool pd_isvar;
   char* pd_out_adptarg_name;
-  idl_bool pd_have_produced_typecode_skel;
 
   o2be_structure();
 
@@ -554,6 +542,7 @@ private:
 
 
 class o2be_exception : public virtual AST_Exception,
+		       public virtual o2be_nested_typedef,
 		       public virtual o2be_name
 {
 public:
@@ -572,11 +561,6 @@ public:
 
   void produce_decls_at_global_scope_in_hdr(std::fstream& s);
 
-  void set_have_produced_typecode_skel()
-  { pd_have_produced_typecode_skel = I_TRUE; }
-  idl_bool have_produced_typecode_skel()
-  { return pd_have_produced_typecode_skel; }
-
   void produce_binary_operators_in_hdr(std::fstream& s);
   void produce_binary_operators_in_dynskel(std::fstream& s);
 
@@ -586,8 +570,6 @@ public:
 private:
   char* pd_repoid;
   size_t pd_repoidsize;
-  idl_bool pd_have_produced_typecode_skel;
-
   o2be_exception();
 };
 
@@ -745,9 +727,9 @@ public:
   void produce_buildDesc_support(std::fstream& s);
   // Generates the tcDescriptor code required for this type.
 
-  static AST_Sequence* attach_seq_to_base_type(AST_Sequence* se);
+  static AST_Sequence *attach_seq_to_base_type(AST_Sequence *se);
 
-  const char* out_adptarg_name(o2be_typedef* tdef, AST_Decl* used_in);
+  const char* out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in);
 
 private:
   o2be_sequence();
@@ -840,6 +822,9 @@ public:
   void produce_wrapproxy_wr_skel(std::fstream& s,o2be_interface &defined_in);
   // produce the _wrap_proxy set method
 
+  void produce_decls_at_global_scope_in_hdr(std::fstream& s);
+  void produce_dynskel(std::fstream& s);
+
   const char* mangled_read_signature();
   const char* mangled_write_signature();
 
@@ -924,6 +909,9 @@ public:
   // Produce the mapping for this operation using the adaptation classes
   // <T>_INOUT_arg and <T>_OUT_arg.
 
+  void produce_decls_at_global_scope_in_hdr(std::fstream& s);
+  void produce_dynskel(std::fstream& s);
+
   idl_bool has_variable_out_arg();
   // Return true if there is any variable length OUT arguments.
 
@@ -952,7 +940,7 @@ public:
     tStructFixed = 11, tStructVariable = 12, tUnionFixed = 13,
     tUnionVariable = 14, tString = 15, tSequence = 16, tArrayFixed = 17,
     tArrayVariable = 18, tAny = 19, tTypeCode = 20, tObjrefMember = 21,
-    tStringMember = 22, tTypeCodeMember = 23,
+    tStringMember = 22, tTypeCodeMember = 23, tContext = 24,
     _tMaxValue
   };
 
@@ -1013,6 +1001,14 @@ private:
   void produceConstStringSizeCalculation(std::fstream& s,
 					 const char* sizevar,
 					 size_t len);
+
+  static
+  void
+  check_and_produce_unnamed_argument_tc_decl(std::fstream&s,AST_Decl* d);
+
+  static
+  void
+  check_and_produce_unnamed_argument_tc_value(std::fstream& s,AST_Decl* d);
 
 private:
   char* pd_mangled_signature;
@@ -1382,8 +1378,7 @@ public:
 			   UTL_StrList *p);
 
   virtual AST_Union *
-          create_union(AST_ConcreteType *dt,
-		       UTL_ScopedName *n,
+          create_union(UTL_ScopedName *n,
 		       UTL_StrList *p);
 
   virtual AST_UnionBranch *
@@ -1523,6 +1518,10 @@ public:
   static const char* write_descriptor_name(o2be_attribute& attr);
   // These return the name of the call descriptor class for the
   // given operation or attribute.
+
+  static char* generate_unique_name(const char* prefix);//DH
+  // Generates a unique identifier each time it is called.
+  // <prefix> is used as a prefix!! eg. _0RL_ctx_
 };
 
 
