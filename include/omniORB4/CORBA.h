@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.16  2001/07/31 16:04:07  sll
+ Added ORB::create_policy() and associated types and operators.
+
  Revision 1.2.2.15  2001/06/18 20:30:51  sll
  Only define 1 conversion operator from T_var to T* if the compiler is
  gcc. Previously, this is only done for gcc 2.7.2. It seems that gcc 3.0
@@ -1196,6 +1199,59 @@ _CORBA_MODULE_BEG
 
   OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(WrongTransaction, _dyn_attr)
 
+
+  //////////////////////////////////////////////////////////////////////
+  ////////////////////////// PolicyError      //////////////////////////
+  //////////////////////////////////////////////////////////////////////
+  typedef _CORBA_Short PolicyErrorCode;
+  _CORBA_MODULE_VARINT const PolicyErrorCode 
+    BAD_POLICY _init_in_decl_( = 0 );
+  _CORBA_MODULE_VARINT const PolicyErrorCode 
+    UNSUPPORTED_POLICY _init_in_decl_( = 1 );
+  _CORBA_MODULE_VARINT const PolicyErrorCode 
+    BAD_POLICY_TYPE _init_in_decl_( = 2 );
+  _CORBA_MODULE_VARINT const PolicyErrorCode
+    BAD_POLICY_VALUE _init_in_decl_( = 3 );
+  _CORBA_MODULE_VARINT const PolicyErrorCode
+    UNSUPPORTED_POLICY_VALUE _init_in_decl_( = 4 );
+
+  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_PolicyErrorCode; 
+
+  class PolicyError : public CORBA::UserException {
+  public:
+    PolicyErrorCode reason;
+
+    inline PolicyError() {
+      pd_insertToAnyFn    = insertToAnyFn;
+      pd_insertToAnyFnNCP = insertToAnyFnNCP;
+    }
+    PolicyError(const PolicyError&);
+    PolicyError(PolicyErrorCode);
+    PolicyError& operator=(const PolicyError&);
+    virtual ~PolicyError();
+    virtual void _raise();
+    static PolicyError* _downcast(CORBA::Exception*);
+    static const PolicyError* _downcast(const CORBA::Exception*);
+    static inline PolicyError* _narrow(CORBA::Exception* e) { 
+      return _downcast(e);
+    }
+
+    void operator>>=(cdrStream&) const;
+    void operator<<=(cdrStream&);
+
+    static _dyn_attr insertExceptionToAny    insertToAnyFn;
+    static _dyn_attr insertExceptionToAnyNCP insertToAnyFnNCP;
+
+    static _dyn_attr const char* _PD_repoId;
+
+  private:
+    virtual CORBA::Exception* _NP_duplicate() const;
+    virtual const char* _NP_typeId() const;
+    virtual const char* _NP_repoId(int*) const;
+    virtual void _NP_marshal(cdrStream&) const;
+  };
+
+  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_PolicyError;
 
   //////////////////////////////////////////////////////////////////////
   ///////////////////////////// Environment ////////////////////////////
@@ -2367,6 +2423,50 @@ _CORBA_MODULE_BEG
   typedef _CORBA_Pseudo_Unbounded_Sequence<Policy, Policy_member> PolicyList;
   typedef PolicyList* PolicyList_var;  //??
 
+  typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_ULong,4,4> PolicyTypeSeq;
+
+  
+
+#ifdef OMNIORB_DECLARE_POLICY_OBJECT
+#error OMNIORB_DECLARE_POLICY_OBJECT is already defined!
+#endif
+#define OMNIORB_DECLARE_POLICY_OBJECT(name, type)  \
+  class name;  \
+  typedef name* name##_ptr;  \
+  typedef name##_ptr name##Ref;  \
+  \
+  class name : public CORBA::Policy  \
+  {  \
+  public:  \
+    inline name(name##Value value) : CORBA::Policy(type), pd_value(value) {}  \
+    inline name() {}  \
+    virtual ~name();  \
+    \
+    virtual CORBA::Policy_ptr copy();  \
+    virtual name##Value value() { return pd_value; }  \
+    \
+    virtual void* _ptrToObjRef(const char* repoId);  \
+    \
+    static name##_ptr _duplicate(name##_ptr p);  \
+    static name##_ptr _narrow(CORBA::Object_ptr p);  \
+    static name##_ptr _nil();  \
+    \
+    static _core_attr const char* _PD_repoId;  \
+    \
+  private:  \
+    name##Value pd_value;  \
+  }; \
+  \
+  typedef _CORBA_PseudoObj_Var<name> name##_var;
+
+#ifdef OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS
+#error OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS is already defined!
+#endif
+#define OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(name) \
+void operator<<=(CORBA::Any&, name##Value); \
+CORBA::Boolean operator>>=(const CORBA::Any&,name##Value& );
+
+
   //////////////////////////////////////////////////////////////////////
   ///////////////////////////// Current         ////////////////////////
   //////////////////////////////////////////////////////////////////////
@@ -2697,6 +2797,8 @@ _CORBA_MODULE_BEG
     DynFixed_ptr create_dyn_fixed(TypeCode_ptr tc);
 #endif
 
+    Policy_ptr create_policy(PolicyType,const Any&);
+    
     // omniORB internal.
     static _core_attr const char* _PD_repoId;
     virtual ~ORB();
@@ -2991,6 +3093,7 @@ extern void _omni_set_NameService(CORBA::Object_ptr);
 #include <omniORB4/corba_operators.h>
 #include <omniORB4/poa.h>
 #include <omniORB4/fixed.h>
+#include <omniORB4/BiDirPolicy.h>
 
 #include <omniORB4/corbaidl_operators.hh>
 

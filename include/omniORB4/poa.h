@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/07/31 16:04:07  sll
+  Added ORB::create_policy() and associated types and operators.
+
   Revision 1.2.2.7  2001/06/07 16:24:08  dpg1
   PortableServer::Current support.
 
@@ -328,30 +331,42 @@ _CORBA_MODULE_BEG
     SINGLE_THREAD_MODEL
   };
 
+_CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ThreadPolicyValue;
+
   enum LifespanPolicyValue {
     TRANSIENT,  // default
     PERSISTENT
   };
+
+  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_LifespanPolicyValue;
 
   enum IdUniquenessPolicyValue {
     UNIQUE_ID,  // default
     MULTIPLE_ID
   };
 
+  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_IdUniquenessPolicyValue;
+
   enum IdAssignmentPolicyValue {
     USER_ID,
     SYSTEM_ID  // default
   };
+
+  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_IdAssignmentPolicyValue;
 
   enum ImplicitActivationPolicyValue {
     IMPLICIT_ACTIVATION,
     NO_IMPLICIT_ACTIVATION  // default (but not root poa)
   };
 
+  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ImplicitActivationPolicyValue;
+
   enum ServantRetentionPolicyValue {
     RETAIN,  // default
     NON_RETAIN
   };
+
+  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ServantRetentionPolicyValue;
 
   enum RequestProcessingPolicyValue {
     USE_ACTIVE_OBJECT_MAP_ONLY,  // default
@@ -359,37 +374,7 @@ _CORBA_MODULE_BEG
     USE_SERVANT_MANAGER
   };
 
-#ifdef OMNIORB_DECLARE_POLICY_OBJECT
-#error OMNIORB_DECLARE_POLICY_OBJECT is already defined!
-#endif
-#define OMNIORB_DECLARE_POLICY_OBJECT(name, type)  \
-  class name;  \
-  typedef name* name##_ptr;  \
-  typedef name##_ptr name##Ref;  \
-  \
-  class name : public CORBA::Policy  \
-  {  \
-  public:  \
-    inline name(name##Value value) : CORBA::Policy(type), pd_value(value) {}  \
-    inline name() {}  \
-    virtual ~name();  \
-    \
-    virtual CORBA::Policy_ptr copy();  \
-    virtual name##Value value() { return pd_value; }  \
-    \
-    virtual void* _ptrToObjRef(const char* repoId);  \
-    \
-    static name##_ptr _duplicate(name##_ptr p);  \
-    static name##_ptr _narrow(CORBA::Object_ptr p);  \
-    static name##_ptr _nil();  \
-    \
-    static _core_attr const char* _PD_repoId;  \
-    \
-  private:  \
-    name##Value pd_value;  \
-  }; \
-  \
-  typedef _CORBA_PseudoObj_Var<name> name##_var;
+  _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_RequestProcessingPolicyValue;
 
   OMNIORB_DECLARE_POLICY_OBJECT(ThreadPolicy, THREAD_POLICY_ID)
   OMNIORB_DECLARE_POLICY_OBJECT(LifespanPolicy, LIFESPAN_POLICY_ID)
@@ -401,8 +386,6 @@ _CORBA_MODULE_BEG
 				SERVANT_RETENTION_POLICY_ID)
   OMNIORB_DECLARE_POLICY_OBJECT(RequestProcessingPolicy,
 				REQUEST_PROCESSING_POLICY_ID)
-
-#undef OMNIORB_DECLARE_POLICY_OBJECT
 
   //////////////////////////////////////////////////////////////////////
   ///////////////////////////// POAManager /////////////////////////////

@@ -17,6 +17,7 @@ ORB_SRCS = \
 	   namedValue.cc \
            nvList.cc \
 	   orbMultiRequest.cc \
+           policy.cc \
 	   pseudoBase.cc \
            request.cc \
            serverRequest.cc \
@@ -26,6 +27,7 @@ ORB_SRCS = \
            $(BUILTIN_STUB_SRCS)
 
 BUILTIN_STUB_SRCS = \
+           poastub.cc \
            bootstrapdynstub.cc \
            corbaidldynstub.cc \
            corbaidlstub.cc \

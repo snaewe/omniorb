@@ -20,6 +20,17 @@ include/omniORB4/templatedecls.h
 
 include/omniORB4/userexception.h
 
+- Added ORB::create_policy() and associated types and operators.
+
+include/omniORB4/poa.h
+include/omniORB4/poa_operators.h
+include/omniORB4/CORBA.h
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/poastub.cc  NEW
+src/lib/omniORB/dynamic/policy.cc   NEW
+
+
+
 Tue Jul 31 09:58:07 BST 2001 dpg1
 =================================
 
