@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.8  1999/12/28 18:16:07  dpg1
+// positive_int_const isn't allowed to be zero.
+//
 // Revision 1.7  1999/11/17 17:17:00  dpg1
 // Changes to remove static initialisation of objects.
 //
@@ -847,7 +850,11 @@ boolean_literal:
     ;
 
 positive_int_const:
-    const_exp { $$ = $1->evalAsULong(); }
+    const_exp {
+      $$ = $1->evalAsULong();
+      if ($$ < 1)
+	IdlError(currentFile, yylineno, "Size must be at least 1");
+    }
     ;
 
 type_dcl:
