@@ -104,9 +104,13 @@ lib = $(soname).$(IDLMODULE_MINOR)
 $(lib): $(OBJS) $(PYOBJS)
 	(set -x; \
 	$(RM) $@; \
+	if (CC -V 2>&1 | grep '5\.[0-9]'); \
+	  then CXX_RUNTIME=-lCrun; \
+	  else CXX_RUNTIME=-lC; \
+        fi; \
         $(CXX) -ptv -G -o $@ -h $(soname) $(IMPORT_LIBRARY_FLAGS) \
          $(patsubst %,-R %,$(IMPORT_LIBRARY_DIRS)) \
-         $(filter-out $(LibSuffixPattern),$^) -lposix4 -lnsl -lC \
+         $(filter-out $(LibSuffixPattern),$^) -lposix4 -lnsl $$CXX_RUNTIME \
 	)
 
 all:: $(lib)
