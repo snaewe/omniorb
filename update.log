@@ -1,4 +1,12 @@
 
+Thu Dec  2 19:01:41 GMT 1999 djr
+================================
+
+- Fixed bug in marshalling/unmarshalling of arrays.
+
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
+
 Thu Nov 25 11:30:35 GMT 1999 djr
 ================================
 

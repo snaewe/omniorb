@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.34.6.4  1999/12/02 19:08:31  djr
+  Fixed bug in (un)marshalling of arrays.
+
   Revision 1.34.6.3  1999/10/13 15:18:03  djr
   Fixed problem with call descriptors shared between ops and attrs.
 
@@ -2265,12 +2268,8 @@ o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
 	ptr_to_first_elm += argname;
 	{
 	  size_t ndim = 0;
-	  o2be_array::dim_iterator next(array);
-	  while( ndim++ < array->getNumOfDims() - 1 ) {
-	    ptr_to_first_elm += '[';
-	    ptr_to_first_elm += (int) next();
-	    ptr_to_first_elm += ']';
-	  }
+	  while( ndim++ < array->getNumOfDims() - 1 )
+	    ptr_to_first_elm += "[0]";
 	}
 	ptr_to_first_elm += ")";
 
@@ -2700,12 +2699,8 @@ o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 	ptr_to_first_elm += argname;
 	{
 	  size_t ndim = 0;
-	  o2be_array::dim_iterator next(array);
-	  while( ndim++ < array->getNumOfDims() - 1 ) {
-	    ptr_to_first_elm += '[';
-	    ptr_to_first_elm += (int) next();
-	    ptr_to_first_elm += ']';
-	  }
+	  while( ndim++ < array->getNumOfDims() - 1 )
+	    ptr_to_first_elm += "[0]";
 	}
 	ptr_to_first_elm += ")";
 
