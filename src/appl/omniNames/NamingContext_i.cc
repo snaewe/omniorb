@@ -49,13 +49,15 @@ NamingContext_i* NamingContext_i::tailContext = (NamingContext_i*)0;
 typedef CosNaming::_sk_NamingContext CosNaming__sk_NamingContext;
 
 NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
-				 const omniORB::objectKey& k, log* l)
+				 const omniORB::objectKey& k,
+				 omniNameslog* l)
   : CosNaming__sk_NamingContext(k), redolog(l)
 
 #else
 
 NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
-				 const omniORB::objectKey& k, log* l)
+				 const omniORB::objectKey& k, 
+				 omniNameslog* l)
   : CosNaming::_sk_NamingContext(k), redolog(l)
 
 #endif

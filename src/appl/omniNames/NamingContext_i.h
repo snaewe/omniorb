@@ -32,12 +32,12 @@
 class NamingContext_i : public virtual CosNaming::_sk_NamingContext {
 
   friend class ObjectBinding;
-  friend class log;
+  friend class omniNameslog;
 
 public:
 
   NamingContext_i(CORBA::BOA_ptr boa, const omniORB::objectKey& k,
-		  log* l);
+		  omniNameslog* l);
 
   //
   // IDL operations:
@@ -76,7 +76,7 @@ public:
 
 private:
 
-  log* redolog;
+  omniNameslog* redolog;
 
   //
   // This multiple-readers, single-writer lock is used to control access to

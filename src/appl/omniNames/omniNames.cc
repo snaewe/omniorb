@@ -137,11 +137,11 @@ main(int argc, char **argv)
   }
 
   //
-  // Set up an instance of class log.  This also gives us back the port
+  // Set up an instance of class omniNameslog.  This also gives us back the port
   // number from the log file if "-start" wasn't specified.
   //
 
-  log l(port,logdir);
+  omniNameslog l(port,logdir);
 
 
   //
