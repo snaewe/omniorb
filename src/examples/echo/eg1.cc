@@ -58,5 +58,9 @@ main(int argc, char **argv)
   //     boa->dispose(myobjRef);
   //     CORBA::release(myobjRef);
 
+  boa->destroy();
+
+  orb->NP_destroy();
+
   return 0;
 }
