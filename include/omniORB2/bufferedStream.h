@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25  1999/07/23 11:24:21  djr
+  Added CdrStreamHelper methods for unmarshalling arrays of basic types.
+
   Revision 1.24  1999/06/18 21:14:21  sll
   Updated copyright notice.
 
@@ -738,10 +741,94 @@ private:
   void write_to_readonly_error(const char* file, int line);
 };
 
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// CdrStreamHelper //////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+template <class buf_t>
+inline void
+CdrStreamHelper_unmarshalArrayShort(buf_t& s, _CORBA_Short* a, int length)
+{
+  s.get_char_array((_CORBA_Char*) a, length * 2, omni::ALIGN_2);
+
+  if( s.RdMessageByteOrder() != omni::myByteOrder )
+    for( int i = 0; i < length; i++ )
+      a[i] = Swap16(a[i]);
+}
+
+
+template <class buf_t>
+inline void
+CdrStreamHelper_unmarshalArrayUShort(buf_t& s, _CORBA_UShort* a, int length)
+{
+  s.get_char_array((_CORBA_Char*) a, length * 2, omni::ALIGN_2);
+
+  if( s.RdMessageByteOrder() != omni::myByteOrder )
+    for( int i = 0; i < length; i++ )
+      a[i] = Swap16(a[i]);
+}
+
+
+template <class buf_t>
+inline void
+CdrStreamHelper_unmarshalArrayLong(buf_t& s, _CORBA_Long* a, int length)
+{
+  s.get_char_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
+
+  if( s.RdMessageByteOrder() != omni::myByteOrder )
+    for( int i = 0; i < length; i++ )
+      a[i] = Swap32(a[i]);
+}
+
+
+template <class buf_t>
+inline void
+CdrStreamHelper_unmarshalArrayULong(buf_t& s, _CORBA_ULong* a, int length)
+{
+  s.get_char_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
+
+  if( s.RdMessageByteOrder() != omni::myByteOrder )
+    for( int i = 0; i < length; i++ )
+      a[i] = Swap32(a[i]);
+}
+
+
+template <class buf_t>
+inline void
+CdrStreamHelper_unmarshalArrayFloat(buf_t& s, _CORBA_Float* a, int length)
+{
+  s.get_char_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
+
+  if( s.RdMessageByteOrder() != omni::myByteOrder )
+    for( int i = 0; i < length; i++ ) {
+      _CORBA_ULong tmp = Swap32(* (_CORBA_ULong*) (a + i));
+      a[i] = * (_CORBA_Float*) &tmp;
+    }
+}
+
+
+template <class buf_t>
+inline void
+CdrStreamHelper_unmarshalArrayDouble(buf_t& s, _CORBA_Double* a, int length)
+{
+  s.get_char_array((_CORBA_Char*) a, length * 8, omni::ALIGN_8);
+
+  if( s.RdMessageByteOrder() != omni::myByteOrder )
+    for( int i = 0; i < length; i++ ) {
+      _CORBA_ULong tmp0 = Swap32(((_CORBA_ULong*) (a + i))[0]);
+      _CORBA_ULong tmp1 = Swap32(((_CORBA_ULong*) (a + i))[1]);
+      ((_CORBA_ULong*) (a + i))[1] = tmp0;
+      ((_CORBA_ULong*) (a + i))[0] = tmp1;
+    }
+}
+
 
 #undef MARSHAL
 #undef UMARSHAL
 
+//////////////////////////////////////////////////////////////////////
+//////////////// Sequence Marshalling / Unmarshalling ////////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T>
 inline void
@@ -1112,6 +1199,7 @@ _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (MemBufferedStream&
   return;
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int elmSize,int elmAlignment>
 inline
 void
@@ -1238,6 +1326,7 @@ _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSiz
     }
   }
 }
+
 
 template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 inline
