@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.29  1999/02/19 11:31:42  djr
+  Fixed implementation of Any insertion/extraction code.
+
   Revision 1.28  1999/02/10 09:56:09  djr
   Fixed bug in which omniidl2 failed if constructed types were
   declared in an exception member declaration.
@@ -2773,15 +2776,15 @@ o2be_interface::produce_binary_operators_in_hdr(std::fstream& s)
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     s << "\n";
     // any insertion and extraction operators
-    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
+    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname()
 	      << " _s);\n";
-    IND(s); s << "void operator<<=(CORBA::Any& _a, " << objref_fqname() 
-	      << "* _s);\n";
+
     IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
 	      << objref_fqname() 
 	      << "& _s);\n\n";
   }
 }
+
 
 void
 o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
@@ -2858,7 +2861,7 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   IND(s); s << "_desc.p_objref.getObjectPtr = _0RL_tcParser_getObjectPtr_"
 	    << _idname() << ";\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+  IND(s); s << "}\n\n\n";
 
   //////////////////////////////////////////////////////////////////////
   /////////////////////// Any insertion operator ///////////////////////
@@ -2867,12 +2870,12 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   IND(s); s << "void operator<<=(CORBA::Any& _a, "
 	    << objref_fqname() << " _s) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
+  IND(s); s << "tcDescriptor tcd;\n";
   IND(s); s << fieldMemberType_fqname(o2be_global::root())
-	    << " _0RL_tmp(_s);\n";
-  o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "_0RL_tmp");
-  IND(s); s << "_a.PR_packFrom(" << fqtcname() << ", &_0RL_tcdesc);\n";
-  IND(s); s << "_0RL_tmp._ptr = 0;\n";
+	    << " tmp(_s);\n";
+  o2be_buildDesc::call_buildDesc(s, this, "tcd", "tmp");
+  IND(s); s << "_a.PR_packFrom(" << fqtcname() << ", &tcd);\n";
+  IND(s); s << "tmp._ptr = 0;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
@@ -2883,24 +2886,21 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
 	    << objref_fqname() << "& _s) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
-  IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
+  IND(s); s << "tcDescriptor tcd;\n";
   IND(s); s << fieldMemberType_fqname(o2be_global::root())
-	    << " _0RL_tmp;\n";
-  o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "_0RL_tmp");
+	    << " tmp;\n";
+  o2be_buildDesc::call_buildDesc(s, this, "tcd", "tmp");
   IND(s); s << "if( _a.PR_unpackTo(" << fqtcname()
-	    << ", &_0RL_tcdesc) ) {\n";
+	    << ", &tcd) ) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "_s = _0RL_tmp._ptr;\n";
-  IND(s); s << "_0RL_tmp._ptr = 0;\n";
+  IND(s); s << "_s = tmp._ptr;\n";
+  IND(s); s << "tmp._ptr = 0;\n";
   IND(s); s << "return 1;\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "} else {\n";
+  IND(s); s << "} else\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "_0RL_tmp._ptr = _s = 0;\n";
   IND(s); s << "return 0;\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 }
