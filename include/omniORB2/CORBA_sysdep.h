@@ -32,6 +32,11 @@
 
 /*
  $Log$
+ Revision 1.15  1998/03/25 14:24:12  sll
+ Added #define EGCS_WORKAROUND for gcc compiler. This activate a
+ workaround for a bug in post-1.0 egcs snapshots. Can be removed if
+ the bug is fixed in future version.
+
  Revision 1.14  1998/01/20 16:45:57  sll
  Added support for OpenVMS.
 
@@ -61,6 +66,11 @@
 #     define SIZEOF_INT  4
 #     define SIZEOF_PTR  8
 #  endif
+
+// Activate temporary workaround for a bug in post-1.0 egcs snapshots
+// No side-effect on other gcc compilers. May be removed in future once
+// the bug is fixed.
+#define EGCS_WORKAROUND
 
 #elif defined(__DECCXX)
 // DEC C++ compiler
