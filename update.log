@@ -1,3 +1,11 @@
+Tue Mar 30 15:37:02 BST 2004 dgrisby
+====================================
+
+- Better fix for scavenger thread restarting after shutdown.
+
+src/lib/omniORB/orbcore/giopStrand.cc
+
+
 Tue Mar 30 14:25:37 BST 2004 dgrisby
 ====================================
 
