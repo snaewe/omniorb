@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.3  2000/03/23 15:31:10  djs
+# Failed to handle recursive unions properly where the cycle had more
+# than one node (didn't use recursion detection functions everywhere it
+# should have)
+#
 # Revision 1.14.2.2  2000/03/09 15:21:48  djs
 # Better handling of internal compiler exceptions (eg attempts to use
 # wide string types)
@@ -509,7 +514,7 @@ def visitUnion(node):
                 seqType = seqType.seqType()
             # careful of recursive unions
             if isinstance(seqType, idltype.Declared) and \
-               seqType.decl() != node:
+               not(recursive(seqType.decl())):
                 seqType.decl().accept(self)
                 
         self.__override = override
