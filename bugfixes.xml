@@ -8,6 +8,16 @@
 
 <buglist version="3.0.2">
 
+<bug id="16" date="Mon Feb  5 12:12:14 GMT 2001" user="dpg1">
+
+  <summary>Incorrect connection closure on Windows</summary>
+  <reported>Victor Joukov</reported>
+  <text>
+  In extremely rare cases, a recv() could be interrupted on Windows,
+  causing a connection closure, rather than the proper retry.
+  </text>
+</bug>
+
 <bug id="15" date="Sun Jan 28 15:30:10 GMT 2001" user="djs">
 
   <summary>omniIDL/C++ backend interface inheritance errors</summary>
