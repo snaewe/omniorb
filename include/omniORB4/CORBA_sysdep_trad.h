@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2002/01/31 10:16:33  dpg1
+  Missing define in traditional sysdep.
+
   Revision 1.1.2.1  2002/01/15 16:38:10  dpg1
   On the road to autoconf. Dependencies refactored, configure.ac
   written. No makefiles yet.
@@ -299,6 +302,7 @@
 #elif defined(__sunos__)
 #  define HAVE_STRTOULL 1
 #  define HAVE_ISNANORINF
+#  define HAVE_NAN_H
 #  define OMNI_SOCKNAME_SIZE_T size_t
 #  if __OSVERSION__ == 5 && (!defined(__GNUG__) || __GNUG__ < 3)
 #    define NEED_GETHOSTNAME_PROTOTYPE
