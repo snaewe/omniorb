@@ -13,10 +13,13 @@
 
 /*
  $Log$
- Revision 1.7  1997/03/09 14:42:50  sll
- String_var and Object_var can now be passed directly as arguments
- to operations that have string and Object as INOUT and OUT parameters.
+ Revision 1.8  1997/03/14 10:18:29  sll
+ operator->() in T_var types is const. Fixed.
 
+ * Revision 1.7  1997/03/09  14:42:50  sll
+ * String_var and Object_var can now be passed directly as arguments
+ * to operations that have string and Object as INOUT and OUT parameters.
+ *
  * Revision 1.6  1997/02/19  11:12:37  ewc
  * Added support for Windows NT / MSVC++ 4.2
  *
@@ -380,7 +383,7 @@ typedef _CORBA_Double  Double;
 
     Any_var &operator=(Any *a);
     Any_var &operator=(const Any_var &a);
-    Any *operator->();
+    Any *operator->() const;
     
     friend class Any_OUT_arg;
   };
@@ -963,7 +966,7 @@ typedef _CORBA_Double  Double;
 	}
 	return *this;
       }
-      inline ObjectIdList* operator->() { return pd_data; }
+      inline ObjectIdList* operator->() const { return pd_data; }
 
 #if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
       inline operator ObjectIdList& () const { return *pd_data; }
@@ -1111,9 +1114,9 @@ typedef _CORBA_Double  Double;
       return *this;
     }
     Object_var& operator= (const Object_member& p);
-    inline Object_ptr operator->() { return pd_objref; }
+    inline Object_ptr operator->() const { return (Object_ptr)pd_objref; }
 
-    inline operator Object_ptr() { return pd_objref; }
+    inline operator Object_ptr() const { return pd_objref; }
 
     friend class Object_member;
     friend class Object_INOUT_arg;
@@ -1181,7 +1184,8 @@ private:
       _ptr = _result;
     }
 
-    inline operator Object_ptr () { return _ptr; }
+    inline Object_ptr operator->() const { return (Object_ptr)_ptr; }
+    inline operator Object_ptr () const { return _ptr; }
     Object_ptr _ptr;
   };
 
