@@ -11,10 +11,15 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/13 15:24:23  sll
-  New member function produce_typedef_hdr(). Called when a typedef declaration
-  is encountered.
+  Revision 1.3  1997/03/10 16:45:10  sll
+  New member function out_adptarg_name() to return the name of the
+  adaptation class. This class is used for passing variable length
+  struct as OUT arguments.
 
+// Revision 1.2  1997/01/13  15:24:23  sll
+// New member function produce_typedef_hdr(). Called when a typedef declaration
+// is encountered.
+//
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -94,6 +99,7 @@
 #include "idl_extern.hh"
 #include "o2be.h"
 
+#define ADPT_CLASS_TEMPLATE  "_CORBA_ConstrType_Variable_OUT_arg"
 
 o2be_structure::o2be_structure(UTL_ScopedName *n, UTL_StrList *p)
 	    : AST_Decl(AST_Decl::NT_struct, n, p),
@@ -104,6 +110,16 @@ o2be_structure::o2be_structure(UTL_ScopedName *n, UTL_StrList *p)
   pd_isvar = I_FALSE;
   pd_hdr_produced_in_field = I_FALSE;
   pd_skel_produced_in_field = I_FALSE;
+
+  pd_out_adptarg_name = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
+				 strlen(fqname())+
+				 strlen(fqname())+strlen("_var")+1];
+  strcpy(pd_out_adptarg_name,ADPT_CLASS_TEMPLATE);
+  strcat(pd_out_adptarg_name,"<");
+  strcat(pd_out_adptarg_name,fqname());
+  strcat(pd_out_adptarg_name,",");
+  strcat(pd_out_adptarg_name,fqname());
+  strcat(pd_out_adptarg_name,"_var>");  
 }
 
 AST_Field *
