@@ -1,10 +1,21 @@
+
+Tue Sep 14 17:57:42 BST 1999 djr
+================================
+
+- Bug in omniidl2.  Exception constructor taking member arguments did
+  not duplicate an object reference argument.
+
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+
+
 Wed Sep  8 12:42:25 BST 1999 sll
-===============================
+================================
 
 - ensure that NetBufferedStream cleanup properly when the underlying strand
   has been closed.
 
 src/lib/omniORB2/orbcore/nbufferedStream.cc
+
 
 Wed Sep  1 15:56:42 BST 1999 sll
 ================================
