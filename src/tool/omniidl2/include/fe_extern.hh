@@ -94,11 +94,8 @@ extern "C" void			FE_init_stage2();	// Initialize stage 2
 
 // Interface to Yacc parser
 
-#ifdef __WIN32__
+#include <stdio.h>
 typedef FILE File;
-#else
-class File;
-#endif
 
 extern "C" int			FE_yyparse();		// Invode yyparse
 extern "C" void			FE_set_yyin(File *);	// Set yyin

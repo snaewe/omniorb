@@ -72,12 +72,8 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  * Front end interface
  */
 
-#ifdef __WIN32__
 #include <stdio.h>
 typedef FILE File;
-#else
-class File;
-#endif
 
 typedef void (* DRV_PF_FE_init_stage1)();
 typedef void (* DRV_PF_FE_init_stage2)();
