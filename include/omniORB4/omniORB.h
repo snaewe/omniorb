@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/07/13 15:16:56  sll
+  New configuration variables: oneCallPerConnection, threadPerConnectionPolicy,
+  maxServerThreadPerConnection, maxInterleavedCallsPerConnection,
+  maxServerThreadPoolSize, threadPerConnectionUpperLimit,
+  threadPerConnectionLowerLimit. Removed maxNumOfAsyncThreads.
+
   Revision 1.2.2.7  2001/06/07 16:24:08  dpg1
   PortableServer::Current support.
 
@@ -620,6 +626,61 @@ _CORBA_MODULE_BEG
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
+  // oneCallPerConnection                                               //
+  //   TRUE means only one call can be in progress at any time per      //
+  // connection.                                                        //
+  //                                                                    //
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean oneCallPerConnection;     //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // threadPerConnectionPolicy                                          //
+  //   TRUE means dedicate one thread per connection on the server side //
+  //                                                                    //
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean threadPerConnectionPolicy;//
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // maxServerThreadPerConnection                                       //
+  //   The max. no. of threads the server will dispatch to server the   //
+  //   requests coming from one connection.                             //
+  _CORBA_MODULE_VAR _core_attr unsigned int maxServerThreadPerConnection;//
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // maxInterleavedCallsPerConnection                                   //
+  //   No. of interleaved calls per connection the server is prepared   //
+  //   to accept. If this number is exceeded, the connection is closed. //
+  _CORBA_MODULE_VAR _core_attr unsigned int maxInterleavedCallsPerConnection;//
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // maxServerThreadPoolSize                                            //
+  //   The max. no. of threads the server will allocate to do various   //
+  //   ORB tasks. This number does not include the dedicated thread     //
+  //   per connection when the threadPerConnectionPolicy is in effect   //
+  _CORBA_MODULE_VAR _core_attr unsigned int maxServerThreadPoolSize;    //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // threadPerConnectionUpperLimit                                      //
+  //   If the one thread per connection is in effect, this number is    //
+  //   the max. no. of connections the server will allow before it      //
+  //   switch off the one thread per connection policy and move to      //
+  //   the thread pool policy.                                          //
+  _CORBA_MODULE_VAR _core_attr unsigned int threadPerConnectionUpperLimit;//
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // threadPerConnectionLowerLimit                                      //
+  //   If the one thread per connection was in effect and was switched  //
+  //   off because threadPerConnectionUpperLimit has been exceeded      //
+  //   previously, this number tells when the policy should be restored //
+  //   when the number of connections drop.                             //
+  _CORBA_MODULE_VAR _core_attr unsigned int threadPerConnectionLowerLimit;
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
   // diiThrowsSysExceptions                                             //
   //  If the value of this variable is TRUE then the Dynamic            //
   // Invacation Interface functions (Request::invoke, send_oneway,      //
@@ -841,9 +902,6 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_VAR _core_attr CORBA::Boolean acceptMisalignedTcIndirections;
   // false by default
 
-  _CORBA_MODULE_VAR _core_attr CORBA::ULong maxNumOfAsyncThreads;
-  // 50 by default
-
   class logStream {
   public:
     logStream();
@@ -926,7 +984,7 @@ _CORBA_MODULE_BEG
     public:
       exceptionStatus(CORBA::CompletionStatus s, CORBA::ULong m) :
 	status(s), minor(m) {}
-      
+
       CORBA::CompletionStatus status;
       CORBA::ULong            minor;
     private:
