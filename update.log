@@ -1,3 +1,10 @@
+Thu Feb 26 10:41:43 GMT 1998 sll
+================================
+
+- ORB_init once again handles the case when argv is a NULL pointer properly.
+
+src/lib/omniORB2/corbaOrb.cc
+
 Wed Feb 25 20:35:22 GMT 1998 sll
 ================================
 
