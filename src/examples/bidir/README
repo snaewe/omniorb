@@ -1,0 +1,15 @@
+
+This example is almost identical to the call_back example, except that
+it uses bidirectional GIOP for the callback. See the README file in
+that directory for an explanation of what the programs do.
+
+For it to work, make sure that you have the following configuration
+parameters set:
+
+  Server:
+    acceptBiDirectionalGIOP = 1
+    serverTransportRule = "unix,tcp,bidir"
+
+  Client:
+    offerBiDirectionalGIOP = 1
+    clientTransportRule = "unix,tcp,bidir"

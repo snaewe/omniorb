@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/08/21 06:23:15  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.2.2  2002/03/18 12:38:26  dpg1
   Lower trace(0) to trace(1), propagate fatalException.
 
@@ -52,7 +55,10 @@ giopMonitor::notifyReadable(void* this_,giopConnection* conn) {
 }
 
 void
-giopMonitor::execute() {
+giopMonitor::execute()
+{
+  omniORB::logs(25, "giopMonitor task execute.");
+  
   CORBA::Boolean exit_on_error = 0;
 
   try {

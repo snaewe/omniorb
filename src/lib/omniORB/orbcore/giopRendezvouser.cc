@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2002/08/21 06:23:15  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.4.4  2002/03/13 16:05:39  dpg1
   Transport shutdown fixes. Reference count SocketCollections to avoid
   connections using them after they are deleted. Properly close
@@ -63,7 +66,10 @@ giopRendezvouser::notifyReadable(void* this_,giopConnection* conn) {
 }
 
 void
-giopRendezvouser::execute() {
+giopRendezvouser::execute()
+{
+  omniORB::logs(25, "giopRendezvouser task execute.");
+
   CORBA::Boolean exit_on_error;
 
   do {

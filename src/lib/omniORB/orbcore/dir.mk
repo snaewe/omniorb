@@ -164,7 +164,7 @@ endif
 ORB_OBJS      = $(ORB_SRCS:.cc=.o)
 CXXSRCS       = $(ORB_SRCS)
 
-vpath %cc $(CXXVPATH)
+vpath %.cc $(CXXVPATH)
 
 LIB_NAME     := omniORB
 LIB_VERSION  := $(OMNIORB_VERSION)

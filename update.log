@@ -1,3 +1,41 @@
+Wed Aug 21 07:18:58 BST 2002 dgrisby
+====================================
+
+- Properly clean up bidir connections and ropes. Other small tweaks.
+
+configure
+configure.ac
+include/omniORB4/giopEndpoint.h
+include/omniORB4/internal/SocketCollection.h
+include/omniORB4/internal/giopMonitor.h
+include/omniORB4/internal/giopRope.h
+include/omniORB4/internal/giopStrand.h
+src/examples/bidir/GNUmakefile       -- new
+src/examples/bidir/GNUmakefile.in    -- new
+src/examples/bidir/README            -- new
+src/examples/bidir/bd_client.cc      -- new
+src/examples/bidir/bd_server.cc      -- new
+src/examples/bidir/bd_shutdown.cc    -- new
+src/examples/bidir/dir.mak           -- new
+src/examples/bidir/dir.mk            -- new
+src/examples/bidir/echo_callback.idl -- new
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopMonitor.cc
+src/lib/omniORB/orbcore/giopRendezvouser.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopWorker.cc
+src/lib/omniORB/orbcore/tracedthread.cc
+src/lib/omniORB/orbcore/ssl/sslActive.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.h
+src/lib/omniORB/orbcore/tcp/tcpActive.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.h
+src/lib/omniORB/orbcore/unix/unixActive.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.h
+
+
 Sun Aug 18 16:36:32 BST 2002 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.10  2002/08/21 06:23:15  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.2.2.9  2002/07/03 15:49:51  dgrisby
   Correct debug flag, typos, bug report address.
 
@@ -96,7 +99,7 @@
 
 static const char* bug_msg =
   " This is probably a bug in omniORB. Please submit a report\n"
-  " (with stack trace if possible) to <omniorb@omniorb.net>.\n";
+  " (with stack trace if possible) to <bugs@omniorb-support.com>.\n";
 
 
 omni_tracedmutex::omni_tracedmutex()

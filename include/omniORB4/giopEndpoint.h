@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2002/08/21 06:23:15  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.4.7  2002/03/19 15:42:03  dpg1
   Use list of IP addresses to pick a non-loopback interface if there is one.
 
@@ -320,10 +323,13 @@ public:
   // function <func> with the <cookie> and the pointer to the connection as
   // the arguments.  This function will only returns when there is no
   // connection to monitor, i.e. all the connections that were registered
-  // have been deleted.
+  // have been deleted, or when deactivate() is called.
 
   virtual _CORBA_Boolean isEmpty() const = 0;
   // Returns TRUE(1) if no connections have been added via registerMonitor().
+
+  virtual void deactivate() = 0;
+  // Stop monitoring connections.
 
   giopActiveCollection() {}
   virtual ~giopActiveCollection() {}

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2002/08/21 06:23:16  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.2.4  2001/07/31 16:16:16  sll
   New transport interface to support the monitoring of active connections.
 
@@ -103,6 +106,9 @@ public:
   CORBA::Boolean isEmpty() const;
   // implement giopActiveCollection::isEmpty
 
+  void deactivate();
+  // implement giopActiveCollection::deactivate
+
   tcpActiveCollection();
   ~tcpActiveCollection();
 
@@ -117,6 +123,7 @@ protected:
 
 private:
   CORBA::ULong      pd_n_sockets;
+  CORBA::Boolean    pd_shutdown;
   omni_tracedmutex  pd_lock;
 
   giopConnection::notifyReadable_t pd_callback_func;

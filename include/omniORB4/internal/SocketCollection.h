@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2002/08/21 06:23:15  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.2.11  2002/05/07 12:54:38  dgrisby
   Fix inevitable Windows header brokenness.
 
@@ -324,16 +327,17 @@ public:
   static CORBA::ULong  hashsize;
 
 private:
-  SocketHandleSet_t pd_fdset_1;
-  SocketHandleSet_t pd_fdset_2;
-  SocketHandleSet_t pd_fdset_dib; // data in buffer
-  int               pd_n_fdset_1;
-  int               pd_n_fdset_2;
-  int               pd_n_fdset_dib;
-  omni_tracedmutex  pd_fdset_lock;
-  unsigned long     pd_abs_sec;
-  unsigned long     pd_abs_nsec;
-  int               pd_refcount;
+  SocketHandleSet_t    pd_fdset_1;
+  SocketHandleSet_t    pd_fdset_2;
+  SocketHandleSet_t    pd_fdset_dib; // data in buffer
+  int                  pd_n_fdset_1;
+  int                  pd_n_fdset_2;
+  int                  pd_n_fdset_dib;
+  omni_tracedmutex     pd_fdset_lock;
+  omni_tracedcondition pd_select_cond; // timedwait on if nothing to select
+  unsigned long        pd_abs_sec;
+  unsigned long        pd_abs_nsec;
+  int                  pd_refcount;
 
 protected:
   SocketLink**      pd_hash_table;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/08/21 06:23:16  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.2.2  2001/08/07 15:42:17  sll
   Make unix domain connections distinguishable on both the server and client
   side.
@@ -53,7 +56,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 static unixActiveCollection myCollection;
 
 /////////////////////////////////////////////////////////////////////////
-unixActiveCollection::unixActiveCollection() : pd_n_sockets(0) {}
+unixActiveCollection::unixActiveCollection(): pd_n_sockets(0),pd_shutdown(0) {}
 
 /////////////////////////////////////////////////////////////////////////
 unixActiveCollection::~unixActiveCollection() {}
@@ -95,6 +98,7 @@ void
 unixActiveCollection::addMonitor(SocketHandle_t) {
   omni_tracedmutex_lock sync(pd_lock);
   pd_n_sockets++;
+  pd_shutdown = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -108,7 +112,14 @@ unixActiveCollection::removeMonitor(SocketHandle_t) {
 CORBA::Boolean
 unixActiveCollection::isEmpty() const {
   omni_tracedmutex_lock sync((omni_tracedmutex&)pd_lock);
-  return (pd_n_sockets == 0);
+  return (pd_n_sockets == 0 || pd_shutdown);
+}
+
+/////////////////////////////////////////////////////////////////////////
+void
+unixActiveCollection::deactivate() {
+  omni_tracedmutex_lock sync(pd_lock);
+  pd_shutdown = 1;
 }
 
 /////////////////////////////////////////////////////////////////////////

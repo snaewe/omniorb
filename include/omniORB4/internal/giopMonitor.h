@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2002/08/21 06:23:15  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.2.1  2001/07/31 16:28:02  sll
   Added GIOP BiDir support.
 
@@ -47,6 +50,8 @@ public:
     pd_server(s) { }
 
   void execute();
+
+  void deactivate() { pd_collection->deactivate(); }
 
   giopActiveCollection* collection() const { return pd_collection; }
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2002/08/21 06:23:16  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.2.1  2001/07/31 16:16:24  sll
   New transport interface to support the monitoring of active connections.
 
@@ -50,7 +53,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 static sslActiveCollection myCollection;
 
 /////////////////////////////////////////////////////////////////////////
-sslActiveCollection::sslActiveCollection() : pd_n_sockets(0) {}
+sslActiveCollection::sslActiveCollection() : pd_n_sockets(0), pd_shutdown(0) {}
 
 /////////////////////////////////////////////////////////////////////////
 sslActiveCollection::~sslActiveCollection() {}
@@ -92,6 +95,7 @@ void
 sslActiveCollection::addMonitor(SocketHandle_t) {
   omni_tracedmutex_lock sync(pd_lock);
   pd_n_sockets++;
+  pd_shutdown = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -102,10 +106,17 @@ sslActiveCollection::removeMonitor(SocketHandle_t) {
 }
 
 /////////////////////////////////////////////////////////////////////////
+void
+sslActiveCollection::deactivate() {
+  omni_tracedmutex_lock sync(pd_lock);
+  pd_shutdown = 1;
+}
+
+/////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 sslActiveCollection::isEmpty() const {
   omni_tracedmutex_lock sync((omni_tracedmutex&)pd_lock);
-  return (pd_n_sockets == 0);
+  return (pd_n_sockets == 0 || pd_shutdown);
 }
 
 /////////////////////////////////////////////////////////////////////////

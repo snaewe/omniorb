@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2002/08/21 06:23:15  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.4.9  2001/09/19 17:26:46  dpg1
   Full clean-up after orb->destroy().
 
@@ -112,12 +115,12 @@ private:
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 class giopStrand : public Strand {
- public:
+public:
 
   giopStrand(const giopAddress*);
   // Ctor for an active strand. I.e. those that are used to connect to
   // a remote address space.
-  // When a connection is establshed, the refernce count goes to 1.
+  // When a connection is establshed, the reference count goes to 1.
   //
   // No thread safety precondition
 
@@ -136,7 +139,7 @@ public:
   // This should be the *ONLY* method to call to delete a strand.
   // Return TRUE if the strand can be considered deleted.
   //
-  // The function check if this connection is satisfied before it returns
+  // The function checks if this connection is satisfied before it returns
   // true:
   //
   //    giopStreamList::is_empty(clients) &&

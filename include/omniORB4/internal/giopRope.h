@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2002/08/21 06:23:15  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.1.4.6  2001/09/19 17:26:46  dpg1
   Full clean-up after orb->destroy().
 
@@ -209,6 +212,7 @@ class giopRope : public Rope, public RopeLink {
   friend class giopStream;
   friend class giopStrand;
   friend class omni_giopRope_initialiser;
+  friend class omni_giopbidir_initialiser;
 
  protected:
   int                  pd_refcount;  // reference count

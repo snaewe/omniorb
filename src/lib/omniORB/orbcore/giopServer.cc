@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.21  2002/08/21 06:23:15  dgrisby
+  Properly clean up bidir connections and ropes. Other small tweaks.
+
   Revision 1.22.2.20  2002/03/18 16:50:18  dpg1
   New threadPoolWatchConnection parameter.
 
@@ -236,6 +239,7 @@ giopServer::addBiDirStrand(giopStrand* s,giopActiveCollection* watcher) {
 	    matched = 1;
 	    break;
 	  }
+	  ++i;
 	}
       }
       if (!matched) {
@@ -477,6 +481,11 @@ giopServer::deactivate()
 
   if (!Link::is_empty(pd_bidir_monitors)) {
     waitforcompletion = 1;
+
+    Link* m = pd_bidir_monitors.next;
+    for (; m != &pd_bidir_monitors; m = m->next) {
+      ((giopMonitor*)m)->deactivate();
+    }
   }
 
 
@@ -499,6 +508,7 @@ giopServer::deactivate()
     omniORB::logs(25, "giopServer waits for completion of rendezvousers "
 		  "and workers");
     pd_cond.wait();
+    omniORB::logs(25, "giopServer back from waiting.");
     goto again;
   }
   else {
