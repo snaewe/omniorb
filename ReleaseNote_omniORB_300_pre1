@@ -61,7 +61,6 @@ Changes since 2.8.0
 
    The following features are not implemented:
 
-     o  'AdapterActivator's
      o  PortableServer::Current
      o  DSI is incomplete (depends on Current).
 
@@ -206,16 +205,11 @@ Changes since 2.8.0
 
 11. Things that don't work.
 
-    a) PortableServer::AdapterActivator is not supported.  You must
-       not pass TRUE to the second argument of
-       PortableServer::POA::find_POA(), and POAs will not be activated
-       on demand in response to requests.
-
-    b) The PortableServer::Current interface is not supported.  Any
+    a) The PortableServer::Current interface is not supported.  Any
        behaviour depending per-thread context information is not
        supported.
 
-    c) The DSI interface has changed significantly.  Old code will
+    b) The DSI interface has changed significantly.  Old code will
        have to be re-written to the new interface.  There is no
        support for using the DSI with the BOA.
         This part of the ORB is incomplete, since it depends in
@@ -223,9 +217,9 @@ Changes since 2.8.0
        src/examples/dsi for a way to workaround this problem for
        now.
 
-    d) The Lifecycle service has not yet been re-implemented.
+    c) The Lifecycle service has not yet been re-implemented.
 
-    e) The name of tie implementation skeletons has changed (in line
+    d) The name of tie implementation skeletons has changed (in line
        with the POA mapping).
 
 

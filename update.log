@@ -1,4 +1,31 @@
 
+Thu Sep 30 12:43:39 BST 1999 djr
+================================
+
+- New MACRO HAS_Cplusplus_catch_exception_by_base.
+
+- Implemented catching user-defined exceptions in stubs for
+  compilers which have no support for catching exceptions by
+  base class.
+
+include/omniORB3/CORBA_sysdep.h
+include/omniORB3/giopDriver.h
+include/omniORB3/omniORB.h
+src/lib/omniORB3/giopServer.cc
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
+- Implemented use of PortableServer::AdapterActivators in POAs.
+
+src/lib/omniORB2/poa.cc
+src/lib/omniORB2/poaimpl.h
+src/lib/omniORB2/poamanager.cc
+src/lib/omniORB2/poamanager.h
+
+- Implemented '_interface' for BOA servants.
+
+src/lib/omniORB2/orbcore/corbaBoa.cc
+
+
 Thu Sep 30 09:58:02 BST 1999 djr
 ================================
 
