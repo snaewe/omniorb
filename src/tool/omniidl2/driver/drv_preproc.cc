@@ -62,8 +62,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
  */
 
-#pragma ident "%@(#)drv_preproc.cc	1.16% %92/06/10% Sun Microsystems"
-
 /*
  * DRV_pre_proc.cc - pass an IDL file through the C preprocessor
  */
@@ -104,10 +102,10 @@ extern "C" char * mktemp(char *);
 #include	<sysent.h>
 #endif		// apollo
 
-#if defined(hpux) || defined(__hpux)
+#if defined(__hpux__)
 #include	<unistd.h>		// POSIX definitions
 #include	<sys/wait.h>		// POSIX definition of wait()
-#endif		// defined(hpux) || defined(__hpux)
+#endif		// defined(__hpux__)
 
 #if defined(__aix__)
 #include        <unistd.h>              // POSIX standard types
@@ -119,7 +117,12 @@ extern "C" char * mktemp(char *);
 #include <wait.h>                       // POSIX definition of wait()
 #endif
 
-#ifdef __NT__
+#if defined(__nextstep__)
+#include <unistd.h>
+#include <wait.h>
+#endif
+
+#ifdef __WIN32__
 #include <io.h>
 #include <process.h>
 #include <sys/stat.h>
@@ -246,7 +249,7 @@ DRV_stripped_name(char *fn)
     if (n == NULL)
 	return NULL;
     l = strlen(n);
-#ifdef __NT__
+#ifdef __WIN32__
     for (n += l; l > 0 && *n != '\\'; l--, n--);
     if (*n == '\\') n++;
 #else
@@ -264,7 +267,7 @@ static char	tmp_file[128];
 static char	tmp_ifile[128];
 
 
-#ifndef __NT__
+#ifndef __WIN32__
 /*
  * Pass input through preprocessor
  */
@@ -431,7 +434,7 @@ DRV_pre_proc(char *myfile)
 
 #else
 
-// Windows NT Version
+// WIN 32 Version
 
 /*
  * Pass input through preprocessor
