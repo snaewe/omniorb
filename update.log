@@ -1,3 +1,11 @@
+Tue Jul 31 09:58:07 BST 2001 dpg1
+=================================
+
+- Allocated one too few characters in WString unmarshal.
+
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+
+
 Thu Jul 26 17:31:30 BST 2001 dpg1
 =================================
 
