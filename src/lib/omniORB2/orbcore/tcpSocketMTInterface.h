@@ -41,13 +41,13 @@
 class tcpSocketIncomingRope;
 class tcpSocketMTincomingFactory;
 
-typedef tcpSocketHandle_t handle_t;
+typedef tcpSocketHandle_t fd_t;
 
 class CommsEventHandler{
 public:
-  virtual void newConnectionAttempt(handle_t) = 0;
-  virtual void dataAvailable(handle_t) = 0;
-  virtual void connectionClosed(handle_t) = 0;
+  virtual void newConnectionAttempt(fd_t) = 0;
+  virtual void dataAvailable(fd_t) = 0;
+  virtual void connectionClosed(fd_t) = 0;
 };
 
 class CommsEventSource{
@@ -68,15 +68,15 @@ protected:
   tcpSocketMTincomingFactory *pd_factory;
   tcpSocketIncomingRope *pd_rope;
 
-  handle_t acceptConnection();
+  fd_t acceptConnection();
 
 public:
   Dispatcher(tcpSocketIncomingRope *r,
 	       tcpSocketMTincomingFactory *f);
   virtual ~Dispatcher() { }
  
-  virtual void watchHandle(handle_t) = 0;
-  virtual void ignoreHandle(handle_t) = 0;
+  virtual void watchHandle(fd_t) = 0;
+  virtual void ignoreHandle(fd_t) = 0;
 
   virtual void waitForEvents(CORBA::Boolean loop_forever = TRUE) = 0;
 };
@@ -92,8 +92,8 @@ public:
 		   tcpSocketMTincomingFactory *f);
   virtual ~AcceptDispatcher() { }
 
-  void watchHandle(handle_t);
-  void ignoreHandle(handle_t);
+  void watchHandle(fd_t);
+  void ignoreHandle(fd_t);
 
   void waitForEvents(CORBA::Boolean loop_forever = TRUE);
 };
@@ -110,8 +110,8 @@ public:
 		   tcpSocketMTincomingFactory *f);
   virtual ~SelectDispatcher() { }
 
-  void watchHandle(handle_t);
-  void ignoreHandle(handle_t);
+  void watchHandle(fd_t);
+  void ignoreHandle(fd_t);
 
   void waitForEvents(CORBA::Boolean loop_forever = TRUE);
 };
@@ -217,10 +217,10 @@ public:
 
   virtual void *run_undetached(void *arg);
 
-  virtual void newConnectionAttempt(handle_t);
+  virtual void newConnectionAttempt(fd_t);
 
-  virtual void dataAvailable(handle_t);
-  virtual void connectionClosed(handle_t);
+  virtual void dataAvailable(fd_t);
+  virtual void connectionClosed(fd_t);
 };
 
 class QPolicyController: public Controller,
@@ -244,10 +244,10 @@ public:
 
   virtual void *run_undetached(void *arg);
 
-  virtual void newConnectionAttempt(handle_t);
+  virtual void newConnectionAttempt(fd_t);
 
-  virtual void dataAvailable(handle_t);
-  virtual void connectionClosed(handle_t);
+  virtual void dataAvailable(fd_t);
+  virtual void connectionClosed(fd_t);
 };
 
 class LeaderFollower: public Controller,
@@ -277,9 +277,9 @@ public:
 
   virtual void *run_undetached(void *arg);
   
-  virtual void newConnectionAttempt(handle_t);
-  virtual void dataAvailable(handle_t);
-  virtual void connectionClosed(handle_t);
+  virtual void newConnectionAttempt(fd_t);
+  virtual void dataAvailable(fd_t);
+  virtual void connectionClosed(fd_t);
 
 };
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.6.8.1.2.1  2000/06/11 15:23:28  djs
+  Now compiles on Win32 platforms using winsock 2.0, implemented using
+  {WaitForMultipleObjects, WSA*}
+
   Revision 1.6.8.1  1999/09/22 14:26:52  djr
   Major rewrite of orbcore to support POA.
 
@@ -51,7 +55,7 @@
 
 
 #ifdef __WIN32__
-#include <winsock.h>
+#include <winsock2.h>
 #else
 #include <netdb.h>
 #endif

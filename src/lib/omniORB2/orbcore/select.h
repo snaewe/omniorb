@@ -1,7 +1,17 @@
 #ifndef _SELECT_H
 #define _SELECT_H
 
+#ifdef __UNIX__
 #include <unistd.h>
+#define PIPE(X) pipe(X)
+#else
+#if defined(_MSC_VER)
+#include <io.h>
+#define PIPE(X) _pipe(X, 16, 0)
+
+#endif /* _MSC_VER */
+#endif /* __UNIX__ */
+ 
 #include <sys/types.h>
 #include <iostream.h>
 #include <assert.h>
@@ -19,7 +29,13 @@ class PollSet: public SocketSet{
  private:
   int maxfds;
 
+#ifdef __WIN32__
+  HANDLE *handles;
+  socket_t *fds;
+  int next;
+#else 
   struct fd_set rfds;
+#endif
   int maxFD;
 
   mutable omni_mutex guard;
@@ -44,10 +60,18 @@ class PollSet: public SocketSet{
 
 class PollSet_Iterator: public SocketSet_Iterator{
  protected:
+#ifdef __WIN32__
+  socket_t active;
+#else
   PollSet &set;
   int index;
+#endif
  public:
+#ifdef __WIN32__
+  PollSet_Iterator(socket_t active);
+#else
   PollSet_Iterator(PollSet&);
+#endif
   virtual socket_t operator() ();
 };
 
@@ -67,11 +91,18 @@ class Poller: public EventMonitor{
   int nthreads_waiting;
   omni_condition wakeUP_cond;
 
+#ifdef __WIN32__
+  // Event notification is achieved under win32 with an
+  // "Event Object"
+  HANDLE wakeUpEvent;
+#else
+  // On Unixoid systems a loopback pipe will suffice
   socket_t *pipe_fd;
+#endif
 
   void wakeUp();
  public:
-  Poller();
+  Poller(const int maxFDs);
 
   void add(socket_t);
   void remove(socket_t);

@@ -26,6 +26,10 @@
 // Description:
 //      
 
+#ifdef __WIN32__
+#include <winsock2.h>
+#endif
+
 #include <omniORB3/CORBA.h>
 #include <omniORB3/omniORB.h>
 #define TRUE 1
@@ -42,7 +46,7 @@
 
 #if defined(__WIN32__)
 
-#include <winsock.h>
+#include <winsock2.h>
 #include <sys/types.h>
 
 #define RC_INADDR_NONE     INADDR_NONE
@@ -51,6 +55,12 @@
 #define INETSOCKET         PF_INET
 #define CLOSESOCKET(sock)  closesocket(sock)
 #define SHUTDOWNSOCKET(sock) ::shutdown(sock,2)
+
+
+int getdtablesize(){
+  return 1024;
+}
+
 #else
 
 #include <sys/time.h>
@@ -139,7 +149,7 @@ Dispatcher::Dispatcher(tcpSocketIncomingRope *r,
 // Will block if no connections are pending
 // On a fatal error will perform proper socket and thread closedown
 // if the system ::accept() call fails, will throw COMM_FAILURE
-handle_t Dispatcher::acceptConnection(){
+fd_t Dispatcher::acceptConnection(){
   PTRACE("Dispatcher", "acceptConnection()");
 
   struct sockaddr_in raddr;
@@ -171,6 +181,9 @@ handle_t Dispatcher::acceptConnection(){
 #ifndef __WIN32__
 	OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
+	// If the error code is WSAEWOULDBLOCK (10035) then it will end up
+	// getting ignored. FIXME: why do we get more accept events than we
+	// should?
 	OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
       }
@@ -293,11 +306,11 @@ AcceptDispatcher::AcceptDispatcher(tcpSocketIncomingRope *r,
   PTRACE("AcceptDispatcher", "AcceptDispatcher");
 }
 
-void AcceptDispatcher::watchHandle(handle_t){
+void AcceptDispatcher::watchHandle(fd_t){
   OMNIORB_ASSERT(NULL);
 }
 
-void AcceptDispatcher::ignoreHandle(handle_t){
+void AcceptDispatcher::ignoreHandle(fd_t){
   OMNIORB_ASSERT(NULL);
 }
 
@@ -333,19 +346,19 @@ void AcceptDispatcher::waitForEvents(CORBA::Boolean loop_forever){
 
 SelectDispatcher::SelectDispatcher(tcpSocketIncomingRope *r,
 				   tcpSocketMTincomingFactory *f):
-  Dispatcher(r, f){
+  Dispatcher(r, f), poller(getdtablesize()){
   PTRACE("SelectDispatcher", "SelectDispatcher");
 
   poller.add(pd_rope->pd_rendezvous);
 }
 
-void SelectDispatcher::watchHandle(handle_t x){
+void SelectDispatcher::watchHandle(fd_t x){
   PTRACE("SelectDispatcher", "watchHandle");
   //cerr << "fd = " << x << endl;
   poller.add(x);
 }
 
-void SelectDispatcher::ignoreHandle(handle_t x){
+void SelectDispatcher::ignoreHandle(fd_t x){
   PTRACE("SelectDispatcher", "ignoreHandle");
   //cerr << "fd = " << x << endl;
   poller.remove(x);
@@ -371,26 +384,31 @@ void SelectDispatcher::waitForEvents(CORBA::Boolean loop_forever){
     //cerr << "Waiting {\n" << poller << "\n}\n";
     PollSet_Active_Iterator set = poller.wait();
     socket_t fd;
+		
     while ((fd = set()) != SOCKET_UNDEFINED){
       //cerr << "active fd = " << fd << endl;
       if (fd == pd_rope->pd_rendezvous){
-	PTRACE("SelectDispatcher", "new connection attempted");
-	socket_t new_sock = acceptConnection();
-
-	if (new_sock == -1){
-	  // shutting down
-	  PTRACE("SelectDispatcher", "shutting down");
-	  return;
+				PTRACE("SelectDispatcher", "new connection attempted");
+				socket_t new_sock;
+				try{
+					new_sock = acceptConnection();
+				} catch (CORBA::COMM_FAILURE&e){
+					PTRACE("Poller", "accept() (probably) just returned WSAEWOULDBLOCK. Ignoring");
+					continue;
+				}
+				if (new_sock == -1){
+					// shutting down
+					PTRACE("SelectDispatcher", "shutting down");
+					return;
+				}
+	
+				if (pd_ceh) pd_ceh->newConnectionAttempt(new_sock);
+			}else{
+				PTRACE("SelectDispatcher", "new data available on socket");
+				if (pd_ceh) pd_ceh->dataAvailable(fd);
+			}
+		}
 	}
-	
-	if (pd_ceh) pd_ceh->newConnectionAttempt(new_sock);
-      }else{
-	PTRACE("SelectDispatcher", "new data available on socket");
-	
-	if (pd_ceh) pd_ceh->dataAvailable(fd);
-      }
-    }
-  }
 }
 
 void Worker::process(tcpSocketStrand *s){
@@ -492,6 +510,7 @@ Controller *Controller::instance(tcpSocketIncomingRope *r,
   default:
     throw omniORB::fatalException(__FILE__, __LINE__,
 				  "Unknown concurrency model selected");
+	return NULL; /* never reached: pacify vc */
   };
 }
 
@@ -525,7 +544,7 @@ void *OOPolicyController::run_undetached(void *arg){
   return NULL;
 }
 
-void OOPolicyController::newConnectionAttempt(handle_t socket){
+void OOPolicyController::newConnectionAttempt(fd_t socket){
   PTRACE("OOPolicyController", "newConnectionAttempt");
 
   tcpSocketStrand *s = new tcpSocketStrand(pd_rope, socket);
@@ -568,10 +587,10 @@ void OOPolicyController::newConnectionAttempt(handle_t socket){
 
 }
 
-void OOPolicyController::dataAvailable(handle_t){ 
+void OOPolicyController::dataAvailable(fd_t){ 
   OMNIORB_ASSERT(NULL); 
 }
-void OOPolicyController::connectionClosed(handle_t){ 
+void OOPolicyController::connectionClosed(fd_t){ 
   OMNIORB_ASSERT(NULL); 
 }
 
@@ -588,7 +607,8 @@ QPolicyController::QPolicyController(tcpSocketIncomingRope *r,
 
   pd_maxstrands = queueLength;
 
-  pd_strandmap = new (tcpSocketStrand*)[pd_maxstrands];
+  pd_strandmap = (tcpSocketStrand**) malloc((sizeof(tcpSocketStrand*) * pd_maxstrands));
+  //pd_strandmap = new (tcpSocketStrand*)[pd_maxstrands];
 
   if (pd_strandmap == NULL)
     throw omniORB::fatalException(__FILE__, __LINE__,
@@ -601,7 +621,7 @@ QPolicyController::QPolicyController(tcpSocketIncomingRope *r,
     nWorkers = omniORB::threadPoolSize;
   
   PTRACE("QPolicyController", "building pool of workers");
-  for (int i=0;i<nWorkers;i++)
+  for (int j=0;j<nWorkers;j++)
     new QWorker(pd_factory, &pd_queue, &pd_dispatcher);
 
   start_undetached();
@@ -610,7 +630,8 @@ QPolicyController::QPolicyController(tcpSocketIncomingRope *r,
 QPolicyController::~QPolicyController(){
   PTRACE("QPolicyController", "destroyed");
 
-  delete[] pd_strandmap;
+  //delete[] pd_strandmap;
+  free(pd_strandmap);
 }
 
 void *QPolicyController::run_undetached(void *arg){
@@ -628,7 +649,7 @@ void *QPolicyController::run_undetached(void *arg){
   return NULL;
 }
 
-void QPolicyController::newConnectionAttempt(handle_t socket){
+void QPolicyController::newConnectionAttempt(fd_t socket){
   PTRACE("QPolicyController", "newConnectionAttempt");
 
   pd_dispatcher.watchHandle(socket);
@@ -641,7 +662,7 @@ void QPolicyController::newConnectionAttempt(handle_t socket){
   pd_strandmap[socket] = newSt;
 }
 
-void QPolicyController::dataAvailable(handle_t socket){
+void QPolicyController::dataAvailable(fd_t socket){
   PTRACE("QPolicyController", "dataAvailable");
 
   pd_dispatcher.ignoreHandle(socket);
@@ -652,7 +673,7 @@ void QPolicyController::dataAvailable(handle_t socket){
 
 }
 
-void QPolicyController::connectionClosed(handle_t socket){
+void QPolicyController::connectionClosed(fd_t socket){
   PTRACE("QPolicyController", "connectionClosed");
 
   OMNIORB_ASSERT(NULL);
@@ -671,7 +692,8 @@ LeaderFollower::LeaderFollower(tcpSocketIncomingRope *r,
 
   pd_maxstrands = getdtablesize();
 
-  pd_strandmap = new (tcpSocketStrand*)[pd_maxstrands];
+  pd_strandmap = (tcpSocketStrand**)malloc(sizeof(tcpSocketStrand*)*pd_maxstrands);
+  //pd_strandmap = new (tcpSocketStrand*)[pd_maxstrands];
 
   if (pd_strandmap == NULL)
     throw omniORB::fatalException(__FILE__, __LINE__,
@@ -689,7 +711,7 @@ LeaderFollower::LeaderFollower(tcpSocketIncomingRope *r,
     nFollowers = omniORB::threadPoolSize;
 
   // create a group of peers
-  for (int i=0;i<(nFollowers-1);i++)
+  for (int j=0;j<(nFollowers-1);j++)
     new LeaderFollower(r, f, 0, FALSE);
 
   start_undetached();
@@ -756,8 +778,9 @@ void *LeaderFollower::run_undetached(void *arg){
       pd_strand->decrRefCount();
       pd_strand->real_shutdown();
 
+#ifndef __WIN32__
       OMNIORB_ASSERT(close(pd_strand->handle()) != 0);
-
+#endif
       pd_strand = NULL;
       break;
     }
@@ -767,7 +790,7 @@ void *LeaderFollower::run_undetached(void *arg){
 
 }
 
-void LeaderFollower::newConnectionAttempt(handle_t socket){
+void LeaderFollower::newConnectionAttempt(fd_t socket){
   PTRACE("LeaderFollower", "newConnectionAttempt");
 
   //cerr << "newConnection socket = " << socket << endl;
@@ -779,7 +802,7 @@ void LeaderFollower::newConnectionAttempt(handle_t socket){
   pd_dispatcher->watchHandle(socket);
 }
 
-void LeaderFollower::dataAvailable(handle_t socket){
+void LeaderFollower::dataAvailable(fd_t socket){
   PTRACE("LeaderFollower", "dataAvailable");
 
   //cerr << "dataAvailable socket = " << socket << endl;
@@ -796,7 +819,7 @@ void LeaderFollower::dataAvailable(handle_t socket){
   }
 }
 
-void LeaderFollower::connectionClosed(handle_t socket){
+void LeaderFollower::connectionClosed(fd_t socket){
   OMNIORB_ASSERT(NULL);
 
 }

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.22.6.10.2.9  2000/06/11 15:23:30  djs
+  Now compiles on Win32 platforms using winsock 2.0, implemented using
+  {WaitForMultipleObjects, WSA*}
+
   Revision 1.22.6.10.2.8  2000/06/11 14:48:25  djs
   Changed file descriptor monitoring code to use select() rather than poll()
 
@@ -208,6 +212,10 @@
 
   */
 
+#ifdef __WIN32__
+#include <winsock2.h>
+#endif
+
 #include <omniORB3/CORBA.h>
 #define TRUE 1
 #define FALSE 0
@@ -234,7 +242,7 @@
 
 #if defined(__WIN32__)
 
-#include <winsock.h>
+#include <winsock2.h>
 #include <sys/types.h>
 
 #define RC_INADDR_NONE     INADDR_NONE

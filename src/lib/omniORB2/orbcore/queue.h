@@ -44,7 +44,7 @@ template<class T> class Queue {
 // when I defined add and remove out-of-line.
 template<class T> class FixedQueue: public Queue<T> {
  public:
-  FixedQueue(const int length): Queue(), 
+  FixedQueue(const int length): Queue<T>(), 
     next_read_index(0), next_write_index(0),
     num_slots(length), used_slots(0),
     pd_cond(&pd_lock) {
