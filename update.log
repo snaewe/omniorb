@@ -1,3 +1,13 @@
+Mon Jun 18 17:12:34 BST 2001 dpg1
+=================================
+
+- Print out distribution date at ORB_init()
+
+bin/scripts/distdate.py               -- new
+src/lib/omniORB/dir.mk
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+
 Fri Jun 15 18:23:10 BST 2001 sll
 ================================
 
@@ -15,7 +25,7 @@ src/examples/ssl_echo/server.pem
 
 
 Fri Jun 15 11:07:03 BST 2001 sll
-===============================
+================================
 
 - Minor updates to make the ORB compiles with SUN C++ 4.2
 

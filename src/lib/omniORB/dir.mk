@@ -11,7 +11,8 @@ ifndef OrbCoreOnly
 SUBDIRS += dynamic codesets
 endif
 
-EXPORTHEADERS = omniORB4/Naming.hh \
+EXPORTHEADERS = omniORB4/distdate.hh \
+                omniORB4/Naming.hh \
                 omniORB4/corbaidl_defs.hh \
                 omniORB4/corbaidl_operators.hh \
                 omniORB4/corbaidl_poa.hh \
@@ -50,6 +51,10 @@ export::
 ######################################################################
 
 OMNIORB_IDL += -p$(BASE_OMNI_TREE)/src/lib/omniORB -Wbdebug
+
+omniORB4/distdate.hh : $(BASE_OMNI_TREE)/update.log
+	@(dir=omniORB4; $(CreateDir))
+	$(PYTHON) $(BASE_OMNI_TREE)/bin/scripts/distdate.py <$(BASE_OMNI_TREE)/update.log >omniORB4/distdate.hh
 
 omniORB4/Naming.hh : Naming.idl
 	@(dir=omniORB4; $(CreateDir))

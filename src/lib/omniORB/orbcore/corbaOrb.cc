@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.15  2001/06/18 16:18:49  dpg1
+  Print out distribution date at ORB_init()
+
   Revision 1.33.2.14  2001/06/11 17:57:13  sll
    External libraries can now hook-up to the orb initialiser list irrespective
    of whether the global variables in the external libraries are initialised
@@ -246,6 +249,7 @@
 #include <giopStreamImpl.h>
 #include <invoker.h>
 #include <omniCurrent.h>
+#include <omniORB4/distdate.hh>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -384,6 +388,11 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
   if( the_orb ) {
     the_orb->_NP_incrRefCount();
     return the_orb;
+  }
+
+  if (omniORB::trace(1)) {
+    omniORB::logger l;
+    l << "Distribution date: " OMNIORB_DIST_DATE "\n";
   }
 
   if( (char*) omniORB::serverName == 0 )
