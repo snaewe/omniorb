@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2001/12/03 18:47:39  dpg1
+  Detect use after deletion in traced mutex and condition.
+
   Revision 1.2.2.2  2001/08/17 13:49:08  dpg1
   Optional logging for traced mutexes and condition variables.
 
@@ -97,6 +100,7 @@ private:
   omni_condition pd_cond;    // so can wait for mutex to unlock
   omni_thread*   pd_holder;  // the thread holding pd_m, or 0
   int            pd_n_conds; // number of dependent condition vars
+  int            pd_deleted; // set true on deletion, may catch later use
   const char*    pd_logname; // if non-zero, name to use for logging
 };
 
@@ -126,6 +130,7 @@ private:
   omni_tracedmutex& pd_mutex;
   omni_condition    pd_cond;
   int               pd_n_waiters;
+  int               pd_deleted;
   const char*       pd_logname;
 };
 
