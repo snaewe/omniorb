@@ -31,9 +31,12 @@
 
 /*
   $Log$
-  Revision 1.4  1997/05/06 16:06:55  sll
-  Public release.
+  Revision 1.5  1997/08/21 22:21:19  sll
+  ProfileBody now has a dtor to deallocate the storage for the host field.
 
+ * Revision 1.4  1997/05/06  16:06:55  sll
+ * Public release.
+ *
  */
 
 #ifndef __IIOP_H__
@@ -54,9 +57,11 @@ class _OMNIORB2_NTDLL_ IIOP {
  
   struct ProfileBody {
     Version                 iiop_version;
-    _CORBA_Char*            host;
+    _CORBA_Char*            host;       // deleted by dtor
     _CORBA_UShort           port;
     _CORBA_Unbounded_Sequence_Octet  object_key;
+
+    ~ProfileBody() { if (host) delete [] host; }
   };
 
   // omniORB2 private functions
