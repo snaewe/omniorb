@@ -177,7 +177,10 @@ UTL_Scope::UTL_Scope()
 	   pd_locals_used(0),
 	   pd_referenced(NULL),
 	   pd_referenced_allocated(0),
-	   pd_referenced_used(0)
+	   pd_referenced_used(0),
+	   pd_parent_types(NULL),
+	   pd_parents_allocated(0),
+	   pd_parents_used(0)
 {
 }
 
@@ -191,7 +194,10 @@ UTL_Scope::UTL_Scope(AST_Decl::NodeType nt)
 	   pd_locals_used(0),
 	   pd_referenced(NULL),
 	   pd_referenced_allocated(0),
-	   pd_referenced_used(0)
+	   pd_referenced_used(0),
+	   pd_parent_types(NULL),
+	   pd_parents_allocated(0),
+	   pd_parents_used(0)
 {
 };
 
@@ -244,8 +250,12 @@ AST_Decl * add_type(AST_Type *type)
 }
 
 /*
- * Protected operations
+ * Public operations
  */
+
+// Narrowing
+IMPL_NARROW_METHODS0(UTL_Scope)
+IMPL_NARROW_FROM_SCOPE(UTL_Scope)
 
 /*
  * Special version of lookup which only looks at the local name instead of
@@ -253,20 +263,46 @@ AST_Decl * add_type(AST_Type *type)
  * be used only by the CFE add_xxx functions
  */
 AST_Decl *
-UTL_Scope::lookup_for_add(AST_Decl *d, idl_bool treat_as_ref)
+UTL_Scope::lookup_for_add(AST_Decl *d, idl_bool treat_as_ref, 
+			  idl_bool ignore_case)
 {
+  AST_Decl* res;
   if (d == NULL)
     return NULL;
-  return lookup_by_name_local(d->local_name(), treat_as_ref);
+  res = lookup_by_name_local(d->local_name(),treat_as_ref,ignore_case);
+  if (res) {
+    if (ignore_case) {
+      // Check if the names differ in case only
+      if (lookup_by_name_local(d->local_name(),I_FALSE,I_FALSE) == NULL) {
+	idl_global->err()->name_case_error(d->local_name()->get_string(),
+					   res->local_name()->get_string());
+      }
+    }
+  }
+  else {
+    // Check also if this name clashes with the names that belong to the
+    // outer scope but have been used in unqualified form in this scope
+    UTL_ScopeActiveIterator i = UTL_ScopeActiveIterator(this,
+					     UTL_Scope::IK_parenttypes);
+    AST_Decl		  *dd;
+    // Iterate over this scope
+    while (!(i.is_done())) {
+      dd = i.item();
+      if (dd->local_name() != NULL && 
+	  dd->local_name()->compare(d->local_name(),ignore_case)) {
+	res = dd;
+	// Check if the names differ in case only
+	if (!dd->local_name()->compare(d->local_name(),I_FALSE)) {
+	  idl_global->err()->name_case_error(d->local_name()->get_string(),
+					     res->local_name()->get_string());
+	}
+	break;
+      }
+      i.next();
+    }
+  }
+  return res;
 }
-
-/*
- * Public operations
- */
-
-// Narrowing
-IMPL_NARROW_METHODS0(UTL_Scope)
-IMPL_NARROW_FROM_SCOPE(UTL_Scope)
 
 // Scope Management Protocol
 //
@@ -764,7 +800,7 @@ UTL_Scope::look_in_inherited(UTL_ScopedName *e, idl_bool treat_as_ref)
    * OK, loop through inherited interfaces. Stop when you find it
    */
   for (nis = i->n_inherits(), is = i->inherits(); nis > 0; nis--, is++) {
-    d = (*is)->lookup_by_name(e, treat_as_ref);
+    d = (*is)->lookup_by_name(e, treat_as_ref,1);
     if (d != NULL)
       return d;
   }
@@ -778,7 +814,7 @@ UTL_Scope::look_in_inherited(UTL_ScopedName *e, idl_bool treat_as_ref)
  * Look up a String * in local scope only
  */
 AST_Decl *
-UTL_Scope::lookup_by_name_local(Identifier *e, idl_bool)
+UTL_Scope::lookup_by_name_local(Identifier *e,idl_bool,idl_bool ignore_case)
 {
   UTL_ScopeActiveIterator *i = new UTL_ScopeActiveIterator(this,
 							   UTL_Scope::IK_both);
@@ -790,7 +826,7 @@ UTL_Scope::lookup_by_name_local(Identifier *e, idl_bool)
    */
   while (!(i->is_done())) {
     d = i->item();
-    if (d->local_name() != NULL && d->local_name()->compare(e)) {
+    if (d->local_name() != NULL && d->local_name()->compare(e,ignore_case)) {
       delete i;
       /*
        * Special case for forward declared interfaces. Look through the
@@ -817,7 +853,8 @@ UTL_Scope::lookup_by_name_local(Identifier *e, idl_bool)
  * Implements lookup by name for scoped names
  */
 AST_Decl *
-UTL_Scope::lookup_by_name(UTL_ScopedName *e, idl_bool treat_as_ref)
+UTL_Scope::lookup_by_name(UTL_ScopedName *e, idl_bool treat_as_ref,
+			  idl_bool internal_recursion)
 {
   AST_Decl		     *d;
   UTL_Scope		     *t = NULL;
@@ -846,7 +883,7 @@ UTL_Scope::lookup_by_name(UTL_ScopedName *e, idl_bool treat_as_ref)
       /*
        * Look up tail of name starting here
        */
-      d = lookup_by_name((UTL_ScopedName *) e->tail(), treat_as_ref);
+      d = lookup_by_name((UTL_ScopedName *) e->tail(), treat_as_ref,1);
       /*
        * Now return whatever we have
        */
@@ -855,7 +892,7 @@ UTL_Scope::lookup_by_name(UTL_ScopedName *e, idl_bool treat_as_ref)
     /*
      * OK, not global scope yet, so simply iterate with parent scope
      */
-    d = t->lookup_by_name(e, treat_as_ref);
+    d = t->lookup_by_name(e, treat_as_ref,1);
     /*
      * If treat_as_ref is true and d is not NULL, add d to
      * set of nodes referenced here
@@ -883,7 +920,7 @@ UTL_Scope::lookup_by_name(UTL_ScopedName *e, idl_bool treat_as_ref)
       if (t == NULL)
 	d = NULL;
       else
-	d = t->lookup_by_name(e, treat_as_ref);
+	d = t->lookup_by_name(e, treat_as_ref,1);
     }
     /*
      * Special case for scope which is an interface. We have to look
@@ -899,6 +936,15 @@ UTL_Scope::lookup_by_name(UTL_ScopedName *e, idl_bool treat_as_ref)
      */
     if (treat_as_ref && d != NULL)
       add_to_referenced(d, I_FALSE);
+
+    if (!internal_recursion && d != NULL) {
+      if (e->length() == 1) {
+	// This is an unqualified name defined in one of the parent scope.
+	// Mark this in the current scope so that lookup_for_add will
+	// check this name for clashes as well
+	add_to_parent_types(d);
+      }
+    }
     /*
      * OK, now return whatever we found
      */
@@ -1031,6 +1077,37 @@ UTL_Scope::add_to_local_types(AST_Decl *e)
   pd_local_types[pd_locals_used++] = e;
 }
 
+// Add to parent types: nodes defined in the outer scope but are referenced 
+// in this scope using their unqualified name.
+void
+UTL_Scope::add_to_parent_types(AST_Decl *e)
+{
+  AST_Decl	**tmp;
+  long		oparents_allocated;
+  long		i;
+
+  if (e == NULL) return;
+
+  // Make sure there's space for one more
+  if (pd_parents_allocated == pd_parents_used) {
+
+    oparents_allocated	= pd_parents_allocated;
+    pd_parents_allocated 	+= INCREMENT;
+    tmp			= new AST_Decl *[pd_parents_allocated];
+
+    for (i = 0; i < oparents_allocated; i++)
+      tmp[i] = pd_parent_types[i];
+
+    delete pd_parent_types;
+
+    pd_parent_types = tmp;
+  }
+
+  // Insert new decl
+  pd_parent_types[pd_parents_used++] = e;
+}
+
+
 // Has this node been referenced here before?
 idl_bool
 UTL_Scope::referenced(AST_Decl *e)
@@ -1146,7 +1223,8 @@ UTL_ScopeActiveIterator::item()
     return iter_source->pd_decls[il];
   if (stage == UTL_Scope::IK_localtypes)
     return iter_source->pd_local_types[il];
-
+  if (stage == UTL_Scope::IK_parenttypes)
+    return iter_source->pd_parent_types[il];
   return NULL;
 }
 
@@ -1156,13 +1234,21 @@ UTL_ScopeActiveIterator::is_done()
 {
   long	limit;
 
-  limit = (stage == UTL_Scope::IK_decls) 
-    ? iter_source->pd_decls_used 
-    : iter_source->pd_locals_used;
+  if (stage == UTL_Scope::IK_decls) {
+    limit = iter_source->pd_decls_used;
+  }
+  else if (stage == UTL_Scope::IK_parenttypes) {
+    limit = iter_source->pd_parents_used;
+  }
+  else {
+    limit = iter_source->pd_locals_used;
+  }
 
   for (;;) {
     if (il < limit)				// Last element?
       return I_FALSE;
+    if (stage == UTL_Scope::IK_parenttypes)
+      return I_TRUE;
     if (stage == UTL_Scope::IK_localtypes)	// Already done local types?
       return I_TRUE;
     if (ik == UTL_Scope::IK_decls)		// Only want decls?
