@@ -7,10 +7,12 @@
 
 #include <stdio.h>
 
-#if (defined(apollo) || defined(hpux)) && defined(__cplusplus)
+#ifdef __cplusplus
+#ifndef __EXTERN_C__
+#define __EXTERN_C__
+#endif
 extern	"C" int yywrap();
-#endif	// (defined(apollo) || defined(hpux)) && defined(__cplusplus)
-
+#endif
 
 # line 89 "idl.yy"
 typedef union
