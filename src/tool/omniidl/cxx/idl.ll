@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7.2.7  2000/06/09 11:20:47  dpg1
+// Last fix put __omni_pragma line numbers off by one...
+//
 // Revision 1.7.2.6  2000/06/08 14:58:19  dpg1
 // Line numbers for #pragmas and // comments were off by one
 //
@@ -361,7 +364,7 @@ L{STR} {
 
 "__omni_pragma"{WS}+ {
   BEGIN(omni_pragma);
-  return PRAGMA;
+  return OMNI_PRAGMA;
 }
 
 <omni_pragma>{WS}+"__omni_endpragma" {
