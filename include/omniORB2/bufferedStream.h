@@ -29,9 +29,13 @@
 
 /*
   $Log$
-  Revision 1.14  1998/03/09 14:33:21  ewc
-  Calls to NP_data() scoped to satisfy aC++ on HPUX
+  Revision 1.15  1998/04/07 19:54:46  sll
+  Added extra marshalling functions when C++ bool type is used to represent
+  CORBA::Boolean.
 
+ * Revision 1.14  1998/03/09  14:33:21  ewc
+ * Calls to NP_data() scoped to satisfy aC++ on HPUX
+ *
  * Revision 1.13  1998/01/27  16:05:42  ewc
  * Added support necessary for TypeCode and Any
  *
@@ -109,6 +113,21 @@ public:
   friend inline void operator<<= (_CORBA_Char &a,NetBufferedStream &s) {
     UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
+
+#ifdef HAS_Cplusplus_Bool
+
+  friend inline void operator>>= (const _CORBA_Boolean b,NetBufferedStream &s) {
+    _CORBA_Char c = b ? 1 : 0;
+    MARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
+  }
+
+  friend inline void operator<<= (_CORBA_Boolean &b,NetBufferedStream &s) {
+    _CORBA_Char c;
+    UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
+    b = c ? true : false;
+  }
+
+#endif
 
   friend inline void operator>>= (const _CORBA_Short a,NetBufferedStream &s) {
     MARSHAL(s,_CORBA_Short,omni::ALIGN_2,a);
@@ -302,7 +321,7 @@ public:
     return current_outb_alignment();
   }
 
-  inline _CORBA_Boolean RdMessageByteOrder() const {
+  inline _CORBA_Char RdMessageByteOrder() const {
     return pd_rdmsg_byte_order;
   }
 
@@ -318,7 +337,7 @@ protected:
   void   WrMessageSize(size_t msgsize);
   // For an outgoing message, set the message size.
 
-  void   RdMessageSize(size_t msgsize,_CORBA_Boolean byteorder);
+  void   RdMessageSize(size_t msgsize,_CORBA_Char byteorder);
   // For an incoming message, set what the message size.
 
 private:
@@ -335,7 +354,7 @@ private:
   size_t          pd_wrmsg_size;
   size_t          pd_read;
   size_t          pd_written;
-  _CORBA_Boolean  pd_rdmsg_byte_order;
+  _CORBA_Char     pd_rdmsg_byte_order;
 
   void ensure_rdlocked();
   void ensure_wrlocked();
@@ -413,6 +432,21 @@ public:
   friend inline void operator<<= (_CORBA_Char &a,MemBufferedStream &s) {
     UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
+
+#ifdef HAS_Cplusplus_Bool
+
+  friend inline void operator>>= (const _CORBA_Boolean b,MemBufferedStream &s) {
+    _CORBA_Char c = b ? 1 : 0;
+    MARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
+  }
+
+  friend inline void operator<<= (_CORBA_Boolean &b,MemBufferedStream &s) {
+    _CORBA_Char c;
+    UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
+    b = c ? true : false;
+  }
+
+#endif
 
   friend inline void operator>>= (const _CORBA_Short a,MemBufferedStream &s) {
     MARSHAL(s,_CORBA_Short,omni::ALIGN_2,a);
@@ -529,11 +563,11 @@ public:
   void rewind_inout_mkr();
   void rewind_in_mkr();
 
-  _CORBA_Boolean byteOrder() const {
+  _CORBA_Char byteOrder() const {
     return pd_byte_order;
   }
 
-  void byteOrder(_CORBA_Boolean b) {
+  void byteOrder(_CORBA_Char b) {
     pd_byte_order = b;
   }
 
@@ -625,7 +659,7 @@ private:
 #define MEMBUFFEREDSTREAM_INLINE_BUF_SIZE 32
   static const int pd_inline_buf_size;
   char      pd_buffer[MEMBUFFEREDSTREAM_INLINE_BUF_SIZE];
-  _CORBA_Boolean pd_byte_order;
+  _CORBA_Char    pd_byte_order;
   _CORBA_Boolean pd_noboundcheck;
   _CORBA_Boolean pd_dupl;
 
@@ -663,7 +697,7 @@ template <class T>
 inline void
 _CORBA_Sequence<T>::operator>>= (NetBufferedStream &s) const
 {
-  pd_len >>= s;
+  ::operator>>=((const _CORBA_ULong)pd_len,s);
   for (int i=0; i<(int)pd_len; i++) {
     pd_buf[i] >>= s;
   }
@@ -1555,6 +1589,178 @@ _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmS
     }
   }
 }
+
+
+#ifdef HAS_Cplusplus_Bool
+// Real C++ bool is used to represent CORBA::Boolean. The marshalling
+// functions for sequence/sequence-array of fixed size elements cannot
+// be used because the C++ bool may or may not be the same size as a
+// CORBA::Char. Define the marshalling functions here:
+
+void
+_CORBA_Unbounded_Sequence__Boolean::operator>>= (NetBufferedStream &s) const
+{
+  _CORBA_Sequence<_CORBA_Boolean>::operator>>=(s);
+}
+
+void
+_CORBA_Unbounded_Sequence__Boolean::operator<<= (NetBufferedStream &s)
+{
+  _CORBA_Sequence<_CORBA_Boolean>::operator<<=(s);
+}
+
+void
+_CORBA_Unbounded_Sequence__Boolean::operator>>= (MemBufferedStream &s) const
+{
+  _CORBA_Sequence<_CORBA_Boolean>::operator>>=(s);
+}
+
+void
+_CORBA_Unbounded_Sequence__Boolean::operator<<= (MemBufferedStream &s)
+{
+  _CORBA_Sequence<_CORBA_Boolean>::operator<<=(s);
+}
+
+template <int max>
+void
+_CORBA_Bounded_Sequence__Boolean<max>::operator>>= (NetBufferedStream &s) const
+{
+  _CORBA_Sequence<_CORBA_Boolean>::operator>>=(s);
+}
+
+template <int max>
+void
+_CORBA_Bounded_Sequence__Boolean<max>::operator<<= (NetBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l > s.RdMessageUnRead() || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    _CORBA_Sequence<_CORBA_Boolean>::NP_data()[i] <<= s;
+  }
+  return;
+}
+
+template <int max>
+void
+_CORBA_Bounded_Sequence__Boolean<max>::operator>>= (MemBufferedStream &s) const
+{
+  _CORBA_Sequence<_CORBA_Boolean>::operator>>=(s);
+}
+
+template <int max>
+void
+_CORBA_Bounded_Sequence__Boolean<max>::operator<<= (MemBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (s.overrun(l) || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    _CORBA_Sequence<_CORBA_Boolean>::NP_data()[i] <<= s;
+  }
+  return;
+}
+
+template<class T, class T_slice, int dimension>
+void
+_CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
+    operator>>= (NetBufferedStream &s) const
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
+  }
+
+template<class T, class T_slice, int dimension>
+void
+_CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
+    operator<<= (NetBufferedStream &s)
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator<<=(s);
+}
+
+template<class T, class T_slice, int dimension>
+void
+_CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
+    operator>>= (MemBufferedStream &s) const
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
+}
+
+template<class T, class T_slice, int dimension>
+void
+_CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
+    operator<<= (MemBufferedStream &s)
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator<<=(s);
+}
+
+template<class T, class T_slice, int dimension, int max>
+void
+_CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
+   operator>>= (NetBufferedStream &s) const
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
+}
+
+template<class T, class T_slice, int dimension, int max>
+void
+_CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
+    operator<<= (NetBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l > s.RdMessageUnRead() || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    for (_CORBA_ULong j=0; j<dimension; j++) {
+      *((_CORBA_Boolean*)(NP_data()[i])+j) <<= s;
+    }
+  }
+  return;
+}
+
+template<class T, class T_slice, int dimension, int max>
+void
+_CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
+    operator>>= (MemBufferedStream &s) const
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
+}
+
+template<class T, class T_slice, int dimension, int max>
+void
+_CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
+    operator<<= (MemBufferedStream &s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (s.overrun(l) || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    for (_CORBA_ULong j=0; j<dimension; j++) {
+      *((_CORBA_Boolean*)(NP_data()[i])+j) <<= s;
+    }
+  }
+  return;
+}
+
+#endif
+
 
 #undef Swap16
 #undef Swap32
