@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.4  2000/03/13 16:00:38  djs
+# Fixed problem with scoping (was emulating old problem)
+#
 # Revision 1.30.2.3  2000/03/10 16:16:32  djs
 # Improper handling of scopes when performing name prefixes in ObjRef_OUT
 # arguments fixed.
@@ -273,8 +276,11 @@ def mapID(identifier):
 # eg mapRepoID("IDL:Module/If/Then") -> "IDL:Module/_cxx_If/_cxx_Then"
 def mapRepoID(id):
     if not(config.EMULATE_BUGS()):
-        raise RuntimeError("Shouldn't be _breaking_ repository IDs if " +\
-                           "not emulating bugs in the old backend!")
+        if config.DEBUG():
+            raise RuntimeError("Shouldn't be _breaking_ repository IDs if " +\
+                               "not emulating bugs in the old backend!")
+        else:
+            return id
     # extract the naming part of the ID
     regex = re.compile(r"(IDL:)*(.+):(.+)")
     match = regex.match(id)
