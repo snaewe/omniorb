@@ -27,6 +27,12 @@
 
 /*
   $Log$
+  Revision 1.20  1999/03/04 10:43:20  djr
+  Enabled reopen modules by default on a number of platforms.
+
+  Revision 1.20  1999/03/04 10:36:36  djr
+  Enabled reopen module by default on egcs 1.1.1, MSVC, DEC C++ & Borland
+
   Revision 1.19  1999/01/07 09:48:23  djr
   Changes to support new output file ...DynSK.cc
 
@@ -280,10 +286,16 @@ BE_parse_args(int argc, char **argv)
   o2be_global::set_dynskelsuffix("DynSK.cpp");
 #endif
 
-#ifdef HAS_Cplusplus_Namespace
+#if ( defined(HAS_Cplusplus_Namespace)              )  \
+ || ( defined(__GNUG__) && __GNUC_MINOR__ >= 91     )  \
+ || ( defined(__DECCXX) && __DECCXX_VAR >= 60000000 )  \
+ || ( defined(_MSC_VER) && _MSC_VER >= 1000         )  \
+ || ( defined(__BCPLUSPLUS__)                       )
+
   // Enable reopen module by default
   idl_global->set_compile_flags(idl_global->compile_flags() |
 				IDL_CF_REOPENMODULE);
+
 #endif
 
   DRV_cpp_init();
