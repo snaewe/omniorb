@@ -1,4 +1,4 @@
-ifdef SunArchitecture
+ifdef UnixArchitecture
 SUBDIRS += omniNames
 endif
 
