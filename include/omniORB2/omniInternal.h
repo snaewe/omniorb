@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.3  1997/01/13 15:10:06  sll
-  Semantics of createObjRef() changed. Changed comments to document this.
+  Revision 1.4  1997/01/21 14:50:44  ewc
+  Added support for resolve initial references functions.
 
+ * Revision 1.3  1997/01/13  15:10:06  sll
+ * Semantics of createObjRef() changed. Changed comments to document this.
+ *
  * Revision 1.2  1997/01/09  10:08:36  ewc
  * Fixed minor bug where omniObjectKey was declared as class, but defined
  * as struct.
@@ -77,6 +80,8 @@ public:
   static void init(int &argc,char **argv,const char *orb_identifier);
   static void boaInit(int &argc,char **argv,const char *boa_identifier);
 
+  static omniObject* resolveInitRef(const char* identifier);  
+  static unsigned long listInitServices(char**& servicelist);
 
   static void objectIsReady(omniObject *obj);
   static void objectDuplicate(omniObject *obj);
@@ -291,5 +296,5 @@ private:
 #include <omniORB2/bufferedStream.h>
 #include <omniORB2/giopDriver.h>
 #include <omniORB2/bufStream_templates.h>
-
+#include <omniORB2/initFile.h>
 #endif // __OMNIORB_H__
