@@ -30,9 +30,12 @@
  
 /*
   $Log$
-  Revision 1.3  1997/05/06 15:26:02  sll
-  Public release.
+  Revision 1.4  1997/12/09 18:20:28  sll
+  Moved omni::initLock back to this file.
 
+// Revision 1.3  1997/05/06  15:26:02  sll
+// Public release.
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -53,6 +56,9 @@
 #include <sys/time.h>
 #endif
 
+omniORB::objectKey       omniORB::seed;
+static omni_mutex        internalLock;
+
 int
 omniORB::hash(omniORB::objectKey& k)
 {
@@ -62,14 +68,15 @@ omniORB::hash(omniORB::objectKey& k)
 void
 omniORB::generateNewKey(omniORB::objectKey& k)
 {
-  omni::initLock.lock();
+  omni_mutex_lock sync(internalLock);
+
   if (!omniORB::seed.hi && !omniORB::seed.med) 
     {
       // one-time initialisation of the seed value
       // initialise the seed of the objectKey generator
       // Guarantee that no two keys generated on the same machine are the same
       // ever.
-#ifndef __NT__
+#ifndef __WIN32__
       // Use gettimeofday() to obtain the current time. Use this to
       // initialise the 32-bit field hi and med in the seed.
       // On unices, add the process id to med.
@@ -118,7 +125,6 @@ omniORB::generateNewKey(omniORB::objectKey& k)
 	     (((k.lo) & 0x0000ff00) << 8)  | 
 	     (((k.lo) & 0x000000ff) << 24));
   }
-  omni::initLock.unlock();
   return;
 }
 
