@@ -1,3 +1,10 @@
+Sat Aug 18 18:27:35 BST 2001 sll
+================================
+
+- Fixed minor bug introduced by previous update
+
+src/lib/omniORB/orbcore/uri.cc
+
 Fri Aug 17 17:52:32 BST 2001 sll
 ================================
 

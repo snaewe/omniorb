@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.2.2.12  2001/08/18 17:28:38  sll
+// Fixed minor bug introduced by the previous update.
+//
 // Revision 1.2.2.11  2001/08/17 17:14:54  sll
 // Moved handler initialisation into static initialisers.
 //
@@ -144,6 +147,7 @@ omniURI::stringToObject(const char* uri, unsigned int cycles)
 	handler = *i;
 	break;
       }
+      i++;
     }
   }
   if (handler)
@@ -169,6 +173,7 @@ omniURI::uriSyntaxIsValid(const char* uri)
 	handler = *i;
 	break;
       }
+      i++;
     }
   }
   if (handler) return handler->syntaxIsValid(uri);
