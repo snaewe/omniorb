@@ -26,6 +26,10 @@
 
 /* 
    $Log$
+   Revision 1.13  1999/02/10 09:55:27  djr
+   Fixed bug in which omniidl2 failed if constructed types were
+   declared in an exception member declaration.
+
    Revision 1.12  1999/02/09 09:44:59  djr
    Fixed bug where a union helper class was not being declared before
    being declared as a friend.
@@ -280,6 +284,10 @@ o2be_module::produce_decls_at_global_scope_in_hdr(std::fstream& s)
 	break;
       case AST_Decl::NT_struct:
 	o2be_structure::narrow_from_decl(decl)
+	  ->produce_decls_at_global_scope_in_hdr(s);
+	break;
+      case AST_Decl::NT_except:
+	o2be_exception::narrow_from_decl(decl)
 	  ->produce_decls_at_global_scope_in_hdr(s);
 	break;
       case AST_Decl::NT_interface:

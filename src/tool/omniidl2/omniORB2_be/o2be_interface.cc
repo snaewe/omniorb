@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.28  1999/02/10 09:56:09  djr
+  Fixed bug in which omniidl2 failed if constructed types were
+  declared in an exception member declaration.
+
   Revision 1.27  1999/02/09 09:40:35  djr
   produce_decls_at_global_scope_in_hdr() now propagates properly
   through (nested) interfaces to structure and union types.
@@ -2711,6 +2715,10 @@ o2be_interface::produce_decls_at_global_scope_in_hdr(std::fstream& s)
       break;
     case AST_Decl::NT_struct:
       o2be_structure::narrow_from_decl(d)
+	->produce_decls_at_global_scope_in_hdr(s);
+      break;
+    case AST_Decl::NT_except:
+      o2be_exception::narrow_from_decl(d)
 	->produce_decls_at_global_scope_in_hdr(s);
       break;
     case AST_Decl::NT_interface:
