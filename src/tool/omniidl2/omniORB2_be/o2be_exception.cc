@@ -25,8 +25,10 @@
 
 /*
   $Log$
-  Revision 1.19  1999/09/14 16:57:30  djr
+  Revision 1.19.4.1  1999/09/15 20:28:44  sll
   Fixed bug - exception constructor does not duplicate object reference arg.
+  Back port from version5.7 tree
+  Update stub to use new cdrstreams.
 
   Revision 1.18  1999/07/19 09:49:32  djr
   Put back prefix Exception/UserException onto type id of exceptions.
@@ -302,11 +304,8 @@ o2be_exception::produce_hdr(std::fstream &s)
   IND(s); s << "static " << uqname()
 	    << "* _narrow(CORBA::Exception* e);\n";
   IND(s); s << "// NOTE: deprecated function from CORBA 2.2. Should use _downcast instead.\n";
-  IND(s); s << "size_t NP_alignedSize(size_t initialoffset) const;\n";
-  IND(s); s << "void operator>>= (NetBufferedStream &) const;\n";
-  IND(s); s << "void operator<<= (NetBufferedStream &);\n";
-  IND(s); s << "void operator>>= (MemBufferedStream &) const;\n";
-  IND(s); s << "void operator<<= (MemBufferedStream &);\n";
+  IND(s); s << "void operator>>= (cdrStream &) const;\n";
+  IND(s); s << "void operator<<= (cdrStream &);\n";
   IND(s); s << "static _core_attr CORBA::Exception::insertExceptionToAny    insertToAnyFn;\n";
   IND(s); s << "static _core_attr CORBA::Exception::insertExceptionToAnyNCP insertToAnyFnNCP;\n";
   DEC_INDENT_LEVEL();
@@ -696,46 +695,8 @@ o2be_exception::produce_skel(std::fstream &s)
   IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
 
-  IND(s); s << "size_t\n";
-  IND(s); s << fqname() << "::NP_alignedSize(size_t _initialoffset) const\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "size_t _msgsize = _initialoffset;\n";
-  {
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )  continue;
-
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     AST_Field::narrow_from_decl(d)->field_type(),
-		     o2be_operation::wIN,mapping);
-
-	if (ntype == o2be_operation::tTypeCode) {
-	  ntype = o2be_operation::tTypeCodeMember;
-	  mapping.is_pointer = I_FALSE;
-	}	      
-
-	o2be_operation::produceSizeCalculation(
-                     s,
-		     AST_Field::narrow_from_decl(d)->field_type(),
-		     ScopeAsDecl(defined_in()),
-		     "",
-		     "_msgsize",
-		     o2be_field::narrow_from_decl(d)->uqname(),
-		     ntype,
-		     mapping);
-      }
-  }
-  IND(s); s << "return _msgsize;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
   IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator>>= (NetBufferedStream &_n) const\n";
+  IND(s); s << fqname() << "::operator>>= (cdrStream &_n) const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   {
@@ -770,7 +731,7 @@ o2be_exception::produce_skel(std::fstream &s)
   IND(s); s << "}\n\n";
 
   IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator<<= (NetBufferedStream &_n)\n";
+  IND(s); s << fqname() << "::operator<<= (cdrStream &_n)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   {
@@ -799,77 +760,6 @@ o2be_exception::produce_skel(std::fstream &s)
 		     o2be_field::narrow_from_decl(d)->uqname(),
 		     ntype,
 		     mapping);
-      }
-  }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator>>= (MemBufferedStream &_n) const\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )  continue;
-
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     AST_Field::narrow_from_decl(d)->field_type(),
-		     o2be_operation::wIN,mapping);
-
-	if (ntype == o2be_operation::tTypeCode) {
-	  ntype = o2be_operation::tTypeCodeMember;
-	  mapping.is_pointer = I_FALSE;
-	}	      
-
-	o2be_operation::produceMarshalCode(
-                     s,
-		     AST_Field::narrow_from_decl(d)->field_type(),
-		     ScopeAsDecl(defined_in()),
-		     "_n",
-		     o2be_field::narrow_from_decl(d)->uqname(),
-		     ntype,
-		     mapping);
-      }
-  }
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
-
-  IND(s); s << "void\n";
-  IND(s); s << fqname() << "::operator<<= (MemBufferedStream &_n)\n";
-  IND(s); s << "{\n";
-  INC_INDENT_LEVEL();
-  {
-    UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl *d = i.item();
-	i.next();
-	if( d->node_type() != AST_Decl::NT_field )  continue;
-
-	o2be_operation::argMapping mapping;
-	o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(
-		     AST_Field::narrow_from_decl(d)->field_type(),
-		     o2be_operation::wIN,mapping);
-
-	if (ntype == o2be_operation::tTypeCode) {
-	  ntype = o2be_operation::tTypeCodeMember;
-	  mapping.is_pointer = I_FALSE;
-	}	      
-
-	o2be_operation::produceUnMarshalCode(
-                     s,
-		     AST_Field::narrow_from_decl(d)->field_type(),
-		     ScopeAsDecl(defined_in()),
-		     "_n",
-		     o2be_field::narrow_from_decl(d)->uqname(),
-		     ntype,
-		     mapping,
-		     I_TRUE);
       }
   }
   DEC_INDENT_LEVEL();
