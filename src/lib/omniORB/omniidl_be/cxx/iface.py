@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.14  2004/10/17 21:47:40  dgrisby
+# Fully qualify scopes in _ptrToObjRef and _ptrToInterface.
+#
 # Revision 1.1.4.13  2003/07/25 16:03:06  dgrisby
 # Initialise base classes in correct order.
 #
@@ -545,11 +548,13 @@ class _impl_I(Class):
       for i in self.interface().allInherits():
         inherited_name = i.name()
         impl_inherited_name = inherited_name.prefix("_impl_")
-        inherited_str = inherited_name.unambiguous(self._environment)
-        impl_inherited_str = impl_inherited_name.unambiguous(self._environment)
-        if inherited_name.needFlatName(self._environment):
-          inherited_str = inherited_name.flatName()
-          impl_inherited_str = impl_inherited_name.flatName()
+
+        # HERE: using the fully scoped name may fail on old MSVC
+        # versions, but it is required by newer MSVC versions.
+        # Marvellous.
+        inherited_str      = inherited_name.fullyQualify()
+        impl_inherited_str = impl_inherited_name.fullyQualify()
+
         stream.out(omniidl_be.cxx.skel.template.interface_impl_repoID_ptr,
                    inherited_name = inherited_str,
                    impl_inherited_name = impl_inherited_str)
@@ -558,11 +563,10 @@ class _impl_I(Class):
       for i in self.interface().allInherits():
         inherited_name = i.name()
         impl_inherited_name = inherited_name.prefix("_impl_")
-        inherited_str = inherited_name.unambiguous(self._environment)
-        impl_inherited_str = impl_inherited_name.unambiguous(self._environment)
-        if inherited_name.needFlatName(self._environment):
-          inherited_str = inherited_name.flatName()
-          impl_inherited_str = impl_inherited_name.flatName()
+
+        inherited_str      = inherited_name.fullyQualify()
+        impl_inherited_str = impl_inherited_name.fullyQualify()
+
         stream.out(omniidl_be.cxx.skel.template.interface_impl_repoID_str,
                    inherited_name = inherited_str,
                    impl_inherited_name = impl_inherited_str)

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.30  2004/10/17 21:47:40  dgrisby
+# Fully qualify scopes in _ptrToObjRef and _ptrToInterface.
+#
 # Revision 1.3.2.29  2004/07/29 10:45:22  dgrisby
 # Bug with unmarshalling unions with multiple case labels.
 #
@@ -303,27 +306,27 @@ void*
   if( id == ::@name@::_PD_repoId )
     return (::@name@_ptr) this;
   @_ptrToObjRef_ptr@
-  if( id == CORBA::Object::_PD_repoId )
-    return (CORBA::Object_ptr) this;
+  if( id == ::CORBA::Object::_PD_repoId )
+    return (::CORBA::Object_ptr) this;
 
   if( omni::strMatch(id, ::@name@::_PD_repoId) )
     return (::@name@_ptr) this;
   @_ptrToObjRef_str@
-  if( omni::strMatch(id, CORBA::Object::_PD_repoId) )
-    return (CORBA::Object_ptr) this;
+  if( omni::strMatch(id, ::CORBA::Object::_PD_repoId) )
+    return (::CORBA::Object_ptr) this;
 
   return 0;
 }
 """
 
 interface_objref_repoID_ptr = """\
-if( id == @inherits_fqname@::_PD_repoId )
-  return (@inherits_fqname@_ptr) this;
+if( id == ::@inherits_fqname@::_PD_repoId )
+  return (::@inherits_fqname@_ptr) this;
 """
 
 interface_objref_repoID_str = """\
-if( omni::strMatch(id, @inherits_fqname@::_PD_repoId) )
-  return (@inherits_fqname@_ptr) this;
+if( omni::strMatch(id, ::@inherits_fqname@::_PD_repoId) )
+  return (::@inherits_fqname@_ptr) this;
 """
 
 interface_shortcut = """\
@@ -539,15 +542,15 @@ void*
 @impl_fqname@::_ptrToInterface(const char* id)
 {
   if( id == ::@name@::_PD_repoId )
-    return (@impl_name@*) this;
+    return (::@impl_fqname@*) this;
   @_ptrToInterface_ptr@
-  if( id == CORBA::Object::_PD_repoId )
+  if( id == ::CORBA::Object::_PD_repoId )
     return (void*) 1;
 
   if( omni::strMatch(id, ::@name@::_PD_repoId) )
-    return (@impl_name@*) this;
+    return (::@impl_fqname@*) this;
   @_ptrToInterface_str@
-  if( omni::strMatch(id, CORBA::Object::_PD_repoId) )
+  if( omni::strMatch(id, ::CORBA::Object::_PD_repoId) )
     return (void*) 1;
   return 0;
 }
@@ -575,13 +578,13 @@ if( ((@impl_inherited_name@*)this)->
 """
 
 interface_impl_repoID_ptr = """\
-if( id == @inherited_name@::_PD_repoId )
-  return (@impl_inherited_name@*) this;
+if( id == ::@inherited_name@::_PD_repoId )
+  return (::@impl_inherited_name@*) this;
 """
 
 interface_impl_repoID_str = """\
-if( omni::strMatch(id, @inherited_name@::_PD_repoId) )
-  return (@impl_inherited_name@*) this;
+if( omni::strMatch(id, ::@inherited_name@::_PD_repoId) )
+  return (::@impl_inherited_name@*) this;
 """
 
 interface_sk = """\
