@@ -1,4 +1,45 @@
 
+Thu Feb 18 15:15:24 GMT 1999 djr
+================================
+
+- omniORB::strictIIOP is now true by default.
+- New command-line option -ORBlcdMode (omniORB::enableLcdMode())
+  (includes not using indirections for on-the-wire TypeCodes)
+
+include/omniORB2/omniORB.h
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/dynamic/typecode.cc
+
+- Implemented CORBA::ORB::send_multiple_requests_* and friends.
+- Modifications to implementation of DII.
+
+include/omniORB2/CORBA.h
+src/lib/omniORB2/dynamic/deferredRequest.h
+src/lib/omniORB2/dynamic/deferredRequest.cc
+src/lib/omniORB2/dynamic/request.cc
+src/lib/omniORB2/dynamic/orbMultiRequest.cc
+src/lib/omniORB2/dynamic/context.h
+src/lib/omniORB2/dynamic/request.h
+
+- Slight modification to the files to include Interface Repository
+  stubs to remove a problem when compiling debug version under
+  egcs
+
+src/lib/omniORB2/dynamic/irstub.cc
+src/lib/omniORB2/dynamic/irdynstub.cc
+src/lib/omniORB2/dynamic/corbaidlstub.cc
+src/lib/omniORB2/dynamic/corbaidldynstub.cc
+
+- Bug in TypeCode parser which read the byte order from a stream
+  which it was writing to.
+
+src/lib/omniORB2/dynamic/tcParser.cc
+
+- Added virtual destructor to NamedValueImpl
+
+src/lib/omniORB2/dynamic/namedValue.cc
+
+
 Wed Feb 17 16:11:43 GMT 1999 djr
 ================================
 
