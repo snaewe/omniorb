@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2001/05/10 15:03:50  dpg1
+  Update cdrStreamAdapter to modified cdrStream interface.
+
   Revision 1.1.2.9  2001/04/18 17:50:44  sll
   Big checkin with the brand new internal APIs.
   Scoped where appropriate with the omni namespace.
@@ -823,26 +826,36 @@ protected:
   // Implementations of abstract functions...
   void put_octet_array(const _CORBA_Octet* b, int size,
 		       omni::alignment_t align=omni::ALIGN_1);
+
   void get_octet_array(_CORBA_Octet* b,int size,
 		       omni::alignment_t align=omni::ALIGN_1);
+
   void skipInput(_CORBA_ULong size);
+
   _CORBA_Boolean checkInputOverrun(_CORBA_ULong itemSize,
 				   _CORBA_ULong nItems,
 				   omni::alignment_t align=omni::ALIGN_1);
+
   _CORBA_Boolean checkOutputOverrun(_CORBA_ULong itemSize,
 				    _CORBA_ULong nItems,
 				    omni::alignment_t align=omni::ALIGN_1);
+
+  void copy_to(cdrStream&, int size, omni::alignment_t align=omni::ALIGN_1);
+
   void fetchInputData(omni::alignment_t align,size_t required);
+
   _CORBA_Boolean reserveOutputSpaceForPrimitiveType(omni::alignment_t align,
 						    size_t required);
+
   _CORBA_Boolean maybeReserveOutputSpace(omni::alignment_t align,
 					 size_t required);
+
   _CORBA_ULong currentInputPtr() const;
   _CORBA_ULong currentOutputPtr() const;
 
-private:
-  cdrStream& pd_actual;
+  _CORBA_ULong completion();
 
+public:
   inline void copyStateFromActual()
   {
     pd_inb_end  = pd_actual.pd_inb_end;
@@ -857,6 +870,9 @@ private:
     pd_actual.pd_outb_end = pd_outb_end;
     pd_actual.pd_outb_mkr = pd_outb_mkr;
   }
+
+private:
+  cdrStream& pd_actual;
 };
 
 #endif /* __CDRSTREAM_H__ */

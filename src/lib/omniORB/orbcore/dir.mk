@@ -3,6 +3,7 @@
 GIOP_SRCS = \
             omniTransport.cc \
 	    cdrStream.cc \
+            cdrStreamAdapter.cc \
 	    cdrMemoryStream.cc \
             giopEndpoint.cc \
             giopRope.cc \
