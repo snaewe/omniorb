@@ -467,8 +467,7 @@ omni_thread::join(void** status)
 
   DB(cerr << "omni_thread::join: doing cthread_join\n");
 
-  int rc = cthread_join(mach_thread);
-  if (rc != 0) throw omni_thread_fatal(rc);
+ *status = cthread_join(mach_thread);
 
   delete this;
 }
