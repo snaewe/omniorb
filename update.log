@@ -1,3 +1,38 @@
+Tue Oct 10 11:14:45 BST 2000 dpg1
+=================================
+
+- Update omniidl front-end from omni3_develop
+
+src/tool/omniidl/cxx/CORBA_basetypes.h
+src/tool/omniidl/cxx/CORBA_sysdep.h
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/idl.yy
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idldump.h
+src/tool/omniidl/cxx/idlexpr.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/idlscope.h
+src/tool/omniidl/cxx/idlutil.cc
+src/tool/omniidl/cxx/idlutil.h
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+src/tool/omniidl/cxx/cccp/config-freebsd.h
+src/tool/omniidl/cxx/cccp/config-linux.h
+src/tool/omniidl/cxx/cccp/config-solaris.h
+src/tool/omniidl/cxx/cccp/config.h
+src/tool/omniidl/python/omniidl/idlast.py
+src/tool/omniidl/python/omniidl/idltype.py
+src/tool/omniidl/python/omniidl/idlutil.py
+src/tool/omniidl/python/omniidl/main.py
+src/tool/omniidl/python/omniidl_be/dump.py
+src/tool/omniidl/python/scripts/omniidlrun.py
+
+
 Tue Oct 10 11:12:28 BST 2000 sll
 ================================
 

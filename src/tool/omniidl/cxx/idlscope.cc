@@ -28,11 +28,30 @@
 
 // $Id$
 // $Log$
-// Revision 1.13.2.1  2000/07/17 10:36:04  sll
-// Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+// Revision 1.13.2.2  2000/10/10 10:18:51  dpg1
+// Update omniidl front-end from omni3_develop.
 //
-// Revision 1.14  2000/07/13 15:25:52  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.11.2.6  2000/09/19 09:14:26  dpg1
+// Scope::Entry::Kind renamed to Scope::Entry::EntryKind to avoid
+// problems with over-keen compilers
+//
+// Revision 1.11.2.5  2000/08/29 15:20:28  dpg1
+// New relativeScope() function. New -i flag to enter interactive loop
+// after parsing
+//
+// Revision 1.11.2.4  2000/08/24 11:33:00  dpg1
+// Typo in error message % format string
+//
+// Revision 1.11.2.3  2000/08/04 09:10:27  dpg1
+// Fix look-up of escaped identifiers broken on 19 July. (Bug 14.)
+//
+// Revision 1.11.2.2  2000/08/01 09:46:47  dpg1
+// No longer complain about inheriting an operation into an interface
+// with the same name.
+//
+// Revision 1.11.2.1  2000/07/19 17:24:54  dpg1
+// omniidl complains if a name which differs only in case is found during
+// name look-up
 //
 // Revision 1.11  1999/11/26 11:33:44  dpg1
 // Bug in findWithInheritance() when inherited interface was not found.
@@ -78,8 +97,8 @@
 #include <string.h>
 
 // Global Scope pointers
-Scope* Scope::global_;
-Scope* Scope::current_;
+Scope* Scope::global_  = 0;
+Scope* Scope::current_ = 0;
 
 // ScopedName implementation
 ScopedName::
@@ -95,9 +114,19 @@ ScopedName::
 ScopedName(const ScopedName* sn) :
   scopeList_(0), last_(0), absolute_(sn->absolute())
 {
-  Fragment *f, *g;
+  const Fragment *f;
 
   for (f = sn->scopeList(); f; f = f->next())
+    append(f->identifier());
+}
+
+ScopedName::
+ScopedName(const ScopedName::Fragment* frags, _CORBA_Boolean absolute) :
+  scopeList_(0), last_(0), absolute_(absolute)
+{
+  const Fragment *f;
+
+  for (f = frags; f; f = f->next())
     append(f->identifier());
 }
 
@@ -191,7 +220,7 @@ append(const char* identifier)
 
 Scope::
 Entry::
-Entry(const Scope* container, Kind k, const char* identifier,
+Entry(const Scope* container, EntryKind k, const char* identifier,
       Scope* scope, Decl* decl, IdlType* idltype,
       Scope::Entry* inh_from, const char* file, int line)
 
@@ -614,15 +643,19 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
     s = this;
 
   // Find entry for each name component
-  const Entry* e;
-  EntryList*   el;
+  const Entry*          e = 0;
+  EntryList*            el;
   ScopedName::Fragment* f = sn->scopeList();
+  const char*           fid;
 
   _CORBA_Boolean top_component = 1;
 
   while (f) {
+    fid = f->identifier();
+    if (fid[0] == '_') fid++;
+
     do {
-      el = s->findWithInheritance(f->identifier());
+      el = s->iFindWithInheritance(fid);
 
       e = 0;
       if (el) {
@@ -630,17 +663,21 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
 
 	if (el->tail()) {
 	  // Error -- ambiguous
-	  char* ssn = sn->toString();
-	  IdlError(file, line, "Ambiguous name `%s':", ssn);
-	  delete [] ssn;
-
-	  for (; el; el = el->tail()) {
-	    char* ssn=el->head()->container()->scopedName()->toString();
-	    IdlErrorCont(el->head()->file(), el->head()->line(),
-			 "(`%s' defined in `%s')", f->identifier(), ssn);
+	  if (file) {
+	    char* ssn = sn->toString();
+	    IdlError(file, line, "Ambiguous name `%s':", ssn);
 	    delete [] ssn;
+
+	    for (; el; el = el->tail()) {
+	      char* ssn = el->head()->container()->scopedName()->toString();
+	      IdlErrorCont(el->head()->file(), el->head()->line(),
+			   "(`%s' defined in `%s')",
+			   el->head()->identifier(), ssn);
+	      delete [] ssn;
+	    }
 	  }
-	  // Carry on with the first one we found
+	  delete el;
+	  return 0;
 	}
 	delete el;
 	break;
@@ -649,25 +686,43 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
     top_component = 0;
 
     if (!e) {
-      char* ssn = sn->toString();
-      IdlError(file, line, "Error in look-up of `%s': `%s' not found",
-	       ssn, f->identifier());
-      delete [] ssn;
+      if (file) {
+	char* ssn = sn->toString();
+	IdlError(file, line, "Error in look-up of `%s': `%s' not found",
+		 ssn, fid);
+	delete [] ssn;
+      }
       return 0;
     }
-    f = f->next();
 
+    if (strcmp(fid, e->identifier())) {
+      // Case clash
+      if (file) {
+	char* ssn = sn->toString();
+	IdlError(file, line, "Error in look-up of `%s': `%s' differs in case",
+		 ssn, fid);
+	delete [] ssn;
+	ssn = e->scopedName()->toString();
+	IdlErrorCont(e->file(), e->line(), "from `%s' declared here", ssn);
+	delete [] ssn;
+      }
+      return 0;
+    }
+
+    f = f->next();
     if (f) { // More name fragments: check that current entry forms a scope
       s = e->scope();
 
       if (!s) {
-	char* ssn = sn->toString();
-	IdlError(file, line,
-		 "Error in look-up of `%s': `%s' does not form a scope",
-		 ssn, e->identifier());
-	IdlErrorCont(e->file(), e->line(), "(`%s' defined here)",
-		     e->identifier());
-	delete [] ssn;
+	if (file) {
+	  char* ssn = sn->toString();
+	  IdlError(file, line,
+		   "Error in look-up of `%s': `%s' does not form a scope",
+		   ssn, e->identifier());
+	  IdlErrorCont(e->file(), e->line(), "(`%s' defined here)",
+		       e->identifier());
+	  delete [] ssn;
+	}
 	return 0;
       }
     }
@@ -683,6 +738,68 @@ findForUse(const ScopedName* sn, const char* file, int line)
   const Entry* e = findScopedName(sn, file, line);
   addUse(sn, file, line);
   return e;
+}
+
+
+static ScopedName*
+findRelativeScope(const ScopedName::Fragment* from,
+		  const ScopedName::Fragment* to,
+		  const Scope* fromScope,
+		  const Scope::Entry* target)
+{
+  ScopedName* result = 0;
+
+  if (!to)
+    return 0;
+
+  if (from && !strcmp(from->identifier(), to->identifier())) {
+    // Top name components match -- recursively try next components
+    result = findRelativeScope(from->next(), to->next(), fromScope, target);
+  }
+
+  if (!result) {
+    ScopedName*         test = new ScopedName(to, 0);
+    const Scope::Entry* find = fromScope->findScopedName(test);
+
+    if (find == target)
+      result = test;
+    else
+      delete test;
+  }
+  return result;
+}
+
+ScopedName*
+Scope::relativeScopedName(const ScopedName* from, const ScopedName* to)
+{
+  if (!global_) {
+    // Haven't parsed any IDL yet!
+    return 0;
+  }
+
+  if ((from && !from->absolute()) || !to->absolute())
+    return 0;
+
+  const Scope* fromScope;
+
+  if (from) {
+    const Entry* fromEntry = global_->findScopedName(from);
+    if (!fromEntry) return 0;
+    fromScope = fromEntry->scope();
+  }
+  else
+    fromScope = global_;
+
+  const Entry* toEntry = global_->findScopedName(to);
+  if (!toEntry) return 0;
+
+  ScopedName* result = findRelativeScope(from ? from->scopeList() : 0,
+					 to->scopeList(), fromScope, toEntry);
+
+  if (!result)
+    result = new ScopedName(to);
+
+  return result;
 }
 
 
@@ -902,7 +1019,7 @@ addCallable(const char* identifier, Scope* scope, Decl* decl,
       {
 	IdlError(file, line,
 		 "Declaration of %s `%s' clashes with earlier declaration "
-		 "of %2 `%s'", decl->kindAsString(), identifier,
+		 "of %s `%s'", decl->kindAsString(), identifier,
 		 clash->decl()->kindAsString(), clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(), "(%s `%s' declared here)",
 		     clash->decl()->kindAsString(), clash->identifier());
@@ -1011,11 +1128,14 @@ addInherited(const char* id, Scope* scope, Decl* decl,
       }
     case Entry::E_PARENT:
       {
-	IdlError(file, line,
-		 "Inherited %s `%s' clashes with interface name `%s'",
-		 decl->kindAsString(), id, clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(),
-		     "(`%s' declared here)", clash->identifier());
+	// It's not clear whether this is OK, but the spec doesn't say
+	// it's definitely illegal
+
+//  	IdlWarning(file, line,
+//  		   "Inherited %s `%s' clashes with interface name `%s'",
+//  		   decl->kindAsString(), id, clash->identifier());
+//  	IdlWarningCont(decl->file(), decl->line(),
+//  		       "(%s `%s' declared here)", decl->kindAsString(), id);
 	break;
       }
     }

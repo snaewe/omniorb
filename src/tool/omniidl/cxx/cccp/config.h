@@ -31,6 +31,9 @@
 #elif defined(__nextstep__)
 #include "config-nextstep.h"
 
+#else
+#error "You must create a cccp config file for your platform"
+
 #endif
 
 #define BITS_PER_UNIT SIZEOF_UNSIGNED_CHAR

@@ -28,11 +28,22 @@
 
 // $Id$
 // $Log$
-// Revision 1.16.2.1  2000/07/17 10:36:02  sll
-// Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+// Revision 1.16.2.2  2000/10/10 10:18:50  dpg1
+// Update omniidl front-end from omni3_develop.
 //
-// Revision 1.17  2000/07/13 15:25:54  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.14.2.9  2000/08/29 10:20:26  dpg1
+// Operations and attributes now have repository ids.
+//
+// Revision 1.14.2.8  2000/08/25 13:33:02  dpg1
+// Multiple comments preceding a declaration are now properly attached on
+// all platforms
+//
+// Revision 1.14.2.7  2000/08/07 15:34:36  dpg1
+// Partial back-port of long long from omni3_1_develop.
+//
+// Revision 1.14.2.6  2000/07/26 10:59:14  dpg1
+// Incorrect error report when inheriting typedef to forward declared
+// interface
 //
 // Revision 1.14.2.5  2000/06/08 14:36:19  dpg1
 // Comments and pragmas are now objects rather than plain strings, so
@@ -135,8 +146,14 @@ add(const char* commentText, const char* file, int line)
 {
   if (Config::keepComments) {
     if (Config::commentsFirst) {
-      if (saved_)
-	mostRecent_->next_ = new Comment(commentText, file, line);
+      if (saved_) {
+	// C++ says that the order of value evaluation is undefined.
+	// Comment's constructor sets mostRecent_, so the innocent-
+	// looking mostRecent_->next_ = new Comment... does the wrong
+	// thing with some compilers :-(
+	Comment* mr = mostRecent_;
+	mr->next_ = new Comment(commentText, file, line);
+      }
       else
 	saved_ = new Comment(commentText, file, line);
     }
@@ -312,13 +329,22 @@ scopedNameToDecl(const char* file, int line, const ScopedName* sn)
   const Scope::Entry* se = Scope::current()->findScopedName(sn, file, line);
 
   if (se) {
-    if (se->kind() == Scope::Entry::E_DECL) {
+    switch (se->kind()) {
+
+    case Scope::Entry::E_MODULE:
+    case Scope::Entry::E_DECL:
+    case Scope::Entry::E_CALLABLE:
+    case Scope::Entry::E_INHERITED:
       return se->decl();
+
+    default:
+      {
+	char* ssn = sn->toString();
+	IdlError(file, line, "`%s' is not a declaration", ssn);
+	IdlErrorCont(se->file(), se->line(), "(`%s' created here)", ssn);
+	delete [] ssn;
+      }
     }
-    char* ssn = sn->toString();
-    IdlError(file, line, "`%s' is not a declaration", ssn);
-    IdlErrorCont(se->file(), se->line(), "(`%s' created here)", ssn);
-    delete [] ssn;
   }
   return 0;
 }
@@ -420,21 +446,29 @@ InheritSpec(const ScopedName* sn, const char* file, int line)
 	  return;
 	}
 	else if (d->kind() == Decl::D_FORWARD) {
-	  char* ssn = ((Forward*)d)->scopedName()->toString();
-	  IdlError(file, line,
-		   "Inherited interface `%s' must be fully defined", ssn);
-
-	  if (decl_ != d) {
-	    char* tssn = sn->toString();
-	    IdlErrorCont(se->file(), se->line(),
-			 "(`%s' reached through typedef `%s')",
-			 ssn, tssn);
-	    delete [] tssn;
+	  Interface* def = ((Forward*)d)->definition();
+	  if (def) {
+	    interface_ = def;
+	    scope_     = interface_->scope();
+	    return;
 	  }
-	  IdlErrorCont(d->file(), d->line(),
-		       "(`%s' forward declared here)", ssn);
-	  delete [] ssn;
-	  return;
+	  else {
+	    char* ssn = ((Forward*)d)->scopedName()->toString();
+	    IdlError(file, line,
+		     "Inherited interface `%s' must be fully defined", ssn);
+
+	    if (decl_ != d) {
+	      char* tssn = sn->toString();
+	      IdlErrorCont(se->file(), se->line(),
+			   "(`%s' reached through typedef `%s')",
+			   ssn, tssn);
+	      delete [] tssn;
+	    }
+	    IdlErrorCont(d->file(), d->line(),
+			 "(`%s' forward declared here)", ssn);
+	    delete [] ssn;
+	    return;
+	  }
 	}
       }
     }
@@ -814,7 +848,8 @@ Declarator(const char* file, int line, _CORBA_Boolean mainFile,
     DeclRepoId(identifier),
     sizes_(sizes),
     thisType_(0),
-    alias_(0)
+    alias_(0),
+    attribute_(0)
 {
 }
 
@@ -829,8 +864,9 @@ const char*
 Declarator::
 kindAsString() const
 {
-  if (alias_) return "typedef declarator";
-  else return "declarator";
+  if (alias_)     return "typedef declarator";
+  if (attribute_) return "attribute declarator";
+                  return "declarator";
 }
 
 void
@@ -839,6 +875,13 @@ setAlias(Typedef* td)
 {
   alias_    = td;
   thisType_ = new DeclaredType(IdlType::tk_alias, this, this);
+}
+
+void
+Declarator::
+setAttribute(Attribute* at)
+{
+  attribute_ = at;
 }
 
 // Typedef
@@ -1255,10 +1298,12 @@ finishConstruction(IdlType* switchType, _CORBA_Boolean constrType,
 #ifdef HAS_LongLong
   case IdlType::tk_longlong:
     UNION_SWITCH(_CORBA_LongLong, LongLong,
-		 -0x8000000000000000LL, defVal==0x7fffffffffffffffLL, ++defVal)
+		 _CORBA_LONGLONG_CONST(-0x8000000000000000),
+		 defVal==_CORBA_LONGLONG_CONST(0x7fffffffffffffff), ++defVal)
   case IdlType::tk_ulonglong:
     UNION_SWITCH(_CORBA_ULongLong, ULongLong,
-		 0xffffffffffffffffLL, defVal==0LL, --defVal)
+		 _CORBA_LONGLONG_CONST(0xffffffffffffffff),
+		 defVal==_CORBA_LONGLONG_CONST(0), --defVal)
 #endif
   case IdlType::tk_wchar:
     UNION_SWITCH(_CORBA_WChar, WChar, 0xffff, defVal==0, --defVal)
@@ -1361,7 +1406,8 @@ Attribute(const char* file, int line, _CORBA_Boolean mainFile,
 
   for (Declarator* d = declarators; d; d = (Declarator*)d->next()) {
     assert(!d->sizes()); // Enforced by grammar
-    Scope::current()->addCallable(d->eidentifier(), 0, this, file, line);
+    d->setAttribute(this);
+    Scope::current()->addCallable(d->eidentifier(), 0, d, file, line);
   }
 }
 
@@ -1473,6 +1519,7 @@ Operation(const char* file, int line, _CORBA_Boolean mainFile,
 	  const char* identifier)
 
   : Decl(D_OPERATION, file, line, mainFile),
+    DeclRepoId(identifier),
     oneway_(oneway),
     returnType_(returnType),
     parameters_(0),
@@ -1482,11 +1529,6 @@ Operation(const char* file, int line, _CORBA_Boolean mainFile,
   if (returnType) delType_ = returnType->shouldDelete();
   else            delType_ = 0;
 
-  if (identifier[0] == '_')
-    identifier_ = idl_strdup(identifier+1);
-  else
-    identifier_ = idl_strdup(identifier);
-
   Scope* s = Scope::current()->newOperationScope(file, line);
   Scope::current()->addCallable(identifier, s, this, file, line);
   Scope::startScope(s);
@@ -1495,7 +1537,6 @@ Operation(const char* file, int line, _CORBA_Boolean mainFile,
 Operation::
 ~Operation()
 {
-  delete [] identifier_;
   if (parameters_) delete parameters_;
   if (raises_)     delete raises_;
   if (contexts_)   delete contexts_;
@@ -1827,21 +1868,37 @@ ValueInheritSpec(ScopedName* sn, const char* file, int line)
 	  return;
 	}
 	else if (d->kind() == Decl::D_VALUEFORWARD) {
-	  char* ssn = ((ValueForward*)d)->scopedName()->toString();
-	  IdlError(file, line,
-		   "Inherited valuetype `%s' must be fully defined", ssn);
+	  ValueBase* def = ((ValueForward*)d)->definition();
 
-	  if (decl_ != d) {
-	    char* tssn = sn->toString();
-	    IdlErrorCont(se->file(), se->line(),
-			 "(`%s' reached through typedef `%s')",
-			 ssn, tssn);
-	    delete [] tssn;
+	  if (def) {
+	    if (def->kind() == Decl::D_VALUE) {
+	      value_ = (Value*)def;
+	      scope_ = ((Value*)def)->scope();
+	      return;
+	    }
+	    else if (def->kind() == Decl::D_VALUEABS) {
+	      value_ = (ValueAbs*)def;
+	      scope_ = ((ValueAbs*)def)->scope();
+	      return;
+	    }
 	  }
-	  IdlErrorCont(d->file(), d->line(),
-		       "(`%s' forward declared here)", ssn);
-	  delete [] ssn;
-	  return;
+	  else {
+	    char* ssn = ((ValueForward*)d)->scopedName()->toString();
+	    IdlError(file, line,
+		     "Inherited valuetype `%s' must be fully defined", ssn);
+
+	    if (decl_ != d) {
+	      char* tssn = sn->toString();
+	      IdlErrorCont(se->file(), se->line(),
+			   "(`%s' reached through typedef `%s')",
+			   ssn, tssn);
+	      delete [] tssn;
+	    }
+	    IdlErrorCont(d->file(), d->line(),
+			 "(`%s' forward declared here)", ssn);
+	    delete [] ssn;
+	    return;
+	  }
 	}
       }
     }

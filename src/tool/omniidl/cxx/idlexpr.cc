@@ -28,11 +28,11 @@
 
 // $Id$
 // $Log$
-// Revision 1.6.2.1  2000/07/17 10:36:03  sll
-// Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+// Revision 1.6.2.2  2000/10/10 10:18:50  dpg1
+// Update omniidl front-end from omni3_develop.
 //
-// Revision 1.7  2000/07/13 15:25:53  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.4.2.2  2000/08/07 15:34:36  dpg1
+// Partial back-port of long long from omni3_1_develop.
 //
 // Revision 1.4.2.1  2000/06/27 16:00:17  sll
 // Fixes to WIN 32 related build and compiler issues.
@@ -526,7 +526,7 @@ _CORBA_LongLong ConstExpr::evalAsLongLong() {
   case IdlType::tk_longlong: r = c_->constAsLongLong(); break;
   case IdlType::tk_ulonglong: {
     _CORBA_ULongLong z = c_->constAsULongLong();
-    r = z; p = (z <= 0x7fffffffffffffffLL);
+    r = z; p = (z <= _CORBA_LONGLONG_CONST(0x7fffffffffffffff));
     break;
   }
   default:

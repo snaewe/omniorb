@@ -100,12 +100,22 @@ class Type:
 Function:
 
   kind()          -- TypeCode kind of type.
+  unalias()       -- Return an equivalent Type object with aliases stripped
   accept(visitor) -- visitor pattern accept. See idlvisitor.py."""
 
     def __init__(self, kind):
         self.__kind  = kind
 
     def kind(self):            return self.__kind
+
+    def unalias(self):
+        type = self
+        while type.kind() == tk_alias:
+            if len(type.decl().sizes()) > 0:
+                return type
+            type = type.decl().alias().aliasType()
+        return type
+        
     def accept(self, visitor): pass
 
 
@@ -260,7 +270,7 @@ Functions:
     def scopedName(self): return self.__scopedName
 
     # Simple name
-    def name(self):       return self.__scopedName[-1:]
+    def name(self):       return self.__scopedName[-1]
 
 
 # Map of singleton Base Type objects
