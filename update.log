@@ -1,4 +1,12 @@
 
+Mon Feb 22 09:21:56 GMT 1999 djr
+================================
+
+- Bug in size calculation for sequence and array TypeCodes.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
 Fri Feb 19 11:21:18 GMT 1999 djr
 ================================
 
@@ -40,7 +48,7 @@ src/lib/omniORB2/dynamic/corbaidlstub.cc
 src/lib/omniORB2/dynamic/corbaidldynstub.cc
 
 - Bug in TypeCode parser which read the byte order from a stream
-  which it was writing to.
+  to which it was writing.
 
 src/lib/omniORB2/dynamic/tcParser.cc
 
