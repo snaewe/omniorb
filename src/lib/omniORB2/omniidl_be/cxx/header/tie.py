@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.9  2000/01/14 11:57:18  djs
+# Added (flattened) templates missing in BOA generation mode.
+#
 # Revision 1.8  2000/01/13 14:16:30  djs
 # Properly clears state between processing separate IDL input files
 #
@@ -82,6 +85,56 @@ def POA_prefix(nested):
     return ""
 
 
+tie_template_template = """\
+template <class T>
+class @tie_name@ : public virtual @inherits@
+{
+public:
+  @tie_name@(T& t)
+    : pd_obj(&t), pd_poa(0), pd_rel(0) {}
+  @tie_name@(T& t, PortableServer::POA_ptr p)
+    : pd_obj(&t), pd_poa(p), pd_rel(0) {}
+  @tie_name@(T* t, CORBA::Boolean r=1)
+    : pd_obj(t), pd_poa(0), pd_rel(r) {}
+  @tie_name@(T* t, PortableServer::POA_ptr p,CORBA::Boolean r=1)
+    : pd_obj(t), pd_poa(p), pd_rel(r) {}
+  ~@tie_name@() {
+    if( pd_poa )  CORBA::release(pd_poa);
+    if( pd_rel )  delete pd_obj;
+  }
+
+  T* _tied_object() { return pd_obj; }
+
+  void _tied_object(T& t) {
+    if( pd_rel )  delete pd_obj;
+    pd_obj = &t;
+    pd_rel = 0;
+  }
+
+  void _tied_object(T* t, CORBA::Boolean r=1) {
+    if( pd_rel )  delete pd_obj;
+    pd_obj = t;
+    pd_rel = r;
+  }
+
+  CORBA::Boolean _is_owner()        { return pd_rel; }
+  void _is_owner(CORBA::Boolean io) { pd_rel = io;   }
+
+  PortableServer::POA_ptr _default_POA() {
+    if( !pd_poa )  return PortableServer::POA::_the_root_poa();
+    else           return PortableServer::POA::_duplicate(pd_poa);
+  }
+
+  @callables@
+
+private:
+  T*                      pd_obj;
+  PortableServer::POA_ptr pd_poa;
+  CORBA::Boolean          pd_rel;
+};
+"""
+
+
 # Control arrives here
 #
 def visitAST(node):
@@ -96,8 +149,9 @@ def visitModule(node):
 
 #def template(environment, node, nested = self.__nested):
 def template(environment, node, nested = 0):
-    
-    scope = tyutil.scope(node.scopedName())
+
+    scopedName = node.scopedName()
+    scope = tyutil.scope(scopedName)
     iname = tyutil.mapID(node.identifier())
     prefix = POA_prefix(nested)
     if scope == []:
@@ -148,12 +202,23 @@ def template(environment, node, nested = 0):
             for parameter in parameters:
                 paramType = parameter.paramType()
                 dir = parameter.direction() + 1
-                argtypes = tyutil.operationArgumentType(paramType, environment,
-                                                        virtualFn = 1)
+                if config.EMULATE_BUGS() and not(config.OldFlag()):
+                    # the old compiler scopes this bit wrong (but only when
+                    # _not_ generating old skeletons?!)
+                    argtypes = tyutil.operationArgumentType(paramType, environment,
+                                                            virtualFn = 1)
+                else:
+                    argtypes = tyutil.operationArgumentType(paramType, global_env,
+                                                            virtualFn = 1)
                 param_type_name = argtypes[dir]
                 param_id = tyutil.mapID(parameter.identifier())
                 signature.append(param_type_name + " " + param_id)
                 call.append(param_id)
+
+            # deal with call contextx
+            if operation.contexts() != []:
+                signature.append("CORBA::Context_ptr _ctxt")
+                call.append("_ctxt")
 
             if has_return_value:
                 return_str = "return "
@@ -196,57 +261,17 @@ def template(environment, node, nested = 0):
     buildCallables(node, where, environment, buildCallables)
                 
         
-    stream.out("""\
-template <class T>
-class @POA_tie_name@ : public virtual @POA_name@
-{
-public:
-  @POA_tie_name@(T& t)
-    : pd_obj(&t), pd_poa(0), pd_rel(0) {}
-  @POA_tie_name@(T& t, PortableServer::POA_ptr p)
-    : pd_obj(&t), pd_poa(p), pd_rel(0) {}
-  @POA_tie_name@(T* t, CORBA::Boolean r=1)
-    : pd_obj(t), pd_poa(0), pd_rel(r) {}
-  @POA_tie_name@(T* t, PortableServer::POA_ptr p,CORBA::Boolean r=1)
-    : pd_obj(t), pd_poa(p), pd_rel(r) {}
-  ~@POA_tie_name@() {
-    if( pd_poa )  CORBA::release(pd_poa);
-    if( pd_rel )  delete pd_obj;
-  }
-
-  T* _tied_object() { return pd_obj; }
-
-  void _tied_object(T& t) {
-    if( pd_rel )  delete pd_obj;
-    pd_obj = &t;
-    pd_rel = 0;
-  }
-
-  void _tied_object(T* t, CORBA::Boolean r=1) {
-    if( pd_rel )  delete pd_obj;
-    pd_obj = t;
-    pd_rel = r;
-  }
-
-  CORBA::Boolean _is_owner()        { return pd_rel; }
-  void _is_owner(CORBA::Boolean io) { pd_rel = io;   }
-
-  PortableServer::POA_ptr _default_POA() {
-    if( !pd_poa )  return PortableServer::POA::_the_root_poa();
-    else           return PortableServer::POA::_duplicate(pd_poa);
-  }
-
-  @callables@
-
-private:
-  T*                      pd_obj;
-  PortableServer::POA_ptr pd_poa;
-  CORBA::Boolean          pd_rel;
-};
-""",
-               POA_tie_name = POA_tie_name,
-               POA_name = POA_name,
+    stream.out(tie_template_template,
+               tie_name = POA_tie_name,
+               inherits = POA_name,
                callables = str(where))
+    if config.FlatTieFlag() and config.BOAFlag():
+        tie_name = "_tie_" + string.join(map(tyutil.mapID,scopedName), "_")
+        sk_name = name.prefixName(map(tyutil.mapID,scopedName), "_sk_")
+        stream.out(tie_template_template,
+                   tie_name = tie_name,
+                   inherits = sk_name,
+                   callables = str(where))
     
 def visitInterface(node):
     if not(node.mainFile()):
