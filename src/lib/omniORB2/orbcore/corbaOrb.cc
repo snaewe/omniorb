@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.34.2.3  2000/09/14 16:04:15  djs
+  Added module initialiser for AMI module
+
   Revision 1.34.2.2  2000/08/04 17:10:30  dpg1
   Long long support
 
@@ -249,6 +252,7 @@ extern omniInitialiser& omni_initRefs_initialiser_;
 extern omniInitialiser& omni_strand_initialiser_;
 extern omniInitialiser& omni_scavenger_initialiser_;
 extern omniInitialiser& omni_hooked_initialiser_;
+extern omniInitialiser& omni_AMI_initialiser_;
 
 static CORBA::Boolean
 parse_ORB_args(int& argc, char** argv, const char* orb_identifier);
@@ -327,6 +331,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     // Call attach method of each initialiser object.
     // The order of these calls must take into account of the dependency
     // among the modules.
+    omni_AMI_initialiser_.attach();
     omni_omniInternal_initialiser_.attach();
     omni_corbaOrb_initialiser_.attach();
     omni_strand_initialiser_.attach();
@@ -584,6 +589,7 @@ omniOrbORB::actual_shutdown()
   omni_corbaOrb_initialiser_.detach();
   omni_omniInternal_initialiser_.detach();
   omni_uri_initialiser_.detach();
+  omni_AMI_initialiser_.detach();
 
   proxyObjectFactory::shutdown();
 
