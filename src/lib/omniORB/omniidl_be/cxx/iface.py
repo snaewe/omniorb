@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.6.5  2005/01/06 16:35:18  dgrisby
+# Narrowing for abstract interfaces.
+#
 # Revision 1.1.6.4  2004/10/13 17:58:22  dgrisby
 # Abstract interfaces support; values support interfaces; value bug fixes.
 #
@@ -319,8 +322,21 @@ class I(Class):
                  operations = string.join(methodl, "\n"))
 
     else:
+      abstract_base = 0
+      for i in self.interface().allInherits():
+        if i.abstract():
+          abstract_base = 1
+          break
+
+      if abstract_base:
+        abstract_narrows = omniidl_be.cxx.header.template.\
+                           interface_abstract_narrows
+      else:
+        abstract_narrows = ""
+
       stream.out(omniidl_be.cxx.header.template.interface_type,
                  name=self.interface().name().simple(),
+                 abstract_narrows = abstract_narrows,
                  Other_IDL = self._other_idl)
 
 
@@ -675,7 +691,7 @@ class _impl_I(Class):
                name = node_name.fullyQualify())
 
     if not self.interface().abstract():
-      # Are we derived from an abstract interface
+      # Are we derived from an abstract interface?
       inherit_abstract = 0
       for i in self.interface().inherits():
         if i.abstract():

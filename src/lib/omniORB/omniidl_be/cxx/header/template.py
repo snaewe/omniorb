@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.8  2005/01/06 16:35:18  dgrisby
+# Narrowing for abstract interfaces.
+#
 # Revision 1.8.2.7  2004/10/13 17:58:24  dgrisby
 # Abstract interfaces support; values support interfaces; value bug fixes.
 #
@@ -373,6 +376,7 @@ public:
   static _ptr_type _duplicate(_ptr_type);
   static _ptr_type _narrow(CORBA::Object_ptr);
   static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
+  @abstract_narrows@
   static _ptr_type _nil();
 
   static inline void _marshalObjRef(_ptr_type, cdrStream&);
@@ -391,6 +395,12 @@ public:
   @Other_IDL@
 };
 """
+
+interface_abstract_narrows = """\
+static _ptr_type _narrow(CORBA::AbstractBase_ptr);
+static _ptr_type _unchecked_narrow(CORBA::AbstractBase_ptr);
+"""
+
 
 ##
 ## Abstract Interfaces
@@ -434,8 +444,8 @@ public:
   typedef @name@_var _var_type;
 
   static _ptr_type _duplicate(_ptr_type);
-  static _ptr_type _narrow(CORBA::Object_ptr);
-  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
+  static _ptr_type _narrow(CORBA::AbstractBase_ptr);
+  static _ptr_type _unchecked_narrow(CORBA::AbstractBase_ptr);
   static _ptr_type _nil();
 
   static inline void _marshalObjRef(_ptr_type, cdrStream&);

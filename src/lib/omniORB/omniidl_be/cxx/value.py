@@ -52,9 +52,11 @@ class @name@ :
 {
 public:  
   // Standard mapping
+  typedef @name@*    _ptr_type;
   typedef @name@_var _var_type;
 
-  static @name@* _downcast (CORBA::ValueBase*);
+  static _ptr_type _downcast (CORBA::ValueBase*);
+  @downcast_abstract@
 
 #ifdef OMNI_HAVE_COVARIANT_RETURNS
   virtual @name@* _copy_value();
@@ -106,6 +108,9 @@ private:
   void operator=(const @name@ &);
 };
 """
+
+value_class_downcast_abstract = """\
+static _ptr_type _downcast (CORBA::AbstractBase*);"""
 
 value_class_np_to_value = """\
 virtual CORBA::ValueBase* _NP_to_value();"""
@@ -287,7 +292,13 @@ void
 @fqname@::~@name@() {}
 """
 
-value_np_to_value_function = """\
+value_functions_abstract = """\
+@fqname@*
+@fqname@::_downcast(CORBA::AbstractBase* _a)
+{
+  return _downcast(_a->_NP_to_value());
+}
+
 CORBA::ValueBase*
 @fqname@::_NP_to_value()
 {
@@ -804,6 +815,7 @@ public:
   virtual const _omni_ValueIds* _NP_truncatableIds() const;
 
   virtual CORBA::Boolean _NP_custom() const;
+  virtual CORBA::Boolean _NP_box() const;
 
   virtual void* _ptrToValue(const char* id);
 
@@ -1764,6 +1776,12 @@ CORBA::Boolean
   return 0;
 }
 
+CORBA::Boolean
+@fqname@::_NP_box() const
+{
+  return 1;
+}
+
 void*
 @fqname@::_ptrToValue(const char* _id)
 {
@@ -1866,6 +1884,13 @@ public:
     CORBA::ValueFactoryBase* vf = new _0RL_@flatname@_init();
     _omni_ValueFactoryManager::register_factory(@fqname@::_PD_repoId, @idhash@, vf, 1);
     vf->_remove_ref();
+  }
+  ~_0RL_@flatname@_install() {
+    try {
+      _omni_ValueFactoryManager::unregister_factory(@fqname@::_PD_repoId, @idhash@);
+    }
+    catch (CORBA::BAD_PARAM&) {
+    }
   }
 };
 
@@ -2421,17 +2446,23 @@ class ValueType (mapping.Decl):
         operations = string.join(operationl, "\n")
 
         if supports_abstract:
-            np_to_value = value_class_np_to_value
+            downcast_abstract = value_class_downcast_abstract
+            np_to_value       = value_class_np_to_value
         else:
-            np_to_value = ""
+            downcast_abstract = ""
+            np_to_value       = ""
 
         stream.out(value_forward, name=cxx_name, guard=guard)
 
-        stream.out(value_class, name=cxx_name, inherits=inherits,
-                   public_accessors=public_accessors,
-                   private_accessors=private_accessors,
-                   operations=operations, np_to_value=np_to_value,
-                   other_idl=gen_other_idl)
+        stream.out(value_class,
+                   name              = cxx_name,
+                   inherits          = inherits,
+                   public_accessors  = public_accessors,
+                   private_accessors = private_accessors,
+                   operations        = operations,
+                   downcast_abstract = downcast_abstract,
+                   np_to_value       = np_to_value,
+                   other_idl         = gen_other_idl)
 
         if astdecl.factories():
             funcs = []
@@ -2653,7 +2684,7 @@ class ValueType (mapping.Decl):
                    unmarshal_members=unmarshal_members)
 
         if astdecl._cxx_supports_abstract:
-            stream.out(value_np_to_value_function, fqname=value_name)
+            stream.out(value_functions_abstract, fqname=value_name)
 
         if not self._abstract:
             vname = cxx_name

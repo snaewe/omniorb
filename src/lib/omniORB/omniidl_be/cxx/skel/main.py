@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.6  2005/01/06 16:35:18  dgrisby
+# Narrowing for abstract interfaces.
+#
 # Revision 1.32.2.5  2004/10/13 17:58:24  dgrisby
 # Abstract interfaces support; values support interfaces; value bug fixes.
 #
@@ -304,13 +307,19 @@ def visitInterface(node):
     objref_name = node_name.prefix("_objref_")
 
     if node.abstract():
-        stream.out(template.abstract_interface_duplicate,
+        stream.out(template.abstract_interface_duplicate_narrow,
                    name = node_name.fullyQualify())
     else:
-        stream.out(template.interface_duplicate,
+        stream.out(template.interface_duplicate_narrow,
                    name = node_name.fullyQualify())
 
-    stream.out(template.interface_class,
+        for i in I.allInherits():
+            if i.abstract():
+                stream.out(template.interface_narrow_abstract,
+                           name = node_name.fullyQualify())
+                break
+
+    stream.out(template.interface_nil,
                name = node_name.fullyQualify(),
                objref_name = objref_name.unambiguous(environment),
                repoID = node.repoId())
