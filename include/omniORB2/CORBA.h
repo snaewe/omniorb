@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.45  1999/08/30 17:40:22  sll
+ Removed use of _T and _T_var.
+
  Revision 1.44  1999/08/24 12:36:44  djr
  PR_structMember now uses 'const char*'.
 
@@ -2529,14 +2532,14 @@ _CORBA_MODULE_BEG
 
     class ObjectIdList_var {
     public:
-      typedef ObjectIdList _T;
-      typedef ObjectIdList_var _T_var;
+      typedef ObjectIdList T;
+      typedef ObjectIdList_var T_var;
 
       inline ObjectIdList_var() : pd_seq(0) {}
-      inline ObjectIdList_var(_T* s) : pd_seq(s) {}
-      inline ObjectIdList_var(const _T_var& sv) {
+      inline ObjectIdList_var(T* s) : pd_seq(s) {}
+      inline ObjectIdList_var(const T_var& sv) {
 	if( sv.pd_seq ) {
-	  pd_seq = new _T;
+	  pd_seq = new T;
 	  *pd_seq = *sv.pd_seq;
 	} else
 	  pd_seq = 0;
@@ -2545,14 +2548,14 @@ _CORBA_MODULE_BEG
 	if( pd_seq )  delete pd_seq;
       }
 
-      inline _T_var& operator = (_T* s) {
+      inline T_var& operator = (T* s) {
 	if( pd_seq )  delete pd_seq;
 	pd_seq = s;
 	return *this;
       }
-      inline _T_var& operator = (const _T_var& sv) {
+      inline T_var& operator = (const T_var& sv) {
 	if( sv.pd_seq ) {
-	  if( !pd_seq )  pd_seq = new _T;
+	  if( !pd_seq )  pd_seq = new T;
 	  *pd_seq = *sv.pd_seq;
 	} else if( pd_seq ) {
 	  delete pd_seq;
@@ -2564,35 +2567,35 @@ _CORBA_MODULE_BEG
       inline _CORBA_String_member operator [] (_CORBA_ULong i) {
 	return (*pd_seq)[i];
       }
-      inline _T* operator -> () { return pd_seq; }
+      inline T* operator -> () { return pd_seq; }
 #if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-      inline operator _T& () const { return *pd_seq; }
+      inline operator T& () const { return *pd_seq; }
 #else
-      inline operator const _T& () const { return *pd_seq; }
-      inline operator _T& () { return *pd_seq; }
+      inline operator const T& () const { return *pd_seq; }
+      inline operator T& () { return *pd_seq; }
 #endif
 
-      inline const _T& in() const { return *pd_seq; }
-      inline _T& inout() { return *pd_seq; }
-      inline _T*& out() { return pd_seq; }
-      inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; return tmp; }
+      inline const T& in() const { return *pd_seq; }
+      inline T& inout() { return *pd_seq; }
+      inline T*& out() { return pd_seq; }
+      inline T* _retn() { T* tmp = pd_seq; pd_seq = 0; return tmp; }
       
       friend class ObjectIdList_out;
       
     private:
-      _T* pd_seq;
+      T* pd_seq;
     };
 
     class ObjectIdList_out {
     public:
-      typedef ObjectIdList _T;
-      typedef ObjectIdList_var _T_var;
+      typedef ObjectIdList T;
+      typedef ObjectIdList_var T_var;
 
-      inline ObjectIdList_out(_T*& s) : _data(s) {}
-      inline ObjectIdList_out(_T_var& sv)
-	: _data(sv.pd_seq) { sv = (_T*) 0; }
+      inline ObjectIdList_out(T*& s) : _data(s) {}
+      inline ObjectIdList_out(T_var& sv)
+	: _data(sv.pd_seq) { sv = (T*) 0; }
 
-      _T*& _data;
+      T*& _data;
 
     private:
       ObjectIdList_out();
