@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.15  1998/10/20 17:54:29  sll
+  On HPUX, allocate memory hostent_data the right way.
+
   Revision 1.14  1998/08/14 13:48:27  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -121,7 +124,7 @@ again:
   // -1 = Error, 0 is OK
   extern int h_errno;
   if (!h.pd_buffer) {
-    h.pd_buffer = (char*) (new hostent_data);
+    h.pd_buffer = new char[sizeof(hostent_data)];
     memset((void*)h.pd_buffer,0,sizeof(hostent_data));
   }
   if (gethostbyname_r(name,&h.pd_ent,(hostent_data*)h.pd_buffer) == -1) {
