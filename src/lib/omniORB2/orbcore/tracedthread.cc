@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/13 12:46:02  djr
+  Work-around for dodgy threads implementation.
+
   Revision 1.1.2.1  1999/09/22 14:27:12  djr
   Major rewrite of orbcore to support POA.
 
@@ -79,7 +82,7 @@ omni_tracedmutex::lock()
 
   omni_mutex_lock sync(pd_lock);
 
-  if( pd_holder == me ) {
+  if( pd_holder && pd_holder == me ) {
     omniORB::log <<
       "omniORB: Assertion failed -- attempt to lock mutex when already held.\n"
       " This is a bug in omniORB. Please submit a report (with stack\n"
@@ -131,6 +134,10 @@ omni_tracedmutex::assert_held(const char* file, int line, int yes)
 
     if(  yes && pd_holder == me || !yes && pd_holder != me )
       return;
+
+    // This is needed for VMS Alpha.  omni_thread::self() is unreliable
+    // once we have returned from main, and returns 0.
+    if( !me )  return;
   }
 
   omniORB::log << "omniORB: Assertion failed -- " <<
