@@ -1,3 +1,37 @@
+Mon Aug 30 17:41:36 BST 1999 sll
+================================
+
+- Scavenger threads now scan for idle connections and stuck remote calls.
+- New omniORB APIs to control their behavior:
+
+       omniORB::scanGranularity
+       omniORB::callTimeOutPeriod
+       omniORB::idleConnectionScanPeriod
+
+  New -ORB options to control from the command line:
+
+        -ORBinConScanPeriod <n seconds>
+        -ORBoutConScanPeriod <n seconds>
+        -ORBclientCallTimeOutPeriod <n seconds>
+        -ORBserverCallTimeOutPeriod <n seconds>
+        -ORBscanOutgoingPeriod <n seconds>
+        -ORBscanIncomingPeriod <n seconds>
+
+   New -ORBhelp and -BOAhelp command line options to list all the
+   options available.
+
+src/lib/omniORB2/orbcore/scavenger.h
+src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/giopClient.cc
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/strand.cc
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+
+include/omniORB2/rope.h 
+include/omniORB2/omniORB.h
+
 
 Tue Aug 24 13:33:46 BST 1999 djr
 ================================
