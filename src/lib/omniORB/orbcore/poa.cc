@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.10  2001/06/29 16:24:48  dpg1
+  Support re-entrancy in single thread policy POAs.
+
   Revision 1.2.2.9  2001/06/07 16:24:10  dpg1
   PortableServer::Current support.
 
@@ -1353,8 +1356,8 @@ omniOrbPOA::dispatch(omniCallHandle& handle, omniLocalIdentity* id)
 
   omni::internalLock->unlock();
 
-  omni_optional_lock sync(*pd_call_lock, !pd_policy.single_threaded,
-			  !pd_policy.single_threaded);
+  omni_optional_rlock sync(pd_call_lock, !pd_policy.single_threaded,
+			   !pd_policy.single_threaded);
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
@@ -1434,8 +1437,8 @@ omniOrbPOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
 
   omni::internalLock->unlock();
 
-  omni_optional_lock sync(*pd_call_lock, !pd_policy.single_threaded,
-			  !pd_policy.single_threaded);
+  omni_optional_rlock sync(pd_call_lock, !pd_policy.single_threaded,
+			   !pd_policy.single_threaded);
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
@@ -1595,8 +1598,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
   // We assume that the policies given have been checked for validity.
   pd_policy = policies;
 
-  if( pd_policy.single_threaded )  pd_call_lock = new omni_tracedmutex();
-  else                             pd_call_lock = &pd_lock;
+  if( pd_policy.single_threaded )  pd_call_lock = new omni_rmutex();
 }
 
 
@@ -2598,8 +2600,8 @@ omniOrbPOA::dispatch_to_sl(omniCallHandle& handle,
   the_id.setServant((PortableServer::Servant) servant, this);
 
   // Create upcall hook
-  PostInvokeHook upcallHook(this, pd_policy.single_threaded ? pd_call_lock : 0,
-			    sl, oid, handle.operation_name(), cookie, servant);
+  PostInvokeHook upcallHook(this, pd_call_lock, sl, oid,
+			    handle.operation_name(), cookie, servant);
   handle.upcall_hook(&upcallHook);
 
   omni::internalLock->lock();
@@ -2628,13 +2630,10 @@ call_postinvoke()
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
-  if (pd_call_lock) {
-    omni_tracedmutex_lock l(*pd_call_lock);
+  {
+    omni_optional_rlock(pd_call_lock, !pd_call_lock, !pd_call_lock);
     pd_sl->postinvoke(pd_oid, pd_poa, pd_op, pd_cookie, pd_servant);
   }
-  else
-    pd_sl->postinvoke(pd_oid, pd_poa, pd_op, pd_cookie, pd_servant);
-
   pd_poa->exitAdapter();
 }
 

@@ -73,6 +73,7 @@ ORB_SRCS =  \
             callHandle.cc \
 	    taskqueue.cc \
 	    tracedthread.cc \
+	    rmutex.cc \
 	    uri.cc \
             $(GIOP_SRCS) \
             $(CODESET_SRCS) \

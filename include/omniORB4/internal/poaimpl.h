@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/06/29 16:24:47  dpg1
+  Support re-entrancy in single thread policy POAs.
+
   Revision 1.1.4.3  2001/06/07 16:24:09  dpg1
   PortableServer::Current support.
 
@@ -82,6 +85,7 @@
 #include <objectAdapter.h>
 #include <poamanager.h>
 #include <taskqueue.h>
+#include <rmutex.h>
 
 #include <omniORB4/callHandle.h>
 
@@ -338,7 +342,7 @@ private:
   class PostInvokeHook : public omniCallHandle::UpcallHook {
   public:
     PostInvokeHook(omniOrbPOA*                            poa,
-		   omni_tracedmutex*                      call_lock,
+		   omni_rmutex*                           call_lock,
 		   PortableServer::ServantLocator_ptr     sl,
 		   PortableServer::ObjectId&              oid,
 		   const char*                            op,
@@ -355,7 +359,7 @@ private:
     void call_postinvoke();
 
     omniOrbPOA*                            pd_poa;
-    omni_tracedmutex*                      pd_call_lock;
+    omni_rmutex*                           pd_call_lock;
     PortableServer::ServantLocator_ptr     pd_sl;
     PortableServer::ObjectId&              pd_oid;
     const char*                            pd_op;
@@ -495,12 +499,10 @@ private:
   Policies                             pd_policy;
   // Immutable.
 
-  omni_tracedmutex*                    pd_call_lock;
-  // This lock is used to enforce the single threaded model policy.
-  // if( pd_policy.single_threaded ) then a mutex is allocated.
-  // Otherwise &pd_lock is used.  Note that the mutex is never
-  // used in this case, but we do not want it to be zero, as we
-  // need to dereference it to pass as a reference.
+  omni_rmutex*                         pd_call_lock;
+  // This recursive lock is used to enforce the single threaded model
+  // policy.  if( pd_policy.single_threaded ) then a mutex is
+  // allocated.
 
   omni_tracedmutex                     pd_lock;
   // Protects access to various members.
