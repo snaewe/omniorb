@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.3  2000/03/24 22:30:17  djs
+# Major code restructuring:
+#   Control flow is more recursive and obvious
+#   Properly distinguishes between forward declarations and externs
+#   Only outputs definitions once
+#   Lots of assertions to check all is well
+#
 # Revision 1.6.2.2  2000/02/16 18:34:49  djs
 # Fixed problem generating fragments in DynSK.cc file
 #
@@ -95,6 +102,6 @@ def run(tree):
     # create somewhere to put the output
     header_filename = config.basename() + config.dynskelsuffix()
     
-    stream = util.Stream(open(header_filename, "w"), 2)
+    stream = util.LazyStream(open(header_filename, "w"), 2)
 
     generate(stream, tree)

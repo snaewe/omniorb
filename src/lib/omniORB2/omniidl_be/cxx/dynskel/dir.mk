@@ -6,8 +6,8 @@ export:: __init__.py
 export:: main.py
 	@(file="main.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
-export:: bdesc.py
-	@(file="bdesc.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+#export:: bdesc.py
+#	@(file="bdesc.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
 export:: typecode.py
 	@(file="typecode.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
