@@ -41,8 +41,7 @@ class serverRequestCallDescriptor;
 class omniServerRequest : public CORBA::ServerRequest {
 public:
   virtual ~omniServerRequest();
-  omniServerRequest(IOP_S& giopS)
-    : pd_state(SR_READY), pd_giop_s(giopS), pd_calldesc(0) {}
+  omniServerRequest(omniCallHandle& handle);
 
   virtual const char* operation();
   virtual void arguments(CORBA::NVList_ptr&);
@@ -64,14 +63,35 @@ public:
   //////////////////////
   // omniORB internal //
   //////////////////////
-  State  state()     { return pd_state;     }
+  State  state()     { return pd_state; }
   void   do_reply();           
+
+  serverRequestCallDescriptor* calldesc() { return pd_calldesc; }
 
 private:
   State               pd_state;            // to check proper invocation order
-  IOP_S&              pd_giop_s;           // we don't own
+  omniCallHandle&     pd_handle;           // we don't own
   serverRequestCallDescriptor* pd_calldesc;
 };
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+class serverRequestCallDescriptor : public omniCallDescriptor {
+public:
+
+  serverRequestCallDescriptor(const char* op,size_t oplen);
+
+  void unmarshalArguments(cdrStream& s);
+  void marshalReturnedValues(cdrStream& s);
+
+  CORBA::Context_var pd_context;
+  CORBA::NVList_var  pd_params;
+  CORBA::Any         pd_result;
+  CORBA::Any         pd_exception;
+};
+
+
 
 OMNI_NAMESPACE_END(omni)
 

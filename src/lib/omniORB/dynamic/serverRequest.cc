@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.8.2.8  2001/08/15 10:37:59  dpg1
+ Update DSI to use Current, inProcessIdentity.
+
  Revision 1.8.2.7  2001/06/13 20:10:04  sll
  Minor update to make the ORB compiles with MSVC++.
 
@@ -75,60 +78,28 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/callHandle.h>
 #include <omniORB4/IOP_S.h>
 #include <dynamicImplementation.h>
 #include <pseudo.h>
 #include <context.h>
 #include <exceptiondefs.h>
+#include <poacurrentimpl.h>
+
 
 CORBA::ServerRequest::~ServerRequest()  {}
 
 OMNI_NAMESPACE_BEGIN(omni)
 
+
 ////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-class serverRequestCallDescriptor : public omniCallDescriptor {
-public:
-
-  /////////////////////////////////////////////////////////////////////
-  inline serverRequestCallDescriptor(const char* op,size_t oplen,
-				     CORBA::NVList_ptr nvlist) :
-     omniCallDescriptor(0, op, oplen, 0, 0, 0, 1),pd_params(nvlist) {}
-
-  /////////////////////////////////////////////////////////////////////
-  void unmarshalArguments(cdrStream& s) {
-
-    CORBA::ULong num_args = pd_params->count();
-
-    for( CORBA::ULong i = 0; i < num_args; i++){
-      CORBA::NamedValue_ptr arg = pd_params->item(i);
-      if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
-	arg->value()->NP_unmarshalDataOnly(s);
-    }
-
-    // If there is no space left for context info...
-    if ( s.checkInputOverrun(1,4) ) {
-      pd_context = CORBA::Context::unmarshalContext(s);
-    }
-  }
-
-  /////////////////////////////////////////////////////////////////////
-  void marshalReturnedValues(cdrStream& s) {
-
-    pd_result.NP_marshalDataOnly(s);
-    for( CORBA::ULong j = 0; j < pd_params->count(); j++ ){
-      CORBA::NamedValue_ptr arg = pd_params->item(j);
-      if( arg->flags() & CORBA::ARG_OUT ||
-	  arg->flags() & CORBA::ARG_INOUT )
-	arg->value()->NP_marshalDataOnly(s);
-    }
-  }
-
-  CORBA::Context_var pd_context;
-  CORBA::NVList_var  pd_params;
-  CORBA::Any         pd_result;
-  CORBA::Any         pd_exception;
-};
+omniServerRequest::omniServerRequest(omniCallHandle& handle) 
+  : pd_state(SR_READY), pd_handle(handle)
+{
+  pd_calldesc =
+    new serverRequestCallDescriptor(handle.operation_name(),
+				    strlen(handle.operation_name()));
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -144,7 +115,7 @@ omniServerRequest::~omniServerRequest()  {
 const char*
 omniServerRequest::operation()
 {
-  return pd_giop_s.operation_name();
+  return pd_handle.operation_name();
 }
 
 
@@ -154,21 +125,30 @@ omniServerRequest::arguments(CORBA::NVList_ptr& parameters)
 {
   if( pd_state != SR_READY ) {
     pd_state = SR_DSI_ERROR;
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_ArgumentsCalledOutOfOrder,
+		  CORBA::COMPLETED_NO);
   }
   if( CORBA::is_nil(parameters) ) {
     pd_state = SR_DSI_ERROR;
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidNVList,
+		  CORBA::COMPLETED_NO);
   }
-
   pd_state = SR_ERROR;
 
-  pd_calldesc = new serverRequestCallDescriptor(pd_giop_s.operation_name(),
-		 			 strlen(pd_giop_s.operation_name()),
-					 parameters);
+  pd_calldesc->pd_params = parameters;
 
-  pd_giop_s.ReceiveRequest(*((omniCallDescriptor*)pd_calldesc));
-
+  if (pd_handle.iop_s()) {
+    pd_handle.iop_s()->ReceiveRequest(*((omniCallDescriptor*)pd_calldesc));
+  }
+  else {
+    // In process call -- use a memory stream
+    cdrMemoryStream stream;
+    pd_handle.call_desc()->initialiseCall(stream);
+    pd_handle.call_desc()->marshalArguments(stream);
+    pd_calldesc->unmarshalArguments(stream);
+  }
   pd_state = SR_GOT_PARAMS;
 }
 
@@ -181,7 +161,9 @@ omniServerRequest::ctx()
 
   if( pd_state != SR_GOT_PARAMS ) {
     pd_state = SR_DSI_ERROR;
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_CtxCalledOutOfOrder,
+		  CORBA::COMPLETED_NO);
   }
 
   return pd_calldesc->pd_context;
@@ -194,7 +176,9 @@ omniServerRequest::set_result(const CORBA::Any& value)
 {
   if( !(pd_state == SR_GOT_PARAMS) ) {
     pd_state = SR_DSI_ERROR;
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_SetResultCalledOutOfOrder,
+		  CORBA::COMPLETED_NO);
   }
 
   pd_calldesc->pd_result = value;
@@ -219,8 +203,11 @@ omniServerRequest::set_exception(const CORBA::Any& value)
   CORBA::TypeCode_var tc = value.type();
   while( tc->kind() == CORBA::tk_alias )
     tc = tc->content_type();
+
   if( tc->kind() != CORBA::tk_except )
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_NotAnException,
+		  CORBA::COMPLETED_NO);
 
   switch( pd_state ) {
   case SR_GOT_PARAMS:
@@ -232,21 +219,62 @@ omniServerRequest::set_exception(const CORBA::Any& value)
   case SR_READY:
     {
       if (isASystemException(tc->id())) {
-	OMNIORB_ASSERT(pd_calldesc == 0);
-	pd_calldesc = new serverRequestCallDescriptor("",0,
-						      CORBA::NVList::_nil());
-	pd_giop_s.SkipRequestBody();
+	pd_handle.SkipRequestBody();
 	break;
       }
       pd_state = SR_DSI_ERROR;
     }
   case SR_DSI_ERROR:
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_ErrorInDynamicImplementation,
+		  CORBA::COMPLETED_NO);
   }
 
   pd_calldesc->pd_exception = value;
   pd_state = SR_EXCEPTION;
 }
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+serverRequestCallDescriptor::
+serverRequestCallDescriptor(const char* op,size_t oplen)
+  : omniCallDescriptor(0, op, oplen, 0, 0, 0, 1)
+{ }
+
+void
+serverRequestCallDescriptor::
+unmarshalArguments(cdrStream& s)
+{
+  CORBA::ULong num_args = pd_params->count();
+
+  for( CORBA::ULong i = 0; i < num_args; i++){
+    CORBA::NamedValue_ptr arg = pd_params->item(i);
+    if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
+      arg->value()->NP_unmarshalDataOnly(s);
+  }
+
+  // If there is no space left for context info...
+  if ( s.checkInputOverrun(1,4) ) {
+    pd_context = CORBA::Context::unmarshalContext(s);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////
+void
+serverRequestCallDescriptor::
+marshalReturnedValues(cdrStream& s)
+{
+  pd_result.NP_marshalDataOnly(s);
+  for( CORBA::ULong j = 0; j < pd_params->count(); j++ ){
+    CORBA::NamedValue_ptr arg = pd_params->item(j);
+    if( arg->flags() & CORBA::ARG_OUT ||
+	arg->flags() & CORBA::ARG_INOUT )
+      arg->value()->NP_marshalDataOnly(s);
+  }
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -300,7 +328,14 @@ omniServerRequest::do_reply()
   case omniServerRequest::SR_GOT_PARAMS:
   case omniServerRequest::SR_GOT_RESULT:
     {
-      pd_giop_s.SendReply();
+      if (pd_handle.iop_s()) {
+	pd_handle.iop_s()->SendReply();
+      }
+      else {
+	cdrMemoryStream stream;
+	pd_calldesc->marshalReturnedValues(stream);
+	pd_handle.call_desc()->unmarshalReturnedValues(stream);
+      }
       break;
     }
   case omniServerRequest::SR_EXCEPTION:  // User & System exception
@@ -310,16 +345,32 @@ omniServerRequest::do_reply()
 
 #     define TEST_AND_EXTRACT_SYSEXCEPTION(name) \
       if ( strcmp("IDL:omg.org/CORBA/" #name ":1.0",repoid) == 0 ) { \
-         CORBA::name* ex; \
-         pd_calldesc->pd_exception >>= ex; \
-         pd_giop_s.SendException(ex); \
-          return; \
+        CORBA::name* ex; \
+ 	pd_calldesc->pd_exception >>= ex; \
+        if (pd_handle.iop_s()) { \
+ 	  pd_handle.iop_s()->SendException(ex); \
+ 	  return; \
+        } \
+        else { \
+          ex->_raise(); \
+        } \
       }
       OMNIORB_FOR_EACH_SYS_EXCEPTION(TEST_AND_EXTRACT_SYSEXCEPTION)
 #     undef TEST_AND_EXTRACT_SYSEXCEPTION
 
       FromAnyUserException ex(pd_calldesc->pd_exception,repoid);
-      pd_giop_s.SendException(&ex);
+
+      if (pd_handle.iop_s()) {
+	pd_handle.iop_s()->SendException(&ex);
+      }
+      else {
+	cdrMemoryStream stream;
+	ex._NP_marshal(stream);
+	pd_handle.call_desc()->userException(stream, 0, repoid);
+
+	// userException() _must_ throw an exception
+	OMNIORB_ASSERT(0);
+      }
       break;
     }
   default:

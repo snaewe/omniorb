@@ -15,7 +15,6 @@
 #include <iostream.h>
 #include <omniORB4/CORBA.h>
 
-
 CORBA::ORB_var orb;
 
 
@@ -39,7 +38,7 @@ MyDynImpl::invoke(CORBA::ServerRequest_ptr request)
     CORBA::NVList_ptr args;
     orb->create_list(0, args);
     CORBA::Any a;
-    a.replace(CORBA::_tc_string, 0);
+    a <<= "";
     args->add_value("", a, CORBA::ARG_IN);
 
     request->arguments(args);
@@ -78,7 +77,7 @@ MyDynImpl::_primary_interface(const PortableServer::ObjectId&,
 int main(int argc, char** argv)
 {
   try {
-    orb = CORBA::ORB_init(argc, argv, "omniORB4");
+    orb = CORBA::ORB_init(argc, argv);
 
     {
       CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
@@ -86,28 +85,18 @@ int main(int argc, char** argv)
 
       MyDynImpl* myimpl = new MyDynImpl;
 
-#if 0
       PortableServer::ObjectId_var myimplid = poa->activate_object(myimpl);
 
-      // NB. PortableServer::DynamicImplementation::_this() can
-      // only be used in the context of an invocation, so we cannot
-      // use it to get a reference here.
-      obj = poa->servant_to_reference(myimpl);
-#else
-      // Although servant_to_reference(myimpl) above will suceed, it
-      // will return a typeless reference.  When the client attempts
-      // to narrow this, it will contact the object and ask it if it
-      // is really an Echo object.  This is not currently implemented
-      // for DSI servants, since it requires the support of the
-      // PortableServer::Current interface.
-      //  We get round it here by specifying the interface that we
-      // want for the reference, then using the object id encapsulated
-      // by the reference to incarnate the object.
+      // If we just use servant_to_reference() or id_to_reference() to
+      // get an object reference, it will contain an empty repository
+      // id, since the ORB has no way of knowing what the DSI
+      // servant's interface is. Instead, we use
+      // create_reference_with_id() to create a reference for the
+      // object with the correct id. It would work with an empty id,
+      // but it's polite to our clients to give them the full
+      // information.
 
-      obj = poa->create_reference("IDL:Echo:1.0");
-      PortableServer::ObjectId_var myimplid = poa->reference_to_id(obj);
-      poa->activate_object_with_id(myimplid, myimpl);
-#endif
+      obj = poa->create_reference_with_id(myimplid, "IDL:Echo:1.0");
 
       CORBA::String_var sior(orb->object_to_string(obj));
       cerr << "'" << (char*)sior << "'" << endl;
