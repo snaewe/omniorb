@@ -1,3 +1,15 @@
+Thu Nov  2 10:07:12 GMT 2000 dpg1
+=================================
+
+- Correct some minor errors in code set implementation
+- Remove Big5 converter since it's wrong
+
+src/lib/omniORB/codesets/cs-big5.cc  -- deleted
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/orbcore/codeSets.cc
+src/lib/omniORB/orbcore/cs-UCS-4.cc
+
+
 Wed Nov  1 15:43:41 GMT 2000 dpg1
 =================================
 

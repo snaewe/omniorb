@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/02 10:16:27  dpg1
+  Correct some minor errors in code set implementation. Remove Big5
+  converter since it's wrong.
+
   Revision 1.1.2.1  2000/10/27 15:42:07  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -52,8 +56,8 @@ const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_7  = 0x00010007;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_8  = 0x00010008;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_9  = 0x00010009;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_8859_10 = 0x0001000a;
-const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_2   = 0x00010100;
-const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_4   = 0x00010104;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_2   = 0x00010102;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_4   = 0x00010106;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_8   = 0x05010001;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_16  = 0x00010109;
 

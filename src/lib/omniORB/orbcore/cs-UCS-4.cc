@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/02 10:16:27  dpg1
+  Correct some minor errors in code set implementation. Remove Big5
+  converter since it's wrong.
+
   Revision 1.1.2.1  2000/10/27 15:42:08  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -103,7 +107,7 @@ NCS_W_UCS_4::marshalWString(cdrStream& stream,
       // Surrogate pair
       wc -= 0x10000;
       ub.insert((wc >> 10)    + 0xd800);
-      ub.insert((wc &  0x4ff) + 0xdc00);
+      ub.insert((wc &  0x3ff) + 0xdc00);
     }
     else
       OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_NO);

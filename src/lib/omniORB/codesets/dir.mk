@@ -9,8 +9,7 @@ ORB_SRCS = \
             cs-8859-7.cc \
             cs-8859-8.cc \
             cs-8859-9.cc \
-            cs-8859-10.cc \
-            cs-big5.cc
+            cs-8859-10.cc
 
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
