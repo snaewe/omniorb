@@ -1,3 +1,12 @@
+Fri Nov 21 14:41:29 GMT 2003 dgrisby
+====================================
+
+- Clear endPoint options on ORB destroy, so they don't conflict if the
+  ORB is initialised again.
+
+src/lib/omniORB/orbcore/objectAdapter.cc
+
+
 Thu Nov 20 13:51:37 GMT 2003 dgrisby
 ====================================
 

@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.17  2003/11/21 14:43:11  dgrisby
+ Clear endPoint options on ORB destroy, so they don't conflict if the
+ ORB is initialised again.
+
  Revision 1.2.2.16  2002/08/21 19:55:42  dgrisby
  Add endPointPublishAllIFs option.
 
@@ -843,7 +847,19 @@ public:
     }
     
   }
-  void detach() { }
+  void detach() {
+    omniORB::logs(20, "Clear endPoint options.");
+    omniObjAdapter::Options::EndpointURIList::iterator i;
+    for (i = omniObjAdapter::options.endpoints.begin();
+	 i != omniObjAdapter::options.endpoints.end(); i++) {
+      delete (*i);
+    }
+    omniObjAdapter::options.endpoints.erase(
+      omniObjAdapter::options.endpoints.begin(),
+      omniObjAdapter::options.endpoints.end());
+
+    omniObjAdapter::options.publish_all = 0;
+  }
 };
 
 
