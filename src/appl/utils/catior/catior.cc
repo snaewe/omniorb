@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
 		    unsigned long j;
 		    if (hexflag)
 		      {
-			// Output key in hexidecimal form.
+			// Output key in hexadecimal form.
 			
 			cout << "0x";
 			
