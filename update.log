@@ -1,4 +1,47 @@
 
+Tue Feb 15 11:01:09 GMT 2000 djr
+================================
+
+- Fixed bug in TypeCodes -- create_union_tc failed if the discriminator
+  type was an alias.
+
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+
+- Fixed typo in the optimisation below.
+
+src/lib/omniORB2/dynamic/tcParser.cc
+
+
+Thu Feb 10 17:58:14 GMT 2000 djr
+================================
+
+- Optimised tcParser::calculateItemSize to use TypeCode alignment info.
+  tcParser::alignedSize now uses the size of the buffer for its
+  calculation if the incoming alignment happens to be 8.
+
+src/lib/omniORB2/dynamic/tcParser.cc
+src/lib/omniORB2/dynamic/tcParser.h
+
+
+Wed Feb  9 14:16:51 GMT 2000 djr
+================================
+
+- Reverted to String_member initialising to zero by default, since
+  using a static "" broke Any in a way which cannot be fixed without
+  an incompatible change to library interfaces.
+
+  Initialisation to empty string can now be enabled by defining the
+  macro OMNI_EMPTY_STRING_MEMBERS, when compiling all libraries and
+  applications.
+
+- Minor bug fixes in assignment to String_member (which don't matter
+  much as we no longer use statically allocated empty strings!).
+
+include/omniORB2/stringtypes.h
+src/lib/omniORB2/orbcore/corbaString.cc
+
+
 Mon Jan 31 10:53:23 GMT 2000 djr
 ================================
 

@@ -38,6 +38,12 @@
 #define FALSE 0
 #endif
 
+
+#define OMNIORB_ASSERT(e)  \
+  do{ if( !(e) )  throw omniORB::fatalException(__FILE__, __LINE__,  \
+	"Internal assertion failed (probably omniORB bug)"); }while(0)
+
+
 //////////////////////////////////////////////////////////////////////
 /////////////////////// Internal Implementation //////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -57,9 +63,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
   const TypeCode_alignTable& alignTbl = tc->alignmentTable();
   unsigned i = 0;  // don't even ask ... just accept it.
 
-  if( alignTbl.entries() == 0 )
-    throw omniORB::fatalException(__FILE__,__LINE__,
-	"fastCopyUsingTC() - alignment table has zero entries");
+  OMNIORB_ASSERT(alignTbl.entries() > 0);
 
   for( i = 0; i < alignTbl.entries(); i++ ) {
 
@@ -168,7 +172,7 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	case CORBA::tk_array:
 	  {
 	    // If element type is_simple(), or has_only_simple()
-	    // then it will have been deal with above. We only
+	    // then it will have been dealt with above. We only
 	    // get here if the best we can do is to copy element
 	    // by element.
 
@@ -186,15 +190,13 @@ inline void fastCopyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	  break;
 
 	default:
-	  throw omniORB::fatalException(__FILE__,__LINE__,
-			"fastCopyUsingTC() - unexpected typecode kind");
+	  OMNIORB_ASSERT(0);
 	}
 	break;
       }
 
     default:
-      throw omniORB::fatalException(__FILE__,__LINE__,
-		"fastCopyUsingTC() - unknown alignment info type");
+      OMNIORB_ASSERT(0);
     }
   }
 }
@@ -339,8 +341,7 @@ inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
       }
 
     default:
-      throw omniORB::fatalException(__FILE__,__LINE__,
-          "tcParser::copyUsingTC() - unknown typecode kind");
+      OMNIORB_ASSERT(0);
     }
 }
 
@@ -352,9 +353,7 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
   const TypeCode_alignTable& alignTbl = tc->alignmentTable();
   unsigned i = 0;  // don't even ask ... just accept it.
 
-  if( alignTbl.entries() == 0 )
-    throw omniORB::fatalException(__FILE__,__LINE__,
-	"skipUsingTC() - alignment table has zero entries");
+  OMNIORB_ASSERT(alignTbl.entries() > 0);
 
   for( i = 0; i < alignTbl.entries(); i++ ) {
 
@@ -466,15 +465,13 @@ inline void skipUsingTC(TypeCode_base* tc, buf_t& buf)
 	  break;
 
 	default:
-	  throw omniORB::fatalException(__FILE__,__LINE__,
-			"skipUsingTC() - unexpected typecode kind");
+	  OMNIORB_ASSERT(0);
 	}
 	break;
       }
 
     default:
-      throw omniORB::fatalException(__FILE__,__LINE__,
-		"skipUsingTC() - unknown alignment info type");
+      OMNIORB_ASSERT(0);
     }
   }
 }
@@ -546,9 +543,14 @@ tcParser::copyFrom(tcDescriptor& desc, int flush)
 size_t
 tcParser::alignedSize(size_t initialoffset)
 {
-  // Rewind the buffer & calculate its size
   pd_mbuf.rewind_in_mkr();
-  return calculateItemSize(ToTcBase_Checked(pd_tc), initialoffset);
+
+  // MemBufferedStreams are 8 byte aligned, so if <initialoffset> is
+  // also 8 byte aligned, we can just use the size of the buffer ...
+  if( (initialoffset & 7) == 0 )
+    return initialoffset + pd_mbuf.RdMessageUnRead();
+  else
+    return calculateItemSize(ToTcBase_Checked(pd_tc), initialoffset);
 }
 
 
@@ -633,8 +635,7 @@ tcParser::appendSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
 
       // OTHER TYPES
     default:
-      throw omniORB::fatalException(__FILE__,__LINE__,
-	 "tcParser::appendSimpleItem() - bad typecode kind");
+      OMNIORB_ASSERT(0);
     }
 }
 
@@ -727,8 +728,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
       tcDescriptor data_desc;
 
       if( !tcdata.p_union.getValueDesc(&tcdata.p_union, data_desc) )
-	throw omniORB::fatalException(__FILE__,__LINE__,
-         "tcParser::appendItem() - failed to get descriptor for union value");
+	OMNIORB_ASSERT(0);
 
       appendItem(tc->NP_member_type(index), data_desc);
       break;
@@ -745,9 +745,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    
 	  // Get a descriptor for the member.
 	  if( !tcdata.p_struct.getMemberDesc(&tcdata.p_struct, i, desc) )
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-		   "tcParser::appendItem() - failed to get descriptor for"
-					  " struct member");
+	    OMNIORB_ASSERT(0);
 
 	  // Append the element to the mbuf.
 	  TypeCode_base* tctmp = tc->NP_member_type(i);
@@ -772,8 +770,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
 	  // Get a descriptor for the member.
 	  if( !tcdata.p_except.getMemberDesc(&tcdata.p_except, i, desc) )
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-	      "tcParser::appendItem() - failed to get exception descriptor");
+	    OMNIORB_ASSERT(0);
 
 	  // Append the element to the mbuf.
 	  TypeCode_base* tctmp = tc->NP_member_type(i);
@@ -797,8 +794,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
 	  // Get a descriptor for the sequence element.
 	  if( !tcdata.p_sequence.getElementDesc(&tcdata.p_sequence, i, desc) )
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-	      "tcParser::appendItem() - failed to get sequence descriptor");
+	    OMNIORB_ASSERT(0);
 
 	  // Append the element to the mbuf.
 	  appendItem(tctmp, desc);
@@ -817,8 +813,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
 
 	  // Get a descriptor for the array element.
 	  if( !tcdata.p_array.getElementDesc(&tcdata.p_array, i, desc) )
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-	      "tcParser::appendItem() - failed to get array descriptor");
+	    OMNIORB_ASSERT(0);
 
 	  // Append the element to the mbuf.
 	  appendItem(tctmp, desc);
@@ -831,8 +826,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
     break;
 
   default:
-    throw omniORB::fatalException(__FILE__,__LINE__,
-        "tcParser::appendItem() - unknown typecode kind");
+    OMNIORB_ASSERT(0);
   }  // switch (tc->NP_kind()) {
 }
 
@@ -877,8 +871,7 @@ tcParser::fetchSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
 
       // OTHER TYPES
     default:
-      throw omniORB::fatalException(__FILE__,__LINE__,
-	 "tcParser::fetchSimpleItem() - bad typecode kind");
+      OMNIORB_ASSERT(0);
     }
 }
 
@@ -988,8 +981,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	break;
       // case CORBA::tk_wchar:
       default:
-	throw omniORB::fatalException(__FILE__,__LINE__,
-          "tcParser::fetchItem() - illegal disciminator type");
+	OMNIORB_ASSERT(0);
       }
 
       // Determine the index of the selected member.
@@ -1008,8 +1000,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
       tcDescriptor data_desc;
 
       if( !tcdata.p_union.getValueDesc(&tcdata.p_union, data_desc) )
-	throw omniORB::fatalException(__FILE__,__LINE__,
-          "tcParser::fetchItem() - failed to get descriptor for union value");
+	OMNIORB_ASSERT(0);
 
       fetchItem(tc->NP_member_type(index), data_desc);
       break;
@@ -1026,8 +1017,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	    
 	  // Get a descriptor for the struct element.
 	  if( !tcdata.p_struct.getMemberDesc(&tcdata.p_struct, i, desc) )
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-		 "tcParser::fetchItem() - struct member descriptor");
+	    OMNIORB_ASSERT(0);
 
 	  fetchItem(tc->NP_member_type(i), desc);
 	}
@@ -1049,8 +1039,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	  tcDescriptor desc;
 
 	  if( !tcdata.p_except.getMemberDesc(&tcdata.p_except, i, desc) )
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-		 "tcParser::fetchItem() - exception member descriptor");
+	    OMNIORB_ASSERT(0);
 
 	  fetchItem(tc->NP_member_type(i), desc);
 	}
@@ -1074,8 +1063,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	  tcDescriptor desc;
 
 	  if( !tcdata.p_sequence.getElementDesc(&tcdata.p_sequence, i, desc) )
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-		 "tcParser::fetchItem() - sequence member descriptor");
+	    OMNIORB_ASSERT(0);
 
 	  fetchItem(tctmp, desc);
 	}
@@ -1092,8 +1080,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
 	  tcDescriptor desc;
 	    
 	  if( !tcdata.p_array.getElementDesc(&tcdata.p_array, i, desc) )
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-		 "tcParser::fetchItem() - struct member descriptor");
+	    OMNIORB_ASSERT(0);
 
 	  fetchItem(tctmp, desc);
 	}
@@ -1105,229 +1092,171 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
     break;
 
   default:
-    throw omniORB::fatalException(__FILE__,__LINE__,
-        "tcParser::fetchItem() - unknown typecode kind");
+    OMNIORB_ASSERT(0);
   }  // switch( tc->NP_kind() ) {
 }
 
 
 size_t
-tcParser::calculateItemSize(const TypeCode_base*tc, const size_t initialoffset)
+tcParser::calculateItemSize(const TypeCode_base*tc, size_t offset)
 {
-  // Size & alignment of the data is dependent upon the
-  // typecode & data involved.
+  CORBA::Char dummy;
+  const TypeCode_alignTable& alignTbl = tc->alignmentTable();
+  unsigned at_i = 0;  // don't even ask ... just accept it.
 
-  switch (tc->NP_kind())
-    {
+  OMNIORB_ASSERT(alignTbl.entries() > 0);
 
-      // TYPES WITH NO DATA TO MARSHAL
-    case CORBA::tk_null:
-    case CORBA::tk_void:
-      return initialoffset;
+  for( at_i = 0; at_i < alignTbl.entries(); at_i++ ) {
 
-      // SIMPLE TYPES
-    case CORBA::tk_short:
-    case CORBA::tk_ushort:
-    case CORBA::tk_long:
-    case CORBA::tk_ulong:
-    case CORBA::tk_float:
-    case CORBA::tk_double:
-    case CORBA::tk_boolean:
-    case CORBA::tk_char:
-    case CORBA::tk_octet:
-    case CORBA::tk_enum:
-      return calculateSimpleItemSize(tc->NP_kind(), initialoffset);
+    switch( alignTbl[at_i].type ) {
+    case TypeCode_alignTable::it_simple:
+      offset = omni::align_to(offset, alignTbl[at_i].simple.alignment) +
+	alignTbl[at_i].simple.size;
+      pd_mbuf.get_char_array(&dummy, 0, alignTbl[at_i].simple.alignment);
+      pd_mbuf.skip(alignTbl[at_i].simple.size);
+      break;
 
-    case CORBA::tk_any:
+    case TypeCode_alignTable::it_nasty:
       {
-	CORBA::Any tmp;
-	tmp <<= pd_mbuf;
-	return tmp.NP_alignedSize(initialoffset);
-      }
+	tc = alignTbl[at_i].nasty.tc;
 
-    // COMPLEX TYPES
-    case CORBA::tk_Principal:
-      {
-	CORBA::ULong idLen;
-	idLen <<= pd_mbuf;
+	switch( tc->NP_kind() ) {
 
-	// Allocate space for the length ULong and the data
-	size_t _msgsize = initialoffset;
-	_msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-	_msgsize += idLen;
-	return _msgsize;
-      }
+	  //?? Some of these could be faster (Any, TypeCode, objref ...)
+	case CORBA::tk_any:
+	  {
+	    CORBA::Any tmp;
+	    tmp <<= pd_mbuf;
+	    offset = tmp.NP_alignedSize(offset);
+	    break;
+	  }
 
-    case CORBA::tk_objref:
-      {
-	CORBA::Object_member tmp;
-	tmp <<= pd_mbuf;
-	return tmp.NP_alignedSize(initialoffset);
-      }
+	case CORBA::tk_Principal:
+	case CORBA::tk_string:
+	  {
+	    CORBA::ULong len;
+	    len <<= pd_mbuf;
+	    pd_mbuf.skip(len);
+	    offset = omni::align_to(offset, omni::ALIGN_4) + 4 + len;
+	    break;
+	  }
 
-    case CORBA::tk_TypeCode:
-      {
-	CORBA::TypeCode_member tmp;
-	tmp <<= pd_mbuf;
-	return tmp.NP_alignedSize(initialoffset);
-      }
+	case CORBA::tk_objref:
+	  {
+	    CORBA::Object_member tmp;
+	    tmp <<= pd_mbuf;
+	    offset = tmp.NP_alignedSize(offset);
+	    break;
+	  }
 
-    case CORBA::tk_string:
-      {
-	// Get the length of the string
-	CORBA::ULong len;
-	len <<= pd_mbuf;
+	case CORBA::tk_TypeCode:
+	  {
+	    CORBA::TypeCode_member tmp;
+	    tmp <<= pd_mbuf;
+	    offset = tmp.NP_alignedSize(offset);
+	    break;
+	  }
 
-	// Skip the remaining data
-	pd_mbuf.skip(len);
+	case CORBA::tk_union:
+	  {
+	    // Fetch the discriminator value.
+	    TypeCode_base* discrimTC = tc->NP_discriminator_type();
+	    TypeCode_union::Discriminator discrim =
+	      TypeCode_union_helper::unmarshalLabel(discrimTC, pd_mbuf);
 
-	// Now calculate the new offset
-	size_t _msgsize = initialoffset;
-	_msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-	_msgsize += len;
+	    offset = TypeCode_union_helper::labelAlignedSize(offset,
+							     discrimTC);
 
-	return _msgsize;
-      }
+	    // Skip the value, using the type for the selected member.
+	    CORBA::Long index =
+	      ((TypeCode_union*)tc)->NP_index_from_discriminator(discrim);
+	    if( index >= 0 )
+	      offset = calculateItemSize(tc->NP_member_type(index), offset);
+	    else
+	      ; // Implicit default -- so no member.
+	    break;
+	  }
 
-    // CONSTRUCTED TYPES
-    case CORBA::tk_union:
-      {
-	size_t _msgsize = initialoffset;
+	case CORBA::tk_sequence:
+	  {
+	    CORBA::ULong length; length <<= pd_mbuf;
+	    offset = omni::align_to(offset, omni::ALIGN_4) + 4;
+	    if( !length )  break;
 
-	// Read in the label value.
-	TypeCode_base* discTC = tc->NP_discriminator_type();
-	TypeCode_union::Discriminator discrim =
-	  TypeCode_union_helper::unmarshalLabel(discTC, pd_mbuf);
+	    TypeCode_base* elem_tc = tc->NP_content_type();
+	    const TypeCode_alignTable& eat = elem_tc->alignmentTable();
 
-	// Add in its size.
-	_msgsize = TypeCode_union_helper::labelAlignedSize(_msgsize,
-							   discTC);
+	    if( eat.is_simple() ) {
+	      // Skip as a single block.
+	      CORBA::ULong size_aligned =
+		omni::align_to(eat[0].simple.size, eat[0].simple.alignment);
+	      pd_mbuf.get_char_array(&dummy, 0, eat[0].simple.alignment);
+	      pd_mbuf.skip(eat[0].simple.size + (length - 1) * size_aligned);
+	      offset = omni::align_to(offset, eat[0].simple.alignment);
+	      offset += eat[0].simple.size + (length - 1) * size_aligned;
+	    }
+	    else if( eat.has_only_simple() ) {
+	      // Skip the first element ...
+	      CORBA::ULong start = 0;
+	      for( unsigned j = 0; j < eat.entries(); j++ ) {
+		start = omni::align_to(start, eat[j].simple.alignment);
+		start += eat[j].simple.size;
+		pd_mbuf.get_char_array(&dummy, 0, eat[j].simple.alignment);
+		pd_mbuf.skip(eat[j].simple.size);
+		offset = omni::align_to(offset, eat[j].simple.alignment);
+		offset += eat[j].simple.size;
+	      }
+	      // Calculate the size of subsequent elements ...
+	      CORBA::ULong end = start;
+	      for( unsigned k = 0; k < eat.entries(); k++ ) {
+		end = omni::align_to(end, eat[k].simple.alignment);
+		end += eat[k].simple.size;
+	      }
+	      // ... then skip the rest as a block.
+	      pd_mbuf.skip((length - 1) * (end - start));
+	      offset += (length - 1) * (end - start);
+	    }
+	    else {
+	      // We can't do better than skipping element by element.
+	      for( CORBA::ULong j = 0; j < length; j++ )
+		offset = calculateItemSize(elem_tc, offset);
+	    }
 
-	// Find the index of the selected member.
-	CORBA::Long index =
-	  ((TypeCode_union*)tc)->NP_index_from_discriminator(discrim);
-	if( index < 0 ){
-	  // Implicit default, so no member.
-	  return _msgsize;
+	    break;
+	  }
+
+	case CORBA::tk_array:
+	  {
+	    // If element type is_simple(), or has_only_simple()
+	    // then it will have been dealt with above. We only
+	    // get here if the best we can do is to copy element
+	    // by element.
+
+	    CORBA::ULong length = tc->NP_length();
+	    TypeCode_base* elemTC = tc->NP_content_type();
+
+	    for( CORBA::ULong j = 0; j < length; j++ )
+	      offset = calculateItemSize(elemTC, offset);
+
+	    break;
+	  }
+
+	case CORBA::tk_alias:
+	  offset = calculateItemSize(tc->NP_content_type(), offset);
+	  break;
+
+	default:
+	  OMNIORB_ASSERT(0);
 	}
-
-	return calculateItemSize(tc->NP_member_type(index), _msgsize);
-      }
-
-    case CORBA::tk_struct:
-      {
-	CORBA::ULong nmembers = tc->NP_member_count();
-	size_t _msgsize = initialoffset;
-
-	for (CORBA::ULong i=0; i < nmembers; i++)
-	  _msgsize = calculateItemSize(tc->NP_member_type(i), _msgsize);
-
-	return _msgsize;
-      }
-
-    case CORBA::tk_except:
-      {
-	CORBA::ULong nmembers = tc->NP_member_count();
-	size_t _msgsize = initialoffset;
-
-	for (CORBA::ULong i=0; i < nmembers; i++)
-	  _msgsize = calculateItemSize(tc->NP_member_type(i), _msgsize);
-
-	return _msgsize;
-      }
-
-    case CORBA::tk_sequence:
-      {
-	size_t _msgsize = initialoffset;
-
-	// Read in the length of the sequence
-	CORBA::ULong len;
-	len <<= pd_mbuf;
-
-	// Make space for the length
-	_msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-
-	// Get the content type
-	TypeCode_base* tctmp = tc->NP_content_type();
-
-	// Make space for the data
-     	for (CORBA::ULong i=0; i < len; i++)
-	  _msgsize = calculateItemSize(tctmp, _msgsize);
-
-	return _msgsize;
-      }
-
-    case CORBA::tk_array:
-      {
-	size_t _msgsize = initialoffset;
-
-	// Read in the length of the sequence
-	CORBA::ULong len = tc->NP_length();
-
-	// Get the content type
-	TypeCode_base* tctmp = tc->NP_content_type();
-
-	// Make space for the data
-     	for (CORBA::ULong i=0; i < len; i++)
-	  _msgsize = calculateItemSize(tctmp, _msgsize);
-
-	return _msgsize;
-      }
-
-    case CORBA::tk_alias:
-      {
-	return calculateItemSize(tc->NP_content_type(), initialoffset);
+	break;
       }
 
     default:
-      throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
-      return FALSE;
+      OMNIORB_ASSERT(0);
     }
-}
-
-
-size_t
-tcParser::calculateSimpleItemSize(const CORBA::TCKind tck,
-				  const size_t initialoffset)
-{
-  void* tmp;
-
-  switch (tck) {
-
-  case CORBA::tk_boolean:
-  case CORBA::tk_char:
-  case CORBA::tk_octet:
-    {
-      CORBA::Char c; c <<= pd_mbuf;
-      return omni::align_to(initialoffset, omni::ALIGN_1) + 1;
-    }
-
-  case CORBA::tk_short:
-  case CORBA::tk_ushort:
-    {
-      CORBA::Short c; c <<= pd_mbuf;
-      return omni::align_to(initialoffset, omni::ALIGN_2) + 2;
-    }
-
-  case CORBA::tk_long:
-  case CORBA::tk_ulong:
-  case CORBA::tk_enum:
-  case CORBA::tk_float:
-    {
-      CORBA::Long c; c <<= pd_mbuf;
-      return omni::align_to(initialoffset, omni::ALIGN_4) + 4;
-    }
-
-  case CORBA::tk_double:
-    {
-      CORBA::Double c; c <<= pd_mbuf;
-      return omni::align_to(initialoffset, omni::ALIGN_8) + 8;
-    }
-
-  default:
-    throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
-    return 0;
   }
+
+  return offset;
 }
 
 //////////////////////////////////////////////////////////////////////
