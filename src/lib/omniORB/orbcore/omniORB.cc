@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2001/07/13 15:30:12  sll
+  New configuration variables.
+
   Revision 1.2.2.3  2001/06/07 16:24:10  dpg1
   PortableServer::Current support.
 
@@ -94,6 +97,13 @@ CORBA::Boolean           strictIIOP = 1;
 char*                    serverName = 0;
 CORBA::Boolean           tcAliasExpand = 0;
 unsigned int             maxTcpConnectionPerServer = 5;
+CORBA::Boolean           oneCallPerConnection = 1;
+CORBA::Boolean           threadPerConnectionPolicy = 1;
+unsigned int             maxServerThreadPerConnection = 100;
+unsigned int             maxInterleavedCallsPerConnection = 5;
+unsigned int             maxServerThreadPoolSize = 100;
+unsigned int             threadPerConnectionUpperLimit = 10000;
+unsigned int             threadPerConnectionLowerLimit = 9000;
 CORBA::Boolean           diiThrowsSysExceptions = 0;
 CORBA::Boolean           abortOnInternalError = 0;
 _CORBA_ULong             objectTableSize = 0;
@@ -118,6 +128,13 @@ CORBA::String_var	 omniORB::serverName((const char*) "unknown");
 #endif
 CORBA::Boolean           omniORB::tcAliasExpand = 0;
 unsigned int             omniORB::maxTcpConnectionPerServer = 5;
+CORBA::Boolean           omniORB::oneCallPerConnection = 1;
+CORBA::Boolean           omniORB::threadPerConnectionPolicy = 1;
+unsigned int             omniORB::maxServerThreadPerConnection = 100;
+unsigned int             omniORB::maxInterleavedCallsPerConnection = 5;
+unsigned int             omniORB::maxServerThreadPoolSize = 100;
+unsigned int             omniORB::threadPerConnectionUpperLimit = 10000;
+unsigned int             omniORB::threadPerConnectionLowerLimit = 9000;
 CORBA::Boolean           omniORB::diiThrowsSysExceptions = 0;
 CORBA::Boolean           omniORB::abortOnInternalError = 0;
 _CORBA_ULong             omniORB::objectTableSize = 0;
