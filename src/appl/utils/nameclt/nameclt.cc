@@ -505,6 +505,18 @@ main(int argc, char **argv)
     return 1;
   }
 
+  catch (CORBA::COMM_FAILURE) {
+    cerr << command 
+	 << ": Cannot contact the Naming Service because of COMM_FAILURE."
+	 << endl;
+    return 1;
+  }
+
+  catch (...) {
+    cerr << command << ": unexpected error" << endl;
+    return 1;
+  }
+
   return 1;
 }
 
