@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.37  1999/06/25 13:52:25  sll
+  Updated any extraction operator to non-copy semantics but can be override
+  by the value of omniORB_27_CompatibleAnyExtraction.
+
   Revision 1.36  1999/06/22 14:54:27  sll
   Changed stub code for any insertion and extraction. No longer keep a
   reference to objref member class in the tcdescriptor.
@@ -2886,6 +2890,15 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n\n";
 
+  IND(s); s << "void _0RL_delete_" << _idname() << "(void* _data) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << objref_fqname() << " _0RL_t = (" 
+	    << objref_fqname() << ") _data;\n";
+  IND(s); s << "CORBA::release(_0RL_t);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+
   //////////////////////////////////////////////////////////////////////
   /////////////////////// Any insertion operator ///////////////////////
   //////////////////////////////////////////////////////////////////////
@@ -2908,6 +2921,10 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
 	    << objref_fqname() << "& _s) {\n";
   INC_INDENT_LEVEL();
+  IND(s); s << objref_fqname() << " sp = ("
+	    << objref_fqname() << ") _a.PR_getCachedData();\n";
+  IND(s); s << "if (sp == 0) {\n";
+  INC_INDENT_LEVEL();
   IND(s); s << "tcDescriptor tcd;\n";
   IND(s); s << fieldMemberType_fqname(o2be_global::root())
 	    << " tmp;\n";
@@ -2915,16 +2932,35 @@ o2be_interface::produce_binary_operators_in_dynskel(std::fstream& s)
   IND(s); s << "if( _a.PR_unpackTo(" << fqtcname()
 	    << ", &tcd) ) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "_s = tmp._ptr;\n";
-  IND(s); s << "tmp._ptr = 0;\n";
-  IND(s); s << "return 1;\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "} else\n";
+  IND(s); s << "if (!omniORB::omniORB_27_CompatibleAnyExtraction) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "return 0;\n";
+  IND(s); s << "((CORBA::Any*)&_a)->PR_setCachedData((void*)tmp._ptr,"
+	    << "_0RL_delete_" << _idname() << ");\n";
   DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "_s = tmp._ptr;\n";
+  IND(s); s << "tmp._ptr = " << fqname() << "::_nil(); return 1;\n";
   DEC_INDENT_LEVEL();
-  IND(s); s << "}\n\n";
+  IND(s); s << "} else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_s = " << fqname() << "::_nil(); return 0;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "else {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::TypeCode_var tc = _a.type();\n";
+  IND(s); s << "if (tc->equivalent(" << fqtcname() << ")) {\n";
+  IND(s); s << "_s = sp; return 1;\n";
+  IND(s); s << "}\n";
+  IND(s); s << "else {\n";
+  IND(s); s << "_s = " << fqname() << "::_nil(); return 0;\n";
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
 }
 
 
