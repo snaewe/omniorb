@@ -8,6 +8,16 @@
 
 <buglist>
 
+<bug id="11" date="Wed Jul 26 16:21:09 BST 2000" user="djs">
+
+  <summary>omniidl C++ backend missed some forward declarations and
+           typedefs when in BOA compatibility mode</summary>
+
+  <reported>Renzo Tomaselli</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-07/0167.html"/>
+
+</bug>
+
 <bug id="10" date="Wed Jul 26 11:46:16 BST 2000" user="dpg1">
 
   <summary>omniidl bug with inheriting typedef to forward declared
