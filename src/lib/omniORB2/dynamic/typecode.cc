@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.6.13  2001/03/20 17:26:51  dpg1
+ * Memory corruption with multiply-recursive TypeCode.
+ *
  * Revision 1.33.6.12  2000/11/27 18:58:29  dpg1
  * jnw's fix for bug with multiply-recursive TypeCode.
  *
@@ -1628,6 +1631,9 @@ size_t
 TypeCode_sequence::NP_alignedComplexParamSize(size_t initialoffset,
 					      TypeCode_offsetTable* otbl) const
 {
+  // This assert is a sanity check that recursive sequences have been
+  // properly completed.
+  OMNIORB_ASSERT(!CORBA::is_nil(pd_content));
   initialoffset = TypeCode_marshaller::alignedSize(ToTcBase(pd_content),
 						   initialoffset, otbl);
   return omni::align_to(initialoffset, omni::ALIGN_4) + 4;
@@ -1656,6 +1662,8 @@ TypeCode_sequence::NP_length() const
 TypeCode_base*
 TypeCode_sequence::NP_content_type() const
 {
+  // Sanity check that recursive sequences have been properly completed
+  OMNIORB_ASSERT(!CORBA::is_nil(pd_content));
   return ToTcBase(pd_content);
 }
 
@@ -4484,8 +4492,12 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 
       case CORBA::tk_alias:
       case CORBA::tk_array:
-      case CORBA::tk_sequence:
 	tc->pd_internal_depth = markLoops(tc->NP_content_type(), depth+1);
+	break;
+
+      case CORBA::tk_sequence:
+	if (((TypeCode_sequence*)tc)->PR_content_is_assigned())
+	  tc->pd_internal_depth = markLoops(tc->NP_content_type(), depth+1);
 	break;
 
       case CORBA::tk_struct:
