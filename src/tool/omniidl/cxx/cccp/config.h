@@ -10,6 +10,12 @@
 #elif defined(__WIN32__)
 #include "config-windows.h"
 
+#elif defined(__freebsd__)
+#include "config-freebsd.h"
+
+#elif defined(__hpux__)
+#include "config-hpux.h"
+
 #endif
 
 #define BITS_PER_UNIT SIZEOF_UNSIGNED_CHAR
