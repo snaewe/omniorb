@@ -1,3 +1,42 @@
+Thu Jan 25 12:59:58 GMT 2001 sll
+================================
+
+- Updated GNUmakefiles to make the external copy build properly
+external_merge/src/lib/omniORB/codesets/GNUmakefile
+external_merge/src/lib/omniORB/GNUmakefile
+external_merge/src/lib/omniORB/omniidl_be/cxx/GNUmakefile
+external_merge/src/lib/omniORB/omniidl_be/GNUmakefile
+external_merge/src/lib/omniORB/dynamic/GNUmakefile
+external_merge/src/lib/omniORB/omniidl_be/cxx/skel/GNUmakefile
+external_merge/src/lib/omniORB/omniidl_be/cxx/impl/GNUmakefile
+external_merge/src/lib/omniORB/omniidl_be/cxx/header/GNUmakefile
+external_merge/src/lib/omniORB/omniidl_be/cxx/dynskel/GNUmakefile
+external_merge/src/lib/omniORB/orbcore/gatekeepers/GNUmakefile
+external_merge/src/lib/omniORB/orbcore/GNUmakefile
+external_merge/src/lib/omniORB/orbcore/gatekeepers/alone/dir.mk
+external_merge/src/lib/omniORB/orbcore/gatekeepers/alone/README.txt
+external_merge/src/lib/omniORB/orbcore/gatekeepers/alone/GNUmakefile
+external_merge/src/lib/omniORB/orbcore/gatekeepers/dir.mk
+external_merge/src/lib/omniORB/orbcore/gatekeepers/tcpwrapper/GNUmakefile
+external_merge/src/lib/omniORB/orbcore/gatekeepers/dummystub/GNUmakefile
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/GNUmakefile
+external_merge/src/lib/omniORB/orbcore/gatekeepers/alone/gatekeeper.cc
+external_merge/src/services/GNUmakefile
+external_merge/src/services/mklib/GNUmakefile
+external_merge/src/services/mklib/mkBOAlib/GNUmakefile
+
+external_merge/src/lib/omniORB2/*    DELETED.
+external_merge/src/lib/dir.mk
+
+- Fixed up cxx backend to stop it from dying when a relative
+  path name is given to the -p option of omniidl.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB/omniidl_be/cxx/skel/__init__.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+
+
 Tue Jan  9 17:03:34 GMT 2001 dpg1
 =================================
 
