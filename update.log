@@ -1,3 +1,11 @@
+Fri May  4 12:23:16 BST 2001 sll
+================================
+
+- Wrong bound check in all sequence array templates
+
+include/omniORB4/seqTemplatedefns.h
+
+
 Wed May  2 18:34:59 BST 2001 sll
 ================================
 
