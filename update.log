@@ -1,3 +1,12 @@
+
+Fri Oct 13 10:24:46 BST 2000 djr
+================================
+
+- Fixed race between object-deactivation an completion of last invocation.
+
+src/lib/omniORB2/orbcore/poa.cc
+
+
 Fri Oct  6 09:58:55 BST 2000 dpg1
 =================================
 

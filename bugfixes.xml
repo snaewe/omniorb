@@ -8,6 +8,18 @@
 
 <buglist version="3.0.2">
 
+<bug id="2" date="Fri Oct 13 09:56:03 BST 2000" user="djr">
+
+  <summary>Race condition in POA triggers assertion failure</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-10/0055.html"/>
+  <text>
+  There is a race condition in the POA between deactivating an object
+  and it being etherealised, which can trigger an assertion failure
+  (which in turn throws an omniORB::fatalException()).
+  </text>
+</bug>
+
 <bug id="1" date="Fri Oct  6 09:58:55 BST 2000" user="dpg1">
 
   <summary>C++ back-end claims that it does not support long long</summary>
