@@ -23,7 +23,7 @@ AR = ar cq
 
 CPP = /usr/bin/cpp
 
-CXX = /usr/bin/g
+CXX = /usr/bin/g++
 CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = -O2 
 
