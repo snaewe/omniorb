@@ -45,7 +45,7 @@
 
 extern "C" void exit(int) ;
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 #include <libcWrapper.h>
 #include <gatekeeper.h>
 

@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 	s2 = s2 - 1 - s1;
     }
 
-    sprintf(buf,"%d.%03d",s2,n2/1000000);
+    sprintf(buf,"%d.%03lu", (unsigned long) s2, (unsigned long)n2/1000000ul);
 
     cout << argv[0] << ": doing " << loop_iterations
 	 << " loop iterations (approx " << buf << " seconds per loop)\n";
