@@ -20,6 +20,7 @@ Major new features since omniORB 3.0.x
  - Fixed point.
  - Complete freeing of all heap allocations.
  - New comprehensive configuration mechanism.
+ - Commercial support. See http://www.omniorb-support.com/
 
 And many other improvements.
 
