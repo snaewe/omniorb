@@ -30,6 +30,10 @@
 
 /* 
  * $Log$
+ * Revision 1.24  1999/03/19 15:15:39  djr
+ * Now accept indirections to fundamental TypeCodes. Option to accept
+ * misaligned indirections.
+ *
  * Revision 1.23  1999/03/11 16:25:59  djr
  * Updated copyright notice
  *
@@ -3185,6 +3189,18 @@ TypeCode_offsetTable::lookupOffset(CORBA::Long offset)
   if (pd_parent_table != 0)
     return pd_parent_table->lookupOffset(offset + pd_parent_base_offset);
 
+  // Visibroker's Java ORB gives out TypeCode indirections which are not
+  // a multiple of 4. Rounding them up seems to solve the problem ...
+
+  if( omniORB::acceptMisalignedTcIndirections && (offset & 0x3) ) {
+    if( omniORB::traceLevel > 1 ) {
+      omniORB::log << "omniORB: WARNING - received TypeCode with mis-aligned"
+	"indirection.\n";
+      omniORB::log.flush();
+    }
+    offset = (offset + 3) & 0xfffffffc;
+  }
+
   // Otherwise, just look in this table directly
   TypeCode_offsetEntry* entry = pd_table;
 
@@ -3415,32 +3431,46 @@ TypeCode_marshaller::unmarshal(NetBufferedStream& s,
 
     // Simple types with no parameters
     case CORBA::tk_null:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_null));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_null));
     case CORBA::tk_void:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_void));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_void));
     case CORBA::tk_short:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_short));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_short));
     case CORBA::tk_ushort:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_ushort));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_ushort));
     case CORBA::tk_long:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_long));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_long));
     case CORBA::tk_ulong:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_ulong));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_ulong));
     case CORBA::tk_float:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_float));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_float));
     case CORBA::tk_double:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_double));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_double));
     case CORBA::tk_boolean:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_boolean));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_boolean));
     case CORBA::tk_char:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_char));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_char));
     case CORBA::tk_octet:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_octet));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_octet));
     case CORBA::tk_any:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_any));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_any));
     case CORBA::tk_TypeCode:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_TypeCode));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_TypeCode));
     case CORBA::tk_Principal:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_Principal));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_Principal));
 
     default:
@@ -3706,32 +3736,46 @@ TypeCode_marshaller::unmarshal(MemBufferedStream& s,
 
     // Simple types with no parameters
     case CORBA::tk_null:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_null));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_null));
     case CORBA::tk_void:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_void));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_void));
     case CORBA::tk_short:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_short));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_short));
     case CORBA::tk_ushort:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_ushort));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_ushort));
     case CORBA::tk_long:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_long));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_long));
     case CORBA::tk_ulong:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_ulong));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_ulong));
     case CORBA::tk_float:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_float));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_float));
     case CORBA::tk_double:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_double));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_double));
     case CORBA::tk_boolean:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_boolean));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_boolean));
     case CORBA::tk_char:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_char));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_char));
     case CORBA::tk_octet:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_octet));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_octet));
     case CORBA::tk_any:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_any));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_any));
     case CORBA::tk_TypeCode:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_TypeCode));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_TypeCode));
     case CORBA::tk_Principal:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_Principal));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_Principal));
 
     default:
