@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.8  1999/11/02 17:47:01  djr
+  Removed obsolete references to rope factories.
+
   Revision 1.29.6.7  1999/10/29 13:18:17  djr
   Changes to ensure mutexes are constructed when accessed.
 
@@ -139,18 +142,10 @@
 #include <bootstrap_i.h>
 #include <omniORB3/omniObjRef.h>
 #include <poaimpl.h>
-#include <ropeFactory.h>
 #include <initialiser.h>
 #include <dynamicLib.h>
 #include <exception.h>
 
-#ifndef __atmos__
-#include <tcpSocket.h>
-#define _tcpOutgoingFactory tcpSocketMToutgoingFactory
-#else
-#include <tcpATMos.h>
-#define _tcpOutgoingFactory tcpATMosMToutgoingFactory
-#endif
 #ifdef _HAS_SIGNAL
 #include <signal.h>
 #include <errno.h>
