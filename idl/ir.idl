@@ -72,7 +72,7 @@ interface Contained : IRObject {
 };
 
 
-#ifndef __VAX
+#if !defined(__VAX) && !defined(__DECCXX)
 interface ModuleDef;
 interface ConstantDef;
 interface IDLType;
@@ -86,7 +86,7 @@ interface ExceptionDef;
 interface WstringDef;
 interface FixedDef;
 
-#ifndef __VAX
+#if !defined(__VAX) && !defined(__DECCXX)
 typedef sequence<InterfaceDef> InterfaceDefSeq;
 #endif
 typedef sequence<Contained> ContainedSeq;
@@ -115,7 +115,7 @@ interface Container : IRObject {
                                    in boolean exclude_inherited,
                                    in long max_returned_objs);
 
-#ifndef __VAX
+#if !defined(__VAX) && !defined(__DECCXX)
 
   ModuleDef create_module(in RepositoryId id,
                           in Identifier name,
@@ -218,7 +218,7 @@ interface Repository : Container {
 };
 
 
-#ifndef __VAX
+#if !defined(__VAX) && !defined(__DECCXX)
 
 interface ModuleDef : Container, Contained {
   // empty
@@ -317,7 +317,7 @@ interface ArrayDef : IDLType {
   attribute IDLType element_type_def;
 };
 
-#ifndef __VAX
+#if !defined(__VAX) && !defined(__DECCXX)
 
 interface ExceptionDef : Contained, Container {
   readonly attribute TypeCode type;
