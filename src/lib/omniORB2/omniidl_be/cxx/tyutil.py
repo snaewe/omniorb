@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.27  2000/01/13 18:16:19  djs
+# Added check to mapRepoID function- it is only there to emulate broken
+# behaviour.
+#
 # Revision 1.26  2000/01/13 11:45:47  djs
 # Added option to customise C++ reserved word name escaping
 #
@@ -248,6 +252,9 @@ def mapID(identifier):
 # broken
 # eg mapRepoID("IDL:Module/If/Then") -> "IDL:Module/_cxx_If/_cxx_Then"
 def mapRepoID(id):
+    if not(config.EMULATE_BUGS()):
+        raise RuntimeError("Shouldn't be _breaking_ repository IDs if " +\
+                           "not emulating bugs in the old backend!")
     # extract the naming part of the ID
     regex = re.compile(r"(IDL:)*(.+):(.+)")
     match = regex.match(id)
