@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.10  2000/07/04 12:57:52  djs
+# Fixed Any insertion/extraction operators for unions and exceptions
+#
 # Revision 1.1.2.9  2000/06/30 09:33:05  djs
 # Removed more possible nameclashes with user supplied names.
 #
@@ -346,6 +349,7 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s) {
 #   @private_prefix@_buildDesc@decl_cname@
 # Generated symbols:
 #   NONE
+# (Note the non-copying operator is inlined in the .hh file)
 typedef_sequence_oper = """\
 void operator <<= (CORBA::Any& _a, const @fqname@& _s)
 {
@@ -521,6 +525,14 @@ void operator<<=(CORBA::Any& _a, const @fqname@& _s)
   tcDescriptor @private_prefix@_tcdesc;
   @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, _s);
   _a.PR_packFrom(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc);
+}
+
+void operator<<=(CORBA::Any& _a, @fqname@* _sp)
+{
+  tcDescriptor @private_prefix@_tcdesc;
+  @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
+  _a.PR_packFrom(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc);
+  delete _sp;
 }
 
 CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp) {
