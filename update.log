@@ -1,3 +1,11 @@
+Wed Aug  1 17:03:11 BST 2001 sll
+================================
+
+- Workaround for codegen bug with MSVC++.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Wed Aug  1 11:00:21 BST 2001 dpg1
 =================================
 
