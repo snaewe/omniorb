@@ -1,3 +1,12 @@
+Tue Nov  7 18:41:48 GMT 2000 sll
+================================
+
+- Corrected bad choice of function names in omniObjRef
+
+include/omniORB4/omniObjRef.h
+src/lib/omniORB/orbcore/corbaObject.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+
 Tue Nov  7 18:16:51 GMT 2000 sll
 ================================
 
