@@ -23,6 +23,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.9  2003/06/03 17:36:58  dgrisby
+// Std stream patch broke some platforms.
+//
 // Revision 1.2.2.8  2003/05/09 13:32:59  dgrisby
 // Use standard iostreams if available.
 //
@@ -196,11 +199,7 @@ static int
 processConfigFile(const char* configFile)
 {
 #ifdef __WIN32__
-#if _MSC_VER >= 1310
   ifstream cfile(configFile, ios::in);
-#else
-  ifstream cfile(configFile, ios::in | ios::nocreate);
-#endif
 #else
   ifstream cfile(configFile);
 #endif

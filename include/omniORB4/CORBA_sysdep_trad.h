@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2003/06/03 17:36:58  dgrisby
+  Std stream patch broke some platforms.
+
   Revision 1.1.2.9  2003/03/12 14:07:44  dgrisby
   MacOS port. Thanks Wolfgang Textor.
 
@@ -210,6 +213,7 @@
 #    endif
 #    define HAS_Cplusplus_Namespace
 #    define HAS_Std_Namespace
+#    define HAVE_STD
 #  endif
 
 #  define HAS_LongLong

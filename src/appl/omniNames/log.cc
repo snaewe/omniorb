@@ -43,11 +43,9 @@
 #  include <iostream>
 #  include <iomanip>
    using namespace std;
-#  define IOS(x) ios::x
 #else
 #  include <iostream.h>
 #  include <iomanip.h>
-#  define IOS(x) x
 #endif
 
 #ifdef __WIN32__
@@ -305,11 +303,7 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
     firstTime = 0;
 
 #ifdef __WIN32__
-#if _MSC_VER >= 1310
     ifstream initf(active,ios::in);
-#else
-    ifstream initf(active,ios::in | ios::nocreate);
-#endif
 #else
     ifstream initf(active);
 #endif
@@ -1065,16 +1059,11 @@ omniNameslog::getUnbind(istream& file)
 void
 omniNameslog::putKey(const PortableServer::ObjectId& id, ostream& file)
 {
-  file << IOS(hex);
+  file << hex;
   for (unsigned int i = 0; i < id.length(); i++) {
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
     file << setfill('0') << setw(2) << (int)id[i];
-#else
-    // Eventually, use the following for all standard C++ compilers
-    file << std::setfill('0') << std::setw(2) << (int)id[i];
-#endif
   }
-  file << IOS(dec);
+  file << dec;
 }
 
 
