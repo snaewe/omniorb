@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.18  1999/12/16 16:08:54  djs
+# Added allInherits function to return a list of all the interfaces an
+# interface inherits from (ie under the transitive closure of the inherits
+# relation)
+#
 # Revision 1.17  1999/12/15 12:12:31  djs
 # Fix building string form of ulong constants
 #
@@ -971,6 +976,17 @@ def const_qualifier(insideModule, insideClass):
         return "static"
     else:
         return "_CORBA_MODULE_VAR"
+
+# ------------------------------------------------------------------
+
+def allInherits(interface):
+    assert isinstance(interface, idlast.Interface)
+    list = []
+    for inherited in interface.inherits():
+        list.append(inherited)
+        list = list + allInherits(inherited)
+
+    return list
 
 # ------------------------------------------------------------------
 
