@@ -11,8 +11,8 @@
 
 /*
   $Log$
-  Revision 1.1  1997/01/21 14:53:27  ewc
-  Initial revision
+  Revision 1.2  1997/01/21 15:03:00  ewc
+  Minor change - moved #define from source file to header.
 
   */
 
@@ -23,6 +23,8 @@
 #ifndef __INITFILE_H__
 #define __INITFILE_H__
 
+
+#define MAX_CONFIG 10   
 
 
 class initFile
