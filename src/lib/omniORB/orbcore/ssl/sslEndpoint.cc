@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2002/08/16 16:00:53  dgrisby
+  Bugs accessing uninitialised String_vars with [].
+
   Revision 1.1.2.14  2002/05/07 12:54:43  dgrisby
   Fix inevitable Windows header brokenness.
 
@@ -120,7 +123,7 @@ sslEndpoint::sslEndpoint(const char* address, sslContext* ctx) :
   // OMNIORB_ASSERT(hostlen);
   pd_address.host = CORBA::string_alloc(hostlen);
   strncpy(pd_address.host,host,hostlen);
-  pd_address.host[hostlen] = '\0';
+  ((char*)pd_address.host)[hostlen] = '\0';
   int rc;
   unsigned int v;
   rc = sscanf(port,"%u",&v);
