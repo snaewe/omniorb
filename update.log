@@ -1,3 +1,11 @@
+Wed Sep  1 15:56:42 BST 1999 sll
+================================
+
+- workaround for Cygnus compiler problem, minor update to cope with ETS kernel
+
+src/tool/omniidl2/ast/ast_string.cc
+src/lib/omniORB2/orbcore/initFile.cc
+
 
 Wed Sep  1 13:58:24 BST 1999 djr
 ================================
