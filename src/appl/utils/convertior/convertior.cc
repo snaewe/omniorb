@@ -166,6 +166,7 @@ int main(int argc, char* argv[])
 
 
   delete[] newior;
+  return 1;
 }  
 
 
