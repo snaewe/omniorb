@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.22.2.3  2000/10/03 17:38:50  sll
+  Fixed typo that cause user exception to be marshalled as system exception.
+
   Revision 1.22.2.2  2000/09/27 18:21:53  sll
   Use the new GIOP engine to handle a remote call.
 
@@ -603,7 +606,7 @@ GIOP_S::MaybeMarshalUserException(void* pex)
     if( !strcmp(user_exns[i], repoid) ) {
 
       GIOP_S_UserException_Marshaller m(ex);
-      InitialiseReply(GIOP::SYSTEM_EXCEPTION,m);
+      InitialiseReply(GIOP::USER_EXCEPTION,m);
       ReplyCompleted();
       break;
     }
