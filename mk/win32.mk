@@ -60,7 +60,7 @@ MV = mv -f
 #
 # Compile flags for VS.NET compilers are different
 #
-ifndef vs_7
+ifeq "$(MSVC7)" ""
 
 # Use the following set of flags to build and use multithreaded DLLs
 #

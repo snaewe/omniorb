@@ -23,17 +23,16 @@ ABSTOP = $(shell cd $(TOP); pwd)
 #PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
 PYTHON = /cygdrive/c/Python22/python
 
-define vs_7
-endef
+MSVC7 = "true"
 
 # Use the following set of flags to build and use multithreaded DLLs
 #
-MSVC_DLL_CXXNODEBUGFLAGS       = -MD -EHsc -GS -GR -Zd -nologo dsdsdsdsasasd
+MSVC_DLL_CXXNODEBUGFLAGS       = -MD -EHs -GS -GR -Zd -nologo
 MSVC_DLL_CXXLINKNODEBUGOPTIONS = -nologo -DEBUG
 MSVC_DLL_CNODEBUGFLAGS         = -MD -GS -GR -Zd -nologo
 MSVC_DLL_CLINKNODEBUGOPTIONS   = -nologo -DEBUG
 #
-MSVC_DLL_CXXDEBUGFLAGS         = -MD -EHsc -RTC1 -GS -GR -Zd -nologo
+MSVC_DLL_CXXDEBUGFLAGS         = -MD -EHs -RTC1 -GS -GR -Zd -nologo
 MSVC_DLL_CXXLINKDEBUGOPTIONS   = -nologo -DEBUG
 MSVC_DLL_CDEBUGFLAGS           = -MD -RTC1 -GS -GR -Zd -nologo
 MSVC_DLL_CLINKDEBUGOPTIONS     = -nologo -DEBUG
@@ -42,12 +41,12 @@ MSVC_DLL_CLINKDEBUGOPTIONS     = -nologo -DEBUG
 #
 # Use the following set of flags to build and use multithread static libraries
 #
-MSVC_STATICLIB_CXXNODEBUGFLAGS       = -MD -EHsc -GS -GR -Zd -nologo
+MSVC_STATICLIB_CXXNODEBUGFLAGS       = -MD -EHs -GS -GR -Zd -nologo
 MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS = -nologo -DEBUG
 MSVC_STATICLIB_CNODEBUGFLAGS         = -MD -GS -GR -Zd -nologo
 MSVC_STATICLIB_CLINKNODEBUGOPTIONS   = -nologo -DEBUG
 
-MSVC_STATICLIB_CXXDEBUGFLAGS         = -MD -EHsc -RTC1 -GS -GR -Zd -nologo
+MSVC_STATICLIB_CXXDEBUGFLAGS         = -MD -EHs -RTC1 -GS -GR -Zd -nologo
 MSVC_STATICLIB_CXXLINKDEBUGOPTIONS   = -nologo -DEBUG
 MSVC_STATICLIB_CDEBUGFLAGS           = -MD -RTC1 -GS -GR -Zd -nologo
 MSVC_STATICLIB_CLINKDEBUGOPTIONS     = -nologo -DEBUG
