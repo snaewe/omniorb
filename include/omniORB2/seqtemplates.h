@@ -28,9 +28,12 @@
 
 /*
  $Log$
- Revision 1.10  1998/01/27 19:35:56  ewc
- Revised Octet and Boolean templates
+ Revision 1.11  1998/01/28 14:29:48  ewc
+ *** empty log message ***
 
+ * Revision 1.10  1998/01/27  19:35:56  ewc
+ * Revised Octet and Boolean templates
+ *
  * Revision 1.9  1998/01/27  16:08:45  ewc
  * Added new classes and templates for sequence of Boolean and sequence
  * of Octet.
@@ -586,7 +589,7 @@ public:
     : _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,1,1>(max) {}
   inline _CORBA_Unbounded_Sequence_Array__Boolean(_CORBA_ULong max,
 							 _CORBA_ULong length,
-							 _CORBA_Boolean *value,
+							 T *value,
 							 _CORBA_Boolean release = 0)
     :  _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,1,1>(max,length,value,release) {}
   inline _CORBA_Unbounded_Sequence_Array__Boolean (const 
@@ -607,7 +610,7 @@ public:
     :   _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Octet,dimension,1,1>(max) {}
   inline _CORBA_Unbounded_Sequence_Array__Octet(_CORBA_ULong max,
 							 _CORBA_ULong length,
-							 _CORBA_Octet *value,
+							 T *value,
 							 _CORBA_Boolean release = 0)
     :   _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Octet,dimension,1,1>(max,length,value,release) {}
   inline _CORBA_Unbounded_Sequence_Array__Octet (const 
@@ -674,7 +677,7 @@ class _CORBA_Bounded_Sequence_Array__Boolean
 public:
   inline _CORBA_Bounded_Sequence_Array__Boolean() {}
   inline _CORBA_Bounded_Sequence_Array__Boolean(_CORBA_ULong length,
-						        _CORBA_Boolean *value,
+						        T *value,
 							_CORBA_Boolean release = 0)
     :  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,max,1,1>(length,value,release) {}
   inline _CORBA_Bounded_Sequence_Array__Boolean(const 
@@ -691,7 +694,7 @@ class _CORBA_Bounded_Sequence_Array__Octet
 public:
   inline _CORBA_Bounded_Sequence_Array__Octet() {}
   inline _CORBA_Bounded_Sequence_Array__Octet(_CORBA_ULong length,
-						        _CORBA_Octet *value,
+						        T *value,
 							_CORBA_Boolean release = 0)
     :  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Octet,dimension,max,1,1>(length,value,release) {}
   inline _CORBA_Bounded_Sequence_Array__Octet(const 
