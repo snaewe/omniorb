@@ -14,9 +14,13 @@
 
 /*
  $Log$
- Revision 1.8  1997/03/26 18:06:21  ewc
- Small bug fix.
+ Revision 1.9  1997/04/01 12:47:26  ewc
+ Suppress warning message about DLL export/import on Win32 (with MSVC++)
+ platforms.
 
+ * Revision 1.8  1997/03/26  18:06:21  ewc
+ * Small bug fix.
+ *
  Revision 1.5  1997/03/14 10:19:10  sll
  Use namespace instead of class for modules if the compiler supports it.
 
@@ -132,8 +136,14 @@
 #error "Both _OMNIORB2_DLL and _WINSTATIC are defined."
 #elif defined(_OMNIORB2_DLL)
 #define _OMNIORB2_NTDLL_ __declspec(dllexport) 
+#pragma warning(disable: 4251)
+// Disable this warning, as myPrincipalID is defined by a template, which
+// can't be exported using __declspec
 #elif !defined(_WINSTATIC)
 #define _OMNIORB2_NTDLL_ __declspec(dllimport)
+#pragma warning(disable: 4251)
+// Disable this warning, as myPrincipalID is defined by a template, which
+// can't be imported using __declspec
 #elif defined(_WINSTATIC)
 #define _OMNIORB2_NTDLL_
 #endif 
