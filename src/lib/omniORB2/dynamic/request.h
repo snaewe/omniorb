@@ -60,7 +60,7 @@ public:
   virtual CORBA::Environment_ptr   env();
   virtual CORBA::ExceptionList_ptr exceptions();
   virtual CORBA::ContextList_ptr   contexts();
-  virtual CORBA::Context_ptr       ctxt() const;
+  virtual CORBA::Context_ptr       ctx() const;
   virtual void                     ctx(CORBA::Context_ptr);
   virtual CORBA::Any& add_in_arg();
   virtual CORBA::Any& add_in_arg(const char* name);
@@ -111,6 +111,7 @@ private:
   // If non-zero, then the exception should be thrown next
   // time one of the public methods (other than poll_response)
   // is called.
+
 };
 
 
