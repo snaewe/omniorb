@@ -1,3 +1,47 @@
+Fri Oct  6 17:33:16 BST 2000 sll
+================================
+
+- Ported dynamic library. (Not tested yet)
+
+include/omniORB4/callDescriptor.h
+include/omniORB4/tcDescriptor.h
+
+src/lib/omniORB/dir.mk
+src/lib/omniORB/exceptiondefs.h
+src/lib/omniORB/dynamic/Namingdynstub.cc
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/anyP.cc
+src/lib/omniORB/dynamic/anyP.h
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/contextList.cc
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/dynAny.h
+src/lib/omniORB/dynamic/dynException.cc
+src/lib/omniORB/dynamic/dynException.h
+src/lib/omniORB/dynamic/dynamicImplementation.cc
+src/lib/omniORB/dynamic/dynamicLib.cc
+src/lib/omniORB/dynamic/namedValue.cc
+src/lib/omniORB/dynamic/nvList.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/request.h
+src/lib/omniORB/dynamic/serverRequest.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/tcParser.h
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/dynamic/typecode.h
+src/lib/omniORB/dynamic/unknownUserExn.cc
+
+src/lib/omniORB/orbcore/callDescriptor.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/tcpSocketMTfactory.cc
+
+src/lib/omniORB/omniORB4/NamingDynSK.cc
+src/lib/omniORB/omniORB4/bootstrapDynSK.cc
+src/lib/omniORB/omniORB4/corbaidlSK.cc
+src/lib/omniORB/omniORB4/irSK.cc
+
+
 Wed Oct  4 17:48:07 BST 2000 sll
 ================================
 
