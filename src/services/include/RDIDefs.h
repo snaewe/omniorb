@@ -30,4 +30,3 @@ inline void RDI_StringFree(char* string)
 { if ( string ) delete [] string; }
 
 #endif
- 
