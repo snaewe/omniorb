@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/11/15 17:04:33  sll
+  Removed marshalling functions from WString_helper.
+
   Revision 1.1.2.2  2000/11/09 12:27:50  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -84,8 +87,6 @@ static inline _CORBA_WChar* dup(const _CORBA_WChar* s) {
 }
 // As CORBA::wstring_dup().
 
-static void marshal(const _CORBA_WChar*,cdrStream&);
-static _CORBA_WChar* unmarshal(cdrStream&);
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -287,7 +288,7 @@ public:
     return tmp;
   }
 
-  void operator >>= (cdrStream& s) const { _CORBA_WString_helper::marshal(_ptr,s); }
+  void operator >>= (cdrStream& s) const;
   void operator <<= (cdrStream& s);
 
   inline _CORBA_WChar*& _NP_ref() {return _ptr;}
