@@ -44,6 +44,10 @@ OBJS         = \
 
 DIR_CPPFLAGS = -I. -I../include $(patsubst %,-I%/../include,$(VPATH))
 
+ifdef Win32Platform
+CXXOPTIONS += -Zm200
+endif
+
 lib = $(patsubst %,$(LibPattern),omniORB2_be)
 
 all:: $(lib)
