@@ -127,7 +127,7 @@ do_main() {
     echo "$date $user"
     echo "================================="
     echo
-    echo $updateLog
+    echo "$updateLog"
     ;;
 
   *)
@@ -388,6 +388,7 @@ do_check_in() {
     fi
 
     echo "Enter log message (terminated by blank line or .):"
+    message=""
     while true; do
       echo -n ">> "
       myread line
@@ -439,7 +440,7 @@ do_check_in() {
     message="NEW FILE"
   fi
 
-  sourceFileFromTop=`echo "$sourceDir/$base" | sed 's|^.*\.\./||'`
+  sourceFileFromTop=`echo "$sourceDir/$base" | sed 's|^.*\.\./|| s|^/.*/version.\../||'`
 
   updateLog="$updateLog
 $sourceFileFromTop - $message"
