@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2002/11/06 11:31:21  dgrisby
+  Old ETS patches that got lost; updates patches README.
+
   Revision 1.1.2.14  2002/10/28 13:48:50  dgrisby
   Work around Windows ME 0.0.0.0 interface problem.
 
@@ -93,7 +96,7 @@
 #include <net/if.h>
 #endif
 
-#if defined(NTArchitecture) && !defined(__ETS_KERNEL__)
+#if defined(NTArchitecture)
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif

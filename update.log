@@ -1,3 +1,13 @@
+Wed Nov  6 11:26:27 GMT 2002 dgrisby
+====================================
+
+- Old ETS patches that got lost; updates patches README.
+
+include/omniORB4/internal/libcWrapper.h
+patches/README
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Mon Nov  4 17:19:50 GMT 2002 dgrisby
 ====================================
 

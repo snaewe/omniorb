@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2002/11/06 11:31:21  dgrisby
+  Old ETS patches that got lost; updates patches README.
+
   Revision 1.1.4.6  2002/09/08 22:12:22  dgrisby
   Last checkin broke it.
 
@@ -77,11 +80,7 @@
 
 
 #if defined(__WIN32__)
-#  if !defined(__ETS_KERNEL__)
-#    include <winsock2.h>
-#  else
-#    include <winsock.h>
-#  endif
+#  include <winsock2.h>
 #else
 #  include <netdb.h>
 #endif

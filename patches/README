@@ -1,6 +1,12 @@
 This directory contains patches to the source to work around bugs in some
 old compilers.
 
+These patches are against omniORB 3.0, so they will not work with
+omniORB 4.0. They should give you a hint about what needs to be done
+to omniORB 4.0, though. If you successfully compile omniORB on one of
+these platforms, please send an up to date patch to the omniORB
+mailing list.
+
 The patches are:
 
   dec_CXX_5.6.patch  - patch to apply to work around bugs in Dec C++ 5.6.
