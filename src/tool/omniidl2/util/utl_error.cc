@@ -147,11 +147,11 @@ error_string(UTL_Error::ErrorCode c)
   return 0; // for MSVC++ 4.2
 }
 
-// Print out an error message header on cerr
+// Print out an error message header on std::cerr
 static void
 idl_error_header(UTL_Error::ErrorCode c, long lineno, String *s)
 {
-  cerr << idl_global->prog_name() 
+  std::cerr << idl_global->prog_name() 
        << ": \"" 
        << (idl_global->read_from_stdin() ? "standard input" : s->get_string())
        << GTDEVEL("\", line ") 
@@ -473,7 +473,7 @@ UTL_Error::syntax_error(IDL_GlobalData::ParseState ps)
   idl_error_header(EIDL_SYNTAX_ERROR,
 		   idl_global->lineno(),
 		   idl_global->filename());
-  cerr << parse_state_to_error_message(ps) << "\n";
+  std::cerr << parse_state_to_error_message(ps) << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -481,7 +481,7 @@ void
 UTL_Error::error0(UTL_Error::ErrorCode c)
 {
   idl_error_header(c, idl_global->lineno(), idl_global->filename());
-  cerr << "\n";
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -489,7 +489,7 @@ void
 UTL_Error::error1(UTL_Error::ErrorCode c, AST_Decl *d)
 {
   idl_error_header(c, d->line(), d->file_name());
-  d->name()->dump(cerr); cerr << "\n";
+  d->name()->dump(std::cerr); std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -497,8 +497,8 @@ void
 UTL_Error::error2(UTL_Error::ErrorCode c, AST_Decl *d1, AST_Decl *d2)
 {
   idl_error_header(c, d1->line(), d1->file_name());
-  d1->name()->dump(cerr); cerr << ", ";
-  d2->name()->dump(cerr); cerr << "\n";
+  d1->name()->dump(std::cerr); std::cerr << ", ";
+  d2->name()->dump(std::cerr); std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -509,9 +509,9 @@ UTL_Error::error3(UTL_Error::ErrorCode c,
 		  AST_Decl *d3)
 {
   idl_error_header(c, d1->line(), d1->file_name());
-  d1->name()->dump(cerr); cerr << ", ";
-  d2->name()->dump(cerr); cerr << ", ";
-  d3->name()->dump(cerr); cerr << "\n";
+  d1->name()->dump(std::cerr); std::cerr << ", ";
+  d2->name()->dump(std::cerr); std::cerr << ", ";
+  d3->name()->dump(std::cerr); std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -520,8 +520,8 @@ void
 UTL_Error::coercion_error(AST_Expression *v, AST_Expression::ExprType t)
 {
   idl_error_header(EIDL_COERCION_FAILURE, v->line(), v->file_name());
-  v->dump(cerr);
-  cerr << GTDEVEL(" to ") << exprtype_to_string(t) << "\n";
+  v->dump(std::cerr);
+  std::cerr << GTDEVEL(" to ") << exprtype_to_string(t) << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -532,8 +532,8 @@ UTL_Error::lookup_error(UTL_ScopedName *n)
   idl_error_header(EIDL_LOOKUP_ERROR,
 		   idl_global->lineno(),
 		   idl_global->filename());
-  n->dump(cerr);
-  cerr << "\n";
+  n->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -543,11 +543,11 @@ void
 UTL_Error::inheritance_fwd_error(UTL_ScopedName *n, AST_Interface *f)
 {
   idl_error_header(EIDL_INHERIT_FWD_ERROR, f->line(), f->file_name());
-  cerr << "interface ";
-  n->dump(cerr);
-  cerr << GTDEVEL(" cannot inherit from forward declared interface ");
-  f->local_name()->dump(cerr);
-  cerr << "\n";
+  std::cerr << "interface ";
+  n->dump(std::cerr);
+  std::cerr << GTDEVEL(" cannot inherit from forward declared interface ");
+  f->local_name()->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -556,11 +556,11 @@ void
 UTL_Error::inheritance_error(UTL_ScopedName *n, AST_Decl *d)
 {
   idl_error_header(EIDL_CANT_INHERIT, d->line(), d->file_name());
-  cerr << " interface ";
-  n->dump(cerr);
-  cerr << GTDEVEL(" attempts to inherit from ");
-  d->dump(cerr);
-  cerr << "\n";
+  std::cerr << " interface ";
+  n->dump(std::cerr);
+  std::cerr << GTDEVEL(" attempts to inherit from ");
+  d->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -569,8 +569,8 @@ void
 UTL_Error::eval_error(AST_Expression *v)
 {
   idl_error_header(EIDL_EVAL_ERROR, v->line(), v->file_name());
-  v->dump(cerr);
-  cerr << "\n";
+  v->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -581,10 +581,10 @@ void
 UTL_Error::constant_expected(UTL_ScopedName *n, AST_Decl *d)
 {
   idl_error_header(EIDL_CONSTANT_EXPECTED, d->line(), d->file_name());
-  n->dump(cerr);
-  cerr << GTDEVEL(" bound to ");
-  d->dump(cerr);
-  cerr << "\n";
+  n->dump(std::cerr);
+  std::cerr << GTDEVEL(" bound to ");
+  d->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -596,9 +596,9 @@ void
 UTL_Error::enum_val_expected(AST_Union *u, AST_UnionLabel *l)
 {
   idl_error_header(EIDL_ENUM_VAL_EXPECTED, u->line(), u->file_name());
-  cerr << " union " << u->local_name()->get_string() << ", ";
-  l->dump(cerr);
-  cerr << "\n";
+  std::cerr << " union " << u->local_name()->get_string() << ", ";
+  l->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -613,11 +613,11 @@ UTL_Error::enum_val_lookup_failure(AST_Union *u,
 				UTL_ScopedName *n)
 {
   idl_error_header(EIDL_ENUM_VAL_NOT_FOUND, u->line(), u->file_name());
-  cerr << " union " << u->local_name()->get_string() << ", ";
-  cerr << " enum " << e->local_name()->get_string() << ", ";
-  cerr << " enumerator ";
-  n->dump(cerr);
-  cerr << "\n";
+  std::cerr << " union " << u->local_name()->get_string() << ", ";
+  std::cerr << " enum " << e->local_name()->get_string() << ", ";
+  std::cerr << " enumerator ";
+  n->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -628,7 +628,7 @@ UTL_Error::name_case_error(char *b, char *n)
   idl_error_header(EIDL_NAME_CASE_ERROR,
 		   idl_global->lineno(),
 		   idl_global->filename());
-  cerr << "\"" << b << GTDEVEL("\" and ") << "\"" << n << "\"\n";
+  std::cerr << "\"" << b << GTDEVEL("\" and ") << "\"" << n << "\"\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -637,14 +637,14 @@ void
 UTL_Error::ambiguous(UTL_Scope *s, AST_Decl *l, AST_Decl *d)
 {
   idl_error_header(EIDL_AMBIGUOUS, d->line(), d->file_name());
-  cerr << GTDEVEL(" scope: ")
+  std::cerr << GTDEVEL(" scope: ")
        << (ScopeAsDecl(s))->local_name()->get_string()
        << ", ";
-  cerr << GTDEVEL(" collision: "); 
-  d->name()->dump(cerr);
-  cerr << " vs. ";
-  l->name()->dump(cerr);
-  cerr << "\n";
+  std::cerr << GTDEVEL(" collision: "); 
+  d->name()->dump(std::cerr);
+  std::cerr << " vs. ";
+  l->name()->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -653,9 +653,9 @@ void
 UTL_Error::fwd_decl_not_defined(AST_Interface *d)
 {
   idl_error_header(EIDL_DECL_NOT_DEFINED, d->line(), d->file_name());
-  cerr << "interface ";
-  d->local_name()->dump(cerr);
-  cerr << "\n";
+  std::cerr << "interface ";
+  d->local_name()->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -666,11 +666,11 @@ UTL_Error::fwd_decl_lookup(AST_Interface *d, UTL_ScopedName *n)
   idl_error_header(EIDL_FWD_DECL_LOOKUP,
 		   idl_global->lineno(),
 		   idl_global->filename());
-  cerr << GTDEVEL("trying to look up ");
-  n->dump(cerr);
-  cerr << GTDEVEL(" in undefined forward declared interface ");
-  d->local_name()->dump(cerr);
-  cerr << "\n";
+  std::cerr << GTDEVEL("trying to look up ");
+  n->dump(std::cerr);
+  std::cerr << GTDEVEL(" in undefined forward declared interface ");
+  d->local_name()->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -679,10 +679,10 @@ void
 UTL_Error::redefinition_in_scope(AST_Decl *d, AST_Decl *s)
 {
   idl_error_header(EIDL_REDEF_SCOPE, d->line(), d->file_name());
-  d->name()->dump(cerr);
-  cerr << ", ";
-  s->name()->dump(cerr);
-  cerr << "\n";
+  d->name()->dump(std::cerr);
+  std::cerr << ", ";
+  s->name()->dump(std::cerr);
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -694,10 +694,10 @@ UTL_Error::not_a_type(AST_Decl *d)
 		   idl_global->lineno(), 
 		   idl_global->filename());
   if (d == NULL || d->name() == NULL)
-    cerr << GTDEVEL("unknown symbol");
+    std::cerr << GTDEVEL("unknown symbol");
   else
-    d->name()->dump(cerr);
-  cerr << "\n"; 
+    d->name()->dump(std::cerr);
+  std::cerr << "\n"; 
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
 
@@ -712,7 +712,7 @@ void
 UTL_Error::operation_name_clash(AST_Decl *d)
 {
   idl_error_header(EIDL_REDEF,d->line(),d->file_name());
-  cerr << GTDEVEL(", the operation's name clashes with one of the inherited interfaces'");
-  cerr << "\n";
+  std::cerr << GTDEVEL(", the operation's name clashes with one of the inherited interfaces'");
+  std::cerr << "\n";
   idl_global->set_err_count(idl_global->err_count() + 1);
 }
