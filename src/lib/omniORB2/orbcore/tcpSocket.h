@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5  1999/07/09 21:04:29  sll
+ Added private data member in tcpSocketMTincomingFactory.
+
  Revision 1.4  1999/03/11 16:25:57  djr
  Updated copyright notice
 
@@ -125,9 +128,15 @@ public:
 			      IOP::TaggedProfileList& profilelist) const;
 
   friend class nobody;
+  friend class tcpSocketRendezvouser;
+  friend class tcpSocketWorker;
 
 private:
   enum { IDLE, ACTIVE, ZOMBIE } pd_state;
+
+  omni_mutex                    pd_shutdown_lock;
+  omni_condition                pd_shutdown_cond;
+  int                           pd_shutdown_nthreads;
 
   ~tcpSocketMTincomingFactory() {} // Cannot delete a factory instance
 
