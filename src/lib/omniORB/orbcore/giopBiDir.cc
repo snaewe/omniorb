@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/07/31 17:31:40  sll
+  strchr returns const char*.
+
   Revision 1.1.2.1  2001/07/31 16:10:38  sll
   Added GIOP BiDir support.
 
@@ -549,7 +552,7 @@ setBiDirServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
   CORBA::ULong j = 0;
   for ( ; i != last; i++) {
     if (strncmp((*i),"giop:tcp",8) == 0 || strncmp((*i),"giop:ssl",8) == 0) {
-      char* p = strchr((*i),':');
+      const char* p = strchr((*i),':');
       OMNIORB_ASSERT(p);
       p = strchr(p+1,':');
       OMNIORB_ASSERT(p);
