@@ -1,3 +1,11 @@
+Thu Jun 29 11:46:10 BST 2000 dpg1
+=================================
+
+- Remove -g debug flag from omniidl build
+
+src/tool/omniidl/cxx/dir.mk
+
+
 Wed Jun 28 18:43:31 BST 2000 sll
 ================================
 
@@ -9,7 +17,7 @@ external_merge/src/examples/call_back/dir.mak
 external_merge/src/examples/echo/dir.mak
 external_merge/src/examples/poa/implicit_activation/dir.mak
 external_merge/src/examples/poa/persistent_objref/dir.mak
-I
+
 
 Wed Jun 28 16:38:31 BST 2000 sll
 ================================
