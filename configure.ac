@@ -73,6 +73,7 @@ AC_CXX_MEMBER_CONSTANTS
 
 OMNI_CXX_CATCH_BY_BASE
 OMNI_CXX_NEED_FQ_BASE_CTOR
+OMNI_CXX_COVARIANT_RETURNS
 OMNI_CXX_LONG_IS_INT
 
 
@@ -215,6 +216,8 @@ AC_CONFIG_FILES(src/appl/GNUmakefile
                 src/examples/poa/threading/GNUmakefile
                 src/examples/ssl_echo/GNUmakefile
                 src/examples/thread/GNUmakefile
+                src/examples/valuetype/GNUmakefile
+                src/examples/valuetype/simple/GNUmakefile
                 src/lib/GNUmakefile
                 src/lib/omniORB/codesets/GNUmakefile
                 src/lib/omniORB/GNUmakefile

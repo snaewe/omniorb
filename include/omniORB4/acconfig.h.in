@@ -165,6 +165,9 @@
 /* define if you want mutexes to be traced */
 #undef OMNIORB_ENABLE_LOCK_TRACES
 
+/* define if the compiler supports covariant return types */
+#undef OMNI_HAVE_COVARIANT_RETURNS
+
 /* define if long is the same type as int */
 #undef OMNI_LONG_IS_INT
 

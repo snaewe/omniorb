@@ -17,7 +17,7 @@ HEADERS = GIOP_C.h GIOP_S.h SocketCollection.h anonObject.h anyP.h	\
           objectTable.h omniCurrent.h omniIdentity.h orbOptions.h	\
           orbParameters.h poacurrentimpl.h poaimpl.h poamanager.h	\
           pseudo.h remoteIdentity.h request.h rmutex.h			\
-          shutdownIdentity.h tcParser.h transportRules.h typecode.h     \
+          shutdownIdentity.h tcParser.h transportRules.h typecode.h	\
           valueTracker.h
 
 include $(TOP)/mk/beforeauto.mk

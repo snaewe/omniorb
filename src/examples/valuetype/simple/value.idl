@@ -1,0 +1,17 @@
+
+module ValueTest {
+  valuetype One {
+    public string s;
+    public long   l;
+  };
+
+  struct Two {
+    string s;
+    long l;
+  };
+
+  interface Test {
+    One op1(in One a);
+    Two op2(in Two a);
+  };
+};

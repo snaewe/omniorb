@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2003/09/26 16:12:53  dgrisby
+  Start of valuetype support.
+
   Revision 1.1.4.1  2003/03/23 21:04:24  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -251,7 +254,19 @@ public:
 
   TypeCode_ptr create_recursive_tc(const char* id);
 
+  TypeCode_ptr create_value_tc(const char* id, const char* name,
+			       ValueModifier type_modifier,
+			       TypeCode_ptr concrete_base,
+			       const ValueMemberSeq& members);
+
   Policy_ptr create_policy(PolicyType,const Any&);
+
+  ValueFactory register_value_factory(const char* id,
+				      ValueFactory factory);
+
+  void unregister_value_factory(const char* id);
+
+  ValueFactory lookup_value_factory(const char* id);
 
   virtual void register_initial_reference(const char* id, Object_ptr obj) = 0;
     

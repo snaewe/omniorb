@@ -13,7 +13,8 @@ HEADERS = acconfig.h BiDirPolicy.h CORBA.h CORBA_Any.h CORBA_Any_vartypes.h \
           CORBA_Object_vartypes.h CORBA_Policy.h CORBA_Principal.h	    \
           CORBA_Request.h CORBA_ServerRequest.h CORBA_String.h		    \
           CORBA_TypeCode.h CORBA_TypeCode_member.h			    \
-          CORBA_UnknownUserException.h CORBA_basetypes.h		    \
+          CORBA_UnknownUserException.h CORBA_ValueBase.h		    \
+          CORBA_ValueBase_vartypes.h CORBA_basetypes.h			    \
           CORBA_primitive_types.h CORBA_static_fns.h CORBA_sysdep.h	    \
           CORBA_sysdep_auto.h CORBA_sysdep_trad.h CORBA_vartypes.h	    \
           GIOP.h IIOP.h IOP.h IOP_C.h IOP_S.h boa.h callDescriptor.h	    \
@@ -27,7 +28,8 @@ HEADERS = acconfig.h BiDirPolicy.h CORBA.h CORBA_Any.h CORBA_Any_vartypes.h \
           poa_operators.h poa_poa.h proxyFactory.h seqTemplatedecls.h	    \
           seqTemplatedefns.h sslContext.h stringtypes.h tcDescriptor.h	    \
           templatedecls.h templatedefns.h tracedthread.h		    \
-          userexception.h wstringtypes.h
+          userexception.h valueFactoryManager.h valueType.h		    \
+          valueTemplatedecls.h wstringtypes.h
 
 SUBDIRS = internal
 

@@ -17,7 +17,6 @@ module CORBA {
 //////////////////////////////////////////////////////////////////////
 
   typedef string ScopedName;
-  typedef string RepositoryId;
 
 
   enum DefinitionKind {
@@ -53,9 +52,6 @@ module CORBA {
     readonly attribute DefinitionKind def_kind;
     void destroy();
   };
-
-
-  typedef string VersionSpec;
 
 
   interface Contained;
@@ -505,6 +501,8 @@ module CORBA {
 
 #ifndef OMNIORB_NO_IR_CLIENT
 
+#if 0
+  // In corbaidl.idl
   typedef short Visibility;
   const Visibility PRIVATE_MEMBER = 0;
   const Visibility PUBLIC_MEMBER  = 1;
@@ -519,6 +517,7 @@ module CORBA {
     Visibility   access; 
   };
   typedef sequence <ValueMember> ValueMemberSeq;
+#endif
 
   interface ValueMemberDef : Contained {
     readonly attribute TypeCode type;

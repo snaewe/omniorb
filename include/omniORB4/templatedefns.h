@@ -242,6 +242,56 @@ CORBA::Object_Member::operator=(const CORBA::Object_Element& p)
   return *this;
 }
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// ValueBase_var    ////////////////////////
+//////////////////////////// ValueBase_Member ////////////////////////
+//////////////////////////// operator=        ////////////////////////
+//////////////////////////// copy ctors       ////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+inline
+CORBA::ValueBase_var::ValueBase_var(const CORBA::ValueBase_Member& p)
+  : _pd_val(p._pd_val)
+{
+  CORBA::add_ref(_pd_val);
+}
+
+inline
+CORBA::ValueBase_var::ValueBase_var(const CORBA::ValueBase_Element& p)
+  : _pd_val(p._pd_val)
+{
+  CORBA::add_ref(_pd_val);
+}
+
+
+inline CORBA::ValueBase_var&
+CORBA::ValueBase_var::operator= (const CORBA::ValueBase_Member& p)
+{
+  CORBA::remove_ref(_pd_val);
+  _pd_val = p._pd_val;
+  CORBA::add_ref(_pd_val);
+  return *this;
+}
+
+inline CORBA::ValueBase_var&
+CORBA::ValueBase_var::operator= (const CORBA::ValueBase_Element& p)
+{
+  CORBA::remove_ref(_pd_val);
+  _pd_val = p._pd_val;
+  CORBA::add_ref(_pd_val);
+  return *this;
+}
+
+inline CORBA::ValueBase_Member&
+CORBA::ValueBase_Member::operator=(const CORBA::ValueBase_Element& p)
+{
+  CORBA::remove_ref(_pd_val);
+  _pd_val = p._pd_val;
+  CORBA::add_ref(_pd_val);
+  return *this;
+}
+
+
 #undef __INLINE_CTOR_DEFN__
 #undef __INLINE_DTOR_DEFN__
 

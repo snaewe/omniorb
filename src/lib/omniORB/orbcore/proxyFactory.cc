@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.2  2003/09/26 16:12:55  dgrisby
+  Start of valuetype support.
+
   Revision 1.5.2.1  2003/03/23 21:02:04  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -187,13 +190,6 @@ proxyObjectFactory::shutdown()
 proxyObjectFactory*
 proxyObjectFactory::lookup(const char* repoId)
 {
-  // Factories should all be registered before the ORB is initialised,
-  // so at this point the list is read-only. Concurrent accesses are
-  // safe, except that the list is deleted when the ORB is shutdown.
-  // There is a very small possibility that we will segfault below,
-  // but that can only happen if the application is creating an object
-  // reference at the same time as they are shutting down the ORB.
-
   OMNIORB_ASSERT(repoId);
 
   omni_tracedmutex_lock sync(*ofl_mutex);

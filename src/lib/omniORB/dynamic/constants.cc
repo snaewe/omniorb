@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2003/09/26 16:12:54  dgrisby
+  Start of valuetype support.
+
   Revision 1.4.2.1  2003/03/23 21:02:51  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -71,3 +74,4 @@ const CORBA::ULong CORBA::NVList::PR_magic          = 0x4E564C54U; // NVLT
 const CORBA::ULong CORBA::Request::PR_magic         = 0x52455154U; // REQT
 const CORBA::ULong CORBA::TypeCode::PR_magic        = 0x54594F4CU; // TCOL
 const CORBA::ULong DynamicAny::DynAny::PR_magic     = 0x44594E54U; // DYNT
+const CORBA::ULong CORBA::ValueBase::_PR_magic      = 0x56414C42U; // VALB

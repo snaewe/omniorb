@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.2  2003/09/26 16:12:53  dgrisby
+ Start of valuetype support.
+
  Revision 1.5.2.1  2003/03/23 21:04:26  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -314,6 +317,8 @@
 
 // Forward declarations.
 class omniOrbBoaServant;
+class _omni_ValueFactoryManager;
+struct _omni_ValueIds;
 
 _CORBA_MODULE CORBA
 
@@ -383,6 +388,8 @@ _CORBA_MODULE_BEG
 # include "CORBA_TypeCode.h"
 # include "CORBA_Request.h"
 # include "CORBA_ServerRequest.h"
+# include "CORBA_ValueBase.h"
+# include "CORBA_ValueBase_vartypes.h"
 # include "CORBA_UnknownUserException.h"
 # include "CORBA_Policy.h"
 # include "CORBA_Current.h"

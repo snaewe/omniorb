@@ -1,6 +1,10 @@
 # dir.mk for omniORB dynamic library
 
 ORB_SRCS = \
+           valueBase.cc \
+           valueFactory.cc \
+           valueTracker.cc \
+           valueType.cc \
            any.cc \
            anyP.cc \
            constants.cc \
@@ -46,7 +50,7 @@ DIR_CPPFLAGS += -D_OMNIORB_DYNAMIC_LIBRARY
 ##########################################################################
 ifdef UnixPlatform
   DIR_CPPFLAGS += -DUnixArchitecture
-#  CXXDEBUGFLAGS = -g
+  CXXDEBUGFLAGS = -g
 endif
 
 ifdef Win32Platform

@@ -1,3 +1,48 @@
+Fri Sep 26 17:08:34 BST 2003 dgrisby
+====================================
+
+- Start of valuetype support.
+
+acinclude.m4
+aclocal.m4
+configure
+configure.ac
+idl/corbaidl.idl
+idl/ir.idl
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_ORB.h
+include/omniORB4/CORBA_ValueBase.h            -- new
+include/omniORB4/CORBA_ValueBase_vartypes.h   -- new
+include/omniORB4/GNUmakefile.in
+include/omniORB4/acconfig.h.in
+include/omniORB4/omniInternal.h
+include/omniORB4/omniutilities.h
+include/omniORB4/templatedefns.h
+include/omniORB4/valueFactoryManager.h        -- new
+include/omniORB4/valueTemplatedecls.h         -- new
+include/omniORB4/valueType.h                  -- new
+include/omniORB4/internal/GNUmakefile.in
+include/omniORB4/internal/valueTrackerImpl.h  -- new
+src/examples/valuetype/GNUmakefile            -- new
+src/examples/valuetype/GNUmakefile.in         -- new
+src/examples/valuetype/dir.mk                 -- new
+src/examples/valuetype/simple/GNUmakefile     -- new
+src/examples/valuetype/simple/GNUmakefile.in  -- new
+src/examples/valuetype/simple/dir.mk          -- new
+src/examples/valuetype/simple/value.idl       -- new
+src/examples/valuetype/simple/vclient.cc      -- new
+src/examples/valuetype/simple/vserver.cc      -- new
+src/lib/omniORB/dynamic/constants.cc
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/poastub.cc
+src/lib/omniORB/dynamic/valueBase.cc          -- new
+src/lib/omniORB/dynamic/valueFactory.cc       -- new
+src/lib/omniORB/dynamic/valueTracker.cc       -- new
+src/lib/omniORB/dynamic/valueType.cc          -- new
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/proxyFactory.cc
+
+
 Thu Sep  4 14:56:05 BST 2003 dgrisby
 ====================================
 

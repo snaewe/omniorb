@@ -105,6 +105,33 @@ if test "$omni_cv_cxx_need_fq_base_ctor" = yes; then
 fi
 ])
 
+AC_DEFUN([OMNI_CXX_COVARIANT_RETURNS],
+[AC_CACHE_CHECK(whether the compiler supports covariant return types,
+omni_cv_cxx_covariant_returns,
+[AC_LANG_PUSH(C++)
+ AC_TRY_COMPILE([
+class A {};
+class B : public virtual A {};
+class C {
+public:
+  virtual A* test();
+};
+class D : public virtual C {
+public:
+  virtual B* test();
+};
+],
+[D d;],
+ omni_cv_cxx_covariant_returns=yes, omni_cv_cxx_covariant_returns=no)
+ AC_LANG_POP(C++)
+])
+if test "$omni_cv_cxx_covariant_returns" = yes; then
+  AC_DEFINE(OMNI_HAVE_COVARIANT_RETURNS,,
+            [define if the compiler supports covariant return types])
+fi
+])
+
+
 AC_DEFUN([OMNI_CXX_LONG_IS_INT],
 [AC_CACHE_CHECK(whether long is the same type as int,
 omni_cv_cxx_long_is_int,
