@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.6  2001/10/29 17:42:38  dpg1
+# Support forward-declared structs/unions, ORB::create_recursive_tc().
+#
 # Revision 1.1.4.5  2001/06/08 17:12:11  dpg1
 # Merge all the bug fixes from omni3_develop.
 #
@@ -155,6 +158,9 @@ class WalkTreeForIncludes(idlvisitor.AstVisitor):
         for n in node.members():
             n.accept(self)
 
+    def visitStructForward(self, node):
+        node.cxx_generate = 1
+
     def visitException(self, node):
         node.cxx_generate = 1
         for n in node.members():
@@ -178,6 +184,9 @@ class WalkTreeForIncludes(idlvisitor.AstVisitor):
 
         if node.constrType():
             node.switchType().decl().accept(self)
+
+    def visitUnionForward(self, node):
+        node.cxx_generate = 1
 
     def visitEnumerator(self, node):
         node.cxx_generate = 1

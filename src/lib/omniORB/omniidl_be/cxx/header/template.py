@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.17  2001/10/29 17:42:41  dpg1
+# Support forward-declared structs/unions, ORB::create_recursive_tc().
+#
 # Revision 1.5.2.16  2001/10/18 12:45:28  dpg1
 # IDL compiler tweaks.
 #
@@ -586,15 +589,44 @@ class @name@ : public @derived@ {
 public:
   typedef @name@_var _var_type;
   inline @name@() {}
-  inline @name@(const @name@& s)
-    : @derived@(s) {}
+  inline @name@(const @name@& _s)
+    : @derived@(_s) {}
 
   @bounds@
 
-  inline @name@& operator = (const @name@& s) {
-    @derived@::operator=(s);
+  inline @name@& operator = (const @name@& _s) {
+    @derived@::operator=(_s);
     return *this;
   }
+};
+"""
+
+sequence_forward_type = """\
+class @name@_var;
+
+class @name@ : public @derived@ {
+public:
+  typedef @name@_var _var_type;
+
+  inline @name@() {}
+  @name@(const @name@& _s);
+  @name@& operator=(const @name@& _s);
+
+  @bounds@
+
+  virtual ~@name@();
+
+  @element@& operator[] (_CORBA_ULong _index);
+  const @element@& operator[] (_CORBA_ULong _index) const;
+  static @element@* allocbuf(_CORBA_ULong _nelems);
+  static void freebuf(@element@* _b);
+
+  void operator>>= (cdrStream &_s) const;
+  void operator<<= (cdrStream &_s);
+
+protected:
+  void NP_copybuffer(_CORBA_ULong _newmax);
+  void NP_freebuf();
 };
 """
 
@@ -611,14 +643,14 @@ inline @name@(_CORBA_ULong _len, @element@* _val, _CORBA_Boolean _rel=0)
 """
 
 sequence_var_array_subscript = """\
-inline @element@_slice* operator [] (_CORBA_ULong s) {
-  return (@element@_slice*) ((_pd_seq->NP_data())[s]);
+inline @element@_slice* operator [] (_CORBA_ULong _s) {
+  return (@element@_slice*) ((_pd_seq->NP_data())[_s]);
 }
 """
 
 sequence_var_subscript = """\
-inline @element@ operator [] (_CORBA_ULong s) {
-  return (*_pd_seq)[s];
+inline @element@ operator [] (_CORBA_ULong _s) {
+  return (*_pd_seq)[_s];
 }
 """
 
@@ -627,98 +659,92 @@ class @name@_out;
 
 class @name@_var {
 public:
-  typedef @name@ T;
-  typedef @name@_var T_var;
-    
   inline @name@_var() : _pd_seq(0) {}
-  inline @name@_var(T* s) : _pd_seq(s) {}
-  inline @name@_var(const T_var& s) {
-    if( s._pd_seq )  _pd_seq = new T(*s._pd_seq);
-    else             _pd_seq = 0;
+  inline @name@_var(@name@* _s) : _pd_seq(_s) {}
+  inline @name@_var(const @name@_var& _s) {
+    if( _s._pd_seq )  _pd_seq = new @name@(*_s._pd_seq);
+    else              _pd_seq = 0;
   }
   inline ~@name@_var() { if( _pd_seq )  delete _pd_seq; }
     
-  inline T_var& operator = (T* s) {
+  inline @name@_var& operator = (@name@* _s) {
     if( _pd_seq )  delete _pd_seq;
-    _pd_seq = s;
+    _pd_seq = _s;
     return *this;
   }
-  inline T_var& operator = (const T_var& s) {
-    if( s._pd_seq ) {
-      if( !_pd_seq )  _pd_seq = new T;
-      *_pd_seq = *s._pd_seq;
+  inline @name@_var& operator = (const @name@_var& _s) {
+    if( _s._pd_seq ) {
+      if( !_pd_seq )  _pd_seq = new @name@;
+      *_pd_seq = *_s._pd_seq;
     } else if( _pd_seq ) {
       delete _pd_seq;
       _pd_seq = 0;
     }
     return *this;
   }
-
   @subscript_operator@
 
-  inline T* operator -> () { return _pd_seq; }
+  inline @name@* operator -> () { return _pd_seq; }
 #if defined(__GNUG__)
-  inline operator T& () const { return *_pd_seq; }
+  inline operator @name@& () const { return *_pd_seq; }
 #else
-  inline operator const T& () const { return *_pd_seq; }
-  inline operator T& () { return *_pd_seq; }
+  inline operator const @name@& () const { return *_pd_seq; }
+  inline operator @name@& () { return *_pd_seq; }
 #endif
     
-  inline const T& in() const { return *_pd_seq; }
-  inline T&       inout()    { return *_pd_seq; }
-  inline T*&      out() {
+  inline const @name@& in() const { return *_pd_seq; }
+  inline @name@&       inout()    { return *_pd_seq; }
+  inline @name@*&      out() {
     if( _pd_seq ) { delete _pd_seq; _pd_seq = 0; }
     return _pd_seq;
   }
-  inline T* _retn() { T* tmp = _pd_seq; _pd_seq = 0; return tmp; }
+  inline @name@* _retn() { @name@* tmp = _pd_seq; _pd_seq = 0; return tmp; }
     
   friend class @name@_out;
   
 private:
-  T* _pd_seq;
+  @name@* _pd_seq;
 };
 """
 
 sequence_out_array_subscript = """\
-inline @element@_slice* operator [] (_CORBA_ULong i) {
-  return (@element@_slice*) ((_data->NP_data())[i]);
+inline @element@_slice* operator [] (_CORBA_ULong _i) {
+  return (@element@_slice*) ((_data->NP_data())[_i]);
 }
 """
 
 sequence_out_subscript = """\
-inline @element@ operator [] (_CORBA_ULong i) {
-  return (*_data)[i];
+inline @element@ operator [] (_CORBA_ULong _i) {
+  return (*_data)[_i];
 }
 """
 
 sequence_out = """\
 class @name@_out {
 public:
-  typedef @name@ T;
-  typedef @name@_var T_var;
-
-  inline @name@_out(T*& s) : _data(s) { _data = 0; }
-  inline @name@_out(T_var& s)
-    : _data(s._pd_seq) { s = (T*) 0; }
-  inline @name@_out(const @name@_out& s) : _data(s._data) {}
-  inline @name@_out& operator = (const @name@_out& s) {
-    _data = s._data;
-    return *this;
-  }  inline @name@_out& operator = (T* s) {
-    _data = s;
+  inline @name@_out(@name@*& _s) : _data(_s) { _data = 0; }
+  inline @name@_out(@name@_var& _s)
+    : _data(_s._pd_seq) { _s = (@name@*) 0; }
+  inline @name@_out(const @name@_out& _s) : _data(_s._data) {}
+  inline @name@_out& operator = (const @name@_out& _s) {
+    _data = _s._data;
     return *this;
   }
-  inline operator T*&()  { return _data; }
-  inline T*& ptr()       { return _data; }
-  inline T* operator->() { return _data; }
+  inline @name@_out& operator = (@name@* _s) {
+    _data = _s;
+    return *this;
+  }
+  inline operator @name@*&()  { return _data; }
+  inline @name@*& ptr()       { return _data; }
+  inline @name@* operator->() { return _data; }
 
   @subscript_operator@
 
-  T*& _data;
-  
+  @name@*& _data;
+
 private:
   @name@_out();
-  @name@_out& operator=(const T_var&);
+  @name@_out& operator=(const @name@_var&);
 };
 """
 
@@ -758,6 +784,9 @@ struct_normal_member = """\
 @memtype@ @cxx_id@@dims@;
 """
 
+struct_forward = """\
+struct @name@;
+"""
 
 ##
 ## Exceptions
@@ -766,9 +795,7 @@ struct_normal_member = """\
 exception = """\
 class @name@ : public CORBA::UserException {
 public:
-
   @Other_IDL@
-
   @members@
 
   inline @name@() {
@@ -1131,6 +1158,10 @@ void @member@ (const _@member@_seq& _value) {
 
 union_member = """\
 @type@ _pd_@name@@dims@;
+"""
+
+union_forward = """\
+class @name@;
 """
 
 ##

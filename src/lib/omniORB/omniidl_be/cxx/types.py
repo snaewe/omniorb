@@ -579,10 +579,11 @@ class Type:
             template["suffix"] = "_String"
         elif d_SeqType.wstring() and not is_array:
             template["suffix"] = "_WString"
+        elif d_SeqType.structforward() or d_SeqType.unionforward():
+            template["forward"] = 1
         elif typeSizeAlignMap.has_key(d_SeqType.type().kind()):
             template["fixed"] = typeSizeAlignMap[d_SeqType.type().\
                                                         kind()]
-        
         elif d_SeqType.objref():
             scopedName = d_SeqType.type().decl().scopedName()
             is_CORBA_Object = scopedName == ["CORBA", "Object"]
@@ -619,6 +620,9 @@ class Type:
         if template.has_key("suffix"):
             name = name + template["suffix"]
 
+        if template.has_key("forward"):
+            name = name + "_Forward"
+
         elif template.has_key("objref") and not template["array"]:
             name = name + "_ObjRef"
 
@@ -635,40 +639,39 @@ class Type:
 
         # Note the difference between an ObjRef and an array of ObjRefs
         if template["array"]:
-            args = args + [seqTypeID, seqTypeID + "_slice"]
+            args.extend([seqTypeID, seqTypeID + "_slice"])
         
             if template.has_key("objref"):
-                args = args + [template["objref_template"]]
+                args.append(template["objref_template"])
 
             elif not template.has_key("suffix"):
                 # __Boolean __Octet __String
                 # these already contain the type info- no need for another
                 # parameter...
-                args = args + [derefSeqTypeID]
-            
-            args = args + [str(dimension)]
+                args.append(derefSeqTypeID)
+                
+            args.append(str(dimension))
         
         elif template.has_key("objref"):
-            args = args + [template["objref_name"],
-                           template["objref_template"],
-                           template["objref_helper"]]
+            args.extend([template["objref_name"],
+                         template["objref_template"],
+                         template["objref_helper"]])
         elif not template.has_key("suffix"):
             # see above
-            args = args + [seqTypeID]
+            args.append(seqTypeID)
         
         if template.has_key("bounded") and \
            template["bounded"]:
-            args = args + [str(template["bounded"])]
+            args.append(str(template["bounded"]))
 
         if template.has_key("fixed"):
             (element_size, alignment) = template["fixed"]
-            args = args + [str(element_size), str(alignment)]
+            args.extend([str(element_size), str(alignment)])
 
         # -----------------------------------
         # build the template instance
-        args_string = string.join(args, ", ")
-        if (args_string != ""):
-            name = name + "< " + args_string + "> "
+        if len(args):
+            name = name + "< " + string.join(args, ", ") + " > "
             return name
 
         return name
@@ -688,7 +691,7 @@ class Type:
         if d_T.typecode(): return "CORBA::TypeCode_var"
         if d_T.any():      return "CORBA::Any_var"
         if d_T.string():   return "CORBA::String_var"
-        if d_T.wstring():   return "CORBA::WString_var"
+        if d_T.wstring():  return "CORBA::WString_var"
         if d_T.enum():
             name = id.Name(self.type().decl().scopedName())
             return name.unambiguous(environment)
@@ -842,9 +845,17 @@ class Type:
         type = self.__type
         return type.kind() == idltype.tk_struct
 
+    def structforward(self):
+        type = self.__type
+        return type.kind() == idltype.ot_structforward
+
     def union(self):
         type = self.__type
         return type.kind() == idltype.tk_union
+
+    def unionforward(self):
+        type = self.__type
+        return type.kind() == idltype.ot_unionforward
 
     def exception(self):
         type = self.__type

@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.4  2001/10/29 17:42:40  dpg1
+# Support forward-declared structs/unions, ORB::create_recursive_tc().
+#
 # Revision 1.6.2.3  2001/06/08 17:12:17  dpg1
 # Merge all the bug fixes from omni3_develop.
 #
@@ -96,9 +99,15 @@ def visitStruct(node):
     for n in node.members():
         n.accept(self)
 
-def visitUnion(node):
+def visitStructForward(node):
     pass
 
+def visitUnion(node):
+    # *** Recurse?
+    pass
+
+def visitUnionForward(node):
+    pass
 
 def visitMember(node):
     if node.constrType():

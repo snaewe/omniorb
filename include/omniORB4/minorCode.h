@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2001/10/29 17:42:35  dpg1
+  Support forward-declared structs/unions, ORB::create_recursive_tc().
+
   Revision 1.1.4.10  2001/10/17 16:47:07  dpg1
   New minor codes
 
@@ -179,6 +182,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_102 OMNIORBMinorCode(102)
 #define OMNIORBMinorCode_103 OMNIORBMinorCode(103)
 #define OMNIORBMinorCode_104 OMNIORBMinorCode(104)
+#define OMNIORBMinorCode_105 OMNIORBMinorCode(105)
 
 #define COMMA ,
 #define DeclareValue(name,value) name = value
@@ -213,8 +217,8 @@ code( BAD_PARAM_NonAbstractBase      	     , OMGMinorCode(11) ) sep \
 code( BAD_PARAM_SupportsTooManyConcreteIntfs , OMGMinorCode(12) ) sep \
 code( BAD_PARAM_IncompleteTypeCode   	     , OMGMinorCode(13) ) sep \
 code( BAD_PARAM_InvalidObjectId      	     , OMGMinorCode(14) ) sep \
-code( BAD_PARAM_BadNameArg           	     , OMGMinorCode(15) ) sep \
-code( BAD_PARAM_BadRepositoryIdArg   	     , OMGMinorCode(16) ) sep \
+code( BAD_PARAM_InvalidName          	     , OMGMinorCode(15) ) sep \
+code( BAD_PARAM_InvalidRepositoryId   	     , OMGMinorCode(16) ) sep \
 code( BAD_PARAM_InvalidMemberName    	     , OMGMinorCode(17) ) sep \
 code( BAD_PARAM_DuplicateLabelValue  	     , OMGMinorCode(18) ) sep \
 code( BAD_PARAM_IncompatibleDiscriminatorType, OMGMinorCode(19) ) sep \
@@ -331,11 +335,12 @@ enum MARSHAL_minor {
 // BAD_TYPECODE
 #define DECLARE_BAD_TYPECODE_minors(code,sep) \
 \
-code( BAD_TYPECODE_Incomplete        , OMGMinorCode(1) ) sep \
-code( BAD_TYPECODE_IllegitimateMember, OMGMinorCode(2) ) sep \
-code( BAD_TYPECODE_TypeCodeIsNil     , OMNIORBMinorCode_71 ) sep \
-code( BAD_TYPECODE_InvalidOperation  , OMNIORBMinorCode_89 ) sep \
-code( BAD_TYPECODE_UnknownKind       , OMNIORBMinorCode_94 )
+code( BAD_TYPECODE_Incomplete        	, OMGMinorCode(1) ) sep \
+code( BAD_TYPECODE_IllegitimateMember	, OMGMinorCode(2) ) sep \
+code( BAD_TYPECODE_TypeCodeIsNil     	, OMNIORBMinorCode_71 ) sep \
+code( BAD_TYPECODE_InvalidOperation  	, OMNIORBMinorCode_89 ) sep \
+code( BAD_TYPECODE_UnknownKind          , OMNIORBMinorCode_94 ) sep \
+code( BAD_TYPECODE_UnresolvedRecursiveTC, OMNIORBMinorCode_105 )
 
 enum BAD_TYPECODE_minor {
   DECLARE_BAD_TYPECODE_minors(DeclareValue,COMMA)  

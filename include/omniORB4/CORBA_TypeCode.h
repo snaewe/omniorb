@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/10/29 17:42:35  dpg1
+  Support forward-declared structs/unions, ORB::create_recursive_tc().
+
   Revision 1.1.2.3  2001/10/17 16:44:00  dpg1
   Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -102,7 +105,10 @@ enum TCKind {
   tk_value_box            = 30,
   tk_native               = 31,
   tk_abstract_interface   = 32,
-  tk_local_interface      = 33
+  tk_local_interface      = 33,
+
+  _np_tk_indirect         = 0xffffffff
+  // Indirection value used in TypeCode marshalling. Non-portable.
 };
 
 
@@ -156,9 +162,9 @@ public:
   // OMG Interface:
 
   OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds, _dyn_attr)
-    OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(BadKind, _dyn_attr)
+  OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(BadKind, _dyn_attr)
 
-    static void marshalTypeCode(TypeCode_ptr obj,cdrStream& s);
+  static void marshalTypeCode(TypeCode_ptr obj,cdrStream& s);
   static TypeCode_ptr unmarshalTypeCode(cdrStream& s);
 
   // omniORB only static constructors
@@ -189,6 +195,7 @@ public:
   static TypeCode_ptr NP_sequence_tc(ULong bound, TypeCode_ptr element_type);
   static TypeCode_ptr NP_array_tc(ULong length, TypeCode_ptr element_type);
   static TypeCode_ptr NP_recursive_sequence_tc(ULong bound, ULong offset);
+  static TypeCode_ptr NP_recursive_tc(const char* id);
 
   // omniORB only static constructors for stubs
   static TypeCode_ptr PR_struct_tc(const char* id, const char* name,
@@ -215,6 +222,7 @@ public:
   static TypeCode_ptr PR_sequence_tc(ULong bound, TypeCode_ptr element_type);
   static TypeCode_ptr PR_array_tc(ULong length, TypeCode_ptr element_type);
   static TypeCode_ptr PR_recursive_sequence_tc(ULong bound, ULong offset);
+  static TypeCode_ptr PR_forward_sequence_tc(ULong bound);
   static TypeCode_ptr PR_null_tc();
   static TypeCode_ptr PR_void_tc();
   static TypeCode_ptr PR_short_tc();
@@ -244,6 +252,11 @@ public:
 
   // omniORB internal functions
   virtual CORBA::Boolean NP_is_nil() const;
+
+  virtual int PR_resolve_forward(TypeCode_ptr tc);
+  // Used to fill in the definition of a sequence to a forward struct
+  // or union. Returns a dummy int to allow it to be called in static
+  // initialisers.
 
   static inline _CORBA_Boolean PR_is_valid(TypeCode_ptr p ) {
     return ((p) ? (p->pd_magic == PR_magic) : 1);

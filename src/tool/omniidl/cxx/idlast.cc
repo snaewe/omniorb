@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.10  2001/10/29 17:42:42  dpg1
+// Support forward-declared structs/unions, ORB::create_recursive_tc().
+//
 // Revision 1.16.2.9  2001/10/17 16:48:32  dpg1
 // Minor error message tweaks
 //
@@ -1132,6 +1135,8 @@ Typedef(const char* file, int line, IDL_Boolean mainFile,
 {
   if (aliasType) delType_ = aliasType->shouldDelete();
   else           delType_ = 0;
+
+  if (aliasType) checkNotForward(file, line, aliasType);
 
   for (Declarator* d = declarators; d; d = (Declarator*)d->next()) {
     d->setAlias(this);

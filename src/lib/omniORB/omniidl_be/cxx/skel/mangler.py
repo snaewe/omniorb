@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.6  2001/10/29 17:42:42  dpg1
+# Support forward-declared structs/unions, ORB::create_recursive_tc().
+#
 # Revision 1.15.2.5  2001/06/08 17:12:20  dpg1
 # Merge all the bug fixes from omni3_develop.
 #
@@ -155,7 +158,7 @@ name_map = {
 # Produce a cannonical type name
 def canonTypeName(type, decl = None, useScopedName = 0):
     assert isinstance(type, types.Type)
-    
+
     type_dims = type.dims()
     decl_dims = []
     if decl != None:

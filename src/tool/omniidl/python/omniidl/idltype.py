@@ -337,12 +337,13 @@ def fixedType(digits, scale):
 
 def declaredType(decl, scopedName, kind, local):
     sname = idlutil.slashName(scopedName)
-    try:
-        return declaredTypeMap[sname]
-    except KeyError:
-        dt = Declared(decl, scopedName, kind, local)
-        declaredTypeMap[sname] = dt
-        return dt
+    if declaredTypeMap.has_key(sname):
+        dt = declaredTypeMap[sname]
+        if dt.kind() == kind:
+            return dt
+    dt = Declared(decl, scopedName, kind, local)
+    declaredTypeMap[sname] = dt
+    return dt
 
 def clear():
     """Clear back-end structures ready for another run"""

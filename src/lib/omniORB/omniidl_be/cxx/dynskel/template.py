@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.12  2001/10/29 17:42:39  dpg1
+# Support forward-declared structs/unions, ORB::create_recursive_tc().
+#
 # Revision 1.3.2.11  2001/08/29 13:41:04  dpg1
 # jnw's fix for compilers with variable sizeof(enum)
 #
@@ -188,7 +191,7 @@ static void
 # Generated symbols:
 #   @private_prefix@_buildDesc@cname@
 builddesc_extern = """\
-@where@ void @private_prefix@_buildDesc@cname@(tcDescriptor &, const @name@&);
+@where@void @private_prefix@_buildDesc@cname@(tcDescriptor &, const @name@&);
 """
 
 # Required symbols:

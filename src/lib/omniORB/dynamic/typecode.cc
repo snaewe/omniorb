@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.21  2001/10/29 17:42:36  dpg1
+ * Support forward-declared structs/unions, ORB::create_recursive_tc().
+ *
  * Revision 1.38.2.20  2001/10/17 16:44:03  dpg1
  * Update DynAny to CORBA 2.5 spec, const Any exception extraction.
  *
@@ -588,6 +591,12 @@ CORBA::TypeCode::NP_recursive_sequence_tc(CORBA::ULong bound,
   return new TypeCode_sequence(bound, offset);
 }
 
+CORBA::TypeCode_ptr
+CORBA::TypeCode::NP_recursive_tc(const char* id)
+{
+  return new TypeCode_indirect(id);
+}
+
 //////////////////////////////////////////////////////////////////////
 /////////////////////// Stub TypeCode Accessors //////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -783,6 +792,16 @@ CORBA::TypeCode::PR_recursive_sequence_tc(CORBA::ULong bound,
   return r;
 }
 
+CORBA::TypeCode_ptr
+CORBA::TypeCode::PR_forward_sequence_tc(CORBA::ULong bound)
+{
+  check_static_data_is_initialised();
+  CORBA::TypeCode_ptr r = new TypeCode_sequence(bound);
+  the_tc_list->add(r);
+  return r;
+}
+
+
 
 CORBA::TypeCode_ptr CORBA::TypeCode::PR_null_tc() {
   check_static_data_is_initialised();
@@ -883,6 +902,14 @@ CORBA::release(TypeCode_ptr o)
 
   if( CORBA::TypeCode::PR_is_valid(o) && !CORBA::is_nil(o) )
     TypeCode_collector::releaseRef(ToTcBase(o));
+}
+
+
+int
+CORBA::TypeCode::PR_resolve_forward(CORBA::TypeCode_ptr)
+{
+  OMNIORB_ASSERT(0);
+  return 0;
 }
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -1011,8 +1038,14 @@ TypeCode_base::NP_marshalComplexParams(cdrStream &,
 const TypeCode_base*
 TypeCode_base::NP_expand(const TypeCode_base* tc)
 {
-  while( tc->NP_kind() == CORBA::tk_alias )
-    tc = tc->NP_content_type();
+  while (1) {
+    if (tc->NP_kind() == CORBA::tk_alias)
+      tc = tc->NP_content_type();
+    else if (tc->NP_kind() == CORBA::_np_tk_indirect)
+      tc = ((TypeCode_indirect*)tc)->NP_resolved();
+    else
+      break;
+  }
   return tc;
 }
 
@@ -1021,6 +1054,13 @@ TypeCode_base::NP_equal(const TypeCode_base* TCp,
 			CORBA::Boolean is_equivalent,
 			const TypeCode_pairlist* tcpl) const
 {
+  while (TCp->NP_kind() == CORBA::_np_tk_indirect)
+    TCp = ((TypeCode_indirect*)TCp)->NP_resolved();
+
+  if (NP_kind() == CORBA::_np_tk_indirect)
+    return ((TypeCode_indirect*)this)->NP_resolved()->NP_equal(TCp,
+							       is_equivalent,
+							       tcpl);
   // Check for trivial pointer-based equality
   if (this == TCp) return 1;
 
@@ -1229,7 +1269,7 @@ TypeCode_base::NP_compactTc()
 {
   if ( !pd_compactTc ) {
     // Bounce this typecode off a cdrMemorystream.
-    // This ensures that any resursive members are duplicated correctly.
+    // This ensures that any recursive members are duplicated correctly.
     cdrMemoryStream s;
     CORBA::TypeCode::marshalTypeCode(this,s);
     pd_compactTc = ToTcBase(CORBA::TypeCode::unmarshalTypeCode(s));
@@ -1671,6 +1711,8 @@ TypeCode_alias::TypeCode_alias(const char* repositoryId,
   if( real_type->aliasExpandedTc() )
     pd_aliasExpandedTc =
       TypeCode_collector::duplicateRef(real_type->aliasExpandedTc());
+
+  pd_complete = NP_complete_recursive(this, repositoryId);
 }
 
 
@@ -1714,6 +1756,14 @@ TypeCode_alias::NP_complete_recursive_sequences(TypeCode_base*  tc,
   if (!pd_complete)
     pd_complete =
       ToTcBase(pd_content)->NP_complete_recursive_sequences(tc, offset);
+  return pd_complete;
+}
+
+CORBA::Boolean
+TypeCode_alias::NP_complete_recursive(TypeCode_base* tc, const char* repoId)
+{
+  if (!pd_complete)
+    pd_complete = ToTcBase(pd_content)->NP_complete_recursive(tc, repoId);
   return pd_complete;
 }
 
@@ -1851,6 +1901,16 @@ TypeCode_sequence::TypeCode_sequence(CORBA::ULong maxLen,
   pd_alignmentTable.addNasty(this);
 }
 
+TypeCode_sequence::TypeCode_sequence(CORBA::ULong maxLen)
+  : TypeCode_base(CORBA::tk_sequence)
+{
+  pd_length = maxLen;
+  pd_offset = 0;
+
+  pd_alignmentTable.setNumEntries(1);
+  pd_alignmentTable.addNasty(this);
+}
+
 
 TypeCode_sequence::TypeCode_sequence()
   : TypeCode_base(CORBA::tk_sequence)
@@ -1921,11 +1981,20 @@ TypeCode_sequence::NP_complete_recursive_sequences(TypeCode_base*  tc,
       else
 	{
 	  // Call the child typecode to complete itself
-	  pd_complete = ToTcBase(pd_content)->
-	    NP_complete_recursive_sequences(tc, offset+1);
+	  if (!CORBA::is_nil(pd_content))
+	      pd_complete = ToTcBase(pd_content)->
+	                        NP_complete_recursive_sequences(tc, offset+1);
 	}
     }
 
+  return pd_complete;
+}
+
+CORBA::Boolean
+TypeCode_sequence::NP_complete_recursive(TypeCode_base* tc, const char* repoId)
+{
+  if (!pd_complete && !CORBA::is_nil(pd_content))
+    pd_complete = ToTcBase(pd_content)->NP_complete_recursive(tc, repoId);
   return pd_complete;
 }
 
@@ -1945,7 +2014,8 @@ TypeCode_sequence::NP_extendedEqual(const TypeCode_base*  TCp,
   if ((NP_kind() != TCp->NP_kind()) || (NP_length() != TCp->NP_length()))
     return 0;
   else
-    return (NP_content_type()->NP_equal(TCp->NP_content_type(),is_equivalent,tcpl));
+    return (NP_content_type()->NP_equal(TCp->NP_content_type(),
+					is_equivalent,tcpl));
 }
 
 
@@ -2054,6 +2124,16 @@ TypeCode_sequence::removeOptionalNames()
   }
 }
 
+int
+TypeCode_sequence::PR_resolve_forward(CORBA::TypeCode_ptr tc)
+{
+  TypeCode_base* tcb = ToTcBase_Checked(tc);
+  pd_content = TypeCode_collector::duplicateRef(tcb);
+  NP_complete_recursive_sequences(this, 0);
+  return 0;
+}
+
+
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// TypeCode_array ///////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -2107,6 +2187,14 @@ TypeCode_array::NP_complete_recursive_sequences(TypeCode_base*  tc,
     pd_complete =
       ToTcBase(pd_content)->NP_complete_recursive_sequences(tc, offset+1);
 
+  return pd_complete;
+}
+
+CORBA::Boolean
+TypeCode_array::NP_complete_recursive(TypeCode_base* tc, const char* repoId)
+{
+  if (!pd_complete)
+    pd_complete = ToTcBase(pd_content)->NP_complete_recursive(tc, repoId);
   return pd_complete;
 }
 
@@ -2254,6 +2342,7 @@ TypeCode_struct::TypeCode_struct(char* repositoryId, char* name,
   pd_nmembers = memberCount;
   pd_members = members;
   NP_complete_recursive_sequences(this, 0);
+  NP_complete_recursive(this, repositoryId);
 
   generateAlignmentTable();
 }
@@ -2338,6 +2427,21 @@ TypeCode_struct::NP_complete_recursive_sequences(TypeCode_base*  tc,
   return pd_complete;
 }
 
+CORBA::Boolean
+TypeCode_struct::NP_complete_recursive(TypeCode_base* tc, const char* repoId)
+{
+  if (!pd_complete) {
+    pd_complete = 1;
+
+    for( CORBA::ULong i = 0; i < pd_nmembers; i++ ) {
+      pd_complete = pd_complete &&
+	ToTcBase(pd_members[i].type)->NP_complete_recursive(tc, repoId);
+    }
+  }
+  return pd_complete;
+}
+
+
 // OMG Interface:
 CORBA::Boolean
 TypeCode_struct::NP_extendedEqual(const TypeCode_base*  TCp,
@@ -2363,13 +2467,14 @@ TypeCode_struct::NP_extendedEqual(const TypeCode_base*  TCp,
     return 0;
 
   for( CORBA::ULong i=0; i < pd_nmembers; i++ ) {
-    if ((!is_equivalent && !NP_namesEqual(pd_members[i].name,
-				       TCp->NP_member_name(i))) ||
-	(!ToTcBase(pd_members[i].type)->NP_equal(TCp->NP_member_type(i),
-						 is_equivalent, tcpl)))
+    if (!is_equivalent && !NP_namesEqual(pd_members[i].name,
+					 TCp->NP_member_name(i)))
+      return 0;
+
+    if (!ToTcBase(pd_members[i].type)->NP_equal(TCp->NP_member_type(i),
+						is_equivalent, tcpl))
       return 0;
   }
-
   return 1;
 }
 
@@ -2612,6 +2717,7 @@ TypeCode_except::TypeCode_except(char* repositoryId, char* name,
   pd_members = members;
 
   NP_complete_recursive_sequences(this, 0);
+  NP_complete_recursive(this, repositoryId);
 
   generateAlignmentTable();
 }
@@ -2693,6 +2799,20 @@ TypeCode_except::NP_complete_recursive_sequences(TypeCode_base*  tc,
 	}
     }
 
+  return pd_complete;
+}
+
+CORBA::Boolean
+TypeCode_except::NP_complete_recursive(TypeCode_base* tc, const char* repoId)
+{
+  if (!pd_complete) {
+    pd_complete = 1;
+    
+    for( CORBA::ULong i = 0; i < pd_nmembers; i++ ) {
+      pd_complete = pd_complete &&
+	ToTcBase(pd_members[i].type)->NP_complete_recursive(tc, repoId);
+    }
+  }
   return pd_complete;
 }
 
@@ -3200,6 +3320,19 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
 	pd_members[i].alabel =
 	  TypeCode_union_helper::extractLabel(members[i].label, pd_discrim_tc);
       }
+
+    // Check the discriminator isn't the same as one we've already
+    // had. This makes the loop O(n^2). Oh well, n is probably
+    // small...
+    if ((int)i != pd_default) {
+      for (CORBA::ULong j=0; j < i; j++) {
+	if ((int)j == pd_default) continue;
+	if (pd_members[j].alabel == pd_members[i].alabel)
+	  OMNIORB_THROW(BAD_PARAM,
+			BAD_PARAM_DuplicateLabelValue,
+			CORBA::COMPLETED_NO);
+      }
+    }
   }
 
   if( pd_default == TYPECODE_UNION_IMPLICIT_DEFAULT &&
@@ -3207,6 +3340,7 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
     pd_default = TYPECODE_UNION_NO_DEFAULT;
 
   NP_complete_recursive_sequences(this, 0);
+  NP_complete_recursive(this, repositoryId);
 
   pd_alignmentTable.setNumEntries(1);
   pd_alignmentTable.addNasty(this);
@@ -3245,6 +3379,7 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
     pd_default = TYPECODE_UNION_NO_DEFAULT;
 
   NP_complete_recursive_sequences(this, 0);
+  NP_complete_recursive(this, repositoryId);
 
   pd_alignmentTable.setNumEntries(1);
   pd_alignmentTable.addNasty(this);
@@ -3342,6 +3477,20 @@ TypeCode_union::NP_complete_recursive_sequences(TypeCode_base*  tc,
 	    NP_complete_recursive_sequences(tc, offset+1);
     }
 
+  return pd_complete;
+}
+
+CORBA::Boolean
+TypeCode_union::NP_complete_recursive(TypeCode_base* tc, const char* repoId)
+{
+  if (!pd_complete) {
+    pd_complete = 1;
+
+    const CORBA::ULong memberCount = pd_members.length();
+    for( CORBA::ULong i = 0; i < memberCount; i++ )
+      pd_complete = pd_complete &&
+	ToTcBase(pd_members[i].atype)->NP_complete_recursive(tc, repoId);
+  }
   return pd_complete;
 }
 
@@ -3698,6 +3847,196 @@ TypeCode_union::removeOptionalNames()
 }
 
 //////////////////////////////////////////////////////////////////////
+//////////////////////// TypeCode_indirect ///////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+TypeCode_indirect::TypeCode_indirect(const char* repoId)
+  : TypeCode_base(CORBA::_np_tk_indirect), pd_repoId(repoId), pd_resolved(0)
+{ }
+
+TypeCode_indirect::~TypeCode_indirect()
+{
+  if (pd_resolved) TypeCode_collector::releaseRef(pd_resolved);
+}
+
+void
+TypeCode_indirect::NP_marshalSimpleParams(cdrStream& s,
+					   TypeCode_offsetTable* tbl) const
+{
+  OMNIORB_ASSERT(pd_resolved);
+  pd_resolved->NP_marshalSimpleParams(s, tbl);
+}
+
+void
+TypeCode_indirect::NP_marshalComplexParams(cdrStream& s,
+					    TypeCode_offsetTable* tbl) const
+{
+  OMNIORB_ASSERT(pd_resolved);
+  pd_resolved->NP_marshalComplexParams(s, tbl);
+}
+
+CORBA::Boolean
+TypeCode_indirect::NP_complete_recursive_sequences(TypeCode_base* tc,
+						    CORBA::ULong offset)
+{
+  return 0;
+}
+
+CORBA::Boolean
+TypeCode_indirect::NP_complete_recursive(TypeCode_base* tc,
+					  const char* repoId)
+{
+  if (!pd_complete) {
+    if (omni::strMatch(repoId, pd_repoId)) {
+      OMNIORB_ASSERT(!pd_resolved);
+      pd_complete = 1;
+      pd_resolved = TypeCode_collector::duplicateRef(tc);
+      return 1;
+    }
+  }
+  return 0;
+}
+
+#define CHECK_RESOLVED do { \
+  if (!pd_resolved) \
+    OMNIORB_THROW(BAD_TYPECODE, \
+                  BAD_TYPECODE_UnresolvedRecursiveTC, \
+		  CORBA::COMPLETED_NO); \
+} while(0)
+
+CORBA::Boolean
+TypeCode_indirect::NP_extendedEqual(const TypeCode_base* TCp,
+				     CORBA::Boolean equivalent,
+				     const TypeCode_pairlist* pl) const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_extendedEqual(TCp, equivalent, pl);
+}
+
+const char*
+TypeCode_indirect::NP_id() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_id();
+}
+
+const char*
+TypeCode_indirect::NP_name() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_name();
+}
+
+CORBA::ULong
+TypeCode_indirect::NP_member_count() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_member_count();
+}
+
+const char*
+TypeCode_indirect::NP_member_name(CORBA::ULong index) const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_member_name(index);
+}
+
+TypeCode_base*
+TypeCode_indirect::NP_member_type(CORBA::ULong index) const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_member_type(index);
+}
+
+CORBA::Any*
+TypeCode_indirect::NP_member_label(CORBA::ULong index) const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_member_label(index);
+}
+
+TypeCode_base*
+TypeCode_indirect::NP_discriminator_type() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_discriminator_type();
+}
+
+CORBA::Long
+TypeCode_indirect::NP_default_index() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_default_index();
+}
+
+CORBA::ULong
+TypeCode_indirect::NP_length() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_length();
+}
+
+TypeCode_base*
+TypeCode_indirect::NP_content_type() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_content_type();
+}
+
+CORBA::UShort
+TypeCode_indirect::NP_fixed_digits() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_fixed_digits();
+}
+
+CORBA::Short
+TypeCode_indirect::NP_fixed_scale() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_fixed_scale();
+}
+
+CORBA::Long
+TypeCode_indirect::NP_param_count() const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_param_count();
+}
+
+CORBA::Any*
+TypeCode_indirect::NP_parameter(CORBA::Long p) const
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_parameter(p);
+}
+
+CORBA::Boolean
+TypeCode_indirect::NP_containsAnAlias()
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_containsAnAlias();
+}
+
+TypeCode_base*
+TypeCode_indirect::NP_aliasExpand(TypeCode_pairlist* pl)
+{
+  CHECK_RESOLVED;
+  return pd_resolved->NP_aliasExpand(pl);
+}
+
+void
+TypeCode_indirect::removeOptionalNames()
+{
+  CHECK_RESOLVED;
+  return pd_resolved->removeOptionalNames();
+}
+
+
+#undef CHECK_RESOLVED
+
+
+//////////////////////////////////////////////////////////////////////
 //////////////////////// TypeCode_offsetTable ////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -3868,12 +4207,23 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
 			     cdrStream& s,
 			     TypeCode_offsetTable* otbl)
 {
+  CORBA::ULong tck = tc->NP_kind();
+
+  // Follow any TypeCode_indirect objects created by
+  // ORB::create_recursive_tc().
+  while (tck == 0xffffffff)
+    {
+      tc = ((TypeCode_indirect*)tc)->NP_resolved();
+      tck = tc->NP_kind();
+    }
+
   // If this _exact_ typecode has already been marshalled into the stream
   // then just put in an indirection
   CORBA::Long tc_offset;
-  if( orbParameters::useTypeCodeIndirections && otbl->lookupTypeCode(tc, tc_offset) )
+  if( orbParameters::useTypeCodeIndirections &&
+      otbl->lookupTypeCode(tc, tc_offset) )
     {
-      // The desired typecode was found, so write out an indirection!
+      // The desired typecode was found, so write out an indirection
       CORBA::ULong tck_indirect = 0xffffffff;
       tck_indirect >>= s;
 
@@ -3883,8 +4233,7 @@ TypeCode_marshaller::marshal(TypeCode_base* tc,
     }
   else
     {
-      // Now write out the Kind
-      CORBA::ULong tck = tc->NP_kind();
+      // Write out the Kind
       tck >>= s;
 
       // Set the current offset of the offset table
@@ -5066,6 +5415,71 @@ CORBA::TypeCode_member::operator<<=(cdrStream& s)
 ///////////////////////////// CORBA::ORB /////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
+static inline int validFirstChar(char c)
+{
+  return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
+}
+
+static inline int validOtherChar(char c)
+{
+  return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+	  (c >= '0' && c <= '9') || (c == '_'));
+}
+
+static void
+checkValidName(const char* name)
+{
+  int ok = 1;
+
+  if (*name) {
+    if (!validFirstChar(*name++)) ok = 0;
+
+    for(; ok && *name; name++) {
+      if (!validOtherChar(*name)) ok = 0;
+    }
+  }
+  if (!ok)
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InvalidName,CORBA::COMPLETED_NO);
+}
+
+static void
+checkValidMemberName(const char* name)
+{
+  int ok = 1;
+
+  if (*name) {
+    if (!validFirstChar(*name++)) ok = 0;
+
+    for(; ok && *name; name++) {
+      if (!validOtherChar(*name)) ok = 0;
+    }
+  }
+  if (!ok)
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InvalidMemberName,CORBA::COMPLETED_NO);
+}
+
+static void
+checkValidRepoId(const char* id)
+{
+  if (*id) {
+    for (; *id && *id != ':'; id++);
+    if (!*id)
+      OMNIORB_THROW(BAD_PARAM,
+		    BAD_PARAM_InvalidRepositoryId,
+		    CORBA::COMPLETED_NO);
+  }
+}
+
+static void
+checkValidTypeCode(const CORBA::TypeCode_ptr tc)
+{
+  CORBA::TCKind k = tc->kind();
+  if (k == CORBA::tk_null || k == CORBA::tk_void || k == CORBA::tk_except)
+    OMNIORB_THROW(BAD_TYPECODE,
+		  BAD_TYPECODE_IllegitimateMember,
+		  CORBA::COMPLETED_NO);
+}
+
 CORBA::TypeCode_ptr
 CORBA::ORB::create_struct_tc(const char* id, const char* name,
 			     const CORBA::StructMemberSeq& members)
@@ -5073,9 +5487,15 @@ CORBA::ORB::create_struct_tc(const char* id, const char* name,
   CORBA::ULong memberCount = members.length();
   CORBA::ULong i;
 
+  checkValidName(name);
+  checkValidRepoId(id);
+
   for( i = 0; i < memberCount; i++ ) {
     if (!CORBA::TypeCode::PR_is_valid(members[i].type))
       OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidTypeCode, CORBA::COMPLETED_NO);
+
+    checkValidMemberName(members[i].name);
+    checkValidTypeCode(members[i].type);
   }
 
   TypeCode_struct::Member* new_members =
@@ -5101,10 +5521,17 @@ CORBA::ORB::create_union_tc(const char* id, const char* name,
   const CORBA::ULong memberCount = members.length();
   CORBA::ULong i;
 
-  for( i = 0; i < memberCount; i++ )
+  checkValidName(name);
+  checkValidRepoId(id);
+
+  for( i = 0; i < memberCount; i++ ) {
     if( !CORBA::TypeCode::PR_is_valid(members[i].type) ||
 	CORBA::is_nil(members[i].type) )
       OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidTypeCode, CORBA::COMPLETED_NO);
+
+    checkValidMemberName(members[i].name);
+    checkValidTypeCode(members[i].type);
+  }
 
   return new TypeCode_union(id, name, ToTcBase_Checked(discriminator_type),
 			    members);
@@ -5114,6 +5541,12 @@ CORBA::TypeCode_ptr
 CORBA::ORB::create_enum_tc(const char* id, const char* name,
 			   const CORBA::EnumMemberSeq& members)
 {
+  checkValidName(name);
+  checkValidRepoId(id);
+
+  for (CORBA::ULong i=0; i < members.length(); i++)
+    checkValidMemberName(members[i]);
+
   return CORBA::TypeCode::NP_enum_tc(id, name, members);
 }
 
@@ -5121,6 +5554,8 @@ CORBA::TypeCode_ptr
 CORBA::ORB::create_alias_tc(const char* id, const char* name,
 			    CORBA::TypeCode_ptr original_type)
 {
+  checkValidName(name);
+  checkValidRepoId(id);
   return CORBA::TypeCode::NP_alias_tc(id, name, original_type);
 }
 
@@ -5129,10 +5564,23 @@ CORBA::ORB::create_exception_tc(const char* id, const char* name,
 				const CORBA::StructMemberSeq& members)
 {
   CORBA::ULong memberCount = members.length();
+  CORBA::ULong i;
+
+  checkValidName(name);
+  checkValidRepoId(id);
+
+  for( i = 0; i < memberCount; i++ ) {
+    if (!CORBA::TypeCode::PR_is_valid(members[i].type))
+      OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidTypeCode, CORBA::COMPLETED_NO);
+
+    checkValidMemberName(members[i].name);
+    checkValidTypeCode(members[i].type);
+  }
+
   TypeCode_struct::Member* new_members =
     new TypeCode_struct::Member[memberCount];
 
-  for( ULong i = 0; i < memberCount; i++ ) {
+  for( i = 0; i < memberCount; i++ ) {
     // We duplicate the name and the type.
     new_members[i].name = CORBA::string_dup(members[i].name);
     new_members[i].type =
@@ -5146,6 +5594,8 @@ CORBA::ORB::create_exception_tc(const char* id, const char* name,
 CORBA::TypeCode_ptr
 CORBA::ORB::create_interface_tc(const char* id, const char* name)
 {
+  checkValidName(name);
+  checkValidRepoId(id);
   return CORBA::TypeCode::NP_interface_tc(id, name);
 }
 
@@ -5174,6 +5624,8 @@ CORBA::ORB::create_sequence_tc(CORBA::ULong bound,
   if (!CORBA::TypeCode::PR_is_valid(element_type))
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidTypeCode, CORBA::COMPLETED_NO);
 
+  checkValidTypeCode(element_type);
+
   return CORBA::TypeCode::NP_sequence_tc(bound, element_type);
 }
 
@@ -5184,6 +5636,8 @@ CORBA::ORB::create_array_tc(CORBA::ULong length,
   if (!CORBA::TypeCode::PR_is_valid(element_type))
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidTypeCode, CORBA::COMPLETED_NO);
 
+  checkValidTypeCode(element_type);
+
   return CORBA::TypeCode::NP_array_tc(length, element_type);
 }
 
@@ -5193,6 +5647,14 @@ CORBA::ORB::create_recursive_sequence_tc(CORBA::ULong bound,
 {
   return CORBA::TypeCode::NP_recursive_sequence_tc(bound, offset);
 }
+
+CORBA::TypeCode_ptr
+CORBA::ORB::create_recursive_tc(const char* id)
+{
+  checkValidRepoId(id);
+  return CORBA::TypeCode::NP_recursive_tc(id);
+}
+
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////////// TypeCode constants /////////////////////////

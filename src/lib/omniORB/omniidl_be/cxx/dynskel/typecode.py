@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.16.2.7  2001/10/29 17:42:39  dpg1
+# Support forward-declared structs/unions, ORB::create_recursive_tc().
+#
 # Revision 1.16.2.6  2001/06/08 17:12:16  dpg1
 # Merge all the bug fixes from omni3_develop.
 #
@@ -178,6 +181,17 @@ def alreadyDefined(mangledname):
 def defineName(mangledname):
     self.__defined_names[mangledname] = 1
 
+def forwardUsed(node):
+    sname = idlutil.slashName(node.scopedName())
+    self.__forwards_pending[sname] = 1
+
+def resolveForward(node):
+    sname = idlutil.slashName(node.scopedName())
+    if self.__forwards_pending.has_key(sname):
+        del self.__forwards_pending[sname]
+        return 1
+    return 0
+
 # mangleName("_0RL_tc", ["CORBA", "Object"]) -> "_ORL_tc_CORBA_Object"
 def mangleName(prefix, scopedName):
     mangled = prefix + id.Name(scopedName).guard()
@@ -191,11 +205,14 @@ self.__currentNodes = []
 
 def startingNode(node):
     self.__currentNodes.append(node)
+
 def finishingNode():
     assert(self.__currentNodes != [])
     self.__currentNodes = self.__currentNodes[:-1]
+
 def currently_being_defined(node):
     return node in self.__currentNodes
+
 def recursive_Depth(node):
     return len(self.__currentNodes) - self.__currentNodes.index(node)
 
@@ -207,10 +224,14 @@ def __init__(stream):
     self.bottomhalf = stream
     self.__immediatelyInsideModule = 0
 
-    # Hashtable with keys representing names defined. If two structures both
+    # Dictionary with keys representing names defined. If two structures both
     # have a member of type foo, we should still only define the TypeCode for
     # foo once.
     self.__defined_names = {}
+
+    # Dictionary of forward-declared structs/unions that have been
+    # used in sequence TypeCodes, but not yet defined.
+    self.__forwards_pending = {}
 
     # Normally when walking over the tree we only consider things
     # defined in the current file. However if we encounter a
@@ -327,13 +348,28 @@ def mkTypeCode(type, declarator = None, node = None):
         seqType = type.seqType()
         if isinstance(seqType, idltype.Declared):
             decl = seqType.decl()
-            if hasattr(decl, "recursive"):
-                # ONLY use a recursive typecode if we're actually defining
-                # it. Otherwise a normal reference will do...
-                if decl.recursive() and currently_being_defined(decl):
-                    depth = recursive_Depth(decl)
-                    return prefix + "recursive_sequence_tc(" +\
-                           str(type.bound()) + ", " + str(depth) + ")"
+            if isinstance(decl, idlast.StructForward) or \
+               isinstance(decl, idlast.UnionForward) :
+
+                forwardUsed(decl)
+                scopedName = decl.scopedName()
+                mangled_name = mangleName(config.state['Private Prefix'] +\
+                                          "_fs_", scopedName)
+                if not alreadyDefined(mangled_name):
+                    defineName(mangled_name)
+                    tophalf.out("""\
+static CORBA::TypeCode_ptr @name@ = @prefix@forward_sequence_tc(@bound@);
+""",
+                                name=mangled_name, prefix=prefix,
+                                bound=type.bound())
+                return mangled_name
+
+            elif hasattr(decl, "recursive") and decl.recursive() and \
+                 currently_being_defined(decl):
+
+                depth = recursive_Depth(decl)
+                return prefix + "recursive_sequence_tc(" +\
+                       str(type.bound()) + ", " + str(depth) + ")"
             
         startingNode(type)
         ret = prefix + "sequence_tc(" + str(type.bound()) + ", " +\
@@ -354,8 +390,7 @@ def mkTypeCode(type, declarator = None, node = None):
         
         repoID = type.decl().repoId()
         iname = scopedName.simple()
-        return prefix + "interface_tc(\"" + repoID + "\", " +\
-                   "\"" + iname + "\")"
+        return prefix + 'interface_tc("' + repoID + '", "' + iname + '")'
 
     guard_name = id.Name(type.scopedName()).guard()
 
@@ -500,6 +535,15 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_struct_tc("@repo
                     name = struct_name, n = str(num),
                     repoID = repoID)   
 
+        if resolveForward(node):
+            fwname  = mangleName(config.state['Private Prefix'] +\
+                                 "_fs_", scopedName)
+            resname = mangleName(config.state['Private Prefix'] +\
+                                 "_rf_", scopedName)
+            tophalf.out("""\
+static int @resname@ = @fwname@->PR_resolve_forward(@mangled_name@);""",
+                        fwname=fwname, resname=resname,
+                        mangled_name=mangled_name)
 
     self.__immediatelyInsideModule = insideModule
 
@@ -510,7 +554,8 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_struct_tc("@repo
     finishingNode()
     return
 
-    
+def visitStructForward(node):
+    pass
 
 def visitUnion(node):
     scopedName = node.scopedName()
@@ -605,6 +650,17 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_union_tc("@repoI
     
     defineName(unionmember_mangled_name)
     defineName(mangled_name)
+
+    if resolveForward(node):
+        fwname  = mangleName(config.state['Private Prefix'] +\
+                             "_fs_", scopedName)
+        resname = mangleName(config.state['Private Prefix'] +\
+                             "_rf_", scopedName)
+        tophalf.out("""\
+static int @resname@ = @fwname@->PR_resolve_forward(@mangled_name@);""",
+                    fwname=fwname, resname=resname,
+                    mangled_name=mangled_name)
+
     
     self.__immediatelyInsideModule = insideModule
 
@@ -615,6 +671,9 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_union_tc("@repoI
     self.bottomhalf = oldbottomhalf
 
     finishingNode()
+
+def visitUnionForward(node):
+    pass
 
 def visitEnum(node):
     scopedName = node.scopedName()
@@ -727,7 +786,7 @@ def visitDeclarator(declarator):
     
     repoID = declarator.repoId()
     typecode = mkTypeCode(aliasType, declarator)
-        
+
     scopedName = declarator.scopedName()
     typedef_name = id.Name(scopedName).simple()
     
@@ -751,7 +810,6 @@ def visitTypedef(node):
 
     recurse(aliasType)
 
-    
     for declarator in node.declarators():
         declarator.accept(self)
 

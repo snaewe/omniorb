@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/10/29 17:42:35  dpg1
+  Support forward-declared structs/unions, ORB::create_recursive_tc().
+
   Revision 1.1.2.3  2001/10/17 16:44:00  dpg1
   Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -234,10 +237,8 @@ public:
   TypeCode_ptr create_array_tc(ULong length, TypeCode_ptr etype);
   TypeCode_ptr create_recursive_sequence_tc(ULong bound, ULong offset);
   // deprecated
-#if 0
-  // Not supported yet
+
   TypeCode_ptr create_recursive_tc(const char* id);
-#endif
 
   Policy_ptr create_policy(PolicyType,const Any&);
     

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.16  2001/10/29 17:42:42  dpg1
+# Support forward-declared structs/unions, ORB::create_recursive_tc().
+#
 # Revision 1.3.2.15  2001/10/18 12:45:29  dpg1
 # IDL compiler tweaks.
 #
@@ -696,3 +699,142 @@ void
 }
 """
 
+##
+## Sequence of forward declared struct/union
+##
+
+sequence_forward_unbounded_defns = """\
+@fqname@::@name@(const ::@fqname@& _s)
+  : @derived@(_s.pd_max, 0, 0, 1)
+{
+  length(_s.pd_len);
+  for (_CORBA_ULong _i=0; _i < pd_len; _i++) {
+    pd_buf[_i] = _s.pd_buf[_i];
+  }
+}
+
+void
+@fqname@::operator<<= (cdrStream& _s)
+{
+  _CORBA_ULong _l;
+  _l <<= _s;
+  if (!_s.checkInputOverrun(1,_l)) {
+    _CORBA_marshal_sequence_range_check_error(_s);
+    // never reach here
+  }
+  length(_l);
+  for( _CORBA_ULong _i = 0; _i < _l; _i++ )
+    pd_buf[_i] <<= _s;
+}
+"""
+
+sequence_forward_bounded_defns = """\
+@fqname@::@name@(const ::@fqname@& _s)
+  : @derived@(0,0,1)
+{
+  length(_s.pd_len);
+  for (_CORBA_ULong _i=0; _i < pd_len; _i++) {
+    pd_buf[_i] = _s.pd_buf[_i];
+  }
+}
+
+void
+@fqname@::operator<<= (cdrStream& _s)
+{
+  _CORBA_ULong _l;
+  _l <<= _s;
+  if (!_s.checkInputOverrun(1,_l) || (_l > @bound@)) {
+    _CORBA_marshal_sequence_range_check_error(_s);
+    // never reach here
+  }
+  length(_l);
+  for( _CORBA_ULong _i = 0; _i < _l; _i++ )
+    pd_buf[_i] <<= _s;
+}
+"""
+
+sequence_forward_defns = """\
+void
+@fqname@::operator>>= (cdrStream& _s) const
+{
+  ::operator>>=(_CORBA_ULong(pd_len), _s);
+  for( _CORBA_ULong _i = 0; _i < pd_len; _i++ )
+    pd_buf[_i] >>= _s;
+}
+
+@fqname@&
+@fqname@::operator=(const ::@fqname@& _s)
+{
+  length(_s.pd_len);
+  for (unsigned long _i=0; _i < pd_len; _i++) {
+    pd_buf[_i] = _s.pd_buf[_i];
+  }
+  return *this;
+}
+
+@element@&
+@fqname@::operator[](_CORBA_ULong _index)
+{
+  if (_index >= pd_len) _CORBA_bound_check_error();
+  return pd_buf[_index];
+}
+
+const @element@&
+@fqname@::operator[](_CORBA_ULong _index) const
+{
+  if (_index >= pd_len) _CORBA_bound_check_error();
+  return pd_buf[_index];
+}
+
+@element@*
+@fqname@::allocbuf(_CORBA_ULong _nelems)
+{
+  ::@element@* _tmp = 0;
+  if (_nelems) {
+    _tmp = new ::@element@[_nelems];
+  }
+  return _tmp;
+}
+
+void
+@fqname@::freebuf(::@element@* _b)
+{
+  if (_b) delete [] _b;
+}
+
+void
+@fqname@::NP_freebuf()
+{
+  if (pd_buf) delete [] pd_buf;
+}
+
+@fqname@::~@name@()
+{
+  if (pd_rel && pd_buf) delete [] pd_buf;
+  pd_buf = 0;
+}
+
+void
+@fqname@::NP_copybuffer(_CORBA_ULong _newmax)
+{
+  // replace pd_data with a new buffer of size newmax.
+  // Invariant:  pd_len <= newmax
+  //
+  ::@element@* _newbuf = allocbuf(_newmax);
+  if (!_newbuf) {
+    _CORBA_new_operator_return_null();
+    // never reach here
+  }
+  for (unsigned long _i=0; _i < pd_len; _i++) {
+    _newbuf[_i] = pd_buf[_i];
+  }
+  if (pd_rel && pd_buf) {
+    freebuf(pd_buf);
+  }
+  else {
+    pd_rel = 1;
+  }
+  pd_buf = _newbuf;
+  pd_max = _newmax;
+}
+"""

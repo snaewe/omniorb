@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.14  2001/10/29 17:42:39  dpg1
+# Support forward-declared structs/unions, ORB::create_recursive_tc().
+#
 # Revision 1.33.2.13  2001/10/18 12:45:28  dpg1
 # IDL compiler tweaks.
 #
@@ -273,20 +276,21 @@ self = defs
 
 def __init__(stream):
     defs.stream = stream
-    # Need to keep track of how deep within the AST we are
-    # in a recursive procedure these would be extra arguments,
+    # Need to keep track of how deep within the AST we are.
+    # In a recursive procedure these would be extra arguments,
     # but the visitor pattern necessitates them being global.
     self.__insideInterface = 0
-    self.__insideModule = 0
-    self.__insideClass = 0
-    # An entry in this hash indicates that an interface has
-    # been declared- therefore any more AST forward nodes for
-    # this interface are ignored.
+    self.__insideModule    = 0
+    self.__insideClass     = 0
+
+    # A repository id entry in this hash indicates that an interface
+    # has been declared- therefore any more AST forward nodes for this
+    # interface are ignored.
     self.__interfaces = {}
 
-    # When we first encounter a module, we deal with all the
-    # continuations straight away. Therefore when we reencounter
-    # a continuation later, we don't duplicate the definitions.
+    # When we first encounter a module, we sometimes deal with all the
+    # continuations straight away. Therefore when we reencounter a
+    # continuation later, we don't duplicate the definitions.
     self.__completedModules = {}
 
     return defs
@@ -306,6 +310,10 @@ def const_qualifier(insideModule, insideClass):
 # Control arrives here
 #
 def visitAST(node):
+    self.__insideInterface  = 0
+    self.__insideModule     = 0
+    self.__insideClass      = 0
+    self.__interfaces       = {}
     self.__completedModules = {}
     for n in node.declarations():
         if ast.shouldGenerateCodeForDecl(n):
@@ -352,7 +360,7 @@ def visitModule(node):
 def visitInterface(node):
     # It's legal to have a forward interface declaration after
     # the actual interface definition. Make sure we ignore these.
-    self.__interfaces[node] = 1
+    self.__interfaces[node.repoId()] = 1
 
     name = node.identifier()
     cxx_name = id.mapID(name)
@@ -418,10 +426,10 @@ def visitInterface(node):
 def visitForward(node):
     # Note it's legal to have multiple forward declarations
     # of the same name. So ignore the duplicates.
-    if self.__interfaces.has_key(node):
+    if self.__interfaces.has_key(node.repoId()):
         return
-    self.__interfaces[node] = 1
-    
+    self.__interfaces[node.repoId()] = 1
+
     environment = id.lookup(node)
     scope = environment.scope()
     cxx_id = id.mapID(node.identifier())
@@ -574,10 +582,12 @@ def visitTypedef(node):
                 stream.out(template.typedef_simple_basic,
                            base = basicReferencedTypeID,
                            derived = derivedName)
+
             # a typedef to a struct or union, or a typedef to a
             # typedef to a sequence
-            elif d_type.struct() or d_type.union() or (d_type.sequence() and \
-                 aliasType.typedef()):
+            elif d_type.struct() or d_type.structforward() or \
+                 d_type.union() or d_type.unionforward() or \
+                 (d_type.sequence() and aliasType.typedef()):
                 
                 stream.out(template.typedef_simple_constructed,
                            base = basicReferencedTypeID,
@@ -618,12 +628,12 @@ def visitTypedef(node):
                     stream.out(sk_base)
                                
                     
-            # Non-array of user declared types
-            elif d_type.kind() in [ idltype.tk_struct, idltype.tk_union,
-                                    idltype.tk_except, idltype.tk_enum ]:
+            # Non-array of enum
+            elif d_type.enum():
                 stream.out(template.typedef_simple_basic,
                            base = basicReferencedTypeID,
                            derived = derivedName)
+
             # Non-array of sequence
             elif d_type.sequence():
                 seqType = types.Type(d_type.type().seqType())
@@ -633,82 +643,112 @@ def visitTypedef(node):
                 seq_dims = seqType.dims()
 
                 templateName = d_type.sequenceTemplate(environment)
+                
+                if d_seqType.structforward() or d_seqType.unionforward():
+                    # Sequence of forward-declared struct or union.
+                    # We cannot use the normal sequence templates
+                    # since they have inline methods that require the
+                    # full definition of the member type. We use
+                    # templates with abstract virtual functions
+                    # instead.
 
-                if d_seqType.string():
-                    element = "_CORBA_String_element"
-                    element_IN = "char *"
-                elif d_seqType.wstring():
-                    element = "_CORBA_WString_element"
-                    element_IN = "CORBA::WChar *"
-                elif d_seqType.objref():
-                    element = seqType.base(environment)
-                    element_IN = element
-                # only if an anonymous sequence
-                elif seqType.sequence():
-                    element = d_seqType.sequenceTemplate(environment)
-                    element_IN = element
-                else:
-                    element = seqType.base(environment)
-                    element_IN = element
-                    
-                element_ptr = element_IN
-                if d_seqType.string() and not seqType.array():
-                    element_ptr = "char*"
-                elif d_seqType.wstring() and not seqType.array():
-                    element_ptr = "CORBA::WChar*"
-                elif d_seqType.objref() and not seqType.array():
-                    element_ptr = seqType.base(environment)
-                # only if an anonymous sequence
-                elif seqType.sequence() and not seqType.array():
-                    element_ptr = element
-                elif d_seqType.typecode():
-                    element_ptr = "CORBA::TypeCode_member"
-                    element = element_ptr
-                    element_IN = element_ptr
-                else:
-                    element_ptr = seqType.base(environment)
-                    
-                # enums are a special case
-                # from o2be_sequence.cc:795:
-                # ----
-                # gcc requires that the marshalling operators for the
-                # element be declared before the sequence template is
-                # typedef'd. This is a problem for enums, as the
-                # marshalling operators are not yet defined (and are
-                # not part of the type itself).
-                # ----
-                # Note that the fully dereferenced name is used
-                friend = "friend"
-                if is_global_scope:
-                    friend = ""
-                    
-                if d_seqType.enum() and not seqType.array():
-                    stream.out(template.typedef_enum_oper_friend,
-                               element = d_seqType.base(environment),
-                               friend = friend)
-                        
-                # derivedName is the new type identifier
-                # element is the name of the basic element type
-                # seq_dims contains dimensions if a sequence of arrays
-                # templateName contains the template instantiation
+                    element = element_ptr = d_seqType.base()
 
-                def bounds(bounded = bounded, derivedName = derivedName,
-                           element_ptr = element_ptr,
-                           templateName = templateName):
-                    if bounded:
-                        ctor_template = template.sequence_bounded_ctors
-                    else:
-                        ctor_template = template.sequence_unbounded_ctors
-                    stream.out(ctor_template,
+                    def bounds(bounded = bounded,
+                               derivedName = derivedName,
+                               derived = templateName,
+                               element = element):
+                        if bounded:
+                            ct = template.sequence_bounded_ctors
+                        else:
+                            ct = template.sequence_unbounded_ctors
+                        stream.out(ct, name = derivedName, element=element,
+                                   bound=bounded, derived=derived)
+
+                    stream.out(template.sequence_forward_type,
                                name = derivedName,
-                               element = element_ptr,
-                               derived = templateName)
-                        
-                # output the main sequence definition
-                stream.out(template.sequence_type,
-                           name = derivedName,
-                           derived = templateName,
-                           bounds = bounds)
+                               derived = templateName,
+                               element = element,
+                               bounds = bounds)
+
+                else:
+                    # Normal case using a template class.
+
+                    if d_seqType.string():
+                        element = "_CORBA_String_element"
+                        element_IN = "char *"
+                    elif d_seqType.wstring():
+                        element = "_CORBA_WString_element"
+                        element_IN = "CORBA::WChar *"
+                    elif d_seqType.objref():
+                        element = seqType.base(environment)
+                        element_IN = element
+                    # only if an anonymous sequence
+                    elif seqType.sequence():
+                        element = d_seqType.sequenceTemplate(environment)
+                        element_IN = element
+                    else:
+                        element = seqType.base(environment)
+                        element_IN = element
+
+                    element_ptr = element_IN
+                    if d_seqType.string() and not seqType.array():
+                        element_ptr = "char*"
+                    elif d_seqType.wstring() and not seqType.array():
+                        element_ptr = "CORBA::WChar*"
+                    elif d_seqType.objref() and not seqType.array():
+                        element_ptr = seqType.base(environment)
+                    # only if an anonymous sequence
+                    elif seqType.sequence() and not seqType.array():
+                        element_ptr = element
+                    elif d_seqType.typecode():
+                        element_ptr = "CORBA::TypeCode_member"
+                        element = element_ptr
+                        element_IN = element_ptr
+                    else:
+                        element_ptr = seqType.base(environment)
+
+                    # enums are a special case
+                    # from o2be_sequence.cc:795:
+                    # ----
+                    # gcc requires that the marshalling operators for the
+                    # element be declared before the sequence template is
+                    # typedef'd. This is a problem for enums, as the
+                    # marshalling operators are not yet defined (and are
+                    # not part of the type itself).
+                    # ----
+                    # Note that the fully dereferenced name is used
+                    friend = "friend"
+                    if is_global_scope:
+                        friend = ""
+
+                    if d_seqType.enum() and not seqType.array():
+                        stream.out(template.typedef_enum_oper_friend,
+                                   element = d_seqType.base(environment),
+                                   friend = friend)
+
+                    # derivedName is the new type identifier
+                    # element is the name of the basic element type
+                    # seq_dims contains dimensions if a sequence of arrays
+                    # templateName contains the template instantiation
+
+                    def bounds(bounded = bounded, derivedName = derivedName,
+                               element_ptr = element_ptr,
+                               templateName = templateName):
+                        if bounded:
+                            ctor_template = template.sequence_bounded_ctors
+                        else:
+                            ctor_template = template.sequence_unbounded_ctors
+                        stream.out(ctor_template,
+                                   name = derivedName,
+                                   element = element_ptr,
+                                   derived = templateName)
+
+                    # output the main sequence definition
+                    stream.out(template.sequence_type,
+                               name = derivedName,
+                               derived = templateName,
+                               bounds = bounds)
                 
 
                 # start building the _var and _out types
@@ -902,6 +942,10 @@ def visitStruct(node):
                    qualifier = qualifier,
                    name = cxx_name)
 
+
+def visitStructForward(node):
+    cxx_name = id.mapID(node.identifier())
+    stream.out(template.struct_forward, name = cxx_name)
 
 
 def visitException(node):
@@ -1583,6 +1627,11 @@ def visitUnion(node):
                    name = cxx_id)
 
     return
+
+
+def visitUnionForward(node):
+    cxx_name = id.mapID(node.identifier())
+    stream.out(template.union_forward, name = cxx_name)
 
 
 def visitEnum(node):
