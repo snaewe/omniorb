@@ -13,6 +13,7 @@ LC_OBJS = omniLifeCycle.o reDirect.o omniLifeCycleSK.o omniLifeCycleDynSK.o
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -I. -I./..
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
+DIR_CPPFLAGS += -D_OMNIORB2_LC_LIBRARY
 
 CXXSRCS = $(LC_SRCS)
 
