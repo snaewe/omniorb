@@ -28,9 +28,13 @@
 
 /*
  $Log$
- Revision 1.6  1998/01/21 12:12:17  sll
- New function _CORBA_null_string_ptr.
+ Revision 1.7  1998/03/02 14:05:02  ewc
+ Patch to fix IDL unions containing structs which contain floats or doubles
+ (was broken on OpenVMS).
 
+ * Revision 1.6  1998/01/21  12:12:17  sll
+ * New function _CORBA_null_string_ptr.
+ *
  * Revision 1.5  1998/01/20  16:45:45  sll
  * Added support for OpenVMS.
  *
@@ -75,7 +79,8 @@ typedef unsigned int              _CORBA_ULong;
 
 #if defined(__VMS) && !__IEEE_FLOAT
 
-// VMS does not use IEEE floating point (unless __IEEE_FLOAT is defined)
+// VMS does not use IEEE floating point unless __IEEE_FLOAT is defined
+#define USING_PROXY_FLOAT
 
 #include <cvtdef.h>
 extern "C" unsigned int cvt$convert_float(...);
