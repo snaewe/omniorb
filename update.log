@@ -1,4 +1,12 @@
 
+Thu Feb 17 14:38:09 GMT 2000 djr
+================================
+
+- A couple more fixes for TypeCode_union with alias in discriminator.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
 Tue Feb 15 11:01:09 GMT 2000 djr
 ================================
 
