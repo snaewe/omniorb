@@ -130,6 +130,18 @@ OMNITHREAD_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNITHREAD_VERSION)))
 
 OMNITHREAD_PLATFORM_LIB = $(filter-out $(patsubst %,$(LibSearchPattern),omnithread), $(OMNITHREAD_LIB))
 
+# omniAsyncInvoker
+#
+# 
+OMNIASYNCINVOKER_VERSION = 1.0
+OMNIASYNCINVOKER_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIASYNCINVOKER_VERSION)))
+OMNIASYNCINVOKER_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIASYNCINVOKER_VERSION)))
+
+OMNIASYNCINVOKER_LIB = $(patsubst %,$(LibSearchPattern),omniAsyncInvoker)
+lib_depend := $(patsubst %,$(LibPattern),omniAsyncInvoker)
+OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+
+
 #
 # CORBA stuff
 #
@@ -194,6 +206,11 @@ OMNIORB_LIB += $($(omniORBGatekeeperImplementation)_LIB)
 OMNIORB_LIB_NODYN += $($(omniORBGatekeeperImplementation)_LIB)
 OMNIORB_LIB_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
 OMNIORB_LIB_NODYN_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
+
+OMNIORB_LIB += $(OMNIASYNCINVOKER_LIB)
+OMNIORB_LIB_NODYN += $(OMNIASYNCINVOKER_LIB)
+OMNIORB_LIB_DEPEND += $(OMNIASYNCINVOKER_LIB_DEPEND)
+OMNIORB_LIB_NODYN_DEPEND += $(OMNIASYNCINVOKER_LIB_DEPEND)
 
 # thread libraries required by omniORB. Make sure this is the last in
 # the list of omniORB related libraries

@@ -1,3 +1,18 @@
+Thu Apr 19 10:45:44 BST 2001 sll
+================================
+
+- New library omniAsyncInvoker
+- Exists as an independent library but required by omniORB
+
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/src/lib/dir.mk
+external_merge/src/lib/omniAsyncInvoker/GNUmakefile NEW
+include/omniAsyncInvoker.h                          NEW
+src/lib/dir.mk
+src/lib/omniAsyncInvoker/dir.mk                     NEW
+src/lib/omniAsyncInvoker/invoker.cc                 NEW
+
 Thu Apr 19 10:36:20 BST 2001 sll
 ================================
 

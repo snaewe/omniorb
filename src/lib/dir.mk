@@ -1,4 +1,4 @@
-SUBDIRS = omnithread omniORB
+SUBDIRS = omnithread omniAsyncInvoker omniORB
 
 all::
 	@$(MakeSubdirs)
