@@ -1,3 +1,15 @@
+Mon Aug 21 09:51:23 BST 2000 sll
+================================
+
+- Put back linker flags to record ld load path in executable
+
+mk/platforms/i586_linux_2.0_glic2.1.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/sun4_sosV_5.6.mk
+mk/platforms/sun4_sosV_5.7.mk
+
+
+
 Fri Aug 18 17:33:17 BST 2000 sll
 ================================
 
