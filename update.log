@@ -1,3 +1,147 @@
+Fri Jan  8 10:09:01 GMT 1999 djr
+================================
+
+- Minor fix to omni_mutex::unlock() for mach.
+
+src/lib/omnithread/mach.cc
+
+
+- Added #include <string.h>.
+
+src/tool/omkdepend/def.h
+
+- Changes to ODE to support split of omniORB2 library into two.
+
+mk/beforedir.mk
+mk/afterdir.mk
+mk/unix.mk
+mk/win32.mk
+
+
+Thu Jan  7 15:28:12 GMT 1999 djr
+================================
+
+- Separated the omniORB library into two parts - the core library and
+  the dynamic library (Any, TypeCode, DynAny etc.)
+
+src/lib/omniORB/*
+
+
+- New configuration variable omniORB::diiThrowsSysExceptions
+- New command line options -ORBdiiThrowsSysExceptions
+                           -ORBinConScanPeriod
+                           -ORBoutConScanPeriod
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+include/omniORB2/omniORB.h
+
+
+- Support CORBA::Exception properly.
+
+src/lib/omniORB2/orbcore/exceptn.cc
+
+
+- MemBufferedStream and NetBufferedStream modified to make their
+  interfaces more similar. Improved support for readonly
+  MemBufferedStream.
+   get_char_array() and put_char_array() now take an alignment
+  argument. New methods copy_from(...).
+
+src/lib/omniORB2/orbcore/mbufferedStream.cc
+src/lib/omniORB2/orbcore/nbufferedStream.cc
+src/lib/omniORB2/orbcore/giopClient.cc
+src/lib/omniORB2/orbcore/giopServer.cc
+
+
+- Implemented strcasecmp() and strncasecmp() for those platforms that
+  don't have it.
+
+src/lib/omniORB2/orbcore/libcWrapper.cc
+
+
+- Corrected minor bug in fprintf format.
+
+src/lib/omniORB2/orbcore/logIOstream.cc
+
+
+- New singleton ProxyObjectTableCleaner to release proxy objects from
+  the proxy object table when the program finishes, and help detect
+  memory leaks.
+
+src/lib/omniORB2/orbcore/objectRef.cc
+
+
+- Support for new implementation of stub proxy calls.
+
+src/lib/omniORB2/orbcore/proxyCall.cc
+include/omniORB2/proxyCall.h
+
+
+- New implementation of Any and TypeCode
+
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/anyP.cc
+src/lib/omniORB2/dynamic/anyP.h
+src/lib/omniORB2/dynamic/tcParser.c
+src/lib/omniORB2/dynamic/tcParser.h
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+
+
+- Added support for DII and DSI.
+
+include/omniORB2/CORBA.h
+include/omniORB2/CORBA_basetypes.h
+include/omniORB2/tcDescriptor.h
+src/lib/omniORB2/orbcore/exception.cc
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/contextList.cc
+src/lib/omniORB2/dynamic/deferredRequest.cc
+src/lib/omniORB2/dynamic/deferredRequest.h
+src/lib/omniORB2/dynamic/dynamicImplementation.cc
+src/lib/omniORB2/dynamic/dynamicImplementation.h
+src/lib/omniORB2/dynamic/environment.cc
+src/lib/omniORB2/dynamic/exceptionList.cc
+src/lib/omniORB2/dynamic/namedValue.cc
+src/lib/omniORB2/dynamic/nvList.cc
+src/lib/omniORB2/dynamic/pseudo.h
+src/lib/omniORB2/dynamic/pseudoBase.cc
+src/lib/omniORB2/dynamic/request.cc
+src/lib/omniORB2/dynamic/serverRequest.cc
+src/lib/omniORB2/dynamic/unknownUserExn.cc
+
+
+- Added support for an Interface Respository (not all platforms).
+
+src/lib/omniORB2/dynamic/corbaidldynstub.cc
+src/lib/omniORB2/dynamic/corbaidlstub.cc
+src/lib/omniORB2/dynamic/ir.cc
+src/lib/omniORB2/dynamic/irdynstub.cc
+src/lib/omniORB2/dynamic/irstub.cc
+
+
+- Support for the server side _interface operation.
+
+src/lib/omniORB2/orbcore/object.cc
+
+
+- New implementation of DynAny (using new version of Any and TypeCode).
+
+src/lib/omniORB2/dynamic/dynAny.cc
+src/lib/omniORB2/dynamic/dynAnyNil.cc
+src/lib/omniORB2/dynamic/dynAny.h
+
+
+- Clarified instructions for compiling stubs into DLLs with MSVC.
+
+include/omniORB2/CORBA_sysdef.h
+include/omniORB2/CORBA.h
+include/omniORB2/IIOP.h
+include/omniORB2/IOP.h
+include/omniORB2/giopDriver.h
+include/omniORB2/proxyFactory.h
+
+
 Thu Jan  7 09:52:19 GMT 1999 djr
 ================================
 
