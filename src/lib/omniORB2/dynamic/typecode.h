@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.2  1999/01/18 13:56:20  djr
+ * Fixed bug in TypeCode_union.
+ *
  * Revision 1.1  1999/01/07 17:12:37  djr
  * Initial revision
  *
@@ -373,7 +376,7 @@ private:
 class TypeCode_objref : public TypeCode_base {
 public:
 
-  TypeCode_objref(const char *repositoryId, const char *name);
+  TypeCode_objref(const char* repositoryId, const char* name);
 
   virtual ~TypeCode_objref();
 
@@ -386,12 +389,12 @@ public:
 
   virtual TypeCode_paramListType NP_paramListType() const;
   virtual size_t NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable *otbl) const;
+					    TypeCode_offsetTable* otbl) const;
 
   // OMG Interface:
-  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base * TCp,
+  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
 					  CORBA::Boolean langEquiv,
-					  const TypeCode_pairlist *tcpl) const;
+					  const TypeCode_pairlist* tcpl) const;
 
   virtual const char* NP_id() const;
   virtual const char* NP_name() const;
@@ -749,24 +752,24 @@ public:
   virtual ~TypeCode_union();
 
   // omniORB2 marshalling routines specific to complex types
-  virtual void NP_marshalComplexParams(MemBufferedStream &,
-				       TypeCode_offsetTable *) const;
+  virtual void NP_marshalComplexParams(MemBufferedStream&,
+				       TypeCode_offsetTable*) const;
 
-  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream &s,
-						  TypeCode_offsetTable *);
+  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream& s,
+						  TypeCode_offsetTable*);
 
   // omniORB2 recursive typecode handling
-  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base * tc,
+  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base* tc,
 							 CORBA::ULong offset);
 
   // omniORB2 parameter list handling
   virtual size_t NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable *otbl) const;
+					    TypeCode_offsetTable* otbl) const;
 
   // OMG Interface:
-  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base * TCp,
+  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
 					  CORBA::Boolean langEquiv,
-					  const TypeCode_pairlist *tcpl) const;
+					  const TypeCode_pairlist* tcpl) const;
 
   virtual const char*    NP_id() const;
   virtual const char*    NP_name() const;
@@ -800,7 +803,7 @@ private:
 
   struct TcUnionMember {
     CORBA::String_member   aname;
-    Discriminator          alabel;
+    Discriminator          alabel;  // undefined if default member
     CORBA::TypeCode_member atype;
   };
   typedef _CORBA_Pseudo_Unbounded_Sequence<TcUnionMember> TcUnionMemberSeq;
@@ -819,8 +822,10 @@ private:
 
   TcUnionMemberSeq pd_members;
 
-  CORBA::Boolean pd_have_calculated_implicit_default;
-  Discriminator  pd_implicit_default;
+  // This is a value which may be used as an explicit or implicit
+  // default value for the union.
+  CORBA::Boolean pd_have_calculated_default_value;
+  Discriminator  pd_default_value;
 };
 
 //////////////////////////////////////////////////////////////////////
