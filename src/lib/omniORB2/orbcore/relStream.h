@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.6.1  1999/09/15 20:25:43  sll
+ Make sure that receive never receive more than max_receive_buffer_size().
+
  Revision 1.2  1999/03/11 16:25:55  djr
  Updated copyright notice
 
@@ -52,7 +55,7 @@ class reliableStreamStrand : public Strand {
 
 public:
 
-  reliableStreamStrand(size_t buffer_size, Rope* r, CORBA::Boolean h);
+  reliableStreamStrand(size_t buffer_size, Rope* r);
   virtual ~reliableStreamStrand();
 
   size_t MaxMTU() const;
