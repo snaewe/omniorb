@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.24  1999/04/01 15:52:23  djr
+  Updated version number to 2.8.
+  Move an _LC_attr to the correct position in a declaration.
+
   Revision 1.23  1999/01/07 18:36:13  djr
   Changes to support split of omniORB library in two.
 
@@ -129,7 +133,7 @@ class omniObjectManager;
 //   the variable name stays the same with compatible shared library, e.g.
 //   2.5.1.
 //
-extern const char* _LC_attr omniORB_2_7;
+extern _LC_attr const char* omniORB_2_8;
 
 
 #include <omniORB2/rope.h>
