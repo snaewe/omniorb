@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.10  1999/07/02 19:13:57  sll
+  typedef of a typedef of a primitive type now translate to a C++ typedef
+  typedef.
+
   Revision 1.9  1999/03/11 16:26:07  djr
   Updated copyright notice
 
@@ -210,11 +214,12 @@ o2be_predefined_type(AST_PredefinedType::PredefinedType t,
 void
 o2be_predefined_type::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 {
+  char* tname = o2be_name::narrow_and_produce_fqname(tdef->base_type());
   switch(pt())
     {
     case AST_PredefinedType::PT_any:
-      IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
-      IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname()
+      IND(s); s << "typedef " << tname << " " << tdef->uqname() << ";\n";
+      IND(s); s << "typedef " << tname << "_var " << tdef->uqname()
 		<< "_var;\n";
       break;
 
@@ -226,7 +231,7 @@ o2be_predefined_type::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
       break;
 	
     default:
-      IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
+      IND(s); s << "typedef " << tname << " " << tdef->uqname() << ";\n";
       break;
     }
 }
