@@ -1,3 +1,13 @@
+
+Wed Sep 13 14:55:26 BST 2000 djr
+================================
+
+- Gotten rid of message that gives repo id in ~omniServant.  It
+  will always be blank 'cos the object is being destroyed.
+
+src/lib/omniORB2/orbcore/omniServant.cc
+
+
 Wed Sep 13 12:37:42 BST 2000 dpg1
 =================================
 
