@@ -60,14 +60,16 @@ if binarchdir != "":
 
 try:
     import _omniidl
-except ImportError:
+except ImportError, msg:
     sys.stderr.write("\n\n")
     sys.stderr.write("omniidl: ERROR!\n\n")
     sys.stderr.write("omniidl: Could not find IDL compiler module " \
                      "_omniidlmodule.so\n")
-    sys.stderr.write("omniidl: Please put it in directory " + \
-                     (archlibdir or binarchdir) + "\n")
+    sys.stderr.write("omniidl: Please make sure it is in directory")
+    sys.stderr.write((archlibdir or binarchdir) + "\n")
     sys.stderr.write("omniidl: (or set the PYTHONPATH environment variable)\n")
+    sys.stderr.write("\n")
+    sys.stderr.write("omniidl: (The error was `" + str(msg) + "')\n")
     sys.stderr.write("\n\n")
     sys.stderr.flush()
     sys.exit(1)
