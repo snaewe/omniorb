@@ -446,7 +446,7 @@ public:
 	// plus the given relative offset.
 
 
-    static void stacksize(unsigned long sz=0);
+    static void stacksize(unsigned long sz);
     static unsigned long stacksize();
         // Use this value as the stack size when spawning a new thread.
         // The default value (0) means that the thread library default is
