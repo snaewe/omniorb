@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <iostream.h>
 #include <strstream.h>
 
 #include "omniParTcl.h"
