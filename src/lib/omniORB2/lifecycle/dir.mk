@@ -171,22 +171,6 @@ ifndef OMNIORB2_IDL_FPATH
 OMNIORB2_IDL_FPATH = $(OMNIORB2_IDL)
 endif
 
-ifndef BuildWin32DebugLibraries
-
-omniLifeCycleSK.cc: ../omniLifeCycleSK.cc
-	$(CP) $< $@
-
-omniLifeCycleDynSK.cc: ../omniLifeCycleDynSK.cc
-	$(CP) $< $@
-
-endif
-
-clean::
-	@$(MakeSubdirs)
-
-clean::
-	$(RM) $(lclib) omniLifeCycleSK.cc omniLifeCycleDynSK.cc
-
 export:: $(lclib)
 	@$(ExportLibrary)
 

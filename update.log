@@ -1,3 +1,18 @@
+Fri Sep 24 23:22:20 BST 1999 sll
+================================
+
+- Final clean up of the clean and veryclean rules so that it works
+  without omake. 
+
+external_merge/mk/afterdir.mk
+external_merge/mk/beforedir.mk
+src/mk/afterdir.mk
+src/mk/beforedir.mk
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/dynamic/dir.mk
+src/lib/omniORB2/lifecycle/dir.mk
+
 Fri Sep 24 15:44:15 BST 1999 sll
 ================================
 
