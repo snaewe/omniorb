@@ -423,7 +423,7 @@ private:
 // discriminator value would be intercepted and if necessary the member
 // DynAny_ptr updated.
 //
-class dynAnyUD1 : CORBA::DynAny {
+class dynAnyUD1 : public CORBA::DynAny {
 public:
   void NP_real_from_any(const CORBA::Any& value);
   void insert_boolean(CORBA::Boolean value);
@@ -479,10 +479,10 @@ private:
   dynAnyUD1& operator=(const dynAnyUD1&);
 };
 
-class dynAnyUD2 : CORBA::DynEnum {
+class dynAnyUD2 : public CORBA::DynEnum {
 public:
   void NP_real_from_any(const CORBA::Any& value);
-#if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x420
+#if !defined(_MSC_VER)
   char* value_as_string() {
     return CORBA::DynEnum::value_as_string();
   }
