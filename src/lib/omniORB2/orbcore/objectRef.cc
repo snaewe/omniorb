@@ -11,9 +11,15 @@
  
 /*
   $Log$
-  Revision 1.2  1997/01/08 18:18:06  ewc
-  Added work-around for MSVC++ 4.2 exception problem.
+  Revision 1.3  1997/01/13 14:52:54  sll
+  It is now valid to call createObjRef() with the argument <targetRepoId> == 0.
+  The semantics of such a call is to return a proxyObject if there is
+  a proxyObjectFactory for the given interface. Otherwise, an AnonymousObject
+  instance is returned.
 
+// Revision 1.2  1997/01/08  18:18:06  ewc
+// Added work-around for MSVC++ 4.2 exception problem.
+//
 // Revision 1.1  1997/01/08  17:26:01  sll
 // Initial revision
 //
@@ -101,6 +107,45 @@ proxyObjectFactory_iterator::operator() ()
   return p;
 }
 
+// An AnonymousObject is used as a proxyObject when no proxyObjectFactory
+// class for a give interface repository ID is found.
+// Of course, one can only use such an object as a CORBA::Object_ptr and
+// passes it around as the type "Object" in IDL operations and attributes.
+// See also the comments in omniORB::createObjRef().
+class AnonymousObject : public virtual omniObject,
+			public virtual CORBA::Object 
+{
+public:
+  AnonymousObject(const char *repoId,
+		  Rope *r,
+		  CORBA::Octet *key,
+		  size_t keysize,
+		  IOP::TaggedProfileList *profiles,
+		  CORBA::Boolean release) :
+    omniObject(repoId,r,key,keysize,profiles,release) 
+  {
+    this->PR_setobj(this);
+    omniORB::objectIsReady(this);
+  }
+  virtual ~AnonymousObject() {}
+  
+protected:
+  virtual void *_widenFromTheMostDerivedIntf(const char *repoId) throw ();
+
+private:
+  AnonymousObject();
+  AnonymousObject (const AnonymousObject&);
+  AnonymousObject &operator=(const AnonymousObject&);
+};
+
+void *
+AnonymousObject::_widenFromTheMostDerivedIntf(const char *repoId) throw ()
+{
+  if (!repoId)
+    return (void *)((CORBA::Object_ptr)this);
+  else
+    return 0;
+}
 
 void
 omniORB::objectIsReady(omniObject *obj)
@@ -238,7 +283,11 @@ omniORB::createObjRef(const char *mostDerivedRepoId,
     proxyObjectFactory_iterator pnext;
     while ((p = pnext())) {
       if (strcmp(p->irRepoId(),mostDerivedRepoId) == 0) {
-	if (!p->is_a(targetRepoId)) {
+	if (!targetRepoId) {
+	  // Target is just the pseudo object CORBA::Object
+	  break;  // got it
+	}
+	else if (!p->is_a(targetRepoId)) {
 	    // Object ref is neither the exact interface nor a derived 
 	    // interface of the one requested.
 	    // It may well be a derived interface that we have no
@@ -257,7 +306,15 @@ omniORB::createObjRef(const char *mostDerivedRepoId,
       // It may well be a derived interface of the one requested.
       // See the restrictions of this implementation at the beginning
       // of this file.
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      if (!targetRepoId) {
+	// Target is just the pseudo object CORBA::Object
+	// Doesn't matter if we don't know about this interface.
+	// Leave p == 0 and let the code below to create the right
+	// pseudo object.
+      }
+      else {
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      }
     }
   }
   size_t ksize = 0;
@@ -268,8 +325,19 @@ omniORB::createObjRef(const char *mostDerivedRepoId,
     if (r) {
       // Create a proxy object
       if (release) {
-	CORBA::Object_ptr objptr = p->newProxyObject(r,objkey,ksize,profiles,1);
-	return objptr->PR_getobj();
+	CORBA::Object_ptr objptr;
+	if (p) {
+	  objptr = p->newProxyObject(r,objkey,ksize,profiles,1);
+	  return objptr->PR_getobj();
+	}
+	else {
+	  // The target is just the pseudo object CORBA::Object
+	  // And we don't have a proxyObjectFactory() for this object
+	  // (that is why p == 0).
+	  // We just make an anonymous object
+	  objptr =  new AnonymousObject(mostDerivedRepoId,r,objkey,ksize,profiles,1);
+	  return objptr->PR_getobj();
+	}
       }
       else {
 	IOP::TaggedProfileList *localcopy = 
@@ -278,9 +346,19 @@ omniORB::createObjRef(const char *mostDerivedRepoId,
 	  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
 	}
 	try {
-	  CORBA::Object_ptr objptr = p->newProxyObject(r,objkey,ksize,
-						       localcopy,1);
-	  return objptr->PR_getobj();
+	  CORBA::Object_ptr objptr;
+	  if (p) {
+	    objptr = p->newProxyObject(r,objkey,ksize,localcopy,1);
+	    return objptr->PR_getobj();
+	  }
+	  else {
+	    // The target is just the pseudo object CORBA::Object
+	    // And we don't have a proxyObjectFactory() for this object
+	    // (that is why p == 0).
+	    // We just make an anonymous object
+	    objptr =  new AnonymousObject(mostDerivedRepoId,r,objkey,ksize,localcopy,1);
+	    return objptr->PR_getobj();
+	  }
 	}
 	catch (...) {
 	  delete localcopy;
@@ -332,7 +410,7 @@ omniORB::stringToObject(const char *str)
   }
 
   try {
-    return omniORB::createObjRef(repoId,repoId,profiles,1);
+    return omniORB::createObjRef(repoId,0,profiles,1);
   }
   catch (...) {
     delete [] repoId;	
@@ -370,6 +448,14 @@ CORBA::UnMarshalObjRef(const char *repoId,
     idlen <<= s;
     if (idlen == 1) {
       // nil object reference
+      CORBA::Char _id;
+      _id <<= s;
+      if ((char)_id != '\0')
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      CORBA::ULong _v;
+      _v <<= s;
+      if (_v != 0)
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
       return CORBA::Object::_nil();
     }
     if (idlen > s.RdMessageUnRead()) {
@@ -454,6 +540,14 @@ CORBA::UnMarshalObjRef(const char *repoId,
     idlen <<= s;
     if (idlen == 1) {
       // nil object reference
+      CORBA::Char _id;
+      _id <<= s;
+      if ((char)_id != '\0')
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      CORBA::ULong _v;
+      _v <<= s;
+      if (_v != 0)
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
       return CORBA::Object::_nil();
     }
     if (idlen > s.unRead()) {
