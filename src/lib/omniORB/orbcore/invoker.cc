@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/09/11 20:40:15  dgrisby
+  Call thread interceptors from etherealiser queue.
+
   Revision 1.1.2.5  2002/09/10 23:17:11  dgrisby
   Thread interceptors.
 
@@ -77,7 +80,7 @@
 #include <interceptors.h>
 #include <stdlib.h>
 
-OMNI_USING_NAMESPACE(omni);
+OMNI_USING_NAMESPACE(omni)
 
 unsigned int omniAsyncInvoker::idle_timeout = 10;
 

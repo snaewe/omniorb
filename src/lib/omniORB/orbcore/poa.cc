@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.33  2002/09/11 20:40:15  dgrisby
+  Call thread interceptors from etherealiser queue.
+
   Revision 1.2.2.32  2002/08/16 17:47:40  dgrisby
   Documentation, message updates. ORB tweaks to match docs.
 
@@ -222,6 +225,7 @@
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/callHandle.h>
 #include <omniORB4/objTracker.h>
+#include <omniORB4/omniInterceptors.h>
 #include <objectTable.h>
 #include <inProcessIdentity.h>
 #include <poamanager.h>
@@ -231,6 +235,7 @@
 #include <orbOptions.h>
 #include <orbParameters.h>
 #include <initRefs.h>
+#include <interceptors.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -1005,8 +1010,10 @@ omniOrbPOA::activate_object_with_id(const PortableServer::ObjectId& oid,
       last = p_servant->_activations().end();
 
       for (; i != last; i++) {
-	if ((*i)->adapter() == this)
+	if ((*i)->adapter() == this) {
+	  entry->setDead();
 	  throw ServantAlreadyActive();
+	}
       }
     }
     entry->setActive(p_servant, this);
@@ -2733,9 +2740,17 @@ public:
     Task* pd_next;
   };
 
-private:
+  // Since this thread calls into application code, it must run both
+  // the thread interceptors -- to mark thread creation and assignment
+  // of the thread to do upcalls. run_undetached() trggers any
+  // createThread interceptors, and control reaches mid_run();
+  // mid_run() triggers any assignUpcallThread interceptors, and
+  // control reaches real_run(), which does the work.
   virtual void* run_undetached(void*);
+  void mid_run();
+  void real_run();
 
+private:
   omni_tracedmutex     pd_queue_lock;
   omni_tracedmutex     pd_task_lock;
   omni_tracedcondition pd_cond;
@@ -2788,16 +2803,90 @@ omniServantActivatorTaskQueue::die()
   if( signal )  pd_cond.signal();
 }
 
+OMNI_NAMESPACE_BEGIN(omni)
+
+class saTaskQueueCreateInfo
+  : public omniInterceptors::createThread_T::info_T {
+public:
+  saTaskQueueCreateInfo(omniServantActivatorTaskQueue* worker) :
+    pd_worker(worker), pd_elmt(omniInterceptorP::createThread) {}
+
+  void run();
+  
+private:
+  omniServantActivatorTaskQueue* pd_worker;
+  omniInterceptorP::elmT*        pd_elmt;
+};
+
+void
+saTaskQueueCreateInfo::run()
+{
+  if (pd_elmt) {
+    omniInterceptors::createThread_T::interceptFunc f =
+      (omniInterceptors::createThread_T::interceptFunc)pd_elmt->func;
+    pd_elmt = pd_elmt->next;
+    f(*this);
+  }
+  else
+    pd_worker->mid_run();
+}
+
+class saTaskQueueAssignInfo
+  : public omniInterceptors::assignUpcallThread_T::info_T {
+public:
+  saTaskQueueAssignInfo(omniServantActivatorTaskQueue* worker) :
+    pd_worker(worker), pd_elmt(omniInterceptorP::assignUpcallThread) {}
+
+  void run();
+  
+private:
+  omniServantActivatorTaskQueue* pd_worker;
+  omniInterceptorP::elmT*        pd_elmt;
+};
+
+void
+saTaskQueueAssignInfo::run()
+{
+  if (pd_elmt) {
+    omniInterceptors::assignUpcallThread_T::interceptFunc f =
+      (omniInterceptors::assignUpcallThread_T::interceptFunc)pd_elmt->func;
+    pd_elmt = pd_elmt->next;
+    f(*this);
+  }
+  else
+    pd_worker->real_run();
+}
+
+OMNI_NAMESPACE_END(omni)
+
+
 void*
 omniServantActivatorTaskQueue::run_undetached(void*)
 {
+  saTaskQueueCreateInfo info(this);
+  info.run();
+  return 0;
+}
+
+void
+omniServantActivatorTaskQueue::mid_run()
+{
+  saTaskQueueAssignInfo info(this);
+  info.run();
+}
+
+
+void
+omniServantActivatorTaskQueue::real_run()
+{
+  omniORB::logs(25, "Servant Activator task queue start");
   while( 1 ) {
     pd_queue_lock.lock();
     while( !pd_taskq ) {
       if( pd_dying ) {
         pd_queue_lock.unlock();
 	omniORB::logs(15, "Servant Activator task queue exit");
-        return 0;
+        return;
       }
       pd_cond.wait();
     }
@@ -2812,7 +2901,6 @@ omniServantActivatorTaskQueue::run_undetached(void*)
     }
     catch(...) {}
   }
-  return 0;
 }
 
 omniServantActivatorTaskQueue::Task::~Task()  {}

@@ -1,3 +1,25 @@
+Wed Sep 11 20:55:30 BST 2002 dgrisby
+====================================
+
+- Disable thread tracing. Misc other release updates.
+
+README.FIRST
+README.win32
+ReleaseNotes_4.0_beta2.txt   -- deleted
+ReleaseNotes_4.0_rc1.txt     -- new
+THIS_IS_OMNIORB_4_0_BETA_2   -- deleted
+THIS_IS_OMNIORB_4_0_RC_1     -- new
+acinclude.m4
+aclocal.m4
+configure
+include/omniconfig.h
+
+- Call thread interceptors from etherealiser queue.
+
+src/lib/omniORB/orbcore/invoker.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
 Wed Sep 11 07:36:42 BST 2002 dgrisby
 ====================================
 
