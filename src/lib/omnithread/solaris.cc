@@ -173,6 +173,7 @@ int omni_thread::next_id = 0;
 
 static thread_key_t self_key;
 
+static size_t stack_size = 0;
 
 //
 // Initialisation function (gets called before any user code).
@@ -328,7 +329,7 @@ omni_thread::start(void)
     if (_state != STATE_NEW)
 	throw omni_thread_invalid();
 
-    THROW_ERRORS(thr_create(0, 0, omni_thread_wrapper, (void*)this, flags,
+    THROW_ERRORS(thr_create(0, stack_size, omni_thread_wrapper, (void*)this, flags,
 			    &sol_thread));
 
     _state = STATE_RUNNING;
@@ -540,4 +541,17 @@ omni_thread::sol_priority(priority_t pri)
     }
 
     throw omni_thread_invalid();
+}
+
+
+void
+omni_thread::stacksize(unsigned long sz)
+{
+  stack_size = sz;
+}
+
+unsigned long
+omni_thread::stacksize()
+{
+  return stack_size;
 }
