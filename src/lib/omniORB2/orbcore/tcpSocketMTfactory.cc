@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.22.6.8  1999/10/27 18:20:40  sll
+  Fixed the ctor of tcpSocketWorker so that if thread create fails, the
+  exception raised by omnithread does not cause assertion failure in the
+  ORB.
+
   Revision 1.22.6.7  1999/10/16 13:22:55  djr
   Changes to support compiling on MSVC.
 
@@ -259,8 +264,8 @@ public:
   tcpSocketWorker(tcpSocketStrand* s, tcpSocketMTincomingFactory* f) : 
           omni_thread(s), pd_factory(f), pd_sync(s,0,0) 
     {
-      s->decrRefCount();
       start();
+      s->decrRefCount();
     }
   virtual ~tcpSocketWorker() { 
     omni_mutex_lock sync(pd_factory->pd_shutdown_lock);

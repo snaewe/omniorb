@@ -1,3 +1,11 @@
+Wed Oct 27 19:06:02 BST 1999 sll
+================================
+
+- Fixed a bug which triggers an assertion failure when the ORB cannot spawn
+  a thread to serve a new connection.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
 
 Wed Oct 27 18:08:28 BST 1999 djr
 ================================
