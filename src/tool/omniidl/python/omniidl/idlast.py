@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11  1999/11/25 11:20:33  dpg1
+# Tidy documentation changes.
+#
 # Revision 1.10  1999/11/23 09:52:11  dpg1
 # Dumb bug where maps weren't cleared between runs.
 #
@@ -779,7 +782,7 @@ class ValueAbs (Decl, DeclRepoId):
 Functions:
 
   inherits()     -- list of ValueAbs objects from which this inherits.
-  supports()     -- list of Interface object which this supports.
+  supports()     -- list of Interface objects which this supports.
   contents()     -- list of Decl objects for declarations within this
                     valuetype.
   declarations() -- subset of contents() containing types, constants and
@@ -831,7 +834,7 @@ Functions:
                     any others will be ValueAbs objects.
   truncatable()  -- boolean: true if the inherited Value is declared
                     truncatable.
-  supports()     -- list of Interface object which this supports.
+  supports()     -- list of Interface objects which this supports.
   contents()     -- list of Decl objects for all items declared within
                     this valuetype.
   declarations() -- subset of contents() containing types, constants
