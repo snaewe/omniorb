@@ -1,4 +1,13 @@
 
+Thu Mar 16 16:17:00 GMT 2000 djs
+================================
+
+- omniidl missed an extern declaration because it failed to 
+  dereference a typedef chain leading to a structure defined
+  in another file
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/bdesc.py
+
 Thu Mar 16 14:13:38 GMT 2000 djr
 ================================
 
