@@ -54,7 +54,7 @@ static void usage(char* progname)
 }
 
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__VMS) && __VMS_VER < 60200000
 
 // WIN32 doesn't have an implementation of getopt() - 
 // supply a getopt() for this program:

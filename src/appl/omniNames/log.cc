@@ -30,6 +30,10 @@
 #include <time.h>
 #include <iostream.h>
 #include <fcntl.h>
+#if defined(__VMS) && __VMS_VER < 70000000
+#include <omniVMS/unlink.hxx>
+#include <omniVms/utsname.hxx>
+#endif
 #include <NamingContext_i.h>
 #include <ObjectBinding.h>
 #include <log.h>
@@ -56,11 +60,11 @@
 #endif
 
 
-#ifndef _NO_STRDUP
+#ifdef _NO_STRDUP
 
 
 // we have no strdup
-char *
+static char *
 strdup (char* str)
 {
   char *newstr;
@@ -134,7 +138,7 @@ log::log(int& p) : port(p)
   if ((logdir = getenv(LOGDIR_ENV_VAR)) == NULL)
     logdir = strdup(DEFAULT_LOGDIR);
 
-#ifndef __WIN32__  
+#if !defined(__WIN32__) && !defined(__VMS)
   if (logdir[0] != '/') {
     cerr << ts.t() << "Error: " << LOGDIR_ENV_VAR << " (" << logdir
 	 << ") is not an absolute path name." << endl;
@@ -168,7 +172,7 @@ log::log(int& p) : port(p)
 			   + strlen(hostname) + 1];
   sprintf(logname, "%s/omninames-%s", logdir, hostname);
 #endif // _USE_GETHOSTNAME
-#else
+#elif defined(__WIN32__)
 
   // Get host name:
 
@@ -185,14 +189,48 @@ log::log(int& p) : port(p)
   sprintf(logname, "%s\\omninames-%s", logdir, machineName);
   
   delete[] machineName;
+#else
+  char last(
+    logdir[strlen(logdir)-1]
+  );
+  if (last != ':' && last != ']') {
+    cerr << ts.t() << "Error: " << LOGDIR_ENV_VAR << " (" << logdir
+         << ") is not a directory name." << endl;
+    exit(1);
+  }
+
+//  if (logdir[strlen(logdir)-1] == '/') {
+//    logdir[strlen(logdir)-1] = '\0';          // strip trailing '/'
+//  }
+
+  struct utsname un;
+  if (uname(&un) < 0) {
+    cerr << ts.t() << "Error: cannot get the name of this host." << endl;
+        
+    exit(1);
+  }
+
+  char* logname = new char[strlen(logdir) + strlen("/omninames-")
+                           + strlen(un.nodename) + 1];
+  sprintf(logname, "%somninames-%s", logdir, un.nodename);
 #endif
 
+#ifndef __VMS
   active = new char[strlen(logname)+strlen(".log")+1];
   sprintf(active,"%s.log",logname);
   backup = new char[strlen(logname)+strlen(".bak")+1];
   sprintf(backup,"%s.bak",logname);
   checkpt = new char[strlen(logname)+strlen(".ckp")+1];
   sprintf(checkpt,"%s.ckp",logname);
+#else
+  // specify latest version:
+  active = new char[strlen(logname)+strlen(".log;")+1];
+  sprintf(active,"%s.log;",logname);
+  backup = new char[strlen(logname)+strlen(".bak;")+1];
+  sprintf(backup,"%s.bak;",logname);
+  checkpt = new char[strlen(logname)+strlen(".ckp;")+1];
+  sprintf(checkpt,"%s.ckp;",logname);
+#endif
 
   if (port != 0) {
 
@@ -569,8 +607,10 @@ log::checkpoint(void)
 
   unlink(backup);
 
-#ifdef __WIN32__
+#if defined(__WIN32__)
   if (!CopyFile(active,backup,TRUE)) {
+#elif defined(__VMS)
+  if (rename(active, backup) < 0) {
 #else
   if (link(active,backup) < 0) {
 #endif
@@ -580,16 +620,19 @@ log::checkpoint(void)
     exit(1);
   }
 
+#ifndef __VMS
   if (unlink(active) < 0) {
     // Failure here leaves active and backup pointing to the same (old) file.
     cerr << ts.t() << "Error: failed to unlink old log file '" << active
 	 << "'." << endl;
     exit(1);
   }
+#endif
 
-
-#ifdef __WIN32__
+#if defined(__WIN32__)
   if (!CopyFile(checkpt,active,TRUE)) {
+#elif defined(__VMS)
+  if (rename(checkpt,active) < 0) {
 #else
   if (link(checkpt,active) < 0) {
 #endif
@@ -599,12 +642,14 @@ log::checkpoint(void)
     exit(1);
   }
 
+#ifndef __VMS
   if (unlink(checkpt) < 0) {
     // Failure here leaves active and checkpoint pointing to the same file.
     cerr << ts.t() << "Error: failed to unlink checkpoint file '" << checkpt
 	 << "'." << endl;
     exit(1);
   }
+#endif
 
 #ifdef __WIN32__
   fd = _open(active, O_WRONLY | O_APPEND);
