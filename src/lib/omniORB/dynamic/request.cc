@@ -323,198 +323,51 @@ RequestImpl::return_value()
 }
 
 
+class omni_RequestImpl_callDesc : public omniCallDescriptor
+{
+public:
+  inline omni_RequestImpl_callDesc(const char* op,
+				   size_t oplen,
+				   _CORBA_Boolean oneway,
+				   RequestImpl& impl) :
+    omniCallDescriptor(0,op,oplen,oneway,0,0,0), pd_impl(impl) {}
+
+  void marshalArguments(cdrStream& s) {
+    pd_impl.marshalArgs(s);
+  }
+
+  void unmarshalReturnedValues(cdrStream& s) {
+    pd_impl.unmarshalArgs(s);
+  }
+private:
+  RequestImpl& pd_impl;
+};
+
+				    
 CORBA::Status
 RequestImpl::invoke()
 {
   if( pd_state != RS_READY && pd_state != RS_DEFERRED )
     OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
 
-  try{
-    int retries = 0;
-    int fwd;
+  try {
 
     CORBA::ULong operation_len = strlen(pd_operation) + 1;
     omniObjRef* o = pd_target->_PR_getobj();
 
-#ifndef EGCS_WORKAROUND
-  _again:
-#else
-    while(1) {
-#endif
-      o->_assertExistsAndTypeVerified();
+    omni_RequestImpl_callDesc call_desc(pd_operation,operation_len,0,*this);
 
-      try{
-
-	omniRopeAndKey rak;
-	fwd = o->_getRopeAndKey(rak);
-
-	CORBA::Boolean reuse = 0; //?? move this up into transport
-
-	try {
-	  // Get a GIOP driven strand.
-	  GIOP_C giop_c(rak.rope());
-	  reuse = giop_c.isReUsingExistingConnection();
-
-	  ContextListImpl* context_list = 0;
-	  if( !CORBA::is_nil(pd_contexts) )
-	    context_list =
-	      (ContextListImpl*)(CORBA::ContextList_ptr)pd_contexts;
-
-	  // Calculate the size of the message.
-	  CORBA::ULong message_size =
-	    GIOP_C::RequestHeaderSize(rak.keysize(), operation_len);
-
-	  message_size = calculateArgDataSize(message_size);
-	  if( context_list )
-	    message_size =
-	      CORBA::Context::_NP_alignedSize(pd_context,
-					      context_list->NP_list(),
-					      context_list->count(),
-					      message_size);
-
-	  giop_c.InitialiseRequest(rak.key(), rak.keysize(),
-				   pd_operation, operation_len,
-				   message_size, 0);
-
-	  // Marshal the arguments to the operation.
-	  marshalArgs(giop_c);
-
-	  // If context strings are supplied, marshal them.
-	  if( context_list )
-	    CORBA::Context::marshalContext(pd_context,
-					   context_list->NP_list(),
-					   context_list->count(),
-					   giop_c);
-
-	  // Wait for the reply.
-
-	  switch( giop_c.ReceiveReply() ) {
-	  case GIOP::NO_EXCEPTION:
-	    // Unmarshal the result.
-	    pd_result->value()->NP_unmarshalDataOnly(giop_c);
-	    // This defaults to unmarshaling (void) if the return type
-	    // has not been set.
-
-	    // Unmarshal any out and inout arguments.
-	    unmarshalArgs(giop_c);
-	    giop_c.RequestCompleted();
-	    INVOKE_DONE();
-	    RETURN_CORBA_STATUS;
-
-	  case GIOP::USER_EXCEPTION:
-	    {
-	      // Retrieve the Interface Repository ID of the exception.
-	      CORBA::ULong repoIdLen;
-	      repoIdLen <<= giop_c;
-	      CORBA::String_var repoId(CORBA::string_alloc(repoIdLen - 1));
-	      giop_c.get_char_array((CORBA::Char*)(char*)repoId,
-					 repoIdLen);
-
-	      CORBA::ULong exListLen = CORBA::is_nil(pd_exceptions) ?
-		0 : pd_exceptions->count();
-
-	      // Search for a match in the exception list.
-	      for( CORBA::ULong i = 0; i < exListLen; i++ ){
-		CORBA::TypeCode_ptr exType = pd_exceptions->item(i);
-
-		if( !strcmp(repoId, exType->id()) ){
-		  // Unmarshal the exception into an Any.
-		  CORBA::Any* newAny = new CORBA::Any(exType, 0);
-		  try {
-		    newAny->NP_unmarshalDataOnly(giop_c);
-		  }
-		  catch(...) {
-		    delete newAny;
-		    throw;
-		  }
-		  // Encapsulate this in an UnknownUserException, which is
-		  // placed into pd_environment.
-		  CORBA::UnknownUserException* ex =
-		    new CORBA::UnknownUserException(newAny);
-		  pd_environment->exception(ex);
-		  giop_c.RequestCompleted();
-		  INVOKE_DONE();
-		  RETURN_CORBA_STATUS;
-		}
-	      }
-	      // The exception didn't match any in the list, or a list
-	      // was not supplied.
-	      giop_c.RequestCompleted(1);
-	      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-	    }
-
-	  case GIOP::LOCATION_FORWARD:
-	    {
-	      CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(giop_c));
-	      giop_c.RequestCompleted();
-	      throw omniORB::LOCATION_FORWARD(obj._retn());
-	    }
-
-	  case GIOP::SYSTEM_EXCEPTION:
-	    giop_c.RequestCompleted(1);
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-					  "GIOP::SYSTEM_EXCEPTION should not"
-					  " be returned by"
-					  " GIOP_C::ReceiveReply()");
-	  }
-	}
-	catch(const omniConnectionBroken& ex) {
-	  if( reuse ){
-	    CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-	    throw ex2;
-	  }
-	  else {
-	    OMNIORB_THROW(COMM_FAILURE, ex.minor(), ex.completed());
-	  }
-	}
-      }
-      catch(const CORBA::COMM_FAILURE& ex) {
-	if( fwd ){
-	  omni::revertToOriginalProfile(o);
-	  CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-	  if( !_omni_callTransientExceptionHandler(o, retries++, ex2) )
-	    throw ex2;
-	}
-	else if( !_omni_callCommFailureExceptionHandler(o, retries++, ex) )
-	  throw;
-      }
-      catch(const CORBA::TRANSIENT& ex) {
-	if( !_omni_callTransientExceptionHandler(o, retries++, ex) )
-	  throw;
-      }
-      catch(const CORBA::OBJECT_NOT_EXIST& ex){
-	if( fwd ){
-	  omni::revertToOriginalProfile(o);
-	  CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-	  if( !_omni_callTransientExceptionHandler(o, retries++, ex2) )
-	    throw ex2;
-	}
-	else if( !_omni_callSystemExceptionHandler(o, retries++, ex) )
-	  throw;
-      }
-      catch(const CORBA::SystemException& ex){
-	if( !_omni_callSystemExceptionHandler(o, retries++, ex) )
-	  throw;
-      }
-      catch(omniORB::LOCATION_FORWARD& ex) {
-	if( CORBA::is_nil(ex.get_obj()) ) {
-	  CORBA::COMM_FAILURE ex2(0, CORBA::COMPLETED_NO);
-	  if( omniORB::traceLevel > 10 ){
-	    omniORB::log << "Received GIOP::LOCATION_FORWARD message that"
-	      " contains a nil object reference.\n";
-	    omniORB::log.flush();
-	  }
-	  if( !_omni_callCommFailureExceptionHandler(o, retries++, ex2) )
-	    throw ex2;
-	}
-	omni::locationForward(o, ex.get_obj()->_PR_getobj());
-      }
-
-#ifndef EGCS_WORKAROUND
-      goto _again;
-#else
+    omniCallDescriptor::ContextInfo ctxt_info;
+    if( !CORBA::is_nil(pd_contexts) ) {
+      ContextListImpl* context_list = (ContextListImpl*)
+	                               (CORBA::ContextList_ptr)pd_contexts;
+      ctxt_info.context = pd_context;
+      ctxt_info.expected = context_list->NP_list();
+      ctxt_info.num_expected = context_list->count();
+      call_desc.set_context_info(&ctxt_info);
     }
-#endif
+
+    o->_invoke(call_desc);
   }
   // Either throw system exceptions, or store in pd_environment.
   catch(CORBA::SystemException& ex){
@@ -537,136 +390,22 @@ RequestImpl::send_oneway()
     OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
 
   try{
-    int retries = 0;
-    int fwd;
-
     CORBA::ULong operation_len = strlen(pd_operation) + 1;
     omniObjRef* o = pd_target->_PR_getobj();
 
-#ifndef EGCS_WORKAROUND
-  _again:
-#else
-    while(1) {
-#endif
-      o->_assertExistsAndTypeVerified();
+    omni_RequestImpl_callDesc call_desc(pd_operation,operation_len,1,*this);
 
-      try{
-
-	omniRopeAndKey rak;
-	fwd = o->_getRopeAndKey(rak);
-
-	CORBA::Boolean reuse = 0; //?? move this up into transport
-
-	try {
-	  // Get a GIOP driven strand.
-	  GIOP_C giop_c(rak.rope());
-	  reuse = giop_c.isReUsingExistingConnection();
-
-	  ContextListImpl* context_list = 0;
-	  if( !CORBA::is_nil(pd_contexts) )
-	    context_list =
-	      (ContextListImpl*)(CORBA::ContextList_ptr)pd_contexts;
-
-	  // Calculate the size of the message.
-	  CORBA::ULong message_size =
-	    GIOP_C::RequestHeaderSize(rak.keysize(), operation_len);
-
-	  message_size = calculateArgDataSize(message_size);
-	  if( context_list )
-	    message_size =
-	      CORBA::Context::_NP_alignedSize(pd_context,
-					      context_list->NP_list(),
-					      context_list->count(),
-					      message_size);
-
-	  giop_c.InitialiseRequest(rak.key(), rak.keysize(),
-				   pd_operation, operation_len,
-				   message_size, 1);
-
-	  // Marshal the arguments to the operation.
-	  marshalArgs(giop_c);
-
-	  // If context strings are supplied, marshal them.
-	  if( context_list )
-	    CORBA::Context::marshalContext(pd_context,
-					   context_list->NP_list(),
-					   context_list->count(),
-					   giop_c);
-
-	  // Wait for the reply.
-
-	  switch( giop_c.ReceiveReply() ) {
-	  case GIOP::NO_EXCEPTION:
-	    giop_c.RequestCompleted();
-	    INVOKE_DONE();
-	    RETURN_CORBA_STATUS;
-
-	  case GIOP::USER_EXCEPTION:
-	  case GIOP::LOCATION_FORWARD:
-	  case GIOP::SYSTEM_EXCEPTION:
-	    giop_c.RequestCompleted(1);
-	    throw omniORB::fatalException(__FILE__,__LINE__,
-					  "GIOP::SYSTEM_EXCEPTION returned"
-					  " unexpected code for oneway call");
-	  }
-	}
-	catch(const omniConnectionBroken& ex) {
-	  if( reuse ){
-	    CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-	    throw ex2;
-	  }
-	  else {
-	    OMNIORB_THROW(COMM_FAILURE, ex.minor(), ex.completed());
-	  }
-	}
-      }
-      catch(const CORBA::COMM_FAILURE& ex) {
-	if( fwd ){
-	  omni::revertToOriginalProfile(o);
-	  CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-	  if( !_omni_callTransientExceptionHandler(o, retries++, ex2) )
-	    throw ex2;
-	}
-	else if( !_omni_callCommFailureExceptionHandler(o, retries++, ex) )
-	  throw;
-      }
-      catch(const CORBA::TRANSIENT& ex) {
-	if( !_omni_callTransientExceptionHandler(o, retries++, ex) )
-	  throw;
-      }
-      catch(const CORBA::OBJECT_NOT_EXIST& ex){
-	if( fwd ){
-	  omni::revertToOriginalProfile(o);
-	  CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-	  if( !_omni_callTransientExceptionHandler(o, retries++, ex2) )
-	    throw ex2;
-	}
-	else if( !_omni_callSystemExceptionHandler(o, retries++, ex) )
-	  throw;
-      }
-      catch(const CORBA::SystemException& ex){
-	if( !_omni_callSystemExceptionHandler(o, retries++, ex) )
-	  throw;
-      }
-      catch(omniORB::LOCATION_FORWARD& ex) {
-	if( CORBA::is_nil(ex.get_obj()) ) {
-	  CORBA::COMM_FAILURE ex2(0, CORBA::COMPLETED_NO);
-	  if( omniORB::traceLevel > 10 ){
-	    omniORB::log << "Received GIOP::LOCATION_FORWARD message that"
-	      " contains a nil object reference.\n";
-	    omniORB::log.flush();
-	  }
-	  if( !_omni_callCommFailureExceptionHandler(o, retries++, ex2) )
-	    throw ex2;
-	}
-	omni::locationForward(o, ex.get_obj()->_PR_getobj());
-      }
-
-#ifndef EGCS_WORKAROUND
-      goto _again;
-#else
+    omniCallDescriptor::ContextInfo ctxt_info;
+    if( !CORBA::is_nil(pd_contexts) ) {
+      ContextListImpl* context_list = (ContextListImpl*)
+	                              (CORBA::ContextList_ptr)pd_contexts;
+      ctxt_info.context = pd_context;
+      ctxt_info.expected = context_list->NP_list();
+      ctxt_info.num_expected = context_list->count();
+      call_desc.set_context_info(&ctxt_info);
     }
-#endif
+
+    o->_invoke(call_desc);
   }
   // Either throw system exceptions, or store in pd_environment.
   catch(CORBA::SystemException& ex){
@@ -759,42 +498,28 @@ RequestImpl::NP_duplicate()
 }
 
 
-CORBA::ULong
-RequestImpl::calculateArgDataSize(CORBA::ULong msize)
+void
+RequestImpl::marshalArgs(cdrStream& s)
 {
   CORBA::ULong num_args = pd_arguments->count();
 
   for( CORBA::ULong i = 0; i < num_args; i++ ){
     CORBA::NamedValue_ptr arg = pd_arguments->item(i);
     if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
-      msize = arg->value()->NP_alignedDataOnlySize(msize);
-  }
-  return msize;
-}
-
-
-void
-RequestImpl::marshalArgs(GIOP_C& giop_c)
-{
-  CORBA::ULong num_args = pd_arguments->count();
-
-  for( CORBA::ULong i = 0; i < num_args; i++ ){
-    CORBA::NamedValue_ptr arg = pd_arguments->item(i);
-    if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
-      arg->value()->NP_marshalDataOnly(giop_c);
+      arg->value()->NP_marshalDataOnly(s);
   }
 }
 
 
 void
-RequestImpl::unmarshalArgs(GIOP_C& giop_c)
+RequestImpl::unmarshalArgs(cdrStream& s)
 {
   CORBA::ULong num_args = pd_arguments->count();
 
   for( CORBA::ULong i = 0; i < num_args; i++){
     CORBA::NamedValue_ptr arg = pd_arguments->item(i);
     if( arg->flags() & CORBA::ARG_OUT || arg->flags() & CORBA::ARG_INOUT )
-      arg->value()->NP_unmarshalDataOnly(giop_c);
+      arg->value()->NP_unmarshalDataOnly(s);
   }
 }
 
