@@ -1,3 +1,13 @@
+Mon Feb 11 15:12:52 GMT 2002 dpg1
+=================================
+
+- Things for ETS kernel.
+
+external_merge/src/dir.mk
+src/lib/omniORB/include/orbOptions.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+
 Mon Feb 11 14:43:01 GMT 2002 dpg1
 =================================
 

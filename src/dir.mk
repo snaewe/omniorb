@@ -10,10 +10,10 @@ ifndef EmbeddedSystem
 SUBDIRS += tool
 endif
 
-SUBDIRS += lib appl
+SUBDIRS += lib
 
 ifndef EmbeddedSystem
-SUBDIRS += services
+SUBDIRS += appl services
 endif
 
 all::

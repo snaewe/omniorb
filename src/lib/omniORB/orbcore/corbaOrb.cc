@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.36  2002/02/11 15:15:50  dpg1
+  Things for ETS kernel.
+
   Revision 1.33.2.35  2002/01/16 11:31:58  dpg1
   Race condition in use of registerNilCorbaObject/registerTrackedObject.
   (Reported by Teemu Torma).
@@ -497,7 +500,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
     if (config_fname) {
       orbOptions::singleton().importFromFile(config_fname);
     }
-#if defined(NTArchitecture)
+#if defined(NTArchitecture) && !defined(__ETS_KERNEL__)
     else {
       // Parse configuration from registry on NT if no configuration
       // file is specified.
