@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/11/01 16:39:01  dpg1
+# Small fixes and cosmetic changes.
+#
 # Revision 1.3  1999/11/01 10:05:01  dpg1
 # New file attribute to AST.
 #
@@ -308,18 +311,18 @@ class Exception (Decl, DeclRepoId):
 
 class CaseLabel (Decl):
     def __init__(self, file, line, mainFile, pragmas,
-                 isDefault, value, labelKind):
+                 default, value, labelKind):
 
         Decl.__init__(self, file, line, mainFile, pragmas)
 
-        self.__isDefault = isDefault
+        self.__default   = default
         self.__value     = value
         self.__labelKind = labelKind
 
     def accept(self, visitor): visitor.visitCaseLabel(self)
 
     # True if this is the default label
-    def isDefault(self): return self.__isDefault
+    def default(self): return self.__default
 
     # Label value. If default, this value is a value used by none of
     # the other labels.
@@ -508,3 +511,7 @@ CORBAObject = Interface("<built in>", 0, 0, [],
                         "IDL:omg.org/CORBA/Object:1.0",
                         0, [])
 registerDecl(["CORBA", "Object"], CORBAObject)
+
+CORBAModule = Module("<built in>", 0, 0, [], "CORBA", ["CORBA"],
+                     "IDL:omg.org/CORBA:1.0", [CORBAObject])
+registerDecl(["CORBA"], CORBAModule)
