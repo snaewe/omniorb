@@ -1,3 +1,20 @@
+Tue Feb 10 16:09:18 GMT 1998 ewc
+================================
+
+- Added an example to demonstrate using type Any
+
+idl/anyExample.idl                             NEW
+
+src/examples/dir.mk
+src/examples/anyExample                        NEW
+src/examples/anyExample/anyExample.pkg         NEW
+src/examples/anyExample/anyExample_clt.cc      NEW
+src/examples/anyExample/anyExample_clt.module  NEW
+src/examples/anyExample/anyExample_impl.cc     NEW
+src/examples/anyExample/anyExample_impl.module NEW
+src/examples/anyExample/dir.mk                 NEW
+
+
 Wed Feb  4 12:11:30 GMT 1998 ewc
 ================================
 
