@@ -1,4 +1,11 @@
 
+Thu Jul 24 18:06:29 BST 1997 tjr
+================================
+
+src/appl/omniNames/log.cc	- change #if to fix bug in sparcworks C++,
+				  not solaris
+
+
 Mon Jul 21 18:07:50 BST 1997 tjr
 ================================
 
