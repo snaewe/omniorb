@@ -1,3 +1,39 @@
+Mon Feb 28 17:14:22 GMT 2005 dgrisby
+====================================
+
+- Re-order iostream include to get definition of HAVE_STD.
+
+src/examples/anyExample/anyExample_clt.cc
+src/examples/anyExample/anyExample_impl.cc
+src/examples/bidir/bd_client.cc
+src/examples/bidir/bd_server.cc
+src/examples/bidir/bd_shutdown.cc
+src/examples/boa/eg2_clt.cc
+src/examples/boa/eg2_impl.cc
+src/examples/call_back/cb_client.cc
+src/examples/call_back/cb_server.cc
+src/examples/call_back/cb_shutdown.cc
+src/examples/dii/echo_diiclt.cc
+src/examples/dsi/echo_dsiimpl.cc
+src/examples/echo/eg1.cc
+src/examples/echo/eg2_clt.cc
+src/examples/echo/eg2_impl.cc
+src/examples/echo/eg3_clt.cc
+src/examples/echo/eg3_impl.cc
+src/examples/echo/eg3_tieimpl.cc
+src/examples/poa/implicit_activation/eg1.cc
+src/examples/poa/persistent_objref/eg2_impl.cc
+src/examples/poa/servant_manager/servant_activator.cc
+src/examples/poa/servant_manager/servant_locator.cc
+src/examples/poa/threading/mainthread.cc
+src/examples/ssl_echo/eg2_clt.cc
+src/examples/ssl_echo/eg2_impl.cc
+
+- Use /cygdrive/ in omkdepend on cygwin.
+
+src/tool/omkdepend/gnuwin32.c
+
+
 Wed Feb 23 12:05:39 GMT 2005 dgrisby
 ====================================
 
