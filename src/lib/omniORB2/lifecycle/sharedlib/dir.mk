@@ -45,11 +45,11 @@ override VPATH := $(patsubst %,%/..,$(VPATH))
 # Further override vpath for *.cc to make sure the stub files are found.
 ifndef BuildWin32DebugLibraries
 
-vpath %.cc ../..
+vpath %.cc .. ../..
 
 else
 
-vpath %.cc ../../..
+vpath %.cc ../.. ../../..
 
 endif
 
