@@ -1,4 +1,4 @@
-SUBDIRS = mklib omniNotify
+SUBDIRS = mklib
 
 all::
 	@(subdirs="$(SUBDIRS)"; target="export"; $(MakeSubdirs))
