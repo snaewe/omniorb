@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.38  1999/06/18 20:32:59  sll
+ Updated to CORBA 2.3 mapping.
+
  Revision 1.37  1999/06/03 17:10:32  sll
  Added T_out types and updated T_var types to CORBA 2.2
 
@@ -141,20 +144,12 @@
 # define __CORBA_H_EXTERNAL_GUARD__
 #endif
 
-#include <omniORB2/omniInternal.h>
-#include <omniORB2/templatedecls.h>
-#include <omniORB2/stringtypes.h>
-
-
-#ifdef _LC_attr
-# error "A local CPP macro _LC_attr has already been defined."
-#else
-# define _LC_attr
+#ifdef _core_attr
+# error "A local CPP macro _core_attr has already been defined."
 #endif
 
-// Must not define USE_stub_in_nt_dll when compiling dynamic.
-#if defined(USE_stub_in_nt_dll) && defined(_OMNIORB2_DYNAMIC_LIBRARY)
-# error "USE_stub_in_nt_dll and _OMNIORB2_DYNAMIC_LIBRARY are both defined."
+#ifdef _dyn_attr
+# error "A local CPP macro _dyn_attr has already been defined."
 #endif
 
 #if defined(_OMNIORB2_LIBRARY) && defined(_OMNIORB2_DYNAMIC_LIBRARY)
@@ -176,6 +171,9 @@
 #define USE_omniORB_logStream
 #endif
 
+#include <omniORB2/omniInternal.h>
+#include <omniORB2/templatedecls.h>
+#include <omniORB2/stringtypes.h>
 
 _CORBA_MODULE CORBA
 
@@ -299,7 +297,9 @@ _CORBA_MODULE_BEG
     void operator<<=(Double d);
 #endif
 
-    void operator<<=(const Any& a);
+    void operator<<=(const Any& a);   // copying
+
+    void operator<<=(Any* a);         // non-copying
 
     void operator<<=(TypeCode_ptr tc);
 
@@ -323,8 +323,10 @@ _CORBA_MODULE_BEG
     };
 
     struct from_string {
+      from_string(const char* s, ULong b, Boolean nocopy = 0)
+	: val((char*)s), bound(b), nc(nocopy) { }
       from_string(char* s, ULong b, Boolean nocopy = 0)
-	: val(s), bound(b), nc(nocopy) { }
+	: val(s), bound(b), nc(nocopy) { }   // deprecated
 
       char* val;
       ULong bound;
@@ -355,13 +357,15 @@ _CORBA_MODULE_BEG
     Boolean operator>>=(Double& d) const;
 #endif
 
-    Boolean operator>>=(Any& a) const;
+    Boolean operator>>=(const Any*& a) const;
+    Boolean operator>>=(Any*& a) const;  // deprecated
 
     Boolean operator>>=(TypeCode_ptr& tc) const;
 
     Boolean operator>>=(Object_ptr& obj) const;
 
-    Boolean operator>>=(char*& s) const;
+    Boolean operator>>=(const char*& s) const;
+    Boolean operator>>=(char*& s) const; // deprecated
 
     struct to_boolean {
       to_boolean(Boolean& b) : ref(b) {}
@@ -379,7 +383,8 @@ _CORBA_MODULE_BEG
     };
 
     struct to_string {
-      to_string(char*& s, ULong b) : val(s), bound(b) { }
+      to_string(const char*& s, ULong b) : val((char*&)s), bound(b) { }
+      to_string(char*& s, ULong b) : val(s), bound(b) { } // deprecated
 
       char*& val;
       ULong bound;
@@ -403,6 +408,7 @@ _CORBA_MODULE_BEG
     void replace(TypeCode_ptr TCp, void* value, Boolean release = 0);
 
     TypeCode_ptr type() const;
+    void type(TypeCode_ptr);
 
     const void* value() const;
 
@@ -483,7 +489,6 @@ _CORBA_MODULE_BEG
     }
 
     // Any member-function insertion operators:
-    // ?? Why is this here? Its not part of the spec is it?
 
     inline void operator<<=(Short s) {
       *pd_data <<= s;
@@ -515,11 +520,19 @@ _CORBA_MODULE_BEG
       *pd_data <<= a;
     }	
 
+    inline void operator<<=(Any* a) {
+      *pd_data <<= a;
+    }
+
     inline void operator<<=(TypeCode_ptr tc) {
       *pd_data <<= tc;
     }
 
-    inline void operator<<=(const char*& s) {
+    inline void operator<<=(Object_ptr obj) {
+      *pd_data <<= obj;
+    }
+
+    inline void operator<<=(const char* s) {
       *pd_data <<= s;
     }
 	
@@ -570,12 +583,24 @@ _CORBA_MODULE_BEG
 
 #endif
 
-    inline Boolean operator>>=(Any& a) const {
+    inline Boolean operator>>=(const Any*& a) const {
+      return (*pd_data >>= a);
+    }
+
+    inline Boolean operator>>=(Any*& a) const {
       return (*pd_data >>= a);
     }
 
     inline Boolean operator>>=(TypeCode_ptr& tc) const {
       return (*pd_data >>= tc);
+    }
+
+    inline Boolean operator>>=(Object_ptr& obj) const {
+      return (*pd_data >>= obj);
+    }
+
+    inline Boolean operator>>=(const char*& s) const {
+      return (*pd_data >>= s);
     }
 
     inline Boolean operator>>=(char*& s) const {
@@ -615,8 +640,8 @@ _CORBA_MODULE_BEG
     inline Any_OUT_arg(Any_var& p) : _data(p.pd_data) {
       p = (Any*)0;
     }
-    inline Any_OUT_arg(Any_OUT_arg& p) : _data(p._data) {}
-    inline Any_OUT_arg& operator=(Any_OUT_arg& p) {
+    inline Any_OUT_arg(const Any_OUT_arg& p) : _data(p._data) {}
+    inline Any_OUT_arg& operator=(const Any_OUT_arg& p) {
       _data = p._data; return *this;
     }
     inline Any_OUT_arg& operator=(Any* p) { _data = p; return *this; }
@@ -643,12 +668,21 @@ _CORBA_MODULE_BEG
     virtual void _raise();
     // 'throw' a copy of self. Must be overriden by all descendants.
 
-    static Exception* _narrow(Exception* e);
+    static Exception* _downcast(Exception* e);
     // An equivalent operation must be provided by each descendant,
     // returning a pointer to the descendant's type.
 
+    static const Exception* _downcast(const Exception* e);
+    // An equivalent operation must be provided by each descendant,
+    // returning a pointer to the descendant's type.
+
+    static Exception* _narrow(Exception* e);
+    // An equivalent operation must be provided by each descendant,
+    // returning a pointer to the descendant's type.
+    // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
     static Exception* _duplicate(Exception* e);
-    static Exception* _NP_is_a(Exception* e, const char* typeId);
+    static Exception* _NP_is_a(const Exception* e, const char* typeId);
 
     static inline _CORBA_Boolean PR_is_valid(Exception* p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
@@ -656,8 +690,33 @@ _CORBA_MODULE_BEG
 
     static _core_attr const _CORBA_ULong PR_magic;
 
+    typedef void (*insertExceptionToAny)    (Any&,const Exception&);
+    typedef void (*insertExceptionToAnyNCP) (Any&,const Exception*);
+
+    insertExceptionToAny insertToAnyFn() const { return pd_insertToAnyFn; }
+    insertExceptionToAnyNCP insertToAnyFnNCP() const { return pd_insertToAnyFnNCP; }
+
+    Exception(const Exception& ex) {
+         pd_magic = ex.pd_magic;
+	 pd_insertToAnyFn = ex.pd_insertToAnyFn;
+	 pd_insertToAnyFnNCP = ex.pd_insertToAnyFnNCP;
+    }
+
+    Exception& operator=(const Exception& ex) {
+         pd_magic = ex.pd_magic;
+	 pd_insertToAnyFn = ex.pd_insertToAnyFn;
+	 pd_insertToAnyFnNCP = ex.pd_insertToAnyFnNCP;
+	 return *this;
+    }
+
   protected:
-    Exception() { pd_magic = PR_magic; }
+    Exception() { pd_magic = PR_magic; 
+                  pd_insertToAnyFn = 0; 
+		  pd_insertToAnyFnNCP = 0;
+    }
+
+    insertExceptionToAny     pd_insertToAnyFn;
+    insertExceptionToAnyNCP  pd_insertToAnyFnNCP;
 
   private:
     virtual Exception* _NP_duplicate() const;
@@ -666,7 +725,7 @@ _CORBA_MODULE_BEG
 
     virtual const char* _NP_mostDerivedTypeId() const;
     // Returns a type identifier in the form of a string. The format is
-    // internal to omniORB2. This is used to support the _narrow()
+    // internal to omniORB2. This is used to support the _downcast()
     // operation. Must be overriden by all descendants.
 
     _CORBA_ULong pd_magic;
@@ -683,7 +742,7 @@ _CORBA_MODULE_BEG
       pd_status = COMPLETED_NO;
     }
 
-    SystemException(const SystemException& e) {
+    SystemException(const SystemException& e) : Exception(e) {
       pd_minor = e.pd_minor;
       pd_status = e.pd_status;
     }
@@ -697,6 +756,7 @@ _CORBA_MODULE_BEG
     virtual ~SystemException();
 
     SystemException& operator=(const SystemException& e) {
+      Exception::operator=(e);
       pd_minor = e.pd_minor;
       pd_status = e.pd_status;
       return *this;
@@ -716,7 +776,11 @@ _CORBA_MODULE_BEG
 
     virtual const char* NP_RepositoryId() const;
 
+    static SystemException* _downcast(Exception*);
+    static const SystemException* _downcast(const Exception*);
+
     static SystemException* _narrow(Exception* e);
+    // NOTE: deprecated function, use _downcast.
 
   protected:
     ULong             pd_minor;
@@ -727,11 +791,21 @@ _CORBA_MODULE_BEG
   class name : public SystemException { \
   public: \
     name (ULong minor = 0, CompletionStatus completed = COMPLETED_NO \
-    ) : SystemException (minor,completed) {} \
+    ) : SystemException (minor,completed) { \
+           pd_insertToAnyFn    = insertToAnyFn; \
+           pd_insertToAnyFnNCP = insertToAnyFnNCP; \
+    } \
+    name( const name& ex) : SystemException(ex) {} \
+    name& operator=( const name& ex) { SystemException::operator=(ex);\
+                                       return *this; } \
     virtual ~name(); \
     virtual const char* NP_RepositoryId() const; \
     virtual void _raise(); \
+    static name* _downcast(Exception*); \
+    static const name* _downcast(const Exception*); \
     static name* _narrow(Exception*); \
+    static _core_attr Exception::insertExceptionToAny    insertToAnyFn; \
+    static _core_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP; \
   private: \
     virtual Exception* _NP_duplicate() const; \
     virtual const char* _NP_mostDerivedTypeId() const; \
@@ -772,14 +846,34 @@ _CORBA_MODULE_BEG
 
   class UserException : public Exception {
   public:
+    UserException() {}
     virtual ~UserException();
+    static UserException* _downcast(Exception* e);
+    static const UserException* _downcast(const Exception* e);
     static UserException* _narrow(Exception* e);
+    // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+    UserException(const UserException& ex) : Exception(ex) {}
+    UserException& operator=(const UserException& ex) { 
+      Exception::operator=(ex); return *this;
+    }
   };
 
   class UnknownUserException : public UserException {
   public:
     UnknownUserException(Any* ex);
     // Consumes <ex> which MUST be a UserException.
+
+    UnknownUserException(const UnknownUserException& ex) : UserException(ex) {
+      pd_exception = new Any(*ex.pd_exception);
+    }
+    
+    UnknownUserException& operator=(const UnknownUserException& ex) {
+      Exception::operator=(ex);
+      if (pd_exception) delete pd_exception;
+      pd_exception = new Any(*ex.pd_exception);
+      return *this;
+    }
 
     virtual ~UnknownUserException();
 
@@ -788,7 +882,13 @@ _CORBA_MODULE_BEG
     virtual void _raise();
     virtual Exception* _NP_duplicate() const;
     virtual const char* _NP_mostDerivedTypeId() const;
+    static UnknownUserException* _downcast(Exception*);
+    static const UnknownUserException* _downcast(const Exception*);
     static UnknownUserException* _narrow(Exception*);
+    // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+    static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+    static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
 
   private:
     Any* pd_exception;
@@ -796,12 +896,27 @@ _CORBA_MODULE_BEG
 
   class WrongTransaction : public CORBA::UserException {
   public:
-    virtual ~WrongTransaction() {};
+    WrongTransaction() { 
+      pd_insertToAnyFn    = insertToAnyFn; 
+      pd_insertToAnyFnNCP = insertToAnyFnNCP;
+    }
+    WrongTransaction(const WrongTransaction& ex) : UserException(ex) {}
+    WrongTransaction& operator=(const WrongTransaction& ex) {
+      UserException::operator=(ex); return *this;
+    }
+    virtual ~WrongTransaction();
 
     virtual void _raise();
     virtual Exception* _NP_duplicate() const;
     virtual const char* _NP_mostDerivedTypeId() const;
+    static WrongTransaction* _downcast(Exception*);
+    static const WrongTransaction* _downcast(const Exception*);
     static WrongTransaction* _narrow(Exception*);
+    // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+    static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+    static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
+
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -937,9 +1052,24 @@ _CORBA_MODULE_BEG
 
     class Bounds : public UserException {
     public:
+      Bounds() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      Bounds(const Bounds& ex) : UserException(ex) {}
+      Bounds& operator=(const Bounds& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~Bounds();
       virtual void _raise();
+      static Bounds* _downcast(Exception* e);
+      static const Bounds* _downcast(const Exception* e);
       static Bounds* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
+
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -1056,9 +1186,24 @@ _CORBA_MODULE_BEG
 
     class Bounds : public UserException {
     public:
+      Bounds() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      Bounds(const Bounds& ex) : UserException(ex) {}
+      Bounds& operator=(const Bounds& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~Bounds();
       virtual void _raise();
+      static Bounds* _downcast(Exception* e);
+      static const Bounds* _downcast(const Exception* e);
       static Bounds* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
+
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -1149,9 +1294,24 @@ _CORBA_MODULE_BEG
 
     class Bounds : public UserException {
     public:
+      Bounds() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      Bounds(const Bounds& ex) : UserException(ex) {}
+      Bounds& operator=(const Bounds& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~Bounds();
       virtual void _raise();
+      static Bounds* _downcast(Exception* e);
+      static const Bounds* _downcast(const Exception* e);
       static Bounds* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
+
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -1213,15 +1373,21 @@ _CORBA_MODULE CORBA
 _CORBA_MODULE_BEG
 #endif
 
-#undef _LC_attr
-#ifdef _OMNIORB2_DYNAMIC_LIBRARY
-#  define _LC_attr
-#else
-#  define _LC_attr _OMNIORB_NTDLL_IMPORT
-#endif
+#if defined(_OMNIORB2_LIBRARY)
+#    undef   _core_attr
+#    define  _core_attr  _OMNIORB_NTDLL_IMPORT
 #include <omniORB2/corbaidl_defs.hh>
-#undef  _LC_attr
-#define _LC_attr
+#    undef   _core_attr
+#    define  _core_attr
+#elif defined(_OMNIORB2_DYNAMIC_LIBRARY)
+#    undef   _core_attr
+#    define  _core_attr
+#include <omniORB2/corbaidl_defs.hh>
+#    undef   _core_attr
+#    define  _core_attr  _OMNIORB_NTDLL_IMPORT
+#else
+#include <omniORB2/corbaidl_defs.hh>
+#endif
 
   class InterfaceDef;
 
@@ -1366,11 +1532,13 @@ _CORBA_MODULE_BEG
 
     TCKind kind() const;
 
-    Boolean equal(TypeCode_ptr TCp, Boolean langEquiv=0) const;
-    // omniORB extension - langEquiv indicates whether typecodes should
-    // be tested for being equivalent(1) or for being identical(0)
-    // Equivalence allows for expansion of tk_alias typecodes prior to
-    // comparison.
+    Boolean equal(TypeCode_ptr TCp) const;
+
+    Boolean equivalent(TypeCode_ptr TCp) const;
+    // CORBA 2.3 addition
+
+    TypeCode_ptr get_compact_typecode() const;
+    // CORBA 2.3 addition
 
     const char* id() const;
     const char* name() const;
@@ -1388,8 +1556,16 @@ _CORBA_MODULE_BEG
 
     TypeCode_ptr content_type() const;
 
-    Long param_count() const;
-    Any* parameter(Long index) const;
+    Long param_count() const;             // obsolute
+    Any* parameter(Long index) const;     // obsolute
+
+#if 0
+    // CORBA 2.3 additions
+    // Not supported yet
+    Visibility member_visibility(ULong index) const;
+    ValuetypeModifier type_modifier() const;
+    TypeCode_ptr concrete_base_type() const;
+#endif    
 
     static TypeCode_ptr _duplicate(TypeCode_ptr t);
     static TypeCode_ptr _nil();
@@ -1398,9 +1574,23 @@ _CORBA_MODULE_BEG
 
     class Bounds : public UserException {
     public:
+      Bounds() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      Bounds(const Bounds& ex) : UserException(ex) {}
+      Bounds& operator=(const Bounds& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~Bounds();
       virtual void _raise();
+      static Bounds* _downcast(Exception* e);
+      static const Bounds* _downcast(const Exception* e);
       static Bounds* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -1408,9 +1598,23 @@ _CORBA_MODULE_BEG
 
     class BadKind : public UserException {
     public:
+      BadKind() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      BadKind(const BadKind& ex) : UserException(ex) {}
+      BadKind& operator=(const BadKind& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~BadKind();
       virtual void _raise();
+      static BadKind* _downcast(Exception* e);
+      static const BadKind* _downcast(const Exception* e);
       static BadKind* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -1570,9 +1774,23 @@ _CORBA_MODULE_BEG
 
     class Invalid : public UserException {
     public:
+      Invalid() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      Invalid(const Invalid& ex) : UserException(ex) {}
+      Invalid& operator=(const Invalid& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~Invalid();
       virtual void _raise();
+      static Invalid* _downcast(Exception* e);
+      static const Invalid* _downcast(const Exception* e);
       static Invalid* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -1580,9 +1798,23 @@ _CORBA_MODULE_BEG
 
     class InvalidValue : public UserException {
     public:
+      InvalidValue() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      InvalidValue(const InvalidValue& ex) : UserException(ex) {}
+      InvalidValue& operator=(const InvalidValue& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~InvalidValue();
       virtual void _raise();
+      static InvalidValue* _downcast(Exception* e);
+      static const InvalidValue* _downcast(const Exception* e);
       static InvalidValue* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -1590,9 +1822,23 @@ _CORBA_MODULE_BEG
 
     class TypeMismatch : public UserException {
     public:
+      TypeMismatch() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      TypeMismatch(const TypeMismatch& ex) : UserException(ex) {}
+      TypeMismatch& operator=(const TypeMismatch& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~TypeMismatch();
       virtual void _raise();
+      static TypeMismatch* _downcast(Exception* e);
+      static const TypeMismatch* _downcast(const Exception* e);
       static TypeMismatch* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -1600,9 +1846,23 @@ _CORBA_MODULE_BEG
 
     class InvalidSeq : public UserException {
     public:
+      InvalidSeq() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      InvalidSeq(const InvalidSeq& ex) : UserException(ex) {}
+      InvalidSeq& operator=(const InvalidSeq& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~InvalidSeq();
       virtual void _raise();
+      static InvalidSeq* _downcast(Exception* e);
+      static const InvalidSeq* _downcast(const Exception* e);
       static InvalidSeq* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -2271,7 +2531,7 @@ _CORBA_MODULE_BEG
 	return *this;
       }
 
-      inline _CORBA_String_member& operator [] (_CORBA_ULong i) {
+      inline _CORBA_String_member operator [] (_CORBA_ULong i) {
 	return (*pd_seq)[i];
       }
       inline _T* operator -> () { return pd_seq; }
@@ -2310,9 +2570,23 @@ _CORBA_MODULE_BEG
 
     class InvalidName : public UserException {
     public:
+      InvalidName() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      InvalidName(const InvalidName& ex) : UserException(ex) {}
+      InvalidName& operator=(const InvalidName& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~InvalidName();
       virtual void _raise();
+      static InvalidName* _downcast(Exception* e);
+      static const InvalidName* _downcast(const Exception* e);
       static InvalidName* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _core_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _core_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -2346,12 +2620,33 @@ _CORBA_MODULE_BEG
     TypeCode_ptr create_array_tc(ULong length, TypeCode_ptr element_type);
 
     TypeCode_ptr create_recursive_sequence_tc(ULong bound, ULong offset);
+      // deprecated
+
+#if 0
+    // Not supported yet
+    TypeCode_ptr create_recusive_tc(const char* id);  
+#endif
 
     class InconsistentTypeCode : public UserException {
     public:
+      InconsistentTypeCode() { 
+	pd_insertToAnyFn    = insertToAnyFn; 
+	pd_insertToAnyFnNCP = insertToAnyFnNCP;
+      }
+      InconsistentTypeCode(const InconsistentTypeCode& ex)
+	: UserException(ex) {}
+      InconsistentTypeCode& operator=(const InconsistentTypeCode& ex) {
+	UserException::operator=(ex); return *this;
+      }
       virtual ~InconsistentTypeCode();
       virtual void _raise();
+      static InconsistentTypeCode* _downcast(Exception* e);
+      static const InconsistentTypeCode* _downcast(const Exception* e);
       static InconsistentTypeCode* _narrow(Exception* e);
+      // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
+
+      static _dyn_attr Exception::insertExceptionToAny    insertToAnyFn;
+      static _dyn_attr Exception::insertExceptionToAnyNCP insertToAnyFnNCP;
     private:
       virtual Exception* _NP_duplicate() const;
       virtual const char* _NP_mostDerivedTypeId() const;
@@ -2538,7 +2833,7 @@ _CORBA_MODULE_BEG
       else
 	pd_objref = CORBA::Object::_nil();
     }
-    Object_var(const Object_member& p);
+    inline Object_var(const Object_member& p);
     inline Object_var& operator= (Object_ptr p) {
       if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
       pd_objref = p;
@@ -2553,12 +2848,27 @@ _CORBA_MODULE_BEG
 	pd_objref = CORBA::Object::_nil();
       return *this;
     }
-    Object_var& operator= (const Object_member& p);
-    inline Object_ptr operator->() const { return (Object_ptr)pd_objref; }
+    inline Object_var& operator= (const Object_member& p);
+
+    inline Object_ptr operator->() const { return pd_objref; }
 
     inline operator Object_ptr() const { return pd_objref; }
 
-    friend class Object_member;
+    inline const Object_ptr in() const { return pd_objref; }
+    inline Object_ptr& inout()         { return pd_objref; }
+    inline Object_ptr& out() {
+      if( !CORBA::is_nil(pd_objref) ) {
+	CORBA::release(pd_objref);
+	pd_objref = CORBA::Object::_nil();
+      }
+      return pd_objref;
+    }
+    inline Object_ptr _retn() {
+      Object_ptr tmp = pd_objref;
+      pd_objref = CORBA::Object::_nil();
+      return tmp;
+    }
+
     friend class Object_INOUT_arg;
     friend class Object_OUT_arg;
 
@@ -2569,9 +2879,16 @@ private:
   // omniORB2 private class
   class Object_member {
   public:
-    inline Object_member() { _ptr = CORBA::Object::_nil(); }
-    inline Object_member(Object_ptr p) { _ptr = p; }
-    inline Object_member(const Object_member& p) {
+    inline Object_member() : pd_rel(1), _ptr(pd_data) { 
+      pd_data = CORBA::Object::_nil();
+    }
+    inline Object_member(Object_ptr& p, _CORBA_Boolean rel) 
+      : pd_rel(rel), _ptr(p) {
+      pd_data = CORBA::Object::_nil();
+    }
+
+    inline Object_member(Object_ptr p) : pd_data(p), pd_rel(1), _ptr(pd_data) {}
+    inline Object_member(const Object_member& p) : pd_rel(1), _ptr(pd_data) {
       if (!CORBA::is_nil(p._ptr)) {
 	_ptr = CORBA::Object::_duplicate(p._ptr);
       }
@@ -2579,15 +2896,16 @@ private:
 	_ptr = CORBA::Object::_nil();
     }
     inline ~Object_member() {
-      if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+      if (pd_rel && !CORBA::is_nil(pd_data)) CORBA::release(pd_data);
+      // Not _ptr! Only call release when this is not a sequence member
     }
     inline Object_member& operator= (Object_ptr p) {
-      if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+      if (pd_rel && !CORBA::is_nil(_ptr)) CORBA::release(_ptr);
       _ptr = p;
       return *this;
     }
     inline Object_member& operator= (const Object_member& p) {
-      if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+      if (pd_rel && !CORBA::is_nil(_ptr)) CORBA::release(_ptr);
       if (!CORBA::is_nil(p._ptr)) {
 	_ptr = CORBA::Object::_duplicate(p._ptr);
       }
@@ -2596,14 +2914,15 @@ private:
       return *this;
     }
     inline Object_member& operator= (const Object_var& p) {
-      if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
-      if (!CORBA::is_nil(p.pd_objref)) {
-	_ptr = CORBA::Object::_duplicate(p.pd_objref);
+      if (pd_rel && !CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+      if (!CORBA::is_nil(p)) {
+	_ptr = CORBA::Object::_duplicate(p);
       }
       else
 	_ptr = CORBA::Object::_nil();
       return *this;
     }
+
     inline size_t NP_alignedSize(size_t initialoffset) const {
       return CORBA::Object::NP_alignedSize(_ptr,initialoffset);
     }
@@ -2626,7 +2945,24 @@ private:
 
     inline Object_ptr operator->() const { return (Object_ptr)_ptr; }
     inline operator Object_ptr () const { return _ptr; }
-    Object_ptr _ptr;
+
+    // omniORB private
+    inline Object_ptr _retn() {
+      Object_ptr tmp;
+      if (!pd_rel) {
+	CORBA::Object::_duplicate(_ptr);
+      }
+      tmp = _ptr;
+      _ptr = CORBA::Object::_nil();
+      return tmp;
+    }
+
+  private:
+    Object_ptr pd_data;
+
+  public:
+    _CORBA_Boolean pd_rel;
+    Object_ptr& _ptr;
   };
 
   // omniORB2 private class
@@ -2634,7 +2970,17 @@ private:
   public:
     inline Object_INOUT_arg(Object_ptr& p) : _data(p) {}
     inline Object_INOUT_arg(Object_var& p) : _data(p.pd_objref) {}
-    inline Object_INOUT_arg(Object_member& p) : _data(p._ptr) {}
+    inline Object_INOUT_arg(Object_member& p) : _data(p._ptr) {
+      // If the Object_member is part of a sequence and the pd_rel == 0,
+      // the ObjRef is not owned by the sequence and should not
+      // be freed. Since this is an inout argument and the callee may call
+      // release, we duplicate the ObjRef and pass it to the callee. This will
+      // result in a memory leak! This only occurs when there is a programming
+      // error and cannot be trapped by the compiler.
+      if (!p.pd_rel && !CORBA::is_nil(p._ptr) ) {
+	CORBA::Object::_duplicate(p);
+      }
+    }
     inline ~Object_INOUT_arg() {}
 
     Object_ptr& _data;
@@ -2646,7 +2992,7 @@ private:
   // omniORB2 private class
   class Object_OUT_arg {
   public:
-    inline Object_OUT_arg(Object_ptr& p) : _data(p) { }
+    inline Object_OUT_arg(Object_ptr& p) : _data(p) { _data = CORBA::Object::_nil(); }
     inline Object_OUT_arg(Object_var& p) : _data(p.pd_objref) {
       p = CORBA::Object::_nil();
     }
@@ -2655,11 +3001,28 @@ private:
     }
     inline ~Object_OUT_arg() {}
 
+    inline Object_OUT_arg& operator=(const Object_OUT_arg& p) { 
+      _data = p._data; return *this;
+    }
+    inline Object_OUT_arg& operator=(Object_ptr p) { _data = p; return *this; }
+    inline Object_OUT_arg& operator=(const Object_var& p) { 
+      _data = CORBA::Object::_duplicate(p); return *this;
+    }
+    inline Object_OUT_arg& operator=(const Object_member& p) {
+      _data = CORBA::Object::_duplicate(p); return * this;
+    }
+    inline operator Object_ptr&() { return _data; }
+    inline Object_ptr& ptr() { return _data; }
+    inline Object_ptr operator->() { return _data; }
+
     Object_ptr& _data;
 
   private:
     Object_OUT_arg();
   };
+
+  typedef Object_OUT_arg Object_out;
+
 
   class TypeCode_INOUT_arg;
   class TypeCode_OUT_arg;
@@ -2896,25 +3259,28 @@ _CORBA_MODULE CORBA
 _CORBA_MODULE_BEG
 #endif
 
-#undef _core_attr
-#undef _dyn_attr
-
-
-#undef _LC_attr
-#ifdef _OMNIORB2_DYNAMIC_LIBRARY
-#  define _LC_attr
-#else
-#  define _LC_attr _OMNIORB_NTDLL_IMPORT
-#endif
+#if defined(_OMNIORB2_LIBRARY)
+#    undef   _core_attr
+#    define  _core_attr  _OMNIORB_NTDLL_IMPORT
 #include <omniORB2/ir_defs.hh>
-#undef  _LC_attr
+#    undef   _core_attr
+#    define  _core_attr
+#elif defined(_OMNIORB2_DYNAMIC_LIBRARY)
+#    undef   _core_attr
+#    define  _core_attr
+#include <omniORB2/ir_defs.hh>
+#    undef   _core_attr
+#    define  _core_attr  _OMNIORB_NTDLL_IMPORT
+#else
+#include <omniORB2/ir_defs.hh>
+#endif
 
 _CORBA_MODULE_END
 
 
 #include <omniORB2/omniORB.h>
 #include <omniORB2/templatedefns.h>
-
+#include <omniORB2/corba_operators.h>
 
 // omniORB2 private functions
 extern CORBA::Boolean
@@ -2950,29 +3316,30 @@ _omni_callSystemExceptionHandler(omniObject*,
 
 extern void _omni_set_NameService(CORBA::Object_ptr);
 
-// Include the COS Naming Service header:
-// Note: on WIN32, the typecode constants defined in the Naming Service
-//       header are not available because they are not exported by the
-//       dynamic library.
-#ifdef _OMNIORB2_DYNAMIC_LIBRARY
-// If compiling the dynamic library, USE_stub_in_nt_dll should
-// not be defined.
-# include <omniORB2/Naming.hh>
-#else
-// If not compiling the dynamic library, we need to ensure that
-// USE_stub_in_nt_dll is defined for these two includes. It must
-// revert to its previous value afterwards.
-# ifdef USE_stub_in_nt_dll
-#  include <omniORB2/Naming.hh>
-# else
-#  define USE_stub_in_nt_dll
-#  include <omniORB2/Naming.hh>
-#  undef USE_stub_in_nt_dll
-# endif
-#endif
-
 #include <omniORB2/corbaidl_operators.hh>
 #include <omniORB2/ir_operators.hh>
 
+#undef _core_attr
+#undef _dyn_attr
+
+#if !defined(_OMNIORB2_LIBRARY) && !defined(_OMNIORB2_DYNAMIC_LIBRARY)
+#ifndef USE_core_stub_in_nt_dll
+#define USE_core_stub_in_nt_dll
+#define USE_core_stub_in_nt_dll_NOT_DEFINED
+#endif
+#ifndef USE_dyn_stub_in_nt_dll
+#define USE_dyn_stub_in_nt_dll
+#define USE_dyn_stub_in_nt_dll_NOT_DEFINED
+#endif
+#include <omniORB2/Naming.hh>
+#ifdef  USE_core_stub_in_nt_dll_NOT_DEFINED
+#undef  USE_core_stub_in_nt_dll
+#undef  USE_core_stub_in_nt_dll_NOT_DEFINED
+#endif
+#ifdef  USE_dyn_stub_in_nt_dll_NOT_DEFINED
+#undef  USE_dyn_stub_in_nt_dll
+#undef  USE_dyn_stub_in_nt_dll_NOT_DEFINED
+#endif
+#endif
 
 #endif // __CORBA_H__
