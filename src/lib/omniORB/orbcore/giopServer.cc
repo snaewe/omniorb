@@ -3,7 +3,25 @@
 // giopServer.cc              Created on: 26/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //      Server side GIOP
@@ -11,30 +29,8 @@
  
 /*
   $Log$
-  Revision 1.6  1997/04/22 17:22:15  sll
-  - Now support GIOP LocateRequest message.
-  - omni::locateObject() now throws OBJECT_NOT_EXIST instead of INV_OBJREF.
-    Catch this exception in HandleRequest().
-  - Use non-zero message size when calling GIOP_S::RdMessageSize() in the
-    initial processing inside GIOP_S::dispatcher().
-
-// Revision 1.5  1997/04/08  17:10:45  sll
-// Relaxed the integrity check on incoming IIOP messages to cope with sloppy
-// IIOP implementation.
-//
-// Revision 1.4  1997/03/10  11:56:44  sll
-// Minor changes to accomodate the creation of a public API for omniORB2.
-//
-  Revision 1.3  1997/01/24 19:30:22  sll
-  In HandleRequest(), check whether CORBA::INV_OBJREF is thrown by
-  omni::locateObject() or by the upper level dispatch.
-
-// Revision 1.2  1997/01/13  14:55:47  sll
-// If the request message size in the header is too large, throw a COMM_FAILURE
-// instead of omniORB::fatalException.
-//
-  Revision 1.1  1997/01/08 17:26:01  sll
-  Initial revision
+  Revision 1.7  1997/05/06 15:20:48  sll
+  Public release.
 
   */
 

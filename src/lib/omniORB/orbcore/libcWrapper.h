@@ -3,7 +3,25 @@
 // LibcWrapper.h              Created on: 19/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //	Wrapper for libc functions which are non-reentrant
@@ -11,15 +29,9 @@
 
 /*
   $Log$
-  Revision 1.3  1997/01/23 16:41:10  sll
-  New static member non_reentrant in the LibcWrapper class.
+  Revision 1.4  1997/05/06 15:23:10  sll
+  Public release.
 
- * Revision 1.2  1997/01/08  18:12:39  ewc
- * Added support for ATMos
- *
- * Revision 1.1  1996/10/10  14:37:53  sll
- * Initial revision
- *
   */
 
 #ifndef __LIBCWRAPPER_H__

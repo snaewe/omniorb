@@ -3,7 +3,25 @@
 // object.cc                  Created on: 13/5/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
@@ -11,29 +29,8 @@
  
 /*
   $Log$
-  Revision 1.6  1997/04/29 16:24:39  ewc
-  Added work-around for MSVC++ 4.2 control-path bug.
-
-// Revision 1.5  1997/04/24  16:00:04  sll
-// - In setRopeAndKey(), do not use omni::objectToIopProfiles() as the
-//   function use getRopeAndKey() and this would cause a deadlock.
-//
-// Revision 1.4  1997/04/22  17:49:55  sll
-// - New atomic functions getRopeAndKey, setRopeAndKey, resetRopeAndKey to
-//   get or set the Rope and object key associated with an object.
-// - dispatch() now accepts psuedo object operations _is_a, _non_existent,
-//   _interface, _implementation.
-// - New atomic function assertObjectExistent to assert that the object
-//   exists. This is done via the GIOP LocateRequest message.
-//
-// Revision 1.3  1997/03/11  20:27:36  sll
-// NP_objkey() should also update the IIOP profile list. Fixed.
-//
-// Revision 1.2  1997/03/10  11:53:06  sll
-// Minor changes to accomodate the creation of a public API for omniORB2.
-//
-  Revision 1.1  1997/01/08 17:26:01  sll
-  Initial revision
+  Revision 1.7  1997/05/06 15:25:34  sll
+  Public release.
 
   */
 

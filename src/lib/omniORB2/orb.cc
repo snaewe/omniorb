@@ -3,7 +3,25 @@
 // orb.cc                     Created on: 20/5/96
 //                            Author    : Sai Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
@@ -11,37 +29,9 @@
  
 /*
   $Log$
-  Revision 1.8  1997/04/22 17:31:45  sll
-  - Use getRopeAndKey instead of _rope() and objkey().
-  - Added -ORBstrictIIOP command line option.
+  Revision 1.9  1997/05/06 15:27:14  sll
+  Public release.
 
-// Revision 1.7  1997/04/21  10:24:00  ewc
-// Minor cosmetic change.
-//
-// Revision 1.6  1997/03/10  12:10:20  sll
-// - Support for ORB and BOA initialisation arguments.
-// -  Add runtime configurable trace messages.
-// - omni::init will only throws CORBA::INITIALIZE exception if anything goes
-//   wrong.
-// - Minor cleanup to accomodate the creation of a public API for omniORB2.
-//
-// Revision 1.5  1997/02/19  11:03:29  ewc
-// Added support for NT
-//
-  Revision 1.4  1997/01/23 16:53:35  sll
-  Changed to use the static member variables defined in the class omniORB etc.
-  Previously they were local static variables.
-
-// Revision 1.3  1997/01/21  14:25:35  ewc
-// Added support for initial reference interface.
-//
-// Revision 1.2  1997/01/08  18:21:06  ewc
-// Corrected bug in omni::iopProfilesToRope (code assumed that profile
-// tag was IOP::TAG_INTERNET_IOP)
-//
-// Revision 1.1  1996/10/10  14:37:53  sll
-// Initial revision
-//
   */
 
 #include <omniORB2/CORBA.h>
