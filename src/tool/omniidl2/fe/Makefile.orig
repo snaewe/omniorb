@@ -1,0 +1,39 @@
+#
+# fe Makefile
+#
+# @(#) Makefile 1.11@(#)
+#
+
+include ../idl_make_vars
+
+FE_FILES	= \
+		fe_declarator.cc \
+		fe_private.cc \
+		fe_init.cc \
+		fe_extern.cc \
+		fe_interface_header.cc
+
+FE_OBJS		= $(FE_FILES:.cc=.o)
+
+FE_LIB_NAME	= libfe.a
+
+all: y.tab.o lex.yy.o $(FE_LIB_NAME)
+
+$(FE_LIB_NAME): $(FE_OBJS) y.tab.o lex.yy.o
+	$(AR) $(ARFLAGS) $@ $(FE_OBJS) y.tab.o lex.yy.o
+	$(RANLIB) $@
+
+# Create the parser and lexer
+y.tab.hh y.tab.cc: idl.yy
+	@-$(RM) $@
+	$(YACC) $(YFLAGS) idl.yy
+	mv -f y.tab.c y.tab.cc
+	mv -f y.tab.h y.tab.hh
+
+lex.yy.cc: idl.ll y.tab.hh
+	$(LEX) $(LEXFLAGS) idl.ll > $@
+
+# DO NOT remove lex.yy.cc and y.tab.{cc,hh} since they're included
+# in the distribution for people who don't have a C++ capable lex or yacc
+clean:
+	rm -f $(FE_OBJS) $(FE_LIB_NAME) lex.yy.o y.tab.o *~
