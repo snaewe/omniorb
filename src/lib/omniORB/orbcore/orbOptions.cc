@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/10/19 11:06:45  dpg1
+  Principal support for GIOP 1.0. Correct some spelling mistakes.
+
   Revision 1.1.2.3  2001/08/21 11:03:38  sll
   Environment variables to set the configuration parameters must now
   prefix with "ORB". For instance, environment variable ORBtraceLevel
@@ -272,7 +275,7 @@ orbOptions::usage() const {
       j++;
     }
   }
-  result->length(j);  // some options may be obsoluted. They are those
+  result->length(j);  // some options may be obsoleted. They are those
                       // with no usage strings. We have to adjust the length
                       // to cater for their omission.
   return result._retn();
@@ -298,7 +301,7 @@ orbOptions::usageArgv() const {
       j++;
     }
   }
-  result->length(j);  // some options may be obsoluted. They are those
+  result->length(j);  // some options may be obsoleted. They are those
                       // with no usage strings. We have to adjust the length
                       // to cater for their omission.
   return result._retn();

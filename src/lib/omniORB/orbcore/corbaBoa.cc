@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16.2.13  2001/10/19 11:06:44  dpg1
+  Principal support for GIOP 1.0. Correct some spelling mistakes.
+
   Revision 1.16.2.12  2001/09/20 09:27:43  dpg1
   Remove assertion failure on exit if not all POAs are deleted.
 
@@ -1119,14 +1122,14 @@ parse_BOA_args(int& argc, char** argv, const char* boa_identifier)
       }
 
       // -BOAiiop_port <port number>[,<port number>]*
-      // -BOAiiop_name_port <hostname[:port number]> -- obsoluted options
+      // -BOAiiop_name_port <hostname[:port number]> -- obsoleted options
       if (strcmp(argv[idx],"-BOAiiop_port") == 0 ||
 	  strcmp(argv[idx],"-BOAiiop_name_port") == 0) {
 
 	if (omniORB::trace(1)) {
 	  omniORB::logger log;
 	  log << "BOA_init failed: "
-	      << argv[idx] << " is now obsolute, use -ORBendpoint instead.\n";
+	      << argv[idx] << " is now obsolete, use -ORBendpoint instead.\n";
 	}
 	return 0;
       }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.30  2001/10/19 11:06:45  dpg1
+  Principal support for GIOP 1.0. Correct some spelling mistakes.
+
   Revision 1.33.2.29  2001/09/20 14:18:12  dpg1
   Make hooked initialiser suitable for ORB restart.
 
@@ -314,10 +317,6 @@ static const char* orb_ids[] = { ORB_ID_STRING,
 				 "omniORB3",
 				 "omniORB2",
 				 0 };
-
-#ifndef OMNIORB_PRINCIPAL_VAR
-#  define OMNIORB_PRINCIPAL_VAR "OMNIORB_PRINCIPAL"
-#endif
 
 static omniOrbORB*          the_orb                   = 0;
 static int                  orb_count                 = 0;
@@ -1330,10 +1329,45 @@ static lcdModeHandler lcdModeHandler_;
 
 
 /////////////////////////////////////////////////////////////////////////////
+class principalHandler : public orbOptions::Handler {
+public:
+
+  principalHandler() :
+    orbOptions::Handler("principal",
+			"principal = <GIOP 1.0 principal string>",
+			1,
+			"-ORBprincipal <GIOP 1.0 principal string>") {}
+
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+    CORBA::ULong l = strlen(value) + 1;
+    omni::myPrincipalID.length(l);
+    for (CORBA::ULong i = 0; i < l; i++)
+      omni::myPrincipalID[i] = value[i];
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    if (omni::myPrincipalID.length() == 0)
+      orbOptions::addKVString(key(),"[Null]",result);
+    else {
+      CORBA::String_var s(CORBA::string_alloc(omni::myPrincipalID.length()+1));
+      CORBA::ULong i;
+      for (i=0; i<omni::myPrincipalID.length(); i++) {
+	((char*)s)[i] = omni::myPrincipalID[i];
+      }
+      ((char*)s)[i] = '\0';
+      orbOptions::addKVString(key(),s,result);
+    }
+  }
+};
+
+static principalHandler principalHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
 class poa_iiop_portHandler : public orbOptions::Handler {
 public:
 
-#define POA_IIOP_IS_OBSOLUTE "is now obsolute, use -ORBendpoint instead"
+#define POA_IIOP_IS_OBSOLETE "is now obsolete, use -ORBendpoint instead"
 
   poa_iiop_portHandler() :
     orbOptions::Handler("poa_iiop_port",0,1,0) {}
@@ -1341,7 +1375,7 @@ public:
   void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     throw orbOptions::BadParam(key(),value,
-			       "poa_iiop_port"POA_IIOP_IS_OBSOLUTE);
+			       "poa_iiop_port"POA_IIOP_IS_OBSOLETE);
   }
 
   void dump(orbOptions::sequenceString& result) {
@@ -1360,7 +1394,7 @@ public:
 
   void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
     throw orbOptions::BadParam(key(),value,
-			       "poa_iiop_name_port"POA_IIOP_IS_OBSOLUTE);
+			       "poa_iiop_name_port"POA_IIOP_IS_OBSOLETE);
   }
 
   void dump(orbOptions::sequenceString& result) {
@@ -1382,32 +1416,13 @@ public:
     orbOptions::singleton().registerHandler(idHandler_);
     orbOptions::singleton().registerHandler(dumpConfigurationHandler_);
     orbOptions::singleton().registerHandler(lcdModeHandler_);
+    orbOptions::singleton().registerHandler(principalHandler_);
     orbOptions::singleton().registerHandler(poa_iiop_portHandler_);
     orbOptions::singleton().registerHandler(poa_iiop_name_portHandler_);
   }
 
 
   void attach() {
-
-    // myPrincipalID, to be used in the principal field of IIOP calls
-    CORBA::ULong  l;
-    CORBA::Octet* p;
-
-    char* env = getenv(OMNIORB_PRINCIPAL_VAR);
-    if (env) {
-      l = strlen(env) + 1;
-      p = (CORBA::Octet*)env;
-    }
-    else {
-      l = strlen("nobody")+1;
-      p = (CORBA::Octet *) "nobody";
-    }
-    omni::myPrincipalID.length(l);
-    unsigned int i;
-    for (i=0; i < l; i++) {
-      omni::myPrincipalID[i] = p[i];
-    }
-
 
 #if defined(_HAS_SIGNAL) && !defined(__CIAO__)
 #ifndef _USE_MACH_SIGNAL

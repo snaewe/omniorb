@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.13  2001/10/19 11:06:45  dpg1
+  Principal support for GIOP 1.0. Correct some spelling mistakes.
+
   Revision 1.1.4.12  2001/09/12 19:43:19  sll
   Enforce GIOP message size limit.
 
@@ -1001,7 +1004,7 @@ giopImpl10::marshalRequestHeader(giopStream* g) {
     cs.put_octet_array(giop_c.key(),giop_c.keysize());
     operator>>= ((CORBA::ULong)calldesc.op_len(),cs);
     cs.put_octet_array((CORBA::Octet*) calldesc.op(), calldesc.op_len());
-    operator>>= ((CORBA::ULong)0,cs);
+    omni::myPrincipalID >>= cs;
     *((CORBA::ULong*)(hdr+8)) = cs.total();
 
 #if defined(PRE_CALCULATE_MESSAGE_SIZE)
@@ -1030,7 +1033,7 @@ giopImpl10::marshalRequestHeader(giopStream* g) {
   s.put_octet_array((CORBA::Octet*) calldesc.op(), calldesc.op_len());
 
   // principal
-  operator>>= ((CORBA::ULong)0,s);
+  omni::myPrincipalID >>= s;
 }
 
 ////////////////////////////////////////////////////////////////////////
