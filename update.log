@@ -1,3 +1,19 @@
+Thu Sep 25 14:43:29 BST 2003 dgrisby
+====================================
+
+- Get hex conversion right.
+
+src/appl/utils/genior/genior.cc
+
+- Log connection attempts.
+
+src/lib/omniORB/orbcore/giopStream.cc
+
+- Use raw strings in is_a.
+
+src/lib/omniORB/orbcore/objectStub.cc
+
+
 Thu Sep 25 14:11:16 BST 2003 dgrisby
 ====================================
 

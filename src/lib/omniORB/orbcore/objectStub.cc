@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2003/09/25 13:48:41  dgrisby
+  Use raw strings in is_a.
+
   Revision 1.1.2.4  2003/07/25 16:06:22  dgrisby
   Bug with nil return from _get_interface.
 
@@ -54,7 +57,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 void
 omni_is_a_CallDesc::marshalArguments(cdrStream& s)
 {
-  s.marshalString(a_1);
+  s.marshalRawString(a_1);
 }
 
 void
@@ -66,7 +69,7 @@ omni_is_a_CallDesc::unmarshalReturnedValues(cdrStream& s)
 void
 omni_is_a_CallDesc::unmarshalArguments(cdrStream& s)
 {
-  a_1 = s.unmarshalString();
+  a_1 = s.unmarshalRawString();
 }
 
 void
