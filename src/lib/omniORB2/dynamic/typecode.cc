@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.2.5  2001/05/25 15:08:36  sll
+ * *** empty log message ***
+ *
  * Revision 1.33.2.4  2000/02/21 10:00:01  djr
  * Another TypeCode_union w aliased discriminator fix.
  *
@@ -166,6 +169,10 @@
 #include <typecode.h>
 #include <tcParser.h>
 #include <string.h>
+
+#define OMNIORB_ASSERT(e)  \
+  do{ if( !(e) )  throw omniORB::fatalException(__FILE__, __LINE__,  \
+        "Internal assertion failed (probably omniORB bug)"); }while(0)
 
 
 // CORBA::TypeCode - core class function implementation
@@ -1162,6 +1169,7 @@ TypeCode_objref::TypeCode_objref(const char* repositoryId, const char* name)
   pd_name = name;
   pd_alignmentTable.setNumEntries(1);
   pd_alignmentTable.addNasty(this);
+  pd_complete = 1;
 }
 
 
@@ -1194,6 +1202,7 @@ TypeCode_objref::NP_unmarshalComplexParams(MemBufferedStream &s,
 
   _ptr->pd_repoId <<= s;
   _ptr->pd_name <<= s;
+  _ptr->pd_complete = 1;
 
   return _ptr;
 }
@@ -1592,6 +1601,9 @@ size_t
 TypeCode_sequence::NP_alignedComplexParamSize(size_t initialoffset,
 					      TypeCode_offsetTable* otbl) const
 {
+  // This assert is a sanity check that recursive sequences have been
+  // properly completed.
+  OMNIORB_ASSERT(!CORBA::is_nil(pd_content));
   initialoffset = TypeCode_marshaller::alignedSize(ToTcBase(pd_content),
 						   initialoffset, otbl);
   return omni::align_to(initialoffset, omni::ALIGN_4) + 4;
@@ -1620,6 +1632,8 @@ TypeCode_sequence::NP_length() const
 TypeCode_base*
 TypeCode_sequence::NP_content_type() const
 {
+  // Sanity check that recursive sequences have been properly completed
+  OMNIORB_ASSERT(!CORBA::is_nil(pd_content));
   return ToTcBase(pd_content);
 }
 
@@ -4448,8 +4462,12 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 
       case CORBA::tk_alias:
       case CORBA::tk_array:
-      case CORBA::tk_sequence:
 	tc->pd_internal_depth = markLoops(tc->NP_content_type(), depth+1);
+	break;
+
+      case CORBA::tk_sequence:
+	if (((TypeCode_sequence*)tc)->PR_content_is_assigned())
+	  tc->pd_internal_depth = markLoops(tc->NP_content_type(), depth+1);
 	break;
 
       case CORBA::tk_struct:
@@ -4478,12 +4496,12 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 	tc->pd_loop_member = 1;
       else
 	tc->pd_loop_member = 0;
+
+      // Clear the mark
+      tc->pd_mark = 0;
     }
 
-  // Clear the mark
-  tc->pd_mark = 0;
-
-  // And return the least-deep accessible node
+  // Return the least-deep accessible node
   return tc->pd_internal_depth;
 }
 

@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.8.2.2  2001/05/25 15:08:36  sll
+ * *** empty log message ***
+ *
  * Revision 1.8.2.1  2000/02/15 11:06:18  djr
  * Fixed bug in create_union_tc() -- problem if discriminator was an alias.
  *
@@ -569,6 +572,10 @@ public:
   virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
+
+  inline CORBA::Boolean  PR_content_is_assigned() const {
+    return !CORBA::is_nil(pd_content);
+  }
 
 private:
   TypeCode_sequence();
