@@ -6,6 +6,7 @@ ORB_SRCS = \
             callDescriptor.cc \
             cdrMemoryStream.cc \
             cdrStream.cc \
+            cdrStreamAdapter.cc \
             constants.cc \
             corbaBoa.cc \
             corbaObject.cc \

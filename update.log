@@ -1,3 +1,22 @@
+Tue Jan  9 17:03:34 GMT 2001 dpg1
+=================================
+
+- Wrong spillover bytes written after fragmentation.
+
+src/lib/omniORB/orbcore/giopStream12.cc
+
+- Assertion messages not updated to put/get_octet_array.
+
+src/lib/omniORB/orbcore/giopStream.cc
+
+- New cdrStreamAdapter class to allow omniORBpy to intercept buffer
+  management.
+
+include/omniORB4/cdrStream.h
+src/lib/omniORB/orbcore/cdrStreamAdapter.cc
+src/lib/omniORB/orbcore/dir.mk
+
+
 Mon Jan  8 12:33:43 GMT 2001 dpg1
 =================================
 
