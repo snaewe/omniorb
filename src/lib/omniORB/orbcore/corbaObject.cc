@@ -11,9 +11,13 @@
  
 /*
   $Log$
-  Revision 1.6  1997/03/10 12:23:26  sll
-  Minor changes to accomodate the creation of a public API for omniORB2.
+  Revision 1.7  1997/04/22 15:52:03  sll
+  - Use getRopeAndKey() instead of _rope() and objkey()
+  - Implemented CORBA::Object::_non_existent()
 
+// Revision 1.6  1997/03/10  12:23:26  sll
+// Minor changes to accomodate the creation of a public API for omniORB2.
+//
   Revision 1.5  1997/01/30 19:57:48  sll
   Added is_nil(), duplicate(), release() in Object_Helper class.
 
@@ -112,8 +116,9 @@ Object::_is_a(const char *repoId)
     omniObject * objptr = PR_getobj();
     if (objptr->_widenFromTheMostDerivedIntf(repoId))
       return 1;
-    else
+    else {
       return 0;
+    }
   }
 }
 
@@ -130,9 +135,12 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
   else {
     omniObject * objptr = PR_getobj();
     omniObject * other_objptr = other_object->PR_getobj();
-    if (objptr->objkeysize() != other_objptr->objkeysize() ||
-	memcmp(objptr->objkey(),other_objptr->objkey(),
-	       objptr->objkeysize()) != 0)
+    omniRopeAndKey rak, other_rak;
+    objptr->getRopeAndKey(rak);
+    other_objptr->getRopeAndKey(other_rak);
+    if (rak.keysize() != other_rak.keysize() ||
+	memcmp((void*)rak.key(),(void*)other_rak.key(),
+	       rak.keysize()) != 0)
       {
 	return 0; // object keys do not match
       }
@@ -153,7 +161,7 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
       else {
 	// both are proxy objects, check whether they go back to the same
 	// address space. Note: object keys are not globally unique.
-	if (objptr->_rope() == other_objptr->_rope())
+	if (rak.rope() == other_rak.rope())
 	  return 1;
 	else
 	  return 0;
@@ -170,8 +178,11 @@ Object::_hash(CORBA::ULong maximum)
     return 0;
   }
   omniObject * objptr = PR_getobj();
-  size_t s = objptr->objkeysize();
-  char *k = (char *)objptr->objkey();
+  omniRopeAndKey rak;
+  objptr->getRopeAndKey(rak);
+
+  size_t s = rak.keysize();
+  char *k = (char *)rak.key();
   CORBA::ULong v = 0;
 
   unsigned int i;
@@ -194,9 +205,82 @@ CORBA::Boolean
 CORBA::
 Object::_non_existent()
 {
-  // XXX not implemented yet, waiting for support of GIOP Lookup message
-  throw omniORB::fatalException(__FILE__,__LINE__,
-				"CORBA::Object::_non_existent() has not been implemeted yet.");
+  if (NP_is_nil()) {
+    return 1;
+  }
+  
+  omniObject * objptr = PR_getobj();
+
+  if (!objptr->is_proxy()) {
+    return 0;
+  }
+
+  CORBA::Boolean forwardlocation;
+  try {
+    omniRopeAndKey rak;
+    forwardlocation = objptr->getRopeAndKey(rak);
+
+    GIOP_C _c(rak.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(rak.keysize(),14);
+    CORBA::Boolean _result;
+    _c.InitialiseRequest(rak.key(),
+			 rak.keysize(),
+			 (char *)"_non_existent",14,_msgsize,0);
+    switch (_c.ReceiveReply())
+      {
+      case GIOP::NO_EXCEPTION:
+	{
+	  _result <<= _c;
+	  _c.RequestCompleted();
+	  if (_result) {
+	    throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
+	  }
+	  break;
+	}
+      case GIOP::USER_EXCEPTION:
+	{
+	  _c.RequestCompleted(1);
+	  throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+	  break;
+	}
+      case GIOP::SYSTEM_EXCEPTION:
+	{
+	  _c.RequestCompleted(1);
+	  throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+	}
+      case GIOP::LOCATION_FORWARD:
+	{
+	  {
+	    CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+	    _c.RequestCompleted();
+	    if (CORBA::is_nil(obj)) {
+	      if (omniORB::traceLevel > 10) {
+		cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+	      }
+	      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+	    }
+	    omniRopeAndKey __r;
+	    obj->PR_getobj()->getRopeAndKey(__r);
+	    objptr->setRopeAndKey(__r);
+	    _c.~GIOP_C();
+	  }
+	  if (omniORB::traceLevel > 10) {
+	    cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+	  }
+	  return _non_existent();
+	}
+      }
+  }
+  catch(const CORBA::COMM_FAILURE& ex) {
+    if (forwardlocation) {
+      objptr->resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
+    }
+    throw;
+  }
+  catch(const CORBA::OBJECT_NOT_EXIST& ex) {
+    return 1;
+  }
   return 0;
 }
 
