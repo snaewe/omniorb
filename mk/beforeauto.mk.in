@@ -5,12 +5,17 @@
 # Based upon beforedir.mk and platform makefiles
 
 platform         = autoconf
-BASE_OMNI_TREE   = @top_srcdir@
-MAKEFILE_INC_DIR = @top_srcdir@/$(CURRENT)/
-IMPORT_TREES     = $(TOP) @top_srcdir@
+MAKEFILE_INC_DIR = $(BASE_OMNI_TREE)/$(CURRENT)/
+IMPORT_TREES     = $(TOP) $(BASE_OMNI_TREE)
 THIS_IMPORT_TREE = $(TOP)
 EXPORT_TREE      = $(TOP)
 PYTHON           = @PYTHON@
+
+# If the build tree is the same as the source tree, autoconf helpfully
+# clears any makefile lines that set VPATH. We put it back here.
+ifndef VPATH
+VPATH=.
+endif
 
 #############################################################################
 #
@@ -66,7 +71,7 @@ comma := ,
 #
 
 IMPORT_CPPFLAGS += -I. $(patsubst %,-I%,$(VPATH)) \
-                   -I$(TOP)/include -I@top_srcdir@/include \
+                   -I$(TOP)/include -I$(BASE_OMNI_TREE)/include \
                    -D__OSVERSION__=@OSVERSION@
 
 CPPFLAGS = $(DIR_CPPFLAGS) $(IMPORT_CPPFLAGS)

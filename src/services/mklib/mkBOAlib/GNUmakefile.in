@@ -1,5 +1,6 @@
 TOP=../../../..
 CURRENT=src/services/mklib/mkBOAlib
+BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
 
 include $(TOP)/mk/beforeauto.mk

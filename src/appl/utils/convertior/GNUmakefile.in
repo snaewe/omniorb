@@ -1,5 +1,6 @@
 TOP=../../../..
 CURRENT=src/appl/utils/convertior
+BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
 
 include $(TOP)/mk/beforeauto.mk

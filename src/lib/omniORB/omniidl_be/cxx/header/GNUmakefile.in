@@ -1,5 +1,6 @@
 TOP=../../../../../..
 CURRENT=src/lib/omniORB/omniidl_be/cxx/header
+BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
 
 include $(TOP)/mk/beforeauto.mk

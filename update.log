@@ -1,3 +1,12 @@
+Mon Feb 18 13:51:54 GMT 2002 dpg1
+=================================
+
+- Fix autoconf stuff for build in source tree.
+
+external_merge/mk/beforeauto.mk.in
+*/GNUmakefile.in
+
+
 Mon Feb 18 11:43:13 GMT 2002 dpg1
 =================================
 
