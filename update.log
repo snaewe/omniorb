@@ -1,3 +1,16 @@
+Mon Jun  9 17:13:57 BST 2003 dgrisby
+====================================
+
+- Remove obsolete scripts.
+
+bin/scripts/java_weatherman
+bin/scripts/obuildtree
+bin/scripts/ols
+bin/scripts/omake
+bin/scripts/opriv
+bin/scripts/oshadow
+
+
 Mon Jun  9 12:42:04 BST 2003 dgrisby
 ====================================
 
