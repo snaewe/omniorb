@@ -29,6 +29,13 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:16:20  sll
+  Replaced data member pd_iopProfiles with pd_ior which contains decoded
+  members of the IOR.
+  Removed _getRopeAndKey(), _getTheKey() and _iopProfiles().
+  Added new functions _getIOR(), _marshal(), _unMarshal(), _toString,
+  _fromString(), _hash(), _is_equivalent().
+
   Revision 1.2.2.1  2000/07/17 10:35:35  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -59,6 +66,7 @@ class omni;
 class omniInternal;
 class omniObjKey;
 class omniIdentity;
+class omniIOR;
 class omniLocalIdentity;
 class omniRemoteIdentity;
 class omniCallDescriptor;
@@ -87,30 +95,11 @@ public:
   // This funtion is thread safe.
   // Must hold <omni::internalLock>.
 
-  int _getRopeAndKey(omniRopeAndKey& rak, _CORBA_Boolean* is_local=0) const;
-  // Get the current value of the rope and key, and whether
-  // the object is local or not.  <is_local> may be null, in
-  // which case that value is not written.  Returns true if
-  // this reference is a forwarded-location.
-  //  This function is thread-safe.
-
-  void _getTheKey(omniObjKey& key, int locked=0) const;
-  // Get the current value of the key.
-  //  This function is thread-safe.
-
   inline const char* _mostDerivedRepoId() const {
     return pd_mostDerivedRepoId;
   }
   // The interface repository id of the most derived interface
   // supported by the object.  May be the empty string '\0'.
-  //  This function is thread-safe.
-
-  inline IOP::TaggedProfileList* _iopProfiles() const {
-    return pd_iopprofiles;
-  }
-  // This object retains the memory returned by this method.
-  // The returned profiles must not be modified.  The returned
-  // value is non-const for nasty dirty-hack type reasons!
   //  This function is thread-safe.
 
   _CORBA_Boolean _real_is_a(const char* repoId);
@@ -244,11 +233,46 @@ public:
   //  Really ought to only call this if you know no-one else
   // is accessing this reference, or holding <omni::internalLock>.
 
+  _CORBA_Boolean _is_equivalent(omniObjRef* other_obj);
+  // Returns true if this and the other_obj is equivalent. In other
+  // words, they both have the same object key and in the same address space.
+  // Caller must not hold <omni::internalLock>
+  // other_obj must not be nil.
+  // This function is thread-safe.
+
+  _CORBA_ULong _hash(_CORBA_ULong maximum);
+  // Returns the result of passing the object key through the ORB's hash
+  // function. The return value is not larger than maximum.
+  // Caller must not hold <omni::internalLock>
+  // This function is thread-safe.
+
   void _invoke(omniCallDescriptor&, _CORBA_Boolean do_assert=1);
   // Does the client-side work of making a request.  Dispaches
   // the call to the object identity, and deals with exception
   // handlers, retries and location forwarding.
 
+  omniIOR* _getIOR();
+  // Returns an omniIOR. The object contains all the fields in
+  // the IOR of the object reference. The object is read-only
+  // and shouldn't be modified. The returned object should be
+  // released by calling its release() method. This
+  // function is atomic and thread-safe.
+  // Mutual exclusion by holding omni::InternalLock.
+  
+  static void _marshal(omniObjRef*, cdrStream&);
+  // Marshal this object reference to the cdrStream.
+  // Use omni::InternalLock for internal synchronisation.
+  // Must not hold omni::InternalLock when calling.
+
+  static omniObjRef* _unMarshal(const char* repoId, cdrStream& s);
+  // Unmarshal from the cdrStream an object reference. The
+  // object reference is expected to implement the interface identified
+  // by the repository ID <repoId>.
+  // Use omni::InternalLock for internal synchronisation.
+  // Must not hold omni::InternalLock when calling.
+
+  static char* _toString(omniObjRef*);
+  static omniObjRef* _fromString(const char*);
 
 protected:
   virtual ~omniObjRef();
@@ -259,8 +283,7 @@ protected:
   // be invoked on nil object references.  This should be tested
   // in the public interface.
 
-  omniObjRef(const char* intfRepoId, const char* mostDerivedId,
-	     IOP::TaggedProfileList* profiles,
+  omniObjRef(const char* intfRepoId, omniIOR* ior,
 	     omniIdentity* id, omniLocalIdentity* lid);
   // Constructed with an initial ref count of 1.
 
@@ -318,8 +341,9 @@ private:
   // string.
   //  Immutable.
 
-  IOP::TaggedProfileList* pd_iopprofiles;
-  // Immutable.
+  omniIOR* pd_ior;
+  // The decoded IOR of this object reference.
+  // Mutable. Protected by <omni::internalLock>.
 
   omniIdentity* pd_id;
   // An encapsulation of the current implementation of this
