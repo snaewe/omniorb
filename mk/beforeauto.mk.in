@@ -1004,7 +1004,30 @@ OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=6 \
 			    -DPthreadSupportThreadPriority -DNoNanoSleep
 endif
 
+###################
+ifdef Cygwin
+IMPORT_CPPFLAGS += -D__linux__ -D__cygwin__
+SHAREDLIB_CPPFLAGS =
+OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=10
+OMNITHREAD_CPPFLAGS = -D_REENTRANT
+OMNITHREAD_LIB += -lpthread
+BinPattern = %.exe
+define MakeCXXSharedLibrary
+ $(ParseNameSpec); \
+ soname=$(SharedLibrarySoNameTemplate); \
+ set -x; \
+ $(RM) $@; \
+ $(CXX) $(SharedLibraryPlatformLinkFlagsTemplate) -o $@ \
+ $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs;
+endef
 
+SHAREDLIB_SUFFIX = dll
+
+SharedLibraryFullNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
+SharedLibrarySoNameTemplate   = lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3
+SharedLibraryLibNameTemplate  = lib$$1$$2.$(SHAREDLIB_SUFFIX)
+
+endif
 
 
 ###########################################################################

@@ -9836,6 +9836,7 @@ os_v="0"
 
 case "$host" in
   *-*-linux-*)   plat_name="Linux";    plat_def="__linux__";    os_v="2";;
+  *-*-cygwin*)   plat_name="Cygwin";   plat_def="__linux__";    os_v="2";;
   *-*-solaris*)  plat_name="SunOS";    plat_def="__sunos__";    os_v="5";;
   *-*-osf3*)     plat_name="OSF1";     plat_def="__osf1__";     os_v="3";;
   *-*-osf4*)     plat_name="OSF1";     plat_def="__osf1__";     os_v="4";;

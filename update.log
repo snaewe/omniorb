@@ -1,3 +1,16 @@
+Tue Feb 25 11:35:03 GMT 2003 dgrisby
+====================================
+
+- Cygwin support. (Thanks Henning Schmidt.)
+
+configure
+configure.ac
+mk/beforeauto.mk.in
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omnithread/posix.cc
+src/services/mklib/dir.mk
+
+
 Fri Feb 21 15:54:30 GMT 2003 dgrisby
 ====================================
 

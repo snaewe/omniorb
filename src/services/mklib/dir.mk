@@ -44,6 +44,13 @@ veryclean::
               $(COS_INTERFACES:%=%.hh)
 
 
+ifdef Cygwin
+# there's a bug in gcc 3.2 (build 20020927) that makes gcc crash
+# when optimizing these files ...
+CXXDEBUGFLAGS = -O0
+endif
+
+
 ##############################################################################
 # Build Static library
 ##############################################################################

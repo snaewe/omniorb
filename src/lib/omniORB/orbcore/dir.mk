@@ -165,6 +165,15 @@ ifndef ETSKernel
 endif
 endif
 
+##########################################################################
+ifdef Cygwin
+# there's a bug in gcc 3.2 (build 20020927) that makes gcc crash
+# when optimizing this file ...
+static/Namingstub.o: CXXDEBUGFLAGS = -O0
+shared/Namingstub.o: CXXDEBUGFLAGS = -O0
+endif
+
+
 #########################################################################
 
 ORB_OBJS      = $(ORB_SRCS:.cc=.o)
