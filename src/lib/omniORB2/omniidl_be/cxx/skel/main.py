@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.9  2000/06/05 13:04:18  djs
+# Removed union member name clash (x & pd_x, pd__default, pd__d)
+# Removed name clash when a sequence is called "pd_seq"
+#
 # Revision 1.27.2.8  2000/05/31 18:03:38  djs
 # Better output indenting (and preprocessor directives now correctly output at
 # the beginning of lines)
@@ -792,7 +796,7 @@ def visitUnion(node):
                     stream.inc_indent()
                     size_calc = skutil.sizeCalculation(environment, caseType,
                                                        decl, "_msgsize",
-                                                       "pd_" + decl_name)
+                                                       "_pd_" + decl_name)
                     stream.out(size_calc)
                     stream.dec_indent()
                     stream.out("\nbreak;\n")
@@ -813,7 +817,7 @@ def visitUnion(node):
                 decl = defaultCase.declarator()
                 size_calc = skutil.sizeCalculation(environment, caseType,
                                                    decl, "_msgsize",
-                                                   "pd_" + defaultMember)
+                                                   "_pd_" + defaultMember)
             stream.out(template.union_align_nonexhaustive,
                        size_calc = size_calc,
                        cases = cases)
@@ -864,20 +868,20 @@ def visitUnion(node):
                 marshal_cases.out("case " + discrim_value + ":")
                 marshal_cases.inc_indent()
                 skutil.marshall_struct_union(marshal_cases, environment,
-                                             caseType, decl, "pd_" + decl_name)
+                                             caseType, decl, "_pd_" + decl_name)
                 marshal_cases.dec_indent()
                 marshal_cases.out("break;")
 
             unmarshal_cases.inc_indent()
-            unmarshal_cases.out("pd__default = " + str(isDefault) + ";")
+            unmarshal_cases.out("_pd__default = " + str(isDefault) + ";")
             skutil.unmarshall_struct_union(unmarshal_cases, environment,
-                                           caseType, decl, "pd_" + decl_name,
+                                           caseType, decl, "_pd_" + decl_name,
                                            can_throw_marshall = 1)
             unmarshal_cases.dec_indent()
             unmarshal_cases.out("break;")
 
     if not(hasDefault) and not(exhaustive):
-        unmarshal_cases.out("default: pd__default = 1; break;")
+        unmarshal_cases.out("default: _pd__default = 1; break;")
         
             
     if booleanWrap:
@@ -902,7 +906,7 @@ def visitUnion(node):
                     decl_scopedName = id.Name(decl.scopedName())
                     decl_name = decl_scopedName.simple()
                     skutil.marshall_struct_union(stream, environment, caseType,
-                                                 decl, "pd_" + decl_name)
+                                                 decl, "_pd_" + decl_name)
             stream.out(template.union_operators_nonexhaustive,
                         default = default,
                         cases = str(marshal_cases))
