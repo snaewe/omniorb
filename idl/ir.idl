@@ -194,7 +194,7 @@ enum PrimitiveKind {
 interface Repository : Container {
   Contained lookup_id(in RepositoryId search_id);
 
-  PrimitiveDef get_primtive(in PrimitiveKind kind);
+  PrimitiveDef get_primitive(in PrimitiveKind kind);
 
   StringDef create_string(in unsigned long bound);
 
