@@ -29,7 +29,8 @@ VERSION = 1.1.0
 #
 
 override VPATH := $(patsubst %,%/..,$(VPATH))
-vpath %.cc ../..
+vpath %.cc ..
+vpath %.c ..
 
 #############################################################################
 #   Make variables common to all platforms                                  #
@@ -60,11 +61,10 @@ OBJS = hosts_access.o options.o shell_cmd.o rfc931.o eval.o \
        hosts_ctl.o refuse.o percent_x.o clean_exit.o $(AUX_OBJS) \
        fix_options.o socket.o workarounds.o \
        update.o misc.o diag.o percent_m.o environ.o fakelog2.o
-
 CXXOBJS = gatekeeper.o
 
-DIR_CPPFLAGS += -I. $(patsubst %,-I.,$(VPATH)) \
-                -I../.. $(patsubst %,-I%/../..,$(VPATH))
+DIR_CPPFLAGS += -I.. $(patsubst %,-I..,$(VPATH)) \
+                -I../../.. $(patsubst %,-I%/../../..,$(VPATH))
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
