@@ -1,3 +1,12 @@
+Mon Aug 10 19:02:33 BST 1998 sll
+================================
+
+- Fixed Any ctor Any(TypeCode_ptr,void*,Boolean) and
+                 void replace(TypeCode_ptr, void*, Boolean)
+  to accept null second argument.
+
+src/lib/omniORB2/any.cc
+
 Mon Aug 10 16:23:35 BST 1998 sll
 ================================
 
@@ -20,12 +29,12 @@ const unsigned short losBitNumber1 = 0x02 << 1;
 const unsigned short losBitNumber2 = 0x02 >> 1;
 
 
-omniidl2/omniORB2_be/o2be_root.cc
-omniidl2/omniORB2_be/o2be_cfe_interface.cc
-omniidl2/omniORB2_be/o2be_union.cc
-omniidl2/fe/idl.yy
-omniidl2/fe/y.tab.cc
-omniidl2/ast/ast_expression.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/fe/idl.yy
+src/tool/omniidl2/fe/y.tab.cc
+src/tool/omniidl2/ast/ast_expression.cc
 
 
 Fri Aug  7 11:39:06 BST 1998 sll
@@ -34,8 +43,8 @@ Fri Aug  7 11:39:06 BST 1998 sll
 - Fix compiler flag for building static omniORB2 libraries for win32
 
 mk/win32.mk
-src/lib/omniORB/dir.mk
-src/lib/omniORB/sharedlib/dir.mk
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/sharedlib/dir.mk
 src/lib/omnithread/dir.mk
 src/lib/omnithread/sharedlib/dir.mk
 
