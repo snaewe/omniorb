@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.24  1999/05/25 17:20:44  sll
+  Added check for invalid arguments in static member functions.
+  Default to throw system exception in the DII interface.
+  resolve_initial_reference now deals with InterfaceRepository.
+
   Revision 1.23  1999/05/22 17:40:57  sll
   Added #ifdef __CIAO__ so that CCia would not complain about gnu/linux
   particulars.
@@ -145,7 +150,7 @@ CORBA::String_var		omniORB::serverName((const char*) "unknown");
 #endif
 CORBA::Boolean                  omniORB::tcAliasExpand = 0;
 unsigned int                    omniORB::maxTcpConnectionPerServer = 5;
-CORBA::Boolean                  omniORB::diiThrowsSysExceptions = 0;
+CORBA::Boolean                  omniORB::diiThrowsSysExceptions = 1;
 CORBA::Boolean                  omniORB::useTypeCodeIndirections = 1;
 CORBA::Boolean                  omniORB::acceptMisalignedTcIndirections = 0;
 #endif
@@ -178,13 +183,13 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier);
 CORBA::
 ORB::ORB()
 {
-  return;
+  pd_magic = CORBA::ORB::PR_magic;
 }
 
 CORBA::
 ORB::~ORB()
 {
-  return;
+  pd_magic = 0;
 }
 
 CORBA::ORB_ptr
@@ -223,6 +228,8 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
       // Override any previous NamesService object reference
       // that may have been read from the configuration file.
       omniInitialReferences::singleton()->set("NameService",
+					      CORBA::Object::_nil());
+      omniInitialReferences::singleton()->set("InterfaceRepository",
 					      CORBA::Object::_nil());
       omniInitialReferences::singleton()
 	->initialise_bootstrap_agent(bootstrapAgentHostname,
@@ -361,7 +368,14 @@ CORBA::ORB::ObjectIdList*
 CORBA::
 ORB::list_initial_services()
 {
-  return omniInitialReferences::singleton()->list();
+  CORBA_InitialReferences::ObjIdList_var v;
+  v = omniInitialReferences::singleton()->list();
+  CORBA::ORB::ObjectIdList* result = new CORBA::ORB::ObjectIdList;
+  result->length(v->length());
+  for (CORBA::ULong index = 0; index < v->length(); index++) {
+    (*result)[index] = v[index];
+  }
+  return result;
 }
 
 
@@ -369,6 +383,10 @@ char*
 CORBA::
 ORB::object_to_string(CORBA::Object_ptr p)
 {
+  if (!CORBA::Object::PR_is_valid(p))
+    // throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
+
   if (CORBA::is_nil(p))
     return omni::objectToString(0);
   else 
@@ -380,11 +398,19 @@ CORBA::Object_ptr
 CORBA::
 ORB::string_to_object(const char *m)
 {
-  omniObject *objptr = omni::stringToObject(m);
-  if (objptr)
-    return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
-  else
-    return CORBA::Object::_nil();
+  if (!m || strlen(m) == 0) 
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+    
+  try {
+    omniObject *objptr = omni::stringToObject(m);
+    if (objptr)
+      return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
+    else
+      return CORBA::Object::_nil();
+  }
+  catch(...) {
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  }
 }
 
 
@@ -392,6 +418,7 @@ CORBA::ORB_ptr
 CORBA::
 ORB::_duplicate(CORBA::ORB_ptr p)
 {
+  if (!PR_is_valid(p)) throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
   return p;
 }
 
@@ -414,7 +441,10 @@ CORBA::release(ORB_ptr p)
 CORBA::Boolean
 CORBA::is_nil(ORB_ptr p)
 {
-  return (p == 0) ? 1 : 0;
+  if (!CORBA::ORB::PR_is_valid(p))
+    return 0;
+  else
+    return ((p == 0) ? 1 : 0);
 }
 
 
