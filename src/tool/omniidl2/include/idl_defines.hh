@@ -80,5 +80,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #define	IDL_CF_ONLY_USAGE	(1 << 3)
 #define	IDL_CF_INFORMATIVE	(1 << 4)
 #define	IDL_CF_NOWARNINGS	(1 << 5)
+#define IDL_CF_LIFECYCLE        (1 << 6)  // ***
 
 #endif	// _IDL_DEFINES_IDL_DEFINES_HH
