@@ -1,3 +1,32 @@
+Tue Oct  3 18:31:31 BST 2000 sll
+================================
+
+- The echo examples now work. Debugging continues.
+
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniObjRef.h
+
+src/lib/omniORB/remoteIdentity.h
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/strand.cc
+
+src/examples/echo/echoSK.cc
+src/examples/echo/eg1.cc
+src/examples/echo/eg2_clt.cc
+src/examples/echo/eg2_impl.cc
+src/examples/echo/eg3_clt.cc
+src/examples/echo/eg3_impl.cc
+
+
 Wed Sep 27 18:24:14 BST 2000 sll
 ===============================
 
