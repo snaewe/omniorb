@@ -1,3 +1,41 @@
+Fri Apr 28 11:19:12 BST 2000 dme
+================================
+- merge changes of Jan 18 & 19 from omni2_8_develop
+
+  [ Wed Jan 19 10:40:23 GMT 2000 dme
+    ================================
+    - update compiled wrapper .exes in external_merge/
+
+    Tue Jan 18 14:54:30 GMT 2000 dme
+    ================================
+
+    - new DIR_IDLFLAGS, DIR_STUBS_CPPFLAGS make it possible to compile
+      interfaces and stubs that depend on idl from import trees without
+      generating headers and stubs for those imported idls locally.  This is
+      useful when the import tree supplies the headers and stubs itself,
+      usually as part of some library.
+
+    - Win32 now uses filename-translating wrappers for omniidl[2].exe, allowing
+      fearless use of "-I" etc.
+    - fixed strncpy()-related bug in all Win32 wrappers
+  ]
+
+external_merge/bin/x86_win32/clwrapper.exe
+external_merge/bin/x86_win32/libwrapper.exe
+external_merge/bin/x86_win32/linkwrapper.exe
+
+mk/afterdir.mk
+mk/beforedir.mk
+mk/win32.mk
+
+src/tool/win32/bccwrapper.c
+src/tool/win32/clwrapper.c
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+src/tool/win32/tlibwrapper.c
+src/tool/win32/tlinkwrapper.c
+
+
 Thu Apr 27 12:13:00 BST 2000 dpg1
 =================================
 
