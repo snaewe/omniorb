@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/08/23 10:11:53  sll
+  Initialise BiDirPolicy constants properly for compilers with no namespace
+  support.
+
   Revision 1.1.2.4  2001/08/21 11:02:14  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -99,10 +103,10 @@ _init_in_def_( const CORBA::PolicyType
 	       BiDirPolicy::BIDIRECTIONAL_POLICY_TYPE = 37; )
 
 _init_in_def_( const BiDirPolicy::BidirectionalPolicyValue 
-                NORMAL = 0; )
+                BiDirPolicy::NORMAL = 0; )
 
 _init_in_def_( const BiDirPolicy::BidirectionalPolicyValue 
-                BOTH = 1; )
+                BiDirPolicy::BOTH = 1; )
 
 BiDirPolicy::BidirectionalPolicy::~BidirectionalPolicy() {}
 
