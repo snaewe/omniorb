@@ -1,3 +1,31 @@
+Mon Nov 20 14:33:28 GMT 2000 sll
+================================
+
+- idl compiler update to support wchar and wstring.
+- wchar and wstring should be fully supported now.
+
+include/omniORB4/CORBA.h
+src/lib/omniORB/dynamic/typecode.cc
+
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/seqTemplatedefns.h
+
+src/lib/omniORB/orbcore/ior.cc
+
+src/lib/omniORB/omniidl_be/cxx/support.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/tcstring.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/tcstring.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/mangler.py
+src/lib/omniORB/omniidl_be/cxx/tools/genIDL
+
+
 Mon Nov 20 11:57:27 GMT 2000 dpg1
 =================================
 
