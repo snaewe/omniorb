@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.17.2.9  2001/08/15 10:31:23  dpg1
+// Minor tweaks and fixes.
+//
 // Revision 1.17.2.8  2001/03/13 10:32:12  dpg1
 // Fixed point support.
 //
@@ -1182,7 +1185,9 @@ visitValue(Value* v)
 
   for (l=0, vinh = v->inherits(); vinh; vinh = vinh->next(), ++l) {
     d = vinh->decl();
-    if (d->kind() == Decl::D_VALUEABS)
+    if (d->kind() == Decl::D_VALUE)
+      pyobj = findPyDecl(((Value*)d)->scopedName());
+    else if (d->kind() == Decl::D_VALUEABS)
       pyobj = findPyDecl(((ValueAbs*)d)->scopedName());
     else if (d->kind() == Decl::D_DECLARATOR)
       pyobj = findPyDecl(((Declarator*)d)->scopedName());

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.5  2001/08/15 10:31:23  dpg1
+# Minor tweaks and fixes.
+#
 # Revision 1.5.2.4  2001/06/13 11:28:22  dpg1
 # Proper omniidl support for wchar/wstring constants.
 #
@@ -110,7 +113,7 @@ with any prefix it shares with B removed.
     return tscope
 
 _valid_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" \
-               " _!$%^&*()-=+[]{};'#:@~,./<>?|`"
+               " _!$%^&*()-=+[]{};#:@~,./<>?|`"
 
 _valid_unichars = map(ord, list(_valid_chars))
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2001/08/15 10:31:23  dpg1
+  Minor tweaks and fixes.
+
   Revision 1.2.2.4  2001/08/03 17:41:20  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -92,7 +95,7 @@ omniDynamicLib* omniDynamicLib::hook = 0;
 static void
 init()
 {
-  omniORB::logs(2, "The omniDynamic library is not linked.");
+  omniORB::logs(2, "Information: the omniDynamic library is not linked.");
 }
 
 
