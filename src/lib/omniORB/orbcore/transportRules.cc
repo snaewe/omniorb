@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/29 17:54:15  sll
+  New method dumpRule.
+
   Revision 1.1.2.1  2001/08/23 16:00:35  sll
   Added method in giopTransportImpl to return the addresses of the host
   interfaces.
@@ -51,6 +54,8 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 static transportRules serverRules_;
 static transportRules clientRules_;
+
+static char* dumpRuleString(transportRules::RuleActionPair* ra);
 
 /////////////////////////////////////////////////////////////////////////////
 transportRules::transportRules() {
@@ -106,6 +111,18 @@ transportRules::match(const char* endpoint,
   }
   return 0;
 }
+
+/////////////////////////////////////////////////////////////////////////////
+char*
+transportRules::dumpRule(CORBA::ULong index) {
+  omnivector<RuleActionPair*>::iterator i = pd_rules.begin();
+  omnivector<RuleActionPair*>::iterator last = pd_rules.end();
+
+  if ( (i+index) >= last ) return 0;
+
+  return dumpRuleString((*(i+index)));
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 static 
