@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.8  2001/07/31 16:34:53  sll
+ New function listMyEndpoints(). Remove explicit instantiation of
+ giopServer, do it via interceptor.
+
  Revision 1.2.2.7  2001/06/11 18:01:18  sll
  Fixed silly mistake in debugging message.
 
@@ -179,9 +183,6 @@ omniObjAdapter::initialise()
   try {
 
     if ( oa_servers.empty() ) {
-      oa_servers.push_back(new giopServer());
-      // Now if any other exotic servers want to be started, this is
-      // where this should be done.
       omniInterceptors::createORBServer_T::info_T info(oa_servers);
       omniORB::getInterceptors()->createORBServer.visit(info);
     }
@@ -503,6 +504,13 @@ omniObjAdapter::matchMyEndpoints(const char* addr)
     if (omni::ptrStrMatch((*i),addr)) return 1;
   }
   return 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+const omnivector<const char*>&
+omniObjAdapter::listMyEndpoints()
+{
+  return oa_endpoints;
 }
 
 //////////////////////////////////////////////////////////////////////
