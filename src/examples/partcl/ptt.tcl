@@ -8,7 +8,10 @@
 # $Author$
 #
 # $Log$
-# Revision 1.2  1996/10/11 11:11:04  tjr
+# Revision 1.2.6.1  1999/09/15 20:23:19  sll
+# *** empty log message ***
+#
+# Revision 1.2  1996/10/11  11:11:04  tjr
 # *** empty log message ***
 #
 # Revision 1.1  1995/09/04  11:01:45  krw

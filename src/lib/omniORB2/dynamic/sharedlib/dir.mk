@@ -19,7 +19,7 @@
 # corresponds to a pure bug fix release.
 #
 # 
-VERSION = 2.8.0
+VERSION = 2.9.0
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))

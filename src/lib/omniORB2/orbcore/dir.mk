@@ -7,21 +7,25 @@
 #   Make variables common to all platforms                                  #
 #############################################################################
 
-ORB2_SRCS = bootstrap_i.cc \
+ORB2_SRCS = bootstrap_i.cc cdrMemoryStream.cc \
             constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
             corbaString.cc \
-            exception.cc giopClient.cc giopServer.cc initFile.cc ior.cc \
-            libcWrapper.cc mbufferedStream.cc nbufferedStream.cc \
+            exception.cc giopClient.cc giopServer.cc giopStream.cc \
+            giopStream10.cc giopStream11.cc giopStream12.cc \
+            initFile.cc ior.cc \
+            libcWrapper.cc \
             object.cc objectKey.cc objectRef.cc ropeFactory.cc \
             strand.cc scavenger.cc exceptn.cc proxyCall.cc \
             current.cc policy.cc orbservice.cc domainManager.cc \
             $(NETLIBSRCS) $(LOG_SRCS) bootstrapstub.cc Namingstub.cc
 
-ORB2_OBJS = bootstrap_i.o \
+ORB2_OBJS = bootstrap_i.o cdrMemoryStream.o \
             constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             corbaString.o \
-            exception.o giopClient.o giopServer.o initFile.o ior.o \
-            libcWrapper.o mbufferedStream.o nbufferedStream.o \
+            exception.o giopClient.o giopServer.o giopStream.o \
+            giopStream10.o giopStream11.o giopStream12.o \
+            initFile.o ior.o \
+            libcWrapper.o \
             object.o objectRef.o objectKey.o ropeFactory.o \
             strand.o scavenger.o exceptn.o proxyCall.o \
             current.o policy.o orbservice.o domainManager.o \

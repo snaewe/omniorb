@@ -1,5 +1,6 @@
 ifndef ATMos
-SUBDIRS = omniNames utils
+#SUBDIRS = omniNames utils
+SUBDIRS = 
 endif
 
 all::

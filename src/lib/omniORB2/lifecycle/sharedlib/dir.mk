@@ -19,7 +19,7 @@
 # corresponds to a pure bug fix release.
 #
 # 
-VERSION = 2.8.0
+VERSION = 2.9.0
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
@@ -27,7 +27,7 @@ micro_version = $(word 3,$(subst ., ,$(VERSION)))
 
 #
 # Life cycle run time library version
-LC_VERSION = 1.3.0
+LC_VERSION = 1.4.0
 
 lc_major_version = $(word 1,$(subst ., ,$(LC_VERSION)))
 lc_minor_version = $(word 2,$(subst ., ,$(LC_VERSION)))

@@ -1,7 +1,8 @@
 # dir.mk for omniORB2.
 #
 
-SUBDIRS = orbcore dynamic lifecycle
+#SUBDIRS = orbcore dynamic lifecycle
+SUBDIRS = orbcore dynamic
 
 
 all:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh omniLifeCycle.hh
