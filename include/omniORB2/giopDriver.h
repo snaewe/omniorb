@@ -11,9 +11,14 @@
 
 /*
   $Log$
-  Revision 1.3  1997/03/26 17:37:22  ewc
-  Runtime converted to Win32 DLL
+  Revision 1.4  1997/04/23 13:49:28  sll
+  - new member GIOP_C::IssueLocateRequest() to issue GIOP LocateRequest mesg.
+  - omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen increased to take into
+    account of the omg.org prefix.
 
+ * Revision 1.3  1997/03/26  17:37:22  ewc
+ * Runtime converted to Win32 DLL
+ *
   Revision 1.2  1997/01/23 15:00:45  sll
   Added global variable max_giop_message_size.
 
@@ -38,7 +43,6 @@
 // Calling the constructors of GIOP_C and GIOP_S acquire a strand.
 // GIOP_C and GIOP_S implements the appropriate exclusive access to the
 // strand according to their internal states.
-
 
 class _OMNIORB2_NTDLL_ GIOP_Basetypes {
 public:
@@ -92,7 +96,7 @@ public:
     static const _CORBA_ULong maxIDLen;
     static const _CORBA_Char *version;
     static const _CORBA_ULong versionLen;
-#define omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen 31
+#define omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen 39
   };
   static size_t max_giop_message_size;
 };
@@ -137,18 +141,24 @@ public:
   //				       	|
   //        RequestCompleted()     +----+---+  	   InitialiseRequest()
   //             +---------------->|  Idle  |---------------+
-  //             |                 +--------+               |
-  //             |                                          V
-  //  +-----------------------+                   +--------------------+
-  //  | ReplyIsBeingProcessed |                   |  RequestInProgress |
-  //  +-----------------------+                   +---------+----------+
-  //		 ^                                          |
-  //             |                                          |
-  //             |         +--------------------+	    |
-  //             +---------|  WaitingForReply   |<----------+
+  //             |                 +---+----+               |
+  //             |                     |                    V
+  //  +-----------------------+        |             +--------------------+
+  //  | ReplyIsBeingProcessed |        |             |  RequestInProgress |
+  //  +-----------------------+        |             +---------+----------+
+  //		 ^                     |                       |
+  //             |                     |                       |
+  //             |                     | IssueLocateRequest()  |
+  //             |      	       |		       |
+  //    	 |      	       |		       |
+  //    	 |      	       |		       |
+  //    	 |      	       |		       |
+  //    	 |                     V                       |
+  //             |         +--------------------+	       |
+  //             +---------|  WaitingForReply   |<-------------+
   //     <got a proper     +--------------------+     ReceiveReply()
   //      reply header while
-  //      in ReceiveReply()>
+  //      in ReceiveReply() or IssueLocateRequest()>
   //
   // The constructor initialises a GIOP_C to Idle state.
   //
@@ -156,13 +166,14 @@ public:
   // Idle or WaitingForReply, there is something seriously wrong with the
   // NetBufferedStream. Also the state of the strand, on which the
   // NetBufferedStream is built, is unknown. For this reason, the strand
-  // is marked as dying by the destructor. The destructor may be called 
+  // is marked as dying by the destructor. The destructor may be called
   // multiple times. It simply returns if the instance is already in Zombie
   // state.
   //
-  // Calling the member functions InitialiseRequest(), ReceiveReply() and
-  // RequestCompleted() while the GIOP_C is not in the appropriate state as
-  // indicated above would cause a CORBA::INTERNAL() exception to be raised.
+  // Calling the member functions InitialiseRequest(), ReceiveReply(),
+  // RequestCompleted() and IssueLocateRequest() while the GIOP_C is not 
+  // in the appropriate state as indicated above would cause a 
+  // CORBA::INTERNAL() exception to be raised.
   //
 
   void InitialiseRequest(const void          *objkey,
@@ -180,6 +191,9 @@ public:
 
   void RequestCompleted(_CORBA_Boolean skip=0);
 
+  GIOP::LocateStatusType IssueLocateRequest(const void   *objkey,
+					    const size_t  objkeysize);
+
   static size_t RequestHeaderSize(const size_t objkeysize,
 				  const size_t opnamesize);
   // Return the header size. This includes the size of the GIOP message
@@ -188,7 +202,7 @@ public:
   size_t MaxMessageSize() const { return pd_max_message_size; }
   // Returns the maximum size of a GIOP message (excluding the header) that
   // can be delivered or received. This value is the smallest of two
-  // values: the ORB-wide limit and the transport dependent limit. 
+  // values: the ORB-wide limit and the transport dependent limit.
   //
   // If an incoming message exceeds this limit, the message will not be
   // unmarshalled and the CORBA::COMM_FAILURE exception will be raised. The
@@ -322,7 +336,7 @@ public:
   size_t MaxMessageSize() const { return pd_max_message_size; }
   // Returns the maximum size of a GIOP message (excluding the header) that
   // can be delivered or received. This value is the smallest of two
-  // values: the ORB-wide limit and the transport dependent limit. 
+  // values: the ORB-wide limit and the transport dependent limit.
   //
   // If an incoming message exceeds this limit, a MessageError message
   // will be sent and the CORBA::COMM_FAILURE exception will be raised. The
