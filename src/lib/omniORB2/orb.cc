@@ -29,9 +29,12 @@
  
 /*
   $Log$
-  Revision 1.9  1997/05/06 15:27:14  sll
-  Public release.
+  Revision 1.10  1997/08/21 21:57:28  sll
+  tcpsock_rendezvouser does fall over when accept call fails.
 
+// Revision 1.9  1997/05/06  15:27:14  sll
+// Public release.
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -517,10 +520,30 @@ tcpsock_rendezvouser::run(void *arg)
       if (omniORB::traceLevel >= 5) {
 	cerr << "tcpsock_rendezvouser thread: accept new strand." << endl;
       }
-      newthr = new strand_server(newSt);
-      if (!newthr) {
-	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+      if (!(newthr = new strand_server(newSt))) {
+	// Cannot create a new thread to serve the strand
+	// We have no choice but to shutdown the strand.
+	// The long term solutions are:  start multiplexing the new strand
+	// and the rendezvous; close down idle connections; reasign
+	// threads to strands; etc.
+	newSt->decrRefCount();
+	newSt->shutdown();
       }
+    }
+    catch(CORBA::COMM_FAILURE &ex) {
+      // XXX accepts failed. The probabe cause is that the number of
+      //     file descriptors opened has exceeded the limit.
+      //     On unix, the value of this limit can be set and get using the
+      //              ulimit command.
+      //     On NT, if this is part of a DLL, the limit is 256(?)
+      //            else the limit is 16(?)
+      // The following is a temporary fix, this thread just wait for a while
+      // and tries again. Hopfully, some connections might be freed by then.
+      if (omniORB::traceLevel >= 5) {
+	cerr << "tcpsock_rendezvouser thread: accept fails. Too many file descriptors opened?" << endl;
+      }
+      omni_thread::sleep(1,0);
+      continue;
     }
     catch(omniORB::fatalException &ex) {
       if (omniORB::traceLevel > 0) {
