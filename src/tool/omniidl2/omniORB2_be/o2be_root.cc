@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.17  1999/01/07 09:37:19  djr
+  Separate stub skeleton into two files: fooSK.cc and fooDynSK.cc.
+  The latter contains code for TypeCode and Any.
+
   Revision 1.16  1998/10/26 12:12:15  sll
   Added check for frontend error flagged by the backend.
 
@@ -84,15 +88,19 @@
 #endif
 
 #ifdef __WIN32__
-#include <stdio.h>
+# include <stdio.h>
 #else
-#include <unistd.h>
-
-#if defined(__VMS) && __VMS_VER < 70000000
-#include <omniVms/unlink.hxx>
+# include <unistd.h>
+# if defined(__VMS) && __VMS_VER < 70000000
+#  include <omniVms/unlink.hxx>
+# endif
 #endif
+#include <ctype.h>
 
-#endif
+
+// Do not forget to update the version number in omniORB_x_y below.
+// The variable is defined in omniInternal.h.
+#define OMNIORB_LIBRARY_VERSION    "omniORB_2_7"
 
 
 o2be_root::o2be_root(UTL_ScopedName *n, UTL_StrList *p)
@@ -107,6 +115,7 @@ o2be_root::o2be_root(UTL_ScopedName *n, UTL_StrList *p)
   set_in_main_file(I_TRUE);
   return;
 }
+
 
 void
 o2be_root::produce()
@@ -129,30 +138,43 @@ o2be_root::produce()
     strcat(stubfname,o2be_global::hdrsuffix());
     pd_hdr.open(stubfname, std::ios::out | std::ios::trunc);
     if (! pd_hdr)
-      {
-	throw o2be_fileio_error("Can't open output header file");
-      }
+      throw o2be_fileio_error("Can't open output header file");
     stubfname[baselen] = '\0';
 
-    // open server
+    // open skeleton
     strcat(stubfname,o2be_global::skelsuffix());
     pd_skel.open(stubfname, std::ios::out | std::ios::trunc);
     if (! pd_skel)
-      {
-        throw o2be_fileio_error("Can't open output stub file");
-      }
+      throw o2be_fileio_error("Can't open output stub file");
     stubfname[baselen] = '\0';
 
+    if (idl_global->compile_flags() & IDL_CF_ANY) {
+      // open dynamic skeleton
+      strcat(stubfname, o2be_global::dynskelsuffix());
+      pd_dynskel.open(stubfname, std::ios::out | std::ios::trunc);
+      if( !pd_dynskel )
+	throw o2be_fileio_error("Can't open output dynamic stub file");
+      stubfname[baselen] = '\0';
+    }
+
     produce_hdr(pd_hdr);
-    if (idl_global->err_count() > 0) {
-      throw o2be_fe_error("Error detected when the header file is generated");
-    }
-    produce_skel(pd_skel);
-    if (idl_global->err_count() > 0) {
-      throw o2be_fe_error("Error detected when the skeleton file is generated");
-    }
+    if (idl_global->err_count() > 0)
+      throw o2be_fe_error("Error detected when generating the header file.");
     pd_hdr.close();
+
+    produce_skel(pd_skel);
+    if (idl_global->err_count() > 0)
+      throw o2be_fe_error("Error detected when generating the skeleton file.");
     pd_skel.close();
+
+    if (idl_global->compile_flags() & IDL_CF_ANY) {
+      produce_dynskel(pd_dynskel);
+      if( idl_global->err_count() > 0 )
+	throw o2be_fe_error("Error detected when generating the"
+			    " dynamic skeleton file.");
+      pd_dynskel.close();
+    }
+
     return;
   }
   catch(...) {
@@ -207,8 +229,7 @@ o2be_root::produce_hdr(std::fstream &hdr)
       << "#include <omniORB2/CORBA.h>\n"
       << "#endif\n\n";
 
-  // XXX LifeCycle compile flag
-  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+  if( idl_global->compile_flags() & IDL_CF_LIFECYCLE ) {
     hdr << "#ifndef __OMNILC_H_EXTERNAL_GUARD__\n"
 	<< "#define __OMNILC_H_EXTERNAL_GUARD__\n"
 	<< "#include <omniORB2/omniLC.h>\n"
@@ -217,42 +238,55 @@ o2be_root::produce_hdr(std::fstream &hdr)
 
   {
     // produce #include for all the included files
-    String **filelist = idl_global->include_file_names();
+    String** filelist = idl_global->include_file_names();
     int nfiles = idl_global->n_include_file_names();
     int j;
 
-    for (j=0; j<nfiles; j++)
-      {
-	char *bname = filelist[j]->get_string();
-	char *ep    = strchr(bname,'.');
-	char *filename;
-	int blen = ((ep == NULL)? strlen(bname) : (ep-bname));
-	filename = new char[blen+1+o2be_global::suffixlen()];
-	strncpy(filename,bname,blen);
-	filename[blen] = '\0';
-	hdr << "#ifndef __" << filename << "_EXTERNAL_GUARD__\n"
-	    << "#define __" << filename << "_EXTERNAL_GUARD__\n";
-	strcat(filename,o2be_global::hdrsuffix());
-	hdr << "#include <" << filename << ">\n"
-	    << "#endif\n";
-	delete [] filename;
+    for( j = 0; j < nfiles; j++ ) {
+      char* bname = filelist[j]->get_string();
+      char* ep = strrchr(bname, '.');
+      size_t blen = ep ? (ep - bname) : strlen(bname);
+      char* filename = new char[blen + 1 + o2be_global::suffixlen()];
+      strncpy(filename, bname, blen);
+      filename[blen] = '\0';
+      strcat(filename, o2be_global::hdrsuffix());
+
+      bname = filename;
+      char* guardname = new char[strlen(bname) + 1];
+      char* d = guardname;
+      while( *bname ) {
+	if( isalnum(*bname) )  *d = *bname;
+	else                   *d = '_';
+	bname++;  d++;
       }
+      *d = '\0';
+
+      hdr << "#ifndef __" << guardname << "_EXTERNAL_GUARD__\n"
+	  << "#define __" << guardname << "_EXTERNAL_GUARD__\n";
+      hdr << "#include <" << filename << ">\n"
+	  << "#endif\n\n";
+
+      delete[] guardname;
+      delete[] filename;
+    }
   }
 
-  hdr << "\n#ifdef _LC_attr\n"
-      << "#error \"A local CPP macro _LC_attr has already been defined.\"\n"
+  hdr << "#ifdef _LC_attr\n"
+      << "# error \"A local CPP macro _LC_attr has already been defined.\"\n"
       << "#else\n"
-      << "#ifdef  USE_stub_in_nt_dll\n"
-      << "#define _LC_attr _OMNIORB_NTDLL_IMPORT\n"
-      << "#else\n"
-      << "#define _LC_attr\n"
-      << "#endif\n"
+      << "# ifdef  USE_stub_in_nt_dll\n"
+      << "#  define _LC_attr _OMNIORB_NTDLL_IMPORT\n"
+      << "# else\n"
+      << "#  define _LC_attr\n"
+      << "# endif\n"
       << "#endif\n\n";
 
   if (idl_global->indent() == NULL)
     idl_global->set_indent(new UTL_Indenter());
 
   o2be_sequence::produce_hdr_for_predefined_types(hdr);
+
+  o2be_module::produce_decls_at_global_scope_in_hdr(hdr);
 
   o2be_module::produce_hdr(hdr);
 
@@ -266,38 +300,50 @@ o2be_root::produce_hdr(std::fstream &hdr)
   hdr << "\n#undef _LC_attr\n\n";
 
   hdr << "#endif // __" << basename << "_hh__" << std::endl;
-  return;
 }
+
 
 void
 o2be_root::produce_skel(std::fstream &skel)
 {
-  skel << "#include \""<<basename<<o2be_global::hdrsuffix()<<"\"\n\n" << std::endl;
+  skel << "#include \"" << basename << o2be_global::hdrsuffix() << "\"\n";
+  skel << "#include <omniORB2/proxyCall.h>\n\n";
 
-
-  // Do not forget to update the version number in omniORB_x_y below.
-  // The variable is defined in omniInternal.h.
   skel << "static const char* _0RL_library_version = "
-       << "omniORB_2_6" 
-       << ";\n\n" << std::endl;
+       << OMNIORB_LIBRARY_VERSION << ";\n\n\n";
 
   if (idl_global->indent() == NULL)
     idl_global->set_indent(new UTL_Indenter());
 
   o2be_module::produce_skel(skel);
-
-  o2be_module::produce_binary_operators_in_skel(skel);
-
-  return;
 }
 
-AST_Sequence *
+
+void
+o2be_root::produce_dynskel(std::fstream& skel)
+{
+  skel << "#include \"" << basename << o2be_global::hdrsuffix() << "\"\n";
+  skel << "#include <omniORB2/tcDescriptor.h>\n\n";
+
+  skel << "static const char* _0RL_library_version = "
+       << OMNIORB_LIBRARY_VERSION << ";\n\n\n";
+
+  if( idl_global->indent() == NULL )
+    idl_global->set_indent(new UTL_Indenter());
+
+  o2be_module::produce_dynskel(skel);
+  o2be_module::produce_binary_operators_in_dynskel(skel);
+}
+
+
+AST_Sequence*
 o2be_root::add_sequence(AST_Sequence *se)
 {
   if (AST_Root::add_sequence(se) == NULL)
     return NULL;
   return o2be_sequence::attach_seq_to_base_type(se);
 }
+
 
 IMPL_NARROW_METHODS1(o2be_root, AST_Root)
 IMPL_NARROW_FROM_DECL(o2be_root)
