@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/07/31 16:06:15  sll
+  Added marshalling operators for IIOP::Address.
+
   Revision 1.2.2.6  2001/05/09 16:59:08  sll
   Added unmarshalObjectKey() to allow quick extraction of the object key.
 
@@ -101,6 +104,9 @@ public:
   struct Address {
     _CORBA_String_member    host;
     _CORBA_UShort           port;
+
+    void operator>>=(cdrStream&) const;
+    void operator<<=(cdrStream&);
   };
 
   struct ProfileBody {
