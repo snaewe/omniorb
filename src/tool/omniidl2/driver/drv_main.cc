@@ -85,8 +85,12 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include <stdlib.h>
 #include <stdio.h>
 
-#if defined(__VMS) && __VMS_VER < 70000000
+#ifdef __VMS
+#if __VMS_VER < 70000000
 #include <omniVms/unlink.hxx>
+#else
+#include <unistd.h>
+#endif
 #endif
 
 #ifndef EXIT_FAILURE
