@@ -25,6 +25,7 @@ src/lib/omniORB/orbcore/inProcessIdentity.cc
 src/lib/omniORB/orbcore/localIdentity.cc
 src/lib/omniORB/orbcore/omniObjRef.cc
 src/lib/omniORB/orbcore/remoteIdentity.cc
+src/lib/omniORB/orbcore/giopBiDir.cc
 
 
 Mon Sep  3 14:23:18 BST 2001 sll
