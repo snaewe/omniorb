@@ -1,3 +1,17 @@
+Thu Oct 11 12:29:47 BST 2001 sll
+================================
+
+- Updated win32 utilities to replace the use of //drive no./ with 
+  /cygdrive/drive no./ prefix. This is necessary because the former is
+  no longer supported by the latest cygwin release (1.3.3).
+
+src/tool/omkdepend/gnuwin32.c
+src/tool/win32/clwrapper.c
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+src/tool/win32/oidlwrapper.c
+
+
 Wed Sep 26 11:44:50 BST 2001 sll
 ================================
 
