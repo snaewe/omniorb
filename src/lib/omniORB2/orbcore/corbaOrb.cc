@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.24  2000/08/30 15:18:44  dpg1
+  New environment variable OMNIORB_PRINCIPAL.
+
   Revision 1.29.6.23  2000/08/08 15:01:43  dpg1
   -ORBpoa_iiop_port no longer overrides OMNIORB_USEHOSTNAME.
 
@@ -214,6 +217,9 @@
 #define MY_ORB_ID           "omniORB3"
 #define OLD_ORB_ID          "omniORB2"
 
+#ifndef OMNIORB_PRINCIPAL_VAR
+#  define OMNIORB_PRINCIPAL_VAR "OMNIORB_PRINCIPAL"
+#endif
 
 static omniOrbORB*          the_orb              = 0;
 static int                  orb_destroyed        = 0;
@@ -1288,8 +1294,19 @@ public:
   void attach() {
 
     // myPrincipalID, to be used in the principal field of IIOP calls
-    CORBA::ULong l = strlen("nobody")+1;
-    CORBA::Octet *p = (CORBA::Octet *) "nobody";
+
+    CORBA::ULong  l;
+    CORBA::Octet* p;
+
+    char* env = getenv(OMNIORB_PRINCIPAL_VAR);
+    if (env) {
+      l = strlen(env) + 1;
+      p = (CORBA::Octet*)env;
+    }
+    else {
+      l = strlen("nobody")+1;
+      p = (CORBA::Octet *) "nobody";
+    }
     omni::myPrincipalID.length(l);
     unsigned int i;
     for (i=0; i < l; i++) {

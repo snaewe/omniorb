@@ -1,3 +1,12 @@
+Wed Aug 30 16:12:53 BST 2000 dpg1
+=================================
+
+- New environment variable OMNIORB_PRINCIPAL which allows you to set
+  the IIOP principal field. This can be used to talk to Gnome's ORBit.
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
 Wed Aug 30 15:48:38 BST 2000 sll
 ================================
 
