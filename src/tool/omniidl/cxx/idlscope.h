@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/10/29 10:01:50  dpg1
+// Global scope initialisation changed.
+//
 // Revision 1.1  1999/10/27 14:05:55  dpg1
 // *** empty log message ***
 //
@@ -109,11 +112,12 @@ public:
 	      S_UNION, S_OPERATION, S_VALUE };
 
   // Static functions to return the current and global scopes
-  static Scope* global()  { return &global_; }
+  static Scope* global()  { return global_; }
   static Scope* current() { return current_; }
 
-  // Static function to initialise the CORBA:: scope
-  static void initCORBAScope();
+  // Static functions to initialise and clear the global and CORBA:: scopes
+  static void init();
+  static void clear();
 
   // Functions to create new sub-scopes of the current scope. If
   // newModuleScope() is asked to create a module scope which already
@@ -304,7 +308,7 @@ private:
   InheritSpec*      inherited_;
   ValueInheritSpec* valueInherited_;
 
-  static Scope      global_;
+  static Scope*     global_;
   static Scope*     current_;
 
   void appendEntry(Entry* e);

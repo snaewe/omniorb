@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/10/29 10:01:50  dpg1
+// Global scope initialisation changed.
+//
 // Revision 1.1  1999/10/27 14:05:55  dpg1
 // *** empty log message ***
 //
@@ -39,8 +42,8 @@
 #include <string.h>
 
 // Global Scope pointers
-Scope  Scope::global_(0, Scope::S_GLOBAL, 0, "(global)", 0);
-Scope* Scope::current_ = &Scope::global_;
+Scope* Scope::global_;
+Scope* Scope::current_;
 
 // ScopedName implementation
 ScopedName::
@@ -274,17 +277,30 @@ Scope::
 
 void
 Scope::
-initCORBAScope()
+init()
 {
   const char* file = "<built in>";
-  Scope* s = Scope::global()->newModuleScope("CORBA", file, 0);
 
-  s->addDecl("TypeCode",  0, 0, &BaseType::TypeCodeType,  file, 1);
-  s->addDecl("Principal", 0, 0, &BaseType::PrincipalType, file, 2);
+  assert(!global_);
 
-  Scope::global()->addModule("CORBA", s, 0, file, 0);
+  global_  = new Scope(0, Scope::S_GLOBAL, 0, file, 0);
+  Scope* s = global_->newModuleScope("CORBA", file, 1);
+
+  s->addDecl("TypeCode",  0, 0, &BaseType::TypeCodeType,  file, 2);
+  s->addDecl("Principal", 0, 0, &BaseType::PrincipalType, file, 3);
+
+  global_->addModule("CORBA", s, 0, file, 1);
+  current_ = global_;
 }
 
+void
+Scope::
+clear()
+{
+  assert(global_);
+  delete global_;
+  global_ = 0;
+}
 
 void
 Scope::
