@@ -44,6 +44,13 @@ import os, os.path
 pylibdir   = archlibdir = None
 binarchdir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
+# Try a path based on the installation prefix
+sppath = "@prefix@/lib/python" + sys.version[:3] + "/site-packages"
+
+if os.path.isdir(sppath):
+    sys.path.append(sppath)
+
+# Paths in a traditional omni tree
 if binarchdir != "":
     sys.path.insert(0, binarchdir)
     bindir, archname = os.path.split(binarchdir)
@@ -67,9 +74,6 @@ if binarchdir != "":
 
         if os.path.isdir(archlibdir):
             sys.path.insert(0, archlibdir)
-
-# Last chance, try a path based on the installation prefix
-sys.path.append("@prefix@/lib/python" + sys.version[:3] + "/site-packages")
 
 try:
     import _omniidl
