@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.8  1999/08/14 16:38:53  sll
+ Changed as locateObject no longer throws an exception when the object is
+ not found.
+
  Revision 1.7  1999/07/02 19:27:21  sll
  Fixed typo in ropeFactory_iterator.
 
@@ -99,19 +103,15 @@ ropeFactory::iopProfilesToRope(const IOP::TaggedProfileList *profiles,
 		// The endpoint is actually one of those exported by this 
 		// address space.
 		rope = 0;
-		try {
-		  omniObject* result = omni::locateObject(manager,
-			   			 *((omniObjectKey*)objkey));
-		  // Got it
+		omniObject* result = omni::locateObject(manager,
+						  *((omniObjectKey*)objkey));
+		if (result) { // Got it
 		  return result;
 		}
-		catch (const CORBA::OBJECT_NOT_EXIST&) {
-		  // the object cannot be found by locateObject().
-		  // Instead of letting the exception propagate all the way 
-		  // upwards, treat this as a foreign object and creates a 
-		  // proxy object.
-		  break;
-		}
+		// the object cannot be found by locateObject().
+		// Instead of letting the exception propagate all the way 
+		// upwards, treat this as a foreign object and creates a 
+		// proxy object.
 	      }
 	    }
 	  }
