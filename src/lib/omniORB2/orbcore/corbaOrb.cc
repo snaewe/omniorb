@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.23  2000/08/08 15:01:43  dpg1
+  -ORBpoa_iiop_port no longer overrides OMNIORB_USEHOSTNAME.
+
   Revision 1.29.6.22  2000/08/04 15:26:11  dpg1
   ORB_init() now defaults ORB id to empty string, and accepts empty
   string as valid.
@@ -205,6 +208,7 @@
 #include <errno.h>
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 
 
 #define MY_ORB_ID           "omniORB3"
@@ -1139,8 +1143,10 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  return 0;
 	}
 
+	const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
+	if( !hostname )  hostname = "";
 	omniObjAdapter::options.
-	  incomingPorts.push_back(omniObjAdapter::ListenPort("", port));
+	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
 
 	move_args(argc, argv, idx, 2);
 	continue;

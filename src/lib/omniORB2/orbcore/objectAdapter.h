@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  2000/08/08 15:01:44  dpg1
+ -ORBpoa_iiop_port no longer overrides OMNIORB_USEHOSTNAME.
+
  Revision 1.1.2.3  1999/10/27 17:32:13  djr
  omni::internalLock and objref_rc_lock are now pointers.
 
@@ -43,6 +46,10 @@
 #define __OMNI_OBJECTADAPTER_H__
 
 #include <omniutilities.h>
+
+#ifndef OMNIORB_USEHOSTNAME_VAR
+#define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
+#endif
 
 
 class ropeFactoryList;

@@ -1,3 +1,19 @@
+Tue Aug  8 15:55:35 BST 2000 dpg1
+=================================
+
+- -ORBpoa_iiop_port no longer overrides OMNIORB_USEHOSTNAME env var
+
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/objectAdapter.cc
+src/lib/omniORB2/orbcore/objectAdapter.h
+
+- "lock" renamed "mu" to avoid name clash with iostream on some
+  platforms.
+
+src/examples/call_back/cb_server.cc
+
+
 Mon Aug  7 18:07:29 BST 2000 dpg1
 =================================
 

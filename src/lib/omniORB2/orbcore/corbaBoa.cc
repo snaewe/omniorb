@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.6.15  2000/08/08 15:01:43  dpg1
+  -ORBpoa_iiop_port no longer overrides OMNIORB_USEHOSTNAME.
+
   Revision 1.13.6.14  2000/06/22 10:40:13  dpg1
   exception.h renamed to exceptiondefs.h to avoid name clash on some
   platforms.
@@ -88,11 +91,6 @@
 #include <exceptiondefs.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-
-#ifndef OMNIORB_USEHOSTNAME_VAR
-#define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
-#endif
 
 
 #define MY_BOA_ID                      "omniORB3_BOA"

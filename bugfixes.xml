@@ -8,6 +8,18 @@
 
 <buglist>
 
+<bug id="17" date="Tue Aug  8 15:55:35 BST 2000" user="dpg1">
+
+  <summary>-ORBpoa_iiop_port overrides OMNIORB_USEHOSTNAME</summary>
+
+  <reported>Beat Meier</reported>
+
+  <text>
+  -ORBpoa_iiop_port would override the OMNIORB_USEHOSTNAME environment
+  variable, meaning that -ORBpoa_iiop_name_port had to be used.
+  </text>
+</bug>
+
 <bug id="16" date="Fri Jul 21 16:20:43 BST 2000" user="sll">
 
   <summary>CORBA calls with large arguments on Win32 platforms may fail
@@ -17,13 +29,14 @@
   <reported>chm</reported>
 
   <text>
-  <p> The connect code in 3.0.0 now turns the socket to non-blocking and set a
-limit on the time it prepares to wait. Once connected, the socket is
-turned back to blocking. Unfortunately, the ioctlsocket call is passed the
-wrong argument which leaves the socket in non-blocking state. The end
-result is that for CORBA calls with large arguments, the call may fail
-mysteriously (because windows says the send call would block and the ORB
-thinks it is wrong because it thinks the socket is blocking).</p>
+  <p>The connect code in 3.0.0 now turns the socket to non-blocking
+  and set a limit on the time it prepares to wait. Once connected, the
+  socket is turned back to blocking. Unfortunately, the ioctlsocket
+  call is passed the wrong argument which leaves the socket in
+  non-blocking state. The end result is that for CORBA calls with
+  large arguments, the call may fail mysteriously (because windows
+  says the send call would block and the ORB thinks it is wrong
+  because it thinks the socket is blocking).</p>
   </text>
 
 </bug>
