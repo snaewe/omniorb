@@ -34,6 +34,10 @@
 # 4. Build the .dll and .lib with the def file.
 #
 #      link -out:foo.dll -dll -def:foo.def -implib:foo.lib foo.o
+#
+# If you are using this script so you can put omniORB stubs in a DLL,
+# you also need to set some defines to correctly import symbols into
+# the application. See the omniORB manual for details.
 
 
 # The way this script works is to process the output of dumpbin.
@@ -52,7 +56,7 @@
 # Class variable and function symbols start with two ??  and class
 # static variable and static function symbols start with one ?.
 
-import re, sys, os, os.path
+import re, sys, os, os.path, string
 
 def usage(argv):
     sys.stderr.write("%s <lib file> <library name> <version> <def file>\n" %
@@ -60,7 +64,7 @@ def usage(argv):
 
 def main(argv):
     try:
-        _, libfile, libname, version, deffile = argv
+        _, libfile, binname, version, deffile = argv
     except ValueError:
         usage(argv)
         sys.exit(1)
@@ -96,7 +100,10 @@ def main(argv):
     print "Output %d symbols." % len(symbols)
 
     out = open(deffile, "w")
-    out.write("LIBRARY %s\n" % libname)
+    if string.lower(binname[4:]) == ".exe":
+        out.write("NAME %s\n" % binname)
+    else:
+        out.write("LIBRARY %s\n" % binname)
     out.write("VERSION %s\n" % version)
     out.write("EXPORTS\n")
 
