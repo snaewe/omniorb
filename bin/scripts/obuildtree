@@ -151,14 +151,16 @@ interactive() {
 		     egrep -v '^'$exporttree'$'`
     extraenvimports=`echo $extraenvimports`
 
+    envimports=""
     if [ "$extraenvimports" != "" ]; then
-      echo "Do you also want to import from $extraenvimports ?"
-      myread useenvimports y
-
-      if [ "$useenvimports" = "y" ]; then
-        envimports=$extraenvimports
-      fi
-    fi
+       for import_tree in $extraenvimports; do
+          echo "Do you also want to import from $import_tree ?"
+          myread use_import_tree y
+          if [ "$use_import_tree" = "y" ]; then
+            envimports="$envimports $import_tree"
+          fi;
+       done;
+    fi;
 
     echo "Enter any other import trees in search order"
 
