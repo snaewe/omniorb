@@ -28,13 +28,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <omnithread.h>
+#include <process.h>
 
 #define DB(x) // x 
-// #include <iostream> or #include <iostream.h> if DB is on.
+//#include <iostream.h> or #include <iostream> if DB is on.
 
 static void get_time_now(unsigned long* abs_sec, unsigned long* abs_nsec);
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -99,6 +98,65 @@ omni_mutex::unlock(void)
 // the thread should indicate that it was signalled rather than that it timed
 // out.
 //
+// It is possible that the thread calling wait or timedwait is not a
+// omni_thread. In this case we have to provide a temporary data structure,
+// i.e. for the duration of the call, for the thread to link itself on the
+// list of waiting threads. _internal_omni_thread_dummy provides such
+// a data structure and _internal_omni_thread_helper is a helper class to
+// deal with this special case for wait() and timedwait(). Once created,
+// the _internal_omni_thread_dummy is cached for use by the next wait() or
+// timedwait() call from a non-omni_thread. This is probably worth doing
+// because creating a Semaphore is quite heavy weight.
+
+class _internal_omni_thread_helper;
+
+class _internal_omni_thread_dummy : public omni_thread {
+public:
+  inline _internal_omni_thread_dummy() : next(0) { }
+  inline ~_internal_omni_thread_dummy() { }
+  friend class _internal_omni_thread_helper;
+private:
+  _internal_omni_thread_dummy* next;
+};
+
+class _internal_omni_thread_helper {
+public:
+  inline _internal_omni_thread_helper()  { 
+    d = 0;
+    t = omni_thread::self();
+    if (!t) {
+      omni_mutex_lock sync(cachelock);
+      if (cache) {
+	d = cache;
+	cache = cache->next;
+      }
+      else {
+	d = new _internal_omni_thread_dummy;
+      }
+      t = d;
+    }
+  }
+  inline ~_internal_omni_thread_helper() { 
+    if (d) {
+      omni_mutex_lock sync(cachelock);
+      d->next = cache;
+      cache = d;
+    }
+  }
+  inline operator omni_thread* () { return t; }
+  inline omni_thread* operator->() { return t; }
+
+  static _internal_omni_thread_dummy* cache;
+  static omni_mutex                   cachelock;
+
+private:
+  _internal_omni_thread_dummy* d;
+  omni_thread*                 t;
+};
+
+_internal_omni_thread_dummy* _internal_omni_thread_helper::cache = 0;
+omni_mutex                   _internal_omni_thread_helper::cachelock;
+
 
 omni_condition::omni_condition(omni_mutex* m) : mutex(m)
 {
@@ -120,7 +178,7 @@ omni_condition::~omni_condition(void)
 void
 omni_condition::wait(void)
 {
-    omni_thread* me = omni_thread::self();
+    _internal_omni_thread_helper me;
 
     EnterCriticalSection(&crit);
 
@@ -149,7 +207,7 @@ omni_condition::wait(void)
 int
 omni_condition::timedwait(unsigned long abs_sec, unsigned long abs_nsec)
 {
-    omni_thread* me = omni_thread::self();
+    _internal_omni_thread_helper me;
 
     EnterCriticalSection(&crit);
 
@@ -347,10 +405,7 @@ int omni_thread::init_t::count = 0;
 
 omni_mutex* omni_thread::next_id_mutex;
 int omni_thread::next_id = 0;
-
 static DWORD self_tls_index;
-static int dont_create_thread = 0;
-
 
 //
 // Initialisation function (gets called before any user code).
@@ -374,11 +429,7 @@ omni_thread::init_t::init_t(void)
     // Create object for this (i.e. initial) thread.
     //
 
-    dont_create_thread = 1;
-
     omni_thread* t = new omni_thread;
-
-    dont_create_thread = 0;
 
     t->_state = STATE_RUNNING;
 
@@ -403,8 +454,13 @@ omni_thread::init_t::init_t(void)
 // Wrapper for thread creation.
 //
 
-extern "C" DWORD 
-omni_thread_wrapper(LPVOID ptr)
+extern "C" 
+#ifndef __BCPLUSPLUS__
+unsigned __stdcall
+#else
+void _USERENTRY
+#endif
+omni_thread_wrapper(void* ptr)
 {
     omni_thread* me = (omni_thread*)ptr;
 
@@ -437,8 +493,9 @@ omni_thread_wrapper(LPVOID ptr)
     }
 
     // should never get here.
-
+#ifndef __BCPLUSPLUS__
     return 0;
+#endif
 }
 
 
@@ -497,17 +554,7 @@ omni_thread::common_constructor(void* arg, priority_t pri, int det)
     cond_next = cond_prev = NULL;
     cond_waiting = FALSE;
 
-    if (dont_create_thread)
-	return;
-
-    handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)omni_thread_wrapper,
-			  (LPVOID)this, CREATE_SUSPENDED, &nt_id);
-
-    if (handle == NULL)
-	throw omni_thread_fatal(GetLastError());
-
-    if (!SetThreadPriority(handle, nt_priority(pri)))
-	throw omni_thread_fatal(GetLastError());
+    handle = NULL;
 }
 
 
@@ -536,6 +583,34 @@ omni_thread::start(void)
 
     if (_state != STATE_NEW)
 	throw omni_thread_invalid();
+
+#ifndef __BCPLUSPLUS__
+    // MSVC++ or compatiable
+    unsigned int t;
+    handle = (HANDLE)_beginthreadex(
+                        NULL,
+			0,
+			omni_thread_wrapper,
+			(LPVOID)this,
+			CREATE_SUSPENDED, 
+			&t);
+    nt_id = t;
+    if (handle == NULL)
+      throw omni_thread_fatal(GetLastError());
+#else
+    // Borland C++
+    handle = (HANDLE)_beginthreadNT(omni_thread_wrapper,
+				    0,
+				    (void*)this,
+				    NULL,
+				    CREATE_SUSPENDED,
+				    &nt_id);
+    if (handle == INVALID_HANDLE_VALUE)
+      throw omni_thread_fatal(errno);
+#endif
+
+    if (!SetThreadPriority(handle, _priority))
+      throw omni_thread_fatal(GetLastError());
 
     if (ResumeThread(handle) == 0xffffffff)
 	throw omni_thread_fatal(GetLastError());
@@ -654,22 +729,39 @@ omni_thread::exit(void* return_value)
 {
     omni_thread* me = self();
 
-    me->mutex.lock();
+    if (me)
+      {
+	me->mutex.lock();
 
-    me->_state = STATE_TERMINATED;
+	me->_state = STATE_TERMINATED;
 
-    me->mutex.unlock();
+	me->mutex.unlock();
 
-    DB(cerr << "omni_thread::exit: thread " << me->id() << " detached "
-       << me->detached << " return value " << return_value << endl);
+	DB(cerr << "omni_thread::exit: thread " << me->id() << " detached "
+	   << me->detached << " return value " << return_value << endl);
 
-    if (me->detached) {
-	delete me;
-    } else {
-	me->return_val = return_value;
-    }
-
-    ExitThread(0);
+	if (me->detached) {
+	  delete me;
+	} else {
+	  me->return_val = return_value;
+	}
+      }
+    else
+      {
+	DB(cerr << "omni_thread::exit: called with a non-omnithread. Exit quietly." << endl);
+      }
+#ifndef __BCPLUSPLUS__
+    // MSVC++ or compatiable
+    //   _endthreadex() does not automatically closes the thread handle.
+    //   The omni_thread dtor closes the thread handle.
+    _endthreadex(0);
+#else
+    // Borland C++
+    //   _endthread() does not automatically closes the thread handle.
+    //   _endthreadex() is only available if __MFC_COMPAT__ is defined and
+    //   all it does is to call _endthread().
+    _endthread();
+#endif
 }
 
 
@@ -680,9 +772,9 @@ omni_thread::self(void)
 
     me = TlsGetValue(self_tls_index);
 
-    if (me == NULL)
-	throw omni_thread_fatal(GetLastError());
-
+    if (me == NULL) {
+      DB(cerr << "omni_thread::self: called with a non-ominthread. NULL is returned." << endl);
+    }
     return (omni_thread*)me;
 }
 
