@@ -186,6 +186,44 @@ endif
 endif
 
 #############################################################################
+#   Make rules for  Linux egcs                                              #
+#############################################################################
+
+ifdef Linux
+ifdef EgcsMajorVersion
+
+DIR_CPPFLAGS += -fPIC
+
+libname = libomnithread.so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+$(lib): $(OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^); \
+       )
+
+all:: $(lib)
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
+endif
+
+#############################################################################
 #   Make rules for IBM AIX                                                  #
 #############################################################################
 
