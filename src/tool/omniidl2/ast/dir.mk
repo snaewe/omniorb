@@ -64,7 +64,7 @@ OBJS	= \
 
 DIR_CPPFLAGS = -I../include $(patsubst %,-I%/../include,$(VPATH))
 
-ifdef NTArchitecture
+ifdef Win32Platform
 # Note the use of -W0 in CXXOPTIONS - this is used to stop pragma warning 
 # messages - should replace with a warning(disable,4068) pragma in the source
 # code

@@ -30,7 +30,7 @@ export:: $(lib)
 clean::
 	$(RM) $(lib)
 
-ifndef ATMosArchitecture
+ifndef ATMos
 
 SUBDIRS = sharedlib
 

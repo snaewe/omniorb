@@ -1,5 +1,3 @@
-SUBDIRS = omkdepend
-
 all:: clwrapper.exe libwrapper.exe linkwrapper.exe omake.exe
 
 define CompileWrapper
@@ -23,9 +21,3 @@ omake.exe: omake.c
 
 export:: clwrapper.exe libwrapper.exe linkwrapper.exe omake.exe
 	@$(ExportExecutable)
-
-all::
-	@$(MakeSubdirs)
-
-export::
-	@$(MakeSubdirs)

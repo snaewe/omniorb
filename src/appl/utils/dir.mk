@@ -1,4 +1,4 @@
-ifndef ATMosArchitecture 
+ifndef ATMos
 SUBDIRS = genior catior convertior nameclt
 endif
 

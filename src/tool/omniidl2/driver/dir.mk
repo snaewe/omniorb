@@ -20,7 +20,7 @@ OBJS = \
 # IDL_CFE_VERSION       Defines what the current IDL CFE version is
 IDL_CFE_VERSION =       \"1.3.0\"
 
-ifdef AlphaArchitecture
+ifdef OSF1
 
 # The front end assumes that line information is produced by cpp before
 # the first line of an included file in this form:
@@ -35,7 +35,7 @@ CPP_LOCATION = gcc
 
 else
 
-ifdef LinuxArchitecture
+ifdef Linux
 
 CPP_LOCATION = gcc
 
@@ -48,7 +48,7 @@ endif
 endif
 
 
-ifdef NTArchitecture
+ifdef Win32Platform
 # Note the use of -W0 in CXXOPTIONS - this is used to stop pragma warning 
 # messages - should replace with a warning(disable,4068) pragma in the source
 # code
@@ -66,7 +66,7 @@ endif
 
 lib = $(patsubst %,$(LibPattern),drv)
 
-ifdef NTArchitecture
+ifdef Win32Platform
 
 all:: $(OBJS)
 

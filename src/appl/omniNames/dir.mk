@@ -1,5 +1,5 @@
 
-ifdef NTArchitecture
+ifdef Win32Platform
 DEFAULT_LOGDIR = C:\TEMP
 
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS) -DDEFAULT_LOGDIR=\\\\\"$(DEFAULT_LOGDIR)\\\\\"

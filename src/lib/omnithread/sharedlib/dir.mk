@@ -78,7 +78,7 @@ define SharedLibrary
 endef
 endif
 
-ifdef NTArchitecture
+ifdef Win32Platform
 
 SharedLibPattern = %_rt.dll
 define SharedLibrary
@@ -101,7 +101,7 @@ $(lib): $(OBJS)
 clean::
 	$(RM) $(lib)
 
-ifndef NTArchitecture
+ifndef Win32Platform
 
 export:: $(lib)
 	@$(ExportLibrary)
