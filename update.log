@@ -1,3 +1,8 @@
+Thu Dec 18 17:16:44 GMT 1997 bjh
+================================
+
+mk/beforedir.mk - JAVA_INPUT_DIRS defined and added to CLASSPATH.
+
 Wed Dec 17 23:17:39 GMT 1997 sll
 ================================
 
