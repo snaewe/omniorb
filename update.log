@@ -1,3 +1,12 @@
+Mon Dec 15 15:31:44 GMT 1997 sll
+================================
+
+- Updates to get the libraries built on WIN32.
+
+include/omniORB2/omniInternal.h
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/sharedlib/dir.mk
+
 Fri Dec 12 20:04:17 GMT 1997 sll
 ================================
 

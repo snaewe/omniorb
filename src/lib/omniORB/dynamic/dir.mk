@@ -59,10 +59,9 @@ endif
 
 ifdef Win32Platform
 
-# Default location of the omniORB2 configuration file [falls back to this if
-# the environment variable OMNIORB_CONFIG is not set] :
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
-NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
+NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o gatekeeper.o
+# See extra comments on gatekeeper.o at the end of this file
 
 DIR_CPPFLAGS += -D "NTArchitecture" -D "_WINSTATIC"
 
@@ -74,7 +73,7 @@ lclib = $(patsubst %,$(LibPattern),omniLC)
 CXXOPTIONS  = $(MSVC_CXXNODEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_CXXLINKNODEBUGOPTIONS)
 
-SUBDIRS += debug sharedlib gatekeepers
+SUBDIRS += debug sharedlib
 
 else
 
@@ -200,5 +199,15 @@ export:: omniLifeCycle.hh
 	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
 
 
+ifdef Win32Platform
 
+# Ideally, we would like to build the dummy gatekeeper stub just like other
+# platforms, i.e. as a separate static library. However, it proves to be quite
+# tricky because the omniORB2 DLL needs the symbols provided by gatekeeper.o
+# to be resolved when the DLL is build. For the moment, just workaround the
+# problem by building the stub directly into the library.
+#
+gatekeeper.o: gatekeepers/dummystub/gatekeeper.cc
+	$(CXX) -c $(CXXFLAGS) -Fo$@ $<
 
+endif
