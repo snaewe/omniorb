@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.22.6.16  2000/08/08 15:22:17  sll
+  In realConnect(), now checks the exception fd_set in the select() call for an
+  error condition. This is necessary because win32 differs from other
+  platforms in that it reports a connect() failure via the exception fd_set.
+
   Revision 1.22.6.15  2000/08/07 10:34:19  sll
   Fixed bug with Win32 tcp socket being left in non-blocking state.
 
@@ -1252,10 +1257,12 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
     int rc;
     while (tremain) {
 
-      fd_set wrfds;
+      fd_set wrfds, exfds;
 # ifndef __CIAO__
       FD_ZERO(&wrfds);
+      FD_ZERO(&exfds);
       FD_SET(sock,&wrfds);
+      FD_SET(sock,&exfds);
 # endif
       struct timeval t;
       int tselect = omniORB::scanGranularity();
@@ -1263,7 +1270,7 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
       t.tv_sec = tselect;
       t.tv_usec = 0;
     again:
-      rc = select(sock+1,0,&wrfds,0,&t);
+      rc = select(sock+1,0,&wrfds,&exfds,&t);
 
       if (rc == 0) {
 	tremain -= tselect;
@@ -1272,7 +1279,7 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
 #   ifndef __WIN32__
 	if (errno == EINTR)
 	  continue;
-#   else
+#   else 
 	if (::WSAGetLastError() == WSAEINTR)
 	  continue;
 #   endif
@@ -1280,6 +1287,9 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
 	  break;
       }
       else {
+	if (FD_ISSET(sock,&exfds)) {
+	  rc = RC_SOCKET_ERROR;
+	}
 	break;
       }
       if (s->_strandIsDying()) {

@@ -1,3 +1,13 @@
+Tue Aug  8 16:13:12 BST 2000 sll
+================================
+
+- On win32 platforms, if the server is not present, a CORBA call may block
+  for 30 seconds before returning a COMM_FAILURE. This is because win32
+  uses a different way to report the socket error in a select() call.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+  
+
 Tue Aug  8 15:55:35 BST 2000 dpg1
 =================================
 
