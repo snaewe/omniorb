@@ -43,6 +43,9 @@ export:: types.py
 export:: config.py
 	@(file="config.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: support.py
+	@(file="support.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
 export::
 	@(set -x; \
 	cd $(PYLIBDIR); \

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.10  2000/08/14 19:34:45  djs
+# Performs a quick scan of the AST looking for unsupported IDL constructs
+# before doing anything else.
+#
 # Revision 1.12.2.9  2000/08/07 15:34:35  dpg1
 # Partial back-port of long long from omni3_1_develop.
 #
@@ -143,7 +147,7 @@ def fatalError(explanation):
     
     lines = string.split(explanation, "\n")
     lines = [ "Fatal error in C++ backend", "" ] + lines
-    lines = lines + [ "Debug mode is currently off" ]
+    #lines = lines + [ "Debug mode is currently off" ]
 
     for line in lines:
         sys.stderr.write("omniidl: " + line + "\n")

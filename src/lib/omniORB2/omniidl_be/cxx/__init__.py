@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.10  2000/08/14 19:34:44  djs
+# Performs a quick scan of the AST looking for unsupported IDL constructs
+# before doing anything else.
+#
 # Revision 1.18.2.9  2000/08/07 15:34:34  dpg1
 # Partial back-port of long long from omni3_1_develop.
 #
@@ -137,6 +141,7 @@ from omniidl_be.cxx import impl
 
 from omniidl_be.cxx import id
 
+from omniidl_be.cxx import support
 from omniidl_be.cxx import config
 
 import re, sys, os.path
@@ -212,6 +217,9 @@ def run(tree, args):
     process_args(args)
 
     try:
+        # Check the input tree only contains stuff we understand
+        support.checkIDL(tree)
+        
         # build the list of include files
         walker = config.WalkTreeForIncludes()
         tree.accept(walker)
