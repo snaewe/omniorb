@@ -1,3 +1,29 @@
+Tue Jan 25 11:14:41 GMT 2005 dgrisby
+====================================
+
+- Merge from omni4_0_develop.
+
+configure
+configure.ac
+include/omnithread.h
+include/omniORB4/CORBA_Policy.h
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/poa_operators.h
+mk/beforeauto.mk.in
+mk/platforms/hppa_hpux_11.23.mk       -- new
+mk/platforms/ia64_hpux_11.23.mk       -- new
+src/lib/omniORB/omniidl_be/cxx/dir.mk
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/lib/omnithread/posix.cc
+src/tool/omniidl/cxx/cccp/config-hpux.h
+src/tool/omniidl/cxx/cccp/config-linux.h
+
+- Set RPM version number.
+
+contrib/RPMs/omniORB.spec
+
+
 Fri Jan 21 12:13:51 GMT 2005 dgrisby
 ====================================
 
