@@ -1179,7 +1179,7 @@ tcParser::calculateItemSize(const TypeCode_base*tc, size_t offset)
 {
   CORBA::Char dummy;
   const TypeCode_alignTable& alignTbl = tc->alignmentTable();
-  unsigned i = 0;  // don't even ask ... just accept it.
+  unsigned at_i = 0;  // don't even ask ... just accept it.
 
   OMNIORB_ASSERT(alignTbl.entries() > 0);
 
