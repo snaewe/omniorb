@@ -267,8 +267,8 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
       if (!logf)
 	throw IOError();
 
-// a bug on Solaris means that the fd doesn't get closed.
-#if defined(__sunos__) && (__OSVERSION__ == 5)
+// a bug in sparcworks C++ means that the fd doesn't get closed.
+#if defined(__sunos__) && defined(__SUNPRO_CC)
       if (close(fd) < 0)
 	throw IOError();
 #endif
@@ -499,8 +499,8 @@ log::checkpoint(void)
     if (!ckpf)
       throw IOError();
 
-// a bug on Solaris means that the fd doesn't get closed.
-#if defined(__sunos__) && (__OSVERSION__ == 5)
+// a bug in sparcworks C++ means that the fd doesn't get closed.
+#if defined(__sunos__) && defined(__SUNPRO_CC)
     if (close(fd) < 0)
       throw IOError();
 #endif
@@ -510,8 +510,8 @@ log::checkpoint(void)
     perror("I/O error writing checkpoint file");
     cerr << "Abandoning checkpoint" << endl;
     ckpf.close();
-// a bug on Solaris means that the fd doesn't get closed.
-#if defined(__sunos__) && (__OSVERSION__ == 5)
+// a bug in sparcworks C++ means that the fd doesn't get closed.
+#if defined(__sunos__) && defined(__SUNPRO_CC)
     close(fd);
 #endif
     NamingContext_i::lock.readerOut();
@@ -526,8 +526,8 @@ log::checkpoint(void)
 
   cerr << ts.t() << "Checkpointing Phase 2: Commit." << endl;
 
-// a bug on Solaris means that the fd doesn't get closed.
-#if defined(__sunos__) && (__OSVERSION__ == 5)
+// a bug in sparcworks C++ means that the fd doesn't get closed.
+#if defined(__sunos__) && defined(__SUNPRO_CC)
   close(logf.rdbuf()->fd());
 #endif
 
