@@ -1,5 +1,5 @@
-IDLMODULE_MAJOR   = 0
-IDLMODULE_MINOR   = 1
+IDLMODULE_MAJOR   = 1
+IDLMODULE_MINOR   = 0
 IDLMODULE_VERSION = 0x2420# => CORBA 2.4, front-end 2.0
 
 DIR_CPPFLAGS += -DIDLMODULE_VERSION="\"$(IDLMODULE_VERSION)\""
@@ -20,6 +20,10 @@ all::
 export::
 	@$(MakeSubdirs)
 
+ifdef INSTALLTARGET
+install::
+	@$(MakeSubdirs)
+endif
 
 OBJS  = y.tab.o lex.yy.o idlerr.o idlutil.o idltype.o \
 	idlrepoId.o idlscope.o idlexpr.o idlast.o idlvalidate.o \
@@ -66,6 +70,46 @@ PYINCFILE := "<python$(PYVERSION)/Python.h>"
 DIR_CPPFLAGS += -I$(PYINCDIR) -DPYTHON_INCLUDE=$(PYINCFILE)
 endif
 
+
+ifeq ($(platform),autoconf)
+
+namespec := _omniidlmodule _ $(IDLMODULE_MAJOR) $(IDLMODULE_MINOR)
+
+SharedLibraryFullNameTemplate = $$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
+SharedLibrarySoNameTemplate   = $$1$$2.$(SHAREDLIB_SUFFIX).$$3
+SharedLibraryLibNameTemplate  = $$1$$2.$(SHAREDLIB_SUFFIX)
+
+ifdef PythonLibraryPlatformLinkFlagsTemplate
+SharedLibraryPlatformLinkFlagsTemplate = $(PythonLibraryPlatformLinkFlagsTemplate)
+endif
+
+shlib := $(shell $(SharedLibraryFullName) $(namespec))
+
+DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
+
+$(shlib): $(OBJS) $(PYOBJS)
+	@(namespec="$(namespec)"; $(MakeCXXSharedLibrary))
+
+all:: $(shlib)
+
+export:: $(shlib)
+	@(namespec="$(namespec)"; $(ExportSharedLibrary))
+
+ifdef INSTALLTARGET
+install:: $(shlib)
+	@(dir="$(INSTALLPYEXECDIR)"; namespec="$(namespec)"; \
+          $(ExportSharedLibraryToDir))
+endif
+
+clean::
+	$(RM) *.o
+	(dir=.; $(CleanSharedLibrary))
+
+veryclean::
+	$(RM) *.o
+	(dir=.; $(CleanSharedLibrary))
+
+else
 
 #############################################################################
 #   Make rules for Linux                                                    #
@@ -581,3 +625,6 @@ endif
 
 # $(idlc): $(OBJS) idlc.o
 # 	@(libs=""; $(CXXExecutable))
+
+
+endif

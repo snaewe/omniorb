@@ -15,3 +15,8 @@ $(GENIOR): genior.o $(CORBA_LIB_NODYN_DEPEND)
 
 export:: $(GENIOR)
 	@$(ExportExecutable)
+
+ifdef INSTALLTARGET
+install:: $(GENIOR)
+	@$(InstallExecutable)
+endif

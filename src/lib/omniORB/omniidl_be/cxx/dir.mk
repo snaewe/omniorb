@@ -1,4 +1,6 @@
-PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl_be/cxx
+PYLIBROOT= $(EXPORT_TREE)/lib/python
+PYLIBDIR = $(PYLIBROOT)/omniidl_be/cxx
+INSTALLPYLIBDIR = $(INSTALLPYTHONDIR)/omniidl_be/cxx
 
 SUBDIRS = header skel dynskel impl
 
@@ -16,47 +18,30 @@ all::
 export::
 	@$(MakeSubdirs)
 
-export:: __init__.py
-	@(file="__init__.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+ifdef INSTALLTARGET
+install::
+	@$(MakeSubdirs)
+endif
 
-export:: util.py
-	@(file="util.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+FILES = __init__.py util.py skutil.py id.py types.py config.py output.py \
+        ast.py iface.py call.py cxx.py support.py descriptor.py
 
-export:: skutil.py
-	@(file="skutil.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+export:: $(FILES)
+	@(dir="$(PYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+          cd $(PYLIBDIR); \
+	  $(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
+	 )
 
-export:: id.py
-	@(file="id.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: types.py
-	@(file="types.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: config.py
-	@(file="config.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: output.py
-	@(file="output.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: ast.py
-	@(file="ast.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: iface.py
-	@(file="iface.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: call.py
-	@(file="call.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: cxx.py
-	@(file="cxx.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: support.py
-	@(file="support.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: descriptor.py
-	@(file="descriptor.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export::
-	@(set -x; \
-	cd $(PYLIBDIR); \
-	$(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
-	)
+ifdef INSTALLTARGET
+install:: $(FILES)
+	@(dir="$(INSTALLPYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+          cd $(INSTALLPYLIBDIR); \
+	  $(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
+	 )
+endif

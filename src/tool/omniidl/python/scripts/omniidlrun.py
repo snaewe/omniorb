@@ -59,9 +59,14 @@ if binarchdir != "":
             sys.path.insert(0, archlibdir)
 
     elif archname == "bin":
-        pylibdir = archlibdir = os.path.join(bindir, "lib")
+        pylibdir   = os.path.join(bindir, "lib", "python")
+        archlibdir = os.path.join(bindir, "lib")
+
         if os.path.isdir(pylibdir):
             sys.path.insert(0, pylibdir)
+
+        if os.path.isdir(archlibdir):
+            sys.path.insert(0, archlibdir)
 
 try:
     import _omniidl

@@ -20,6 +20,10 @@ all:: mkstatic mkshared
 
 export:: mkstatic mkshared
 
+ifdef INSTALLTARGET
+install:: mkstatic mkshared
+endif
+
 vers := $(subst ., ,$(LIB_VERSION))
 ifeq ($(words $(vers)), 2)
   vers  := _ $(vers)
@@ -33,6 +37,8 @@ namespec := $(LIB_NAME) $(vers)
 ##############################################################################
 # Build Static library
 ##############################################################################
+
+ifndef NoStaticLibrary
 
 staticlib := static/$(patsubst %,$(LibNoDebugPattern),$(LIB_NAME)$(major))
 MDFLAGS += -p static/
@@ -48,6 +54,11 @@ $(staticlib): $(patsubst %, static/%, $(LIB_OBJS))
 export:: $(staticlib)
 	@$(ExportLibrary)
 
+ifdef INSTALLTARGET
+install:: $(staticlib)
+	@$(InstallLibrary)
+endif
+
 clean::
 	$(RM) static/*.o
 	$(RM) $(staticlib)
@@ -56,6 +67,11 @@ veryclean::
 	$(RM) static/*.o
 	$(RM) $(staticlib)
 
+else
+
+mkstatic::
+
+endif
 
 ##############################################################################
 # Build Shared library
@@ -85,6 +101,12 @@ $(shlib): $(patsubst %, shared/%, $(LIB_OBJS) $(LIB_SHARED_ONLY_OBJS))
 export:: $(shlib)
 	@(namespec="$(namespec)"; \
           $(ExportSharedLibrary))
+
+ifdef INSTALLTARGET
+install:: $(shlib)
+	@(namespec="$(namespec)"; \
+          $(InstallSharedLibrary))
+endif
 
 clean::
 	$(RM) shared/*.o

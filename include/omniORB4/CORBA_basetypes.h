@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.7  2002/02/18 11:59:12  dpg1
+ Full autoconf support.
+
  Revision 1.2.2.6  2002/01/15 16:38:09  dpg1
  On the road to autoconf. Dependencies refactored, configure.ac
  written. No makefiles yet.
@@ -108,6 +111,7 @@ typedef unsigned short            _CORBA_UShort;
 typedef long                      _CORBA_Long;
 
 typedef unsigned long             _CORBA_ULong;
+
 #elif SIZEOF_INT == 4
 #  ifndef OMNI_LONG_IS_INT
 #    define OMNI_LONG_IS_INT

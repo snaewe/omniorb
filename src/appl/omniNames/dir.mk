@@ -39,6 +39,11 @@ clean::
 export:: $(omniNames)
 	@$(ExportExecutable)
 
+ifdef INSTALLTARGET
+install:: $(omniNames)
+	@$(InstallExecutable)
+endif
+
 OBJS = $(CXXSRCS:.cc=.o)
 
 $(omniNames): $(OBJS) $(CORBA_LIB_NODYN_DEPEND)

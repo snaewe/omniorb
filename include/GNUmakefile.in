@@ -1,0 +1,23 @@
+TOP=..
+CURRENT=include
+VPATH=@srcdir@
+
+INSTALLDIR = $(INSTALLINCDIR)
+
+HEADERS = omnithread.h omniconfig.h
+
+SUBDIRS = omniORB4
+
+include $(TOP)/mk/beforeauto.mk
+
+install:: $(HEADERS)
+	@(for i in $^; do \
+            file="$$i"; \
+            dir="$(INSTALLDIR)"; \
+            $(ExportFileToDir) \
+          done )
+
+install::
+	@$(MakeSubdirs)
+
+include $(TOP)/mk/afterauto.mk

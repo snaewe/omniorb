@@ -15,3 +15,8 @@ $(CONVERTIOR): convertior.o $(CORBA_LIB_NODYN_DEPEND)
 
 export:: $(CONVERTIOR)
 	@$(ExportExecutable)
+
+ifdef INSTALLTARGET
+install:: $(CONVERTIOR)
+	@$(InstallExecutable)
+endif

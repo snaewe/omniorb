@@ -1,17 +1,25 @@
-PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl_be/cxx/impl
+PYLIBROOT= $(EXPORT_TREE)/lib/python
+PYLIBDIR = $(PYLIBROOT)/omniidl_be/cxx/impl
+INSTALLPYLIBDIR = $(INSTALLPYTHONDIR)/omniidl_be/cxx/impl
 
+FILES = __init__.py main.py template.py
 
-all::
-	@$(MakeSubdirs)
+export:: $(FILES)
+	@(dir="$(PYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+          cd $(PYLIBDIR); \
+	  $(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
+	 )
 
-export::
-	@$(MakeSubdirs)
-
-export:: __init__.py
-	@(file="__init__.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: main.py
-	@(file="main.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: template.py
-	@(file="template.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+ifdef INSTALLTARGET
+install:: $(FILES)
+	@(dir="$(INSTALLPYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+          cd $(INSTALLPYLIBDIR); \
+	  $(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
+	 )
+endif

@@ -1,3 +1,5 @@
+#include <omniconfig.h>
+
 #ifdef OMNI_CONFIG_TRADITIONAL
 
 #if defined(__linux__)
@@ -41,8 +43,6 @@
 
 #endif
 
-#else // autoconf config
-#  include <omniconfig.h>
 #endif
 
 

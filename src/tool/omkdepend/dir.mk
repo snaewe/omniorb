@@ -20,5 +20,10 @@ $(prog): $(OBJS)
 export:: $(prog)
 	@$(ExportExecutable)
 
+ifdef INSTALLTARGET
+install:: $(prog)
+	@$(InstallExecutable)
+endif
+
 clean::
 	$(RM) $(prog)

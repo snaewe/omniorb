@@ -1,5 +1,9 @@
-include cosinterfaces.mk
-include libdefs.mk
+include $(MAKEFILE_INC_DIR)cosinterfaces.mk
+include $(MAKEFILE_INC_DIR)libdefs.mk
+
+# Uncomment the next line to build BOA versions of the COS libraries
+# BUILD_BOA_COS_LIB = 1
+
 
 # Look for .idl files in <top>/idl
 vpath %.idl $(IMPORT_TREES:%=%/idl/COS)
@@ -22,11 +26,18 @@ all:: mkstatic mkshared
 export:: mkstatic mkshared
 
 export:: $(COS_INTERFACES:%=%.hh) COS_sysdep.h
-	@(for i in $^; do \
-            file="$$i"; \
-            dir="$(EXPORT_TREE)/$(INCDIR)/COS"; \
-		$(ExportFileToDir) \
+	@(dir="$(EXPORT_TREE)/$(INCDIR)/COS"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
           done )
+
+ifdef INSTALLTARGET
+install:: $(COS_INTERFACES:%=%.hh) COS_sysdep.h
+	@(dir="$(INSTALLINCDIR)/COS"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done )
+endif
 
 veryclean::
 	$(RM) $(COS_INTERFACES:%=%SK.cc) $(COS_INTERFACES:%=%DynSK.cc) \
@@ -36,6 +47,8 @@ veryclean::
 ##############################################################################
 # Build Static library
 ##############################################################################
+
+ifndef NoStaticLibrary
 
 version  := $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 
@@ -60,9 +73,25 @@ export:: $(sk)
 export:: $(dynsk)
 	@$(ExportLibrary)
 
+ifdef INSTALLTARGET
+install:: $(sk)
+	@$(InstallLibrary)
+
+install:: $(dynsk)
+	@$(InstallLibrary)
+endif
+
+
 clean::
 	$(RM) static/*.o
 	$(RM) $(sk) $(dynsk)
+
+else
+
+mkstatic::
+
+endif
+
 
 ##############################################################################
 # Build Shared library
@@ -109,9 +138,23 @@ export:: $(dynskshared)
 	@(namespec="$(dynsknamespec)"; \
          $(ExportSharedLibrary))
 
+ifdef INSTALLTARGET
+install:: $(skshared)
+	@(namespec="$(sknamespec)"; \
+         $(InstallSharedLibrary))
+
+install:: $(dynskshared)
+	@(namespec="$(dynsknamespec)"; \
+         $(InstallSharedLibrary))
+endif
+
 clean::
 	$(RM) shared/*.o
 	(dir=shared; $(CleanSharedLibrary))
+
+else
+
+mkshared::
 
 endif
 
@@ -201,7 +244,10 @@ endif
 ##############################################################################
 # Build Subdirectories
 ##############################################################################
+
+ifdef BUILD_BOA_COS_LIB
 SUBDIRS = mkBOAlib
+endif
 
 all::
 	@$(MakeSubdirs)
@@ -209,3 +255,7 @@ all::
 export::
 	@$(MakeSubdirs)
 
+ifdef INSTALLTARGET
+install::
+	@$(MakeSubdirs)
+endif

@@ -1,0 +1,7 @@
+TOP=../../..
+CURRENT=src/tool/omniidl
+VPATH=@srcdir@
+
+include $(TOP)/mk/beforeauto.mk
+include @srcdir@/dir.mk
+include $(TOP)/mk/afterauto.mk

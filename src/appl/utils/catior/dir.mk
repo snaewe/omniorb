@@ -18,3 +18,8 @@ $(CATIOR): catior.o $(CORBA_LIB_NODYN_DEPEND)
 
 export:: $(CATIOR)
 	@$(ExportExecutable)
+
+ifdef INSTALLTARGET
+install:: $(CATIOR)
+	@$(InstallExecutable)
+endif

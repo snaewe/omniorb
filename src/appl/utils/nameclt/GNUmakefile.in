@@ -1,0 +1,7 @@
+TOP=../../../..
+CURRENT=src/appl/utils/nameclt
+VPATH=@srcdir@
+
+include $(TOP)/mk/beforeauto.mk
+include @srcdir@/dir.mk
+include $(TOP)/mk/afterauto.mk

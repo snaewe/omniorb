@@ -35,6 +35,15 @@ export:: $(EXPORTHEADERS)
 		$(ExportFileToDir) \
           done )
 
+ifdef INSTALLTARGET
+install:: $(EXPORTHEADERS)
+	@(for i in $^; do \
+            file="$$i"; \
+            dir="$(INSTALLINCDIR)/omniORB4"; \
+		$(ExportFileToDir) \
+          done )
+endif
+
 
 veryclean::
 	$(RM) $(STUBHEADERS) omniORB4/*SK.cc
@@ -44,6 +53,11 @@ all::
 
 export::
 	@$(MakeSubdirs)
+
+ifdef INSTALLTARGET
+install::
+	@$(MakeSubdirs)
+endif
 
 
 ######################################################################

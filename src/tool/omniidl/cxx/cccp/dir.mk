@@ -35,6 +35,11 @@ export:: $(omnicpp)
 	@(dir="$(EXPORT_TREE)/$(LIBDIR)"; file="$(omnicpp)"; \
 	$(ExportExecutableFileToDir))
 
+ifdef INSTALLTARGET
+install:: $(omnicpp)
+	@$(InstallExecutable)
+endif
+
 endif
 
 

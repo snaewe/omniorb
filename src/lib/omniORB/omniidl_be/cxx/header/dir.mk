@@ -1,31 +1,22 @@
-PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl_be/cxx/header
+PYLIBROOT= $(EXPORT_TREE)/lib/python
+PYLIBDIR = $(PYLIBROOT)/omniidl_be/cxx/header
+INSTALLPYLIBDIR = $(INSTALLPYTHONDIR)/omniidl_be/cxx/header
 
-export::
-	@$(MakeSubdirs)
+FILES = __init__.py defs.py opers.py poa.py tie.py forward.py marshal.py \
+        tcstring.py template.py
 
-export:: __init__.py
-	@(file="__init__.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+export:: $(FILES)
+	@(dir="$(PYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+	 )
 
-export:: defs.py
-	@(file="defs.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: opers.py
-	@(file="opers.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: poa.py
-	@(file="poa.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: tie.py
-	@(file="tie.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: forward.py
-	@(file="forward.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: marshal.py
-	@(file="marshal.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: tcstring.py
-	@(file="tcstring.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: template.py
-	@(file="template.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+ifdef INSTALLTARGET
+install:: $(FILES)
+	@(dir="$(INSTALLPYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+	 )
+endif

@@ -1,5 +1,5 @@
-include ../cosinterfaces.mk
-include ../libdefs.mk
+include $(MAKEFILE_INC_DIR)../cosinterfaces.mk
+include $(MAKEFILE_INC_DIR)../libdefs.mk
 
 # Generate BOA skeleton
 DIR_IDLFLAGS += -WbBOA
@@ -21,11 +21,18 @@ all:: mkstatic mkshared
 export:: mkstatic mkshared
 
 export:: $(COS_INTERFACES:%=%.hh) COS_sysdep.h
-	@(for i in $^; do \
-            file="$$i"; \
-            dir="$(EXPORT_TREE)/$(INCDIR)/COS/BOA"; \
-		$(ExportFileToDir) \
+	@(dir="$(EXPORT_TREE)/$(INCDIR)/COS/BOA"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
           done )
+
+ifdef INSTALLTARGET
+install:: $(COS_INTERFACES:%=%.hh) COS_sysdep.h
+	@(dir="$(INSTALLINCDIR)/COS/BOA"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done )
+endif
 
 veryclean::
 	$(RM) $(COS_INTERFACES:%=%SK.cc) $(COS_INTERFACES:%=%DynSK.cc) \
@@ -34,6 +41,8 @@ veryclean::
 ##############################################################################
 # Build Static library
 ##############################################################################
+
+ifndef NoStaticLibrary
 
 version  := $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 
@@ -49,12 +58,23 @@ mkstatic:: $(sk)
 $(sk): $(patsubst %, static/%, $(COS_SK_OBJS))
 	@$(StaticLinkLibrary)
 
+ifdef INSTALLTARGET
+install:: $(sk)
+	@$(InstallLibrary)
+endif
+
 export:: $(sk)
 	@$(ExportLibrary)
 
 clean::
 	$(RM) static/*.o
 	$(RM) $(sk)
+
+else
+
+mkstatic::
+
+endif
 
 ##############################################################################
 # Build Shared library
@@ -89,9 +109,19 @@ export:: $(skshared)
 	@(namespec="$(sknamespec)"; \
          $(ExportSharedLibrary))
 
+ifdef INSTALLTARGET
+install:: $(skshared)
+	@(namespec="$(sknamespec)"; \
+         $(InstallSharedLibrary))
+endif
+
 clean::
 	$(RM) shared/*.o
 	(dir=shared; $(CleanSharedLibrary))
+
+else
+
+mkshared::
 
 endif
 

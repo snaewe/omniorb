@@ -25,5 +25,10 @@ clean::
 export:: $(omniMapper)
 	@$(ExportExecutable)
 
+ifdef INSTALLTARGET
+install:: $(omniMapper)
+	@$(InstallExecutable)
+endif
+
 $(omniMapper): omniMapper.o $(CORBA_LIB_NODYN_DEPEND)
 	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))

@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.19  2002/02/18 11:59:12  dpg1
+ Full autoconf support.
+
  Revision 1.2.2.18  2002/01/15 16:38:09  dpg1
  On the road to autoconf. Dependencies refactored, configure.ac
  written. No makefiles yet.
@@ -57,12 +60,13 @@
 // hard-coded values in CORBA_sysdep_trad.h
 //
 
+#ifndef OMNI_CONFIG_EXTERNAL
+#  include <omniconfig.h>
+#endif
+
 #ifdef OMNI_CONFIG_TRADITIONAL
 #  include <omniORB4/CORBA_sysdep_trad.h>
 #else
-#  ifndef OMNI_CONFIG_EXTERNAL
-#    include <omniconfig.h>
-#  endif
 #  include <omniORB4/CORBA_sysdep_auto.h>
 #endif
 

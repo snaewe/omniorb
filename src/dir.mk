@@ -25,5 +25,10 @@ all::
 export::
 	@$(MakeSubdirs)
 
+ifdef INSTALLTARGET
+install::
+	@$(MakeSubdirs)
+endif
+
 clean::
 	rm -rf stub

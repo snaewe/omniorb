@@ -7,7 +7,7 @@ SSL_SRCS = \
            sslContext.cc
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
-DIR_CPPFLAGS += -I../../include $(patsubst %,-I%/../../include,$(VPATH))
+DIR_CPPFLAGS += $(patsubst %,-I%/include/omniORB4/internal,$(IMPORT_TREES))
 DIR_CPPFLAGS += -D_OMNIORB_SSL_LIBRARY
 DIR_CPPFLAGS += $(OMNIORB_CPPFLAGS)
 DIR_CPPFLAGS += $(OPEN_SSL_CPPFLAGS)

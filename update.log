@@ -1,3 +1,175 @@
+Mon Feb 18 11:43:13 GMT 2002 dpg1
+=================================
+
+- Full autoconf support.
+
+acinclude.m4							-- deleted
+aclocal.m4							-- deleted
+configure.ac							-- deleted
+external_merge/GNUmakefile.in					-- new
+external_merge/acinclude.m4					-- new
+external_merge/aclocal.m4					-- new
+external_merge/configure					-- new
+external_merge/configure.ac					-- new
+external_merge/bin/scripts/config.guess				-- new
+external_merge/bin/scripts/config.sub				-- new
+external_merge/include/GNUmakefile.in				-- new
+external_merge/include/omniconfig.h.in				-- new
+external_merge/include/omniORB4/GNUmakefile.in			-- new
+external_merge/include/omniORB4/internal/GNUmakefile.in		-- new
+external_merge/mk/afterauto.mk.in				-- new
+external_merge/mk/beforeauto.mk.in				-- new
+external_merge/mk/beforedir.mk
+external_merge/mk/mklib.mk
+external_merge/src/GNUmakefile.in				-- new
+external_merge/src/dir.mk
+external_merge/src/appl/GNUmakefile.in				-- new
+external_merge/src/appl/omniMapper/GNUmakefile.in		-- new
+external_merge/src/appl/omniNames/GNUmakefile.in		-- new
+external_merge/src/appl/utils/GNUmakefile.in			-- new
+external_merge/src/appl/utils/catior/GNUmakefile.in		-- new
+external_merge/src/appl/utils/convertior/GNUmakefile.in		-- new
+external_merge/src/appl/utils/convertior/GNUmakefile.in		-- new
+external_merge/src/appl/utils/nameclt/GNUmakefile.in		-- new
+external_merge/src/examples/GNUmakefile.in			-- new
+external_merge/src/examples/anyExample/GNUmakefile.in		-- new
+external_merge/src/examples/boa/GNUmakefile.in			-- new
+external_merge/src/examples/call_back/GNUmakefile.in		-- new
+external_merge/src/examples/dii/GNUmakefile.in			-- new
+external_merge/src/examples/dsi/GNUmakefile.in			-- new
+external_merge/src/examples/echo/GNUmakefile.in			-- new
+external_merge/src/examples/partcl/GNUmakefile.in		-- new
+external_merge/src/examples/poa/GNUmakefile.in			-- new
+external_merge/src/examples/poa/implicit_activation/GNUmakefile.in	-- new
+external_merge/src/examples/poa/persistent_objref/GNUmakefile.in	-- new
+external_merge/src/examples/poa/servant_manager/GNUmakefile.in	-- new
+external_merge/src/examples/poa/threading/GNUmakefile		-- new
+external_merge/src/examples/poa/threading/GNUmakefile.in	-- new
+external_merge/src/examples/ssl_echo/GNUmakefile.in		-- new
+external_merge/src/examples/thread/GNUmakefile.in		-- new
+external_merge/src/lib/GNUmakefile.in				-- new
+external_merge/src/lib/dir.mk
+external_merge/src/lib/omniORB/GNUmakefile.in			-- new
+external_merge/src/lib/omniORB/codesets/GNUmakefile.in		-- new
+external_merge/src/lib/omniORB/dynamic/GNUmakefile.in		-- new
+external_merge/src/lib/omniORB/omniidl_be/GNUmakefile.in	-- new
+external_merge/src/lib/omniORB/omniidl_be/cxx/GNUmakefile.in	-- new
+external_merge/src/lib/omniORB/omniidl_be/cxx/dynskel/GNUmakefile.in	-- new
+external_merge/src/lib/omniORB/omniidl_be/cxx/header/GNUmakefile.in	-- new
+external_merge/src/lib/omniORB/omniidl_be/cxx/impl/GNUmakefile.in	-- new
+external_merge/src/lib/omniORB/omniidl_be/cxx/skel/GNUmakefile.in	-- new
+external_merge/src/lib/omniORB/orbcore/GNUmakefile.in		-- new
+external_merge/src/lib/omniORB/orbcore/ssl/GNUmakefile.in	-- new
+external_merge/src/lib/omnithread/GNUmakefile.in		-- new
+external_merge/src/services/GNUmakefile.in			-- new
+external_merge/src/services/mklib/GNUmakefile.in		-- new
+external_merge/src/services/mklib/mkBOAlib/GNUmakefile.in	-- new
+external_merge/src/tool/GNUmakefile.in				-- new
+external_merge/src/tool/dir.mk
+external_merge/src/tool/omkdepend/GNUmakefile.in		-- new
+external_merge/src/tool/omniidl/GNUmakefile.in			-- new
+external_merge/src/tool/omniidl/cxx/GNUmakefile.in		-- new
+external_merge/src/tool/omniidl/cxx/cccp/GNUmakefile.in		-- new
+external_merge/src/tool/omniidl/python/GNUmakefile.in		-- new
+external_merge/src/tool/omniidl/python/omniidl/GNUmakefile.in	-- new
+external_merge/src/tool/omniidl/python/omniidl_be/GNUmakefile.in	-- new
+external_merge/src/tool/omniidl/python/scripts/GNUmakefile.in	-- new
+external_merge/src/tool/omniidl/python/scripts/omniidl.in	-- new
+include/omniconfig.h						-- new
+include/omniORB4/CORBA_basetypes.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/CORBA_sysdep_auto.h
+src/dir.mk
+src/appl/dir.mk
+src/appl/omniMapper/dir.mk
+src/appl/omniNames/dir.mk
+src/appl/utils/dir.mk
+src/appl/utils/catior/dir.mk
+src/appl/utils/convertior/dir.mk
+src/appl/utils/genior/dir.mk
+src/appl/utils/nameclt/dir.mk
+src/examples/poa/dir.mk
+src/examples/poa/threading/dir.mk				-- new
+src/examples/poa/threading/mainthread.cc			-- new
+src/lib/dir.mk
+src/lib/omniORB/dir.mk
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/include/GIOP_C.h				-- deleted
+src/lib/omniORB/include/GIOP_S.h				-- deleted
+src/lib/omniORB/include/SocketCollection.h			-- deleted
+src/lib/omniORB/include/anonObject.h				-- deleted
+src/lib/omniORB/include/anyP.h					-- deleted
+src/lib/omniORB/include/codeSetUtil.h				-- deleted
+src/lib/omniORB/include/context.h				-- deleted
+src/lib/omniORB/include/corbaBoa.h				-- deleted
+src/lib/omniORB/include/corbaOrb.h				-- deleted
+src/lib/omniORB/include/deferredRequest.h			-- deleted
+src/lib/omniORB/include/dynAnyImpl.h				-- deleted
+src/lib/omniORB/include/dynamicImplementation.h			-- deleted
+src/lib/omniORB/include/dynamicLib.h				-- deleted
+src/lib/omniORB/include/excepthandler.h				-- deleted
+src/lib/omniORB/include/exceptiondefs.h				-- deleted
+src/lib/omniORB/include/giopBiDir.h				-- deleted
+src/lib/omniORB/include/giopMonitor.h				-- deleted
+src/lib/omniORB/include/giopRendezvouser.h			-- deleted
+src/lib/omniORB/include/giopRope.h				-- deleted
+src/lib/omniORB/include/giopServer.h				-- deleted
+src/lib/omniORB/include/giopStrand.h				-- deleted
+src/lib/omniORB/include/giopStream.h				-- deleted
+src/lib/omniORB/include/giopStreamImpl.h			-- deleted
+src/lib/omniORB/include/giopWorker.h				-- deleted
+src/lib/omniORB/include/inProcessIdentity.h			-- deleted
+src/lib/omniORB/include/initRefs.h				-- deleted
+src/lib/omniORB/include/initialiser.h				-- deleted
+src/lib/omniORB/include/invoker.h				-- deleted
+src/lib/omniORB/include/libcWrapper.h				-- deleted
+src/lib/omniORB/include/localIdentity.h				-- deleted
+src/lib/omniORB/include/objectAdapter.h				-- deleted
+src/lib/omniORB/include/objectStub.h				-- deleted
+src/lib/omniORB/include/objectTable.h				-- deleted
+src/lib/omniORB/include/omniCurrent.h				-- deleted
+src/lib/omniORB/include/omniIdentity.h				-- deleted
+src/lib/omniORB/include/orbOptions.h				-- deleted
+src/lib/omniORB/include/orbParameters.h				-- deleted
+src/lib/omniORB/include/poacurrentimpl.h			-- deleted
+src/lib/omniORB/include/poaimpl.h				-- deleted
+src/lib/omniORB/include/poamanager.h				-- deleted
+src/lib/omniORB/include/pseudo.h				-- deleted
+src/lib/omniORB/include/remoteIdentity.h			-- deleted
+src/lib/omniORB/include/request.h				-- deleted
+src/lib/omniORB/include/rmutex.h				-- deleted
+src/lib/omniORB/include/shutdownIdentity.h			-- deleted
+src/lib/omniORB/include/tcParser.h				-- deleted
+src/lib/omniORB/include/transportRules.h			-- deleted
+src/lib/omniORB/include/typecode.h				-- deleted
+src/lib/omniORB/omniidl_be/dir.mk
+src/lib/omniORB/omniidl_be/cxx/dir.mk
+src/lib/omniORB/omniidl_be/cxx/dynskel/dir.mk
+src/lib/omniORB/omniidl_be/cxx/header/dir.mk
+src/lib/omniORB/omniidl_be/cxx/impl/dir.mk
+src/lib/omniORB/omniidl_be/cxx/skel/dir.mk
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/lib/omnithread/dir.mk
+src/services/dir.mk
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+src/tool/dir.mk
+src/tool/omkdepend/dir.mk
+src/tool/omniidl/dir.mk
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/cccp/config.h
+src/tool/omniidl/cxx/cccp/dir.mk
+src/tool/omniidl/python/dir.mk
+src/tool/omniidl/python/omniidl/dir.mk
+src/tool/omniidl/python/omniidl/main.py
+src/tool/omniidl/python/omniidl_be/dir.mk
+src/tool/omniidl/python/scripts/dir.mk
+src/tool/omniidl/python/scripts/omniidlrun.py
+
+
 Wed Feb 13 17:37:56 GMT 2002 dpg1
 =================================
 

@@ -1,4 +1,6 @@
-PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl_be
+PYLIBROOT= $(EXPORT_TREE)/lib/python
+PYLIBDIR = $(PYLIBROOT)/omniidl_be
+INSTALLPYLIBDIR = $(INSTALLPYTHONDIR)/omniidl_be
 
 ifndef PYTHON
 all::
@@ -7,20 +9,24 @@ export::
 	@$(NoPythonError)
 endif
 
-export:: __init__.py
-	@(file="__init__.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+FILES = __init__.py dump.py example.py interactive.py
 
-export:: dump.py
-	@(file="dump.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+export:: $(FILES)
+	@(dir="$(PYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+          cd $(PYLIBDIR); \
+	  $(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
+	 )
 
-export:: example.py
-	@(file="example.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: interactive.py
-	@(file="interactive.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export::
-	@(set -x; \
-	cd $(PYLIBDIR); \
-	$(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
-	)
+ifdef INSTALLTARGET
+install:: $(FILES)
+	@(dir="$(INSTALLPYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+          cd $(INSTALLPYLIBDIR); \
+	  $(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
+	 )
+endif

@@ -67,6 +67,11 @@ $(staticlib): $(patsubst %, static/%, $(LIB_OBJS))
 export:: $(staticlib)
 	@$(ExportLibrary)
 
+ifdef INSTALLTARGET
+install:: $(staticlib)
+	@$(InstallLibrary)
+endif
+
 clean::
 	$(RM) static/*.o
 	$(RM) $(staticlib)
@@ -103,6 +108,12 @@ $(shlib): $(patsubst %, shared/%, $(LIB_OBJS))
 export:: $(shlib)
 	@(namespec="$(namespec)"; \
           $(ExportSharedLibrary))
+
+ifdef INSTALLTARGET
+install:: $(shlib)
+	@(namespec="$(namespec)"; \
+          $(InstallSharedLibrary))
+endif
 
 clean::
 	$(RM) shared/*.o

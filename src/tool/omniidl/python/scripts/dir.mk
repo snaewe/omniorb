@@ -1,8 +1,11 @@
 ifdef UnixPlatform
 
-export:: omniidlrun.py
+export:: omniidl omniidlrun.py
 	@$(ExportExecutable)
 
-export:: omniidl
-	@$(ExportExecutable)
+ifdef INSTALLTARGET
+install:: omniidl omniidlrun.py
+	@$(InstallExecutable)
+endif
+
 endif

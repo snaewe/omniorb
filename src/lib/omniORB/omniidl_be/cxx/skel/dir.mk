@@ -1,17 +1,21 @@
-PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl_be/cxx/skel
+PYLIBROOT= $(EXPORT_TREE)/lib/python
+PYLIBDIR = $(PYLIBROOT)/omniidl_be/cxx/skel
+INSTALLPYLIBDIR = $(INSTALLPYTHONDIR)/omniidl_be/cxx/skel
 
-export:: __init__.py
-	@(file="__init__.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+FILES = __init__.py main.py poa.py mangler.py template.py
 
-export:: main.py
-	@(file="main.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+export:: $(FILES)
+	@(dir="$(PYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+	 )
 
-export:: poa.py
-	@(file="poa.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: mangler.py
-	@(file="mangler.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: template.py
-	@(file="template.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
+ifdef INSTALLTARGET
+install:: $(FILES)
+	@(dir="$(INSTALLPYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+	 )
+endif

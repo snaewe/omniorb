@@ -1,0 +1,16 @@
+TOP=.
+CURRENT=.
+VPATH=@srcdir@
+
+include $(TOP)/mk/beforeauto.mk
+
+SUBDIRS = src
+
+all::
+	@(target="export"; $(MakeSubdirs))
+
+install::
+	@$(MakeSubdirs)
+	@(subdirs="include"; $(MakeSubdirs))
+
+include $(TOP)/mk/afterauto.mk

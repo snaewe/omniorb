@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.6  2002/02/18 11:59:23  dpg1
+# Full autoconf support.
+#
 # Revision 1.17.2.5  2001/11/14 17:13:44  dpg1
 # Long double support.
 #
@@ -123,7 +126,11 @@ else:
     preprocessor_path = os.path.dirname(sys.argv[0])
 
 if sys.platform != "OpenVMS":
-    preprocessor      = os.path.join(preprocessor_path, "omnicpp")
+    preprocessor = os.path.join(preprocessor_path, "omnicpp")
+    if not os.path.isfile(preprocessor):
+        # Try getting omnicpp from the PATH
+        preprocessor = "omnicpp"
+        
     preprocessor_cmd  = preprocessor + " -lang-c++ -undef -D__OMNIIDL__=" + \
 			_omniidl.version
 else:    

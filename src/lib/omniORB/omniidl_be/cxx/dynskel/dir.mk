@@ -1,17 +1,21 @@
-PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl_be/cxx/dynskel
+PYLIBROOT= $(EXPORT_TREE)/lib/python
+PYLIBDIR = $(PYLIBROOT)/omniidl_be/cxx/dynskel
+INSTALLPYLIBDIR = $(INSTALLPYTHONDIR)/omniidl_be/cxx/dynskel
 
-export:: __init__.py
-	@(file="__init__.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+FILES = __init__.py main.py typecode.py tcstring.py template.py
 
-export:: main.py
-	@(file="main.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+export:: $(FILES)
+	@(dir="$(PYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+	 )
 
-export:: typecode.py
-	@(file="typecode.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: tcstring.py
-	@(file="tcstring.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export:: template.py
-	@(file="template.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
+ifdef INSTALLTARGET
+install:: $(FILES)
+	@(dir="$(INSTALLPYLIBDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done; \
+	 )
+endif

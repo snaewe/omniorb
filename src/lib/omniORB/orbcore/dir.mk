@@ -102,7 +102,7 @@ ORB_SRCS =  \
 
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
-DIR_CPPFLAGS += -I../include $(patsubst %,-I%/../include,$(VPATH))
+DIR_CPPFLAGS += $(patsubst %,-I%/include/omniORB4/internal,$(IMPORT_TREES))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
 DIR_CPPFLAGS += -D_OMNIORB_LIBRARY
