@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.30  2004/04/08 10:02:20  dgrisby
+  In thread pool mode, close connections that will not be selectable.
+
   Revision 1.22.2.29  2004/03/02 15:32:07  dgrisby
   Fix locking in connection shutdown.
 
@@ -744,6 +747,22 @@ giopServer::notifyRzNewConnection(giopRendezvouser* r, giopConnection* conn)
 	conn->pd_n_workers++;
       }
       else {
+	if (!conn->isSelectable()) {
+	  if (omniORB::trace(20)) {
+	    omniORB::logger log;
+	    log << "Connection from " << conn->peeraddress()
+		<< " is not selectable. Closing it.\n";
+	  }
+	  {
+	    omni_tracedmutex_lock sync(*omniTransportLock);
+	    cs->strand->safeDelete();
+	  }
+	  csRemove(conn);
+	  pd_lock.unlock();
+	  delete cs;
+	  pd_lock.lock();
+	  throw outOfResource();
+	}
 	pd_lock.unlock();
 	conn->setSelectable(1);
 	pd_lock.lock();

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.18  2004/04/08 10:02:19  dgrisby
+  In thread pool mode, close connections that will not be selectable.
+
   Revision 1.1.2.17  2003/11/12 16:04:18  dgrisby
   Set sockets to close on exec.
 
@@ -307,6 +310,9 @@ public:
 
   void clearSelectable(SocketHandle_t);
   // Indicates that this connection need not be watched any more.
+
+  CORBA::Boolean isSelectable(SocketHandle_t sock);
+  // Indicates whether the given socket can be selected upon.
 
   CORBA::Boolean Select();
   // Returns TRUE(1) if the Select() has successfully done a scan.

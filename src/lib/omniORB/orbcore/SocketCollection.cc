@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.19  2004/04/08 10:02:20  dgrisby
+  In thread pool mode, close connections that will not be selectable.
+
   Revision 1.1.2.18  2004/03/26 11:52:07  dgrisby
   SetHandleInformation not supported on ETS.
 
@@ -99,6 +102,9 @@
 #  include "selectLib.h"
 #  include "iostream.h"
 #endif
+
+
+#define SELECTABLE_FD_LIMIT FD_SETSIZE
 
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -274,6 +280,9 @@ SocketCollection::setSelectable(SocketHandle_t sock,
 				CORBA::Boolean data_in_buffer,
 				CORBA::Boolean hold_lock) {
 
+  if (sock >= SELECTABLE_FD_LIMIT)
+    return;
+
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_fdset_lock, hold_lock);
 
   if (!hold_lock) pd_fdset_lock.lock();
@@ -313,6 +322,9 @@ SocketCollection::setSelectable(SocketHandle_t sock,
 void
 SocketCollection::clearSelectable(SocketHandle_t sock) {
 
+  if (sock >= SELECTABLE_FD_LIMIT)
+    return;
+
   omni_tracedmutex_lock sync(pd_fdset_lock);
 
   if (FD_ISSET(sock,&pd_fdset_1)) {
@@ -328,6 +340,14 @@ SocketCollection::clearSelectable(SocketHandle_t sock) {
     FD_CLR(sock,&pd_fdset_dib);
   }
 }
+
+/////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+SocketCollection::isSelectable(SocketHandle_t sock)
+{
+  return sock < SELECTABLE_FD_LIMIT;
+}
+
 
 #ifdef GDB_DEBUG
 

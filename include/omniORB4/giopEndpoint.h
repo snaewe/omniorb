@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2004/04/08 10:02:18  dgrisby
+  In thread pool mode, close connections that will not be selectable.
+
   Revision 1.1.4.8  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -102,9 +105,14 @@ public:
   // If data_in_buffer == 1, treat this connection as if there are
   // data available from the connection already.
 
-
   virtual void clearSelectable() = 0;
   // Indicates that this connection need not be watched any more.
+
+  virtual _CORBA_Boolean isSelectable() = 0;
+  // Returns true if this connection is selectable, false if not. It
+  // may not be if the server is very heavily loaded and there are
+  // more file descriptors in use than available in a select() fd_set.
+
 
   virtual void Peek(notifyReadable_t func,void* cookie) = 0;
   // Do nothing and returns immediately if the connection has not been

@@ -1,3 +1,20 @@
+Thu Apr  8 11:06:08 BST 2004 dgrisby
+====================================
+
+- In thread pool mode, close connections that will not be selectable.
+
+include/omniORB4/giopEndpoint.h
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.h
+
+
 Wed Apr  7 18:45:34 BST 2004 dgrisby
 ====================================
 

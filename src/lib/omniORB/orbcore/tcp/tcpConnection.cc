@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2004/04/08 10:02:22  dgrisby
+  In thread pool mode, close connections that will not be selectable.
+
   Revision 1.1.2.14  2003/11/12 16:04:17  dgrisby
   Set sockets to close on exec.
 
@@ -375,6 +378,13 @@ tcpConnection::clearSelectable() {
 
   pd_belong_to->clearSelectable(pd_socket);
 }
+
+/////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+tcpConnection::isSelectable() {
+  return pd_belong_to->isSelectable(pd_socket);
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 void
