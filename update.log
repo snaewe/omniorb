@@ -1,3 +1,23 @@
+
+Mon Feb  1 14:34:42 GMT 1999 djr
+================================
+
+- Initialise strings allocated with CORBA::string_alloc() to
+  zero length. Effectively 'inline' uses of string_alloc and
+  string_free in corbaString.cc.
+- Replace a number of instances of copy-initialisation with
+  direct-initialisation.
+
+src/lib/omniORB2/orbcore/corbaString.cc
+src/lib/omniORB2/orbcore/bootstrap_i.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/objectRef.cc
+src/lib/omniORB2/orbcore/proxyCall.cc
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/request.cc
+src/lib/omniORB2/dynamic/serverRequest.cc
+
+
 Mon Jan 25 20:06:08 GMT 1999 sll
 ================================
 
@@ -6,6 +26,7 @@ Mon Jan 25 20:06:08 GMT 1999 sll
 
 mk/java.mk
 mk/afterdir.mk
+
 
 Mon Jan 25 18:46:55 GMT 1999 tjr
 ================================
@@ -27,6 +48,7 @@ include/omniORB2/rope.h
 src/lib/omniORB2/orbcore/sharedlib/dir.mk
 src/lib/omniORB2/orbcore/strand.cc
 src/lib/omniORB2/dynamic/sharedlib/dir.mk
+
 
 Wed Jan 20 11:38:36 GMT 1999 tjr
 ================================
