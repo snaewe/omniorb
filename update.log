@@ -1,3 +1,16 @@
+Wed Aug 29 14:36:46 BST 2001 dpg1
+=================================
+
+- jnw's fix for compilers with variable sizeof(enum)
+
+include/omniORB4/tcDescriptor.h
+src/lib/omniORB/dynamic/dynException.cc
+src/lib/omniORB/dynamic/poastub.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+
+
 Wed Aug 29 12:47:52 BST 2001 dpg1
 =================================
 

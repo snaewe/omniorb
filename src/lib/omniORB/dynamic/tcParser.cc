@@ -662,6 +662,32 @@ tcParser::skip(const CORBA::TypeCode_ptr tc, cdrStream &s) {
 /////////////////////// Internal Implementation //////////////////////
 //////////////////////////////////////////////////////////////////////
 
+static inline CORBA::ULong getEnumData(const tcDescriptor &tcdata) {
+  switch (tcdata.p_enum.size) {
+  case 1: return *((CORBA::Octet*)tcdata.p_enum.data);
+  case 2: return *((CORBA::UShort*)tcdata.p_enum.data);
+  default: return *((CORBA::ULong*)tcdata.p_enum.data);
+#ifdef HAS_LongLong
+  case 8: return *((CORBA::ULongLong*)tcdata.p_enum.data);
+#endif
+  };
+  OMNIORB_ASSERT(0);
+  // Fails if compiler has picked sizeof(enum) which is not a power of 2.
+}
+
+static inline void setEnumData(tcDescriptor &tcdata,const CORBA::ULong value) {
+  switch (tcdata.p_enum.size) {
+  case 1: *((CORBA::Octet*)tcdata.p_enum.data) = value; return;
+  case 2: *((CORBA::UShort*)tcdata.p_enum.data) = value; return;
+  default: *((CORBA::ULong*)tcdata.p_enum.data) = value; return;
+#ifdef HAS_LongLong
+  case 8: *((CORBA::ULongLong*)tcdata.p_enum.data) = value; return;
+#endif
+  };
+  OMNIORB_ASSERT(0);
+  // Fails if compiler has picked sizeof(enum) which is not a power of 2.
+}
+
 void appendSimpleItem(CORBA::TCKind tck, const tcDescriptor &tcdata, cdrStream& buf)
 {
   switch (tck)
@@ -698,7 +724,7 @@ void appendSimpleItem(CORBA::TCKind tck, const tcDescriptor &tcdata, cdrStream& 
       buf.marshalOctet(*tcdata.p_octet);
       break;
     case CORBA::tk_enum:
-      *tcdata.p_enum    >>= buf;
+      getEnumData(tcdata) >>= buf;
       break;
 
 #ifdef HAS_LongLong
@@ -998,7 +1024,11 @@ void fetchSimpleItem(CORBA::TCKind tck, cdrStream &src, tcDescriptor &tcdata)
       *tcdata.p_octet = src.unmarshalOctet();
       break;
     case CORBA::tk_enum:
-      *tcdata.p_enum    <<= src;
+      {
+	CORBA::ULong tmp;
+	tmp <<= src ;
+	setEnumData(tcdata, tmp);
+      };
       break;
 
 #ifdef HAS_LongLong
@@ -1137,7 +1167,7 @@ void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
 	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_ulong;
 	break;
       case CORBA::tk_enum:
-	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_enum;
+	discrim = (CORBA::PR_unionDiscriminator) getEnumData(disc_desc);
 	break;
 #ifdef HAS_LongLong
       case CORBA::tk_longlong:

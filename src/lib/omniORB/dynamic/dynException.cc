@@ -456,7 +456,8 @@ void
 buildDesc_mCompletionStatus(tcDescriptor& _desc, 
 			    const CORBA::CompletionStatus& _data)
 {
-  _desc.p_enum = (CORBA::ULong*)&_data;
+  _desc.p_enum.data = (void*)&_data;
+  _desc.p_enum.size = sizeof(_data);
 }
 
 static

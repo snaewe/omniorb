@@ -240,7 +240,6 @@ union tcDescriptor {
   CORBA::Char*       p_char;
   CORBA::WChar*      p_wchar;
   CORBA::Octet*      p_octet;
-  CORBA::ULong*      p_enum;
   CORBA::Fixed*      p_fixed;
 #ifdef HAS_LongLong
   CORBA::LongLong*   p_longlong;
@@ -250,7 +249,18 @@ union tcDescriptor {
   CORBA::LongDouble* p_longdouble;
 #endif
 
-  CORBA::Any*     p_any;
+  // ENUM - Special case
+  // data - Pointer to the actual enum data
+  // Compilers may optimise enums => we force a cast to
+  // void * to avoid assuming that enum == ulong.
+  // size - Size of the enum data.  e.g. size=sizeof(enum_type)
+  // Fill this in both when reading AND writing to enums!
+  struct {
+    void*            data;
+    CORBA::Octet     size;
+  } p_enum;
+
+  CORBA::Any*        p_any;
 
   // COMPLEX types
 
@@ -269,8 +279,8 @@ union tcDescriptor {
   // appendItem() will read in the string from string pointer
   // fetchItem() will overwrite the string pointer to a new string - 
   //   if( *ptr && release )  existing string will be freed.
-  //   If new memory is allocated for the string and release is not 1 then it is
-  //   the callers responsibility to free.
+  //   If new memory is allocated for the string and release is not 1
+  //   then it is the callers responsibility to free.
   struct {
     char**         ptr;
     _CORBA_Boolean release;
