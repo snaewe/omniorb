@@ -9,6 +9,11 @@
 #ifndef __omnithread_posix_h_
 #define __omnithread_posix_h_
 
+#if defined(__alpha__) && defined(__osf1__)
+// stop unnecessary definitions of TRY, etc on OSF
+#define EXC_HANDLING
+#endif
+
 #include <pthread.h>
 
 #define OMNI_MUTEX_IMPLEMENTATION			\
