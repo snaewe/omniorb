@@ -33,6 +33,7 @@ veryclean::
 	$(RM) $(COS_INTERFACES:%=%SK.cc) $(COS_INTERFACES:%=%DynSK.cc) \
               $(COS_INTERFACES:%=%.hh)
 
+
 ##############################################################################
 # Build Static library
 ##############################################################################
@@ -76,17 +77,26 @@ skshared      = shared/$(shell $(SharedLibraryFullName) $(sknamespec))
 dynsknamespec = $(subst ., ,$(COS_DYNSKLIB_NAME).$(sharedversion))
 dynskshared   = shared/$(shell $(SharedLibraryFullName) $(dynsknamespec))
 
+ifdef Win32Platform
+# in case of Win32 lossage:
+imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
+         $(OMNIORB_LIB))
+else
+imps := $(OMNIORB_LIB)
+endif
+
+
 mkshared::
 	@(dir=shared; $(CreateDir))
 
 mkshared:: $(skshared) $(dynskshared) 
 
 $(skshared): $(patsubst %, shared/%, $(COS_SK_OBJS))
-	@(namespec="$(sknamespec)" extralibs="$(OMNIORB_LIB)"; \
+	@(namespec="$(sknamespec)" extralibs="$(imps)"; \
          $(MakeCXXSharedLibrary))
 
 $(dynskshared): $(patsubst %, shared/%, $(COS_DYNSK_OBJS))
-	@(namespec="$(dynsknamespec)" extralibs="$(skshared) $(OMNIORB_LIB)"; \
+	@(namespec="$(dynsknamespec)" extralibs="$(skshared) $(imps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshared)
@@ -152,17 +162,20 @@ skshareddbug    = shareddebug/$(shell $(SharedLibraryDebugFullName) $(sknamespec
 dynsknamespec   = $(subst ., ,$(COS_DYNSKLIB_NAME).$(shareddbugversion))
 dynskshareddbug = shareddebug/$(shell $(SharedLibraryDebugFullName) $(dynsknamespec))
 
+dbugimps  := $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), \
+               $(OMNIORB_LIB))
+
 mkshareddbug::
 	@(dir=shareddebug; $(CreateDir))
 
 mkshareddbug:: $(skshareddbug) $(dynskshareddbug) 
 
 $(skshareddbug): $(patsubst %, shareddebug/%, $(COS_SK_OBJS))
-	(namespec="$(sknamespec)" debug=1 extralibs="$(OMNIORB_LIB)"; \
+	(namespec="$(sknamespec)" debug=1 extralibs="$(dbugimps)"; \
          $(MakeCXXSharedLibrary))
 
 $(dynskshareddbug): $(patsubst %, shareddebug/%, $(COS_DYNSK_OBJS))
-	@(namespec="$(dynsknamespec)" debug=1 extralibs="$(skshareddbug) $(OMNIORB_LIB)"; \
+	@(namespec="$(dynsknamespec)" debug=1 extralibs="$(skshareddbug) $(dbugimps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshareddbug)

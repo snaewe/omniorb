@@ -65,13 +65,21 @@ sharedversion = $(OMNIORB_VERSION)
 sknamespec    = $(subst ., ,$(COS_SKLIB_NAME).$(sharedversion))
 skshared      = shared/$(shell $(SharedLibraryFullName) $(sknamespec))
 
+ifdef Win32Platform
+# in case of Win32 lossage:
+imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
+         $(OMNIORB_LIB))
+else
+imps := $(OMNIORB_LIB)
+endif
+
 mkshared::
 	@(dir=shared; $(CreateDir))
 
 mkshared:: $(skshared)
 
 $(skshared): $(patsubst %, shared/%, $(COS_SK_OBJS))
-	@(namespec="$(sknamespec)" extralibs="$(OMNIORB_LIB)"; \
+	@(namespec="$(sknamespec)" extralibs="$(imps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshared)
@@ -123,13 +131,16 @@ shareddbugversion = $(OMNIORB_VERSION)
 sknamespec      = $(subst ., ,$(COS_SKLIB_NAME).$(shareddbugversion))
 skshareddbug    = shareddebug/$(shell $(SharedLibraryDebugFullName) $(sknamespec))
 
+dbugimps  := $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), \
+               $(OMNIORB_LIB))
+
 mkshareddbug::
 	@(dir=shareddebug; $(CreateDir))
 
 mkshareddbug:: $(skshareddbug)
 
 $(skshareddbug): $(patsubst %, shareddebug/%, $(COS_SK_OBJS))
-	(namespec="$(sknamespec)" debug=1 extralibs="$(OMNIORB_LIB)"; \
+	(namespec="$(sknamespec)" debug=1 extralibs="$(dbugimps)"; \
          $(MakeCXXSharedLibrary))
 
 export:: $(skshareddbug)
