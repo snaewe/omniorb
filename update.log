@@ -1,3 +1,19 @@
+Mon Jun 12 12:11:44 BST 2000 dpg1
+=================================
+
+- Clarifying comment about TRANSIENT exceptions on exiting HOLDING state.
+
+src/lib/omniORB2/orbcore/poa.cc
+
+- Global exception handlers were returning a zero cookie
+
+src/lib/omniORB2/orbcore/exception.cc
+
+- sll's fix for rope deletion race condition
+
+src/lib/omniORB2/orbcore/strand.cc
+
+
 Fri Jun  9 12:01:25 BST 2000 dpg1
 =================================
 
