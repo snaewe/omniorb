@@ -3,7 +3,7 @@
 //
 // Copyright (C) Olivetti Research Limited, 1994
 //
-// Last update Time-stamp: <95/01/24 17:49:01 sll>
+// Last update Time-stamp: <95/03/09 16:54:52 sll>
 //
 // Description:
 //     A solution to the infamous dining philosophers, implemented using
@@ -18,9 +18,12 @@
 
 /*
  $Log$
- Revision 1.1  1995/01/25 11:54:48  sll
- Initial revision
+ Revision 1.2  1995/03/13 16:26:44  sll
+ Added mutex around output to STDERR stream.
 
+// Revision 1.1  1995/01/25  11:54:48  sll
+// Initial revision
+//
  */
 
 #include <iostream.h>
@@ -42,6 +45,11 @@ static int             room_occupancy = 0;
 
 static int random_l();
 
+static omni_mutex    *print_mutex;
+#define PRINTMSG(x) do { print_mutex->acquire(); x; print_mutex->release(); } while (0)
+                         
+                         
+
 static void *
 philosopher(void *arg)
 {
@@ -56,17 +64,17 @@ philosopher(void *arg)
       l = r;
       r = t;
     }
-  cerr << "Philosopher #" << id << " has entered the room." << endl;
+  PRINTMSG(cerr << "Philosopher #" << id << " has entered the room." << endl);
   { int count = random_l() % 10 + 1;
     while (count--)
       {
 	chopsticks[l]->acquire();
 	chopsticks[r]->acquire();
-	cerr << "Philosopher #" << id << " is eating spaghetti now." << endl;
+	PRINTMSG(cerr << "Philosopher #" << id << " is eating spaghetti now." << endl);
 	omni_thread::sleep(random_l()%2,random_l()%1000000000);
 	chopsticks[l]->release();
 	chopsticks[r]->release();
-	cerr << "Philosopher #" << id << " is pondering about life." << endl;
+	PRINTMSG(cerr << "Philosopher #" << id << " is pondering about life." << endl);
 	omni_thread::sleep(random_l()%2,random_l()%1000000000);
       }
   }
@@ -75,7 +83,7 @@ philosopher(void *arg)
   phillies[id] = NULL;
   room_mutex->release();
   room_cond->signal();
-  cerr << "Philosophor #" << id << " has left the room." << endl;
+  PRINTMSG(cerr << "Philosophor #" << id << " has left the room. " << room_occupancy <<  endl);
   return NULL;
 }
 
@@ -83,10 +91,11 @@ int
 main(int argc, char ** argv)
 {
   int i;
+  print_mutex = omni_mutex::create();
   for (i=0; i<N_DINERS; i++)
     if ((chopsticks[i] = omni_mutex::create()) == NULL)
       {
-	cerr << "Cannot create chopstick #" << i << endl;
+	PRINTMSG(cerr << "Cannot create chopstick #" << i << endl);
 	exit(1);
       }
   room_mutex = omni_mutex::create();
@@ -95,31 +104,37 @@ main(int argc, char ** argv)
   for (i=0; i<N_DINERS; i++)
     if ((phillies[i] = omni_thread::create(philosopher,1,(void *)i)) == NULL)
       {
-	cerr << "Cannot create philosopher #" << i << endl;
+	PRINTMSG(cerr << "Cannot create philosopher #" << i << endl);
 	exit(1);
       }
   room_occupancy = N_DINERS;
   while (1)
     {
       while (room_occupancy == N_DINERS)
-	room_cond->wait();
+	{
+	  PRINTMSG(cerr << "main thread about to block " << room_occupancy << endl);
+	  room_cond->wait();
+	}
       // Hm.. someone has left the room.
       room_mutex->release();
       // Sleep for a while and then create a new philosopher
-      omni_thread::sleep(0,random_l()%500000000);
+        PRINTMSG(cerr << "main thread sleep" << endl);
+	omni_thread::sleep(1,200000000);
+        PRINTMSG(cerr << "main thread wake up" << endl);
+//	omni_thread::sleep(0,random_l()%500000000);
       room_mutex->acquire();
       for (i=0; i<N_DINERS; i++)
 	if (phillies[i] == NULL)
 	  break;
       if (i == N_DINERS)
 	{
-	  cerr << "Contrary to what I was told, no one has left the room!!!!\n";
-	  cerr << "I give up!!!" << endl;
+	  PRINTMSG(cerr << "Contrary to what I was told, no one has left the room!!!!\n");
+	  PRINTMSG(cerr << "I give up!!!" << endl);
 	  exit(1);
 	}
       if ((phillies[i] = omni_thread::create(philosopher,1,(void *)i)) == NULL)
 	{
-	  cerr << "Cannot create philosopher #" << i << endl;
+	  PRINTMSG(cerr << "Cannot create philosopher #" << i << endl);
 	  exit(1);
 	}
       room_occupancy++;

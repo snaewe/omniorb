@@ -17,14 +17,20 @@
 
 /*
  $Log$
- Revision 1.1  1995/01/25 11:54:53  sll
- Initial revision
+ Revision 1.2  1995/03/13 16:30:22  sll
+ Added mutex around output to STDERR stream.
 
+// Revision 1.1  1995/01/25  11:54:53  sll
+// Initial revision
+//
  */
  
 #include <iostream.h>
 #include <stdlib.h>
 #include "omnithread.h"
+
+static omni_mutex    *print_mutex = omni_mutex::create();
+#define PRINTMSG(x) do { print_mutex->acquire(); x; print_mutex->release(); } while (0)
 
 static void* thread_fn(void*);
 
@@ -44,18 +50,18 @@ int main(int argc, char** argv)
 
     omni_thread::cancel_other_threads();
 
-    cerr << "main returning\n";
+    PRINTMSG(cerr << "main returning\n");
 
     return 0;
 }
 
 static void* thread_fn(void* arg)
 {
-    cerr << "thread " << omni_thread::self()->id() << " about to sleep" << endl;
+    PRINTMSG(cerr << "thread " << omni_thread::self()->id() << " about to sleep" << endl);
 
     omni_thread::sleep((int)arg,0);
 
-    cerr << "thread " << omni_thread::self()->id() << " awoken\n";
+    PRINTMSG(cerr << "thread " << omni_thread::self()->id() << " awoken\n");
 
     return (void*)3;
 }
