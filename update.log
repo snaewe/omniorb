@@ -2,6 +2,31 @@ Wed Apr 18 18:16:26 BST 2001 sll
 ================================
 
 - Big checkin with the brand new internal APIs.
+- New header files
+
+include/omniORB4/IOP_C.h
+include/omniORB4/IOP_S.h
+include/omniORB4/giopEndpoint.h
+include/omniORB4/minorCode.h
+include/omniORB4/omniServer.h
+include/omniORB4/omniTransport.h
+include/omniORB4/omniutilities.h
+src/lib/omniORB/include/GIOP_C.h
+src/lib/omniORB/include/GIOP_S.h
+src/lib/omniORB/include/dynamicImplementation.h
+src/lib/omniORB/include/giopRendezvouser.h
+src/lib/omniORB/include/giopRope.h
+src/lib/omniORB/include/giopServer.h
+src/lib/omniORB/include/giopStrand.h
+src/lib/omniORB/include/giopStream.h
+src/lib/omniORB/include/giopStreamImpl.h
+src/lib/omniORB/include/giopWorker.h
+src/lib/omniORB/include/invoker.h
+
+Wed Apr 18 18:16:26 BST 2001 sll
+================================
+
+- Big checkin with the brand new internal APIs.
 - These files were relocated and scoped with the omni namespace.
 
 src/lib/omniORB/include/anonObject.h
