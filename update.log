@@ -1,3 +1,11 @@
+Wed May 26 13:16:28 BST 1999 sll
+================================
+
+- Added -Y <cpp location> flag to omniidl2
+
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+
+
 Wed May 26 12:36:42 BST 1999 sll
 ================================
 
