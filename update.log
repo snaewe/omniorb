@@ -1,3 +1,70 @@
+Thu Sep 14 16:01:20 BST 2000 djs
+================================
+
+- Added module initialiser for AMI module
+
+include/omniORB3/omniAMI.h
+src/lib/omniORB2/orbcore/omniAMI.cc
+
+- Another example added
+
+src/exampes/ami/echo.cc                                 (REMOVED)
+src/examples/ami/echo_ami.idl                           (REMOVED)
+src/examples/ami/echo                                   (NEW)
+src/examples/ami/echo/dir.mk                            (NEW)
+src/examples/ami/echo/echo.cc                           (NEW)
+src/examples/ami/echo/echo_ami.idl                      (NEW)
+src/examples/ami/exception/dir.mk                       (NEW)
+src/examples/ami/exception/exc.idl                      (NEW)
+src/examples/ami/exception/exc_client.cc                (NEW)
+src/examples/ami/exception/exc_server.cc                (NEW)
+
+- Remodularised C++ descriptor name generator
+
+src/lib/omniORB2/omniidl_be/cxx/descriptor.py           (NEW)
+src/lib/omniORB2/omniidl_be/cxx/call.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/mangler.py
+
+- Bug in listing all inherited interfaces if one is a forward
+- repoID munging function now handles #pragma ID in bootstrap.idl
+
+src/lib/omniORB2/omniidl_be/cxx/ast.py
+
+- Added AST -> AST transform which adds AMI-relevant nodes to the tree
+  (Pseudo-IDL nodes which aren't defined in idlast.py)
+
+src/lib/omniORB2/omniidl_be/cxx/ami/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/ami/ami.py
+
+- Naming environments generating code now copes with new IDL AST types
+  (invented by the backend)
+
+src/lib/omniORB2/omniidl_be/cxx/id.py
+
+- Extra type utility functions
+- Duplicates an objref using I_Helper::duplicate, so it handles forward
+  declarations better
+
+src/lib/omniORB2/omniidl_be/cxx/types.py
+
+- Various bugfixes in new code
+
+src/lib/omniORB2/omniidl_be/cxx/iface.py
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py
+src/lib/omniORB2/omniidl_be/cxx/ami/exholder.py
+src/lib/omniORB2/omniidl_be/cxx/ami/hooks.py
+src/lib/omniORB2/omniidl_be/cxx/ami/objref.py
+src/lib/omniORB2/omniidl_be/cxx/ami/poller.py
+src/lib/omniORB2/omniidl_be/cxx/ami/rhandler.py
+
+- Minor tidying
+
+src/lib/omniORB2/omniidl_be/cxx/util.py
+src/lib/omniORB2/omniidl_be/cxx/skel/__init__.py
+include/queue.h
+
+
 Mon Aug 21 13:51:41 BST 2000 sll
 ================================
 
