@@ -1,3 +1,13 @@
+Tue Jan 25 15:41:11 GMT 2000 sll
+================================
+
+- Added new platform file for Redhat 6.1, i.e. glibc-2.1 systems
+- The compiler used by this platform is /usr/bin/{g++,gcc} and
+  not the /usr/local/gcc-2.95 compiler. 
+
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+
+
 Wed Jan 19 10:40:23 GMT 2000 dme
 ================================
 
