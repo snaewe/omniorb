@@ -1,41 +1,34 @@
 // -*- Mode: C++; -*-
-//                          Package   : omniidl
+//                          Package   : omniidl2
 // o2be_attribute.cc        Created on: 13/09/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//  This file is part of omniidl2.
+//
+//  Omniidl2 is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+//  USA.
 //
 // Description:
 //
 
 /*
   $Log$
-  Revision 1.7  1997/05/02 16:26:31  sll
-  The string that sent over the wire to identify an operation name that
-  clashes with a C++ reserved word should not be prepended with _.
-
-// Revision 1.6  1997/04/23  14:28:40  sll
-// - added support for LOCATION_FORWARD message
-// - added code to assert object existent when first do a remote call.
-//
-// Revision 1.5  1997/02/17  18:03:46  ewc
-// IDL Compiler now adds a dummy return after some exceptions - this
-// stops some C++ compilers from complaining (e.g. MSVC++ 4.2) about
-// some control paths not returning values.
-//
-  Revision 1.4  1997/01/24 19:39:04  sll
-  The skeleton code for nil object now returns a properly initialised result.
-
-  Revision 1.3  1997/01/23 17:10:24  sll
-  Now allocate typedefed array properly in get attribute operation.
-
-// Revision 1.2  1997/01/13  15:34:22  sll
-// Don't use operator->() if the return value is array_slice.
-// Don't use new (type)[i]. The brackets are unnecessary.
-// /
-//
-  Revision 1.1  1997/01/08 17:32:59  sll
-  Initial revision
+  Revision 1.8  1997/05/06 13:50:29  sll
+  Public release.
 
   */
 

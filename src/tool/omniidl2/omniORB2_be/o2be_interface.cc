@@ -1,57 +1,34 @@
 // -*- Mode: C++; -*-
-//                          Package   : omniidl
+//                          Package   : omniidl2
 // o2be_interface.cc        Created on: 12/08/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//  This file is part of omniidl2.
+//
+//  Omniidl2 is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+//  USA.
 //
 // Description:
 //
 
 /*
   $Log$
-  Revision 1.8  1997/05/02 16:25:29  sll
-  When matching operation name inside the dispatch function, do not prepend
-  _ to names that are C++ reserved words.
-
-// Revision 1.7  1997/04/23  14:32:36  sll
-// - Changed implementation skeleton stub to use atmoic get and set
-//   functions to obtain an object's rope and key.
-//
-// Revision 1.6  1997/03/10  16:36:30  sll
-// - Added omniORB2 specific functions in the  _sk_<interface> class. They
-//   are: _this, _obj_is_ready, _dispose, _boa, _key. These functions
-//   are part of omniORB2's public API.
-// - Changed the operation signatures in class T of interface T to use the
-//   adaptation classes for passing variable length INOUT and OUT arguments.
-// - New member function inout_adptarg_name() and out_adptarg_name() to return
-//   the name of the adaptation classes.
-// - T_var type is also generated inside interface forward declaration code.
-//
-  Revision 1.5  1997/01/30 20:29:01  sll
-  Added is_nil, release and duplicate to _Helper class.
-
-  Revision 1.4  1997/01/24 19:42:16  sll
-  New member function check_opname_clash().
-  The class definition of the stub code <X>_proxyObjectFactory() is moved
-  from the SK file to the header file.
-
-  Revision 1.3  1997/01/23 17:08:29  sll
-  Changed <X>_proxyObjectFactory() class to include a new static member
-  function that returns a nil object of X.
-
-// Revision 1.2  1997/01/13  15:41:15  sll
-// If the name of the interface is Object, rename it to CORBA::Object.
-// New member function produce_typedef_hdr(). This is called when a typedef
-// declaration is encountered.
-// Defined a new class <interface>_Helper. This is used to instantiate
-// the template _CORBA_ObjRef_Var and _CORBA_ObjRef_Member.
-// This is necessary because the interface can be recurively used within
-// its scope, e.g. as a user exception value and the _nil() and marshalling
-// functions cannot be used.
-//
-  Revision 1.1  1997/01/08 17:32:59  sll
-  Initial revision
+  Revision 1.9  1997/05/06 13:58:53  sll
+  Public release.
 
   */
 

@@ -1,32 +1,35 @@
 // -*- Mode: C++; -*-
-//                          Package   : omniidl
+//                          Package   : omniidl2
 // o2be.h                   Created on: 5/8/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//  This file is part of omniidl2.
+//
+//  Omniidl2 is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+//  USA.
 //
 // Description:
 //    Defines all classes for omniORB2 backend
 
 /*
  $Log$
- Revision 1.6  1997/04/29 12:28:57  sll
- Added support for prefix, ID and version pragmas.
+ Revision 1.7  1997/05/06 13:47:39  sll
+ Public release.
 
- * Revision 1.5  1997/03/10  16:19:04  sll
- * *** empty log message ***
- *
- Revision 1.4  1997/01/24 19:38:02  sll
- *** empty log message ***
-
- Revision 1.3  1997/01/23 17:04:51  sll
- Now say friend class X instead of just friend X.
-
- * Revision 1.2  1997/01/13  15:18:54  sll
- * *** empty log message ***
- *
- Revision 1.1  1997/01/08 17:33:30  sll
- Initial revision
 
  */
 
@@ -38,14 +41,14 @@
 
 #define USE_SEQUENCE_TEMPLATE_IN_PLACE 1
 
-class o2be_name 
+class o2be_name
 {
 public:
   o2be_name(AST_Decl *decl);
 
   // fully qualified name of the scope
   virtual char *scopename() { return pd_scopename; }
-                    
+
   // un-qualified name
   virtual char *uqname()    { return pd_uqname; }
 
@@ -55,14 +58,14 @@ public:
   // same as scopename but with '_' as the separator
   virtual char *_scopename() { return pd__scopename; }
 
-  // same as fqname but with '_' as the separator  
+  // same as fqname but with '_' as the separator
   virtual char *_fqname()    { return pd__fqname; }
 
   virtual char *repositoryID();
 
   void set_scopename(char *n) { pd_scopename = n; }
   void set_uqname(char *n)    { pd_uqname = n; }
-  void set_fqname(char *n)    { pd_fqname = n; }                    
+  void set_fqname(char *n)    { pd_fqname = n; }
   void set__scopename(char *n){ pd__scopename = n; }
   void set__fqname(char *n)   { pd__fqname = n; }
 
@@ -105,7 +108,7 @@ class o2be_predefined_type : public virtual AST_PredefinedType,
 {
 public:
 
-  o2be_predefined_type(AST_PredefinedType::PredefinedType t, 
+  o2be_predefined_type(AST_PredefinedType::PredefinedType t,
 		       UTL_ScopedName *n,
 		       UTL_StrList *p);
 
@@ -168,7 +171,7 @@ private:
 };
 
 class o2be_enum_val : public virtual AST_EnumVal,
-		      public virtual o2be_name 
+		      public virtual o2be_name
 {
 public:
 
@@ -276,7 +279,7 @@ private:
 
 };
 
-class o2be_structure : public virtual AST_Structure, 
+class o2be_structure : public virtual AST_Structure,
 		       public virtual o2be_name,
 		       public virtual o2be_sequence_chain
 {
@@ -314,7 +317,7 @@ private:
 };
 
 class o2be_exception : public virtual AST_Exception,
-		       public virtual o2be_name 
+		       public virtual o2be_name
 {
 public:
 
@@ -489,7 +492,7 @@ private:
 };
 
 class o2be_operation : public virtual AST_Operation,
-		       public virtual o2be_name 
+		       public virtual o2be_name
 {
 public:
 
@@ -569,10 +572,10 @@ private:
   idl_bool no_user_exception();
   // returns I_TRUE if this operation does not raise a user exception
 
-  static 
+  static
   argType ast2ArgMapping(AST_Decl *decl,argWhich dir,argMapping &mapping);
 
-  static 
+  static
   void declareVarType(fstream &s, AST_Decl *decl, idl_bool is_var=0,
 		      idl_bool is_arrayslice=0);
 
@@ -705,7 +708,7 @@ class o2be_module : public virtual AST_Module,
 		    public virtual o2be_name
 {
 public:
-  o2be_module(UTL_ScopedName *n, UTL_StrList *p) 
+  o2be_module(UTL_ScopedName *n, UTL_StrList *p)
                  : AST_Decl(AST_Decl::NT_module, n, p),
 		   UTL_Scope(AST_Decl::NT_module),
 		   o2be_name(this) {}
@@ -724,7 +727,7 @@ private:
 };
 
 class o2be_root : public virtual AST_Root,
-		  public virtual o2be_module 
+		  public virtual o2be_module
 {
 public:
 
@@ -775,22 +778,22 @@ public:
 
   static int suffixlen() { return pd_suffixlen; }
 
-  static void set_hdrsuffix(char *h) { 
+  static void set_hdrsuffix(char *h) {
     pd_hdrsuffix = new char[strlen(h)+1];
     if (strlen(h) > pd_suffixlen)
       pd_suffixlen = strlen(h);
     strcpy(pd_hdrsuffix,h);
-    return; 
+    return;
   }
 
   static char *hdrsuffix() { return pd_hdrsuffix; }
 
-  static void set_skelsuffix(char *c) { 
+  static void set_skelsuffix(char *c) {
     pd_skelsuffix = new char[strlen(c)+1];
     if (strlen(c) > pd_suffixlen)
       pd_suffixlen = strlen(c);
     strcpy(pd_skelsuffix,c);
-    return; 
+    return;
   }
 
   static char *skelsuffix() { return pd_skelsuffix; }
@@ -809,7 +812,7 @@ public:
   virtual AST_Root *create_root(UTL_ScopedName *n,
 				UTL_StrList *p);
 
-  virtual AST_PredefinedType * 
+  virtual AST_PredefinedType *
           create_predefined_type(AST_PredefinedType::PredefinedType t,
 				 UTL_ScopedName *n,
 				 UTL_StrList *p);
@@ -843,7 +846,7 @@ public:
 			   UTL_StrList *p);
 
   virtual AST_Field *
-          create_field(AST_Type *ft, 
+          create_field(AST_Type *ft,
 		       UTL_ScopedName *n,
 		       UTL_StrList *p);
 

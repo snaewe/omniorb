@@ -1,30 +1,34 @@
 // -*- Mode: C++; -*-
-//                          Package   : omniidl
+//                          Package   : omniidl2
 // o2be_sequence.cc         Created on: 12/08/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//  This file is part of omniidl2.
+//
+//  Omniidl2 is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+//  USA.
 //
 // Description:
 
 
 /*
   $Log$
-  Revision 1.4  1997/03/10 16:44:33  sll
-  - Generate T_var types using the new template _CORBA_Sequence_Var.
-  - New member function out_adptarg_name() to return the name of the
-    adaptation class. This class is used for passing variable length
-    arrays as OUT arguments.
-
-// Revision 1.3  1997/02/17  18:13:43  ewc
-// Added support for Windows NT.
-//
-// Revision 1.2  1997/01/13  15:25:34  sll
-// New member function produce_typedef_hdr(). Called when a typedef
-// declaration is encountered.
-//
-  Revision 1.1  1997/01/08 17:32:59  sll
-  Initial revision
+  Revision 1.5  1997/05/06 14:05:26  sll
+  Public release.
 
   */
 

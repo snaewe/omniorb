@@ -1,9 +1,26 @@
 // -*- Mode: C++; -*-
-//                          Package   : omniidl
+//                          Package   : omniidl2
 // o2be_operation.cc        Created on: 23/08/1996
 //                          Author    : Sai-Lai Lo (sll)
 //
-// Copyright (C) Olivetti Research Limited, 1996
+//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//
+//  This file is part of omniidl2.
+//
+//  Omniidl2 is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+//  USA.
 //
 // Description:
 //
@@ -11,50 +28,8 @@
 
 /*
   $Log$
-  Revision 1.10  1997/05/02 16:27:29  sll
-  The string that sent over the wire to identify an operation name that
-  clashes with a C++ reserved word should not be prepended with _.
-
-// Revision 1.9  1997/04/29  12:30:39  sll
-// Removed name ambiguity.
-//
-// Revision 1.8  1997/04/23  14:31:16  sll
-// - added support for LOCATION_FORWARD message
-// - added code to assert object existent when first do a remote call.
-//
-// Revision 1.7  1997/03/10  16:43:05  sll
-// - New member function produce_mapping_with_indirection. This function produce
-//   the mapping for an operation that uses the adaptation classes for passing
-//   variable length INOUT and OUT arguments.
-// - New boolean member functions has_variable_out_arg, has_pointer_inout_arg
-//   to tell whether the operation contains these argument types.
-// - Minor changes to accommodate the creation of a public API for omniORB2.
-//
-// Revision 1.6  1997/02/17  18:11:33  ewc
-// IDL Compiler now adds a dummy return after some exceptions - this
-//  stops some C++ compilers from complaining (e.g. MSVC++ 4.2) about
-// some control paths not returning values.
-//
-  Revision 1.5  1997/01/28 18:36:24  sll
-  Fixed the bugs in the proxy and the server skeleton code which only
-  affects oneway operation.
-
-  Revision 1.4  1997/01/24 19:40:46  sll
-  The operations for nil object now return properly initialised result values.
-  Fixed a bug in the marshalling of object reference and string as INOUT arg.
-
-  Revision 1.3  1997/01/23 17:06:56  sll
-  Now do the right thing to initialise typedefed arrays in result and out
-  arguments.
-
-// Revision 1.2  1997/01/13  15:30:24  sll
-// In server skeleton code, don't use operator->() for results and INOUT
-// arguments if the type is array_slice.
-// Bug fixed at various places to get to the true type of a typedef before
-// calling the narrow_from_decl function of the true type.
-//
-  Revision 1.1  1997/01/08 17:32:59  sll
-  Initial revision
+  Revision 1.11  1997/05/06 14:03:08  sll
+  Public release.
 
   */
 
