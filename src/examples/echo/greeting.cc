@@ -25,6 +25,6 @@ hello(CORBA::Object_ptr obj)
 
   dest = e->echoString(src);
 
-  cerr << "I said,\"" << src << "\"."
-       << " The Object said,\"" << dest <<"\"" << endl;
+  cerr << "I said,\"" << (char*)src << "\"."
+       << " The Object said,\"" << (char*)dest <<"\"" << endl;
 }
