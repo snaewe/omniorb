@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 18:03:40  sll
+  Updated to use the new cdrStream abstraction.
+  Updated to match the changes in the proxyFactory class.
+
   Revision 1.2.2.1  2000/07/17 10:35:57  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -52,13 +56,13 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
-#include <omniORB3/callDescriptor.h>
+#include <omniORB4/callDescriptor.h>
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// ForwardRequest ///////////////////////////
@@ -114,45 +118,21 @@ const char* PortableServer::ForwardRequest::_NP_repoId(int* _size) const {
   return "IDL:omg.org/PortableServer/ForwardRequest:2.3";
 }
 
-void PortableServer::ForwardRequest::_NP_marshal(NetBufferedStream& _s) const {
+void PortableServer::ForwardRequest::_NP_marshal(cdrStream& _s) const {
   *this >>= _s;
-}
-
-void PortableServer::ForwardRequest::_NP_marshal(MemBufferedStream& _s) const {
-  *this >>= _s;
-}
-
-size_t
-PortableServer::ForwardRequest::_NP_alignedSize(size_t _msgsize) const
-{
-  _msgsize = CORBA::Object_Helper::NP_alignedSize(forward_reference,_msgsize);
-  return _msgsize;
 }
 
 void
-PortableServer::ForwardRequest::operator>>= (NetBufferedStream& _n) const
+PortableServer::ForwardRequest::operator>>= (cdrStream& _n) const
 {
   CORBA::Object_Helper::marshalObjRef(forward_reference,_n);
 }
 
 void
-PortableServer::ForwardRequest::operator<<= (NetBufferedStream& _n)
+PortableServer::ForwardRequest::operator<<= (cdrStream& _n)
 {
   forward_reference = CORBA::Object_Helper::unmarshalObjRef(_n);
 }
-
-void
-PortableServer::ForwardRequest::operator>>= (MemBufferedStream& _n) const
-{
-  CORBA::Object_Helper::marshalObjRef(forward_reference,_n);
-}
-
-void
-PortableServer::ForwardRequest::operator<<= (MemBufferedStream& _n)
-{
-  forward_reference = CORBA::Object_Helper::unmarshalObjRef(_n);
-}
-
 
 PortableServer::AdapterActivator_ptr PortableServer::AdapterActivator_Helper::_nil() {
   return PortableServer::AdapterActivator::_nil();
@@ -170,26 +150,13 @@ void PortableServer::AdapterActivator_Helper::duplicate(PortableServer::AdapterA
   if( p )  omni::duplicateObjRef(p);
 }
 
-size_t PortableServer::AdapterActivator_Helper::NP_alignedSize(PortableServer::AdapterActivator_ptr obj, size_t offset) {
-  return PortableServer::AdapterActivator::_alignedSize(obj, offset);
-}
-
-void PortableServer::AdapterActivator_Helper::marshalObjRef(PortableServer::AdapterActivator_ptr obj, NetBufferedStream& s) {
+void PortableServer::AdapterActivator_Helper::marshalObjRef(PortableServer::AdapterActivator_ptr obj, cdrStream& s) {
   PortableServer::AdapterActivator::_marshalObjRef(obj, s);
 }
 
-PortableServer::AdapterActivator_ptr PortableServer::AdapterActivator_Helper::unmarshalObjRef(NetBufferedStream& s) {
+PortableServer::AdapterActivator_ptr PortableServer::AdapterActivator_Helper::unmarshalObjRef(cdrStream& s) {
   return PortableServer::AdapterActivator::_unmarshalObjRef(s);
 }
-
-void PortableServer::AdapterActivator_Helper::marshalObjRef(PortableServer::AdapterActivator_ptr obj, MemBufferedStream& s) {
-  PortableServer::AdapterActivator::_marshalObjRef(obj, s);
-}
-
-PortableServer::AdapterActivator_ptr PortableServer::AdapterActivator_Helper::unmarshalObjRef(MemBufferedStream& s) {
-  return PortableServer::AdapterActivator::_unmarshalObjRef(s);
-}
-
 
 PortableServer::AdapterActivator_ptr
 PortableServer::AdapterActivator::_duplicate(PortableServer::AdapterActivator_ptr obj)
@@ -227,9 +194,9 @@ const char* PortableServer::AdapterActivator::_PD_repoId = "IDL:omg.org/Portable
 PortableServer::_objref_AdapterActivator::~_objref_AdapterActivator() {}
 
 
-PortableServer::_objref_AdapterActivator::_objref_AdapterActivator(const char* mdri, IOP::TaggedProfileList* p,
+PortableServer::_objref_AdapterActivator::_objref_AdapterActivator(omniIOR* ior,
          omniIdentity* id, omniLocalIdentity* lid)
- : omniObjRef(PortableServer::AdapterActivator::_PD_repoId, mdri, p, id, lid)
+ : omniObjRef(PortableServer::AdapterActivator::_PD_repoId, ior, id, lid)
 {
   _PR_setobj(this);
 }
@@ -289,10 +256,10 @@ PortableServer::_pof_AdapterActivator::~_pof_AdapterActivator() {}
 
 
 omniObjRef*
-PortableServer::_pof_AdapterActivator::newObjRef(const char* mdri, IOP::TaggedProfileList* p,
+PortableServer::_pof_AdapterActivator::newObjRef(omniIOR* ior,
                omniIdentity* id, omniLocalIdentity* lid)
 {
-  return new PortableServer::_objref_AdapterActivator(mdri, p, id, lid);
+  return new PortableServer::_objref_AdapterActivator(ior, id, lid);
 }
 
 
@@ -354,26 +321,13 @@ void PortableServer::ServantManager_Helper::duplicate(PortableServer::ServantMan
   if( p )  omni::duplicateObjRef(p);
 }
 
-size_t PortableServer::ServantManager_Helper::NP_alignedSize(PortableServer::ServantManager_ptr obj, size_t offset) {
-  return PortableServer::ServantManager::_alignedSize(obj, offset);
-}
-
-void PortableServer::ServantManager_Helper::marshalObjRef(PortableServer::ServantManager_ptr obj, NetBufferedStream& s) {
+void PortableServer::ServantManager_Helper::marshalObjRef(PortableServer::ServantManager_ptr obj, cdrStream& s) {
   PortableServer::ServantManager::_marshalObjRef(obj, s);
 }
 
-PortableServer::ServantManager_ptr PortableServer::ServantManager_Helper::unmarshalObjRef(NetBufferedStream& s) {
+PortableServer::ServantManager_ptr PortableServer::ServantManager_Helper::unmarshalObjRef(cdrStream& s) {
   return PortableServer::ServantManager::_unmarshalObjRef(s);
 }
-
-void PortableServer::ServantManager_Helper::marshalObjRef(PortableServer::ServantManager_ptr obj, MemBufferedStream& s) {
-  PortableServer::ServantManager::_marshalObjRef(obj, s);
-}
-
-PortableServer::ServantManager_ptr PortableServer::ServantManager_Helper::unmarshalObjRef(MemBufferedStream& s) {
-  return PortableServer::ServantManager::_unmarshalObjRef(s);
-}
-
 
 PortableServer::ServantManager_ptr
 PortableServer::ServantManager::_duplicate(PortableServer::ServantManager_ptr obj)
@@ -411,9 +365,9 @@ const char* PortableServer::ServantManager::_PD_repoId = "IDL:omg.org/PortableSe
 PortableServer::_objref_ServantManager::~_objref_ServantManager() {}
 
 
-PortableServer::_objref_ServantManager::_objref_ServantManager(const char* mdri, IOP::TaggedProfileList* p,
+PortableServer::_objref_ServantManager::_objref_ServantManager(omniIOR* ior,
          omniIdentity* id, omniLocalIdentity* lid)
- : omniObjRef(PortableServer::ServantManager::_PD_repoId, mdri, p, id, lid)
+ : omniObjRef(PortableServer::ServantManager::_PD_repoId, ior, id, lid)
 {
   _PR_setobj(this);
 }
@@ -435,10 +389,10 @@ PortableServer::_pof_ServantManager::~_pof_ServantManager() {}
 
 
 omniObjRef*
-PortableServer::_pof_ServantManager::newObjRef(const char* mdri, IOP::TaggedProfileList* p,
+PortableServer::_pof_ServantManager::newObjRef(omniIOR* ior,
                omniIdentity* id, omniLocalIdentity* lid)
 {
-  return new PortableServer::_objref_ServantManager(mdri, p, id, lid);
+  return new PortableServer::_objref_ServantManager(ior, id, lid);
 }
 
 
@@ -500,26 +454,13 @@ void PortableServer::ServantActivator_Helper::duplicate(PortableServer::ServantA
   if( p )  omni::duplicateObjRef(p);
 }
 
-size_t PortableServer::ServantActivator_Helper::NP_alignedSize(PortableServer::ServantActivator_ptr obj, size_t offset) {
-  return PortableServer::ServantActivator::_alignedSize(obj, offset);
-}
-
-void PortableServer::ServantActivator_Helper::marshalObjRef(PortableServer::ServantActivator_ptr obj, NetBufferedStream& s) {
+void PortableServer::ServantActivator_Helper::marshalObjRef(PortableServer::ServantActivator_ptr obj, cdrStream& s) {
   PortableServer::ServantActivator::_marshalObjRef(obj, s);
 }
 
-PortableServer::ServantActivator_ptr PortableServer::ServantActivator_Helper::unmarshalObjRef(NetBufferedStream& s) {
+PortableServer::ServantActivator_ptr PortableServer::ServantActivator_Helper::unmarshalObjRef(cdrStream& s) {
   return PortableServer::ServantActivator::_unmarshalObjRef(s);
 }
-
-void PortableServer::ServantActivator_Helper::marshalObjRef(PortableServer::ServantActivator_ptr obj, MemBufferedStream& s) {
-  PortableServer::ServantActivator::_marshalObjRef(obj, s);
-}
-
-PortableServer::ServantActivator_ptr PortableServer::ServantActivator_Helper::unmarshalObjRef(MemBufferedStream& s) {
-  return PortableServer::ServantActivator::_unmarshalObjRef(s);
-}
-
 
 PortableServer::ServantActivator_ptr
 PortableServer::ServantActivator::_duplicate(PortableServer::ServantActivator_ptr obj)
@@ -557,10 +498,10 @@ const char* PortableServer::ServantActivator::_PD_repoId = "IDL:omg.org/Portable
 PortableServer::_objref_ServantActivator::~_objref_ServantActivator() {}
 
 
-PortableServer::_objref_ServantActivator::_objref_ServantActivator(const char* mdri, IOP::TaggedProfileList* p,
+PortableServer::_objref_ServantActivator::_objref_ServantActivator(omniIOR* ior,
          omniIdentity* id, omniLocalIdentity* lid)
- : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(mdri, p, id, lid),
-   omniObjRef(PortableServer::ServantActivator::_PD_repoId, mdri, p, id, lid)
+ : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id, lid),
+   omniObjRef(PortableServer::ServantActivator::_PD_repoId, ior, id, lid)
 {
   _PR_setobj(this);
 }
@@ -662,10 +603,10 @@ PortableServer::_pof_ServantActivator::~_pof_ServantActivator() {}
 
 
 omniObjRef*
-PortableServer::_pof_ServantActivator::newObjRef(const char* mdri, IOP::TaggedProfileList* p,
+PortableServer::_pof_ServantActivator::newObjRef(omniIOR* ior,
                omniIdentity* id, omniLocalIdentity* lid)
 {
-  return new PortableServer::_objref_ServantActivator(mdri, p, id, lid);
+  return new PortableServer::_objref_ServantActivator(ior, id, lid);
 }
 
 
@@ -731,26 +672,13 @@ void PortableServer::ServantLocator_Helper::duplicate(PortableServer::ServantLoc
   if( p )  omni::duplicateObjRef(p);
 }
 
-size_t PortableServer::ServantLocator_Helper::NP_alignedSize(PortableServer::ServantLocator_ptr obj, size_t offset) {
-  return PortableServer::ServantLocator::_alignedSize(obj, offset);
-}
-
-void PortableServer::ServantLocator_Helper::marshalObjRef(PortableServer::ServantLocator_ptr obj, NetBufferedStream& s) {
+void PortableServer::ServantLocator_Helper::marshalObjRef(PortableServer::ServantLocator_ptr obj, cdrStream& s) {
   PortableServer::ServantLocator::_marshalObjRef(obj, s);
 }
 
-PortableServer::ServantLocator_ptr PortableServer::ServantLocator_Helper::unmarshalObjRef(NetBufferedStream& s) {
+PortableServer::ServantLocator_ptr PortableServer::ServantLocator_Helper::unmarshalObjRef(cdrStream& s) {
   return PortableServer::ServantLocator::_unmarshalObjRef(s);
 }
-
-void PortableServer::ServantLocator_Helper::marshalObjRef(PortableServer::ServantLocator_ptr obj, MemBufferedStream& s) {
-  PortableServer::ServantLocator::_marshalObjRef(obj, s);
-}
-
-PortableServer::ServantLocator_ptr PortableServer::ServantLocator_Helper::unmarshalObjRef(MemBufferedStream& s) {
-  return PortableServer::ServantLocator::_unmarshalObjRef(s);
-}
-
 
 PortableServer::ServantLocator_ptr
 PortableServer::ServantLocator::_duplicate(PortableServer::ServantLocator_ptr obj)
@@ -788,10 +716,10 @@ const char* PortableServer::ServantLocator::_PD_repoId = "IDL:omg.org/PortableSe
 PortableServer::_objref_ServantLocator::~_objref_ServantLocator() {}
 
 
-PortableServer::_objref_ServantLocator::_objref_ServantLocator(const char* mdri, IOP::TaggedProfileList* p,
+PortableServer::_objref_ServantLocator::_objref_ServantLocator(omniIOR* ior,
          omniIdentity* id, omniLocalIdentity* lid)
- : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(mdri, p, id, lid),
-   omniObjRef(PortableServer::ServantLocator::_PD_repoId, mdri, p, id, lid)
+ : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id, lid),
+   omniObjRef(PortableServer::ServantLocator::_PD_repoId, ior, id, lid)
 {
   _PR_setobj(this);
 }
@@ -897,10 +825,10 @@ PortableServer::_pof_ServantLocator::~_pof_ServantLocator() {}
 
 
 omniObjRef*
-PortableServer::_pof_ServantLocator::newObjRef(const char* mdri, IOP::TaggedProfileList* p,
+PortableServer::_pof_ServantLocator::newObjRef(omniIOR* ior,
                omniIdentity* id, omniLocalIdentity* lid)
 {
-  return new PortableServer::_objref_ServantLocator(mdri, p, id, lid);
+  return new PortableServer::_objref_ServantLocator(ior, id, lid);
 }
 
 
