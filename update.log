@@ -1,3 +1,11 @@
+Thu Mar 13 14:46:14 GMT 2003 dgrisby
+====================================
+
+- Log DefaultInitRef properly. Thanks Matej Kenda.
+
+src/lib/omniORB/orbcore/initRefs.cc
+
+
 Thu Mar 13 13:47:22 GMT 2003 dgrisby
 ====================================
 

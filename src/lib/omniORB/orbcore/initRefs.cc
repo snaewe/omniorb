@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.15  2003/03/13 14:53:25  dgrisby
+  Log DefaultInitRef properly. Thanks Matej Kenda.
+
   Revision 1.2.2.14  2002/08/16 17:47:39  dgrisby
   Documentation, message updates. ORB tweaks to match docs.
 
@@ -851,7 +854,7 @@ public:
 
 
   void visit(const char* value,orbOptions::Source src) throw (orbOptions::BadParam) {
-    if (src == orbOptions::fromArgv) {
+    if (src == orbOptions::fromArgv || src == orbOptions::fromArray) {
       omniInitialReferences::setDefaultInitRefFromArgs(value);
     }
     else {
@@ -860,9 +863,13 @@ public:
   }
 
   void dump(orbOptions::sequenceString& result) {
-    const char* v = the_argsDefaultInitRef;
-    if (!v) v = "";
-    orbOptions::addKVString(key(),v,result);
+    const char* v;
+
+    v = the_fileDefaultInitRef;
+    orbOptions::addKVString("DefaultInitRef (file)", v ? v : "", result);
+
+    v = the_argsDefaultInitRef;
+    orbOptions::addKVString("DefaultInitRef (args)", v ? v : "", result);
   }
 };
 
