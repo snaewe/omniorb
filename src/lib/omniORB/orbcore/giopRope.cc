@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.23  2003/02/17 01:20:00  dgrisby
+  Avoid deadlock with bidir connection shutdown.
+
   Revision 1.1.4.22  2002/09/08 21:12:38  dgrisby
   Properly handle IORs with no usable profiles.
 
@@ -238,7 +241,16 @@ giopRope::acquireClient(const omniIOR* ior,
     switch (s->state()) {
     case giopStrand::DYING:
       {
-	ndying++;
+	// Bidirectional strands do not count towards the total of
+	// dying strands. This is because with a bidirectional rope,
+	// the max number of strands is one. Below, if the number of
+	// dying strands is > the max, we wait for the strands to die.
+	// However, it is possible that we are the client keeping the
+	// strand alive, leading to a deadlock. To avoid the
+	// situation, we do not count dying bidir strands, allowing us
+	// to create a new one, and release the one that is dying.
+	if (!s->biDir)
+	  ndying++;
 	break;
       }
     case giopStrand::TIMEDOUT:
