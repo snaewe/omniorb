@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.3  1997/12/18 17:27:39  sll
+  Updated to work under glibc-2.0.
+
   Revision 1.2  1997/12/12 18:44:11  sll
   Added call to gateKeeper.
 
@@ -92,7 +95,7 @@ public:
   tcpSocketRendezvouser(tcpSocketIncomingRope *r) : omni_thread(r) {
     start_undetached();
   }
-  virtual ~tcpSocketRendezvouser() {}
+  virtual ~tcpSocketRendezvouser() { }
   virtual void* run_undetached(void *arg);
 
 private:
@@ -105,7 +108,7 @@ public:
     s->decrRefCount();
     start();
   }
-  virtual ~tcpSocketWorker() {}
+  virtual ~tcpSocketWorker() { }
   virtual void run(void *arg);
 
 private:
@@ -309,13 +312,18 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
   }
   
   {
-#if (defined(__GLIBC__) && __GLIBC__ >= 2) || defined(__aix__)
-  // GNU C library uses size_t* instead of int* in getsockname().
-  // This is suppose to be compatible with the upcoming POSIX standard.
+#if (defined(__GLIBC__) && __GLIBC__ >= 2)
+    // GNU C library uses socklen_t * instead of int* in getsockname().
+    // This is suppose to be compatible with the upcoming POSIX standard.
+    socklen_t l;
+#elif defined(__aix__)
     size_t l;
-#else
+# else
     int l;
-#endif
+# endif
+
+
+
     l = sizeof(struct sockaddr_in);
     if (getsockname(pd_rendezvous,
 		    (struct sockaddr *)&myaddr,&l) == RC_SOCKET_ERROR) {
@@ -762,12 +770,14 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       tcpSocketHandle_t new_sock;
       struct sockaddr_in raddr;
  
-#if (defined(__GLIBC__) && __GLIBC__ >= 2) || defined(__aix__)
-      // GNU C library uses size_t* instead of int* in accept().
+#if (defined(__GLIBC__) && __GLIBC__ >= 2)
+      // GNU C library uses socklen_t * instead of int* in accept ().
       // This is suppose to be compatible with the upcoming POSIX standard.
-      size_t l;
+      socklen_t l;
+#elif defined(__aix__)
+    size_t l;
 #else
-      int l;
+    int l;
 #endif
 
       l = sizeof(struct sockaddr_in);
@@ -891,11 +901,16 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
     tcpSocketHandle_t new_sock;
     struct sockaddr_in raddr;
-#if (defined(__GLIBC__) && __GLIBC__ >= 2) || defined(__aix__)
+#if (defined(__GLIBC__) && __GLIBC__ >= 2)
+    // GNU C library uses socklen_t * instead of int* in accept ().
+    // This is suppose to be compatible with the upcoming POSIX standard.
+    socklen_t l;
+#elif defined(__aix__)
     size_t l;
 #else
     int l;
 #endif
+
     l = sizeof(struct sockaddr_in);
     if ((new_sock = ::accept(r->pd_rendezvous,(struct sockaddr *)&raddr,&l)) 
 	      == RC_INVALID_SOCKET) 

@@ -13,9 +13,11 @@ static char sccsid[] = "@(#) percent_m.c 1.1 94/12/28 17:42:37";
 #include <string.h>
 
 extern int errno;
+#if !(defined(__GLIBC__) && __GLIBC__ >=2)
 #ifndef SYS_ERRLIST_DEFINED
 extern char *sys_errlist[];
 extern int sys_nerr;
+#endif
 #endif
 
 #include "mystdarg.h"
