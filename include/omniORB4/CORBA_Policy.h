@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2003/11/05 12:59:03  dgrisby
+  Wrong return type from PolicySeq_var operator[].
+
   Revision 1.1.2.4  2003/01/14 11:48:15  dgrisby
   Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
 
@@ -125,7 +128,7 @@ public:
     }
     return *this;
   }
-  inline Policy* operator [] (_CORBA_ULong _s) {
+  inline Policy_member& operator [] (_CORBA_ULong _s) {
     return (*_pd_seq)[_s];
   }
   inline PolicyList* operator -> () { return _pd_seq; }
