@@ -1,3 +1,22 @@
+Tue Aug 25 19:50:00 BST 1998 sll
+================================
+
+- Update to make gcc-2.7.2 and egcs to compile happily
+- Now build shared library when the compiler is egcs.
+
+include/omniORB2/CORBA.h
+
+src/lib/omniORB2/sharedlib/dir.mk
+src/lib/omniORB2/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+
+src/lib/omniORB2/bootstrap_i.h
+src/lib/omniORB2/bootstrap_i.cc
+src/lib/omniORB2/dynAnyP.cc
+src/lib/omniORB2/dynAny.cc
+
+
+
 Tue Aug 25 16:18:24 BST 1998 sll
 ================================
 
