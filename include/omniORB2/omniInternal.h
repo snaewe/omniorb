@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16  1998/01/20 16:46:18  sll
+  Removed obsolute variable omni::traceLevel.
+
   Revision 1.15  1997/12/15 15:26:32  sll
   Added the missing dllimport/dllexport for WIN32.
 
@@ -116,7 +119,6 @@ public:
 #endif
 
   static const _CORBA_Boolean myByteOrder;
-  static _CORBA_ULong         traceLevel;
 
   enum alignment_t { ALIGN_1 = 1, ALIGN_2 = 2, ALIGN_4 = 4, ALIGN_8 = 8 };
   static const alignment_t max_alignment;  // Maximum value of alignment_t
