@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.5  2001/03/13 10:32:11  dpg1
+// Fixed point support.
+//
 // Revision 1.16.2.4  2000/11/01 12:45:56  dpg1
 // Update to CORBA 2.4 specification.
 //
@@ -973,7 +976,32 @@ Const(const char* file, int line, IDL_Boolean mainFile,
       }
       break;
     }
-  case IdlType::tk_fixed:      v_.fixed_      = expr->evalAsFixed(); break;
+  case IdlType::tk_fixed:
+    {
+      IDL_Fixed* f = expr->evalAsFixed();
+
+      FixedType* ft = (FixedType*)t;
+      if (ft->digits()) {
+	// Check constant fits in the target type
+	IDL_Fixed* g = new IDL_Fixed(f->truncate(ft->scale()));
+
+	if (g->fixed_digits() > ft->digits()) {
+	  IdlError(file, line,
+		   "Fixed point constant has too many digits to "
+		   "fit fixed<%u,%u>",
+		   ft->digits(), ft->scale());
+	}
+	else if (f->fixed_scale() > g->fixed_scale()) {
+	  IdlWarning(file, line,
+		     "Fixed point constant truncated to fit fixed<%u,%u>",
+		     ft->digits(), ft->scale());
+	}
+	delete f;
+	f = g;
+      }
+      v_.fixed_ = f;
+      break;
+    }
   case IdlType::tk_enum:
     v_.enumerator_ = expr->evalAsEnumerator((Enum*)((DeclaredType*)t)->decl());
     break;
@@ -992,6 +1020,7 @@ Const::
 {
   if (constKind_ == IdlType::tk_string)  delete [] v_.string_;
   if (constKind_ == IdlType::tk_wstring) delete [] v_.wstring_;
+  if (constKind_ == IdlType::tk_fixed)   delete    v_.fixed_;
   if (delType_) delete constType_;
 }
 
@@ -1020,8 +1049,15 @@ CONST_AS(IDL_LongDouble,   constAsLongDouble, tk_longdouble, longdouble_)
 #endif
 CONST_AS(IDL_WChar,        constAsWChar,      tk_wchar,      wchar_)
 CONST_AS(const IDL_WChar*, constAsWString,    tk_wstring,    wstring_)
-CONST_AS(IDL_Fixed,        constAsFixed,      tk_fixed,      fixed_)
 CONST_AS(Enumerator*,      constAsEnumerator, tk_enum,       enumerator_)
+
+IDL_Fixed*
+Const::constAsFixed() const {
+  assert(constKind_ == IdlType::tk_fixed);
+
+  // Have to copy the fixed object to get the memory management right
+  return new IDL_Fixed(*v_.fixed_);
+}
 
 
 // Declarator

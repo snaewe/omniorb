@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4  2001/03/13 10:32:05  dpg1
+ Fixed point support.
+
  Revision 1.2.2.3  2000/11/15 19:16:30  sll
  Added provision to override default mapping of CORBA::WChar to C++ wchar_t.
 
@@ -99,6 +102,8 @@ typedef long                      _CORBA_Long;
 
 typedef unsigned long             _CORBA_ULong;
 #elif SIZEOF_INT == 4
+#  define OMNI_LONG_IS_INT
+
 typedef int                       _CORBA_Long;
 
 typedef unsigned int              _CORBA_ULong;

@@ -23,13 +23,13 @@ export::
 
 OBJS  = y.tab.o lex.yy.o idlerr.o idlutil.o idltype.o \
 	idlrepoId.o idlscope.o idlexpr.o idlast.o idlvalidate.o \
-	idldump.o idlconfig.o
+	idldump.o idlconfig.o idlfixed.o
 
 PYOBJS = idlpython.o
 
 CXXSRCS = y.tab.cc lex.yy.cc idlerr.cc idlutil.cc idltype.cc \
 	idlrepoId.cc idlscope.cc idlexpr.cc idlast.cc idlvalidate.cc \
-	idldump.cc idlconfig.cc idlpython.cc idlc.cc
+	idldump.cc idlconfig.cc idlfixed.cc idlpython.cc idlc.cc
 
 YYSRC = idl.yy
 LLSRC = idl.ll

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.4  2001/03/13 10:32:09  dpg1
+# Fixed point support.
+#
 # Revision 1.15.2.3  2000/11/20 14:43:26  sll
 # Added support for wchar and wstring.
 #
@@ -108,7 +111,7 @@
 
 
 from omniidl import idlast, idltype
-from omniidl_be.cxx import types, id, skutil
+from omniidl_be.cxx import types, id, skutil, util
 
 import string
 
@@ -241,6 +244,11 @@ def canonTypeName(type, decl = None, useScopedName = 0):
             if type.type().bound() != 0:
                 bound = str(type.type().bound())
             return bound + "wstring"
+
+        if isinstance(type.type(), idltype.Fixed):
+            return str(type.type().digits()) + "_" + \
+                   str(type.type().scale()) + "fixed"
+
         if isinstance(type.type(), idltype.Declared):
             return id.Name(type.type().scopedName()).guard()
 

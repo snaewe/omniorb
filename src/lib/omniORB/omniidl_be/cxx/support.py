@@ -216,7 +216,7 @@ class SupportedTypeVisitor(idlvisitor.TypeVisitor):
         type.seqType().accept(self)
 
     def visitFixedType(self, type):
-        unsupportedType("fixed")
+        return
 
     def visitDeclaredType(self, type):
         type.decl().accept(self.ast_visitor)

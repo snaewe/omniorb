@@ -240,6 +240,7 @@ union tcDescriptor {
   CORBA::WChar*      p_wchar;
   CORBA::Octet*      p_octet;
   CORBA::ULong*      p_enum;
+  CORBA::Fixed*      p_fixed;
 #ifdef HAS_LongLong
   CORBA::LongLong*   p_longlong;
   CORBA::ULongLong*  p_ulonglong;
@@ -365,6 +366,7 @@ _0RL_buildDesc_cunsigned_plonglong(tcDescriptor &desc,
 {
   desc.p_ulonglong = (CORBA::ULongLong *)&data;
 }
+#endif
 
 #ifdef HAS_LongDouble
 inline void
@@ -372,7 +374,6 @@ _0RL_buildDesc_clongdouble(tcDescriptor &desc, const CORBA::LongDouble &data)
 {
   desc.p_longdouble = (CORBA::LongDouble *)&data;
 }
-#endif
 #endif
 
 #if !defined(NO_FLOAT)
@@ -436,6 +437,18 @@ _0RL_buildDesc_cwstring(tcDescriptor &desc,_CORBA_WString_element const& data)
   desc.p_wstring.ptr = (_CORBA_WChar**) &data.pd_data;
   desc.p_wstring.release = data.pd_rel;
 }
+
+///////////////////
+// Fixed         //
+///////////////////
+
+inline void
+_0RL_buildDesc_cfixed(tcDescriptor &desc, const CORBA::Fixed &data)
+{
+  desc.p_fixed = (CORBA::Fixed *)&data;
+}
+
+
 
 ///////////////////
 // Object_member //

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.5  2001/03/13 10:32:07  dpg1
+# Fixed point support.
+#
 # Revision 1.14.2.4  2000/11/20 14:43:24  sll
 # Added support for wchar and wstring.
 #
@@ -181,7 +184,8 @@ def initSymbols():
                   "_0RL_buildDesc_cCORBA_mObject",
                   "_0RL_buildDesc_cTypeCode",
                   "_0RL_buildDesc_clonglong",
-                  "_0RL_buildDesc_cunsigned_plonglong"]:
+                  "_0RL_buildDesc_cunsigned_plonglong",
+                  "_0RL_buildDesc_cfixed"]:
         defineSymbol(name)
 
 def defineSymbol(name):
@@ -361,10 +365,6 @@ def forward(decl, member = None):
 # (normally we skip declarations make in another file)
 def visitBaseType(type):
     pass
-def visitWStringType(type):
-    pass
-def visitFixedType(type):
-    pass
 
 def visitDeclaredType(type):
     decl = type.decl()
@@ -427,6 +427,18 @@ def visitWStringType(type):
         stream.out(template.bdesc_wstring, n = n,
                    private_prefix = prefix)
         
+def visitFixedType(type):
+    prefix = config.state['Private Prefix']
+    digits = str(type.digits())
+    scale  = str(type.scale())
+    generated_symbol = prefix + "_buildDesc_c%s_%sfixed" % (digits, scale)
+    if isDefined(generated_symbol):
+        return
+    required_symbols = [ prefix + "_buildDesc_cfixed" ]
+    defineSymbols([ generated_symbol ])
+    assertDefined(required_symbols)
+    stream.out(template.bdesc_fixed, digits=digits, scale=scale,
+               private_prefix = prefix)
 
 def visitSequenceType(type):
     seqType = types.Type(type.seqType())

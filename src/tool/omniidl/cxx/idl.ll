@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.9.2.5  2001/03/13 10:32:10  dpg1
+// Fixed point support.
+//
 // Revision 1.9.2.4  2000/11/01 12:45:55  dpg1
 // Update to CORBA 2.4 specification.
 //
@@ -118,7 +121,6 @@ IDL_UShort escapeToWChar(char* s);
 char* escapedStringToString(char* s);
 IDL_UShort* escapedStringToWString(char* s);
 void parseLineDirective(char* s);
-int fixed(char* s);
 
 %}
 
@@ -337,17 +339,17 @@ L{STR} {
 }
 
 {DECDIGIT}+"."{DECDIGIT}*[dD] {
-  yylval.fixed_val = fixed(yytext);
+  yylval.fixed_val = new IDL_Fixed(yytext, currentFile, yylineno);
   return FIXED_PT_LITERAL;
 }
 
 {DECDIGIT}*"."{DECDIGIT}+[dD] {
-  yylval.fixed_val = fixed(yytext);
+  yylval.fixed_val = new IDL_Fixed(yytext, currentFile, yylineno);
   return FIXED_PT_LITERAL;
 }
 
 {DECDIGIT}+[dD] {
-  yylval.fixed_val = fixed(yytext);
+  yylval.fixed_val = new IDL_Fixed(yytext, currentFile, yylineno);
   return FIXED_PT_LITERAL;
 }
 
@@ -654,8 +656,4 @@ void parseLineDirective(char* s) {
       AST::tree()->setFile(currentFile);
   }
   yylineno = line;
-}
-
-int fixed(char* s) {
-  return 42;
 }

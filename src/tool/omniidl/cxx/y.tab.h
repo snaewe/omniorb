@@ -13,7 +13,7 @@ typedef union {
   IDL_WChar                wchar_val;
   IDL_WChar*               wstring_val;
   IDL_Boolean              boolean_val;
-  int                      fixed_val; // ***
+  IDL_Fixed*               fixed_val;
   IdlType*                 type_val;
   TypeSpec*                type_spec_val;
   IdlExpr*                 expr_val;

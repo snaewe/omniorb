@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.5  2001/03/13 10:32:08  dpg1
+# Fixed point support.
+#
 # Revision 1.3.2.4  2000/11/20 14:43:24  sll
 # Added support for wchar and wstring.
 #
@@ -113,6 +116,16 @@ bdesc_string = """\
 bdesc_wstring = """\
 #ifndef @private_prefix@_buildDesc_c@n@wstring
 #define @private_prefix@_buildDesc_c@n@wstring @private_prefix@_buildDesc_cwstring
+#endif
+"""
+
+# Required symbols:
+#   @private_prefix@_buildDesc_cfixed
+# Generated symbols:
+#   @private_prefix@_buildDesc_c@digits@_@scale@fixed
+bdesc_fixed = """\
+#ifndef @private_prefix@_buildDesc_c@digits@_@scale@fixed
+#define @private_prefix@_buildDesc_c@digits@_@scale@fixed @private_prefix@_buildDesc_cfixed
 #endif
 """
 

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6.2.4  2001/03/13 10:32:11  dpg1
+// Fixed point support.
+//
 // Revision 1.6.2.3  2000/10/27 16:31:09  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -87,11 +90,7 @@ EXPR_ERR(IDL_LongDouble,   evalAsLongDouble, "a long double",         1.0)
 #endif
 EXPR_ERR(IDL_WChar,        evalAsWChar,      "a wide character",      '!')
 EXPR_ERR(const IDL_WChar*, evalAsWString,    "a wide string", EMPTY_WSTRING)
-
-IDL_Fixed IdlExpr::evalAsFixed() {
-  IdlError(file(), line(), "Fixed is not yet supported");
-  return 1;
-}
+EXPR_ERR(IDL_Fixed*,       evalAsFixed,      "fixed point", new IDL_Fixed("1"))
 
 Enumerator*
 IdlExpr::
@@ -194,7 +193,7 @@ IDL_Char CharExpr::evalAsChar() {
 IDL_WChar WCharExpr::evalAsWChar() {
   return value_;
 }
-IDL_Fixed FixedExpr::evalAsFixed() {
+IDL_Fixed* FixedExpr::evalAsFixed() {
   return value_;
 }
 
@@ -706,8 +705,8 @@ CONST_EXPR_EVAL(IDL_WChar, evalAsWChar, tk_wchar,
 		constAsWChar, "wide character", '!')
 CONST_EXPR_EVAL(const IDL_WChar*, evalAsWString, tk_wstring,
 		constAsWString, "wide string", EMPTY_WSTRING)
-CONST_EXPR_EVAL(IDL_Fixed, evalAsFixed, tk_fixed,
-		constAsFixed, "fixed", 0)
+CONST_EXPR_EVAL(IDL_Fixed*, evalAsFixed, tk_fixed,
+		constAsFixed, "fixed", new IDL_Fixed("1"))
 
 Enumerator* ConstExpr::evalAsEnumerator(const Enum* target) {
   if (c_->constKind() == IdlType::tk_enum) {
@@ -912,6 +911,19 @@ ADD_EXPR_EVAL_F(IDL_Double,     evalAsDouble,     "double")
 ADD_EXPR_EVAL_F(IDL_LongDouble, evalAsLongDouble, "long double")
 #endif
 
+IDL_Fixed* AddExpr::evalAsFixed() {
+  IDL_Fixed *a, *b, *r;
+  a = a_->evalAsFixed(); b = b_->evalAsFixed();
+  try {
+    r = new IDL_Fixed(*a + *b);
+  }
+  catch (IDL_Fixed::Overflow&) {
+    IdlError(file(), line(), "Sub-expression overflows fixed digits");
+    r = new IDL_Fixed("1");
+  }
+  delete a; delete b;
+  return r;
+}
 
 // Sub
 #define SUB_EXPR_EVAL_S(ret, op, str) \
@@ -961,6 +973,21 @@ SUB_EXPR_EVAL_F(IDL_Double,     evalAsDouble,     "double")
 #ifdef HAS_LongDouble
 SUB_EXPR_EVAL_F(IDL_LongDouble, evalAsLongDouble, "long double")
 #endif
+
+IDL_Fixed* SubExpr::evalAsFixed() {
+  IDL_Fixed *a, *b, *r;
+  a = a_->evalAsFixed(); b = b_->evalAsFixed();
+  try {
+    r = new IDL_Fixed(*a - *b);
+  }
+  catch (IDL_Fixed::Overflow&) {
+    IdlError(file(), line(), "Sub-expression overflows fixed digits");
+    r = new IDL_Fixed("1");
+  }
+  delete a; delete b;
+  return r;
+}
+
 
 
 // Mult
@@ -1012,6 +1039,19 @@ MULT_EXPR_EVAL_F(IDL_Double,     evalAsDouble,     "double")
 MULT_EXPR_EVAL_F(IDL_LongDouble, evalAsLongDouble, "long double")
 #endif
 
+IDL_Fixed* MultExpr::evalAsFixed() {
+  IDL_Fixed *a, *b, *r;
+  a = a_->evalAsFixed(); b = b_->evalAsFixed();
+  try {
+    r = new IDL_Fixed(*a * *b);
+  }
+  catch (IDL_Fixed::Overflow&) {
+    IdlError(file(), line(), "Sub-expression overflows fixed digits");
+    r = new IDL_Fixed("1");
+  }
+  delete a; delete b;
+  return r;
+}
 
 // Div
 #define DIV_EXPR_EVAL_S(ret, op) \
@@ -1066,6 +1106,25 @@ DIV_EXPR_EVAL_F(IDL_Double,     evalAsDouble,     "double")
 DIV_EXPR_EVAL_F(IDL_LongDouble, evalAsLongDouble, "long double")
 #endif
 
+IDL_Fixed* DivExpr::evalAsFixed() {
+  IDL_Fixed *a, *b, *r;
+  a = a_->evalAsFixed(); b = b_->evalAsFixed();
+  try {
+    r = new IDL_Fixed(*a / *b);
+  }
+  catch (IDL_Fixed::Overflow&) {
+    IdlError(file(), line(), "Sub-expression overflows fixed digits");
+    r = new IDL_Fixed("1");
+  }
+  catch (IDL_Fixed::DivideByZero&) {
+    IdlError(file(), line(), "Divide by zero");
+    r = new IDL_Fixed("1");
+  }
+  delete a; delete b;
+  return r;
+}
+
+
 // Invert
 #define INVERT_EXPR_EVAL(ret, op) \
 ret InvertExpr::op() { \
@@ -1080,6 +1139,7 @@ INVERT_EXPR_EVAL(IDL_Octet,      evalAsOctet)
 INVERT_EXPR_EVAL(IDL_LongLong,   evalAsLongLong)
 INVERT_EXPR_EVAL(IDL_ULongLong,  evalAsULongLong)
 #endif
+
 
 // Minus
 #define MINUS_EXPR_EVAL(ret, op) \
@@ -1096,6 +1156,13 @@ MINUS_EXPR_EVAL(IDL_Double,     evalAsDouble)
 #ifdef HAS_LongDouble
 MINUS_EXPR_EVAL(IDL_LongDouble, evalAsLongDouble)
 #endif
+
+IDL_Fixed* MinusExpr::evalAsFixed() {
+  IDL_Fixed* r = new IDL_Fixed(- *(e_->evalAsFixed()));
+  delete e_->evalAsFixed();
+  return r;
+}
+
 
 // Plus
 #define PLUS_EXPR_EVAL(ret, op) \
@@ -1116,3 +1183,7 @@ PLUS_EXPR_EVAL(IDL_Double,     evalAsDouble)
 #ifdef HAS_LongDouble
 PLUS_EXPR_EVAL(IDL_LongDouble, evalAsLongDouble)
 #endif
+
+IDL_Fixed* PlusExpr::evalAsFixed() {
+  return e_->evalAsFixed();
+}

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.6  2001/03/13 10:32:09  dpg1
+# Fixed point support.
+#
 # Revision 1.5.2.5  2000/11/20 14:43:25  sll
 # Added support for wchar and wstring.
 #
@@ -444,6 +447,11 @@ typedef CORBA::TypeCode_var @name@_var;
 typedef_simple_any = """\
 typedef CORBA::Any @name@;
 typedef CORBA::Any_var @name@_var;
+"""
+
+typedef_simple_fixed = """\
+typedef _omni_Fixed<@digits@,@scale@> @name@;
+typedef @name@& @name@_out;
 """
 
 typedef_simple_basic = """\

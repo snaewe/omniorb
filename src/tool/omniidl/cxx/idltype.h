@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.4  2001/03/13 10:32:13  dpg1
+// Fixed point support.
+//
 // Revision 1.5.2.3  2000/11/01 12:45:57  dpg1
 // Update to CORBA 2.4 specification.
 //
@@ -251,20 +254,20 @@ private:
 
 class FixedType : public IdlType {
 public:
-  FixedType(IDL_UShort digits, IDL_Short scale) :
+  FixedType(IDL_Short digits, IDL_Short scale) :
     IdlType(tk_fixed), digits_(digits), scale_(scale) { }
 
   virtual ~FixedType() {}
 
   IDL_UShort  digits()       { return digits_; }
-  IDL_Short   scale()        { return scale_; }
+  IDL_UShort  scale()        { return scale_; }
   IDL_Boolean shouldDelete() { return 1; }
 
   void accept(TypeVisitor& visitor) { visitor.visitFixedType(this); }
 
 private:
   IDL_UShort digits_;
-  IDL_Short  scale_;
+  IDL_UShort scale_;
 };
 
 

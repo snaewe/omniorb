@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.5  2001/03/13 10:32:16  dpg1
+# Fixed point support.
+#
 # Revision 1.8.2.4  2000/11/01 15:57:03  dpg1
 # More updates for 2.4.
 #
@@ -138,6 +141,8 @@ module @id@ {""", id = node.identifier())
             value = '"' + repr(node.value())[1:-1] + '"'
         elif node.constKind() == idltype.tk_char:
             value = "'" + repr(node.value())[1:-1] + "'"
+        elif node.constKind() == idltype.tk_fixed:
+            value = node.value() + "d"
         else:
             value = str(node.value())
         
@@ -405,8 +410,11 @@ native @id@;""",
                                  str(type.bound()) + ">"
 
     def visitFixedType(self, type):
-        self.__result_type = "fixed <" + str(type.digits()) + ", " +\
-                             str(type.scale()) + ">"
+        if type.digits() > 0:
+            self.__result_type = "fixed<" + str(type.digits()) + "," +\
+                                 str(type.scale()) + ">"
+        else:
+            self.__result_type = "fixed"
 
     def visitDeclaredType(self, type):
         self.__result_type = "::" + \

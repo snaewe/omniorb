@@ -13,6 +13,7 @@ ORB_SRCS = \
             corbaOrb.cc \
             corbaString.cc \
             corbaWString.cc \
+            corbaFixed.cc \
             dynamicLib.cc \
             exception.cc \
             exceptn.cc \

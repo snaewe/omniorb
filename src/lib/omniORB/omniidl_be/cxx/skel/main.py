@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.7  2001/03/13 10:32:09  dpg1
+# Fixed point support.
+#
 # Revision 1.29.2.6  2001/01/25 13:09:11  sll
 # Fixed up cxx backend to stop it from dying when a relative
 # path name is given to the -p option of omniidl.
@@ -553,6 +556,8 @@ def visitConst(node):
         type_string = "char *"
     elif d_constType.wstring():
         type_string = "CORBA::WChar *"
+    elif d_constType.fixed():
+        type_string = constType.base()
     else:
         type_string = d_constType.base()
 

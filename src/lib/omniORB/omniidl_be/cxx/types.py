@@ -39,7 +39,7 @@ RET    = 3
 
 # we don't support these yet
 unsupported_typecodes =[idltype.tk_Principal, idltype.tk_longdouble,
-                        idltype.tk_fixed, idltype.tk_value,
+                        idltype.tk_value,
                         idltype.tk_value_box, idltype.tk_native,
                         idltype.tk_abstract_interface,
                         idltype.tk_local_interface]
@@ -221,6 +221,8 @@ class Type:
             return "CORBA::Any"
         if self.void():
             return "void"
+        if self.fixed():
+            return "CORBA::Fixed"
         if self.sequence():
             return self.sequenceTemplate(environment)
 
@@ -494,6 +496,8 @@ class Type:
             return "\"" + string.join(chars, "") + "\""
         if kind in [ idltype.tk_octet ]:
             return str(value)
+        if kind in [ idltype.tk_fixed ]:
+            return '"' + value + '"'
 
         util.fatalError("Internal error when handling value (" +\
                         repr(value) +")" )
@@ -850,6 +854,10 @@ class Type:
     def any(self):
         type = self.__type
         return type.kind() == idltype.tk_any
+
+    def fixed(self):
+        type = self.__type
+        return type.kind() == idltype.tk_fixed
 
 
 def variableDecl(decl):

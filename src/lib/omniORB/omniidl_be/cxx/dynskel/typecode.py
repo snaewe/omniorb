@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.16.2.5  2001/03/13 10:32:08  dpg1
+# Fixed point support.
+#
 # Revision 1.16.2.4  2000/11/20 14:43:24  sll
 # Added support for wchar and wstring.
 #
@@ -345,8 +348,7 @@ def mkTypeCode(type, declarator = None, node = None):
                mkTypeCode(types.Type(type.seqType())) + ")"
 
     if isinstance(type, idltype.Fixed):
-        util.fatalError("Fixed types are not supported")
-        raise "Don't know how to generate TypeCode for Fixed"
+        return prefix + "fixed_tc(%d,%d)" % (type.digits(),type.scale())
 
     assert isinstance(type, idltype.Declared)
 

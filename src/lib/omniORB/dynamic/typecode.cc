@@ -27,9 +27,11 @@
 //      Implementation of the CORBA::TypeCode psuedo object
 //	
 
-
 /* 
  * $Log$
+ * Revision 1.38.2.10  2001/03/13 10:32:06  dpg1
+ * Fixed point support.
+ *
  * Revision 1.38.2.9  2000/12/05 17:41:00  dpg1
  * New cdrStream functions to marshal and unmarshal raw strings.
  *
@@ -336,6 +338,18 @@ CORBA::TypeCode::content_type() const
 					  ->NP_content_type());
 }
 
+CORBA::UShort
+CORBA::TypeCode::fixed_digits() const
+{
+  return ToConstTcBase_Checked(this)->NP_fixed_digits();
+}
+
+CORBA::Short
+CORBA::TypeCode::fixed_scale() const
+{
+  return ToConstTcBase_Checked(this)->NP_fixed_scale();
+}
+
 CORBA::Long
 CORBA::TypeCode::param_count() const
 {
@@ -484,6 +498,12 @@ CORBA::TypeCode::NP_wstring_tc(CORBA::ULong bound)
 }
 
 CORBA::TypeCode_ptr
+CORBA::TypeCode::NP_fixed_tc(CORBA::UShort digits, CORBA::Short scale)
+{
+  return new TypeCode_fixed(digits, scale);
+}
+
+CORBA::TypeCode_ptr
 CORBA::TypeCode::NP_sequence_tc(CORBA::ULong bound,
 				CORBA::TypeCode_ptr element_type)
 {
@@ -619,6 +639,12 @@ CORBA::TypeCode::PR_wstring_tc(CORBA::ULong bound)
   return new TypeCode_wstring(bound);
 }
 
+CORBA::TypeCode_ptr
+CORBA::TypeCode::PR_fixed_tc(CORBA::UShort digits, CORBA::UShort scale)
+{
+  check_static_data_is_initialised();
+  return new TypeCode_fixed(digits, scale);
+}
 
 CORBA::TypeCode_ptr
 CORBA::TypeCode::PR_sequence_tc(CORBA::ULong bound,
@@ -824,6 +850,10 @@ TypeCode_base::TypeCode_base(CORBA::TCKind tck)
     pd_compactTc = this;
     break;
 
+  case CORBA::tk_fixed:
+    pd_aliasExpandedTc = pd_compactTc = this;
+    break;
+
   default:
     pd_complete = 0;
     break;
@@ -992,6 +1022,23 @@ TypeCode_base::NP_content_type() const
 #endif
 }
 
+CORBA::UShort
+TypeCode_base::NP_fixed_digits() const
+{
+  throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
+}
+
+CORBA::Short
+TypeCode_base::NP_fixed_scale() const
+{
+  throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
+}
 
 CORBA::Long
 TypeCode_base::NP_param_count() const
@@ -1262,6 +1309,81 @@ TypeCode_wstring::NP_parameter(CORBA::Long index) const
 
   return rv;
 }
+
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// TypeCode_fixed ///////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+// Notes:
+// Fixed typecodes have SIMPLE parameter lists (i.e. ones NOT enclosed in an
+// octet sequence encapsualtion)
+
+TypeCode_fixed::TypeCode_fixed(CORBA::UShort digits, CORBA::Short scale)
+  : TypeCode_base(CORBA::tk_fixed)
+{
+  pd_digits = digits;
+  pd_scale  = scale;
+
+  pd_alignmentTable.setNumEntries(1);
+  pd_alignmentTable.addNasty(this);
+}
+
+TypeCode_fixed::TypeCode_fixed()
+  : TypeCode_base(CORBA::tk_fixed)
+{
+  pd_alignmentTable.setNumEntries(1);
+  pd_alignmentTable.addNasty(this);
+}
+
+TypeCode_fixed::~TypeCode_fixed() {}
+
+void
+TypeCode_fixed::NP_marshalSimpleParams(cdrStream &s,
+				       TypeCode_offsetTable* ) const
+{
+  pd_digits >>= s;
+  pd_scale  >>= s;
+}
+
+TypeCode_base*
+TypeCode_fixed::NP_unmarshalSimpleParams(cdrStream &s,
+					 TypeCode_offsetTable* otbl)
+{
+  TypeCode_fixed* _ptr = new TypeCode_fixed;
+
+  otbl->addEntry(otbl->currentOffset(), _ptr);
+
+  _ptr->pd_digits <<= s;
+  _ptr->pd_scale  <<= s;
+
+  return _ptr;
+}
+
+
+CORBA::Boolean
+TypeCode_fixed::NP_extendedEqual(const TypeCode_base*  TCp,
+				 CORBA::Boolean,
+				 const TypeCode_pairlist*) const
+{
+  return ((NP_kind() == TCp->NP_kind()) &&
+	  (NP_fixed_digits() == TCp->NP_fixed_digits()) &&
+	  (NP_fixed_scale()  == TCp->NP_fixed_scale()));
+}
+
+
+CORBA::UShort
+TypeCode_fixed::NP_fixed_digits() const
+{
+  return pd_digits;
+}
+
+CORBA::Short
+TypeCode_fixed::NP_fixed_scale() const
+{
+  return pd_scale;
+}
+
 
 
 //////////////////////////////////////////////////////////////////////
@@ -4847,6 +4969,18 @@ CORBA::TypeCode_ptr
 CORBA::ORB::create_string_tc(CORBA::ULong bound)
 {
   return CORBA::TypeCode::NP_string_tc(bound);
+}
+
+CORBA::TypeCode_ptr
+CORBA::ORB::create_wstring_tc(CORBA::ULong bound)
+{
+  return CORBA::TypeCode::NP_wstring_tc(bound);
+}
+
+CORBA::TypeCode_ptr
+CORBA::ORB::create_fixed_tc(CORBA::UShort digits, CORBA::Short scale)
+{
+  return CORBA::TypeCode::NP_fixed_tc(digits, scale);
 }
 
 CORBA::TypeCode_ptr

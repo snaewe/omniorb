@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.11  2001/03/13 10:32:04  dpg1
+ Fixed point support.
+
  Revision 1.2.2.10  2001/01/08 12:35:41  dpg1
  _duplicate in CORBA::Object::_narrow
 
@@ -371,6 +374,7 @@ _CORBA_MODULE_BEG
   typedef class TypeCode* TypeCode_ptr;
   typedef TypeCode_ptr TypeCodeRef;
 
+  class Fixed;
 
   class Any {
   public:
@@ -482,6 +486,14 @@ _CORBA_MODULE_BEG
       Boolean nc;
     };
 
+    struct from_fixed {
+      from_fixed(const Fixed& f, UShort d, UShort s)
+	: val(f), digits(d), scale(s) {}
+
+      const Fixed& val;
+      UShort       digits;
+      UShort       scale;
+    };
 
     void operator<<=(from_boolean f);
 
@@ -494,6 +506,8 @@ _CORBA_MODULE_BEG
     void operator<<=(from_string s);
 
     void operator<<=(from_wstring s);
+
+    void operator<<=(from_fixed f);
 
     // OMG Extraction operators
     Boolean operator>>=(Short& s) const;
@@ -569,6 +583,15 @@ _CORBA_MODULE_BEG
       ULong bound;
     };
 
+    struct to_fixed {
+      to_fixed(Fixed& f, UShort d, UShort s)
+	: val(f), digits(d), scale(s) {}
+
+      Fixed& val;
+      UShort digits;
+      UShort scale;
+    };
+
     struct to_object {
       to_object(Object_ptr& obj) : ref(obj) { }
       Object_ptr& ref;
@@ -587,6 +610,8 @@ _CORBA_MODULE_BEG
 #endif
 
     Boolean operator>>=(to_wstring s) const;
+
+    Boolean operator>>=(to_fixed s) const;
 
     Boolean operator>>=(to_object o) const;
 
@@ -1748,8 +1773,11 @@ _CORBA_MODULE_BEG
 
     TypeCode_ptr content_type() const;
 
-    Long param_count() const;             // obsolute
-    Any* parameter(Long index) const;     // obsolute
+    UShort fixed_digits() const;
+    Short fixed_scale() const;
+    
+    Long param_count() const;             // obsolete
+    Any* parameter(Long index) const;     // obsolete
 
 #if 0
     // CORBA 2.3 additions
@@ -1794,6 +1822,7 @@ _CORBA_MODULE_BEG
     static TypeCode_ptr NP_interface_tc(const char* id, const char* name);
     static TypeCode_ptr NP_string_tc(ULong bound);
     static TypeCode_ptr NP_wstring_tc(ULong bound);
+    static TypeCode_ptr NP_fixed_tc(UShort digits, Short scale);
     static TypeCode_ptr NP_sequence_tc(ULong bound, TypeCode_ptr element_type);
     static TypeCode_ptr NP_array_tc(ULong length, TypeCode_ptr element_type);
     static TypeCode_ptr NP_recursive_sequence_tc(ULong bound, ULong offset);
@@ -1841,6 +1870,7 @@ _CORBA_MODULE_BEG
     static TypeCode_ptr PR_Object_tc();
     static TypeCode_ptr PR_string_tc();
     static TypeCode_ptr PR_wstring_tc();
+    static TypeCode_ptr PR_fixed_tc(UShort digits, UShort scale);
 #ifdef HAS_LongLong
     static TypeCode_ptr PR_longlong_tc();
     static TypeCode_ptr PR_ulonglong_tc();
@@ -2598,6 +2628,7 @@ _CORBA_MODULE_BEG
     TypeCode_ptr create_interface_tc(const char* id, const char* name);
     TypeCode_ptr create_string_tc(ULong bound);
     TypeCode_ptr create_wstring_tc(ULong bound);
+    TypeCode_ptr create_fixed_tc(UShort digits, Short scale);
     TypeCode_ptr create_sequence_tc(ULong bound,
 				    TypeCode_ptr element_type);
     TypeCode_ptr create_array_tc(ULong length, TypeCode_ptr etype);
@@ -2635,6 +2666,115 @@ _CORBA_MODULE_BEG
 
   _CORBA_MODULE_FN ORB_ptr ORB_init(int& argc, char** argv,
 				    const char* orb_identifier="");
+
+
+  //////////////////////////////////////////////////////////////////////
+  /////////////////////////////// Fixed ////////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  class Fixed {
+
+#define OMNI_FIXED_DIGITS 31
+
+  public:
+    // Constructors
+    Fixed(int val = 0);
+    Fixed(unsigned val);
+
+#ifndef OMNI_LONG_IS_INT
+    Fixed(Long val);
+    Fixed(ULong val);
+#endif
+#ifdef HAS_LongLong
+    Fixed(LongLong val);
+    Fixed(ULongLong val);
+#endif
+#ifndef NO_FLOAT
+    Fixed(Double val);
+#endif
+#ifdef HAS_LongDouble
+    Fixed(LongDouble val);
+#endif
+    Fixed(const Fixed& val);
+    Fixed(const char* val);
+
+    Fixed(const Octet* val, UShort digits, UShort scale, Boolean negative);
+    // omniORB specific constructor
+
+    ~Fixed();
+
+    // Conversions
+#ifdef HAS_LongLong
+    operator LongLong() const;
+#else
+    operator Long() const;
+#endif
+#ifndef NO_FLOAT
+#  ifdef HAS_LongDouble
+    operator LongDouble() const;
+#  else
+    operator Double() const;
+#  endif
+#endif
+    Fixed round   (UShort scale) const;
+    Fixed truncate(UShort scale) const;
+
+    // Operators
+    Fixed&  operator= (const Fixed& val);
+    Fixed&  operator+=(const Fixed& val);
+    Fixed&  operator-=(const Fixed& val);
+    Fixed&  operator*=(const Fixed& val);
+    Fixed&  operator/=(const Fixed& val);
+
+    Fixed&  operator++();
+    Fixed   operator++(int);
+    Fixed&  operator--();
+    Fixed   operator--(int);
+    Fixed   operator+ () const;
+    Fixed   operator- () const;
+    Boolean operator! () const;
+
+    // Other member functions
+    UShort fixed_digits() const { return pd_digits; }
+    UShort fixed_scale()  const { return pd_scale;  }
+
+    // omniORB specific functions
+
+    char* NP_asString() const;
+    // Return a string containing the fixed. Caller frees with
+    // CORBA::string_free().
+
+    void NP_fromString(const char* val);
+    // Set the value from the given string.
+
+    const Octet* PR_val() const { return pd_val; }
+    // Return the internal value buffer. Used by arithmetic functions.
+
+    Boolean PR_negative() const { return pd_negative; }
+    // True if the value is negative, false if positive or zero.
+
+    void PR_checkLimits();
+    // Function to check that this fixed point value fits in the
+    // digits/scale limits declared in the IDL. Truncates the value,
+    // or throws DATA_CONVERSION if the value is too big. Does nothing
+    // for base CORBA::Fixed, where there are no limits.
+
+    void PR_setLimits(UShort idl_digits, UShort idl_scale);
+    // Set and check the digits/scale limits.
+
+    // Marshalling operators
+    void operator>>= (cdrStream& s) const;
+    void operator<<= (cdrStream& s);
+
+  private:
+    Octet   pd_val[OMNI_FIXED_DIGITS]; // Value stored least sig. digit first
+
+    UShort  pd_digits;     // Digits and scale the number has
+    UShort  pd_scale;
+    Boolean pd_negative;   // True if value is negative
+    UShort  pd_idl_digits; // Digits and scale the IDL says it should have
+    UShort  pd_idl_scale;  //  (zero for base CORBA::Fixed).
+  };
 
 
   //////////////////////////////////////////////////////////////////////
@@ -2776,6 +2916,7 @@ _CORBA_MODULE_END
 #include <omniORB4/templatedefns.h>
 #include <omniORB4/corba_operators.h>
 #include <omniORB4/poa.h>
+#include <omniORB4/fixed.h>
 
 
 //?? These really want to be renamed and put elsewhere.

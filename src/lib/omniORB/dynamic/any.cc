@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.19.2.6  2001/03/13 10:32:05  dpg1
+ * Fixed point support.
+ *
  * Revision 1.19.2.5  2000/11/17 19:09:36  dpg1
  * Support codeset conversion in any.
  *
@@ -525,6 +528,18 @@ CORBA::Any::operator<<=(from_wstring s)
   if( s.nc )  CORBA::wstring_free(s.val);
 }
 
+void
+CORBA::Any::operator<<=(from_fixed f)
+{
+  tcDescriptor tcd;
+  tcd.p_fixed = (CORBA::Fixed*)&f.val;
+  // The cast to (CORBA::Fixed*) hides the fact that f.val is
+  // const. setData() doesn't modify the value, so it's OK.
+
+  CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_fixed_tc(f.digits,f.scale);
+  pdAnyP()->setData(newtc, tcd);
+}
+
 
 // EXTRACTION OPERATORS
 
@@ -890,6 +905,15 @@ CORBA::Any::operator>>=(to_wstring s) const
       s.val = 0; return 0;
     }
   }
+}
+
+CORBA::Boolean
+CORBA::Any::operator>>=(to_fixed f) const
+{
+  CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_fixed_tc(f.digits, f.scale);
+  tcDescriptor tcd;
+  tcd.p_fixed = &f.val;
+  return pdAnyP()->getData(newtc, tcd);
 }
 
 

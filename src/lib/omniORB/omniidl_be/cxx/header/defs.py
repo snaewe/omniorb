@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.7  2001/03/13 10:32:08  dpg1
+# Fixed point support.
+#
 # Revision 1.33.2.6  2000/11/20 14:43:25  sll
 # Added support for wchar and wstring.
 #
@@ -441,6 +444,8 @@ def visitConst(node):
         type_string = "char *"
     elif d_constType.string():
         type_string = "CORBA::WChar *"
+    elif d_constType.fixed():
+        type_string = constType.member()
     else:
         type_string = d_constType.member()
         # should this be .base?
@@ -555,6 +560,13 @@ def visitTypedef(node):
             elif d_type.any():
                 stream.out(template.typedef_simple_any,
                            name = derivedName)
+
+            elif d_type.fixed():
+                stream.out(template.typedef_simple_fixed,
+                           name = derivedName,
+                           digits = d_type.type().digits(),
+                           scale = d_type.type().scale())
+
             # Non-array of basic type
             elif isinstance(d_type.type(), idltype.Base):
 

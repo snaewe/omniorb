@@ -801,6 +801,14 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
       break;
     }
 
+  case CORBA::tk_fixed:
+    {
+      CORBA::Fixed f(*tcdata.p_fixed);
+      f.PR_setLimits(tc->fixed_digits(), tc->fixed_scale());
+      f >>= pd_mbuf;
+      break;
+    }
+
     // CONSTRUCTED TYPES
   case CORBA::tk_union:
     {
@@ -1100,6 +1108,15 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
       if(tcdata.p_wstring.release )
 	_CORBA_WString_helper::free(*tcdata.p_wstring.ptr);
       *tcdata.p_wstring.ptr = pd_mbuf.unmarshalWString();
+      break;
+    }
+
+  case CORBA::tk_fixed:
+    {
+      CORBA::Fixed f;
+      f.PR_setLimits(tc->fixed_digits(), tc->fixed_scale());
+      f <<= pd_mbuf;
+      *tcdata.p_fixed = f;
       break;
     }
 
