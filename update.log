@@ -1,3 +1,51 @@
+Wed Aug 19 20:09:17 BST 1998 sll
+================================
+
+- Bug fix: omniidl2 dump core with the following illegal syntax:
+
+     exception E {};
+     typedef sequence<E> EL;
+
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+
+
+Wed Aug 19 16:33:54 BST 1998 sll
+================================
+
+- Modified omniidl2.
+- In the new stubs, all <<= and >>= operators are generated in the global 
+  namespace.
+  Previously, these operators for types in a namespace A is defined in that
+  namespace. This creates problems to some compilers that support namespace
+  but not the koenig lookup (e.g. DEC C++ 5.6 and 6.0).
+
+include/omniORB2/CORBA.h
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/bufferedStream.h
+
+src/lib/omniORB2/objectRef.cc
+src/lib/omniORB2/typecode.cc
+
+src/tool/omniidl2/include/idl.hh
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+src/tool/omniidl2/omniORB2_be/o2be_constant.cc
+src/tool/omniidl2/omniORB2_be/o2be_enum.cc
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_module.cc
+src/tool/omniidl2/omniORB2_be/o2be_name.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_struct.cc
+src/tool/omniidl2/omniORB2_be/o2be_typedef.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+
+New member functions void produce_binary_operators_in_hdr and the like
+are responsible for generating binary operators <<= etc in the global
+namespace.
+
+
 Thu Aug 13 19:01:24 BST 1998 sll
 ================================
 
