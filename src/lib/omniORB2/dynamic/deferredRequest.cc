@@ -92,30 +92,3 @@ DeferredRequest::run_undetached(void* arg)
 
   return 0;
 }
-
-
-void
-DeferredRequest::done()
-{
-  if( !pd_ready )
-    throw omniORB::fatalException(__FILE__,__LINE__,
-        "DeferredRequest::done() when not ready");
-
-  // Grab the exception to prevent it being deleted when <this> is
-  // deleted. Ensure that it is freed after we have thrown a copy of it.
-  CORBA::Exception* ex = pd_exception;
-  pd_exception = 0;
-
-  this->join(0);  // 'this' will now have been 'delete'd
-
-  try {
-    if( ex && omniORB::diiThrowsSysExceptions )
-      ex->_raise();
-  }
-  catch(...) {
-    // I'm not sure if this is strictly speaking legal ... but it
-    // seems to work!!
-    if( ex )  delete ex;
-    throw;
-  }
-}
