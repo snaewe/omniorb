@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.10  2000/01/11 11:34:28  djs
+# Added support for fragment generation (-F) mode
+#
 # Revision 1.9  2000/01/10 17:18:14  djs
 # Removed redundant code.
 #
@@ -101,14 +104,15 @@ def visitModule(node):
         return
     
     name = tyutil.mapID(node.identifier())
-    
-    stream.out("""\
+
+    if not(config.FragmentFlag()):
+        stream.out("""\
 _CORBA_MODULE @POA_prefix@@name@
 _CORBA_MODULE_BEG
 """,
-               name = name,
-               POA_prefix = POA_prefix())
-    stream.inc_indent()
+                   name = name,
+                   POA_prefix = POA_prefix())
+        stream.inc_indent()
 
     for n in node.definitions():
         nested = self.__nested
@@ -118,8 +122,9 @@ _CORBA_MODULE_BEG
 
         self.__nested = nested
 
-    stream.dec_indent()
-    stream.out("""\
+    if not(config.FragmentFlag()):
+        stream.dec_indent()
+        stream.out("""\
 _CORBA_MODULE_END
 
 """)

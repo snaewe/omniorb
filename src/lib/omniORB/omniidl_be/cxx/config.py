@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  2000/01/11 11:35:36  djs
+# Added support for fragment generation (-F) mode
+#
 # Revision 1.5  1999/12/24 18:20:12  djs
 # Builds list of IDL files #included by walking the AST and examining the
 # file() of each Decl node.
@@ -98,6 +101,13 @@ def FlatTieFlag():
     global __flattie
     return __flattie
 
+# generate fragments
+def setFragmentFlag(flag):
+    global __fragment
+    __fragment = flag
+def FragmentFlag():
+    global __fragment
+    return __fragment
     
 # suffix added to basename to get header filename
 def hdrsuffix():
@@ -117,7 +127,7 @@ def defs_fragment_suffix():
 
 # suffix to be added to basename to get the filename of the operators fragment file
 def opers_fragment_suffix():
-    return "_opers"
+    return "_operators"
 
 # suffix to be added to basename to get the filename of the operators fragment file
 def poa_fragment_suffix():

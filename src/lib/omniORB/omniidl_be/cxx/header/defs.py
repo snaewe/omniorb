@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.22  2000/01/11 11:34:27  djs
+# Added support for fragment generation (-F) mode
+#
 # Revision 1.21  2000/01/10 16:13:13  djs
 # Removed a chunk of redundant code.
 #
@@ -114,10 +117,6 @@ import defs
 
 self = defs
 
-# Not implemented yet:
-# Flags which control the behaviour of the backend
-isFragment = 0
-
 # State information (used to be passed as arguments during recursion)
 self.__insideInterface = 0
 self.__insideModule = 0
@@ -145,7 +144,7 @@ def visitModule(node):
     
     name = tyutil.mapID(node.identifier())
     
-    if not(isFragment):
+    if not(config.FragmentFlag()):
         stream.out("""\
 _CORBA_MODULE @name@
 
@@ -160,7 +159,7 @@ _CORBA_MODULE_BEG
         n.accept(self)
 
     self.__insideModule = insideModule
-    if not(isFragment):
+    if not(config.FragmentFlag()):
         stream.dec_indent()
         stream.out("""\
 _CORBA_MODULE_END
