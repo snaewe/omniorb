@@ -42,6 +42,7 @@ dnl ** Integer representation
 AC_C_BIGENDIAN
 AC_CHECK_SIZEOF(char, 1)
 AC_CHECK_SIZEOF(unsigned char, 1)
+AC_CHECK_SIZEOF(bool, 1)
 AC_CHECK_SIZEOF(short, 2)
 AC_CHECK_SIZEOF(int, 4)
 AC_CHECK_SIZEOF(long, 4)
