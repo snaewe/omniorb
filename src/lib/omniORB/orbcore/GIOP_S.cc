@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.17  2001/12/03 18:46:25  dpg1
+  Race condition in giopWorker destruction.
+
   Revision 1.1.4.16  2001/11/12 13:47:09  dpg1
   Minor fixes.
 
@@ -190,13 +193,14 @@ GIOP_S::dispatcher() {
       if (!pd_strand->stopIdleCounter()) {
 	// This strand has been expired by the scavenger. Don't
 	// process this call.
-	omniORB::logger log;
-	log << "dispatcher cannot stop idle counter.\n";
+	if (omniORB::trace(1)) {
+	  omniORB::logger l;
+	  l << "dispatcher cannot stop idle counter.\n";
+	}
 	pd_strand->state(giopStrand::DYING);
 	return 0;
       }
     }
-
 
     if (pd_requestType == GIOP::Request) {
       return handleRequest();

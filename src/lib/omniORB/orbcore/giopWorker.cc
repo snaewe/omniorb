@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/12/03 18:46:25  dpg1
+  Race condition in giopWorker destruction.
+
   Revision 1.1.4.4  2001/08/29 17:53:05  sll
   Replaced gatekeeper with serverTransportRule to determine whether a
   connection should be accepted.
@@ -156,17 +159,17 @@ giopWorker::execute() {
   CORBA::Boolean done = pd_singleshot;
 
   do {
+    {
+      GIOP_S_Holder iops_holder(pd_strand,this);
 
-    GIOP_S_Holder iops_holder(pd_strand,this);
-
-    GIOP_S* iop_s = iops_holder.operator->();
-    if (iop_s) {
-      exit_on_error = !iop_s->dispatcher();
+      GIOP_S* iop_s = iops_holder.operator->();
+      if (iop_s) {
+	exit_on_error = !iop_s->dispatcher();
+      }
+      else {
+	exit_on_error = 1;
+      }
     }
-    else {
-      exit_on_error = 1;
-    }
-
     pd_server->notifyWkDone(this,exit_on_error);
 
   } while(!(done || exit_on_error));
