@@ -139,7 +139,7 @@ dnl ** Platform name
 
 plat_name="Platform_Unknown"
 plat_def="__unknown_platform__"
-os_version="0"
+os_v="0"
 
 case "$host" in
   *-*-linux-*)   plat_name="Linux";    plat_def="__linux__";    os_v="2";;
