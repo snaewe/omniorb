@@ -1,3 +1,23 @@
+
+Tue Jan 12 15:19:17 GMT 1999 tjr
+================================
+
+Initial check-in of new java rules and first beta version of omniORBj.
+
+mk/java.mk				- NEW FILE
+mk/beforedir.mk				- delete BJH's java stuff and include
+					  new java.mk
+mk/afterdir.mk				- new java stub rule + improve IDL
+					  "not found" rule
+mk/unix.mk				- change clean rules for java
+mk/platforms/i586_linux_2.0_glibc.mk	- new java stuff
+mk/platforms/sun4_sosV_5.5.mk		- new java stuff
+mk/platforms/sun4_sosV_5.6.mk		- new java stuff
+
+src/lib/dir.mk			- build omniORBj on i586_linux_2.0_glibc
+src/lib/omniORBj		- NEW DIRECTORY
+
+
 Tue Jan 12 11:12:52 GMT 1999 djr
 ================================
 
