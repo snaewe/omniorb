@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16.2.2  2000/09/27 17:53:27  sll
+  Updated to identify the ORB as omniORB4.
+
   Revision 1.16.2.1  2000/07/17 10:35:51  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -85,9 +88,9 @@
 */
 
 #define ENABLE_CLIENT_IR_SUPPORT
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #include <corbaBoa.h>
-#include <omniORB3/callDescriptor.h>
+#include <omniORB4/callDescriptor.h>
 #include <localIdentity.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
@@ -100,10 +103,10 @@
 #define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
 #endif
 
-
-#define MY_BOA_ID                      "omniORB3_BOA"
-#define OLD_BOA_ID                     "omniORB2_BOA"
-
+static const char* boa_ids[] = { "omniORB4_BOA",
+			       "omniORB3_BOA", 
+			       "omniORB2_BOA", 
+			       0 };
 
 static omniOrbBOA*                       the_boa = 0;
 static omni_tracedmutex                  boa_lock;
@@ -625,7 +628,8 @@ omniOrbBOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
-    l << "Dispatching remote call \'" << giop_s.operation() << "\' to: "
+    l << "Dispatching remote call \'" 
+      << (const char*) giop_s.invokeInfo().operation() << "\' to: "
       << id << '\n';
   }
 
@@ -653,7 +657,7 @@ omniOrbBOA::dispatch(GIOP_S& giop_s, const CORBA::Octet* key, int keysize)
   CORBA::Object_ptr obj = loader(k);
 
   if( CORBA::is_nil(obj) )  CORBA::OBJECT_NOT_EXIST(0, CORBA::COMPLETED_NO);
-  else                      throw omniORB::LOCATION_FORWARD(obj);
+  else                      throw omniORB::LOCATION_FORWARD(obj,0);
 }
 
 
@@ -696,7 +700,7 @@ omniOrbBOA::objectExists(const _CORBA_Octet* key, int keysize)
 
   CORBA::Object_ptr obj = loader(k);
 
-  if( !CORBA::is_nil(obj) )  throw omniORB::LOCATION_FORWARD(obj);
+  if( !CORBA::is_nil(obj) )  throw omniORB::LOCATION_FORWARD(obj,0);
 
   return 0;
 }
@@ -902,7 +906,7 @@ omniOrbBoaServant::_this(const char* repoId)
     id = omni::locateIdentity((const CORBA::Octet*) &pd_key,
 			      sizeof(omniOrbBoaKey), hash, 1);
 
-  omniObjRef* objref = omni::createObjRef(_mostDerivedRepoId(), repoId, id);
+  omniObjRef* objref = omni::createObjRef(_mostDerivedRepoId(),repoId, id);
   omni::internalLock->unlock();
 
   OMNIORB_ASSERT(objref);
@@ -931,7 +935,7 @@ omniOrbBoaServant::_do_get_interface()
 
   // Make a call to the interface repository.
   omniStdCallDesc::_cCORBA_mObject_i_cstring
-    call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, 0, repoId);
+    call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, repoId);
   repository->_PR_getobj()->_invoke(call_desc);
 
   return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
@@ -940,6 +944,23 @@ omniOrbBoaServant::_do_get_interface()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+
+static
+CORBA::Boolean
+isValidId(const char* id) {
+  const char** p = boa_ids;
+  while (*p) {
+    if (strcmp(*p,id) == 0) return 1;
+    p++;
+  }
+  return 0;
+}
+
+static
+const char*
+myBoaId() {
+  return boa_ids[0];
+}
 
 static
 void
@@ -960,18 +981,21 @@ CORBA::Boolean
 parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
 {
   CORBA::Boolean orbId_match = 0;
-  if( orb_identifier && strcmp(orb_identifier, MY_BOA_ID)
-                     && strcmp(orb_identifier, OLD_BOA_ID) ) {
+  if( orb_identifier && !isValidId(orb_identifier) ) {
     if( omniORB::trace(1) ) {
       omniORB::logger l;
       l << "BOA_init failed -- the BOAid (" << orb_identifier << ")"
-	" is not " << MY_BOA_ID << "\n";
+	" is not " <<  myBoaId() << "\n";
     }
     return 0;
   }
-  if( omniORB::trace(1) && !strcmp(orb_identifier, OLD_BOA_ID) )
-    omniORB::logs(1, "WARNING -- using BOAid " OLD_BOA_ID
-		  " (should be " MY_BOA_ID ").");
+  if( omniORB::trace(1) && strcmp(orb_identifier, myBoaId()) ) {
+    if( omniORB::trace(1) ) {
+      omniORB::logger l;
+      l << "WARNING -- using BOAid " << orb_identifier 
+	<< " (should be " << myBoaId() << ")." << "\n";
+    }
+  }
 
   int idx = 1;
   while (argc > idx)
@@ -991,18 +1015,22 @@ parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
 	  omniORB::logs(1, "BOA_init failed: missing -BOAid parameter.");
 	  return 0;
 	}
-	if (strcmp(argv[idx+1], MY_BOA_ID) != 0)
+	if (!isValidId(argv[idx+1]) )
 	  {
 	    if ( omniORB::trace(1) ) {
 	      omniORB::logger l;
 	      l << "BOA_init failed -- the BOAid (" <<
-		argv[idx+1] << ") is not " << MY_BOA_ID << "\n";
+		argv[idx+1] << ") is not " << myBoaId() << "\n";
 	    }
 	    return 0;
 	  }
-	if( !strcmp(argv[idx + 1], OLD_BOA_ID) )
-	  omniORB::logs(1, "WARNING -- using BOAid " OLD_BOA_ID
-			" (should be " MY_BOA_ID ").");
+	if( strcmp(argv[idx + 1], myBoaId()) ) {
+	  if( omniORB::trace(1) ) {
+	    omniORB::logger l;
+	    l << "WARNING -- using BOAid " << orb_identifier 
+	      << " (should be " << myBoaId() << ")." << "\n";
+	  }
+	}
 	orbId_match = 1;
 	move_args(argc,argv,idx,2);
 	continue;
@@ -1087,7 +1115,7 @@ parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
 	omniORB::logger l;
 	l <<
 	  "Valid -BOA<options> are:\n"
-	  "    -BOAid omniORB3_BOA\n"
+	  "    -BOAid omniORB4_BOA\n"
 	  "    -BOAiiop_port <port no.>[,<port no>]*\n"
 	  "    -BOAiiop_name_port <hostname[:port no.]>\n"
 	  "    -BOAno_bootstrap_agent\n";
