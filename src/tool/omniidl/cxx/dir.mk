@@ -53,7 +53,7 @@ ifdef Linux
 CXXOPTIONS += -fpic
 
 DIR_CPPFLAGS += -DCPP_LOCATION="\"/lib/cpp\"" \
-                -DCPP_FLAGS="\"--lang-c++ -undef\""
+                -DCPP_FLAGS="\"-lang-c++ -undef\""
 
 libname = _omniidlmodule.so
 soname = $(libname).$(IDLMODULE_MAJOR)
