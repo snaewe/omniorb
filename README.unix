@@ -129,11 +129,11 @@ Configuration
       NAMESERVICE IOR:00fff71c0000002849444c3a6f6d672e6f72672f436f734e616d696e672f4e616d696e67436f6e746578743a312e300000000001000000000000002c0001000000000012776962626c652e776f62626c652e636f6d0004d20000000c34c35a8305a931a200000001
 
     o Since 2.6.0, an alternative way set up omniORB.cfg is as follows:
-         If omniNames has been started on host wobble and port 1234,
+         If omniNames has been started on host wobble and port 12345,
          add to omniORB.cfg the following lines:
 
       ORBInitialHost wobble
-      ORBInitialPort 1234
+      ORBInitialPort 12345
 
       Any omniORB2 clients of release 2.6.0 or later is able to use this
       information to locate the root context of the Naming Service. 
