@@ -2,21 +2,22 @@ Release Notes for omniORB 3.0.1 (18 Aug 2000)
 ===============================
 
 This is a minor release since omniORB 3.0.0. The release notes of the last
-major release, i.e. 3.0.0, is at the end of this file.
+major release, i.e. 3.0.0, are at the end of this file.
 
 Changes since 3.0.0:
 
-  1. Bug fixes. The list of bugs fixed since 3.0.0 can be found by following
-     the links at:
+  1. Bug fixes. The list of bugs fixed since 3.0.0 can be found by
+     following the links at:
 
         http://www.uk.research.att.com/omniORB/omniORBbug.html
 
 
   2. New COS stub library. A new library is added to this release. The
-     library contains the stubs for a subset of the COS (common object 
-     services) IDLs. In fact, the complete set of COS IDLs can be built
-     but only a subset is enabled by default. To add extra COS IDLs, simply
-     edit the makefile in <top>/src/services/mklib and rebuild from source.
+     library contains the stubs for a subset of the COS (common object
+     services) IDLs. In fact, the complete set of COS IDLs can be
+     built but only a subset is enabled by default. To add extra COS
+     IDLs, simply edit the makefile in <top>/src/services/mklib and
+     rebuild from source.
 
      The stub library is built by default for all platforms except for
      openVMS (pending build files update) and embedded systems.
@@ -24,11 +25,13 @@ Changes since 3.0.0:
      The addition is to prepare for the release of future COS services 
      running on top of omniORB.
 
-  3. Partial longlong support. You can use long longs in static types, 
-     but you cannot insert them into Anys for the moment. The IDL compiler
-     will refuse to create the DynSK stubs for IDL containing long longs,
-     so you cannot use the -Wba option.Long long is only available if 
-     your C++ compiler has native support for 64-bit types. 
+  3. Partial longlong support. You can use long longs in static types,
+     but you cannot insert them into Anys for the moment (since that
+     would break binary compatibility with the dynamic library). The
+     IDL compiler will refuse to create the DynSK stubs for IDL
+     containing long longs, so you cannot use the -Wba option. Long
+     long is only available if your C++ compiler has native support
+     for 64-bit types.
 
   4. Shared runtime version number change
 

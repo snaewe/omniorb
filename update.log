@@ -1,3 +1,11 @@
+Fri Aug 18 14:09:22 BST 2000 dpg1
+=================================
+
+- Note about why long long is not supported in Anys
+
+external_merge/ReleaseNote_omniORB_301
+
+
 Fri Aug 18 13:35:26 BST 2000 sll
 ================================
 
@@ -16,6 +24,7 @@ external_merge/ReleaseNote_omniORB_301
 bugfixes-300.xml
 bugfixes.xml
 bugfixes.xsl
+
 
 Fri Aug 18 13:11:36 BST 2000 dme
 ================================
