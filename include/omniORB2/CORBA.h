@@ -31,6 +31,9 @@
 
 /*
  $Log$
+ Revision 1.24  1998/08/15 14:22:04  sll
+ Remove inline member implementations in _nil_TypeCode and IRObject.
+
  Revision 1.23  1998/08/05 18:10:39  sll
  Added DynAny.
 
@@ -1084,71 +1087,10 @@ typedef _CORBA_Double  Double;
     dk_Primitive, dk_String, dk_Sequence, dk_Array, dk_Repository 
   };
 
-  _CORBA_MODULE_OP inline void operator>>= (DefinitionKind _e,NetBufferedStream &s) {
-    ::operator>>=((CORBA::ULong)_e,s);
-  }
-
-  _CORBA_MODULE_OP inline void operator<<= (DefinitionKind &_e,NetBufferedStream &s) {
-    CORBA::ULong _0RL_e;
-    _0RL_e <<= s;
-    switch (_0RL_e) {
-      case dk_none:
-      case dk_all:
-      case dk_Attribute:
-      case dk_Constant:
-      case dk_Exception:
-      case dk_Interface:
-      case dk_Module:
-      case dk_Operation:
-      case dk_Typedef:
-      case dk_Alias:
-      case dk_Struct:
-      case dk_Union:
-      case dk_Enum:
-      case dk_Primitive:
-      case dk_String:
-      case dk_Sequence:
-      case dk_Array:
-      case dk_Repository:
-        _e = (DefinitionKind) _0RL_e;
-        break;
-      default:
-        _CORBA_marshal_error();
-    }
-  }
-
-  _CORBA_MODULE_OP inline void operator>>= (DefinitionKind _e,MemBufferedStream &s) {
-    ::operator>>=((CORBA::ULong)_e,s);
-  }
-
-  _CORBA_MODULE_OP inline void operator<<= (DefinitionKind &_e,MemBufferedStream &s) {
-    CORBA::ULong _0RL_e;
-    _0RL_e <<= s;
-    switch (_0RL_e) {
-      case dk_none:
-      case dk_all:
-      case dk_Attribute:
-      case dk_Constant:
-      case dk_Exception:
-      case dk_Interface:
-      case dk_Module:
-      case dk_Operation:
-      case dk_Typedef:
-      case dk_Alias:
-      case dk_Struct:
-      case dk_Union:
-      case dk_Enum:
-      case dk_Primitive:
-      case dk_String:
-      case dk_Sequence:
-      case dk_Array:
-      case dk_Repository:
-        _e = (DefinitionKind) _0RL_e;
-        break;
-      default:
-        _CORBA_marshal_error();
-    }
-  }
+  _CORBA_MODULE_OP void operator>>= (DefinitionKind _e,NetBufferedStream &s);
+  _CORBA_MODULE_OP void operator<<= (DefinitionKind &_e,NetBufferedStream &s);
+  _CORBA_MODULE_OP void operator>>= (DefinitionKind _e,MemBufferedStream &s);
+  _CORBA_MODULE_OP void operator<<= (DefinitionKind &_e,MemBufferedStream &s);
 
   
   class IRObject;
@@ -1160,31 +1102,12 @@ typedef _CORBA_Double  Double;
 
     // Not implemented yet - used by IR
 
-    virtual ~IRObject() {}
-
-    virtual DefinitionKind def_kind() {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return dk_none;
-    }
-
-    virtual void destroy() {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-    }
-
-    static IRObject_ptr _duplicate(IRObject_ptr obj) {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return 0;
-    }
-      
-    static IRObject_ptr _narrow(Object_ptr obj) {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return 0;
-    }
-
-    static IRObject_ptr _nil() {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return 0;
-    }
+    virtual ~IRObject();
+    virtual DefinitionKind def_kind();
+    virtual void destroy();
+    static IRObject_ptr _duplicate(IRObject_ptr obj);
+    static IRObject_ptr _narrow(Object_ptr obj);
+    static IRObject_ptr _nil();
 
   protected:
     IRObject() { }
@@ -1524,7 +1447,11 @@ typedef _CORBA_Double  Double;
     static TypeCode_ptr _duplicate(TypeCode_ptr t);
     static TypeCode_ptr _nil();
 
+#ifdef HAS_Cplusplus_Namespace
+    friend class ::tcParseEngine;
+#else
     friend class tcParseEngine;
+#endif
     friend class Any;
 
   private:
@@ -1551,92 +1478,18 @@ typedef _CORBA_Double  Double;
     virtual ~_nil_TypeCode() {}
 
     virtual Boolean NP_is_nil() const;
-
-    // OMG interface:
-
-    const char* id () const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      char * _result= 0;
-      return _result;
-    }
-
-    const char* name () const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      char * _result= 0;
-      return _result;
-    }
-
-    ULong member_count () const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      ULong _result = 0;
-      return _result;
-    }
-
-    const char* member_name(ULong index) const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      char * _result= 0;
-      return _result;
-    }
-
-    TypeCode_ptr member_type(ULong index) const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      TypeCode_ptr _result= 0;
-      return _result;
-    }
-
-    Any* member_label(ULong index) const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      Any * _result= 0;
-      return _result;
-    }
-
-    TypeCode_ptr discriminator_type() const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      TypeCode_ptr _result= 0;
-      return _result;
-    }
-
-    Long  default_index() const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      Long _result = 0;
-      return _result;
-    }
-
-    ULong length() const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      ULong _result = 0;
-      return _result;
-    }
-
-    TypeCode_ptr content_type() const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      TypeCode_ptr _result= 0;
-      return _result;
-    }
-
-    Long param_count() const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      Long _result = 0;
-      return _result;
-    }
-
-    Any* parameter(Long index) const {
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      Any * _result= 0;
-      return _result;
-    }
+    const char* id () const;
+    const char* name () const;
+    ULong member_count () const;
+    const char* member_name(ULong index) const;
+    TypeCode_ptr member_type(ULong index) const;
+    Any* member_label(ULong index) const;
+    TypeCode_ptr discriminator_type() const;
+    Long  default_index() const;
+    ULong length() const;
+    TypeCode_ptr content_type() const;
+    Long param_count() const;
+    Any* parameter(Long index) const;
   };
 
 
