@@ -72,7 +72,7 @@ else
 DIR_CPPFLAGS += -D__OMNIORB__
 endif
 
-ifeq($(CXX),CC)
+ifeq ($(CXX),CC)
 CXXDEBUGFLAGS = -fast
 endif
 
