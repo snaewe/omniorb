@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.15  1999/07/02 19:14:16  sll
+  Typedef of a typedef of an enum now translates to a C++ typedef of a
+  typedef.
+
   Revision 1.14  1999/06/18 20:47:12  sll
   Updated to use _dyn_attr.
 
@@ -293,7 +297,8 @@ o2be_enum::produce_binary_operators_in_dynskel(std::fstream &s)
 void
 o2be_enum::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 {
-  IND(s); s << "typedef " << unambiguous_name(tdef) 
+  IND(s); s << "typedef " 
+	    << o2be_name::narrow_and_produce_unambiguous_name(tdef->base_type(),tdef) 
 	    << " " << tdef->uqname() << ";\n";
 }
 
