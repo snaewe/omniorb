@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.14.2.7  2004/10/18 02:44:37  dgrisby
+# New -Wbdll_includes option.
+#
 # Revision 1.14.2.6  2002/09/03 09:32:57  dgrisby
 # C++ back-end bails out if asked to compile more than one file.
 #
@@ -123,6 +126,9 @@ class ConfigurationState:
 
             # Generate local servant shortcut code?
             'Shortcut':              0,
+
+            # Extra ifdefs for stubs in dlls?
+            'DLLIncludes':           0,
 
             # Are we in DEBUG mode?
             'Debug':                 0

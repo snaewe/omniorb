@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.7  2004/10/18 02:44:37  dgrisby
+# New -Wbdll_includes option.
+#
 # Revision 1.14.2.6  2003/01/22 12:10:55  dgrisby
 # Explicitly close files in C++ backend.
 #
@@ -187,6 +190,16 @@ def monolithic(stream, tree):
 
     header(stream, guard)
 
+    # Extra DLL include stuff?
+    if config.state['DLLIncludes']:
+        sub_include_pre  = output.StringStream()
+        sub_include_post = output.StringStream()
+        sub_include_pre .out(template.sub_include_pre,  guard=guard)
+        sub_include_post.out(template.sub_include_post, guard=guard)
+    else:
+        sub_include_pre  = ""
+        sub_include_post = ""
+
     # Add in any direct C++ from toplevel pragma if present
     cxx_direct_include = []
     directive = "hh "
@@ -280,7 +293,9 @@ def monolithic(stream, tree):
                other_tie = other_tie,
                operators = main_opers,
                marshalling = main_marshal,
-               guard = guard)
+               guard = guard,
+               sub_include_pre = sub_include_pre,
+               sub_include_post = sub_include_post)
 
 
 def run(tree):

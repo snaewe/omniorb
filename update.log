@@ -1,3 +1,31 @@
+Mon Oct 18 03:32:55 BST 2004 dgrisby
+====================================
+
+- Document packaging stubs in DLLs.
+
+ReleaseNotes_4.0.5.txt
+bin/scripts/makedeffile.py
+doc/omniORB.pdf
+doc/omniORB.ps
+doc/omniORB/index.html
+doc/omniORB/omniORB001.html
+doc/omniORB/omniORB002.html
+doc/omniORB/omniORB003.html
+doc/omniORB/omniORB004.html
+doc/omniORB/omniORB006.html
+doc/omniORB/omniORB012.html
+doc/omniORB/omniORB013.html  -- new
+doc/tex/omniORB.bib
+doc/tex/omniORB.tex
+
+- New -Wbdll_includes option.
+
+src/lib/omniORB/omniidl_be/cxx/__init__.py
+src/lib/omniORB/omniidl_be/cxx/config.py
+src/lib/omniORB/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+
 Mon Oct 18 01:43:33 BST 2004 dgrisby
 ====================================
 

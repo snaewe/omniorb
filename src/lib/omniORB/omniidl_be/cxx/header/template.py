@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.24  2004/10/18 02:44:37  dgrisby
+# New -Wbdll_includes option.
+#
 # Revision 1.5.2.23  2004/07/29 10:36:34  dgrisby
 # Bug with unmarshalling unions with multiple case labels.
 #
@@ -209,9 +212,10 @@ main = """\
 # define USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
 #endif
 
+@sub_include_pre@
 @cxx_direct_include@
-
 @includes@
+@sub_include_post@
 
 #ifdef USE_stub_in_nt_dll
 #ifndef USE_core_stub_in_nt_dll
@@ -269,6 +273,27 @@ main = """\
 #endif
 
 #endif  // __@guard@_hh__
+"""
+
+
+sub_include_pre = """\
+#ifdef INCLUDED_stub_in_nt_dll
+# ifdef USE_stub_in_nt_dll
+#  error "cannot use both INCLUDED_stub_in_nt_dll and USE_stub_in_nt_dll."
+# else
+#  define USE_stub_in_nt_dll
+# endif
+# define INCLUDED_stub_in_nt_dll_DEFINED_@guard@
+# undef INCLUDED_stub_in_nt_dll
+#endif
+"""
+
+sub_include_post = """\
+#ifdef INCLUDED_stub_in_nt_dll_DEFINED_@guard@
+# undef USE_stub_in_nt_dll
+# define INCLUDED_stub_in_nt_dll 
+# undef INCLUDED_stub_in_nt_dll_DEFINED_@guard@
+#endif
 """
 
 main_include = """\
