@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.18  1999/06/26 18:08:17  sll
+  HPUX update to separate difference between HPUX 10.20 and HPUX 11.00.
+
   Revision 1.17  1999/03/11 16:25:54  djr
   Updated copyright notice
 
@@ -131,6 +134,21 @@ again:
 
 #elif defined(__hpux__)
 
+# if __OSVERSION__ >= 11
+  // gethostbyname is thread safe and reentrant under HPUX 11.00
+  struct hostent *hp;
+  if ((hp = ::gethostbyname(name)) == NULL) {
+    rc = errno;
+    return -1;
+  }
+  else {
+    // the hostent_var object needs a dummy buffer here otherwise
+    // the hostent() member returns NULL
+    if (h.pd_buffer == NULL)
+      h.pd_buffer = new char[0];
+    h.pd_ent = *hp;
+  }
+# else
   // Use gethostbyname_r() on HPUX 10.20
   //  int gethostbyname_r(const char *name, struct hostent *result, 
   //                       struct hostent_data *buffer);
@@ -144,6 +162,7 @@ again:
     rc = h_errno;  // Error
     return -1;
   }
+# endif
   
 #else
 
