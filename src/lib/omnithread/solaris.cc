@@ -95,10 +95,14 @@ omni_condition::timedwait(unsigned long secs, unsigned long nanosecs)
 {
     timespec rqts = { secs, nanosecs };
 
+ again:
     int rc = cond_timedwait(&sol_cond, &mutex->sol_mutex, &rqts);
 
     if (rc == 0)
 	return 1;
+
+    if (rc == EINTR)
+        goto again;
 
     if (rc == ETIME)
 	return 0;
@@ -493,8 +497,16 @@ void
 omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 {
     timespec rqts = { secs, nanosecs };
-    if (nanosleep(&rqts, (timespec*)NULL) != 0)
+    timespec remain;
+    while (nanosleep(&rqts, &remain)) {
+      if (errno == EINTR) {
+	rqts.tv_sec  = remain.tv_sec;
+	rqts.tv_nsec = remain.tv_nsec;
+	continue;
+      }
+      else
 	throw omni_thread_fatal(errno);
+    }
 }
 
 
