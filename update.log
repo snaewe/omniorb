@@ -1,3 +1,20 @@
+Fri Jun 25 14:55:48 BST 1999 sll
+================================
+
+- Rename compatibility flag copyStringInAnyExtraction to
+  omniORB_27_CompatibleAnyExtraction.
+- Changed Any extraction for object reference and to_string to non-copy.
+  Again the semantics can be changed back to pre-2.8.0's by setting
+  omniORB_27_CompatibleAnyExtraction.
+- removed bogus operator Any::operator>>=(Object_ptr&)
+
+include/omniORB2/CORBA.h
+include/omniORB2/omniORB.h
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/context.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Wed Jun 23 10:55:25 BST 1999 sll
 ================================
 
