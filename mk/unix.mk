@@ -139,7 +139,7 @@ OMNIASYNCINVOKER_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIASYNCINVOKER_VERSION
 
 OMNIASYNCINVOKER_LIB = $(patsubst %,$(LibSearchPattern),omniAsyncInvoker)
 lib_depend := $(patsubst %,$(LibPattern),omniAsyncInvoker)
-OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+OMNIASYNCINVOKER_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 
 #
@@ -221,10 +221,14 @@ OMNIORB_LIB_DEPEND += $(OMNITHREAD_LIB_DEPEND)
 OMNIORB_LIB_NODYN_DEPEND += $(OMNITHREAD_LIB_DEPEND)
 
 
-# LifeCycle stuff
-
-OMNIORB_IDL_LC_FLAGS = -l
-OMNIORB_LC_LIB = $(patsubst %,$(LibSearchPattern),omniLC)
+# omniORB SSL transport
+OMNIORB_SSL_VERSION = $(OMNIORB_VERSION)
+OMNIORB_SSL_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_SSL_VERSION)))
+OMNIORB_SSL_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_SSL_VERSION)))
+OMNIORB_SSL_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_SSL_VERSION)))
+OMNIORB_SSL_LIB = $(patsubst %,$(LibSearchPattern),omnisslTP$(OMNIORB_SSL_MAJOR_VERSION))
+lib_depend := $(patsubst %,$(LibPattern),omnisslTP$(OMNIORB_SSL_MAJOR_VERSION))
+OMNIORB_SSL_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 #
 # Tcl stuff
