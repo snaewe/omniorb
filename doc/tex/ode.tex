@@ -790,6 +790,17 @@ be created at the top level of the build tree.  The IDL compiler is invoked for
 each of the IDL files (in this case {\tt wib.idl} and {\tt wob.idl}), and the
 stubs generated are compiled and linked in to your executable binary.
 
+If your program does not use any of the dynamic features of CORBA
+(ie. \verb|Any|, \verb|TypeCode|, \verb|DynAny| or the \emph{Dynamic
+Invocation Interface} or \emph{Dynamic Skeleton Interface}) then it is
+possible to build a binary without this code:
+\begin{itemize}
+\item use \verb|CORBA_STATIC_STUB_OBJS| rather than \verb|CORBA_STUB_OBJS| in
+the dependency list.
+\item specify \verb|CORBA_LIB_NODYN| as the CORBA library instead of
+\verb|CORBA_LIB|.
+\end{itemize}
+
 For each platform there should be a default implementation of CORBA to which
 the {\tt CorbaImplementation} variable is set. At present this is 
 {\tt OMNIORB2} on Solaris, Digital UNIX, Linux, ATMos and
