@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.12  2004/07/29 10:36:34  dgrisby
+# Bug with unmarshalling unions with multiple case labels.
+#
 # Revision 1.29.2.11  2004/07/23 14:07:04  dgrisby
 # Subtly incorrect generated code for arrays.
 #
@@ -500,20 +503,21 @@ def visitUnion(node):
                 unmarshal_cases.out("default:")
             else:
                 unmarshal_cases.out("case " + discrim_value + ":")
-
                 marshal_cases.out("case " + discrim_value + ":")
+
                 marshal_cases.inc_indent()
                 skutil.marshall(marshal_cases, environment,
                                 caseType, decl, "_pd_" + decl_name, "_n")
-                marshal_cases.dec_indent()
                 marshal_cases.out("break;")
+                marshal_cases.dec_indent()
 
             unmarshal_cases.inc_indent()
             unmarshal_cases.out("_pd__default = " + str(isDefault) + ";")
             skutil.unmarshall(unmarshal_cases, environment,
                               caseType, decl, "_pd_" + decl_name, "_n")
-            unmarshal_cases.dec_indent()
+            unmarshal_cases.out("_pd__initialised = 1;")
             unmarshal_cases.out("break;")
+            unmarshal_cases.dec_indent()
 
     if not hasDefault and not exhaustive:
         unmarshal_cases.out("default: _pd__default = 1; break;")

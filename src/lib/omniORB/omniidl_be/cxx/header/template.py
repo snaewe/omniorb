@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.23  2004/07/29 10:36:34  dgrisby
+# Bug with unmarshalling unions with multiple case labels.
+#
 # Revision 1.5.2.22  2004/07/23 14:07:04  dgrisby
 # Subtly incorrect generated code for arrays.
 #
@@ -989,13 +992,13 @@ friend class ::@private_prefix@_tcParser_unionhelper_@name@;
 #endif
 """
 
-union_proxy_float = """\
+union_proxy_float = """
 #ifdef USING_PROXY_FLOAT
   @type@ _pd_@name@@dims@;
 #endif
 """
 
-union_noproxy_float = """\
+union_noproxy_float = """
 #ifndef USING_PROXY_FLOAT
   @type@ _pd_@name@@dims@;
 #endif

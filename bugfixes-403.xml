@@ -8,6 +8,16 @@
 
 <buglist version="4.0.3">
 
+<bug id="9" date="Thu Jul 29 11:32:51 BST 2004" user="dgrisby">
+  <summary>Unions with multiple cases not properly unmarshalled</summary>
+  <reported>Martin Laporte</reported>
+  <text>
+  When a union with multiple case labels for a single member was
+  unmarshalled, its internal initialised flag was not correctly set,
+  meaning the receiver could not change the case label as they should
+  be able to.
+  </text>
+</bug>
 
 <bug id="8" date="Thu Jul  1 20:01:13 BST 2004" user="dgrisby">
   <summary>Fixed point broken</summary>

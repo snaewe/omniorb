@@ -1,3 +1,17 @@
+Thu Jul 29 11:34:45 BST 2004 dgrisby
+====================================
+
+- Final (?) version of the spec file for 4.0.4.
+
+contrib/RPMs/omniORB.spec
+
+- Bug with unmarshalling unions with multiple case labels.
+
+bugfixes-403.xml
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+
+
 Mon Jul 26 14:42:16 BST 2004 dgrisby
 ====================================
 
