@@ -1204,6 +1204,15 @@ public:
     return *( (const T*) (pd_data + index_));
   }
 
+#if defined(__GNUG__) && __GNUG__ == 3 && __GNUC_MINOR__ >= 4
+  // g++ thinks the operators with ULong arguments are ambiguous when
+  // used with int literals. This sorts it out.
+  inline T& operator[] (int index_) { return *(pd_data + index_); }
+  inline const T& operator[] (int index_) const {
+    return *( (const T*) (pd_data + index_));
+  }
+#endif
+
   inline operator T* () const             { return pd_data; }
   // inline operator const T* () const       { return (const T*)pd_data; }
   // No need for const operator, and it upsets gcc.
