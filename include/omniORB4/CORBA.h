@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.10  2001/01/08 12:35:41  dpg1
+ _duplicate in CORBA::Object::_narrow
+
  Revision 1.2.2.9  2000/11/20 14:40:03  sll
  Added TypeCode::PR_wstring_tc(CORBA::ULong bound).
 
@@ -1618,7 +1621,7 @@ _CORBA_MODULE_BEG
     ULong           _hash(ULong maximum);
 
     static _ptr_type        _duplicate(_ptr_type);
-    static inline _ptr_type _narrow(Object_ptr o) { return o; }
+    static inline _ptr_type _narrow(Object_ptr o) { return _duplicate(o); }
     static _ptr_type        _nil();
 
     //////////////////////
