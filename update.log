@@ -1,3 +1,16 @@
+Thu Sep 23 20:04:22 BST 1999 sll
+===============================
+
+- Added static functions stacksize() in the omnithread library to control
+  the stack size when spawning a new thread.
+
+include/omnithread.h
+
+src/lib/omnithread/posix.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/solaris.cc
+src/lib/omnithread/mach.cc
+
 
 Thu Sep 23 17:43:53 BST 1999 djr
 ================================

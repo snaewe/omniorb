@@ -445,6 +445,13 @@ public:
 	// use in timed_waits on condition variables, which is the current time
 	// plus the given relative offset.
 
+
+    static void stacksize(unsigned long sz=0);
+    static unsigned long stacksize();
+        // Use this value as the stack size when spawning a new thread.
+        // The default value (0) means that the thread library default is
+        // to be used.
+
 private:
 
     virtual void run(void* arg) {}
