@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/06/29 16:26:01  dpg1
+  Reinstate tracing messages for new connections and handling locate
+  requests.
+
   Revision 1.1.2.3  2001/06/20 18:35:16  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -348,6 +352,10 @@ tcpConnection::tcpConnection(tcpSocketHandle_t sock) : pd_socket(sock) {
   }
   pd_peeraddress = ip4ToString((CORBA::ULong)addr.sin_addr.s_addr,
 			       (CORBA::UShort)addr.sin_port,"giop:tcp:");
+  if (omniORB::trace(5)) {
+    omniORB::logger l;
+    l << "connect from " << pd_peeraddress << "\n";
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////

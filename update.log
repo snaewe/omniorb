@@ -1,3 +1,22 @@
+Fri Jun 29 17:23:00 BST 2001 dpg1
+=================================
+
+- Support re-entrancy in single thread policy POAs.
+
+src/lib/omniORB/include/poaimpl.h
+src/lib/omniORB/include/rmutex.h      -- NEW
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/rmutex.cc     -- NEW
+
+- Reinstate tracing messages for new connections and handling locate
+  requests.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+
+
 Tue Jun 26 14:36:44 BST 2001 sll
 ================================
 

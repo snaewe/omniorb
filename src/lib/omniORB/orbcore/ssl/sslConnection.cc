@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/06/29 16:26:01  dpg1
+  Reinstate tracing messages for new connections and handling locate
+  requests.
+
   Revision 1.1.2.3  2001/06/26 13:38:45  sll
   Make ssl compiles with pre-0.9.6a OpenSSL
 
@@ -294,6 +298,10 @@ sslConnection::sslConnection(tcpSocketHandle_t sock,::SSL* ssl) :
   pd_peeraddress = tcpConnection::ip4ToString(
 			       (CORBA::ULong)addr.sin_addr.s_addr,
 			       (CORBA::UShort)addr.sin_port,"giop:ssl:");
+  if (omniORB::trace(5)) {
+    omniORB::logger l;
+    l << "connect from " << pd_peeraddress << "\n";
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////

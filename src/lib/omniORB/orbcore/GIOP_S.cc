@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/06/29 16:26:01  dpg1
+  Reinstate tracing messages for new connections and handling locate
+  requests.
+
   Revision 1.1.4.6  2001/05/31 16:18:12  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -353,6 +357,8 @@ GIOP_S::handleLocateRequest() {
     impl()->inputMessageEnd(this,0);
     
     pd_state = WaitingForReply;
+
+    omniORB::logs(10, "Handling a GIOP LOCATE_REQUEST.");
 
     GIOP::LocateStatusType status = GIOP::UNKNOWN_OBJECT;
 
