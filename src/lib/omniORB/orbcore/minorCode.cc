@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2004/12/20 18:09:48  dgrisby
+  Remove entry for obsolete WRONG_TRANSACTION exception.
+
   Revision 1.1.2.4  2004/05/05 21:04:01  dgrisby
   Change COMMA define to avoid clashes with other systems.
 
@@ -184,10 +187,6 @@ minorCodeLookup TRANSACTION_ROLLEDBACK_LookupTable[] = {
 };
 
 minorCodeLookup INVALID_TRANSACTION_LookupTable[] = { 
-  { 0, 0 } 
-};
-
-minorCodeLookup WRONG_TRANSACTION_LookupTable[] = { 
   { 0, 0 } 
 };
 
