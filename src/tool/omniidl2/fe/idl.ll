@@ -184,10 +184,23 @@ oneway		return ONEWAY;
 		  yylval.cval = idl_escape_reader(__yytext + 1);
 		  return CHARACTER_LITERAL;
 		}
-^#[ \t]*pragma[ \t].*\n	{/* remember pragma */
-  		  idl_global->set_lineno(idl_global->lineno() + 1);
+
+^[ \t]*#[ \t]*pragma[ \t]+version/[ \t]+[a-zA-Z\:][a-zA-Z0-9_\:]*[ \t]+[0-9]+\.[0-9]+[ \t]*\n {
+                   return PRAGMA_VERSION;
+                 }               
+
+^[ \t]*#[ \t]*pragma[ \t]+ID/[ \t]+[a-zA-Z\:][a-zA-Z0-9_\:]*[ \t]+"\""[^\"]*"\""[ \t]*\n {
+                    return PRAGMA_ID;
+		 }
+
+^[ \t]*#[ \t]*pragma[ \t]+prefix/[ \t]+"\""[^\"]*"\""[ \t]*\n {
+                     return PRAGMA_PREFIX;
+                 }
+
+^[ \t]*#[ \t]*pragma[ \t].*\n	{/* remember pragma */
 		  idl_store_pragma(__yytext);
 		}
+
 ^#[ \t]*[0-9]*" ""\""[^\"]*"\""" "[0-9]*\n		{
 		  idl_parse_line_and_file(__yytext);
 		}
@@ -222,7 +235,8 @@ oneway		return ONEWAY;
 		      if (next == '/')
 			break;
 		      else
-			yyunput(c);
+			/* yyunput(c); */
+			unput(c);
 	              if (c == '\n') 
 		        idl_global->set_lineno(idl_global->lineno() + 1);
 		    }
@@ -408,27 +422,68 @@ idl_store_pragma(char *buf)
     cp++;
   while(*cp == ' ' || *cp == '\t')
     cp++;
-  char pragma[80];
-  char *pp = pragma;
+
+  char *pp = cp;
+  while (*pp != '\n') pp++;
+  char* pragma = new char[pp-cp+1];
+  pp = pragma;
   while(*cp != '\n') {
     *pp++ = *cp++;
   }
   *pp = 0;
-  if (strcmp(pragma, "import") == 0) {
+  pp = strchr(pragma,' ');
+  if (!pp) pp = strchr(pragma,'\t');
+  if (strncmp(pragma,"version",7) == 0) {
+    if (!pp || pp == pragma + 7) {
+      idl_global->set_parse_state(IDL_GlobalData::PS_PragmaVersionSeen);
+      idl_global->err()->syntax_error(idl_global->parse_state());
+      idl_global->set_lineno(idl_global->lineno() + 1);
+      return;
+    }
+  }
+  else if (strncmp(pragma,"ID",2) == 0) {
+    if (!pp || pp == pragma + 2) {
+      idl_global->set_parse_state(IDL_GlobalData::PS_PragmaIDSeen);
+      idl_global->err()->syntax_error(idl_global->parse_state());
+      idl_global->set_lineno(idl_global->lineno() + 1);
+      return;
+    }
+  }
+  else if (strncmp(pragma,"prefix",6) == 0) {
+    if (!pp || pp == pragma + 6) {
+      idl_global->set_parse_state(IDL_GlobalData::PS_PragmaPrefixSeen);
+      idl_global->err()->syntax_error(idl_global->parse_state());
+      idl_global->set_lineno(idl_global->lineno() + 1);
+      return;
+    }
+  }
+  else if (strcmp(pragma, "import") == 0) {
     idl_global->set_import(I_TRUE);
     return;
   } 
-  if (strcmp(pragma, "include") == 0) {
+  else if (strcmp(pragma, "include") == 0) {
     idl_global->set_import(I_FALSE);
     return;
   }
+
   UTL_StrList *p = idl_global->pragmas();
   if (p == NULL)
-    idl_global->set_pragmas(new UTL_StrList(new String(buf), NULL));
+    idl_global->set_pragmas(new UTL_StrList(new String(""),
+	 	                            new UTL_StrList(new String(buf), 
+                                                           NULL
+                                                           )
+                                            )
+                            );
   else {
-    p->nconc(new UTL_StrList(new String(buf), NULL));
+    p->nconc(new UTL_StrList(new String(""),
+                             new UTL_StrList(new String(buf), 
+                                             NULL
+                                            )
+	                    )
+             );
     idl_global->set_pragmas(p);
   }
+  idl_global->set_lineno(idl_global->lineno() + 1);
 }
 
 /*

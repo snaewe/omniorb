@@ -83,6 +83,8 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 extern	"C" int yywrap();
 #endif
 
+extern char yytext[];
+
 %}
 
 /*
@@ -167,6 +169,10 @@ extern	"C" int yywrap();
 %token <strval>	SCOPE_DELIMITOR
 %token		LEFT_SHIFT
 %token		RIGHT_SHIFT
+
+%token          PRAGMA_ID
+%token          PRAGMA_VERSION
+%token          PRAGMA_PREFIX
 
 /*
  * These are production names:
@@ -279,6 +285,9 @@ definition
 	  idl_global->set_parse_state(IDL_GlobalData::PS_NoState);
 	  yyerrok;
 	}
+        | pragma_id
+        | pragma_version
+        | pragma_prefix
 	;
 
 module	: MODULE
@@ -2221,6 +2230,79 @@ string_literals
 	}
 	;
 
+pragma_version : PRAGMA_VERSION
+ 	{
+	  idl_global->set_parse_state(IDL_GlobalData::PS_PragmaVersionSeen);
+	}
+        scoped_name
+        {
+	  idl_global->set_parse_state(IDL_GlobalData::PS_ScopedNameSeen);
+        }
+        FLOATING_PT_LITERAL
+	{
+          UTL_Scope	*s = idl_global->scopes()->top_non_null();
+	  AST_Decl	*d = NULL;
+
+	  if (s != NULL)
+	    d = s->lookup_by_name($3, I_TRUE);
+	  if (d == NULL) {
+	    idl_global->err()->lookup_error($3);
+	  }
+	  else {
+	    d->add_pragmas(new UTL_StrList(new String("version"),
+					   new UTL_StrList(new String(yytext),
+							   NULL
+							   )
+					   )
+			   );
+	  }
+	}
+        ;
+
+pragma_id : PRAGMA_ID
+        {	
+	  idl_global->set_parse_state(IDL_GlobalData::PS_PragmaIDSeen);
+        }
+        scoped_name
+        {
+	  idl_global->set_parse_state(IDL_GlobalData::PS_ScopedNameSeen);
+        }
+	STRING_LITERAL
+        {
+          UTL_Scope	*s = idl_global->scopes()->top_non_null();
+	  AST_Decl	*d = NULL;
+
+	  if (s != NULL)
+	    d = s->lookup_by_name($3, I_TRUE);
+	  if (d == NULL) {
+	    idl_global->err()->lookup_error($3);
+	  }
+	  else {
+	    d->add_pragmas(new UTL_StrList(new String("ID"),
+					   new UTL_StrList(new String($5),
+							   NULL
+							   )
+					   )
+			   );
+	  }
+	}
+        ;
+
+pragma_prefix : PRAGMA_PREFIX
+        {
+	  idl_global->set_parse_state(IDL_GlobalData::PS_PragmaPrefixSeen);
+        }
+        STRING_LITERAL
+	{
+	  UTL_Scope *s = idl_global->scopes()->top_non_null();
+	  AST_Decl  *d = ScopeAsDecl(s);
+	  d->add_pragmas(new UTL_StrList(new String("prefix"),
+					 new UTL_StrList(new String($3),
+							 NULL
+							 )
+					 )
+			 );
+	}
 %%
 /* programs */
 
