@@ -1,3 +1,11 @@
+Thu Apr  9 15:44:26 BST 1998 tjr
+================================
+
+src/appl/omniNames/log.cc	      - fix minor memory leaks
+src/appl/omniNames/NamingContext_i.cc \ fix object ref release for rebind, etc
+src/appl/omniNames/ObjectBinding.h    / rptd by Saroj Mahapatra<saroj@Bear.COM>
+
+
 Wed Apr  8 17:02:05 BST 1998 sll
 ================================
 
