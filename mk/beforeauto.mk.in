@@ -43,6 +43,16 @@ INSTALLLIBDIR 	 := @libdir@
 INSTALLPYTHONDIR := @pythondir@
 INSTALLPYEXECDIR := @pyexecdir@
 
+#############################################################################
+#
+# Tool bindir to use depends on make target
+#
+ifeq ($(MAKECMDGOALS),install)
+  TOOLBINDIR = $(INSTALLBINDIR)
+else
+  TOOLBINDIR = $(TOP)/$(BINDIR)
+endif
+
 
 #############################################################################
 #
@@ -453,7 +463,7 @@ OMNIORB_DLL_NAME = $(patsubst %,$(LibSearchPattern),\
 OMNIORB_DYNAMIC_DLL_NAME = $(patsubst %,$(LibSearchPattern),\
                            omniDynamic$(OMNIORB_MAJOR_VERSION))
 
-OMNIORB_IDL_ONLY = $(TOP)/$(BINDIR)/omniidl -bcxx
+OMNIORB_IDL_ONLY = $(TOOLBINDIR)/omniidl -bcxx
 OMNIORB_IDL_ANY_FLAGS = -Wba
 OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
 OMNIORB_CPPFLAGS = -D__OMNIORB$(OMNIORB_MAJOR_VERSION)__ \
@@ -643,7 +653,7 @@ INSTEXEFLAGS	= -m 0755
 CP		= cp
 MV		= mv -f
 CPP		= @CPP@
-OMKDEPEND	= $(TOP)/$(BINDIR)/omkdepend
+OMKDEPEND	= $(TOOLBINDIR)/omkdepend
 RMDIRHIER	= $(RM) -rf
 
 CXXMAKEDEPEND   = $(OMKDEPEND) -D__cplusplus
@@ -877,6 +887,7 @@ IMPORT_CPPFLAGS += -D__irix__
 
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 \
 			    -DPthreadSupportThreadPriority
+OMNITHREAD_LIB += -lpthread
 
 # *** FIXME. How do we know what ABI to use?  Perhaps it has to be a
 # configure option?
@@ -942,8 +953,9 @@ endif
 ifdef FreeBSD
 IMPORT_CPPFLAGS += -D__freebsd__
 
-OMNITHREAD_CPPFLAGS = -D_REENTRANT -D_THREAD_SAFE -pthread
+OMNITHREAD_CPPFLAGS = -D_REENTRANT -D_THREAD_SAFE
 OMNITHREAD_POSIX_CPPFLAGS = -DUsePthread -DPthreadDraftVersion=10
+OMNITHREAD_LIB += -pthread
 endif
 
 ###################

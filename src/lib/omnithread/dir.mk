@@ -40,6 +40,10 @@ all:: mkstatic mkshared
 
 export:: mkstatic mkshared
 
+ifdef INSTALLTARGET
+install:: mkstatic mkshared
+endif
+
 vers := $(subst ., ,$(LIB_VERSION))
 ifeq ($(words $(vers)), 2)
   vers  := _ $(vers)
