@@ -122,8 +122,8 @@ extern "C" char * mktemp(char *);
 #endif
 
 #if defined(__nextstep__)
-#include <unistd.h>
-#include <wait.h>
+#include <sys/types.h>
+typedef int pid_t;
 #endif
 
 #ifdef __WIN32__
