@@ -191,9 +191,11 @@ endif
 
 ifdef AIX
 
-libname = libomnithread.so
-soname  = $(libname).$(minor_version)
-lib = $(soname).$(micro_version)
+libname = libomnithread$(minor_version).a
+soname  = libomnithread.so.$(minor_version).$(micro_version)
+lib = $(libname).$(micro_version)
+
+all:: $(lib)
 
 ifeq ($(notdir $(CXX)),xlC_r)
 
@@ -201,25 +203,13 @@ $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
         /usr/lpp/xlC/bin/makeC++SharedLib \
-             -o $@ $(IMPORT_LIBRARY_FLAGS) \
+             -o $(soname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) \
          -lC -lpthreads -lc_r -lc -p 40; \
+         ar cq $(lib) $(soname) ; \
+         $(RM) $(soname) ; \
        )
 
-all:: $(lib)
-
-clean::
-	$(RM) $(lib)
-
-export:: $(lib)
-	@$(ExportLibrary)
-	@(set -x; \
-          cd $(EXPORT_TREE)/$(LIBDIR); \
-          $(RM) $(soname); \
-          ln -s $(lib) $(soname); \
-          $(RM) $(libname); \
-          ln -s $(soname) $(libname); \
-         )
 endif
 
 ifeq ($(notdir $(CXX)),g++)
@@ -228,12 +218,14 @@ $(lib): $(OBJS)
 	(set -x; \
          $(RM) $@; \
          $(CXXLINK) -shared -mthreads \
-              -o $@ $(IMPORT_LIBRARY_FLAGS) \
-          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) ; \
+              -o $(soname) $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) \
          -lpthreads; \
-       )
+         ar cq $(lib) $(soname); \
+         $(RM) $(soname); \
+	)
 
-all:: $(lib)
+endif
 
 clean::
 	$(RM) $(lib)
@@ -242,14 +234,9 @@ export:: $(lib)
 	@$(ExportLibrary)
 	@(set -x; \
           cd $(EXPORT_TREE)/$(LIBDIR); \
-          $(RM) $(soname); \
-          ln -s $(lib) $(soname); \
           $(RM) $(libname); \
-          ln -s $(soname) $(libname); \
+          ln -s $(lib) $(libname); \
          )
-endif
-
-
 endif
 
 #############################################################################
