@@ -1,3 +1,14 @@
+Tue May  1 18:54:48 BST 2001 sll
+================================
+
+- Remove user exception check in GIOP implementations. This has been
+  done in GIOP_S.
+
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Tue May  1 17:04:53 BST 2001 sll
 ================================
 
