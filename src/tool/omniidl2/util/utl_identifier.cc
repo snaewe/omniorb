@@ -67,6 +67,24 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include	<idl.hh>
 #include	<idl_extern.hh>
 
+#if defined(__VMS) && __VMS_VER < 70000000
+static int  strcasecmp(const char * s1, const char * s2) {
+
+    while (*s1 && *s2) {
+        char c1 = isalpha(*s1) ? tolower(*s1) : *s1;
+        char c2 = isalpha(*s2) ? tolower(*s2) : *s2;
+        if (c1 < c2) return -1;
+        if (c1 > c2) return 1;
+        ++s1;
+        ++s2;
+    }
+    if (*s1==0 && *s2 == 0) return 0;
+    if (*s1 == 0) return -1;
+    return 1;
+
+}
+
+#endif
 /*
  * Constructors
  */
