@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/11/15 17:07:47  sll
+  Added giopStreamInfo. This structure contains all the state variables
+  related to the giop setup on the strand.
+
   Revision 1.1.2.2  2000/11/03 18:49:16  sll
   Separate out the marshalling of byte, octet and char into 3 set of distinct
   marshalling functions.
@@ -45,6 +49,7 @@
 #define __GIOPSTREAM_H__
 
 class giopMarshaller;
+class giopStreamInfo;
 class giopStreamImpl;
 class giop_1_0_Impl;
 class giop_1_1_Impl;
@@ -142,6 +147,7 @@ public:
   class requestInfo {
   public:
 # define GIOPSTREAM_INLINE_BUF_SIZE 32
+
     inline _CORBA_ULong  requestID() const { return pd_request_id; }
     inline void requestID(_CORBA_ULong v) { pd_request_id = v; }
 
@@ -204,6 +210,8 @@ public:
     }
 
 
+    IOP::ServiceContextList& service_contexts() { return pd_service_contexts; }
+
     inline GIOP::IORAddressingInfo& targetAddress() { 
       return pd_target_address;
     }
@@ -232,15 +240,16 @@ public:
     }
 
   private:
-    _CORBA_ULong    pd_request_id;
-    _CORBA_Boolean  pd_response_expected;
-    _CORBA_Boolean  pd_result_expected;
-    omniObjKey      pd_key;
-    char*           pd_operation;
-    char            pd_op_buffer[GIOPSTREAM_INLINE_BUF_SIZE];
-    _CORBA_Octet*   pd_principal;
-    _CORBA_Octet    pd_pr_buffer[GIOPSTREAM_INLINE_BUF_SIZE];
-    _CORBA_ULong    pd_principal_len;
+    _CORBA_ULong            pd_request_id;
+    _CORBA_Boolean          pd_response_expected;
+    _CORBA_Boolean          pd_result_expected;
+    omniObjKey              pd_key;
+    char*                   pd_operation;
+    char                    pd_op_buffer[GIOPSTREAM_INLINE_BUF_SIZE];
+    _CORBA_Octet*           pd_principal;
+    _CORBA_Octet            pd_pr_buffer[GIOPSTREAM_INLINE_BUF_SIZE];
+    _CORBA_ULong            pd_principal_len;
+    IOP::ServiceContextList pd_service_contexts;
 
     // If pd_objkeysize < 0, pd_target_address contains the
     // full IOR that the client has sent. Only used in GIOP 1.2.
@@ -492,6 +501,12 @@ public:
   // Post-condition:
   //    Still hold <MUTEX> on exit.
 
+  inline giopStreamInfo* streamInfo() {
+    return pd_strand->pd_giop_info;
+  }
+
+  GIOP::Version version();
+
 private:
   giopStreamImpl* pd_impl;
   _CORBA_Boolean  pd_rdlocked;
@@ -586,7 +601,6 @@ public:
   size_t maxReserveOutputSpace(omni::alignment_t) const;
   _CORBA_ULong currentInputPtr() const;
   _CORBA_ULong currentOutputPtr() const;
-
 };
 
 // The giopMarshaller interface is implemented by the stub
@@ -603,5 +617,38 @@ public:
   virtual void marshal(cdrStream&) = 0;
 };
 
+
+// The giopStreamInfo contains the GIOP related state associated with a 
+// strand. Each strand instance is allocated one of this.
+//
+class giopStreamInfo {
+public:
+
+  giopStream*         head;
+  // head  - a strand may have more than one giopStream instances associated
+  // 	     with it. Mostly this is because from GIOP 1.2 onwards, requests
+  //         can be interleaved on a connection. Each of these request is
+  //         represented by a giopStream insteance. They are linked together
+  //         from <head>
+
+  _CORBA_Boolean      tcs_selected;
+  omniCodeSet::TCS_C* tcs_c;
+  omniCodeSet::TCS_W* tcs_w;
+  GIOP::Version       version;
+  // The transmission codesets for char, wchar, string and wstring are selected
+  // by the client based on the codeset info in the IOR. The client informs
+  // the server of its selection using a codeset service context. This is
+  // done only once per lifetime of a connection (strand). 
+  // If <tcs_selected> == 1,
+  //    <tcs_c>, <tcs_w> and <version> records the chosen code set convertors
+  //    and the GIOP version for which the convertors apply.
+
+  _CORBA_Boolean      biDir;
+  // Indicate if the strand is used for bidirectional GIOP.
+
+  giopStreamInfo() : head(0), tcs_selected(0), tcs_c(0), tcs_w(0), biDir(0) {
+    version.major = version.minor = 0;
+  }
+};
 
 #endif /* __CDRSTREAM_H__ */
