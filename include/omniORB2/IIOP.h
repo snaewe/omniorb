@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.6  1997/12/09 20:39:38  sll
+  Removed profileToEncapStream and EncapStreamToProfile.
+
   Revision 1.5  1997/08/21 22:21:19  sll
   ProfileBody now has a dtor to deallocate the storage for the host field.
 
@@ -64,9 +67,6 @@ class _OMNIORB2_NTDLL_ IIOP {
     ~ProfileBody() { if (host) delete [] host; }
   };
 
-  // omniORB2 private functions
-  static void profileToEncapStream(ProfileBody &,_CORBA_Unbounded_Sequence_Octet &);
-  static void EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &,ProfileBody &);
 };
 
 
