@@ -11,9 +11,12 @@
  
 /*
   $Log$
-  Revision 1.1  1997/01/08 17:26:01  sll
-  Initial revision
+  Revision 1.2  1997/01/08 18:02:32  ewc
+  Added unsigned int to remove compiler warning
 
+// Revision 1.1  1997/01/08  17:26:01  sll
+// Initial revision
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -157,7 +160,9 @@ Object::_hash(CORBA::ULong maximum)
   size_t s = objptr->objkeysize();
   char *k = (char *)objptr->objkey();
   CORBA::ULong v = 0;
-  for (int i = 0; i+4 < s; i+=4) {
+
+  unsigned int i;
+  for (i = 0; i+4 < s; i+=4) {
     v += (((CORBA::ULong)k[i] << 24) +
 	 ((CORBA::ULong)k[i+1] << 16) +
 	 ((CORBA::ULong)k[i+2] << 8) +
