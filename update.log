@@ -1,3 +1,19 @@
+Wed Apr 26 19:18:00 BST 2000 djs
+================================
+
+- Removed superflous "externs" in front of function definitions
+
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+- Changed type mapping code and identifier handling code
+
+src/lib/omniORB2/omniidl_be/cxx/types.py -- new
+src/lib/omniORB2/omniidl_be/cxx/id.py    -- new
+
+- Rippled changes thoughout rest of C++ backend
+
+src/lib/omniORB2/omniidl_be/cxx/* (ALL)
+
 
 Thu Apr 20 16:08:04 BST 2000 djr
 ================================
