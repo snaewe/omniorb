@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.21.6.2  1999/09/24 17:11:12  djr
+  New option -ORBtraceInvocations and omniORB::traceInvocations.
+
   Revision 1.21.6.1  1999/09/22 14:26:49  djr
   Major rewrite of orbcore to support POA.
 
@@ -694,7 +697,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     // a location forward exception to re-direct the request
     // to another location.
 
-    if( omniORB::trace(10) )
+    if( omniORB::traceInvocations )
       omniORB::logf("Implementation of \'%s\' generated LOCATION_FORWARD.",
 		    operation());
 

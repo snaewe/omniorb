@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/09/24 17:11:10  djr
+  New option -ORBtraceInvocations and omniORB::traceInvocations.
+
   Revision 1.1.2.2  1999/09/24 15:01:28  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -130,6 +133,13 @@ _CORBA_MODULE_BEG
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtraceLevel <n>, or by direct assignment to this   //
   //     variable.                                                     //
+  //                                                                   //
+  _CORBA_MODULE_VAR _core_attr int   traceInvocations;                 //
+  //                                                                   //
+  //     This value can be changed at runtime either by command-line   //
+  //     option: -ORBtraceInvocations, or by direct assignment to this //
+  //     variable.  If true, then each local and remote invocation     //
+  //     will generate a trace message.                                //
   ///////////////////////////////////////////////////////////////////////
 
   ///////////////////////////////////////////////////////////////////////

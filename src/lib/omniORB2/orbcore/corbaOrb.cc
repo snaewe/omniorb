@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.4  1999/09/24 17:11:11  djr
+  New option -ORBtraceInvocations and omniORB::traceInvocations.
+
   Revision 1.29.6.3  1999/09/24 15:01:33  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -721,6 +724,13 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  return 0;
 	}
 	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBtraceInvocations
+      if (strcmp(argv[idx],"-ORBtraceInvocations") == 0) {
+	omniORB::traceInvocations = 1;
+	move_args(argc,argv,idx,1);
 	continue;
       }
 

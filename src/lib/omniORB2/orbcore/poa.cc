@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/09/24 17:11:14  djr
+  New option -ORBtraceInvocations and omniORB::traceInvocations.
+
   Revision 1.1.2.2  1999/09/24 10:28:51  djr
   Added POA_Helper and POA::the_children().
 
@@ -1232,7 +1235,7 @@ omniOrbPOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
   omni_optional_lock sync(*pd_call_lock, !pd_policy.single_threaded,
 			  !pd_policy.single_threaded);
 
-  if( omniORB::trace(10) ) {
+  if( omniORB::traceInvocations ) {
     omniORB::logger l;
     l << "Dispatching remote call \'" << giop_s.operation() << "\' to "
       << id << '\n';
@@ -1252,25 +1255,8 @@ omniOrbPOA::dispatch(GIOP_S& giop_s, const CORBA::Octet* key, int keysize)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
   OMNIORB_ASSERT(key);
-#if 0
-  // This assertion has failed!
   OMNIORB_ASSERT(keysize >= pd_poaIdSize &&
 		 !memcmp(key, pd_poaId, pd_poaIdSize));
-#else
-  if( !(keysize >= pd_poaIdSize && !memcmp(key, pd_poaId, pd_poaIdSize)) ) {
-    omniORB::logger l;
-    l << "keysize: " << keysize << '\n';
-    l << "key: ";
-    for( int i = 0; i < keysize; i++ )  l << (int)key[i] << ' ';
-    l << '\n';
-    l << "pd_poaIdSize: " << pd_poaIdSize << '\n';
-    l << "pd_poaId: ";
-    for( int j = 0; j < pd_poaIdSize; j++ )  l << (int)pd_poaId[j] << ' ';
-    l << '\n';
-  }
-  OMNIORB_ASSERT(keysize >= pd_poaIdSize &&
-		 !memcmp(key, pd_poaId, pd_poaIdSize));
-#endif
 
   // Check that the key is the right size (if system generated).
   if( !pd_policy.user_assigned_id &&
@@ -1313,7 +1299,7 @@ omniOrbPOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
   omni_optional_lock sync(*pd_call_lock, !pd_policy.single_threaded,
 			  !pd_policy.single_threaded);
 
-  if( omniORB::trace(10) ) {
+  if( omniORB::traceInvocations ) {
     omniORB::logger l;
     l << "Dispatching local call \'" << call_desc.op() << "\' to "
       << id << '\n';
