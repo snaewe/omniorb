@@ -1,3 +1,12 @@
+Tue Aug  1 10:38:56 BST 2000 dpg1
+=================================
+
+- IDL compiler no longer complains about inheriting an operation into
+  an interface with the same name
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Mon Jul 31 18:34:21 BST 2000 sll
 ================================
 

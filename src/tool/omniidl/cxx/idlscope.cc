@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.11.2.2  2000/08/01 09:46:47  dpg1
+// No longer complain about inheriting an operation into an interface
+// with the same name.
+//
 // Revision 1.11.2.1  2000/07/19 17:24:54  dpg1
 // omniidl complains if a name which differs only in case is found during
 // name look-up
@@ -1023,11 +1027,14 @@ addInherited(const char* id, Scope* scope, Decl* decl,
       }
     case Entry::E_PARENT:
       {
-	IdlError(file, line,
-		 "Inherited %s `%s' clashes with interface name `%s'",
-		 decl->kindAsString(), id, clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(),
-		     "(`%s' declared here)", clash->identifier());
+	// It's not clear whether this is OK, but the spec doesn't say
+	// it's definitely illegal
+
+//  	IdlWarning(file, line,
+//  		   "Inherited %s `%s' clashes with interface name `%s'",
+//  		   decl->kindAsString(), id, clash->identifier());
+//  	IdlWarningCont(decl->file(), decl->line(),
+//  		       "(%s `%s' declared here)", decl->kindAsString(), id);
 	break;
       }
     }
