@@ -1,3 +1,12 @@
+Fri Jun 18 15:43:49 BST 2004 dgrisby
+====================================
+
+- Obscure and rare bug in GIOP 1.2 system exception sending.
+
+contrib/RPMs/omniORB.spec
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Tue May 25 17:28:39 BST 2004 dgrisby
 ====================================
 
