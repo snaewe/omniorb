@@ -1,3 +1,15 @@
+Tue Jan  4 14:42:36 GMT 2005 dgrisby
+====================================
+
+- Copy-and-paste error in sample.reg.
+
+sample.reg
+
+- Use standard streams in example code. (Both thanks Stefan Naewe.)
+
+src/lib/omniORB/omniidl_be/cxx/impl/template.py
+
+
 Mon Dec 20 20:11:38 GMT 2004 dgrisby
 ====================================
 

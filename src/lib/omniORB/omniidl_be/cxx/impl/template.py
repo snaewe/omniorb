@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.4  2005/01/04 14:44:23  dgrisby
+# Use standard streams in example code. (Both thanks Stefan Naewe.)
+#
 # Revision 1.3.2.3  2002/10/20 20:17:11  dgrisby
 # Fix reference to omniORB 3.
 #
@@ -92,7 +95,7 @@ interface_ior = """\
   // IDL interface: @fqname@
   CORBA::Object_var ref = @inst_name@->_this();
   CORBA::String_var sior(orb->object_to_string(ref));
-  cout << "IDL object @fqname@ IOR = '" << (char*)sior << "'" << endl;
+  std::cout << "IDL object @fqname@ IOR = '" << (char*)sior << "'" << std::endl;
 }
 """
 
@@ -101,7 +104,7 @@ main = """\
 // Example code for implementing IDL interfaces in file @file@
 //
 
-#include <iostream.h>
+#include <iostream>
 #include <@idl_hh@>
 
 @interfaces@
@@ -138,19 +141,19 @@ int main(int argc, char** argv)
     orb->destroy();
   }
   catch(CORBA::SystemException&) {
-    cerr << "Caught CORBA::SystemException." << endl;
+    std::cerr << "Caught CORBA::SystemException." << std::endl;
   }
   catch(CORBA::Exception&) {
-    cerr << "Caught CORBA::Exception." << endl;
+    std::cerr << "Caught CORBA::Exception." << std::endl;
   }
   catch(omniORB::fatalException& fe) {
-    cerr << "Caught omniORB::fatalException:" << endl;
-    cerr << "  file: " << fe.file() << endl;
-    cerr << "  line: " << fe.line() << endl;
-    cerr << "  mesg: " << fe.errmsg() << endl;
+    std::cerr << "Caught omniORB::fatalException:" << std::endl;
+    std::cerr << "  file: " << fe.file() << std::endl;
+    std::cerr << "  line: " << fe.line() << std::endl;
+    std::cerr << "  mesg: " << fe.errmsg() << std::endl;
   }
   catch(...) {
-    cerr << "Caught unknown exception." << endl;
+    std::cerr << "Caught unknown exception." << std::endl;
   }
 
   return 0;
