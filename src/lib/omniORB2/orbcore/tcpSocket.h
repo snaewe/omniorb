@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.4.4  2000/03/27 17:28:02  sll
+ Now member tcpSocketOutgoingRope::oneCallPerConnection().
+
  Revision 1.5.4.3  1999/10/02 18:21:30  sll
  Added support to decode optional tagged components in the IIOP profile.
  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -224,6 +227,7 @@ public:
   // Post-condition:
   //    Still hold <MUTEX> on exit, even if an exception is raised
 
+protected:
   virtual ~tcpSocketStrand();
   // MUTEX:
   //    pd_rope->pd_lock
@@ -232,6 +236,7 @@ public:
   // Post-condition:
   //    Still hold <MUTEX> on exit
 
+public:
   void real_shutdown();
   void ll_send(void* buf,size_t sz);
   size_t ll_recv(void* buf,size_t sz);
@@ -323,6 +328,7 @@ public:
   CORBA::Boolean is_outgoing() const { return 1; }
   CORBA::Boolean remote_is(Endpoint *&e);
   CORBA::Boolean this_is(Endpoint *&e) { return 0; }
+  CORBA::Boolean oneCallPerConnection();
 
   Strand *newStrand();
 
