@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.8  1998/01/27 16:46:29  ewc
+  *** empty log message ***
+
   Revision 1.7  1997/12/09 19:54:58  sll
   *** empty log message ***
 
@@ -59,11 +62,28 @@ o2be_name::o2be_name(AST_Decl::NodeType t,UTL_ScopedName* n, UTL_StrList* up)
   strcpy(p,pd_scopename);
   strcat(p,pd_uqname);
   pd_fqname = p;
+
   p = new char [strlen(pd__scopename)+strlen(pd_uqname)+1];
   strcpy(p,pd__scopename);
   strcat(p,pd_uqname);
   pd__fqname = p;
 
+
+  p = new char [strlen((const char*) "_tc_")+strlen(pd_uqname)+1];
+  strcpy(p,(const char*) "_tc_");
+  strcat(p,pd_uqname);
+  pd_tcname = p;
+
+  p = new char [strlen(pd_scopename)+strlen(pd_tcname)+1];
+  strcpy(p,pd_scopename);
+  strcat(p,pd_tcname);
+  pd_fqtcname = p;
+
+  p = new char[strlen(pd__scopename) + strlen(pd_tcname) +1];
+  strcpy(p,pd__scopename);
+  strcat(p,pd_tcname);
+  pd__fqtcname = p;
+					      
   pd_repositoryID = internal_produce_repositoryID(this,this);
   return;
 }
@@ -835,3 +855,183 @@ o2be_name::narrow_and_produce_unambiguous_scopename(AST_Decl *decl,
     }
 return 0; // For MSVC++ 4.2
 }
+
+
+void
+o2be_name::narrow_and_produce_typecode_skel(AST_Decl *decl, 
+					    fstream& s)
+{
+  switch(decl->node_type())
+    {
+    case AST_Decl::NT_pre_defined:
+    case AST_Decl::NT_string:
+    case AST_Decl::NT_interface:
+    case AST_Decl::NT_interface_fwd:
+      break;
+
+    case AST_Decl::NT_except:
+      o2be_exception::narrow_from_decl(decl)->produce_typecode_skel(s);
+      break;
+
+    case AST_Decl::NT_union:
+      o2be_union::narrow_from_decl(decl)->produce_typecode_skel(s);
+      break;
+
+    case AST_Decl::NT_struct:
+      o2be_structure::narrow_from_decl(decl)->produce_typecode_skel(s);
+      break;
+
+    case AST_Decl::NT_enum:
+      o2be_enum::narrow_from_decl(decl)->produce_typecode_skel(s);
+      break;
+
+    case AST_Decl::NT_array:
+      o2be_array::narrow_from_decl(decl)->produce_typecode_skel(s);
+      break;
+     
+    case AST_Decl::NT_sequence:
+      o2be_sequence::narrow_from_decl(decl)->produce_typecode_skel(s);
+      break;
+      
+    case AST_Decl::NT_typedef:
+      o2be_typedef::narrow_from_decl(decl)->produce_typecode_skel(s);
+      break;
+      
+    default:
+      throw o2be_internal_error(__FILE__,__LINE__,"Unrecognised argument type");
+    }
+}
+
+
+void 
+o2be_name::produce_typecode_member(AST_Decl *decl, 
+				   fstream& s,
+				   idl_bool new_ptr)
+{
+  switch(decl->node_type())
+    {
+    case AST_Decl::NT_pre_defined:
+      if (new_ptr) s << "new ";
+      s << "CORBA::TypeCode(" << 
+	o2be_predefined_type::narrow_from_decl(decl)->tckname();
+      if (!new_ptr) s << ",0"; // Needed for bug in MSVC++ 4.2
+      s << ")";
+      break;
+
+    case AST_Decl::NT_string:
+      if (new_ptr) s << "new ";
+      s << "CORBA::TypeCode(CORBA::tk_string," << 
+	o2be_string::narrow_from_decl(decl)->max_length() << ")";
+      break;
+
+    case AST_Decl::NT_interface:
+      {
+	if (new_ptr) s << "new ";
+	s << "CORBA::TypeCode(";
+	char* intf_name =o2be_interface::narrow_from_decl(decl)->uqname();
+	if (strcmp(intf_name,"Object") == 0 || 
+	    strcmp(intf_name,"CORBA::Object") == 0) 
+	  s << "\"IDL:CORBA/Object:1.0\", \"Object\")";
+	else 
+	  {
+	    s << "\"" << o2be_interface::narrow_from_decl(decl)->repositoryID()
+	      << "\", \"" << intf_name << "\")";
+	  }
+      }
+      break;
+
+    case AST_Decl::NT_interface_fwd:
+	if (new_ptr) s << "new ";
+	s << "CORBA::TypeCode(\"" 
+	  << o2be_interface_fwd::narrow_from_decl(decl)->repositoryID()
+	  << "\", \"" << o2be_interface_fwd::narrow_from_decl(decl)->uqname()
+	  << "\")";
+      break;
+
+    case AST_Decl::NT_except:
+      if (new_ptr) s << "CORBA::TypeCode::_duplicate(&";
+      s << "_01RL_" << o2be_exception::narrow_from_decl(decl)->_fqtcname();
+      if (new_ptr) s << ")";
+      break;
+
+    case AST_Decl::NT_union:
+      if (new_ptr) s << "CORBA::TypeCode::_duplicate(&";
+      s << "_01RL_" << o2be_union::narrow_from_decl(decl)->_fqtcname();
+      if (new_ptr) s << ")";
+      break;
+
+    case AST_Decl::NT_struct:
+      if (new_ptr) s << "CORBA::TypeCode::_duplicate(&";
+      s << "_01RL_" << o2be_structure::narrow_from_decl(decl)->_fqtcname();
+      if (new_ptr) s << ")";
+      break;
+
+    case AST_Decl::NT_enum:
+      if (new_ptr) s << "CORBA::TypeCode::_duplicate(&";
+      s << "_01RL_" << o2be_enum::narrow_from_decl(decl)->_fqtcname();
+      if (new_ptr) s << ")";
+      break;
+
+    case AST_Decl::NT_array:
+      o2be_array::narrow_from_decl(decl)->produce_typecode_member(s,new_ptr);
+      break;
+     
+    case AST_Decl::NT_sequence:
+      o2be_sequence::narrow_from_decl(decl)->produce_typecode_member(s,new_ptr);
+      break;
+      
+    case AST_Decl::NT_typedef:
+      if (new_ptr) s << "CORBA::TypeCode::_duplicate(&";
+      s << "_01RL_" << o2be_typedef::narrow_from_decl(decl)->_fqtcname();
+      if (new_ptr) s << ")";
+      break;
+      
+    default:
+      throw o2be_internal_error(__FILE__,__LINE__,"Unrecognised argument type");
+    }
+}  
+
+
+idl_bool
+o2be_name::narrow_and_check_recursive_seq(AST_Decl *decl)
+{
+  switch(decl->node_type())
+    {
+    case AST_Decl::NT_pre_defined:
+    case AST_Decl::NT_string:
+    case AST_Decl::NT_interface:
+    case AST_Decl::NT_interface_fwd:
+    case AST_Decl::NT_enum:
+      return I_FALSE;
+      break;
+
+    case AST_Decl::NT_except:
+      return o2be_exception::narrow_from_decl(decl)->check_recursive_seq();
+      break;
+
+    case AST_Decl::NT_union:
+      return o2be_union::narrow_from_decl(decl)->check_recursive_seq();
+      break;
+
+    case AST_Decl::NT_struct:
+      return o2be_structure::narrow_from_decl(decl)->check_recursive_seq();
+      break;
+
+    case AST_Decl::NT_sequence:
+      return o2be_sequence::narrow_from_decl(decl)->check_recursive_seq();
+      break;
+
+    case AST_Decl::NT_array:
+      return o2be_array::narrow_from_decl(decl)->check_recursive_seq();
+      break;
+      
+    case AST_Decl::NT_typedef:
+      return o2be_typedef::narrow_from_decl(decl)->check_recursive_seq();
+      break;
+
+    default:
+      throw o2be_internal_error(__FILE__,__LINE__,"Unrecognised argument type");
+      return I_FALSE;
+    }
+}
+
