@@ -1,3 +1,13 @@
+Wed Aug 15 18:58:28 BST 2001 dpg1
+=================================
+
+- Minor POA bugs.
+
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
 Wed Aug 15 11:13:08 BST 2001 dpg1
 =================================
 

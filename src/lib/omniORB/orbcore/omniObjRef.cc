@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.19  2001/08/15 17:59:11  dpg1
+  Minor POA bugs.
+
   Revision 1.2.2.18  2001/08/15 10:26:13  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -169,7 +172,7 @@ omniObjRef::_realNarrow(const char* repoId)
     omni::internalLock->lock();
 
     omniLocalIdentity* lid = omniLocalIdentity::downcast(_identity());
-    if (lid && !lid->deactivated() &&
+    if (lid && !lid->deactivated() && lid->servant() &&
 	lid->servant()->_ptrToInterface(repoId)) {
 
       // The object is local and activated, and the servant supports

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.15  2001/08/15 17:59:12  dpg1
+  Minor POA bugs.
+
   Revision 1.2.2.14  2001/08/15 10:26:13  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -1068,8 +1071,9 @@ omniOrbPOA::servant_to_id(PortableServer::Servant p_servant)
   if( !p_servant )
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidServant, CORBA::COMPLETED_NO);
 
-  if( pd_policy.req_processing != RPP_DEFAULT_SERVANT &&
-      !pd_policy.retain_servants )
+  if( !( (pd_policy.req_processing == RPP_DEFAULT_SERVANT) ||
+	 (pd_policy.retain_servants && (!pd_policy.multiple_id ||
+					pd_policy.implicit_activation)) ) )
     throw WrongPolicy();
 
   omni_tracedmutex_lock sync(pd_lock);
@@ -1081,13 +1085,18 @@ omniOrbPOA::servant_to_id(PortableServer::Servant p_servant)
       if (current) {
 	omniCallDescriptor* call_desc = current->callDescriptor();
 
-	if (call_desc && call_desc->poa() == this) {
+	if (call_desc &&
+	    call_desc->poa() == this &&
+	    call_desc->localId()->servant() == (omniServant*)p_servant) {
+
 	  return localId_to_ObjectId(call_desc->localId());
 	}
       }
       throw ServantNotActive();
     }
   }
+
+  if (!pd_policy.retain_servants) throw WrongPolicy();
 
   omni_tracedmutex_lock sync2(*omni::internalLock);
 
@@ -1105,7 +1114,8 @@ omniOrbPOA::servant_to_id(PortableServer::Servant p_servant)
     }
   }
 
-  if( !pd_policy.implicit_activation )  throw WrongPolicy();
+  if( !pd_policy.implicit_activation ) throw ServantNotActive();
+
   CHECK_NOT_DYING();
 
   // If we get here then we need to do an implicit activation.
@@ -1160,8 +1170,8 @@ omniOrbPOA::servant_to_reference(PortableServer::Servant p_servant)
     // POA. It seems most sensible to carry on with the code below...
   }
 
-  if( !pd_policy.retain_servants ||
-      (pd_policy.multiple_id && !pd_policy.implicit_activation) )
+  if( !( pd_policy.retain_servants &&
+	 (!pd_policy.multiple_id || pd_policy.implicit_activation) ) )
     throw WrongPolicy();
 
   omni_tracedmutex_lock sync(pd_lock);
@@ -1191,7 +1201,7 @@ omniOrbPOA::servant_to_reference(PortableServer::Servant p_servant)
       }
     }
   }
-  if( !pd_policy.implicit_activation )  throw WrongPolicy();
+  if( !pd_policy.implicit_activation )  throw ServantNotActive();
   CHECK_NOT_DYING();
 
   // If we get here, then either the servant is not activated in
@@ -1208,6 +1218,8 @@ omniOrbPOA::servant_to_reference(PortableServer::Servant p_servant)
     entry = omniObjTable::newEntry(key);
 
   } while( !entry );
+
+  entry->setActive(p_servant, this);
 
   // *** FIXME: Move into setActive() ?
   p_servant->_add_ref();

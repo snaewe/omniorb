@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.17  2001/08/15 17:59:11  dpg1
+  Minor POA bugs.
+
   Revision 1.2.2.16  2001/08/15 10:26:13  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -796,7 +799,8 @@ omni::createObjRef(const char* targetRepoId,
   if (id) {
     omniLocalIdentity* lid = omniLocalIdentity::downcast(id);
 
-    if (lid && !lid->servant()->_ptrToInterface(targetRepoId)) {
+    if (lid && (!lid->servant() ||
+		!lid->servant()->_ptrToInterface(targetRepoId))) {
       // Local id can't be used by the objref
       id = createInProcessIdentity(lid->key(), lid->keysize());
     }
