@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.24  1999/06/02 16:41:19  sll
+  Moved class proxyObjectFactory into the CORBA namespace.
+
   Revision 1.23  1999/03/11 16:25:55  djr
   Updated copyright notice
 
@@ -96,7 +99,6 @@
 #pragma hdrstop
 #endif
 
-#include <omniORB2/proxyFactory.h>
 #include <ropeFactory.h>
 
 #if defined(HAS_Cplusplus_Namespace)
@@ -154,27 +156,27 @@ omniObject*         omniObject::proxyObjectTable = 0;
 omniObject**        omniObject::localObjectTable = 0;
 omni_mutex          omniObject::wrappedObjectTableLock;
 void**              omniObject::wrappedObjectTable = 0;
-proxyObjectFactory* proxyObjectFactory::proxyStubs = 0;
+CORBA::proxyObjectFactory* CORBA::proxyObjectFactory::proxyStubs = 0;
 
 
-proxyObjectFactory::proxyObjectFactory()
+CORBA::proxyObjectFactory::proxyObjectFactory()
 {
-  pd_next = proxyObjectFactory::proxyStubs;
+  pd_next = CORBA::proxyObjectFactory::proxyStubs;
   proxyStubs = this;
   return;
 }
 
-proxyObjectFactory::~proxyObjectFactory()
+CORBA::proxyObjectFactory::~proxyObjectFactory()
 {
 }
 
-proxyObjectFactory_iterator::proxyObjectFactory_iterator()
+CORBA::proxyObjectFactory_iterator::proxyObjectFactory_iterator()
 {
-  pd_f = proxyObjectFactory::proxyStubs;
+  pd_f = CORBA::proxyObjectFactory::proxyStubs;
 }
 
-proxyObjectFactory *
-proxyObjectFactory_iterator::operator() ()
+CORBA::proxyObjectFactory *
+CORBA::proxyObjectFactory_iterator::operator() ()
 {
   proxyObjectFactory *p = pd_f;
   if (pd_f)
@@ -401,9 +403,9 @@ omni::createObjRef(const char* mostDerivedRepoId,
 {
   CORBA::Octet *objkey = 0;
 
-  proxyObjectFactory *p;
+  CORBA::proxyObjectFactory *p;
   {
-    proxyObjectFactory_iterator pnext;
+    CORBA::proxyObjectFactory_iterator pnext;
     while ((p = pnext())) {
       if (strcmp(p->irRepoId(),mostDerivedRepoId) == 0) {
 	if (!targetRepoId) {
@@ -468,7 +470,7 @@ omni::createObjRef(const char* mostDerivedRepoId,
 	    // identified by the <targetRepoId>.
 
 	    // find the proxy factory for <targetRepoId>
-	    proxyObjectFactory_iterator pnext;
+	    CORBA::proxyObjectFactory_iterator pnext;
 	    while ((p = pnext())) {
 	      if (strcmp(p->irRepoId(),targetRepoId) == 0) {
 		break;  // got it
@@ -523,7 +525,7 @@ omni::createObjRef(const char* mostDerivedRepoId,
 	      // identified by the <targetRepoId>.
 
 	      // find the proxy factory for <targetRepoId>
-	      proxyObjectFactory_iterator pnext;
+	      CORBA::proxyObjectFactory_iterator pnext;
 	      while ((p = pnext())) {
 		if (strcmp(p->irRepoId(),targetRepoId) == 0) {
 		  break;  // got it
