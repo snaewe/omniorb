@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.6.10  2000/06/27 16:23:25  sll
+ * Merged OpenVMS port.
+ *
  * Revision 1.33.6.9  2000/03/20 15:09:30  djr
  * Fixed signed/unsigned mismatch.
  *
@@ -196,6 +199,15 @@
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// CORBA::TypeCode //////////////////////////
 //////////////////////////////////////////////////////////////////////
+
+#if !defined(OMNIORB_NO_EXCEPTION_LOGGING) && defined(__DECCXX) && __DECCXX_VER > 60000000
+//  Compaq C++ 6.x needs dummy return if function is called to throw an
+//  exception.
+#ifndef NEED_DUMMY_RETURN
+#define NEED_DUMMY_RETURN
+#endif
+#endif
+
 
 CORBA::TypeCode::~TypeCode() {
   pd_magic = 0;

@@ -1,3 +1,17 @@
+Tue Jun 27 17:15:58 BST 2000 sll
+================================
+
+- Merged openVMS port
+
+external_merge/README.openvms
+external_merge/README.openvms_v6
+external_merge/patches/dec_CXX_5.6.patch
+include/omniORB3/CORBA_sysdep.h
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/orbcore/portableserver.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/python/omniidl/main.py
+
 Tue Jun 27 17:00:42 BST 2000 sll
 ================================
 

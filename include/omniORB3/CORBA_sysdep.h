@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.10  2000/06/27 16:23:24  sll
+ Merged OpenVMS port.
+
  Revision 1.1.2.9  2000/03/23 16:27:47  djr
  Added NEED_DUMMY_RETURN to egcs/gcc.
 
@@ -198,7 +201,7 @@
 // Minor version number 91 is for egcs version 1.*  Some older
 // versions of 1.* may not support namespaces properly - this is
 // only tested for egcs 1.1.1
-#  if __GNUC_MINOR__ >= 91
+#  if __GNUC_MINOR__ >= 91 || __GNUC_MINOR__ == 9
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Cplusplus_Bool
 #  endif
@@ -224,8 +227,25 @@
 //#     define HAS_Cplusplus_Namespace
 //#     define NEED_DUMMY_RETURN
 #  else
+//    Compaq C++ 5.x
+//    Work-around for OpenVMS VAX Compaq C++ 5.6 compiler problem with
+//    %CXX-W-CANTCOMPLETE messages.  Note that this cannot be disabled with a
+//    compiler switch if the message occurs in a template instantiation (but
+//    this pragma wasn't implemented until 6.something on Unix).
+#     ifdef __VMS
+#       pragma message disable CANTCOMPLETE
+#     endif
 #     define NEED_DUMMY_RETURN
 #     undef  HAS_Cplusplus_const_cast
+#     define OMNI_REQUIRES_FQ_BASE_CTOR
+#     define OMNI_OPERATOR_REFPTR_REQUIRES_TYPEDEF
+#     define OMNI_PREMATURE_INSTANTIATION
+//    Extra macros from the Compaq C++ 5.x patch (in <top>/patches/) to be
+//    added here
+#     ifndef OMNI_OPERATOR_REFPTR
+#       error "Patch for Compaq C++ 5.x has not been applied."
+#     endif
+
 #  endif
 
 #elif defined(__SUNPRO_CC) 
@@ -395,18 +415,7 @@
 # if __VMS_VER >= 70000000
 #  define _HAS_SIGNAL 1
 # else
-#  include <string.h>
-#  include <stdlib.h>
-// Pre 7.x VMS does not have strdup.
-inline static char*
-strdup (char* str)
-{
-  char* newstr;
-
-  newstr = (char*) malloc(strlen(str) + 1);
-  if( newstr )  strcpy(newstr, str);
-  return newstr;
-}
+#  define _NO_STRDUP 1
 #  define _HAS_NOT_GOT_strcasecmp
 #  define _HAS_NOT_GOT_strncasecmp
 # endif
@@ -676,6 +685,21 @@ strdup (char* str)
 # define OMNIORB_BASE_CTOR(a)
 #endif
 
+#ifndef OMNI_OPERATOR_REFPTR
+// Only used when the source tree is patched with DEC C++ 5.6 workarounds
+#define OMNI_OPERATOR_REFPTR(T) inline operator T*&()
+#endif
+
+#ifndef OMNI_CONSTRTYPE_FIX_VAR_MEMBER
+// Only used when the source tree is patched with DEC C++ 5.6 workarounds
+#define OMNI_CONSTRTYPE_FIX_VAR_MEMBER(T) \
+   typedef _CORBA_ConstrType_Fix_Var<T> _var_type;
+#endif
+
+#ifndef OMNI_CONSTRTYPE_FIX_VAR
+// Only used when the source tree is patched with DEC C++ 5.6 workarounds
+#define OMNI_CONSTRTYPE_FIX_VAR(T) typedef T::_var_type T##_var;
+#endif
 
 #ifndef USE_omniORB_logStream
 // New stubs use omniORB::logStream. Old stubs still need cerr. Include

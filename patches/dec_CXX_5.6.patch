@@ -1,0 +1,318 @@
+diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/CORBA_sysdep.h omniORB3_20000524_vms/include/omniORB3/CORBA_sysdep.h
+*** omniORB3_20000524/include/omniORB3/CORBA_sysdep.h	Thu Mar 23 11:27:48 2000
+--- omniORB3_20000524_vms/include/omniORB3/CORBA_sysdep.h	Thu May 11 11:48:08 2000
+***************
+*** 240,244 ****
+--- 240,267 ----
+//    Extra macros from the Compaq C++ 5.x patch (in <top>/patches/) to be
+//    added here  
++ #define OMNI_OPERATOR_REFPTR(T)\
++   typedef T*& _1RTP_##T;\
++   inline operator _1RTP_##T()
++
++ //  This platform can't handle:
++ //
++ //  template <class T>
++ //  struct X {
++ //    T t;              // (1)
++ //  };
++ //  struct Y {
++ //    typedef X<Y> Z;   // (2)
++ //  };
++ //
++ //  because X<Y> is instantiated at (2) so that T is an incomplete type at (1).
++ 
++ #define OMNI_CONSTRTYPE_FIX_VAR_MEMBER(T)
++ #define OMNI_CONSTRTYPE_FIX_VAR(T) typedef _CORBA_ConstrType_Fix_Var<T> T##_var;
++ 
++ //  Note that this is only a problem with fixed length constructed types.  The
++ //  variable length constructed type var uses a pointer, so the forward
++ //  declaration is okay.
++ 
+#     ifndef OMNI_OPERATOR_REFPTR
+#       error "Patch for Compaq C++ 5.x has not been applied."
+#     endif
+diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/CORBA.h omniORB3_20000524_vms/include/omniORB3/CORBA.h
+*** omniORB3_20000524/include/omniORB3/CORBA.h	Fri Mar 03 09:29:16 2000
+--- omniORB3_20000524_vms/include/omniORB3/CORBA.h	Thu May 18 17:50:36 2000
+***************
+*** 708,714 ****
+      }
+      inline Any_OUT_arg& operator=(Any* p) { _data = p; return *this; }
+  
+!     operator Any*& () { return _data; }
+      Any*& ptr() { return _data; }
+  
+      Any*& _data;
+--- 708,714 ----
+      }
+      inline Any_OUT_arg& operator=(Any* p) { _data = p; return *this; }
+  
+!     OMNI_OPERATOR_REFPTR(Any) { return _data; }
+      Any*& ptr() { return _data; }
+  
+      Any*& _data;
+***************
+*** 2301,2306 ****
+  	_data = s._data; return *this;
+        }
+        inline ObjectIdList_out& operator=(T* s) { _data = s; return *this; }
+!       inline operator T*&() { return _data; }
+        inline T*& ptr() { return _data; }
+        inline T* operator->() { return _data; }
+--- 2301,2306 ----
+  	_data = s._data; return *this;
+        }
+        inline ObjectIdList_out& operator=(T* s) { _data = s; return *this; }
+!       OMNI_OPERATOR_REFPTR(T) { return _data; }
+        inline T*& ptr() { return _data; }
+        inline T* operator->() { return _data; }
+diff --recursive --new-file --context omniORB_3.0.0/src/lib/omniORB2/dynamic/pseudo.h omniORB_3.0.0_cxx5.6/src/lib/omniORB2/dynamic/pseudo.h
+*** omniORB_3.0.0/src/lib/omniORB2/dynamic/pseudo.h	Wed Sep 22 10:26:38 1999
+--- omniORB_3.0.0_cxx5.6/src/lib/omniORB2/dynamic/pseudo.h	Thu May 11 18:32:36 2000
+***************
+*** 145,151 ****
+--- 145,155 ----
+    virtual CORBA::Boolean NP_is_nil() const;
+    virtual CORBA::ContextList_ptr NP_duplicate();
+  
++ #if !defined(__DECCXX) || __DECCXX_VER >= 60000000
+    inline const char*const* NP_list() { return pd_list.NP_data(); }
++ #else
++   inline const char*const* NP_list() { return (const char*const*)pd_list.NP_data(); }
++ #endif
+  
+  private:
+    void free_entries();
+diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/stringtypes.h omniORB3_20000524_vms/include/omniORB3/stringtypes.h
+*** omniORB3_20000524/include/omniORB3/stringtypes.h	Tue Nov 23 05:48:08 1999
+--- omniORB3_20000524_vms/include/omniORB3/stringtypes.h	Mon Mar 13 15:05:42 2000
+***************
+*** 450,456 ****
+    }
+    inline ~_CORBA_String_inout() {}
+  
+!   inline operator char*&()  { return _data; }
+  
+    char*& _data;
+  
+--- 450,456 ----
+    }
+    inline ~_CORBA_String_inout() {}
+  
+!   OMNI_OPERATOR_REFPTR(char)  { return _data; }
+  
+    char*& _data;
+  
+***************
+*** 479,486 ****
+    inline _CORBA_String_out& operator=(const char* p) {
+      _data = _CORBA_String_var::string_dup(p); return *this;
+    }
+! 
+!   operator char*& () { return _data; }
+    char*& ptr()       { return _data; }
+  
+    char*& _data;
+--- 479,485 ----
+    inline _CORBA_String_out& operator=(const char* p) {
+      _data = _CORBA_String_var::string_dup(p); return *this;
+    }
+!   OMNI_OPERATOR_REFPTR(char) { return _data; }
+    char*& ptr()       { return _data; }
+  
+    char*& _data;
+diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/poa.h omniORB3_20000524_vms/include/omniORB3/poa.h
+*** omniORB3_20000524/include/omniORB3/poa.h	Tue Nov 23 05:48:08 1999
+--- omniORB3_20000524_vms/include/omniORB3/poa.h	Mon Mar 13 15:05:42 2000
+***************
+*** 255,261 ****
+      inline ObjectId_out(const ObjectId_out& s) : _data(s._data) { }
+      inline ObjectId_out& operator=(const ObjectId_out& s) { _data = s._data; return *this; }
+      inline ObjectId_out& operator=(_T* s) { _data = s; return *this; }
+!     inline operator _T*&() { return _data; }
+      inline _T*& ptr() { return _data; }
+      inline _T* operator->() { return _data; }
+      inline CORBA::Octet& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
+--- 255,261 ----
+      inline ObjectId_out(const ObjectId_out& s) : _data(s._data) { }
+      inline ObjectId_out& operator=(const ObjectId_out& s) { _data = s._data; return *this; }
+      inline ObjectId_out& operator=(_T* s) { _data = s; return *this; }
+!     OMNI_OPERATOR_REFPTR(_T) { return _data; }
+      inline _T*& ptr() { return _data; }
+      inline _T* operator->() { return _data; }
+      inline CORBA::Octet& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
+diff --recursive --new-file --context omniORB3_20000524/include/omniORB3/templatedecls.h omniORB3_20000524_vms/include/omniORB3/templatedecls.h
+*** omniORB3_20000524/include/omniORB3/templatedecls.h	Fri Sep 24 05:51:58 1999
+--- omniORB3_20000524_vms/include/omniORB3/templatedecls.h	Mon Mar 13 15:05:42 2000
+***************
+*** 558,564 ****
+    }
+    inline ~_CORBA_ObjRef_INOUT_arg() {}
+  
+!   inline operator T*&()  { return _data; }
+  
+    T*& _data;
+  
+--- 558,564 ----
+    }
+    inline ~_CORBA_ObjRef_INOUT_arg() {}
+  
+!   OMNI_OPERATOR_REFPTR(T)  { return _data; }
+  
+    T*& _data;
+  
+***************
+*** 603,609 ****
+      _data = ((T*)p);
+      return * this;
+    }
+!   inline operator T*&()  { return _data; }
+    inline T*& ptr()       { return _data; }
+    inline T* operator->() const { return _data; }
+  
+--- 603,609 ----
+      _data = ((T*)p);
+      return * this;
+    }
+!   OMNI_OPERATOR_REFPTR(T)  { return _data; }
+    inline T*& ptr()       { return _data; }
+    inline T* operator->() const { return _data; }
+  
+***************
+*** 687,693 ****
+    inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   inline operator T*&() { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T*& operator->() { return _data; }
+  
+--- 687,693 ----
+    inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   OMNI_OPERATOR_REFPTR(T) { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T*& operator->() { return _data; }
+  
+***************
+*** 790,796 ****
+    inline _CORBA_ConstrType_Variable_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   inline operator T*&() { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T*& operator->() { return _data; }
+  
+--- 790,796 ----
+    inline _CORBA_ConstrType_Variable_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   OMNI_OPERATOR_REFPTR(T) { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T*& operator->() { return _data; }
+  
+***************
+*** 891,897 ****
+    inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   inline operator T*&() { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T& operator[] (_CORBA_ULong index) {
+      return _data[index];
+--- 891,897 ----
+    inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
+    inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
+    inline T_out& operator=(T* p) { _data = p; return *this; }
+!   OMNI_OPERATOR_REFPTR(T) { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T& operator[] (_CORBA_ULong index) {
+      return _data[index];
+diff --recursive --new-file --context omniORB3_20000524/src/lib/omniORB2/omniidl_be/cxx/header/template.py omniORB3_20000524_vms/src/lib/omniORB2/omniidl_be/cxx/header/template.py
+*** omniORB3_20000524/src/lib/omniORB2/omniidl_be/cxx/header/template.py	Thu May 18 11:57:34 2000
+--- omniORB3_20000524_vms/src/lib/omniORB2/omniidl_be/cxx/header/template.py	Wed May 24 18:28:00 2000
+***************
+*** 600,606 ****
+      _data = s;
+      return *this;
+    }
+!   inline operator T*&()  { return _data; }
+    inline T*& ptr()       { return _data; }
+    inline T* operator->() { return _data; }
+  
+--- 600,606 ----
+      _data = s;
+      return *this;
+    }
+!   OMNI_OPERATOR_REFPTR(T)  { return _data; }
+    inline T*& ptr()       { return _data; }
+    inline T* operator->() { return _data; }
+  
+***************
+*** 634,639 ****
+--- 634,660 ----
+  };
+  
+  typedef @name@::_var_type @name@_var;
++ 
++ typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
++ """
++ 
++ # Added for DEC C++ 5.6:
++ struct_fix = """\
++ struct @name@ {
++   OMNI_CONSTRTYPE_FIX_VAR_MEMBER(@name@)
++ 
++   @Other_IDL@
++ 
++   @members@
++ 
++   size_t _NP_alignedSize(size_t initialoffset) const;
++   void operator>>= (NetBufferedStream &) const;
++   void operator<<= (NetBufferedStream &);
++   void operator>>= (MemBufferedStream &) const;
++   void operator<<= (MemBufferedStream &);
++ };
++ 
++ OMNI_CONSTRTYPE_FIX_VAR(@name@)
+  
+  typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
+  """
+diff --recursive --new-file --context omniORB3_20000524/src/lib/omniORB2/omniidl_be/cxx/header/defs.py omniORB3_20000524_vms/src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+*** omniORB3_20000524/src/lib/omniORB2/omniidl_be/cxx/header/defs.py	Thu May 18 11:57:34 2000
+--- omniORB3_20000524_vms/src/lib/omniORB2/omniidl_be/cxx/header/defs.py	Wed May 24 18:38:44 2000
+***************
+*** 848,859 ****
+                                 dims = tyutil.dimsToString(decl_dims))
+              
+      # Output the structure itself
+!     stream.out(template.struct,
+!                name = cxx_name,
+!                type = type,
+!                Other_IDL = Other_IDL,
+!                members = members)
+!     
+      self.__insideClass = insideClass
+  
+      # TypeCode and Any
+--- 848,865 ----
+                                 dims = tyutil.dimsToString(decl_dims))
+              
+      # Output the structure itself
+!     if type == "Fix":
+!         stream.out(template.struct_fix,
+!                    name = cxx_name,
+!                    type = type,
+!                    Other_IDL = Other_IDL,
+!                    members = members)
+!     else:
+!         stream.out(template.struct,
+!                    name = cxx_name,
+!                    type = type,
+!                    Other_IDL = Other_IDL,
+!                    members = members)
+      self.__insideClass = insideClass
+  
+      # TypeCode and Any

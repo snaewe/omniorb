@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.9  2000/06/27 16:23:25  sll
+// Merged OpenVMS port.
+//
 // Revision 1.15.2.8  2000/06/20 13:55:58  dpg1
 // omniidl now keeps the C++ tree until after the back-ends have run.
 // This means that back-ends can be C++ extension modules.
@@ -107,6 +110,9 @@
 #if defined(__WIN32__)
 #include <Python.h>
 #elif defined(__VMS)
+#  if defined(__DECCXX) && __DECCXX_VER < 60000000
+      struct _typeobject;
+#  endif
 #include <python_include/python.h>
 #else
 #include <python1.5/Python.h>
@@ -1341,6 +1347,10 @@ extern "C" {
 
 #ifdef OMNIIDL_EXECUTABLE
 
+#ifdef __VMS
+extern "C" int PyVMS_init(int* pvi_argc, char*** pvi_argv);
+#endif
+
 // It's awkward to make a command named `omniidl' on NT which runs
 // Python, so we make the front-end a Python executable which always
 // runs omniidl.main.
@@ -1381,6 +1391,10 @@ main(int argc, char** argv)
 "\n"
 "omniidl.main.main()\n";
 
+#ifdef __VMS
+  PyVMS_init(&argc, &argv);
+  Py_SetProgramName(argv[0]);
+#endif
   Py_Initialize();
   PySys_SetArgv(argc, argv);
 
