@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.17  2001/08/03 17:45:39  sll
+ Added minorCode.h
+
  Revision 1.2.2.16  2001/07/31 16:04:07  sll
  Added ORB::create_policy() and associated types and operators.
 
@@ -3094,6 +3097,8 @@ extern void _omni_set_NameService(CORBA::Object_ptr);
 #include <omniORB4/poa.h>
 #include <omniORB4/fixed.h>
 #include <omniORB4/BiDirPolicy.h>
+
+#include <omniORB4/minorCode.h>
 
 #include <omniORB4/corbaidl_operators.hh>
 
