@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.15  1998/08/26 11:13:32  sll
+  Minor updates to remove warnings when compiled with standard C++ compiler.
+
   Revision 1.14  1998/08/14 13:49:38  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -40,6 +43,9 @@
   Temporary work-around for egcs compiler.
 
   $Log$
+  Revision 1.15  1998/08/26 11:13:32  sll
+  Minor updates to remove warnings when compiled with standard C++ compiler.
+
   Revision 1.14  1998/08/14 13:49:38  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -418,8 +424,10 @@ omniObject::dispatch(GIOP_S &_s,const char *_op,
   else
     return 0;
 
+#ifdef NEED_DUMMY_RETURN
   // For MSVC++ 4.2:
   return 0;
+#endif
 }
 
 
