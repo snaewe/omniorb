@@ -108,6 +108,10 @@ public:
   virtual CORBA::Boolean dispatch(GIOP_S& s,const char *op,
 				  CORBA::Boolean response_expected);
 
+  virtual void* _widenFromTheMostDerivedIntf(const char* type_id,
+                                             _CORBA_Boolean is_cxx_type_id=0);
+  // Overrides omniObject.
+
   CORBA::Object_ptr _this() {
     CORBA::Object::_duplicate(this);
     return this;
