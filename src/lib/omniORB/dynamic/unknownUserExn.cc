@@ -220,7 +220,7 @@ void operator<<=(CORBA::Any& _a, const CORBA::UnknownUserException* _sp) {
   insertUnknownUserExceptionToAny(_a,_sp);
 }
 
-CORBA::Boolean operator>>=(const CORBA::Any& _a, CORBA::UnknownUserException*& _sp) {
+CORBA::Boolean operator>>=(const CORBA::Any& _a, const CORBA::UnknownUserException*& _sp) {
   CORBA::UnknownUserException* s = 0;
   if (extractUnknownUserExceptionFromAny(_a,s,1)) {
     _sp = s;

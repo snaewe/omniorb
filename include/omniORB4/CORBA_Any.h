@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/01/09 11:37:46  dpg1
+  Platform, constness fixes.
+
   Revision 1.1.2.2  2001/10/17 16:43:59  dpg1
   Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -218,7 +221,7 @@ public:
     UShort scale;
   };
   struct to_object {
-    to_object(Object_out obj) : ref(obj) { }
+    to_object(Object_out obj) : ref(obj._data) { }
     Object_ptr& ref;
   };
 

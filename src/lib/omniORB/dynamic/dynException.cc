@@ -195,7 +195,7 @@ void operator<<=(CORBA::Any& _a, const module::fqname* _sp) { \
   insertUserExceptionToAny(_a,_tc_##module##_##_fqname,_sp); \
 } \
  \
-CORBA::Boolean operator>>=(const CORBA::Any& _a, module::fqname*& _sp) { \
+CORBA::Boolean operator>>=(const CORBA::Any& _a, const module::fqname*& _sp) { \
   CORBA::UserException* s = 0; \
   if (extractUserExceptionFromAny(_a,_tc_##module##_##_fqname,s,1)) { \
     _sp = (module::fqname *)s; \
