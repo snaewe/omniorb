@@ -30,6 +30,12 @@ src/lib/omniORB/orbcore/tcp/tcpEndpoint.h
 
 include/omniORB4/CORBA_sysdep.h
 
+- Rearrange the declaration of for-loop index variable to work with old and
+  standard C++.
+
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+
+
 Tue Jun 19 17:23:08 BST 2001 sll
 ================================
 
