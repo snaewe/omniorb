@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.18  2004/10/18 00:23:54  dgrisby
+  Bug in trying to set up bidirectional GIOP with GIOP 1.0 and 1.1.
+
   Revision 1.1.2.17  2004/05/25 16:25:18  dgrisby
   Typo in bidir changes.
 
@@ -504,6 +507,17 @@ BiDirClientRope::acquireClient(const omniIOR* ior,
 			       omniCallDescriptor* calldesc) {
 
   GIOP_C* giop_c = (GIOP_C*) giopRope::acquireClient(ior,key,keysize,calldesc);
+
+  // Bidirectional is only supported in GIOP 1.2 and above
+  GIOP::Version v = ior->getIORInfo()->version();
+  if (!(v.major > 1 || v.minor >= 2)) {
+    if (omniORB::trace(20)) {
+      omniORB::logger log;
+      log << "Bidirectional client using normal connection because "
+	  << "it is only GIOP " << (int)v.major << "." << (int)v.minor << "\n";
+    }
+    return giop_c;
+  }
 
   omni_tracedmutex_lock sync(pd_lock);
   giopStrand& s = (giopStrand&)((giopStream&)(*giop_c));
