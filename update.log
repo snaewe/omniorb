@@ -1,3 +1,15 @@
+Mon Jun 28 14:29:56 BST 1999 dpg1
+=================================
+
+- Updated LifeCycle code for proxyCallWraper and Context support
+
+include/omniLC.h
+src/lib/omniORB2/lifecycle/omniLifeCycle.cc
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
+src/tool/omniidl2/omniORB2_be/o2be_attribute.cc
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
+
 Sat Jun 26 18:50:18 BST 1999 sll
 ================================
 
