@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.10.2.2  1999/09/23 13:47:25  sll
+  Fixed a race condition which causes simple programs that exit quickly to
+  delay for a maximum of one scan period.
+
   Revision 1.10.2.1  1999/09/21 20:37:17  sll
   -Simplified the scavenger code and the mechanism in which connections
    are shutdown. Now only one scavenger thread scans both incoming
@@ -316,7 +320,7 @@ omniORB_Scavenger::run_undetached(void*)
 
   omni_mutex_lock sync(pd_mutex);
 
-  while (1) {
+  while (!pd_isdying) {
 
     int poke = 0;
     if (ScanPeriod) {
@@ -333,9 +337,7 @@ omniORB_Scavenger::run_undetached(void*)
       omni_thread::get_time(&abs_sec,&abs_nsec);	
     }
 
-    if (pd_isdying) break;
-    
-    if (poke) continue;
+    if (poke || pd_isdying) continue;
   
     LOGMESSAGE(15,"","scanning connections");
 
