@@ -5,6 +5,7 @@ ORB_SRCS = \
             bootstrapstub.cc \
             callDescriptor.cc \
             cdrMemoryStream.cc \
+            cdrStream.cc \
             constants.cc \
             corbaBoa.cc \
             corbaObject.cc \
