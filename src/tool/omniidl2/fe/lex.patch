@@ -1,0 +1,84 @@
+We generate lex.yy.c, which is renamed to lex.yy.cc, by parsing idl.ll by
+lex on Solaris. The output however has to be patched to be usable on other
+platforms. The following is a template of the patch that has to be applied to
+the output. If the idl.ll has been modified, the line no. info in the patch
+is not expected to be correct. However, at least this provides the starting
+point to incorporate the necessary changes.
+
+
+
+
+
+*** lex.yy.c	Thu Feb 26 12:04:28 1998
+--- lex.yy.cc	Thu Feb 26 12:11:45 1998
+***************
+*** 13,18 ****
+--- 13,24 ----
+  # define lex_output(c) (void)putc(c,yyout)
+  #endif
+  
++ #if defined(__cplusplus)
++ #ifndef __EXTERN_C__
++ #define __EXTERN_C__
++ #endif
++ #endif
++ 
+  #if defined(__cplusplus) || defined(__STDC__)
+  
+  #if defined(__cplusplus) && defined(__EXTERN_C__)
+***************
+*** 69,80 ****
+--- 75,88 ----
+  int yytchar;
+  FILE *yyin = {stdin}, *yyout = {stdout};
+  extern int yylineno;
++ #ifndef __DECCXX
+  struct yysvf { 
+  	struct yywork *yystoff;
+  	struct yysvf *yyother;
+  	int *yystops;};
+  struct yysvf *yyestate;
+  extern struct yysvf yysvec[], *yybgin;
++ #endif
+  
+  # line 4 "idl.ll"
+  /*
+***************
+*** 2050,2055 ****
+--- 2058,2073 ----
+  0,0,	300,303,	0,0,	0,0,	
+  302,302,	0,0,	0,0,	0,0,	
+  0,0};
++ 
++ #ifdef __DECCXX
++ struct yysvf { 
++ 	struct yywork *yystoff;
++ 	struct yysvf *yyother;
++ 	int *yystops;};
++ struct yysvf *yyestate;
++ extern struct yysvf yysvec[], *yybgin;
++ #endif
++ 
+  struct yysvf yysvec[] = {
+  0,	0,	0,
+  yycrank+-1,	0,		yyvstop+1,
+***************
+*** 2418,2425 ****
+  /*	The copyright notice above does not evidence any   	*/
+  /*	actual or intended publication of such source code.	*/
+  
+- #pragma ident	"@(#)ncform	6.8	95/02/11 SMI"
+- 
+  int yylineno =1;
+  # define YYU(x) x
+  # define NLSTATE yyprevious=YYNEWLINE
+--- 2436,2441 ----
+***************
+*** 2657,2659 ****
+--- 2673,2678 ----
+  {
+  	unput(c);
+  	}
++ #ifdef __VMS
++ # line 2677 "lex_yy.cc"
++ #endif
