@@ -838,7 +838,7 @@ omniNameslog::getCreate(istream& file)
 
   getKey(id, file);
 
-  if (id.length() == 4) // SYS_ASSIGNED_ID_SIZE
+  if (id.length() == 12) // SYS_ASSIGNED_ID_SIZE + TRANSIENT_SUFFIX_SIZE
     rc = new NamingContext_i(poa, id, this);
   else
     rc = new NamingContext_i(ins_poa, id, this);

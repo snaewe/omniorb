@@ -8,12 +8,27 @@
 
 <buglist version="4.0.0">
 
-<bug id="1" date="Wed Oct  2 21:06:51 BST 2002" user="dgrisby">
-  <summary>Broken .mak files for Windows</summary>
-  <reported>Jonathan Shaw</reported>
+<bug id="4" date="Mon Oct 14 15:48:35 BST 2002" user="dgrisby">
+  <summary>Object ids not unique in PERSISTENT SYSTEM_ID POAs</summary>
+  <reported>Bjorn Rohde Jensen</reported>
+  <listlink
+  href="http://www.omniorb-support.com/pipermail/omniorb-list/2002-October/021993.html"/>
   <text>
-  The .mak files for use with Windows nmake were broken. The Windows
-  binary distribution has been patched.
+  A POA with the PERSISTENT and SYSTEM_ID policies should generate
+  object ids that are unique across all runs. omniORB failed to do
+  that. See the new poaUniquePersistentSystemIds configuration
+  parameter if you need the old behaviour.
+  </text>
+</bug>
+
+<bug id="3" date="Mon Oct 14 15:48:35 BST 2002" user="dgrisby">
+  <summary>Deadlock race condition in create_POA / destroy</summary>
+  <reported>Teemu Torma</reported>
+  <listlink
+  href="http://www.omniorb-support.com/pipermail/omniorb-list/2002-October/021987.html"/>
+  <text>
+  If a thread destroying a POA raced with another thread trying to
+  create the same POA, a deadlock could occur.
   </text>
 </bug>
 
@@ -22,6 +37,15 @@
   <reported>Norrie Quinn</reported>
   <listlink
   href="http://www.omniorb-support.com/pipermail/omniorb-list/2002-September/021849.html"/>
+</bug>
+
+<bug id="1" date="Wed Oct  2 21:06:51 BST 2002" user="dgrisby">
+  <summary>Broken .mak files for Windows</summary>
+  <reported>Jonathan Shaw</reported>
+  <text>
+  The .mak files for use with Windows nmake were broken. The Windows
+  binary distribution has been patched.
+  </text>
 </bug>
 
 </buglist>

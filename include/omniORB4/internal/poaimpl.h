@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2002/10/14 15:14:54  dgrisby
+  Fix create_POA / destroy deadlock, unique persistent system ids.
+
   Revision 1.1.4.10  2001/11/13 14:11:44  dpg1
   Tweaks for CORBA 2.5 compliance.
 
@@ -537,6 +540,11 @@ private:
   // A list of objects activated in this adapter.  Includes only
   // those in the active object map.
   //  Protected by <pd_lock>.
+
+  _CORBA_Octet*                        pd_oidPrefix;
+  // Unique id to prefix object ids when using the PERSISTENT and
+  // SYSTEM_ID policies.
+  //  Immutable once allocated. No concurrency control.
 };
 
 OMNI_NAMESPACE_END(omni)

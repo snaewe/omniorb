@@ -165,10 +165,12 @@ main(int argc, char **argv)
   // Add a fake command line option to tell the POA which port to use.
   //
 
-  insertArgs(argc, argv, 1, 2);
+  insertArgs(argc, argv, 1, 4);
   argv[1] = strdup("-ORBendPoint");
   argv[2] = new char[20];
   sprintf(argv[2], "giop:tcp::%d", port);
+  argv[3] = strdup("-ORBpoaUniquePersistentSystemIds");
+  argv[4] = strdup("1");
 
   //
   // Initialize the ORB and the object adapter.

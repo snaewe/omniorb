@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.34  2002/10/14 15:16:20  dgrisby
+  Fix create_POA / destroy deadlock, unique persistent system ids.
+
   Revision 1.2.2.33  2002/09/11 20:40:15  dgrisby
   Call thread interceptors from etherealiser queue.
 
@@ -269,7 +272,7 @@ OMNI_USING_NAMESPACE(omni)
 ////////////////////////////////////////////////////////////////////////////
 //             Configuration options                                      //
 ////////////////////////////////////////////////////////////////////////////
-  CORBA::ULong orbParameters::poaHoldRequestTimeout = 0;
+CORBA::ULong orbParameters::poaHoldRequestTimeout = 0;
 //  This variable can be used to set a time-out for calls being held
 //  in a POA which is in the HOLDING state.  It gives the time in
 //  milliseconds after which a TRANSIENT exception will be thrown if
@@ -277,6 +280,13 @@ OMNI_USING_NAMESPACE(omni)
 //
 //  Valid values = (n >= 0 in milliseconds)
 //                  0 --> no time-out.
+
+static CORBA::Boolean poaUniquePersistentSystemIds = 1;
+//  If true, system ids generated for PERSISTENT policy POAs will be
+//  unique between POA instantiations, as required by the POA spec; if
+//  false, system ids will be reused, as in earlier omniORB versions.
+//
+//  Valid values = 0 or 1
 
 
 //////////////////////////////////////////////////////////////////////
@@ -497,6 +507,8 @@ omniOrbPOA::~omniOrbPOA()
       break;
     }
   }
+  if (pd_oidPrefix)
+    delete [] pd_oidPrefix;
 }
 
 
@@ -526,7 +538,10 @@ omniOrbPOA::create_POA(const char* adapter_name,
   omni_tracedmutex_lock sync(poa_lock);
   omni_tracedmutex_lock sync2(pd_lock);
 
-  CHECK_NOT_DYING();
+  if (pd_dying)
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_POACreationDuringDestruction,
+		  CORBA::COMPLETED_NO);
 
   // If an adapter of the given name exists, but is in the
   // process of being destroyed, we should block until
@@ -535,13 +550,43 @@ omniOrbPOA::create_POA(const char* adapter_name,
 
   omniOrbPOA* p = find_child(adapter_name);
   if( p ) {
-    omni_tracedmutex_lock sync(p->pd_lock);
+    // Increment its refcount so it doesn't disappear from under us
+    p->incrRefCount();
+
+    p->pd_lock.lock();
+
     if( p->pd_dying ) {
+
+      // Temporarily release other locks
+      pd_lock.unlock();
+      poa_lock.unlock();
+
+      if( omniORB::trace(10) ) {
+	omniORB::logger l;
+	l << "Waiting for destruction of POA(" << adapter_name << ").\n";
+      }
       while( p->pd_destroyed != 2 )  p->pd_deathSignal.wait();
+
+      p->pd_lock.unlock();
+      p->decrRefCount();
+
+      if( omniORB::trace(10) ) {
+	omniORB::logger l;
+	l << "Continuing the creation of POA(" << adapter_name << ").\n";
+      }
+
+      // Reacquire locks
+      poa_lock.lock();
+      pd_lock.lock();
+
+      // It should have gone now
       OMNIORB_ASSERT(find_child(adapter_name) == 0);
     }
-    else
+    else {
+      p->pd_lock.unlock();
+      p->decrRefCount();
       throw AdapterAlreadyExists();
+    }
   }
 
   if( CORBA::is_nil(manager) )
@@ -678,7 +723,6 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
   // try and:
   //   o  create child POAs
   //   o  activate objects
-  //   o  perform upcalls
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
@@ -953,8 +997,18 @@ omniOrbPOA::activate_object_with_id(const PortableServer::ObjectId& oid,
   if( !p_servant )
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidServant, CORBA::COMPLETED_NO);
 
-  if( !pd_policy.user_assigned_id && oid.length() != SYS_ASSIGNED_ID_SIZE )
-    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidSystemId, CORBA::COMPLETED_NO);
+  if( !pd_policy.user_assigned_id ) {
+
+    CORBA::ULong length_check;
+
+    if (!pd_policy.transient && poaUniquePersistentSystemIds)
+      length_check = SYS_ASSIGNED_ID_SIZE + TRANSIENT_SUFFIX_SIZE;
+    else
+      length_check = SYS_ASSIGNED_ID_SIZE;
+
+    if (oid.length() != length_check)
+      OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidSystemId, CORBA::COMPLETED_NO);
+  }
 
   omniObjKey key;
   create_key(key, oid.NP_data(), oid.length());
@@ -1133,8 +1187,19 @@ omniOrbPOA::create_reference_with_id(const PortableServer::ObjectId& oid,
 				     const char* intf)
 {
   CHECK_NOT_NIL_OR_DESTROYED();
-  if( !pd_policy.user_assigned_id && oid.length() != SYS_ASSIGNED_ID_SIZE )
-    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidSystemId, CORBA::COMPLETED_NO);
+
+  if( !pd_policy.user_assigned_id ) {
+
+    CORBA::ULong length_check;
+
+    if (!pd_policy.transient && poaUniquePersistentSystemIds)
+      length_check = SYS_ASSIGNED_ID_SIZE + TRANSIENT_SUFFIX_SIZE;
+    else
+      length_check = SYS_ASSIGNED_ID_SIZE;
+
+    if (oid.length() != length_check)
+      OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidSystemId, CORBA::COMPLETED_NO);
+  }
 
   if( !intf )  intf = ""; // Null string is permitted.
 
@@ -1867,7 +1932,8 @@ omniOrbPOA::omniOrbPOA(const char* name,
     pd_call_lock(0),
     pd_deathSignal(&pd_lock),
     pd_oidIndex(0),
-    pd_activeObjList(0)
+    pd_activeObjList(0),
+    pd_oidPrefix(0)
 {
   OMNIORB_ASSERT(name);
   OMNIORB_ASSERT(manager);
@@ -1905,6 +1971,10 @@ omniOrbPOA::omniOrbPOA(const char* name,
       ((char*) pd_poaId)[fnlen] = TRANSIENT_SUFFIX_SEP;
       generateUniqueId((_CORBA_Octet*) ((char*) pd_poaId + fnlen + 1));
       ((char*) pd_poaId)[pd_poaIdSize - 1] = '\0';
+    }
+    else if (!policies.user_assigned_id && poaUniquePersistentSystemIds) {
+      pd_oidPrefix = new CORBA::Octet[TRANSIENT_SUFFIX_SIZE];
+      generateUniqueId(pd_oidPrefix);
     }
   }
   else {
@@ -1966,8 +2036,16 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   OMNIORB_ASSERT(pd_dying);
 
   while( pd_children.length() ) {
-    try { pd_children[0]->destroy(etherealize_objects, 1); }
-    catch(...) {}
+    try {
+      pd_children[0]->destroy(etherealize_objects, 1);
+    }
+    catch(CORBA::OBJECT_NOT_EXIST& ex) {
+      // Race with another thread destroying a child POA.
+      omni_thread::sleep(0, 100000000);
+    }
+    catch (...) {
+      omniORB::logs(2, "Unexpected exception in do_destroy.");
+    }
   }
 
   OMNIORB_ASSERT(pd_children.length() == 0);
@@ -2366,7 +2444,14 @@ omniOrbPOA::create_new_key(omniObjKey& key_out, const CORBA::Octet** id,
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock, 1);
 
-  key_out.set_size(pd_poaIdSize + SYS_ASSIGNED_ID_SIZE);
+  CORBA::Boolean add_prefix = (!pd_policy.transient &&
+			       poaUniquePersistentSystemIds);
+
+  if (add_prefix)
+    key_out.set_size(pd_poaIdSize+SYS_ASSIGNED_ID_SIZE+TRANSIENT_SUFFIX_SIZE);
+  else
+    key_out.set_size(pd_poaIdSize+SYS_ASSIGNED_ID_SIZE);
+
   CORBA::Octet* k = key_out.write_key();
 
   _CORBA_ULong idx = pd_oidIndex;
@@ -2378,13 +2463,24 @@ omniOrbPOA::create_new_key(omniObjKey& key_out, const CORBA::Octet** id,
   }
 
   memcpy(k, (const char*) pd_poaId, pd_poaIdSize);
-  memcpy(k + pd_poaIdSize, (const CORBA::Octet*) &idx,
-	 SYS_ASSIGNED_ID_SIZE);
+
+  if (add_prefix) {
+    memcpy(k + pd_poaIdSize, pd_oidPrefix,
+	   TRANSIENT_SUFFIX_SIZE);
+    memcpy(k + TRANSIENT_SUFFIX_SIZE + pd_poaIdSize,
+	   (const CORBA::Octet*) &idx,
+	   SYS_ASSIGNED_ID_SIZE);
+  }
+  else {
+    memcpy(k + pd_poaIdSize, (const CORBA::Octet*) &idx,
+	   SYS_ASSIGNED_ID_SIZE);
+  }
 
   pd_oidIndex++;
 
   if( id )      *id = k + pd_poaIdSize;
-  if( idsize )  *idsize = SYS_ASSIGNED_ID_SIZE;
+  if( idsize )  *idsize = (SYS_ASSIGNED_ID_SIZE +
+			   (add_prefix ? TRANSIENT_SUFFIX_SIZE : 0));
 }
 
 
@@ -3794,6 +3890,34 @@ public:
 
 static poaHoldRequestTimeoutHandler poaHoldRequestTimeoutHandler_;
 
+/////////////////////////////////////////////////////////////////////////////
+class poaUniquePersistentSystemIdsHandler : public orbOptions::Handler {
+public:
+
+  poaUniquePersistentSystemIdsHandler() :
+    orbOptions::Handler("poaUniquePersistentSystemIds",
+			"poaUniquePersistentSystemIds = 0 or 1",
+			1,
+			"-ORBpoaUniquePersistentSystemIds < 0 | 1 >") {}
+
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    poaUniquePersistentSystemIds = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),poaUniquePersistentSystemIds,
+			     result);
+  }
+};
+
+static poaUniquePersistentSystemIdsHandler poaUniquePersistentSystemIdsHandler_;
+
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
@@ -3807,6 +3931,7 @@ public:
 
   omni_poa_initialiser() {
     orbOptions::singleton().registerHandler(poaHoldRequestTimeoutHandler_);
+    orbOptions::singleton().registerHandler(poaUniquePersistentSystemIdsHandler_);
     omniInitialReferences::registerPseudoObjFn("RootPOA",    resolveRootPOAFn);
     omniInitialReferences::registerPseudoObjFn("omniINSPOA", resolveINSPOAFn);
   }
