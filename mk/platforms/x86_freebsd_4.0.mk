@@ -10,7 +10,7 @@ x86Processor = 1
 #
 # You must set a path to a Python 1.5.2 interpreter.
 
-PYTHON = /usr/local/bin/python
+#PYTHON = /usr/local/bin/python
 
 
 #
