@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.31  1999/04/15 14:12:05  djr
+  Fixed bug w TIE templates (wrong when using diamond shaped multiple
+  inheritance.
+
   Revision 1.30  1999/03/11 16:26:13  djr
   Updated copyright notice
 
@@ -2951,17 +2955,73 @@ o2be_interface::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 	    << "_var " << tdef->uqname() << "_var;\n";
 }
 
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+// Highly inefficient hack. Oh how we dream of the STL ...
+
+class OpnList {
+public:
+  inline OpnList() {
+    pd_size = 10;
+    pd_ops = new char*[pd_size];
+    pd_n = 0;
+  };
+  inline ~OpnList() {
+    for( int i = 0; i < pd_n; i++ )  delete[] pd_ops[i];
+    delete[] pd_ops;
+  }
+
+  void add(const char* op);
+  int is_member(const char* op);
+
+private:
+  char** pd_ops;
+  int pd_size;
+  int pd_n;
+};
+
+
+void OpnList::add(const char* op)
+{
+  if( pd_n == pd_size ) {
+    int newsize = pd_size * 3 / 2 + 1;
+    char** newops = new char*[newsize];
+    for( int i = 0; i < pd_n; i++ )  newops[i] = pd_ops[i];
+    pd_size = newsize;
+    delete[] pd_ops;
+    pd_ops = newops;
+  }
+  pd_ops[pd_n] = new char[strlen(op) + 1];
+  strcpy(pd_ops[pd_n++], op);
+}
+
+
+int OpnList::is_member(const char* op)
+{
+  for( int i = 0; i < pd_n; i++ )
+    if( !strcmp(pd_ops[i], op) )
+      return 1;
+  return 0;
+}
+
 
 static
-void internal_produce_tie_call_wrappers(o2be_interface* intf, std::fstream &s)
+void internal_produce_tie_call_wrappers(o2be_interface* intf, OpnList& opl,
+					std::fstream& s)
 {
   UTL_ScopeActiveIterator i(intf,UTL_Scope::IK_decls);
   while (!i.is_done())
     {
       AST_Decl *d = i.item();
+      i.next();
       if (d->node_type() == AST_Decl::NT_op)
 	{
 	  o2be_operation* op = o2be_operation::narrow_from_decl(d);
+	  const char* opname = op->uqname();
+	  if( opl.is_member(opname) )  continue;
+	  opl.add(opname);
 	  IND(s);
 	  op->produce_decl(s,0,0,I_TRUE,I_TRUE);
 	  s << " { ";
@@ -2973,7 +3033,10 @@ void internal_produce_tie_call_wrappers(o2be_interface* intf, std::fstream &s)
       else if (d->node_type() == AST_Decl::NT_attr)
 	{
 	  IND(s);
-	  o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
+	  o2be_attribute* a = o2be_attribute::narrow_from_decl(d);
+	  const char* opname = a->uqname();
+	  if( opl.is_member(opname) )  continue;
+	  opl.add(opname);
 	  a->produce_decl_rd(s, I_TRUE);
 	  s << ' ' << a->uqname() << "()";
 	  s << " { return pd_obj->" << a->uqname() << "(); }\n";
@@ -2984,7 +3047,6 @@ void internal_produce_tie_call_wrappers(o2be_interface* intf, std::fstream &s)
 	      s << " _value)  { pd_obj->" << a->uqname() << "(_value); }\n";
 	    }
 	}
-      i.next();
     }
   {
     int ni,j;
@@ -2995,7 +3057,7 @@ void internal_produce_tie_call_wrappers(o2be_interface* intf, std::fstream &s)
 	for (j=0; j< ni; j++)
 	  {
 	    o2be_interface * intfc = o2be_interface::narrow_from_decl(intftable[j]);
-	    internal_produce_tie_call_wrappers(intfc,s);
+	    internal_produce_tie_call_wrappers(intfc, opl, s);
 	  }
       }
   }
@@ -3019,7 +3081,8 @@ o2be_interface::produce_tie_templates(std::fstream &s)
   IND(s); s << "~" << TIE_CLASS_PREFIX << _fqname() 
 	    << "() { if (pd_release) delete pd_obj; }\n";
 
-  internal_produce_tie_call_wrappers(this,s);
+  OpnList opl;
+  internal_produce_tie_call_wrappers(this, opl, s);
   DEC_INDENT_LEVEL();
   IND(s); s << "private:\n";
   INC_INDENT_LEVEL();
