@@ -1,8 +1,0 @@
-Object anyExample_clt_exe.o
-{
-    Executable anyExample_clt
-    ULibrary libpthreads.o
-    ULibrary plibc.o
-    ULibrary llibc++.o
-    ULibrary netdb.o
-}

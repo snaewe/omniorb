@@ -1,8 +1,0 @@
-
-A note on VisualAge C++ 5.0
-===========================
-
-It is reported that VisualAge C++ 5.0 does not like the inline friend
-functions declared in include/omniORB3/bufferedStream.h. As a
-work-around, apply the patch in patches/aix_xlC_5.0.patch to move the
-function definitions.
