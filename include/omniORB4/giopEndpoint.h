@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/12/03 13:39:54  dpg1
+  Explicit socket shutdown flag for Windows.
+
   Revision 1.1.4.5  2001/08/23 16:00:34  sll
   Added method in giopTransportImpl to return the addresses of the host
   interfaces.
@@ -78,7 +81,7 @@ public:
   virtual int Recv(void* buf, size_t sz,
 		   unsigned long deadline_secs = 0,
 		   unsigned long deadline_nanosecs = 0) = 0;
-  virtual void   Shutdown() = 0;
+  virtual void Shutdown() = 0;
 
   virtual const char* myaddress() = 0;
   virtual const char* peeraddress() = 0;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/12/03 13:39:54  dpg1
+  Explicit socket shutdown flag for Windows.
+
   Revision 1.1.2.4  2001/08/24 16:43:25  sll
   Switch to use Winsock 2. Removed reference to winsock.h. Let the pre-processor
   define _WIN32_WINNT=0x0400 to select the right header.
@@ -98,6 +101,7 @@
 #define EINPROGRESS        WSAEWOULDBLOCK
 #define RC_EINTR           WSAEINTR
 #define SOCKNAME_SIZE_T    int
+#define NEED_SOCKET_SHUTDOWN_FLAG 1
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -202,13 +206,25 @@ extern int SocketSetblocking(SocketHandle_t sock);
 class SocketLink {
 
 public:
-  SocketLink(SocketHandle_t s) : pd_socket(s), pd_next(0) {}
+  SocketLink(SocketHandle_t s)
+    : pd_socket(s),
+#ifdef NEED_SOCKET_SHUTDOWN_FLAG
+      pd_shutdown(0),
+#endif
+      pd_next(0) {}
+
   ~SocketLink() {}
 
   friend class SocketCollection;
 
 protected:
   SocketHandle_t pd_socket;
+
+#ifdef NEED_SOCKET_SHUTDOWN_FLAG
+  // select() on Windows does not return an error after the socket has
+  // shutdown, so we have to store an extra flag here.
+  CORBA::Boolean pd_shutdown;
+#endif
 
 private:
   SocketLink*    pd_next;

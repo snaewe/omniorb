@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2001/12/03 13:39:55  dpg1
+  Explicit socket shutdown flag for Windows.
+
   Revision 1.1.2.9  2001/11/26 10:51:04  dpg1
   Wrong endpoint address when getsockname() fails.
 
@@ -199,6 +202,13 @@ tcpConnection::Recv(void* buf, size_t sz,
 
   do {
 
+#ifdef NEED_SOCKET_SHUTDOWN_FLAG
+    // Unfortunately, select() on Windows does not return an error
+    // after the socket has shutdown. We have to use this hack.
+    if (pd_shutdown)
+      return -1;
+#endif
+
     struct timeval t;
 
     if (deadline_secs || deadline_nanosecs) {
@@ -275,6 +285,9 @@ tcpConnection::Recv(void* buf, size_t sz,
 void
 tcpConnection::Shutdown() {
   SHUTDOWNSOCKET(pd_socket);
+#ifdef NEED_SOCKET_SHUTDOWN_FLAG
+  pd_shutdown = 1;
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////
