@@ -1,3 +1,12 @@
+Thu Mar 13 13:47:22 GMT 2003 dgrisby
+====================================
+
+- Another AIX patch. Will it work this time, we wonder...
+
+mk/beforeauto.mk.in
+src/tool/omniidl/cxx/dir.mk
+
+
 Wed Mar 12 16:51:05 GMT 2003 dgrisby
 ====================================
 
