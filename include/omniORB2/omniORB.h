@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.8  1998/01/27 16:07:58  ewc
+  Added -ORBtcAliasExpand flag
+
   Revision 1.7  1997/12/12 18:47:16  sll
   New variable serverName.
 
@@ -104,6 +107,30 @@ public:
   //     variable.                                                     //
   ///////////////////////////////////////////////////////////////////////
 
+  ///////////////////////////////////////////////////////////////////////
+  //  tcAliasExpand flag is used to indicate whether TypeCodes        //
+  //              associated with anys should have aliases removed.This//
+  //              functionality is included because some ORBs will not //
+  //              recognise an Any containing a TypeCode containing    //
+  //              aliases to be the same as the actual type contained  //
+  //              in the Any. Note that omniORB will always remove     //
+  //              top-level aliases, but will not remove aliases from  //
+  //              TypeCodes that are members of other TypeCodes (e.g.  //
+  //              TypeCodes for members of structs etc.), unless       //
+  //              tcAliasExpand is set to 1. There is a performance    //
+  //              penalty when inserting into an Any if tcAliasExpand  //
+  //              is set to 1. The default value is 0 (i.e. aliases of //
+  //              member TypeCodes are not expanded).                  //
+  //              Note that aliases won't be expanded when one of the  //
+  //              non - type-safe methods of inserting into an Any is  //
+  //              used (i.e. when the replace() member function or     //
+  //              non - type-safe Any constructor is used. )           //
+  ///////////////////////////////////////////////////////////////////////
+  static CORBA::Boolean tcAliasExpand;                                 //
+  //     This value can be changed at runtime either by command-line   //
+  //     option: -ORBtcAliasExpand <0|1>, or by direct assignment to   //
+  //     this variable.                                                //
+  ///////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
   // objectKey is a data type that uniquely identify each object        //
