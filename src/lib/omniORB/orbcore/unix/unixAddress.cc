@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/23 10:11:15  sll
+  Use AF_UNIX if AF_LOCAL is not defined.
+
   Revision 1.1.2.2  2001/08/07 15:42:17  sll
   Make unix domain connections distinguishable on both the server and client
   side.
@@ -48,6 +51,12 @@
 #include <sys/un.h>
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(unixAddress);
+
+#ifndef AF_LOCAL
+#ifdef  AF_UNIX
+#define AF_LOCAL AF_UNIX
+#endif
+#endif
 
 OMNI_NAMESPACE_BEGIN(omni)
 

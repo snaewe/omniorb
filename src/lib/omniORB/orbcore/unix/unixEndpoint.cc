@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/08/23 10:11:16  sll
+  Use AF_UNIX if AF_LOCAL is not defined.
+
   Revision 1.1.2.4  2001/08/17 17:12:42  sll
   Modularise ORB configuration parameters.
 
@@ -61,6 +64,13 @@
 #include <omniORB4/linkHacks.h>
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(unixEndpoint);
+
+#ifndef AF_LOCAL
+#ifdef  AF_UNIX
+#define AF_LOCAL AF_UNIX
+#endif
+#endif
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 
