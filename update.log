@@ -1,3 +1,21 @@
+Mon Nov 25 21:02:05 GMT 2002 dgrisby
+====================================
+
+- Minor sample config update.
+
+sample.cfg
+sample.reg
+
+- Add new to_string() function to Fixed.
+
+include/omniORB4/CORBA_Fixed.h
+src/lib/omniORB/orbcore/corbaFixed.cc
+
+- Friendly error messages if can't create files.
+
+src/lib/omniORB/omniidl_be/cxx/output.py
+
+
 Fri Nov 22 12:12:57 GMT 2002 dgrisby
 ====================================
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.6  2002/11/25 21:10:08  dgrisby
+# Friendly error messages if can't create files.
+#
 # Revision 1.1.4.5  2001/08/15 10:29:53  dpg1
 # Update DSI to use Current, inProcessIdentity.
 #
@@ -57,12 +60,18 @@ import string
 createdFiles = []
 
 def createFile(filename):
-    if filename in createdFiles:
-        file = open(filename, "a")
-    else:
-        file = open(filename, "w")
-        createdFiles.append(filename)
-    return file
+    try:
+        if filename in createdFiles:
+            file = open(filename, "a")
+        else:
+            file = open(filename, "w")
+            createdFiles.append(filename)
+        return file
+    except IOError:
+        import sys
+        sys.stderr.write("omniidl: Cannot open file '%s' for writing.\n" %
+                         filename)
+        sys.exit(1)
 
 def listAllCreatedFiles():
     return createdFiles
