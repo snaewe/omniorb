@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.14  2000/08/30 18:12:46  dpg1
+// Register operation declarations so they can be found with findDecl().
+//
 // Revision 1.15.2.13  2000/08/29 15:20:28  dpg1
 // New relativeScope() function. New -i flag to enter interactive loop
 // after parsing
@@ -391,8 +394,8 @@ visitModule(Module* m)
 				scopedNameToList(m->scopedName()),
 				m->repoId(),
 				pydecls);
-  registerPyDecl(m->scopedName(), result_);
   ASSERT_RESULT;
+  registerPyDecl(m->scopedName(), result_);
 }
 
 void
@@ -917,6 +920,7 @@ visitOperation(Operation* o)
 			pyparameters,
 			pyraises, pycontexts);
   ASSERT_RESULT;
+  registerPyDecl(o->scopedName(), result_);
 }
 
 void

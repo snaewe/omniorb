@@ -1,3 +1,12 @@
+Wed Aug 30 19:10:01 BST 2000 dpg1
+=================================
+
+- Register operation declarations so they can be found with
+  findDecl().
+
+src/tool/omniidl/cxx/idlpython.cc
+
+
 Wed Aug 30 16:12:53 BST 2000 dpg1
 =================================
 
