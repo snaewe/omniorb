@@ -37,5 +37,5 @@ export:: $(omniNames)
 
 OBJS = $(CXXSRCS:.cc=.o)
 
-$(omniNames): $(OBJS) $(CORBA_STATIC_LIB_DEPEND)
-	@(libs="$(CORBA_STATIC_LIB)"; $(CXXExecutable))
+$(omniNames): $(OBJS) $(CORBA_LIB_DEPEND)
+	@(libs="$(CORBA_LIB)"; $(CXXExecutable))
