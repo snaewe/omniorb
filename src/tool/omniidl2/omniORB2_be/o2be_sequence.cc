@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.21  1999/05/26 15:57:00  sll
+  sequence of object now uses a separate template.
+
   Revision 1.20  1999/05/26 10:40:51  sll
   Each sequence is now generated as a separate type.
 
@@ -369,25 +372,27 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 	if (s_max) {
 	  // bounded sequence
 	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_OBJREF) + 
-	                    strlen(iname) + strlen(baseclassname) + 25;
+	                    strlen(iname)*2 + strlen(baseclassname) + 33;
 	  result = new char[namesize];
 	  sprintf(result,
-		  "%s<%s,%s,%d>",
+		  "%s<%s,%s,%s_Helper,%d>",
 		  SEQUENCE_TEMPLATE_BOUNDED_OBJREF,
 		  iname,
 		  baseclassname,
+		  iname,
 		  (int) s_max);
 	}
 	else {
 	  // unbounded sequence
 	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_OBJREF) +
-	                    strlen(iname) + strlen(baseclassname) + 5;
+	                    strlen(iname)*2 + strlen(baseclassname) + 13;
 	  result = new char[namesize];
 	  sprintf(result,
-		  "%s<%s,%s >",
+		  "%s<%s,%s,%s_Helper >",
 		  SEQUENCE_TEMPLATE_UNBOUNDED_OBJREF,
 		  iname,
-		  baseclassname);
+		  baseclassname,
+		  iname);
 	}
 	return result;
 	break;
