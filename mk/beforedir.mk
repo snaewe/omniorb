@@ -271,7 +271,26 @@ endef
 # CORBA stuff
 #
 
+# It is now possible to compile interfaces and stubs that depend on
+# idl from import trees without generating headers and stubs for those
+# imported idls locally.  This is useful when the import tree supplies
+# the headers and stubs itself, usually as part of some library.
+#
+# To arrange this, set DIR_IDLFLAGS and DIR_STUBS_CPPFLAGS in your
+# dir.mk to the appropriate include flags.  Usually, these will just
+# be the ones in IMPORT_IDLFLAGS and IMPORT_CPPFLAGS defined here, so
+#
+#   DIR_IDLFLAGS = $(IMPORT_IDLFLAGS)
+#   DIR_STUBS_CPPFLAGS = $(IMPORT_CPPFLAGS)
+#
+# is all you need.  This would be the default if it weren't for the
+# need to preserve the old (idl-copying) behaviour for existing dir.mk
+# files.
+
 vpath %.idl $(IMPORT_TREES:%=%/idl)
+
+IMPORT_IDLFLAGS += -I. $(patsubst %,-I%,$(VPATH)) \
+		       $(patsubst %,-I%/idl,$(IMPORT_TREES))
 
 CORBA_IDL_FILES = $(CORBA_INTERFACES:%=%.idl)
 
@@ -293,7 +312,8 @@ CORBA_STUB_OBJ_PATTERN	= $($(CorbaImplementation)_STUB_OBJ_PATTERN)
 CORBA_DYN_STUB_SRC_PATTERN = $($(CorbaImplementation)_DYN_STUB_SRC_PATTERN)
 CORBA_DYN_STUB_OBJ_PATTERN = $($(CorbaImplementation)_DYN_STUB_OBJ_PATTERN)
 
-CORBA_STUB_HDRS		= $(CORBA_INTERFACES:%=$(CORBA_STUB_HDR_PATTERN))
+CORBA_STUB_HDRS		= \
+	$(CORBA_INTERFACES:%=$(CORBA_STUB_HDR_PATTERN))
 CORBA_STUB_SRCS		= $($(CorbaImplementation)_STUB_SRCS)
 CORBA_STUB_OBJS		= $($(CorbaImplementation)_STUB_OBJS)
 CORBA_STATIC_STUB_SRCS	= $($(CorbaImplementation)_STATIC_STUB_SRCS)
@@ -307,7 +327,6 @@ CORBA_STUB_FILES = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%.idl) \
 		   $($(CorbaImplementation)_EXTRA_STUB_FILES)
 
 GENERATED_CXX_HDRS += $(CORBA_STUB_HDRS)
-
 
 #############################################################################
 #

@@ -74,6 +74,17 @@ char *TranslateFileNameD2U(char *in, int offset)
     }
   }
 
+  /* Any residue dos drive, i.e. [A-Za-z]:, convert to //[A-Za-z]
+   */
+  if (strlen(out) >= 2 && out[1] == ':') {
+    char* newout = malloc(strlen(out) + 2);
+    newout[0] = '/';
+    newout[1] = '/';
+    newout[2] = out[0];
+    newout[3] = '\0';
+    strcat(newout,out+2);
+    out = newout;
+  }
   return out;
 }
 

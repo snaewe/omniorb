@@ -1,3 +1,14 @@
+Wed Jun 28 16:38:31 BST 2000 sll
+================================
+
+- last minute update to external_merge make rules
+- omkdepend no longer spit out dos drive pathnames
+
+external_merge/mk/beforedir.mk
+src/tool/omkdepend/gnuwin32.c
+src/tool/omniidl/cxx/dir.mk
+
+
 Wed Jun 28 14:53:27 BST 2000 dpg1
 =================================
 
