@@ -1,3 +1,15 @@
+Mon Feb 11 17:05:43 GMT 2002 dpg1
+=================================
+
+- Fix Windows brokenness caused by autoconf stuff.
+
+src/lib/omniORB/include/libcWrapper.h
+
+- Cast result of pthread_self().
+
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+
+
 Mon Feb 11 15:12:52 GMT 2002 dpg1
 =================================
 
