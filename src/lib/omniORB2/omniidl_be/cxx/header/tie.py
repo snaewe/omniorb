@@ -28,6 +28,10 @@
 #
 # $Id$
 # $Log$
+# Revision 1.11.2.4  2000/05/31 18:02:58  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+#
 # Revision 1.11.2.3  2000/04/26 18:22:31  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -186,7 +190,7 @@ def write_template(environment, node, nested = 0):
                 return_str = ""
                 
             where.out("""\
-  @return_type_name@ @operation_name@(@signature@) { @return_str@pd_obj->@operation_name@(@call@); }""", return_type_name = returnType_name,
+@return_type_name@ @operation_name@(@signature@) { @return_str@pd_obj->@operation_name@(@call@); }""", return_type_name = returnType_name,
                       operation_name = operation_name,
                       return_str = return_str,
                       signature = string.join(signature, ", "),
@@ -209,11 +213,11 @@ def write_template(environment, node, nested = 0):
                 
                 ident = id.mapID(identifier)
                 where.out("""\
-  @attr_type_ret_name@ @attribute_name@() { return pd_obj->@attribute_name@(); }""", attr_type_ret_name = attrType_name_RET,
+@attr_type_ret_name@ @attribute_name@() { return pd_obj->@attribute_name@(); }""", attr_type_ret_name = attrType_name_RET,
                           attribute_name = ident)
                 if not(attribute.readonly()):
                     where.out("""\
-  void @attribute_name@(@attr_type_in_name@ _value) { pd_obj->@attribute_name@(_value); }""", attribute_name = ident,
+void @attribute_name@(@attr_type_in_name@ _value) { pd_obj->@attribute_name@(_value); }""", attribute_name = ident,
                               attr_type_in_name = attrType_name_IN)                    
         # do the recursive bit
         for i in interface.inherits():

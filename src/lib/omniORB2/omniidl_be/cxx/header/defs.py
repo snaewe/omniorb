@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.10  2000/05/31 18:02:56  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+#
 # Revision 1.31.2.9  2000/05/30 15:59:23  djs
 # Removed inheritance ambiguity in generated BOA _sk_ and POA_ classes
 #
@@ -964,7 +968,7 @@ def visitException(node):
         ctor = cxx_exname + "(" + string.join(ctor_args, ", ") + ");"
             
     if no_members:
-        inline = "inline"
+        inline = "inline "
         body = "{ }"
         alignedSize = ""
     else:

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.5  2000/05/31 18:02:51  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+#
 # Revision 1.1.2.4  2000/03/28 18:28:23  djs
 # Sequence deletion function used unescaped name "data" which could clash with a
 # user identifier
@@ -607,8 +611,8 @@ const CORBA::TypeCode_ptr _tc_string_@n@ = CORBA::TypeCode::PR_string_tc(@n@);
 external_linkage = """\
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
-  @namespace@
-  namespace @scope@ {
+@namespace@
+namespace @scope@ {
   const CORBA::TypeCode_ptr @tc_unscoped_name@ = @mangled_name@;
 }
 #else

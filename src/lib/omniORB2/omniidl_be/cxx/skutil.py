@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.4  2000/05/31 18:02:16  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+#
 # Revision 1.15.2.3  2000/04/26 18:22:13  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -122,7 +126,7 @@ def marshall_struct_union(string, environment, type, decl, argname, to="_n"):
     if not(is_array):
         # marshall the simple way
         string.out("""\
-   @name@ >>= @to@;""", name = argname, to = to)
+@name@ >>= @to@;""", name = argname, to = to)
     else:
         # do it the normal way
         marshall(string, environment, type, decl, argname, to,
@@ -190,22 +194,22 @@ CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
         bounds = util.StringStream()
         if d_type.type().bound() != 0:
             bounds.out("""\
-    if (_len > @n@+1) {
-      throw CORBA::@exception@(0, CORBA::COMPLETED_MAYBE);
-    }""", n = str(d_type.type().bound()),
+if (_len > @n@+1) {
+  throw CORBA::@exception@(0, CORBA::COMPLETED_MAYBE);
+}""", n = str(d_type.type().bound()),
                        exception = exception)
 
         string.out("""\
-    CORBA::ULong _len = (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);
-    @bound@
-    _len >>= @to@;
-    if (_len > 1)
-      @to@.put_char_array((const CORBA::Char *)((const char*)@argname@@indexing_string@),_len);
-    else {
-      if ((const char*) @argname@@indexing_string@ == 0 && omniORB::traceLevel > 1)
-        _CORBA_null_string_ptr(0);
-      CORBA::Char('\\0') >>= @to@;
-    }""",
+CORBA::ULong _len = (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);
+@bound@
+_len >>= @to@;
+if (_len > 1)
+  @to@.put_char_array((const CORBA::Char *)((const char*)@argname@@indexing_string@),_len);
+else {
+  if ((const char*) @argname@@indexing_string@ == 0 && omniORB::traceLevel > 1)
+    _CORBA_null_string_ptr(0);
+  CORBA::Char('\\0') >>= @to@;
+}""",
                    bound = str(bounds),
                    argname = argname,
                    indexing_string = indexing_string,
@@ -217,7 +221,7 @@ CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
             indexing_string = util.block_begin_loop(string, full_dims) +\
                               "._ptr"
         string.out("""\
-    @type_name@_Helper::marshalObjRef(@argname@@indexing_string@,@to@);""",
+@type_name@_Helper::marshalObjRef(@argname@@indexing_string@,@to@);""",
                    type_name = type_name,
                    argname = argname,
                    indexing_string = indexing_string,
@@ -230,7 +234,7 @@ CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
         else:
             indexing_string = ""
         string.out("""\
-    @argname@@indexing_string@ >>= @to@;""",
+@argname@@indexing_string@ >>= @to@;""",
                    argname = argname, indexing_string = indexing_string,
                    to = to)
         if is_array:
@@ -253,7 +257,7 @@ def unmarshall_struct_union(string, environment, type, decl, argname,
     if not(is_array):
         # unmarshall the simple way
         string.out("""\
-   @name@ <<= @from_where@;""", name = argname, from_where = from_where)
+@name@ <<= @from_where@;""", name = argname, from_where = from_where)
     else:
         # do it the normal way
         unmarshall(string, environment, type, decl, argname,
@@ -341,7 +345,7 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
 
     if d_type.typecode():
         to.out("""\
-  @element_name@ = CORBA::TypeCode::unmarshalTypeCode(@from_where@);""",
+@element_name@ = CORBA::TypeCode::unmarshalTypeCode(@from_where@);""",
                element_name = element_name,
                from_where = from_where)
     elif d_type.string():
@@ -356,48 +360,48 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
 }""", where = from_where, name = element_name)
         else:
             to.out("""\
-  CORBA::ULong _len;
-  _len <<= @from_where@;
-  if (!_len) {
-    if (omniORB::traceLevel > 1)
-      _CORBA_null_string_ptr(1);
-    _len = 1;
-  }""", from_where = from_where)
+CORBA::ULong _len;
+_len <<= @from_where@;
+if (!_len) {
+  if (omniORB::traceLevel > 1)
+    _CORBA_null_string_ptr(1);
+  _len = 1;
+}""", from_where = from_where)
             if can_throw_marshall:
                 to.out("""\
-  else if ( @from_where@.RdMessageUnRead() < _len)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);""",
+else if ( @from_where@.RdMessageUnRead() < _len)
+  throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);""",
                        from_where = from_where)
                 to.dec_indent()
 
             if d_type.type().bound() != 0:
                 to.out("""\
-  if (_len > @n@+1) {
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  }""", n = str(d_type.type().bound()))
+if (_len > @n@+1) {
+  throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+}""", n = str(d_type.type().bound()))
 
                
             to.out("""\
-  if (!(char*)(@element_name@ = CORBA::string_alloc(_len-1)))
-    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-  if (_len > 1)
-    @from_where@.get_char_array((CORBA::Char *)((char *)@element_name@),_len);
-  else
-    *((CORBA::Char*)((char*) @element_name@)) <<= @from_where@ ;""",
+if (!(char*)(@element_name@ = CORBA::string_alloc(_len-1)))
+  throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+if (_len > 1)
+  @from_where@.get_char_array((CORBA::Char *)((char *)@element_name@),_len);
+else
+  *((CORBA::Char*)((char*) @element_name@)) <<= @from_where@ ;""",
                    element_name = element_name,
                    from_where = from_where)
             to.dec_indent()
     elif d_type.objref():
         base_type_name = d_type.base(environment)
         to.out("""\
-  @element_name@ = @type@_Helper::unmarshalObjRef(@from_where@);""",
+@element_name@ = @type@_Helper::unmarshalObjRef(@from_where@);""",
                    type = base_type_name,
                    element_name = element_name,
                    from_where = from_where)
 
     else:
         to.out("""\
-  @element_name@ <<= @from_where@;""",
+@element_name@ <<= @from_where@;""",
                    element_name = element_name,
                    from_where = from_where)
 
@@ -518,7 +522,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
 
         # do the actual calculation
         string.out("""\
-  @sizevar@ = @argname@@indexing_string@@deref@_NP_alignedSize(@sizevar@);""",
+@sizevar@ = @argname@@indexing_string@@deref@_NP_alignedSize(@sizevar@);""",
                    sizevar = sizevar, argname = argname,
                    indexing_string = indexing_string,
                    deref = dereference)

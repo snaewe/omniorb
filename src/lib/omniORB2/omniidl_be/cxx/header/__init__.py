@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.5  2000/05/31 18:02:56  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+#
 # Revision 1.12.2.4  2000/04/26 18:22:27  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -235,24 +239,24 @@ def run(tree):
         # build the defs file
         defs_filename = config.basename() + config.defs_fragment_suffix() +\
                         config.hdrsuffix()
-        defs_stream = util.LazyStream(open(defs_filename, "w"), 2)
+        defs_stream = util.Stream(open(defs_filename, "w"), 2)
         defs_fragment(defs_stream, tree)
 
         # build the opers file
         opers_filename = config.basename() + config.opers_fragment_suffix() +\
                          config.hdrsuffix()
-        opers_stream = util.LazyStream(open(opers_filename, "w"), 2)
+        opers_stream = util.Stream(open(opers_filename, "w"), 2)
         opers_fragment(opers_stream, tree)
 
         # build the poa file
         poa_filename = config.basename() + config.poa_fragment_suffix() +\
                        config.hdrsuffix()
-        poa_stream = util.LazyStream(open(poa_filename, "w"), 2)
+        poa_stream = util.Stream(open(poa_filename, "w"), 2)
         poa_fragment(poa_stream, tree)
     else:
         # build the full header file
         header_filename = config.basename() + config.hdrsuffix()
-        stream = util.LazyStream(open(header_filename, "w"), 2)
+        stream = util.Stream(open(header_filename, "w"), 2)
         # generate one big chunk of header
         monolithic(stream, tree)
 

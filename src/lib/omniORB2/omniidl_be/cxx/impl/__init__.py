@@ -10,7 +10,7 @@ def run(tree):
     idl_filename = tree.file()
     impl_filename = config.basename() + config.implsuffix()
 
-    stream = util.LazyStream(open(impl_filename, "w"), 2)
+    stream = util.Stream(open(impl_filename, "w"), 2)
     main.__init__(stream, idl_filename, hh_filename)
 
     main.run(tree)

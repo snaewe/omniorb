@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.6  2000/05/31 18:02:17  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+#
 # Revision 1.12.2.5  2000/04/26 18:22:15  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -119,33 +123,59 @@ def fatalError(explanation):
         
 
 # ------------------------------------------------------------------
-# Generic formatting functions
-
-
-# ------------------------------------------------------------------
 # Generic output utilities
 
-#   (modified from dpg1s to keep track of output indent level
-#    semi-automatically)
+# Stream is a wrapper around a python file stream
+# StringStream is a string buffer with a stream interface
 #
-# Out of date:
-# Doesnt have a stack of preceeding whitespace length as python does, instead
-# interprets an increase as a single inc_indent() and a decrease as a
-# dec_indent() First output line within a Stream.out() call sets the origin
-# for the successive lines. An @...@ expansion which becomes multiple lines
-# is output at a contant indent.
+# Holes in output template string can consist of:
+#   Strings - inserted as is
+#   StringStreams - converted into strings and inserted
+#   Integers - converted into strings (using str) and inserted
+#   Functions - stream is updated to reflect the current indent level
+#      and the function is applied (permitting template driven code
+#      rather than code-driving-template style)
+#
+# Multiline strings are inserted at the same indent level eg
+#
+# ~~~~~          ~~~~~
+#   @foo@   ->     ~~~~~~
+#                  ~~~~~~
+# ~~~~~          ~~~~~              
+#
+# Entire lines are buffered and if they consist of a preprocessor
+# directive ( ^\s*# ) the preceeding whitespace is trimmed.
+#
+# Note that a line which is empty apart from a hole is still a complete
+# line even if the hole itself is empty. This commonly causes large blocks of
+# empty lines in the output. For aesthetic effect, runs of more than 1 empty
+# line are removed.
 
 import re, string
 
-# simpler version (almost identical to dpg1s, except with the self.write
-# method):
+# dummy function which exists to get a handle on its type
+def fn():
+    pass
+
 class Stream:
     """Test output stream, same as omniidl.output.Stream but with an
        indirection (through write method)"""
-    def __init__(self, file, indent_size = 4):
+    def __init__(self, file, indent_size = 2):
         self.indent = 0
         self.istring = " " * indent_size
         self.file = file
+
+        self.pre_indent = ""
+        self.line_buffer = ""
+
+        self.last_line_empty = self.false
+
+    function_type = type(fn)
+    integer_type = type(1)
+    string_type = type("foo")
+    true = 1 == 1
+    false = 1 == 0
+
     regex = re.compile(r"@([^@]*)@")
 
     def inc_indent(self): self.indent = self.indent + 1
@@ -160,9 +190,63 @@ class Stream:
             if match.group(1) == "": return "@"
             return eval(match.group(1), globals(), dict)
 
-        for l in string.split(self.regex.sub(replace, text), "\n"):
-            self.write(self.istring * self.indent)
-            self.write(l)
+        for l in string.split(text, "\n"):
+            is_literal_text = 1 == 0
+            tokens = string.split(l, "@")
+            if tokens == []: continue
+
+            pre_indent = self.istring * self.indent
+            if string.lstrip(tokens[0]) == "":
+                pre_indent = pre_indent + tokens[0]
+                is_literal_text = not(is_literal_text)
+                tokens = tokens[1:]
+
+            start_of_line = self.true
+            for token in tokens:
+                is_literal_text = not(is_literal_text)
+
+                
+                if is_literal_text:
+                    if start_of_line:
+                        self.write(self.pre_indent + pre_indent)
+                    self.write(token)    
+                else:
+                    thing = eval(token, globals(), dict)
+
+                    expanded = ""
+                    if isinstance(thing, self.string_type):
+                        expanded = thing
+                    elif isinstance(thing, StringStream):
+                        expanded = str(thing)
+                    elif isinstance(thing, self.function_type):
+                        old_indent_str = self.pre_indent
+                        old_indent_level = self.indent
+                        self.indent = 0
+                        self.pre_indent = self.pre_indent + pre_indent
+                        apply(thing)
+                        self.pre_indent = old_indent_str
+                        self.indent = old_indent_level
+                        continue
+                    elif isinstance(thing, self.integer_type) or \
+                         hasattr(thing, "__str__"):
+                        expanded = str(thing)
+                    else:
+                        raise "What kind of type is " + repr(thing)
+
+                    lines = string.split(expanded, "\n")
+                    for n in range(0, len(lines)):
+                        if start_of_line:
+                            self.write(self.pre_indent + pre_indent)
+
+                        start_of_line = self.false
+
+                        self.write(lines[n])
+                        if n < (len(lines) - 1):
+                            self.write("\n")
+                            start_of_line = self.true
+
+                start_of_line = self.false
+                
             self.write("\n")
 
     def niout(self, text, ldict={}, **dict):
@@ -178,63 +262,46 @@ class Stream:
             self.write(l)
             self.write("\n")
 
-    def write(self, text):
-        self.file.write(text)
-
+    def preproc(self):
+        lstrip = string.lstrip(self.line_buffer)
+        if (lstrip != "") and (lstrip[0] == "#"):
+            self.line_buffer = lstrip
         
+    def write(self, text):
+        if text == "\n":
+            self.preproc()
+
+            this_line_empty = string.lstrip(self.line_buffer) == ""
+            if not(self.last_line_empty and this_line_empty):
+                self.writeln()
+            else:
+               self.line_buffer = ""
+            self.last_line_empty = this_line_empty
+            
+            return
+        self.line_buffer = self.line_buffer + text
+
+    def writeln(self):
+        self.file.write(self.line_buffer)
+        self.file.write("\n")
+        self.line_buffer = ""
+
 
 class StringStream(Stream):
     """Writes to a string buffer rather than a file."""
-    def __init__(self, indent_size = 4):
+    def __init__(self, indent_size = 2):
         Stream.__init__(self, None, indent_size)
         self.__buffer = ""
 
-    def write(self, text):
-        strings = string.split(text, '\n')
-        for s in strings:
-            if string.strip(s) != "":
-                self.__buffer = self.__buffer + "\n" + s 
-
+    def writeln(self):
+        self.__buffer = self.__buffer + self.line_buffer + "\n"
+        self.line_buffer = ""
 
     def __str__(self):
         return self.__buffer
 
     def __add__(self, other):
         return self.__buffer + str(other)
-
-# dummy function which exists to get a handle on its type
-def fn():
-    pass
-
-class LazyStream(Stream):
-    def __init__(self, file, indent_size = 4):
-        Stream.__init__(self, file, indent_size)
-        self._function_type = type(fn)
-        self._integer_type = type(1)
-        self._string_type = type("foo")
-
-    def out(self, text, ldict={}, **dict):
-        dict.update(ldict)
-
-        is_literal_text = 1 == 0
-        for l in string.split(text, '@'):
-            is_literal_text = not(is_literal_text)
-
-            if is_literal_text:
-                self.write(l)
-            else:
-                thing = eval(l, globals(), dict)
-                if isinstance(thing, self._string_type):
-                    self.write(thing)
-                elif isinstance(thing, self._function_type):
-                    apply(thing)
-                elif isinstance(thing, self._integer_type) or \
-                     hasattr(thing, "__str__"):
-                    self.write(str(thing))
-                else:
-                    raise "What kind of type is " + repr(thing)
-        self.write("\n")
-            
 
 
 # ------------------------------------------------------------------

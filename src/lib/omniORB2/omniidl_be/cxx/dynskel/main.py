@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.7  2000/05/31 18:02:50  djs
+# Better output indenting (and preprocessor directives now correctly output at
+# the beginning of lines)
+#
 # Revision 1.12.2.6  2000/04/26 18:22:20  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -876,9 +880,9 @@ def visitUnion(node):
         required_symbols.append(prefix + "_buildDesc" + mem_cname)
         
         switch.out("""\
-    if( _u->pd__default ) {
-      @private_prefix@_buildDesc@mem_cname@(_newdesc, @thing@);
-    } else {""",
+if( _u->pd__default ) {
+  @private_prefix@_buildDesc@mem_cname@(_newdesc, @thing@);
+} else {""",
                    mem_cname = mem_cname,
                    private_prefix = prefix,
                    thing = thing)
@@ -886,7 +890,7 @@ def visitUnion(node):
 
     # handle the main cases
     switch.out("""\
-      switch( _u->pd__d ) {""")
+switch( _u->pd__d ) {""")
 
     # deal with types
     for c in node.cases():
@@ -925,22 +929,22 @@ def visitUnion(node):
                 label = switchType.literal(l.value())
             required_symbols.append(prefix + "_buildDesc" + type_cname)
             switch.out("""\
-      case @label@:
-        @private_prefix@_buildDesc@type_cname@(_newdesc, @cast@);
-        break;""", label = label, type_cname = type_cname, cast = cast,
+case @label@:
+  @private_prefix@_buildDesc@type_cname@(_newdesc, @cast@);
+  break;""", label = label, type_cname = type_cname, cast = cast,
                        private_prefix = prefix)
             switch.dec_indent()
 
     if not(isExhaustive):
         switch.out("""\
-      default: return 0;""")
+default: return 0;""")
     switch.dec_indent()
     switch.out("""\
-      }""")
+}""")
     if default_case:
         switch.out("""\
-     }""")
-
+}""")
+        
     assertDefined(required_symbols) # needed by the switch
 
     stream.out(template.union_tcParser,
