@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4.2.2  2000/09/27 17:11:28  djs
+# Bugfix
+#
 # Revision 1.4.2.1  2000/08/21 11:35:23  djs
 # Lots of tidying
 #
@@ -59,7 +62,7 @@
 import string
 
 from omniidl import idlast, idlvisitor
-from omniidl_be.cxx import ast, cxx, util, id, types
+from omniidl_be.cxx import ast, cxx, util, id, types, output
 from omniidl_be.cxx.impl import template
 
 import main
