@@ -27,9 +27,13 @@
 
 /*
   $Log$
-  Revision 1.10  1998/01/27 16:34:55  ewc
-   Added support for type any and TypeCode
+  Revision 1.11  1998/04/07 18:41:11  sll
+  Use std::cerr instead of cerr.
+  Added compiler flag -m.
 
+// Revision 1.10  1998/01/27  16:34:55  ewc
+//  Added support for type any and TypeCode
+//
 // Revision 1.9  1998/01/20  19:13:38  sll
 // Added support for OpenVMS.
 //
@@ -163,18 +167,18 @@ BE_produce()
     o2be_global::root()->produce();
   }
   catch (o2be_fileio_error &ex) {
-    cerr << "Error: " << ex.errmsg() << endl;
+    std::cerr << "Error: " << ex.errmsg() << std::endl;
     idl_global->err_count();
   }
   catch (o2be_unsupported &ex) {
-    cerr << "Error: " << ex.file() << "-" << ex.line()
-         << " unsupported IDL syntax. " << ex.msg() << endl;
+    std::cerr << "Error: " << ex.file() << "-" << ex.line()
+         << " unsupported IDL syntax. " << ex.msg() << std::endl;
     idl_global->err_count();
   }
 #if 0
   catch (o2be_internal_error &ex) {
-    cerr << "omniORB2 back end internal error: " 
-	 << ex.file() << ":" << ex.line() << "-" << ex.errmsg() << endl;
+    std::cerr << "omniORB2 back end internal error: " 
+	 << ex.file() << ":" << ex.line() << "-" << ex.errmsg() << std::endl;
     idl_global->err_count();
   };
 #endif
@@ -194,28 +198,30 @@ static
 void
 usage()
 {
-  cerr << GTDEVEL("usage: ")
+  std::cerr << GTDEVEL("usage: ")
        << idl_global->prog_name()
 #ifdef __WIN32__
        << GTDEVEL(" [flag]* file\n");
 #else
        << GTDEVEL(" [flag]* file [file]*\n");
 #endif
-  cerr << GTDEVEL("Legal flags:\n");
+  std::cerr << GTDEVEL("Legal flags:\n");
 
-  cerr << GTDEVEL(" -Dname[=value]\t\tdefines name for preprocessor\n");
-  cerr << GTDEVEL(" -E\t\t\truns preprocessor only, prints on stdout\n");
-  cerr << GTDEVEL(" -Idir\t\t\tincludes dir in search path for preprocessor\n");
-  cerr << GTDEVEL(" -Uname\t\t\tundefines name for preprocessor\n");
-  cerr << GTDEVEL(" -V\t\t\tprints version info then exits\n");
-  cerr << GTDEVEL(" -h suffix   Specify non-default suffix for the generated header file(s)\n");
-  cerr << GTDEVEL(" -s suffix   Specify non-default suffix for the generated stub file(s)\n");
-  cerr << GTDEVEL(" -u\t\t\tprints usage message and exits\n");
+  std::cerr << GTDEVEL(" -Dname[=value]\t\tdefines name for preprocessor\n");
+  std::cerr << GTDEVEL(" -E\t\t\truns preprocessor only, prints on stdout\n");
+  std::cerr << GTDEVEL(" -Idir\t\t\tincludes dir in search path for preprocessor\n");
+  std::cerr << GTDEVEL(" -Uname\t\t\tundefines name for preprocessor\n");
+  std::cerr << GTDEVEL(" -V\t\t\tprints version info then exits\n");
+  std::cerr << GTDEVEL(" -a\t\t\tgenerates code required by type any\n");
+  std::cerr << GTDEVEL(" -h suffix   Specify non-default suffix for the generated header file(s)\n");
+  std::cerr << GTDEVEL(" -l\t\t\tgenerates code required by LifeCycle service\n");
+  std::cerr << GTDEVEL(" -m\t\t\tallow modules to be reopened\n");
+  std::cerr << GTDEVEL(" -s suffix   Specify non-default suffix for the generated stub file(s)\n");
+  std::cerr << GTDEVEL(" -u\t\t\tprints usage message and exits\n");
 
-  cerr << GTDEVEL(" -v\t\t\ttraces compilation stages\n");
-  cerr << GTDEVEL(" -w\t\t\tsuppresses IDL compiler warning messages\n");
-  cerr << GTDEVEL(" -l\t\t\tgenerates code required by LifeCycle service\n");
-  cerr << GTDEVEL(" -a\t\t\tgenerates code required by type any\n");
+  std::cerr << GTDEVEL(" -v\t\t\ttraces compilation stages\n");
+  std::cerr << GTDEVEL(" -w\t\t\tsuppresses IDL compiler warning messages\n");
+
   return;
 }
 
@@ -238,9 +244,15 @@ BE_parse_args(int argc, char **argv)
  o2be_global::set_skelsuffix("SK.cpp");
 #endif
 
+#ifdef HAS_Cplusplus_Namespace
+ // Enable reopen module by default
+ idl_global->set_compile_flags(idl_global->compile_flags() |
+			       IDL_CF_REOPENMODULE);
+#endif
+
   DRV_cpp_init();
   idl_global->set_prog_name(argv[0]);
-  while ((c = getopt(argc,argv,"D:EI:U:Vuvwh:s:la")) != EOF)
+  while ((c = getopt(argc,argv,"D:EI:U:Vuvwh:s:lam")) != EOF)
     {
       switch (c) 
 	{
@@ -288,6 +300,13 @@ BE_parse_args(int argc, char **argv)
 	  idl_global->set_compile_flags(idl_global->compile_flags() |
 					IDL_CF_ANY);
 	  break;
+
+
+	case 'm':
+	  idl_global->set_compile_flags(idl_global->compile_flags() |
+					IDL_CF_REOPENMODULE);
+	  break;
+
 	case '?':
 	  usage();
 	  idl_global->set_compile_flags(idl_global->compile_flags() |
@@ -303,7 +322,7 @@ BE_parse_args(int argc, char **argv)
 
   if (DRV_nfiles == 0)
     {
-      cerr << "No file specified.\n";
+      std::cerr << "No file specified.\n";
       usage();
       idl_global->set_compile_flags(idl_global->compile_flags() |
 				    IDL_CF_ONLY_USAGE);
