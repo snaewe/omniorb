@@ -29,11 +29,14 @@
 
 /*
   $Log$
-  Revision 1.26  1999/08/16 19:21:38  sll
-  Use per-compilation unit initialiser object to perform initialisation
-  and cleanup.
-  New member function CORBA::ORB::NP_destory().
+  Revision 1.27  1999/08/16 20:27:26  sll
+  *** empty log message ***
 
+// Revision 1.26  1999/08/16  19:21:38  sll
+// Use per-compilation unit initialiser object to perform initialisation
+// and cleanup.
+// New member function CORBA::ORB::NP_destory().
+//
   Revision 1.25  1999/06/26 18:05:36  sll
   New options -ORBabortOnInternalError, -ORBverifyObjectExistsAndType.
 
@@ -231,6 +234,8 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
     omni_bootstrap_i_initialiser_.attach();
     omni_scavenger_initialiser_.attach();
     omni_corbaOrb_initialiser_.attach();
+
+    omniORB::seed.hi = omniORB::seed.med = 0;
   }
   catch (const CORBA::INITIALIZE &ex) {
     throw;
@@ -814,7 +819,6 @@ public:
       omni::myPrincipalID[i] = p[i];
     }
 
-    omniORB::seed.hi = omniORB::seed.med = 0;
 
 #if defined(_HAS_SIGNAL) && !defined(__CIAO__)
 #ifndef _USE_MACH_SIGNAL
