@@ -1,4 +1,14 @@
 
+Thu Mar 23 15:27:00 GMT 2000 djs
+================================
+
+- omniidl C++ backend failed to handle recursive unions where
+  there was more than one node in the cycle
+  (even though it has functions specifically to handle this 
+  properly)
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
 Tue Mar 21 10:56:00 GMT 2000 djs
 ================================
 
