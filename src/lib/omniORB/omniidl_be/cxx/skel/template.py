@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.21  2001/11/13 14:14:45  dpg1
+# Bug when no catch by base class.
+#
 # Revision 1.3.2.20  2001/11/12 13:46:07  dpg1
 # _unchecked_narrow, improved _narrow.
 #
@@ -324,7 +327,7 @@ interface_callback_tryblock = """\
 #ifdef HAS_Cplusplus_catch_exception_by_base
   @result@impl->@cxx_operation_name@(@operation_arguments@);
 #else
-  if (!is_upcall())
+  if (!cd->is_upcall())
     @result@impl->@cxx_operation_name@(@operation_arguments@);
   else {
     try {
