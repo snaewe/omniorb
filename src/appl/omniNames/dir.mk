@@ -1,11 +1,17 @@
 
 ifdef NTArchitecture
-DEFAULT_LOGDIR = \"C:\\OMNINAMES\"
+DEFAULT_LOGDIR = C:\TEMP
+
+DIR_CPPFLAGS = $(CORBA_CPPFLAGS) -DDEFAULT_LOGDIR=\\\\\"$(DEFAULT_LOGDIR)\\\\\"
+
 else
 DEFAULT_LOGDIR = \"/var/omniNames\"
-endif
 
 DIR_CPPFLAGS = $(CORBA_CPPFLAGS) -DDEFAULT_LOGDIR=$(DEFAULT_LOGDIR)
+
+endif
+
+
 
 CXXSRCS = omniNames.cc NamingContext_i.cc log.cc
 
