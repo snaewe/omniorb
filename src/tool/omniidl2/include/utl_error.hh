@@ -178,6 +178,10 @@ public:
 
   // Report back-end error
   void  back_end(long lineno, String *s);
+
+  // Report name clash of the operation's name with one or more of the
+  // inherited interface(s)
+  void operation_name_clash(AST_Decl *t);
 };
 
 #endif           // _UTL_ERROR_UTL_ERROR_HH
