@@ -1,3 +1,10 @@
+Wed Sep 19 18:42:43 BST 2001 sll
+================================
+
+- Remove obsolute system exception WRONG_TRANSACTION
+
+include/omniORB4/userexception.h
+
 Wed Sep 19 18:19:58 BST 2001 dpg1
 =================================
 

@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.5  2001/09/19 17:44:20  sll
+ Remove obsolute system exception WRONG_TRANSACTION
+
  Revision 1.2.2.4  2001/07/31 15:59:02  sll
  Added new 2.4.2 System Exceptions
 
@@ -180,7 +183,6 @@ doit (OBJECT_NOT_EXIST) \
 doit (TRANSACTION_REQUIRED) \
 doit (TRANSACTION_ROLLEDBACK) \
 doit (INVALID_TRANSACTION) \
-doit (WRONG_TRANSACTION) \
 doit (INV_POLICY) \
 doit (CODESET_INCOMPATIBLE) \
 doit (REBIND) \
