@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.22  2003/11/19 10:42:09  dgrisby
+  Locking bug with comm failure in bidirectional GIOP.
+
   Revision 1.1.4.21  2003/07/16 14:22:38  dgrisby
   Speed up oneway handling a little. More tracing for split messages.
 
@@ -578,7 +581,7 @@ giopImpl12::inputReplyBegin(giopStream* g,
       if (g->pd_strand->state() == giopStrand::DYING) {
 	CORBA::ULong minor;
 	CORBA::Boolean retry;
-	g->notifyCommFailure(0,minor,retry);
+	g->notifyCommFailure(1,minor,retry);
 	CORBA::CompletionStatus status;
 	if (g->pd_strand->orderly_closed) {
 	  status = CORBA::COMPLETED_NO;
