@@ -115,7 +115,7 @@ int main() {
  omni_cv_cxx_need_fq_base_ctor=no)
  AC_LANG_POP(C++)
 ])
-if test "$omni_cv_cxx_need_fq_base_ctor=" = yes; then
+if test "$omni_cv_cxx_need_fq_base_ctor" = yes; then
   AC_DEFINE(OMNI_REQUIRES_FQ_BASE_CTOR,,
             [define if base constructors have to be fully qualified])
 fi

@@ -8587,7 +8587,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 fi
 echo "$as_me:$LINENO: result: $omni_cv_cxx_need_fq_base_ctor" >&5
 echo "${ECHO_T}$omni_cv_cxx_need_fq_base_ctor" >&6
-if test "$omni_cv_cxx_need_fq_base_ctor=" = yes; then
+if test "$omni_cv_cxx_need_fq_base_ctor" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define OMNI_REQUIRES_FQ_BASE_CTOR
