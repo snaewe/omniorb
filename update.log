@@ -1,3 +1,17 @@
+Tue May 25 15:00:10 BST 2004 dgrisby
+====================================
+
+- Minor updates to package config files.
+
+contrib/pkgconfig/omniORB4.pc.in
+contrib/pkgconfig/omnithread3.pc.in
+
+- Properly close bidirectional connections.
+
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Tue May 25 14:51:40 BST 2004 dgrisby
 ====================================
 

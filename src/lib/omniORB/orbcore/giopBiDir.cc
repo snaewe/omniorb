@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2004/05/25 14:02:22  dgrisby
+  Properly close bidirectional connections.
+
   Revision 1.1.2.15  2003/02/03 16:53:14  dgrisby
   Force type in constructor argument to help confused compilers.
 
@@ -452,6 +455,20 @@ BiDirServerRope::decrRefCount() {
   if (RopeLink::is_empty(pd_strands) && !pd_nwaiting) {
     RopeLink::remove();
     delete this;
+  }
+  else {
+    RopeLink* p = pd_strands.next;
+    for (; p != &pd_strands; p = p->next) {
+      giopStrand* g = (giopStrand*)p;
+      if (g->state() != giopStrand::DYING) {
+	if (omniORB::trace(30) {
+	  omniORB::logger l;
+	  l << "Bi-directional rope is no longer referenced; strand "
+	    << (void*)g << " is a candidate for scavenging.\n";
+	}
+	g->startIdleCounter();
+      }
+    }
   }
 }
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.24  2004/05/25 14:02:22  dgrisby
+  Properly close bidirectional connections.
+
   Revision 1.1.4.23  2004/02/06 16:17:45  dgrisby
   Properly handle large giopMaxMsgSize settings.
 
@@ -916,9 +919,14 @@ giopImpl12::unmarshalWildCardRequestHeader(giopStream* g) {
     ((GIOP_S*)g)->requestId(reqid);
     break;
   case GIOP::CloseConnection:
-    if (g->pd_strand->biDir) {
+    if (g->pd_strand->biDir && g->pd_strand->isClient()) {
       // proper shutdown of a connection.
-      // XXX what to do?
+      if (omniORB::trace(30)) {
+	omniORB::logger l;
+	l << "Server has closed a bi-directional connection on strand "
+	  << (void*)g->pd_strand << ". Will scavenge it.";
+      }
+      g->pd_strand->startIdleCounter();
     }
     inputRaiseCommFailure(g);
     break;
