@@ -1,3 +1,11 @@
+Tue Jun 26 14:36:44 BST 2001 sll
+================================
+
+- make ssl compiles with pre-0.9.6a OpenSSL
+
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+
+
 Fri Jun 22 11:24:38 BST 2001 dpg1
 =================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/06/26 13:38:45  sll
+  Make ssl compiles with pre-0.9.6a OpenSSL
+
   Revision 1.1.2.2  2001/06/20 18:35:16  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -103,7 +106,11 @@ sslConnection::Send(void* buf, size_t sz,
 
     // Reach here if we can write without blocking or we don't
     // care if we block here.
+#if OPENSSL_VERSION_NUMBER >= 0x0090601fL
     tx = SSL_write(pd_ssl,buf,sz);
+#else
+    tx = SSL_write(pd_ssl,(char*)buf,sz);
+#endif
 
     rc = SSL_get_error(pd_ssl, tx);
 
@@ -207,7 +214,11 @@ sslConnection::Recv(void* buf, size_t sz,
 
     // Reach here if we can read without blocking or we don't
     // care if we block here.
+#if OPENSSL_VERSION_NUMBER >= 0x0090601fL
     rx = SSL_read(pd_ssl,buf,sz);
+#else
+    rx = SSL_read(pd_ssl,(char*)buf,sz);
+#endif
 
     rc = SSL_get_error(pd_ssl, rx);
 
