@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.5  1998/10/08 11:12:23  sll
+   Removed typo which only affect platform(s) with PROXY_FLOAT.
+
    Revision 1.4  1998/08/26 11:12:22  sll
    Minor updates to remove warnings when compiled with standard C++ compilers.
 
@@ -305,12 +308,12 @@ dynAnyP::currentComponentFromBasetype(CORBA::TCKind k,Bval& v)
 #else
       case CORBA::tk_float: {
 	CORBA::Float tmp(v.fv);
-	tmp >>=3D pd_buf;
+	tmp >>= pd_buf;
       } 
       break;
       case CORBA::tk_double: {
 	CORBA::Double tmp(v.dv);
-	tmp >>=3D pd_buf;
+	tmp >>= pd_buf;
       } 
       break;
 #endif
@@ -418,14 +421,14 @@ dynAnyP::currentComponentToBasetype(CORBA::TCKind k,Bval& v)
 #else
       case CORBA::tk_float: {
 	CORBA::Float tmp;
-	tmp <<=3D pd_buf;
-	v.fv =3D tmp;
+	tmp <<= pd_buf;
+	v.fv = tmp;
       } 
       break;
       case CORBA::tk_double: {
 	CORBA::Double tmp;
-	tmp <<=3D pd_buf;
-	v.dv =3D tmp;
+	tmp <<= pd_buf;
+	v.dv = tmp;
       } 
       break;
 #endif
