@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/11 14:30:56  sll
+  first_use status of the strand is now in use.
+
   Revision 1.1.4.1  2001/04/18 18:10:52  sll
   Big checkin with the brand new internal APIs.
 
@@ -118,7 +121,7 @@ GIOP_C::ReceiveReply() {
   pd_state = IOP_C::ReplyIsBeingProcessed;
 
   GIOP::ReplyStatusType rc = replyStatus();
-  if (rc == GIOP::SYSTEM_EXCEPTION) {
+  if (rc == GIOP::SYSTEM_EXCEPTION) { 
     UnMarshallSystemException();
     // never reaches here
   }
@@ -134,7 +137,7 @@ GIOP_C::RequestCompleted(CORBA::Boolean skip) {
   if (!calldescriptor() || !calldescriptor()->is_oneway()) {
     impl()->inputMessageEnd(this,skip);
   }
-
+  pd_strand->first_use = 0;
   pd_state = IOP_C::Idle;
 }
 
@@ -183,6 +186,7 @@ GIOP_C::UnMarshallSystemException()
   status <<= s;
 
   impl()->inputMessageEnd(this,0);
+  pd_strand->first_use = 0;
   pd_state = IOP_C::Idle;
 
   switch (status) {
