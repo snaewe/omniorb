@@ -1,3 +1,27 @@
+Tue Sep 14 18:43:38 BST 1999 sll
+================================
+
+- omniidl2 bug fix
+
+  module A {
+   typedef string Atype;
+   interface B {
+     void op();
+   };
+  };
+
+  module C {
+    typedef char Atype;
+    interface D : A::B {
+      void op2(in Atype x);
+    };
+  };
+
+  The stub code for C::D::op2 refers to A::Atype instead of C::Atype.
+  This is a bug.
+
+src/tool/omniidl2/util/utl_scope.cc
+
 
 Tue Sep 14 17:57:42 BST 1999 djr
 ================================
