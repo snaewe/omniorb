@@ -1,3 +1,11 @@
+Wed Jul  8 14:38:00 BST 1998 dpg1
+=================================
+
+Fixed bug with interface inheritance in LifeCycle code generation
+
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 
 Fri Jul  3 15:47:23 BST 1998 tjr
 ================================
