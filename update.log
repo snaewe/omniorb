@@ -1,3 +1,13 @@
+Sun Aug 31 21:33:52 BST 2003 dgrisby
+====================================
+
+- Add inclusion guards to standard IDL files.
+
+idl/corbaidl.idl
+idl/ir.idl
+idl/poa_include.idl
+
+
 Thu Aug 21 16:41:38 BST 2003 dgrisby
 ====================================
 
