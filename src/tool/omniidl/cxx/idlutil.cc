@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.5  2001/06/21 11:17:15  sll
+// Added darwin port.
+//
 // Revision 1.5.2.4  2001/06/08 17:12:24  dpg1
 // Merge all the bug fixes from omni3_develop.
 //
@@ -157,12 +160,34 @@ idl_strtoul(const char* text, int base)
   return strtoul(text, 0, base);
 }
 
-#  elif defined(__freebsd__)
+#  elif defined(__freebsd__) || defined (__darwin__)
 
 IdlIntLiteral
 idl_strtoul(const char* text, int base)
 {
   return strtouq(text, 0, base);
+}
+
+#  elif defined(__hpux__)
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  IdlIntLiteral ull;
+  switch (base) {
+  case 8:
+    sscanf(text, "%llo", &ull);
+    break;
+  case 10:
+    sscanf(text, "%lld", &ull);
+    break;
+  case 16:
+    sscanf(text, "%llx", &ull);
+    break;
+  default:
+    abort();
+  }
+  return ull;
 }
 
 #  else

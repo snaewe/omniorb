@@ -17,11 +17,13 @@
 #  alpha_nt_4.0              Alpha Windows NT 4.0, MS VC++ 5.0
 #  alpha_osf1_3.2            Digital Unix 3.2, DEC C++ v5.5
 #  alpha_osf1_4.0            Digital Unix 4.0, DEC C++ v6.0
+#  alpha_osf1_5.0            Tru64 5.0, DEC C++ v6.2
 #  alpha_linux_2.0           alpha linux (compiler problem,still doesn't work)
 #  powerpc_aix_4.2           IBM AIX 4.2, IBM C Set++
 #  powerpc_aix_4.2_xlc5      IBM AIX 4.2, XLC 5.0 (a.k.a. Visual Age 5.0)
 #  powerpc_aix_4.3_xlc5      IBM AIX 4.3, XLC 5.0 (a.k.a. Visual Age 5.0)
 #  powerpc_linux_2.2_glibc   PowerPC linux, Debian
+#  powerpc_darwin_1.3        PowerPC Darwin/Mac OS X
 #  hppa_hpux_10.20           HPUX 10.20, aC++ B3910B A.01.04
 #  hppa_hpux_11.00           HPUX 11.00, aC++ B3910B A.01.04
 #  m68k_nextstep_3.3         NextStep 3.3, gcc-2.7.2
@@ -55,11 +57,13 @@
 #platform = alpha_nt_4.0
 #platform = alpha_osf1_3.2
 #platform = alpha_osf1_4.0
+#platform = alpha_osf1_5.0
 #platform = powerpc_aix_4.2
 #platform = powerpc_aix_4.3
 #platform = powerpc_aix_4.2_xlc5
 #platform = powerpc_aix_4.3_xlc5
 #platform = powerpc_linux_2.2_glibc
+#platform = powerpc_darwin_1.3
 #platform = hppa_hpux_10.20
 #platform = hppa_hpux_11.00
 #platform = m68k_nextstep_3.3
