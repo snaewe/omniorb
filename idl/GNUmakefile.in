@@ -4,7 +4,7 @@ BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
 INSTALL=@INSTALL@
 
-INSTALLDIR = @datadir@/idl/omniORB
+INSTALLDIR = $(INSTALLIDLDIR)/omniORB
 
 FILES = Naming.idl bootstrap.idl corbaidl.idl echo.idl ir.idl orb.idl \
         poa.idl poa_include.idl

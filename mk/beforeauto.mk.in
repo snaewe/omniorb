@@ -37,11 +37,12 @@ BINDIR  = bin
 prefix        	 := @prefix@
 exec_prefix   	 := @exec_prefix@
 INSTALLTARGET 	 := 1
-INSTALLINCDIR 	 := @includedir@
-INSTALLBINDIR 	 := @bindir@
-INSTALLLIBDIR 	 := @libdir@
-INSTALLPYTHONDIR := @pythondir@
-INSTALLPYEXECDIR := @pyexecdir@
+INSTALLINCDIR 	 := $(DESTDIR)@includedir@
+INSTALLBINDIR 	 := $(DESTDIR)@bindir@
+INSTALLLIBDIR 	 := $(DESTDIR)@libdir@
+INSTALLPYTHONDIR := $(DESTDIR)@pythondir@
+INSTALLPYEXECDIR := $(DESTDIR)@pyexecdir@
+INSTALLIDLDIR    := $(DESTDIR)@datadir@/idl
 
 #############################################################################
 #

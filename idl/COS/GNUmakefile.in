@@ -4,7 +4,7 @@ BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
 INSTALL=@INSTALL@
 
-INSTALLDIR = @datadir@/idl/omniORB/COS
+INSTALLDIR = $(INSTALLIDLDIR)/omniORB/COS
 
 FILES = AttNotifyChannelAdmin.idl CosCollection.idl			\
         CosCompoundLifeCycle.idl CosConcurrencyControl.idl		\

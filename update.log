@@ -1,3 +1,13 @@
+Sun Aug 18 16:36:32 BST 2002 dgrisby
+====================================
+
+- DESTDIR for install.
+
+idl/GNUmakefile.in
+idl/COS/GNUmakefile.in
+mk/beforeauto.mk.in
+
+
 Sun Aug 18 15:57:08 BST 2002 dgrisby
 ====================================
 
