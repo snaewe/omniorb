@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2002/09/06 21:16:59  dgrisby
+  Bail out if port number is 0.
+
   Revision 1.1.2.11  2002/08/16 16:00:54  dgrisby
   Bugs accessing uninitialised String_vars with [].
 
@@ -138,6 +141,8 @@ tcpAddress::Connect(unsigned long deadline_secs,
   LibcWrapper::hostent_var h;
   int  rc;
   SocketHandle_t sock;
+
+  if (pd_address.port == 0) return 0;
 
   if (! LibcWrapper::isipaddr(pd_address.host)) {
     if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {

@@ -1,3 +1,12 @@
+Fri Sep  6 22:13:24 BST 2002 dgrisby
+====================================
+
+- Bail out if port number is 0.
+
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+
+
 Fri Sep  6 15:27:22 BST 2002 dgrisby
 ====================================
 
