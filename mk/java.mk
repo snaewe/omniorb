@@ -15,9 +15,9 @@ IMPORT_JAR_DIRS = $(patsubst %,%/$(JARDIR),$(IMPORT_TREES))
 
 CORBA_JAVA_STUB_DIR    = $(TOP)/java_stub
 CORBA_STUB_JAR_PATTERN = $(CORBA_JAVA_STUB_DIR)/%.jar
-CORBA_STUB_JARS        = $(CORBA_UNIQUE_INTERFACES:%=$(CORBA_STUB_JAR_PATTERN))
+CORBA_STUB_JARS        = $(CORBA_INTERFACES:%=$(CORBA_STUB_JAR_PATTERN))
 CORBA_JAVA_STUB_FILES  = $(CORBA_STUB_JARS) \
-		      $(CORBA_UNIQUE_INTERFACES:%=$(CORBA_JAVA_STUB_DIR)/%.idl)
+		      $(CORBA_INTERFACES:%=$(CORBA_JAVA_STUB_DIR)/%.idl)
 
 #
 # CleanJavaClassFiles removes all .class files from this directory and its
