@@ -5,14 +5,18 @@ SUBDIRS = sharedlib
 # For meaning of these options, see the comments in Makefile.orig
 LIBRARY_OPTIONS = \
                -DLIBC_CALLS_STRTOK \
-               -DGETPEERNAME_BUG \
                -DBROKEN_FGETS \
                -DSOLARIS_24_GETHOSTBYNAME_BUG \
                -DHOSTS_DENY=\"/etc/hosts.deny\" \
                -DHOSTS_ALLOW=\"/etc/hosts.allow\" \
                -DRFC931_TIMEOUT=10
 
+ifndef AIX
+LIBRARY_OPTIONS += -DGETPEERNAME_BUG
+endif
+
 DIR_CPPFLAGS = -DHOSTS_ACCESS $(LIBRARY_OPTIONS)
+DIR_CPPFLAGS += $(CORBA_CPPFLAGS)
 
 SRCS = hosts_access.c options.c shell_cmd.c rfc931.c eval.c \
        hosts_ctl.c refuse.c percent_x.c clean_exit.c $(AUX_SRCS) \
