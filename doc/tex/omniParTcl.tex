@@ -28,10 +28,10 @@
 
 \begin{abstract}
 \noindent
-We describe a clean and simple method for integrating \tcltk\ and \CXX
+We describe a clean and simple method for integrating \tcltk\ and \CXX\ 
 in order to provide the means to create graphical user interfaces for
 Orbix-based applications, both clients and servers.  In fact, the method
-is a general one which allows the creation of a \tcltk\ GUI for any \CXX
+is a general one which allows the creation of a \tcltk\ GUI for any \CXX\ 
 program.
 
 The method allows \CXX\ functions to be invoked from a \tcltk\ script and
@@ -45,7 +45,7 @@ No modification to the Tk scheduler is required.
 
 \omniParTcl\ (pronounced ``omni-{\em particle}'' and intended to
 evoke the idea of ``{\em Par\/}allel {\em \tcl\/}'') provides a mechanism
-for attaching a graphical front-end written in \tcltk\ to a \CXX
+for attaching a graphical front-end written in \tcltk\ to a \CXX\ 
 program.  It was motivated by the perceived need for
 better-than-command-line interfaces for Omni/Orbix applications.  In
 discussion, the following criteria were established for any integration
@@ -68,7 +68,7 @@ recursion which could otherwise easily occur given the diverse range of
 execution triggers in \tcltk.
 
 \item
-Polling should not be used in synchronizing \tcltk\ and \CXX
+Polling should not be used in synchronizing \tcltk\ and \CXX\ 
 threads.  This obviates the need to predetermine the balance between
 interactive response time and CPU wastage on polling.  More generally,
 it also removes the danger of multiple \omniParTcl\ applications
@@ -286,7 +286,7 @@ files and libraries for \tcl 7.4 and \tk 4.0.  However, if there is a
 pressing need to use \omniParTcl\ with \tcl 7.3 and \tk 3.6, it can
 easily be built for these.
 
-Note that the {\tt omnithread} library is required for all \omniParTcl
+Note that the {\tt omnithread} library is required for all \omniParTcl\ 
 applications, even those which have only a single thread.
 
 \section{An Example}
