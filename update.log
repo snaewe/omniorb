@@ -1,3 +1,12 @@
+Tue Apr 10 11:53:45 BST 2001 dpg1
+=================================
+
+- Minor fix to new output routine.
+
+src/lib/omniORB/omniidl_be/cxx/output.py
+src/tool/omniidl/python/omniidl/output.py
+
+
 Mon Apr  9 16:16:30 BST 2001 dpg1
 =================================
 

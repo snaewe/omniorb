@@ -197,7 +197,7 @@ Functions:
 
         if lines > 1 and not line: # Newline at end of text
             self.do_indent = 1
-            return 0
+            return self.indent
 
         self.do_indent = 0
         return pos + len(line)
@@ -205,20 +205,6 @@ Functions:
     def odone(self):
         self.file.write("\n")
         self.do_indent = 1
-
-
-    def niout(self, text, ldict={}, **dict):
-        """Output a multi-line string without indentation."""
-
-        dict.update(ldict)
-
-        def replace(match, dict=dict):
-            if match.group(1) == "": return "@"
-            return eval(match.group(1), globals(), dict)
-
-        for l in string.split(self.regex.sub(replace, text), "\n"):
-            self.file.write(l)
-            self.file.write("\n")
 
 
 class StringStream(Stream):
