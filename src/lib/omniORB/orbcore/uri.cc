@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.2.2.11  2001/08/17 17:14:54  sll
+// Moved handler initialisation into static initialisers.
+//
 // Revision 1.2.2.10  2001/08/03 17:41:25  sll
 // System exception minor code overhaul. When a system exeception is raised,
 // a meaning minor code is provided.
@@ -101,18 +104,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 #define MAX_STRING_TO_OBJECT_CYCLES 10
 
-
-struct URIHandlerList {
-  URIHandlerList(omniURI::URIHandler* h) : handler(h), next(0) {}
-
-  omniURI::URIHandler* handler;
-  URIHandlerList*      next;
-};
-
-static URIHandlerList*  the_URIHandlerList = 0;
-static URIHandlerList*  the_URIHandlerTail = 0;
-static omni_tracedmutex handler_lock;
-
+static omnivector<omniURI::URIHandler*> handlers;
 
 
 char*
@@ -144,10 +136,12 @@ omniURI::stringToObject(const char* uri, unsigned int cycles)
 
   URIHandler* handler = 0;
   {
-    omni_tracedmutex_lock sync(handler_lock);
-    for (URIHandlerList* hl = the_URIHandlerList; hl; hl = hl->next) {
-      if (hl->handler->supports(uri)) {
-	handler = hl->handler;
+    omnivector<omniURI::URIHandler*>::iterator i = handlers.begin();
+    omnivector<omniURI::URIHandler*>::iterator last = handlers.end();
+
+    while (i != last) {
+      if ((*i)->supports(uri)) {
+	handler = *i;
 	break;
       }
     }
@@ -167,50 +161,18 @@ omniURI::uriSyntaxIsValid(const char* uri)
 
   URIHandler* handler = 0;
   {
-    omni_tracedmutex_lock sync(handler_lock);
-    for (URIHandlerList* hl = the_URIHandlerList; hl; hl = hl->next) {
-      if (hl->handler->supports(uri)) {
-	handler = hl->handler;
+    omnivector<omniURI::URIHandler*>::iterator i = handlers.begin();
+    omnivector<omniURI::URIHandler*>::iterator last = handlers.end();
+
+    while (i != last) {
+      if ((*i)->supports(uri)) {
+	handler = *i;
 	break;
       }
     }
   }
   if (handler) return handler->syntaxIsValid(uri);
   return 0;
-}
-
-void
-omniURI::addURIHandler(URIHandler* handler)
-{
-  omni_tracedmutex_lock sync(handler_lock);
-
-  URIHandlerList* entry = new URIHandlerList(handler);
-
-  if (the_URIHandlerList) {
-    the_URIHandlerTail->next = entry;
-    the_URIHandlerTail       = entry;
-  }
-  else {
-    the_URIHandlerList = entry;
-    the_URIHandlerTail = entry;
-  }
-}
-
-
-static void
-deleteURIHandlers()
-{
-  omni_tracedmutex_lock sync(handler_lock);
-
-  URIHandlerList *current, *next;
-
-  for (current = the_URIHandlerList; current; current = next) {
-    next = current->next;
-    delete current->handler;
-    delete current;
-  }
-  the_URIHandlerList = 0;
-  the_URIHandlerTail = 0;
 }
 
 
@@ -1016,17 +978,22 @@ omniURI::addrAndNameToURI(const char* addr, const char* sn)
 /////////////////////////////////////////////////////////////////////////////
 // initialiser
 /////////////////////////////////////////////////////////////////////////////
+static iorURIHandler       iorURIHandler_;
+static corbalocURIHandler  corbalocURIHandler_;
+static corbanameURIHandler corbanameURIHandler_;
 
+// No need to register the initialiser to ORB_init unless attach () does
+// something.
 class omni_uri_initialiser : public omniInitialiser {
 public:
-  void attach() {
-    omniURI::addURIHandler(new iorURIHandler);
-    omniURI::addURIHandler(new corbalocURIHandler);
-    omniURI::addURIHandler(new corbanameURIHandler);
+  omni_uri_initialiser() {
+    handlers.push_back(&iorURIHandler_);
+    handlers.push_back(&corbalocURIHandler_);
+    handlers.push_back(&corbanameURIHandler_);
   }
-  void detach() {
-    deleteURIHandlers();
-  }
+
+  void attach() {}
+  void detach() {}
 };
 
 static omni_uri_initialiser initialiser;
