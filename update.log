@@ -15,6 +15,18 @@ src/lib/omniORB/orbcore/dir.mk
 src/lib/omniORB/dynamic/dir.mk
 src/lib/omniORB/orbcore/corbaOrb.cc
 
+external_merge/README.win32
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak
+
+
 Fri Aug 24 16:53:28 BST 2001 sll
 ================================
 

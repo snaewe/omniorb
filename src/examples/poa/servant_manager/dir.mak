@@ -29,7 +29,7 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 # interfaces, such as Anys, typecodes, DSI and DII. In these examples, the
 # runtime library is not required as none of these features are used.
 # However, a bug in MSVC++ causes it to generate a bunch of references
-# to functions in omniDynamic301_rt.lib when compiling the stubs.
+# to functions in omniDynamic400_rt.lib when compiling the stubs.
 # So now we link the dynamic library as well.
 # An alternative is to replace the dynamic library with the much smaller 
 # library msvcstub.lib. The smaller library contains nothing but stubs
@@ -40,10 +40,11 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #OMNI_DYNAMIC_LIB = omniDynamic301_rt.lib
 OMNI_DYNAMIC_LIB = msvcstub.lib -NODEFAULTLIB:libcmt.lib -NODEFAULTLIB:libcmtd.lib 
 
-CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-CORBA_LIB      = omniORB301_rt.lib omnithread2_rt.lib \
+CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ \
+                 -D__OSVERSION__=4
+CORBA_LIB      = omniORB400_rt.lib omnithread2_rt.lib \
                  $(OMNI_DYNAMIC_LIB) \
-                 wsock32.lib advapi32.lib \
+                 ws2_32.lib mswsock.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
 
 CXXFLAGS       = -O2 -MD -GX $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
@@ -57,12 +58,12 @@ CXXLINKOPTIONS =
 # To build debug executables
 # Replace the above with the following:
 #
-#OMNI_DYNAMIC_LIB = omniDynamic301_rtd.lib
+#OMNI_DYNAMIC_LIB = omniDynamic400_rtd.lib
 #OMNI_DYNAMIC_LIB = msvcstubd.lib
-#CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-#CORBA_LIB      = omniORB301_rtd.lib omnithread2_rtd.lib \
+#CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ -D__OSVERSION__=4
+#CORBA_LIB      = omniORB400_rtd.lib omnithread2_rtd.lib \
 #                 $(OMNI_DYNAMIC_LIB) \
-#                 wsock32.lib advapi32.lib -libpath:$(TOP)\lib\x86_win32
+#                 ws2_32.lib mswsock.lib advapi32.lib -libpath:$(TOP)\lib\x86_win32
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
 #CXXLINKOPTIONS = -debug -PDB:NONE	
 

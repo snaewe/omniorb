@@ -40,10 +40,11 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #OMNI_DYNAMIC_LIB = omniDynamic400_rt.lib
 OMNI_DYNAMIC_LIB = msvcstub.lib
 
-CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
+CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ \
+                 -D__OSVERSION__=4
 CORBA_LIB      = omniORB400_rt.lib omnithread2_rt.lib \
                  $(OMNI_DYNAMIC_LIB) \
-                 wsock32.lib advapi32.lib \
+                 ws2_32.lib mswsock.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
 
 CXXFLAGS       = -O2 -MD -GX $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
@@ -59,10 +60,10 @@ CXXLINKOPTIONS =
 #
 #OMNI_DYNAMIC_LIB = omniDynamic400_rtd.lib
 #OMNI_DYNAMIC_LIB = msvcstubd.lib
-#CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
+#CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ -D__OSVERSION__=4
 #CORBA_LIB      = omniORB400_rtd.lib omnithread2_rtd.lib \
 #                 $(OMNI_DYNAMIC_LIB) \
-#                 wsock32.lib advapi32.lib -libpath:$(TOP)\lib\x86_win32
+#                 ws2_32.lib mswsock.lib advapi32.lib -libpath:$(TOP)\lib\x86_win32
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
 #CXXLINKOPTIONS = -debug -PDB:NONE	
 
