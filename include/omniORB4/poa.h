@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/11/03 18:58:47  sll
+  Unbounded sequence of octet got a new type name.
+
   Revision 1.2.2.2  2000/09/27 16:57:14  sll
   Replaced marshalling operators for MemBufferedStream and NetBufferedStream
   with just one type for cdrStream.
@@ -186,18 +189,18 @@ _CORBA_MODULE_BEG
 
   class ObjectId_var;
 
-  class ObjectId : public _CORBA_Unbounded_Sequence__Octet {
+  class ObjectId : public _CORBA_Unbounded_Sequence_Octet {
   public:
     typedef ObjectId_var _var_type;
     inline ObjectId() {}
     inline ObjectId(const ObjectId& seq)
-      : _CORBA_Unbounded_Sequence__Octet(seq) {}
+      : _CORBA_Unbounded_Sequence_Octet(seq) {}
     inline ObjectId(CORBA::ULong max)
-      : _CORBA_Unbounded_Sequence__Octet(max) {}
+      : _CORBA_Unbounded_Sequence_Octet(max) {}
     inline ObjectId(CORBA::ULong max, CORBA::ULong len, CORBA::Octet* val, CORBA::Boolean rel=0)
-      : _CORBA_Unbounded_Sequence__Octet(max, len, val, rel) {}
+      : _CORBA_Unbounded_Sequence_Octet(max, len, val, rel) {}
     inline ObjectId& operator = (const ObjectId& seq) {
-      _CORBA_Unbounded_Sequence__Octet::operator=(seq);
+      _CORBA_Unbounded_Sequence_Octet::operator=(seq);
       return *this;
     }
   };

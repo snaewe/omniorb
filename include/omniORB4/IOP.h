@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2000/11/03 18:58:46  sll
+  Unbounded sequence of octet got a new type name.
+
   Revision 1.2.2.3  2000/10/04 16:52:04  sll
   New helper function dumpComponent().
 
@@ -305,7 +308,7 @@ public:
 
   struct ServiceContext {
     ServiceID              context_id;
-    _CORBA_Unbounded_Sequence__Octet context_data;
+    _CORBA_Unbounded_Sequence_Octet context_data;
 
     // the following are omniORB private functions
     void operator>>= (cdrStream &s);

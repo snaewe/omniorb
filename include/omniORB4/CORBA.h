@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4  2000/11/03 18:58:46  sll
+ Unbounded sequence of octet got a new type name.
+
  Revision 1.2.2.3  2000/10/27 15:42:02  dpg1
  Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -1260,17 +1263,17 @@ _CORBA_MODULE_BEG
   //typedef _CORBA_PseudoObj_Var<Principal> Principal_var;
   //typedef _CORBA_PseudoObj_Out<Principal,Principal_var> Principal_out;
 
-  class PrincipalID : public _CORBA_Unbounded_Sequence__Octet {
+  class PrincipalID : public _CORBA_Unbounded_Sequence_Octet {
   public:
     inline PrincipalID() {}
     inline PrincipalID(const PrincipalID& seq)
-      : _CORBA_Unbounded_Sequence__Octet(seq) {}
+      : _CORBA_Unbounded_Sequence_Octet(seq) {}
     inline PrincipalID(CORBA::ULong max)
-      : _CORBA_Unbounded_Sequence__Octet(max) {}
+      : _CORBA_Unbounded_Sequence_Octet(max) {}
     inline PrincipalID(CORBA::ULong max, CORBA::ULong len, CORBA::Octet* val, CORBA::Boolean rel=0)
-      : _CORBA_Unbounded_Sequence__Octet(max, len, val, rel) {}
+      : _CORBA_Unbounded_Sequence_Octet(max, len, val, rel) {}
     inline PrincipalID& operator = (const PrincipalID& seq) {
-      _CORBA_Unbounded_Sequence__Octet::operator=(seq);
+      _CORBA_Unbounded_Sequence_Octet::operator=(seq);
       return *this;
     };
   };
@@ -1739,7 +1742,7 @@ _CORBA_MODULE_BEG
     OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(TypeMismatch, _dyn_attr)
     OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(InvalidSeq, _dyn_attr)
 
-    typedef _CORBA_Unbounded_Sequence__Octet OctetSeq;
+    typedef _CORBA_Unbounded_Sequence_Octet OctetSeq;
 
     virtual ~DynAny();
 
@@ -2144,17 +2147,17 @@ _CORBA_MODULE_BEG
   typedef BOA_ptr BOARef;
 
 
-  class ReferenceData : public _CORBA_Unbounded_Sequence__Octet {
+  class ReferenceData : public _CORBA_Unbounded_Sequence_Octet {
   public://??
     inline ReferenceData() {}
     inline ReferenceData(const ReferenceData& seq)
-      : _CORBA_Unbounded_Sequence__Octet(seq) {}
+      : _CORBA_Unbounded_Sequence_Octet(seq) {}
     inline ReferenceData(CORBA::ULong max)
-      : _CORBA_Unbounded_Sequence__Octet(max) {}
+      : _CORBA_Unbounded_Sequence_Octet(max) {}
     inline ReferenceData(CORBA::ULong max, CORBA::ULong len, CORBA::Octet* val, CORBA::Boolean rel=0)
-      : _CORBA_Unbounded_Sequence__Octet(max, len, val, rel) {}
+      : _CORBA_Unbounded_Sequence_Octet(max, len, val, rel) {}
     inline ReferenceData& operator = (const ReferenceData& seq) {
-      _CORBA_Unbounded_Sequence__Octet::operator=(seq);
+      _CORBA_Unbounded_Sequence_Octet::operator=(seq);
       return *this;
     };
   };
@@ -2225,19 +2228,19 @@ _CORBA_MODULE_BEG
 
     class ObjectIdList_var;
 
-    class ObjectIdList : public _CORBA_Unbounded_Sequence__String {
+    class ObjectIdList : public _CORBA_Unbounded_Sequence_String {
     public:
       typedef ObjectIdList_var _var_type;
       inline ObjectIdList() {}
       inline ObjectIdList(const ObjectIdList& seq)
-        : _CORBA_Unbounded_Sequence__String(seq) {}
+        : _CORBA_Unbounded_Sequence_String(seq) {}
       inline ObjectIdList(ULong max)
-        : _CORBA_Unbounded_Sequence__String(max) {}
+        : _CORBA_Unbounded_Sequence_String(max) {}
       inline ObjectIdList(ULong max, ULong len, char** val,
 			  Boolean rel=0)
-        : _CORBA_Unbounded_Sequence__String(max, len, val, rel) {}
+        : _CORBA_Unbounded_Sequence_String(max, len, val, rel) {}
       inline ObjectIdList& operator = (const ObjectIdList& seq) {
-        _CORBA_Unbounded_Sequence__String::operator=(seq);
+        _CORBA_Unbounded_Sequence_String::operator=(seq);
         return *this;
       }
     };

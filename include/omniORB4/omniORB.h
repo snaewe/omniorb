@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/11/03 18:58:47  sll
+  Unbounded sequence of octet got a new type name.
+
   Revision 1.2.2.2  2000/09/27 17:09:16  sll
   New member maxGIOPVersion(), getInterceptors(), noFirewallNavigation,
   giopTargetAddressMode.
@@ -265,7 +268,7 @@ _CORBA_MODULE_BEG
                                       const objectKey &k2);             //
   //                                                                    //
   //                                                                    //
-  typedef _CORBA_Unbounded_Sequence_Octet seqOctets;                    //
+  typedef _CORBA_Unbounded_Sequence_Octet seqOctets;                   //
   // Convert a key to a sequence of octets.                             //
   _CORBA_MODULE_FN seqOctets* keyToOctetSequence(const objectKey &k1);  //
   //                                                                    //

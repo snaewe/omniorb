@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2000/11/03 18:58:47  sll
+  Unbounded sequence of octet got a new type name.
+
   Revision 1.2.2.3  2000/10/27 15:42:03  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -229,7 +232,7 @@ public:
   static _core_attr omni_tracedmutex*                poRcLock;
   // Psuedo-object ref count lock.
 
-  static _core_attr _CORBA_Unbounded_Sequence__Octet myPrincipalID;
+  static _core_attr _CORBA_Unbounded_Sequence_Octet  myPrincipalID;
   static _core_attr const alignment_t                max_alignment;
   // Maximum value of alignment_t
 
