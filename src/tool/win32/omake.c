@@ -129,16 +129,29 @@ int main(int argc, char **argv)
   sprintf(tmp,"CURRENT=%s",current);
   makeCmd[nArgs++] = strdup(tmp);
 
-  for (i = 1; i < argc; i++) {
-    makeCmd[nArgs++] = argv[i];
+  if (argc > 1) {
+    sprintf(tmp,"OMAKE_TARGET=%s",argv[argc-1]);
+  } else {
+    sprintf(tmp,"OMAKE_TARGET=");
   }
+  makeCmd[nArgs++] = strdup(tmp);
 
   if (!quiet) {
+    printf("\n");
     for (i = 0; i < nArgs; i++) {
       printf("%s ",makeCmd[i]);
     }
+  }
 
-    printf("\n");
+  for (i = 1; i < argc; i++) {
+    makeCmd[nArgs++] = argv[i];
+    if (!quiet) {
+      printf("'%s' ",makeCmd[i]);
+    }
+  }
+
+  if (!quiet) {
+    printf("\n\n");
   }
 
   if (execvp(makeCmd[0],makeCmd) < 0) {
