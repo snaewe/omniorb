@@ -495,8 +495,6 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
       ev->et = AST_Expression::EV_ulong;
       return ev;
     case AST_Expression::EV_long:
-      if (ev->u.lval < 0)
-	return NULL;
       ev->u.ulval = (unsigned long) ev->u.lval;
       ev->et = AST_Expression::EV_ulong;
       return ev;
@@ -1304,7 +1302,7 @@ AST_Expression::compare(AST_Expression *vc)
  * Dump this binary AST_Expression node to the ostream o
  */
 static void
-dump_binary_expr(ostream &o, char *s, AST_Expression *n1, AST_Expression *n2)
+dump_binary_expr( std:: ostream &o, char *s, AST_Expression *n1, AST_Expression *n2)
 {
   if (n1 != NULL) n1->dump(o);
   o << " " << s << " ";
@@ -1315,7 +1313,7 @@ dump_binary_expr(ostream &o, char *s, AST_Expression *n1, AST_Expression *n2)
  * Dump this unary AST_Expression node to the ostream o
  */
 static void
-dump_unary_expr(ostream &o, char *s, AST_Expression *e)
+dump_unary_expr( std:: ostream &o, char *s, AST_Expression *e)
 {
   o << s;
   e->dump(o);
@@ -1325,7 +1323,7 @@ dump_unary_expr(ostream &o, char *s, AST_Expression *e)
  * Dump the supplied AST_ExprValue to the ostream o
  */
 static void
-dump_expr_val(ostream &o, AST_Expression::AST_ExprValue *ev)
+dump_expr_val( std:: ostream &o, AST_Expression::AST_ExprValue *ev)
 {
   switch (ev->et) {
   case AST_Expression::EV_short:
@@ -1370,7 +1368,7 @@ dump_expr_val(ostream &o, AST_Expression::AST_ExprValue *ev)
  * Dump an AST_Expression node to the ostream o
  */
 void
-AST_Expression::dump(ostream &o)
+AST_Expression::dump( std:: ostream &o)
 {
   /*
    * See if it was a constant or was evaluated already
