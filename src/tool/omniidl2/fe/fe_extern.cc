@@ -65,6 +65,11 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 /*
  * fe_extern.cc - export FE interfaces to driver
  */
+#include <stdio.h>
+
+#ifdef __NT__
+#include <io.h>
+#endif
 
 #include	<idl.hh>
 #include	<idl_extern.hh>
@@ -75,12 +80,15 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include	<utl_indenter.hh>
 #include	<utl_string.hh>
 
+
 /*
  * yacc parser interface
  */
 
+
+ 
 extern int yyparse();
-extern File * yyin;
+extern File *yyin;
 
 int
 FE_yyparse()
@@ -89,14 +97,22 @@ FE_yyparse()
   if (idl_global->err_count() == 0) {
     idl_global->root()->call_add();
   }
+
+#ifdef __NT__
+	fclose(yyin);
+   _close(1); // Close the file [stdin points to the file] -- so NT can delete it.
+#endif
+
   return result;
 }
+
 
 void
 FE_set_yyin(File * f)
 {
   yyin = f;
 }
+
 
 /*
  * constructor interfaces 

@@ -72,7 +72,13 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  * Front end interface
  */
 
+#ifdef __NT__
+#include <stdio.h>
+typedef FILE File;
+#else
 class File;
+#endif
+
 typedef void (* DRV_PF_FE_init_stage1)();
 typedef void (* DRV_PF_FE_init_stage2)();
 typedef int  (* DRV_PF_FE_yyparse)();
@@ -122,3 +128,4 @@ extern void DRV_BE_open();
 extern void DRV_BE_close();
 
 #endif	// _DRV_LINK_DRV_LINK_HH
+

@@ -67,6 +67,10 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #pragma ident "%@(#)fe_extern.h	1.40% %92/06/10% Sun Microsystems"
 
+#ifdef __NT__
+#include <stdio.h>
+#endif
+
 // fe_extern.hh
 //
 // Declares all global functions for the FE
@@ -92,7 +96,12 @@ extern "C" void			FE_init_stage2();	// Initialize stage 2
 
 // Interface to Yacc parser
 
+#ifdef __NT__
+typedef FILE File;
+#else
 class File;
+#endif
+
 extern "C" int			FE_yyparse();		// Invode yyparse
 extern "C" void			FE_set_yyin(File *);	// Set yyin
 

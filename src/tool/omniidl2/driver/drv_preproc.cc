@@ -75,6 +75,8 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include	<drv_link.hh>
 
 #include	<stdio.h>
+#include	<stdlib.h>
+#include	<string.h>
 #include	<fcntl.h>
 
 #if defined(__sunos__) 
@@ -106,6 +108,12 @@ extern "C" char * mktemp(char *);
 #include	<unistd.h>		// POSIX definitions
 #include	<sys/wait.h>		// POSIX definition of wait()
 #endif		// defined(hpux) || defined(__hpux)
+
+#ifdef __NT__
+#include <io.h>
+#include <process.h>
+#include <sys/stat.h>
+#endif
 
 #undef	MAX_ARGLIST
 #define	MAX_ARGLIST	128
@@ -153,6 +161,12 @@ DRV_cpp_init()
     DRV_cpp_putarg("-xc++");
     copy_src = I_FALSE;
   }
+  else if(strcmp(idl_global->cpp_location(),"CL") == 0 || strcmp(idl_global->cpp_location(),"cl") == 0) {
+	  // MSVC++ 4.2 ignores the file extension for preprocessing.
+	  copy_src = I_FALSE;
+	  DRV_cpp_putarg("-nologo");
+  }
+
   DRV_cpp_putarg("-E");
   DRV_cpp_putarg("-DIDL");
   DRV_cpp_putarg("-I.");
@@ -231,9 +245,12 @@ DRV_stripped_name(char *fn)
 /*
  * File names
  */
+
 static char	tmp_file[128];
 static char	tmp_ifile[128];
 
+
+#ifndef __NT__
 /*
  * Pass input through preprocessor
  */
@@ -397,3 +414,186 @@ DRV_pre_proc(char *myfile)
   if (idl_global->compile_flags() & IDL_CF_ONLY_PREPROC)
     exit(0);
 }
+
+#else
+
+// Windows NT Version
+
+/*
+ * Pass input through preprocessor
+ */
+void
+DRV_pre_proc(char *myfile)
+{
+  int	wait_status;
+
+  long	readfromstdin = I_FALSE;
+
+  char	catbuf[512];
+  
+
+  char* tmpfn;	
+  tmpfn = _tempnam(NULL,"idl_");
+  if (tmpfn == NULL)
+    {
+      cerr << "Error creating temporary filename." << endl;
+      exit(-1);
+    }
+  else if (strlen(tmpfn) > 127)
+    {
+      cerr << "Temporary filename too large." << endl;
+      exit(-1);
+    }
+  
+  strcpy(tmp_file,tmpfn);
+  free(tmpfn);
+
+  tmpfn = _tempnam(NULL,"idl_");
+
+  if (tmpfn == NULL)
+    {
+      cerr << "Error creating temporary filename." << endl;
+      exit(-1);
+    }
+  else if (strlen(tmpfn) > 127)
+    {
+      cerr << "Temporary filename too large." << endl;
+      exit(-1);
+    }
+  strcpy(tmp_ifile,tmpfn);
+  free(tmpfn);
+
+  if (strcmp(myfile, "standard input") == 0) {
+    idl_global->set_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+    idl_global->set_main_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+    idl_global->
+        set_stripped_filename(
+            (*DRV_FE_new_UTL_String)(DRV_stripped_name(tmp_ifile))
+        );
+    idl_global->set_real_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+    DRV_copy_input(stdin, tmp_ifile);
+    idl_global->set_read_from_stdin(I_TRUE);
+  } else {
+    if (copy_src) {
+      FILE *fd = fopen(myfile, "r");
+      DRV_copy_input(fd, tmp_ifile);
+      fclose(fd);
+    }
+    idl_global->set_read_from_stdin(I_FALSE);
+    idl_global->set_filename((*DRV_FE_new_UTL_String)(myfile));
+    idl_global->set_main_filename((*DRV_FE_new_UTL_String)(myfile));
+    idl_global->
+        set_stripped_filename(
+            (*DRV_FE_new_UTL_String)(DRV_stripped_name(myfile))
+        );
+    if (copy_src) {
+      idl_global->set_real_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+    }
+    else {
+      idl_global->set_real_filename((*DRV_FE_new_UTL_String)(myfile));
+    }
+  }
+
+
+  {
+    if (copy_src)
+      DRV_cpp_putarg(tmp_ifile);
+    else 
+      DRV_cpp_putarg(myfile);
+    {
+      int fd = _open(tmp_file, _O_RDWR | _O_CREAT | _O_TRUNC, 
+			                                        _S_IWRITE);
+      if (fd < 0) {
+        cerr << idl_global->prog_name()
+    	  << GTDEVEL(": cannot open temp file ")
+ 	  << tmp_file << " for writing\n";
+        exit(99);
+      }
+      int result = _dup2(fd, _fileno(stdout));
+      if (result < 0) {
+        cerr << idl_global->prog_name()
+    	  << GTDEVEL(": temp file ")
+  	  << tmp_file << " dup error\n";
+        exit(99);
+      }
+      _close(fd);
+    }
+    int spawn_rc = _spawnvp(_P_WAIT,arglist[0], 
+			                 (const char* const*) arglist);
+	if (spawn_rc != 0)
+		{
+			cerr << idl_global->prog_name() 
+				 << GTDEVEL(": spawnvp of ")
+				 << arglist[0]
+				 << GTDEVEL(" failed\n");
+			cerr << "Preprocessor returned non-zero status " << spawn_rc << endl;
+			
+			_close(1);
+			if (copy_src) {
+				 if (_unlink(tmp_ifile) == -1) {
+					cerr << idl_global->prog_name()
+						 << GTDEVEL(": Could not remove cpp input file ")
+						 << tmp_ifile
+						 << "\n";
+					exit(99);	
+					}
+			 }
+
+			if (_unlink(tmp_file) == -1) {
+				 cerr << idl_global->prog_name()
+					  << GTDEVEL(": Could not remove cpp output file ")
+					  << tmp_file
+					  << "\n";
+			     exit(99);
+			}
+
+
+		    exit(99);
+		}
+  }
+  FILE * yyin = fopen(tmp_file, "r+");
+  if (yyin == NULL) {
+    cerr << idl_global->prog_name()
+	 << GTDEVEL(": Could not open cpp output file ")
+	 << tmp_file
+	 << "\n";
+    exit(99);
+  }
+
+  (*DRV_FE_set_yyin)((File *) yyin);
+  if (idl_global->compile_flags() & IDL_CF_ONLY_PREPROC) {
+    _close(1);
+	_dup2(_fileno(stderr),1); // Redirected to stderr, in order to write to the screen!
+    sprintf(catbuf, "type %s", tmp_file);
+    system(catbuf);
+  }
+  if (copy_src) {
+    if (_unlink(tmp_ifile) == -1) {
+      cerr << idl_global->prog_name()
+	   << GTDEVEL(": Could not remove cpp input file ")
+	   << tmp_ifile
+	   << "\n";
+      exit(99);
+    }
+  }
+
+
+  idl_global->set_temp_filename((*DRV_FE_new_UTL_String)(tmp_file));
+
+  if (idl_global->compile_flags() & IDL_CF_ONLY_PREPROC)
+  {
+	/* Remove the temporary file [containing the preprocessor output. */
+  fclose(yyin);
+  if (_unlink((idl_global->temp_filename())->get_string()) == -1)
+	{
+	 cerr << idl_global->prog_name()
+	 << GTDEVEL(": Could not remove cpp output file ")
+	 << (idl_global->temp_filename())->get_string()
+	 << "\n";
+     exit(99);
+	 }
+  
+    exit(0);
+  }
+}
+#endif

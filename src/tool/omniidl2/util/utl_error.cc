@@ -146,6 +146,7 @@ error_string(UTL_Error::ErrorCode c)
   case UTL_Error::EIDL_BACK_END:
     return GTDEVEL("back end: ");
   }
+  return 0; // for MSVC++ 4.2
 }
 
 // Print out an error message header on cerr
@@ -193,6 +194,7 @@ exprtype_to_string(AST_Expression::ExprType t)
   case AST_Expression::EV_none:
     return "none";
   }
+  return 0; // for MSVC++ 4.2
 }
 
 /*

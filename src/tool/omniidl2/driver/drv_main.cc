@@ -75,11 +75,13 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 ** 4. Otherwise, for the single file, invoke DRV_drive
 */
 
+#include <stdio.h>
+
 #include	<idl.hh>
 #include	<idl_extern.hh>
 
 #include	<drv_private.hh>
-#include        <drv_link.hh>
+#include    <drv_link.hh>
 
 static void
 DRV_version()
@@ -141,6 +143,23 @@ DRV_drive(char *s)
 	 << s
 	 << "\n";
   (*DRV_FE_yyparse)();
+
+
+#ifdef __NT__
+
+  /* Remove the temporary file [containing the preprocessor output. */
+ 
+  if (_unlink((idl_global->temp_filename())->get_string()) == -1)
+	{
+	 cerr << idl_global->prog_name()
+	 << GTDEVEL(": Could not remove cpp output file ")
+	 << (idl_global->temp_filename())->get_string()
+	 << "\n";
+     exit(99);
+	 }
+#endif
+
+
   /*
    * If there were any errors, stop
    */
@@ -185,6 +204,7 @@ DRV_drive(char *s)
   /*
    * Exit cleanly
    */
+
   exit(0);
 }
 
@@ -227,13 +247,25 @@ main(int argc, char **argv)
   }
   /*
    * Fork off a process for each file to process. Fork only if
-   * there is more than one file to process
+   * there is more than one file to process -- [ except under NT - raise error ]
    */
   if (DRV_nfiles > 1) {
+
+#ifdef __NT__
+
+	  cerr << idl_global->prog_name()
+		   << ": Only one IDL file may be specified at the command line."
+	 	   << endl;
+	  exit(-1);
+#else
+
+	 
     /*
      * DRV_fork never returns
      */
     DRV_fork();
+#endif
+
   } else {
     /*
      * Do the one file we have to parse
@@ -246,6 +278,7 @@ main(int argc, char **argv)
     DRV_file_index = 0;
     DRV_drive(DRV_files[DRV_file_index]);
   }
+
   exit(0);
   /* NOTREACHED */
   return 0;

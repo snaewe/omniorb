@@ -99,7 +99,9 @@ typedef union
 #include <memory.h>
 #endif
 
+#ifndef __NT__
 #include <values.h>
+#endif
 
 #ifdef __cplusplus
 

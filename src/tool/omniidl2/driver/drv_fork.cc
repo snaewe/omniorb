@@ -98,6 +98,11 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #endif		// defined(hpux) || defined(__hpux)
 
 
+#ifndef __NT__
+
+// Note that Windows NT version can only handle one file on command line.
+
+
 /*
  * Fork off a process, wait for it to die
  */
@@ -145,3 +150,5 @@ DRV_fork()
    */
   exit(0);
 }
+
+#endif
