@@ -265,7 +265,7 @@ omni_thread::init_t::init_t(void)
     if (count++ != 0)	// only do it once however many objects get created.
 	return;
 
-    DB(cerr << "omni_thread::init: posix 1003.4a (draft "
+    DB(cerr << "omni_thread::init: posix 1003.4a/1003.1c (draft "
        << PthreadDraftVersion << ") implementation initialising\n");
 
 #ifdef NeedPthreadInit
@@ -283,9 +283,6 @@ omni_thread::init_t::init_t(void)
 	::exit(1);
     }
 
-    lowest_priority = PRI_OTHER_MIN;
-    highest_priority = PRI_OTHER_MAX;
-
 #else
 
     int rc = ERRNO(pthread_key_create(&self_key, NULL));
@@ -294,6 +291,22 @@ omni_thread::init_t::init_t(void)
 	cerr << "omni_thread::init: pthread_key_create error " << rc << endl;
 	::exit(1);
     }
+
+#endif
+
+#if defined(__osf1__) && defined(__alpha__)
+
+    lowest_priority = PRI_OTHER_MIN;
+    highest_priority = PRI_OTHER_MAX;
+
+#elif defined(__sunos__) && (__OSVERSION__ == 5)
+
+    // a bug in pthread_attr_setschedparam means lowest priority is 1 not 0
+
+    lowest_priority  = 1;
+    highest_priority = 3;
+
+#else
 
     lowest_priority = sched_get_priority_min(SCHED_FIFO);
     highest_priority = sched_get_priority_max(SCHED_FIFO);
@@ -349,7 +362,7 @@ omni_thread::init_t::init_t(void)
 	::exit(1);
     }
 
-#else
+#elif (PthreadDraftVersion == 6)
 
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -365,6 +378,20 @@ omni_thread::init_t::init_t(void)
 
     if (rc != 0) {
 	cerr << "omni_thread::init: pthread_setschedattr error " << rc << endl;
+	::exit(1);
+    }
+
+#else
+
+    struct sched_param sparam;
+
+    sparam.sched_priority = posix_priority(PRIORITY_NORMAL);
+
+    rc = ERRNO(pthread_setschedparam(t->posix_thread, SCHED_OTHER, &sparam));
+
+    if (rc != 0) {
+	cerr << "omni_thread::init: pthread_setschedparam error "
+	     << rc << endl;
 	::exit(1);
     }
 
@@ -506,48 +533,68 @@ int omni_thread::start(void)
 	return EINVAL;
     }
 
-#ifdef PthreadSupportThreadPriority
+    pthread_attr_t attr;
 
 #if (PthreadDraftVersion == 4)
-
-#define THREAD_ATTR (attr)
-
-    pthread_attr_t attr;
     pthread_attr_create(&attr);
-    rc = ERRNO(pthread_attr_setprio(&attr, posix_priority(_priority)));
-
 #else
-
-#define THREAD_ATTR (&attr)
-
-    pthread_attr_t attr;
     pthread_attr_init(&attr);
-    rc = ERRNO(pthread_attr_setprio(&attr, posix_priority(_priority)));
+#endif
 
-#endif	/* PthreadDraftVersion */
+#ifdef PthreadSupportThreadPriority
+
+#if (PthreadDraftVersion <= 6)
+
+    rc = ERRNO(pthread_attr_setprio(&attr, posix_priority(_priority)));
 
     if (rc != 0) {
+	DB(cerr << "omni_thread::start: pthread_attr_setprio error "
+	   << rc << endl);
 	mutex.unlock();
 	return rc;
     }
 
-#else	/* PthreadSupportThreadPriority */
-
-#if (PthreadDraftVersion == 4)
-
-#define THREAD_ATTR pthread_attr_default
-
 #else
 
-#define THREAD_ATTR NULL
+    struct sched_param sparam;
+
+    sparam.sched_priority = posix_priority(_priority);
+    rc = ERRNO(pthread_attr_setschedparam(&attr, &sparam));
+
+    if (rc != 0) {
+	DB(cerr << "omni_thread::start: pthread_attr_setschedparam error "
+	   << rc << endl);
+	mutex.unlock();
+	return rc;
+    }
 
 #endif	/* PthreadDraftVersion */
 
 #endif	/* PthreadSupportThreadPriority */
 
-    rc = ERRNO(pthread_create(&posix_thread, THREAD_ATTR, wrapper,
-			      (void*)this));
+#if defined(__osf1__) && defined(__alpha__)
+
+    // omniORB requires a larger stack size than the default (21120)
+    // on OSF/1
+
+    rc = ERRNO(pthread_attr_setstacksize(&attr, 32768));
+
     if (rc != 0) {
+	DB(cerr << "omni_thread::start: pthread_attr_setstacksize error "
+	   << rc << endl);
+	mutex.unlock();
+	return rc;
+    }
+
+#endif	/* __osf1__ && __alpha__ */
+
+#if (PthreadDraftVersion == 4)
+    rc = ERRNO(pthread_create(&posix_thread, attr, wrapper, (void*)this));
+#else
+    rc = ERRNO(pthread_create(&posix_thread, &attr, wrapper, (void*)this));
+#endif
+    if (rc != 0) {
+	DB(cerr << "omni_thread::start: pthread_create error " << rc << endl);
 	mutex.unlock();
 	return rc;
     }
@@ -556,9 +603,14 @@ int omni_thread::start(void)
 
     if (detached) {
 
+#if (PthreadDraftVersion <= 6)
 	rc = ERRNO(pthread_detach(&posix_thread));
-
+#else
+	rc = ERRNO(pthread_detach(posix_thread));
+#endif
 	if (rc != 0) {
+	    DB(cerr << "omni_thread::start: pthread_detach error "
+	       << rc << endl);
 	    mutex.unlock();
 	    return rc;
 	}
@@ -646,7 +698,12 @@ int omni_thread::set_priority(priority_t pri)
 
     int rc = ERRNO(pthread_setprio(posix_thread, posix_priority(pri)));
 
-#else
+    if (rc != 0) {
+	mutex.unlock();
+	return rc;
+    }
+
+#elif (PthreadDraftVersion == 6)
 
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -660,14 +717,27 @@ int omni_thread::set_priority(priority_t pri)
 
     rc = ERRNO(pthread_setschedattr(posix_thread, attr));
 
-#endif
+    if (rc != 0) {
+	mutex.unlock();
+	return rc;
+    }
+
+#else
+
+    struct sched_param sparam;
+
+    sparam.sched_priority = posix_priority(pri);
+
+    int rc = ERRNO(pthread_setschedparam(posix_thread, SCHED_OTHER, &sparam));
 
     if (rc != 0) {
 	mutex.unlock();
 	return rc;
     }
 
-#endif /* PthreadSupportThreadPriority */
+#endif   /* PthreadDraftVersion */
+
+#endif   /* PthreadSupportThreadPriority */
 
     mutex.unlock();
 
@@ -769,6 +839,8 @@ omni_thread* omni_thread::self(void)
 {
     omni_thread* me;
 
+#if (PthreadDraftVersion <= 6)
+
     int rc = ERRNO(pthread_getspecific(self_key, (void**)&me));
 
     if (rc != 0) {
@@ -776,15 +848,38 @@ omni_thread* omni_thread::self(void)
 	return (omni_thread*)NULL;
     }
 
+#else
+
+    me = (omni_thread *)pthread_getspecific(self_key);
+    if (me == NULL) {
+	cerr << "omni_thread::self: pthread_getspecific error" << endl;
+	return (omni_thread*)NULL;
+    }
+
+#endif
+
     return me;
 }
 
 void omni_thread::yield(void)
 {
 #if (PthreadDraftVersion == 4)
-  pthread_yield();
+
+    pthread_yield();
+
+#elif (PthreadDraftVersion < 9)
+
+    pthread_yield(NULL);
+
 #else
-  pthread_yield(NULL);
+
+    int rc = sched_yield();
+
+    if (rc != 0) {
+	cerr << "omni_thread::yield: sched_yield error " << errno << endl;
+	::exit(1);
+    }
+
 #endif
 }
 
