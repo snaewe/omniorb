@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/10/29 10:01:31  dpg1
+// Nicer error reporting.
+//
 // Revision 1.1  1999/10/27 14:05:57  dpg1
 // *** empty log message ***
 //
@@ -211,15 +214,17 @@ _CORBA_Boolean BooleanExpr::evalAsBoolean() {
 Enumerator* EnumExpr::evalAsEnumerator(const Enum* target) {
 
   if (value_->container() != target) {
-    const char* ssn = target->scopedName()->toString();
+    const char* vssn = value_->scopedName()->toString();
+    const char* essn  = target->scopedName()->toString();
     IdlError(file(), line(), "Enumerator `%s' does not belong to enum `%s'",
-	     value_->identifier(), ssn);
-    delete [] ssn;
-    ssn = value_->container()->scopedName()->toString();
+	     vssn, essn);
+    delete [] essn;
+    essn = value_->container()->scopedName()->toString();
     IdlErrorCont(value_->file(), value_->line(),
 		 "(Enumerator `%s' declared in `%s' here)",
-		 value_->identifier(), ssn);
-    delete [] ssn;
+		 vssn, essn);
+    delete [] essn;
+    delete [] vssn;
   }
   return value_;
 }
