@@ -1,46 +1,39 @@
 // echo_dsiimpl.cc
 //
 //               This example demonstrates the Dynamic Skeleton Interface.
-//               It is a server for the eg3_clt client in the
+//               It is a server for the eg2_clt client in the
 //               src/examples/echo directory. Alternatively you can use the
 //               DII echo client in src/examples/dii.
 //
 // Usage: echo_dsiimpl
 //
-//        On startup, the object reference is registered with the 
-//        COS naming service. The client uses the naming service to
-//        locate this object.
-//
-//        The name which the object is bound to is as follows:
-//              root  [context]
-//               |
-//              text  [context] kind [my_context]
-//               |
-//              Echo  [object]  kind [Object]
+//        On startup, the object reference is printed to cerr as a
+//        stringified IOR. This string should be used as the argument to 
+//        eg2_clt or echo_diiclt.
 //
 
 #include <iostream.h>
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 
-static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);
-
-CORBA::ORB_ptr orb = 0;
+CORBA::ORB_var orb;
 
 
-class MyDynImpl : public CORBA::BOA::DynamicImplementation {
+class MyDynImpl : public PortableServer::DynamicImplementation,
+		  public PortableServer::RefCountServantBase
+{
 public:
-  virtual void invoke(CORBA::ServerRequest_ptr request,
-		      CORBA::Environment& env) throw();
+  virtual void invoke(CORBA::ServerRequest_ptr);
+  virtual char* _primary_interface(const PortableServer::ObjectId&,
+				   PortableServer::POA_ptr);
 };
 
 
 void
-MyDynImpl::invoke(CORBA::ServerRequest_ptr request, CORBA::Environment& env)
-  throw()
+MyDynImpl::invoke(CORBA::ServerRequest_ptr request)
 {
   try {
-    if( strcmp(request->op_name(), "echoString") )
+    if( strcmp(request->operation(), "echoString") )
       throw CORBA::BAD_OPERATION(0, CORBA::COMPLETED_NO);
 
     CORBA::NVList_ptr args;
@@ -49,147 +42,98 @@ MyDynImpl::invoke(CORBA::ServerRequest_ptr request, CORBA::Environment& env)
     a.replace(CORBA::_tc_string, 0);
     args->add_value("", a, CORBA::ARG_IN);
 
-    request->params(args);
+    request->arguments(args);
 
     const char* mesg;
     *(args->item(0)->value()) >>= mesg;
 
     CORBA::Any* result = new CORBA::Any();
     *result <<= CORBA::Any::from_string(mesg, 0);
-    request->result(result);
+    request->set_result(*result);
   }
   catch(CORBA::SystemException& ex){
-    env.exception(CORBA::Exception::_duplicate(&ex));
+    CORBA::Any a;
+    a <<= ex;
+    request->set_exception(a);
   }
   catch(...){
     cout << "echo_dsiimpl: MyDynImpl::invoke - caught an unknown exception."
 	 << endl;
-    env.exception(new CORBA::UNKNOWN(0, CORBA::COMPLETED_NO));
+    CORBA::Any a;
+    a <<= CORBA::UNKNOWN(0, CORBA::COMPLETED_NO);
+    request->set_exception(a);
   }
 }
 
 
-int
-main(int argc, char **argv)
+char*
+MyDynImpl::_primary_interface(const PortableServer::ObjectId&,
+			      PortableServer::POA_ptr)
 {
-  orb = CORBA::ORB_init(argc,argv,"omniORB2");
-  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+  return CORBA::string_dup("IDL:Echo:1.0");
+}
 
-  CORBA::Object_ptr obj = boa->create_dynamic_object(new MyDynImpl,
-						     "IDL:Echo:1.0");
-  boa->obj_is_ready(obj);
+//////////////////////////////////////////////////////////////////////
 
-  if( !bindObjectToName(orb, obj) )
-    return 1;
+int main(int argc, char** argv)
+{
+  try {
+    orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-  boa->impl_is_ready();
+    CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
 
-  // Tell the BOA we are ready. The BOA's default behaviour is to block
-  // on this call indefinitely.
+    MyDynImpl* myimpl = new MyDynImpl;
 
-  // Call boa->impl_shutdown() from another thread would unblock the
-  // main thread from impl_is_ready().
-  //
-  // To properly shutdown the BOA and the ORB, add the following calls
-  // after impl_is_ready() returns.
-  //
-  // boa->destroy();
-  // orb->NP_destroy();
+#if 0
+    PortableServer::ObjectId_var myimplid = poa->activate_object(myimpl);
+
+    // NB. PortableServer::DynamicImplementation::_this() can
+    // only be used in the context of an invocation, so we cannot
+    // use it to get a reference here.
+    obj = poa->servant_to_reference(myimpl);
+#else
+    // Although servant_to_reference(myimpl) above will suceed, it
+    // will return a typeless reference.  When the client attempts
+    // to narrow this, it will contact the object and ask it if it
+    // is really an Echo object.  This is not currently implemented
+    // for DSI servants, since it requires the support of the
+    // PortableServer::Current interface.
+    //  We get round it here by specifying the interface that we
+    // want for the reference, then using the object id encapsulated
+    // by the reference to incarnate the object.
+
+    obj = poa->create_reference("IDL:Echo:1.0");
+    PortableServer::ObjectId_var myimplid = poa->reference_to_id(obj);
+    poa->activate_object_with_id(myimplid, myimpl);
+#endif
+
+    CORBA::String_var sior(orb->object_to_string(obj));
+    cerr << "'" << (char*)sior << "'" << endl;
+
+    myimpl->_remove_ref();
+
+    PortableServer::POAManager_var pman = poa->the_POAManager();
+    pman->activate();
+
+    orb->run();
+    orb->destroy();
+  }
+  catch(CORBA::SystemException&) {
+    cerr << "Caught CORBA::SystemException." << endl;
+  }
+  catch(CORBA::Exception&) {
+    cerr << "Caught CORBA::Exception." << endl;
+  }
+  catch(omniORB::fatalException& fe) {
+    cerr << "Caught omniORB::fatalException:" << endl;
+    cerr << "  file: " << fe.file() << endl;
+    cerr << "  line: " << fe.line() << endl;
+    cerr << "  mesg: " << fe.errmsg() << endl;
+  }
+  catch(...) {
+    cerr << "Caught unknown exception." << endl;
+  }
+
   return 0;
-}
-
-
-static
-CORBA::Boolean
-bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr obj)
-{
-  CosNaming::NamingContext_var rootContext;
-  
-  try {
-    // Obtain a reference to the root context of the Name service:
-    CORBA::Object_var initServ;
-    initServ = orb->resolve_initial_references("NameService");
-
-    // Narrow the object returned by resolve_initial_references()
-    // to a CosNaming::NamingContext object:
-    rootContext = CosNaming::NamingContext::_narrow(initServ);
-    if (CORBA::is_nil(rootContext)) 
-      {
-        cerr << "Failed to narrow naming context." << endl;
-        return 0;
-      }
-  }
-  catch(CORBA::ORB::InvalidName& ex) {
-    cerr << "Service required is invalid [does not exist]." << endl;
-    return 0;
-  }
-
-
-  try {
-    // Bind a context called "test" to the root context:
-
-    CosNaming::Name contextName;
-    contextName.length(1);
-    contextName[0].id   = (const char*) "test";    // string copied
-    contextName[0].kind = (const char*) "my_context"; // string copied    
-    // Note on kind: The kind field is used to indicate the type
-    // of the object. This is to avoid conventions such as that used
-    // by files (name.type -- e.g. test.ps = postscript etc.)
-
-    CosNaming::NamingContext_var testContext;
-    try {
-      // Bind the context to root, and assign testContext to it:
-      testContext = rootContext->bind_new_context(contextName);
-    }
-    catch(CosNaming::NamingContext::AlreadyBound& ex) {
-      // If the context already exists, this exception will be raised.
-      // In this case, just resolve the name and assign testContext
-      // to the object returned:
-      CORBA::Object_var tmpobj;
-      tmpobj = rootContext->resolve(contextName);
-      testContext = CosNaming::NamingContext::_narrow(tmpobj);
-      if (CORBA::is_nil(testContext)) {
-        cerr << "Failed to narrow naming context." << endl;
-        return 0;
-      }
-    } 
-
-    // Bind the object (obj) to testContext, naming it Echo:
-    CosNaming::Name objectName;
-    objectName.length(1);
-    objectName[0].id   = (const char*) "Echo";   // string copied
-    objectName[0].kind = (const char*) "Object"; // string copied
-
-
-    // Bind obj with name Echo to the testContext:
-    try {
-      testContext->bind(objectName,obj);
-    }
-    catch(CosNaming::NamingContext::AlreadyBound& ex) {
-      testContext->rebind(objectName,obj);
-    }
-    // Note: Using rebind() will overwrite any Object previously bound 
-    //       to /test/Echo with obj.
-    //       Alternatively, bind() can be used, which will raise a
-    //       CosNaming::NamingContext::AlreadyBound exception if the name
-    //       supplied is already bound to an object.
-
-    // Amendment: When using OrbixNames, it is necessary to first try bind
-    // and then rebind, as rebind on it's own will throw a NotFoundexception if
-    // the Name has not already been bound. [This is incorrect behaviour -
-    // it should just bind].
-  }
-  catch (CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE, unable to contact the "
-         << "naming service." << endl;
-    return 0;
-  }
-  catch (omniORB::fatalException& ex) {
-    throw;
-  }
-  catch (...) {
-    cerr << "Caught a system exception while using the naming service."<< endl;
-    return 0;
-  }
-  return 1;
 }
