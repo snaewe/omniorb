@@ -132,7 +132,9 @@ NamingContext_i::resolve_simple(const CosNaming::Name& n)
 
   throw CosNaming::NamingContext::NotFound(CosNaming::NamingContext::
 					   missing_node, n);
+#ifdef NEED_DUMMY_RETURN
   return 0;
+#endif
 }
 
 
@@ -177,7 +179,7 @@ NamingContext_i::resolve_compound(const CosNaming::Name& n,
   CosNaming::NamingContext_var context
     = CosNaming::NamingContext::_narrow(ob->object);
 
-  if (CORBA::is_nil((const CosNaming::NamingContext_ptr)context) ||
+  if (CORBA::is_nil((CosNaming::NamingContext_ptr)context) ||
       (ob->binding.binding_type != CosNaming::ncontext))
   {
     DB(cerr << "  resolve_compound: object "
