@@ -11,21 +11,18 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/21 14:19:44  ewc
-  Added support for initial references interface.
+  Revision 1.3  1997/01/23 16:38:33  sll
+  Locals like boa_initialised are now static members of the omniORB class.
 
+// Revision 1.2  1997/01/21  14:19:44  ewc
+// Added support for initial references interface.
+//
 // Revision 1.1  1997/01/08  17:26:01  sll
 // Initial revision
 //
  */
 
 #include <omniORB2/CORBA.h>
-
-static omni_mutex initLock;
-static CORBA::Boolean orb_initialised = 0;
-static CORBA::Boolean boa_initialised = 0;
-static CORBA::ORB orb;
-static CORBA::BOA boa;
 
 CORBA::
 ORB::ORB()
@@ -43,26 +40,26 @@ ORB::~ORB()
 CORBA::ORB_ptr
 CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
 {
-  initLock.lock();
-  if (!orb_initialised) {
+  omniORB::initLock.lock();
+  if (!omniORB::orb_initialised) {
     omniORB::init(argc,argv,orb_identifier);
-    orb_initialised = 1;
+    omniORB::orb_initialised = 1;
   }
-  initLock.unlock();
-  return &orb;
+  omniORB::initLock.unlock();
+  return &CORBA::ORB::orb;
 }
 
 CORBA::BOA_ptr
 CORBA::
 ORB::BOA_init(int &argc, char **argv, const char *boa_identifier)
 {
-  initLock.lock();
-  if (!boa_initialised) {
+  omniORB::initLock.lock();
+  if (!omniORB::boa_initialised) {
     omniORB::boaInit(argc,argv,boa_identifier);
-    boa_initialised = 1;
+    omniORB::boa_initialised = 1;
   }
-  initLock.unlock();
-  return &boa;
+  omniORB::initLock.unlock();
+  return &CORBA::BOA::boa;
 }
 
 char *
@@ -111,8 +108,6 @@ CORBA::is_nil(ORB_ptr p)
 {
   return (p == 0) ? 1 : 0;
 }
-
-
 
 // Implementation of Initial Reference member functions:
 
