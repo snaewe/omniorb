@@ -1,5 +1,19 @@
+Wed Jun  2 17:49:13 BST 1999 sll
+================================
+
+- Changed createObjRef(). In the case when the proxyObjectFactories for
+  the targetRepoId and the mostDerivedRepoId are not available, we now create
+  an AnonymousObject. Previously, we throw a Marshal exception. Any attempt
+  to narrow the returned object to the target interface identified by
+  targetRepoId would results in a nil object being returned.
+  This change is necessary to facilitate the implementation of the python
+  binding.
+
+src/lib/omniORB2/orbcore/objectRef.cc
+
+
 Wed Jun  2 17:05:10 BST 1999 sll
-===============================
+================================
 
 - Enable IR client support for all platforms. Previously, IR client is
   not available with compilers that do not support namespace.
@@ -8,6 +22,7 @@ Wed Jun  2 17:05:10 BST 1999 sll
 
 include/omniORB2/CORBA.h
 include/omniORB2/CORBA_sysdep.h
+include/omniORB2/proxyFactory.h
 
 src/lib/omniORB2/orbcore/objectRef.cc
 src/lib/omniORB2/orbcore/gatekeepers/dummystub/dir.mk
@@ -27,7 +42,6 @@ src/tool/omniidl2/omniORB2_be/o2be_interface.cc
 src/tool/omniidl2/include/idl_defines.hh
 
 idl/corbaidl.idl
-
 
 
 Mon May 31 14:59:03 BST 1999 sll
