@@ -1,3 +1,11 @@
+Tue Oct 10 15:46:56 BST 2000 sll
+================================
+
+- bug fix, oneway call now works.
+
+src/lib/omniORB/orbcore/giopClient.cc
+
+
 Tue Oct 10 11:14:45 BST 2000 dpg1
 =================================
 
