@@ -176,10 +176,10 @@ class SupportedASTVisitor(idlvisitor.AstVisitor):
         pass
 
     def visitValueBox(self, node):
-        value.getValueType(node)
+        pass
 
     def visitValueAbs(self, node):
-        value.getValueType(node)
+        pass
 
     def visitValue(self, node):
         if node.custom():
