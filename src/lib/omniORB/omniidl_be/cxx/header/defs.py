@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.5  2000/11/10 15:40:52  dpg1
+# Missed an update in yesterday's merge.
+#
 # Revision 1.33.2.4  2000/11/07 18:29:56  sll
 # Choose a default constant not too large to avoid g++ complaining.
 #
@@ -1180,54 +1183,65 @@ def visitUnion(node):
                                                              environment))
                         
 
-        # first switch on the current case
+        # switch (currently active case){
+        #
+        outer_has_default = 0 # only mention default: once
         for c in node.cases():
-            # optimisation: we've already checked for the simple case where
-            # we set the discriminator to the current value
-            if len(c.labels()) == 1 and not(c.labels()[0].default()):
-                # case has one label, for control to get here _value must
-                # be for a different label _unless_ the one label was itself
-                # a default: which means many label values are possible
-                continue
 
             need_switch = 1
-            # output one C++ case label for each IDL case label for this member
+
+            # If the currently active case has only one non-default label,
+            # then the only legal action is to set it to its current value.
+            # We've already checked for this in an if (...) statement before
+            # here.
+            if len(c.labels()) == 1 and not(c.labels()[0].default()):
+                cases.out("case @label@: goto fail;",
+                          label = switchType.literal(c.labels()[0].value(),
+                                                     environment))
+                continue
+
+            # output one C++ case label for each IDL case label
+            # case 1:
+            # case 2:
+            # default:
+
+            this_case_is_default = 0
             for l in c.labels():
                 if l.default():
-                    cases.out("default:")
+                    this_case_is_default = 1
                     outer_has_default = 1
-                    this_is_default = 1
-                else:
-                    cases.out("case @label@:",
-                              label = switchType.literal(l.value(),
-                                                         environment))
-                    cases_done.append(l)
-                    this_is_default = 0
+                    cases.out("default:")
+                    continue
 
-            # switch on the to-label
+                cases.out("case @label@:",
+                          label = switchType.literal(l.value(), environment))
+
+            # switch (case to switch to){
+            #
             cases.inc_indent()
             cases.out("switch (_value){\n")
             cases.inc_indent()
-            has_default = 0
+            inner_has_default = 0
 
 
-            # If we are in the default state, then make sure we're not trying
-            # to set the discriminator to a non-default value
-            if this_is_default:
+            # If we currently are in the default case, fail all attempts
+            # to switch cases.
+            if this_case_is_default:
                 fail_all_but(c.labels())
-                        
+                cases.out("default: _pd__d = _value; return;")
+                cases.dec_indent()
+                cases.out("}\n")
+                cases.dec_indent()
+                continue
+                
+            # This is not the default case, all possibilities have associated
+            # UnionCaseLabels
             for l in c.labels():
-                if l.default():
-                    cases.out("default: _pd__d = _value; return;")
-                    has_default = 1
-                elif not(this_is_default):
-                    cases.out("case @label@: _pd__d = @label@; return;",
-                              label = switchType.literal(l.value(),
-                                                         environment))
-                    cases_done.append(l)
+                cases.out("case @label@: _pd__d = @label@; return;",
+                          label = switchType.literal(l.value(), environment))
 
-            if not(has_default):
-                cases.out("default: goto fail;")
+            
+            cases.out("default: goto fail;")
             cases.dec_indent()
             cases.out("}\n")
             cases.dec_indent()
@@ -1235,9 +1249,12 @@ def visitUnion(node):
         if not(outer_has_default) and not(implicitDefault):
             cases.out("default: goto fail;")
 
-        # do we have an implicit default member (no actual case, but a
-        # legal set of discriminator values)
+        # handle situation where have an implicit default member
+        # (ie no actual case, but a legal set of discriminator values)
+        # (assumes that the current discriminator is set to one of the
+        # defaults)
         if implicitDefault:
+            need_switch = 1
             cases.out("default:")
             cases.out("switch (_value){")
             cases.inc_indent()
