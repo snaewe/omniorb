@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7.2.2  2000/03/06 15:03:49  dpg1
+// Minor bug fixes to omniidl. New -nf and -k flags.
+//
 // Revision 1.7.2.1  2000/02/16 16:30:54  dpg1
 // #pragma ID was misspelled #pragma id. Oops.
 //
@@ -329,16 +332,17 @@ L{STR} {
   return FIXED_PT_LITERAL;
 }
 
-"//".*\n { /* Comment */ }
+"//".*\n { Comment::add(yytext); }
 
 "/*" {
+  Comment::add(yytext);
   BEGIN(comment);
 }
 
-<comment>[^*\n]       {}
-<comment>"*"+[^*/\n]* {}
-<comment>\n           {}
-<comment>"*"+"/"      {BEGIN(INITIAL);}
+<comment>[^*\n]*      { Comment::append(yytext); }
+<comment>"*"+[^*/\n]* { Comment::append(yytext); }
+<comment>\n           { Comment::append(yytext); }
+<comment>"*"+"/"      { Comment::append(yytext); BEGIN(INITIAL); }
 
 ^{SPACE}*#{SPACE}*pragma{SPACE}*prefix{SPACE}* {
   BEGIN(known_pragma);

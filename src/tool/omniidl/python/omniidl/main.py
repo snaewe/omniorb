@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.6  2000/03/06 15:03:45  dpg1
+# Minor bug fixes to omniidl. New -nf and -k flags.
+#
 # Revision 1.15.2.5  2000/03/02 11:22:46  dpg1
 # omniidl.py renamed omniidlrun.py to avoid problems with import
 # omniidl.main.
@@ -130,6 +133,8 @@ The supported flags are:
   -Wparg[,arg...] Send args to the preprocessor
   -bback_end      Select a back-end to be used. More than one permitted
   -Wbarg[,arg...] Send args to the back-end
+  -nf             Do not warn about unresolved forward declarations
+  -k              Keep comments as strings to be used by the back-ends
   -Cdir           Change directory to dir before writing output
   -d              Dump the parsed IDL then exit
   -pdir           Path to omniidl back-ends ($TOP/lib/python)
@@ -166,7 +171,7 @@ def parseArgs(args):
     paths = []
 
     try:
-        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:C:dVuhvqp:")
+        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:n:kC:dVuhvqp:")
     except getopt.error, e:
         sys.stderr.write("Error in arguments: " + e + "\n")
         sys.stderr.write("Use " + cmdname + " -u for usage\n")
@@ -212,14 +217,29 @@ def parseArgs(args):
 
         elif o == "-C":
             if not os.path.isdir(a):
-                sys.stderr.write(cmdname + ": `" + a + \
-                                 "' is not a directory\n")
+                if not quiet:
+                    sys.stderr.write(cmdname + ": `" + a + \
+                                     "' is not a directory\n")
                 sys.exit(1)
             cd_to = a
 
         elif o == "-b":
             backends.append(a)
             backends_args.append([])
+
+        elif o == "-n":
+            if a == "f":
+                _omniidl.noForwardWarning()
+            else:
+                if not quiet:
+                    sys.stderr.write(cmdname + ": unknown warning option `" + \
+                                     a + "'\n")
+                    sys.stderr.write("Use " + cmdname + " -u for usage\n")
+                sys.exit(1)
+
+        elif o == "-k":
+            preprocessor_args.append("-C")
+            _omniidl.keepComments()
 
         elif o == "-d":
             dump_only = 1
@@ -236,6 +256,7 @@ def parseArgs(args):
 
         elif o == "-q":
             quiet = 1
+            _omniidl.quiet()
 
         elif o == "-p":
             paths.append(a)
