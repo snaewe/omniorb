@@ -1,3 +1,11 @@
+Thu Jun 21 14:35:52 BST 2001 dpg1
+=================================
+
+- Remove -traditional-cpp from C++ flags on Darwin.
+
+external_merge/mk/platforms/powerpc_darwin_1.3.mk
+
+
 Thu Jun 21 11:08:39 BST 2001 sll
 ================================
 
