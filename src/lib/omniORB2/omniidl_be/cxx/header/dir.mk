@@ -26,3 +26,6 @@ export:: marshal.py
 
 export:: tcstring.py
 	@(file="tcstring.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
+export:: template.py
+	@(file="template.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))

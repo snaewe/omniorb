@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.30  2000/01/18 18:05:52  djs
+# Extracted most C++ from header/defs and put in a template file.
+# General refactoring.
+#
 # Revision 1.29  2000/01/17 17:01:49  djs
 # Many fixes including:
 #   Module continuations
@@ -135,8 +139,8 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-
 from omniidl.be.cxx import tyutil, util, name, env, config
+from omniidl.be.cxx.header import template
 
 import defs
 
@@ -165,24 +169,23 @@ def visitModule(node):
     # files
     if not(node.mainFile()):
         return
+
+    # In case of continuations, don't output the definitions
+    # more than once
     slash_scopedName = string.join(node.scopedName(), "/")
     if self.__completedModules.has_key(slash_scopedName):
         return
-    
-    name = tyutil.mapID(node.identifier())
+    self.__completedModules[slash_scopedName] = 1
+
+    id = node.identifier()
+    cxx_id = tyutil.mapID(id)
     
     if not(config.FragmentFlag()):
-        stream.out("""\
-_CORBA_MODULE @name@
-
-_CORBA_MODULE_BEG
-""", name = name)
+        stream.out(template.module_begin, name = cxx_id)
         stream.inc_indent()
 
     insideModule = self.__insideModule
     self.__insideModule = 1
-
-    self.__completedModules[slash_scopedName] = 1
 
     for n in node.definitions():
         n.accept(self)
@@ -197,9 +200,8 @@ _CORBA_MODULE_BEG
     self.__insideModule = insideModule
     if not(config.FragmentFlag()):
         stream.dec_indent()
-        stream.out("""\
-_CORBA_MODULE_END
-""")
+        stream.out(template.module_end, name = name)
+
         
 
 def visitInterface(node):
@@ -221,74 +223,26 @@ def visitInterface(node):
     # the ifndef guard name contains scope information
     guard = tyutil.guardName(scope)
 
-    stream.out("""\
-#ifndef __@guard@__
-#define __@guard@__
+    # make the necessary forward references, typedefs and define
+    # the _Helper class
+    stream.out(template.interface_begin,
+               guard = guard,
+               name = cxx_name)
 
-class @name@;
-class _objref_@name@;
-class _impl_@name@;
-typedef _objref_@name@* @name@_ptr;
-typedef @name@_ptr @name@Ref;
-
-class @name@_Helper {
-public:
-  typedef @name@_ptr _ptr_type;
-
-  static _ptr_type _nil();
-  static _CORBA_Boolean is_nil(_ptr_type);
-  static void release(_ptr_type);
-  static void duplicate(_ptr_type);
-  static size_t NP_alignedSize(_ptr_type, size_t);
-  static void marshalObjRef(_ptr_type, NetBufferedStream&);
-  static _ptr_type unmarshalObjRef(NetBufferedStream&);
-  static void marshalObjRef(_ptr_type, MemBufferedStream&);
-  static _ptr_type unmarshalObjRef(MemBufferedStream&);
-};
-
-typedef _CORBA_ObjRef_Var<_objref_@name@, @name@_Helper> @name@_var;
-typedef _CORBA_ObjRef_OUT_arg<_objref_@name@,@name@_Helper > @name@_out;
-
-#endif
-
-
-class @name@ {
-public:
-  // Declarations for this interface type.
-  typedef @name@_ptr _ptr_type;
-  typedef @name@_var _var_type;
-
-  static _ptr_type _duplicate(_ptr_type);
-  static _ptr_type _narrow(CORBA::Object_ptr);
-  static _ptr_type _nil();
-
-  static inline size_t _alignedSize(_ptr_type, size_t);
-  static inline void _marshalObjRef(_ptr_type, NetBufferedStream&);
-  static inline void _marshalObjRef(_ptr_type, MemBufferedStream&);
-
-  static inline _ptr_type _unmarshalObjRef(NetBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
-  }
-
-  static inline _ptr_type _unmarshalObjRef(MemBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
-  }
-
-  static _core_attr const char* _PD_repoId;
-
-  // Other IDL defined within this scope.
-  """,
-               name = cxx_name,
-               guard = guard)
-    # output code for other declarations within this scope
+    # recursively take care of other IDL declared within this
+    # scope
+    Other_IDL = util.StringStream()
+    _stream = self.stream
+    self.stream = Other_IDL
     for n in node.declarations():
         n.accept(self)
+    self.stream = _stream
+
+    # Output the this interface's corresponding class
+    stream.out(template.interface_type,
+               name = cxx_name,
+               Other_IDL = str(Other_IDL))
+    
         
     # build methods corresponding to attributes, operations etc
     attributes = []
@@ -299,9 +253,11 @@ public:
         if isinstance(c, idlast.Attribute):
             attrType = c.attrType()
             derefAttrType = tyutil.deref(attrType)
-            
-            returnType = tyutil.operationArgumentType(attrType, outer_environment)[0]
-            inType = tyutil.operationArgumentType(attrType, outer_environment)[1]
+
+            argtypes = tyutil.operationArgumentType(attrType,
+                                                    outer_environment)
+            returnType = argtypes[0]
+            inType = argtypes[1]
             
             for i in c.identifiers():
                 attribname = tyutil.mapID(i)
@@ -310,15 +266,16 @@ public:
                     attributes.append("void " + attribname + "(" \
                                       + inType + ")")
         elif isinstance(c, idlast.Operation):
-            def argumentTypeToString(arg, virtual = 0, envir = outer_environment):
-                return tyutil.operationArgumentType(arg, envir, virtual)
-
             params = []
             virtual_params = []
             for p in c.parameters():
                 paramType = p.paramType()
-                types = argumentTypeToString(paramType)
-                virtual_types = argumentTypeToString(paramType, 1)
+                types = tyutil.operationArgumentType(paramType,
+                                                     outer_environment,
+                                                     virtualFn = 0)
+                virtual_types = tyutil.operationArgumentType(paramType,
+                                                             outer_environment,
+                                                             virtualFn = 1)
                 tuple = ("", "")
                 if   p.is_in() and p.is_out():
                     tuple = (types[3], virtual_types[3])
@@ -337,7 +294,9 @@ public:
                 params.append("CORBA::Context_ptr _ctxt")
                 virtual_params.append("CORBA::Context_ptr _ctxt")
                 
-            return_type = argumentTypeToString(c.returnType())[0]
+            return_type = tyutil.operationArgumentType(c.returnType(),
+                                                       outer_environment,
+                                                       virtualFn = 0)[0]
             opname = tyutil.mapID(c.identifier())
             arguments = string.join(params, ", ")
             virtual_arguments = string.join(virtual_params, ", ")
@@ -374,6 +333,7 @@ public:
         
         objref_inherits.append("public virtual " + objref_string)
         impl_inherits.append("public virtual " + impl_string)
+
     # if already inheriting, the base classes will be present
     # (transitivity of the inherits-from relation)
     if node.inherits() == []:
@@ -383,90 +343,29 @@ public:
             
     objref_inherits = string.join(objref_inherits, ",\n")
     impl_inherits = string.join(impl_inherits, ", \n")
-        
-    stream.out("""\
-    
-};
 
-
-class _objref_@name@ :
-  @inherits@
-{
-public:
-  @operations@
-  @attributes@
-
-  inline _objref_@name@() { _PR_setobj(0); }  // nil
-  _objref_@name@(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
-
-protected:
-  virtual ~_objref_@name@();
-
-private:
-  virtual void* _ptrToObjRef(const char*);
-
-  _objref_@name@(const _objref_@name@&);
-  _objref_@name@& operator = (const _objref_@name@&);
-  // not implemented
-};
-
-
-class _pof_@name@ : public proxyObjectFactory {
-public:
-  inline _pof_@name@() : proxyObjectFactory(@name@::_PD_repoId) {}
-  virtual ~_pof_@name@();
-
-  virtual omniObjRef* newObjRef(const char*, IOP::TaggedProfileList*,
-                                omniIdentity*, omniLocalIdentity*);
-  virtual _CORBA_Boolean is_a(const char*) const;
-};
-
-""",
-               inherits = objref_inherits,
+    # Output the _objref_ class definition
+    stream.out(template.interface_objref,
                name = cxx_name,
+               inherits = objref_inherits,
                operations = operations_str,
                attributes = attributes_str)
-    stream.out("""\
-class _impl_@name@ :
-  @inherits@
-{
-public:
-  virtual ~_impl_@name@();
 
-  @virtual_operations@
-  @virtual_attributes@
+    # Output the _pof_ class definition
+    stream.out(template.interface_pof,
+               name = cxx_name)
 
-protected:
-  virtual _CORBA_Boolean _dispatch(GIOP_S&);
-
-private:
-  virtual void* _ptrToInterface(const char*);
-  virtual const char* _mostDerivedRepoId();
-};
-
-""",
+    # Output the _impl_ class definition
+    stream.out(template.interface_impl,
                inherits = impl_inherits,
-               name = cxx_name,
                virtual_operations = virtual_operations_str,
-               virtual_attributes = virtual_attributes_str)
+               virtual_attributes = virtual_attributes_str,
+               name = cxx_name)
 
     # Generate BOA compatible skeletons?
     if config.BOAFlag():
-        stream.out("""\
-class _sk_@name@ :
-  public virtual _impl_@name@,
-  public virtual omniOrbBoaServant
-{
-public:
-  virtual ~_sk_@name@();
-  inline @name@::_ptr_type _this() {
-    return (@name@::_ptr_type) omniOrbBoaServant::_this(@name@::_PD_repoId);
-  }
-  inline void _obj_is_ready(CORBA::BOA_ptr) { omniOrbBoaServant::_obj_is_ready(); }
-  inline CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }
-};""",
+        stream.out(template.interface_sk,
                    name = cxx_name)
-        
 
     self.__insideInterface = insideInterface
     self.__insideClass = insideClass
@@ -474,10 +373,10 @@ public:
     # Typecode and Any
     if config.TypecodeFlag():
         qualifier = tyutil.const_qualifier(self.__insideModule,
-                                               self.__insideClass)
-        stream.out("""\
-@qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;
-""", qualifier = qualifier, name = cxx_name)
+                                           self.__insideClass)
+        stream.out(template.typecode,
+                   qualifier = qualifier,
+                   name = cxx_name)
         
     return
     
@@ -502,37 +401,11 @@ def visitForward(node):
     name = tyutil.mapID(node.identifier())
 
     guard = tyutil.guardName(scope + [name])
-    
-    stream.out("""\
-#ifndef __@guard@__
-#define __@guard@__
 
-  class @name@;
-  class _objref_@name@;
-  class _impl_@name@;
-  typedef _objref_@name@* @name@_ptr;
-  typedef @name@_ptr @name@Ref;
-
-  class @name@_Helper {
-  public:
-    typedef @name@_ptr _ptr_type;
-
-    static _ptr_type _nil();
-    static _CORBA_Boolean is_nil(_ptr_type);
-    static void release(_ptr_type);
-    static void duplicate(_ptr_type);
-    static size_t NP_alignedSize(_ptr_type, size_t);
-    static void marshalObjRef(_ptr_type, NetBufferedStream&);
-    static _ptr_type unmarshalObjRef(NetBufferedStream&);
-    static void marshalObjRef(_ptr_type, MemBufferedStream&);
-    static _ptr_type unmarshalObjRef(MemBufferedStream&);
-  };
-
-  typedef _CORBA_ObjRef_Var<_objref_@name@, @name@_Helper> @name@_var;
-  typedef _CORBA_ObjRef_OUT_arg<_objref_@name@,@name@_Helper > @name@_out;
-
-#endif
-""", guard = guard, name = name)    
+    # output the definition
+    stream.out(template.interface_begin,
+               guard = guard,
+               name = name)
 
 def visitConst(node):
     if not(node.mainFile()):
@@ -557,28 +430,23 @@ def visitConst(node):
     # should be rationalised with tyutil.const_qualifier
     if self.__insideClass:
         if representedByInteger:
-            stream.out("""\
-  static _core_attr const @type@ @name@ _init_in_cldecl_( = @val@ );""",
+            stream.out(template.const_inclass_isinteger,
                        type = type_string, name = name, val = value)
         else:
-            stream.out("""\
-  static _core_attr const @type@ @name@;""",
+            stream.out(template.const_inclass_notinteger,
                        type = type_string, name = name)
     else:
+        where = "GLOBAL"
         if self.__insideModule:
             where = "MODULE"
-        else:
-            where = "GLOBAL"
         if representedByInteger:
-            stream.out("""\
-  _CORBA_@where@_VARINT const @type@ @name@ _init_in_decl_( = @val@ );""",
+            stream.out(template.const_outsideclass_isinteger,
                        where = where,
                        type = type_string,
                        name = name,
                        val = value)
         else:
-            stream.out("""\
-  _CORBA_@where@_VAR _core_attr const @type@ @name@;""",
+            stream.out(template.const_outsideclass_notinteger,
                        where = where,
                        type = type_string,
                        name = name)
@@ -612,7 +480,8 @@ def visitTypedef(node):
     if tyutil.isSequence(derefType):
         sequenceTemplate = tyutil.sequenceTemplate(derefType, environment)
     elif tyutil.isObjRef(derefType):
-        objRefTemplate = tyutil.objRefTemplate(derefType, "Member", environment)
+        objRefTemplate = tyutil.objRefTemplate(derefType, "Member",
+                                               environment)
     
     # each one is handled independently
     for d in node.declarators():
@@ -632,13 +501,10 @@ def visitTypedef(node):
         if config.TypecodeFlag():
             qualifier = tyutil.const_qualifier(self.__insideModule,
                                                self.__insideClass)
-            stream.out("""\
-@qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;
-""",
-                       qualifier = qualifier, name = derivedName)
+            stream.out(template.typecode,
+                       qualifier = qualifier,
+                       name = derivedName)
                     
-
-
         # is it a simple alias (ie not an array at this level)?
         if not(array_declarator):
             # not an array declarator but a simple declarator to an array
@@ -647,64 +513,38 @@ def visitTypedef(node):
                 # array handling functions, but we don't need to duplicate
                 # array looping code since we can just call the functions
                 # for the base type
-                stream.out("""\
-typedef @base@ @derived@;
-typedef @base@_slice @derived@_slice;
-typedef @base@_copyHelper @derived@_copyHelper;
-typedef @base@_var @derived@_var;
-typedef @base@_out @derived@_out;
-typedef @base@_forany @derived@_forany;
-""",
+                stream.out(template.typedef_simple_to_array,
                            base = basicReferencedTypeID,
                            derived = derivedName)
                 # the declaration of the alloc(), dup() and free() methods
                 # depend on whether the declaration is in global scope
                 if not(is_global_scope):
-                    stream.out("""\
-static @derived@_slice* @derived@_alloc() { return @base@_alloc(); }
-static @derived@_slice* @derived@_dup(const @derived@_slice* p) { return @base@_dup(p); }
-static void @derived@_copy( @derived@_slice* _to, const @derived@_slice* _from ) { @base@_copy(_to, _from); }
-static void @derived@_free( @derived@_slice* p) { @base@_free(p); }
-""",
+                    stream.out(template.typedef_simple_to_array_static_fn,
                                base = basicReferencedTypeID,
                                derived = derivedName)
                 else:
-                    stream.out("""\
-extern @derived@_slice* @derived@_alloc();
-extern @derived@_slice* @derived@_dup(const @derived@_slice* p);
-extern void @derived@_copy( @derived@_slice* _to, const @derived@_slice* _from );
-extern void @derived@_free( @derived@_slice* p);
-""",
+                    stream.out(template.typedef_simple_to_array_extern,
                                base = basicReferencedTypeID,
                                derived = derivedName)
                            
             # Non-array of string
             elif tyutil.isString(derefType):
-                stream.out("""\
-typedef char* @name@;
-typedef CORBA::String_var @name@_var;
-""",
+                stream.out(template.typedef_simple_string,
                            name = derivedName)
             elif tyutil.isTypeCode(derefType):
-                stream.out("""\
-typedef CORBA::TypeCode_ptr @name@_ptr;
-typedef CORBA::TypeCode_var @name@_var;""",
+                stream.out(template.typedef_simple_typecode,
                            name = derivedName)
             elif tyutil.isAny(derefType):
-                stream.out("""\
-typedef CORBA::Any @name@;
-typedef CORBA::Any_var @name@_var;""",
+                stream.out(template.typedef_simple_any,
                            name = derivedName)
             # Non-array of basic type
             elif isinstance(derefType, idltype.Base):
 
                 # typedefs to basic types are always fully qualified?
                 # IDL oddity?
-                basicReferencedTypeID = self.__globalScope.principalID(aliasType)
-                #basicReferencedTypeID = environment.principalID(aliasType, 1)
-                stream.out("""\
-typedef @base@ @derived@;
-""",
+                basicReferencedTypeID = self.__globalScope.\
+                                        principalID(aliasType)
+                stream.out(template.typedef_simple_basic,
                            base = basicReferencedTypeID,
                            derived = derivedName)
             # a typedef to a struct or union, or a typedef to a
@@ -714,11 +554,7 @@ typedef @base@ @derived@;
                  (tyutil.isSequence(derefType) and \
                   tyutil.isTypedef(aliasType)):
 
-                stream.out("""\
-typedef @base@ @name@;
-typedef @base@_var @name@_var;
-typedef @base@_out @name@_out;
-""",
+                stream.out(template.typedef_simple_constructed,
                            base = basicReferencedTypeID,
                            name = derivedName)
                     
@@ -739,29 +575,21 @@ typedef @base@_out @name@_out;
                     impl_name = environment.nameToString(impl_scopedName)
                     objref_name = environment.nameToString(objref_scopedName)
                     
-                    impl_base = "typedef " + impl_name + "_impl_" + derivedName + ";"
+                    impl_base = "typedef " + impl_name + "_impl_" +\
+                                derivedName + ";"
                     objref_base = "typedef " + objref_name + "_objref_" + \
                                   derivedName + ";"
 
-                stream.out("""\
-typedef @base@ @name@;
-typedef @base@_ptr @name@_ptr;
-typedef @base@Ref @name@Ref;
-@impl_base@
-typedef @base@_Helper @name@_Helper;
-@objref_base@
-typedef @base@_var @name@_var;
-typedef @base@_out @name@_out;""",
+                stream.out(template.typedef_simple_objref,
                            base = derefTypeID,
                            name = derivedName,
                            impl_base = impl_base,
                            objref_base = objref_base)
             # Non-array of user declared types
             elif isinstance(derefType, idltype.Declared):
-                stream.out("""\
-typedef @base@ @name@;""",
+                stream.out(template.typedef_simple_basic,
                            base = basicReferencedTypeID,
-                           name = derivedName)
+                           derived = derivedName)
             # Non-array of sequence
             elif isinstance(derefType, idltype.Sequence):
                 seqType = derefType.seqType()
@@ -815,75 +643,47 @@ typedef @base@ @name@;""",
                 # not part of the type itself).
                 # ----
                 # Note that the fully dereferenced name is used
+                friend = "friend"
                 if is_global_scope:
                     friend = ""
-                else:
-                    friend = "friend"
                     
                 if tyutil.isEnum(seqDerefType) and \
                    not(is_array):
-                    stream.out("""\
-// Need to declare <<= for elem type, as GCC expands templates early
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
- @friend@ inline void operator >>= (@element@, NetBufferedStream&);
- @friend@ inline void operator <<= (@element@&, NetBufferedStream&);
- @friend@ inline void operator >>= (@element@, MemBufferedStream&);
- @friend@ inline void operator <<= (@element@&, MemBufferedStream&);
-#endif""",
-                    element = environment.principalID(seqDerefType),
-                    friend = friend)
+                    stream.out(template.typedef_enum_oper_friend,
+                               element = environment.principalID(seqDerefType),
+                               friend = friend)
                         
                 # derivedName is the new type identifier
                 # element is the name of the basic element type
                 # seq_dims contains dimensions if a sequence of arrays
                 # templateName contains the template instantiation
 
-                stream.out("""\
-  class @name@_var;
-
-  class @name@ : public @derived@ {
-  public:
-    typedef @name@_var _var_type;
-    inline @name@() {}
-    inline @name@(const @name@& s)
-      : @derived@(s) {}
-    """,
-                name = derivedName,
-                element = element_IN,
-                derived = templateName)
+                bounds = util.StringStream()
                 if not(bounded):
-                    
-                    stream.out("""\
-    inline @name@(_CORBA_ULong _max)
-      : @derived@(_max) {}
-    inline @name@(_CORBA_ULong _max, _CORBA_ULong _len, @element@* _val, _CORBA_Boolean _rel=0)
-      : @derived@(_max, _len, _val, _rel) {}
-    """,
+                    bounds.out(template.sequence_type_bounds,
                                name = derivedName,
                                element = element_ptr,
                                derived = templateName)
-                stream.out("""\
-    inline @name@& operator = (const @name@& s) {
-      @derived@::operator=(s);
-      return *this;
-    }
-  };""",
-                name = derivedName,
-                element = element_IN,
-                derived = templateName)
+                # output the main sequence definition
+                stream.out(template.sequence_type,
+                           name = derivedName,
+                           derived = templateName,
+                           bounds = str(bounds))
                 
+
+                # start building the _var and _out types
                 subscript_operator_var = util.StringStream()
                 subscript_operator_out = util.StringStream()
-                    
+
+                # subscripting operators depend on what it is
+                # fundamentally a type of
                 if is_array:
-                    subscript_operator_var.out("""\
-    inline @element@_slice* operator [] (_CORBA_ULong s) {
-      return (@element@_slice*) ((pd_seq->NP_data())[s]);
-    }""", element = element_ptr)
-                    subscript_operator_out.out("""\
-    inline @element@_slice* operator [] (_CORBA_ULong i) {
-      return (@element@_slice*) ((_data->NP_data())[i]);
-    }""", element = element_ptr)
+                    subscript_operator_var.out(
+                        template.sequence_var_array_subscript,
+                        element = element_ptr)
+                    subscript_operator_out.out(
+                        template.sequence_out_array_subscript,
+                        element = element_ptr)
                 else:
                     if tyutil.isString(seqDerefType):
                         # special case alert
@@ -894,106 +694,29 @@ typedef @base@ @name@;""",
                                                                   environment)
                     # only if an anonymous sequence
                     elif tyutil.isSequence(seqType):
-                        element_reference = tyutil.sequenceTemplate(seqDerefType, environment) + "&"
+                        element_reference = tyutil.sequenceTemplate(
+                            seqDerefType, environment) + "&"
                     else:
                         element_reference = element + "&"
-                    subscript_operator_var.out("""\
-    inline @element@ operator [] (_CORBA_ULong s) {
-      return (*pd_seq)[s];
-    }""", element = element_reference)
-                    subscript_operator_out.out("""\
-    inline @element@ operator [] (_CORBA_ULong i) {
-      return (*_data)[i];
-    }""", element = element_reference)                        
-                        
-                stream.out("""\
-  class @name@_out;
+                    subscript_operator_var.out(
+                        template.sequence_var_subscript,
+                        element = element_reference)
+                    subscript_operator_out.out(
+                        template.sequence_out_subscript,
+                        element = element_reference)                        
 
-  class @name@_var {
-  public:
-    typedef @name@ T;
-    typedef @name@_var T_var;
-    
-    inline @name@_var() : pd_seq(0) {}
-    inline @name@_var(T* s) : pd_seq(s) {}
-    inline @name@_var(const T_var& s) {
-      if( s.pd_seq )  pd_seq = new T(*s.pd_seq);
-      else             pd_seq = 0;
-    }
-    inline ~@name@_var() { if( pd_seq )  delete pd_seq; }
-    
-    inline T_var& operator = (T* s) {
-      if( pd_seq )  delete pd_seq;
-      pd_seq = s;
-      return *this;
-    }
-    inline T_var& operator = (const T_var& s) {
-      if( s.pd_seq ) {
-        if( !pd_seq )  pd_seq = new T;
-        *pd_seq = *s.pd_seq;
-      } else if( pd_seq ) {
-        delete pd_seq;
-        pd_seq = 0;
-      }
-      return *this;
-    }
-    @subscript_operator_var@
-    inline T* operator -> () { return pd_seq; }
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-    inline operator T& () const { return *pd_seq; }
-#else
-    inline operator const T& () const { return *pd_seq; }
-    inline operator T& () { return *pd_seq; }
-#endif
-    
-    inline const T& in() const { return *pd_seq; }
-    inline T&       inout()    { return *pd_seq; }
-    inline T*&      out() {
-      if( pd_seq ) { delete pd_seq; pd_seq = 0; }
-      return pd_seq;
-    }
-    inline T* _retn() { T* tmp = pd_seq; pd_seq = 0; return tmp; }
-    
-    friend class @name@_out;
-  
-  private:
-    T* pd_seq;
-  };
-  
-  class @name@_out {
-  public:
-    typedef @name@ T;
-    typedef @name@_var T_var;
 
-    inline @name@_out(T*& s) : _data(s) { _data = 0; }
-    inline @name@_out(T_var& s)
-      : _data(s.pd_seq) { s = (T*) 0; }
-    inline @name@_out(const @name@_out& s) : _data(s._data) {}
-    inline @name@_out& operator = (const @name@_out& s) {
-      _data = s._data;
-      return *this;
-    }  inline @name@_out& operator = (T* s) {
-      _data = s;
-      return *this;
-    }
-    inline operator T*&()  { return _data; }
-    inline T*& ptr()       { return _data; }
-    inline T* operator->() { return _data; }
-    @subscript_operator_out@
-
-    T*& _data;
-  
-  private:
-    @name@_out();
-    @name@_out& operator=(const T_var&);
-  };
-
-  """,
+                # write the _var class definition
+                stream.out(template.sequence_var,
                            name = derivedName,
-                           element = element,
-                           subscript_operator_var = str(subscript_operator_var),
-                           subscript_operator_out = str(subscript_operator_out))
-            else:                  
+                           subscript_operator = str(subscript_operator_var))
+
+                # write the _out class definition
+                stream.out(template.sequence_out,
+                           name = derivedName,
+                           subscript_operator = str(subscript_operator_out))
+
+            else:
                 # FIXME: finish the rest later
                 raise "No code for type = " + repr(type)
 
@@ -1006,23 +729,9 @@ typedef @base@ @name@;""",
             dimsString = tyutil.dimsToString(d.sizes())
             taildims = tyutil.dimsToString(d.sizes()[1:])
             
-            typestring = basicReferencedTypeID
-            if tyutil.isString(derefType) and \
-               not(is_array):
-                typestring = "CORBA::String_member"
-            elif tyutil.isObjRef(derefType) and \
-                 not(is_array):
-                typestring = objRefTemplate
-            elif tyutil.isTypeCode(derefType) and \
-                 not(is_array):
-                typestring = "CORBA::TypeCode_member"
-            elif tyutil.isSequence(aliasType) and \
-                 not(is_array):
-                typestring = sequenceTemplate
-                             
-            stream.out("""\
-typedef @type@ @name@@dims@;
-typedef @type@ @name@_slice@taildims@;""",
+            typestring = tyutil.memberType(environment, aliasType)
+
+            stream.out(template.typedef_array,
                        name = derivedName,
                        type = typestring,
                        dims = dimsString,
@@ -1030,67 +739,34 @@ typedef @type@ @name@_slice@taildims@;""",
 
             # if in global scope we define the functions as extern
             if is_global_scope:
-                stream.out("""\
-extern @name@_slice* @name@_alloc();
-extern @name@_slice* @name@_dup(const @name@_slice* _s);
-extern void @name@_free(@name@_slice* _s);
-extern void @name@_copy(@name@_slice* _to, const @name@_slice* _from);
-""", name = derivedName)
+                stream.out(template.typedef_array_extern,
+                           name = derivedName)
             else:
-                stream.out("""
-static inline @name@_slice* @name@_alloc() {
-  return new @name@_slice[@firstdim@];
-}
+                # build the _dup loop
+                dup_loop = util.StringStream()
+                index = util.start_loop(dup_loop, all_dims,
+                                        iter_type = "unsigned int")
+                dup_loop.out("_data@index@ = _s@index@;",
+                             index = index)
+                util.finish_loop(dup_loop, all_dims)
 
-static inline @name@_slice* @name@_dup(const @name@_slice* _s) {
-   if (!_s) return 0;
-   @name@_slice* _data = @name@_alloc();
-   if (_data) {""",
-                           type = basicReferencedTypeID,
+                # build the _copy loop
+                copy_loop = util.StringStream()
+                index = util.start_loop(copy_loop, all_dims,
+                                        iter_type = "unsigned int")
+                copy_loop.out("_to@index@ = _from@index@;", index = index)
+                util.finish_loop(copy_loop, all_dims)
+
+                # output the static functions
+                stream.out(template.typedef_array_static,
                            name = derivedName,
-                           dims = dimsString,
                            firstdim = repr(all_dims[0]),
-                           taildims = taildims)
-                stream.inc_indent()
-                index = util.start_loop(stream, all_dims, iter_type = "unsigned int")
-                
-                stream.out("""\
-       _data@subscript@ = _s@subscript@;""", subscript = index)
-                util.finish_loop(stream, all_dims)
-                stream.dec_indent()
-                stream.out("""\
-   }
-   return _data;
-}
-
-static inline void @name@_copy(@name@_slice* _to, const @name@_slice* _from){
-  """, name = derivedName)
-                stream.inc_indent()
-                index = util.start_loop(stream, all_dims, iter_type = "unsigned int")
-                stream.out("""\
-  _to@index@ = _from@index@;""", index = index)
-                util.finish_loop(stream, all_dims)
-                stream.dec_indent()
-                stream.out("""\
-
-}
-
-static inline void @name@_free(@name@_slice* _s) {
-    delete [] _s;
-}
-""", name = derivedName)
-            stream.out("""\
-class @name@_copyHelper {
-public:
-  static inline @name@_slice* alloc() { return @name@_alloc(); }
-  static inline @name@_slice* dup(const @name@_slice* p) { return @name@_dup(p); }
-  static inline void free(@name@_slice* p) { @name@_free(p); }
-};
-
-typedef _CORBA_Array_Var<@name@_copyHelper,@name@_slice> @name@_var;
-typedef _CORBA_Array_OUT_arg<@name@_slice,@name@_var > @name@_out;
-typedef _CORBA_Array_Forany<@name@_copyHelper,@name@_slice> @name@_forany;
-""", name = derivedName)
+                           dup_loop = str(dup_loop),
+                           copy_loop = str(copy_loop))
+                            
+            # output the _copyHelper class
+            stream.out(template.typedef_array_copyHelper,
+                       name = derivedName)
                 
      
 
@@ -1121,96 +797,53 @@ def visitStruct(node):
     insideClass = self.__insideClass
     self.__insideClass = 1
             
-    stream.out("""\
-struct @name@ {""", name = cxx_name)
-    stream.inc_indent()
-        
+    type = "Fix"
     if tyutil.isVariableDecl(node):
         type = "Variable"
-    else:
-        type = "Fix"
+
+    # Deal with types constructed here
+    _stream = self.stream
+    Other_IDL = util.StringStream()
+    self.stream = Other_IDL
+    for m in node.members():
+        if m.constrType():
+            m.memberType().decl().accept(self)
+    self.stream = _stream
             
-    stream.out("""\
-typedef _CORBA_ConstrType_@type@_Var<@name@> _var_type;""",
-               name = cxx_name, type = type)
-
-    # First pass through the members outputs code for all the user
-    # declared new types
-    user_decls = filter(lambda x: isinstance(x.memberType(),
-                                             idltype.Declared),
-                        node.members())
-    for m in user_decls:
-        m.accept(self)
-
+    # Deal with the actual struct members
+    members = util.StringStream()
     for m in node.members():
         memberType = m.memberType()
         derefType = tyutil.deref(memberType)
-
         is_array = tyutil.typeDims(memberType) != []
 
-        if is_array:
-            memtype = environment.principalID(memberType)
-        else:
-            # strings always seem to be a special case
-            if tyutil.isString(derefType):
-                memtype = "CORBA::String_member"
-            elif tyutil.isObjRef(derefType):
-                memtype = tyutil.objRefTemplate(derefType, "Member", environment)    
-            elif tyutil.isTypeCode(derefType):
-                memtype = "CORBA::TypeCode_member"
-            elif tyutil.isTypedef(memberType):
-                memtype = environment.principalID(memberType)
-            elif tyutil.isSequence(memberType):
-                sequence_template = tyutil.sequenceTemplate(memberType, environment)
-
-                for d in m.declarators():
-                    instname = tyutil.mapID(d.identifier())
-                    if d.sizes() != []:
-                        dims_string = tyutil.dimsToString(d.sizes())
-                        stream.out("""\
-@sequence_template@ @instname@@dims@;""",
-                                   sequence_template = sequence_template,
-                                   instname = instname,
-                                   dims = dims_string)
-                    else:
-                        memtype = instname + "_seq"
-                        stream.out("""\
-typedef @sequence_template@ _@memtype@;
-_@memtype@ @instname@;""",
-                                   sequence_template = sequence_template,
-                                   memtype = memtype,
-                                   instname = instname)
-                continue
-
-            elif tyutil.isEnum(memberType):
-                memtype = environment.principalID(memberType)
-
-            else:
-                memtype = environment.principalID(memberType)
+        memtype = tyutil.memberType(environment, memberType)
 
         for d in m.declarators():
-            dims = d.sizes()
-            dims_string = tyutil.dimsToString(dims)
-            id = tyutil.mapID(d.identifier())
-            stream.out("""\
-@type@ @identifier@@dims@;""", type = memtype,
-                       identifier = id,
-                       dims = dims_string)
+            id = d.identifier()
+            cxx_id = tyutil.mapID(id)
 
+            decl_dims = d.sizes()
+            is_array_declarator = decl_dims != []
 
-    stream.out("""\
-  size_t _NP_alignedSize(size_t initialoffset) const;
-  void operator>>= (NetBufferedStream &) const;
-  void operator<<= (NetBufferedStream &);
-  void operator>>= (MemBufferedStream &) const;
-  void operator<<= (MemBufferedStream &);
-};
-
-typedef @name@::_var_type @name@_var;
-
-typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
-""", type = type,name = cxx_name)
-
+            # non-arrays of direct sequences are done via a typedef
+            if not(is_array_declarator) and tyutil.isSequence(memberType):
+                members.out(template.struct_nonarray_sequence,
+                            memtype = memtype,
+                            cxx_id = cxx_id)
+            else:
+                members.out(template.struct_normal_member,
+                            memtype = memtype,
+                            cxx_id = cxx_id,
+                            dims = tyutil.dimsToString(decl_dims))
+            
+    # Output the structure itself
+    stream.out(template.struct,
+               name = cxx_name,
+               type = type,
+               Other_IDL = str(Other_IDL),
+               members = str(members))
+    
     self.__insideClass = insideClass
 
     # TypeCode and Any
@@ -1218,9 +851,9 @@ typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
         # structs in C++ are classes with different default privacy policies
         qualifier = tyutil.const_qualifier(self.__insideModule,
                                            self.__insideClass)
-        stream.out("""\
-@qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
-                   qualifier = qualifier, name = cxx_name)
+        stream.out(template.typecode,
+                   qualifier = qualifier,
+                   name = cxx_name)
 
 
 
@@ -1241,82 +874,56 @@ def visitException(node):
     # if the exception has no members, inline some no-ops
     no_members = (node.members() == [])
 
+    # other types constructed within this one
+    Other_IDL = util.StringStream()
+    _stream = self.stream
+    self.stream = Other_IDL
+    for m in node.members():
+        if m.constrType():
+            m.memberType().decl().accept(self)
+    self.stream = _stream
 
-    stream.out("""\
-class @name@ : public CORBA::UserException {
-public:
-  """, name = cxx_exname)
-
-    # deal with the datamembers and constructors
-    data = util.StringStream()
+    # deal with the exceptions members
+    members = util.StringStream()
+    # and constructor arguments
     ctor_args = []
     for m in node.members():
         memberType = m.memberType()
         derefType = tyutil.deref(memberType)
         type_dims = tyutil.typeDims(memberType)
 
-        # is it constructed here?
-        if m.constrType():
-            memberType.decl().accept(self)
-        
         for d in m.declarators():
             decl_dims = d.sizes()
             full_dims = decl_dims + type_dims
             is_array = full_dims != []
             is_array_declarator = decl_dims != []
 
-            if tyutil.isSequence(derefType):
-                sequence_template = tyutil.sequenceTemplate(derefType,
-                                                            environment)
-            elif tyutil.isObjRef(derefType):
-                objref_member = tyutil.objRefTemplate(derefType, "Member",
-                                                      environment)
+            memtype = tyutil.memberType(environment, memberType)
+            id = d.identifier()
+            cxx_id = tyutil.mapID(id)
 
-            if is_array:
-                type = environment.principalID(memberType)
-
-            elif tyutil.isTypeCode(derefType):
-                type = "CORBA::TypeCode_member"
-            elif tyutil.isString(derefType):
-                type = "CORBA::String_member"
-            elif tyutil.isObjRef(derefType) and \
-                 derefType.decl().scopedName() == ["CORBA", "Object"]:
-                type = "CORBA::Object_member"
-            # direct sequence?
-            elif tyutil.isSequence(memberType):
-                type = sequence_template
-
-            #elif tyutil.isTypedef(memberType):
-            #    type = environment.principalID(memberType)
-            #elif tyutil.isSequence(derefType):
-            #    type = tyutil.sequenceTemplate(derefType, environment)
-                
-            else:
-                type = environment.principalID(memberType)
-            name = tyutil.mapID(d.identifier())
-            dims = tyutil.dimsToString(decl_dims)
+            dims_string = tyutil.dimsToString(decl_dims)
 
             ctor_arg_type = tyutil.makeConstructorArgumentType(memberType,
                                                                environment)
 
             if is_array_declarator:
-                ctor_arg_type = "const " + config.privatePrefix() + "_" + name
+                ctor_arg_type = "const " + config.privatePrefix() +\
+                                "_" + cxx_id
             
-                if tyutil.isSequence(derefType):
-                    type = sequence_template
-                elif tyutil.isObjRef(derefType):
-                    type = objref_member
-                    
-                data.out("""\
-    typedef @type@ @private_prefix@_@name@@dims@;
-    typedef @type@ _@name@_slice;""", type = type, name = name,
-                         dims = dims,
-                         private_prefix = config.privatePrefix())
-                
-            data.out("""\
-    @type@ @name@@dims@;""", type = type, name = name, dims = dims)
-            type = tyutil.operationArgumentType(memberType, environment)[1]
-            ctor_args.append(ctor_arg_type + " i_" + name)
+                members.out(template.exception_array_declarator,
+                            memtype = memtype,
+                            cxx_id = cxx_id,
+                            dims = dims_string,
+                            private_prefix = config.privatePrefix())
+
+            ctor_args.append(ctor_arg_type + " i_" + cxx_id)
+
+            members.out(template.exception_member,
+                        memtype = memtype,
+                        cxx_id = cxx_id,
+                        dims = dims_string)
+
     ctor = ""
     if ctor_args != []:
         ctor = cxx_exname + "(" + string.join(ctor_args, ", ") + ");"
@@ -1329,59 +936,26 @@ public:
         inline = ""
         body = ";"
         alignedSize = "size_t _NP_alignedSize(size_t) const;"
-            
-    stream.out("""\
-  @datamembers@
 
-  inline @name@() {
-    pd_insertToAnyFn    = insertToAnyFn;
-    pd_insertToAnyFnNCP = insertToAnyFnNCP;
-  }
-  @name@(const @name@&);
-  @constructor@
-  @name@& operator=(const @name@&);
-  virtual ~@name@();
-  virtual void _raise();
-  static @name@* _downcast(CORBA::Exception*);
-  static const @name@* _downcast(const CORBA::Exception*);
-  static inline @name@* _narrow(CORBA::Exception* e) {
-    return _downcast(e);
-  }
-  
-  @alignedSize@
-
-  @inline@ void operator>>=(NetBufferedStream&) const @body@
-  @inline@ void operator>>=(MemBufferedStream&) const @body@
-  @inline@ void operator<<=(NetBufferedStream&) @body@
-  @inline@ void operator<<=(MemBufferedStream&) @body@
-
-  static _core_attr insertExceptionToAny    insertToAnyFn;
-  static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;
-
-  static _core_attr const char* _PD_repoId;
-
-private:
-  virtual CORBA::Exception* _NP_duplicate() const;
-  virtual const char* _NP_typeId() const;
-  virtual const char* _NP_repoId(int*) const;
-  virtual void _NP_marshal(NetBufferedStream&) const;
-  virtual void _NP_marshal(MemBufferedStream&) const;
-};
-
-""",
-               name = cxx_exname, datamembers = str(data),
+    # output the main exception declaration
+    stream.out(template.exception,
+               name = cxx_exname,
+               Other_IDL = str(Other_IDL),
+               members = str(members),
                constructor = ctor,
-               inline = inline, body = body,
-               alignedSize = alignedSize)
+               alignedSize = alignedSize,
+               inline = inline,
+               body = body)
+               
     self.__insideClass = insideClass
 
     # Typecode and Any
     if config.TypecodeFlag():
         qualifier = tyutil.const_qualifier(self.__insideModule,
                                            self.__insideClass)
-        stream.out("""\
-@qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;
-""", qualifier = qualifier, name = cxx_exname)
+        stream.out(template.typecode,
+                   qualifier = qualifier,
+                   name = cxx_exname)
     
 
 
@@ -1389,10 +963,10 @@ def visitUnion(node):
     if not(node.mainFile()):
         return
     
-    name = node.identifier()
-    cxx_name = tyutil.mapID(name)
+    id = node.identifier()
+    cxx_id = tyutil.mapID(id)
     outer_environment = env.lookup(node)
-    environment = outer_environment.enterScope(name)
+    environment = outer_environment.enterScope(id)
     
     scope = environment.scope()
     insideClass = self.__insideClass
@@ -1473,18 +1047,15 @@ def visitUnion(node):
     # discriminant are listed"
     exhaustive = tyutil.exhaustiveMatch(switchType, tyutil.allCaseValues(node))
     implicitDefault = not(hasDefault) and not(exhaustive)
-    
+
+    fixed = "Fix"
     if tyutil.isVariableDecl(node):
         fixed = "Variable"
-    else:
-        fixed = "Fix"
-    stream.out("""\
-class @unionname@ {
-public:
 
-  typedef _CORBA_ConstrType_@fixed@_Var<@unionname@> _var_type;""",
-               unionname = cxx_name, fixed = fixed)
-
+    Other_IDL = util.StringStream()
+    _stream = self.stream
+    self.stream = Other_IDL
+    
     # deal with constructed switch type
     if node.constrType():
         node.switchType().decl().accept(self)
@@ -1494,107 +1065,62 @@ public:
         if n.constrType():
             n.caseType().decl().accept(self)
 
-    stream.out("""\
-  @unionname@() {""",unionname = cxx_name, fixed = fixed)
-    stream.inc_indent()
-        
+    self.stream = _stream
+    
+    # create the default constructor body
+    default_constructor = util.StringStream()
     if implicitDefault:
-        stream.out("""\
-    _default();""")
-                      
+        default_constructor.out(template.union_constructor_implicit)
     elif hasDefault:
-        stream.out("""\
-    pd__default = 1;
-    pd__d = @default@;""", default = chooseArbitraryDefault())
-    stream.dec_indent()
-    stream.out("""\
-  }
-  """)
-    for section in ['copyconst', 'equalsop']:
-        if (section is 'copyconst'):
-            stream.out("""\
-  @unionname@(const @unionname@& _value) {""", unionname = cxx_name)
-        else:
-            stream.out("""\
-  @unionname@& operator=(const @unionname@& _value) {""", unionname = cxx_name)
-        stream.inc_indent()
-        if not(exhaustive):
-            stream.out("""\
-    if ((pd__default = _value.pd__default)) {
-      pd__d = _value.pd__d;""", unionname = cxx_name)
-            # the default case (if it exists) need initialising here
-            for c in node.cases():
-                if c.isDefault:
-                    stream.out("""\
-      @default@(_value.pd_@default@);""",
-                               default=tyutil.mapID(c.declarator().identifier()))
-            stream.dec_indent()
-            stream.out("""\
-    }
-    else {""")
-        stream.out("""\
-      switch(_value.pd__d) {""")
-        stream.inc_indent()
-        # iterate over cases
-        for c in node.cases():
-            for l in c.labels():
-                if l.default(): continue
-                # FIXME: stupid special case. An explicit discriminator
-                # value of \0 -> 0000 whereas an implicit one (valueString)
-                # \0 -> '\000'
-                discrimvalue = tyutil.valueString(switchType, l.value(),
-                                                  environment)
-                    
-                stream.out("""\
-         case @discrimvalue@: @name@(_value.pd_@name@); break;""",
+        default_constructor.out(template.union_constructor_default,
+                                default = chooseArbitraryDefault())
+
+    # create the copy constructor and the assignment operator
+    # bodies
+    copy_constructor = util.StringStream()
+    # build the switch() case body
+    ctor_cases = util.StringStream()
+    for c in node.cases():
+        for l in c.labels():
+            if l.default(): continue
+            discrimvalue = tyutil.valueString(switchType, l.value(),
+                                              environment)
+            ctor_cases.out(template.union_ctor_case,
                            discrimvalue = discrimvalue,
                            name = tyutil.mapID(c.declarator().identifier()))
-        # Booleans are a special case (isn't everything?)
-        booleanWrap = tyutil.isBoolean(switchType) \
-                      and exhaustive
-        if booleanWrap:
-            stream.niout("""\
-#ifndef HAS_Cplusplus_Bool""")
-        stream.out("""\
-         default: break;""")
-        if booleanWrap:
-            stream.niout("""\
-#endif""")
-        stream.dec_indent()
-        stream.out("""\
-      }""")
-        if not(exhaustive):
-            stream.out("""\
-    }""")
-        if section is 'equalsop':
-            stream.out("""\
-    return *this;
-  }""")
-        else:
-            stream.dec_indent()
-            stream.out("""\
-  }
 
-  ~@unionname@() {}
-  """, unionname= cxx_name)
+    # Booleans are a special case (isn't everything?)
+    booleanWrap = tyutil.isBoolean(switchType) and exhaustive
+    if booleanWrap:
+        ctor_cases.out(template.union_ctor_bool_default)
+    else:
+        ctor_cases.out(template.union_ctor_default)
+        
+    if not(exhaustive):
+        # grab the default case
+        default = ""
+        for c in node.cases():
+            if c.isDefault:
+                case_id = c.declarator().identifier()
+                cxx_case_id = tyutil.mapID(case_id)
+                default = cxx_case_id + "(_value.pd_" + cxx_case_id + ");"
 
-    # deal with the discriminator
-    stream.out("""\
-  
-  @discrimtype@ _d() const { return pd__d;}
-  void _d(@discrimtype@ _value) {}
-  """, discrimtype = environment.principalID(deref_switchType))
 
+        copy_constructor.out(template.union_ctor_nonexhaustive,
+                             default = default,
+                             cases = str(ctor_cases))
+    else:
+        copy_constructor.out(template.union_ctor_exhaustive,
+                             cases = str(ctor_cases))
+        
+    # do we need an implicit _default function?
+    implicit_default = util.StringStream()
     if implicitDefault:
-        stream.out("""\
-  void _default()
-  {
-    pd__d = @arbitraryDefault@;
-    pd__default = 1;
-  }
-  """, arbitraryDefault = chooseArbitraryDefault())
+        implicit_default.out(template.union_implicit_default,
+                             arbitraryDefault = chooseArbitraryDefault())
 
     # get and set functions for each case:
+    members = util.StringStream()
     for c in node.cases():
         # Following the typedef chain will deliver the base type of
         # the alias. Whether or not it is an array is stored in an
@@ -1612,12 +1138,12 @@ public:
         full_dims = decl_dims + dims
 
         is_array = full_dims != []
-        anonymous_array = decl_dims != []
+        is_array_declarator = decl_dims != []
         alias_array = dims != []
         
         member = tyutil.mapID(decl.identifier())
-        # the name of the member type (not flattened)
-        type = environment.principalID(caseType)
+
+        memtype = tyutil.memberType(environment, caseType)
 
         # CORBA 2.3 C++ language mapping (June, 1999) 1-34:
         # ... Setting the union value through a modifier function
@@ -1659,236 +1185,108 @@ public:
             if tyutil.isChar(switchType) and label.value() == '\0':
                 discrimvalue = "0000"
 
-            type_str = type
-
-            type_predefined = anonymous_array and not(alias_array) or \
-                              not(is_array)
-            
-            if tyutil.isString(derefType) and \
-               (anonymous_array and not(alias_array) or \
-                not(is_array)):
-                type_str = "CORBA::String_member"
-            if tyutil.isObjRef(derefType):
-                if alias_array:
-                    type_str = type_str
-                elif anonymous_array:
-                    type_str = tyutil.objRefTemplate(derefType, "Member",
-                                                     environment)
-                else:
-                    type_str = environment.principalID(derefType)
-            elif tyutil.isSequence(caseType):
-                type_str = tyutil.sequenceTemplate(caseType, environment)
-
-            # only different when array is anonymous
-            const_type_str = type_str
+            # only different when array declarator
+            const_type_str = memtype
                 
             # anonymous arrays are handled slightly differently
-            if anonymous_array:
+            if is_array_declarator:
                 prefix = config.privatePrefix()
-                stream.out("""\
-   typedef @type_str@ @prefix@_@name@@dims@;
-   typedef @type_str@ _@name@_slice@tail_dims@;
-   """,
-                        prefix = prefix,
-                        type_str = type_str,
-                        name = member,
-                        dims = tyutil.dimsToString(decl.sizes()),
-                        tail_dims = tyutil.dimsToString(decl.sizes()[1:]))
+                members.out(template.union_array_declarator,
+                            prefix = prefix,
+                            memtype = memtype,
+                            name = member,
+                            dims = tyutil.dimsToString(decl.sizes()),
+                            tail_dims = tyutil.dimsToString(decl.sizes()[1:]))
                 const_type_str = prefix + "_" + member
-                type_str = "_" + member
+                memtype = "_" + member
              
             if is_array:
-                # arrays
                 # build the loop
                 loop = util.StringStream()
-                dimsString = tyutil.dimsToString(range(0, len(full_dims)), "_i")
-                index = 0
-                for size in full_dims:
-                    loop.out("""\
-    for (unsigned int _i@index@ =0;_i@index@ < @size@;_i@index@++) {""",
-                             index = str(index), size = str(size))
-                    index = index + 1
-                    loop.inc_indent()
-                loop.out("""\
-      pd_@name@@dimsString@ = _value@dimsString@;""",
-                         name = member, dimsString = dimsString)
-                for size in full_dims:
-                    loop.dec_indent()
-                    loop.out("""\
-    }""")             
-                stream.out("""\
-  const @type@_slice *@name@ () const { return pd_@name@; }
-  void @name@ (const @const_type@ _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    @loop@
-  }""",
-                           type = type_str,
-                           const_type = const_type_str,
-                           name = member,
-                           isDefault = str(c.isDefault),
-                           discrimvalue = discrimvalue,
-                           loop = str(loop))
+                index = util.start_loop(loop, full_dims,
+                                        iter_type = "unsigned int")
+                loop.out("pd_" + member + index + " = _value" + index + ";")
+                util.finish_loop(loop, full_dims)
+                members.out(template.union_array,
+                            memtype = memtype,
+                            const_type = const_type_str,
+                            name = member,
+                            isDefault = str(c.isDefault),
+                            discrimvalue = discrimvalue,
+                            loop = str(loop))
             elif derefType.kind() == idltype.tk_any:
                 # note type != CORBA::Any when its an alias...
-                stream.out("""\
-  const @type@ &@name@ () const { return pd_@name@; }
-  @type@ &@name@ () { return pd_@name@; }
-  void @name@ (const @type@& _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = _value;
-  }""",
-                           type = type_str,
-                           name = member,
-                           isDefault = str(c.isDefault),
-                           discrimvalue = discrimvalue)
+                members.out(template.union_any,
+                            type = memtype,
+                            name = member,
+                            isDefault = str(c.isDefault),
+                            discrimvalue = discrimvalue)
             elif derefType.kind() == idltype.tk_TypeCode:
-                stream.out("""\
-  CORBA::TypeCode_ptr @name@ () const { return pd_@name@._ptr; }
-  void @name@(CORBA::TypeCode_ptr _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = CORBA::TypeCode::_duplicate(_value);
-  }
-  void @name@(const CORBA::TypeCode_member& _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = _value;
-  }
-  void @name@(const CORBA::TypeCode_var& _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = _value;
-  }""",
-                           name = member,
-                           isDefault = str(c.isDefault),
-                           discrimvalue = discrimvalue)
+                members.out(template.union_typecode,
+                            name = member,
+                            isDefault = str(c.isDefault),
+                            discrimvalue = discrimvalue)
                 
                 
             elif isinstance(derefType, idltype.Base) or \
                             tyutil.isEnum(derefType):
                 # basic type
-                stream.out("""\
-  @type@ @name@ () const { return pd_@name@; }
-  void @name@ (@type@  _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = _value;
-  }""",
-                           type = type_str,
-                           name = member,
-                           isDefault = str(c.isDefault),
-                           discrimvalue = discrimvalue)
+                members.out(template.union_basic,
+                            type = memtype,
+                            name = member,
+                            isDefault = str(c.isDefault),
+                            discrimvalue = discrimvalue)
 
             elif isinstance(derefType, idltype.String):
-                stream.out("""\
-  const char * @name@ () const { return (const char*) pd_@name@; }
-  void @name@(char* _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = _value;
-  }
-  void @name@(const char*  _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = _value;
-  }
-  void @name@(const CORBA::String_var& _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = _value;
-  }
-  void @name@(const CORBA::String_member& _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = _value;
-  }""",
-                           name = member,
-                           isDefault = str(c.isDefault),
-                           discrimvalue = discrimvalue)
+                members.out(template.union_string,
+                            name = member,
+                            isDefault = str(c.isDefault),
+                            discrimvalue = discrimvalue)
             elif tyutil.isObjRef(derefType):
-                objref = tyutil.objRefTemplate(derefType, "Member", environment)
-                stream.out("""\
-  @type@_ptr @member@ () const { return pd_@member@._ptr; }
-  void @member@(@type@_ptr _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    @type@_Helper::duplicate(_value);
-    pd_@member@ = _value;
-  }
-  void @member@(const @objref@& _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@member@ = _value;
-  }
-  void @member@(const @type@_var&  _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@member@ = _value;
-  }""",
-                           member = member,
-                           type = type_str,
-                           objref = objref,
-                           isDefault = str(c.isDefault),
-                           discrimvalue = discrimvalue)
+                scopedName = derefType.decl().scopedName()
+                ptr_name = name.suffixName(scopedName, "_ptr", environment)
+                Helper_name = name.suffixName(scopedName, "_Helper",
+                                              environment)
+                var_name = name.suffixName(scopedName, "_var", environment)
+
+                members.out(template.union_objref,
+                            member = member,
+                            memtype = memtype,
+                            ptr_name = ptr_name,
+                            var_name = var_name,
+                            Helper_name = Helper_name,
+                            isDefault = str(c.isDefault),
+                            discrimvalue = discrimvalue)
             elif tyutil.isTypedef(caseType) or \
                  tyutil.isStruct(derefType) or \
                  tyutil.isUnion(derefType):
-
-                stream.out("""\
-  const @type@ &@name@ () const { return pd_@name@; }
-  @type@ &@name@ () { return pd_@name@; }
-  void @name@ (const @type@& _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@name@ = _value;
-  }""",
-                           type = type_str,
-                           name = member,
-                           isDefault = str(c.isDefault),
-                           discrimvalue = discrimvalue)
+                members.out(template.union_constructed,
+                            type = memtype,
+                            name = member,
+                            isDefault = str(c.isDefault),
+                            discrimvalue = discrimvalue)
 
             elif isinstance(derefType, idltype.Sequence):
                 sequence_template  = tyutil.sequenceTemplate(derefType,
                                                              environment)
-                stream.out("""\
-  typedef @sequence_template@ _@member@_seq;
-  const _@member@_seq& @member@ () const { return pd_@member@; }
-  _@member@_seq& @member@ () { return pd_@member@; }
-  void @member@ (const _@member@_seq& _value) {
-    pd__d = @discrimvalue@;
-    pd__default = @isDefault@;
-    pd_@member@ = _value;
-  }""",
-                           sequence_template = sequence_template,
-                           member = member,
-                           isDefault = str(c.isDefault),
-                           discrimvalue = discrimvalue)
+                members.out(template.union_sequence,
+                            sequence_template = sequence_template,
+                            member = member,
+                            isDefault = str(c.isDefault),
+                            discrimvalue = discrimvalue)
 
             else:
                 raise "Don't know how to output code for union type: "+type
-    stream.out("""\
 
-  size_t _NP_alignedSize(size_t initialoffset) const;
-  void operator>>= (NetBufferedStream&) const;
-  void operator<<= (NetBufferedStream&);
-  void operator>>= (MemBufferedStream&) const;
-  void operator<<= (MemBufferedStream&);
-  """)
     # Typecode and Any
+    tcParser_unionHelper = util.StringStream()
     if config.TypecodeFlag():
         guard_name = tyutil.guardName(node.scopedName())
-        stream.out("""\
-#if defined(__GNUG__) || defined(__DECCXX) && (__DECCXX_VER < 60000000)
-    friend class @private_prefix@_tcParser_unionhelper_@name@;
-#else
-    friend class ::@private_prefix@_tcParser_unionhelper_@name@;
-#endif
-""", name = guard_name, private_prefix = config.privatePrefix())
-    stream.out("""\
-private:
-  """)
+        
+        tcParser_unionHelper.out(template.union_tcParser_friend,
+                                 name = guard_name,
+                                 private_prefix = config.privatePrefix())
+
 
     # declare the instance of the discriminator and
     # the actual data members (shock, horror)
@@ -1914,44 +1312,27 @@ private:
         full_dims = case_dims + decl_dims
         
         is_array = full_dims != []
-        anonymous_array = decl_dims != []
+        is_array_declarator = decl_dims != []
         alias_array = case_dims != []
 
         member_name = tyutil.mapID(c.declarator().identifier())
-        # put fixed types inside the union and variable types
-        # outside. FIXME: is this if correct?
-        type_str = environment.principalID(caseType)
-        if tyutil.isString(derefType) and \
-               (anonymous_array and not(alias_array) or \
-                not(is_array)):
-                type_str = "CORBA::String_member"
-        if tyutil.isObjRef(derefType):
-            if alias_array:
-                type_str = type_str
-            else:
-                type_str = tyutil.objRefTemplate(derefType, "Member",
-                                                 environment)
-        elif tyutil.isTypeCode(derefType) and not(is_array):
-            type_str = "CORBA::TypeCode_member"
-        elif tyutil.isSequence(caseType) and anonymous_array:
-            # the typedef _name_seq is not defined in this case
-            type_str = tyutil.sequenceTemplate(caseType, environment)
-        elif tyutil.isSequence(caseType) and not(anonymous_array):
-            # sequence template typedef already exists
-            type_str = "_" + member_name + "_seq"
+        type_str = tyutil.memberType(environment, caseType)
 
+        # non-array sequences have had their template typedef'd somewhere
+        if not(is_array_declarator) and tyutil.isSequence(caseType):
+            type_str = "_" + member_name + "_seq"
+        
         dims_str = tyutil.dimsToString(decl_dims)
-            
-        # floats in unions are special cases
+
+        # Decide what does inside and outside the union {} itself
+        # Note: floats in unions are special cases
         if tyutil.isFloating(derefType) and not(is_array):
-            inside.out("""\
-#ifndef USING_PROXY_FLOAT
-  @type@ pd_@name@@dims@;
-#endif""", type = type_str, name = member_name, dims = dims_str)
-            outside.out("""\
-#ifdef USING_PROXY_FLOAT
-  @type@ pd_@name@@dims@;
-#endif""", type = type_str, name = member_name, dims = dims_str)
+            inside.out(template.union_noproxy_float,
+                       type = type_str, name = member_name,
+                       dims = dims_str)
+            outside.out(template.union_proxy_float,
+                       type = type_str, name = member_name,
+                       dims = dims_str)
             used_inside = used_outside = 1
         else:
             if is_array and tyutil.isStruct(derefType) and not(is_variable):
@@ -1969,44 +1350,32 @@ private:
                 else:
                     this_stream = inside
                     used_inside = 1
-            this_stream.out("""\
-    @type@ pd_@name@@dims@;""",
+            this_stream.out(template.union_member,
                             type = type_str,
                             name = member_name,
                             dims = dims_str)
   
     discrimtype = environment.principalID(deref_switchType)
         
-    if tyutil.isVariableDecl(node):
-        isVariable = "Variable"
-    else:
-        isVariable = "Fix"
-
-    stream.out("""\
-    @discrimtype@ pd__d;
-    CORBA::Boolean pd__default;""",
-               discrimtype = discrimtype)
     if used_inside:
-        stream.out("""\
-    union {
-      @insideUnion@
-    };""",
-                   insideUnion=str(inside))
-    if used_outside:
-        stream.out("""\
-    @outsideUnion@
-  };""", outsideUnion = str(outside))
-    else:
-        stream.dec_indent()
-        stream.out("""\
-  };""")
-    stream.dec_indent()
-    stream.out("""\
-typedef @Name@::_var_type @Name@_var;
-typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
-""",
-               isVariable = isVariable,
-               Name = cxx_name)
+        _union = util.StringStream()
+        _union.out(template.union_union, members = str(inside))
+        inside = _union
+
+    # write out the union class
+    stream.out(template.union,
+               unionname = cxx_id,
+               fixed = fixed,
+               Other_IDL = str(Other_IDL),
+               default_constructor = str(default_constructor),
+               copy_constructor = str(copy_constructor),
+               discrimtype = discrimtype,
+               implicit_default = str(implicit_default),
+               members = str(members),
+               tcParser_unionHelper = str(tcParser_unionHelper),
+               union = str(inside),
+               outsideUnion = str(outside))
+               
 
     self.__insideClass = insideClass
 
@@ -2014,9 +1383,9 @@ typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
     if config.TypecodeFlag():
         qualifier = tyutil.const_qualifier(self.__insideModule,
                                            self.__insideClass)
-        stream.out("""\
-@qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
-                   qualifier = qualifier, name = cxx_name)
+        stream.out(template.typecode,
+                   qualifier = qualifier,
+                   name = cxx_id)
 
     return
 
@@ -2029,18 +1398,16 @@ def visitEnum(node):
     cxx_name = tyutil.mapID(name)
     enumerators = node.enumerators()
     memberlist = map(lambda x: tyutil.name(x.scopedName()), enumerators)
-    stream.out("""\
-enum @name@ { @memberlist@ };
-typedef @name@& @name@_out;
-""", name = cxx_name, memberlist = string.join(memberlist, ", "))
+    stream.out(template.enum,
+               name = cxx_name,
+               memberlist = string.join(memberlist, ", "))
 
     # TypeCode and Any
     if config.TypecodeFlag():
         insideModule = self.__insideModule
         insideClass = self.__insideClass
         qualifier = tyutil.const_qualifier(insideModule, insideClass)
-        stream.out("""\
-@qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
+        stream.out(template.typecode,
                    qualifier = qualifier, name = cxx_name)
     
     node.written = cxx_name
