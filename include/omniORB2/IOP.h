@@ -31,9 +31,12 @@
 
 /*
   $Log$
-  Revision 1.2  1997/05/06 16:07:17  sll
-  Public release.
+  Revision 1.3  1997/12/09 20:36:28  sll
+  Added TaggedProfileList_var class.
 
+ * Revision 1.2  1997/05/06  16:07:17  sll
+ * Public release.
+ *
  */
 
 #ifndef __IOP_H__
@@ -59,10 +62,48 @@ public:
     void operator<<= (NetBufferedStream &s);
     void operator>>= (MemBufferedStream &s);
     void operator<<= (MemBufferedStream &s);
-
   };
 
   typedef _CORBA_Unbounded_Sequence<TaggedProfile> TaggedProfileList;
+  class TaggedProfileList_var {
+  public:
+    TaggedProfileList_var() { _ptr = 0; }
+    TaggedProfileList_var(TaggedProfileList* p) { _ptr = p; }
+    TaggedProfileList_var(TaggedProfileList_var& p);
+    ~TaggedProfileList_var() { if (_ptr) delete _ptr; }
+    TaggedProfileList_var& operator= (const TaggedProfileList_var& p) {
+      if (p._ptr) {
+	if (!_ptr) {
+	  _ptr = new TaggedProfileList;
+	  if (!_ptr) {
+	    _CORBA_new_operator_return_null();
+	    // never reach here
+	  }
+	}
+	*_ptr = *p._ptr;
+      }
+      else {
+	if (_ptr) delete _ptr;
+	_ptr = 0;
+      }
+      return *this;
+    }
+    TaggedProfileList_var& operator= (TaggedProfileList* p) {
+      if (_ptr) delete _ptr;
+      _ptr = p;
+      return *this;
+    }
+    TaggedProfile& operator[] (_CORBA_ULong index) { 
+      return (_ptr->NP_data())[index]; 
+    }
+    const TaggedProfile& operator[] (_CORBA_ULong index) const {
+      return (_ptr->NP_data())[index];
+    }
+    inline TaggedProfileList* operator->() const { 
+      return (TaggedProfileList*)_ptr; 
+    }
+    TaggedProfileList* _ptr;
+  };
 
   struct IOR {
     _CORBA_Char       *type_id;
