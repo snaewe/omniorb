@@ -3,7 +3,7 @@
 // o2be_array.cc            Created on: 07/10/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl2.
 //
@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.16  1999/03/11 16:26:11  djr
+  Updated copyright notice
+
   Revision 1.15  1999/02/19 11:23:54  djr
   Fixed dim_iterator - which fails if array type is nested more than
   2 levels deep.

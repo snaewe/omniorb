@@ -2,7 +2,7 @@
 // o2be_predefined_type.cc  Created on: 9/8/96
 //			    Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl2.
 //
@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.9  1999/03/11 16:26:07  djr
+  Updated copyright notice
+
   Revision 1.8  1999/01/07 09:37:45  djr
   Changes to support new implementation of TypeCode.
 

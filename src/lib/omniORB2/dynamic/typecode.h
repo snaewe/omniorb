@@ -4,7 +4,7 @@
 //                            Author1   : James Weatherall (jnw)
 //                            Author2   : David Riddoch (djr)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.4  1999/03/11 16:25:59  djr
+ * Updated copyright notice
+ *
  * Revision 1.3  1999/02/18 15:49:30  djr
  * Simplified NP_namesEqualOrNull()
  *

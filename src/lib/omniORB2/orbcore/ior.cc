@@ -3,7 +3,7 @@
 // ior.cc                     Created on: 5/7/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.8  1999/03/11 16:25:53  djr
+  Updated copyright notice
+
   Revision 1.7  1998/08/14 13:48:04  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.

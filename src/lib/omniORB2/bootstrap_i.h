@@ -3,7 +3,7 @@
 // bootstrap_i.h              Created on: 20/08/98
 //                            Author    : Sai-Lai Lo
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.3  1999/03/11 16:25:51  djr
+  Updated copyright notice
+
   Revision 1.2  1998/08/25 18:52:09  sll
   Added dummy marshalling functions in serviceRecord to make gcc-2.7.2 happy.
 

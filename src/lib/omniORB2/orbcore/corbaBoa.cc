@@ -3,7 +3,7 @@
 // corbaBoa.cc                Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.8  1999/03/11 16:25:51  djr
+  Updated copyright notice
+
   Revision 1.7  1998/08/21 19:15:07  sll
   Added new command line option: -BOAno_bootstrap_agent. If this option
   is specified, do not initialise the special object that can respond to

@@ -3,7 +3,7 @@
 // omniLifeCycle.cc           Created on: 1997/0920
 //                            Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1997-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -28,6 +28,9 @@
 //      
 
 // $Log$
+// Revision 1.4  1999/03/11 16:26:04  djr
+// Updated copyright notice
+//
 // Revision 1.3  1998/04/07 19:41:25  sll
 // Updated when omniORB is a namespace.
 //

@@ -2,7 +2,7 @@
 //                            Author    : James Weatherall (jnw)
 //
 //
-//    Copyright (C) 1998 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1998-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //

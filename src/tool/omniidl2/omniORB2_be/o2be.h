@@ -3,7 +3,7 @@
 // o2be.h                   Created on: 5/8/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl2.
 //
@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.21  1999/03/11 16:26:07  djr
+ Updated copyright notice
+
  Revision 1.20  1999/02/10 09:44:45  djr
  Fixed bug in which omniidl2 failed if constructed types were
  declared in an exception member declaration.

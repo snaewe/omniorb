@@ -1,7 +1,7 @@
 //				Package : threadtests
 // prio.cc			Created : 8/95 tjr
 //
-// Copyright (C) Olivetti Research Ltd 1995
+// Copyright (C) AT&T Laboratories Cambridge 1995
 //
 // This program is designed to test out thread priorities.  It creates six
 // threads, two at each of high, normal and low priority (the main thread

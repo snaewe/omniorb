@@ -3,7 +3,7 @@
 // logIOstream.cc             Created on: 31/3/1998
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1998 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1998-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.5  1999/03/11 16:25:54  djr
+  Updated copyright notice
+
   Revision 1.4  1999/01/07 15:59:13  djr
   Corrected minor bug in fprintf format.
 

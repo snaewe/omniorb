@@ -3,7 +3,7 @@
 // giopServer.cc              Created on: 26/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.16  1999/03/11 16:25:53  djr
+  Updated copyright notice
+
   Revision 1.15  1999/01/07 15:52:41  djr
   Changes needed due to changes to interface of Net/MemBufferedStream.
 

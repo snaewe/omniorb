@@ -3,7 +3,7 @@
 // Strand.cc                  Created on: 18/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.8  1999/03/11 16:25:56  djr
+  Updated copyright notice
+
   Revision 1.7  1999/01/25 18:00:53  sll
   Fixed a bug in Sync::WrTimedLock and Sync::WrUnlock(Strand* s).
   Previously, WrTimedLock does not increment the reference count of the

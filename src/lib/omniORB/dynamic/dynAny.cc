@@ -3,7 +3,7 @@
 // DynAny.cc                  Created on: 12/02/98
 //                            Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /* 
    $Log$
+   Revision 1.5  1999/03/11 16:25:58  djr
+   Updated copyright notice
+
    Revision 1.4  1999/01/07 16:58:16  djr
    New implementation using new version of TypeCode and Any.
 

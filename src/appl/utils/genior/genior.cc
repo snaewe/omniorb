@@ -2,7 +2,7 @@
 //                          Package   : genior
 // genior.cc                Author    : Eoin Carroll (ewc)
 //
-//    Copyright (C) 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1997-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of genior.
 //

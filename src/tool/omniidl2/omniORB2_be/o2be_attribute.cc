@@ -3,7 +3,7 @@
 // o2be_attribute.cc        Created on: 13/09/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl2.
 //
@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.20  1999/03/11 16:26:10  djr
+  Updated copyright notice
+
   Revision 1.19  1999/01/07 09:51:11  djr
   New implementation of proxy calls which reduces the size of
   the code generated.

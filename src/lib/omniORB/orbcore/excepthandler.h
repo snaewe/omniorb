@@ -3,7 +3,7 @@
 // excepthandler.h            Created on: 13/5/97
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2  1999/03/11 16:25:52  djr
+  Updated copyright notice
+
   Revision 1.1  1997/12/09 18:43:07  sll
   Initial revision
 

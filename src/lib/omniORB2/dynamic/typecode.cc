@@ -3,7 +3,7 @@
 // typecode.cc                Created on: 03/09/98
 //                            Author    : James Weatherall (jnw)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.23  1999/03/11 16:25:59  djr
+ * Updated copyright notice
+ *
  * Revision 1.22  1999/03/04 09:54:24  djr
  * Disabled cached parameter lists - they have a bug.
  *

@@ -3,7 +3,7 @@
 // o2be_name.cc             Created on: 12/08/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl2.
 //
@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.13  1999/03/11 16:26:07  djr
+  Updated copyright notice
+
   Revision 1.12  1999/01/07 09:43:43  djr
   Two new 'names' for declarations, _idname() and canonical_name() which
   produce names guarenteed to be unique for a given identifier and a

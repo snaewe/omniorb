@@ -3,7 +3,7 @@
 // tcpSocket.h                Created on: 30/9/97
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.4  1999/03/11 16:25:57  djr
+ Updated copyright notice
+
  Revision 1.3  1998/11/09 10:56:17  sll
  Removed the use of the reserved keyword "export".
 

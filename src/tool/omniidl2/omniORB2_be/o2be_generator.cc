@@ -3,7 +3,7 @@
 // o2be_generator.cc        Created on: 06/08/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl2.
 //
@@ -26,6 +26,9 @@
 
 /*
   $Log$
+  Revision 1.5  1999/03/11 16:26:08  djr
+  Updated copyright notice
+
   Revision 1.4  1998/08/13 22:53:06  sll
   Finish off last check-in.
 

@@ -2,7 +2,7 @@
 // o2be_exception.cc        Created on: 9/8/96
 //			    Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl2.
 //
@@ -25,6 +25,9 @@
 
 /*
   $Log$
+  Revision 1.14  1999/03/11 16:26:11  djr
+  Updated copyright notice
+
   Revision 1.13  1999/02/10 09:54:28  djr
   Fixed bug in which omniidl2 failed if constructed types were
   declared in an exception member declaration.

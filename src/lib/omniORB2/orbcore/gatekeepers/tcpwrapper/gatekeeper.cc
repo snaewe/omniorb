@@ -3,7 +3,7 @@
 // gatekeeper.cc              Created on: 24/11/97
 //                            Author    : Ben Harris (bjh)
 //
-//    Copyright (C) 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1997-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //

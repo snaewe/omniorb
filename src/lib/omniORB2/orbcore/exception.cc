@@ -3,7 +3,7 @@
 // exception.cc               Created on: 13/5/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.8  1999/03/11 16:25:52  djr
+  Updated copyright notice
+
   Revision 1.7  1999/01/07 15:44:03  djr
   Added _CORBA_invoked_nil_pseudo_ref() and
   _CORBA_use_nil_ptr_as_nil_pseudo_objref().

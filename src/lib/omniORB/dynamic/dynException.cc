@@ -3,7 +3,7 @@
 // dynException.cc            Created on: 10/1998
 //                            Author    : David Riddoch (djr)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //

@@ -3,7 +3,7 @@
 // o2be_operation.cc        Created on: 23/08/1996
 //                          Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl2.
 //
@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.27  1999/03/11 16:26:08  djr
+  Updated copyright notice
+
   Revision 1.26  1999/02/10 13:52:19  djr
   Replaced uses of an interface foo with foo_Helper, so that the stubs
   will compile even if the interface is not defined anywhere in the

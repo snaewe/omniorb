@@ -3,7 +3,7 @@
 // o2be_interface.cc        Created on: 12/08/1996
 //			    Author    : Sai-Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl2.
 //
@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.30  1999/03/11 16:26:13  djr
+  Updated copyright notice
+
   Revision 1.29  1999/02/19 11:31:42  djr
   Fixed implementation of Any insertion/extraction code.
 

@@ -3,7 +3,7 @@
 // mbufferedStream.cc         Created on: 6/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.8  1999/03/11 16:25:54  djr
+  Updated copyright notice
+
   Revision 1.7  1999/01/07 16:04:39  djr
   Interface changed slightly to agree more closely with NetBufferedStream.
   Support for read-only streams with external buffer improved.

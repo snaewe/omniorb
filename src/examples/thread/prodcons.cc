@@ -1,7 +1,7 @@
 //				Package : threadtests
 // prodcons.cc			Created : 6/95 tjr
 //
-// Copyright (C) Olivetti Research Ltd 1995
+// Copyright (C) AT&T Laboratories Cambridge 1995
 //
 // Demonstrates the use of condition variables for signalling between
 // two "producer" threads and three "consumer" threads.  Also demonstrates

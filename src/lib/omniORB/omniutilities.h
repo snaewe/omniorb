@@ -3,7 +3,7 @@
 // omniutilities.h            Created on: 11/98
 //                            Author    : David Riddoch
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //

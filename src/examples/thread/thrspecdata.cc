@@ -1,7 +1,7 @@
 //				Package : threadtests
 // thrspecdata.cc		Created : 6/95 tjr
 //
-// Copyright (C) Olivetti Research Ltd 1995
+// Copyright (C) AT&T Laboratories Cambridge 1995
 //
 // Demonstrates the use of thread-specific data by having a class which
 // inherits from omni_thread.  Also demonstrates joining with a thread

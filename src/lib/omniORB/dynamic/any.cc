@@ -4,7 +4,7 @@
 //                            Author1   : Eoin Carroll (ewc)
 //                            Author2   : James Weatherall (jnw)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,9 +29,12 @@
 
 
 /* $Log$
-/* Revision 1.10  1999/03/01 09:12:18  djr
-/* Accept insertion of null strings into Any (with warning message)
+/* Revision 1.11  1999/03/11 16:25:58  djr
+/* Updated copyright notice
 /*
+ * Revision 1.10  1999/03/01 09:12:18  djr
+ * Accept insertion of null strings into Any (with warning message)
+ *
  * Revision 1.9  1999/02/18 15:45:39  djr
  * (Re)Fixed broken insertion/extraction of Object_ptr from Any.
  *
