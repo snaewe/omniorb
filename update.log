@@ -1,3 +1,18 @@
+Wed Jan 21 14:50:09 GMT 1998 sll
+================================
+
+- Now WIN32 DLLs names have the minor version number included.
+-    omniORB dll    - omniORB24_rt.dll & omniORB24_rt.lib
+-    omnithread dll - omnithread2_rt.dll & omnithread2_rt.lib
+-    omniLC dll     - omniLC2_rt.dll & omniLC2_rt.lib
+-
+- If the minor version number of any of these libraries is changed, the 
+- following files should be updated according:
+
+src/lib/omniORB2/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+mk/win32.mk
+
 Wed Jan 21 12:30:56 GMT 1998 sll
 ================================
 
