@@ -8,6 +8,17 @@
 
 <buglist>
 
+<bug id="12" date="Tue Sep 19 14:50:05 BST 2000" user="djs">
+
+  <summary>C++ backend reversed order of includes in .hh file</summary>
+  <reported>NODA Itsuki</reported>
+  <link "http://www.uk.research.att.com/omniORB/archives/2000-09/0090.html"/>
+  <text>
+  If an IDL source file #included &lt;a.idl&gt; and &lt;b.idl&gt; then the
+  resulting header would #include &lt;b.hh&gt; before &lt;a.hh&gt;.
+  </text>
+</bug>
+
 <bug id="11" date="Tue Sep 19 10:08:31 BST 2000" user="dpg1">
 
   <summary>Bug when assigning a String_var to itself</summary>
