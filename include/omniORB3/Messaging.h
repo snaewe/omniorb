@@ -1,3 +1,42 @@
+// -*- Mode: C++; -*-
+//                            Package   : omniORB
+// Messaging.h                Created on: 21/8/2000
+//                            Author    : David Scott (djs)
+//
+//    Copyright (C) 1996-2000 AT&T Laboratories Cambridge
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+//    02111-1307, USA
+//
+//
+// Description: Valuetypes in the Messaging module
+//    
+//
+/*
+ $Id$
+ $Log$
+ Revision 1.1.2.4  2000/09/28 18:28:36  djs
+ Bugfixes in Poller (wrt timout behaviour and is_ready function)
+ Removed traces of Private POA/ internal ReplyHandler servant for Poller
+ strategy
+ General comment tidying
+
+*/
+
 // Converts code generated from AMI_PseudoIDL.idl into the CORBA Messaging
 // module
 
@@ -8,6 +47,7 @@
 #define USE_omniORB_logStream
 #endif
 
+// for ULONG_MAX
 #include <limits.h>
 
 #ifndef __CORBA_H_EXTERNAL_GUARD__
@@ -49,11 +89,28 @@ _CORBA_MODULE Messaging
 
 _CORBA_MODULE_BEG
 
+// Import the closest IDL we can (structs rather than valuetypes)
 #ifndef __Messaging_mReplyHandler__
 # include "omniMessaging_defs.hh"
 #endif
 
-// ExceptionHolder valuetype
+// Note that valuetypes decend from CORBA::ValueBase and are reference
+// counted objects (using _add_ref() and _remove_ref) They should never
+// be delete()d directly, the system will delete them when their reference
+// counts drop to zero.
+
+/////////////////////////////////////////////////////////////////////////
+// Messaging::ExceptionHolder valuetype /////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+// Note this can be marshalled and sent across a network, but it will
+// look like a simple struct and not a valuetype. Not much can be done
+// about this until omniORB supports valuetypes.
+
+// When instances of this object are created (on catching an exception)
+// the exception is stored as a simple local pointer and not marshalled 
+// into a sequence<octet> buffer unless it is necessary to actually transmit 
+// it.)
 struct ExceptionHolder: ExceptionHolder_base, CORBA::ValueBase{
   ExceptionHolder(): local_exception_object(NULL){ } 
   virtual ~ExceptionHolder();
@@ -90,7 +147,19 @@ typedef _CORBA_ConstrType_Variable_OUT_arg<ExceptionHolder, ExceptionHolder_var>
 _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ExceptionHolder;
 
 
-// Poller "valuetype"
+/////////////////////////////////////////////////////////////////////////
+// Messaging::Poller valuetype //////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+// Again this valuetype is implemented as a struct with methods. It cannot
+// really be transmitted meaningfully on the network- if the request hasn't
+// been received then a strict value-copy will never be useful. Methods to
+// marshal type specific pollers aren't generated.
+
+// Note that operation invocation results can be taken from this struct
+// (as .out() arguments) and subsequent (or concurrent) calls should throw
+// an exception. We need concurrency control to ensure this.
+
 struct Poller: public CORBA::ValueBase{
 
 protected:
@@ -100,7 +169,8 @@ protected:
     reply_already_read(0),
     pd_is_from_poller(0),
     pd_associated_handler(Messaging::ReplyHandler::_nil()),
-    op_name(opname) { }
+    pd_op_name(opname),
+    pd_target(CORBA::Object::_duplicate(target)){ }
 
 
   // lock internal data, allow for blocking waits
@@ -121,29 +191,42 @@ protected:
   // Type-specific Pollers are defined _per IDL interface_ however they
   // are used _per OPERATION_. Therefore it is possible to ask for the 
   // wrong reply from a poller. Convenience function to throw the exception.
-  void _NP_wrong_transaction(){
-    pd_is_from_poller = 1;
+  void _NP_throw_wrong_transaction(){
+    pd_is_from_poller = 1; // informs the client code that the exception
+                           // originated from the AMI system and not from
+                           // the remote server
     throw CORBA::WRONG_TRANSACTION();
   }
-  void _NP_do_timeout(CORBA::ULong timeout){
-    if (!is_ready(timeout)) throw CORBA::TIMEOUT();
+
+  // Called by the stubs to perform a blocking wait for each polling call.
+  void _NP_wait_and_throw_exception(CORBA::ULong timeout){
+    if (!is_ready(timeout)) {
+      // NO_RESPONSE is generated for the no-timeout case
+      if (timeout == 0) throw CORBA::NO_RESPONSE();
+      throw CORBA::TIMEOUT();
+    }
+
+    // Data must have arrived within the timeout period.
+    {
+      omni_mutex_lock lock(pd_state_lock);
+      // Has someone else got it?
+      if (reply_already_read) throw CORBA::OBJECT_NOT_EXIST();
+      // Claim it for ourselves
+      reply_already_read = 1;
+      // Everyone else who tries to get this data will get an exception instead
+    }
   }
-  void _NP_reply_received(){
+
+  // When the call descriptor is told to send on the reply and we are polling,
+  // it fills in the pointers and then calls this function to wake up blocked
+  // threads.
+  void _NP_tell_poller_reply_received(){
     omni_mutex_lock lock(pd_state_lock);
     reply_received = 1;
-    // ** Question- if two threads are blocked, should both be woken up and
-    // one throw an exception?
-    pd_state_cond.signal();
-  }
-  // Called when the reply is known to have been received (ie is_ready returned
-  // TRUE) to prevent two threads simultaneously taking the results.
-  void _NP_reply_obtained(){
-    omni_mutex_lock lock(pd_state_lock);
-    
-    if (reply_already_read)
-      throw CORBA::OBJECT_NOT_EXIST();
-    
-    reply_already_read = 1;
+    // The client could have lots of threads blocked on this event, better wake
+    // them all up. They can fight over ownership of the data and the loser(s)
+    // can return with OBJECT_NOT_EXIST
+    pd_state_cond.broadcast();
   }
 
   public:
@@ -163,7 +246,7 @@ protected:
   //  6.6.2: The name of the operation that was invoked asynchronously is
   //         accessible from any Poller. The returned string is identical
   //         to the operation name from the target interface's InterfaceDef.
-  const char* operation_name() { return op_name; }
+  const char* operation_name() { return pd_op_name; }
 
   // attribute ReplyHandler associated_handler;
   //  6.6.3: If the associated_handler is set to nil, the polling model is
@@ -182,11 +265,16 @@ protected:
   CORBA::Boolean is_ready(CORBA::ULong timeout);
   CORBA::PollableSet_ptr create_pollable_set();
 
-  // Object target
-  CORBA::Object_Member pd_target;
-  // string op_name
-  const char* op_name;
+  // *** Question: what is the point in having a
+  //    readonly attribute Object Messaging::Poller::operation_target
+  //    readonly attribute string Messaging::Poller::operation_name
+  // as well as the (writable?)
+  //    Object Messaging::Poller::target
+  //    string Messaging::Poller::string
+  // what would be the point in writing to either of these fields?!
 
+  CORBA::Object_ptr pd_target;
+  const char* pd_op_name;
 };
 
 _CORBA_MODULE_END

@@ -29,6 +29,12 @@
 
 /* 
   $Log$
+  Revision 1.1.2.6  2000/09/28 18:29:40  djs
+  Bugfixes in Poller (wrt timout behaviour and is_ready function)
+  Removed traces of Private POA/ internal ReplyHandler servant for Poller
+  strategy
+  General comment tidying
+
   Revision 1.1.2.5  2000/09/27 17:13:08  djs
   Struct member renaming
   Added command line options
@@ -65,6 +71,14 @@
 // set (timeout) number of seconds, and if no work is available they shut
 // themselves down.
 
+// Uses the system variables:
+//   omniORB::AMIWorkerTimeout    (seconds of idle time before worker threads
+//                                 shut themselves down)
+//   omniORB::AMIMaxWorkerThreads (limit on the number of spawned worker
+//                                 threads)
+//   omniORB::AMIMaxQueueSize     (max elements in the queue, or 0 for 
+//                                 unbounded)
+
 static omni_mutex     state_lock;
 static omni_condition shutdown_cond(&state_lock);
 
@@ -79,8 +93,11 @@ static unsigned long  queue_length  = 0; // number of call descriptors in q
 // Call Descriptor code ///////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
+// Called by the AMI runtime when the invocation on the target has completed
+// and the results are available.
 void omniAMIDescriptor::sendReply(){
   if (_is_polling) return giveReplyToPoller();
+
   omniObjRef *handler = get_handler();
 
   // A nil reply handler means don't send the reply anywhere.
@@ -89,11 +106,16 @@ void omniAMIDescriptor::sendReply(){
   get_handler()->_invoke(*get_reply_cd());
 }
 
+// Called whenever an exceptional reply is available
 void omniAMIDescriptor::sendException(CORBA::Exception &e, 
 				      CORBA::Boolean is_system_exception){
+  // package up the caught exception object into a Type-Specific
+  // ExceptionHolder valuetype
   Messaging::ExceptionHolder *holder = get_exception_holder();
   holder->pd_is_system_exception = is_system_exception;
   holder->local_exception_object = CORBA::Exception::_duplicate(&e);
+
+  if (_is_polling) return giveReplyToPoller();
   
   get_handler()->_invoke(*get_exc_cd(*holder));
 }
@@ -187,6 +209,7 @@ void AMI::enqueue(omniAMICall *cd){
 
     if ((nWorkers < omniORB::AMIMaxWorkerThreads)){
       // spawn a new worker thread directly for this request
+      // (skipping the queue)
       AMITRACE("AMI", "Spawning a new worker");
       Worker *newWorker = new Worker(cd);
       
@@ -232,6 +255,7 @@ public:
     queue = new AMI::Queue(omniORB::AMIMaxQueueSize);
   }
   void detach() {
+    AMITRACE("AMI Initialiser", "Signalling Worker threads to shut down");
     AMI::shutdown();
     AMITRACE("AMI Initaliser", "Destroying request Queue");
     delete queue;
