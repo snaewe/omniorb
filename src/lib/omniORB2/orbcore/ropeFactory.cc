@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.9  1999/08/16 19:26:56  sll
+ Added a per-compilation unit initialiser object.
+
  Revision 1.8  1999/08/14 16:38:53  sll
  Changed as locateObject no longer throws an exception when the object is
  not found.
@@ -64,10 +67,16 @@
 
 #include <ropeFactory.h>
 #include <objectManager.h>
+#ifndef __atmos__
+#include <tcpSocket.h>
+#define _tcpOutgoingFactory tcpSocketMToutgoingFactory
+#else
+#include <tcpATMos.h>
+#define _tcpOutgoingFactory tcpATMosMToutgoingFactory
+#endif
 
 ropeFactoryType* ropeFactoryTypeList = 0;
-ropeFactoryList globalOutgoingRopeFactories;
-
+ropeFactoryList* globalOutgoingRopeFactories;
 
 omniObject*
 ropeFactory::iopProfilesToRope(const IOP::TaggedProfileList *profiles,
@@ -96,7 +105,7 @@ ropeFactory::iopProfilesToRope(const IOP::TaggedProfileList *profiles,
 	  omniObjectManager* manager = omniObjectManager::root(1);
 	  if (manager) {
 
-	    ropeFactory_iterator iter(*(manager->incomingRopeFactories()));
+	    ropeFactory_iterator iter(manager->incomingRopeFactories());
 	    incomingRopeFactory* factory;
 	    while ((factory = (incomingRopeFactory*) iter())) {
 	      if (rope = factory->findIncoming((Endpoint*)addr)) {
@@ -183,3 +192,33 @@ Endpoint::~Endpoint() {
   delete [] pd_protocolname;
 }
 
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_ropeFactory_initialiser : public omniInitialiser {
+public:
+
+  void attach() {
+
+    globalOutgoingRopeFactories = new ropeFactoryList;
+
+    // Initialise all the rope factories that will be used to
+    // create outgoing ropes.
+    globalOutgoingRopeFactories->insert(new _tcpOutgoingFactory );
+
+    // Add rope factories for other transports here.
+
+    // Initialise a giopServerThreadWrapper singelton
+    omniORB::giopServerThreadWrapper::setGiopServerThreadWrapper(
+       new omniORB::giopServerThreadWrapper);
+  }
+
+  void detach() {
+  }
+};
+
+static omni_ropeFactory_initialiser initialiser;
+
+omniInitialiser& omni_ropeFactory_initialiser_ = initialiser;
