@@ -249,10 +249,10 @@ omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
 ifndef OpenNTBuildTree
 # GNU-WIN32 wrapper
-OMNIORB_IDL_ONLY = $(BASE_OMNI_TREE)/$(BINDIR)/oidlwrapper.exe -gnuwin32 -bcxx -Wbh=.hh -Wbs=SK.cc
+OMNIORB_IDL_ONLY = oidlwrapper -gnuwin32 -bcxx -Wbh=.hh -Wbs=SK.cc
 else
 # OpenNT wrapper
-OMNIORB_IDL_ONLY = $(BASE_OMNI_TREE)/$(BINDIR)/oidlwrapper.exe -opennt -bcxx -Wbh=.hh -Wbs=SK.cc
+OMNIORB_IDL_ONLY = oidlwrapper -opennt -bcxx -Wbh=.hh -Wbs=SK.cc
 endif
 
 OMNIORB_IDL_ANY_FLAGS = -Wba
