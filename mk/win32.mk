@@ -419,16 +419,21 @@ OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
 
+OMNIORB_DLL_NAME = $(shell $(SharedLibraryFullName) $(subst ., ,omniORB.$(OMNIORB_VERSION)))
+OMNIORB_DEBUG_DLL_NAME = $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniORB.$(OMNIORB_VERSION)))
+
+OMNIORB_DYNAMIC_DLL_NAME = $(shell $(SharedLibraryFullName) $(subst ., ,omniDynamic.$(OMNIORB_VERSION)))
+OMNIORB_DEBUG_DYNAMIC_DLL_NAME = $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniDynamic.$(OMNIORB_VERSION)))
+
 ifndef BuildDebugBinary
 
-omniorb_dll_name := $(shell $(SharedLibraryFullName) $(subst ., ,omniORB.$(OMNIORB_VERSION)))
-omnidynamic_dll_name := $(shell $(SharedLibraryFullName) $(subst ., ,omniDynamic.$(OMNIORB_VERSION)))
+omniorb_dll_name := $(OMNIORB_DLL_NAME)
+omnidynamic_dll_name := $(OMNIORB_DYNAMIC_DLL_NAME)
 
 else
 
-omniorb_dll_name := $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniORB.$(OMNIORB_VERSION)))
-omnidynamic_dll_name := $(shell $(SharedLibraryDebugFullName) $(subst ., ,omniDynamic.$(OMNIORB_VERSION)))
-
+omniorb_dll_name := $(OMNIORB_DEBUG_DLL_NAME)
+omnidynamic_dll_name := $(OMNIORB_DEBUG_DYNAMIC_DLL_NAME)
 endif
 
 lib_depend := $(omniorb_dll_name)

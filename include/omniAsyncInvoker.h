@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/06/13 20:06:17  sll
+  Minor fix to make the ORB compile with MSVC++.
+
   Revision 1.1.4.1  2001/04/19 09:47:54  sll
   New library omniAsyncInvoker.
 
@@ -48,7 +51,7 @@
 //
 //    The command to be executed is an omniTask instance. The omniTask
 //    class is based on the Command Pattern (Design Patterns, chapter 5).
-// 
+//
 //    The client creates an instance of the omniTask and registers it with
 //    the omniAsyncInvoker using the insert() method. The invoker will
 //    dispatch a thread to call the execute() method in the omniTask object.
@@ -93,15 +96,44 @@
 
 #include <omnithread.h>
 
+#ifdef _MSC_VER
+
+// Using MSVC++ to compile. If compiling library as a DLL,
+// define _OMNIASYNC_DLL. If compiling as a statuc library, define
+// _WINSTATIC
+// If compiling an application that is to be statically linked to omniAsyncInvoker,
+// define _WINSTATIC (if the application is  to be dynamically linked,
+// there is no need to define any of these macros).
+
+#if defined (_OMNIASYNC_DLL) && defined(_WINSTATIC)
+#error "Both _OMNIASYNC_DLL and _WINSTATIC are defined."
+#elif defined(_OMNIASYNC_DLL)
+#define _OMNIASYNC_NTDLL_ __declspec(dllexport)
+#elif !defined(_WINSTATIC)
+#define _OMNIASYNC_NTDLL_ __declspec(dllimport)
+#elif defined(_WINSTATIC)
+#define _OMNIASYNC_NTDLL_
+#endif
+ // _OMNIASYNC_DLL && _WINSTATIC
+
+#else
+
+// Not using MSVC++ to compile
+#define _OMNIASYNC_NTDLL_
+
+#endif
+ // _MSC_VER
 
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-class omniTaskLink {
+class _OMNIASYNC_NTDLL_ omniTaskLink {
 public:
   omniTaskLink* next;
   omniTaskLink* prev;
 
-  omniTaskLink() : next(this), prev(this) {}
+  omniTaskLink() {
+	  next = prev = this;
+	}
 
   void enq(omniTaskLink& head);
   void deq();
@@ -114,11 +146,11 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-class omniTask : public omniTaskLink {
+class _OMNIASYNC_NTDLL_ omniTask : public omniTaskLink {
  public:
 
-  enum Category { AnyTime, 
-		  ImmediateDispatch, 
+  enum Category { AnyTime,
+		  ImmediateDispatch,
 		  DedicatedThread
   };
 
@@ -133,16 +165,20 @@ class omniTask : public omniTaskLink {
  private:
   Category  pd_category;
 
+#ifndef _OMNIASYNC_DLL  // MSVC workaround. Do not define default ctor if dllexport is
+                        // defined.
   omniTask();
+#endif
+
   omniTask(const omniTask&);
   omniTask& operator=(const omniTask&);
 };
 
-class omniAsyncInvoker;
+
 
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-class omniAsyncInvoker {
+class _OMNIASYNC_NTDLL_ omniAsyncInvoker {
  public:
   omniAsyncInvoker(unsigned int max=10000);
   // <max> specifies the maximum number of threads the object should
@@ -167,17 +203,19 @@ class omniAsyncInvoker {
 
   void perform(int polling = 0);
   // Execute the tasks that is in the DedicatedThread category.
-  // if polling is non-zero, blocks within this method until a task is 
+  // if polling is non-zero, blocks within this method until a task is
   // executed.
   // else returns immediately if there is no task to execute.
 
   friend class omniAsyncWorker;
 
-  static unsigned int idle_timeout; // No. of seconds before an idle thread
+  static unsigned int idle_timeout;
+                                    // No. of seconds before an idle thread
                                     // has to wait before it exits.
                                     // default is 10 seconds.
 
-  static unsigned int traceLevel;   // control how much trace message is
+  static unsigned int traceLevel;
+                                    // control how much trace message is
                                     // emitted to stderr. The higher the no.
                                     // the more verbose it is. Default is 1.
 
@@ -185,10 +223,10 @@ class omniAsyncInvoker {
 
   unsigned int      pd_keep_working; // 0 means all threads should exit.
   omni_mutex*       pd_lock;
-  omni_condition*   pd_cond;        // signal this conditional when all 
+  omni_condition*   pd_cond;        // signal this conditional when all
                                     // the threads serving Anytime tasks are
                                     // exiting.
-  omniTaskLink      pd_anytime_tq;  // Anytime tasks 
+  omniTaskLink      pd_anytime_tq;  // Anytime tasks
   omniTaskLink      pd_dedicate_tq; // Dedicated thread tasks
   omniAsyncWorker*  pd_idle_threads; // idle threads ready for Anytime tasks
   unsigned int      pd_nthreads;   // No. of threads serving Anytime tasks

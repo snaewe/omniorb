@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETARY INTERFACE ***
-//	
+//
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/06/13 20:06:18  sll
+  Minor fix to make the ORB compile with MSVC++.
+
   Revision 1.1.2.5  2000/11/22 14:37:58  dpg1
   Code set marshalling functions now take a string length argument.
 
@@ -51,6 +54,10 @@
 
 
 //#include <CONV_FRAME.hh>
+
+class cdrStream;
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 class CONV_FRAME {
 public:
@@ -109,8 +116,6 @@ public:
 //
 // In all functions involving string lengths, the length does not
 // include the terminating null.
-
-class cdrStream;
 
 class omniCodeSet {
 public:
@@ -525,7 +530,7 @@ public:
     virtual _CORBA_Boolean fastUnmarshalWChar  (cdrStream&          stream,
 						NCS_W*              ncs,
 						_CORBA_WChar&       c);
-    
+
     virtual _CORBA_Boolean fastUnmarshalWString(cdrStream&          stream,
 						NCS_W*              ncs,
 						_CORBA_ULong        bound,
@@ -558,5 +563,6 @@ public:
 
 };
 
+OMNI_NAMESPACE_END(omni)
 
 #endif // __CODESETS_H__
