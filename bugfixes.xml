@@ -27,7 +27,7 @@
 	   };
 	 };
     </pre>
-  would result in invalid invalid C++.
+  would result in invalid C++.
   </text>
 </bug>
 
