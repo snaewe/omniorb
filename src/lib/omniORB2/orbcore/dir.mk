@@ -43,7 +43,13 @@ ORB_SRCS = \
             tcpSocketMTfactory.cc \
             logIOstream.cc \
             bootstrapstub.cc \
-            Namingstub.cc
+            Namingstub.cc \
+            messagingstub.cc \
+            pollablestub.cc \
+            Messaging.cc \
+            omniAMI.cc \
+            PollableSet.cc \
+
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)

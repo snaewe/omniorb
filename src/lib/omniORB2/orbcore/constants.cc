@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16.2.1  2000/08/21 11:35:50  djs
+  Added initial AMI support
+
   Revision 1.16  2000/07/13 15:25:58  dpg1
   Merge from omni3_develop for 3.0 release.
 
@@ -277,6 +280,10 @@ const GIOP_Basetypes::_SysExceptRepoID
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::DATA_CONVERSION ((CORBA::Char *)
 					"IDL:omg.org/CORBA/DATA_CONVERSION");
+
+const GIOP_Basetypes::_SysExceptRepoID 
+      GIOP_Basetypes::SysExceptRepoID::TIMEOUT ((CORBA::Char *)
+                                       "IDL:omg.org/CORBA/TIMEOUT");
 
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::TRANSACTION_REQUIRED ((CORBA::Char *)
