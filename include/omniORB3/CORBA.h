@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.11  2000/08/07 15:34:32  dpg1
+ Partial back-port of long long from omni3_1_develop.
+
  Revision 1.1.2.10  2000/08/04 15:26:10  dpg1
  ORB_init() now defaults ORB id to empty string, and accepts empty
  string as valid.
@@ -267,9 +270,16 @@ _CORBA_MODULE_BEG
   typedef _CORBA_UShort  UShort;
   typedef _CORBA_Long    Long;
   typedef _CORBA_ULong   ULong;
+# ifdef HAS_LongLong
+  typedef _CORBA_LongLong  LongLong;
+  typedef _CORBA_ULongLong ULongLong;
+# endif
 # ifndef NO_FLOAT
   typedef _CORBA_Float   Float;
   typedef _CORBA_Double  Double;
+# ifdef HAS_LongDouble
+  typedef _CORBA_LongDouble LongDouble;
+# endif
 # endif
 
   typedef _CORBA_Boolean& Boolean_out;
@@ -1540,7 +1550,10 @@ _CORBA_MODULE_BEG
     tk_sequence	= 19,
     tk_array	= 20,
     tk_alias	= 21,
-    tk_except	= 22
+    tk_except	= 22,
+    tk_longlong   = 23,
+    tk_ulonglong  = 24,
+    tk_longdouble = 25
   };
 
 

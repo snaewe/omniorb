@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.7.6.3  2000/08/07 15:34:35  dpg1
+  Partial back-port of long long from omni3_1_develop.
+
   Revision 1.7.6.2  1999/09/28 10:54:33  djr
   Removed pretty-printing of object keys from object adapters.
 
@@ -146,6 +149,22 @@ omniORB::logStream::operator<<(unsigned long n)
   return *this;
 }
 
+#ifdef HAS_LongLong
+omniORB::logStream&
+omniORB::logStream::operator<<(_CORBA_LONGLONG_DECL n)
+{
+  fprintf(stderr,"%lld",n);
+  return *this;
+}
+
+omniORB::logStream&
+omniORB::logStream::operator<<(_CORBA_ULONGLONG_DECL n)
+{
+  fprintf(stderr,"%llu",n);
+  return *this;
+}
+#endif
+
 #ifndef NO_FLOAT
 omniORB::logStream&
 omniORB::logStream::operator<<(double n)
@@ -153,6 +172,16 @@ omniORB::logStream::operator<<(double n)
   fprintf(stderr,"%g",n);
   return *this;
 }
+
+#ifdef HAS_LongDouble
+omniORB::logStream&
+omniORB::logStream::operator<<(_CORBA_LONGDOUBLE_DECL n)
+{
+  fprintf(stderr,"%Lg",n);
+  return *this;
+}
+#endif
+
 #endif
 
 omniORB::logStream&
@@ -264,6 +293,26 @@ omniORB::logger::operator<<(unsigned long n)
   return *this;
 }
 
+#ifdef HAS_LongLong
+omniORB::logger&
+omniORB::logger::operator<<(_CORBA_LONGLONG_DECL n)
+{
+  reserve(60);
+  sprintf(pd_p, "%lld", n);
+  pd_p += strlen(pd_p);
+  return *this;
+}
+
+
+omniORB::logger&
+omniORB::logger::operator<<(_CORBA_ULONGLONG_DECL n)
+{
+  reserve(60);
+  sprintf(pd_p, "%llu", n);
+  pd_p += strlen(pd_p);
+  return *this;
+}
+#endif
 
 #ifndef NO_FLOAT
 omniORB::logger&
@@ -274,6 +323,18 @@ omniORB::logger::operator<<(double n)
   pd_p += strlen(pd_p);
   return *this;
 }
+
+#ifdef HAS_LongDouble
+omniORB::logger&
+omniORB::logger::operator<<(_CORBA_LONGDOUBLE_DECL n)
+{
+  reserve(60);
+  sprintf(pd_p, "%Lg", n);
+  pd_p += strlen(pd_p);
+  return *this;
+}
+#endif
+
 #endif
 
 

@@ -28,11 +28,14 @@
 
 /*
  $Log$
- Revision 1.1.2.2  2000/08/07 15:34:32  dpg1
+ Revision 1.2.2.1  2000/08/07 15:34:35  dpg1
  Partial back-port of long long from omni3_1_develop.
 
- Revision 1.1.2.1  1999/09/24 09:51:37  djr
- Moved from omniORB2 + some new files.
+ Revision 1.2  2000/02/04 12:17:10  dpg1
+ Support for VMS.
+
+ Revision 1.1  1999/10/27 14:06:01  dpg1
+ *** empty log message ***
 
  Revision 1.12  1999/08/15 13:52:17  sll
  New VMS float implementation.
@@ -84,6 +87,8 @@ typedef unsigned char             _CORBA_Octet;
 typedef short                     _CORBA_Short;
 
 typedef unsigned short            _CORBA_UShort;
+
+typedef unsigned short            _CORBA_WChar;
 
 #if SIZEOF_LONG == 4
 typedef long                      _CORBA_Long;

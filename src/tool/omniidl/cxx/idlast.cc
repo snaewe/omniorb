@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.14.2.7  2000/08/07 15:34:36  dpg1
+// Partial back-port of long long from omni3_1_develop.
+//
 // Revision 1.14.2.6  2000/07/26 10:59:14  dpg1
 // Incorrect error report when inheriting typedef to forward declared
 // interface
@@ -1261,10 +1264,12 @@ finishConstruction(IdlType* switchType, _CORBA_Boolean constrType,
 #ifdef HAS_LongLong
   case IdlType::tk_longlong:
     UNION_SWITCH(_CORBA_LongLong, LongLong,
-		 -0x8000000000000000LL, defVal==0x7fffffffffffffffLL, ++defVal)
+		 _CORBA_LONGLONG_CONST(-0x8000000000000000),
+		 defVal==_CORBA_LONGLONG_CONST(0x7fffffffffffffff), ++defVal)
   case IdlType::tk_ulonglong:
     UNION_SWITCH(_CORBA_ULongLong, ULongLong,
-		 0xffffffffffffffffLL, defVal==0LL, --defVal)
+		 _CORBA_LONGLONG_CONST(0xffffffffffffffff),
+		 defVal==_CORBA_LONGLONG_CONST(0), --defVal)
 #endif
   case IdlType::tk_wchar:
     UNION_SWITCH(_CORBA_WChar, WChar, 0xffff, defVal==0, --defVal)

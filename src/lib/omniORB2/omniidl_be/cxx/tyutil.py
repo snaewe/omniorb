@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.9  2000/08/07 15:34:34  dpg1
+# Partial back-port of long long from omni3_1_develop.
+#
 # Revision 1.30.2.8  2000/07/17 09:36:16  djs
 # Added function to strip typedef chains from AST nodes
 # Fixed allInherits() function to handle inheriting from a typedef to an
@@ -508,7 +511,9 @@ typeSizeAlignMap = {
     idltype.tk_float:   (4, 4),
     idltype.tk_enum:    (4, 4),
     idltype.tk_double:  (8, 8),
-    idltype.tk_octet:   (1, 1)
+    idltype.tk_octet:   (1, 1),
+    idltype.tk_longlong:  (8, 8),
+    idltype.tk_ulonglong: (8, 8)
     }
 
 

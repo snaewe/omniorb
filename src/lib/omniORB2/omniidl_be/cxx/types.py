@@ -38,8 +38,7 @@ OUT    = 2
 RET    = 3
 
 # we don't support these yet
-unsupported_typecodes =[idltype.tk_Principal, idltype.tk_longlong,
-                        idltype.tk_ulonglong, idltype.tk_longdouble,
+unsupported_typecodes =[idltype.tk_Principal, idltype.tk_longdouble,
                         idltype.tk_wchar, idltype.tk_wstring,
                         idltype.tk_fixed, idltype.tk_value,
                         idltype.tk_value_box, idltype.tk_native,
@@ -443,12 +442,16 @@ class Type:
         if kind in [ idltype.tk_short, idltype.tk_ushort ]:
             return str(value)
         # careful with long ints to avoid "L" postfix
-        if kind in [ idltype.tk_long, idltype.tk_longlong,
-                     idltype.tk_ulong, idltype.tk_ulonglong ]:
+        if kind in [ idltype.tk_long, idltype.tk_ulong ]:
             s = str(value)
             if s[-1] == 'L':
                 return s[0:-1]
             return s
+        if kind in [ idltype.tk_longlong, idltype.tk_ulonglong ]:
+            s = str(value)
+            if s[-1] == 'L':
+                s = s[:-1]
+            return "_CORBA_LONGLONG_CONST(" + s + ")"
         if kind in [ idltype.tk_float, idltype.tk_double ]:
             return str(value)
         # chars are single-quoted

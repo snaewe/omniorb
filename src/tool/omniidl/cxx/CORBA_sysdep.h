@@ -32,51 +32,24 @@
 
 /*
  $Log$
- Revision 1.1.2.15  2000/08/07 15:34:33  dpg1
+ Revision 1.3.2.1  2000/08/07 15:34:35  dpg1
  Partial back-port of long long from omni3_1_develop.
 
- Revision 1.1.2.14  2000/07/07 10:31:33  sll
- DEC C++ 6.{0,1} on Digital Unix needs OMNI_REQUIRES_FQ_BASE_CTOR.
+ Revision 1.3  2000/02/04 12:17:10  dpg1
+ Support for VMS.
 
- Revision 1.1.2.13  2000/07/07 10:18:33  sll
- Fixed unbalanced #if #endif.
+ Revision 1.2  1999/12/08 20:04:52  dpg1
+ long long is broken in gcc with Sparc, and maybe other platforms, so
+ limit it to x86.
 
- Revision 1.1.2.12  2000/07/05 11:13:56  dpg1
- Untested support for AIX with xlC 5.
-
- Revision 1.1.2.11  2000/06/30 14:12:07  dpg1
- Minor fixes for FreeBSD.
-
- Revision 1.1.2.10  2000/06/27 16:23:24  sll
- Merged OpenVMS port.
-
- Revision 1.1.2.9  2000/03/23 16:27:47  djr
- Added NEED_DUMMY_RETURN to egcs/gcc.
-
- Revision 1.1.2.8  2000/03/10 16:45:52  dpg1
- MSVC++ can't catch exceptions by base class.
-
- Revision 1.1.2.7  2000/02/23 12:57:15  dpg1
- Some support for NextStep x86.
-
- Revision 1.1.2.6  2000/02/04 14:48:09  djr
- Added a couple of feature test macros.
-
- Revision 1.1.2.5  2000/01/27 11:11:24  djr
- Correction.
-
- Revision 1.1.2.4  2000/01/27 10:55:44  djr
- Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
- fqname for base class constructor for some compilers.
-
- Revision 1.1.2.3  1999/10/21 10:59:20  djr
+ Revision 1.1  1999/10/27 14:06:01  dpg1
  *** empty log message ***
 
- Revision 1.1.2.2  1999/09/30 11:49:26  djr
- Implemented catching user-exceptions in GIOP_S for all compilers.
+ Revision 1.39.2.2  1999/09/22 18:59:40  sll
+ Added powerpc linux support.
 
- Revision 1.1.2.1  1999/09/24 09:51:38  djr
- Moved from omniORB2 + some new files.
+ Revision 1.39.2.1  1999/09/22 13:44:40  sll
+ Updated for AIX 4.2 and 4.3
 
  Revision 1.39  1999/08/30 18:43:34  sll
  Removed ENABLE_CLIENT_IR_SUPPORT as the default define. Application code
@@ -223,7 +196,7 @@
 
 #if defined(__x86__)
 #  define HAS_LongLong
-//#  define HAS_LongDouble
+#  define HAS_LongDouble
 #  define _CORBA_LONGLONG_DECL   long long
 #  define _CORBA_ULONGLONG_DECL  unsigned long long
 #  define _CORBA_LONGDOUBLE_DECL long double 
@@ -240,7 +213,7 @@
 #  endif
 #  if __DECCXX_VER >= 60000000
 #     define HAS_LongLong
-//#     define HAS_LongDouble
+#     define HAS_LongDouble
 #     define _CORBA_LONGLONG_DECL   long long
 #     define _CORBA_ULONGLONG_DECL  unsigned long long
 #     define _CORBA_LONGDOUBLE_DECL long double
@@ -289,7 +262,7 @@
 #  endif
 
 #  define HAS_LongLong
-//#  define HAS_LongDouble
+#  define HAS_LongDouble
 #  define _CORBA_LONGLONG_DECL   long long
 #  define _CORBA_ULONGLONG_DECL  unsigned long long
 #  define _CORBA_LONGDOUBLE_DECL long double 
