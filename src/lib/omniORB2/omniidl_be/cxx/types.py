@@ -299,21 +299,9 @@ class Type:
                     base = d_type.__base_type(environment)
 
 
-        # <FIXME: Can be cut out>
-        # Strangeness: if actually a typedef to a struct or union,
-        # the _out type is dereferenced, whilst the others aren't?
-        if self.typedef() and not(self.array()) and self.variable() and \
-           direction == OUT and not(config.OldFlag() and not(use_out)) and \
-            (d_type.struct() or d_type.union()):
-            uname = id.Name(d_type.type().scopedName()).\
-                    unambiguous(environment)
-            base =  uname + "_out"
-            return base
-        # </FIXME>
-            
         # Use the ObjRef template for non-arrays of objrefs rather than use
         # the (equivalent?) _out type?
-        elif not(d_type.objref()) or type.array():
+        if not(d_type.objref()) or type.array():
 
             # if its an out type and a typedef (to a variable type),
             # use the predefined _out type
