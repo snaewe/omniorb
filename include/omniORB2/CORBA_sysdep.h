@@ -14,9 +14,13 @@
 
 /*
  $Log$
- Revision 1.5  1997/03/14 10:19:10  sll
- Use namespace instead of class for modules if the compiler supports it.
+ Revision 1.6  1997/03/19 15:43:50  sll
+ Added check for macro Status. If it is defined by a header file included
+ before this, stop the preprocessing with the #error directive.
 
+ * Revision 1.5  1997/03/14  10:19:10  sll
+ * Use namespace instead of class for modules if the compiler supports it.
+ *
  * Revision 1.4  1997/03/09  14:35:59  sll
  * Minor cleanup.
  *
@@ -57,9 +61,7 @@
 // SUN C++ compiler
 
 #elif defined(_MSC_VER)
-
-#define _CORBA_MODULE namespace
-#define _CORBA_MODULE_PUBLIC
+// VC++ compiler
 #endif
 
 #if defined(arm)
@@ -71,6 +73,13 @@
 #error "Cannot use this C++ header file for non C++ programs."
 #endif
 
+#ifdef Status
+#error "Name conflict: Status is defined as a macro in a header file include before this."
+// X11's Xlib.h (and may be others) define Status as a macro. This name
+// conflicts with the Status type defined in the CORBA namespace.
+// To remove this error, make sure that the offending header file is included
+// after omniORB2/CORBA.h.
+#endif
 
 
 // Default flag values if not already overridden above
