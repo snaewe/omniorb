@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/08/20 16:39:19  dpg1
+  Correct spelling mistake :-)
+
   Revision 1.1.2.3  2001/08/20 15:38:56  sll
   Multi-options, such as endPoint, InitRef are support in NT registry.
 
@@ -122,7 +125,7 @@ CORBA::Boolean getRegEntry(HKEY rootkey, DWORD index,
   if (valuetype != REG_SZ) {
     if ( omniORB::trace(1) ) {
       omniORB::logger log;
-      log << "Error reading configuration data in the register. Reason: value is not of type REG_SZ\n";
+      log << "Error reading configuration data in the registry. Reason: value is not of type REG_SZ\n";
     }
     throw orbOptions::Unknown("<missing>","<missing>");
   }
@@ -277,7 +280,7 @@ void parseOldConfigReg(orbOptions& opt, HKEY rootkey) {
   if (omniORB::trace(1)) {
     omniORB::logger log;
     log << "Warning: the registry entries are in the old pre-omniORB4 format.\n"
- "omniORB: For the moment this is accepted to maintain backword compatibility.\n"
+ "omniORB: For the moment this is accepted to maintain backward compatibility.\n"
  "omniORB: Please update to the new registry format ASAP.\n";
   }
 

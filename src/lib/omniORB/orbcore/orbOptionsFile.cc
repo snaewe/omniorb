@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/20 16:39:19  dpg1
+  Correct spelling mistake :-)
+
   Revision 1.1.2.1  2001/08/20 08:19:23  sll
   Read the new ORB configuration file format. Can still read old format.
   Can also set configuration parameters from environment variables.
@@ -185,7 +188,7 @@ oldconfig_warning(const char* key, const char* newkey) {
   if (!said_warning && omniORB::trace(1)) {
     omniORB::logger log;
     log << "Warning: the config file is in the old pre-omniORB4 format.\n"
- "omniORB: For the moment this is accepted to maintain backword compatibility.\n"
+ "omniORB: For the moment this is accepted to maintain backward compatibility.\n"
  "omniORB: Please update to the new config file format ASAP.\n";
     said_warning = 1;
   }

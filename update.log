@@ -1,3 +1,12 @@
+Mon Aug 20 17:09:08 BST 2001 dpg1
+=================================
+
+- Correct spelling mistake :-)
+
+src/lib/omniORB/orbcore/orbOptionsFile.cc
+src/lib/omniORB/orbcore/orbOptionsReg.cc
+
+
 Mon Aug 20 16:32:53 BST 2001 sll
 ================================
 
@@ -5,6 +14,7 @@ Mon Aug 20 16:32:53 BST 2001 sll
 
 sample.reg NEW
 src/lib/omniORB/orbcore/orbOptionsReg.cc
+
 
 Mon Aug 20 16:05:36 BST 2001 sll
 ================================
