@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.9.2.8  2001/10/22 10:48:22  dpg1
+// Cope with DOS line endings in all IDL situations.
+//
 // Revision 1.9.2.7  2001/10/17 16:48:32  dpg1
 // Minor error message tweaks
 //
@@ -413,16 +416,16 @@ L{STR} {
   return PRAGMA;
 }
 
-<unknown_pragma>([^\\\n]|(\\[^\n]))+ {
+<unknown_pragma>([^\\\n\r]|(\\[^\n\r]))+ {
   yylval.string_val = idl_strdup(yytext);
   return UNKNOWN_PRAGMA_BODY;
 }
 
-<INITIAL,known_pragma,unknown_pragma>\\\n {
+<INITIAL,known_pragma,unknown_pragma>\\(\n|(\r\n)) {
   /* Continue line if it ends with \ */
 }
 
-<known_pragma,unknown_pragma>\n {
+<known_pragma,unknown_pragma>\n|(\r\n) {
   BEGIN(INITIAL);
   return END_PRAGMA;
 }

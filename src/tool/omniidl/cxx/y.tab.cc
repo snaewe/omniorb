@@ -71,7 +71,7 @@
 #define	LEFT_SHIFT	321
 #define	RIGHT_SHIFT	322
 
-#line 91 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 94 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 
 
 #include <stdlib.h>
@@ -111,7 +111,7 @@ ValueAbs* valueabs_hack = 0;
 #endif
 
 
-#line 131 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 134 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 typedef union {
   char*                    id_val;
   int                      int_val;
@@ -348,37 +348,37 @@ static const short yyrhs[] = {    -1,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-   397,   399,   405,   407,   413,   415,   416,   417,   418,   419,
-   420,   421,   422,   428,   433,   436,   440,   448,   452,   454,
-   457,   462,   465,   469,   477,   483,   491,   493,   494,   497,
-   501,   503,   509,   511,   512,   513,   514,   515,   516,   522,
-   524,   527,   531,   539,   547,   554,   558,   562,   565,   575,
-   577,   578,   579,   582,   586,   591,   599,   602,   607,   611,
-   616,   628,   635,   641,   646,   649,   654,   658,   661,   666,
-   673,   675,   678,   686,   696,   700,   702,   708,   710,   711,
-   714,   722,   724,   727,   730,   734,   736,   744,   750,   752,
-   755,   757,   763,   771,   777,   779,   780,   781,   782,   783,
-   784,   785,   786,   789,   792,   796,   798,   801,   803,   806,
-   808,   813,   815,   818,   823,   825,   826,   829,   831,   834,
-   837,   842,   848,   851,   853,   854,   857,   861,   862,   865,
-   869,   872,   875,   878,   881,   884,   887,   892,   894,   903,
-   905,   914,   916,   919,   928,   930,   931,   932,   933,   936,
-   939,   947,   949,   952,   954,   955,   960,   962,   963,   964,
-   965,   966,   967,   968,   969,   972,   974,   975,   976,   979,
-   981,   982,   985,   987,   993,   995,   998,  1004,  1008,  1010,
-  1011,  1014,  1016,  1019,  1021,  1022,  1025,  1029,  1033,  1037,
-  1039,  1040,  1043,  1047,  1051,  1055,  1059,  1063,  1067,  1071,
-  1075,  1079,  1084,  1092,  1098,  1100,  1106,  1112,  1119,  1128,
-  1136,  1142,  1144,  1145,  1146,  1147,  1153,  1157,  1159,  1165,
-  1172,  1174,  1180,  1184,  1189,  1196,  1201,  1208,  1214,  1216,
-  1222,  1228,  1232,  1237,  1239,  1244,  1246,  1251,  1257,  1259,
-  1265,  1269,  1275,  1277,  1280,  1282,  1288,  1293,  1301,  1307,
-  1309,  1315,  1318,  1322,  1331,  1337,  1339,  1342,  1346,  1348,
-  1351,  1353,  1354,  1361,  1363,  1369,  1375,  1377,  1378,  1381,
-  1383,  1386,  1390,  1394,  1400,  1402,  1405,  1409,  1413,  1419,
-  1421,  1422,  1423,  1428,  1451,  1457,  1461,  1465,  1470,  1472,
-  1473,  1474,  1477,  1479,  1482,  1484,  1487,  1491,  1496,  1501,
-  1506,  1511,  1516,  1522,  1528,  1530
+   400,   402,   408,   410,   416,   418,   419,   420,   421,   422,
+   423,   424,   425,   431,   436,   439,   443,   451,   455,   457,
+   460,   465,   468,   472,   480,   486,   494,   496,   497,   500,
+   504,   506,   512,   514,   515,   516,   517,   518,   519,   525,
+   527,   530,   534,   542,   550,   557,   561,   565,   568,   578,
+   580,   581,   582,   585,   589,   594,   602,   605,   610,   614,
+   619,   631,   638,   644,   649,   652,   657,   661,   664,   669,
+   676,   678,   681,   689,   699,   703,   705,   711,   713,   714,
+   717,   725,   727,   730,   733,   737,   739,   747,   753,   755,
+   758,   760,   766,   774,   780,   782,   783,   784,   785,   786,
+   787,   788,   789,   792,   795,   799,   801,   804,   806,   809,
+   811,   816,   818,   821,   826,   828,   829,   832,   834,   837,
+   840,   845,   851,   854,   856,   857,   860,   864,   865,   868,
+   872,   875,   878,   881,   884,   887,   890,   895,   897,   906,
+   908,   917,   919,   922,   931,   933,   934,   935,   936,   939,
+   942,   950,   952,   955,   957,   958,   963,   965,   966,   967,
+   968,   969,   970,   971,   972,   975,   977,   978,   979,   982,
+   984,   985,   988,   990,   996,   998,  1001,  1007,  1011,  1013,
+  1014,  1017,  1019,  1022,  1024,  1025,  1028,  1032,  1036,  1040,
+  1042,  1043,  1046,  1050,  1054,  1058,  1062,  1066,  1070,  1074,
+  1078,  1082,  1087,  1095,  1101,  1103,  1109,  1115,  1122,  1131,
+  1139,  1145,  1147,  1148,  1149,  1150,  1156,  1160,  1162,  1168,
+  1175,  1177,  1183,  1187,  1192,  1199,  1204,  1211,  1217,  1219,
+  1225,  1231,  1235,  1240,  1242,  1247,  1249,  1254,  1260,  1262,
+  1268,  1272,  1278,  1280,  1283,  1285,  1291,  1296,  1304,  1310,
+  1312,  1318,  1321,  1325,  1334,  1340,  1342,  1345,  1349,  1351,
+  1354,  1356,  1357,  1364,  1366,  1372,  1378,  1380,  1381,  1384,
+  1386,  1389,  1393,  1397,  1403,  1405,  1408,  1412,  1416,  1422,
+  1424,  1425,  1426,  1431,  1454,  1460,  1464,  1468,  1473,  1475,
+  1476,  1477,  1480,  1482,  1485,  1487,  1490,  1494,  1499,  1504,
+  1509,  1514,  1519,  1525,  1531,  1533
 };
 #endif
 
@@ -1490,89 +1490,89 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 398 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 401 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 2:
-#line 399 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 402 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.decl_val = yyvsp[0].decl_val;
       AST::tree()->setDeclarations(yyvsp[0].decl_val);
     ;
     break;}
 case 3:
-#line 406 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 409 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].decl_val; ;
     break;}
 case 4:
-#line 407 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 410 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].decl_val) { yyvsp[-1].decl_val->append(yyvsp[0].decl_val); yyval.decl_val = yyvsp[-1].decl_val; }
       else yyval.decl_val = yyvsp[0].decl_val;
     ;
     break;}
 case 5:
-#line 414 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.decl_val = yyvsp[-1].decl_val; ;
-    break;}
-case 6:
-#line 415 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.decl_val = yyvsp[-1].const_val; ;
-    break;}
-case 7:
-#line 416 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.decl_val = yyvsp[-1].exception_val; ;
-    break;}
-case 8:
 #line 417 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].decl_val; ;
     break;}
-case 9:
+case 6:
 #line 418 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.decl_val = yyvsp[-1].const_val; ;
+    break;}
+case 7:
+#line 419 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.decl_val = yyvsp[-1].exception_val; ;
+    break;}
+case 8:
+#line 420 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.decl_val = yyvsp[-1].decl_val; ;
+    break;}
+case 9:
+#line 421 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].module_val; ;
     break;}
 case 10:
-#line 419 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 422 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].value_base_val; ;
     break;}
 case 11:
-#line 420 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 423 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 12:
-#line 421 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 424 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 13:
-#line 422 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 425 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Syntax error in definition");
       yyval.decl_val = 0;
     ;
     break;}
 case 14:
-#line 429 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 432 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-4].module_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.module_val = yyvsp[-4].module_val;
     ;
     break;}
 case 15:
-#line 433 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 436 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in module definition");
     ;
     break;}
 case 16:
-#line 436 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 439 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].module_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.module_val = yyvsp[-5].module_val;
     ;
     break;}
 case 17:
-#line 440 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 443 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in module definition (no body found)");
@@ -1581,40 +1581,40 @@ case 17:
     ;
     break;}
 case 18:
-#line 449 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 452 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.module_val = new Module(currentFile, yylineno, mainFile, yyvsp[0].id_val); ;
     break;}
 case 19:
-#line 453 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 456 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].interface_val; ;
     break;}
 case 20:
-#line 454 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 457 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].forward_val; ;
     break;}
 case 21:
-#line 458 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 461 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-3].interface_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.interface_val = yyvsp[-3].interface_val;
     ;
     break;}
 case 22:
-#line 462 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 465 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in interface definition");
     ;
     break;}
 case 23:
-#line 465 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 468 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].interface_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.interface_val = yyvsp[-5].interface_val;
     ;
     break;}
 case 24:
-#line 469 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 472 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in interface definition (no body found)");
@@ -1623,90 +1623,90 @@ case 24:
     ;
     break;}
 case 25:
-#line 478 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 481 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.forward_val = new Forward(currentFile, yylineno, mainFile, yyvsp[0].id_val, yyvsp[-2].int_val==1, yyvsp[-2].int_val==2);
     ;
     break;}
 case 26:
-#line 485 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 488 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.interface_val = new Interface(currentFile, yylineno, mainFile,
 			 yyvsp[-2].id_val, yyvsp[-4].int_val==1, yyvsp[-4].int_val==2, yyvsp[0].inheritspec_val);
     ;
     break;}
 case 27:
-#line 492 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 495 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.int_val = 0; ;
     break;}
 case 28:
-#line 493 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 496 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.int_val = 1; ;
     break;}
 case 29:
-#line 494 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 497 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.int_val = 2; ;
     break;}
 case 30:
-#line 498 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 501 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].decl_val; ;
     break;}
 case 31:
-#line 502 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 505 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 32:
-#line 503 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 506 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].decl_val) { yyvsp[-1].decl_val->append(yyvsp[0].decl_val); yyval.decl_val = yyvsp[-1].decl_val; }
       else yyval.decl_val = yyvsp[0].decl_val;
     ;
     break;}
 case 33:
-#line 510 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 513 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].decl_val; ;
     break;}
 case 34:
-#line 511 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 514 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].const_val; ;
     break;}
 case 35:
-#line 512 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 515 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].exception_val; ;
     break;}
 case 36:
-#line 513 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 516 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].attribute_val; ;
     break;}
 case 37:
-#line 514 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 517 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[-1].operation_val; ;
     break;}
 case 38:
-#line 515 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 518 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 39:
-#line 516 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 519 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Syntax error in interface body");
       yyval.decl_val = 0;
     ;
     break;}
 case 40:
-#line 523 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 526 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.inheritspec_val = 0; ;
     break;}
 case 41:
-#line 524 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 527 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.inheritspec_val = yyvsp[0].inheritspec_val; ;
     break;}
 case 42:
-#line 528 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 531 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.inheritspec_val = yyvsp[0].inheritspec_val; ;
     break;}
 case 43:
-#line 532 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 535 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.inheritspec_val = new InheritSpec(yyvsp[-1].scopedname_val, currentFile, yylineno);
       if (!yyval.inheritspec_val->interface()) {
@@ -1716,7 +1716,7 @@ case 43:
     ;
     break;}
 case 44:
-#line 539 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 542 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-4].inheritspec_val) {
 	yyvsp[-4].inheritspec_val->append(new InheritSpec(yyvsp[-1].scopedname_val, currentFile, yylineno),
@@ -1727,7 +1727,7 @@ case 44:
     ;
     break;}
 case 45:
-#line 547 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 550 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in inheritance list");
@@ -1735,58 +1735,58 @@ case 45:
     ;
     break;}
 case 46:
-#line 555 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 558 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.scopedname_val = yyvsp[0].scopedname_val; ;
     break;}
 case 47:
-#line 559 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 562 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.scopedname_val = new ScopedName(yyvsp[0].id_val, 0);
     ;
     break;}
 case 48:
-#line 562 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 565 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.scopedname_val = new ScopedName(yyvsp[0].id_val, 1);
     ;
     break;}
 case 49:
-#line 565 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 568 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-2].scopedname_val->append(yyvsp[0].id_val);
       yyval.scopedname_val=yyvsp[-2].scopedname_val;
     ;
     break;}
 case 50:
-#line 576 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 579 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.value_base_val = yyvsp[0].value_val; ;
     break;}
 case 51:
-#line 577 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 580 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.value_base_val = yyvsp[0].value_abs_val; ;
     break;}
 case 52:
-#line 578 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 581 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.value_base_val = yyvsp[0].value_box_val; ;
     break;}
 case 53:
-#line 579 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 582 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.value_base_val = yyvsp[0].value_forward_val; ;
     break;}
 case 54:
-#line 583 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 586 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_forward_val = new ValueForward(currentFile, yylineno, mainFile, 0, yyvsp[0].id_val);
     ;
     break;}
 case 55:
-#line 586 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 589 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_forward_val = new ValueForward(currentFile, yylineno, mainFile, 1, yyvsp[0].id_val);
     ;
     break;}
 case 56:
-#line 592 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 595 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_box_val = new ValueBox(currentFile, yylineno, mainFile,
 			yyvsp[-1].id_val, yyvsp[0].type_spec_val->type(), yyvsp[0].type_spec_val->constr());
@@ -1794,13 +1794,13 @@ case 56:
     ;
     break;}
 case 57:
-#line 600 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 603 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       valueabs_hack = new ValueAbs(currentFile, yylineno, mainFile, yyvsp[0].id_val, 0, 0);
     ;
     break;}
 case 58:
-#line 602 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 605 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       valueabs_hack->finishConstruction(yyvsp[-1].decl_val);
       yyval.value_abs_val = valueabs_hack;
@@ -1808,7 +1808,7 @@ case 58:
     ;
     break;}
 case 59:
-#line 607 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 610 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       valueabs_hack = new ValueAbs(currentFile, yylineno, mainFile, yyvsp[-1].id_val,
 				   yyvsp[0].valueinheritsupportspec_val->inherits(), yyvsp[0].valueinheritsupportspec_val->supports());
@@ -1816,7 +1816,7 @@ case 59:
     ;
     break;}
 case 60:
-#line 611 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 614 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       valueabs_hack->finishConstruction(yyvsp[-1].decl_val);
       yyval.value_abs_val = valueabs_hack;
@@ -1824,7 +1824,7 @@ case 60:
     ;
     break;}
 case 61:
-#line 616 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 619 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in abstract valuetype");
@@ -1837,14 +1837,14 @@ case 61:
     ;
     break;}
 case 62:
-#line 629 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 632 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-3].value_val->finishConstruction(yyvsp[-1].decl_val);
       yyval.value_val = yyvsp[-3].value_val;
     ;
     break;}
 case 63:
-#line 636 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 639 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_val = new Value(currentFile, yylineno, mainFile, 0, yyvsp[-1].id_val,
 		     yyvsp[0].valueinheritsupportspec_val->inherits(), yyvsp[0].valueinheritsupportspec_val->supports());
@@ -1852,7 +1852,7 @@ case 63:
     ;
     break;}
 case 64:
-#line 641 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 644 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_val = new Value(currentFile, yylineno, mainFile, 1, yyvsp[-1].id_val,
 		     yyvsp[0].valueinheritsupportspec_val->inherits(), yyvsp[0].valueinheritsupportspec_val->supports());
@@ -1860,52 +1860,52 @@ case 64:
     ;
     break;}
 case 65:
-#line 646 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 649 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_val = new Value(currentFile, yylineno, mainFile, 0, yyvsp[0].id_val, 0, 0);
     ;
     break;}
 case 66:
-#line 649 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 652 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.value_val = new Value(currentFile, yylineno, mainFile, 1, yyvsp[0].id_val, 0, 0);
     ;
     break;}
 case 67:
-#line 655 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 658 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.valueinheritsupportspec_val = new ValueInheritSupportSpec(yyvsp[-2].valueinheritspec_val, yyvsp[0].inheritspec_val);
     ;
     break;}
 case 68:
-#line 658 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 661 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.valueinheritsupportspec_val = new ValueInheritSupportSpec(yyvsp[0].valueinheritspec_val, 0);
     ;
     break;}
 case 69:
-#line 661 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 664 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.valueinheritsupportspec_val = new ValueInheritSupportSpec(0, yyvsp[0].inheritspec_val);
     ;
     break;}
 case 70:
-#line 667 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 670 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].boolean_val) yyvsp[0].valueinheritspec_val->setTruncatable();
       yyval.valueinheritspec_val = yyvsp[0].valueinheritspec_val;
     ;
     break;}
 case 71:
-#line 674 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 677 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 0; ;
     break;}
 case 72:
-#line 675 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 678 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 1; ;
     break;}
 case 73:
-#line 679 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 682 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.valueinheritspec_val = new ValueInheritSpec(yyvsp[0].scopedname_val, currentFile, yylineno);
       if (!yyval.valueinheritspec_val->value()) {
@@ -1915,7 +1915,7 @@ case 73:
     ;
     break;}
 case 74:
-#line 686 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 689 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-2].valueinheritspec_val) {
 	yyvsp[-2].valueinheritspec_val->append(new ValueInheritSpec(yyvsp[0].scopedname_val, currentFile, yylineno),
@@ -1926,34 +1926,34 @@ case 74:
     ;
     break;}
 case 75:
-#line 697 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 700 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.scopedname_val = yyvsp[0].scopedname_val; ;
     break;}
 case 76:
-#line 701 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 704 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = 0; ;
     break;}
 case 77:
-#line 702 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 705 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].decl_val) { yyvsp[-1].decl_val->append(yyvsp[0].decl_val); yyval.decl_val = yyvsp[-1].decl_val; }
       else yyval.decl_val = yyvsp[0].decl_val;
     ;
     break;}
 case 78:
-#line 709 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 712 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].decl_val; ;
     break;}
 case 79:
-#line 710 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 713 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].statemember_val; ;
     break;}
 case 80:
-#line 711 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 714 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].factory_val; ;
     break;}
 case 81:
-#line 715 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 718 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.statemember_val = new StateMember(currentFile, yylineno, mainFile,
 			   yyvsp[-3].ulong_val, yyvsp[-2].type_spec_val->type(), yyvsp[-2].type_spec_val->constr(), yyvsp[-1].declarator_val);
@@ -1961,34 +1961,34 @@ case 81:
     ;
     break;}
 case 82:
-#line 723 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 726 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.ulong_val = 0; ;
     break;}
 case 83:
-#line 724 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 727 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.ulong_val = 1; ;
     break;}
 case 84:
-#line 728 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 731 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-3].factory_val->closeParens();
     ;
     break;}
 case 85:
-#line 730 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 733 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].factory_val->finishConstruction(yyvsp[-3].parameter_val);
       yyval.factory_val = yyvsp[-5].factory_val;
     ;
     break;}
 case 86:
-#line 734 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 737 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-3].factory_val->closeParens();
     ;
     break;}
 case 87:
-#line 736 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 739 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in factory parameters");
@@ -1997,166 +1997,166 @@ case 87:
     ;
     break;}
 case 88:
-#line 745 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 748 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.factory_val = new Factory(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 89:
-#line 751 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 754 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = 0; ;
     break;}
 case 90:
-#line 752 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 755 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = yyvsp[0].parameter_val; ;
     break;}
 case 91:
-#line 756 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 759 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = yyvsp[0].parameter_val; ;
     break;}
 case 92:
-#line 757 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 760 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-2].parameter_val) { yyvsp[-2].parameter_val->append(yyvsp[0].parameter_val); yyval.parameter_val = yyvsp[-2].parameter_val; }
       else yyval.parameter_val = yyvsp[0].parameter_val;
     ;
     break;}
 case 93:
-#line 764 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 767 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.parameter_val = new Parameter(currentFile, yylineno, mainFile, 0, yyvsp[-1].type_val, yyvsp[0].id_val);
     ;
     break;}
 case 94:
-#line 772 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 775 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.const_val = new Const(currentFile, yylineno, mainFile, yyvsp[-3].type_val, yyvsp[-2].id_val, yyvsp[0].expr_val);
     ;
     break;}
 case 95:
-#line 778 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.type_val = yyvsp[0].type_val; ;
-    break;}
-case 96:
-#line 779 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.type_val = yyvsp[0].type_val; ;
-    break;}
-case 97:
-#line 780 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.type_val = yyvsp[0].type_val; ;
-    break;}
-case 98:
 #line 781 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 99:
+case 96:
 #line 782 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 100:
+case 97:
 #line 783 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 101:
+case 98:
 #line 784 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 102:
+case 99:
 #line 785 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 103:
+case 100:
 #line 786 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.type_val = yyvsp[0].type_val; ;
+    break;}
+case 101:
+#line 787 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.type_val = yyvsp[0].type_val; ;
+    break;}
+case 102:
+#line 788 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.type_val = yyvsp[0].type_val; ;
+    break;}
+case 103:
+#line 789 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = IdlType::scopedNameToType(currentFile, yylineno, yyvsp[0].scopedname_val);
     ;
     break;}
 case 104:
-#line 789 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 792 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 105:
-#line 793 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 796 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 106:
-#line 797 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 800 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 107:
-#line 798 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 801 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = new OrExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val); ;
     break;}
 case 108:
-#line 802 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 805 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 109:
-#line 803 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 806 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = new XorExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val); ;
     break;}
 case 110:
-#line 807 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 810 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 111:
-#line 808 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 811 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new AndExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
     ;
     break;}
 case 112:
-#line 814 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 817 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 113:
-#line 815 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 818 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
     yyval.expr_val = new RShiftExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
   ;
     break;}
 case 114:
-#line 818 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 821 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
     yyval.expr_val = new LShiftExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
   ;
     break;}
 case 115:
-#line 824 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 827 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 116:
-#line 825 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 828 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = new AddExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val); ;
     break;}
 case 117:
-#line 826 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 829 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = new SubExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val); ;
     break;}
 case 118:
-#line 830 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 833 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 119:
-#line 831 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 834 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new MultExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
     ;
     break;}
 case 120:
-#line 834 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 837 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new DivExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
     ;
     break;}
 case 121:
-#line 837 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 840 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new ModExpr(currentFile, yylineno, yyvsp[-2].expr_val, yyvsp[0].expr_val);
     ;
     break;}
 case 122:
-#line 843 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 846 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].char_val == '-') yyval.expr_val = new MinusExpr(currentFile, yylineno, yyvsp[0].expr_val);
       if (yyvsp[-1].char_val == '+') yyval.expr_val = new PlusExpr(currentFile, yylineno, yyvsp[0].expr_val);
@@ -2164,89 +2164,89 @@ case 122:
     ;
     break;}
 case 123:
-#line 848 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 851 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 124:
-#line 852 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 855 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.char_val = '-'; ;
     break;}
 case 125:
-#line 853 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 856 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.char_val = '+'; ;
     break;}
 case 126:
-#line 854 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 857 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.char_val = '~'; ;
     break;}
 case 127:
-#line 858 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 861 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = IdlExpr::scopedNameToExpr(currentFile, yylineno, yyvsp[0].scopedname_val);
     ;
     break;}
 case 128:
-#line 861 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 864 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[0].expr_val; ;
     break;}
 case 129:
-#line 862 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 865 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.expr_val = yyvsp[-1].expr_val; ;
     break;}
 case 130:
-#line 866 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 869 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new IntegerExpr(currentFile, yylineno, yyvsp[0].int_literal_val);
     ;
     break;}
 case 131:
-#line 869 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 872 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new StringExpr(currentFile, yylineno, yyvsp[0].string_val);
     ;
     break;}
 case 132:
-#line 872 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 875 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new WStringExpr(currentFile, yylineno, yyvsp[0].wstring_val);
     ;
     break;}
 case 133:
-#line 875 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 878 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new CharExpr(currentFile, yylineno, yyvsp[0].char_val);
     ;
     break;}
 case 134:
-#line 878 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 881 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new WCharExpr(currentFile, yylineno, yyvsp[0].wchar_val);
     ;
     break;}
 case 135:
-#line 881 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 884 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new FixedExpr(currentFile, yylineno, yyvsp[0].fixed_val);
     ;
     break;}
 case 136:
-#line 884 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 887 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new FloatExpr(currentFile, yylineno, yyvsp[0].float_literal_val);
     ;
     break;}
 case 137:
-#line 887 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 890 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.expr_val = new BooleanExpr(currentFile, yylineno, yyvsp[0].boolean_val);
     ;
     break;}
 case 138:
-#line 893 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 896 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.string_val = yyvsp[0].string_val; ;
     break;}
 case 139:
-#line 894 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 897 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.string_val = new char [strlen(yyvsp[-1].string_val) + strlen(yyvsp[0].string_val) + 1];
       strcpy(yyval.string_val, yyvsp[-1].string_val);
@@ -2256,11 +2256,11 @@ case 139:
     ;
     break;}
 case 140:
-#line 904 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 907 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.wstring_val = yyvsp[0].wstring_val; ;
     break;}
 case 141:
-#line 905 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 908 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.wstring_val = new IDL_WChar [idl_wstrlen(yyvsp[-1].wstring_val) + idl_wstrlen(yyvsp[0].wstring_val) + 1];
       idl_wstrcpy(yyval.wstring_val, yyvsp[-1].wstring_val);
@@ -2270,15 +2270,15 @@ case 141:
     ;
     break;}
 case 142:
-#line 915 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 918 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 1; ;
     break;}
 case 143:
-#line 916 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 919 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 0; ;
     break;}
 case 144:
-#line 920 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 923 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlLongVal v = yyvsp[0].expr_val->evalAsLongV();
       if (v.negative || v.u == 0)
@@ -2287,33 +2287,33 @@ case 144:
     ;
     break;}
 case 145:
-#line 929 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 932 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].typedef_val; ;
     break;}
 case 146:
-#line 930 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 933 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].struct_val; ;
     break;}
 case 147:
-#line 931 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 934 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].union_val; ;
     break;}
 case 148:
-#line 932 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 935 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].enum_val; ;
     break;}
 case 149:
-#line 933 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 936 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.decl_val = new Native(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 150:
-#line 936 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 939 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.decl_val = yyvsp[0].decl_val; ;
     break;}
 case 151:
-#line 940 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 943 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.typedef_val = new Typedef(currentFile, yylineno, mainFile,
 		       yyvsp[-1].type_spec_val->type(), yyvsp[-1].type_spec_val->constr(), yyvsp[0].declarator_val);
@@ -2321,221 +2321,221 @@ case 151:
     ;
     break;}
 case 152:
-#line 948 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 951 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 0); ;
     break;}
 case 153:
-#line 949 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 952 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 1); ;
     break;}
 case 154:
-#line 953 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 956 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 155:
-#line 954 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 957 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 156:
-#line 955 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 958 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = IdlType::scopedNameToType(currentFile, yylineno, yyvsp[0].scopedname_val);
     ;
     break;}
 case 157:
-#line 961 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.type_val = yyvsp[0].type_val; ;
-    break;}
-case 158:
-#line 962 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.type_val = yyvsp[0].type_val; ;
-    break;}
-case 159:
-#line 963 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.type_val = yyvsp[0].type_val; ;
-    break;}
-case 160:
 #line 964 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 161:
+case 158:
 #line 965 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 162:
+case 159:
 #line 966 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 163:
+case 160:
 #line 967 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 164:
+case 161:
 #line 968 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
-case 165:
+case 162:
 #line 969 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
+case 163:
+#line 970 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.type_val = yyvsp[0].type_val; ;
+    break;}
+case 164:
+#line 971 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.type_val = yyvsp[0].type_val; ;
+    break;}
+case 165:
+#line 972 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.type_val = yyvsp[0].type_val; ;
+    break;}
 case 166:
-#line 973 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.type_val = yyvsp[0].type_val; ;
-    break;}
-case 167:
-#line 974 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.type_val = yyvsp[0].type_val; ;
-    break;}
-case 168:
-#line 975 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
-{ yyval.type_val = yyvsp[0].type_val; ;
-    break;}
-case 169:
 #line 976 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
+case 167:
+#line 977 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.type_val = yyvsp[0].type_val; ;
+    break;}
+case 168:
+#line 978 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.type_val = yyvsp[0].type_val; ;
+    break;}
+case 169:
+#line 979 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+{ yyval.type_val = yyvsp[0].type_val; ;
+    break;}
 case 170:
-#line 980 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 983 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].struct_val->thisType(); ;
     break;}
 case 171:
-#line 981 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 984 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].union_val->thisType(); ;
     break;}
 case 172:
-#line 982 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 985 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].enum_val->thisType(); ;
     break;}
 case 173:
-#line 986 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 989 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[-1].declarator_val; ;
     break;}
 case 174:
-#line 987 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 990 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-4].declarator_val) { yyvsp[-4].declarator_val->append(yyvsp[-1].declarator_val); yyval.declarator_val = yyvsp[-4].declarator_val; }
       else yyval.declarator_val = yyvsp[-1].declarator_val;
     ;
     break;}
 case 175:
-#line 994 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 997 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[0].declarator_val; ;
     break;}
 case 176:
-#line 995 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 998 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[0].declarator_val; ;
     break;}
 case 177:
-#line 999 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1002 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.declarator_val = new Declarator(currentFile, yylineno, mainFile, yyvsp[0].id_val, 0);
     ;
     break;}
 case 178:
-#line 1005 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1008 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[0].declarator_val; ;
     break;}
 case 179:
-#line 1009 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1012 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::floatType; ;
     break;}
 case 180:
-#line 1010 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1013 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::doubleType; ;
     break;}
 case 181:
-#line 1011 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1014 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::longdoubleType; ;
     break;}
 case 182:
-#line 1015 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1018 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 183:
-#line 1016 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1019 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 184:
-#line 1020 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1023 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 185:
-#line 1021 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1024 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 186:
-#line 1022 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1025 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 187:
-#line 1026 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1029 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::shortType; ;
     break;}
 case 188:
-#line 1030 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1033 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::longType; ;
     break;}
 case 189:
-#line 1034 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1037 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::longlongType; ;
     break;}
 case 190:
-#line 1038 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1041 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 191:
-#line 1039 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1042 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 192:
-#line 1040 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1043 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 193:
-#line 1044 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1047 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::ushortType; ;
     break;}
 case 194:
-#line 1048 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1051 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::ulongType; ;
     break;}
 case 195:
-#line 1052 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1055 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::ulonglongType; ;
     break;}
 case 196:
-#line 1056 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1059 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::charType; ;
     break;}
 case 197:
-#line 1060 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1063 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::wcharType; ;
     break;}
 case 198:
-#line 1064 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1067 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::booleanType; ;
     break;}
 case 199:
-#line 1068 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1071 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::octetType; ;
     break;}
 case 200:
-#line 1072 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1075 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::anyType; ;
     break;}
 case 201:
-#line 1076 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1079 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = DeclaredType::corbaObjectType; ;
     break;}
 case 202:
-#line 1080 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1083 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].struct_val->finishConstruction(yyvsp[-1].member_val);
       yyval.struct_val = yyvsp[-5].struct_val;
     ;
     break;}
 case 203:
-#line 1084 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1087 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in struct definition");
@@ -2544,24 +2544,24 @@ case 203:
     ;
     break;}
 case 204:
-#line 1093 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1096 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.struct_val = new Struct(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 205:
-#line 1099 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1102 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.member_val = yyvsp[-1].member_val; ;
     break;}
 case 206:
-#line 1100 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1103 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-2].member_val) { yyvsp[-2].member_val->append(yyvsp[-1].member_val); yyval.member_val = yyvsp[-2].member_val; }
       else yyval.member_val = yyvsp[-1].member_val;
     ;
     break;}
 case 207:
-#line 1107 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1110 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.member_val = new Member(currentFile, yylineno, mainFile,
 		      yyvsp[-2].type_spec_val->type(), yyvsp[-2].type_spec_val->constr(), yyvsp[-1].declarator_val);
@@ -2569,7 +2569,7 @@ case 207:
     ;
     break;}
 case 208:
-#line 1112 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1115 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in member declaration");
@@ -2577,7 +2577,7 @@ case 208:
     ;
     break;}
 case 209:
-#line 1122 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1125 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
 
       yyvsp[-12].union_val->finishConstruction(yyvsp[-7].type_spec_val->type(), yyvsp[-7].type_spec_val->constr(), yyvsp[-1].union_case_val);
@@ -2586,7 +2586,7 @@ case 209:
     ;
     break;}
 case 210:
-#line 1128 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1131 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in union declaration");
@@ -2595,95 +2595,95 @@ case 210:
     ;
     break;}
 case 211:
-#line 1137 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1140 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.union_val = new Union(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 212:
-#line 1143 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1146 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 0); ;
     break;}
 case 213:
-#line 1144 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1147 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 0); ;
     break;}
 case 214:
-#line 1145 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1148 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].type_val, 0); ;
     break;}
 case 215:
-#line 1146 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1149 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_spec_val = new TypeSpec(yyvsp[0].enum_val->thisType(), 1); ;
     break;}
 case 216:
-#line 1147 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1150 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_spec_val = new TypeSpec(IdlType::scopedNameToType(currentFile, yylineno, yyvsp[0].scopedname_val),
 			0);
     ;
     break;}
 case 217:
-#line 1154 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1157 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.union_case_val = yyvsp[0].union_case_val; ;
     break;}
 case 218:
-#line 1158 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1161 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.union_case_val = yyvsp[-1].union_case_val; ;
     break;}
 case 219:
-#line 1159 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1162 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-2].union_case_val->append(yyvsp[-1].union_case_val);
       yyval.union_case_val = yyvsp[-2].union_case_val;
     ;
     break;}
 case 220:
-#line 1166 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1169 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-1].union_case_val->finishConstruction(yyvsp[-2].case_label_val);
       yyval.union_case_val = yyvsp[-1].union_case_val;
     ;
     break;}
 case 221:
-#line 1173 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1176 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.case_label_val = yyvsp[0].case_label_val; ;
     break;}
 case 222:
-#line 1174 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1177 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-1].case_label_val->append(yyvsp[0].case_label_val);
       yyval.case_label_val = yyvsp[-1].case_label_val;
     ;
     break;}
 case 223:
-#line 1181 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1184 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.case_label_val = new CaseLabel(currentFile, yylineno, mainFile, yyvsp[-2].expr_val);
     ;
     break;}
 case 224:
-#line 1184 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1187 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.case_label_val = new CaseLabel(currentFile, yylineno, mainFile, 0);
     ;
     break;}
 case 225:
-#line 1190 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1193 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.union_case_val = new UnionCase(currentFile, yylineno, mainFile,
 			 yyvsp[-1].type_spec_val->type(), yyvsp[-1].type_spec_val->constr(), yyvsp[0].declarator_val);
     ;
     break;}
 case 226:
-#line 1197 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1200 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].enum_val->finishConstruction(yyvsp[-1].enumerator_val);
       yyval.enum_val = yyvsp[-5].enum_val;
     ;
     break;}
 case 227:
-#line 1201 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1204 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Syntax error in enum definition");
       yyvsp[-1].enum_val->finishConstruction(0);
@@ -2691,115 +2691,115 @@ case 227:
     ;
     break;}
 case 228:
-#line 1209 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1212 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.enum_val = new Enum(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 229:
-#line 1215 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1218 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.enumerator_val = yyvsp[-1].enumerator_val; ;
     break;}
 case 230:
-#line 1216 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1219 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-4].enumerator_val->append(yyvsp[-1].enumerator_val);
       yyval.enumerator_val = yyvsp[-4].enumerator_val;
     ;
     break;}
 case 231:
-#line 1223 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1226 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.enumerator_val = new Enumerator(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 232:
-#line 1229 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1232 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = new SequenceType(yyvsp[-3].type_val, yyvsp[-1].ulong_val);
     ;
     break;}
 case 233:
-#line 1232 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1235 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = new SequenceType(yyvsp[-1].type_val, 0);
     ;
     break;}
 case 234:
-#line 1238 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1241 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = new StringType(yyvsp[-1].ulong_val); ;
     break;}
 case 235:
-#line 1239 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1242 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = StringType::unboundedStringType;
     ;
     break;}
 case 236:
-#line 1245 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1248 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = new WStringType(yyvsp[-1].ulong_val); ;
     break;}
 case 237:
-#line 1246 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1249 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = WStringType::unboundedWStringType;
     ;
     break;}
 case 238:
-#line 1252 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1255 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.declarator_val = new Declarator(currentFile, yylineno, mainFile, yyvsp[-1].id_val, yyvsp[0].array_size_val);
     ;
     break;}
 case 239:
-#line 1258 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1261 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.array_size_val = yyvsp[0].array_size_val; ;
     break;}
 case 240:
-#line 1259 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1262 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-1].array_size_val->append(yyvsp[0].array_size_val);
       yyval.array_size_val = yyvsp[-1].array_size_val;
     ;
     break;}
 case 241:
-#line 1266 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1269 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.array_size_val = new ArraySize(yyvsp[-1].ulong_val); ;
     break;}
 case 242:
-#line 1270 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1273 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.attribute_val = new Attribute(currentFile, yylineno, mainFile, yyvsp[-3].boolean_val, yyvsp[-1].type_val, yyvsp[0].declarator_val);
     ;
     break;}
 case 243:
-#line 1276 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1279 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 0; ;
     break;}
 case 244:
-#line 1277 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1280 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 1; ;
     break;}
 case 245:
-#line 1281 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1284 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.declarator_val = yyvsp[-1].declarator_val; ;
     break;}
 case 246:
-#line 1282 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1285 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-4].declarator_val) { yyvsp[-4].declarator_val->append(yyvsp[-1].declarator_val); yyval.declarator_val = yyvsp[-4].declarator_val; }
       else yyval.declarator_val = yyvsp[-1].declarator_val;
     ;
     break;}
 case 247:
-#line 1289 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1292 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-5].exception_val->finishConstruction(yyvsp[-1].member_val);
       yyval.exception_val = yyvsp[-5].exception_val;
     ;
     break;}
 case 248:
-#line 1293 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1296 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in exception definition");
@@ -2808,37 +2808,37 @@ case 248:
     ;
     break;}
 case 249:
-#line 1302 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1305 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.exception_val = new Exception(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 250:
-#line 1308 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1311 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.member_val = 0; ;
     break;}
 case 251:
-#line 1309 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1312 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-1].member_val) { yyvsp[-1].member_val->append(yyvsp[0].member_val);	yyval.member_val = yyvsp[-1].member_val; }
       else yyval.member_val = yyvsp[0].member_val;
     ;
     break;}
 case 252:
-#line 1316 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1319 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-2].operation_val->closeParens();
     ;
     break;}
 case 253:
-#line 1318 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1321 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-6].operation_val->finishConstruction(yyvsp[-4].parameter_val, yyvsp[-1].raisesspec_val, yyvsp[0].contextspec_val);
       yyval.operation_val = yyvsp[-6].operation_val;
     ;
     break;}
 case 254:
-#line 1322 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1325 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in operation declaration");
@@ -2848,41 +2848,41 @@ case 254:
     ;
     break;}
 case 255:
-#line 1332 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1335 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.operation_val = new Operation(currentFile, yylineno, mainFile, yyvsp[-2].boolean_val, yyvsp[-1].type_val, yyvsp[0].id_val);
     ;
     break;}
 case 256:
-#line 1338 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1341 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 0; ;
     break;}
 case 257:
-#line 1339 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1342 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = yyvsp[0].boolean_val; ;
     break;}
 case 258:
-#line 1343 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1346 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.boolean_val = 1; ;
     break;}
 case 259:
-#line 1347 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1350 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 260:
-#line 1348 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1351 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = BaseType::voidType; ;
     break;}
 case 261:
-#line 1352 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1355 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = yyvsp[-1].parameter_val; ;
     break;}
 case 262:
-#line 1353 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1356 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = 0; ;
     break;}
 case 263:
-#line 1354 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1357 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in operation parameters");
@@ -2890,104 +2890,104 @@ case 263:
     ;
     break;}
 case 264:
-#line 1362 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1365 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.parameter_val = yyvsp[-1].parameter_val; ;
     break;}
 case 265:
-#line 1363 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1366 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       if (yyvsp[-4].parameter_val) { yyvsp[-4].parameter_val->append(yyvsp[-1].parameter_val); yyval.parameter_val = yyvsp[-4].parameter_val; }
       else yyval.parameter_val = yyvsp[-1].parameter_val;
     ;
     break;}
 case 266:
-#line 1370 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1373 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.parameter_val = new Parameter(currentFile, yylineno, mainFile, yyvsp[-2].int_val, yyvsp[-1].type_val, yyvsp[0].id_val);
     ;
     break;}
 case 267:
-#line 1376 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1379 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.int_val = 0; ;
     break;}
 case 268:
-#line 1377 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1380 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.int_val = 1; ;
     break;}
 case 269:
-#line 1378 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1381 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.int_val = 2; ;
     break;}
 case 270:
-#line 1382 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1385 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.raisesspec_val = 0; ;
     break;}
 case 271:
-#line 1383 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1386 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.raisesspec_val = yyvsp[-1].raisesspec_val; ;
     break;}
 case 272:
-#line 1387 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1390 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.raisesspec_val = yyvsp[-1].raisesspec_val; ;
     break;}
 case 273:
-#line 1391 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1394 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.raisesspec_val = new RaisesSpec(yyvsp[-1].scopedname_val, currentFile, yylineno);
     ;
     break;}
 case 274:
-#line 1394 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1397 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-4].raisesspec_val->append(new RaisesSpec(yyvsp[-1].scopedname_val, currentFile, yylineno));
       yyval.raisesspec_val = yyvsp[-4].raisesspec_val;
     ;
     break;}
 case 275:
-#line 1401 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1404 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.contextspec_val = 0; ;
     break;}
 case 276:
-#line 1402 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1405 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.contextspec_val = yyvsp[-1].contextspec_val; ;
     break;}
 case 277:
-#line 1406 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1409 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.contextspec_val = yyvsp[-1].contextspec_val; ;
     break;}
 case 278:
-#line 1410 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1413 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.contextspec_val = new ContextSpec(yyvsp[-1].string_val, currentFile, yylineno);
     ;
     break;}
 case 279:
-#line 1413 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1416 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyvsp[-4].contextspec_val->append(new ContextSpec(yyvsp[-1].string_val, currentFile, yylineno));
       yyval.contextspec_val = yyvsp[-4].contextspec_val;
     ;
     break;}
 case 280:
-#line 1420 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1423 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 281:
-#line 1421 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1424 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 282:
-#line 1422 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1425 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = yyvsp[0].type_val; ;
     break;}
 case 283:
-#line 1423 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1426 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = IdlType::scopedNameToType(currentFile, yylineno, yyvsp[0].scopedname_val);
     ;
     break;}
 case 284:
-#line 1429 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1432 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlLongVal scalev = yyvsp[-1].expr_val->evalAsLongV();
 
@@ -3010,83 +3010,83 @@ case 284:
     ;
     break;}
 case 285:
-#line 1452 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1455 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.type_val = new FixedType(0, 0);
     ;
     break;}
 case 286:
-#line 1458 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1461 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.type_val = new DeclaredType(IdlType::tk_value, 0, 0); ;
     break;}
 case 287:
-#line 1462 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1465 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.decl_val = new StructForward(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 288:
-#line 1465 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1468 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.decl_val = new UnionForward(currentFile, yylineno, mainFile, yyvsp[0].id_val);
     ;
     break;}
 case 297:
-#line 1488 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1491 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       Prefix::setPrefix(idl_strdup(yyvsp[-1].string_val));
     ;
     break;}
 case 298:
-#line 1491 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1494 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Malformed #pragma prefix");
     ;
     break;}
 case 299:
-#line 1497 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1500 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       Decl* d = Decl::scopedNameToDecl(currentFile, yylineno, yyvsp[-2].scopedname_val);
       if (d) DeclRepoId::setRepoId(d, yyvsp[-1].string_val, currentFile, yylineno);
     ;
     break;}
 case 300:
-#line 1501 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1504 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Malformed #pragma id");
     ;
     break;}
 case 301:
-#line 1507 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1510 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       Decl* d = Decl::scopedNameToDecl(currentFile, yylineno, yyvsp[-4].scopedname_val);
       if (d) DeclRepoId::setVersion(d, yyvsp[-3].int_literal_val, yyvsp[-1].int_literal_val, currentFile, yylineno);
     ;
     break;}
 case 302:
-#line 1511 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1514 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       IdlSyntaxError(currentFile, yylineno, "Malformed #pragma version");
     ;
     break;}
 case 303:
-#line 1517 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1520 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       Pragma::add(yyvsp[-1].string_val, currentFile, yylineno-1);
     ;
     break;}
 case 304:
-#line 1523 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1526 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       Pragma::add(yyvsp[-1].string_val, currentFile, yylineno);
     ;
     break;}
 case 305:
-#line 1529 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1532 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 { yyval.string_val = yyvsp[0].string_val; ;
     break;}
 case 306:
-#line 1530 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1533 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 {
       yyval.string_val = new char [strlen(yyvsp[-1].string_val) + strlen(yyvsp[0].string_val) + 1];
       strcpy(yyval.string_val, yyvsp[-1].string_val);
@@ -3317,5 +3317,5 @@ yyerrhandle:
     }
   return 1;
 }
-#line 1539 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
+#line 1542 "/home/dpg1/omni/cvs/40/src/tool/omniidl/cxx/idl.yy"
 
