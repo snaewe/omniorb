@@ -342,19 +342,11 @@ public:
     pd_impl.unmarshalResults(s);
   }
 
-  void userException(IOP_C& iop_c, const char* repoId) {
-    CORBA::Boolean rc = pd_impl.unmarshalUserException(iop_c.getStream(),
-						       repoId);
-    iop_c.RequestCompleted(!rc);
+  void userException(cdrStream& stream, IOP_C* iop_c, const char* repoId) {
+    CORBA::Boolean rc = pd_impl.unmarshalUserException(stream, repoId);
+    if (iop_c) iop_c->RequestCompleted(!rc);
     if (!rc) {
-      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-    }
-    else {
-      // This method is required to always throw an exception instead of
-      // simply returning. Normally the exception is the real user
-      // exception.  In this case, we fullfill the requirement by throwing
-      // an internal exception which get caught in the try loop of invoke.
-      throw RequestImpl::Completed();
+      OMNIORB_THROW(UNKNOWN, UNKNOWN_UserException, CORBA::COMPLETED_MAYBE);
     }
   }
 
@@ -396,9 +388,6 @@ RequestImpl::invoke()
       throw;
     } else
       pd_environment->exception(CORBA::Exception::_duplicate(&ex));
-  }
-  catch (const RequestImpl::Completed& ) {
-    // User exception has been unmarshalled. Do nothing.
   }
   INVOKE_DONE();
   RETURN_CORBA_STATUS;

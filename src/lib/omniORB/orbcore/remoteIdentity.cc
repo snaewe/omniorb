@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.11  2001/08/17 13:42:49  dpg1
+  callDescriptor::userException() no longer has to throw an exception.
+
   Revision 1.2.2.10  2001/08/15 10:26:14  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -170,9 +173,11 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
       CORBA::String_var repoId(s.unmarshalRawString());
       call_desc.userException(iop_client->getStream(), &(IOP_C&)iop_client,
 			      repoId);
-      // Never get here - this must throw either a user exception
-      // or CORBA::MARSHAL.
-      OMNIORB_ASSERT(0);
+      // Usually, the userException() call throws a user exception or
+      // a system exception. In the DII case, it just stores the
+      // exception and returns.
+
+      break;
     }
 
   case GIOP::LOCATION_FORWARD:

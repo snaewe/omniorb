@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.8.2.9  2001/08/17 13:42:48  dpg1
+ callDescriptor::userException() no longer has to throw an exception.
+
  Revision 1.8.2.8  2001/08/15 10:37:59  dpg1
  Update DSI to use Current, inProcessIdentity.
 
@@ -367,9 +370,6 @@ omniServerRequest::do_reply()
 	cdrMemoryStream stream;
 	ex._NP_marshal(stream);
 	pd_handle.call_desc()->userException(stream, 0, repoid);
-
-	// userException() _must_ throw an exception
-	OMNIORB_ASSERT(0);
       }
       break;
     }

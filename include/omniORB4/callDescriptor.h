@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.9  2001/08/17 13:42:48  dpg1
+ callDescriptor::userException() no longer has to throw an exception.
+
  Revision 1.2.2.8  2001/08/15 10:26:07  dpg1
  New object table behaviour, correct POA semantics.
 
@@ -123,9 +126,10 @@ public:
 
   virtual void userException(cdrStream& stream, _OMNI_NS(IOP_C)* iop_client,
 			     const char*);
-  // Defaults to no user exceptions, and thus throws
-  // CORBA::MARSHAL.  Any version of this should in all
-  // cases either throw a user exception or CORBA::MARSHAL.
+  // Defaults to no user exceptions, and thus throws CORBA::MARSHAL.
+  // Most versions of this throw either a user exception or
+  // CORBA::MARSHAL, but it is permitted to return successfully. This
+  // is done by DII, for example.
   // If iop_client is non-zero, must call iop_client->RequestCompleted().
 
   //////////////////////////////////////////////////

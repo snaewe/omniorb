@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.6  2001/08/17 13:42:49  dpg1
+ callDescriptor::userException() no longer has to throw an exception.
+
  Revision 1.1.2.5  2001/08/15 10:26:11  dpg1
  New object table behaviour, correct POA semantics.
 
@@ -192,12 +195,14 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
 	  int i = _OMNI_NS(orbAsyncInvoker)->insert(&mtt); OMNIORB_ASSERT(i);
 	  mtt.wait();
 	}
+	stream.rewindPtrs();
+	desc.marshalReturnedValues(stream);
+	pd_call_desc->unmarshalReturnedValues(stream);
       }
 #ifdef HAS_Cplusplus_catch_exception_by_base
       catch (CORBA::UserException& ex) {
 	stream.rewindPtrs();
 	dealWithUserException(stream, pd_call_desc, ex);
-	OMNIORB_ASSERT(0);
       }
 #else
       catch (omniORB::StubUserException& uex) {
@@ -210,12 +215,9 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
 	  delete uex.ex();  // ?? Possible memory leak?
 	  throw;
 	}
-	OMNIORB_ASSERT(0);
+	delete uex.ex();
       }
 #endif
-      stream.rewindPtrs();
-      desc.marshalReturnedValues(stream);
-      pd_call_desc->unmarshalReturnedValues(stream);
     }
   }
 }
@@ -237,9 +239,6 @@ dealWithUserException(cdrMemoryStream& stream,
   ex._NP_marshal(stream);
 
   desc->userException(stream, 0, repoId);
-
-  // userException() _must_ throw an exception
-  OMNIORB_ASSERT(0);
 }
 
 void 
