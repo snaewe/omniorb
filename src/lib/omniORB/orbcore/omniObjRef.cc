@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 18:40:38  sll
+  Removed obsoluted _getRopeAndKey()
+  New members _getIOR(), _marshal(), _unMarshal(), _toString,  _fromString(),
+  _hash(), _is_equivalent().
+
   Revision 1.2.2.1  2000/07/17 10:35:56  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -56,21 +61,15 @@
 
 */
 
-#include <omniORB3/CORBA.h>
-
-#ifdef HAS_pch
-#pragma hdrstop
-#endif
-
-#include <omniORB3/omniObjRef.h>
-#include <omniORB3/callDescriptor.h>
-#include <omniORB3/omniServant.h>
+#include <omniORB4/CORBA.h>
+#include <omniORB4/callDescriptor.h>
 #include <localIdentity.h>
 #include <remoteIdentity.h>
 #include <objectAdapter.h>
 #include <ropeFactory.h>
 #include <excepthandler.h>
 #include <exceptiondefs.h>
+#include <objectStub.h>
 
 
 CORBA::Boolean
@@ -82,47 +81,6 @@ omniObjRef::_compatibleServant(omniServant* svnt)
     return 1;
   else
     return 0;
-}
-
-
-int
-omniObjRef::_getRopeAndKey(omniRopeAndKey& rak, CORBA::Boolean* is_local) const
-{
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
-
-  if( is_local )  *is_local = 0;
-
-  int fwd;
-  int use_loopback = 0;
-
-  {
-    omni::internalLock->lock();
-
-    fwd = pd_flags.forward_location;
-    rak.key(pd_id->key(), pd_id->keysize());
-
-    if( is_local )  *is_local = pd_localId ? 1 : 0;
-
-    if( pd_localId && pd_id == pd_localId )
-      use_loopback = 1;
-    else
-      rak.rope(((omniRemoteIdentity*) pd_id)->rope());
-
-    omni::internalLock->unlock();
-  }
-
-  if( use_loopback )  rak.rope(omniObjAdapter::defaultLoopBack());
-
-  return fwd;
-}
-
-
-void
-omniObjRef::_getTheKey(omniObjKey& key, int locked) const
-{
-  if( !locked )  omni::internalLock->lock();
-  key.copy(pd_id->key(), pd_id->keysize());
-  if( !locked )  omni::internalLock->unlock();
 }
 
 
@@ -178,10 +136,10 @@ omniObjRef::_realNarrow(const char* repoId)
       omni::internalLock->lock();
 
       if( _localId() )
-	objref = omni::createObjRef(pd_mostDerivedRepoId, repoId, _localId());
+	objref = omni::createObjRef(repoId, _localId(),
+				    pd_ior->duplicateNoLock());
       else
-	objref = omni::createObjRef(pd_mostDerivedRepoId, repoId,
-				    pd_iopprofiles, 0, 1);
+	objref = omni::createObjRef(repoId,pd_ior->duplicateNoLock(),1);
 
       omni::internalLock->unlock();
 
@@ -239,113 +197,81 @@ omniObjRef::_assertExistsAndTypeVerified()
   }
 }
 
-//////////////////////////////////////////////////////////////////////
-
-class omniObjRef_is_a_CallDesc : public omniCallDescriptor {
-public:
-  inline omniObjRef_is_a_CallDesc(LocalCallFn lcfn, const char* op,
-				  int oplen, const char* i_1)
-    : omniCallDescriptor(lcfn, op, oplen),
-      a_1(i_1)
-    {}
-
-  virtual CORBA::ULong alignedSize(CORBA::ULong);
-  virtual void marshalArguments(GIOP_C&);
-  virtual void unmarshalReturnedValues(GIOP_C&);
-
-  const char*    a_1;
-  CORBA::Boolean result;
-};
-
-
-CORBA::ULong
-omniObjRef_is_a_CallDesc::alignedSize(CORBA::ULong msgsize)
+CORBA::Boolean 
+omniObjRef::_is_equivalent(omniObjRef* o_obj)
 {
-  msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4;
-  msgsize += a_1 ? strlen(a_1) + 1 : 1;
-  return msgsize;
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+
+  int m_islocal, o_islocal;
+  const CORBA::Octet* m_key;
+  const CORBA::Octet* o_key;
+  int m_keysize, o_keysize;
+  
+  {
+    omni_tracedmutex_lock sync(*omni::internalLock);
+
+    m_key = pd_id->key();
+    m_keysize = pd_id->keysize();
+
+    o_key = o_obj->pd_id->key();
+    o_keysize = o_obj->pd_id->keysize();
+
+    if (m_keysize != o_keysize || 
+	memcmp((void*)m_key,(void*)o_key,m_keysize) != 0)
+      // Object keys do not match
+      return 0;
+
+    m_islocal = pd_localId ? 1 : 0;
+    o_islocal = o_obj->pd_localId ? 1 : 0;
+
+    if (m_islocal && o_islocal)
+      return 1;
+    else if (m_islocal != o_islocal)
+      return 0;
+    else
+      return ((((omniRemoteIdentity*) pd_id)->rope()) == 
+	      (((omniRemoteIdentity*) o_obj->pd_id)->rope()));
+  }
 }
 
-
-void
-omniObjRef_is_a_CallDesc::marshalArguments(GIOP_C& giop_client)
+CORBA::ULong
+omniObjRef::_hash(CORBA::ULong maximum)
 {
-  CORBA::ULong len_1 = a_1 ? strlen(a_1) + 1 : 1;
-  len_1 >>= giop_client;
-  if( len_1 > 1 )
-    giop_client.put_char_array((const CORBA::Char*) a_1, len_1);
-  else {
-    if( a_1 == 0 && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(0);
-    CORBA::Char('\0') >>= giop_client;
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+
+  const CORBA::Octet* key;
+  int keysize;
+
+  {
+    omni_tracedmutex_lock sync(*omni::internalLock);
+    key = pd_id->key();
+    keysize = pd_id->keysize();
+
+    return CORBA::ULong(omni::hash(key, keysize) % maximum);
   }
 }
 
 
-void
-omniObjRef_is_a_CallDesc::unmarshalReturnedValues(GIOP_C& giop_client)
-{
-  result <<= giop_client;
-}
-
-
-static void
-omniObjRef_is_a_lcfn(omniCallDescriptor* cd, omniServant* servant)
-{
-  omniObjRef_is_a_CallDesc* tcd = (omniObjRef_is_a_CallDesc*) cd;
-
-  tcd->result = servant->_is_a(tcd->a_1);
-}
-
-
+//////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 omniObjRef::_remote_is_a(const char* a_repoId)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
-  omniObjRef_is_a_CallDesc call_desc(omniObjRef_is_a_lcfn,
-				     "_is_a", sizeof("_is_a"), a_repoId);
+  omni_is_a_CallDesc call_desc("_is_a", sizeof("_is_a"), a_repoId);
 
   _invoke(call_desc, 0);
   return call_desc.result;
 }
 
 //////////////////////////////////////////////////////////////////////
-
-class omniObjRef_non_existent_CallDesc : public omniCallDescriptor {
-public:
-  inline omniObjRef_non_existent_CallDesc(LocalCallFn lcfn,
-					  const char* op, int oplen)
-    : omniCallDescriptor(lcfn, op, oplen)
-    {}
-
-  virtual void unmarshalReturnedValues(GIOP_C&);
-
-  CORBA::Boolean result;
-};
-
-
-void
-omniObjRef_non_existent_CallDesc::unmarshalReturnedValues(GIOP_C& giop_client)
-{
-  result <<= giop_client;
-}
-
-
-static void
-omniObjRef_non_existent_lcfn(omniCallDescriptor* cd, omniServant* servant)
-{
-  ((omniObjRef_non_existent_CallDesc*) cd)->result = servant->_non_existent();
-}
-
-
 CORBA::Boolean
 omniObjRef::_remote_non_existent()
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
-  omniObjRef_non_existent_CallDesc call_desc(omniObjRef_non_existent_lcfn,
-					     "_non_existent",
-					     sizeof("_non_existent"));
+  omni_non_existent_CallDesc call_desc("_non_existent",
+				       sizeof("_non_existent"));
 
   _invoke(call_desc, 0);
   return call_desc.result;
@@ -455,7 +381,10 @@ omniObjRef::~omniObjRef()
   if( pd_intfRepoId != pd_mostDerivedRepoId )
     delete[] pd_intfRepoId;
   if( pd_mostDerivedRepoId )  delete[] pd_mostDerivedRepoId;
-  if( pd_iopprofiles )        delete pd_iopprofiles;
+
+  if (pd_ior) {
+    pd_ior->release();
+  }
 }
 
 
@@ -463,7 +392,7 @@ omniObjRef::omniObjRef()
   : pd_refCount(0),
     pd_mostDerivedRepoId(0),
     pd_intfRepoId(0),
-    pd_iopprofiles(0),
+    pd_ior(0),
     pd_id(0),
     pd_localId(0),
     pd_nextInLocalRefList(0)
@@ -472,24 +401,24 @@ omniObjRef::omniObjRef()
 }
 
 
-omniObjRef::omniObjRef(const char* intfRepoId, const char* mostDerivedId,
-		       IOP::TaggedProfileList* profiles,
+omniObjRef::omniObjRef(const char* intfRepoId, omniIOR* ior,
 		       omniIdentity* id, omniLocalIdentity* lid)
   : pd_refCount(1),
-    pd_iopprofiles(profiles),
+    pd_ior(ior),
     pd_id(id),
     pd_localId(lid),
     pd_nextInLocalRefList(0)
 {
   OMNIORB_ASSERT(intfRepoId);
-  OMNIORB_ASSERT(mostDerivedId);
+  OMNIORB_ASSERT(ior);
   OMNIORB_ASSERT(id);
 
   pd_intfRepoId = new char[strlen(intfRepoId) + 1];
   strcpy(pd_intfRepoId, intfRepoId);
-  if( strcmp(intfRepoId, mostDerivedId) ) {
-    pd_mostDerivedRepoId = new char[strlen(mostDerivedId) + 1];
-    strcpy(pd_mostDerivedRepoId, mostDerivedId);
+
+  if( strcmp(intfRepoId, ior->repositoryID) ) {
+    pd_mostDerivedRepoId = new char[strlen(ior->repositoryID) + 1];
+    strcpy(pd_mostDerivedRepoId, ior->repositoryID);
   }
   else
     pd_mostDerivedRepoId = pd_intfRepoId;
@@ -511,11 +440,8 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
 
-#ifndef EGCS_WORKAROUND
- _again:
-#else
   while(1) {
-#endif
+
     if( omniORB::verifyObjectExistsAndType && do_assert )
       _assertExistsAndTypeVerified();
 
@@ -566,16 +492,168 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 	if( !_omni_callCommFailureExceptionHandler(this, retries++, ex2) )
 	  throw ex2;
       }
-      omni::locationForward(this, ex.get_obj()->_PR_getobj());
+      omni::locationForward(this,ex.get_obj()->_PR_getobj(),ex.is_permanent());
     }
 
-#ifndef EGCS_WORKAROUND
-    goto _again;
-#else
   }
-#endif
 }
 
+
+omniIOR* 
+omniObjRef::_getIOR()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+  omni_tracedmutex_lock sync(*omni::internalLock);
+  // Must hold mutex before reading pd_ior.
+  return pd_ior->duplicateNoLock();
+}
+
+void
+omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+
+  if (!objref || objref->_is_nil()) {
+    ::operator>>= ((CORBA::ULong)1,s);
+    ::operator>>= ((CORBA::Char) '\0',s);
+    ::operator>>= ((CORBA::ULong) 0,s);
+    return;
+  }
+
+  omniIOR_var ior;
+  {
+    omni_tracedmutex_lock sync(*omni::internalLock);
+    // Must hold mutex before reading pd_ior.
+    ior =  objref->pd_ior->duplicateNoLock();
+  }
+
+  const char* repoId = ior->repositoryID;
+  CORBA::ULong repoIdSize = strlen(repoId)+1;
+  repoIdSize >>= s;
+  s.put_char_array((CORBA::Char*) repoId, repoIdSize);
+  (IOP::TaggedProfileList&)ior->iopProfiles >>= s;
+}
+
+char*
+omniObjRef::_toString(omniObjRef* objref)
+{
+  cdrMemoryStream buf(CORBA::ULong(0),1);
+  omni::myByteOrder >>= buf;
+  _marshal(objref,buf);
+
+  // turn the encapsulation into a hex string with "IOR:" prepended
+  buf.rewindInputPtr();
+  size_t s = buf.bufSize();
+  CORBA::Char * data = (CORBA::Char *)buf.bufPtr();
+
+  char *result = new char[4+s*2+1];
+  result[4+s*2] = '\0';
+  result[0] = 'I';
+  result[1] = 'O';
+  result[2] = 'R';
+  result[3] = ':';
+  for (int i=0; i < (int)s; i++) {
+    int j = 4 + i*2;
+    int v = (data[i] & 0xf0);
+    v = v >> 4;
+    if (v < 10)
+      result[j] = '0' + v;
+    else
+      result[j] = 'a' + (v - 10);
+    v = ((data[i] & 0xf));
+    if (v < 10)
+      result[j+1] = '0' + v;
+    else
+      result[j+1] = 'a' + (v - 10);
+  }
+  return result;
+}
+
+
+omniObjRef*
+omniObjRef::_unMarshal(const char* repoId, cdrStream& s)
+{
+  CORBA::String_var id;
+  IOP::TaggedProfileList_var profiles;
+
+  id = IOP::IOR::unmarshaltype_id(s);
+  
+  profiles = new IOP::TaggedProfileList();
+  (IOP::TaggedProfileList&)profiles <<= s;
+
+  if (profiles->length() == 0 && strlen(id) == 0) {
+    // This is a nil object reference
+    return 0;
+  }
+  else {
+    // It is possible that we reach here with the id string = '\0'.
+    // That is alright because the actual type of the object will be
+    // verified using _is_a() at the first invocation on the object.
+    //
+    // Apparently, some ORBs such as ExperSoft's do that. Furthermore,
+    // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
+    // 
+    omniIOR* ior = new omniIOR(id._retn(),profiles._retn());
+    omniObjRef* objref = omni::createObjRef(repoId,ior,0);
+    return objref;
+  }
+}
+
+omniObjRef*
+omniObjRef::_fromString(const char* str)
+{
+  size_t s = (str ? strlen(str) : 0);
+  if (s<4)
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  const char *p = str;
+  if (p[0] != 'I' ||
+      p[1] != 'O' ||
+      p[2] != 'R' ||
+      p[3] != ':')
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+  s = (s-4)/2;  // how many octets are there in the string
+  p += 4;
+
+  cdrMemoryStream buf((CORBA::ULong)s,0);
+
+  for (int i=0; i<(int)s; i++) {
+    int j = i*2;
+    CORBA::Octet v;
+    
+    if (p[j] >= '0' && p[j] <= '9') {
+      v = ((p[j] - '0') << 4);
+    }
+    else if (p[j] >= 'a' && p[j] <= 'f') {
+      v = ((p[j] - 'a' + 10) << 4);
+    }
+    else if (p[j] >= 'A' && p[j] <= 'F') {
+      v = ((p[j] - 'A' + 10) << 4);
+    }
+    else
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+    if (p[j+1] >= '0' && p[j+1] <= '9') {
+      v += (p[j+1] - '0');
+    }
+    else if (p[j+1] >= 'a' && p[j+1] <= 'f') {
+      v += (p[j+1] - 'a' + 10);
+    }
+    else if (p[j+1] >= 'A' && p[j+1] <= 'F') {
+      v += (p[j+1] - 'A' + 10);
+    }
+    else
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    v >>= buf;
+  }
+
+  buf.rewindInputPtr();
+  CORBA::Boolean b;
+  b <<= buf;
+  buf.setByteSwapFlag(b);
+
+  return _unMarshal(CORBA::Object::_PD_repoId,buf);
+}
 
 void
 omniObjRef::_locateRequest()
@@ -585,11 +663,7 @@ omniObjRef::_locateRequest()
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
 
-#ifndef EGCS_WORKAROUND
- _again:
-#else
   while(1) {
-#endif
 
     try{
 
@@ -642,12 +716,8 @@ omniObjRef::_locateRequest()
 	if( !_omni_callCommFailureExceptionHandler(this, retries++, ex2) )
 	  throw ex2;
       }
-      omni::locationForward(this, ex.get_obj()->_PR_getobj());
+      omni::locationForward(this,ex.get_obj()->_PR_getobj(),ex.is_permanent());
     }
 
-#ifndef EGCS_WORKAROUND
-    goto _again;
-#else
   }
-#endif
 }
