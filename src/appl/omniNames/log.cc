@@ -115,17 +115,18 @@ timestamp ts;
 
 
 //
-// Constructor for class log.  There will normally be only one instance of this
-// class.  Unfortunately the initialisation of the class cannot be completed in
-// the constructor - the rest is done in the init() member function.  This is
-// because the main program cannot give us pointers to the ORB and the BOA
-// until it has worked out which port to listen on, but it normally finds out
-// the port from the log file.  So in this constructor we initialise as much as
-// we can, find out the port from the log file if there is one and return.
-// Then the main program initialises the ORB and the BOA and calls init().
+// Constructor for class omniNameslog.  There will normally be only one
+// instance of this class.  Unfortunately the initialisation of the class
+// cannot be completed in the constructor - the rest is done in the init()
+// member function.  This is because the main program cannot give us
+// pointers to the ORB and the BOA until it has worked out which port to
+// listen on, but it normally finds out the port from the log file.  So in
+// this constructor we initialise as much as we can, find out the port from
+// the log file if there is one and return.  Then the main program
+// initialises the ORB and the BOA and calls init().
 //
 
-log::log(int& p,char* logdir) : port(p)
+omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
 {
   startingUp = 1;
   checkpointNeeded = 1;
@@ -317,7 +318,7 @@ log::log(int& p,char* logdir) : port(p)
 
 
 void
-log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
+omniNameslog::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 {
   orb = o;
   boa = b;
@@ -332,16 +333,21 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
     cerr << ts.t() << "Starting omniNames for the first time." << endl;
 
     try {
-#ifdef __WIN32__
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#  ifdef __WIN32__
       int fd = _open(active, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
-#else
+#  else
       int fd = open(active, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
-#endif
+#  endif
 
       if (fd < 0)
 	throw IOError();
       logf.attach(fd);
-
+#else
+      logf.open(active,ios::out|ios::trunc,0666);
+      if (!logf)
+	throw IOError();
+#endif
       putPort(port, logf);
 
       omniORB::objectKey k;
@@ -354,7 +360,7 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 	throw IOError();
 
 // a bug in sparcworks C++ means that the fd doesn't get closed.
-#if defined(__sunos__) && defined(__SUNPRO_CC)
+#if defined(__sunos__) && defined(__SUNPRO_CC) && __SUNPRO_CC < 0x500
       if (close(fd) < 0)
 	throw IOError();
 #endif
@@ -449,11 +455,12 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
   CORBA::release(rootContext);	// dispose of the object reference
 
-#ifdef __WIN32__
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#  ifdef __WIN32__
   int fd = _open(active, O_WRONLY | O_APPEND);
-#else
+#  else
   int fd = open(active, O_WRONLY | O_APPEND | O_SYNC);
-#endif
+#  endif
 
   if (fd < 0) {
     cerr << ts.t() << "Error: cannot open log file '" << active
@@ -461,6 +468,14 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
     exit(1);
   }
   logf.attach(fd);
+#else
+  logf.open(active,ios::out|ios::app,0666);
+  if (!logf) {
+    cerr << ts.t() << "Error: cannot open log file '" << active
+	 << "' for writing." << endl;
+    exit(1);
+  }
+#endif
 
   startingUp = 0;
 
@@ -475,7 +490,7 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
 
 void
-log::create(const omniORB::objectKey& key)
+omniNameslog::create(const omniORB::objectKey& key)
 {
   if (!startingUp) {
     try {
@@ -490,7 +505,7 @@ log::create(const omniORB::objectKey& key)
 }
 
 void
-log::destroy(CosNaming::NamingContext_ptr nc)
+omniNameslog::destroy(CosNaming::NamingContext_ptr nc)
 {
   if (!startingUp) {
     try {
@@ -505,7 +520,7 @@ log::destroy(CosNaming::NamingContext_ptr nc)
 }
 
 void
-log::bind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
+omniNameslog::bind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
 	  CORBA::Object_ptr obj, CosNaming::BindingType t)
 {
   if (!startingUp) {
@@ -521,7 +536,7 @@ log::bind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
 }
 
 void
-log::unbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n)
+omniNameslog::unbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n)
 {
   if (!startingUp) {
     try {
@@ -537,7 +552,7 @@ log::unbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n)
 
 
 void
-log::checkpoint(void)
+omniNameslog::checkpoint(void)
 {
   if (!checkpointNeeded) {
     // cerr << ts.t() << "No checkpoint needed." << endl;
@@ -556,13 +571,15 @@ log::checkpoint(void)
 
   ofstream ckpf;
 
-#ifdef __WIN32__
-  int fd = _open(checkpt, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
-#else
-  int fd = open(checkpt, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
-#endif
-
   try {
+
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#  ifdef __WIN32__
+  int fd = _open(checkpt, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
+#  else
+  int fd = open(checkpt, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
+#  endif
+
     if (fd < 0) {
       cerr << ts.t() << "Error: cannot open checkpoint file '"
 	   << checkpt << "' for writing." << endl;
@@ -570,7 +587,14 @@ log::checkpoint(void)
     }
 
     ckpf.attach(fd);
-
+#else
+    ckpf.open(checkpt,ios::out|ios::trunc,0666);
+    if (!ckpf) {
+      cerr << ts.t() << "Error: cannot open checkpoint file '"
+	   << checkpt << "' for writing." << endl;
+      throw IOError();
+    }
+#endif
     putPort(port, ckpf);
 
     NamingContext_i* nci;
@@ -591,7 +615,7 @@ log::checkpoint(void)
       throw IOError();
 
 // a bug in sparcworks C++ means that the fd doesn't get closed.
-#if defined(__sunos__) && defined(__SUNPRO_CC)
+#if defined(__sunos__) && defined(__SUNPRO_CC) && __SUNPRO_CC < 0x500
     if (close(fd) < 0)
       throw IOError();
 #endif
@@ -602,7 +626,7 @@ log::checkpoint(void)
     cerr << "Abandoning checkpoint" << endl;
     ckpf.close();
 // a bug in sparcworks C++ means that the fd doesn't get closed.
-#if defined(__sunos__) && defined(__SUNPRO_CC)
+#if defined(__sunos__) && defined(__SUNPRO_CC) && __SUNPRO_CC < 0x500
     close(fd);
 #endif
     NamingContext_i::lock.readerOut();
@@ -618,7 +642,7 @@ log::checkpoint(void)
   cerr << ts.t() << "Checkpointing Phase 2: Commit." << endl;
 
 // a bug in sparcworks C++ means that the fd doesn't get closed.
-#if defined(__sunos__) && defined(__SUNPRO_CC)
+#if defined(__sunos__) && defined(__SUNPRO_CC) && __SUNPRO_CC < 0x500
   close(logf.rdbuf()->fd());
 #endif
 
@@ -670,11 +694,12 @@ log::checkpoint(void)
   }
 #endif
 
-#ifdef __WIN32__
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#  ifdef __WIN32__
   fd = _open(active, O_WRONLY | O_APPEND);
-#else
+#  else
   fd = open(active, O_WRONLY | O_APPEND | O_SYNC);
-#endif
+#  endif
 
   if (fd < 0) {
     cerr << ts.t() << "Error: cannot open new log file '" << active
@@ -682,6 +707,14 @@ log::checkpoint(void)
     exit(1);
   }
   logf.attach(fd);
+#else
+  logf.open(active,ios::out|ios::app,0666);
+  if (!logf) {
+    cerr << ts.t() << "Error: cannot open log file '" << active
+	 << "' for writing." << endl;
+    exit(1);
+  }
+#endif
 
   NamingContext_i::lock.readerOut();
 
@@ -692,7 +725,7 @@ log::checkpoint(void)
 
 
 void
-log::putPort(int p, ostream& file)
+omniNameslog::putPort(int p, ostream& file)
 {
   file << "port " << p << '\n' << flush;
   if (!file) throw IOError();
@@ -706,7 +739,7 @@ log::putPort(int p, ostream& file)
 //
 
 void
-log::getPort(istream& file)
+omniNameslog::getPort(istream& file)
 {
   char* str;
 
@@ -733,7 +766,7 @@ log::getPort(istream& file)
 
 
 void
-log::putCreate(const omniORB::objectKey& key, ostream& file)
+omniNameslog::putCreate(const omniORB::objectKey& key, ostream& file)
 {
   file << "create ";
   putKey(key, file);
@@ -743,7 +776,7 @@ log::putCreate(const omniORB::objectKey& key, ostream& file)
 
 
 void
-log::getCreate(istream& file)
+omniNameslog::getCreate(istream& file)
 {
   //
   // Argument to "create" is the object key of the naming context.
@@ -756,7 +789,7 @@ log::getCreate(istream& file)
 
 
 void
-log::putDestroy(CosNaming::NamingContext_ptr nc, ostream& file)
+omniNameslog::putDestroy(CosNaming::NamingContext_ptr nc, ostream& file)
 {
   file << "destroy ";
   CORBA::String_var s = orb->object_to_string(nc);
@@ -767,7 +800,7 @@ log::putDestroy(CosNaming::NamingContext_ptr nc, ostream& file)
 
 
 void
-log::getDestroy(istream& file)
+omniNameslog::getDestroy(istream& file)
 {
   //
   // Argument to "destroy" is NamingContext IOR.
@@ -797,7 +830,7 @@ log::getDestroy(istream& file)
 
 
 void
-log::putBind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
+omniNameslog::putBind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
 	     CORBA::Object_ptr obj, CosNaming::BindingType t, ostream& file)
 {
   file << "bind ";
@@ -819,7 +852,7 @@ log::putBind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
 
 
 void
-log::getBind(istream& file)
+omniNameslog::getBind(istream& file)
 {
   //
   // First arg is NamingContext IOR.
@@ -899,7 +932,7 @@ log::getBind(istream& file)
 
 
 void
-log::putUnbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
+omniNameslog::putUnbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
 	       ostream& file)
 {
   file << "unbind ";
@@ -915,7 +948,7 @@ log::putUnbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
 
 
 void
-log::getUnbind(istream& file)
+omniNameslog::getUnbind(istream& file)
 {
   //
   // First arg is NamingContext IOR.
@@ -957,12 +990,17 @@ log::getUnbind(istream& file)
 
 
 void
-log::putKey(const omniORB::objectKey& key, ostream& file)
+omniNameslog::putKey(const omniORB::objectKey& key, ostream& file)
 {
   omniORB::seqOctets* os = omniORB::keyToOctetSequence(key);
   file << hex;
   for (unsigned int i = 0; i < os->length(); i++) {
+#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
     file << setfill('0') << setw(2) << (int)(*os)[i];
+#else
+    // Eventually, use the following for all standard C++ compilers
+    file << std::setfill('0') << std::setw(2) << (int)(*os)[i];
+#endif
   }
   file << dec;
   delete os;
@@ -970,7 +1008,7 @@ log::putKey(const omniORB::objectKey& key, ostream& file)
 
 
 void
-log::getKey(omniORB::objectKey& k, istream& file)
+omniNameslog::getKey(omniORB::objectKey& k, istream& file)
 {
   char* str;
   getFinalString(str, file);
@@ -991,7 +1029,7 @@ log::getKey(omniORB::objectKey& k, istream& file)
 
 
 void
-log::putString(const char* str, ostream& file)
+omniNameslog::putString(const char* str, ostream& file)
 {
   for (int i = strlen(str); i > 0; i--, str++) {
     switch (*str) {
@@ -1024,7 +1062,7 @@ log::putString(const char* str, ostream& file)
 
 
 void
-log::getFinalString(char*& buf, istream& file)
+omniNameslog::getFinalString(char*& buf, istream& file)
 {
   if (getString(buf, file) != '\n')
     throw ParseError();
@@ -1032,14 +1070,14 @@ log::getFinalString(char*& buf, istream& file)
 }
 
 void
-log::getNonfinalString(char*& buf, istream& file)
+omniNameslog::getNonfinalString(char*& buf, istream& file)
 {
   if (getString(buf, file) != ' ')
     throw ParseError();
 }
 
 int
-log::getString(char*& buf, istream& file)
+omniNameslog::getString(char*& buf, istream& file)
 {
   int bufsz = 512;
   buf = new char[bufsz];
