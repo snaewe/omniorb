@@ -28,6 +28,14 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.2  2000/09/14 16:03:01  djs
+# Remodularised C++ descriptor name generator
+# Bug in listing all inherited interfaces if one is a forward
+# repoID munging function now handles #pragma ID in bootstrap.idl
+# Naming environments generating code now copes with new IDL AST types
+# Modified type utility functions
+# Minor tidying
+#
 # Revision 1.1.2.1  2000/08/21 11:34:32  djs
 # Lots of omniidl/C++ backend changes
 #
@@ -68,7 +76,7 @@ class WalkTreeForIncludes(idlvisitor.AstVisitor):
         ast._includes = []
     def add(self, node):
         file = node.file()
-        if not(file in ast._includes):
+        if not(file in ast._includes) and (file != "<built in>"):
             ast._includes.append(file)
 
     def visitAST(self, node):
@@ -219,6 +227,8 @@ def allInherits(interface):
         # extend search one level deeper than current
         next = []
         for c in map(remove_typedefs, current):
+            if isinstance(c, idlast.Forward):
+                c = c.fullDecl()
             next = next + c.inherits()
 
         return next + bfs(next, bfs)
@@ -229,20 +239,31 @@ def allInherits(interface):
 
     return util.setify(list)
 
-# Splits a repoId into its component parts
-#  eg IDL:omg.org/Something/Useless:2.0
-#        -->
-#            ( [omg.org, Something, Useless], 2.0 )
+# From the CORBA IR spec (Ch. 10):
+#  Repository IDs are of the form:
+#      <format>:<string>
+# where <format> doesn't contain any ':' characters.
 #
+# The <format> string is usually something like 'IDL:'
+# and the corresponding <string> part is this case:
+#      <idlist>:<version>
 def splitRepoId(repoId):
-    regex = re.compile(r"IDL:(.+):(.+)")
+    regex = re.compile(r"(.+?):(.+)")
     search = regex.search(repoId)
-    scoping = search.group(1)
-    version = search.group(2)
-    return (string.split(scoping, "/"), version)
+    if not(search):
+        util.fatalError("repository ID not in the form <format>:<string>")
+    (format, str) = (search.group(1), search.group(2))
+
+    search = regex.search(str)
+    if not(search):
+        # assume #pragme ID "a/b/c:1.0"
+        return ("", string.split(format, "/"), str)
+
+    return (format, string.split(search.group(1), "/"), search.group(2))
 
 # Joins a repoId back up again
 #
 def joinRepoId(x):
-    (scope, version) = x
-    return "IDL:" + string.join(scope) + ":" + version
+    (prefix, scope, version) = x
+    if prefix != "": prefix = prefix + ":"
+    return prefix + string.join(scope, "/") + ":" + version

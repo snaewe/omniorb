@@ -65,6 +65,11 @@ class Name:
         self.__prefix = ""
         self.__suffix = ""
 
+    def __cmp__(self, other):
+        if not(isinstance(other, Name)): return 1
+        return self.fullyQualify() == other.fullyQualify()
+
+
     def simple(self, cxx = 1):
         """simple(id.Name, cxx boolean): string
            Returns the 'simple' part of the name with the scope removed"""
@@ -109,7 +114,7 @@ class Name:
         # Maps an IDL name into a cxx one with proper escaping
         return map(mapID, self.__scopedName)
     
-    def fullyQualify(self, cxx = 1, include_root = 0):
+    def fullyQualify(self, cxx = 1):
         """fullyQualify(id.Name, cxx boolean, include_root boolean): string
            Returns a fully qualified C++ name (initial root :: optional)"""
         if cxx: sn = self.__map_cxx()
@@ -117,10 +122,7 @@ class Name:
 
         sn = self.__apply_presuffix(sn)
 
-        if include_root: name = "::"
-        else:            name = ""
-        
-        return name + string.join(sn, "::")
+        return string.join(sn, "::")
 
     def fullName(self):
         """fullName(id.Name): string list
@@ -164,7 +166,7 @@ class Name:
         relName = self.relName(environment)
         if relName == None:
             # must fully qualify from the root
-            return self.fullyQualify(cxx = cxx, include_root = 1)
+            return "::" + self.fullyQualify(cxx = cxx)
 
         if cxx: relName = map(mapID, relName)
         relName = self.__apply_presuffix(relName)
@@ -201,7 +203,10 @@ class Name:
     
     def needFlatName(self, environment):
         # does the name have scope :: qualifiers
-        return len(self.relName(environment)) > 1
+        relName = self.relName(environment)
+        #if not(relName): return 0
+            
+        return len(relName) > 1
 
 
     def hash(self):
@@ -297,14 +302,14 @@ class Environment:
 # (facilitates multiple passes of the AST, by precaching naming info)
 id._environments = None
 
-# List of AST nodes which should be predefined in the system
-id._predefined_decls = []
+# List of predefined names
+id._predefined_names =  [ ["CORBA", "Object"] ]
 
-def predefine_decl(node):
-    id._predefined_decls.append(node)
+def predefine_decl(decl):
+    id._predefined_names.append(decl.scopedName())
 
 
-# modules can't emulate sequence types?
+# Could annotate the tree instead?
 def lookup(node):
     """lookup : AST node -> Environment"""
     try:
@@ -340,19 +345,21 @@ class WalkTree(idlvisitor.AstVisitor):
         id._environments = {}
         # Names which are predefined
         self.__env = Environment()
-        predefined = [ ["CORBA", "Object"] ]
-        for scopedName in predefined:
-            self.__env.addName(scopedName)
 
-        for decl in id._predefined_decls:
-            self.__env.addName(decl.scopedName())
-            id._environments[decl] = self.__env
+        for name in id._predefined_names:
+            self.__env.addName(name)
 
         
     # Tree walking functions
     def visitAST(self, node):
         for n in node.declarations():
             n.accept(self)
+
+        self.__cache(node)
+
+    def visitDeclRepoId(self, node):
+        name = node.identifier()
+        self.__add(name)
 
         self.__cache(node)
             

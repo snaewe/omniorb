@@ -28,6 +28,14 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.2  2000/09/14 16:03:01  djs
+# Remodularised C++ descriptor name generator
+# Bug in listing all inherited interfaces if one is a forward
+# repoID munging function now handles #pragma ID in bootstrap.idl
+# Naming environments generating code now copes with new IDL AST types
+# Modified type utility functions
+# Minor tidying
+#
 # Revision 1.1.2.1  2000/08/21 11:34:32  djs
 # Lots of omniidl/C++ backend changes
 #
@@ -35,7 +43,7 @@
 """Produce local callback functions"""
 
 from omniidl import idlast, idltype
-from omniidl_be.cxx import types, id, util, skutil, output, cxx, ast
+from omniidl_be.cxx import types, id, util, skutil, output, cxx, ast, descriptor
 from omniidl_be.cxx.skel import mangler, template
 
 import string
@@ -500,7 +508,13 @@ def impl_dispatch_method(stream, callable, environment):
                size_calculation_arguments = size_calc_arguments,
                put_results = put_results,
                put_arguments = put_arguments)
-        
+
+# Predefined proxy call descriptors
+prefix = "omniStdCallDesc::"
+system_descriptors = \
+      { "void":                      prefix + "void_call",
+        "_cCORBA_mObject_i_cstring": prefix + "_cCORBA_mObject_i_cstring" }
+self.proxy_call_descriptors = system_descriptors.copy()
         
 def proxy_call_descriptor(callable, stream):
     return_type = types.Type(callable.returnType())
@@ -514,24 +528,15 @@ def proxy_call_descriptor(callable, stream):
 
     identifier = callable.method_name()
 
-    # Call descriptor names are of the form:
-    #  TAG _ PREFIX _ BASE
-    # Tag represents the type of thing {call descriptor, local callback...}
-    # Prefix is derived from the first encountered scopedname[1]
-    # Base is a counter to uniquify the identifier
-    #
-    # [1] Since the names are guaranteed unique, the prefix makes the
-    #     names used by two different modules disjoint too. Not sure why,
-    #     as they are not externally visible?
-
-
     # signature is a text string form of the complete operation signature
     signature = callable.signature()
     # we only need one descriptor for each _signature_ (not operation)
-    if mangler.call_descriptors.has_key(signature):
-        return mangler.call_descriptor(signature)
+    if self.proxy_call_descriptors.has_key(signature):
+        return self.proxy_call_descriptors[signature]
 
-    descriptor = mangler.call_descriptor(signature)
+    desc = descriptor.call_descriptor(signature)
+    self.proxy_call_descriptors[signature] = desc
+
     # if no arguments and no return value and no exceptions then
     # use the void_call predefined one in the runtime
     if not(has_return_value) and not(has_arguments) and \
@@ -609,7 +614,7 @@ virtual void unmarshalReturnedValues(GIOP_C&);
     # Write the proxy class definition
     stream.out(template.interface_proxy_class,
                signature = signature,
-               call_descriptor = descriptor,
+               call_descriptor = desc,
                ctor_args = ctor_args_string,
                inherits_list = inherits_list_string,
                marshal_arguments_decl = marshal_arguments_decl,
@@ -643,11 +648,11 @@ virtual void unmarshalReturnedValues(GIOP_C&);
                 
         # write the alignment function
         stream.out(template.interface_proxy_alignment,
-                   call_descriptor = descriptor,
+                   call_descriptor = desc,
                    size_calculation = size_calculation)
         # write the marshal function
         stream.out(template.interface_proxy_marshal,
-                   call_descriptor = descriptor,
+                   call_descriptor = desc,
                    marshal_block = marshal_block)
 
     # -------------------------------------------------------------
@@ -862,7 +867,7 @@ pd_result = new @type@;
 
         # write the unmarshal function
         stream.out(template.interface_proxy_unmarshal,
-                   call_descriptor = descriptor,
+                   call_descriptor = desc,
                    pre_decls = pre_decls,
                    unmarshal_block = unmarshal_block,
                    post_assign = post_assign)
@@ -896,18 +901,17 @@ pd_result = new @type@;
 
         # write the user exception template
         stream.out(template.interface_proxy_exn,
-                   call_descriptor = descriptor,
+                   call_descriptor = desc,
                    exception_block = str(block))
 
-    return descriptor
+    return desc
 
 # unique to (callable, node)
 
 self.local_callbacks = {}
 
-def local_callback_function(stream, node, name, callable):
+def local_callback_function(stream, name, callable):
     assert isinstance(stream, output.Stream)
-    assert isinstance(node, idlast.Interface)
     assert isinstance(name, id.Name)
     assert isinstance(callable, Callable)
 
@@ -918,8 +922,8 @@ def local_callback_function(stream, node, name, callable):
     impl_name = name.prefix("_impl_")
 
     signature = callable.signature()
-    call_descriptor = mangler.call_descriptor(signature)
-    local_call_descriptor = mangler.local_callback_fn(node,
+    call_descriptor = self.proxy_call_descriptors[signature]
+    local_call_descriptor = descriptor.local_callback_fn(name,
              callable.operation_name(), signature)
     
     parameters = callable.parameters()

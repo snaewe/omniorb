@@ -28,6 +28,14 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.3  2000/09/14 16:03:03  djs
+# Remodularised C++ descriptor name generator
+# Bug in listing all inherited interfaces if one is a forward
+# repoID munging function now handles #pragma ID in bootstrap.idl
+# Naming environments generating code now copes with new IDL AST types
+# Modified type utility functions
+# Minor tidying
+#
 # Revision 1.15.2.2  2000/08/21 11:34:37  djs
 # Lots of omniidl/C++ backend changes
 #
@@ -131,9 +139,9 @@ def fatalError(explanation):
         print "omniidl: fatalError occurred, in debug mode."
         for line in string.split(explanation, "\n"):
             print ">> " + line
-        print "Configuration state:"
-        print "-------------------------"
-        config.state.dump()
+        #print "Configuration state:"
+        #print "-------------------------"
+        #config.state.dump()
 
         if have_traceback:
             print "Stack:"
@@ -216,3 +224,15 @@ def fold(list, base, fn):
     rest = [first] + list[2:]
     return fold(rest, base, fn)
 
+## Assorted other functions ########################################
+##
+class Stack:
+    def __init__(self):
+        self.__list = []
+    def push(self, thing):
+        self.__list.append(thing)
+    def pop(self):
+        if self.__list == []: raise "Stack Empty"
+        thing = self.__list[-1]
+        self.__list = self.__list[0:-1]
+        return thing

@@ -177,6 +177,10 @@ class Type:
         util.fatalError("Unknown type encountered (kind = " + str(kind) + ")")
         return
 
+    def op_is_pointer(self, direction):
+        if not(self.array()) and self.deref().string(): return 0
+        return self.__argmapping(direction)[2]
+
     def __var_argmapping(self, direction):
         # __var_argmapping(types.Type, direction): const * reference
         #  Returns info on argument mapping for a type in a _var
@@ -663,6 +667,21 @@ class Type:
 
         raise "Unknown _var type, kind = " + str(d_T.kind())
 
+    def _ptr_is_pointer(self):
+        """Returns whether a pointer to this type is actually a C++ pointer
+           rather than a _ptr typedef"""
+        if self.array(): return 0
+
+        d_T = self.deref()
+        if d_T.struct() or d_T.union() or d_T.exception():
+            return d_T.variable()
+
+        if d_T.sequence(): return 1
+
+        if d_T.any(): return 1
+        
+        return 0
+
     def _ptr(self, environment = None):
         """Returns a representation of a type which is not responsible for its
            own destruction. Assigning a heap alloccated thing to this type
@@ -676,13 +695,18 @@ class Type:
 
         if d_T.typecode(): return "CORBA::TypeCode_ptr"
         if d_T.any():      return "CORBA::Any*"
-        if d_T.string():   return "const char*"
+        if d_T.string():   return "char*"
         if d_T.enum():
             name = id.Name(self.type().decl().scopedName())
             return name.unambiguous(environment)
 
-        if d_T.struct() or d_T.union() or d_T.exception() or \
-           d_T.sequence() or d_T.objref():
+        if d_T.struct() or d_T.union() or d_T.exception() or d_T.sequence():
+            name = id.Name(self.type().decl().scopedName())
+            name = name.unambiguous(environment)
+            if d_T._ptr_is_pointer(): name = name + "*"
+            return name
+        
+        if d_T.objref():
             name = id.Name(self.type().decl().scopedName()).suffix("_ptr")
             return name.unambiguous(environment)
 
@@ -692,6 +716,12 @@ class Type:
         if d_T.void():     raise "No such thing as a void _ptr type"
 
         raise "Unknown _ptr type, kind = " + str(d_T.kind())
+
+    def out(self, ident):
+        if self.kind() in basic_map.keys():
+            return ident
+        
+        return ident + ".out()"
 
     def free(self, thing, environment = None):
         """Ensures that any heap allocated storage associated with this type
@@ -723,10 +753,14 @@ class Type:
             return dest + " = " + name.unambiguous(environment) + "("+src+");"
 
         d_T = self.deref()
-        if d_T.objref() or d_T.typecode():
-            name = id.Name(self.type().decl().scopedName())
-            return dest + " = " + name.unambiguous(environment) + \
-                   "::_duplicate(" + src + ");"
+        if d_T.typecode():
+            return dest + " = CORBA::TypeCode::_duplicate(" + src + ");"
+        if d_T.objref():
+            # Use the internal omniORB duplicate function in case the
+            # normal one isn't available
+            name = id.Name(self.type().decl().scopedName()).suffix("_Helper")
+            return name.unambiguous(environment) + "::duplicate" +\
+                   "(" + src + ");\n" + dest + " = " + src + ";"
         if d_T.string():
             return dest + " = CORBA::string_dup(" + src + ");"
         if d_T.any():
@@ -865,8 +899,7 @@ def variableDecl(decl):
          decl.alias() != None:
         return Type(decl.alias().aliasType()).variable()
 
-    util.fatalError("Unknown AST node encountered when computing " +\
-                    "variable-ness of a declared type")
+    util.fatalError("Unknown AST node, scopedName = " +repr(decl.scopedName()))
 
 
 

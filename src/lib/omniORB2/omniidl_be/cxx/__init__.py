@@ -28,6 +28,14 @@
 
 # $Id$
 # $Log$
+# Revision 1.21.2.4  2000/09/14 16:03:00  djs
+# Remodularised C++ descriptor name generator
+# Bug in listing all inherited interfaces if one is a forward
+# repoID munging function now handles #pragma ID in bootstrap.idl
+# Naming environments generating code now copes with new IDL AST types
+# Modified type utility functions
+# Minor tidying
+#
 # Revision 1.21.2.3  2000/08/21 11:34:31  djs
 # Lots of omniidl/C++ backend changes
 #
@@ -136,7 +144,7 @@
 from omniidl_be.cxx import header, skel, dynskel, impl, ami
 
 ## Utility functions
-from omniidl_be.cxx import id, config, ast, output, support
+from omniidl_be.cxx import id, config, ast, output, support, descriptor
 
 import re, sys, os.path
 
@@ -216,15 +224,19 @@ def run(tree, args):
     try:
         # Check the input tree only contains stuff we understand
         support.checkIDL(tree)
-        
+
+        # Initialise the descriptor generating code
+        descriptor.__init__(tree)
+
+        # Build the map of AST nodes to Environments
+        tree.accept(id.WalkTree())
+
         # AMI code hooks into existing infrastructure (ie doesn't need to
         # be driven explicitly here)
         if config.state['AMI']:
-            ami.__init__()
-            ami.init_hooks()
-        
-        environments = id.WalkTree()
-        tree.accept(environments)
+            tree = ami.__init__(tree)
+            tree.accept(id.WalkTree())
+            
 
         # initialise the handy ast module
         ast.__init__(tree)

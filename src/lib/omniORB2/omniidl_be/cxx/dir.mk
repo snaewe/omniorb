@@ -52,6 +52,9 @@ export:: cxx.py
 export:: support.py
 	@(file="support.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: descriptor.py
+	@(file="descriptor.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
 export::
 	@(set -x; \
 	cd $(PYLIBDIR); \
