@@ -24,7 +24,7 @@
 
 #include <iostream.h>
 #include <stdlib.h>
-#include "omniORB2/Naming.hh"
+#include <omniORB3/Naming.hh>
 
 static int advanced = 0;
 static const char* command;
@@ -78,7 +78,7 @@ main(int argc, char **argv)
 {
   // Initialize the ORB, the object adaptor and the echo object:
 
-  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB3");
 
   const char* ior = (const char*)0;
   int n;
@@ -617,11 +617,11 @@ main(int argc, char **argv)
        << ": Unexpected error encountered."
        << endl;
  error_return:
-  orb->NP_destroy();
+  orb->destroy();
   return 1;
 
  done:
-  orb->NP_destroy();
+  orb->destroy();
   return 0;
 }
 

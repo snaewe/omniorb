@@ -36,7 +36,7 @@
 #include <unistd.h>
 #endif
 
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
 
 
 static CORBA::Char*
