@@ -164,8 +164,8 @@ CORBA::name::_downcast(const Exception* e) \
 const char* \
 CORBA::name::_NP_repoId(int* size) const \
 { \
-  *size = GIOP_Basetypes::SysExceptRepoID::name.len; \
-  return (const char*) GIOP_Basetypes::SysExceptRepoID::name.id; \
+  *size = sizeof("IDL:omg.org/CORBA/" #name ":1.0"); \
+  return "IDL:omg.org/CORBA/" #name ":1.0"; \
 } \
  \
 CORBA::Exception* \
