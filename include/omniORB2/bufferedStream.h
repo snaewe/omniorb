@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.19  1999/01/07 18:31:20  djr
+  MemBufferedStream modified so that interface and semantics more closely
+  match NetBufferedStream.
+  get_char_array() and put_char_array() now both take an alignment argument.
+  New methods copy_from(...) for efficient copying between streams.
+
   Revision 1.18  1998/08/19 16:06:05  sll
   MemBufferedStream::RdMessageByteOrder now returns true and false if
   the C++ bool type is used to represent CORBA::Boolean. MSVC++ is quite
@@ -105,6 +111,11 @@
 #error "UMARSHAL has already been defined"
 #endif
 
+
+//////////////////////////////////////////////////////////////////////
+////////////////////////// NetBufferedStream /////////////////////////
+//////////////////////////////////////////////////////////////////////
+
 class NetBufferedStream : public Strand_Sync {
 public:
   NetBufferedStream(Strand *s,
@@ -117,23 +128,22 @@ public:
 		    size_t Bufsize=0);
   ~NetBufferedStream();
 
-
-  friend inline void operator>>= (const _CORBA_Char a,NetBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Char a, NetBufferedStream& s) {
     MARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
 
-  friend inline void operator<<= (_CORBA_Char &a,NetBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Char& a, NetBufferedStream& s) {
     UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
 
 #ifdef HAS_Cplusplus_Bool
 
-  friend inline void operator>>= (const _CORBA_Boolean b,NetBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Boolean b, NetBufferedStream& s) {
     _CORBA_Char c = b ? 1 : 0;
     MARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
   }
 
-  friend inline void operator<<= (_CORBA_Boolean &b,NetBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Boolean& b, NetBufferedStream& s) {
     _CORBA_Char c;
     UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
     b = c ? true : false;
@@ -141,11 +151,11 @@ public:
 
 #endif
 
-  friend inline void operator>>= (const _CORBA_Short a,NetBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Short a, NetBufferedStream& s) {
     MARSHAL(s,_CORBA_Short,omni::ALIGN_2,a);
   }
 
-  friend inline void operator<<= (_CORBA_Short &a,NetBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Short& a, NetBufferedStream& s) {
     if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_Short t;
       UMARSHAL(s,_CORBA_Short,omni::ALIGN_2,t);
@@ -157,11 +167,11 @@ public:
     return;
   }
 
-  friend inline void operator>>= (const _CORBA_UShort a,NetBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_UShort a, NetBufferedStream& s) {
     MARSHAL(s,_CORBA_UShort,omni::ALIGN_2,a);
   }
 
-  friend inline void operator<<= (_CORBA_UShort &a,NetBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_UShort& a, NetBufferedStream& s) {
     if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_UShort t;
       UMARSHAL(s,_CORBA_UShort,omni::ALIGN_2,t);
@@ -174,11 +184,11 @@ public:
   }
 
 
-  friend inline void operator>>= (const _CORBA_Long a,NetBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Long a, NetBufferedStream& s) {
     MARSHAL(s,_CORBA_Long,omni::ALIGN_4,a);
   }
 
-  friend inline void operator<<= (_CORBA_Long &a,NetBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Long& a, NetBufferedStream& s) {
     if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_Long t;
       UMARSHAL(s,_CORBA_Long,omni::ALIGN_4,t);
@@ -190,11 +200,11 @@ public:
     return;
   }
 
-  friend inline void operator>>= (const _CORBA_ULong a,NetBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_ULong a, NetBufferedStream& s) {
     MARSHAL(s,_CORBA_ULong,omni::ALIGN_4,a);
   }
 
-  friend inline void operator<<= (_CORBA_ULong &a,NetBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_ULong& a, NetBufferedStream& s) {
     if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_ULong t;
       UMARSHAL(s,_CORBA_ULong,omni::ALIGN_4,t);
@@ -208,11 +218,11 @@ public:
 
 #if !defined(NO_FLOAT)
 
-  friend inline void operator>>= (const _CORBA_Float a,NetBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Float a, NetBufferedStream& s) {
     MARSHAL(s,_CORBA_Float,omni::ALIGN_4,a);
   }
 
-  friend inline void operator<<= (_CORBA_Float &a,NetBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Float& a, NetBufferedStream& s) {
     if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_Float t;
       UMARSHAL(s,_CORBA_Float,omni::ALIGN_4,t);
@@ -226,11 +236,11 @@ public:
     return;
   }
 
-  friend inline void operator>>= (const _CORBA_Double a,NetBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Double a, NetBufferedStream& s) {
     MARSHAL(s,_CORBA_Double,omni::ALIGN_8,a);
   }
 
-  friend inline void operator<<= (_CORBA_Double &a,NetBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Double& a, NetBufferedStream& s) {
     if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_Double t;
       UMARSHAL(s,_CORBA_Double,omni::ALIGN_8,t);
@@ -249,14 +259,18 @@ public:
 
 #endif
 
-  void put_char_array(const _CORBA_Char *b,int size,_CORBA_Boolean startMTU=0,
-		      _CORBA_Boolean at_most_once=0);
+  void put_char_array(const _CORBA_Char* b, int size,
+			  omni::alignment_t align=omni::ALIGN_1,
+			  _CORBA_Boolean startMTU=0,
+			  _CORBA_Boolean at_most_once=0);
   // marshal in the data in <b>. If startMTU is TRUE(1), the caller indicates
   // that this is the beginning of a new message. If startMTU is
   // TRUE, at_most_once indicates whether this message should be sent
   // with at_most_once semantics.
 
-  void get_char_array(_CORBA_Char *b,int size,_CORBA_Boolean startMTU=0);
+  void get_char_array(_CORBA_Char* b,int size,
+			  omni::alignment_t align=omni::ALIGN_1,
+			  _CORBA_Boolean startMTU=0);
   // unmarshal data into <b>. If startMTU is TRUE(1), the caller indicates
   // that the beginning of a new message is expected and if the underlying
   // transport thinks otherwise, it is an indication of a protocol violation.
@@ -270,6 +284,11 @@ public:
   void flush(_CORBA_Boolean endMTU=0);
   // flush the internal transmission buffer. If endMTU is TRUE(1), the
   // caller indicates that the current message has end.
+
+  void copy_from(MemBufferedStream&, size_t size,
+		 omni::alignment_t align=omni::ALIGN_1);
+  // Copy <size> bytes from the given stream. Both streams are first
+  // moved on to the appropriate alignment.
 
   // Byte streams passing through the object can be separated into
   // messages. A message is simply a vector of bytes.  Both the incoming
@@ -312,10 +331,11 @@ public:
   // Return the number of bytes in the incoming message that have
   // not been read.
 
-  _CORBA_Boolean overrun(_CORBA_ULong len) const {
-    if (len <= (_CORBA_ULong) RdMessageUnRead()) return 0;
-    else return 1;
+  inline _CORBA_Boolean overrun(_CORBA_ULong len) const {
+    return len > (_CORBA_ULong) RdMessageUnRead();
   }
+  // Return true if reading <len> bytes from the stream would go
+  // beyond the end of the current message.
 
   inline int RdMessageCurrentAlignment() const {
     return current_inb_alignment();
@@ -338,7 +358,6 @@ public:
   }
 
 protected:
-
   void RdLock();
   void RdUnlock();
   void WrLock();
@@ -346,19 +365,19 @@ protected:
 
   inline _CORBA_Long newRequestID() { return pd_strand->sequenceNumber(); }
 
-  void   WrMessageSize(size_t msgsize);
+  void WrMessageSize(size_t msgsize);
   // For an outgoing message, set the message size.
 
-  void   RdMessageSize(size_t msgsize,_CORBA_Char byteorder);
-  // For an incoming message, set what the message size.
+  void RdMessageSize(size_t msgsize, _CORBA_Char byteorder);
+  // For an incoming message, set the message size and byte-order.
 
 private:
-  Strand         *pd_strand;
+  Strand*         pd_strand;
   size_t          pd_ideal_buf_size;
-  void           *pd_inb_end;
-  void           *pd_outb_end;
-  void           *pd_inb_mkr;
-  void           *pd_outb_mkr;
+  void*           pd_inb_end;
+  void*           pd_outb_end;
+  void*           pd_inb_mkr;
+  void*           pd_outb_mkr;
   _CORBA_Boolean  pd_RdLock;
   _CORBA_Boolean  pd_WrLock;
 
@@ -381,23 +400,24 @@ private:
   void rewind_outb_mkr(int oldalignment);
   void rewind_inb_mkr(int oldalignment);
 
-  inline void *align_and_put_bytes(omni::alignment_t align,size_t nbytes,
+  inline void* align_and_put_bytes(omni::alignment_t align, size_t nbytes,
 				   _CORBA_Boolean startMTU=0,
-				   _CORBA_Boolean at_most_once=0) {
+				   _CORBA_Boolean at_most_once=0)
+  {
     // If startMTU is TRUE(1), the caller indicates
     // that this is the beginning of a new message. If startMTU is
     // TRUE, at_most_once indicates whether this message should be sent
     // with at_most_once semantics.
-    if (startMTU) 
-      giveback_reserved(1,1);
-    omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_outb_mkr,align);
+    if (startMTU)  giveback_reserved(1,1);
+    omni::ptr_arith_t p1 =omni::align_to((omni::ptr_arith_t)pd_outb_mkr,align);
     omni::ptr_arith_t p2 = p1 + nbytes;
-    if ((void *)p2 > pd_outb_end) {
-      reserve(p2 - (omni::ptr_arith_t)pd_outb_mkr,startMTU,at_most_once);
-      return align_and_put_bytes(align,nbytes);
+    if( (void*)p2 > pd_outb_end ) {
+      reserve(p2 - (omni::ptr_arith_t)pd_outb_mkr, startMTU, at_most_once);
+      p1 = omni::align_to((omni::ptr_arith_t)pd_outb_mkr, align);
+      p2 = p1 + nbytes;
     }
-    pd_outb_mkr = (void *) p2;
-    return (void *) p1;
+    pd_outb_mkr = (void*) p2;
+    return (void*) p1;
   }
 
   inline void *align_and_get_bytes(omni::alignment_t align,size_t nbytes,
@@ -406,54 +426,55 @@ private:
     // that the beginning of a new message is expected and if the underlying
     // transport thinks otherwise, it is an indication of a protocol violation.
     // In that case, the transport should close the connection.
-    if (startMTU)
-      giveback_received(1);
+    if (startMTU)  giveback_received(1);
     omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_inb_mkr,align);
     omni::ptr_arith_t p2 = p1 + nbytes;
     if ((void *)p2 > pd_inb_end) {
-      receive(p2 - (omni::ptr_arith_t)pd_inb_mkr,startMTU);
-      return align_and_get_bytes(align,nbytes);
+      receive(p2 - (omni::ptr_arith_t)pd_inb_mkr, startMTU);
+      p1 = omni::align_to((omni::ptr_arith_t)pd_inb_mkr, align);
+      p2 = p1 + nbytes;
     }
-    pd_inb_mkr = (void *) p2;
-    return (void *)p1;
+    pd_inb_mkr = (void*) p2;
+    return (void*) p1;
   }
 
   NetBufferedStream();
   NetBufferedStream(const NetBufferedStream&);
-  NetBufferedStream &operator=(const NetBufferedStream&);
+  NetBufferedStream& operator=(const NetBufferedStream&);
 };
 
-
+//////////////////////////////////////////////////////////////////////
+////////////////////////// MemBufferedStream /////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 class MemBufferedStream {
 public:
   MemBufferedStream(size_t initialBufsize=0);
   ~MemBufferedStream();
   
-  MemBufferedStream(const MemBufferedStream&, _CORBA_Boolean dupl = 0);
-  MemBufferedStream(_CORBA_Char* data);
+  MemBufferedStream(const MemBufferedStream&);
+  MemBufferedStream& operator=(const MemBufferedStream&);
 
-  MemBufferedStream &operator=(const MemBufferedStream&);
+  MemBufferedStream(void* databuffer);
+  MemBufferedStream(void* databuffer, size_t maxLen);
+  // Constructors for a read-only buffered stream.
 
-  // XXX shallowCopy- deprecated function. Do not use in new code.
-  void shallowCopy(const MemBufferedStream&);
-
-  friend inline void operator>>= (const _CORBA_Char a,MemBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Char a, MemBufferedStream& s) {
     MARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
 
-  friend inline void operator<<= (_CORBA_Char &a,MemBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Char& a, MemBufferedStream& s) {
     UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
 
 #ifdef HAS_Cplusplus_Bool
 
-  friend inline void operator>>= (const _CORBA_Boolean b,MemBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Boolean b, MemBufferedStream& s) {
     _CORBA_Char c = b ? 1 : 0;
     MARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
   }
 
-  friend inline void operator<<= (_CORBA_Boolean &b,MemBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Boolean& b, MemBufferedStream& s) {
     _CORBA_Char c;
     UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
     b = c ? true : false;
@@ -461,11 +482,11 @@ public:
 
 #endif
 
-  friend inline void operator>>= (const _CORBA_Short a,MemBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Short a, MemBufferedStream& s) {
     MARSHAL(s,_CORBA_Short,omni::ALIGN_2,a);
   }
 
-  friend inline void operator<<= (_CORBA_Short &a,MemBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Short& a, MemBufferedStream& s) {
     if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_Short t;
       UMARSHAL(s,_CORBA_Short,omni::ALIGN_2,t);
@@ -477,11 +498,11 @@ public:
     return;
   }
 
-  friend inline void operator>>= (const _CORBA_UShort a,MemBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_UShort a, MemBufferedStream& s) {
     MARSHAL(s,_CORBA_UShort,omni::ALIGN_2,a);
   }
 
-  friend inline void operator<<= (_CORBA_UShort &a,MemBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_UShort& a, MemBufferedStream& s) {
     if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_UShort t;
       UMARSHAL(s,_CORBA_UShort,omni::ALIGN_2,t);
@@ -494,11 +515,11 @@ public:
   }
 
 
-  friend inline void operator>>= (const _CORBA_Long a,MemBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Long a, MemBufferedStream& s) {
     MARSHAL(s,_CORBA_Long,omni::ALIGN_4,a);
   }
 
-  friend inline void operator<<= (_CORBA_Long &a,MemBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Long& a, MemBufferedStream& s) {
     if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_Long t;
       UMARSHAL(s,_CORBA_Long,omni::ALIGN_4,t);
@@ -510,11 +531,11 @@ public:
     return;
   }
 
-  friend inline void operator>>= (const _CORBA_ULong a,MemBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_ULong a, MemBufferedStream& s) {
     MARSHAL(s,_CORBA_ULong,omni::ALIGN_4,a);
   }
 
-  friend inline void operator<<= (_CORBA_ULong &a,MemBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_ULong& a, MemBufferedStream& s) {
     if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_ULong t;
       UMARSHAL(s,_CORBA_ULong,omni::ALIGN_4,t);
@@ -528,11 +549,11 @@ public:
 
 #if !defined(NO_FLOAT)
 
-  friend inline void operator>>= (const _CORBA_Float a,MemBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Float a, MemBufferedStream& s) {
     MARSHAL(s,_CORBA_Float,omni::ALIGN_4,a);
   }
 
-  friend inline void operator<<= (_CORBA_Float &a,MemBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Float& a, MemBufferedStream& s) {
     if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_Float t;
       UMARSHAL(s,_CORBA_Float,omni::ALIGN_4,t);
@@ -546,11 +567,11 @@ public:
     return;
   }
 
-  friend inline void operator>>= (const _CORBA_Double a,MemBufferedStream &s) {
+  friend inline void operator>>= (_CORBA_Double a, MemBufferedStream& s) {
     MARSHAL(s,_CORBA_Double,omni::ALIGN_8,a);
   }
 
-  friend inline void operator<<= (_CORBA_Double &a,MemBufferedStream &s) {
+  friend inline void operator<<= (_CORBA_Double& a, MemBufferedStream& s) {
     if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_Double t;
       UMARSHAL(s,_CORBA_Double,omni::ALIGN_8,t);
@@ -569,30 +590,42 @@ public:
 
 #endif
 
-  void put_char_array(const _CORBA_Char *b,int size);
-  void get_char_array(_CORBA_Char *b,int size);
+  void put_char_array(const _CORBA_Char* src,int size,
+		      omni::alignment_t align=omni::ALIGN_1);
+  void get_char_array(_CORBA_Char* dst, int size,
+		      omni::alignment_t align=omni::ALIGN_1);
+
+  friend class NetBufferedStream;
+
+  void copy_from(MemBufferedStream& from, size_t size,
+		 omni::alignment_t align=omni::ALIGN_1);
+  void copy_from(NetBufferedStream& from, size_t size,
+		 omni::alignment_t align=omni::ALIGN_1);
+  // Copy <size> bytes from the given stream. Both streams are first
+  // moved on to the appropriate alignment.
 
 
-  void rewind_inout_mkr();
-  void rewind_in_mkr();
+  inline void rewind_in_mkr() {
+    pd_in_mkr = startofstream();
+  }
+  inline void rewind_inout_mkr() {
+    rewind_in_mkr();
+    pd_out_mkr = pd_in_mkr;
+  }
 
-  _CORBA_Char byteOrder() const {
+  inline _CORBA_Char byteOrder() const {
     return pd_byte_order;
   }
 
-  void byteOrder(_CORBA_Char b) {
+  inline void byteOrder(_CORBA_Char b) {
     pd_byte_order = b;
   }
 
-  _CORBA_Boolean RdMessageByteOrder() const {
-#ifdef HAS_Cplusplus_Bool
-    return byteOrder()?true:false;
-#else
+  inline _CORBA_Char RdMessageByteOrder() const {
     return byteOrder();
-#endif
   }
 
-  size_t alreadyRead() const {
+  inline size_t alreadyRead() const {
     if (pd_in_mkr < pd_out_mkr)
       return ((omni::ptr_arith_t)pd_in_mkr - 
 	      (omni::ptr_arith_t)startofstream());
@@ -601,11 +634,11 @@ public:
 	      (omni::ptr_arith_t)startofstream());
   }
 
-  size_t RdMessageAlreadyRead() const { 
+  inline size_t RdMessageAlreadyRead() const { 
     return alreadyRead(); 
   }
 
-  size_t unRead() const {
+  inline size_t unRead() const {
     if (pd_in_mkr < pd_out_mkr)
       return ((omni::ptr_arith_t)pd_out_mkr - 
 	      (omni::ptr_arith_t)pd_in_mkr);
@@ -613,118 +646,101 @@ public:
       return 0;
   }
 
-  size_t RdMessageUnRead() const { 
+  inline size_t RdMessageUnRead() const { 
     return unRead(); 
   }
 
-  int rdCurrentAlignment() const {
+  inline _CORBA_Boolean overrun(_CORBA_ULong len) const {
+    return len > (_CORBA_ULong) unRead();
+  }
+
+  inline int rdCurrentAlignment() const {
     int align=((omni::ptr_arith_t)pd_in_mkr & ((int)omni::max_alignment - 1));
     return ((align)? align:(int)omni::max_alignment);
   }
 
-  size_t alreadyWritten() const {
+  inline size_t alreadyWritten() const {
     return ((omni::ptr_arith_t)pd_out_mkr - 
 	    (omni::ptr_arith_t)startofstream());
   }
 
-  size_t WrMessageAlreadyWritten() const { 
-    return alreadyWritten(); 
+  inline size_t WrMessageAlreadyWritten() const {
+    return ((omni::ptr_arith_t)pd_out_mkr - 
+	    (omni::ptr_arith_t)startofstream());
   }
 
-  int wrCurrentAlignment() const {
+  inline int wrCurrentAlignment() const {
     int align=((omni::ptr_arith_t)pd_out_mkr & ((int)omni::max_alignment - 1));
     return ((align)?align:(int)omni::max_alignment);
   }
 
-  _CORBA_Boolean overrun(_CORBA_ULong len) const {
-    if (pd_noboundcheck || len <= (_CORBA_ULong) unRead()) return 0;
-    else return 1;
-  }
+  void skip(_CORBA_ULong size);
 
-  void reset();
-
-  void skip(_CORBA_ULong size,omni::alignment_t align = omni::ALIGN_1);
-
-  void *data() const {
-    return pd_in_mkr;
-  }
-
-  // XXX setSize- deprecated function. Do not use in new code.
-  void* setSize(size_t sz) {
-    if (sz > size()) {
-      omni::ptr_arith_t p1 = 
-	omni::align_to((omni::ptr_arith_t)pd_out_mkr,omni::ALIGN_1);
-      omni::ptr_arith_t p2 = p1 + sz;
-      if ((void *)p2 > pd_bufend) {
-	grow(p2 - (omni::ptr_arith_t)pd_bufend);
-	return align_and_put_bytes(omni::ALIGN_1,sz);
-      }
-      pd_out_mkr = (void *) p2;
-      return (void *) p1;
-    }
-
-    pd_out_mkr = (void*) ((omni::ptr_arith_t) pd_in_mkr + sz);
-    return pd_in_mkr;
-  }
-	    
-  size_t size() const;
+  inline void* data() const { return pd_in_mkr; }
 
 private:
-  void     *pd_bufp;
-  void     *pd_bufend;
-  void     *pd_in_mkr;
-  void     *pd_out_mkr;
+
 #define MEMBUFFEREDSTREAM_INLINE_BUF_SIZE 32
+
+  _CORBA_Boolean   pd_external_buffer;
+  void*            pd_bufp;
+  void*            pd_bufend;
+  void*            pd_in_mkr;
+  void*            pd_out_mkr;
   static const int pd_inline_buf_size;
-  char      pd_buffer[MEMBUFFEREDSTREAM_INLINE_BUF_SIZE];
-  _CORBA_Char    pd_byte_order;
-  _CORBA_Boolean pd_noboundcheck;
-  _CORBA_Boolean pd_dupl;
+  char             pd_buffer[MEMBUFFEREDSTREAM_INLINE_BUF_SIZE];
+  _CORBA_Boolean   pd_byte_order;
 
+  inline void* align_and_put_bytes(omni::alignment_t align, size_t nbytes)
+  {
+    if( pd_external_buffer )  write_to_readonly_error(__FILE__, __LINE__);
 
-  inline void *align_and_put_bytes(omni::alignment_t align,size_t nbytes) {
     omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_out_mkr,align);
     omni::ptr_arith_t p2 = p1 + nbytes;
-    if ((void *)p2 > pd_bufend) {
+    if( (void*)p2 > pd_bufend ) {
       grow(p2 - (omni::ptr_arith_t)pd_out_mkr);
-      return align_and_put_bytes(align,nbytes);
+      p1 = omni::align_to((omni::ptr_arith_t)pd_out_mkr, align);
+      p2 = p1 + nbytes;
     }
-    pd_out_mkr = (void *) p2;
-    return (void *) p1;
+    pd_out_mkr = (void*) p2;
+    return (void*) p1;
   }
 
-  inline void *align_and_get_bytes(omni::alignment_t align,size_t nbytes) {
-    omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_in_mkr,align);
-    pd_in_mkr = (void *)(p1 + nbytes);
-    if (pd_in_mkr > pd_out_mkr && !pd_noboundcheck) {
-      return overrun_error();
-    }
-    return (void *)p1;
+  inline void* align_and_get_bytes(omni::alignment_t align,size_t nbytes) {
+    omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_in_mkr, align);
+    pd_in_mkr = (void*) (p1 + nbytes);
+    if( pd_in_mkr > pd_out_mkr )  overrun_error();
+    return (void*) p1;
   }
 
-  void * startofstream() const;
+  void* startofstream() const;
+  inline size_t size() {
+    return (omni::ptr_arith_t) pd_bufend - (omni::ptr_arith_t) startofstream();
+  }
   void grow(size_t minimum);
-  void copy(const MemBufferedStream &);
-  void *overrun_error();
+  void copy(const MemBufferedStream&);
+  void overrun_error();
+  void write_to_readonly_error(const char* file, int line);
 };
+
 
 #undef MARSHAL
 #undef UMARSHAL
 
-template <class T>
-inline void
-_CORBA_Sequence<T>::operator>>= (NetBufferedStream &s) const
-{
-  ::operator>>=(pd_len,s);
-  for (int i=0; i<(int)pd_len; i++) {
-    pd_buf[i] >>= s;
-  }
-  return;
-}
 
 template <class T>
 inline void
-_CORBA_Sequence<T>::operator<<= (NetBufferedStream &s)
+_CORBA_Sequence<T>::operator>>= (NetBufferedStream& s) const
+{
+  ::operator>>=(_CORBA_ULong(pd_len), s);
+  for( int i = 0; i < (int)pd_len; i++ )
+    pd_buf[i] >>= s;
+}
+
+
+template <class T>
+inline void
+_CORBA_Sequence<T>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -733,38 +749,34 @@ _CORBA_Sequence<T>::operator<<= (NetBufferedStream &s)
     // never reach here
   }
   length(l);
-  for (_CORBA_ULong i=0; i<l; i++) {
+  for( _CORBA_ULong i = 0; i < l; i++ )
     pd_buf[i] <<= s;
-  }
-  return;
 }
+
 
 template <class T>
 inline void
-_CORBA_Sequence<T>::operator>>= (MemBufferedStream &s) const
+_CORBA_Sequence<T>::operator>>= (MemBufferedStream& s) const
 {
-  ::operator>>=(pd_len,s);
-  for (int i=0; i<(int)pd_len; i++) {
+  pd_len >>= s;
+  for (int i=0; i<(int)pd_len; i++)
     pd_buf[i] >>= s;
-  }
-  return;
 }
+
 
 template <class T>
 inline void
-_CORBA_Sequence<T>::operator<<= (MemBufferedStream &s)
+_CORBA_Sequence<T>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l)) {
+  if (s.unRead() < l) {
     _CORBA_marshal_error();
     // never reach here
   }
   length(l);
-  for (_CORBA_ULong i=0; i<l; i++) {
+  for (_CORBA_ULong i=0; i<l; i++)
     pd_buf[i] <<= s;
-  }
-  return;
 }
 
 
@@ -780,37 +792,42 @@ _CORBA_Unbounded_Sequence<T>::NP_alignedSize(size_t initialoffset) const
   return alignedsize;
 }
 
+
 template <class T>
 inline 
 void 
-_CORBA_Unbounded_Sequence<T>::operator>>= (NetBufferedStream &s) const
+_CORBA_Unbounded_Sequence<T>::operator>>= (NetBufferedStream& s) const
 {
   _CORBA_Sequence<T>::operator>>=(s);
 }
+
 
 template <class T>
 inline
 void
-_CORBA_Unbounded_Sequence<T>::operator<<= (NetBufferedStream &s)
+_CORBA_Unbounded_Sequence<T>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_Sequence<T>::operator<<=(s);
 }
 
+
 template <class T>
 inline
 void 
-_CORBA_Unbounded_Sequence<T>::operator>>= (MemBufferedStream &s) const
+_CORBA_Unbounded_Sequence<T>::operator>>= (MemBufferedStream& s) const
 {
   _CORBA_Sequence<T>::operator>>=(s);
 }
 
+
 template <class T>
 inline
 void 
-_CORBA_Unbounded_Sequence<T>::operator<<= (MemBufferedStream &s)
+_CORBA_Unbounded_Sequence<T>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_Sequence<T>::operator<<=(s);
 }
+
 
 template <class T,int max>
 inline 
@@ -824,17 +841,19 @@ _CORBA_Bounded_Sequence<T,max>::NP_alignedSize(size_t initialoffset) const
   return alignedsize;
 }
 
+
 template <class T,int max>
 inline 
 void
-_CORBA_Bounded_Sequence<T,max>::operator>>= (NetBufferedStream &s) const
+_CORBA_Bounded_Sequence<T,max>::operator>>= (NetBufferedStream& s) const
 {
   _CORBA_Sequence<T>::operator>>=(s);
 }
 
+
 template <class T,int max>
 inline void
-_CORBA_Bounded_Sequence<T,max>::operator<<= (NetBufferedStream &s)
+_CORBA_Bounded_Sequence<T,max>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -850,20 +869,22 @@ _CORBA_Bounded_Sequence<T,max>::operator<<= (NetBufferedStream &s)
   return;
 }
 
+
 template <class T,int max>
 inline void
-_CORBA_Bounded_Sequence<T,max>::operator>>= (MemBufferedStream &s) const 
+_CORBA_Bounded_Sequence<T,max>::operator>>= (MemBufferedStream& s) const 
 {
   _CORBA_Sequence<T>::operator>>=(s);
 }
 
+
 template <class T,int max>
 inline void
-_CORBA_Bounded_Sequence<T,max>::operator<<= (MemBufferedStream &s)
+_CORBA_Bounded_Sequence<T,max>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l) || l > max) {
+  if ((s.unRead() < l) || l > max) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -873,6 +894,7 @@ _CORBA_Bounded_Sequence<T,max>::operator<<= (MemBufferedStream &s)
   }
   return;
 }
+
 
 template <class T,int elmSize,int elmAlignment>
 inline
@@ -887,10 +909,11 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::NP_alignedSi
   return alignedsize;
 }
 
+
 template <class T,int elmSize,int elmAlignment>
 inline
 void
-_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= (NetBufferedStream &s) const
+_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= (NetBufferedStream& s) const
 {
   _CORBA_ULong l = _CORBA_Sequence<T>::length();
   l >>= s;
@@ -903,10 +926,11 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= 
   s.put_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
 }
 
+
 template <class T,int elmSize,int elmAlignment>
 inline
 void
-_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= (NetBufferedStream &s)
+_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -947,10 +971,11 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= 
   }
 }
 
+
 template <class T,int elmSize,int elmAlignment>
 inline
 void
-_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= (MemBufferedStream &s) const
+_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= (MemBufferedStream& s) const
 {
   _CORBA_ULong l = _CORBA_Sequence<T>::length();
   l >>= s;
@@ -963,14 +988,15 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= 
   s.put_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
 }
 
+
 template <class T,int elmSize,int elmAlignment>
 inline
 void
-_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= (MemBufferedStream &s)
+_CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l*elmSize)) {
+  if (s.unRead() < (l*elmSize)) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -1008,7 +1034,6 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator<<= 
 }
 
 
-
 template <class T,int max,int elmSize, int elmAlignment>
 inline
 size_t
@@ -1026,7 +1051,7 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::NP_aligned
 template <class T,int max,int elmSize, int elmAlignment>
 inline
 void
-_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>= (NetBufferedStream &s) const
+_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>= (NetBufferedStream& s) const
 {
   _CORBA_ULong l = length();
   l >>= s;
@@ -1039,10 +1064,11 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>
   s.put_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
 }
 
+
 template <class T,int max,int elmSize, int elmAlignment>
 inline
 void
-_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<= (NetBufferedStream &s)
+_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -1084,10 +1110,11 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<
   }
 }
 
+
 template <class T,int max,int elmSize, int elmAlignment>
 inline
 void
-_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>= (MemBufferedStream &s) const
+_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>= (MemBufferedStream& s) const
 {
   _CORBA_ULong l = length();
   l >>= s;
@@ -1100,14 +1127,15 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>
   s.put_char_array((_CORBA_Char*)_CORBA_Sequence<T>::NP_data(),(int)l*elmSize);
 }
 
+
 template <class T,int max,int elmSize, int elmAlignment>
 inline
 void
-_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<= (MemBufferedStream &s)
+_CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l*elmSize) || l > max) {
+  if ((s.unRead() < (l*elmSize)) || l > max) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -1145,11 +1173,11 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator<<
   }
 }
 
-/////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T,class T_slice,class Telm,int dimension>
 inline void
-_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (NetBufferedStream &s) const
+_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (NetBufferedStream& s) const
 {
   pd_len >>= s;
   for (_CORBA_ULong i=0; i<pd_len; i++) {
@@ -1160,9 +1188,10 @@ _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (NetBufferedStream 
   return;
 }
 
+
 template <class T,class T_slice,class Telm,int dimension>
 inline void
-_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (NetBufferedStream &s)
+_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -1179,9 +1208,10 @@ _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (NetBufferedStream 
   return;
 }
 
+
 template <class T,class T_slice,class Telm,int dimension>
 inline void
-_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (MemBufferedStream &s) const
+_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (MemBufferedStream& s) const
 {
   pd_len >>= s;
   for (_CORBA_ULong i=0; i<pd_len; i++) {
@@ -1192,13 +1222,14 @@ _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (MemBufferedStream 
   return;
 }
 
+
 template <class T,class T_slice,class Telm,int dimension>
 inline void
-_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (MemBufferedStream &s)
+_CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l)) {
+  if (s.unRead() < l) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -1228,6 +1259,7 @@ _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::NP_alignedSize(size_t
   return alignedsize;
 }
 
+
 template <class T,class T_slice,class Telm,int dimension>
 inline 
 void 
@@ -1235,6 +1267,7 @@ _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (NetBuffe
 {
   _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>=(s);
 }
+
 
 template <class T,class T_slice,class Telm,int dimension>
 inline
@@ -1244,21 +1277,24 @@ _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (NetBuffe
   _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator<<=(s);
 }
 
-template <class T,class T_slice,class Telm,int dimension>
-inline
-void 
-_CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (MemBufferedStream &s) const
-{
-  _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>=(s);
-}
 
 template <class T,class T_slice,class Telm,int dimension>
 inline
 void 
-_CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (MemBufferedStream &s)
+_CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator>>= (MemBufferedStream& s) const
+{
+  _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>=(s);
+}
+
+
+template <class T,class T_slice,class Telm,int dimension>
+inline
+void 
+_CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator<<=(s);
 }
+
 
 template <class T,class T_slice,class Telm,int dimension,int max>
 inline 
@@ -1274,17 +1310,19 @@ _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::NP_alignedSize(size
   return alignedsize;
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int max>
 inline 
 void
-_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator>>= (NetBufferedStream &s) const
+_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator>>= (NetBufferedStream& s) const
 {
   _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>=(s);
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int max>
 inline void
-_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator<<= (NetBufferedStream &s)
+_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -1302,20 +1340,22 @@ _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator<<= (NetBuf
   return;
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int max>
 inline void
-_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator>>= (MemBufferedStream &s) const 
+_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator>>= (MemBufferedStream& s) const 
 {
   _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator>>=(s);
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int max>
 inline void
-_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator<<= (MemBufferedStream &s)
+_CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l) || l > max) {
+  if ((s.unRead() < l) || l > max) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -1327,6 +1367,7 @@ _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max>::operator<<= (MemBuf
   }
   return;
 }
+
 
 template <class T,class T_slice,class Telm,int dimension,int elmSize,int elmAlignment>
 inline
@@ -1342,10 +1383,11 @@ _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSiz
   return alignedsize;
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int elmSize,int elmAlignment>
 inline
 void
-_CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment>::operator>>= (NetBufferedStream &s) const
+_CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment>::operator>>= (NetBufferedStream& s) const
 {
   _CORBA_ULong l = _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length();
   l >>= s;
@@ -1358,10 +1400,11 @@ _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSiz
   s.put_char_array((_CORBA_Char*)NP_data(),(int)l*dimension*elmSize);
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int elmSize,int elmAlignment>
 inline
 void
-_CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment>::operator<<= (NetBufferedStream &s)
+_CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -1404,10 +1447,11 @@ _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSiz
   }
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int elmSize,int elmAlignment>
 inline
 void
-_CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment>::operator>>= (MemBufferedStream &s) const
+_CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment>::operator>>= (MemBufferedStream& s) const
 {
   _CORBA_ULong l = _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length();
   l >>= s;
@@ -1420,14 +1464,15 @@ _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSiz
   s.put_char_array((_CORBA_Char*)NP_data(),(int)l*dimension*elmSize);
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int elmSize,int elmAlignment>
 inline
 void
-_CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment>::operator<<= (MemBufferedStream &s)
+_CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l*dimension*elmSize)) {
+  if( s.unRead() < l * dimension * elmSize ) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -1467,7 +1512,6 @@ _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSiz
 }
 
 
-
 template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 inline
 size_t
@@ -1485,7 +1529,7 @@ _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmS
 template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 inline
 void
-_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::operator>>= (NetBufferedStream &s) const
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::operator>>= (NetBufferedStream& s) const
 {
   _CORBA_ULong l = length();
   l >>= s;
@@ -1498,10 +1542,11 @@ _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmS
   s.put_char_array((_CORBA_Char*)NP_data(),(int)l*dimension*elmSize);
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 inline
 void
-_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::operator<<= (NetBufferedStream &s)
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -1545,10 +1590,11 @@ _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmS
   }
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 inline
 void
-_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::operator>>= (MemBufferedStream &s) const
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::operator>>= (MemBufferedStream& s) const
 {
   _CORBA_ULong l = length();
   l >>= s;
@@ -1561,14 +1607,15 @@ _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmS
   s.put_char_array((_CORBA_Char*)NP_data(),(int)l*dimension*elmSize);
 }
 
+
 template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 inline
 void
-_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::operator<<= (MemBufferedStream &s)
+_CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l*dimension*elmSize) || l > max) {
+  if ((s.unRead() < (l*dimension*elmSize)) || l > max) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -1616,39 +1663,44 @@ _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmS
 // CORBA::Char. Define the marshalling functions here:
 
 void
-_CORBA_Unbounded_Sequence__Boolean::operator>>= (NetBufferedStream &s) const
+_CORBA_Unbounded_Sequence__Boolean::operator>>= (NetBufferedStream& s) const
 {
   _CORBA_Sequence<_CORBA_Boolean>::operator>>=(s);
 }
 
+
 void
-_CORBA_Unbounded_Sequence__Boolean::operator<<= (NetBufferedStream &s)
+_CORBA_Unbounded_Sequence__Boolean::operator<<= (NetBufferedStream& s)
 {
   _CORBA_Sequence<_CORBA_Boolean>::operator<<=(s);
 }
 
+
 void
-_CORBA_Unbounded_Sequence__Boolean::operator>>= (MemBufferedStream &s) const
+_CORBA_Unbounded_Sequence__Boolean::operator>>= (MemBufferedStream& s) const
 {
   _CORBA_Sequence<_CORBA_Boolean>::operator>>=(s);
 }
 
+
 void
-_CORBA_Unbounded_Sequence__Boolean::operator<<= (MemBufferedStream &s)
+_CORBA_Unbounded_Sequence__Boolean::operator<<= (MemBufferedStream& s)
 {
   _CORBA_Sequence<_CORBA_Boolean>::operator<<=(s);
 }
 
+
 template <int max>
 void
-_CORBA_Bounded_Sequence__Boolean<max>::operator>>= (NetBufferedStream &s) const
+_CORBA_Bounded_Sequence__Boolean<max>::operator>>= (NetBufferedStream& s) const
 {
   _CORBA_Sequence<_CORBA_Boolean>::operator>>=(s);
 }
 
+
 template <int max>
 void
-_CORBA_Bounded_Sequence__Boolean<max>::operator<<= (NetBufferedStream &s)
+_CORBA_Bounded_Sequence__Boolean<max>::operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -1664,20 +1716,22 @@ _CORBA_Bounded_Sequence__Boolean<max>::operator<<= (NetBufferedStream &s)
   return;
 }
 
+
 template <int max>
 void
-_CORBA_Bounded_Sequence__Boolean<max>::operator>>= (MemBufferedStream &s) const
+_CORBA_Bounded_Sequence__Boolean<max>::operator>>= (MemBufferedStream& s) const
 {
   _CORBA_Sequence<_CORBA_Boolean>::operator>>=(s);
 }
 
+
 template <int max>
 void
-_CORBA_Bounded_Sequence__Boolean<max>::operator<<= (MemBufferedStream &s)
+_CORBA_Bounded_Sequence__Boolean<max>::operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l) || l > max) {
+  if ((s.unRead() < l) || l > max) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -1688,50 +1742,56 @@ _CORBA_Bounded_Sequence__Boolean<max>::operator<<= (MemBufferedStream &s)
   return;
 }
 
-template<class T, class T_slice, int dimension>
-void
-_CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
-    operator>>= (NetBufferedStream &s) const
-{
-  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
-  }
 
 template<class T, class T_slice, int dimension>
 void
 _CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
-    operator<<= (NetBufferedStream &s)
+    operator>>= (NetBufferedStream& s) const
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
+}
+
+
+template<class T, class T_slice, int dimension>
+void
+_CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
+    operator<<= (NetBufferedStream& s)
 {
   _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator<<=(s);
 }
 
-template<class T, class T_slice, int dimension>
-void
-_CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
-    operator>>= (MemBufferedStream &s) const
-{
-  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
-}
 
 template<class T, class T_slice, int dimension>
 void
 _CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
-    operator<<= (MemBufferedStream &s)
+    operator>>= (MemBufferedStream& s) const
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
+}
+
+
+template<class T, class T_slice, int dimension>
+void
+_CORBA_Unbounded_Sequence_Array__Boolean<T,T_slice,dimension>::
+    operator<<= (MemBufferedStream& s)
 {
   _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator<<=(s);
 }
 
-template<class T, class T_slice, int dimension, int max>
-void
-_CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
-   operator>>= (NetBufferedStream &s) const
-{
-  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
-}
 
 template<class T, class T_slice, int dimension, int max>
 void
 _CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
-    operator<<= (NetBufferedStream &s)
+   operator>>= (NetBufferedStream& s) const
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
+}
+
+
+template<class T, class T_slice, int dimension, int max>
+void
+_CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
+    operator<<= (NetBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
@@ -1749,22 +1809,24 @@ _CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
   return;
 }
 
-template<class T, class T_slice, int dimension, int max>
-void
-_CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
-    operator>>= (MemBufferedStream &s) const
-{
-  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
-}
 
 template<class T, class T_slice, int dimension, int max>
 void
 _CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
-    operator<<= (MemBufferedStream &s)
+    operator>>= (MemBufferedStream& s) const
+{
+  _CORBA_Sequence_Array<T,T_slice,_CORBA_Boolean,dimension>::operator>>=(s);
+}
+
+
+template<class T, class T_slice, int dimension, int max>
+void
+_CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
+    operator<<= (MemBufferedStream& s)
 {
   _CORBA_ULong l;
   l <<= s;
-  if (s.overrun(l) || l > max) {
+  if ((s.unRead() < l) || l > max) {
     _CORBA_marshal_error();
     // never reach here
   }
@@ -1784,5 +1846,3 @@ _CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
 #undef Swap32
 
 #endif // __BUFFEREDSTREAM_H__
-
-
