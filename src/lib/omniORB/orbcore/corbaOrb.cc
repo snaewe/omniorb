@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.33.2.2  2000/09/27 17:54:29  sll
+  Updated to identify the ORB as omniORB4. Added initialiser calls to the new
+  code.
+
   Revision 1.33.2.1  2000/07/17 10:35:52  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -184,7 +188,7 @@
 //
  */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -192,12 +196,12 @@
 
 #include <corbaOrb.h>
 #include <initRefs.h>
-#include <omniORB3/omniObjRef.h>
+#include <omniORB4/omniObjRef.h>
 #include <poaimpl.h>
 #include <initialiser.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
-#include <omniORB3/omniURI.h>
+#include <omniORB4/omniURI.h>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -206,8 +210,10 @@
 #include <stdio.h>
 
 
-#define MY_ORB_ID           "omniORB3"
-#define OLD_ORB_ID          "omniORB2"
+static const char* orb_ids[] = { "omniORB4",
+				 "omniORB3", 
+				 "omniORB2", 
+				 0 };
 
 
 static omniOrbORB*          the_orb              = 0;
@@ -232,6 +238,7 @@ extern "C" int sigaction(int, const struct sigaction *, struct sigaction *);
 //
 extern omniInitialiser& omni_uri_initialiser_;
 extern omniInitialiser& omni_corbaOrb_initialiser_;
+extern omniInitialiser& omni_giopStreamImpl_initialiser_;
 extern omniInitialiser& omni_ropeFactory_initialiser_;
 extern omniInitialiser& omni_omniInternal_initialiser_;
 extern omniInitialiser& omni_initFile_initialiser_;
@@ -239,6 +246,7 @@ extern omniInitialiser& omni_initRefs_initialiser_;
 extern omniInitialiser& omni_strand_initialiser_;
 extern omniInitialiser& omni_scavenger_initialiser_;
 extern omniInitialiser& omni_hooked_initialiser_;
+extern omniInitialiser& omni_interceptor_initialiser_;
 
 static CORBA::Boolean
 parse_ORB_args(int& argc, char** argv, const char* orb_identifier);
@@ -322,9 +330,11 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_strand_initialiser_.attach();
     omni_scavenger_initialiser_.attach();
     omni_ropeFactory_initialiser_.attach();
+    omni_giopStreamImpl_initialiser_.attach();
     omni_initFile_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
     omni_hooked_initialiser_.attach();
+    omni_interceptor_initialiser_.attach();
 
     if( bootstrapAgentHostname ) {
       // The command-line option -ORBInitialHost has been specified.
@@ -565,9 +575,11 @@ omniOrbORB::actual_shutdown()
   omniObjAdapter::shutdown();
 
   // Call detach method of the initialisers in reverse order.
+  omni_interceptor_initialiser_.detach();
   omni_hooked_initialiser_.detach();
   omni_initRefs_initialiser_.detach();
   omni_initFile_initialiser_.detach();
+  omni_giopStreamImpl_initialiser_.detach();
   omni_ropeFactory_initialiser_.detach();
   omni_scavenger_initialiser_.detach();
   omni_strand_initialiser_.detach();
@@ -639,6 +651,23 @@ omniOrbORB::do_shutdown(CORBA::Boolean wait_for_completion)
 //////////////////////////////////////////////////////////////////////
 
 static
+CORBA::Boolean
+isValidId(const char* id) {
+  const char** p = orb_ids;
+  while (*p) {
+    if (strcmp(*p,id) == 0) return 1;
+    p++;
+  }
+  return 0;
+}
+
+static
+const char*
+myOrbId() {
+  return orb_ids[0];
+}
+
+static
 void
 move_args(int& argc,char **argv,int idx,int nargs)
 {
@@ -658,19 +687,21 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 {
   CORBA::Boolean orbId_match = 0;
 
-  if( orb_identifier && strcmp(orb_identifier, MY_ORB_ID)
-                     && strcmp(orb_identifier, OLD_ORB_ID) ) {
+   if( orb_identifier && !isValidId(orb_identifier) ) {
     if( omniORB::trace(1) ) {
       omniORB::logger l;
       l << "CORBA::ORB_init failed -- the ORBid (" << orb_identifier << ")"
-	" is not " << MY_ORB_ID << "\n";
+	" is not " <<  myOrbId() << "\n";
     }
     return 0;
   }
-  if( orb_identifier && omniORB::trace(1) &&
-      !strcmp(orb_identifier, OLD_ORB_ID) )
-    omniORB::logs(1, "WARNING -- using ORBid " OLD_ORB_ID
-		  " (should be " MY_ORB_ID ").");
+  if( omniORB::trace(1) && strcmp(orb_identifier, myOrbId()) ) {
+    if( omniORB::trace(1) ) {
+      omniORB::logger l;
+      l << "WARNING -- using ORBid " << orb_identifier 
+	<< " (should be " << myOrbId() << ")." << "\n";
+    }
+  }
 
   if (argc > 0) {
     // Using argv[0] as the serverName implicitly assumes that the
@@ -681,7 +712,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
     //
     // XXX Should we trim this to a leafname?
 #ifdef HAS_Cplusplus_Namespace
-    if (omniORB::serverName) omni::freeString(omniORB::serverName);
+    if (omniORB::serverName) _CORBA_String_helper::free(omniORB::serverName);
 #endif
     omniORB::serverName = CORBA::string_dup(argv[0]);
   }
@@ -708,18 +739,22 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  omniORB::logs(1,"CORBA::ORB_init failed: missing -ORBid parameter.");
 	  return 0;
 	}
-	if( strcmp(argv[idx+1], MY_ORB_ID) && strcmp(argv[idx+1], OLD_ORB_ID) )
+	if (!isValidId(argv[idx+1]) )
 	  {
-	    if( omniORB::trace(1) ) {
+	    if ( omniORB::trace(1) ) {
 	      omniORB::logger l;
 	      l << "CORBA::ORB_init failed -- the ORBid (" <<
-		argv[idx+1] << ") is not " << MY_ORB_ID << "\n";
+		argv[idx+1] << ") is not " << myOrbId() << "\n";
 	    }
 	    return 0;
 	  }
-	if( !strcmp(argv[idx + 1], OLD_ORB_ID) )
-	  omniORB::logs(1, "WARNING -- using ORBid " OLD_ORB_ID
-			" (should be " MY_ORB_ID ").");
+	if( strcmp(argv[idx + 1], myOrbId()) ) {
+	  if( omniORB::trace(1) ) {
+	    omniORB::logger l;
+	    l << "WARNING -- using ORBid " << orb_identifier 
+	      << " (should be " << myOrbId() << ")." << "\n";
+	  }
+	}
 	orbId_match = 1;
 	move_args(argc,argv,idx,2);
 	continue;
@@ -885,7 +920,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  return 0;
 	}
 #ifdef HAS_Cplusplus_Namespace
-	if (omniORB::serverName) omni::freeString(omniORB::serverName);
+	if (omniORB::serverName) _CORBA_String_helper::free(omniORB::serverName);
 #endif
 	omniORB::serverName = CORBA::string_dup(argv[idx+1]);
 	move_args(argc,argv,idx,2);
@@ -1081,7 +1116,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  "Valid -ORB<options> are:\n"
 	  "\n"
 	  "  Standard options:\n"
-	  "    -ORBid omniORB3\n"
+	  "    -ORBid omniORB4\n"
 	  "    -ORBInitRef <ObjectID>=<ObjectURI>\n"
 	  "    -ORBDefaultInitRef <Default URI>\n"
 	  "\n"
@@ -1189,6 +1224,27 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
       if (strcmp(argv[idx],"-ORBno_bootstrap_agent") == 0) {
 	omniObjAdapter::options.noBootstrapAgent = 1;
 	move_args(argc,argv,idx,1);
+	continue;
+      }
+
+      // -ORBmaxGIOPVersion <major no>.<minor no>
+      if ( strcmp(argv[idx],"-ORBmaxGIOPVersion") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBmaxGIOPVersion parameter.");
+	  return 0;
+	}
+	unsigned int major, minor;
+	if ( sscanf(argv[idx+1], "%u.%u", &major, &minor) != 2 ||
+	     major > 255 || minor > 255) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBmaxGIOPVersion parameter.");
+	  return 0;
+	}
+	CORBA::Char ma = major;
+	CORBA::Char mi = minor;
+	omniORB::maxGIOPVersion(ma,mi);
+	move_args(argc,argv,idx,2);
 	continue;
       }
 
