@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/08/17 17:09:39  sll
+  Use LinkHack.
+
   Revision 1.1.4.1  2001/04/18 17:18:17  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -81,13 +84,6 @@ public:
   // if the dynamic is linked, or is zero otherwise.
   static _core_attr omniDynamicLib* hook;
 
-  // This is used in the dynamic library only to ensure that if
-  // the dynamic library is linked, then the hook will be enagaged.
-  // (see ** below).
-  //  NB. Since it is _only_ used in the dynamic library, we don't
-  // need a _dyn_attr here.
-  static char link_in;
-
   ////////////////////////////////////////////////
   // Operations exported by the dynamic library //
   ////////////////////////////////////////////////
@@ -105,16 +101,6 @@ public:
   // in the case that the interface repository is co-located!
   void (*lookup_id_lcfn)(omniCallDescriptor*, omniServant*);
 };
-
-
-#ifdef _OMNIORB_DYNAMIC_LIBRARY
-// ** Any source file in the dynamic library that includes
-// this header is guarenteed to engage the dynamic library
-// hook.  Thus this header should be included in source files
-// which include code which is used by the functions exported
-// under this interface.
-static char* omniDynamicLib_link_in = &omniDynamicLib::link_in;
-#endif
 
 
 #undef _core_attr
