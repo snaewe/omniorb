@@ -62,10 +62,10 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
  */
 
-#pragma ident "%@(#)ast_interface_fwd.cc	1.44% %92/06/11% Sun Microsystems"
+#pragma ident "%@(#)ast_intf_fwd.cc	1.44% %92/06/11% Sun Microsystems"
 
 /*
- * ast_interface_fwd.cc - Implementation of class AST_InterfaceFwd
+ * ast_intf_fwd.cc - Implementation of class AST_InterfaceFwd
  *
  * AST_InterfaceFwd nodes denote forward declarations of IDL interfaces
  * AST_InterfaceFwd nodes have a field containing the full declaration
