@@ -77,18 +77,6 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 
-# Uncomment the following if you want all utils and examples build in
-# this tree to statically linke with the omniORB libraries.
-# build tools semistatic : shared with system libs and static with omniORB libs
-#CORBA_LIB	= -Wl,-Bstatic
-#CORBA_LIB	+= -lomniORB3 -lomniDynamic2 -ltcpwrapGK -lomnithread
-#CORBA_LIB	+= -Wl,-Bdynamic
-#OMNITHREAD_LIB = 
-#CORBA_LIB_NODYN	= -Wl,-Bstatic
-#CORBA_LIB_NODYN	+= -lomniORB3 -ltcpwrapGK -lomnithread
-#CORBA_LIB_NODYN	+= -Wl,-Bdynamic
-#OMNITHREAD_LIB_NODYN = -lomnithread
-
 #
 # Shared Library support.     
 #
@@ -96,3 +84,19 @@ BuildSharedLibrary = 1       # Enable
 SHAREDLIB_CPPFLAGS = -fPIC
 #
 # everything else is default from unix.mk
+
+
+
+# Add the location of the Open SSL library
+
+# To build the SSL transport, OPEN_SSL_ROOT must be defined and points to
+# the top level directory of the openssl library. The default is to disable
+# the build.
+#
+#OPEN_SSL_ROOT = /usr/local/openssl
+#
+
+OPEN_SSL_CPPFLAGS = -I$(OPEN_SSL_ROOT)/include
+OPEN_SSL_LIB = -L$(OPEN_SSL_ROOT)/lib -lssl -lcrypto
+OMNIORB_SSL_LIB += $(OPEN_SSL_LIB)
+OMNIORB_SSL_CPPFLAGS += $(OPEN_SSL_CPPFLAGS)
