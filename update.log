@@ -1,3 +1,13 @@
+Fri Jul  9 22:01:23 BST 1999 sll
+================================
+
+- Now BOA::destroy() does not return until all worker threads have
+  exited.
+
+src/lib/omniORB2/orbcore/tcpSocket.h
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
 Fri Jul  9 15:00:00 BST 1999 sll
 ================================
 
@@ -5,7 +15,7 @@ Fri Jul  9 15:00:00 BST 1999 sll
   This operator was there in version5.5 tree and had been removed in
   the version 5.6 tree (why?)
 
-src/too/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
 
 
 Mon Jul  5 10:24:02 BST 1999 sll
