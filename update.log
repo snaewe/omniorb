@@ -1,3 +1,24 @@
+Tue Feb 26 13:57:20 GMT 2002 dpg1
+=================================
+
+- Recent changes broke Windows.
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+- Private copy constructor for omni_thread.
+
+include/omnithread.h
+
+- Minor codes for omniORBpy.
+
+include/omniORB4/minorCode.h
+
+- Contact server before IfR in _get_interface().
+
+src/lib/omniORB/dynamic/ir.cc
+
+
 Mon Feb 25 14:58:23 GMT 2002 dpg1
 =================================
 

@@ -30,8 +30,11 @@
 
 #define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB4/CORBA.h>
+#include <omniORB4/callDescriptor.h>
 #include <initRefs.h>
 #include <exceptiondefs.h>
+#include <objectStub.h>
+
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -44,10 +47,17 @@ Object::_get_interface()
 					   BAD_PARAM_InvalidObjectRef,
 					   CORBA::COMPLETED_NO);
 
-  //?? No - we ought to contact the implementation first, and only
-  // if that fails to provide an answer should we try to go direct
-  // to the repository.
+  // Try asking the object itself...
+  omni_interface_CallDesc call_desc("_interface", sizeof("_interface"));
+  try {
+    pd_obj->_invoke(call_desc, 0);
+    CORBA::Object_var obj = call_desc.result();
+    return CORBA::InterfaceDef::_narrow(obj);
+  }
+  catch (CORBA::Exception& ex) {
+  }
 
+  // Failed to contact the object directly. Try the interface repository...
   CORBA::Object_var o(omniInitialReferences::resolve("InterfaceRepository"));
   CORBA::Repository_ptr repository = CORBA::Repository::_narrow(o);
 
