@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.22.2.3  2000/01/05 18:15:41  dme
+  - provide Foo_copy() for array types per CORBA 2.3
+  - make o2be_root.cc compile on non-gcc platforms
+
   Revision 1.22.2.2  1999/09/28 15:59:50  djr
   Ooops -- need to workaround MSVC bug in previous patch.
 
@@ -512,7 +516,7 @@ IMPL_NARROW_FROM_SCOPE(o2be_root)
 static char*
 internal_make_include_filename(const char* bname)
 {
-  char* ep = strrchr(bname, '.');
+  const char* ep = strrchr(bname, '.');
   size_t blen = ep ? (ep - bname) : strlen(bname);
   char* filename = new char[blen + 1 + o2be_global::suffixlen()];
   strncpy(filename, bname, blen);

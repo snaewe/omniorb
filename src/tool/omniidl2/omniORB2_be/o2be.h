@@ -27,6 +27,10 @@
 
 /*
  $Log$
+ Revision 1.27.2.1  2000/01/05 18:15:40  dme
+ - provide Foo_copy() for array types per CORBA 2.3
+ - make o2be_root.cc compile on non-gcc platforms
+
  Revision 1.27  1999/08/09 12:26:05  sll
  Removed pd_out_adptarg_name from o2be_array
 
@@ -639,6 +643,7 @@ public:
   // Returns the type name for the c++ type we will be
   // using as the element, suitably scoped.
 
+  void produce_copy_loops (std::fstream& s, const char* to, const char* from);
   void produce_hdr (std::fstream& s, o2be_typedef* tdef);
   void produce_skel(std::fstream& s, o2be_typedef* tdef);
   void produce_dynskel(std::fstream& s, o2be_typedef* tdef);
