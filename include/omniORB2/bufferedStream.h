@@ -11,6 +11,9 @@
 
 /*
   $Log$
+  Revision 1.5  1997/03/09 12:59:52  sll
+  Minor cleanup.
+
   Revision 1.4  1997/01/23 18:03:49  sll
   Fixed bug in marshalling of double. The alignment should be 8.
 
@@ -75,74 +78,74 @@ public:
 
 
   friend inline void operator>>= (const _CORBA_Char a,NetBufferedStream &s) {
-    MARSHAL(s,_CORBA_Char,omniORB::ALIGN_1,a);
+    MARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
 
   friend inline void operator<<= (_CORBA_Char &a,NetBufferedStream &s) {
-    UMARSHAL(s,_CORBA_Char,omniORB::ALIGN_1,a);
+    UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
 
   friend inline void operator>>= (const _CORBA_Short a,NetBufferedStream &s) {
-    MARSHAL(s,_CORBA_Short,omniORB::ALIGN_2,a);
+    MARSHAL(s,_CORBA_Short,omni::ALIGN_2,a);
   }
 
   friend inline void operator<<= (_CORBA_Short &a,NetBufferedStream &s) {
-    if (s.RdMessageByteOrder() != omniORB::myByteOrder) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_Short t;
-      UMARSHAL(s,_CORBA_Short,omniORB::ALIGN_2,t);
+      UMARSHAL(s,_CORBA_Short,omni::ALIGN_2,t);
       a = Swap16(t);
     }
     else {
-      UMARSHAL(s,_CORBA_Short,omniORB::ALIGN_2,a);
+      UMARSHAL(s,_CORBA_Short,omni::ALIGN_2,a);
     }
     return;
   }
 
   friend inline void operator>>= (const _CORBA_UShort a,NetBufferedStream &s) {
-    MARSHAL(s,_CORBA_UShort,omniORB::ALIGN_2,a);
+    MARSHAL(s,_CORBA_UShort,omni::ALIGN_2,a);
   }
 
   friend inline void operator<<= (_CORBA_UShort &a,NetBufferedStream &s) {
-    if (s.RdMessageByteOrder() != omniORB::myByteOrder) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_UShort t;
-      UMARSHAL(s,_CORBA_UShort,omniORB::ALIGN_2,t);
+      UMARSHAL(s,_CORBA_UShort,omni::ALIGN_2,t);
       a = Swap16(t);
     }
     else {
-      UMARSHAL(s,_CORBA_UShort,omniORB::ALIGN_2,a);
+      UMARSHAL(s,_CORBA_UShort,omni::ALIGN_2,a);
     }
     return;
   }
 
 
   friend inline void operator>>= (const _CORBA_Long a,NetBufferedStream &s) {
-    MARSHAL(s,_CORBA_Long,omniORB::ALIGN_4,a);
+    MARSHAL(s,_CORBA_Long,omni::ALIGN_4,a);
   }
 
   friend inline void operator<<= (_CORBA_Long &a,NetBufferedStream &s) {
-    if (s.RdMessageByteOrder() != omniORB::myByteOrder) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_Long t;
-      UMARSHAL(s,_CORBA_Long,omniORB::ALIGN_4,t);
+      UMARSHAL(s,_CORBA_Long,omni::ALIGN_4,t);
       a = Swap32(t);
     }
     else {
-      UMARSHAL(s,_CORBA_Long,omniORB::ALIGN_4,a);
+      UMARSHAL(s,_CORBA_Long,omni::ALIGN_4,a);
     }
     return;
   }
 
   friend inline void operator>>= (const _CORBA_ULong a,NetBufferedStream &s) {
-    MARSHAL(s,_CORBA_ULong,omniORB::ALIGN_4,a);
+    MARSHAL(s,_CORBA_ULong,omni::ALIGN_4,a);
   }
 
   friend inline void operator<<= (_CORBA_ULong &a,NetBufferedStream &s) {
-    if (s.RdMessageByteOrder() != omniORB::myByteOrder) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_ULong t;
-      UMARSHAL(s,_CORBA_ULong,omniORB::ALIGN_4,t);
+      UMARSHAL(s,_CORBA_ULong,omni::ALIGN_4,t);
       a = Swap32(t);
     }
     else {
-      UMARSHAL(s,_CORBA_ULong,omniORB::ALIGN_4,a);
+      UMARSHAL(s,_CORBA_ULong,omni::ALIGN_4,a);
     }
     return;
   }
@@ -150,31 +153,31 @@ public:
 #if !defined(NO_FLOAT)
 
   friend inline void operator>>= (const _CORBA_Float a,NetBufferedStream &s) {
-    MARSHAL(s,_CORBA_Float,omniORB::ALIGN_4,a);
+    MARSHAL(s,_CORBA_Float,omni::ALIGN_4,a);
   }
 
   friend inline void operator<<= (_CORBA_Float &a,NetBufferedStream &s) {
-    if (s.RdMessageByteOrder() != omniORB::myByteOrder) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_Float t;
-      UMARSHAL(s,_CORBA_Float,omniORB::ALIGN_4,t);
+      UMARSHAL(s,_CORBA_Float,omni::ALIGN_4,t);
       _CORBA_ULong tl1 = *((_CORBA_ULong *)&t);
       _CORBA_ULong tl2 = Swap32(tl1);
       a = *((_CORBA_Float *) &tl2);
     }
     else {
-      UMARSHAL(s,_CORBA_Float,omniORB::ALIGN_4,a);
+      UMARSHAL(s,_CORBA_Float,omni::ALIGN_4,a);
     }
     return;
   }
 
   friend inline void operator>>= (const _CORBA_Double a,NetBufferedStream &s) {
-    MARSHAL(s,_CORBA_Double,omniORB::ALIGN_8,a);
+    MARSHAL(s,_CORBA_Double,omni::ALIGN_8,a);
   }
 
   friend inline void operator<<= (_CORBA_Double &a,NetBufferedStream &s) {
-    if (s.RdMessageByteOrder() != omniORB::myByteOrder) {
+    if (s.RdMessageByteOrder() != omni::myByteOrder) {
       _CORBA_Double t;
-      UMARSHAL(s,_CORBA_Double,omniORB::ALIGN_8,t);
+      UMARSHAL(s,_CORBA_Double,omni::ALIGN_8,t);
       _CORBA_ULong tl1 = ((_CORBA_ULong *)&t)[1];
       _CORBA_ULong tl2 = Swap32(tl1);
       ((_CORBA_ULong *)&a)[0] = tl2;
@@ -183,7 +186,7 @@ public:
       ((_CORBA_ULong *)&a)[1] = tl2;
     }
     else {
-      UMARSHAL(s,_CORBA_Double,omniORB::ALIGN_8,a);
+      UMARSHAL(s,_CORBA_Double,omni::ALIGN_8,a);
     }
     return;
   }
@@ -292,22 +295,22 @@ private:
   void rewind_outb_mkr(int oldalignment);
   void rewind_inb_mkr(int oldalignment);
 
-  inline void *align_and_put_bytes(omniORB::alignment_t align,size_t nbytes) {
-    omniORB::ptr_arith_t p1 = omniORB::align_to((omniORB::ptr_arith_t)pd_outb_mkr,align);
-    omniORB::ptr_arith_t p2 = p1 + nbytes;
+  inline void *align_and_put_bytes(omni::alignment_t align,size_t nbytes) {
+    omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_outb_mkr,align);
+    omni::ptr_arith_t p2 = p1 + nbytes;
     if ((void *)p2 > pd_outb_end) {
-      reserve(p2 - (omniORB::ptr_arith_t)pd_outb_mkr);
+      reserve(p2 - (omni::ptr_arith_t)pd_outb_mkr);
       return align_and_put_bytes(align,nbytes);
     }
     pd_outb_mkr = (void *) p2;
     return (void *) p1;
   }
 
-  inline void *align_and_get_bytes(omniORB::alignment_t align,size_t nbytes) {
-    omniORB::ptr_arith_t p1 = omniORB::align_to((omniORB::ptr_arith_t)pd_inb_mkr,align);
-    omniORB::ptr_arith_t p2 = p1 + nbytes;
+  inline void *align_and_get_bytes(omni::alignment_t align,size_t nbytes) {
+    omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_inb_mkr,align);
+    omni::ptr_arith_t p2 = p1 + nbytes;
     if ((void *)p2 > pd_inb_end) {
-      receive(p2 - (omniORB::ptr_arith_t)pd_inb_mkr);
+      receive(p2 - (omni::ptr_arith_t)pd_inb_mkr);
       return align_and_get_bytes(align,nbytes);
     }
     pd_inb_mkr = (void *) p2;
@@ -330,74 +333,74 @@ public:
   MemBufferedStream &operator=(const MemBufferedStream&);
 
   friend inline void operator>>= (const _CORBA_Char a,MemBufferedStream &s) {
-    MARSHAL(s,_CORBA_Char,omniORB::ALIGN_1,a);
+    MARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
 
   friend inline void operator<<= (_CORBA_Char &a,MemBufferedStream &s) {
-    UMARSHAL(s,_CORBA_Char,omniORB::ALIGN_1,a);
+    UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
   }
 
   friend inline void operator>>= (const _CORBA_Short a,MemBufferedStream &s) {
-    MARSHAL(s,_CORBA_Short,omniORB::ALIGN_2,a);
+    MARSHAL(s,_CORBA_Short,omni::ALIGN_2,a);
   }
 
   friend inline void operator<<= (_CORBA_Short &a,MemBufferedStream &s) {
-    if (s.byteOrder() != omniORB::myByteOrder) {
+    if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_Short t;
-      UMARSHAL(s,_CORBA_Short,omniORB::ALIGN_2,t);
+      UMARSHAL(s,_CORBA_Short,omni::ALIGN_2,t);
       a = Swap16(t);
     }
     else {
-      UMARSHAL(s,_CORBA_Short,omniORB::ALIGN_2,a);
+      UMARSHAL(s,_CORBA_Short,omni::ALIGN_2,a);
     }
     return;
   }
 
   friend inline void operator>>= (const _CORBA_UShort a,MemBufferedStream &s) {
-    MARSHAL(s,_CORBA_UShort,omniORB::ALIGN_2,a);
+    MARSHAL(s,_CORBA_UShort,omni::ALIGN_2,a);
   }
 
   friend inline void operator<<= (_CORBA_UShort &a,MemBufferedStream &s) {
-    if (s.byteOrder() != omniORB::myByteOrder) {
+    if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_UShort t;
-      UMARSHAL(s,_CORBA_UShort,omniORB::ALIGN_2,t);
+      UMARSHAL(s,_CORBA_UShort,omni::ALIGN_2,t);
       a = Swap16(t);
     }
     else {
-      UMARSHAL(s,_CORBA_UShort,omniORB::ALIGN_2,a);
+      UMARSHAL(s,_CORBA_UShort,omni::ALIGN_2,a);
     }
     return;
   }
 
 
   friend inline void operator>>= (const _CORBA_Long a,MemBufferedStream &s) {
-    MARSHAL(s,_CORBA_Long,omniORB::ALIGN_4,a);
+    MARSHAL(s,_CORBA_Long,omni::ALIGN_4,a);
   }
 
   friend inline void operator<<= (_CORBA_Long &a,MemBufferedStream &s) {
-    if (s.byteOrder() != omniORB::myByteOrder) {
+    if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_Long t;
-      UMARSHAL(s,_CORBA_Long,omniORB::ALIGN_4,t);
+      UMARSHAL(s,_CORBA_Long,omni::ALIGN_4,t);
       a = Swap32(t);
     }
     else {
-      UMARSHAL(s,_CORBA_Long,omniORB::ALIGN_4,a);
+      UMARSHAL(s,_CORBA_Long,omni::ALIGN_4,a);
     }
     return;
   }
 
   friend inline void operator>>= (const _CORBA_ULong a,MemBufferedStream &s) {
-    MARSHAL(s,_CORBA_ULong,omniORB::ALIGN_4,a);
+    MARSHAL(s,_CORBA_ULong,omni::ALIGN_4,a);
   }
 
   friend inline void operator<<= (_CORBA_ULong &a,MemBufferedStream &s) {
-    if (s.byteOrder() != omniORB::myByteOrder) {
+    if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_ULong t;
-      UMARSHAL(s,_CORBA_ULong,omniORB::ALIGN_4,t);
+      UMARSHAL(s,_CORBA_ULong,omni::ALIGN_4,t);
       a = Swap32(t);
     }
     else {
-      UMARSHAL(s,_CORBA_ULong,omniORB::ALIGN_4,a);
+      UMARSHAL(s,_CORBA_ULong,omni::ALIGN_4,a);
     }
     return;
   }
@@ -405,31 +408,31 @@ public:
 #if !defined(NO_FLOAT)
 
   friend inline void operator>>= (const _CORBA_Float a,MemBufferedStream &s) {
-    MARSHAL(s,_CORBA_Float,omniORB::ALIGN_4,a);
+    MARSHAL(s,_CORBA_Float,omni::ALIGN_4,a);
   }
 
   friend inline void operator<<= (_CORBA_Float &a,MemBufferedStream &s) {
-    if (s.byteOrder() != omniORB::myByteOrder) {
+    if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_Float t;
-      UMARSHAL(s,_CORBA_Float,omniORB::ALIGN_4,t);
+      UMARSHAL(s,_CORBA_Float,omni::ALIGN_4,t);
       _CORBA_ULong tl1 = *((_CORBA_ULong *)&t);
       _CORBA_ULong tl2 = Swap32(tl1);
       a = *((_CORBA_Float *) &tl2);
     }
     else {
-      UMARSHAL(s,_CORBA_Float,omniORB::ALIGN_4,a);
+      UMARSHAL(s,_CORBA_Float,omni::ALIGN_4,a);
     }
     return;
   }
 
   friend inline void operator>>= (const _CORBA_Double a,MemBufferedStream &s) {
-    MARSHAL(s,_CORBA_Double,omniORB::ALIGN_8,a);
+    MARSHAL(s,_CORBA_Double,omni::ALIGN_8,a);
   }
 
   friend inline void operator<<= (_CORBA_Double &a,MemBufferedStream &s) {
-    if (s.byteOrder() != omniORB::myByteOrder) {
+    if (s.byteOrder() != omni::myByteOrder) {
       _CORBA_Double t;
-      UMARSHAL(s,_CORBA_Double,omniORB::ALIGN_8,t);
+      UMARSHAL(s,_CORBA_Double,omni::ALIGN_8,t);
       _CORBA_ULong tl1 = ((_CORBA_ULong *)&t)[1];
       _CORBA_ULong tl2 = Swap32(tl1);
       ((_CORBA_ULong *)&a)[0] = tl2;
@@ -438,7 +441,7 @@ public:
       ((_CORBA_ULong *)&a)[1] = tl2;
     }
     else {
-      UMARSHAL(s,_CORBA_Double,omniORB::ALIGN_8,a);
+      UMARSHAL(s,_CORBA_Double,omni::ALIGN_8,a);
     }
     return;
   }
@@ -462,8 +465,8 @@ public:
 
   size_t unRead() const {
     if (pd_in_mkr < pd_out_mkr)
-      return ((omniORB::ptr_arith_t)pd_out_mkr - 
-	      (omniORB::ptr_arith_t)pd_in_mkr);
+      return ((omni::ptr_arith_t)pd_out_mkr - 
+	      (omni::ptr_arith_t)pd_in_mkr);
     else
       return 0;
   }
@@ -482,19 +485,19 @@ private:
   char      pd_buffer[MEMBUFFEREDSTREAM_INLINE_BUF_SIZE];
   _CORBA_Boolean pd_byte_order;
 
-  inline void *align_and_put_bytes(omniORB::alignment_t align,size_t nbytes) {
-    omniORB::ptr_arith_t p1 = omniORB::align_to((omniORB::ptr_arith_t)pd_out_mkr,align);
-    omniORB::ptr_arith_t p2 = p1 + nbytes;
+  inline void *align_and_put_bytes(omni::alignment_t align,size_t nbytes) {
+    omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_out_mkr,align);
+    omni::ptr_arith_t p2 = p1 + nbytes;
     if ((void *)p2 > pd_bufend) {
-      grow(p2 - (omniORB::ptr_arith_t)pd_out_mkr);
+      grow(p2 - (omni::ptr_arith_t)pd_out_mkr);
       return align_and_put_bytes(align,nbytes);
     }
     pd_out_mkr = (void *) p2;
     return (void *) p1;
   }
 
-  inline void *align_and_get_bytes(omniORB::alignment_t align,size_t nbytes) {
-    omniORB::ptr_arith_t p1 = omniORB::align_to((omniORB::ptr_arith_t)pd_in_mkr,align);
+  inline void *align_and_get_bytes(omni::alignment_t align,size_t nbytes) {
+    omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_in_mkr,align);
     pd_in_mkr = (void *)(p1 + nbytes);
     if (pd_in_mkr > pd_out_mkr) {
       return overrun_error();
