@@ -1860,8 +1860,15 @@ case 73:
 	      } else {
 	         yyval.etval = AST_Expression::EV_any;
 	      }
-	    } else
+	    } else if (d->node_type() == AST_Decl::NT_string) {
+	      yyval.etval = AST_Expression::EV_string;
+	    }
+	    else {
+              // We should check for wstring here. Not done at the moment
+	      // any typedef of wstring used would definitely fail with
+	      // a coersion error. Fix this when support for wstring is added.
 	      yyval.etval = AST_Expression::EV_any;
+	    }
 	  } else
 	    yyval.etval = AST_Expression::EV_any;
 	} break;

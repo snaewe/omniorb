@@ -711,8 +711,15 @@ const_type
 	      } else {
 	         $$ = AST_Expression::EV_any;
 	      }
-	    } else
+	    } else if (d->node_type() == AST_Decl::NT_string) {
+	      $$ = AST_Expression::EV_string;
+	    }
+	    else {
+              // We should check for wstring here. Not done at the moment
+	      // any typedef of wstring used would definitely fail with
+	      // a coersion error. Fix this when support for wstring is added.
 	      $$ = AST_Expression::EV_any;
+	    }
 	  } else
 	    $$ = AST_Expression::EV_any;
 	}
