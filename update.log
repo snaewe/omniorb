@@ -1,3 +1,45 @@
+Mon Jun 11 19:14:31 BST 2001 sll
+================================
+
+- Specified OPEN_SSL_ROOT in lab internal platform file
+
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+
+Mon Jun 11 18:59:39 BST 2001 sll
+================================
+
+- Added ssl transport. 
+- The ssl transport uses the openssl library. If the make variable
+  OPEN_SSL_ROOT is defined, the library will be compiled.
+
+src/lib/omniORB/orbcore/dir.mk
+
+src/lib/omniORB/orbcore/giopRope.cc
+external_merge/mk/unix.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc2.1.mk
+
+include/omniORB4/sslContext.h                          NEW
+src/lib/omniORB/orbcore/ssl/dir.mk                     NEW
+src/lib/omniORB/orbcore/ssl/sslAddress.cc              NEW
+src/lib/omniORB/orbcore/ssl/sslAddress.h               NEW
+src/lib/omniORB/orbcore/ssl/sslConnection.cc           NEW
+src/lib/omniORB/orbcore/ssl/sslConnection.h            NEW
+src/lib/omniORB/orbcore/ssl/sslContext.cc              NEW
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc             NEW
+src/lib/omniORB/orbcore/ssl/sslEndpoint.h              NEW
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc        NEW
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.h         NEW
+
+Mon Jun 11 18:58:12 BST 2001 sll
+================================
+
+- Various minor fixes to bugs uncovered while adding another transport
+
+              Modified                src/lib/omniORB/orbcore/giopServer.cc
+            * Modified                include/omniORB4/minorCode.h
+              Modified                src/lib/omniORB/orbcore/objectAdapter.cc
+
+
 Mon Jun 11 18:54:26 BST 2001 sll
 ================================
 

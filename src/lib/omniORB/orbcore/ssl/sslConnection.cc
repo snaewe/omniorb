@@ -1,0 +1,298 @@
+// -*- Mode: C++; -*-
+//                            Package   : omniORB
+// sslConnection.cc           Created on: 19 Mar 2001
+//                            Author    : Sai Lai Lo (sll)
+//
+//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
+//
+// Description:
+//	*** PROPRIETORY INTERFACE ***
+// 
+
+/*
+  $Log$
+  Revision 1.1.2.1  2001/06/11 18:11:06  sll
+  *** empty log message ***
+
+  Revision 1.1.2.1  2001/04/18 18:10:44  sll
+  Big checkin with the brand new internal APIs.
+
+*/
+
+#include <omniORB4/CORBA.h>
+#include <omniORB4/giopEndpoint.h>
+#include <ssl/sslConnection.h>
+#include <stdio.h>
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+/////////////////////////////////////////////////////////////////////////
+int
+sslConnection::send(void* buf, size_t sz,
+		    unsigned long deadline_secs,
+		    unsigned long deadline_nanosecs) {
+
+#ifdef __VMS
+  // OpenVMS socket library cannot handle more than 64K buffer.
+  if (sz > 65535) sz = 65536-8;
+#endif
+
+  int tx;
+  int rc;
+
+  do {
+
+    struct timeval t;
+
+    if (deadline_secs || deadline_nanosecs) {
+      tcpConnection::setTimeOut(deadline_secs,deadline_nanosecs,t);
+      if (t.tv_sec == 0 && t.tv_usec == 0) {
+	// Already timeout.
+	return 0;
+      }
+      else {
+#if defined(USE_POLL)
+	struct pollfd fds;
+	fds.fd = pd_socket;
+	fds.events = POLLOUT;
+	tx = poll(&fds,1,t.tv_sec*1000+(t.tv_usec/1000));
+#else
+	fd_set fds, efds;
+	FD_ZERO(&fds);
+	FD_ZERO(&efds);
+	FD_SET(pd_socket,&fds);
+	FD_SET(pd_socket,&efds);
+	tx = select(pd_socket+1,0,&fds,&efds,&t);
+#endif
+	if (tx == 0) {
+	  // Time out!
+	  return 0;
+	}
+	else if (tx == RC_SOCKET_ERROR) {
+	  if (ERRNO == RC_EINTR)
+	    continue;
+	  else {
+	    return -1;
+	  }
+	}
+      }
+    }
+
+    // Reach here if we can write without blocking or we don't
+    // care if we block here.
+    tx = SSL_write(pd_ssl,buf,sz);
+
+    rc = SSL_get_error(pd_ssl, tx);
+
+    switch(rc) {
+    case SSL_ERROR_NONE:
+      break;
+
+    case SSL_ERROR_SSL:
+    case SSL_ERROR_ZERO_RETURN:
+      return -1;
+
+    case SSL_ERROR_WANT_READ:
+    case SSL_ERROR_WANT_WRITE:
+      continue;
+
+    case SSL_ERROR_SYSCALL:
+      if (ERRNO == RC_EINTR)
+	continue;
+      else
+	return -1;
+    default:
+      OMNIORB_ASSERT(0);
+    }
+
+    OMNIORB_ASSERT(tx != 0);
+
+  } while(0);
+
+  return tx;
+}
+
+/////////////////////////////////////////////////////////////////////////
+int
+sslConnection::recv(void* buf, size_t sz,
+		    unsigned long deadline_secs,
+		    unsigned long deadline_nanosecs) {
+
+#ifdef __VMS
+  // OpenVMS socket library cannot handle more than 64K buffer.
+  if (sz > 65535) sz = 65536-8;
+#endif
+
+  int rx;
+  int rc;
+
+  do {
+
+    struct timeval t;
+
+    if (deadline_secs || deadline_nanosecs) {
+      tcpConnection::setTimeOut(deadline_secs,deadline_nanosecs,t);
+      if (t.tv_sec == 0 && t.tv_usec == 0) {
+	// Already timeout.
+	return 0;
+      }
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+      if (t.tv_sec > giopStrand::scanPeriod) {
+	t.tv_sec = giopStrand::scanPeriod;
+      }
+#endif
+    }
+    else {
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+      t.tv_sec = giopStrand::scanPeriod;
+      t.tv_usec = 0;
+#else
+      t.tv_sec = t.tv_usec = 0;
+#endif
+    }
+
+    if ( (t.tv_sec || t.tv_usec) && SSL_pending(pd_ssl) <=0 ) {
+#if defined(USE_POLL)
+      struct pollfd fds;
+      fds.fd = pd_socket;
+      fds.events = POLLIN;
+      rx = poll(&fds,1,t.tv_sec*1000+(t.tv_usec/1000));
+#else
+      fd_set fds, efds;
+      FD_ZERO(&fds);
+      FD_ZERO(&efds);
+      FD_SET(pd_socket,&fds);
+      FD_SET(pd_socket,&efds);
+      rx = select(pd_socket+1,&fds,0,&efds,&t);
+#endif
+      if (rx == 0) {
+	// Time out!
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+	continue;
+#else
+	return 0;
+#endif
+      }
+      else if (rx == RC_SOCKET_ERROR) {
+	if (ERRNO == RC_EINTR)
+	  continue;
+	else {
+	  return -1;
+	}
+      }
+    }
+
+    // Reach here if we can read without blocking or we don't
+    // care if we block here.
+    rx = SSL_read(pd_ssl,buf,sz);
+
+    rc = SSL_get_error(pd_ssl, rx);
+
+    switch(rc) {
+    case SSL_ERROR_NONE:
+      break;
+
+    case SSL_ERROR_SSL:
+    case SSL_ERROR_ZERO_RETURN:
+      return -1;
+
+    case SSL_ERROR_WANT_READ:
+    case SSL_ERROR_WANT_WRITE:
+      continue;
+
+    case SSL_ERROR_SYSCALL:
+      if (ERRNO == RC_EINTR)
+	continue;
+      else
+	return -1;
+    default:
+      OMNIORB_ASSERT(0);
+    }
+
+    OMNIORB_ASSERT(rx != 0);
+
+  } while(0);
+
+  return rx;
+}
+
+/////////////////////////////////////////////////////////////////////////
+void
+sslConnection::shutdown() {
+  SSL_set_shutdown(pd_ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+  SSL_shutdown(pd_ssl);
+  SHUTDOWNSOCKET(pd_socket);
+}
+
+/////////////////////////////////////////////////////////////////////////
+const char*
+sslConnection::myaddress() {
+  return (const char*)pd_myaddress;
+}
+
+/////////////////////////////////////////////////////////////////////////
+const char*
+sslConnection::peeraddress() {
+  return (const char*)pd_peeraddress;
+}
+
+/////////////////////////////////////////////////////////////////////////
+sslConnection::sslConnection(tcpSocketHandle_t sock,::SSL* ssl) : 
+  pd_socket(sock), pd_ssl(ssl) {
+
+  struct sockaddr_in addr;
+  SOCKNAME_SIZE_T l;
+
+  l = sizeof(struct sockaddr_in);
+  if (getsockname(pd_socket,
+		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {
+    pd_myaddress = (const char*)"giop:ssl:255.255.255.255:65535";
+  }
+  pd_myaddress = tcpConnection::ip4ToString(
+			     (CORBA::ULong)addr.sin_addr.s_addr,
+			     (CORBA::UShort)addr.sin_port,"giop:ssl:");
+  
+  l = sizeof(struct sockaddr_in);
+  if (getpeername(pd_socket,
+		  (struct sockaddr *)&addr,&l) == RC_SOCKET_ERROR) {
+    pd_peeraddress = (const char*)"giop:ssl:255.255.255.255:65535";
+  }
+  pd_peeraddress = tcpConnection::ip4ToString(
+			       (CORBA::ULong)addr.sin_addr.s_addr,
+			       (CORBA::UShort)addr.sin_port,"giop:ssl:");
+}
+
+/////////////////////////////////////////////////////////////////////////
+sslConnection::~sslConnection() {
+
+  if(pd_ssl != 0) {
+    if (SSL_get_shutdown(pd_ssl) == 0) {
+      SSL_set_shutdown(pd_ssl, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+      SSL_shutdown(pd_ssl);
+    }
+    SSL_free(pd_ssl);
+    pd_ssl = 0;
+  }
+
+  CLOSESOCKET(pd_socket);
+}
+
+OMNI_NAMESPACE_END(omni)
