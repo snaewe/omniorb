@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.7  2000/07/03 14:56:43  djs
+# Fixed bug generating typecodes for struct members which are anonymous
+# sequences.
+#
 # Revision 1.14.2.6  2000/06/26 16:23:27  djs
 # Refactoring of configuration state mechanism.
 #
@@ -439,7 +443,19 @@ def visitStruct(node):
         memberType = child.memberType()
         if isinstance(memberType, idltype.Declared):
             memberType.decl().accept(self)
+        elif isinstance(memberType, idltype.Sequence):
+            # anonymous sequence (maybe sequence<sequence<...<T>>>)
+            # Find the ultimate base type, and if it's user declared then
+            # produce a typecode definition for it.
+            base_type = memberType.seqType()
+            while isinstance(base_type, idltype.Sequence):
+                base_type = base_type.seqType()
 
+            # careful of recursive structs
+            if isinstance(base_type, idltype.Declared) and \
+               not(recursive(base_type.decl())):
+                base_type.decl().accept(self)
+                        
     self.__override = override
 
     tophalf.out(str(buildMembersStructure(node)))
