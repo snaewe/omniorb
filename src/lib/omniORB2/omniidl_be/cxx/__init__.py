@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.12  2001/04/25 17:07:21  dpg1
+# Properly handle files #included at non-file scope.
+#
 # Revision 1.18.2.11  2001/04/25 16:55:07  dpg1
 # Properly handle files #included at non-file scope.
 #
@@ -163,6 +166,7 @@ usage_string = """\
   -WbBOA            Generate BOA compatible skeletons
   -Wbold            Generate old CORBA 2.1 signatures for skeletons
   -Wbold_prefix     Map C++ reserved words with prefix _
+  -Wbinline         Generate code for #included files inline with the main file
   -Wbkeep_inc_path  Preserve IDL #include path in header #includes
   -Wbuse_quotes     Use quotes in #includes: \"foo\" rather than <foo>"""
 
