@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.7  2000/01/27 10:55:44  djr
+ Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
+ fqname for base class constructor for some compilers.
+
  Revision 1.1.2.6  1999/10/21 11:29:46  djr
  Added _core_attr to declaration of _PD_repoId in exceptions & interfaces.
 
@@ -60,7 +64,8 @@ public:  \
     pd_insertToAnyFn    = insertToAnyFn;  \
     pd_insertToAnyFnNCP = insertToAnyFnNCP;  \
   }  \
-  inline name(const name& _ex) : UserException(_ex) {}  \
+  inline name(const name& _ex) :  \
+    OMNIORB_BASE_CTOR(CORBA::)UserException(_ex) {}  \
   inline name& operator=(const name& _ex) {  \
     * (CORBA::UserException*) this = _ex;  return *this;  \
   }  \

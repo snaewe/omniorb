@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/01/27 10:55:47  djr
+  Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
+  fqname for base class constructor for some compilers.
+
   Revision 1.1.2.3  1999/10/04 17:08:34  djr
   Some more fixes/MSVC work-arounds.
 
@@ -55,7 +59,7 @@ class omniOrbPOAManager : public PortableServer::POAManager {
 public:
   virtual ~omniOrbPOAManager();
   inline omniOrbPOAManager(int is_nil = 0)
-    : POAManager(is_nil),
+    : OMNIORB_BASE_CTOR(PortableServer::)POAManager(is_nil),
       pd_refCount(1),
       pd_state(HOLDING)
     {}

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.29.6.13  2000/01/27 10:55:45  djr
+  Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
+  fqname for base class constructor for some compilers.
+
   Revision 1.29.6.12  2000/01/22 16:46:04  djr
   Added -ORBtraceInvocations to option help summary.
 
@@ -323,7 +327,7 @@ omniOrbORB::~omniOrbORB()  {}
 
 
 omniOrbORB::omniOrbORB(int nil)
-  : ORB(nil),
+  : OMNIORB_BASE_CTOR(CORBA::)ORB(nil),
     pd_refCount(1),
     pd_destroyed(0),
     pd_shutdown(0),

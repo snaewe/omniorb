@@ -8,6 +8,23 @@ src/examples/anyExample/anyExample_clt.cc
 src/examples/anyExample/anyExample_impl.cc
 src/examples/anyExample/dir.mk
 
+- Added macro OMNIORB_BASE_CTOR() which conditionally provides the
+  fully qualified name for a base class constructor.  This is enabled
+  with the feature test macro OMNI_REQUIRES_FQ_BASE_CTOR.
+   This seems to be required for powerpc_aix at least.
+
+- Other minor mods for powerpc aix.
+
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+include/omniORB3/CORBA_sysdep.h
+include/omniORB3/userexception.h
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poamanager.cc
+src/lib/omniORB2/orbcore/poastubs.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
 
 Wed Jan 26 15:29:24 GMT 2000 djr
 ================================

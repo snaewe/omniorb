@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.39.6.14  2000/01/27 10:55:48  djr
+  Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
+  fqname for base class constructor for some compilers.
+
   Revision 1.39.6.13  1999/11/22 10:50:44  djr
   Fixed bug in omniidl3.  typedef of Object was broken.
 
@@ -204,6 +208,9 @@ static void internal_produce_tie_templates(std::fstream& s,
 					   o2be_interface* intf,
 					   const char* class_name,
 					   const char* skel_name);
+static void internal_find_prefix(StringBuf&,
+				 const char* str_w_prefix,
+				 const char* str_wo_prefix);
 
 
 
@@ -614,7 +621,7 @@ o2be_interface::produce_hdr(std::fstream& s)
 
   s << o2be_verbatim(
    "\n"
-   "protected:\n"
+   "public:  // Really protected, workaround for xlC\n"
    "  virtual _CORBA_Boolean _dispatch(GIOP_S&);\n"
    "\n"
    "private:\n"
@@ -934,8 +941,17 @@ o2be_interface::produce_skel(std::fstream &s)
     int ni = n_inherits();
     for( int i = 0; i < ni; i++ ) {
       o2be_interface* intf = o2be_interface::narrow_from_decl(intftable[i]);
-      IND(s); s << "   " << intf->unambiguous_proxy_name(this)
-		<< "(mdri, p, id, lid),\n";
+
+      const char* base_ctor_name = intf->unambiguous_proxy_name(this);
+      StringBuf base_ctor_prefix;
+
+      internal_find_prefix(base_ctor_prefix, intf->proxy_fqname(),
+			   base_ctor_name);
+
+      IND(s); 
+      if( strlen(base_ctor_prefix) )
+	s << "   OMNIORB_BASE_CTOR(" << base_ctor_prefix.c_str() << ')';
+      s << base_ctor_name << "(mdri, p, id, lid),\n";
     }
   }
   s << o2be_template(map,
@@ -2118,6 +2134,27 @@ internal_produce_tie_templates(std::fstream& s, o2be_interface* intf,
     "  CORBA::Boolean          pd_rel;\n"
     "};\n\n\n"
    );
+}
+
+
+static void internal_find_prefix(StringBuf& result,
+				 const char* str_w_prefix,
+				 const char* str_wo_prefix)
+{
+  int wp_len = strlen(str_w_prefix);
+  int wop_len = strlen(str_wo_prefix);
+
+  if( wop_len == wp_len && strcmp(str_w_prefix, str_wo_prefix) )
+    cerr << "internal_find_prefix: " << str_w_prefix << " " << str_wo_prefix
+	 << '\n';//??
+
+  if( wop_len >= wp_len )  return;
+
+  if( strcmp(str_w_prefix + wp_len - wop_len, str_wo_prefix) )
+    cerr << "internal_find_prefix: " << str_w_prefix << " " << str_wo_prefix
+	 << '\n';//??
+
+  result += StringBuf::extent(str_w_prefix, str_w_prefix + wp_len - wop_len);
 }
 
 //////////////////////////////////////////////////////////////////////

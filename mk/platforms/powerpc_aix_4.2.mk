@@ -95,7 +95,7 @@ LibSharedSearchPattern = -l%
 # Override the defaults set in unix.mk
 #
 #omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
-omniORBGatekeeperImplementation = NO_IMPL
+#omniORBGatekeeperImplementation = NO_IMPL
 
 #
 # Notice that the version number 2.8 is hardwired in OMNIORB_LIB.
