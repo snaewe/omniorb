@@ -97,12 +97,16 @@ pr(ip, file, base)
 	static char	*lastfile;
 	register int	len, i;
 	char	buf[ BUFSIZ ];
+#ifdef WIN32
 	char *transfile = TranslateFileNameD2U(ip->i_file,0);
+#else
+	char *transfile = ip->i_file;
+#endif
 
 	printed = TRUE;
 	if (file != lastfile) {
 		lastfile = file;
-		sprintf(buf, "\n%s%s%s %s.d: %s", objprefix, base, objsuffix,
+		sprintf(buf, "%s%s%s %s.d: %s", objprefix, base, objsuffix,
 			base, transfile);
 	}
 	else {
@@ -120,5 +124,7 @@ pr(ip, file, base)
 	printf("\n# %s includes:", transfile);
 	for (i=0; i<ip->i_listlen; i++)
 		printf("\n#\t%s", ip->i_list[ i ]->i_incstring);
+#ifdef WIN32
 	free(transfile);
+#endif
 }
