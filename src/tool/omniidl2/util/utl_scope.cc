@@ -931,6 +931,7 @@ UTL_Scope::lookup_by_name(UTL_ScopedName *e, idl_bool treat_as_ref,
      * in the inherited interfaces as well..
      */
       d = look_in_inherited(e, treat_as_ref);
+      if (d) return d;
   }
 
   if (d == NULL) {
