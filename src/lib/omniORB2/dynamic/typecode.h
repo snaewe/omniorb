@@ -30,6 +30,10 @@
 
 /*
  * $Log$
+ * Revision 1.7  1999/07/01 10:28:14  djr
+ * Added two methods to TypeCode_pairlist.
+ * Declare inline methods as inline.
+ *
  * Revision 1.6  1999/06/18 21:00:31  sll
  * Updated to CORBA 2.3 mapping.
  *
@@ -145,8 +149,8 @@ public:
     };
   };
 
-  TypeCode_alignTable() : pd_entries(0), pd_table(0), pd_owns(0) {}
-  ~TypeCode_alignTable() {
+  inline TypeCode_alignTable() : pd_entries(0), pd_table(0), pd_owns(0) {}
+  inline ~TypeCode_alignTable() {
     if( pd_table ) {
       for( unsigned i = 0; i < pd_entries; i++ )
 	if( i_own(i) )  delete pd_table[i];
@@ -155,48 +159,52 @@ public:
     }
   }
 
-  void setNumEntries(unsigned n) {
+  inline void setNumEntries(unsigned n) {
     pd_table = (new Alignment*[n]);
     unsigned owns_len = n & 31 ? (n>>5) + 1 : (n>>5);
     pd_owns = new CORBA::ULong[owns_len];
     for( unsigned i = 0; i < owns_len; i++ )  pd_owns[i] = 0;
     for( unsigned j = 0; j < n; j++ )         pd_table[j] = 0;
   }
-  void add(const TypeCode_alignTable& at, unsigned ati) {
+  inline void add(const TypeCode_alignTable& at, unsigned ati) {
     pd_table[pd_entries++] = at.pd_table[ati];
   }
-  void set(const TypeCode_alignTable& at) {
+  inline void set(const TypeCode_alignTable& at) {
     setNumEntries(at.entries());
     for( unsigned i = 0; i < at.entries(); i++ )  add(at, i);
   }
-  void addSimple(omni::alignment_t a, size_t s) {
+  inline void addSimple(omni::alignment_t a, size_t s) {
     unsigned i = new_entry();
     pd_table[i]->type = it_simple;
     pd_table[i]->simple.alignment = a;
     pd_table[i]->simple.size = s;
   }
-  void addNasty(TypeCode_base* tc) {
+  inline void addNasty(TypeCode_base* tc) {
     unsigned i = new_entry();
     pd_table[i]->type = it_nasty;
     pd_table[i]->nasty.tc = tc;
   }
 
-  CORBA::Boolean is_simple() const {
+  inline CORBA::Boolean is_simple() const {
     return pd_entries == 1 && pd_table[0]->type == it_simple;
   }
-  CORBA::Boolean has_only_simple() const {
+  inline CORBA::Boolean has_only_simple() const {
     for( unsigned i = 0; i < pd_entries; i++ )
       if( pd_table[i]->type != it_simple )  return 0;
     return 1;
   }
 
-  unsigned         entries() const                { return pd_entries;     }
-  const Alignment& operator [] (unsigned i) const { return *(pd_table[i]); }
+  inline unsigned entries() const { return pd_entries; }
+  inline const Alignment& operator [] (unsigned i) const {
+    return *(pd_table[i]);
+  }
 
 private:
-  int i_own(unsigned i) const { return pd_owns[i >> 5] & (1 << (i & 31));  }
-  void set_i_own(unsigned i)  { pd_owns[i >> 5] |= (1 << (i & 31));        }
-  unsigned new_entry() {
+  inline int i_own(unsigned i) const {
+    return pd_owns[i >> 5] & (1 << (i & 31));
+  }
+  inline void set_i_own(unsigned i) { pd_owns[i >> 5] |= (1 << (i & 31)); }
+  inline unsigned new_entry() {
     pd_table[pd_entries] = new Alignment;
     set_i_own(pd_entries);
     return pd_entries++;
@@ -230,7 +238,7 @@ public:
 
   // omniORB2 recursive typecode & reference count handling
   virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base* tc,
-							 CORBA::ULong offset){
+							 CORBA::ULong offset) {
     return 1;
   }
 
@@ -255,7 +263,7 @@ public:
   }
 
   // omniORB2 internal versions of the OMG TypeCode interface
-  CORBA::TCKind  NP_kind() const { return pd_tck; }
+  inline CORBA::TCKind NP_kind() const { return pd_tck; }
 
   CORBA::Boolean NP_equal(const TypeCode_base* TCp,
 			  CORBA::Boolean equivalent,
@@ -290,7 +298,7 @@ public:
 
   virtual CORBA::Boolean NP_is_nil() const;
 
-  const TypeCode_alignTable& alignmentTable() const {
+  inline const TypeCode_alignTable& alignmentTable() const {
     return pd_alignmentTable;
   }
 
@@ -298,11 +306,11 @@ public:
   // Returns true if this TypeCode or any of its members
   // is an alias.
 
-  virtual TypeCode_base* NP_aliasExpand();
+  virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
   // Return a TypeCode equivalent to this, but with aliases expanded
-  // to the actual type. It is assumed that this will only be called
+  // to the actual type.  It is assumed that this will only be called
   // if necassary - ie. the instance it is invoked on really does
-  // contain an alias. This is necassary to reduce the number of
+  // contain an alias.  This is necassary to reduce the number of
   // calls to NP_containsAnAlias that are necassary.
 
   TypeCode_base* NP_compactTc();
@@ -317,8 +325,10 @@ public:
   // Return a duplicate of <tc> with aliases expanded to
   // the true type.
 
-  TypeCode_base* aliasExpandedTc() { return pd_aliasExpandedTc; }
+  inline TypeCode_base* aliasExpandedTc() { return pd_aliasExpandedTc; }
   // Returns the alias expanded TypeCode if it has been generated.
+
+  inline CORBA::Boolean complete() { return pd_complete; }
 
 protected:
   TypeCode_alignTable pd_alignmentTable;
@@ -496,12 +506,12 @@ public:
   virtual CORBA::Any* NP_parameter(CORBA::Long) const;
 
   virtual CORBA::Boolean NP_containsAnAlias();
-  virtual TypeCode_base* NP_aliasExpand();
+  virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
 
 private:
-  TypeCode_alias() : TypeCode_base(CORBA::tk_alias) {}
+  inline TypeCode_alias() : TypeCode_base(CORBA::tk_alias) {}
 
   CORBA::String_member pd_repoId;
   CORBA::String_member pd_name;
@@ -547,7 +557,7 @@ public:
   virtual CORBA::Any*    NP_parameter(CORBA::Long) const;
 
   virtual CORBA::Boolean NP_containsAnAlias();
-  virtual TypeCode_base* NP_aliasExpand();
+  virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
 
@@ -597,12 +607,12 @@ public:
   virtual CORBA::Any* NP_parameter(CORBA::Long) const;
 
   virtual CORBA::Boolean NP_containsAnAlias();
-  virtual TypeCode_base* NP_aliasExpand();
+  virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
 
 private:
-  TypeCode_array() : TypeCode_base(CORBA::tk_array) {}
+  inline TypeCode_array() : TypeCode_base(CORBA::tk_array) {}
 
   void generateAlignmentTable();
 
@@ -655,12 +665,12 @@ public:
   virtual CORBA::Any* NP_parameter(CORBA::Long) const;
 
   virtual CORBA::Boolean NP_containsAnAlias();
-  virtual TypeCode_base* NP_aliasExpand();
+  virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
 
 private:
-  TypeCode_struct()
+  inline TypeCode_struct()
     : TypeCode_base(CORBA::tk_struct),
       pd_members(0), pd_nmembers(0) {}
   // Private constructor - used when unmarshalling a TypeCode.
@@ -718,12 +728,12 @@ public:
   virtual CORBA::Any* NP_parameter(CORBA::Long) const;
 
   virtual CORBA::Boolean NP_containsAnAlias();
-  virtual TypeCode_base* NP_aliasExpand();
+  virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
 
 private:
-  TypeCode_except()
+  inline TypeCode_except()
     : TypeCode_base(CORBA::tk_except),
       pd_members(0), pd_nmembers(0) {}
 
@@ -839,7 +849,7 @@ public:
   virtual CORBA::Long    NP_param_count() const;
   virtual CORBA::Any*    NP_parameter(CORBA::Long) const;
 
-  Discriminator NP_member_label_val(CORBA::ULong index) const {
+  inline Discriminator NP_member_label_val(CORBA::ULong index) const {
     return pd_members[index].alabel;
   }
   CORBA::Long NP_index_from_discriminator(Discriminator) const;
@@ -853,7 +863,7 @@ public:
   //  Must not be called if the union has no default.
 
   virtual CORBA::Boolean NP_containsAnAlias();
-  virtual TypeCode_base* NP_aliasExpand();
+  virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
 
@@ -937,8 +947,8 @@ public:
   CORBA::Boolean lookupTypeCode(const TypeCode_base* tc, CORBA::Long& offset);
 
   // Routine to retrieve the current buffer offset
-  CORBA::Long currentOffset()   { return pd_curr_offset; }
-  void setOffset(CORBA::Long i) { pd_curr_offset = i;    }
+  inline CORBA::Long currentOffset()   { return pd_curr_offset; }
+  inline void setOffset(CORBA::Long i) { pd_curr_offset = i;    }
 
 private:
   TypeCode_offsetEntry* pd_table;
@@ -960,14 +970,24 @@ private:
 class TypeCode_pairlist
 {
 public:
-  TypeCode_pairlist(const TypeCode_pairlist* next,
-		    const TypeCode_base* tc1,
-		    const TypeCode_base* tc2)
+  inline TypeCode_pairlist(const TypeCode_pairlist* next,
+			   const TypeCode_base* tc1,
+			   const TypeCode_base* tc2)
     : d_next(next), d_tc1(tc1), d_tc2(tc2) {}
 
   const TypeCode_pairlist* d_next;
   const TypeCode_base*     d_tc1;
   const TypeCode_base*     d_tc2;
+
+  static int contains(const TypeCode_pairlist*,
+		      const TypeCode_base*, const TypeCode_base*);
+  // Returns true if the given list contains the given pair.
+
+  static const TypeCode_base* search(const TypeCode_pairlist*,
+				     const TypeCode_base*);
+  // Search for given typecode in the pair list, and if
+  // found as the second of a pair, return the first in
+  // the same pair.  Otherwise return 0.
 };
 
 //////////////////////////////////////////////////////////////////////
