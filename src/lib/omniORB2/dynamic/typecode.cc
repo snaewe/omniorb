@@ -30,6 +30,10 @@
 
 /* 
  * $Log$
+ * Revision 1.10  1998/08/11 11:48:49  sll
+ * Extended workaround in CORBA::TypeCode::_nil() to cover up to DEC Cxx
+ * v5.5-015.
+ *
  * Revision 1.9  1998/08/05 18:01:12  sll
  * Fixed bugs caused by typos in TypeCode::TypeCode(TCKind,ULong) and
  * TypeCode::_nil().
@@ -1894,7 +1898,7 @@ CORBA::TypeCode_ptr
 CORBA::TypeCode::_nil()
 {
   if (!_nil_TypeCodeV) {
-#if !defined(__DECCXX_VER) || __DECCXX_VER > 50590004
+#if !defined(__DECCXX_VER) || __DECCXX_VER > 50590015
     _nil_TypeCodeV = new CORBA::_nil_TypeCode;
 #else
     // Workaround for compiler bug in DEC cxx v5.5
