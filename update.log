@@ -1,4 +1,16 @@
 
+Fri Mar 19 15:15:50 GMT 1999 djr
+================================
+
+- Accept TypeCode indirections to fundamental types. New option to
+  accept mis-aligned indirections (received from Visibroker), which
+  is enabled in lcdMode.
+
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+include/omniORB2/omniORB.h
+
+
 Thu Mar 18 11:47:36 GMT 1999 djr
 ================================
 
