@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.34.6.5  1999/12/16 14:26:28  djr
+  Fix for omniidl3 pseudo-bug.
+
   Revision 1.34.6.4  1999/12/02 19:08:31  djr
   Fixed bug in (un)marshalling of arrays.
 
@@ -1836,8 +1839,12 @@ o2be_operation::mangled_signature()
 }
 
 
-static int compare_strings(const void* s1, const void* s2) {
-  return strcmp((const char*) s1, (const char*) s2);
+static int compare_exns(const void* s1, const void* s2)
+{
+  o2be_exception** pe1 = (o2be_exception**) s1;
+  o2be_exception** pe2 = (o2be_exception**) s2;
+
+  return strcmp((*pe1)->_idname(), (*pe2)->_idname());
 }
 
 
@@ -1869,7 +1876,7 @@ o2be_operation::id_sorted_exn_list()
 
   // Sort 'em.
   qsort(pd_id_sorted_exn_list, pd_n_exceptions,
-	sizeof(o2be_exception*), compare_strings);
+	sizeof(o2be_exception*), compare_exns);
 
   return pd_id_sorted_exn_list;
 }

@@ -1,4 +1,14 @@
 
+Thu Dec 16 14:20:49 GMT 1999 djr
+================================
+
+- Fixed pseudo-bug in omniidl3.  Did not have any negative effects, but
+  was unsafe and the method o2be_operation::id_sorted_exn_list() did not
+  do what it said!
+
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
+
 Wed Dec 15 14:47:18 GMT 1999 djr
 ================================
 
