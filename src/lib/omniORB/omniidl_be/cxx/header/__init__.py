@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.10  2000/01/17 17:00:21  djs
+# Runs tcParser #ifdefs for bounded strings
+#
 # Revision 1.9  2000/01/11 11:34:27  djs
 # Added support for fragment generation (-F) mode
 #
@@ -65,6 +68,7 @@ import omniidl.be.cxx.header.poa
 import omniidl.be.cxx.header.tie
 import omniidl.be.cxx.header.forward
 import omniidl.be.cxx.header.marshal
+import omniidl.be.cxx.header.tcstring
 
 # -----------------------------
 # Utility functions
@@ -97,6 +101,10 @@ def defs_fragment(stream, tree):
     forward = omniidl.be.cxx.header.forward.__init__(stream)
     tree.accept(forward)
     
+    # generate the bounded string tcParser stuff
+    tcstring = omniidl.be.cxx.header.tcstring.__init__(stream)
+    tree.accept(tcstring)
+
     defs = omniidl.be.cxx.header.defs.__init__(stream)
     tree.accept(defs)
 
@@ -207,6 +215,10 @@ def monolithic(stream, tree):
     forward = omniidl.be.cxx.header.forward.__init__(stream)
     tree.accept(forward)
     
+    # generate the bounded string tcParser stuff
+    tcstring = omniidl.be.cxx.header.tcstring.__init__(stream)
+    tree.accept(tcstring)
+
     defs = omniidl.be.cxx.header.defs.__init__(stream)
     tree.accept(defs)
 
