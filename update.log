@@ -1,3 +1,11 @@
+Wed Mar 21 16:31:13 GMT 2001 dpg1
+=================================
+
+- Wrong member count in TypeCode for union with multiple case labels.
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
+
 Tue Mar 20 16:55:07 GMT 2001 dpg1
 =================================
 

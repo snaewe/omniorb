@@ -8,6 +8,26 @@
 
 <buglist version="3.0.3">
 
+<bug id="3" date="Wed Mar 21 16:31:13 GMT 2001" user="dpg1">
+
+  <summary>Incorrect TypeCode for union with multiple case
+  labels</summary>
+  <reported>Clemens Fischer</reported>
+  <text>
+  The generated TypeCode for a union with multiple case labels would
+  have the wrong member count. e.g. the count for
+  <p/>
+  <pre>
+  union U switch (long) {
+    case 1:
+    case 2: long l;
+    case 3: string s;
+  };
+  </pre>
+  would be 2 instead of 3.
+  </text>
+</bug>
+
 <bug id="2" date="Tue Mar 20 16:55:07 GMT 2001" user="dpg1">
 
   <summary>Incorrect DynSK stubs for some recursive types</summary>
