@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.18  2001/09/10 17:53:07  sll
+  In inputMessage, if a strand is dying and has been orderly_closed, i.e. a
+  GIOP CloseConnection has been received, set the retry flag in the
+  CommFailure exception.
+
   Revision 1.1.4.17  2001/09/04 14:44:25  sll
   Added the boolean argument to notifyCommFailure to indicate if
   omniTransportLock is held by the caller.
@@ -738,8 +743,14 @@ giopStream::inputMessage() {
     CORBA::ULong minor;
     CORBA::Boolean retry;
     notifyCommFailure(0,minor,retry);
-    CommFailure::_raise(minor,(CORBA::CompletionStatus)completion(),retry,
-			__FILE__,__LINE__);
+    CORBA::CompletionStatus status;
+    if (pd_strand->orderly_closed) {
+      status = CORBA::COMPLETED_NO;
+    }
+    else {
+      status = (CORBA::CompletionStatus)completion();
+    }
+    CommFailure::_raise(minor,status,retry,__FILE__,__LINE__);
     // never reaches here.
   }
 
