@@ -1,4 +1,13 @@
 
+Thu Jul 22 15:05:25 BST 1999 tjr
+================================
+
+- tidy up some java funnies.
+
+mk/afterdir.mk       - remove debugging output
+idl/weatherInfo.idl  - remove spurious file
+
+
 Tue Jul 20 15:23:06 BST 1999 djr
 ================================
 
