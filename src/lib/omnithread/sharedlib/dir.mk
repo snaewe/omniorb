@@ -1,3 +1,10 @@
+
+#
+# For each source tree we want to search the parent directory to get source
+# files so we put these on VPATH.  However we can't put the parent build
+# directory ('..') on VPATH otherwise the .o files in there are used.  So we
+# need to do that as a special case with the vpath directive:
+#
 override VPATH := $(patsubst %,%/..,$(VPATH))
 vpath %.cc ..
 
@@ -91,18 +98,24 @@ all:: $(lib)
 $(lib): $(OBJS)
 	@$(SharedLibrary)
 
-ifdef NTArchitecture
-clean::
-	$(RM) $(lib) omnithread_rt.exp
-else
 clean::
 	$(RM) $(lib)
-endif
+
+ifndef NTArchitecture
 
 export:: $(lib)
 	@$(ExportLibrary)
 
-ifdef NTArchitecture
+else
+
+# NT treats DLLs more like executables -- the .dll file needs to go in the
+# bin/x86... directory so that it's on your PATH:
+export:: $(lib)
+	@$(ExportExecutable)
+
+clean::
+	$(RM) omnithread_rt.exp
+
 export:: omnithread_rt.lib
 	@$(ExportLibrary)
 endif
