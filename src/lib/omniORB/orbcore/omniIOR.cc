@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4.2.2  2001/02/23 19:25:19  sll
+  Merged interim FT client stuff.
+
   Revision 1.1.2.4.2.1  2001/02/23 16:50:36  sll
   SLL work in progress.
 
@@ -63,6 +66,7 @@ omniIOR::omniIOR(char* repoId, IOP::TaggedProfileList* iop) :
   pd_orb_type(0),
   pd_tcs_c(0),
   pd_tcs_w(0),
+  pd_is_IOGR(0),
   pd_refCount(1)
 {
   {
@@ -81,6 +85,7 @@ omniIOR::omniIOR(char* repoId, IOP::TaggedProfile* iop, CORBA::ULong niops,
   pd_orb_type(0),
   pd_tcs_c(0),
   pd_tcs_w(0),
+  pd_is_IOGR(0),
   pd_refCount(1)
 {    
   {
@@ -100,6 +105,7 @@ omniIOR::omniIOR(const char* repoId, omniIdentity* id) :
   pd_orb_type(0),
   pd_tcs_c(0),
   pd_tcs_w(0),
+  pd_is_IOGR(0),
   pd_refCount(1)
 {
   {
@@ -131,6 +137,7 @@ omniIOR::omniIOR(const char* repoId,
   pd_orb_type(0),
   pd_tcs_c(0),
   pd_tcs_w(0),
+  pd_is_IOGR(0),
   pd_refCount(1)
 {
   {

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7.2.2  2001/02/23 19:25:18  sll
+  Merged interim FT client stuff.
+
   Revision 1.2.2.7.2.1  2001/02/23 16:50:35  sll
   SLL work in progress.
 
@@ -475,7 +478,7 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 
 
   int retries = 0;
-  int fwd;
+  int fwd = 0;
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
 
@@ -722,7 +725,7 @@ void
 omniObjRef::_locateRequest()
 {
   int retries = 0;
-  int fwd;
+  int fwd = 0;
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
 

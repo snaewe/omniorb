@@ -1,0 +1,36 @@
+//File: ft.idl
+
+#ifndef _FT_IDL_
+#define _FT_IDL_
+
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #ifndef __FT_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #define __FT_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #include "FT_sysdep.h"
+#pragma hh #endif
+
+#pragma prefix "omg.org"
+
+module CORBA {
+  module FT {
+    // HOW TO GET GIOP::Version in idl ???
+
+    struct GIOP__Version {
+      octet major;
+      octet minor;
+    };
+
+    typedef string FTDomainId;
+    typedef unsigned long long ObjectGroupId;
+    typedef unsigned long ObjectGroupRefVersion;
+
+    struct TagGroupTaggedComponent { // tag = TAG_GROUP;
+      GIOP__Version         version;
+      FTDomainId            ft_domain_id;
+      ObjectGroupId         object_group_id;
+      ObjectGroupRefVersion object_group_ref_version;
+    };
+  };
+};
+
+#endif /* ifndef _FT_IDL_ */

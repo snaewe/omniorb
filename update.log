@@ -1,3 +1,30 @@
+Fri Feb 23 19:21:56 GMT 2001 sll
+================================
+
+- SLL work in progress
+- merged interim FT client stuff
+
+These files are NEW.
+
+ft_not_merged
+idl/FT/FT.idl
+include/FT/FT_sysdep.h
+mk/ft.mk
+
+
+These files are MODIFIED.
+
+include/omniORB4/IOP.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniInternal.h
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+
 Fri Feb 23 16:47:39 GMT 2001 sll
 ================================
 - SLL work in progress snapshot

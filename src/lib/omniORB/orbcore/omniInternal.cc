@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.6.2.2  2001/02/23 19:25:18  sll
+  Merged interim FT client stuff.
+
   Revision 1.2.2.6.2.1  2001/02/23 16:50:36  sll
   SLL work in progress.
 
@@ -122,6 +125,11 @@
 #include <anonObject.h>
 #include <initialiser.h>
 #include <exceptiondefs.h>
+#if 0
+#include <remoteGroupIdentity.h>
+#else
+// XXX not included ATM. Need a better way to incorporate FT client side.
+#endif
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -583,6 +591,78 @@ omni::deactivateObject(const CORBA::Octet* key, int keysize)
 }
 
 
+// always consumes ior
+omniIdentity* omni::createIdentity(omniIOR* ior,
+				   identity_t& kind,
+				   CORBA::Boolean locked)
+{
+  Rope* rope = 0;
+  CORBA::Boolean is_local = 0;
+  if( ior->is_IOGR() ) {
+#if 0
+    omniRemoteGroupIdentity* remote_group_id = new omniRemoteGroupIdentity(ior, locked);
+    kind = REMOTE_GROUP_IDENTITY;
+    return remote_group_id;
+#else
+    // XXX for the moment, disable the code. We have to think of a better
+    // way to incorporate the FT client side code.  
+
+    // XXX Even if we enable the above code. It does not have the desired
+    //     effect yet.  because the IOR is decoded as a side effect of 
+    //     selectRope ATM.  Therefore ior->is_IOGR() always return 0 
+    //     which is the default value.
+
+    OMNIORB_ASSERT(0);
+#endif
+  } else if( ior->selectRope(rope, is_local) ) {
+    if (is_local) {
+      CORBA::Octet* key = ior->getIIOPprofile().object_key.get_buffer();
+      int  keysize = ior->getIIOPprofile().object_key.length();
+      ior->release(); // done with ior, always consume
+
+      CORBA::ULong hashv = hash(key,keysize);
+
+      omni_optional_lock sync(*internalLock, locked, locked);
+
+      // If the identity does not exist in the local object table,
+      // this will insert a dummy entry.
+
+      omniLocalIdentity* local_id = locateIdentity(key, keysize, hashv, 1);
+      kind = LOCAL_IDENTITY;
+      return local_id;
+    } else {
+      omniRemoteIdentity* remote_id = new omniRemoteIdentity(ior, rope); // consumes ior
+      kind = REMOTE_IDENTITY;
+      return remote_id;
+    }
+  }
+  // invalid IOR
+  ior->release(); // done with ior, always consume
+  return 0;
+}
+
+// always consumes ior
+omniRemoteIdentity* omni::createRemoteIdentity(omniIOR* ior)
+{
+  Rope* rope = 0;
+  CORBA::Boolean is_local = 0;
+  if( ior->selectRope(rope, is_local) ) {
+    if (is_local) {
+      rope = omniObjAdapter::defaultLoopBack();
+      rope->incrRefCount();
+      omniRemoteIdentity* remote_id = new omniRemoteIdentity(ior, rope); // consumes ior
+      return remote_id;
+    } else {
+      omniRemoteIdentity* remote_id = new omniRemoteIdentity(ior, rope); // consumes ior
+      return remote_id;
+    }
+  }
+  // invalid IOR
+  ior->release(); // done with ior, always consume
+  return 0;
+}
+
+
 omniObjRef*
 omni::createObjRef(const char* targetRepoId,
 		   omniIOR* ior,
@@ -592,30 +672,20 @@ omni::createObjRef(const char* targetRepoId,
   OMNIORB_ASSERT(targetRepoId);
   OMNIORB_ASSERT(ior);
 
-  Rope*          rope = 0;
-  CORBA::Boolean is_local = 0;
+  identity_t kind;
+  ior->duplicate(); // consumed by createIdentity
+  omniIdentity* id = omni::createIdentity(ior, kind, locked);
 
-  if( !ior->selectRope(rope, is_local) ) {
+  if( !id ) {
     ior->release();
     return 0;
   }
 
-  if( is_local ) {
-
-    const CORBA::Octet* key = ior->getIIOPprofile().object_key.get_buffer();
-    int  keysize = ior->getIIOPprofile().object_key.length();
-
-    CORBA::ULong hashv = hash(key,keysize);
-
-    omni_optional_lock sync(*internalLock, locked, locked);
-
-    // If the identity does not exist in the local object table,
-    // this will insert a dummy entry.
-
-    omniLocalIdentity* local_id = locateIdentity(key, keysize, hashv, 1);
-
-    return createObjRef(targetRepoId, local_id, ior);
+  if( kind == LOCAL_IDENTITY ) {
+    return createObjRef(targetRepoId, (omniLocalIdentity*)id, ior); 
+    // consumes ior
   }
+  // id is either remoteIdentity or remoteGroupIdentity 
 
   proxyObjectFactory* pof = proxyObjectFactory::lookup(ior->repositoryID());
 
@@ -654,10 +724,6 @@ omni::createObjRef(const char* targetRepoId,
     if( strcmp(targetRepoId, CORBA::Object::_PD_repoId) )
       target_intf_not_confirmed = 1;
   }
-
-  ior->duplicate();
-
-  omniRemoteIdentity* id = new omniRemoteIdentity(ior,rope);
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
@@ -824,26 +890,27 @@ omni::revertToOriginalProfile(omniObjRef* objref)
 
   omniORB::logs(10, "Reverting object reference to original profile");
 
-  Rope*          rope = 0;
-  CORBA::Boolean is_local = 0;
-
   omniIOR_var ior = objref->_getIOR();
 
-  if ( !ior->selectRope(rope, is_local) ) {
-    OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
-  }
-
   omni_tracedmutex_lock sync(*internalLock);
+  CORBA::Boolean locked = 1;
 
   // We might have already been reverted... We check here
   // rather than sooner, so as to avoid holding <internalLock>
   // longer than necassary.
   if( !objref->pd_flags.forward_location ) {
-    if( rope )  rope->decrRefCount();
     return;
   }
 
-  omniLocalIdentity* local_id = 0;
+  identity_t kind;
+  ior->duplicate(); // consumed by createIdentity
+  // XXX is this call equivalent to what this routine used to do
+  // XXX for the 2 non-IOGR cases ???
+  omniIdentity* id = omni::createIdentity(ior, kind, locked);
+
+  if( !id ) {
+    OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
+  }
 
   // For efficiency lets just assume that it exists.  We are
   // about to retry anyway -- so we'll soon find out!
@@ -851,16 +918,11 @@ omni::revertToOriginalProfile(omniObjRef* objref)
   objref->pd_flags.type_verified = 1;
   objref->pd_flags.object_exists = 1;
 
-  if( is_local ) {
 
-    const CORBA::Octet* key = ior->getIIOPprofile().object_key.get_buffer();
-    int  keysize = ior->getIIOPprofile().object_key.length();
-
-    CORBA::ULong hashv = hash(key, keysize);
-    local_id = locateIdentity(key, keysize, hashv, 1);
-
+  if( kind == LOCAL_IDENTITY ) {
+    omniLocalIdentity* local_id = (omniLocalIdentity*)id;
     omniServant* servant = local_id->servant();
-    // XXX could servant be nil??
+    // could be nil
 
     if (servant && objref->_compatibleServant(servant)) {
       omniInternal::replaceImplementation(objref, local_id, local_id);
@@ -871,14 +933,15 @@ omni::revertToOriginalProfile(omniObjRef* objref)
     // activated) or it is not of a suitable type. Use the
     // default loop-back rope and continue as for remote.
 
-    OMNIORB_ASSERT(!rope);
-    rope = omniObjAdapter::defaultLoopBack();
+    Rope* rope = omniObjAdapter::defaultLoopBack();
     rope->incrRefCount();
+    omniIdentity* rid = new omniRemoteIdentity(ior._retn(),rope);
+    omniInternal::replaceImplementation(objref, rid, local_id);
+    return;
   }
-
-  // Need to instantiate a properly typed proxy.
-  omniIdentity* rid = new omniRemoteIdentity(ior._retn(),rope);
-  omniInternal::replaceImplementation(objref, rid, local_id);
+  // a new RemoteIdentity or RemoteGroupIdentity was created
+  // XXX is the 0 argument correct ???
+  omniInternal::replaceImplementation(objref, id, 0);
 }
 
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5.2.2  2001/02/23 19:25:19  sll
+  Merged interim FT client stuff.
+
   Revision 1.2.2.5.2.1  2001/02/23 16:50:43  sll
   SLL work in progress.
 
@@ -188,6 +191,8 @@ class omniObjRef;
 class omniServant;
 class omniIOR;
 class omniLocalIdentity;
+class omniRemoteIdentity;
+class omniIdentity;
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -299,6 +304,37 @@ _CORBA_MODULE_BEG
   // count of the returned id when finished with it.
   //  Must hold <internalLock>.
   //  This function does not throw any exceptions.
+
+  // Each of the reference creating functions below return a
+  // reference which supports the c++ type interface give by
+  // the repository id <targetRepoId> -- it must be a type for
+  // which we have static information.  <mostDerivedRepoId> is
+  // the interface repository ID recorded in the original IOR.
+  // This may be the empty string (but *not* null).
+  //  If <targetRepoId> is neither equal to <mostDerivedRepoId>
+  // nor the latter is a derived interface of the former, these
+  // methods return 0.
+
+  enum identity_t { LOCAL_IDENTITY, REMOTE_IDENTITY, REMOTE_GROUP_IDENTITY };
+
+  _CORBA_MODULE_FN omniIdentity* createIdentity(omniIOR* ior,
+						identity_t& kind,
+						_CORBA_Boolean locked);
+  // Returns an instance of one of the 3 subclasses of omniIdentity:
+  // omniLocalIdentity, omniRemoteIdentity, and omniRemoteGroupIdentity.
+  // kind is set accordingly.
+  // Returns 0 if the IOR is invalid such that an omniIdentity cannot be 
+  // created.
+  // Always consumes ior.
+
+  _CORBA_MODULE_FN omniRemoteIdentity* createRemoteIdentity(omniIOR* ior);
+  // Regardless of whether the ior is actually an IOGR (has a TAG_GROUP)
+  // or contains a reference to a local object, an omniRemoteIdentity
+  // is returned (or 0 if the IOR is invalid).  For a local object,
+  // the loopback interface is used.  For in IOGR, the TAG_GROUP
+  // is ignored and the normal behavior for an ior with several
+  // profiles applies (currently, arbitrarily select one profile).
+  // Always consumes ior.
 
   // Each of the reference creating functions below return a
   // reference which supports the c++ type interface give by

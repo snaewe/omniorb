@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/02/23 19:25:19  sll
+  Merged interim FT client stuff.
+
   Revision 1.1.2.1  2001/02/23 16:46:59  sll
   Added new files.
 
@@ -525,7 +528,11 @@ GIOP_S::unmarshalIORAddressingInfo() {
     Rope* rope;
     CORBA::Boolean is_local;
 
-    if (ior->selectRope(rope,is_local)) {
+    // XXX The following code does not have the desired effect yet.
+    //     because the IOR is decoded as a side effect of selectRope ATM.
+    //     Therefore ior->is_IOGR() always return 0 which is the default
+    //     value.
+    if ( !ior->is_IOGR() && ior->selectRope(rope,is_local)) {
       if (is_local) {
 	keysize(ior->getIIOPprofile().object_key.length());
 	memcpy((void*)key(),

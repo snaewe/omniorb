@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3.2.2  2001/02/23 19:25:20  sll
+  Merged interim FT client stuff.
+
   Revision 1.1.2.3.2.1  2001/02/23 16:50:43  sll
   SLL work in progress.
 
@@ -104,6 +107,24 @@ public:
     OMNIORB_ASSERT(pd_decoded);
     return pd_tcs_w;
   }    
+
+  _CORBA_Boolean is_IOGR() const { return pd_is_IOGR; }
+
+
+  class IORExtraInfo {
+  public:
+    IORExtraInfo(const IOP::ComponentId cid) : compid(cid),data(0) {}
+    ~IORExtraInfo() { if (data) destructor(data); data = 0; }
+    IOP::ComponentId compid;
+    void* data;
+    void (*destructor)(void*);
+  };
+  // For each unique ComponentId (e.g., TAG_GROUP) one can add
+  // an IORExtraInfo element to the extra_info list.
+
+  typedef _CORBA_Unbounded_Sequence<IORExtraInfo> IORExtraInfoList;
+
+  IORExtraInfoList& extraInfo() { return pd_extra_info; }
 
   ///////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////
@@ -204,6 +225,10 @@ public:
   static void  unmarshal_TAG_CODE_SETS(const IOP::TaggedComponent&, omniIOR*);
   static char* dump_TAG_CODE_SETS(const IOP::TaggedComponent&);
 
+  static void  add_TAG_GROUP(IOP::TaggedComponent&, const omniIOR*);
+  static void  unmarshal_TAG_GROUP(const IOP::TaggedComponent&, omniIOR*);
+  static char* dump_TAG_GROUP(const IOP::TaggedComponent&);
+
 private:
 
   _CORBA_String_member               pd_repositoryID;
@@ -221,6 +246,10 @@ private:
   _CORBA_ULong                       pd_orb_type;
   omniCodeSet::TCS_C*                pd_tcs_c;
   omniCodeSet::TCS_W*                pd_tcs_w;
+
+  _CORBA_Boolean                     pd_is_IOGR;
+
+  IORExtraInfoList                   pd_extra_info;
 
   int                                pd_refCount;
   // Protected by <omni::internalLock>

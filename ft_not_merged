@@ -1,0 +1,13 @@
+external_merge/mk/unix.mk
+external_merge/mk/rtems.mk
+external_merge/mk/win32.mk
+
+src/lib/dir.mk
+
+src/lib/omniORB/orbcore/omniInternal.cc
+     - call to omniRemoteGroupIdentity ctor not enabled.
+
+src/lib/omniORB/remoteGroupIdentity.{h,cc}
+src/lib/omniFT/*
+
+
