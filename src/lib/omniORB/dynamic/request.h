@@ -36,7 +36,6 @@
 
 class DeferredRequest;
 
-
 class RequestImpl : public CORBA::Request, public PseudoObjBase {
 public:
   RequestImpl(CORBA::Object_ptr target, const char* operation);
@@ -83,11 +82,10 @@ public:
     pd_sysExceptionToThrow = 0;
   }
 
-private:
-  CORBA::ULong calculateArgDataSize(CORBA::ULong msize);
-  void marshalArgs(GIOP_C& giop_client);
-  void unmarshalArgs(GIOP_C& giop_client);
+  void marshalArgs(cdrStream&);
+  void unmarshalArgs(cdrStream&);
 
+private:
   enum State {
     RS_READY,
     RS_DONE,
