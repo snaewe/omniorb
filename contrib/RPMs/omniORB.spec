@@ -96,6 +96,7 @@ mv $RPM_BUILD_ROOT/%{prefix}/bin/catior $RPM_BUILD_ROOT/%{prefix}/bin/catior.omn
 
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
 cp etc/init.d/omninames $RPM_BUILD_ROOT/etc/rc.d/init.d/omninames
+chmod +x $RPM_BUILD_ROOT/etc/rc.d/init.d/omninames
 #cp %{SOURCE1} $RPM_BUILD_ROOT/etc/
 
 mkdir -p $RPM_BUILD_ROOT/var/omninames
