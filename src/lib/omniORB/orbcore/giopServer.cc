@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.14  1998/08/21 19:08:50  sll
+  Added hook to recognise the key 'INIT' of the special bootstrapping
+  agent. Dispatch the invocation to the agent if it has been initialised.
+
   Revision 1.13  1998/08/14 13:47:08  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -65,6 +69,7 @@
 
 #include <ropeFactory.h>
 #include <objectManager.h>
+#include <bootstrap_i.h>
 
 size_t  GIOP_Basetypes::max_giop_message_size = 2048 * 1024;
 
@@ -428,6 +433,7 @@ void
 GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 {
   CORBA::ULong msgsize;
+  omniObject *obj = 0;    
 
   try {
     // This try block catches any exception that might raise during
@@ -459,15 +465,28 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 
     CORBA::ULong keysize;
     keysize <<= *this;
-    if (keysize != sizeof(omniObjectKey)) {
+    if (keysize == sizeof(omniObjectKey)) {
+      get_char_array((CORBA::Char *)&pd_objkey,keysize);
+    }
+    else {
       // This key did not come from this orb.
       // silently skip the key. Initialise pd_objkey to all zeros and
       // let the call to locateObject() below to raise the proper exception
       pd_objkey = omniORB::nullkey();
-      skip(keysize);
-    }
-    else {
-      get_char_array((CORBA::Char *)&pd_objkey,keysize);
+      
+      // However, we make a special case for the bootstrapping agent.
+      // The object key is "INIT". If the key match and we do have
+      // the bootstrapping agent running, initialise obj to point to it. 
+      if (keysize == 4) {
+	CORBA::Char k[4];
+	get_char_array(k,4);
+	if (k[0] == 'I' && k[1] == 'N' && k[2] == 'I' && k[3] == 'T') {
+	  obj = omniInitialReferences::singleton()->has_bootstrap_agentImpl();
+	}
+      }
+      else {
+	skip(keysize);
+      }
     }
 
     CORBA::ULong octetlen;
@@ -517,12 +536,17 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     // MessageError Message instead of returning a Reply with System Exception
     // message because the other-end says do not send me a reply!
 
-  omniObject *obj = 0;    
   try {
     // In future, we have to partially decode the object key to
     // determine which object manager it belongs to.
     // For the moment, there is only one object manager- the rootObjectManager.
-    obj = omni::locateObject(omniObjectManager::root(),pd_objkey);
+    if (!obj) {
+      obj = omni::locateObject(omniObjectManager::root(),pd_objkey);
+    }
+    else {
+      omni::objectDuplicate(obj);
+    }
+
     if (!obj->dispatch(*this,(const char *)pd_operation,pd_response_expected))
 	{
 	  if (!obj->omniObject::dispatch(*this,(const char*)pd_operation,
