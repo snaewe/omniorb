@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.4  1998/04/07 18:42:41  sll
+  Use std::fstream instead of fstream.
+  Stub code now contains workaround for MSVC++ to initialise constants properly.
+
   Revision 1.3  1997/12/09 19:55:24  sll
   *** empty log message ***
 
@@ -50,10 +54,9 @@ o2be_constant::o2be_constant(AST_Expression::ExprType et,
 }
 
 void
-o2be_constant::produce_hdr(fstream &s)
+o2be_constant::produce_hdr(std::fstream &s)
 {
-  IND(s); s << ((defined_in()== idl_global->root()) ? "extern const " 
-		                                    : "static const ");
+  IND(s); s << VarToken(*this) << " const ";
   AST_Expression::ExprType etype = et();
   switch (etype) {
   case AST_Expression::EV_short:
@@ -95,53 +98,89 @@ o2be_constant::produce_hdr(fstream &s)
 }
 
 void
-o2be_constant::produce_skel(fstream &s)
+o2be_constant::produce_skel(std::fstream &s)
 {
   char *quote = NULL;
+  char *typestr;
 
-  IND(s); s << "const ";
   AST_Expression::ExprType etype = et();
   switch (etype) {
   case AST_Expression::EV_short:
-    s << "CORBA::Short";
+    typestr =  "const CORBA::Short";
     break;
   case AST_Expression::EV_ushort:
-    s << "CORBA::UShort";
+    typestr =  "const CORBA::UShort";
     break;
   case AST_Expression::EV_long:
-    s <<  "CORBA::Long";
+    typestr =  "const CORBA::Long";
     break;
   case AST_Expression::EV_ulong:
-    s << "CORBA::ULong";
+    typestr =  "const CORBA::ULong";
     break;
   case AST_Expression::EV_float:
-    s << "CORBA::Float";
+    typestr = "const CORBA::Float";
     break;
   case AST_Expression::EV_double:
-    s << "CORBA::Double";
+    typestr = "const CORBA::Double";
     break;
   case AST_Expression::EV_char:
-    s <<  "CORBA::Char";
+    typestr = "const CORBA::Char";
     quote = "'";
     break;
   case AST_Expression::EV_octet:
-    s << "CORBA::Octet";
+    typestr = "const CORBA::Octet";
     break;
   case AST_Expression::EV_bool:
-    s << "CORBA::Boolean";
+    typestr = "const CORBA::Boolean";
     break;
   case AST_Expression::EV_string:
-    s << "char *";
+    typestr = "const char *";
     quote = "\"";
     break;
   default:
     throw o2be_internal_error(__FILE__,__LINE__,"unexpected type under constant class");
     break;
   }
-  s << " " << fqname() << " = " 
-    << ((quote != NULL) ? quote : "");
-  constant_value()->dump(s);
-  s << ((quote != NULL) ? quote : "") << ";\n";
+
+  if (defined_in() != idl_global->root() &&
+      defined_in()->scope_node_type() == AST_Decl::NT_module)
+    {
+      s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
+      IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
+      AST_Decl* inscope = ScopeAsDecl(defined_in());
+      char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
+      if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
+	{
+	  scopename = o2be_name::narrow_and_produce__fqname(inscope);
+	  IND(s); s << "namespace " << scopename << " = " 
+		    << o2be_name::narrow_and_produce_fqname(inscope)
+		    << ";\n";
+	}
+      IND(s); s << "namespace " << scopename << " {\n";
+      INC_INDENT_LEVEL();
+
+      IND(s); s << "extern " << typestr << " " << uqname() << "="
+		<< ((quote != NULL) ? quote : "");
+      constant_value()->dump(s);
+      s << ((quote != NULL) ? quote : "") << ";\n";
+
+
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      s << "#else\n";
+      IND(s); s << typestr << " " << fqname() << "="
+		<< ((quote != NULL) ? quote : "");
+      constant_value()->dump(s);
+      s << ((quote != NULL) ? quote : "") << ";\n";
+      s << "#endif\n";
+    }
+  else
+    {
+      IND(s); s << typestr << " " << uqname() << "="
+		<< ((quote != NULL) ? quote : "");
+      constant_value()->dump(s);
+      s << ((quote != NULL) ? quote : "") << ";\n";
+    }
   return;
 }
 
