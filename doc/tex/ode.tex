@@ -13,16 +13,11 @@
 \author{Tristan Richardson\\
         ORL\\
         Cambridge}
-\date{30 June 1998}
+\date{12 January 1999}
 
 \begin{document}
 
 \maketitle
-
-\begin{center}
-{\it Note: this document replaces~\cite{lo95} and~\cite{ward95}.}
-
-\end{center}
 
 \vspace{0.2in}
 
@@ -59,7 +54,7 @@ tree} can then be used as an {\em import tree} by another build tree.
 Obviously build trees are platform-dependent.
 
 \item A {\em source tree} has the source code of things which need ``building''
-such as C/C++ source and java source.  Things which don't need to be ``built''
+such as C/C++ source and Java source.  Things which don't need to be ``built''
 such as header files and IDL files can just be put directly into an
 import/export tree.
 
@@ -154,7 +149,7 @@ same build tree.
 
 \end{enumerate}
 
-\section{Writing a Hello World program}
+\section{Writing a Hello World program in C}
 
 This section introduces the use of the development environment by going through
 the steps to build a simple ``hello world'' program on a unix platform.  This
@@ -164,15 +159,23 @@ above.
 \subsection{Setting up Your Environment}
 \label{settingenv}
 
-\sloppy{Although not strictly necessary it is advisable to set the
-environment variable \verb|OMNI_TREE| to point to the base OMNI tree you
-wish to use (for example \verb|/project/omni/release|).  Then add the
-directories \verb|$OMNI_TREE/bin/|{\it platform} and
-\verb|$OMNI_TREE/bin/scripts| to your path in that order (so that
-platform-specific binaries will override scripts).  You may also wish to
-add \verb|$OMNI_TREE/man| to your {\tt MANPATH}.  If the version of make
-which is on your path is not GNU make then you need to set the environment
-variable {\tt GNUMAKE} to specify the command to run for GNU make.}
+\sloppy{Although not strictly necessary it is advisable to set the environment
+variable \verb|OMNI_TREE| to point to the base OMNI tree you wish to use.  For
+a quick test like this, you can use \verb|/project/omni/release| - this is a
+symbolic link to the current release tree.  If you want to make a build tree
+which is more stable, use the actual directory name
+(e.g. \verb|/project/omni/version5.5|) as the base OMNI tree.  Doing the latter
+means you won't have problems when the release tree is moved on to the next
+version.  If you really want to be at the cutting edge, you can use
+\verb|/project/omni/develop|, but as the name suggests, the develop tree may
+change underneath your feet, so you should only do this if you really need to.
+
+Having decided on your base OMNI tree, add the directories
+\verb|$OMNI_TREE/bin/|{\it platform} and \verb|$OMNI_TREE/bin/scripts| to your
+path in that order (so that platform-specific binaries will override scripts).
+You may also wish to add \verb|$OMNI_TREE/man| to your {\tt MANPATH}.  If the
+version of make which is on your path is not GNU make then you need to set the
+environment variable {\tt GNUMAKE} to specify the command to run for GNU make.}
 
 \subsection{Creating a build tree}
 
@@ -283,8 +286,8 @@ make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET=
 
 /project/omni/release/mk/afterdir.mk:64: hello.d: No such file or directory
 /bin/sh -ec "gcc -M  -I.  -I/project/omni/release/include -D__sunos__ -D__sp
-arc__ -D__OSVERSION__=5 -DSVR4 hello.c | sed 's/hello\\.o/& hello.d/g' > hello.
-d"
+arc__ -D__OSVERSION__=5 -DSVR4 hello.c | sed 's/hello\\.o/& hello.d/g' > hel
+lo.d"
 gcc -c -O -fpcc-struct-return  -I.  -I/project/omni/release/include -D__suno
 s__ -D__sparc__ -D__OSVERSION__=5 -DSVR4 -o hello.o hello.c
 + rm -f hello 
@@ -398,7 +401,8 @@ The {\tt dir.mk} file is basically just a makefile, so you can put normal make
 rules and variable definitions there.  However to make full use of the ODE you
 will want to use the predefined variables and rules to make your {\tt dir.mk}
 platform-independent.  As with imakefiles, usually the best thing to do is find
-an existing dir.mk which does nearly the same thing that you want and copy it.
+an existing {\tt dir.mk} which does nearly the same thing that you want and
+copy it.
 
 \subsection{Generating library and executable names}
 
@@ -543,9 +547,9 @@ whenever that library changes.
 \subsubsection{Building dynamically-linked (shared) libraries}
 
 At present there are no rules to help you do this.  Currently the omnithread
-and omniORB2 libraries are built as shared libraries using a custom dir.mk.
-Proper support for building shared libraries ought to be provided at some time
-in the future.
+and omniORB2 libraries are built as shared libraries using a custom {\tt
+dir.mk}.  Proper support for building shared libraries ought to be provided at
+some time in the future.
 
 
 \subsection{Building in subdirectories}
@@ -739,10 +743,14 @@ exported.
 
 Once you have the structure and the {\tt dir.mk} files, you can now create a
 build tree for each platform.  Go into the {\tt build} directory and run ``{\tt
-obuildtree}''.  Nearly all the the defaults should be correct.  Make sure that
-your top-level directory ({\tt /project/wobble/version1.0}) is the export tree
-as well as the first import tree, and also that the source tree is the same
-with {\tt src} appended ({\tt /project/wobble/version1.0/src}).
+obuildtree}''.  Nearly all the the defaults should be correct.  You should use
+the actual directory name of the base OMNI tree
+(e.g. \verb|/project/omni/version5.5|) rather than
+\verb|/project/omni/release|, so that you don't have problems when the release
+tree is moved on to the next version.  Make sure that your top-level directory
+({\tt /project/wobble/version1.0}) is the export tree as well as the first
+import tree, and also that the source tree is the same with {\tt src} appended
+({\tt /project/wobble/version1.0/src}).
 
 Go into the {\it platform} subdirectory and do ``{\tt omake export}''.  If you
 got your {\tt dir.mk} files correct everything will now build and be exported
@@ -759,9 +767,9 @@ default import from any trees specified in \verb|OMNI_IMPORT_TREES|, saving
 them from having to type the full path out each time they create a build tree.
 
 
-\section{CORBA}
+\section{Using CORBA in C++ programs}
 
-Using CORBA in your programs is easy.  In your {\tt dir.mk}:
+Using CORBA in your C++ programs is easy.  In your {\tt dir.mk}:
 \begin{itemize}
 \item the make variable \verb|CORBA_INTERFACES| should contain a list of the
 IDL interfaces which your program uses.
@@ -812,6 +820,155 @@ the {\tt beforedir.mk} of an import tree.  If you change {\tt
 CorbaImplementation} in this way you must be careful to make sure that all
 relevant libraries and stubs have also been built with the same CORBA
 implementation.
+
+
+\section{Building Java Programs}
+
+Building Java programs is quite different to the way C and C++ programs are
+built.  In Java there is no link stage, and there are no header files.
+Instead, Java imposes constraints on the way files are used and named so that
+the compiler or the runtime can find interdependent classes.
+
+The ``make'' program was designed with the C/C++ model of building in mind.
+Java doesn't fit into this model very well in a number of ways:
+
+\begin{itemize}
+
+\item There is no simple relationship between Java source (\verb|.java|) and
+Java class (\verb|.class|) file names.  For example a single \verb|.java| file
+can generate multiple \verb|.class| files, whose names may change as the
+contents of the \verb|.java| file changes.
+
+\item Checking dependencies between individual \verb|.java| and \verb|.class|
+files is not really worth doing separately - it's as expensive as recompiling
+all the \verb|.java| files.
+
+\item The Java package layout must be reflected in the directory hierarchy.  In
+particular, the Java compiler must be invoked from the top of this package
+directory hierarchy so that it can find classes in different packages.
+
+\end{itemize}
+
+In essence, \verb|.class| files are too small a unit for "make" to deal with.
+Our solution to these problems is for make to deal with Java archive
+(\verb|.jar|) files as targets, rather than \verb|.class| files.  We treat
+\verb|.class| files as intermediate files which exist temporarily to create a
+\verb|.jar| file, but can be removed afterwards.
+
+So in a {\tt dir.mk} you specify that certain \verb|.java| files produce a
+\verb|.jar| file - all \verb|.class| files generated from compiling the
+\verb|.java| files will be included in the \verb|.jar| file.  Whenever a
+\verb|.java| file changes, all the \verb|.java| files making up the same
+\verb|.jar| file will be recompiled to produce a new \verb|.jar| file.
+
+For example, say you have a class \verb|HelloWorld| inside the \verb|Hello|
+package.  Somewhere in your tree you must have a \verb|Hello| directory with
+a \verb|HelloWorld.java| inside it.  Don't put a {\tt dir.mk} in the
+\verb|Hello| directory itself.  Instead, at the level above the \verb|Hello|
+directory, make a {\tt dir.mk} with the following:
+
+{\footnotesize \begin{verbatim}
+all:: hello.jar
+
+hello.jar: Hello/HelloWorld.java
+        @$(CompileJavaSourcesToJar)
+\end{verbatim}}
+
+When you do an \verb|omake|, this should first run the Java compiler to create
+any \verb|.class| files, then run the \verb|jar| program to create the
+\verb|hello.jar| file.  The \verb|CompileJavaSourcesToJar| rule actually leaves
+behind the intermediate \verb|.class| files, so in this case you can run your
+Java program something like this:
+
+{\footnotesize \begin{verbatim}
+% java Hello.HelloWorld
+\end{verbatim}}
+
+However, only the \verb|.class| files from the last
+\verb|CompileJavaSourcesToJar| rule are left behind, so in general you need to
+run your Java program from the \verb|.jar| file, something like this:
+
+{\footnotesize \begin{verbatim}
+% java -classpath hello.jar:/usr/local/java/lib/classes.zip Hello.HelloWorld
+\end{verbatim}}
+
+For completeness there should also be a rule for removing the \verb|.class|
+files when ``{\tt omake clean}'' is done:
+
+{\footnotesize \begin{verbatim}
+clean::
+        @$(CleanJavaClassFiles)
+\end{verbatim}}
+
+You may also want a rule to export the \verb|.jar| file:
+
+{\footnotesize \begin{verbatim}
+export:: hello.jar
+        @$(ExportJar)
+\end{verbatim}}
+
+As an extra convenience, you don't need to explicitly specify all of the
+\verb|.java| files in your tree if you just want them all combined into a
+single \verb|.jar| file.  You can get the ODE to automatically find all the
+\verb|.java| files by doing the following:
+
+{\footnotesize \begin{verbatim}
+hello.jar: $(JAVA_FIND_ALL_SOURCES)
+        @$(CompileJavaSourcesToJar)
+\end{verbatim}}
+
+Another difference between C/C++ and Java is that Java is platform-independent,
+so you only need to build Java code on a single platform.  The easiest way to
+ensure this is to put an \verb|ifdef| in the dir.mk above the directory with
+your Java code, which builds in that directory only for your chosen platform.  For example:
+
+{\footnotesize \begin{verbatim}
+SUBDIRS = wib wob
+
+ifdef SunOS
+SUBDIRS += myjavastuff
+endif
+
+all::
+        @$(MakeSubdirs)
+
+export::
+        @$(MakeSubdirs)
+\end{verbatim}}
+
+\subsection{Using CORBA in Java programs}
+
+CORBA stubs fit into this jar-based scheme well - all Java classes generated
+from a \verb|.idl| file are bundled into a \verb|.jar| file of the same name.
+These are put into a \verb|java_stub| directory at the top of the build tree,
+similar to the \verb|stub| directory for C++ stubs.
+
+As with C++, your {\tt dir.mk} should set \verb|CORBA_INTERFACES| to the IDL
+interfaces which your program uses.  The rule to build your \verb|.jar| file
+should have both \verb|$(CORBA_STUB_JARS)| and \verb|$(CORBA_ORB_JAR)| in the
+dependencies.  If you want to generate a complete \verb|.jar| which includes
+all the ORB and stub classes, you can use the \verb|$(CombineJars)| rule, e.g.:
+
+{\footnotesize \begin{verbatim}
+CORBA_INTERFACES = mrBook
+
+mrbook_only.jar: $(CORBA_STUB_JARS) $(CORBA_ORB_JAR) $(JAVA_FIND_ALL_SOURCES)
+        @$(CompileJavaSourcesToJar)
+
+mrbook.jar: mrbook_only.jar $(CORBA_STUB_JARS) $(CORBA_ORB_JAR)
+        @$(CombineJars)
+\end{verbatim}}
+
+Often it's useful to put all the generated stub classes into a separate Java
+package to avoid name clashes.  This can be done by setting the make variable
+\verb|CORBA_INTERFACES_JAVA_PACKAGE|, e.g.:
+
+{\footnotesize \begin{verbatim}
+CORBA_INTERFACES_JAVA_PACKAGE = mrBookPackage
+\end{verbatim}}
+
+In this case, all generated stub classes appear in the package
+\verb|mrBookPackage|.
 
 \section{Building on NT}
 
@@ -1015,7 +1172,7 @@ int main()
 }
 \end{verbatim}}
 
-The dir.mk is just as before:
+The {\tt dir.mk} is just as before:
 
 {\footnotesize \begin{verbatim}
 $ cat >dir.mk
@@ -1100,9 +1257,9 @@ Module hello
 Process hello is hello/hello
 \end{verbatim}}
 
-Now we need one extra {\tt export} rule in dir.mk\footnote{Adding this rule
-doesn't make dir.mk ATMos-specific -- it is simply ignored on non-ATMos
-platforms}:
+Now we need one extra {\tt export} rule in {\tt dir.mk}\footnote{Adding this
+rule doesn't make {\tt dir.mk} ATMos-specific -- it is simply ignored on
+non-ATMos platforms}:
 
 {\footnotesize \begin{verbatim}
 $ cat >>dir.mk
@@ -1202,9 +1359,9 @@ into their three different functions:
 
 \begin{enumerate}
 \item Directives which say how to compile programs and libraries are replaced
-by rules in dir.mk.
+by rules in {\tt dir.mk}.
 \item Directives describing particular executables are put into a module file
-in the same directory as the code and dir.mk (as described in section
+in the same directory as the code and {\tt dir.mk} (as described in section
 \ref{atmoshello} for the hello world example).
 \item Directives defining {\em interfaces}, i.e. messages (and possibly
 hardware configuration), are put into module files in a separate ``ATMos
@@ -1340,18 +1497,5 @@ message will have a different ID in your local import/export tree from the ID
 it has in the project import/export tree.
 
 \end{itemize}
-
-
-\begin{thebibliography}{ward95}
-
-\bibitem[Lo95]{lo95}
-{\em A Guide to the OMNI Development Environment},
-Sai Lai Lo, ORL, 15 August 1995.
-
-\bibitem[Ward95]{ward95}
-{\em A Guide to Windows NT Program Development in the OMNI Tree},
-Andrew M. R. Ward, ORL, August 1995.
-
-\end{thebibliography}
 
 \end{document}
