@@ -1,3 +1,38 @@
+Tue Oct  5 21:28:48 BST 1999 sll
+================================
+
+- Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE
+
+- Added option -ORBgiopTargetAddressMode <0|1|2> to control the
+  TargetAddress mode used when invoking on a remote object using GIOP 1.2
+
+- Updated test GIOPProxy server to test the mapTargetAddressToObject upcall 
+  from the ORB.
+
+include/omniORB2/GIOP.h
+include/omniORB2/IOP.h
+include/omniORB2/giopStream.h
+include/omniORB2/omniORB.h
+src/lib/omniORB2/dynamic/proxyCall.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/firewallProxy.cc
+src/lib/omniORB2/orbcore/giopClient.cc
+src/lib/omniORB2/orbcore/giopObjectInfo.h
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/giopStream.cc
+src/lib/omniORB2/orbcore/giopStream12.cc
+src/lib/omniORB2/orbcore/ior.cc
+src/lib/omniORB2/orbcore/object.cc
+src/lib/omniORB2/orbcore/objectRef.cc
+src/lib/omniORB2/orbcore/proxyCall.cc
+src/lib/omniORB2/orbcore/ropeFactory.cc
+src/lib/omniORB2/orbcore/tcpSocket.cc
+
+src/test/giopproxy/README                    NEW
+src/test/giopproxy/server.cc
+
+
 Sat Oct  2 19:23:30 BST 1999 sll
 ================================
 
