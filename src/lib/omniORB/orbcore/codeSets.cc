@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2002/12/19 13:56:58  dgrisby
+  New Windows 1251 code set. (Thanks Vasily Tchekalkin).
+
   Revision 1.1.2.10  2001/07/26 16:37:20  dpg1
   Make sure static initialisers always run.
 
@@ -123,6 +126,8 @@ const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_2   = 0x00010102;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_4   = 0x00010106;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_8   = 0x05010001;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_16  = 0x00010109;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1251  = 0x100204e3;
+
 
 //
 // GIOP version constants

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2002/12/19 13:56:58  dgrisby
+  New Windows 1251 code set. (Thanks Vasily Tchekalkin).
+
   Revision 1.1.2.6  2001/06/13 20:06:18  sll
   Minor fix to make the ORB compile with MSVC++.
 
@@ -136,6 +139,8 @@ public:
   static _core_attr const CONV_FRAME::CodeSetId ID_UTF_8;
   static _core_attr const CONV_FRAME::CodeSetId ID_UTF_16;  // Unicode with
                                                             //  surrogates
+  static _core_attr const CONV_FRAME::CodeSetId ID_CP1251;  // windows-1251
+
 
   class NCS_C; // Native code set for char and string
   class NCS_W; // Native code set for wide char and wide string

@@ -1,3 +1,19 @@
+Thu Dec 19 13:54:17 GMT 2002 dgrisby
+====================================
+
+- Don't try to delete non-existent file when no preprocessor.
+
+src/tool/omniidl/python/omniidl/main.py
+
+- New Windows 1251 code set. (Thanks Vasily Tchekalkin).
+
+include/omniORB4/codeSets.h
+src/lib/omniORB/codesets/cs-cp1251.cc      -- new
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/codesets/omniCodeSets.cc
+src/lib/omniORB/orbcore/codeSets.cc
+
+
 Thu Dec 19 12:20:51 GMT 2002 dgrisby
 ====================================
 
