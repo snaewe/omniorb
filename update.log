@@ -1,3 +1,27 @@
+Fri Apr 30 15:53:04 BST 2004 dgrisby
+====================================
+
+- Update readme.
+
+README.unix
+
+- Use correct socklen arg type on Solaris. Thanks Mike Heley.
+
+include/omniORB4/CORBA_sysdep_trad.h
+
+- Off-by-one error in UCS-4 marshalling. Thanks Brett Zimmerman.
+
+src/lib/omniORB/codesets/cs-UCS-4.cc
+
+- Fix to dummy thread on vxWorks. Thanks Gary Block.
+
+src/lib/omnithread/vxWorks.cc
+
+- Fix included file issues in omnicpp.
+
+src/tool/omniidl/cxx/cccp/cccp.c
+
+
 Mon Apr 19 10:27:15 BST 2004 dgrisby
 ====================================
 
