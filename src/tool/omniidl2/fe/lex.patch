@@ -82,3 +82,20 @@ point to incorporate the necessary changes.
 + #ifdef __VMS
 + # line 2677 "lex_yy.cc"
 + #endif
+
+
+Also, add conditional compilation guards for WIN32 around the declaration of
+exit (at line 52):
+
+#if !defined(__WIN32__)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+	void exit(int);
+#ifdef __cplusplus
+}
+#endif
+
+#endif // __WIN32__
+
