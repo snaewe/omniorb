@@ -29,6 +29,10 @@
 
 /* 
    $Log$
+   Revision 1.8.2.1  1999/09/22 16:38:25  djr
+   Removed MT locking for 'DynAny's.
+   New methods DynUnionImpl::NP_disc_value() and NP_disc_index().
+
    Revision 1.8  1999/07/20 14:22:58  djr
    Accept nil ref in insert_reference().
    Allow DynAny with type tk_void.
@@ -285,7 +289,6 @@ CORBA::DynArray::~DynArray() {}
 
 
 omni_mutex DynAnyImplBase::refCountLock;
-omni_mutex DynAnyImplBase::lock;
 
 
 DynAnyImplBase::~DynAnyImplBase()
@@ -320,7 +323,6 @@ DynAnyImplBase::from_any(const CORBA::Any& value)
   MemBufferedStream& buf = ((AnyP*)value.NP_pd())->getMemBufferedStream();
   buf.rewind_in_mkr();
 
-  Lock sync(this);
   if( !copy_from(buf) )  throw CORBA::DynAny::Invalid();
 }
 
@@ -333,7 +335,6 @@ DynAnyImplBase::to_any()
 
   // <buf> should already be rewound.
 
-  Lock sync(this);
   if( !copy_to(buf) ) {
     delete a;
     throw CORBA::DynAny::Invalid();
@@ -422,8 +423,6 @@ DynAnyImpl::assign(CORBA::DynAny_ptr da)
   if( !tc()->equivalent(daib->tc()) )  throw CORBA::DynAny::Invalid();
   DynAnyImpl* dai = ToDynAnyImpl(daib);
 
-  Lock sync(this);
-
   if( !dai->isValid() )  throw CORBA::DynAny::Invalid();
 
   dai->pd_buf.rewind_in_mkr();
@@ -451,7 +450,6 @@ DynAnyImpl::copy()
 void
 DynAnyImpl::insert_boolean(CORBA::Boolean value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_boolean);
 }
 
@@ -459,7 +457,6 @@ DynAnyImpl::insert_boolean(CORBA::Boolean value)
 void
 DynAnyImpl::insert_octet(CORBA::Octet value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_octet);
 }
 
@@ -467,7 +464,6 @@ DynAnyImpl::insert_octet(CORBA::Octet value)
 void
 DynAnyImpl::insert_char(CORBA::Char value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_char);
 }
 
@@ -475,7 +471,6 @@ DynAnyImpl::insert_char(CORBA::Char value)
 void
 DynAnyImpl::insert_short(CORBA::Short value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_short);
 }
 
@@ -483,7 +478,6 @@ DynAnyImpl::insert_short(CORBA::Short value)
 void
 DynAnyImpl::insert_ushort(CORBA::UShort value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_ushort);
 }
 
@@ -491,7 +485,6 @@ DynAnyImpl::insert_ushort(CORBA::UShort value)
 void
 DynAnyImpl::insert_long(CORBA::Long value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_long);
 }
 
@@ -499,14 +492,12 @@ DynAnyImpl::insert_long(CORBA::Long value)
 void
 DynAnyImpl::insert_ulong(CORBA::ULong value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_ulong);
 }
 #ifndef NO_FLOAT
 void
 DynAnyImpl::insert_float(CORBA::Float value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_float);
 }
 
@@ -514,7 +505,6 @@ DynAnyImpl::insert_float(CORBA::Float value)
 void
 DynAnyImpl::insert_double(CORBA::Double value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_double);
 }
 #endif
@@ -530,7 +520,6 @@ DynAnyImpl::insert_string(const char* value)
   if( maxlen && length - 1 > maxlen )
     throw CORBA::DynAny::InvalidValue();
 
-  Lock sync(this);
   MemBufferedStream& buf = doWrite(CORBA::tk_string);
   length >>= buf;
   buf.put_char_array((const CORBA::Char*)value, length);
@@ -543,7 +532,6 @@ DynAnyImpl::insert_reference(CORBA::Object_ptr value)
   if ( !CORBA::Object::PR_is_valid(value) )
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  Lock sync(this);
   CORBA::Object::marshalObjRef(value, doWrite(CORBA::tk_objref));
 }
 
@@ -556,7 +544,6 @@ DynAnyImpl::insert_typecode(CORBA::TypeCode_ptr value)
 
   if( CORBA::is_nil(value) )  throw CORBA::DynAny::InvalidValue();
 
-  Lock sync(this);
   CORBA::TypeCode::marshalTypeCode(value, doWrite(CORBA::tk_TypeCode));
 }
 
@@ -564,7 +551,6 @@ DynAnyImpl::insert_typecode(CORBA::TypeCode_ptr value)
 void
 DynAnyImpl::insert_any(const CORBA::Any& value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_any);
 }
 
@@ -572,7 +558,6 @@ DynAnyImpl::insert_any(const CORBA::Any& value)
 CORBA::Boolean
 DynAnyImpl::get_boolean()
 {
-  Lock sync(this);
   CORBA::Boolean value;
   value <<= doRead(CORBA::tk_boolean);
   return value;
@@ -582,7 +567,6 @@ DynAnyImpl::get_boolean()
 CORBA::Octet
 DynAnyImpl::get_octet()
 {
-  Lock sync(this);
   CORBA::Octet value;
   value <<= doRead(CORBA::tk_octet);
   return value;
@@ -592,7 +576,6 @@ DynAnyImpl::get_octet()
 CORBA::Char
 DynAnyImpl::get_char()
 {
-  Lock sync(this);
   CORBA::Char value;
   value <<= doRead(CORBA::tk_char);
   return value;
@@ -602,7 +585,6 @@ DynAnyImpl::get_char()
 CORBA::Short
 DynAnyImpl::get_short()
 {
-  Lock sync(this);
   CORBA::Short value;
   value <<= doRead(CORBA::tk_short);
   return value;
@@ -612,7 +594,6 @@ DynAnyImpl::get_short()
 CORBA::UShort
 DynAnyImpl::get_ushort()
 {
-  Lock sync(this);
   CORBA::UShort value;
   value <<= doRead(CORBA::tk_ushort);
   return value;
@@ -622,7 +603,6 @@ DynAnyImpl::get_ushort()
 CORBA::Long
 DynAnyImpl::get_long()
 {
-  Lock sync(this);
   CORBA::Long value;
   value <<= doRead(CORBA::tk_long);
   return value;
@@ -632,7 +612,6 @@ DynAnyImpl::get_long()
 CORBA::ULong
 DynAnyImpl::get_ulong()
 {
-  Lock sync(this);
   CORBA::ULong value;
   value <<= doRead(CORBA::tk_ulong);
   return value;
@@ -642,7 +621,6 @@ DynAnyImpl::get_ulong()
 CORBA::Float
 DynAnyImpl::get_float()
 {
-  Lock sync(this);
   CORBA::Float value;
   value <<= doRead(CORBA::tk_float);
   return value;
@@ -652,7 +630,6 @@ DynAnyImpl::get_float()
 CORBA::Double
 DynAnyImpl::get_double()
 {
-  Lock sync(this);
   CORBA::Double value;
   value <<= doRead(CORBA::tk_double);
   return value;
@@ -662,7 +639,6 @@ DynAnyImpl::get_double()
 char*
 DynAnyImpl::get_string()
 {
-  Lock sync(this);
   MemBufferedStream& buf = doRead(CORBA::tk_string);
 
   CORBA::ULong length;
@@ -690,7 +666,6 @@ DynAnyImpl::get_string()
 CORBA::Object_ptr
 DynAnyImpl::get_reference()
 {
-  Lock sync(this);
   return CORBA::Object::unmarshalObjRef(doRead(CORBA::tk_objref));
 }
 
@@ -698,7 +673,6 @@ DynAnyImpl::get_reference()
 CORBA::TypeCode_ptr
 DynAnyImpl::get_typecode()
 {
-  Lock sync(this);
   return CORBA::TypeCode::unmarshalTypeCode(doRead(CORBA::tk_TypeCode));
 }
 
@@ -706,7 +680,6 @@ DynAnyImpl::get_typecode()
 CORBA::Any*
 DynAnyImpl::get_any()
 {
-  Lock sync(this);
   MemBufferedStream& buf = doRead(CORBA::tk_any);
 
   CORBA::Any* value = new CORBA::Any();
@@ -833,7 +806,6 @@ DynEnumImpl::value_as_string()
 
   CORBA::ULong val;
   {
-    Lock sync(this);
     if( !isValid() )  return CORBA::string_dup("");
     pd_buf.rewind_in_mkr();
     val <<= pd_buf;
@@ -853,7 +825,6 @@ DynEnumImpl::value_as_string(const char* value)
   CORBA::Long index = tc()->NP_member_index(value);
   if( index < 0 )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
-  Lock sync(this);
   pd_buf.rewind_inout_mkr();
   CORBA::ULong(index) >>= pd_buf;
   setValid();
@@ -865,14 +836,13 @@ DynEnumImpl::value_as_ulong()
 {
   CORBA::ULong val;
   {
-    Lock sync(this);
-    if( !isValid() )  throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    if( !isValid() )  throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     pd_buf.rewind_in_mkr();
     val <<= pd_buf;
   }
 
   if( val >= tc()->NP_member_count() )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return val;
 }
@@ -884,7 +854,6 @@ DynEnumImpl::value_as_ulong(CORBA::ULong value)
   if( value >= tc()->NP_member_count() )
     throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
-  Lock sync(this);
   pd_buf.rewind_inout_mkr();
   value >>= pd_buf;
   setValid();
@@ -962,7 +931,6 @@ DynAnyConstrBase::assign(CORBA::DynAny_ptr da)
   // We do the copy via an intermediate buffer.
 
   MemBufferedStream buf;
-  Lock sync(this);
 
   if( !daib->copy_to(buf) )  throw CORBA::DynAny::Invalid();
 
@@ -975,7 +943,6 @@ DynAnyConstrBase::assign(CORBA::DynAny_ptr da)
 void
 DynAnyConstrBase::insert_boolean(CORBA::Boolean value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_boolean);
 }
 
@@ -983,7 +950,6 @@ DynAnyConstrBase::insert_boolean(CORBA::Boolean value)
 void
 DynAnyConstrBase::insert_octet(CORBA::Octet value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_octet);
 }
 
@@ -991,7 +957,6 @@ DynAnyConstrBase::insert_octet(CORBA::Octet value)
 void
 DynAnyConstrBase::insert_char(CORBA::Char value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_char);
 }
 
@@ -999,7 +964,6 @@ DynAnyConstrBase::insert_char(CORBA::Char value)
 void
 DynAnyConstrBase::insert_short(CORBA::Short value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_short);
 }
 
@@ -1007,7 +971,6 @@ DynAnyConstrBase::insert_short(CORBA::Short value)
 void
 DynAnyConstrBase::insert_ushort(CORBA::UShort value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_ushort);
 }
 
@@ -1015,7 +978,6 @@ DynAnyConstrBase::insert_ushort(CORBA::UShort value)
 void
 DynAnyConstrBase::insert_long(CORBA::Long value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_long);
 }
 
@@ -1023,7 +985,6 @@ DynAnyConstrBase::insert_long(CORBA::Long value)
 void
 DynAnyConstrBase::insert_ulong(CORBA::ULong value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_ulong);
 }
 
@@ -1031,7 +992,6 @@ DynAnyConstrBase::insert_ulong(CORBA::ULong value)
 void
 DynAnyConstrBase::insert_float(CORBA::Float value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_float);
 }
 
@@ -1039,7 +999,6 @@ DynAnyConstrBase::insert_float(CORBA::Float value)
 void
 DynAnyConstrBase::insert_double(CORBA::Double value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_double);
 }
 #endif
@@ -1050,7 +1009,6 @@ DynAnyConstrBase::insert_string(const char* value)
   if( !value )  throw CORBA::DynAny::InvalidValue();
   CORBA::ULong length = strlen(value) + 1;
 
-  Lock sync(this);
   if( pd_curr_index < 0 )  throw CORBA::DynAny::InvalidValue();
 
   TypeCode_base* tc = nthComponentTC(pd_curr_index);
@@ -1073,7 +1031,6 @@ DynAnyConstrBase::insert_reference(CORBA::Object_ptr value)
   if ( !CORBA::Object::PR_is_valid(value) )
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  Lock sync(this);
   CORBA::Object::marshalObjRef(value, writeCurrent(CORBA::tk_objref));
 }
 
@@ -1086,7 +1043,6 @@ DynAnyConstrBase::insert_typecode(CORBA::TypeCode_ptr value)
 
   if( CORBA::is_nil(value) )  throw CORBA::DynAny::InvalidValue();
 
-  Lock sync(this);
   CORBA::TypeCode::marshalTypeCode(value, writeCurrent(CORBA::tk_TypeCode));
 }
 
@@ -1094,7 +1050,6 @@ DynAnyConstrBase::insert_typecode(CORBA::TypeCode_ptr value)
 void
 DynAnyConstrBase::insert_any(const CORBA::Any& value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_any);
 }
 
@@ -1102,7 +1057,6 @@ DynAnyConstrBase::insert_any(const CORBA::Any& value)
 CORBA::Boolean
 DynAnyConstrBase::get_boolean()
 {
-  Lock sync(this);
   CORBA::Boolean value;
   value <<= readCurrent(CORBA::tk_boolean);
   return value;
@@ -1112,7 +1066,6 @@ DynAnyConstrBase::get_boolean()
 CORBA::Octet
 DynAnyConstrBase::get_octet()
 {
-  Lock sync(this);
   CORBA::Octet value;
   value <<= readCurrent(CORBA::tk_octet);
   return value;
@@ -1122,7 +1075,6 @@ DynAnyConstrBase::get_octet()
 CORBA::Char
 DynAnyConstrBase::get_char()
 {
-  Lock sync(this);
   CORBA::Char value;
   value <<= readCurrent(CORBA::tk_char);
   return value;
@@ -1132,7 +1084,6 @@ DynAnyConstrBase::get_char()
 CORBA::Short
 DynAnyConstrBase::get_short()
 {
-  Lock sync(this);
   CORBA::Short value;
   value <<= readCurrent(CORBA::tk_short);
   return value;
@@ -1142,7 +1093,6 @@ DynAnyConstrBase::get_short()
 CORBA::UShort
 DynAnyConstrBase::get_ushort()
 {
-  Lock sync(this);
   CORBA::UShort value;
   value <<= readCurrent(CORBA::tk_ushort);
   return value;
@@ -1152,7 +1102,6 @@ DynAnyConstrBase::get_ushort()
 CORBA::Long
 DynAnyConstrBase::get_long()
 {
-  Lock sync(this);
   CORBA::Long value;
   value <<= readCurrent(CORBA::tk_long);
   return value;
@@ -1162,7 +1111,6 @@ DynAnyConstrBase::get_long()
 CORBA::ULong
 DynAnyConstrBase::get_ulong()
 {
-  Lock sync(this);
   CORBA::ULong value;
   value <<= readCurrent(CORBA::tk_ulong);
   return value;
@@ -1172,7 +1120,6 @@ DynAnyConstrBase::get_ulong()
 CORBA::Float
 DynAnyConstrBase::get_float()
 {
-  Lock sync(this);
   CORBA::Float value;
   value <<= readCurrent(CORBA::tk_float);
   return value;
@@ -1182,7 +1129,6 @@ DynAnyConstrBase::get_float()
 CORBA::Double
 DynAnyConstrBase::get_double()
 {
-  Lock sync(this);
   CORBA::Double value;
   value <<= readCurrent(CORBA::tk_double);
   return value;
@@ -1192,7 +1138,6 @@ DynAnyConstrBase::get_double()
 char*
 DynAnyConstrBase::get_string()
 {
-  Lock sync(this);
   MemBufferedStream& buf = readCurrent(CORBA::tk_string);
 
   TypeCode_base* tc = nthComponentTC(pd_curr_index);
@@ -1223,7 +1168,6 @@ DynAnyConstrBase::get_string()
 CORBA::Object_ptr
 DynAnyConstrBase::get_reference()
 {
-  Lock sync(this);
   return CORBA::Object::unmarshalObjRef(readCurrent(CORBA::tk_objref));
 }
 
@@ -1231,7 +1175,6 @@ DynAnyConstrBase::get_reference()
 CORBA::TypeCode_ptr
 DynAnyConstrBase::get_typecode()
 {
-  Lock sync(this);
   return CORBA::TypeCode::unmarshalTypeCode(readCurrent(CORBA::tk_TypeCode));
 }
 
@@ -1239,7 +1182,6 @@ DynAnyConstrBase::get_typecode()
 CORBA::Any*
 DynAnyConstrBase::get_any()
 {
-  Lock sync(this);
   CORBA::Any* value = new CORBA::Any();
   try {
     *value <<= readCurrent(CORBA::tk_any);
@@ -1255,8 +1197,6 @@ DynAnyConstrBase::get_any()
 CORBA::DynAny_ptr
 DynAnyConstrBase::current_component()
 {
-  Lock sync(this);
-
   if( pd_curr_index < 0 )  return CORBA::DynAny::_nil();
   DynAnyImplBase* da = getCurrent();
   da->incrRefCount();
@@ -1267,8 +1207,6 @@ DynAnyConstrBase::current_component()
 CORBA::Boolean
 DynAnyConstrBase::next()
 {
-  Lock sync(this);
-
   if( pd_curr_index + 1 < (int)pd_n_components )  pd_curr_index++;
   else                                            pd_curr_index = -1;
 
@@ -1279,8 +1217,6 @@ DynAnyConstrBase::next()
 CORBA::Boolean
 DynAnyConstrBase::seek(CORBA::Long index)
 {
-  Lock sync(this);
-
   if( index < 0 || index >= (int)pd_n_components ) {
     pd_curr_index = -1;
     return 0;
@@ -1295,8 +1231,6 @@ DynAnyConstrBase::seek(CORBA::Long index)
 void
 DynAnyConstrBase::rewind()
 {
-  Lock sync(this);
-
   pd_curr_index = pd_n_components ? 0 : -1;
 }
 
@@ -1574,10 +1508,8 @@ DynStructImpl::copy()
 char*
 DynStructImpl::current_member_name()
 {
-  Lock sync(this);
-
   if( pd_curr_index < 0 )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return CORBA::string_dup(tc()->NP_member_name(pd_curr_index));
 }
@@ -1586,10 +1518,8 @@ DynStructImpl::current_member_name()
 CORBA::TCKind
 DynStructImpl::current_member_kind()
 {
-  Lock sync(this);
-
   if( pd_curr_index < 0 )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return tc()->NP_member_type(pd_curr_index)->NP_kind();
 }
@@ -1600,14 +1530,13 @@ DynStructImpl::get_members()
 {
   CORBA::NameValuePairSeq* nvps = new CORBA::NameValuePairSeq();
 
-  Lock sync(this);
   nvps->length(pd_n_components);
 
   for( unsigned i = 0; i < pd_n_components; i++ ) {
     (*nvps)[i].id = CORBA::string_dup(tc()->NP_member_name(i));
     if( !component_to_any(i, (*nvps)[i].value) ) {
       delete nvps;
-      throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+      throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     }
   }
   return nvps;
@@ -1617,8 +1546,6 @@ DynStructImpl::get_members()
 void
 DynStructImpl::set_members(const CORBA::NameValuePairSeq& nvps)
 {
-  Lock sync(this);
-
   if( nvps.length() != pd_n_components )
     throw CORBA::DynAny::InvalidSeq();
 
@@ -1705,7 +1632,6 @@ DynUnionImpl::assign(CORBA::DynAny_ptr da)
   // We do the copy via an intermediate buffer.
 
   MemBufferedStream buf;
-  Lock sync(this);
 
   if( !daib->copy_to(buf) )  throw CORBA::DynAny::Invalid();
 
@@ -1733,7 +1659,6 @@ DynUnionImpl::copy()
 void
 DynUnionImpl::insert_boolean(CORBA::Boolean value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_boolean);
   discriminatorHasChanged();
 }
@@ -1742,7 +1667,6 @@ DynUnionImpl::insert_boolean(CORBA::Boolean value)
 void
 DynUnionImpl::insert_octet(CORBA::Octet value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_octet);
   discriminatorHasChanged();
 }
@@ -1751,7 +1675,6 @@ DynUnionImpl::insert_octet(CORBA::Octet value)
 void
 DynUnionImpl::insert_char(CORBA::Char value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_char);
   discriminatorHasChanged();
 }
@@ -1760,7 +1683,6 @@ DynUnionImpl::insert_char(CORBA::Char value)
 void
 DynUnionImpl::insert_short(CORBA::Short value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_short);
   discriminatorHasChanged();
 }
@@ -1769,7 +1691,6 @@ DynUnionImpl::insert_short(CORBA::Short value)
 void
 DynUnionImpl::insert_ushort(CORBA::UShort value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_ushort);
   discriminatorHasChanged();
 }
@@ -1778,7 +1699,6 @@ DynUnionImpl::insert_ushort(CORBA::UShort value)
 void
 DynUnionImpl::insert_long(CORBA::Long value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_long);
   discriminatorHasChanged();
 }
@@ -1787,7 +1707,6 @@ DynUnionImpl::insert_long(CORBA::Long value)
 void
 DynUnionImpl::insert_ulong(CORBA::ULong value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_ulong);
   discriminatorHasChanged();
 }
@@ -1796,7 +1715,6 @@ DynUnionImpl::insert_ulong(CORBA::ULong value)
 void
 DynUnionImpl::insert_float(CORBA::Float value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_float);
   discriminatorHasChanged();
 }
@@ -1805,7 +1723,6 @@ DynUnionImpl::insert_float(CORBA::Float value)
 void
 DynUnionImpl::insert_double(CORBA::Double value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_double);
   discriminatorHasChanged();
 }
@@ -1816,8 +1733,6 @@ DynUnionImpl::insert_string(const char* value)
 {
   if( !value )  throw CORBA::DynAny::InvalidValue();
   CORBA::ULong length = strlen(value) + 1;
-
-  Lock sync(this);
 
   if( pd_curr_index != 1 || pd_member_kind != CORBA::tk_string )
     throw CORBA::DynAny::InvalidValue();
@@ -1838,7 +1753,6 @@ DynUnionImpl::insert_reference(CORBA::Object_ptr value)
   if ( !CORBA::Object::PR_is_valid(value) )
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  Lock sync(this);
   CORBA::Object::marshalObjRef(value, writeCurrent(CORBA::tk_objref));
   discriminatorHasChanged();
 }
@@ -1852,7 +1766,6 @@ DynUnionImpl::insert_typecode(CORBA::TypeCode_ptr value)
 
   if( CORBA::is_nil(value) )  throw CORBA::DynAny::InvalidValue();
 
-  Lock sync(this);
   CORBA::TypeCode::marshalTypeCode(value, writeCurrent(CORBA::tk_TypeCode));
   discriminatorHasChanged();
 }
@@ -1861,7 +1774,6 @@ DynUnionImpl::insert_typecode(CORBA::TypeCode_ptr value)
 void
 DynUnionImpl::insert_any(const CORBA::Any& value)
 {
-  Lock sync(this);
   value >>= writeCurrent(CORBA::tk_any);
   discriminatorHasChanged();
 }
@@ -1870,7 +1782,6 @@ DynUnionImpl::insert_any(const CORBA::Any& value)
 CORBA::Boolean
 DynUnionImpl::get_boolean()
 {
-  Lock sync(this);
   CORBA::Boolean value;
   value <<= readCurrent(CORBA::tk_boolean);
   return value;
@@ -1880,7 +1791,6 @@ DynUnionImpl::get_boolean()
 CORBA::Octet
 DynUnionImpl::get_octet()
 {
-  Lock sync(this);
   CORBA::Octet value;
   value <<= readCurrent(CORBA::tk_octet);
   return value;
@@ -1890,7 +1800,6 @@ DynUnionImpl::get_octet()
 CORBA::Char
 DynUnionImpl::get_char()
 {
-  Lock sync(this);
   CORBA::Char value;
   value <<= readCurrent(CORBA::tk_char);
   return value;
@@ -1900,7 +1809,6 @@ DynUnionImpl::get_char()
 CORBA::Short
 DynUnionImpl::get_short()
 {
-  Lock sync(this);
   CORBA::Short value;
   value <<= readCurrent(CORBA::tk_short);
   return value;
@@ -1910,7 +1818,6 @@ DynUnionImpl::get_short()
 CORBA::UShort
 DynUnionImpl::get_ushort()
 {
-  Lock sync(this);
   CORBA::UShort value;
   value <<= readCurrent(CORBA::tk_ushort);
   return value;
@@ -1920,7 +1827,6 @@ DynUnionImpl::get_ushort()
 CORBA::Long
 DynUnionImpl::get_long()
 {
-  Lock sync(this);
   CORBA::Long value;
   value <<= readCurrent(CORBA::tk_long);
   return value;
@@ -1930,7 +1836,6 @@ DynUnionImpl::get_long()
 CORBA::ULong
 DynUnionImpl::get_ulong()
 {
-  Lock sync(this);
   CORBA::ULong value;
   value <<= readCurrent(CORBA::tk_ulong);
   return value;
@@ -1940,7 +1845,6 @@ DynUnionImpl::get_ulong()
 CORBA::Float
 DynUnionImpl::get_float()
 {
-  Lock sync(this);
   CORBA::Float value;
   value <<= readCurrent(CORBA::tk_float);
   return value;
@@ -1950,7 +1854,6 @@ DynUnionImpl::get_float()
 CORBA::Double
 DynUnionImpl::get_double()
 {
-  Lock sync(this);
   CORBA::Double value;
   value <<= readCurrent(CORBA::tk_double);
   return value;
@@ -1960,7 +1863,6 @@ DynUnionImpl::get_double()
 char*
 DynUnionImpl::get_string()
 {
-  Lock sync(this);
   MemBufferedStream& buf = readCurrent(CORBA::tk_string);
 
   CORBA::ULong maxlen = pd_member->tc()->NP_length();
@@ -1989,7 +1891,6 @@ DynUnionImpl::get_string()
 CORBA::Object_ptr
 DynUnionImpl::get_reference()
 {
-  Lock sync(this);
   return CORBA::Object::unmarshalObjRef(readCurrent(CORBA::tk_objref));
 }
 
@@ -1997,7 +1898,6 @@ DynUnionImpl::get_reference()
 CORBA::TypeCode_ptr
 DynUnionImpl::get_typecode()
 {
-  Lock sync(this);
   return CORBA::TypeCode::unmarshalTypeCode(readCurrent(CORBA::tk_TypeCode));
 }
 
@@ -2005,7 +1905,6 @@ DynUnionImpl::get_typecode()
 CORBA::Any*
 DynUnionImpl::get_any()
 {
-  Lock sync(this);
   CORBA::Any* value = new CORBA::Any();
   try {
     *value <<= readCurrent(CORBA::tk_any);
@@ -2020,8 +1919,6 @@ DynUnionImpl::get_any()
 CORBA::DynAny_ptr
 DynUnionImpl::current_component()
 {
-  Lock sync(this);
-
   switch( pd_curr_index ) {
   case 0:
     pd_disc->incrRefCount();
@@ -2043,8 +1940,6 @@ DynUnionImpl::current_component()
 CORBA::Boolean
 DynUnionImpl::next()
 {
-  Lock sync(this);
-
   if( pd_curr_index == 0 ) {
     pd_curr_index = 1;
     return 1;
@@ -2059,8 +1954,6 @@ DynUnionImpl::next()
 CORBA::Boolean
 DynUnionImpl::seek(CORBA::Long index)
 {
-  Lock sync(this);
-
   switch( index ) {
   case 0:
     pd_curr_index = 0;
@@ -2078,7 +1971,6 @@ DynUnionImpl::seek(CORBA::Long index)
 void
 DynUnionImpl::rewind()
 {
-  Lock sync(this);
   pd_curr_index = 0;
 }
 
@@ -2094,7 +1986,6 @@ DynUnionImpl::set_as_default()
       return 0;
     case TYPECODE_UNION_IMPLICIT_DEFAULT:
       {
-	Lock sync(this);
 	pd_disc->pd_buf.rewind_in_mkr();
 	TypeCode_union::Discriminator disc_value =
 	  TypeCode_union_helper::unmarshalLabel(pd_disc_type, pd_disc->pd_buf);
@@ -2102,7 +1993,6 @@ DynUnionImpl::set_as_default()
       }
     default:
       {
-	Lock sync(this);
 	pd_disc->pd_buf.rewind_in_mkr();
 	TypeCode_union::Discriminator disc_value =
 	  TypeCode_union_helper::unmarshalLabel(pd_disc_type, pd_disc->pd_buf);
@@ -2161,8 +2051,6 @@ DynUnionImpl::discriminator_kind()
 CORBA::DynAny_ptr
 DynUnionImpl::member()
 {
-  Lock sync(this);
-
   if( pd_member ) {
     pd_member->incrRefCount();
     return pd_member;
@@ -2175,8 +2063,6 @@ DynUnionImpl::member()
 char*
 DynUnionImpl::member_name()
 {
-  Lock sync(this);
-
   if( pd_member )
     return CORBA::string_dup(tc()->NP_member_name(pd_disc_index));
   else
@@ -2205,7 +2091,6 @@ DynUnionImpl::member_name(const char* name)
 CORBA::TCKind
 DynUnionImpl::member_kind()
 {
-  Lock sync(this);
   return pd_member_kind;
 }
 
@@ -2312,8 +2197,6 @@ DynUnionDisc::assign(CORBA::DynAny_ptr da)
   if( !tc()->equivalent(daib->tc()) )  throw CORBA::DynAny::Invalid();
   DynAnyImpl* dai = ToDynAnyImpl(daib);
 
-  Lock sync(this);
-
   if( !dai->isValid() )  throw CORBA::DynAny::Invalid();
 
   dai->pd_buf.rewind_in_mkr();
@@ -2344,7 +2227,6 @@ DynUnionDisc::copy()
 void
 DynUnionDisc::insert_boolean(CORBA::Boolean value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_boolean);
   if( pd_union )  pd_union->discriminatorHasChanged();
 }
@@ -2361,7 +2243,6 @@ DynUnionDisc::insert_octet(CORBA::Octet value)
 void
 DynUnionDisc::insert_char(CORBA::Char value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_char);
   if( pd_union )  pd_union->discriminatorHasChanged();
 }
@@ -2370,7 +2251,6 @@ DynUnionDisc::insert_char(CORBA::Char value)
 void
 DynUnionDisc::insert_short(CORBA::Short value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_short);
   if( pd_union )  pd_union->discriminatorHasChanged();
 }
@@ -2379,7 +2259,6 @@ DynUnionDisc::insert_short(CORBA::Short value)
 void
 DynUnionDisc::insert_ushort(CORBA::UShort value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_ushort);
   if( pd_union )  pd_union->discriminatorHasChanged();
 }
@@ -2388,7 +2267,6 @@ DynUnionDisc::insert_ushort(CORBA::UShort value)
 void
 DynUnionDisc::insert_long(CORBA::Long value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_long);
   if( pd_union )  pd_union->discriminatorHasChanged();
 }
@@ -2397,7 +2275,6 @@ DynUnionDisc::insert_long(CORBA::Long value)
 void
 DynUnionDisc::insert_ulong(CORBA::ULong value)
 {
-  Lock sync(this);
   value >>= doWrite(CORBA::tk_ulong);
   if( pd_union )  pd_union->discriminatorHasChanged();
 }
@@ -2537,7 +2414,6 @@ DynUnionEnumDisc::value_as_string()
 
   CORBA::ULong val;
   {
-    Lock sync(this);
     if( !isValid() )  return CORBA::string_dup("");
     pd_buf.rewind_in_mkr();
     val <<= pd_buf;
@@ -2557,7 +2433,6 @@ DynUnionEnumDisc::value_as_string(const char* value)
   CORBA::Long index = tc()->NP_member_index(value);
   if( index < 0 )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
-  Lock sync(this);
   pd_buf.rewind_inout_mkr();
   CORBA::ULong(index) >>= pd_buf;
   setValid();
@@ -2570,14 +2445,13 @@ DynUnionEnumDisc::value_as_ulong()
 {
   CORBA::ULong val;
   {
-    Lock sync(this);
-    if( !isValid() )  throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    if( !isValid() )  throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     pd_buf.rewind_in_mkr();
     val <<= pd_buf;
   }
 
   if( val >= tc()->NP_member_count() )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return val;
 }
@@ -2589,7 +2463,6 @@ DynUnionEnumDisc::value_as_ulong(CORBA::ULong value)
   if( value >= tc()->NP_member_count() )
     throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
-  Lock sync(this);
   pd_buf.rewind_inout_mkr();
   value >>= pd_buf;
   setValid();
@@ -2617,7 +2490,6 @@ DynUnionEnumDisc::NP_narrow()
 void
 DynUnionEnumDisc::set_value(TypeCode_union::Discriminator v)
 {
-  Lock sync(this);
   pd_buf.rewind_inout_mkr();
   CORBA::ULong(v) >>= pd_buf;
   setValid();
@@ -2669,9 +2541,8 @@ void
 DynSequenceImpl::length (CORBA::ULong value)
 {
   if( pd_bound && value > pd_bound )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
-  Lock sync(this);
   setNumComponents(value);
 }
 
@@ -2679,15 +2550,13 @@ DynSequenceImpl::length (CORBA::ULong value)
 CORBA::AnySeq*
 DynSequenceImpl::get_elements()
 {
-  Lock sync(this);
-
   CORBA::AnySeq* as = new CORBA::AnySeq();
   as->length(pd_n_components);
 
   for( unsigned i = 0; i < pd_n_components; i++ ) {
     if( !component_to_any(i, (*as)[i]) ) {
       delete as;
-      throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+      throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     }
   }
   return as;
@@ -2699,8 +2568,6 @@ DynSequenceImpl::set_elements(const CORBA::AnySeq& as)
 {
   if( pd_bound && as.length() > pd_bound )
     throw CORBA::DynAny::InvalidSeq();
-
-  Lock sync(this);
 
   if( as.length() != pd_n_components )
     setNumComponents(as.length());
@@ -2808,12 +2675,10 @@ DynArrayImpl::get_elements()
   CORBA::AnySeq* as = new CORBA::AnySeq();
   as->length(pd_n_components);
 
-  Lock sync(this);
-
   for( unsigned i = 0; i < pd_n_components; i++ ) {
     if( !component_to_any(i, (*as)[i]) ) {
       delete as;
-      throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+      throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     }
   }
   return as;
@@ -2825,8 +2690,6 @@ DynArrayImpl::set_elements(const CORBA::AnySeq& as)
 {
   if( as.length() != pd_n_components )
     throw CORBA::DynAny::InvalidSeq();
-
-  Lock sync(this);
 
   for( unsigned i = 0; i < pd_n_components; i++ ) {
     if( !component_from_any(i, as[i]) )

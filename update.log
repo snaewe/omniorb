@@ -1,3 +1,13 @@
+
+Wed Sep 22 17:27:15 BST 1999 djr
+================================
+
+- Removed MT locking from DynAny.
+
+src/lib/omniORB2/dynamic/dynAny.h
+src/lib/omniORB2/dynamic/dynAny.cc
+
+
 Wed Sep 22 15:16:55 BST 1999 sll
 ================================
 
@@ -30,6 +40,7 @@ src/lib/omniORB2/dynamic/sharedlib/dir.mk
 src/lib/omniORB2/lifecycle/sharedlib/dir.mk
 src/lib/omniORB2/orbcore/sharedlib/dir.mk
 src/lib/omnithread/sharedlib/dir.mk
+
 
 Wed Sep 22 13:06:18 BST 1999 sll
 ================================
