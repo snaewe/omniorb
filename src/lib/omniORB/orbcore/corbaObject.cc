@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.20.2.3  2000/11/07 18:44:03  sll
+  Renamed omniObjRef::_hash and _is_equivalent to __hash and __is_equivalent
+  to avoid name clash with the member functions of CORBA::Object.
+
   Revision 1.20.2.2  2000/09/27 18:13:26  sll
   Use the new cdrStream abstraction.
   Removed obsoluted code CORBA::UnMarshalObjRef() and CORBA::MarshalObjRef().
@@ -176,7 +180,7 @@ CORBA::Object::_is_equivalent(CORBA::Object_ptr other_object)
     omniObjRef* objptr = _PR_getobj();
     omniObjRef* other_objptr = other_object->_PR_getobj();
 
-    return objptr->_is_equivalent(other_objptr);
+    return objptr->__is_equivalent(other_objptr);
   }
 }
 
@@ -187,7 +191,7 @@ CORBA::Object::_hash(CORBA::ULong maximum)
   if( _NP_is_nil() || maximum == 0 )  return 0;
   if( _NP_is_pseudo() )  return CORBA::ULong((unsigned long) this) % maximum;
 
-  return _PR_getobj()->_hash(maximum);
+  return _PR_getobj()->__hash(maximum);
 }
 
 

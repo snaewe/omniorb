@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2000/11/07 18:44:03  sll
+  Renamed omniObjRef::_hash and _is_equivalent to __hash and __is_equivalent
+  to avoid name clash with the member functions of CORBA::Object.
+
   Revision 1.2.2.5  2000/11/03 19:12:07  sll
   Use new marshalling functions for byte, octet and char. Use get_octet_array
   instead of get_char_array and put_octet_array instead of put_char_array.
@@ -215,7 +219,7 @@ omniObjRef::_assertExistsAndTypeVerified()
 }
 
 CORBA::Boolean 
-omniObjRef::_is_equivalent(omniObjRef* o_obj)
+omniObjRef::__is_equivalent(omniObjRef* o_obj)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
@@ -252,7 +256,7 @@ omniObjRef::_is_equivalent(omniObjRef* o_obj)
 }
 
 CORBA::ULong
-omniObjRef::_hash(CORBA::ULong maximum)
+omniObjRef::__hash(CORBA::ULong maximum)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
