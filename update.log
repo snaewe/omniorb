@@ -1,9 +1,27 @@
+
+Fri Aug 20 12:41:42 BST 1999 djr
+================================
+
+- Fixed bug in omniidl2 generated MACRO (too many )'s ).
+
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+
+- Removed debug output (left in by mistake!).
+
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
+- Yet another TypeCode alias-expand bug.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
 Tue Aug 17 20:16:38 BST 1999 sll
 ================================
 
 - Fix to bug introduced in python binding change
 
 src/lib/omniORB2/orbcore/giopServer.cc
+
 
 Mon Aug 16 20:18:08 BST 1999 sll
 ================================
@@ -80,7 +98,6 @@ src/lib/omniORB2/orbcore/unshared.cc
 src/lib/omniORB2/orbcore/objectRef.cc
 
 
-
 Mon Aug  9 12:20:28 BST 1999 sll
 ================================
 
@@ -103,6 +120,7 @@ Fri Aug  6 17:55:57 BST 1999 sll
 
 src/lib/omniORB2/dynamic/typecode.cc
 
+
 Wed Aug  4 11:14:31 BST 1999 sll
 ================================
 
@@ -112,6 +130,7 @@ Wed Aug  4 11:14:31 BST 1999 sll
   struct A {
     Factory o;
   };
+
 
 Mon Aug  2 19:47:32 BST 1999 sll
 ================================
@@ -133,6 +152,7 @@ Mon Aug  2 19:47:32 BST 1999 sll
 
 src/tool/omniidl2/util/utl_scope.cc
 
+
 Mon Aug  2 14:41:39 BST 1999 sll
 ================================
 
@@ -150,6 +170,7 @@ Mon Aug  2 11:56:13 BST 1999 sll
 - Correct non-standard C++ signature.
 
 include/omniORB2/tcDescriptor.h
+
 
 Fri Jul 23 12:24:32 BST 1999 djr
 ================================
