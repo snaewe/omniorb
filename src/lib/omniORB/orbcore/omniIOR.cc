@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/10/04 16:53:48  sll
+  Make sure IIOP version is set in the iiop member.
+
   Revision 1.1.2.2  2000/10/03 17:37:07  sll
   Changed omniIOR synchronisation mutex from omni::internalLock to its own
   mutex.
@@ -41,6 +44,7 @@
 #include <omniIdentity.h>
 #include <ropeFactory.h>
 #include <initialiser.h>
+#include <giopStreamImpl.h>
 
 omni_tracedmutex*                omniIOR::lock = 0;
 
@@ -125,6 +129,7 @@ omniIOR::omniIOR(const char* repoId,
 
   iiop.address.host = addrs[0].host; 
   iiop.address.port = addrs[0].port;
+  iiop.version = giopStreamImpl::maxVersion()->version();
 
   if (naddrs > 1) {
     for (CORBA::ULong index = 1; index < naddrs; index++) {
