@@ -11,6 +11,10 @@
  
 /*
   $Log$
+  Revision 1.2  1997/01/13 14:55:47  sll
+  If the request message size in the header is too large, throw a COMM_FAILURE
+  instead of omniORB::fatalException.
+
   Revision 1.1  1997/01/08 17:26:01  sll
   Initial revision
 
@@ -75,8 +79,10 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
   else
     {
       if (RdMessageUnRead())
-	throw omniORB::fatalException(__FILE__,__LINE__,
-             "GIOP_S::RequestReceived() reported wrong request message size.");				  
+	{
+	  setStrandDying();
+	  throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+	}
     }
 
   pd_state = GIOP_S::WaitingForReply;
