@@ -1,3 +1,32 @@
+Tue Nov 27 14:28:24 GMT 2001 dpg1
+=================================
+
+- Context, DII fixes.
+
+include/omniORB4/CORBA_Context.h
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/deferredRequest.cc
+src/lib/omniORB/dynamic/dynamicLib.cc
+src/lib/omniORB/dynamic/orbMultiRequest.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/include/context.h
+src/lib/omniORB/include/deferredRequest.h
+src/lib/omniORB/include/request.h
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+- Local _is_equivalent fix.
+
+src/lib/omniORB/include/inProcessIdentity.h
+src/lib/omniORB/include/localIdentity.h
+src/lib/omniORB/orbcore/inProcessIdentity.cc
+
+- long double TC descriptor.
+
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/mangler.py
+
+
 Mon Nov 26 10:42:03 GMT 2001 dpg1
 =================================
 
