@@ -12,9 +12,12 @@
 
 /*
  $Log$
- Revision 1.2  1997/01/08 18:56:09  ewc
- Added entry for NT byte - order
+ Revision 1.3  1997/02/19 11:13:32  ewc
+ Added support for Windows NT.
 
+ * Revision 1.2  1997/01/08  18:56:09  ewc
+ * Added entry for NT byte - order
+ *
  * Revision 1.1  1997/01/08  17:28:30  sll
  * Initial revision
  *
@@ -82,12 +85,13 @@
 #define _HAS_SIGNAL 1
 #elif defined(_X86_) || defined(__i386__)
 #define _OMNIORB_HOST_BYTE_ORDER_ 1
+#if !defined(__NT__)
 #define _HAS_SIGNAL 1
-#elif defined(__NT__)
-#define _OMNIORB_HOST_BYTE_ORDER_ 1
+#endif
 #else
 #error "The byte order of this platform is unknown"
 #endif
+
 
 // This implementation *DOES NOT* support the Dynamic Invocation Interface
 // and the Dynamic Skeleton Interface. Hence some of the psuedo objects are
