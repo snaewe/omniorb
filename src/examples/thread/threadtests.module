@@ -1,0 +1,17 @@
+Object diner_a.o
+{
+    Executable diner
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary llibc.o
+}
+
+Object threadcancel_a.o
+{
+    Executable threadcancel
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary llibc.o
+}
