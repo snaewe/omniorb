@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/10/15 23:24:14  dgrisby
+  Avoid clash with Solaris defining truncate to truncate64.
+
   Revision 1.1.2.2  2001/10/17 16:44:00  dpg1
   Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -40,6 +43,12 @@
 #ifndef INSIDE_OMNIORB_CORBA_MODULE
 #  error "Must only be #included by CORBA.h"
 #endif
+
+// Some Solaris versions helpfully #define truncate to truncate64...
+#ifdef truncate
+#  undef truncate
+#endif
+
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////////// Fixed ////////////////////////////////

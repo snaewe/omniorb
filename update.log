@@ -1,3 +1,15 @@
+Wed Oct 16 00:19:33 BST 2002 dgrisby
+====================================
+
+- Forgot case of compilers with no bool.
+
+include/omniORB4/seqTemplatedefns.h
+
+- Avoid clash with Solaris defining truncate to truncate64.
+
+include/omniORB4/CORBA_Fixed.h
+
+
 Mon Oct 14 20:59:38 BST 2002 dgrisby
 ====================================
 
