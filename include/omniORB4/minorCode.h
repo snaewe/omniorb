@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/08/15 10:15:45  dpg1
+  New minor codes for POA and DSI errors.
+
   Revision 1.1.4.6  2001/08/03 17:49:33  sll
   New minor code and lookup table for translating a minor code to its memonic
   names.
@@ -122,6 +125,14 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_58 OMNIORBMinorCode(58)
 #define OMNIORBMinorCode_59 OMNIORBMinorCode(59)
 #define OMNIORBMinorCode_60 OMNIORBMinorCode(60)
+#define OMNIORBMinorCode_61 OMNIORBMinorCode(61)
+#define OMNIORBMinorCode_62 OMNIORBMinorCode(62)
+#define OMNIORBMinorCode_63 OMNIORBMinorCode(63)
+#define OMNIORBMinorCode_64 OMNIORBMinorCode(64)
+#define OMNIORBMinorCode_65 OMNIORBMinorCode(65)
+#define OMNIORBMinorCode_66 OMNIORBMinorCode(66)
+#define OMNIORBMinorCode_67 OMNIORBMinorCode(67)
+#define OMNIORBMinorCode_68 OMNIORBMinorCode(68)
 
 #define COMMA ,
 #define DeclareValue(name,value) name = value
@@ -162,7 +173,7 @@ code( BAD_PARAM_17                   , OMGMinorCode(17) ) sep \
 code( BAD_PARAM_18                   , OMGMinorCode(18) ) sep \
 code( BAD_PARAM_19                   , OMGMinorCode(19) ) sep \
 code( BAD_PARAM_20                   , OMGMinorCode(20) ) sep \
-code( BAD_PARAM_21                   , OMGMinorCode(21) ) sep \
+code( BAD_PARAM_NotAnException       , OMGMinorCode(21) ) sep \
 code( BAD_PARAM_22                   , OMGMinorCode(22) ) sep \
 code( BAD_PARAM_WCharTCSNotKnown     , OMGMinorCode(23) ) sep \
 code( BAD_PARAM_24                   , OMGMinorCode(24) ) sep \
@@ -177,7 +188,9 @@ code( BAD_PARAM_WCharOutOfRange      , OMNIORBMinorCode_46 ) sep \
 code( BAD_PARAM_InternalInvariant    , OMNIORBMinorCode_49 ) sep \
 code( BAD_PARAM_NullStringUnexpected , OMNIORBMinorCode_57 ) sep \
 code( BAD_PARAM_InvalidPOAName       , OMNIORBMinorCode_59 ) sep \
-code( BAD_PARAM_LocalObjectExpected  , OMNIORBMinorCode_60 )
+code( BAD_PARAM_LocalObjectExpected  , OMNIORBMinorCode_60 ) sep \
+code( BAD_PARAM_InvalidSystemId      , OMNIORBMinorCode_61 ) sep \
+code( BAD_PARAM_InvalidNVList        , OMNIORBMinorCode_64 )
 
 enum BAD_PARAM_minor {
   DECLARE_BAD_PARAM_minors(DeclareValue,COMMA)
@@ -226,7 +239,8 @@ code( MARSHAL_InvalidEnumValue                , OMNIORBMinorCode_26 ) sep \
 code( MARSHAL_AttemptToWriteToReadOnlyBuf     , OMNIORBMinorCode_28 ) sep \
 code( MARSHAL_InvalidFixedValue               , OMNIORBMinorCode_42 ) sep \
 code( MARSHAL_InvalidWCharSize                , OMNIORBMinorCode_47 ) sep \
-code( MARSHAL_InvalidIOR                      , OMNIORBMinorCode_52 )
+code( MARSHAL_InvalidIOR                      , OMNIORBMinorCode_52 ) sep \
+code( MARSHAL_ExceptionInDSINotPropagated     , OMNIORBMinorCode_67 )
 
 
 
@@ -294,20 +308,22 @@ enum NO_IMPLEMENT_minor {
 // NO_IMPLEMENT
 #define DECLARE_BAD_INV_ORDER_minors(code,sep) \
 \
-code( BAD_INV_ORDER_1                 , OMGMinorCode(1) ) sep \
-code( BAD_INV_ORDER_2                 , OMGMinorCode(2) ) sep \
-code( BAD_INV_ORDER_WouldDeadLock     , OMGMinorCode(3) ) sep \
-code( BAD_INV_ORDER_ORBHasShutdown    , OMGMinorCode(4) ) sep \
-code( BAD_INV_ORDER_5                 , OMGMinorCode(5) ) sep \
-code( BAD_INV_ORDER_6                 , OMGMinorCode(6) ) sep \
-code( BAD_INV_ORDER_7                 , OMGMinorCode(7) ) sep \
-code( BAD_INV_ORDER_8                 , OMGMinorCode(8) ) sep \
-code( BAD_INV_ORDER_9                 , OMGMinorCode(9) ) sep \
-code( BAD_INV_ORDER_10                , OMGMinorCode(10) ) sep \
-code( BAD_INV_ORDER_11                , OMGMinorCode(11) ) sep \
-code( BAD_INV_ORDER_12                , OMGMinorCode(12) ) sep \
-code( BAD_INV_ORDER_13                , OMGMinorCode(13) ) sep \
-code( BAD_INV_ORDER_CodeSetNotKnownYet, OMNIORBMinorCode_24 )
+code( BAD_INV_ORDER_1                 	     	, OMGMinorCode(1) ) sep \
+code( BAD_INV_ORDER_2                 	     	, OMGMinorCode(2) ) sep \
+code( BAD_INV_ORDER_WouldDeadLock     	     	, OMGMinorCode(3) ) sep \
+code( BAD_INV_ORDER_ORBHasShutdown    	     	, OMGMinorCode(4) ) sep \
+code( BAD_INV_ORDER_5                 	     	, OMGMinorCode(5) ) sep \
+code( BAD_INV_ORDER_ServantManagerAlreadySet 	, OMGMinorCode(6) ) sep \
+code( BAD_INV_ORDER_ArgumentsCalledOutOfOrder	, OMGMinorCode(7) ) sep \
+code( BAD_INV_ORDER_CtxCalledOutOfOrder	     	, OMGMinorCode(8) ) sep \
+code( BAD_INV_ORDER_SetResultCalledOutOfOrder	, OMGMinorCode(9) ) sep \
+code( BAD_INV_ORDER_10                	     	, OMGMinorCode(10) ) sep \
+code( BAD_INV_ORDER_11                	     	, OMGMinorCode(11) ) sep \
+code( BAD_INV_ORDER_12                	     	, OMGMinorCode(12) ) sep \
+code( BAD_INV_ORDER_13                	     	, OMGMinorCode(13) ) sep \
+code( BAD_INV_ORDER_CodeSetNotKnownYet	     	, OMNIORBMinorCode_24 ) sep \
+code( BAD_INV_ORDER_ArgumentsNotCalled          , OMNIORBMinorCode_65 ) sep \
+code( BAD_INV_ORDER_ErrorInDynamicImplementation, OMNIORBMinorCode_66 )
 
 enum BAD_INV_ORDER_minor {
   DECLARE_BAD_INV_ORDER_minors(DeclareValue,COMMA)  
@@ -316,14 +332,15 @@ enum BAD_INV_ORDER_minor {
 // TRANSIENT
 #define DECLARE_TRANSIENT_minors(code,sep) \
 \
-code( TRANSIENT_POANoResource         , OMGMinorCode(1) ) sep \
-code( TRANSIENT_NoUsableProfile       , OMGMinorCode(2) ) sep \
-code( TRANSIENT_FailedOnForwarded     , OMNIORBMinorCode_1 ) sep \
-code( TRANSIENT_ConnectFailed         , OMNIORBMinorCode_2 ) sep \
-code( TRANSIENT_CallTimedout          , OMNIORBMinorCode_8 ) sep \
-code( TRANSIENT_BiDirConnIsGone       , OMNIORBMinorCode_14 ) sep \
-code( TRANSIENT_BiDirConnUsedWithNoPOA, OMNIORBMinorCode_16 ) sep \
-code( TRANSIENT_ConnectionClosed      , OMNIORBMinorCode_17 )
+code( TRANSIENT_POANoResource         	  , OMGMinorCode(1) ) sep \
+code( TRANSIENT_NoUsableProfile       	  , OMGMinorCode(2) ) sep \
+code( TRANSIENT_FailedOnForwarded     	  , OMNIORBMinorCode_1 ) sep \
+code( TRANSIENT_ConnectFailed         	  , OMNIORBMinorCode_2 ) sep \
+code( TRANSIENT_CallTimedout          	  , OMNIORBMinorCode_8 ) sep \
+code( TRANSIENT_BiDirConnIsGone       	  , OMNIORBMinorCode_14 ) sep \
+code( TRANSIENT_BiDirConnUsedWithNoPOA	  , OMNIORBMinorCode_16 ) sep \
+code( TRANSIENT_ConnectionClosed      	  , OMNIORBMinorCode_17 ) sep \
+code( TRANSIENT_ObjDeactivatedWhileHolding, OMNIORBMinorCode_62 )
 
 enum TRANSIENT_minor {
   DECLARE_TRANSIENT_minors(DeclareValue,COMMA)  
@@ -332,7 +349,8 @@ enum TRANSIENT_minor {
 // INTF_REPOS
 #define DECLARE_INTF_REPOS_minors(code,sep) \
 \
-code( INTF_REPOS_NotAvailable         , OMNIORBMinorCode_39 )
+code( INTF_REPOS_NotAvailable                , OMNIORBMinorCode_39 ) sep \
+code( INTF_REPOS_PrimaryInterfaceReturnedZero, OMNIORBMinorCode_68 )
 
 enum INTF_REPOS_minor {
   DECLARE_INTF_REPOS_minors(DeclareValue,COMMA)  
@@ -348,7 +366,8 @@ code( OBJ_ADAPTER_NoServantManager    , OMGMinorCode(4) ) sep \
 code( OBJ_ADAPTER_WrongIncarnatePolicy, OMGMinorCode(5) ) sep \
 code( OBJ_ADAPTER_BiDirNotAllowed     , OMNIORBMinorCode_15 ) sep \
 code( OBJ_ADAPTER_BOANotInitialised   , OMNIORBMinorCode_33 ) sep \
-code( OBJ_ADAPTER_POANotInitialised   , OMNIORBMinorCode_53 ) 
+code( OBJ_ADAPTER_POANotInitialised   , OMNIORBMinorCode_53 ) sep \
+code( OBJ_ADAPTER_ServantAlreadyActive, OMNIORBMinorCode_63 )
 
 
 enum OBJ_ADAPTER_minor {
