@@ -1,3 +1,11 @@
+Fri Jun 22 11:24:38 BST 2001 dpg1
+=================================
+
+- Extend distdate.py so it can be used by omniORBpy.
+
+bin/scripts/distdate.py
+
+
 Thu Jun 21 12:13:30 BST 2001 sll
 ================================
 

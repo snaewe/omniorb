@@ -4,6 +4,11 @@
 
 import sys, string
 
+if len(sys.argv) > 1:
+    package = sys.argv[1]
+else:
+    package = "OMNIORB"
+
 line = sys.stdin.readline()
 
 while line == "\n":
@@ -14,7 +19,7 @@ line = string.strip(line)
 output = """\
 // distdate.hh -- Automatically generated file
 
-#define OMNIORB_DIST_DATE "%s"
+#define %s_DIST_DATE "%s"
 """
 
-print output % line
+print output % (package, line)
