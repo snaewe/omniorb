@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.22.4.5  2000/03/27 17:27:50  sll
+  Now member tcpSocketOutgoingRope::oneCallPerConnection().
+  Extra test code to spawn multiple worker threads per connection.
+
   Revision 1.22.4.4  1999/11/04 20:22:39  sll
   At trace level 30, dump packet only show the first 128 bytes. The old
   behaviour is available at trace level 40.
@@ -247,6 +251,10 @@ extern "C" int gethostname(char *name, int namelen);
 
 #define PTRACE(prefix,message) LOGMESSAGE(15,prefix,message)
 
+
+// Define this macro to enable the code to spawn multiple server threads per
+// connection
+//#define TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
 
 /////////////////////////////////////////////////////////////////////////////
 class tcpSocketRendezvouser : public omni_thread {
@@ -801,6 +809,14 @@ tcpSocketOutgoingRope::newStrand()
   return new tcpSocketStrand(this,remote);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+tcpSocketOutgoingRope::oneCallPerConnection()
+{
+  // Returns 1 to enforce the restriction that there *CANNOT* be more
+  // than one call in progress on the same strand at the same time.
+  return 0;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1400,6 +1416,11 @@ tcpSocketWorker::run(void *arg)
   // by calling  _realRun(arg) when it is ready.
 }
 
+
+#ifdef TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+static void create_sidekick(tcpSocketStrand*);
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketWorker::_realRun(void *arg)
@@ -1418,8 +1439,21 @@ tcpSocketWorker::_realRun(void *arg)
     s->real_shutdown();
   }
   else {
+
+#ifdef TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+    create_sidekick(s);
+#endif
+
     while (1) {
       try {
+	
+#ifdef TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+	if (omniORB::trace(25)) {
+	  omniORB::logger log;
+	  log << "Worker dispatch: " << omni_thread::self()->id() << "\n";
+	}
+#endif
+
 	GIOP_S::dispatcher(s);
       }
       catch (const CORBA::COMM_FAILURE &) {
@@ -1445,7 +1479,78 @@ tcpSocketWorker::_realRun(void *arg)
     }
   }
 
-  s->decrRefCount(0,1);
+  s->decrRefCount();
 
   PTRACE("Worker","exit.");
 }
+
+
+#ifdef TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+
+class sideKick : public omni_thread {
+public:
+  sideKick(tcpSocketStrand* s) : 
+          omni_thread(s)
+    {
+      start();
+    }
+  virtual ~sideKick() {
+  }
+  virtual void run(void *arg) {
+    tcpSocketStrand* s = (tcpSocketStrand*)arg;
+    PTRACE("SideKick","start.");
+    while (1) {
+      try {
+
+	if (omniORB::trace(25)) {
+	  omniORB::logger log;
+	  log << "SideKick dispatch: " << omni_thread::self()->id() << "\n";
+	}
+	GIOP_S::dispatcher(s);
+      }
+      catch (const CORBA::COMM_FAILURE &) {
+	PTRACE("SideKick","Communication failure. Connection closed.");
+	break;
+      }
+      catch(const omniORB::fatalException &ex) {
+	if (omniORB::trace(0)) {
+	  omniORB::logger log("omniORB: tcpSocketMTfactory SideKick: ");
+	  log << "You have caught an omniORB2 bug, details are as follows:\n"
+	      << ex.file() << " " << ex.line() << ":" << ex.errmsg()
+	      << "\n";
+	    }
+	break;
+      }
+      catch (...) {
+	if (omniORB::trace(0)) {
+	  omniORB::logger log("omniORB: tcpSocketMTfactory SideKick: ");
+	  log << "Caught a system exception.\n";
+	}
+	break;
+      }
+    }
+    s->decrRefCount();
+    if (omniORB::trace(25)) {
+      omniORB::logger log;
+      log << "SideKick exit: " << omni_thread::self()->id() << "\n";
+    }
+  }
+};
+
+static
+void create_sidekick(tcpSocketStrand* s)
+{
+  sideKick* k;
+  s->incrRefCount();
+  k = new sideKick(s);
+  s->incrRefCount();
+  k = new sideKick(s);
+  s->incrRefCount();
+  k = new sideKick(s);
+  s->incrRefCount();
+  k = new sideKick(s);
+}
+
+#endif // TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+
+
