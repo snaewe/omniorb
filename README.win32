@@ -100,9 +100,15 @@ follow these steps:
     o Start the tool REGEDT32.EXE (on NT) or REGEDIT.EXE (on Windows '95). 
       Select the key HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\InitRef (or
       create it if it doesn't exist). Add a string value (known as a
-      REG_SZ data type when using REGEDT32) with key "1", value
+      REG_SZ data type when using REGEDT32) with name "1", value
       "NameService=corbaname::my.host.name" (putting the correct host
       name in, of course).
+
+    o Due to a bug in some versions of Windows, omniORB may crash if
+      you have no entries in the SOFTWARE\omniORB key other than the
+      InitRef sub-key. If this happens, set the name InitRef in the
+      SOFTWARE\omniORB key, rather than using a sub-key, or add at
+      least one configuration parameter to the SOFTWARE\omniORB key.
 
     o The registry entries must be duplicated on all machines that
       will run omniORB programs. It is only necessary to run one
