@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/03/27 17:37:50  sll
+  Changed to use the new giopStreamImpl interface.
+  Added support to allow call multiplexing on the client side.
+
   Revision 1.1.2.2  1999/11/04 20:20:20  sll
   GIOP engines can now do callback to the higher layer to calculate total
   message size if necessary.
@@ -70,6 +74,15 @@ static const char messageErrorHeader[8] = {
 
 static const char fragmentHeader[8] = {
    'G','I','O','P',1,1,_OMNIORB_HOST_BYTE_ORDER_,GIOP::Fragment };
+
+#define LOGMESSAGE(level,prefix,message) do {\
+   if (omniORB::trace(level)) {\
+     omniORB::logger log;\
+	log << " giop 1.1 " ## prefix ## ": " message ## "\n";\
+   }\
+} while (0)
+
+#define PTRACE(prefix,message) LOGMESSAGE(25,prefix,message)
 
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
@@ -585,7 +598,7 @@ public:
 	  g->pd_strand->max_receive_buffer_size() < (reqsize+padding)) {
 
 	// The request size is too large. 
-	setTerminalError(g);
+	g->setTerminalError();
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
       }
 
@@ -669,7 +682,7 @@ public:
 
     if (size > g->pd_input_msgfrag_to_come) {
       g->SendMsgErrorMessage();
-      setTerminalError(g);
+      g->setTerminalError();
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     }
 
@@ -710,7 +723,7 @@ public:
 	  if (padding > g->pd_input_msgfrag_to_come) {
 	    // Protocol violation
 	    g->SendMsgErrorMessage();
-	    setTerminalError(g);
+	    g->setTerminalError();
 	    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
 	  }
 	  g->pd_input_msgfrag_to_come -= padding;
@@ -728,7 +741,7 @@ public:
 	  if (reqsize % (int)alignment) {
 	    // Protocol violation. The data should be integral multiple 
 	    g->SendMsgErrorMessage();
-	    setTerminalError(g);
+	    g->setTerminalError();
 	    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
 	  }
 	}
@@ -863,7 +876,7 @@ private:
       // We may choose not to send MessageError but  instead just
       // throw MARSHAL exception.
       g->SendMsgErrorMessage();
-      setTerminalError(g);
+      g->setTerminalError();
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
     }
 
@@ -874,9 +887,30 @@ private:
 	hdr[7] != (unsigned char) GIOP::CloseConnection) {
       g->SendMsgErrorMessage();
     }
-    setTerminalError(g);
+    g->setTerminalError();
     g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
     return (GIOP::MsgType) 0; // Dummy return
+  }
+
+  //////////////////////////////////////////////////////////////////
+  void transferInputContext(giopStream* g, giopStream* dest)
+  {
+    // NOTE: this function transfer the state setup by inputFragmentBegin()
+    //       Any state changes made in inputFragmentBegin() must be transfer
+    //       here.
+    size_t leftover = (omni::ptr_arith_t)g->pd_inb_end - 
+                      (omni::ptr_arith_t)g->pd_inb_mkr;
+    if (leftover) {
+      g->pd_strand->giveback_received(leftover);
+      g->pd_input_msgfrag_to_come += leftover;
+      g->pd_inb_end = g->pd_inb_mkr;
+    }
+    dest->pd_inb_mkr = g->pd_inb_mkr;
+    dest->pd_inb_end = g->pd_inb_end;
+    dest->pd_input_fragmented = g->pd_input_fragmented;
+    dest->pd_unmarshal_byte_swap = g->pd_unmarshal_byte_swap;
+    dest->pd_input_msgfrag_to_come = g->pd_input_msgfrag_to_come;
+    dest->pd_input_msgbody_received = g->pd_input_msgbody_received;
   }
 
 public:
@@ -922,13 +956,13 @@ public:
     case GIOP::Fragment:
       {
 	g->SendMsgErrorMessage();
-	setTerminalError(g);
+	g->setTerminalError();
 	g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
 	// never reach here.
       }
     case GIOP::MessageError:
       {
-	setTerminalError(g);
+	g->setTerminalError();
 	g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
 	// never reach here.
       }
@@ -937,73 +971,77 @@ public:
   }
 
   //////////////////////////////////////////////////////////////////
-  GIOP::ReplyStatusType inputReplyMessageBegin(giopStream* g,
-					       CORBA::ULong reqid,
-					       CORBA::Boolean headerInBuffer)
+  CORBA::Boolean inputReplyMessageBegin(giopStream* g)
   {
-    g->pd_input_msgbody_received = 0;
-
-    GIOP::MsgType t =  inputFragmentBegin(g,1,headerInBuffer,0);
-
-    g->pd_inb_mkr = (void*) ((omni::ptr_arith_t)g->pd_inb_mkr + 12);
-
-    if (t != GIOP::Reply)
-      {
-	setTerminalError(g);
-	g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
-	// never reach here.
-      }
-
-    CORBA::ULong replyid;
-    GIOP::ReplyStatusType rc;
-
-    unmarshalReplyHeader(g,replyid,rc);
-    if (reqid != replyid) {
-      // request ID mismatch.
-      // This cannot happen because we do not issue Cancel Message and
-      // we do not multiplex GIOP request concurrently on the same connection
-      g->SendMsgErrorMessage();
-      setTerminalError(g);
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-    }
-    // XXX Call interceptor(s);
+    CORBA::Boolean rc = inputAnyReplyBegin(g,GIOP::Reply);
+    // XXX if (rc) Call interceptor(s);
     return rc;
   }
 
   //////////////////////////////////////////////////////////////////
-  GIOP::LocateStatusType inputLocateReplyMessageBegin(giopStream* g,
-					       CORBA::ULong reqid,
-					       CORBA::Boolean headerInBuffer)
+  CORBA::Boolean inputLocateReplyMessageBegin(giopStream* g)
+				    
+  {
+    return inputAnyReplyBegin(g,GIOP::LocateReply);
+  }
+
+private:
+  CORBA::Boolean inputAnyReplyBegin(giopStream* g, GIOP::MsgType expect)
   {
     g->pd_input_msgbody_received = 0;
 
-    GIOP::MsgType t =  inputFragmentBegin(g,1,headerInBuffer,0);
+    GIOP::MsgType t = inputFragmentBegin(g,1,0,0);
 
     g->pd_inb_mkr = (void*) ((omni::ptr_arith_t)g->pd_inb_mkr + 12);
 
-    if (t != GIOP::LocateReply)
-      {
-	setTerminalError(g);
-	g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
-	// never reach here.
-      }
-
     CORBA::ULong replyid;
-    GIOP::LocateStatusType rc;
 
-    unmarshalLocateReplyHeader(g,replyid,rc);
-    if (reqid != replyid) {
-      // request ID mismatch.
-      // This cannot happen because we do not issue Cancel Message and
-      // we do not multiplex GIOP request concurrently on the same connection
-      g->SendMsgErrorMessage();
-      setTerminalError(g);
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    if (t == GIOP::Reply) {
+      unmarshalReplyHeader(g,replyid);
+    }
+    else if (t == GIOP::LocateReply) {
+      unmarshalLocateReplyHeader(g,replyid);
+    }
+    else {
+      g->setTerminalError();
+      g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
+      // never reach here.
     }
 
-    return rc;
+    if (g->pd_request_id == replyid) {
+      if (t != expect) goto message_error;
+    }
+    else {
+      // request ID mismatch.
+      PTRACE("inputAnyReplyBegin","transfer reply message");
+
+      omni_mutex_lock sync(g->getSyncMutex());
+      giopStream* p = giopStream::findOnly(g->pd_strand,replyid);
+      if (!p) {
+	// This cannot happen because we do not issue Cancel Message
+	goto message_error;
+      }
+      else {	
+	transferInputContext(g,p);
+	if (t == GIOP::Reply) {
+	  transferReplyHeader(g,p);
+	}
+	else {
+	  transferLocateReplyHeader(g,p);
+	}
+	g->transferReplyState(p);
+	return 0;
+      }
+    }
+    return 1;
+
+  message_error:
+    g->SendMsgErrorMessage();
+    g->setTerminalError();
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   }
 
+public:
   //////////////////////////////////////////////////////////////////
   void inputMessageEnd(giopStream* g, CORBA::Boolean disgard,
 		       CORBA::Boolean error)
@@ -1066,18 +1104,6 @@ public:
 	}
       }
     }
-  }
-
-  //////////////////////////////////////////////////////////////////
-  CORBA::Boolean terminalError(const giopStream* g) const
-  {
-    return g->pd_strand->_strandIsDying();
-  }
-
-  //////////////////////////////////////////////////////////////////
-  void setTerminalError(giopStream* g)
-  {
-    Strand::Sync::setStrandIsDying(g->pd_strand);
   }
 
   ///////////////////////////////////////////////////////////////////
@@ -1189,9 +1215,11 @@ private:
   }
 
   //////////////////////////////////////////////////////////////////
-  void unmarshalReplyHeader(giopStream* g,CORBA::ULong& reqid,
-			    GIOP::ReplyStatusType& rc)
+  void unmarshalReplyHeader(giopStream* g,CORBA::ULong& reqid)
   {
+    // Note: Any data extracted by this function should be transferred by
+    //       transferReplyHeader()
+
     cdrStream& s = *g;
 
     // Service context
@@ -1206,7 +1234,6 @@ private:
     }
 
     reqid <<= s;
-    g->pd_request_id = reqid;
   
     CORBA::ULong v;
     v <<= s;
@@ -1220,21 +1247,31 @@ private:
     default:
       // Should never receive anything other that the above
       // Same treatment as wrong header
-      setTerminalError(g);
+      g->setTerminalError();
       g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
       // never reach here.
     }
-    rc = (GIOP::ReplyStatusType) v;
+    g->pd_reply_status.replyStatus = (GIOP::ReplyStatusType)v;
+  }
+
+
+  //////////////////////////////////////////////////////////////////
+  void transferReplyHeader(giopStream* g,giopStream* dest)
+  {
+    // Note: this function transfer the data extracted by unmarshalReplyHeader.
+    //       Any changes to unmarshalReplyHeader should be accompanied by
+    //       corresponding changes here.
+
+    // XXX Transfer the service context as well.
+    dest->pd_reply_status.replyStatus = g->pd_reply_status.replyStatus;
   }
 
   //////////////////////////////////////////////////////////////////
-  void unmarshalLocateReplyHeader(giopStream* g,CORBA::ULong& reqid,
-				  GIOP::LocateStatusType& rc)
+  void unmarshalLocateReplyHeader(giopStream* g,CORBA::ULong& reqid)
   {
     cdrStream& s = *g;
 
     reqid <<= s;
-    g->pd_request_id = reqid;
 
     CORBA::ULong v;
     v <<= s;
@@ -1247,11 +1284,22 @@ private:
     default:
       // Should never receive anything other that the above
       // Same treatment as wrong header
-      setTerminalError(g);
+      g->setTerminalError();
       g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
       // never reach here.
     }
-    rc = (GIOP::LocateStatusType) v;
+    g->pd_reply_status.locateReplyStatus = (GIOP::LocateStatusType)v;
+  }
+
+  //////////////////////////////////////////////////////////////////
+  void transferLocateReplyHeader(giopStream* g,giopStream* dest)
+  {
+    // Note: this function transfer the data extracted by 
+    //       unmarshalLocateReplyHeader. Any changes to 
+    //       unmarshalLocateReplyHeader should be accompanied by
+    //       corresponding changes here.
+
+    dest->pd_reply_status.locateReplyStatus = g->pd_reply_status.locateReplyStatus;
   }
 
   giop_1_1_Impl(const giop_1_1_Impl&);

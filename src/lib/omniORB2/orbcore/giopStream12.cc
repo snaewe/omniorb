@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2000/03/27 17:37:50  sll
+  Changed to use the new giopStreamImpl interface.
+  Added support to allow call multiplexing on the client side.
+
   Revision 1.1.2.6  2000/02/14 18:06:45  sll
   Support GIOP 1.2 fragment interleaving. This requires minor access control
   changes to the relevant classes.
@@ -688,7 +692,6 @@ public:
   //
   ///////////////////////////////////////////////////////////////////
 
-
   //////////////////////////////////////////////////////////////////
   size_t inputRemaining(giopStream* g)
   {
@@ -737,7 +740,7 @@ public:
 	  g->pd_strand->max_receive_buffer_size() < reqsize) {
 
 	// The request size is too large. 
-	setTerminalError(g);
+	g->setTerminalError();
 	PTRACE("getInputData","MARSHAL exception(request size too large)");
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
       }
@@ -761,7 +764,7 @@ public:
     }
     else if (g->pd_input_fragmented) {
 
-      GIOP::MsgType t = inputFragmentBegin(g,1,0,1);
+      GIOP::MsgType t = inputFragmentBegin(g,1,0,1,0);
       goto again;
     }
     else {
@@ -793,7 +796,7 @@ public:
 
       g->pd_input_msgbody_received += ((omni::ptr_arith_t)g->pd_inb_mkr -
 				       (omni::ptr_arith_t)g->pd_inb_begin);
-      (void) inputFragmentBegin(g,1,0,1);
+      (void) inputFragmentBegin(g,1,0,1,0);
       goto again;
     }
 
@@ -819,14 +822,14 @@ public:
   again:
     if (!g->pd_input_msgfrag_to_come && g->pd_input_fragmented) {
 
-      (void) inputFragmentBegin(g,1,0,1);
+      (void) inputFragmentBegin(g,1,0,1,0);
       goto again;
     }
 
     if (size > g->pd_input_msgfrag_to_come) {
       PTRACE("skipInputData","MessageError(request size too large)");
       g->SendMsgErrorMessage();
-      setTerminalError(g);
+      g->setTerminalError();
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     }
 
@@ -872,7 +875,7 @@ public:
 	    // Protocol violation. The data should be integral multiple 
 	    PTRACE("copyInputData","MessageError(protocol violation. Data is not integral multiple of requested element size)");
 	    g->SendMsgErrorMessage();
-	    setTerminalError(g);
+	    g->setTerminalError();
 	    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
 	  }
 	}
@@ -891,7 +894,7 @@ public:
       }
       else if (g->pd_input_fragmented) {
 
-	GIOP::MsgType t = inputFragmentBegin(g,1,0,1);
+	GIOP::MsgType t = inputFragmentBegin(g,1,0,1,0);
 	continue;
       }
       else {
@@ -913,16 +916,14 @@ public:
 
 private:
 
-  CORBA::Boolean saveInterleaveFragment(giopStream* g, CORBA::ULong reqid);
+  CORBA::Boolean saveInterleaveFragment(giopStream* g, 
+					CORBA::ULong reqid,
+					GIOP::MsgType msgtype);
 
 protected:
-
-  void inputCheckFragmentHeader(giopStream* g,
-				CORBA::Boolean giop12only,
-				CORBA::Boolean headerInBuffer,
-				CORBA::Boolean expectFragment)
+  void getHeader12(giopStream*g,CORBA::Boolean headerInBuffer,
+		   unsigned char*& hdr,CORBA::Boolean& bswap)
   {
-  again:
     if (!headerInBuffer) {
       assert(g->pd_inb_end == g->pd_inb_mkr);
 
@@ -931,11 +932,48 @@ protected:
       g->pd_inb_begin = g->pd_inb_mkr = b.buffer;
       g->pd_inb_end = (void *) ((omni::ptr_arith_t)g->pd_inb_mkr + b.size);
     }
+    hdr = (unsigned char*) g->pd_inb_mkr;
+    bswap = (((hdr[6] & 0x1) == _OMNIORB_HOST_BYTE_ORDER_) ? 0 : 1 );
+  }
 
-    unsigned char* hdr = (unsigned char*) g->pd_inb_mkr;
-    CORBA::Boolean bswap = (((hdr[6] & 0x1) == _OMNIORB_HOST_BYTE_ORDER_)
-			    ? 0 : 1 );
+  void getHeader16(giopStream*g,CORBA::Boolean headerInBuffer,
+		   unsigned char*& hdr,CORBA::Boolean& bswap,
+		   CORBA::ULong& reqid)
+  {
+    if (headerInBuffer) {
+      g->pd_strand->giveback_received(12);
+    }
+    else {
+      assert(g->pd_inb_end == g->pd_inb_mkr);
+    }
+    Strand::sbuf b;
+    b = g->pd_strand->receive(16,1,omni::max_alignment,1);
+    g->pd_inb_begin = g->pd_inb_mkr = b.buffer;
+    g->pd_inb_end = (void *) ((omni::ptr_arith_t)g->pd_inb_mkr + b.size);
+    hdr = (unsigned char*) g->pd_inb_mkr;
+    bswap = (((hdr[6] & 0x1) == _OMNIORB_HOST_BYTE_ORDER_) ? 0 : 1 );
+    reqid = *(CORBA::ULong*)(hdr + 12);
+    if (bswap) {
+      CORBA::ULong t = reqid;
+      reqid = ((((t) & 0xff000000) >> 24) |
+	       (((t) & 0x00ff0000) >> 8)  |
+	       (((t) & 0x0000ff00) << 8)  |
+	       (((t) & 0x000000ff) << 24));
+    }	
+  }
+
+  void inputCheckFragmentHeader(giopStream* g,
+				CORBA::Boolean giop12only,
+				CORBA::Boolean headerInBuffer,
+				CORBA::Boolean expectFragment,
+				CORBA::Boolean expectReply)
+  {
+  again:
+    unsigned char* hdr;
+    CORBA::Boolean bswap;
     CORBA::ULong reqid;
+
+    getHeader12(g,headerInBuffer,hdr,bswap);
 
     if (hdr[0] != 'G' || hdr[1] != 'I' || hdr[2] != 'O' || hdr[3] != 'P' ||
 	hdr[4] != 1   || hdr[5] > 2 || (hdr[5] != 2 && giop12only)) {
@@ -958,22 +996,8 @@ protected:
     case GIOP::Fragment:
     case GIOP::CancelRequest:
       {	
-	{
-	  g->pd_strand->giveback_received(12);
-	  Strand::sbuf b;
-	  b = g->pd_strand->receive(16,1,omni::max_alignment,1);
-	  g->pd_inb_begin = g->pd_inb_mkr = b.buffer;
-	  g->pd_inb_end = (void *) ((omni::ptr_arith_t)g->pd_inb_mkr + b.size);
-	  hdr = (unsigned char*) g->pd_inb_mkr;
-	}
-	reqid = *(CORBA::ULong*)(hdr + 12);
-	if (bswap) {
-	  CORBA::ULong t = reqid;
-	  reqid = ((((t) & 0xff000000) >> 24) |
-		   (((t) & 0x00ff0000) >> 8)  |
-		   (((t) & 0x0000ff00) << 8)  |
-		   (((t) & 0x000000ff) << 24));
-	}
+	getHeader16(g,1,hdr,bswap,reqid);
+
 	if (expectFragment) {
 	  if (reqid == g->pd_request_id) {
 	    if (hdr[7] == (unsigned char) GIOP::CancelRequest) {
@@ -1009,26 +1033,22 @@ protected:
 	goto bail_out;
 	break;     // dummy statement
       }
+    case GIOP::Reply:
+    case GIOP::LocateReply:
+      {
+	getHeader16(g,1,hdr,bswap,reqid);
+
+	if (expectReply && g->pd_request_id == reqid)
+	  return;
+	else
+	  goto demux;
+	break; 	   // dummy statement
+      }
     default:
       {
 	if (expectFragment) {
 	  // We expect a fragment and this isn't.
-	  {
-	    g->pd_strand->giveback_received(12);
-	    Strand::sbuf b;
-	    b = g->pd_strand->receive(16,1,omni::max_alignment,1);
-	    g->pd_inb_begin = g->pd_inb_mkr = b.buffer;
-	    g->pd_inb_end = (void *) ((omni::ptr_arith_t)g->pd_inb_mkr + b.size);
-	    hdr = (unsigned char*) g->pd_inb_mkr;
-	  }
-	  reqid = *(CORBA::ULong*)(hdr + 12);
-	  if (bswap) {
-	    CORBA::ULong t = reqid;
-	    reqid = ((((t) & 0xff000000) >> 24) |
-		     (((t) & 0x00ff0000) >> 8)  |
-		     (((t) & 0x0000ff00) << 8)  |
-		     (((t) & 0x000000ff) << 24));
-	  }
+	  getHeader16(g,1,hdr,bswap,reqid);
 	  goto demux;
 	}
       }
@@ -1050,27 +1070,19 @@ protected:
     //  hdr   = points to the start of the header
     //  bswap = TRUE(1) if byte swap is necessary
 
-#if 0
-    // XXX Temp. solution does not support fragment interleaving.
-    PTRACE("inputCheckFragmentHeader","MessageError (Fragment multiplexing unsupported)");
-    goto bail_out;
-#else
-
-    if (saveInterleaveFragment(g,reqid)) {
+    if (saveInterleaveFragment(g,reqid,(GIOP::MsgType)hdr[7])) {
       headerInBuffer = 0;
       goto again;
     }
     else
       goto bail_out;
 
-#endif
-
   bail_out:
     if (hdr[7] != (unsigned char) GIOP::MessageError &&
 	hdr[7] != (unsigned char) GIOP::CloseConnection) {
       g->SendMsgErrorMessage();
     }
-    setTerminalError(g);
+    g->setTerminalError();
     g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
   }
 
@@ -1084,9 +1096,11 @@ protected:
   virtual GIOP::MsgType inputFragmentBegin(giopStream* g,
 					   CORBA::Boolean giop12only,
 					   CORBA::Boolean headerInBuffer,
-					   CORBA::Boolean expectFragment)
+					   CORBA::Boolean expectFragment,
+					   CORBA::Boolean expectReply)
   {
-    inputCheckFragmentHeader(g,giop12only,headerInBuffer,expectFragment);
+    inputCheckFragmentHeader(g,giop12only,headerInBuffer,
+			     expectFragment,expectReply);
     // If expectFragment == 1
     //    returns here only if the incoming contains a fragment that is part 
     //    of the current message or a CancelRequest message direct at
@@ -1110,7 +1124,6 @@ protected:
 				     (((fragsz) & 0x000000ff) << 24));
     }
 
-
     if (hdr[5] >= 1) {
       g->pd_input_fragmented = ((hdr[6] & 0x2) ? 1 : 0);
       if (g->pd_input_fragmented) {
@@ -1127,6 +1140,12 @@ protected:
       g->pd_inb_mkr = (void*)((omni::ptr_arith_t)g->pd_inb_mkr + 16);
       g->pd_input_msgfrag_to_come -= 4;
     }
+    else {
+      // subtract from the count the bytes in the body that has already
+      // been read from the strand.
+      g->pd_input_msgfrag_to_come -= ((omni::ptr_arith_t)g->pd_inb_end -
+				      (omni::ptr_arith_t)g->pd_inb_mkr - 12);
+    }
 
     if ((g->pd_input_msgbody_received + g->pd_input_msgfrag_to_come) > 
         GIOP_Basetypes::max_giop_message_size) {
@@ -1136,7 +1155,7 @@ protected:
 
       PTRACE("inputFragmentBegin","MessageError(message size exceeded limit)");
       g->SendMsgErrorMessage();
-      setTerminalError(g);
+      g->setTerminalError();
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
     }
 
@@ -1147,7 +1166,7 @@ protected:
 	hdr[7] != (unsigned char) GIOP::CloseConnection) {
       g->SendMsgErrorMessage();
     }
-    setTerminalError(g);
+    g->setTerminalError();
     g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
     return (GIOP::MsgType) 0; // Dummy return
 }
@@ -1160,7 +1179,7 @@ public:
   {
     g->pd_input_msgbody_received = 0;
 
-    GIOP::MsgType t = inputFragmentBegin(g,0,headerInBuffer,0);
+    GIOP::MsgType t = inputFragmentBegin(g,0,headerInBuffer,0,0);
   
     unsigned char* hdr = (unsigned char*) g->pd_inb_mkr;
 
@@ -1198,13 +1217,13 @@ public:
       {
 	PTRACE("inputRequestMessageBegin","MessageError (unexpected message type");
 	g->SendMsgErrorMessage();
-	setTerminalError(g);
+	g->setTerminalError();
 	g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
 	// never reach here.
       }
     case GIOP::MessageError:
       {
-	setTerminalError(g);
+	g->setTerminalError();
 	g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
 	// never reach here.
       }
@@ -1213,19 +1232,17 @@ public:
   }
 
   //////////////////////////////////////////////////////////////////
-  GIOP::ReplyStatusType inputReplyMessageBegin(giopStream* g,
-					       CORBA::ULong reqid,
-					       CORBA::Boolean headerInBuffer)
+  CORBA::Boolean inputReplyMessageBegin(giopStream* g)
   {
     g->pd_input_msgbody_received = 0;
 
-    GIOP::MsgType t =  inputFragmentBegin(g,1,headerInBuffer,0);
+    GIOP::MsgType t =  inputFragmentBegin(g,1,0,0,1);
 
     g->pd_inb_mkr = (void*) ((omni::ptr_arith_t)g->pd_inb_mkr + 12);
 
     if (t != GIOP::Reply)
       {
-	setTerminalError(g);
+	g->setTerminalError();
 	g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
 	// never reach here.
       }
@@ -1234,34 +1251,29 @@ public:
     GIOP::ReplyStatusType rc;
 
     unmarshalReplyHeader(g,replyid,rc);
-    if (reqid != replyid) {
-      // request ID mismatch.
-      // This cannot happen because we do not issue Cancel Message and
-      // we do not multiplex GIOP request concurrently on the same connection
-
+    if (g->pd_request_id != replyid) {
       PTRACE("inputReplyMessageBegin","MessageError (request ID mismatch)");
       g->SendMsgErrorMessage();
-      setTerminalError(g);
+      g->setTerminalError();
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     }
+    g->pd_reply_status.replyStatus = rc;
     // XXX Call interceptor(s);
-    return rc;
+    return 1;
   }
 
   //////////////////////////////////////////////////////////////////
-  GIOP::LocateStatusType inputLocateReplyMessageBegin(giopStream* g,
-					       CORBA::ULong reqid,
-					       CORBA::Boolean headerInBuffer)
+  CORBA::Boolean inputLocateReplyMessageBegin(giopStream* g)
   {
     g->pd_input_msgbody_received = 0;
 
-    GIOP::MsgType t =  inputFragmentBegin(g,1,headerInBuffer,0);
+    GIOP::MsgType t =  inputFragmentBegin(g,1,0,0,1);
 
     g->pd_inb_mkr = (void*) ((omni::ptr_arith_t)g->pd_inb_mkr + 12);
 
     if (t != GIOP::LocateReply)
       {
-	setTerminalError(g);
+	g->setTerminalError();
 	g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
 	// never reach here.
       }
@@ -1270,18 +1282,14 @@ public:
     GIOP::LocateStatusType rc;
 
     unmarshalLocateReplyHeader(g,replyid,rc);
-    if (reqid != replyid) {
-      // request ID mismatch.
-      // This cannot happen because we do not issue Cancel Message and
-      // we do not multiplex GIOP request concurrently on the same connection
-
+    if (g->pd_request_id != replyid) {
       PTRACE("inputLocateReplyMessageBegin","MessageError (request ID mismatch)");
       g->SendMsgErrorMessage();
-      setTerminalError(g);
+      g->setTerminalError();
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     }
-
-    return rc;
+    g->pd_reply_status.locateReplyStatus = rc;
+    return 1;
   }
 
   //////////////////////////////////////////////////////////////////
@@ -1303,7 +1311,7 @@ public:
       // come are empty. If not it is an error. We iterate here to read
       // all the empty fragments and stop either the last one is read or
       // a non-empty fragment is read.
-      (void) inputFragmentBegin(g,1,0,1);
+      (void) inputFragmentBegin(g,1,0,1,0);
     }
 
     if (error || (g->pd_input_fragmented && ! disgard)) {
@@ -1344,22 +1352,10 @@ public:
 	}
 	else {
 
-	  GIOP::MsgType t = inputFragmentBegin(g,1,0,1);
+	  GIOP::MsgType t = inputFragmentBegin(g,1,0,1,0);
 	}
       }
     }
-  }
-
-  //////////////////////////////////////////////////////////////////
-  CORBA::Boolean terminalError(const giopStream* g) const
-  {
-    return g->pd_strand->_strandIsDying();
-  }
-
-  //////////////////////////////////////////////////////////////////
-  void setTerminalError(giopStream* g)
-  {
-    Strand::Sync::setStrandIsDying(g->pd_strand);
   }
 
   struct internalBuffer {
@@ -1488,7 +1484,7 @@ private:
       // Should never receive anything other that the above
       // Same treatment as wrong header
       PTRACE("unmarshalReplyHeader","Error (unrecognised reply. Corrupted header?");
-      setTerminalError(g);
+      g->setTerminalError();
       g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
       // never reach here.
     }
@@ -1532,7 +1528,7 @@ private:
     default:
       // Should never receive anything other that the above
       // Same treatment as wrong header
-      setTerminalError(g);
+      g->setTerminalError();
       PTRACE("unmarshalLocateReplyHeader","Error (unrecognised reply. Corrupted header?");
       g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
       // never reach here.
@@ -1708,7 +1704,7 @@ public:
   {
     size_t leftover = (omni::ptr_arith_t)g->pd_outb_end - 
                       (omni::ptr_arith_t)g->pd_outb_mkr;
-    if (g->pd_wrlocked && leftover && !terminalError(g)) {
+    if (g->pd_wrlocked && leftover && !g->terminalError()) {
       // XXX This should not be done if this is a buffered giopStream
       g->pd_strand->giveback_reserved(leftover);
     }
@@ -1723,6 +1719,8 @@ public:
     g->pd_input_buffers = g->pd_input_current_buffer = g->pd_input_hdr_end= 0; 
     g->pd_inb_end = g->pd_inb_mkr;
   }
+
+  CORBA::Boolean isBuffered(giopStream*) { return 1; }
 
   ///////////////////////////////////////////////////////////////////
   //
@@ -1762,7 +1760,7 @@ public:
 
       if (avail < reqsize) {
 	// The request size is too large. 
-	setTerminalError(g);
+	g->setTerminalError();
 	PTRACE("getInputData(m)","MARSHAL exception(request size too large)");
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
       }
@@ -1770,7 +1768,7 @@ public:
     else if (g->pd_input_fragmented) {
       g->pd_input_msgbody_received += ((omni::ptr_arith_t)g->pd_inb_mkr -
 				       (omni::ptr_arith_t)g->pd_inb_begin);
-      (void) inputFragmentBegin(g,1,0,1);
+      (void) inputFragmentBegin(g,1,0,1,0);
       goto again;
     }
     else {
@@ -1787,7 +1785,7 @@ public:
     if ((g->pd_inb_mkr == g->pd_inb_end) && g->pd_input_fragmented) {
       g->pd_input_msgbody_received += ((omni::ptr_arith_t)g->pd_inb_mkr -
 				       (omni::ptr_arith_t)g->pd_inb_begin);
-      (void) inputFragmentBegin(g,1,0,1);
+      (void) inputFragmentBegin(g,1,0,1,0);
       goto again;
     }
 
@@ -1797,7 +1795,7 @@ public:
     if (size > avail) {
       PTRACE("skipInputData(m)","MessageError(request size too large)");
       g->SendMsgErrorMessage();
-      setTerminalError(g);
+      g->setTerminalError();
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
     }
 
@@ -1840,7 +1838,7 @@ public:
 	    // Protocol violation. The data should be integral multiple 
 	    PTRACE("copyInputData(m)","MessageError(protocol violation. Data is not integral multiple of requested element size)");
 	    g->SendMsgErrorMessage();
-	    setTerminalError(g);
+	    g->setTerminalError();
 	    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
 	  }
 	}
@@ -1854,7 +1852,7 @@ public:
       else if (g->pd_input_fragmented) {
 	g->pd_input_msgbody_received += ((omni::ptr_arith_t)g->pd_inb_mkr -
 					 (omni::ptr_arith_t)g->pd_inb_begin);
-	(void) inputFragmentBegin(g,1,0,1);
+	(void) inputFragmentBegin(g,1,0,1,0);
 	continue;
       }
       else {
@@ -1877,15 +1875,11 @@ public:
     //      3. A valid giop 1.2 header is present in the input stream.
     //      4. If this is not the 1st fragment, the byte order must
     //         match that of the first fragment.
-    assert(g->pd_inb_end == g->pd_inb_mkr);
 
-    Strand::sbuf b;
-    b = g->pd_strand->receive(12,1,omni::max_alignment,1);
-    
-    unsigned char* hdr = (unsigned char*) b.buffer;
+    unsigned char* hdr;
+    CORBA::Boolean bswap;
 
-    CORBA::Boolean bswap = (((hdr[6] & 0x1) == _OMNIORB_HOST_BYTE_ORDER_)
-			    ? 0 : 1 );
+    getHeader12(g,0,hdr,bswap);
 
     if (hdr[7] != (unsigned char) GIOP::Fragment)
       g->pd_unmarshal_byte_swap = bswap;
@@ -1939,6 +1933,7 @@ public:
     void* p = (void*)omni::align_to((omni::ptr_arith_t)&(bp->data),
 				    omni::ALIGN_8);
     memcpy(p,(void*)hdr,12);
+    g->pd_inb_mkr = g->pd_inb_end;
     {
       Strand::sbuf bb;
       bb.buffer = (void*)((omni::ptr_arith_t)p + 12);
@@ -1951,7 +1946,8 @@ protected:
 
   GIOP::MsgType inputFragmentBegin(giopStream* g,CORBA::Boolean giop12only,
 				   CORBA::Boolean headerInBuffer,
-				   CORBA::Boolean expectFragment)
+				   CORBA::Boolean expectFragment,
+				   CORBA::Boolean expectReply)
   {
   again:
     internalBuffer* p = (internalBuffer*) g->pd_input_current_buffer;
@@ -2004,7 +2000,7 @@ protected:
 	// throw MARSHAL exception.
 	PTRACE("inputFragmentBegin(m)","MessageError(message size exceeded limit)");
 	g->SendMsgErrorMessage();
-	setTerminalError(g);
+	g->setTerminalError();
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
       }
 
@@ -2012,7 +2008,8 @@ protected:
     }
 
     // Reach here if we have to fetch a new fragment from the strand.
-    inputCheckFragmentHeader(g,giop12only,headerInBuffer,expectFragment);
+    inputCheckFragmentHeader(g,giop12only,headerInBuffer,expectFragment,
+			     expectReply);
 
     // Returns here only if there is a fragment that is part of
     // the current message.
@@ -2031,7 +2028,7 @@ protected:
 	hdr[7] != (unsigned char) GIOP::CloseConnection) {
       g->SendMsgErrorMessage();
     }
-    setTerminalError(g);
+    g->setTerminalError();
     g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
     return (GIOP::MsgType) 0; // Dummy return
   }
@@ -2052,7 +2049,7 @@ public:
       // a non-empty fragment is read.
       g->pd_input_msgbody_received += ((omni::ptr_arith_t)g->pd_inb_mkr -
 				       (omni::ptr_arith_t)g->pd_inb_begin);
-      (void) inputFragmentBegin(g,1,0,1);
+      (void) inputFragmentBegin(g,1,0,1,0);
       avail = (omni::ptr_arith_t) g->pd_inb_end - 
 	      (omni::ptr_arith_t) g->pd_inb_mkr;
     }
@@ -2085,7 +2082,7 @@ public:
       while (g->pd_input_fragmented) {
 	g->pd_input_msgbody_received += ((omni::ptr_arith_t)g->pd_inb_mkr -
 					 (omni::ptr_arith_t)g->pd_inb_begin);
-	(void) inputFragmentBegin(g,1,0,1);
+	(void) inputFragmentBegin(g,1,0,1,0);
       }
     }
 
@@ -2149,7 +2146,7 @@ public:
       // before copying.
       {
 	startSavingInputMessageBody(&s);
-	while (s.pd_input_fragmented) (void) inputFragmentBegin(&s,1,0,1);
+	while (s.pd_input_fragmented) (void) inputFragmentBegin(&s,1,0,1,0);
       }
 
       internalBuffer* bp = (internalBuffer*) s.pd_input_buffers;
@@ -2239,8 +2236,10 @@ giop_1_2_Impl::copyMessageBodyFrom(giopStream*g, giopStream& s)
     giop_1_2_buffered_singleton->copyMessageBodyFrom(g,s);
 }
 
+
 CORBA::Boolean 
-giop_1_2_Impl::saveInterleaveFragment(giopStream* g, CORBA::ULong reqid)
+giop_1_2_Impl::saveInterleaveFragment(giopStream* g, CORBA::ULong reqid,
+				      GIOP::MsgType msgtype)
 {
   {
     if (omniORB::trace(25)) {
@@ -2250,60 +2249,73 @@ giop_1_2_Impl::saveInterleaveFragment(giopStream* g, CORBA::ULong reqid)
     }
   }
 
-  // Seach the list of giopStream of this strand to see if there is 
-  // already one with the same request ID. If not, allocate a 
-  // new giopStream.
-  //
-  unsigned char* hdr = (unsigned char*) g->pd_inb_mkr;
-  giopStream* p;
-  {
-    omni_mutex_lock sync(Strand::Sync::getMutex(g->pd_strand));
-    p = (giopStream*) Strand::Sync::getSync(g->pd_strand);
-    while (p) {
-      if (p->pd_request_id == reqid) break;
-      p = (giopStream*) p->pd_next;
-    }
+  CORBA::Boolean isnew;
 
-    switch ((GIOP::MsgType)hdr[7]) {
-    case GIOP::Fragment:
+  giopStream* p = giopStream::findOrCreateBuffered(g->pd_strand,reqid,isnew);
 
-      if (!p || p->pd_state == giopStream::InputFullyBuffered) {
-	// On the wire protocol error. We got a fragment but either:
-	//     1. haven't got the 1st request message or
-	//     2. a complete request message with the same request id is
-	//        already in the buffer.
-	PTRACE("saveInterleaveFragment",
-	       "MessageError (unexpected interleave fragment)");
-	return 0;
-      }
-      break;
-
-    default:
-
-      if (p) {
-	// On the wire protocol error, this is the 1st message but
-	// we already have another one with the same request id in the
-	// buffer.
-	PTRACE("saveInterleaveFragment",
-	       "MessageError (message reuse the same request ID)");
-	return 0;
-      }
-      break;
-    }
-
-    if (!p) {
-      p = new giopStream(g->pd_strand);
+  if (isnew) {
+    p->pd_impl = giop_1_2_buffered_singleton;
+  }
+  else {
+    if (p->pd_impl != giop_1_2_buffered_singleton) {
       p->pd_impl = giop_1_2_buffered_singleton;
-      p->pd_state = giopStream::InputPartiallyBuffered;
-      p->pd_request_id = reqid;
     }
   }
-  CORBA::Boolean fragmented = ((hdr[6] & 0x2) ? 1 : 0);
-  if (!fragmented) {
-    PTRACE("saveInterleaveFragment",
-	   "end of fragment received");
-    p->pd_state = giopStream::InputFullyBuffered;
+
+  unsigned char* hdr = (unsigned char*) g->pd_inb_mkr;
+  CORBA::Boolean delete_spurious = 0;
+
+  switch ((GIOP::MsgType)hdr[7]) {
+  case GIOP::Fragment:
+    if (isnew) {
+      // This fragment is part of fragmented request/reply message and we
+      // have not got the 1st fragment. We can safely drop
+      // the message.
+      PTRACE("saveInterleaveFragment",
+	     "Unexpected interleave fragment dropped");
+      delete_spurious = 1;
+    }
+    else if (p->pd_state == giopStream::InputFullyBuffered) {
+      // On the wire protocol error. We already have a complete request
+      // message with the same request id in the buffer.
+      PTRACE("saveInterleaveFragment",
+	     "MessageError (unexpected interleave fragment)");
+      return 0;
+    }
+    break;
+
+  case GIOP::CancelRequest:
+    break;
+
+  case GIOP::Reply:
+  case GIOP::LocateReply:
+    {
+      if (isnew) {
+	// This is a reply and we should have a matching giopStream already
+	// on the queue. Since a new giopStream has been created, this could
+	// be a reply to an old request or the remote end is confused.
+	// Either way, we can safely drop the message.
+	PTRACE("saveInterleaveFragment",
+	       "Unexpected reply dropped");
+	delete_spurious = 1;
+      }
+      break;
+    }
+
+  default:
+
+    if (!isnew) {
+      // On the wire protocol error, this is the 1st message but
+      // we already have another one with the same request id in the
+      // buffer.
+      PTRACE("saveInterleaveFragment",
+	     "MessageError (message reuse the same request ID)");
+      return 0;
+    }
+    break;
   }
+
+  CORBA::Boolean fragmented = ((hdr[6] & 0x2) ? 1 : 0);
   
   g->pd_strand->giveback_received((omni::ptr_arith_t)g->pd_inb_end -
 				  (omni::ptr_arith_t)g->pd_inb_mkr);
@@ -2311,6 +2323,16 @@ giop_1_2_Impl::saveInterleaveFragment(giopStream* g, CORBA::ULong reqid)
 
   giop_1_2_buffered_singleton->fetchFragment(p);
 
+  if (!delete_spurious) {
+    if (!fragmented) {
+      PTRACE("saveInterleaveFragment",
+	     "end of fragment received");
+      p->changeToFullyBuffered();
+    }
+  }
+  else {
+    p->deleteThis();
+  }
   return 1;
 }
 
