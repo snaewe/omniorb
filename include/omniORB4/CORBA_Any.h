@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2003/01/16 12:47:08  dgrisby
+  Const cast macro. Thanks Matej Kenda.
+
   Revision 1.1.2.4  2002/03/11 12:23:03  dpg1
   Tweaks to avoid compiler warnings.
 
@@ -123,11 +126,7 @@ public:
   };
   struct from_string {
     from_string(const char* s, ULong b, Boolean nocopy = 0)
-#ifdef HAS_Cplusplus_const_cast
-      : val(const_cast<char*>(s)), bound(b), nc(nocopy) { }
-#else
-      : val((char*)s), bound(b), nc(nocopy) { }
-#endif
+      : val(OMNI_CONST_CAST(char*, s)), bound(b), nc(nocopy) { }
     from_string(char* s, ULong b, Boolean nocopy = 0)
       : val(s), bound(b), nc(nocopy) { }   // deprecated
 
@@ -137,7 +136,7 @@ public:
   };
   struct from_wstring {
     from_wstring(const WChar* s, ULong b, Boolean nocopy = 0)
-      : val((WChar*)s), bound(b), nc(nocopy) { }
+      : val(OMNI_CONST_CAST(WChar*, s)), bound(b), nc(nocopy) { }
     from_wstring(WChar* s, ULong b, Boolean nocopy = 0)
       : val(s), bound(b), nc(nocopy) { }   // deprecated
 

@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.8  2003/01/16 12:47:08  dgrisby
+ Const cast macro. Thanks Matej Kenda.
+
  Revision 1.1.2.7  2003/01/14 11:48:15  dgrisby
  Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
 
@@ -192,11 +195,7 @@ public:
 
   inline const T* get_buffer() const { 
     if (pd_max && !pd_buf) {
-#ifdef HAS_Cplusplus_const_cast
-      T_seq* s = const_cast<T_seq*>(this);
-#else
-      T_seq* s = (T_seq*)this;
-#endif
+      T_seq* s = OMNI_CONST_CAST(T_seq*, this);
       s->copybuffer(pd_max);
     }
     return pd_buf;
@@ -426,11 +425,7 @@ public:
 
   inline const T* get_buffer() const { 
     if (pd_max && !pd_buf) {
-#ifdef HAS_Cplusplus_const_cast
-      T_seq* s = const_cast<T_seq*>(this);
-#else
-      T_seq* s = (T_seq*)this;
-#endif
+      T_seq* s = OMNI_CONST_CAST(T_seq*, this);
       s->NP_copybuffer(pd_max);
     }
     return pd_buf;
@@ -1157,11 +1152,7 @@ public:
 
   inline T* get_buffer() const {
     if (pd_max && !pd_buf) {
-#ifdef HAS_Cplusplus_const_cast
-      T_seq* s = const_cast<T_seq*>(this);
-#else
-      T_seq* s = (T_seq*)this;
-#endif
+      T_seq* s = OMNI_CONST_CAST(T_seq*, this);
       s->copybuffer(pd_max);
     }
     return pd_buf;
@@ -1973,11 +1964,7 @@ public:
 
   inline T*const * get_buffer() const { 
     if (pd_max && !pd_data) {
-#ifdef HAS_Cplusplus_const_cast
-      T_seq* s = const_cast<T_seq*>(this);
-#else
-      T_seq* s = (T_seq*)this;
-#endif
+      T_seq* s = OMNI_CONST_CAST(T_seq*, this);
       s->copybuffer(pd_max);
     }
     return pd_data; 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2003/01/16 12:47:08  dgrisby
+  Const cast macro. Thanks Matej Kenda.
+
   Revision 1.1.2.9  2003/01/14 11:48:16  dgrisby
   Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
 
@@ -222,18 +225,10 @@ public:
   typedef _CORBA_WChar* ptr_t;
 
   inline _CORBA_WString_member()
-#ifdef HAS_Cplusplus_const_cast
-    : _ptr(const_cast<_CORBA_WChar*>(_CORBA_WString_helper::empty_wstring)) {}
-#else
-    : _ptr((_CORBA_WChar*) _CORBA_WString_helper::empty_wstring) {}
-#endif
+    : _ptr(OMNI_CONST_CAST(_CORBA_WChar*, _CORBA_WString_helper::empty_wstring)) {}
 
   inline _CORBA_WString_member(const _CORBA_WString_member& s)  
-#ifdef HAS_Cplusplus_const_cast
-    : _ptr(const_cast<_CORBA_WChar*>(_CORBA_WString_helper::empty_wstring)) {
-#else
-    : _ptr((_CORBA_WChar*) _CORBA_WString_helper::empty_wstring) {
-#endif
+    : _ptr(OMNI_CONST_CAST(_CORBA_WChar*, _CORBA_WString_helper::empty_wstring)) {
     if (s._ptr && s._ptr != _CORBA_WString_helper::empty_wstring)
       _ptr = _CORBA_WString_helper::dup(s._ptr);
   }
@@ -394,11 +389,7 @@ public:
 	(const _CORBA_WChar*) s != _CORBA_WString_helper::empty_wstring)
       pd_data = _CORBA_WString_helper::dup((const _CORBA_WChar*)s);
     else {
-#ifdef HAS_Cplusplus_const_cast
-      pd_data = const_cast<_CORBA_WChar*>((const _CORBA_WChar*)s);
-#else
-      pd_data = (_CORBA_WChar*)(const _CORBA_WChar*)s;
-#endif
+      pd_data = OMNI_CONST_CAST(_CORBA_WChar*, (const _CORBA_WChar*)s);
     }
     return *this;
   }
@@ -602,11 +593,7 @@ public:
 
     // If we've shrunk we need to clear the entries at the top.
     for( _CORBA_ULong i = len; i < pd_len; i++ ) {
-#ifdef HAS_Cplusplus_const_cast
-      operator[](i) = const_cast<_CORBA_WChar*>(_CORBA_WString_helper::empty_wstring);
-#else
-      operator[](i) = (_CORBA_WChar*) _CORBA_WString_helper::empty_wstring;
-#endif
+      operator[](i) = OMNI_CONST_CAST(_CORBA_WChar*, _CORBA_WString_helper::empty_wstring);
     }
 
     if (len) {
@@ -642,8 +629,10 @@ public:
     ptr_arith_t l = nelems;
     b[0] = (_CORBA_WChar*) ((ptr_arith_t) 0x53515354U);
     b[1] = (_CORBA_WChar*) l;
-    for (_CORBA_ULong index_ = 2; index_ < (nelems+2); index_++)
-      b[index_] = (_CORBA_WChar*)_CORBA_WString_helper::empty_wstring;
+    for (_CORBA_ULong index_ = 2; index_ < (nelems+2); index_++) {
+      b[index_] = OMNI_CONST_CAST(_CORBA_WChar*,
+				  _CORBA_WString_helper::empty_wstring);
+    }
     return b+2;
   }
 
@@ -691,11 +680,7 @@ public:
 
   inline const _CORBA_WChar* const* get_buffer() const { 
     if (pd_max && !pd_data) {
-#ifdef HAS_Cplusplus_const_cast
-      _CORBA_Sequence_WString* s = const_cast<_CORBA_Sequence_WString*>(this);
-#else
-      _CORBA_Sequence_WString* s = (_CORBA_Sequence_WString*)this;
-#endif
+      _CORBA_Sequence_WString* s = OMNI_CONST_CAST(_CORBA_Sequence_WString*, this);
       s->copybuffer(pd_max);
     }
 #if !defined(__DECCXX) || (__DECCXX_VER > 60000000)

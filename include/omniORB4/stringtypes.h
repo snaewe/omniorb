@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.12  2003/01/16 12:47:08  dgrisby
+ Const cast macro. Thanks Matej Kenda.
+
  Revision 1.2.2.11  2003/01/14 11:48:15  dgrisby
  Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
 
@@ -249,18 +252,10 @@ public:
   typedef char* ptr_t;
 
   inline _CORBA_String_member()
-#ifdef HAS_Cplusplus_const_cast
-    : _ptr(const_cast<char*>(_CORBA_String_helper::empty_string)) {}
-#else
-    : _ptr((char*) _CORBA_String_helper::empty_string) {}
-#endif
+    : _ptr(OMNI_CONST_CAST(char*, _CORBA_String_helper::empty_string)) {}
 
   inline _CORBA_String_member(const _CORBA_String_member& s) 
-#ifdef HAS_Cplusplus_const_cast
-    : _ptr(const_cast<char*>(_CORBA_String_helper::empty_string)) {
-#else
-    : _ptr((char*)_CORBA_String_helper::empty_string) {
-#endif
+    : _ptr(OMNI_CONST_CAST(char*, _CORBA_String_helper::empty_string)) {
     if (s._ptr && s._ptr != _CORBA_String_helper::empty_string)
       _ptr = _CORBA_String_helper::dup(s._ptr);
   }
@@ -399,11 +394,7 @@ public:
       if (s.pd_data && s.pd_data != _CORBA_String_helper::empty_string)
 	pd_data = _CORBA_String_helper::dup(s.pd_data);
       else {
-#ifdef HAS_Cplusplus_const_cast
-	pd_data = const_cast<char*>(s.pd_data);
-#else
-	pd_data = (char*)s.pd_data;
-#endif
+	pd_data = OMNI_CONST_CAST(char*, s.pd_data);
       }
     }
     return *this;
@@ -426,11 +417,7 @@ public:
 	(const char*) s != _CORBA_String_helper::empty_string)
       pd_data = _CORBA_String_helper::dup((const char*)s);
     else {
-#ifdef HAS_Cplusplus_const_cast
-      pd_data = const_cast<char*>((const char*)s);
-#else
-      pd_data = (char*)(const char*)s;
-#endif
+      pd_data = OMNI_CONST_CAST(char*, (const char*)s);
     }
     return *this;
   }
@@ -632,11 +619,7 @@ public:
 
     // If we've shrunk we need to clear the entries at the top.
     for( _CORBA_ULong i = len; i < pd_len; i++ ) {
-#ifdef HAS_Cplusplus_const_cast
-      operator[](i) = const_cast<char*>(_CORBA_String_helper::empty_string);
-#else
-      operator[](i) = (char*) _CORBA_String_helper::empty_string;
-#endif
+      operator[](i) = OMNI_CONST_CAST(char*, _CORBA_String_helper::empty_string);
     }
     if (len) {
       // Allocate buffer on-demand. Either pd_data == 0 
@@ -672,11 +655,7 @@ public:
     b[0] = (char*) ((ptr_arith_t) 0x53515354U);
     b[1] = (char*) l;
     for (_CORBA_ULong index_ = 2; index_ < (nelems+2); index_++) {
-#ifdef HAS_Cplusplus_const_cast
-      b[index_] = const_cast<char*>(_CORBA_String_helper::empty_string);
-#else
-      b[index_] = (char*)_CORBA_String_helper::empty_string;
-#endif
+      b[index_] = OMNI_CONST_CAST(char*, _CORBA_String_helper::empty_string);
     }
     return b+2;
   }
@@ -725,11 +704,7 @@ public:
 
   inline const char* const* get_buffer() const { 
     if (pd_max && !pd_data) {
-#ifdef HAS_Cplusplus_const_cast
-      _CORBA_Sequence_String* s = const_cast<_CORBA_Sequence_String*>(this);
-#else
-      _CORBA_Sequence_String* s = (_CORBA_Sequence_String*)this;
-#endif
+      _CORBA_Sequence_String* s = OMNI_CONST_CAST(_CORBA_Sequence_String*, this);
       s->copybuffer(pd_max);
     }
 #if !defined(__DECCXX) || (__DECCXX_VER > 60000000)

@@ -1,3 +1,16 @@
+Thu Jan 16 12:45:04 GMT 2003 dgrisby
+====================================
+
+- Const cast macro. Thanks Matej Kenda.
+
+include/omniORB4/CORBA_Any.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/callDescriptor.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+
+
 Thu Jan 16 10:59:20 GMT 2003 dgrisby
 ====================================
 
