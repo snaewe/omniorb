@@ -12,7 +12,7 @@ DYN2_SRCS = bootstrapDynSK.cc NamingDynSK.cc \
 	    dynAny.cc dynAnyNil.cc \
 	    namedValue.cc nvList.cc exceptionList.cc contextList.cc \
 	    environment.cc context.cc deferredRequest.cc unknownUserExn.cc \
-            proxyCall.cc \
+            proxyCall.cc wrongTranExn.cc \
 	    request.cc serverRequest.cc dynamicImplementation.cc \
 	    pseudoBase.cc dynException.cc ir.cc \
 	    irstub.cc irdynstub.cc corbaidlstub.cc corbaidldynstub.cc \
@@ -23,7 +23,7 @@ DYN2_OBJS = bootstrapDynSK.o NamingDynSK.o \
 	    dynAny.o dynAnyNil.o \
 	    namedValue.o nvList.o exceptionList.o contextList.o \
 	    environment.o context.o deferredRequest.o unknownUserExn.o \
-            proxyCall.o \
+            proxyCall.o wrongTranExn.o \
 	    request.o serverRequest.o dynamicImplementation.o \
 	    pseudoBase.o dynException.o ir.o \
 	    irstub.o irdynstub.o corbaidlstub.o corbaidldynstub.o \
