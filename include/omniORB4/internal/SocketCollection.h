@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2002/05/07 12:54:38  dgrisby
+  Fix inevitable Windows header brokenness.
+
   Revision 1.1.2.10  2002/04/28 20:43:25  dgrisby
   Windows, FreeBSD, ETS fixes.
 
@@ -144,6 +147,7 @@ OMNI_NAMESPACE_END(omni)
 #  include <sys/time.h>
 #  include <sys/socket.h>
 #  include <netinet/in.h>
+#  include <netinet/tcp.h>
 #  include <arpa/inet.h>
 #  include <unistd.h>
 #  include <sys/types.h>
