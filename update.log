@@ -1,3 +1,11 @@
+Fri Aug  4 10:00:42 BST 2000 dpg1
+=================================
+
+- Fix look-up of escaped identifiers broken on 19 July. (Bug 14.)
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Thu Aug  3 22:22:24 BST 2000 djs
 ================================
 

@@ -8,6 +8,17 @@
 
 <buglist>
 
+<bug id="14" date="Fri Aug  4 10:00:42 BST 2000" user="dpg1">
+
+  <summary>Fix to bug 4 broke escaped identifiers</summary>
+  <reported>dme</reported>
+
+  <text>The fix to <a href="#bug4">bug 4</a> broke look-ups of escaped
+  identifiers. omniidl would complain about differences in case
+  between the escaped identifier and the target.</text>
+
+</bug>
+
 <bug id="13" date="Thu Aug  3 22:22:24 BST 2000" user="djs">
 
   <summary>omniIDL/C++ generated method signature mismatch when using 
