@@ -22,6 +22,8 @@ public:
     if (reply) delete reply;
     if (exc)   delete exc;
   }
+  // These are implemented by the IDL compiler, dealing with type-specific
+  // entities.
   virtual omniCallDescriptor *get_request_cd() = 0;
   virtual omniCallDescriptor *get_reply_cd() = 0;
   virtual omniCallDescriptor *get_exc_cd(Messaging::ExceptionHolder&) = 0;
@@ -32,11 +34,27 @@ public:
   virtual Messaging::ExceptionHolder* get_exception_holder() = 0;
 };
 
+//?
+class omniAMICall_var{
+  omniAMICall *data;
+ public:
+  omniAMICall_var(): data(NULL) { }
+  omniAMICall_var(omniAMICall *d): data(d) { }
+  ~omniAMICall_var() { 
+    delete data; 
+  }
+  omniAMICall_var operator=(omniAMICall* call){
+    if (data) delete data;
+    data = call;
+    return *this;
+  }
+};
+
 
 class AMI{
 
 public:
-  typedef TimedQueue<omniAMICall*> Queue;
+  typedef Queue<omniAMICall*> Queue;
 
   class Worker: public omni_thread{
   private:

@@ -52,7 +52,7 @@ _CORBA_MODULE_BEG
 // ExceptionHolder valuetype
 struct ExceptionHolder: ExceptionHolder_base{
   ExceptionHolder(): local_exception_object(NULL){ } 
-  virtual ~ExceptionHolder(){ }
+  virtual ~ExceptionHolder();
 
   // Exception can either be a pointer to a local exception object
   // kept here, or it can exit in marshalled form inside the 
@@ -72,9 +72,8 @@ struct ExceptionHolder: ExceptionHolder_base{
   void operator<<= (MemBufferedStream &);
 };
 
-typedef ExceptionHolder_base_var ExceptionHolder_var;
-
-typedef ExceptionHolder_base_out ExceptionHolder_out;
+typedef _CORBA_ConstrType_Variable_Var<ExceptionHolder> ExceptionHolder_var;
+typedef _CORBA_ConstrType_Variable_OUT_arg<ExceptionHolder, ExceptionHolder_var> ExceptionHolder_out;
 
 _CORBA_MODULE_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_ExceptionHolder;
 
