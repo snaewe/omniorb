@@ -29,6 +29,9 @@
 /*
  $Id$
  $Log$
+ Revision 1.1.2.6  2000/10/10 15:07:22  djs
+ Moved code from header to .cc file.
+
  Revision 1.1.2.5  2000/09/28 23:18:14  djs
  Reordered initialiser list to match declaration order
 
@@ -190,47 +193,25 @@ protected:
   // result to this object
   ReplyHandler_ptr pd_associated_handler;
 
+  // Convenience function to throw an exception from the AMI system, setting
+  // is_from_poller to TRUE. (if locked == TRUE it assumes we're holding the
+  // internal state lock.
+  void _NP_throw_exception_from_poller(const CORBA::Exception& e, 
+				       CORBA::Boolean locked);
+
   public:
   // Type-specific Pollers are defined _per IDL interface_ however they
   // are used _per OPERATION_. Therefore it is possible to ask for the 
   // wrong reply from a poller. Convenience function to throw the exception.
-  void _NP_throw_wrong_transaction(){
-    pd_is_from_poller = 1; // informs the client code that the exception
-                           // originated from the AMI system and not from
-                           // the remote server
-    throw CORBA::WRONG_TRANSACTION();
-  }
+  void _NP_throw_wrong_transaction();
 
   // Called by the stubs to perform a blocking wait for each polling call.
-  void _NP_wait_and_throw_exception(CORBA::ULong timeout){
-    if (!is_ready(timeout)) {
-      // NO_RESPONSE is generated for the no-timeout case
-      if (timeout == 0) throw CORBA::NO_RESPONSE();
-      throw CORBA::TIMEOUT();
-    }
-
-    // Data must have arrived within the timeout period.
-    {
-      omni_mutex_lock lock(pd_state_lock);
-      // Has someone else got it?
-      if (reply_already_read) throw CORBA::OBJECT_NOT_EXIST();
-      // Claim it for ourselves
-      reply_already_read = 1;
-      // Everyone else who tries to get this data will get an exception instead
-    }
-  }
+  void _NP_wait_and_throw_exception(CORBA::ULong timeout);
 
   // When the call descriptor is told to send on the reply and we are polling,
   // it fills in the pointers and then calls this function to wake up blocked
   // threads.
-  void _NP_tell_poller_reply_received(){
-    omni_mutex_lock lock(pd_state_lock);
-    reply_received = 1;
-    // The client could have lots of threads blocked on this event, better wake
-    // them all up. They can fight over ownership of the data and the loser(s)
-    // can return with OBJECT_NOT_EXIST
-    pd_state_cond.broadcast();
-  }
+  void _NP_tell_poller_reply_received();
 
   public:
   virtual ~Poller() {
