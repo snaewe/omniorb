@@ -10,9 +10,12 @@
 
 /*
  $Log$
- Revision 1.5  1997/03/10 16:19:04  sll
- *** empty log message ***
+ Revision 1.6  1997/04/29 12:28:57  sll
+ Added support for prefix, ID and version pragmas.
 
+ * Revision 1.5  1997/03/10  16:19:04  sll
+ * *** empty log message ***
+ *
  Revision 1.4  1997/01/24 19:38:02  sll
  *** empty log message ***
 
@@ -55,7 +58,7 @@ public:
   // same as fqname but with '_' as the separator  
   virtual char *_fqname()    { return pd__fqname; }
 
-  virtual char *repositoryID() { return pd_repositoryID; }
+  virtual char *repositoryID();
 
   void set_scopename(char *n) { pd_scopename = n; }
   void set_uqname(char *n)    { pd_uqname = n; }
@@ -78,6 +81,7 @@ private:
   char *pd__scopename;
   char *pd__fqname;
   char *pd_repositoryID;
+  AST_Decl *pd_decl;
 };
 
 class o2be_typedef;

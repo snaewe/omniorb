@@ -443,7 +443,12 @@ parse_state_to_error_message(IDL_GlobalData::ParseState ps)
     return GTDEVEL("Illegal syntax after ',' in declarators list");
   case IDL_GlobalData::PS_DeclsDeclSeen:
     return GTDEVEL("Illegal syntax after declarator in declarators list");
-
+  case IDL_GlobalData::PS_PragmaIDSeen:
+    return GTDEVEL("Illegal syntax after #pragma ID");
+  case IDL_GlobalData::PS_PragmaVersionSeen:
+    return GTDEVEL("Illegal syntax after #pragma version");
+  case IDL_GlobalData::PS_PragmaPrefixSeen:
+    return GTDEVEL("Illegal syntax after #pragma prefix");
   default:
     return GTDEVEL("Some syntax error");
   }

@@ -194,6 +194,9 @@ public:
     , PS_OpContextCommaSeen	// Seen ',' for CONTEXT
     , PS_DeclsCommaSeen		// Seen ',' in declarators list
     , PS_DeclsDeclSeen		// Seen complete decl in decls list
+    , PS_PragmaIDSeen           // Seen #pragma ID
+    , PS_PragmaVersionSeen      // Seen #pragma version
+    , PS_PragmaPrefixSeen       // Seen #pragma prefix
   };
 
   // Constructor

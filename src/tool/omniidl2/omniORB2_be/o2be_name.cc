@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.2  1997/02/17 18:09:56  ewc
-  Added support for Windows NT
+  Revision 1.3  1997/04/29 12:29:29  sll
+  Added support for prefix, ID and version pragmas.
 
+// Revision 1.2  1997/02/17  18:09:56  ewc
+// Added support for Windows NT
+//
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -26,6 +29,8 @@
 
 static char *internal_produce_scope_name(UTL_ScopedName *n,char *separator);
 static char *internal_check_name_for_reserved_words(char *p);
+static char *internal_produce_repositoryID(AST_Decl *decl,o2be_name *n);
+static UTL_String* internal_search_pragma(AST_Decl* decl,char* p);
 
 o2be_name::o2be_name(AST_Decl *decl)
 {
@@ -42,16 +47,102 @@ o2be_name::o2be_name(AST_Decl *decl)
   strcat(p,pd_uqname);
   pd__fqname = p;
 
-  char *q = internal_produce_scope_name(decl->name(),"/");
-  p = new char [strlen("IDL::1.0") + strlen(q) + strlen(uqname()) + 1];
-  strcpy(p,"IDL:");
-  strcat(p,q);
-  strcat(p,uqname());
-  strcat(p,":1.0");
-  delete [] q;
-  pd_repositoryID = p;
+  pd_repositoryID = internal_produce_repositoryID(decl,this);
+  pd_decl = decl;
   return;
 }
+
+char*
+o2be_name::repositoryID() {
+  // Check the pragmas attached to this node to see if
+  // pragma ID is defined to override the default repositoryID.
+  UTL_String* id;
+  if (id = internal_search_pragma(pd_decl,"ID")) {
+    return id->get_string();
+  }
+  else if (id = internal_search_pragma(pd_decl,"version")) {
+    // Check if pragma version is defined to override the
+    // version number in the default repositoryID.
+    char* p = strrchr(pd_repositoryID,':') + 1;
+    char* result = new char[(p-pd_repositoryID)+strlen(id->get_string())+1];
+    strncpy(result,pd_repositoryID,p-pd_repositoryID);
+    result[p-pd_repositoryID] = '\0';
+    strcat(result,id->get_string());
+    return result;
+  }
+  else {
+    return pd_repositoryID;
+  }
+}
+
+static
+char*
+internal_produce_repositoryID(AST_Decl *decl,o2be_name *n)
+{
+  // find if any pragma prefix applies to this node. 
+  UTL_String* prefix;
+  UTL_Scope*  prefix_scope = 0;
+
+  if (!(prefix = internal_search_pragma(decl,"prefix"))) {
+    // no pragma prefix defined in this node, search the parents
+    prefix_scope = decl->defined_in();
+    while (prefix_scope) {
+      if (!(prefix = internal_search_pragma(ScopeAsDecl(prefix_scope),
+					    "prefix"))) {
+	prefix_scope = ScopeAsDecl(prefix_scope)->defined_in();
+      }
+      else {
+	break;
+      }
+    }
+  }
+
+  UTL_ScopedName* idlist;
+
+  if (prefix) {
+    idlist = new UTL_ScopedName(decl->local_name(),NULL);
+    UTL_Scope* u = decl->defined_in();
+    while (prefix_scope && prefix_scope != u) {
+      idlist = new UTL_ScopedName(ScopeAsDecl(u)->local_name(),idlist);
+      u = ScopeAsDecl(u)->defined_in();
+    }
+    idlist = new UTL_ScopedName(new Identifier(prefix->get_string()),idlist);
+
+  }
+  else {
+    idlist = decl->name();
+  }
+  char* q = internal_produce_scope_name(idlist,"/");
+  char* result = new char [strlen("IDL::1.0") + 
+			   strlen(q) + 
+			   strlen(n->uqname())+1];
+  strcpy(result,"IDL:");
+  strcat(result,q);
+  strcat(result,n->uqname());
+  strcat(result,":1.0");
+  delete [] q;
+  return result;
+}
+
+static
+UTL_String*
+internal_search_pragma(AST_Decl* decl,char* p) 
+{
+  UTL_String* result = 0;
+  UTL_StrlistActiveIterator l(decl->pragmas());
+  while (!l.is_done()) {
+    if (strcmp(p,l.item()->get_string()) == 0) {
+      l.next();
+      result = l.item();
+    }
+    else {
+      l.next();
+    }
+    l.next();
+  }
+  return result;
+}
+
 
 static
 char *
@@ -68,8 +159,10 @@ internal_produce_scope_name(UTL_ScopedName *n,char *separator)
   Identifier *id;
   char *q;
 
+  Identifier *last = n->last_component();
+
   id = iter.item();
-  while (!iter.is_done())
+  while (!iter.is_done() && id != last)
     {
       q = internal_check_name_for_reserved_words(id->get_string());
       if (strlen(q) != 0)
@@ -89,8 +182,8 @@ internal_produce_scope_name(UTL_ScopedName *n,char *separator)
 	  if (q != id->get_string())
 	    delete [] q;
 	}
-      id = iter.item();
       iter.next();
+      id = iter.item();
     }
   return p;
 }

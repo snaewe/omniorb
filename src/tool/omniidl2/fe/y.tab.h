@@ -74,3 +74,6 @@ extern YYSTYPE yylval;
 # define SCOPE_DELIMITOR 298
 # define LEFT_SHIFT 299
 # define RIGHT_SHIFT 300
+# define PRAGMA_ID 301
+# define PRAGMA_VERSION 302
+# define PRAGMA_PREFIX 303
