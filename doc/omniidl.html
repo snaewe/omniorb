@@ -223,7 +223,7 @@ open the module just named <TT>foo</TT>, using the normal
 <BR>
 The only requirement on back-end modules is that they contain a
 function with the signature <TT>run(tree, args)</TT>, where <TT>tree</TT>
-is an <TT>AST</TT> object as described in section&nbsp;<A HREF="#sec:astclass">2.3.2</A>,
+is an <TT>AST</TT> object as described in section&nbsp;<A HREF="#sec:astclass">2.3.3</A>,
 and <TT>args</TT> is a list of argument strings passed to the back-end.<BR>
 <BR>
 Back-ends may also optionally provide a variable named <TT>cpp_args</TT>
@@ -366,9 +366,40 @@ objects need not actually derive from the classes defined in
 <TT>idlvisitor</TT><A NAME="text1" HREF="#note1"><SUP><FONT SIZE=2>1</FONT></SUP></A>. Also note that you do not have to use the
 visitor pattern if you do not wish to.<BR>
 <BR>
+<!--TOC subsubsection Pragmas and comments-->
+
+<H4>2.3.2&nbsp;&nbsp; Pragmas and comments</H4><!--SEC END -->
+Any unknown <TT>#pragma</TT>s encountered in the IDL are attached to
+nodes within the AST. Similarly, comments are attached if <FONT COLOR=purple>omniidl</FONT> is
+run with the <TT>-k</TT> or <TT>-K</TT> fields.<BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Pragma</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>text()</TT><DD><BR>Text of the pragma.<BR>
+<BR>
+
+<DT><TT>__str__()</TT><DD><BR>Same as <TT>text()</TT>.<BR>
+<BR>
+
+<DT><TT>file()</TT><DD><BR>File containing the pragma.<BR>
+<BR>
+
+<DT><TT>line()</TT><DD><BR>Line within the file.</DL><HR SIZE=2><BR>
+<BR>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Comment</TT></B></DIV><DL COMPACT=compact>
+<DT><TT>text()</TT><DD><BR>Text of the comment.<BR>
+<BR>
+
+<DT><TT>__str__()</TT><DD><BR>Same as <TT>text()</TT>.<BR>
+<BR>
+
+<DT><TT>file()</TT><DD><BR>File containing the comment.<BR>
+<BR>
+
+<DT><TT>line()</TT><DD><BR>Line within the file.</DL><HR SIZE=2><BR>
+<BR>
 <!--TOC subsubsection The root of the tree-->
 
-<H4>2.3.2&nbsp;&nbsp; The root of the tree</H4><!--SEC END -->
+<H4>2.3.3&nbsp;&nbsp; The root of the tree</H4><!--SEC END -->
 
 <A NAME="sec:astclass"></A>The back-end's <TT>run()</TT> function (described in
 section&nbsp;<A HREF="#sec:bemodules">2.1</A>) is passed an object of class <TT>AST</TT>.<BR>
@@ -381,20 +412,20 @@ section&nbsp;<A HREF="#sec:bemodules">2.1</A>) is passed an object of class <TT>
  scope.<BR>
 <BR>
 
-<DT><TT>pragmas()</TT><DD><BR>List of strings containing <TT>#pragma</TT>s which occurred before
- any declarations. Later <TT>#pragma</TT>s are attached to
- <TT>Decl</TT> objects.<BR>
+<DT><TT>pragmas()</TT><DD><BR>List of <TT>Pragma</TT> objects containing <TT>#pragma</TT>s which
+ occurred before any declarations. Later <TT>#pragma</TT>s are
+ attached to <TT>Decl</TT> objects.<BR>
 <BR>
 
-<DT><TT>comments()</TT><DD><BR>List of strings containing comments which were not attached to
- declarations (see section&nbsp;<A HREF="#sec:comments">1.5</A>).<BR>
+<DT><TT>comments()</TT><DD><BR>List of <TT>Comment</TT> objects containing comments which were not
+ attached to declarations (see section&nbsp;<A HREF="#sec:comments">1.5</A>).<BR>
 <BR>
 
 <DT><TT>accept(visitor)</TT><DD><BR>Visitor pattern accept.</DL><HR SIZE=2><BR>
 <BR>
 <!--TOC subsubsection Base declaration-->
 
-<H4>2.3.3&nbsp;&nbsp; Base declaration</H4><!--SEC END -->
+<H4>2.3.4&nbsp;&nbsp; Base declaration</H4><!--SEC END -->
 All declarations in the tree are derived from the <TT>Decl</TT> class:<BR>
 <BR>
 <HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Decl</TT></B></DIV><DL COMPACT=compact>
@@ -408,19 +439,19 @@ All declarations in the tree are derived from the <TT>Decl</TT> class:<BR>
  it is in an included file.<BR>
 <BR>
 
-<DT><TT>pragmas()</TT><DD><BR>List of strings containing <TT>#pragma</TT>s which occurred after
- this declaration, but before any others.<BR>
+<DT><TT>pragmas()</TT><DD><BR>List of <TT>Pragma</TT> objects containing <TT>#pragma</TT>s which
+ occurred after this declaration, but before any others.<BR>
 <BR>
 
-<DT><TT>comments()</TT><DD><BR>List of strings containing comments attached to this declaration
- (see section&nbsp;<A HREF="#sec:comments">1.5</A>).<BR>
+<DT><TT>comments()</TT><DD><BR>List of <TT>Comment</TT> objects containing comments attached to this
+ declaration (see section&nbsp;<A HREF="#sec:comments">1.5</A>).<BR>
 <BR>
 
 <DT><TT>accept(visitor)</TT><DD><BR>Visitor pattern accept.</DL><HR SIZE=2><BR>
 <BR>
 <!--TOC subsubsection Declarations with a repository identifier-->
 
-<H4>2.3.4&nbsp;&nbsp; Declarations with a repository identifier</H4><!--SEC END -->
+<H4>2.3.5&nbsp;&nbsp; Declarations with a repository identifier</H4><!--SEC END -->
 Some classes of declaration object also inherit from the
 <TT>DeclRepoId</TT> mixin class:<BR>
 <BR>
@@ -437,7 +468,7 @@ Some classes of declaration object also inherit from the
 <BR>
 <!--TOC subsubsection Declaration classes-->
 
-<H4>2.3.5&nbsp;&nbsp; Declaration classes</H4><!--SEC END -->
+<H4>2.3.6&nbsp;&nbsp; Declaration classes</H4><!--SEC END -->
 The declaration objects making up the tree have the following classes:<BR>
 <BR>
 <HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Module (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Module declaration</I></DIV><DL COMPACT=compact>
@@ -718,7 +749,7 @@ No non-inherited functions.</DL><HR SIZE=2><BR>
 <BR>
 <!--TOC subsubsection Type objects-->
 
-<H4>2.3.6&nbsp;&nbsp; Type objects</H4><!--SEC END -->
+<H4>2.3.7&nbsp;&nbsp; Type objects</H4><!--SEC END -->
 All type objects are derived from the base class <TT>Type</TT>:<BR>
 <BR>
 <HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idltype.Type</TT></B></DIV><BR><DIV ALIGN=center><I>Base class for types</I></DIV><DL COMPACT=compact>
@@ -772,7 +803,7 @@ valuetype) must be explicitly declared. They are represented with
 <BR>
 <!--TOC subsubsection Finding a named <TT>Decl</TT>-->
 
-<H4>2.3.7&nbsp;&nbsp; Finding a named <TT>Decl</TT></H4><!--SEC END -->
+<H4>2.3.8&nbsp;&nbsp; Finding a named <TT>Decl</TT></H4><!--SEC END -->
 Normally, back-ends walk over the tree of <TT>Decl</TT> objects,
 dealing with the declarations as they encounter them. Occasionally,
 however, it may be useful to find a declaration by its scoped name.

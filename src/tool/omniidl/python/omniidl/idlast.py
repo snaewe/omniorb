@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.13.2.2  2000/06/08 14:36:21  dpg1
+# Comments and pragmas are now objects rather than plain strings, so
+# they can have file,line associated with them.
+#
 # Revision 1.13.2.1  2000/03/06 15:03:45  dpg1
 # Minor bug fixes to omniidl. New -nf and -k flags.
 #
@@ -85,6 +89,8 @@ Classes:
   AST          -- top level of Abstract Syntax Tree.
   Decl         -- base of all declarations.
   DeclRepoId   -- mixin class for Decls with repository ids.
+  Pragma       -- record of an unknown pragma
+  Comment      -- record of a comment
   Module       -- module declaration.
   Interface    -- interface declaration.
   Forward      -- forward-declared interface.
@@ -121,11 +127,11 @@ Functions:
   file()          -- the file name of the main IDL file.
   declarations()  -- list of Decl objects corresponding to declarations
                      at file scope.
-  pragmas()       -- list of strings containing #pragmas which occurred
-                     before any declarations. Later #pragmas are
-                     attached to Decl objects.
-  comments()      -- list of strings containing comments which occurred
-                     before any declarations.
+  pragmas()       -- list of Pragma objects containing #pragmas which
+                     occurred before any declarations. Later #pragmas
+                     are attached to Decl objects.
+  comments()      -- list of Comment objects containing comments which
+                     occurred before any declarations.
   accept(visitor) -- visitor pattern accept. See idlvisitor.py."""
 
     def __init__(self, file, declarations, pragmas, comments):
@@ -150,9 +156,9 @@ Functions:
   line()          -- the line number within the file.
   mainFile()      -- boolean: true if the file was the main IDL file;
                      false if it was an included file.
-  pragmas()       -- list of strings containing #pragmas which
+  pragmas()       -- list of Pragma objects containing #pragmas which
                      immediately followed this declaration.
-  comments()      -- list of strings containing comments which
+  comments()      -- list of Comment objects containing comments which
                      immediately followed this declaration.
   accept(visitor) -- visitor pattern accept. See idlvisitor.py."""
 
@@ -192,6 +198,53 @@ Functions:
     def scopedName(self): return self.__scopedName
     def repoId(self):     return self.__repoId
 
+
+# Pragmas and comments
+
+class Pragma :
+    """Class containing information about an unknown pragma
+
+Functions:
+
+  text()    -- text of the pragma
+  __str__() -- same as text()
+  file()    -- file containing the pragma
+  line()    -- line number in file"""
+
+    def __init__(self, text, file, line):
+        self.__text = text
+        self.__file = file
+        self.__line = line
+
+    def text(self)    : return self.__text
+    def __str__(self) : return self.__text
+    def file(self)    : return self.__file
+    def line(self)    : return self.__line
+
+class Comment :
+    """Class containing information about a comment
+
+Functions:
+
+  text()    -- text of the comment
+  __str__() -- same as text()
+  file()    -- file containing the comment
+  line()    -- line number in file"""
+
+    def __init__(self, text, file, line):
+        self.__text = text
+        self.__file = file
+        self.__line = line
+
+    def text(self)    : return self.__text
+    def __str__(self) : return self.__text
+    def file(self)    : return self.__file
+    def line(self)    : return self.__line
+
+
+
+
+# Concrete declaration objects
 
 class Module (Decl, DeclRepoId):
     """Module declaration (Decl, DeclRepoId)

@@ -517,6 +517,47 @@ as a visitor object.}. Also note that you do not have to use the
 visitor pattern if you do not wish to.
 
 
+\subsubsection{Pragmas and comments}
+
+Any unknown \texttt{\#pragma}s encountered in the IDL are attached to
+nodes within the AST. Similarly, comments are attached if \omniidl\ is
+run with the \cmdline{-k} or \cmdline{-K} fields.
+
+\begin{funcdesc}{omniidl.idlast.Pragma}
+
+\dfunc{text()}
+  Text of the pragma.
+
+\dfunc{\_\_str\_\_()}
+  Same as \op{text}.
+
+\dfunc{file()}
+  File containing the pragma.
+
+\dfunc{line()}
+  Line within the file.
+
+\end{funcdesc}
+
+
+\begin{funcdesc}{omniidl.idlast.Comment}
+
+\dfunc{text()}
+  Text of the comment.
+
+\dfunc{\_\_str\_\_()}
+  Same as \op{text}.
+
+\dfunc{file()}
+  File containing the comment.
+
+\dfunc{line()}
+  Line within the file.
+
+\end{funcdesc}
+
+
+
 \subsubsection{The root of the tree}
 \label{sec:astclass}
 
@@ -533,13 +574,13 @@ section~\ref{sec:bemodules}) is passed an object of class \class{AST}.
   scope.
 
 \dfunc{pragmas()}
-  List of strings containing \texttt{\#pragma}s which occurred before
-  any declarations. Later \texttt{\#pragma}s are attached to
-  \class{Decl} objects.
+  List of \class{Pragma} objects containing \texttt{\#pragma}s which
+  occurred before any declarations. Later \texttt{\#pragma}s are
+  attached to \class{Decl} objects.
 
 \dfunc{comments()}
-  List of strings containing comments which were not attached to
-  declarations (see section~\ref{sec:comments}).
+  List of \class{Comment} objects containing comments which were not
+  attached to declarations (see section~\ref{sec:comments}).
 
 \dfunc{accept(visitor)}
   Visitor pattern accept.
@@ -564,12 +605,12 @@ All declarations in the tree are derived from the \class{Decl} class:
   it is in an included file.
 
 \dfunc{pragmas()}
-  List of strings containing \texttt{\#pragma}s which occurred after
-  this declaration, but before any others.
+  List of \class{Pragma} objects containing \texttt{\#pragma}s which
+  occurred after this declaration, but before any others.
 
 \dfunc{comments()}
-  List of strings containing comments attached to this declaration
-  (see section~\ref{sec:comments}).
+  List of \class{Comment} objects containing comments attached to this
+  declaration (see section~\ref{sec:comments}).
 
 \dfunc{accept(visitor)}
   Visitor pattern accept.

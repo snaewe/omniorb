@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.14.2.5  2000/06/08 14:36:19  dpg1
+// Comments and pragmas are now objects rather than plain strings, so
+// they can have file,line associated with them.
+//
 // Revision 1.14.2.4  2000/06/05 18:13:26  dpg1
 // Comments can be attached to subsequent declarations (with -K). Better
 // idea of most recent decl in operation declarations
@@ -109,32 +113,32 @@ Comment* Comment::saved_      = 0;
 // Pragma
 void
 Pragma::
-add(const char* pragmaText)
+add(const char* pragmaText, const char* file, int line)
 {
   if (Decl::mostRecent())
-    Decl::mostRecent()->addPragma(pragmaText);
+    Decl::mostRecent()->addPragma(pragmaText, file, line);
   else
-    AST::tree()->addPragma(pragmaText);
+    AST::tree()->addPragma(pragmaText, file, line);
 }
 
 // Comment
 
 void
 Comment::
-add(const char* commentText)
+add(const char* commentText, const char* file, int line)
 {
   if (Config::keepComments) {
     if (Config::commentsFirst) {
       if (saved_)
-	mostRecent_->next_ = new Comment(commentText);
+	mostRecent_->next_ = new Comment(commentText, file, line);
       else
-	saved_ = new Comment(commentText);
+	saved_ = new Comment(commentText, file, line);
     }
     else {
       if (Decl::mostRecent())
-	Decl::mostRecent()->addComment(commentText);
+	Decl::mostRecent()->addComment(commentText, file, line);
       else
-	AST::tree()->addComment(commentText);
+	AST::tree()->addComment(commentText, file, line);
     }
   }
 }
@@ -178,9 +182,9 @@ AST::~AST() {
 
 void
 AST::
-addPragma(const char* pragmaText)
+addPragma(const char* pragmaText, const char* file, int line)
 {
-  Pragma* p = new Pragma(pragmaText);
+  Pragma* p = new Pragma(pragmaText, file, line);
   if (pragmas_)
     lastPragma_->next_ = p;
   else
@@ -190,9 +194,9 @@ addPragma(const char* pragmaText)
 
 void
 AST::
-addComment(const char* commentText)
+addComment(const char* commentText, const char* file, int line)
 {
-  Comment* p = new Comment(commentText);
+  Comment* p = new Comment(commentText, file, line);
   if (comments_)
     lastComment_->next_ = p;
   else
@@ -315,9 +319,9 @@ scopedNameToDecl(const char* file, int line, const ScopedName* sn)
 
 void
 Decl::
-addPragma(const char* pragmaText)
+addPragma(const char* pragmaText, const char* file, int line)
 {
-  Pragma* p = new Pragma(pragmaText);
+  Pragma* p = new Pragma(pragmaText, file, line);
   if (pragmas_)
     lastPragma_->next_ = p;
   else
@@ -327,9 +331,9 @@ addPragma(const char* pragmaText)
 
 void
 Decl::
-addComment(const char* commentText)
+addComment(const char* commentText, const char* file, int line)
 {
-  Comment* p = new Comment(commentText);
+  Comment* p = new Comment(commentText, file, line);
   if (comments_)
     lastComment_->next_ = p;
   else

@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0
 %%Creator: dvips(k) 5.86 Copyright 1999 Radical Eye Software
 %%Title: omniidl.dvi
-%%Pages: 19
+%%Pages: 20
 %%PageOrder: Ascend
 %%BoundingBox: 0 0 596 842
 %%DocumentFonts: Helvetica Palatino-Roman Palatino-Bold Courier
@@ -11,7 +11,7 @@
 %DVIPSWebPage: (www.radicaleye.com)
 %DVIPSCommandLine: dvips omniidl
 %DVIPSParameters: dpi=600, compressed
-%DVIPSSource:  TeX output 2000.06.06:1646
+%DVIPSSource:  TeX output 2000.06.08:1531
 %%BeginProcSet: texc.pro
 %!
 /TeXDict 300 dict def TeXDict begin/N{def}def/B{bind def}N/S{exch}N/X{S
@@ -273,8 +273,8 @@ rf /Fb 206[25 49[{TeXBase1Encoding ReEncodeFont}1 49.8132
 /Palatino-Roman rf /Fc 206[33 49[{TeXBase1Encoding ReEncodeFont}1
 66.4176 /Palatino-Roman rf /Fd 134[51 1[76 1[56 30 40
 35 1[56 51 56 81 30 1[30 30 56 51 35 45 56 40 56 45 10[71
-71 61 13[51 1[76 1[61 10[45 45 45 45 45 45 45 2[23 43[56
-2[{TeXBase1Encoding ReEncodeFont}36 90.9091 /Palatino-Bold
+71 61 3[56 9[51 1[76 1[61 9[45 45 45 45 45 45 45 45 2[23
+43[56 2[{TeXBase1Encoding ReEncodeFont}38 90.9091 /Palatino-Bold
 rf /Fe 133[55 55 55 55 55 55 55 55 55 55 55 55 55 55
 55 55 1[55 55 55 55 55 55 55 55 55 1[55 7[55 55 55 55
 55 55 1[55 55 55 55 55 55 1[55 2[55 55 55 55 55 55 3[55
@@ -287,13 +287,13 @@ rf /Fe 133[55 55 55 55 55 55 55 55 55 55 55 55 55 55
 50 1[50 1[50 3[50 2[50 1[50 50 7[50 50 2[50 50 50 2[50
 50 50 4[50 34[{TeXBase1Encoding ReEncodeFont}54 83.022
 /Courier rf /Fh 134[51 47 76 1[55 30 39 36 1[55 50 53
-1[26 2[26 2[30 44 56 40 50 45 11[71 56 48 61 2[71 76
-2[66 1[31 2[51 56 70 64 56 71 12[45 45 45 45 2[23 30
-45[{.167 SlantFont TeXBase1Encoding ReEncodeFont}38 90.9091
-/Palatino-Roman rf /Fi 134[45 45 66 45 51 30 35 35 42
-45 40 51 71 25 40 1[25 45 45 25 35 45 37 42 40 9[86 66
-71 56 51 2[56 71 71 86 3[30 2[51 56 71 61 56 66 14[45
-45 2[23 30 23 41[48 2[{TeXBase1Encoding ReEncodeFont}46
+80 26 51 1[26 2[30 44 56 40 50 45 11[71 56 48 61 2[71
+76 2[66 1[31 76 1[51 56 70 64 56 71 12[45 45 45 45 2[23
+30 45[{.167 SlantFont TeXBase1Encoding ReEncodeFont}41
+90.9091 /Palatino-Roman rf /Fi 134[45 45 66 45 51 30
+35 35 42 45 40 51 71 25 40 1[25 45 45 25 35 45 37 42
+40 9[86 66 71 56 51 2[56 71 71 86 3[30 2[51 56 71 61
+56 66 14[45 45 2[23 30 23 41[48 2[{TeXBase1Encoding ReEncodeFont}46
 90.9091 /Palatino-Italic rf /Fj 144[61 61 89 28 2[28
 4[61 100[{TeXBase1Encoding ReEncodeFont}6 99.6264 /Helvetica-Bold
 rf /Fk 130[55 1[55 55 55 55 55 55 55 55 55 55 55 55 55
@@ -510,7 +510,7 @@ Fk(__init__.py)p Fn(.)362 2092 y(The)d(only)h(r)n(equir)n(ement)f(on)g
 221 2205 y(the)32 b(signatur)n(e)g Fk(run\(tree,)50 b(args\))p
 Fn(,)33 b(wher)n(e)f Fk(tree)f Fn(is)h(an)i Fk(AST)d
 Fn(object)h(as)h(described)f(in)221 2318 y(section)22
-b(2.3.2,)h(and)g Fk(args)e Fn(is)i(a)g(list)g(of)f(ar)n(gument)g
+b(2.3.3,)h(and)g Fk(args)e Fn(is)i(a)g(list)g(of)f(ar)n(gument)g
 (strings)g(passed)f(to)h(the)f(back-end.)362 2431 y(Back-ends)37
 b(may)g(also)h(optionally)g(pr)n(ovide)f(a)h(variable)h(named)f
 Fk(cpp_args)33 b Fn(which)221 2544 y(contains)c(a)g(list)g(of)g
@@ -649,422 +649,440 @@ b(Also)25 b(note)f(that)h(you)g(do)g(not)g(have)g(to)g(use)g(the)g
 (object.)p eop
 %%Page: 7 7
 7 6 bop 63 249 a Fh(2.3)91 b(Abstract)22 b(Syntax)g(T)-8
-b(r)n(ee)2210 b Fn(7)63 548 y Fd(2.3.2)91 b(The)23 b(root)f(of)h(the)g
-(tree)63 725 y Fn(The)33 b(back-end's)i Fk(run\(\))d
+b(r)n(ee)2210 b Fn(7)63 548 y Fd(2.3.2)91 b(Pragmas)24
+b(and)e(comments)63 725 y Fn(Any)f(unknown)g Fk(#pragma)p
+Fn(s)d(encounter)n(ed)i(in)j(the)e(IDL)h(ar)n(e)g(attached)g(to)g
+(nodes)e(within)i(the)63 838 y(AST)-7 b(.)22 b(Similarly)-10
+b(,)24 b(comments)e(ar)n(e)h(attached)f(if)h Fm(omniidl)f
+Fn(is)h(r)o(un)f(with)h(the)f Fk(-k)f Fn(or)i Fk(-K)f
+Fn(\002elds.)p 63 997 3289 13 v 1134 1110 a Fe(omniidl.idlast.P)o(ra)o
+(gm)o(a)63 1241 y(text\(\))290 1354 y Fn(T)-8 b(ext)21
+b(of)i(the)f(pragma.)63 1542 y Fe(__str__\(\))290 1655
+y Fn(Same)h(as)f Fk(text\(\))p Fn(.)63 1842 y Fe(file\(\))290
+1955 y Fn(File)h(containing)g(the)e(pragma.)63 2143 y
+Fe(line\(\))290 2256 y Fn(Line)h(within)h(the)f(\002le.)p
+63 2330 V 63 2464 V 1107 2577 a Fe(omniidl.idlast.)o(Co)o(mm)o(ent)63
+2708 y(text\(\))290 2821 y Fn(T)-8 b(ext)21 b(of)i(the)f(comment.)63
+3009 y Fe(__str__\(\))290 3122 y Fn(Same)h(as)f Fk(text\(\))p
+Fn(.)63 3309 y Fe(file\(\))290 3422 y Fn(File)h(containing)g(the)e
+(comment.)63 3610 y Fe(line\(\))290 3723 y Fn(Line)h(within)h(the)f
+(\002le.)p 63 3797 V 63 4010 a Fd(2.3.3)91 b(The)23 b(root)f(of)h(the)g
+(tree)63 4187 y Fn(The)33 b(back-end's)i Fk(run\(\))d
 Fn(function)j(\(described)e(in)i(section)f(2.1\))i(is)e(passed)f(an)i
-(object)g(of)63 838 y(class)23 b Fk(AST)p Fn(.)p 63 973
-3289 13 v 1216 1086 a Fe(omniidl.idlast.)o(AS)o(T)63
-1217 y(file\(\))290 1330 y Fn(The)f(\002le)h(name)f(of)h(the)f(main)i
-(IDL)e(\002le)h(being)f(compiled.)63 1518 y Fe(declarations\(\))290
-1631 y Fn(List)g(of)g Fk(Decl)f Fn(objects)h(corr)n(esponding)f(to)h
-(declarations)h(at)f(\002le)h(scope.)63 1819 y Fe(pragmas\(\))290
-1931 y Fn(List)e(of)g(strings)g(containing)h Fk(#pragma)p
-Fn(s)c(which)k(occurr)n(ed)f(befor)n(e)g(any)h(declarations.)290
-2044 y(Later)g Fk(#pragma)p Fn(s)d(ar)n(e)k(attached)f(to)g
-Fk(Decl)f Fn(objects.)63 2232 y Fe(comments\(\))290 2345
-y Fn(List)h(of)g(strings)g(containing)h(comments)e(which)j(wer)n(e)d
-(not)h(attached)h(to)f(declarations)290 2458 y(\(see)g(section)f
-(1.5\).)63 2645 y Fe(accept\(visitor)o(\))290 2758 y
-Fn(V)-5 b(isitor)22 b(pattern)f(accept.)p 63 2833 V 63
-3046 a Fd(2.3.3)91 b(Base)24 b(declaration)63 3222 y
-Fn(All)f(declarations)g(in)g(the)f(tr)n(ee)f(ar)n(e)i(derived)f(fr)n
-(om)h(the)f Fk(Decl)f Fn(class:)p eop
+(object)g(of)63 4300 y(class)23 b Fk(AST)p Fn(.)p eop
 %%Page: 8 8
 8 7 bop 221 249 a Fn(8)2084 b Fh(2)91 b(BACK-END)22 b(INTERF)-7
-b(ACE)p 221 469 3289 13 v 1347 582 a Fe(omniidl.idlast.D)o(ec)o(l)221
-713 y(file\(\))448 826 y Fn(The)22 b(name)h(of)g(the)f(\002le)g(in)i
-(which)f(this)f(declaration)h(was)g(made.)221 1014 y
-Fe(line\(\))448 1127 y Fn(The)f(line)h(number)g(within)g(the)f(\002le.)
-221 1314 y Fe(mainFile\(\))448 1427 y Fn(Boolean:)54
+b(ACE)p 221 469 3289 13 v 1375 582 a Fe(omniidl.idlast)o(.A)o(ST)221
+713 y(file\(\))448 826 y Fn(The)22 b(\002le)h(name)g(of)g(the)e(main)j
+(IDL)f(\002le)f(being)h(compiled.)221 1014 y Fe(declarations\(\))448
+1127 y Fn(List)f(of)h Fk(Decl)e Fn(objects)h(corr)n(esponding)e(to)i
+(declarations)h(at)g(\002le)g(scope.)221 1314 y Fe(pragmas\(\))448
+1427 y Fn(List)e(of)g Fk(Pragma)d Fn(objects)i(containing)h
+Fk(#pragma)p Fn(s)d(which)j(occurr)n(ed)g(befor)n(e)f(any)h(dec-)448
+1540 y(larations.)29 b(Later)22 b Fk(#pragma)p Fn(s)d(ar)n(e)k
+(attached)f(to)g Fk(Decl)f Fn(objects.)221 1728 y Fe(comments\(\))448
+1841 y Fn(List)33 b(of)g Fk(Comment)e Fn(objects)h(containing)i
+(comments)f(which)g(wer)n(e)g(not)g(attached)g(to)448
+1954 y(declarations)23 b(\(see)f(section)g(1.5\).)221
+2141 y Fe(accept\(visitor\))448 2254 y Fn(V)-5 b(isitor)22
+b(pattern)g(accept.)p 221 2329 V 221 2541 a Fd(2.3.4)92
+b(Base)24 b(declaration)221 2718 y Fn(All)g(declarations)e(in)h(the)f
+(tr)n(ee)g(ar)n(e)h(derived)e(fr)n(om)j(the)d Fk(Decl)g
+Fn(class:)p 221 2854 V 1347 2967 a Fe(omniidl.idlast.D)o(ec)o(l)221
+3098 y(file\(\))448 3211 y Fn(The)h(name)h(of)g(the)f(\002le)g(in)i
+(which)f(this)f(declaration)h(was)g(made.)221 3398 y
+Fe(line\(\))448 3511 y Fn(The)f(line)h(number)g(within)g(the)f(\002le.)
+221 3699 y Fe(mainFile\(\))448 3812 y Fn(Boolean:)54
 b(tr)o(ue)35 b(if)h(the)f(declaration)h(is)g(in)h(the)d(main)j(IDL)f
-(\002le;)42 b(false)36 b(if)h(it)f(is)f(in)i(an)448 1540
-y(included)23 b(\002le.)221 1728 y Fe(pragmas\(\))448
-1841 y Fn(List)33 b(of)h(strings)e(containing)i Fk(#pragma)p
-Fn(s)29 b(which)34 b(occurr)n(ed)f(after)h(this)f(declaration,)448
-1954 y(but)23 b(befor)n(e)f(any)h(others.)221 2141 y
-Fe(comments\(\))448 2254 y Fn(List)38 b(of)h(strings)e(containing)i
-(comments)f(attached)g(to)g(this)h(declaration)g(\(see)e(sec-)448
-2367 y(tion)23 b(1.5\).)221 2555 y Fe(accept\(visitor\))448
-2667 y Fn(V)-5 b(isitor)22 b(pattern)g(accept.)p 221
-2742 V 221 2955 a Fd(2.3.4)92 b(Declarations)25 b(with)d(a)h
-(repository)g(identi\002er)221 3132 y Fn(Some)f(classes)g(of)h
-(declaration)g(object)f(also)h(inherit)g(fr)n(om)g(the)f
-Fk(DeclRepoId)c Fn(mixin)24 b(class:)p 221 3291 V 1184
-3404 a Fe(omniidl.idlast)o(.D)o(ecl)o(Re)o(po)o(Id)221
-3535 y(identifier\(\))448 3648 y Fn(Name)f(of)g(the)e(declaration)j(as)
-e(a)h(string.)221 3836 y Fe(scopedName\(\))448 3948 y
-Fn(List)50 b(of)g(strings)f(forming)h(the)g(fully-scoped)f(name)i(of)f
-(the)f(declaration.)111 b(e.g.)448 4061 y Fk(::foo::bar::baz)16
-b Fn(is)23 b(r)n(epr)n(esented)d(as)j Fk(['foo','bar',')o(ba)o(z')o(])p
-Fn(.)221 4249 y Fe(repoId\(\))448 4362 y Fn(Repository)d(identi\002er)i
-(of)h(the)f(declaration.)p 221 4437 V 221 4649 a Fd(2.3.5)92
-b(Declaration)24 b(classes)221 4826 y Fn(The)e(declaration)h(objects)f
-(making)h(up)f(the)g(tr)n(ee)g(have)h(the)f(following)g(classes:)p
-eop
+(\002le;)42 b(false)36 b(if)h(it)f(is)f(in)i(an)448 3925
+y(included)23 b(\002le.)221 4112 y Fe(pragmas\(\))448
+4225 y Fn(List)k(of)h Fk(Pragma)d Fn(objects)i(containing)h
+Fk(#pragma)p Fn(s)d(which)j(occurr)n(ed)f(after)h(this)f(dec-)448
+4338 y(laration,)d(but)e(befor)n(e)h(any)f(others.)221
+4526 y Fe(comments\(\))448 4639 y Fn(List)34 b(of)h Fk(Comment)d
+Fn(objects)i(containing)h(comments)f(attached)g(to)g(this)h
+(declaration)448 4752 y(\(see)22 b(section)g(1.5\).)221
+4939 y Fe(accept\(visitor\))448 5052 y Fn(V)-5 b(isitor)22
+b(pattern)g(accept.)p 221 5127 V eop
 %%Page: 9 9
 9 8 bop 63 249 a Fh(2.3)91 b(Abstract)22 b(Syntax)g(T)-8
-b(r)n(ee)2210 b Fn(9)p 63 469 3289 13 v 643 582 a Fe(omniidl.idlast.M)o
-(od)o(ul)o(e)48 b(\(Decl,DeclRepoId)o(\))1351 695 y Fi(Module)24
-b(declaration)63 826 y Fe(definitions\(\))290 939 y Fn(List)g(of)h
-Fk(Decl)e Fn(objects)h(declar)n(ed)g(within)h(this)g(module,)f(in)h
-(the)f(or)n(der)g(they)f(wer)n(e)h(de-)290 1052 y(clar)n(ed.)63
-1240 y Fe(continuations\()o(\))290 1352 y Fn(List)44
+b(r)n(ee)2210 b Fn(9)63 548 y Fd(2.3.5)91 b(Declarations)25
+b(with)e(a)g(repository)g(identi\002er)63 725 y Fn(Some)f(classes)g(of)
+g(declaration)h(object)g(also)g(inherit)f(fr)n(om)h(the)f
+Fk(DeclRepoId)c Fn(mixin)24 b(class:)p 63 884 3289 13
+v 1025 997 a Fe(omniidl.idlast.)o(Dec)o(lR)o(ep)o(oI)o(d)63
+1128 y(identifier\(\))290 1241 y Fn(Name)e(of)h(the)f(declaration)h(as)
+g(a)g(string.)63 1429 y Fe(scopedName\(\))290 1542 y
+Fn(List)49 b(of)i(strings)e(forming)h(the)f(fully-scoped)h(name)g(of)g
+(the)g(declaration.)111 b(e.g.)290 1655 y Fk(::foo::bar::baz)16
+b Fn(is)23 b(r)n(epr)n(esented)c(as)k Fk(['foo','bar','b)o(az)o('])o
+Fn(.)63 1842 y Fe(repoId\(\))290 1955 y Fn(Repository)d(identi\002er)i
+(of)g(the)g(declaration.)p 63 2030 V 63 2242 a Fd(2.3.6)91
+b(Declaration)25 b(classes)63 2419 y Fn(The)d(declaration)h(objects)f
+(making)h(up)f(the)g(tr)n(ee)f(have)i(the)f(following)h(classes:)p
+63 2579 V 643 2691 a Fe(omniidl.idlast.M)o(od)o(ul)o(e)48
+b(\(Decl,DeclRepoId)o(\))1351 2804 y Fi(Module)24 b(declaration)63
+2936 y Fe(definitions\(\))290 3048 y Fn(List)g(of)h Fk(Decl)e
+Fn(objects)h(declar)n(ed)g(within)h(this)g(module,)f(in)h(the)f(or)n
+(der)g(they)f(wer)n(e)h(de-)290 3161 y(clar)n(ed.)63
+3349 y Fe(continuations\()o(\))290 3462 y Fn(List)44
 b(containing)h Fk(Module)d Fn(objects)i(which)h(ar)n(e)g(continuations)
-f(of)g(this)g(module.)290 1465 y(When)23 b(modules)f(ar)n(e)i(r)n
+f(of)g(this)g(module.)290 3575 y(When)23 b(modules)f(ar)n(e)i(r)n
 (e-opened,)d(multiple)j Fk(Module)c Fn(objects)j(with)g(the)g(same)g
-(name)290 1578 y(appear)31 b(in)h(the)e(enclosing)h Fk(Module)e
+(name)290 3688 y(appear)31 b(in)h(the)e(enclosing)h Fk(Module)e
 Fn(or)i Fk(AST)f Fn(object.)53 b(In)31 b(case)h(it's)f(useful,)i(the)d
-(\002rst)290 1691 y Fk(Module)22 b Fn(object)j(for)f(a)h(particular)h
+(\002rst)290 3801 y Fk(Module)22 b Fn(object)j(for)f(a)h(particular)h
 (module)e(has)h(a)g(list)g(containing)g(continuations)g(of)290
-1804 y(that)d(module.)27 b(Y)-8 b(ou)22 b(will)i(pr)n(obably)f(not)f
-(have)h(any)g(use)e(for)i(this.)p 63 1879 V 63 2012 V
-562 2125 a Fe(omniidl.idlast)o(.I)o(nt)o(erf)o(ac)o(e)48
-b(\(Decl,DeclRepoI)o(d\))1333 2238 y Fi(Interface)25
-b(declaration)63 2369 y Fe(abstract\(\))290 2482 y Fn(Boolean:)i(tr)o
-(ue)22 b(if)h(the)f(interface)h(is)g(declar)n(ed)f(abstract.)63
-2670 y Fe(inherits\(\))290 2783 y Fn(List)g(of)g Fk(Interface)d
-Fn(objects)j(fr)n(om)h(which)g(this)g(one)f(inherits.)63
-2971 y Fe(contents\(\))290 3083 y Fn(List)g(of)g Fk(Decl)f
-Fn(objects)h(for)h(all)h(items)e(declar)n(ed)h(within)g(this)f
-(interface.)63 3271 y Fe(declarations\(\))290 3384 y
-Fn(Subset)f(of)i Fk(contents\(\))18 b Fn(containing)23
-b(types,)d(constants)i(and)g(exceptions.)63 3572 y Fe(callables\(\))290
-3685 y Fn(Subset)f(of)i Fk(contents\(\))18 b Fn(containing)23
-b Fk(Operation)p Fn(s)18 b(and)23 b Fk(Attribute)p Fn(s.)p
-63 3759 V 63 3893 V 616 4006 a Fe(omniidl.idlast.)o(Fo)o(rwa)o(rd)48
-b(\(Decl,DeclRepo)o(Id)o(\))1218 4119 y Fi(Forward-declar)n(ed)27
-b(interface)63 4250 y Fe(abstract\(\))290 4363 y Fn(Boolean:)g(tr)o(ue)
-22 b(if)h(the)f(interface)h(is)g(declar)n(ed)f(abstract.)63
-4550 y Fe(fullDecl\(\))290 4663 y Fk(Interface)f Fn(object)j(corr)n
-(esponding)f(to)h(the)g(full)h(interface)g(declaration)g(or)g
-Fk(None)e Fn(if)290 4776 y(ther)n(e)f(is)g(no)h(full)g(declaration.)p
-63 4851 V eop
+3914 y(that)d(module.)27 b(Y)-8 b(ou)22 b(will)i(pr)n(obably)f(not)f
+(have)h(any)g(use)e(for)i(this.)p 63 3988 V eop
 %%Page: 10 10
 10 9 bop 221 249 a Fn(10)2039 b Fh(2)91 b(BACK-END)22
-b(INTERF)-7 b(ACE)p 221 469 3289 13 v 829 582 a Fe(omniidl.idlast.)o
-(Co)o(nst)48 b(\(Decl,DeclRepo)o(Id)o(\))1482 695 y Fi(Constant)23
-b(declaration)221 826 y Fe(constType\(\))448 939 y Fk(IdlType.Type)18
-b Fn(object)k(of)h(the)f(constant.)27 b(Aliases)22 b(not)g(stripped.)
-221 1127 y Fe(constKind\(\))448 1240 y Fn(T)-8 b(ypeCode)28
-b(kind)i(of)g(the)f(constant)h(with)g(aliases)g(stripped.)49
-b(So)29 b(for)i(a)f(constant)g(de-)448 1352 y(clar)n(ed)24
-b(with:)558 1577 y Fk(typedef)51 b(long)i(MyLong;)558
-1690 y(const)f(MyLong)g(foo)h(=)h(123;)448 1915 y(constKind\(\))17
-b Fn(will)22 b(r)n(eturn)f Fk(tk_long)p Fn(,)d(but)j
-Fk(constType\(\))c Fn(will)22 b(r)n(eturn)f(an)h Fk(Idl-)448
-2028 y(Type.Declared)38 b Fn(object)44 b(\(see)e(page)h(18\))i(which)f
-(r)n(efers)f(to)g Fk(MyLong)p Fn('s)e(typedef)448 2141
-y Fk(Declarator)19 b Fn(object.)221 2329 y Fe(value\(\))448
-2442 y Fn(V)-8 b(alue)23 b(of)f(the)g(constant.)27 b(Either)22
-b(an)h(integer)e(or)h(an)i Fk(Enumerator)18 b Fn(object.)p
-221 2516 V 221 2650 V 693 2763 a Fe(omniidl.idlast)o(.De)o(cl)o(ar)o
-(at)o(or)48 b(\(Decl,DeclRepoI)o(d\))975 2876 y Fi(Declarator)25
-b(used)e(in)g(typedefs,)i(struct)f(members,)f(etc.)221
-3007 y Fe(sizes\(\))448 3120 y Fn(List)f(of)h(array)g(sizes,)f(or)g
-Fk(None)f Fn(if)j(it)e(is)h(a)g(simple)g(declarator)-7
-b(.)221 3308 y Fe(alias\(\))448 3421 y Fk(Typedef)28
-b Fn(object)i(that)f(the)h(declarator)g(is)g(part)g(of,)i(or)e
-Fk(None)e Fn(if)j(the)f(object)g(is)g(not)f(a)448 3533
-y(typedef)21 b(declarator)-7 b(.)p 221 3608 V 221 3742
-V 1075 3855 a Fe(omniidl.idlast)o(.T)o(yp)o(ede)o(f)48
-b(\(Decl\))1512 3968 y Fi(T)-8 b(ypedef)24 b(declaration)221
-4099 y Fe(aliasType\(\))448 4212 y Fk(IdlType.Type)18
-b Fn(object)k(that)h(this)f(is)h(an)g(alias)h(to.)221
-4399 y Fe(constrType\(\))448 4512 y Fn(Boolean:)41 b(tr)o(ue)29
-b(if)h(the)e(alias)j(type)d(was)h(constr)o(ucted)f(within)i(this)f
-(typedef)e(declara-)448 4625 y(tion,)c(like)558 4850
-y Fk(typedef)51 b(struct)h(foo)h({)h(long)f(l;)g(})h(bar;)221
-5075 y Fe(declarators\(\))448 5188 y Fn(List)22 b(of)h
-Fk(Declarator)18 b Fn(objects.)p 221 5263 V eop
+b(INTERF)-7 b(ACE)p 221 469 3289 13 v 720 582 a Fe(omniidl.idlast.)o
+(In)o(te)o(rfa)o(ce)48 b(\(Decl,DeclRepo)o(Id)o(\))1491
+695 y Fi(Interface)25 b(declaration)221 826 y Fe(abstract\(\))448
+939 y Fn(Boolean:)j(tr)o(ue)21 b(if)j(the)e(interface)g(is)h(declar)n
+(ed)g(abstract.)221 1127 y Fe(inherits\(\))448 1240 y
+Fn(List)f(of)h Fk(Interface)c Fn(objects)j(fr)n(om)h(which)g(this)f
+(one)g(inherits.)221 1427 y Fe(contents\(\))448 1540
+y Fn(List)g(of)h Fk(Decl)e Fn(objects)h(for)g(all)j(items)d(declar)n
+(ed)g(within)h(this)f(interface.)221 1728 y Fe(declarations\(\))448
+1841 y Fn(Subset)g(of)g Fk(contents\(\))d Fn(containing)k(types,)d
+(constants)h(and)i(exceptions.)221 2028 y Fe(callables\(\))448
+2141 y Fn(Subset)f(of)g Fk(contents\(\))d Fn(containing)k
+Fk(Operation)p Fn(s)18 b(and)k Fk(Attribute)p Fn(s.)p
+221 2216 V 221 2350 V 775 2462 a Fe(omniidl.idlast)o(.F)o(or)o(war)o(d)
+48 b(\(Decl,DeclRepoI)o(d\))1376 2575 y Fi(Forward-declar)n(ed)27
+b(interface)221 2707 y Fe(abstract\(\))448 2819 y Fn(Boolean:)h(tr)o
+(ue)21 b(if)j(the)e(interface)g(is)h(declar)n(ed)g(abstract.)221
+3007 y Fe(fullDecl\(\))448 3120 y Fk(Interface)e Fn(object)k(corr)n
+(esponding)d(to)i(the)g(full)i(interface)f(declaration)g(or)f
+Fk(None)f Fn(if)448 3233 y(ther)n(e)f(is)h(no)f(full)i(declaration.)p
+221 3308 V eop
 %%Page: 11 11
 11 10 bop 63 249 a Fh(2.3)91 b(Abstract)22 b(Syntax)g(T)-8
-b(r)n(ee)2170 b Fn(1)-5 b(1)p 63 469 3289 13 v 943 582
-a Fe(omniidl.idlast.M)o(em)o(be)o(r)48 b(\(Decl\))1125
-695 y Fi(Member)24 b(of)f(a)g(struct)g(or)h(exception)63
-826 y Fe(memberType\(\))290 939 y Fk(IdlType.Type)17
-b Fn(object)23 b(for)f(the)g(type)f(of)i(this)f(member)-7
-b(.)63 1127 y Fe(constrType\(\))290 1240 y Fn(Boolean:)28
-b(tr)o(ue)22 b(if)i(the)f(member)g(type)e(was)j(constr)o(ucted)d
-(within)i(the)g(member)g(decla-)290 1352 y(ration.)28
-b(e.g.)399 1602 y Fk(struct)52 b(S)i({)508 1715 y(struct)e(T)i({)617
-1828 y(long)f(l;)508 1941 y(})h(the_T;)399 2054 y(};)63
-2304 y Fe(declarators\(\))290 2417 y Fn(List)22 b(of)g
-Fk(Declarator)d Fn(objects.)p 63 2491 V 63 2625 V 643
-2738 a Fe(omniidl.idlast.S)o(tr)o(uc)o(t)48 b(\(Decl,DeclRepoId)o(\))
-1376 2851 y Fi(Struct)23 b(declaration)63 2982 y Fe(members\(\))290
-3095 y Fn(List)f(of)g Fk(Member)e Fn(objects)i(for)h(the)f(str)o(uct)g
-(contents.)63 3283 y Fe(recursive\(\))290 3396 y Fn(Boolean:)27
-b(tr)o(ue)22 b(if)h(the)f(str)o(uct)g(is)h(r)n(ecursive,)f(e.g.)399
-3645 y Fk(struct)52 b(S)i({)508 3758 y(long)f(l;)508
-3871 y(sequence)e(<S>)i(ss;)399 3984 y(};)p 63 4159 V
-63 4292 V 562 4405 a Fe(omniidl.idlast)o(.E)o(xc)o(ept)o(io)o(n)48
-b(\(Decl,DeclRepoI)o(d\))1310 4518 y Fi(Exception)24
-b(declaration)63 4649 y Fe(members\(\))290 4762 y Fn(List)e(of)g
-Fk(Member)e Fn(objects)i(for)h(the)f(exception)f(contents.)p
-63 4837 V eop
+b(r)n(ee)2170 b Fn(1)-5 b(1)p 63 469 3289 13 v 671 582
+a Fe(omniidl.idlast)o(.C)o(ons)o(t)48 b(\(Decl,DeclRepoI)o(d\))1324
+695 y Fi(Constant)23 b(declaration)63 826 y Fe(constType\(\))290
+939 y Fk(IdlType.Type)17 b Fn(object)23 b(of)f(the)g(constant.)27
+b(Aliases)c(not)e(stripped.)63 1127 y Fe(constKind\(\))290
+1240 y Fn(T)-8 b(ypeCode)28 b(kind)h(of)h(the)g(constant)f(with)h
+(aliases)h(stripped.)48 b(So)30 b(for)g(a)h(constant)e(de-)290
+1352 y(clar)n(ed)23 b(with:)399 1577 y Fk(typedef)51
+b(long)i(MyLong;)399 1690 y(const)f(MyLong)g(foo)h(=)h(123;)290
+1915 y(constKind\(\))16 b Fn(will)23 b(r)n(eturn)d Fk(tk_long)p
+Fn(,)f(but)i Fk(constType\(\))16 b Fn(will)23 b(r)n(eturn)d(an)i
+Fk(Idl-)290 2028 y(Type.Declared)38 b Fn(object)43 b(\(see)g(page)g
+(19\))i(which)f(r)n(efers)f(to)g Fk(MyLong)p Fn('s)e(typedef)290
+2141 y Fk(Declarator)18 b Fn(object.)63 2329 y Fe(value\(\))290
+2442 y Fn(V)-8 b(alue)22 b(of)h(the)f(constant.)27 b(Either)21
+b(an)i(integer)f(or)g(an)h Fk(Enumerator)18 b Fn(object.)p
+63 2516 V 63 2650 V 534 2763 a Fe(omniidl.idlast.D)o(ec)o(la)o(ra)o(to)
+o(r)49 b(\(Decl,DeclRepo)o(Id)o(\))816 2876 y Fi(Declarator)25
+b(used)f(in)e(typedefs,)k(struct)d(members,)h(etc.)63
+3007 y Fe(sizes\(\))290 3120 y Fn(List)e(of)g(array)h(sizes,)f(or)h
+Fk(None)e Fn(if)i(it)g(is)g(a)g(simple)f(declarator)-7
+b(.)63 3308 y Fe(alias\(\))290 3421 y Fk(Typedef)27 b
+Fn(object)j(that)g(the)f(declarator)i(is)f(part)g(of,)i(or)d
+Fk(None)g Fn(if)i(the)e(object)h(is)h(not)e(a)290 3533
+y(typedef)20 b(declarator)-7 b(.)p 63 3608 V 63 3742
+V 916 3855 a Fe(omniidl.idlast.)o(Ty)o(ped)o(ef)48 b(\(Decl\))1353
+3968 y Fi(T)-8 b(ypedef)24 b(declaration)63 4099 y Fe(aliasType\(\))290
+4212 y Fk(IdlType.Type)17 b Fn(object)23 b(that)f(this)g(is)h(an)g
+(alias)h(to.)63 4399 y Fe(constrType\(\))290 4512 y Fn(Boolean:)41
+b(tr)o(ue)28 b(if)i(the)f(alias)i(type)d(was)h(constr)o(ucted)f(within)
+h(this)g(typedef)e(declara-)290 4625 y(tion,)22 b(like)399
+4850 y Fk(typedef)51 b(struct)h(foo)h({)h(long)f(l;)h(})g(bar;)63
+5075 y Fe(declarators\(\))290 5188 y Fn(List)22 b(of)g
+Fk(Declarator)d Fn(objects.)p 63 5263 V eop
 %%Page: 12 12
 12 11 bop 221 249 a Fn(12)2039 b Fh(2)91 b(BACK-END)22
-b(INTERF)-7 b(ACE)p 221 469 3289 13 v 1020 582 a Fe(omniidl.idlast.)o
-(Ca)o(se)o(Lab)o(el)48 b(\(Decl\))1408 695 y Fi(One)22
-b(label)i(within)f(a)g(union)221 826 y Fe(default\(\))448
-939 y Fn(Boolean:)28 b(tr)o(ue)21 b(if)j(this)e(is)h(the)f(default)g
-(label.)221 1127 y Fe(value\(\))448 1240 y Fn(Label)e(value.)27
-b(Either)18 b(an)i(integer)e(or)g(an)i Fk(Enumerator)14
-b Fn(object.)27 b(For)18 b(the)g(default)h(case,)448
-1352 y(r)n(eturns)j(a)h(value)g(used)f(by)g(none)g(of)g(the)g(other)g
-(union)g(labels.)221 1540 y Fe(labelKind\(\))448 1653
-y Fn(T)-8 b(ypeCode)21 b(kind)h(of)g(the)g(label.)p 221
-1728 V 221 1861 V 1020 1974 a Fe(omniidl.idlast.)o(Un)o(io)o(nCa)o(se)
-48 b(\(Decl\))1418 2087 y Fi(One)22 b(case)i(within)f(a)g(union)221
-2218 y Fe(labels\(\))448 2331 y Fn(List)f(of)h Fk(CaseLabel)c
-Fn(objects.)221 2519 y Fe(caseType\(\))448 2632 y Fk(IdlType.Type)f
-Fn(object)k(for)h(the)f(case)g(type.)221 2819 y Fe(constrType\(\))448
-2932 y Fn(Boolean:)28 b(tr)o(ue)21 b(if)j(the)e(case)g(type)f(was)i
-(constr)o(ucted)e(within)i(the)f(case.)221 3120 y Fe(declarator\(\))448
-3233 y Fk(Declarator)d Fn(object)p 221 3308 V 221 3441
-V 829 3554 a Fe(omniidl.idlast.)o(Un)o(ion)48 b(\(Decl,DeclRepo)o(Id)o
-(\))1533 3667 y Fi(Union)22 b(declaration)221 3798 y
-Fe(switchType\(\))448 3911 y Fk(IdlType.Type)c Fn(object)k(corr)n
-(esponding)f(to)h(the)g(switch)g(type.)221 4099 y Fe(constrType\(\))448
-4212 y Fn(Boolean:)44 b(tr)o(ue)30 b(if)h(the)f(switch)h(type)e(was)i
-(declar)n(ed)f(within)h(the)f(switch)h(statement.)448
-4325 y(Only)24 b(possible)d(for)i(Enums.)221 4512 y Fe(cases\(\))448
-4625 y Fn(List)f(of)h Fk(UnionCase)c Fn(objects.)221
-4813 y Fe(recursive\(\))448 4926 y Fn(Boolean:)28 b(tr)o(ue)21
-b(if)j(the)e(union)g(is)h(r)n(ecursive.)p 221 5000 V
-eop
+b(INTERF)-7 b(ACE)p 221 469 3289 13 v 1102 582 a Fe(omniidl.idlast.)o
+(Me)o(mb)o(er)48 b(\(Decl\))1284 695 y Fi(Member)23 b(of)g(a)g(struct)h
+(or)f(exception)221 826 y Fe(memberType\(\))448 939 y
+Fk(IdlType.Type)18 b Fn(object)k(for)h(the)f(type)f(of)h(this)g(member)
+-7 b(.)221 1127 y Fe(constrType\(\))448 1240 y Fn(Boolean:)29
+b(tr)o(ue)22 b(if)i(the)e(member)h(type)f(was)h(constr)o(ucted)e
+(within)j(the)e(member)h(decla-)448 1352 y(ration.)28
+b(e.g.)558 1602 y Fk(struct)51 b(S)j({)667 1715 y(struct)d(T)k({)776
+1828 y(long)d(l;)667 1941 y(})i(the_T;)558 2054 y(};)221
+2304 y Fe(declarators\(\))448 2417 y Fn(List)22 b(of)h
+Fk(Declarator)18 b Fn(objects.)p 221 2491 V 221 2625
+V 802 2738 a Fe(omniidl.idlast.)o(St)o(ru)o(ct)48 b(\(Decl,DeclRepoI)o
+(d\))1534 2851 y Fi(Struct)23 b(declaration)221 2982
+y Fe(members\(\))448 3095 y Fn(List)f(of)h Fk(Member)d
+Fn(objects)i(for)h(the)e(str)o(uct)h(contents.)221 3283
+y Fe(recursive\(\))448 3396 y Fn(Boolean:)28 b(tr)o(ue)21
+b(if)j(the)e(str)o(uct)g(is)g(r)n(ecursive,)h(e.g.)558
+3645 y Fk(struct)51 b(S)j({)667 3758 y(long)e(l;)667
+3871 y(sequence)f(<S>)i(ss;)558 3984 y(};)p 221 4159
+V 221 4292 V 720 4405 a Fe(omniidl.idlast.)o(Ex)o(ce)o(pti)o(on)48
+b(\(Decl,DeclRepo)o(Id)o(\))1469 4518 y Fi(Exception)24
+b(declaration)221 4649 y Fe(members\(\))448 4762 y Fn(List)e(of)h
+Fk(Member)d Fn(objects)i(for)h(the)e(exception)h(contents.)p
+221 4837 V eop
 %%Page: 13 13
 13 12 bop 63 249 a Fh(2.3)91 b(Abstract)22 b(Syntax)g(T)-8
-b(r)n(ee)2165 b Fn(13)p 63 469 3289 13 v 534 582 a Fe(omniidl.idlast.E)
-o(nu)o(me)o(ra)o(to)o(r)49 b(\(Decl,DeclRepo)o(Id)o(\))1269
-695 y Fi(Enumerator)23 b(of)g(an)g(enum)290 939 y Fn(No)f
-(non-inherited)f(functions.)p 63 1014 V 63 1147 V 698
-1260 a Fe(omniidl.idlast.)o(En)o(um)48 b(\(Decl,DeclRepo)o(Id\))1379
-1373 y Fi(Enum)21 b(declaration)63 1504 y Fe(enumerators\(\))290
-1617 y Fn(List)h(of)g Fk(Enumerator)d Fn(objects.)p 63
-1692 V 63 1826 V 862 1939 a Fe(omniidl.idlast)o(.A)o(tt)o(rib)o(ut)o(e)
-48 b(\(Decl\))1320 2051 y Fi(Attribute)24 b(declaration)63
-2183 y Fe(readonly\(\))290 2296 y Fn(Boolean:)j(tr)o(ue)22
-b(if)h(the)f(attribute)g(is)h(r)n(ead)g(only)-10 b(.)63
-2483 y Fe(attrType\(\))290 2596 y Fk(IdlType.Type)17
-b Fn(object)23 b(for)f(the)g(attribute's)g(type.)63 2784
-y Fe(identifiers\(\))290 2897 y Fn(List)g(of)g(strings)g(containing)h
-(the)f(attribute)g(identi\002ers.)k(e.g.)21 b(for)i(the)f(declaration)
-399 3147 y Fk(attribute)50 b(long)j(a,)h(b;)290 3396
-y(identifiers\(\))17 b Fn(will)24 b(r)n(eturn)d Fk(['a','b'])p
-Fn(.)p 63 3471 V 63 3605 V 862 3718 a Fe(omniidl.idlast)o(.P)o(ar)o
-(ame)o(te)o(r)48 b(\(Decl\))1234 3831 y Fi(Parameter)24
-b(of)f(an)g(operation)63 3962 y Fe(direction\(\))290
-4075 y Fn(Integer:)j(0)d(==)g(in,)f(1)i(==)f(out,)e(2)i(==)g(inout.)63
-4262 y Fe(is_in\(\))290 4375 y Fn(Boolean:)k(tr)o(ue)22
-b(if)h(in)g(or)g(inout.)63 4563 y Fe(is_out\(\))290 4676
-y Fn(Boolean:)k(tr)o(ue)22 b(if)h(out)f(or)g(inout.)63
-4863 y Fe(paramType\(\))290 4976 y Fk(IdlType.Type)17
-b Fn(object)23 b(for)f(the)g(parameter)g(type.)63 5164
-y Fe(identifier\(\))290 5277 y Fn(String)g(containing)h(the)f
-(parameter)g(identi\002er)-7 b(.)p 63 5352 V eop
+b(r)n(ee)2165 b Fn(13)p 63 469 3289 13 v 862 582 a Fe(omniidl.idlast)o
+(.C)o(as)o(eLa)o(be)o(l)48 b(\(Decl\))1249 695 y Fi(One)22
+b(label)j(within)e(a)g(union)63 826 y Fe(default\(\))290
+939 y Fn(Boolean:)k(tr)o(ue)22 b(if)h(this)g(is)f(the)g(default)h
+(label.)63 1127 y Fe(value\(\))290 1240 y Fn(Label)c(value.)28
+b(Either)18 b(an)h(integer)f(or)h(an)g Fk(Enumerator)c
+Fn(object.)26 b(For)19 b(the)f(default)h(case,)290 1352
+y(r)n(eturns)i(a)i(value)h(used)d(by)i(none)e(of)i(the)f(other)f(union)
+i(labels.)63 1540 y Fe(labelKind\(\))290 1653 y Fn(T)-8
+b(ypeCode)20 b(kind)i(of)h(the)f(label.)p 63 1728 V 63
+1861 V 862 1974 a Fe(omniidl.idlast)o(.U)o(ni)o(onC)o(as)o(e)48
+b(\(Decl\))1259 2087 y Fi(One)23 b(case)g(within)h(a)f(union)63
+2218 y Fe(labels\(\))290 2331 y Fn(List)f(of)g Fk(CaseLabel)d
+Fn(objects.)63 2519 y Fe(caseType\(\))290 2632 y Fk(IdlType.Type)e
+Fn(object)23 b(for)f(the)g(case)h(type.)63 2819 y Fe(constrType\(\))290
+2932 y Fn(Boolean:)k(tr)o(ue)22 b(if)h(the)f(case)h(type)e(was)h
+(constr)o(ucted)f(within)i(the)f(case.)63 3120 y Fe(declarator\(\))290
+3233 y Fk(Declarator)c Fn(object)p 63 3308 V 63 3441
+V 671 3554 a Fe(omniidl.idlast)o(.U)o(nio)o(n)48 b(\(Decl,DeclRepoI)o
+(d\))1374 3667 y Fi(Union)22 b(declaration)63 3798 y
+Fe(switchType\(\))290 3911 y Fk(IdlType.Type)17 b Fn(object)23
+b(corr)n(esponding)d(to)i(the)g(switch)h(type.)63 4099
+y Fe(constrType\(\))290 4212 y Fn(Boolean:)43 b(tr)o(ue)30
+b(if)i(the)e(switch)g(type)g(was)g(declar)n(ed)h(within)g(the)f(switch)
+h(statement.)290 4325 y(Only)23 b(possible)f(for)g(Enums.)63
+4512 y Fe(cases\(\))290 4625 y Fn(List)g(of)g Fk(UnionCase)d
+Fn(objects.)63 4813 y Fe(recursive\(\))290 4926 y Fn(Boolean:)27
+b(tr)o(ue)22 b(if)h(the)f(union)h(is)f(r)n(ecursive.)p
+63 5000 V eop
 %%Page: 14 14
 14 13 bop 221 249 a Fn(14)2039 b Fh(2)91 b(BACK-END)22
-b(INTERF)-7 b(ACE)p 221 469 3289 13 v 1020 582 a Fe(omniidl.idlast.)o
-(Op)o(er)o(ati)o(on)48 b(\(Decl\))1465 695 y Fi(Operation)24
-b(declaration)221 826 y Fe(oneway\(\))448 939 y Fn(Boolean:)k(tr)o(ue)
-21 b(if)j(the)e(operation)f(is)i(one)f(way)-10 b(.)221
-1127 y Fe(returnType\(\))448 1240 y Fk(IdlType.Type)18
-b Fn(object)k(for)h(the)f(r)n(eturn)f(type.)221 1427
-y Fe(identifier\(\))448 1540 y Fn(String)h(containing)h(the)f
-(operation)g(identi\002er)-7 b(.)221 1728 y Fe(parameters\(\))448
-1841 y Fn(List)22 b(of)h Fk(Parameter)c Fn(objects.)221
-2028 y Fe(raises\(\))448 2141 y Fn(List)j(of)h Fk(Exception)c
-Fn(objects)j(which)h(the)f(operation)f(can)j(raise.)221
-2329 y Fe(contexts\(\))448 2442 y Fn(List)e(of)h(strings)e(declar)n(ed)
-i(as)f(context)g(for)g(the)g(operation.)p 221 2516 V
-221 2650 V 1102 2763 a Fe(omniidl.idlast.)o(Na)o(ti)o(ve)48
-b(\(Decl\))1528 2876 y Fi(Native)24 b(declaration)448
-3120 y Fn(Native)f(should)f(not)g(be)g(used)f(in)i(normal)h(IDL.)448
-3270 y(No)e(non-inherited)g(functions.)p 221 3345 V 221
-3479 V 966 3592 a Fe(omniidl.idlast)o(.S)o(ta)o(te)o(Mem)o(be)o(r)48
-b(\(Decl\))1191 3704 y Fi(State)23 b(member)h(of)f(a)g(concr)n(ete)i
-(valuetype)221 3836 y Fe(memberAccess\(\))448 3949 y
-Fn(Integer:)h(0)d(==)g(public,)h(1)f(==)g(private.)221
-4136 y Fe(memberType\(\))448 4249 y Fk(IdlType.Type)18
-b Fn(object)k(for)h(member)f(type.)221 4437 y Fe(constrType\(\))448
-4550 y Fn(Boolean:)28 b(tr)o(ue)21 b(if)j(the)e(member)g(type)f(is)i
-(declar)n(ed)f(within)h(the)f(StateMember)-7 b(.)221
-4737 y Fe(declarators\(\))448 4850 y Fn(List)22 b(of)h
-Fk(Declarator)18 b Fn(objects.)p 221 4925 V eop
+b(INTERF)-7 b(ACE)p 221 469 3289 13 v 693 582 a Fe(omniidl.idlast)o
+(.En)o(um)o(er)o(at)o(or)48 b(\(Decl,DeclRepoI)o(d\))1427
+695 y Fi(Enumerator)24 b(of)f(an)g(enum)448 939 y Fn(No)f
+(non-inherited)g(functions.)p 221 1014 V 221 1147 V 856
+1260 a Fe(omniidl.idlast.E)o(nu)o(m)48 b(\(Decl,DeclRepoId)o(\))1538
+1373 y Fi(Enum)21 b(declaration)221 1504 y Fe(enumerators\(\))448
+1617 y Fn(List)h(of)h Fk(Enumerator)18 b Fn(objects.)p
+221 1692 V 221 1826 V 1020 1939 a Fe(omniidl.idlast.)o(At)o(tr)o(ibu)o
+(te)48 b(\(Decl\))1479 2051 y Fi(Attribute)24 b(declaration)221
+2183 y Fe(readonly\(\))448 2296 y Fn(Boolean:)k(tr)o(ue)21
+b(if)j(the)e(attribute)g(is)g(r)n(ead)h(only)-10 b(.)221
+2483 y Fe(attrType\(\))448 2596 y Fk(IdlType.Type)18
+b Fn(object)k(for)h(the)f(attribute's)f(type.)221 2784
+y Fe(identifiers\(\))448 2897 y Fn(List)h(of)h(strings)e(containing)i
+(the)f(attribute)g(identi\002ers.)27 b(e.g.)21 b(for)h(the)g
+(declaration)558 3147 y Fk(attribute)50 b(long)j(a,)g(b;)448
+3396 y(identifiers\(\))17 b Fn(will)24 b(r)n(eturn)e
+Fk(['a','b'])p Fn(.)p 221 3471 V 221 3605 V 1020 3718
+a Fe(omniidl.idlast.)o(Pa)o(ra)o(met)o(er)48 b(\(Decl\))1392
+3831 y Fi(Parameter)25 b(of)e(an)g(operation)221 3962
+y Fe(direction\(\))448 4075 y Fn(Integer:)j(0)d(==)g(in,)g(1)g(==)g
+(out,)f(2)h(==)g(inout.)221 4262 y Fe(is_in\(\))448 4375
+y Fn(Boolean:)28 b(tr)o(ue)21 b(if)j(in)f(or)f(inout.)221
+4563 y Fe(is_out\(\))448 4676 y Fn(Boolean:)28 b(tr)o(ue)21
+b(if)j(out)e(or)g(inout.)221 4863 y Fe(paramType\(\))448
+4976 y Fk(IdlType.Type)c Fn(object)k(for)h(the)f(parameter)g(type.)221
+5164 y Fe(identifier\(\))448 5277 y Fn(String)g(containing)h(the)f
+(parameter)g(identi\002er)-7 b(.)p 221 5352 V eop
 %%Page: 15 15
 15 14 bop 63 249 a Fh(2.3)91 b(Abstract)22 b(Syntax)g(T)-8
-b(r)n(ee)2165 b Fn(15)p 63 469 3289 13 v 916 582 a Fe(omniidl.idlast.)o
-(Fa)o(cto)o(ry)48 b(\(Decl\))1158 695 y Fi(Factory)24
-b(method)h(of)e(a)g(valuetype)63 826 y Fe(identifier\(\))290
-939 y Fn(String)f(containing)h(the)f(factory)g(identi\002er)-7
-b(.)63 1127 y Fe(parameters\(\))290 1240 y Fn(List)22
-b(of)g Fk(Parameter)d Fn(objects.)p 63 1314 V 63 1448
-V 480 1561 a Fe(omniidl.idlast)o(.Va)o(lu)o(eF)o(or)o(wa)o(rd)48
-b(\(Decl,DeclRepoI)o(d\))1198 1674 y Fi(Forward-declar)n(ed)27
-b(valuetype)63 1805 y Fe(abstract\(\))290 1918 y Fn(Boolean:)g(tr)o(ue)
-22 b(if)h(declar)n(ed)g(abstract.)63 2105 y Fe(fullDecl\(\))290
-2218 y Fk(Value)j Fn(or)h Fk(ValueAbs)e Fn(object)j(corr)n(esponding)d
-(to)j(the)f(full)i(valuetype)e(declaration)290 2331 y(or)22
-b Fk(None)f Fn(if)j(ther)n(e)d(is)i(no)f(full)i(declaration.)p
-63 2406 V 63 2540 V 589 2653 a Fe(omniidl.idlast.)o(Va)o(lu)o(eB)o(ox)
-48 b(\(Decl,DeclRepoI)o(d\))1194 2765 y Fi(Boxed)24 b(valuetype)h
-(declaration)63 2897 y Fe(boxedType\(\))290 3010 y Fk(IdlType.Type)17
-b Fn(object)23 b(for)f(the)g(boxed)g(type.)63 3197 y
-Fe(constrType\(\))290 3310 y Fn(Boolean:)27 b(tr)o(ue)22
-b(if)h(boxed)f(type)f(is)i(declar)n(ed)f(inside)g(the)g(valuetype)g
-(declaration.)p 63 3385 V 63 3518 V 589 3631 a Fe(omniidl.idlast.)o(Va)
-o(lu)o(eA)o(bs)48 b(\(Decl,DeclRepoI)o(d\))1147 3744
-y Fi(Abstract)24 b(valuetype)h(declaration)63 3875 y
-Fe(inherits\(\))290 3988 y Fn(List)d(of)g Fk(ValueAbs)e
-Fn(objects)i(fr)n(om)h(which)g(this)f(inherits.)63 4176
-y Fe(supports\(\))290 4289 y Fn(List)g(of)g Fk(Interface)d
-Fn(objects)j(which)h(this)g(valuetype)e(supports.)63
-4477 y Fe(contents\(\))290 4589 y Fn(List)h(of)g Fk(Decl)f
-Fn(objects)h(for)h(all)h(items)e(de\002ned)f(within)i(this)f
-(valuetype.)63 4777 y Fe(declarations\(\))290 4890 y
-Fn(Subset)f(of)i Fk(contents\(\))18 b Fn(containing)23
-b(types,)d(constants)i(and)g(exceptions.)63 5078 y Fe(callables\(\))290
-5191 y Fn(Subset)f(of)i(contents\(\))e(containing)i Fk(Operation)p
-Fn(s)18 b(and)23 b Fk(Attribute)p Fn(s.)p 63 5265 V eop
+b(r)n(ee)2165 b Fn(15)p 63 469 3289 13 v 862 582 a Fe(omniidl.idlast)o
+(.O)o(pe)o(rat)o(io)o(n)48 b(\(Decl\))1306 695 y Fi(Operation)24
+b(declaration)63 826 y Fe(oneway\(\))290 939 y Fn(Boolean:)j(tr)o(ue)22
+b(if)h(the)f(operation)g(is)g(one)g(way)-10 b(.)63 1127
+y Fe(returnType\(\))290 1240 y Fk(IdlType.Type)17 b Fn(object)23
+b(for)f(the)g(r)n(eturn)g(type.)63 1427 y Fe(identifier\(\))290
+1540 y Fn(String)g(containing)h(the)f(operation)f(identi\002er)-7
+b(.)63 1728 y Fe(parameters\(\))290 1841 y Fn(List)22
+b(of)g Fk(Parameter)d Fn(objects.)63 2028 y Fe(raises\(\))290
+2141 y Fn(List)j(of)g Fk(Exception)d Fn(objects)j(which)h(the)f
+(operation)g(can)h(raise.)63 2329 y Fe(contexts\(\))290
+2442 y Fn(List)f(of)g(strings)g(declar)n(ed)g(as)h(context)e(for)i(the)
+f(operation.)p 63 2516 V 63 2650 V 943 2763 a Fe(omniidl.idlast.N)o(at)
+o(iv)o(e)48 b(\(Decl\))1369 2876 y Fi(Native)24 b(declaration)290
+3120 y Fn(Native)f(should)e(not)h(be)h(used)e(in)i(normal)g(IDL.)290
+3270 y(No)f(non-inherited)f(functions.)p 63 3345 V 63
+3479 V 807 3592 a Fe(omniidl.idlast.)o(St)o(at)o(eMe)o(mb)o(er)48
+b(\(Decl\))1032 3704 y Fi(State)24 b(member)f(of)h(a)f(concr)n(ete)h
+(valuetype)63 3836 y Fe(memberAccess\(\))290 3949 y Fn(Integer:)i(0)d
+(==)g(public,)g(1)g(==)g(private.)63 4136 y Fe(memberType\(\))290
+4249 y Fk(IdlType.Type)17 b Fn(object)23 b(for)f(member)h(type.)63
+4437 y Fe(constrType\(\))290 4550 y Fn(Boolean:)k(tr)o(ue)22
+b(if)h(the)f(member)h(type)e(is)i(declar)n(ed)f(within)h(the)f
+(StateMember)-7 b(.)63 4737 y Fe(declarators\(\))290
+4850 y Fn(List)22 b(of)g Fk(Declarator)d Fn(objects.)p
+63 4925 V eop
 %%Page: 16 16
 16 15 bop 221 249 a Fn(16)2039 b Fh(2)91 b(BACK-END)22
-b(INTERF)-7 b(ACE)p 221 469 3289 13 v 829 582 a Fe(omniidl.idlast.)o
-(Va)o(lue)48 b(\(Decl,DeclRepo)o(Id)o(\))1468 695 y Fi(V)-7
-b(aluetype)25 b(declaration)221 826 y Fe(custom\(\))448
-939 y Fn(Boolean:)j(tr)o(ue)21 b(if)j(declar)n(ed)e(custom.)221
-1127 y Fe(inherits\(\))448 1240 y Fn(List)j(of)g(valuetypes)f(fr)n(om)i
-(which)f(this)g(inherits.)35 b(The)24 b(\002rst)h(may)g(be)g(a)h
-Fk(Value)d Fn(object)448 1352 y(or)g(a)g Fk(ValueAbs)c
-Fn(object;)j(any)h(others)e(will)j(be)e Fk(ValueAbs)d
-Fn(objects.)221 1540 y Fe(truncatable\(\))448 1653 y
-Fn(Boolean:)40 b(tr)o(ue)28 b(if)h(the)f(inherited)g
-Fk(Value)f Fn(is)h(declar)n(ed)h(tr)o(uncatable;)j(false)e(if)f(not,)g
-(or)448 1766 y(ther)n(e)22 b(is)h(no)f(inherited)g Fk(Value)p
-Fn(.)221 1954 y Fe(supports\(\))448 2066 y Fn(List)g(of)h
-Fk(Interface)c Fn(objects)j(which)h(this)f(valuetype)g(supports.)221
-2254 y Fe(contents\(\))448 2367 y Fn(List)g(of)h Fk(Decl)e
+b(INTERF)-7 b(ACE)p 221 469 3289 13 v 1075 582 a Fe(omniidl.idlast)o
+(.F)o(ac)o(tor)o(y)48 b(\(Decl\))1317 695 y Fi(Factory)24
+b(method)g(of)g(a)f(valuetype)221 826 y Fe(identifier\(\))448
+939 y Fn(String)f(containing)h(the)f(factory)h(identi\002er)-7
+b(.)221 1127 y Fe(parameters\(\))448 1240 y Fn(List)22
+b(of)h Fk(Parameter)c Fn(objects.)p 221 1314 V 221 1448
+V 638 1561 a Fe(omniidl.idlast.)o(Val)o(ue)o(Fo)o(rw)o(ar)o(d)49
+b(\(Decl,DeclRepo)o(Id)o(\))1357 1674 y Fi(Forward-declar)n(ed)27
+b(valuetype)221 1805 y Fe(abstract\(\))448 1918 y Fn(Boolean:)h(tr)o
+(ue)21 b(if)j(declar)n(ed)e(abstract.)221 2105 y Fe(fullDecl\(\))448
+2218 y Fk(Value)k Fn(or)i Fk(ValueAbs)c Fn(object)k(corr)n(esponding)e
+(to)h(the)g(full)j(valuetype)d(declaration)448 2331 y(or)c
+Fk(None)e Fn(if)i(ther)n(e)f(is)g(no)h(full)g(declaration.)p
+221 2406 V 221 2540 V 747 2653 a Fe(omniidl.idlast.V)o(al)o(ue)o(Bo)o
+(x)48 b(\(Decl,DeclRepoId)o(\))1352 2765 y Fi(Boxed)24
+b(valuetype)h(declaration)221 2897 y Fe(boxedType\(\))448
+3010 y Fk(IdlType.Type)18 b Fn(object)k(for)h(the)f(boxed)f(type.)221
+3197 y Fe(constrType\(\))448 3310 y Fn(Boolean:)28 b(tr)o(ue)21
+b(if)j(boxed)e(type)f(is)h(declar)n(ed)h(inside)f(the)g(valuetype)f
+(declaration.)p 221 3385 V 221 3518 V 747 3631 a Fe(omniidl.idlast.V)o
+(al)o(ue)o(Ab)o(s)48 b(\(Decl,DeclRepoId)o(\))1305 3744
+y Fi(Abstract)24 b(valuetype)h(declaration)221 3875 y
+Fe(inherits\(\))448 3988 y Fn(List)d(of)h Fk(ValueAbs)c
+Fn(objects)j(fr)n(om)h(which)g(this)g(inherits.)221 4176
+y Fe(supports\(\))448 4289 y Fn(List)f(of)h Fk(Interface)c
+Fn(objects)j(which)h(this)f(valuetype)g(supports.)221
+4477 y Fe(contents\(\))448 4589 y Fn(List)g(of)h Fk(Decl)e
 Fn(objects)h(for)g(all)j(items)d(de\002ned)e(within)j(this)g
-(valuetype.)221 2555 y Fe(declarations\(\))448 2667 y
+(valuetype.)221 4777 y Fe(declarations\(\))448 4890 y
 Fn(Subset)f(of)g Fk(contents\(\))d Fn(containing)k(types,)d(constants)h
-(and)i(exceptions.)221 2855 y Fe(callables\(\))448 2968
-y Fn(Subset)h(of)g Fk(contents\(\))c Fn(containing)25
-b Fk(Operation)p Fn(s,)c Fk(Attribute)p Fn(s,)f Fk(StateMem-)448
-3081 y(ber)p Fn(s)h(and)i Fk(Factory)p Fn(s.)p 221 3156
-V 221 3368 a Fd(2.3.6)92 b(T)-8 b(ype)22 b(objects)221
-3545 y Fn(All)i(type)d(objects)h(ar)n(e)h(derived)e(fr)n(om)i(the)f
-(base)h(class)g Fk(Type)p Fn(:)p 221 3704 V 1320 3817
-a Fe(omniidl.idltype)o(.T)o(yp)o(e)1515 3930 y Fi(Base)g(class)h(for)g
-(types)221 4061 y Fe(kind\(\))448 4174 y Fn(T)-8 b(ypeCode)21
-b(kind)h(of)g(type.)221 4362 y Fe(accept\(visitor\))448
-4475 y Fn(V)-5 b(isitor)22 b(pattern)g(accept.)p 221
-4550 V 221 4737 a(The)31 b(basic)i(CORBA)f(types)e(\(null,)35
-b(void,)f(short,)e(long,)i(unsigned)c(short,)i(unsigned)f(long,)221
-4849 y(\003oat,)f(double,)f(boolean,)h(char)-7 b(,)30
-b(octet,)f(any)-10 b(,)30 b(T)-8 b(ypeCode,)27 b(Principal,)k(long)d
-(long,)i(unsigned)221 4962 y(long)d(long,)h(long)g(double,)g(and)f
-(wide)g(char\))i(ar)n(e)f(r)n(epr)n(esented)c(by)k(objects)f(of)g(type)
-f Fk(omni-)221 5075 y(idl.idltype.Bas)o(e)p Fn(,)16 b(derived)22
-b(fr)n(om)h Fk(Type)p Fn(,)e(with)h(no)h(extra)f(methods.)362
-5188 y(The)h(template)f(types\227string,)e(wstring,)i(sequence,)f(and)i
-(\002xed\227do)e(not)h(have)i(associ-)221 5301 y(ated)c
-Fk(Decl)f Fn(objects)h(since)g(they)f(ar)n(e)i(not)f(explicitly)h
-(declar)n(ed.)27 b(They)19 b(ar)n(e)i(always)g(implicitly)p
+(and)i(exceptions.)221 5078 y Fe(callables\(\))448 5191
+y Fn(Subset)f(of)g(contents\(\))g(containing)h Fk(Operation)p
+Fn(s)18 b(and)23 b Fk(Attribute)p Fn(s.)p 221 5265 V
 eop
 %%Page: 17 17
 17 16 bop 63 249 a Fh(2.3)91 b(Abstract)22 b(Syntax)g(T)-8
-b(r)n(ee)2165 b Fn(17)63 548 y(declar)n(ed)22 b(as)h(part)f(of)h
-(another)f(declaration.)p 63 707 3289 13 v 916 820 a
-Fe(omniidl.idltype)o(.S)o(tri)o(ng)48 b(\(Type\))1499
-933 y Fi(String)23 b(type)63 1064 y Fe(bound\(\))290
-1177 y Fn(Bound)e(of)i(a)g(bounded)e(string,)g(or)i(0)g(for)f
-(unbounded)f(strings.)p 63 1252 V 63 1386 V 889 1498
-a Fe(omniidl.idltype)o(.W)o(St)o(ri)o(ng)48 b(\(Type\))1400
-1611 y Fi(W)n(ide)24 b(string)g(type)63 1743 y Fe(bound\(\))290
-1855 y Fn(Bound)d(of)i(a)g(bounded)e(wstring,)g(or)h(0)i(for)e
-(unbounded)f(wstrings.)p 63 1930 V 63 2064 V 862 2177
-a Fe(omniidl.idltyp)o(e.)o(Se)o(que)o(nc)o(e)48 b(\(Type\))1449
-2290 y Fi(Sequence)23 b(type)63 2421 y Fe(seqType\(\))290
-2534 y Fk(IdlType.Type)17 b Fn(object)23 b(r)n(epr)n(esenting)d(what)j
-(the)f(sequence)e(contains.)63 2721 y Fe(bound\(\))290
-2834 y Fn(Bound)h(of)i(a)g(bounded)e(sequence,)g(or)h(0)h(for)g
-(unbounded)d(sequences.)p 63 2909 V 63 3043 V 943 3156
-a Fe(omniidl.idltype.)o(Fi)o(xe)o(d)48 b(\(Type\))1409
-3268 y Fi(Fixed)24 b(point)f(type)63 3400 y Fe(digits\(\))290
-3513 y Fn(Number)f(of)h(digits)f(in)h(number)-7 b(.)63
-3700 y Fe(scale\(\))290 3813 y Fn(Scale)23 b(of)g(number)-7
-b(.)p 63 3888 V 63 4075 a(All)20 b(other)d(types)h(\(interface,)i(str)o
-(uct,)e(union,)i(enum,)f(typedef,)e(exception,)i(valuetype\))f(must)63
-4188 y(be)k(explicitly)h(declar)n(ed.)28 b(They)21 b(ar)n(e)i(r)n(epr)n
-(esented)d(with)j Fk(Declared)c Fn(objects:)p eop
+b(r)n(ee)2165 b Fn(17)p 63 469 3289 13 v 671 582 a Fe(omniidl.idlast)o
+(.V)o(alu)o(e)48 b(\(Decl,DeclRepoI)o(d\))1309 695 y
+Fi(V)-7 b(aluetype)25 b(declaration)63 826 y Fe(custom\(\))290
+939 y Fn(Boolean:)i(tr)o(ue)22 b(if)h(declar)n(ed)g(custom.)63
+1127 y Fe(inherits\(\))290 1240 y Fn(List)h(of)i(valuetypes)d(fr)n(om)j
+(which)g(this)f(inherits.)35 b(The)24 b(\002rst)g(may)i(be)f(a)h
+Fk(Value)d Fn(object)290 1352 y(or)f(a)h Fk(ValueAbs)c
+Fn(object;)k(any)f(others)f(will)j(be)f Fk(ValueAbs)c
+Fn(objects.)63 1540 y Fe(truncatable\(\))290 1653 y Fn(Boolean:)39
+b(tr)o(ue)28 b(if)i(the)e(inherited)g Fk(Value)e Fn(is)j(declar)n(ed)g
+(tr)o(uncatable;)j(false)d(if)h(not,)f(or)290 1766 y(ther)n(e)22
+b(is)g(no)h(inherited)e Fk(Value)p Fn(.)63 1954 y Fe(supports\(\))290
+2066 y Fn(List)h(of)g Fk(Interface)d Fn(objects)j(which)h(this)g
+(valuetype)e(supports.)63 2254 y Fe(contents\(\))290
+2367 y Fn(List)h(of)g Fk(Decl)f Fn(objects)h(for)h(all)h(items)e
+(de\002ned)f(within)i(this)f(valuetype.)63 2555 y Fe(declarations\(\))
+290 2667 y Fn(Subset)f(of)i Fk(contents\(\))18 b Fn(containing)23
+b(types,)d(constants)i(and)g(exceptions.)63 2855 y Fe(callables\(\))290
+2968 y Fn(Subset)h(of)i Fk(contents\(\))20 b Fn(containing)25
+b Fk(Operation)p Fn(s,)20 b Fk(Attribute)p Fn(s,)h Fk(StateMem-)290
+3081 y(ber)p Fn(s)g(and)h Fk(Factory)p Fn(s.)p 63 3156
+V 63 3368 a Fd(2.3.7)91 b(T)-8 b(ype)22 b(objects)63
+3545 y Fn(All)h(type)e(objects)h(ar)n(e)h(derived)f(fr)n(om)h(the)f
+(base)g(class)h Fk(Type)p Fn(:)p 63 3704 V 1162 3817
+a Fe(omniidl.idltyp)o(e.)o(Ty)o(pe)1357 3930 y Fi(Base)g(class)h(for)g
+(types)63 4061 y Fe(kind\(\))290 4174 y Fn(T)-8 b(ypeCode)20
+b(kind)i(of)h(type.)63 4362 y Fe(accept\(visitor)o(\))290
+4475 y Fn(V)-5 b(isitor)22 b(pattern)f(accept.)p 63 4550
+V 63 4737 a(The)31 b(basic)i(CORBA)f(types)d(\(null,)35
+b(void,)f(short,)f(long,)g(unsigned)d(short,)j(unsigned)d(long,)63
+4849 y(\003oat,)f(double,)h(boolean,)f(char)-7 b(,)31
+b(octet,)e(any)-10 b(,)29 b(T)-8 b(ypeCode,)27 b(Principal,)32
+b(long)c(long,)h(unsigned)63 4962 y(long)e(long,)h(long)f(double,)h
+(and)g(wide)f(char\))h(ar)n(e)g(r)n(epr)n(esented)d(by)i(objects)g(of)h
+(type)e Fk(omni-)63 5075 y(idl.idltype.Ba)o(se)o Fn(,)17
+b(derived)k(fr)n(om)j Fk(Type)p Fn(,)c(with)j(no)f(extra)g(methods.)204
+5188 y(The)g(template)g(types\227string,)e(wstring,)i(sequence,)f(and)i
+(\002xed\227do)e(not)i(have)g(associ-)63 5301 y(ated)c
+Fk(Decl)g Fn(objects)h(since)h(they)e(ar)n(e)i(not)f(explicitly)h
+(declar)n(ed.)27 b(They)19 b(ar)n(e)i(always)g(implicitly)p
+eop
 %%Page: 18 18
 18 17 bop 221 249 a Fn(18)2039 b Fh(2)91 b(BACK-END)22
-b(INTERF)-7 b(ACE)p 221 469 3289 13 v 1020 582 a Fe(omniidl.idltype)o
-(.D)o(ec)o(lar)o(ed)48 b(\(Type\))1435 695 y Fi(Explicitly)25
-b(declar)n(ed)h(type)221 826 y Fe(decl\(\))448 939 y
-Fk(omniidl.idlast.D)o(ec)o(l)17 b Fn(object)22 b(which)h(corr)n
-(esponds)d(to)i(this)h(type.)221 1127 y Fe(scopedName\(\))448
-1240 y Fn(Fully)g(scoped)e(name)i(of)g(the)e(type)g(as)i(a)g(list)g(of)
-g(strings.)221 1427 y Fe(name\(\))448 1540 y Fn(Simple)g(name)g(of)g
-(the)f(type,)e(i.e.)j(the)e(last)i(element)f(of)g(the)g(scoped)f(name.)
-p 221 1615 V 221 1827 a Fd(2.3.7)92 b(Finding)21 b(a)i(named)g
-Fe(Decl)221 2004 y Fn(Normally)-10 b(,)33 b(back-ends)d(walk)i(over)e
-(the)g(tr)n(ee)g(of)h Fk(Decl)e Fn(objects,)j(dealing)f(with)f(the)g
-(decla-)221 2117 y(rations)c(as)h(they)e(encounter)f(them.)39
-b(Occasionally)-10 b(,)29 b(however)-7 b(,)26 b(it)h(may)g(be)f(useful)
-g(to)g(\002nd)f(a)221 2230 y(declaration)f(by)f(its)g(scoped)e(name.)30
-b(Only)23 b Fk(Decl)p Fn(s)e(which)j(inherit)f(fr)n(om)h
-Fk(DeclRepoId)18 b Fn(can)221 2343 y(be)23 b(found)f(in)h(this)f(way)
--10 b(.)p 221 2502 V 1484 2615 a Fe(omniidl.idlast)221
-2746 y(findDecl\(scoped)o(Na)o(me\))448 2859 y Fn(Find)18
-b(the)f Fk(Decl)f Fn(object)i(which)h(has)f(the)f(scoped)f(name)j(list)
-f Fk(scopedName)p Fn(.)k(If)c(a)g(decla-)448 2972 y(ration)24
-b(with)f(the)g(speci\002ed)f(name)i(does)d(not)i(exist,)g(the)f
-Fk(DeclNotFound)c Fn(exception)448 3085 y(is)23 b(raised.)p
-221 3160 V 221 3379 a Fl(2.4)99 b(An)25 b(example)e(back-end)221
-3555 y Fn(The)28 b(following)g(code)g(is)g(an)h(extr)n(emely)e(simple)h
-(back-end)h(which)g(just)e(prints)h(the)f(names)221 3668
-y(of)g(all)i(operations)c(declar)n(ed)i(within)g(an)h(IDL)e(\002le.)41
-b(Unfortunately)-10 b(,)27 b(it)g(is)g(so)f(simple)h(that)g(it)221
-3781 y(does)k(not)g(show)h(many)g(featur)n(es)g(of)g(the)f(back-end)i
-(interface.)56 b(Y)-8 b(ou)32 b(should)f(look)g(at)i(the)221
-3894 y Fk(dump.py)20 b Fn(and)i Fk(python.py)d Fn(back-ends)j(for)h(a)g
-(mor)n(e)f(extensive)f(example.)221 4107 y Fk(from)53
-b(omniidl)e(import)h(idlast,)f(idlvisitor,)f(idlutil)221
-4220 y(import)i(string)221 4445 y(class)g(ExampleVisitor)d
-(\(idlvisitor.As)o(tV)o(is)o(ito)o(r\))o(:)439 4671 y(def)54
-b(visitAST\(self,)48 b(node\):)658 4784 y(for)53 b(n)h(in)f
-(node.declaration)o(s\()o(\):)876 4897 y(n.accept\(self\))439
-5123 y(def)h(visitModule\(se)o(lf)o(,)48 b(node\):)658
-5236 y(for)53 b(n)h(in)f(node.definitions)o(\(\))o(:)876
-5349 y(n.accept\(self\))p eop
+b(INTERF)-7 b(ACE)221 548 y Fn(declar)n(ed)23 b(as)f(part)h(of)f
+(another)g(declaration.)p 221 707 3289 13 v 1075 820
+a Fe(omniidl.idltyp)o(e.)o(St)o(rin)o(g)48 b(\(Type\))1657
+933 y Fi(String)23 b(type)221 1064 y Fe(bound\(\))448
+1177 y Fn(Bound)f(of)g(a)h(bounded)e(string,)h(or)g(0)h(for)g
+(unbounded)e(strings.)p 221 1252 V 221 1386 V 1047 1498
+a Fe(omniidl.idltype.)o(WS)o(tr)o(in)o(g)48 b(\(Type\))1558
+1611 y Fi(W)n(ide)24 b(string)g(type)221 1743 y Fe(bound\(\))448
+1855 y Fn(Bound)e(of)g(a)h(bounded)e(wstring,)h(or)g(0)h(for)g
+(unbounded)d(wstrings.)p 221 1930 V 221 2064 V 1020 2177
+a Fe(omniidl.idltype)o(.S)o(eq)o(uen)o(ce)48 b(\(Type\))1608
+2290 y Fi(Sequence)22 b(type)221 2421 y Fe(seqType\(\))448
+2534 y Fk(IdlType.Type)c Fn(object)k(r)n(epr)n(esenting)f(what)h(the)g
+(sequence)f(contains.)221 2721 y Fe(bound\(\))448 2834
+y Fn(Bound)h(of)g(a)h(bounded)e(sequence,)g(or)h(0)i(for)e(unbounded)f
+(sequences.)p 221 2909 V 221 3043 V 1102 3156 a Fe(omniidl.idltype)o
+(.F)o(ix)o(ed)48 b(\(Type\))1568 3268 y Fi(Fixed)23 b(point)h(type)221
+3400 y Fe(digits\(\))448 3513 y Fn(Number)f(of)f(digits)g(in)h(number)
+-7 b(.)221 3700 y Fe(scale\(\))448 3813 y Fn(Scale)24
+b(of)e(number)-7 b(.)p 221 3888 V 221 4075 a(All)20 b(other)e(types)f
+(\(interface,)j(str)o(uct,)f(union,)g(enum,)g(typedef,)f(exception,)g
+(valuetype\))h(must)221 4188 y(be)k(explicitly)g(declar)n(ed.)k(They)22
+b(ar)n(e)h(r)n(epr)n(esented)d(with)i Fk(Declared)d Fn(objects:)p
+eop
 %%Page: 19 19
-19 18 bop 3261 249 a Fn(19)281 661 y Fk(def)53 b(visitInterface\()o(se)
-o(lf)o(,)48 b(node\):)499 774 y(name)53 b(=)h(idlutil.ccolon)o(Nam)o
-(e\()o(no)o(de)o(.s)o(cop)o(ed)o(Na)o(me)o(\(\))o(\))499
-1000 y(if)g(node.mainFile\()o(\):)717 1112 y(for)f(c)h(in)g
-(node.callables\()o(\):)935 1225 y(if)g(isinstance\(c,)49
-b(idlast.Operati)o(on)o(\):)1154 1338 y(print)j(name)h(+)h("::")e(+)i
-(\\)1481 1451 y(c.identifier\(\))48 b(+)54 b("\(\)")63
-1677 y(def)f(run\(tree,)d(args\):)281 1790 y(visitor)h(=)j
-(ExampleVisitor\()o(\))281 1903 y(tree.accept\(vi)o(sit)o(or)o(\))63
-2115 y Fn(The)21 b(visitor)g(object)h(simple)f(r)n(ecurses)g(thr)n
-(ough)f(the)h Fk(AST)f Fn(and)i Fk(Module)d Fn(objects,)i(and)g(prints)
-63 2228 y(the)g(operation)h(names)g(it)h(\002nds)f(in)h
-Fk(Interface)c Fn(objects.)204 2341 y(Note)25 b(that)h(since)g
-Fk(AstVisitor)c Fn(\(and)27 b(similarly)h Fk(TypeVisitor)22
-b Fn(which)27 b(is)f(not)g(used)63 2454 y(in)31 b(the)f(example\))i
-(has)f(all)h(operations)e(declar)n(ed)h(to)f(be)h(no-ops,)h(the)e
-Fk(ExampleVisitor)63 2567 y Fn(class)35 b(does)f(not)h(have)h(to)e
-(declar)n(e)i(visit)g(functions)f(for)g(all)i(node)d(types.)64
-b(This)35 b(can)i(be)e(a)63 2680 y(disadvantage)d(if)i(your)e(back-end)
-g(is)h(supposed)d(to)i(perform)g(some)g(action)i(for)f(all)h(node)63
-2793 y(types,)29 b(since)g(ther)n(e)g(will)i(be)f(no)f(err)n(or)g(if)h
-(you)f(accidentally)i(miss)f(a)g(node)e(type.)48 b(In)29
-b(those)63 2906 y(situations)17 b(it)i(is)g(better)e(to)h(declar)n(e)g
-(a)h(visitor)g(class)g(which)g(does)e(not)h(derive)g(fr)n(om)h(the)e
-(visitor)63 3019 y(base)22 b(classes.)63 3317 y Fo(3)119
-b(Front-end)30 b(architecture)63 3528 y Fn(Not)21 b(her)n(e)h(yet.)p
+19 18 bop 63 249 a Fh(2.4)91 b(An)23 b(example)f(back-end)2115
+b Fn(19)p 63 469 3289 13 v 862 582 a Fe(omniidl.idltyp)o(e.)o(De)o(cla)
+o(re)o(d)48 b(\(Type\))1277 695 y Fi(Explicitly)25 b(declar)n(ed)h
+(type)63 826 y Fe(decl\(\))290 939 y Fk(omniidl.idlast.)o(De)o(cl)16
+b Fn(object)22 b(which)i(corr)n(esponds)c(to)i(this)g(type.)63
+1127 y Fe(scopedName\(\))290 1240 y Fn(Fully)g(scoped)f(name)i(of)g
+(the)f(type)f(as)i(a)g(list)g(of)f(strings.)63 1427 y
+Fe(name\(\))290 1540 y Fn(Simple)h(name)g(of)f(the)g(type,)f(i.e.)h
+(the)g(last)h(element)e(of)i(the)f(scoped)f(name.)p 63
+1615 V 63 1827 a Fd(2.3.8)91 b(Finding)21 b(a)j(named)e
+Fe(Decl)63 2004 y Fn(Normally)-10 b(,)33 b(back-ends)d(walk)h(over)f
+(the)g(tr)n(ee)g(of)h Fk(Decl)e Fn(objects,)j(dealing)f(with)g(the)f
+(decla-)63 2117 y(rations)c(as)g(they)f(encounter)g(them.)39
+b(Occasionally)-10 b(,)29 b(however)-7 b(,)26 b(it)g(may)h(be)f(useful)
+g(to)g(\002nd)g(a)63 2230 y(declaration)d(by)g(its)g(scoped)f(name.)29
+b(Only)24 b Fk(Decl)p Fn(s)d(which)i(inherit)g(fr)n(om)h
+Fk(DeclRepoId)19 b Fn(can)63 2343 y(be)j(found)g(in)h(this)f(way)-10
+b(.)p 63 2502 V 1325 2615 a Fe(omniidl.idlast)63 2746
+y(findDecl\(scope)o(dN)o(am)o(e\))290 2859 y Fn(Find)17
+b(the)h Fk(Decl)e Fn(object)i(which)g(has)g(the)g(scoped)e(name)i(list)
+g Fk(scopedName)p Fn(.)k(If)c(a)h(decla-)290 2972 y(ration)k(with)h
+(the)e(speci\002ed)g(name)i(does)e(not)h(exist,)f(the)h
+Fk(DeclNotFound)18 b Fn(exception)290 3085 y(is)23 b(raised.)p
+63 3160 V 63 3379 a Fl(2.4)99 b(An)24 b(example)g(back-end)63
+3555 y Fn(The)j(following)i(code)e(is)i(an)f(extr)n(emely)g(simple)g
+(back-end)g(which)h(just)f(prints)f(the)h(names)63 3668
+y(of)f(all)h(operations)e(declar)n(ed)g(within)i(an)f(IDL)g(\002le.)41
+b(Unfortunately)-10 b(,)26 b(it)h(is)g(so)g(simple)g(that)f(it)63
+3781 y(does)k(not)i(show)f(many)i(featur)n(es)e(of)h(the)g(back-end)g
+(interface.)57 b(Y)-8 b(ou)31 b(should)g(look)h(at)g(the)63
+3894 y Fk(dump.py)19 b Fn(and)k Fk(python.py)18 b Fn(back-ends)23
+b(for)f(a)h(mor)n(e)g(extensive)e(example.)63 4107 y
+Fk(from)52 b(omniidl)g(import)g(idlast,)f(idlvisitor,)e(idlutil)63
+4220 y(import)i(string)63 4445 y(class)h(ExampleVisitor)c
+(\(idlvisitor.Ast)o(Vi)o(si)o(tor)o(\):)281 4671 y(def)53
+b(visitAST\(self,)48 b(node\):)499 4784 y(for)53 b(n)h(in)g
+(node.declaratio)o(ns)o(\(\))o(:)717 4897 y(n.accept\(self\))281
+5123 y(def)f(visitModule\(sel)o(f,)48 b(node\):)499 5236
+y(for)53 b(n)h(in)g(node.definition)o(s\()o(\):)717 5349
+y(n.accept\(self\))p eop
+%%Page: 20 20
+20 19 bop 221 249 a Fn(20)1778 b Fh(3)92 b(FRONT)-5 b(-END)21
+b(ARCHITECTURE)439 661 y Fk(def)54 b(visitInterface)o(\(s)o(el)o(f,)48
+b(node\):)658 774 y(name)k(=)i(idlutil.ccolonNa)o(me)o(\(n)o(od)o(e.)o
+(sco)o(pe)o(dN)o(am)o(e\()o(\)\))658 1000 y(if)f(node.mainFile\(\))o(:)
+876 1112 y(for)g(c)h(in)g(node.callables)o(\(\))o(:)1094
+1225 y(if)g(isinstance\(c,)48 b(idlast.Operatio)o(n\))o(:)1312
+1338 y(print)k(name)h(+)h("::")f(+)h(\\)1639 1451 y(c.identifier\(\))49
+b(+)54 b("\(\)")221 1677 y(def)f(run\(tree,)e(args\):)439
+1790 y(visitor)h(=)i(ExampleVisitor)o(\(\))439 1903 y
+(tree.accept\(visi)o(to)o(r\))221 2115 y Fn(The)21 b(visitor)h(object)f
+(simple)h(r)n(ecurses)e(thr)n(ough)h(the)f Fk(AST)h Fn(and)g
+Fk(Module)e Fn(objects,)i(and)h(prints)221 2228 y(the)g(operation)g
+(names)g(it)h(\002nds)e(in)j Fk(Interface)18 b Fn(objects.)362
+2341 y(Note)25 b(that)h(since)h Fk(AstVisitor)22 b Fn(\(and)27
+b(similarly)h Fk(TypeVisitor)21 b Fn(which)27 b(is)g(not)e(used)221
+2454 y(in)32 b(the)e(example\))h(has)g(all)i(operations)c(declar)n(ed)i
+(to)f(be)h(no-ops,)h(the)e Fk(ExampleVisitor)221 2567
+y Fn(class)36 b(does)e(not)g(have)i(to)f(declar)n(e)h(visit)g
+(functions)f(for)g(all)i(node)d(types.)64 b(This)35 b(can)h(be)f(a)221
+2680 y(disadvantage)e(if)g(your)f(back-end)h(is)g(supposed)d(to)i
+(perform)g(some)g(action)h(for)g(all)h(node)221 2793
+y(types,)29 b(since)h(ther)n(e)f(will)i(be)e(no)g(err)n(or)g(if)i(you)e
+(accidentally)i(miss)e(a)i(node)d(type.)47 b(In)30 b(those)221
+2906 y(situations)18 b(it)h(is)f(better)f(to)h(declar)n(e)h(a)g
+(visitor)g(class)g(which)g(does)d(not)i(derive)g(fr)n(om)h(the)f
+(visitor)221 3019 y(base)23 b(classes.)221 3317 y Fo(3)119
+b(Front-end)30 b(architecture)221 3528 y Fn(Not)22 b(her)n(e)g(yet.)p
 eop
 %%Trailer
 end

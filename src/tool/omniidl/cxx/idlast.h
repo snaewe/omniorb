@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.8.2.4  2000/06/08 14:36:19  dpg1
+// Comments and pragmas are now objects rather than plain strings, so
+// they can have file,line associated with them.
+//
 // Revision 1.8.2.3  2000/06/05 18:13:27  dpg1
 // Comments can be attached to subsequent declarations (with -K). Better
 // idea of most recent decl in operation declarations
@@ -79,21 +83,27 @@ class Decl;
 // Pragma class stores a list of pragmas:
 class Pragma {
 public:
-  Pragma(const char* pragmaText)
-    : pragmaText_(idl_strdup(pragmaText)), next_(0) {}
+  Pragma(const char* pragmaText, const char* file, int line)
+    : pragmaText_(idl_strdup(pragmaText)),
+      file_(idl_strdup(file)), line_(line), next_(0) {}
 
   ~Pragma() {
     delete [] pragmaText_;
+    delete [] file_;
     if (next_) delete next_;
   }
 
   const char* pragmaText() const { return pragmaText_; }
+  const char* file()       const { return file_; }
+  int         line()       const { return line_; }
   Pragma*     next()       const { return next_; }
 
-  static void add(const char* pragmaText);
+  static void add(const char* pragmaText, const char* file, int line);
 
 private:
   char*   pragmaText_;
+  char*   file_;
+  int     line_;
   Pragma* next_;
 
   friend class AST;
@@ -103,20 +113,24 @@ private:
 // Comment class stores a list of comment strings:
 class Comment {
 public:
-  Comment(const char* commentText)
-    : commentText_(idl_strdup(commentText)), next_(0) {
+  Comment(const char* commentText, const char* file, int line)
+    : commentText_(idl_strdup(commentText)),
+      file_(idl_strdup(file)), line_(line), next_(0) {
     mostRecent_ = this;
   }
 
   ~Comment() {
     delete [] commentText_;
+    delete [] file_;
     if (next_) delete next_;
   }
 
   const char* commentText() const { return commentText_; }
+  const char* file()        const { return file_; }
+  int         line()        const { return line_; }
   Comment*    next()        const { return next_; }
 
-  static void add   (const char* commentText);
+  static void add   (const char* commentText, const char* file, int line);
   static void append(const char* commentText);
   static void clear() { mostRecent_ = 0; }
 
@@ -125,6 +139,8 @@ public:
 
 private:
   char*           commentText_;
+  char*           file_;
+  int             line_;
   Comment*        next_;
   static Comment* mostRecent_;
   static Comment* saved_;
@@ -152,8 +168,8 @@ public:
   void        accept(AstVisitor& visitor) { visitor.visitAST(this); }
 
   void        setFile(const char* f);
-  void        addPragma(const char* pragmaText);
-  void        addComment(const char* commentText);
+  void        addPragma(const char* pragmaText, const char* file, int line);
+  void        addComment(const char* commentText, const char* file, int line);
 
 private:
   void        setDeclarations(Decl* d);
@@ -217,8 +233,8 @@ public:
   // recursively visiting children if it needs to
   virtual void accept(AstVisitor& visitor) = 0;
 
-  void addPragma(const char* pragmaText);
-  void addComment(const char* commentText);
+  void addPragma(const char* pragmaText, const char* file, int line);
+  void addComment(const char* commentText, const char* file, int line);
 
 private:
   Kind              kind_;
