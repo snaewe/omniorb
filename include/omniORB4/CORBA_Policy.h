@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/01/02 18:13:43  dpg1
+  Platform fixes/additions.
+
   Revision 1.1.2.2  2001/11/12 13:47:09  dpg1
   Minor fixes.
 
@@ -91,6 +94,8 @@ typedef _CORBA_PseudoObj_Member<Policy, Policy_var> Policy_member;
 typedef _CORBA_Pseudo_Unbounded_Sequence<Policy, Policy_member> PolicyList;
 
 typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_ULong,4,4> PolicyTypeSeq;
+
+class PolicyList_out;
 
 class PolicyList_var {
 public:

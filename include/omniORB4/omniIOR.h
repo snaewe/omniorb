@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2002/01/02 18:13:43  dpg1
+  Platform fixes/additions.
+
   Revision 1.1.2.10  2001/08/15 10:26:08  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -72,7 +75,9 @@
 
 #include <omniORB4/giopEndpoint.h>
 
-class _OMNI_NS(Rope);
+OMNI_NAMESPACE_BEGIN(omni)
+class Rope;
+OMNI_NAMESPACE_END(omni)
 
 class omniIOR {
 public:

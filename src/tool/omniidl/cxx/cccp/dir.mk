@@ -19,7 +19,9 @@ all:: $(omnicpp)
 #############################################################################
 
 ifdef AIX
+ifeq ($(notdir $(CXX)),xlC_r)
 DIR_CPPFLAGS += -ma
+endif
 endif
 
 ifdef Win32Platform

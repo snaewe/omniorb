@@ -228,8 +228,6 @@ $(lib): $(OBJS) $(PYOBJS)
 	 ; \
        )
 
-endif
-
 all:: $(lib)
 
 clean::
@@ -237,6 +235,32 @@ clean::
 
 export:: $(lib)
 	@$(ExportLibrary)
+
+endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+# Build omniidl as an executable by linking in the Python runtime
+# library.  Is this really necessary?  Can't we make a Python
+# extension?
+
+DIR_CPPFLAGS += -DOMNIIDL_EXECUTABLE
+CXXLINKOPTIONS += -L$(PYTHONLIBDIR)
+
+omniidl = $(patsubst %,$(BinPattern),omniidl)
+
+all:: $(omniidl)
+
+export:: $(omniidl)
+	@$(ExportExecutable)
+
+clean::
+	$(RM) $(omniidl)
+
+$(omniidl): $(OBJS) $(PYOBJS)
+	@(libs="-lpython$(PYVERSION) -lpthread -lm"; $(CXXExecutable))
+
+endif
 
 endif
 

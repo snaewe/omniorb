@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.17  2002/01/02 18:13:43  dpg1
+ Platform fixes/additions.
+
  Revision 1.2.2.16  2001/11/14 17:13:41  dpg1
  Long double support.
 
@@ -407,10 +410,13 @@
 #if _COMPILER_VERSION >= 721
 #define HAS_Cplusplus_Namespace
 #define HAS_Cplusplus_Bool
+#define HAS_Cplusplus_const_cast
 #define OMNI_REQUIRES_FQ_BASE_CTOR
 #define HAS_LongLong
+#define HAS_LongDouble
 #define _CORBA_LONGLONG_DECL long long
 #define _CORBA_ULONGLONG_DECL unsigned long long
+#define _CORBA_LONGDOUBLE_DECL long double
 #define _CORBA_LONGLONG_CONST(x) (x##LL)
 #endif
 
@@ -484,7 +490,7 @@
 #ifndef _CORBA_WCHAR_DECL
 #  define _CORBA_WCHAR_DECL wchar_t
    // Wide character size
-#  if defined(__linux__) || defined(__sunos__) || defined(__freebsd__) || defined(__darwin__)
+#  if defined(__linux__) || defined(__sunos__) || defined(__freebsd__) || defined(__darwin__) || defined(__irix__)
 #    define SIZEOF_WCHAR 4
 #  elif defined(__WIN32__)
 #    define SIZEOF_WCHAR 2
@@ -536,6 +542,9 @@
 #  define _NO_STRDUP 1
 #  define _USE_GETHOSTNAME 1
 # endif
+#elif defined(__s390__)
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
+# define _HAS_SIGNAL 1
 #elif defined(__aix__) && defined(__powerpc__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1

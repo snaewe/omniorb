@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/01/02 18:15:41  dpg1
+  Platform fixes/additions.
+
   Revision 1.1.2.2  2001/08/03 17:43:19  sll
   Make sure dll import spec for win32 is properly done.
 
@@ -59,7 +62,9 @@ OMNI_NAMESPACE_BEGIN(omni)
 ////////////////////////////////////////////////////////////////////////
 class BiDirInfo : public omniIOR::IORExtraInfo {
  public:
-  BiDirInfo(char* s) : IORExtraInfo(IOP::TAG_OMNIORB_BIDIR), sendfrom(s) {}
+  BiDirInfo(char* s) :
+    OMNIORB_BASE_CTOR(omniIOR::)IORExtraInfo(IOP::TAG_OMNIORB_BIDIR),
+    sendfrom(s) {}
 
   CORBA::String_var sendfrom;
 
