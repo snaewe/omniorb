@@ -29,9 +29,14 @@
 
 /*
   $Log$
-  Revision 1.10  1997/08/26 15:25:26  sll
-  Removed initFile.h include.
+  Revision 1.11  1997/09/20 16:23:53  dpg1
+  Added second argument, is_cxx_type to _widenFromTheMostDerivedIntf().
+  Added a new hash table of wrapped objects, and a mutex for it, for
+  LifeCycle support.
 
+ * Revision 1.10  1997/08/26  15:25:26  sll
+ * Removed initFile.h include.
+ *
   Revision 1.9  1997/05/06 16:09:13  sll
   Public release.
 
@@ -234,6 +239,8 @@ private:
   omniRopeAndKey(const omniRopeAndKey&);
 };
 
+class _wrap_proxy;
+
 class omniObject {
 
 protected:
@@ -278,13 +285,26 @@ public:
 
   inline const char *NP_IRRepositoryId() const { return pd_repoId; }
 
-  virtual void *_widenFromTheMostDerivedIntf(const char *repoId);
+  virtual void *_widenFromTheMostDerivedIntf(const char *type_id,
+                                           _CORBA_Boolean is_cxx_type_id=0);
   // The most derived class which override this virtual function will be
-  // called to return a pointer to the base class object that implements
-  // the interface identified by the IR repository ID <repoId>.
-  // If <repoID> is null, a pointer to the base class CORBA::Object will
-  // be returned.
-  // If the object cannot be widened to the interface specified, a
+  // called to return a pointer to the base class object identified by
+  // the type id <type_id>. 
+  //
+  // This function accepts two forms of type id:
+  //   if <is_cxx_type_id> == 0
+  //      <type_id> is a OMG IR repository ID. Furthermore, if <type_id> is
+  //      null, a pointer to the base class CORBA::Object will be returned.
+  //      The most derived class is guaranteed to support the widening to
+  //      all of the base classes that implement the base IDL interfaces.
+  //   if <is_cxx_type_id> == 1
+  //      <type_id> is a C++ class name of the target base class. For example
+  //      the base class CORBA::Object can be obtained by using 
+  //      "CORBA::Object" as the <type_id>. 
+  //      The most derived class may support the widening to a subset of its
+  //      base classes. It may even support none at all.
+  //
+  // If the object cannot be widened to the class specified, a
   // null pointer will be returned.
   // This function DO NOT throw any exception under any circumstance.
 
@@ -295,6 +315,8 @@ public:
   static omni_mutex          objectTableLock;
   static omniObject*         proxyObjectTable;
   static omniObject**        localObjectTable;
+  static omni_mutex          wrappedObjectTableLock;
+  static _wrap_proxy**       wrappedObjectTable;
 
 private:
   union {
