@@ -13,6 +13,9 @@
 
 /*
  $Log$
+ Revision 1.2  1997/01/13 15:06:51  sll
+ Added marshalling routines for CORBA::Object.
+
  Revision 1.1  1997/01/08 17:28:30  sll
  Initial revision
 
@@ -145,11 +148,11 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
     String_var &operator= (const String_member &s);
 
     operator ptr_t& () { return (ptr_t&) _data; }
-
+#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
     operator char* () {
       return _data;
     }
-
+#endif
     operator const char* () const {
       return _data;
     }
@@ -637,6 +640,17 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
   class ImplementatationDef;
   typedef class ImplementationDef *ImplementationDef_ptr;
 
+  class Object_Helper {
+  public:
+    // omniORB2 specifics
+    static Object_ptr _nil();
+    static size_t NP_alignedSize(Object_ptr obj,size_t initialoffset);
+    static void marshalObjRef(Object_ptr obj,NetBufferedStream &s);
+    static Object_ptr unmarshalObjRef(NetBufferedStream &s);
+    static void marshalObjRef(Object_ptr obj,MemBufferedStream &s);
+    static Object_ptr unmarshalObjRef(MemBufferedStream &s);
+  };
+
   class Object {
   public:
 
@@ -671,16 +685,26 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 
     static Object_ptr _duplicate(Object_ptr obj);
     static Object_ptr _nil();
+
+    Object();
+    virtual ~Object() {}
+
+    // omniORB2 specifics
     void NP_release();
     _CORBA_Boolean NP_is_nil();
-    Object();
     void PR_setobj(omniObject *obj);
     omniObject *PR_getobj();
-    virtual ~Object() {}
+    static size_t NP_alignedSize(Object_ptr obj,size_t initialoffset);
+    static void marshalObjRef(Object_ptr obj,NetBufferedStream &s);
+    static Object_ptr unmarshalObjRef(NetBufferedStream &s);
+    static void marshalObjRef(Object_ptr obj,MemBufferedStream &s);
+    static Object_ptr unmarshalObjRef(MemBufferedStream &s);
 
   private:
     omniObject *pd_obj;
   };
+
+  typedef _CORBA_ObjRef_Var<Object,Object_Helper> Object_var;
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Request                                     //
