@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.2  1998/04/18 10:11:47  sll
+  Corrected typo (_log instead of log).
+
   Revision 1.1  1998/04/07 20:24:40  sll
   Initial revision
 
@@ -49,12 +52,12 @@ static omniORB::logStream _log;
 // MSVC++ does not give the variables external linkage otherwise. Its a bug.
 namespace omniORB {
 
-logStream& log = log;
+logStream& log = _log;
 
 }
 #else
 
-omniORB::logStream& omniORB::log = log;
+omniORB::logStream& omniORB::log = _log;
 
 #endif
 
