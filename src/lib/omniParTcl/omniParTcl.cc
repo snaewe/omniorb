@@ -29,7 +29,7 @@ extern "C"
 // to the pipe.
 //
 static int        tclWakeupPipe[2];
-static omni_mutex *twpMutex;
+static omni_mutex twpMutex;
 
 //
 // We maintain a FIFO queue of Tcl/Tk scripts waiting for evaluation.
@@ -38,7 +38,7 @@ static omni_mutex *twpMutex;
 // mutex-protect access to the script queue.
 //
 static scriptQueue sQ;
-static omni_mutex  *sqMutex;
+static omni_mutex  sqMutex;
 
 void omniTclMeAndWait(char *script)
 {
@@ -48,22 +48,21 @@ void omniTclMeAndWait(char *script)
   //
   char dummybyte; // We can write any old byte to the pipe
   
-  omni_condition *sqeCond = omni_condition::create(sqMutex);
+  omni_condition sqeCond(&sqMutex);
     
-  sqMutex->acquire();  
+  sqMutex.acquire();  
 
-  sQ.enq(script,sqeCond);                  // Put script on queue of those
+  sQ.enq(script,&sqeCond);                 // Put script on queue of those
                                            // waiting for eval.
 
-  twpMutex->acquire();
+  twpMutex.acquire();
   write(tclWakeupPipe[1],&dummybyte,1);    // Wake up Tcl/Tk
-  twpMutex->release();
+  twpMutex.release();
   
-  sqeCond->wait();                         // Wait for Tcl/Tk to finish with
+  sqeCond.wait();                          // Wait for Tcl/Tk to finish with
                                            // this script.
 
-  sqMutex->release();                      // Release the lock on the queue
-  delete sqeCond;                          // and claim back the cond var space.
+  sqMutex.release();                       // Release the lock on the queue
 }  
 
 void omniTclMeAndRun(char *script)
@@ -74,13 +73,13 @@ void omniTclMeAndRun(char *script)
   //
   char dummybyte; // We can write any old byte to the pipe
   
-  sqMutex->acquire(); //
+  sqMutex.acquire(); //
   sQ.enq(script,0);   // Put script on queue of those waiting for eval.
-  sqMutex->release(); //
+  sqMutex.release(); //
 
-  twpMutex->acquire();
+  twpMutex.acquire();
   write(tclWakeupPipe[1],&dummybyte,1);    // Wake up Tcl/Tk
-  twpMutex->release();
+  twpMutex.release();
 }  
 
 void cxxTclScriptHandler(ClientData clientData, int mask)
@@ -104,9 +103,9 @@ void cxxTclScriptHandler(ClientData clientData, int mask)
   int done = 0;
   while (!done) {
     
-    sqMutex->acquire();  //
+    sqMutex.acquire();  //
     scp = sQ.deq();      // Get next script/condition pair.
-    sqMutex->release();  //
+    sqMutex.release();  //
 
     if (scp.script == (char *)0) {
       done = 1;
@@ -137,9 +136,9 @@ void cxxTclScriptHandler(ClientData clientData, int mask)
       // Wake up the C++ thread if it's waiting.
       //
       if (scp.cond != 0) {
-        sqMutex->acquire();
+        sqMutex.acquire();
         scp.cond->signal();
-        sqMutex->release(); 
+        sqMutex.release(); 
       }
     }
   }
@@ -205,12 +204,6 @@ int omniParTcl_Init(Tcl_Interp *interp)
   //
   Tcl_CreateCommand(interp, "threadSafeExec", threadSafeExec,
                     (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-
-  //
-  // Set up synchronization stuff.
-  //
-  sqMutex  = omni_mutex::create();
-  twpMutex = omni_mutex::create();
 
   return TCL_OK;
 }
