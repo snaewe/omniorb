@@ -11,11 +11,14 @@
 
 /*
   $Log$
-  Revision 1.3  1997/01/13 15:01:11  sll
-  Use CORBA::ULong, which is always 32-bit, to store the return value of
-  inet_addr(). Check the return value of inet_addr() against (CORBA::ULong)-1
-  for error.
+  Revision 1.4  1997/03/04 10:36:40  ewc
+  Removed references to NT. [NT code is now in a seperate file].
 
+// Revision 1.3  1997/01/13  15:01:11  sll
+// Use CORBA::ULong, which is always 32-bit, to store the return value of
+// inet_addr(). Check the return value of inet_addr() against (CORBA::ULong)-1
+// for error.
+//
 // Revision 1.2  1997/01/08  18:49:53  ewc
 // Added check to see if remote hostname embedded in IOR is IP address.
 // If it is, a gethostbyname() on the address is not now performed.
@@ -28,16 +31,11 @@
 #include <omniORB2/CORBA.h>
 #include "tcpSocket_UNIX.h"
 
-#ifdef __NT__
-#include <winsock.h>
-#else
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#endif
-
 #include <sys/types.h>
 #include <errno.h>
 #include <limits.h>
@@ -47,10 +45,6 @@
 
 #if defined(__sunos__) && __OSVERSION__ == 5
 extern "C" int gethostname(char *name, int namelen);
-#endif
-
-#if defined(__NT__)
-int close(SOCKET s) {return closesocket(s); }
 #endif
 
 // Size of transmit and receive buffers
