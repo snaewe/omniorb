@@ -1,4 +1,13 @@
 
+Mon Mar 29 09:59:03 GMT 1999 djr
+================================
+
+- Fixed type in omni_condition::timedwait() - which causes a long wait if
+  the time is just in the past.
+
+src/lib/omnithread/nt.cc
+
+
 Mon Mar 22 13:30:55 GMT 1999 djr
 ================================
 
