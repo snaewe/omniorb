@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12  2000/01/20 18:25:53  djs
+# Got rid of some superfluous whitespace
+#
 # Revision 1.11  2000/01/17 16:59:53  djs
 # Some whitespace stripping in StringStream
 #
@@ -237,13 +240,9 @@ class StringStream(Stream):
     def write(self, text):
         strings = string.split(text, '\n')
         for s in strings:
-            if s != "":
-                
-                if (self.__buffer != ""):
-                    self.__buffer = self.__buffer + "\n"
-                self.__buffer = self.__buffer + s + "\n"
-                
-        #self.__buffer = self.__buffer + text
+            if string.strip(s) != "":
+                self.__buffer = self.__buffer + "\n" + s 
+
 
     def __str__(self):
         return self.__buffer
