@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.20  1998/05/20 18:23:58  sll
+  New option (-t) enable the generation of tie implementation template.
+
   Revision 1.19  1998/04/07 18:48:03  sll
   Use std::fstream instead of fstream.
   Stub code modified to accommodate the use of namespace to represent module.
@@ -84,6 +87,8 @@
 #define FIELD_MEMBER_TEMPLATE     "_CORBA_ObjRef_Member"
 #define ADPT_INOUT_CLASS_TEMPLATE "_CORBA_ObjRef_INOUT_arg"
 #define ADPT_OUT_CLASS_TEMPLATE   "_CORBA_ObjRef_OUT_arg"
+#define TIE_CLASS_PREFIX          "_tie_"
+
 
 o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
 			       UTL_StrList *p)
@@ -2539,6 +2544,84 @@ o2be_interface::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 	    << "_var " << tdef->uqname() << "_var;\n";
 }
 
+
+static
+void internal_produce_tie_call_wrappers(o2be_interface* intf, std::fstream &s)
+{
+  UTL_ScopeActiveIterator i(intf,UTL_Scope::IK_decls);
+  while (!i.is_done())
+    {
+      AST_Decl *d = i.item();
+      if (d->node_type() == AST_Decl::NT_op)
+	{
+	  o2be_operation* op = o2be_operation::narrow_from_decl(d);
+	  IND(s);
+	  op->produce_decl(s,0,0,I_TRUE,I_TRUE);
+	  s << " { ";
+	  if (!op->return_is_void()) s << " return ";
+	  s << "pd_obj->";
+	  op->produce_invoke(s);
+	  s << "; }\n";
+	}
+      else if (d->node_type() == AST_Decl::NT_attr)
+	{
+	  IND(s);
+	  o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
+	  a->produce_decl_rd(s,0,I_TRUE,I_TRUE);
+	  s << " { return pd_obj->" << a->uqname() << "(); }\n";
+	  if (!a->readonly())
+	    {
+	      IND(s);
+	      a->produce_decl_wr(s,0,I_TRUE,I_TRUE);
+	      s << " { pd_obj->" << a->uqname() << "(_value); }\n";
+	    }
+	}
+      i.next();
+    }
+  {
+    int ni,j;
+    AST_Interface **intftable;
+    if ((ni = intf->n_inherits()) != 0)
+      {
+	intftable = intf->inherits();
+	for (j=0; j< ni; j++)
+	  {
+	    o2be_interface * intfc = o2be_interface::narrow_from_decl(intftable[j]);
+	    internal_produce_tie_call_wrappers(intfc,s);
+	  }
+      }
+  }
+}
+
+void
+o2be_interface::produce_tie_templates(std::fstream &s)
+{
+  IND(s); s << "template <class T,CORBA::Boolean release>\n";
+  IND(s); s << "class " << TIE_CLASS_PREFIX << _fqname()
+	    << " : public virtual " << server_fqname() << std::endl;
+  IND(s); s << "{\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << TIE_CLASS_PREFIX << _fqname() 
+	    << " (T* o) : pd_obj(o), pd_release(release) {}\n";
+  IND(s); s << TIE_CLASS_PREFIX << _fqname()
+	    << " (T* o, const omniORB::objectKey& k) : "
+	    << server_fqname() << "(k), pd_obj(o), pd_release(release) {}\n";
+  IND(s); s << "~" << TIE_CLASS_PREFIX << _fqname() 
+	    << "() { if (pd_release) delete pd_obj; }\n";
+
+  internal_produce_tie_call_wrappers(this,s);
+  DEC_INDENT_LEVEL();
+  IND(s); s << "private:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "T* pd_obj;\n";
+  IND(s); s << "CORBA::Boolean pd_release;\n";
+  IND(s); s << TIE_CLASS_PREFIX << _fqname() << "();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n\n";
+
+
+}
 
 const char*
 o2be_interface::fieldMemberType_fqname(AST_Decl* used_in) const

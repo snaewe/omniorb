@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.15  1998/05/20 18:23:37  sll
+ New option (-t) enable the generation of tie implementation template.
+
  Revision 1.14  1998/04/09 19:15:01  sll
  VarToken now emits _CORBA_GLOBAL_VAR instead of extern for globals.
 
@@ -821,6 +824,7 @@ public:
   void produce_hdr(std::fstream &s);
   void produce_skel(std::fstream &s);
   void produce_typedef_hdr (std::fstream &s, o2be_typedef *tdef);
+  void produce_tie_templates(std::fstream &s);
 
   const char *objref_uqname() const { return pd_objref_uqname; }
   const char *objref_fqname() const { return pd_objref_fqname; }
@@ -938,6 +942,7 @@ public:
 
   void produce_hdr(std::fstream &s);
   void produce_skel(std::fstream &s);
+  void produce_tie_templates(std::fstream &s);
 
 private:
   o2be_module();
