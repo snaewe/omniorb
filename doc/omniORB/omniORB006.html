@@ -568,6 +568,25 @@ static void installSystemExceptionHandler(CORBA::Object_ptr obj,
 </PRE>The functions are equivalent to their counterparts for
 <TT>CORBA::TRANSIENT</TT>.<BR>
 <BR>
+<A NAME="toc37"></A>
+<H2>6.12&nbsp;&nbsp; Location forwarding</H2>
+<A NAME="sec:locationForward"></A>Any CORBA operation invocation can return a <TT>LOCATION_FORWARD</TT>
+message to the caller, indicating that it should retry the invocation
+on a new object reference. The standard allows ServantManagers to
+trigger <TT>LOCATION_FORWARD</TT>s by raising the
+<TT>PortableServer::ForwardRequest</TT> exception, but it does not
+provide a similar mechanism for normal servants. omniORB provides the
+<TT>omniORB::LOCATION_FORWARD</TT> exception for this purpose. It can
+be thrown by any operation implementation.<BR>
+<BR>
+<PRE>
+class LOCATION_FORWARD {
+public:
+  LOCATION_FORWARD(CORBA::Object_ptr objref);
+};
+</PRE>The exception object consumes the object reference it is
+passed.<BR>
+<BR>
 <HR WIDTH="50%" SIZE=1><DL>
 <DT><A NAME="note16" HREF="#text16"><FONT SIZE=5>1</FONT></A><DD> <TT>omniORB</TT> is a class name if the
 C++ compiler does not support the <TT>namespace</TT> keyword.

@@ -17,7 +17,7 @@
 <H1>Chapter&nbsp;8&nbsp;&nbsp; Connection Management</H1>
 <A NAME="ch_conn"></A>This chapter describes how omniORB manages network connections.<BR>
 <BR>
-<A NAME="toc40"></A>
+<A NAME="toc41"></A>
 <H2>8.1&nbsp;&nbsp; Background</H2>In CORBA, the ORB is the `middleware' that allows a client to invoke
 an operation on an object without regard to its implementation or
 location. In order to invoke an operation on an object, a client needs
@@ -49,7 +49,7 @@ The rest of this chapter describes how omniORB manages network
 connections and the programming interface to fine tune the management
 policy.<BR>
 <BR>
-<A NAME="toc41"></A>
+<A NAME="toc42"></A>
 <H2>8.2&nbsp;&nbsp; The Model</H2>omniORB is designed from the ground up to be fully multi-threaded. The
 objective is to maximise the degree of concurrency and at the same
 time eliminate any unnecessary thread overhead. Another objective is
@@ -91,7 +91,7 @@ of file handles a process can open. 64 is the usual default limit. The
 value can be increased to a maximum of a thousand or more by changing
 the `ulimit' in the shell.<BR>
 <BR>
-<A NAME="toc42"></A>
+<A NAME="toc43"></A>
 <H2>8.3&nbsp;&nbsp; Idle Connection Shutdown and Remote Call Timeout</H2>
 <A NAME="sec_shut"></A>Inside the ORB, a thread is dedicated to scan for idle connections.
 The thread looks after both the outgoing connections and the incoming
@@ -154,7 +154,7 @@ public:
 </PRE>The scan can be disabled completely by setting the scan granularity to
 0.<BR>
 <BR>
-<A NAME="toc43"></A>
+<A NAME="toc44"></A>
 <H2>8.4&nbsp;&nbsp; Interoperability Considerations</H2>The IIOP specification allows both the client and the server to
 shutdown a connection unilaterally. When one end is about to shutdown
 a connection, it should send a closeConnection message to the other
@@ -178,7 +178,7 @@ to an omniORB server. The work-around is either to catch the exception
 in the application code and retry, or to turn off the idle connection
 shutdown inside the omniORB server.<BR>
 <BR>
-<A NAME="toc44"></A>
+<A NAME="toc45"></A>
 <H2>8.5&nbsp;&nbsp; Connection Acceptance</H2>
 <A NAME="sec_accept"></A>omniORB provides the hook to implement a connection acceptance policy.
 Inside the ORB runtime, a thread is dedicated to receive new

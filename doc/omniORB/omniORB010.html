@@ -45,7 +45,7 @@ particularly with the addition of the support for the IDL type
 <TT>valuetype</TT>. Future releases of omniORB will be updated to
 implement the interface as defined in CORBA 2.3.<BR>
 <BR>
-<A NAME="toc49"></A>
+<A NAME="toc50"></A>
 <H2>10.1&nbsp;&nbsp; C++ mapping</H2><PRE>
 // namespace CORBA
 
@@ -227,7 +227,7 @@ public:
   static DynArray_ptr _narrow(DynAny_ptr);
   static DynArray_ptr _nil();
 };
-</PRE><A NAME="toc50"></A>
+</PRE><A NAME="toc51"></A>
 <H2>10.2&nbsp;&nbsp; The DynAny Interface</H2>
 <A NAME="dynany"></A>
 <H3>10.2.1&nbsp;&nbsp; Example: extract data values from an Any</H3>If an Any contains a value of one of the basic data types, its value
@@ -516,7 +516,7 @@ interface to facilitate the handling of any values containing
 non-basic types: struct, sequence, array, enum and union<A NAME="text23" HREF="#note23"><SUP><FONT SIZE=2>4</FONT></SUP></A>. The next few sections will provide more details on
 these interfaces.<BR>
 <BR>
-<A NAME="toc51"></A>
+<A NAME="toc52"></A>
 <H2>10.3&nbsp;&nbsp; The DynStruct Interface</H2>When a DynAny object is created through the <TT>create_dyn_any()</TT>
 operation and the any value contains a struct type, a <TT>DynStruct</TT>
 object is created. The DynAny reference returned can be narrowed to a
@@ -588,7 +588,7 @@ interface provides two operations: <TT>current_member_name()</TT> and
 <TT>current_member_kind()</TT>, to return information about the
 current component.<BR>
 <BR>
-<A NAME="toc52"></A>
+<A NAME="toc53"></A>
 <H2>10.4&nbsp;&nbsp; The DynSequence Interface</H2>Like struct values, sequence values can be traversed using the
 operations introduced in section&nbsp;<A HREF="#dynany">10.2</A>. The first sequence
 element can be accessed as the first DynAny component, the second
@@ -640,12 +640,12 @@ is provided to return all the sequence elements and the
 <TT>set_elements()</TT> operation is provided to insert all the sequence
 elements.<BR>
 <BR>
-<A NAME="toc53"></A>
+<A NAME="toc54"></A>
 <H2>10.5&nbsp;&nbsp; The DynArray Interface</H2>Array values are handled by the DynArray interface. The DynArray
 interface is the same as the DynSequence interface except that the
 former does not provide the set length and get length operations.<BR>
 <BR>
-<A NAME="toc54"></A>
+<A NAME="toc55"></A>
 <H2>10.6&nbsp;&nbsp; The DynEnum Interface</H2>Enum values are handled by the DynEnum interface. A DynEnum object
 contains a single component which is the enum value. This value cannot
 be extracted or inserted using the get and insert operations of the
@@ -656,7 +656,7 @@ The <TT>value_as_string()</TT> operation allows the enum value to be
 extracted or inserted as a string. The <TT>value_as_ulong()</TT> operation
 allows the enum value to be extracted or inserted as an unsigned long.<BR>
 <BR>
-<A NAME="toc55"></A>
+<A NAME="toc56"></A>
 <H2>10.7&nbsp;&nbsp; The DynUnion Interface</H2>Union values are handled by the DynUnion interface. Unfortunately, the
 CORBA 2.2 specification does not define the DynUnion interface in
 sufficient details to nail down its intended usage<A NAME="text24" HREF="#note24"><SUP><FONT SIZE=2>5</FONT></SUP></A>. In this section, we try to fill in the gaps and describe a
@@ -909,7 +909,7 @@ under this condition will return <TT>tk_null</TT>.</OL>To ensure portability, it
 interface and not to rely on the ORB to behave as omniORB does under
 these ambiguous conditions.<BR>
 <BR>
-<A NAME="toc56"></A>
+<A NAME="toc57"></A>
 <H2>10.8&nbsp;&nbsp; Duplicate DynAny References</H2>Like any CORBA object and psuedo object references, a DynAny reference
 can be duplicated using the <TT>_duplicate()()</TT> operations. When an
 application has obtained multiple DynAny references to the same DynAny
@@ -919,7 +919,7 @@ references. In particular, if a call through one reference has caused
 the current component pointer to be changed, subsequent calls through
 other references will operate on the new current component pointer.<BR>
 <BR>
-<A NAME="toc57"></A>
+<A NAME="toc58"></A>
 <H2>10.9&nbsp;&nbsp; Other Operations</H2>The following is a short summary of the other operations in the DynAny
 interface which have not been covered in previous sections:<BR>
 <BR>

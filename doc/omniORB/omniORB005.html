@@ -155,6 +155,10 @@ arguments to.<BR>
 <TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated stub files. Default
  `<TT>SK.cc</TT>.'</TD>
 </TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbd=</TT><I>suffix</I></TD>
+<TD ALIGN=left NOWRAP>Use <I>suffix</I> for generated dynamic files. Default
+ `<TT>DynSK.cc</TT>.'</TD>
+</TR>
 <TR><TD ALIGN=left NOWRAP><TT>-Wba</TT></TD>
 <TD ALIGN=left NOWRAP>Generate stubs for TypeCode and Any.</TD>
 </TR>
@@ -182,6 +186,14 @@ arguments to.<BR>
 <TR><TD ALIGN=left NOWRAP><TT>-Wbold_prefix</TT></TD>
 <TD ALIGN=left NOWRAP>Map C++ reserved words with prefix `<TT>_</TT>' rather than
  `<TT>_cxx_</TT>'.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbkeep_inc_path</TT></TD>
+<TD ALIGN=left NOWRAP>Preserve IDL `<TT>#include</TT>' paths in generated
+ 	`<TT>#include</TT>' directives.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-Wbuse_quotes</TT></TD>
+<TD ALIGN=left NOWRAP>Use quotes in `<TT>#include</TT>' directives 
+ (e.g. <TT>"foo"</TT> rather than <TT>&lt;foo&gt;</TT>.)</TD>
 </TR></TABLE><BR>
 Again, most of these are self-explanatory.<BR>
 <BR>
@@ -254,11 +266,11 @@ object. You still have to fill in the operation implementations, of
 course.<BR>
 <BR>
 <A NAME="toc25"></A>
-<H2>5.3&nbsp;&nbsp; Examples</H2>Compile the C++ headers and stubs for a file <TT>a.idl</TT>:<BR>
+<H2>5.3&nbsp;&nbsp; Examples</H2>Generate the C++ headers and stubs for a file <TT>a.idl</TT>:<BR>
 <BR>
 <BLOCKQUOTE>
 <TT>omniidl -bcxx a.idl</TT>
-</BLOCKQUOTE>Compile with Any support:<BR>
+</BLOCKQUOTE>Generate with Any support:<BR>
 <BR>
 <BLOCKQUOTE>
 <TT>omniidl -bcxx -Wba a.idl</TT>

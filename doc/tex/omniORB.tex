@@ -205,7 +205,7 @@ May 2000
 omniORB is an Object Request Broker (ORB) that implements the 2.3
 specification of the Common Object Request Broker Architecture
 (CORBA)~\cite{corba23-spec}\footnote{Most of the 2.3 features have
-been implemented. The features still missing in this release is listed
+been implemented. The features still missing in this release are listed
 in section~\ref{missing}. Where possible, backward compatibility has
 been maintained up to specification 2.0.}. It has passed the Open
 Group CORBA compliant testsuite and is one of the three ORBs to have
@@ -291,8 +291,8 @@ The following is a list of the missing features.
 \item omniORB does not have its own Interface Repository. However, it
 can act as a client to an IR.
 
-\item The IDL types wchar, wstring, fixed, valuetype and native are
-not supported in this release.
+\item The IDL types wchar, wstring, fixed, and valuetype are not
+supported in this release.
 
 \item The \type{PortableServer::Current} interface is not yet
 supported.
@@ -1182,7 +1182,7 @@ the application will hang when the CORBA DLL is unloaded.
 In this example, the client and the object implementation reside in
 two different address spaces. The code of this example is almost the
 same as the previous example. The only difference is the extra work
-need to be done to pass the object reference from the object
+which needs to be done to pass the object reference from the object
 implementation to the client.
 
 The simplest (and quite primitive) way to pass an object reference
@@ -1862,25 +1862,25 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
     catch(CosNaming::NamingContext::AlreadyBound& ex) {
       testContext->rebind(objectName, objref);
     }
-    // Note: Using rebind() will overwrite any Object previously bound
-    //       to /test/Echo with obj.
+    // Note: Using rebind() will overwrite any Object previously
+    //       bound to /test/Echo with obj.
     //       Alternatively, bind() can be used, which will raise a
-    //       CosNaming::NamingContext::AlreadyBound exception if the name
-    //       supplied is already bound to an object.
+    //       CosNaming::NamingContext::AlreadyBound exception if
+    //       the name supplied is already bound to an object.
 
-    // Amendment: When using OrbixNames, it is necessary to first try bind
-    // and then rebind, as rebind on it's own will throw a NotFoundexception if
-    // the Name has not already been bound. [This is incorrect behaviour -
-    // it should just bind].
+    // Amendment: When using OrbixNames, it is necessary to first
+    // try bind and then rebind, as rebind on it's own will throw
+    // a NotFoundexception if the Name has not already been bound.
+    // [This is incorrect behaviour -- it should just bind].
   }
   catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "naming service." << endl;
+    cerr << "Caught system exception COMM_FAILURE -- unable to "
+         << "contact the naming service." << endl;
     return 0;
   }
   catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException while using the naming service."
-	 << endl;
+    cerr << "Caught a CORBA::SystemException while using the "
+         << "naming service." << endl;
     return 0;
   }
   return 1;
@@ -1947,8 +1947,8 @@ main (int argc, char **argv)
     orb->destroy();
   }
   catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "object." << endl;
+    cerr << "Caught system exception COMM_FAILURE -- unable to "
+         << "contact the object." << endl;
   }
   catch(CORBA::SystemException&) {
     cerr << "Caught CORBA::SystemException." << endl;
@@ -2015,12 +2015,12 @@ getObjectReference(CORBA::ORB_ptr orb)
     cerr << "Context not found." << endl;
   }
   catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "naming service." << endl;
+    cerr << "Caught system exception COMM_FAILURE -- unable to "
+         << "contact the naming service." << endl;
   }
   catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException while using the naming service."
-	 << endl;
+    cerr << "Caught a CORBA::SystemException while using the "
+         << "naming service." << endl;
   }
   return CORBA::Object::_nil();
 }
@@ -2189,25 +2189,25 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
     catch(CosNaming::NamingContext::AlreadyBound& ex) {
       testContext->rebind(objectName, objref);
     }
-    // Note: Using rebind() will overwrite any Object previously bound
-    //       to /test/Echo with obj.
+    // Note: Using rebind() will overwrite any Object previously
+    //       bound to /test/Echo with obj.
     //       Alternatively, bind() can be used, which will raise a
-    //       CosNaming::NamingContext::AlreadyBound exception if the name
-    //       supplied is already bound to an object.
+    //       CosNaming::NamingContext::AlreadyBound exception if
+    //       the name supplied is already bound to an object.
 
-    // Amendment: When using OrbixNames, it is necessary to first try bind
-    // and then rebind, as rebind on it's own will throw a NotFoundexception if
-    // the Name has not already been bound. [This is incorrect behaviour -
-    // it should just bind].
+    // Amendment: When using OrbixNames, it is necessary to first
+    // try bind and then rebind, as rebind on it's own will throw
+    // a NotFoundexception if the Name has not already been bound.
+    // [This is incorrect behaviour -- it should just bind].
   }
   catch(CORBA::COMM_FAILURE& ex) {
-    cerr << "Caught system exception COMM_FAILURE -- unable to contact the "
-         << "naming service." << endl;
+    cerr << "Caught system exception COMM_FAILURE -- unable to "
+         << "contact the naming service." << endl;
     return 0;
   }
   catch(CORBA::SystemException&) {
-    cerr << "Caught a CORBA::SystemException while using the naming service."
-	 << endl;
+    cerr << "Caught a CORBA::SystemException while using the "
+         << "naming service." << endl;
     return 0;
   }
   return 1;
@@ -2395,6 +2395,12 @@ I::S I_impl::op() {
 }
 \end{cxxlisting}
 
+
+\item The proprietary omniORB 2 LifeCycle extensions are no longer
+supported. All of the facilities it offered can be implemented with
+the POA interfaces, and the \code{omniORB::LOCATION\_FORWARD}
+exception (see section~\ref{sec:locationForward}). Code which used the
+old interfaces will have to be rewritten.
 
 
 \end{itemize}
@@ -3072,12 +3078,12 @@ arguments to.
         `\code{\_cxx\_}'.\\
 
 \cmdline{-Wbkeep\_inc\_path}
-     \> Preserve IDL `\code{\#include}' paths in generated header 
+     \> Preserve IDL `\code{\#include}' paths in generated
        	`\code{\#include}' directives.\\
 
 \cmdline{-Wbuse\_quotes}
-     \> Use double quotes in `\code{\#include}' directives 
-        (eg \code{``foo''} rather than \code{<foo>}.)\\
+     \> Use quotes in `\code{\#include}' directives 
+        (e.g.\ \code{"foo"} rather than \code{<foo>}.)\\
 
 
 
@@ -3167,13 +3173,13 @@ course.
 
 \section{Examples}
 
-Compile the C++ headers and stubs for a file \file{a.idl}:
+Generate the C++ headers and stubs for a file \file{a.idl}:
 
 \begin{quote}
 \cmdline{omniidl -bcxx a.idl}
 \end{quote}
 
-\noindent Compile with Any support:
+\noindent Generate with Any support:
 
 \begin{quote}
 \cmdline{omniidl -bcxx -Wba a.idl}
@@ -3826,6 +3832,27 @@ The functions are equivalent to their counterparts for
 
 
 
+\section{Location forwarding}
+\label{sec:locationForward}
+
+Any CORBA operation invocation can return a \code{LOCATION\_FORWARD}
+message to the caller, indicating that it should retry the invocation
+on a new object reference. The standard allows ServantManagers to
+trigger \code{LOCATION\_FORWARD}s by raising the
+\code{PortableServer::ForwardRequest} exception, but it does not
+provide a similar mechanism for normal servants. omniORB provides the
+\code{omniORB::LOCATION\_FORWARD} exception for this purpose. It can
+be thrown by any operation implementation.
+
+\begin{cxxlisting}
+class LOCATION_FORWARD {
+public:
+  LOCATION_FORWARD(CORBA::Object_ptr objref);
+};
+\end{cxxlisting}
+
+\noindent The exception object consumes the object reference it is
+passed.
 
 
 
@@ -6101,7 +6128,7 @@ A toy example use of the DII can be found in the omniORB distribution
 in the \file{src/examples/dii} directory.  The DII makes extensive use
 of the type Any, so ensure that you have read chapter~\ref{ch_any}.
 For more information refer to the Dynamic Invocation Interface and C++
-Mapping sections of the CORBA 2.3 specification~\cite{corba23-spec}.
+Mapping sections of the CORBA specification~\cite{corba23-spec}.
 
 
 \section{Overview}

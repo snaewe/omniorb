@@ -590,7 +590,7 @@ the application will hang when the CORBA DLL is unloaded.</DL><A NAME="toc12"></
 <H2>2.9&nbsp;&nbsp; Example 2 --- Different Address Spaces</H2>In this example, the client and the object implementation reside in
 two different address spaces. The code of this example is almost the
 same as the previous example. The only difference is the extra work
-need to be done to pass the object reference from the object
+which needs to be done to pass the object reference from the object
 implementation to the client.<BR>
 <BR>
 The simplest (and quite primitive) way to pass an object reference
@@ -1219,25 +1219,25 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
     catch(CosNaming::NamingContext::AlreadyBound&amp; ex) {
       testContext-&gt;rebind(objectName, objref);
     }
-    // Note: Using rebind() will overwrite any Object previously bound
-    //       to /test/Echo with obj.
+    // Note: Using rebind() will overwrite any Object previously
+    //       bound to /test/Echo with obj.
     //       Alternatively, bind() can be used, which will raise a
-    //       CosNaming::NamingContext::AlreadyBound exception if the name
-    //       supplied is already bound to an object.
+    //       CosNaming::NamingContext::AlreadyBound exception if
+    //       the name supplied is already bound to an object.
 
-    // Amendment: When using OrbixNames, it is necessary to first try bind
-    // and then rebind, as rebind on it's own will throw a NotFoundexception if
-    // the Name has not already been bound. [This is incorrect behaviour -
-    // it should just bind].
+    // Amendment: When using OrbixNames, it is necessary to first
+    // try bind and then rebind, as rebind on it's own will throw
+    // a NotFoundexception if the Name has not already been bound.
+    // [This is incorrect behaviour -- it should just bind].
   }
   catch(CORBA::COMM_FAILURE&amp; ex) {
-    cerr &lt;&lt; "Caught system exception COMM_FAILURE -- unable to contact the "
-         &lt;&lt; "naming service." &lt;&lt; endl;
+    cerr &lt;&lt; "Caught system exception COMM_FAILURE -- unable to "
+         &lt;&lt; "contact the naming service." &lt;&lt; endl;
     return 0;
   }
   catch(CORBA::SystemException&amp;) {
-    cerr &lt;&lt; "Caught a CORBA::SystemException while using the naming service."
-  &lt;&lt; endl;
+    cerr &lt;&lt; "Caught a CORBA::SystemException while using the "
+         &lt;&lt; "naming service." &lt;&lt; endl;
     return 0;
   }
   return 1;
@@ -1299,8 +1299,8 @@ main (int argc, char **argv)
     orb-&gt;destroy();
   }
   catch(CORBA::COMM_FAILURE&amp; ex) {
-    cerr &lt;&lt; "Caught system exception COMM_FAILURE -- unable to contact the "
-         &lt;&lt; "object." &lt;&lt; endl;
+    cerr &lt;&lt; "Caught system exception COMM_FAILURE -- unable to "
+         &lt;&lt; "contact the object." &lt;&lt; endl;
   }
   catch(CORBA::SystemException&amp;) {
     cerr &lt;&lt; "Caught CORBA::SystemException." &lt;&lt; endl;
@@ -1367,12 +1367,12 @@ getObjectReference(CORBA::ORB_ptr orb)
     cerr &lt;&lt; "Context not found." &lt;&lt; endl;
   }
   catch(CORBA::COMM_FAILURE&amp; ex) {
-    cerr &lt;&lt; "Caught system exception COMM_FAILURE -- unable to contact the "
-         &lt;&lt; "naming service." &lt;&lt; endl;
+    cerr &lt;&lt; "Caught system exception COMM_FAILURE -- unable to "
+         &lt;&lt; "contact the naming service." &lt;&lt; endl;
   }
   catch(CORBA::SystemException&amp;) {
-    cerr &lt;&lt; "Caught a CORBA::SystemException while using the naming service."
-  &lt;&lt; endl;
+    cerr &lt;&lt; "Caught a CORBA::SystemException while using the "
+         &lt;&lt; "naming service." &lt;&lt; endl;
   }
   return CORBA::Object::_nil();
 }
@@ -1536,25 +1536,25 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
     catch(CosNaming::NamingContext::AlreadyBound&amp; ex) {
       testContext-&gt;rebind(objectName, objref);
     }
-    // Note: Using rebind() will overwrite any Object previously bound
-    //       to /test/Echo with obj.
+    // Note: Using rebind() will overwrite any Object previously
+    //       bound to /test/Echo with obj.
     //       Alternatively, bind() can be used, which will raise a
-    //       CosNaming::NamingContext::AlreadyBound exception if the name
-    //       supplied is already bound to an object.
+    //       CosNaming::NamingContext::AlreadyBound exception if
+    //       the name supplied is already bound to an object.
 
-    // Amendment: When using OrbixNames, it is necessary to first try bind
-    // and then rebind, as rebind on it's own will throw a NotFoundexception if
-    // the Name has not already been bound. [This is incorrect behaviour -
-    // it should just bind].
+    // Amendment: When using OrbixNames, it is necessary to first
+    // try bind and then rebind, as rebind on it's own will throw
+    // a NotFoundexception if the Name has not already been bound.
+    // [This is incorrect behaviour -- it should just bind].
   }
   catch(CORBA::COMM_FAILURE&amp; ex) {
-    cerr &lt;&lt; "Caught system exception COMM_FAILURE -- unable to contact the "
-         &lt;&lt; "naming service." &lt;&lt; endl;
+    cerr &lt;&lt; "Caught system exception COMM_FAILURE -- unable to "
+         &lt;&lt; "contact the naming service." &lt;&lt; endl;
     return 0;
   }
   catch(CORBA::SystemException&amp;) {
-    cerr &lt;&lt; "Caught a CORBA::SystemException while using the naming service."
-  &lt;&lt; endl;
+    cerr &lt;&lt; "Caught a CORBA::SystemException while using the "
+         &lt;&lt; "naming service." &lt;&lt; endl;
     return 0;
   }
   return 1;
