@@ -51,7 +51,7 @@ ifdef UnixPlatform
 ifdef OMNIORB_CONFIG_DEFAULT_LOCATION
 CONFIG_DEFAULT_LOCATION = $(OMNIORB_CONFIG_DEFAULT_LOCATION)
 else
-CONFIG_DEFAULT_LOCATION = \"/project/omni/var/omniORB_NEW.cfg\"
+CONFIG_DEFAULT_LOCATION = /project/omni/var/omniORB_NEW.cfg
 endif
 
 #CXXDEBUGFLAGS = -g
@@ -59,7 +59,7 @@ endif
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
 NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
 DIR_CPPFLAGS += -DUnixArchitecture
-DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION=$(CONFIG_DEFAULT_LOCATION)
+DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 endif
 
 #############################################################################
@@ -503,7 +503,7 @@ $(lib): $(ORB2_OBJS)
          aCC -b -Wl,+h$(soname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
-           -ldce -lcma ; \
+           $(HPTHREADLIBS) ; \
         )
 
 clean::
@@ -606,6 +606,44 @@ $(lib): $(ORB2_OBJS)
            -o $@ $(IMPORT_LIBRARY_FLAGS) $^ $(LDLIBS); \
         )
 
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
+endif
+
+#############################################################################
+#   Make rules for FreeBSD 3.x egcs                                         #
+#############################################################################
+
+ifdef FreeBSD
+ifdef EgcsMajorVersion
+
+DIR_CPPFLAGS += -fPIC
+
+libname = libomniORB$(major_version).so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+all:: $(lib)
+
+$(lib): $(ORB2_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) \
+       )
 
 clean::
 	$(RM) $(lib)
