@@ -36,6 +36,7 @@ class omniNameslog {
 
   CORBA::ORB_ptr orb;
   PortableServer::POA_ptr poa;
+  PortableServer::POA_ptr ins_poa;
   char *active;
   char *backup;
   char *checkpt;
@@ -99,7 +100,9 @@ public:
 
   omniNameslog(int& port,char* logdir=0);
 
-  void init(CORBA::ORB_ptr o, PortableServer::POA_ptr p);
+  void init(CORBA::ORB_ptr o,
+	    PortableServer::POA_ptr p,
+	    PortableServer::POA_ptr ip);
 
   void create(const PortableServer::ObjectId& id);
   void destroy(CosNaming::NamingContext_ptr nc);

@@ -323,10 +323,13 @@ omniNameslog::omniNameslog(int& p,char* logdir) : port(p)
 
 
 void
-omniNameslog::init(CORBA::ORB_ptr the_orb, PortableServer::POA_ptr the_poa)
+omniNameslog::init(CORBA::ORB_ptr          the_orb,
+		   PortableServer::POA_ptr the_poa,
+		   PortableServer::POA_ptr the_ins_poa)
 {
-  orb = the_orb;
-  poa = the_poa;
+  orb     = the_orb;
+  poa     = the_poa;
+  ins_poa = the_ins_poa;
 
   if (firstTime) {
 
@@ -356,9 +359,8 @@ omniNameslog::init(CORBA::ORB_ptr the_orb, PortableServer::POA_ptr the_poa)
       putPort(port, logf);
 
       {
-	CORBA::Object_var ref = poa->create_reference(
-				    CosNaming::NamingContext::_PD_repoId);
-	PortableServer::ObjectId_var refid = poa->reference_to_id(ref);
+	PortableServer::ObjectId_var refid =
+	  PortableServer::string_to_ObjectId("NameService");
 
 	putCreate(refid, logf);
       }
@@ -609,7 +611,7 @@ omniNameslog::checkpoint(void)
     NamingContext_i* nci;
 
     for (nci = NamingContext_i::headContext; nci; nci = nci->next) {
-      PortableServer::ObjectId_var id = poa->servant_to_id(nci);
+      PortableServer::ObjectId_var id = nci->PR_id();
       putCreate(id, ckpf);
     }
 
@@ -793,8 +795,15 @@ omniNameslog::getCreate(istream& file)
   //
 
   PortableServer::ObjectId id;
+  NamingContext_i*         rc;
+
   getKey(id, file);
-  NamingContext_i* rc = new NamingContext_i(poa, id, this);
+
+  if (id.length() == 4) // SYS_ASSIGNED_ID_SIZE
+    rc = new NamingContext_i(poa, id, this);
+  else
+    rc = new NamingContext_i(ins_poa, id, this);
+
   rc->_remove_ref();
 }
 
@@ -1004,7 +1013,7 @@ void
 omniNameslog::putKey(const PortableServer::ObjectId& id, ostream& file)
 {
   file << hex;
-  for (int i = 0; i < id.length(); i++) {
+  for (unsigned int i = 0; i < id.length(); i++) {
 #if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
     file << setfill('0') << setw(2) << (int)id[i];
 #else
