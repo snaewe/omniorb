@@ -1,3 +1,24 @@
+Thu Nov 23 13:02:35 GMT 2000 sll
+===============================
+
+- Added support for KAI C++ 4.0. Works for HPUX 11.00 and Linux glibc2.1
+
+external_merge/README.KAI_C++   NEW
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc2.1.mk
+include/omniORB3/CORBA_sysdep.h
+src/appl/omniNames/log.cc
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+
+
+- Avoided using signal as a variable name
+
+src/examples/call_back/cb_server.cc
+
+
 Thu Nov 23 11:17:25 GMT 2000 sll
 ================================
 
