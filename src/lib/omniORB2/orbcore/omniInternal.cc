@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.1.2.16  2000/07/21 15:35:47  dpg1
+  Incorrectly rejected object references with incompatible target and
+  most-derived repoIds.
+
   Revision 1.1.2.15  2000/06/27 15:40:57  sll
   Workaround for Cygnus gcc's inability to recognise _CORBA_Octet*& and
   CORBA::Octet*& are the same type.
@@ -604,14 +608,9 @@ omni::createObjRef(const char* mostDerivedRepoId,
   if( pof && !pof->is_a(targetRepoId) &&
       strcmp(targetRepoId, CORBA::Object::_PD_repoId) ) {
 
-    if( omniORB::trace(10) )
-      omniORB::logf("Cannot create reference -- %s is\n"
-		    " not a base for %s.", targetRepoId, mostDerivedRepoId);
-
-    if( release_profiles )  delete profiles;
-    delete[] key;
-    rope->decrRefCount();
-    return 0;
+    // We know that <mostDerivedRepoId> is not derived from
+    // <targetRepoId>. We need to carry on regardless...
+    pof = 0;
   }
 
   // Once we reach here:
@@ -623,6 +622,11 @@ omni::createObjRef(const char* mostDerivedRepoId,
   // else
   //    there is no proxy factory linked into this executable that
   //    matches the interface identified by <mostDerivedRepoId>
+  // or
+  //    there _is_ a proxy factory for <mostDerivedRepoId>, but we
+  //    know that it is not derived from <targetRepoId>. We must
+  //    contact the object, in case it actually supports an interface
+  //    derived from both <mostDerivedRepoId> and <targetRepoId>.
 
   int target_intf_not_confirmed = 0;
 

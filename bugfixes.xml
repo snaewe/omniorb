@@ -8,6 +8,28 @@
 
 <buglist>
 
+<bug id="7" date="Fri Jul 21 16:20:43 BST 2000" user="dpg1">
+
+  <summary>Support for object references with unlikely repository
+  ids.</summary>
+
+  <reported>chm</reported>
+
+  <text>
+  <p>In the case that omniORB receives an object reference claiming to
+  be type "A", and it requires type "B", but it has static knowledge
+  that "A" is not derived from "B", it rejects the object reference.
+  This is incorrect, since the object may actually have type "C",
+  which is derived from both "A" and "B".</p>
+
+  <p>A special case of this is an object reference claiming to be a
+  base type of the target type (such as CORBA::Object). Attempts to
+  narrow such a reference would always fail.</p>
+  </text>
+
+</bug>
+
+
 <bug id="6" date="Fri Jul 21 10:48:44 BST 2000" user="dpg1">
 
   <summary>String_var copy initialisations changed to direct

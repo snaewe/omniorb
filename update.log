@@ -1,3 +1,12 @@
+Fri Jul 21 16:20:43 BST 2000 dpg1
+=================================
+
+- Incorrectly rejected object references with incompatible target and
+  most-derived repoIds.
+
+src/lib/omniORB2/orbcore/omniInternal.cc
+
+
 Fri Jul 21 10:48:44 BST 2000 dpg1
 =================================
 
