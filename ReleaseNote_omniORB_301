@@ -45,8 +45,8 @@ Changes since 3.0.0:
         libomniORB30.a
         libomniDynamic30.a
 
-       On various unices, the name is unchanged, i.e.
-         libomniORB3.so ---> libomniORB3.so.0 --> libomniORB3.so.0.0
+       On various unices, the name is,
+         libomniORB3.so ---> libomniORB3.so.0 --> libomniORB3.so.0.1
 
 
 Release Notes for omniORB 3.0.0 (13 Jul 2000)

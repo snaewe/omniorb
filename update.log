@@ -1,3 +1,22 @@
+Fri Aug 18 13:35:26 BST 2000 sll
+================================
+
+- Updated COS library make rule to generate correct dependency
+
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+
+- Update make file to keep in sync with latest omniORB version number.
+
+src/lib/omniORB/dynamic/sharedlib/dir.mk
+
+- Documentation updates
+
+external_merge/ReleaseNote_omniORB_301
+bugfixes-300.xml
+bugfixes.xml
+bugfixes.xsl
+
 Fri Aug 18 13:11:36 BST 2000 dme
 ================================
 - Allow replacement of proxyObjectFactories

@@ -41,6 +41,7 @@ version  := $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 
 sk = static/$(patsubst %,$(LibNoDebugPattern),$(COS_SKLIB_NAME)$(version))
 dynsk = static/$(patsubst %,$(LibNoDebugPattern),$(COS_DYNSKLIB_NAME)$(version))
+MDFLAGS += -p static/
 
 mkstatic::
 	@(dir=static; $(CreateDir))
@@ -75,6 +76,8 @@ skshared      = shared/$(shell $(SharedLibraryFullName) $(sknamespec))
 
 dynsknamespec = $(subst ., ,$(COS_DYNSKLIB_NAME).$(sharedversion))
 dynskshared   = shared/$(shell $(SharedLibraryFullName) $(dynsknamespec))
+
+MDFLAGS += -p shared/
 
 ifdef Win32Platform
 # in case of Win32 lossage:
@@ -129,6 +132,8 @@ dbugversion = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 skdbug = debug/$(patsubst %,$(LibDebugPattern),$(COS_SKLIB_NAME)$(dbugversion))
 dynskdbug = debug/$(patsubst %,$(LibDebugPattern),$(COS_DYNSKLIB_NAME)$(dbugversion))
 
+MDFLAGS += -p debug/
+
 mkstaticdbug::
 	@(dir=debug; $(CreateDir))
 
@@ -163,6 +168,8 @@ dynskshareddbug = shareddebug/$(shell $(SharedLibraryDebugFullName) $(dynsknames
 
 dbugimps  := $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern), \
                $(OMNIORB_LIB))
+
+MDFLAGS += -p shareddebug/
 
 mkshareddbug::
 	@(dir=shareddebug; $(CreateDir))
