@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2003/11/12 16:57:49  dgrisby
+  Mistake in Windows case.
+
   Revision 1.1.2.16  2003/11/12 16:04:17  dgrisby
   Set sockets to close on exec.
 
@@ -178,7 +181,7 @@ SocketSetCloseOnExec(SocketHandle_t sock) {
   // Not supported on vxWorks
   return 0;
 # elif defined(__WIN32__)
-  SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0);
+  SetHandleInformation((HANDLE)sock, HANDLE_FLAG_INHERIT, 0);
   return 0;
 # else
   int fl = FD_CLOEXEC;
