@@ -1,0 +1,60 @@
+.TH omake 1 "15.10.96" "ORL"
+.SH NAME
+omake \- run GNU make inside an OMNI build tree
+.SH SYNOPSIS
+.B omake
+.I [variable=value]*
+.I [target]
+.SH DESCRIPTION
+The omake command runs GNU make inside an OMNI build tree.  Arguments given to
+.B omake
+on the command line are passed directly on to
+.B make,
+but
+.B omake
+itself generates extra arguments, amongst which are:
+.TP 5
+.B TOP=<top>
+This tells make the path from the current directory to the top of the build
+tree.
+.TP
+.B CURRENT=<current>
+This is the path from the top of the tree down to the current directory
+.TP
+.B VPATH=<directories>
+This is a list of the source directories (the equivalent of the current
+directory in each of the source trees).  Make will search through these
+directories if it can't find a source file in the current directory.
+.TP
+.B -f <top>/config/config.mk
+This tells make to use config.mk as the makefile.  In turn config.mk will
+include other files from the import trees and will include dir.mk from either
+the current directory or one of the source directories.
+.TP
+.B -I <source-directory>
+These arguments tell make to search the source directories for the dir.mk file.
+.TP
+.B OMAKE_TARGET=<target>
+This is set to the final argument given to omake (usually the target).
+
+.SH SEE ALSO
+.BR obuildtree (1)
+
+.SH FILES
+.TP 5
+.B <top>/config/sources
+contains a list of the source trees.
+.TP
+.B <top>/config/config.mk
+is the makefile which
+.B omake
+uses when building inside this tree.
+
+.SH ENVIRONMENT VARIABLES
+.TP 5
+.B GNUMAKE
+should be set to the command needed to run GNU make if this is different from
+.B make
+
+.SH AUTHOR
+Tristan Richardson, ORL

@@ -1,0 +1,63 @@
+                        omniORB on Mac OS platforms.
+                        ============================
+
+This file contains information on installing, building, and using
+omniORB on Mac OS (Classic, Carbon and Mach-O) platforms.
+
+omniORB has been tested with the following software configuration:
+
+- Operating System  : Mac OS 9, X
+- Architecture      : Classic
+- Compiler          : Metrowerks CodeWarrior 8.3
+- POSIX Library     : GUSI 2.2.3
+
+If you need a Darwin version, please refer to README.unix.
+
+
+Roadmap
+=======
+
+The directory structure of this distribution looks as follows:
+
+<Top>:                    : Folder where distribution was unpacked
+<Top>:readmes             : platform specific readme files
+<Top>:doc                 : omniORB documentation
+<Top>:man                 : omniORB manual pages
+<Top>:mk                  : make configuration files
+<Top>:config              : configuration files for target platform
+<Top>:etc                 : zip files
+<Top>:include             : include files
+<Top>:src                 : source files
+<Top>:src:lib:omnithread  : source files for the omnithread library
+<Top>:src:lib:omniORB     : source files for the ORB runtime library
+<Top>:src:tool:omniidl    : source files for the IDL compiler
+<Top>:src:appl:omniNames  : source files for the COS Naming service
+<Top>:src:appl:utils      : source files for utilities
+<Top>:src:examples        : source files for examples
+
+
+To build with CodeWarrior, some extra files are required in the
+contrib directory. These files are available in <Top>:etc:macos.zip.
+Unpack the zip file at the <Top> folder. That creates the following
+folder:
+
+<Top>:contrib:CodeWarrior : Mac specific files and CodeWarrior projects
+
+
+Configuration
+=============
+
+You will need to build omniORB for Darwin once before you can build a
+Mac OS version using CodeWarrior. This initial build creates the
+executables and the stub code included in the project file.
+
+
+Installation
+============
+
+Using CodeWarrior import the omniORB.mcp.xml file and save it as a
+project into the :contrib:CodeWarrior folder. The CodeWarrior project
+assumes that the GUSI library resides in the folder GUSI2 at the same
+level as the <Top>. Please adjust your paths if required.
+
+Build the targets you need.

@@ -1,0 +1,59 @@
+//
+//                            Package   : omniORB2
+// omniLifeCycle.idl          Created on: 1997/09/20
+//                            Author    : Duncan Grisby (dpg1)
+//
+//    Copyright (C) 1997 Olivetti & Oracle Research Laboratory
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
+//
+// Description:
+//	*** PROPRIETORY INTERFACE ***
+//      
+
+// This MUST NOT be compiled with omniidl -l
+
+/* $Log$
+/* Revision 1.6.2.1  2003/03/23 21:04:30  dgrisby
+/* Start of omniORB 4.1.x development branch.
+/*
+/* Revision 1.3.2.1  2000/07/17 10:35:32  sll
+/* Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+/*
+/* Revision 1.4  2000/07/13 15:26:07  dpg1
+/* Merge from omni3_develop for 3.0 release.
+/*
+/* Revision 1.1  1997/09/20 17:08:55  dpg1
+/* Initial revision
+/*
+ */
+
+
+#ifndef _omniLifeCycle_idl_
+#define _omniLifeCycle_idl_
+
+// omniLifeCycleInfo interface:
+
+interface omniLifeCycleInfo {
+  void reportMove(in Object obj);
+  void reportRemove();
+  readonly attribute Object homeObject;
+};
+
+#endif // _omniLifeCycle_idl_

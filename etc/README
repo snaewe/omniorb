@@ -1,0 +1,11 @@
+openvms.zip - extra files to build this distribution under openVMS.
+              The content of this zip file overlays on top of the distribution.
+              unzip this file at the top level directory of this distribution.
+
+rtems.zip -   extra RTEMS sample configuration files.
+              The content of this zip file overlays on top of the distribution.
+              unzip this file at the top level directory of this distribution.
+
+vxworks.zip - extra files for vxWorks. (Cut down omniNames.)
+              The content of this zip file overlays on top of the distribution.
+              unzip this file at the top level directory of this distribution.

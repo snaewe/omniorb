@@ -1,0 +1,54 @@
+
+Object eg1_exe.o
+{
+    Executable eg1
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
+
+Object eg2_clt_exe.o
+{
+    Executable eg2_clt
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
+
+Object eg2_impl_exe.o
+{
+    Executable eg2_impl
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
+
+Object eg3_clt_exe.o
+{
+    Executable eg3_clt
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
+
+Object eg3_impl_exe.o
+{
+    Executable eg3_impl
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
+
+Object eg3_tieimpl_exe.o
+{
+    Executable eg3_tieimpl
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}

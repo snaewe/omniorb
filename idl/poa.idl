@@ -1,0 +1,76 @@
+
+#ifndef __PORTABLESERVER_POA_IDL__
+#define __PORTABLESERVER_POA_IDL__
+
+
+#include <poa_include.idl>
+
+
+#pragma prefix "omg.org"
+
+
+//////////////////////////////////////////////////////////////////////
+module PortableServer {
+//////////////////////////////////////////////////////////////////////
+
+  #pragma version PortableServer 2.3
+
+  exception ForwardRequest { Object forward_reference; };
+  #pragma version ForwardRequest 2.3
+
+  // **************************************************
+  //
+  // AdapterActivator interface
+  //
+  // **************************************************
+
+  interface AdapterActivator {
+
+    boolean unknown_adapter(in POA parent, in string name);
+  };
+  #pragma version AdapterActivator 2.3
+
+  // **************************************************
+  //
+  // ServantManager interface
+  //
+  // **************************************************
+
+  interface ServantManager {};
+  #pragma version ServantManager 2.3
+
+  interface ServantActivator : ServantManager {
+
+    Servant incarnate(in ObjectId oid, in POA adapter)
+      raises ( ForwardRequest );
+
+    void etherealize(in ObjectId oid, in POA adapter,
+		     in Servant serv, in boolean cleanup_in_progress,
+		     in boolean remaining_activations );
+  };
+  #pragma version ServantActivator 2.3
+
+  interface ServantLocator : ServantManager {
+
+    //??native 	Cookie;
+    typedef short Cookie;
+
+    Servant preinvoke(in ObjectId oid, in POA adapter,
+		      in CORBA::Identifier operation,
+		      out Cookie the_cookie )
+      raises ( ForwardRequest );
+
+    void postinvoke(in ObjectId oid, in POA adapter,
+		    in CORBA::Identifier operation,
+		    in Cookie the_cookie, in Servant the_servant);
+  };
+  #pragma version ServantLocator 2.3
+
+//////////////////////////////////////////////////////////////////////
+};
+//////////////////////////////////////////////////////////////////////
+
+#pragma prefix ""
+
+
+#endif  // __PORTABLESERVER_POA_IDL__

@@ -1,0 +1,83 @@
+#!/bin/sh
+
+#
+# ols - list all the files in the source directories corresponding to the
+# current directory when in an OMNI build tree.
+#
+
+#
+# First find top of this tree and path from top to current directory.
+#
+
+top="."
+currentAbsolute=`pwd`
+current="."
+
+until [ -f $top/config/config.mk -a -f $top/config/sources ]; do
+  if [ $top = "." ]; then
+    top=".."
+    current=`basename $currentAbsolute`
+    currentAbsolute=`dirname $currentAbsolute`
+  else
+    top="../$top"
+    current="`basename $currentAbsolute`/$current"
+    currentAbsolute=`dirname $currentAbsolute`
+  fi
+
+  if [ $currentAbsolute = "/" ]; then
+    echo "ERROR: NOT IN AN OMNI TREE" >&2
+    exit 1
+  fi
+done
+
+if [ $top != "." ]; then
+  topslash="$top/"
+fi
+if [ $current != "." ]; then
+  slashcurrent="/$current"
+fi
+
+
+#
+# Find out the equivalent of the current directory in each of the source
+# trees.
+#
+
+topsources=`cat ${topslash}config/sources`
+
+for source in $topsources; do
+  case $source in
+  /*) ;;
+  *) source="$topslash$source";;
+  esac
+  sources="$sources $source$slashcurrent"
+done
+
+
+
+if [ $# -eq 0 ]; then
+  for source in $sources; do
+    (cd $source
+     echo
+     echo $source:
+     files=`ls | egrep -v '^RCS$'`
+     ls -dF $files
+    )
+  done
+else
+  if [ -f "$1" ]; then
+    echo $1
+  else
+    cwd=`pwd`
+    for source in $sources; do
+      if [ -d "$source" ]; then
+        cd $source
+        if [ -f "$1" ]; then
+          echo $source/$1
+          break
+        fi
+        cd $cwd
+      fi
+    done
+  fi
+fi

@@ -1,0 +1,249 @@
+Release Notes for 2.8.0  (31st Aug 1999)
+=======================
+
+The last release was 2.7.1 (12th March 1999).
+
+Source code and binary distributions are available from our Web pages:
+
+         http://www.uk.research.att.com/omniORB/omniORB.html
+
+NOTE!!! Please read the rest note about the incompatible changes in this 
+        release.
+
+
+Changes since 2.7.1
+-------------------
+
+1. CORBA compliant testing
+   
+   This version has passed the Open Group CORBA 2.1 compliant testsuite. 
+   The CORBA brand from the Open Group has been awarded to omniORB2 with
+   this version.
+
+2. Updated to CORBA 2.3 mapping.
+
+   Summary of changes:
+   ------------------
+   a) Reserved word is mapped to _cxx_<word> instead of _<word>. This can
+      be overrided with the -c flag to the compiler.
+
+   b) out types are defined for IDL primitive types, interface, enum, string
+      and other constructed types.
+
+   c) exception type now has a _raise() method. The _narrow() method is
+      deprecated and is replaced by the _downcast() methods.
+      All exception types, system exceptions included, can be inserted or
+      extracted to and from an Any.
+
+   d) T_var types contain new methods in(), inout(), out() and _retn()
+ 
+   e) For an interface A, A::_ptr_type and A::_var_type are now defined.
+
+   f) For an IDL struct, union or sequence type T, the T::_var_type is defined.
+
+   g) For anonymous sequence used in a struct or union member, a typedef
+      is defined.
+          e.g. struct A {         // IDL
+                 sequence<char> a;
+               };
+               
+               class A {
+               public:
+                  typedef <omniORB2 sequence char type> _a_seq;
+                  ...
+               };
+
+   h) For IDL sequence types, new member functions, get_buffer(), 
+      replace() and release() are defined.
+
+   i) Typecode interface contains new methods equivalent() and
+      get_compact_typecode().
+
+   j) Any interface contains new method void type(TypeCode_ptr).
+      Any extraction operators now take const pointer as argument.
+      The old non-const pointer operator is deprecated.
+
+   k) The semantics of the extraction of string, object reference and
+      typecode from an Any has changed. See 3) for details.
+
+3. Incompatible changes to the extraction of values from an Any:
+
+   Since 2.8.0, omniORB2 has been updated to CORBA 2.3. In order to comply 
+   with the 2.3 specification, it is necessary to change the
+   semantics of the extraction of string, object reference and typecode
+   from an Any. The memory of the extracted values of these types now belong
+   to the Any value. The storage is freed when the Any value is
+   deallocated. Previously the extracted value is a copy and the application
+   is responsible to release the storage. It is not possible to detect the old
+   usage at compile time. In particular, unmodified code that uses the
+   affected Any extraction operators would most certainly cause runtime errors
+   to occur.  To smooth the transition from the old usage to the new, an ORB
+   configuration variable omniORB::omniORB_27_CompatibleAnyExtraction
+   can be set to revert the any extraction operators to the old semantics.
+
+   For example:
+
+   An application written to the old usage looks like this:
+
+       char* str;
+
+       CORBA::Any v = ...;
+
+       v >>= str;
+       ...
+       CORBA::string_free(str);    // Must free the returned string
+
+   The new usage looks like this:
+
+       const char* str;
+
+       CORBA::Any v = ...;
+
+       v >>= str;
+
+       // No need to free str as the storage is still owned by v.
+
+    The same applied to object reference and typecodes.
+    However, the CORBA::Any::operator>>=(to_object) still returns a 
+    copy of the object reference and should be released by the application.
+
+
+4. IDL stubs must be regenerated with the new IDL compiler to be
+   compatible with the runtime library.
+
+   The current shared runtime library versions are:
+
+   On various unices:
+
+       libomniORB2.so ---> libomniORB2.so.8 --> libomniORB2.so.8.0
+
+  On IBM AIX
+
+      libomniORB28.a
+      libomniDynamic28.a
+      libomniLC2.a
+
+  On Windows NT/95, the omniORB2 runtime DLLs for this version are:
+
+      libomniORB280_rt.dll
+      libomniORB280_rt.lib
+      libomniDynamic280_rt.dll
+      libomniDynamic280_rt.lib
+      libomniLC30_rt.dll
+      libomniLC30_rt.lib
+
+  Make sure you update your Visual Studio to pick up the right library.
+
+5. New command line options and ORB configuration variables:
+
+    -ORBhelp and -BOAhelp List all the available options.
+
+    -ORBverifyObjectExistsAndType <0 or 1> to disable object existence
+                check using the GIOP LOCATE_REQUEST message.
+
+    -ORBlcdMode to enable the "lowest command denominator mode" to cope
+                 with deficiencies in other ORBs.
+
+
+    -ORBabortOnInternalError <0 or 1> to control runtime behaviour when
+                                      an internal error is detected.
+
+    -BOAiiop_name_port <hostname[:port number]> to tells the BOA the
+                  hostname and optionally the port number to use.
+
+
+    -ORBinConScanPeriod <n seconds>
+    -ORBoutConScanPeriod <n seconds>
+    -ORBclientCallTimeOutPeriod <n seconds>
+    -ORBserverCallTimeOutPeriod <n seconds>
+    -ORBscanGranularity <n seconds>
+        See 8) Connection management.
+      
+6. New omniidl2 options:
+
+     -Y <cpp location> to tell the compiler to use this preprocessor
+     -c                to map C++ reserved words with prefix _, the
+                       default prefix is now _cxx_.
+                       
+
+7. Interface Repository.
+
+   The client side support is included on all platforms. A new keyword
+   "INTERFACE_REPOSITORY" can be used in omniORB.cfg to specify the
+   IOR of the interface repository to use.
+
+   However, to use the client support, application code should define
+   ENABLE_CLIENT_IR_SUPPORT so that the stub header is imported.
+
+8. Connection management
+
+   Connection management has been extended to both scan for idle
+   connections and stuck remote calls. It is now possible to define
+   a maximum time a remote call is allowed to progress. When this
+   period is exceeded, a COMM_FAILURE would be raised. This eliminates
+   the possibility that a remote call is stuck indefinitely waiting
+   for a reply to come from a tcp connection that is dead but has
+   not been close down by the OS.
+
+   New omniORB APIs to control their behavior are:
+
+       omniORB::scanGranularity
+       omniORB::callTimeOutPeriod
+       omniORB::idleConnectionScanPeriod
+
+  New -ORB options to control from the command line:
+
+        -ORBinConScanPeriod <n seconds>
+        -ORBoutConScanPeriod <n seconds>
+        -ORBclientCallTimeOutPeriod <n seconds>
+        -ORBserverCallTimeOutPeriod <n seconds>
+        -ORBscanGranularity <n seconds>
+
+  Refer to omniORB.h for their usage.
+
+9.New member function CORBA::ORB::NP_destroy() is provided. This member
+  should be called by the application to cleanup the ORB before exit.
+
+  In particular, applications written for Windows 95/98 or using the ORB
+  runtime DLL with Visual Basic should call this function (as well as
+  CORBA::BOA::destory()) to ensure all internal threads are cleaned up
+  before the runtime DLL is unloaded.  To summarise, the following call
+  sequence should be used to exit:
+
+    CORBA::ORB_ptr orb;
+    CORBA::BOA_ptr boa;
+        ....
+     boa->destory();
+     orb->NP_destory();
+
+10. New platforms
+
+   The platform files for Irix 6.4 and 6.5 has been updated to perform
+   program linkage in the right order.
+   
+   Support for HPUX 11.00, SCO Unixware 7 and FreeBSD 3.2 have been added.
+
+11. The omniORB2 user guide has been updated. 
+
+12. Bugs fixed.
+
+  The complete list of bugs reported and fixed can be found in:
+        http://www.uk.research.att.com/omniORB/omniORBbug.html
+
+  All the bugs listed have been fixed.
+
+  Notable fixes are:
+
+  a) The allocbuf function for sequence of string and object reference now
+     returns the correct buffer type. The T* data constructor for these
+     sequence types now works correctly.
+
+  b) When omniORB::tcAliasExpand is set to 1, the expansion of recursive 
+     typecodes is now performed correctly. Marshalling of Any when the
+     flag is set also works correctly.
+
+  c) A rare race condition in the connection management threads have been
+     identified and fixed.
+
+
+

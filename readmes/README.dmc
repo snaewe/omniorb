@@ -1,0 +1,35 @@
+You need at least Digital Mars C++ 8.32.14 (earlier versions won't
+work).
+
+Some notes about compiling with DM:
+
+ * Use "platform = x86_win32_dmc" in config\config.mak
+
+ * x86_win32_dmc.mk uses "-ND" to link with DM's DLL runtime library
+   (which isn't included in the download version of the compiler), if
+   you want to link with the static version of the runtime library you
+   have to replace "-ND" with "-D_MT".
+
+ * You can use the Python DLL included in Python binary distributions,
+   but you have to create a Python import library for DM using "implib
+   /system python22.lib python22.dll" and copy the import library to
+   src\tool\omniidl\cxx\
+
+ * I am using the MSYS (see http://www.mingw.org/msys.shtml) versions
+   of the GNU tools - for using the Cygwin tools or some other Win32
+   port of the GNU tools, minor changes to x86_win32_dmc.mk might be
+   necessary. In particular, DM's "link" and "lib" commands can't be
+   directly invoked from MSYS's make/sh, therefore these commands are
+   indirectly invoked via "cmd //c" (if that doesn't work for you, you
+   can try replacing it with "cmd /c" or completely removing the "cmd
+   //c" part).
+
+ * DM's link sometimes complains about unknown "libpath" options
+   (these can safely be ignored) - the build system currently assumes
+   that MSVC++ is used on Windows
+
+ * I get an "out of memory" error when trying to compile
+   src\services\mklib\CosNotifyChannelAdminSK.cc with debug
+   information
+
+ * I haven't done much testing yet (omniNames does at least start up)

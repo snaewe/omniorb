@@ -1,0 +1,457 @@
+#!/usr/local/bin/bash
+#
+# opriv - VERSION FOR OMNI DEVELOPMENT ENVIRONMENT VERSION 4.0
+#
+# opriv - deal with "private" files in shadow directories in the omni tree.
+#
+# Performs one of a number of tasks depending on the first argument:
+#
+# opriv make files...		- make a private file (a writable copy of a
+#				  file in the master source - a bit like
+#				  "checking out" a file).
+#
+# opriv find [directory]	- find all "private" files in a tree.  This is
+#				  useful used in backticks as an argument to
+#				  other commands eg opriv diff `opriv find`
+#				  (in fact this is the default behaviour of
+#				  the commands below when given no arguments)
+#
+# opriv diff files...		- print diff between private file and master
+#				  source file
+#
+# opriv check files...		- check whether files in the master source have
+#				  been updated since private copy was taken
+#
+# opriv ci files...		- copy private files back into the master
+#				  source directory and check them in,
+#				  automatically generating an entry to be put
+#				  in the update log.  An "opriv check" will be
+#				  done first to make sure that this is not
+#				  undoing someone else's updates to the master
+#				  source.
+#
+# opriv revert files...		- revert from a private file back to having a
+#				  link to the file in the master source.
+#
+
+###########################################################################
+#
+# Unfortunately the built-in "read" doesn't work on NT so we need this.  It
+# also has the beneficial side-effect of expanding environment variables in
+# the input string.
+#
+
+myread() {
+  eval "$1=\"`head -1`\""
+}
+
+
+do_usage() {
+  echo "usage: `basename $0` make files..."
+  echo "       `basename $0` find [directory]"
+  echo "       `basename $0` diff files..."
+  echo "       `basename $0` check files..."
+  echo "       `basename $0` ci files..."
+  echo "       `basename $0` revert files..."
+  exit 1
+}
+
+pfname=".privatefiles";
+updateLogName="update.log";
+
+if [ $# -eq 0 ]; then
+  do_usage
+fi
+
+cmd=$1
+shift
+
+args=$*
+
+argc=$#
+
+do_main() {
+
+  case "$cmd" in
+
+  find)
+    do_find
+    ;;
+
+  make)
+    do_make
+    ;;
+
+  diff|check|revert)
+    if [ $argc -eq 0 ]; then
+      args=`$0 find`
+    fi
+
+    do_for_each_arg
+    ;;
+
+  ci)
+    user=${LOGNAME-$USER}
+
+    if [ "$user" = "" ]; then
+      echo "ERROR - Neither \$LOGNAME nor \$USER is defined"
+      exit 1
+    fi
+
+    if [ $argc -eq 0 ]; then
+      args=`$0 find`
+    fi
+
+    cmd=check
+    do_for_each_arg
+
+    if [ "$checkFailed" ]; then
+      echo
+      echo "Someone else's changes to the master tree may be lost."
+      echo "Do you want to continue the check in ?"
+      myread ok
+      if [ "$ok" != "y" ]; then
+        exit 1
+      fi
+    fi
+
+    cmd=check_in
+    do_for_each_arg
+
+    echo
+    echo "***********************"
+    echo "Add this to $updateLogName:"
+    echo "***********************"
+    echo
+    date=`date`
+    echo "$date $user"
+    echo "================================="
+    echo "$updateLog"
+    ;;
+
+  *)
+    do_usage
+    ;;
+
+  esac
+}
+
+
+#
+# find - find all private files in a tree.
+#
+
+do_find() {
+  if [ $argc -gt 1 ]; then
+    do_usage
+  fi
+
+  if [ $argc -eq 0 ]; then
+    dir="."
+  else
+    dir=$args
+  fi
+
+  ps=`find $dir -name $pfname -print`
+
+  for p in $ps; do
+    shadowDirSlash=`dirname $p | sed 's|$|/|; s|^\./||'`
+
+    pfs=`tail +2 $p | awk '{print$1}'`
+
+    for pf in $pfs; do
+      echo "$shadowDirSlash$pf"
+    done
+  done
+}
+
+
+#
+# do_make - makes each file argument a "private" file (recorded in a file
+# called ".privatefiles").  A local, writable copy of the file is made, if
+# this has not already been done.
+#
+# If it is the first file to be declared private in a directory (i.e.
+# ".privatefiles" doesn't exist) the source directory will be prompted for.
+#
+# The source directory is recorded as the first line of
+# ".privatefiles". Each subsequent line is an entry for a private file.
+#
+
+do_make() {
+  if [ $argc -eq 0 ]; then
+    do_usage
+  fi
+
+  for file in $args; do
+    if [ -d $file ]; then
+      echo "$file is a directory - ignoring" >&2
+      continue
+    fi
+
+    shadowDir=`dirname $file`
+    base=`basename $file`
+
+    if [ -f $shadowDir/$pfname ]; then
+      sourceFromShadow=`head -1 $shadowDir/$pfname`
+
+      if egrep -s "^$base " $shadowDir/$pfname >/dev/null; then
+        echo "$file already recorded as private" >&2
+        continue
+      fi
+
+    else
+      if [ "$shadowDir" != "." ]; then
+        echo "What is the source directory from $shadowDir ?"
+      else
+        echo "What is the source directory ?"
+      fi
+      myread sourceFromShadow
+      if [ "$sourceFromShadow" = "" ]; then
+        exit 1
+      fi
+
+      echo $sourceFromShadow >$shadowDir/$pfname
+    fi
+
+    if expr "$sourceFromShadow" : "/.*" >/dev/null; then
+      sourceDir=$sourceFromShadow
+    else
+      sourceDir=$shadowDir/$sourceFromShadow
+    fi
+
+
+    if [ ! -f $file ]; then
+      if [ -f $sourceDir/$base ]; then
+        cp $sourceDir/$base $file
+        chmod u+w $file
+      else
+        echo "Warning: $sourceDir/$base doesn't exist"
+      fi
+    fi
+
+    if [ -e "$sourceDir/$base" -a \( -e "$sourceDir/RCS/$base,v" -o \
+         -e "$sourceDir/$base,v" \) ]; then
+
+      rev=`rlog -h $sourceDir/$base | grep 'head:' | awk '{print$2}'`
+    else
+      rev="new"
+    fi
+
+    echo "$base $rev" >>$shadowDir/$pfname
+
+  done
+}
+
+
+#
+# do_for_each_arg - for each file argument do the command in $cmd.
+#
+
+do_for_each_arg() {
+  for file in $args; do
+    if [ -d $file ]; then
+      continue
+    fi
+
+    shadowDir=`dirname $file`
+    base=`basename $file`
+    sourceFromShadow=`head -1 $shadowDir/$pfname`
+
+    if expr "$sourceFromShadow" : "/.*" >/dev/null; then
+      sourceDir=$sourceFromShadow
+    else
+      sourceDir=$shadowDir/$sourceFromShadow
+    fi
+
+    eval do_$cmd
+  done
+}
+
+
+#
+# do_diff - do a "diff" between private file and the corresponding master
+# source file.
+#
+
+do_diff() {
+  echo
+  echo "*************** $file **************";
+  diff $sourceDir/$base $file
+}
+
+
+#
+# do_check - check whether files in the master source have changed since
+# private copies were taken.
+#
+
+do_check() {
+  if [ -e "$sourceDir/$base" -a \( -e "$sourceDir/RCS/$base,v" -o \
+       -e "$sourceDir/$base,v" \) ]; then
+
+    nowrev=`rlog -h $sourceDir/$base | grep 'head:' | awk '{print$2}'`
+  else
+    nowrev="new"
+  fi
+
+  origrev=`egrep "^$base " $shadowDir/$pfname | awk '{print$2}'`
+
+  if [ "$nowrev" != "$origrev" ]; then
+    echo "**** $file taken from rev $origrev, $sourceDir/$base is rev $nowrev"
+    checkFailed=1
+  fi
+}
+
+
+#
+# do_revert - remove private file but require confirmation if the private file
+# differs from the source file (or the source file doesn't exist).  The emacs 
+# backup file (ending in ~) is also removed.
+#
+
+do_revert() {
+  if [ -f "$sourceDir/$base" ]; then
+    diff $file $sourceDir/$base
+    if [ $? -eq 1 ]; then
+      echo "**** $file differs from $sourceDir/$base. Are you sure ?"
+      myread ok
+      if [ "$ok" != "y" ]; then
+        continue
+      fi
+    fi
+  elif [ -f $file ]; then
+    echo "**** $sourceDir/$base does not exist. Remove $file ?"
+    myread ok
+    if [ "$ok" != "y" ]; then
+      continue
+    fi
+  fi
+
+  egrep -v "^$base " $shadowDir/$pfname >$shadowDir/$pfname.new
+  mv -f $shadowDir/$pfname.new $shadowDir/$pfname
+
+  if [ -f $file ]; then
+    echo "Removing $file"
+    rm $file
+  fi
+
+  if [ -f "$file~" ]; then
+    echo "Removing $file~"
+    rm "$file~"
+  fi
+}
+
+
+#
+# do_check_in - copy private files back into the source directory and perform
+# an RCS check-in, automatically generating an entry to be put in the update
+# log.
+#
+
+do_check_in() {
+  sourceFileFromTop=`echo "$sourceDir/$base" | sed 's|^.*\.\./||; s|^/.*/version.\../||'`
+  sourceTop=`expr "$sourceDir/$base" : '\(/.*/version.\..\)/.*'`
+
+  if [ -f "$sourceTop/$updateLogName" ]; then
+    locked=`rlog -L -R -l$user $sourceTop/$updateLogName`
+    if [ -z "$locked" ]; then
+      echo "You do not hold the RCS lock on $sourceTop/$updateLogName"
+      exit 1
+    fi
+  fi
+
+  echo
+  echo "*************** $file **************"
+  echo
+
+  if [ -f "$sourceDir/RCS/$base,v" -o -f "$sourceDir/$base,v" ]; then
+    if cmp -s $sourceDir/$base $file; then
+      echo "No changes have been made to $file"
+      continue
+    fi
+
+    while true; do
+      echo "** OK to check in $file ('d' for a diff)?"
+      myread ok
+      if [ "$ok" != "d" ]; then
+        break
+      fi
+      (set -x; diff $sourceDir/$base $file)
+    done
+
+    if [ "$ok" != "y" ]; then
+      continue
+    fi
+
+    (set -x; rcs -l $sourceDir/$base)
+
+    if [ $? -ne 0 ]; then
+      echo "** Failed to get RCS lock on $sourceDir/$base"
+      echo "** Abort or Continue with other files (a/c)?"
+      myread ok
+      if [ "$ok" != "c" ]; then
+        echo "** Aborting"
+	exit 1
+      fi
+      continue
+    fi
+
+    echo "Enter log message (terminated by blank line or .):"
+    message=""
+    while true; do
+      echo -n ">> "
+      myread line
+      if [ "$line" = "" -o "$line" = "." ]; then
+        break
+      fi
+      message="$message${message:+
+}$line"
+    done
+
+    if [ "$message" = "" ]; then
+      message="*** empty log message ***"
+    fi
+
+    (set -x;
+     rm -f $sourceDir/$base
+     cp $file $sourceDir/$base
+     ci -m"$message" $sourceDir/$base
+     co -u $sourceDir/$base
+    )
+  else
+    if [ -e "$sourceDir/$base" ]; then
+      echo "** $sourceDir/$base exists already but has no RCS file"
+      echo "** Abort or Continue with other files (a/c)?"
+      myread ok
+      if [ "$ok" != "c" ]; then
+        echo "** Aborting"
+	exit 1
+      fi
+      continue
+    fi
+
+    echo "** OK to check in $file (new file)?"
+    myread ok
+    if [ "$ok" != "y" ]; then
+      continue
+    fi
+
+    if [ ! -d "$sourceDir" ]; then
+      (set -x; mkdirhier $sourceDir/RCS)
+    fi
+
+    (set -x;
+     cp $file $sourceDir/$base
+     ci -t- $sourceDir/$base
+     co -u $sourceDir/$base
+    )
+
+    message="NEW FILE"
+  fi
+
+  updateLog="$updateLog
+$sourceFileFromTop - $message"
+}
+
+do_main

@@ -1,0 +1,67 @@
+
+This example demonstrates the following features of omniORB and CORBA:
+
+  o  use of call-backs
+  o  use of threads for asynchronous processing
+  o  use of IDL modules
+  o  orderly shutdown of a server, cleaning up resources
+
+
+It consists of three programs:
+
+  o  cb_server     -  a server application
+  o  cb_client     -  you'll never guess ...
+  o  cb_shutdown   -  initiates shutdown of the server
+
+
+To run the server:
+
+  $ ./cb_server
+  'IOR:3456098456.......345604598'
+
+
+To run a client, cut and paste the IOR from the server:
+
+  $ ./cb_client 'IOR:3456098456.......345604598'
+  cb_client: server->one_time(call_back, "Hello!")
+  cb_client: call_back("Hello!")
+  cb_client: Returned.
+
+In this example the server invokes the call-back object in the client
+before returning.  You observe the CORBA calls as they occur in the ORB
+by passing the -ORBtraceInvocations 1 flag to your applications:
+
+  $ ./cb_client 'IOR:3456098456.......345604598' -ORBtraceInvocations 1
+  cb_client: server->one_time(call_back, "Hello!")
+  omniORB: Invoke 'one_time' on remote: root<0>
+  omniORB: Dispatching remote call 'call_back' to: root<0>
+  cb_client: call_back("Hello!")
+  cb_client: Returned.
+
+
+In a second mode of operation, the client registers the call-back with
+the server, and waits for the server to make asynchronous call-backs.
+The server spawns a new thread to serve the client.  This server thread
+exits when the client goes away, or the server is shut down.  Note that
+this is not a very efficient way of serving many clients!
+
+The two additional arguments passed to the client are the pause in seconds
+between call-backs, and a time in seconds after which the client will
+exit:
+
+  $ ./cb_client 'IOR:3456098456.......345604598' 1 4
+  cb_client: server->register(call_back, "Hello!", 1)
+  cb_client: Returned.
+  cb_client: call_back("Hello!")
+  cb_client: call_back("Hello!")
+  cb_client: call_back("Hello!")
+  cb_client: Finished.
+
+
+Finally, the server may be asked to shut itself down cleanly.  This is
+done as follows:
+
+  $ ./cb_shutdown 'IOR:3456098456.......345604598'
+
+Notice that the instance of server_i registered with the ORB is properly
+cleaned up.

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cd new
+/home/djs/src/omni/cvs/bin/scripts/omniidl -bcxx -Wbtf ../$1.idl
+cd ..

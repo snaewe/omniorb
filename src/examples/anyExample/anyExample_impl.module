@@ -1,0 +1,9 @@
+Object anyExample_impl_exe.o
+{
+    Executable anyExample_impl
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
+

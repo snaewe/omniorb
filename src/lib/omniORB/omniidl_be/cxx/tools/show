@@ -1,0 +1,7 @@
+#!/bin/sh
+
+SUFFIX=.hh
+
+TOOLS=/home/djs/src/omni/cvs/src/omniidl/python/be/cxx/tools
+
+$TOOLS/wdiff old/$1$SUFFIX new/$1$SUFFIX

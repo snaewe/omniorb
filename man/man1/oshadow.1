@@ -1,0 +1,28 @@
+.TH oshadow 1 "15.10.96" "ORL"
+.SH NAME
+oshadow \- create a shadow of a source tree
+.SH SYNOPSIS
+.B oshadow
+.I [directory]
+.SH DESCRIPTION
+The oshadow command creates a directory structure in the current directory
+identical to that below the given directory.  Essentially it is just like
+.B lndir
+but without the symbolic links.  If no directory is given on the command line
+then one is prompted for.  If the current directory is the top of an OMNI build
+tree created with
+.B obuildtree,
+the default directory to shadow will be the first source tree.
+ 
+.SH SEE ALSO
+.BR obuildtree (1)
+.BR omake (1)
+.BR lndir (1)
+
+.SH FILES
+.TP 5
+.B ./config/sources
+contains a list of the source trees if this is an OMNI build tree.
+
+.SH AUTHOR
+Tristan Richardson, ORL

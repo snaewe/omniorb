@@ -1,0 +1,15 @@
+OmniORB has been tested with egcs-1.1.2 and gcc-2.95 on x86 linux.
+The compiler must be configured with --enable-threads for the C++
+exception handling to be thread safe.
+
+With a few exceptions, egcs compilers on other platforms don't seem to
+have proper support for thread-safe exception handling. Unless there
+are information to the contrary, do not assume that you can use egcs
+or gcc compiler on your platform to compile omniORB.
+
+egcs/gcc-2.95 are known to work on:
+
+- x86, powerpc linux (BUT not on alpha linux)
+- sparc or x86 Solaris
+- AIX
+

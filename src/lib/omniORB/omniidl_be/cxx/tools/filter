@@ -1,0 +1,12 @@
+#!/usr/bin/env perl
+
+# Chops out all blank lines in the input file, to ease
+# comparisons with diff. Should decrease the false-negative
+# regression test rate
+#
+
+
+while (<>){
+    next if (/^\s*$/);
+    print;
+}

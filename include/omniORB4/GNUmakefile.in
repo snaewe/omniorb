@@ -1,0 +1,45 @@
+TOP=../..
+CURRENT=include/omniORB4
+BASE_OMNI_TREE=@top_srcdir@
+VPATH=@srcdir@
+INSTALL=@INSTALL@
+
+INSTALLDIR = $(INSTALLINCDIR)/omniORB4
+
+HEADERS = acconfig.h BiDirPolicy.h CORBA.h CORBA_Any.h CORBA_Any_vartypes.h \
+          CORBA_BOA.h CORBA_Context.h CORBA_Current.h CORBA_DomainManager.h \
+          CORBA_Environment.h CORBA_Exception.h CORBA_ExceptionList.h	    \
+          CORBA_Fixed.h CORBA_NamedValue.h CORBA_ORB.h CORBA_Object.h	    \
+          CORBA_Object_vartypes.h CORBA_Policy.h CORBA_Principal.h	    \
+          CORBA_Request.h CORBA_ServerRequest.h CORBA_String.h		    \
+          CORBA_TypeCode.h CORBA_TypeCode_member.h			    \
+          CORBA_UnknownUserException.h CORBA_basetypes.h		    \
+          CORBA_primitive_types.h CORBA_static_fns.h CORBA_sysdep.h	    \
+          CORBA_sysdep_auto.h CORBA_sysdep_trad.h CORBA_vartypes.h	    \
+          GIOP.h IIOP.h IOP.h IOP_C.h IOP_S.h boa.h callDescriptor.h	    \
+          callHandle.h cdrStream.h codeSets.h corba_operators.h		    \
+          dynAny.h finalCleanup.h fixed.h giopEndpoint.h linkHacks.h	    \
+          local_config.h minorCode.h objTracker.h omniAsyncInvoker.h	    \
+          omniIOR.h omniInterceptors.h omniInternal.h omniORB.h		    \
+          omniORBcompat.h omniObjKey.h omniObjRef.h omniPolicy.h	    \
+          omniServant.h omniServer.h omniTransport.h omniURI.h		    \
+          omniutilities.h optionalFeatures.h poa.h poa_defs.h		    \
+          poa_operators.h poa_poa.h proxyFactory.h seqTemplatedecls.h	    \
+          seqTemplatedefns.h sslContext.h stringtypes.h tcDescriptor.h	    \
+          templatedecls.h templatedefns.h tracedthread.h		    \
+          userexception.h wstringtypes.h
+
+SUBDIRS = internal
+
+include $(TOP)/mk/beforeauto.mk
+
+install:: $(HEADERS)
+	@(dir="$(INSTALLDIR)"; \
+          for file in $^; do \
+            $(ExportFileToDir) \
+          done )
+
+install::
+	@$(MakeSubdirs)
+
+include $(TOP)/mk/afterauto.mk

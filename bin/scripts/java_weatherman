@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# This won't work until a server's been set up and its IOR published.
+
+#$IOR=IOR:...
+
+if [ -z $IOR ]; then
+    exec java UK.co.orl.weather.Weatherman $IOR
+else
+    echo "Weather service IOR needed (edit the script if you have one)" >2
+    exit 1
+fi
