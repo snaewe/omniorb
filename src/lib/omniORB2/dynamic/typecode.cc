@@ -30,6 +30,10 @@
 
 /* 
  * $Log$
+ * Revision 1.14  1998/09/03 17:38:23  sll
+ * CORBA::TypeCode::_nil() called the wrong ctor when compiled with DEC cxx
+ * 5.5. fixed.
+ *
  * Revision 1.13  1998/08/19 15:46:03  sll
  * operator<<= (CORBA::DefinitionKind,NetBufferedStream&) and friends are now
  * defined in the global scope. Previously they are defined in namespace COR
@@ -1946,7 +1950,7 @@ CORBA::TypeCode::_nil()
 #else
     // Workaround for compiler bug in DEC cxx v5.5
     CORBA::_nil_TypeCode tmp;
-    _nil_TypeCodeV = new CORBA::TypeCode(tmp);
+    _nil_TypeCodeV = new CORBA::_nil_TypeCode(tmp);
 #endif
   }
   return _nil_TypeCodeV;
