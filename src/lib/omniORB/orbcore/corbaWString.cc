@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/11/17 19:11:16  dpg1
+  Rename _CORBA_Sequence__WString to _CORBA_Sequence_WString.
+
   Revision 1.1.2.3  2000/11/16 12:33:44  dpg1
   Minor fixes to permit use of UShort as WChar.
 
@@ -99,11 +102,11 @@ _CORBA_WString_member::operator >>= (cdrStream& s) const {
 }
 
 //////////////////////////////////////////////////////////////////////
-////////////////// _CORBA_Unbounded_Sequence__WString /////////////////
+////////////////// _CORBA_Unbounded_Sequence_WString /////////////////
 //////////////////////////////////////////////////////////////////////
 
 void
-_CORBA_Sequence__WString::operator >>= (cdrStream& s) const
+_CORBA_Sequence_WString::operator >>= (cdrStream& s) const
 {
   pd_len >>= s;
 
@@ -115,7 +118,7 @@ _CORBA_Sequence__WString::operator >>= (cdrStream& s) const
 
 
 void
-_CORBA_Sequence__WString::operator <<= (cdrStream& s)
+_CORBA_Sequence_WString::operator <<= (cdrStream& s)
 {
   _CORBA_ULong slen;
   slen <<= s;

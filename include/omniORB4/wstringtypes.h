@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/11/17 19:11:16  dpg1
+  Rename _CORBA_Sequence__WString to _CORBA_Sequence_WString.
+
   Revision 1.1.2.3  2000/11/15 17:04:33  sll
   Removed marshalling functions from WString_helper.
 
@@ -553,14 +556,14 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////
-////////////////// _CORBA_Sequence__WString           /////////////////
+////////////////// _CORBA_Sequence_WString           /////////////////
 //////////////////////////////////////////////////////////////////////
 
-class _CORBA_Sequence__WString
+class _CORBA_Sequence_WString
 {
 public:
   typedef _CORBA_WString_element ElemT;
-  typedef _CORBA_Sequence__WString SeqT;
+  typedef _CORBA_Sequence_WString SeqT;
 
   inline _CORBA_ULong maximum() const { return pd_max; }
   inline _CORBA_ULong length() const  { return pd_len; }
@@ -657,9 +660,9 @@ public:
   inline const _CORBA_WChar* const* get_buffer() const { 
     if (pd_max && !pd_data) {
 #ifdef HAS_Cplusplus_const_cast
-      _CORBA_Sequence__WString* s = const_cast<_CORBA_Sequence__WString*>(this);
+      _CORBA_Sequence_WString* s = const_cast<_CORBA_Sequence_WString*>(this);
 #else
-      _CORBA_Sequence__WString* s = (_CORBA_Sequence__WString*)this;
+      _CORBA_Sequence_WString* s = (_CORBA_Sequence_WString*)this;
 #endif
       s->copybuffer(pd_max);
     }
@@ -671,7 +674,7 @@ public:
   }
 
 
-  inline ~_CORBA_Sequence__WString() { 
+  inline ~_CORBA_Sequence_WString() { 
     if (pd_rel && pd_data) freebuf(pd_data);
     pd_data = 0;
   }
@@ -681,15 +684,15 @@ public:
   void operator <<= (cdrStream& s);
 
 protected:
-  inline _CORBA_Sequence__WString()
+  inline _CORBA_Sequence_WString()
     : pd_max(0), pd_len(0), pd_rel(1), pd_bounded(0), pd_data(0) {}
 
-  inline _CORBA_Sequence__WString(_CORBA_ULong max,
+  inline _CORBA_Sequence_WString(_CORBA_ULong max,
 				 _CORBA_Boolean bounded=0)
     : pd_max(max), pd_len(0), pd_rel(1), pd_bounded(bounded), pd_data(0) {
   }
 
-  inline _CORBA_Sequence__WString(_CORBA_ULong   max,
+  inline _CORBA_Sequence_WString(_CORBA_ULong   max,
 				 _CORBA_ULong   len,
 				 _CORBA_WChar**         value,
 				 _CORBA_Boolean release = 0,
@@ -702,7 +705,7 @@ protected:
     }
   }
 
-  inline _CORBA_Sequence__WString(const SeqT& s)
+  inline _CORBA_Sequence_WString(const SeqT& s)
     : pd_max(s.pd_max), pd_len(0), pd_rel(1),
       pd_bounded(s.pd_bounded), pd_data(0) {
     length(s.pd_len);
@@ -773,76 +776,76 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////
-/////////////////// _CORBA_Bounded_Sequence__WString //////////////////
+/////////////////// _CORBA_Bounded_Sequence_WString //////////////////
 //////////////////////////////////////////////////////////////////////
 
 template<int max>
-class _CORBA_Bounded_Sequence__WString
-  : public _CORBA_Sequence__WString
+class _CORBA_Bounded_Sequence_WString
+  : public _CORBA_Sequence_WString
 {
 public:
-  typedef _CORBA_Bounded_Sequence__WString<max> SeqT;
+  typedef _CORBA_Bounded_Sequence_WString<max> SeqT;
 
-  inline _CORBA_Bounded_Sequence__WString()
-    : _CORBA_Sequence__WString(max,1) {}
+  inline _CORBA_Bounded_Sequence_WString()
+    : _CORBA_Sequence_WString(max,1) {}
 
-  inline _CORBA_Bounded_Sequence__WString(_CORBA_ULong   length,
+  inline _CORBA_Bounded_Sequence_WString(_CORBA_ULong   length,
 					 _CORBA_WChar**         value,
 					 _CORBA_Boolean release = 0)
-    : _CORBA_Sequence__WString(max, length, value, release, 1) {}
+    : _CORBA_Sequence_WString(max, length, value, release, 1) {}
 
-  inline _CORBA_Bounded_Sequence__WString(const SeqT& s)
-    : _CORBA_Sequence__WString(s) {}
+  inline _CORBA_Bounded_Sequence_WString(const SeqT& s)
+    : _CORBA_Sequence_WString(s) {}
 
-  inline ~_CORBA_Bounded_Sequence__WString() {}
+  inline ~_CORBA_Bounded_Sequence_WString() {}
 
   inline SeqT& operator = (const SeqT& s) {
-    _CORBA_Sequence__WString::operator = (s);
+    _CORBA_Sequence_WString::operator = (s);
     return *this;
   }
 
   // CORBA 2.3 additions
   inline void replace(_CORBA_ULong len, _CORBA_WChar** data,
 		      _CORBA_Boolean release = 0) {
-    _CORBA_Sequence__WString::replace(max,len,data,release);
+    _CORBA_Sequence_WString::replace(max,len,data,release);
   }
 };
 
 //////////////////////////////////////////////////////////////////////
-////////////////// _CORBA_Unbounded_Sequence__WString /////////////////
+////////////////// _CORBA_Unbounded_Sequence_WString /////////////////
 //////////////////////////////////////////////////////////////////////
 
-class _CORBA_Unbounded_Sequence__WString
-  : public _CORBA_Sequence__WString
+class _CORBA_Unbounded_Sequence_WString
+  : public _CORBA_Sequence_WString
 {
 public:
-  typedef _CORBA_Unbounded_Sequence__WString SeqT;
+  typedef _CORBA_Unbounded_Sequence_WString SeqT;
 
-  inline _CORBA_Unbounded_Sequence__WString() {}
+  inline _CORBA_Unbounded_Sequence_WString() {}
 
-  inline _CORBA_Unbounded_Sequence__WString(_CORBA_ULong max) :
-         _CORBA_Sequence__WString(max) {}
+  inline _CORBA_Unbounded_Sequence_WString(_CORBA_ULong max) :
+         _CORBA_Sequence_WString(max) {}
 
-  inline _CORBA_Unbounded_Sequence__WString(_CORBA_ULong   max,
+  inline _CORBA_Unbounded_Sequence_WString(_CORBA_ULong   max,
 					   _CORBA_ULong   length,
 					   _CORBA_WChar**         value,
 					   _CORBA_Boolean release = 0)
-    : _CORBA_Sequence__WString(max, length, value, release) {}
+    : _CORBA_Sequence_WString(max, length, value, release) {}
 
-  inline _CORBA_Unbounded_Sequence__WString(const SeqT& s)
-    : _CORBA_Sequence__WString(s) {}
+  inline _CORBA_Unbounded_Sequence_WString(const SeqT& s)
+    : _CORBA_Sequence_WString(s) {}
 
-  inline ~_CORBA_Unbounded_Sequence__WString() {}
+  inline ~_CORBA_Unbounded_Sequence_WString() {}
 
   inline SeqT& operator = (const SeqT& s) {
-    _CORBA_Sequence__WString::operator = (s);
+    _CORBA_Sequence_WString::operator = (s);
     return *this;
   }
 
   // CORBA 2.3 additions
   inline void replace(_CORBA_ULong max, _CORBA_ULong len, _CORBA_WChar** data,
 		      _CORBA_Boolean release = 0) {
-    _CORBA_Sequence__WString::replace(max,len,data,release);
+    _CORBA_Sequence_WString::replace(max,len,data,release);
   }
 
 };
