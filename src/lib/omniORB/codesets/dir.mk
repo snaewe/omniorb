@@ -40,7 +40,6 @@ LIB_NAME     := omniCodeSets
 LIB_VERSION  := $(OMNIORB_VERSION)
 LIB_OBJS     := $(ORB_OBJS)
 LIB_IMPORTS  := $(patsubst %,$(LibPathPattern),../orbcore/shared) \
-                $(OMNIORB_DLL_NAME) $(OMNIORB_DYNAMIC_DLL_NAME) \
-                $(OMNIASYNCINVOKER_LIB) $(OMNITHREAD_LIB) $(EXTRA_LIBS)
+                $(EXTRA_LIBS)
 
 include $(BASE_OMNI_TREE)/mk/mklib.mk
