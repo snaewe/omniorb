@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.10  1999/11/17 17:23:54  dpg1
+// Minor bug when scoped name look-up encounters an identifier which does
+// not form a scope.
+//
 // Revision 1.9  1999/11/17 17:17:00  dpg1
 // Changes to remove static initialisation of objects.
 //
@@ -647,6 +651,7 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
 	IdlErrorCont(e->file(), e->line(), "(`%s' defined here)",
 		     e->identifier());
 	delete [] ssn;
+	return 0;
       }
     }
   }
