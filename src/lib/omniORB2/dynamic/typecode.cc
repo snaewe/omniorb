@@ -30,6 +30,10 @@
 
 /* 
  * $Log$
+ * Revision 1.26  1999/05/25 17:54:48  sll
+ * Added check for invalid arguments using magic numbers.
+ * Perform casting of integer label values in union members.
+ *
  * Revision 1.25  1999/04/21 13:24:57  djr
  * Fixed bug in generation of typecode alignment tables.
  *
@@ -140,7 +144,9 @@
 /////////////////////////// CORBA::TypeCode //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::TypeCode::~TypeCode() {}
+CORBA::TypeCode::~TypeCode() {
+  pd_magic = 0;
+}
 
 CORBA::TCKind
 CORBA::TypeCode::kind() const
@@ -152,6 +158,7 @@ CORBA::Boolean
 CORBA::TypeCode::equal(CORBA::TypeCode_ptr TCp,
 		       CORBA::Boolean langEquiv) const
 {
+  if (!PR_is_valid(TCp)) throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
   return ToConstTcBase_Checked(this)
     ->NP_equal(ToTcBase_Checked(TCp), langEquiv, 0);
 }
@@ -236,6 +243,8 @@ CORBA::TypeCode::parameter(Long index) const
 CORBA::TypeCode_ptr
 CORBA::TypeCode::_duplicate(CORBA::TypeCode_ptr t)
 {
+  if (!PR_is_valid(t))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
   if (CORBA::is_nil(t))  return t;
   return TypeCode_collector::duplicateRef(ToTcBase(t));
 }
@@ -330,7 +339,7 @@ CORBA::TypeCode::NP_struct_tc(const char* id, const char* name,
 {
   const CORBA::ULong memberCount = members.length();
   for( CORBA::ULong i = 0; i < memberCount; i++ )
-    if (CORBA::is_nil(members[i].type))
+    if ( !PR_is_valid(members[i].type) || CORBA::is_nil(members[i].type))
       throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
 
   return new TypeCode_struct(id, name, members);
@@ -344,7 +353,7 @@ CORBA::TypeCode::NP_union_tc(const char* id, const char* name,
 {
   const CORBA::ULong memberCount = members.length();
   for( CORBA::ULong i = 0; i < memberCount; i++ )
-    if( CORBA::is_nil(members[i].type) )
+    if( !PR_is_valid(members[i].type) || CORBA::is_nil(members[i].type) )
       throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
 
   return new TypeCode_union(id, name, ToTcBase_Checked(discriminator_type),
@@ -374,7 +383,7 @@ CORBA::TypeCode::NP_exception_tc(const char* id, const char* name,
 {
   const CORBA::ULong memberCount = members.length();
   for( CORBA::ULong i = 0; i < memberCount; i++ )
-    if (CORBA::is_nil(members[i].type))
+    if ( !PR_is_valid(members[i].type) || CORBA::is_nil(members[i].type))
       throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
 
   return new TypeCode_except(id, name, members);
@@ -617,7 +626,7 @@ CORBA::TypeCode_ptr CORBA::TypeCode::PR_string_tc() {
 void
 CORBA::release(TypeCode_ptr o)
 {
-  if( !CORBA::is_nil(o) )
+  if( CORBA::TypeCode::PR_is_valid(o) && !CORBA::is_nil(o) )
     TypeCode_collector::releaseRef(ToTcBase(o));
 }
 
@@ -2549,6 +2558,9 @@ TypeCode_enum::NP_member_count() const
 const char*
 TypeCode_enum::NP_member_name(CORBA::ULong index) const
 {
+  if (pd_members.length() <= index)
+    throw CORBA::TypeCode::Bounds();
+
   return pd_members[index];
 }
 
@@ -2608,6 +2620,9 @@ TypeCode_union::TypeCode_union(const char* repositoryId,
   : TypeCode_base(CORBA::tk_union)
 {
   const CORBA::ULong memberCount = members.length();
+
+  if (memberCount == 0)
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
   pd_repoId = CORBA::string_dup(repositoryId);
   pd_name = CORBA::string_dup(name);
@@ -2878,6 +2893,9 @@ TypeCode_union::NP_member_count() const
 const char*
 TypeCode_union::NP_member_name(CORBA::ULong index) const
 {
+  if (pd_members.length() <= index)
+    throw CORBA::TypeCode::Bounds();
+
   return pd_members[index].aname;
 }
 
@@ -2885,6 +2903,9 @@ TypeCode_union::NP_member_name(CORBA::ULong index) const
 TypeCode_base*
 TypeCode_union::NP_member_type(CORBA::ULong index) const
 {
+  if (pd_members.length() <= index)
+    throw CORBA::TypeCode::Bounds();
+
   return ToTcBase(pd_members[index].atype);
 }
 
@@ -2892,8 +2913,12 @@ TypeCode_union::NP_member_type(CORBA::ULong index) const
 CORBA::Any*
 TypeCode_union::NP_member_label(CORBA::ULong i) const
 {
+  if (pd_members.length() <= i)
+    throw CORBA::TypeCode::Bounds();
+
   CORBA::Any* a = new CORBA::Any;
   if( !a )  _CORBA_new_operator_return_null();
+
   TypeCode_union_helper::insertLabel(*a, pd_members[i].alabel, pd_discrim_tc);
   return a;
 }
@@ -4284,71 +4309,124 @@ TypeCode_union::Discriminator
 TypeCode_union_helper::extractLabel(const CORBA::Any& label,
 				    CORBA::TypeCode_ptr tc)
 {
-  { // check that <label> is of the correct type
+  // When the discriminator is a long, short, unsigned short or unsigned long,
+  // we have to cast the label value from any of these kinds and check
+  // if it is within the integer range of the discriminator.
+  CORBA::TCKind lbl_kind;
+  TypeCode_union::Discriminator lbl_value;
+  CORBA::Boolean sign = 0;    // 1 == signed.
+
+  {
     CORBA::TypeCode_var lbl_tc = label.type();
-    if( !tc->equal(lbl_tc) )
+    lbl_kind = lbl_tc->kind();
+    switch (lbl_kind) {
+    case CORBA::tk_char:
+      {
+	CORBA::Char c;
+	label >>= CORBA::Any::to_char(c);
+	lbl_value = c;
+	break;
+      }
+    case CORBA::tk_boolean:
+      {
+	CORBA::Boolean c;
+	label >>= CORBA::Any::to_boolean(c);
+	lbl_value = ((c)? 1 : 0);
+	break;
+      }
+    case CORBA::tk_octet:
+      {
+	CORBA::Octet c;
+	label >>= CORBA::Any::to_octet(c);
+	lbl_value = c;
+	break;
+      }
+    case CORBA::tk_short:
+      {
+	CORBA::Short c;
+	label >>= c;
+	lbl_value = c;
+	sign = 1;
+	break;
+      }
+    case CORBA::tk_ushort:
+      {
+	CORBA::UShort c;
+	label >>= c;
+	lbl_value = c;
+	break;
+      }
+    case CORBA::tk_long:
+      {
+	CORBA::Long c;
+	label >>= c;
+	lbl_value = c;
+	sign = 1;
+	break;
+      }
+    case CORBA::tk_ulong:
+      {
+	CORBA::ULong c;
+	label >>= c;
+	lbl_value = c;
+	break;
+      }
+    case CORBA::tk_enum:
+      {
+	// check that <label> is of the correct type
+	if( !tc->equal(lbl_tc) )
+	  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      }
+    default:
       throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    }
   }
 
   switch( tc->kind() ) {
   case CORBA::tk_char:
-    {
-      CORBA::Char c;
-      label >>= CORBA::Any::to_char(c);
-      return TypeCode_union::Discriminator(c);
-    }
+    if (lbl_kind != CORBA::tk_char)
+      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    break;
   case CORBA::tk_boolean:
-    {
-      CORBA::Boolean c;
-      label >>= CORBA::Any::to_boolean(c);
-      return TypeCode_union::Discriminator(c);
-    }
-  case CORBA::tk_octet:
-    {
-      CORBA::Octet c;
-      label >>= CORBA::Any::to_octet(c);
-      return TypeCode_union::Discriminator(c);
-    }
+    if (lbl_kind != CORBA::tk_boolean)
+      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    break;
   case CORBA::tk_short:
-    {
-      CORBA::Short c;
-      label >>= c;
-      return TypeCode_union::Discriminator(c);
-    }
+    if ((sign && ((CORBA::Long) lbl_value < -32768) ) || (lbl_value > 32767) )
+      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    break;
   case CORBA::tk_ushort:
-    {
-      CORBA::UShort c;
-      label >>= c;
-      return TypeCode_union::Discriminator(c);
-    }
+    if ((sign && ((CORBA::Long) lbl_value < 0) ) || (lbl_value > 65536) )
+      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    break;
   case CORBA::tk_long:
-    {
-      CORBA::Long c;
-      label >>= c;
-      return TypeCode_union::Discriminator(c);
-    }
+    // XXX if ever TypeCode_union::Discriminator is bigger than
+    //     CORBA::Long, we should test for the negative limit as well.
+   if (!sign && (lbl_value > 2147483647) )
+      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    break;
   case CORBA::tk_ulong:
-    {
-      CORBA::ULong c;
-      label >>= c;
-      return TypeCode_union::Discriminator(c);
-    }
+    // XXX if ever TypeCode_union::Discriminator is bigger than
+    //     CORBA::ULong, we should test for the positive limit as well.
+    if (sign && ((CORBA::Long) lbl_value < 0))
+      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+    break;
   case CORBA::tk_enum:
     {
       CORBA::ULong c;
       tcDescriptor enumdesc;
       enumdesc.p_enum = &c;
       label.PR_unpackTo(tc, &enumdesc);
-      return TypeCode_union::Discriminator(c);
+      lbl_value = c;
+      break;
     }
   // case CORBA::tk_wchar:
+  case CORBA::tk_octet:
   default:
     throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
   }
 
-#ifdef NEED_DUMMY_RETURN
-  return 0;
-#endif
+  return lbl_value;
 }
 
 
@@ -4702,13 +4780,20 @@ CORBA::ORB::create_struct_tc(const char* id, const char* name,
 			     const CORBA::StructMemberSeq& members)
 {
   CORBA::ULong memberCount = members.length();
+  CORBA::ULong i;
+
+  for( i = 0; i < memberCount; i++ ) {
+    if (!CORBA::TypeCode::PR_is_valid(members[i].type))
+      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  }
+
   PR_structMember* new_members = new PR_structMember[memberCount];
 
-  for( ULong i = 0; i < memberCount; i++ ) {
+  for( i = 0; i < memberCount; i++ ) {
     // We duplicate the name and the type.
     new_members[i].name = CORBA::string_dup(members[i].name);
     new_members[i].type =
-      TypeCode_collector::duplicateRef(ToTcBase(members[i].type));
+       TypeCode_collector::duplicateRef(ToTcBase(members[i].type));
   }
 
   return new TypeCode_struct(CORBA::string_dup(id), CORBA::string_dup(name),
@@ -4722,9 +4807,12 @@ CORBA::ORB::create_union_tc(const char* id, const char* name,
 			    const CORBA::UnionMemberSeq& members)
 {
   const CORBA::ULong memberCount = members.length();
-  for( CORBA::ULong i = 0; i < memberCount; i++ )
-    if( CORBA::is_nil(members[i].type) )
-      throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
+  CORBA::ULong i;
+
+  for( i = 0; i < memberCount; i++ )
+    if( !CORBA::TypeCode::PR_is_valid(members[i].type) ||
+	CORBA::is_nil(members[i].type) )
+      throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
   return new TypeCode_union(id, name, ToTcBase_Checked(discriminator_type),
 			    members);
@@ -4778,6 +4866,9 @@ CORBA::TypeCode_ptr
 CORBA::ORB::create_sequence_tc(CORBA::ULong bound,
 			       CORBA::TypeCode_ptr element_type)
 {
+  if (!CORBA::TypeCode::PR_is_valid(element_type))
+      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+
   return CORBA::TypeCode::NP_sequence_tc(bound, element_type);
 }
 
@@ -4785,6 +4876,9 @@ CORBA::TypeCode_ptr
 CORBA::ORB::create_array_tc(CORBA::ULong length,
 			    CORBA::TypeCode_ptr element_type)
 {
+  if (!CORBA::TypeCode::PR_is_valid(element_type))
+      throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+
   return CORBA::TypeCode::NP_array_tc(length, element_type);
 }
 
@@ -4818,6 +4912,7 @@ TypeCode_ptr         _tc_TypeCode;
 TypeCode_ptr         _tc_Principal;
 TypeCode_ptr         _tc_Object;
 TypeCode_ptr         _tc_string;
+TypeCode_ptr         _tc_NamedValue;
 }
 #else
 CORBA::TypeCode_ptr         CORBA::_tc_null;
@@ -4836,6 +4931,7 @@ CORBA::TypeCode_ptr         CORBA::_tc_TypeCode;
 CORBA::TypeCode_ptr         CORBA::_tc_Principal;
 CORBA::TypeCode_ptr         CORBA::_tc_Object;
 CORBA::TypeCode_ptr         CORBA::_tc_string;
+CORBA::TypeCode_ptr         CORBA::_tc_NamedValue;
 #endif
 
 
@@ -4877,6 +4973,23 @@ static void check_static_data_is_initialised()
   CORBA::_tc_Principal = new TypeCode_base(CORBA::tk_Principal);
   CORBA::_tc_Object = new TypeCode_objref("IDL:CORBA/Object:1.0","Object");
   CORBA::_tc_string = new TypeCode_string(0);
+  {
+    CORBA::TypeCode_var tc_Flags = new TypeCode_alias("IDL:CORBA/Flags:1.0", "Flags",ToTcBase(CORBA::_tc_ulong));
+    CORBA::TypeCode_var tc_Identifier = new TypeCode_alias("IDL:CORBA/Identifier:1.0", "Identifier", ToTcBase(CORBA::_tc_string));
+
+    CORBA::PR_structMember nvMembers[4];
+
+    nvMembers[0].name = "name";
+    nvMembers[0].type = tc_Identifier;
+    nvMembers[1].name = "argument";
+    nvMembers[1].type = CORBA::_tc_any;
+    nvMembers[2].name = "len";
+    nvMembers[2].type = CORBA::_tc_long;
+    nvMembers[3].name = "arg_modes";
+    nvMembers[3].type = tc_Flags;
+    
+    CORBA::_tc_NamedValue = CORBA::TypeCode::PR_struct_tc("IDL:CORBA/NamedValue:1.0", "NamedValue",nvMembers, 4);
+  }
 }
 
 // We need a singleton here as a final check, so that if no
