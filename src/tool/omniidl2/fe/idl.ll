@@ -82,7 +82,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include <string.h>
 
-static char	idl_escape_reader(char *);
+static unsigned char	idl_escape_reader(char *);
 static double	idl_atof(char *);
 static long	idl_atoi(char *, long);
 static void	idl_parse_line_and_file(char *);
@@ -105,7 +105,7 @@ typedef		return TYPEDEF;
 struct		return STRUCT;
 enum		return ENUM;
 string		return STRING;
-wstring_t	return WSTRING;
+wstring 	return WSTRING;
 sequence	return SEQUENCE;
 union		return UNION;
 switch		return SWITCH;
@@ -117,7 +117,7 @@ long		return LONG;
 short		return SHORT;
 unsigned	return UNSIGNED;
 char		return CHAR;
-wchar_t		return WCHAR;
+wchar		return WCHAR;
 boolean		return BOOLEAN;
 octet		return OCTET;
 void		return VOID;
@@ -144,39 +144,44 @@ oneway		return ONEWAY;
     return IDENTIFIER;
 }
 
--?[0-9]+"."[0-9]*([eE][+-]?[0-9]+)?[lLfF]?      {
+[0-9]*"."[0-9]*([eE][+-]?[0-9]+)?[lLfF]?      {
                   yylval.dval = idl_atof(yytext);
                   return FLOATING_PT_LITERAL;
                 }
--?[0-9]+[eE][+-]?[0-9]+[lLfF]?  {
+[0-9]+[eE][+-]?[0-9]+[lLfF]?  {
                   yylval.dval = idl_atof(yytext);
                   return FLOATING_PT_LITERAL;
                 }
 
--?[1-9][0-9]*	{
+[1-9][0-9]*	{
 		  yylval.ival = idl_atoi(yytext, 10);
 		  return INTEGER_LITERAL;
 	        }
--?0[xX][a-fA-F0-9]+ {
+0[xX][a-fA-F0-9]+ {
 		  yylval.ival = idl_atoi(yytext, 16);
 		  return INTEGER_LITERAL;
 	        }
--?0[0-7]*	{
+0[0-7]*	{
 		  yylval.ival = idl_atoi(yytext, 8);
 		  return INTEGER_LITERAL;
 	      	}
-
-"\""[^\"]*"\""	{
+"\""([^\"\\]|\\.)*"\""	{
 		  yytext[strlen(yytext)-1] = '\0';
 		  yylval.sval = new String(yytext + 1);
 		  return STRING_LITERAL;
 	      	}
+
 "'"."'"		{
 		  yylval.cval = yytext[1];
 		  return CHARACTER_LITERAL;
 	      	}
 "'"\\([0-7]{1,3})"'"	{
 		  // octal character constant
+		  yylval.cval = idl_escape_reader(yytext + 1);
+		  return CHARACTER_LITERAL;
+		}
+"'"\\([xX][0-9a-fA-F]{1,2})"'"	{
+		  // hex character constant
 		  yylval.cval = idl_escape_reader(yytext + 1);
 		  return CHARACTER_LITERAL;
 		}
@@ -623,7 +628,7 @@ idl_atof(char *s)
 /*
  * Convert (some) escaped characters into their ascii values
  */
-static char
+static unsigned char
 idl_escape_reader(
     char *str
 )
