@@ -30,9 +30,10 @@ $compare_program = "/home/djs/src/omni/cvs/src".
 # command line option
 $test_suite = "/home/djs/src/idl-test-suite";
 
-$tests = [ ["", "", ""],
-#	   ["-tp",  "-Wbtp", "Tie Templates"],
-#           ["-tf",  "-Wbtf", "Flattened tie templates"],
+$tests = [ 
+           ["", "", ""],
+	   ["-tp",  "-Wbtp", "Tie Templates"],
+           ["-tf",  "-Wbtf", "Flattened tie templates"],
            ["-a",   "-Wba",  "TypeCode and Any"] 
 ];
 
