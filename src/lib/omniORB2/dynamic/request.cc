@@ -39,7 +39,7 @@
 #include <string.h>
 #include <omniORB3/callDescriptor.h>
 #include <remoteIdentity.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 #define INVOKE_DONE()  if( pd_state == RS_READY )  pd_state = RS_DONE;
@@ -458,12 +458,14 @@ RequestImpl::invoke()
 					  " GIOP_C::ReceiveReply()");
 	  }
 	}
-	catch(const CORBA::COMM_FAILURE& ex) {
+	catch(const omniConnectionBroken& ex) {
 	  if( reuse ){
 	    CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
 	    throw ex2;
 	  }
-	  else throw;
+	  else {
+	    OMNIORB_THROW(COMM_FAILURE, ex.minor(), ex.completed());
+	  }
 	}
       }
       catch(const CORBA::COMM_FAILURE& ex) {
@@ -608,12 +610,14 @@ RequestImpl::send_oneway()
 					  " unexpected code for oneway call");
 	  }
 	}
-	catch(const CORBA::COMM_FAILURE& ex) {
+	catch(const omniConnectionBroken& ex) {
 	  if( reuse ){
 	    CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
 	    throw ex2;
 	  }
-	  else throw;
+	  else {
+	    OMNIORB_THROW(COMM_FAILURE, ex.minor(), ex.completed());
+	  }
 	}
       }
       catch(const CORBA::COMM_FAILURE& ex) {

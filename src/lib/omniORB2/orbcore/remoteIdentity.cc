@@ -28,6 +28,15 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/06/22 10:37:50  dpg1
+  Transport code now throws omniConnectionBroken exception rather than
+  CORBA::COMM_FAILURE when things go wrong. This allows the invocation
+  code to distinguish between transport problems and COMM_FAILURES
+  propagated from the server side.
+
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.1.2.4  1999/10/27 17:32:16  djr
   omni::internalLock and objref_rc_lock are now pointers.
 
@@ -51,7 +60,7 @@
 #include <remoteIdentity.h>
 #include <omniORB3/callDescriptor.h>
 #include <dynamicLib.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -160,12 +169,14 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
 
     }
   }
-  catch(CORBA::COMM_FAILURE& ex) {
+  catch(omniConnectionBroken& ex) {
     if( reuse ){
       CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
       throw ex2;
     }
-    else throw;
+    else {
+      OMNIORB_THROW(COMM_FAILURE, ex.minor(), ex.completed());
+    }
   }
 }
 
@@ -229,12 +240,14 @@ omniRemoteIdentity::locateRequest()
 
     }
   }
-  catch(CORBA::COMM_FAILURE& ex) {
+  catch(omniConnectionBroken& ex) {
     if( reuse ){
       CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
       throw ex2;
     }
-    else throw;
+    else {
+      OMNIORB_THROW(COMM_FAILURE, ex.minor(), ex.completed());
+    }
   }
 }
 

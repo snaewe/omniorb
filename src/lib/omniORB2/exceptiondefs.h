@@ -1,6 +1,6 @@
 // -*- Mode: C++; -*-
 //                            Package   : omniORB
-// exception.h                Created on: 27/5/99
+// exceptiondefs.h            Created on: 27/5/99
 //                            Author    : David Riddoch (djr)
 //
 //    Copyright (C) 1996-1999 AT&T Research Cambridge
@@ -28,6 +28,15 @@
 
 /*
   $Log$
+  Revision 1.1.2.1  2000/06/22 10:37:49  dpg1
+  Transport code now throws omniConnectionBroken exception rather than
+  CORBA::COMM_FAILURE when things go wrong. This allows the invocation
+  code to distinguish between transport problems and COMM_FAILURES
+  propagated from the server side.
+
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.1.2.3  1999/10/18 11:27:37  djr
   Centralised list of system exceptions.
 
@@ -43,6 +52,20 @@
 #define __OMNIORB_EXCEPTION_H__
 
 
+class omniConnectionBroken {
+public:
+  inline omniConnectionBroken(CORBA::ULong m, CORBA::CompletionStatus c)
+    : pd_minor(m), pd_status(c) {}
+
+  inline CORBA::ULong minor()                const { return pd_minor;  }
+  inline CORBA::CompletionStatus completed() const { return pd_status; }
+
+private:
+  CORBA::ULong            pd_minor;
+  CORBA::CompletionStatus pd_status;
+};
+
+
 #ifndef OMNIORB_NO_EXCEPTION_LOGGING
 
 
@@ -56,13 +79,16 @@ public:
 
 #undef OMNIORB_EX
 
-
+  static void omniConnectionBroken(const char*, int, CORBA::ULong,
+				   CORBA::CompletionStatus);
 };
 
 
 #define OMNIORB_THROW(name, minor, completion) \
   omniExHelper::name(__FILE__, __LINE__, minor, completion)
 
+#define OMNIORB_THROW_CONNECTION_BROKEN(minor, completion) \
+  omniExHelper::omniConnectionBroken(__FILE__, __LINE__, minor, completion)
 
 #else
 
@@ -70,6 +96,8 @@ public:
 #define OMNIORB_THROW(name, minor, completion) \
   throw CORBA::name(minor, completion)
 
+#define OMNIORB_THROW_CONNECTION_BROKEN(minor, completion) \
+  throw omniConnectionBroken(minor, completion)
 
 #endif
 
