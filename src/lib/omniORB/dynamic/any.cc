@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.19.2.14  2004/10/17 21:46:24  dgrisby
+ * Reset any in NP_unmarshalDataOnly.
+ *
  * Revision 1.19.2.13  2003/03/23 20:41:58  dgrisby
  * Assigning an Any to itself would incorrectly deallocate it.
  *
@@ -252,6 +255,7 @@ CORBA::Any::NP_marshalDataOnly(cdrStream& s) const
 void
 CORBA::Any::NP_unmarshalDataOnly(cdrStream& s)
 {
+  pdAnyP()->setTC_and_reset(pdAnyP()->getTC());
   pdAnyP()->copyFrom(s);
 }
 
