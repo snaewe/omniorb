@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.3  2000/11/03 19:21:35  sll
+# idltype.Declared now takes an extra argument.
+#
 # Revision 1.14.2.2  2000/10/12 15:37:49  sll
 # Updated from omni3_1_develop.
 #
@@ -239,7 +242,7 @@ def visitInterface(node):
     tc_name = scopedName.prefix("_tc_").fullyQualify()
     helper_name = scopedName.suffix("_Helper").fullyQualify()
     interface_type = types.Type(idltype.Declared(node,node.scopedName(),
-                                                 idltype.tk_objref));
+                                                 idltype.tk_objref,0));
     objref_member = interface_type.objRefTemplate("tcDesc_arg")
     prefix = config.state['Private Prefix']
 
@@ -999,7 +1002,7 @@ def visitForward(node):
     if not(isDefined(symbol)):
         stream.out("// forward declaration of interface")
         interface_type = types.Type(idltype.Declared(node, node.scopedName(),
-                                          idltype.tk_objref))
+                                          idltype.tk_objref,0))
         mem_name = interface_type.objRefTemplate("tcDesc_arg")
 
         forward(node, mem_name)
