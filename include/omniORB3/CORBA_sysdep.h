@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.17  2000/08/17 09:00:53  dpg1
+ GCC claims to support long long on all platforms.
+
  Revision 1.1.2.16  2000/08/10 10:17:53  sll
  Found the workaround for MSVC++ so that exceptions can be caught by base
  class. All the copy ctor from the most derived to the base classes must be
@@ -227,14 +230,12 @@
 #     define HAS_Cplusplus_Bool
 #  endif
 
-#if defined(__x86__)
+// GCC claims to support long long on all platforms
 #  define HAS_LongLong
-//#  define HAS_LongDouble
 #  define _CORBA_LONGLONG_DECL   long long
 #  define _CORBA_ULONGLONG_DECL  unsigned long long
 #  define _CORBA_LONGDOUBLE_DECL long double 
 #  define _CORBA_LONGLONG_CONST(x) (x##LL)
-#endif
 
 #elif defined(__DECCXX)
 // DEC C++ compiler
