@@ -21,7 +21,7 @@ ABSTOP = $(shell cd $(TOP); pwd)
 # In that case, uncomment the first line below.
 
 #PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
-#PYTHON = //c/progra~1/Python/python
+#PYTHON = /cygdrive/c/progra~1/Python/python
 
 
 #
