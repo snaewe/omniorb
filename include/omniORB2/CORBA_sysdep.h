@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.39.4.2  2000/03/27 17:48:04  sll
+ Added test for Cygnus CodeFusion 1.0 compiler
+
  Revision 1.39.4.1  1999/09/25 17:00:10  sll
  Merged changes from omni2_8_develop branch.
 
@@ -168,7 +171,7 @@
 // Minor version number 91 is for egcs version 1.*  Some older
 // versions of 1.* may not support namespaces properly - this is
 // only tested for egcs 1.1.1
-#  if __GNUC_MINOR__ >= 91
+#  if __GNUC_MINOR__ >= 91 || __GNUC_MINOR__ == 9
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Cplusplus_Bool
 #  endif
