@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.6  1999/06/18 20:36:05  sll
+  Replaced _LC_attr with _core_attr.
+
   Revision 1.5  1999/01/07 18:22:25  djr
   Replaced _OMNIORB_NTDLL_IMPORT with _LC_attr.
 
@@ -53,8 +56,8 @@
 class IOP {
 public:
   typedef _CORBA_ULong ProfileId;
-  static _LC_attr const   ProfileId    TAG_INTERNET_IOP;
-  static _LC_attr const   ProfileId    TAG_MULTIPLE_COMPONENTS;
+  static _core_attr const   ProfileId    TAG_INTERNET_IOP;
+  static _core_attr const   ProfileId    TAG_MULTIPLE_COMPONENTS;
 
   struct TaggedProfile {
     ProfileId tag;
@@ -166,7 +169,7 @@ public:
 
   typedef _CORBA_Unbounded_Sequence<ServiceContext> ServiceContextList;
 
-  static _LC_attr const ServiceID TransactionService;
+  static _core_attr const ServiceID TransactionService;
 
 
   // omniORB2 private function

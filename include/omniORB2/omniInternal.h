@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25  1999/06/18 20:36:31  sll
+  Replaced _LC_attr with _core_attr.
+
   Revision 1.24  1999/04/01 15:52:23  djr
   Updated version number to 2.8.
   Move an _LC_attr to the correct position in a declaration.
@@ -100,19 +103,6 @@
 #include <omniORB2/CORBA_sysdep.h>
 #include <omniORB2/CORBA_basetypes.h>
 #include <omniORB2/seqtemplates.h>
-
-
-#ifdef _LC_attr
-# error "A local CPP macro _LC_attr has already been defined."
-#else
-# ifdef _OMNIORB2_LIBRARY
-#  define _LC_attr
-# else
-#  define _LC_attr _OMNIORB_NTDLL_IMPORT
-# endif
-#endif
-
-
 #include <omniORB2/IOP.h>
 #include <omniORB2/GIOP.h>
 #include <omniORB2/IIOP.h>
@@ -133,7 +123,7 @@ class omniObjectManager;
 //   the variable name stays the same with compatible shared library, e.g.
 //   2.5.1.
 //
-extern _LC_attr const char* omniORB_2_8;
+extern _core_attr const char* omniORB_2_8;
 
 
 #include <omniORB2/rope.h>
@@ -161,17 +151,17 @@ public:
 #error "No suitable type to do pointer arithmetic"
 #endif
 
-  static _LC_attr const _CORBA_Char myByteOrder;
+  static _core_attr const _CORBA_Char myByteOrder;
 
   enum alignment_t { ALIGN_1 = 1, ALIGN_2 = 2, ALIGN_4 = 4, ALIGN_8 = 8 };
-  static _LC_attr const alignment_t max_alignment;
+  static _core_attr const alignment_t max_alignment;
   // Maximum value of alignment_t
 
   static inline ptr_arith_t align_to(ptr_arith_t p,alignment_t align) {
     return (p + ((int) align - 1)) & ~((int) align - 1);
   }
 
-  static _LC_attr _CORBA_Unbounded_Sequence_Octet myPrincipalID;
+  static _core_attr _CORBA_Unbounded_Sequence_Octet myPrincipalID;
 
   static void objectIsReady(omniObject* obj);
   static void objectDuplicate(omniObject* obj);
@@ -568,9 +558,5 @@ private:
 
 template <class T>
 class _CORBA_ConstrType_Variable_Var;
-
-
-#undef _LC_attr
-
 
 #endif // __OMNIINTERNAL_H__

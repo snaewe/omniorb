@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9  1999/06/18 20:36:18  sll
+  Replaced _LC_attr with _core_attr.
+
   Revision 1.8  1999/01/07 18:32:42  djr
   Replaced _OMNIORB_NTDLL_IMPORT with _LC_attr.
 
@@ -67,13 +70,13 @@ public:
   class MessageHeader {
   public:
     typedef _CORBA_Char HeaderType[8];
-    static _LC_attr const HeaderType Request;
-    static _LC_attr const HeaderType Reply;
-    static _LC_attr const HeaderType CancelRequest;
-    static _LC_attr const HeaderType LocateRequest;
-    static _LC_attr const HeaderType LocateReply;
-    static _LC_attr const HeaderType CloseConnection;
-    static _LC_attr const HeaderType MessageError;
+    static _core_attr const HeaderType Request;
+    static _core_attr const HeaderType Reply;
+    static _core_attr const HeaderType CancelRequest;
+    static _core_attr const HeaderType LocateRequest;
+    static _core_attr const HeaderType LocateReply;
+    static _core_attr const HeaderType CloseConnection;
+    static _core_attr const HeaderType MessageError;
   };
   struct _SysExceptRepoID {
     _CORBA_Char *id;
@@ -85,42 +88,42 @@ public:
   };
   class SysExceptRepoID {
   public:
-    static _LC_attr const _SysExceptRepoID UNKNOWN;
-    static _LC_attr const _SysExceptRepoID BAD_PARAM;
-    static _LC_attr const _SysExceptRepoID NO_MEMORY;
-    static _LC_attr const _SysExceptRepoID IMP_LIMIT;
-    static _LC_attr const _SysExceptRepoID COMM_FAILURE;
-    static _LC_attr const _SysExceptRepoID INV_OBJREF;
-    static _LC_attr const _SysExceptRepoID OBJECT_NOT_EXIST;
-    static _LC_attr const _SysExceptRepoID NO_PERMISSION;
-    static _LC_attr const _SysExceptRepoID INTERNAL;
-    static _LC_attr const _SysExceptRepoID MARSHAL;
-    static _LC_attr const _SysExceptRepoID INITIALIZE;
-    static _LC_attr const _SysExceptRepoID NO_IMPLEMENT;
-    static _LC_attr const _SysExceptRepoID BAD_TYPECODE;
-    static _LC_attr const _SysExceptRepoID BAD_OPERATION;
-    static _LC_attr const _SysExceptRepoID NO_RESOURCES;
-    static _LC_attr const _SysExceptRepoID NO_RESPONSE;
-    static _LC_attr const _SysExceptRepoID PERSIST_STORE;
-    static _LC_attr const _SysExceptRepoID BAD_INV_ORDER;
-    static _LC_attr const _SysExceptRepoID TRANSIENT;
-    static _LC_attr const _SysExceptRepoID FREE_MEM;
-    static _LC_attr const _SysExceptRepoID INV_IDENT;
-    static _LC_attr const _SysExceptRepoID INV_FLAG;
-    static _LC_attr const _SysExceptRepoID INTF_REPOS;
-    static _LC_attr const _SysExceptRepoID BAD_CONTEXT;
-    static _LC_attr const _SysExceptRepoID OBJ_ADAPTER;
-    static _LC_attr const _SysExceptRepoID DATA_CONVERSION;
-    static _LC_attr const _SysExceptRepoID TRANSACTION_REQUIRED;
-    static _LC_attr const _SysExceptRepoID TRANSACTION_ROLLEDBACK;
-    static _LC_attr const _SysExceptRepoID INVALID_TRANSACTION;
-    static _LC_attr const _SysExceptRepoID WRONG_TRANSACTION;
-    static _LC_attr const _CORBA_ULong maxIDLen;
-    static _LC_attr const _CORBA_Char *version;
-    static _LC_attr const _CORBA_ULong versionLen;
+    static _core_attr const _SysExceptRepoID UNKNOWN;
+    static _core_attr const _SysExceptRepoID BAD_PARAM;
+    static _core_attr const _SysExceptRepoID NO_MEMORY;
+    static _core_attr const _SysExceptRepoID IMP_LIMIT;
+    static _core_attr const _SysExceptRepoID COMM_FAILURE;
+    static _core_attr const _SysExceptRepoID INV_OBJREF;
+    static _core_attr const _SysExceptRepoID OBJECT_NOT_EXIST;
+    static _core_attr const _SysExceptRepoID NO_PERMISSION;
+    static _core_attr const _SysExceptRepoID INTERNAL;
+    static _core_attr const _SysExceptRepoID MARSHAL;
+    static _core_attr const _SysExceptRepoID INITIALIZE;
+    static _core_attr const _SysExceptRepoID NO_IMPLEMENT;
+    static _core_attr const _SysExceptRepoID BAD_TYPECODE;
+    static _core_attr const _SysExceptRepoID BAD_OPERATION;
+    static _core_attr const _SysExceptRepoID NO_RESOURCES;
+    static _core_attr const _SysExceptRepoID NO_RESPONSE;
+    static _core_attr const _SysExceptRepoID PERSIST_STORE;
+    static _core_attr const _SysExceptRepoID BAD_INV_ORDER;
+    static _core_attr const _SysExceptRepoID TRANSIENT;
+    static _core_attr const _SysExceptRepoID FREE_MEM;
+    static _core_attr const _SysExceptRepoID INV_IDENT;
+    static _core_attr const _SysExceptRepoID INV_FLAG;
+    static _core_attr const _SysExceptRepoID INTF_REPOS;
+    static _core_attr const _SysExceptRepoID BAD_CONTEXT;
+    static _core_attr const _SysExceptRepoID OBJ_ADAPTER;
+    static _core_attr const _SysExceptRepoID DATA_CONVERSION;
+    static _core_attr const _SysExceptRepoID TRANSACTION_REQUIRED;
+    static _core_attr const _SysExceptRepoID TRANSACTION_ROLLEDBACK;
+    static _core_attr const _SysExceptRepoID INVALID_TRANSACTION;
+    static _core_attr const _SysExceptRepoID WRONG_TRANSACTION;
+    static _core_attr const _CORBA_ULong maxIDLen;
+    static _core_attr const _CORBA_Char *version;
+    static _core_attr const _CORBA_ULong versionLen;
 #define omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen 46
   };
-  static _LC_attr size_t max_giop_message_size;
+  static _core_attr size_t max_giop_message_size;
 };
 
 
