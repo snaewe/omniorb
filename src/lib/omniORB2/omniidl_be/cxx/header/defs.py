@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.18  2000/07/26 15:29:08  djs
+# Missing typedef and forward when generating BOA skeletons
+#
 # Revision 1.31.2.17  2000/07/18 15:34:25  djs
 # Added -Wbvirtual_objref option to make attribute and operation _objref
 # methods virtual
@@ -312,10 +315,16 @@ def visitInterface(node):
     # the ifndef guard name contains flattened scope
     guard = id.Name(scope).guard()
 
+    # Potentially forward declare BOA skeleton code
+    class_sk = ""
+    if config.state['BOA Skeletons']:
+        class_sk = "class _sk_" + cxx_name + ";"
+
     # make the necessary forward references, typedefs and define
     # the _Helper class
     stream.out(template.interface_begin,
                guard = guard,
+               class_sk_name = class_sk,
                name = cxx_name)
 
     # recursively take care of other IDL declared within this
@@ -487,9 +496,15 @@ def visitForward(node):
     name = id.Name(node.scopedName())
     guard = name.guard()
 
+    # Potentially forward declare BOA skeleton class
+    class_sk = ""
+    if config.state['BOA Skeletons']:
+        class_sk = "class _sk_" + name.unambiguous(environment) + ";"
+
     # output the definition
     stream.out(template.interface_begin,
                guard = guard,
+               class_sk_name = class_sk,
                name = name.unambiguous(environment))
 
 def visitConst(node):
@@ -640,24 +655,33 @@ def visitTypedef(node):
                                   ["CORBA", "Object"]
                 impl_base = ""
                 objref_base = ""
+                sk_base = ""
                 if not(is_CORBA_Object):
                     scopedName = d_type.type().decl().scopedName()
                     name = id.Name(scopedName)
                     impl_scopedName = name.prefix("_impl_")
                     objref_scopedName = name.prefix("_objref_")
+                    sk_scopedName = name.prefix("_sk_")
                     impl_name = impl_scopedName.unambiguous(environment)
                     objref_name = objref_scopedName.unambiguous(environment)
+                    sk_name = sk_scopedName.unambiguous(environment)
 
-                    impl_base = "typedef " + impl_name + " _impl_" +\
-                                derivedName + ";"
-                    objref_base = "typedef " + objref_name + " _objref_" + \
-                                  derivedName + ";"
+                    impl_base =   "typedef " + impl_name   + " _impl_"   +\
+                                   derivedName + ";"
+                    objref_base = "typedef " + objref_name + " _objref_" +\
+                                   derivedName + ";"
+                    sk_base =     "typedef " + sk_name     + " _sk_"     +\
+                                   derivedName + ";"
 
                 stream.out(template.typedef_simple_objref,
                            base = derefTypeID,
                            name = derivedName,
                            impl_base = impl_base,
                            objref_base = objref_base)
+                if config.state['BOA Skeletons']:
+                    stream.out(sk_base)
+                               
+                    
             # Non-array of user declared types
             elif d_type.kind() in [ idltype.tk_struct, idltype.tk_union,
                                     idltype.tk_except, idltype.tk_enum ]:

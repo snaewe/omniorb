@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.15  2000/07/26 15:29:11  djs
+# Missing typedef and forward when generating BOA skeletons
+#
+# Revision 1.3.2.14  2000/07/24 09:35:20  dpg1
+# Adding the missing constructor meant that there was no longer a
+# default constructor.
+#
 # Revision 1.3.2.13  2000/07/24 10:17:31  djs
 # Added missing BOA skeleton constructor
 #
@@ -226,6 +233,7 @@ interface_begin = """\
 class @name@;
 class _objref_@name@;
 class _impl_@name@;
+@class_sk_name@
 typedef _objref_@name@* @name@_ptr;
 typedef @name@_ptr @name@Ref;
 
@@ -347,6 +355,7 @@ class _sk_@name@ :
   @sk_inherits@
 {
 public:
+  _sk_@name@() {}
   _sk_@name@(const omniOrbBoaKey&);
   virtual ~_sk_@name@();
   inline @name@::_ptr_type _this() {
@@ -435,6 +444,7 @@ typedef @base@_Helper @name@_Helper;
 typedef @base@_var @name@_var;
 typedef @base@_out @name@_out;
 """
+
 
 typedef_enum_oper_friend = """\
 // Need to declare <<= for elem type, as GCC expands templates early
