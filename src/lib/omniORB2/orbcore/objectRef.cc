@@ -11,12 +11,16 @@
  
 /*
   $Log$
-  Revision 1.4  1997/03/10 12:46:41  sll
-  - Changed to use the static member variables in the omniObject class etc.
-    Previously they were static local variables.
-  - Minor changes to accomodate the creation of a public API for omniORB2.
-  - Minor bug fix to disposeObject.
+  Revision 1.5  1997/03/11 16:48:43  sll
+  objectRelease now does not throw any exception. This is the compliant
+  behaviour.
 
+// Revision 1.4  1997/03/10  12:46:41  sll
+// - Changed to use the static member variables in the omniObject class etc.
+//   Previously they were static local variables.
+// - Minor changes to accomodate the creation of a public API for omniORB2.
+// - Minor bug fix to disposeObject.
+//
 // Revision 1.3  1997/01/13  14:52:54  sll
 // It is now valid to call createObjRef() with the argument <targetRepoId> == 0.
 // The semantics of such a call is to return a proxyObject if there is
@@ -201,7 +205,18 @@ omni::objectRelease(omniObject *obj)
   omniObject::objectTableLock.lock();
   if (obj->getRefCount() <= 0) {
     omniObject::objectTableLock.unlock();
-    throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
+    // This is most likely to be caused by the application code calling
+    // CORBA::release() twice on an object reference.
+    // 
+    // One would like to throw a CORBA::INV_OBJREF exception at this stage
+    // but the CORBA spec. says release *must not* throw CORBA exceptions.
+    // Therefore, just generate a warning message and returns.
+    if (omniORB::traceLevel > 0) {
+      cerr << "Warning: try to release an object with reference count <= 0.\n"
+	   << "Has CORBA::release() been called more than once on an object reference?"
+	   << endl;
+    }
+    return;
   }
   obj->setRefCount(obj->getRefCount()-1);
   if (obj->getRefCount() == 0) {
