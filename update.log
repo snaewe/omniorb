@@ -1,3 +1,13 @@
+Fri Aug 18 13:05:14 BST 2000 dme
+================================
+- Fix omkdepend output for static/%.o etc.
+
+external_merge/mk/afterdir.mk
+external_merge/mk/mklib.mk
+src/tool/omkdepend/main.c
+src/tool/omkdepend/pr.c
+
+
 Fri Aug 18 12:25:31 BST 2000 dpg1
 =================================
 
