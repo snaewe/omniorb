@@ -18,7 +18,7 @@
 #
 # 
 
-VERSION = 1.2.0
+VERSION = 1.2.1
 
 major_version = $(word 1,$(subst ., ,$(VERSION)))
 minor_version = $(word 2,$(subst ., ,$(VERSION)))
