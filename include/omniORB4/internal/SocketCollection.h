@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2002/10/04 11:11:45  dgrisby
+  Transport fixes: ENOTSOCK for Windows, SOMAXCONN in listen().
+
   Revision 1.1.2.14  2002/09/08 22:12:22  dgrisby
   Last checkin broke it.
 
@@ -137,7 +140,7 @@
 #  define ERRNO              ::WSAGetLastError()
 #  define EINPROGRESS        WSAEWOULDBLOCK
 #  define RC_EINTR           WSAEINTR
-#  define RC_EBADF           WSAEBADF
+#  define RC_EBADF           WSAENOTSOCK
 #  define NEED_SOCKET_SHUTDOWN_FLAG 1
 
 OMNI_NAMESPACE_BEGIN(omni)

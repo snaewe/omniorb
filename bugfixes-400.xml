@@ -17,4 +17,11 @@
   </text>
 </bug>
 
+<bug id="2" date="Fri Oct  4 12:01:31 BST 2002" user="dgrisby">
+  <summary>Random endpoint errors on Windows</summary>
+  <reported>Norrie Quinn</reported>
+  <link
+  href="http://www.omniorb-support.com/pipermail/omniorb-list/2002-September/021849.html"/>
+</bug>
+
 </buglist>

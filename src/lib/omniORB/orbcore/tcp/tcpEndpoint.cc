@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2002/10/04 11:11:46  dgrisby
+  Transport fixes: ENOTSOCK for Windows, SOMAXCONN in listen().
+
   Revision 1.1.2.15  2002/08/27 10:32:27  dgrisby
   FreeBSD fixes.
 
@@ -218,7 +221,7 @@ tcpEndpoint::Bind() {
     return 0;
   }
 
-  if (listen(pd_socket,5) == RC_SOCKET_ERROR) {
+  if (listen(pd_socket,SOMAXCONN) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
     return 0;
   }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2002/10/04 11:11:45  dgrisby
+  Transport fixes: ENOTSOCK for Windows, SOMAXCONN in listen().
+
   Revision 1.1.2.16  2002/09/09 22:11:51  dgrisby
   SSL transport cleanup even if certificates are wrong.
 
@@ -219,7 +222,7 @@ sslEndpoint::Bind() {
     return 0;
   }
 
-  if (listen(pd_socket,5) == RC_SOCKET_ERROR) {
+  if (listen(pd_socket,SOMAXCONN) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_socket);
     return 0;
   }
