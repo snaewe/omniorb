@@ -29,10 +29,13 @@
 
 /*
   $Log$
-  Revision 1.10  1998/03/02 17:05:29  ewc
-  Removed scoping from objectKey in class loader (caused problems compiling
-  with MSVC++ 5.0)
+  Revision 1.11  1998/03/04 14:48:47  sll
+  Added omniORB::giopServerThreadWrapper.
 
+ * Revision 1.10  1998/03/02  17:05:29  ewc
+ * Removed scoping from objectKey in class loader (caused problems compiling
+ * with MSVC++ 5.0)
+ *
  * Revision 1.9  1998/02/25  20:34:59  sll
  * New omniORB::loader class for adding dynamic object loader.
  *
@@ -363,11 +366,67 @@ public:
   public:                                                               //
     typedef CORBA::Object_ptr (*mapKeyToObject_t) (                     //
                                        const objectKey& key);           //
-                                                                        // 
+                                                                        //
     static void set(mapKeyToObject_t NewKeyToObject);                   //
   };
   ////////////////////////////////////////////////////////////////////////
 
+
+  ////////////////////////////////////////////////////////////////////////
+  // class giopServerThreadWrapper                                      //
+  //                                                                    //
+  // At any time, a single instance of this class (a singleton) is      //
+  // registered with the runtime.                                       //
+  //                                                                    //
+  // What is the function of this class?                                //
+  //   The runtime uses a number of threads internally to process       //
+  //   requests from other address spaces. Each thread starts by        //
+  //   calling the run() method of the singleton. The thread            //
+  //   will exit when run() returns. The run() method takes two         //
+  //   arguments: a callback function <fn> and its argument <arg>.      //
+  //   The run() method *MUST* call fn(arg) to pass the control back    //
+  //   the runtime at some point. When fn() returns, the run() method   //
+  //   should cleanup and returns asap.                                 //
+  //                                                                    //
+  //   Application can modify the behaviour of run() by installing      //
+  //   another singleton using setGiopServerThreadWrapper(). The        //
+  //   singleton should be an instance of a derived class of            //
+  //   giopServerThreadWrapper. The derived class should overload the   //
+  //   virtual function run() to customise its behaviour.               //
+  //                                                                    //
+  //   For example, to insert the fault handler code for ObjectStore    //
+  //   a derived class ObjectStoreThreadWrapper is defined as follows:  //
+  //									//
+  //   class ObjectStoreThreadWrapper : omniORB::giopServerThreadWrapper//
+  //   {								//
+  //     public:							//
+  //       void run(void (*fn)(void*),void* arg) {			//
+  //         /* Setup the context to clean up the state attached by	//
+  //            ObjectStore to this thread */				//
+  //         OS_PSE_ESTABLISH_FAULT_HANDLER				//
+  //         fn(arg);							//
+  //         OS_PSE_END_FAILUT_HANDLER					//
+  //       }								//
+  //  }									//
+  //									//
+  //  And in the main()							//
+  // 									//
+  //  omniORB::setgiopServerThreadWrapper(new ObjectStoreThreadWrapper);//
+  //									//
+  class giopServerThreadWrapper {                                       //
+  public:								//
+    virtual void run(void (*fn)(void*), void* arg) { fn(arg); }		//
+    virtual ~giopServerThreadWrapper() {}                               //
+									//
+  // Install a new singleton. The old singleton will be deleted by the  //
+  // runtime. This function is not thread-safe and *SHOULD NOT* be used //
+  // when the BOA::impl_is_ready() has been called.                     //
+  // If the argument <p> is nil, the call will be siliently ignored.    //
+  // 
+    static void setGiopServerThreadWrapper(giopServerThreadWrapper* p);	//
+    static giopServerThreadWrapper* getGiopServerThreadWrapper();       //
+  };									//
+  ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
   // class fatalException                                               //
