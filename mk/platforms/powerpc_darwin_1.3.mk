@@ -32,14 +32,14 @@ CXXMAKEDEPEND  += -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS   = -O2
 CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
-CXXOPTIONS      = -Wall -Wno-unused -traditional-cpp
+CXXOPTIONS      = -Wall -Wno-unused
 
 CC           = /usr/bin/cc
 CMAKEDEPEND += -D__GNUC__
 CDEBUGFLAGS  = -O
 CLINK        = $(CC)
 CLINKOPTIONS = $(CDEBUGFLAGS) $(COPTIONS)
-COPTIONS     = -traditional-cpp
+COPTIONS     = 
 
 INSTALL = install -c
 
