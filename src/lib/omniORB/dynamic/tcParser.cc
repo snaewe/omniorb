@@ -1158,7 +1158,8 @@ void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
       tcDescriptor             disc_desc;
       CORBA::TCKind            disc_kind = tc->NP_discriminator_type()->kind();
 
-      disc_desc.p_char = (CORBA::Char*) &disc_val;
+      disc_desc.p_enum.data = (void*) &disc_val;
+      disc_desc.p_enum.size = sizeof(disc_val);
       fetchSimpleItem(disc_kind, src, disc_desc);
 
       // Determine the discriminator value.
