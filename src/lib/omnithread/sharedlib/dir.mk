@@ -78,8 +78,8 @@ ifndef BuildWin32DebugLibraries
 
 implib = $(patsubst %,$(DLLPattern),omnithread$(minor_version))
 staticlib = ../$(patsubst %,$(LibPattern),omnithread)
-CXXOPTIONS  = $(MSVC_CXXNODEBUGFLAGS)
-CXXLINKOPTIONS = $(MSVC_CXXLINKNODEBUGOPTIONS)
+CXXOPTIONS  = $(MSVC_DLL_CXXNODEBUGFLAGS)
+CXXLINKOPTIONS = $(MSVC_DLL_CXXLINKNODEBUGOPTIONS)
 
 SUBDIRS = debug
 
@@ -93,8 +93,8 @@ else
 implib = $(patsubst %,$(DLLDebugPattern),omnithread$(minor_version))
 staticlib = ../../debug/$(patsubst %,$(LibDebugPattern),omnithread)
 CXXDEBUGFLAGS =
-CXXOPTIONS = $(MSVC_CXXDEBUGFLAGS)
-CXXLINKOPTIONS = $(MSVC_CXXLINKDEBUGOPTIONS)
+CXXOPTIONS = $(MSVC_DLL_CXXDEBUGFLAGS)
+CXXLINKOPTIONS = $(MSVC_DLL_CXXLINKDEBUGOPTIONS)
 
 SUBDIRS =
 
