@@ -2314,15 +2314,15 @@ case 174:
     break;}
 case 175:
 #line 930 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::floatType; ;
+{ yyval.type_val = BaseType::floatType; ;
     break;}
 case 176:
 #line 931 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::doubleType; ;
+{ yyval.type_val = BaseType::doubleType; ;
     break;}
 case 177:
 #line 932 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::longdoubleType; ;
+{ yyval.type_val = BaseType::longdoubleType; ;
     break;}
 case 178:
 #line 936 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
@@ -2346,15 +2346,15 @@ case 182:
     break;}
 case 183:
 #line 947 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::shortType; ;
+{ yyval.type_val = BaseType::shortType; ;
     break;}
 case 184:
 #line 951 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::longType; ;
+{ yyval.type_val = BaseType::longType; ;
     break;}
 case 185:
 #line 955 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::longlongType; ;
+{ yyval.type_val = BaseType::longlongType; ;
     break;}
 case 186:
 #line 959 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
@@ -2370,39 +2370,39 @@ case 188:
     break;}
 case 189:
 #line 965 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::ushortType; ;
+{ yyval.type_val = BaseType::ushortType; ;
     break;}
 case 190:
 #line 969 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::ulongType; ;
+{ yyval.type_val = BaseType::ulongType; ;
     break;}
 case 191:
 #line 973 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::ulonglongType; ;
+{ yyval.type_val = BaseType::ulonglongType; ;
     break;}
 case 192:
 #line 977 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::charType; ;
+{ yyval.type_val = BaseType::charType; ;
     break;}
 case 193:
 #line 981 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::wcharType; ;
+{ yyval.type_val = BaseType::wcharType; ;
     break;}
 case 194:
 #line 985 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::booleanType; ;
+{ yyval.type_val = BaseType::booleanType; ;
     break;}
 case 195:
 #line 989 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::octetType; ;
+{ yyval.type_val = BaseType::octetType; ;
     break;}
 case 196:
 #line 993 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::anyType; ;
+{ yyval.type_val = BaseType::anyType; ;
     break;}
 case 197:
 #line 997 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &DeclaredType::corbaObjectType; ;
+{ yyval.type_val = DeclaredType::corbaObjectType; ;
     break;}
 case 198:
 #line 1001 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
@@ -2609,7 +2609,7 @@ case 230:
 case 231:
 #line 1160 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
 {
-      yyval.type_val = &StringType::unboundedStringType;
+      yyval.type_val = StringType::unboundedStringType;
     ;
     break;}
 case 232:
@@ -2619,7 +2619,7 @@ case 232:
 case 233:
 #line 1167 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
 {
-      yyval.type_val = &WStringType::unboundedWStringType;
+      yyval.type_val = WStringType::unboundedWStringType;
     ;
     break;}
 case 234:
@@ -2741,7 +2741,7 @@ case 254:
     break;}
 case 255:
 #line 1267 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"
-{ yyval.type_val = &BaseType::voidType; ;
+{ yyval.type_val = BaseType::voidType; ;
     break;}
 case 256:
 #line 1271 "/home/dpg1/omni/cvs/omni/src/lib/omniORBpy/omniidl/cxx/idl.yy"

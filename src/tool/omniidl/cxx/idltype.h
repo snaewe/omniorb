@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/11/17 17:16:59  dpg1
+// Changes to remove static initialisation of objects.
+//
 // Revision 1.2  1999/10/29 15:44:23  dpg1
 // DeclaredType() now takes extra DeclRepoId* argument.
 //
@@ -106,8 +109,11 @@ public:
   static IdlType* scopedNameToType(const char* file, int line,
 				   const ScopedName* sn);
 
+  static void init();
+
 private:
   Kind kind_;
+  static _CORBA_Boolean initialised_;
 };
 
 
@@ -121,24 +127,24 @@ public:
   void accept(TypeVisitor& visitor) { visitor.visitBaseType(this); }
 
   // Static base type singletons
-  static BaseType nullType;
-  static BaseType voidType;
-  static BaseType shortType;
-  static BaseType longType;
-  static BaseType ushortType;
-  static BaseType ulongType;
-  static BaseType floatType;
-  static BaseType doubleType;
-  static BaseType booleanType;
-  static BaseType charType;
-  static BaseType octetType;
-  static BaseType anyType;
-  static BaseType TypeCodeType;
-  static BaseType PrincipalType;
-  static BaseType longlongType;
-  static BaseType ulonglongType;
-  static BaseType longdoubleType;
-  static BaseType wcharType;
+  static BaseType* nullType;
+  static BaseType* voidType;
+  static BaseType* shortType;
+  static BaseType* longType;
+  static BaseType* ushortType;
+  static BaseType* ulongType;
+  static BaseType* floatType;
+  static BaseType* doubleType;
+  static BaseType* booleanType;
+  static BaseType* charType;
+  static BaseType* octetType;
+  static BaseType* anyType;
+  static BaseType* TypeCodeType;
+  static BaseType* PrincipalType;
+  static BaseType* longlongType;
+  static BaseType* ulonglongType;
+  static BaseType* longdoubleType;
+  static BaseType* wcharType;
 };
 
 
@@ -162,7 +168,7 @@ public:
 
   void accept(TypeVisitor& visitor) { visitor.visitStringType(this); }
 
-  static StringType unboundedStringType;
+  static StringType* unboundedStringType;
 
 private:
   _CORBA_ULong bound_;
@@ -179,7 +185,7 @@ public:
 
   void accept(TypeVisitor& visitor) { visitor.visitWStringType(this); }
 
-  static WStringType unboundedWStringType;
+  static WStringType* unboundedWStringType;
 
 private:
   _CORBA_ULong bound_;
@@ -256,7 +262,7 @@ public:
   _CORBA_Boolean shouldDelete() { return 0; }
   void accept(TypeVisitor& visitor) { visitor.visitDeclaredType(this); }
 
-  static DeclaredType corbaObjectType;
+  static DeclaredType* corbaObjectType;
 
 private:
   Decl*       decl_;

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5  1999/11/17 17:16:59  dpg1
+// Changes to remove static initialisation of objects.
+//
 // Revision 1.4  1999/11/04 17:16:54  dpg1
 // Changes for NT.
 //
@@ -106,25 +109,58 @@ scopedNameToType(const char* file, int line, const ScopedName* sn)
   return 0;
 }
 
-// Static type objects
-BaseType     BaseType::nullType(IdlType::tk_null);
-BaseType     BaseType::voidType(IdlType::tk_void);
-BaseType     BaseType::shortType(IdlType::tk_short);
-BaseType     BaseType::longType(IdlType::tk_long);
-BaseType     BaseType::ushortType(IdlType::tk_ushort);
-BaseType     BaseType::ulongType(IdlType::tk_ulong);
-BaseType     BaseType::floatType(IdlType::tk_float);
-BaseType     BaseType::doubleType(IdlType::tk_double);
-BaseType     BaseType::booleanType(IdlType::tk_boolean);
-BaseType     BaseType::charType(IdlType::tk_char);
-BaseType     BaseType::octetType(IdlType::tk_octet);
-BaseType     BaseType::anyType(IdlType::tk_any);
-BaseType     BaseType::TypeCodeType(IdlType::tk_TypeCode);
-BaseType     BaseType::PrincipalType(IdlType::tk_Principal);
-BaseType     BaseType::longlongType(IdlType::tk_longlong);
-BaseType     BaseType::ulonglongType(IdlType::tk_ulonglong);
-BaseType     BaseType::longdoubleType(IdlType::tk_longdouble);
-BaseType     BaseType::wcharType(IdlType::tk_wchar);
-StringType   StringType::unboundedStringType(0);
-WStringType  WStringType::unboundedWStringType(0);
-DeclaredType DeclaredType::corbaObjectType(IdlType::tk_objref, 0, 0);
+// Static type object pointers
+_CORBA_Boolean IdlType::initialised_             = 0;
+BaseType*      BaseType::nullType                = 0;
+BaseType*      BaseType::voidType                = 0;
+BaseType*      BaseType::shortType               = 0;
+BaseType*      BaseType::longType                = 0;
+BaseType*      BaseType::ushortType              = 0;
+BaseType*      BaseType::ulongType               = 0;
+BaseType*      BaseType::floatType               = 0;
+BaseType*      BaseType::doubleType              = 0;
+BaseType*      BaseType::booleanType             = 0;
+BaseType*      BaseType::charType                = 0;
+BaseType*      BaseType::octetType               = 0;
+BaseType*      BaseType::anyType                 = 0;
+BaseType*      BaseType::TypeCodeType            = 0;
+BaseType*      BaseType::PrincipalType           = 0;
+BaseType*      BaseType::longlongType            = 0;
+BaseType*      BaseType::ulonglongType           = 0;
+BaseType*      BaseType::longdoubleType          = 0;
+BaseType*      BaseType::wcharType               = 0;
+StringType*    StringType::unboundedStringType   = 0;
+WStringType*   WStringType::unboundedWStringType = 0;
+DeclaredType*  DeclaredType::corbaObjectType     = 0;
+
+
+void
+IdlType::
+init()
+{
+  if (!initialised_) {
+    BaseType::nullType                = new BaseType(IdlType::tk_null);
+    BaseType::voidType                = new BaseType(IdlType::tk_void);
+    BaseType::shortType               = new BaseType(IdlType::tk_short);
+    BaseType::longType                = new BaseType(IdlType::tk_long);
+    BaseType::ushortType              = new BaseType(IdlType::tk_ushort);
+    BaseType::ulongType               = new BaseType(IdlType::tk_ulong);
+    BaseType::floatType               = new BaseType(IdlType::tk_float);
+    BaseType::doubleType              = new BaseType(IdlType::tk_double);
+    BaseType::booleanType             = new BaseType(IdlType::tk_boolean);
+    BaseType::charType                = new BaseType(IdlType::tk_char);
+    BaseType::octetType               = new BaseType(IdlType::tk_octet);
+    BaseType::anyType                 = new BaseType(IdlType::tk_any);
+    BaseType::TypeCodeType            = new BaseType(IdlType::tk_TypeCode);
+    BaseType::PrincipalType           = new BaseType(IdlType::tk_Principal);
+    BaseType::longlongType            = new BaseType(IdlType::tk_longlong);
+    BaseType::ulonglongType           = new BaseType(IdlType::tk_ulonglong);
+    BaseType::longdoubleType          = new BaseType(IdlType::tk_longdouble);
+    BaseType::wcharType               = new BaseType(IdlType::tk_wchar);
+    StringType::unboundedStringType   = new StringType(0);
+    WStringType::unboundedWStringType = new WStringType(0);
+    DeclaredType::corbaObjectType     = new DeclaredType(IdlType::tk_objref,
+							 0, 0);
+    initialised_ = 1;
+  }
+}

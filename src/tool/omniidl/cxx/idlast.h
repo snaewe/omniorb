@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7  1999/11/17 17:17:00  dpg1
+// Changes to remove static initialisation of objects.
+//
 // Revision 1.6  1999/11/02 17:07:27  dpg1
 // Changes to compile on Solaris.
 //
@@ -90,7 +93,7 @@ class AST {
 public:
   AST();
   ~AST();
-  static AST*           tree() { return &tree_; }
+  static AST*           tree();
   static _CORBA_Boolean process(FILE* f, const char* name);
 
   Decl*       declarations()              { return declarations_; }
@@ -108,7 +111,7 @@ private:
 
   Decl*       declarations_;
   char*       file_;
-  static AST  tree_;
+  static AST* tree_;
   Pragma*     pragmas_;
   Pragma*     lastPragma_;
   friend int  yyparse();
