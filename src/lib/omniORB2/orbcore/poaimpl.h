@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  1999/10/04 17:08:33  djr
+  Some more fixes/MSVC work-arounds.
+
   Revision 1.1.2.4  1999/09/30 11:52:32  djr
   Implemented use of AdapterActivators in POAs.
 
@@ -155,7 +158,7 @@ public:
   };
   // The PERSISTENT lifespan policy is not currently supported.
 
-  typedef _CORBA_Pseudo_Unbounded_Sequence<omniOrbPOA*, omniOrbPOA*> ChildSeq;
+  typedef _CORBA_PseudoValue_Sequence<omniOrbPOA*> ChildSeq;
 
 
   omniOrbPOA(const char* name, omniOrbPOAManager* manager,

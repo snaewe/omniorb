@@ -1,4 +1,22 @@
 
+Mon Oct  4 18:05:57 BST 1999 djr
+================================
+
+- A whole bunch on minor MSVC work-arounds.
+
+include/omniORB3/userexception.h
+src/lib/omniORB2/orbcore/anonObject.h
+src/lib/omniORB2/orbcore/bootstrap_i.cc
+src/lib/omniORB2/orbcore/callDescriptor.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/poaimpl.h
+src/lib/omniORB2/orbcore/poamanager.h
+src/lib/omniORB2/orbcore/poastubs.cc
+src/lib/omniORB2/orbcore/portableserver.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Mon Oct  4 16:39:10 BST 1999 djr
 ================================
 

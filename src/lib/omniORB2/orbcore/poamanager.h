@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/04 17:08:34  djr
+  Some more fixes/MSVC work-arounds.
+
   Revision 1.1.2.2  1999/09/30 11:52:33  djr
   Implemented use of AdapterActivators in POAs.
 
@@ -84,7 +87,7 @@ public:
   void lose_poa(omniOrbPOA* poa);
 
 
-  typedef _CORBA_Pseudo_Unbounded_Sequence<omniOrbPOA*,omniOrbPOA*> POASeq;
+  typedef _CORBA_PseudoValue_Sequence<omniOrbPOA*> POASeq;
 
 
 private:

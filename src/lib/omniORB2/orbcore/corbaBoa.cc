@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.6.6  1999/10/04 17:08:31  djr
+  Some more fixes/MSVC work-arounds.
+
   Revision 1.13.6.5  1999/09/30 12:24:48  djr
   Implemented the '_interface' operation for BOA servants.
 
@@ -639,8 +642,9 @@ omniOrbBOA::objectExists(const _CORBA_Octet* key, int keysize)
 
   CORBA::Object_ptr obj = loader(k);
 
-  if( CORBA::is_nil(obj) )  return 0;
-  else                      throw omniORB::LOCATION_FORWARD(obj);
+  if( !CORBA::is_nil(obj) )  throw omniORB::LOCATION_FORWARD(obj);
+
+  return 0;
 }
 
 

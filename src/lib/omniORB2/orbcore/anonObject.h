@@ -30,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/04 17:08:30  djr
+  Some more fixes/MSVC work-arounds.
+
   Revision 1.1.2.1  1999/09/22 14:26:42  djr
   Major rewrite of orbcore to support POA.
 
@@ -64,7 +67,7 @@ public:
 			omniIdentity* id, omniLocalIdentity* lid)
   : omniObjRef(CORBA::Object::_PD_repoId, mostDerivedTypeId,
 	       profiles, id, lid),
-    CORBA::Object(this)
+    Object(this)
     {}
 
 protected:

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  1999/10/04 17:08:31  djr
+ Some more fixes/MSVC work-arounds.
+
  Revision 1.1.2.1  1999/09/22 14:26:43  djr
  Major rewrite of orbcore to support POA.
 
@@ -131,4 +134,5 @@ CORBA::ULong
 omniLocalOnlyCallDescriptor::alignedSize(CORBA::ULong)
 {
   throw CORBA::INV_OBJREF(0, CORBA::COMPLETED_NO);
+  return 0;
 }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.5  1999/10/04 17:08:32  djr
+  Some more fixes/MSVC work-arounds.
+
   Revision 1.29.6.4  1999/09/24 17:11:11  djr
   New option -ORBtraceInvocations and omniORB::traceInvocations.
 
@@ -132,6 +135,7 @@
 #include <poaimpl.h>
 #include <ropeFactory.h>
 #include <initialiser.h>
+#include <dynamicLib.h>
 #ifndef __atmos__
 #include <tcpSocket.h>
 #define _tcpOutgoingFactory tcpSocketMToutgoingFactory
@@ -140,7 +144,6 @@
 #define _tcpOutgoingFactory tcpATMosMToutgoingFactory
 #endif
 #ifdef _HAS_SIGNAL
-#include <dynamicLib.h>
 #include <signal.h>
 #include <errno.h>
 #endif

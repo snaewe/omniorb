@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/04 17:08:34  djr
+  Some more fixes/MSVC work-arounds.
+
   Revision 1.1.2.1  1999/09/22 14:27:04  djr
   Major rewrite of orbcore to support POA.
 
@@ -66,10 +69,10 @@ _init_in_def_( const CORBA::ULong
 #define DEFINE_POLICY_OBJECT(name, type)  \
   \
 PortableServer::name::name(name##Value value)  \
- : CORBA::Object((omniObjRef*) 1), CORBA::Policy(type), pd_value(value) {}  \
+ : Object((omniObjRef*) 1), CORBA::Policy(type), pd_value(value) {}  \
   \
 PortableServer::name::name()  \
- : CORBA::Object(0) {}  \
+ : Object(0) {}  \
   \
 PortableServer::name::~name() {}  \
   \

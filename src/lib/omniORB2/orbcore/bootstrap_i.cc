@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9.6.3  1999/10/04 17:08:31  djr
+  Some more fixes/MSVC work-arounds.
+
   Revision 1.9.6.2  1999/09/24 15:01:32  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -85,8 +88,7 @@ struct serviceRecord {
   CORBA::Object_member ref;
 };
 
-static _CORBA_Pseudo_Unbounded_Sequence<serviceRecord,serviceRecord>
-                                   the_serviceList;
+static _CORBA_PseudoValue_Sequence<serviceRecord> the_serviceList;
 
 
 //////////////////////////////////////////////////////////////////////
@@ -120,7 +122,7 @@ CORBA_InitialReferences_i::list()
 
   CORBA_InitialReferences::ObjIdList* result =
     new CORBA_InitialReferences::ObjIdList(the_serviceList.length());
-  CORBA_InitialReferences::ObjIdList& l(*result);
+  CORBA_InitialReferences::ObjIdList& l = *result;
 
   l.length(the_serviceList.length());
 
@@ -218,7 +220,7 @@ omniInitialReferences::list()
 
   CORBA::ORB::ObjectIdList* result =
     new CORBA::ORB::ObjectIdList(the_serviceList.length());
-  CORBA::ORB::ObjectIdList& l(*result);
+  CORBA::ORB::ObjectIdList& l = *result;
 
   l.length(the_serviceList.length());
 

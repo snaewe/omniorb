@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.39.6.7  1999/10/04 17:08:35  djr
+  Some more fixes/MSVC work-arounds.
+
   Revision 1.39.6.6  1999/10/04 15:51:52  djr
   Various fixes/MSVC work-arounds.
 
@@ -906,13 +909,14 @@ o2be_interface::produce_skel(std::fstream &s)
 
    "fqproxy::proxy(const char* mdri, IOP::TaggedProfileList* p,\n"
    "         omniIdentity* id, omniLocalIdentity* lid)\n"
-   " : CORBA::Object(this),\n"
+   " : Object(this),\n"
   );
   {
     AST_Interface** intftable = inherits();
     int ni = n_inherits();
     for( int i = 0; i < ni; i++ ) {
       o2be_interface* intf = o2be_interface::narrow_from_decl(intftable[i]);
+      //?? Does this need to be unambiguous to make MSVC happy?
       IND(s); s << "   " << intf->proxy_fqname() << "(mdri, p, id, lid),\n";
     }
   }
