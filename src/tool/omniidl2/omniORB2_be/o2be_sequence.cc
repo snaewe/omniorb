@@ -27,6 +27,11 @@
 
 /*
   $Log$
+  Revision 1.25  1999/06/27 16:48:38  sll
+  Do not expand a sequence of sequence to a template of template of base type
+  if the element sequence is a typedef. This is necessary because a sequence
+  definition is now a class and not a template instance.
+
   Revision 1.24  1999/06/22 14:55:46  sll
   Correct type casting in any extraction operator.
 
@@ -637,9 +642,9 @@ o2be_sequence::seq_member_name(AST_Decl* used_in)
     case o2be_operation::tSequence:
       {
 	AST_Decl* decl = base_type();
-	while (decl->node_type() == AST_Decl::NT_typedef)
-	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	baseclassname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(used_in);
+	if (decl->node_type() != AST_Decl::NT_typedef) {
+	  baseclassname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(used_in);
+	}
 	break;
       }
     default:
