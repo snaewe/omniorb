@@ -1,10 +1,19 @@
+Tue Aug 15 16:28:30 BST 2000 sll
+================================
+
+- Back-off previous update and use the root name COSBOA for the COS BOA 
+  library
+
+external_merge/mk/cos.mk
+src/services/mklib/mkBOAlib/dir.mk
+
 Tue Aug 15 16:16:42 BST 2000 sll
 ================================
 
 - match up the name of the BOA version of the COS library in the build 
  directory and cos.mk
 
-external_merge/mk/cos.mkc
+external_merge/mk/cos.mk
 
 
 Tue Aug 15 14:11:37 BST 2000 dpg1

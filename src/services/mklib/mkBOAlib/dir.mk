@@ -10,7 +10,7 @@ vpath %.idl $(IMPORT_TREES:%=%/idl/COS)
 DIR_IDLFLAGS += -I. $(patsubst %,-I%/idl/COS,$(IMPORT_TREES))
 
 
-COS_SKLIB_NAME    = COS_BOA
+COS_SKLIB_NAME    = COSBOA
 
 COS_SK_OBJS = $(COS_INTERFACES:%=%SK.o)
 COS_SK_SRCS = $(COS_INTERFACES:%=%SK.cc)

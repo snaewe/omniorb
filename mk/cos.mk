@@ -29,7 +29,7 @@ COS_CPPFLAGS =  $(patsubst %,-I%/include/COS,$(IMPORT_TREES))
 
 else
 
-COS_OA       = _BOA
+COS_OA       = BOA
 COS_CPPFLAGS = $(patsubst %,-I%/include/COS/BOA,$(IMPORT_TREES)) -DCOS_USES_BOA
 
 endif
