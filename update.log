@@ -1,3 +1,13 @@
+Tue Jul 31 18:40:08 BST 2001 sll
+================================
+
+- cleanup String_var usage. Make sure there is no contruct like this:
+    CORBA::String_var foo = CORBA::string_alloc(1);
+
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/uri.cc
+
+
 Tue Jul 31 18:31:54 BST 2001 sll
 ================================
 

@@ -29,6 +29,9 @@
 //      
 
 // $Log$
+// Revision 1.2.2.9  2001/07/31 17:42:11  sll
+// Cleanup String_var usage.
+//
 // Revision 1.2.2.8  2001/06/11 17:53:22  sll
 //  The omniIOR ctor used by genior and corbaloc now has the option to
 //  select whether to call interceptors and what set of interceptors to call.
@@ -778,7 +781,8 @@ corbanameURIHandler::syntaxIsValid(const char* uri)
     }
     c++;
     unsigned int key_size;
-    CORBA::String_var   sname = unescapeKey(c, key_size);
+    CORBA::String_var   sname;
+    sname = unescapeKey(c, key_size);
     CosNaming::Name_var name  = omniURI::stringToName(sname);
   }
   catch (...) {

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/07/31 17:42:11  sll
+  Cleanup String_var usage.
+
   Revision 1.1.2.5  2001/07/31 16:32:02  sll
   Added virtual function is_giopStream to check if a cdrStream is a giopStream.
   That is, a poor man's substitute for dynamic_cast.
@@ -280,7 +283,7 @@ omniIOR::dump_TAG_CODE_SETS(const IOP::TaggedComponent& c)
   }
   tcs_w[index] = 0;
 
-  CORBA::String_var strbuf = CORBA::string_alloc(bufsize+256);
+  CORBA::String_var strbuf(CORBA::string_alloc(bufsize+256));
   const char** p;
   strcpy(strbuf,"TAG_CODE_SETS char native code set: ");
   write_codeset_name(strbuf,ncs_c,info.ForCharData.native_code_set);
