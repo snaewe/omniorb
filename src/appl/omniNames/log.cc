@@ -232,6 +232,8 @@ log::log(int& p) : port(p)
   sprintf(checkpt,"%s.ckp;",logname);
 #endif
 
+  delete [] logname;
+
   if (port != 0) {
 
     //
@@ -427,6 +429,7 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
   char* p = orb->object_to_string(rootContext);
   cerr << ts.t() << "Root context is " << p << endl;
+  delete p;
 
   CORBA::release(rootContext);	// dispose of the object reference
 
@@ -946,6 +949,7 @@ log::putKey(const omniORB::objectKey& key, ostream& file)
     file << setfill('0') << setw(2) << (int)(*os)[i];
   }
   file << dec;
+  delete os;
 }
 
 
