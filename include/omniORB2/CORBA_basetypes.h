@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.10  1999/06/18 20:34:22  sll
+ New function _CORBA_bad_param_freebuf().
+
  Revision 1.9  1999/01/07 18:11:58  djr
  New functions: _CORBA_invoked_nil_pseudo_ref()
  and            _CORBA_use_nil_ptr_as_nil_pseudo_objref()
@@ -129,6 +132,6 @@ extern void _CORBA_null_string_ptr(_CORBA_Boolean);
 extern void _CORBA_invoked_nil_pseudo_ref();
 extern _CORBA_Boolean
 _CORBA_use_nil_ptr_as_nil_pseudo_objref(const char* objType);
-
+extern void _CORBA_bad_param_freebuf();
 
 #endif // __CORBA_BASETYPES_H__
