@@ -272,6 +272,11 @@ omni_thread::init_t::init_t(void)
     lowest_priority = PRI_OTHER_MIN;
     highest_priority = PRI_OTHER_MAX;
 
+#elif defined(__hpux__)
+
+    lowest_priority = PRI_OTHER_MIN;
+    highest_priority = PRI_OTHER_MAX;
+
 #elif defined(__sunos__) && (__OSVERSION__ == 5)
 
     // a bug in pthread_attr_setschedparam means lowest priority is 1 not 0
@@ -467,6 +472,10 @@ omni_thread::start(void)
     pthread_attr_create(&attr);
 #else
     pthread_attr_init(&attr);
+#endif
+
+#if (PthreadDraftVersion == 8)
+    pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_UNDETACHED);
 #endif
 
 #ifdef PthreadSupportThreadPriority
@@ -718,7 +727,7 @@ omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 	throw omni_thread_fatal(errno);
 #else
 
-#if defined(__osf1__) && defined(__alpha__)
+#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10)
 
     if (pthread_delay_np(&rqts) != 0)
 	throw omni_thread_fatal(errno);
@@ -746,7 +755,7 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 {
     timespec abs;
 
-#if defined(__osf1__) && defined(__alpha__)
+#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10)
 
     timespec rel;
     rel.tv_sec = rel_sec;
