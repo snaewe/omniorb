@@ -84,8 +84,8 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  * Constructor(s) and destructor
  */
 AST_Operation::AST_Operation()
-	     : pd_flags(OP_noflags),
-	       pd_return_type(NULL),
+	     : pd_return_type(NULL),
+	       pd_flags(OP_noflags),
 	       pd_context(NULL),
 	       pd_exceptions(NULL)
 {
@@ -93,12 +93,12 @@ AST_Operation::AST_Operation()
 
 AST_Operation::AST_Operation(AST_Type *rt, Flags fl, UTL_ScopedName *n,
 			   UTL_StrList *p)
-	     : pd_return_type(rt),
+	     : AST_Decl(AST_Decl::NT_op, n, p),
+	       UTL_Scope(AST_Decl::NT_op),
+	       pd_return_type(rt),
 	       pd_flags(fl),
 	       pd_context(NULL),
-	       pd_exceptions(NULL),
-	       AST_Decl(AST_Decl::NT_op, n, p),
-	       UTL_Scope(AST_Decl::NT_op)
+	       pd_exceptions(NULL)
 {
   AST_PredefinedType *pdt;
 

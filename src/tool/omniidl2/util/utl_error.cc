@@ -173,18 +173,28 @@ exprtype_to_string(AST_Expression::ExprType t)
     return "long";
   case AST_Expression::EV_ulong:
     return "unsigned long";
+  case AST_Expression::EV_longlong:
+    return "long long";
+  case AST_Expression::EV_ulonglong:
+    return "unsigned long long";
   case AST_Expression::EV_float:
     return "float";
   case AST_Expression::EV_double:
     return "double";
+  case AST_Expression::EV_longdouble:
+   return "long double";
   case AST_Expression::EV_char:
     return "char";
+  case AST_Expression::EV_wchar:
+    return "wchar";
   case AST_Expression::EV_octet:
     return "octet";
   case AST_Expression::EV_bool:
     return "boolean";
   case AST_Expression::EV_string:
     return "string";
+  case AST_Expression::EV_wstring:
+    return "wstring";
   case AST_Expression::EV_any:
     return "any";
   case AST_Expression::EV_void:

@@ -255,6 +255,7 @@ NamingContext_i::bind_helper(const CosNaming::Name& n, CORBA::Object_ptr obj,
 	throw CosNaming::NamingContext::AlreadyBound();
     }
     catch (CosNaming::NamingContext::NotFound& ex) {
+      ob = 0;
       DB(cerr << "  bind in context " << this
 	 << ": caught not found exception from resolving simple name\n"
 	 << "    reason " << ex.why << " rest of name ");

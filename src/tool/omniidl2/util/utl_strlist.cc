@@ -86,8 +86,8 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  */
 
 UTL_StrList::UTL_StrList(String *s, UTL_StrList *cdr)
-	   : pd_car_data(s),
-	     UTL_List(cdr)
+	   :  UTL_List(cdr),
+             pd_car_data(s)
 {
 }
 

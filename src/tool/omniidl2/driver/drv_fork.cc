@@ -102,7 +102,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 #include <unistd.h>                     // POSIX standard types
-#include <wait.h>                       // POSIX definition of wait()
+#include <sys/wait.h>
 #endif
 
 #if defined(__nextstep__)

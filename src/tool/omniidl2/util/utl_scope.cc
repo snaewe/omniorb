@@ -1189,10 +1189,10 @@ UTL_ScopeActiveIterator::UTL_ScopeActiveIterator(
 				       UTL_Scope::ScopeIterationKind i)
 			: iter_source(s),
 			  ik(i),
-			  il(0),
 			  stage(i == UTL_Scope::IK_both
 				? UTL_Scope::IK_decls
-				: i)
+				: i),
+			  il(0)              
 {
 }
 

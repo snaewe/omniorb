@@ -30,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.5  1997/12/18 17:32:42  sll
+  *** empty log message ***
+
   Revision 1.4  1997/12/09 18:20:28  sll
   Moved omni::initLock back to this file.
 
@@ -159,7 +162,7 @@ omniORB::keyToOctetSequence(const omniORB::objectKey &k1)
   omniORB::seqOctets* result = new omniORB::seqOctets;
   result->length(sizeof(omniORB::objectKey));
   const CORBA::Octet* p = (const CORBA::Octet*) &k1;
-  for (int i=0; i< sizeof(omniORB::objectKey); i++) {
+  for (unsigned int i=0; i< sizeof(omniORB::objectKey); i++) {
     result->operator[](i) = p[i];
   }
   return result;
@@ -173,7 +176,7 @@ omniORB::octetSequenceToKey(const omniORB::seqOctets& seq)
   }
   omniORB::objectKey result;
   CORBA::Octet* p = (CORBA::Octet*) &result;
-  for (int i=0; i< sizeof(omniORB::objectKey); i++) {
+  for (unsigned int i=0; i< sizeof(omniORB::objectKey); i++) {
     p[i] = seq[i];
   }
   return result;

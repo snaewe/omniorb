@@ -86,8 +86,8 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  */
 
 UTL_ExceptList::UTL_ExceptList(AST_Exception *s, UTL_ExceptList *cdr)
-	      : pd_car_data(s),
-		UTL_List(cdr)
+	      : UTL_List(cdr),
+                pd_car_data(s)
 {
 }
 

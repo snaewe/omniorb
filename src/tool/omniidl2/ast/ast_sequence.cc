@@ -85,13 +85,13 @@ AST_Sequence::AST_Sequence()
 }
 
 AST_Sequence::AST_Sequence(AST_Expression *ms, AST_Type *bt)
-	    : pd_max_size(ms),
-	      pd_base_type(bt),
-	      AST_Decl(AST_Decl::NT_sequence,
+	    : AST_Decl(AST_Decl::NT_sequence,
 		       new UTL_ScopedName(
 				      new Identifier("sequence",1,0,I_FALSE),
 				      NULL),
-		       NULL)
+		       NULL),
+	      pd_max_size(ms),
+	      pd_base_type(bt)
 {
 }
 

@@ -83,17 +83,16 @@ AST_String::AST_String()
 }
 
 AST_String::AST_String(AST_Expression *ms)
-	  : pd_max_size(ms), pd_width(sizeof(char)),
-	    AST_Decl(AST_Decl::NT_string,
-		     new UTL_ScopedName(new Identifier("string",1,0,I_FALSE),
-					NULL),
-		     NULL)
+	  : AST_Decl(AST_Decl::NT_string,
+ 		     new UTL_ScopedName(new Identifier("string",1,0,I_FALSE),
+ 					NULL),
+		     NULL),
+	    pd_max_size(ms), pd_width(sizeof(char))
 {
 }
 
 AST_String::AST_String(AST_Expression *ms, long wide)
-	  : pd_max_size(ms), pd_width(wide),
-	    AST_Decl(AST_Decl::NT_string,
+	  : AST_Decl(AST_Decl::NT_string,
 		     new UTL_ScopedName(wide == sizeof(char)
 					? new Identifier("string",1,0,I_FALSE)
 					: new Identifier("wstring_t",
@@ -101,7 +100,8 @@ AST_String::AST_String(AST_Expression *ms, long wide)
                                                          0,
                                                          I_FALSE),
 					NULL),
-		     NULL)
+		     NULL),
+	    pd_max_size(ms), pd_width(wide)
 {
 }
 

@@ -79,13 +79,13 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  * Constructor(s) and destructor
  */
 AST_Array::AST_Array()
-	 : pd_n_dims(0), pd_base_type(NULL), pd_dims(NULL)
+	 : pd_n_dims(0), pd_dims(NULL), pd_base_type(NULL)
 {
 }
 
 AST_Array::AST_Array(UTL_ScopedName *n, unsigned long nd, UTL_ExprList *ds)
-	 : pd_n_dims(nd), pd_base_type(NULL),
-	   AST_Decl(AST_Decl::NT_array, n, NULL)
+	 : AST_Decl(AST_Decl::NT_array, n, NULL),
+	   pd_n_dims(nd), pd_base_type(NULL)
 {
   pd_dims = compute_dims(ds, nd);
 }
@@ -103,7 +103,7 @@ AST_Array::compute_dims(UTL_ExprList *ds, unsigned long nds)
 {
   AST_Expression	**result;
   UTL_ExprlistActiveIterator *l;
-  long		i;
+  unsigned long		i;
 
   if (ds == NULL)
     return NULL;
@@ -132,7 +132,7 @@ AST_Array::compute_dims(UTL_ExprList *ds, unsigned long nds)
 void
 AST_Array::dump(ostream &o)
 {
-  long	i;
+  unsigned long	i;
 
   pd_base_type->dump(o);
   o << " ";

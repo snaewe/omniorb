@@ -93,8 +93,8 @@ AST_illegal_recursive_type(AST_Decl *t)
 {
   UTL_ScopeStackActiveIterator *i;
   UTL_Scope		       *s;
-  AST_Structure		       *st1, *st2;
-  AST_Union		       *un1, *un2;
+  AST_Structure		       *st1 = NULL, *st2;
+  AST_Union		       *un1 = NULL, *un2;
   idl_bool		       check_for_struct = I_FALSE,
 			       check_for_union = I_FALSE;
 

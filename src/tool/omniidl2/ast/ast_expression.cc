@@ -100,9 +100,9 @@ AST_Expression::fill_definition_details()
 AST_Expression::AST_Expression(UTL_ScopedName *nm)
 	      : pd_ec(EC_symbol),
 		pd_ev(NULL),
-		pd_n(nm),
 		pd_v1(NULL),
-		pd_v2(NULL)
+		pd_v2(NULL),
+		pd_n(nm)
 {
   fill_definition_details();
 }
@@ -112,10 +112,11 @@ AST_Expression::AST_Expression(UTL_ScopedName *nm)
  */
 AST_Expression::AST_Expression(AST_Expression *v, ExprType t)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_n(NULL),
-		pd_ev(NULL)
+		pd_n(NULL)
+
 {
   fill_definition_details();
 
@@ -131,9 +132,9 @@ AST_Expression::AST_Expression(AST_Expression *v, ExprType t)
 AST_Expression::AST_Expression(ExprComb c, AST_Expression *ev1,
 			       AST_Expression *ev2)
 	      : pd_ec(c),
+		pd_ev(NULL),
 		pd_v1(ev1),
 		pd_v2(ev2),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -144,9 +145,9 @@ AST_Expression::AST_Expression(ExprComb c, AST_Expression *ev1,
  */
 AST_Expression::AST_Expression(short sv)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -161,9 +162,9 @@ AST_Expression::AST_Expression(short sv)
  */
 AST_Expression::AST_Expression(unsigned short usv)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -178,9 +179,9 @@ AST_Expression::AST_Expression(unsigned short usv)
  */
 AST_Expression::AST_Expression(long lv)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -195,9 +196,9 @@ AST_Expression::AST_Expression(long lv)
  */
 AST_Expression::AST_Expression(long lv, ExprType t)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -212,9 +213,9 @@ AST_Expression::AST_Expression(long lv, ExprType t)
  */
 AST_Expression::AST_Expression(unsigned long ulv)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -229,9 +230,9 @@ AST_Expression::AST_Expression(unsigned long ulv)
  */
 AST_Expression::AST_Expression(float fv)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -246,9 +247,9 @@ AST_Expression::AST_Expression(float fv)
  */
 AST_Expression::AST_Expression(double dv)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -263,9 +264,9 @@ AST_Expression::AST_Expression(double dv)
  */
 AST_Expression::AST_Expression(char cv)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -280,9 +281,9 @@ AST_Expression::AST_Expression(char cv)
  */
 AST_Expression::AST_Expression(unsigned char ov)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -297,9 +298,9 @@ AST_Expression::AST_Expression(unsigned char ov)
  */
 AST_Expression::AST_Expression(String *sv)
 	      : pd_ec(EC_none),
+		pd_ev(NULL),
 		pd_v1(NULL),
 		pd_v2(NULL),
-		pd_ev(NULL),
 		pd_n(NULL)
 {
   fill_definition_details();
@@ -374,6 +375,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     case AST_Expression::EV_any:
     case AST_Expression::EV_void:
     case AST_Expression::EV_none:
+    default:
       return NULL;
     }
   case AST_Expression::EV_ushort:
@@ -428,6 +430,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     case AST_Expression::EV_any:
     case AST_Expression::EV_void:
     case AST_Expression::EV_none:
+    default:
       return NULL;
     }
   case AST_Expression::EV_long:
@@ -476,6 +479,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     case AST_Expression::EV_any:
     case AST_Expression::EV_void:
     case AST_Expression::EV_none:
+    default:
       return NULL;
     }
   case AST_Expression::EV_ulong:
@@ -528,6 +532,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     case AST_Expression::EV_any:
     case AST_Expression::EV_void:
     case AST_Expression::EV_none:
+    default:
       return NULL;
     }
   case AST_Expression::EV_bool:
@@ -570,6 +575,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     case AST_Expression::EV_any:
     case AST_Expression::EV_void:
     case AST_Expression::EV_none:
+    default:
       return NULL;
     }
   case AST_Expression::EV_float:
@@ -614,6 +620,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     case AST_Expression::EV_any:
     case AST_Expression::EV_void:
     case AST_Expression::EV_none:
+    default:
       return NULL;
     }
   case AST_Expression::EV_double:
@@ -656,6 +663,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     case AST_Expression::EV_any:
     case AST_Expression::EV_void:
     case AST_Expression::EV_none:
+    default:
       return NULL;
     }
   case AST_Expression::EV_char:
@@ -712,6 +720,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     case AST_Expression::EV_any:
     case AST_Expression::EV_void:
     case AST_Expression::EV_none:
+    default:
       return NULL;
     }
   case AST_Expression::EV_octet:
@@ -768,6 +777,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     case AST_Expression::EV_any:
     case AST_Expression::EV_void:
     case AST_Expression::EV_none:
+    default:
       return NULL;
     }
   case AST_Expression::EV_any:
@@ -793,8 +803,10 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
     default:
       return NULL;
     }
+  default:
+    return NULL;
   }
-  return 0; // for MSVC++ 4.2
+  return NULL; // for MSVC++ 4.2
 }
 
 /*
@@ -986,7 +998,7 @@ AST_Expression::eval_un_op(AST_Expression::EvalKind ek)
 AST_Expression::AST_ExprValue *
 AST_Expression::eval_symbol(AST_Expression::EvalKind ek)
 {
-  UTL_Scope		*s;
+  UTL_Scope		*s = NULL;
   AST_Decl		*d;
   AST_Constant		*c;
 
@@ -1095,6 +1107,8 @@ AST_Expression::coerce(AST_Expression::ExprType t)
     break;
   case EV_string:
     copy->u.strval = pd_ev->u.strval;
+    break;
+  default:
     break;
   }
 
@@ -1223,6 +1237,7 @@ AST_Expression::operator==(AST_Expression *vc)
   case EV_any:
   case EV_void:
   case EV_none:
+  default:
     return I_FALSE;
   } 
   return 0; // for MSVC++ 4.2
@@ -1271,6 +1286,7 @@ AST_Expression::compare(AST_Expression *vc)
   case EV_any:
   case EV_void:
   case EV_none:
+  default:
     return I_FALSE;
   }
  return 0; // for MSVC++ 4.2
@@ -1345,6 +1361,7 @@ dump_expr_val(ostream &o, AST_Expression::AST_ExprValue *ev)
   case AST_Expression::EV_any:
   case AST_Expression::EV_none:
   case AST_Expression::EV_void:
+  default:
     break;
   }
 }

@@ -80,8 +80,9 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  * Constructor(s) and destructor
  */
 AST_Interface::AST_Interface()
-	     : pd_n_inherits(0),
-	       pd_inherits(NULL)
+	     : pd_inherits(NULL),
+	       pd_n_inherits(0)
+
 {
 }
 
@@ -91,8 +92,8 @@ AST_Interface::AST_Interface(UTL_ScopedName *n,
 			     UTL_StrList *p)
 	    : AST_Decl(AST_Decl::NT_interface, n, p),
 	      UTL_Scope(AST_Decl::NT_interface),
-	      pd_n_inherits(nih),
-	      pd_inherits(ih)
+	      pd_inherits(ih),
+	      pd_n_inherits(nih)
 {
 }
 

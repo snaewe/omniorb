@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.4  1997/05/06 15:11:48  sll
-  Public release.
+  Revision 1.5  1997/12/18 17:32:40  sll
+  *** empty log message ***
 
+// Revision 1.4  1997/05/06  15:11:48  sll
+// Public release.
+//
  */
 
 #include <omniORB2/CORBA.h>
@@ -104,7 +107,7 @@ CORBA::String_var::operator= (const CORBA::String_member &s)
 char &
 CORBA::String_var::operator[] (CORBA::ULong index) 
 {
-  if (!_data || strlen(_data) < (int)index) {
+  if (!_data || (CORBA::ULong)strlen(_data) < index) {
     _CORBA_bound_check_error();	// never return
   }
   return _data[index];
@@ -113,7 +116,7 @@ CORBA::String_var::operator[] (CORBA::ULong index)
 char
 CORBA::String_var::operator[] (CORBA::ULong index) const
 {
-  if (!_data || strlen(_data) < (int)index) {
+  if (!_data || (CORBA::ULong)strlen(_data) < index) {
     _CORBA_bound_check_error();	// never return
   }
   return _data[index];

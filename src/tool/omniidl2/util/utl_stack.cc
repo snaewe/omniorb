@@ -79,8 +79,8 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
  */
 
 UTL_ScopeStack::UTL_ScopeStack()
-	      : pd_stack_data_nalloced(INCREMENT),
-		pd_stack_data(new UTL_Scope *[INCREMENT]),
+	      : pd_stack_data(new UTL_Scope *[INCREMENT]),
+		pd_stack_data_nalloced(INCREMENT),
 		pd_stack_top(0)
 {
 }

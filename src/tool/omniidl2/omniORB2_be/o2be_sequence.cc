@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.8  1997/12/18 17:28:50  sll
+  *** empty log message ***
+
   Revision 1.7  1997/12/09 19:55:14  sll
   *** empty log message ***
 
@@ -341,9 +344,9 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		  "%s<%s,%d,%d,%d>",
 		  SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT,
 		  baseclassname,
-		  s_max,
-		  elmsize,
-		  alignment);
+		  (int)s_max,
+		  (int)elmsize,
+		  (int)alignment);
 	}
 	else {
 	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED)
@@ -353,7 +356,7 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		  "%s<%s,%d>",
 		  SEQUENCE_TEMPLATE_BOUNDED,
 		  baseclassname,
-		  s_max);
+		  (int)s_max);
 	}      
       }
       else {
@@ -368,10 +371,10 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		  baseclassname,
 		  baseclassname,
 		  elmclassname,
-		  dimension,
-		  s_max,
-		  elmsize,
-		  alignment);
+		  (int)dimension,
+		  (int)s_max,
+		  (int)elmsize,
+		  (int)alignment);
 	}
 	else {
 	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_ARRAY)
@@ -383,8 +386,8 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		  baseclassname,
 		  baseclassname,
 		  elmclassname,
-		  dimension,
-		  s_max);
+		  (int)dimension,
+		  (int)s_max);
 	}      
       }
     }
@@ -400,8 +403,8 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		  "%s<%s,%d,%d>",
 		  SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT,
 		  baseclassname,
-		  elmsize,
-		  alignment);
+		  (int)elmsize,
+		  (int)alignment);
 	}
 	else {
 	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED)
@@ -425,9 +428,9 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		  baseclassname,
 		  baseclassname,
 		  elmclassname,
-		  dimension,
-		  elmsize,
-		  alignment);
+		  (int)dimension,
+		  (int)elmsize,
+		  (int)alignment);
 	}
 	else {
 	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY)
@@ -439,7 +442,7 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 		  baseclassname,
 		  baseclassname,
 		  elmclassname,
-		  dimension);
+		  (int)dimension);
 	}
       }
     }
