@@ -609,7 +609,7 @@ omni_thread::start(void)
       throw omni_thread_fatal(errno);
 #endif
 
-    if (!SetThreadPriority(handle, _priority))
+    if (!SetThreadPriority(handle, nt_priority(_priority)))
       throw omni_thread_fatal(GetLastError());
 
     if (ResumeThread(handle) == 0xffffffff)
