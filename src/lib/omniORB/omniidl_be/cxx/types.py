@@ -39,7 +39,6 @@ RET    = 3
 
 # we don't support these yet
 unsupported_typecodes =[idltype.tk_Principal, idltype.tk_longdouble,
-                        idltype.tk_wchar, idltype.tk_wstring,
                         idltype.tk_fixed, idltype.tk_value,
                         idltype.tk_value_box, idltype.tk_native,
                         idltype.tk_abstract_interface,
@@ -179,7 +178,9 @@ class Type:
         return
 
     def op_is_pointer(self, direction):
-        if not(self.array()) and self.deref().string(): return 0
+        if not(self.array()) and \
+           (self.deref().string() or self.deref().wstring()):
+            return 0
         return self._argmapping(direction)[2]
 
     def __var_argmapping(self, direction):
@@ -190,7 +191,8 @@ class Type:
         # CORBA2.3 P1-204 Table 1-4 T_var argument and result mapping
         kind = self.__type.kind()
         if kind in [ idltype.tk_objref, idltype.tk_struct, idltype.tk_union,
-                     idltype.tk_string, idltype.tk_sequence, idltype.tk_any,
+                     idltype.tk_string, idltype.tk_wstring,
+                     idltype.tk_sequence, idltype.tk_any,
                      idltype.tk_value, idltype.tk_value_box ] or \
                      self.array():
             return ( (1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
@@ -212,7 +214,7 @@ class Type:
         if self.string() or d_type.string():
             return "char*"
         if self.wstring() or d_type.wstring():
-            return "WChar*"
+            return "CORBA::WChar*"
         if self.typecode():
             return "CORBA::TypeCode_ptr"
         if self.any():
@@ -238,6 +240,8 @@ class Type:
             return basic_map_out[d_kind]
         if d_type.string():
             return "CORBA::String_out"
+        if d_type.wstring():
+            return "CORBA::WString_out"
         if d_type.typecode():
             return "CORBA::TypeCode_OUT_arg"
         if d_type.any():
@@ -268,6 +272,8 @@ class Type:
         kind = d_type.kind()
         if d_type.string():
             return "CORBA::String_INOUT_arg"
+        if d_type.wstring():
+            return "CORBA::WString_INOUT_arg"
         if d_type.typecode():
             return "CORBA::TypeCode_INOUT_arg"
         if d_type.any():
@@ -321,7 +327,9 @@ class Type:
             # use the predefined _out type
             if type.typedef() and type.variable() and direction == OUT:
 
-                if (not(d_type.string()) or (d_type.string() and type.array())):
+                if (not(d_type.string()) or not(d_type.wstring()) or \
+                    (d_type.string() and type.array()) or \
+                    (d_type.wstring() and type.array())):
                     base = id.Name(type.__type.scopedName()).unambiguous(environment)
                     base = base + "_out"
                     return base
@@ -335,6 +343,8 @@ class Type:
             if direction == OUT and not(use_out):
                 if d_type.string() and not(old_sig):
                     return self.__base_type_OUT(environment)
+                if d_type.wstring() and not(old_sig):
+                    return self.__base_type_OUT(environment)
                 if d_type.objref() and not(old_sig):
                     return self.__base_type_OUT(environment)
                 if d_type.typecode() and not(old_sig):
@@ -344,6 +354,8 @@ class Type:
                 
             if direction == OUT:
                 if d_type.string():
+                    return self.__base_type_OUT(environment)
+                if d_type.wstring():
                     return self.__base_type_OUT(environment)
                 if d_type.typecode():
                     return self.__base_type_OUT(environment)
@@ -357,6 +369,8 @@ class Type:
             if direction == INOUT:
                 if d_type.string() and use_out:
                     return self.__base_type_INOUT(environment)
+                if d_type.wstring() and use_out:
+                    return self.__base_type_INOUT(environment)
                 if d_type.typecode() and use_out:
                     return self.__base_type_INOUT(environment)
                 if d_type.objref() and use_out:
@@ -365,7 +379,10 @@ class Type:
 
         if d_type.string() and not(type.array()):
             base = d_type.base(environment)
-            
+
+        if d_type.wstring() and not(type.array()):
+            base = d_type.base(environment)
+    
         # P1-104 mentions two cases: returning an array and a variable
         # array out argument. For the latter rely on the _out type
         if (type.array() and direction == RET):
@@ -389,6 +406,8 @@ class Type:
             d_type = self.deref()
             if d_type.string():
                 return "CORBA::String_member"
+            if d_type.wstring():
+                return "CORBA::WString_member"
             if d_type.objref():
                 return d_type.objRefTemplate("Member", environment)
             if d_type.typecode():
@@ -501,9 +520,14 @@ class Type:
             SeqTypeID = string.replace(SeqTypeID,"_ptr","")
         elif d_SeqType.string():
             d_SeqTypeID = "CORBA::String_member"
+        elif d_SeqType.wstring():
+            d_SeqTypeID = "CORBA::WString_member"
         
         if SeqType.string():
             SeqTypeID = "CORBA::String_member"
+
+        if SeqType.wstring():
+            SeqTypeID = "CORBA::WString_member"
 
         # silly special case (not needed?):
         #if d_SeqType.objref() and SeqType.typedef():
@@ -537,6 +561,8 @@ class Type:
     
         if d_SeqType.char():
             template["suffix"] = "_Char"
+        if d_SeqType.wchar():
+            template["suffix"] = "_WChar"
         elif d_SeqType.boolean():
             template["suffix"] = "_Boolean"
         elif d_SeqType.octet():
@@ -544,6 +570,8 @@ class Type:
             # strings are always special
         elif d_SeqType.string() and not(is_array):
             template["suffix"] = "_String"
+        elif d_SeqType.wstring() and not(is_array):
+            template["suffix"] = "_WString"
         elif typeSizeAlignMap.has_key(d_SeqType.type().kind()):
             template["fixed"] = typeSizeAlignMap[d_SeqType.type().\
                                                         kind()]
@@ -653,6 +681,7 @@ class Type:
         if d_T.typecode(): return "CORBA::TypeCode_var"
         if d_T.any():      return "CORBA::Any_var"
         if d_T.string():   return "CORBA::String_var"
+        if d_T.wstring():   return "CORBA::WString_var"
         if d_T.enum():
             name = id.Name(self.type().decl().scopedName())
             return name.unambiguous(environment)
@@ -684,6 +713,8 @@ class Type:
             return "CORBA::release(" + thing + ");"
         if d_T.string():   return "CORBA::string_free(" + thing + ");"
 
+        if d_T.wstring():   return "CORBA::wstring_free(" + thing + ");"
+
         if d_T.struct() or d_T.union() or d_T.exception() or \
            d_T.sequence() or d_T.any():
             if d_T.variable():
@@ -713,6 +744,8 @@ class Type:
                    "(" + src + ");\n" + dest + " = " + src + ";"
         if d_T.string():
             return dest + " = CORBA::string_dup(" + src + ");"
+        if d_T.wstring():
+            return dest + " = CORBA::wstring_dup(" + src + ");"
         if d_T.any():
             return dest + " = new CORBA::Any(" + src + ");"
         
@@ -744,8 +777,12 @@ class Type:
                                 idltype.tk_ulong, idltype.tk_ulonglong ]
     def char(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_char, idltype.tk_wchar ]
+        return type.kind() == idltype.tk_char
 
+    def wchar(self):
+        type = self.__type
+        return type.kind() == idltype.tk_wchar
+        
     def floating(self):
         type = self.__type
         return type.kind() in [ idltype.tk_float, idltype.tk_double ]
@@ -760,59 +797,59 @@ class Type:
 
     def boolean(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_boolean ]
+        return type.kind() == idltype.tk_boolean
 
     def enum(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_enum ]
+        return type.kind() == idltype.tk_enum
 
     def octet(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_octet ]
+        return type.kind() == idltype.tk_octet
 
     def string(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_string ]
+        return type.kind() == idltype.tk_string
 
     def wstring(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_wstring ]
+        return type.kind() == idltype.tk_wstring
 
     def objref(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_objref ]
+        return type.kind() == idltype.tk_objref
 
     def sequence(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_sequence ]
+        return type.kind() == idltype.tk_sequence
 
     def typecode(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_TypeCode ]
+        return type.kind() == idltype.tk_TypeCode
 
     def typedef(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_alias ]
+        return type.kind() == idltype.tk_alias
 
     def struct(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_struct ]
+        return type.kind() == idltype.tk_struct
 
     def union(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_union ]
+        return type.kind() == idltype.tk_union
 
     def exception(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_except ]
+        return type.kind() == idltype.tk_except
     
     def void(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_void ]
+        return type.kind() == idltype.tk_void
 
     def any(self):
         type = self.__type
-        return type.kind() in [ idltype.tk_any ]
+        return type.kind() == idltype.tk_any
 
 
 def variableDecl(decl):

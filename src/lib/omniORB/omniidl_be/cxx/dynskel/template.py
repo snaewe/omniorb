@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.4  2000/11/20 14:43:24  sll
+# Added support for wchar and wstring.
+#
 # Revision 1.3.2.3  2000/11/03 19:21:55  sll
 # Use include omniORB4 in the generated code.
 #
@@ -100,6 +103,16 @@ static const char* @prefix@_library_version = @library@;
 bdesc_string = """\
 #ifndef @private_prefix@_buildDesc_c@n@string
 #define @private_prefix@_buildDesc_c@n@string @private_prefix@_buildDesc_cstring
+#endif
+"""
+
+# Required symbols:
+#   @private_prefix@_buildDesc_cwstring
+# Generated symbols:
+#   @private_prefix@_buildDesc_c@n@wstring
+bdesc_wstring = """\
+#ifndef @private_prefix@_buildDesc_c@n@wstring
+#define @private_prefix@_buildDesc_c@n@wstring @private_prefix@_buildDesc_cwstring
 #endif
 """
 
@@ -641,6 +654,13 @@ tc_string = """\
 #if !defined(___tc_string_@n@_value__) && !defined(DISABLE_Unnamed_Bounded_String_TC)
 #define ___tc_string_@n@_value__
 const CORBA::TypeCode_ptr _tc_string_@n@ = CORBA::TypeCode::PR_string_tc(@n@);
+#endif
+"""
+
+tc_wstring = """\
+#if !defined(___tc_wstring_@n@_value__) && !defined(DISABLE_Unnamed_Bounded_WString_TC)
+#define ___tc_wstring_@n@_value__
+const CORBA::TypeCode_ptr _tc_wstring_@n@ = CORBA::TypeCode::PR_wstring_tc(@n@);
 #endif
 """
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.4  2000/11/20 14:43:24  sll
+# Added support for wchar and wstring.
+#
 # Revision 1.14.2.3  2000/11/03 19:21:35  sll
 # idltype.Declared now takes an extra argument.
 #
@@ -165,6 +168,7 @@ def initSymbols():
     for name in [ "_0RL_buildDesc_cboolean",
                   "_0RL_buildDesc_coctet",
                   "_0RL_buildDesc_cchar",
+                  "_0RL_buildDesc_cwchar",
                   "_0RL_buildDesc_cshort",
                   "_0RL_buildDesc_cunsigned_pshort",
                   "_0RL_buildDesc_clong",
@@ -173,6 +177,7 @@ def initSymbols():
                   "_0RL_buildDesc_cdouble",
                   "_0RL_buildDesc_cany",
                   "_0RL_buildDesc_cstring",
+                  "_0RL_buildDesc_cwstring",
                   "_0RL_buildDesc_cCORBA_mObject",
                   "_0RL_buildDesc_cTypeCode",
                   "_0RL_buildDesc_clonglong",
@@ -313,9 +318,10 @@ def docast(type, decl, string):
         cast_to = d_type.sequenceTemplate()
     elif d_type.typecode():
         cast_to = "CORBA::TypeCode_member"
-        
     elif d_type.string():
         cast_to = "CORBA::String_member"
+    elif d_type.wstring():
+        cast_to = "CORBA::WString_member"
     cast_to = cast_to + "(*)" + tail_dims_string
     return "(const " + cast_to + ")(" + cast_to + ")" +\
            "(" + string + ")"
@@ -402,6 +408,23 @@ def visitStringType(type):
         assertDefined(required_symbols)
         # <---
         stream.out(template.bdesc_string, n = n,
+                   private_prefix = prefix)
+        
+
+def visitWStringType(type):
+    bound = type.bound()
+    if bound != 0:
+        prefix = config.state['Private Prefix']
+        n = str(bound)
+        # <---
+        generated_symbol = prefix + "_buildDesc_c" + n + "wstring"
+        if isDefined(generated_symbol):
+            return
+        required_symbols  = [ prefix + "_buildDesc_c" + "wstring" ]
+        defineSymbols([ generated_symbol ])
+        assertDefined(required_symbols)
+        # <---
+        stream.out(template.bdesc_wstring, n = n,
                    private_prefix = prefix)
         
 
@@ -553,6 +576,9 @@ _desc.p_array.opq_array = &""" + prefix + """_tmp;"""
     if deref_type.string():
         if type_dims == []:
             element_name = "CORBA::String_member"
+    elif deref_type.wstring():
+        if type_dims == []:
+            element_name = "CORBA::WString_member"
     elif type.sequence():
         element_name = type.sequenceTemplate()
     elif deref_type.typecode():
@@ -607,6 +633,8 @@ _desc.p_array.opq_array = &""" + prefix + """_tmp;"""
         argtype = "CORBA::TypeCode_member"
     elif deref_type.string():
         argtype = "CORBA::String_member"
+    elif deref_type.wstring():
+        argtype = "CORBA::WString_member"
 
     required_symbols = [ prefix + "_tcParser_getElementDesc" + d_cname ]
     generated_symbol = prefix + "_buildDesc" + d_cname
@@ -785,6 +813,8 @@ def visitTypedef(node):
         deref_alias_tyname = deref_aliasType.objRefTemplate("Member")
     elif deref_aliasType.string():
         alias_tyname = "CORBA::String_member"
+    elif deref_aliasType.wstring():
+        alias_tyname = "CORBA::WString_member"
 
     for declarator in node.declarators():
         first_declarator = declarator == node.declarators()[0]
@@ -818,7 +848,9 @@ def visitTypedef(node):
                 argtype = deref_aliasType.sequenceTemplate()
             if deref_aliasType.string():
                 argtype = "CORBA::String_member"
-            if deref_aliasType.typecode():
+            elif deref_aliasType.wstring():
+                argtype = "CORBA::WString_member"
+            elif deref_aliasType.typecode():
                 argtype = "CORBA::TypeCode_member"
                 
             assertDefined([ prefix + "_buildDesc" + decl_cname ])

@@ -201,8 +201,7 @@ class SupportedTypeVisitor(idlvisitor.TypeVisitor):
 
         not_supported = { idltype.tk_null:       "null",
                           idltype.tk_Principal:  "CORBA::Principal",
-                          idltype.tk_longdouble: "long double",
-                          idltype.tk_wchar:      "wchar" }
+                          idltype.tk_longdouble: "long double" }
 
         if type.kind() in not_supported.keys():
             unsupportedType(not_supported[type.kind()])
@@ -211,7 +210,7 @@ class SupportedTypeVisitor(idlvisitor.TypeVisitor):
         return
 
     def visitWStringType(self, type):
-        unsupportedType("wide strings")
+        return
 
     def visitSequenceType(self, type):
         type.seqType().accept(self)

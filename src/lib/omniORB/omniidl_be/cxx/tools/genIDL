@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4.2.3  2000/11/20 14:43:26  sll
+# Added support for wchar and wstring.
+#
 # Revision 1.4.2.2  2000/10/12 15:37:54  sll
 # Updated from omni3_1_develop.
 #
@@ -105,12 +108,12 @@ def addInt(definition, newName):
 def basic():
     if allPossibilities:
         for type in ["float", "double", "short", "long", "unsigned short",
-                     "unsigned long", "boolean", "char", "octet"]:
+                     "unsigned long", "boolean", "char", "wchar", "octet"]:
             allNames.append([type])
     else:
         allNames.append(["float"])
 
-    for type in ["string"]:
+    for type in ["string", "wstring" ]:
         allNames.append([type])
 
     addEx("""\

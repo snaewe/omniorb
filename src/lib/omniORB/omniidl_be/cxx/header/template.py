@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.5  2000/11/20 14:43:25  sll
+# Added support for wchar and wstring.
+#
 # Revision 1.5.2.4  2000/11/09 12:27:55  dpg1
 # Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 #
@@ -424,6 +427,13 @@ extern void @derived@_free( @derived@_slice* p);
 typedef_simple_string = """\
 typedef char* @name@;
 typedef CORBA::String_var @name@_var;
+typedef CORBA::String_out @name@_out;
+"""
+
+typedef_simple_wstring = """\
+typedef CORBA::WChar* @name@;
+typedef CORBA::WString_var @name@_var;
+typedef CORBA::WString_out @name@_out;
 """
 
 typedef_simple_typecode = """\
@@ -973,6 +983,37 @@ void @name@(const CORBA::String_member& _value) {
 }
 """
 
+union_wstring = """\
+const CORBA::WChar * @name@ () const {
+    return (const CORBA::WChar*) _pd_@name@;
+}
+void @name@(CORBA::WChar* _value) {
+  _pd__initialised = 1;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
+}
+void @name@(const CORBA::WChar*  _value) {
+  _pd__initialised = 1;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
+}
+void @name@(const CORBA::WString_var& _value) {
+  _pd__initialised = 1;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
+}
+void @name@(const CORBA::WString_member& _value) {
+  _pd__initialised = 1;
+  _pd__d = @discrimvalue@;
+  _pd__default = @isDefault@;
+  _pd_@name@ = _value;
+}
+"""
+
+
 union_objref = """\
 @ptr_name@ @member@ () const { return _pd_@member@._ptr; }
 void @member@(@ptr_name@ _value) {
@@ -1203,5 +1244,15 @@ tcstring = """\
 #if !defined(___tc_string_@n@__) && !defined(DISABLE_Unnamed_Bounded_String_TC)
 #define ___tc_string_@n@__
 _CORBA_GLOBAL_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_string_@n@;
+#endif
+"""
+
+##
+## tc_wstring
+##
+tcwstring = """\
+#if !defined(___tc_wstring_@n@__) && !defined(DISABLE_Unnamed_Bounded_WString_TC)
+#define ___tc_wstring_@n@__
+_CORBA_GLOBAL_VAR _dyn_attr const CORBA::TypeCode_ptr _tc_wstring_@n@;
 #endif
 """

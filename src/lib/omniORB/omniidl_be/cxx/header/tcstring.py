@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.3  2000/11/20 14:43:25  sll
+# Added support for wchar and wstring.
+#
 # Revision 1.5.2.2  2000/10/12 15:37:51  sll
 # Updated from omni3_1_develop.
 #
@@ -102,19 +105,31 @@ def visitStringType(type):
     stream.out(template.tcstring,
                n = str(type.bound()))    
 
+def visitWStringType(type):
+    if type.bound() == 0:
+        return
+    stream.out(template.tcwstring,
+               n = str(type.bound()))    
+
 def visitAttribute(node):
     attrType = types.Type(node.attrType())
     if attrType.string():
+        attrType.type().accept(self)
+    elif attrType.wstring():
         attrType.type().accept(self)
 
 def visitOperation(node):
     returnType = types.Type(node.returnType())
     if returnType.string():
         returnType.type().accept(self)
+    elif returnType.wstring():
+        returnType.type().accept(self)
 
     for p in node.parameters():
         paramType = types.Type(p.paramType())
         if paramType.string():
+            paramType.type().accept(self)
+        elif paramType.wstring():
             paramType.type().accept(self)
             
 def visitInterface(node):

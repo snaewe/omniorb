@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.5  2000/11/20 14:43:25  sll
+# Added support for wchar and wstring.
+#
 # Revision 1.29.2.4  2000/11/07 18:30:35  sll
 # exception copy ctor must use helper duplicate function if the interface is
 # a forward declaration.
@@ -541,6 +544,8 @@ def visitConst(node):
     
     if d_constType.string():
         type_string = "char *"
+    elif d_constType.wstring():
+        type_string = "CORBA::WChar *"
     else:
         type_string = d_constType.base()
 
