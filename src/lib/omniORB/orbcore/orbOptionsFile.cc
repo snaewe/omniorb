@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/21 11:02:17  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.1.2.2  2001/08/20 16:39:19  dpg1
   Correct spelling mistake :-)
 
@@ -170,7 +174,7 @@ orbOptions::importFromFile(const char* filename) throw (orbOptions::Unknown,
     }
 
     *(++p) = '\0';
-    addOption(key,value);
+    addOption(key,value,fromFile);
   }
   fclose(file);
 }
@@ -233,33 +237,33 @@ parseOldConfigOption(orbOptions& opt, char* line) {
 
   if (strcmp(key,"ORBInitRef") == 0) {
     oldconfig_warning("ORBInitRef","InitRef");
-    opt.addOption(key+3,value);
+    opt.addOption(key+3,value,orbOptions::fromFile);
   }
   else if (strcmp(key,"ORBDefaultInitRef") == 0) {
     oldconfig_warning("ORBDefaultInitRef","DefaultInitRef");
-    opt.addOption(key+3,value);
+    opt.addOption(key+3,value,orbOptions::fromFile);
   }
   else if (strcmp(key,"NAMESERVICE") == 0) {
     oldconfig_warning("NAMESERVICE","InitRef NameService=");
     const char* format = "NameService=%s";
     CORBA::String_var v(CORBA::string_alloc(strlen(value)+strlen(format)));
     sprintf(v,format,value);
-    opt.addOption("InitRef",v);
+    opt.addOption("InitRef",v,orbOptions::fromFile);
   }
   else if (strcmp(key,"INTERFACE_REPOSITORY") == 0) {
     oldconfig_warning("INTERFACE_REPOSITORY","InitRef InterfaceRepository=");
     const char* format = "InterfaceRepository=%s";
     CORBA::String_var v(CORBA::string_alloc(strlen(value)+strlen(format)));
     sprintf(v,format,value);
-    opt.addOption("InitRef",v);
+    opt.addOption("InitRef",v,orbOptions::fromFile);
   }
   else if (strcmp(key,"ORBInitialHost") == 0) {
     oldconfig_warning("ORBInitialHost","bootstrapAgentHostname");
-    opt.addOption("bootstrapAgentHostname",value);
+    opt.addOption("bootstrapAgentHostname",value,orbOptions::fromFile);
   }
   else if (strcmp(key,"ORBInitialPort") == 0) {
     oldconfig_warning("ORBInitialPort","bootstrapAgentPort");
-    opt.addOption("bootstrapAgentPort",value);
+    opt.addOption("bootstrapAgentPort",value,orbOptions::fromFile);
   }
   else if (strcmp(key,"GATEKEEPER_ALLOWFILE") == 0) {
     oldconfig_warning("GATEKEEPER_ALLOWFILE","accepted");

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.21  2001/08/21 11:02:16  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.2.2.20  2001/08/20 13:27:43  dpg1
   Correct description of objectTableSize configuration setting.
 
@@ -1162,7 +1166,7 @@ public:
 			1,
 			"-ORBtraceLevel < n >= 0 >") {}
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {
@@ -1192,7 +1196,7 @@ public:
 			"-ORBtraceInvocations < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {
@@ -1220,7 +1224,7 @@ public:
 			1,
 			"-ORBobjectTableSize < n >= 0 >") {}
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {
@@ -1250,7 +1254,7 @@ public:
 			"-ORBabortOnInternalError < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {

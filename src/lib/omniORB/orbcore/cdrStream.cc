@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2001/08/21 11:02:12  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.1.2.8  2001/08/17 17:12:35  sll
   Modularise ORB configuration parameters.
 
@@ -538,7 +542,7 @@ public:
 			1,
 			"-ORBnativeCharCodeSet <code set name, e.g. ISO-8859-1>") {}
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
     
     omniCodeSet::NCS_C* v = omniCodeSet::getNCS_C(value);
     if (!v) {
@@ -570,7 +574,7 @@ public:
 			1,
 			"-ORBnativeWCharCodeSet <code set name, e.g. UTF-16>") {}
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
     
     omniCodeSet::NCS_W* v = omniCodeSet::getNCS_W(value);
     if (!v) {

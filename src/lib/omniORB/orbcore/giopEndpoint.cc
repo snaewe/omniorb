@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2001/08/21 11:02:14  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.1.2.8  2001/08/17 17:12:36  sll
   Modularise ORB configuration parameters.
 
@@ -279,7 +283,7 @@ public:
 			"-ORBunixTransportDirectory <dir name>") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
     orbParameters::unixTransportDirectory = value;
   }
 
@@ -313,7 +317,7 @@ public:
 			"-ORBunixTransportPermission <mode bits in octal radix>") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     unsigned int v;
     if( sscanf(value,"%o",&v) != 1 ) {

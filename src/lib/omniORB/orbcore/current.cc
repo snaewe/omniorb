@@ -348,7 +348,7 @@ public:
 			"-ORBsupportCurrent < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {

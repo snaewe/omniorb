@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.33.2.24  2001/08/21 11:02:13  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.33.2.23  2001/08/20 08:19:22  sll
   Read the new ORB configuration file format. Can still read old format.
   Can also set configuration parameters from environment variables.
@@ -1195,7 +1199,7 @@ public:
 			1) {}
 
 
-  void visit(const char*) throw (orbOptions::BadParam) {
+  void visit(const char*,orbOptions::Source) throw (orbOptions::BadParam) {
 
     orbOptions::sequenceString_var usage;
     usage = orbOptions::singleton().usageArgv();
@@ -1225,7 +1229,7 @@ public:
 			"-ORBid "ORB_ID_STRING" (standard option)") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     if (!isValidId(value)) {
       throw orbOptions::BadParam(key(),value,"id is not "ORB_ID_STRING);
@@ -1257,7 +1261,7 @@ public:
 			"-ORBdumpConfiguration < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {
@@ -1286,7 +1290,7 @@ public:
 			"-ORBlcdMode < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {
@@ -1314,7 +1318,7 @@ public:
   poa_iiop_portHandler() : 
     orbOptions::Handler("poa_iiop_port",0,1,0) {}
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     throw orbOptions::BadParam(key(),value,
 			       "poa_iiop_port"POA_IIOP_IS_OBSOLUTE);
@@ -1334,7 +1338,7 @@ public:
   poa_iiop_name_portHandler() : 
     orbOptions::Handler("poa_iiop_name_port",0,1,0) {}
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
     throw orbOptions::BadParam(key(),value,
 			       "poa_iiop_name_port"POA_IIOP_IS_OBSOLUTE);
   }

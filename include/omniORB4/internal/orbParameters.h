@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/21 11:02:12  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.1.2.1  2001/08/17 17:12:34  sll
   Modularise ORB configuration parameters.
 
@@ -77,8 +81,8 @@ _CORBA_MODULE_VAR _core_attr GIOP::Version maxGIOPVersion;
 //  Set the maximum GIOP version the ORB should support. The ORB tries
 //  to match the <major>.<minor> version as specified. This function
 //  should only be called before ORB_init(). Calling this function
-//  after ORB_init()  does not cause the ORB to change its maximum
-//  supported version, in this case the ORB just returns its version
+//  after ORB_init() does not cause the ORB to change its maximum
+//  supported version; in this case the ORB just returns its version
 //  number in <major>.<minor>.
 //
 //  Valid values = 1.0 | 1.1 | 1.2
@@ -89,6 +93,7 @@ _CORBA_MODULE_VAR _core_attr CORBA::ULong giopMaxMsgSize;
 //   refuse to send or receive the message and raise a MARSHAL exception.
 //
 //   Valid values = (n >= 8192)
+//
 
 
 _CORBA_MODULE_VAR _core_attr omniCodeSet::NCS_C* nativeCharCodeSet;
@@ -114,6 +119,7 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean      lcdMode;
 //  certain types of erroneous message are received on the wire.
 //
 //  Valid values = 0 or 1
+//
 
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportCurrent;
@@ -122,7 +128,6 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportCurrent;
 //  PortableServer::Current. If you do not need this information, you
 //  can set the value to 0, resulting in a small performance
 //  improvement.
-
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean      strictIIOP;
 //   Enable vigorous check on incoming IIOP messages
@@ -134,40 +139,47 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean      strictIIOP;
 //   of the spec.
 //
 //   If this flag is non-zero, the incoming message is expected to
-//   be well behaved. Any messages that have garbage at the end will
+//   be well-behaved. Any messages that have garbage at the end will
 //   be rejected.
 //   
 //   The default value of this flag is true, so invalid messages are
 //   rejected. If you set it to zero, the ORB will silently skip the
 //   unread part. The problem with this behaviour is that the header
 //   message size may actually be garbage, caused by a bug in the
-//   sender's code. The receiving thread may forever block on the
+//   sender's code. The receiving thread may block forever on the
 //   strand as it tries to read more data from it. In this case the
 //   sender won't send any more as it thinks it has marshalled in all
 //   the data.
 //
 //   Valid values = 0 or 1
+//
 
 
 _CORBA_MODULE_VAR _core_attr CORBA::ULong scanGranularity;
-//  The granularity at which the ORB scan for idle connections.
+//  The granularity at which the ORB scans for idle connections.
 //  This value determines the minimum value that inConScanPeriod or
 //  outConScanPeriod can be implemented.
 //
 //  Valid values = (n >= 0 in seconds) 
 //                  0 --> do not scan for idle connections.
+//
+
 
 
 
 _CORBA_MODULE_VAR _core_attr CORBA::ULong objectTableSize;
-//  Initial hash table size of the Active Object Map. The hash table is
-//  resized automatically depending on the number of active objects.
-//  If one is definitely going to instantiate a very large number of
-//  objects, change the table size to a large number would save the ORB
-//  a bit of time to readjust the hash table.
+//  Hash table size of the Active Object Map. If this is zero, the ORB
+//  uses a dynamically resized open hash table. This is normally the  
+//  best option, but it leads to less predictable performance since   
+//  any operation which adds or removes a table entry may trigger a   
+//  resize. If you set this to a non-zero value, the hash table has   
+//  the specified number of entries, and is never resized. Note that  
+//  the hash table is open, so this does not limit the number of      
+//  active objects, just how efficiently they can be located.
 //
 //  Valid values = (n >= 0)
-//                 0 --> let the ORB choose
+//                 0 --> use a dynamically resized table.
+
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean abortOnInternalError;
 //  If the value of this variable is TRUE then the ORB will abort
@@ -181,35 +193,36 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean abortOnInternalError;
 
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean tcAliasExpand;
-// This flag is used to indicate whether TypeCodes associated with anys
-// should have aliases removed. This functionality is included because
-// some ORBs will not recognise an Any containing a TypeCode containing
-// aliases to be the same as the actual type contained in the Any. Note
-// that omniORB will always remove top-level aliases, but will not remove
-// aliases from TypeCodes that are members of other TypeCodes (e.g.
-// TypeCodes for members of structs etc.), unless tcAliasExpand is set to 1.
-// There is a performance penalty when inserting into an Any if 
-// tcAliasExpand is set to 1. The default value is 0 (i.e. aliases of
-// member TypeCodes are not expanded). Note that aliases won't be expanded
-// when one of the non-type-safe methods of inserting into an Any is
-// used (i.e. when the replace() member function or non - type-safe Any
-// constructor is used. )
+//   This flag is used to indicate whether TypeCodes associated with Anys
+//   should have aliases removed. This functionality is included because
+//   some ORBs will not recognise an Any containing a TypeCode with
+//   aliases to be the same as the actual type contained in the Any. Note
+//   that omniORB will always remove top-level aliases, but will not remove
+//   aliases from TypeCodes that are members of other TypeCodes (e.g.
+//   TypeCodes for members of structs etc.), unless tcAliasExpand is set to 1.
+//   There is a performance penalty when inserting into an Any if 
+//   tcAliasExpand is set to 1. The default value is 0 (i.e. aliases of
+//   member TypeCodes are not expanded). Note that aliases won't be expanded
+//   when one of the non-type-safe methods of inserting into an Any is
+//   used (i.e. when the replace() member function or non - type-safe Any
+//   constructor is used. )
 //
-//  Valid values = 0 or 1
+//    Valid values = 0 or 1
+
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean useTypeCodeIndirections;
-// If true (the default), typecode indirectional will be used. Set
-// this to false to disable that. Setting this to false might be
-// useful to interoperate with another ORB implementation that cannot
-// handle indirectional properly.
-//
-// Valid values = 0 or 1
+//   If true (the default), typecode indirections will be used. Set
+//   this to false to disable that. Setting this to false might be
+//   useful to interoperate with another ORB implementation that cannot
+//   handle indirections properly.
+//  
+//   Valid values = 0 or 1
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean  acceptMisalignedTcIndirections;
-// If true, try to fix a mis-aligned indirection in a typecode. This
-// could be used to work around some versions of Visibroker's Java ORB.
-//
-// Valid values = 0 or 1
+//   If true, try to fix a mis-aligned indirection in a typecode. This
+//   could be used to work around some versions of Visibroker's Java ORB.
+//  
+//   Valid values = 0 or 1
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -223,7 +236,7 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean  acceptMisalignedTcIndirections;
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean verifyObjectExistsAndType;
 //  If the value of this variable is 0 then the ORB will not
 //  send a GIOP LOCATE_REQUEST message to verify the existence of
-//  the object prior to the first invocation. Setting this variable
+//  the object prior to the first invocation. Set this variable
 //  if the other end is a buggy ORB that cannot handle GIOP
 //  LOCATE_REQUEST. 
 //
@@ -236,13 +249,13 @@ _CORBA_MODULE_VAR _core_attr CORBA::Boolean oneCallPerConnection;
 //  Valid values = 0 or 1
 
 _CORBA_MODULE_VAR _core_attr CORBA::ULong maxGIOPConnectionPerServer;
-//  The ORB could open more than one connections to a server
+//  The ORB could open more than one connection to a server
 //  depending on the number of concurrent invocations to the same
-//  server. This variable decide what is the maximum number of
-//  connections to use per server. This variable is read only once
-//  at ORB_init. If the number of concurrent invocations exceed this
-//  number, the extra invocations would be blocked until the
-//  the outstanding ones return.
+//  server. This variable decides the maximum number of connections 
+//  to use per server. This variable is read only once at ORB_init.
+//  If the number of concurrent invocations exceeds this number, the
+//  extra invocations are blocked until the the outstanding ones
+//  return.
 //
 //  Valid values = (n >= 1) 
 
@@ -404,10 +417,10 @@ _CORBA_MODULE_VAR _core_attr CORBA::UShort unixTransportPermission;
 //  Valid values = unix permission mode bits in octal radix (e.g. 0755)
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportBootstrapAgent;
-// 1 means enable the support for Sun's bootstrap agent protocol.
-// This enables interoperability between omniORB servers and Sun's javaIDL
-// clients. When this option is enabled, an omniORB server will response
-// to a bootstrap agent request.
+//Applies to the server side. 1 means enable the support for Sun's
+//bootstrap agent protocol.  This enables interoperability between omniORB
+//servers and Sun's javaIDL clients. When this option is enabled, an
+//omniORB server will response to a bootstrap agent request.
 
 _CORBA_MODULE_END
 

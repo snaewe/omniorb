@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2001/08/21 11:02:14  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.1.4.11  2001/08/17 17:12:37  sll
   Modularise ORB configuration parameters.
 
@@ -643,7 +647,7 @@ public:
 			"-ORBoneCallPerConnection < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {
@@ -671,7 +675,7 @@ public:
 			1,
 			"-ORBmaxGIOPConnectionPerServer < n > 0 >") {}
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {

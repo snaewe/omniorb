@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.12  2001/08/21 11:02:16  sll
+ orbOptions handlers are now told where an option comes from. This
+ is necessary to process DefaultInitRef and InitRef correctly.
+
  Revision 1.2.2.11  2001/08/20 15:08:36  sll
  Changed option name endpoint* to endPoint*.
 
@@ -578,7 +582,7 @@ public:
 "                          * may not be supported on the platform.\n") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     omniObjAdapter::Options::EndpointURI* opt;
     opt = new omniObjAdapter::Options::EndpointURI();
@@ -620,7 +624,7 @@ public:
 			"-ORBendPointNoPublish <endpoint uri>") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     omniObjAdapter::Options::EndpointURI* opt;
     opt = new omniObjAdapter::Options::EndpointURI();
@@ -655,7 +659,7 @@ public:
 			"-ORBendPointNoListen <endpoint uri>") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     omniObjAdapter::Options::EndpointURI* opt;
     opt = new omniObjAdapter::Options::EndpointURI();

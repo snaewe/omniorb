@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/08/21 11:02:14  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.2.2.6  2001/08/17 17:12:36  sll
   Modularise ORB configuration parameters.
 
@@ -204,7 +208,7 @@ public:
 			"-ORBtcAliasExpand < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {
@@ -233,7 +237,7 @@ public:
 			"-ORBdiiThrowsSysExceptions < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {
@@ -262,7 +266,7 @@ public:
 			"-ORBomniORB_27_CompatibleAnyExtraction < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {
@@ -291,7 +295,7 @@ public:
 			"-ORBuseTypeCodeIndirections < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {
@@ -320,7 +324,7 @@ public:
 			"-ORBacceptMisalignedTcIndirections < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {

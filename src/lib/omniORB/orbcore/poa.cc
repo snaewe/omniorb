@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.19  2001/08/21 11:02:18  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.2.2.18  2001/08/20 10:43:57  sll
   Fixed minor bug detected by MSVC++
 
@@ -3536,7 +3540,7 @@ public:
 			1,
 			"-ORBpoaHoldRequestTimeout < n >= 0 in msec >") {}
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {

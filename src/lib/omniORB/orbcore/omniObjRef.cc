@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.21  2001/08/21 11:02:17  sll
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.2.2.20  2001/08/17 17:12:40  sll
   Modularise ORB configuration parameters.
 
@@ -930,7 +934,7 @@ public:
 			"-ORBverifyObjectExistsAndType < 0 | 1 >") {}
 
 
-  void visit(const char* value) throw (orbOptions::BadParam) {
+  void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::Boolean v;
     if (!orbOptions::getBoolean(value,v)) {
