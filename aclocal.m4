@@ -128,6 +128,7 @@ AC_DEFUN([OMNI_CXX_NEED_FQ_BASE_CTOR],
 omni_cv_cxx_need_fq_base_ctor,
 [AC_LANG_PUSH(C++)
  AC_TRY_COMPILE([
+/* Test sub-classes */
 class A {
 public:
   class B {
@@ -139,8 +140,15 @@ class C : public A::B {
 public:
   C() : B(5) {}
 };
+/* Test namespaces */
+namespace P { class R {};               };
+namespace Q { class R : public P::R {}; };
+class S : public Q::R {
+public:
+  S(): R() {}
+};
 ],
-[C c;],
+[C c; S s;],
  omni_cv_cxx_need_fq_base_ctor=no, omni_cv_cxx_need_fq_base_ctor=yes)
  AC_LANG_POP(C++)
 ])

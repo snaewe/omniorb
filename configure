@@ -9055,6 +9055,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 #line $LINENO "configure"
 #include "confdefs.h"
 
+/* Test sub-classes */
 class A {
 public:
   class B {
@@ -9066,6 +9067,13 @@ class C : public A::B {
 public:
   C() : B(5) {}
 };
+/* Test namespaces */
+namespace P { class R {};               };
+namespace Q { class R : public P::R {}; };
+class S : public Q::R {
+public:
+  S(): R() {}
+};
 
 #ifdef F77_DUMMY_MAIN
 #  ifdef __cplusplus
@@ -9076,7 +9084,7 @@ public:
 int
 main ()
 {
-C c;
+C c; S s;
   ;
   return 0;
 }

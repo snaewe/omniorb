@@ -1,3 +1,14 @@
+Thu Nov 20 13:51:37 GMT 2003 dgrisby
+====================================
+
+- More extensive check for fully qualified base constructors. Thanks
+  Alex Tingle.
+
+acinclude.m4
+aclocal.m4
+configure
+
+
 Thu Nov 20 13:36:09 GMT 2003 dgrisby
 ====================================
 
