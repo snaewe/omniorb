@@ -196,7 +196,7 @@ endif
 
 ifdef EXPORT_TREE
 define ExportATMosInterfaces
-(dir=$(EXPORT_TREE)/$(BINDIR); $(CreateDir); \
+(dir=$(EXPORT_TREE)/$(BINDIR)/init; $(CreateDir); \
  allinterfaces="$(EXPORT_TREE)/$(BINDIR)/all_interfaces"; \
  if [ -f $$allinterfaces ]; then \
    (set -x; $(RM) $$allinterfaces); \
