@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/02/08 13:25:24  djr
+  Added a couple of missing _core_attr.
+
   Revision 1.1.2.1  1999/09/22 14:26:25  djr
   Major rewrite of orbcore to support POA.
 
@@ -36,6 +39,15 @@
 
 #ifndef __DYNAMICLIB_H__
 #define __DYNAMICLIB_H__
+
+
+#if defined(_OMNIORB_LIBRARY)
+# define _core_attr
+#elif defined(_OMNIORB_DYNAMIC_LIBRARY)
+# define _core_attr _OMNIORB_NTDLL_IMPORT
+#else
+# error "Neither _OMNIORB_LIBRARY nor _OMNIORB_DYNAMIC_LIBRARY defined"
+#endif
 
 
 class omniCallDescriptor;
@@ -49,15 +61,17 @@ public:
   // is linked then the real functions are called.  Otherwise
   // stub versions are called which do nothing, or deal with the
   // error appropriately.
-  static omniDynamicLib* ops;
+  static _core_attr omniDynamicLib* ops;
 
   // This points to the dynamic library's version of the functions
   // if the dynamic is linked, or is zero otherwise.
-  static omniDynamicLib* hook;
+  static _core_attr omniDynamicLib* hook;
 
   // This is used in the dynamic library only to ensure that if
   // the dynamic library is linked, then the hook will be enagaged.
   // (see ** below).
+  //  NB. Since it is _only_ used in the dynamic library, we don't
+  // need a _dyn_attr here.
   static char link_in;
 
   ////////////////////////////////////////////////
@@ -89,6 +103,9 @@ public:
 // under this interface.
 static char* omniDynamicLib_link_in = &omniDynamicLib::link_in;
 #endif
+
+
+#undef _core_attr
 
 
 #endif  // __DYNAMICLIB_H__

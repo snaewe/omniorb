@@ -1,3 +1,14 @@
+
+Tue Feb  8 13:20:50 GMT 2000 djr
+================================
+
+- Added a few _core_attr.  Dynamic library should now work on Win(x).
+  (modulo oustanding issue with tcParser and String_member).
+
+include/omniORB3/omniInternal.h
+src/lib/omniORB2/dynamicLib.h
+
+
 Mon Feb  7 15:29:03 GMT 2000 dpg1
 =================================
 

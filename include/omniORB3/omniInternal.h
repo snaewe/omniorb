@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2000/02/08 13:25:23  djr
+  Added a couple of missing _core_attr.
+
   Revision 1.1.2.6  2000/01/27 16:31:32  djr
   String_member now initialised to empty string by default.
 
@@ -191,7 +194,7 @@ public:
   static _core_attr const alignment_t                max_alignment;
   // Maximum value of alignment_t
 
-  static const char*const                            empty_string;
+  static _core_attr const char*const                 empty_string;
   // Used to initialise empty strings, since some compilers will allocate
   // a separate instance for each "" in code.
 
