@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/11/15 17:25:11  sll
+  Added char, wchar codeset convertor support.
+
   Revision 1.1.2.3  2000/10/04 16:53:48  sll
   Make sure IIOP version is set in the iiop member.
 
@@ -50,7 +53,7 @@ omni_tracedmutex*                omniIOR::lock = 0;
 
 omniIOR::omniIOR(char* repoId, IOP::TaggedProfileList* iop) : 
   iopProfiles(iop), decoded(1), selectedRopeFactoryType(0),
-  addr_mode(GIOP::KeyAddr),opaque_data(0),pd_refCount(1)
+  addr_mode(GIOP::KeyAddr),tcs_c(0),tcs_w(0),opaque_data(0),pd_refCount(1)
 {
   {
     omniORB::logger log;
@@ -68,7 +71,7 @@ omniIOR::omniIOR(char* repoId, IOP::TaggedProfileList* iop) :
 omniIOR::omniIOR(char* repoId, IOP::TaggedProfile* iop, _CORBA_ULong niops,
 		 _CORBA_ULong selected_profile_index) :
   decoded(1), selectedRopeFactoryType(0), addr_mode(GIOP::KeyAddr), 
-  opaque_data(0),pd_refCount(1)
+  tcs_c(0),tcs_w(0),opaque_data(0),pd_refCount(1)
 {
   {
     omniORB::logger log;
@@ -85,7 +88,7 @@ omniIOR::omniIOR(char* repoId, IOP::TaggedProfile* iop, _CORBA_ULong niops,
 
 omniIOR::omniIOR(const char* repoId, omniIdentity* id) :
   decoded(1), selectedRopeFactoryType(0), addr_mode(GIOP::KeyAddr), 
-  opaque_data(0),pd_refCount(1)
+  tcs_c(0),tcs_w(0),opaque_data(0),pd_refCount(1)
 {
   {
     omniORB::logger log;
@@ -115,7 +118,7 @@ omniIOR::omniIOR(const char* repoId,
 		 const _CORBA_Unbounded_Sequence_Octet& key,
 		 const IIOP::Address* addrs, CORBA::ULong naddrs) :
   decoded(1), selectedRopeFactoryType(0), addr_mode(GIOP::KeyAddr), 
-  opaque_data(0),pd_refCount(1) 
+  tcs_c(0),tcs_w(0),opaque_data(0),pd_refCount(1) 
 {
   {
     omniORB::logger log;
