@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2003/07/26 22:52:22  dgrisby
+  Avoid spurious gcc warnings when sizeof pointer > sizeof int.
+
   Revision 1.1.2.6  2002/03/18 15:13:09  dpg1
   Fix bug with old-style ORBInitRef in config file; look for
   -ORBtraceLevel arg before anything else; update Windows registry
@@ -439,7 +442,7 @@ orbOptions::addKVULong(const char* key, CORBA::ULong value,
 
   l = strlen(key) + 16;
   kv = CORBA::string_alloc(l);
-  sprintf(kv,"%s = %lu",key,value);
+  sprintf(kv,"%s = %lu",key,(unsigned long)value);
 
   l = result.length();
   result.length(l+1);

@@ -56,7 +56,12 @@ CORBA::Boolean orbParameters::supportCurrent      = 1;
 /////////////////////////////////////////////////////////////////////////////
 
 
-CORBA::Current::Current(int nil) { _PR_setobj((omniObjRef*)(nil ? 0:1)); }
+CORBA::Current::Current(int nil) {
+  if (nil)
+    _PR_setobj((omniObjRef*)0);
+  else
+    _PR_setobj((omniObjRef*)1);
+}
 
 CORBA::Current::~Current() {}
 

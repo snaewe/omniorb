@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2003/07/26 22:52:22  dgrisby
+  Avoid spurious gcc warnings when sizeof pointer > sizeof int.
+
   Revision 1.1.2.15  2003/02/03 16:53:14  dgrisby
   Force type in constructor argument to help confused compilers.
 
@@ -363,7 +366,7 @@ static void write_codeset_name(char* buf, const char* cname,
     strcat(buf,cname);
   else {
     char* p = buf + strlen(buf);
-    sprintf(p,"0x%08lx",id);
+    sprintf(p,"0x%08lx",(unsigned long)id);
   }
 }
 

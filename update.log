@@ -1,3 +1,19 @@
+Sat Jul 26 23:45:15 BST 2003 dgrisby
+====================================
+
+- Avoid spurious gcc warnings when sizeof pointer > sizeof int.
+
+include/omniORB4/CORBA_BOA.h
+include/omniORB4/CORBA_ORB.h
+include/omniORB4/dynAny.h
+include/omniORB4/poa.h
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+src/lib/omniORB/orbcore/poamanager.cc
+
+
 Fri Jul 25 16:52:55 BST 2003 dgrisby
 ====================================
 

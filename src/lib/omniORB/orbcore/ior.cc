@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.24  2003/07/26 22:52:22  dgrisby
+  Avoid spurious gcc warnings when sizeof pointer > sizeof int.
+
   Revision 1.10.2.23  2003/02/03 16:53:14  dgrisby
   Force type in constructor argument to help confused compilers.
 
@@ -518,7 +521,7 @@ omniIOR::dump_TAG_ORB_TYPE(const IOP::TaggedComponent& c)
   else {
     len += 16;
     outstr = CORBA::string_alloc(len);
-    sprintf(outstr,"%s 0x%08lx","TAG_ORB_TYPE",orb_type);
+    sprintf(outstr,"%s 0x%08lx","TAG_ORB_TYPE",(unsigned long)orb_type);
   }
   return outstr._retn();
 }
@@ -967,7 +970,7 @@ IOP::dumpComponent(const IOP::TaggedComponent& c) {
     strcpy(p,tagname);
   }
   else {
-    sprintf(p,"unknown tag(0x%08lx)",c.tag);
+    sprintf(p,"unknown tag(0x%08lx)",(unsigned long)c.tag);
   }
   p += strlen(p);
   *p++ = ' ';

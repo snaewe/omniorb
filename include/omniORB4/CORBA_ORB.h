@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2003/07/26 22:52:22  dgrisby
+  Avoid spurious gcc warnings when sizeof pointer > sizeof int.
+
   Revision 1.1.2.6  2001/11/13 14:11:43  dpg1
   Tweaks for CORBA 2.5 compliance.
 
@@ -257,7 +260,12 @@ public:
   virtual ~ORB();
 
 protected:
-  inline ORB(int nil) { _PR_setobj((omniObjRef*) (nil ? 0:1)); }
+  inline ORB(int nil) {
+    if (nil)
+      _PR_setobj((omniObjRef*)0);
+    else
+      _PR_setobj((omniObjRef*)1);
+  }
 
 private:
   ORB(const ORB&);

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2003/07/26 22:52:22  dgrisby
+  Avoid spurious gcc warnings when sizeof pointer > sizeof int.
+
   Revision 1.1.2.2  2003/01/16 11:08:26  dgrisby
   Patches to support Digital Mars C++. Thanks Christof Meerwald.
 
@@ -202,7 +205,10 @@ _CORBA_MODULE_BEG
 
   protected:
     inline DynAny(int is_nil = 0) : pd_dynmagic(PR_magic) {
-      _PR_setobj((omniObjRef*)(is_nil ? 0:1));
+      if (is_nil)
+	_PR_setobj((omniObjRef*)0);
+      else
+	_PR_setobj((omniObjRef*)1);
     }
     virtual ~DynAny();
 
@@ -973,7 +979,10 @@ _CORBA_MODULE_BEG
     virtual void* _ptrToObjRef(const char* repoId) = 0;
 
     inline DynAnyFactory(int is_nil = 0) {
-      _PR_setobj((omniObjRef*)(is_nil ? 0:1));
+      if (is_nil)
+	_PR_setobj((omniObjRef*)0);
+      else
+	_PR_setobj((omniObjRef*)1);
     }
     virtual ~DynAnyFactory();
 
