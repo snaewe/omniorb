@@ -28,10 +28,12 @@
 
 /*
  $Log$
+ Revision 1.19  1999/05/26 15:55:39  sll
+    Added new template _CORBA_Sequence_ObjRef to deal with sequence
+    of object reference. This is necessary in order to implment the value ctor
+    correctly.
+
  Revision 1.18  1999/05/26 15:04:15  sll
-   Added new template _CORBA_Sequence_ObjRef to deal with sequence
-   of object reference. This is necessary in order to implment the value ctor
-   correctly.
 
  Revision 1.17  1999/05/26 14:55:06  sll
 
@@ -830,10 +832,10 @@ public:
 ///////////////// _CORBA_Sequence_ObjRef              ////////////////
 //////////////////////////////////////////////////////////////////////
 
-template <class T, class ElemT>
+template <class T, class ElemT, class T_Helper>
 class _CORBA_Sequence_ObjRef {
 public:
-  typedef _CORBA_Sequence_ObjRef<T,ElemT> T_seq;
+  typedef _CORBA_Sequence_ObjRef<T,ElemT,T_Helper> T_seq;
 
   inline _CORBA_Sequence_ObjRef()
     : pd_max(0), pd_len(0), pd_rel(1), pd_buf(0) { }
@@ -914,7 +916,7 @@ public:
   }
   static inline T** allocbuf(_CORBA_ULong nelems) { 
     T** v = new T*[nelems];
-    for (_CORBA_ULong i=0; i < nelems; i++) v[i] = CORBA::Object::_nil();
+    for (_CORBA_ULong i=0; i < nelems; i++) v[i] = T_Helper::_nil();
     return v;
   }
   static inline void freebuf(T** b) { if( b ) delete[] b; }
@@ -939,22 +941,22 @@ public:
 ///////////////// _CORBA_Unbounded_Sequence_ObjRef    ////////////////
 //////////////////////////////////////////////////////////////////////
 
-template <class T, class ElemT>
-class _CORBA_Unbounded_Sequence_ObjRef : public _CORBA_Sequence_ObjRef<T,ElemT> {
+template <class T, class ElemT, class T_Helper>
+class _CORBA_Unbounded_Sequence_ObjRef : public _CORBA_Sequence_ObjRef<T,ElemT,T_Helper> {
 public:
   inline _CORBA_Unbounded_Sequence_ObjRef() {}
   inline _CORBA_Unbounded_Sequence_ObjRef(_CORBA_ULong max) 
-                          : _CORBA_Sequence_ObjRef<T,ElemT>(max) {}
+                          : _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>(max) {}
   inline _CORBA_Unbounded_Sequence_ObjRef(_CORBA_ULong max,
 				   _CORBA_ULong length,
 				   T          **value,
 				   _CORBA_Boolean release = 0)
-     : _CORBA_Sequence_ObjRef<T,ElemT>(max,length,value,release) {}
-  inline _CORBA_Unbounded_Sequence_ObjRef(const _CORBA_Unbounded_Sequence_ObjRef<T,ElemT>& s) 
-     : _CORBA_Sequence_ObjRef<T,ElemT>(s) {}
+     : _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>(max,length,value,release) {}
+  inline _CORBA_Unbounded_Sequence_ObjRef(const _CORBA_Unbounded_Sequence_ObjRef<T,ElemT,T_Helper>& s) 
+     : _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>(s) {}
   inline ~_CORBA_Unbounded_Sequence_ObjRef() {}
-  inline _CORBA_Unbounded_Sequence_ObjRef<T,ElemT> &operator= (const _CORBA_Unbounded_Sequence_ObjRef<T,ElemT> &s) {
-    _CORBA_Sequence_ObjRef<T,ElemT>::operator= (s);
+  inline _CORBA_Unbounded_Sequence_ObjRef<T,ElemT,T_Helper> &operator= (const _CORBA_Unbounded_Sequence_ObjRef<T,ElemT,T_Helper> &s) {
+    _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>::operator= (s);
     return *this;
   }
 
@@ -970,23 +972,23 @@ public:
 ///////////////// _CORBA_Bounded_Sequence_ObjRef      ////////////////
 //////////////////////////////////////////////////////////////////////
 
-template<class T, class ElemT,int max>
+template<class T, class ElemT,class T_Helper,int max>
 class _CORBA_Bounded_Sequence_ObjRef
-  : public _CORBA_Sequence_ObjRef<T,ElemT>
+  : public _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>
 {
 public:
   inline _CORBA_Bounded_Sequence_ObjRef() : 
-                      _CORBA_Sequence_ObjRef<T,ElemT>(max){}
+                      _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>(max){}
   inline _CORBA_Bounded_Sequence_ObjRef(_CORBA_ULong length,
 				   T          **value,
 				   _CORBA_Boolean release = 0)
-     : _CORBA_Sequence_ObjRef<T,ElemT>(max,length,value,release) {}
-  inline _CORBA_Bounded_Sequence_ObjRef(const _CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>& s) : _CORBA_Sequence_ObjRef<T,ElemT>(s) {}
+     : _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>(max,length,value,release) {}
+  inline _CORBA_Bounded_Sequence_ObjRef(const _CORBA_Bounded_Sequence_ObjRef<T,ElemT,T_Helper,max>& s) : _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>(s) {}
   inline ~_CORBA_Bounded_Sequence_ObjRef() {}
-  inline _CORBA_Bounded_Sequence_ObjRef<T,ElemT,max> &operator= (const _CORBA_Bounded_Sequence_ObjRef<T,ElemT,max> &s);
+  inline _CORBA_Bounded_Sequence_ObjRef<T,ElemT,T_Helper,max> &operator= (const _CORBA_Bounded_Sequence_ObjRef<T,ElemT,T_Helper,max> &s);
 
   inline _CORBA_ULong length() const { 
-                 return _CORBA_Sequence_ObjRef<T,ElemT>::length(); }
+                 return _CORBA_Sequence_ObjRef<T,ElemT,T_Helper>::length(); }
   inline void length(_CORBA_ULong len);
 
   // omniORB2 extensions
