@@ -1,3 +1,11 @@
+Tue May  8 18:03:55 BST 2001 sll
+================================
+
+- Client side now closes the connection if it encounters any error in 
+  processing a call.
+
+src/lib/omniORB/orbcore/giopRope.cc
+
 Tue May  8 17:28:20 BST 2001 sll
 ================================
 
