@@ -71,7 +71,7 @@ minor_version = $(word 2,$(subst ., ,$(VERSION)))
 micro_version = $(word 3,$(subst ., ,$(VERSION)))
 
 #############################################################################
-#   Make rules for to Solaris 2.x                                           #
+#   Make rules for Solaris 2.x                                              #
 #############################################################################
 
 ifdef SunOS
@@ -116,7 +116,7 @@ endif
 endif
 
 #############################################################################
-#   Make rules for to Digital Unix                                          #
+#   Make rules for  Digital Unix                                            #
 #############################################################################
 
 ifdef OSF1
