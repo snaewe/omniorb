@@ -2,6 +2,12 @@
 Wed Feb  9 11:57:28 GMT 2000 djr
 ================================
 
+- Fixed bug in _CORBA_String_member.  When a new string is allocated or
+  consumed the pd_rel flag should be set to avoid a memory leak.
+
+include/omniORB3/stringtypes.h
+src/lib/omniORB2/orbcore/corbaString.cc
+
 - Minor improvements to omni_tracedmutex/condition.  Now checks that mutex
   is destroyed before associated condvar.  Unnecassary member
   omni_tracedmutex::pd_m removed.

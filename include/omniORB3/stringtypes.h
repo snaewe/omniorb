@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.3  2000/02/09 15:01:28  djr
+ Fixed _CORBA_String_member bug.
+
  Revision 1.1.2.2  2000/01/27 16:31:32  djr
  String_member now initialised to empty string by default.
 
@@ -116,8 +119,12 @@ public:
 
   inline _CORBA_String_var& operator=(const _CORBA_String_member& s);
 
+#if ! (defined(__GNUG__) && __GNUC_MINOR__ == 95)
   inline operator char* ()             { return _data; }
   inline operator const char* () const { return _data; }
+#else
+  inline operator char* () const { return _data; }
+#endif
 
   inline char& operator[] (_CORBA_ULong index) {
     if (!_data || (_CORBA_ULong)strlen(_data) < index) {
@@ -172,7 +179,6 @@ public:
   inline _CORBA_String_member(const _CORBA_String_member& s) 
            : pd_data(0), pd_rel(1), _ptr(pd_data) {
     if (s._ptr)  _ptr = _CORBA_String_var::string_dup(s._ptr);
-    else         _ptr = 0;
   }
 
   inline ~_CORBA_String_member() {
@@ -184,6 +190,7 @@ public:
   inline _CORBA_String_member& operator=(char* s) {
     if (pd_rel && ((char*)_ptr))  delete[] _ptr;
     _ptr = s;
+    pd_rel = 1;
     return *this;
   }
 
@@ -192,7 +199,10 @@ public:
       delete[] _ptr;
       _ptr = 0;
     }
-    if (s)  _ptr = _CORBA_String_var::string_dup(s);
+    if( s ) {
+      _ptr = _CORBA_String_var::string_dup(s);
+      pd_rel = 1;
+    }
     return *this;
   }
 
@@ -201,7 +211,10 @@ public:
       delete[] _ptr;
       _ptr = 0;
     }
-    if (s._ptr)  _ptr = _CORBA_String_var::string_dup(s._ptr);
+    if( s._ptr ) {
+      _ptr = _CORBA_String_var::string_dup(s._ptr);
+      pd_rel = 1;
+    }
     return *this;
   }
 
@@ -210,7 +223,10 @@ public:
       delete[] _ptr;
       _ptr = 0;
     }
-    if( (const char*)s )  _ptr = _CORBA_String_var::string_dup((const char*)s);
+    if( (const char*)s ) {
+      _ptr = _CORBA_String_var::string_dup((const char*)s);
+      pd_rel = 1;
+    }
     return *this;
   }
 
@@ -228,8 +244,12 @@ public:
     return _ptr[index];
   }
 
+#if ! (defined(__GNUG__) && __GNUC_MINOR__ == 95)
   inline operator char* ()             { return _ptr; }
   inline operator const char* () const { return _ptr; }
+#else
+  inline operator char* () const { return _ptr; }
+#endif
 
   inline char* _retn() {
     char *tmp;
