@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.8  2000/07/18 15:34:17  djs
+# Added -Wbvirtual_objref option to make attribute and operation _objref
+# methods virtual
+#
 # Revision 1.18.2.7  2000/06/26 16:23:09  djs
 # Added new backend arguments.
 # Better error handling when encountering unsupported IDL (eg valuetypes)
@@ -181,6 +185,8 @@ def process_args(args):
             config.state['Keep Include Path'] = 1
         elif arg == "use_quotes":
             config.state['Use Quotes']        = 1
+        elif arg == "virtual_objref":
+            config.state['Virtual Objref Methods'] = 1
         elif arg == "debug":
             config.state['Debug']             = 1
         elif arg[:2] == "h=":
