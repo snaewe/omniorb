@@ -1,3 +1,35 @@
+Mon Oct 14 15:48:35 BST 2002 dgrisby
+====================================
+
+- Minor Autoconf fixes.
+
+acinclude.m4
+aclocal.m4
+configure
+configure.ac
+
+- Cope with platforms where sizeof(bool) != 1.
+
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/acconfig.h.in
+include/omniORB4/seqTemplatedefns.h
+
+- Fix create_POA / destroy deadlock, unique persistent system ids.
+
+bugfixes-400.xml
+sample.cfg
+sample.reg
+include/omniORB4/internal/poaimpl.h
+src/appl/omniNames/log.cc
+src/appl/omniNames/log.cc
+src/appl/omniNames/omniNames.cc
+src/lib/omniORB/orbcore/poa.cc
+
+- Typo in fcntl error check.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Fri Oct  4 12:01:31 BST 2002 dgrisby
 ====================================
 
