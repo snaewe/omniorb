@@ -104,6 +104,11 @@ DRV_prep_cpp_arg(char *s)
 void
 DRV_usage()
 {
+  if (DRV_BE_parse_args != 0)
+    {
+      return;
+    }
+
   cerr << idl_global->prog_name()
        << GTDEVEL(": usage: ")
        << idl_global->prog_name()
@@ -129,6 +134,12 @@ DRV_usage()
 void
 DRV_parse_args(long ac, char **av)
 {
+  if (DRV_BE_parse_args != 0)
+    {
+      (*DRV_BE_parse_args)(ac,av);
+      return;
+    }
+
   char	*buffer;
   char	*s;
   long	i;
@@ -178,7 +189,7 @@ DRV_parse_args(long ac, char **av)
       case 'V':
 	idl_global->set_compile_flags(idl_global->compile_flags() |
 				      IDL_CF_VERSION);
-	break;
+	return;
       case 'W':
 	if (av[i][2] == '\0') {
 	  if (i < ac - 1) {
@@ -253,6 +264,7 @@ DRV_parse_args(long ac, char **av)
 	idl_global->set_compile_flags(idl_global->compile_flags() |
 				      IDL_CF_ONLY_USAGE);
 	break;
+
       case 'v':
 	idl_global->set_compile_flags(idl_global->compile_flags() |
 				      IDL_CF_INFORMATIVE);
