@@ -80,6 +80,33 @@ Exception::_NP_is_a(const Exception* e, const char* typeId)
   return 0;
 }
 
+const char*
+CORBA::
+Exception::_name() const
+{
+  const char* a = _NP_typeId();
+  const char* b = a;
+
+  // Figure out the name from the typeId
+  for (; *a; ++a) {
+    if (*a == '/' || *a == ':') {
+      while (*a == '/' || *a == ':') ++a;
+      b = a;
+    }
+  }
+  OMNIORB_ASSERT(*b);
+  return b;
+}
+
+const char*
+CORBA::
+Exception::_rep_id() const
+{
+  int dummy;
+  return _NP_repoId(&dummy);
+}
+
+
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// SystemException //////////////////////////

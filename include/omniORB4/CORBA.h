@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.18  2001/08/15 10:19:29  dpg1
+ _name and _rep_id methods in CORBA::Exception.
+
  Revision 1.2.2.17  2001/08/03 17:45:39  sll
  Added minorCode.h
 
@@ -972,6 +975,10 @@ _CORBA_MODULE_BEG
     // NOTE: deprecated function from CORBA 2.2. Same as _downcast.
 
     static Exception* _duplicate(Exception* e);
+
+    virtual const char* _name() const;
+    virtual const char* _rep_id() const;
+    // Return the plain name and repository id
 
     // omniORB internal.
     virtual const char* _NP_repoId(int* size) const = 0;
