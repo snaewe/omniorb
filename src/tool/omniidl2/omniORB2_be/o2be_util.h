@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  1999/09/28 09:49:21  djr
+ Properly escape characters in include file guards.
+ Removed dangerous default argument to StringBuf constructor.
+
  Revision 1.1.2.1  1999/09/24 10:05:33  djr
  Updated for omniORB3.
 
@@ -48,9 +52,9 @@
 
 class StringBuf {
 public:
-  inline StringBuf(size_t size = STRING_BUF_INC) {
-    pd_current = pd_start = new char[size];
-    pd_end = pd_start + size;
+  inline StringBuf() {
+    pd_current = pd_start = new char[STRING_BUF_INC];
+    pd_end = pd_start + STRING_BUF_INC;
     *pd_current = '\0';
   }
   inline ~StringBuf() { delete[] pd_start; }
