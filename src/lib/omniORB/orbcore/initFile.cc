@@ -29,6 +29,13 @@
 
 /*
   $Log$
+  Revision 1.24  1998/08/21 19:11:36  sll
+  Now store the initial object reference to the NameService into
+  omniInitialReferences::singleton().
+  Recognise new keys: ORBInitialHost and ORBInitialPort. Call into
+  omniInitialReferences::singleton() to register the host+port where the
+  special bootstrapping agent can be located.
+
   Revision 1.23  1998/08/14 13:47:39  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -102,6 +109,7 @@
 #endif
 
 #include <initFile.h>
+#include <bootstrap_i.h>
 
 #include "gatekeeper.h"
 
@@ -128,7 +136,6 @@ initFile::initFile() : fData(0), fsize(0), currpos(0)
   use_registry = 0;
   curr_index = 0;
 #endif
-  _NameService = CORBA::Object::_nil();
 }
 
 
@@ -145,6 +152,7 @@ void initFile::initialize()
   // Note: Using standard C file functions for compatibility with ATMos
 
   CORBA::String_var config_fname;
+  CORBA::Object_var NameService;
 
 // Get filename:
 
@@ -223,7 +231,9 @@ void initFile::initialize()
   CORBA::String_var entryname;
   CORBA::String_var data;
   int multcheck[INIT_MAX_CONFIG] = { 0 }; 
-  
+  CORBA::String_var bootstrapAgentHostname;
+  CORBA::UShort     bootstrapAgentPort = 900;
+
   while(getnextentry(entryname,data))
     {
       if (strcmp((const char*)entryname,"NAMESERVICE") == 0)
@@ -236,7 +246,7 @@ void initFile::initialize()
 	  try
 	    {
 	      omniObject* objptr = omni::stringToObject(data);
-	      _NameService = (CORBA::Object_ptr) 
+	      NameService = (CORBA::Object_ptr) 
 		                objptr->_widenFromTheMostDerivedIntf(0);
 	      
 	    }
@@ -245,7 +255,7 @@ void initFile::initialize()
 	      invref(entryname);
 	    }
 
-	  if((_NameService->PR_getobj()->_widenFromTheMostDerivedIntf(
+	  if((NameService->PR_getobj()->_widenFromTheMostDerivedIntf(
 				  CosNaming_NamingContext_IntfRepoID)) == 0)
 	    {
 	      // The object reference supplied is not for the NamingService
@@ -260,6 +270,19 @@ void initFile::initialize()
       else if (strcmp(entryname, "GATEKEEPER_DENYFILE") == 0)
 	{
 	  gateKeeper::denyFile = CORBA::string_dup(data);
+	}
+      else if (strcmp(entryname, "ORBInitialHost") == 0)
+	{
+	  bootstrapAgentHostname = CORBA::string_dup(data);
+	}
+      else if (strcmp(entryname, "ORBInitialPort") == 0)
+	{
+	  unsigned int port;
+	  if (sscanf(data,"%u",&port) != 1 ||
+	      (port == 0 || port >= 65536)) {
+	    invref(entryname);
+	  }
+	  bootstrapAgentPort = (CORBA::UShort)port;
 	}
       else
 	{
@@ -277,6 +300,16 @@ void initFile::initialize()
 	 throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
 	}
     }
+  if (!CORBA::is_nil(NameService)) {
+    omniInitialReferences::singleton()->set("NameService",NameService);
+  }
+  else {
+    if ((char*)bootstrapAgentHostname != 0) {
+      omniInitialReferences::singleton()
+	->initialise_bootstrap_agent(bootstrapAgentHostname,
+				     bootstrapAgentPort);
+    }
+  }
   return;
 }
 
