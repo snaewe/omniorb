@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.10  2001/05/09 17:04:24  sll
+  _realNarrow() now propagates location forward flag when it has to create
+  a new object reference.
+
   Revision 1.2.2.9  2001/05/02 16:11:44  sll
    _realNarrow() calls createObjRef with the right locking and arguments.
 
@@ -168,6 +172,7 @@ omniObjRef::_realNarrow(const char* repoId)
       {
 	omni_tracedmutex_lock sync(*omni::internalLock);
 	objref = omni::createObjRef(repoId,ior,1,_identity(),_localId());
+	objref->pd_flags.forward_location = pd_flags.forward_location;
       }
 
       if( objref ) {
