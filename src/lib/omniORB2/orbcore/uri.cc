@@ -30,6 +30,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.10  2002/02/05 13:23:46  djr
+// Fixed memory leak in string_to_object().
+//
 // Revision 1.1.2.9  2000/11/21 12:24:44  dpg1
 // corbaloc URIs accept an empty object address, to mean localhost on the
 // default port.
@@ -299,6 +302,7 @@ public:
   class ObjAddr {
   public:
     ObjAddr() : next_(0) {}
+    virtual ~ObjAddr()   {}
 
     static ObjAddr* parse(const char*& c);
 

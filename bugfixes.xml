@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
 <?xml-stylesheet type="text/xml" href="bugfixes.xsl"?>
 
-<!-- The following bugs have been fixed since the omniORB 3.0.2     -->
+<!-- The following bugs have been fixed since the omniORB 3.0.4     -->
 <!-- release. This file is transformed into html with bugfixes.xsl. -->
 
 <!-- Editors: make sure the content you add is well-formed XML.     -->
 
 <buglist version="3.0.4">
+
+<bug id="10" date="Tue Feb  5 12:09:40 GMT 2002" user="djr">
+  <summary>Memory leak in string_to_object()</summary>
+  <reported>Jose Hernandez</reported>
+  <text>
+  There was a memory leak in CORBA::ORB::string_to_object() under certain
+  circumstances.  This was due to an base class lacking a virtual
+  destructor.
+  </text>
+</bug>
 
 <bug id="9" date="Fri Oct  5 17:47:54 BST 2001" user="dpg1">
   <summary>Memory leak in omniNames</summary>
