@@ -32,6 +32,9 @@
 
 /*
  * $Log$
+ * Revision 1.1.4.3  2004/05/25 14:20:50  dgrisby
+ * ValueType TypeCode support.
+ *
  * Revision 1.1.4.2  2004/04/02 13:26:24  dgrisby
  * Start refactoring TypeCode to support value TypeCodes, start of
  * abstract interfaces support.
@@ -1054,10 +1057,17 @@ private:
 class TypeCode_value : public TypeCode_base {
 public:
 
+  struct Member {
+    char*               name;
+    CORBA::TypeCode_ptr type;
+    CORBA::Short        access;
+  };
+
   TypeCode_value(const char* repositoryId, const char* name,
 		 CORBA::ValueModifier type_modifier,
-		 CORBA::TypeCode_ptr concrete_base,
-		 const CORBA::PR_valueMember* members);
+		 TypeCode_base* concrete_base,
+		 Member* members,
+		 CORBA::ULong memberCount);
 
   virtual ~TypeCode_value();
 
@@ -1070,7 +1080,13 @@ public:
 
   virtual TypeCode_paramListType NP_paramListType() const;
 
-  // OMG Interface:
+  // omniORB recursive typecode & reference count handling
+  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base* tc,
+							 CORBA::ULong offset);
+
+  virtual CORBA::Boolean NP_complete_recursive(TypeCode_base* tc,
+					       const char* repoId);
+
   virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
 					  CORBA::Boolean equivalent,
 					  const TypeCode_pairlist* tcpl) const;
@@ -1090,16 +1106,62 @@ public:
 
   virtual void removeOptionalNames();
 
-protected:
+private:
   TypeCode_value();
+  // Private constructor - used when unmarshalling a TypeCode.
 
   CORBA::String_member 	 pd_repoId;
   CORBA::String_member 	 pd_name;
-  CORBA::PR_valueMember* pd_members;
+  Member*                pd_members;
   CORBA::ULong           pd_nmembers;
   CORBA::ValueModifier   pd_modifier;
-  TypeCode_base*         pd_base;
+  CORBA::TypeCode_member pd_base;
 };
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// TypeCode_value_box ///////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class TypeCode_value_box : public TypeCode_base {
+public:
+
+  TypeCode_value_box(const char* repositoryId, const char* name,
+		     TypeCode_base* boxedTC);
+
+  virtual ~TypeCode_value_box();
+
+  // omniORB marshalling routines specific to complex types
+  virtual void NP_marshalComplexParams(cdrStream&,
+				       TypeCode_offsetTable*) const;
+
+  static TypeCode_base* NP_unmarshalComplexParams(cdrStream &s,
+						  TypeCode_offsetTable* otbl);
+
+  virtual TypeCode_paramListType NP_paramListType() const;
+
+  // OMG Interface:
+  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
+					  CORBA::Boolean equivalent,
+					  const TypeCode_pairlist* tcpl) const;
+
+  virtual const char*          NP_id() const;
+  virtual const char*          NP_name() const;
+
+  virtual TypeCode_base*       NP_content_type() const;
+
+  virtual CORBA::Boolean       NP_containsAnAlias();
+  virtual TypeCode_base*       NP_aliasExpand(TypeCode_pairlist*);
+
+  virtual void removeOptionalNames();
+
+private:
+  TypeCode_value_box();
+
+  CORBA::String_member 	 pd_repoId;
+  CORBA::String_member 	 pd_name;
+  CORBA::TypeCode_member pd_boxed;
+};
+
 
 
 //////////////////////////////////////////////////////////////////////

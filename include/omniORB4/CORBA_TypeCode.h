@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2004/05/25 14:20:50  dgrisby
+  ValueType TypeCode support.
+
   Revision 1.1.4.3  2004/04/02 13:26:25  dgrisby
   Start refactoring TypeCode to support value TypeCodes, start of
   abstract interfaces support.
@@ -83,7 +86,6 @@ struct PR_unionMember {
 
 struct PR_valueMember {
   const char*  name;
-  const char*  id;
   TypeCode_ptr type;
   _CORBA_Short access;
 };
@@ -279,7 +281,7 @@ public:
 				  ValueModifier type_modifier,
 				  TypeCode_ptr concrete_base,
 				  const PR_valueMember* members,
-				  _Tracker* tracker);
+				  ULong memberCount, _Tracker* tracker);
 
   static TypeCode_ptr PR_value_box_tc(const char* id, const char* name,
 				      TypeCode_ptr boxed_type,
