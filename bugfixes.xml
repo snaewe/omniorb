@@ -8,6 +8,17 @@
 
 <buglist version="3.0.4">
 
+<bug id="9" date="Fri Oct  5 17:47:54 BST 2001" user="dpg1">
+  <summary>Memory leak in omniNames</summary>
+  <reported>Mathieu de Naurois</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-10/0032.html"/>
+  <text>
+  A silly memory leak was introduced when omniNames was POAfied.
+  Amazing it took this long before someone noticed :-)
+  </text>
+</bug>
+
 <bug id="8" date="Thu Aug 30 10:13:19 BST 2001" user="dpg1">
   <summary>Incorrect result when assigning unsigned long long
   consts</summary>

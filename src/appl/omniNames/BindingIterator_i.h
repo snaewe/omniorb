@@ -44,7 +44,7 @@ public:
   BindingIterator_i(PortableServer::POA_ptr poa, CosNaming::BindingList* l)
     : list(l)
   {
-    poa->activate_object(this);
+    PortableServer::ObjectId_var id = poa->activate_object(this);
   }
 
   CORBA::Boolean next_one(CosNaming::Binding_out b) {

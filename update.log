@@ -1,3 +1,11 @@
+Fri Oct  5 17:47:54 BST 2001 dpg1
+=================================
+
+- Silly memory leak in BindingIterator creation.
+
+src/appl/omniNames/BindingIterator_i.h
+
+
 Fri Oct  5 15:27:13 BST 2001 dpg1
 =================================
 
