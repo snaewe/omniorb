@@ -3,6 +3,11 @@
 #ifndef _COS_NOTIFY_COMM_I_H_
 #define _COS_NOTIFY_COMM_I_H_
 
+#include <iomanip.h>
+#include <iostream.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "CosNotifyComm.hh"
 
 // ------------------------------------------------------------- //
@@ -51,11 +56,11 @@ inline void PushConsumer_i::offer_change(const _EventTypeSeq& added,
   cout << "PushConsumer: offer_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx];
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -85,11 +90,11 @@ inline void PullConsumer_i::offer_change(const _EventTypeSeq& added,
   cout << "PullConsumer: offer_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx];
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -140,11 +145,11 @@ inline void PullSupplier_i::subscription_change(const _EventTypeSeq& added,
   cout << "PullSupplier: subscription_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx];
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }					
 
@@ -174,11 +179,11 @@ inline void PushSupplier_i::subscription_change(const _EventTypeSeq& added,
   cout << "PushSupplier: subscription_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx];
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -219,11 +224,11 @@ inline void StructuredPushConsumer_i::offer_change(const _EventTypeSeq& added,
   cout << "StructuredPushConsumer: offer_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx];
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -252,11 +257,11 @@ inline void StructuredPullConsumer_i::offer_change(const _EventTypeSeq& added,
   cout << "StructuredPullConsumer: offer_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx];
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -323,11 +328,11 @@ inline void StructuredPullSupplier_i::subscription_change(
   cout << "StructuredPullSupplier: subscription_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx]; 
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -357,11 +362,11 @@ inline void StructuredPushSupplier_i::subscription_change(
   cout << "StructuredPushSupplier: subscription_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx]; 
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -406,11 +411,11 @@ inline void SequencePushConsumer_i::offer_change(const _EventTypeSeq& added,
   cout << "SequencePushConsumer: offer_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx];
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl; 
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl; 
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -440,11 +445,11 @@ inline void SequencePullConsumer_i::offer_change(const _EventTypeSeq& added,
   cout << "SequencePullConsumer: offer_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx];
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -520,11 +525,11 @@ inline void SequencePullSupplier_i::subscription_change(
   cout << "SequencePullSupplier: subscription_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx]; 
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
@@ -555,11 +560,11 @@ inline void SequencePushSupplier_i::subscription_change(
   cout << "SequencePushSupplier: subscription_change contains: " << endl;
   for (indx = 0; indx < added.length(); indx++) {
         type = added[indx]; 
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t+ " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
   for (indx = 0; indx < deled.length(); indx++) {
         type = deled[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
+        cout << "\t- " << (const char*)type.domain_name << "::" << (const char*)type.type_name << endl;
   }
 }
 
