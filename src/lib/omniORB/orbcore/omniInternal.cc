@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.12  2001/07/13 15:29:59  sll
+  Use the variable omniORB::maxServerThreadPoolSize to control invoker thread
+  pool size.
+
   Revision 1.2.2.11  2001/05/31 16:18:13  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -162,8 +166,6 @@ int                              omni::localInvocationCount = 0;
 
 omni_tracedmutex*                omni::objref_rc_lock = 0;
 // Protects omniObjRef reference counting.
-
-CORBA::ULong                     omniORB::maxNumOfAsyncThreads = 50;
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -1048,7 +1050,7 @@ public:
     objectTable = new omniLocalIdentity* [objectTableSize];
     for( CORBA::ULong i = 0; i < objectTableSize; i++ )  objectTable[i] = 0;
 
-    orbAsyncInvoker = new omniAsyncInvoker(omniORB::maxNumOfAsyncThreads);
+    orbAsyncInvoker = new omniAsyncInvoker(omniORB::maxServerThreadPoolSize);
   }
 
   void detach() {
