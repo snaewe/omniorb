@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.4.2  2003/05/20 16:53:15  dgrisby
+ Valuetype marshalling support.
+
  Revision 1.1.4.1  2003/03/23 21:02:29  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -61,6 +64,7 @@
 #include <omniORB4/IOP_C.h>
 #include <poacurrentimpl.h>
 #include <invoker.h>
+#include <valueTracker.h>
 
 
 static void
@@ -183,6 +187,10 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
       cdrMemoryStream stream;
       pd_call_desc->initialiseCall(stream);
       pd_call_desc->marshalArguments(stream);
+      if (stream.valueTracker()) {
+	delete stream.valueTracker();
+	stream.valueTracker(0);
+      }
       desc.unmarshalArguments(stream);
 
       try {
@@ -240,7 +248,10 @@ dealWithUserException(cdrMemoryStream& stream,
   }
 
   ex._NP_marshal(stream);
-
+  if (stream.valueTracker()) {
+    delete stream.valueTracker();
+    stream.valueTracker(0);
+  }
   desc->userException(stream, 0, repoId);
 }
 

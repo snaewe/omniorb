@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.10.2.2  2003/05/20 16:53:14  dgrisby
+ Valuetype marshalling support.
+
  Revision 1.10.2.1  2003/03/23 21:02:45  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -100,6 +103,7 @@
 #include <context.h>
 #include <exceptiondefs.h>
 #include <poacurrentimpl.h>
+#include <valueTracker.h>
 
 
 CORBA::ServerRequest::~ServerRequest()  {}
@@ -162,6 +166,11 @@ omniServerRequest::arguments(CORBA::NVList_ptr& parameters)
     cdrMemoryStream stream;
     pd_handle.call_desc()->initialiseCall(stream);
     pd_handle.call_desc()->marshalArguments(stream);
+
+    if (stream.valueTracker()) {
+      delete stream.valueTracker();
+      stream.valueTracker(0);
+    }
     pd_calldesc->unmarshalArguments(stream);
   }
   pd_state = SR_GOT_PARAMS;
@@ -360,6 +369,10 @@ omniServerRequest::do_reply()
       else {
 	cdrMemoryStream stream;
 	pd_calldesc->marshalReturnedValues(stream);
+	if (stream.valueTracker()) {
+	  delete stream.valueTracker();
+	  stream.valueTracker(0);
+	}
 	pd_handle.call_desc()->unmarshalReturnedValues(stream);
       }
       break;
@@ -392,6 +405,10 @@ omniServerRequest::do_reply()
       else {
 	cdrMemoryStream stream;
 	ex._NP_marshal(stream);
+	if (stream.valueTracker()) {
+	  delete stream.valueTracker();
+	  stream.valueTracker(0);
+	}
 	pd_handle.call_desc()->userException(stream, 0, repoid);
       }
       break;

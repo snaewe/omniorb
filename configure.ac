@@ -1,5 +1,5 @@
 dnl -*- M4 -*-
-AC_INIT(omniORB, 4.0.1, bugs@omniorb-support.com)
+AC_INIT(omniORB, 4.1.0, bugs@omniorb-support.com)
 
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(bin/scripts/omkdirhier)
@@ -208,7 +208,6 @@ AC_CONFIG_FILES(src/appl/GNUmakefile
                 src/examples/GNUmakefile
                 src/examples/dsi/GNUmakefile
                 src/examples/echo/GNUmakefile
-                src/examples/partcl/GNUmakefile
                 src/examples/poa/GNUmakefile
                 src/examples/poa/implicit_activation/GNUmakefile
                 src/examples/poa/persistent_objref/GNUmakefile

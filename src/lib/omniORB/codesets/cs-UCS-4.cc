@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2003/05/20 16:53:14  dgrisby
+  Valuetype marshalling support.
+
   Revision 1.1.4.1  2003/03/23 21:02:51  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -289,6 +292,8 @@ TCS_W_UCS_4::marshalWChar(cdrStream& stream,
   // since we're not transmitting UTF-16. We assume here that there is
   // no padding, and we use the stream's endianness.
 
+  stream.declareArrayLength(omni::ALIGN_1, 5);
+
   stream.marshalOctet(4);
 
   _CORBA_ULong  tc = uc;
@@ -329,6 +334,8 @@ TCS_W_UCS_4::marshalWString(cdrStream& stream,
   _CORBA_ULong         tc;
   omniCodeSet::UniChar uc;
   
+  stream.declareArrayLength(omni::ALIGN_4, mlen);
+
   for (_CORBA_ULong i=0; i<=len; i++) {
     uc = us[i];
 
@@ -478,6 +485,7 @@ TCS_W_UCS_4::fastMarshalWChar(cdrStream&          stream,
 {
   if (ncs->id() == id()) { // Null transformation
 
+    stream.declareArrayLength(omni::ALIGN_1, 5);
     stream.marshalOctet(4);
 
     _CORBA_Octet* p = (_CORBA_Octet*)&wc;
@@ -516,6 +524,7 @@ TCS_W_UCS_4::fastMarshalWString(cdrStream&          stream,
     _CORBA_ULong mlen = len * 4; mlen >>= stream;
 
     if (stream.marshal_byte_swap()) {
+      stream.declareArrayLength(omni::ALIGN_4, mlen);
       _CORBA_ULong tc;
       for (_CORBA_ULong i=0; i<len; i++) {
 	tc = ws[i]; tc >>= stream;

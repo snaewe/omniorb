@@ -1,3 +1,34 @@
+Tue May 20 17:35:21 BST 2003 dgrisby
+====================================
+
+- Valuetype marshalling support.
+
+configure
+configure.ac
+update.log
+include/omniORB4/CORBA_TypeCode.h
+include/omniORB4/cdrStream.h
+include/omniORB4/minorCode.h
+include/omniORB4/internal/GNUmakefile.in
+include/omniORB4/internal/valueTracker.h        -- new
+mk/beforeauto.mk.in
+src/lib/omniORB/codesets/cs-UCS-4.cc
+src/lib/omniORB/dynamic/serverRequest.cc
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/callHandle.cc
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc  -- new
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/cs-16bit.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/omniInternal.cc
+src/tool/omniidl/python/omniidl/idlast.py
+
+
 Sun Mar 23 20:49:38 GMT 2003 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.17.2.2  2003/05/20 16:53:16  dgrisby
+  Valuetype marshalling support.
+
   Revision 1.17.2.1  2003/03/23 21:02:24  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -309,3 +312,25 @@ IOP::ServiceIDtoName(IOP::ServiceID v)
 
 const CORBA::ULong CORBA::Exception::PR_magic       = 0x45584354U; // EXCT
 const CORBA::ULong CORBA::Object::_PR_magic         = 0x434F424AU; // COBJ
+
+
+////////////////////////////////////////////////////////////////////////////
+//             ValueType TypeCode related constants                       //
+////////////////////////////////////////////////////////////////////////////
+
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the variables external linkage otherwise. Its a bug.
+namespace CORBA {
+
+_init_in_def_( const ValueModifier VM_NONE        = 0; )
+_init_in_def_( const ValueModifier VM_CUSTOM      = 1; )
+_init_in_def_( const ValueModifier VM_ABSTRACT    = 2; )
+_init_in_def_( const ValueModifier VM_TRUNCATABLE = 3; )
+
+};
+#else
+_init_in_def_( const CORBA::ValueModifier CORBA::VM_NONE        = 0; )
+_init_in_def_( const CORBA::ValueModifier CORBA::VM_CUSTOM      = 1; )
+_init_in_def_( const CORBA::ValueModifier CORBA::VM_ABSTRACT    = 2; )
+_init_in_def_( const CORBA::ValueModifier CORBA::VM_TRUNCATABLE = 3; )
+#endif

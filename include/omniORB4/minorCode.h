@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2003/05/20 16:53:12  dgrisby
+  Valuetype marshalling support.
+
   Revision 1.1.6.1  2003/03/23 21:04:16  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -202,6 +205,12 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_107 OMNIORBMinorCode(107)
 #define OMNIORBMinorCode_108 OMNIORBMinorCode(108)
 #define OMNIORBMinorCode_109 OMNIORBMinorCode(109)
+#define OMNIORBMinorCode_110 OMNIORBMinorCode(110)
+#define OMNIORBMinorCode_111 OMNIORBMinorCode(111)
+#define OMNIORBMinorCode_112 OMNIORBMinorCode(112)
+#define OMNIORBMinorCode_113 OMNIORBMinorCode(113)
+#define OMNIORBMinorCode_114 OMNIORBMinorCode(114)
+#define OMNIORBMinorCode_115 OMNIORBMinorCode(115)
 
 #define COMMA ,
 #define DeclareValue(name,value) name = value
@@ -285,7 +294,8 @@ code( BAD_PARAM_EmbeddedNullInPythonString   , OMNIORBMinorCode_96 ) sep \
 code( BAD_PARAM_StringIsTooLong              , OMNIORBMinorCode_100 ) sep \
 code( BAD_PARAM_SequenceIsTooLong            , OMNIORBMinorCode_101 ) sep \
 code( BAD_PARAM_WrongUnionMemberSelected     , OMNIORBMinorCode_107 ) sep \
-code( BAD_PARAM_InvalidFixedPointLimits      , OMNIORBMinorCode_109 )
+code( BAD_PARAM_InvalidFixedPointLimits      , OMNIORBMinorCode_109 ) sep \
+code( BAD_PARAM_AttemptToMarshalAbstractValue, OMNIORBMinorCode_115 )
 
 
 enum BAD_PARAM_minor {
@@ -345,7 +355,12 @@ code( MARSHAL_ExceptionInDSINotPropagated     , OMNIORBMinorCode_67 ) sep \
 code( MARSHAL_InvalidContextList              , OMNIORBMinorCode_79 ) sep \
 code( MARSHAL_InvalidIndirection              , OMNIORBMinorCode_90 ) sep \
 code( MARSHAL_InvalidTypeCodeKind             , OMNIORBMinorCode_91 ) sep \
-code( MARSHAL_MessageTooLong                  , OMNIORBMinorCode_93 )
+code( MARSHAL_MessageTooLong                  , OMNIORBMinorCode_93 ) sep \
+code( MARSHAL_CannotReserveOutputSpace        , OMNIORBMinorCode_110 ) sep \
+code( MARSHAL_InvalidChunkedEncoding          , OMNIORBMinorCode_111 ) sep \
+code( MARSHAL_InvalidValueTag                 , OMNIORBMinorCode_112 ) sep \
+code( MARSHAL_NoRepoIdInValueType             , OMNIORBMinorCode_113 ) sep \
+code( MARSHAL_TypeIsNotAValueType             , OMNIORBMinorCode_114 )
 
 
 

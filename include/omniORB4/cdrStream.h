@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2003/05/20 16:53:12  dgrisby
+  Valuetype marshalling support.
+
   Revision 1.1.4.1  2003/03/23 21:04:17  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -139,13 +142,19 @@
 #endif
 
 class cdrStreamAdapter;
+class cdrValueChunkStream;
+
+OMNI_NAMESPACE_BEGIN(omni)
+  class ValueIndirectionTracker;
+OMNI_NAMESPACE_END(omni)
+
 
 class cdrStream {
 public:
 
   cdrStream();
 
-  virtual ~cdrStream() {}
+  virtual ~cdrStream();
 
 #ifndef CdrMarshal
 #define CdrMarshal(s,type,align,arg) do {\
@@ -416,11 +425,29 @@ public:
       v.l[3] = Swap32(u.l[0]);
       a = v.d;
     }
-    CdrMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+    omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)s.pd_outb_mkr,
+					  omni::ALIGN_8);
+    omni::ptr_arith_t p2 = p1 + sizeof(_CORBA_LongDouble);
+    if ((void*)p2 <= s.pd_outb_end) {
+      *((_CORBA_LongDouble*)p1) = a;
+      s.pd_outb_mkr = (void*)p2;
+    }
+    else {
+      s.put_octet_array((_CORBA_Octet*)&a, 16, omni::ALIGN_8);
+    }
   }
 
   friend inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
-    CdrUnMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+    omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)s.pd_inb_mkr,
+					  omni::ALIGN_8);
+    omni::ptr_arith_t p2 = p1 + sizeof(_CORBA_LongDouble);
+    if ((void *)p2 <= s.pd_inb_end) {
+      s.pd_inb_mkr = (void*)p2;
+      a = *((_CORBA_LongDouble*)p1);
+    }
+    else {
+      s.get_octet_array((_CORBA_Octet*)&a, 16, omni::ALIGN_8);
+    }
     if (s.pd_unmarshal_byte_swap) {
       union {
 	_CORBA_LongDouble d;
@@ -616,7 +643,7 @@ protected:
 
   virtual _CORBA_Boolean maybeReserveOutputSpace(omni::alignment_t align,
 						 size_t required) = 0;
-  // Same as reserverOutputSpaceForPrimitiveType, except the following:
+  // Same as reserveOutputSpaceForPrimitiveType, except the following:
   // 1. The required size can be any size.
   // 2. The implementation of this function can throw CORBA::BAD_PARAM
   //    if the nature of the stream makes it impossible to fullfil this
@@ -632,6 +659,16 @@ protected:
   _OMNI_NS(omniCodeSet::NCS_C)* pd_ncs_c;
   _OMNI_NS(omniCodeSet::NCS_W)* pd_ncs_w;
 
+  _OMNI_NS(ValueIndirectionTracker)* pd_valueTracker;
+  // Object used to track offsets of indirections in valuetypes.
+
+  _CORBA_Boolean pd_chunked;
+  // True if this is a chunked value stream.
+
+  virtual void chunkStreamDeclareArrayLength(omni::alignment_t align,
+					     size_t size);
+  // Only implemented in chunked streams. See declareArrayLength() below.
+
 public:
 
   // Access functions to the char and wchar code set convertors
@@ -639,6 +676,28 @@ public:
   inline void TCS_C(_OMNI_NS(omniCodeSet::TCS_C)* c) { pd_tcs_c = c; }
   inline _OMNI_NS(omniCodeSet::TCS_W)* TCS_W() const { return pd_tcs_w; }
   inline void TCS_W(_OMNI_NS(omniCodeSet::TCS_W)* c) { pd_tcs_w = c; }
+
+  // Access functions to the value indirection tracker
+  inline _OMNI_NS(ValueIndirectionTracker)* valueTracker() const {
+    return pd_valueTracker;
+  }
+  inline void valueTracker(_OMNI_NS(ValueIndirectionTracker)* v) {
+    pd_valueTracker = v;
+  }
+
+  inline void declareArrayLength(omni::alignment_t align,
+				 size_t size)
+  {
+    if (pd_chunked)
+      chunkStreamDeclareArrayLength(align, size);
+  }
+  // The GIOP spec requires that arrays of primitive types, strings
+  // and wstrings are not split across valuetype chunk boundaries.
+  // This function is used to pre-declare the number of octets in an
+  // array, for use in cases where the array contents are marshalled
+  // in pieces. If the array contents are marshalled in one go with
+  // put_octet_array, even if preceded by a string/wstring length
+  // field, there is no need to call this function.
 
 
   inline void
@@ -780,8 +839,9 @@ private:
   cdrStream& operator=(const cdrStream&);
 
   friend class cdrStreamAdapter;
-  // cdrStreamAdapter needs to access protected pointers and virtual
-  // functions.
+  friend class cdrValueChunkStream;
+  // cdrStreamAdapter and cdrValueChunkStream need to access protected
+  // pointers and virtual functions.
 };
 
 #ifdef OMNI_NO_INLINE_FRIENDS
@@ -955,11 +1015,29 @@ inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
     v.l[3] = Swap32(u.l[0]);
     a = v.d;
   }
-  CdrMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+  omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)s.pd_outb_mkr,
+					omni::ALIGN_8);
+  omni::ptr_arith_t p2 = p1 + sizeof(_CORBA_LongDouble);
+  if ((void*)p2 <= s.pd_outb_end) {
+    *((_CORBA_LongDouble*)p1) = a;
+    s.pd_outb_mkr = (void*)p2;
+  }
+  else {
+    s.put_octet_array((_CORBA_Octet*)&a, 16, omni::ALIGN_8);
+  }
 }
 
 inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
-  CdrUnMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+  omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)s.pd_inb_mkr,
+					omni::ALIGN_8);
+  omni::ptr_arith_t p2 = p1 + sizeof(_CORBA_LongDouble);
+  if ((void *)p2 <= s.pd_inb_end) {
+    s.pd_inb_mkr = (void*)p2;
+    a = *((_CORBA_LongDouble*)p1);
+  }
+  else {
+    s.get_octet_array((_CORBA_Octet*)&a, 16, omni::ALIGN_8);
+  }
   if (s.pd_unmarshal_byte_swap) {
     union {
       _CORBA_LongDouble d;
@@ -1165,6 +1243,7 @@ protected:
   virtual ~cdrStreamAdapter()
   {
     copyStateToActual();
+    pd_valueTracker = 0;
   }
 
   // Implementations of abstract functions...
@@ -1202,17 +1281,19 @@ protected:
 public:
   inline void copyStateFromActual()
   {
-    pd_inb_end  = pd_actual.pd_inb_end;
-    pd_inb_mkr  = pd_actual.pd_inb_mkr;
-    pd_outb_end = pd_actual.pd_outb_end;
-    pd_outb_mkr = pd_actual.pd_outb_mkr;
+    pd_inb_end      = pd_actual.pd_inb_end;
+    pd_inb_mkr      = pd_actual.pd_inb_mkr;
+    pd_outb_end     = pd_actual.pd_outb_end;
+    pd_outb_mkr     = pd_actual.pd_outb_mkr;
+    pd_valueTracker = pd_actual.pd_valueTracker;
   }
   inline void copyStateToActual() const
   {
-    pd_actual.pd_inb_end  = pd_inb_end;
-    pd_actual.pd_inb_mkr  = pd_inb_mkr;
-    pd_actual.pd_outb_end = pd_outb_end;
-    pd_actual.pd_outb_mkr = pd_outb_mkr;
+    pd_actual.pd_inb_end      = pd_inb_end;
+    pd_actual.pd_inb_mkr      = pd_inb_mkr;
+    pd_actual.pd_outb_end     = pd_outb_end;
+    pd_actual.pd_outb_mkr     = pd_outb_mkr;
+    pd_actual.pd_valueTracker = pd_valueTracker;
   }
 
   virtual void* ptrToClass(int* cptr);
@@ -1224,5 +1305,148 @@ public:
 private:
   cdrStream& pd_actual;
 };
+
+
+// cdrValueChunkStream is similar to cdrStreamAdapter. It implements
+// chunked encoding of valuetypes by wrapping an existing stream.
+//
+// Use for reading and writing is slightly asymmetric: for writing,
+// the stream wrapper must be created before marshalling the value tag
+// indicating chunked encoding; for reading, the wrapper is created
+// after unmarshalling the outer-most value tag (since it is not until
+// then that the reader knows chunking is is use).
+
+class cdrValueChunkStream : public cdrStream {
+public:
+  cdrValueChunkStream(cdrStream& stream) :
+    pd_actual(stream), pd_nestLevel(0), pd_lengthPtr(0),
+    pd_remaining(0), pd_inChunk(0), pd_justEnded(0), pd_reader(0),
+    pd_exception(0)
+  {
+    pd_unmarshal_byte_swap = pd_actual.pd_unmarshal_byte_swap;
+    pd_marshal_byte_swap   = pd_actual.pd_marshal_byte_swap;
+    pd_tcs_c               = pd_actual.pd_tcs_c;
+    pd_tcs_w               = pd_actual.pd_tcs_w;
+    pd_chunked             = 1;
+
+    copyStateFromActual();
+  }
+
+  virtual ~cdrValueChunkStream();
+
+  void startOutputValue(_CORBA_Long valueTag);
+  // Start a chunk for a new value, with the given value tag.
+  // Increments the nesting level. Must be called at least once before
+  // using the stream for writing.
+
+  void endOutputValue();
+  // End the current value, decrementing the nesting level.
+
+  void initialiseInput();
+  // Initialise stream as an input stream.
+
+  inline _CORBA_Long nestLevel() {
+    return pd_nestLevel;
+  }
+
+  inline void exceptionOccurred()
+  {
+    pd_exception = 1;
+  }
+
+  _CORBA_Boolean skipToNestedValue(_CORBA_Long level);
+  // Function used by truncation. Skip the remaining octets in the
+  // value at the specified nesting level. If a nested value is
+  // encountered, return true; if the end of the value is reached,
+  // return false.
+  //
+  // We need this because we might truncate a value containing a
+  // member that is a value we know about. Later on, an indirection
+  // might point to that member.
+
+
+  // Implementations of abstract functions...
+  void put_octet_array(const _CORBA_Octet* b, int size,
+		       omni::alignment_t align=omni::ALIGN_1);
+
+  void get_octet_array(_CORBA_Octet* b,int size,
+		       omni::alignment_t align=omni::ALIGN_1);
+
+  void skipInput(_CORBA_ULong size);
+
+  _CORBA_Boolean checkInputOverrun(_CORBA_ULong itemSize,
+				   _CORBA_ULong nItems,
+				   omni::alignment_t align=omni::ALIGN_1);
+
+  _CORBA_Boolean checkOutputOverrun(_CORBA_ULong itemSize,
+				    _CORBA_ULong nItems,
+				    omni::alignment_t align=omni::ALIGN_1);
+
+  void fetchInputData(omni::alignment_t align,size_t required);
+
+  _CORBA_Boolean reserveOutputSpaceForPrimitiveType(omni::alignment_t align,
+						    size_t required);
+
+  _CORBA_Boolean maybeReserveOutputSpace(omni::alignment_t align,
+					 size_t required);
+
+  _CORBA_ULong currentInputPtr() const;
+  _CORBA_ULong currentOutputPtr() const;
+
+  _CORBA_ULong completion();
+
+  virtual void chunkStreamDeclareArrayLength(omni::alignment_t align,
+					     size_t size);
+
+  inline void copyStateFromActual()
+  {
+    pd_inb_end      = pd_actual.pd_inb_end;
+    pd_inb_mkr      = pd_actual.pd_inb_mkr;
+    pd_outb_end     = pd_actual.pd_outb_end;
+    pd_outb_mkr     = pd_actual.pd_outb_mkr;
+    pd_valueTracker = pd_actual.pd_valueTracker;
+  }
+  inline void copyStateToActual() const
+  {
+    pd_actual.pd_inb_mkr      = pd_inb_mkr;
+    pd_actual.pd_outb_mkr     = pd_outb_mkr;
+    pd_actual.pd_valueTracker = pd_valueTracker;
+  }
+
+  static _core_attr int _classid;
+  virtual void* ptrToClass(int* cptr);
+  static inline cdrValueChunkStream* downcast(cdrStream* s) {
+    return (cdrValueChunkStream*)s->ptrToClass(&_classid);
+  }
+
+private:
+  void startOutputChunk();
+  void endOutputChunk();
+
+  void maybeStartNewChunk(omni::alignment_t align, size_t size);
+  // Start a new chunk by doing the equivalent of endOutputChunk,
+  // startOutputChunk, unless ending the chunk now would cause us to
+  // output a zero length chunk. In that case, we use
+  // chunkStreamDeclareArrayLength to reserve space in the chunk for
+  // an element of the specified size.
+
+  void startInputChunk();
+  void endInputValue();
+
+  _CORBA_Long peekChunkTag();
+  // Retrieve a chunk tag from the stream without moving the pointers along.
+
+  cdrStream&     pd_actual;    // Stream being wrapped
+  _CORBA_Long    pd_nestLevel; // The nesting level of chunks
+  _CORBA_Long*   pd_lengthPtr; // Pointer to the chunk length field
+  _CORBA_ULong   pd_remaining; // !=0 => octets remaining in chunk
+  _CORBA_Boolean pd_inChunk;   // True if we're inside a chunk
+  _CORBA_Boolean pd_justEnded; // True if we've just ended a value
+  _CORBA_Boolean pd_reader;    // True if we're a reader not a writer
+  _CORBA_Boolean pd_exception; // Set true if an exception occurs, to
+			       // prevent further exceptions during
+			       // clean-up.
+};
+
 
 #endif /* __CDRSTREAM_H__ */

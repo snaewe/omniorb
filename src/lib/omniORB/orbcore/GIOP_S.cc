@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2003/05/20 16:53:15  dgrisby
+  Valuetype marshalling support.
+
   Revision 1.1.6.1  2003/03/23 21:02:32  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -141,6 +144,7 @@
 #include <omniORB4/omniInterceptors.h>
 #include <interceptors.h>
 #include <poaimpl.h>
+#include <valueTracker.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -577,6 +581,11 @@ GIOP_S::ReceiveRequest(omniCallDescriptor& desc) {
   desc.unmarshalArguments(s);
   pd_state = WaitingForReply;
 
+  if (valueTracker()) {
+    delete valueTracker();
+    valueTracker(0);
+  }
+
   // Here we notify the giopServer that this thread has finished
   // reading the request. The server may want to keep a watch on
   // any more request coming in on the connection while this
@@ -640,6 +649,11 @@ GIOP_S::SendReply() {
   calldescriptor()->marshalReturnedValues(s);
   impl()->outputMessageEnd(this);
   pd_state = ReplyCompleted;
+
+  if (valueTracker()) {
+    delete valueTracker();
+    valueTracker(0);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -670,6 +684,11 @@ GIOP_S::SendException(CORBA::Exception* ex) {
   // handleRequest.
   impl()->sendUserException(this,*((CORBA::UserException*)ex));
   pd_state = ReplyCompleted;
+
+  if (valueTracker()) {
+    delete valueTracker();
+    valueTracker(0);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////

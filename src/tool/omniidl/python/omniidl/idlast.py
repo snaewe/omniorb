@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.2  2003/05/20 16:53:17  dgrisby
+# Valuetype marshalling support.
+#
 # Revision 1.20.2.1  2003/03/23 21:01:39  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -994,8 +997,11 @@ Functions:
                     this valuetype.
   declarations() -- subset of contents() containing types, constants
                     and exceptions.
-  callables()    -- subset of contents() containing Operations,
-                    Attributes, StateMembers and Factorys."""
+  callables()    -- subset of contents() containing Operations and
+                    Attributes.
+  statemembers() -- subset of contents() containing StateMembers.
+  factories()    -- subset of contents() containing Factory instances.
+  """
 
     def __init__(self, file, line, mainFile, pragmas, comments,
                  identifier, scopedName, repoId,
@@ -1011,6 +1017,8 @@ Functions:
         self.__contents     = []
         self.__declarations = []
         self.__callables    = []
+        self.__statemembers = []
+        self.__factories    = []
 
     def _setContents(self, contents):
         self.__contents     = contents
@@ -1022,9 +1030,15 @@ Functions:
                                      contents)
         self.__callables    = filter(lambda c: \
                                      (isinstance(c, Attribute) or
-                                      isinstance(c, Operation) or
-                                      isinstance(c, StateMember) or
-                                      isinstance(c, Factory)),
+                                      isinstance(c, Operation)),
+                                     contents)
+
+        self.__statemembers = filter(lambda c: \
+                                     (isinstance(c, StateMember)),
+                                     contents)
+
+        self.__factories    = filter(lambda c: \
+                                     (isinstance(c, Factory)),
                                      contents)
 
     def accept(self, visitor): visitor.visitValue(self)
@@ -1036,7 +1050,8 @@ Functions:
     def contents(self):     return self.__contents
     def declarations(self): return self.__declarations
     def callables(self):    return self.__callables
-
+    def statemembers(self): return self.__statemembers
+    def factories(self):    return self.__factories
 
 
 # Map of Decl objects, indexed by stringified scoped name, and

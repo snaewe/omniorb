@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2003/05/20 16:53:16  dgrisby
+  Valuetype marshalling support.
+
   Revision 1.1.4.1  2003/03/23 21:02:20  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -222,6 +225,7 @@ omniCodeSet::TCS_C_8bit::marshalString(cdrStream& stream,
   _CORBA_Char          c;
   omniCodeSet::UniChar uc;
 
+  stream.declareArrayLength(omni::ALIGN_1, len);
   for (_CORBA_ULong i=0; i<len; i++) {
     uc = us[i];
     c = pd_fromU[(uc & 0xff00) >> 8][uc & 0x00ff];

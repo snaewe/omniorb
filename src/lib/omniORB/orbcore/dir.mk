@@ -5,6 +5,7 @@ GIOP_SRCS = \
 	    cdrStream.cc \
             cdrStreamAdapter.cc \
 	    cdrMemoryStream.cc \
+	    cdrValueChunkStream.cc \
             giopEndpoint.cc \
             giopRope.cc \
             giopStrand.cc \
@@ -147,7 +148,7 @@ DIR_CPPFLAGS += -DCONFIG_ENV='"$(CONFIG_ENV)"'
 
 ##########################################################################
 ifdef UnixPlatform
-#  CXXDEBUGFLAGS = -g
+  CXXDEBUGFLAGS = -g
   DIR_CPPFLAGS += -DUnixArchitecture
   ifdef SunOS
     DIR_CPPFLAGS += -DBSD_COMP   # include BSD flags in ioctl.h

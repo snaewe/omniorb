@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2003/05/20 16:53:12  dgrisby
+  Valuetype marshalling support.
+
   Revision 1.1.4.1  2003/03/23 21:04:23  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -114,6 +117,20 @@ enum TCKind {
   // Indirection value used in TypeCode marshalling. Non-portable.
 };
 
+typedef short ValueModifier;
+
+_CORBA_MODULE_VARINT
+const ValueModifier VM_NONE        _init_in_decl_( = 0 );
+
+_CORBA_MODULE_VARINT
+const ValueModifier VM_CUSTOM      _init_in_decl_( = 1 );
+
+_CORBA_MODULE_VARINT
+const ValueModifier VM_ABSTRACT    _init_in_decl_( = 2 );
+
+_CORBA_MODULE_VARINT
+const ValueModifier VM_TRUNCATABLE _init_in_decl_( = 3 );
+
 
 class TypeCode {
 public:
@@ -151,13 +168,11 @@ public:
   Long param_count() const;             // obsolete
   Any* parameter(Long index) const;     // obsolete
 
-#if 0
-  // CORBA 2.3 additions
-  // Not supported yet
-  Visibility member_visibility(ULong index) const;
-  ValuetypeModifier type_modifier() const;
+  _CORBA_Short member_visibility(ULong index) const;
+  // Return type is really Visibility
+
+  ValueModifier type_modifier() const;
   TypeCode_ptr concrete_base_type() const;
-#endif    
 
   static TypeCode_ptr _duplicate(TypeCode_ptr t);
   static TypeCode_ptr _nil();

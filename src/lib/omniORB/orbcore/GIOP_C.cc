@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2003/05/20 16:53:15  dgrisby
+  Valuetype marshalling support.
+
   Revision 1.1.6.1  2003/03/23 21:02:32  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -73,6 +76,7 @@
 #include <exceptiondefs.h>
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/minorCode.h>
+#include <valueTracker.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -145,6 +149,10 @@ GIOP_C::InitialiseRequest() {
   impl()->outputMessageBegin(this,impl()->marshalRequestHeader);
   calldescriptor()->marshalArguments(*this);
   impl()->outputMessageEnd(this);
+  if (valueTracker()) {
+    delete valueTracker();
+    valueTracker(0);
+  }
   pd_state = IOP_C::WaitingForReply;
 }
 
@@ -176,6 +184,11 @@ void
 GIOP_C::RequestCompleted(CORBA::Boolean skip) {
 
   OMNIORB_ASSERT(pd_state == IOP_C::ReplyIsBeingProcessed);
+
+  if (valueTracker()) {
+    delete valueTracker();
+    valueTracker(0);
+  }
 
   if (!calldescriptor() || !calldescriptor()->is_oneway()) {
     impl()->inputMessageEnd(this,skip);
@@ -227,6 +240,11 @@ GIOP_C::UnMarshallSystemException()
   CORBA::ULong status;
   minorcode <<= s;
   status <<= s;
+
+  if (valueTracker()) {
+    delete valueTracker();
+    valueTracker(0);
+  }
 
   impl()->inputMessageEnd(this,0);
   pd_strand->first_use = 0;
