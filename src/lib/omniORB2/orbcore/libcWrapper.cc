@@ -29,9 +29,12 @@
 
 /*
   $Log$
-  Revision 1.11  1998/01/20 17:32:15  sll
-  Added support for OpenVMS.
+  Revision 1.12  1998/01/21 12:30:32  sll
+  Corrected typo that only affects hpux.
 
+// Revision 1.11  1998/01/20  17:32:15  sll
+// Added support for OpenVMS.
+//
   Revision 1.10  1997/12/23 19:24:00  sll
   gethostbyname now works properly on HPUX.
 
@@ -111,7 +114,7 @@ again:
   }
   if (gethostbyname_r(name,&h.pd_ent,(hostent_data*)h.pd_buffer) == -1) {
     rc = h_errno;  // Error
-    return -1
+    return -1;
   }
   
 #else
