@@ -30,6 +30,12 @@
 
 /* 
  * $Log$
+ * Revision 1.21  1999/02/23 11:46:07  djr
+ * Fixed bugs in size calculation for TypeCodes.
+ *
+ * Revision 1.21  1999/02/22 09:32:34  djr
+ * Bug in size calculation for array and sequence TypeCodes.
+ *
  * Revision 1.20  1999/02/18 15:51:23  djr
  * Option to not use indirections in on-the-wire TypeCodes.
  *
@@ -1435,14 +1441,11 @@ size_t
 TypeCode_sequence::NP_alignedComplexParamSize(size_t initialoffset,
 					      TypeCode_offsetTable* otbl) const
 {
-  // Space for repositoryId and name
-  size_t _msgsize = initialoffset;
-
-  _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-  _msgsize = TypeCode_marshaller::alignedSize(ToTcBase(pd_content), _msgsize, otbl);
-
-  return _msgsize;
+  initialoffset = TypeCode_marshaller::alignedSize(ToTcBase(pd_content),
+						   initialoffset, otbl);
+  return omni::align_to(initialoffset, omni::ALIGN_4) + 4;
 }
+
 
 CORBA::Boolean
 TypeCode_sequence::NP_extendedEqual(const TypeCode_base*  TCp,
@@ -1585,14 +1588,9 @@ size_t
 TypeCode_array::NP_alignedComplexParamSize(size_t initialoffset,
 					   TypeCode_offsetTable* otbl) const
 {
-  // Allocate space for the length bound & content type
-  size_t _msgsize = initialoffset;
-
-  _msgsize = omni::align_to(_msgsize, omni::ALIGN_4) + 4;
-  _msgsize =
-    TypeCode_marshaller::alignedSize(ToTcBase(pd_content), _msgsize, otbl);
-
-  return _msgsize;
+  initialoffset = TypeCode_marshaller::alignedSize(ToTcBase(pd_content),
+						   initialoffset, otbl);
+  return omni::align_to(initialoffset, omni::ALIGN_4) + 4;
 }
 
 CORBA::Boolean
@@ -2454,6 +2452,7 @@ TypeCode_enum::NP_marshalComplexParams(MemBufferedStream &s,
     pd_members[i] >>= s;
 }
 
+
 TypeCode_base*
 TypeCode_enum::NP_unmarshalComplexParams(MemBufferedStream &s,
 					 TypeCode_offsetTable* otbl)
@@ -2475,6 +2474,7 @@ TypeCode_enum::NP_unmarshalComplexParams(MemBufferedStream &s,
   return _ptr;
 }
 
+
 size_t
 TypeCode_enum::NP_alignedComplexParamSize(size_t initialoffset,
 					  TypeCode_offsetTable* otbl) const
@@ -2492,6 +2492,7 @@ TypeCode_enum::NP_alignedComplexParamSize(size_t initialoffset,
 
   return _msgsize;
 }
+
 
 CORBA::Boolean
 TypeCode_enum::NP_extendedEqual(const TypeCode_base* TCp,
@@ -2783,6 +2784,7 @@ TypeCode_union::NP_complete_recursive_sequences(TypeCode_base*  tc,
   return pd_complete;
 }
 
+
 size_t
 TypeCode_union::NP_alignedComplexParamSize(size_t initialoffset,
 					   TypeCode_offsetTable* otbl) const
@@ -2802,12 +2804,14 @@ TypeCode_union::NP_alignedComplexParamSize(size_t initialoffset,
       _msgsize =
 	TypeCode_union_helper::labelAlignedSize(_msgsize, pd_discrim_tc);
       _msgsize = pd_members[i].aname.NP_alignedSize(_msgsize);
-      _msgsize = TypeCode_marshaller::alignedSize(ToTcBase(pd_members[i].atype),
-						  _msgsize, otbl);
+      _msgsize =
+	TypeCode_marshaller::alignedSize(ToTcBase(pd_members[i].atype),
+					 _msgsize, otbl);
     }
 
   return _msgsize;
 }
+
 
 CORBA::Boolean
 TypeCode_union::NP_extendedEqual(const TypeCode_base*  TCp,
@@ -2954,6 +2958,7 @@ TypeCode_union::NP_parameter(CORBA::Long index) const
 
   return rv;
 }
+
 
 CORBA::Long
 TypeCode_union::NP_index_from_discriminator(Discriminator d) const
@@ -3115,6 +3120,7 @@ TypeCode_offsetTable::TypeCode_offsetTable()
 {
 }
 
+
 TypeCode_offsetTable::~TypeCode_offsetTable()
 {
   TypeCode_offsetEntry* entry = pd_table;
@@ -3128,6 +3134,7 @@ TypeCode_offsetTable::~TypeCode_offsetTable()
     }
 }
 
+
 // Routine to create a child, encapsulating offsetTable
 TypeCode_offsetTable::TypeCode_offsetTable(TypeCode_offsetTable* parent,
 					   CORBA::Long base_offset)
@@ -3136,6 +3143,7 @@ TypeCode_offsetTable::TypeCode_offsetTable(TypeCode_offsetTable* parent,
     pd_parent_base_offset(parent->currentOffset() - base_offset)
 {
 }
+
 
 // Routine to add an offset->typecode mapping
 void
@@ -3158,6 +3166,7 @@ TypeCode_offsetTable::addEntry(CORBA::Long offset, TypeCode_base* typecode)
     }
 }
 
+
 // Routines to retrieve typecode by offset or vica versa
 TypeCode_base*
 TypeCode_offsetTable::lookupOffset(CORBA::Long offset)
@@ -3179,6 +3188,7 @@ TypeCode_offsetTable::lookupOffset(CORBA::Long offset)
 
   return 0;
 }
+
 
 CORBA::Boolean
 TypeCode_offsetTable::lookupTypeCode(const TypeCode_base*  tc,
@@ -3796,7 +3806,7 @@ TypeCode_marshaller::alignedSize(const TypeCode_base* tc,
   // If this _exact_ typecode would have already appeared in the stream
   // then just put in an indirection.
   CORBA::Long tc_offset;
-  if( otbl->lookupTypeCode(tc, tc_offset) )
+  if( omniORB::useTypeCodeIndirections && otbl->lookupTypeCode(tc, tc_offset) )
     {
       // The desired typecode was found, so add space for an indirection!
       // (kind and offset value)
