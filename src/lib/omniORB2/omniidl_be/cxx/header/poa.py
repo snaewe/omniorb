@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.7  2000/06/26 16:23:59  djs
+# Better handling of #include'd files (via new commandline options)
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.15.2.6  2000/06/05 13:03:57  djs
 # Removed union member name clash (x & pd_x, pd__default, pd__d)
 # Removed name clash when a sequence is called "pd_seq"
@@ -146,7 +150,7 @@ def visitModule(node):
     
     name = id.mapID(node.identifier())
 
-    if not(config.FragmentFlag()):
+    if not(config.state['Fragment']):
         stream.out(template.POA_module_begin,
                    name = name,
                    POA_prefix = POA_prefix())
@@ -161,7 +165,7 @@ def visitModule(node):
     # (This might be unnecessary as there (seems to be) no relationship
     #  between things in the POA module- they all point back into the main
     #  module?)
-    if config.SpliceModulesFlag():
+    if config.state['Splice Modules']:
         for c in node.continuations():
             #self.__completedModules[node] = 1
             for n in c.definitions():
@@ -169,7 +173,7 @@ def visitModule(node):
 
     self.__nested = nested
 
-    if not(config.FragmentFlag()):
+    if not(config.state['Fragment']):
         stream.dec_indent()
         stream.out(template.POA_module_end)
     return
@@ -211,7 +215,7 @@ def visitInterface(node):
                impl_scopedID = impl_scopedID,
                inherits = inherits_str)
 
-    if config.TieFlag():
+    if config.state['Normal Tie']:
         # Normal tie templates, inline (so already in relevant POA_
         # module)
         poa_name = ""

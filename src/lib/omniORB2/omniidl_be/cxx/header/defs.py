@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.14  2000/06/26 16:23:57  djs
+# Better handling of #include'd files (via new commandline options)
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.31.2.13  2000/06/19 18:19:49  djs
 # Implemented union discriminant setting function _d(_value) with checks for
 # illegal uses (setting to a label corresponding to a non-current member and
@@ -244,7 +248,7 @@ def visitModule(node):
     ident = node.identifier()
     cxx_id = id.mapID(ident)
 
-    if not(config.FragmentFlag()):
+    if not(config.state['Fragment']):
         stream.out(template.module_begin, name = cxx_id)
         stream.inc_indent()
 
@@ -256,7 +260,7 @@ def visitModule(node):
         n.accept(self)
 
     # deal with continuations (only if the splice-modules flag is set)
-    if config.SpliceModulesFlag():
+    if config.state['Splice Modules']:
         for c in node.continuations():
             for n in c.definitions():
                 n.accept(self)
@@ -264,7 +268,7 @@ def visitModule(node):
     # pop self.__insideModule
     self.__insideModule = insideModule
     
-    if not(config.FragmentFlag()):
+    if not(config.state['Fragment']):
         stream.dec_indent()
         stream.out(template.module_end, name = cxx_id)
 
@@ -422,7 +426,7 @@ def visitInterface(node):
                name = cxx_name)
 
     # Generate BOA compatible skeletons?
-    if config.BOAFlag():
+    if config.state['BOA Skeletons']:
         stream.out(template.interface_sk,
                    name = cxx_name,
                    sk_inherits = sk_inherits)
@@ -433,7 +437,7 @@ def visitInterface(node):
     self.__insideClass = insideClass
 
     # Typecode and Any
-    if config.TypecodeFlag():
+    if config.state['Typecode']:
         qualifier = tyutil.const_qualifier(self.__insideModule,
                                            self.__insideClass)
         stream.out(template.typecode,
@@ -548,7 +552,7 @@ def visitTypedef(node):
         array_declarator = d.sizes() != []
 
         # Typecode and Any
-        if config.TypecodeFlag():
+        if config.state['Typecode']:
             qualifier = tyutil.const_qualifier(self.__insideModule,
                                                self.__insideClass)
             stream.out(template.typecode,
@@ -886,7 +890,7 @@ def visitStruct(node):
     self.__insideClass = insideClass
 
     # TypeCode and Any
-    if config.TypecodeFlag():
+    if config.state['Typecode']:
         # structs in C++ are classes with different default privacy policies
         qualifier = tyutil.const_qualifier(self.__insideModule,
                                            self.__insideClass)
@@ -943,7 +947,7 @@ def visitException(node):
                                memtype = memtype,
                                cxx_id = cxx_id,
                                dims = dims_string,
-                               private_prefix = config.privatePrefix())
+                               private_prefix = config.state['Private Prefix'])
 
                 stream.out(template.exception_member,
                            memtype = memtype,
@@ -973,7 +977,7 @@ def visitException(node):
             cxx_id = id.mapID(ident)
 
             if is_array_declarator:
-                ctor_arg_type = "const " + config.privatePrefix() +\
+                ctor_arg_type = "const " + config.state['Private Prefix'] +\
                                 "_" + cxx_id
             ctor_args.append(ctor_arg_type + " i_" + cxx_id)
 
@@ -1004,7 +1008,7 @@ def visitException(node):
     self.__insideClass = insideClass
 
     # Typecode and Any
-    if config.TypecodeFlag():
+    if config.state['Typecode']:
         qualifier = tyutil.const_qualifier(self.__insideModule,
                                            self.__insideClass)
         stream.out(template.typecode,
@@ -1367,7 +1371,7 @@ def visitUnion(node):
                 
                 # anonymous arrays are handled slightly differently
                 if is_array_declarator:
-                    prefix = config.privatePrefix()
+                    prefix = config.state['Private Prefix']
                     stream.out(template.union_array_declarator,
                                prefix = prefix,
                                memtype = memtype,
@@ -1462,11 +1466,11 @@ def visitUnion(node):
 
     # Typecode and Any
     def tcParser_unionHelper(stream = stream, node = node):
-        if config.TypecodeFlag():
+        if config.state['Typecode']:
             guard_name = id.Name(node.scopedName()).guard()
             stream.out(template.union_tcParser_friend,
                        name = guard_name,
-                       private_prefix = config.privatePrefix())
+                       private_prefix = config.state['Private Prefix'])
 
 
     # declare the instance of the discriminator and
@@ -1560,7 +1564,7 @@ def visitUnion(node):
     self.__insideClass = insideClass
 
     # TypeCode and Any
-    if config.TypecodeFlag():
+    if config.state['Typecode']:
         qualifier = tyutil.const_qualifier(self.__insideModule,
                                            self.__insideClass)
         stream.out(template.typecode,
@@ -1583,7 +1587,7 @@ def visitEnum(node):
                memberlist = string.join(memberlist, ", "))
 
     # TypeCode and Any
-    if config.TypecodeFlag():
+    if config.state['Typecode']:
         insideModule = self.__insideModule
         insideClass = self.__insideClass
         qualifier = tyutil.const_qualifier(insideModule, insideClass)

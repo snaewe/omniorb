@@ -28,6 +28,10 @@
 #
 # $Id$
 # $Log$
+# Revision 1.11.2.7  2000/06/26 16:24:00  djs
+# Better handling of #include'd files (via new commandline options)
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.11.2.6  2000/06/12 13:22:14  djs
 # Stopped generation of BOA ties #include'd from other files
 #
@@ -259,7 +263,7 @@ class FlatTieTemplates(idlvisitor.AstVisitor):
         if not(node.mainFile()): return
         
         self.generate_POA_tie(node)
-        if config.BOAFlag():
+        if config.state['BOA Skeletons']:
             self.generate_BOA_tie(node)
 
     def generate_BOA_tie(self, node):

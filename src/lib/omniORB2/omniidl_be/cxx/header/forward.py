@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.4  2000/06/26 16:23:59  djs
+# Better handling of #include'd files (via new commandline options)
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.6.2.3  2000/06/05 13:03:56  djs
 # Removed union member name clash (x & pd_x, pd__default, pd__d)
 # Removed name clash when a sequence is called "pd_seq"
@@ -111,14 +115,14 @@ def visitUnion(node):
             n.caseType().decl().accept(self)
 
     # Typecode and Any
-    if config.TypecodeFlag():
+    if config.state['Typecode']:
         name = id.Name(node.scopedName())
         fqname = name.fullyQualify()
         guard_name = name.guard()
 
         stream.out(template.tcParser_unionHelper,
                    fqname = fqname, guard_name = guard_name,
-                   private_prefix = config.privatePrefix())
+                   private_prefix = config.state['Private Prefix'])
 
             
 def visitInterface(node):

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.7  2000/06/26 16:23:57  djs
+# Better handling of #include'd files (via new commandline options)
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.12.2.6  2000/06/05 13:03:54  djs
 # Removed union member name clash (x & pd_x, pd__default, pd__d)
 # Removed name clash when a sequence is called "pd_seq"
@@ -108,19 +112,21 @@ from omniidl_be.cxx import util, id
 
 # -----------------------------
 # System functions
-import re, sys
+import re, sys, os.path
 
 
 def header(stream, filename):
     stream.out(template.header,
-               Config = config, guard = filename)
+               program = config.state['Program Name'],
+               library = config.state['Library Version'],
+               guard = filename)
 
 def footer(stream):
     stream.out(template.footer)
 
 def defs_fragment(stream, tree):
     """Creates the defs fragment only"""
-    filename = config.basename() + config.defs_fragment_suffix()
+    filename = config.state['Basename'] + config.state['_DEFS Fragment']
     header(stream, filename)
 
     # generate the header definitions
@@ -138,7 +144,7 @@ def defs_fragment(stream, tree):
 
 def opers_fragment(stream, tree):
     """Creates the opers fragment only"""
-    filename = config.basename() + config.opers_fragment_suffix()
+    filename = config.state['Basename'] + config.state['_OPERS Fragment']
     header(stream, filename)
 
     # see o2be_root::produce_hdr and o2be_root::produce_hdr_defs
@@ -152,7 +158,7 @@ def opers_fragment(stream, tree):
 
 def poa_fragment(stream, tree):
     """Creates the poa fragment only"""
-    filename = config.basename() + config.poa_fragment_suffix()
+    filename = config.state['Basename'] + config.state['_POA Fragment']
     header(stream, filename)
 
     poa = omniidl_be.cxx.header.poa.__init__(stream)
@@ -163,15 +169,13 @@ def poa_fragment(stream, tree):
 def monolithic(stream, tree):
     """Creates one large header with all definitions inside"""
 
-    # inconsistancy- everywhere else transforms "_" into "__"
-    # but the old BE doesn't here
-    guard = re.sub(r"\W", "_", config.basename())
+    guard = id.Name([config.state['Basename']]).guard()
 
     header(stream, guard)
     
     includes = util.StringStream()
     # produce #includes for all files included by the IDL
-    for include in config.include_file_names():
+    for include in config.includes:
         # skip the main file
         if tree.file() == include:
             continue
@@ -179,20 +183,27 @@ def monolithic(stream, tree):
         # the old C++ BE makes orb.idl a special case
         # (might now be a redundant test)
         
-        # chop off the current extension and replace with a .hh
-        # s/(.*)\./\1\.hh/
-        match = re.compile(r"(.*)\.").match(include)
-        filename = match.group(1)
-        # chop off the directories and just get the filename
-        # I bet this causes lots of trouble later...
-        elements = re.split(r"/", filename)
-        filename = elements[len(elements) - 1]
-        filename = filename + config.hdrsuffix()
+        # dirname  == directory containing the include file
+        # filename == extensionless filename
+        # ext      == extension (typically .idl)
+        (root, ext) = os.path.splitext(include)
+        (dirname, filename) = os.path.split(root)
+        # make the C++ header filename
+        filename = filename + config.state['HH Suffix']
         # s/\W/_/g
         guardname = id.Name([filename]).guard()
 
+        cxx_include = filename
+        if config.state['Keep Include Path']:
+            cxx_include = os.path.join(dirname, cxx_include)
+
+        if config.state['Use Quotes']:
+            cxx_include = "\"" + cxx_include + "\""
+        else:
+            cxx_include = "<" + cxx_include + ">"
+            
         includes.out(template.main_include,
-                     guardname = guardname, filename = filename)
+                     guardname = guardname, filename = cxx_include)
 
     # see o2be_root::produce_hdr and o2be_root::produce_hdr_defs
 
@@ -216,11 +227,11 @@ def monolithic(stream, tree):
         tree.accept(poa)
 
     def other_tie(stream = stream, tree = tree):
-        if config.TieFlag() and config.BOAFlag():
+        if config.state['Normal Tie'] and config.state['BOA Skeletons']:
             tie = omniidl_be.cxx.header.tie.BOATieTemplates(stream)
             tree.accept(tie)
         
-        if config.FlatTieFlag():
+        if config.state['Flattened Tie']:
             tie = omniidl_be.cxx.header.tie.FlatTieTemplates(stream)
             tree.accept(tie)
 
@@ -247,27 +258,31 @@ def monolithic(stream, tree):
 
 
 def run(tree):
-    if config.FragmentFlag():
+    if config.state['Fragment']:
         # build the defs file
-        defs_filename = config.basename() + config.defs_fragment_suffix() +\
-                        config.hdrsuffix()
+        defs_filename = config.state['Basename']         +\
+                        config.state['_DEFS Fragment']   +\
+                        config.state['HH Suffix']
         defs_stream = util.Stream(open(defs_filename, "w"), 2)
         defs_fragment(defs_stream, tree)
 
         # build the opers file
-        opers_filename = config.basename() + config.opers_fragment_suffix() +\
-                         config.hdrsuffix()
+        opers_filename = config.state['Basename']        +\
+                         config.state['_OPERS Fragment'] +\
+                         config.state['HH Suffix']
         opers_stream = util.Stream(open(opers_filename, "w"), 2)
         opers_fragment(opers_stream, tree)
 
         # build the poa file
-        poa_filename = config.basename() + config.poa_fragment_suffix() +\
-                       config.hdrsuffix()
+        poa_filename = config.state['Basename']          +\
+                       config.state['_POA Fragment']     +\
+                       config.state['HH Suffix']
         poa_stream = util.Stream(open(poa_filename, "w"), 2)
         poa_fragment(poa_stream, tree)
     else:
         # build the full header file
-        header_filename = config.basename() + config.hdrsuffix()
+        header_filename = config.state['Basename']       +\
+                          config.state['HH Suffix']
         stream = util.Stream(open(header_filename, "w"), 2)
         # generate one big chunk of header
         monolithic(stream, tree)
