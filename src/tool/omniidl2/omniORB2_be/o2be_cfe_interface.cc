@@ -10,6 +10,9 @@
 
 /*
   $Log$
+  Revision 1.3  1997/02/17 18:07:02  ewc
+  Added support for Windows NT
+
   Revision 1.2  1997/01/23 17:03:34  sll
   Added definition of o2be_global::pd_aflag.
 
@@ -20,11 +23,78 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
+#ifndef __NT__
 #include <unistd.h>
+#endif
+
 #include "idl.hh"
 #include "idl_extern.hh"
 #include "drv_private.hh"
 #include "o2be.h"
+
+
+#ifdef __NT__
+
+// NT doesn't have an implementation of getopt() - supply a getopt() for this program:
+
+char* optarg;
+int optind = 1;
+
+
+int
+getopt(int num_args, char* const* args, const char* optstring)
+{
+if (optind == num_args) return EOF;
+char* buf_left = *(args+optind);
+
+if ((*buf_left != '-' && *buf_left != '/') || buf_left == NULL ) return EOF;
+else if ((optind < (num_args-1)) && strcmp(buf_left,"-") == 0 && strcmp(*(args+optind+1),"-") == 0)
+	{
+		optind+=2;
+		return EOF;
+	}
+else if (strcmp(buf_left,"-") == 0)
+	{
+		optind++;
+		return '?';
+	}
+
+for(int count = 0; count < strlen(optstring); count++)
+	{
+	if (optstring[count] == ':') continue;
+	if (buf_left[1] == optstring[count])
+		{
+		 if(optstring[count+1] == ':')
+		  {
+			if (strlen(buf_left) > 2)
+			 {
+				optarg = (buf_left+2);
+				optind++;
+			 }
+			else if (optind < (num_args-1))
+			 {
+				optarg = *(args+optind+1);
+				optind+=2;
+			 }
+			else
+			 {
+				optind++;
+				return '?';
+			 }
+		  }
+		  else optind++;
+
+		  return buf_left[1];
+		}
+	}
+optind++;
+return '?';
+}
+
+#endif
+
 
 o2be_root *o2be_global::myself = NULL;
 char *o2be_global::pd_hdrsuffix = DEFAULT_IDL_HDR_SUFFIX;
@@ -43,7 +113,7 @@ int o2be_global::pd_aflag = 0;
 AST_Generator *
 BE_init()
 {
-  AST_Generator	*g = new o2be_generator();
+  AST_Generator	*g = new o2be_generator();	
   return g;
 }
 
@@ -128,8 +198,13 @@ BE_parse_args(int argc, char **argv)
 {
   int c;
   char *buffer;
+
+#ifndef __NT__
   extern char *optarg;
   extern int optind;
+#else	
+ o2be_global::set_skelsuffix("SK.cpp");
+#endif
 
   DRV_cpp_init();
   idl_global->set_prog_name(argv[0]);
@@ -185,6 +260,8 @@ BE_parse_args(int argc, char **argv)
     {
       DRV_files[DRV_nfiles++] = argv[optind];
     }
+
+
   if (DRV_nfiles == 0)
     {
       cerr << "No file specified.\n";
