@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.16  1998/08/21 19:13:32  sll
+  Use omniInitialReferences::singleton() to manage initial object references.
+  New command line options: -ORBInitialHost, -ORBInitialPort.
+
   Revision 1.15  1998/08/14 13:44:57  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -74,6 +78,7 @@
 
 #include <stdio.h>
 #include <initFile.h>
+#include <bootstrap_i.h>
 #include <scavenger.h>
 #include <ropeFactory.h>
 #ifndef __atmos__
@@ -118,8 +123,10 @@ _CORBA_Unbounded_Sequence_Octet omni::myPrincipalID;
 
 static const char*       myORBId          = "omniORB2";
 static CORBA::ORB_ptr    orb              = 0;
-static CORBA::Object_ptr NameServiceRef   = 0; 
 static omni_mutex        internalLock;
+
+static const char*       bootstrapAgentHostname = 0;
+static CORBA::UShort     bootstrapAgentPort     = 900;
 
 
 #ifdef __SINIX__
@@ -147,7 +154,6 @@ ORB::~ORB()
   return;
 }
 
-
 CORBA::ORB_ptr
 CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
 {
@@ -170,13 +176,25 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
     // Now initialise all the rope factories that will be used to
     // create outgoing ropes.
     globalOutgoingRopeFactories.insert(new _tcpOutgoingFactory );
+
     // Add rope factories for other transports here.
 
     // get configuration information:
     {
       initFile configFile;
       configFile.initialize();
-      NameServiceRef = configFile.NameService();
+    }
+
+    // 
+    if (bootstrapAgentHostname) {
+      // The command-line option -ORBInitialHost has been specified.
+      // Override any previous NamesService object reference
+      // that may have been read from the configuration file.
+      omniInitialReferences::singleton()->set("NameService",
+					      CORBA::Object::_nil());
+      omniInitialReferences::singleton()
+	->initialise_bootstrap_agent(bootstrapAgentHostname,
+				     bootstrapAgentPort);
     }
 
     // myPrincipalID, to be used in the principal field of IIOP calls
@@ -280,30 +298,27 @@ CORBA::Object_ptr
 CORBA::
 ORB::resolve_initial_references(const char* identifier)
 {
-  // Resolve initial references:
-  if (strcmp(identifier,"InterfaceRepository") == 0)
-    {
+  if (!identifier) throw CORBA::ORB::InvalidName();
+
+  CORBA::Object_ptr obj = omniInitialReferences::singleton()->get(identifier);
+
+  if (!CORBA::is_nil(obj)) {
+    return obj;
+  }
+  else {
+    // Resource not found. 
+    if (strcmp(identifier,"InterfaceRepository") == 0) {
       // No Interface Repository
       throw CORBA::INTF_REPOS(0,CORBA::COMPLETED_NO);
     }
-  else if (strcmp(identifier,"NameService") == 0)
-    {
-      if (CORBA::is_nil(NameServiceRef))
-	{
-	  // Failed to get a reference to the Naming Service during ORB 
-	  // initialization
-	  throw CORBA::NO_RESOURCES(0,CORBA::COMPLETED_NO);
-	}
-      else 
-	{
-	  return CORBA::Object::_duplicate(NameServiceRef);
-	}
+    else if (strcmp(identifier,"NameService") == 0) {
+      throw CORBA::NO_RESOURCES(0,CORBA::COMPLETED_NO);
     }
-  else
-    {
+    else {
       // No further ObjectIds are defined
       throw CORBA::ORB::InvalidName();
     }
+  }
 #ifdef NEED_DUMMY_RETURN
   return CORBA::Object::_nil(); // dummy return to keep some compilers happy
 #endif
@@ -314,15 +329,7 @@ CORBA::ORB::ObjectIdList*
 CORBA::
 ORB::list_initial_services()
 {
-  ObjectIdList* idlist = new ObjectIdList;
-  idlist->length(0);
-
-  if (NameServiceRef != 0)
-    {
-      idlist->length(1);
-      (*idlist)[0] = (const char*) "NameService";
-    }
-  return idlist;
+  return omniInitialReferences::singleton()->list();
 }
 
 
@@ -603,12 +610,49 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	move_args(argc,argv,idx,2);
 	continue;
       }
+
+      // -ORBInitialHost
+      if (strcmp(argv[idx],"-ORBInitialHost") == 0) {
+	if((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    omniORB::log << "CORBA::ORB_init failed: missing -ORBInitialHost parameter.\n";
+	    omniORB::log.flush();
+	  }
+	  return 0;
+	}
+	bootstrapAgentHostname = CORBA::string_dup(argv[idx+1]);
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBInitialPort
+      if (strcmp(argv[idx],"-ORBInitialPort") == 0) {
+	if((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    omniORB::log << "CORBA::ORB_init failed: missing -ORBInitialPort parameter.\n";
+	    omniORB::log.flush();
+	  }
+	  return 0;
+	}
+        unsigned int port;
+	if (sscanf(argv[idx+1],"%u",&port) != 1 ||
+            (port == 0 || port >= 65536)) {
+	  if (omniORB::traceLevel > 0) {
+	    omniORB::log << "CORBA::ORB_init failed: invalid -ORBInitialPort parameter.\n";
+	    omniORB::log.flush();
+	  }
+	  return 0;
+	}
+	bootstrapAgentPort = (CORBA::UShort)port;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
       
       // Reach here only if the argument in this form: -ORBxxxxx
       // is not recognised.
       if (omniORB::traceLevel > 0) {
-	omniORB::log << "CORBA::ORB_init failed: unknown ORB argument (\n"
-		     << argv[idx] << ")";
+	omniORB::log << "CORBA::ORB_init failed: unknown ORB argument ("
+		     << argv[idx] << ")\n";
 	omniORB::log.flush();
       }
       return 0;
