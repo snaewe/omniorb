@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.16  1997/12/23 19:26:13  sll
+  Now generate correct typedefs for typedef interfaces.
+
   Revision 1.15  1997/12/10 11:35:41  sll
   Updated life cycle service stub.
 
@@ -1282,7 +1285,21 @@ o2be_interface_fwd::produce_hdr(fstream &s)
   IND(s); s << "typedef " << intf->uqname() << "* " 
 	    << intf->objref_uqname() << ";\n";
   IND(s); s << "typedef " << intf->objref_uqname() << " " 
-	    << intf->uqname() << "Ref;\n\n";
+	    << intf->uqname() << "Ref;\n";
+  IND(s); s << "class " << intf->proxy_uqname() << ";\n";
+  IND(s); s << "class " << intf->server_uqname() << ";\n";
+  IND(s); s << "class " << intf->nil_uqname() << ";\n";
+
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+  IND(s); s << "class " << intf->lcproxy_uqname() << ";\n";
+  IND(s); s << "class " << intf->lcserver_uqname() << ";\n";
+  IND(s); s << "class " << intf->dead_uqname() << ";\n";
+  IND(s); s << "class " << intf->home_uqname() << ";\n";
+  IND(s); s << "class " << intf->wrapproxy_uqname() << ";\n";
+  }
+
+  s << "\n";
+
   IND(s); s << "class " << intf->uqname() << "_Helper {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "public:\n";
@@ -2377,7 +2394,7 @@ o2be_interface::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 	    << " " << tdef->uqname() << "_ptr;\n";
   IND(s); s << "typedef " << unambiguous_name(tdef)
 	    << "Ref " << tdef->uqname() << "Ref;\n";
-  if (strcmp(uqname(),"Object") != 0) {
+  if (strcmp(uqname(),"CORBA::Object") != 0) {
     IND(s); s << "typedef " << unambiguous_name(tdef)
 	      << "_Helper " << tdef->uqname() << "_Helper;\n";
     IND(s); s << "typedef " << unambiguous_proxy_name(tdef)
@@ -2401,6 +2418,10 @@ o2be_interface::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
     }
     s << "#define " << tdef->_fqname() << IRREPOID_POSTFIX << " " << IRrepoId()
       << ";\n";
+  }
+  else {
+    IND(s); s << "typedef CORBA::Object_Helper " 
+	      << tdef->uqname() << "_Helper;\n";
   }
   IND(s); s << "typedef " << unambiguous_name(tdef) 
 	    << "_var " << tdef->uqname() << "_var;\n";
