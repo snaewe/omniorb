@@ -583,6 +583,10 @@ private:
     value_t**     _values;
     unsigned long _value_alloc;
 
+    omni_thread(const omni_thread&);
+    omni_thread& operator=(const omni_thread&);
+    // Not implemented
+
 public:
 
     priority_t priority(void) {
