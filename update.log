@@ -1,3 +1,12 @@
+Mon Jun 11 12:35:31 BST 2001 dpg1
+=================================
+
+- Failed to initialise refcount in Current object.
+
+src/lib/omniORB/include/poacurrentimpl.h
+src/lib/omniORB/orbcore/current.cc
+
+
 Fri Jun  8 17:58:38 BST 2001 dpg1
 =================================
 

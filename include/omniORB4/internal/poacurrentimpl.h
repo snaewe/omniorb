@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/06/11 11:38:17  dpg1
+  Failed to initialise refcount in Current object.
+
   Revision 1.1.2.1  2001/06/07 16:24:09  dpg1
   PortableServer::Current support.
 
@@ -46,7 +49,7 @@ class omniOrbPOACurrent : public PortableServer::Current
 {
 public:
   omniOrbPOACurrent(CORBA::Boolean is_nil = 0)
-    : OMNIORB_BASE_CTOR(PortableServer::)Current(is_nil)
+    : OMNIORB_BASE_CTOR(PortableServer::)Current(is_nil), pd_refCount(1)
   {}
   virtual ~omniOrbPOACurrent();
 

@@ -131,8 +131,10 @@ omniOrbPOACurrent::theCurrent()
 {
   omni_tracedmutex_lock l(*omni::poRcLock);
 
-  if (!thePOACurrent)
+  if (!thePOACurrent) {
     thePOACurrent = new omniOrbPOACurrent;
+    return thePOACurrent;
+  }
 
   thePOACurrent->pd_refCount++;
   return thePOACurrent;
