@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.16  2000/07/12 17:16:11  djs
+# Minor bugfix to option -Wbsplice-modules
+#
 # Revision 1.31.2.15  2000/06/27 16:15:10  sll
 # New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
 # _CORBA_ObjRef_tcDesc_arg to support assignment to an element of a
@@ -269,6 +272,7 @@ def visitModule(node):
         for c in node.continuations():
             for n in c.definitions():
                 n.accept(self)
+            self.__completedModules[c] = 1
 
     # pop self.__insideModule
     self.__insideModule = insideModule
