@@ -187,11 +187,11 @@ $(wob): wob.o $(OMNITHREAD_LIB_DEPEND)
 
 \end{verbatim}
 
-Note that if you use CORBA then it is important that {\tt
-\$(CORBA\_CLIENT\_LIB)} or {\tt \$(CORBA\_SERVER\_LIB)} appears before {\tt
-\$(OMNITHREAD\_LIB)} in the {\tt libs="..."} assignment.  This is because
-linking the Solaris thread library before the Orbix library results in a binary
-which segmentation faults inside the Orbix library initialisation.
+Note that if you use CORBA then it is important that {\tt \$(CORBA\_LIB)}
+appears before {\tt \$(OMNITHREAD\_LIB)} in the {\tt libs="..."} assignment.
+This is because linking the Solaris thread library before the Orbix library
+results in a binary which segmentation faults inside the Orbix library
+initialisation.
 
 
 
