@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2002/05/07 12:55:47  dgrisby
+  Minor tweak to log message format.
+
   Revision 1.1.2.12  2002/04/25 23:13:30  dgrisby
   Minor tweak to codeset setting interceptors for GIOP 1.0.
 
@@ -550,7 +553,7 @@ setCodeSetServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
 
     if (omniORB::trace(25)) {
       omniORB::logger log;
-      log << " send codeset service context: ( "
+      log << " send codeset service context: ("
 	  << tcs_c->name() << "," << ((tcs_w) ? tcs_w->name() : "none")
 	  << ")\n";
     }
@@ -612,7 +615,7 @@ getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
 
       if (omniORB::trace(25)) {
 	omniORB::logger log;
-	log << " recieve codeset service context and set TCS to ( "
+	log << " recieve codeset service context and set TCS to ("
 	    << ((tcs_c) ? tcs_c->name() : "none") << "," 
 	    << ((tcs_w) ? tcs_w->name() : "none") << ")\n";
       }
