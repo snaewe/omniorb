@@ -1,9 +1,32 @@
 Thu Jun 21 11:08:39 BST 2001 sll
 ================================
 
-- HPUX does not have strtoul, use sscanf as a replacement.c
+- HPUX does not have strtoul, use sscanf as a replacement.
 
 src/tool/omniidl/cxx/idlutil.cc
+
+
+Mon Jun 18 18:40:15 BST 2001 dpg1
+=================================
+
+- Preliminary support for Darwin / Mac OS X.
+
+external_merge/config/config.mk
+external_merge/mk/platforms/powerpc_darwin_1.3.mk               -- new
+include/omnithread.h
+mk/platforms/powerpc_darwin_1.3.mk                              -- new
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/diag.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/fakelog2.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/percent_m.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/posix.cc
+src/lib/omnithread/sharedlib/dir.mk
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idlutil.cc
+src/tool/omniidl/cxx/cccp/config-darwin.h                       -- new
+src/tool/omniidl/cxx/cccp/config.h
 
 
 Wed Jun 20 16:11:24 BST 2001 sll
