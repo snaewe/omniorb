@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/06/02 14:18:26  dpg1
+  Race condition in tracedcondition
+
   Revision 1.1.2.4  2000/02/10 18:28:22  djr
   omni_tracedmutex/condition now survive if omni_thread::self() returns 0.
 
@@ -177,7 +180,9 @@ omni_tracedcondition::omni_tracedcondition(omni_tracedmutex* m)
 
     BOMB_OUT();
   }
+  pd_mutex.pd_lock.lock();
   pd_mutex.pd_n_conds++;
+  pd_mutex.pd_lock.unlock();
 }
 
 
@@ -189,7 +194,9 @@ omni_tracedcondition::~omni_tracedcondition()
       " but there are still threads waiting on it!\n";
     omniORB::log.flush();
   }
+  pd_mutex.pd_lock.lock();
   pd_mutex.pd_n_conds--;
+  pd_mutex.pd_lock.unlock();
 }
 
 
