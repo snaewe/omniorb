@@ -29,6 +29,13 @@
  
 /*
   $Log$
+  Revision 1.25  1999/06/02 16:57:07  sll
+  Changed createObjRef(). In the case when the proxyObjectFactories for
+  the targetRepoId and the mostDerivedRepoId are not available, we now create
+  an AnonymousObject. Previously, we throw a Marshal exception. Any attempt
+  to narrow the returned object to the target interface identified by
+  targetRepoId would results in a nil object being returned.
+
   Revision 1.24  1999/06/02 16:41:19  sll
   Moved class proxyObjectFactory into the CORBA namespace.
 
@@ -477,13 +484,21 @@ omni::createObjRef(const char* mostDerivedRepoId,
 	      }
 	    }
 	    
-	    if (!p) {
-	      // this is terrible, the caller just give me a <targetRepoId>
-	      // that we don't have a proxy factory for.
-	      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	    if (p)
+	      objptr = p->newProxyObject(rope,objkey,ksize,profiles,1);
+	    else {
+	      // We don't have a proxyObjectFactory for the target
+	      // repoId. When using C++ stubs, this should never
+	      // happen. It will happen when using stubs in another
+	      // language, such as Python. Create an anonymous object
+	      // with the target repoId, to be checked on the first
+	      // invocation. If C++ stubs omit the proxyObjectFactory,
+	      // all references to the associated interface will be
+	      // returned as nil.
+	      objptr = new AnonymousObject(targetRepoId,rope,
+					   objkey,ksize,profiles,1);
 	    }
 
-	    objptr = p->newProxyObject(rope,objkey,ksize,profiles,1);
 	    // The ctor of the proxy object sets its IR repository ID
 	    // to <targetRepoId>, we reset it to <mostDerivedRepoId> because
 	    // this identifies the true type of the object.
@@ -532,13 +547,21 @@ omni::createObjRef(const char* mostDerivedRepoId,
 		}
 	      }
 	    
-	      if (!p) {
-		// this is terrible, the caller just give me a <targetRepoId>
-		// that we don't have a proxy factory for.
-		throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	      if (p)
+		objptr = p->newProxyObject(rope,objkey,ksize,localcopy,1);
+	      else {
+		// We don't have a proxyObjectFactory for the target
+		// repoId. When using C++ stubs, this should never
+		// happen. It will happen when using stubs in another
+		// language, such as Python. Create an anonymous
+		// object with the target repoId, to be checked on the
+		// first invocation. If C++ stubs omit the
+		// proxyObjectFactory, all references to the
+		// associated interface will be returned as nil.
+		objptr = new AnonymousObject(targetRepoId,rope,
+					     objkey,ksize,localcopy,1);
 	      }
 
-	      objptr = p->newProxyObject(rope,objkey,ksize,localcopy,1);
 	      // The ctor of the proxy object sets its IR repository ID
 	      // to <targetRepoId>, we reset it to <mostDerivedRepoId> because
 	      // this identifies the true type of the object.
