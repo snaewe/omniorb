@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.2.5  2001/06/06 10:36:41  sll
+  Backported workaround for Sun C++ 5.0 or Forte WS C++ 6.0.
+
   Revision 1.29.2.4  2000/01/07 15:44:56  djr
   Call timeouts are now disabled by default.
 
@@ -236,6 +239,18 @@ ORB::~ORB()
   pd_magic = 0;
 }
 
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
+
+#include <exception.h>
+static void omni_abort()
+{
+  abort();
+}
+
+#endif
+#endif
+
 CORBA::ORB_ptr
 CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
 {
@@ -290,6 +305,17 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
   catch (...) {
     throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
   }
+
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
+  // Sun C++ 5.0 or Forte C++ 6.0 generated code will segv occasionally
+  // when concurrent threads throw an exception. The stack trace points
+  // to a problem in the exception unwinding. The workaround seems to be
+  // to install explicitly an uncaught exception handler, which is what
+  // we do here.
+  set_terminate(omni_abort);
+#endif
+#endif
 
   orb = new CORBA::ORB;
   return orb;

@@ -1,3 +1,14 @@
+Wed Jun  6 11:34:24 BST 2001 sll
+================================
+
+- backport from omniORB 3
+  Added workaround to the unwind exception bug in Sun C++ 5.0 or the later
+  Forte WS C++ 6.0. It seems to work, at least it has no side effect if it
+  doesn't.
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
 Tue May 29 12:06:29 BST 2001 sll
 ================================
 
