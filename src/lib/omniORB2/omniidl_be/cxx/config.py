@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12  2000/01/13 15:56:30  djs
+# Factored out private identifier prefix rather than hard coding it all through
+# the code.
+#
 # Revision 1.11  2000/01/13 14:16:20  djs
 # Properly clears state between processing separate IDL input files
 #
@@ -186,7 +190,7 @@ def poa_fragment_suffix():
     return self._poa_fragment
 
 # prefix to be added to avoid occasional name clashes
-def name_prefix():
+def privatePrefix():
     return self._name_prefix
     
 # list of all files #included in the IDL

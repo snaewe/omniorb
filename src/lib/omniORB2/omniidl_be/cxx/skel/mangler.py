@@ -30,6 +30,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12  2000/01/13 15:56:44  djs
+# Factored out private identifier prefix rather than hard coding it all through
+# the code.
+#
 # Revision 1.11  2000/01/13 14:16:35  djs
 # Properly clears state between processing separate IDL input files
 #
@@ -79,7 +83,7 @@
 import re, string
 
 from omniidl import idlast, idltype
-from omniidl.be.cxx import util, tyutil, skutil
+from omniidl.be.cxx import util, tyutil, skutil, config
 
 import mangler
 self = mangler
@@ -87,8 +91,8 @@ self = mangler
 # -------------------------
 # Standard prefixes
 
-CALL_DESC_PREFIX            = "_0RL_cd_"
-LCALL_DESC_PREFIX           = "_0RL_lcfn_"
+CALL_DESC_PREFIX            = config.privatePrefix() + "_cd_"
+LCALL_DESC_PREFIX           = config.privatePrefix() + "_lcfn_"
 STD_PROXY_CALL_DESC_PREFIX  = "omniStdCallDesc::"
 
 # -------------------------

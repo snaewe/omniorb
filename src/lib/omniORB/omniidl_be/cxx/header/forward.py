@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  2000/01/13 15:56:39  djs
+# Factored out private identifier prefix rather than hard coding it all through
+# the code.
+#
 # Revision 1.3  2000/01/07 20:31:28  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -91,8 +95,9 @@ def visitUnion(node):
         guard_name = tyutil.guardName(scopedName)
         stream.out("""\
 // Declare helper class for union type @fqname@
-class _0RL_tcParser_unionhelper_@guard_name@;""",
-                   fqname = fqname, guard_name = guard_name)
+class @private_prefix@_tcParser_unionhelper_@guard_name@;""",
+                   fqname = fqname, guard_name = guard_name,
+                   private_prefix = config.privatePrefix())
         
 def visitInterface(node):
     if not(node.mainFile()):

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.26  2000/01/13 15:56:38  djs
+# Factored out private identifier prefix rather than hard coding it all through
+# the code.
+#
 # Revision 1.25  2000/01/13 14:16:29  djs
 # Properly clears state between processing separate IDL input files
 #
@@ -1249,10 +1253,11 @@ public:
                                                                environment)
 
             if is_array_declarator:
-                ctor_arg_type = "const _0RL_" + name                
+                ctor_arg_type = "const " + config.privatePrefix() + "_" + name
                 data.out("""\
-    typedef @type@ _0RL_@name@@dims@;
-    typedef @type@ _@name@_slice;""", type = type, name = name, dims = dims)
+    typedef @type@ @private_prefix@_@name@@dims@;
+    typedef @type@ _@name@_slice;""", type = type, name = name, dims = dims,
+                         private_prefix = config.privatePrefix())
                 
             data.out("""\
     @type@ @name@@dims@;""", type = type, name = name, dims = dims)
@@ -1600,7 +1605,7 @@ public:
                 
             # anonymous arrays are handled slightly differently
             if anonymous_array:
-                prefix = config.name_prefix()
+                prefix = config.privatePrefix()
                 stream.out("""\
    typedef @type_str@ @prefix@_@name@@dims@;
    typedef @type_str@ _@name@_slice@tail_dims@;
@@ -1797,11 +1802,11 @@ public:
         guard_name = tyutil.guardName(node.scopedName())
         stream.out("""\
 #if defined(__GNUG__) || defined(__DECCXX) && (__DECCXX_VER < 60000000)
-    friend class _0RL_tcParser_unionhelper_@name@;
+    friend class @private_prefix@_tcParser_unionhelper_@name@;
 #else
-    friend class ::_0RL_tcParser_unionhelper_@name@;
+    friend class ::@private_prefix@_tcParser_unionhelper_@name@;
 #endif
-""", name = guard_name)
+""", name = guard_name, private_prefix = config.privatePrefix())
     stream.out("""\
 private:
   """)

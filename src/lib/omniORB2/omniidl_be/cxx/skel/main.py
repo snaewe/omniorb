@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.21  2000/01/13 15:56:43  djs
+# Factored out private identifier prefix rather than hard coding it all through
+# the code.
+#
 # Revision 1.20  2000/01/13 14:16:34  djs
 # Properly clears state between processing separate IDL input files
 #
@@ -1188,7 +1192,8 @@ def visitException(node):
             if is_array_declarator:
                 # we use the internal typedef'ed type if the member is an array
                 # declarator
-                memberType_name_arg = "const _0RL_" + decl_name
+                memberType_name_arg = "const " + config.privatePrefix() + "_" + \
+                                      decl_name
             else:
                 # we normally use the utility function for this purpose
                 memberType_name_arg = tyutil.makeConstructorArgumentType(memberType,

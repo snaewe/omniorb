@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  2000/01/13 15:56:35  djs
+# Factored out private identifier prefix rather than hard coding it all through
+# the code.
+#
 # Revision 1.8  2000/01/13 14:16:24  djs
 # Properly clears state between processing separate IDL input files
 #
@@ -131,7 +135,7 @@ def visitInterface(node):
 
     stream.out("""\
 static void
-_0RL_tcParser_setObjectPtr_@guard_name@(tcObjrefDesc *_desc, CORBA::Object_ptr _ptr)
+@private_prefix@_tcParser_setObjectPtr_@guard_name@(tcObjrefDesc *_desc, CORBA::Object_ptr _ptr)
 {
   @fqname@_ptr _p = @fqname@::_narrow(_ptr);
   @fqname@_ptr* pp = (@fqname@_ptr*)_desc->opq_objref;
@@ -141,28 +145,28 @@ _0RL_tcParser_setObjectPtr_@guard_name@(tcObjrefDesc *_desc, CORBA::Object_ptr _
 }
 
 static CORBA::Object_ptr
-_0RL_tcParser_getObjectPtr_@guard_name@(tcObjrefDesc *_desc)
+@private_prefix@_tcParser_getObjectPtr_@guard_name@(tcObjrefDesc *_desc)
 {
   return (CORBA::Object_ptr) *((@fqname@_ptr*)_desc->opq_objref);
 }
 
-void _0RL_buildDesc_c@guard_name@(tcDescriptor& _desc, const @objref_member@& _data)
+void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor& _desc, const @objref_member@& _data)
 {
   _desc.p_objref.opq_objref = (void*) &_data._ptr;
   _desc.p_objref.opq_release = _data.pd_rel;
-  _desc.p_objref.setObjectPtr = _0RL_tcParser_setObjectPtr_@guard_name@;
-  _desc.p_objref.getObjectPtr = _0RL_tcParser_getObjectPtr_@guard_name@;
+  _desc.p_objref.setObjectPtr = @private_prefix@_tcParser_setObjectPtr_@guard_name@;
+  _desc.p_objref.getObjectPtr = @private_prefix@_tcParser_getObjectPtr_@guard_name@;
 }
 
 
-void _0RL_delete_@guard_name@(void* _data) {
+void @private_prefix@_delete_@guard_name@(void* _data) {
   CORBA::release((@fqname@_ptr) _data);
 }
 
 void operator<<=(CORBA::Any& _a, @fqname@_ptr _s) {
   tcDescriptor tcd;
   @objref_member@ tmp(_s,0);
-  _0RL_buildDesc_c@guard_name@(tcd, tmp);
+  @private_prefix@_buildDesc_c@guard_name@(tcd, tmp);
   _a.PR_packFrom(@tc_name@, &tcd);
 }
 
@@ -177,10 +181,10 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s) {
   if (sp == 0) {
     tcDescriptor tcd;
     @objref_member@ tmp;
-    _0RL_buildDesc_c@guard_name@(tcd, tmp);
+    @private_prefix@_buildDesc_c@guard_name@(tcd, tmp);
     if( _a.PR_unpackTo(@tc_name@, &tcd) ) {
       if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
-        ((CORBA::Any*)&_a)->PR_setCachedData((void*)tmp._ptr,_0RL_delete_@guard_name@);
+        ((CORBA::Any*)&_a)->PR_setCachedData((void*)tmp._ptr,@private_prefix@_delete_@guard_name@);
       }
       _s = tmp._ptr;
       tmp._ptr = @fqname@::_nil(); return 1;
@@ -199,7 +203,7 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s) {
   }
 }
 """, guard_name = guard_name, fqname = fqname, objref_member = objref_member,
-               tc_name = tc_name)
+               tc_name = tc_name, private_prefix = config.privatePrefix())
 
     bdesc.__currentNode = lastNode
 
@@ -251,11 +255,12 @@ def visitTypedef(node):
 
         if is_array_declarator:
             stream.out("""\
-void _0RL_delete_@guard_name@(void* _data) {
+void @private_prefix@_delete_@guard_name@(void* _data) {
   @fqname@_slice* _0RL_t = (@fqname@_slice*) _data;
   @fqname@_free(_0RL_t);
 }
-""", fqname = fqname, guard_name = guard_name)
+""", fqname = fqname, guard_name = guard_name,
+                       private_prefix = config.privatePrefix())
 
             if first_declarator:
                 node.accept(bdesc)
@@ -273,12 +278,12 @@ void _0RL_delete_@guard_name@(void* _data) {
                 
             stream.out("""\
 void operator<<=(CORBA::Any& _a, const @fqname@_forany& _s) {
-  @fqname@_slice* _0RL_s = _s.NP_getSlice();
-  tcDescriptor _0RL_tcdesc;
-  _0RL_buildDesc@decl_cname@(_0RL_tcdesc, (const @dtype@(*)@tail_dims@)(@dtype@(*)@tail_dims@)(_0RL_s));
-  _a.PR_packFrom(@tcname@, &_0RL_tcdesc);
+  @fqname@_slice* @private_prefix@_s = _s.NP_getSlice();
+  tcDescriptor @private_prefix@_tcdesc;
+  @private_prefix@_buildDesc@decl_cname@(@private_prefix@_tcdesc, (const @dtype@(*)@tail_dims@)(@dtype@(*)@tail_dims@)(@private_prefix@_s));
+  _a.PR_packFrom(@tcname@, &@private_prefix@_tcdesc);
   if( _s.NP_nocopy() ) {
-    delete[] _0RL_s;
+    delete[] @private_prefix@_s;
   }
 }
 """,
@@ -287,29 +292,30 @@ void operator<<=(CORBA::Any& _a, const @fqname@_forany& _s) {
                        type = alias_tyname,
                        dtype = argtype,
                        tail_dims = tail_dims,
+                       private_prefix = config.privatePrefix(),
                        tcname = tc_name)
 
             stream.out("""\
 CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s) {
-  @fqname@_slice* _0RL_s = (@fqname@_slice*) _a.PR_getCachedData();
-  if( !_0RL_s ) {
-    _0RL_s = @fqname@_alloc();
-    tcDescriptor _0RL_tcdesc;
-    _0RL_buildDesc@decl_cname@(_0RL_tcdesc, (const @dtype@(*)@tail_dims@)(@dtype@(*)@tail_dims@)(_0RL_s));
-    if( !_a.PR_unpackTo(@tcname@, &_0RL_tcdesc) ) {
-      delete[] _0RL_s;
+  @fqname@_slice* @private_prefix@_s = (@fqname@_slice*) _a.PR_getCachedData();
+  if( !@private_prefix@_s ) {
+    @private_prefix@_s = @fqname@_alloc();
+    tcDescriptor @private_prefix@_tcdesc;
+    @private_prefix@_buildDesc@decl_cname@(@private_prefix@_tcdesc, (const @dtype@(*)@tail_dims@)(@dtype@(*)@tail_dims@)(@private_prefix@_s));
+    if( !_a.PR_unpackTo(@tcname@, &@private_prefix@_tcdesc) ) {
+      delete[] @private_prefix@_s;
       _s = 0;
       return 0;
     }
-    ((CORBA::Any*)&_a)->PR_setCachedData(_0RL_s, _0RL_delete_@guard_name@);
+    ((CORBA::Any*)&_a)->PR_setCachedData(@private_prefix@_s, @private_prefix@_delete_@guard_name@);
   } else {
-    CORBA::TypeCode_var _0RL_tc = _a.type();
-    if( !_0RL_tc->equivalent(@tcname@) ) {
+    CORBA::TypeCode_var @private_prefix@_tc = _a.type();
+    if( !@private_prefix@_tc->equivalent(@tcname@) ) {
       _s = 0;
       return 0;
     }
   }
-  _s = _0RL_s;
+  _s = @private_prefix@_s;
   return 1;
 }
 """,
@@ -319,6 +325,7 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s) {
                        dtype = argtype,
                        tail_dims = tail_dims,
                        tcname = tc_name,
+                       private_prefix = config.privatePrefix(),
                        guard_name = guard_name)
         
 
@@ -330,11 +337,11 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s) {
 void operator <<= (CORBA::Any& a, const @fqname@& s)
 {
   tcDescriptor tcdesc;
-  _0RL_buildDesc@decl_cname@(tcdesc, s);
+  @private_prefix@_buildDesc@decl_cname@(tcdesc, s);
   a.PR_packFrom(@tcname@, &tcdesc);
 }
 
-void _0RL_seq_delete_@guard_name@(void* data)
+void @private_prefix@_seq_delete_@guard_name@(void* data)
 {
   delete (@fqname@*)data;
 }
@@ -351,9 +358,9 @@ CORBA::Boolean operator >>= (const CORBA::Any& a, const @fqname@*& s_out)
   if( stmp == 0 ) {
     tcDescriptor tcdesc;
     stmp = new @fqname@;
-    _0RL_buildDesc@decl_cname@(tcdesc, *stmp);
+    @private_prefix@_buildDesc@decl_cname@(tcdesc, *stmp);
     if( a.PR_unpackTo(@tcname@, &tcdesc)) {
-      ((CORBA::Any*)&a)->PR_setCachedData((void*)stmp, _0RL_seq_delete_@guard_name@);
+      ((CORBA::Any*)&a)->PR_setCachedData((void*)stmp, @private_prefix@_seq_delete_@guard_name@);
       s_out = stmp;
       return 1;
     } else {
@@ -375,7 +382,8 @@ CORBA::Boolean operator >>= (const CORBA::Any& a, const @fqname@*& s_out)
                        fqname = fqname,
                        tcname = tc_name,
                        decl_cname = decl_cname,
-                       guard_name = guard_name)           
+                       private_prefix = config.privatePrefix(),
+                       guard_name = guard_name)
 
     bdesc.__currentNode = lastNode
 
@@ -393,26 +401,27 @@ def visitEnum(node):
     fqname = env.nameToString(scopedName)
 
     stream.out("""\
-void _0RL_buildDesc_c@guard_name@(tcDescriptor& _desc, const @fqname@& _data)
+void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor& _desc, const @fqname@& _data)
 {
   _desc.p_enum = (CORBA::ULong*)&_data;
 }
 
 void operator<<=(CORBA::Any& _a, @fqname@ _s)
 {
-  tcDescriptor _0RL_tcd;
-  _0RL_buildDesc_c@guard_name@(_0RL_tcd, _s);
-  _a.PR_packFrom(_0RL_tc_@guard_name@, &_0RL_tcd);
+  tcDescriptor @private_prefix@_tcd;
+  @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcd, _s);
+  _a.PR_packFrom(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcd);
 }
 
 CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@& _s)
 {
-  tcDescriptor _0RL_tcd;
-  _0RL_buildDesc_c@guard_name@(_0RL_tcd, _s);
-  return _a.PR_unpackTo(_0RL_tc_@guard_name@, &_0RL_tcd);
+  tcDescriptor @private_prefix@_tcd;
+  @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcd, _s);
+  return _a.PR_unpackTo(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcd);
 }
 """,
                guard_name = guard_name,
+               private_prefix = config.privatePrefix(),
                fqname = fqname)
 
     bdesc.__currentNode = lastNode
@@ -440,23 +449,23 @@ def visitStruct(node):
     member_desc = bdesc.member(node)    
 
     stream.out("""\
-void _0RL_delete_@guard_name@(void* _data) {
-  @fqname@* _0RL_t = (@fqname@*) _data;
-  delete _0RL_t;
+void @private_prefix@_delete_@guard_name@(void* _data) {
+  @fqname@* @private_prefix@_t = (@fqname@*) _data;
+  delete @private_prefix@_t;
 }
 
 @member_desc@
 
 void operator<<=(CORBA::Any& _a, const @fqname@& _s) {
-  tcDescriptor _0RL_tcdesc;
-  _0RL_buildDesc_c@guard_name@(_0RL_tcdesc, _s);
-  _a.PR_packFrom(_0RL_tc_@guard_name@, &_0RL_tcdesc);
+  tcDescriptor @private_prefix@_tcdesc;
+  @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, _s);
+  _a.PR_packFrom(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc);
 }
  
 void operator<<=(CORBA::Any& _a, @fqname@* _sp) {
-  tcDescriptor _0RL_tcdesc;
-  _0RL_buildDesc_c@guard_name@(_0RL_tcdesc, *_sp);
-  _a.PR_packFrom(_0RL_tc_@guard_name@, &_0RL_tcdesc);
+  tcDescriptor @private_prefix@_tcdesc;
+  @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
+  _a.PR_packFrom(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc);
   delete _sp;
 }
 
@@ -467,24 +476,25 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp) {
 CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp) {
   _sp = (@fqname@ *) _a.PR_getCachedData();
   if (_sp == 0) {
-    tcDescriptor _0RL_tcdesc;
+    tcDescriptor @private_prefix@_tcdesc;
     _sp = new @fqname@;
-    _0RL_buildDesc_c@guard_name@(_0RL_tcdesc, *_sp);
-    if (_a.PR_unpackTo(_0RL_tc_@guard_name@, &_0RL_tcdesc)) {
-      ((CORBA::Any *)&_a)->PR_setCachedData((void*)_sp, _0RL_delete_@guard_name@);
+    @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
+    if (_a.PR_unpackTo(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc)) {
+      ((CORBA::Any *)&_a)->PR_setCachedData((void*)_sp, @private_prefix@_delete_@guard_name@);
       return 1;
     } else {
       delete (@fqname@ *)_sp; _sp = 0;
       return 0;
     }
   } else {
-    CORBA::TypeCode_var _0RL_tctmp = _a.type();
-    if (_0RL_tctmp->equivalent(_0RL_tc_@guard_name@)) return 1;
+    CORBA::TypeCode_var @private_prefix@_tctmp = _a.type();
+    if (@private_prefix@_tctmp->equivalent(@private_prefix@_tc_@guard_name@)) return 1;
     _sp = 0;
     return 0;
   }
 }""", fqname = fqname, guard_name = guard_name, cases = str(cases),
                member_desc = str(member_desc),
+               private_prefix = config.privatePrefix(),
                num_members = str(num_members))    
 
     bdesc.__currentNode = lastNode
@@ -530,9 +540,10 @@ def visitUnion(node):
         
         switch.out("""\
     if( _u->pd__default ) {
-      _0RL_buildDesc@mem_cname@(_newdesc, @thing@);
+      @private_prefix@_buildDesc@mem_cname@(_newdesc, @thing@);
     } else {""",
                    mem_cname = mem_cname,
+                   private_prefix = config.privatePrefix(),
                    thing = thing)
         switch.inc_indent()
 
@@ -582,9 +593,10 @@ def visitUnion(node):
 
         if tyutil.isString(caseType) and caseType.bound() != 0:
             stream.out("""\
-#ifndef _0RL_buildDesc_c@bound@string
-#define _0RL_buildDesc_c@bound@string _0RL_buildDesc_cstring
-#endif""", bound = str(caseType.bound()))
+#ifndef @private_prefix@_buildDesc_c@bound@string
+#define @private_prefix@_buildDesc_c@bound@string @private_prefix@_buildDesc_cstring
+#endif""", bound = str(caseType.bound()),
+                       private_prefix = config.privatePrefix())
 
             
         for l in c.labels():
@@ -597,8 +609,9 @@ def visitUnion(node):
                 label = tyutil.valueString(switchType, l.value(), env)
             switch.out("""\
       case @label@:
-        _0RL_buildDesc@type_cname@(_newdesc, @cast@);
-        break;""", label = label, type_cname = type_cname, cast = cast)
+        @private_prefix@_buildDesc@type_cname@(_newdesc, @cast@);
+        break;""", label = label, type_cname = type_cname, cast = cast,
+                       private_prefix = config.privatePrefix())
             switch.dec_indent()
 
     if not(isExhaustive):
@@ -621,14 +634,14 @@ def visitUnion(node):
         sw_scopedName = switchType.decl().scopedName()
         sw_guard_name = tyutil.guardName(sw_scopedName)
         sw_fqname = env.nameToString(sw_scopedName)
-        fn_name = "_0RL_buildDesc_c" + sw_guard_name
+        fn_name = config.privatePrefix() + "_buildDesc_c" + sw_guard_name
         
     stream.out("""\
-class _0RL_tcParser_unionhelper_@guard_name@ {
+class @private_prefix@_tcParser_unionhelper_@guard_name@ {
 public:
   static void getDiscriminator(tcUnionDesc* _desc, tcDescriptor& _newdesc, CORBA::PR_unionDiscriminator& _discrim) {
     @fqname@* _u = (@fqname@*)_desc->opq_union;
-    _0RL_buildDesc@discrim_cname@(_newdesc, _u->pd__d);
+    @private_prefix@_buildDesc@discrim_cname@(_newdesc, _u->pd__d);
     _discrim = (CORBA::PR_unionDiscriminator)_u->pd__d;
   }
 
@@ -648,36 +661,40 @@ public:
                discrim_cname = discrim_cname,
                discrim_type = discrim_type,
                switch = str(switch),
+               private_prefix = config.privatePrefix(),
                fqname = fqname)
 
     
 
     stream.out("""\
-void _0RL_buildDesc_c@guard_name@(tcDescriptor& _desc, const @fqname@& _data)
+void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor& _desc, const @fqname@& _data)
 {
-  _desc.p_union.getDiscriminator = _0RL_tcParser_unionhelper_@guard_name@::getDiscriminator;
-  _desc.p_union.setDiscriminator = _0RL_tcParser_unionhelper_@guard_name@::setDiscriminator;
-  _desc.p_union.getValueDesc = _0RL_tcParser_unionhelper_@guard_name@::getValueDesc;
+  _desc.p_union.getDiscriminator = @private_prefix@_tcParser_unionhelper_@guard_name@::getDiscriminator;
+  _desc.p_union.setDiscriminator = @private_prefix@_tcParser_unionhelper_@guard_name@::setDiscriminator;
+  _desc.p_union.getValueDesc = @private_prefix@_tcParser_unionhelper_@guard_name@::getValueDesc;
   _desc.p_union.opq_union = (void*)&_data;
 }
-""", guard_name = guard_name, fqname = fqname)
+""", guard_name = guard_name, fqname = fqname,
+               private_prefix = config.privatePrefix())
 
     stream.out("""\
-void _0RL_delete_@guard_name@(void* _data)
+void @private_prefix@_delete_@guard_name@(void* _data)
 {
-  @fqname@* _0RL_t = (@fqname@*) _data;
-  delete _0RL_t;
+  @fqname@* @private_prefix@_t = (@fqname@*) _data;
+  delete @private_prefix@_t;
 }
-""", guard_name = guard_name, fqname = fqname)
+""", guard_name = guard_name, fqname = fqname,
+               private_prefix = config.privatePrefix())
 
     stream.out("""\
 void operator<<=(CORBA::Any& _a, const @fqname@& _s)
 {
-  tcDescriptor _0RL_tcdesc;
-  _0RL_buildDesc_c@guard_name@(_0RL_tcdesc, _s);
-  _a.PR_packFrom(_0RL_tc_@guard_name@, &_0RL_tcdesc);
+  tcDescriptor @private_prefix@_tcdesc;
+  @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, _s);
+  _a.PR_packFrom(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc);
 }
-""", guard_name = guard_name, fqname = fqname)    
+""", guard_name = guard_name, fqname = fqname,
+               private_prefix = config.privatePrefix())    
 
     stream.out("""\
 CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp) {
@@ -689,11 +706,11 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp) {
 CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp) {
   _sp = (@fqname@ *) _a.PR_getCachedData();
   if (_sp == 0) {
-    tcDescriptor _0RL_tcdesc;
+    tcDescriptor @private_prefix@_tcdesc;
     _sp = new @fqname@;
-    _0RL_buildDesc_c@guard_name@(_0RL_tcdesc, *_sp);
-    if( _a.PR_unpackTo(_0RL_tc_@guard_name@, &_0RL_tcdesc) ) {
-      ((CORBA::Any*)&_a)->PR_setCachedData((void*)_sp, _0RL_delete_@guard_name@);
+    @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
+    if( _a.PR_unpackTo(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc) ) {
+      ((CORBA::Any*)&_a)->PR_setCachedData((void*)_sp, @private_prefix@_delete_@guard_name@);
       return 1;
     } else {
       delete ( @fqname@*)_sp;
@@ -701,13 +718,14 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp) {
       return 0;
     }
   } else {
-    CORBA::TypeCode_var _0RL_tctmp = _a.type();
-    if (_0RL_tctmp->equivalent(_0RL_tc_@guard_name@)) return 1;
+    CORBA::TypeCode_var @private_prefix@_tctmp = _a.type();
+    if (@private_prefix@_tctmp->equivalent(@private_prefix@_tc_@guard_name@)) return 1;
     _sp = 0;
     return 0;
   }
 }
-""", fqname = fqname, guard_name = guard_name)
+""", fqname = fqname, guard_name = guard_name,
+               private_prefix = config.privatePrefix())
 
     bdesc.__currentNode = lastNode
 
@@ -743,68 +761,71 @@ def visitException(node):
     stream.out(str(bdesc.member(node, modify_for_exception = 1)))
 
     stream.out("""\
-void _0RL_delete_@guard_name@(void* _data) {
-  @fqname@* _0RL_t = (@fqname@*) _data;
-  delete _0RL_t;
+void @private_prefix@_delete_@guard_name@(void* _data) {
+  @fqname@* @private_prefix@_t = (@fqname@*) _data;
+  delete @private_prefix@_t;
 }
-""", guard_name = guard_name, fqname = fqname)
+""", guard_name = guard_name, fqname = fqname,
+               private_prefix = config.privatePrefix())
 
     stream.out("""\
 void operator<<=(CORBA::Any& _a, const @fqname@& _s) {
   tcDescriptor _0RL_tcdesc;
-  _0RL_buildDesc_c@guard_name@(_0RL_tcdesc, _s);
-  _a.PR_packFrom(_0RL_tc_@guard_name@, &_0RL_tcdesc);
+  @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, _s);
+  _a.PR_packFrom(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc);
 }
 
 void operator<<=(CORBA::Any& _a, const @fqname@* _sp) {
-  tcDescriptor _0RL_tcdesc;
-  _0RL_buildDesc_c@guard_name@(_0RL_tcdesc, *_sp);
-  _a.PR_packFrom(_0RL_tc_@guard_name@, &_0RL_tcdesc);
+  tcDescriptor @private_prefix@_tcdesc;
+  @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
+  _a.PR_packFrom(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc);
   delete (@fqname@ *)_sp;
 }
 
 CORBA::Boolean operator>>=(const CORBA::Any& _a,const @fqname@*& _sp) {
   _sp = (@fqname@ *) _a.PR_getCachedData();
   if (_sp == 0) {
-    tcDescriptor _0RL_tcdesc;
+    tcDescriptor @private_prefix@_tcdesc;
     _sp = new @fqname@;
-    _0RL_buildDesc_c@guard_name@(_0RL_tcdesc, *_sp);
-    if (_a.PR_unpackTo(_0RL_tc_@guard_name@, &_0RL_tcdesc)) {
-      ((CORBA::Any *)&_a)->PR_setCachedData((void*)_sp, _0RL_delete_@guard_name@);
+    @private_prefix@_buildDesc_c@guard_name@(@private_prefix@_tcdesc, *_sp);
+    if (_a.PR_unpackTo(@private_prefix@_tc_@guard_name@, &@private_prefix@_tcdesc)) {
+      ((CORBA::Any *)&_a)->PR_setCachedData((void*)_sp, @private_prefix@_delete_@guard_name@);
       return 1;
     } else {
       delete (@fqname@ *)_sp;_sp = 0;
       return 0;
     }
   } else {
-    CORBA::TypeCode_var _0RL_tctmp = _a.type();
-    if (_0RL_tctmp->equivalent(_0RL_tc_@guard_name@)) return 1;
+    CORBA::TypeCode_var @private_prefix@_tctmp = _a.type();
+    if (@private_prefix@_tctmp->equivalent(@private_prefix@_tc_@guard_name@)) return 1;
     delete (@fqname@ *)_sp;_sp = 0;
     return 0;
   }
 }
-""", fqname = fqname, guard_name = guard_name)
+""", fqname = fqname, guard_name = guard_name,
+               private_prefix = config.privatePrefix())
 
     stream.out("""\
-static void _0RL_insertToAny__c@guard_name@(CORBA::Any& a,const CORBA::Exception& e) {
+static void @private_prefix@_insertToAny__c@guard_name@(CORBA::Any& a,const CORBA::Exception& e) {
   const @fqname@ & _ex = (const @fqname@ &) e;
   operator<<=(a,_ex);
 }
 
-static void _0RL_insertToAnyNCP__c@guard_name@ (CORBA::Any& a,const CORBA::Exception* e) {
+static void @private_prefix@_insertToAnyNCP__c@guard_name@ (CORBA::Any& a,const CORBA::Exception* e) {
   const @fqname@ * _ex = (const @fqname@ *) e;
   operator<<=(a,_ex);
 }
 
-class _0RL_insertToAny_Singleton__c@guard_name@ {
+class @private_prefix@_insertToAny_Singleton__c@guard_name@ {
 public:
-  _0RL_insertToAny_Singleton__c@guard_name@() {
-    @fqname@::insertToAnyFn = _0RL_insertToAny__c@guard_name@;
-    @fqname@::insertToAnyFnNCP = _0RL_insertToAnyNCP__c@guard_name@;
+  @private_prefix@_insertToAny_Singleton__c@guard_name@() {
+    @fqname@::insertToAnyFn = @private_prefix@_insertToAny__c@guard_name@;
+    @fqname@::insertToAnyFnNCP = @private_prefix@_insertToAnyNCP__c@guard_name@;
   }
 };
-static _0RL_insertToAny_Singleton__c@guard_name@ _0RL_insertToAny_Singleton__c@guard_name@_;
-""", fqname = fqname, guard_name = guard_name)
+static @private_prefix@_insertToAny_Singleton__c@guard_name@ @private_prefix@_insertToAny_Singleton__c@guard_name@_;
+""", fqname = fqname, guard_name = guard_name,
+               private_prefix = config.privatePrefix())
     
 
 

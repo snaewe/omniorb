@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  2000/01/13 15:56:34  djs
+# Factored out private identifier prefix rather than hard coding it all through
+# the code.
+#
 # Revision 1.8  2000/01/13 14:16:24  djs
 # Properly clears state between processing separate IDL input files
 #
@@ -130,22 +134,23 @@ def write_array_desc(where, aliasType, dims):
 
 
     where.out("""\
-#ifndef __0RL_tcParser_getElementDesc@this_cname@__
-#define __0RL_tcParser_getElementDesc@this_cname@__
+#ifndef _@private_prefix@_tcParser_getElementDesc@this_cname@__
+#define _@private_prefix@_tcParser_getElementDesc@this_cname@__
 static CORBA::Boolean
-_0RL_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _index, tcDescriptor &_desc)
+@private_prefix@_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _index, tcDescriptor &_desc)
 {
-  @type@ (&_0RL_tmp)@tail_dims@ = (*((@type@(*)@index_string@)_adesc->opq_array))[_index];
+  @type@ (&@private_prefix@_tmp)@tail_dims@ = (*((@type@(*)@index_string@)_adesc->opq_array))[_index];
   @builddesc@
   return 1;
 }
 #endif
 """,
-                   this_cname = this_cname,
-                   type = element_name,
-                   tail_dims = string.join(dims_tail_index, ""),
-                   builddesc = builddesc_str,
-                   index_string = string.join(dims_index, ""))
+              this_cname = this_cname,
+              type = element_name,
+              tail_dims = string.join(dims_tail_index, ""),
+              builddesc = builddesc_str,
+              index_string = string.join(dims_index, ""),
+              private_prefix = config.privatePrefix())
 
     # need to build the tcParser_getElementDesc function
     # If we amount to a single dimensional array, then we do
@@ -174,20 +179,21 @@ _0RL_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _inde
         argtype = "CORBA::TypeCode_member"
 
     where.out("""\
-#ifndef __0RL_tcParser_buildDesc@decl_cname@__
-#define __0RL_tcParser_buildDesc@decl_cname@__
+#ifndef _@private_prefix@_tcParser_buildDesc@decl_cname@__
+#define _@private_prefix@_tcParser_buildDesc@decl_cname@__
 static void
-_0RL_buildDesc@cname@(tcDescriptor& _desc, const @dtype@(*_data)@tail_dims@)
+@private_prefix@_buildDesc@cname@(tcDescriptor& _desc, const @dtype@(*_data)@tail_dims@)
 {
-  _desc.p_array.getElementDesc = _0RL_tcParser_getElementDesc@cname@;
+  _desc.p_array.getElementDesc = @private_prefix@_tcParser_getElementDesc@cname@;
   _desc.p_array.opq_array = (void*) _data;
 }
 #endif
 """,
-             cname = cname,
-             tail_dims = tail_dims,
-             dtype = argtype,
-             type = alias_tyname)
+              cname = cname,
+              tail_dims = tail_dims,
+              dtype = argtype,
+              type = alias_tyname,
+              private_prefix = config.privatePrefix())
 
 
 
@@ -197,9 +203,9 @@ def bstring(type):
     desc = util.StringStream()
     if bound != 0:
         desc.out("""\
-#ifndef _0RL_buildDesc_c@n@string
-#define _0RL_buildDesc_c@n@string _0RL_buildDesc_cstring
-#endif""", n = str(bound))
+#ifndef @private_prefix@_buildDesc_c@n@string
+#define @private_prefix@_buildDesc_c@n@string @private_prefix@_buildDesc_cstring
+#endif""", n = str(bound), private_prefix = config.privatePrefix())
     return desc
     
 
@@ -282,14 +288,14 @@ def array(aliasType, declarator = None, scopedName = ""):
         alias_cname = mangler.canonTypeName(aliasType.decl().alias().aliasType())
     prev_cname = canonDims(current_dims) + alias_cname
             
-    builddesc_flat_str = "_0RL_buildDesc" + alias_cname +\
-                         "(_desc, _0RL_tmp);"
+    builddesc_flat_str = config.privatePrefix() + "_buildDesc" + alias_cname +\
+                         "(_desc, " + config.privatePrefix() + "_tmp);"
     if type_dims == []:
         builddesc_str = builddesc_flat_str
     else:
         builddesc_str = """\
-_desc.p_array.getElementDesc = _0RL_tcParser_getElementDesc""" + prev_cname + """;
-_desc.p_array.opq_array = &_0RL_tmp;"""
+_desc.p_array.getElementDesc = """ + config.privatePrefix() + """_tcParser_getElementDesc""" + prev_cname + """;
+_desc.p_array.opq_array = &""" + config.privatePrefix() + """_tmp;"""
 
     element_name = alias_tyname
     
@@ -313,8 +319,8 @@ _desc.p_array.opq_array = &_0RL_tmp;"""
 
         new_cname = canonDims(element_dims[1:]) + prev_cname
         builddesc_str = """\
-_desc.p_array.getElementDesc = _0RL_tcParser_getElementDesc""" + new_cname + """;
-_desc.p_array.opq_array = &_0RL_tmp;"""
+_desc.p_array.getElementDesc = """ + config.privatePrefix() + """_tcParser_getElementDesc""" + new_cname + """;
+_desc.p_array.opq_array = &""" + config.privatePrefix() + """_tmp;"""
 
         # first iteration, check for special case
         if first_iteration:
@@ -326,22 +332,23 @@ _desc.p_array.opq_array = &_0RL_tmp;"""
         dims_tail_index = dims_index[1:]
         this_cname = canonDims(current_dims) + alias_cname
         desc.out("""\
-#ifndef __0RL_tcParser_getElementDesc@this_cname@__
-#define __0RL_tcParser_getElementDesc@this_cname@__
+#ifndef _@private_prefix@_tcParser_getElementDesc@this_cname@__
+#define _@private_prefix@_tcParser_getElementDesc@this_cname@__
 static CORBA::Boolean
-_0RL_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _index, tcDescriptor &_desc)
+@private_prefix@_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _index, tcDescriptor &_desc)
 {
-  @type@ (&_0RL_tmp)@tail_dims@ = (*((@type@(*)@index_string@)_adesc->opq_array))[_index];
+  @type@ (&@private_prefix@_tmp)@tail_dims@ = (*((@type@(*)@index_string@)_adesc->opq_array))[_index];
   @builddesc@
   return 1;
 }
 #endif
 """,
-                   this_cname = this_cname,
-                   type = element_name,
-                   tail_dims = string.join(dims_tail_index, ""),
-                   builddesc = builddesc_str,
-                   index_string = string.join(dims_index, ""))
+                 this_cname = this_cname,
+                 type = element_name,
+                 tail_dims = string.join(dims_tail_index, ""),
+                 builddesc = builddesc_str,
+                 index_string = string.join(dims_index, ""),
+                 private_prefix = config.privatePrefix())
 
 
     dims_str   = map(str, full_dims)
@@ -356,20 +363,21 @@ _0RL_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _inde
         argtype = "CORBA::TypeCode_member"
         
     desc.out("""\
-#ifndef __0RL_tcParser_buildDesc@decl_cname@__
-#define __0RL_tcParser_buildDesc@decl_cname@__
+#ifndef _@private_prefix@_tcParser_buildDesc@decl_cname@__
+#define _@private_prefix@_tcParser_buildDesc@decl_cname@__
 static void
-_0RL_buildDesc@decl_cname@(tcDescriptor& _desc, const @dtype@(*_data)@tail_dims@)
+@private_prefix@_buildDesc@decl_cname@(tcDescriptor& _desc, const @dtype@(*_data)@tail_dims@)
 {
-  _desc.p_array.getElementDesc = _0RL_tcParser_getElementDesc@decl_cname@;
+  _desc.p_array.getElementDesc = @private_prefix@_tcParser_getElementDesc@decl_cname@;
   _desc.p_array.opq_array = (void*) _data;
 }
 #endif
 """,
-               decl_cname = decl_cname,
-               tail_dims = tail_dims,
-               dtype = argtype,
-               type = alias_tyname)
+             decl_cname = decl_cname,
+             tail_dims = tail_dims,
+             dtype = argtype,
+             type = alias_tyname,
+             private_prefix = config.privatePrefix())
 
     return desc
 
@@ -415,8 +423,9 @@ def interface(type):
             env = name.Environment()
             objref_name = tyutil.objRefTemplate(deref_type, "Member", env)
             desc.out("""\
-extern void _0RL_buildDesc@cname@(tcDescriptor &, const @objref@&);""",
-                     cname = cname, objref = objref_name)
+extern void @private_prefix@_buildDesc@cname@(tcDescriptor &, const @objref@&);""",
+                     cname = cname, objref = objref_name,
+                     private_prefix = config.privatePrefix())
     return desc
 
 
@@ -485,42 +494,43 @@ def sequence(type):
         desc.out(str(sequence(seqType)))
     
     desc.out("""\
-#ifndef __0RL_tcParser_buildDesc@cname@__
-#define __0RL_tcParser_buildDesc@cname@__
+#ifndef _@private_prefix@_tcParser_buildDesc@cname@__
+#define _@private_prefix@_tcParser_buildDesc@cname@__
 static void
-_0RL_tcParser_setElementCount@cname@(tcSequenceDesc* _desc, CORBA::ULong _len)
+@private_prefix@_tcParser_setElementCount@cname@(tcSequenceDesc* _desc, CORBA::ULong _len)
 {
   ((@sequence_template@*)_desc->opq_seq)->length(_len);
 }
 
 static CORBA::ULong
-_0RL_tcParser_getElementCount@cname@(tcSequenceDesc* _desc)
+@private_prefix@_tcParser_getElementCount@cname@(tcSequenceDesc* _desc)
 {
   return ((@sequence_template@*)_desc->opq_seq)->length();
 }
 
 static CORBA::Boolean
-_0RL_tcParser_getElementDesc@cname@(tcSequenceDesc* _desc, CORBA::ULong _index, tcDescriptor& _newdesc)
+@private_prefix@_tcParser_getElementDesc@cname@(tcSequenceDesc* _desc, CORBA::ULong _index, tcDescriptor& _newdesc)
 {
-  _0RL_buildDesc@thing_cname@(_newdesc, @thing@);
+  @private_prefix@_buildDesc@thing_cname@(_newdesc, @thing@);
   return 1;
 }
 
 static void
-_0RL_buildDesc@cname@(tcDescriptor &_desc, const @sequence_template@& _data)
+@private_prefix@_buildDesc@cname@(tcDescriptor &_desc, const @sequence_template@& _data)
 {
   _desc.p_sequence.opq_seq = (void*) &_data;
   _desc.p_sequence.setElementCount =
-    _0RL_tcParser_setElementCount@cname@;
+    @private_prefix@_tcParser_setElementCount@cname@;
   _desc.p_sequence.getElementCount =
-    _0RL_tcParser_getElementCount@cname@;
+    @private_prefix@_tcParser_getElementCount@cname@;
   _desc.p_sequence.getElementDesc =
-    _0RL_tcParser_getElementDesc@cname@;
+    @private_prefix@_tcParser_getElementDesc@cname@;
   }
 #endif
 """, cname = memberType_cname, thing_cname = seqType_cname,
              sequence_template = sequence_template,
-             thing = thing)
+             thing = thing,
+             private_prefix = config.privatePrefix())
     return desc
 
 # This code appears to be common to both structs and exceptions.
@@ -591,8 +601,9 @@ def member(node, modify_for_exception = 0):
 
             cases.out("""\
 case @n@:
-  _0RL_buildDesc@cname@(_newdesc, @thing@);
+  @private_prefix@_buildDesc@cname@(_newdesc, @thing@);
   return 1;""", n = str(index), cname = decl_cname,
+                      private_prefix = config.privatePrefix(),
                       thing = thing)
             num_members = num_members + 1
             index = index + 1
@@ -601,12 +612,13 @@ case @n@:
     # IMPROVEME (FIXME)
     if modify_for_exception:
         desc.out("""\
-CORBA::Boolean _0RL_tcParser_getMemberDesc_@guard_name@(tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc)
-{""", guard_name = guard_name)
+CORBA::Boolean @private_prefix@_tcParser_getMemberDesc_@guard_name@(tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc)
+{""", guard_name = guard_name, private_prefix = config.privatePrefix())
     else:
         desc.out("""\
 static CORBA::Boolean
-_0RL_tcParser_getMemberDesc_@guard_name@(tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){""", guard_name = guard_name)
+@private_prefix@_tcParser_getMemberDesc_@guard_name@(tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){""", guard_name = guard_name,
+                 private_prefix = config.privatePrefix())
 
     desc.inc_indent()
     desc.out("""\
@@ -624,15 +636,15 @@ CORBA::ULong""")
         desc.out("""\
 static CORBA::ULong""")
     desc.out("""\
-_0RL_tcParser_getMemberCount_@guard_name@(tcStructDesc *_desc)
+@private_prefix@_tcParser_getMemberCount_@guard_name@(tcStructDesc *_desc)
 {
   return @num_members@;
 }
 
-void _0RL_buildDesc_c@guard_name@(tcDescriptor &_desc, const @fqname@& _data)
+void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor &_desc, const @fqname@& _data)
 {
-  _desc.p_struct.getMemberDesc = _0RL_tcParser_getMemberDesc_@guard_name@;
-  _desc.p_struct.getMemberCount = _0RL_tcParser_getMemberCount_@guard_name@;
+  _desc.p_struct.getMemberDesc = @private_prefix@_tcParser_getMemberDesc_@guard_name@;
+  _desc.p_struct.getMemberCount = @private_prefix@_tcParser_getMemberCount_@guard_name@;
   _desc.p_struct.opq_struct = (void *)&_data;
 }
 
@@ -640,6 +652,7 @@ void _0RL_buildDesc_c@guard_name@(tcDescriptor &_desc, const @fqname@& _data)
              guard_name = guard_name,
              fqname = fqname,
              num_members = str(num_members),
+             private_prefix = config.privatePrefix(),
              cases = str(cases))
     return desc
    
@@ -649,13 +662,14 @@ def external(type):
     guard_name = tyutil.guardName(scopedName)
     env = name.Environment()
     fqname = env.nameToString(scopedName)
-    fn_name = "_0RL_buildDesc_c" + guard_name
+    fn_name = config.privatePrefix() + "_buildDesc_c" + guard_name
 
     desc = util.StringStream()
     desc.out("""\
-extern void _0RL_buildDesc_c@guard_name@(tcDescriptor &, const @fqname@&);""",
-                         guard_name = guard_name,
-                         fqname = fqname)
+extern void @private_prefix@_buildDesc_c@guard_name@(tcDescriptor &, const @fqname@&);""",
+             guard_name = guard_name,
+             private_prefix = config.privatePrefix(),
+             fqname = fqname)
     return desc
 
 

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  2000/01/13 15:56:34  djs
+# Factored out private identifier prefix rather than hard coding it all through
+# the code.
+#
 # Revision 1.3  2000/01/12 11:52:09  djs
 # Added important comment :)
 #
@@ -62,7 +66,7 @@ def monolithic(stream, tree):
 #include "@Config.basename()@@Config.hdrsuffix()@"
 #include <omniORB3/tcDescriptor.h>
 
-static const char* @Config.name_prefix()@_library_version = @Config.omniORB_Library_Version()@;
+static const char* @Config.privatePrefix()@_library_version = @Config.omniORB_Library_Version()@;
 """, Config = config)
 
     Typecode = omniidl.be.cxx.dynskel.typecode.__init__(stream)
