@@ -6,6 +6,9 @@
 #define HAVE_STRERROR 1
 #define HAVE_VPRINTF 1
 
+#define HAVE_ALLOCA 1
+#include <alloca.h>
+
 #else
 #error "You must set definitions for your architecture in config-linux.h"
 

@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/01/25 11:17:49  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.3  2005/01/13 21:09:57  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -330,6 +333,23 @@
 #    define _CORBA_LONGLONG_DECL   long long
 #    define _CORBA_ULONGLONG_DECL  unsigned long long
 #    define _CORBA_LONGLONG_CONST(x) (x##LL)
+#    if defined(_FPWIDETYPES)
+#      define HAS_LongDouble
+#      define _CORBA_LONGDOUBLE_DECL long double
+#    endif
+#    ifndef HAVE_STD
+#        define HAVE_STD 1
+#    endif
+// ia64 in 64-bit mode
+#    if defined(__LP64__)
+#      define SIZEOF_CHAR 1
+#      define SIZEOF_DOUBLE 8
+#      define SIZEOF_FLOAT 4
+#      define SIZEOF_INT 4
+#      define SIZEOF_LONG 8
+#      define SIZEOF_LONG_LONG 8
+#      define SIZEOF_PTR 8
+#    endif
 #  endif
 
 #elif defined(__MWERKS__)
@@ -365,6 +385,9 @@
 #  endif
 
 #elif defined(__hppa__)
+#  define _OMNIORB_HOST_BYTE_ORDER_ 0
+
+#elif defined(__ia64__)
 #  define _OMNIORB_HOST_BYTE_ORDER_ 0
 
 #elif defined(__powerpc__)

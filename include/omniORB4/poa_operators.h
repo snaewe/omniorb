@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2005/01/25 11:17:48  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.4.2.1  2003/03/23 21:04:04  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -76,12 +79,12 @@ PortableServer::ServantLocator::_marshalObjRef(PortableServer::ServantLocator_pt
   omniObjRef::_marshal(obj->_PR_getobj(),s);
 }
 
-OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::ThreadPolicy)
-OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::LifespanPolicy)
-OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::IdUniquenessPolicy)
-OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::IdAssignmentPolicy)
-OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::ImplicitActivationPolicy)
-OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::ServantRetentionPolicy)
-OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::RequestProcessingPolicy)
+OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::OMNIORB_POLICY_VALUE(ThreadPolicy))
+OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::OMNIORB_POLICY_VALUE(LifespanPolicy))
+OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::OMNIORB_POLICY_VALUE(IdUniquenessPolicy))
+OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::OMNIORB_POLICY_VALUE(IdAssignmentPolicy))
+OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::OMNIORB_POLICY_VALUE(ImplicitActivationPolicy))
+OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::OMNIORB_POLICY_VALUE(ServantRetentionPolicy))
+OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(PortableServer::OMNIORB_POLICY_VALUE(RequestProcessingPolicy))
 
 #endif  // __OMNI_POA_OPERATORS_H__

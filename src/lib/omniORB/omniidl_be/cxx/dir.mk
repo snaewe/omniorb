@@ -33,7 +33,8 @@ export:: $(FILES)
             $(ExportFileToDir) \
           done; \
           cd $(PYLIBDIR); \
-	  $(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
+          cd ..; \
+	  $(PYTHON) -c "import compileall; compileall.compile_dir('cxx')"; \
 	 )
 
 ifdef INSTALLTARGET
@@ -43,6 +44,7 @@ install:: $(FILES)
             $(ExportFileToDir) \
           done; \
           cd $(INSTALLPYLIBDIR); \
-	  $(PYTHON) -c "import compileall; compileall.compile_dir('.')"; \
+          cd ..; \
+	  $(PYTHON) -c "import compileall; compileall.compile_dir('cxx')"; \
 	 )
 endif

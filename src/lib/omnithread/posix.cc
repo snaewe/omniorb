@@ -922,7 +922,7 @@ omni_thread::posix_priority(priority_t pri)
 #endif
 
     throw omni_thread_invalid();
-#ifdef _MSC_VER
+#if defined(_MSC_VER ) || defined(__HP_aCC)
     return 0;
 #endif
 }

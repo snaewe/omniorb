@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/25 11:17:49  dgrisby
+  Merge from omni4_0_develop.
+
   Revision 1.1.4.2  2005/01/06 23:08:07  dgrisby
   Big merge from omni4_0_develop.
 
@@ -224,6 +227,9 @@ private:
 #ifdef OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS
 #error OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS is already defined!
 #endif
+
+#define OMNIORB_POLICY_VALUE(policy) policy##Value
+
 #define OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(name) \
-void operator<<=(CORBA::Any&, name##Value); \
-CORBA::Boolean operator>>=(const CORBA::Any&,name##Value& );
+void operator<<=(CORBA::Any &, name); \
+CORBA::Boolean operator>>=(const CORBA::Any&, name& );
