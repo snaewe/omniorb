@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.1  1997/01/08 18:35:17  ewc
-  Initial revision
+  Revision 1.2  1997/01/21 14:27:09  ewc
+  Fixed minor bug in tcpSocketRope::remote_is()
 
+// Revision 1.1  1997/01/08  18:35:17  ewc
+// Initial revision
+//
   */
 
 /*********************************************************************/
@@ -816,7 +819,7 @@ tcpSocketRope::remote_is(Endpoint *&e)
     tcpSocketEndpoint *te = tcpSocketEndpoint::castup(e);
     if (!te)
       return 0;
-    if (te == pd_endpoint.remote)
+    if (*te == pd_endpoint.remote)
       return 1;
     else
       return 0;
