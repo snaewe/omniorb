@@ -9,6 +9,18 @@ Fri Dec 12 18:36:11 GMT 1997 sll
 - Unix platforms use host-based access control based on tcp_wrapper_7.6.
 - Win32 and ATMos remains unchanged, i.e. all incomings are accepted.
 
+
+mk/unix.mk
+mk/atmos.mk
+mk/win32.mk
+mk/platforms/alpha_osf1_3.2.mk
+mk/platforms/alpha_osf1_4.0.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/x86_sosV_5.5.mk
+mk/platforms/hppa_hpux_10.20.mk
+mk/platforms/i586_linux_2.0.mk
+mk/platforms/alpha_linux_2.0.mk
+
 lib/omniORB2/dir.mk
 lib/omniORB2/corbaOrb.cc
 lib/omniORB2/initFile.cc

@@ -261,6 +261,21 @@ OMNIORB2_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
 OMNIORB2_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%SK.cc
 OMNIORB2_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%SK.o
 
+# omniORB2 access control policy modules
+
+OMNIORB2_DUMMYGK_LIB = $(patsubst %,$(LibSearchPattern),omniGK_stub)
+lib_depend := $(patsubst %,$(LibPattern),omniGK_stub)
+OMNIORB2_DUMMYGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+
+OMNIORB2_TCPWRAPGK_LIB = $(patsubst %,$(LibSearchPattern),tcpwrapGK)
+lib_depend := $(patsubst %,$(LibPattern),tcpwrapGK)
+OMNIORB2_TCPWRAPGK_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+
+omniORB2GatekeeperImplementation = OMNIORB2_DUMMYGK
+
+OMNIORB2_LIB += $($(omniORB2GatekeeperImplementation)_LIB)
+OMNIORB2_LIB_DEPEND += $($(omniORB2GatekeeperImplementation)_LIB_DEPEND)
+
 # LifeCycle stuff
 
 OMNIORB2_IDL_LC_FLAGS = -l
