@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.6  2001/10/29 17:44:29  dpg1
+ Wrong code when no catch by base class.
+
  Revision 1.1.2.5  2001/09/19 17:26:50  dpg1
  Full clean-up after orb->destroy().
 
@@ -168,8 +171,9 @@ omniInProcessIdentity::dispatch(omniCallDescriptor& call_desc)
 
     OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_NoMatch,
 		  CORBA::COMPLETED_NO);
-  }
+
 #ifdef HAS_Cplusplus_catch_exception_by_base
+  }
   catch (CORBA::Exception&) {
     throw;
   }
