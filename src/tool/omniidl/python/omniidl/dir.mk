@@ -10,7 +10,7 @@ PYSTDLIBS = \\.os \\.dospath \\.macpath \\.pcpath \\.ntpath      \
 
 PYLIBS = $(PYSTDLIBS) \\.omniidl.*
 
-SUBDIRS = be arch
+SUBDIRS = be
 
 all::
 	@$(MakeSubdirs)
