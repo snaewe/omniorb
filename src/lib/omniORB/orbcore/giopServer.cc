@@ -11,9 +11,13 @@
  
 /*
   $Log$
-  Revision 1.4  1997/03/10 11:56:44  sll
-  Minor changes to accomodate the creation of a public API for omniORB2.
+  Revision 1.5  1997/04/08 17:10:45  sll
+  Relaxed the integrity check on incoming IIOP messages to cope with sloppy
+  IIOP implementation.
 
+// Revision 1.4  1997/03/10  11:56:44  sll
+// Minor changes to accomodate the creation of a public API for omniORB2.
+//
   Revision 1.3  1997/01/24 19:30:22  sll
   In HandleRequest(), check whether CORBA::INV_OBJREF is thrown by
   omni::locateObject() or by the upper level dispatch.
@@ -87,8 +91,37 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
     {
       if (RdMessageUnRead())
 	{
-	  setStrandDying();
-	  throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+	  // The value in the message size field in the GIOP header is larger
+	  // than the actual body size, i.e there is garbage at the end.
+	  //
+	  // The default behaviour is to just silently skip the unread part.
+	  // The problem with this behaviour is that the header message size
+	  // may actually be garbage value, caused by a bug in the client
+	  // code. This thread may forever block on the strand as it tries
+	  // to read more data from it. In this case the client won't send
+	  // anymore as it thinks it has marshalled in all the data.
+	  //
+	  // It is really a sloppy IIOP implementation (through strictly
+	  // speaking not a violation of the specification) to have a
+	  // message size value in the header that doesn't match with
+	  // a body that contains only the marshalled data.
+	  //
+	  // If omniORB::strictIIOP non-zero, we expect incoming calls to
+	  // be well behaved and rejects anything that is not.
+	  if (omniORB::traceLevel >= 15) {
+	    cerr << "GIOP_S::RequestReceived: garbage left at the end of message." << endl;
+	  }
+#if 0
+	  if (!omniORB::strictIIOP) {
+#else
+	  if (1) {
+#endif
+	    skip(RdMessageUnRead());
+	  }
+	  else {
+	    setStrandDying();
+	    throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+	  }
 	}
     }
 
