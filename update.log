@@ -1,4 +1,16 @@
 
+Tue Aug 24 13:33:46 BST 1999 djr
+================================
+
+- Modified CORBA::PR_structMember, TypeCode_struct and
+  TypeCode_except to make proper use of 'const char*',
+  to eliminate warnings/errors on strict compilers.
+
+include/omniORB2/CORBA.h
+src/lib/omniORB2/dynamic/typecode.h
+src/lib/omniORB2/dynamic/typecode.cc
+
+
 Fri Aug 20 12:41:42 BST 1999 djr
 ================================
 
