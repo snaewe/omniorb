@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.33  1999/06/02 16:44:32  sll
+  If module name is CORBA, use omniObjectKey instead of omniORB::objectKey.
+
   Revision 1.32  1999/05/26 10:43:35  sll
   Added connection calls to allow the generation of typecode constant for
   bounded string defined in the operation or attribute signature.
@@ -427,6 +430,18 @@ o2be_interface::check_opname_clash(o2be_interface *p,char *opname)
   return I_FALSE;
 }
 
+static inline
+const char*
+objectkeytype(o2be_interface* p) {
+  if (strcmp(p->scopename(),"CORBA::") == 0) {
+    // If this interface is defined within module CORBA, use omniObjectKey
+    // because omniORB.h might not be included when the header is included.
+    return "omniObjectKey";
+  }
+  else
+    return "omniORB::objectKey";
+}
+
 void 
 o2be_interface::produce_hdr(std::fstream &s)
 {
@@ -657,14 +672,14 @@ o2be_interface::produce_hdr(std::fstream &s)
   IND(s); s << "public:\n\n";
   INC_INDENT_LEVEL();
   IND(s); s << server_uqname() << "() {}\n";
-  IND(s); s << server_uqname() << "(const omniORB::objectKey& k);\n";
+  IND(s); s << server_uqname() << "(const " << objectkeytype(this) << "& k);\n";
   IND(s); s << "virtual ~" << server_uqname() << "() {}\n";
   IND(s); s << objref_uqname() << " _this() { return "
 	    << uqname() << "::_duplicate(this); }\n";
   IND(s); s << "void _obj_is_ready(CORBA::BOA_ptr boa) { boa->obj_is_ready(this); }\n";
   IND(s); s << "CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }\n";
   IND(s); s << "void _dispose() { _boa()->dispose(this); }\n";
-  IND(s); s << "omniORB::objectKey _key();\n";
+  IND(s); s <<  objectkeytype(this) << " _key();\n";
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
@@ -1310,7 +1325,7 @@ o2be_interface::produce_hdr(std::fstream &s)
 
   // proxyObjectFactory
   IND(s); s << "class " << uqname() << PROXY_OBJ_FACTORY_POSTFIX
-	    << " : public proxyObjectFactory {\n";
+	    << " : public CORBA::proxyObjectFactory {\n";
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
   IND(s); s << uqname() << PROXY_OBJ_FACTORY_POSTFIX << " () {}\n";
@@ -1673,7 +1688,7 @@ o2be_interface::produce_skel(std::fstream &s)
   
 
   IND(s); s << server_fqname() << "::" << server_uqname() 
-	    << " (const omniORB::objectKey& k)\n";
+	    << " (const " << objectkeytype(this) << "& k)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "omniRopeAndKey l(0,(CORBA::Octet*)&k,(CORBA::ULong)sizeof(k));\n";
@@ -1681,13 +1696,13 @@ o2be_interface::produce_skel(std::fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << "omniORB::objectKey\n";
+  IND(s); s << objectkeytype(this) << "\n";
   IND(s); s << server_fqname() << "::_key()\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   IND(s); s << "omniRopeAndKey l;\n";
   IND(s); s << "getRopeAndKey(l);\n";
-  IND(s); s << "return (*((omniORB::objectKey*)l.key()));\n";
+  IND(s); s << "return (*((" << objectkeytype(this) << "*)l.key()));\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
@@ -3092,7 +3107,7 @@ o2be_interface::produce_tie_templates(std::fstream &s)
   IND(s); s << TIE_CLASS_PREFIX << _fqname() 
 	    << " (T* o) : pd_obj(o), pd_release(release) {}\n";
   IND(s); s << TIE_CLASS_PREFIX << _fqname()
-	    << " (T* o, const omniORB::objectKey& k) : "
+	    << " (T* o, const " << objectkeytype(this) << "& k) : "
 	    << server_fqname() << "(k), pd_obj(o), pd_release(release) {}\n";
   IND(s); s << "~" << TIE_CLASS_PREFIX << _fqname() 
 	    << "() { if (pd_release) delete pd_obj; }\n";
