@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2001/06/07 16:24:10  dpg1
+  PortableServer::Current support.
+
   Revision 1.2.2.5  2001/05/29 17:03:51  dpg1
   In process identity.
 
@@ -119,6 +122,7 @@
 #include <initialiser.h>
 #include <exceptiondefs.h>
 #include <poaimpl.h>
+#include <poacurrentimpl.h>
 #include <omniORB4/omniURI.h>
 
 
@@ -304,26 +308,21 @@ omniInitialReferences::setDefaultInitRefFromFile(const char* defInit)
 static CORBA::Object_ptr
 resolvePseudo(const char* id, unsigned int cycles)
 {
+  // Instantiate the pseudo objects on demand.
+  // NB. No race condition problem here - these fns are thread safe.
+
+  // We cannot insert the references into the initial references map,
+  // since holding a reference there would prevent the objects from
+  // being released properly when they have been destroyed.
+
   if( !strcmp(id, "POACurrent") ) {
-    OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
+    return omniOrbPOACurrent::theCurrent();
   }
   else if( !strcmp(id, "RootPOA") ) {
-    // Instantiate the root POA on demand.
-    // NB. No race condition problem here - this fn is thread safe.
     return omniOrbPOA::rootPOA();
-
-    // We cannot insert the reference into the initial references
-    // map, since holding a reference there would prevent the poa
-    // from being released properly when it has been destroyed.
   }
   else if( !strcmp(id, "omniINSPOA") ) {
-    // Instantiate the INS POA on demand.
-    // NB. No race condition problem here - this fn is thread safe.
     return omniOrbPOA::omniINSPOA();
-
-    // We cannot insert the reference into the initial references
-    // map, since holding a reference there would prevent the poa
-    // from being released properly when it has been destroyed.
   }
   return 0;
 }

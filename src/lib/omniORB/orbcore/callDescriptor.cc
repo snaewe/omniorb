@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.6  2001/06/07 16:24:09  dpg1
+ PortableServer::Current support.
+
  Revision 1.2.2.5  2001/04/18 18:18:11  sll
  Big checkin with the brand new internal APIs.
 
@@ -74,6 +77,7 @@
 #include <omniORB4/callDescriptor.h>
 #include <exceptiondefs.h>
 #include <dynamicLib.h>
+#include <omniCurrent.h>
 
 OMNI_USING_NAMESPACE(omni)
 

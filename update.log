@@ -1,3 +1,36 @@
+Thu Jun  7 17:15:16 BST 2001 dpg1
+=================================
+
+- Dummy thread support to bless non-omnithread threads with an
+  omni_thread::self().
+
+include/omnithread.h
+src/lib/omnithread/mach.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+src/lib/omnithread/solaris.cc
+
+- PortableServer::Current support.
+
+include/omniORB4/callDescriptor.h
+include/omniORB4/callHandle.h
+include/omniORB4/omniORB.h
+include/omniORB4/poa.h
+src/lib/omniORB/include/omniCurrent.h       -- new
+src/lib/omniORB/include/poacurrentimpl.h    -- new
+src/lib/omniORB/include/poaimpl.h
+src/lib/omniORB/orbcore/callDescriptor.cc
+src/lib/omniORB/orbcore/callHandle.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/localIdentity.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poamanager.cc
+src/lib/omniORB/orbcore/portableserver.cc
+
+
 Thu May 31 17:02:57 BST 2001 dpg1
 =================================
 

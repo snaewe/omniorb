@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/06/07 16:24:08  dpg1
+  PortableServer::Current support.
+
   Revision 1.2.2.6  2001/05/29 17:03:48  dpg1
   In process identity.
 
@@ -626,9 +629,9 @@ _CORBA_MODULE_BEG
 
     // omniORB internal.
     static _core_attr const char* _PD_repoId;
-
+  
   protected:
-    Current();
+    inline Current(int is_nil = 0) : CORBA::Current(is_nil) {}
     virtual ~Current();
 
   private:

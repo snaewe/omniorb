@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  2001/06/07 16:24:09  dpg1
+ PortableServer::Current support.
+
  Revision 1.1.2.1  2001/05/29 17:03:50  dpg1
  In process identity.
 
@@ -40,6 +43,7 @@
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/omniServant.h>
 #include <omniORB4/IOP_C.h>
+#include <poacurrentimpl.h>
 
 
 static void
@@ -51,20 +55,28 @@ dealWithUserException(cdrMemoryStream& stream,
 void
 omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
 {
+  OMNIORB_ASSERT(pd_poa);
+  OMNIORB_ASSERT(pd_localId);
+  desc.poa(pd_poa);
+  desc.localId(pd_localId);
+
   if (pd_iop_s) { // Remote call
     pd_iop_s->ReceiveRequest(desc);
-  
-    if (pd_upcall_hook)
-      pd_upcall_hook->upcall(servant, desc);
-    else
-      desc.doLocalCall(servant);
-
+    {
+      _OMNI_NS(poaCurrentStackInsert) _i(desc);
+      if (pd_upcall_hook)
+	pd_upcall_hook->upcall(servant, desc);
+      else
+	desc.doLocalCall(servant);
+    }
     pd_iop_s->SendReply();
   }
   else { // In process call
 
     if (pd_call_desc == &desc) {
       // Fast case -- call descriptor can invoke directly on the servant
+      _OMNI_NS(poaCurrentStackInsert) _i(desc);
+
       if (pd_upcall_hook)
 	pd_upcall_hook->upcall(servant, desc);
       else
@@ -82,6 +94,7 @@ omniCallHandle::upcall(omniServant* servant, omniCallDescriptor& desc)
       desc.unmarshalArguments(stream);
 
       try {
+	_OMNI_NS(poaCurrentStackInsert) _i(desc);
 	if (pd_upcall_hook)
 	  pd_upcall_hook->upcall(servant, desc);
 	else

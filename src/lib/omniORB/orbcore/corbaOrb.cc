@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.13  2001/06/07 16:24:09  dpg1
+  PortableServer::Current support.
+
   Revision 1.33.2.12  2001/05/31 16:18:12  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -234,8 +237,10 @@
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
 #include <omniORB4/omniURI.h>
+#include <omniORB4/minorCode.h>
 #include <giopStreamImpl.h>
 #include <invoker.h>
+#include <omniCurrent.h>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -291,6 +296,7 @@ extern omniInitialiser& omni_cdrStream_initialiser_;
 extern omniInitialiser& omni_giopStrand_initialiser_;
 extern omniInitialiser& omni_giopStreamImpl_initialiser_;
 extern omniInitialiser& omni_omniTransport_initialiser_;
+extern omniInitialiser& omni_omniCurrent_initialiser_;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -394,6 +400,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_initFile_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
     omni_giopStrand_initialiser_.attach();
+    omni_omniCurrent_initialiser_.attach();
     omni_hooked_initialiser_.attach();
 
     if( bootstrapAgentHostname ) {
@@ -441,8 +448,9 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
 #define CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED()  \
   if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();  \
   if( pd_destroyed )  OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);  \
-  if( pd_shutdown  )  throw CORBA::BAD_INV_ORDER(CORBA::OMGVMCID | 4,  \
-						 CORBA::COMPLETED_NO);  \
+  if( pd_shutdown  )  OMNIORB_THROW(BAD_INV_ORDER, \
+                                    _OMNI_NS(BAD_INV_ORDER_ORBHasShutdown), \
+                                    CORBA::COMPLETED_NO);  \
 
 
 omniOrbORB::~omniOrbORB()  {}
@@ -542,9 +550,15 @@ omniOrbORB::shutdown(CORBA::Boolean wait_for_completion)
 
   CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
 
-  if( wait_for_completion && 0 /*?? in context of invocation */ )
-    OMNIORB_THROW(BAD_INV_ORDER,CORBA::OMGVMCID | 3, CORBA::COMPLETED_NO);
-
+  if( wait_for_completion ) {
+    // Complain if in the context of an operation invocation
+    omniCurrent* current = omniCurrent::get();
+    if (current && current->callDescriptor()) {
+      OMNIORB_THROW(BAD_INV_ORDER,
+		    BAD_INV_ORDER_WouldDeadLock,
+		    CORBA::COMPLETED_NO);
+    }
+  }
   do_shutdown(wait_for_completion);
 }
 
@@ -560,13 +574,19 @@ omniOrbORB::destroy()
 
     if( pd_destroyed )  OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
 
-    if( 0 /*?? in context of invocation */ )
-      OMNIORB_THROW(BAD_INV_ORDER,CORBA::OMGVMCID | 3, CORBA::COMPLETED_NO);
+    // Complain if in the context of an operation invocation
+    omniCurrent* current = omniCurrent::get();
+    if (current && current->callDescriptor()) {
+      OMNIORB_THROW(BAD_INV_ORDER,
+		    BAD_INV_ORDER_WouldDeadLock,
+		    CORBA::COMPLETED_NO);
+    }
 
     if( !pd_shutdown )  do_shutdown(1);
 
     // Call detach method of the initialisers in reverse order.
     omni_hooked_initialiser_.detach();
+    omni_omniCurrent_initialiser_.detach();
     omni_giopStrand_initialiser_.detach();
     omni_initRefs_initialiser_.detach();
     omni_initFile_initialiser_.detach();

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2001/06/07 16:24:10  dpg1
+  PortableServer::Current support.
+
   Revision 1.2.2.8  2001/05/31 16:18:14  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -146,6 +149,7 @@
 #include <localIdentity.h>
 #include <poamanager.h>
 #include <exceptiondefs.h>
+#include <poacurrentimpl.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -288,33 +292,32 @@ DEFINE_CPFN(RequestProcessingPolicy, create_request_processing_policy)
 #ifdef VERSION
 #undef VERSION
 #endif
-#define VERSION ":2.3"
+#define VERSION ":2.4"
 
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA,
 				       AdapterAlreadyExists,
-	       "IDL:omg.org/PortableServer/AdapterAlreadyExists" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/AdapterAlreadyExists" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA, AdapterInactive,
-	       "IDL:omg.org/PortableServer/AdapterInactive" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/AdapterInactive" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA, AdapterNonExistent,
-	       "IDL:omg.org/PortableServer/AdapterNonExistent" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/AdapterNonExistent" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA, NoServant,
-	       "IDL:omg.org/PortableServer/NoServant" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/NoServant" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA,ObjectAlreadyActive,
-	       "IDL:omg.org/PortableServer/ObjectAlreadyActive" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/ObjectAlreadyActive" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA, ObjectNotActive,
-	       "IDL:omg.org/PortableServer/ObjectNotActive" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/ObjectNotActive" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA,
 				       ServantAlreadyActive,
-	       "IDL:omg.org/PortableServer/ServantAlreadyActive" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/ServantAlreadyActive" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA, ServantNotActive,
-	       "IDL:omg.org/PortableServer/ServantNotActive" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/ServantNotActive" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA, WrongAdapter,
-	       "IDL:omg.org/PortableServer/WrongAdapter" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/WrongAdapter" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA, WrongPolicy,
-	       "IDL:omg.org/PortableServer/WrongPolicy" PS_VERSION)
-
+	   "IDL:omg.org/PortableServer/POA/WrongPolicy" PS_VERSION)
 OMNIORB_DEFINE_USER_EX_COMMON_FNS(PortableServer::POA, InvalidPolicy,
-	       "IDL:omg.org/PortableServer/InvalidPolicy" PS_VERSION)
+	   "IDL:omg.org/PortableServer/POA/InvalidPolicy" PS_VERSION)
 
 
 PortableServer::POA::InvalidPolicy::InvalidPolicy(const PortableServer::POA::InvalidPolicy& _s) : CORBA::UserException(_s)
@@ -491,8 +494,21 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
 		    CORBA::Boolean wait_for_completion)
 {
   CHECK_NOT_NIL();
-  if( wait_for_completion && 0 /*?? in context of invocation */ )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+  if( wait_for_completion ) {
+
+    omniCurrent* current = omniCurrent::get();
+    if (current && current->callDescriptor()) {
+      // In the context of an operation invocation.
+
+      // This is interesting. It would be sufficient (but harder) to
+      // only complain if in the context of an invocation in _this_
+      // POA. However, the 2.4 spec says "...some POA belonging to the
+      // same ORB as this POA...". Since we only ever support one ORB,
+      // life is easy.
+
+      OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    }
+  }
 
   // Mark self as being in the process of destruction, sever links
   // with poa manager, destroy childer, deactivate all objects
@@ -931,6 +947,20 @@ omniOrbPOA::create_reference_with_id(const PortableServer::ObjectId& oid,
   return (CORBA::Object_ptr) objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
 }
 
+PortableServer::ObjectId*
+omniOrbPOA::localId_to_ObjectId(omniLocalIdentity* id)
+{
+  OMNIORB_ASSERT(pd_poaIdSize == 0 ||
+		 omni::strMatch((const char*) pd_poaId,
+				(const char*) id->key()));
+  int idsize = id->keysize() - pd_poaIdSize;
+  OMNIORB_ASSERT(idsize >= 0);
+  PortableServer::ObjectId* ret = new PortableServer::ObjectId(idsize);
+  ret->length(idsize);
+  memcpy(ret->NP_data(), id->key() + pd_poaIdSize, idsize);
+  return ret;
+}  
+
 
 PortableServer::ObjectId*
 omniOrbPOA::servant_to_id(PortableServer::Servant p_servant)
@@ -943,10 +973,19 @@ omniOrbPOA::servant_to_id(PortableServer::Servant p_servant)
 
   omni_tracedmutex_lock sync(pd_lock);
 
-  if( 0 /*?? in context of invocation */ &&
-      pd_policy.req_processing == RPP_DEFAULT_SERVANT &&
-      p_servant == pd_defaultServant ) {
-    OMNIORB_ASSERT(0);
+  if( pd_policy.req_processing == RPP_DEFAULT_SERVANT ) {
+
+    if (p_servant == pd_defaultServant ) {
+      omniCurrent* current = omniCurrent::get();
+      if (current) {
+	omniCallDescriptor* call_desc = current->callDescriptor();
+
+	if (call_desc && call_desc->poa() == this) {
+	  return localId_to_ObjectId(call_desc->localId());
+	}
+      }
+    }
+    throw ServantNotActive();
   }
 
   omni_tracedmutex_lock sync2(*omni::internalLock);
@@ -959,17 +998,8 @@ omniOrbPOA::servant_to_id(PortableServer::Servant p_servant)
 
     while( id && id->adapter() != this )  id = id->servantsNextIdentity();
 
-    if( id ) {
-      OMNIORB_ASSERT(pd_poaIdSize == 0 ||
-		     omni::ptrStrMatch((const char*) pd_poaId,
-				       (const char*) id->key()));
-      int idsize = id->keysize() - pd_poaIdSize;
-      OMNIORB_ASSERT(idsize >= 0);
-      PortableServer::ObjectId* ret = new PortableServer::ObjectId(idsize);
-      ret->length(idsize);
-      memcpy(ret->NP_data(), id->key() + pd_poaIdSize, idsize);
-      return ret;
-    }
+    if( id )
+      return localId_to_ObjectId(id);
   }
 
   if( !pd_policy.implicit_activation )  throw WrongPolicy();
@@ -1006,12 +1036,22 @@ omniOrbPOA::servant_to_reference(PortableServer::Servant p_servant)
   CHECK_NOT_NIL_OR_DESTROYED();
   if( !p_servant )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
-  if( 0 /*?? in context of request on given servant */ ) {
-    // Return reference associated with request.
-    // Do we even care which POA the request was
-    // associated with?  I think if the request
-    // was not associated with this POA, then we
-    // should probably carry on below ...
+  omniCurrent* current = omniCurrent::get();
+
+  if (current) {
+    omniCallDescriptor* call_desc = current->callDescriptor();
+    if (call_desc &&
+	call_desc->localId()->servant() == (omniServant*)p_servant &&
+	call_desc->poa() == this) {
+
+      // Return reference associated with the current invocation
+      omniObjRef* objref = omniOrbPOACurrent::real_get_reference(call_desc);
+      return (CORBA::Object_ptr)
+	                  objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
+    }
+    // It's not clear from the spec what should happen if we're in the
+    // context of an invocation on the given servant, but not in this
+    // POA. It seems most sensible to carry on with the code below...
   }
 
   if( !pd_policy.retain_servants ||
@@ -1139,12 +1179,7 @@ omniOrbPOA::reference_to_id(CORBA::Object_ptr reference)
       memcmp(id->key(), (const char*) pd_poaId, pd_poaIdSize) )
     throw WrongAdapter();
 
-  int idsize = id->keysize() - pd_poaIdSize;
-  PortableServer::ObjectId* ret = new PortableServer::ObjectId(idsize);
-  ret->length(idsize);
-  memcpy(ret->NP_data(), id->key() + pd_poaIdSize, idsize);
-
-  return ret;
+  return localId_to_ObjectId(id);
 }
 
 
@@ -1307,6 +1342,8 @@ omniOrbPOA::dispatch(omniCallHandle& handle, omniLocalIdentity* id)
   OMNIORB_ASSERT(id);  OMNIORB_ASSERT(id->servant());
   OMNIORB_ASSERT(id->adapter() == this);
 
+  handle.poa(this);
+
   enterAdapter();
 
   if( pd_rq_state != (int) PortableServer::POAManager::ACTIVE )
@@ -1357,6 +1394,8 @@ omniOrbPOA::dispatch(omniCallHandle& handle,
   OMNIORB_ASSERT(keysize >= pd_poaIdSize);
   //OMNIORB_ASSERT(!memcmp(key, (const char*) pd_poaId, pd_poaIdSize));
 
+  handle.poa(this);
+
   // Check that the key is the right size (if system generated).
   if( !pd_policy.user_assigned_id &&
       keysize - pd_poaIdSize != SYS_ASSIGNED_ID_SIZE )
@@ -1404,7 +1443,11 @@ omniOrbPOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
       << id << '\n';
   }
 
-  call_desc.doLocalCall(id->servant());
+  call_desc.poa(this);
+  {
+    _OMNI_NS(poaCurrentStackInsert) _i(call_desc);
+    call_desc.doLocalCall(id->servant());
+  }
 }
 
 

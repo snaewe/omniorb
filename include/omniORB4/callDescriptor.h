@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.7  2001/06/07 16:24:07  dpg1
+ PortableServer::Current support.
+
  Revision 1.2.2.6  2001/05/29 17:03:47  dpg1
  In process identity.
 
@@ -63,8 +66,10 @@
 
 class omniObjRef;
 class omniServant;
+class omniCurrent;
 
 OMNI_NAMESPACE_BEGIN(omni)
+class omniOrbPOA;
 class giopAddress;
 OMNI_NAMESPACE_END(omni)
 
@@ -89,14 +94,17 @@ public:
       pd_user_excns(user_excns),
       pd_n_user_excns(n_user_excns),
       pd_is_upcall(is_upcall),
+      pd_first_address_used(0),
+      pd_current(0),
+      pd_current_next(0),
       pd_objref(0),
-      pd_first_address_used(0) {}
+      pd_poa(0),
+      pd_localId(0) {}
 
-#if defined(__GNUG__)
-  // gcc is rather anal and insists on a class with virtual functions must
-  // have a virtual dtor.
-  virtual ~omniCallDescriptor() {}
-#endif
+  virtual ~omniCallDescriptor()
+  {
+    OMNIORB_ASSERT(!pd_current);
+  }
 
   //////////////////////////////////////////////////
   // Methods to implement call on the client side //
@@ -142,8 +150,6 @@ public:
   inline const _OMNI_NS(giopAddress)* firstAddressUsed() { 
     return pd_first_address_used;
   }
-  inline void objref(omniObjRef* o) { pd_objref = o; }
-  inline omniObjRef* objref() { OMNIORB_ASSERT(pd_objref); return pd_objref; }
 
   inline void firstAddressUsed(const _OMNI_NS(giopAddress)* a) { 
     pd_first_address_used = a;
@@ -170,11 +176,18 @@ public:
   inline void skipAssertObjectExistence() { pd_assert_object_existent = 0; }
   inline _CORBA_Boolean doAssertObjectExistence() { return pd_assert_object_existent; }
 
-private:
-  omniCallDescriptor(const omniCallDescriptor&);
-  omniCallDescriptor& operator = (const omniCallDescriptor&);
-  // Not implemented.
+  /////////////////////
+  // Current support //
+  /////////////////////
 
+  inline void objref(omniObjRef* o)           { pd_objref = o; }
+  inline omniObjRef* objref()                 { return pd_objref; }
+  inline void poa(_OMNI_NS(omniOrbPOA*) poa)  { pd_poa = poa; }
+  inline _OMNI_NS(omniOrbPOA*) poa()          { return pd_poa; }
+  inline void localId(omniLocalIdentity* lid) { pd_localId = lid; }
+  inline omniLocalIdentity* localId()         { return pd_localId; }
+
+private:
   LocalCallFn                  pd_localCall;
   _CORBA_Boolean               pd_is_oneway;
   const char*                  pd_op;
@@ -185,14 +198,40 @@ private:
   int                          pd_n_user_excns;
   _CORBA_Boolean               pd_is_upcall;
 
-  omniObjRef*                  pd_objref;
-  // On the client side, this is needed to check if a servant found by
-  // the in process identity can be used in a direct local call.
-
   const _OMNI_NS(giopAddress)* pd_first_address_used;
   // state holder for the giop transport in relation to this call. Not
   // manipulated by this class other than the access functions.
   // Initialised to 0 in ctor.
+
+  /////////////////////
+  // Current support //
+  /////////////////////
+
+  omniCurrent*                 pd_current;
+  omniCallDescriptor*          pd_current_next;
+  // The omniCurrent object maintains a stack of call descriptors,
+  // representing nested colocated calls. These pointers are
+  // maintained by functions in omniCurrent.
+
+  omniObjRef*                  pd_objref;
+  // This is set on the client side to indicate the object reference
+  // invoked on. It is used for two things: 1. to check if a servant
+  // found by the in process identity can be used in a direct local
+  // call; 2. as the return value from PortableServer::Current::
+  // get_reference(). In the case of a remote upcall, this is zero,
+  // and an objref is constructed from information in the local id on
+  // request.
+
+  _OMNI_NS(omniOrbPOA*)        pd_poa;
+  omniLocalIdentity*           pd_localId;
+  // Both always set on the way through the POA during an upcall.
+
+
+  omniCallDescriptor(const omniCallDescriptor&);
+  omniCallDescriptor& operator = (const omniCallDescriptor&);
+  // Not implemented.
+
+  friend class omniCurrent;
 };
 
 

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  2001/06/07 16:24:08  dpg1
+ PortableServer::Current support.
+
  Revision 1.1.2.1  2001/05/29 17:03:48  dpg1
  In process identity.
 
@@ -40,6 +43,11 @@
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/IOP_S.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
+class omniOrbPOA;
+OMNI_NAMESPACE_END(omni)
+
+class omniLocalIdentity;
 
 class omniCallHandle {
 public:
@@ -48,14 +56,18 @@ public:
     : pd_iop_s(iop_s),
       pd_call_desc(0),
       pd_op(iop_s->operation_name()),
-      pd_upcall_hook(0)
+      pd_upcall_hook(0),
+      pd_poa(0),
+      pd_localId(0)
   {}
 
   inline omniCallHandle(omniCallDescriptor* call_desc)
     : pd_iop_s(0),
       pd_call_desc(call_desc),
       pd_op(call_desc->op()),
-      pd_upcall_hook(0)
+      pd_upcall_hook(0),
+      pd_poa(0),
+      pd_localId(0)
   {}
 
   inline const char*         operation_name() const { return pd_op; }
@@ -80,11 +92,16 @@ public:
   // unmarshalling arguments. It skips any remaining input data so the
   // exception may be returned as soon as possible.
 
+  inline void poa(_OMNI_NS(omniOrbPOA)* poa) { pd_poa = poa; }
+  inline void localId(omniLocalIdentity* id) { pd_localId = id; }
+
 private:
-  _OMNI_NS(IOP_S)*    pd_iop_s;
-  omniCallDescriptor* pd_call_desc;
-  const char*         pd_op;
-  UpcallHook*         pd_upcall_hook;
+  _OMNI_NS(IOP_S)*      pd_iop_s;
+  omniCallDescriptor*   pd_call_desc;
+  const char*           pd_op;
+  UpcallHook*           pd_upcall_hook;
+  _OMNI_NS(omniOrbPOA)* pd_poa;
+  omniLocalIdentity*    pd_localId;
 
 private:
   // Not implemented

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.6  2001/06/07 16:24:11  dpg1
+  PortableServer::Current support.
+
   Revision 1.2.2.5  2001/05/31 16:18:15  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -86,11 +89,13 @@
 #define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB4/CORBA.h>
 #include <poaimpl.h>
+#include <poacurrentimpl.h>
 #include <localIdentity.h>
 #include <omniORB4/callDescriptor.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
+#include <omniCurrent.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -225,44 +230,45 @@ PortableServer::ServantBase::_remove_ref()
   // empty
 }
 
-
 void*
 PortableServer::ServantBase::_do_this(const char* repoId)
 {
   OMNIORB_ASSERT(repoId);
 
-  if( 0 /*?? in context of invocation on this servant */ ) {
+  omniCurrent* current = omniCurrent::get();
+  if (current) {
+    omniCallDescriptor* call_desc = current->callDescriptor();
 
-    // Return a reference to the object being invoked.
-#if defined(__DECCXX) && __DECCXX_VER >= 60000000
-    // Compaq C++ 6.2 warns about this even though this code 
-    // cannot ever execute
-    return 0;
-#endif
-  }
-  else {
+    if (call_desc &&
+	call_desc->localId()->servant() == (omniServant*)this) {
 
-    {
-      omni_tracedmutex_lock sync(*omni::internalLock);
-
-      omniLocalIdentity* id = _identities();
-
-      if( id && !id->servantsNextIdentity() ) {
-	// We only have a single activation -- return a reference to it.
-	omniObjRef* ref = omni::createObjRef(_mostDerivedRepoId(), repoId, id);
-	OMNIORB_ASSERT(ref);
-	return ref->_ptrToObjRef(repoId);
-      }
+      // In context of an invocation on this servant
+      omniObjRef* ref = omniOrbPOACurrent::real_get_reference(call_desc);
+      OMNIORB_ASSERT(ref);
+      return ref->_ptrToObjRef(repoId);
     }
-
-    PortableServer::POA_var poa = this->_default_POA();
-
-    if( CORBA::is_nil(poa) )
-      OMNIORB_THROW(OBJ_ADAPTER,0, CORBA::COMPLETED_NO);
-
-    return ((omniOrbPOA*)(PortableServer::POA_ptr) poa)->
-      servant__this(this, repoId);
   }
+
+  {
+    omni_tracedmutex_lock sync(*omni::internalLock);
+
+    omniLocalIdentity* id = _identities();
+
+    if( id && !id->servantsNextIdentity() ) {
+      // We only have a single activation -- return a reference to it.
+      omniObjRef* ref = omni::createObjRef(_mostDerivedRepoId(), repoId, id);
+      OMNIORB_ASSERT(ref);
+      return ref->_ptrToObjRef(repoId);
+    }
+  }
+
+  PortableServer::POA_var poa = this->_default_POA();
+
+  if( CORBA::is_nil(poa) )
+    OMNIORB_THROW(OBJ_ADAPTER,0, CORBA::COMPLETED_NO);
+
+  return ((omniOrbPOA*)(PortableServer::POA_ptr) poa)->
+    servant__this(this, repoId);
 }
 
 

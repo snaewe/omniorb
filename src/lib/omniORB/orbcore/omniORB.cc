@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2001/06/07 16:24:10  dpg1
+  PortableServer::Current support.
+
   Revision 1.2.2.2  2000/09/27 17:57:05  sll
   Changed include/omniORB3 to include/omniORB4
 
@@ -98,6 +101,7 @@ CORBA::Boolean           useTypeCodeIndirections = 1;
 CORBA::Boolean           acceptMisalignedTcIndirections = 0;
 CORBA::Boolean           verifyObjectExistsAndType = 1;
 int                      poaHoldRequestTimeout = 0;
+CORBA::Boolean           supportCurrent = 1;
 CORBA::Boolean           noFirewallNavigation = 0;
 GIOP::AddressingDisposition giopTargetAddressMode = GIOP::KeyAddr;
 objectKey                seed;
@@ -121,6 +125,7 @@ CORBA::Boolean           omniORB::useTypeCodeIndirections = 1;
 CORBA::Boolean           omniORB::acceptMisalignedTcIndirections = 0;
 CORBA::Boolean           omniORB::verifyObjectExistsAndType = 1;
 int                      omniORB::poaHoldRequestTimeout = 0;
+CORBA::Boolean           omniORB::supportCurrent = 1;
 CORBA::Boolean           noFirewallNavigation = 0;
 GIOP::AddressingDisposition giopTargetAddressMode = GIOP::KeyAddr;
 omniORB::objectKey       omniORB::seed;
