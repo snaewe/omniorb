@@ -1,3 +1,13 @@
+Fri Apr 10 12:38:36 BST 1998 sll
+================================
+
+- Get rid of the use of cerr and #include <iostream.h> unless DB(x) is on.
+
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+src/lib/omnithread/solaris.cc
+src/lib/omnithread/mach.cc
+
 Thu Apr  9 20:15:38 BST 1998 sll
 ===============================
 
