@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7  1999/11/17 18:05:16  dpg1
+// Tiny change to enum printing.
+//
 // Revision 1.6  1999/11/17 17:50:42  dpg1
 // Unions with nested declarations now output properly.
 //
@@ -374,7 +377,7 @@ visitEnum(Enum* e)
   ++indent_;
   for (Enumerator* n = e->enumerators(); n; n = (Enumerator*)n->next()) {
     printIndent();
-    printf("%s;\n", n->identifier());
+    printf("%s,\n", n->identifier());
   }
   --indent_;
   printIndent();
