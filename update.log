@@ -1,10 +1,3 @@
-Mon Jun 11 19:14:31 BST 2001 sll
-================================
-
-- Specified OPEN_SSL_ROOT in lab internal platform file
-
-mk/platforms/i586_linux_2.0_glibc2.1.mk
-
 Mon Jun 11 18:59:39 BST 2001 sll
 ================================
 
