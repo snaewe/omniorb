@@ -1,3 +1,14 @@
+
+Mon Nov 13 11:47:35 GMT 2000 djr
+================================
+
+- ServantLocator::preinvoke() and ServantActivator::incarnate() did not
+  allow system exceptions through to client.  (NB. This fix does not work
+  for platforms that do not catch exceptions by base class).
+
+src/lib/omniORB2/orbcore/poa.cc
+
+
 Tue Nov  7 15:31:24 GMT 2000 dpg1
 =================================
 

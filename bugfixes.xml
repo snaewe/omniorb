@@ -8,6 +8,19 @@
 
 <buglist version="3.0.2">
 
+<bug id="6" date="Mon Nov 13 11:47:35 GMT 2000" user="djr">
+
+  <summary>System exceptions not forwarded from incarnate() and preinvoke()</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-11/0083.html"/>
+  <text>
+  System exceptions thrown from a ServantLocator's preinvoke() method, or a
+  ServantActivator's incarnate() method are silently converted into an
+  OBJ_ADAPTER exception.  They should be passed on to the client without
+  change.
+  </text>
+</bug>
+
 <bug id="5" date="Tue Nov  7 15:31:24 GMT 2000" user="dpg1">
 
   <summary>Examples fail to build with nmake on Windows 9x</summary>
