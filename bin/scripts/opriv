@@ -387,7 +387,7 @@ do_check_in() {
       continue
     fi
 
-    echo "Enter log message (terminated by ctrl-d or .):"
+    echo "Enter log message (terminated by blank line or .):"
     while true; do
       echo -n ">> "
       myread line
