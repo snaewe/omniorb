@@ -4,7 +4,7 @@
 # lndir but we just make the directories - no symbolic links.
 #
 
-if [ $# -eq 1 -a -d "$1" ]; then
+if [ $# -eq 1 ]; then
 
   from=$1
 
@@ -21,6 +21,11 @@ else
   if [ "$from" = "" ]; then
     from=$defaultfrom
   fi
+fi
+
+if [ ! -d "$from" ]; then
+  echo "Error: $from is not a directory"
+  exit 1
 fi
 
 shadow() {
