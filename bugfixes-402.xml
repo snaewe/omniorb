@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.0.0     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.0.2">
+
+<bug id="1" date="Thu Aug 21 15:53:14 BST 2003" user="dgrisby">
+  <summary>Registry reading broken on Windows</summary>
+  <reported>Paul Keeley</reported>
+  <listlink
+  href="http://www.omniorb-support.com/pipermail/omniorb-list/2003-August/024096.html"/>
+  <text>
+  A fix to reading of the configuration file accidentally disabled
+  reading from the registry.
+  </text>
+</bug>
+
+</buglist>

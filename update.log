@@ -13,6 +13,7 @@ Thu Aug 21 15:53:14 BST 2003 dgrisby
 
 - Really silly bug broke registry reading on Windows.
 
+bugfixes-402.xml   -- new
 include/omniORB4/internal/orbOptions.h
 src/lib/omniORB/orbcore/corbaOrb.cc
 src/lib/omniORB/orbcore/orbOptionsFile.cc
