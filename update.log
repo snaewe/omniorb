@@ -1,3 +1,11 @@
+Sun Aug 18 15:57:08 BST 2002 dgrisby
+====================================
+
+- Free TLS id on Windows.
+
+src/lib/omnithread/nt.cc
+
+
 Sun Aug 18 15:51:47 BST 2002 dgrisby
 ====================================
 

@@ -459,6 +459,8 @@ omni_thread::init_t::~init_t(void)
     delete self;
 
     delete next_id_mutex;
+
+    TlsFree(self_tls_index);
 }
 
 //
