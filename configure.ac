@@ -56,7 +56,8 @@ AC_CHECK_SIZEOF(void*, 4)
 dnl ** Struct members
 
 AC_CHECK_MEMBERS([struct sockaddr_in.sin_len, struct sockaddr_in.sin_zero],,,
-[#include <sys/socket.h>
+[#include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>])
 
 
