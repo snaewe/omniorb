@@ -1,3 +1,67 @@
+Wed Sep 27 17:40:58 BST 2000 sll
+================================
+
+- Support for GIOP 1.1 and 1.2 with a new giop engine. Check-in batch #1.
+- Updated header files to use the new giop engine.
+
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_vartypes.h
+include/omniORB4/GIOP.h
+include/omniORB4/IIOP.h
+include/omniORB4/IOP.h
+include/omniORB4/callDescriptor.h
+include/omniORB4/giopDriver.h
+include/omniORB4/omniInternal.h
+include/omniORB4/omniORB.h
+include/omniORB4/omniObjKey.h
+include/omniORB4/omniObjRef.h
+include/omniORB4/omniServant.h
+include/omniORB4/omniURI.h
+include/omniORB4/poa.h
+include/omniORB4/poa_defs.h
+include/omniORB4/poa_operators.h
+include/omniORB4/proxyFactory.h
+include/omniORB4/rope.h
+include/omniORB4/stringtypes.h
+include/omniORB4/tcDescriptor.h
+include/omniORB4/templatedecls.h
+include/omniORB4/userexception.h
+
+
+- New header files
+
+include/omniORB4/cdrStream.h
+include/omniORB4/giopStream.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniInterceptors.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/seqTemplatedefns.h
+
+
+- Temporary hand-crafted stub files to be replaced later by code generated
+  by omniidl
+
+include/omniORB4/Naming.hh
+include/omniORB4/bootstrap.hh
+include/omniORB4/corbaidl_defs.hh
+include/omniORB4/corbaidl_operators.hh
+include/omniORB4/corbaidl_poa.hh
+include/omniORB4/ir_defs.hh
+include/omniORB4/ir_operators.hh
+include/omniORB4/ir_poa.hh
+
+Wed Sep 26 17:00:06 BST 2000 sll
+================================
+
+- Copied include/omniORB3 to include/omniORB4 and removed include/omniORB3 from
+  this branch.
+- Copied src/lib/omniORB2 to src/lib/omniORB and removed src/lib/omniORB2 from
+  this branch.
+
+src/lib/omniORB2 --> src/lib/omniORB
+include/omniORB3 --> include/omniORB4
+
+
 Mon Aug 21 14:48:26 BST 2000 sll
 ================================
 
