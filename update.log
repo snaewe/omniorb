@@ -1,3 +1,15 @@
+Tue May 27 12:15:31 BST 2003 dgrisby
+====================================
+
+- Deferred DII requests were broken on Windows due to a DLL issue.
+
+include/omniORB4/internal/invoker.h
+
+- For some reason the config file was not looked at on Windows.
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+
 Thu May 22 15:47:16 BST 2003 dgrisby
 ====================================
 
