@@ -1,7 +1,16 @@
 PYBINDIR = $(EXPORT_TREE)/bin/scripts
-PYLIBDIR = $(EXPORT_TREE)/lib/python/omniidl
+PYLIBROOT= $(EXPORT_TREE)/lib/python
+PYLIBDIR = $(PYLIBROOT)/omniidl
 
-SUBDIRS = be
+PAR = $(PYBINDIR)/par
+
+PYSTDLIBS = \\.os \\.dospath \\.macpath \\.pcpath \\.ntpath      \
+            \\.posixpath \\.stat \\.UserDict \\.getopt \\.string \
+            \\.re \\.types \\.keyword
+
+PYLIBS = $(PYSTDLIBS) \\.omniidl.*
+
+SUBDIRS = be arch
 
 all::
 	@$(MakeSubdirs)
@@ -34,3 +43,6 @@ export:: idlvisitor.py
 
 export:: output.py
 	@(file="output.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
+export::
+	$(PAR) -r $(PYLIBROOT)/omni.par $(PYLIBS)
