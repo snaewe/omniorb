@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.17  1998/10/26 12:12:43  sll
+ Added an exception type for reporting frontend error detected by the backend.
+
  Revision 1.16  1998/08/19 15:49:11  sll
  Binary operators <<= and friends are now generated in a separate pass.
  The member functions void produce_binary_operators_in_hdr and the like
@@ -1274,5 +1277,18 @@ private:
   const char *pd_errmsg;
   o2be_fileio_error();
 };
+
+class o2be_fe_error {
+public:
+  o2be_fe_error(const char *errmsg) {
+    pd_errmsg = errmsg;
+  }
+  ~o2be_fe_error() {}
+  const char *errmsg() const { return pd_errmsg; }
+private:
+  const char *pd_errmsg;
+  o2be_fe_error();
+};
+
 
 #endif
