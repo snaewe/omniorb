@@ -5,7 +5,7 @@
 # found, it falls-back on using a Python interpreter from the PATH.
 #
 # If this script does not work for you, make sure there is a suitable
-# Python interpreter on your path, and run omniidl.py directly.
+# Python interpreter on your path, and run omniidlrun.py directly.
 
 
 # Figure out where this script is running from
@@ -26,7 +26,7 @@ fi
 (cd $dir; dir=`pwd`)
 
 omnipython=$dir/omnipython
-omniidl=$dir/omniidl.py
+omniidl=$dir/omniidlrun.py
 
 if test -x $omnipython ; then
     $omnipython $omniidl $@

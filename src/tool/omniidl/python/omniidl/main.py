@@ -29,6 +29,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.5  2000/03/02 11:22:46  dpg1
+# omniidl.py renamed omniidlrun.py to avoid problems with import
+# omniidl.main.
+#
 # Revision 1.15.2.4  2000/02/22 16:44:50  dpg1
 # Cosmetic change.
 #
@@ -107,7 +111,7 @@ import getopt, os, os.path, string
 
 import idlast, idltype
 
-cmdname = os.path.basename(sys.argv[0])
+cmdname = "omniidl"
 
 def version():
     print "omniidl version 0.1"

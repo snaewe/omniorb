@@ -1,6 +1,6 @@
 ifdef UnixPlatform
 
-export:: omniidl.py
+export:: omniidlrun.py
 	@$(ExportExecutable)
 
 export:: omniidl

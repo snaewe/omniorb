@@ -1,3 +1,16 @@
+Thu Mar  2 11:20:30 GMT 2000 dpg1
+=================================
+
+- Having a command named omniidl.py caused import omniidl.main to fail
+  in some circumstances. Renamed to omniidlrun.py.
+
+src/tool/omniidl/python/omniidl/main.py
+src/tool/omniidl/python/scripts/dir.mk
+src/tool/omniidl/python/scripts/omniidl
+src/tool/omniidl/python/scripts/omniidl.py     -- removed
+src/tool/omniidl/python/scripts/omniidlrun.py  -- new
+
+
 Thu Mar  2 10:22:40 GMT 2000 dpg1
 =================================
 

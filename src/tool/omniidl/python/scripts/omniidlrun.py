@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- python -*-
 #                           Package   : omniidl
-# omniidl                   Created on: 1999/10/29
+# omniidlrun.py             Created on: 1999/10/29
 #			    Author    : Duncan Grisby (dpg1)
 #
 #    Copyright (C) 1999 AT&T Laboratories Cambridge
