@@ -1,3 +1,12 @@
+Wed Mar 16 09:15:35 GMT 2005 dgrisby
+====================================
+
+- Previous change to CancelRequest handling accidentally broke
+  server-side connection shutdown.
+
+src/lib/omniORB/orbcore/giopStrand.cc
+
+
 Tue Mar 15 10:24:43 GMT 2005 dgrisby
 ====================================
 
