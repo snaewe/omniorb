@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/11/15 19:10:55  djs
+# Added module for utility functions specific to generating skeletons
+# Union skeletons working
+#
 # Revision 1.4  1999/11/10 20:19:32  djs
 # Option to emulate scope bug in old backend
 # Array struct element fix
@@ -86,6 +90,7 @@ class Stream:
 
     def inc_indent(self): self.indent = self.indent + 1
     def dec_indent(self): self.indent = self.indent - 1
+    def reset_indent(self): self.indent = 0
 
     def __wscount(self, text):
         match = self.__wsregex.match(text)

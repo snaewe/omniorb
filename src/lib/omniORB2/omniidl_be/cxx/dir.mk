@@ -17,6 +17,9 @@ export:: tyutil.py
 export:: util.py
 	@(file="util.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: skutil.py
+	@(file="skutil.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
 export:: name.py
 	@(file="name.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 

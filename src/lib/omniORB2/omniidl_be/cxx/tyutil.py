@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/11/15 19:10:55  djs
+# Added module for utility functions specific to generating skeletons
+# Union skeletons working
+#
 # Revision 1.7  1999/11/12 17:17:46  djs
 # Creates output files rather than using stdout
 # Utility functions useful for skeleton generation added
@@ -438,6 +442,7 @@ def operationArgumentType(type, environment, virtualFn = 0):
 
 typeSizeAlignMap = {
     idltype.tk_char:    (1, 1),
+    idltype.tk_boolean: (1, 1),
     idltype.tk_wchar:   (2, 2),
     idltype.tk_short:   (2, 2),
     idltype.tk_ushort:  (2, 2),
@@ -550,15 +555,15 @@ def sequenceTemplate(sequence, environment):
     if isBoolean(derefSeqType):
         template["suffix"] = "__Boolean"
     # strings are always special
-    if isString(derefSeqType) and not(is_array):
+    elif isString(derefSeqType) and not(is_array):
         template["suffix"] = "__String"
-    if isOctet(derefSeqType):
+    elif isOctet(derefSeqType):
         template["suffix"] = "__Octet"
                     
-    if typeSizeAlignMap.has_key(derefSeqType.kind()):
+    elif typeSizeAlignMap.has_key(derefSeqType.kind()):
         template["fixed"] = typeSizeAlignMap[derefSeqType.kind()]
         
-    if isObjRef(derefSeqType):
+    elif isObjRef(derefSeqType):
        scopedName = derefSeqType.decl().scopedName()
        scopedName = self.scope(scopedName) + \
                     ["_objref_" + self.name(scopedName)]
@@ -590,6 +595,7 @@ def valueString(type, value, environment):
        type.kind() == idltype.tk_longlong  or \
        type.kind() == idltype.tk_ulong     or \
        type.kind() == idltype.tk_ulonglong:
+        #return str(repr(value))
         return str(int(eval(str(value))))
     if type.kind() == idltype.tk_float     or \
        type.kind() == idltype.tk_double:
@@ -597,7 +603,7 @@ def valueString(type, value, environment):
     # chars are single-quoted
     if type.kind() == idltype.tk_char      or \
        type.kind() == idltype.tk_wchar:
-        return "'" + value + "'"
+        return "'" + str(value) + "'"
     # booleans are straightforward
     if type.kind() == idltype.tk_boolean:
         return str(value)
@@ -617,7 +623,7 @@ def valueString(type, value, environment):
         return str(value)
 
     raise "Cannot convert a value (" + repr(value) + ") of type: " +\
-          repr(type) + " into a string."
+          repr(type) + "(kind == " + repr(type.kind()) + ") into a string."
         
         
 # ------------------------------------------------------------------
@@ -656,7 +662,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname):
 
     if not(is_array):
         if typeSizeAlignMap.has_key(type.kind()):
-            size = typeSizeAlignMap[type.kind()]
+            size = typeSizeAlignMap[type.kind()][0]
             
             if size == 1:
                 string.out("""\
@@ -701,7 +707,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname):
         indexing_string = ""
         for dim in full_dims:
             string.out("""\
-for (CORBA::ULong _i@n@ = 0;_i < @dim@;_i@n@++) {""",
+for (CORBA::ULong _i@n@ = 0;_i@n@ < @dim@;_i@n@++) {""",
                        n = str(index), dim = str(dim))
             string.inc_indent()
             indexing_string = indexing_string + "[_i" + str(index) + "]"
@@ -721,7 +727,7 @@ for (CORBA::ULong _i@n@ = 0;_i < @dim@;_i@n@++) {""",
     # thing is an array
     if not(isVariable):
         if typeSizeAlignMap.has_key(type.kind()):
-            size = typeSizeAlignMap[type.kind()]
+            size = typeSizeAlignMap[type.kind()][0]
 
             if size == 1:
                 string.out("""\
@@ -780,6 +786,82 @@ for (CORBA::ULong _i@n@ = 0;_i < @dim@;_i@n@++) {""",
 
     return str(string)
     
+# ------------------------------------------------------------------
+
+
+def allCaseValues(node):
+    assert isinstance(node, idlast.Union)
+    list = []
+    for n in node.cases():
+        for l in n.labels():
+            if not(l.default()):
+                list.append(l)
+    return list
+
+# marks each case node with isDefault : boolean and returns the
+# default case or None if none found
+def getDefaultCaseAndMark(node):
+    assert isinstance(node, idlast.Union)
+    default = None
+    for c in node.cases():
+        c.isDefault = 0
+        for l in c.labels():
+            if l.default():
+                default = c
+                c.isDefault = 1
+    return default
+
+def getDefaultLabel(case):
+    assert isinstance(case, idlast.UnionCase)
+    for l in case.labels():
+        if l.default():
+            return l
+    assert 0
+    # default case must have a default label!
+
+# ------------------------------------------------------------------
+
+# determines whether a set of cases represents an Exhaustive Match
+def exhaustiveMatch(switchType, allCaseValues):
+    # return all the used case values
+    
+    # dereference the switch_type (ie if CASE <scoped_name>)
+    switchType = tyutil.deref(switchType)
+            
+    # same as discrimValueToString
+    # CASE <integer_type>
+    if tyutil.isInteger(switchType):
+        # Assume that we can't possibly do an exhaustive match
+        # on the integers, since they're (mostly) very big.
+        # maybe should rethink this for the short ints...
+        return 0
+    # CASE <char_type>
+    elif tyutil.isChar(switchType):
+        # make a set with all the characters inside
+        s = []
+        for char in range(0,256):
+            s.append(chr(char))
+        # make a set with all the used characters
+        used = allCaseValues
+        # subtract all the used ones from the possibilities
+        difference = util.minus(s, used)
+        # if the difference is empty, match is exhaustive
+        return (len(difference) == 0)
+    # CASE <boolean_type>
+    elif tyutil.isBoolean(switchType):
+        s = [0, 1]
+        used = map(lambda x: x.value(), allCaseValues)
+        difference = util.minus(s, used)
+        return (len(difference) == 0)
+    # CASE <enum_type>
+    elif tyutil.isEnum(switchType):
+        s = switchType.decl().enumerators()
+        used = map(lambda x: x.value(), allCaseValues)
+        difference = util.minus(s, used)
+        return (len(difference) == 0)
+    else:
+        raise "exhaustiveMatch type="+repr(switchType)+ \
+              " val="+repr(discrimvalue)
 
 
 # ------------------------------------------------------------------
