@@ -240,15 +240,15 @@ print_key(_CORBA_Unbounded_Sequence__Octet& key, int hexflag)
 
     cout << "0x";
 
-    for ( int j=0; j < (key).length(); j++) {
-      int v = (((key)[j] & 0xf0) >> 4);
+    for( unsigned j = 0; j < key.length(); j++ ) {
+      int v = (key[j] & 0xf0) >> 4;
 
       if (v < 10)
 	cout << (char)('0' + v);
       else
 	cout << (char)('a' + (v - 10));
 
-      v = (((key)[j] & 0xf));
+      v = key[j] & 0xf;
 
       if (v < 10)
 	cout << (char)('0' + v);
@@ -256,7 +256,7 @@ print_key(_CORBA_Unbounded_Sequence__Octet& key, int hexflag)
 	cout << (char)('a' + (v - 10));
     }
 
-    cout << "  (" << (key).length()
+    cout << "  (" << key.length()
 	 << " bytes)" << endl;
   }
   else {
@@ -264,10 +264,10 @@ print_key(_CORBA_Unbounded_Sequence__Octet& key, int hexflag)
 
     cout << "\"";
 
-    for( int j=0; j < (key).length(); j++) {
-      if ((char) ((key)[j]) >= ' ' &&
-	  (char) ((key)[j]) <= '~')
-	cout << (char)((key)[j]);
+    for( unsigned j = 0; j < key.length(); j++ ) {
+      if( (char) key[j] >= ' ' &&
+	  (char) key[j] <= '~')
+	cout << (char) key[j];
       else
 	cout << ".";
     }
@@ -334,7 +334,7 @@ print_omni_key(_CORBA_Unbounded_Sequence__Octet& key, int hexflag)
 
   if( get_poa_info(key, poas, is_transient, id) ) {
     cout << "POA(" << (char*)poas[0];
-    for( int i = 1; i < poas.length(); i++ )
+    for( unsigned i = 1; i < poas.length(); i++ )
       cout << '/' << (char*)poas[i];
     cout << ") ";
   }
@@ -408,7 +408,7 @@ int main(int argc, char* argv[])
       cerr << "Type ID: \"" << (char*) repoID << "\"" << endl;
       cerr << "Profiles:" << endl;
 
-      for (long count=0; count < profiles->length(); count++) {
+      for (unsigned long count=0; count < profiles->length(); count++) {
 	cout << count+1 << ". ";
 
 	if ((*profiles)[count].tag == IOP::TAG_INTERNET_IOP) {

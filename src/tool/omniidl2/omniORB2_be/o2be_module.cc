@@ -26,6 +26,9 @@
 
 /* 
    $Log$
+   Revision 1.15.6.2  1999/09/27 09:09:11  djr
+   Minor corrections to get rid of warnings.
+
    Revision 1.15.6.1  1999/09/24 10:05:26  djr
    Updated for omniORB3.
 
@@ -196,6 +199,8 @@ o2be_module::produce_poa_hdr(std::fstream& s)
     case AST_Decl::NT_typedef:
       o2be_typedef::narrow_from_decl(decl)->produce_poa_hdr(s);
       break;
+    default:
+      break;
     }
   }
 
@@ -280,6 +285,8 @@ o2be_module::produce_poa_skel(std::fstream& s)
       break;
     case AST_Decl::NT_interface:
       o2be_interface::narrow_from_decl(decl)->produce_poa_skel(s);
+      break;
+    default:
       break;
     }
   }

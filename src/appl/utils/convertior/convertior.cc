@@ -348,7 +348,7 @@ CORBA::Char* convertRef(char* old_ior, char* hostname)
 	}
       else
 	{	  
-	  for (long count=0; count < old_profiles->length(); count++)
+	  for (unsigned long count=0; count < old_profiles->length(); count++)
 	    {
 	      if ((*old_profiles)[count].tag == IOP::TAG_INTERNET_IOP)
 		  {
