@@ -41,6 +41,7 @@
 #include <remoteIdentity.h>
 #include <exceptiondefs.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 #define INVOKE_DONE()  if( pd_state == RS_READY )  pd_state = RS_DONE;
 
@@ -626,6 +627,10 @@ public:
     return _nil();
   }
 };
+
+OMNI_NAMESPACE_END(omni)
+
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////

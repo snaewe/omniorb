@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/04/19 09:18:43  sll
+  Scoped where appropriate with the omni namespace.
+
   Revision 1.1.2.3  2000/12/05 17:43:30  dpg1
   Check for input over-run in string and wstring unmarshalling.
 
@@ -53,6 +56,8 @@
 
 #include <omniORB4/CORBA.h>
 #include <codeSetUtil.h>
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 #if (SIZEOF_WCHAR == 4)
 
@@ -600,3 +605,5 @@ static CS_UCS_4_init _CS_UCS_4_init;
 
 
 #endif // (SIZEOF_WCHAR == 4)
+
+OMNI_NAMESPACE_END(omni)

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2001/04/19 09:14:14  sll
+  Scoped where appropriate with the omni namespace.
+
   Revision 1.2.2.4  2000/10/09 16:26:28  sll
   Temporary disable IR support.
 
@@ -49,12 +52,12 @@
 
 */
 
-// XXX Temporary disable ENABLE_CLIENT_IR_SUPPORT
-//#define ENABLE_CLIENT_IR_SUPPORT
+#define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
 #include <dynamicLib.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 static void init();
 static void deinit();
@@ -107,13 +110,9 @@ marshal_context(cdrStream& s, CORBA::Context_ptr ctxt,
 static void
 lookup_id_lcfn(omniCallDescriptor* cd, omniServant* svnt)
 {
-  // XXX
-  throw omniORB::fatalException(__FILE__,__LINE__,
-				"Not ported yet.");
-
-#if 0
   omniStdCallDesc::_cCORBA_mObject_i_cstring* tcd = (omniStdCallDesc::_cCORBA_mObject_i_cstring*) cd;
   CORBA::_impl_Repository* impl = (CORBA::_impl_Repository*) svnt->_ptrToInterface(CORBA::Repository::_PD_repoId);
   tcd->pd_result = impl->lookup_id(tcd->arg_0);
-#endif
 }
+
+OMNI_NAMESPACE_END(omni)

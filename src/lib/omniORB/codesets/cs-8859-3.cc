@@ -8,6 +8,8 @@
 #include <omniORB4/CORBA.h>
 #include <codeSetUtil.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
+
 static const omniCodeSet::UniChar toUCS[] = {
   0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007,
   0x0008, 0x0009, 0x000a, 0x000b, 0x000c, 0x000d, 0x000e, 0x000f,
@@ -206,4 +208,6 @@ public:
   }
 };
 static CS_8859_3_init _CS_8859_3_init_;
+
+OMNI_NAMESPACE_END(omni)
 

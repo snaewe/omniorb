@@ -36,6 +36,7 @@
 #include <pseudo.h>
 #include <exceptiondefs.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 NamedValueImpl::NamedValueImpl(CORBA::Flags flags)
 {
@@ -150,6 +151,10 @@ public:
     return _nil();
   }
 };
+
+OMNI_NAMESPACE_END(omni)
+
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////

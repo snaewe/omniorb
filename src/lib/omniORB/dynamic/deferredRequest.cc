@@ -30,6 +30,7 @@
 
 #include <deferredRequest.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 DeferredRequest::DeferredRequest(CORBA::Request_ptr request)
   : pd_readyCondition(&pd_readyMutex)
@@ -92,3 +93,5 @@ DeferredRequest::run_undetached(void* arg)
 
   return 0;
 }
+
+OMNI_NAMESPACE_END(omni)

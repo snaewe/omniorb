@@ -30,6 +30,7 @@
 #include <omniORB4/CORBA.h>
 #include <request.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 struct RequestLink {
   inline RequestLink(CORBA::Request_ptr r) : request(r), next(0) {}
@@ -58,6 +59,9 @@ static omni_condition q_cv(&q_lock);
 // This is signalled if( queue_waiters > 0 ) and there might be
 // something to receive now.                           =====
 
+OMNI_NAMESPACE_END(omni)
+
+OMNI_USING_NAMESPACE(omni)
 
 CORBA::Status
 CORBA::ORB::send_multiple_requests_oneway(const RequestSeq& rs)
@@ -145,6 +149,7 @@ CORBA::ORB::poll_next_response()
   return incoming_q != 0;
 }
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 static void
 internal_get_response(CORBA::Request_ptr req)
@@ -157,6 +162,7 @@ internal_get_response(CORBA::Request_ptr req)
   }
 }
 
+OMNI_NAMESPACE_END(omni)
 
 CORBA::Status
 CORBA::ORB::get_next_response(Request_out req_out)

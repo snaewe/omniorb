@@ -36,6 +36,7 @@
 
 #include <pseudo.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// PseudoObjBase ///////////////////////////
@@ -60,3 +61,5 @@ PseudoObjBase::decrRefCount()
   if( --pd_refCount == 0 )
     delete this;
 }
+
+OMNI_NAMESPACE_END(omni)

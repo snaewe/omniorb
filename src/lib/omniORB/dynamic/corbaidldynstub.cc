@@ -29,4 +29,7 @@
 #define ENABLE_CLIENT_IR_SUPPORT
 # include <omniORB4/CORBA.h>
 # include <omniORB4/tcDescriptor.h>
+
+OMNI_USING_NAMESPACE(omni)
+
 # include <omniORB4/corbaidlDynSK.cc>

@@ -33,6 +33,7 @@
 #include <initRefs.h>
 #include <exceptiondefs.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 CORBA::InterfaceDef_ptr
 CORBA::

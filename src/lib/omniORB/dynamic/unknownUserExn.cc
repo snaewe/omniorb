@@ -30,6 +30,7 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/tcDescriptor.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 CORBA::UnknownUserException::UnknownUserException(Any* ex)
   : pd_exception(ex)

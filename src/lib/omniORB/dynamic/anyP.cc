@@ -30,6 +30,7 @@
 
 #include "anyP.h"
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 // Constructor/destructor
 
@@ -81,3 +82,5 @@ AnyP::~AnyP()
     pd_cached_data_destructor(pd_cached_data_ptr);
   pd_cached_data_ptr = 0;
 }
+
+OMNI_NAMESPACE_END(omni)

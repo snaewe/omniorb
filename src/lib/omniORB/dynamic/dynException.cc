@@ -34,8 +34,9 @@
 #endif
 
 #include <omniORB4/tcDescriptor.h>
-#include <dynException.h>
 #include <exceptiondefs.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 ////////  Implementation of Any Insertion for Exception //////////////
@@ -614,24 +615,6 @@ name##_insertToAnyNCP(CORBA::Any& a,const CORBA::Exception* e) \
 OMNIORB_FOR_EACH_SYS_EXCEPTION(STD_EXCEPTION)
 #undef STD_EXCEPTION
 
-
-//////////////////////////////////////////////////////////////////////
-////////////// isaSystemException                                /////
-//////////////////////////////////////////////////////////////////////
-
-CORBA::Boolean
-isaSystemException(const CORBA::Any* a)
-{
-  CORBA::TypeCode_var tc = a->type();
-
-# define ISA_EXCEPTION(name) if (tc->equivalent(_tc_##name)) return 1;
-
-  OMNIORB_FOR_EACH_SYS_EXCEPTION(ISA_EXCEPTION)
-
-# undef ISA_EXCEPTION
-
-  return 0;
-}
 
 //////////////////////////////////////////////////////////////////////
 ////////////// Once only initializer to set up all insertToAnyFn /////

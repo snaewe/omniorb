@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.19.2.7  2001/04/19 09:14:16  sll
+ * Scoped where appropriate with the omni namespace.
+ *
  * Revision 1.19.2.6  2001/03/13 10:32:05  dpg1
  * Fixed point support.
  *
@@ -153,6 +156,7 @@
 #include <anyP.h>
 #include <typecode.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 ////////////////////////////////////////////////////////////////////////
 // In pre-2.8.0 versions, the CORBA::Any extraction operator for

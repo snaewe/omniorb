@@ -29,5 +29,9 @@
 #define ENABLE_CLIENT_IR_SUPPORT
 # include <omniORB4/CORBA.h>
 # include <omniORB4/callDescriptor.h>
+# include <omniORB4/IOP_S.h>
+
+OMNI_USING_NAMESPACE(omni)
+
 # include <omniORB4/irSK.cc>
 

@@ -36,6 +36,7 @@
 #include <pseudo.h>
 #include <exceptiondefs.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 #define INIT_MAX_SEQ_LENGTH  6
 
@@ -175,6 +176,10 @@ public:
     return _nil();
   }
 };
+
+OMNI_NAMESPACE_END(omni)
+
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////

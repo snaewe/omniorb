@@ -39,6 +39,7 @@
 
 #define INIT_MAX_SEQ_LENGTH  6
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 ContextListImpl::ContextListImpl()
 {
@@ -176,6 +177,9 @@ public:
   }
 };
 
+OMNI_NAMESPACE_END(omni)
+
+OMNI_USING_NAMESPACE(omni)
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -201,7 +205,7 @@ ContextList::_nil()
   static omniNilCtList* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilCtList;
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilCtList();
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

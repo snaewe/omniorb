@@ -35,6 +35,10 @@
 
 #include <dynAny.h>
 
+OMNI_USING_NAMESPACE(omni)
+
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// omniNilDynAny ///////////////////////////
@@ -229,6 +233,7 @@ public:
   }
 };
 
+OMNI_NAMESPACE_END(omni)
 
 CORBA::DynAny_ptr
 CORBA::DynAny::_nil()
@@ -241,6 +246,8 @@ CORBA::DynAny::_nil()
   }
   return _the_nil_ptr;
 }
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// omniNilDynEnum ///////////////////////////
@@ -264,6 +271,7 @@ public:
   }
 };
 
+OMNI_NAMESPACE_END(omni)
 
 CORBA::DynEnum_ptr
 CORBA::DynEnum::_nil()
@@ -276,6 +284,8 @@ CORBA::DynEnum::_nil()
   }
   return _the_nil_ptr;
 }
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////// omniNilDynStruct //////////////////////////
@@ -300,6 +310,7 @@ public:
   }
 };
 
+OMNI_NAMESPACE_END(omni)
 
 CORBA::DynStruct_ptr
 CORBA::DynStruct::_nil()
@@ -312,6 +323,8 @@ CORBA::DynStruct::_nil()
   }
   return _the_nil_ptr;
 }
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// omniNilDynUnion //////////////////////////
@@ -351,6 +364,7 @@ public:
   }
 };
 
+OMNI_NAMESPACE_END(omni)
 
 CORBA::DynUnion_ptr
 CORBA::DynUnion::_nil()
@@ -363,6 +377,8 @@ CORBA::DynUnion::_nil()
   }
   return _the_nil_ptr;
 }
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////////// omniNilDynSequence /////////////////////////
@@ -386,6 +402,7 @@ public:
   }
 };
 
+OMNI_NAMESPACE_END(omni)
 
 CORBA::DynSequence_ptr
 CORBA::DynSequence::_nil()
@@ -398,6 +415,8 @@ CORBA::DynSequence::_nil()
   }
   return _the_nil_ptr;
 }
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// omniNilDynArray //////////////////////////
@@ -414,6 +433,7 @@ public:
   }
 };
 
+OMNI_NAMESPACE_END(omni)
 
 CORBA::DynArray_ptr
 CORBA::DynArray::_nil()
