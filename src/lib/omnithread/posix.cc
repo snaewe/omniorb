@@ -152,6 +152,7 @@ omni_condition::timedwait(unsigned long secs, unsigned long nanosecs)
 {
     timespec rqts = { secs, nanosecs };
 
+again:
     int rc = ERRNO(pthread_cond_timedwait(&posix_cond,
 					  &mutex->posix_mutex, &rqts));
     if (rc == 0)
@@ -160,6 +161,14 @@ omni_condition::timedwait(unsigned long secs, unsigned long nanosecs)
 #if (PthreadDraftVersion <= 6)
     if (rc == EAGAIN)
 	return 0;
+#endif
+
+#if defined(__GLIBC__)
+    // Some versions of the glibc 2.0.x produces this errno when the 
+    // program is debugged under gdb. Straightly speaking this is non-posix
+    // compliant. We catch this here to make debugging possible.
+    if (rc == EINTR)
+      goto again;
 #endif
 
     if (rc == ETIMEDOUT)
