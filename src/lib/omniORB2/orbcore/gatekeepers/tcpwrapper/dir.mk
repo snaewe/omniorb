@@ -11,7 +11,9 @@ LIBRARY_OPTIONS = \
                -DRFC931_TIMEOUT=10
 
 ifndef OSR5
+ifndef IRIX
 LIBRARY_OPTIONS += -DSOLARIS_24_GETHOSTBYNAME_BUG
+endif
 endif
 
 ifndef AIX
