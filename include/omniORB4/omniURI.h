@@ -29,6 +29,9 @@
 //
 
 // $Log$
+// Revision 1.2.2.5  2001/08/17 17:03:53  sll
+// Remove addURIHandler.
+//
 // Revision 1.2.2.4  2001/04/18 17:50:43  sll
 // Big checkin with the brand new internal APIs.
 // Scoped where appropriate with the omni namespace.
@@ -104,10 +107,6 @@ public:
     // Return true if the URI is syntactically valid.
     //  Does not throw any exceptions.
   };
-
-  static void addURIHandler(URIHandler* handler);
-  // Add a URI handler.
-
 
   // The following functions implement the stringified name operations
   // of CosNaming::NamingContextExt. They are available here to avoid
