@@ -29,6 +29,15 @@
 
 /*
   $Log$
+  Revision 1.10  1999/02/01 15:40:44  djr
+  Initialise strings allocated with string_alloc() to zero length.
+  Inline uses of string_alloc() and string_free().
+
+  Revision 1.10  1999/02/01 14:42:36  djr
+  Initialise allocated strings to zero length.
+  Corrected several cases where a string is duplicated - the buffer allocated
+  was 1 byte too long.
+
   Revision 1.9  1999/01/07 15:41:29  djr
   *** empty log message ***
 
@@ -55,23 +64,34 @@
 #include <omniORB2/CORBA.h>
 
 
+#define ALLOC_BYTES(len)  (new char[(int)(len)])
+#define FREE_BYTES(p)     delete[] (p)
+
+
 char*
 CORBA::string_alloc(CORBA::ULong len)
 {
-  return new char[(int)len+1];
+  // We initialise the string to zero length to help prevent errors
+  // if this string is copied before it is initialied. This is easy
+  // to do when assigning the returned value to a CORBA::String_var.
+  char* s = ALLOC_BYTES(len + 1);
+  if( s )  *s = '\0';
+  return s;
 }
+
 
 void
 CORBA::string_free(char* p)
 {
-  delete [] p;
+  FREE_BYTES(p);
 }
+
 
 char*
 CORBA::string_dup(const char* p)
 {
   if (p) {
-    char* q = CORBA::string_alloc((CORBA::ULong)(strlen(p)+1));
+    char* q = ALLOC_BYTES(strlen(p) + 1);
     if (q) {
       strcpy(q,p);
       return q;
@@ -80,10 +100,14 @@ CORBA::string_dup(const char* p)
   return 0;
 }
 
+//////////////////////////////////////////////////////////////////////
+///////////////////////////// String_var /////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
 CORBA::String_var::String_var(const CORBA::String_member& s)
 {
   if ((const char*)s) {
-    _data = string_alloc((ULong)(strlen(s)+1));
+    _data = ALLOC_BYTES(strlen(s) + 1);
     strcpy(_data,s);
   }
   else
@@ -95,11 +119,11 @@ CORBA::String_var&
 CORBA::String_var::operator= (const CORBA::String_member& s)
 {
   if (_data) {
-    string_free(_data);
+    FREE_BYTES(_data);
     _data = 0;
   }
   if ((const char*)s) {
-    _data = string_alloc((ULong)(strlen(s)+1));
+    _data = ALLOC_BYTES(strlen(s) + 1);
     strcpy(_data,s);
   }
   return *this;
@@ -148,7 +172,7 @@ void
 CORBA::String_member::operator<<= (NetBufferedStream& s)
 {
   if( _ptr ) {
-    CORBA::string_free(_ptr);
+    FREE_BYTES(_ptr);
     _ptr = 0;
   }
 
@@ -156,7 +180,8 @@ CORBA::String_member::operator<<= (NetBufferedStream& s)
   len <<= s;
   if( !len && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(1);
 
-  char* p = CORBA::string_alloc(len ? len - 1 : 1);
+  CORBA::ULong nbytes = len ? len : 1;
+  char* p = ALLOC_BYTES(nbytes);
   if( !p )  throw CORBA::NO_MEMORY(0, CORBA::COMPLETED_MAYBE);
 
   if( len ) {
@@ -164,11 +189,11 @@ CORBA::String_member::operator<<= (NetBufferedStream& s)
       s.get_char_array((CORBA::Char*)p, len);
     }
     catch(...) {
-      CORBA::string_free(p);
+      FREE_BYTES(p);
       throw;
     }
     if( p[len - 1] != '\0' ) {
-      CORBA::string_free(p);
+      FREE_BYTES(p);
       throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
     }
   }
@@ -200,7 +225,7 @@ void
 CORBA::String_member::operator<<= (MemBufferedStream& s)
 {
   if( _ptr ) {
-    CORBA::string_free(_ptr);
+    FREE_BYTES(_ptr);
     _ptr = 0;
   }
 
@@ -209,12 +234,12 @@ CORBA::String_member::operator<<= (MemBufferedStream& s)
   if( !len || s.RdMessageUnRead() < len )
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
 
-  char* p = CORBA::string_alloc(len - 1);
+  char* p = ALLOC_BYTES(len);
   if( !p )  throw CORBA::NO_MEMORY(0, CORBA::COMPLETED_MAYBE);
 
   s.get_char_array((CORBA::Char*)p, len);
   if( p[len - 1] != '\0' ) {
-    CORBA::string_free(p);
+    FREE_BYTES(p);
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   }
 
