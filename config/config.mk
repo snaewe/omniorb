@@ -23,6 +23,7 @@
 #  i586_linux_2.0_glibc2.1   x86 glibc-2.1, e.g. Redhat linux 6.x
 #  alpha_linux_2.0           alpha linux (compiler problem,still doesn't work)
 #  m68k_nextstep_3.3         NextStep 3.3, gcc-2.7.2
+#  x86_nextstep_3.3          NextStep 3.3 x86
 #  mips_sinux_5.43           Reliant UNIX from Siemens-Nixdorf (SNI)
 #  mips_irix_6.2_n32         SGI Irix 6.2 - 32bit mode
 #  mips_irix_6.3_n32         SGI Irix 6.3 - 32bit mode
@@ -56,6 +57,7 @@
 #platform = i586_linux_2.0_glibc2.1
 #platform = powerpc_linux_2.2_glibc
 #platform = m68k_nextstep_3.3
+#platform = x86_nextstep_3.3
 #platform = mips_sinux_5.43
 #platform = mips_irix_6.2_n32
 #platform = mips_irix_6.3_n32
