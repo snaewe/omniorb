@@ -30,7 +30,7 @@
 #include <unistd.h>
 #endif
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
@@ -120,111 +120,6 @@ getopt(int num_args, char* const* args, const char* optstring)
 }
 
 #endif
-
-
-static
-void
-EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &s,
-			   IIOP::ProfileBody &p)
-{
-  CORBA::ULong begin = 0;
-  CORBA::ULong end = 0;
-
-  // s[0] - byteorder
-  end += 1;
-  if (s.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-  CORBA::Boolean byteswap = ((s[begin] == omni::myByteOrder) ? 0 : 1);
-
-  // s[1] - iiop_version.major
-  // s[2] - iiop_version.minor
-  begin = end;
-  end = begin + 2;
-  if (s.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  p.iiop_version.major = s[begin];
-  p.iiop_version.minor = s[begin+1];
-  if (p.iiop_version.major != 1)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-  // s[3] - padding
-  // s[4] - s[7] host string length
-  begin = end + 1;
-  end = begin + 4;
-  if (s.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  {
-    CORBA::ULong len;
-    if (!byteswap) {
-      len = ((CORBA::ULong &) s[begin]);
-    }
-    else {
-      CORBA::ULong t = ((CORBA::ULong &) s[begin]);
-      len = Swap32(t);
-    }
-
-    // s[8] - s[8+len-1] host string
-    begin = end;
-    end = begin + len;
-    if (s.length() <= end)
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-    // Is this string null terminated?
-    if (((char)s[end-1]) != '\0')
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-    p.host = new CORBA::Char[len];
-    if (!p.host)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-    memcpy((void *)p.host,(void *)&(s[begin]),len);
-  }
-
-  // align to CORBA::UShort
-  begin = (end + 1) & ~(1);
-  // s[begin] port number
-  end = begin + 2;
-  if (s.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  if (!byteswap) {
-    p.port = ((CORBA::UShort &) s[begin]);
-  }
-  else {
-    CORBA::UShort t = ((CORBA::UShort &) s[begin]);
-    p.port = Swap16(t);
-  }
-
-  // align to CORBA::ULong
-  begin = (end + 3) & ~(3);
-  // s[begin]  object key length
-  end = begin + 4;
-  if (s.length() < end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-  if (s.length() == end) {
-    p.object_key.length(0);
-  }
-  else {
-    CORBA::ULong len;
-    if (!byteswap) {
-      len = ((CORBA::ULong &) s[begin]);
-    }
-    else {
-      CORBA::ULong t = ((CORBA::ULong &) s[begin]);
-      len = Swap32(t);
-    }
-
-    begin = end;
-    end = begin + len;
-    if (s.length() < end)
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-    // extract object key
-    p.object_key.length(len);
-    memcpy((void *)&p.object_key[0],(void *)&(s[begin]),len);
-  }
-  return;
-}
 
 
 #define POA_NAME_SEP            '\xff'
@@ -349,11 +244,82 @@ print_omni_key(_CORBA_Unbounded_Sequence__Octet& key, int hexflag)
   print_key(id, hexflag);
 }
 
+static
+void
+print_tagged_components(IOP::MultipleComponentProfile& components)
+{
+  CORBA::ULong total = components.length();
+  
+  for (CORBA::ULong index=0; index < total; index++) {
+    CORBA::String_var content;
+    content = IOP::dumpComponent(components[index]);
+    cout << "            " << (const char*) content << endl;
+  }
+}
 
 #if !defined(__WIN32__)
 extern char* optarg;
 extern int optind;
 #endif
+
+
+static
+void
+toIOR(const char* iorstr,IOP::IOR& ior)
+{
+  size_t s = (iorstr ? strlen(iorstr) : 0);
+  if (s<4)
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  const char *p = iorstr;
+  if (p[0] != 'I' ||
+      p[1] != 'O' ||
+      p[2] != 'R' ||
+      p[3] != ':')
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+  s = (s-4)/2;  // how many octets are there in the string
+  p += 4;
+
+  cdrMemoryStream buf((CORBA::ULong)s,0);
+
+  for (int i=0; i<(int)s; i++) {
+    int j = i*2;
+    CORBA::Octet v;
+    
+    if (p[j] >= '0' && p[j] <= '9') {
+      v = ((p[j] - '0') << 4);
+    }
+    else if (p[j] >= 'a' && p[j] <= 'f') {
+      v = ((p[j] - 'a' + 10) << 4);
+    }
+    else if (p[j] >= 'A' && p[j] <= 'F') {
+      v = ((p[j] - 'A' + 10) << 4);
+    }
+    else
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+
+    if (p[j+1] >= '0' && p[j+1] <= '9') {
+      v += (p[j+1] - '0');
+    }
+    else if (p[j+1] >= 'a' && p[j+1] <= 'f') {
+      v += (p[j+1] - 'a' + 10);
+    }
+    else if (p[j+1] >= 'A' && p[j+1] <= 'F') {
+      v += (p[j+1] - 'A' + 10);
+    }
+    else
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    v >>= buf;
+  }
+
+  buf.rewindInputPtr();
+  CORBA::Boolean b;
+  b <<= buf;
+  buf.setByteSwapFlag(b);
+
+  ior.type_id = IOP::IOR::unmarshaltype_id(buf);
+  ior.profiles <<= buf;
+}
 
 
 int main(int argc, char* argv[])
@@ -393,30 +359,34 @@ int main(int argc, char* argv[])
   }
 
 
-  _CORBA_Char* str_ior = (CORBA::Char*)argv[optind];
+  const char* str_ior = argv[optind];
 
-  _CORBA_Char* repoID;
-  IOP::TaggedProfileList* profiles;
+  IOP::IOR ior;
 
   try {
-    IOP::EncapStrToIor(str_ior, repoID, profiles);
 
-    if (*repoID == '\0' && profiles->length() == 0) {
+    toIOR(str_ior,ior);
+
+    if (ior.profiles.length() == 0 && strlen(ior.type_id) == 0) {
       cout << "IOR is a nil object reference." << endl;
     }
     else {
-      cout << "Type ID: \"" << (char*) repoID << "\"" << endl;
+      cout << "Type ID: \"" << (const char*) ior.type_id << "\"" << endl;
       cout << "Profiles:" << endl;
 
-      for (unsigned long count=0; count < profiles->length(); count++) {
+      for (unsigned long count=0; count < ior.profiles.length(); count++) {
+
 	cout << count+1 << ". ";
 
-	if ((*profiles)[count].tag == IOP::TAG_INTERNET_IOP) {
+	if (ior.profiles[count].tag == IOP::TAG_INTERNET_IOP) {
+
 	  IIOP::ProfileBody pBody;
-	  EncapStreamToProfile((*profiles)[count].profile_data, pBody);
-	  cout << "IIOP " << (int) pBody.iiop_version.major << "."
-	       << (int) pBody.iiop_version.minor << " ";
-	  cout << (char*) pBody.host << " " << pBody.port << " ";
+	  IIOP::decodeProfile(ior.profiles[count],pBody);
+
+	  cout << "IIOP " << (int) pBody.version.major << "."
+	       << (int) pBody.version.minor << " ";
+	  cout << (const char*) pBody.address.host 
+	       << " " << pBody.address.port << " ";
 
 	  unsigned long j;
 
@@ -425,13 +395,23 @@ int main(int argc, char* argv[])
 	  else
 	    print_key(pBody.object_key, hexflag);
 
+	  print_tagged_components(pBody.components);
+
+	  cout << endl;
 	}
-	else if ((*profiles)[count].tag == IOP::TAG_MULTIPLE_COMPONENTS) {
-	  cout << "Multiple Component Tag" << endl;
+	else if (ior.profiles[count].tag == IOP::TAG_MULTIPLE_COMPONENTS) {
+	  
+	  cout << "Multiple Componet Profile ";
+	  IIOP::ProfileBody pBody;
+	  IIOP::decodeMultiComponentProfile(ior.profiles[count],pBody);
+	  print_tagged_components(pBody.components);
+
+	  cout << endl;
+	  
 	}
 	else {
 	  cout << "Unrecognised profile tag: "
-	       << (int) ((*profiles)[count].tag)
+	       << (int) (ior.profiles[count].tag)
 	       << endl;
 	}
       }
@@ -440,14 +420,11 @@ int main(int argc, char* argv[])
   catch(CORBA::MARSHAL& ex) {
     cerr << "Invalid stringified IOR supplied." << endl;
     cerr << "(Minor = " << ex.minor() << ")" << endl;
-    return -1;
+    return 1;
   }
   catch(...) {
     cerr << "Exception while processing stringified IOR." << endl;
-    return -1;
+    return 1;
   }
-
-  delete[] repoID;
-  delete profiles;
-  return 1;
+  return 0;
 }

@@ -35,12 +35,12 @@
 #include <unistd.h>
 #endif
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #include <ctype.h>
 
 
-static CORBA::Char*
-genRef(char* IRTypeId, char* hostname, int port, char* objectid, int hex);
+static char* genRef(const char* IRTypeId, const char* hostname, 
+		    int port,  const char* objectid, int hex);
 
 
 static void usage(char* progname)
@@ -116,49 +116,6 @@ getopt(int num_args, char* const* args, const char* optstring)
 #endif
 
 
-
-static
-void
-profileToEncapStream(IIOP::ProfileBody &p,
-			   _CORBA_Unbounded_Sequence_Octet &s)
-{
-  CORBA::ULong hlen = strlen((const char *)p.host) + 1;
-  CORBA::ULong klen = p.object_key.length();
-  {
-    // calculate the total size of the encapsulated stream
-    CORBA::ULong total = 8 + hlen;        // first 4 bytes + aligned host
-    total = ((total + 1) & ~(1)) + 2;     // aligned port value
-    total = ((total + 3) & ~(3)) + 4 +	// aligned object key
-      klen;
-    
-    s.length(total);
-  }
-
-
-  s[0] = omni::myByteOrder;
-  s[1] = IIOP::current_major;
-  s[2] = IIOP::current_minor;
-  s[3] = 0;
-  {
-    CORBA::ULong &l = (CORBA::ULong &) s[4];
-    l = hlen;
-  }
-  memcpy((void *)&(s[8]),(void *)p.host,hlen);
-  CORBA::ULong idx = ((8 + hlen) + 1) & ~(1);
-  {
-    CORBA::UShort &l = (CORBA::UShort &) s[idx];
-    l = p.port;
-  }
-  idx = ((idx + 2) + 3) & ~(3);
-  {
-    CORBA::ULong &l = (CORBA::ULong &) s [idx];
-    l = klen;
-  }
-  idx += 4;
-  memcpy((void *)&s[idx],(void *)&p.object_key[0],klen);
-  return;
-}
-
 #if !defined(__WIN32__)
 extern char* optarg;
 extern int optind;
@@ -167,106 +124,92 @@ extern int optind;
 
 int main(int argc, char* argv[])
 {
-  if (argc < 4) 
-    {
-      usage(argv[0]);
-      return 1;
-    }	
-
+  if (argc < 4) {
+    usage(argv[0]);
+    return 1;
+  }	
 
   // Get options:
 
   int c;
   int hexflag = 0;
 
-  while((c = getopt(argc,argv,"x")) != EOF)
-    {
-      switch(c)
-	{
-	case 'x':
-	  hexflag = 1;
-	  break;
-	case '?':
-	  {
-	    usage(argv[0]);
-	    return 1;
-	  }
-	}
+  while((c = getopt(argc,argv,"x")) != EOF) {
+    switch(c) {
+    case 'x':
+      hexflag = 1;
+      break;
+    case '?':
+      {
+	usage(argv[0]);
+	return 1;
+      }
     }
+  }
 	  
 
   int port;
-  char *IRTypeId, *hostname, *objKey;
+  CORBA::String_var IRTypeId, hostname, objKey;
 
-  if (hexflag) 
-    {
-      if (argc < 6)
-	{
-	  usage(argv[0]);
-	  return 1;
-	}
-      IRTypeId = strdup(argv[2]);
-      hostname = strdup(argv[3]);
-      port = atoi(argv[4]);
-      objKey = strdup(argv[5]);
+  if (hexflag) {
+    if (argc < 6) {
+      usage(argv[0]);
+      return 1;
     }
-  else 
-    {
-      if (argc < 4)
-	{
-	  usage(argv[0]);
-	  return 1;
-	}
-
-      IRTypeId = strdup(argv[1]);
-      hostname = strdup(argv[2]);
-      port = atoi(argv[3]);
-
-      if (argc < 5) objKey = 0;
-      else objKey = strdup(argv[4]);
-
+    IRTypeId = CORBA::string_dup(argv[2]);
+    hostname = CORBA::string_dup(argv[3]);
+    port = atoi(argv[4]);
+    objKey = CORBA::string_dup(argv[5]);
+  }
+  else {
+    if (argc < 4) {
+      usage(argv[0]);
+      return 1;
     }
+    IRTypeId = CORBA::string_dup(argv[1]);
+    hostname = CORBA::string_dup(argv[2]);
+    port = atoi(argv[3]);
+    
+    if (argc >= 5)
+      objKey = CORBA::string_dup(argv[4]);
+  }
 
-  if (port == 0)
-    {
-      cerr << "Port number is invalid." << endl;
-      return -1;
-    }
+  if (port == 0) {
+    cerr << "Port number is invalid." << endl;
+    return 1;
+  }
 
-
-  CORBA::Char* ior = genRef(IRTypeId, hostname, port, objKey, hexflag);
-  
-  if (ior == 0)
-    {
-      cerr << "Error creating IOR." << endl;
-      return -1;
-    }
-  else
-    {
-      cout << (char*) ior << endl;
-    }
-
-  free(IRTypeId);
-  free(hostname);
-  if (objKey != 0)  free(objKey);
-
-  delete[] ior;
-
-  return 1;
+  CORBA::String_var ior;
+  try {
+    ior = genRef(IRTypeId, hostname, port, objKey, hexflag);
+  }
+  catch(...) {
+    cerr << "Unexpected exception caught. Abort." << endl;
+    return 1;
+  }
+  if ((const char*)ior) {
+    cout << (const char*) ior << endl;
+    return 0;
+  }
+  else {
+    return 1;
+  }
 }
 
 
-
-CORBA::Char* genRef(char* IRTypeId, char* hostname, int port, char* objKey, 
-	         int hex)
+static
+char*
+genRef(const char* IRTypeId, const char* hostname, int port, 
+       const char* objKey, int hex)
 {
+  CORBA::ORB_var orb;
+  int argc = 0;
   
-  IIOP::ProfileBody profb;
+  orb = CORBA::ORB_init(argc,0,"omniORB4");
 
-  profb.iiop_version.major = IIOP::current_major;
-  profb.iiop_version.minor = IIOP::current_minor;
-  profb.port = (CORBA::UShort) port;
-  profb.host = (CORBA::Char*) hostname;
+  IIOP::Address addrs;
+  addrs.host = hostname;
+  addrs.port = port;
 
   omniORB::seqOctets* keySeed;
 
@@ -277,99 +220,65 @@ CORBA::Char* genRef(char* IRTypeId, char* hostname, int port, char* objKey,
       omniORB::generateNewKey(k);
       keySeed = omniORB::keyToOctetSequence(k);
     }
-  else
-    {
-      // Use key given.
+  else {
+    // Use key given.
 
-     
-      if (!hex)
-	{
-	  // Key is a text value.
-	  keySeed = new omniORB::seqOctets;
-	  keySeed->length(strlen(objKey));
-	  
-	  unsigned int j;
+    if (!hex) {
+      // Key is a text value.
+      keySeed = new omniORB::seqOctets;
+      keySeed->length(strlen(objKey));
+      unsigned int j;
 
-	  for (j=0; j<strlen(objKey); j++)
-	    (*keySeed)[j] = (CORBA::Octet) objKey[j];
-	 
-	}
-      else
-	{
-	  // Interpret key as hexadecimal
-	  if ((objKey[0] != '0' || objKey[1] !='x'))
-	    {
-	      cerr << "A hexadecimal key should be prefixed by 0x" << endl;
-	      return 0;
-	    }
-	  else if ( (strlen(objKey)%2) != 0)
-	    {
-	      cerr << "Hexadecimal key is corrupted." << endl;
-	      return 0;
-	    }
-	
-
-	  keySeed = new omniORB::seqOctets;
-	  keySeed->length((strlen(objKey)/2)-1);
-
-	  unsigned int j;
-
-	  for (j=2; j < strlen(objKey); j+=2)
-	    {
-	      char curr = (int) tolower(objKey[j]);
-	      int hi,lo;
-
-	      if (curr >= '0' && curr <= '9')
-		hi = ((curr - 48) << 4);
-	      else if (curr >= 'a' && curr <='f')
-		hi = ((curr - 87) << 4);
-	      else
-		{
-		  cerr << "Hexadecimal key is corrupted." << endl;
-		  return 0;
-		}
-		 
-	      curr = tolower(objKey[j+1]);
-	      
-	      if (curr >= '0' && curr <= '9')
-		  lo = curr - 48;
-	      else if (curr >= 'a' && curr <='f')
-		  lo = curr - 87;
-	      else
-		{
-		  cerr << "Hexadecimal key is corrupted." << endl;
-		  return 0;
-		}
-
-	     (*keySeed)[(j/2)-1] = (CORBA::Octet) (hi + lo);
-	    }
-	}
+      for (j=0; j<strlen(objKey); j++)
+	(*keySeed)[j] = (CORBA::Octet) objKey[j];
     }
-      
+    else {
+      // Interpret key as hexadecimal
+      if ((objKey[0] != '0' || objKey[1] !='x')) {
+	cerr << "A hexadecimal key should be prefixed by 0x" << endl;
+	return 0;
+      }
+      else if ( (strlen(objKey)%2) != 0) {
+	cerr << "Hexadecimal key is corrupted." << endl;
+	return 0;
+      }
+	
+      keySeed = new omniORB::seqOctets;
+      keySeed->length((strlen(objKey)/2)-1);
+      unsigned int j;
 
-  profb.object_key = *keySeed;
-
-  IOP::TaggedProfile p;
-  p.tag = IOP::TAG_INTERNET_IOP;
+      for (j=2; j < strlen(objKey); j+=2) {
+	char curr = (int) tolower(objKey[j]);
+	int hi,lo;
+	
+	if (curr >= '0' && curr <= '9')
+	  hi = ((curr - 48) << 4);
+	else if (curr >= 'a' && curr <='f')
+	  hi = ((curr - 87) << 4);
+	else {
+	  cerr << "Hexadecimal key is corrupted." << endl;
+	  return 0;
+	}
+	curr = tolower(objKey[j+1]);
+	if (curr >= '0' && curr <= '9')
+	  lo = curr - 48;
+	else if (curr >= 'a' && curr <='f')
+	  lo = curr - 87;
+	else {
+	  cerr << "Hexadecimal key is corrupted." << endl;
+	  return 0;
+	}
+	(*keySeed)[(j/2)-1] = (CORBA::Octet) (hi + lo);
+      }
+    }
+  }
   
-  profileToEncapStream(profb,p.profile_data);
-
-
-  int intfname_len = strlen(IRTypeId)+1;
-  CORBA::Char* intfname = new CORBA::Char[intfname_len];
-  sprintf((char*) intfname,"%s",IRTypeId);
-  intfname[intfname_len-1]='\0';
-
-  IOP::TaggedProfileList* pList = new IOP::TaggedProfileList;
-  pList->length(1);
-  (*pList)[0] = p;
-  CORBA::Char* string_ior =  IOP::iorToEncapStr(intfname,pList);
+  omniIOR* ior = new omniIOR(IRTypeId,*keySeed,&addrs,1);
+  omniObjRef* objref = omni::createObjRef(CORBA::Object::_PD_repoId,ior,0);
   
-
-  delete pList;
-  delete keySeed;
-  delete[] intfname;
-	  
-  return string_ior;
+  CORBA::String_var result;
+  result = omniObjRef::_toString(objref);
+  
+  return result._retn();
 }  
   
