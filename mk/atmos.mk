@@ -184,7 +184,7 @@ endif
 #
 
 ifdef EXPORT_TREE
-define ExportATMosInterface
+define ExportATMosInterfaces
 (dir=$(EXPORT_TREE)/$(BINDIR); $(CreateDir); \
  allpackage="$(EXPORT_TREE)/$(BINDIR)/all_if.pkg"; \
  if [ -f $$allpackage ]; then \
@@ -229,7 +229,7 @@ define ExportATMosInterface
 )
 endef
 
-define ExportATMosPackage
+define ExportATMosPackages
 (for package in $$packages; do \
    file="$$package.pkg"; \
    dir="$(EXPORT_TREE)/$(BINDIR)/software"; \
@@ -238,8 +238,8 @@ define ExportATMosPackage
 )
 endef
 else
-ExportATMosInterface=$(NoExportTreeError)
-ExportATMosPackage=$(NoExportTreeError)
+ExportATMosInterfaces=$(NoExportTreeError)
+ExportATMosPackages=$(NoExportTreeError)
 endif
 
 

@@ -4,4 +4,7 @@ all::
 	@echo
 
 export::
-	@$(ExportATMosInterface)
+	@$(ExportATMosInterfaces)
+
+export::
+	@(packages="omniORB"; $(ExportATMosPackages))

@@ -12,9 +12,11 @@ all:: $(diner) $(prio) $(thrspecdata) $(prodcons)
 clean::
 	$(RM) $(diner) $(prio) $(thrspecdata) $(prodcons)
 
-export: $(diner) $(prio) $(thrspecdata) $(prodcons)
+export:: $(diner) $(prio) $(thrspecdata) $(prodcons)
 	@(module="threadtests"; $(ExportExecutable))
 
+export::
+	@(packages="diner"; $(ExportATMosPackages))
 
 $(diner): diner.o $(OMNITHREAD_LIB_DEPEND)
 	@(libs="$(OMNITHREAD_LIB)"; $(CXXExecutable))
