@@ -9,3 +9,7 @@ export:: main.py
 export:: poa.py
 	@(file="poa.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: mangler.py
+	@(file="mangler.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
+
