@@ -10,6 +10,9 @@
 
 /*
  $Log$
+ Revision 1.2  1997/01/23 15:16:40  sll
+ Added static member proxyStubs in proxyObjectFactory class.
+
  Revision 1.1  1997/01/08 17:28:30  sll
  Initial revision
 
@@ -38,7 +41,8 @@ public:
   // Return true if <base_repoId> is the interface repository ID of
   // a base interface.
 
-  friend proxyObjectFactory_iterator;
+  friend class proxyObjectFactory_iterator;
+  static proxyObjectFactory* proxyStubs;
 
 private:
   proxyObjectFactory *pd_next;
