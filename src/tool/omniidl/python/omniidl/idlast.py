@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.4  2000/11/01 15:57:03  dpg1
+# More updates for 2.4.
+#
 # Revision 1.15.2.3  2000/11/01 12:45:59  dpg1
 # Update to CORBA 2.4 specification.
 #
@@ -295,6 +298,7 @@ class Interface (Decl, DeclRepoId):
 Functions:
 
   abstract()     -- boolean: true if the interface is declared abstract.
+  local()        -- boolean: true if the interface is declared local.
   inherits()     -- list of Interface objects from which this one
                     inherits.
   contents()     -- list of Decl objects for all items declared within
@@ -306,12 +310,13 @@ Functions:
 
     def __init__(self, file, line, mainFile, pragmas, comments,
                  identifier, scopedName, repoId,
-                 abstract, inherits):
+                 abstract, local, inherits):
 
         Decl.__init__(self, file, line, mainFile, pragmas, comments)
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__abstract     = abstract
+        self.__local        = local
         self.__inherits     = inherits
         self.__contents     = []
         self.__declarations = []
@@ -329,6 +334,7 @@ Functions:
     def accept(self, visitor): visitor.visitInterface(self)
 
     def abstract(self):     return self.__abstract
+    def local(self):        return self.__local
     def inherits(self):     return self.__inherits
     def contents(self):     return self.__contents
     def declarations(self): return self.__declarations
@@ -341,23 +347,26 @@ class Forward (Decl, DeclRepoId):
 Functions:
 
   abstract() -- boolean: true if the interface is declared abstract.
+  local()    -- boolean: true if the interface is declared local.
   fullDecl() -- Interface object corresponding to full interface
                 declaration or None if there is no full declaration."""
 
     def __init__(self, file, line, mainFile, pragmas, comments,
                  identifier, scopedName, repoId,
-                 abstract):
+                 abstract, local):
 
         Decl.__init__(self, file, line, mainFile, pragmas, comments)
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__abstract = abstract
+        self.__local    = local
         self._fullDecl  = None
         self._more      = []
 
     def accept(self, visitor): visitor.visitForward(self)
 
     def abstract(self): return self.__abstract
+    def local(self):    return self.__abstract
     def fullDecl(self): return self._fullDecl
 
 
@@ -1093,7 +1102,7 @@ strings. Raises DeclNotFound if the name is not recognised."""
 CORBAObject = Interface("<built in>", 0, 0, [], [],
                         "Object", ["CORBA", "Object"],
                         "IDL:omg.org/CORBA/Object:1.0",
-                        0, [])
+                        0, 0, [])
 registerDecl(["CORBA", "Object"], CORBAObject)
 
 CORBAModule = Module("<built in>", 0, 0, [], [], "CORBA", ["CORBA"],

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.4  2000/11/01 15:57:03  dpg1
+# More updates for 2.4.
+#
 # Revision 1.8.2.3  2000/11/01 12:46:00  dpg1
 # Update to CORBA 2.4 specification.
 #
@@ -98,9 +101,13 @@ module @id@ {""", id = node.identifier())
         else:
             inherits = ""
 
+        if   node.abstract(): qual = "abstract "
+        elif node.local():    qual = "local "
+        else:                 qual = ""
+        
         self.st.out("""\
-interface @id@ @inherits@{""",
-               id = node.identifier(), inherits=inherits)
+@qual@interface @id@ @inherits@{""",
+               id = node.identifier(), inherits=inherits, qual=qual)
 
         self.st.inc_indent()
 
@@ -113,8 +120,12 @@ interface @id@ @inherits@{""",
 
 
     def visitForward(self, node):
+        if   node.abstract(): qual = "abstract "
+        elif node.local():    qual = "local "
+        else:                 qual = ""
+        
         self.st.out("""\
-interface @id@;""", id = node.identifier())
+@qual@interface @id@;""", id = node.identifier(), qual=qual)
 
 
     def visitConst(self, node):
