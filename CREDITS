@@ -6,10 +6,6 @@ Email:        Peter.Braun@mchp.siemens.de
 Organisation: SIEMENS AG
 Description:  Reliant UNIX port
 
-Name:         Steven Brenneis
-Email:        brennes1@rjrt.com
-Description:  Reopen IDL module and use of C++ namespace
-
 Name:         Eoin Carroll
 Email:        ewc@orl.co.uk
 Organisation: Olivetti & Oracle Research Laboratory
@@ -103,10 +99,6 @@ Name:         Hugo Vandeputte
 Email:        Hugo.Vandeputte@meteo.fr
 Organisation: SCEM/TTI/DEV
 Description:  HPUX port
-
-Name:         Bruce Visscher
-Email:        visschb@rjrt.com
-Description:  OpenVMS port
 
 Name:         James Weatherall
 Email:	      jnw@uk.research.att.com
