@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5  1999/11/03 17:24:05  dpg1
+// Added optional pragmas all over the place.
+//
 // Revision 1.4  1999/11/02 17:07:28  dpg1
 // Changes to compile on Solaris.
 //
@@ -279,7 +282,6 @@ ValueAbs* valueabs_hack = 0;
 %type <struct_val> 		    struct_type
 %type <struct_val> 		    struct_header
 %type <member_val> 		    member_list
-%type <member_val> 		    member_plus
 %type <member_val> 		    member
 %type <union_val> 		    union_type
 %type <union_val> 		    union_header
@@ -361,8 +363,8 @@ definition:
     ;
 
 module:
-    module_header '{' definition_plus '}' {
-      $1->finishConstruction($3);
+    module_header pragmas_opt '{' definition_plus '}' {
+      $1->finishConstruction($4);
       $$ = $1;
     }
   | module_header error {
@@ -416,8 +418,9 @@ forward_dcl:
     ;
 
 interface_header:
-    abstract_opt INTERFACE IDENTIFIER interface_inheritance_spec_opt {
-      $$ = new Interface(currentFile, yylineno, mainFile, $3, $1, $4);
+    abstract_opt INTERFACE IDENTIFIER pragmas_opt
+        interface_inheritance_spec_opt {
+      $$ = new Interface(currentFile, yylineno, mainFile, $3, $1, $5);
     }
     ;
 
@@ -461,16 +464,16 @@ interface_inheritance_spec:
     ;
 
 interface_inheritance_list:
-    interface_name {
+    interface_name pragmas_opt {
       $$ = new InheritSpec($1, currentFile, yylineno);
     }
-  | interface_inheritance_list ',' interface_name {
+  | interface_inheritance_list ',' pragmas_opt interface_name pragmas_opt {
       if ($1) {
-	$1->append(new InheritSpec($3, currentFile, yylineno),
+	$1->append(new InheritSpec($4, currentFile, yylineno),
 		   currentFile, yylineno);
 	$$ = $1;
       }
-      else $$ = new InheritSpec($3, currentFile, yylineno);
+      else $$ = new InheritSpec($4, currentFile, yylineno);
     }
   | error {
       IdlSyntaxError(currentFile, yylineno,
@@ -897,10 +900,10 @@ constr_type_spec:
     ;
 
 declarators:
-    declarator { $$ = $1; }
-  | declarators ',' declarator {
-      $1->append($3);
-      $$ = $1;
+    declarator pragmas_opt { $$ = $1; }
+  | declarators ',' pragmas_opt declarator pragmas_opt {
+      if ($1) { $1->append($4); $$ = $1; }
+      else $$ = $4;
     }
     ;
 
@@ -991,8 +994,8 @@ object_type:
     ;
 
 struct_type:
-    struct_header '{' member_list '}' {
-      $1->finishConstruction($3);
+    struct_header pragmas_opt '{' pragmas_opt member_list '}' {
+      $1->finishConstruction($5);
       $$ = $1;
     }
   | struct_header error {
@@ -1010,20 +1013,15 @@ struct_header:
     ;
 
 member_list:
-    member_plus { $$ = $1; }
-    ;
-
-member_plus:
     member { $$ = $1; }
-  | member_plus member {
+  | member_list member {
       if ($1) { $1->append($2); $$ = $1; }
       else $$ = $2;
     }
-  | member_plus pragma { $$ = $1; }
     ;
 
 member:
-    type_spec declarators ';' {
+    type_spec declarators ';' pragmas_opt {
       $$ = new Member(currentFile, yylineno, mainFile,
 		      $1->type(), $1->constr(), $2);
       delete $1;
@@ -1032,13 +1030,16 @@ member:
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in member declaration");
       $$ = 0;
-  }
+    }
     ;
 
 union_type:
-    union_header SWITCH '(' switch_type_spec ')' '{' switch_body '}' {
-      $1->finishConstruction($4->type(), $4->constr(), $7);
-      delete $4;
+    union_header pragmas_opt SWITCH
+        '(' pragmas_opt switch_type_spec pragmas_opt ')'
+        pragmas_opt '{' pragmas_opt switch_body '}' {
+
+      $1->finishConstruction($6->type(), $6->constr(), $12);
+      delete $6;
       $$ = $1;
     }
   | union_header error {
@@ -1076,11 +1077,10 @@ case_plus:
       $1->append($2);
       $$ = $1;
     }
-  | case_plus pragma { $$ = $1; }
     ;
 
 case:
-    case_label_plus element_spec ';' {
+    case_label_plus element_spec ';' pragmas_opt {
       $2->finishConstruction($1);
       $$ = $2;
     }
@@ -1095,10 +1095,10 @@ case_label_plus:
     ;
 
 case_label:
-    CASE const_exp ':' {
+    CASE const_exp ':' pragmas_opt {
       $$ = new CaseLabel(currentFile, yylineno, mainFile, $2);
     }
-  | DEFAULT ':' {
+  | DEFAULT ':' pragmas_opt {
       $$ = new CaseLabel(currentFile, yylineno, mainFile, 0);
     }
     ;
@@ -1111,8 +1111,8 @@ element_spec:
     ;
 
 enum_type:
-    enum_header '{' enumerator_list '}' {
-      $1->finishConstruction($3);
+    enum_header pragmas_opt '{' pragmas_opt enumerator_list '}' {
+      $1->finishConstruction($5);
       $$ = $1;
     }
   | enum_header error {
@@ -1129,9 +1129,9 @@ enum_header:
     ;
 
 enumerator_list:
-    enumerator { $$ = $1; }
-  | enumerator_list ',' enumerator {
-      $1->append($3);
+    enumerator pragmas_opt { $$ = $1; }
+  | enumerator_list ',' pragmas_opt enumerator pragmas_opt {
+      $1->append($4);
       $$ = $1;
     }
     ;
@@ -1195,16 +1195,16 @@ readonly_opt:
     ;
 
 simple_declarator_list:
-    simple_declarator { $$ = $1; }
-  | simple_declarator_list ',' simple_declarator {
-      $1->append($3);
-      $$ = $1;
+    simple_declarator pragmas_opt { $$ = $1; }
+  | simple_declarator_list ',' pragmas_opt simple_declarator pragmas_opt {
+      if ($1) { $1->append($4); $$ = $1; }
+      else $$ = $4;
     }
     ;
 
 except_dcl:
-    except_header '{' member_star '}' {
-      $1->finishConstruction($3);
+    except_header pragmas_opt '{' pragmas_opt member_star '}' {
+      $1->finishConstruction($5);
       $$ = $1;
     }
   | except_header error {
@@ -1230,8 +1230,9 @@ member_star:
     ;
 
 op_dcl:
-    op_header parameter_dcls raises_expr_opt context_expr_opt {
-      $1->finishConstruction($2, $3, $4);
+    op_header pragmas_opt parameter_dcls pragmas_opt
+        raises_expr_opt context_expr_opt {
+      $1->finishConstruction($3, $5, $6);
       $$ = $1;
     }
   | op_header error {
@@ -1263,8 +1264,8 @@ op_type_spec:
     ;
 
 parameter_dcls:
-    '(' param_dcl_list ')' { $$ = $2; }
-  | '(' ')'                { $$ = 0; }
+    '(' pragmas_opt param_dcl_list ')' { $$ = $3; }
+  | '(' pragmas_opt ')'                { $$ = 0; }
   | '(' error ')' {
       IdlSyntaxError(currentFile, yylineno,
 		     "Syntax error in operation parameters");
@@ -1273,10 +1274,10 @@ parameter_dcls:
     ;
 
 param_dcl_list:
-    param_dcl { $$ = $1; }
-  | param_dcl_list ',' param_dcl {
-      $1->append($3);
-      $$ = $1;
+    param_dcl pragmas_opt { $$ = $1; }
+  | param_dcl_list ',' pragmas_opt param_dcl pragmas_opt {
+      if ($1) { $1->append($4); $$ = $1; }
+      else $$ = $4;
     }
     ;
 
@@ -1293,8 +1294,8 @@ param_attribute:
     ;
 
 raises_expr_opt:
-    /* empty */ { $$ = 0; }
-  | raises_expr { $$ = $1; }
+    /* empty */             { $$ = 0; }
+  | raises_expr pragmas_opt { $$ = $1; }
     ;
 
 raises_expr:
@@ -1302,18 +1303,18 @@ raises_expr:
     ;
 
 scoped_name_list:
-    scoped_name {
+    scoped_name pragmas_opt {
       $$ = new RaisesSpec($1, currentFile, yylineno);
     }
-  | scoped_name_list ',' scoped_name {
-      $1->append(new RaisesSpec($3, currentFile, yylineno));
+  | scoped_name_list ',' pragmas_opt scoped_name pragmas_opt {
+      $1->append(new RaisesSpec($4, currentFile, yylineno));
       $$ = $1;
     }
     ;
 
 context_expr_opt:
-    /* empty */  { $$ = 0; }
-  | context_expr { $$ = $1; }
+    /* empty */              { $$ = 0; }
+  | context_expr pragmas_opt { $$ = $1; }
     ;
 
 context_expr:
@@ -1321,11 +1322,11 @@ context_expr:
     ;
 
 string_literal_list:
-    string_literal_plus {
+    string_literal_plus pragmas_opt {
       $$ = new ContextSpec($1, currentFile, yylineno);
     }
-  | string_literal_list ',' string_literal_plus {
-      $1->append(new ContextSpec($3, currentFile, yylineno));
+  | string_literal_list ',' pragmas_opt string_literal_plus pragmas_opt {
+      $1->append(new ContextSpec($4, currentFile, yylineno));
       $$ = $1;
     }
     ;
@@ -1361,6 +1362,16 @@ pragma:
     pragma_id
   | pragma_version
   | unknown_pragma
+    ;
+
+pragmas:
+    pragma
+  | pragmas pragma
+    ;
+
+pragmas_opt:
+    /* empty */
+  | pragmas
     ;
 
 pragma_prefix:
