@@ -155,14 +155,6 @@ private:
   size_t calculateItemSize(const TypeCode_base *tc,
 			   const size_t initialoffset);
 
-  // calculateSimpleItemSize
-  // Examines the data at the current position in the internal
-  // buffer and returns the offset resulting from marshalling
-  // that data using CDR semantics, at the specified initialoffet,
-  // into another buffer.
-  size_t calculateSimpleItemSize(const CORBA::TCKind tck,
-				 const size_t initialoffset);
-
 
   // FIELDS
 
