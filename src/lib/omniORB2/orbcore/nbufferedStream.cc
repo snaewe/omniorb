@@ -11,11 +11,14 @@
 
 /*
   $Log$
-  Revision 1.4  1997/04/23 12:52:59  sll
-  - introduced direct send/receive cutoff values.
-  - added DO_NOT_AVOID_MISALIGNMENT macro. If defined, try to receive
-    as much as the internal buffer allows.
+  Revision 1.5  1997/04/28 18:09:37  sll
+  current_inb_alignment and current_outb_alignment are now const functions.
 
+// Revision 1.4  1997/04/23  12:52:59  sll
+// - introduced direct send/receive cutoff values.
+// - added DO_NOT_AVOID_MISALIGNMENT macro. If defined, try to receive
+//   as much as the internal buffer allows.
+//
 // Revision 1.3  1997/03/10  11:52:38  sll
 // Minor changes to accomodate the creation of a public API for omniORB2.
 //
@@ -304,14 +307,14 @@ NetBufferedStream::rewind_outb_mkr(int oldalignment) {
 
 int
 
-NetBufferedStream::current_outb_alignment() {
+NetBufferedStream::current_outb_alignment() const {
   int align = (omni::ptr_arith_t)pd_outb_mkr & ((int)omni::max_alignment - 1);
   return ((align) ? align : (int)omni::max_alignment);
 }
 
 int
 
-NetBufferedStream::current_inb_alignment() {
+NetBufferedStream::current_inb_alignment() const {
   int align = (omni::ptr_arith_t)pd_inb_mkr & ((int)omni::max_alignment - 1);
   return ((align) ? align : (int)omni::max_alignment);
 }
