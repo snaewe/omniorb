@@ -442,46 +442,19 @@ OMNIORB_FOR_EACH_SYS_EXCEPTION(STD_EXCEPTION)
 ////////////// isaSystemException                                /////
 //////////////////////////////////////////////////////////////////////
 
+
 CORBA::Boolean
 isaSystemException(const CORBA::Any* a)
 {
   CORBA::TypeCode_var tc = a->type();
 
-  if (tc->equivalent(_tc_UNKNOWN) ||
-      tc->equivalent(_tc_UNKNOWN) ||
-      tc->equivalent(_tc_BAD_PARAM) ||
-      tc->equivalent(_tc_NO_MEMORY) ||
-      tc->equivalent(_tc_IMP_LIMIT) ||
-      tc->equivalent(_tc_COMM_FAILURE) ||
-      tc->equivalent(_tc_INV_OBJREF) ||
-      tc->equivalent(_tc_OBJECT_NOT_EXIST) ||
-      tc->equivalent(_tc_NO_PERMISSION) ||
-      tc->equivalent(_tc_INTERNAL) ||
-      tc->equivalent(_tc_MARSHAL) ||
-      tc->equivalent(_tc_INITIALIZE) ||
-      tc->equivalent(_tc_NO_IMPLEMENT) ||
-      tc->equivalent(_tc_BAD_TYPECODE) ||
-      tc->equivalent(_tc_BAD_OPERATION) ||
-      tc->equivalent(_tc_NO_RESOURCES) ||
-      tc->equivalent(_tc_NO_RESPONSE) ||
-      tc->equivalent(_tc_PERSIST_STORE) ||
-      tc->equivalent(_tc_BAD_INV_ORDER) ||
-      tc->equivalent(_tc_TRANSIENT) ||
-      tc->equivalent(_tc_FREE_MEM) ||
-      tc->equivalent(_tc_INV_IDENT) ||
-      tc->equivalent(_tc_INV_FLAG) ||
-      tc->equivalent(_tc_INTF_REPOS) ||
-      tc->equivalent(_tc_BAD_CONTEXT) ||
-      tc->equivalent(_tc_OBJ_ADAPTER) ||
-      tc->equivalent(_tc_DATA_CONVERSION) ||
-      tc->equivalent(_tc_TRANSACTION_REQUIRED) ||
-      tc->equivalent(_tc_TRANSACTION_ROLLEDBACK) ||
-      tc->equivalent(_tc_INVALID_TRANSACTION) ||
-      tc->equivalent(_tc_WRONG_TRANSACTION)) {
-    return 1;
-  }
-  else
-    return 0;
+# define ISA_EXCEPTION(name) if (tc->equivalent(_tc_##name)) return 1;
+
+  OMNIORB_FOR_EACH_SYS_EXCEPTION(ISA_EXCEPTION)
+
+# undef ISA_EXCEPTION
+
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////
