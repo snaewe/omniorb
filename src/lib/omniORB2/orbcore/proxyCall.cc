@@ -35,6 +35,10 @@
 
 /*
  $Log$
+ Revision 1.5  1999/05/20 18:36:03  sll
+ Revert to non-context version. Support for context is now in
+ an equivalent version in the dynamic library.
+
  Revision 1.4  1999/04/21 13:11:18  djr
  Added support for contexts.
 
@@ -74,11 +78,6 @@ _again:
 				  call_desc.operation_len());
 
       message_size = call_desc.alignedSize(message_size);
-      if( call_desc.contexts_expected() )
-	message_size = CORBA::Context::NP_alignedSize(call_desc.context(),
-				      call_desc.contexts_expected(),
-				      call_desc.num_contexts_expected(),
-				      message_size);
 
       giop_client.InitialiseRequest(ropeAndKey.key(), ropeAndKey.keysize(),
 				    call_desc.operation(),
@@ -87,11 +86,6 @@ _again:
 
       // Marshal the arguments to the operation.
       call_desc.marshalArguments(giop_client);
-      if( call_desc.contexts_expected() )
-	CORBA::Context::marshalContext(call_desc.context(),
-				       call_desc.contexts_expected(),
-				       call_desc.num_contexts_expected(),
-				       giop_client);
 
       // Wait for the reply.
       switch(giop_client.ReceiveReply()){
@@ -220,11 +214,6 @@ _again:
 				  call_desc.operation_len());
 
       message_size = call_desc.alignedSize(message_size);
-      if( call_desc.contexts_expected() )
-	message_size = CORBA::Context::NP_alignedSize(call_desc.context(),
-				      call_desc.contexts_expected(),
-				      call_desc.num_contexts_expected(),
-				      message_size);
 
       giop_client.InitialiseRequest(ropeAndKey.key(), ropeAndKey.keysize(),
 				    call_desc.operation(),
@@ -233,11 +222,6 @@ _again:
 
       // Marshal the arguments to the operation.
       call_desc.marshalArguments(giop_client);
-      if( call_desc.contexts_expected() )
-	CORBA::Context::marshalContext(call_desc.context(),
-				       call_desc.contexts_expected(),
-				       call_desc.num_contexts_expected(),
-				       giop_client);
 
       // Wait for the reply.
       switch(giop_client.ReceiveReply()){
