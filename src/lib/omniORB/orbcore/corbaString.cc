@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.17.2.8  2001/09/19 17:26:48  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.17.2.7  2001/08/03 17:41:19  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -153,13 +156,7 @@ CORBA::string_free(char* p)
 char*
 CORBA::string_dup(const char* p)
 {
-  if (p) {
-    char* q = _CORBA_String_helper::alloc(strlen(p));
-    if (q) {
-      strcpy(q,p);
-      return q;
-    }
-  }
+  if (p) return _CORBA_String_helper::dup(p);
   return 0;
 }
 

@@ -611,6 +611,7 @@ public:
 	static int count;
     public:
 	init_t(void);
+        ~init_t(void);
     };
 
     friend class init_t;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/09/19 17:26:46  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.1.4.5  2001/09/04 14:38:09  sll
   Added the boolean argument to notifyCommFailure to indicate if
   omniTransportLock is held by the caller.
@@ -205,6 +208,7 @@ class giopRope : public Rope, public RopeLink {
 
   friend class giopStream;
   friend class giopStrand;
+  friend class omni_giopRope_initialiser;
 
  protected:
   int                  pd_refcount;  // reference count

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/09/19 17:26:52  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.2.2.6  2001/06/07 16:24:11  dpg1
   PortableServer::Current support.
 
@@ -88,6 +91,7 @@
 #include <exceptiondefs.h>
 #include <omniCurrent.h>
 #include <omniORB4/minorCode.h>
+#include <omniORB4/objTracker.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -132,6 +136,7 @@ PortableServer::POAManager::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbPOAManager(1 /* is nil */);
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

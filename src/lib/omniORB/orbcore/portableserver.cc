@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.9  2001/09/19 17:26:52  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.2.2.8  2001/08/15 10:26:14  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -99,6 +102,7 @@
 #include <poacurrentimpl.h>
 #include <localIdentity.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/objTracker.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
@@ -180,6 +184,7 @@ PortableServer::name::_nil()  \
   if( !_the_nil_ptr ) {  \
     omni::nilRefLock().lock();  \
     if( !_the_nil_ptr )  _the_nil_ptr = new name;  \
+    registerNilCorbaObject(_the_nil_ptr); \
     omni::nilRefLock().unlock();  \
   }  \
   return _the_nil_ptr;  \

@@ -28,6 +28,7 @@
 //
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/objTracker.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -575,7 +576,7 @@ RequestImpl::unmarshalUserException(cdrStream& s, const char* repoId)
 
 static CORBA::Any dummy_any;
 
-class omniNilRequest : public CORBA::Request {
+class omniNilRequest : public CORBA::Request, public omniTrackedObject {
 public:
   virtual CORBA::Object_ptr target() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -701,6 +702,7 @@ Request::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilRequest;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

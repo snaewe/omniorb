@@ -145,7 +145,7 @@ private:
   // PRIVATE DATA
 
   cdrMemoryStream pd_mbuf;
-  CORBA::TypeCode_ptr pd_tc;
+  CORBA::TypeCode_var pd_tc;
 
   // If the AnyP was created using a void* pointer and TypeCode.
   void * pd_dataptr;

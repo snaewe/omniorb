@@ -28,6 +28,7 @@
 //
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/objTracker.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -44,7 +45,8 @@ OMNI_NAMESPACE_BEGIN(omni)
 //////////////////////////// omniNilDynAny ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynAny : public virtual CORBA::DynAny {
+class omniNilDynAny : public virtual CORBA::DynAny,
+		      public omniTrackedObject {
 public:
   virtual CORBA::TypeCode_ptr type() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -242,6 +244,7 @@ CORBA::DynAny::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynAny;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -280,6 +283,7 @@ CORBA::DynEnum::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynEnum;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -319,6 +323,7 @@ CORBA::DynStruct::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynStruct;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -373,6 +378,7 @@ CORBA::DynUnion::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynUnion;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -411,6 +417,7 @@ CORBA::DynSequence::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynSequence;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -442,6 +449,7 @@ CORBA::DynArray::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilDynArray;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

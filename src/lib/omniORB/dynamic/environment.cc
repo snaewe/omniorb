@@ -28,6 +28,7 @@
 //
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/objTracker.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -130,7 +131,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilEnv : public CORBA::Environment {
+class omniNilEnv : public CORBA::Environment, public omniTrackedObject {
 public:
   virtual void exception(CORBA::Exception*) {
     _CORBA_invoked_nil_pseudo_ref();
@@ -199,6 +200,7 @@ Environment::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilEnv;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

@@ -28,6 +28,7 @@
 //
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/objTracker.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -181,7 +182,7 @@ NVListImpl::NP_duplicate()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilNVList : public CORBA::NVList {
+class omniNilNVList : public CORBA::NVList, public omniTrackedObject {
 public:
   virtual CORBA::ULong count() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -255,6 +256,7 @@ NVList::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilNVList;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

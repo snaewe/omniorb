@@ -445,6 +445,19 @@ omni_thread::init_t::init_t(void)
 	throw omni_thread_fatal(GetLastError());
 }
 
+omni_thread::init_t::~init_t(void)
+{
+    if (--count != 0) return;
+
+    omni_thread* self = omni_thread::self();
+    if (!self) return;
+
+    TlsSetValue(self_tls_index, (LPVOID)0);
+    delete self;
+
+    delete next_id_mutex;
+}
+
 //
 // Wrapper for thread creation.
 //

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.15  2001/09/19 17:26:49  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.22.2.14  2001/09/10 17:47:57  sll
   startIdleCounter in csInsert.
 
@@ -117,8 +120,8 @@ CORBA::ULong   orbParameters::maxServerThreadPoolSize        = 100;
 
 
 ////////////////////////////////////////////////////////////////////////////
-  giopServer::giopServer() : pd_state(IDLE), pd_nconnections(0),
-			     pd_cond(&pd_lock), pd_n_temporary_workers(0)
+giopServer::giopServer() : pd_state(IDLE), pd_nconnections(0),
+			   pd_cond(&pd_lock), pd_n_temporary_workers(0)
 {
   pd_thread_per_connection = orbParameters::threadPerConnectionPolicy;
   pd_connectionState = new connectionState*[connectionState::hashsize];
@@ -130,6 +133,7 @@ CORBA::ULong   orbParameters::maxServerThreadPoolSize        = 100;
 ////////////////////////////////////////////////////////////////////////////
 giopServer::~giopServer()
 {
+  delete [] pd_connectionState;
 }
 
 
@@ -634,12 +638,14 @@ giopServer::notifyRzNewConnection(giopRendezvouser* r, giopConnection* conn)
 					  !conn->pd_has_dedicated_thread);
 	if (!orbAsyncInvoker->insert(task)) {
 	  // Cannot start serving this new connection.
-	  omniORB::logger log;
-	  log << "Cannot create a worker for this endpoint: "
-	      << conn->myaddress()
-	      << " from "
-	      << conn->peeraddress()
-	      << "\n";
+	  if (omniORB::trace(1)) {
+	    omniORB::logger log;
+	    log << "Cannot create a worker for this endpoint: "
+		<< conn->myaddress()
+		<< " from "
+		<< conn->peeraddress()
+		<< "\n";
+	  }
 	  delete task;
 	  {
 	    omni_tracedmutex_lock sync(*omniTransportLock);

@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.5  2001/09/19 17:26:46  dpg1
+ Full clean-up after orb->destroy().
+
  Revision 1.1.2.4  2001/09/03 16:52:04  sll
  New signature for locateRequest. Now accept a calldescriptor argument.
 
@@ -60,20 +63,30 @@ OMNI_NAMESPACE_END(omni)
 
 class omniInProcessIdentity : public omniIdentity {
 public:
-  inline ~omniInProcessIdentity() {}
+  inline ~omniInProcessIdentity() {
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+    if (--identity_count == 0)
+      lastIdentityHasBeenDeleted();
+  }
 
   inline omniInProcessIdentity(omniObjKey& key,
 			       classCompare_fn compare = thisClassCompare)
     : omniIdentity(key, compare),
       pd_refCount(0)
-    {}
+    {
+      ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+      ++identity_count;
+    }
   // May consume <key>.
 
   inline omniInProcessIdentity(const _CORBA_Octet* key, int keysize,
 			       classCompare_fn compare = thisClassCompare)
     : omniIdentity(key, keysize, compare),
       pd_refCount(0)
-    {}
+    {
+      ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+      ++identity_count;
+    }
   // Copies <key>.
 
   virtual void dispatch(omniCallDescriptor&);

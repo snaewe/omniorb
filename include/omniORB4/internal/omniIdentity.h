@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/09/19 17:26:46  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.1.4.4  2001/09/03 16:52:05  sll
   New signature for locateRequest. Now accept a calldescriptor argument.
 
@@ -119,6 +122,10 @@ public:
   // space.
 
 
+  static void waitForLastIdentity();
+  // Block until all traced omniIdentity objects have been deleted.
+  //  Must not hold <omni::internalLock>
+
   // Support for downcasting in the absense of dynamic_cast<>.
   // classCompare_fn's second argument is really of type
   // classCompare_fn, but that can't be declared.
@@ -139,18 +146,17 @@ public:
 
   inline classCompare_fn classCompare() { return pd_classCompare; }
 
-
 protected:
 #ifndef __GNUG__
-  inline ~omniIdentity() {}
-  // Should only be destroyed by implementation of derived classes.
-  // This doesn't need to be virtual, since it is only ever deleted
-  // by the most derived type.
+  inline
 #else
-  virtual ~omniIdentity() {}
-  // But gcc is rather anal and insits on a class with virtual functions must
-  // have a virtual dtor.
+  virtual
 #endif
+  ~omniIdentity() { }
+  // Should only be destroyed by implementation of derived classes.
+  // This doesn't need to be virtual, since it is only ever deleted by
+  // the most derived type.  But gcc is rather anal and insists that a
+  // class with virtual functions must have a virtual dtor.
 
   inline omniIdentity(omniObjKey& key, classCompare_fn compare)
     : pd_key(key, 1), pd_classCompare(compare) {}
@@ -165,6 +171,17 @@ protected:
 		      classCompare_fn compare)
     : pd_key(key, keysize), pd_classCompare(compare) {}
   // Consumes <key>.
+
+  inline omniIdentity(classCompare_fn compare)
+    : pd_classCompare(compare) {}
+  // No key. Used by dummy shutdown identity.
+
+
+  static int identity_count;
+  // Count of active identity objects. When this goes to zero, all
+  // outgoing invocations have completed.
+
+  static void lastIdentityHasBeenDeleted();
 
 public:
   typedef _CORBA_Boolean (*equivalent_fn)(const omniIdentity*,

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2001/09/19 17:26:50  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.1.2.9  2001/08/21 10:49:39  dpg1
   Fix incorrect sequence expansion.
 
@@ -370,13 +373,11 @@ class omni_omniIOR_initialiser : public omniInitialiser {
 public:
 
   void attach() {
-
-    omniIOR::lock   = new omni_tracedmutex;
+    if (!omniIOR::lock) omniIOR::lock = new omni_tracedmutex;
   }
 
   void detach() {
-    delete omniIOR::lock;
-    omniIOR::lock = 0;
+    // omniIOR::lock is deleted by final clean-up in omniInternal.cc
   }
 };
 

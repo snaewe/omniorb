@@ -28,6 +28,7 @@
 //
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/objTracker.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -149,7 +150,7 @@ ExceptionListImpl::free_entries()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilExList : public CORBA::ExceptionList {
+class omniNilExList : public CORBA::ExceptionList, public omniTrackedObject {
 public:
   virtual CORBA::ULong count() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -207,6 +208,7 @@ ExceptionList::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilExList;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2001/09/19 17:26:49  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.1.4.11  2001/09/10 17:51:46  sll
   Scavenger now manages passive connections as well.
   Send CloseConnection message when a scavenger close a connection.
@@ -645,7 +648,7 @@ Scavenger::execute()
       removeIdle(giopStrand::passive,server_shutdown_list,0);
     }
 
-    // Now goes through the list to delete them all
+    // Now go through the list to delete them all
     {
       StrandList* p = client_shutdown_list.next;
       while ( p != &client_shutdown_list ) {
@@ -673,6 +676,8 @@ Scavenger::execute()
     }
 
     {
+      // We have to hold <omniTransportLock> while disposing of the
+      // server strands, since other threads may be dealing with them.
       omni_tracedmutex_lock sync(*omniTransportLock);
 
       StrandList* p = server_shutdown_list.next;
@@ -725,7 +730,7 @@ Scavenger::execute()
 void
 Scavenger::notify()
 {
-  omni_tracedmutex_lock sycn(*mutex);
+  omni_tracedmutex_lock sync(*mutex);
   if ( !shutdown && orbParameters::scanGranularity &&!theTask ) {
     theTask = new Scavenger();
     orbAsyncInvoker->insert(theTask);
@@ -894,6 +899,92 @@ public:
   }
   void detach() {
     Scavenger::terminate();
+
+    omni_tracedmutex_lock sync(*omniTransportLock);
+
+    // Close client strands
+    {
+      StrandList* p = giopStrand::active_timedout.next;
+      while ( p != &giopStrand::active_timedout ) {
+	giopStrand* s = (giopStrand*)p;
+	p = p->next;
+	s->StrandList::remove();
+	s->RopeLink::remove();
+	s->state(giopStrand::DYING);
+	if (omniORB::trace(30)) {
+	  omniORB::logger log;
+	  log << "Shutdown close connection to "
+	      << s->address->address() << "\n";
+	}
+	if ( s->version.minor >= 2 ) {
+	  // GIOP 1.2 or above requires the client send a closeconnection
+	  // message.
+	  char hdr[12];
+	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
+	  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
+	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
+	  hdr[7] = (char)GIOP::CloseConnection;
+	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+	  s->connection->Send(hdr,12);
+	}
+	s->safeDelete(1);
+      }
+    }
+    {
+      StrandList* p = giopStrand::active.next;
+      while ( p != &giopStrand::active ) {
+	giopStrand* s = (giopStrand*)p;
+	p = p->next;
+	s->StrandList::remove();
+	s->RopeLink::remove();
+	s->state(giopStrand::DYING);
+	if (omniORB::trace(30)) {
+	  omniORB::logger log;
+	  log << "Shutdown close connection to "
+	      << s->address->address() << "\n";
+	}
+	if ( s->version.minor >= 2 ) {
+	  // GIOP 1.2 or above requires the client send a closeconnection
+	  // message.
+	  char hdr[12];
+	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
+	  hdr[4] = s->version.major;   hdr[5] = s->version.minor;
+	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
+	  hdr[7] = (char)GIOP::CloseConnection;
+	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+	  s->connection->Send(hdr,12);
+	}
+	s->safeDelete(1);
+      }
+    }
+    // Close server strands
+    {
+      StrandList* p = giopStrand::passive.next;
+      while ( p != &giopStrand::passive ) {
+	giopStrand* s = (giopStrand*)p;
+	p = p->next;
+	s->StrandList::remove();
+	s->RopeLink::remove();
+	s->state(giopStrand::DYING);
+	if (omniORB::trace(30)) {
+	  omniORB::logger log;
+	  log << "Shutdown close connection from " 
+	      << s->connection->peeraddress() << "\n";
+	}	
+	{
+	  // Send close connection message.
+	  GIOP::Version ver = giopStreamImpl::maxVersion()->version();
+	  char hdr[12];
+	  hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
+	  hdr[4] = ver.major;   hdr[5] = ver.minor;
+	  hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
+	  hdr[7] = (char)GIOP::CloseConnection;
+	  hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
+	  s->connection->Send(hdr,12);
+	}
+	s->connection->Shutdown();
+      }
+    }
   }
 };
 

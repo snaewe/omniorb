@@ -28,6 +28,7 @@
 //
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/objTracker.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -130,7 +131,7 @@ NamedValueImpl::NP_duplicate()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilNV : public CORBA::NamedValue {
+class omniNilNV : public CORBA::NamedValue, public omniTrackedObject {
 public:
   virtual const char* name() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -182,6 +183,7 @@ NamedValue::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniNilNV;
+    registerTrackedObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

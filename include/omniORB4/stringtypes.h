@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.8  2001/09/19 17:26:44  dpg1
+ Full clean-up after orb->destroy().
+
  Revision 1.2.2.7  2001/08/17 13:44:08  dpg1
  Change freeing behaviour of string members and elements.
 
@@ -84,6 +87,7 @@
 
 */
 
+
 #ifndef __OMNI_STRINGTYPES_H__
 #define __OMNI_STRINGTYPES_H__
 
@@ -114,8 +118,11 @@ static inline void free(char* s) {
 
 static inline char* dup(const char* s) { 
   char* r = alloc(strlen(s));
-  strcpy(r, s);
-  return r;
+  if (r) {
+    strcpy(r, s);
+    return r;
+  }
+  return 0;
 }
 // As CORBA::string_dup().
 

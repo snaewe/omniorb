@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2001/09/19 17:26:43  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.2.2.8  2001/08/15 10:26:08  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -280,6 +283,10 @@ public:
   // Set or change the identity to dispatch to.
   //  Must hold <omni::internalLock>.
 
+  static void _shutdown();
+  // Called during ORB shutdown. Disables all object references.
+  //  Must not hold <omni::internalLock>.
+
 protected:
   virtual ~omniObjRef();
   // Must not hold <omni::internalLock>.
@@ -306,10 +313,14 @@ private:
   omniObjRef& operator = (const omniObjRef&);
   // Not implemented.
 
+  void _disable();
+  // Disable the object reference so all future invocations throw BAD_INV_ORDER
+  //  Must hold <omni::internalLock>.
 
-  //////////////////////////////////////////////////
-  // Private methods - for use by class omni only //
-  //////////////////////////////////////////////////
+
+  ///////////////////////////////////////////////
+  // Some friends need to access the internals //
+  ///////////////////////////////////////////////
   friend class _OMNI_NS(omniInternal);
   friend class omniPy;
   friend void omni::duplicateObjRef(omniObjRef*);
@@ -363,6 +374,12 @@ private:
   // key of a remote object.
   //  Mutable.  Protected by <omni::internalLock>.
 
+  omniObjRef*  pd_next;
+  omniObjRef** pd_prev;
+  // Doubly linked list of all non-nil object references, so they may
+  // be disabled at ORB shutdown.
+  //  Protected by <omni::objref_rc_lock>.
+
   struct {
     unsigned forward_location            : 1;
     // True if we have had a LOCATION_FORWARD.  In this case the
@@ -390,6 +407,9 @@ private:
     unsigned static_repoId               : 1;
     // True if pd_intfRepoId is static and should not be deleted when
     // this objref is destroyed.
+
+    unsigned orb_shutdown                : 1;
+    // True if the ORB that created this objref has been shut down.
 
   } pd_flags;
   // Mutable.  Protected by <omni::internalLock>.

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.4.5  2001/09/19 17:26:47  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.1.4.4  2001/09/03 16:52:05  sll
   New signature for locateRequest. Now accept a calldescriptor argument.
 
@@ -81,7 +84,10 @@ public:
       pd_refCount(0),
       pd_ior(ior),
       pd_rope(rope)
-    {}
+    {
+      ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+      ++identity_count;
+    }
   // Consumes <ior> and <rope>.  Copies <key>.  Constructs an identity
   // with ref count of 0.
 

@@ -68,6 +68,7 @@ ORB_SRCS =  \
 	    interceptors.cc \
 	    ior.cc \
 	    libcWrapper.cc \
+            omniIdentity.cc \
 	    localIdentity.cc \
 	    logIOstream.cc \
             minorCode.cc \
@@ -86,6 +87,7 @@ ORB_SRCS =  \
 	    proxyFactory.cc \
 	    remoteIdentity.cc \
 	    inProcessIdentity.cc \
+            shutdownIdentity.cc \
             callHandle.cc \
 	    tracedthread.cc \
             transportRules.cc \

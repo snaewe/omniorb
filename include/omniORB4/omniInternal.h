@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.12  2001/09/19 17:26:43  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.2.2.11  2001/08/15 10:26:08  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -186,6 +189,7 @@
 #include <string.h>
 #endif
 #include <omnithread.h>
+#include <omniORB4/finalCleanup.h>
 #include <omniORB4/CORBA_sysdep.h>
 #include <omniORB4/CORBA_basetypes.h>
 #include <omniORB4/seqTemplatedecls.h>

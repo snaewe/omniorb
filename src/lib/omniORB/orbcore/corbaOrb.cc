@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.27  2001/09/19 17:26:48  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.33.2.26  2001/08/24 16:44:59  sll
   Switch to use Winsock 2. Replaced wsock32.lib with ws2_32.lib and mswsock.lib
 
@@ -281,12 +284,14 @@
 #include <exceptiondefs.h>
 #include <omniORB4/omniURI.h>
 #include <omniORB4/minorCode.h>
+#include <omniORB4/objTracker.h>
 #include <giopStreamImpl.h>
 #include <invoker.h>
 #include <omniCurrent.h>
 #include <omniORB4/distdate.hh>
 #include <orbOptions.h>
 #include <orbParameters.h>
+#include <omniIdentity.h>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -309,7 +314,7 @@ static const char* orb_ids[] = { ORB_ID_STRING,
 #endif
 
 static omniOrbORB*          the_orb                   = 0;
-static int                  orb_destroyed             = 0;
+static int                  orb_count                 = 0;
 static omni_tracedmutex     orb_lock;
 static omni_tracedcondition orb_signal(&orb_lock);
 static volatile int         orb_n_blocked_in_run      = 0;
@@ -355,6 +360,7 @@ extern omniInitialiser& omni_dynamiclib_initialiser_;
 extern omniInitialiser& omni_objadpt_initialiser_;
 extern omniInitialiser& omni_giopEndpoint_initialiser_;
 extern omniInitialiser& omni_transportRules_initialiser_;
+extern omniInitialiser& omni_ObjRef_initialiser_;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -398,6 +404,7 @@ CORBA::ORB::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbORB(1 /* is nil */);
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -436,11 +443,11 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
 {
   omni_tracedmutex_lock sync(orb_lock);
 
-  if( orb_destroyed ) {
-    omniORB::logs(1, "The ORB cannot be re-initialised!");
-    OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_ORBHasShutdown,
-		  CORBA::COMPLETED_NO);
-  }
+//    if( orb_destroyed ) {
+//      omniORB::logs(1, "The ORB cannot be re-initialised!");
+//      OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_ORBHasShutdown,
+//  		  CORBA::COMPLETED_NO);
+//    }
 
   if( the_orb ) {
     the_orb->_NP_incrRefCount();
@@ -565,6 +572,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
     omni_giopStrand_initialiser_.attach();
     omni_omniCurrent_initialiser_.attach();
     omni_dynamiclib_initialiser_.attach();
+    omni_ObjRef_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
     omni_hooked_initialiser_.attach();
     omniAsyncInvoker::traceLevel = omniORB::traceLevel;
@@ -602,6 +610,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
 
   the_orb = new omniOrbORB(0);
   the_orb->_NP_incrRefCount();
+  orb_count++;
   return the_orb;
 }
 
@@ -615,6 +624,12 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
   if( pd_shutdown  )  OMNIORB_THROW(BAD_INV_ORDER, \
                                     BAD_INV_ORDER_ORBHasShutdown, \
                                     CORBA::COMPLETED_NO);  \
+
+CORBA::Boolean
+omniOrbORB::all_destroyed()
+{
+  return orb_count == 0;
+}
 
 
 omniOrbORB::~omniOrbORB()  {}
@@ -790,6 +805,7 @@ omniOrbORB::destroy()
     // Call detach method of the initialisers in reverse order.
     omni_hooked_initialiser_.detach();
     omni_initRefs_initialiser_.detach();
+    omni_ObjRef_initialiser_.detach();
     omni_dynamiclib_initialiser_.detach();
     omni_omniCurrent_initialiser_.detach();
     omni_giopStrand_initialiser_.detach();
@@ -814,7 +830,7 @@ omniOrbORB::destroy()
     pd_destroyed = 1;
     orb = the_orb;
     the_orb = 0;
-    orb_destroyed = 1;
+    orb_count--;
   }
   CORBA::release(orb);
 }
@@ -921,6 +937,15 @@ omniOrbORB::actual_shutdown()
 
   // Shutdown incoming connections.
   omniObjAdapter::shutdown();
+
+  // Disable object references
+  omniObjRef::_shutdown();
+
+  // Wait for all client requests to complete
+  //?? Is is safe to unlock orb_lock here?
+  orb_lock.unlock();
+  omniIdentity::waitForLastIdentity();
+  orb_lock.lock();
 
   omniORB::logs(10, "ORB shutdown is complete.");
 

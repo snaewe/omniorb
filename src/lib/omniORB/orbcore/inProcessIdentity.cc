@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.5  2001/09/19 17:26:50  dpg1
+ Full clean-up after orb->destroy().
+
  Revision 1.1.2.4  2001/09/03 16:52:05  sll
  New signature for locateRequest. Now accept a calldescriptor argument.
 
@@ -78,10 +81,8 @@ public:
 
   inline ~omniInProcessIdentity_RefHolder() {
     omni::internalLock->lock();
-    int done = --pd_id->pd_refCount > 0;
+    if (--pd_id->pd_refCount == 0) delete pd_id;
     omni::internalLock->unlock();
-    if( done )  return;
-    delete pd_id;
   }
 
 private:

@@ -27,9 +27,11 @@
 //      Implementation of the CORBA::TypeCode psuedo object
 //
 
-
 /*
  * $Log$
+ * Revision 1.38.2.18  2001/09/19 17:26:45  dpg1
+ * Full clean-up after orb->destroy().
+ *
  * Revision 1.38.2.17  2001/08/29 13:41:03  dpg1
  * jnw's fix for compilers with variable sizeof(enum)
  *
@@ -234,6 +236,7 @@
  */
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/objTracker.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -400,6 +403,23 @@ CORBA::TypeCode::_duplicate(CORBA::TypeCode_ptr t)
   return TypeCode_collector::duplicateRef(ToTcBase(t));
 }
 
+OMNI_NAMESPACE_BEGIN(omni)
+
+//
+// The nil TypeCode is derived from neither CORBA::Object or
+// omniTrackedObject. We use a holder object to ensure it is deleted
+// on exit.
+//
+class omniNilTypeCodeHolder : public omniTrackedObject {
+public:
+  inline omniNilTypeCodeHolder(CORBA::TypeCode_ptr nil) : pd_nil(nil) {}
+  virtual ~omniNilTypeCodeHolder() { delete pd_nil; }
+private:
+  CORBA::TypeCode_ptr pd_nil;
+};
+
+OMNI_NAMESPACE_END(omni)
+
 
 CORBA::TypeCode_ptr
 CORBA::TypeCode::_nil()
@@ -408,6 +428,7 @@ CORBA::TypeCode::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new TypeCode;
+    registerTrackedObject(new omniNilTypeCodeHolder(_the_nil_ptr));
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -564,7 +585,22 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 static void check_static_data_is_initialised();
 
+
+// The omniTypeCodeList singleton is used to track all "static"
+// TypeCode objects created in the DynSK files, so they can be deleted
+// on clean shutdown.
+class omniTypeCodeList : public omniTrackedObject {
+public:
+  virtual ~omniTypeCodeList();
+  void add(CORBA::TypeCode_ptr tc) { pd_list.push_back(tc); }
+private:
+  omnivector<CORBA::TypeCode_ptr> pd_list;
+};
+
+static omniTypeCodeList* the_tc_list = 0;
+
 OMNI_NAMESPACE_END(omni)
+
 
 CORBA::TypeCode_ptr
 CORBA::TypeCode::PR_struct_tc(const char* id, const char* name,
@@ -577,13 +613,16 @@ CORBA::TypeCode::PR_struct_tc(const char* id, const char* name,
     = new TypeCode_struct::Member[memberCount];
 
   for( ULong i = 0; i < memberCount; i++ ) {
-    // We duplicate the name and consume the type.
+    // We duplicate the name and type.
     new_members[i].name = CORBA::string_dup(members[i].name);
-    new_members[i].type = members[i].type;
+    new_members[i].type = CORBA::TypeCode::_duplicate(members[i].type);
   }
 
-  return new TypeCode_struct(CORBA::string_dup(id), CORBA::string_dup(name),
-			     new_members, memberCount);
+  CORBA::TypeCode_ptr r = new TypeCode_struct(CORBA::string_dup(id),
+					      CORBA::string_dup(name),
+					      new_members, memberCount);
+  the_tc_list->add(r);
+  return r;
 }
 
 
@@ -595,8 +634,11 @@ CORBA::TypeCode::PR_union_tc(const char* id, const char* name,
 {
   check_static_data_is_initialised();
 
-  return new TypeCode_union(id, name, ToTcBase(discriminator_type),
-			    members, memberCount, deflt);
+  CORBA::TypeCode_ptr r = new TypeCode_union(id, name,
+					     ToTcBase(discriminator_type),
+					     members, memberCount, deflt);
+  the_tc_list->add(r);
+  return r;
 }
 
 
@@ -612,7 +654,9 @@ CORBA::TypeCode::PR_enum_tc(const char* id, const char* name,
   for( ULong i = 0; i < memberCount; i++ )
     memberSeq[i] = members[i];
 
-  return NP_enum_tc(id, name, memberSeq);
+  CORBA::TypeCode_ptr r = NP_enum_tc(id, name, memberSeq);
+  the_tc_list->add(r);
+  return r;
 }
 
 
@@ -621,7 +665,10 @@ CORBA::TypeCode::PR_alias_tc(const char* id, const char* name,
 			     CORBA::TypeCode_ptr original_type)
 {
   check_static_data_is_initialised();
-  return new TypeCode_alias(id, name, ToTcBase(original_type));
+  CORBA::TypeCode_ptr r = new TypeCode_alias(id, name,
+					     ToTcBase(original_type));
+  the_tc_list->add(r);
+  return r;
 }
 
 
@@ -636,13 +683,16 @@ CORBA::TypeCode::PR_exception_tc(const char* id, const char* name,
     new TypeCode_struct::Member[memberCount];
 
   for( ULong i = 0; i < memberCount; i++ ) {
-    // We duplicate the name and consume the type.
+    // We duplicate the name and type.
     new_members[i].name = CORBA::string_dup(members[i].name);
-    new_members[i].type = members[i].type;
+    new_members[i].type = CORBA::TypeCode::_duplicate(members[i].type);
   }
 
-  return new TypeCode_except(CORBA::string_dup(id), CORBA::string_dup(name),
-			     new_members, memberCount);
+  CORBA::TypeCode_ptr r = new TypeCode_except(CORBA::string_dup(id),
+					      CORBA::string_dup(name),
+					      new_members, memberCount);
+  the_tc_list->add(r);
+  return r;
 }
 
 
@@ -650,7 +700,9 @@ CORBA::TypeCode_ptr
 CORBA::TypeCode::PR_interface_tc(const char* id, const char* name)
 {
   check_static_data_is_initialised();
-  return new TypeCode_objref(id, name);
+  CORBA::TypeCode_ptr r = new TypeCode_objref(id, name);
+  the_tc_list->add(r);
+  return r;
 }
 
 
@@ -659,7 +711,9 @@ CORBA::TypeCode::PR_string_tc(CORBA::ULong bound)
 {
   if( bound == 0 )  return PR_string_tc();
   check_static_data_is_initialised();
-  return new TypeCode_string(bound);
+  CORBA::TypeCode_ptr r = new TypeCode_string(bound);
+  the_tc_list->add(r);
+  return r;
 }
 
 CORBA::TypeCode_ptr
@@ -667,14 +721,18 @@ CORBA::TypeCode::PR_wstring_tc(CORBA::ULong bound)
 {
   if( bound == 0 )  return PR_wstring_tc();
   check_static_data_is_initialised();
-  return new TypeCode_wstring(bound);
+  CORBA::TypeCode_ptr r = new TypeCode_wstring(bound);
+  the_tc_list->add(r);
+  return r;
 }
 
 CORBA::TypeCode_ptr
 CORBA::TypeCode::PR_fixed_tc(CORBA::UShort digits, CORBA::UShort scale)
 {
   check_static_data_is_initialised();
-  return new TypeCode_fixed(digits, scale);
+  CORBA::TypeCode_ptr r = new TypeCode_fixed(digits, scale);
+  the_tc_list->add(r);
+  return r;
 }
 
 CORBA::TypeCode_ptr
@@ -682,7 +740,9 @@ CORBA::TypeCode::PR_sequence_tc(CORBA::ULong bound,
 				CORBA::TypeCode_ptr element_type)
 {
   check_static_data_is_initialised();
-  return new TypeCode_sequence(bound, ToTcBase(element_type));
+  CORBA::TypeCode_ptr r = new TypeCode_sequence(bound, ToTcBase(element_type));
+  the_tc_list->add(r);
+  return r;
 }
 
 
@@ -691,7 +751,9 @@ CORBA::TypeCode::PR_array_tc(CORBA::ULong length,
 		       CORBA::TypeCode_ptr element_type)
 {
   check_static_data_is_initialised();
-  return new TypeCode_array(length, ToTcBase(element_type));
+  CORBA::TypeCode_ptr r = new TypeCode_array(length, ToTcBase(element_type));
+  the_tc_list->add(r);
+  return r;
 }
 
 
@@ -700,7 +762,9 @@ CORBA::TypeCode::PR_recursive_sequence_tc(CORBA::ULong bound,
 					  CORBA::ULong offset)
 {
   check_static_data_is_initialised();
-  return new TypeCode_sequence(bound, offset);
+  CORBA::TypeCode_ptr r = new TypeCode_sequence(bound, offset);
+  the_tc_list->add(r);
+  return r;
 }
 
 
@@ -799,6 +863,8 @@ CORBA::TypeCode_ptr CORBA::TypeCode::PR_longdouble_tc() {
 void
 CORBA::release(TypeCode_ptr o)
 {
+  OMNIORB_ASSERT(CORBA::TypeCode::PR_is_valid(o));
+
   if( CORBA::TypeCode::PR_is_valid(o) && !CORBA::is_nil(o) )
     TypeCode_collector::releaseRef(ToTcBase(o));
 }
@@ -4149,6 +4215,8 @@ TypeCode_collector::duplicateRef(TypeCode_base* tc)
 {
   omni_mutex_lock l(*pd_refcount_lock);
 
+  //  if (tc->pd_tck == CORBA::tk_null) abort();
+
   tc->pd_ref_count++;
 
   return tc;
@@ -4166,9 +4234,9 @@ TypeCode_collector::releaseRef(TypeCode_base* tc)
 
     // If the reference count is already zero then this node is already
     // being deleted
-    if (tc->pd_ref_count == 0)
+    if (tc->pd_ref_count == 0) {
       return;
-
+    }
     // If the reference count has hit 1 then we can delete the node
     if (tc->pd_ref_count == 1)
       {
@@ -5138,8 +5206,10 @@ static void check_static_data_is_initialised()
   static int is_initialised = 0;
 
   if( is_initialised )  return;
-
   is_initialised = 1;
+
+  the_tc_list = new omniTypeCodeList;
+  registerTrackedObject(the_tc_list);
 
   // Mutexes
   aliasExpandedTc_lock = new omni_mutex();
@@ -5165,12 +5235,36 @@ static void check_static_data_is_initialised()
   CORBA::_tc_Object = new TypeCode_objref("IDL:omg.org/CORBA/Object:1.0","Object");
   CORBA::_tc_string = new TypeCode_string(0);
   CORBA::_tc_wstring = new TypeCode_wstring(0);
+
+  the_tc_list->add(CORBA::_tc_null);
+  the_tc_list->add(CORBA::_tc_void);
+  the_tc_list->add(CORBA::_tc_short);
+  the_tc_list->add(CORBA::_tc_long);
+  the_tc_list->add(CORBA::_tc_ushort);
+  the_tc_list->add(CORBA::_tc_ulong);
+  the_tc_list->add(CORBA::_tc_float);
+  the_tc_list->add(CORBA::_tc_double);
+  the_tc_list->add(CORBA::_tc_boolean);
+  the_tc_list->add(CORBA::_tc_char);
+  the_tc_list->add(CORBA::_tc_wchar);
+  the_tc_list->add(CORBA::_tc_octet);
+  the_tc_list->add(CORBA::_tc_any);
+  the_tc_list->add(CORBA::_tc_TypeCode);
+  the_tc_list->add(CORBA::_tc_Principal);
+  the_tc_list->add(CORBA::_tc_Object);
+  the_tc_list->add(CORBA::_tc_string);
+  the_tc_list->add(CORBA::_tc_wstring);
+
 #ifdef HAS_LongLong
   CORBA::_tc_longlong   = new TypeCode_base(CORBA::tk_longlong);
   CORBA::_tc_ulonglong  = new TypeCode_base(CORBA::tk_ulonglong);
+
+  the_tc_list->add(CORBA::_tc_longlong);
+  the_tc_list->add(CORBA::_tc_ulonglong);
 #endif
 #ifdef HAS_LongDouble
   CORBA::_tc_longdouble = new TypeCode_base(CORBA::tk_longdouble);
+  the_tc_list->add(CORBA::_tc_longdouble);
 #endif
   {
     CORBA::TypeCode_var tc_Flags = new TypeCode_alias("IDL:omg.org/CORBA/Flags:1.0", "Flags",ToTcBase(CORBA::_tc_ulong));
@@ -5190,6 +5284,28 @@ static void check_static_data_is_initialised()
     CORBA::_tc_NamedValue = CORBA::TypeCode::PR_struct_tc("IDL:omg.org/CORBA/NamedValue:1.0", "NamedValue",nvMembers, 4);
   }
 }
+
+//
+// Clean-up
+//
+omniTypeCodeList::~omniTypeCodeList()
+{
+  int tcs = 0;
+  omnivector<CORBA::TypeCode_ptr>::iterator i = pd_list.begin();
+  for (; i != pd_list.end(); i++, tcs++)
+    CORBA::release(*i);
+
+  if (omniORB::trace(15)) {
+    omniORB::logger l;
+    l << "Released " << tcs << " static TypeCodes.\n";
+  }
+
+  // Delete mutexes
+  delete aliasExpandedTc_lock;
+  delete pd_cached_paramlist_lock;
+  delete pd_refcount_lock;
+}
+
 
 // We need a singleton here as a final check, so that if no
 // stub code calls into check_static_data_is_initialised()

@@ -375,6 +375,18 @@ omni_thread::init_t::init_t(void)
 #endif   /* PthreadSupportThreadPriority */
 }
 
+omni_thread::init_t::~init_t(void)
+{
+    if (--count != 0) return;
+
+    omni_thread* self = omni_thread::self();
+    if (!self) return;
+
+    pthread_setspecific(self_key, 0);
+    delete self;
+
+    delete next_id_mutex;
+}
 
 //
 // Wrapper for thread creation.

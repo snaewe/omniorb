@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.7  2001/09/19 17:26:52  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.2.2.6  2001/08/15 10:26:14  dpg1
   New object table behaviour, correct POA semantics.
 
@@ -71,6 +74,7 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/objTracker.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -157,7 +161,7 @@ void PortableServer::AdapterActivator_Helper::release(PortableServer::AdapterAct
 }
 
 void PortableServer::AdapterActivator_Helper::duplicate(PortableServer::AdapterActivator_ptr p) {
-  if( p )  omni::duplicateObjRef(p);
+  if( p && !p->_NP_is_nil() )  omni::duplicateObjRef(p);
 }
 
 void PortableServer::AdapterActivator_Helper::marshalObjRef(PortableServer::AdapterActivator_ptr obj, cdrStream& s) {
@@ -171,7 +175,7 @@ PortableServer::AdapterActivator_ptr PortableServer::AdapterActivator_Helper::un
 PortableServer::AdapterActivator_ptr
 PortableServer::AdapterActivator::_duplicate(PortableServer::AdapterActivator_ptr obj)
 {
-  if( obj )  omni::duplicateObjRef(obj);
+  if( obj && !obj->_NP_is_nil() )  omni::duplicateObjRef(obj);
   return obj;
 }
 
@@ -192,6 +196,7 @@ PortableServer::AdapterActivator::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new _objref_AdapterActivator();
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -327,7 +332,7 @@ void PortableServer::ServantManager_Helper::release(PortableServer::ServantManag
 }
 
 void PortableServer::ServantManager_Helper::duplicate(PortableServer::ServantManager_ptr p) {
-  if( p )  omni::duplicateObjRef(p);
+  if( p && !p->_NP_is_nil() )  omni::duplicateObjRef(p);
 }
 
 void PortableServer::ServantManager_Helper::marshalObjRef(PortableServer::ServantManager_ptr obj, cdrStream& s) {
@@ -341,7 +346,7 @@ PortableServer::ServantManager_ptr PortableServer::ServantManager_Helper::unmars
 PortableServer::ServantManager_ptr
 PortableServer::ServantManager::_duplicate(PortableServer::ServantManager_ptr obj)
 {
-  if( obj )  omni::duplicateObjRef(obj);
+  if( obj && !obj->_NP_is_nil() )  omni::duplicateObjRef(obj);
   return obj;
 }
 
@@ -362,6 +367,7 @@ PortableServer::ServantManager::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new _objref_ServantManager();
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -459,7 +465,7 @@ void PortableServer::ServantActivator_Helper::release(PortableServer::ServantAct
 }
 
 void PortableServer::ServantActivator_Helper::duplicate(PortableServer::ServantActivator_ptr p) {
-  if( p )  omni::duplicateObjRef(p);
+  if( p && !p->_NP_is_nil() )  omni::duplicateObjRef(p);
 }
 
 void PortableServer::ServantActivator_Helper::marshalObjRef(PortableServer::ServantActivator_ptr obj, cdrStream& s) {
@@ -473,7 +479,7 @@ PortableServer::ServantActivator_ptr PortableServer::ServantActivator_Helper::un
 PortableServer::ServantActivator_ptr
 PortableServer::ServantActivator::_duplicate(PortableServer::ServantActivator_ptr obj)
 {
-  if( obj )  omni::duplicateObjRef(obj);
+  if( obj && !obj->_NP_is_nil() )  omni::duplicateObjRef(obj);
   return obj;
 }
 
@@ -494,6 +500,7 @@ PortableServer::ServantActivator::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new _objref_ServantActivator();
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -677,7 +684,7 @@ void PortableServer::ServantLocator_Helper::release(PortableServer::ServantLocat
 }
 
 void PortableServer::ServantLocator_Helper::duplicate(PortableServer::ServantLocator_ptr p) {
-  if( p )  omni::duplicateObjRef(p);
+  if( p && !p->_NP_is_nil() )  omni::duplicateObjRef(p);
 }
 
 void PortableServer::ServantLocator_Helper::marshalObjRef(PortableServer::ServantLocator_ptr obj, cdrStream& s) {
@@ -691,7 +698,7 @@ PortableServer::ServantLocator_ptr PortableServer::ServantLocator_Helper::unmars
 PortableServer::ServantLocator_ptr
 PortableServer::ServantLocator::_duplicate(PortableServer::ServantLocator_ptr obj)
 {
-  if( obj )  omni::duplicateObjRef(obj);
+  if( obj && !obj->_NP_is_nil() )  omni::duplicateObjRef(obj);
   return obj;
 }
 
@@ -712,6 +719,7 @@ PortableServer::ServantLocator::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new _objref_ServantLocator();
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.14  2001/09/19 17:26:53  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.2.2.13  2001/09/03 16:52:05  sll
   New signature for locateRequest. Now accept a calldescriptor argument.
 
@@ -125,10 +128,8 @@ public:
 
   inline ~omniRemoteIdentity_RefHolder() {
     omni::internalLock->lock();
-    int done = --pd_id->pd_refCount > 0;
+    if (--pd_id->pd_refCount == 0) delete pd_id;
     omni::internalLock->unlock();
-    if( done )  return;
-    delete pd_id;
   }
 
 private:
@@ -299,9 +300,14 @@ omniRemoteIdentity::locateRequest(omniCallDescriptor& call_desc)
 
 omniRemoteIdentity::~omniRemoteIdentity()
 {
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+
   omniORB::logs(15, "omniRemoteIdentity deleted.");
   pd_rope->decrRefCount();
   pd_ior->release();
+
+  if (--identity_count == 0)
+    lastIdentityHasBeenDeleted();
 }
 
 omniIdentity::equivalent_fn

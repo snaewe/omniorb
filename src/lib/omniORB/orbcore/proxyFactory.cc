@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2001/09/19 17:26:53  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.2.2.4  2001/04/18 18:18:05  sll
   Big checkin with the brand new internal APIs.
 
@@ -63,13 +66,12 @@ proxyObjectFactory::~proxyObjectFactory()  {}
 
 
 proxyObjectFactory::proxyObjectFactory(const char* repoId)
+  : pd_repoId(repoId)
 {
   // These factories are constructed statically in the stubs, thus
   // there should be no possiblilty of concurrency.
 
   OMNIORB_ASSERT(repoId);
-
-  pd_repoId = CORBA::string_dup(repoId);
 
   if( !ofl ) {
     ofl_size = 5;

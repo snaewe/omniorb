@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.20  2001/09/19 17:26:51  dpg1
+  Full clean-up after orb->destroy().
+
   Revision 1.2.2.19  2001/08/21 11:02:18  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -178,6 +181,7 @@
 #include <omniORB4/IOP_S.h>
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/callHandle.h>
+#include <omniORB4/objTracker.h>
 #include <objectTable.h>
 #include <inProcessIdentity.h>
 #include <poamanager.h>
@@ -296,6 +300,7 @@ PortableServer::POA::_nil()
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbPOA();
+    registerNilCorbaObject(_the_nil_ptr);
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
@@ -531,9 +536,13 @@ omniOrbPOA::find_POA(const char* adapter_name, CORBA::Boolean activate_it)
 
   poa = attempt_to_activate_adapter(adapter_name);
 
-  if( !poa ) throw AdapterNonExistent();
+  if( poa && !poa->pd_dying ) {
+    poa->incrRefCount();
+    return poa;
+  }
 
-  return poa;
+  throw AdapterNonExistent();
+  return 0; // For dumb compilers
 }
 
 
@@ -2514,16 +2523,32 @@ omniOrbPOA::deactivate_objects(omniObjTableEntry* entry)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
+  omniObjTableEntry* next;
+
   while( entry ) {
     while (entry->state() == omniObjTableEntry::ACTIVATING)
       entry->wait(omniObjTableEntry::ACTIVE |
 		  omniObjTableEntry::DEACTIVATING |
 		  omniObjTableEntry::ETHEREALISING);
 
+    next = entry->nextInOAObjList();
+
     if (entry->state() == omniObjTableEntry::ACTIVE)
       entry->setDeactivating();
 
-    entry = entry->nextInOAObjList();
+    if (!entry->is_idle()) {
+      // Entry has outstanding invocations. When the last invocation
+      // finishes, lastInvocationHasCompleted() will be called. We
+      // detach the entry here, so the destroying thread doesn't try
+      // to etherealise it.
+      if (omniORB::trace(20)) {
+	omniORB::logger l;
+	l << entry << " is not idle, etherealise from other thread\n";
+      }
+      entry->removeFromOAObjList();
+      detached_object();
+    }
+    entry = next;
   }
 }
 
