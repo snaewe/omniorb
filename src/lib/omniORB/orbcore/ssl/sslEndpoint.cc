@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2002/03/11 12:24:39  dpg1
+  Restrict bind to specified host, if any.
+
   Revision 1.1.2.6  2001/07/31 16:16:22  sll
   New transport interface to support the monitoring of active connections.
 
@@ -138,6 +141,23 @@ sslEndpoint::Bind() {
   addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(pd_address.port);
 
+  if ((char*)pd_address.host && strlen(pd_address.host) != 0) {
+    LibcWrapper::hostent_var h;
+    int rc;
+
+    if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
+      if (omniORB::trace(1)) {
+       omniORB::logger log;
+       log << "Cannot get the address of this host\n";
+      }
+      CLOSESOCKET(pd_socket);
+      return 0;
+    }
+    memcpy((void *)&addr.sin_addr,
+          (void *)h.hostent()->h_addr_list[0],
+          sizeof(addr.sin_addr));
+  }
+  
   if (addr.sin_port) {
     int valtrue = 1;
     if (setsockopt(pd_socket,SOL_SOCKET,SO_REUSEADDR,
@@ -171,7 +191,7 @@ sslEndpoint::Bind() {
   {
     char self[64];
     if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
-      if (omniORB::trace(0)) {
+      if (omniORB::trace(1)) {
 	omniORB::logger log;
 	log << "Cannot get the name of this host\n";
       }
@@ -183,7 +203,7 @@ sslEndpoint::Bind() {
     int rc;
 
     if (LibcWrapper::gethostbyname(self,h,rc) < 0) {
-      if (omniORB::trace(0)) {
+      if (omniORB::trace(1)) {
 	omniORB::logger log;
 	log << "Cannot get the address of this host\n";
       }

@@ -1,3 +1,33 @@
+Mon Mar 11 12:16:12 GMT 2002 dpg1
+=================================
+
+- ETS things.
+
+external_merge/README.ETSKernel
+external_merge/mk/mklib.mk
+external_merge/mk/platforms/x86_ets.mk
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/orbOptionsReg.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+- Tweaks to avoid compiler warnings.
+
+include/omniORB4/CORBA_Any.h
+include/omniORB4/cdrStream.h
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+
+- -Wbe option for example code suffix.
+
+src/lib/omniORB/omniidl_be/cxx/__init__.py
+
+- Restrict bind to specified host, if any.
+
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Tue Feb 26 14:47:48 GMT 2002 dpg1
 =================================
 
