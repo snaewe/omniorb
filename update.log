@@ -1,3 +1,13 @@
+Wed Aug  4 11:14:31 BST 1999 sll
+================================
+
+- Fixed a bug so that the correct stub code is generated for this IDL:
+
+  typedef Object Factory;
+  struct A {
+    Factory o;
+  };
+
 Mon Aug  2 19:47:32 BST 1999 sll
 ================================
 
