@@ -88,7 +88,7 @@ CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS)
 
 SUBDIRS += debug
 
-ifndef EmbeddedSystem
+ifndef ETSKernel
 SUBDIRS +=sharedlib
 endif
 
@@ -112,6 +112,19 @@ vpath %.cc ..
 
 endif
 
+ifdef ETSKernel
+# Default location of the omniORB2 configuration file [falls back to this if
+# the environment variable OMNIORB_CONFIG is not set] :
+#
+ifdef OMNIORB_CONFIG_DEFAULT_LOCATION
+CONFIG_DEFAULT_LOCATION = $(OMNIORB_CONFIG_DEFAULT_LOCATION)
+else
+CONFIG_DEFAULT_LOCATION = C:\\OMNIORB.CFG
+endif
+
+DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
+
+endif
 
 endif
 
