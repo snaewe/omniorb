@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22  1999/09/01 12:57:26  djr
+  Added atomic logging class omniORB::logger, and methods logf() and logs().
+
   Revision 1.21  1999/08/30 16:56:19  sll
   New API members: omniORB::scanGranularity and omniORB::callTimeOutPeriod.
 
@@ -119,7 +122,7 @@ _CORBA_MODULE_BEG
   //               communication socket shutdown                       //
   //     level 10 - the above plus execution trace messages            //
   //     ...                                                           //
-  _CORBA_MODULE_VAR _core_attr CORBA::ULong   traceLevel;              //
+  _CORBA_MODULE_VAR _core_attr int   traceLevel;                       //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtraceLevel <n>, or by direct assignment to this   //
@@ -673,6 +676,74 @@ _CORBA_MODULE_BEG
   };
 
   _CORBA_MODULE_VAR _core_attr logStream& log;
+
+  //////////////////////////////////////////////////////////////////////
+  /////////////////////////// omniORB::logger //////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  static inline int trace(int tl) { return traceLevel >= tl; }
+
+
+  class logger {
+  public:
+    logger(const char* prefix = 0);  // prefix defaults to "omniORB: "
+    ~logger();
+    // The destructor flushes the message.
+
+    logger& operator<<(char c);
+    logger& operator<<(unsigned char c) { return (*this) << (char)c; }
+    logger& operator<<(signed char c) { return (*this) << (char)c; }
+    logger& operator<<(const char *s);
+    logger& operator<<(const unsigned char *s) {
+      return (*this) << (const char*)s;
+    }
+    logger& operator<<(const signed char *s) {
+      return (*this) << (const char*)s;
+    }
+    logger& operator<<(const void *p);
+    logger& operator<<(int n);
+    logger& operator<<(unsigned int n);
+    logger& operator<<(long n);
+    logger& operator<<(unsigned long n);
+    logger& operator<<(short n) {return operator<<((int)n);}
+    logger& operator<<(unsigned short n) {return operator<<((unsigned int)n);}
+#ifdef HAS_Cplusplus_Bool
+    logger& operator<<(bool b) { return operator<<((int)b); }
+#endif
+#ifndef NO_FLOAT
+    logger& operator<<(double n);
+    logger& operator<<(float n) { return operator<<((double)n); }
+#endif
+
+    void flush();
+    // Flushes the logger -- it can then be re-used for another
+    // message.
+
+  private:
+    logger(const logger&);
+    logger& operator=(const logger&);
+
+    inline void reserve(int n) { if( pd_end - pd_p - 1 < n )  more(n); }
+    void more(int n);
+
+    const char* pd_prefix;
+    char*       pd_buf;
+    char*       pd_p;      // assert(*pd_p == '\0')
+    char*       pd_end;    // assert(pd_p < pd_end)
+  };
+
+
+  _CORBA_MODULE_FN void logf(const char* fmt ...);
+  // Writes log message with prefix, and appends '\n'.
+
+  _CORBA_MODULE_FN void do_logs(const char* msg);
+  // internal
+
+  _CORBA_MODULE_FN inline void logs(int tl, const char* msg) {
+    if( traceLevel >= tl )  do_logs(msg);
+  }
+  // Writes log message with prefix, and appends '\n'.
+
 
 #ifndef HAS_Cplusplus_Namespace
   friend class omni;
