@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.9  1997/12/23 19:28:29  sll
+  Now generate correct template argument for sequence<array of sequence>.
+
   Revision 1.8  1997/12/18 17:28:50  sll
   *** empty log message ***
 
@@ -319,6 +322,11 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 	  case o2be_operation::tString:
 	    {
 	      elmclassname = o2be_string::fieldMemberTypeName();
+	    }
+	    break;
+	  case o2be_operation::tSequence:
+	    {
+	      elmclassname = o2be_sequence::narrow_from_decl(decl)->seq_template_name(used_in);
 	    }
 	    break;
 	  default:
