@@ -1,3 +1,15 @@
+Thu Jan 22 11:43:00 GMT 1998 sll
+================================
+
+- set incoming and outgoing scan period to 30 seconds.
+
+src/lib/omniORB2/scavenger.cc
+
+- catch COMM_FAILURE and other exceptions in nameclt so that it does not
+  core dump when the naming service is down.
+
+src/appl/utils/nameclt/nameclt.cc
+
 Wed Jan 21 21:37:03 GMT 1998 bjh
 ================================
 
