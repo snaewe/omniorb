@@ -1,3 +1,13 @@
+Fri Jun 16 09:33:00 BST 2000 djs
+================================
+
+- omniIDL C++ union bug: when discriminant is a boolean and the union
+  has a single FALSE case (therefore it has an implied default) it picked
+  a bad default value.
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+
+
 Wed Jun 14 15:33:29 BST 2000 dme
 ================================
 - Update omkdepend and the various win32 wrappers for Cygwin's new
