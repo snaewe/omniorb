@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/09/13 15:36:00  sll
+  Provide hooks to openssl for thread safety.
+  Switched to select v2 or v3 methods but accept only v3 or tls v1 protocol.
+  Added extra method set_supported_versions.
+
   Revision 1.1.2.1  2001/06/11 18:11:07  sll
   *** empty log message ***
 
@@ -52,20 +57,46 @@ class sslContext {
   
   // These three parameters must be set or else the default way to
   // initialise a sslContext singleton will not be used.
-  static const char* certificate_authority_file;
-  static const char* key_file;
+  static const char* certificate_authority_file; // In PEM format
+  static const char* key_file;                   // In PEM format
   static const char* key_file_password;
 
   static sslContext* singleton;
 
+  virtual ~sslContext();
+
  protected:
-  virtual SSL_METHOD* set_method();
+  virtual SSL_METHOD* set_method(); 
+  // Default to return SSLv23_method().
+
+  virtual void set_supported_versions(); 
+  // Default to SSL_CTX_set_options(ssL_ctx, SSL_OP_NO_SSLv2); That is
+  // only accept SSL version 3 or TLS version 1.
+
   virtual void set_CA();
+  // Default to read the certificates of the Certificate Authorities in the 
+  // file named by the static member certificate_authority_file.
+
   virtual void set_certificate();
+  // Default to read the certificate of this server from the file named
+  // by the static member key_file. 
+
   virtual void set_cipher();
+  // Default to call OpenSSL_add_all_algorithms().
+
   virtual void set_privatekey();
+  // Default to read the private key of this server from the file named
+  // by the statci member key_file. Notice that this file also contains
+  // the server's certificate.
+
   virtual void seed_PRNG();
+  // On systems that does not provide a /dev/urandom, default to provide
+  // a seed for the PRNG using process ID and time of date. This is not
+  // a very good seed cryptographically. Secure applications should definitely
+  // override this method to provide a better seed.
+
   virtual void set_DH();
+
   virtual void set_ephemeralRSA();
 
   sslContext();
@@ -73,13 +104,16 @@ class sslContext {
   friend class _OMNI_NS(omni_sslTransport_initialiser);
  private:
 
+  void thread_setup();
+  void thread_cleanup();
+
   virtual void internal_initialise();
 
   const char* pd_cafile;
   const char* pd_keyfile;
   const char* pd_password;
-  SSL_CTX*  pd_ctx;
-  
+  SSL_CTX*    pd_ctx;
+  omni_mutex* pd_locks;
 };
 
 #endif // __SSLCONTEXT_H__
