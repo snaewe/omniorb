@@ -1,3 +1,13 @@
+
+Tue Jun  8 10:42:37 BST 1999 djr
+================================
+
+- Correction in the manual -- CORBA::ORB::create_* are non-static members.
+  Also recursive TypeCodes are supported.
+
+doc/tex/omniORB2.tex
+
+
 Thu Jun  3 18:06:58 BST 1999 sll
 ================================
 
