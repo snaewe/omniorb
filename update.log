@@ -1,3 +1,19 @@
+Mon Jan 11 16:17:00 GMT 1999 djr
+================================
+
+- Modifications to makefiles to ensure that the correct versions
+  of generated header files are picked up.
+
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/dynamic/dir.mk
+src/lib/omniORB2/lifecycle/dir.mk
+src/lib/omniORB2/dynamic/corbaidlstub.cc
+src/lib/omniORB2/dynamic/corbaidldynstub.cc
+src/lib/omniORB2/dynamic/irstub.cc
+src/lib/omniORB2/dynamic/irdynstub.cc
+
+
 Fri Jan  8 11:26:43 GMT 1999 djr
 ================================
 
