@@ -1,3 +1,260 @@
+Wed Aug 27 11:24:10 BST 1997 sll
+================================
+
+- The definition file for NT omniORB2 DLL export symbols are now generated 
+  automatically.
+- Fixes for the bugs listed below:
+
+------------------------
+
+On unix, an omniORB server exits when the number of open filedescriptors
+reaches the soft limit, normally 64.
+
+Fixed so that the server does not exit. The limit needs to be increased with
+your shell, for example 'limit descriptors 1024'
+
+
+Reported by: Bernhard Ruememapp
+
+------------------------
+
+Deadlock occurs when the destructor of an object implementation class calls
+CORBA::_release(CORBA::Object_ptr).
+
+Reported by: Matthew Newhook, Duncan Grisby
+----------------------
+
+Calling _sk_<interface>::_dispose() when the object's reference count == 1
+corrupts the internal object table.
+
+Reported by: Matthew Newhook, Duncan Grisby
+
+-----------------------
+
+IDL union bug, the stub generated for the IDL below does not compile:
+
+union U switch(long)
+{
+case 1: double d;
+case 2: long e;
+default: short s;
+};
+
+
+Reported internally
+
+------------------------------
+
+New system exceptions
+
+TRANSACTION_REQUIRED
+TRANSACTION_ROLLEDBACK
+INVALID_TRANSACTION
+WRONG_TRANSACTION
+
+
+Reported by Mark Little
+
+-------------------------------
+
+Memory leaks
+
+Reported by Mathew Barrow, Matthew Newhook
+
+-------------------------------
+
+CORBA::String_member copy ctor tests _ptr before initialising it.
+
+Reported by Mathew Barrow, Matthew Newhook
+
+----------------------------------
+
+omniNames:
+
+In the case when BindingIterator::next_one() returns false, the value of
+binding_type in the out argument is not initialised. This causes
+marshalling failures on the remote end sometimes (the value is neither nobject
+or ncontext).
+
+Reported by Matthew Newhook
+
+-------------------------------
+
+User exceptions:
+
+The stub code to unmarshal user exception allocates the wrong size buffer
+for the repository ID string. This causes marshalling failures when the
+exception has a #pragma prefix defined.
+
+Reported by Matthew Newhook, Mathew Barrow and Juergen Keil
+
+----------------------------
+
+Interface Inheritance:
+
+// IDL	
+  interface person
+  {
+    attribute string ID;
+  };
+
+  interface kid: person
+  {
+    attribute person mom;
+  };
+
+  interface mother: person
+  {
+    attribute person child;
+  };
+
+// C++
+
+  kid_ptr    k = ...;                  // k is a remote object
+  person_ptr a = k->mom();             // k actually returns an object ref
+                                       // of interface mother
+  mother_ptr m = mother::_narrow(a);
+  assert(CORBA::is_nil(m) != 0);      // Bug: assertion failed.
+
+
+This bug is fixed but requires both sides to have the stub of all the
+interfaces linked into the executable. The next release will remove this
+restriction.
+
+Reported by  Ernie van der Meer
+
+-----------------------------------
+
+Wrong typedef for CORBA::ORBid
+Wrong signature for CORBA::ORB_init()
+
+Reported by Mark Little
+
+-------------------------------
+
+Port to run under x86 linux, glib 2.0.4, gcc2.7.2.2
+
+Reported by Marcel Ruff
+
+-------------------------------
+
+Sequence of array does not work
+
+// IDL
+   typedef float rc[3];
+   typedef sequence<rc> rcSeq;
+
+    interface Ri {
+      void Dummy(in rcSeq colors);
+    };
+
+Reported by John Connett
+
+------------------------------
+
+Wrong stub for
+
+// IDL
+typedef Object O;
+
+Reported by Wolfgang Ruppel
+----------------------------
+
+Port to AIX 4.2
+
+Reported by Andrey Slepuhin
+
+
+XXX - miss out the patch to log.cc, await reply from AS
+--------------------------
+
+omniidl2 does not detect name clashes between identifiers that
+differ in case only.
+
+    // Extract from OTS IDL
+    typedef ... Coordinator;
+    typedef ... Terminator;
+    struct TransIdentity
+    {
+        Coordinator coordinator;
+        Terminator terminator;
+        otid_t otid;
+    };
+
+  IDL compiler should report name clashes between Coordinator-coordinator and
+  Terminator-terminator.
+
+Reported by Mark Little
+-----------------------------------------
+
+catior SEGV when supplied with a stringified IOR with a few digits missing
+
+Reported internally
+
+------------------------------------------
+
+Using 'c' as the name of an OUT/INOUT variable length argument in an
+operation clashes with an internal variable used by the proxy stub code.
+
+Reported internally
+
+--------------------------------------------
+
+
+src/tool/omniidl2/include/utl_identifier.hh
+src/tool/omniidl2/include/utl_scope.hh
+src/tool/omniidl2/ast/ast_enum.cc
+src/tool/omniidl2/ast/ast_exception.cc
+src/tool/omniidl2/ast/ast_interface.cc
+src/tool/omniidl2/ast/ast_module.cc
+src/tool/omniidl2/ast/ast_operation.cc
+src/tool/omniidl2/ast/ast_structure.cc
+src/tool/omniidl2/ast/ast_union.cc
+src/tool/omniidl2/driver/drv_fork.cc
+src/tool/omniidl2/driver/drv_preproc.cc
+src/tool/omniidl2/omniORB2_be/o2be_attribute.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_name.cc
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/util/utl_identifier.cc
+src/tool/omniidl2/util/utl_scope.cc
+
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/objectRef.cc
+src/lib/omniORB2/constants.cc
+src/lib/omniORB2/giopServer.cc
+src/lib/omniORB2/giopClient.cc
+src/lib/omniORB2/orb.cc
+src/lib/omniORB2/object.cc
+src/lib/omniORB2/tcpSocket_UNIX.cc
+src/lib/omniORB2/tcpSocket_ATMos.cc
+src/lib/omniORB2/tcpSocket_NT.cc
+src/lib/omniORB2/exception.cc
+src/lib/omniORB2/initFile.cc
+src/lib/omniORB2/ior.cc
+src/lib/omniORB2/libcWrapper.cc
+src/lib/omnithread/posix.cc
+src/lib/omniORB2/sharedlib/dir.mk
+src/lib/omniORB2/sharedlib/omniORB2.def              deleted
+
+src/appl/omniNames/BindingIterator_i.h
+src/appl/utils/nameclt/nameclt.cc
+
+src/examples/echo/greeting.cc
+
+include/omniORB2/CORBA.h
+include/omniORB2/giopDriver.h
+include/omniORB2/IIOP.h
+include/omniORB2/CORBA_basetypes.h
+include/omniORB2/seqtemplates.h
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/bufferedStream.h
+include/omniORB2/templates.h
+include/omniORB2/initFile.h                 moved to src/lib/omniORB2
+include/omnithread.h
+
 
 Mon Aug 18 15:18:00 BST 1997 tjr
 ================================
