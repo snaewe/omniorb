@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.19  1999/08/17 14:49:20  sll
+  Fixed bug introduced by the previous change. Now works correctly if the
+  application defined loader returns a nil object reference.
+
   Revision 1.18  1999/08/14 16:38:17  sll
   Added support for python binding.
   Changed locate object code as locateObject no longer throws an exception.
@@ -612,7 +616,8 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 	  ReplyCompleted();
 	}
       }
-      else {
+
+      if (!obj) {
 	RequestReceived(1);
 	if (!pd_response_expected) {
 	  // This is a one way invocation, we choose to return a MessageError
