@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.2.2.25  2002/03/18 15:13:08  dpg1
+  Fix bug with old-style ORBInitRef in config file; look for
+  -ORBtraceLevel arg before anything else; update Windows registry
+  key. Correct error message.
+
   Revision 1.2.2.24  2001/09/24 14:26:02  dpg1
   Safer static translation unit counts for omnithread and final clean-up.
 
@@ -1190,7 +1195,7 @@ public:
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {
       throw orbOptions::BadParam(key(),value,
-				 orbOptions::expect_non_zero_ulong_msg);
+				 orbOptions::expect_ulong_msg);
     }
     omniORB::traceLevel = v;
   }
@@ -1276,8 +1281,7 @@ public:
 
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {
-      throw orbOptions::BadParam(key(),value,
-				 orbOptions::expect_non_zero_ulong_msg);
+      throw orbOptions::BadParam(key(),value,orbOptions::expect_ulong_msg);
     }
     orbParameters::objectTableSize = v;
   }

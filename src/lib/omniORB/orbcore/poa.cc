@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.2.2.31  2002/03/18 15:13:09  dpg1
+  Fix bug with old-style ORBInitRef in config file; look for
+  -ORBtraceLevel arg before anything else; update Windows registry
+  key. Correct error message.
+
   Revision 1.2.2.30  2002/02/25 11:17:13  dpg1
   Use tracedmutexes everywhere.
 
@@ -3685,7 +3690,7 @@ public:
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {
       throw orbOptions::BadParam(key(),value,
-				 orbOptions::expect_non_zero_ulong_msg);
+				 orbOptions::expect_ulong_msg);
     }
     orbParameters::poaHoldRequestTimeout = v;
   }

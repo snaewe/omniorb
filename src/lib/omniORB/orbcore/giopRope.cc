@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.20  2002/03/18 15:13:08  dpg1
+  Fix bug with old-style ORBInitRef in config file; look for
+  -ORBtraceLevel arg before anything else; update Windows registry
+  key. Correct error message.
+
   Revision 1.1.4.19  2001/09/19 17:26:49  dpg1
   Full clean-up after orb->destroy().
 
@@ -760,7 +765,7 @@ public:
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {
       throw orbOptions::BadParam(key(),value,
-				 orbOptions::expect_non_zero_ulong_msg);
+			 orbOptions::expect_greater_than_zero_ulong_msg);
     }
     orbParameters::maxGIOPConnectionPerServer = v;
   }

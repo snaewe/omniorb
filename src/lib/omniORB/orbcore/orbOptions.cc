@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/03/18 15:13:09  dpg1
+  Fix bug with old-style ORBInitRef in config file; look for
+  -ORBtraceLevel arg before anything else; update Windows registry
+  key. Correct error message.
+
   Revision 1.1.2.5  2001/10/29 17:44:59  dpg1
   Missing loop increment.
 
@@ -243,6 +248,30 @@ orbOptions::extractInitOptions(int& argc,char** argv)
 
 ////////////////////////////////////////////////////////////////////////
 void
+orbOptions::getTraceLevel(int argc, char** argv)
+  throw (orbOptions::Unknown,orbOptions::BadParam) {
+
+  const char* key = "traceLevel";
+
+  for (int i=0; i<argc; i++) {
+    if (!strcmp(argv[i], "-ORBtraceLevel")) {
+      if (i+1 == argc) {
+	throw orbOptions::BadParam(key, "<missing>",
+				   "Expected parameter missins");
+      }
+      CORBA::ULong v;
+      if (!orbOptions::getULong(argv[i+1], v))
+	throw orbOptions::BadParam(key, argv[i+1],
+				   orbOptions::expect_ulong_msg);
+      omniORB::traceLevel = v;
+      return;
+    }
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+void
 orbOptions::importFromEnv() throw (orbOptions::Unknown,orbOptions::BadParam) {
   
   omnivector<orbOptions::Handler*>::const_iterator i = pd_handlers.begin();
@@ -378,7 +407,7 @@ orbOptions::getULong(const char* value, CORBA::ULong& result) {
 
   long v;
   v = strtol(value,0,10);
-  if (v == LONG_MIN || v == LONG_MAX) return 0;
+  if (v == LONG_MIN || v == LONG_MAX || v < 0) return 0;
   result = v;
   return 1;
 }
@@ -436,7 +465,7 @@ orbOptions::addKVString(const char* key, const char* value,
 
 ////////////////////////////////////////////////////////////////////////
 const char* orbOptions::expect_boolean_msg = "Invalid value, expect 0 or 1";
-const char* orbOptions::expect_non_zero_ulong_msg = "Invalid value, expect n > 0";
+const char* orbOptions::expect_ulong_msg = "Invalid value, expect n >= 0";
 const char* orbOptions::expect_greater_than_zero_ulong_msg = "Invalid value, expect n >= 1";
 
 /////////////////////////////////////////////////////////////////////////////

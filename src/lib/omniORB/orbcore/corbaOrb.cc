@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.33.2.39  2002/03/18 15:13:07  dpg1
+  Fix bug with old-style ORBInitRef in config file; look for
+  -ORBtraceLevel arg before anything else; update Windows registry
+  key. Correct error message.
+
   Revision 1.33.2.38  2002/03/13 16:05:38  dpg1
   Transport shutdown fixes. Reference count SocketCollections to avoid
   connections using them after they are deleted. Properly close
@@ -493,6 +498,10 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
 
     orbOptions::singleton().reset();
 
+    // Look for -ORBtraceLevel arg first
+    option_source = option_src_5;
+    orbOptions::singleton().getTraceLevel(argc,argv);
+
     // Parse configuration file
     option_source = option_src_1;
 
@@ -552,7 +561,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
       l << "ORB_init failed: Bad parameter (" << ex.value
 	<< ") for option "
 	<< ((option_source == option_src_5) ? "-ORB" : "")
-	<< ex.key << " in " <<  option_source << " reason: "
+	<< ex.key << " in " <<  option_source << ", reason: "
 	<< ex.why << "\n";
     }
     OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
@@ -567,7 +576,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
       omniORB::logger l;
       l << "ORB_init failed: Bad parameter (" << ex.value
 	<< ") for ORB configuration option " << ex.key
-	<< " reason: " << ex.why << "\n";
+	<< ", reason: " << ex.why << "\n";
     }
     OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
 		  CORBA::COMPLETED_NO);

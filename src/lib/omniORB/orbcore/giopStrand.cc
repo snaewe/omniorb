@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2002/03/18 15:13:08  dpg1
+  Fix bug with old-style ORBInitRef in config file; look for
+  -ORBtraceLevel arg before anything else; update Windows registry
+  key. Correct error message.
+
   Revision 1.1.4.15  2002/03/14 14:40:46  dpg1
   Scavenger locking bug.
 
@@ -800,7 +805,7 @@ public:
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {
       throw orbOptions::BadParam(key(),value,
-				 orbOptions::expect_non_zero_ulong_msg);
+				 orbOptions::expect_ulong_msg);
     }
     orbParameters::scanGranularity = v;
   }
@@ -828,7 +833,7 @@ public:
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {
       throw orbOptions::BadParam(key(),value,
-				 orbOptions::expect_non_zero_ulong_msg);
+				 orbOptions::expect_ulong_msg);
     }
     orbParameters::outConScanPeriod = v;
   }
@@ -856,7 +861,7 @@ public:
     CORBA::ULong v;
     if (!orbOptions::getULong(value,v)) {
       throw orbOptions::BadParam(key(),value,
-				 orbOptions::expect_non_zero_ulong_msg);
+				 orbOptions::expect_ulong_msg);
     }
     orbParameters::inConScanPeriod = v;
   }

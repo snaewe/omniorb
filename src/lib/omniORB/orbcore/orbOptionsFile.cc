@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/03/18 15:13:09  dpg1
+  Fix bug with old-style ORBInitRef in config file; look for
+  -ORBtraceLevel arg before anything else; update Windows registry
+  key. Correct error message.
+
   Revision 1.1.2.5  2002/01/02 18:18:26  dpg1
   Old config file warning less obtrusive.
 
@@ -115,7 +120,16 @@ orbOptions::importFromFile(const char* filename) throw (orbOptions::Unknown,
     if ( *p == '#' || *p == '\0' )
       continue;
 
-    char* sep = strchr(line,'=');
+#if SUPPORT_OLD_CONFIG_FORMAT
+    // Special case: old ORBInitRef has an '=' in it, so the test
+    // below spots the '=' incorrectly.
+    if (!strncmp(p, "ORBInitRef", 10)) {
+      if (parseOldConfigOption(*this,line)) {
+	continue;
+      }
+    }
+#endif
+    char* sep = strchr(p,'=');
     if (!sep) {
 #if SUPPORT_OLD_CONFIG_FORMAT
       // Backward compatibility. Detect old format/keywords 

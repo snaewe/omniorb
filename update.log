@@ -1,3 +1,22 @@
+Mon Mar 18 15:07:36 GMT 2002 dpg1
+=================================
+
+- Fix bug with old-style ORBInitRef in config file; look for
+  -ORBtraceLevel arg before anything else; update Windows registry
+  key. Correct error message.
+
+include/omniORB4/internal/orbOptions.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+src/lib/omniORB/orbcore/orbOptionsFile.cc
+src/lib/omniORB/orbcore/orbOptionsReg.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
 Mon Mar 18 12:37:01 GMT 2002 dpg1
 =================================
 

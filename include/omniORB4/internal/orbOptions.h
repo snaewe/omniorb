@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/03/18 15:13:07  dpg1
+  Fix bug with old-style ORBInitRef in config file; look for
+  -ORBtraceLevel arg before anything else; update Windows registry
+  key. Correct error message.
+
   Revision 1.1.2.5  2002/02/11 15:15:50  dpg1
   Things for ETS kernel.
 
@@ -199,6 +204,15 @@ class orbOptions {
   //    Not thread safe
 
   ////////////////////////////////////////////////////////////////////////
+  void getTraceLevel(int argc, char** argv) throw (Unknown,BadParam);
+  // Look for an -ORBtraceLevel argument very early on, so the trace
+  // level can affect later option logging. Does not remove the
+  // arguments -- that is done by extractInitOptions() later.
+  //
+  // Thread Safety preconditions:
+  //    Not thread safe
+
+  ////////////////////////////////////////////////////////////////////////
   void importFromFile(const char* filename) throw (Unknown,BadParam);
 
 #if defined(NTArchitecture) && !defined(__ETS_KERNEL__)
@@ -277,7 +291,7 @@ class orbOptions {
   // argv. Update argc to truncate the moved arguments from argv.
 
   static const char* expect_boolean_msg;
-  static const char* expect_non_zero_ulong_msg;
+  static const char* expect_ulong_msg;
   static const char* expect_greater_than_zero_ulong_msg;
 
   ////////////////////////////////////////////////////////////////////////
