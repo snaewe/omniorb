@@ -7,7 +7,7 @@ OBJS  += index.o
 CSRCS += index.c
 endif
 
-DIR_CPPFLAGS += -DHAVE_CONFIG_H
+DIR_CPPFLAGS += -DHAVE_CONFIG_H -I.
 
 omni-cpp = $(patsubst %,$(BinPattern),omni-cpp)
 
