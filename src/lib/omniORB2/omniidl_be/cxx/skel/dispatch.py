@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/12/01 16:58:32  djs
+# Added code to handle user exceptions being thrown
+#
 # Revision 1.4  1999/11/29 19:27:05  djs
 # Code tidied and moved around. Some redundant code eliminated.
 #
@@ -315,13 +318,50 @@ def operation(operation):
         result_assignment = "result = "
 
 
+    raises = operation.raises()
+    has_user_exceptions = raises != []
+    # need to declare user exceptions
+    exceptions = util.StringStream()
+    try_ = util.StringStream()
+    catch = util.StringStream()
+    if has_user_exceptions:
+        # old compiler seems to order repoIDs by exception definition
+        # no need to duplicate that behaviour here
+        repoIDs = map(lambda x: "\"" + x.repoId() + "\"", raises)
+        exceptions.out("""\
+static const char* const _user_exns[] = {
+  @repoID_list@
+};
+giop_s.set_user_exceptions(_user_exns, @n@);""",
+                       repoID_list = string.join(repoIDs, ",\n"),
+                       n = str(len(repoIDs)))
+        try_.out("""\
+#ifndef HAS_Cplusplus_catch_exception_by_base
+    try {
+#endif""")
+        
+        catch.out("""\
+#ifndef HAS_Cplusplus_catch_exception_by_base
+    }""")
+        for exception in raises:
+            exname = environment.nameToString(exception.scopedName())
+            catch.out("""\
+    catch(@exname@& ex) {
+      throw omniORB::StubUserException(ex._NP_duplicate());
+    }""", exname = exname)
+        catch.out("""\
+#endif""")
+
     # main block of code goes here
     stream.out("""\
   if( !strcmp(giop_s.operation(), \"@operation_name@\") ) {
+    @exception_decls@
     @get_arguments@
     giop_s.RequestReceived();
     @decl_result@
+    @try_@
     @result_assignment@this->@operation_name@(@argument_list@);
+    @catch@
     if( giop_s.response_expected() ) {
       size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
       @size_calculation_results@
@@ -334,9 +374,12 @@ def operation(operation):
     return 1;
   }""",
                operation_name = operation_name,
+               exception_decls = str(exceptions),
                get_arguments = str(get_arguments),
                decl_result = str(decl_result),
+               try_ = str(try_),
                argument_list = string.join(argument_list, ", "),
+               catch = str(catch),
                result_assignment = result_assignment,
                size_calculation_results = str(size_calc_results),
                size_calculation_arguments = str(size_calc_arguments),
