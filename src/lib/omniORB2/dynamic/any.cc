@@ -29,7 +29,7 @@
 
 
 /* $Log$
-/* Revision 1.17  1999/07/02 19:33:30  sll
+/* Revision 1.18  1999/07/02 19:35:16  sll
 /* Corrected typo in operator>>= for typecode.
 /*
  * Revision 1.16  1999/07/02 19:10:46  sll
@@ -591,7 +591,7 @@ CORBA::Any::operator>>=(CORBA::TypeCode_ptr& tc) const
     CORBA::Boolean ret = pdAnyP()->getData(CORBA::_tc_TypeCode, tcd);
     if( ret ) {
       if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
-        PR_setCachedData((void*)tcm._ptr,delete_typecode);
+        ((CORBA::Any*)this)->PR_setCachedData((void*)tcm._ptr,delete_typecode);
       }
       tc = tcm._ptr;
       tcm._ptr = CORBA::TypeCode::_nil(); return 1;
