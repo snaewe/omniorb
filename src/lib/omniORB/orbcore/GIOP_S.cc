@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/01 16:07:32  sll
+  All GIOP implementations should now work with fragmentation and abitrary
+  sizes non-copy transfer.
+
   Revision 1.1.4.1  2001/04/18 18:10:51  sll
   Big checkin with the brand new internal APIs.
 
@@ -70,7 +74,6 @@ GIOP_S::GIOP_S(giopStrand* g,giopServer*server) : giopStream(g),
 		                            pd_operation((char*)pd_op_buffer),
 					    pd_principal(pd_pr_buffer),
 					    pd_principal_len(0),
-					    pd_request_id(0),
 					    pd_response_expected(1),
 					    pd_result_expected(1)
 {
@@ -85,7 +88,6 @@ GIOP_S::GIOP_S(const GIOP_S& src) : giopStream(src.pd_strand),
 				    pd_operation((char*)pd_op_buffer),
 				    pd_principal(pd_pr_buffer),
 				    pd_principal_len(0),
-				    pd_request_id(0),
 				    pd_response_expected(1),
 				    pd_result_expected(1)
 {
@@ -303,6 +305,10 @@ GIOP_S::handleRequest() {
     }
   }
 #undef MARSHAL_USER_EXCEPTION
+
+  catch(const giopStream::CommFailure&) {
+    throw;
+  }
 
   catch(...) {
     if( omniORB::traceLevel > 1 ) {

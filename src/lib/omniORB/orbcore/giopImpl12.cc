@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/01 16:07:32  sll
+  All GIOP implementations should now work with fragmentation and abitrary
+  sizes non-copy transfer.
+
   Revision 1.1.4.1  2001/04/18 18:10:50  sll
   Big checkin with the brand new internal APIs.
 
@@ -630,6 +634,19 @@ void
 giopImpl12::inputMessageEnd(giopStream* g,CORBA::Boolean disgard) {
 
   if ( g->pd_strand->state() != giopStrand::DYING ) {
+
+    while ( g->inputExpectAnotherFragment() &&
+	    g->inputFragmentToCome() == 0   && 
+	    g->pd_inb_end == g->pd_inb_mkr     ) {
+
+      // If there are more fragments to come and we do not have any
+      // data left in our buffer, we keep fetching the next
+      // fragment until one of the conditions is false.
+      // This will cater for the case where the remote end is sending
+      // the last fragment(s) with 0 body size to indicate the end of
+      // a message.
+      inputNewFragment(g);
+    }
 
     if (!disgard && inputRemaining(g)) {
       if (omniORB::trace(15)) {
@@ -1424,9 +1441,8 @@ giopImpl12::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
   CORBA::ULong sz = (omni::ptr_arith_t)g->pd_outb_mkr - 
                     (omni::ptr_arith_t)hdr -12;
 
+  outputSetFragmentSize(g,sz);
   *((CORBA::ULong*)(hdr + 8)) = sz;
-
-  s.alignOutput(omni::ALIGN_8);
 
   outputMessageEnd(g);
 }
@@ -1713,20 +1729,18 @@ giopImpl12::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
     hdr[0] = 'G'; hdr[1] = 'I'; hdr[2] = 'O'; hdr[3] = 'P';
     hdr[4] = 1;   hdr[5] = 2;   hdr[6] = _OMNIORB_HOST_BYTE_ORDER_;
     hdr[7] = (char)GIOP::Fragment;
-    g->pd_outb_mkr = (void*)(outbuf_begin + 12);
+    *((CORBA::ULong*)(hdr + 12)) = g->requestId();
+    g->pd_outb_mkr = (void*)(outbuf_begin + 16);
 
     // Now determine how much space we have left.
     // If the message size has already reach omniORB::MaxMessageSize(),
     // outputHasReachedLimit() will return TRUE.
     CORBA::ULong avail = omniORB::MaxMessageSize() - g->outputMessageSize();
 
-    // Adjust avail to make sure that either it is 0 or when the header
-    // size (12) is added the result is a multiple of 8.
+    // Adjust avail to make sure that it a multiple of 8.
     // This preserves our invariant: g->pd_outb_end always align on 8 bytes
     // boundary.
-    // The value should be one of 0, 4, 12, 20, ....
-    avail = ((avail + 4) >> 3) << 3;
-    avail = (avail ? avail - 4 : 0);
+    avail = ((avail + 7) >> 3) << 3;
 
     omni::ptr_arith_t newmkr = (omni::ptr_arith_t) g->pd_outb_mkr + avail;
     if (newmkr < (omni::ptr_arith_t)g->pd_outb_end) {
@@ -1795,7 +1809,7 @@ giopImpl12::copyOutputData(giopStream* g,void* b, size_t sz,
     // boundary. Therefore we may have to leave behind 0-7 bytes in the
     // next fragment.
 
-    size_t leftover = (newmkr + sz) % 0x7;
+    size_t leftover = (newmkr + sz) & 0x7;
 
     if (!g->outputFragmentSize()) {
 
@@ -1814,7 +1828,6 @@ giopImpl12::copyOutputData(giopStream* g,void* b, size_t sz,
     g->sendCopyChunk(b,sz - leftover,0,0);
     // XXX no deadline set.
 
-    sz = leftover;
     if (leftover) {
       if (outputHasReachedLimit(g)) {
 	// Already reached the message size limit
@@ -1823,6 +1836,7 @@ giopImpl12::copyOutputData(giopStream* g,void* b, size_t sz,
       }
       b = (void*) ((omni::ptr_arith_t)b + sz - leftover);
     }
+    sz = leftover;
   }
 
   while (sz) {

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/01 16:07:32  sll
+  All GIOP implementations should now work with fragmentation and abitrary
+  sizes non-copy transfer.
+
   Revision 1.1.4.1  2001/04/18 18:10:50  sll
   Big checkin with the brand new internal APIs.
 
@@ -335,6 +339,19 @@ void
 giopImpl11::inputMessageEnd(giopStream* g,CORBA::Boolean disgard) {
 
   if ( g->pd_strand->state() != giopStrand::DYING ) {
+
+    while ( g->inputExpectAnotherFragment() &&
+	    g->inputFragmentToCome() == 0   && 
+	    g->pd_inb_end == g->pd_inb_mkr     ) {
+
+      // If there are more fragments to come and we do not have any
+      // data left in our buffer, we keep fetching the next
+      // fragment until one of the conditions is false.
+      // This will cater for the case where the remote end is sending
+      // the last fragment(s) with 0 body size to indicate the end of
+      // a message.
+      inputNewFragment(g);
+    }
 
     if (!disgard && inputRemaining(g)) {
       if (omniORB::trace(15)) {

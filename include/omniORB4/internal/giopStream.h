@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/01 16:07:32  sll
+  All GIOP implementations should now work with fragmentation and abitrary
+  sizes non-copy transfer.
+
   Revision 1.1.4.1  2001/04/18 17:18:59  sll
   Big checkin with the brand new internal APIs.
 
@@ -396,6 +400,7 @@ private:
   // written with a sensible value when used.
   CORBA::ULong               pd_outputFragmentSize;
   CORBA::ULong               pd_outputMessageSize;
+  CORBA::ULong               pd_request_id;
 
   inline CORBA::ULong outputMessageSize() const {
     return pd_outputMessageSize;
@@ -437,6 +442,11 @@ private:
 
   void errorOnSend(int,const char*,CORBA::ULong);
   // internal helper function, do not use outside this class
+
+protected:
+  //////////////////////////////////////////////////////////////////
+  inline CORBA::ULong  requestId() const { return pd_request_id; }
+  inline void requestId(CORBA::ULong v) { pd_request_id = v; }
 
 };
 

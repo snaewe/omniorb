@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/05/01 16:07:31  sll
+  All GIOP implementations should now work with fragmentation and abitrary
+  sizes non-copy transfer.
+
   Revision 1.1.4.6  2001/04/18 18:10:48  sll
   Big checkin with the brand new internal APIs.
 
@@ -66,7 +70,8 @@ giopStream::giopStream(giopStrand* strand) :
   pd_inputMessageSize(0),
   pd_currentOutputBuffer(0),
   pd_outputFragmentSize(0),
-  pd_outputMessageSize(0)
+  pd_outputMessageSize(0),
+  pd_request_id(0)
 {
 }
 
@@ -601,12 +606,17 @@ giopStream::inputMessage(unsigned long deadline_secs,
       total = buf->end - buf->start;
     }
     total -= (buf->last - buf->start);
-    do {
+    while (total) {
       int rsz = pd_strand->connection->recv((void*)
 					    ((omni::ptr_arith_t)buf+buf->last),
 					    (size_t) total,
 					    deadline_secs, deadline_nanosecs);
       if (rsz > 0) {
+	if (omniORB::trace(30)) {
+	  fprintf(stderr,"omniORB: inputMessage: (body) from %s %d bytes\n",
+		  pd_strand->connection->peeraddress(),rsz);
+	  dumpbuf((unsigned char*)buf+buf->last,rsz);
+	}
 	buf->last += rsz;
 	total -= rsz;
       }
@@ -614,7 +624,7 @@ giopStream::inputMessage(unsigned long deadline_secs,
 	errorOnReceive(rsz,__FILE__,__LINE__,buf);
 	// never reaches here.
       }
-    } while (total);
+    }
   }
   else if (buf->size < (buf->last - buf->start)) {
     // Too much data in the buffer. Locate the beginning of the next

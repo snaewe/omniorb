@@ -1,3 +1,35 @@
+Tue May  1 17:04:53 BST 2001 sll
+================================
+
+- All GIOP implementations should now work with fragmentation and abitrary
+  sizes non-copy transfer.
+
+src/lib/omniORB/include/GIOP_C.h
+src/lib/omniORB/include/GIOP_S.h
+src/lib/omniORB/include/giopStream.h
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopStream.cc
+
+
+Tue May  1 17:03:36 BST 2001 sll
+================================
+
+- Silly use of sizeof() on const char*. Should use strlen().
+
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+Tue May  1 16:47:03 BST 2001 sll
+================================
+
+- Silly typo in a switch statement causes random failure due to corrupted 
+  link list. 
+
+src/lib/omniAsyncInvoker/invoker.cc
+
+
 Thu Apr 19 12:14:33 BST 2001 sll
 ================================
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/01 16:07:33  sll
+  All GIOP implementations should now work with fragmentation and abitrary
+  sizes non-copy transfer.
+
   Revision 1.1.4.1  2001/04/18 17:19:01  sll
   Big checkin with the brand new internal APIs.
 
@@ -93,9 +97,6 @@ class GIOP_C : public IOP_C, public giopStream, public giopStreamList {
   GIOP::LocateStatusType locateStatus() const { return pd_locateStatus; }
   void locateStatus(GIOP::LocateStatusType rc) { pd_locateStatus = rc; }
 
-  inline CORBA::ULong  requestId() const { return pd_request_id; }
-  inline void requestId(CORBA::ULong v) { pd_request_id = v; }
-
   inline CORBA::ULong  replyId() const { return pd_reply_id; }
   inline void replyId(CORBA::ULong v) { pd_reply_id = v; }
 
@@ -108,7 +109,6 @@ private:
   giopRope*               pd_rope;
   GIOP::ReplyStatusType   pd_replyStatus;
   GIOP::LocateStatusType  pd_locateStatus;
-  CORBA::ULong            pd_request_id;
   CORBA::ULong            pd_reply_id;
 
   void UnMarshallSystemException();
