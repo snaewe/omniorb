@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.14  1998/08/06 16:23:27  sll
+  *** empty log message ***
+
   Revision 1.13  1998/05/20 18:24:13  sll
   New option (-t) enable the generation of tie implementation template.
 
@@ -85,7 +88,7 @@ getopt(int num_args, char* const* args, const char* optstring)
 if (optind == num_args) return EOF;
 char* buf_left = *(args+optind);
 
-if ((*buf_left != '-' && *buf_left != '/') || buf_left == NULL ) return EOF;
+if (buf_left == NULL || (*buf_left != '-' && *buf_left != '/')) return EOF;
 else if ((optind < (num_args-1)) && strcmp(buf_left,"-") == 0 && strcmp(*(args+optind+1),"-") == 0)
 	{
 		optind+=2;
