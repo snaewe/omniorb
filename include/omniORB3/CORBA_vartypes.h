@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  1999/10/13 12:44:35  djr
+ Added definition of TypeCode_out.
+
  Revision 1.1.2.1  1999/09/24 09:51:39  djr
  Moved from omniORB2 + some new files.
 
@@ -363,6 +366,9 @@ public:
 private:
   TypeCode_OUT_arg();
 };
+
+
+typedef TypeCode_OUT_arg TypeCode_out;
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////////// ORB_var //////////////////////////////
