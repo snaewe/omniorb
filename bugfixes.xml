@@ -8,6 +8,21 @@
 
 <buglist version="3.0.3">
 
+<bug id="5" date="Wed Apr 25 17:49:17 BST 2001" user="dpg1">
+
+  <summary>Incorrect code generated for includes at non-file
+  scope</summary>
+  <reported>Olaf Meding</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-04/0152.html"/>
+  <text>
+  The IDL compiler C++ back-end would generate incorrect code for
+  #includes at non-file scope. Now, declarations inside files #included
+  at non-file scope are treated as if they appeared in the including
+  file.
+  </text>
+</bug>
+
 <bug id="4" date="Tue Mar 27 17:56:31 BST 2001" user="djr">
 
   <summary>Bug in ORB core causes assertion failure</summary>
