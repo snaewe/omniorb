@@ -1,15 +1,48 @@
-.TH obuildtree 1 "15.10.96" "ORL"
+.TH obuildtree 1 "25.10.96" "ORL"
 .SH NAME
 obuildtree \- create an OMNI build tree
 .SH SYNOPSIS
 .B obuildtree
+.br
+.B obuildtree
+[-b \fIbaseomnitree\fP] [-p \fIplatform\fP] [-d \fIdest\fP] [-e \fIexport\fP]
+[-i \fIimport\fP]... [-s \fIsource\fP]...
+
 .SH DESCRIPTION
-The obuildtree command creates a build tree for use with the OMNI development
-environment.  It prompts for information it needs about the build tree.  This
-includes the platform name, the name of the destination directory, which import
-trees it imports from, whether it has an export tree and whether it has any
-source trees.
- 
+The
+.B obuildtree
+command creates a build tree for use with the OMNI development environment.  If
+given no arguments it prompts for the information it needs about the build
+tree.  This includes the platform name, the name of the destination directory,
+the base OMNI tree, which import trees it imports from, whether it has an
+export tree and whether it has any source trees.  Most of the questions have
+sensible defaults.  If any source trees have been specified then
+.B obuildtree
+will also offer to create a shadow of each of them by running
+.B oshadow.
+
+Alternatively options can be given to specify information on the command line.
+Information is not prompted for in this mode.  Any information missing from the
+command line will be filled in with appropriate defaults.
+
+Note that the base OMNI tree will always be the final import tree, and that if
+an export tree is given then this will also be the first import tree.
+
+.SH ENVIRONMENT VARIABLES
+.TP 5
+.B OMNI_TREE
+specifies the default base OMNI tree to use
+.TP
+.B OMNI_IMPORT_TREES
+specifies standard import trees.  When run interactively
+.B obuildtree
+will offer to import from trees listed here.  This variable is ignored when
+command line options are given.
+.TP
+.B GNUMAKE
+should be set to the command needed to run GNU make if this is different from
+.B make
+
 .SH SEE ALSO
 .BR oshadow (1)
 .BR omake (1)
@@ -24,12 +57,6 @@ is the makefile which
 .B omake
 will use when building inside this tree.  It pulls in make variables and rules
 from the import trees and includes the dir.mk for each directory.
-
-.SH ENVIRONMENT VARIABLES
-.TP 5
-.B GNUMAKE
-should be set to the command needed to run GNU make if this is different from
-.B make
 
 .SH AUTHOR
 Tristan Richardson, ORL
