@@ -11,9 +11,13 @@
 
 /*
   $Log$
-  Revision 1.1  1997/02/19 11:07:02  ewc
-  Initial revision
+  Revision 1.2  1997/04/23 13:04:49  sll
+  - fetch() now takes an argument (default to 0) to optionally specify
+    the maximum number of bytes to fetch.
 
+ * Revision 1.1  1997/02/19  11:07:02  ewc
+ * Initial revision
+ *
 
   */
 
@@ -173,7 +177,10 @@ public:
 private:
 
   void transmit();
-  void fetch();
+  void fetch(CORBA::ULong max=0);
+  // fetch data from the network to the internal buffer.
+  // If <max>=0, fetch as much as possible, otherwise fetch at most <max>
+  // bytes.
 
   tcpSocketHandle_t pd_socket;
   void    *pd_tx_buffer;
