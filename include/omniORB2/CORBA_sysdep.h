@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.39.2.2  1999/09/22 18:59:40  sll
+ Added powerpc linux support.
+
  Revision 1.39.2.1  1999/09/22 13:44:40  sll
  Updated for AIX 4.2 and 4.3
 
@@ -331,6 +334,9 @@
 # if !defined(__WIN32__)
 #  define _HAS_SIGNAL 1
 # endif
+#elif defined(__linux__) && defined(__powerpc__)
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
+# define _HAS_SIGNAL 1
 #elif defined(__aix__) && defined(__powerpc__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
