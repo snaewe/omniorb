@@ -1,0 +1,42 @@
+The following contains instructions to use omniORB2 under ETS-Kernel. The
+information is provided by David MorgenLender <dmorgen@alum.mit.edu>.
+
+1. Select the platform x86_ets in config/config.mk. 
+
+2. This platform requires the omniORB2 IDL compiler omniidl2.exe for 
+   Windows NT/95. Before you proceed to build the libraries, make sure that
+   you have obtained a copy of the compiler and it is in one of the directories
+   in your Path environment. omniidl2.exe is distributed in the 
+   <top>/bin/win32 directory of a binary distribution for x86_nt_4.0.
+
+3. Build the libraries by following the instructions given in
+   "Building omniORB2 from the source files" in README.win32. Only the 
+   libraries will be built and installed in
+           <top>\lib\x86_ets
+
+
+4. ETS-Kernel does not support registry. The default setup is to read from
+   a configuration file (C:\OMNIORB.CFG) for the root context of the
+   COSNaming service.
+
+5.  The ETS-Kernel application should be built using the static version of
+    omniORB (-D_WINSTATIC must be specified.) See mk/platforms/x86_ets.mk for
+    an example.
+
+6.  Currently, there is a bug in ETS-Kernel:  bind() does not select a
+    port, if it's given a port value of 0.  PharLap is working on a fix for
+    this.  So for now, the app cannot depend upon omniORB to determine the port
+    to use.  As a workaround, I specify a port # to use via a command line
+    argument to the app.
+
+7.  omniORB requires that a hostname be specified, but ETS-Kernel does not
+    support a pre-defined hostname.  The workaround is to specify a hostname
+    via an environment variable (OMNIORB_USEHOSTNAME), which I set during
+    the initialization of my app.
+
+8.  It's critical that ETS-Kernel is configured properly regarding the
+    network card, IP information, etc.  The appropriate network card driver
+    must be linked into the app.  The appropriate configuration information
+    (e.g. IP address) must be configured into the ETS-Kernel monitor (which
+    functions as a loader for the app).
+

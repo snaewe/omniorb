@@ -1,0 +1,4 @@
+openvms.zip - extra files to build this distribution under openVMS.
+              The content of this zip file overlays on top of the distribution.
+              unzip this file at the top level directory of this distribution.
+

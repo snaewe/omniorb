@@ -1,0 +1,859 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!Converted with LaTeX2HTML 95 (Thu Jan 19 1995) by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds >
+<HEAD>
+<TITLE> Type Any and TypeCode</TITLE>
+</HEAD>
+<BODY>
+<meta name="description" value=" Type Any and TypeCode">
+<meta name="keywords" value="omniORB2">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<P>
+ <BR> <HR><A NAME=tex2html327 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html325 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html319 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html329 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html328 HREF="node11.html"> Dynamic Management of </A>
+<B>Up:</B> <A NAME=tex2html326 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html320 HREF="node9.html"> Proxy Objects</A>
+<BR> <HR> <P>
+<H1><A NAME=SECTION001000000000000000000> Type Any and TypeCode</A></H1>
+<P>
+
+<A NAME=ch_any>&#160;</A>
+<P>
+The CORBA specification provides for a type that can hold the value of any 
+OMG IDL type. This type is known as type Any. The OMG also specifies a 
+pseudo-object, TypeCode, that can encode a description of any type specifiable
+in OMG IDL.
+<P>
+In this chapter, an example demonstrating the use of type Any is presented. 
+This is followed by sections describing the behaviour of type Any and TypeCode 
+in omniORB2. 
+For further information on type Any, refer to the C++ Mapping section of the 
+CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG96a</A>], and for more information on 
+TypeCode, refer to the Interface Repository chapter in the CORBA core section 
+of the CORBA 2 specification.
+<P>
+<H1><A NAME=SECTION001010000000000000000> Example using type Any</A></H1>
+<P>
+Before going through this example, you should make sure that you have read 
+and understood the examples in chapter <A HREF="node3.html#ch_basic">2</A>.
+The source code for this example is included in the omniORB2 distribution,
+in the directory src/examples/anyExample. A listing of the source code is
+provided at the end of this chapter.
+<P>
+<H2><A NAME=SECTION001011000000000000000> Type Any in IDL</A></H2>
+<P>
+Type Any allows one to delay the decision on the type used in an operation 
+until run-time. To use type any in IDL, use the keyword <tt> any</tt>, as in the 
+following example:
+
+<PRE>// IDL
+
+interface anyExample {
+  any testOp(in any mesg);
+};
+</PRE>
+
+<P>
+The operation <tt> testOp()</tt> in this example can now take any value 
+expressible in OMG IDL as an argument, and can also return any type 
+expressible in OMG IDL.
+<P>
+Type Any is mapped into C++ as the type <tt> CORBA::Any</tt>. When passed as
+an argument or as a result of an operation, the following rules apply:
+<P>
+
+<P><IMG  ALIGN=BOTTOM ALT="" SRC="img14.gif"><P>
+
+<P>
+So, the above IDL would map to the following C++
+<P>
+
+<PRE>// C++
+
+class anyExample_i : public virtual _sk_anyExample {
+public:
+  anyExample_i() { }
+  virtual ~anyExample_i() { }
+  virtual CORBA::Any* testOp(const CORBA::Any&amp; a);
+};
+</PRE>
+
+<P>
+<H2><A NAME=SECTION001012000000000000000> Inserting and Extracting Basic Types from an Any</A></H2>
+<P>
+The question now arises as to how values are inserted into and removed from
+an Any. This is achieved using two overloaded operators: <tt> &lt;&lt;= and &gt;&gt;= </tt>.
+<P>
+Two insert a value into an Any, the <tt> &lt;&lt;= </tt>operator is used, as in this 
+example:
+<P>
+
+<PRE>// C++
+ 
+CORBA::Any an_any;
+CORBA::Long l = 100;
+an_any &lt;&lt;= l;
+</PRE>
+
+<P>
+Note that the overloaded <tt> &lt;&lt;= </tt>operator has a return type of <tt> void</tt>.
+<P>
+To extract a value, the <tt> &gt;&gt;= </tt>operator is used, as in this example (where
+the Any contains a long):
+<P>
+
+<PRE>// C++
+
+CORBA::Long l;
+an_any &gt;&gt;= l;
+
+cout &lt;&lt; &quot;This is a long: &quot; &lt;&lt; l &lt;&lt; endl;
+</PRE>
+
+<P>
+The overloaded <tt> &gt;&gt;= </tt>operator returns a CORBA::Boolean. If an attempt is 
+made to extract a value from an Any when it contains a different value (e.g. 
+an attempt to extract a long from an Any containing a double), the overloaded 
+<tt> &gt;&gt;= </tt>operator will return False; otherwise it will return True. Thus, a 
+common tactic to extract values from an Any is as follows:
+<P>
+<P>
+
+<PRE>// C++
+
+
+CORBA::Long l;
+CORBA::Double d;
+char* str;
+
+if (an_any &gt;&gt;= l) {
+    cout &lt;&lt; &quot;Long: &quot; &lt;&lt; l &lt;&lt; endl;
+}
+else if (an_any &gt;&gt;= d) {
+    cout &lt;&lt; &quot;Double: &quot; &lt;&lt; d &lt;&lt; endl;
+}
+else if (an_any &gt;&gt;= str) {
+    cout &lt;&lt; &quot;String: &quot; &lt;&lt; str &lt;&lt; endl;
+}
+else {
+    cout &lt;&lt; &quot;Unknown value.&quot; &lt;&lt; endl;
+}
+</PRE>
+
+<P>
+<H2><A NAME=SECTION001013000000000000000> Inserting and Extracting Constructed Types from an Any</A></H2>
+<P>
+It is also possible to insert and extract constructed types and object
+references from an Any. <tt> omniidl2 </tt>will generate insertion and extraction 
+operators for the constructed type. Note that it is necessary to specify
+the <tt> -a</tt> command-line flag when running omniidl2 in order to generate
+these operators. The following example illustrates the use of constructed types
+with type Any:
+<P>
+
+<PRE>// IDL
+
+struct testStruct {
+  long l;
+  short s;
+};
+
+
+interface anyExample {
+  any testOp(in any mesg);
+};
+</PRE>
+
+<P>
+Upon compiling the above IDL with <tt> omniidl2 -a</tt>, the following overloaded 
+operators are generated:
+<P>
+<OL><LI> <tt> void operator&lt;&lt;=(CORBA::Any&amp;, const testStruct&amp; ) </tt>
+<LI> <tt> void operator&lt;&lt;=(CORBA::Any&amp;, testStruct* ) </tt>
+<LI> <tt> CORBA::Boolean operator&gt;&gt;=(const CORBA::Any&amp;, testStruct*&amp;) </tt>
+</OL>
+<P>
+Operators of this form are generated for all constructed types, and for 
+interfaces.
+<P>
+The first operator, <em> (1) </em>, copies the constructed type, and inserts it 
+into the Any. The second operator, <em> (2) </em>, inserts the constructed type 
+into the Any, and then manages it. Note that if the second operator is used,
+the Any consumes the constructed type, and the caller should not used the
+pointer to access the data after insertion. The following is an example of how
+to insert a value into an Any using operator <em> (1) </em>:
+
+<PRE>// C++
+
+CORBA::Any an_any;
+
+testStruct t;
+t.l = 456;
+t.s = 8;
+
+an_any &lt;&lt;= t;
+</PRE>
+
+<P>
+The third operator, <em> (3) </em>, is used to extract the constructed type 
+from the Any, and can be used as follows:
+<P>
+
+<PRE>testStruct* tp;
+
+if (an_any &gt;&gt;= tp) {
+    cout &lt;&lt; &quot;testStruct: l: &quot; &lt;&lt; tp-&gt;l &lt;&lt; endl;
+    cout &lt;&lt; &quot;            s: &quot; &lt;&lt; tp-&gt;s &lt;&lt; endl;
+}
+else {
+    cout &lt;&lt; &quot;Unknown value contained in Any.&quot; &lt;&lt; endl;
+}
+</PRE>
+
+<P>
+As with basic types, if an attempt is made to extract a type
+from an Any that does not contain a value of that type, the extraction 
+operator returns False. If the Any does contain that type, the extraction
+operator returns True. If the extraction is successful, the caller's pointer 
+will point to memory managed by the Any. The caller must not delete or 
+otherwise change this storage, and should not use this storage after the
+contents of the Any are replaced (either by insertion or assignment), or
+after the Any has been destroyed <A NAME=tex2html19 HREF="footnode.html#713"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>. In particular, management of
+the pointer should not be assigned to a <tt> _var</tt> type.
+<P>
+If the extraction fails, the caller's pointer will be set to point to null.
+<P>
+Note that there are special rules for inserting and extracting arrays (using 
+<tt> _forany</tt> types), and for inserting and extracting booleans, octets,
+chars, and bounded strings. Please refer to section 16.14 of the C++ Mapping 
+section of the CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG96a</A>] for further 
+information.
+<P>
+<H1><A NAME=SECTION001020000000000000000> Type Any in omniORB2</A></H1>
+<P>
+<A NAME=anyOmniORB2>&#160;</A>
+<P>
+This section contains some notes on the use and behaviour of type Any in 
+omniORB2.
+<P>
+<H4><A NAME=SECTION001020010000000000000> Generating Insertion and Extraction Operators.</A></H4>
+<P>
+To generate type Any insertion and extraction operators for constructed 
+types and interfaces, the <tt> -a </tt>command line flag should be specified when 
+running <tt> omniidl2</tt>.
+<P>
+<H4><A NAME=SECTION001020020000000000000> TypeCode comparison when extracting from an Any.</A></H4>
+<P>
+When an attempt is made to extract a type from an Any, the TypeCode of the 
+type is checked for equality with the TypeCode of the type stored by the 
+Any. omniORB2 will ignore any alias TypeCodes (<tt> tk_alias</tt>) when 
+making this comparison. Examples:
+<P>
+
+<PRE>// IDL 1
+
+typedef double Double1;
+
+struct Test1 {
+Double1 a;
+};
+
+
+------
+
+
+// IDL 2
+
+typedef double Double2;
+
+struct Test1 {
+  Double2 a;
+};
+</PRE>
+
+<P>
+If an attempt is made to extract the type <tt> Test1 </tt>defined in IDL 1 from an
+Any containing the <tt> Test1 </tt>defined in IDL 2, this will succeed (and 
+vice-versa), as the two types differ only by an alias.
+<P>
+<H4><A NAME=SECTION001020030000000000000> Object references.</A></H4>
+<P>
+Note that type Any does not manage object reference types - it is unclear in 
+the CORBA specification whether this is required or not. Therefore, the 
+programmer should release object references and pseudo-objects (such as 
+TypeCode) that have been extracted from an Any. Type Any will, however, manage
+constructed types (as per the CORBA 2 specification) - constructed types
+extracted from an Any should not be deleted, as they will be deleted by the 
+Any when it is destroyed.
+<P>
+<H4><A NAME=SECTION001020040000000000000> Top-level aliases.</A></H4>
+<P>
+When a type is inserted into an Any, the Any stores both the value of the type
+and the TypeCode for that type. If there are any top-level <tt> tk_alias</tt> 
+TypeCodes in the TypeCode, they will be removed from the TypeCode stored in 
+the Any. Note that this does not affect the <tt> _tc_ </tt>TypeCode generated to 
+represent the type (see section on TypeCode, below). This behaviour is 
+necessary, as two types that differ only by a top-level alias can use the 
+same insertion and extraction operators. If the <tt> tk_alias</tt> is not 
+removed, one of the types could be transmitted with an incorrect 
+<tt> tk_alias</tt> TypeCode. Example:
+<P>
+
+<PRE>// IDL 3
+
+typedef sequence&lt;double&gt; seqDouble1;
+typedef sequence&lt;double&gt; seqDouble2;
+</PRE>
+
+<P>
+If either seqDouble1 or seqDouble2 is inserted into a TypeCode, the TypeCode
+stored will be for a <tt> sequence&lt;double&gt;</tt>, and not for an alias to a 
+<tt> sequence&lt;double&gt;</tt>.
+<P>
+<H4><A NAME=SECTION001020050000000000000> Removing aliases from TypeCodes.</A></H4>
+<P>
+Some ORBs (e.g. Orbix) will not accept TypeCodes containing <tt> tk_alias</tt> 
+TypeCodes. When using type Any while interoperating with these ORBs, it is 
+necessary to remove <tt> tk_alias</tt> TypeCodes from throughout the TypeCode 
+representing a constructed type.
+<P>
+While omniORB2 will always remove top-level aliases, it doesn't remove aliases 
+contained in a constructed type (for example, <tt> Double1</tt> in the struct 
+<tt> Test1</tt> in example 1, above). To remove all <tt> tk_alias</tt> 
+TypeCodes from TypeCodes stored in Anys, supply the <tt> -ORBtcAliasExpand 1 </tt>
+command-line flag when running an omniORB2 executable. There will be some 
+(small) performance penalty when inserting values into an Any.
+<P>
+Note that the <tt> _tc_ </tt>TypeCodes generated for all constructed types will 
+contain the complete TypeCode for the type (including any <tt> tk_alias</tt> 
+TypeCodes), regardless of whether the <tt> -ORBtcAliasExpand</tt> flag is set to 1
+or not.
+<P>
+<H4><A NAME=SECTION001020060000000000000> Recursive TypeCodes.</A></H4>
+<P>
+omniORB2 does not yet support recursive TypeCodes. This means that types such 
+as the following can not be inserted or extracted from an Any:
+
+<PRE>   
+// IDL 4
+
+struct Test4 {
+  sequence&lt;Test4&gt; a;
+};
+</PRE>
+
+If these types are specified in IDL, omniidl2 will not generate Any insertion/
+extraction operators, so an attempt to insert/extract them will result in 
+compile-time errors. Similarly, it won't generate a <tt> _tc_</tt> TypeCode for
+the type. If another type contains a type which is recursive, operators won't 
+be generated for that type either, and so on. Recursive TypeCodes will be 
+supported in a future release of omniORB2.
+<P>
+<H4><A NAME=SECTION001020070000000000000> Type-unsafe construction and insertion.</A></H4>
+<P>
+If using the type-unsafe Any constructor, or the <tt> CORBA::Any::replace()</tt> 
+member function, ensure that the value returned by the 
+<tt> CORBA::Any::value()</tt> member function and the TypeCode returned by the 
+<tt> CORBA::Any::type()</tt> member function are used as arguments to the 
+constructor or function. Using other values or TypeCodes may result in a 
+mismatch, and is undefined behaviour.
+<P>
+Note that a non-CORBA 2 function, 
+
+<PRE>   CORBA::ULong CORBA::Any::NP_length() const
+</PRE>
+
+is supplied. This member function returns the length of the value returned 
+by the <tt> CORBA::Any::value() </tt>member function. It may be necessary to use 
+this function if the Any's value is to be stored in a file.
+<P>
+<H4><A NAME=SECTION001020080000000000000> Threads and type Any.</A></H4>
+<P>
+Inserting and extracting simultaneously from the same Any (in 2 different 
+threads) is undefined behaviour.
+<P>
+Extracting simultaneously from the same Any (in 2 or more different threads)
+may result in a memory leak if the type being extracted is a constructed type.
+It was decided not to mutex the Any, as this condition should rarely arise, 
+and adding a mutex would lead to performance penalties.
+<P>
+<H1><A NAME=SECTION001030000000000000000> TypeCode in omniORB2</A></H1>
+<P>
+This section contains some notes on the use and behaviour of TypeCode in 
+omniORB2
+<P>
+<H4><A NAME=SECTION001030010000000000000> TypeCodes in IDL.</A></H4>
+<P>
+When using TypeCodes in IDL, note that they are defined in the CORBA scope.
+Therefore, CORBA::TypeCode should be used. Example:
+
+<PRE>// IDL 5
+
+struct Test5 {
+  long length;
+  CORBA::TypeCode desc;
+};
+</PRE>
+
+<P>
+<H4><A NAME=SECTION001030020000000000000> orb.idl</A></H4>
+<P>
+Inclusion of the file <tt> orb.idl </tt>in IDL using CORBA::TypeCode is optional.
+An empty orb.idl file is provided for compatibility purposes.
+<P>
+<H4><A NAME=SECTION001030030000000000000> Generating TypeCodes for constructed types.</A></H4>
+<P>
+To generate a TypeCode for constructed types, specify the <tt> -a</tt>
+command-line flag when running omniidl2. This will generate a <tt> _tc_</tt> 
+TypeCode describing the type, at the same scope as the type (as per the 
+CORBA 2 specification). Example:
+<P>
+
+<PRE>// IDL 6
+
+struct Test6 {
+ double a;
+ sequence&lt;long&gt; b;
+};
+</PRE>
+
+<P>
+A TypeCode, <tt> _tc_Test6</tt>, will be generated to describe the struct 
+<tt> Test6</tt>. The operations defined in the TypeCode interface (see 
+section 6.7.1 of the CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG96a</A>] ) can be used to
+query the TypeCode about the type it represents.
+<P>
+<H4><A NAME=SECTION001030040000000000000> TypeCode equality.</A></H4>
+<P>
+The <tt> CORBA::TypeCode::equal()</tt> member function will return true only if 
+the two TypeCodes are exactly the same. <tt> tk_alias</tt> TypeCodes are included
+in this comparison, unlike the comparison made when values are extracted from 
+an Any (see section on Any, above).
+<P>
+If one of the TypeCodes being checked is a <tt> tk_struct</tt>, <tt> tk_union</tt>,
+<tt> tk_enum</tt>, or <tt> tk_alias</tt>, and has an empty repository ID parameter,
+then the repository ID parameter will be ignored when checking for equality. 
+Similarly, if the <tt> name </tt>or <tt> member_name </tt>parameters of a TypeCode are
+empty strings, they will be ignored for equality checking purposes. This is 
+because a CORBA 2 ORB does not have to include these parameters in a TypeCode 
+(see section 12.3.4 of the Interoperability section of the CORBA 2 
+specification [<A HREF="node15.html#corba2spec">OMG96a</A>]). Note that these (optional) parameters are 
+included in TypeCodes generated by omniORB2.
+<P>
+<H1><A NAME=SECTION001040000000000000000> Source Listing</A></H1>
+<P>
+<H2><A NAME=SECTION001041000000000000000> anyExample_impl.cc</A></H2>
+<P>
+<PRE>// anyExample_impl.cc - This is the source code of the example used in 
+//                      Chapter 9 &quot;Type Any and TypeCode&quot; of the omniORB2 
+//                      users guide.
+//
+//               This is the object implementation.
+//
+// Usage: anyExample_impl
+//
+//        On startup, the object reference is registered with the 
+//        COS naming service. The client uses the naming service to
+//        locate this object.
+//
+//        The name which the object is bound to is as follows:
+//              root  [context]
+//               |
+//              text  [context] kind [my_context]
+//               |
+//              anyExample  [object]  kind [Object]
+//
+
+#include &lt;iostream.h&gt;
+
+#include &quot;anyExample.hh&quot;
+
+
+static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);
+
+
+class anyExample_i : public virtual _sk_anyExample {
+public:
+  anyExample_i() { }
+  virtual ~anyExample_i() { }
+  virtual CORBA::Any* testOp(const CORBA::Any&amp; a);
+};
+
+
+CORBA::Any* 
+anyExample_i::testOp(const CORBA::Any&amp; a) {
+
+  cout &lt;&lt; &quot;Any received, containing: &quot; &lt;&lt; endl;
+  
+#ifndef NO_FLOAT
+  CORBA::Double d;
+#endif
+
+  CORBA::Long l;
+  char* str;
+
+  testStruct* tp;
+
+
+  if (a &gt;&gt;= l) {
+    cout &lt;&lt; &quot;Long: &quot; &lt;&lt; l &lt;&lt; endl;
+  }
+#ifndef NO_FLOAT
+  else if (a &gt;&gt;= d) {
+    cout &lt;&lt; &quot;Double: &quot; &lt;&lt; d &lt;&lt; endl;
+  }
+#endif
+  else if (a &gt;&gt;= str) {
+    cout &lt;&lt; &quot;String: &quot; &lt;&lt; str &lt;&lt; endl;
+  }
+  else if (a &gt;&gt;= tp) {
+    cout &lt;&lt; &quot;testStruct: l: &quot; &lt;&lt; tp-&gt;l &lt;&lt; endl;
+    cout &lt;&lt; &quot;            s: &quot; &lt;&lt; tp-&gt;s &lt;&lt; endl;
+  }
+  else {
+    cout &lt;&lt; &quot;Unknown value.&quot; &lt;&lt; endl;
+  }
+
+  CORBA::Any* ap = new CORBA::Any;
+  
+  *ap &lt;&lt;= (CORBA::ULong) 314;
+
+  cout &lt;&lt; &quot;Returning Any containing: ULong: 314\n&quot; &lt;&lt; endl;
+  return ap;
+}
+
+
+int
+main(int argc, char **argv)
+{
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,&quot;omniORB2&quot;);
+  CORBA::BOA_ptr boa = orb-&gt;BOA_init(argc,argv,&quot;omniORB2_BOA&quot;);
+
+  anyExample_i *myobj = new anyExample_i();
+  myobj-&gt;_obj_is_ready(boa);
+
+  {
+    anyExample_var myobjRef = myobj-&gt;_this();
+    if (!bindObjectToName(orb,myobjRef)) {
+      return 1;
+    }
+  }
+
+  boa-&gt;impl_is_ready();
+  // Tell the BOA we are ready. The BOA's default behaviour is to block
+  // on this call indefinitely.
+
+  return 0;
+}
+
+
+static
+CORBA::Boolean
+bindObjectToName(CORBA::ORB_ptr orb,CORBA::Object_ptr obj)
+{
+  CosNaming::NamingContext_var rootContext;
+  
+  try {
+    // Obtain a reference to the root context of the Name service:
+    CORBA::Object_var initServ;
+    initServ = orb-&gt;resolve_initial_references(&quot;NameService&quot;);
+
+    // Narrow the object returned by resolve_initial_references()
+    // to a CosNaming::NamingContext object:
+    rootContext = CosNaming::NamingContext::_narrow(initServ);
+    if (CORBA::is_nil(rootContext)) 
+      {
+        cerr &lt;&lt; &quot;Failed to narrow naming context.&quot; &lt;&lt; endl;
+        return 0;
+      }
+  }
+  catch(CORBA::ORB::InvalidName&amp; ex) {
+    cerr &lt;&lt; &quot;Service required is invalid [does not exist].&quot; &lt;&lt; endl;
+    return 0;
+  }
+
+
+  try {
+    // Bind a context called &quot;test&quot; to the root context:
+
+    CosNaming::Name contextName;
+    contextName.length(1);
+    contextName[0].id   = (const char*) &quot;test&quot;;    // string copied
+    contextName[0].kind = (const char*) &quot;my_context&quot;; // string copied    
+    // Note on kind: The kind field is used to indicate the type
+    // of the object. This is to avoid conventions such as that used
+    // by files (name.type -- e.g. test.ps = postscript etc.)
+
+    CosNaming::NamingContext_var testContext;
+    try {
+      // Bind the context to root, and assign testContext to it:
+      testContext = rootContext-&gt;bind_new_context(contextName);
+    }
+    catch(CosNaming::NamingContext::AlreadyBound&amp; ex) {
+      // If the context already exists, this exception will be raised.
+      // In this case, just resolve the name and assign testContext
+      // to the object returned:
+      CORBA::Object_var tmpobj;
+      tmpobj = rootContext-&gt;resolve(contextName);
+      testContext = CosNaming::NamingContext::_narrow(tmpobj);
+      if (CORBA::is_nil(testContext)) {
+        cerr &lt;&lt; &quot;Failed to narrow naming context.&quot; &lt;&lt; endl;
+        return 0;
+      }
+    } 
+
+    // Bind the object (obj) to testContext, naming it anyExample:
+    CosNaming::Name objectName;
+    objectName.length(1);
+    objectName[0].id   = (const char*) &quot;anyExample&quot;;   // string copied
+    objectName[0].kind = (const char*) &quot;Object&quot;; // string copied
+
+
+    // Bind obj with name anyExample to the testContext:
+    try {
+      testContext-&gt;bind(objectName,obj);
+    }
+    catch(CosNaming::NamingContext::AlreadyBound&amp; ex) {
+      testContext-&gt;rebind(objectName,obj);
+    }
+    // Note: Using rebind() will overwrite any Object previously bound 
+    //       to /test/anyExample with obj.
+    //       Alternatively, bind() can be used, which will raise a
+    //       CosNaming::NamingContext::AlreadyBound exception if the name
+    //       supplied is already bound to an object.
+  }
+  catch (CORBA::COMM_FAILURE&amp; ex) {
+    cerr &lt;&lt; &quot;Caught system exception COMM_FAILURE, unable to contact the &quot;
+         &lt;&lt; &quot;naming service.&quot; &lt;&lt; endl;
+    return 0;
+  }
+  catch (omniORB::fatalException&amp; ex) {
+    throw;
+  }
+  catch (...) {
+    cerr &lt;&lt; &quot;Caught a system exception while using the naming service.&quot;&lt;&lt; endl;
+    return 0;
+  }
+  return 1;
+}
+</PRE>
+<P>
+<H2><A NAME=SECTION001042000000000000000> anyExample_clt.cc</A></H2>
+<P>
+<PRE>// anyExample_clt.cc -  This is the source code of the example used in 
+//                      Chapter 9 &quot;Type Any and TypeCode&quot; of the omniORB2 
+//                      users guide.
+//
+//              This is the client. It uses the COSS naming service
+//              to obtain the object reference.
+//
+// Usage: anyExample_clt
+//
+//
+//        On startup, the client lookup the object reference from the
+//        COS naming service.
+//
+//        The name which the object is bound to is as follows:
+//              root  [context]
+//               |
+//              text  [context] kind [my_context]
+//               |
+//              anyExample  [object]  kind [Object]
+//
+
+#include &lt;iostream.h&gt;
+#include &quot;anyExample.hh&quot;
+
+static CORBA::Object_ptr getObjectReference(CORBA::ORB_ptr orb);
+static void invokeOp(anyExample_ptr&amp; tobj, const CORBA::Any&amp; a);
+
+int
+main (int argc, char **argv) 
+{
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,&quot;omniORB2&quot;);
+  CORBA::BOA_ptr boa = orb-&gt;BOA_init(argc,argv,&quot;omniORB2_BOA&quot;);
+  CORBA::Object_var obj;
+  
+  try {
+    obj = getObjectReference(orb);
+  }
+  catch(CORBA::COMM_FAILURE&amp; ex) {
+    cerr &lt;&lt; &quot;Caught system exception COMM_FAILURE, unable to contact the &quot;
+         &lt;&lt; &quot;object.&quot; &lt;&lt; endl;
+    return -1;
+  }
+  catch(omniORB::fatalException&amp; ex) {
+    cerr &lt;&lt; &quot;Caught omniORB2 fatalException. This indicates a bug is caught &quot;
+         &lt;&lt; &quot;within omniORB2.\nPlease send a bug report.\n&quot;
+         &lt;&lt; &quot;The exception was thrown in file: &quot; &lt;&lt; ex.file() &lt;&lt; &quot;\n&quot;
+         &lt;&lt; &quot;                            line: &quot; &lt;&lt; ex.line() &lt;&lt; &quot;\n&quot;
+         &lt;&lt; &quot;The error message is: &quot; &lt;&lt; ex.errmsg() &lt;&lt; endl;
+    return -1;
+  }
+  catch(...) {
+    cerr &lt;&lt; &quot;Caught a system exception.&quot; &lt;&lt; endl;
+    return -1;
+  }
+
+
+  anyExample_ptr tobj = anyExample::_narrow(obj);
+  
+  if (CORBA::is_nil(tobj)) {
+    cerr &lt;&lt; &quot;Can't narrow object reference to type anyExample.&quot; &lt;&lt; endl;
+    return -1;
+  }
+
+
+  CORBA::Any a;
+
+  try {
+    // Sending Long
+    CORBA::Long l = 100;
+    a &lt;&lt;= l;
+    cout &lt;&lt; &quot;Sending Any containing Long: &quot; &lt;&lt; l &lt;&lt; endl; 
+    invokeOp(tobj,a);
+    
+    // Sending Double
+#ifndef NO_FLOAT
+    CORBA::Double d = 1.2345;
+    a &lt;&lt;= d;
+    cout &lt;&lt; &quot;Sending Any containing Double: &quot; &lt;&lt; d &lt;&lt; endl; 
+    invokeOp(tobj,a);
+#endif
+  
+    // Sending String
+    const char* str = &quot;Hello&quot;;
+    a &lt;&lt;= str;
+    cout &lt;&lt; &quot;Sending Any containing String: &quot; &lt;&lt; str &lt;&lt; endl;
+    invokeOp(tobj,a);
+    
+    // Sending testStruct  [Struct defined in IDL]
+    testStruct t;
+    t.l = 456;
+    t.s = 8;
+    a &lt;&lt;= t;
+    cout &lt;&lt; &quot;Sending Any containing testStruct: l: &quot; &lt;&lt; t.l &lt;&lt; endl;
+    cout &lt;&lt; &quot;                                   s: &quot; &lt;&lt; t.s &lt;&lt; endl;
+    invokeOp(tobj,a);
+  }
+  catch(CORBA::COMM_FAILURE&amp; ex) {
+    cerr &lt;&lt; &quot;Caught system exception COMM_FAILURE, unable to contact the &quot;
+         &lt;&lt; &quot;object.&quot; &lt;&lt; endl;
+    return -1;
+  }
+  catch(omniORB::fatalException&amp; ex) {
+    cerr &lt;&lt; &quot;Caught omniORB2 fatalException. This indicates a bug is caught &quot;
+         &lt;&lt; &quot;within omniORB2.\nPlease send a bug report.\n&quot;
+         &lt;&lt; &quot;The exception was thrown in file: &quot; &lt;&lt; ex.file() &lt;&lt; &quot;\n&quot;
+         &lt;&lt; &quot;                            line: &quot; &lt;&lt; ex.line() &lt;&lt; &quot;\n&quot;
+         &lt;&lt; &quot;The error message is: &quot; &lt;&lt; ex.errmsg() &lt;&lt; endl;
+    return -1;
+  }
+  catch(...) {
+    cerr &lt;&lt; &quot;Caught a system exception.&quot; &lt;&lt; endl;
+    return -1;
+  }
+	
+  return 0;
+}
+
+static 
+CORBA::Object_ptr
+getObjectReference(CORBA::ORB_ptr orb)
+{
+  CosNaming::NamingContext_var rootContext;
+  
+  try {
+    // Obtain a reference to the root context of the Name service:
+    CORBA::Object_var initServ;
+    initServ = orb-&gt;resolve_initial_references(&quot;NameService&quot;);
+
+    // Narrow the object returned by resolve_initial_references()
+    // to a CosNaming::NamingContext object:
+    rootContext = CosNaming::NamingContext::_narrow(initServ);
+    if (CORBA::is_nil(rootContext)) 
+      {
+        cerr &lt;&lt; &quot;Failed to narrow naming context.&quot; &lt;&lt; endl;
+        return CORBA::Object::_nil();
+      }
+  }
+  catch(CORBA::ORB::InvalidName&amp; ex) {
+    cerr &lt;&lt; &quot;Service required is invalid [does not exist].&quot; &lt;&lt; endl;
+    return CORBA::Object::_nil();
+  }
+
+
+  // Create a name object, containing the name test/context:
+  CosNaming::Name name;
+  name.length(2);
+
+  name[0].id   = (const char*) &quot;test&quot;;       // string copied
+  name[0].kind = (const char*) &quot;my_context&quot;; // string copied
+  name[1].id   = (const char*) &quot;anyExample&quot;;
+  name[1].kind = (const char*) &quot;Object&quot;;
+  // Note on kind: The kind field is used to indicate the type
+  // of the object. This is to avoid conventions such as that used
+  // by files (name.type -- e.g. test.ps = postscript etc.)
+
+  
+  CORBA::Object_ptr obj;
+  try {
+    // Resolve the name to an object reference, and assign the reference 
+    // returned to a CORBA::Object:
+    obj = rootContext-&gt;resolve(name);
+  }
+  catch(CosNaming::NamingContext::NotFound&amp; ex)
+    {
+      // This exception is thrown if any of the components of the
+      // path [contexts or the object] aren't found:
+      cerr &lt;&lt; &quot;Context not found.&quot; &lt;&lt; endl;
+      return CORBA::Object::_nil();
+    }
+  catch (CORBA::COMM_FAILURE&amp; ex) {
+    cerr &lt;&lt; &quot;Caught system exception COMM_FAILURE, unable to contact the &quot;
+         &lt;&lt; &quot;naming service.&quot; &lt;&lt; endl;
+    return CORBA::Object::_nil();
+  }
+  catch(omniORB::fatalException&amp; ex) {
+    throw;
+  }
+  catch (...) {
+    cerr &lt;&lt; &quot;Caught a system exception while using the naming service.&quot;&lt;&lt; endl;
+    return CORBA::Object::_nil();
+  }
+  return obj;
+}
+
+
+static void 
+invokeOp(anyExample_ptr&amp; tobj, const CORBA::Any&amp; a)
+{
+  CORBA::Any_var bp;
+
+  cout &lt;&lt; &quot;Invoking operation.&quot; &lt;&lt; endl;
+  bp = tobj-&gt;testOp(a);
+
+  cout &lt;&lt; &quot;Operation completed. Returned Any: &quot;;
+  CORBA::ULong ul;
+
+  if (bp &gt;&gt;= ul) {
+    cout &lt;&lt; &quot;ULong: &quot; &lt;&lt; ul &lt;&lt; &quot;\n&quot; &lt;&lt; endl;
+  }
+  else {
+    cout &lt;&lt; &quot;Unknown value.&quot; &lt;&lt; &quot;\n&quot; &lt;&lt; endl;
+  }
+}
+</PRE>
+<P>
+
+<BR> <HR><A NAME=tex2html327 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html325 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html319 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html329 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html328 HREF="node11.html"> Dynamic Management of </A>
+<B>Up:</B> <A NAME=tex2html326 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html320 HREF="node9.html"> Proxy Objects</A>
+<BR> <HR> <P>
+<BR> <HR>
+<P><ADDRESS>
+<I>David Riddoch <BR>
+Wed Feb 24 14:48:15 GMT 1999</I>
+</ADDRESS>
+</BODY>

@@ -1,0 +1,431 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!Converted with LaTeX2HTML 95 (Thu Jan 19 1995) by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds >
+<HEAD>
+<TITLE> Proxy Objects</TITLE>
+</HEAD>
+<BODY>
+<meta name="description" value=" Proxy Objects">
+<meta name="keywords" value="omniORB2">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<P>
+ <BR> <HR><A NAME=tex2html316 HREF="node10.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html314 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html308 HREF="node8.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html318 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html317 HREF="node10.html"> Type Any and </A>
+<B>Up:</B> <A NAME=tex2html315 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html309 HREF="node8.html"> Connection Management</A>
+<BR> <HR> <P>
+<H1><A NAME=SECTION00900000000000000000> Proxy Objects</A></H1>
+<P>
+
+<P>
+When a client acquires a reference to an object in another address space,
+omniORB2 creates a local representation of the object and returns a pointer
+to this object as its object reference. The local representation is known
+as the proxy object.
+<P>
+The proxy object maps each IDL operation into a method to deliver
+invocations to the remote object. The method implements argument
+marshalling using the ORB runtime. When the ORB runtime detects an error
+condition, it may raise a system exception. These exceptions will normally be
+propagated by the proxy object to the application code. However, there may
+be applications that prefer to have the system exceptions trapped in the
+proxy object. For these applications, it is possible to install exception
+handlers for individual proxy object or all proxy objects. The API to do
+this will be explained in this chapter.
+<P>
+As described in section <A HREF="node7.html#sec_intf">6.2</A>, proxy objects are created by
+instances of the proxyObjectFactory class. For each IDL interface A, the
+stubs of A contains a derived class of proxyObjectFactory
+(A_proxyObjectFactory). This derived class is responsible for creating
+proxy objects for A. This process is completely transparent to the
+application. However, there may be applications that require greater
+control on the creation of proxy objects or even want to change the
+behavior of the proxy objects. To cater for this requirement, applications
+can override the default proxyObjectFactories and install their own
+versions of proxyObjectFactories. The way to do this will be explained in
+this chapter.
+<P>
+<H1><A NAME=SECTION00910000000000000000> System Exception Handlers</A></H1>
+<P>
+By default, all system exceptions, with the exception of CORBA::TRANSIENT,
+are propagated by the proxy objects to the application code. Some
+applications may prefer to trap these exceptions within the proxy objects so
+that the application logic does not have to deal with the error
+condition. For example, when a CORBA::COMM_FAILURE is received, an
+application may just want to retry the invocation until it finally
+succeeds. This approach is useful for objects that are persistent and their
+operations are idempotent.
+<P>
+OmniORB2 provides a set of functions to install exception handlers. Once
+they are installed, proxy objects will call these handlers when the target
+system exceptions are raised by the ORB runtime. Exception handlers can be
+installed for CORBA::TRANSIENT, CORBA::COMM_FAILURE and
+CORBA::SystemException. The last handler covers all system exceptions other
+than the two covered by the first two handlers. An exception handler can be
+installed for individual proxy object or it can be installed for all proxy
+objects in the address space.
+<P>
+<H2><A NAME=SECTION00911000000000000000> CORBA::TRANSIENT handlers</A></H2>
+<P>
+When a CORBA::TRANSIENT exception is raised by the ORB runtime, the default
+behaviour of the proxy objects is to retry indefinitely until the operation
+succeeds. Successive retries will be delayed progressively by multiples of
+<tt> omniORB::defaultTransientRetryDelayIncrement</tt>. The delay will be
+limited to a maximum specified by <tt>
+omniORB::defaultTransientRetryDelayMaximum</tt>. The unit of both values are in
+seconds.
+<P>
+The ORB runtime will raised CORBA::TRANSIENT under the following
+conditions:
+<P>
+<OL><LI> When a <b> cached</b> network connection is broken while an invocation
+is in progress. The ORB will try to open a new connection at the next
+invocation.
+<P>
+<LI> When the proxy object has been redirected by a location forward
+message by the remote object to a new location and the object at the new
+location cannot be contacted. In addition to the CORBA::TRANSIENT
+exception, the proxy object also resets its internal state so that the next
+invocation will be directed at the original location of the remote object.
+<P>
+<LI> When the remote object reports CORBA::TRANSIENT.
+<P>
+</OL>
+<P>
+Applications can override the default behaviour by installing their own
+exception handler. The API to do so is summarised below:
+<P>
+
+<PRE>class omniORB {
+
+public:
+  
+typedef CORBA::Boolean (*transientExceptionHandler_t)(void* cookie,
+                                                CORBA::ULong n_retries,
+                                                const CORBA::TRANSIENT&amp; ex);
+
+static void installTransientExceptionHandler(void* cookie,
+                                             transientExceptionHandler_t fn);
+
+static void installTransientExceptionHandler(CORBA::Object_ptr obj,
+                                             void* cookie,
+                                             transientExceptionHandler_t fn);
+  
+static CORBA::ULong defaultTransientRetryDelayIncrement;
+static CORBA::ULong defaultTransientRetryDelayMaximum;
+
+}
+</PRE>
+
+<P>
+The overloaded functions <tt> installTransientExceptionHandler</tt>
+can be used to install the exception handlers for CORBA::TRANSIENT.
+<P>
+Two overloaded forms are available. The first form install an
+exception handler for all object references except for those which
+have an exception handler installed by the second form, which takes
+an addition argument to identify the target object reference.
+The argument <tt> cookie</tt> is an opaque pointer which will be passed
+on by the ORB when it calls the exception handler.
+<P>
+An exception handler will be called by proxy objects with three
+arguments. The <tt> cookie</tt> is the opaque pointer registered by
+<tt> installTransientExceptionHandler</tt>. The argument <tt> n_retries</tt> is
+the number of times the proxy has called this handler for the same
+invocation. The argument <tt> ex</tt> is the value of the exception caught.
+The exception handler is expected to do whatever is appropriate and returns
+a boolean value. If the return value is TRUE(1), the proxy object would
+retry the operation again. If the return value is FALSE(0), the
+CORBA::TRANSIENT exception would be propagated into the application code.
+<P>
+The following sample code installs a simple exception handler for all
+objects and for a specific object:
+<P>
+
+<PRE>CORBA::Boolean my_transient_handler1 (void* cookie,
+                                      CORBA::ULong retries,
+                                      const CORBA::TRANSIENT&amp; ex)
+{
+   cerr &lt;&lt; ''transient handler 1 called.'' &lt;&lt; endl;
+   return 1;           // retry immediately.
+}
+ 
+CORBA::Boolean my_transient_handler2 (void* cookie,
+                                      CORBA::ULong retries,
+                                      const CORBA::TRANSIENT&amp; ex)
+{
+   cerr &lt;&lt; ''transient handler 2 called.'' &lt;&lt; endl;
+   return 1;           // retry immediately.
+}
+
+
+static Echo_ptr myobj;
+
+void installhandlers()
+{
+   omniORB::installTransientExceptionHandler(0,my_transient_handler1);
+   // All proxy objects will call my_transient_handler1 from now on.
+
+   omniORB::installTransientExceptionHandler(myobj,0,my_transient_handler2);
+   // The proxy object of myobj will call my_transient_handler2 from now on.
+}
+</PRE>
+
+<P>
+<H2><A NAME=SECTION00912000000000000000> CORBA::COMM_FAILURE</A></H2>
+<P>
+When the ORB runtime fails to establish a network connection to the remote
+object and none of the conditions listed above for raising a
+CORBA::TRANSIENT is applicable, it raises a CORBA::COMM_FAILURE exception.
+<P>
+The default behaviour of the proxy objects is to propagate this exception
+to the application.
+<P>
+Applications can override the default behaviour by installing their own
+exception handlers. The API to do so is summarised below:
+<P>
+
+<PRE>class omniORB {
+
+public:
+
+typedef CORBA::Boolean (*commFailureExceptionHandler_t)(void* cookie,
+                                                CORBA::ULong n_retries,
+                                                const CORBA::COMM_FAILURE&amp; ex);
+
+static void installCommFailureExceptionHandler(void* cookie,
+                                             commFailureExceptionHandler_t fn);
+
+static void installCommFailureExceptionHandler(CORBA::Object_ptr obj,
+                                             void* cookie,
+                                             commFailureExceptionHandler_t
+                                             fn);
+}
+</PRE>
+
+<P>
+The functions are equivalent to their counterparts for CORBA::TRANSIENT.
+<P>
+<H2><A NAME=SECTION00913000000000000000> CORBA::SystemException</A></H2>
+<P>
+To report an error condition, the ORB runtime may raise other
+SystemExceptions. If the exception is neither CORBA::TRANISENT nor
+CORBA::COMM_FAILURE, the default behaviour of the proxy objects is to
+propagate this exception to the application.
+<P>
+Application can override the default behaviour by installing their own
+exception handlers. The API to do so is summarised below:
+<P>
+
+<PRE>class omniORB {
+
+public:
+
+typedef CORBA::Boolean (*systemExceptionHandler_t)(void* cookie,
+                                            CORBA::ULong n_retries,
+                                            const CORBA::SystemException&amp; ex);
+
+static void installSystemExceptionHandler(void* cookie,
+                                          systemExceptionHandler_t fn);
+
+static void installSystemExceptionHandler(CORBA::Object_ptr obj,
+                                          void* cookie,
+                                          systemExceptionHandler_t fn);
+}
+</PRE>
+
+<P>
+The functions are equivalent to their counterparts for CORBA::TRANSIENT.
+<P>
+<H1><A NAME=SECTION00920000000000000000> Proxy Object Factories</A></H1>
+<P>
+This section describes how an application can control the creation or
+change the behaviour of proxy objects.
+<P>
+<H2><A NAME=SECTION00921000000000000000> Background</A></H2>
+<P>
+For each interface A, its stub contains a proxy factory class- <tt>
+A_proxyObjectFactory</tt>. This class is derived from <tt> proxyObjectFactory</tt>
+and implements three virtual functions:
+<P>
+
+<PRE>class A_proxyObjectFactory : public virtual proxyObjectFactory {
+public:
+
+  virtual const char *irRepoId() const;
+
+  virtual _CORBA_Boolean  is_a(const char *base_repoId) const;
+       
+  virtual CORBA::Object_ptr newProxyObject(Rope *r,
+                                           CORBA::Octet *key,
+                                           size_t keysize,
+                                           IOP::TaggedProfileList
+                                           *profiles,
+                                           CORBA::Boolean release);
+
+};
+</PRE>
+
+<P>
+As described in chapter <A HREF="node7.html#ch_intf">6</A>, the functions allow the ORB runtime
+to perform type checking. The function <tt> newProxyObject</tt> creates a proxy
+object for A based on its input arguments. The return value is a pointer to
+the class <tt> _proxy_A</tt> which is automatically re-casted into a <tt>
+CORBA::Object_ptr</tt>.  <tt> _proxy_A</tt> implements the proxy object for A:
+<P>
+
+<PRE>class _proxy_A :  public virtual A {
+public:
+
+  _proxy_A (Rope *r,
+            CORBA::Octet *key,
+            size_t keysize,IOP::TaggedProfileList *profiles,
+            CORBA::Boolean release);
+  virtual ~_proxy_A();
+
+  // plus other internal functions.
+
+};
+</PRE>
+
+<P>
+The stub of A guarantees that exactly <b> one</b> instance of
+<tt> A_proxyObjectFactory</tt> is instantiated when an application is
+executed. The constructor of <tt> A_proxyObjectFactory</tt>, via its
+base class <tt> proxyObjectFactory</tt> links the instance into the ORB's
+proxy factory list.
+<P>
+Newly instantiated proxy object factories are always entered at the front
+of the ORB's proxy factory list. Moreover, when the ORB searches for a
+match on the type, it always stops at the first match. In other words, when
+additional instances of <tt> A_proxyObjectFactory</tt> or derived classes of
+it are created, the last instantiation will override earlier instantiations
+to be the proxy factory selected to create proxy objects of A. This
+property can be used by an application to install its
+own proxy object factories.
+<P>
+<H2><A NAME=SECTION00922000000000000000> An Example</A></H2>
+<P>
+Using the <tt> Echo</tt> example in chapter <A HREF="node3.html#ch_basic">2</A> as the basis, one
+can tell the ORB to use a modified proxy object class to create proxy
+objects. The steps involved are as follows:
+<P>
+<H3><A NAME=SECTION00922100000000000000> Define a new proxy class</A></H3>
+<P>
+We define a new proxy class to cache the result of the last
+invocation of <tt> echoString</tt>.
+<P>
+
+<PRE>class _new_proxy_Echo : public virtual _proxy_Echo {
+public:
+  _new_proxy_Echo (Rope *r,
+                  CORBA::Octet *key,
+                  size_t keysize,IOP::TaggedProfileList *profiles,
+                  CORBA::Boolean release) 
+         : _proxy_Echo(r,key,keysize,profiles,release),
+           omniObject(Echo_IntfRepoID,r,key,keysize,profiles,release) 
+   {
+     // You have to look at the _proxy_Echo class and copy from its
+     // ctor all the explicit ctor calls to its base member.
+   }
+   virtual ~_new_proxy_Echo() {}
+
+
+   virtual char* echoString(const char* mesg) {
+     //
+     // Only calls the remote object if the argument is different from the
+     // last invocation.
+
+     omni_mutex_lock sync(lock);
+     if ((char*)last_arg) {
+       if (strcmp(mesg,(char*)last_arg) == 0) {
+          return CORBA::string_dup(last_result);
+       }
+     }
+     char* res = _proxy_Echo::echoString(mesg);
+     last_arg = mesg;
+     last_result = (const char*) res;
+     return res;
+   }
+
+private:
+  omni_mutex        lock;
+  CORBA::String_var last_arg;
+  CORBA::String_var last_result;
+};
+</PRE>
+
+<P>
+<H3><A NAME=SECTION00922200000000000000> Define a new proxy factory class</A></H3>
+<P>
+Next, we define a new proxy factory class to instantiate <tt>
+_new_proxy_Echo</tt> as proxy objects for <tt> Echo</tt>.
+<P>
+
+<PRE>class _new_Echo_proxyObjectFactory : public virtual Echo_proxyObjectFactory
+{
+public:
+   _new_Echo_proxyObjectFactory () {}
+   virtual ~_new_Echo_proxyObjectFactory() {}
+
+   // Only have to override newProxyObject
+   virtual CORBA::Object_ptr newProxyObject(Rope *r,
+                                            CORBA::Octet *key,
+                                            size_t keysize,
+                                            IOP::TaggedProfileList *profiles,
+                                            CORBA::Boolean release) {
+      _new_proxy_Echo *p = new _new_proxy_Echo(r,key,keysize,profiles,release);
+      return p;
+   }
+};
+</PRE>
+
+<P>
+Finally, we have to instantiate a single instance of the new proxy factory
+in the application code.
+<P>
+
+<PRE>int main(int argc, char** argv)
+{
+   // Other initialisation steps
+
+   _new_Echo_proxyObjectFactory* f =  new _new_Echo_proxyObjectFactory;
+
+   // Use the new operator to instantiate the proxy factory and never
+   // call the delete operator on this instance.
+
+   // From this point onwards, _new_proxy_Echo will be used to create
+   // proxy objects for Echo.
+
+}
+</PRE>
+
+<P>
+<H2><A NAME=SECTION00923000000000000000> Further Considerations</A></H2>
+<P>
+Notice that the ORB may call <tt> newProxyObject</tt> multiple times to create
+proxy objects for the same remote object. In other words, the ORB does not
+guarantee that only one proxy object is created for each remote
+object. For applications that require this guarantee, it is necessary to
+check within <tt> newProxyObject</tt> whether a proxy object has already been
+created for the current request. If the argument <tt> Rope* r</tt> points to
+the same structure and the content of the sequence <tt> CORBA::Octet* key</tt> is
+the same, then an existing proxy object can be returned to satisfy the
+current request. Do not forget to call <tt> CORBA::duplicate()</tt> before
+returning the object reference.
+<P>
+<tt> newProxyObject</tt> may be called concurrently by different threads within
+the ORB. Needless to say, the function must be thread-safe.
+<P>
+
+<BR> <HR><A NAME=tex2html316 HREF="node10.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html314 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html308 HREF="node8.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html318 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html317 HREF="node10.html"> Type Any and </A>
+<B>Up:</B> <A NAME=tex2html315 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html309 HREF="node8.html"> Connection Management</A>
+<BR> <HR> <P>
+<BR> <HR>
+<P><ADDRESS>
+<I>David Riddoch <BR>
+Wed Feb 24 14:48:15 GMT 1999</I>
+</ADDRESS>
+</BODY>

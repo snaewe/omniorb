@@ -1,0 +1,326 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!Converted with LaTeX2HTML 95 (Thu Jan 19 1995) by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds >
+<HEAD>
+<TITLE> The Basic Object Adaptor (BOA)</TITLE>
+</HEAD>
+<BODY>
+<meta name="description" value=" The Basic Object Adaptor (BOA)">
+<meta name="keywords" value="omniORB2">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<P>
+ <BR> <HR><A NAME=tex2html283 HREF="node7.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html281 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html275 HREF="node5.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html285 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html284 HREF="node7.html"> Interface Type Checking</A>
+<B>Up:</B> <A NAME=tex2html282 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html276 HREF="node5.html"> The omniORB2 API</A>
+<BR> <HR> <P>
+<H1><A NAME=SECTION00600000000000000000> The Basic Object Adaptor (BOA)</A></H1>
+<P>
+
+<P>
+This chapter describes the BOA implementation in omniORB2. The CORBA
+specification defines the Basic Object Adaptor as the entity that mediates
+between object implementations and the ORB. Unfortunately, the BOA
+specification is incomplete and does not address the multi-threading issues
+appropriately. The end result is that different ORB vendors implement
+different extensions to their BOAs. Worse, the implementation of the operations
+defined in the specification are different in different ORBs. Recently, a new
+Object Adaptor specification (the Portable Object Adaptor- POA) has been
+adopted and will replace the BOA as the standard Object Adaptor in
+CORBA. The new specification recognises the compatibility problems of BOA
+and recommends that all BOAs should be considered propriety extensions.
+OmniORB2 will support POA in future releases. Until then, you have to
+use the BOA to attach object implementations to the ORB.
+<P>
+The rest of this chapter describes the interface of the BOA in detail. It
+is important to recognise that the interface described below is omniORB2
+specific and hence the code using this interface is unlikely to be portable
+to other ORBs.
+<P>
+Unless it is stated otherwise, the term ``object'' will be used below to
+refer to object implementations. This should not be confused with ``object
+references'' which are handles held by clients.
+<P>
+<H1><A NAME=SECTION00610000000000000000> BOA Initialisation</A></H1>
+<P>
+It takes two steps to put the BOA into service. The BOA has to be
+initialised using <tt> BOA_init</tt> and activated using <tt>
+impl_is_ready</tt>.
+<P>
+ <tt> BOA_init</tt> is a member of the <tt> CORBA::ORB</tt> class. Its signature is:
+<P>
+
+<PRE>BOA_ptr BOA_init(int &amp; argc,
+                 char ** argv,
+                 const char * boa_identifier);
+</PRE>
+
+<P>
+ Typically, it is used in the startup code as follows:
+<P>
+
+<PRE>CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,&quot;omniORB2&quot;);   // line 1
+CORBA::BOA_ptr boa = orb-&gt;BOA_init(argc,argv,&quot;omniORB2_BOA&quot;); // line 2
+</PRE>
+
+<P>
+The <tt> argv</tt> parameters may contain BOA options. These options will be
+removed from the <tt> argv</tt> list when <tt> BOA_init</tt> returns. Other
+parameters in <tt> argv</tt> will remain. The supported options are:
+<P>
+<DL ><DT>-BOAiiop_port <tt> &lt;port number (0-65535)&gt;</tt>
+<DD> Use the port number to receive
+IIOP requests. This option can be specified multiple times in the command
+line and the BOA would be initialised to listen on all of the ports.
+<P>
+<DT>-BOAid <tt> &lt;id (string)&gt;</tt>
+<DD> If this option is used the id must be
+``omniORB2_BOA''.
+<P>
+ </DL>
+<P>
+If the third argument of <tt> BOA_init</tt> is non-nil, it must be the string
+constant ``omniORB2_BOA''. If the argument is nil, -BOAid must be present
+in <tt> argv</tt>.
+<P>
+If there is any problem in the initialisation process, a <tt>
+CORBA::INITIALIZE</tt> exception would be raised.
+<P>
+To register an object with the BOA, the method
+<tt> _obj_is_ready</tt> should be called with the return value of <tt>
+BOA_init</tt> as the argument.
+<P>
+<tt> BOA_init</tt> is thread-safe. It can be called multiple times and the
+same <tt> BOA_ptr</tt> will be returned. However, only the <tt> argv</tt> in the
+first call will be scanned, the argument is ignored in subsequent calls.
+<P>
+<tt> BOA_init</tt> returns a pseudo object of type <tt>
+CORBA::BOA_ptr</tt>. Similar to <tt> CORBA::Object_ptr</tt>, the pointer can be
+managed using <tt> CORBA::BOA_var</tt>, <tt> BOA::_duplicate</tt> and <tt>
+CORBA::release</tt>. The pointer can be tested using <tt> CORBA::is_nil</tt> which
+returns true if the pointer is equivalent to the return value of <tt>
+BOA::_nil</tt>.
+<P>
+After <tt> BOA_init</tt> is called, objects can be registered. However,
+incoming IIOP requests would not be despatched until <tt> impl_is_ready</tt>
+is called.
+<P>
+
+<PRE>class BOA {
+public:
+   impl_is_ready(CORBA::ImplementationDef_ptr p = 0,
+                 CORBA::Boolean NonBlocking = 0);
+};
+</PRE>
+
+<P>
+One of the common pitfall in using the BOA is to forget to call
+impl_is_ready. Until this call returns, there is no thread listening on
+the port from which IIOP requests are received. The remote client may hang
+because of this.
+<P>
+When <tt> impl_is_ready</tt> is called with no argument. The calling thread
+would be blocked indefinitely in the function until <tt> impl_shutdown</tt>
+(see below) is called. The thread that is calling <tt> impl_is_ready</tt>
+is not used by the BOA to perform its internal functions. The BOA has its
+own set of threads to process incoming requests and general
+housekeeping. Therefore, it is not necessary to have a thread blocked in
+the call if it can be put into use elsewhere. For example, the main thread
+may call <tt> impl_is_ready</tt> once in non-blocking mode (see below) and
+then enter the event loop to handle the GUI frontend.
+<P>
+If non-blocking behaviour is needed, the <tt> NonBlocking</tt> argument should be
+set to 1. For instance, if you creates a callback object, you might call
+impl_is_ready in non-blocking mode to tell the BOA to start receiving
+IIOP requests before sending the callback object to the remote object. The
+first argument <tt> ImplementationDef_ptr</tt> is ignored by the BOA. Just set
+the argument to nil.
+<P>
+<tt> impl_is_ready</tt> is thread safe and can be called multiple
+times. Multiple threads can be blocked in <tt> impl_is_ready</tt>.
+<P>
+<H1><A NAME=SECTION00620000000000000000> Object Registration</A></H1>
+<P>
+Once the BOA is initialised, objects can be registered. The
+purpose of object registration is to let the BOA know of the existence of
+the object and to dispatch requests for the object as upcalls into the
+object.
+<P>
+To register an object, the <tt> _obj_is_ready</tt> function should be
+called. <tt> _obj_is_ready</tt> is a member function of the implementation
+skeleton class. The function should be called only once for each object.
+The call should be made only after the object is fully initialised.
+<P>
+The member function <tt> obj_is_ready</tt> of the BOA may also be used to
+register an object. However, this function has been superseded by <tt>
+_obj_is_ready</tt> and should not be used in new application code.
+<P>
+<H1><A NAME=SECTION00630000000000000000> Object Disposal</A></H1>
+<P>
+Once an object is registered, it is under the
+management of the BOA. To remove the object from the BOA and to delete it
+(when it is safe to do so), the <tt> _dispose</tt> function should be called.
+<tt> _dispose</tt> is a member function of the implementation skeleton class.
+The function should be called only once for each object.
+<P>
+Notice the asymmetry in object instantiation and destruction. To instantiate
+an object, the application code has to call the <b> new</b>
+operator. To remove the object, the application should never
+call the delete operator on the object directly.
+<P>
+At the time the <tt> _dispose</tt> call is made, there may be other threads
+invoking on the object, the BOA ensures that all these calls are completed
+before removing the object from its internal tables and calling the
+<b> delete</b> operator.
+<P>
+Internally, the BOA keeps a reference count on each object. Initially, the
+reference count is 0. After a call to <tt> _obj_is_ready</tt>, the reference
+count is 1. The BOA increases the reference count by 1 before
+an upcall into the object is made. The count is decreased by 1 when the
+upcall returns.  <tt> _dispose</tt> decreases the reference count by 1, if
+the reference count is 0, the delete operator is called. If the count is
+non-zero, the object is marked as disposed. The object will be deleted when
+the reference count eventually goes to zero.
+<P>
+The reference count is also increased by 1 for each object reference held
+in the same address space. Hence, the <b> delete</b> operator will not be
+called when there are outstanding object references in the same address
+space. To ensure that an object is deleted, all its object references in
+the same address space should be released using <tt> CORBA::release</tt>.
+<P>
+Unlike colocated object references, references held by clients in other
+address spaces would not prevent the deletion of objects. If these clients
+invoke on the object after it is disposed, the system exception INV_OBJREF
+would be raised. The difference in semantics is an undesirable side-effect
+of the current BOA implementation. In future, colocated references will
+have the same semantics as remote references, i.e. their presence will not
+delay the deletion of the objects.
+<P>
+Instead of <tt> _dispose</tt>, it may be useful to have a method to deactivate
+the object but not deleting it. This feature is not supported in the
+current BOA implementation.
+<P>
+<H1><A NAME=SECTION00640000000000000000> BOA Shutdown</A></H1>
+<P>
+The BOA can be withdrawn from service using member functions <tt>
+impl_shutdown</tt> and <tt> destroy</tt>.
+<P>
+
+<PRE>class BOA {
+public:
+   void impl_shutdown();
+   void destroy();
+};
+</PRE>
+
+<P>
+<tt> impl_shutdown</tt> and <tt> destroy</tt> are the inverse of <tt>
+impl_is_ready</tt> and <tt> BOA_init</tt> respectively.
+<P>
+<tt> impl_shutdown</tt> deactivates the BOA. When the call returns, all the
+internal threads and network connections will be shutdown. Any thread
+blocking in <tt> impl_is_ready</tt> would be unblocked. After the call, no
+request from other address spaces will be processed. In other words, the
+BOA will be in the same state as it was in before <tt> impl_is_ready</tt> was
+called. For example, a remote client may hang if it tries to connect to the
+server after <tt> impl_shutdown</tt> was called because no thread is listening
+on the IIOP port.
+<P>
+<tt> impl_shutdown</tt> does not wait for incoming requests to complete before
+it closes the network connections. The remote clients will see the network
+connections shutdown and the replies may not  reach them even if the
+upcalls have been completed. Therefore, if the application is to define an
+operation in an IDL interface to shutdown the BOA,  the operation should be
+defined as an oneway operation.
+<P>
+<tt> impl_shutdown</tt> is thread-safe and can be called multiple times. The
+call is silently ignored if the BOA has already been shutdown. After <tt>
+impl_shutdown</tt> is called, the BOA can be reactivated by another call to
+<tt> impl_is_ready</tt>.
+<P>
+It should be noted that <tt> impl_shutdown</tt> does not affect outgoing
+network connections. That is, clients in the same address space will
+still be able to make calls to objects in other address spaces.
+<P>
+While remote requests are not delivered after <tt> impl_shutdown</tt> is
+called, the current implementation does not stop colocated clients from
+calling the objects. In future, colocated clients will exhibit the same
+behaviour as remote clients.
+<P>
+<tt> destroy</tt> permanently removed the BOA. This function will call <tt>
+impl_shutdown</tt> implicitly if it has not been called. When this call
+returns, the IIOP port(s) held by the BOA will be freed. Remote clients
+will see their requests refused by the operating system when they try to
+open a connection to the IIOP port(s).
+<P>
+After <tt> destroy</tt> is called, the BOA should not be used. If there is any
+objects still registered with the BOA, the objects should not be invoked
+afterwards. The objects are not disposed. Invoking on the objects after
+<tt> destroy</tt> would result in undefined behaviour. Initialisation of
+another BOA using <tt> BOA_init</tt> is not supported. The behaviour of <tt>
+BOA_init</tt> after this call is undefined.
+<P>
+<H1><A NAME=SECTION00650000000000000000> Unsupported functions</A></H1>
+<P>
+The following member functions are not implemented. Calling these functions
+do not have any effect.
+<P>
+<UL><LI> <tt> Object_ptr create(...)</tt>
+<LI> <tt> ReferenceData* get_id(Object_ptr)</tt>
+<LI> <tt> Principal_ptr get_principal(Object_ptr,Environment_ptr)</tt>
+<LI> <tt> void change_implementation(Object_ptr, ImplementationDef_ptr)</tt>
+<LI> <tt> void deactivate_impl(ImplementationDef_ptr)</tt>
+<LI> <tt> void deactivate_obj(Object_ptr)</tt>
+</UL><H1><A NAME=SECTION00660000000000000000> Loading Objects On Demand</A></H1>
+<P>
+<A NAME=load_on_demand>&#160;</A>
+<P>
+Since 2.5.0, there is limited support for loading objects on demand. 
+An application can register a handler for loading objects dynamically. The
+handler should have the signature <tt> omniORB::loader::mapKeyToObject_t</tt>:
+<P>
+
+<PRE>  namespace omniORB {
+    ...
+    class loader {
+    public:
+      typedef CORBA::Object_ptr (*mapKeyToObject_t) (const objectKey&amp; key);
+      static void set(mapKeyToObject_t NewKeyToObject);
+    };
+  };
+</PRE>
+
+<P>
+When the ORB cannot locate the target object in this address space, it
+calls the handler with the object key of the target. The handler is expected
+to instantiate the object, either in this address space or in another
+address space, and returns the object reference to the newly instantiated
+object. The ORB will then reply with a LOCATION_FORWARD message to instruct
+the client to retry using the object reference returned by the handler.
+When the handler returns, the ORB assumes ownership of the returned
+value. It will call CORBA::release() on the returned value when it has
+finished with it.
+<P>
+The handler may be called concurrently by multi-threads. Hence it  
+must be thread-safe.
+<P>
+If the handler cannot load the target object, it should return     
+CORBA::Object::_nil(). The object will be treated as non-existing.
+<P>
+The application registers the handler with the ORB at runtime      
+using omniORB::loader::set(). This function is not thread-safe.    
+Calling this function again will replace the old handler with      
+the new one.
+<P>
+
+<BR> <HR><A NAME=tex2html283 HREF="node7.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html281 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html275 HREF="node5.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html285 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html284 HREF="node7.html"> Interface Type Checking</A>
+<B>Up:</B> <A NAME=tex2html282 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html276 HREF="node5.html"> The omniORB2 API</A>
+<BR> <HR> <P>
+<BR> <HR>
+<P><ADDRESS>
+<I>David Riddoch <BR>
+Wed Feb 24 14:48:15 GMT 1999</I>
+</ADDRESS>
+</BODY>

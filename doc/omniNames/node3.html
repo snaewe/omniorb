@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!Converted with LaTeX2HTML 95 (Thu Jan 19 1995) by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds >
+<HEAD>
+<TITLE> Starting omniNames and setting omniORB.cfg</TITLE>
+</HEAD>
+<BODY>
+<meta name="description" value=" Starting omniNames and setting omniORB.cfg">
+<meta name="keywords" value="omniNames">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<P>
+ <BR> <HR><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.orl.co.uk/latex2html/icons/next_motif_gr.gif">   <A NAME=tex2html30 HREF="omniNames.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.orl.co.uk/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html26 HREF="node2.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.orl.co.uk/latex2html/icons/previous_motif.gif"></A>         <BR>
+<B>Up:</B> <A NAME=tex2html31 HREF="omniNames.html">The OMNI Naming Service</A>
+<B> Previous:</B> <A NAME=tex2html27 HREF="node2.html"> Log file</A>
+<BR> <HR> <P>
+<H1><A NAME=SECTION00030000000000000000> Starting omniNames and setting omniORB.cfg</A></H1>
+<P>
+When starting omniNames for the first time, you must specify the TCP port
+number on which it should listen.  This is written to the log file so that on
+subsequent invocations it will listen on the same port number and thus can be
+accessible through the same object reference.  When omniNames starts up
+successfully it writes the stringified object reference for its root context on
+standard error.
+<P>
+
+At startup the omniORB runtime tries to read the configuration file
+<code>omniORB.cfg</code> to obtain the object reference to the root context of the
+Naming Service.  This object reference is returned by the call
+<code>resolve_initial_references(&quot;NameService&quot;)</code>.  Once you have started
+omniNames for the first time you have to copy the stringified object reference
+printed on standard error into <code>omniORB.cfg</code>.  The format of the entry is
+the word <code>NAMESERVICE</code> followed by space and the stringified IOR all on
+one line.  For example:
+
+<P>
+
+<PRE>NAMESERVICE IOR:000000000000002049444c3a436f734e616d696e672f4e616d696e674
+36f6e746578743a312e300000000001000000000000002c0001000000000012776962626c
+652e776f62626c652e636f6d0004d20000000c3371b8c09528a18700000001
+</PRE>
+
+<P>
+<BR> <HR>
+
+</BODY>

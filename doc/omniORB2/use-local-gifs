@@ -1,0 +1,11 @@
+#!/bin/sh
+
+
+for html in *.html; do
+  echo $html
+  cat $html | \
+      sed 's+http://www\.uk\.research\.att\.com/latex2html/icons/++g' \
+      > $html.tmp
+  rm $html
+  mv $html.tmp $html
+done

@@ -1,0 +1,346 @@
+\documentclass[11pt,twoside,onecolumn]{article}
+\usepackage[]{fontenc}
+\usepackage{palatino}
+\usepackage{a4}
+\addtolength{\oddsidemargin}{-0.2in}
+\addtolength{\evensidemargin}{-0.6in}
+\addtolength{\textwidth}{0.5in}
+\pagestyle{headings}
+
+\title{The OMNI Thread Abstraction}
+
+\author{Tristan Richardson\\
+Olivetti \& Oracle Research Laboratory \\
+Cambridge \\
+}
+
+\date{{\it Revised} 13 March 1997}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The OMNI thread abstraction is designed to provide a common set of thread
+operations for use in programs written in C++.  Programs written using the
+abstraction should be much easier to port between different architectures with
+different underlying threads primitives.
+
+The programming interface is designed to be similar to the C language interface
+to POSIX threads (IEEE draft standard 1003.1c - previously 1003.4a, often known
+as ``pthreads'' \cite{pthreads}).
+
+Much of the abstraction consists of simple C++ object wrappers around pthread
+calls.  However for some features such as thread-specific data, a better
+interface can be offered because of the use of C++.
+
+Some of the more complex features of pthreads are not supported because of the
+difficulty of ensuring the same features can be offered on top of other thread
+systems.  Such features include thread cancellation and complex scheduling
+control (though simple thread priorities are supported).
+
+The abstraction layer is currently implemented for the following architectures
+/ thread systems:
+
+\begin{itemize}
+
+\item Solaris 2.x using pthreads draft 10
+\item Solaris 2.x using solaris threads (but pthreads version is now standard)
+\item Alpha OSF1 using pthreads draft 4
+\item Windows NT using NT threads
+\item Linux 2.x using Linuxthread 0.5 (which is based on pthreads draft 10)
+\item Linux 2.x using MIT pthreads (which is based on draft 8)
+\item ATMos using pthreads draft 6
+
+\end{itemize}
+
+See the {\tt omnithread.h} header file for full details of the API.  The
+descriptions below assume you have some previous knowledge of threads, mutexes,
+condition variables and semaphores.  Also refer to other documentation
+(\cite{birrell}, \cite{pthreads}) for further explanation of these ideas
+(particularly condition variables, the use of which may not be particularly
+intuitive when first encountered).
+
+
+\section{Synchronisation objects}
+
+Synchronisation objects are used to synchronise threads within the same
+process.  There is no inter-process synchronisation provided.  The
+synchronisation objects provided are mutexes, condition variables and counting
+semaphores.
+
+\subsection{Mutex}
+
+An object of type {\tt omni\_mutex} is used for mutual exclusion.  It provides
+two operations, {\tt lock()} and {\tt unlock()}.  The alternative names {\tt
+acquire()} and {\tt release()} can be used if preferred.  Behaviour is
+undefined when a thread attempts to lock the same mutex again or when a mutex
+is locked by one thread and unlocked by a different thread.
+
+
+\subsection{Condition Variable}
+
+A condition variable is represented by an {\tt omni\_condition} and is used for
+signalling between threads.  A call to {\tt wait()} causes a thread to wait on
+the condition variable.  A call to {\tt signal()} wakes up at least one thread
+if any are waiting.  A call to {\tt broadcast()} wakes up all threads waiting
+on the condition variable.
+
+When constructed, a pointer to an {\tt omni\_mutex} must be given.  A condition
+variable {\tt wait()} has an implicit mutex {\tt unlock()} and {\tt lock()}
+around it.  The link between condition variable and mutex lasts for the
+lifetime of the condition variable (unlike pthreads where the link is only for
+the duration of the wait).  The same mutex may be used with several condition
+variables.
+
+A wait with a timeout can be achieved by calling {\tt timed\_wait()}.  This is
+given an absolute time to wait until.  The routine {\tt
+omni\_thread::get\_time()} can be used to turn a relative time into an absolute
+time.  {\tt timed\_wait()} returns {\tt ETIMEDOUT} if the time expires before
+the condition variable is signalled.
+
+
+\subsection{Counting semaphores}
+
+An {\tt omni\_semaphore} is a counting semaphore.  When created it is given an
+initial unsigned integer value.  When {\tt wait()} is called, the value is
+decremented if non-zero.  If the value is zero then the thread blocks instead.
+When {\tt post()} is called, if any threads are blocked in {\tt wait()},
+exactly one thread is woken. If no threads were blocked then the value of the
+semaphore is incremented.
+
+If a thread calls {\tt try\_wait()}, then the thread won't block if the
+semaphore's value is 0, returning {\tt EAGAIN} instead.
+
+At present there is no way of querying the value of the semaphore.
+
+
+
+\section{Thread object}
+
+A thread is represented by an {\tt omni\_thread} object.  There are broadly two
+different ways in which it can be used.
+
+The first way is simply to create an {\tt omni\_thread} object, giving a
+particular function which the thread should execute.  This is like the POSIX
+(or any other) C language interface.
+
+The second method of use is to create a new class which inherits from {\tt
+omni\_thread}.  In this case the thread will execute the {\tt run()} member
+function of the new class.  One advantage of this scheme is that
+thread-specific data can be implemented simply by having data members of the
+new class.
+
+When constructed a thread is in the "new" state and has not actually started.
+A call to {\tt start()} causes the thread to begin executing.  A static member
+function {\tt create()} is provided to construct and start a thread in a single
+call.  A thread exits by calling {\tt exit()} or by returning from the thread
+function.
+
+Threads can be either detached or undetached.  Detached threads are threads for
+which all state will be lost upon exit.  Other threads cannot determine when a
+detached thread will disappear, and therefore should not attempt to access the
+thread object unless some explicit synchronisation with the detached thread
+guarantees that it still exists.
+
+Undetached threads are threads for which storage is not reclaimed until another
+thread waits for its termination by calling {\tt join()}.  An exit value can be
+passed from an undetached thread to the thread which joins it.
+
+\sloppy{
+Detached / undetached threads are distinguished on creation by the type of
+function they execute.  Undetached threads execute a function which has a {\tt
+void*} return type, whereas detached threads execute a function which has a
+{\tt void} return type.  Unfortunately C++ member functions are not allowed to
+be distinguished simply by their return type.  Thus in the case of a derived
+class of {\tt omni\_thread} which needs an undetached thread, the member
+function executed by the thread is called {\tt run\_undetached()} rather than
+{\tt run()}, and it is started by calling {\tt start\_undetached()} instead of
+{\tt start()}.
+}
+
+The abstraction currently supports three priorities of thread, but no guarantee
+is made of how this will affect underlying thread scheduling.  The three
+priorities are {\tt PRIORITY\_LOW}, {\tt PRIORITY\_NORMAL} and {\tt
+PRIORITY\_HIGH}.  By default all threads run at {\tt PRIORITY\_NORMAL}.  A
+different priority can be specified on thread creation, or while the thread is
+running using {\tt set\_priority().}  A thread's current priority is returned
+by {\tt priority()}.
+
+\sloppy{
+Other functions provided are {\tt self()} which returns the calling thread's
+{\tt omni\_thread} object, {\tt yield()} which requests that other threads be
+allowed to run, {\tt id()} which returns an integer id for the thread for use
+in debugging, {\tt state()}, {\tt sleep()} and {\tt get\_time()}.
+}
+
+\section{Using OMNI threads in your program}
+
+Obviously you need to include the {\tt omnithread.h} header file in your source
+code, and link in the omnithread library with your executable.  Because there
+is a single {\tt omnithread.h} for all platforms, certain preprocessor defines
+must be given as compiler options.  The easiest way to do this is to study the
+makefiles given in the examples provided with this distribution.  If you are to
+include OMNI threads in your own development environment, these are the
+necessary preprocessor defines:
+
+\begin{tabular}{|l|l|} \hline
+Platform & Preprocessor Defines \\ \hline \hline
+Sun Solaris 2.x & \verb|-D__sunos__ -D__sparc__ -D__OSVERSION__=5 -DSVR4| \\
+ & \verb|-DUsePthread -D_REENTRANT| \\ \hline
+Digital Unix 3.2 & \verb|-D__osf1__ -D__alpha__ -D__OSVERSION__=3| \\
+ & \verb|-D_REENTRANT| \\ \hline
+x86 Linux 2.0 & \verb|-D__linux__ -D__i86__ -D__OSVERSION__=2| \\
+with linuxthreads 0.5 & \verb|-D_REENTRANT| \\ \hline
+Windows NT & \verb|-D__NT__ -MD| \\ \hline
+\end{tabular}
+
+
+\section{Threaded I/O shutdown for Unix}
+
+or, how one thread should tell another thread to shut down when it might
+be doing a blocking call on a socket.
+
+Unfortunately there doesn't seem to be a standard way of doing this which works
+across all Unix systems.  I have investigated the behaviour of our two main
+Unix platforms, Solaris 2.5 and Digital Unix 3.2.  On Digital Unix everything
+is fine, as the obvious method using shutdown() seems to work OK.
+Unfortunately on Solaris shutdown can only be used on a connected socket, so we
+need devious means to get around this limitation.  The details are summarised
+below:
+
+
+\subsection{read()}
+
+Thread A is in a loop, doing read(sock), processing the data, then going back
+into the read.
+
+Thread B comes along and wants to shut it down - it can't cancel thread A since
+(i) working out how to clean up according to where A is in its loop is a
+nightmare, and (ii) this isn't available in omnithread anyway.
+
+On Solaris 2.5 and Digital Unix 3.2 the following strategy works:
+
+Thread B does shutdown(sock,2).
+
+At this point thread A is either blocked inside read(sock), or is elsewhere in
+the loop.  If the former then read will return 0, indicating that the socket is
+closed.  If the latter then eventually thread A will call read(sock) and then
+this will return 0.  Thread A should close(sock), do any other tidying up, and
+exit.
+
+If there is another point in the loop that thread A can block then obviously
+thread B needs to be aware of this and be able to wake it up in the appropriate
+way from that point.
+
+
+
+\subsection{accept()}
+
+Again thread A is in a loop, this time doing an accept on listenSock, dealing
+with a new connection and going back into accept.  Thread B wants to cancel it.
+
+On Digital Unix 3.2 the strategy is identical to that for read:
+
+Thread B does shutdown(listenSock,2).  Wherever thread A is in the loop,
+eventually it will return ECONNABORTED from the accept call.  It should
+close(listenSock), tidy up as necessary and exit.
+
+On Solaris 2.5 thread B can't do shutdown(listenSock,2) - this returns
+ENOTCONN.  Instead the following strategy can be used:
+
+First thread B sets some sort of "shutdown flag" associated with listenSock.
+Then it does getsockaddr(listenSock) to find out which port listenSock is on
+(or knows already), sets up a socket dummySock, does connect(dummySock, this
+host, port) and finally does close(dummySock).
+
+Now wherever thread A is in the loop, eventually it will call
+accept(listenSock).  This will return successfully with a new socket, say
+connSock.  Thread A then checks to see if the "shutdown flag" is set.  If not,
+then it's a normal connection.  If it is set, then thread A closes listenSock
+and connSock, tidies up and exits.
+
+
+\subsection{write()}
+
+Thread A may be blocked in write, or about to go in to a potentially-blocking
+write.  Thread B wants to shut it down.
+
+On Solaris 2.5:
+
+Thread B does shutdown(sock,2).
+
+If thread A is already in write(sock) then it will return with ENXIO.  If
+thread A calls write after thread B calls shutdown this will return EIO.
+
+
+On Digital Unix 3.2:
+
+Thread B does shutdown(sock,2).
+
+If thread A is already in write(sock) then it will return the number of bytes
+written before it became blocked.  A subsequent call to write will then
+generate SIGPIPE (or EPIPE will be returned if SIGPIPE is ignored by the
+thread).
+
+
+\subsection{connect()}
+
+Thread A may be blocked in connect, or about to go in to a potentially-blocking
+connect.  Thread B wants to shut it down.
+
+
+On Digital Unix 3.2:
+
+Thread B does shutdown(sock,2).
+
+If thread A is already in connect(sock) then it will return a successful
+connection.  Subsequent reading or writing will show that the socket has been
+shut down (i.e. read returns 0, write generates SIGPIPE or returns EPIPE).  If
+thread A calls connect after thread B calls shutdown this will return EINVAL.
+
+
+On Solaris 2.5:
+
+There is no way to wake up a thread which is blocked in connect.  Instead
+Solaris forces us through a ridiculous procedure whichever way we try it.
+One way is this:
+
+First thread A creates a pipe in addition to the socket.  Instead of shutting
+down the socket, thread B simply writes a byte to the pipe.
+
+\sloppy{
+Thread A meanwhile sets the socket non-blocking using fcntl(sock, F\_SETFL,
+O\_NONBLOCK).  Then it calls connect on the socket - this will return
+EINPROGRESS.  Then it must call select, waiting for either sock to become
+writable or for the pipe to become readable.  If select returns that just sock
+is writable then the connection has succeeded.  It then needs to set the socket
+back to blocking mode using fcntl(sock, F\_SETFL, 0).  If instead select
+returns that the pipe is readable, thread A closes the socket, tidies up and
+exits.
+}
+
+An alternative method is similar but to use polling instead of the pipe.
+Thread B justs sets a flag and thread A calls select with a timeout,
+periodically waking up to see if the flag has been set.
+
+
+\begin{thebibliography}{lo}
+
+\bibitem[POSIX94]{pthreads}
+{\em Portable Operating System Interface (POSIX) Threads Extension},
+P1003.1c Draft 10,
+IEEE,
+September 1994.
+
+\bibitem[Birrell89]{birrell}
+{\em An Introduction to Programming with Threads},
+Research Report 35,
+DEC Systems Research Center,
+Palo Alto, CA,
+January 1989.
+
+\end{thebibliography}
+
+\end{document}

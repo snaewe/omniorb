@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!Converted with LaTeX2HTML 95 (Thu Jan 19 1995) by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds >
+<HEAD>
+<TITLE> Synchronisation objects</TITLE>
+</HEAD>
+<BODY>
+<meta name="description" value=" Synchronisation objects">
+<meta name="keywords" value="omnithread">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<P>
+ <BR> <HR><A NAME=tex2html27 HREF="node3.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.orl.co.uk/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html25 HREF="omnithread.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.orl.co.uk/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html19 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.orl.co.uk/latex2html/icons/previous_motif.gif"></A>         <BR>
+<B> Next:</B> <A NAME=tex2html28 HREF="node3.html"> Thread object</A>
+<B>Up:</B> <A NAME=tex2html26 HREF="omnithread.html">The OMNI Thread Abstraction</A>
+<B> Previous:</B> <A NAME=tex2html20 HREF="node1.html"> Introduction</A>
+<BR> <HR> <P>
+<H1><A NAME=SECTION00020000000000000000> Synchronisation objects</A></H1>
+<P>
+Synchronisation objects are used to synchronise threads within the same
+process.  There is no inter-process synchronisation provided.  The
+synchronisation objects provided are mutexes, condition variables and counting
+semaphores.
+<P>
+<H2><A NAME=SECTION00021000000000000000> Mutex</A></H2>
+<P>
+An object of type <tt> omni_mutex</tt> is used for mutual exclusion.  It provides
+two operations, <tt> lock()</tt> and <tt> unlock()</tt>.  The alternative names <tt>
+acquire()</tt> and <tt> release()</tt> can be used if preferred.  Behaviour is
+undefined when a thread attempts to lock the same mutex again or when a mutex
+is locked by one thread and unlocked by a different thread.
+<P>
+<H2><A NAME=SECTION00022000000000000000> Condition Variable</A></H2>
+<P>
+A condition variable is represented by an <tt> omni_condition</tt> and is used for
+signalling between threads.  A call to <tt> wait()</tt> causes a thread to wait on
+the condition variable.  A call to <tt> signal()</tt> wakes up at least one thread
+if any are waiting.  A call to <tt> broadcast()</tt> wakes up all threads waiting
+on the condition variable.
+<P>
+When constructed, a pointer to an <tt> omni_mutex</tt> must be given.  A condition
+variable <tt> wait()</tt> has an implicit mutex <tt> unlock()</tt> and <tt> lock()</tt>
+around it.  The link between condition variable and mutex lasts for the
+lifetime of the condition variable (unlike pthreads where the link is only for
+the duration of the wait).  The same mutex may be used with several condition
+variables.
+<P>
+A wait with a timeout can be achieved by calling <tt> timed_wait()</tt>.  This is
+given an absolute time to wait until.  The routine <tt>
+omni_thread::get_time()</tt> can be used to turn a relative time into an absolute
+time.  <tt> timed_wait()</tt> returns <tt> ETIMEDOUT</tt> if the time expires before
+the condition variable is signalled.
+<P>
+<H2><A NAME=SECTION00023000000000000000> Counting semaphores</A></H2>
+<P>
+An <tt> omni_semaphore</tt> is a counting semaphore.  When created it is given an
+initial unsigned integer value.  When <tt> wait()</tt> is called, the value is
+decremented if non-zero.  If the value is zero then the thread blocks instead.
+When <tt> post()</tt> is called, if any threads are blocked in <tt> wait()</tt>,
+exactly one thread is woken. If no threads were blocked then the value of the
+semaphore is incremented.
+<P>
+If a thread calls <tt> try_wait()</tt>, then the thread won't block if the
+semaphore's value is 0, returning <tt> EAGAIN</tt> instead.
+<P>
+At present there is no way of querying the value of the semaphore.
+<P>
+<BR> <HR><A NAME=tex2html27 HREF="node3.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.orl.co.uk/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html25 HREF="omnithread.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.orl.co.uk/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html19 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.orl.co.uk/latex2html/icons/previous_motif.gif"></A>         <BR>
+<B> Next:</B> <A NAME=tex2html28 HREF="node3.html"> Thread object</A>
+<B>Up:</B> <A NAME=tex2html26 HREF="omnithread.html">The OMNI Thread Abstraction</A>
+<B> Previous:</B> <A NAME=tex2html20 HREF="node1.html"> Introduction</A>
+<BR> <HR> <P>
+<BR> <HR>
+
+</BODY>

@@ -1,0 +1,91 @@
+\documentclass[11pt,twoside,onecolumn]{article}
+\usepackage[]{fontenc}
+\usepackage{palatino}
+\usepackage{a4}
+\addtolength{\oddsidemargin}{-0.2in}
+\addtolength{\evensidemargin}{-0.6in}
+\addtolength{\textwidth}{0.5in}
+\pagestyle{headings}
+
+\title{The OMNI Naming Service}
+
+\author{Tristan Richardson\\
+Olivetti \& Oracle Research Laboratory\\
+Cambridge}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The OMNI Naming Service ({\em omniNames}) is an omniORB2 implementation of the
+OMG's COS Naming Service Specification.  It offers a way for a client to turn a
+human-readable name into an object reference, on which the client can
+subsequently invoke operations in the normal way.  See the OMG specification
+for full details of the functionality provided by the Naming Service.
+
+\sloppy{
+The Naming Service stores a set of bindings of names to objects.  These
+bindings can be arranged as an arbitrary directed graph, although they are
+often arranged in a tree hierarchy.  Each node in the graph is a {\em naming
+context}.  There is a ``root'' context at which name lookups usually start.
+This is the object returned by the call to
+\verb|CORBA::ORB::resolve_initial_references("NameService").|
+}
+
+\section{Log file}
+
+\sloppy{
+The Naming Service is often part of the bootstrapping process of other CORBA
+programs.  For this reason, if an instance of omniNames crashes (or the machine
+on which it runs is rebooted), it is important that certain aspects of its
+operation persist upon restarting.  Firstly the root context of the Naming
+Service should always be accessible through the same object reference.  This
+helps the ORB to implement the \verb|resolve_initial_references| call by
+allowing the object reference to be stored in a configuration file, for
+example.  Secondly, the naming graph with all its bindings should persist
+between invocations.
+}
+
+To achieve this, omniNames generates a log file, to which it writes out an
+entry every time a change is made to the naming graph.  The directory in which
+this log file is written can be specified with the \verb|OMNINAMES_LOGDIR|
+environment variable.  When omniNames is restarted it uses the log file so that
+it can regenerate the naming graph.
+
+Periodically the log file is checkpointed, removing unnecessary operations from
+the log file.  The idle time between checkpoints can be set with the
+\verb|OMNINAMES_ITBC| environment variable.  It defaults to 15 minutes.
+
+\section{Starting omniNames and setting omniORB.cfg}
+
+When starting omniNames for the first time, you must specify the TCP port
+number on which it should listen.  This is written to the log file so that on
+subsequent invocations it will listen on the same port number and thus can be
+accessible through the same object reference.  When omniNames starts up
+successfully it writes the stringified object reference for its root context on
+standard error.
+
+\sloppy{
+At startup the omniORB runtime tries to read the configuration file
+\verb|omniORB.cfg| to obtain the object reference to the root context of the
+Naming Service.  This object reference is returned by the call
+\verb|resolve_initial_references("NameService")|.  Once you have started
+omniNames for the first time you have to copy the stringified object reference
+printed on standard error into \verb|omniORB.cfg|.  The format of the entry is
+the word \verb|NAMESERVICE| followed by space and the stringified IOR all on
+one line.  For example:
+}
+
+{\small
+\begin{verbatim}
+NAMESERVICE IOR:000000000000002049444c3a436f734e616d696e672f4e616d696e674
+36f6e746578743a312e300000000001000000000000002c0001000000000012776962626c
+652e776f62626c652e636f6d0004d20000000c3371b8c09528a18700000001
+\end{verbatim}
+}
+
+\end{document}

@@ -1,0 +1,202 @@
+Release Notes for 2.6.1     (20th Oct 1998)
+=======================
+
+This release is a minor update to 2.6.0 (released 14th Oct 1998).
+
+The previous major release is 2.5.0 (10th Mar 1998).
+
+Source code and binary distributions are available from our Web pages:
+
+         http://www.orl.co.uk/omniORB/omniORB.html
+
+Changes since 2.6.0
+-------------------
+
+1. Support for Alpha NT 4.0 added.
+2. Two Bug fixes to omniidl2
+      Bug no. 34 and 35 are fixed. Details can be found on:
+                http://www.orl.co.uk/omniORB/omniORBbug.html
+
+
+Changes since 2.5.0
+-------------------
+
+1. IDL stubs must be regenerated with the new IDL compiler to be
+   compatible with the runtime library.
+
+   The current shared runtime library versions are:
+
+   On various unices:
+
+       libomniORB2.so ---> libomniORB2.so.6 --> libomniORB2.so.6.0
+
+   On IBM AIX
+       libomniORB26.a
+       libomniLC2.a
+
+   On Windows NT/95, the omniORB2 runtime DLLs for this version are:
+
+       libomniORB260_rt.dll
+       libomniORB260_rt.lib
+       libomniLC22_rt.dll
+       libomniLC22_rt.lib
+
+   Make sure you update your Visual Studio to pick up the right library.
+
+2. Stub enhancements:
+
+     a) With MSVC++ and DEC C++ v6.0, C++ namespace is used to represent 
+        IDL module.
+
+     b) With MSVC++ and DEC C++ v6.0, C++ bool type is used to represent
+        IDL boolean. If you are using some libraries that have #define
+        bool, it is best to disable this feature by passing 
+        -DNo_Cplusplus_Bool to the C++ compiler.
+
+     c) Reopen IDL modules is allowed by default when the IDL compiler is 
+        compiled on MSVC++ and DEC C++ v6.0. It is not allowed by default
+        on other platforms.
+        The -m flag can be given to omniidl2 to explicitly enable reopen 
+        module on all platforms. However, the stub code will not compile
+        unless namespace is used to represent module.
+
+     d) Dependency on iostream.h is removed from the stubs (and the runtime).
+        This will allow omniORB2 to work with applications that use either
+        STL iostream or the traditional iostream.
+
+     e) Stubs are ready to be compiled into Windows DLLs.
+        See the comment in CORBA_sysdep.h
+
+3. Support of the DynAny interface.
+
+     DynAny interface, except the DynFixed interface, is fully supported.
+     A new chapter on the use of this interface has been added to
+     the omniORB2 user guide.
+
+4. omnithread library update 
+
+  Updated omnithread library so that native threads can call any operations
+  in the library and vice versa. Previously, native threads cannot call
+  omni_thread::join and on nt cannot wait on omni_condition.
+  The semantics of omni_thread::self() is clarified. If the calling thread
+  is not the main thread and is not created using the omnithread library,
+  omni_thread::self() returns 0.
+
+5. Added new flag -t to omniidl2 to enable the generation
+   of tie implementation template
+
+   The example src/examples/echo/eg3_tieimpl.cc shows how the template
+   can be used. More description can be found in chapter 2 of the omniORB2
+   user guide
+
+6. JavaIDL compatible bootstrapping
+
+   It is now possible to use the same mechanism to tell the ORB the root
+   context of the Naming Service. Previously, this is done via an IOR
+   string in the configuration file omniORB.cfg or the win32 registry.
+
+   Now, all omniORB2 servers, omniNames included, can respond to a query
+   to the special object with object key 'INIT' and the following interface
+	 module CORBA {
+               interface InitialReferences {
+                  Object get(in ORB::ObjectId id);
+                  ORB::ObjectIdList list();
+               };
+          };
+
+   To tell an omniORB2 client to use this feature:
+
+   1. Use the command line options:
+          -ORBInitialHost <hostname (string)>
+      and -ORBInitialPort <port (short 1-65535)>
+
+      -ORBInitialPort is optionally. If not specified, port 900 will be
+       used.
+
+   2. Added the following into omniORB.cfg or win32 registry:
+
+         ORBInitialHost <hostname (string)>
+         ORBInitialPort <port (short 1-65535)>
+
+
+   So a simpler way to set up omniNames is:
+
+      1. Start omniNames the first time on host wobble:
+             $ omniNames -start <port (e.g. 1234)>
+
+      2. Add to omniORB.cfg the following lines:
+
+           ORBInitialHost wobble
+           ORBInitialPort 1234
+
+      or
+
+        Just invoke a client with -ORBInitialHost wobble -ORBInitialPort 1234
+
+     3. To configure JavaIDL clients to use omniNames, use the JavaIDL
+        command line options: -ORBInitialHost, -ORBInitialPort.
+
+7. New runtime configuration variable:
+
+     omniORB::maxTcpConnectionPerServer
+
+   This variable controls the maximum number of tcp connections to open to
+   a server. Previously this variable is hard-coded to 5.
+   Change this variable by assignment. Make sure that this is done before
+   ORB_init because the variable is read only once in ORB_init.
+
+8. Bugs fixed:
+      The complete list of bugs fixed can be found in:
+          http://www.orl.co.uk/omniORB/omniORBbug.html
+      section omniORB_2.5.0 bugs and patches. 
+   All the bugs listed have been fixed.
+
+
+9. New platforms
+
+      Ports to SGI, Phar Lap ETS kernel, SCO OpenServer 5, Reliant Unix 5.43.
+      We cannot test these ports ourselves. However users have reported
+      success on using omniORB2 on these platforms. 
+
+     The platform and compiler combinations that are known to work:
+
+     sun4_sosV_5.5          Solaris 2.5, Sunpro C++/gcc-2.7.2
+     sun4_sosV_5.6          Solaris 2.6, Sunpro C++/gcc-2.7.2
+     i586_linux_2.0         x86 Redhat linux 4.2, gcc-2.7.2
+     alpha_osf1_3.2         Digital Unix 3.2, DEC C++ v5.5
+     alpha_osf1_4.0         Digital Unix 4.0, DEC C++ v6.0
+     powerpc_aix_4.2        IBM AIX 4.2, IBM C Set++
+     hppa_hpux_10.20        HPUX 10.20, aC++ B3910B A.01.04
+     x86_nt_3.5             Windows NT 3.5, MS VC++ 5.0
+     x86_nt_4.0             Windows NT 4.0, MS VC++ 5.0
+     x86_win95              Windows 95, MS VC++ 5.0
+     i586_linux_2.0_glibc   x86 Redhat linux 5.1,egcs-1.1b+binutils-2.9.1.0.14
+     powerpc_aix_4.2_egcs   power PC AIX 4.2, egcs-1.0+eh_path
+     m68k_nextstep_3.3      NextStep 3.3, gcc-2.7.2
+     mips_sinux_5.43        Reliant UNIX from Siemens-Nixdorf (SNI)
+     mips_irix_6.2_n32      SGI Irix 6.2 - 32bit mode, SGI C++ compiler
+     x86_ets                Phar Lap Realtime ETS-kernel/ MSVC++ 5.0
+     x86_sco5               SCO OpenServer 5/gcc-2.7.2
+
+10. x86 Linux systems with glibc 2.0 library (e.g. Redhat 5.1)
+
+    omniORB2 is known to work with egcs-1.1b and binutils-2.9.1.0.14.
+    Choose the platform i586_linux_2.0_glibc. You may have to edit the
+    make variables CXX and CC in the file
+          $(top)/mk/platforms/i586_linux_2.0_glibc.mk
+
+    This compiler tool chain contains most bug fixes and seems to cope with
+    -O2 optimisation and shared library very well.
+    Therefore, the default optimisation on this platform is now -O2 and
+    omniORB2 runtime libraries are compiled as shared.
+
+    Warning: there may still be bugs in the compiler which will cause it
+             to generate the wrong code with -O2. If in doubt, remove
+             the optimisation flag (use this line in 
+             dir.mk 'CXXDEBUGFLAGS =').
+
+11. The omniORB2 user guide has been updated. 
+
+------------
+Sai-Lai Lo
+(s.lo@orl.co.uk)

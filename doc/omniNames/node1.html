@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!Converted with LaTeX2HTML 95 (Thu Jan 19 1995) by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds >
+<HEAD>
+<TITLE> Introduction</TITLE>
+</HEAD>
+<BODY>
+<meta name="description" value=" Introduction">
+<meta name="keywords" value="omniNames">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<P>
+ <BR> <HR><A NAME=tex2html14 HREF="node2.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.orl.co.uk/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html12 HREF="omniNames.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.orl.co.uk/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html6 HREF="omniNames.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.orl.co.uk/latex2html/icons/previous_motif.gif"></A>         <BR>
+<B> Next:</B> <A NAME=tex2html15 HREF="node2.html"> Log file</A>
+<B>Up:</B> <A NAME=tex2html13 HREF="omniNames.html">The OMNI Naming Service</A>
+<B> Previous:</B> <A NAME=tex2html7 HREF="omniNames.html">The OMNI Naming Service</A>
+<BR> <HR> <P>
+<H1><A NAME=SECTION00010000000000000000> Introduction</A></H1>
+<P>
+The OMNI Naming Service (<em> omniNames</em>) is an omniORB2 implementation of the
+OMG's COS Naming Service Specification.  It offers a way for a client to turn a
+human-readable name into an object reference, on which the client can
+subsequently invoke operations in the normal way.  See the OMG specification
+for full details of the functionality provided by the Naming Service.
+<P>
+
+The Naming Service stores a set of bindings of names to objects.  These
+bindings can be arranged as an arbitrary directed graph, although they are
+often arranged in a tree hierarchy.  Each node in the graph is a <em> naming
+context</em>.  There is a ``root'' context at which name lookups usually start.
+This is the object returned by the call to
+<code>CORBA::ORB::resolve_initial_references(&quot;NameService&quot;).</code>
+
+<P>
+<BR> <HR>
+
+</BODY>

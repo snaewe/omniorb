@@ -1,0 +1,148 @@
+omniORB2 on OpenVMS platforms
+=============================
+
+This file contains information on building omniORB2 on OpenVMS (Alpha and
+and VAX) platforms.
+
+Downloading the distribution
+----------------------------
+
+Refer to http://www.uk.research.att.com/omniORB/VMSDownload.html for
+downloading and unpacking the distribution.
+
+
+Building the distribution
+-------------------------
+
+This distribution requires the use of MMS.  It has been tested on OpenVMS Alpha
+version 6.2 and OpenVMS VAX version 6.1 using DEC C++ version 5.5 and 5.6.
+
+The MMS files assume the use of the MMS /Skip qualifier.  You should define a
+"make" symbol as follows:
+
+	$ make=="mms/skip"
+
+Before starting the build, you should configure your system to the platform you
+are using by editing the file [.config]config.mms.
+
+Next, set your default working directory to [.src] and type:
+
+	$ make/macro=(initialize_mms=1)
+
+You should now be ready to build. Just type 'make export'.  If you use the
+"veryclean" rule you will need to repeat the above initialization step.
+
+To build debug versions of the library and/or executables, type:
+
+	$ make/macro=(debug=1)
+
+This will create libraries and executables with a "d" suffix.  For example,
+omniORB2d.olb.
+
+Setting up your environment
+---------------------------
+
+If your operating system is 6.2 or above, you should add the directory:
+mydisk:[myroot.bin.platform] to the logical name DCL$PATH (where platform is
+openvms_{alpha|vax}_6_{1|2} and mydisk:[myroot] is the directory containing the
+file you are reading).  DCL$PATH should be defined as a search list logical.
+
+If your operating system is 6.1 or below, you should define each of the
+executables in that directory as foreign commands.  E.g.:
+
+	$ omniidl2=="mydisk:[myroot.bin.openvms_vax_6_1]omniidl2.exe"
+
+You will also need to define the logical OMNICFG to point to an existing
+directory for name service configuration information.  The omniNames server
+will use this directory.
+
+You will need to create a file called "omnicfg:omniorb.cfg" to contain the
+nameservice IOR as described in the omniORB2 documentation.  The file
+contains the single record:
+
+NAMESERVICE <stringified IOR>
+
+Once you have created this file, you should startup the omniNames server as a
+detached process.  This should be added to your system startup procedure.
+
+Building omniORB2 applications
+-----------------------------
+
+To compile and link against the omniORB2 libraries, you should define the
+following logical names:
+
+	$ define <qualifiers> omni mydisk:[myroot.include]
+	$ define <qualifiers> omniORB2 mydisk:[myroot.include.omniORB2]
+	$ define <qualifiers> omniVms mydisk:[myroot.include.omniVms]
+	$ define <qualifiers> omnithread mydisk:[myroot.include.omnithread]
+	$ define <qualifiers> omnilib mydisk:[myroot.lib.platform]
+
+(Note that the resulting logical names and translations will be in all upper
+case.)  With the above definitions in place, you should add
+/include=([],omni:)/exceptions to your CXX compiles.  The logical names,
+omniORB2, omniVms, and omnithread are needed because DEC C+for OpenVMS does
+not handle sub-directories of a directory in the include path properly.
+
+The logical name omnilib is used as a convenience for the cxxlink command line.
+You will link against omnilib:omniORB2.olb/library, one of the floating point
+libraries provided (see the section "Floating point support" below), and the
+POSIX threads shareable image for your platform (you should use
+omnilib:share.opt/options for this).
+
+You may wish to use or adapt the development environment provided in the DCL 
+and MMS files contained in [.etc]openvms.zip to accomplish the above.
+
+Floating point support
+----------------------
+
+The CORBA standard mandates that an implementation should use the IEEE standard
+for floating point types (CORBA::Float and CORBA::Double).  Since native IEEE
+floating point is not available on the VAX platform and to provide additional
+flexibility for the Alpha platform, these types are proxy types.  Therefore,
+additional libraries are provided in addition to omnilib:omniORB2.olb.  These
+are omnilib:omniORB2DFloat.olb, omnilib:omniORB2GFloat.olb, and
+omnilib:omniORB2IEEEFloat.olb.  These libraries must be added to the cxxlink
+command consistent with the option specified on the CXX command line (even if
+the default for the particular platform is taken).  Within an address space
+(i.e. executable image) you must set the /Float CXX qualifier consistently.
+
+The omniORB2 for VMS development environment provides for different floating
+point formats by allowing one of:
+
+	make /macro=(D_FLOAT=1)
+	make /macro=(G_FLOAT=1)
+	make /macro=(IEEE_FLOAT=1)
+
+to explicitly build for D, G, or IEEE floating point support.  The default  is
+G_Float and D_FLOAT on Alpha and VAX, respectively (consistent with the CXX
+default).  You do not need to supply these qualifiers when building the
+distribution.
+
+
+Notes
+-----
+
+If you are running OpenVMS version 6.1, please ensure that you have
+installed the latest ECOs for the DEC C RTL and C++ Class Library.
+
+This release of omniORB2 is incompatable with the backport library supplied
+with DEC C++ version 5.6.  Therefore, if your operating system is below 7.0
+and you use DEC C++ version 5.6, be sure that the logical name DECC$CRTLMAP
+is not defined.
+
+Building the examples
+=====================
+
+You are strongly encouraged to try out the examples provided in
+[.src.examples]. Go into [.src.examples] and type 'make all' (where make is
+defined as above).
+
+Study the documentations in [.doc] (in the omniORB 2.5.0 distribution) before
+you run any of the example programs.
+
+Documentation
+=============
+
+You must read the omniORB2 and the OMNI naming service user guides. Follow
+the instructions in the guides to complete the configuration process.
+

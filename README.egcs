@@ -1,0 +1,80 @@
+
+
+OmniORB2 has been tested with egcs-1.1.1 + binutils-2.9.1.0.14 on x86 linux
+2.0 and glibc 2.0.x systems. This release of egcs fixes quite a few bugs
+in the previous version, and it is strongly recommended that you get hold
+of this version.
+
+Please see the mailing list for news of success with egcs on other platforms,
+or if you manage to use egcs sucessfully on a new platform yourself, then
+please let us know.
+
+
+- David Riddoch
+  23 Dec 1998
+
+----------------------------
+Some older news:
+--------------
+
+OmniORB2 has been tested with egcs-1.1b + binutils-2.9.1.0.14 on x86 linux
+2.0 and glibc 2.0.x systems (e.g. Redhat 5.1). Remember that egcs-1.1b must
+be compiled with --enable-threads.
+
+It has not been confirmed whether the compiler generates correct code
+on other platforms. The compiler may compile this distribution cleanly.
+However, the code it generates may not be correct. This would result in
+random crashes when omniORB programs are run.
+
+
+Egcs-1.0 was released in Dec 1997 and was followed by egcs-1.0.1 in Jan 1998. 
+
+The stock compiler can compile this distribution cleanly. However, the
+code it generates does not have thread-safe exception handling. This would
+result in random crashes when omniORB programs are run.
+
+Teemu Torma has provided a patch to egcs-1.0 to make it generates
+thread-safe exception handling code. OmniORB2 has been tested with the
+patched compiler and successfully run on the following platforms:
+
+  o x86 linux 2.0 / glibc 2.0.x (Redhat 5.0)
+  o alpha linux 2.0 / glibc 2.0.x (Redhat 5.0)
+  o AIX 4.2
+
+However, there is a compiler bug in egcs-1.0 that make it unable to compile
+some of the sequence templates in omniORB2. The bug might be fixed in the
+latest snapshot of egcs but I'm not certain.
+
+Teemu Torma's patch is reported to be working on Solaris, HPUX and AIX as
+well. Andrey Slepuhin has run the omniORB2_testsuite with egcs on AIX. Let
+me know if you have success in running the testsuite on other platforms.
+
+The latest development snapshot of egcs seems to have incorporated the patch
+but I have not tested it myself.
+
+I've left my binaries for x86 Redhat linux 5.0 and alpha Redhat linux 5.0
+in:
+      ftp.uk.research.att.com:/pub/linux/egcs-1.0.alphabin.tgz  (4M) and
+      ftp.uk.research.att.com:/pub/linux/egcs-1.0.x86bin.tgz    (4M)
+
+The diff against the unpatched egcs-1.0 is in:
+
+      ftp.uk.research.att.com:/pub/linux/egcs-1.0-thread-safe-eh.diff (60K)
+
+The diff is based on Teemu Torma's patch + patch for RedHat 5.0 by H.J. Lu
++ my bug fix to get the thread-safe-eh stuff to work with linux-threads (or
+any draft 10 or later posix thread implementations).
+
+For x86 Redhat linux 5.0, you must update binutils to 2.8.1.0.17.
+
+If you are building the compiler yourself, you have to apply this patch to
+the resulting spec file:
+
+23c23
+< %{pg:-lgmon} %{pg:-lc_p} %{!pg:-lc} %{pthread:-lpthread}
+---
+> %{pg:-lgmon} %{pg:-lc_p} %{!pg:-lc} %{pthread:-rpath /usr/local/lib/pthread -lpthread}
+
+This is to ensure that the thread-safe-eh version of the stdc++ library is
+picked up when the executable is run.
+

@@ -1,0 +1,109 @@
+omniORB2 has been tested with the following software configuration:
+
+A) Kernel               2.0.27
+   Gnu C++              2.7.2.1
+   Binutils             2.7.0
+   Linux C Library      5.3.12
+   Linux C++ Library    2.7.1
+   Linuxthreads         0.5
+
+B) Kernel               2.0.35
+   Egcs                 1.1.1
+   Binutils             2.9.1.0.14
+   Linux C Library      glibc-2.0.x
+
+
+
+Note on EGCS 1.1b
+-----------------
+
+Previous versions of omniORB have been tested with EGCS 1.1b, and were
+largely sucessful. However version 1.1.1 includes several important bug fixes
+and it is strongly recommended that you upgrade to this version.
+
+
+The following contains information on older Linux configuations
+---------------------------------------------------------------
+
+It has been reported that with some S.U.S.E distributions, the
+release fails to compile with an internal compiler error. The distribution
+apparently bundles gcc 2.7.2.3 so one would expect the release should compile.
+The exact cause of the problem is unknown.
+
+
+Typo in /usr/include/sched.h
+----------------------------
+
+In some linux distributions, e.g. RedHat 4.1, there is a typo in
+/usr/include/sched.h which would cause an error when compiling omniORB2.
+If you see this error, apply the following patch:
+
+
+*** sched.h     Thu May 22 13:49:34 1997
+--- sched.h.patched     Thu May 22 13:49:47 1997
+***************
+*** 33,39 ****
+  extern int sched_getscheduler __P((pid_t __pid));
+  extern int sched_yield __P((void));
+  extern int sched_get_priority_max __P((int __policy));
+! extern int sched_get_priority_min _P((int __policy));
+  extern int sched_rr_get_interval __P((pid_t __pid,
+                struct timespec *interval));
+  
+--- 33,39 ----
+  extern int sched_getscheduler __P((pid_t __pid));
+  extern int sched_yield __P((void));
+  extern int sched_get_priority_max __P((int __policy));
+! extern int sched_get_priority_min __P((int __policy));
+  extern int sched_rr_get_interval __P((pid_t __pid,
+                struct timespec *interval));
+  
+
+Gcc exception handling
+----------------------
+
+omniORB2 uses C++ exceptions. By default, exception handling is not enabled
+in gcc 2.7.2. To compile programs that use omniORB2, the -fhandle-exceptions
+flag must be specified. Notice that optimization is not supported with
+-fhandle-exceptions.
+
+By default, Run Time Type Identification (RTTI) is not supported in g++
+2.7.2. In other words, throws will only match on catch parameters of
+exactly the same types.
+
+It is possible to enable RTTI support in gcc 2.7.2. To do so, the omniORB
+library must be modified to include <typeinfo>. Refer to g++ documentation
+for details.
+
+omniORB2 has not been tested with gcc 2.8.0, which should resolve the above 
+problems.
+
+
+No shared library support
+-------------------------
+
+With gcc 2.7.2, it is not possible to create a C++ shared library with
+exception handling enabled. Therefore, only static libraries are provided.
+This problem is probably resolved in gcc 2.8.0.
+
+
+Porting to other hardware platforms
+-----------------------------------
+
+omniORB2 has only been tested on x86 Linux. Theoretically, it will just
+compile with no change on other linux platforms. In practice, the success
+of a port depends largely on the quality of exception handling in gcc.  On
+alpha Linux, gcc 2.7.2 fails to compile the omniORB2 library because of an
+internal compiler error. This bug is a show stopper with no work around. 
+However, the g++ maintainers have asserted that the bug has been fixed in 
+gcc 2.8.0, though this has yet to be verified.
+
+
+Gcc 2.8.0
+---------
+
+gcc 2.8.0 has been released. We have not tested omniORB2 with the compiler. It
+may be the case that gcc 2.8.0 will have the same problem with thread safe 
+exception handling as egcs (see README.egcs). If that is the case, omniORB2 
+programs may crash randomly. One has to wait a bit longer for gcc to have 
+thread safe exception or switch to egcs.

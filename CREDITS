@@ -1,0 +1,86 @@
+This is a list of people that have contributed to omniORB2. It is sorted by
+the last name.
+
+Name:         Peter Braun
+Email:        Peter.Braun@mchp.siemens.de
+Organisation: SIEMENS AG
+Description:  Reliant UNIX port
+
+Name:         Steven Brenneis
+Email:        brennes1@rjrt.com
+Description:  Reopen IDL module and use of C++ namespace
+
+Name:         Eoin Carroll
+Email:        ewc@orl.co.uk
+Organisation: Olivetti & Oracle Research Laboratory
+Description:  Any and TypeCode, NT port, ATMos port, misc. omniORB2 core work
+
+Name:         Gary D. Duzan
+Email:        gduzan@gte.com
+Organisation: GTE Laboratories
+Description:  AIX port
+
+Name:         Liutger Franzen
+Email:        ilfranze@techfak.uni-bielefeld.de
+Description:  Irix port
+
+Name:         Ben Harris
+Email:        bjh@orl.co.uk
+Organisation: Olivetti & Oracle Research Laboratory
+Description:  java examples
+
+Name:         Lars Immisch
+Email:        lars@ibp.de
+Description:  Nextstep 3.3 port
+
+Name:         Sai-Lai Lo
+Email:        s.lo@uk.research.att.com
+Organisation: AT&T Laboratories, Cambridge
+Description:  omniORB2 architect and the main developer of the omniORB2 core
+
+Name:         H. J. Lu
+Email:        hjl@lucon.org
+Description:  Patches for glibc-2 and egcs-1.0
+
+Name:         David Morgenlender
+Email:        dmorgen@alum.mit.edu
+Description:  Phar Lap Realtime ETS-Kernel port
+
+Name:         Ron Record
+Email:        rr@sco.com
+Organisation: SCO
+Description:  SCO OpenServer 5 port
+
+Name:         Tristan Richardson
+Email:        tjr@uk.research.att.com
+Organisation: AT&T Laboratories, Cambridge
+Description:  omnithread, omniNames, Omni Development Environment
+
+NameL         David Riddoch
+Email:        djr@uk.research.att.com
+Organisation: AT&T Laboratories, Cambridge
+Description:  DSI, DII, DynAny and misc. omniORB2 core
+
+Name:         Marcel Ruff
+Email:        ruff@comsys.dofn.de
+Organisation: Nortel Dasa Network Systems
+Description:  HPUX port
+
+Name:         Andrey Slepuhin
+Email:        pooh@msu.ru
+Organisation: Moscow State University
+Description:  AIX port, egcs port and initial testing
+
+Name:         Hugo Vandeputte
+Email:        Hugo.Vandeputte@meteo.fr
+Organisation: SCEM/TTI/DEV
+Description:  HPUX port
+
+Name:         Bruce Visscher
+Email:        visschb@rjrt.com
+Description:  OpenVMS port
+
+Name:         James Weatherall
+Email:	      jnw@uk.research.att.com
+Organisation: AT&T Laboratories, Cambridge
+Description:  New implementation of TypeCode and Any
