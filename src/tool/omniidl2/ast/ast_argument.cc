@@ -139,8 +139,8 @@ AST_Argument::dump( std:: ostream &o)
  * Data accessors
  */
 
-const AST_Argument::Direction
-AST_Argument::direction()
+AST_Argument::Direction
+AST_Argument::direction() const
 {
   return pd_direction;
 }

@@ -147,8 +147,8 @@ AST_Array::dump( std:: ostream &o)
 /*
  * Data accessors
  */
-const unsigned long 
-AST_Array::n_dims()
+unsigned long 
+AST_Array::n_dims() const
 {
   return pd_n_dims;
 }
