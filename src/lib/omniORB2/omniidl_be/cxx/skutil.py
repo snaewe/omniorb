@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11  1999/12/16 16:08:02  djs
+# More TypeCode and Any fixes
+#
 # Revision 1.10  1999/12/15 12:11:54  djs
 # Marshalling arrays of Anys fix
 #
@@ -140,9 +143,17 @@ def marshall(string, environment, type, decl, argname, to="_n",
             return
 
     if tyutil.isTypeCode(deref_type):
+        # same as obj ref
+        indexing_string = ""
+        if is_array:
+            indexing_string = util.block_begin_loop(string, full_dims) +\
+                              "._ptr"
         string.out("""\
-CORBA::TypeCode::marshalTypeCode(@argname@, @to@);""",
-                   argname = argname, to = to)
+CORBA::TypeCode::marshalTypeCode(@argname@@indexing_string@, @to@);""",
+                   argname = argname, to = to,
+                   indexing_string = indexing_string)
+        if is_array:
+            util.block_end_loop(string, full_dims)
        
     elif tyutil.isString(deref_type):
         indexing_string = util.block_begin_loop(string, full_dims)
@@ -275,7 +286,8 @@ CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
                        where = from_where, typecast = typecast,
                        num = str(num_elements))
             return
-        if tyutil.isAny(deref_type):
+        if tyutil.isAny(deref_type) or \
+           tyutil.isTypeCode(deref_type):
             pass
         # not sure how to handle other basic types
         elif isinstance(deref_type, idltype.Base):
@@ -489,6 +501,11 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
         string.out("""\
 @sizevar@ = @name@_Helper::NP_alignedSize(@argname@@indexing_string@._ptr,@sizevar@);""",
                    sizevar = sizevar, name = name, argname = argname,
+                   indexing_string = indexing_string)
+    elif tyutil.isTypeCode(deref_type):
+        string.out("""\
+@sizevar@ = ((@argname@@indexing_string@._ptr)->_NP_alignedSize(@sizevar@));""",
+                   sizevar = sizevar, argname = argname,
                    indexing_string = indexing_string)
 
     else:
