@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.11  2000/01/20 12:46:40  djs
+# Renamed a function to avoid a name clash with a module.
+#
 # Revision 1.10  2000/01/19 11:23:29  djs
 # Moved most C++ code to template file
 #
@@ -102,7 +105,7 @@ def visitModule(node):
 
 
 #def template(environment, node, nested = self.__nested):
-def template(environment, node, nested = 0):
+def write_template(environment, node, nested = 0):
 
     scopedName = node.scopedName()
     scope = tyutil.scope(scopedName)
@@ -222,7 +225,7 @@ def template(environment, node, nested = 0):
     if config.FlatTieFlag() and config.BOAFlag():
         tie_name = "_tie_" + string.join(map(tyutil.mapID,scopedName), "_")
         sk_name = name.prefixName(map(tyutil.mapID,scopedName), "_sk_")
-        stream.out(template.tie_templatee,
+        stream.out(template.tie_template,
                    tie_name = tie_name,
                    inherits = sk_name,
                    callables = str(where))
@@ -232,7 +235,7 @@ def visitInterface(node):
         return
 
     environment = env.lookup(node)
-    template(environment, node)
+    write_template(environment, node)
 
     for n in node.declarations():
         n.accept(self)

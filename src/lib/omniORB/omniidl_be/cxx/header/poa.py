@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14  2000/01/20 12:46:40  djs
+# Renamed a function to avoid a name clash with a module.
+#
 # Revision 1.13  2000/01/19 11:23:28  djs
 # Moved most C++ code to template file
 #
@@ -162,7 +165,7 @@ def visitInterface(node):
                impl_scopedID = impl_scopedID)
 
     if config.TieFlag():
-        tie.template(environment, node, self.__nested)
+        tie.write_template(environment, node, self.__nested)
     return
 
 def visitTypedef(node):
