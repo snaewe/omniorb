@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.7  2001/08/17 13:47:31  dpg1
+# Small bug fixes.
+#
 # Revision 1.14.2.6  2001/06/08 17:12:14  dpg1
 # Merge all the bug fixes from omni3_develop.
 #
@@ -462,8 +465,10 @@ def visitSequenceType(type):
     elementDesc = output.StringStream()
     prefix = config.state['Private Prefix']
     # djr and jnw's "Super-Hacky Optimisation"
+    # (ammended by dpg1 to be even more hacky, since char/wchar now don't work)
     if isinstance(d_seqType.type(), idltype.Base) and \
        not d_seqType.variable() and \
+       not d_seqType.type().kind() in [idltype.tk_char, idltype.tk_wchar] and \
        not is_array:
         elementDesc.out(template.sequence_elementDesc_contiguous,
                         sequence = sequence_desc)

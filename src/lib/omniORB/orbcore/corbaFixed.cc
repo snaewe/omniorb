@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.5  2001/08/17 13:47:32  dpg1
+// Small bug fixes.
+//
 // Revision 1.1.2.4  2001/08/03 17:41:18  sll
 // System exception minor code overhaul. When a system exeception is raised,
 // a meaning minor code is provided.
@@ -184,6 +187,8 @@ CORBA::Fixed::Fixed(const CORBA::Octet* val,
 {
   OMNIORB_ASSERT(digits <= OMNI_FIXED_DIGITS);
   OMNIORB_ASSERT(scale  <= digits);
+
+  if (digits == 0) pd_negative = 0;
 
   memcpy(pd_val, val, digits);
   memset(pd_val + digits, 0, OMNI_FIXED_DIGITS - digits);

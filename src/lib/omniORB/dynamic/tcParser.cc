@@ -250,6 +250,15 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	  fastCopyUsingTC(tc->NP_content_type(), ibuf, obuf);
 	  break;
 
+	case CORBA::tk_fixed:
+	  {
+	    CORBA::Fixed f;
+	    f.PR_setLimits(tc->NP_fixed_digits(), tc->NP_fixed_scale());
+	    f <<= ibuf;
+	    f >>= obuf;
+	    break;
+	  }
+
 	default:
 	  OMNIORB_ASSERT(0);
 	}
@@ -444,6 +453,15 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	return;
       }
 
+    case CORBA::tk_fixed:
+      {
+	CORBA::Fixed f;
+	f.PR_setLimits(tc->NP_fixed_digits(), tc->NP_fixed_scale());
+	f <<= ibuf;
+	f >>= obuf;
+	break;
+      }
+
     default:
       OMNIORB_ASSERT(0);
     }
@@ -584,6 +602,14 @@ void skipUsingTC(TypeCode_base* tc, cdrStream& buf)
 	case CORBA::tk_alias:
 	  skipUsingTC(tc->NP_content_type(), buf);
 	  break;
+
+	case CORBA::tk_fixed:
+	  {
+	    CORBA::Fixed f;
+	    f.PR_setLimits(tc->NP_fixed_digits(), tc->NP_fixed_scale());
+	    f <<= buf;
+	    break;
+	  }
 
 	default:
 	  OMNIORB_ASSERT(0);

@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.15  2001/08/17 13:47:30  dpg1
+ * Small bug fixes.
+ *
  * Revision 1.38.2.14  2001/07/25 13:39:46  dpg1
  * Missing wstring case in TypeCode unmarshalling.
  *
@@ -730,6 +733,10 @@ CORBA::TypeCode_ptr CORBA::TypeCode::PR_boolean_tc() {
 CORBA::TypeCode_ptr CORBA::TypeCode::PR_char_tc() {
   check_static_data_is_initialised();
   return CORBA::_tc_char;
+}
+CORBA::TypeCode_ptr CORBA::TypeCode::PR_wchar_tc() {
+  check_static_data_is_initialised();
+  return CORBA::_tc_wchar;
 }
 CORBA::TypeCode_ptr CORBA::TypeCode::PR_octet_tc() {
   check_static_data_is_initialised();
