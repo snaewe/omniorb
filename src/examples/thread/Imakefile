@@ -15,8 +15,12 @@ all:: diner
 
 NormalCplusplusProgramTarget(diner,diner.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),)
 
+InstallProgram(diner,$(BINDIR))
+
 all:: threadcancel
 
 NormalCplusplusProgramTarget(threadcancel,threadcancel.o,$(OMNITHREADDEPEND),$(OMNITHREADLIB),)
+
+InstallProgram(threadcancel,$(BINDIR))
 
 DependTarget()
