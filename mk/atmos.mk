@@ -45,7 +45,7 @@ ASMAKEDEPEND      = arm-cpp -M
 
 CP                = cp
 MV		  = mv -f
-MKDIRHIER         = mkdirhier
+MKDIRHIER         = omkdirhier
 
 INSTALL           = installbsd -c
 INSTLIBFLAGS      = -m 0644
