@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.24  1998/10/06 15:15:48  sll
+  Removed check for response expected flag in _sk* dispatch function when
+  the operation is a request-reply.
+
   Revision 1.23  1998/08/13 22:43:51  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -1244,6 +1248,12 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n";
   }
+#if 0
+  // Even if this is request reply, the caller may send a GIOP request
+  // message with no responds specified in the header. Therefore the
+  // stub code should not throw an exception.
+  // XXX In fact, this end should just dump the result from the upcall.
+  //     This is not done at the moment.
   else {
     IND(s); s << "if (!_0RL_response_expected) {\n";
     INC_INDENT_LEVEL();
@@ -1251,7 +1261,7 @@ o2be_operation::produce_server_skel(std::fstream &s,o2be_interface &def_in)
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n";
   }
-
+#endif
   {
     // unmarshall arguments
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
