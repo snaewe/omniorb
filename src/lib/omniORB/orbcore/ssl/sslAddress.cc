@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2003/12/03 14:40:23  dgrisby
+  Fix timeout bug with ssl transport; fix ssl configure issues.
+
   Revision 1.1.2.14  2003/01/14 12:20:33  dgrisby
   Verify that a connect really has connected.
 
@@ -142,7 +145,91 @@ sslAddress::duplicate() const {
   return new sslAddress(pd_address,pd_ctx);
 }
 
+
 /////////////////////////////////////////////////////////////////////////
+
+static inline int setAndCheckTimeout(unsigned long deadline_secs,
+				     unsigned long deadline_nanosecs,
+				     struct timeval& t)
+{
+  if (deadline_secs || deadline_nanosecs) {
+    SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
+    if (t.tv_sec == 0 && t.tv_usec == 0) {
+      // Already timedout.
+      return 1;
+    }
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+    if (t.tv_sec > orbParameters::scanGranularity) {
+      t.tv_sec = orbParameters::scanGranularity;
+    }
+#endif
+  }
+  else {
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+    t.tv_sec = orbParameters::scanGranularity;
+    t.tv_usec = 0;
+#else
+    t.tv_sec = t.tv_usec = 0;
+#endif
+  }
+  return 0;
+}
+
+static inline int waitWrite(SocketHandle_t sock, struct timeval& t)
+{
+  int rc;
+
+#if defined(USE_POLL)
+  struct pollfd fds;
+  fds.fd = sock;
+  fds.events = POLLOUT;
+  int timeout = t.tv_sec*1000+(t.tv_usec/1000);
+  if (timeout == 0) timeout = -1;
+  rc = poll(&fds,1,timeout);
+  if (rc > 0 && fds.revents & POLLERR) {
+    rc = 0;
+  }
+#else
+  fd_set fds, efds;
+  FD_ZERO(&fds);
+  FD_ZERO(&efds);
+  FD_SET(sock,&fds);
+  FD_SET(sock,&efds);
+  struct timeval* tp = &t;
+  if (t.tv_sec == 0 && t.tv_usec == 0) tp = 0;
+  rc = select(sock+1,0,&fds,&efds,tp);
+#endif
+  return rc;
+}
+
+static inline int waitRead(SocketHandle_t sock, struct timeval& t)
+{
+  int rc;
+
+#if defined(USE_POLL)
+  struct pollfd fds;
+  fds.fd = sock;
+  fds.events = POLLIN;
+  int timeout = t.tv_sec*1000+(t.tv_usec/1000);
+  if (timeout == 0) timeout = -1;
+  rc = poll(&fds,1,timeout);
+  if (rc > 0 && fds.revents & POLLERR) {
+    rc = 0;
+  }
+#else
+  fd_set fds, efds;
+  FD_ZERO(&fds);
+  FD_ZERO(&efds);
+  FD_SET(sock,&fds);
+  FD_SET(sock,&efds);
+  struct timeval* tp = &t;
+  if (t.tv_sec == 0 && t.tv_usec == 0) tp = 0;
+  rc = select(sock+1,&fds,0,&efds,tp);
+#endif
+  return rc;
+}
+
+
 giopActiveConnection*
 sslAddress::Connect(unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) const {
@@ -183,52 +270,19 @@ sslAddress::Connect(unsigned long deadline_secs,
     }
   }
 
+  struct timeval t;
+  int rc;
+
+  // Wait until we're connected and ready to send...
   do {
-
-    struct timeval t;
-
-    if (deadline_secs || deadline_nanosecs) {
-      SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
-      if (t.tv_sec == 0 && t.tv_usec == 0) {
-	// Already timeout.
-	CLOSESOCKET(sock);
-	return 0;
-      }
-#if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      if (t.tv_sec > orbParameters::scanGranularity) {
-	t.tv_sec = orbParameters::scanGranularity;
-      }
-#endif
-    }
-    else {
-#if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      t.tv_sec = orbParameters::scanGranularity;
-      t.tv_usec = 0;
-#else
-      t.tv_sec = t.tv_usec = 0;
-#endif
+    if (setAndCheckTimeout(deadline_secs, deadline_nanosecs, t)) {
+      // Already timeout.
+      CLOSESOCKET(sock);
+      return 0;
     }
 
-#if defined(USE_POLL)
-    struct pollfd fds;
-    fds.fd = sock;
-    fds.events = POLLOUT;
-    int timeout = t.tv_sec*1000+(t.tv_usec/1000);
-    if (timeout == 0) timeout = -1;
-    int rc = poll(&fds,1,timeout);
-    if (rc > 0 && fds.revents & POLLERR) {
-      rc = 0;
-    }
-#else
-    fd_set fds, efds;
-    FD_ZERO(&fds);
-    FD_ZERO(&efds);
-    FD_SET(sock,&fds);
-    FD_SET(sock,&efds);
-    struct timeval* tp = &t;
-    if (t.tv_sec == 0 && t.tv_usec == 0) tp = 0;
-    int rc = select(sock+1,0,&fds,&efds,tp);
-#endif
+    rc = waitWrite(sock, t);
+
     if (rc == 0) {
       // Time out!
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
@@ -252,29 +306,63 @@ sslAddress::Connect(unsigned long deadline_secs,
 	return 0;
       }
     }
-
   } while (0);
-
-  if (SocketSetblocking(sock) == RC_INVALID_SOCKET) {
-    CLOSESOCKET(sock);
-    return 0;
-  }
 
   ::SSL* ssl = SSL_new(pd_ctx->get_SSL_CTX());
   SSL_set_fd(ssl, sock);
   SSL_set_connect_state(ssl);
 
-  while(1) {
+  // Do the SSL handshake...
+  while (1) {
+
+    if (setAndCheckTimeout(deadline_secs, deadline_nanosecs, t)) {
+      // Already timeout.
+      SSL_free(ssl);
+      CLOSESOCKET(sock);
+      return 0;
+    }
+
     int result = SSL_connect(ssl);
-    int code = SSL_get_error(ssl, result);
+    int code   = SSL_get_error(ssl, result);
 
     switch(code) {
     case SSL_ERROR_NONE:
-      return new sslActiveConnection(sock,ssl);
+      {
+	if (SocketSetblocking(sock) == RC_INVALID_SOCKET) {
+	  SSL_free(ssl);
+	  CLOSESOCKET(sock);
+	  return 0;
+	}
+	return new sslActiveConnection(sock,ssl);
+      }
 
     case SSL_ERROR_WANT_READ:
+      {
+	rc = waitRead(sock, t);
+	if (rc == 0) {
+	  // Timeout
+#if !defined(USE_FAKE_INTERRUPTABLE_RECV)
+	  SSL_free(ssl);
+	  CLOSESOCKET(sock);
+	  return 0;
+#endif
+	}
+	continue;
+      }
+
     case SSL_ERROR_WANT_WRITE:
-      continue;
+      {
+	rc = waitWrite(sock, t);
+	if (rc == 0) {
+	  // Timeout
+#if !defined(USE_FAKE_INTERRUPTABLE_RECV)
+	  SSL_free(ssl);
+	  CLOSESOCKET(sock);
+	  return 0;
+#endif
+	}
+	continue;
+      }
 
     case SSL_ERROR_SYSCALL:
       {
@@ -295,8 +383,9 @@ sslAddress::Connect(unsigned long deadline_secs,
 	CLOSESOCKET(sock);
 	return 0;
       }
+    default:
+      OMNIORB_ASSERT(0);
     }
-    OMNIORB_ASSERT(0);
   }
 }
 

@@ -45,7 +45,7 @@ else
     PKG_CHECK_MODULES(OPENSSL, openssl,
         [open_ssl_root=`$PKG_CONFIG --variable=prefix openssl`
 	 open_ssl_cppflags="$OPENSSL_CFLAGS"
-	 open_ssl_libs="$OPENSSL_LIBS"
+	 open_ssl_lib="$OPENSSL_LIBS"
 	 open_ssl_pkgconfig="yes"
 	 omni_cv_openssl_root="$open_ssl_root"
         ],
@@ -77,7 +77,7 @@ else
     :
   else
     open_ssl_cppflags="-I$open_ssl_root/include"
-    open_ssl_libs="-L$open_ssl_root/lib -lssl -lcrypto"
+    open_ssl_lib="-L$open_ssl_root/lib -lssl -lcrypto"
   fi
 fi
 AC_SUBST(OPEN_SSL_ROOT, $open_ssl_root)

@@ -1,3 +1,14 @@
+Wed Dec  3 14:38:55 GMT 2003 dgrisby
+====================================
+
+- Fix timeout bug with ssl transport; fix ssl configure issues.
+
+acinclude.m4
+aclocal.m4
+configure
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+
+
 Fri Nov 21 17:39:25 GMT 2003 dgrisby
 ====================================
 
