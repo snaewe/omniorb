@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2002/05/07 00:46:26  dgrisby
+  Different define for TCP protocol number.
+
   Revision 1.1.2.8  2002/05/07 00:28:32  dgrisby
   Turn off Nagle's algorithm. Fixes odd Linux loopback behaviour.
 
@@ -164,7 +167,7 @@ sslAddress::Connect(unsigned long deadline_secs,
   {
     // Prevent Nagle's algorithm
     int valtrue = 1;
-    if (setsockopt(sock,SOL_TCP,TCP_NODELAY,
+    if (setsockopt(sock,IPPROTO_TCP,TCP_NODELAY,
 		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
       CLOSESOCKET(sock);
       return 0;

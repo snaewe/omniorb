@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2002/05/07 00:46:26  dgrisby
+  Different define for TCP protocol number.
+
   Revision 1.1.2.11  2002/05/07 00:28:32  dgrisby
   Turn off Nagle's algorithm. Fixes odd Linux loopback behaviour.
 
@@ -151,7 +154,7 @@ tcpEndpoint::Bind() {
   {
     // Prevent Nagle's algorithm
     int valtrue = 1;
-    if (setsockopt(pd_socket,SOL_TCP,TCP_NODELAY,
+    if (setsockopt(pd_socket,IPPROTO_TCP,TCP_NODELAY,
 		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
       CLOSESOCKET(pd_socket);
       pd_socket = RC_INVALID_SOCKET;
