@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2003/08/21 14:57:52  dgrisby
+  Really silly bug broke registry reading on Windows.
+
   Revision 1.1.2.10  2003/05/22 14:51:37  dgrisby
   Fix registry code.
 
@@ -85,7 +88,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 static void parseConfigReg(orbOptions& opt, HKEY rootkey);
 static void parseOldConfigReg(orbOptions& opt, HKEY rootkey);
 
-void
+CORBA::Boolean
 orbOptions::importFromRegistry() throw (orbOptions::Unknown,
 					orbOptions::BadParam) {
 
@@ -108,7 +111,7 @@ orbOptions::importFromRegistry() throw (orbOptions::Unknown,
       RegCloseKey(rootkey);
       throw;
     }
-    return;
+    return 1;
   }
 
   rootregname = OLD_REGKEY1;
@@ -127,6 +130,7 @@ orbOptions::importFromRegistry() throw (orbOptions::Unknown,
       RegCloseKey(rootkey);
       throw;
     }
+    return 1;
   }
 
   rootregname = OLD_REGKEY2;
@@ -144,7 +148,9 @@ orbOptions::importFromRegistry() throw (orbOptions::Unknown,
       RegCloseKey(rootkey);
       throw;
     }
+    return 1;
   }
+  return 0;
 }
 
 #define KEYBUFSIZE   128

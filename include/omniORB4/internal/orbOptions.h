@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2003/08/21 14:57:38  dgrisby
+  Really silly bug broke registry reading on Windows.
+
   Revision 1.1.2.6  2002/03/18 15:13:07  dpg1
   Fix bug with old-style ORBInitRef in config file; look for
   -ORBtraceLevel arg before anything else; update Windows registry
@@ -213,11 +216,11 @@ class orbOptions {
   //    Not thread safe
 
   ////////////////////////////////////////////////////////////////////////
-  void importFromFile(const char* filename) throw (Unknown,BadParam);
+  CORBA::Boolean importFromFile(const char* filename) throw (Unknown,BadParam);
 
 #if defined(NTArchitecture) && !defined(__ETS_KERNEL__)
   ////////////////////////////////////////////////////////////////////////
-  void importFromRegistry() throw (Unknown,BadParam);
+  CORBA::Boolean importFromRegistry() throw (Unknown,BadParam);
 #endif
 
   ////////////////////////////////////////////////////////////////////////
