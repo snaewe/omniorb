@@ -200,16 +200,16 @@ XCOMM
 
 CXXSRCS = wob.cc
 
-#ifdef UseOmniORB
+DEFINES = $(CORBA_DEFINE) $(OMNITHREADDEFINE)
 
-DEFINES = $(CORBA_DEFINE)
+CORBAInterface(wobble)
+
+#ifdef UseOmniORB
 
 NormalCplusplusProgramTarget(wob,wob.o,$(CORBA_LIBDEPEND),\
         $(CORBA_CLTLIB),NullParameter)
 
 #else
-
-DEFINES = $(CORBA_DEFINE) $(OMNITHREADDEFINE)
 
 NormalCplusplusProgramTarget(wob,wob.o,\
         $(CORBA_LIBDEPEND) $(OMNITHREADDEPEND),\
@@ -221,8 +221,8 @@ NormalCplusplusProgramTarget(wob,wob.o,\
 
 Note that it is important that {\tt \$(CORBA\_CLTLIB)} or {\tt
 \$(CORBA\_SRVLIB)} appears before {\tt \$(OMNITHREADLIB)} in the
-NormalCplusplusProgramTarget rule.\footnote{This is because linking the Solaris
+NormalCplusplusProgramTarget rule.  This is because linking the Solaris
 thread library before the Orbix library results in a binary which segmentation
-faults inside the Orbix library initialisation.}
+faults inside the Orbix library initialisation.
 
 \end{document}
