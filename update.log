@@ -1,3 +1,11 @@
+Fri May  4 17:51:59 BST 2001 dpg1
+=================================
+
+- Work-around for Compaq C++ optimiser bug.
+
+src/lib/omniORB2/orbcore/omniObjRef.cc
+
+
 Fri Apr 27 11:58:25 BST 2001 dpg1
 =================================
 
