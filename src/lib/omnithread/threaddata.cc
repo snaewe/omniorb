@@ -40,7 +40,6 @@ omni_thread::allocate_key()
 omni_thread::value_t*
 omni_thread::set_value(key_t k, value_t* v)
 {
-  omni_mutex_lock l(mutex);
   if (k == 0) return 0;
   if (k > _value_alloc) {
     next_id_mutex->lock();
@@ -70,7 +69,6 @@ omni_thread::set_value(key_t k, value_t* v)
 omni_thread::value_t*
 omni_thread::get_value(key_t k)
 {
-  omni_mutex_lock l(mutex);
   if (k > _value_alloc) return 0;
   return _values[k-1];
 }
@@ -78,7 +76,6 @@ omni_thread::get_value(key_t k)
 omni_thread::value_t*
 omni_thread::remove_value(key_t k)
 {
-  omni_mutex_lock l(mutex);
   if (k > _value_alloc) return 0;
   value_t* v = _values[k-1];
   _values[k-1] = 0;

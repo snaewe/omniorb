@@ -477,8 +477,9 @@ public:
     // derived from value_t. Any values still stored in the
     // omni_thread when the thread exits are deleted.
     //
-    // These functions are thread safe, so you can set data in a
-    // different thread to your current thread.
+    // These functions are NOT thread safe, so you should be very
+    // careful about setting/getting data in a different thread to the
+    // current thread.
 
     typedef unsigned int key_t;
     static key_t allocate_key();
@@ -565,7 +566,7 @@ private:
 
     omni_mutex mutex;
 	// used to protect any members which can change after construction,
-	// i.e. the following 2 members and the per-thread data.
+	// i.e. the following 2 members.
 
     state_t _state;
     priority_t _priority;

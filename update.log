@@ -1,3 +1,14 @@
+Fri Nov  9 12:44:28 GMT 2001 dpg1
+=================================
+
+- Thread specific data access is no longer thread safe. No code
+  required it to be, and removing the locking gives a significant
+  performance gain.
+
+include/omnithread.h
+src/lib/omnithread/threaddata.cc
+
+
 Fri Nov  9 09:55:10 GMT 2001 dpg1
 =================================
 
