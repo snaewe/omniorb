@@ -94,12 +94,16 @@ endif
 
 ifdef SunOS
 
-CXXOPTIONS   += -Kpic
-DIR_CPPFLAGS += -I/usr/local/include
-
 libname = _omniidlmodule.so
 soname = $(libname).$(IDLMODULE_MAJOR)
 lib = $(soname).$(IDLMODULE_MINOR)
+
+DIR_CPPFLAGS += -I/usr/local/include
+
+
+ifeq ($(notdir $(CXX)),CC)
+
+CXXOPTIONS   += -Kpic
 
 $(lib): $(OBJS) $(PYOBJS)
 	(set -x; \
@@ -112,6 +116,21 @@ $(lib): $(OBJS) $(PYOBJS)
          $(patsubst %,-R %,$(IMPORT_LIBRARY_DIRS)) \
          $(filter-out $(LibSuffixPattern),$^) -lposix4 -lnsl $$CXX_RUNTIME \
 	)
+
+endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+CXXOPTIONS += -fPIC
+
+$(lib): $(OBJS) $(PYOBJS)
+	(set -x; \
+	$(RM) $@; \
+	$(CXXLINK) $(CXXLINKOPTIONS) -shared -o $@ -Wl-soname,$(soname) $(IMPORT_LIBRARY_FLAGS) $(OMNIORB2_LIB_NODYN_DEPEND)\
+	 $(filter-out $(LibSuffixPattern),$^) $(OMNIORB2_LIB_NODYN)\
+	)
+
+endif
 
 all:: $(lib)
 
