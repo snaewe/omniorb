@@ -30,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.13  1999/06/26 18:08:50  sll
+  Rearrange namespace scoping again to cope with some compiler's deficency.
+
   Revision 1.12  1999/03/11 16:25:54  djr
   Updated copyright notice
 
@@ -97,13 +100,9 @@ namespace omniORB {
 omniORB::objectKey       omniORB::seed;
 #endif
 
-// operators are defined in the omniORB namespace
-#define OPERATOR_PREFIX omniORB::
-
 #else
 // operators are defined in the global namespace
 omniORB::objectKey       omniORB::seed;
-#define OPERATOR_PREFIX
 #endif
 
 static omni_mutex        internalLock;
@@ -204,8 +203,15 @@ omniORB::nullkey()
   return n;
 }
 
+#if defined(HAS_Cplusplus_Namespace)
+namespace omniORB {
+#endif
+
+  // Some compilers which support namespace cannot handle operator==
+  // definition prefix by omniORB::. We therefore enclose the
+  // operator definitions in namespace omniORB scoping to avoid the problem.
+
 int 
-OPERATOR_PREFIX 
 operator==(const omniORB::objectKey &k1,const omniORB::objectKey &k2)
 {
   return (k1.hi == k2.hi &&
@@ -214,7 +220,6 @@ operator==(const omniORB::objectKey &k1,const omniORB::objectKey &k2)
 }
 
 int 
-OPERATOR_PREFIX
 operator!=(const omniORB::objectKey &k1,const omniORB::objectKey &k2)
 {
   return (k1.hi != k2.hi ||
@@ -222,6 +227,9 @@ operator!=(const omniORB::objectKey &k1,const omniORB::objectKey &k2)
 	  k1.lo != k2.lo) ? 1 : 0;
 }
 
+#if defined(HAS_Cplusplus_Namespace)
+}
+#endif
 
 omniORB::seqOctets* 
 omniORB::keyToOctetSequence(const omniORB::objectKey &k1)
