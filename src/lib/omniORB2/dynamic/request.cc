@@ -213,7 +213,7 @@ RequestImpl::contexts()
 
 
 CORBA::Context_ptr
-RequestImpl::ctxt() const
+RequestImpl::ctx() const
 {
   return pd_context;
 }
@@ -222,6 +222,8 @@ RequestImpl::ctxt() const
 void
 RequestImpl::ctx(CORBA::Context_ptr context)
 {
+  if (!CORBA::Context::PR_is_valid(context))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
   if( pd_state != RS_READY )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
@@ -292,6 +294,8 @@ RequestImpl::add_out_arg(const char* name)
 void
 RequestImpl::set_return_type(CORBA::TypeCode_ptr tc)
 {
+  if (!CORBA::TypeCode::PR_is_valid(tc))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
   if( pd_state != RS_READY )
     throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
@@ -669,6 +673,15 @@ RequestImpl::poll_response()
     pd_deferredRequest->die();
     pd_deferredRequest = 0;
     pd_state = RS_DONE;
+
+    // XXX Opengroup vsOrb tests for poll_response to raise an
+    //     exception when the invocation results in a system exception.
+    if( omniORB::diiThrowsSysExceptions ) {
+      if (pd_sysExceptionToThrow) pd_sysExceptionToThrow->_raise();
+    }
+  }
+  else {
+    omni_thread::yield();
   }
 
   return result;
@@ -765,7 +778,7 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return CORBA::ContextList::_nil();
   }
-  virtual CORBA::Context_ptr ctxt() const {
+  virtual CORBA::Context_ptr ctx() const {
     _CORBA_invoked_nil_pseudo_ref();
     return CORBA::Context::_nil();
   }
@@ -837,14 +850,16 @@ static NilRequest _nilRequest;
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::Request::~Request() {}
+CORBA::Request::~Request() { pd_magic = 0; }
 
 
 CORBA::Request_ptr
 CORBA::
 Request::_duplicate(Request_ptr p)
 {
-  if( p )  return p->NP_duplicate();
+  if (!PR_is_valid(p))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
 
@@ -861,9 +876,9 @@ Request::_nil()
 //////////////////////////////////////////////////////////////////////
 
 void
-CORBA::release(Request_ptr p)
+CORBA::release(CORBA::Request_ptr p)
 {
-  if( !p->NP_is_nil() )
+  if( CORBA::Request::PR_is_valid(p) && !CORBA::is_nil(p) )
     ((RequestImpl*)p)->decrRefCount();
 }
 
@@ -877,7 +892,11 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 			       CORBA::Flags req_flags)
 {
   // NB. req_flags is ignored - ref. CORBA 2.2 section 20.28
-
+  if (!CORBA::Context::PR_is_valid(ctx) ||
+      !CORBA::NVList::PR_is_valid(arg_list) ||
+      !CORBA::NamedValue::PR_is_valid(result))
+    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
+      
   request = new RequestImpl(this, operation, ctx, arg_list, result);
   RETURN_CORBA_STATUS;
 }
@@ -894,6 +913,12 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 			       CORBA::Flags req_flags)
 {
   // NB. req_flags is ignored - ref. CORBA 2.2 section 20.28
+  if (!CORBA::Context::PR_is_valid(ctx) ||
+      !CORBA::NVList::PR_is_valid(arg_list) ||
+      !CORBA::NamedValue::PR_is_valid(result) ||
+      !CORBA::ExceptionList::PR_is_valid(exceptions) ||
+      !CORBA::ContextList::PR_is_valid(ctxlist))
+    throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
   request = new RequestImpl(this, operation, ctx, arg_list, result,
 			    exceptions, ctxlist);
