@@ -31,6 +31,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/04/27 10:35:49  dpg1
+  Interoperable Naming Service
+
+  Added IIOP default port constant.
+
   Revision 1.1.2.1  1999/09/24 09:51:40  djr
   Moved from omniORB2 + some new files.
 
@@ -83,6 +88,7 @@ public:
     ~ProfileBody() { if (host) delete [] host; }
   };
 
+  static const _CORBA_UShort DEFAULT_PORT;
 };
 
 
