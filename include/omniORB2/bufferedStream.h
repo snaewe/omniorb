@@ -11,11 +11,14 @@
 
 /*
   $Log$
-  Revision 1.6  1997/04/23 14:11:38  sll
-  Marshalling functions for the sequence templates are defined here.
-  get_char_array and put_char_array are used to marshal sequence of
-  primitive data types.
+  Revision 1.7  1997/04/23 16:13:28  sll
+  Fixed silly. Do not use CORBA::ULong inside template functions.
 
+ * Revision 1.6  1997/04/23  14:11:38  sll
+ * Marshalling functions for the sequence templates are defined here.
+ * get_char_array and put_char_array are used to marshal sequence of
+ * primitive data types.
+ *
  * Revision 1.5  1997/03/09  12:59:52  sll
  * Minor cleanup.
  *
@@ -719,7 +722,7 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= 
   l >>= s;
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
-    CORBA::ULong padding = 0;
+    _CORBA_ULong padding = 0;
     if (s.WrMessageAlreadyWritten() & ((int)omni::ALIGN_8 - 1))
       padding >>= s;
   }
@@ -781,7 +784,7 @@ _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>::operator>>= 
   l >>= s;
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
-    CORBA::ULong padding = 0;
+    _CORBA_ULong padding = 0;
     if (s.alreadyWritten() & ((int)omni::ALIGN_8 - 1))
       padding >>= s;
   }
@@ -857,7 +860,7 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>
   l >>= s;
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
-    CORBA::ULong padding = 0;
+    _CORBA_ULong padding = 0;
     if (s.WrMessageAlreadyWritten() & ((int)omni::ALIGN_8 - 1))
       padding >>= s;
   }
@@ -920,7 +923,7 @@ _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>::operator>>
   l >>= s;
   if (l==0) return;
   if ((int)elmAlignment == (int)omni::ALIGN_8) {
-    CORBA::ULong padding = 0;
+    _CORBA_ULong padding = 0;
     if (s.alreadyWritten() & ((int)omni::ALIGN_8 - 1))
       padding >>= s;
   }
