@@ -40,6 +40,9 @@ CXXMAKEDEPEND     = $(CXX) -M
 CATOBJ            = catobj
 
 AS                = arm-asm
+ASFLAGS           = $(CPPFLAGS)
+ASMAKEDEPEND      = arm-cpp -M
+
 CP                = cp
 MV		  = mv -f
 MKDIRHIER         = mkdirhier
@@ -59,6 +62,9 @@ INSTEXEFLAGS      = -m 0755
 %.o: %.cc
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
+%.o: %.s
+	$(AS) $(ASFLAGS) -o $@ $<
+
 
 #
 # Standard ATMos CPP flags.
@@ -71,7 +77,7 @@ IMPORT_CPPFLAGS += -D__atmos__ -D__arm__ -DATMOS \
 
 
 #
-# Rule to generate dependency files
+# Rules to generate dependency files
 #
 
 define GenerateCDependencies
@@ -80,6 +86,10 @@ endef
 
 define GenerateCXXDependencies
 $(SHELL) -ec "$(CXXMAKEDEPEND) $(CPPFLAGS) $< | sed 's/$*\\.o/& $@/g' > $@"
+endef
+
+define GenerateASDependencies
+$(SHELL) -ec "$(ASMAKEDEPEND) $(CPPFLAGS) $< | sed 's/$*\\.o/& $@/g' > $@"
 endef
 
 
@@ -260,19 +270,20 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 # CORBA stuff
 #
 
-CorbaImplementation = omniORB
+CorbaImplementation = OMNIORB
 
-$(CORBA_STUB_DIR)/%S.o: $(CORBA_STUB_DIR)/%S.cc $(CORBA_STUB_DIR)/%.hh
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(CORBA_STUB_DIR)/%C.o: $(CORBA_STUB_DIR)/%C.cc $(CORBA_STUB_DIR)/%.hh
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+define CompileCorbaStubRule
+$(CXX) $(CXXDEBUGFLAGS) $(CXXOPTIONS) $(CORBA_CPPFLAGS) $(IMPORT_CPPFLAGS) \
+    -c $< -o $@
+endef
 
 OMNIORB_IDL = omniidl -c C.cc -s S.cc -B
-OMNIORB_CPPFLAGS = -D__OMNIORB__ \
+OMNIORB_CPPFLAGS = -D__OMNIORB__ -I$(CORBA_STUB_DIR) \
 		   $(patsubst %,-I%/include/omniORB,$(IMPORT_TREES))
-OMNIORB_SERVER_LIB = omniORB_lib.o $(OMNITHREAD_LIB)
+OMNIORB_LIB = omniORB_lib.o $(OMNITHREAD_LIB)
 lib_depend := omniORB_lib.o
-OMNIORB_SERVER_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
-OMNIORB_CLIENT_LIB = $(OMNIORB_SERVER_LIB)
-OMNIORB_CLIENT_LIB_DEPEND := $(OMNIORB_SERVER_LIB_DEPEND)
+OMNIORB_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
+OMNIORB_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
+OMNIORB_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%S.cc
+OMNIORB_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%S.o
+OMNIORB_EXTRA_STUB_FILES = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%C.cc)
