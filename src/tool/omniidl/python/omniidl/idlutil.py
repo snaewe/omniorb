@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.3  2001/03/13 10:34:01  dpg1
+# Minor Python clean-ups
+#
 # Revision 1.5.2.2  2000/10/10 10:18:54  dpg1
 # Update omniidl front-end from omni3_develop.
 #
@@ -55,7 +58,6 @@ pruneScope()     -- remove common prefix from a scoped name.
 relativeScope()  -- give a minimal name for one scope relative to another."""
 
 import string
-import _omniidl
 
 def slashName(scopedName, our_scope=[]):
     """slashName(list, [list]) -> string
@@ -157,4 +159,5 @@ relativeScope(["P", "O", "J"], ["O", "C"]) -> [None, "O", "C"]
 
 If either scoped name does not exist, returns None."""
 
+    import _omniidl
     return _omniidl.relativeScopedName(fromScope, destScope)

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.2  2001/03/13 10:34:01  dpg1
+# Minor Python clean-ups
+#
 # Revision 1.1.4.1  2000/10/12 15:37:47  sll
 # Updated from omni3_1_develop.
 #
@@ -204,11 +207,4 @@ def get_interface_operation_descriptor(iname, operation_name, signature):
 # takes an int and returns the int in hex, without leading 0x and
 # with 0s padding
 def hex_word(x):
-    x = hex(x)[2:]
-    while len(x) < 8:
-        x = "0" + x
-    return x
-
-
-        
-    
+    return "%08x" % x

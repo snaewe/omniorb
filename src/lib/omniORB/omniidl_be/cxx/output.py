@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.2  2001/03/13 10:34:01  dpg1
+# Minor Python clean-ups
+#
 # Revision 1.1.4.1  2000/10/12 15:37:48  sll
 # Updated from omni3_1_develop.
 #
@@ -47,7 +50,7 @@ self.createdFiles = []
 
 def createFile(filename):
     file = open(filename, "w")
-    self.createdFiles.append(file)
+    self.createdFiles.append(filename)
     return file
 
 def listAllCreatedFiles():
