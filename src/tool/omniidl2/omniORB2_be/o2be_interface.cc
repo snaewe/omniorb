@@ -27,9 +27,14 @@
 
 /*
   $Log$
-  Revision 1.9  1997/05/06 13:58:53  sll
-  Public release.
+  Revision 1.10  1997/08/21 21:20:08  sll
+  - Names of internal variables inside the stub code now all start with the
+    prefix __ to avoid potential clash with identifiers defined in IDL.
+  - fixed bug in the stub code generated for typedef Object X.
 
+// Revision 1.9  1997/05/06  13:58:53  sll
+// Public release.
+//
   */
 
 #include "idl.hh"
@@ -833,7 +838,7 @@ o2be_interface::produce_skel(fstream &s)
 
   // server skeleton dispatch function
   IND(s); s << "CORBA::Boolean\n";
-  IND(s); s << server_fqname() << "::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean _response_expected)\n";
+  IND(s); s << server_fqname() << "::dispatch(GIOP_S &__s,const char *__op,CORBA::Boolean __response_expected)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   {
@@ -845,7 +850,7 @@ o2be_interface::produce_skel(fstream &s)
 	if (d->node_type() == AST_Decl::NT_op)
 	  {
 	    IND(s); s << ((notfirst)?"else ":"")
-		      << "if (strcmp(_op,\""
+		      << "if (strcmp(__op,\""
 		      << d->local_name()->get_string()
 		      << "\") == 0)\n";
 	    IND(s); s << "{\n";
@@ -859,7 +864,7 @@ o2be_interface::produce_skel(fstream &s)
 	  {
 	    o2be_attribute *a = o2be_attribute::narrow_from_decl(d);
 	    IND(s); s << ((notfirst)?"else ":"")
-		      << "if (strcmp(_op,\""
+		      << "if (strcmp(__op,\""
 		      << "_get_" << a->local_name()->get_string()
 		      << "\") == 0)\n";
 	    IND(s); s << "{\n";
@@ -869,7 +874,7 @@ o2be_interface::produce_skel(fstream &s)
 	    IND(s); s << "}\n";
 	    if (!a->readonly())
 	      {
-		IND(s); s << "else if (strcmp(_op,\""
+		IND(s); s << "else if (strcmp(__op,\""
 			  << "_set_" << a->local_name()->get_string()
 			  << "\") == 0)\n";
 		IND(s); s << "{\n";
@@ -890,7 +895,7 @@ o2be_interface::produce_skel(fstream &s)
 	  o2be_interface * intf = o2be_interface::narrow_from_decl(intftable[j]);
 	  IND(s); s << ((notfirst)?"else ":"")
 		    << "if (" << intf->server_fqname() 
-		    << "::dispatch(_s,_op,_response_expected)) {\n";
+		    << "::dispatch(__s,__op,__response_expected)) {\n";
 	  INC_INDENT_LEVEL();
 	  IND(s); s << "return 1;\n";
 	  DEC_INDENT_LEVEL();
@@ -1166,17 +1171,20 @@ o2be_interface::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
   IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
   IND(s); s << "typedef " << objref_fqname() << " " << tdef->uqname() << "_ptr;\n";
   IND(s); s << "typedef " << fqname() << "Ref " << tdef->uqname() << "Ref;\n";
-  IND(s); s << "typedef " << fqname() << "_Helper " << tdef->uqname() << "_Helper;\n";
-  IND(s); s << "typedef " << proxy_fqname()
-	    << " " << PROXY_CLASS_PREFIX << tdef->uqname() << ";\n";
-  IND(s); s << "typedef " << server_fqname()
-	    << " " << SERVER_CLASS_PREFIX << tdef->uqname() << ";\n";
-  IND(s); s << "typedef " << nil_fqname()
-	    << " " << NIL_CLASS_PREFIX << tdef->uqname() << ";\n";
-  IND(s); s << "typedef " << fqname() << "_var "
-	    << tdef->uqname() << "_var;\n";
-  s << "#define " << tdef->_fqname() << IRREPOID_POSTFIX << " " << IRrepoId()
-    << ";\n";
+
+  if (strcmp(uqname(),"Object") != 0) {
+    IND(s); s << "typedef " << fqname() << "_Helper " << tdef->uqname() << "_Helper;\n";
+    IND(s); s << "typedef " << proxy_fqname()
+	      << " " << PROXY_CLASS_PREFIX << tdef->uqname() << ";\n";
+    IND(s); s << "typedef " << server_fqname()
+	      << " " << SERVER_CLASS_PREFIX << tdef->uqname() << ";\n";
+    IND(s); s << "typedef " << nil_fqname()
+	      << " " << NIL_CLASS_PREFIX << tdef->uqname() << ";\n";
+    IND(s); s << "typedef " << fqname() << "_var "
+	      << tdef->uqname() << "_var;\n";
+    s << "#define " << tdef->_fqname() << IRREPOID_POSTFIX << " " << IRrepoId()
+      << ";\n";
+  }
 }
 
 
