@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.14  2000/02/04 18:11:01  djr
+  Minor mods for IRIX (casting pointers to ulong instead of int).
+
   Revision 1.29.6.13  2000/01/27 10:55:45  djr
   Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
   fqname for base class constructor for some compilers.
@@ -499,15 +502,6 @@ omniOrbORB::destroy()
 
 
 CORBA::Boolean
-omniOrbORB::_is_a(const char* repoId)
-{
-  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
-
-  return (repoId && _ptrToObjRef(repoId)) ? 1 : 0;
-}
-
-
-CORBA::Boolean
 omniOrbORB::_non_existent()
 {
   CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
@@ -517,24 +511,6 @@ omniOrbORB::_non_existent()
   orb_lock.unlock();
 
   return ret;
-}
-
-
-CORBA::Boolean
-omniOrbORB::_is_equivalent(CORBA::Object_ptr other_object)
-{
-  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
-
-  return other_object == (CORBA::Object_ptr) this;
-}
-
-
-CORBA::ULong
-omniOrbORB::_hash(CORBA::ULong max)
-{
-  CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
-
-  return CORBA::ULong(this) % max;
 }
 
 

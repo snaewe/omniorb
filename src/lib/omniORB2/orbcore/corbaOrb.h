@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/02/04 18:11:02  djr
+  Minor mods for IRIX (casting pointers to ulong instead of int).
+
   Revision 1.1.2.2  2000/01/20 11:51:34  djr
   (Most) Pseudo objects now used omni::poRcLock for ref counting.
   New assertion check OMNI_USER_CHECK.
@@ -59,10 +62,7 @@ public:
   virtual void shutdown(CORBA::Boolean);
   virtual void destroy();
 
-  virtual CORBA::Boolean _is_a(const char*);
   virtual CORBA::Boolean _non_existent();
-  virtual CORBA::Boolean _is_equivalent(CORBA::Object_ptr);
-  virtual CORBA::ULong   _hash(CORBA::ULong);
   virtual void* _ptrToObjRef(const char*);
   virtual void _NP_incrRefCount();
   virtual void _NP_decrRefCount();

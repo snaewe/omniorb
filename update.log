@@ -1,4 +1,21 @@
 
+Fri Feb  4 18:07:05 GMT 2000 djr
+================================
+
+- Minor mods for IRIX, which doesn't like casting from pointers to
+  ints.  This is because pointers are 8bytes and ints are 4.
+
+- Removed _is_a, _is_equivalent and _hash from omniOrbORB, since
+  they are implemented in CORBA::Object (and are not reachable
+  anyway!).
+
+src/lib/omniORB2/orbcore/corbaObject.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/corbaOrb.h
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poamanager.cc
+
+
 Fri Feb  4 14:46:06 GMT 2000 djr
 ================================
 

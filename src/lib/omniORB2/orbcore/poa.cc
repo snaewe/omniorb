@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2000/02/04 18:11:03  djr
+  Minor mods for IRIX (casting pointers to ulong instead of int).
+
   Revision 1.1.2.13  2000/01/27 10:55:46  djr
   Mods needed for powerpc_aix.  New macro OMNIORB_BASE_CTOR to provide
   fqname for base class constructor for some compilers.
@@ -492,7 +495,7 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
 
     void** args = new void* [2];
     args[0] = (omniOrbPOA*) this;
-    args[1] = (void*) (int) etherealize_objects;
+    args[1] = (void*) (unsigned long) etherealize_objects;
     (new omni_thread(destroyer_thread_fn, args))->start();
   }
 }
@@ -2791,7 +2794,7 @@ destroyer_thread_fn(void* args)
   void** targs = (void**) args;
 
   omniOrbPOA* poa = (omniOrbPOA*) targs[0];
-  CORBA::Boolean etherealise = (CORBA::Boolean) (int) targs[1];
+  CORBA::Boolean etherealise = (CORBA::Boolean) (unsigned long) targs[1];
   delete[] targs;
 
   poa->do_destroy(etherealise);
