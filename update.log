@@ -1,3 +1,12 @@
+Fri Jan  9 16:15:03 GMT 1998 bjh
+================================
+
+- Java examples now compile.
+
+src/java/UK/co.orl/omniorb/dir.mk
+idl/echo.idl
+
+
 Thu Jan  8 00:40:27 GMT 1998 bjh
 ================================
 
