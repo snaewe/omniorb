@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13  2000/01/10 18:42:22  djs
+# Removed redundant code, tidied up.
+#
 # Revision 1.12  2000/01/07 20:31:33  djs
 # Regression tests in CVSROOT/testsuite now pass for
 #   * no backend arguments
@@ -163,8 +166,6 @@ def argmapping(type):
     deref_type_name = environment.principalID(deref_type, fully_scope = 0)
 
     if is_array:
-        #if tyutil.isObjRef(deref_type) or \
-        #   tyutil.isString(deref_type):
         if is_variable:
             return ["const " + type_name + "_slice*",
                                type_name + "_slice*&",

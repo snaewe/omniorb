@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  2000/01/10 18:42:22  djs
+# Removed redundant code, tidied up.
+#
 # Revision 1.4  1999/12/25 21:47:19  djs
 # Better TypeCode support
 #
@@ -64,8 +67,6 @@ self.__environment = name.Environment()
 self.__nested = 0
 
 def POA_prefix():
-    # is this different to the header?
-    #return "POA_"
     if not(self.__nested):
         return "POA_"
     return ""
