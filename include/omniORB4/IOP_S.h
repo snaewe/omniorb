@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/09/20 11:30:59  sll
+  On the server, the final state of a GIOP_S is ReplyCompleted instead of
+  Idle. This is necessary because the idle connection management code
+  treats Idle as a state where the idle counter can be restarted.
+
   Revision 1.1.2.3  2001/09/10 17:41:30  sll
   Added WaitForRequestHeader in IOP_S::State. Reorder the enum labels inside
   IOP_S::State, any label that is larger than WaitForRequestHeader now
@@ -70,6 +75,7 @@ public:
 	       RequestIsBeingProcessed,
 	       WaitingForReply,
 	       ReplyIsBeingComposed,
+	       ReplyCompleted,
 	       InputFullyBuffered,
 	       InputPartiallyBuffered
   };

@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2001/09/20 11:30:59  sll
+  On the server, the final state of a GIOP_S is ReplyCompleted instead of
+  Idle. This is necessary because the idle connection management code
+  treats Idle as a state where the idle counter can be restarted.
+
   Revision 1.1.4.13  2001/09/10 17:44:34  sll
   Added stopIdleCounter() call inside dispatcher when the header has been
   received.
@@ -386,7 +391,7 @@ GIOP_S::handleRequest() {
 		      (CORBA::CompletionStatus) completion());
     impl()->sendSystemException(this,ex);
   }
-  pd_state = Idle;
+  pd_state = ReplyCompleted;
   return 1;
 }
 
@@ -490,7 +495,7 @@ GIOP_S::handleLocateRequest() {
     MARSHAL_SYSTEM_EXCEPTION();
   }
 
-  pd_state = Idle;
+  pd_state = ReplyCompleted;
   return 1;
 }
 
@@ -500,7 +505,7 @@ GIOP_S::handleCancelRequest() {
   // We do not have the means to asynchronously abort the execution of
   // an upcall by another thread. Therefore it is not possible to
   // cancel a request that has already been in progress. 
-  pd_state = Idle;
+  pd_state = ReplyCompleted;
   return 1;
 }
 
@@ -578,7 +583,7 @@ GIOP_S::SendReply() {
   impl()->outputMessageBegin(this,impl()->marshalReplyHeader);
   calldescriptor()->marshalReturnedValues((cdrStream&)*this);
   impl()->outputMessageEnd(this);
-  pd_state = Idle;
+  pd_state = ReplyCompleted;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -595,7 +600,7 @@ GIOP_S::SendException(CORBA::Exception* ex) {
 # define TEST_AND_MARSHAL_SYSEXCEPTION(name) \
   if ( strcmp("IDL:omg.org/CORBA/" #name ":1.0",repoid) == 0 ) { \
     impl()->sendSystemException(this,*((CORBA::SystemException*)ex)); \
-    pd_state = Idle; \
+    pd_state = ReplyCompleted; \
     return; \
   }
 
@@ -608,7 +613,7 @@ GIOP_S::SendException(CORBA::Exception* ex) {
   // been thrown as a C++ exception and got handled by the catch clause in
   // handleRequest.
   impl()->sendUserException(this,*((CORBA::UserException*)ex));
-  pd_state = Idle;
+  pd_state = ReplyCompleted;
 }
 
 ////////////////////////////////////////////////////////////////////////

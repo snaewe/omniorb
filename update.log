@@ -1,3 +1,14 @@
+Thu Sep 20 12:26:46 BST 2001 sll
+================================
+
+- On the server, the final state of a GIOP_S is ReplyCompleted instead of 
+  Idle. This is necessary because the idle connection management code
+  treats Idle as a state where the idle counter can be restarted.
+
+include/omniORB4/IOP_S.h
+src/lib/omniORB/orbcore/GIOP_S.cc
+
+
 Thu Sep 20 10:25:55 BST 2001 dpg1
 =================================
 
