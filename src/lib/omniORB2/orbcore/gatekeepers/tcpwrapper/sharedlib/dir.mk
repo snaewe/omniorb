@@ -41,14 +41,22 @@ vpath %.c ..
 # For meaning of these options, see the comments in Makefile.orig
 LIBRARY_OPTIONS = \
                -DLIBC_CALLS_STRTOK \
-               -DGETPEERNAME_BUG \
                -DBROKEN_FGETS \
-               -DSOLARIS_24_GETHOSTBYNAME_BUG \
                -DHOSTS_DENY=\"/etc/hosts.deny\" \
                -DHOSTS_ALLOW=\"/etc/hosts.allow\" \
                -DRFC931_TIMEOUT=10
 
-DIR_CPPFLAGS = -DHOSTS_ACCESS $(LIBRARY_OPTIONS)
+ifndef OSR5
+ifndef IRIX
+LIBRARY_OPTIONS += -DSOLARIS_24_GETHOSTBYNAME_BUG
+endif
+endif
+
+ifndef AIX
+LIBRARY_OPTIONS += -DGETPEERNAME_BUG
+endif
+
+DIR_CPPFLAGS = -DHOSTS_ACCESS $(LIBRARY_OPTIONS) -D_REENTRANT
 
 SRCS = hosts_access.c options.c shell_cmd.c rfc931.c eval.c \
        hosts_ctl.c refuse.c percent_x.c clean_exit.c $(AUX_SRCS) \
@@ -153,5 +161,54 @@ export:: $(lib)
           $(RM) $(libname); \
           ln -s $(soname) $(libname); \
          )
+endif
+endif
+
+#############################################################################
+#   Make rules for SGI Irix 6.2                                             #
+#############################################################################
+
+ifdef IRIX
+ifeq ($(notdir $(CXX)),CC)
+
+DIR_CPPFLAGS += -KPIC
+
+ifdef IRIX_n32
+ADD_CPPFLAGS = -n32
+endif
+ifdef IRIX_64
+ADD_CPPFLAGS = -64
+endif
+
+libname = libomniORB$(major_version).so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+lclibname = libomniLC.so
+lcsoname  = $(lclibname).$(lc_minor_version)
+lclib = $(lcsoname).$(lc_micro_version)
+
+all:: $(lib)
+
+$(lib): $(OBJS) $(CXXOBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(LINK.cc) -KPIC -shared -Wl,-h,$(libname) -Wl,-set_version,$(soname) -Wl,-rpath,$(LIBDIR) \
+         -o $@ $(IMPORT_LIBRARY_FLAGS) $^ $(LDLIBS); \
+       )
+
+clean::
+	$(RM) $(lib) $(lclib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
 endif
 endif
