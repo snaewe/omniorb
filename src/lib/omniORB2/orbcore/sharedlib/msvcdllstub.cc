@@ -34,6 +34,7 @@
 //      a bug I don't care!
 //	
 
+#define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB2/CORBA.h>
 
 CORBA::TypeCode_member::~TypeCode_member() {}
