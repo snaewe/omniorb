@@ -698,6 +698,29 @@ _CORBA_Array_Var<T_Helper,T>::operator= (const _CORBA_Array_Var<T_Helper,T>& p)
   return *this;
 }
 
+//////////////////////////////////////////////////////////////////////
+/////////////    _CORBA_Bounded_Sequence_ObjRef //////////////////////
+//////////////////////////////////////////////////////////////////////
+
+template <class T,class ElemT, int max>
+inline _CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>&
+_CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>::operator= (const _CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>& s)
+{
+  _CORBA_Sequence_ObjRef<T,ElemT>::operator= (s);
+  return *this;
+}
+
+
+template <class T,class ElemT, int max>
+inline void
+_CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>::length(_CORBA_ULong len)
+{
+  if (len > max) {
+    _CORBA_bound_check_error();
+    // never reach here
+  }
+  _CORBA_Sequence_ObjRef<T,ElemT>::length(len);
+}
 
 #undef __INLINE_CTOR_DEFN__
 #undef __INLINE_DTOR_DEFN__
