@@ -3,7 +3,7 @@
 # mangler.py                Created on: 1999/11/16
 #			    Author    : David Scott (djs)
 #
-#    Copyright (C) 1999 AT&T Laboratories Cambridge
+#    Copyright (C) 1999-2000 AT&T Laboratories Cambridge
 #
 #  This file is part of omniidl.
 #
@@ -23,13 +23,14 @@
 #  02111-1307, USA.
 #
 # Description:
-#
-#   Mangle scoped names for proxy skeleton proxy classes
-#    - a python conversion of djr's o2be_name_mangle.cc
-#                             and   o2be_call_desc.cc        
+#   Produce mangled names for types and operation signatures
+#   
 
 # $Id$
 # $Log$
+# Revision 1.16.2.2  2000/09/14 16:03:59  djs
+# Remodularised C++ descriptor name generator
+#
 # Revision 1.16.2.1  2000/08/21 11:35:33  djs
 # Lots of tidying
 #
@@ -99,45 +100,16 @@
 # Code for call descriptors and proxies
 #
 
-# Functions which produce a signature string from a callable:
-#
-# produce_operation_signature       :                                 
-# produce_read_attribute_signature  : callable -> signature string    
-# produce_write_attribute_signature :                                 '
-
-# Every signature has a unique "call descriptor" object which serves
-# to encapsulate the calling and returning arguments. Note that two
-# interfaces with an identical method can share the call descriptors.
-
-# Every Interface::Method has a unique "local callback function" which
-# calls the local _impl_ method in the case of colocated calls. These
-# are never shared.
-
-# call_descriptor(signature) : call descriptor class name string
-# context_descriptor(signature) : context descriptor for signature
-# local_callback_fn(interface, signature) : callback function name
-
-
-import re, string
 
 from omniidl import idlast, idltype
-from omniidl_be.cxx import util, skutil, config, types, id
+from omniidl_be.cxx import types, id, skutil
 
-import mangler
-self = mangler
+import string
 
-# -------------------------
-# Standard prefixes
+#######################################################################
+## Produce cannonical names for types and operation signatures
 
-private_prefix = config.state['Private Prefix']
-CALL_DESC_PREFIX            = private_prefix + "_cd_"
-LCALL_DESC_PREFIX           = private_prefix + "_lcfn_"
-CTX_DESC_PREFIX             = private_prefix + "_ctx_"
-STD_PROXY_CALL_DESC_PREFIX  = "omniStdCallDesc::"
-
-# -------------------------
 # Separator constants
-
 SCOPE_SEPARATOR         =    "_m"
 ARRAY_SEPARATOR         =    "_a"
 SEQ_SEPARATOR           =    "_s"
@@ -148,11 +120,7 @@ OUT_SEPARATOR           =    "_o"
 INOUT_SEPARATOR         =    "_n"
 EXCEPTION_SEPARATOR     =    "_e"
 
-# -------------------------
-# Actual code goes here
-
-
-# Basic types are flattened into these strings within canonical name
+# Canonical names for basic types
 name_map = {
     idltype.tk_short:       "short",
     idltype.tk_long:        "long",
@@ -172,8 +140,7 @@ name_map = {
     idltype.tk_TypeCode:    "TypeCode",
     }
 
-# FIXME: Think of some way of better handling types. Merging
-# in information from declarators would be sensible.
+# Produce a cannonical type name
 def canonTypeName(type, decl = None, useScopedName = 0):
     assert isinstance(type, types.Type)
     
@@ -205,7 +172,8 @@ def canonTypeName(type, decl = None, useScopedName = 0):
     if type.sequence() and types.Type(type.type().seqType()).sequence():
         bound = type.type().bound()
         canon_name = canon_name + SEQ_SEPARATOR + str(bound) +\
-                     canonTypeName(types.Type(type.type().seqType()), None, useScopedName)
+                     canonTypeName(types.Type(type.type().seqType()), None,
+                                   useScopedName)
         
         return canon_name
         
@@ -251,7 +219,8 @@ def canonTypeName(type, decl = None, useScopedName = 0):
         # we use the scopedName() of the immediately preceeding
         # typedef which is an instance of idltype.Declared
         while type.typedef() and \
-              not(types.Type(type.type().decl().alias().aliasType()).sequence()):
+              not(types.Type(type.type().decl().alias().aliasType()).
+                  sequence()):
             type = types.Type(type.type().decl().alias().aliasType())
 
         if name_map.has_key(type.type().kind()):
@@ -270,12 +239,6 @@ def canonTypeName(type, decl = None, useScopedName = 0):
 
     canon_name = canon_name + CANNON_NAME_SEPARATOR + typeName(type)
     return canon_name
-
-# Given a type, produce a flat unique canonical name
-def produce_canonical_name_for_type(type):
-    assert isinstance(type, types.Type)
-
-    return canonTypeName(type, None)
 
 
 def produce_signature(returnType, parameters, raises):
@@ -316,152 +279,3 @@ def produce_signature(returnType, parameters, raises):
     return sig
             
 
-def produce_operation_signature(operation):
-    assert isinstance(operation, idlast.Operation)
-    return produce_signature(operation.returnType(),
-                             operation.parameters(),
-                             operation.raises())
-
-
-def produce_read_attribute_signature(attribute):
-    assert isinstance(attribute, idlast.Attribute)
-
-    return canonTypeName(types.Type(attribute.attrType()),
-                         useScopedName = 1)
-
-def produce_write_attribute_signature(attribute):
-    assert isinstance(attribute, idlast.Attribute)
-
-    return "void" + IN_SEPARATOR +\
-           canonTypeName(types.Type(attribute.attrType()),
-                         useScopedName = 1)
-        
-
-# ----------------
-# Call Descriptor utility functions
-
-def __init__():
-    self.base_initialised = 0
-    self.base_low = 0
-    self.base_high = 0
-    self.base_counter = 0
-
-    # Some call descriptors are already available in the runtime libraries
-
-    prefix = STD_PROXY_CALL_DESC_PREFIX
-    self.system_descriptors = \
-          { "void":                      prefix + "void_call",
-            "_cCORBA_mObject_i_cstring": prefix + "_cCORBA_mObject_i_cstring" }
-
-    # Proxy call descriptor table keyed by signature
-    self.call_descriptors = system_descriptors.copy()
-    # make sure we dont redefine these either
-
-    # Local callback function table keyed by interface and then signature
-    self.callbacks = {}
-
-def call_descriptor(signature):
-    if self.system_descriptors.has_key(signature):
-        return self.system_descriptors[signature]
-    
-    if not(self.call_descriptors.has_key(signature)):
-        self.call_descriptors[signature] = generate_unique_name("")
-
-    return CALL_DESC_PREFIX + self.call_descriptors[signature]
-
-def context_descriptor(signature):
-    if not(self.call_descriptors.has_key(signature)):
-        self.call_descriptors[signature] = generate_unique_name("")
-
-    return CTX_DESC_PREFIX + self.call_descriptors[signature]
-
-def local_callback_fn(interface, operation_name, signature):
-    assert isinstance(interface, idlast.Interface)
-
-    if not(self.callbacks.has_key(interface)):
-        self.callbacks[interface] = {}
-
-    iface_table = self.callbacks[interface]
-    key = signature + "/" + operation_name
-    if iface_table.has_key(key):
-        # we've got this exact function already
-        return iface_table[key]
- 
-    # generate a new function name
-    function = generate_unique_name(LCALL_DESC_PREFIX)
-    iface_table[key] = function
-    return function
-
-
-
-######################################################################
-# Hashing functions use a Knuth-style string -> int hash             #
-# (This is just used _once_ to get a pseudo-random string. Why?)
-def initialise_base(scopedName):
-    if self.base_initialised:
-        return
-    string_seed = id.Name(scopedName).guard()
-    
-    self.base_initialised = 1
-
-    # equivalent to >> only without sign extension
-    # (python uses 2's complement signed arithmetic)
-    def rshift(x, distance):
-        sign_bit = x & 0x80000000
-        # remove the sign bit to make it unsigned
-        x = x & (0xffffffff ^ sign_bit)
-        # perform shift (thinks number is unsigned, no extension)
-        x = x >> distance
-        # add sign bit back in
-        if sign_bit:
-            x = x | (1 << (32 - distance -1))
-        return x
-
-    def lshift(x, distance):
-        # same as non-sign extended case
-        return x << distance
-    
-    for char in string_seed:
-        tmp = rshift((self.base_high & 0xfe000000), 25)
-        self.base_high = (lshift(self.base_high, 7)) ^\
-                         (rshift((self.base_low & 0xfe000000), 25))
-        self.base_low  = lshift(self.base_low, 7) ^ tmp
-        self.base_low  = self.base_low ^ (ord(char))
-
-
-def generate_new_descriptor(signature):
-    descriptor = generate_unique_name("")
-    self.available_descriptors[signature] = descriptor
-    return descriptor
-
-def generate_unique_name(prefix):
-    # takes an int and returns the int in hex, without leading 0x and
-    # with 0 padding
-    def hex_word(x):
-        x = hex(x)[2:]
-        while len(x) < 8:
-            x = "0" + x
-        return x
-    
-    high    = hex_word(self.base_high)
-    low     = hex_word(self.base_low)
-    counter = hex_word(self.base_counter)
-
-    high    = list(high)
-    low     = list(low)
-    counter = list(counter)
-
-    high.reverse()
-    low.reverse()
-    counter.reverse()
-
-    unique_name = prefix + string.join(high + low + ["_"] + counter, "")
-
-    self.base_counter = self.base_counter + 1
-    
-    return unique_name
-    
-
-
-        
-    

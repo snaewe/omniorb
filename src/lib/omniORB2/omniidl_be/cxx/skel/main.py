@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.3  2000/09/14 16:03:57  djs
+# Remodularised C++ descriptor name generator
+#
 # Revision 1.30.2.2  2000/08/21 11:35:32  djs
 # Lots of tidying
 #
@@ -183,7 +186,7 @@ import string
 
 from omniidl import idlast, idltype, idlutil
 from omniidl_be.cxx import cxx, ast, output, id, config, skutil, types, iface, call
-from omniidl_be.cxx.skel import mangler, template
+from omniidl_be.cxx.skel import template
 
 import main
 self = main
@@ -240,16 +243,6 @@ def visitInterface(node):
     # [1] Since the names are guaranteed unique, the prefix makes the
     #     names used by two different modules disjoint too. Not sure why
     #     as they are not externally visible?
-    operations = filter(lambda x:isinstance(x, idlast.Operation),
-                        node.callables())
-    attributes = filter(lambda x:isinstance(x, idlast.Attribute),
-                        node.callables())
-    if operations != []:
-        scopedName = node.scopedName() + [operations[0].identifier()]
-        mangler.initialise_base(scopedName)
-    if attributes != []:
-        scopedName = node.scopedName() + [attributes[0].identifiers()[0]]
-        mangler.initialise_base(scopedName)
 
     I = iface.Interface(node)
     I_Helper = iface.instance("I_Helper")(I)
@@ -370,6 +363,7 @@ def visitMember(node):
 def visitStruct(node):
 
     outer_environment = id.lookup(node)
+    
     scopedName = id.Name(node.scopedName())
 
     size_calculation = "omni::align_to(_msgsize, omni::ALIGN_4) + 4"

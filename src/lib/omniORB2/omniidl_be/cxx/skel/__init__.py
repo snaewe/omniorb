@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.2  2000/09/14 16:03:57  djs
+# Remodularised C++ descriptor name generator
+#
 # Revision 1.8.2.1  2000/08/21 11:35:31  djs
 # Lots of tidying
 #
@@ -68,7 +71,6 @@
 #
 
 from omniidl_be.cxx import config, output, ast, id
-from omniidl_be.cxx.skel import mangler
 
 def monolithic(stream, tree):
     """Creates one large skeleton with all code inside"""
@@ -120,8 +122,6 @@ def run(tree):
                     config.state['SK Suffix']
     stream = output.Stream(output.createFile(skel_filename), 2)
 
-    # clear all state
-    mangler.__init__()
 
     if config.state['Fragment']:
         fragment(stream, tree)
