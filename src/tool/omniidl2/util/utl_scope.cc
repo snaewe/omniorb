@@ -814,7 +814,8 @@ UTL_Scope::look_in_inherited(UTL_ScopedName *e, idl_bool treat_as_ref)
    * OK, loop through inherited interfaces. Stop when you find it
    */
   for (nis = i->n_inherits(), is = i->inherits(); nis > 0; nis--, is++) {
-    d = (*is)->lookup_by_name(e, treat_as_ref,1);
+    d = (*is)->lookup_by_name_local(e->head(),treat_as_ref);
+    if (d && e->tail()) d = iter_lookup_by_name_local(d,e,treat_as_ref);
     if (d != NULL)
       return d;
   }
