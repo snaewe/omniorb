@@ -1,3 +1,11 @@
+Mon Jan 21 11:51:04 GMT 2002 dpg1
+=================================
+
+- Add TRANSIENT minor code for Python exception.
+
+include/omniORB4/minorCode.h
+
+
 Wed Jan 16 12:33:52 GMT 2002 dpg1
 =================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2002/01/21 11:51:52  dpg1
+  Add TRANSIENT minor code for Python exception.
+
   Revision 1.1.4.11  2001/10/29 17:42:35  dpg1
   Support forward-declared structs/unions, ORB::create_recursive_tc().
 
@@ -183,6 +186,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_103 OMNIORBMinorCode(103)
 #define OMNIORBMinorCode_104 OMNIORBMinorCode(104)
 #define OMNIORBMinorCode_105 OMNIORBMinorCode(105)
+#define OMNIORBMinorCode_106 OMNIORBMinorCode(106)
 
 #define COMMA ,
 #define DeclareValue(name,value) name = value
@@ -414,7 +418,8 @@ code( TRANSIENT_CallTimedout          	  , OMNIORBMinorCode_8 ) sep \
 code( TRANSIENT_BiDirConnIsGone       	  , OMNIORBMinorCode_14 ) sep \
 code( TRANSIENT_BiDirConnUsedWithNoPOA	  , OMNIORBMinorCode_16 ) sep \
 code( TRANSIENT_ConnectionClosed      	  , OMNIORBMinorCode_17 ) sep \
-code( TRANSIENT_ObjDeactivatedWhileHolding, OMNIORBMinorCode_62 )
+code( TRANSIENT_ObjDeactivatedWhileHolding, OMNIORBMinorCode_62 ) sep \
+code( TRANSIENT_PythonExceptionInORB      , OMNIORBMinorCode_106 )
 
 enum TRANSIENT_minor {
   DECLARE_TRANSIENT_minors(DeclareValue,COMMA)  
