@@ -28,9 +28,12 @@
 
 /*
  $Log$
- Revision 1.5  1997/05/06 16:11:10  sll
- Public release.
+ Revision 1.6  1997/08/21 22:21:56  sll
+ New templates to support sequence of array.
 
+ * Revision 1.5  1997/05/06  16:11:10  sll
+ * Public release.
+ *
  */
 
 #ifndef __SEQTEMPLATES_H__
@@ -168,7 +171,6 @@ public:
   inline void operator<<= (NetBufferedStream &s);
   inline void operator>>= (MemBufferedStream &s) const;
   inline void operator<<= (MemBufferedStream &s);
-
 private:
   _CORBA_ULong    pd_max;
   _CORBA_ULong    pd_len;
@@ -283,7 +285,263 @@ public:
   inline void operator<<= (MemBufferedStream &s);
 };
 
+////////////////////////////////////////////////////////////////////////////
+
+template <class T,class Telm,int dimension>
+class _CORBA_Sequence_Array {
+public:
+  inline _CORBA_Sequence_Array() : pd_max(0), pd_len(0), 
+                                   pd_rel(1), pd_buf(0) { }
+  inline _CORBA_Sequence_Array(_CORBA_ULong max) :
+             pd_max(max), pd_len(0), pd_rel(1)
+  {
+    if (!(pd_buf = allocbuf(max))) {
+      _CORBA_new_operator_return_null();
+      // never reach here
+    }
+    return;
+  }
+
+  inline _CORBA_Sequence_Array(_CORBA_ULong max,
+			       _CORBA_ULong length,
+			       T           *value,
+			       _CORBA_Boolean release = 0) 
+      : pd_max(max), 
+	pd_len(length), 
+	pd_rel(release),
+	pd_buf(value)
+  {
+    if (length > max) {
+      _CORBA_bound_check_error();
+      // never reach here
+    }
+    return;
+  }
+
+  inline _CORBA_Sequence_Array(const _CORBA_Sequence_Array<T,Telm,dimension>& s)
+              : pd_max(s.pd_max), 
+		pd_len(s.pd_len),
+		pd_rel(1)
+  {
+    if (!(pd_buf = allocbuf(s.pd_len))) {
+      _CORBA_new_operator_return_null();
+      // never reach here
+    }
+    for (_CORBA_ULong i=0; i < s.pd_len; i++) {
+      for (_CORBA_ULong j=0; j < dimension; j++) {
+	*((Telm*)(pd_buf[i]) + j) = *((Telm*)(s.pd_buf[i]) + j);
+      }
+    }
+  }
+
+  inline ~_CORBA_Sequence_Array() {
+    if (pd_rel && pd_buf) freebuf(pd_buf);
+    pd_buf = 0;
+    return;
+  }
+  inline _CORBA_Sequence_Array<T,Telm,dimension> &operator= (const _CORBA_Sequence_Array<T,Telm,dimension> &s)
+  {
+    if (pd_max < s.pd_max)
+      {
+	T *newbuf = allocbuf(s.pd_max);
+	if (!newbuf) {
+	  _CORBA_new_operator_return_null();
+	  // never reach here
+	}
+	pd_max = s.pd_max;
+	if (pd_rel && pd_buf) {
+	  freebuf(pd_buf);
+	}
+	else {
+	  pd_rel = 1;
+	}
+	pd_buf = newbuf;
+      }
+    pd_len = s.pd_len;
+    for (unsigned long i=0; i < pd_len; i++) {
+      for (_CORBA_ULong j=0; j < dimension; j++) {
+	*((Telm*)(pd_buf[i]) + j) = *((Telm*)(s.pd_buf[i]) + j);
+      }
+    }
+    return *this;
+  }
+
+  inline _CORBA_ULong maximum() const { return pd_max; }
+  inline _CORBA_ULong length() const { return pd_len; }
+  inline void length(_CORBA_ULong length)
+  {
+    if (length > pd_max)
+      {
+	T *newbuf = allocbuf(length);
+	if (!newbuf) {
+	  _CORBA_new_operator_return_null();
+	  // never reach here
+	}
+	for (unsigned long i=0; i < pd_len; i++) {
+	  for (_CORBA_ULong j=0; j < dimension; j++) {
+	    *((Telm*)(newbuf[i]) + j) = *((Telm*)(pd_buf[i]) + j);
+	  }
+	}
+	pd_max = length;
+	if (pd_rel && pd_buf) {
+	  freebuf(pd_buf);
+	}
+	else {
+	  pd_rel = 1;
+	}
+	pd_buf = newbuf;
+      }
+    pd_len = length;
+    return;
+  }
+  inline T &operator[] (_CORBA_ULong index)
+  {
+    if (index >= length()) {
+      _CORBA_bound_check_error();
+    }
+    return pd_buf[index];
+  }
+  inline const T &operator[] (_CORBA_ULong index) const
+  {
+    if (index >= length()) {
+      _CORBA_bound_check_error();
+    }
+    return pd_buf[index];
+  }
+  static inline T* allocbuf(_CORBA_ULong nelems)
+  {
+    return new T[nelems];
+  }
+  static inline void freebuf(T * b)
+  {
+    if (b) delete [] b; 
+    return;
+  }
+  // omniORB2 extensions
+  inline T *NP_data() const { return pd_buf; }
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+private:
+  _CORBA_ULong    pd_max;
+  _CORBA_ULong    pd_len;
+  _CORBA_Boolean  pd_rel;
+  T              *pd_buf;
+};
+
+template <class T,class Telm,int dimension>
+class _CORBA_Unbounded_Sequence_Array : public _CORBA_Sequence_Array<T,Telm,dimension> {
+public:
+  inline _CORBA_Unbounded_Sequence_Array() {}
+  inline _CORBA_Unbounded_Sequence_Array(_CORBA_ULong max) : _CORBA_Sequence_Array<T,Telm,dimension>(max) {}
+  inline _CORBA_Unbounded_Sequence_Array(_CORBA_ULong max,
+					 _CORBA_ULong length,
+					 T           *value,
+					 _CORBA_Boolean release = 0)
+     : _CORBA_Sequence_Array<T,Telm,dimension>(max,length,value,release) {}
+  inline _CORBA_Unbounded_Sequence_Array(const _CORBA_Unbounded_Sequence_Array<T,Telm,dimension>& s) 
+     : _CORBA_Sequence_Array<T,Telm,dimension>(s) {}
+  inline ~_CORBA_Unbounded_Sequence_Array() {}
+  inline _CORBA_Unbounded_Sequence_Array<T,Telm,dimension> &operator= (const _CORBA_Unbounded_Sequence_Array<T,Telm,dimension> &s) {
+    _CORBA_Sequence_Array<T,Telm,dimension>::operator= (s);
+    return *this;
+  }
+  inline size_t NP_alignedSize(size_t initialoffset) const;
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+};
+
+template <class T,class Telm,int dimension,int elmSize,int elmAlignment>
+class _CORBA_Unbounded_Sequence_Array_w_FixSizeElement 
+   : public _CORBA_Sequence_Array<T,Telm,dimension> 
+{
+public:
+  inline _CORBA_Unbounded_Sequence_Array_w_FixSizeElement() {}
+  inline _CORBA_Unbounded_Sequence_Array_w_FixSizeElement(_CORBA_ULong max)
+    : _CORBA_Sequence_Array<T,Telm,dimension>(max) {}
+  inline _CORBA_Unbounded_Sequence_Array_w_FixSizeElement(_CORBA_ULong max,
+							  _CORBA_ULong length,
+							  T           *value,
+							  _CORBA_Boolean release = 0)
+    : _CORBA_Sequence_Array<T,Telm,dimension>(max,length,value,release) {}
+  inline _CORBA_Unbounded_Sequence_Array_w_FixSizeElement (const 
+       _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,elmSize,elmAlignment>& s)
+    : _CORBA_Sequence_Array<T,Telm,dimension>(s) {}
+  inline ~_CORBA_Unbounded_Sequence_Array_w_FixSizeElement() {}
+  inline _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,elmSize,elmAlignment> &
+      operator= 
+        (const 
+	  _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,elmSize,elmAlignment> &
+	 s) 
+  {
+    _CORBA_Sequence_Array<T,Telm,dimension>::operator= (s);
+    return *this;
+  }
+  inline size_t NP_alignedSize(size_t initialoffset) const;
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+};
+
+template <class T,class Telm,int dimension,int max>
+class _CORBA_Bounded_Sequence_Array : public _CORBA_Sequence_Array<T,Telm,dimension> {
+public:
+  inline _CORBA_Bounded_Sequence_Array() : _CORBA_Sequence_Array<T,Telm,dimension>(max) {}
+  inline _CORBA_Bounded_Sequence_Array(_CORBA_ULong length,
+				       T           *value,
+				       _CORBA_Boolean release = 0)
+            : _CORBA_Sequence_Array<T,Telm,dimension>(max,length,value,release) {}
+  inline _CORBA_Bounded_Sequence_Array(const _CORBA_Bounded_Sequence_Array<T,Telm,dimension,max>& s)
+            : _CORBA_Sequence_Array<T,Telm,dimension>(s) {}
+  inline ~_CORBA_Bounded_Sequence_Array() {}
+  inline _CORBA_Bounded_Sequence_Array<T,Telm,dimension,max> &operator= (const _CORBA_Bounded_Sequence_Array<T,Telm,dimension,max> &s);
+  inline _CORBA_ULong length() const { return _CORBA_Sequence_Array<T,Telm,dimension>::length(); }
+  inline void length(_CORBA_ULong len);
+  inline size_t NP_alignedSize(size_t initialoffset) const;
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+};
+
+template <class T,class Telm,int dimension,int max,int elmSize, int elmAlignment>
+class _CORBA_Bounded_Sequence_Array_w_FixSizeElement 
+  : public _CORBA_Sequence_Array<T,Telm,dimension> 
+{
+public:
+  inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement() {}
+  inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement(_CORBA_ULong length,
+							T           *value,
+							_CORBA_Boolean release = 0)
+    : _CORBA_Sequence_Array<T,Telm,dimension>(max,length,value,release) {}
+  inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement(const 
+      _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>& s) 
+    : _CORBA_Sequence_Array<T,Telm,dimension>(s) {}
+  inline ~_CORBA_Bounded_Sequence_Array_w_FixSizeElement() {}
+  inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment> &
+      operator= 
+        (const 
+          _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,Telm,dimension,max,elmSize,elmAlignment>&
+            s);
+  inline _CORBA_ULong length() const;
+  inline void length(_CORBA_ULong len);
+  // omniORB2 extensions
+  inline size_t NP_alignedSize(size_t initialoffset) const;
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+};
+
 typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Octet,1,1> _CORBA_Unbounded_Sequence_Octet;
 
 #endif // __SEQTEMPLATES_H__
+
+
+
+
 
