@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22  1998/10/08 13:07:24  sll
+  OpenVMS needs string.h (POSIX or System V) instead of strings.h (BSD).
+
   Revision 1.21  1998/08/21 19:27:08  sll
   New omniObject member noExistentCheck.
 
@@ -81,7 +84,7 @@
 #include <assert.h>
 #include <stddef.h>
 
-#if !defined(__atmos__) && !defined(_WIN32)
+#if !defined(__atmos__) && !defined(_WIN32) && !defined(__VMS)
 #include <strings.h>
 #else
 #include <string.h>
