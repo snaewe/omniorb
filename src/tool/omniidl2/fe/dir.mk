@@ -26,20 +26,18 @@ $(lib): $(OBJS)
 	@$(StaticLinkLibrary)
 
 #
-# We don't seem to be able to regenerate y.tab.cc y.tab.hh and lex.yy.cc
-# (at least on OSF)
-#
 # Create the parser and lexer
 #
-#y.tab.hh y.tab.cc: idl.yy
+# If ever we need to regenerate lex.yy.cc and y.tab.cc, use bison and flex
+#
+#lex.yy.cc: idl.ll
 #	@-$(RM) $@
-#	$(YACC) -d $<
+#	flex -B $<
+#	sed -e 's/^#include <unistd.h>//' lex.yy.c > $@
+#
+#y.tab.cc: idl.yy
+#	@-$(RM) $@
+#	bison -d -y $<
 #	mv -f y.tab.c y.tab.cc
-#	mv -f y.tab.h y.tab.hh
-#
-#lex.yy.cc: idl.ll y.tab.hh
-#	$(LEX) $(LEXFLAGS) $<
-#	mv -f lex.yy.c lex.yy.cc
-#
 #clean::
 #	$(RM) y.tab.cc y.tab.hh y.tab.c y.tab.h lex.yy.c lex.yy.cc
