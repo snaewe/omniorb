@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2002/10/15 23:25:45  dgrisby
+  DOH!
+
   Revision 1.1.2.9  2002/10/15 23:23:29  dgrisby
   Forgot case of compilers with no bool.
 
@@ -295,7 +298,7 @@ _CORBA_Sequence_Boolean::operator>>= (cdrStream& s) const
   _CORBA_ULong l = Base_T_seq::length();
   l >>= s;
   if (l==0) return;
-# if (SIZEOF_BOOL == 1) || !defined(HAVE_BOOL)
+# if !defined(HAVE_BOOL) || (SIZEOF_BOOL == 1)
   s.put_octet_array((_CORBA_Octet*)pd_buf,l);
 # else
   for ( _CORBA_ULong i = 0; i < l; i++ )
@@ -316,7 +319,7 @@ _CORBA_Sequence_Boolean::operator<<= (cdrStream& s)
   }
   length(l);
   if (l==0) return;
-# if (SIZEOF_BOOL == 1) || !defined(HAVE_BOOL)
+# if !defined(HAVE_BOOL) || (SIZEOF_BOOL == 1)
   s.get_octet_array((_CORBA_Octet*)pd_buf,l);
 # else
   for ( _CORBA_ULong i = 0; i < l; i++ )
