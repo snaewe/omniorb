@@ -74,6 +74,9 @@ specifies non-default suffix for header file
 .BI \-s suffix
 specifies non-default suffix for server stub file
 .TP
+.BI \-S
+do not suppress sequence\<string\> stub code
+.TP
 .BI \-u
 prints the usage message and exits
 .TP
