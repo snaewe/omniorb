@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.8  1999/11/11 10:20:30  dpg1
+// Bug in marking use of fully-scoped names.
+//
 // Revision 1.7  1999/11/04 17:16:55  dpg1
 // Changes for NT.
 //
@@ -664,27 +667,29 @@ void
 Scope::
 addUse(const ScopedName* sn, const char* file, int line)
 {
-  const char* id = sn->scopeList()->identifier();
-  if (id[0] == '_') ++id;
+  if (!sn->absolute()) {
+    const char* id = sn->scopeList()->identifier();
+    if (id[0] == '_') ++id;
 
-  const Entry* clash = iFind(id);
+    const Entry* clash = iFind(id);
 
-  if (clash) {
-    if (strcmp(id, clash->identifier())) {
-      char* ssn = sn->toString();
-      IdlError(file, line, "Use of `%s' clashes with identifier `%s'",
-	       ssn, clash->identifier());
-      IdlErrorCont(clash->file(), clash->line(), "(`%s' declared here)",
-		   clash->identifier());
-      delete [] ssn;
+    if (clash) {
+      if (strcmp(id, clash->identifier())) {
+	char* ssn = sn->toString();
+	IdlError(file, line, "Use of `%s' clashes with identifier `%s'",
+		 ssn, clash->identifier());
+	IdlErrorCont(clash->file(), clash->line(), "(`%s' declared here)",
+		     clash->identifier());
+	delete [] ssn;
+      }
+      // Else the identifier is being used in the same scope that it was
+      // declared, so don't mark it as used.
     }
-    // Else the identifier is being used in the same scope that it was
-    // declared, so don't mark it as used.
-  }
-  else {
-    Entry* ue = new Entry(this, Entry::E_USE, id, 0, 0, 0, 0, file, line);
-    appendEntry(ue);
-    if (parent_ && parent_->nestedUse()) parent_->addUse(sn, file, line);
+    else {
+      Entry* ue = new Entry(this, Entry::E_USE, id, 0, 0, 0, 0, file, line);
+      appendEntry(ue);
+      if (parent_ && parent_->nestedUse()) parent_->addUse(sn, file, line);
+    }
   }
 }
 
