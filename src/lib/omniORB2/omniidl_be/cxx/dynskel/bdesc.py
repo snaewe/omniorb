@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/12/16 16:09:30  djs
+# TypeCode fixes
+# Enum scope special case fixed
+#
 # Revision 1.2  1999/12/14 17:38:19  djs
 # Fixed anonymous sequences of sequences bug
 #
@@ -129,6 +133,8 @@ _desc.p_array.opq_array = &_0RL_tmp;"""
             element_name = deref_alias_tyname # String_member
     elif tyutil.isSequence(aliasType):
         element_name = tyutil.sequenceTemplate(aliasType, env)
+    elif tyutil.isTypeCode(aliasType):
+        element_name = "CORBA::TypeCode_member"
 
     element_dims = []
     while index >= 0:
@@ -180,7 +186,9 @@ _0RL_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _inde
     argtype = deref_alias_tyname
     if tyutil.isSequence(deref_aliasType):
         argtype = tyutil.sequenceTemplate(deref_aliasType, env)
-
+    elif tyutil.isTypeCode(deref_aliasType):
+        argtype = "CORBA::TypeCode_member"
+        
     desc.out("""\
 #ifndef __0RL_tcParser_buildDesc@decl_cname@__
 #define __0RL_tcParser_buildDesc@decl_cname@__
@@ -219,6 +227,8 @@ def docast(type, string, dont_do_tail = 0):
         cast_to = tyutil.objRefTemplate(deref_type, "Member", env)
     elif tyutil.isSequence(deref_type):
         cast_to = tyutil.sequenceTemplate(deref_type, env)
+    elif tyutil.isTypeCode(deref_type):
+        cast_to = "CORBA::TypeCode_member"
     cast_to = cast_to + "(*)" + tail_dims_string
     return "(const " + cast_to + ")(" + cast_to + ")" +\
            "(" + string + ")"
@@ -320,7 +330,9 @@ def member(node, modify_for_exception = 0):
     fqname = env.nameToString(scopedName)
         
     cases = util.StringStream()
+    # note the enum special case here
     num_members = 0
+    index = 0
     desc = util.StringStream()
     for member in node.members():
         memberType = member.memberType()
@@ -330,6 +342,10 @@ def member(node, modify_for_exception = 0):
                                                 fully_scope = 1)
         member_dims = tyutil.typeDims(memberType)
         is_array = member_dims != []
+
+        # enums have funny scoping rules
+        if tyutil.isEnum(memberType) and member.constrType():
+            num_members = num_members + len(memberType.decl().enumerators())
         
         if tyutil.isObjRef(deref_memberType):
             m_scopedName = memberType.decl().scopedName()
@@ -371,9 +387,11 @@ def member(node, modify_for_exception = 0):
             cases.out("""\
 case @n@:
   _0RL_buildDesc@cname@(_newdesc, @thing@);
-  return 1;""", n = str(num_members), cname = decl_cname,
+  return 1;""", n = str(index), cname = decl_cname,
                       thing = thing)
             num_members = num_members + 1
+            index = index + 1
+            
 
     # IMPROVEME (FIXME)
     if modify_for_exception:
