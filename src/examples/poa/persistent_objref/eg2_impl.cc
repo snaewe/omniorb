@@ -15,7 +15,12 @@
 //        See <top>/src/appl/omniNames/omniNames.cc for an example.
 //
 
-#include <iostream.h>
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 #include <stdlib.h>
 #include <echo.hh>
 

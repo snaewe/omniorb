@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2004/10/17 20:14:33  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.1.2.15  2003/12/03 14:40:23  dgrisby
   Fix timeout bug with ssl transport; fix ssl configure issues.
 
@@ -239,7 +242,7 @@ sslAddress::Connect(unsigned long deadline_secs,
   if (pd_address.port == 0) return 0;
 
   LibcWrapper::AddrInfo_var ai;
-  ai = LibcWrapper::getaddrinfo(pd_address.host, pd_address.port);
+  ai = LibcWrapper::getAddrInfo(pd_address.host, pd_address.port);
 
   if ((LibcWrapper::AddrInfo*)ai == 0)
     return 0;

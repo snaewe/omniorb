@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.22  2004/10/17 20:14:28  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.1.2.21  2003/05/09 13:31:02  dgrisby
   Restore LongLong ifdefs. Where did they go?
 
@@ -136,6 +139,30 @@
 #else
 #error "Swap64 has already been defined"
 #endif
+#endif
+
+// Technically, we have to declare friend functions outside of the
+// class to put them into the global scope (this is pretty esoteric:
+// friend functions are not in class scope but if they are first
+// declared inside the class they aren't in global scope either...or
+// something like that...)  It is too bad we have to have operators in
+// global scope but some compilers don't handle Koenig lookup
+// correctly.
+
+class cdrStream;
+inline void operator>>= (_CORBA_Short      a, cdrStream& s);
+inline void operator<<= (_CORBA_Short&     a, cdrStream& s);
+inline void operator>>= (_CORBA_UShort     a, cdrStream& s);
+inline void operator<<= (_CORBA_UShort&    a, cdrStream& s);
+inline void operator>>= (_CORBA_Long       a, cdrStream& s);
+inline void operator<<= (_CORBA_Long&      a, cdrStream& s);
+inline void operator>>= (_CORBA_ULong      a, cdrStream& s);
+inline void operator<<= (_CORBA_ULong&     a, cdrStream& s);
+#ifdef HAS_LongLong
+inline void operator>>= (_CORBA_LongLong   a, cdrStream& s);
+inline void operator<<= (_CORBA_LongLong&  a, cdrStream& s);
+inline void operator>>= (_CORBA_ULongLong  a, cdrStream& s);
+inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s);
 #endif
 
 class cdrStreamAdapter;
@@ -343,57 +370,48 @@ public:
 
 #ifndef OMNI_NO_INLINE_FRIENDS
   friend inline void operator>>= (_CORBA_Float a, cdrStream& s) {
+    _CORBA_ULong l = OMNI_REINTERPRET_CAST(_CORBA_ULong, a);
     if (s.pd_marshal_byte_swap) {
-      union {
- 	_CORBA_Float f;
- 	_CORBA_ULong l;
-      } u;
-      u.f = a;
-      u.l = Swap32(u.l);
-      a = u.f;
+      l = Swap32(l);
     }
-    CdrMarshal(s,_CORBA_Float,omni::ALIGN_4,a);
+    CdrMarshal(s,_CORBA_Long,omni::ALIGN_4,l);
   }
 
   friend inline void operator<<= (_CORBA_Float& a, cdrStream& s) {
-    CdrUnMarshal(s,_CORBA_Float,omni::ALIGN_4,a);
+    _CORBA_ULong l;
+    CdrUnMarshal(s,_CORBA_ULong,omni::ALIGN_4,l);
     if (s.pd_unmarshal_byte_swap) {
-      union {
-	_CORBA_Float f;
-	_CORBA_ULong l;
-      } u;
-      u.f = a;
-      u.l = Swap32(u.l);
-      a = u.f;
+      l = Swap32(l);
     }
+    a = OMNI_REINTERPRET_CAST(_CORBA_Float, l);
   }
 
   friend inline void operator>>= (_CORBA_Double a, cdrStream& s) {
+    struct LongArray2 {
+      _CORBA_ULong l[2];
+    } l;
+    l = OMNI_REINTERPRET_CAST(LongArray2, a);
     if (s.pd_marshal_byte_swap) {
-      union {
-	_CORBA_Double d;
-	_CORBA_ULong l[2];
-      } u, v;
-      u.d = a;
-      v.l[0] = Swap32(u.l[1]);
-      v.l[1] = Swap32(u.l[0]);
-      a = v.d;
+      LongArray2 m;
+      m.l[0] = Swap32(l.l[1]);
+      m.l[1] = Swap32(l.l[0]);
+      l = m;
     }
-    CdrMarshal(s,_CORBA_Double,omni::ALIGN_8,a);
+    CdrMarshal(s,LongArray2,omni::ALIGN_8,l);
   }
 
   friend inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
-    CdrUnMarshal(s,_CORBA_Double,omni::ALIGN_8,a);
+    struct LongArray2 {
+      _CORBA_ULong l[2];
+    } l;
+    CdrUnMarshal(s,LongArray2,omni::ALIGN_8,l);
     if (s.pd_unmarshal_byte_swap) {
-      union {
-	_CORBA_Double d;
-	_CORBA_ULong l[2];
-      } u, v;
-      u.d = a;
-      v.l[0] = Swap32(u.l[1]);
-      v.l[1] = Swap32(u.l[0]);
-      a = v.d;
+      LongArray2 m;
+      m.l[0] = Swap32(l.l[1]);
+      m.l[1] = Swap32(l.l[0]);
+      l = m;
     }
+    a = OMNI_REINTERPRET_CAST(_CORBA_Double, l);
   }
 #else
   friend inline void operator>>= (_CORBA_Float      a, cdrStream& s);
@@ -404,39 +422,40 @@ public:
 #endif
 
 #ifdef HAS_LongDouble
+
 #if SIZEOF_LONG_DOUBLE == 16
 
 #ifndef OMNI_NO_INLINE_FRIENDS
   friend inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
+    struct LongArray4 {
+      _CORBA_ULong l[4];
+    } l;
+    l = OMNI_REINTERPRET_CAST(LongArray4, a);
     if (s.pd_marshal_byte_swap) {
-      union {
-	_CORBA_LongDouble d;
-	_CORBA_ULong l[4];
-      } u, v;
-      u.d = a;
-      v.l[0] = Swap32(u.l[3]);
-      v.l[1] = Swap32(u.l[2]);
-      v.l[2] = Swap32(u.l[1]);
-      v.l[3] = Swap32(u.l[0]);
-      a = v.d;
+      LongArray4 m;
+      m.l[0] = Swap32(l.l[3]);
+      m.l[1] = Swap32(l.l[2]);
+      m.l[2] = Swap32(l.l[1]);
+      m.l[3] = Swap32(l.l[0]);
+      l = m;
     }
-    CdrMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+    CdrMarshal(s,LongArray4,omni::ALIGN_8,l);
   }
 
   friend inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
-    CdrUnMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+    struct LongArray4 {
+      _CORBA_ULong l[4];
+    } l;
+    CdrUnMarshal(s,LongArray4,omni::ALIGN_8,l);
     if (s.pd_unmarshal_byte_swap) {
-      union {
-	_CORBA_LongDouble d;
-	_CORBA_ULong l[4];
-      } u, v;
-      u.d = a;
-      v.l[0] = Swap32(u.l[3]);
-      v.l[1] = Swap32(u.l[2]);
-      v.l[2] = Swap32(u.l[1]);
-      v.l[3] = Swap32(u.l[0]);
-      a = v.d;
+      LongArray4 m;
+      m.l[0] = Swap32(l.l[3]);
+      m.l[1] = Swap32(l.l[2]);
+      m.l[2] = Swap32(l.l[1]);
+      m.l[3] = Swap32(l.l[0]);
+      l = m;
     }
+    a = OMNI_REINTERPRET_CAST(_CORBA_LongDouble, l);
   }
 #else
   friend inline void operator>>= (_CORBA_LongDouble  a, cdrStream& s);
@@ -721,16 +740,12 @@ public:
   {
     get_octet_array((_CORBA_Char*) a, length * 4, omni::ALIGN_4);
 
-    if( unmarshal_byte_swap() )
+    if( unmarshal_byte_swap() ) {
+      _CORBA_ULong* p=(_CORBA_ULong*)a;
       for( int i = 0; i < length; i++ ) {
-	union {
-	  _CORBA_Float f;
-	  _CORBA_ULong l;
-	} u;
-	u.f = a[i];
-	u.l = Swap32(u.l);
-	a[i] = u.f;
+	p[i] = Swap32(p[i]);
       }
+    }
   }
 
 
@@ -739,17 +754,18 @@ public:
   {
     get_octet_array((_CORBA_Char*) a, length * 8, omni::ALIGN_8);
 
-    if( unmarshal_byte_swap() )
+    if( unmarshal_byte_swap() ) {
+      struct LongArray2 {
+        _CORBA_ULong l[2];
+      };
+      LongArray2* p=(LongArray2*)a;
       for( int i = 0; i < length; i++ ) {
-	union {
-	  _CORBA_Double d;
-	  _CORBA_ULong l[2];
-	} u, v;
-	u.d = a[i];
-	v.l[0] = Swap32(u.l[1]);
-	v.l[1] = Swap32(u.l[0]);
-	a[i] = v.d;
+        LongArray2 l;
+        l.l[0] = Swap32(p[i].l[1]);
+        l.l[1] = Swap32(p[i].l[0]);
+        p[i] = l;
       }
+    }
   }
 #endif
 
@@ -891,57 +907,48 @@ inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s) {
 #if !defined(NO_FLOAT)
 
 inline void operator>>= (_CORBA_Float a, cdrStream& s) {
+  _CORBA_ULong l = OMNI_REINTERPRET_CAST(_CORBA_ULong, a);
   if (s.pd_marshal_byte_swap) {
-    union {
-      _CORBA_Float f;
-      _CORBA_ULong l;
-    } u;
-    u.f = a;
-    u.l = Swap32(u.l);
-    a = u.f;
+    l = Swap32(l);
   }
-  CdrMarshal(s,_CORBA_Float,omni::ALIGN_4,a);
+  CdrMarshal(s,_CORBA_Long,omni::ALIGN_4,l);
 }
 
 inline void operator<<= (_CORBA_Float& a, cdrStream& s) {
-  CdrUnMarshal(s,_CORBA_Float,omni::ALIGN_4,a);
+  _CORBA_ULong l;
+  CdrUnMarshal(s,_CORBA_ULong,omni::ALIGN_4,l);
   if (s.pd_unmarshal_byte_swap) {
-    union {
-      _CORBA_Float f;
-      _CORBA_ULong l;
-    } u;
-    u.f = a;
-    u.l = Swap32(u.l);
-    a = u.f;
+    l = Swap32(l);
   }
+  a = OMNI_REINTERPRET_CAST(_CORBA_Float, l);
 }
 
 inline void operator>>= (_CORBA_Double a, cdrStream& s) {
+  struct LongArray2 {
+    _CORBA_ULong l[2];
+  } l;
+  l = OMNI_REINTERPRET_CAST(LongArray2, a);
   if (s.pd_marshal_byte_swap) {
-    union {
-      _CORBA_Double d;
-      _CORBA_ULong l[2];
-    } u, v;
-    u.d = a;
-    v.l[0] = Swap32(u.l[1]);
-    v.l[1] = Swap32(u.l[0]);
-    a = v.d;
+    LongArray2 m;
+    m.l[0] = Swap32(l.l[1]);
+    m.l[1] = Swap32(l.l[0]);
+    l = m;
   }
-  CdrMarshal(s,_CORBA_Double,omni::ALIGN_8,a);
+  CdrMarshal(s,LongArray2,omni::ALIGN_8,l);
 }
 
 inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
-  CdrUnMarshal(s,_CORBA_Double,omni::ALIGN_8,a);
+  struct LongArray2 {
+    _CORBA_ULong l[2];
+  } l;
+  CdrUnMarshal(s,LongArray2,omni::ALIGN_8,l);
   if (s.pd_unmarshal_byte_swap) {
-    union {
-      _CORBA_Double d;
-      _CORBA_ULong l[2];
-    } u, v;
-    u.d = a;
-    v.l[0] = Swap32(u.l[1]);
-    v.l[1] = Swap32(u.l[0]);
-    a = v.d;
+    LongArray2 m;
+    m.l[0] = Swap32(l.l[1]);
+    m.l[1] = Swap32(l.l[0]);
+    l = m;
   }
+  a = OMNI_REINTERPRET_CAST(_CORBA_Double, l);
 }
 
 #endif
@@ -949,35 +956,35 @@ inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
 #ifdef HAS_LongDouble
 #if SIZEOF_LONG_DOUBLE == 16
 inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
+  struct LongArray4 {
+    _CORBA_ULong l[4];
+  } l;
+  l = OMNI_REINTERPRET_CAST(LongArray4, a);
   if (s.pd_marshal_byte_swap) {
-    union {
-      _CORBA_LongDouble d;
-      _CORBA_ULong l[4];
-    } u, v;
-    u.d = a;
-    v.l[0] = Swap32(u.l[3]);
-    v.l[1] = Swap32(u.l[2]);
-    v.l[2] = Swap32(u.l[1]);
-    v.l[3] = Swap32(u.l[0]);
-    a = v.d;
+    LongArray4 m;
+    m.l[0] = Swap32(l.l[3]);
+    m.l[1] = Swap32(l.l[2]);
+    m.l[2] = Swap32(l.l[1]);
+    m.l[3] = Swap32(l.l[0]);
+    l = m;
   }
-  CdrMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+  CdrMarshal(s,LongArray4,omni::ALIGN_8,l);
 }
 
 inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
-  CdrUnMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+  struct LongArray4 {
+    _CORBA_ULong l[4];
+  } l;
+  CdrUnMarshal(s,LongArray4,omni::ALIGN_8,l);
   if (s.pd_unmarshal_byte_swap) {
-    union {
-      _CORBA_LongDouble d;
-      _CORBA_ULong l[4];
-    } u, v;
-    u.d = a;
-    v.l[0] = Swap32(u.l[3]);
-    v.l[1] = Swap32(u.l[2]);
-    v.l[2] = Swap32(u.l[1]);
-    v.l[3] = Swap32(u.l[0]);
-    a = v.d;
+    LongArray4 m;
+    m.l[0] = Swap32(l.l[3]);
+    m.l[1] = Swap32(l.l[2]);
+    m.l[2] = Swap32(l.l[1]);
+    m.l[3] = Swap32(l.l[0]);
+    l = m;
   }
+  a = OMNI_REINTERPRET_CAST(_CORBA_LongDouble, l);
 }
 #endif
 #endif

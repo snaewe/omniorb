@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.26  2004/10/17 20:14:28  dgrisby
+ Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
  Revision 1.2.2.25  2004/07/01 19:08:11  dgrisby
  Support Windows build with mingw. Thanks Wolfgang Glas.
 
@@ -104,10 +107,17 @@
 // Macro to provide const_cast functionality on all platforms.
 //
 #ifdef HAS_Cplusplus_const_cast
-  #define OMNI_CONST_CAST(_t, _v) const_cast<_t>(_v)
+#  define OMNI_CONST_CAST(_t, _v) const_cast<_t>(_v)
 #else
-  #define OMNI_CONST_CAST(_t, _v) (_t)(_v)
+#  define OMNI_CONST_CAST(_t, _v) (_t)(_v)
 #endif
+
+#ifdef HAS_Cplusplus_reinterpret_cast
+#  define OMNI_REINTERPRET_CAST(_t, _v) reinterpret_cast<_t const&>(_v)
+#else
+#  define OMNI_REINTERPRET_CAST(_t, _v) (*(_t*)(&_v))
+#endif
+
 
 #if defined(__GNUG__)
 // GNU G++ compiler

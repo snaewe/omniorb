@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2004/10/17 20:14:28  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.1.2.15  2004/07/30 10:53:16  dgrisby
   Only set HAVE_STD if not already set. Thanks Matej Kenda.
 
@@ -91,6 +94,9 @@
 
 #define HAS_Cplusplus_const_cast
 // Unset this define if the compiler does not support const_cast<T*>
+
+#define HAS_Cplusplus_reinterpret_cast
+// Unset this define if the compiler does not support reinterpret_cast<T>
 
 #define HAS_Cplusplus_catch_exception_by_base
 // Unset this define if the compiler does not support catching
@@ -207,6 +213,7 @@
 #  else
 //    Compaq C++ 5.x
 #     undef  HAS_Cplusplus_const_cast
+#     undef  HAS_Cplusplus_reinterpret_cast
 #     define OMNI_REQUIRES_FQ_BASE_CTOR
 
 #  endif
@@ -309,6 +316,7 @@
 #elif defined(__xlC__)
 #  if (__xlC__ <= 0x0306)
 #    undef HAS_Cplusplus_const_cast
+#    undef HAS_Cplusplus_reinterpret_cast
 #  elif (__xlC__ >= 0x0500) // added in xlC 5.0 (a.k.a. Visual Age 5.0)
 #    define HAS_Cplusplus_Bool
 #    define HAS_Cplusplus_Namespace

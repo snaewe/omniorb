@@ -1,6 +1,11 @@
 // mainthread.cc -- Demonstrate the main thread policy
 
-#include <iostream.h>
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 #include <echo.hh>
 
 CORBA::ORB_ptr orb;

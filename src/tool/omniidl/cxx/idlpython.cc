@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.17.2.16  2004/10/17 20:14:34  dgrisby
+// Updated support for OpenVMS. Many thanks to Bruce Visscher.
+//
 // Revision 1.17.2.15  2003/01/16 11:08:27  dgrisby
 // Patches to support Digital Mars C++. Thanks Christof Meerwald.
 //
@@ -170,12 +173,9 @@
 //
 
 #if defined(__VMS)
-#  if defined(__DECCXX) && __DECCXX_VER < 60000000
-      struct _typeobject;
-#  endif
-#include <python_include/python.h>
+#  include <Python.h>
 #else
-#include PYTHON_INCLUDE
+#  include PYTHON_INCLUDE
 #endif
 
 #include <idlsysdep.h>
@@ -1601,13 +1601,14 @@ extern "C" {
 
 #ifdef OMNIIDL_EXECUTABLE
 
-#ifdef __VMS
-extern "C" int PyVMS_init(int* pvi_argc, char*** pvi_argv);
-#endif
-
 // It's awkward to make a command named 'omniidl' on NT which runs
 // Python, so we make the front-end a Python executable which always
 // runs omniidl.main.
+#ifdef __VMS
+#ifdef PYTHON_1
+extern "C" int PyVMS_init(int* pvi_argc, char*** pvi_argv);
+#endif
+#endif
 
 int
 main(int argc, char** argv)
@@ -1627,6 +1628,8 @@ main(int argc, char** argv)
 "\n"
 "        if os.path.isdir(pylibdir):\n"
 "            sys.path.insert(0, pylibdir)\n"
+"else:\n"
+"    print '''can't parse %s's path name!''' % sys.executable\n"
 "\n"
 "try:\n"
 "    import omniidl.main\n"
@@ -1646,7 +1649,9 @@ main(int argc, char** argv)
 "omniidl.main.main()\n";
 
 #ifdef __VMS
+#ifdef PYTHON_1
   PyVMS_init(&argc, &argv);
+#endif
   Py_SetProgramName(argv[0]);
 #endif
   Py_Initialize();

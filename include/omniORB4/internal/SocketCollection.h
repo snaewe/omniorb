@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.19  2004/10/17 20:14:28  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.1.2.18  2004/04/08 10:02:19  dgrisby
   In thread pool mode, close connections that will not be selectable.
 
@@ -186,9 +189,7 @@ OMNI_NAMESPACE_END(omni)
 #    include <poll.h>
 #  endif
 
-#  if !defined(__VMS)
-#    include <fcntl.h>
-#  endif
+#  include <fcntl.h>
 
 #  if defined (__uw7__)
 #    ifdef shutdown

@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.15  2004/10/17 20:14:35  dgrisby
+# Updated support for OpenVMS. Many thanks to Bruce Visscher.
+#
 # Revision 1.17.2.14  2004/07/01 19:17:42  dgrisby
 # Cope with spaces in -I arguments.
 #
@@ -211,7 +214,12 @@ def parseArgs(args):
             preprocessor_args.append("-D" + a)
 
         elif o == "-I":
-            preprocessor_args.append('-I "%s"' % a)
+            if sys.platform != "OpenVMS":
+                preprocessor_args.append('-I "%s"' % a)
+            else:
+                # It would be stupid, rude, and evil to put spaces in
+                # a dirname on VMS
+                preprocessor_args.append('-I%s' % a)
 
         elif o == "-U":
             preprocessor_args.append("-U" + a)

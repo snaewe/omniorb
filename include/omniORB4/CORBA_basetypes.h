@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.8  2004/10/17 20:14:28  dgrisby
+ Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
  Revision 1.2.2.7  2002/02/18 11:59:12  dpg1
  Full autoconf support.
 
@@ -173,6 +176,54 @@ public:
   inline _CORBA_Float() {cvt_(0.0f);}
   inline _CORBA_Float(float f) {cvt_(f);}
   inline operator float() const {return cvt_();}
+  inline _CORBA_Float operator+() const {
+    return *this;
+  }
+  inline _CORBA_Float operator-() const {
+    return _CORBA_Float(-cvt_());
+  }
+  inline _CORBA_Float& operator+=(_CORBA_Float const& v) {
+    cvt_(cvt_()+v.cvt_());
+    return *this;
+  }
+  inline _CORBA_Float& operator-=(_CORBA_Float const& v) {
+    cvt_(cvt_()-v.cvt_());
+    return *this;
+  }
+  inline _CORBA_Float& operator*=(_CORBA_Float const& v) {
+    cvt_(cvt_()*v.cvt_());
+    return *this;
+  }
+  inline _CORBA_Float& operator/=(_CORBA_Float const& v) {
+    cvt_(cvt_()/v.cvt_());
+    return *this;
+  }
+  inline _CORBA_Float& operator+=(float v) {
+    cvt_(cvt_()+v);
+    return *this;
+  }
+  inline _CORBA_Float& operator-=(float v) {
+    cvt_(cvt_()-v);
+    return *this;
+  }
+  inline _CORBA_Float& operator*=(float v) {
+    cvt_(cvt_()*v);
+    return *this;
+  }
+  inline _CORBA_Float& operator/=(float v) {
+    cvt_(cvt_()/v);
+    return *this;
+  }
+  inline static int compare(_CORBA_Float const& lhs,
+                            _CORBA_Float const& rhs) {
+    float l=lhs.cvt_();
+    float r=rhs.cvt_();
+    if (l<r)
+      return -1;
+    if (l==r)
+      return 0;
+    return 1;
+  }
 };
 
 class _CORBA_Double {
@@ -190,7 +241,171 @@ public:
   inline _CORBA_Double() {cvt_(0.0);}
   inline _CORBA_Double(double d) {cvt_(d);}
   inline operator double() const {return cvt_();}
+  inline _CORBA_Double operator+() const {
+    return *this;
+  }
+  inline _CORBA_Double operator-() const {
+    return _CORBA_Double(-cvt_());
+  }
+  inline _CORBA_Double& operator+=(_CORBA_Double const& v) {
+    cvt_(cvt_()+v.cvt_());
+    return *this;
+  }
+  inline _CORBA_Double& operator-=(_CORBA_Double const& v) {
+    cvt_(cvt_()-v.cvt_());
+    return *this;
+  }
+  inline _CORBA_Double& operator*=(_CORBA_Double const& v) {
+    cvt_(cvt_()*v.cvt_());
+    return *this;
+  }
+  inline _CORBA_Double& operator/=(_CORBA_Double const& v) {
+    cvt_(cvt_()/v.cvt_());
+    return *this;
+  }
+  inline _CORBA_Double& operator+=(double v) {
+    cvt_(cvt_()+v);
+    return *this;
+  }
+  inline _CORBA_Double& operator-=(double v) {
+    cvt_(cvt_()-v);
+    return *this;
+  }
+  inline _CORBA_Double& operator*=(double v) {
+    cvt_(cvt_()*v);
+    return *this;
+  }
+  inline _CORBA_Double& operator/=(double v) {
+    cvt_(cvt_()/v);
+    return *this;
+  }
+  inline static int compare(_CORBA_Double const& lhs,
+                            _CORBA_Double const& rhs) {
+    double l=lhs.cvt_();
+    double r=rhs.cvt_();
+    if (l<r)
+      return -1;
+    if (l==r)
+      return 0;
+    return 1;
+  }
 };
+
+inline _CORBA_Float operator+(_CORBA_Float const& lhs,
+                              _CORBA_Float const& rhs) {
+  _CORBA_Float f(lhs);
+  f+=rhs;
+  return f;
+}
+
+inline _CORBA_Float operator-(_CORBA_Float const& lhs,
+                              _CORBA_Float const& rhs) {
+  _CORBA_Float f(lhs);
+  f-=rhs;
+  return f;
+}
+
+inline _CORBA_Float operator*(_CORBA_Float const& lhs,
+                              _CORBA_Float const& rhs) {
+  _CORBA_Float f(lhs);
+  f*=rhs;
+  return f;
+}
+
+inline _CORBA_Float operator/(_CORBA_Float const& lhs,
+                              _CORBA_Float const& rhs) {
+  _CORBA_Float f(lhs);
+  f/=rhs;
+  return f;
+}
+
+inline bool operator==(_CORBA_Float const& lhs,
+                       _CORBA_Float const& rhs) {
+    return _CORBA_Float::compare(lhs,rhs)==0;
+}
+
+inline bool operator!=(_CORBA_Float const& lhs,
+                       _CORBA_Float const& rhs) {
+    return _CORBA_Float::compare(lhs,rhs)!=0;
+}
+
+inline bool operator<=(_CORBA_Float const& lhs,
+                       _CORBA_Float const& rhs) {
+    return _CORBA_Float::compare(lhs,rhs)<=0;
+}
+
+inline bool operator>=(_CORBA_Float const& lhs,
+                       _CORBA_Float const& rhs) {
+    return _CORBA_Float::compare(lhs,rhs)>=0;
+}
+
+inline bool operator<(_CORBA_Float const& lhs,
+                       _CORBA_Float const& rhs) {
+    return _CORBA_Float::compare(lhs,rhs)<0;
+}
+
+inline bool operator>(_CORBA_Float const& lhs,
+                       _CORBA_Float const& rhs) {
+    return _CORBA_Float::compare(lhs,rhs)>0;
+}
+
+inline _CORBA_Double operator+(_CORBA_Double const& lhs,
+                               _CORBA_Double const& rhs) {
+  _CORBA_Double d(lhs);
+  d+=rhs;
+  return d;
+}
+
+inline _CORBA_Double operator-(_CORBA_Double const& lhs,
+                               _CORBA_Double const& rhs) {
+  _CORBA_Double d(lhs);
+  d-=rhs;
+  return d;
+}
+
+inline _CORBA_Double operator*(_CORBA_Double const& lhs,
+                               _CORBA_Double const& rhs) {
+  _CORBA_Double d(lhs);
+  d*=rhs;
+  return d;
+}
+
+inline _CORBA_Double operator/(_CORBA_Double const& lhs,
+                               _CORBA_Double const& rhs) {
+  _CORBA_Double d(lhs);
+  d/=rhs;
+  return d;
+}
+
+inline bool operator==(_CORBA_Double const& lhs,
+                       _CORBA_Double const& rhs) {
+    return _CORBA_Double::compare(lhs,rhs)==0;
+}
+
+inline bool operator!=(_CORBA_Double const& lhs,
+                       _CORBA_Double const& rhs) {
+    return _CORBA_Double::compare(lhs,rhs)!=0;
+}
+
+inline bool operator<=(_CORBA_Double const& lhs,
+                       _CORBA_Double const& rhs) {
+    return _CORBA_Double::compare(lhs,rhs)<=0;
+}
+
+inline bool operator>=(_CORBA_Double const& lhs,
+                       _CORBA_Double const& rhs) {
+    return _CORBA_Double::compare(lhs,rhs)>=0;
+}
+
+inline bool operator<(_CORBA_Double const& lhs,
+                      _CORBA_Double const& rhs) {
+    return _CORBA_Double::compare(lhs,rhs)<0;
+}
+
+inline bool operator>(_CORBA_Double const& lhs,
+                      _CORBA_Double const& rhs) {
+    return _CORBA_Double::compare(lhs,rhs)>0;
+}
 
 #undef cvt_
 

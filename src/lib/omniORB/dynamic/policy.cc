@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.6  2004/10/17 20:14:32  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.1.2.5  2003/02/17 02:03:08  dgrisby
   vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 
@@ -133,11 +136,8 @@ ORB::create_policy(CORBA::PolicyType t, const CORBA::Any& value) {
 
   // omniORB specific policies
   CASE_CPFN_OMNI(/*LOCAL_SHORTCUT_POLICY_TYPE*/0x41545401, LocalShortcutPolicy)
-
-  // Anything else we do not know
-  default:
-    throw CORBA::PolicyError(CORBA::BAD_POLICY);
   }
+  throw CORBA::PolicyError(CORBA::BAD_POLICY);
 }
 
 //////////////////////////////////////////////////////////////////////

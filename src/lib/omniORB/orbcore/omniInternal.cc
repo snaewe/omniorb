@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.36  2004/10/17 20:14:33  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.2.2.35  2004/07/23 13:25:44  dgrisby
   New traceExceptions option.
 
@@ -1033,7 +1036,7 @@ omni::createObjRef(const char* targetRepoId,
 
     for (CORBA::ULong index = 0; index < extra.length(); index++) {
 
-      if (extra[index]->compid == IOP::TAG_OMNIORB_PERSISTENT_ID)
+      if (extra[index]->compid == IOP::TAG_OMNIORB_PERSISTENT_ID) {
 
 	if (!id->inThisAddressSpace()) {
 
@@ -1051,7 +1054,8 @@ omni::createObjRef(const char* targetRepoId,
 	  releaseObjRef(objref);
 	  objref = new_objref;
 	}
-      break;
+	break;
+      }
     }
   }
   return objref;

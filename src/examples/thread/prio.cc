@@ -21,7 +21,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <iostream.h>
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 #include <omnithread.h>
 
 #if defined(__arm__) && defined(__atmos__)

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.32  2004/10/17 20:14:32  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.22.2.31  2004/09/13 10:03:13  dgrisby
   Fix for giopServer shutdown issue. Thanks Serguei Kolos.
 
@@ -1063,9 +1066,12 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 
     return dying ? 1 : 0;
   }
-  // Never reach here
+#ifndef __DECCXX
+  // Never reach here (and the hp/compaq/dec compiler is smart enough
+  // to figure that out).
   OMNIORB_ASSERT(0);
   return 0;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////

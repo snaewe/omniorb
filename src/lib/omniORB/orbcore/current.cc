@@ -116,7 +116,8 @@ CORBA::Current::_PD_repoId = "IDL:omg.org/CORBA/Current:1.0";
 //            omniCurrent                                                  //
 /////////////////////////////////////////////////////////////////////////////
 
-omni_thread::key_t omniCurrent::thread_key;
+omni_thread::key_t omniCurrent::thread_key = 0;
+// DEC CXX needs the zero initialiser for some reason
 
 void
 omniCurrent::init()

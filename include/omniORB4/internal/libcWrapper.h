@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2004/10/17 20:14:28  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.1.4.11  2004/03/19 01:08:35  dgrisby
   Fix Windows DLL issues.
 
@@ -104,13 +107,16 @@ public:
   static int isipaddr(const char* node);
   // True if node is an IPv4 address.
 
-  static AddrInfo* getaddrinfo(const char* node, CORBA::UShort port);
+  // On VMS getaddrinfo is a macro in <netdb.h> as of VMS 7.3-1.  So,
+  // made this mixed case:
+  static AddrInfo* getAddrInfo(const char* node, CORBA::UShort port);
   // Return an AddrInfo object for the specified node and port. If
   // node is zero, address is INADDR_ANY. If node is invalid, returns
   // zero.
 
-  static void freeaddrinfo(AddrInfo* ai);
-  // Release the AddrInfo object returned by getaddrinfo(), and any in
+  // made this mixed case for consistency:
+  static void freeAddrInfo(AddrInfo* ai);
+  // Release the AddrInfo object returned by getAddrInfo(), and any in
   // its linked list.
 
   class AddrInfo {
@@ -143,10 +149,10 @@ public:
     inline AddrInfo_var() : pd_ai(0) {}
     inline AddrInfo_var(AddrInfo* ai) : pd_ai(ai) {}
     inline ~AddrInfo_var() {
-      if (pd_ai) LibcWrapper::freeaddrinfo(pd_ai);
+      if (pd_ai) LibcWrapper::freeAddrInfo(pd_ai);
     }
     inline AddrInfo_var& operator=(AddrInfo* ai) {
-      if (pd_ai) LibcWrapper::freeaddrinfo(pd_ai);
+      if (pd_ai) LibcWrapper::freeAddrInfo(pd_ai);
       pd_ai = ai;
       return *this;
     }

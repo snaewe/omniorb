@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.16  2004/10/17 20:14:33  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.19.2.15  2004/02/11 12:19:17  dgrisby
   Cygwin patches. Thanks Douglas Brown.
 
@@ -228,7 +231,7 @@ static inline CORBA::ULong hostent_to_ip4(struct hostent* entp)
 }
 
 
-LibcWrapper::AddrInfo* LibcWrapper::getaddrinfo(const char* node,
+LibcWrapper::AddrInfo* LibcWrapper::getAddrInfo(const char* node,
 						CORBA::UShort port)
 {
   if (!node) {
@@ -410,7 +413,7 @@ again:
 #endif
 }
 
-void LibcWrapper::freeaddrinfo(LibcWrapper::AddrInfo* ai)
+void LibcWrapper::freeAddrInfo(LibcWrapper::AddrInfo* ai)
 {
   delete ai;
 }

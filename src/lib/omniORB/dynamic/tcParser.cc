@@ -676,7 +676,9 @@ static inline CORBA::ULong getEnumData(const tcDescriptor &tcdata) {
   case 8: return *((CORBA::ULongLong*)tcdata.p_enum.data);
 #endif
   };
+#ifndef __DECCXX
   OMNIORB_ASSERT(0);
+#endif
   // Fails if compiler has picked sizeof(enum) which is not a power of 2.
 }
 
@@ -689,7 +691,9 @@ static inline void setEnumData(tcDescriptor &tcdata,const CORBA::ULong value) {
   case 8: *((CORBA::ULongLong*)tcdata.p_enum.data) = value; return;
 #endif
   };
+#ifndef __DECCXX
   OMNIORB_ASSERT(0);
+#endif
   // Fails if compiler has picked sizeof(enum) which is not a power of 2.
 }
 

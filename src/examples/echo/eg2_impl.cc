@@ -10,7 +10,12 @@
 //        eg2_clt.
 //
 
-#include <iostream.h>
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 #include <echo.hh>
 
 

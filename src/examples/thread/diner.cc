@@ -16,6 +16,9 @@
 
 /*
  $Log$
+ Revision 1.6.12.1  2004/10/17 20:14:31  dgrisby
+ Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
  Revision 1.6  1999/03/11 16:26:15  djr
  Updated copyright notice
 
@@ -36,7 +39,12 @@
 //
  */
 
-#include <iostream.h>
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 #include <stdlib.h>
 #include <omnithread.h>
 

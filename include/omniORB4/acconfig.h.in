@@ -75,6 +75,9 @@
 /* Define to 1 if you have the <netdb.h> header file. */
 #undef HAVE_NETDB_H
 
+/* define if the compiler supports reinterpret_cast<> */
+#undef HAVE_REINTERPRET_CAST
+
 /* Define to 1 if you have the `sigaction' function. */
 #undef HAVE_SIGACTION
 

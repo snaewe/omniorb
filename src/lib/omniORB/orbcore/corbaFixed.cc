@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.16  2004/10/17 20:14:32  dgrisby
+// Updated support for OpenVMS. Many thanks to Bruce Visscher.
+//
 // Revision 1.1.2.15  2004/07/23 13:22:53  dgrisby
 // Fixed point rounding was still broken.
 //
@@ -170,7 +173,7 @@ CORBA::Fixed::Fixed(CORBA::ULongLong val) :
 CORBA::Fixed::Fixed(CORBA::Double val) :
   pd_idl_digits(0), pd_idl_scale(0)
 {
-  if (val > 1e32 || val < -1e32) {
+  if ((double)val > 1e32 || (double)val < -1e32) {
     // Too big
     OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_RangeError,
 		  CORBA::COMPLETED_NO);
@@ -191,7 +194,7 @@ CORBA::Fixed::Fixed(CORBA::LongDouble val) :
   pd_idl_digits(0), pd_idl_scale(0)
 {
   if (val > 1e32 || val < -1e32) {
-    // Too big
+    // Too big / small
     OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_RangeError,
 		  CORBA::COMPLETED_NO);
   }
@@ -322,7 +325,11 @@ CORBA::Fixed::operator CORBA::LongDouble() const
 
 CORBA::Fixed::operator CORBA::Double() const
 {
+#ifdef __VMS
+  double r = 0, s = 0;
+#else
   CORBA::Double r = 0, s = 0;
+#endif
   int i;
 
   // Digits before decimal point

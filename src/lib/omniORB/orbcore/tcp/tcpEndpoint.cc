@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.23  2004/10/17 20:14:33  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.1.2.22  2003/11/12 16:04:17  dgrisby
   Set sockets to close on exec.
 
@@ -205,7 +208,7 @@ tcpEndpoint::Bind() {
   }
 
   LibcWrapper::AddrInfo_var ai;
-  ai = LibcWrapper::getaddrinfo(host, pd_address.port);
+  ai = LibcWrapper::getAddrInfo(host, pd_address.port);
 
   if ((LibcWrapper::AddrInfo*)ai == 0) {
     if (omniORB::trace(1)) {
@@ -287,7 +290,7 @@ tcpEndpoint::Bind() {
 	l << "My hostname is " << self << ".\n";
       }
       LibcWrapper::AddrInfo_var ai;
-      ai = LibcWrapper::getaddrinfo(self, pd_address.port);
+      ai = LibcWrapper::getAddrInfo(self, pd_address.port);
       if ((LibcWrapper::AddrInfo*)ai == 0) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger log;

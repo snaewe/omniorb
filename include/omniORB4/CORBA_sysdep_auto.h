@@ -30,6 +30,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  2004/10/17 20:14:28  dgrisby
+ Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
  Revision 1.1.2.3  2003/10/17 15:22:44  dgrisby
  Cope with (lack of) long double on some platforms.
 
@@ -56,6 +59,10 @@
 
 #ifdef HAVE_CONST_CAST
 #  define HAS_Cplusplus_const_cast
+#endif
+
+#ifdef HAVE_REINTERPRET_CAST
+#  define HAS_Cplusplus_reinterpret_cast
 #endif
 
 #ifdef HAVE_NAMESPACES

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.25  2004/10/17 20:14:32  dgrisby
+  Updated support for OpenVMS. Many thanks to Bruce Visscher.
+
   Revision 1.1.2.24  2004/09/13 15:31:09  dgrisby
   Really dumb problem with SocketCollection on Win32.
 
@@ -118,9 +121,15 @@
 #  include "iostream.h"
 #endif
 
+#if defined(__VMS)
+#  include <stropts.h>
+#endif
+
 #if !defined(__WIN32__)
 #  define SELECTABLE_FD_LIMIT FD_SETSIZE
 #endif
+
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -158,6 +167,12 @@ SocketSetnonblocking(SocketHandle_t sock) {
     return RC_INVALID_SOCKET;
   }
   return 0;
+# elif defined(__VMS)
+  int fl = 1;
+  if (ioctl(sock, FIONBIO, &fl) == RC_INVALID_SOCKET) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
 # elif defined(__WIN32__)
   u_long v = 1;
   if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
@@ -179,6 +194,12 @@ SocketSetblocking(SocketHandle_t sock) {
 # if defined(__vxWorks__)
   int fl = FALSE;
   if (ioctl(sock, FIONBIO, (int)&fl) == ERROR) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
+# elif defined(__VMS)
+  int fl = 0;
+  if (ioctl(sock, FIONBIO, &fl) == RC_INVALID_SOCKET) {
     return RC_INVALID_SOCKET;
   }
   return 0;
