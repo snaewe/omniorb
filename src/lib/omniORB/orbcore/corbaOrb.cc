@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.4  2000/10/04 16:54:41  sll
+  Added omni_omniIOR_initialiser_.
+
   Revision 1.33.2.3  2000/10/03 17:37:42  sll
   New initialiser for omniIOR.
 
@@ -251,6 +254,7 @@ extern omniInitialiser& omni_strand_initialiser_;
 extern omniInitialiser& omni_scavenger_initialiser_;
 extern omniInitialiser& omni_hooked_initialiser_;
 extern omniInitialiser& omni_interceptor_initialiser_;
+extern omniInitialiser& omni_ior_initialiser_;
 
 static CORBA::Boolean
 parse_ORB_args(int& argc, char** argv, const char* orb_identifier);
@@ -337,6 +341,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_ropeFactory_initialiser_.attach();
     omni_giopStreamImpl_initialiser_.attach();
     omni_interceptor_initialiser_.attach();
+    omni_ior_initialiser_.attach();
     omni_initFile_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
     omni_hooked_initialiser_.attach();
@@ -583,6 +588,7 @@ omniOrbORB::actual_shutdown()
   omni_hooked_initialiser_.detach();
   omni_initRefs_initialiser_.detach();
   omni_initFile_initialiser_.detach();
+  omni_ior_initialiser_.detach();
   omni_interceptor_initialiser_.detach();
   omni_giopStreamImpl_initialiser_.detach();
   omni_ropeFactory_initialiser_.detach();
