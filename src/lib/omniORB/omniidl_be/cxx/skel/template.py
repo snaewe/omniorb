@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.18  2001/11/07 15:45:53  dpg1
+# Faster _ptrToInterface/_ptrToObjRef in common cases.
+#
 # Revision 1.3.2.17  2001/11/06 15:41:37  dpg1
 # Reimplement Context. Remove CORBA::Status. Tidying up.
 #
@@ -244,17 +247,29 @@ interface_objref = """\
 void*
 @fq_objref_name@::_ptrToObjRef(const char* id)
 {
-  if( omni::ptrStrMatch(id, ::@name@::_PD_repoId) )
+  if( id == ::@name@::_PD_repoId )
     return (::@name@_ptr) this;
-  @_ptrToObjRef@
-  if( omni::ptrStrMatch(id, CORBA::Object::_PD_repoId) )
+  @_ptrToObjRef_ptr@
+  if( id == CORBA::Object::_PD_repoId )
     return (CORBA::Object_ptr) this;
+
+  if( omni::strMatch(id, ::@name@::_PD_repoId) )
+    return (::@name@_ptr) this;
+  @_ptrToObjRef_str@
+  if( omni::strMatch(id, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
+
   return 0;
 }
 """
 
-interface_objref_repoID = """\
-if( omni::ptrStrMatch(id, @inherits_fqname@::_PD_repoId) )
+interface_objref_repoID_ptr = """\
+if( id == @inherits_fqname@::_PD_repoId )
+  return (@inherits_fqname@_ptr) this;
+"""
+
+interface_objref_repoID_str = """\
+if( omni::strMatch(id, @inherits_fqname@::_PD_repoId) )
   return (@inherits_fqname@_ptr) this;
 """
 
@@ -433,10 +448,16 @@ CORBA::Boolean
 void*
 @impl_fqname@::_ptrToInterface(const char* id)
 {
-  if( omni::ptrStrMatch(id, ::@name@::_PD_repoId) )
+  if( id == ::@name@::_PD_repoId )
     return (@impl_name@*) this;
-  @_ptrToInterface@
-  if( omni::ptrStrMatch(id, CORBA::Object::_PD_repoId) )
+  @_ptrToInterface_ptr@
+  if( id == CORBA::Object::_PD_repoId )
+    return (void*) 1;
+
+  if( omni::strMatch(id, ::@name@::_PD_repoId) )
+    return (@impl_name@*) this;
+  @_ptrToInterface_str@
+  if( omni::strMatch(id, CORBA::Object::_PD_repoId) )
     return (void*) 1;
   return 0;
 }
@@ -454,8 +475,13 @@ if( @impl_inherited_name@::_dispatch(_handle) ) {
 }
 """
 
-interface_impl_repoID = """\
-if( omni::ptrStrMatch(id, @inherited_name@::_PD_repoId) )
+interface_impl_repoID_ptr = """\
+if( id == @inherited_name@::_PD_repoId )
+  return (@impl_inherited_name@*) this;
+"""
+
+interface_impl_repoID_str = """\
+if( omni::strMatch(id, @inherited_name@::_PD_repoId) )
   return (@impl_inherited_name@*) this;
 """
 

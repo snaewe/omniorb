@@ -1,3 +1,14 @@
+Wed Nov  7 15:42:12 GMT 2001 dpg1
+=================================
+
+- Faster _ptrToInterface/_ptrToObjRef in common cases, with a slight
+  cost in code size.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/poastubs.cc
+
+
 Tue Nov  6 16:51:48 GMT 2001 dpg1
 =================================
 

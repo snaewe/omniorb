@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.9  2001/11/07 15:45:53  dpg1
+# Faster _ptrToInterface/_ptrToObjRef in common cases.
+#
 # Revision 1.1.4.8  2001/08/15 10:26:10  dpg1
 # New object table behaviour, correct POA semantics.
 #
@@ -275,9 +278,14 @@ class _objref_I(Class):
 
   def cc(self, stream):
 
-    def _ptrToObjRef(self = self, stream = stream):
+    def _ptrToObjRef_ptr(self = self, stream = stream):
       for i in self.interface().allInherits():
-        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID,
+        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_ptr,
+                   inherits_fqname = i.name().fullyQualify())
+
+    def _ptrToObjRef_str(self = self, stream = stream):
+      for i in self.interface().allInherits():
+        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID_str,
                    inherits_fqname = i.name().fullyQualify())
 
     # build the inherits list
@@ -313,7 +321,8 @@ class _objref_I(Class):
                fq_objref_name = self.name().fullyQualify(),
                objref_name = self.name().simple(),
                inherits_str = inherits_str,
-               _ptrToObjRef = _ptrToObjRef)
+               _ptrToObjRef_ptr = _ptrToObjRef_ptr,
+               _ptrToObjRef_str = _ptrToObjRef_str)
     
       
     for method in self.methods():
@@ -440,7 +449,7 @@ class _impl_I(Class):
                    impl_inherited_name = impl_inherits)
 
     # For each of the inherited interfaces, check their repoId strings
-    def _ptrToInterface(self = self, stream = stream):
+    def _ptrToInterface_ptr(self = self, stream = stream):
       for i in self.interface().allInherits():
         inherited_name = i.name()
         impl_inherited_name = inherited_name.prefix("_impl_")
@@ -449,7 +458,20 @@ class _impl_I(Class):
         if inherited_name.needFlatName(self._environment):
           inherited_str = inherited_name.flatName()
           impl_inherited_str = impl_inherited_name.flatName()
-        stream.out(omniidl_be.cxx.skel.template.interface_impl_repoID,
+        stream.out(omniidl_be.cxx.skel.template.interface_impl_repoID_ptr,
+                   inherited_name = inherited_str,
+                   impl_inherited_name = impl_inherited_str)
+
+    def _ptrToInterface_str(self = self, stream = stream):
+      for i in self.interface().allInherits():
+        inherited_name = i.name()
+        impl_inherited_name = inherited_name.prefix("_impl_")
+        inherited_str = inherited_name.unambiguous(self._environment)
+        impl_inherited_str = impl_inherited_name.unambiguous(self._environment)
+        if inherited_name.needFlatName(self._environment):
+          inherited_str = inherited_name.flatName()
+          impl_inherited_str = impl_inherited_name.flatName()
+        stream.out(omniidl_be.cxx.skel.template.interface_impl_repoID_str,
                    inherited_name = inherited_str,
                    impl_inherited_name = impl_inherited_str)
 
@@ -466,7 +488,8 @@ class _impl_I(Class):
                getopname = getopname,
                dispatch = dispatch,
                impl_name = impl_name.unambiguous(self._environment),
-               _ptrToInterface = _ptrToInterface,
+               _ptrToInterface_ptr = _ptrToInterface_ptr,
+               _ptrToInterface_str = _ptrToInterface_str,
                name = node_name.fullyQualify())
           
 
