@@ -71,6 +71,8 @@ On most Unix platforms, omniORB can be configured using the common
 Autoconf configure script, that tries to figure out the specifics of
 your machine.
 
+The Autoconf build does not currently work for cross compiling.
+
 Although you can run configure and make in the main omniORB source
 directory, you are strongly advised to build in a different
 directory. e.g.

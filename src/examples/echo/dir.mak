@@ -26,11 +26,11 @@ TOP = ..\..\..
 #
 DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #
-# omniDynamic403_rt.lib is the runtime DLL to support the CORBA dynamic
+# omniDynamic404_rt.lib is the runtime DLL to support the CORBA dynamic
 # interfaces, such as Anys, typecodes, DSI and DII. In these examples, the
 # runtime library is not required as none of these features are used.
 # However, a bug in MSVC++ causes it to generate a bunch of references
-# to functions in omniDynamic403_rt.lib when compiling the stubs.
+# to functions in omniDynamic404_rt.lib when compiling the stubs.
 # So now we link the dynamic library as well.
 # An alternative is to replace the dynamic library with the much smaller 
 # library msvcstub.lib. The smaller library contains nothing but stubs
@@ -38,13 +38,13 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 # interfaces are used. We use the small library here. If you prefer
 # to link with the dynamic library, swap the comment on the next 2
 # lines.
-#OMNI_DYNAMIC_LIB = omniDynamic403_rt.lib
+#OMNI_DYNAMIC_LIB = omniDynamic404_rt.lib
 OMNI_DYNAMIC_LIB = msvcstub.lib -NODEFAULTLIB:libcmt.lib -NODEFAULTLIB:libcmtd.lib 
 
 
 CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ \
                  -D__OSVERSION__=4
-CORBA_LIB      = omniORB403_rt.lib omnithread30_rt.lib \
+CORBA_LIB      = omniORB404_rt.lib omnithread30_rt.lib \
                  $(OMNI_DYNAMIC_LIB) \
                  ws2_32.lib mswsock.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
@@ -60,10 +60,10 @@ CXXLINKOPTIONS =
 # To build debug executables
 # Replace the above with the following:
 #
-#OMNI_DYNAMIC_LIB = omniDynamic403_rtd.lib
+#OMNI_DYNAMIC_LIB = omniDynamic404_rtd.lib
 #OMNI_DYNAMIC_LIB = msvcstubd.lib -NODEFAULTLIB:libcmt.lib -NODEFAULTLIB:libcmtd.lib 
 #CORBA_CPPFLAGS = -D__WIN32__ -D_WIN32_WINNT=0x0400 -D__x86__ -D__NT__ -D__OSVERSION__=4
-#CORBA_LIB      = omniORB403_rtd.lib omnithread30_rtd.lib \
+#CORBA_LIB      = omniORB404_rtd.lib omnithread30_rtd.lib \
 #                 $(OMNI_DYNAMIC_LIB) \
 #                 ws2_32.lib mswsock.lib advapi32.lib -libpath:$(TOP)\lib\x86_win32
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)

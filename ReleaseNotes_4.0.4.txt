@@ -1,9 +1,18 @@
-RELEASE NOTES for omniORB 4.0.3
+RELEASE NOTES for omniORB 4.0.4
 ===============================
 
-This is omniORB 4.0.3. It is a stable release.
+This is omniORB 4.0.4. It is a stable release.
 
 See README.unix or README.win32 for building instructions.
+
+
+New features since omniORB 4.0.3
+--------------------------------
+
+ - Bug fixes.
+ - Minor new features: persistent server identifiers, support for
+   unloadable stubs, traceExceptions parameter.
+ - Platform additions and fixes.
 
 
 New features since omniORB 4.0.2
