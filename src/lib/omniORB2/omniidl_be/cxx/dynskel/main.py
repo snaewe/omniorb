@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.5  2000/04/05 10:58:36  djs
+# Missing function declaration when a union has a switch type declared in
+# another file
+#
 # Revision 1.12.2.4  2000/03/24 22:30:18  djs
 # Major code restructuring:
 #   Control flow is more recursive and obvious
@@ -832,6 +836,9 @@ def visitUnion(node):
         stream.out("// forward declaration because union is recursive")
         forward(node)
 
+    # this may need an extern
+    node.switchType().accept(self)
+    
     # constructed types
     if node.constrType():
         node.switchType().decl().accept(self)
