@@ -1,3 +1,11 @@
+Mon Mar  9 14:12:56 GMT 1998 ewc
+================================
+
+- Mach threads pathces from Lars Immisch applied
+
+src/lib/omnithread/mach.cc
+
+
 Mon Mar  9 11:42:47 GMT 1998 ewc
 ================================
 
