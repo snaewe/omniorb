@@ -29,6 +29,11 @@
 
 /*
  $Log$
+ Revision 1.2.2.3  2000/11/03 19:04:34  sll
+ Renamed _CORBA_Unbounded_Sequence__String to _CORBA_Unbounded_Sequence_String
+ and _CORBA_Bounded_Sequence__String to _CORBA_Bounded_Sequence_String
+ Removed marshal() and unmarshal() from String_helper.
+
  Revision 1.2.2.2  2000/09/27 17:02:24  sll
  Consolidate all string allocation functions into the _CORBA_String_helper
  class. Updated to use the new cdrStream abstraction.
@@ -102,8 +107,6 @@ static inline char* dup(const char* s) {
 }
 // As CORBA::string_dup().
 
-static void marshal(const char*,cdrStream&);
-static char* unmarshal(cdrStream&);
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -301,7 +304,7 @@ public:
     return tmp;
   }
 
-  void operator >>= (cdrStream& s) const { _CORBA_String_helper::marshal(_ptr,s); }
+  void operator >>= (cdrStream& s) const;
   void operator <<= (cdrStream& s);
 
   inline char*& _NP_ref() {return _ptr;}
@@ -562,14 +565,14 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////
-////////////////// _CORBA_Sequence__String           /////////////////
+////////////////// _CORBA_Sequence_String           //////////////////
 //////////////////////////////////////////////////////////////////////
 
-class _CORBA_Sequence__String
+class _CORBA_Sequence_String
 {
 public:
   typedef _CORBA_String_element ElemT;
-  typedef _CORBA_Sequence__String SeqT;
+  typedef _CORBA_Sequence_String SeqT;
 
   inline _CORBA_ULong maximum() const { return pd_max; }
   inline _CORBA_ULong length() const  { return pd_len; }
@@ -666,9 +669,9 @@ public:
   inline const char* const* get_buffer() const { 
     if (pd_max && !pd_data) {
 #ifdef HAS_Cplusplus_const_cast
-      _CORBA_Sequence__String* s = const_cast<_CORBA_Sequence__String*>(this);
+      _CORBA_Sequence_String* s = const_cast<_CORBA_Sequence_String*>(this);
 #else
-      _CORBA_Sequence__String* s = (_CORBA_Sequence__String*)this;
+      _CORBA_Sequence_String* s = (_CORBA_Sequence_String*)this;
 #endif
       s->copybuffer(pd_max);
     }
@@ -680,7 +683,7 @@ public:
   }
 
 
-  inline ~_CORBA_Sequence__String() { 
+  inline ~_CORBA_Sequence_String() { 
     if (pd_rel && pd_data) freebuf(pd_data);
     pd_data = 0;
   }
@@ -690,15 +693,15 @@ public:
   void operator <<= (cdrStream& s);
 
 protected:
-  inline _CORBA_Sequence__String()
+  inline _CORBA_Sequence_String()
     : pd_max(0), pd_len(0), pd_rel(1), pd_bounded(0), pd_data(0) {}
 
-  inline _CORBA_Sequence__String(_CORBA_ULong max,
+  inline _CORBA_Sequence_String(_CORBA_ULong max,
 				 _CORBA_Boolean bounded=0)
     : pd_max(max), pd_len(0), pd_rel(1), pd_bounded(bounded), pd_data(0) {
   }
 
-  inline _CORBA_Sequence__String(_CORBA_ULong   max,
+  inline _CORBA_Sequence_String(_CORBA_ULong   max,
 				 _CORBA_ULong   len,
 				 char**         value,
 				 _CORBA_Boolean release = 0,
@@ -711,7 +714,7 @@ protected:
     }
   }
 
-  inline _CORBA_Sequence__String(const SeqT& s)
+  inline _CORBA_Sequence_String(const SeqT& s)
     : pd_max(s.pd_max), pd_len(0), pd_rel(1),
       pd_bounded(s.pd_bounded), pd_data(0) {
     length(s.pd_len);
@@ -782,76 +785,76 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////
-/////////////////// _CORBA_Bounded_Sequence__String //////////////////
+/////////////////// _CORBA_Bounded_Sequence_String //////////////////
 //////////////////////////////////////////////////////////////////////
 
 template<int max>
-class _CORBA_Bounded_Sequence__String
-  : public _CORBA_Sequence__String
+class _CORBA_Bounded_Sequence_String
+  : public _CORBA_Sequence_String
 {
 public:
-  typedef _CORBA_Bounded_Sequence__String<max> SeqT;
+  typedef _CORBA_Bounded_Sequence_String<max> SeqT;
 
-  inline _CORBA_Bounded_Sequence__String()
-    : _CORBA_Sequence__String(max,1) {}
+  inline _CORBA_Bounded_Sequence_String()
+    : _CORBA_Sequence_String(max,1) {}
 
-  inline _CORBA_Bounded_Sequence__String(_CORBA_ULong   length,
+  inline _CORBA_Bounded_Sequence_String(_CORBA_ULong   length,
 					 char**         value,
 					 _CORBA_Boolean release = 0)
-    : _CORBA_Sequence__String(max, length, value, release, 1) {}
+    : _CORBA_Sequence_String(max, length, value, release, 1) {}
 
-  inline _CORBA_Bounded_Sequence__String(const SeqT& s)
-    : _CORBA_Sequence__String(s) {}
+  inline _CORBA_Bounded_Sequence_String(const SeqT& s)
+    : _CORBA_Sequence_String(s) {}
 
-  inline ~_CORBA_Bounded_Sequence__String() {}
+  inline ~_CORBA_Bounded_Sequence_String() {}
 
   inline SeqT& operator = (const SeqT& s) {
-    _CORBA_Sequence__String::operator = (s);
+    _CORBA_Sequence_String::operator = (s);
     return *this;
   }
 
   // CORBA 2.3 additions
   inline void replace(_CORBA_ULong len, char** data,
 		      _CORBA_Boolean release = 0) {
-    _CORBA_Sequence__String::replace(max,len,data,release);
+    _CORBA_Sequence_String::replace(max,len,data,release);
   }
 };
 
 //////////////////////////////////////////////////////////////////////
-////////////////// _CORBA_Unbounded_Sequence__String /////////////////
+////////////////// _CORBA_Unbounded_Sequence_String /////////////////
 //////////////////////////////////////////////////////////////////////
 
-class _CORBA_Unbounded_Sequence__String
-  : public _CORBA_Sequence__String
+class _CORBA_Unbounded_Sequence_String
+  : public _CORBA_Sequence_String
 {
 public:
-  typedef _CORBA_Unbounded_Sequence__String SeqT;
+  typedef _CORBA_Unbounded_Sequence_String SeqT;
 
-  inline _CORBA_Unbounded_Sequence__String() {}
+  inline _CORBA_Unbounded_Sequence_String() {}
 
-  inline _CORBA_Unbounded_Sequence__String(_CORBA_ULong max) :
-         _CORBA_Sequence__String(max) {}
+  inline _CORBA_Unbounded_Sequence_String(_CORBA_ULong max) :
+         _CORBA_Sequence_String(max) {}
 
-  inline _CORBA_Unbounded_Sequence__String(_CORBA_ULong   max,
+  inline _CORBA_Unbounded_Sequence_String(_CORBA_ULong   max,
 					   _CORBA_ULong   length,
 					   char**         value,
 					   _CORBA_Boolean release = 0)
-    : _CORBA_Sequence__String(max, length, value, release) {}
+    : _CORBA_Sequence_String(max, length, value, release) {}
 
-  inline _CORBA_Unbounded_Sequence__String(const SeqT& s)
-    : _CORBA_Sequence__String(s) {}
+  inline _CORBA_Unbounded_Sequence_String(const SeqT& s)
+    : _CORBA_Sequence_String(s) {}
 
-  inline ~_CORBA_Unbounded_Sequence__String() {}
+  inline ~_CORBA_Unbounded_Sequence_String() {}
 
   inline SeqT& operator = (const SeqT& s) {
-    _CORBA_Sequence__String::operator = (s);
+    _CORBA_Sequence_String::operator = (s);
     return *this;
   }
 
   // CORBA 2.3 additions
   inline void replace(_CORBA_ULong max, _CORBA_ULong len, char** data,
 		      _CORBA_Boolean release = 0) {
-    _CORBA_Sequence__String::replace(max,len,data,release);
+    _CORBA_Sequence_String::replace(max,len,data,release);
   }
 
 };
