@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.22  2001/08/20 13:48:00  dpg1
+# Wrong _out type generated for fixed length structs/unions.
+# (Back-ported from omniORB 4.)
+#
 # Revision 1.31.2.21  2001/04/25 16:55:09  dpg1
 # Properly handle files #included at non-file scope.
 #
@@ -856,10 +860,17 @@ def visitTypedef(node):
                            dup_loop = dup_loop,
                            copy_loop = copy_loop)                            
             # output the _copyHelper class
-            stream.out(template.typedef_array_copyHelper,
-                       name = derivedName)
-                
-     
+            if types.variableDecl(node):
+                stream.out(template.typedef_array_copyHelper,
+                           name = derivedName)
+                stream.out(template.typedef_array_variable_out_type,
+                           name = derivedName)
+            else:
+                stream.out(template.typedef_array_copyHelper,
+                           name = derivedName)
+                stream.out(template.typedef_array_fix_out_type,
+                           name = derivedName)
+
 
 def visitMember(node):
     memberType = node.memberType()
@@ -918,11 +929,22 @@ def visitStruct(node):
                                dims = tyutil.dimsToString(decl_dims))
             
     # Output the structure itself
-    stream.out(template.struct,
-               name = cxx_name,
-               type = type,
-               Other_IDL = Other_IDL,
-               members = members)
+    if types.variableDecl(node):
+        stream.out(template.struct,
+                   name = cxx_name,
+                   type = "Variable",
+                   Other_IDL = Other_IDL,
+                   members = members)
+        stream.out(template.struct_variable_out_type,
+                   name = cxx_name)
+    else:
+        stream.out(template.struct,
+                   name = cxx_name,
+                   type = "Fix",
+                   Other_IDL = Other_IDL,
+                   members = members)
+        stream.out(template.struct_fix_out_type,
+                   name = cxx_name)
     
     self.__insideClass = insideClass
 
@@ -1602,7 +1624,13 @@ def visitUnion(node):
                tcParser_unionHelper = tcParser_unionHelper,
                union = str(inside),
                outsideUnion = str(outside))
-               
+
+    if types.variableDecl(node):
+        stream.out(template.union_variable_out_type,
+                   unionname = cxx_id)
+    else:
+        stream.out(template.union_fix_out_type,
+                   unionname = cxx_id)
 
     self.__insideClass = insideClass
 

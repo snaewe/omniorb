@@ -1,3 +1,14 @@
+Mon Aug 20 14:44:28 BST 2001 dpg1
+=================================
+
+- Wrong _out type generated for fixed length structs/unions.
+  (Back-ported from omniORB 4.)
+
+include/omniORB3/templatedecls.h
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
 Thu Aug 16 09:58:02 BST 2001 dpg1
 =================================
 

@@ -8,6 +8,13 @@
 
 <buglist version="3.0.4">
 
+<bug id="6" date="Mon Aug 20 14:44:28 BST 2001" user="dpg1">
+  <summary>Wrong _out type for fixed size structs/unions</summary>
+  <reported>Vibhu Rishi</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-08/0130.html"/>
+</bug>
+
 <bug id="5" date="Fri Aug  3 11:09:01 BST 2001" user="dpg1">
   <summary>Refcount not incremented in find_POA with
   AdapterActivator.</summary>
