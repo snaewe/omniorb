@@ -1,3 +1,18 @@
+Mon Nov 20 11:57:27 GMT 2000 dpg1
+=================================
+
+- No need to initialise omniIOR module before uri module.
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/uri.cc
+
+- API to configure code sets.
+
+include/omniORB4/omniORB.h
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+
 Fri Nov 17 19:05:15 GMT 2000 dpg1
 =================================
 
