@@ -74,7 +74,7 @@ and the following omniORB-specific arguments:<BR>
 <TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="omniORB011.html#dii_invoke">11.4</A>.</TD>
 </TR>
 <TR><TD ALIGN=left NOWRAP><TT>-ORBabortOnInternalError </TT>&lt;<I>0 or 1</I>&gt;</TD>
-<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec_fatal">6.10</A>.</TD>
+<TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec_fatal">6.11</A>.</TD>
 </TR>
 <TR><TD ALIGN=left NOWRAP><TT>-ORBverifyObjectExistsAndType </TT>&lt;<I>0 or 1</I>&gt;</TD>
 <TD ALIGN=left NOWRAP>See section&nbsp;<A HREF="#sec_lcd">6.9</A>.</TD>
@@ -366,7 +366,18 @@ line option <TT>-ORBverifyObjectExistsAndType</TT> has the same
 effect.<BR>
 <BR>
 <A NAME="toc35"></A>
-<H2>6.10&nbsp;&nbsp; Trapping omniORB Internal Errors</H2>
+<H2>6.10&nbsp;&nbsp; GIOP Requesting Principal field</H2>In versions 1.0 and 1.1 of the GIOP specification, request messages
+contain a `principal' field which was intended to identify the client.
+The meaning of the principal field was never specified, and its use is
+now deprecated. The field is not present in GIOP 1.2. omniORB normally
+uses the string `<TT>nobody</TT>' in the principal field. However,
+some systems (e.g. the GNOME desktop environment) use the principal
+field as an authentication mechanism, so omniORB allows you to
+configure the principal by setting the <TT>OMNIORB_PRINCIPAL</TT>
+environment variable.<BR>
+<BR>
+<A NAME="toc36"></A>
+<H2>6.11&nbsp;&nbsp; Trapping omniORB Internal Errors</H2>
 <A NAME="sec_fatal"></A><PRE>
 class fatalException {
 public:
@@ -392,8 +403,8 @@ can also be set via the command line option
 <BR>
 <BR>
 <BR>
-<A NAME="toc36"></A>
-<H2>6.11&nbsp;&nbsp; System Exception Handlers</H2>By default, all system exceptions which are raised during an operation
+<A NAME="toc37"></A>
+<H2>6.12&nbsp;&nbsp; System Exception Handlers</H2>By default, all system exceptions which are raised during an operation
 invocation, with the exception of <TT>CORBA::TRANSIENT</TT>, are
 propagated to the application code. Some applications may prefer to
 trap these exceptions within the proxy objects so that the application
@@ -414,7 +425,7 @@ individual proxy objects, or it can be installed for all proxy objects
 in the address space.<BR>
 <BR>
 
-<H3>6.11.1&nbsp;&nbsp; CORBA::TRANSIENT handlers</H3>When a <TT>CORBA::TRANSIENT</TT> exception is raised by the ORB runtime,
+<H3>6.12.1&nbsp;&nbsp; CORBA::TRANSIENT handlers</H3>When a <TT>CORBA::TRANSIENT</TT> exception is raised by the ORB runtime,
 the default behaviour of the proxy objects is to retry indefinitely
 until the operation succeeds. Successive retries will be delayed
 progressively by multiples of
@@ -513,7 +524,7 @@ void installhandlers()
    // The proxy object of myobj will call my_transient_handler2 from now on.
 }
 </PRE>
-<H3>6.11.2&nbsp;&nbsp; CORBA::COMM_FAILURE</H3>When the ORB runtime fails to establish a network connection to the
+<H3>6.12.2&nbsp;&nbsp; CORBA::COMM_FAILURE</H3>When the ORB runtime fails to establish a network connection to the
 remote object and none of the conditions listed above for raising a
 <TT>CORBA::TRANSIENT</TT> is applicable, it raises a
 <TT>CORBA::COMM_FAILURE</TT> exception.<BR>
@@ -543,7 +554,7 @@ static void installCommFailureExceptionHandler(CORBA::Object_ptr obj,
 <TT>CORBA::TRANSIENT</TT>.<BR>
 <BR>
 
-<H3>6.11.3&nbsp;&nbsp; CORBA::SystemException</H3>To report an error condition, the ORB runtime may raise other system
+<H3>6.12.3&nbsp;&nbsp; CORBA::SystemException</H3>To report an error condition, the ORB runtime may raise other system
 exceptions. If the exception is neither <TT>CORBA::TRANISENT</TT> nor
 <TT>CORBA::COMM_FAILURE</TT>, the default behaviour of the proxy
 objects is to propagate this exception to the application.
@@ -568,8 +579,8 @@ static void installSystemExceptionHandler(CORBA::Object_ptr obj,
 </PRE>The functions are equivalent to their counterparts for
 <TT>CORBA::TRANSIENT</TT>.<BR>
 <BR>
-<A NAME="toc37"></A>
-<H2>6.12&nbsp;&nbsp; Location forwarding</H2>
+<A NAME="toc38"></A>
+<H2>6.13&nbsp;&nbsp; Location forwarding</H2>
 <A NAME="sec:locationForward"></A>Any CORBA operation invocation can return a <TT>LOCATION_FORWARD</TT>
 message to the caller, indicating that it should retry the invocation
 on a new object reference. The standard allows ServantManagers to

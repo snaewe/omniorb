@@ -1,3 +1,33 @@
+Tue Sep 19 12:24:15 BST 2000 dpg1
+=================================
+
+- Minor documentation updates: new INS spec, omniidl -T,
+  OMNIORB_PRINCIPAL.
+
+doc/tex/omniORB.bib
+doc/tex/omniORB.tex
+doc/tex/omniidl.tex
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniidl.html
+external_merge/doc/omniidl.pdf
+external_merge/doc/omniidl.ps
+external_merge/doc/omniORB/index.html
+external_merge/doc/omniORB/omniORB001.html
+external_merge/doc/omniORB/omniORB002.html
+external_merge/doc/omniORB/omniORB003.html
+external_merge/doc/omniORB/omniORB004.html
+external_merge/doc/omniORB/omniORB005.html
+external_merge/doc/omniORB/omniORB006.html
+external_merge/doc/omniORB/omniORB007.html
+external_merge/doc/omniORB/omniORB008.html
+external_merge/doc/omniORB/omniORB009.html
+external_merge/doc/omniORB/omniORB010.html
+external_merge/doc/omniORB/omniORB011.html
+external_merge/doc/omniORB/omniORB012.html
+external_merge/doc/omniORB/omniORB014.html
+
+
 Tue Sep 19 10:08:31 BST 2000 dpg1
 =================================
 

@@ -194,6 +194,9 @@ The supported flags are:
 \cmdline{-N}
      \> Do not run the preprocessor.\\
 
+\cmdline{-T}
+     \> Use a temporary file, not a pipe, for preprocessor output.\\
+
 \cmdline{-Wp}\textit{arg}[,\textit{arg}\dots]
      \> Send arguments to the preprocessor.\\
 
@@ -267,6 +270,16 @@ search path by default---use `\cmdline{-I.}' for that. The
 \cmdline{-Y} option can be used to specify a different preprocessor to
 omnicpp. Beware that line directives inserted by other preprocessors
 are likely to confuse \omniidl.
+
+\subsubsection{Windows 9x}
+
+The output from the C preprocessor is normally fed to the \omniidl\
+parser through a pipe. On some Windows 98 machines (but not all!)  the
+pipe does not work, and the preprocessor output is echoed to the
+screen. When this happens, the \omniidl\ parser sees an empty file,
+and produces useless stub files with strange long names. To avoid the
+problem, use the `\cmdline{-T}' option to create a temporary file
+between the two stages.
 
 
 \subsection{Forward-declared interfaces}
@@ -690,7 +703,9 @@ The declaration objects making up the tree have the following classes:
   Boolean: true if the interface is declared abstract.
 
 \dfunc{inherits()}
-  List of \class{Interface} objects from which this one inherits.
+  List of interfaces from which this one inherits. Each list member is
+  either an \class{Interface} object, or a \class{Declarator} object
+  belonging to a typedef to an interface.
 
 \dfunc{contents()}
   List of \class{Decl} objects for all items declared within this

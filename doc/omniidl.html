@@ -77,6 +77,9 @@ The <FONT COLOR=purple>omniidl</FONT> command line has the form:<BR>
 <TR><TD ALIGN=left NOWRAP><TT>-N</TT></TD>
 <TD ALIGN=left NOWRAP>Do not run the preprocessor.</TD>
 </TR>
+<TR><TD ALIGN=left NOWRAP><TT>-T</TT></TD>
+<TD ALIGN=left NOWRAP>Use a temporary file, not a pipe, for preprocessor output.</TD>
+</TR>
 <TR><TD ALIGN=left NOWRAP><TT>-Wp</TT><I>arg</I>[,<I>arg</I>...]</TD>
 <TD ALIGN=left NOWRAP>Send arguments to the preprocessor.</TD>
 </TR>
@@ -145,6 +148,17 @@ search path by default---use `<TT>-I.</TT>' for that. The
 <TT>-Y</TT> option can be used to specify a different preprocessor to
 omnicpp. Beware that line directives inserted by other preprocessors
 are likely to confuse <FONT COLOR=purple>omniidl</FONT>.<BR>
+<BR>
+<!--TOC subsubsection Windows 9x-->
+
+<H4>1.3.1&nbsp;&nbsp; Windows 9x</H4><!--SEC END -->
+The output from the C preprocessor is normally fed to the <FONT COLOR=purple>omniidl</FONT>
+parser through a pipe. On some Windows 98 machines (but not all!) the
+pipe does not work, and the preprocessor output is echoed to the
+screen. When this happens, the <FONT COLOR=purple>omniidl</FONT> parser sees an empty file,
+and produces useless stub files with strange long names. To avoid the
+problem, use the `<TT>-T</TT>' option to create a temporary file
+between the two stages.<BR>
 <BR>
 <!--TOC subsection Forward-declared interfaces-->
 
@@ -506,7 +520,9 @@ The declaration objects making up the tree have the following classes:<BR>
 <DT><TT>abstract()</TT><DD><BR>Boolean: true if the interface is declared abstract.<BR>
 <BR>
 
-<DT><TT>inherits()</TT><DD><BR>List of <TT>Interface</TT> objects from which this one inherits.<BR>
+<DT><TT>inherits()</TT><DD><BR>List of interfaces from which this one inherits. Each list member is
+ either an <TT>Interface</TT> object, or a <TT>Declarator</TT> object
+ belonging to a typedef to an interface.<BR>
 <BR>
 
 <DT><TT>contents()</TT><DD><BR>List of <TT>Decl</TT> objects for all items declared within this
