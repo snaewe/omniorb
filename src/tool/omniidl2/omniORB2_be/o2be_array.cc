@@ -10,11 +10,14 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/13 15:35:19  sll
-  Added code to implement isVariable() properly.
-  New member function produce_typedef_hdr(). This is called when a typedef
-  declaration is encountered.
+  Revision 1.3  1997/02/17 18:01:56  ewc
+  Added support for Windows NT
 
+// Revision 1.2  1997/01/13  15:35:19  sll
+// Added code to implement isVariable() properly.
+// New member function produce_typedef_hdr(). This is called when a typedef
+// declaration is encountered.
+//
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -85,6 +88,7 @@ o2be_array::getSliceDim()
     default:
       throw o2be_internal_error(__FILE__,__LINE__,"unexpected type for array dimension");
     }
+  return 0;
 }
 
 AST_Decl *
@@ -222,6 +226,7 @@ dim_iterator::operator() ()
     default:
       throw o2be_internal_error(__FILE__,__LINE__,"unexpected type for array dimension");
     }
+  return 0;
 }
 
 void
