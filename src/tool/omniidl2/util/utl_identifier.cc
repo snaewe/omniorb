@@ -95,12 +95,23 @@ Identifier::get_string()
 
 // Compare two Identifier *
 long
-Identifier::compare(Identifier *o)
+Identifier::compare(Identifier *o,idl_bool ignore_case)
 {
   if (o == NULL) return I_FALSE;
   if (pv_string == NULL || o->get_string() == NULL)
     return I_FALSE;
-  return (strcmp(pv_string, o->get_string()) == 0) ? I_TRUE : I_FALSE;
+  if (!ignore_case) {
+    return (strcmp(pv_string, o->get_string()) == 0) ? I_TRUE : I_FALSE;
+  }
+  else {
+#ifndef __WIN32__
+    // Use BSD 4.3 function strcasecmp. 
+    return (strcasecmp(pv_string,o->get_string()) == 0) ? I_TRUE : I_FALSE;
+#else
+   // Use WIN32 case insensitive string compare _stricmp
+    return (_stricmp(pv_string,o->get_string()) == 0) ? I_TRUE : I_FALSE;
+#endif
+  }
 }
 
 // Dumping
