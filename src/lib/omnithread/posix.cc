@@ -771,8 +771,16 @@ omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 
 #ifndef NoNanoSleep
 
-    if (nanosleep(&rqts, (timespec*)NULL) != 0)
+    timespec remain;
+    while (nanosleep(&rqts, &remain)) {
+      if (errno == EINTR) {
+	rqts.tv_sec  = remain.tv_sec;
+	rqts.tv_nsec = remain.tv_nsec;
+	continue;
+      }
+      else
 	throw omni_thread_fatal(errno);
+    }
 #else
 
 #if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS) || defined(__SINIX__)
@@ -783,7 +791,7 @@ omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 #elif defined(__linux__) || defined(__aix__)
 
     if (secs > 2000) {
-	::sleep(secs);
+      while (secs = ::sleep(secs)) ;
     } else {
 	usleep(secs * 1000000 + (nanosecs / 1000));
     }
