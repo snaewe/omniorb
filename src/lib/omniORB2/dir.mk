@@ -18,6 +18,12 @@ EXPORTHEADERS = omniORB3/Naming.hh \
                 omniORB3/ir_defs.hh \
                 omniORB3/ir_operators.hh \
                 omniORB3/ir_poa.hh \
+	        omniORB3/pollable_defs.hh \
+	        omniORB3/pollable_operators.hh \
+                omniORB3/pollable_poa.hh \
+                omniORB3/omniMessaging_defs.hh \
+                omniORB3/omniMessaging_operators.hh \
+                omniORB3/omniMessaging_poa.hh \
                 omniORB3/omniLifeCycle.hh
 
 STUBHEADERS = $(EXPORTHEADERS) \
@@ -58,7 +64,7 @@ omniORB3/bootstrap.hh : bootstrap.idl
 	@(dir=omniORB3; $(CreateDir))
 	$(OMNIORB_IDL) -ComniORB3 $<
 
-omniORB3/ir_defs.hh omniORB3/ir_oprators.hh omniORB3/ir_poa.hh: ir.idl
+omniORB3/ir_defs.hh omniORB3/ir_operators.hh omniORB3/ir_poa.hh: ir.idl
 	@(dir=omniORB3; $(CreateDir))
 	$(OMNIORB_IDL) -WbF $(IMPORT_IDLFLAGS) -ComniORB3 $<
 
@@ -69,6 +75,17 @@ omniORB3/corbaidl_defs.hh corbaidl_operators.hh corbaidl_poa.hh: corbaidl.idl
 omniORB3/omniLifeCycle.hh : omniLifeCycle.idl
 	@(dir=omniORB3; $(CreateDir))
 	$(OMNIORB_IDL) -ComniORB3 $<
+
+omniORB3/pollable_defs.hh omniORB3/pollable_operators.hh \
+        omniORB3/pollable_poa.hh: pollable.idl
+	@(dir=omniORB3; $(CreateDir))
+	$(OMNIORB_IDL) -WbF -ComniORB3 $<
+
+omniORB3/omniMessaging_defs.hh omniORB3/omniMessaging_operators.hh \
+        omniORB3/omniMessaging_poa.hh: omniMessaging.idl
+	@(dir=omniORB3; $(CreateDir))
+	$(OMNIORB_IDL) -WbF -ComniORB3 $<
+
 
 ciao:: $(STUBHEADERS)
 	@$(MakeSubdirs)

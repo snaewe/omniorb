@@ -29,7 +29,8 @@ DYN_SRCS = \
            Namingdynstub.cc \
 	   orbMultiRequest.cc \
            constants.cc \
-           dynamicLib.cc
+           dynamicLib.cc \
+	   messagingdynstub.cc
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
