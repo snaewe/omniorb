@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/12/10 18:26:36  djs
+# Moved most #ifdef buildDesc code into a separate module
+# General tidying up
+#
 # Revision 1.1  1999/12/09 20:40:14  djs
 # TypeCode and Any generation option performs identically to old compiler for
 # all current test fragments.
@@ -89,8 +93,6 @@ def external_linkage(decl, mangled_name = ""):
     scope = tyutil.scope(scopedName)
     tc_name = name.prefixName(scopedName, "_tc_")
     tc_unscoped_name = "_tc_" + tyutil.name(scopedName)
-    #tc_name = "_tc_" + tyutil.mapID(tyutil.name(scopedName))
-    #tc_scopedName = scope + [tc_name]
 
     if mangled_name == "":
         mangled_name = "_0RL_tc_" + guard_name
@@ -119,7 +121,6 @@ const CORBA::TypeCode_ptr @tc_name@ = @mangled_name@;
         flatscope = scope[0]
 
     env = name.Environment()
-    #tc_scopedName_str = env.nameToString(tc_scopedName)
             
     where.out("""\
 namespace @scope@ {

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/12/10 18:26:36  djs
+# Moved most #ifdef buildDesc code into a separate module
+# General tidying up
+#
 # Revision 1.2  1999/12/09 20:40:14  djs
 # TypeCode and Any generation option performs identically to old compiler for
 # all current test fragments.
@@ -47,13 +51,14 @@ from omniidl.be.cxx import tyutil, util, name, config
 
 from omniidl.be.cxx.skel import mangler
 
+from omniidl.be.cxx.dynskel import bdesc
+
 import main
 
 self = main
 
 def __init__(stream):
     self.stream = stream
-    self.__buildDesc = {}
     return self
 
 # ------------------------------------
@@ -157,157 +162,12 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s) {
                tc_name = tc_name)
 
 
-def buildDesc_array(aliasType, declarator):
-    assert isinstance(aliasType, idltype.Type)
-    assert isinstance(declarator, idlast.Declarator)
-    # should be an array declarator
-    decl_dims = declarator.sizes()
-    assert (decl_dims != [])
-
-    deref_aliasType = tyutil.deref(aliasType)
-    type_dims = tyutil.typeDims(aliasType)
-    full_dims = decl_dims + type_dims
-    env = name.Environment()
-    scopedName = declarator.scopedName()
-    fqname = env.nameToString(scopedName)
-    tc_name = name.prefixName(scopedName, "_tc_")
-    guard_name = tyutil.guardName(scopedName)
-    # problem with sequences as always
-    # Probably should look into derefKeepDims here
-    if tyutil.isSequence(deref_aliasType) and tyutil.isTypedef(aliasType):
-        alias = aliasType.decl().alias()
-        alias_cname = mangler.canonTypeName(alias.aliasType())
-    else:
-        # assume that dimensions are handled later on by hand
-        alias_cname = mangler.canonTypeName(deref_aliasType)
-    alias_tyname = env.principalID(aliasType)
-    deref_keep_dims_alias_tyname = env.principalID(tyutil.derefKeepDims(aliasType))
-    deref_alias_tyname = env.principalID(deref_aliasType)
-    decl_cname = mangler.canonTypeName(aliasType, declarator)
-
-    desc = util.StringStream()
-
-    if tyutil.isObjRef(deref_aliasType):
-        # this could easily now be broken:
-        objref_name = tyutil.objRefTemplate(deref_aliasType, "Member", env)
-        deref_alias_tyname = objref_name
-        # only if a direct typedef to an objref. Musn't duplicate prototype
-        if type_dims == []:
-            alias_tyname = objref_name
-        if type_dims == []:
-            desc.out(str(buildDesc_int(aliasType)))
-
-    def canonDims(d):
-        canon = map(lambda x:"_a" + str(x), d)
-        return string.join(canon, "")
-
-
-    # for some reason, a multidimensional declarator will create
-    # several of these functions, slowly adding dimensions
-    current_dims = []
-    index = len(decl_dims) - 1
-
-    # if thing being aliased is also an array declarator, we need
-    # to add its dimensions too.
-    if tyutil.isTypedef(aliasType):
-        #current_dims = aliasType.decl().sizes()
-        current_dims = tyutil.typeDims(aliasType)
-    prev_cname = canonDims(current_dims) + alias_cname
-        
-            
-    builddesc_flat_str = "_0RL_buildDesc" + alias_cname +\
-                         "(_desc, _0RL_tmp);"
-    if type_dims == []:
-        builddesc_str = builddesc_flat_str
-    else:
-        builddesc_str = """\
-_desc.p_array.getElementDesc = _0RL_tcParser_getElementDesc""" + prev_cname + """;
-_desc.p_array.opq_array = &_0RL_tmp;"""
-
-    element_name = alias_tyname
-    
-    if tyutil.isString(deref_aliasType):
-        if type_dims == []:
-            element_name = deref_alias_tyname # String_member
-    elif tyutil.isSequence(aliasType):
-        element_name = tyutil.sequenceTemplate(aliasType, env)
-
-    element_dims = []
-    while index >= 0:
-
-        first_iteration = element_dims == []
-        
-        element_dims = [decl_dims[index]] + element_dims
-        current_dims = [decl_dims[index]] + current_dims
-        index = index - 1
-
-        new_cname = canonDims(element_dims[1:]) + prev_cname
-        builddesc_str = """\
-_desc.p_array.getElementDesc = _0RL_tcParser_getElementDesc""" + new_cname + """;
-_desc.p_array.opq_array = &_0RL_tmp;"""
-
-        # first iteration, check for special case
-        if first_iteration:
-            if type_dims == []:
-                builddesc_str = builddesc_flat_str
-
-        element_tail_dims = element_dims[1:]
-        dims_index = map(lambda x:"[" + str(x) + "]", element_dims)
-        dims_tail_index = dims_index[1:]
-        this_cname = canonDims(current_dims) + alias_cname
-        desc.out("""\
-#ifndef __0RL_tcParser_getElementDesc@this_cname@__
-#define __0RL_tcParser_getElementDesc@this_cname@__
-static CORBA::Boolean
-_0RL_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _index, tcDescriptor &_desc)
-{
-  @type@ (&_0RL_tmp)@tail_dims@ = (*((@type@(*)@index_string@)_adesc->opq_array))[_index];
-  @builddesc@
-  return 1;
-}
-#endif
-""",
-                   this_cname = this_cname,
-                   type = element_name,
-                   tail_dims = string.join(dims_tail_index, ""),
-                   builddesc = builddesc_str,
-                   index_string = string.join(dims_index, ""))
-
-
-    dims_str   = map(str, full_dims)
-    dims_index = map(lambda x:"[" + x + "]", dims_str)
-    dims_tail_index = dims_index[1:]
-    tail_dims = string.join(dims_tail_index, "")
-
-    argtype = deref_alias_tyname
-    if tyutil.isSequence(deref_aliasType):
-        argtype = tyutil.sequenceTemplate(deref_aliasType, env)
-
-    desc.out("""\
-#ifndef __0RL_tcParser_buildDesc@decl_cname@__
-#define __0RL_tcParser_buildDesc@decl_cname@__
-static void
-_0RL_buildDesc@decl_cname@(tcDescriptor& _desc, const @dtype@(*_data)@tail_dims@)
-{
-  _desc.p_array.getElementDesc = _0RL_tcParser_getElementDesc@decl_cname@;
-  _desc.p_array.opq_array = (void*) _data;
-}
-#endif
-""",
-               decl_cname = decl_cname,
-               tail_dims = tail_dims,
-               dtype = argtype,
-               type = alias_tyname)
-
-    return desc
-
 def visitTypedef(node):
     aliasType = node.aliasType()
     deref_aliasType = tyutil.deref(aliasType)
     type_dims = tyutil.typeDims(aliasType)
     env = name.Environment()
 
-#    alias_cname = mangler.produce_canonical_name_for_type(aliasType)
     alias_cname = mangler.canonTypeName(aliasType)
     alias_tyname = env.principalID(aliasType)
     deref_alias_tyname = env.principalID(deref_aliasType)
@@ -340,9 +200,9 @@ void _0RL_delete_@guard_name@(void* _data) {
             # if the alias points to an "anonymous" sequence type
             # then we need to build it too
             if tyutil.isSequence(aliasType):
-                stream.out(str(buildMemberDesc_seq(aliasType)))
+                stream.out(str(bdesc.sequence(aliasType)))
             
-            stream.out(str(buildDesc_array(aliasType, declarator)))
+            stream.out(str(bdesc.array(aliasType, declarator)))
 
             dims_str   = map(str, full_dims)
             dims_index = map(lambda x:"[" + x + "]", dims_str)
@@ -406,7 +266,7 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_forany& _s) {
 
         # --- sequences
         if not(is_array_declarator) and tyutil.isSequence(aliasType):
-            stream.out(str(buildMemberDesc_seq(deref_aliasType)))
+            stream.out(str(bdesc.sequence(deref_aliasType)))
             stream.out("""\
 void operator <<= (CORBA::Any& a, const @fqname@& s)
 {
@@ -489,238 +349,6 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@& _s)
                guard_name = guard_name,
                fqname = fqname)
 
-# dont_do_tail is a hack, set to 1 if the type has a corresponding
-# array declarator.
-def buildDesc_docast(type, string, dont_do_tail = 0):
-    assert isinstance(type, idltype.Type)
-    env = name.Environment()
-    dims = tyutil.typeDims(type)
-    tail_dims_string = ""
-    if dims != []:
-        if dont_do_tail:
-            tail_dims = dims[:]
-        else:
-            tail_dims = dims[1:] 
-        tail_dims_string = tyutil.dimsToString(tail_dims)
-    deref_type = tyutil.deref(type)
-    cast_to = env.principalID(deref_type, fully_scope = 1)
-    if tyutil.isObjRef(deref_type):
-        cast_to = tyutil.objRefTemplate(deref_type, "Member", env)
-    elif tyutil.isSequence(deref_type):
-        cast_to = tyutil.sequenceTemplate(deref_type, env)
-    cast_to = cast_to + "(*)" + tail_dims_string
-    return "(const " + cast_to + ")(" + cast_to + ")" +\
-           "(" + string + ")"
-
-def buildDesc_int(type):
-    assert isinstance(type, idltype.Type)
-    deref_type = tyutil.deref(type)
-    desc = util.StringStream()
-    if tyutil.isObjRef(deref_type):
-        cname = mangler.canonTypeName(tyutil.derefKeepDims(type))
-        # have we already made this declaration?
-        if not(self.__buildDesc.has_key(cname)):
-            self.__buildDesc[cname] = "defined"
-            env = name.Environment()
-            objref_name = tyutil.objRefTemplate(deref_type, "Member", env)
-            desc.out("""\
-extern void _0RL_buildDesc@cname@(tcDescriptor &, const @objref@&);""",
-                     cname = cname, objref = objref_name)
-    return desc
-
-# This needs to be refactored bigtime :)
-def buildMemberDesc_seq(type):
-    env = name.Environment()
-    seqType = type.seqType()
-    deref_seqType = tyutil.deref(seqType)
-    # FIXME:this is very hacky
-    seqType_cname = mangler.canonTypeName(tyutil.derefKeepDims(seqType))
-    #seqType_cname = mangler.produce_canonical_name_for_type(seqType)
-    sequence_template = tyutil.sequenceTemplate(type, env)
-    deref_type = tyutil.deref(type)
-    memberType_cname = mangler.canonTypeName(deref_type)
-
-    seqType_dims = tyutil.typeDims(seqType)
-    is_array = seqType_dims != []
-
-    # something very strange happens here with strings and casting
-    thing = "(*((" + sequence_template + "*)_desc->opq_seq))[_index]"
-    if is_array:
-        thing = buildDesc_docast(seqType, thing)
-        #cast = env.principalID(deref_seqType, fully_scope = 1)
-        #thing = "(const " + cast + "(*))(" + cast + "(*))" +\
-        #        "(" + thing + ")"
-
-    desc = util.StringStream()
-
-    if tyutil.isObjRef(deref_seqType):
-        objref_name = tyutil.objRefTemplate(deref_seqType, "Member", env)
-        if not(is_array):
-            desc.out(str(buildDesc_int(seqType)))
-        #if not(tyutil.isTypedef(seqType)) or is_array:
-        if 0:
-            desc.out("""\
-extern void _0RL_buildDesc@alias_cname@(tcDescriptor &, const @objref@&);""",
-                   alias_cname = seqType_cname,
-                   objref = objref_name)
-    
-    desc.out("""\
-#ifndef __0RL_tcParser_buildDesc@cname@__
-#define __0RL_tcParser_buildDesc@cname@__
-static void
-_0RL_tcParser_setElementCount@cname@(tcSequenceDesc* _desc, CORBA::ULong _len)
-{
-  ((@sequence_template@*)_desc->opq_seq)->length(_len);
-}
-
-static CORBA::ULong
-_0RL_tcParser_getElementCount@cname@(tcSequenceDesc* _desc)
-{
-  return ((@sequence_template@*)_desc->opq_seq)->length();
-}
-
-static CORBA::Boolean
-_0RL_tcParser_getElementDesc@cname@(tcSequenceDesc* _desc, CORBA::ULong _index, tcDescriptor& _newdesc)
-{
-  _0RL_buildDesc@thing_cname@(_newdesc, @thing@);
-  return 1;
-}
-
-static void
-_0RL_buildDesc@cname@(tcDescriptor &_desc, const @sequence_template@& _data)
-{
-  _desc.p_sequence.opq_seq = (void*) &_data;
-  _desc.p_sequence.setElementCount =
-    _0RL_tcParser_setElementCount@cname@;
-  _desc.p_sequence.getElementCount =
-    _0RL_tcParser_getElementCount@cname@;
-  _desc.p_sequence.getElementDesc =
-    _0RL_tcParser_getElementDesc@cname@;
-  }
-#endif
-""", cname = memberType_cname, thing_cname = seqType_cname,
-             sequence_template = sequence_template,
-             thing = thing)
-    return desc
-
-# This code appears to be common to both structs and exceptions.
-# Differences include some whitespace formatting and
-# functions declared as static for structs and not for exceptions?
-def buildMemberDesc(node, modify_for_exception = 0):
-    scopedName = node.scopedName()
-    guard_name = tyutil.guardName(scopedName)
-    env = name.Environment()
-    fqname = env.nameToString(scopedName)
-        
-    cases = util.StringStream()
-    num_members = 0
-    desc = util.StringStream()
-    for member in node.members():
-        memberType = member.memberType()
-        deref_memberType = tyutil.derefKeepDims(memberType)
-        memberType_cname = mangler.canonTypeName(deref_memberType)
-        deref_memberType_name = env.principalID(tyutil.deref(memberType),
-                                                fully_scope = 1)
-        member_dims = tyutil.typeDims(memberType)
-        is_array = member_dims != []
-        
-        if tyutil.isObjRef(deref_memberType):
-            m_scopedName = memberType.decl().scopedName()
-            objref_name = name.prefixName(m_scopedName, "_objref_")
-            helper_name = name.suffixName(m_scopedName, "_Helper")
-            objref_member = "_CORBA_ObjRef_Member<" + objref_name + ", " +\
-                            helper_name + ">"
-            if not(is_array):
-                desc.out(str(buildDesc_int(memberType)))
-            if 0:
-            #if tyutil.isObjRef(memberType):
-                desc.out("""\
-extern void _0RL_buildDesc@cname@(tcDescriptor &, const @objref_member@&);""",
-                         cname = memberType_cname,
-                         objref_member = objref_member)
-        elif tyutil.isSequence(memberType):
-            desc.out(str(buildMemberDesc_seq(memberType)))
-        elif tyutil.isString(memberType):
-            bound = memberType.bound()
-            if bound != 0:
-                desc.out("""\
-#ifndef _0RL_buildDesc_c@n@string
-#define _0RL_buildDesc_c@n@string _0RL_buildDesc_cstring
-#endif""", n = str(bound))
-
-
-        # build the cases
-        for d in member.declarators():
-            member_scopedName = d.scopedName()
-            member_name = tyutil.mapID(tyutil.name(member_scopedName))
-            decl_cname = mangler.canonTypeName(deref_memberType, d)
-            decl_dims = d.sizes()
-            full_dims = decl_dims + member_dims
-            is_array = full_dims != []
-            is_array_declarator = decl_dims != []
-
-            if is_array_declarator:
-                desc.out(str(buildDesc_array(memberType, d)))
-
-            # something strange happening here too
-            thing = "((" + fqname + "*)_desc->opq_struct)->" + member_name
-            if is_array:
-                thing = buildDesc_docast(memberType, thing)
-                #cast = deref_memberType_name
-                #thing = "(const " + cast +"(*))(" + cast + "(*))" +\
-                #        "(" + thing + ")"
-
-            cases.out("""\
-case @n@:
-  _0RL_buildDesc@cname@(_newdesc, @thing@);
-  return 1;""", n = str(num_members), cname = decl_cname,
-                      thing = thing)
-            num_members = num_members + 1
-
-    # IMPROVEME (FIXME)
-    if modify_for_exception:
-        desc.out("""\
-CORBA::Boolean _0RL_tcParser_getMemberDesc_@guard_name@(tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc)
-{""", guard_name = guard_name)
-    else:
-        desc.out("""\
-static CORBA::Boolean
-_0RL_tcParser_getMemberDesc_@guard_name@(tcStructDesc *_desc, CORBA::ULong _index, tcDescriptor &_newdesc){""", guard_name = guard_name)
-
-    desc.inc_indent()
-    desc.out("""\
-  switch (_index) {
-  @cases@
-  default:
-    return 0;
-  };
-}
-""", cases = str(cases))
-    if modify_for_exception:
-        desc.out("""\
-CORBA::ULong""")
-    else:
-        desc.out("""\
-static CORBA::ULong""")
-    desc.out("""\
-_0RL_tcParser_getMemberCount_@guard_name@(tcStructDesc *_desc)
-{
-  return @num_members@;
-}
-
-void _0RL_buildDesc_c@guard_name@(tcDescriptor &_desc, const @fqname@& _data)
-{
-  _desc.p_struct.getMemberDesc = _0RL_tcParser_getMemberDesc_@guard_name@;
-  _desc.p_struct.getMemberCount = _0RL_tcParser_getMemberCount_@guard_name@;
-  _desc.p_struct.opq_struct = (void *)&_data;
-}
-
-""",
-             guard_name = guard_name,
-             fqname = fqname,
-             num_members = str(num_members),
-             cases = str(cases))
-    return desc
    
 def visitStruct(node):
 
@@ -737,7 +365,7 @@ def visitStruct(node):
         # recurse
         m.accept(self)
 
-    member_desc = buildMemberDesc(node)    
+    member_desc = bdesc.member(node)    
 
     stream.out("""\
 void _0RL_delete_@guard_name@(void* _data) {
@@ -814,7 +442,7 @@ def visitUnion(node):
         mem_name = tyutil.name(default_case.declarator().scopedName())
         thing = "_u->pd_" + mem_name
         if default_is_array:
-            thing = buildDesc_docast(default_type, thing)
+            thing = bdesc.docast(default_type, thing)
         
         switch.out("""\
     if( _u->pd__default ) {
@@ -844,23 +472,16 @@ def visitUnion(node):
         union_member = "_u->pd_" + mem_name
         cast = union_member
         if is_array:
-            cast = buildDesc_docast(caseType, cast, is_array_declarator)
+            cast = bdesc.docast(caseType, cast, is_array_declarator)
 
         # handle cases which are themselves anonymous array
         # or sequence declarators
         if tyutil.isSequence(caseType):
-            stream.out(str(buildMemberDesc_seq(caseType)))
+            stream.out(str(bdesc.sequence(caseType)))
         if is_array_declarator:
-            stream.out(str(buildDesc_array(caseType, declarator)))
+            stream.out(str(bdesc.array(caseType, declarator)))
         if tyutil.isObjRef(caseType):
-            stream.out(str(buildDesc_int(caseType)))
-            
-        #if is_array:
-        #    tail_dims = case_dims[1:]
-        #    tail_str = tyutil.dimsToString(tail_dims)
-        #    cast = deref_type_name + "(*)" + tail_str
-        #    cast = "(const " + cast + ")(" + cast + ")" +\
-        #           "(" + union_member + ")"
+            stream.out(str(bdesc.interface(caseType)))
             
         for l in c.labels():
             if l.default():
@@ -993,7 +614,7 @@ def visitException(node):
 
         memberType = m.memberType()
 
-    stream.out(str(buildMemberDesc(node, modify_for_exception = 1)))
+    stream.out(str(bdesc.member(node, modify_for_exception = 1)))
 
     stream.out("""\
 void _0RL_delete_@guard_name@(void* _data) {
