@@ -3627,11 +3627,10 @@ name in a CORBA Naming service. They are an extension of the
 \corbauri{corbaname:rir:/NameService#project/example/echo.obj}
 \end{quote}
 
-\noindent Note that the object found with the
-\corbauri{corbaloc}-style portion must be of type
-\intf{CosNaming::NamingContext}, or something derived from it. If the
-object key (or \corbauri{rir} name) is `\corbauri{NameService}', it
-can be left out:
+\noindent The object found with the \corbauri{corbaloc}-style portion
+must be of type \intf{CosNaming::\dsc{}NamingContext}, or something
+derived from it. If the object key (or \corbauri{rir} name) is
+`\corbauri{NameService}', it can be left out:
 
 \begin{quote}
 \corbauri{corbaname::myhost#project/example/echo.obj}\\
