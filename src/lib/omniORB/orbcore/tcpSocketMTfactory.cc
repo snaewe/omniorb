@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.2.4  2000/10/06 16:38:34  sll
+  Replaced omniConnectionBroken with strand::raiseException().
+
   Revision 1.29.2.3  2000/09/27 18:32:41  sll
   Use the new reference counting scheme of Strand.
   New signature findIncoming() and findOrCreateOutgoing().
@@ -595,9 +598,9 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 
   if ((pd_rendezvous = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
 # ifndef __WIN32__
-    OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 # else
-    OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 # endif
   }
   myaddr.sin_family = INETSOCKET;
@@ -611,10 +614,9 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
       {
 	CLOSESOCKET(pd_rendezvous);
 #     ifndef __WIN32__
-	OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #     else
-	OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),
-					CORBA::COMPLETED_NO);
+	OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #     endif
       }
   }
@@ -624,9 +626,9 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
   {
     CLOSESOCKET(pd_rendezvous);
 # ifndef __WIN32__
-    OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 # else
-    OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 # endif
   }
 
@@ -634,9 +636,9 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
   if (listen(pd_rendezvous,5) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_rendezvous);
 # ifndef __WIN32__
-    OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 # else
-    OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 # endif
   }
   
@@ -659,9 +661,9 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 		    (struct sockaddr *)&myaddr,&l) == RC_SOCKET_ERROR) {
       CLOSESOCKET(pd_rendezvous);
 # ifndef __WIN32__
-      OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 # else
-      OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),CORBA::COMPLETED_NO);
+      OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 # endif
     }
 
@@ -1010,11 +1012,12 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
     //
     if ((pd_socket = realConnect(pd_delay_connect,this)) == RC_INVALID_SOCKET) {
       _setStrandIsDying();
-#   ifndef __WIN32__
-      OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
-#   else
-      OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),CORBA::COMPLETED_NO);
-#   endif
+#ifndef __WIN32__
+      raiseException(errno,CORBA::COMPLETED_NO);
+#else
+      raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
+      // Never reach here.
     }
     delete pd_delay_connect;
     pd_delay_connect = 0;
@@ -1075,23 +1078,23 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
       else
 	{
 	  _setStrandIsDying();
-#       ifndef __WIN32__
-	  OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
-#       else
-	  OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),
-					  CORBA::COMPLETED_NO);
-#       endif
+#ifndef __WIN32__
+	  raiseException(errno,CORBA::COMPLETED_NO);
+#else
+	  raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
+	  // Never reach here
 	}
     }
     else
       if (rx == 0) {
 	_setStrandIsDying();
-#     ifndef __WIN32__
-	OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
-#     else
-	OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),
-					CORBA::COMPLETED_NO);
-#     endif
+#ifndef __WIN32__
+	raiseException(errno,CORBA::COMPLETED_NO);
+#else
+	raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
+	// Never reach here.
       }
     break;
   }
@@ -1112,11 +1115,11 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
     //
     if ((pd_socket = realConnect(pd_delay_connect,this)) == RC_INVALID_SOCKET) {
       _setStrandIsDying();
-#   ifndef __WIN32__
-      OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
-#   else
-      OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),CORBA::COMPLETED_NO);
-#   endif
+#ifndef __WIN32__
+      raiseException(errno,CORBA::COMPLETED_NO);
+#else
+      raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
     }
     delete pd_delay_connect;
     pd_delay_connect = 0;
@@ -1144,27 +1147,25 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
 	continue;
       else {
 	_setStrandIsDying();
-	OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
+	raiseException(errno,CORBA::COMPLETED_NO);
       }
 #   else
       if (::WSAGetLastError() == WSAEINTR)
  	continue;
       else {
  	_setStrandIsDying();
-	OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),
-					CORBA::COMPLETED_MAYBE);
+	raiseException(::WSAGetLastError(),CORBA::COMPLETED_MAYBE);
       }
 #   endif
     }
     else
       if (tx == 0) {
 	_setStrandIsDying();
-#     ifndef __WIN32__
-	OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
-#     else
-	OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),
-					CORBA::COMPLETED_NO);
-#     endif
+#ifndef __WIN32__
+	raiseException(errno,CORBA::COMPLETED_NO);
+#else
+	raiseException(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
       }
     sz -= tx;
     p += tx;
@@ -1437,12 +1438,11 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
       if ((new_sock = ::accept(r->pd_rendezvous,(struct sockaddr *)&raddr,&l)) 
 	                          == RC_INVALID_SOCKET) {
-#     ifndef __WIN32__
-	OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
-#     else
-	OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),
-					CORBA::COMPLETED_NO);
-#     endif
+#ifndef __WIN32__
+	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+#else
+	throw CORBA::COMM_FAILURE(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
       }
 
       PTRACE("Rendezvouser","unblock from accept()");
@@ -1498,7 +1498,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
       }
     }
-    catch(omniConnectionBroken&) {
+    catch(const CORBA::COMM_FAILURE &) {
       // XXX accepts failed. The probable cause is that the number of
       //     file descriptors opened has exceeded the limit.
       //     On unix, the value of this limit can be set and get using the
@@ -1657,7 +1657,7 @@ tcpSocketWorker::_realRun(void *arg)
 
 	  GIOP_S::dispatcher(s);
 	}
-	catch (omniConnectionBroken&) {
+	catch (const CORBA::COMM_FAILURE&) {
 	  PTRACE("Worker","#### Connection closed.");
 	  break;
 	}
@@ -1708,8 +1708,8 @@ public:
 	}
 	GIOP_S::dispatcher(s);
       }
-      catch (omniConnectionBroken&) {
-	PTRACE("SideKick","Connection closed.");
+      catch (const CORBA::COMM_FAILURE &) {
+	PTRACE("SideKick","Communication failure. Connection closed.");
 	break;
       }
       catch(const omniORB::fatalException &ex) {
