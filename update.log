@@ -1,3 +1,13 @@
+Fri Nov  3 17:19:49 GMT 2000 sll
+================================
+
+- Removed temporary files as they are no longer needed once the idl compiler
+  has been updated.
+
+src/lib/omniORB/omniORB4/*           REMOVED
+src/examples/echo/echoSK.cc
+
+
 Fri Nov  3 12:18:46 GMT 2000 dpg1
 =================================
 
