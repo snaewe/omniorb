@@ -1310,7 +1310,8 @@ void fetchItem(const TypeCode_base* tc, cdrStream& src, tcDescriptor& tcdata)
 //////////////////////////////////////////////////////////////////////
 
 void
-_0RL_tcParser_objref_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr)
+_0RL_tcParser_objref_setObjectPtr(const tcObjrefDesc* desc,
+				  CORBA::Object_ptr ptr)
 {
   CORBA::Object_ptr* pp = (CORBA::Object_ptr*)desc->opq_objref;
   if (desc->opq_release && !CORBA::is_nil(*pp)) {

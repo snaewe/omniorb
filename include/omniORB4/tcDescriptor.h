@@ -456,7 +456,8 @@ _0RL_buildDesc_cfixed(tcDescriptor &desc, const CORBA::Fixed &data)
 ///////////////////
 
 extern void
-_0RL_tcParser_objref_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr);
+_0RL_tcParser_objref_setObjectPtr(const tcObjrefDesc* desc,
+				  CORBA::Object_ptr ptr);
 
 extern CORBA::Object_ptr
 _0RL_tcParser_objref_getObjectPtr(const tcObjrefDesc* desc);
