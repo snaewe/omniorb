@@ -137,29 +137,131 @@ private:
 ///////////////// _CORBA_Pseudo_Unbounded_Sequence ///////////////////
 //////////////////////////////////////////////////////////////////////
 
-template <class T>
+template <class T, class ElemT>
 class _CORBA_Pseudo_Unbounded_Sequence {
 public:
-  typedef _CORBA_Pseudo_Unbounded_Sequence<T> T_seq;
+  typedef _CORBA_Pseudo_Unbounded_Sequence<T,ElemT> T_seq;
 
   inline _CORBA_Pseudo_Unbounded_Sequence()
     : pd_max(0), pd_len(0), pd_rel(1), pd_buf(0) { }
   inline _CORBA_Pseudo_Unbounded_Sequence(_CORBA_ULong max)
     : pd_max(max), pd_len(0), pd_rel(1)
   {
-    if( !(pd_buf = allocbuf(max)) )
+    if( !(pd_buf = new ElemT[max]) )
       _CORBA_new_operator_return_null();
   }
 
   inline _CORBA_Pseudo_Unbounded_Sequence(_CORBA_ULong max,
 					  _CORBA_ULong length,
-					  T* value, _CORBA_Boolean release = 0)
+					  T** value, _CORBA_Boolean release = 0)
+    : pd_max(max), pd_len(length)
+  {
+    if( length > max )  _CORBA_bound_check_error();
+    pd_buf = new ElemT[length];
+    if( release ) {
+      for( _CORBA_ULong i = 0; i < length; i++ )  pd_buf[i] = value[i];
+      delete[] value;
+    }
+    else {
+      for( _CORBA_ULong i = 0; i < length; i++ )
+	pd_buf[i] = value[i];
+    }
+  }
+
+  inline _CORBA_Pseudo_Unbounded_Sequence(const T_seq& s)
+    : pd_max(s.pd_max), pd_len(s.pd_len), pd_rel(1)
+  {
+    if( !(pd_buf = new ElemT[s.pd_max]) )
+      _CORBA_new_operator_return_null();
+    for( _CORBA_ULong i=0; i < s.pd_len; i++ ) {
+      pd_buf[i] = s.pd_buf[i];
+    }
+  }
+
+  inline ~_CORBA_Pseudo_Unbounded_Sequence() {
+    if( pd_rel && pd_buf )  delete[] pd_buf;
+  }
+
+  inline T_seq& operator= (const T_seq& s) {
+    if( pd_max < s.pd_max ) {
+      ElemT* newbuf = new ElemT[s.pd_max];
+      if( !newbuf )  _CORBA_new_operator_return_null();
+      pd_max = s.pd_max;
+      if( pd_rel && pd_buf )  delete[] pd_buf;
+      else                    pd_rel = 1;
+      pd_buf = newbuf;
+    }
+    pd_len = s.pd_len;
+    for( unsigned long i=0; i < pd_len; i++ )  pd_buf[i] = s.pd_buf[i];
+    return *this;
+  }
+
+  inline _CORBA_ULong maximum() const { return pd_max; }
+  inline _CORBA_ULong length() const { return pd_len; }
+  inline void length(_CORBA_ULong length) {
+    if (length > pd_max) {
+      ElemT* newbuf = new ElemT[length];
+      if( !newbuf )  _CORBA_new_operator_return_null();
+      for( unsigned long i = 0; i < pd_len; i++ )
+	newbuf[i] = pd_buf[i];
+      pd_max = length;
+      if( pd_rel && pd_buf )  delete[] pd_buf;
+      else                    pd_rel = 1;
+      pd_buf = newbuf;
+    }
+    pd_len = length;
+  }
+  inline ElemT& operator[] (_CORBA_ULong index) {
+    if( index >= pd_len )  _CORBA_bound_check_error();
+    return pd_buf[index];
+  }
+  inline const ElemT& operator[] (_CORBA_ULong index) const {
+    if( index >= pd_len )  _CORBA_bound_check_error();
+    return pd_buf[index];
+  }
+  static inline T** allocbuf(_CORBA_ULong nelems) { 
+    T** v = new T*[nelems];
+    for (_CORBA_ULong i=0; i < nelems; i++) v[i] = T::_nil();
+    return v;
+  }
+  static inline void freebuf(T** b) { if( b ) delete[] b; }
+
+  inline ElemT* NP_data() { return pd_buf; }
+
+protected:
+  _CORBA_ULong    pd_max;
+  _CORBA_ULong    pd_len;
+  _CORBA_Boolean  pd_rel;
+  ElemT*          pd_buf;
+};
+
+//////////////////////////////////////////////////////////////////////
+///////////////// _CORBA_PseudoValue_Sequence      ///////////////////
+//////////////////////////////////////////////////////////////////////
+
+template <class T>
+class _CORBA_PseudoValue_Sequence {
+public:
+  typedef _CORBA_PseudoValue_Sequence<T> T_seq;
+
+  inline _CORBA_PseudoValue_Sequence()
+    : pd_max(0), pd_len(0), pd_rel(1), pd_buf(0) { }
+  inline _CORBA_PseudoValue_Sequence(_CORBA_ULong max)
+    : pd_max(max), pd_len(0), pd_rel(1)
+  {
+    if( !(pd_buf = allocbuf(max)) )
+      _CORBA_new_operator_return_null();
+  }
+
+  inline _CORBA_PseudoValue_Sequence(_CORBA_ULong max,
+				     _CORBA_ULong length,
+				     T* value, _CORBA_Boolean release = 0)
     : pd_max(max), pd_len(length), pd_rel(release), pd_buf(value)
   {
     if( length > max )  _CORBA_bound_check_error();
   }
 
-  inline _CORBA_Pseudo_Unbounded_Sequence(const T_seq& s)
+  inline _CORBA_PseudoValue_Sequence(const T_seq& s)
     : pd_max(s.pd_max), pd_len(s.pd_len), pd_rel(1)
   {
     if( !(pd_buf = allocbuf(s.pd_max)) )
@@ -169,7 +271,7 @@ public:
     }
   }
 
-  inline ~_CORBA_Pseudo_Unbounded_Sequence() {
+  inline ~_CORBA_PseudoValue_Sequence() {
     if( pd_rel && pd_buf )  delete[] pd_buf;
   }
 
@@ -682,6 +784,5 @@ private:
   T*             pd_data;
   _CORBA_Boolean pd_nocopy;
 };
-
 
 #endif  // __TEMPLATEDECLS_H__
