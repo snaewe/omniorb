@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12  1999/11/29 15:04:47  dpg1
+# Fixed bug in clear().
+#
 # Revision 1.11  1999/11/25 11:20:33  dpg1
 # Tidy documentation changes.
 #
@@ -949,11 +952,6 @@ strings. Raises DeclNotFound if the name is not recognised."""
     return declMap[sname]
 
 
-def clear():
-    """Clear back-end structures ready for another run"""
-    declMap.clear()
-
-
 # Declarations of non-basic `built-in' types
 
 CORBAObject = Interface("<built in>", 0, 0, [],
@@ -965,3 +963,10 @@ registerDecl(["CORBA", "Object"], CORBAObject)
 CORBAModule = Module("<built in>", 0, 0, [], "CORBA", ["CORBA"],
                      "IDL:omg.org/CORBA:1.0", [CORBAObject])
 registerDecl(["CORBA"], CORBAModule)
+
+
+def clear():
+    """Clear back-end structures ready for another run"""
+    declMap.clear()
+    registerDecl(["CORBA", "Object"], CORBAObject)
+    registerDecl(["CORBA"], CORBAModule)
