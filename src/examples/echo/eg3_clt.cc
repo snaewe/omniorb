@@ -48,10 +48,14 @@ main (int argc, char **argv)
   try {
     CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-    CORBA::Object_var obj = getObjectReference(orb);
+    {
+      CORBA::Object_var obj = getObjectReference(orb);
 
-    Echo_var echoref = Echo::_narrow(obj);
-    hello(echoref);
+      Echo_var echoref = Echo::_narrow(obj);
+
+      for (CORBA::ULong count=0; count < 10; count++)
+	hello(echoref);
+    }
 
     orb->destroy();
   }

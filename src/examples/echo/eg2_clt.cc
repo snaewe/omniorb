@@ -25,6 +25,8 @@ static void hello(Echo_ptr e)
 
 int main(int argc, char** argv)
 {
+
+
   try {
     CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
@@ -33,14 +35,16 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    CORBA::Object_var obj = orb->string_to_object(argv[1]);
-    Echo_var echoref = Echo::_narrow(obj);
-    if( CORBA::is_nil(echoref) ) {
-      cerr << "Can't narrow reference to type Echo (or it was nil)." << endl;
-      return 1;
+    {
+      CORBA::Object_var obj = orb->string_to_object(argv[1]);
+      Echo_var echoref = Echo::_narrow(obj);
+      if( CORBA::is_nil(echoref) ) {
+	cerr << "Can't narrow reference to type Echo (or it was nil)." << endl;
+	return 1;
+      }
+      for (CORBA::ULong count=0; count<10; count++) 
+	hello(echoref);
     }
-    hello(echoref);
-
     orb->destroy();
   }
   catch(CORBA::COMM_FAILURE& ex) {
@@ -62,6 +66,5 @@ int main(int argc, char** argv)
   catch(...) {
     cerr << "Caught unknown exception." << endl;
   }
-
   return 0;
 }

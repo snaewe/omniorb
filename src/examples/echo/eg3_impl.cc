@@ -47,25 +47,27 @@ main(int argc, char **argv)
   try {
     CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-    CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
-    PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
+    {
+      CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+      PortableServer::POA_var poa = PortableServer::POA::_narrow(obj);
 
-    Echo_i* myecho = new Echo_i();
+      Echo_i* myecho = new Echo_i();
 
-    PortableServer::ObjectId_var myechoid = poa->activate_object(myecho);
+      PortableServer::ObjectId_var myechoid = poa->activate_object(myecho);
 
-    // Obtain a reference to the object, and register it in
-    // the naming service.
-    obj = myecho->_this();
-    if( !bindObjectToName(orb, obj) )
-      return 1;
+      // Obtain a reference to the object, and register it in
+      // the naming service.
+      obj = myecho->_this();
+      if( !bindObjectToName(orb, obj) )
+	return 1;
 
-    myecho->_remove_ref();
+      myecho->_remove_ref();
 
-    PortableServer::POAManager_var pman = poa->the_POAManager();
-    pman->activate();
+      PortableServer::POAManager_var pman = poa->the_POAManager();
+      pman->activate();
 
-    orb->run();
+      orb->run();
+    }
     orb->destroy();
   }
   catch(CORBA::SystemException&) {
