@@ -73,7 +73,13 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include <fe_private.hh>
 
+#if defined(__WIN32__)
+#include "y.tab.hh"
+#elif defined(__VMS)
+#include "y_tab.hh"
+#else
 #include <y.tab.hh>
+#endif
 
 #include <iostream.h>
 #include <string.h>
@@ -185,35 +191,28 @@ oneway		return ONEWAY;
 		  return CHARACTER_LITERAL;
 		}
 
-^[ \t]*#[ \t]*pragma[ \t]+version/[ \t]+[a-zA-Z\:][a-zA-Z0-9_\:]*[ \t]+[0-9]+\.[0-9]+[ \t]*\n {
+^[ \t]*#[ \t0-9\$]*pragma[ \t]+version/[ \t]+[a-zA-Z\:][a-zA-Z0-9_\:]*[ \t]+[0-9]+\.[0-9]+[ \t]*\n {
                    return PRAGMA_VERSION;
                  }               
 
-^[ \t]*#[ \t]*pragma[ \t]+ID/[ \t]+[a-zA-Z\:][a-zA-Z0-9_\:]*[ \t]+"\""[^\"]*"\""[ \t]*\n {
+^[ \t]*#[ \t0-9\$]*pragma[ \t]+ID/[ \t]+[a-zA-Z\:][a-zA-Z0-9_\:]*[ \t]+"\""[^\"]*"\""[ \t]*\n {
                     return PRAGMA_ID;
 		 }
 
-^[ \t]*#[ \t]*pragma[ \t]+prefix/[ \t]+"\""[^\"]*"\""[ \t]*\n {
+^[ \t]*#[ \t0-9\$]*pragma[ \t]+prefix/[ \t]+"\""[^\"]*"\""[ \t]*\n {
                      return PRAGMA_PREFIX;
                  }
 
-^[ \t]*#[ \t]*pragma[ \t].*\n	{/* remember pragma */
+^[ \t]*#[ \t0-9\$]*pragma[ \t].*\n	{/* remember pragma */
 		  idl_store_pragma(__yytext);
 		}
-
-^#[ \t]*[0-9]*" ""\""[^\"]*"\""" "[0-9]*\n		{
-		  idl_parse_line_and_file(__yytext);
-		}
-^#[ \t]*[0-9]*" ""\""[^\"]*"\""\n			{
+^#[ \t]*[0-9]*" ""\""[^\"]*"\"".*\n			{
 		  idl_parse_line_and_file(__yytext);
 		}
 ^#[ \t]*[0-9]*\n	{
 		  idl_parse_line_and_file(__yytext);
 	        }
-^#[ \t]*line[ \t]*[0-9]*" ""\""[^\"]*"\""" "[0-9]*\n		{
-		  idl_parse_line_and_file_NT(__yytext);
-		}
-^#[ \t]*line[ \t]*[0-9]*" ""\""[^\"]*"\""\n			{
+^#[ \t]*line[ \t]*[0-9]*" ""\""[^\"]*"\"".*\n			{
 		  idl_parse_line_and_file_NT(__yytext);
 		}
 ^#[ \t]*line[ \t]*[0-9]*\n	{
@@ -320,8 +319,21 @@ idl_parse_line_and_file(char *buf)
   *r = 0;
   if (*h == '\0')
     idl_global->set_filename(new String("standard input"));
-  else
+  else {
+#ifdef __VMS
+    // kill version
+    char* v(r);
+    for(--v; v != h && *v != ';'; --v);
+    if (*v==';') *v = 0;
+    else v = r;
+    // kill device/directory:
+    for(r=v; r != h && *r != ']' && *r != ':'; --r) {
+        if(isalpha(*r)) *r = tolower(*r);
+    }
+    if (*r==']' || *r==':') h = r+1;
+#endif
     idl_global->set_filename(new String(h));
+  }
 
   idl_global->set_in_main_file(
     (idl_global->filename()->compare(idl_global->real_filename())) ?
