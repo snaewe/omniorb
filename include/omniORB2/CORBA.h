@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.39  1999/06/22 15:04:29  sll
+ Put back pre CORBA-2.3 operator>>=(Any&a) in Any_var.
+
  Revision 1.38  1999/06/18 20:32:59  sll
  Updated to CORBA 2.3 mapping.
 
@@ -359,6 +362,7 @@ _CORBA_MODULE_BEG
 
     Boolean operator>>=(const Any*& a) const;
     Boolean operator>>=(Any*& a) const;  // deprecated
+    Boolean operator>>=(Any& a) const;  // pre CORBA-2.3, obsoluted do not use.
 
     Boolean operator>>=(TypeCode_ptr& tc) const;
 
@@ -588,6 +592,10 @@ _CORBA_MODULE_BEG
     }
 
     inline Boolean operator>>=(Any*& a) const {
+      return (*pd_data >>= a);
+    }
+
+    Boolean operator>>=(Any& a) const {  // pre CORBA-2.3, obsoluted do not use
       return (*pd_data >>= a);
     }
 
