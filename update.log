@@ -1,3 +1,37 @@
+Wed Jan  2 18:07:47 GMT 2002 dpg1
+=================================
+
+- Platform fixes/additions.
+
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/powerpc_aix_4.3_gcc.mk  -- new
+external_merge/mk/platforms/s390_linux_glibc2.1.mk  -- new
+include/omniORB4/CORBA_Policy.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/omniIOR.h
+src/lib/omniORB/include/giopBiDir.h
+src/lib/omniORB/orbcore/corbaString.cc
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/cccp/config-linux.h
+src/tool/omniidl/cxx/cccp/dir.mk
+
+- Relax IOR strictness when strictIIOP not set.
+
+src/lib/omniORB/orbcore/ior.cc
+
+- Segfault during final clean-up if ORB not initialised.
+
+src/lib/omniORB/orbcore/omniObjRef.cc
+
+- Old config file warning less obtrusive.
+
+src/lib/omniORB/orbcore/orbOptionsFile.cc
+
+- Remove NOLONGLONG define.
+
+src/services/mklib/libdefs.mk
+
+
 Tue Dec  4 14:29:26 GMT 2001 dpg1
 =================================
 
