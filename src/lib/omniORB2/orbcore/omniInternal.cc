@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.12  2000/04/13 17:48:58  djr
+  Minor improvement -- reduces times when need to verify object's type.
+
   Revision 1.1.2.11  2000/03/01 17:57:41  dpg1
   New omniObjRef::_compatibleServant() function to support object
   references and servants written for languages other than C++.
@@ -609,7 +612,8 @@ omni::createObjRef(const char* mostDerivedRepoId,
   if( !pof ) {
     pof = proxyObjectFactory::lookup(targetRepoId);
     OMNIORB_ASSERT(pof);
-    target_intf_not_confirmed = 1;
+    if( strcmp(targetRepoId, CORBA::Object::_PD_repoId) )
+      target_intf_not_confirmed = 1;
   }
 
   if( !release_profiles )  profiles = new IOP::TaggedProfileList(*profiles);
