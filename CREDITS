@@ -31,7 +31,7 @@ Description:  Irix port
 Name:         Duncan Grisby
 Email:        dgrisby@uk.research.att.com
 Organisation: AT&T Laboratories, Cambridge
-Description:  Lifecycle support
+Description:  Lifecycle support, Interoperable Naming Service, New IDL compiler
 
 Name:         Ben Harris
 Email:        bjh@orl.co.uk
@@ -45,7 +45,7 @@ Description:  Nextstep 3.3 port
 Name:         Sai-Lai Lo
 Email:        s.lo@uk.research.att.com
 Organisation: AT&T Laboratories, Cambridge
-Description:  omniORB2 architect and the main developer of the omniORB2 core
+Description:  omniORB architect and the main developer of the omniORB core
 
 Name:         H. J. Lu
 Email:        hjl@lucon.org
@@ -69,10 +69,10 @@ Email:        tjr@uk.research.att.com
 Organisation: AT&T Laboratories, Cambridge
 Description:  omnithread, omniNames, Omni Development Environment
 
-NameL         David Riddoch
+Name:         David Riddoch
 Email:        djr@uk.research.att.com
 Organisation: AT&T Laboratories, Cambridge
-Description:  DSI, DII, DynAny and misc. omniORB2 core
+Description:  DSI, DII, DynAny and misc. omniORB core
 
 Name:         James Riden
 Email:        jamesr@europe.com
@@ -83,6 +83,11 @@ Name:         Marcel Ruff
 Email:        ruff@comsys.dofn.de
 Organisation: Nortel Dasa Network Systems
 Description:  HPUX port
+
+Name:         David Scott
+Email:        djs@uk.research.att.com
+Organisation: AT&T Laboratories, Cambridge
+Description:  New IDL backend for omniORB3
 
 Name:         Andrey Slepuhin
 Email:        pooh@msu.ru

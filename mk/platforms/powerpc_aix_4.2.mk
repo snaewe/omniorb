@@ -57,7 +57,7 @@ CXXLINK		= xlC_r
 
 # Use C Set++ to compile your C source.
 #
-CC               = xlC_r
+CC              = xlC_r
 CLINK           = xlC_r
 
 # Get the compiler version
@@ -106,13 +106,13 @@ LibSharedSearchPattern = -l%
 #omniORBGatekeeperImplementation = NO_IMPL
 
 #
-# Notice that the version number 2.8 is hardwired in OMNIORB_LIB.
+# Notice that the version number 3.0 is hardwired in OMNIORB_LIB.
 #
 OMNIORB_LIB = $(patsubst %,$(LibSharedSearchPattern),omniORB30) \
-               $(patsubst %,$(LibSharedSearchPattern),omniDynamic28) \
+               $(patsubst %,$(LibSharedSearchPattern),omniDynamic30) \
                $(OMNITHREAD_LIB) $(SOCKET_LIB)
 lib_depend := $(patsubst %,$(LibSharedPattern),omniORB30) \
-              $(patsubst %,$(LibSharedPattern),omniDynamic28)
+              $(patsubst %,$(LibSharedPattern),omniDynamic30)
 OMNIORB_LIB_DEPEND1 := $(GENERATE_LIB_DEPEND)
 OMNIORB_LIB_DEPEND = $(OMNIORB_LIB_DEPEND1) $(OMNITHREAD_LIB_DEPEND)
 

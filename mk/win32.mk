@@ -288,11 +288,6 @@ OMNIORB_DYN_STUB_OBJ_PATTERN = $(CORBA_STUB_DIR)/%DynSK.o
 OMNIORB_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
 
 
-# LifeCycle stuff
-
-OMNIORB_IDL_LC_FLAGS = -l
-OMNIORB_LC_LIB = $(patsubst %,$(DLLSearchPattern),omniLC30)
-
 CorbaImplementation = OMNIORB
 
 #

@@ -86,6 +86,15 @@ strdup (char* str)
 }
 #endif  // _NO_STRDUP
 
+
+static
+inline void reallyFlush(ofstream& f) {
+    f.flush();
+#ifdef needsExplicitFsync
+    ::fsync(f.rdbuf()->fd());
+#endif
+}
+
 extern void usage();
 
 
@@ -358,6 +367,7 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
 	throw IOError();
 #endif
       putPort(port, logf);
+      reallyFlush(logf);
 
       {
 	PortableServer::ObjectId_var refid =
@@ -517,6 +527,7 @@ omniNameslog::create(const PortableServer::ObjectId& id)
   if (!startingUp) {
     try {
       putCreate(id, logf);
+      reallyFlush(logf);
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
@@ -532,6 +543,7 @@ omniNameslog::destroy(CosNaming::NamingContext_ptr nc)
   if (!startingUp) {
     try {
       putDestroy(nc, logf);
+      reallyFlush(logf);
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
@@ -548,6 +560,7 @@ omniNameslog::bind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
   if (!startingUp) {
     try {
       putBind(nc, n, obj, t, logf);
+      reallyFlush(logf);
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
@@ -563,6 +576,7 @@ omniNameslog::unbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n)
   if (!startingUp) {
     try {
       putUnbind(nc, n, logf);
+      reallyFlush(logf);
     } catch (IOError& ex) {
       cerr << ts.t() << flush;
       perror("I/O error writing log file");
@@ -751,7 +765,7 @@ omniNameslog::checkpoint(void)
 void
 omniNameslog::putPort(int p, ostream& file)
 {
-  file << "port " << p << '\n' << flush;
+  file << "port " << p << '\n';
   if (!file) throw IOError();
 }
 
@@ -794,7 +808,7 @@ omniNameslog::putCreate(const PortableServer::ObjectId& id, ostream& file)
 {
   file << "create ";
   putKey(id, file);
-  file << '\n' << flush;
+  file << '\n';
   if (!file) throw IOError();
 }
 
@@ -826,7 +840,7 @@ omniNameslog::putDestroy(CosNaming::NamingContext_ptr nc, ostream& file)
   file << "destroy ";
   CORBA::String_var s = orb->object_to_string(nc);
   putString(s, file);
-  file << '\n' << flush;
+  file << '\n';
   if (!file) throw IOError();
 }
 
@@ -878,7 +892,7 @@ omniNameslog::putBind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& n,
     file << " ncontext ";
   s = orb->object_to_string(obj);
   putString(s, file);
-  file << '\n' << flush;
+  file << '\n';
   if (!file) throw IOError();
 }
 
@@ -974,7 +988,7 @@ omniNameslog::putUnbind(CosNaming::NamingContext_ptr nc, const CosNaming::Name& 
   putString(n[0].id, file);
   file << ' ';
   putString(n[0].kind, file);
-  file << '\n' << flush;
+  file << '\n';
   if (!file) throw IOError();
 }
 

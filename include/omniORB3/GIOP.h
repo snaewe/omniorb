@@ -31,8 +31,11 @@
 
 /*
   $Log$
-  Revision 1.2  2000/07/04 15:23:35  dpg1
-  Merge from omni3_develop.
+  Revision 1.2.2.1  2000/07/17 10:35:33  sll
+  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+
+  Revision 1.3  2000/07/13 15:26:05  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.1.2.1  1999/09/24 09:51:40  djr
   Moved from omniORB2 + some new files.

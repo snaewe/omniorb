@@ -1,3 +1,646 @@
+Mon Jul 17 11:05:49 BST 2000 sll
+================================
+
+Merged updates from omni3_develop since omni3_0_0_pre3 to omni3_0_0.
+
+update.log
+doc/tex/omniORB.tex
+external_merge/CHANGES_280
+external_merge/CREDITS
+external_merge/README.ETSKernel
+external_merge/README.FIRST
+external_merge/README.FreeBSD
+external_merge/README.KNOWN_ISSUES
+external_merge/README.Linux
+external_merge/README.SGI
+external_merge/README.SunC++5
+external_merge/README.aix
+external_merge/README.hpux11
+external_merge/README.openvms
+external_merge/README.unix
+external_merge/README.win32
+external_merge/ReleaseNote_981223
+external_merge/ReleaseNote_omniORB_270
+external_merge/ReleaseNote_omniORB_271
+external_merge/ReleaseNote_omniORB_280
+external_merge/ReleaseNote_omniORB_300
+external_merge/ReleaseNote_omniORB_300_pre3
+external_merge/config/config.mk
+external_merge/doc/omniNames.html
+external_merge/doc/omniNames.tex
+external_merge/doc/omnithread.html
+external_merge/doc/omnithread.tex
+external_merge/doc/utilities.html
+external_merge/doc/utilities.tex
+external_merge/doc/omniNames/node1.html
+external_merge/doc/omniNames/node2.html
+external_merge/doc/omniNames/node3.html
+external_merge/doc/omniNames/omniNames.html
+external_merge/doc/omniORB/omniORB002.html
+external_merge/doc/omniORB/omniORB004.html
+external_merge/doc/omniORB/omniORB006.html
+external_merge/doc/omniORB/omniORB007.html
+external_merge/doc/omniORB/omniORB009.html
+external_merge/doc/omniORB/omniORB010.html
+external_merge/doc/omniORB/omniORB011.html
+external_merge/doc/omniORB/omniORB012.html
+external_merge/doc/omnithread/images.aux
+external_merge/doc/omnithread/images.log
+external_merge/doc/omnithread/images.pl
+external_merge/doc/omnithread/images.tex
+external_merge/doc/omnithread/node1.html
+external_merge/doc/omnithread/node2.html
+external_merge/doc/omnithread/node3.html
+external_merge/doc/omnithread/node4.html
+external_merge/doc/omnithread/node5.html
+external_merge/doc/omnithread/node6.html
+external_merge/doc/omnithread/omnithread.html
+external_merge/doc/utilities/images.aux
+external_merge/doc/utilities/images.log
+external_merge/doc/utilities/images.pl
+external_merge/doc/utilities/images.tex
+external_merge/doc/utilities/node1.html
+external_merge/doc/utilities/node2.html
+external_merge/doc/utilities/node3.html
+external_merge/doc/utilities/utilities.html
+external_merge/doc/lifecycle.pdf
+external_merge/doc/lifecycle.ps
+external_merge/doc/omniNames.pdf
+external_merge/doc/omniNames.ps
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniidl.pdf
+external_merge/doc/omniidl.ps
+external_merge/doc/omnithread.pdf
+external_merge/doc/omnithread.ps
+external_merge/doc/utilities.pdf
+external_merge/doc/utilities.ps
+external_merge/mk/win32.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+external_merge/patches/README
+external_merge/patches/aix_xlC_5.0.patch
+external_merge/patches/dec_CXX_5.6.patch
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/thread/README
+idl/ir.idl
+idl/omniLifeCycle.idl
+include/omniORB3/CORBA.h
+include/omniORB3/CORBA_basetypes.h
+include/omniORB3/CORBA_sysdep.h
+include/omniORB3/CORBA_vartypes.h
+include/omniORB3/GIOP.h
+include/omniORB3/IIOP.h
+include/omniORB3/IOP.h
+include/omniORB3/boa.h
+include/omniORB3/bufferedStream.h
+include/omniORB3/callDescriptor.h
+include/omniORB3/giopDriver.h
+include/omniORB3/omniInternal.h
+include/omniORB3/omniORB.h
+include/omniORB3/omniObjKey.h
+include/omniORB3/omniObjRef.h
+include/omniORB3/omniServant.h
+include/omniORB3/omniURI.h
+include/omniORB3/poa.h
+include/omniORB3/poa_defs.h
+include/omniORB3/poa_operators.h
+include/omniORB3/poa_poa.h
+include/omniORB3/proxyFactory.h
+include/omniORB3/rope.h
+include/omniORB3/seqtemplates.h
+include/omniORB3/stringtypes.h
+include/omniORB3/stringtypes.h.old
+include/omniORB3/tracedthread.h
+include/omniORB3/userexception.h
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+src/appl/omniMapper/dir.mk
+src/appl/omniMapper/omniMapper.cc
+src/appl/omniNames/INSMapper.h
+src/appl/omniNames/NamingContext_i.h
+src/appl/omniNames/log.cc
+src/appl/utils/catior/catior.cc
+src/appl/utils/genior/genior.cc
+src/examples/boa/eg2_clt.cc
+src/lib/omniORB2/dynamicLib.h
+src/lib/omniORB2/exceptiondefs.h
+src/lib/omniORB2/initRefs.h
+src/lib/omniORB2/initialiser.h
+src/lib/omniORB2/omniIdentity.h
+src/lib/omniORB2/remoteIdentity.h
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/constants.cc
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/context.h
+src/lib/omniORB2/dynamic/dynAny.cc
+src/lib/omniORB2/dynamic/dynAny.h
+src/lib/omniORB2/dynamic/dynException.cc
+src/lib/omniORB2/dynamic/dynamicLib.cc
+src/lib/omniORB2/dynamic/serverRequest.cc
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/typecode.h
+src/lib/omniORB2/omniidl_be/showast.py
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/config.py
+src/lib/omniORB2/omniidl_be/cxx/env.py
+src/lib/omniORB2/omniidl_be/cxx/name.py
+src/lib/omniORB2/omniidl_be/cxx/skutil.py
+src/lib/omniORB2/omniidl_be/cxx/tyutil.py
+src/lib/omniORB2/omniidl_be/cxx/util.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/tcstring.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/forward.py
+src/lib/omniORB2/omniidl_be/cxx/header/marshal.py
+src/lib/omniORB2/omniidl_be/cxx/header/opers.py
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+src/lib/omniORB2/omniidl_be/cxx/header/tcstring.py
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+src/lib/omniORB2/omniidl_be/cxx/header/tie.py
+src/lib/omniORB2/omniidl_be/cxx/impl/main.py
+src/lib/omniORB2/omniidl_be/cxx/impl/template.py
+src/lib/omniORB2/omniidl_be/cxx/skel/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/skel/dispatch.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/mangler.py
+src/lib/omniORB2/omniidl_be/cxx/skel/poa.py
+src/lib/omniORB2/omniidl_be/cxx/skel/proxy.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+src/lib/omniORB2/omniidl_be/cxx/tools/genIDL
+src/lib/omniORB2/orbcore/anonObject.cc
+src/lib/omniORB2/orbcore/anonObject.h
+src/lib/omniORB2/orbcore/callDescriptor.cc
+src/lib/omniORB2/orbcore/constants.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaBoa.h
+src/lib/omniORB2/orbcore/corbaFloat.cc
+src/lib/omniORB2/orbcore/corbaObject.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/corbaOrb.h
+src/lib/omniORB2/orbcore/corbaString.cc
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/orbcore/dynamicLib.cc
+src/lib/omniORB2/orbcore/excepthandler.h
+src/lib/omniORB2/orbcore/exception.cc
+src/lib/omniORB2/orbcore/giopClient.cc
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/initFile.cc
+src/lib/omniORB2/orbcore/initFile.h
+src/lib/omniORB2/orbcore/initRefs.cc
+src/lib/omniORB2/orbcore/ior.cc
+src/lib/omniORB2/orbcore/libcWrapper.cc
+src/lib/omniORB2/orbcore/libcWrapper.h
+src/lib/omniORB2/orbcore/localIdentity.cc
+src/lib/omniORB2/orbcore/localIdentity.h
+src/lib/omniORB2/orbcore/logIOstream.cc
+src/lib/omniORB2/orbcore/mbufferedStream.cc
+src/lib/omniORB2/orbcore/nbufferedStream.cc
+src/lib/omniORB2/orbcore/objectAdapter.cc
+src/lib/omniORB2/orbcore/objectAdapter.h
+src/lib/omniORB2/orbcore/omniInternal.cc
+src/lib/omniORB2/orbcore/omniORB.cc
+src/lib/omniORB2/orbcore/omniObjRef.cc
+src/lib/omniORB2/orbcore/omniServant.cc
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poaimpl.h
+src/lib/omniORB2/orbcore/poamanager.cc
+src/lib/omniORB2/orbcore/poamanager.h
+src/lib/omniORB2/orbcore/poastubs.cc
+src/lib/omniORB2/orbcore/policy.cc
+src/lib/omniORB2/orbcore/portableserver.cc
+src/lib/omniORB2/orbcore/proxyFactory.cc
+src/lib/omniORB2/orbcore/relStream.cc
+src/lib/omniORB2/orbcore/relStream.h
+src/lib/omniORB2/orbcore/remoteIdentity.cc
+src/lib/omniORB2/orbcore/ropeFactory.cc
+src/lib/omniORB2/orbcore/ropeFactory.h
+src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/scavenger.h
+src/lib/omniORB2/orbcore/strand.cc
+src/lib/omniORB2/orbcore/taskqueue.cc
+src/lib/omniORB2/orbcore/taskqueue.h
+src/lib/omniORB2/orbcore/tcpSocket.cc
+src/lib/omniORB2/orbcore/tcpSocket.h
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/lib/omniORB2/orbcore/tracedthread.cc
+src/lib/omniORB2/orbcore/uri.cc
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/tool/omniidl/cxx/CORBA_basetypes.h
+src/tool/omniidl/cxx/CORBA_sysdep.h
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/idl.yy
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idlc.cc
+src/tool/omniidl/cxx/idlconfig.cc
+src/tool/omniidl/cxx/idlconfig.h
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idldump.h
+src/tool/omniidl/cxx/idlerr.cc
+src/tool/omniidl/cxx/idlerr.h
+src/tool/omniidl/cxx/idlexpr.cc
+src/tool/omniidl/cxx/idlexpr.h
+src/tool/omniidl/cxx/idlmath.h
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+src/tool/omniidl/cxx/idlrepoId.h
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/idlscope.h
+src/tool/omniidl/cxx/idlsysdep.h
+src/tool/omniidl/cxx/idltype.cc
+src/tool/omniidl/cxx/idltype.h
+src/tool/omniidl/cxx/idlutil.cc
+src/tool/omniidl/cxx/idlutil.h
+src/tool/omniidl/cxx/idlvalidate.cc
+src/tool/omniidl/cxx/idlvalidate.h
+src/tool/omniidl/cxx/idlvisitor.h
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/python/omniidl/idlast.py
+src/tool/omniidl/python/omniidl/idlutil.py
+src/tool/omniidl/python/omniidl/idlvisitor.py
+src/tool/omniidl/python/omniidl/main.py
+src/tool/omniidl/python/omniidl_be/dump.py
+
+The original update log is as follows:
+
+
+>Thu Jul 13 19:12:53 BST 2000 sll
+>>>================================
+>>>
+>>>- Missed make variable
+>>>
+>>>external_merge/mk/platforms/hppa_hpux_11.00.mk
+>>>external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+>>>
+>>>Thu Jul 13 18:15:02 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- Remove -g from omniMapper build
+>>>
+>>>src/appl/omniMapper/dir.mk
+>>>
+>>>
+>>>Thu Jul 13 15:42:03 BST 2000 sll
+>>>================================
+>>>
+>>>- Documentation update. Remove pre-release status
+>>>
+>>>external_merge/ReleaseNote_omniORB_300              new
+>>>external_merge/ReleaseNote_omniORB_300_per3         removed
+>>>external_merge/THIS_IS_3_0_0_PRERELEASE_3           removed
+>>>external_merge/THIS_IS_omniORB_3_0_0                new
+>>>
+>>>
+>>>Thu Jul 13 11:51:22 BST 2000 sll
+>>>================================
+>>>
+>>>- README updates
+>>>
+>>>external_merge/CHANGES_280  (previously ReleaseNote_omniORB_280)
+>>>external_merge/CREDITS
+>>>external_merge/README.FIRST
+>>>external_merge/README.unix
+>>>external_merge/README.win32
+>>>external_merge/README.SGI
+>>>exteranl_merge/README.FreeBSD
+>>>
+>>>external_merge/ReleaseNote_981223        removed
+>>>external_merge/ReleaseNote_omniORB_270   removed
+>>>external_merge/ReleaseNote_omniORB_271   removed
+>>>external_merge/ReleaseNote_omniORB_280   removed
+>>>
+>>>
+>>>Thu Jul 13 11:31:33 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- External documentation updates
+>>>
+>>>external_merge/doc/lifecycle.pdf              -- deleted
+>>>external_merge/doc/lifecycle.ps               -- deleted
+>>>external_merge/doc/omniNames.dvi              -- deleted
+>>>external_merge/doc/omniNames.html             -- deleted
+>>>external_merge/doc/omniNames.pdf
+>>>external_merge/doc/omniNames.ps
+>>>external_merge/doc/omniNames.tex
+>>>external_merge/doc/omnithread.dvi             -- deleted
+>>>external_merge/doc/omnithread.html            -- new
+>>>external_merge/doc/omnithread.pdf
+>>>external_merge/doc/omnithread.ps
+>>>external_merge/doc/utilities.dvi              -- deleted
+>>>external_merge/doc/utilities.html             -- new
+>>>external_merge/doc/utilities.pdf
+>>>external_merge/doc/utilities.ps
+>>>external_merge/doc/utilities.tex
+>>>external_merge/doc/omniNames/node1.html       -- deleted
+>>>external_merge/doc/omniNames/node2.html       -- deleted
+>>>external_merge/doc/omniNames/node3.html       -- deleted
+>>>external_merge/doc/omniNames/omniNames.html   -- deleted
+>>>external_merge/doc/omnithread/images.aux      -- deleted
+>>>external_merge/doc/omnithread/images.log      -- deleted
+>>>external_merge/doc/omnithread/images.pl       -- deleted
+>>>external_merge/doc/omnithread/images.tex      -- deleted
+>>>external_merge/doc/omnithread/img1.gif        -- deleted
+>>>external_merge/doc/omnithread/node1.html      -- deleted
+>>>external_merge/doc/omnithread/node2.html      -- deleted
+>>>external_merge/doc/omnithread/node3.html      -- deleted
+>>>external_merge/doc/omnithread/node4.html      -- deleted
+>>>external_merge/doc/omnithread/node5.html      -- deleted
+>>>external_merge/doc/omnithread/node6.html      -- deleted
+>>>external_merge/doc/omnithread/omnithread.html -- deleted
+>>>external_merge/doc/utilities/images.aux       -- deleted
+>>>external_merge/doc/utilities/images.log       -- deleted
+>>>external_merge/doc/utilities/images.pl        -- deleted
+>>>external_merge/doc/utilities/images.tex       -- deleted
+>>>external_merge/doc/utilities/img1.gif         -- deleted
+>>>external_merge/doc/utilities/img2.gif         -- deleted
+>>>external_merge/doc/utilities/node1.html       -- deleted
+>>>external_merge/doc/utilities/node2.html       -- deleted
+>>>external_merge/doc/utilities/node3.html       -- deleted
+>>>external_merge/doc/utilities/utilities.html   -- deleted
+>>>
+>>>
+>>>Wed Jul 12 15:14:33 BST 2000 djs
+>>>================================
+>>>
+>>>- Minor fix to omniidl/C+>>>backend option -Wbsplice-modules
+>>>
+>>>src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+>>>src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+>>>
+>>>
+>>>Wed Jul 12 15:19:27 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- Minor fix to HTML version of omniORB manual
+>>>
+>>>doc/tex/omniORB.tex
+>>>external_merge/doc/omniORB/omniORB004.html
+>>>
+>>>
+>>>Wed Jul 12 14:50:25 BST 2000 sll
+>>>================================
+>>>
+>>>- OpenVMS merge, new rules for omniORBpy
+>>>
+>>>external_merge/etc/openvms.zip
+>>>
+>>>
+>>>
+>>>Wed Jul 12 14:18:46 BST 2000 sll
+>>>================================
+>>>
+>>>- Documented IRIX CPP macro for pthread
+>>>
+>>>external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+>>>mk/platforms/mips_irix_6.4_6.5_common.mk
+>>>
+>>>Wed Jul 12 14:03:17 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- The default corbaloc port is 2809, not 2089 as specified in the
+>>>  specification!
+>>>
+>>>doc/tex/omniORB.tex
+>>>external_merge/doc/omniORB.pdf
+>>>external_merge/doc/omniORB.ps
+>>>external_merge/doc/omniORB/omniORB004.html
+>>>external_merge/doc/omniORB/omniORB006.html
+>>>external_merge/doc/omniORB/omniORB007.html
+>>>external_merge/doc/omniORB/omniORB009.html
+>>>external_merge/doc/omniORB/omniORB010.html
+>>>external_merge/doc/omniORB/omniORB011.html
+>>>external_merge/doc/omniORB/omniORB012.html
+>>>src/lib/omniORB2/orbcore/constants.cc
+>>>
+>>>
+>>>Tue Jul 11 21:04:36 BST 2000 sll
+>>>================================
+>>>
+>>>- Fixed a bug in dir.mk caused by a recent change that omit gatekeeper.o
+>>>  from those platforms that are built with no gatekeeper support.
+>>>  The affected platforms are HPUX, AIX and SINIX.
+>>>
+>>>src/lib/omniORB2/orbcore/sharedlib/dir.mk
+>>>
+>>>
+>>>Tue Jul 11 20:58:59 BST 2000 sll
+>>>================================
+>>>
+>>>- Create a new lib on Win32- msvcstub.lib. This can be used to resolve
+>>>  unnecessary reference from stub *SK.cc files to a few functions in
+>>>  omniDynamic300_rt.dll. 
+>>>- Updated nmake examples to use the stub lib.
+>>>
+>>>external_merge/src/examples/boa/dir.mak
+>>>external_merge/src/examples/call_back/dir.mak
+>>>external_merge/src/examples/echo/dir.mak
+>>>external_merge/src/examples/poa/implicit_activation/dir.mak
+>>>external_merge/src/examples/poa/persistent_objref/dir.mak
+>>>src/lib/omniORB2/orbcore/dir.mk
+>>>
+>>>Tue Jul 11 16:14:24 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- Win32 makefile updates
+>>>
+>>>external_merge/mk/win32.mk
+>>>external_merge/src/examples/boa/dir.mak
+>>>external_merge/src/examples/call_back/dir.mak
+>>>external_merge/src/examples/dii/dir.mak
+>>>external_merge/src/examples/dsi/dir.mak
+>>>external_merge/src/examples/echo/dir.mak
+>>>external_merge/src/examples/poa/implicit_activation/dir.mak
+>>>external_merge/src/examples/poa/persistent_objref/dir.mak
+>>>
+>>>- Change #include from <echo.hh> to <becho.hh>
+>>>
+>>>src/examples/boa/eg2_clt.cc
+>>>
+>>>
+>>>Tue Jul 11 13:46:58 BST 2000 sll
+>>>================================
+>>>
+>>>- Updated omniidl build rules for HPUX 11.00
+>>>
+>>>src/tool/omniidl/cxx/dir.mk
+>>>
+>>>
+>>>Tue Jul 11 13:37:05 BST 2000 sll
+>>>================================
+>>>
+>>>- Added omnipython distribution for HPUX 11.00 and IRIX 6.5. Updated
+>>>  documentation to reflect this.
+>>>
+>>>external_merge/README.KNOWN_ISSUES         Deleted
+>>>external_merge/README.hpux11               New
+>>>external_merge/README.SunC++5
+>>>external_merge/README.unix
+>>>
+>>>external_merge/mk/platforms/hppa_hpux_11.00.mk
+>>>external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+>>>
+>>>mk/platforms/hppa_hpux_11.00.mk
+>>>mk/platforms/mips_irix_6.4_6.5_common.mk
+>>>
+>>>
+>>>Tue Jul 11 11:26:48 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- Rationalise stdout/stderr output from catior and genior
+>>>
+>>>src/appl/utils/catior/catior.cc
+>>>src/appl/utils/genior/genior.cc
+>>>
+>>>
+>>>Mon Jul 10 17:47:18 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- Change repoId of CORBA::CompletionStatus to
+>>>  IDL:omg.org/CORBA/completion_status:1.0
+>>>
+>>>src/lib/omniORB2/dynamic/dynException.cc
+>>>
+>>>
+>>>Mon Jul 10 14:03:49 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- Initialisation of Any insertion functions was missing from system
+>>>  exceptions.
+>>>
+>>>include/omniORB3/CORBA.h
+>>>
+>>>
+>>>Mon Jul 10 12:22:08 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- More omniORB 2 references changed
+>>>
+>>>external_merge/src/examples/anyExample/dir.mak
+>>>external_merge/src/examples/dii/dir.mak
+>>>external_merge/src/examples/dsi/dir.mak
+>>>external_merge/src/examples/thread/README
+>>>
+>>>
+>>>Mon Jul 10 11:56:56 BST 2000 sll
+>>>================================
+>>>
+>>>- openVMS build merge
+>>>
+>>>external_merge/etc/openvms.zip
+>>>
+>>>Mon Jul 10 11:48:04 BST 2000 sll
+>>>================================
+>>>
+>>>- Minor rearrangement to keep DEC C+>>>5.6 happy.
+>>>
+>>>src/lib/omniORB2/orbcore/corbaOrb.cc
+>>>
+>>>
+>>>Mon Jul 10 11:43:51 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- Add patch file for AIX VisualAge C+>>>5.0.
+>>>
+>>>external_merge/README.aix                  -- new
+>>>external_merge/patches/README
+>>>external_merge/patches/aix_xlC_5.0.patch   -- new
+>>>
+>>>- Various references to omniORB2 changed.
+>>>
+>>>external_merge/README.ETSKernel
+>>>external_merge/README.Linux
+>>>external_merge/README.SunC++5
+>>>external_merge/README.unix
+>>>external_merge/README.win32
+>>>
+>>>
+>>>Mon Jul 10 11:41:10 BST 2000 sll
+>>>================================
+>>>
+>>>- Some platforms' stream::flush() function requires an addition
+>>>  low level sync() call to ensure that the data is flushed to disk.
+>>>  Whenever a transaction is to be flushed to the redolog, omniNames now
+>>>  call reallyFlush() which may call sync() if necessary.
+>>>
+>>>src/appl/omniNames/log.cc
+>>>
+>>>
+>>>
+>>>Fri Jul  7 11:28:19 BST 2000 sll
+>>>================================
+>>>
+>>>- DEC C+>>>6.{0,1} on Digital Unix requires #define OMNI_REQUIRES_FQ_BASE_CTOR
+>>>
+>>>include/omniORB3/CORBA_sysdep.h
+>>>
+>>>
+>>>Fri Jul  7 11:24:51 BST 2000 sll
+>>>================================
+>>>
+>>>- More openVMS merge
+>>>
+>>>external_merge/etc/openvms.zip
+>>>
+>>>
+>>>Fri Jul  7 11:15:21 BST 2000 sll
+>>>================================
+>>>
+>>>- Fixed breakage caused by previous AIX xlC 5 checkin
+>>>
+>>>include/omniORB3/CORBA_sysdep.h
+>>>
+>>>
+>>>Thu Jul  6 17:20:28 BST 2000 sll
+>>>================================
+>>>
+>>>- Further openVMS merge
+>>>
+>>>external_merge/README.openvms
+>>>external_merge/etc/openvms.zip
+>>>external_merge/patches/dec_CXX_5.6.patch
+>>>idl/ir.idl
+>>>
+>>>Thu Jul  6 10:26:43 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- Clarify omniidl usage in documentation and omniidl -u
+>>>
+>>>doc/tex/omniORB.tex
+>>>external_merge/doc/omniORB.pdf
+>>>external_merge/doc/omniORB.ps
+>>>external_merge/doc/omniORB/omniORB002.html
+>>>src/tool/omniidl/python/omniidl/main.py
+>>>
+>>>
+>>>Wed Jul  5 12:08:06 BST 2000 dpg1
+>>>=================================
+>>>
+>>>- Untested support for AIX with xlC 5.
+>>>
+>>>external_merge/config/config.mk
+>>>external_merge/mk/platforms/powerpc_aix_4.2.mk
+>>>external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk -- new
+>>>external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk -- new
+>>>include/omniORB3/CORBA_sysdep.h
+>>>src/appl/omniNames/NamingContext_i.h
+
+
 Wed Jul  5 11:31:43 BST 2000 sll
 ================================
 

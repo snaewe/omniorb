@@ -29,8 +29,11 @@
 
 /*
   $Log$
-  Revision 1.29  2000/07/04 15:22:49  dpg1
-  Merge from omni3_develop.
+  Revision 1.29.2.1  2000/07/17 10:36:00  sll
+  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+
+  Revision 1.30  2000/07/13 15:25:54  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.22.6.14  2000/07/03 15:38:20  dpg1
   Support for FreeBSD 4.0. FreeBSD 3.2 hopefully works too.

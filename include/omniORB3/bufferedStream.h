@@ -29,8 +29,11 @@
 
 /*
   $Log$
-  Revision 1.2  2000/07/04 15:23:34  dpg1
-  Merge from omni3_develop.
+  Revision 1.2.2.1  2000/07/17 10:35:34  sll
+  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+
+  Revision 1.3  2000/07/13 15:26:05  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.1.2.2  2000/02/10 18:03:04  djr
   tcParser::calculateItemSize and tcParser::alignedSize optimised.

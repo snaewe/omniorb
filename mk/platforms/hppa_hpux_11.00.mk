@@ -5,13 +5,18 @@
 HPUX = 1
 HppaProcessor = 1
 
+ABSTOP = $(shell cd $(TOP); pwd)
+
 #
 # Python set-up
 #
-# You must set a path to a Python 1.5.2 interpreter.
+# You must set a path to a Python 1.5.2 interpreter. If you do not
+# wish to make a complete installation, you may download a minimal
+# Python from ftp://ftp.uk.research.att.com/pub/omniORB/python/
+# In that case, uncomment the first line below.
 
+#PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
 #PYTHON = /usr/local/bin/python
-
 
 #
 # Include general unix things

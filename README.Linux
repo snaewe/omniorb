@@ -1,13 +1,13 @@
 The platform file is i586_linux_2.0_glibc.mk for glibc-2.x based system
 which include all the latest versions of linux distributions.
 
-omniORB2 has been tested with
+omniORB has been tested with
 
 - 2.0 and 2.2 kernels
 - glibc-2.0 and glibc-2.1 C library
 - x86 egcs-1.1.2, gcc-2.95 or cygnus codefusion compiler
 
-It has also been reported that omniORB2 also works on Powerpc linux in the
+It has also been reported that omniORB also works on Powerpc linux in the
 Debian distribution.
 
 With omniORB 2.7.1, it can be compiled with the older gcc 2.7.2.1 and

@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD><TITLE>The OMNI Naming Service</TITLE>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.05">
+</HEAD>
+<BODY >
+<!--HEVEA command line is: hevea omniNames -->
+<!--HTMLHEAD-->
+<!--ENDHTML-->
+<!--CUT DEF section 1 -->
+<BR>
+<BR>
+
+<H1 ALIGN=center>The OMNI Naming Service</H1>
+
+<H3 ALIGN=center>Tristan Richardson<BR>AT&amp;T Laboratories Cambridge
+</H3>
+
+<H3 ALIGN=center>13 July 2000</H3><!--TOC section Introduction-->
+
+<H2>1&nbsp;&nbsp; Introduction</H2><!--SEC END -->
+The OMNI Naming Service (<EM>omniNames</EM>) is an omniORB
+implementation of the OMG's COS Naming Service Specification. It
+offers a way for a client to turn a human-readable name into an object
+reference, on which the client can subsequently invoke operations in
+the normal way. See the OMG specification for full details of the
+functionality provided by the Naming Service.<BR>
+<BR>
+The Naming Service stores a set of bindings of names to objects.
+These bindings can be arranged as an arbitrary directed graph,
+although they are often arranged in a tree hierarchy. Each node in
+the graph is a <EM>naming context</EM>. There is a ``root'' context at
+which name lookups usually start. This is the object returned by the
+call to <CODE>CORBA::ORB::resolve_initial_references("NameService").</CODE><BR>
+<BR>
+<!--TOC section Log file-->
+
+<H2>2&nbsp;&nbsp; Log file</H2><!--SEC END -->
+The Naming Service is often part of the bootstrapping process of other
+CORBA programs. For this reason, if an instance of omniNames crashes
+(or the machine on which it runs is rebooted), it is important that
+certain aspects of its operation persist upon restarting. Firstly the
+root context of the Naming Service should always be accessible through
+the same object reference. This helps the ORB to implement the
+<CODE>resolve_initial_references</CODE> call by allowing the object
+reference to be stored in a configuration file, for example.
+Secondly, the naming graph with all its bindings should persist
+between invocations.<BR>
+<BR>
+To achieve this, omniNames generates a log file, to which it writes
+out an entry every time a change is made to the naming graph. The
+directory in which this log file is written can be specified with the
+<CODE>OMNINAMES_LOGDIR</CODE> environment variable. When omniNames is
+restarted it uses the log file so that it can regenerate the naming
+graph.<BR>
+<BR>
+Periodically the log file is checkpointed, removing unnecessary
+entries from the log file. The idle time between checkpoints can be
+set with the <CODE>OMNINAMES_ITBC</CODE> environment variable. It defaults
+to 15 minutes.<BR>
+<BR>
+<!--TOC section Starting omniNames and setting omniORB.cfg-->
+
+<H2>3&nbsp;&nbsp; Starting omniNames and setting omniORB.cfg</H2><!--SEC END -->
+When starting omniNames for the first time, you can either let it
+start with the default TCP port of 2809, or you can specify the port
+number on which it should listen. This is written to the log file so
+that on subsequent invocations it will listen on the same port number
+and thus can be accessible through the same object reference. When
+omniNames starts up successfully it writes the stringified object
+reference for its root context on standard error.<BR>
+<BR>
+At startup, omniORB tries to read the configuration file
+<CODE>omniORB.cfg</CODE> to obtain the object reference to the root context
+of the Naming Service. This object reference is returned by
+<CODE>resolve_initial_references("NameService")</CODE>. There are a number
+of methods of specifying the root naming context in
+<CODE>omniORB.cfg</CODE>---see the omniORB manual for details.<BR>
+<BR>
+<!--HTMLFOOT-->
+<!--ENDHTML-->
+
+<!--FOOTER-->
+<HR SIZE=2>
+<BLOCKQUOTE><EM>This document was translated from L<sup>A</sup>T<sub>E</sub>X by
+</EM><A HREF="http://pauillac.inria.fr/~maranget/hevea/index.html"><EM>H</EM><EM><FONT SIZE=2><sup>E</sup></FONT></EM><EM>V</EM><EM><FONT SIZE=2><sup>E</sup></FONT></EM><EM>A</EM></A><EM>.
+</EM></BLOCKQUOTE></BODY>
+</HTML>
+

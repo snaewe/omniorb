@@ -1,4 +1,4 @@
-The following contains instructions to use omniORB2 under ETS-Kernel. The
+The following contains instructions to use omniORB under ETS-Kernel. The
 information is provided by David MorgenLender <dmorgen@alum.mit.edu> and
 Jon Kristensen <jon.kristensen@kongsberg-simrad.com>.
 
@@ -8,11 +8,11 @@ Jon Kristensen <jon.kristensen@kongsberg-simrad.com>.
     binaries located in the <top>/bin/x86_win32 directory of a binary distribution 
     for x86_nt_4.0. Before proceeding with building this platform, make sure that
     you have the required NT platform binaries in  <top>/bin/x86_win32.
-    Among the binaries required is the omniORB2 IDL compiler (omniidl2.exe) and
+    Among the binaries required is the omniORB IDL compiler (omniidl.exe) and
     some of the compiler wrapper functions.
 
 3.  Build the libraries by following the instructions given in
-    "Building omniORB2 from the source files" in README.win32. Only the 
+    "Building omniORB from the source files" in README.win32. Only the 
     libraries will be built and installed in
            <top>\lib\x86_win32_ets
 

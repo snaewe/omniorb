@@ -28,8 +28,14 @@
 
 # $Id$
 # $Log$
-# Revision 1.17  2000/07/04 15:23:05  dpg1
-# Merge from omni3_develop.
+# Revision 1.17.2.1  2000/07/17 10:35:48  sll
+# Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+#
+# Revision 1.18  2000/07/13 15:26:00  dpg1
+# Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.15.2.8  2000/07/12 17:16:12  djs
+# Minor bugfix to option -Wbsplice-modules
 #
 # Revision 1.15.2.7  2000/06/26 16:23:59  djs
 # Better handling of #include'd files (via new commandline options)
@@ -170,9 +176,9 @@ def visitModule(node):
     #  module?)
     if config.state['Splice Modules']:
         for c in node.continuations():
-            #self.__completedModules[node] = 1
             for n in c.definitions():
                 n.accept(self)
+            self.__completedModules[c] = 1
 
     self.__nested = nested
 

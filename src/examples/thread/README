@@ -31,7 +31,7 @@ To Compile
 To Run The Programs
 -------------------
 
-- On unix, since the shared libraries libomniORB2.so and libomnithread.so
+- On unix, since the shared libraries libomniORB3.so and libomnithread.so
   are not in the directories searched by the dynamic loader by default, you
   must add the library directory to the search path. 
 

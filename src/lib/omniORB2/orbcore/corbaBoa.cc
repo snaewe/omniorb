@@ -29,8 +29,11 @@
 
 /*
   $Log$
-  Revision 1.16  2000/07/04 15:22:58  dpg1
-  Merge from omni3_develop.
+  Revision 1.16.2.1  2000/07/17 10:35:51  sll
+  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+
+  Revision 1.17  2000/07/13 15:25:58  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.13.6.14  2000/06/22 10:40:13  dpg1
   exception.h renamed to exceptiondefs.h to avoid name clash on some

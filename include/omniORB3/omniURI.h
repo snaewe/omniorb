@@ -32,8 +32,11 @@
 
 // $Id$
 // $Log$
-// Revision 1.2  2000/07/04 15:23:32  dpg1
-// Merge from omni3_develop.
+// Revision 1.2.2.1  2000/07/17 10:35:35  sll
+// Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+//
+// Revision 1.3  2000/07/13 15:26:05  dpg1
+// Merge from omni3_develop for 3.0 release.
 //
 // Revision 1.1.2.1  2000/04/27 10:37:12  dpg1
 // Interoperable Naming Service

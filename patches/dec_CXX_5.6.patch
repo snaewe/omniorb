@@ -311,3 +311,23 @@
       self.__insideClass = insideClass
   
       # TypeCode and Any
+*** src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py Tue Jun 27 17:15:09 2000
+--- cxx56src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py Thu Jul  6 12:47:32 2000
+***************
+*** 651,657 ****
+                      d_name
+              if is_array:
+                  thing = docast(memberType, d, thing)
+! 
+              assertDefined([ prefix + "_buildDesc" + d_cname ])
+              cases.out("""\
+  case @n@:
+--- 651,658 ----
+                      d_name
+              if is_array:
+                  thing = docast(memberType, d, thing)
+!             elif memberType.deref().objref():
+!                 thing = memberType.objRefTemplate("tcDesc_arg") + "(" + thing + ")"
+              assertDefined([ prefix + "_buildDesc" + d_cname ])
+              cases.out("""\
+  case @n@:

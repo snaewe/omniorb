@@ -53,13 +53,12 @@ string, so the original URI can be written:<BR>
 <BR>
 <BLOCKQUOTE>
 <TT>corbaloc::myhost.example.com:1234/MyObjectKey</TT>
-</BLOCKQUOTE>The IANA has assigned port number 2089 for use by
-<TT>corbaloc</TT>, so if the server is listening on that port, you
-can leave the port number out. The following two URIs refer to the
-same object:<BR>
+</BLOCKQUOTE>The IANA has assigned port number 2809<A NAME="text14" HREF="#note14"><SUP><FONT SIZE=2>1</FONT></SUP></A> for use by <TT>corbaloc</TT>, so if
+the server is listening on that port, you can leave the port number
+out. The following two URIs refer to the same object:<BR>
 <BR>
 <BLOCKQUOTE>
-<TT>corbaloc::myhost.example.com:2089/MyObjectKey</TT><BR><TT>corbaloc::myhost.example.com/MyObjectKey</TT>
+<TT>corbaloc::myhost.example.com:2809/MyObjectKey</TT><BR><TT>corbaloc::myhost.example.com/MyObjectKey</TT>
 </BLOCKQUOTE>You can specify an object which is available at more than
 one location by separating the locations with commas:<BR>
 <BR>
@@ -122,7 +121,7 @@ with command line arguments of:<BR>
 <TT>-ORBInitRef NameService=corbaname::myhost.example.com</TT>
 </BLOCKQUOTE><TT>resolve_initial_references("NameService")</TT> will
 return a reference to the object with key `NameService' available on
-myhost.example.com, port 2089. Since IOR-format strings are considered
+myhost.example.com, port 2809. Since IOR-format strings are considered
 URIs, you can also say things like:<BR>
 <BR>
 <BLOCKQUOTE>
@@ -167,7 +166,7 @@ understand the order in which the options are tried. The resolution
 order, as required by the CORBA specification, is:<BR>
 <BR>
 <OL type=1>
-<LI> Check for special names such as `<TT>RootPOA</TT>'<A NAME="text14" HREF="#note14"><SUP><FONT SIZE=2>1</FONT></SUP></A>.<BR>
+<LI> Check for special names such as `<TT>RootPOA</TT>'<A NAME="text15" HREF="#note15"><SUP><FONT SIZE=2>2</FONT></SUP></A>.<BR>
 <BR>
 
 <LI> Resolve with an <TT>-ORBInitRef</TT> argument.<BR>
@@ -263,8 +262,8 @@ each component are separated by `<TT>.</TT>' characters. If the
 `<TT>.</TT>'; if the <TT>id</TT> is empty, the representation starts
 with a `<TT>.</TT>' character; if both <TT>id</TT> and <TT>kind</TT>
 are empty, the representation is just a `<TT>.</TT>'. The backslash
-`' is used to escape the meaning of
-`<TT>/</TT>', `<TT>.</TT>' and `' itself.<BR>
+`<TT>\</TT>' is used to escape the meaning of
+`<TT>/</TT>', `<TT>.</TT>' and `<TT>\</TT>' itself.<BR>
 <BR>
 <TT>to_url()</TT> takes a <TT>corbaloc</TT> style address and key string
 (but without the <TT>corbaloc:</TT> part), and a stringified name,
@@ -282,7 +281,7 @@ equivalents of the various bind operations.<BR>
 <BR>
 
 <H3>4.3.2&nbsp;&nbsp; Use with corbaname</H3>To make it easy to use omniNames with <TT>corbaname</TT> URIs, it
-now starts with the default port of 2089, and an object key of
+now starts with the default port of 2809, and an object key of
 `<TT>NameService</TT>' for the root naming context. This is only
 possible when it is started `fresh', rather than with a log file from
 an older omniNames version.<BR>
@@ -298,8 +297,8 @@ For the port number, there are two options. The first is to run
 omniNames with a command line argument like:<BR>
 <BR>
 <BLOCKQUOTE>
-<TT>omniNames -logdir /the/log/dir -ORBpoa_iiop_port 2089</TT>
-</BLOCKQUOTE>This causes it to listen on both port 2089 <EM>and</EM>
+<TT>omniNames -logdir /the/log/dir -ORBpoa_iiop_port 2809</TT>
+</BLOCKQUOTE>This causes it to listen on both port 2809 <EM>and</EM>
 whatever port it listened on before. The disadvantage with this is
 that the IORs to all naming contexts now contain two IIOP profiles,
 one for each port, which, amongst other things, increases the size of
@@ -309,11 +308,11 @@ The second option is to use omniMapper, as described below.<BR>
 <BR>
 <A NAME="toc21"></A>
 <H2>4.4&nbsp;&nbsp; omniMapper</H2>
-omniMapper is a simple daemon which listens on port 2089 (or any other
+omniMapper is a simple daemon which listens on port 2809 (or any other
 port), and redirects IIOP requests for configured object keys to
 associated persistent IORs. It can be used to make a naming service
 (even an old non-INS aware version of omniNames or other ORB's naming
-service) appear on port 2089 with the object key
+service) appear on port 2809 with the object key
 `<TT>NameService</TT>'. The same goes for any other service you may
 wish to specify, such as an interface repository. omniMapper is
 started with a command line of:<BR>
@@ -321,7 +320,7 @@ started with a command line of:<BR>
 <BLOCKQUOTE>
 <TT>omniMapper [-port </TT>&lt;<I>port</I>&gt;<TT>] [-config </TT>&lt;<I>config file</I>&gt;<TT>] [-v]</TT>
 </BLOCKQUOTE>The <TT>-port</TT> option allows you to choose a port other
-than 2089 to listen on<A NAME="text15" HREF="#note15"><SUP><FONT SIZE=2>2</FONT></SUP></A>. The <TT>-config</TT> option specifies a location for the
+than 2809 to listen on<A NAME="text16" HREF="#note16"><SUP><FONT SIZE=2>3</FONT></SUP></A>. The <TT>-config</TT> option specifies a location for the
 configuration file. The default name is <TT>/etc/omniMapper.cfg</TT>, or
 <CODE>C:\omniMapper.cfg</CODE>
 on Windows. omniMapper does not normally print anything; the
@@ -367,13 +366,16 @@ can activate/deactivate it, create children, and so on, in the usual
 way.<BR>
 <BR>
 <HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note14" HREF="#text14"><FONT SIZE=5>1</FONT></A><DD> In
+<DT><A NAME="note14" HREF="#text14"><FONT SIZE=5>1</FONT></A><DD> Not 2089 as
+printed in [<A HREF="omniORB014.html#inschapters"><CITE>OMG99b</CITE></A>]!
+
+<DT><A NAME="note15" HREF="#text15"><FONT SIZE=5>2</FONT></A><DD> In
 fact, a strict reading of the specification says that it should be
 possible to override `<TT>RootPOA</TT>' etc. with
 <TT>-ORBInitRef</TT>, but since POAs are locality constrained that is
 ridiculous.
 
-<DT><A NAME="note15" HREF="#text15"><FONT SIZE=5>2</FONT></A><DD> You can also play the
+<DT><A NAME="note16" HREF="#text16"><FONT SIZE=5>3</FONT></A><DD> You can also play the
 <TT>-ORBpoa_iiop_port</TT> trick to make it listen on more than one
 port.
 </DL>

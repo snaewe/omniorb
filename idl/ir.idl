@@ -85,7 +85,7 @@ module CORBA {
   };
 
 
-#if !defined(__VAX) && !defined(__DECCXX)
+#ifndef OMNIORB_NO_IR_CLIENT
   interface ModuleDef;
   interface ConstantDef;
   interface IDLType;
@@ -103,7 +103,7 @@ module CORBA {
   interface WstringDef;
   interface FixedDef;
 
-#if !defined(__VAX) && !defined(__DECCXX)
+#ifndef OMNIORB_NO_IR_CLIENT
   typedef sequence<InterfaceDef>         InterfaceDefSeq;
   typedef sequence<ValueDef>             ValueDefSeq;
   typedef sequence<AbstractInterfaceDef> AbstractInterfaceDefSeq;
@@ -142,7 +142,7 @@ module CORBA {
 				     in boolean        exclude_inherited,
 				     in long           max_returned_objs);
 
-#if !defined(__VAX) && !defined(__DECCXX)
+#ifndef OMNIORB_NO_IR_CLIENT
 
     ModuleDef create_module(in RepositoryId id,
 			    in Identifier   name,
@@ -271,7 +271,7 @@ module CORBA {
   };
 
 
-#if !defined(__VAX) && !defined(__DECCXX)
+#ifndef OMNIORB_NO_IR_CLIENT
 
   interface ModuleDef : Container, Contained {
     // empty
@@ -373,7 +373,7 @@ module CORBA {
     attribute IDLType           element_type_def;
   };
 
-#if !defined(__VAX) && !defined(__DECCXX)
+#ifndef OMNIORB_NO_IR_CLIENT
 
   interface ExceptionDef : Contained, Container {
     readonly attribute TypeCode type;
@@ -503,7 +503,7 @@ module CORBA {
   };
 
 
-#if !defined(__VAX) && !defined(__DECCXX)
+#ifndef OMNIORB_NO_IR_CLIENT
 
   typedef short Visibility;
   const Visibility PRIVATE_MEMBER = 0;

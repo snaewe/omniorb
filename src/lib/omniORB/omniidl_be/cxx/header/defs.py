@@ -28,8 +28,14 @@
 
 # $Id$
 # $Log$
-# Revision 1.33  2000/07/04 15:23:05  dpg1
-# Merge from omni3_develop.
+# Revision 1.33.2.1  2000/07/17 10:35:45  sll
+# Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
+#
+# Revision 1.34  2000/07/13 15:26:00  dpg1
+# Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.31.2.16  2000/07/12 17:16:11  djs
+# Minor bugfix to option -Wbsplice-modules
 #
 # Revision 1.31.2.15  2000/06/27 16:15:10  sll
 # New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
@@ -272,6 +278,7 @@ def visitModule(node):
         for c in node.continuations():
             for n in c.definitions():
                 n.accept(self)
+            self.__completedModules[c] = 1
 
     # pop self.__insideModule
     self.__insideModule = insideModule

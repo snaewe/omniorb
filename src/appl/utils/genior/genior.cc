@@ -243,7 +243,7 @@ int main(int argc, char* argv[])
     }
   else
     {
-      cerr << (char*) ior << endl;
+      cout << (char*) ior << endl;
     }
 
   free(IRTypeId);

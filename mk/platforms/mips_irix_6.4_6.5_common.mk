@@ -6,15 +6,18 @@
 IRIX = 1
 IndigoProcessor = 1
 
-
+ABSTOP = $(shell cd $(TOP); pwd)
 
 #
 # Python set-up
 #
-# You must set a path to a Python 1.5.2 interpreter.
+# You must set a path to a Python 1.5.2 interpreter. If you do not
+# wish to make a complete installation, you may download a minimal
+# Python from ftp://ftp.uk.research.att.com/pub/omniORB/python/
+# In that case, uncomment the first line below.
 
+#PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
 #PYTHON = /usr/local/bin/python
-
 
 #
 # Include general unix things
@@ -76,7 +79,15 @@ CLINK             = $(CC)
 #
 
 Posix_OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) -lpthread
-Posix_OMNITHREAD_CPPFLAGS = -DUsePthread -D_REENTRANT 
+Posix_OMNITHREAD_CPPFLAGS = -D_REENTRANT
+#
+# It is recommended to use -D_POSIX_C_SOURCE=199506L. However, POSIX 1c
+# API is enabled by default by _SGI_SOURCE (which is defined by default). 
+# Also, defining _POSIX_C_SOURCE remove all the other non-posix functions, 
+# such as gettimeofday. This is bad.
+# As far as I can tell, the _REENTRANT macro has no effect and could be
+# removed.
+#
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 \
 			    -DPthreadSupportThreadPriority
 

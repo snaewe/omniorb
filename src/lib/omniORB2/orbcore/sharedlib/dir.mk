@@ -58,7 +58,6 @@ endif
 #CXXDEBUGFLAGS = -g
 
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
-NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
 DIR_CPPFLAGS += -DUnixArchitecture
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 endif
@@ -69,7 +68,7 @@ endif
 
 ifdef Win32Platform
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
-NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o  gatekeeper.o
+ORB_OBJS += gatekeeper.o
 # See the extra comments on gatekeeper.o at the end of this file
 
 DIR_CPPFLAGS += -DNTArchitecture
@@ -336,7 +335,7 @@ lib = $(libname).$(micro_version)
 # how to tell the linker it is safe to have some undefined symbols, we
 # have to disable the gatekeeper feature.
 
-NETLIBOBJS += gatekeeper.o
+ORB_OBJS += gatekeeper.o
 
 all:: $(lib)
 
@@ -523,7 +522,7 @@ lib     = $(soname).$(micro_version)
 # may complain about undefined symbols when it tries to link the shared
 # libaries below. Further testing is needed. 
 #
-NETLIBOBJS +=  gatekeeper.o
+ORB_OBJS +=  gatekeeper.o
 
 all:: $(lib)
 
@@ -574,7 +573,7 @@ lib     = $(soname).$(micro_version)
 # may complain about undefined symbols when it tries to link the shared
 # libaries below. Further testing is needed. 
 #
-NETLIBOBJS +=  gatekeeper.o
+ORB_OBJS +=  gatekeeper.o
 
 $(lib): $(ORB_OBJS)
 	(set -x; \
