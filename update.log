@@ -1,9 +1,77 @@
+Fri Aug 17 14:14:10 BST 2001 dpg1
+=================================
+
+- Split CORBA.h into separate bits.
+
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_Any.h                   -- new
+include/omniORB4/CORBA_Any_vartypes.h          -- new
+include/omniORB4/CORBA_BOA.h		       -- new
+include/omniORB4/CORBA_Context.h	       -- new
+include/omniORB4/CORBA_Current.h	       -- new
+include/omniORB4/CORBA_DomainManager.h	       -- new
+include/omniORB4/CORBA_DynAny.h		       -- new
+include/omniORB4/CORBA_Environment.h	       -- new
+include/omniORB4/CORBA_Exception.h	       -- new
+include/omniORB4/CORBA_ExceptionList.h	       -- new
+include/omniORB4/CORBA_Fixed.h		       -- new
+include/omniORB4/CORBA_NamedValue.h	       -- new
+include/omniORB4/CORBA_ORB.h		       -- new
+include/omniORB4/CORBA_Object.h		       -- new
+include/omniORB4/CORBA_Object_vartypes.h       -- new
+include/omniORB4/CORBA_Policy.h		       -- new
+include/omniORB4/CORBA_Principal.h	       -- new
+include/omniORB4/CORBA_Request.h	       -- new
+include/omniORB4/CORBA_ServerRequest.h	       -- new
+include/omniORB4/CORBA_String.h		       -- new
+include/omniORB4/CORBA_TypeCode.h	       -- new
+include/omniORB4/CORBA_TypeCode_member.h       -- new
+include/omniORB4/CORBA_UnknownUserException.h  -- new
+include/omniORB4/CORBA_primitive_types.h       -- new
+include/omniORB4/CORBA_static_fns.h	       -- new
+include/omniORB4/CORBA_vartypes.h
+
+- callDescriptor::userException() no longer has to throw an exception.
+
+include/omniORB4/callDescriptor.h
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/serverRequest.cc
+src/lib/omniORB/include/request.h
+src/lib/omniORB/orbcore/callHandle.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+
+- Change freeing behaviour of string members and elements.
+
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+
+- C++ mapping fixes.
+
+include/omniORB4/templatedecls.h
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+- Small bug fixes.
+
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/orbcore/corbaFixed.cc
+
+- Optional logging for traced mutexes and condition variables.
+
+include/omniORB4/tracedthread.h
+src/lib/omniORB/orbcore/tracedthread.cc
+
+
 Thu Aug 16 17:11:00 BST 2001 sll
 ================================
 
 - Fix compilation problem
 
 include/omniORB4/omniORB.h
+
 
 Thu Aug 16 15:36:04 BST 2001 dpg1
 =================================
