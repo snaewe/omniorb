@@ -10,6 +10,11 @@
 
 /*
  $Log$
+ Revision 1.2  1997/01/24 19:26:38  sll
+ Moved the implementations of the inline members of _CORBA_Sequence<T> back
+ into its class definition. This is to work around a bug in Sunpro C++ 4.0
+ which make it fails to compile the runtime when optimisation is on.
+
  Revision 1.1  1997/01/23 15:19:58  sll
  Initial revision
 
@@ -25,25 +30,125 @@ template <class T>
 class _CORBA_Sequence {
 public:
   inline _CORBA_Sequence() : pd_max(0), pd_len(0), pd_rel(1), pd_buf(0) { }
-  inline _CORBA_Sequence(_CORBA_ULong max);
+  inline _CORBA_Sequence(_CORBA_ULong max) :
+             pd_max(max), pd_len(0), pd_rel(1)
+  {
+    if (!(pd_buf = allocbuf(max))) {
+      _CORBA_new_operator_return_null();
+      // never reach here
+    }
+    return;
+  }
+
   inline _CORBA_Sequence(_CORBA_ULong max,
 			 _CORBA_ULong length,
 			 T           *value,
-			 _CORBA_Boolean release = 0);
-  inline _CORBA_Sequence(const _CORBA_Sequence<T>& s);
+			 _CORBA_Boolean release = 0) 
+      : pd_max(max), 
+	pd_len(length), 
+	pd_rel(release),
+	pd_buf(value)
+  {
+    if (length > max) {
+      _CORBA_bound_check_error();
+      // never reach here
+    }
+    return;
+  }
+
+  inline _CORBA_Sequence(const _CORBA_Sequence<T>& s)
+              : pd_max(s.pd_max), 
+		pd_len(s.pd_len),
+		pd_rel(1)
+  {
+    if (!(pd_buf = allocbuf(s.pd_len))) {
+      _CORBA_new_operator_return_null();
+      // never reach here
+    }
+    for (_CORBA_ULong i=0; i < s.pd_len; i++) {
+      pd_buf[i] = s.pd_buf[i];
+    }
+  }
+
   inline ~_CORBA_Sequence() {
     if (pd_rel && pd_buf) freebuf(pd_buf);
     pd_buf = 0;
     return;
   }
-  inline _CORBA_Sequence<T> &operator= (const _CORBA_Sequence<T> &s);
+  inline _CORBA_Sequence<T> &operator= (const _CORBA_Sequence<T> &s)
+  {
+    if (pd_max < s.pd_max)
+      {
+	T *newbuf = allocbuf(s.pd_max);
+	if (!newbuf) {
+	  _CORBA_new_operator_return_null();
+	  // never reach here
+	}
+	pd_max = s.pd_max;
+	if (pd_rel && pd_buf) {
+	  freebuf(pd_buf);
+	}
+	else {
+	  pd_rel = 1;
+	}
+	pd_buf = newbuf;
+      }
+    pd_len = s.pd_len;
+    for (unsigned long i=0; i < pd_len; i++) {
+      pd_buf[i] = s.pd_buf[i];
+    }
+    return *this;
+  }
+
   inline _CORBA_ULong maximum() const { return pd_max; }
   inline _CORBA_ULong length() const { return pd_len; }
-  inline void length(_CORBA_ULong length);
-  inline T &operator[] (_CORBA_ULong index);
-  inline const T &operator[] (_CORBA_ULong index) const;
-  static inline T* allocbuf(_CORBA_ULong nelems);
-  static inline void freebuf(T * b);
+  inline void length(_CORBA_ULong length)
+  {
+    if (length > pd_max)
+      {
+	T *newbuf = allocbuf(length);
+	if (!newbuf) {
+	  _CORBA_new_operator_return_null();
+	  // never reach here
+	}
+	for (unsigned long i=0; i < pd_len; i++) {
+	  newbuf[i] = pd_buf[i];
+	}
+	pd_max = length;
+	if (pd_rel && pd_buf) {
+	  freebuf(pd_buf);
+	}
+	else {
+	  pd_rel = 1;
+	}
+	pd_buf = newbuf;
+      }
+    pd_len = length;
+    return;
+  }
+  inline T &operator[] (_CORBA_ULong index)
+  {
+    if (index >= length()) {
+      _CORBA_bound_check_error();
+    }
+    return pd_buf[index];
+  }
+  inline const T &operator[] (_CORBA_ULong index) const
+  {
+    if (index >= length()) {
+      _CORBA_bound_check_error();
+    }
+    return pd_buf[index];
+  }
+  static inline T* allocbuf(_CORBA_ULong nelems)
+  {
+    return new T[nelems];
+  }
+  static inline void freebuf(T * b)
+  {
+    if (b) delete [] b; 
+    return;
+  }
   // omniORB2 extensions
   inline T *NP_data() const { return pd_buf; }
   inline void operator>>= (NetBufferedStream &s) const;
@@ -114,146 +219,6 @@ public:
   inline void operator<<= (MemBufferedStream &s);
 };
 
-template <class T>
-inline 
-_CORBA_Sequence<T>::_CORBA_Sequence(_CORBA_ULong max) : 
-  pd_max(max), pd_len(0), pd_rel(1)
-{
-  if (!(pd_buf = allocbuf(max))) {
-    _CORBA_new_operator_return_null();
-    // never reach here
-  }
-  return;
-}
-
-template <class T>
-inline
-_CORBA_Sequence<T>::_CORBA_Sequence(_CORBA_ULong max,
-				    _CORBA_ULong length,
-				    T           *value,
-				    _CORBA_Boolean release) 
-      : pd_max(max), 
-	pd_len(length), 
-	pd_rel(release),
-	pd_buf(value)
-{
-  if (length > max) {
-    _CORBA_bound_check_error();
-    // never reach here
-  }
-  return;
-}
-
-template <class T>
-inline
-_CORBA_Sequence<T>::_CORBA_Sequence(const _CORBA_Sequence<T>& s)
-  : pd_max(s.pd_max), 
-    pd_len(s.pd_len),
-    pd_rel(1)
-{
-  if (!(pd_buf = allocbuf(s.pd_len))) {
-    _CORBA_new_operator_return_null();
-    // never reach here
-  }
-  for (_CORBA_ULong i=0; i < s.pd_len; i++) {
-    pd_buf[i] = s.pd_buf[i];
-  }
-}
-
-template <class T>
-inline 
-_CORBA_Sequence<T>&
-_CORBA_Sequence<T>::operator= (const _CORBA_Sequence<T> &s)
-{
-  if (pd_max < s.pd_max)
-    {
-      T *newbuf = allocbuf(s.pd_max);
-      if (!newbuf) {
-	_CORBA_new_operator_return_null();
-	// never reach here
-      }
-      pd_max = s.pd_max;
-      if (pd_rel && pd_buf) {
-	freebuf(pd_buf);
-      }
-      else {
-	pd_rel = 1;
-      }
-      pd_buf = newbuf;
-    }
-  pd_len = s.pd_len;
-  for (unsigned long i=0; i < pd_len; i++) {
-    pd_buf[i] = s.pd_buf[i];
-  }
-  return *this;
-}
-
-template <class T>
-inline
-void
-_CORBA_Sequence<T>::length(_CORBA_ULong length)
-{
-  if (length > pd_max)
-    {
-      T *newbuf = allocbuf(length);
-      if (!newbuf) {
-	_CORBA_new_operator_return_null();
-	// never reach here
-      }
-      for (unsigned long i=0; i < pd_len; i++) {
-	newbuf[i] = pd_buf[i];
-      }
-      pd_max = length;
-      if (pd_rel && pd_buf) {
-	freebuf(pd_buf);
-      }
-      else {
-	pd_rel = 1;
-      }
-      pd_buf = newbuf;
-    }
-  pd_len = length;
-  return;
-}
-
-template <class T>
-inline
-T&
-_CORBA_Sequence<T>::operator[] (_CORBA_ULong index)
-{
-  if (index >= length()) {
-    _CORBA_bound_check_error();
-  }
-  return pd_buf[index];
-}
-
-template <class T>
-inline
-const T&
-_CORBA_Sequence<T>::operator[] (_CORBA_ULong index) const
-{
-  if (index >= length()) {
-    _CORBA_bound_check_error();
-  }
-  return pd_buf[index];
-}
-
-template <class T>
-inline
-T*
-_CORBA_Sequence<T>::allocbuf(_CORBA_ULong nelems)
-{ 
-  return new T[nelems];
-}
-
-template <class T>
-inline
-void
-_CORBA_Sequence<T>::freebuf(T * b)
-{ 
-  if (b) delete [] b; 
-  return;
-}
 
 template <class T>
 inline
