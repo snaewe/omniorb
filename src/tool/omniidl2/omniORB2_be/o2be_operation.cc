@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.17  1997/12/23 19:30:37  sll
+  Now generate correct stub for multi-dimensional array of object references.
+
   Revision 1.16  1997/12/10 11:35:30  sll
   Updated life cycle service stub.
 
@@ -3852,10 +3855,10 @@ o2be_operation::produceMarshalCode(fstream &s, AST_Decl *decl,
 	      ndim = 0;
 	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
 		{
-		  s << "[_i" << ndim << "]._ptr";
+		  s << "[_i" << ndim << "]";
 		  ndim++;
 		}
-	      s << "," << netstream << ");\n";
+	      s << "._ptr," << netstream << ");\n";
  	    }
 	    break;
 
@@ -4146,10 +4149,10 @@ o2be_operation::produceSizeCalculation(fstream &s, AST_Decl *decl,
 	      ndim = 0;
 	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
 		{
-		  s << "[_i" << ndim << "]._ptr";
+		  s << "[_i" << ndim << "]";
 		  ndim++;
 		}
-	      s << "," << sizevar << ");\n";
+	      s << "._ptr," << sizevar << ");\n";
  	    }
 	    break;
 
