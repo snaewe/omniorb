@@ -11,6 +11,9 @@
 
 /*
   $Log$
+  Revision 1.2  1997/02/04 16:35:11  sll
+  string_alloc() should allocate len+1 chars.
+
   Revision 1.1  1997/01/08 17:26:01  sll
   Initial revision
 
@@ -21,7 +24,7 @@
 char *
 CORBA::string_alloc(CORBA::ULong len)
 {
-  return new char[(int)len];
+  return new char[(int)len+1];
 }
 
 void
