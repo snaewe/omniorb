@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.29.6.17  2000/06/02 14:17:05  dpg1
+  Add static install() method to initialiser so extra initialisers /
+  deinitialisers can be added at run time (needed by omniORBpy).
+
   Revision 1.29.6.16  2000/05/24 17:19:41  dpg1
   Add documented but non-existent -ORBobjectTableSize and
   -ORBno_bootstrap_agent arguments
@@ -218,7 +222,7 @@ extern omniInitialiser& omni_initFile_initialiser_;
 extern omniInitialiser& omni_initRefs_initialiser_;
 extern omniInitialiser& omni_strand_initialiser_;
 extern omniInitialiser& omni_scavenger_initialiser_;
-
+extern omniInitialiser& omni_hooked_initialiser_;
 
 static CORBA::Boolean
 parse_ORB_args(int& argc, char** argv, const char* orb_identifier);
@@ -304,6 +308,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_ropeFactory_initialiser_.attach();
     omni_initFile_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
+    omni_hooked_initialiser_.attach();
 
     if( bootstrapAgentHostname ) {
       // The command-line option -ORBInitialHost has been specified.
@@ -544,6 +549,7 @@ omniOrbORB::actual_shutdown()
   omniObjAdapter::shutdown();
 
   // Call detach method of the initialisers in reverse order.
+  omni_hooked_initialiser_.detach();
   omni_initRefs_initialiser_.detach();
   omni_initFile_initialiser_.detach();
   omni_ropeFactory_initialiser_.detach();
@@ -1185,6 +1191,61 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
     return 0;
   }
   return 1;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Hooked initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_hooked_initialiser : public omniInitialiser {
+public:
+
+  omni_hooked_initialiser() : pd_head(0), pd_tail(0) {}
+
+  void attach() {
+    for (initHolder* ih = pd_head; ih; ih = ih->next)
+      ih->init->attach();
+  }
+
+  void detach() {
+    initHolder *ih, *nih;
+    for (ih = pd_head; ih; ih = nih) {
+      ih->init->detach();
+      nih = ih->next;
+      delete ih;
+    }
+  }
+
+  void install(omniInitialiser* init) {
+    initHolder* ih = new initHolder(init);
+    if (pd_tail)
+      pd_tail->next = ih;
+    else
+      pd_head = ih;
+    pd_tail = ih;
+  }
+
+private:
+  struct initHolder {
+    initHolder(omniInitialiser* i) : init(i), next(0) {}
+
+    omniInitialiser* init;
+    initHolder*      next;
+  };
+
+  initHolder* pd_head;
+  initHolder* pd_tail;
+};
+
+static omni_hooked_initialiser hinitialiser;
+omniInitialiser& omni_hooked_initialiser_ = hinitialiser;
+
+void
+omniInitialiser::
+install(omniInitialiser* init)
+{
+  hinitialiser.install(init);
 }
 
 

@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/06/02 14:17:05  dpg1
+  Add static install() method to initialiser so extra initialisers /
+  deinitialisers can be added at run time (needed by omniORBpy).
+
   Revision 1.1.2.1  1999/09/24 15:01:32  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -44,6 +48,11 @@ class omniInitialiser {
 public:
   virtual void attach() = 0;
   virtual void detach() = 0;
+
+  static void install(omniInitialiser* init);
+  // Hook to allow modules to add initialisers dynamically. These
+  // initialisers are run after all statically declared ones. Not
+  // thread safe.
 };
 
 
