@@ -1,0 +1,218 @@
+Overview of the omniORB4 transport subsystem
+============================================
+
+The purpose of this document is to give an overview of the structure of the
+transport subsystem. The description aims to provide a general picture of
+what happens and the relationship between the various class objects. One
+should not assume that this is a complete and accurate description of what
+actual happens. The source code should be consulted to understand what is
+actually happening.
+
+
+The transport subsystem is responsible for the managing connections to
+and from remote address spaces. 
+
+Subsystem external interfaces
+----------------------------
+
+The rest of the ORB interacts with the transport subsystem via the
+following classes defined in omniTransport.h:
+
+1. class Rope
+
+     An abstract base class.
+
+     A Rope is an abstraction through which a client can connect to a
+     remote address space. A rope creates network connections to the remote
+     address on demand. At any time, there can be 0 to n number of network
+     connections associated with each rope.
+
+     Every object reference created by the ORB has a Rope associated with
+     it. Furthermore, all object references point to the same remote
+     address space share the same rope.
+
+     A rope is a reference counted object. If the reference count is 0, the
+     rope will be deleted by the ORB. The reference count is incremented by
+     1 (via incrRefCount()) whenever an object reference that contains a
+     reference to the rope is created.     
+
+
+2. class IOP_C
+
+     An abstract base class.
+
+     This object is used to drive a remote invocation on the client side.
+     To do a remote call, the client thread must first acquire a IOP_C
+     object. This is done via the Rope::acquireClient() method.
+     When the remote call is completed, the IOP_C object must be freed by
+     the Rope::releaseClient() method.
+
+     The IOP_C contains a number of methods to drive a remote call through
+     its complete cycle. Using the getStream() method, a cdrStream object
+     can be obtained. The object can then be used to marshal or unmarshal
+     call arguments.
+
+     Example usage. The IOP_C object is used in omniRemoteIdentity::dispatch()
+     to drive a remote call.
+
+3. class IOP_S
+
+     An abstract base class.
+
+     This object is used to serve an incoming remote invocation on the
+     server side.
+
+     Typically, the transport subsystem is responsible for dispatching
+     threads to serve incoming requests for each network connection.
+     When a request is received, the identity of the target is decoded,
+     if it is a valid servant in this address space, an upcall will be
+     dispatched to the omniServant::_dispatch() method. An IOP_S object
+     is passed as an argument to the _dispatch() method. Using this object,
+     the stub level code can receive all the call arguments and to return
+     any results returned by the upcall to the application code.
+
+
+Subsystem internal interfaces
+-----------------------------
+
+The transport subsystem is provided by a bunch of GIOP specific
+classes. These classes share the same "giop" prefix in their names, e.g.
+giopRope, giopStrand, giopStream etc. This is one implementation of the
+subsystem's external interface. It is entirely possible to add a different
+implementation to the ORB but unless the network transport is very
+different there is rarely a need to do so.
+
+The complete GIOP protocol is implemented by the giop classes. The
+implementation can be used to drive the GIOP protocol over any reliable
+stream network protocols, e.g. tcp, ssl over tcp, unix socket etc.
+
+
+The implementation classes can be roughly divided into 2 groups:
+1. the client side transport:
+       giopRope, giopStrand, giopStream, GIOP_C
+
+2. the server side transport:
+       giopStrand, giopStream, GIOP_S
+       giopServer, giopRendezvouser, giopWorker
+
+Notice that giopStrand and giopStream are shared by both sides.
+
+In addition, each network protocol, e.g. tcp, is driven by an implemention
+of the giopEndpoint, giopAddress and giopConnection abstract classes.
+
+  Client side transport
+  ---------------------
+
+  giopRope is a concrete implmentation of the Rope class. 
+  When the client thread calls the giopRope::acquireClient() (the concrete
+  implementation of Rope::acquireClient()), the giopRope object performs
+  the following actions:
+
+    1. It checks to see if a network connection is already opened.
+    2. If there isn't one, it creates a network connection. In doing so, it
+       creates a giopStrand object (which encapsulate the network
+       connection) and adds the object to its pd_strands list.
+    3. If a network connection is already opened, it checks if the
+       connection has been used to carry the same GIOP protocol version
+       previously and if no other thread is using it to perform an
+       invocation at the time. If both are true, the connection is
+       chosen. Otherwise, the object may create another network connection;
+       wait for a network connection to become free; or simply pick a used
+       connection and let the call multiplex with an ongoing call.
+    4. Once a connection is chosen, a GIOP_C object is created and attached
+       to the connection's giopStrand object. The GIOP_C object is entered
+       onto the giopStrand::clients list.
+       The acquireClient method returns the GIOP_C object.
+
+  When the client thread has finished with the GIOP_C object, it returns
+  the object to the giopRope by the giopRope::releaseClient() method. The
+  releaseClient method performs the following actions:
+    1. It checks to see if the giopStrand (i.e. the network connection) is
+       still usable. For instance, if the communication through this
+       connection has been broken, the giopStrand would have entered the
+       DYING state. If that is the case, the GIOP_C object is deleted. If
+       no other GIOP_C objects are attached to the giopStrand and no
+       threads is block waiting on the giopStrand, the giopStrand is
+       DELETED.
+       Notice that this is the ONLY way a giopStrand in the DYING state is
+       deleted.
+    2. If the giopStrand is still usable, it is in the ACTIVE state. In
+       that case, the GIOP_C object is marked as UnUsed and entered into the
+       giopStrand::clients list. The same object will be given out next
+       time acquireClient is called. 
+
+
+  Remember that a giopRope object (because it is derived from the Rope
+  class) is reference-counted on the number of object references that
+  refers to it. When the reference count goes to 0, the giopRope is a
+  candidate to be deleted. What should we do about the giopStrands of this
+  rope? Instead of closing down all the connections and deleting the
+  giopStrands immediately when the reference count goes to 0, the
+  giopStrands are changed to the TIMEOUT state. In this state, the
+  giopStrands can be deleted at any time immediately when the resource is
+  tight. Or the connections may be closed down through the normal
+  scavenging process (see below). Since connections take time to set up,
+  if the ORB has to instantiate a new object reference going to the same
+  address space shortly afterwards, leaving these connections open would
+  save a lot of work to redo the connection setup.
+
+  Client side scavenger
+  ---------------------
+
+  Once a connection is opened, it may not be used for a long period of
+  time. To conserve resources, it is desireable to close these idle
+  connections. When the ORB has created one or more network connections, it
+  will spawn a thread to expire the connections when they become idle.
+  Periodically, the thread wakes up, scans all the giopStrands that is in
+  the ACTIVE or TIMEOUT state. If the giopStrands are deemed to be idled
+  for a period of time, the connections are closed and the giopStrands are
+  deleted.  Notice that the thread does not touch any giopStrand that is in
+  the DYING state or is in used.
+
+
+  XXX Client side final shutdown
+  ------------------------------
+  This is not done yet. Which means that when CORBA::ORB::destroy() is
+  called, all existing connections will be left as they are.
+
+  When CORBA::ORB::destroy() is called, all the connections should be
+  cleaned up.
+  1. For those connections that are not in use, we just shut them down.
+  2. For those connections that have invocations in progress, 
+       Shall we shutdown the connections and wait for all the threads that
+       use these connections to release their GIOP_Cs???????
+
+
+  Multiple client Addresses
+  -----------------------------
+  The IOR may contain multiple addresses. When a giopRope is created, it
+  is given a vector of addresses. Any one of them can be used to contact
+  the remote objects. They may be alternative addresses of the same network
+  protocol or may belong to an entirely different network protocol.
+
+  Given this list of addresses, the ORB has to select the subset that can
+  be used and arrange the addresses in the order they should be used.
+  The selection is done by consulting a configration table which matches
+  an ordered list of transport with an address mask.
+
+  When an address is found to be bad, i.e. no communication can be
+  established, the rope must be notified so that it can switch to the
+  next address in the ordered list. The member function notifyCommFailure
+  is used for this purpose. The function informs the rope which address has
+  been found to be bad, the return value reports the address the rope will
+  be used from then onwards. 
+
+  The caller to notifyCommFailure is GIOP_C::notifyCommFailure. The
+  function is in turn called whenever the giopStream (which is the base
+  class of GIOP_C) detects an error in sending or receiving data.
+
+  It is usually desireable to try all the address before giving up.  In
+  order to do so, GIOP_C keeps a local copy of the address in use when it
+  is first acquired. Whenever it has to call giopRope::notifyCommFailure,
+  it compares the returned value with the local copy. A match means that
+  the giopRope has cycled through all the usable addresses. In that case,
+  there is not much point to retry the invocation. If that is not the
+  case, the invocation could be relaunched and the new address will be used.
+  
+  
+

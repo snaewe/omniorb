@@ -1,0 +1,225 @@
+// -*- Mode: C++; -*-
+//                            Package   : omniORB
+// tcpAddress.cc              Created on: 19 Mar 2001
+//                            Author    : Sai Lai Lo (sll)
+//
+//    Copyright (C) 2001 AT&T Laboratories Cambridge
+//
+//    This file is part of the omniORB library
+//
+//    The omniORB library is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Library General Public
+//    License as published by the Free Software Foundation; either
+//    version 2 of the License, or (at your option) any later version.
+//
+//    This library is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Library General Public License for more details.
+//
+//    You should have received a copy of the GNU Library General Public
+//    License along with this library; if not, write to the Free
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    02111-1307, USA
+//
+//
+// Description:
+//	*** PROPRIETORY INTERFACE ***
+// 
+
+/*
+  $Log$
+  Revision 1.1.2.1  2001/04/18 18:10:44  sll
+  Big checkin with the brand new internal APIs.
+
+*/
+
+#include <omniORB4/CORBA.h>
+#include <omniORB4/giopEndpoint.h>
+#include <tcp/tcpConnection.h>
+#include <tcp/tcpAddress.h>
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+/////////////////////////////////////////////////////////////////////////
+tcpAddress::tcpAddress(const IIOP::Address& address) : pd_address(address) {
+
+  const char* format = "giop:tcp:%s:%d";
+  pd_address_string = CORBA::string_alloc(strlen(address.host)+
+					  sizeof(format)+6);
+  sprintf((char*)pd_address_string,format,(const char*)address.host,
+	  address.port);
+}
+
+/////////////////////////////////////////////////////////////////////////
+tcpAddress::tcpAddress(const char* address) {
+
+  pd_address_string = address;
+  // OMNIORB_ASSERT(strncmp(address,"giop:tcp:",9) == 0);
+  const char* host = index(address,':');
+  host = index(host+1,':') + 1;
+  const char* port = index(host,':') + 1;
+  CORBA::ULong hostlen = port - host - 1;
+  // OMNIORB_ASSERT(hostlen);
+  pd_address.host = CORBA::string_alloc(hostlen);
+  strncpy(pd_address.host,host,hostlen);
+  pd_address.host[hostlen] = '\0';
+  int rc;
+  unsigned int v;
+  rc = sscanf(port,"%u",&v);
+  // OMNIORB_ASSERT(rc == 1);
+  // OMNIORB_ASSERT(v > 0 && v < 65536);
+  pd_address.port = v;
+}
+
+/////////////////////////////////////////////////////////////////////////
+const char*
+tcpAddress::type() const {
+  return "giop:tcp";
+}
+
+/////////////////////////////////////////////////////////////////////////
+const char*
+tcpAddress::address() const {
+  return pd_address_string;
+}
+
+/////////////////////////////////////////////////////////////////////////
+giopAddress*
+tcpAddress::duplicate() const {
+  return new tcpAddress(pd_address);
+}
+
+/////////////////////////////////////////////////////////////////////////
+giopConnection*
+tcpAddress::connect(unsigned long deadline_secs,
+		    unsigned long deadline_nanosecs) const {
+
+  struct sockaddr_in raddr;
+  LibcWrapper::hostent_var h;
+  int  rc;
+  tcpSocketHandle_t sock;
+    
+  if (! LibcWrapper::isipaddr(pd_address.host)) {
+    if (LibcWrapper::gethostbyname(pd_address.host,h,rc) < 0) {
+      return 0;
+    }
+    // We just pick the first address in the list, may be we should go
+    // through the list and if possible pick the one that is on the same
+    // subnet.
+    memcpy((void*)&raddr.sin_addr,
+	   (void*)h.hostent()->h_addr_list[0],
+	   sizeof(raddr.sin_addr));
+  }
+  else {
+    // The machine name is already an IP address
+    CORBA::ULong ip_p;
+    if ( (ip_p = inet_addr(pd_address.host)) == RC_INADDR_NONE) {
+      return 0;
+    }
+    memcpy((void*) &raddr.sin_addr, (void*) &ip_p, sizeof(raddr.sin_addr));
+  }
+
+  raddr.sin_family = INETSOCKET;
+  raddr.sin_port   = htons(pd_address.port);
+
+  if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
+    return 0;
+  }
+
+#if !defined(USE_NONBLOCKING_CONNECT)
+
+  if (::connect(sock,(struct sockaddr *)&raddr,
+		sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) {
+    CLOSESOCKET(sock);
+    return 0;
+  }
+  return new tcpConnection(sock);
+
+#else
+
+  if (tcpConnection::setnonblocking(sock) == RC_INVALID_SOCKET) return 0;
+    
+  if (::connect(sock,(struct sockaddr *)&raddr,
+		sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) {
+
+    if (ERRNO != EINPROGRESS) {
+      CLOSESOCKET(sock);
+      return 0;
+    }
+  }
+
+  do {
+
+    struct timeval t;
+
+    if (deadline_secs || deadline_nanosecs) {
+      tcpConnection::setTimeOut(deadline_secs,deadline_nanosecs,t);
+      if (t.tv_sec == 0 && t.tv_usec == 0) {
+	// Already timeout.
+	CLOSESOCKET(sock);
+	return 0;
+      }
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+      if (t.tv_sec > giopStrand::scanPeriod) {
+	t.tv_sec = giopStrand::scanPeriod;
+      }
+#endif
+    }
+    else {
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+      t.tv_sec = giopStrand::scanPeriod;
+      t.tv_usec = 0;
+#else
+      t.tv_sec = t.tv_usec = 0;
+#endif
+    }
+
+#if defined(USE_POLL)
+    struct pollfd fds;
+    fds.fd = sock;
+    fds.events = POLLOUT;
+    int timeout = t.tv_sec*1000+(t.tv_usec/1000);
+    if (timeout == 0) timeout = -1;
+    int rc = poll(&fds,1,timeout);
+    if (rc > 0 && fds.revents & POLLERR) {
+      rc = 0;
+    }
+#else
+    fd_set fds, efds;
+    FD_ZERO(&fds);
+    FD_ZERO(&efds);
+    FD_SET(sock,&fds);
+    FD_SET(sock,&efds);
+    struct timeval* tp = &t;
+    if (t.tv_sec == 0 && t.tv_usec == 0) tp = 0;
+    int rc = select(sock+1,0,&fds,&efds,tp);
+#endif
+    if (rc == 0) {
+      // Time out!
+#if defined(USE_FAKE_INTERRUPTABLE_RECV)
+      continue;
+#else
+      CLOSESOCKET(sock);
+      return 0;
+#endif
+    }
+    else if (rc == RC_SOCKET_ERROR) {
+      if (ERRNO == RC_EINTR)
+	continue;
+      else {
+	CLOSESOCKET(sock);
+	return 0;
+      }
+    }
+
+  } while (0);
+
+  if (tcpConnection::setblocking(sock) == RC_INVALID_SOCKET) return 0;
+
+  return new tcpConnection(sock);
+#endif
+}
+
+
+OMNI_NAMESPACE_END(omni)
