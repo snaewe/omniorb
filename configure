@@ -9100,11 +9100,11 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 #line $LINENO "configure"
 #include "confdefs.h"
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <sys/types.h>
 
 #ifdef F77_DUMMY_MAIN
 #  ifdef __cplusplus
@@ -9146,11 +9146,11 @@ rm -f conftest.$ac_objext conftest.$ac_ext
 #line $LINENO "configure"
 #include "confdefs.h"
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <sys/types.h>
 
 #ifdef F77_DUMMY_MAIN
 #  ifdef __cplusplus

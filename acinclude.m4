@@ -200,11 +200,11 @@ AC_DEFUN([OMNI_SOCKNAME_ARG],
  omni_cv_sockname_size_t=no
  AC_LANG_PUSH(C++)
  AC_TRY_COMPILE([
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <sys/types.h>
 ],[
   socklen_t l;
   getsockname(0, 0, &l);
@@ -212,11 +212,11 @@ AC_DEFUN([OMNI_SOCKNAME_ARG],
  omni_cv_sockname_size_t=socklen_t)
  if test "$omni_cv_sockname_size_t" = no; then
  AC_TRY_COMPILE([
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <sys/types.h>
 ],[
   size_t l;
   getsockname(0, 0, &l);

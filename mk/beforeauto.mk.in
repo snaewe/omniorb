@@ -493,7 +493,7 @@ OMNIORB_LIB_NODYN += $(OMNITHREAD_LIB) $(SOCKET_LIB)
 OMNIORB_LIB_DEPEND += $(OMNITHREAD_LIB_DEPEND)
 OMNIORB_LIB_NODYN_DEPEND += $(OMNITHREAD_LIB_DEPEND)
 
-OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) -lpthread
+OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread)
 
 
 
@@ -718,6 +718,7 @@ ifdef Linux
 IMPORT_CPPFLAGS += -D__linux__
 OMNITHREAD_POSIX_CPPFLAGS = -DNoNanoSleep -DPthreadDraftVersion=10
 OMNITHREAD_CPPFLAGS = -D_REENTRANT
+OMNITHREAD_LIB += -lpthread
 endif
 
 ###################
@@ -728,7 +729,7 @@ OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 \
 OMNITHREAD_CPPFLAGS = -DUsePthread -D_REENTRANT $(CXXMTFLAG)
 SOCKET_LIB = -lsocket -lnsl
 THREAD_LIB = -lthread $(CXXMTFLAG)
-OMNITHREAD_LIB += -lposix4 $(CXXMTFLAG)
+OMNITHREAD_LIB += -lpthread -lposix4 $(CXXMTFLAG)
 
 ifdef Compiler_GCC
 SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-h,$$soname
@@ -916,6 +917,9 @@ SharedLibrarySoNameTemplate = lib$$1$$2.$$3.$(SHAREDLIB_SUFFIX)
 SharedLibraryLibNameTemplate = lib$$1$$2.$(SHAREDLIB_SUFFIX)
 SharedLibraryPlatformLinkFlagsTemplate = -dynamiclib -flat_namespace \
                                          -undefined suppress
+PythonLibraryPlatformLinkFlagsTemplate = -bundle -flat_namespace \
+                                         -undefined suppress
+PythonSHAREDLIB_SUFFIX = so
 
 # Re-define 'ExportLibrary' to run 'ranlib' after the file is copied,
 # for static libraries as otherwise the linker complains: "table of 

@@ -75,6 +75,10 @@ ifeq ($(platform),autoconf)
 
 namespec := _omniidlmodule _ $(IDLMODULE_MAJOR) $(IDLMODULE_MINOR)
 
+ifdef PythonSHAREDLIB_SUFFIX
+SHAREDLIB_SUFFIX = $(PythonSHAREDLIB_SUFFIX)
+endif
+
 SharedLibraryFullNameTemplate = $$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4
 SharedLibrarySoNameTemplate   = $$1$$2.$(SHAREDLIB_SUFFIX).$$3
 SharedLibraryLibNameTemplate  = $$1$$2.$(SHAREDLIB_SUFFIX)
