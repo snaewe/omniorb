@@ -1,3 +1,13 @@
+Mon Jul 26 11:46:41 BST 2004 dgrisby
+====================================
+
+- New RPM spec file from Thomas Lockhart.
+
+contrib/RPMs/omniORB.spec
+etc/init.d/omniNames.SuSE.in  -- new
+etc/init.d/omniNames.in
+
+
 Mon Jul 26 10:55:58 BST 2004 dgrisby
 ====================================
 

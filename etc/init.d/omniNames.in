@@ -9,7 +9,7 @@
 #
 # Author: Sander Steffann <sander@steffann.nl>
 # Modified: Thomas Lockhart <lockhart@fourpalms.org>
-# - Put omniNames log files under /var/log/omniNames
+# - Put omniNames files under /var/log/omniNames
 # - Adjust start/stop levels
 # Modified: Duncan Grisby <duncan@grisby.org>
 # - Put omniNames files under /var/omniNames, since they are not log files
@@ -52,7 +52,7 @@ case "$1" in
 			fi
 
 			# Run it
-			$OMNINAMES $OMNINAMES_OPTIONS &> /dev/null &
+			su omni -c "$OMNINAMES $OMNINAMES_OPTIONS" &> /dev/null &
 			OMNINAMES_PID=$!
 
 			# Sleep a while, and then check if omniNames is still running

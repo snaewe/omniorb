@@ -1,16 +1,30 @@
+%define omnigid 255
+%define omniuid 255
+
 Summary: Object Request Broker (ORB)
 Name:    omniORB
-Version: 4.0.3
-Release: 5
+Version: 4.0.4
+Release: 1
 License: GPL / LGPL
 Group:   System/Libraries
 Source0: %{name}-%{version}.tar.gz
-# omniORB.cfg is a (possibly modified) version of sample.cfg in the omniORB distro.
-Prefix: /usr
-Prereq: /sbin/chkconfig /sbin/ldconfig
-URL:            http://omniorb.sourceforge.net/
+Prefix:  /usr
+%if "%{_vendor}" != "suse"
+Prereq:  /sbin/chkconfig
+%endif
+Prereq:  /sbin/ldconfig
+URL:     http://omniorb.sourceforge.net/
 #Provides:       corba
-BuildRequires:  python glibc-devel openssl
+BuildRequires:  python glibc-devel
+%if "%{_vendor}" == "MandrakeSoft"
+BuildRequires:  openssl
+%endif
+%if "%{_vendor}" == "redhat"
+BuildRequires:  python-devel openssl-devel
+%endif
+%if "%{_vendor}" == "suse"
+BuildRequires:	openssl-devel
+%endif
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 #BuildArch:      i586
 
@@ -22,66 +36,75 @@ linked with %{name}.
 
 # servers
 
-%package -n %{name}-servers
+%package servers
 Summary: Utility programs
 Group:          Development/C++
+Prereq:         /sbin/service /sbin/chkconfig
+Prereq:         /usr/sbin/groupadd /usr/sbin/groupdel
+Prereq:         /usr/sbin/useradd /usr/sbin/userdel
 Requires:       %{name} = %{version}-%{release}
 Provides:       libomniorb-servers = %{version}-%{release} %{name}-servers = %{version}-%{release}
 
-%description -n %{name}-servers
+%description servers
 %{name} CORBA services including a Naming Service.
 
-%package -n %{name}-bootscripts
+%package bootscripts
 Summary: Utility programs
 Group: Development/C++
 Requires: %{name}-servers = %{version}-%{release} %{name}-utils = %{version}-%{release}
 Provides: %{name}-bootscripts = %{version}-%{release}
 
-%description -n %{name}-bootscripts
+%description bootscripts
 Automatic starting of the %{name} CORBA Naming Service.
 
 # utilities
 
-%package -n %{name}-utils
+%package utils
 Summary: Utility programs
 Group:          Development/C++
 Requires:       %{name} = %{version}-%{release}
 Provides:       libomniorb-utils = %{version}-%{release} %{name}-utils = %{version}-%{release}
 
-%description -n %{name}-utils
+%description utils
 %{name} utility programs which may be useful at runtime.
 
 # devel part of the bundle
 
-%package -n %{name}-devel
+%package devel
 Summary: Header files and libraries needed for %{name} development
 Group:          Development/C++
 Requires:       %{name} = %{version}-%{release}
 Provides:       libomniorb-devel = %{version}-%{release} %{name}-devel = %{version}-%{release}
 
-%description -n %{name}-devel
+%description devel
 The header files and libraries needed for developing programs using
 %{name}.
 
 # docs and examples are in a separate package
 
-%package -n %{name}-doc
+%package doc
 Summary: Documentation and examples for %{name}
 Group:          Development/C++
 #Requires:       %{name} = %{version}
 
-%description -n %{name}-doc
+%description doc
 Developer documentation and examples.
 
 
-%define py_ver        %(python -c 'import sys;print(sys.version[0:3])')
+%define py_ver    %(python -c 'import sys;print(sys.version[0:3])')
+
 
 %prep 
-
 %setup -n %{name}-%{version}
-#%patch0 -p1
 
-./configure --prefix=%{prefix} --with-openssl=/usr
+%if "%{_vendor}" == "suse"
+# Replace the init script with something appropriate for SuSE
+# FIXME Note that we hardcode a relative path here,
+# since we do not have that available directly from RPM.
+cp -f etc/init.d/omniNames.SuSE.in etc/init.d/omniNames.in
+%endif
+
+./configure --prefix=%{prefix} --with-openssl=%{prefix}
 
 
 %build
@@ -90,102 +113,165 @@ make IMPORT_CPPFLAGS+="$RPM_OPT_FLAGS" all
 
 
 %install
-make DESTDIR=$RPM_BUILD_ROOT install
+make DESTDIR=%{buildroot} install
 
-mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
-cp sample.cfg $RPM_BUILD_ROOT/etc/omniORB.cfg
-cp etc/init.d/omniNames $RPM_BUILD_ROOT/etc/rc.d/init.d/
-chmod +x $RPM_BUILD_ROOT/etc/rc.d/init.d/ $RPM_BUILD_ROOT/etc/rc.d/init.d/omniNames
+mkdir -p %{buildroot}%{_initrddir}
+cp sample.cfg %{buildroot}%{_sysconfdir}/omniORB.cfg
+cp etc/init.d/omniNames %{buildroot}%{_initrddir}
 
-mkdir -p $RPM_BUILD_ROOT/%{prefix}/man/man{1,5}
-cp -r man/* $RPM_BUILD_ROOT/%{prefix}/man
+mkdir -p %{buildroot}/%{_mandir}/man{1,5}
+cp -r man/* %{buildroot}/%{_mandir}
 
-mkdir -p $RPM_BUILD_ROOT/var/log/omniNames
-mkdir -p $RPM_BUILD_ROOT/var/lib/omniMapper
+mkdir -p %{buildroot}%{_var}/omniNames
+mkdir -p %{buildroot}%{_localstatedir}/omniMapper
 
 # Rename catior to avoid naming conflict with TAO
-mv $RPM_BUILD_ROOT/%{prefix}/bin/catior $RPM_BUILD_ROOT/%{prefix}/bin/catior.omni
-mv $RPM_BUILD_ROOT/%prefix/man/man1/catior.1 $RPM_BUILD_ROOT/%prefix/man/man1/catior.omni.1
+mv %{buildroot}%{_bindir}/catior %{buildroot}%{_bindir}/catior.omni
+mv %{buildroot}/%{_mandir}/man1/catior.1 %{buildroot}/%{_mandir}/man1/catior.omni.1
 
 
 %clean
-[ -z $RPM_BUILD_ROOT ] || rm -rf $RPM_BUILD_ROOT
+[ -z %{buildroot} ] || rm -rf %{buildroot}
+
 
 %pre
-%post -n %{name} -p /sbin/ldconfig
-%postun -n %{name} -p /sbin/ldconfig
+
+%post
+/sbin/ldconfig
+
+%pre servers
+/usr/sbin/groupadd -g %{omnigid} -o -r omni >/dev/null 2>&1 || :
+/usr/sbin/useradd -M -n -g omni -o -r -d /var/omniNames -s /bin/bash \
+  -c "omniORB Servers" -u %{omniuid} omni >/dev/null 2>&1 || :
+
+%post servers
+/sbin/ldconfig
+
+%pre bootscripts
+# a previous version is already installed?
+#if [ $1 -ge 2 ]; then
+#  /sbin/service omniNames stop >/dev/null 2>&1
+#fi
 
 %post bootscripts
+%if "%{_vendor}" == "suse"
+# Most SuSE service scripts have a corresponding link into /usr/sbin
+mkdir -p %{prefix}/sbin
+ln -sf %{_initrddir}/omniNames %{prefix}/sbin/rcomniNames
+/sbin/insserv omniNames
+%else
 /sbin/chkconfig --add omniNames
+%endif
+#/sbin/service omniNames restart >/dev/null 2>&1
 
 %preun bootscripts
+%if "%{_vendor}" == "suse"
+/sbin/insserv -r omniNames
+rm -rf %{prefix}/sbin/rcomniNames
+%else
 /sbin/chkconfig --del omniNames
-rm -rf /var/log/omniNames/*
+%endif
+/sbin/service omniNames stop >/dev/null 2>&1
+rm -rf /var/omniNames/*
 rm -rf /var/lib/omniMapper/*
+
+%postun
+/sbin/ldconfig
+
+%postun servers
+/sbin/ldconfig
+# uninstalling all versions?
+if [ $1 -eq 0 ] ; then
+  /usr/sbin/userdel omni >/dev/null 2>&1 || :
+  /usr/sbin/groupdel omni >/dev/null 2>&1 || : 
+fi
 
 
 # main package includes libraries and copyright info
 %files
 %defattr (-,root,root)
 %doc CREDITS COPYING COPYING.LIB
-%config(noreplace) %_sysconfdir/*.cfg
-%prefix/lib/*.so.*
-%prefix/share/idl
+%config(noreplace) %{_sysconfdir}/*.cfg
+%{_libdir}/*.so.*
+%{_datadir}/idl/*
 
 
-%files -n %{name}-servers
+%files servers
 %defattr (-,root,root)
-%attr(644,root,man) %prefix/man/man1/omniNames*
-#%attr(644,root,man) %prefix/man/man1/omniMapper*
-%prefix/bin/omniMapper
-%prefix/bin/omniNames
+%dir %attr(700,omni,omni) %{_var}/omniNames
+%dir %attr(700,omni,omni) %{_localstatedir}/omniMapper
+%attr(644,root,man) %{_mandir}/man1/omniNames*
+#%attr(644,root,man) %{_mandir}/man1/omniMapper*
+%attr(755,root,root) %{_bindir}/omniMapper
+%attr(755,root,root) %{_bindir}/omniNames
 # Thin substitute for standard Linux init script
 
-%files -n %{name}-bootscripts
+
+%files bootscripts
 %defattr (-,root,root)
-%config(noreplace) %_sysconfdir/rc.d/init.d/*
-%dir %attr(754,root,root) /var/log/omniNames
-%dir %attr(754,root,root) /var/lib/omniMapper
+%config(noreplace) %attr(775,root,root) %{_initrddir}/*
 
 
-%files -n %{name}-utils
+%files utils
 %defattr (-,root,root)
-%attr(644,root,man) %prefix/man/man1/catior*
-%attr(644,root,man) %prefix/man/man1/genior*
-%attr(644,root,man) %prefix/man/man1/nameclt*
-%prefix/bin/catior.omni
-%prefix/bin/convertior
-%prefix/bin/genior
-%prefix/bin/nameclt
+%attr(644,root,man) %{_mandir}/man1/catior*
+%attr(644,root,man) %{_mandir}/man1/genior*
+%attr(644,root,man) %{_mandir}/man1/nameclt*
+%{_bindir}/catior.omni
+%{_bindir}/convertior
+%{_bindir}/genior
+%{_bindir}/nameclt
 
 
-%files -n %{name}-devel
+%files devel
 %defattr(-,root,root)
 %doc ReleaseNotes* readmes/*
-%attr(644,root,man) %prefix/man/man1/omniidl*
-%prefix/bin/omnicpp
-%prefix/bin/omniidl
-%prefix/bin/omniidlrun.py
-%prefix/bin/omkdepend
-%prefix/lib/*.a
-%prefix/lib/*.so
-%prefix/include/*
-%prefix/lib/python%{py_ver}/site-packages/omniidl/*
-%prefix/lib/python%{py_ver}/site-packages/omniidl_be/*.py*
-%prefix/lib/python%{py_ver}/site-packages/omniidl_be/cxx/*.py*
-%prefix/lib/python%{py_ver}/site-packages/omniidl_be/cxx/header/*
-%prefix/lib/python%{py_ver}/site-packages/omniidl_be/cxx/skel/*
-%prefix/lib/python%{py_ver}/site-packages/omniidl_be/cxx/dynskel/*
-%prefix/lib/python%{py_ver}/site-packages/omniidl_be/cxx/impl/*
-%prefix/lib/python%{py_ver}/site-packages/_omniidlmodule.so*
-%prefix/lib/pkgconfig/*.pc
+%attr(644,root,man) %{_mandir}/man1/omniidl*
+%{_bindir}/omnicpp
+%{_bindir}/omniidl
+%{_bindir}/omniidlrun.py
+%{_bindir}/omkdepend
+%{_libdir}/*.a
+%{_libdir}/*.so
+%{_includedir}/*
+%{_libdir}/python%{py_ver}/site-packages/omniidl/*
+%{_libdir}/python%{py_ver}/site-packages/omniidl_be/*.py*
+%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/*.py*
+%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/header/*
+%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/skel/*
+%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/dynskel/*
+%{_libdir}/python%{py_ver}/site-packages/omniidl_be/cxx/impl/*
+%{_libdir}/python%{py_ver}/site-packages/_omniidlmodule.so*
+%{_libdir}/pkgconfig/*.pc
 
-%files -n %{name}-doc
+
+%files doc
 %defattr(-,root,root)
 %doc doc/* 
 
 
 %changelog
+* Mon Jul 26 2004 Duncan Grisbt <duncan@grisby.org> 4.0.4-1
+- Bump version number; integrate SuSE changes. Don't automatically
+  start omniNames upon RPM install.
+
+* Thu Jul 22 2004 Thomas Lockhart <lockhart@fourpalms.org> 4.0.3-7
+- Incorporate additional SuSE features per Dirk O. Siebnich <dok@dok-net.net>
+- Use additional standard RPM substitution parameters rather than
+  hardcoded paths
+
+* Wed Dec 24 2003 Thomas Lockhart <lockhart@fourpalms.org> 4.0.3
+- Fix ownership of boot scripts per Bastiann Bakker
+- Clean up pre- and post-install actions to support servers
+
+* Tue Dec 08 2003 Thomas Lockhart <lockhart@fourpalms.org> 4.0.3
+- Include additional build dependencies for redhat per Bastiann Bakker
+- Put man pages for all distros into %{prefix}/share/man per FHS conventions
+- Run omniNames under user "omni" per Jan Holst Jensen
+
+* Mon Dec 01 2003 Thomas Lockhart <lockhart@fourpalms.org> 4.0.3
+- Merge SuSE spec contributions from Johan Cronje
+
 * Wed Nov 19 2003 Duncan Grisby <duncan@grisby.org> 4.0.3
 - Merge contributed updates, bump version number.
 

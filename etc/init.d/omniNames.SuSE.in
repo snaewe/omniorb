@@ -1,0 +1,113 @@
+#!/bin/sh
+#
+# Startup script to start/stop the omniORB services
+#
+# chkconfig: 345 90 10
+# description: CORBA Naming Service from omniORB
+# processname: omniNames
+# config: /etc/omniORB.cfg
+#
+# Author: Sander Steffann <sander at steffann.nl>
+# Modified: Thomas Lockhart <lockhart at fourpalms.org>
+# - Put omniNames files under /var/log/omniNames
+# - Adjust start/stop levels
+# Modified: Duncan Grisby <duncan at grisby.org>
+# - Put omniNames files under /var/omniNames, since they are not log files
+# Modified: Johan Cronje <jcronje at dsp.sun.ac.za>
+# - Edited the file to work in SuSE Linux
+# Modified: Dirk O. Siebnich <dok at dok-net.net>
+# - better LSB compliance
+
+### BEGIN INIT INFO
+# Provides:          omniNames
+# Required-Start:    $syslog
+# Required-Stop:     $syslog
+# Default-Start:     2 3 5
+# Short-Description: omniNames daemon that provides a CORBA naming service
+# Description:       The CORBA naming service provides a way for CORBA clients
+#	to obtain object references by using object names rather
+#	than IOR string references.
+#	Enable this service if the machine will act as a Naming
+#	Service Server.
+### END INIT INFO
+
+# Program options
+# Edit the paths if they do not correspond with your installation
+GENIOR=@prefix@/bin/genior
+OMNINAMES=@prefix@/bin/omniNames
+OMNINAMES_DIR=/var/omniNames
+OMNIMAPPER_DIR=/var/lib/omniMapper
+test -x $OMNINAMES || exit 5
+
+. /lib/lsb/init-functions
+rc_reset
+
+# Registered port number for CORBA naming service is 2809.
+# Should be preferred but may conflict with other ORBs running concurrently.
+TCPPORT=2809
+
+if [ -f /etc/sysconfig/omniNames ];then
+	. /etc/sysconfig/omniNames
+fi
+
+case "$1" in
+  start)
+	# Make sure directories exist
+	[ -d $OMNINAMES_DIR ] || mkdir -p $OMNINAMES_DIR
+	[ -d $OMNIMAPPER_DIR ] || mkdir -p $OMNIMAPPER_DIR
+  
+        echo -n "Starting omniNames"
+        OMNINAMES_OPTIONS="-errlog $OMNINAMES_DIR/error.log -logdir $OMNINAMES_DIR"
+
+        if [ ! -f $OMNINAMES_DIR/omninames-*.log ]; 
+        then
+           OMNINAMES_OPTIONS="$OMNINAMES_OPTIONS -start $TCPPORT"
+           echo -n " for the first time"
+        fi
+        # Run it
+        startproc -u omni $OMNINAMES $OMNINAMES_OPTIONS
+        if [ rc_status ];
+        then
+           touch /var/lock/subsys/omniNames
+        fi
+        rc_status -v
+        echo -n "Configuring NameService with genior"
+        $GENIOR IDL:omg.org/CosNaming/NamingContextExt:1.0 `hostname` $TCPPORT NameService > $OMNIMAPPER_DIR/NameService
+        rc_status -v
+	;;
+
+  stop)
+	echo -n "Stopping omniNames"
+	killproc -TERM $OMNINAMES
+	rm -f $OMNIMAPPER_DIR/NameService
+	rm -f /var/lock/subsys/omniNames
+        rc_status -v
+	;;
+
+  try-restart)
+	$0 status
+	if test $? = 0; then
+		$0 restart
+	else
+		rc_reset	# Not running is not a failure.
+	fi
+	# Remember status and be quiet
+	rc_status
+	;;
+
+  restart|reload)
+	$0 stop
+	$0 start
+	;;
+
+  status)
+        echo -n "Checking for omniNames"
+	checkproc $OMNINAMES
+        rc_status -v
+	;;
+
+  *)
+	echo "Usage: $0 {start|stop|restart|reload|status}"
+	exit 1
+esac
+rc_exit
