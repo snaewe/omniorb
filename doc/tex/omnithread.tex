@@ -2,6 +2,9 @@
 \usepackage[]{fontenc}
 \usepackage{palatino}
 \usepackage{a4}
+\addtolength{\oddsidemargin}{-0.2in}
+\addtolength{\evensidemargin}{-0.6in}
+\addtolength{\textwidth}{0.5in}
 \pagestyle{headings}
 
 \title{The OMNI Thread Abstraction}
@@ -145,6 +148,7 @@ Undetached threads are threads for which storage is not reclaimed until another
 thread waits for its termination by calling {\tt join()}.  An exit value can be
 passed from an undetached thread to the thread which joins it.
 
+\sloppy{
 Detached / undetached threads are distinguished on creation by the type of
 function they execute.  Undetached threads execute a function which has a {\tt
 void*} return type, whereas detached threads execute a function which has a
@@ -154,6 +158,7 @@ class of {\tt omni\_thread} which needs an undetached thread, the member
 function executed by the thread is called {\tt run\_undetached()} rather than
 {\tt run()}, and it is started by calling {\tt start\_undetached()} instead of
 {\tt start()}.
+}
 
 The abstraction currently supports three priorities of thread, but no guarantee
 is made of how this will affect underlying thread scheduling.  The three
@@ -163,11 +168,12 @@ different priority can be specified on thread creation, or while the thread is
 running using {\tt set\_priority().}  A thread's current priority is returned
 by {\tt priority()}.
 
+\sloppy{
 Other functions provided are {\tt self()} which returns the calling thread's
 {\tt omni\_thread} object, {\tt yield()} which requests that other threads be
 allowed to run, {\tt id()} which returns an integer id for the thread for use
 in debugging, {\tt state()}, {\tt sleep()} and {\tt get\_time()}.
-
+}
 
 \section{Using threads in OMNI programs}
 
@@ -311,6 +317,7 @@ One way is this:
 First thread A creates a pipe in addition to the socket.  Instead of shutting
 down the socket, thread B simply writes a byte to the pipe.
 
+\sloppy{
 Thread A meanwhile sets the socket non-blocking using fcntl(sock, F\_SETFL,
 O\_NONBLOCK).  Then it calls connect on the socket - this will return
 EINPROGRESS.  Then it must call select, waiting for either sock to become
@@ -319,6 +326,7 @@ is writable then the connection has succeeded.  It then needs to set the socket
 back to blocking mode using fcntl(sock, F\_SETFL, 0).  If instead select
 returns that the pipe is readable, thread A closes the socket, tidies up and
 exits.
+}
 
 An alternative method is similar but to use polling instead of the pipe.
 Thread B justs sets a flag and thread A calls select with a timeout,
