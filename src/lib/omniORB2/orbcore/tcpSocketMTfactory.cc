@@ -29,6 +29,17 @@
 
 /*
   $Log$
+  Revision 1.22.6.10.2.1  2000/02/22 11:04:57  djs
+  Rendezvouser blocks in select() rather than accept()
+  Rendezvouser maintains a bitmap of interesting FDs (in preparation for
+    it monitoring all the network requests)
+  Rendezvouser can be woken up from its blocked state by a worker
+    sending it a SIGQUIT. This can only be done while the rendezvouser
+    is in select() as at all other times it holds an omni_mutex guard.
+  Added a fixed length thread safe Queue template to hold pending requests.
+
+  The 1-1 mapping of threads to connections is still active.
+
   Revision 1.22.6.10  2000/01/28 15:57:10  djr
   Removed superflouous ref counting in Strand_iterator.
   Removed flags to indicate that Ropes and Strands are heap allocated.
@@ -38,7 +49,7 @@
   Fixed bug in tcpSocketMTfactory.cc:dumpbuf().
 
   Revision 1.22.6.8  1999/10/27 18:20:40  sll
-  Fixed the ctor of tcpSocketWorker so that if thread create fails, the
+  Fixed the ctor of orker so that if thread create fails, the
   exception raised by omnithread does not cause assertion failure in the
   ORB.
 
@@ -164,6 +175,9 @@
 #include <tcpSocket.h>
 #include <exception.h>
 
+// the Fixed Length thread safe queue template
+#include <queue.h>
+
 #if defined(__WIN32__)
 
 #include <winsock.h>
@@ -262,15 +276,33 @@ public:
   virtual ~tcpSocketRendezvouser() { }
   virtual void* run_undetached(void *arg);
 
+  static void wakeUp();
 private:
   tcpSocketMTincomingFactory* pd_factory;
+  omni_mutex pd_allowed_to_signal;
   tcpSocketRendezvouser();
+
+  // Fixed length queue of requests to be processed
+  const static int queueLength = 5; // relate this to the getdtablesize()?
+  FixedQueue<tcpSocketStrand*, queueLength> pd_q;
+public:
+  void signalLock(){
+    PTRACE("Rendezvouser", "allowed_to_signal -> try to acquire");
+    pd_allowed_to_signal.lock();
+    PTRACE("Rendezvouser", "allowed_to_signal -> acquired");
+  }
+  void signalUnlock(){
+    PTRACE("Rendezvouser", "allowed to signal -> released");
+    pd_allowed_to_signal.unlock();
+  }
 };
+
+static tcpSocketRendezvouser* rendezvous;
 
 class tcpSocketWorker : public omni_thread {
 public:
   tcpSocketWorker(tcpSocketStrand* s, tcpSocketMTincomingFactory* f) : 
-          omni_thread(s), pd_factory(f), pd_sync(s,0,0) 
+          omni_thread(s), pd_factory(f), pd_sync(s,0,0)
     {
       start();
       s->decrRefCount();
@@ -288,6 +320,7 @@ public:
   }
   virtual void run(void *arg);
   static void _realRun(void* arg);
+  static void _dispatchOne(tcpSocketStrand* s);
 
 private:
   tcpSocketMTincomingFactory* pd_factory;
@@ -1152,6 +1185,30 @@ extern PFV set_terminate(PFV);
 #endif
 #endif
 
+#include <signal.h>
+
+// HACK the rendezvouser thread (for killing purposes)
+static pthread_t rendez_thread;
+static int wake_signal = SIGQUIT;
+
+void handle_signal(int signalno){
+
+  printf("Is printf safe in the face of threads _and_ signals?\n");
+}
+//struct sigaction sighandler = {SIG_IGN, NULL, NULL, NULL};
+// HACK
+
+
+void tcpSocketRendezvouser::wakeUp(){
+  PTRACE("Rendezvouser", "wakeUp called [acquiring lock]");
+  rendezvous->signalLock();
+  {
+    pthread_kill(rendez_thread, wake_signal);
+  }
+  PTRACE("Rendezvouser", "wakeUp finished [released lock]");
+  rendezvous->signalUnlock();
+}
+
 void*
 tcpSocketRendezvouser::run_undetached(void *arg)
 {
@@ -1164,16 +1221,44 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 #endif
   PTRACE("Rendezvouser","start.");
 
+  
+  // HACK - get the pthreads thread ID
+  rendez_thread = pthread_self();
+  rendezvous = this;
+  signal(wake_signal, &handle_signal);
+  //sigaction(wake_signal, &sighandler, NULL);
+  // HACK
+  
+  
   tcpSocketStrand *newSt = 0;
   tcpSocketWorker *newthr = 0;
   CORBA::Boolean   die = 0;
 
+  // build the interesting bitmap of file descriptors
+  fd_set interestingFDs;
+  FD_ZERO(&interestingFDs);
+  // we're always interested in new connections
+  FD_SET(r->pd_rendezvous, &interestingFDs);
+  int highestFD = r->pd_rendezvous;
+  
+  // noone is allowed to signal us unless we know it is safe
+  signalLock();
+  
   while (r->pd_shutdown == tcpSocketIncomingRope::ACTIVE  && !die) {
 
     try {
 
       tcpSocketHandle_t new_sock;
       struct sockaddr_in raddr;
+      // select() modifies the bitmap in place so we need to copy it
+      // Worker threads are also able to modify the interestingFD set
+      // while we aren't looking and then cause us to take a fresh new
+      // local copy.
+
+      // FIXME: remember to lock shared data
+      fd_set FDs;
+      memcpy(&FDs, &interestingFDs, sizeof(fd_set));
+      
  
 #if (defined(__GLIBC__) && __GLIBC__ >= 2)
       // GNU C library uses socklen_t * instead of int* in accept ().
@@ -1187,69 +1272,106 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
       l = sizeof(struct sockaddr_in);
 
-      PTRACE("Rendezvouser","block on accept()");
+      PTRACE("Rendezvouser","block on select()");
 
-      if ((new_sock = ::accept(r->pd_rendezvous,(struct sockaddr *)&raddr,&l)) 
-	                          == RC_INVALID_SOCKET) {
-#ifndef __WIN32__
-	OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
-#else
-	OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
-#endif
-      }
-
-      PTRACE("Rendezvouser","unblock from accept()");
-
+      int signal_result;
+      
+      // ----------------------------------------------------------
+      // A worker thread can signal us while we are in here
+      signalUnlock();
       {
-	omni_mutex_lock sync(r->pd_lock);
+        signal_result = ::select(highestFD + 1, &FDs, NULL, NULL, NULL);
+      }
+      signalLock();
+      // ----------------------------------------------------------
+	    
+      if (signal_result == -1){
+	// Received a signal while blocked in select()
+	PTRACE("Rendezvouser", "SIGNAL unblocked select");
+	// This means either that:
+	//  * A worker thread has finished reading a request on
+	//    a strand and wishes that strand to be monitored for
+	//    new incoming requests again
+	//  * A signal in some other context indicating something
+	//    really bad has happened
+	// Assuming that noone else will send this particular signal
+	// type, assume the former.
 
-	if (r->pd_shutdown != tcpSocketIncomingRope::ACTIVE) {
-	  // It has been indicated that this thread should stop
-	  // accepting connection request.
-	  CLOSESOCKET(new_sock);
-	  continue;
+	// Just go round the loop again refreshing the bitmap and
+	// reblocking
+      } else
+
+	// is it a new connection?
+	if (FD_ISSET(r->pd_rendezvous, &FDs)){
+	  PTRACE("Rendezvouser", "new connection attempted");
+
+	  if ((new_sock = ::accept(r->pd_rendezvous,(struct sockaddr *)&raddr,&l)) 
+	      == RC_INVALID_SOCKET) {
+#ifndef __WIN32__
+	    OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
+#else
+	    OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
+#endif
+	  }
+      
+	  PTRACE("Rendezvouser","unblock from select(), accept() successful");
+
+	  {
+	    omni_mutex_lock sync(r->pd_lock);
+
+	    if (r->pd_shutdown != tcpSocketIncomingRope::ACTIVE) {
+	      // It has been indicated that this thread should stop
+	      // accepting connection request.
+	      CLOSESOCKET(new_sock);
+	      continue;
+	    }
+
+	    newSt = new tcpSocketStrand(r,new_sock);
+	    newSt->incrRefCount(1);
+	  }
+
+	  PTRACE("Rendezvouser","accept new strand.");
+
+	  omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
+	  if (pd_factory->pd_shutdown_nthreads >= 0) {
+	    pd_factory->pd_shutdown_nthreads++;
+	  } else {
+	    pd_factory->pd_shutdown_nthreads--;
+	  }
+
+	  // ----- This is where we get the 1 - 1 mapping
+	  try {
+	    PTRACE("Rendezvouser", "+    WORKER");
+	    newthr = new tcpSocketWorker(newSt,pd_factory);
+	    PTRACE("Rendezvouser", "+    OK");
+	  } catch(...) {
+	    newthr = 0;
+	  }
+	  if (!newthr) {
+	    // Cannot create a new thread to serve the strand
+	    // We have no choice but to shutdown the strand.
+	    // The long term solutions are:  start multiplexing the new strand
+	    // and the rendezvous; close down idle connections; reasign
+	    // threads to strands; etc.
+	    newSt->decrRefCount();
+	    newSt->real_shutdown();
+	    
+	    omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
+	    OMNIORB_ASSERT(pd_factory->pd_shutdown_nthreads != 0);
+	    if (pd_factory->pd_shutdown_nthreads > 0) {
+	      pd_factory->pd_shutdown_nthreads--;
+	    } else {
+	      pd_factory->pd_shutdown_nthreads++;
+	      pd_factory->pd_shutdown_cond.signal();
+	    }
+	  }
+	
+	} else {
+	  PTRACE("Rendezvouser", "incoming request detected on strand?");
+	  // we need to find a free thread in the pool and allocate it
+	  abort();
 	}
-
-	newSt = new tcpSocketStrand(r,new_sock);
-	newSt->incrRefCount(1);
-      }
-
-      PTRACE("Rendezvouser","accept new strand.");
-
-      omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
-      if (pd_factory->pd_shutdown_nthreads >= 0) {
-	pd_factory->pd_shutdown_nthreads++;
-      }
-      else {
-	pd_factory->pd_shutdown_nthreads--;
-      }
-
-      try {
-	newthr = new tcpSocketWorker(newSt,pd_factory);
-      }
-      catch(...) {
-	newthr = 0;
-      }
-      if (!newthr) {
-	// Cannot create a new thread to serve the strand
-	// We have no choice but to shutdown the strand.
-	// The long term solutions are:  start multiplexing the new strand
-	// and the rendezvous; close down idle connections; reasign
-	// threads to strands; etc.
-	newSt->decrRefCount();
-	newSt->real_shutdown();
-
-	omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
-	OMNIORB_ASSERT(pd_factory->pd_shutdown_nthreads != 0);
-	if (pd_factory->pd_shutdown_nthreads > 0) {
-	  pd_factory->pd_shutdown_nthreads--;
-	}
-	else {
-	  pd_factory->pd_shutdown_nthreads++;
-	  pd_factory->pd_shutdown_cond.signal();
-	}
-
-      }
+      
     }
     catch(CORBA::COMM_FAILURE&) {
       // XXX accepts failed. The probable cause is that the number of
@@ -1367,6 +1489,36 @@ tcpSocketWorker::run(void *arg)
 }
 
 void
+tcpSocketWorker::_dispatchOne(tcpSocketStrand *s)
+{
+  PTRACE("Worker", "in worker dispatch function");
+   
+  try {
+		GIOP_S::dispatcher(s);
+  } catch (CORBA::COMM_FAILURE&) {
+	  PTRACE("Worker","#### Communication failure. Connection closed.");
+	  throw;
+  } catch(const omniORB::fatalException& ex) {
+	  if( omniORB::trace(0) ) {
+	    omniORB::logger l;
+	    l << "You have caught an omniORB bug, details are as follows:\n"
+	      " file: " << ex.file() << "\n"
+	      " line: " << ex.line() << "\n"
+	      " mesg: " << ex.errmsg() << "\n";
+  	}
+	  throw;
+  } catch (...) {
+	  omniORB::logs(0, "An exception has occured and was caught by"
+		  	      " tcpSocketMT Worker thread.");
+   	throw;
+  }
+  
+  rendezvous->wakeUp();
+             
+	PTRACE("Worker", "worker finishing request dispatch");
+}
+
+void
 tcpSocketWorker::_realRun(void *arg)
 {
   tcpSocketStrand* s = (tcpSocketStrand*)arg;
@@ -1386,32 +1538,14 @@ tcpSocketWorker::_realRun(void *arg)
   }
   else
 #endif
-    {
-    while (1) {
-      try {
-	GIOP_S::dispatcher(s);
+    
+    try {
+      while (1) {
+        _dispatchOne(s);
       }
-      catch (CORBA::COMM_FAILURE&) {
-	PTRACE("Worker","#### Communication failure. Connection closed.");
-	break;
-      }
-      catch(const omniORB::fatalException& ex) {
-	if( omniORB::trace(0) ) {
-	  omniORB::logger l;
-	  l << "You have caught an omniORB bug, details are as follows:\n"
-	    " file: " << ex.file() << "\n"
-	    " line: " << ex.line() << "\n"
-	    " mesg: " << ex.errmsg() << "\n";
-	}
-	break;
-      }
-      catch (...) {
-	omniORB::logs(0, "An exception has occured and was caught by"
-		      " tcpSocketMT Worker thread.");
-	break;
-      }
+    } catch (...) {
+      // error handling is done in the other function
     }
-  }
 
   PTRACE("Worker","exit.");
 }
