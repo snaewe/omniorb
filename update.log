@@ -1,4 +1,12 @@
 
+Thu Mar 23 16:20:29 GMT 2000 djr
+================================
+
+- Added NEED_DUMMY_RETURN for gcc/egcs.
+
+include/omniORB3/CORBA_sysdep.h
+
+
 Thu Mar 23 15:27:00 GMT 2000 djs
 ================================
 
@@ -9,6 +17,7 @@ Thu Mar 23 15:27:00 GMT 2000 djs
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
 
+
 Tue Mar 21 10:56:00 GMT 2000 djs
 ================================
 
@@ -16,6 +25,7 @@ Tue Mar 21 10:56:00 GMT 2000 djs
   fixed
 
 src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
+
 
 Mon Mar 20 15:00:13 GMT 2000 djr
 ================================

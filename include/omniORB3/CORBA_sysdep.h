@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.9  2000/03/23 16:27:47  djr
+ Added NEED_DUMMY_RETURN to egcs/gcc.
+
  Revision 1.1.2.8  2000/03/10 16:45:52  dpg1
  MSVC++ can't catch exceptions by base class.
 
@@ -189,6 +192,8 @@
 // No side-effect on other gcc compilers. May be removed in future once
 // the bug is fixed.
 #define EGCS_WORKAROUND
+
+#define NEED_DUMMY_RETURN
 
 // Minor version number 91 is for egcs version 1.*  Some older
 // versions of 1.* may not support namespaces properly - this is
