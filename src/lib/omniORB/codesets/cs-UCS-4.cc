@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/12/05 17:43:30  dpg1
+  Check for input over-run in string and wstring unmarshalling.
+
   Revision 1.1.2.2  2000/11/22 14:37:59  dpg1
   Code set marshalling functions now take a string length argument.
 
@@ -398,6 +401,9 @@ TCS_W_UCS_4::unmarshalWString(cdrStream& stream,
   if (bound && len > bound)
     OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
 
+  if (!stream.checkInputOverrun(1, mlen))
+    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+
   omniCodeSetUtil::BufferU ub(len + 1);
   _CORBA_ULong             tc;
   _CORBA_ULong             i;
@@ -556,6 +562,9 @@ TCS_W_UCS_4::fastUnmarshalWString(cdrStream&          stream,
 
     if (bound && len > bound)
       OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+
+    if (!stream.checkInputOverrun(1, mlen))
+      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
 
     ws = omniCodeSetUtil::allocW(len + 1);
     omniCodeSetUtil::HolderW wh(ws);

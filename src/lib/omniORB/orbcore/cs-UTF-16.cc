@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2000/12/05 17:43:30  dpg1
+  Check for input over-run in string and wstring unmarshalling.
+
   Revision 1.1.2.5  2000/11/22 14:38:00  dpg1
   Code set marshalling functions now take a string length argument.
 
@@ -320,6 +323,9 @@ TCS_W_UTF_16::unmarshalWString(cdrStream& stream,
     OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
 
   _CORBA_ULong len = mlen / 2; // Note no terminating null in marshalled form
+
+  if (!stream.checkInputOverrun(1, mlen))
+    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
 
   // If there is a BOM, this will allocate one character too many, but
   // never mind.
