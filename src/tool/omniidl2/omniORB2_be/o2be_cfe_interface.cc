@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.28  1999/08/15 13:58:01  sll
+  Updated for DEC C++ v6.0.
+
   Revision 1.27  1999/06/03 17:12:23  sll
   New flag -c.
 
@@ -312,7 +315,7 @@ BE_parse_args(int argc, char **argv)
 
 #if ( defined(HAS_Cplusplus_Namespace)              )  \
  || ( defined(__GNUG__) && __GNUC_MINOR__ >= 91     )  \
- || ( defined(__DECCXX) && __DECCXX_VAR >= 60000000 )  \
+ || ( defined(__DECCXX) && __DECCXX_VER >= 60000000 )  \
  || ( defined(_MSC_VER) && _MSC_VER >= 1000         )  \
  || ( defined(__BCPLUSPLUS__)                       )
 
