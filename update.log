@@ -1,3 +1,11 @@
+Fri Mar  1 15:44:58 GMT 2002 dpg1
+=================================
+
+- Add -Wbe switch to C++ back-end for changing example impl suffix.
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+
+
 Wed Feb 20 13:31:07 GMT 2002 dpg1
 =================================
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.14  2002/03/01 15:51:02  dpg1
+# Add -Wbe switch to C++ back-end for changing example impl suffix.
+#
 # Revision 1.18.2.13  2002/02/20 13:33:46  dpg1
 # C++ back-end old signatures option did not work.
 #
@@ -213,6 +216,8 @@ def process_args(args):
             config.state['SK Suffix']         = arg[2:]
         elif arg[:2] == "d=":
             config.state['DYNSK Suffix']      = arg[2:]
+        elif arg[:2] == "e=":
+            config.state['IMPL Suffix']       = arg[2:]
         elif arg == "inline":
             config.state['Inline Includes']   = 1
         else:
