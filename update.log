@@ -1,3 +1,21 @@
+Wed Oct  4 17:48:07 BST 2000 sll
+================================
+
+- Added default interceptors to encode and decode TAG_ORB_TYPE
+- catior and friends now fully decode the content of GIOP 1.2 IORs.
+
+include/omniORB4/IIOP.h
+include/omniORB4/IOP.h
+
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/appl/utils/genior/genior.cc
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+
+
 Tue Oct  3 18:31:31 BST 2000 sll
 ================================
 
