@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.25  2002/05/10 14:00:31  dgrisby
+  Disable Nagle.
+
   Revision 1.22.6.24  2002/04/28 17:53:04  dgrisby
   FreeBSD patches.
 
@@ -293,6 +296,7 @@
 #endif
 
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 
@@ -618,6 +622,21 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
     OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),CORBA::COMPLETED_NO);
 # endif
   }
+  {
+    // Prevent Nagle's algorithm
+    int valtrue = 1;
+    if (setsockopt(pd_rendezvous,SOL_TCP,TCP_NODELAY,
+		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
+
+      CLOSESOCKET(pd_rendezvous);
+#     ifndef __WIN32__
+      OMNIORB_THROW_CONNECTION_BROKEN(errno,CORBA::COMPLETED_NO);
+#     else
+      OMNIORB_THROW_CONNECTION_BROKEN(::WSAGetLastError(),CORBA::COMPLETED_NO);
+#     endif
+    }
+  }
+
   myaddr.sin_family = INETSOCKET;
   myaddr.sin_addr.s_addr = INADDR_ANY;
   myaddr.sin_port = htons(e->port());
@@ -1265,6 +1284,17 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
 
   if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
     return RC_INVALID_SOCKET;
+  }
+
+  {
+    // Prevent Nagle's algorithm
+    int valtrue = 1;
+    if (setsockopt(sock,SOL_TCP,TCP_NODELAY,
+		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
+
+      CLOSESOCKET(sock);
+      return RC_INVALID_SOCKET;
+    }
   }
 
 #if defined(USE_NONBLOCKING_CONNECT)

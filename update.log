@@ -1,3 +1,11 @@
+Fri May 10 14:48:57 BST 2002 dgrisby
+====================================
+
+- Disable Nagle.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
 Sun Apr 28 18:51:41 BST 2002 dgrisby
 ====================================
 
