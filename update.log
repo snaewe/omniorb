@@ -1,3 +1,14 @@
+
+Fri Jan  7 14:47:08 GMT 2000 djr
+================================
+
+- Server and client call timeouts are now disabled by default.
+
+src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+doc/tex/omniORB2.tex
+
+
 Wed Jan  5 18:05:56 GMT 2000 dme
 ================================
 

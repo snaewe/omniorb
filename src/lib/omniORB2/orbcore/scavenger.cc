@@ -28,8 +28,11 @@
  
 /*
   $Log$
-  Revision 1.13  1999/09/27 13:36:06  djr
+  Revision 1.14  2000/01/07 15:46:13  djr
   Update from omni2_8_develop
+
+  Revision 1.10.2.3  1999/09/27 13:31:43  djr
+  Updated logging to always issue omniORB: prefix.
 
   Revision 1.10.2.2  1999/09/23 13:47:25  sll
   Fixed a race condition which causes simple programs that exit quickly to
@@ -102,11 +105,14 @@
   omniORB::logs(level, "scavenger " prefix ": " message)
 
 
-static CORBA::ULong ScanPeriod  = 5;		// seconds
-static int serverCallTimeLimit_ = 18;
-static int clientCallTimeLimit_ = 12;
+static CORBA::ULong ScanPeriod = 5;  // seconds
+
+// The following are in scan periods.
+static int serverCallTimeLimit_ = INT_MAX;
+static int clientCallTimeLimit_ = INT_MAX;
 static int outIdleTimeLimit_    = 24;
 static int inIdleTimeLimit_     = 36;
+
 
 /////////////////////////////////////////////////////////////////////////////
 // omniORB_Scavenger

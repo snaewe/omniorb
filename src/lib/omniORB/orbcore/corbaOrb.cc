@@ -29,8 +29,11 @@
 
 /*
   $Log$
-  Revision 1.31  2000/01/05 17:20:23  djr
+  Revision 1.32  2000/01/07 15:46:12  djr
   Update from omni2_8_develop
+
+  Revision 1.29.2.3  2000/01/05 17:19:03  djr
+  Added check for reinitialisation in ORB_init and BOA_init.
 
   Revision 1.29.2.2  1999/09/22 18:43:58  sll
   Updated documentation
@@ -725,7 +728,7 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	unsigned int v;
 	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
 	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBinConScanPeriod parameter.");
+			" -ORBclientCallTimeOutPeriod parameter.");
 	  return 0;
 	}
 	omniORB::callTimeOutPeriod(omniORB::clientSide, v);
