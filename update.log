@@ -1,3 +1,13 @@
+Fri Jul  9 15:00:00 BST 1999 sll
+================================
+
+- Put back non-copy object reference insertion operator for Any
+  This operator was there in version5.5 tree and had been removed in
+  the version 5.6 tree (why?)
+
+src/too/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Mon Jul  5 10:24:02 BST 1999 sll
 ================================
 
