@@ -6,6 +6,15 @@
 // Notes:		 Munching strategy is imperative
 //////////////////////////////////////////////////////////////////////////////
 // $Log$
+// Revision 1.1.2.2  2003/11/05 15:42:39  dgrisby
+// vxWorks omnithread fixes from Jochen Gern.
+//
+// Revision 1.2  2003/11/05 11:05:38  gernjo
+// In omni_condition, removed task synchronization via the waiters_ variable. Instead, in signal() re-take the semaphore after signaling. Changed stack size to 60000 due to enhanced stack requirements of release code.
+//
+// Revision 1.1.1.1  2003/10/20 10:15:50  gernjo
+// Original distribution
+//
 // Revision 1.1.2.1  2003/02/17 02:03:11  dgrisby
 // vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 //
@@ -60,7 +69,7 @@
 #define ERRNO(x) (((x) != 0) ? (errno) : 0)
 #define THROW_ERRORS(x) { if((x) != OK) throw omni_thread_fatal(errno); }
 #define OMNI_THREAD_ID	0x7F7155AAl
-#define OMNI_STACK_SIZE 32768l
+#define OMNI_STACK_SIZE 60000l
 
 #ifdef _DEBUG
 	#include <fstream>
@@ -153,37 +162,17 @@ omni_condition::omni_condition(omni_mutex* m) : mutex(m)
 {
 	DBG_TRACE(cout<<"omni_condition::omni_condition  mutexID: "<<(int)mutex->mutexID<<" tid:"<<(int)taskIdSelf()<<endl);
 
-	waiters_ = 0;
-
 	sema_ = semCCreate(SEM_Q_PRIORITY, 0);
 	if(sema_ == NULL)
 	{
 		DBG_TRACE(cout<<"Exception: omni_condition::omni_condition()  tid: "<<(int)taskIdSelf()<<endl);
 		DBG_THROW(throw omni_thread_fatal(errno));
 	}
-
-	waiters_lock_ = semMCreate(SEM_Q_PRIORITY | SEM_INVERSION_SAFE);
-	if(waiters_lock_ == NULL)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::omni_condition()  tid: "<<(int)taskIdSelf()<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
 }
 
 omni_condition::~omni_condition(void)
 {
-	STATUS status = semDelete(waiters_lock_);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::~omni_condition"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	status = semDelete(sema_);
+	STATUS status = semDelete(sema_);
 
 	DBG_ASSERT(assert(status == OK));
 
@@ -196,45 +185,16 @@ omni_condition::~omni_condition(void)
 
 void omni_condition::wait(void)
 {
-	DBG_TRACE(cout<<"omni_condition::wait            mutexID: "<<(int)mutex->mutexID<<" tid:"<<(int)taskIdSelf()<<endl);
+	STATUS status = OK;
 
-	// Prevent race conditions on the <waiters_> count.
-
-	STATUS status = semTake(waiters_lock_,WAIT_FOREVER);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::wait"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	++waiters_;
-
-	status = semGive(waiters_lock_);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::wait"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	// disable task lock to have an atomic unlock+semTake
-	taskLock();
-
-	// We keep the lock held just long enough to increment the count of
-	// waiters by one.	Note that we can't keep it held across the call
-	// to wait() since that will deadlock other calls to signal().
+	taskLock();	// disable task switch until semTake
+				// else a broadcast may not wakeup
+				// this waiting thread
 	mutex->unlock();
-
-	// Wait to be awakened by a cond_signal() or cond_broadcast().
-	status = semTake(sema_,WAIT_FOREVER);
-
-	// reenable task rescheduling
-	taskUnlock();
+		// release mutex
+	status = semTake(sema_, WAIT_FOREVER);
+		// wait at semaphore for a signal or broadcast
+	taskUnlock();		// reenable task switch
 
 	DBG_ASSERT(assert(status == OK));
 
@@ -244,37 +204,8 @@ void omni_condition::wait(void)
 		DBG_THROW(throw omni_thread_fatal(errno));
 	}
 
-	// Reacquire lock to avoid race conditions on the <waiters_> count.
-	status = semTake(waiters_lock_,WAIT_FOREVER);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::wait"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	// We're ready to return, so there's one less waiter.
-	--waiters_;
-
-	// Release the lock so that other collaborating threads can make
-	// progress.
-	status = semGive(waiters_lock_);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::wait"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	// Bad things happened, so let's just return below.
-
-	// We must always regain the <external_mutex>, even when errors
-	// occur because that's the guarantee that we give to our callers.
 	mutex->lock();
+		// get owner of mutex before return
 }
 
 
@@ -285,29 +216,6 @@ int omni_condition::timedwait(unsigned long secs, unsigned long nanosecs)
 	timespec now;
 	unsigned long timeout;
 	int ticks;
-
-	// Prevent race conditions on the <waiters_> count.
-	STATUS status = semTake(waiters_lock_, WAIT_FOREVER);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::timedwait"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	++waiters_;
-
-	status = semGive(waiters_lock_);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::timedwait"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
 
 	clock_gettime(CLOCK_REALTIME, &now);
 
@@ -332,41 +240,11 @@ int omni_condition::timedwait(unsigned long secs, unsigned long nanosecs)
 	// reenable task rescheduling
 	taskUnlock();
 
-	// Reacquire lock to avoid race conditions.
-	status = semTake(waiters_lock_, WAIT_FOREVER);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::timedwait"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	--waiters_;
-
-	status = semGive(waiters_lock_);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::timedwait"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	// A timeout has occured - fires exception if the origin is other than timeout
-	if(result!=OK && !(errno == S_objLib_OBJ_TIMEOUT || errno == S_objLib_OBJ_UNAVAILABLE))
-	{
-		DBG_TRACE(cout<<"omni_condition::timedwait! - thread:"<<omni_thread::self()->id()<<" SemID:"<<(int)sema_<<" errno:"<<errno<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
 	// We must always regain the <external_mutex>, even when errors
 	// occur because that's the guarantee that we give to our callers.
 	mutex->lock();
 
-	if(result!=OK) // timeout
+	if(result!= OK) // timeout
 		return 0;
 
 	return 1;
@@ -376,7 +254,7 @@ void omni_condition::signal(void)
 {
 	DBG_TRACE(cout<<"omni_condition::signal          mutexID: "<<(int)mutex->mutexID<<" tid:"<<(int)taskIdSelf()<<endl);
 
-	STATUS status = semTake(waiters_lock_, WAIT_FOREVER);
+	STATUS status = semGive(sema_);
 
 	DBG_ASSERT(assert(status == OK));
 
@@ -385,84 +263,24 @@ void omni_condition::signal(void)
 		DBG_TRACE(cout<<"Exception: omni_condition::signal"<<endl);
 		DBG_THROW(throw omni_thread_fatal(errno));
 	}
-
-	int have_waiters = waiters_ > 0;
-
-	status = semGive(waiters_lock_);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::signal"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	if(have_waiters != 0)
-	{
-		status = semGive(sema_);
-
-		DBG_ASSERT(assert(status == OK));
-
-		if(status != OK)
-		{
-			DBG_TRACE(cout<<"Exception: omni_condition::signal"<<endl);
-			DBG_THROW(throw omni_thread_fatal(errno));
-		}
-	}
+    
+    // take unread message if no thread was waiting
+    semTake(sema_, NO_WAIT);
 }
 
 void omni_condition::broadcast(void)
 {
 	DBG_TRACE(cout<<"omni_condition::broadcast       mutexID: "<<(int)mutex->mutexID<<" tid:"<<(int)taskIdSelf()<<endl);
 
-	int have_waiters = 0;
-
-	// The <external_mutex> must be locked before this call is made.
-	// This is needed to ensure that <waiters_> and <was_broadcast_> are
-	// consistent relative to each other.
-	STATUS status = semTake(waiters_lock_, WAIT_FOREVER);
+	// Wake up all the waiters.
+	STATUS status = semFlush(sema_);
 
 	DBG_ASSERT(assert(status == OK));
 
 	if(status != OK)
 	{
-		DBG_TRACE(cout<<"Exception: omni_condition::signal"<<endl);
+		DBG_TRACE(cout<<"omni_condition::broadcast1! - thread:"<<omni_thread::self()->id()<<" SemID:"<<(int)sema_<<" errno:"<<errno<<endl);
 		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	if(waiters_ > 0)
-	{
-		// We are broadcasting, even if there is just one waiter...
-		// Record the fact that we are broadcasting.	This helps the
-		// cond_wait() method know how to optimize itself.	Be sure to
-		// set this with the <waiters_lock_> held.
-		have_waiters = 1;
-	}
-
-	status = semGive(waiters_lock_);
-
-	DBG_ASSERT(assert(status == OK));
-
-	if(status != OK)
-	{
-		DBG_TRACE(cout<<"Exception: omni_condition::signal"<<endl);
-		DBG_THROW(throw omni_thread_fatal(errno));
-	}
-
-	if(have_waiters)
-	{
-		// Wake up all the waiters.
-		status = semFlush(sema_);
-
-			DBG_ASSERT(assert(status == OK));
-
-			if(status != OK)
-			{
-				DBG_TRACE(cout<<"omni_condition::broadcast1! - thread:"<<omni_thread::self()->id()<<" SemID:"<<(int)sema_<<" errno:"<<errno<<endl);
-				DBG_THROW(throw omni_thread_fatal(errno));
-			}
-
 	}
 }
 

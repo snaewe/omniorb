@@ -10,6 +10,15 @@
 %% Notes:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% $Log$
+%% Revision 1.1.2.2  2003/11/05 15:42:39  dgrisby
+%% vxWorks omnithread fixes from Jochen Gern.
+%%
+%% Revision 1.2  2003/11/05 11:09:05  gernjo
+%% In omni_condition implementation, removed waiters_ and waiters_lock_
+%%
+%% Revision 1.1.1.1  2003/10/20 10:15:20  gernjo
+%% Original distribution
+%%
 %% Revision 1.1.2.1  2003/02/17 02:03:07  dgrisby
 %% vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 %%
@@ -53,8 +62,6 @@ extern "C" void omni_thread_wrapper(void* ptr);
    bool m_bConstructed;
 
 #define OMNI_CONDITION_IMPLEMENTATION \
-   long waiters_; \
-   SEM_ID waiters_lock_; \
    SEM_ID sema_;
 
 #define OMNI_SEMAPHORE_IMPLEMENTATION \

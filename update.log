@@ -1,3 +1,12 @@
+Wed Nov  5 15:41:30 GMT 2003 dgrisby
+====================================
+
+- vxWorks omnithread fixes from Jochen Gern.
+
+include/omnithread/VxThread.h
+src/lib/omnithread/vxWorks.cc
+
+
 Wed Nov  5 15:21:13 GMT 2003 dgrisby
 ====================================
 
