@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/05/11 14:28:56  sll
+  Temporarily replaced all  MARSHAL_MessageSizeExceedLimit with
+  MARSHAL_MessageSizeExceedLimitOnServer.
+
   Revision 1.1.4.4  2001/05/01 17:56:29  sll
   Remove user exception check in sendUserException. This has been done by
   the caller.
@@ -1410,7 +1414,7 @@ giopImpl11::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
     }
     g->outputMessageSize(g->outputMessageSize()+sz);
     if (g->outputMessageSize() > omniORB::MaxMessageSize()) {
-      OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimit,
+      OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimitOnClient,
 		    (CORBA::CompletionStatus)g->completion());
     }
   }
@@ -1500,7 +1504,7 @@ giopImpl11::getReserveSpace(giopStream* g,omni::alignment_t align,size_t sz) {
     return;
 
  overflow:
-    OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimit,
+    OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimitOnClient,
 		  (CORBA::CompletionStatus)g->completion());
 }
 
@@ -1511,7 +1515,7 @@ giopImpl11::copyOutputData(giopStream* g,void* b, size_t sz,
 
   if (outputHasReachedLimit(g)) {
     // Already reached the message size limit
-    OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimit,
+    OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimitOnClient,
 		  (CORBA::CompletionStatus)g->completion());
   }
 
@@ -1564,7 +1568,7 @@ giopImpl11::copyOutputData(giopStream* g,void* b, size_t sz,
 	outputFlush(g);
 	if (sz && outputHasReachedLimit(g)) {
 	  // Already reached the message size limit
-	  OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimit,
+	  OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimitOnClient,
 			(CORBA::CompletionStatus)g->completion());
 	}
       }
@@ -1594,7 +1598,7 @@ void
 giopImpl11::outputSetFragmentSize(giopStream* g,CORBA::ULong msz) {
 
   if (msz > omniORB::MaxMessageSize()) {
-    OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimit,
+    OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimitOnClient,
 		  (CORBA::CompletionStatus)g->completion());
   }
   g->outputFragmentSize(msz);
