@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.4  2000/06/07 15:34:52  dpg1
+  Replace refcounting removed by djr on 31 Jan.
+
   Revision 1.10.2.3  2000/01/31 11:04:47  djr
   Improved allocation of strands to client threads.
 
@@ -599,6 +602,10 @@ Strand_iterator::Strand_iterator(const Rope *r,
 
 Strand_iterator::~Strand_iterator()
 {
+  if (pd_s) {
+    pd_s->decrRefCount(1);
+    pd_s = 0;                // Be paranoid
+  }
   if (!pd_leave_mutex)
     ((Rope *)pd_rope)->pd_lock.unlock();
   return;
@@ -608,6 +615,7 @@ Strand *
 Strand_iterator::operator() ()
 {
   if (pd_s) {
+    pd_s->decrRefCount(1);
     pd_s = pd_s->pd_next;
   }
   else if (!pd_initialised) {
@@ -621,6 +629,9 @@ Strand_iterator::operator() ()
       delete p;
     else
       p->~Strand();
+  }
+  if (pd_s) {
+    pd_s->incrRefCount(1);
   }
   return pd_s;
 }
