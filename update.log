@@ -1,3 +1,17 @@
+Fri Jun 30 12:21:32 BST 2000 sll
+================================
+
+- Change libtcpwrapGK shared library version number.
+  This is necessary because the library depends on an internal interface
+  of omniORB runtime. That interface has changed.
+  The shared library version number change would allow old and new
+  omniORB runtime libraries to co-exist in the same directory.
+  Otherwise, the old runtime will incorrectly linked to the newer
+  libtcpwrapGK library.
+
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
+
+
 Fri Jun 30 10:30:00 BST 2000 djs
 ================================
 

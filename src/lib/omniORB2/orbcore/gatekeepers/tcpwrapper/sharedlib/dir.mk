@@ -6,8 +6,6 @@
 # The Version number is constructed as follows:
 #    <major version no.>.<minor version no.>.<micro version no.>
 #
-# The <major version no.> is always 2 for omniORB2.
-#
 # The <minor version no.> changes when:
 #   1. Public interfaces have been extended but remains backward compatible
 #      with earlier minor version.
@@ -18,7 +16,7 @@
 # corresponds to a pure bug fix release.
 #
 # 
-VERSION = 1.1.0
+VERSION = 1.2.0
 #
 #
 #
