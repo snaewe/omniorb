@@ -1,3 +1,14 @@
+Fri Apr 27 11:58:25 BST 2001 dpg1
+=================================
+
+- Fix scoping bug in MSVC work-around for external constant linkage.
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+
 Wed Apr 25 17:49:17 BST 2001 dpg1
 =================================
 

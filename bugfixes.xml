@@ -8,6 +8,19 @@
 
 <buglist version="3.0.3">
 
+<bug id="6" date="Fri Apr 27 11:58:25 BST 2001" user="dpg1">
+
+  <summary>Incorrect namespaces for MSVC++ constant
+  work-around</summary>
+  <reported>Daniel Bell</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-03/0107.html"/>
+  <text>
+  The code generated to give constants external linkage on MSVC failed
+  for nested modules.
+  </text>
+</bug>
+
 <bug id="5" date="Wed Apr 25 17:49:17 BST 2001" user="dpg1">
 
   <summary>Incorrect code generated for includes at non-file

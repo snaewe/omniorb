@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.11  2001/04/27 11:03:55  dpg1
+# Fix scoping bug in MSVC work-around for external constant linkage.
+#
 # Revision 1.1.2.10  2000/07/04 12:57:52  djs
 # Fixed Any insertion/extraction operators for unions and exceptions
 #
@@ -638,10 +641,9 @@ const CORBA::TypeCode_ptr _tc_string_@n@ = CORBA::TypeCode::PR_string_tc(@n@);
 external_linkage = """\
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
-@namespace@
-namespace @scope@ {
+@open_namespace@
   const CORBA::TypeCode_ptr @tc_unscoped_name@ = @mangled_name@;
-}
+@close_namespace@
 #else
 const CORBA::TypeCode_ptr @tc_name@ = @mangled_name@;
 #endif
