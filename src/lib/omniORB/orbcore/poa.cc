@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.35  2002/11/08 01:20:46  dgrisby
+  Initialise oid prefix member in nil POA.
+
   Revision 1.2.2.34  2002/10/14 15:16:20  dgrisby
   Fix create_POA / destroy deadlock, unique persistent system ids.
 
@@ -2022,7 +2025,8 @@ omniOrbPOA::omniOrbPOA()  // nil constructor
     pd_poaIdSize(0),
     pd_deathSignal(&pd_lock),
     pd_oidIndex(0),
-    pd_activeObjList(0)
+    pd_activeObjList(0),
+    pd_oidPrefix(0)
 {
 }
 
