@@ -1,3 +1,11 @@
+Wed Mar  2 13:31:11 GMT 2005 dgrisby
+====================================
+
+- Variable name clash.
+
+src/lib/omniORB/orbcore/giopBiDir.cc
+
+
 Wed Mar  2 12:35:11 GMT 2005 dgrisby
 ====================================
 
