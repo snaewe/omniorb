@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.37  2005/03/29 14:41:33  dgrisby
+  Use omniORB logger instead of logf. May avoid a compiler / platform
+  bug on VxWorks.
+
   Revision 1.2.2.36  2004/10/17 20:14:33  dgrisby
   Updated support for OpenVMS. Many thanks to Bruce Visscher.
 
@@ -486,8 +490,10 @@ omni::releaseObjRef(omniObjRef* objref)
     objref->_setIdentity(0);
   }
 
-  if( omniORB::trace(15) )
-    omniORB::logf("ObjRef(%s) -- deleted.", objref->_mostDerivedRepoId());
+  if( omniORB::trace(15) ) {
+    omniORB::logger l;
+    l << "ObjRef(" << objref->_mostDerivedRepoId() << ") -- deleted.\n";
+  }
 
   // Destroy the reference.
   delete objref;
