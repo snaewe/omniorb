@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/02/10 18:28:22  djr
+  omni_tracedmutex/condition now survive if omni_thread::self() returns 0.
+
   Revision 1.1.2.3  2000/02/09 12:06:37  djr
   Additional checks for tracedmutex/conditions.
   Removed superflouous member of omni_tracedmutex.
@@ -99,7 +102,7 @@ omni_tracedmutex::lock()
 
   omni_mutex_lock sync(pd_lock);
 
-  if( pd_holder && pd_holder == me ) {
+  if( me && pd_holder == me ) {
     omniORB::log <<
       "omniORB: Assertion failed -- attempt to lock mutex when already held.\n"
       << bug_msg;
@@ -110,7 +113,7 @@ omni_tracedmutex::lock()
 
   while( pd_holder )  pd_cond.wait();
 
-  pd_holder = me;
+  pd_holder = me ? me : (omni_thread*) 1;
 }
 
 
@@ -122,7 +125,7 @@ omni_tracedmutex::unlock()
   {
     omni_mutex_lock sync(pd_lock);
 
-    if( pd_holder != me ) {
+    if( !pd_holder || me && pd_holder != me ) {
       omniORB::log <<
 	"omniORB: Assertion failed -- attempt to unlock mutex not held.\n" <<
 	bug_msg;
@@ -145,12 +148,8 @@ omni_tracedmutex::assert_held(const char* file, int line, int yes)
 
     omni_thread* me = omni_thread::self();
 
-    if(  yes && pd_holder == me || !yes && pd_holder != me )
+    if(  yes && pd_holder == me || !yes && pd_holder != me || !me )
       return;
-
-    // This is needed for VMS Alpha.  omni_thread::self() is unreliable
-    // once we have returned from main, and returns 0.
-    if( !me )  return;
   }
 
   omniORB::log << "omniORB: Assertion failed -- " <<
@@ -201,7 +200,7 @@ omni_tracedcondition::wait()
 
   omni_mutex_lock sync(pd_mutex.pd_lock);
 
-  if( pd_mutex.pd_holder != me ) {
+  if( me && pd_mutex.pd_holder != me ) {
     omniORB::log <<
       "omniORB: Assertion failed -- attempt to wait on condition variable,\n"
       " but the calling thread does not hold the associated mutex.\n" <<
@@ -217,7 +216,7 @@ omni_tracedcondition::wait()
   pd_cond.wait();
   pd_n_waiters--;
   while( pd_mutex.pd_holder )  pd_mutex.pd_cond.wait();
-  pd_mutex.pd_holder = me;
+  pd_mutex.pd_holder = me ? me : (omni_thread*) 1;
 }
 
 
@@ -228,7 +227,7 @@ omni_tracedcondition::timedwait(unsigned long secs, unsigned long nanosecs)
 
   omni_mutex_lock sync(pd_mutex.pd_lock);
 
-  if( pd_mutex.pd_holder != me ) {
+  if( me && pd_mutex.pd_holder != me ) {
     omniORB::log <<
       "omniORB: Assertion failed -- attempt to wait on condition variable,\n"
       " but the calling thread does not hold the associated mutex.\n" <<
@@ -244,7 +243,7 @@ omni_tracedcondition::timedwait(unsigned long secs, unsigned long nanosecs)
   int ret = pd_cond.timedwait(secs, nanosecs);
   pd_n_waiters--;
   while( pd_mutex.pd_holder )  pd_mutex.pd_cond.wait();
-  pd_mutex.pd_holder = me;
+  pd_mutex.pd_holder = me ? me : (omni_thread*) 1;
 
   return ret;
 }
@@ -253,28 +252,6 @@ omni_tracedcondition::timedwait(unsigned long secs, unsigned long nanosecs)
 void
 omni_tracedcondition::signal()
 {
-#if 0
-  // This is not generally desirable, since it
-  // bombs out even for perfectly legal code!
-
-  if( omniORB::traceLevel > 5 ) {
-    // Check to see if we hold the mutex, and issue a
-    // warning if so, since it is inefficient.
-    CORBA::Boolean mutex_held = 0;
-    { omni_mutex_lock sync(pd_mutex.pd_lock);
-      if( pd_mutex.pd_holder == omni_thread::self() )
-	mutex_held = 1;
-    }
-    if( mutex_held ) {
-      omniORB::log <<
-	"omniORB: WARNING -- signalling a condition variable whilst holding\n"
-	" the associated mutex may be inefficient.\n"
-      omniORB::log.flush();
-      BOMB_OUT();
-    }
-  }
-#endif
-
   pd_cond.signal();
 }
 
@@ -285,4 +262,5 @@ omni_tracedcondition::broadcast()
   pd_cond.broadcast();
 }
 
-#endif
+
+#endif  // ifdef OMNIORB_ENABLE_LOCK_TRACES

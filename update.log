@@ -1,4 +1,14 @@
 
+Thu Feb 10 18:26:33 GMT 2000 djr
+================================
+
+- The omni_tracedmutex/condition implementation now survives if
+  omni_thread::self() returns zero (as has been reported on
+  OpenVMS after main has exited).
+
+src/lib/omniORB2/orbcore/tracedthread.cc
+
+
 Thu Feb 10 17:58:14 GMT 2000 djr
 ================================
 
