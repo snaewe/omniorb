@@ -1,3 +1,11 @@
+Mon Nov  4 17:19:50 GMT 2002 dgrisby
+====================================
+
+- Don't use gethostbyname for IP addresses on Win32.
+
+src/lib/omniORB/orbcore/libcWrapper.cc
+
+
 Wed Oct 30 16:41:56 GMT 2002 dgrisby
 ====================================
 
