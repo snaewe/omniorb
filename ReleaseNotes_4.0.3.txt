@@ -1,9 +1,17 @@
-RELEASE NOTES for omniORB 4.0.2
+RELEASE NOTES for omniORB 4.0.3
 ===============================
 
-This is omniORB 4.0.2. It is a stable release.
+This is omniORB 4.0.3. It is a stable release.
 
 See README.unix or README.win32 for building instructions.
+
+
+New features since omniORB 4.0.2
+--------------------------------
+
+ - Bug fixes.
+ - omniunix corbaloc scheme.
+ - Small scalability improvements.
 
 
 New features since omniORB 4.0.1

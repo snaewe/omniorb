@@ -100,7 +100,7 @@ compilers and Python. It will always choose gcc over the platform's
 native compiler if it is available. To change the choices it makes,
 use variables CC, CXX and PYTHON, e.g.:
 
-  ../configure CXX=/usr/bin/platform_c++ PYTHON=/usr/local/bin/python2.2
+  ../configure CXX=/usr/bin/platform_c++ PYTHON=/usr/local/bin/python2.3
 
 There are various omniORB specific options:
 
@@ -279,7 +279,7 @@ ATMos 4.0           |__arm__    __atmos__     __OSVERSION__=4            |
 NextStep 3.x        |__m68k__   __nextstep__  __OSVERSION__=3            |
 Unixware 7          |__x86__    __uw7__       __OSVERSION__=5            |
 
-You should also specify the preprocessor defines (e.g. -D\_REENTRANT) for
+You should also specify the preprocessor defines (e.g. -D_REENTRANT) for
 compiling multithreaded programs.
 
 

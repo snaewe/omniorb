@@ -1,6 +1,6 @@
 READ ME FIRST!
 
-This is version 4.0.2 of omniORB.
+This is version 4.0.3 of omniORB.
 
 omniORB is copyright AT&T Laboratories Cambridge, Apasphere Ltd and
 others. It is free software. The programs in omniORB are distributed
@@ -77,6 +77,7 @@ following features are not supported in the current release.
 
 - Objects by value.
 - Portable Interceptors.
+- Local interfaces.
 
 
 Missing features
