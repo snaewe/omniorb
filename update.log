@@ -1,3 +1,11 @@
+Tue Nov  6 16:51:48 GMT 2001 dpg1
+=================================
+
+- Minor bug with traceLevel >= 10.
+
+src/lib/omniORB/orbcore/poa.cc
+
+
 Tue Nov  6 15:29:48 GMT 2001 dpg1
 =================================
 

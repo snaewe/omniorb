@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.23  2001/11/06 16:52:47  dpg1
+  Minor bug with traceLevel >= 10.
+
   Revision 1.2.2.22  2001/10/17 16:44:07  dpg1
   Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -981,7 +984,7 @@ omniOrbPOA::deactivate_object(const PortableServer::ObjectId& oid)
   omniObjTableEntry* entry = omniObjTable::locate(key.key(),key.size(),hashv);
 
   if (!entry || entry->state() != omniObjTableEntry::ACTIVE) {
-    if (omniORB::trace(10)) {
+    if (omniORB::trace(10) && entry) {
       if (entry->state() == omniObjTableEntry::ACTIVATING) {
 	omniORB::logger l;
 	l << "deactivate_object() races with a thread activating the "
