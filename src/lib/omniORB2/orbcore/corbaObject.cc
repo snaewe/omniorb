@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.19.4.2  1999/10/02 18:33:18  sll
+  Make sure that deleting a GIOPObjectInfo does not result in deadlock if
+  the object recusively delete other GIOPObjectInfos.
+
   Revision 1.19.4.1  1999/09/15 20:18:33  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -200,8 +204,8 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
     omniObject * other_objptr = other_object->PR_getobj();
 
     CORBA::Boolean original;
-    GIOPObjectInfo_var self_info = objptr->getInvokeInfo(original);
-    GIOPObjectInfo_var other_info = other_objptr->getInvokeInfo(original);
+    GIOPObjectInfo_var self_info;
+    GIOPObjectInfo_var other_info;
     
     if (!objptr->is_proxy()) {
       // this is a local object
@@ -212,6 +216,7 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
 	// other_object is a proxy.
 	// Have to check if the proxy actually points back to this object
 	// via the loop back connection
+	other_info = other_objptr->getInvokeInfo(original);
 	if (objptr->_objectManager()->defaultLoopBack() == other_info->rope())
 	  return 1;
 	else
@@ -224,6 +229,7 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
 	// other_object is local.
 	// Have to check if this proxy actually points back to the local
 	// object via the loop back connection
+	self_info = objptr->getInvokeInfo(original);
 	if (other_objptr->_objectManager()->defaultLoopBack() == self_info->rope())
 	  return 1;
 	else
@@ -232,6 +238,8 @@ Object::_is_equivalent(CORBA::Object_ptr other_object)
       else {
 	// both are proxy objects, check whether they go back to the same
 	// address space. Note: object keys are not globally unique.
+	self_info = objptr->getInvokeInfo(original);
+	other_info = other_objptr->getInvokeInfo(original);
 	if (self_info->rope() == other_info->rope())
 	  return 1;
 	else
@@ -249,27 +257,34 @@ Object::_hash(CORBA::ULong maximum)
     return 0;
   }
   omniObject * objptr = PR_getobj();
-
-  CORBA::Boolean original;
-  GIOPObjectInfo_var self_info = objptr->getInvokeInfo(original);
-
-  size_t s = self_info->keysize();
-  char *k = (char*)self_info->key();
   CORBA::ULong v = 0;
 
-  unsigned int i;
-  for (i = 0; i+4 < s; i+=4) {
-    v += (((CORBA::ULong)k[i] << 24) +
-	 ((CORBA::ULong)k[i+1] << 16) +
-	 ((CORBA::ULong)k[i+2] << 8) +
-	 ((CORBA::ULong)k[i+3]));
+  if (!objptr->is_proxy()) {
+    omniObjectKey key;
+    objptr->getKey(key);
+    v = key.hi + key.med + key.lo;
   }
-  CORBA::ULong v2 = 0;
-  while (i < s) {
-    v2 += (v2 << 8) + (CORBA::ULong)k[i];
-    i++;
+  else {
+    CORBA::Boolean original;
+    GIOPObjectInfo_var self_info = objptr->getInvokeInfo(original);
+
+    size_t s = self_info->keysize();
+    char *k = (char*)self_info->key();
+
+    unsigned int i;
+    for (i = 0; i+4 < s; i+=4) {
+      v += (((CORBA::ULong)k[i] << 24) +
+	    ((CORBA::ULong)k[i+1] << 16) +
+	    ((CORBA::ULong)k[i+2] << 8) +
+	    ((CORBA::ULong)k[i+3]));
+    }
+    CORBA::ULong v2 = 0;
+    while (i < s) {
+      v2 += (v2 << 8) + (CORBA::ULong)k[i];
+      i++;
+    }
+    v += v2;
   }
-  v += v2;
   return (v % maximum);
 }
 
