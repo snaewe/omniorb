@@ -1,4 +1,12 @@
 
+Fri Oct  9 16:11:27 BST 1998 tjr
+================================
+
+- put list & resolve output to stdout not stderr
+
+src/appl/utils/nameclt/nameclt.cc
+
+
 Fri Oct  9 15:15:43 BST 1998 tjr
 ================================
 
