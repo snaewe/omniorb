@@ -11,9 +11,13 @@
 
 /*
   $Log$
-  Revision 1.7  1997/03/26 17:38:04  ewc
-  Runtime converted to Win32 DLL
+  Revision 1.8  1997/04/23 14:23:04  sll
+  New atomic functions in omniObject to set and get an object's rope and
+  key. These functions replaces the non-thread-safe _rope() and objkey().
 
+ * Revision 1.7  1997/03/26  17:38:04  ewc
+ * Runtime converted to Win32 DLL
+ *
  * Revision 1.6  1997/03/10  11:38:49  sll
  * - File renamed to clearly indicated that these are internal interfaces.
  * - class omniORB renamed to class omni. (Class omniORB is now the public
@@ -63,6 +67,7 @@
 class Rope;
 class GIOP_S;
 class GIOP_C;
+class GIOPobjectLocation;
 class omniObject;
 class initFile;
 class omniORB;
@@ -73,9 +78,8 @@ struct omniObjectKey {
   _CORBA_ULong lo;
 };
 
+class _OMNIORB2_NTDLL_ omni {
 
-
-class  _OMNIORB2_NTDLL_ omni {
 public:
 
 #if SIZEOF_PTR == SIZEOF_LONG
@@ -180,37 +184,61 @@ public:
   // CORBA::Object from which all interfaces derived.
   
   static void  orbIsReady();
-  static size_t MaxMessageSize();
-  // returns the ORB-wide limit on the size of GIOP message (excluding the
-  // header).
-
-
-
-  // This exception is thrown if a bug inside the omniORB2 runtime is
-  // detected. The exact location in the source where the exception is
-  // thrown is indicated by file() and line().
-  // 
-  class fatalException {
-  public:
-    fatalException(const char *file,int line,const char *errmsg) {
-      pd_file = file;
-      pd_line = line;
-      pd_errmsg = errmsg;
-    }
-    ~fatalException() {}
-    const char *file() const { return pd_file; }
-    int line() const { return pd_line; }
-    const char *errmsg() const { return pd_errmsg; }
-  private:
-    const char *pd_file;
-    int         pd_line;
-    const char *pd_errmsg;
-
-    fatalException();
-  };
 };
 
+class omniRopeAndKey {
+public:
+  inline omniRopeAndKey(Rope *r,_CORBA_Octet *k, _CORBA_ULong ksize) 
+                 : pd_r(r), pd_keysize(0)
+  {
+    key(k,ksize);
+  }
 
+  inline omniRopeAndKey() : pd_r(0), pd_keysize(0) {}
+
+  inline ~omniRopeAndKey() { 
+    if (pd_keysize > sizeof(omniObjectKey)) {
+      delete [] pd_keyptr;
+    }
+  }
+
+  inline Rope* rope() const { return pd_r; }
+
+  inline _CORBA_Octet* key() const { 
+    if (pd_keysize <= sizeof(omniObjectKey)) {
+      return (_CORBA_Octet*)&pd_key; 
+    }
+    else {
+      return pd_keyptr; 
+    }
+  }
+   
+  inline _CORBA_ULong  keysize() const { return pd_keysize; }
+
+  inline void rope(Rope* r) { pd_r = r; }
+  inline void key(_CORBA_Octet* k, _CORBA_ULong ksize) {
+    if (pd_keysize > sizeof(omniObjectKey)) delete [] pd_keyptr;
+    pd_keysize = ksize;
+    if (pd_keysize <= sizeof(omniObjectKey)) {
+      memcpy((void *)&pd_key,(void*)k,pd_keysize);
+    }
+    else {
+      pd_keyptr = new _CORBA_Octet[pd_keysize];
+      memcpy((void*)pd_keyptr,(void*)k,pd_keysize);
+    }
+  }
+
+private:
+  Rope*             pd_r;
+  _CORBA_ULong      pd_keysize;
+  union {
+    _CORBA_Octet*   pd_keyptr;
+    omniObjectKey   pd_key;
+  };
+
+  omniRopeAndKey& operator=(const omniRopeAndKey&);
+  omniRopeAndKey(const omniRopeAndKey&);
+};
 
 class omniObject {
 
@@ -228,17 +256,26 @@ protected:
 
   virtual ~omniObject();
 
-  void  NP_objkey(const omniObjectKey &k);
-  void  NP_rope(Rope *r);
   void  PR_IRRepositoryId(const char *s);
+
 
 public:
 
-  inline Rope *_rope() const { return pd_rope; }
-  inline const void *objkey() const { return ((pd_proxy) ?
-					      ((void *)pd_objkey.foreign) :
-					      ((void *)&pd_objkey.native)); }
-  inline const size_t objkeysize() const { return pd_objkeysize; }
+  void setRopeAndKey(const omniRopeAndKey& l,_CORBA_Boolean keepIOP=1);
+  // Set new values to the rope and key. If keepIOP is true, keep the
+  // original IOP profile. Otherwise update the profile as well.
+
+  void resetRopeAndKey();
+  // If this is a proxy object, reset the rope and key to the values
+  // stored in the IOP profile.
+  // This function has no effect on local objects and is silently ignored.
+
+  _CORBA_Boolean getRopeAndKey(omniRopeAndKey& l) const;
+  // Get the current value of the rope and key. If the values are the same
+  // as those stored in the IOP profile, the return value is 0. Otherwise
+  // the return value is 1.
+
+  void assertObjectExistent();
 
   virtual _CORBA_Boolean dispatch(GIOP_S &,const char *operation,
 				  _CORBA_Boolean response_expected);
@@ -277,6 +314,8 @@ private:
   int                           pd_refCount;
   omniObject *                      pd_next;
   _CORBA_Boolean                pd_disposed;
+  _CORBA_Boolean                pd_existentverified;
+  _CORBA_Boolean               	pd_forwardlocation;
   
   IOP::TaggedProfileList *      pd_iopprofile;
   
