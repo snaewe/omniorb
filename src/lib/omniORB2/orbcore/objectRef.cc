@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.8  1997/08/08 09:34:57  sll
+  MarshalObjRef now always pass the repository ID of the most derived type
+  in the IOR.
+
   Revision 1.7  1997/05/06 15:26:37  sll
   Public release.
 
@@ -541,6 +545,8 @@ CORBA::MarshalObjRef(CORBA::Object_ptr obj,
   }
 
   // non-nil object reference
+  repoId = obj->PR_getobj()->NP_IRRepositoryId();
+  repoIdSize = strlen(repoId)+1;
   operator>>= ((CORBA::ULong) repoIdSize,s);
   s.put_char_array((CORBA::Char *)repoId,repoIdSize);
   IOP::TaggedProfileList * pl = obj->PR_getobj()->iopProfiles();
@@ -554,6 +560,8 @@ CORBA::AlignedObjRef(CORBA::Object_ptr obj,
 		     size_t repoIdSize,
 		     size_t initialoffset)
 {
+  repoId = obj->PR_getobj()->NP_IRRepositoryId();
+  repoIdSize = strlen(repoId)+1;
   omni::ptr_arith_t msgsize = omni::align_to((omni::ptr_arith_t)
                                                    initialoffset,
 						   omni::ALIGN_4);
@@ -652,6 +660,8 @@ CORBA::MarshalObjRef(CORBA::Object_ptr obj,
   }
 
   // non-nil object reference
+  repoId = obj->PR_getobj()->NP_IRRepositoryId();
+  repoIdSize = strlen(repoId)+1;
   operator>>= ((CORBA::ULong) repoIdSize,s);
   s.put_char_array((CORBA::Char *)repoId,repoIdSize);
   IOP::TaggedProfileList * pl = obj->PR_getobj()->iopProfiles();
