@@ -1,3 +1,47 @@
+Mon Jun 26 17:15:00 BST 2000 djs
+================================
+
+- Added new omniIDL/C++ compiler backend flags & features:
+  -Wbd=suffix      : changes the DynSK.cc file suffix
+  -Wbkeep_inc_path : Preserves IDL #include path in generated C++ header
+  -Wbuse_quotes    : Uses "" rather than <> in C++ header #includes
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be//cxx/header/template.py
+doc/tex/omniORB.tex
+
+- Added better handling of unsupported IDL constructs
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/types.py
+src/lib/omniORB2/omniidl_be/cxx/util.py
+
+- Fixed platform specific path handling for #includes
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+
+- Changed the global configuration state mechanism
+
+src/lib/omniORB2/omniidl_be/cxx/config.py
+src/lib/omniORB2/omniidl_be/cxx/id.py
+src/lib/omniORB2/omniidl_be/cxx/types.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/forward.py
+src/lib/omniORB2/omniidl_be/cxx/header/opers.py
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+src/lib/omniORB2/omniidl_be/cxx/header/tie.py
+src/lib/omniORB2/omniidl_be/cxx/impl/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/skel/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/skel/dispatch.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/mangler.py
+
+
 Thu Jun 22 11:22:01 BST 2000 dpg1
 =================================
 
