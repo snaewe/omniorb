@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.5  1998/01/27 16:48:06  ewc
+  Added support for type Any and TypeCode
+
   Revision 1.4  1997/12/09 19:55:03  sll
   *** empty log message ***
 
@@ -47,59 +50,81 @@ o2be_predefined_type::o2be_predefined_type(AST_PredefinedType::PredefinedType t,
 		    o2be_sequence_chain(AST_Decl::NT_pre_defined,sn,p)
 {
   const char *name;
+  const char *tckind;
 
   switch(pt())
     {
     case AST_PredefinedType::PT_long:
       name = "Long";
+      tckind = "CORBA::tk_long";
       break;
     case AST_PredefinedType::PT_ulong:
       name = "ULong";
+      tckind = "CORBA::tk_ulong";
       break;
     case AST_PredefinedType::PT_short:
       name = "Short";
+      tckind = "CORBA::tk_short";
       break;
     case AST_PredefinedType::PT_ushort:
       name = "UShort";
+      tckind = "CORBA::tk_ushort";
       break;
     case AST_PredefinedType::PT_float:
       name = "Float";
+      tckind = "CORBA::tk_float";
      break;
     case AST_PredefinedType::PT_double:
       name = "Double";
+      tckind = "CORBA::tk_double";
       break;
     case AST_PredefinedType::PT_char:
       name = "Char";
+      tckind = "CORBA::tk_char";
       break;
     case AST_PredefinedType::PT_boolean:
       name = "Boolean";
+      tckind = "CORBA::tk_boolean";
       break;
     case AST_PredefinedType::PT_octet:
       name = "Octet";
+      tckind = "CORBA::tk_octet";
       break;
     case AST_PredefinedType::PT_any:
       name = "Any";
+      tckind = "CORBA::tk_any";
       break;
     case AST_PredefinedType::PT_void:
       name = "<void>";
+      tckind = "CORBA::tk_void";
+      break;
+    case AST_PredefinedType::PT_TypeCode:
+      name = "TypeCode_ptr";
+      tckind = "CORBA::tk_TypeCode";
       break;
     case AST_PredefinedType::PT_pseudo:
       name = "<pseudo>";
+      tckind = "tk_<psuedo>";
       break;
     case AST_PredefinedType::PT_longlong:
       name = "<longlong>";
+      tckind = "tk_<longlong>";
       break;
     case AST_PredefinedType::PT_ulonglong:
       name = "<ulonglong>";
+      tckind = "tk_<ulonglong>";
       break;
     case AST_PredefinedType::PT_longdouble:
       name = "<longdouble>";
+      tckind = "tk_<longdouble>";
       break;
     case AST_PredefinedType::PT_wchar:
       name = "<wchar>";
+      tckind = "tk_<wchar>";
       break;
     default:
       name = "<unknown>";
+      tckind = "tk_<unknown>";
       break;
     }
 
@@ -124,6 +149,16 @@ o2be_predefined_type::o2be_predefined_type(AST_PredefinedType::PredefinedType t,
   n = new char[strlen(scopename())+1];
   strcpy(n,scopename());
   set__scopename(n);
+
+  pd_tckname = new char[strlen(tckind)+1];
+  strcpy(pd_tckname,tckind);
+
+  set_tcname("");
+  set_fqtcname("");
+  set__fqtcname("");
+
+  set_recursive_seq(I_FALSE);
+
   return;
 }
 
@@ -134,12 +169,36 @@ o2be_predefined_type::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
     {
     case AST_PredefinedType::PT_any:
       IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
-      IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << ";\n";
+      IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << "_var;\n";
       break;
+
+    case AST_PredefinedType::PT_TypeCode:
+      IND(s); s << "typedef CORBA::TypeCode_ptr " << tdef->uqname() << "_ptr;\n";
+      IND(s); s << "typedef CORBA::TypeCode_var " << tdef->uqname() << "_var;\n";
+      break;
+	
     default:
       IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
       break;
     }
+}
+
+const char*
+o2be_predefined_type::fieldMemberTypeName()
+{
+  switch(pt())
+    {
+    case AST_PredefinedType::PT_TypeCode:
+      return o2be_predefined_type::TypeCodeMemberName();      
+    default:
+      return uqname();
+    }
+}
+
+const char*
+o2be_predefined_type::TypeCodeMemberName()
+{
+  return "CORBA::TypeCode_member";
 }
 
 // Narrowing

@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.10  1998/01/27 16:48:28  ewc
+  Added support for type Any and TypeCode
+
   Revision 1.9  1997/12/23 19:28:29  sll
   Now generate correct template argument for sequence<array of sequence>.
 
@@ -140,11 +143,19 @@
 #define SEQUENCE_TEMPLATE_UNBOUNDED                "_CORBA_Unbounded_Sequence"
 #define SEQUENCE_TEMPLATE_BOUNDED                  "_CORBA_Bounded_Sequence"
 #define SEQUENCE_TEMPLATE_UNBOUNDED_W_FIXSIZEELEMENT "_CORBA_Unbounded_Sequence_w_FixSizeElement"
+#define SEQUENCE_TEMPLATE_UNBOUNDED__BOOLEAN "_CORBA_Unbounded_Sequence__Boolean"
+#define SEQUENCE_TEMPLATE_UNBOUNDED__OCTET "_CORBA_Unbounded_Sequence__Octet"
 #define SEQUENCE_TEMPLATE_BOUNDED_W_FIXSIZEELEMENT "_CORBA_Bounded_Sequence_w_FixSizeElement"
+#define SEQUENCE_TEMPLATE_BOUNDED__BOOLEAN "_CORBA_Bounded_Sequence__Boolean"
+#define SEQUENCE_TEMPLATE_BOUNDED__OCTET "_CORBA_Bounded_Sequence__Octet"
 #define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY    "_CORBA_Unbounded_Sequence_Array"
 #define SEQUENCE_TEMPLATE_BOUNDED_ARRAY      "_CORBA_Bounded_Sequence_Array"
 #define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY_W_FIXSIZEELEMENT "_CORBA_Unbounded_Sequence_Array_w_FixSizeElement"
+#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__BOOLEAN "_CORBA_Unbounded_Sequence_Array__Boolean"
+#define SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__OCTET "_CORBA_Unbounded_Sequence_Array__Octet"
 #define SEQUENCE_TEMPLATE_BOUNDED_ARRAY_W_FIXSIZEELEMENT "_CORBA_Bounded_Sequence_Array_w_FixSizeElement"
+#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY__BOOLEAN "_CORBA_Bounded_Sequence_Array__Boolean"
+#define SEQUENCE_TEMPLATE_BOUNDED_ARRAY__OCTET "_CORBA_Bounded_Sequence_Array__Octet"
 #define SEQUENCE_TEMPLATE_ADPT_CLASS "_CORBA_Sequence_OUT_arg"
 
 static size_t astExpr2val(AST_Expression *v);
@@ -211,6 +222,12 @@ o2be_sequence::o2be_sequence(AST_Expression *v, AST_Type *t)
   strcpy(p,_scopename());
   strcat(p,uqname());
   set__fqname(p);
+
+  set_tcname("");
+  set_fqtcname("");
+  set__fqtcname("");
+
+  set_recursive_seq(I_FALSE);
 }
 
 
@@ -231,8 +248,44 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
   switch (ntype) 
     {
     case o2be_operation::tBoolean:
-    case o2be_operation::tChar:
+	if (s_max) {
+	  // bounded sequence
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED__BOOLEAN) + 13;
+	  result = new char[namesize];
+	  sprintf(result,
+		  "%s<%d>",
+		  SEQUENCE_TEMPLATE_BOUNDED__BOOLEAN,
+		  (int)s_max);
+	}
+	else {
+	  // unbounded sequence
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED__BOOLEAN) + 1;
+	  result = new char[namesize];
+	  strcpy(result,SEQUENCE_TEMPLATE_UNBOUNDED__BOOLEAN);
+	}
+	return result;
+	break;
+
     case o2be_operation::tOctet:
+	if (s_max) {
+	  // bounded sequence
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED__OCTET) + 13;
+	  result = new char[namesize];
+	  sprintf(result,
+		  "%s<%d>",
+		  SEQUENCE_TEMPLATE_BOUNDED__OCTET,
+		  (int)s_max);
+	}
+	else {
+	  // unbounded sequence
+	  size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED__OCTET) + 1;
+	  result = new char[namesize];
+	  strcpy(result,SEQUENCE_TEMPLATE_UNBOUNDED__OCTET);
+	}
+	return result;
+	break;
+
+    case o2be_operation::tChar:
       elmsize = 1;
       alignment = 1;
       break;
@@ -271,8 +324,62 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 	switch (ntype)
 	  {
 	  case o2be_operation::tBoolean:
-	  case o2be_operation::tChar:
+	    if (s_max) {
+	      // bounded sequence of array
+	      size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_ARRAY__BOOLEAN)
+		+strlen(baseclassname)*2+32;
+	      result = new char[namesize];
+	      sprintf(result,
+		      "%s<%s,%s_slice,%d,%d>",
+		      SEQUENCE_TEMPLATE_BOUNDED_ARRAY__BOOLEAN,
+		      baseclassname,
+		      baseclassname,
+		      (int)dimension,
+		      (int)s_max);
+	    }
+	    else {
+	      size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__BOOLEAN)
+		+ strlen(baseclassname)*2+24;
+	      result = new char[namesize];
+	      sprintf(result,
+		      "%s<%s,%s_slice,%d>",
+		      SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__BOOLEAN,
+		      baseclassname,
+		      baseclassname,
+		      (int)dimension);
+	    }
+	    return result;
+	    break;
+
 	  case o2be_operation::tOctet:
+	    if (s_max) {
+	      // bounded sequence of array
+	      size_t namesize = strlen(SEQUENCE_TEMPLATE_BOUNDED_ARRAY__OCTET)
+		+strlen(baseclassname)*2+32;
+	      result = new char[namesize];
+	      sprintf(result,
+		      "%s<%s,%s_slice,%d,%d>",
+		      SEQUENCE_TEMPLATE_BOUNDED_ARRAY__OCTET,
+		      baseclassname,
+		      baseclassname,
+		      (int)dimension,
+		      (int)s_max);
+	    }
+	    else {
+	      size_t namesize = strlen(SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__OCTET)
+		+ strlen(baseclassname)*2+24;
+	      result = new char[namesize];
+	      sprintf(result,
+		      "%s<%s,%s_slice,%d>",
+		      SEQUENCE_TEMPLATE_UNBOUNDED_ARRAY__OCTET,
+		      baseclassname,
+		      baseclassname,
+		      (int)dimension);
+	    }
+	    return result;
+	    break;
+
+	  case o2be_operation::tChar:
 	    elmsize = 1;
 	    alignment = 1;
 	    break;
@@ -322,6 +429,11 @@ o2be_sequence::seq_template_name(AST_Decl* used_in)
 	  case o2be_operation::tString:
 	    {
 	      elmclassname = o2be_string::fieldMemberTypeName();
+	    }
+	    break;
+	  case o2be_operation::tTypeCode:
+	    {
+	      elmclassname = o2be_predefined_type::TypeCodeMemberName();
 	    }
 	    break;
 	  case o2be_operation::tSequence:
@@ -484,6 +596,11 @@ o2be_sequence::seq_member_name(AST_Decl* used_in)
     case o2be_operation::tString:
       {
 	baseclassname = o2be_string::fieldMemberTypeName();
+	break;
+      }
+    case o2be_operation::tTypeCode:
+      {
+	baseclassname = o2be_predefined_type::TypeCodeMemberName();
 	break;
       }
     case o2be_operation::tSequence:
@@ -719,6 +836,23 @@ o2be_sequence::produce_hdr(fstream &s)
 	}
 	break;
       }
+    case o2be_operation::tTypeCode:
+      {
+	AST_Decl *decl = base_type();
+	if (s_max) {
+	  IND(s); s << "typedef " 
+		    << SEQUENCE_TEMPLATE_BOUNDED << "<"
+		    << o2be_predefined_type::TypeCodeMemberName()
+		    << "," << s_max << "> ";
+	}
+	else {
+	  IND(s); s << "typedef " 
+		    << SEQUENCE_TEMPLATE_UNBOUNDED << "<"
+		    << o2be_predefined_type::TypeCodeMemberName()
+		    << "> ";
+	}
+	break;
+      }
     case o2be_operation::tAny:
     default:
       {
@@ -748,8 +882,52 @@ o2be_sequence::produce_hdr(fstream &s)
 
 void
 o2be_sequence::produce_skel(fstream &s)
-{
+{  
   return;
+}
+
+void 
+o2be_sequence::produce_typecode_skel(fstream &s)
+{
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    // All array TypeCodes are generated in-place when they are used.
+    // Produce any static TypeCodes that are required by the array TypeCode
+    AST_Decl *decl = base_type();
+    if (!decl->in_main_file() || 
+	decl->node_type() == AST_Decl::NT_array || 
+	decl->node_type() == AST_Decl::NT_sequence)
+      {
+	o2be_name::narrow_and_produce_typecode_skel(decl,s);	       
+      }
+    }
+  return;
+}
+
+void 
+o2be_sequence::produce_typecode_member(fstream &s, idl_bool new_ptr)
+{
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    AST_Decl *decl = base_type();
+    size_t s_max = astExpr2val(max_size());
+    if (new_ptr) s << "new ";
+    s << "CORBA::TypeCode(CORBA::tk_sequence, " << s_max << ", ";     
+    o2be_name::produce_typecode_member(decl,s,I_FALSE);
+    s << ")";
+  }
+}
+
+
+idl_bool 
+o2be_sequence::check_recursive_seq()
+{
+  AST_Decl *decl = base_type();
+  if (decl->node_type() == AST_Decl::NT_struct) {
+    // Catch recursive struct
+    if (o2be_structure::narrow_from_decl(decl) == defined_in())
+      return I_TRUE;
+  }	    
+  
+  return o2be_name::narrow_and_check_recursive_seq(decl);
 }
 
 void
@@ -775,6 +953,103 @@ o2be_sequence::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 		<< tdef->uqname() << "_var;\n\n";
       break;
     }
+  
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    if (check_recursive_seq() == I_FALSE) {
+      set_recursive_seq(I_FALSE);
+      // Produce inline definitions of Any insertion and extraction operator,
+      // and deletion function.
+      // Note that both insertion and extraction operators are inline.
+      char* guardName = internal_produce_localname(o2be_sequence::BASE_TYPE);
+
+      size_t s_max = astExpr2val(max_size());
+      if (s_max) 
+	{
+	  char* dstr = new char[12];
+	  sprintf(dstr,"_%d",(int) s_max);
+
+	  char* tmpName = guardName;
+	  guardName = new char[strlen(guardName) + 12];
+	  strcpy(guardName,tmpName);
+	  strcat(guardName,dstr);
+	  delete[] dstr;
+	  delete[] tmpName;
+	  }
+
+      s << "#ifndef __04RL_" << guardName << "__" << endl;
+      s << "#define __04RL_" << guardName << "__\n" << endl;
+    
+      // any insertion operators (inline definitions)
+      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+		<< "inline void operator<<=(CORBA::Any& _a, const " 
+		<< tdef->uqname() << "& _s) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
+      IND(s); s << tdef->tcname() << "->NP_fillInit(_0RL_mbuf);\n";
+      IND(s); s << "_s >>= _0RL_mbuf;\n";
+      IND(s); s << "_a.NP_replaceData(" << tdef->tcname() << ",_0RL_mbuf);\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+		<< "inline void operator<<=(CORBA::Any& _a, " << tdef->uqname() 
+		<< "* _sp) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "::operator<<=(_a,*_sp);\n";
+      IND(s); s << "delete _sp;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      // deletion operator (inline definition)
+      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+		<< "inline void _03RL_" << tdef->_fqname() 
+		<< "_delete(void* _data) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << tdef->uqname() << "* _0RL_t = (" << tdef->uqname() 
+		<< "*) _data;\n";
+      IND(s); s << "delete _0RL_t;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      // any extraction operator (inline definition)
+      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+		<< "inline CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+		<< tdef->uqname() << "*& _sp) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
+      IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << tdef->tcname() 
+		<< ",1)) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "_sp = 0;\n";
+      IND(s); s << "return 0;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      IND(s); s << "else {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "void* _0RL_data = _a.NP_data();\n\n";
+      IND(s); s << "if (!_0RL_data) {\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
+      IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
+      IND(s); s << tdef->uqname() << "* _0RL_tmp = new " << tdef->uqname() 
+		<< ";\n";
+      IND(s); s << "*_0RL_tmp <<= _0RL_tmp_mbuf;\n";
+      IND(s); s << "_0RL_data = (void*) _0RL_tmp;\n";
+      IND(s); s << "_a.NP_holdData(_0RL_data,_03RL_" << tdef->_fqname() 
+		<< "_delete);\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+      IND(s); s << "_sp = (" << tdef->uqname() << "*) _0RL_data;\n";
+      IND(s); s << "return 1;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
+      s << "#endif\n\n";
+    }
+    else set_recursive_seq(I_TRUE);
+  }
 #else
   IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
   IND(s); s << "typedef " << fqname() << "_var " << tdef->uqname() << "_var;\n\n";
@@ -816,9 +1091,24 @@ o2be_sequence::internal_produce_seqname(AST_Decl *d,enum seqnametype stype)
 	o2be_sequence *s = o2be_sequence::narrow_from_decl(d);
 	char *iiname = o2be_sequence::internal_produce_seqname(s->base_type(),
 							      stype);
-	iname = new char [strlen("sequence_")+strlen(iiname)+1];
-	strcpy(iname,"sequence_");
-	strcat(iname,iiname);
+	size_t s_max = astExpr2val(s->max_size());
+	if (stype == o2be_sequence::BASE_TYPE && s_max) 
+	  {
+	    char* dstr = new char[12];
+	    sprintf(dstr,"_%d",(int) s_max);
+
+	    iname = new char [strlen("sequence_")+strlen(iiname)+12];
+	    strcpy(iname,"sequence_");
+	    strcat(iname,iiname);
+	    strcat(iname,dstr);
+	    delete[] dstr;
+	  }
+	else
+	  {
+	    iname = new char [strlen("sequence_")+strlen(iiname)+1];
+	    strcpy(iname,"sequence_");
+	    strcat(iname,iiname);
+	  }
 	delete [] iiname;
       }
       break;
@@ -848,12 +1138,57 @@ o2be_sequence::internal_produce_seqname(AST_Decl *d,enum seqnametype stype)
     case AST_Decl::NT_typedef:
       {
 	o2be_typedef *s = o2be_typedef::narrow_from_decl(d);
-	if (stype == o2be_sequence::EFFECTIVE_TYPE)
+	if (stype == o2be_sequence::EFFECTIVE_TYPE || 
+	    stype == o2be_sequence::BASE_TYPE)
 	  {
 	    AST_Decl *efftype = s->base_type();
 	    if (efftype->node_type() != AST_Decl::NT_array)
 	      {
 		iname = o2be_sequence::internal_produce_seqname(efftype,stype);
+		break;
+	      }
+	    else if (efftype->node_type() == AST_Decl::NT_array &&
+		     stype == o2be_sequence::BASE_TYPE) 
+	      {
+		// Produce string using base element of array
+		o2be_array* arrType = o2be_array::narrow_from_decl(efftype);
+		char* arrBaseName = o2be_sequence::internal_produce_seqname(arrType->base_type(),stype);
+		int arrNumDims = arrType->n_dims();
+		if (arrNumDims < 1)  throw o2be_internal_error(__FILE__,__LINE__,"unexpected number of dimensions in array expression");
+
+		iname = new char[strlen(arrBaseName) + (arrNumDims*11) + 3];
+		strcpy(iname,"");
+
+		char* dimString = new char[12];
+		AST_Expression **arrDims = arrType->dims();
+		int count;
+
+		for(count = 0; count < arrNumDims; count++)
+		  {
+		    AST_Expression::AST_ExprValue *v = arrDims[count]->ev();
+		    switch(v->et)
+		      {
+		      case AST_Expression::EV_short:
+			sprintf(dimString,"%d_",v->u.sval);
+			strcat(iname,dimString);			
+			break;
+		      case AST_Expression::EV_ushort:
+			sprintf(dimString,"%d_",v->u.usval);
+			strcat(iname,dimString);			
+			break;
+		      case AST_Expression::EV_long:
+			sprintf(dimString,"%d_",v->u.lval);
+			strcat(iname,dimString);			
+			break;
+		      case AST_Expression::EV_ulong:
+			sprintf(dimString,"%d_",v->u.ulval);
+			strcat(iname,dimString);			
+			break;
+		      default:
+			throw o2be_internal_error(__FILE__,__LINE__,"unexpected type in array expression");
+		      }
+		  }
+		strcat(iname,arrBaseName);
 		break;
 	      }
 	  }

@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.17  1998/01/27 16:45:14  ewc
+  Added support for type Any and TypeCode
+
   Revision 1.16  1997/12/23 19:26:13  sll
   Now generate correct typedefs for typedef interfaces.
 
@@ -93,6 +96,11 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
       set__fqname("CORBA_Object");
       set_scopename("");
       set__scopename("");
+
+      set_tcname("CORBA::_tc_Object");
+      set_fqtcname("CORBA::_tc_Object");
+      set__fqtcname("CORBA__tc_Object");
+
       pd_objref_uqname = "CORBA::Object_ptr";
       pd_objref_fqname = "CORBA::Object_ptr";
       pd_fieldmem_uqname = "CORBA::Object_member";
@@ -101,6 +109,8 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
       pd_out_adptarg_name = "CORBA::Object_OUT_arg";
       return;
     }
+
+  set_recursive_seq(I_FALSE);
 
   pd_objref_uqname = new char[strlen(uqname())+strlen("_ptr")+1];
   strcpy(pd_objref_uqname,uqname());
@@ -296,6 +306,7 @@ o2be_interface_fwd::o2be_interface_fwd(UTL_ScopedName *n, UTL_StrList *p)
     AST_Decl(AST_Decl::NT_interface_fwd, n, p),
     o2be_name(AST_Decl::NT_interface_fwd,n,p)
 {
+  set_recursive_seq(I_FALSE);
 }
 
 idl_bool
@@ -1270,6 +1281,41 @@ o2be_interface::produce_hdr(fstream &s)
   }
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
+
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    // TypeCode_ptr declaration
+    IND(s); s << ((defined_in() == idl_global->root()) ? "extern " : 
+		  "static ") 
+	      << "const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+
+    // any insertion operators (inline definitions)
+    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+	      << "inline void operator<<=(CORBA::Any& _a, " << objref_uqname() 
+	      << " _s) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
+    IND(s); s << tcname() << "->NP_fillInit(_0RL_mbuf);\n";
+    IND(s); s << uqname() << "::marshalObjRef(_s,_0RL_mbuf);\n";
+    IND(s); s << "_a.NP_replaceData(" << tcname() << ",_0RL_mbuf);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+	      << "inline void operator<<=(CORBA::Any& _a, " << objref_uqname() 
+	      << "* _sp) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "::operator<<=(_a,*_sp);\n";
+    IND(s); s << "CORBA::release(*_sp);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    // any extraction operator (declaration)
+    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
+	      << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+	      << objref_uqname() 
+	      << "& _s);\n\n";
+  }
+
 
   produce_seq_hdr_if_defined(s);
   return;
@@ -2383,6 +2429,39 @@ o2be_interface::produce_skel(fstream &s)
     IND(s); s << "}\n\n";
     s << "\n// *** End of LifeCycle stuff\n\n";
   }
+
+  if (idl_global->compile_flags() & IDL_CF_ANY) {
+    // Produce code for types any and TypeCode
+    s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
+    s << "#define " << "__01RL_" << _fqtcname() << "__\n";
+    IND(s); s << "static CORBA::TypeCode _01RL_" << _fqtcname() << "(\"" 
+	      << repositoryID() << "\", \"" << uqname() << "\");\n\n";
+    s << "#endif\n\n"; 
+    
+    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+	      << "_01RL_" << _fqtcname() << ";\n\n";
+    
+    IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+	      << objref_fqname() << "& _s) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
+    IND(s); s << "if (!_0RL_any_tc->NP_expandEqual(" << fqtcname() 
+	      << ",1)) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "return 0;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "else {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "MemBufferedStream _0RL_tmp_mbuf;\n";
+    IND(s); s << "_a.NP_getBuffer(_0RL_tmp_mbuf);\n";
+    IND(s); s << "_s = " << fqname() << "::unmarshalObjRef(_0RL_tmp_mbuf);\n";
+    IND(s); s << "return 1;\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+  } 
 }
 
 void
