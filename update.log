@@ -1,3 +1,12 @@
+Tue Aug 15 16:16:42 BST 2000 sll
+================================
+
+- match up the name of the BOA version of the COS library in the build 
+ directory and cos.mk
+
+external_merge/mk/cos.mkc
+
+
 Tue Aug 15 14:11:37 BST 2000 dpg1
 =================================
 
