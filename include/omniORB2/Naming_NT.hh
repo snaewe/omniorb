@@ -1,16 +1,16 @@
-// Naming_NT.hh -- manually altered for use with Windows NT
-//
+/* Naming_NT.hh                                          */
+/*                                                       */
+/* Manually Edited Naming.hh for Windows NT/ MSVC++ 4.2  */
+/* Includes work-arounds for MSVC++ 4.3 bugs             */
 
-// This version of the Naming Stubs should be used until the IDL compiler
-// generates code acceptable to MSVC++ 4.2
 
 #ifndef __Naming_hh__
 #define __Naming_hh__
 
 #include <omniORB2/CORBA.h>
 
-class CosNaming {
-public:
+_CORBA_MODULE CosNaming {
+_CORBA_MODULE_PUBLIC
 
   typedef char* Istring;
   typedef CORBA::String_var Istring_var;
@@ -29,12 +29,12 @@ public:
   typedef _CORBA_ConstrType_Variable_Var<NameComponent> NameComponent_var;
 
   typedef _CORBA_Unbounded_Sequence<CosNaming_NameComponent > Name;
+  typedef _CORBA_Sequence_Var<Name, CosNaming_NameComponent > Name_var;
   typedef Name CosNaming_Name;
-  typedef _CORBA_ConstrType_Variable_Var<Name> Name_var;
 
   enum BindingType { nobject, ncontext };
-
   typedef BindingType CosNaming_BindingType;
+
   friend inline void operator>>= (BindingType _e,NetBufferedStream &s) {
     ::operator>>=((CORBA::ULong)_e,s);
   }
@@ -81,10 +81,13 @@ public:
   };
 
   typedef Binding CosNaming_Binding;
+
   typedef _CORBA_ConstrType_Variable_Var<Binding> Binding_var;
+  typedef Binding_var CosNaming_Binding_var;
 
   typedef _CORBA_Unbounded_Sequence<CosNaming_Binding > BindingList;
-  typedef _CORBA_ConstrType_Variable_Var<BindingList> BindingList_var;
+  typedef _CORBA_Sequence_Var<BindingList, CosNaming_Binding > BindingList_var;
+  typedef BindingList_var CosNaming_BindingList_var;
   typedef BindingList CosNaming_BindingList;
 
 #ifndef __CosNaming_BindingIterator__
@@ -107,6 +110,10 @@ public:
     static void marshalObjRef(BindingIterator_ptr obj,MemBufferedStream &s);
     static BindingIterator_ptr unmarshalObjRef(MemBufferedStream &s);
   };
+  typedef _CORBA_ObjRef_Var<BindingIterator,BindingIterator_Helper> BindingIterator_var;
+  typedef BindingIterator_Helper CosNaming_BindingIterator_Helper;
+  typedef BindingIterator_var CosNaming_BindingIterator_var;
+
 #endif
 #ifndef __CosNaming_NamingContext__
 #define __CosNaming_NamingContext__
@@ -115,6 +122,7 @@ public:
   typedef NamingContext_ptr NamingContextRef;
   typedef NamingContext_ptr CosNaming_NamingContext_ptr;
   typedef NamingContext CosNaming_NamingContext;
+
 
   class NamingContext_Helper {
     public:
@@ -128,16 +136,15 @@ public:
     static void marshalObjRef(NamingContext_ptr obj,MemBufferedStream &s);
     static NamingContext_ptr unmarshalObjRef(MemBufferedStream &s);
   };
-
+  typedef _CORBA_ObjRef_Var<NamingContext,NamingContext_Helper> NamingContext_var;
   typedef NamingContext_Helper CosNaming_NamingContext_Helper;
+
 #endif
 #ifndef __CosNaming_NamingContext__
 #define __CosNaming_NamingContext__
   class   NamingContext;
   typedef NamingContext* NamingContext_ptr;
   typedef NamingContext_ptr NamingContextRef;
-  typedef NamingContext_ptr CosNaming_NamingContext_ptr;
-  typedef NamingContext CosNaming_NamingContext;
 
   class NamingContext_Helper {
     public:
@@ -151,18 +158,18 @@ public:
     static void marshalObjRef(NamingContext_ptr obj,MemBufferedStream &s);
     static NamingContext_ptr unmarshalObjRef(MemBufferedStream &s);
   };
+  typedef _CORBA_ObjRef_Var<NamingContext,NamingContext_Helper> NamingContext_var;
 
-  typedef NamingContext_Helper CosNaming_NamingContext_Helper;
 #endif
 #define CosNaming_NamingContext_IntfRepoID "IDL:CosNaming/NamingContext:1.0"
-
 
   class NamingContext : public virtual omniObject, public virtual CORBA::Object {
   public:
 
     enum NotFoundReason { missing_node, not_context, not_object };
 
-	typedef NotFoundReason CosNaming_NamingContext_NotFoundReason;
+    typedef NotFoundReason CosNaming_NamingContext_NotFoundReason;
+
     friend inline void operator>>= (NotFoundReason _e,NetBufferedStream &s) {
       ::operator>>=((CORBA::ULong)_e,s);
     }
@@ -299,7 +306,13 @@ public:
     virtual CosNaming_NamingContext_ptr  new_context (  ) = 0;
     virtual CosNaming_NamingContext_ptr  bind_new_context ( const CosNaming_Name & n ) = 0;
     virtual void destroy (  ) = 0;
-    virtual void list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ) = 0;
+    virtual void ___list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ) = 0;
+    void list ( CORBA::ULong  how_many,
+                   _CORBA_Sequence_OUT_arg<CosNaming_BindingList,CosNaming_BindingList_var >  bl,
+                   _CORBA_ObjRef_OUT_arg<CosNaming_BindingIterator,CosNaming_BindingIterator_var,_CORBA_ObjRef_Member<CosNaming_BindingIterator,CosNaming_BindingIterator_Helper>,CosNaming_BindingIterator_Helper >  bi )
+    {
+      ___list ( how_many, bl._data, bi._data );
+    }
     static NamingContext_ptr _duplicate(NamingContext_ptr);
     static NamingContext_ptr _narrow(CORBA::Object_ptr);
     static NamingContext_ptr _nil();
@@ -314,7 +327,7 @@ public:
 
     static inline NamingContext_ptr unmarshalObjRef(NetBufferedStream &s) {
       CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef(CosNaming_NamingContext_IntfRepoID,s);
-      NamingContext_ptr _result = CosNaming::NamingContext::_narrow(_obj);
+      NamingContext_ptr _result = CosNaming_NamingContext::_narrow(_obj);
       CORBA::release(_obj);
       return _result;
     }
@@ -325,7 +338,7 @@ public:
 
     static inline NamingContext_ptr unmarshalObjRef(MemBufferedStream &s) {
       CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef(CosNaming_NamingContext_IntfRepoID,s);
-      NamingContext_ptr _result = CosNaming::NamingContext::_narrow(_obj);
+      NamingContext_ptr _result = CosNaming_NamingContext::_narrow(_obj);
       CORBA::release(_obj);
       return _result;
     }
@@ -340,7 +353,7 @@ public:
       this->PR_setobj(this);
     }
     virtual ~NamingContext() {}
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) throw ();
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId);
 
   private:
 
@@ -348,14 +361,17 @@ public:
     NamingContext &operator=(const NamingContext&);
   };
 
-  typedef _CORBA_ObjRef_Var<NamingContext,NamingContext_Helper> NamingContext_var;
-
   class _sk_NamingContext :  public virtual NamingContext {
   public:
 
     _sk_NamingContext() {}
+    _sk_NamingContext(const omniORB::objectKey& k) { NP_objkey(k); }
     virtual ~_sk_NamingContext() {}
-    virtual CORBA::Object_ptr _this() { return (CORBA::Object_ptr) this; }
+    NamingContext_ptr _this() { return NamingContext::_duplicate(this); }
+    void _obj_is_ready(CORBA::BOA_ptr boa) { boa->obj_is_ready(this); }
+    CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }
+    void _dispose() { _boa()->dispose(this); }
+    omniORB::objectKey _key() { return (*(omniORB::objectKey*)objkey()); }
     virtual void bind ( const CosNaming_Name & n, CORBA::Object_ptr  obj ) = 0;
     virtual void rebind ( const CosNaming_Name & n, CORBA::Object_ptr  obj ) = 0;
     virtual void bind_context ( const CosNaming_Name & n, CosNaming_NamingContext_ptr  nc ) = 0;
@@ -366,8 +382,15 @@ public:
     virtual CosNaming_NamingContext_ptr  bind_new_context ( const CosNaming_Name & n ) = 0;
     virtual void destroy (  ) = 0;
     virtual void list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ) = 0;
+    virtual void ___list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ) {
+      list ( how_many, bl, bi );
+    }
     virtual CORBA::Boolean dispatch(GIOP_S &s,const char *op,CORBA::Boolean response);
 
+  protected:
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
+      return NamingContext::_widenFromTheMostDerivedIntf(repoId);
+    }
   private:
     _sk_NamingContext (const _sk_NamingContext&);
     _sk_NamingContext &operator=(const _sk_NamingContext&);
@@ -378,7 +401,7 @@ public:
 
     _proxy_NamingContext (Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release) :
       omniObject(CosNaming_NamingContext_IntfRepoID,r,key,keysize,profiles,release) {
-        omniORB::objectIsReady(this);
+        omni::objectIsReady(this);
     }
     virtual ~_proxy_NamingContext() {}
     virtual void bind ( const CosNaming_Name & n, CORBA::Object_ptr  obj );
@@ -390,12 +413,15 @@ public:
     virtual CosNaming_NamingContext_ptr  new_context (  );
     virtual CosNaming_NamingContext_ptr  bind_new_context ( const CosNaming_Name & n );
     virtual void destroy (  );
-    virtual void list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi );
+    virtual void ___list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi );
 
   protected:
 
     _proxy_NamingContext () {}
 
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
+      return NamingContext::_widenFromTheMostDerivedIntf(repoId);
+    }
   private:
 
     _proxy_NamingContext (const _proxy_NamingContext&);
@@ -446,14 +472,14 @@ public:
     CosNaming_NamingContext_ptr  new_context (  ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
-      CosNaming_NamingContext_ptr _result= 0;
+      CosNaming::NamingContext_ptr _result= 0;
       return _result;
     }
 
     CosNaming_NamingContext_ptr  bind_new_context ( const CosNaming_Name & n ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
-      CosNaming_NamingContext_ptr _result= 0;
+      CosNaming::NamingContext_ptr _result= 0;
       return _result;
     }
 
@@ -463,15 +489,19 @@ public:
       return;
     }
 
-    void list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ){
+    void ___list ( CORBA::ULong  how_many, CosNaming_BindingList *& bl, CosNaming_BindingIterator_ptr & bi ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
       return;
     }
 
+  protected:
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
+      return NamingContext::_widenFromTheMostDerivedIntf(repoId);
+    }
   };
 
-  class NamingContext_proxyObjectFactory : public proxyObjectFactory {
+class  _OMNIORB2_NTDLL_ NamingContext_proxyObjectFactory : public proxyObjectFactory {
   public:
     NamingContext_proxyObjectFactory () {}
     virtual ~NamingContext_proxyObjectFactory () {}
@@ -506,14 +536,25 @@ public:
     static void marshalObjRef(BindingIterator_ptr obj,MemBufferedStream &s);
     static BindingIterator_ptr unmarshalObjRef(MemBufferedStream &s);
   };
+  typedef _CORBA_ObjRef_Var<BindingIterator,BindingIterator_Helper> BindingIterator_var;
+
 #endif
 #define CosNaming_BindingIterator_IntfRepoID "IDL:CosNaming/BindingIterator:1.0"
 
   class BindingIterator : public virtual omniObject, public virtual CORBA::Object {
   public:
 
-    virtual CORBA::Boolean  next_one ( CosNaming_Binding *& b ) = 0;
-    virtual CORBA::Boolean  next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ) = 0;
+    virtual CORBA::Boolean  ___next_one ( CosNaming_Binding *& b ) = 0;
+    CORBA::Boolean  next_one ( _CORBA_ConstrType_Variable_OUT_arg<CosNaming_Binding,CosNaming_Binding_var>  b )
+    {
+      return ___next_one ( b._data );
+    }
+    virtual CORBA::Boolean  ___next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ) = 0;
+    CORBA::Boolean  next_n ( CORBA::ULong  how_many,
+                                _CORBA_Sequence_OUT_arg<CosNaming_BindingList,CosNaming_BindingList_var >  bl )
+    {
+      return ___next_n ( how_many, bl._data );
+    }
     virtual void destroy (  ) = 0;
     static BindingIterator_ptr _duplicate(BindingIterator_ptr);
     static BindingIterator_ptr _narrow(CORBA::Object_ptr);
@@ -529,7 +570,7 @@ public:
 
     static inline BindingIterator_ptr unmarshalObjRef(NetBufferedStream &s) {
       CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef(CosNaming_BindingIterator_IntfRepoID,s);
-      BindingIterator_ptr _result = CosNaming::BindingIterator::_narrow(_obj);
+      BindingIterator_ptr _result = CosNaming_BindingIterator::_narrow(_obj);
       CORBA::release(_obj);
       return _result;
     }
@@ -540,7 +581,7 @@ public:
 
     static inline BindingIterator_ptr unmarshalObjRef(MemBufferedStream &s) {
       CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef(CosNaming_BindingIterator_IntfRepoID,s);
-      BindingIterator_ptr _result = CosNaming::BindingIterator::_narrow(_obj);
+      BindingIterator_ptr _result = CosNaming_BindingIterator::_narrow(_obj);
       CORBA::release(_obj);
       return _result;
     }
@@ -555,7 +596,7 @@ public:
       this->PR_setobj(this);
     }
     virtual ~BindingIterator() {}
-    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) throw ();
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId);
 
   private:
 
@@ -563,19 +604,32 @@ public:
     BindingIterator &operator=(const BindingIterator&);
   };
 
-  typedef _CORBA_ObjRef_Var<BindingIterator,BindingIterator_Helper> BindingIterator_var;
-
   class _sk_BindingIterator :  public virtual BindingIterator {
   public:
 
     _sk_BindingIterator() {}
+    _sk_BindingIterator(const omniORB::objectKey& k) { NP_objkey(k); }
     virtual ~_sk_BindingIterator() {}
-    virtual CORBA::Object_ptr _this() { return (CORBA::Object_ptr) this; }
+    BindingIterator_ptr _this() { return BindingIterator::_duplicate(this); }
+    void _obj_is_ready(CORBA::BOA_ptr boa) { boa->obj_is_ready(this); }
+    CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }
+    void _dispose() { _boa()->dispose(this); }
+    omniORB::objectKey _key() { return (*(omniORB::objectKey*)objkey()); }
     virtual CORBA::Boolean  next_one ( CosNaming_Binding *& b ) = 0;
+    virtual CORBA::Boolean  ___next_one ( CosNaming_Binding *& b ) {
+      return next_one ( b );
+    }
     virtual CORBA::Boolean  next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ) = 0;
+    virtual CORBA::Boolean  ___next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ) {
+      return next_n ( how_many, bl );
+    }
     virtual void destroy (  ) = 0;
     virtual CORBA::Boolean dispatch(GIOP_S &s,const char *op,CORBA::Boolean response);
 
+  protected:
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
+      return BindingIterator::_widenFromTheMostDerivedIntf(repoId);
+    }
   private:
     _sk_BindingIterator (const _sk_BindingIterator&);
     _sk_BindingIterator &operator=(const _sk_BindingIterator&);
@@ -586,17 +640,20 @@ public:
 
     _proxy_BindingIterator (Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release) :
       omniObject(CosNaming_BindingIterator_IntfRepoID,r,key,keysize,profiles,release) {
-        omniORB::objectIsReady(this);
+        omni::objectIsReady(this);
     }
     virtual ~_proxy_BindingIterator() {}
-    virtual CORBA::Boolean  next_one ( CosNaming_Binding *& b );
-    virtual CORBA::Boolean  next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl );
+    virtual CORBA::Boolean  ___next_one ( CosNaming_Binding *& b );
+    virtual CORBA::Boolean  ___next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl );
     virtual void destroy (  );
 
   protected:
 
     _proxy_BindingIterator () {}
 
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
+      return BindingIterator::_widenFromTheMostDerivedIntf(repoId);
+    }
   private:
 
     _proxy_BindingIterator (const _proxy_BindingIterator&);
@@ -607,14 +664,14 @@ public:
   public:
     _nil_BindingIterator() { this->PR_setobj(0); }
     virtual ~_nil_BindingIterator() {}
-    CORBA::Boolean  next_one ( CosNaming_Binding *& b ){
+    CORBA::Boolean  ___next_one ( CosNaming_Binding *& b ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
       CORBA::Boolean _result = 0;
       return _result;
     }
 
-    CORBA::Boolean  next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ){
+    CORBA::Boolean  ___next_n ( CORBA::ULong  how_many, CosNaming_BindingList *& bl ){
       throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
       // never reach here! Dummy return to keep some compilers happy.
       CORBA::Boolean _result = 0;
@@ -627,6 +684,10 @@ public:
       return;
     }
 
+  protected:
+    virtual void *_widenFromTheMostDerivedIntf(const char *repoId) {
+      return BindingIterator::_widenFromTheMostDerivedIntf(repoId);
+    }
   };
 
   class BindingIterator_proxyObjectFactory : public proxyObjectFactory {
