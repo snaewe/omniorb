@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2002/11/26 14:51:50  dgrisby
+  Implement missing interceptors.
+
   Revision 1.1.2.13  2002/05/07 12:55:47  dgrisby
   Minor tweak to log message format.
 
@@ -584,7 +587,7 @@ getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
   omniCodeSet::TCS_C* tcs_c = d.tcs_c;
   omniCodeSet::TCS_W* tcs_w = d.tcs_w;
 
-  IOP::ServiceContextList& svclist = info.giop_s.receive_service_contexts();
+  IOP::ServiceContextList& svclist = info.giop_s.service_contexts();
   CORBA::ULong total = svclist.length();
   for (CORBA::ULong index = 0; index < total; index++) {
     if (svclist[index].context_id == IOP::CodeSets) {

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2002/11/26 14:50:43  dgrisby
+  Implement missing interceptors.
+
   Revision 1.1.2.7  2002/09/10 23:17:10  dgrisby
   Thread interceptors.
 
@@ -67,6 +70,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 class omniInterceptorP;
 class giopStream;
 class GIOP_S;
+class GIOP_C;
 class orbServer;
 
 class omniInterceptors {
@@ -160,28 +164,13 @@ public:
 
     class info_T {
     public:
+      GIOP_C&                  giop_c;
+      IOP::ServiceContextList& service_contexts;
       
-      info_T();
+      info_T(GIOP_C& c, IOP::ServiceContextList& sc) :
+	giop_c(c), service_contexts(sc) {}
     private:
-      info_T(const info_T&);
-      info_T& operator=(const info_T&);
-    };
-
-    typedef CORBA::Boolean (*interceptFunc)(info_T& info);
-
-    void add(interceptFunc);
-    void remove(interceptFunc);
-  };
-
-  //////////////////////////////////////////////////////////////////
-  class clientReceiveException_T {
-  public:
-
-    class info_T {
-    public:
-      
       info_T();
-    private:
       info_T(const info_T&);
       info_T& operator=(const info_T&);
     };
@@ -198,7 +187,7 @@ public:
 
     class info_T {
     public:
-      GIOP_S&    giop_s;
+      GIOP_S& giop_s;
 
       info_T(GIOP_S& s) : 
 	giop_s(s) {}
@@ -222,9 +211,12 @@ public:
 
     class info_T {
     public:
+      GIOP_S&                  giop_s;
       
-      info_T();
+      info_T(GIOP_S& s) :
+	giop_s(s) {}
     private:
+      info_T();
       info_T(const info_T&);
       info_T& operator=(const info_T&);
     };
@@ -241,9 +233,13 @@ public:
 
     class info_T {
     public:
-      
-      info_T();
+      GIOP_S&                  giop_s;
+      CORBA::Exception*        exception;
+
+      info_T(GIOP_S& s, CORBA::Exception* e) :
+	giop_s(s), exception(e) {}
     private:
+      info_T();
       info_T(const info_T&);
       info_T& operator=(const info_T&);
     };
@@ -329,7 +325,6 @@ public:
   decodeIOR_T                decodeIOR;
   clientSendRequest_T        clientSendRequest;
   clientReceiveReply_T       clientReceiveReply;
-  clientReceiveException_T   clientReceiveException;
   serverReceiveRequest_T     serverReceiveRequest;
   serverSendReply_T          serverSendReply;
   serverSendException_T      serverSendException;

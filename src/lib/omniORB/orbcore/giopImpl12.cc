@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.17  2002/11/26 14:51:52  dgrisby
+  Implement missing interceptors.
+
   Revision 1.1.4.16  2002/07/04 15:14:41  dgrisby
   Correct usage of MessageErrors, fix log messages.
 
@@ -811,17 +814,24 @@ giopImpl12::unmarshalReplyHeader(giopStream* g) {
 
   giop_c.replyStatus((GIOP::ReplyStatusType)v);
 
-  // Service context
-  CORBA::ULong svcccount;
-  CORBA::ULong svcctag;
-  CORBA::ULong svcctxtsize;
-  svcccount <<= s;
-  while (svcccount-- > 0) {
-    svcctag <<= s;
-    svcctxtsize <<= s;
-    s.skipInput(svcctxtsize);
+  if (omniInterceptorP::clientReceiveReply) {
+    IOP::ServiceContextList sctxts;
+    sctxts <<= s;
+    omniInterceptors::clientReceiveReply_T::info_T info(giop_c, sctxts);
+    omniInterceptorP::visit(info);
   }
-
+  else {
+    // Skip service context
+    CORBA::ULong svcccount;
+    CORBA::ULong svcctag;
+    CORBA::ULong svcctxtsize;
+    svcccount <<= s;
+    while (svcccount-- > 0) {
+      svcctag <<= s;
+      svcctxtsize <<= s;
+      s.skipInput(svcctxtsize);
+    }
+  }
   if (inputRemaining(g))
     s.alignInput(omni::ALIGN_8);
 }
@@ -936,7 +946,7 @@ giopImpl12::unmarshalRequestHeader(giopStream* g) {
   op[vl-1] = '\0';
 
   // Service context
-  giop_s.receive_service_contexts() <<= s;
+  giop_s.service_contexts() <<= s;
 
   if (inputRemaining(g))
     s.alignInput(omni::ALIGN_8);
@@ -1483,7 +1493,7 @@ giopImpl12::marshalReplyHeader(giopStream* g) {
     cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12);
     operator>>= ((CORBA::ULong)0,cs);
     rc >>= cs;
-    operator>>= ((CORBA::ULong)0,cs);
+    giop_s.service_contexts() >>= cs;
     *((CORBA::ULong*)(hdr+8)) = cs.total();
   }
 
@@ -1494,7 +1504,7 @@ giopImpl12::marshalReplyHeader(giopStream* g) {
   rc >>= s;
 
   // Service context
-  operator>>= ((CORBA::ULong)0,s);
+  giop_s.service_contexts() >>= s;
   
   s.alignOutput(omni::ALIGN_8);
 }
@@ -1519,12 +1529,34 @@ giopImpl12::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 				    retry,__FILE__,__LINE__);
   }
 
+  int repoid_size;
+  const char* repoid = ex._NP_repoId(&repoid_size);
+
   outputNewMessage(g);
 
   char* hdr = (char*) g->pd_currentOutputBuffer + 
                       g->pd_currentOutputBuffer->start;
 
   hdr[7] = (char) GIOP::Reply;
+
+  if (giop_s.service_contexts().length() > 0) {
+
+    // Compute and initialise the message size field. Only necessary
+    // if there are service contexts, since we know a message without
+    // service contexts will fit in a single buffer.
+
+    cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12);
+    operator>>= ((CORBA::ULong)0,cs);
+    operator>>= ((CORBA::ULong)0,cs);
+    giop_s.service_contexts() >>= cs;
+    CORBA::ULong(repoid_size) >>= cs;
+    cs.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
+    ex.minor() >>= cs;
+    operator>>= ((CORBA::ULong)0,cs);
+
+    outputSetFragmentSize(g,cs.total()-12);
+    *((CORBA::ULong*)(hdr + 8)) = cs.total() - 12;
+  }
 
   // request id
   giop_s.requestId() >>= s;
@@ -1533,22 +1565,19 @@ giopImpl12::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
   CORBA::ULong rc = GIOP::SYSTEM_EXCEPTION;
   rc >>= s;
 
-  // Service context
-  operator>>= ((CORBA::ULong)0,s);
+  // service contexts
+  giop_s.service_contexts() >>= s;
 
-  // system exception value
-  int repoid_size;
-  const char* repoid = ex._NP_repoId(&repoid_size);
+  // RepoId
   CORBA::ULong(repoid_size) >>= s;
   s.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
+
+  // system exception value
   ex.minor() >>= s;
   CORBA::ULong(ex.completed()) >>= s;
 
   CORBA::ULong sz = (omni::ptr_arith_t)g->pd_outb_mkr - 
                     (omni::ptr_arith_t)hdr -12;
-
-  outputSetFragmentSize(g,sz);
-  *((CORBA::ULong*)(hdr + 8)) = sz;
 
   outputMessageEnd(g);
 }
@@ -1560,7 +1589,7 @@ giopImpl12::sendUserException(giopStream* g,const CORBA::UserException& ex) {
   GIOP_S& giop_s = *(GIOP_S*)g;
   cdrStream& s = (cdrStream&) *g;
 
-  int i, repoid_size;
+  int repoid_size;
   const char* repoid = ex._NP_repoId(&repoid_size);
 
   outputNewMessage(g);
@@ -1577,7 +1606,7 @@ giopImpl12::sendUserException(giopStream* g,const CORBA::UserException& ex) {
     cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12);
     operator>>= ((CORBA::ULong)0,cs);
     operator>>= ((CORBA::ULong)0,cs);
-    operator>>= ((CORBA::ULong)0,cs);
+    giop_s.service_contexts() >>= cs;
     CORBA::ULong(repoid_size) >>= cs;
     cs.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
     ex._NP_marshal(cs);
@@ -1585,7 +1614,6 @@ giopImpl12::sendUserException(giopStream* g,const CORBA::UserException& ex) {
     outputSetFragmentSize(g,cs.total()-12);
     *((CORBA::ULong*)(hdr + 8)) = cs.total() - 12;
   }
-
 
   // request id
   giop_s.requestId() >>= s;
@@ -1595,10 +1623,13 @@ giopImpl12::sendUserException(giopStream* g,const CORBA::UserException& ex) {
   rc >>= s;
 
   // Service context
-  operator>>= ((CORBA::ULong)0,s);
+  giop_s.service_contexts() >>= s;
 
+  // RepoId
   CORBA::ULong(repoid_size) >>= s;
   s.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
+
+  // Exception value
   ex._NP_marshal(s);
 
   outputMessageEnd(g);

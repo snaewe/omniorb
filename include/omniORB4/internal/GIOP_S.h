@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2002/11/26 14:51:48  dgrisby
+  Implement missing interceptors.
+
   Revision 1.1.4.6  2001/10/17 16:33:27  dpg1
   New downcast mechanism for cdrStreams.
 
@@ -196,7 +199,7 @@ class GIOP_S : public IOP_S, public giopStream, public giopStreamList {
   }
 
   //////////////////////////////////////////////////////////////////
-  IOP::ServiceContextList& receive_service_contexts() {
+  inline IOP::ServiceContextList& service_contexts() {
     return pd_service_contexts;
   }
 

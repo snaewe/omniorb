@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/11/26 14:51:49  dgrisby
+  Implement missing interceptors.
+
   Revision 1.1.2.2  2002/09/10 23:17:11  dgrisby
   Thread interceptors.
 
@@ -64,7 +67,6 @@ public:
   static _core_attr elmT* decodeIOR;
   static _core_attr elmT* clientSendRequest;
   static _core_attr elmT* clientReceiveReply;
-  static _core_attr elmT* clientReceiveException;
   static _core_attr elmT* serverReceiveRequest;
   static _core_attr elmT* serverSendReply;
   static _core_attr elmT* serverSendException;
@@ -85,7 +87,6 @@ public:
   VISIT_FUNCTION(decodeIOR)
   VISIT_FUNCTION(clientSendRequest)
   VISIT_FUNCTION(clientReceiveReply)
-  VISIT_FUNCTION(clientReceiveException)
   VISIT_FUNCTION(serverReceiveRequest)
   VISIT_FUNCTION(serverSendReply)
   VISIT_FUNCTION(serverSendException)
