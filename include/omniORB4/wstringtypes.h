@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2005/03/14 13:39:51  dgrisby
+  Avoid compiler warnings about empty for loop.
+
   Revision 1.1.2.12  2004/04/30 15:58:33  dgrisby
   Make ptr_arith_t unsigned.
 
@@ -99,7 +102,7 @@ static inline void free(_CORBA_WChar* s) {
 
 static inline int len(const _CORBA_WChar* s) {
   int i;
-  for (i=0; *s; s++, i++);
+  for (i=0; *s; s++, i++) {};
   return i;
 }
 
