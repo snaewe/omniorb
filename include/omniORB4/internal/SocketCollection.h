@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2002/02/26 14:06:44  dpg1
+  Recent changes broke Windows.
+
   Revision 1.1.2.7  2002/02/13 16:02:38  dpg1
   Stability fixes thanks to Bastiaan Bakker, plus threading
   optimisations inspired by investigating Bastiaan's bug reports.
@@ -110,6 +113,7 @@
 #  define ERRNO              ::WSAGetLastError()
 #  define EINPROGRESS        WSAEWOULDBLOCK
 #  define RC_EINTR           WSAEINTR
+#  define RC_EBADF           WSAEBADF
 #  define NEED_SOCKET_SHUTDOWN_FLAG 1
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -180,6 +184,7 @@ extern "C" int select (int,fd_set*,fd_set*,fd_set*,struct timeval *);
 
 #  define ERRNO              errno
 #  define RC_EINTR           EINTR
+#  define RC_EBADF           EBADF
 
 
 OMNI_NAMESPACE_BEGIN(omni)

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/02/26 14:06:45  dpg1
+  Recent changes broke Windows.
+
   Revision 1.1.2.5  2002/02/13 16:02:38  dpg1
   Stability fixes thanks to Bastiaan Bakker, plus threading
   optimisations inspired by investigating Bastiaan's bug reports.
@@ -266,7 +269,7 @@ SocketCollection::Select() {
   }
 
   if (nready == RC_SOCKET_ERROR) {
-    if (ERRNO == EBADF) {
+    if (ERRNO == RC_EBADF) {
       omniORB::logs(20, "select() returned EBADF, retrying");
       goto again;
     }
