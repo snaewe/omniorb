@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/09/27 17:19:12  sll
+ Updated to use the new cdrStream abstraction.
+ Replace include/omniORB3 with include/omniORB4.
+
  Revision 1.2.2.1  2000/07/17 10:35:32  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -238,10 +242,7 @@
 #define USE_omniORB_logStream
 #endif
 
-#include <omniORB3/omniInternal.h>
-#include <omniORB3/templatedecls.h>
-#include <omniORB3/stringtypes.h>
-#include <omniORB3/userexception.h>
+#include <omniORB4/omniInternal.h>
 
 
 // Forward declarations.
@@ -327,25 +328,16 @@ _CORBA_MODULE_BEG
     Any(TypeCode_ptr tc, void* value, Boolean release = 0);	
 
     // Marshalling operators
-    void operator>>= (NetBufferedStream& s) const;
-    void operator<<= (NetBufferedStream& s);
-
-    void operator>>= (MemBufferedStream& s) const;
-    void operator<<= (MemBufferedStream& s);
-
-    size_t _NP_alignedSize(size_t initialoffset) const;
+    void operator>>= (cdrStream& s) const;
+    void operator<<= (cdrStream& s);
 
     void* NP_pd() { return pd_ptr; }
     void* NP_pd() const { return pd_ptr; }
 
     // omniORB data-only marshalling functions
-    void NP_marshalDataOnly(NetBufferedStream& s) const;
-    void NP_unmarshalDataOnly(NetBufferedStream& s);
+    void NP_marshalDataOnly(cdrStream& s) const;
+    void NP_unmarshalDataOnly(cdrStream& s);
 
-    void NP_marshalDataOnly(MemBufferedStream& s) const;
-    void NP_unmarshalDataOnly(MemBufferedStream& s);
-
-    size_t NP_alignedDataOnlySize(size_t initialoffset) const;
 
     // omniORB internal stub support routines
     void PR_packFrom(TypeCode_ptr newtc, void* tcdesc);
@@ -767,9 +759,7 @@ _CORBA_MODULE_BEG
 
     // omniORB internal.
     virtual const char* _NP_repoId(int* size) const = 0;
-    virtual size_t _NP_alignedSize(size_t) const;
-    virtual void _NP_marshal(NetBufferedStream&) const = 0;
-    virtual void _NP_marshal(MemBufferedStream&) const = 0;
+    virtual void _NP_marshal(cdrStream&) const = 0;
 
     static inline _CORBA_Boolean PR_is_valid(Exception* p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
@@ -879,9 +869,7 @@ _CORBA_MODULE_BEG
     CompletionStatus  pd_status;
 
   private:
-    virtual size_t _NP_alignedSize(size_t) const;
-    virtual void _NP_marshal(NetBufferedStream&) const;
-    virtual void _NP_marshal(MemBufferedStream&) const;
+    virtual void _NP_marshal(cdrStream&) const;
   };
 
 #define OMNIORB_DECLARE_SYS_EXCEPTION(name) \
@@ -975,8 +963,7 @@ _CORBA_MODULE_BEG
     virtual Exception* _NP_duplicate() const;
     virtual const char* _NP_typeId() const;
     virtual const char* _NP_repoId(int* size) const;
-    virtual void _NP_marshal(NetBufferedStream&) const;
-    virtual void _NP_marshal(MemBufferedStream&) const;
+    virtual void _NP_marshal(cdrStream&) const;
 
     Any* pd_exception;
   };
@@ -1173,14 +1160,9 @@ _CORBA_MODULE_BEG
     static Context_ptr _nil();
 
     // omniORB specifics.
-    static size_t _NP_alignedSize(Context_ptr ctxt, const char*const* which,
-				  int whichlen, size_t initialoffset);
     static void marshalContext(Context_ptr ctxt, const char*const* which,
-			       int whichlen, NetBufferedStream& s);
-    static void marshalContext(Context_ptr ctxt, const char*const* which,
-			       int whichlen, MemBufferedStream& s);
-    static Context_ptr unmarshalContext(NetBufferedStream& s);
-    static Context_ptr unmarshalContext(MemBufferedStream& s);
+			       int whichlen, cdrStream& s);
+    static Context_ptr unmarshalContext(cdrStream& s);
 
     static inline _CORBA_Boolean PR_is_valid(Context_ptr p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
@@ -1357,11 +1339,8 @@ _CORBA_MODULE_BEG
 
     TypeCode_ptr _ptr;
 
-    void operator>>=(NetBufferedStream&) const;
-    void operator<<=(NetBufferedStream&);
-    void operator>>=(MemBufferedStream&) const;
-    void operator<<=(MemBufferedStream&);
-    size_t _NP_alignedSize(size_t) const;
+    void operator>>=(cdrStream&) const;
+    void operator<<=(cdrStream&);
   };
 
 
@@ -1375,17 +1354,17 @@ _CORBA_MODULE_BEG
 #if defined(_OMNIORB_LIBRARY)
 #    undef   _core_attr
 #    define  _core_attr  _OMNIORB_NTDLL_IMPORT
-#include <omniORB3/corbaidl_defs.hh>
+#include <omniORB4/corbaidl_defs.hh>
 #    undef   _core_attr
 #    define  _core_attr
 #elif defined(_OMNIORB_DYNAMIC_LIBRARY)
 #    undef   _core_attr
 #    define  _core_attr
-#include <omniORB3/corbaidl_defs.hh>
+#include <omniORB4/corbaidl_defs.hh>
 #    undef   _core_attr
 #    define  _core_attr  _OMNIORB_NTDLL_IMPORT
 #else
-#include <omniORB3/corbaidl_defs.hh>
+#include <omniORB4/corbaidl_defs.hh>
 #endif
 
   class InterfaceDef;
@@ -1421,11 +1400,8 @@ _CORBA_MODULE_BEG
     static _CORBA_Boolean is_nil(_ptr_type);
     static void release(_ptr_type);
     static void duplicate(_ptr_type);
-    static size_t NP_alignedSize(_ptr_type, size_t);
-    static void marshalObjRef(_ptr_type, NetBufferedStream&);
-    static _ptr_type unmarshalObjRef(NetBufferedStream&);
-    static void marshalObjRef(_ptr_type, MemBufferedStream&);
-    static _ptr_type unmarshalObjRef(MemBufferedStream&);
+    static void marshalObjRef(_ptr_type, cdrStream&);
+    static _ptr_type unmarshalObjRef(cdrStream&);
   };
 
   class Object {
@@ -1484,11 +1460,8 @@ _CORBA_MODULE_BEG
     virtual void _NP_decrRefCount();
     virtual void* _ptrToObjRef(const char* repoId);
 
-    static size_t _NP_alignedSize(Object_ptr, size_t);
-    static void _marshalObjRef(Object_ptr, NetBufferedStream&);
-    static Object_ptr _unmarshalObjRef(NetBufferedStream&);
-    static void _marshalObjRef(Object_ptr, MemBufferedStream&);
-    static Object_ptr _unmarshalObjRef(MemBufferedStream&);
+    static void _marshalObjRef(Object_ptr, cdrStream&);
+    static Object_ptr _unmarshalObjRef(cdrStream&);
 
     static _core_attr const char* _PD_repoId;
     static _core_attr const ULong _PR_magic;
@@ -1595,12 +1568,8 @@ _CORBA_MODULE_BEG
     OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(Bounds, _dyn_attr)
     OMNIORB_DECLARE_USER_EXCEPTION_IN_CORBA(BadKind, _dyn_attr)
 
-    static void marshalTypeCode(TypeCode_ptr obj,NetBufferedStream& s);
-    static TypeCode_ptr unmarshalTypeCode(NetBufferedStream& s);
-    // omniORB marshalling & support routines
-
-    static void marshalTypeCode(TypeCode_ptr obj,MemBufferedStream& s);
-    static TypeCode_ptr unmarshalTypeCode(MemBufferedStream& s);
+    static void marshalTypeCode(TypeCode_ptr obj,cdrStream& s);
+    static TypeCode_ptr unmarshalTypeCode(cdrStream& s);
 
     // omniORB only static constructors
     // 1) These constructors are used by omniORB stubs & libraries to produce
@@ -1671,7 +1640,6 @@ _CORBA_MODULE_BEG
     static TypeCode_ptr PR_string_tc();
 
     // omniORB internal functions
-    size_t _NP_alignedSize(size_t initialoffset) const;
     virtual CORBA::Boolean NP_is_nil() const;
 
     static inline _CORBA_Boolean PR_is_valid(TypeCode_ptr p ) {
@@ -2535,23 +2503,7 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN void release(TypeCode_ptr o);
   _CORBA_MODULE_FN void release(DynAny_ptr d);
 
-
-  // omniORB private functions.
-  //?? Move these out of the CORBA module.
-  _CORBA_MODULE_FN Object_ptr UnMarshalObjRef(const char* repoId,
-					      NetBufferedStream& s);
-  _CORBA_MODULE_FN void MarshalObjRef(Object_ptr obj, const char *repoId,
-				      size_t repoIdSize, NetBufferedStream& s);
-  _CORBA_MODULE_FN size_t AlignedObjRef(Object_ptr obj, const char *repoId,
-					size_t repoIdSize,
-					size_t initialoffset);
-  _CORBA_MODULE_FN Object_ptr UnMarshalObjRef(const char *repoId,
-					      MemBufferedStream& s);
-  _CORBA_MODULE_FN void MarshalObjRef(Object_ptr obj, const char* repoId,
-				      size_t repoIdSize, MemBufferedStream& s);
-
-
-#include <omniORB3/CORBA_vartypes.h>
+#include <omniORB4/CORBA_vartypes.h>
 
 #ifdef HAS_Cplusplus_Namespace
 _CORBA_MODULE_END
@@ -2564,28 +2516,28 @@ _CORBA_MODULE_BEG
 #if defined(_OMNIORB_LIBRARY)
 #    undef   _core_attr
 #    define  _core_attr  _OMNIORB_NTDLL_IMPORT
-#include <omniORB3/ir_defs.hh>
+#include <omniORB4/ir_defs.hh>
 #    undef   _core_attr
 #    define  _core_attr
 #elif defined(_OMNIORB_DYNAMIC_LIBRARY)
 #    undef   _core_attr
 #    define  _core_attr
-#include <omniORB3/ir_defs.hh>
+#include <omniORB4/ir_defs.hh>
 #    undef   _core_attr
 #    define  _core_attr  _OMNIORB_NTDLL_IMPORT
 #else
-#include <omniORB3/ir_defs.hh>
+#include <omniORB4/ir_defs.hh>
 #endif
 #endif
 
 _CORBA_MODULE_END
 
 
-#include <omniORB3/omniORB.h>
-#include <omniORB3/proxyFactory.h>
-#include <omniORB3/templatedefns.h>
-#include <omniORB3/corba_operators.h>
-#include <omniORB3/poa.h>
+#include <omniORB4/omniORB.h>
+#include <omniORB4/proxyFactory.h>
+#include <omniORB4/templatedefns.h>
+#include <omniORB4/corba_operators.h>
+#include <omniORB4/poa.h>
 
 
 //?? These really want to be renamed and put elsewhere.
@@ -2602,26 +2554,24 @@ _omni_callSystemExceptionHandler(omniObjRef* obj, CORBA::ULong retries,
 
 extern void _omni_set_NameService(CORBA::Object_ptr);
 
-
-#include <omniORB3/corbaidl_operators.hh>
+#include <omniORB4/corbaidl_operators.hh>
 
 #if defined(ENABLE_CLIENT_IR_SUPPORT)
-#include <omniORB3/ir_operators.hh>
+#include <omniORB4/ir_operators.hh>
 #endif
 
 
 _CORBA_MODULE POA_CORBA
 _CORBA_MODULE_BEG
 
-#include <omniORB3/corbaidl_poa.hh>
+#include <omniORB4/corbaidl_poa.hh>
 #if defined(ENABLE_CLIENT_IR_SUPPORT)
-#include <omniORB3/ir_poa.hh>
+#include <omniORB4/ir_poa.hh>
 #endif
 
 _CORBA_MODULE_END
 
-
-#include <omniORB3/boa.h>
+#include <omniORB4/boa.h>
 
 
 #undef _core_attr
@@ -2637,7 +2587,7 @@ _CORBA_MODULE_END
 #define USE_dyn_stub_in_nt_dll
 #define USE_dyn_stub_in_nt_dll_NOT_DEFINED
 #endif
-#include <omniORB3/Naming.hh>
+#include <omniORB4/Naming.hh>
 #ifdef  USE_core_stub_in_nt_dll_NOT_DEFINED
 #undef  USE_core_stub_in_nt_dll
 #undef  USE_core_stub_in_nt_dll_NOT_DEFINED
