@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/11/29 19:26:59  djs
+# Code tidied and moved around. Some redundant code eliminated.
+#
 # Revision 1.6  1999/11/29 15:26:04  djs
 # Marshalling bugfixes.
 #
@@ -55,42 +58,14 @@ from omniidl import idlutil, idltype, idlast
 
 from omniidl.be.cxx import util, tyutil
 
+# From http://www-i3.informatik.rwth-aachen.de/funny/babbage.html:
+#
+# A hotly contested issue among language designers is the method for
+# passing parameters to subfunctions. Some advocate "call by name," others
+# prefer "call by value." Babbage uses a new method - "call by telephone."
+# This is especially effective for long-distance parameter passing.
 
-# Build a loop iterating over every element of a multidimensional
-# thing and return the indexing string
-def start_loop(where, dims, prefix = "_i"):
-    index = 0
-    istring = ""
-    for dimension in dims:
-        where.out("""\
-for (CORBA::ULong @prefix@@n@ = 0;@prefix@@n@ < @dim@;_i@n@++) {""",
-                  prefix = prefix,
-                  n = str(index),
-                  dim = str(dimension))
-        where.inc_indent()
-        istring = istring + "[" + prefix + str(index) + "]"
-        index = index + 1
-    return istring
-
-# Finish the loop
-def finish_loop(where, dims):
-    for dummy in dims:
-        where.dec_indent()
-        where.out("}")
-    
-
-# deprecated
-def begin_loop(string, full_dims):
-    string.out("{")
-    string.inc_indent()
-    return start_loop(string, full_dims)
-
-# deprecated
-def end_loop(string, full_dims):
-    finish_loop(string, full_dims)
-            
-    string.dec_indent()
-    string.out("}")
+# Code for marshalling and unmarshalling various data types.
 
 def marshall_struct_union(string, environment, type, decl, argname, to="_n"):
     assert isinstance(type, idltype.Type)
@@ -156,7 +131,7 @@ def marshall(string, environment, type, decl, argname, to="_n",
             return
 
     if tyutil.isString(deref_type):
-        indexing_string = begin_loop(string, full_dims)
+        indexing_string = util.block_begin_loop(string, full_dims)
         string.out("""\
     CORBA::ULong _len = (((const char*) @argname@@indexing_string@)? strlen((const char*) @argname@@indexing_string@) + 1 : 1);
     _len >>= @to@;
@@ -170,11 +145,12 @@ def marshall(string, environment, type, decl, argname, to="_n",
                    argname = argname,
                    indexing_string = indexing_string,
                    to = to)
-        end_loop(string, full_dims)
+        util.block_end_loop(string, full_dims)
     elif tyutil.isObjRef(deref_type):
         indexing_string = ""
         if is_array:
-            indexing_string = begin_loop(string, full_dims) + "._ptr"
+            indexing_string = util.block_begin_loop(string, full_dims) +\
+                              "._ptr"
         string.out("""\
     @type_name@_Helper::marshalObjRef(@argname@@indexing_string@,@to@);""",
                    type_name = type_name,
@@ -182,10 +158,10 @@ def marshall(string, environment, type, decl, argname, to="_n",
                    indexing_string = indexing_string,
                    to = to)
         if is_array:
-            end_loop(string, full_dims)
+            util.block_end_loop(string, full_dims)
     else:
         if is_array:
-            indexing_string = begin_loop(string, full_dims)
+            indexing_string = util.block_begin_loop(string, full_dims)
         else:
             indexing_string = ""
         string.out("""\
@@ -193,7 +169,7 @@ def marshall(string, environment, type, decl, argname, to="_n",
                    argname = argname, indexing_string = indexing_string,
                    to = to)
         if is_array:
-            end_loop(string, full_dims)
+            util.block_end_loop(string, full_dims)
     
     return
 
@@ -219,9 +195,10 @@ def unmarshall_struct_union(string, environment, type, decl, argname,
                    can_throw_marshall, from_where)
 
 
-def unmarshall(string, environment, type, decl, argname,
+
+def unmarshall(to, environment, type, decl, name,
                can_throw_marshall, from_where = "_n",
-               fully_scope = 0):
+               fully_scope = 0, string_via_member = 0):
     assert isinstance(type, idltype.Type)
     if decl:
         assert isinstance(decl, idlast.Declarator)
@@ -245,95 +222,113 @@ def unmarshall(string, environment, type, decl, argname,
     num_elements = reduce(lambda x,y:x*y, full_dims, 1)
 
     type_name = environment.principalID(deref_type, fully_scope)
-    
-    if 0 and not(is_array):
-        string.out("""\
-@argname@ <<= @from_where@;""", argname = argname, from_where = from_where)
-        return
+    deref_type_name = environment.principalID(deref_type, fully_scope)
 
-    # unmarshall an array of basic things
-    #   octet and chars are handled directly
-    if (tyutil.isOctet(deref_type) or tyutil.isChar(deref_type) or \
-        tyutil.isBoolean(deref_type)) and is_array:
-        string.out("""\
-@from_where@.get_char_array((_CORBA_Char*) ((@type@*) @argname@@dims_string@), @num@);""",
-                   argname = argname, type = type_name,
-                   dims_string = dims_string,
-                   num = str(num_elements), from_where = from_where)
-        return
-    #   other basic types are handled here
-    array_helper_suffix = {
-        idltype.tk_short:  "Short",
-        idltype.tk_long:   "Long",
-        idltype.tk_ushort: "UShort",
-        idltype.tk_ulong:  "ULong",
-        idltype.tk_float:  "Float",
-        idltype.tk_double: "Double",
-        }
-    if isinstance(deref_type, idltype.Base) and is_array:
+    element_name = name + dims_string
+
+    if is_array:
+        # BASIC things
+        # octets, chars and booleans are handled via
+        # get_char_array
+        if tyutil.isOctet(deref_type) or \
+           tyutil.isChar(deref_type)  or \
+           tyutil.isBoolean(deref_type):
+            to.out("""\
+@from_where@.get_char_array((_CORBA_Char*) ((@type@*) @element_name@), @num@);""",
+                   element_name = element_name,
+                   type = type_name,
+                   num = str(num_elements),
+                   from_where = from_where)
+            return
+        # other basic types are handled via a CdrStreamHelper 
+        array_helper_suffix = {
+            idltype.tk_short:  "Short",
+            idltype.tk_long:   "Long",
+            idltype.tk_ushort: "UShort",
+            idltype.tk_ulong:  "ULong",
+            idltype.tk_float:  "Float",
+            idltype.tk_double: "Double",
+            idltype.tk_enum:   "ULong",
+            }
         if array_helper_suffix.has_key(deref_type.kind()):
-           string.out("""\
-CdrStreamHelper_unmarshalArray@suffix@(@from_where@, ((@type@*) @argname@@dims_string@), @num@);""",
-                      suffix = array_helper_suffix[deref_type.kind()],
-                      type = type_name,
-                      argname = argname,
-                      dims_string = dims_string,
-                      num = str(num_elements),
-                      from_where = from_where)
-           return
-        # basic type (boolean, any, tc, princ, ll, ull, ld, wc)
-        raise "Don't know how to marshall type: " + repr(deref_type) +\
+            typecast = "((" + deref_type_name + "*) " + element_name + ")"
+            # use the most dereferenced type
+            if tyutil.isEnum(deref_type):
+                typecast = "(_CORBA_ULong*) " + typecast
+            to.out("""\
+CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
+                       suffix = array_helper_suffix[deref_type.kind()],
+                       where = from_where, typecast = typecast,
+                       num = str(num_elements))
+            return
+        # not sure how to handle other basic types
+        if isinstance(deref_type, idltype.Base):
+            raise "Don't know how to marshall type: " + repr(deref_type) +\
               "(kind = " + str(deref_type.kind()) + ") array"
 
-    if not(is_array):
-    #if tyutil.isObjRef(deref_type) or not(is_array):
-        indexing_string = ""
-    else:
-        indexing_string = begin_loop(string, full_dims)
+
+    # superfluous bracketting
+    if is_array:
+        to.out("{")
+        to.inc_indent()
+
+    indexing_string = util.start_loop(to, full_dims)
+    element_name = name + indexing_string
     
     if tyutil.isString(deref_type):
-        string.out("""\
+        if not(is_array) and string_via_member:
+            # go via temporary. why?
+            to.out("""\
+{
+  CORBA::String_member _0RL_str_tmp;
+  _0RL_str_tmp <<=  @where@;
+  @name@ = _0RL_str_tmp._ptr;
+  _0RL_str_tmp._ptr = 0;
+}""", where = from_where, name = element_name)
+        else:
+            to.out("""\
   CORBA::ULong _len;
   _len <<= @from_where@;
   if (!_len) {
     if (omniORB::traceLevel > 1)
       _CORBA_null_string_ptr(1);
     _len = 1;
-  }""", name = argname, indexing_string = indexing_string,
-                   from_where = from_where)
-        if can_throw_marshall:
-            string.out("""\
+  }""", from_where = from_where)
+            if can_throw_marshall:
+                to.out("""\
   else if ( @from_where@.RdMessageUnRead() < _len)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);""",
                        from_where = from_where)
-            string.dec_indent()
-        string.out("""\
-  if (!(char*)(@name@@indexing_string@ = CORBA::string_alloc(_len-1)))
+                to.dec_indent()
+            to.out("""\
+  if (!(char*)(@element_name@ = CORBA::string_alloc(_len-1)))
     throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
   if (_len > 1)
-    @from_where@.get_char_array((CORBA::Char *)((char *)@name@@indexing_string@),_len);
+    @from_where@.get_char_array((CORBA::Char *)((char *)@element_name@),_len);
   else
-    *((CORBA::Char*)((char*) @name@@indexing_string@)) <<= @from_where@ ;""",
-                   name = argname, indexing_string = indexing_string,
+    *((CORBA::Char*)((char*) @element_name@)) <<= @from_where@ ;""",
+                   element_name = element_name,
                    from_where = from_where)
-        string.dec_indent()
+            to.dec_indent()
     elif tyutil.isObjRef(deref_type):
-        string.out("""\
-  @name@@indexing_string@ = @type@_Helper::unmarshalObjRef(@from_where@);""",
-                   type = type_name,
-                   name = argname,
-                   indexing_string = indexing_string,
+        base_type_name = environment.principalID(deref_type, fully_scope)
+        to.out("""\
+  @element_name@ = @type@_Helper::unmarshalObjRef(@from_where@);""",
+                   type = base_type_name,
+                   element_name = element_name,
                    from_where = from_where)
 
     else:
-        string.out("""\
-  @name@@indexing_string@ <<= @from_where@;""",
-                   name = argname, indexing_string = indexing_string,
+        to.out("""\
+  @element_name@ <<= @from_where@;""",
+                   element_name = element_name,
                    from_where = from_where)
 
+    util.finish_loop(to, full_dims)
+    
     if is_array:
-    #if not(tyutil.isObjRef(deref_type)) and(is_array):
-        end_loop(string, full_dims)
+        to.dec_indent()
+        to.out("}")
 
     
 # ------------------------------------------------------------------
@@ -443,7 +438,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
             return str(string)
 
         # must be an array of fixed structs or unions
-        indexing_string = begin_loop(string, full_dims)
+        indexing_string = util.block_begin_loop(string, full_dims)
 
         # do the actual calculation
         string.out("""\
@@ -452,13 +447,13 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
                    indexing_string = indexing_string,
                    deref = dereference)
 
-        end_loop(string, full_dims)
+        util.block_end_loop(string, full_dims)
 
         return str(string)
 
 
     # thing is an array of variable sized elements
-    indexing_string = begin_loop(string, full_dims)
+    indexing_string = util.block_begin_loop(string, full_dims)
 
     if tyutil.isString(deref_type):
         string.out("""\
@@ -484,7 +479,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
                    deref = dereference)
                
 
-    end_loop(string, full_dims)
+    util.block_end_loop(string, full_dims)
 #    print "[[[ " + str(string) + "]]]"
 
     return str(string)
@@ -504,399 +499,4 @@ def unmarshal_string_via_temporary(variable_name, stream_name):
     
     
 
-# -------------------------------------------
-# Operation dispatching
 
-def operation_dispatch(operation, environment, stream):
-
-    id_name = tyutil.mapID(operation.identifier())
-
-    parameters = operation.parameters()
-    unmarshal_in = util.StringStream()
-    marshal_out  = util.StringStream()
-    size_calc    = util.StringStream()
-    argument_list = []
-
-    returnType = operation.returnType()
-    deref_returnType = tyutil.deref(returnType)
-    return_type_name = environment.principalID(returnType)
-    return_type_dims = tyutil.typeDims(returnType)
-    is_array = return_type_dims != []
-
-    if tyutil.isString(returnType):
-        return_type_name = "CORBA::String_var"
-    elif is_array or tyutil.isVariableType(returnType):
-        return_type_name = return_type_name + "_var"
-
-    has_return_value = not(tyutil.isVoid(returnType))
-
-    # item_types contains all the argument types + the result
-    # item_names contains all the argument names + the result
-    # item_direction contains the direction of all the arguments + result
-    item_types = map(lambda x:x.paramType(), parameters)
-    item_names = map(lambda x:"arg_" + x.identifier(), parameters)
-    item_directions = map(lambda x:x.direction(), parameters)
-
-    # 1st pass, build the invocation argument list
-    zipped_up = util.zip(item_types, util.zip(item_names, item_directions))
-    
-    for (item_type, (item_name, item_direction)) in zipped_up:
-        deref_item_type = tyutil.deref(item_type)
-        type_dims = tyutil.typeDims(item_type)
-        is_array = type_dims != []
-
-        arg = ["", "", ""]
-        arg[0] = item_name
-        arg[1] = item_name
-        arg[2] = item_name
-        if tyutil.isString(deref_item_type):
-            arg[0] = arg[0] + ".in()"
-            arg[1] = arg[1] + ".out()"
-            arg[2] = arg[2] + ".inout()"
-        elif tyutil.isVariableType(deref_item_type):
-            arg[1] = arg[1] + ".out()"
-
-        argument_list.append(arg[item_direction])
-
-        #if tyutil.isVariableType(deref_item_type) and \
-        #   out_arg
-        #if tyutil.isVariableType(deref_item_type) and \
-        #   not(tyutil.isStruct(deref_item_type) or \
-        #       tyutil.isUnion(deref_item_type)) and \
-        #   not is_array:
-        #    # and not sequence?
-        #    if item_direction == 0:
-        #        # in
-        #        argument_list.append(item_name + ".in()")
-        #    elif item_direction == 1:
-        #        # out
-        #        argument_list.append(item_name + ".out()")
-        #    elif item_direction == 2:
-        #        # inout
-        #        argument_list.append(item_name + ".inout()")
-        #elif (tyutil.isSequence(deref_item_type) or \
-        #     tyutil.isStruct(deref_item_type) or \
-        #     tyutil.isUnion(deref_item_type)) and \
-        #     item_direction == 1:
-        #    # out
-        #    argument_list.append(item_name + ".out()")
-        #else:
-        #    argument_list.append(item_name)
-
-    # 2nd thing- handle the return value
-    if has_return_value:
-        result_string = "result"
-        is_pointer = 0
-        if tyutil.isVariableType(deref_returnType) and \
-           not(tyutil.isString(deref_returnType)):
-        #if tyutil.isObjRef(deref_returnType) or \
-        #   tyutil.isSequence(deref_returnType):
-            result_string = "(result.operator->())"
-            if not(tyutil.isObjRef(deref_returnType)):
-                is_pointer = 1
-            
-        size_calc.out(sizeCalculation(environment, returnType,
-                                      None, "msgsize", result_string, 1,
-                                      is_pointer = is_pointer))
-        if is_pointer:
-            result_string = "*" + result_string
-        marshall(marshal_out, environment, returnType,
-                 None, result_string, "giop_s")
-        
-
-    # 3rd pass, add the rest (this includes handling the return value)
-    if 0 and has_return_value:
-                item_types.append(returnType)
-                item_names.append("result")
-                item_directions.append(1)
-
-    zipped_up = util.zip(item_types, util.zip(item_names, item_directions))
-    
-    for (item_type, (item_name, item_direction)) in zipped_up:
-        deref_item_type = tyutil.deref(item_type)
-        item_type_name = environment.principalID(item_type)
-        item_dims = tyutil.typeDims(item_type)
-        is_array = item_dims != []
-
-        if is_array:
-            unmarshal_in.out("""\
-@item_type_name@ @item_name@;""", item_type_name = item_type_name,
-                             item_name = item_name)
-            if item_direction == 0 or item_direction == 2:
-                unmarshall(unmarshal_in, environment, item_type, None,
-                           item_name, 1, "giop_s")
-            if item_direction == 1 or item_direction == 2:
-                marshall(marshal_out, environment, item_type, None,
-                         item_name, "giop_s")
-
-        is_pointer = 0
-        if tyutil.isVariableType(deref_item_type) and \
-           not(tyutil.isString(deref_item_type)):
-            item_name = "(" + item_name + ".operator->())"
-            is_pointer = 1
-        if tyutil.isSequence(deref_item_type) and \
-           item_direction == 1:
-            is_pointer = 1
-        
-
-        # SWITCH(deref_item_type)
-        #  CASE(string)
-        elif tyutil.isString(deref_item_type):
-            unmarshal_in.out("""\
-CORBA::String_var @item_name@;""", item_name = item_name)
-            if item_direction == 0 or item_direction == 2:
-                # either in or inout
-                unmarshal_in.out("""\
-{
-  CORBA::String_member _0RL_str_tmp;
-  _0RL_str_tmp <<= giop_s;
-  @item_name@ = _0RL_str_tmp._ptr;
-  _0RL_str_tmp._ptr = 0;
-}""", item_name = item_name)
-            if item_direction == 1 or item_direction == 2:
-                # either out or inout
-                marshall(marshal_out, environment, item_type,
-                                None, item_name, "giop_s")
-
-        #  CASE(objref)
-        elif tyutil.isObjRef(deref_item_type):
-            unmarshal_in.out("""\
-@item_type@_var @item_name@;""", item_type = item_type_name,
-                             item_name = item_name)
-            if item_direction == 0 or item_direction == 2:
-                # in or inout
-                unmarshall(unmarshal_in, environment,
-                                  item_type, None,
-                                  item_name, 0, "giop_s")
-            if item_direction == 1:
-                # out
-                marshal_out.out("""\
-@item_type@_Helper::marshalObjRef((@item_name@.operator->()),giop_s);""",
-                                item_type = item_type_name,
-                                item_name = item_name)
-            if item_direction == 2:
-                # inout
-                marshal_out.out("""\
-@item_type@_Helper::marshalObjRef(@item_name@,giop_s);""",
-                                item_type = item_type_name,
-                                item_name = item_name)
-        #  CASE(sequence)
-        elif tyutil.isSequence(deref_item_type):
-            if item_direction == 1:
-                unmarshal_in.out("""\
-@item_type@_var @item_name@;""", item_type = item_type_name,
-                                 item_name = item_name)
-            else:
-                unmarshal_in.out("@type@ @item_name@;",
-                                 type = item_type_name,
-                                 item_name = item_name)
-            if item_direction == 0 or item_direction == 2:
-                unmarshal_in.out("@item_name@ <<= giop_s;",
-                                 item_name = item_name)
-            if item_direction == 1:
-                marshal_out.out("*(@item_name@.operator->()) >>= giop_s;",
-                                item_name = item_name)
-            elif item_direction == 2:
-                marshal_out.out("@item_name@ >>= giop_s;",
-                                item_name = item_name)
-                
-            
-                            
-        #  DEFAULT
-        else:
-            if tyutil.isVariableType(item_type) and \
-               item_direction == 1:
-                unmarshal_in.out("""\
-// confusion reigns
-@type@_var @item_name@;""", type = item_type_name,
-                                 item_name = item_name)
-            else:
-                # this bit is probably too simplistic
-                unmarshal_in.out("@type@ @item_name@;",
-                                 type = item_type_name,
-                                 item_name = item_name)
-            if item_direction == 0 or item_direction == 2:
-                unmarshal_in.out("@item_name@ <<= giop_s;",
-                                 item_name = item_name)
-            if item_direction == 1 or item_direction == 2:
-                marshal_out.out("@item_name@ >>= giop_s;",
-                                item_name = item_name)
-
-
-                        
-        # if parameter is out or inout, alignment matters
-        if item_direction == 1 or item_direction == 2:
-            #if (tyutil.isObjRef(deref_item_type) or \
-            #    tyutil.isSequence(deref_item_type))and \
-            #   item_direction == 1:
-            #    # out only
-            #    item_name = "(" + item_name + ".operator->())"
-
-            calc = sizeCalculation(environment, item_type,
-                                   None,
-                                   "msgsize",
-                                   item_name, 1,
-                                   is_pointer = is_pointer)
-            size_calc.out(calc)
-
-    return_type_dec = ""
-    return_string = ""
-    if has_return_value:
-        return_type_dec = return_type_name + " result;"
-        return_string = "result = "
-
-    stream.out("""\
-  if( !strcmp(giop_s.operation(), \"@idname@\") ) {
-    @unmarshal_in_arguments@
-    giop_s.RequestReceived();
-    @return_type_dec@
-    @return_assign@this->@operation_name@(@argument_list@);
-    if( giop_s.response_expected() ) {
-      size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      @size_calculation@
-      giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
-      @marshal_out_arguments@
-    }
-    giop_s.ReplyCompleted();
-    return 1;
-  }""",
-                   idname = id_name,
-                   unmarshal_in_arguments = str(unmarshal_in),
-                   operation_name = id_name,
-                   marshal_out_arguments = str(marshal_out),
-                   argument_list = string.join(argument_list, ", "),
-                   size_calculation = str(size_calc),
-                   return_type_dec = return_type_dec,
-                   return_assign = return_string)
-
-    
-
-def attribute_read_dispatch(attribute, environment, id, stream):
-
-    attrType = attribute.attrType()
-    deref_attrType = tyutil.deref(attrType)
-    attrib_type_name = environment.principalID(attrType)
-    result_name = "result"
-    attr_dims = tyutil.typeDims(attrType)
-    is_array = attr_dims != []
-
-    is_pointer = 0
-
-
-    if tyutil.isSequence(deref_attrType):
-        is_pointer = 1
-
-    # similar code exists in skel/main.py, handling pd_result
-    # basic types don't have slices
-    if is_array:
-        if tyutil.ttsMap.has_key(deref_attrType.kind()):
-            result_name = "result"
-        else:
-            result_name = "((" + attrib_type_name + "_slice*)" + "result)"
-            
-        attrib_type_name = attrib_type_name + "_var"
-        
-    elif tyutil.isString(deref_attrType):
-        attrib_type_name = "CORBA::String_var"
-
-    elif tyutil.isVariableType(attrType):
-        if tyutil.isObjRef(deref_attrType):
-            attrib_type_name = environment.principalID(deref_attrType)
-        
-        attrib_type_name = attrib_type_name + "_var"
-        result_name = "(result.operator->())"
-        if tyutil.isStruct(deref_attrType) or \
-           tyutil.isUnion(deref_attrType):
-            is_pointer = 1
-
-    # ---
-
-    size_calc = sizeCalculation(environment, attrType,
-                                None, "msgsize", result_name, 1, is_pointer)
-    marshal = util.StringStream()
-
-    if is_pointer:
-        result_name = "*" + result_name
-        
-    marshall(marshal, environment, attrType, None, result_name, "giop_s")
-    
-    stream.out("""\
-if( !strcmp(giop_s.operation(), \"_get_@attrib_name@\") ) {    
-  giop_s.RequestReceived();
-  @attrib_type@ result = this->@attrib_name@();
-  if( giop_s.response_expected() ) {
-    size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-    @size_calculation@
-    giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
-    @marshall_result@
-  }
-  giop_s.ReplyCompleted();
-  return 1;
-}""",
-               marshall_result = str(marshal),
-               attrib_type = attrib_type_name,
-               attrib_name = id,
-               size_calculation = size_calc)
-    
-def attribute_write_dispatch(attribute, environment, id, stream):
-
-    attrType = attribute.attrType()
-    deref_attrType = tyutil.deref(attrType)
-    attrib_type_name = environment.principalID(attrType)
-    attr_dims = tyutil.typeDims(attrType)
-    is_array = attr_dims != []
-    
-    is_pointer = 0
-
-    if is_array:
-        if tyutil.ttsMap.has_key(deref_attrType.kind()):
-            pass
-        else:
-            attrib_type_name = attrib_type_name 
-        
-    elif tyutil.isString(deref_attrType):
-        attrib_type_name = "CORBA::String_var"
-
-    elif tyutil.isObjRef(deref_attrType):
-        attrib_type_name = environment.principalID(deref_attrType)
-        attrib_type_name = attrib_type_name + "_var"
-
-    elif tyutil.isSequence(deref_attrType):
-        # not a _var type
-        is_pointer = 1    
-
-
-    unmarshal = util.StringStream()
-
-    if not(is_array) and tyutil.isString(deref_attrType):
-        unmarshal.out("""\
-{
-  CORBA::String_member _0RL_str_tmp;
-  _0RL_str_tmp <<= giop_s;
-  @item_name@ = _0RL_str_tmp._ptr;
-  _0RL_str_tmp._ptr = 0;
-}""", item_name = "value")
-    else:
-        unmarshall(unmarshal, environment, attrType, None, "value",
-                   1, "giop_s")
-    
-    stream.out("""\
-if( !strcmp(giop_s.operation(), \"_set_@attrib_name@\") ) {
-  @attrib_type@ value;
-  @unmarshall_value@
-  giop_s.RequestReceived();
-  this->@attrib_name@(value);
-  if( giop_s.response_expected() ) {
-    size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-    giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
-  }
-  giop_s.ReplyCompleted();
-  return 1;
-}""",
-               unmarshall_value = str(unmarshal),
-               attrib_type = attrib_type_name,
-               attrib_name = id)
-
-
-    
-    

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/11/29 19:26:59  djs
+# Code tidied and moved around. Some redundant code eliminated.
+#
 # Revision 1.7  1999/11/17 20:37:09  djs
 # General util functions
 #
@@ -89,30 +92,3 @@ def run(tree, args):
     
     skel.run(tree)
 
-    #stream = util.Stream(sys.stdout, 2)
-
-    #defs = header.defs.__init__(stream)
-    #tree.accept(defs)
-    
-    
-    #global main_idl_file, imported_files
-    
-    #main_idl_file = tree.file()
-
-    #imported_files[outputFileName(main_idl_file)] = 1
-
-    #checkStubDir(stub_directory)
-
-    #outpybasename = outputFileName(main_idl_file)
-    #outpymodule   = stub_module + outpybasename
-    #outpyname     = os.path.join(stub_directory, outpybasename + ".py")
-
-
-    #st.out(file_start, filename=main_idl_file)
-
-    #pv = PythonVisitor(st, outpymodule)
-    #tree.accept(pv)
-
-    #st.out(file_end)
-
-    #updateModules(exported_modules.keys(), outpymodule)

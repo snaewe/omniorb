@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/11/29 19:27:05  djs
+# Code tidied and moved around. Some redundant code eliminated.
+#
 # Revision 1.7  1999/11/29 15:27:53  djs
 # Minor bugfixes
 #
@@ -59,11 +62,7 @@ from omniidl import idlast, idltype, idlutil
 
 from omniidl.be.cxx import tyutil, util, name, config, skutil
 
-from omniidl.be.cxx.skel import mangler
-from omniidl.be.cxx.skel import dispatch
-from omniidl.be.cxx.skel import proxy
-#import omniidl.be.cxx.skel.util
-#skutil = omniidl.be.cxx.skel.util
+from omniidl.be.cxx.skel import mangler, dispatch, proxy
 
 import main
 self = main
@@ -123,12 +122,12 @@ def visitInterface(node):
 
     self.__insideInterface = insideInterface
 
-    #print "[[[ env = " + str(environment) + "]]]"
-    #print "[[[ scopedName = " + repr(node.scopedName()) + "]]]"
     scopedName = map(tyutil.mapID, node.scopedName())
     fqname = string.join(scopedName, "::")
     name = environment.nameToString(scopedName)
 
+    # we need to generate several useful classes for object
+    # references
     objref_scopedName = tyutil.scope(scopedName) + \
                         ["_objref_" + tyutil.name(scopedName)]
     
@@ -139,12 +138,6 @@ def visitInterface(node):
                       ["_impl_" + tyutil.name(scopedName)]
     impl_fqname = string.join(impl_scopedName, "::")
     impl_name = environment.nameToString(environment.relName(impl_scopedName))
-
-    #print "[[[  -> objrefName = " + repr(objref_scopedName) +\
-    #      "  name = " + repr(objref_name) + "]]]"
-    #print "[[[  -> implName = " + repr(impl_scopedName) +\
-    #      "  name = " + repr(impl_name) + "]]]"
-
 
 
     # build the helper class methods
@@ -218,14 +211,12 @@ void @name@_Helper::marshalObjRef(@name@_ptr obj, MemBufferedStream& s) {
 }""", name = name, objref_name = objref_name)
     
 
-    # repository ID
+    # output the repository ID
     stream.out("""\
 const char* @name@::_PD_repoId = \"@repoID@\";""",
                name = name, repoID = node.repoId())
 
-    # proxy
-
-    # build inherits list
+    # gather information for possible interface inheritance
     inherits_str = ""
     inherited_repoIDs = ""
     for i in node.inherits():
@@ -239,10 +230,9 @@ const char* @name@::_PD_repoId = \"@repoID@\";""",
         
         inherits_objref_name = environment.nameToString(environment.relName(
             inherits_objref_scopedName))
-        #inherits_objref_name = string.join(inherits_objref_scopedName, "::")
         inherits_str = inherits_str + inherits_objref_name + "(mdri, p, id, lid),\n"
-        
-    # FIXME: may need to sort out name qualification here
+
+    # generate the _objref_ methods
     stream.out("""\
 @fq_objref_name@::~@objref_name@() {}
 
@@ -268,39 +258,29 @@ void*
 """, name = name, fq_objref_name = objref_fqname, objref_name = objref_name,
                inherits_str = inherits_str, inherited_repoIDs = inherited_repoIDs)
 
-    # deal with callables
+    # deal with callables (attributes and interfaces)
     callables = node.callables()
     attributes = filter(lambda x:isinstance(x, idlast.Attribute), callables)
     operations = filter(lambda x:isinstance(x, idlast.Operation), callables)
     scopedName = node.scopedName()
 
+    # every callable has an associated call descriptor proxy.
     Proxy = proxy.__init__(environment, stream)
 
+    # ------------------------------------
+    # Operations
     for operation in operations:
         operationName = operation.identifier()
-        
         seed = scopedName + [operation.identifier()]
-        mangled_signature = mangler.produce_operation_signature(operation)
 
         # try the all new proxy code!
         Proxy.operation(operation, seed)
-        need_proxies = 0
         descriptor = mangler.operation_descriptor_name(operation)
-        #try:
-        #    descriptor = mangler.operation_descriptor_name(operation)
-        #    need_proxies = 0
-        #except KeyError:
-        #    mangler.generate_descriptors(operation, seed)
-        #    descriptor = mangler.operation_descriptor_name(operation)
-        #    need_proxies = 1
 
         parameters = operation.parameters()
-        parameters_in  = filter(lambda x:x.is_in(),  parameters)
-        parameters_out = filter(lambda x:x.is_out(), parameters)
         parameters_ID  = map(lambda x:tyutil.mapID(x.identifier()), parameters)
         
         parameter_argmapping = []
-        parameter_vargmapping = []
 
         returnType = operation.returnType()
         result_type = tyutil.operationArgumentType(returnType,
@@ -316,321 +296,9 @@ void*
             paramType_name = environment.principalID(paramType, fully_scope = 1)
             
             optypes = tyutil.operationArgumentType(paramType, environment)
-            if parameter.is_in() and parameter.is_out():
-                parameter_argmapping.append(optypes[3])
-            elif parameter.is_in():
-                parameter_argmapping.append(optypes[1])
-            elif parameter.is_out():
-                parameter_argmapping.append(optypes[2])
-            # some day I'll figure out a better way of handling this
-            if is_array:
-                parameter_vargmapping.append(paramType_name + "_slice*")
-            elif tyutil.isString(deref_paramType) and parameter.is_out():
-                parameter_vargmapping.append("char*&")
-            elif tyutil.isObjRef(deref_paramType) and parameter.is_out():
-                parameter_vargmapping.append(paramType_name + "_ptr&")
-            elif tyutil.isVariableType(deref_paramType) and \
-                 parameter.direction() == 1:
-                # out only
-                parameter_vargmapping.append(paramType_name + "*&")
+            # optypes[0] is return [1] is in [2] is out [3] is inout
+            parameter_argmapping.append(optypes[parameter.direction() + 1])
                 
-                                             
-            else:
-                optypes = tyutil.operationArgumentType(paramType, environment, 1, 1)
-                if parameter.is_in() and parameter.is_out():
-                    parameter_vargmapping.append(optypes[3])
-                elif parameter.is_in():
-                    parameter_vargmapping.append(optypes[1])
-                elif parameter.is_out():
-                    parameter_vargmapping.append(optypes[2])
-                
-        # builds a list of argument initialisers of the form
-        #   [ arg_n(a_n) ]*
-        # to add to the inheritance list
-        def buildinit(x):
-            result = []
-            for name in x:
-                result.append("arg_" + str(name) + "(a_" + str(name) + ")")
-            return result
-
-        # builds a list of variable definitions of the form
-        #   [ name prefix_n ]*
-        # to go in the constructor
-        def buildarg(x, prefix, n=0):
-            result = []
-            for name in x:
-                result.append(name + " " + prefix + str(n))
-                n = n + 1
-            return result
-
-        # build the call descriptor for the operation
-        ctor_args = ["LocalCallFn lcfn", "const char* op", "size_t oplen",
-                     "_CORBA_Boolean oneway"] +\
-                     buildarg(parameter_vargmapping, "a_")
-        inherits_list = ["omniCallDescriptor(lcfn, op, oplen, oneway)"] +\
-                        buildinit(range(0, len(parameter_argmapping)))
-        members = buildarg(parameter_vargmapping, "arg_")
-
-        if has_return_value:
-            result_f = "inline " + result_type + " result() { return pd_result; }"
-            result_data = result_type + " pd_result;"
-        else:
-            result_f = ""
-            result_data = ""
-
-        marshalArguments_str = """\
-        virtual CORBA::ULong alignedSize(CORBA::ULong size_in);
-        virtual void marshalArguments(GIOP_C&);"""
-        
-        unmarshalArguments_str = "virtual void unmarshalReturnedValues(GIOP_C&);"
-        if parameters_out == [] and not(has_return_value):
-            unmarshalArguments_str = ""
-        if parameters_in == []:
-            marshalArguments_str = ""
-            
-        if need_proxies:
-            stream.out("""\
-// Proxy call descriptor class. Mangled signature:
-//  @mangled_signature@
-class @call_descriptor@
-  : public omniCallDescriptor
-{
-public:
-  inline @call_descriptor@(@ctor_args@):
-     @inherits_list@ {}
-
-  @marshalArguments_str@
-  @unmarshalArguments_str@
-  
-  @result_member_function@
-  @members@
-  @result_member_data@
-};
-
-""",
-                       mangled_signature = mangled_signature,
-                       call_descriptor = descriptor,
-                       ctor_args = string.join(ctor_args, ","),
-                       inherits_list = string.join(inherits_list, ",\n"),
-                       marshalArguments_str = marshalArguments_str,
-                       unmarshalArguments_str = unmarshalArguments_str,
-                       result_member_function = result_f,
-                       result_member_data = result_data,
-                       result_type = result_type,
-                       members = string.join(map(lambda x:x+";",members), "\n"))
-        # build the align method
-
-        # do the size calculation (if there are -in- arguments)
-        if parameters_in != []:
-            size = util.StringStream()
-            n = 0
-            for parameter in parameters:
-                if parameter.is_in():
-                    paramType = parameter.paramType()
-                    calc = skutil.sizeCalculation(environment, paramType, None,
-                                              "msgsize", "arg_" + str(n), 1)
-                    size.out(calc)
-                n = n + 1
-                
-                size_calculation = str(size)
-
-            if need_proxies:
-                stream.out("""\
-CORBA::ULong @call_descriptor@::alignedSize(CORBA::ULong msgsize)
-{
-  @size_calculation@
-  return msgsize;
-}
-""",
-                           call_descriptor = descriptor,
-                           size_calculation = size_calculation)        
-        
-
-        # code to marshall the -in- arguments
-        if parameters_in != []:
-            marshall = util.StringStream()
-            n = 0
-            for parameter in parameters:
-                if parameter.is_in():
-                    paramType = parameter.paramType()
-                    skutil.marshall(marshall, environment, paramType, None,
-                                    "arg_" + str(n), "giop_client",
-                                    fully_scope = 1)
-                n = n + 1
-
-            if need_proxies:
-                stream.out("""\
-void @call_descriptor@::marshalArguments(GIOP_C& giop_client)
-{
-  @marshall@
-}
-""",
-                           call_descriptor = descriptor,
-                           marshall = str(marshall))
-
-        # code to unmarshall the -out- arguments
-        if parameters_out != [] or has_return_value:
-            unmarshall = util.StringStream()
-            n = 0
-            # build the chunk of code in 3 pieces
-            start  = util.StringStream()
-            middle = util.StringStream()
-            end    = util.StringStream()
-
-            # item_types contains all the argument types + the result
-            # item_names contains all the argument names + the result
-            # item_direction contains the direction of all the arguments + result
-            # item_via_temporary suggests whether to unmarshal via a
-            #   temporary variable
-            item_types = map(lambda x:x.paramType(), parameters)
-            item_names = map(lambda x:"arg_" + str(x), range(0, len(parameters)))
-            item_direction = map(lambda x:x.direction(), parameters)
-            item_via_temporary = [1] * len(parameters)
-
-            if has_return_value:
-                item_types = [returnType] + item_types
-                item_names = ["pd_result"] + item_names
-                item_direction = [1] + item_direction
-                item_via_temporary = [0] + item_via_temporary
-                #item_types.append(returnType)
-                #item_names.append("pd_result")
-                #item_direction.append(1)
-                #item_via_temporary.append(0)
-            
-            zipped_up = util.zip(item_types,
-                                 util.zip(item_names,
-                                          util.zip(item_direction,
-                                                   item_via_temporary)))
-
-            n = -1
-            
-            for (item_type, (item_name, (item_direction, via_tmp))) in zipped_up:
-                deref_item_type = tyutil.deref(item_type)
-                type_dims = tyutil.typeDims(item_type)
-                is_array = type_dims != []
-                
-                item_type_name = environment.principalID(item_type, 1)
-                assign_to = "tmp_" + str(n)
-                n = n + 1
-                # this needs uniform(-ing?, -alising?)
-                if via_tmp == 0:
-                    assign_to = "pd_result"
-                    if is_array:
-                        start.out("""\
-pd_result = @item_type_name@_alloc();""",
-                              item_type_name = item_type_name)
-                    if tyutil.isVariableType(item_type) and \
-                       not(tyutil.isString(item_type)):
-                        start.out("""\
-pd_result = new @item_type_name@;""", item_type_name = item_type_name)
-
-                if is_array:
-                    skutil.unmarshall(middle, environment, item_type, None,
-                                      item_name, 1, "giop_client")
-                # SWITCH(deref_item_type)
-                #  CASE(string)
-                elif tyutil.isString(deref_item_type):
-                    
-                    if item_direction == 1:
-                        # out only
-                        if via_tmp:
-                            start.out("""\
-char* @assign_to@ = 0;""", assign_to = assign_to)
-                            end.out("""\
-@item_name@ = @assign_to@;""", assign_to = assign_to, item_name = item_name)
-                    if item_direction == 2:
-                        # inout only
-                        middle.out("""\
-char* @assign_to@;""", assign_to = assign_to)
-                    if item_direction == 1 or item_direction == 2:
-                        # out and inout
-                        middle.out(
-                            skutil.unmarshal_string_via_temporary(
-                            assign_to,
-                            "giop_client"))
-                        
-                    if item_direction == 2:
-                        # inout only
-                        middle.out("""\
-CORBA::string_free(@item_name@);
-@item_name@ = @assign_to@;""", assign_to = assign_to, item_name = item_name)
-
-                #  CASE(objref)
-                elif tyutil.isObjRef(deref_item_type):
-                    if item_direction == 1:
-                        # out only
-                        if via_tmp:
-                            start.out("""\
-@param_type@_ptr @assign_to@ = 0;""", param_type = item_type_name,
-                                      assign_to = assign_to)
-                        middle.out("""\
-@assign_to@ = @param_type@_Helper::unmarshalObjRef(giop_client);""",
-                                       param_type = item_type_name,
-                                       assign_to = assign_to)
-                        if via_tmp:
-                            end.out("""\
-@item_name@ = @assign_to@;""", assign_to = assign_to, item_name = item_name)
-                        
-                    if item_direction == 2:
-                        middle.out("""\
-@param_type@_ptr @assign_to@;
-@assign_to@ = @param_type@_Helper::unmarshalObjRef(giop_client);
-@param_type@_Helper::release(@item_name@);
-@item_name@ = @assign_to@;""", param_type = item_type_name,
-                                   item_name = item_name,
-                                   assign_to = assign_to)
-                #  CASE(sequence)
-                elif tyutil.isSequence(deref_item_type):
-                    if item_direction == 1:
-                        # out only
-                        if via_tmp:
-                            start.out("""\
-@param_type@* @assign_to@ = new @param_type@;""",
-                                      param_type = item_type_name,
-                                      assign_to = assign_to)
-                        else:
-                            # the pd_result
-
-                            middle.out("""\
-@assign_to@ = new @param_type@;""",
-                                      param_type = item_type_name,
-                                      assign_to = assign_to)
-
-                        middle.out("""\
-*@assign_to@ <<= giop_client;""", assign_to = assign_to)
-                        if via_tmp:
-                            end.out("""\
-@item_name@ = @assign_to@;""", item_name = item_name,
-                                    assign_to = assign_to)
-                    if item_direction == 2:
-                        # inout only
-                        middle.out("""\
-@item_name@ <<= giop_client;""", item_name = item_name)
-
-
-                    
-                #  DEFAULT
-                elif item_direction == 1 or item_direction == 2:
-                    
-                    skutil.unmarshall(middle, environment, item_type,
-                                      None, item_name, 0, "giop_client")
-            
-                    
-            if need_proxies:
-                stream.out("""\
-void @call_descriptor@::unmarshalReturnedValues(GIOP_C& giop_client)
-{
-  @unmarshall_start@
-  @unmarshall_middle@
-  @unmarshall_end@
-}
-
-""",
-                           call_descriptor = descriptor,
-                           unmarshall_start = str(start),
-                           unmarshall_middle = str(middle),
-                           unmarshall_end = str(end),
-                           unmarshall = str(unmarshall))
 
         # static call back function
         local_call_descriptor = mangler.generate_unique_name(mangler.LCALL_DESC_PREFIX)
@@ -658,7 +326,7 @@ static void
                    operation_arguments = string.join(impl_args, ", "),
                    result = result_string)
 
-        # objref::operation
+        # objref::operation name
         objref_args = util.zip(parameter_argmapping, parameters_ID)
         objref_args = map(lambda (x,y): x + " " + y, objref_args)
         call_desc_args = [local_call_descriptor, "\"" + operationName + "\"",
@@ -693,24 +361,13 @@ static void
                    call_desc_args = string.join(call_desc_args, ", "),
                    return_string = return_string)
                    
-        
-    # attributes
+    # ------------------------------------
+    # Attributes
     for attribute in attributes:
         seed = scopedName + [attribute.identifiers()[0]]
-        #read_signature = mangler.produce_read_attribute_signature(attribute)
-        #write_signature = mangler.produce_write_attribute_signature(attribute)
 
-        Proxy = proxy.__init__(environment, stream)
         Proxy.attribute(attribute, seed)
-        need_proxies = 0
-        #try:
-        #    # see if we already have proxies generated
-        #    mangler.attribute_read_descriptor_name(attribute)
-        #    need_proxies = 0
-        #except KeyError:
-        #    mangler.generate_descriptors(attribute, seed)
-        #    need_proxies = 1
-        # 
+
         read = mangler.attribute_read_descriptor_name(attribute)
         write = mangler.attribute_write_descriptor_name(attribute)
         attrType = attribute.attrType()
@@ -720,118 +377,21 @@ static void
         deref_attrType = tyutil.deref(attrType)
         attrType_name = environment.principalID(attrType, 1)
 
+        # we need the type with and without its full scope
         attrTypes = tyutil.operationArgumentType(attrType, environment, 0,
                                                  fully_scope = 1)
         scoped_attrTypes = tyutil.operationArgumentType(attrType, environment, 0,
                                                  fully_scope = 0)
         return_type = attrTypes[0]
+
         if is_array:
-            in_type = attrTypes[1]+"_slice*"
             scoped_in_type = scoped_attrTypes[1]+"_slice*"
         else:
-            in_type = attrTypes[1]
             scoped_in_type = scoped_attrTypes[1]
 
-        size = skutil.sizeCalculation(environment, attrType, None ,
-                                      "msgsize",
-                                      "arg_0", 1, fully_scope = 1)
-        marshall_stream = util.StringStream()
-        skutil.marshall(marshall_stream, environment, attrType, None,
-                        "arg_0", "giop_client", fully_scope = 1)
-
-        if is_array:
-            s = util.StringStream()
-            s.out("pd_result = @name@_alloc();", name = attrType_name)
-            # basic types don't have slices
-            if tyutil.ttsMap.has_key(deref_attrType.kind()):
-                result_string = "pd_result"
-            else:
-                result_string = "((" + attrType_name + "_slice*)" + "pd_result)"
-
-            skutil.unmarshall(s, environment, attrType, None, result_string, 1,
-                              "giop_client", fully_scope = 1)
-            unmarshalReturned = str(s)
-            
-        elif tyutil.isString(deref_attrType):
-            unmarshalReturned = skutil.unmarshal_string_via_temporary("pd_result",
-                                                                      "giop_client")
-        elif tyutil.isObjRef(deref_attrType):
-            unmarshalReturned = "\
-pd_result = " + attrType_name + "_Helper::unmarshalObjRef(giop_client);"
-        elif tyutil.isVariableType(deref_attrType):
-            unmarshalReturned = "\
-pd_result = new " + attrType_name + ";\n" + "\
-*pd_result <<= giop_client;"
-        else:
-            unmarshalReturned = """\
-pd_result <<= giop_client;"""
-           
 
         for id in attribute.identifiers():
             attrib_name = tyutil.mapID(id)
-
-            if need_proxies:
-                stream.out("""\
-// Proxy call descriptor class. Mangled signature:
-//  @read_signature@
-class @read_descriptor@
-  : public omniCallDescriptor
-{
-public:
-  inline @read_descriptor@(LocalCallFn lcfn, const char* op, size_t oplen, _CORBA_Boolean oneway) :
-    omniCallDescriptor(lcfn, op, oplen, oneway)  {}
-  
-  virtual void unmarshalReturnedValues(GIOP_C&);
-  inline @return_type@ result() { return pd_result; }
-
-  @return_type@ pd_result;
-};
-
-
-void @read_descriptor@::unmarshalReturnedValues(GIOP_C& giop_client)
-{
-  @unmarshalReturned@
-}
-
-
-// Proxy call descriptor class. Mangled signature:
-//  @write_signature@
-class @write_descriptor@
-  : public omniCallDescriptor
-{
-public:
-  inline @write_descriptor@(LocalCallFn lcfn, const char* op, size_t oplen, _CORBA_Boolean oneway, @in_type@ a_0) :
-    omniCallDescriptor(lcfn, op, oplen, oneway),
-    arg_0(a_0)  {}
-  
-  virtual CORBA::ULong alignedSize(CORBA::ULong);
-  virtual void marshalArguments(GIOP_C&);
-
-  @in_type@ arg_0;
-};
-
-
-CORBA::ULong @write_descriptor@::alignedSize(CORBA::ULong msgsize)
-{
-  @size_calculation@
-  return msgsize;
-}
-
-
-void @write_descriptor@::marshalArguments(GIOP_C& giop_client)
-{
-  @marshall_argument@
-}
-""",
-                           read_signature = read_signature,
-                           write_signature = write_signature,
-                           read_descriptor = read, write_descriptor = write,
-                           return_type = return_type,
-                           in_type = in_type,
-                           size_calculation = size,
-                           marshall_argument = str(marshall_stream),
-                           unmarshalReturned = unmarshalReturned)
-
 
             get_attrib_name = "_get_" + attrib_name
             local_call_descriptor = mangler.generate_unique_name(mangler.LCALL_DESC_PREFIX)
@@ -900,7 +460,7 @@ void @objref_fqname@::@attrib_name@(@in_type@ arg_0)
                            in_type = scoped_in_type)
 
 
-    # _pof_
+    # _pof_ class
     pof_scopedName = tyutil.scope(scopedName) + \
                       ["_pof_" + tyutil.name(scopedName)]
     pof_name = string.join(pof_scopedName, "::")
@@ -945,7 +505,7 @@ const @pof_name@ _the_pof_@idname@;""",
 
     # FIXME: There should be an MSVC workaround here.
 
-    # _impl_
+    # _impl_ class (contains the callable dispatch code)
 
     stream.out("""\
 @impl_fqname@::~_impl_@uname@() {}
@@ -959,6 +519,7 @@ CORBA::Boolean
     dispatcher = dispatch.__init__(environment, stream)
     
     for callable in node.callables():
+        # This isn't quite as neat as it could be
         if isinstance(callable, idlast.Operation):
             identifiers = [callable.identifier()]
         else:
@@ -969,18 +530,13 @@ CORBA::Boolean
             id_name = tyutil.mapID(id)
             if isinstance(callable, idlast.Operation):
                 dispatcher.operation(callable)
-                #skutil.operation_dispatch(callable, interface_environment,
-                #                          stream)
 
             elif isinstance(callable, idlast.Attribute):
-                
-                skutil.attribute_read_dispatch(callable, interface_environment,
-                                               id_name, stream)
+                dispatcher.attribute_read(callable, id_name)
 
                 if not(callable.readonly()):
+                    dispatcher.attribute_write(callable, id_name)
 
-                    skutil.attribute_write_dispatch(callable, interface_environment,
-                                                    id_name, stream)
     stream.dec_indent()
 
     # if we don't implement the operation/attrib ourselves, we need to
@@ -1315,6 +871,8 @@ size_t
     # FIXME: I thought the CORBA::MARSHAL exception thrown when
     # unmarshalling an array of strings was skipped when unmarshalling
     # from a MemBufferedStream (it is for a struct, but not for a union)
+    # (This is probably due to a string-inconsistency with the old compiler
+    # and can be sorted out later)
     for where_to in ["NetBufferedStream", "MemBufferedStream"]:
         #can_throw_marshall = where_to == "NetBufferedStream"
         can_throw_marshall = 1

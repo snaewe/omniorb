@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/11/29 19:27:05  djs
+# Code tidied and moved around. Some redundant code eliminated.
+#
 # Revision 1.3  1999/11/29 15:27:28  djs
 # Moved proxy call descriptor generation for attributes to this module.
 #
@@ -101,124 +104,6 @@ void @call_descriptor@::marshalArguments(GIOP_C& giop_client)
 }
 """
 
-def unmarshal(type, name, from_where, to, can_throw_marshal, fully_scope = 0):
-    assert isinstance(type, idltype.Type)
-    environment = self.__environment
-    deref_type = tyutil.deref(type)
-    deref_type_name = environment.principalID(deref_type, fully_scope)
-    type_dims = tyutil.typeDims(type)
-    # for a type with dimensions [10][20][30]....[n][n+1]
-    # we iterate over the last dimension, so we need to use
-    # [10][20][30]....[n]
-    dims_string = tyutil.dimsToString(type_dims[0:-1])
-
-    is_array = type_dims != []
-    num_elements = reduce(lambda x,y:x*y, type_dims, 1)
-
-    type_name = environment.principalID(type, fully_scope)
-
-    if is_array:
-        # BASIC things
-        # octets, chars and booleans are handled via
-        # get_char_array
-        if tyutil.isOctet(deref_type) or \
-           tyutil.isChar(deref_type)  or \
-           tyutil.isBoolean(deref_type):
-            to.out("""\
-@where@.get_char_array((_CORBA_Char*) ((@type@*) @name@@dims@), @num@);""",
-                       where = from_where, type = deref_type_name,
-                       name = name, dims = dims_string,
-                       num = str(num_elements))
-            return
-        # other basic types are handled via a CdrStreamHelper
-        array_helper_suffix = {
-            idltype.tk_short:  "Short",
-            idltype.tk_long:   "Long",
-            idltype.tk_ushort: "UShort",
-            idltype.tk_ulong:  "ULong",
-            idltype.tk_float:  "Float",
-            idltype.tk_double: "Double",
-            idltype.tk_enum:   "ULong",
-            }
-        if array_helper_suffix.has_key(deref_type.kind()):
-            typecast = "((" + deref_type_name + "*) " + name + dims_string + ")"
-            # use the most dereferenced type
-            if tyutil.isEnum(deref_type):
-                typecast = "(_CORBA_ULong*) " + typecast
-            to.out("""\
-CdrStreamHelper_unmarshalArray@suffix@(@where@,@typecast@, @num@);""",
-                   suffix = array_helper_suffix[deref_type.kind()],
-                   where = from_where, typecast = typecast,
-                   num = str(num_elements))
-            return
-        # not sure how to handle other basic types
-        if isinstance(deref_type, idltype.Base):
-            raise "Don't know how to marshall type: " + repr(deref_type) +\
-              "(kind = " + str(deref_type.kind()) + ") array"
-
-    # superfluous bracketting
-    if is_array:
-        to.out("{")
-        to.inc_indent()
-        
-    # some uniformity here
-    istring = skutil.start_loop(to, type_dims)
-
-    element_name = name + istring
-    
-    if tyutil.isString(deref_type):
-        if not(is_array):
-            # go via temporary. why?
-            to.out("""\
-{
-  CORBA::String_member _0RL_str_tmp;
-  _0RL_str_tmp <<=  @where@;
-  @name@ = _0RL_str_tmp._ptr;
-  _0RL_str_tmp._ptr = 0;
-}""", where = from_where, name = element_name)
-        else:
-            to.out("""\
-  CORBA::ULong _len;
-  _len <<= @where@;
-  if (!_len) {
-    if (omniORB::traceLevel > 1)
-      _CORBA_null_string_ptr(1);
-    _len = 1;
-  }""", where = from_where)            
-            if can_throw_marshal:
-                to.out("""\
-  else if ( @where@.RdMessageUnRead() < _len)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);""",
-                           where = from_where)
-                to.dec_indent()
-            to.out("""\
-  if (!(char*)(@name@ = CORBA::string_alloc(_len-1)))
-    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-  if (_len > 1)
-    @where@.get_char_array((CORBA::Char *)((char *)@name@),_len);
-  else
-    *((CORBA::Char*)((char*) @name@)) <<= @where@ ;""",
-                   where = from_where, name = element_name)
-            to.dec_indent()            
-
-
-    elif tyutil.isObjRef(deref_type):
-        base_type_name = environment.principalID(deref_type, fully_scope)
-        to.out("""\
-  @name@ = @type@_Helper::unmarshalObjRef(@where@);""",
-                   name = element_name, type = base_type_name,
-                   where = from_where)
-
-    else:
-        to.out("""\
-  @name@ <<= @where@;""", where = from_where,
-                   name = element_name)
-
-    skutil.finish_loop(to, type_dims)
-
-    if is_array:
-        to.dec_indent()
-        to.out("}")
 
 def argmapping(type):
     assert isinstance(type, idltype.Type)
@@ -423,7 +308,8 @@ def operation(operation, seed):
                            direction, dereference = 0,
                            pre_decls = pre_decls,
                            unmarshal_block = unmarshal_block,
-                           post_assign = post_assign):
+                           post_assign = post_assign,
+                           environment = environment):
             dims = tyutil.typeDims(type)
             is_array = dims != []
             deref_type = tyutil.deref(type)
@@ -450,9 +336,14 @@ def operation(operation, seed):
                 deref_name = "((" + temp_type_name + ") " + temp + ")"
             else:
                 deref_name = temp
-            unmarshal(type, deref_name, "giop_client", unmarshal_block,
-                      can_throw_marshal = 1,
-                      fully_scope = 1)
+            skutil.unmarshall(unmarshal_block, environment, type, None,
+                              deref_name, can_throw_marshall = 1,
+                              from_where = "giop_client",
+                              fully_scope = 1,
+                              string_via_member = 1)
+            #unmarshal(type, deref_name, "giop_client", unmarshal_block,
+            #          can_throw_marshal = 1,
+            #          fully_scope = 1)
 
             if is_inout and not(is_array):
                 if tyutil.isString(deref_type):
@@ -493,9 +384,14 @@ pd_result = @type@_alloc();""", type = return_type_base)
 pd_result = new @type@;""", type = return_type_base)
                 name = "*" + name
 
-            unmarshal(return_type, name, "giop_client",
-                      unmarshal_block, can_throw_marshal = 1,
-                      fully_scope = 1)
+            skutil.unmarshall(unmarshal_block, environment, return_type, None,
+                              name, can_throw_marshall = 1,
+                              from_where = "giop_client",
+                              fully_scope = 1,
+                              string_via_member = 1)
+            #unmarshal(return_type, name, "giop_client",
+            #          unmarshal_block, can_throw_marshal = 1,
+            #          fully_scope = 1)
                 
         
         n = -1
@@ -562,10 +458,15 @@ pd_result = new @type@;""", type = return_type_base)
                                temp_type_name, temp_init_value,
                                direction, dereference)
             else:
-                unmarshal(param_type, arg_name, "giop_client",
-                          unmarshal_block,
-                          can_throw_marshal = 1,
-                          fully_scope = 1)
+                skutil.unmarshall(unmarshal_block, environment, param_type, None,
+                                  arg_name, can_throw_marshall = 1,
+                                  from_where = "giop_client",
+                                  fully_scope = 1,
+                                  string_via_member = 1)
+                #unmarshal(param_type, arg_name, "giop_client",
+                #          unmarshal_block,
+                #          can_throw_marshal = 1,
+                #          fully_scope = 1)
             
 
         # write the unmarshal function

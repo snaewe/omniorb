@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/11/29 19:27:05  djs
+# Code tidied and moved around. Some redundant code eliminated.
+#
 # Revision 1.3  1999/11/29 15:26:45  djs
 # Minor bugfixesx.
 #
@@ -39,6 +42,10 @@
 #
 
 """Produce operation and attribute call dispatching code"""
+
+# Outputs the code which glues together requests received over GIOP
+# to actual implementations.
+
 
 import string
 
@@ -57,6 +64,7 @@ def __init__(environment, stream):
     self.__stream = stream
     return self
 
+# ------------------------------------
 
 # Create appropriate argument type instances
 #  -out- (includes return) types have their storage
@@ -158,6 +166,9 @@ def is_pointer(type):
 
     return 0
 
+# ------------------------------------
+# Operation dispatching
+
 def operation(operation):
     environment = self.__environment
     stream = self.__stream
@@ -212,11 +223,14 @@ def operation(operation):
                           argument_name = argument_prefixed_name)
         # consider the need to demarshal it
         if argument.is_in():
-            #skutil.unmarshall(get_arguments, environment, argument_type,
-            #                  None, prefix + argument_name, 1, "giop_s")
             Proxy = proxy.__init__(environment, None)
-            Proxy.unmarshal(argument_type, prefix + argument_name, "giop_s",
-                              get_arguments, can_throw_marshal = 1)
+            skutil.unmarshall(get_arguments, environment, argument_type, None,
+                              prefix + argument_name,
+                              from_where = "giop_s",
+                              can_throw_marshall = 1,
+                              string_via_member = 1)
+            #Proxy.unmarshal(argument_type, prefix + argument_name, "giop_s",
+            #                  get_arguments, can_throw_marshal = 1)
 
         marshal_name = argument_prefixed_name
         align_name = argument_prefixed_name
@@ -250,8 +264,6 @@ def operation(operation):
 
             skutil.marshall(put_arguments, environment, argument_type,
                             None, marshal_name, "giop_s")
-            #print "[[[ argispntr = " +str(arg_is_pntr) + "  is_pntr = " +\
-            #      str(is_pntr) + "]]]"
             size_calc_arguments.out(
                 skutil.sizeCalculation(environment, argument_type,
                                        None, "msgsize",
@@ -335,6 +347,141 @@ def operation(operation):
 
         
 
+# ------------------------------------
+# Attribute read-dispatching
 
-def attribute(operation):
-    pass
+def attribute_read(attribute, id):
+    assert isinstance(attribute, idlast.Attribute)
+
+    environment = self.__environment
+    stream = self.__stream
+    
+    attrType = attribute.attrType()
+    deref_attrType = tyutil.deref(attrType)
+    attrib_type_name = environment.principalID(attrType)
+    result_name = "result"
+    attr_dims = tyutil.typeDims(attrType)
+    is_array = attr_dims != []
+
+    is_pointer = 0
+
+    if tyutil.isSequence(deref_attrType):
+        is_pointer = 1
+
+    # similar code exists in skel/main.py, handling pd_result
+    # basic types don't have slices
+    if is_array:
+        if tyutil.ttsMap.has_key(deref_attrType.kind()):
+            result_name = "result"
+        else:
+            result_name = "((" + attrib_type_name + "_slice*)" + "result)"
+            
+        attrib_type_name = attrib_type_name + "_var"
+        
+    elif tyutil.isString(deref_attrType):
+        attrib_type_name = "CORBA::String_var"
+
+    elif tyutil.isVariableType(attrType):
+        if tyutil.isObjRef(deref_attrType):
+            attrib_type_name = environment.principalID(deref_attrType)
+        
+        attrib_type_name = attrib_type_name + "_var"
+        result_name = "(result.operator->())"
+        if tyutil.isStruct(deref_attrType) or \
+           tyutil.isUnion(deref_attrType):
+            is_pointer = 1
+
+    # ---
+
+    size_calc = skutil.sizeCalculation(environment, attrType,
+                                       None, "msgsize", result_name, 1, is_pointer)
+    marshal = util.StringStream()
+
+    if is_pointer:
+        result_name = "*" + result_name
+        
+    skutil.marshall(marshal, environment, attrType, None, result_name, "giop_s")
+    
+    stream.out("""\
+if( !strcmp(giop_s.operation(), \"_get_@attrib_name@\") ) {    
+  giop_s.RequestReceived();
+  @attrib_type@ result = this->@attrib_name@();
+  if( giop_s.response_expected() ) {
+    size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
+    @size_calculation@
+    giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
+    @marshall_result@
+  }
+  giop_s.ReplyCompleted();
+  return 1;
+}""",
+               marshall_result = str(marshal),
+               attrib_type = attrib_type_name,
+               attrib_name = id,
+               size_calculation = size_calc)
+
+
+# ------------------------------------
+# Attribute write-dispatching
+
+def attribute_write(attribute, id):
+    assert isinstance(attribute, idlast.Attribute)
+
+    environment = self.__environment
+    stream = self.__stream
+
+    attrType = attribute.attrType()
+    deref_attrType = tyutil.deref(attrType)
+    attrib_type_name = environment.principalID(attrType)
+    attr_dims = tyutil.typeDims(attrType)
+    is_array = attr_dims != []
+    
+    is_pointer = 0
+
+    if is_array:
+        if tyutil.ttsMap.has_key(deref_attrType.kind()):
+            pass
+        else:
+            attrib_type_name = attrib_type_name 
+        
+    elif tyutil.isString(deref_attrType):
+        attrib_type_name = "CORBA::String_var"
+
+    elif tyutil.isObjRef(deref_attrType):
+        attrib_type_name = environment.principalID(deref_attrType)
+        attrib_type_name = attrib_type_name + "_var"
+
+    elif tyutil.isSequence(deref_attrType):
+        # not a _var type
+        is_pointer = 1    
+
+
+    unmarshal = util.StringStream()
+    if not(is_array) and tyutil.isString(deref_attrType):
+        unmarshal.out("""\
+{
+  CORBA::String_member _0RL_str_tmp;
+  _0RL_str_tmp <<= giop_s;
+  @item_name@ = _0RL_str_tmp._ptr;
+  _0RL_str_tmp._ptr = 0;
+}""", item_name = "value")
+    else:
+        skutil.unmarshall(unmarshal, environment, attrType, None, "value",
+                          1, "giop_s")
+    
+    stream.out("""\
+if( !strcmp(giop_s.operation(), \"_set_@attrib_name@\") ) {
+  @attrib_type@ value;
+  @unmarshall_value@
+  giop_s.RequestReceived();
+  this->@attrib_name@(value);
+  if( giop_s.response_expected() ) {
+    size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
+    giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
+  }
+  giop_s.ReplyCompleted();
+  return 1;
+}""",
+               unmarshall_value = str(unmarshal),
+               attrib_type = attrib_type_name,
+               attrib_name = id)    

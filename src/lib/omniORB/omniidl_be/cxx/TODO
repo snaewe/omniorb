@@ -13,10 +13,13 @@
 * Sort out functions declared as extern even though they are complete with
   chunks of code. (typedefs to arrays)
 
-* Factor out generation of array-spanning loops into a reusable function
-
 * Sort out argument passing conventions (pointer, reference etc etc)
   examine tables in old BE and look for exceptions etc
 
 * Slight assymmetry in call desc unmarshalling code (positions where temp
   variables are declared seems to vary)
+
+* Module continuations
+
+* Unify marshalling/ unmarshalling code (it happens both in skutil and in 
+  proxy)
