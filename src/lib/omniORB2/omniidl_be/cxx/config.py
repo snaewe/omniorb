@@ -107,7 +107,7 @@ class WalkTreeForIncludes(idlvisitor.AstVisitor):
     def add(self, node):
         file = node.file()
         if not(file in config.includes):
-            config.includes = [file] + config.includes
+            config.includes.append(file)
 
     def visitAST(self, node):
         self.add(node)
