@@ -1,3 +1,48 @@
+Thu Dec 18 17:20:14 GMT 1997 sll
+================================
+
+- General cleanup to remove old non-standard C++ code spotted by egcs-1.0. 
+  The tree should now compiled with very few spurious warnings.
+- ported to alpha linux with egcs-1.0 (+thread-safe exception handling)
+
+include/omniORB2/seqtemplates.h
+include/omniORB2/CORBA.h
+include/omniORB2/omniLC.h
+
+src/lib/omniORB2/corbaString.cc
+src/lib/omniORB2/objectKey.cc
+src/lib/omniORB2/tcpSocketMTfactory.cc
+src/lib/omniORB2/initFile.cc
+src/lib/omniORB2/gatekeepers/tcpwrapper/percent_m.c
+src/lib/omnithread/posix.cc
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/driver/drv_preproc.cc
+src/tool/omniidl2/driver/drv_fork.cc
+src/tool/omniidl2/fe/fe_declarator.cc
+src/tool/omniidl2/ast/ast_string.cc
+src/tool/omniidl2/ast/ast_sequence.cc
+src/tool/omniidl2/ast/ast_recursive.cc
+src/tool/omniidl2/ast/ast_operation.cc
+src/tool/omniidl2/ast/ast_interface.cc
+src/tool/omniidl2/ast/ast_expression.cc
+src/tool/omniidl2/ast/ast_constant.cc
+src/tool/omniidl2/ast/ast_decl.cc
+src/tool/omniidl2/ast/ast_array.cc
+src/tool/omniidl2/util/utl_exceptlist.cc
+src/tool/omniidl2/util/utl_error.cc
+src/tool/omniidl2/util/utl_strlist.cc
+src/tool/omniidl2/util/utl_stack.cc
+src/tool/omniidl2/util/utl_scope.cc
+src/tool/omniidl2/util/utl_namelist.cc
+src/tool/omniidl2/util/utl_labellist.cc
+src/tool/omniidl2/util/utl_idlist.cc
+src/tool/omniidl2/util/utl_exprlist.cc
+src/tool/omniidl2/util/utl_decllist.cc
+src/tool/omniidl2/util/utl_string.cc
+src/appl/omniNames/NamingContext_i.cc
+
 Thu Dec 18 17:16:44 GMT 1997 bjh
 ================================
 
