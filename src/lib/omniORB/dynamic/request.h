@@ -83,7 +83,7 @@ public:
   }
 
   void marshalArgs(cdrStream&);
-  void unmarshalArgs(cdrStream&);
+  void unmarshalResults(cdrStream&);
 
 private:
   enum State {

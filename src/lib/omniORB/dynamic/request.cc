@@ -337,7 +337,7 @@ public:
   }
 
   void unmarshalReturnedValues(cdrStream& s) {
-    pd_impl.unmarshalArgs(s);
+    pd_impl.unmarshalResults(s);
   }
 private:
   RequestImpl& pd_impl;
@@ -512,8 +512,10 @@ RequestImpl::marshalArgs(cdrStream& s)
 
 
 void
-RequestImpl::unmarshalArgs(cdrStream& s)
+RequestImpl::unmarshalResults(cdrStream& s)
 {
+  pd_result->value()->NP_unmarshalDataOnly(s);
+
   CORBA::ULong num_args = pd_arguments->count();
 
   for( CORBA::ULong i = 0; i < num_args; i++){
