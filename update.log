@@ -1,3 +1,14 @@
+Tue Jan 12 11:12:52 GMT 1999 djr
+================================
+
+- Renamed UNIQUE_CORBA_INTERFAES to CORBA_UNIQUE_INTERFACES.
+  Replaced other references to CORBA_INTERFACES with CORBA_UNIQUE_INTERFACES.
+
+mk/beforedir.mk
+mk/unix.mk
+mk/win32.mk
+
+
 Mon Jan 11 16:17:00 GMT 1999 djr
 ================================
 
