@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.25  1998/08/26 18:28:44  sll
+  Complete the previous fix for the LifeCycle support.
+
   Revision 1.24  1998/08/25 16:33:23  sll
   Workaround in the generated stub for a MSVC++ bug.
   Bug fix for the LifeCycle support.
@@ -2146,10 +2149,10 @@ o2be_interface::produce_skel(std::fstream &s)
 	    // of a base class using the member function's fully/partially
 	    // scoped name. Have to use the alias for the base class in the
 	    // global scope to refer to the virtual member function instead.
-	    if (strcmp(intf_name,intf->home_uqname()) != 0) {
+	    if (strcmp(intf_name,intf->lcserver_uqname()) != 0) {
 	      if (strcmp(uqname(),intf->uqname()) != 0) {
 		intf_name = new char[strlen(intf->_scopename())+
-				    strlen(intf->home_uqname())+1];
+				    strlen(intf->lcserver_uqname())+1];
 		intf_name[0] = '\0';
 	      }
 	      else {
@@ -2160,17 +2163,17 @@ o2be_interface::produce_skel(std::fstream &s)
 		// base class.
 		intf_name = new char[strlen("((*)this)->") +
 				    strlen(intf->_scopename())*2+
-				    strlen(intf->home_uqname())*2+1];
+				    strlen(intf->lcserver_uqname())*2+1];
 		strcpy(intf_name,"((");
 		strcat(intf_name,intf->_scopename());
-		strcat(intf_name,intf->home_uqname());
+		strcat(intf_name,intf->lcserver_uqname());
 		strcat(intf_name,"*)this)->");
 	      }
 	      strcat(intf_name,intf->_scopename());
-	      strcat(intf_name,intf->home_uqname());
+	      strcat(intf_name,intf->lcserver_uqname());
 	    }
 	  }
-	  IND(s); s << intf_name << "::_set_home(home);\n";
+	  IND(s); s << intf_name << "::_set_home(home);\n\n";
 	}
     }
     DEC_INDENT_LEVEL();
