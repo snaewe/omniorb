@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.29  2000/01/18 13:05:57  djs
+# Nice new memberType function
+#
 # Revision 1.28  2000/01/17 16:59:31  djs
 # Better support for outputting {char, string} values in a C++ friendly way
 #
@@ -434,6 +437,35 @@ def guardName(scopedName):
     guard = reduce(lambda x,y: x + y, scope, "") + scopedName[-1]
     
     return guard
+
+# ------------------------------------------------------------------
+
+def memberType(environment, type, decl = None):
+    assert isinstance(type, idltype.Type)
+    type_dims = typeDims(type)
+    decl_dims = []
+    if decl != None:
+        assert isinstance(decl, idlast.Declarator)
+        decl_dims = decl.sizes()
+
+    is_array = type_dims != []
+    is_array_declarator = decl_dims != []
+
+    if is_array:
+        # for the type to have dimensions, it must be a typedef
+        return environment.principalID(type)
+
+    derefType = deref(type)
+    if isString(derefType):
+        return "CORBA::String_member"
+    if isObjRef(derefType):
+        return objRefTemplate(derefType, "Member", environment)
+    if isTypeCode(derefType):
+        return "CORBA::TypeCode_member"
+    if isSequence(type):
+        return sequenceTemplate(type, environment)
+
+    return environment.principalID(type)
 
 # ------------------------------------------------------------------
 
