@@ -47,7 +47,7 @@ static void usage(char* progname)
 {
   cerr << "usage: " << progname << " [-x] <IR Type ID> <hostname> <port> [object key]" << endl;
   cerr << "         flag:" << endl;
-  cerr << "               -x interpret object key as a hexidecimal value." << endl;
+  cerr << "               -x interpret object key as a hexadecimal value." << endl;
 }
 
 
@@ -255,15 +255,15 @@ CORBA::Char* genRef(char* IRTypeId, char* hostname, int port, char* objKey,
 	}
       else
 	{
-	  // Interpret key as hexidecimal
+	  // Interpret key as hexadecimal
 	  if ((objKey[0] != '0' || objKey[1] !='x'))
 	    {
-	      cerr << "A hexidecimal key should be prefixed by 0x" << endl;
+	      cerr << "A hexadecimal key should be prefixed by 0x" << endl;
 	      return 0;
 	    }
 	  else if ( (strlen(objKey)%2) != 0)
 	    {
-	      cerr << "Hexidecimal key is corrupted." << endl;
+	      cerr << "Hexadecimal key is corrupted." << endl;
 	      return 0;
 	    }
 	
@@ -284,7 +284,7 @@ CORBA::Char* genRef(char* IRTypeId, char* hostname, int port, char* objKey,
 		hi = ((curr - 87) << 4);
 	      else
 		{
-		  cerr << "Hexidecimal key is corrupted." << endl;
+		  cerr << "Hexadecimal key is corrupted." << endl;
 		  return 0;
 		}
 		 
@@ -296,7 +296,7 @@ CORBA::Char* genRef(char* IRTypeId, char* hostname, int port, char* objKey,
 		  lo = curr - 87;
 	      else
 		{
-		  cerr << "Hexidecimal key is corrupted." << endl;
+		  cerr << "Hexadecimal key is corrupted." << endl;
 		  return 0;
 		}
 
