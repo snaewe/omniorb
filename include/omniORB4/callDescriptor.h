@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.10  2001/08/17 17:01:16  sll
+ Removed assert existent flag in the call descriptor.
+
  Revision 1.2.2.9  2001/08/17 13:42:48  dpg1
  callDescriptor::userException() no longer has to throw an exception.
 
@@ -96,7 +99,6 @@ public:
       pd_is_oneway(oneway),
       pd_op(op), pd_oplen(op_len),
       pd_ctxt(0),
-      pd_assert_object_existent(omniORB::verifyObjectExistsAndType),
       pd_user_excns(user_excns),
       pd_n_user_excns(n_user_excns),
       pd_is_upcall(is_upcall),
@@ -181,9 +183,6 @@ public:
   inline void set_context_info(const ContextInfo* ci) { pd_ctxt = ci; }
   inline const ContextInfo* context_info() { return pd_ctxt; }
 
-  inline void skipAssertObjectExistence() { pd_assert_object_existent = 0; }
-  inline _CORBA_Boolean doAssertObjectExistence() { return pd_assert_object_existent; }
-
   /////////////////////
   // Current support //
   /////////////////////
@@ -201,7 +200,6 @@ private:
   const char*                  pd_op;
   size_t                       pd_oplen;
   const ContextInfo*           pd_ctxt;
-  _CORBA_Boolean               pd_assert_object_existent;
   const char*const*            pd_user_excns;
   int                          pd_n_user_excns;
   _CORBA_Boolean               pd_is_upcall;
