@@ -2,7 +2,10 @@ omniORB on OpenVMS platforms
 ============================
 
 This file contains information on building omniORB on OpenVMS (Alpha
-and VAX) platforms.
+and VAX) platforms. The last port of omniORB to OpenVMS was for
+omniORB 3.0.x. Some modifications to the 4.0.x code base will probably
+be required to make it work. If you successfully compile omniORB 4.0.x
+on OpenVMS, please report your success to the omniORB mailing list.
 
 Changes in 3.0.0 prerelease
 ---------------------------
