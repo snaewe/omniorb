@@ -28,6 +28,8 @@
 
 #include <thread.h>
 
+extern "C" void* omni_thread_wrapper(void* ptr);
+
 #define OMNI_MUTEX_IMPLEMENTATION			\
     mutex_t sol_mutex;
 
@@ -39,7 +41,7 @@
 
 #define OMNI_THREAD_IMPLEMENTATION			\
     thread_t sol_thread;				\
-    static void* wrapper(void*);			\
-    static int sol_priority(priority_t);
+    static int sol_priority(priority_t);		\
+    friend void* omni_thread_wrapper(void* ptr);
 
 #endif

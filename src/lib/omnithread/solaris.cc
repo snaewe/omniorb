@@ -27,9 +27,12 @@
 #include <iostream.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "omnithread.h"
+#include <omnithread.h>
 
 #define DB(x) // x 
+
+#define THROW_ERRORS(x) { int rc = (x); \
+			  if (rc != 0) throw omni_thread_fatal(rc); }
 
 
 
@@ -42,31 +45,24 @@
 
 omni_mutex::omni_mutex(void)
 {
-    int rc = mutex_init(&sol_mutex, USYNC_THREAD, 0);
-
-    if (rc != 0)
-	cerr << "omni_mutex::omni_mutex: mutex_init error " << rc << endl;
+    THROW_ERRORS(mutex_init(&sol_mutex, USYNC_THREAD, 0));
 }
-
 
 omni_mutex::~omni_mutex(void)
 {
-    int rc = mutex_destroy(&sol_mutex);
-
-    if (rc != 0)
-	cerr << "omni_mutex::~omni_mutex: mutex_destroy error " << rc << endl;
+    THROW_ERRORS(mutex_destroy(&sol_mutex));
 }
 
-
-int omni_mutex::lock(void)
+void
+omni_mutex::lock(void)
 {
-    return mutex_lock(&sol_mutex);
+    THROW_ERRORS(mutex_lock(&sol_mutex));
 }
 
-
-int omni_mutex::unlock(void)
+void
+omni_mutex::unlock(void)
 {
-    return mutex_unlock(&sol_mutex);
+    THROW_ERRORS(mutex_unlock(&sol_mutex));
 }
 
 
@@ -80,52 +76,46 @@ int omni_mutex::unlock(void)
 
 omni_condition::omni_condition(omni_mutex* m) : mutex(m)
 {
-    int rc = cond_init(&sol_cond, USYNC_THREAD, 0);
-
-    if (rc != 0)
-	cerr << "omni_condition::omni_condition: cond_init error "
-	     << rc << endl;
+    THROW_ERRORS(cond_init(&sol_cond, USYNC_THREAD, 0));
 }
-
 
 omni_condition::~omni_condition(void)
 {
-    int rc = cond_destroy(&sol_cond);
-
-    if (rc != 0)
-	cerr << "omni_condition::~omni_condition: cond_destroy error "
-	     << rc << endl;
+    THROW_ERRORS(cond_destroy(&sol_cond));
 }
 
-
-int omni_condition::wait(void)
+void
+omni_condition::wait(void)
 {
-    return cond_wait(&sol_cond, &mutex->sol_mutex);
+    THROW_ERRORS(cond_wait(&sol_cond, &mutex->sol_mutex));
 }
 
-
-int omni_condition::timed_wait(unsigned long secs, unsigned long nanosecs)
+int
+omni_condition::timedwait(unsigned long secs, unsigned long nanosecs)
 {
     timespec rqts = { secs, nanosecs };
 
     int rc = cond_timedwait(&sol_cond, &mutex->sol_mutex, &rqts);
 
+    if (rc == 0)
+	return 1;
+
     if (rc == ETIME)
-	rc = ETIMEDOUT;
+	return 0;
 
-    return rc;
+    throw omni_thread_fatal(rc);
 }
 
-
-int omni_condition::signal(void)
+void
+omni_condition::signal(void)
 {
-    return cond_signal(&sol_cond);
+    THROW_ERRORS(cond_signal(&sol_cond));
 }
 
-
-int omni_condition::broadcast(void)
+void
+omni_condition::broadcast(void)
 {
-    return cond_broadcast(&sol_cond);
+    THROW_ERRORS(cond_broadcast(&sol_cond));
 }
 
 
@@ -139,33 +129,24 @@ int omni_condition::broadcast(void)
 
 omni_semaphore::omni_semaphore(unsigned int initial)
 {
-    int rc = sema_init(&sol_sem, initial, USYNC_THREAD, NULL);
-
-    if (rc != 0)
-	cerr << "omni_semaphore::omni_semaphore: sema_init error "
-	     << rc << endl;
+    THROW_ERRORS(sema_init(&sol_sem, initial, USYNC_THREAD, NULL));
 }
-
 
 omni_semaphore::~omni_semaphore(void)
 {
-    int rc = sema_destroy(&sol_sem);
-
-    if (rc != 0)
-	cerr << "omni_semaphore::~omni_semaphore: sema_destroy error "
-	     << rc << endl;
+    THROW_ERRORS(sema_destroy(&sol_sem));
 }
 
-
-int omni_semaphore::wait(void)
+void
+omni_semaphore::wait(void)
 {
-    return sema_wait(&sol_sem);
+    THROW_ERRORS(sema_wait(&sol_sem));
 }
 
-
-int omni_semaphore::post(void)
+void
+omni_semaphore::post(void)
 {
-    return sema_post(&sol_sem);
+    THROW_ERRORS(sema_post(&sol_sem));
 }
 
 
@@ -200,12 +181,7 @@ omni_thread::init_t::init_t(void)
 
     DB(cerr << "omni_thread::init: solaris implementation initialising\n");
 
-    int rc = thr_keycreate(&self_key, NULL);
-
-    if (rc != 0) {
-	cerr << "omni_thread::init: thr_keycreate error " << rc << endl;
-	::exit(1);
-    }
+    THROW_ERRORS(thr_keycreate(&self_key, NULL));
 
     next_id_mutex = new omni_mutex;
 
@@ -215,11 +191,6 @@ omni_thread::init_t::init_t(void)
 
     omni_thread* t = new omni_thread;
 
-    if (t->_state != STATE_NEW) {
-	cerr << "omni_thread::init: problem creating initial thread object\n";
-	::exit(1);
-    }
-
     t->_state = STATE_RUNNING;
 
     t->sol_thread = thr_self();
@@ -227,74 +198,51 @@ omni_thread::init_t::init_t(void)
     DB(cerr << "initial thread " << t->id() << " sol_thread " << t->sol_thread
        << endl);
 
-    rc = thr_setspecific(self_key, (void*)t);
+    THROW_ERRORS(thr_setspecific(self_key, (void*)t));
 
-    if (rc != 0) {
-	cerr << "omni_thread::init: thr_setspecific error " << rc << endl;
-	::exit(1);
-    }
-
-    rc = thr_setprio(t->sol_thread, sol_priority(PRIORITY_NORMAL));
-
-    if (rc != 0) {
-	cerr << "omni_thread::init: thr_setprio error " << rc << endl;
-	::exit(1);
-    }
+    THROW_ERRORS(thr_setprio(t->sol_thread, sol_priority(PRIORITY_NORMAL)));
 }
+
 
 //
 // Wrapper for thread creation.
 //
 
-extern "C" {
+extern "C" void*
+omni_thread_wrapper(void* ptr)
+{
+    omni_thread* me = (omni_thread*)ptr;
+
+    DB(cerr << "omni_thread::wrapper: thread " << me->id()
+       << " started\n");
+
+    THROW_ERRORS(thr_setspecific(self_key, me));
 
     //
-    // I'm not sure if you should be able to declare a static member function
-    // as extern "C" like this but it seems to work.  If not, all you need
-    // is a simple non-member function like this:
-    //
-    // static void* wrapper2(void* ptr) { return omni_thread::wrapper(ptr) }
+    // Now invoke the thread function with the given argument.
     //
 
-    void* omni_thread::wrapper(void* ptr)
-    {
-	omni_thread* me = (omni_thread*)ptr;
-
-	DB(cerr << "omni_thread::wrapper: thread " << me->id()
-	   << " started\n");
-
-	int rc = thr_setspecific(self_key, me);
-
-	if (rc != 0)
-	    cerr << "omni_thread::wrapper: thr_setspecific error "
-		 << rc << endl;
-
-	//
-	// Now invoke the thread function with the given argument.
-	//
-
-	if (me->fn_void != NULL) {
-	    (*me->fn_void)(me->thread_arg);
-	    omni_thread::exit();
-	}
-
-	if (me->fn_ret != NULL) {
-	    void* return_value = (*me->fn_ret)(me->thread_arg);
-	    omni_thread::exit(return_value);
-	}
-
-	if (me->detached) {
-	    me->run(me->thread_arg);
-	    omni_thread::exit();
-	} else {
-	    void* return_value = me->run_undetached(me->thread_arg);
-	    omni_thread::exit(return_value);
-	}
-
-	// should never get here.
-
-	return NULL;
+    if (me->fn_void != NULL) {
+	(*me->fn_void)(me->thread_arg);
+	omni_thread::exit();
     }
+
+    if (me->fn_ret != NULL) {
+	void* return_value = (*me->fn_ret)(me->thread_arg);
+	omni_thread::exit(return_value);
+    }
+
+    if (me->detached) {
+	me->run(me->thread_arg);
+	omni_thread::exit();
+    } else {
+	void* return_value = me->run_undetached(me->thread_arg);
+	omni_thread::exit(return_value);
+    }
+
+    // should never get here.
+
+    return NULL;
 }
 
 
@@ -332,7 +280,8 @@ omni_thread::omni_thread(void* arg, priority_t pri)
 
 // common part of all constructors.
 
-void omni_thread::common_constructor(void* arg, priority_t pri, int det)
+void
+omni_thread::common_constructor(void* arg, priority_t pri, int det)
 {
     _state = STATE_NEW;
     _priority = pri;
@@ -362,47 +311,40 @@ omni_thread::~omni_thread(void)
 // Start the thread
 //
 
-int omni_thread::start(void)
+void
+omni_thread::start(void)
 {
     long flags = 0;
 
     if (detached)
 	flags |= THR_DETACHED;
 
-    mutex.lock();
+    omni_mutex_lock l(mutex);
 
-    if (_state != STATE_NEW) {
-	mutex.unlock();
-	DB(cerr << "omni_thread::start: thread not in \"new\" state\n");
-	return EINVAL;
-    }
+    if (_state != STATE_NEW)
+	throw omni_thread_invalid();
 
-    int rc = thr_create(0, 0, wrapper, (void*)this, flags, &sol_thread);
-
-    if (rc != 0) {
-	mutex.unlock();
-	return rc;
-    }
+    THROW_ERRORS(thr_create(0, 0, omni_thread_wrapper, (void*)this, flags,
+			    &sol_thread));
 
     _state = STATE_RUNNING;
 
-    rc = thr_setprio(sol_thread, sol_priority(_priority));
-
-    mutex.unlock();
-    return rc;
+    THROW_ERRORS(thr_setprio(sol_thread, sol_priority(_priority)));
 }
+
 
 //
 // Start a thread which will run the member function run_undetached().
 //
 
-int omni_thread::start_undetached(void)
+void
+omni_thread::start_undetached(void)
 {
     if ((fn_void != NULL) || (fn_ret != NULL))
-	return EINVAL;
+	throw omni_thread_invalid();
 
     detached = 0;
-    return start();
+    start();
 }
 
 
@@ -410,40 +352,31 @@ int omni_thread::start_undetached(void)
 // join - simply check error conditions & call thr_join.
 //
 
-int omni_thread::join(void** status)
+void
+omni_thread::join(void** status)
 {
     mutex.lock();
 
     if ((_state != STATE_RUNNING) && (_state != STATE_TERMINATED)) {
 	mutex.unlock();
-	DB(cerr << "omni_thread::join: thread not in running or "
-	   << "terminated state\n");
-	return EINVAL;
+	throw omni_thread_invalid();
     }
 
     mutex.unlock();
 
-    if (this == self()) {
-	DB(cerr << "omni_thread::join: can't join with self\n");
-	return EINVAL;
-    }
+    if (this == self())
+	throw omni_thread_invalid();
 
-    if (detached) {
-	DB(cerr << "omni_thread::join: can't join with detached thread\n");
-	return EINVAL;
-    }
+    if (detached)
+	throw omni_thread_invalid();
 
     DB(cerr << "omni_thread::join: doing thr_join\n");
 
-    int rc = thr_join(sol_thread, (thread_t *)NULL, status);
-
-    if (rc != 0) return rc;
+    THROW_ERRORS(thr_join(sol_thread, (thread_t *)NULL, status));
 
     DB(cerr << "omni_thread::join: thr_join succeeded\n");
 
     delete this;
-
-    return 0;
 }
 
 
@@ -451,23 +384,17 @@ int omni_thread::join(void** status)
 // Change this thread's priority.
 //
 
-int omni_thread::set_priority(priority_t pri)
+void
+omni_thread::set_priority(priority_t pri)
 {
-    mutex.lock();
+    omni_mutex_lock l(mutex);
 
-    if (_state != STATE_RUNNING) {
-	mutex.unlock();
-	DB(cerr << "omni_thread::set_priority: thread not in running state\n");
-	return EINVAL;
-    }
+    if (_state != STATE_RUNNING)
+	throw omni_thread_invalid();
 
     _priority = pri;
 
-    int rc = thr_setprio(sol_thread, sol_priority(pri));
-
-    mutex.unlock();
-
-    return rc;
+    THROW_ERRORS(thr_setprio(sol_thread, sol_priority(pri)));
 }
 
 
@@ -478,53 +405,24 @@ int omni_thread::set_priority(priority_t pri)
 
 // detached version
 
-omni_thread* omni_thread::create(void (*fn)(void*), void* arg, priority_t pri)
+omni_thread*
+omni_thread::create(void (*fn)(void*), void* arg, priority_t pri)
 {
     omni_thread* t = new omni_thread(fn, arg, pri);
 
-    int rc = t->start();
-
-    if (rc != 0) {
-	cerr << "omni_thread::create: start error " << rc << endl;
-	delete t;
-	return (omni_thread*)NULL;
-    }
+    t->start();
 
     return t;
 }
 
 // undetached version
 
-omni_thread* omni_thread::create(void* (*fn)(void*), void* arg, priority_t pri)
+omni_thread*
+omni_thread::create(void* (*fn)(void*), void* arg, priority_t pri)
 {
     omni_thread* t = new omni_thread(fn, arg, pri);
 
-    int rc = t->start();
-
-    if (rc != 0) {
-	cerr << "omni_thread::create: start error " << rc << endl;
-	delete t;
-	return (omni_thread*)NULL;
-    }
-
-    return t;
-}
-
-// backwards-compatible version
-
-omni_thread* omni_thread::create(void* (*fn)(void*), int det, void* arg)
-{
-    omni_thread* t = new omni_thread(fn, arg, PRIORITY_NORMAL);
-
-    t->detached = det;
-
-    int rc = t->start();
-
-    if (rc != 0) {
-	cerr << "omni_thread::create: start error " << rc << endl;
-	delete t;
-	return (omni_thread*)NULL;
-    }
+    t->start();
 
     return t;
 }
@@ -539,14 +437,12 @@ omni_thread* omni_thread::create(void* (*fn)(void*), int det, void* arg)
 // still incorrectly refer to the thread object, but that's their problem.
 //
 
-void omni_thread::exit(void* return_value)
+void
+omni_thread::exit(void* return_value)
 {
     omni_thread* me = self();
 
     me->mutex.lock();
-
-    if (me->_state != STATE_RUNNING)
-	cerr << "omni_thread::exit: thread not in \"running\" state\n";
 
     me->_state = STATE_TERMINATED;
 
@@ -561,35 +457,37 @@ void omni_thread::exit(void* return_value)
     thr_exit(return_value);
 }
 
-omni_thread* omni_thread::self(void)
+
+omni_thread*
+omni_thread::self(void)
 {
     omni_thread* me;
 
-    int rc = thr_getspecific(self_key, (void**)&me);
-
-    if (rc != 0) {
-	cerr << "omni_thread::self: thr_getspecific error " << rc << endl;
-	return (omni_thread*)NULL;
-    }
+    THROW_ERRORS(thr_getspecific(self_key, (void**)&me));
 
     return me;
 }
 
-void omni_thread::yield(void)
+
+void
+omni_thread::yield(void)
 {
     thr_yield();
 }
 
-int omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
+
+void
+omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 {
     timespec rqts = { secs, nanosecs };
     if (nanosleep(&rqts, (timespec*)NULL) != 0)
-	return errno;
-    return 0;
+	throw omni_thread_fatal(errno);
 }
 
-int omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
-			  unsigned long rel_sec, unsigned long rel_nsec)
+
+void
+omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
+		      unsigned long rel_sec, unsigned long rel_nsec)
 {
     timespec abs;
     clock_gettime(CLOCK_REALTIME, &abs);
@@ -598,11 +496,11 @@ int omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
     abs.tv_nsec = abs.tv_nsec % 1000000000;
     *abs_sec = abs.tv_sec;
     *abs_nsec = abs.tv_nsec;
-    return 0;
 }
 
 
-int omni_thread::sol_priority(priority_t pri)
+int
+omni_thread::sol_priority(priority_t pri)
 {
     switch (pri) {
 
@@ -614,8 +512,7 @@ int omni_thread::sol_priority(priority_t pri)
 
     case PRIORITY_HIGH:
 	return 2;
-
-    default:
-	return -1;
     }
+
+    throw omni_thread_invalid();
 }

@@ -10,8 +10,7 @@
 
 #include <iostream.h>
 #include <stdlib.h>
-#include <errno.h>
-#include "omnithread.h"
+#include <omnithread.h>
 
 static void producer(void*);
 static void consumer(void*);
@@ -72,7 +71,7 @@ static void consumer(void* arg)
 	while (empty_flag) {
 	    cerr << name << ": waiting for message\n";
 
-	    if (full.timed_wait(s,n) == ETIMEDOUT) {
+	    if (!full.timedwait(s,n)) {
 		cerr << name << ": timed out, trying again\n";
 		omni_thread::get_time(&s,&n,0,500000000);
 	    } else if (empty_flag) {

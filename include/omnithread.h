@@ -27,9 +27,6 @@
 // This file declares classes for threads and synchronisation objects
 // (mutexes, condition variables and counting semaphores).
 //
-// Unless otherwise stated below, functions which return int return 0 if
-// successful, non-zero error number if not.
-//
 // Wherever a seemingly arbitrary choice has had to be made as to the interface
 // provided, the intention here has been to be as POSIX-like as possible.  This
 // is why there is no semaphore timed wait, for example.
@@ -69,13 +66,13 @@ class omni_thread;
 
 
 #if defined(__arm__) && defined(__atmos__)
-#include "omnithread/posix.h"
+#include <omnithread/posix.h>
 
 #elif defined(__alpha__) && defined(__osf1__)
-#include "omnithread/posix.h"
+#include <omnithread/posix.h>
 
 #elif defined(__NT__)
-#include "omnithread/nt.h"
+#include <omnithread/nt.h>
 
 #ifdef _MSC_VER
 
@@ -107,13 +104,13 @@ class omni_thread;
  
 #elif defined(__sunos__) && (__OSVERSION__ == 5)
 #ifdef UsePthread
-#include "omnithread/posix.h"
+#include <omnithread/posix.h>
 #else
-#include "omnithread/solaris.h"
+#include <omnithread/solaris.h>
 #endif
 
 #elif defined(__linux__)
-#include "omnithread/posix.h"
+#include <omnithread/posix.h>
 
 #else
 #error "No implementation header file"
@@ -131,6 +128,25 @@ class omni_thread;
 #endif
 
 
+//
+// This exception is thrown in the event of a fatal error.
+//
+
+class _OMNITHREAD_NTDLL_ omni_thread_fatal {
+public:
+    int error;
+    omni_thread_fatal(int e = 0) : error(e) {}
+};
+
+
+//
+// This exception is thrown when an operation is invoked with invalid
+// arguments.
+//
+
+class _OMNITHREAD_NTDLL_ omni_thread_invalid {};
+
+
 ///////////////////////////////////////////////////////////////////////////
 //
 // Mutex
@@ -143,20 +159,43 @@ public:
     omni_mutex(void);
     ~omni_mutex(void);
 
-    int lock(void);
-    int unlock(void);
-    int acquire(void) { return lock(); }
-    int release(void) { return unlock(); }
+    void lock(void);
+    void unlock(void);
+    void acquire(void) { lock(); }
+    void release(void) { unlock(); }
 	// the names lock and unlock are preferred over acquire and release
 	// since we are attempting to be as POSIX-like as possible.
-
-    static omni_mutex* create(void) { return new omni_mutex; }
-	// for backwards compatibility
 
     friend class omni_condition;
 
 OMNI_THREAD_EXPOSE:
     OMNI_MUTEX_IMPLEMENTATION
+};
+
+//
+// As an alternative to:
+// {
+//   mutex.lock();
+//   .....
+//   mutex.unlock();
+// }
+//
+// you can use a single instance of the omni_mutex_lock class:
+//
+// {
+//   omni_mutex_lock l(mutex);
+//   ....
+// }
+//
+// This has the advantage that mutex.unlock() will be called automatically
+// when an exception is thrown.
+//
+
+class _OMNITHREAD_NTDLL_ omni_mutex_lock {
+    omni_mutex& mutex;
+public:
+    omni_mutex_lock(omni_mutex& m) : mutex(m) { mutex.lock(); }
+    ~omni_mutex_lock(void) { mutex.unlock(); }
 };
 
 
@@ -178,29 +217,27 @@ public:
 
     ~omni_condition(void);
 
-    int wait(void);
+    void wait(void);
 	// wait for the condition variable to be signalled.  The mutex is
 	// implicitly released before waiting and locked again after waking up.
 	// If wait() is called by multiple threads, a signal may wake up more
 	// than one thread.  See POSIX threads documentation for details.
 
-    int timed_wait(unsigned long secs, unsigned long nanosecs = 0);
-	// timed_wait is given an absolute time to wait until.  To wait for a
+    int timedwait(unsigned long secs, unsigned long nanosecs = 0);
+	// timedwait() is given an absolute time to wait until.  To wait for a
 	// relative time from now, use omni_thread::get_time. See POSIX threads
 	// documentation for why absolute times are better than relative.
-	// Returns 0 if successfully signalled, ETIMEDOUT if time expired.
+	// Returns 1 (true) if successfully signalled, 0 (false) if time
+	// expired.
 
-    int signal(void);
+    void signal(void);
 	// if one or more threads have called wait(), signal wakes up at least
 	// one of them, possibly more.  See POSIX threads documentation for
 	// details.
 
-    int broadcast(void);
+    void broadcast(void);
 	// broadcast is like signal but wakes all threads which have called
 	// wait().
-
-    static omni_condition* create(omni_mutex* m) { return new omni_condition(m); }
-	// only for backwards compatibility
 
 OMNI_THREAD_EXPOSE:
     OMNI_CONDITION_IMPLEMENTATION
@@ -219,20 +256,31 @@ public:
     omni_semaphore(unsigned int initial = 1);
     ~omni_semaphore(void);
 
-    int wait(void);
+    void wait(void);
 	// if semaphore value is > 0 then decrement it and carry on. If it's
 	// already 0 then block.
 
-    int try_wait(void);
-	// if semaphore value is > 0 then decrement it and return 0. If it's
-	// already 0 then return EAGAIN.
+    int trywait(void);
+	// if semaphore value is > 0 then decrement it and return 1 (true).
+	// If it's already 0 then return 0 (false).
 
-    int post(void);
+    void post(void);
 	// if any threads are blocked in wait(), wake one of them up. Otherwise
 	// increment the value of the semaphore.
 
 OMNI_THREAD_EXPOSE:
     OMNI_SEMAPHORE_IMPLEMENTATION
+};
+
+//
+// A helper class for semaphores, similar to omni_mutex_lock above.
+//
+
+class _OMNITHREAD_NTDLL_ omni_semaphore_lock {
+    omni_semaphore& sem;
+public:
+    omni_semaphore_lock(omni_semaphore& s) : sem(s) { sem.wait(); }
+    ~omni_semaphore_lock(void) { sem.post(); }
 };
 
 
@@ -253,8 +301,8 @@ public:
     };
 
     enum state_t {
-	STATE_INVALID,		// thread object was not created properly.
-	STATE_NEW,		// object exists but thread hasn't started.
+	STATE_NEW,		// thread object exists but thread hasn't
+				// started yet.
 	STATE_RUNNING,		// thread is running.
 	STATE_TERMINATED	// thread has terminated but storage has not
 				// been reclaimed (i.e. waiting to be joined).
@@ -277,7 +325,7 @@ public:
 	// reclaimed automatically on termination. Only an undetached thread
 	// can be joined.
 
-    int start(void);
+    void start(void);
 	// start() causes a thread created with one of the constructors to
 	// start executing the appropriate function.
 
@@ -288,7 +336,7 @@ protected:
 	// execute the run() or run_undetached() member functions depending on
 	// whether start() or start_undetached() is called respectively.
 
-    int start_undetached(void);
+    void start_undetached(void);
 	// can be used with the above constructor in a derived class to cause
 	// the thread to be undetached.  In this case the thread executes the
 	// run_undetached member function.
@@ -303,13 +351,13 @@ protected:
 
 public:
 
-    int join(void**);
+    void join(void**);
 	// join causes the calling thread to wait for another's completion,
 	// putting the return value in the variable of type void* whose address
 	// is given (unless passed a null pointer). Only undetached threads
 	// may be joined. Storage for the thread will be reclaimed.
 
-    int set_priority(priority_t);
+    void set_priority(priority_t);
 	// set the priority of the thread.
 
     static omni_thread* create(void (*fn)(void*), void* arg = NULL,
@@ -318,12 +366,8 @@ public:
 			       priority_t pri = PRIORITY_NORMAL);
 	// create spawns a new thread executing the given function with the
 	// given argument at the given priority. Returns a pointer to the
-	// thread object on success, null pointer on failure. It simply
-	// constructs a new thread object then calls start.
-
-    static omni_thread* create(void* (*fn)(void*), int detached,
-			       void* arg = NULL);
-	// This form of create is for backwards compatibility only.
+	// thread object. It simply constructs a new thread object then calls
+	// start.
 
     static void exit(void* return_value = NULL);
 	// causes the calling thread to terminate.
@@ -334,11 +378,11 @@ public:
     static void yield(void);
 	// allows another thread to run.
 
-    static int sleep(unsigned long secs, unsigned long nanosecs = 0);
+    static void sleep(unsigned long secs, unsigned long nanosecs = 0);
 	// sleeps for the given time.
 
-    static int get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
-			unsigned long rel_sec = 0, unsigned long rel_nsec = 0);
+    static void get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
+			 unsigned long rel_sec = 0, unsigned long rel_nsec=0);
 	// calculates an absolute time in seconds and nanoseconds, suitable for
 	// use in timed_waits on condition variables, which is the current time
 	// plus the given relative offset.
@@ -376,20 +420,16 @@ public:
 
 	// return this thread's priority.
 
-	mutex.lock();
-	priority_t pri = _priority;
-	mutex.unlock();
-	return pri;
+	omni_mutex_lock l(mutex);
+	return _priority;
     }
 
     state_t state(void) {
 
 	// return thread state (invalid, new, running or terminated).
 
-	mutex.lock();
-	state_t s = _state;
-	mutex.unlock();
-	return s;
+	omni_mutex_lock l(mutex);
+	return _state;
     }
 
     int id(void) { return _id; }

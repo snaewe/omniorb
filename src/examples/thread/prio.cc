@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream.h>
-#include "omnithread.h"
+#include <omnithread.h>
 
 #if defined(__arm__) && defined(__atmos__)
 #define flush ""

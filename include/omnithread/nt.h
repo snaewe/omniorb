@@ -29,6 +29,8 @@
 
 #include <windows.h>
 
+extern "C" DWORD omni_thread_wrapper(LPVOID ptr);
+
 #define OMNI_MUTEX_IMPLEMENTATION			\
     CRITICAL_SECTION crit;
 
@@ -48,10 +50,8 @@
     omni_thread* cond_next;				\
     omni_thread* cond_prev;				\
     BOOL cond_waiting;					\
-    static DWORD wrapper(LPVOID);			\
     static int nt_priority(priority_t);			\
-    friend class omni_condition;
-
-#define ETIMEDOUT 0x20000000
+    friend class omni_condition;			\
+    friend DWORD omni_thread_wrapper(LPVOID ptr);
 
 #endif

@@ -36,6 +36,8 @@
 
 #include <pthread.h>
 
+extern "C" void* omni_thread_wrapper(void* ptr);
+
 #define OMNI_MUTEX_IMPLEMENTATION			\
     pthread_mutex_t posix_mutex;
 
@@ -47,17 +49,9 @@
     omni_condition c;					\
     int value;
 
-
-//
-// The inclusion of cancel() here is a dirty hack to keep omniORB happy.
-// It should disappear in the near future.
-//
-
 #define OMNI_THREAD_IMPLEMENTATION			\
     pthread_t posix_thread;				\
-    static void* wrapper(void*);			\
     static int posix_priority(priority_t);		\
-public:							\
-    int cancel(void);
+    friend void* omni_thread_wrapper(void* ptr);
 
 #endif

@@ -9,7 +9,7 @@
 //
 
 #include <iostream.h>
-#include "omnithread.h"
+#include <omnithread.h>
 
 class thread_with_data : public omni_thread {
     int my_thread_id_plus_two;
