@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.13  2001/09/20 09:27:44  dpg1
+ Remove assertion failure on exit if not all POAs are deleted.
+
  Revision 1.2.2.12  2001/08/21 11:02:16  sll
  orbOptions handlers are now told where an option comes from. This
  is necessary to process DefaultInitRef and InitRef correctly.
@@ -141,7 +144,10 @@ omniObjAdapter::Options omniObjAdapter::options;
 
 
 //////////////////////////////////////////////////////////////////////
-omniObjAdapter::~omniObjAdapter() {}
+omniObjAdapter::~omniObjAdapter()
+{
+  OMNIORB_ASSERT(pd_signal == 0);
+}
 
 
 //////////////////////////////////////////////////////////////////////
@@ -372,7 +378,7 @@ omniObjAdapter::waitForActiveRequestsToComplete(int locked)
   OMNIORB_ASSERT(pd_nReqActive >= 0);
 
   pd_signalOnZeroInvocations++;
-  while( pd_nReqActive )  pd_signal.wait();
+  while( pd_nReqActive )  pd_signal->wait();
   pd_signalOnZeroInvocations--;
 
   if( !locked )  omni::internalLock->unlock();
@@ -390,7 +396,7 @@ omniObjAdapter::waitForAllRequestsToComplete(int locked)
   OMNIORB_ASSERT(pd_nReqInThis >= 0);
 
   pd_signalOnZeroInvocations++;
-  while( pd_nReqInThis )  pd_signal.wait();
+  while( pd_nReqInThis )  pd_signal->wait();
   pd_signalOnZeroInvocations--;
 
   if( !locked )  omni::internalLock->unlock();
@@ -535,22 +541,26 @@ omniObjAdapter::listMyEndpoints()
 }
 
 //////////////////////////////////////////////////////////////////////
-omniObjAdapter::omniObjAdapter()
+omniObjAdapter::omniObjAdapter(int nil)
   : pd_nReqInThis(0),
     pd_nReqActive(0),
     pd_signalOnZeroInvocations(0),
-    pd_signal(omni::internalLock ? omni::internalLock : &omni::nilRefLock()),
+    pd_signal(0),
     pd_nDetachedObjects(0),
     pd_signalOnZeroDetachedObjects(0),
     pd_isActive(0)
 {
-  // NB. We always initialise pd_signal with omni::internalLock.
-  // The case that it is initialised with &oa_lock only happends
-  // for 'nil' object adapters, which may be contructed before
-  // the ORB is initialised.  Thus omni::internalLock is not
-  // initialised, and we have to use something else...
+  if (!nil) pd_signal = new omni_tracedcondition(omni::internalLock);
 }
 
+//////////////////////////////////////////////////////////////////////
+void
+omniObjAdapter::adapterDestroyed()
+{
+  OMNIORB_ASSERT(pd_signal);
+  delete pd_signal;
+  pd_signal = 0;
+}
 
 //////////////////////////////////////////////////////////////////////
 omniObjAdapter::

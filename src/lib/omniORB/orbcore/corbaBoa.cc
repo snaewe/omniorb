@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16.2.12  2001/09/20 09:27:43  dpg1
+  Remove assertion failure on exit if not all POAs are deleted.
+
   Revision 1.16.2.11  2001/09/19 17:26:47  dpg1
   Full clean-up after orb->destroy().
 
@@ -261,6 +264,7 @@ omniOrbBOA::~omniOrbBOA()
 
 omniOrbBOA::omniOrbBOA(int nil)
   : OMNIORB_BASE_CTOR(CORBA::)BOA(nil),
+    omniObjAdapter(nil),
     pd_state(IDLE),
     pd_refCount(1),
     pd_activeObjList(0),
@@ -489,6 +493,7 @@ omniOrbBOA::destroy()
   // their etherealisations.
   wait_for_detached_objects();
 
+  adapterDestroyed();
   CORBA::release(boa);
 }
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.21  2001/09/20 09:27:44  dpg1
+  Remove assertion failure on exit if not all POAs are deleted.
+
   Revision 1.2.2.20  2001/09/19 17:26:51  dpg1
   Full clean-up after orb->destroy().
 
@@ -1830,6 +1833,7 @@ omniOrbPOA::omniOrbPOA(const char* name,
 
 omniOrbPOA::omniOrbPOA()  // nil constructor
   : OMNIORB_BASE_CTOR(PortableServer::)POA(1),
+    omniObjAdapter(1),
     pd_destroyed(1),
     pd_dying(1),
     pd_refCount(0),
@@ -1896,7 +1900,7 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   pd_rq_state = (int) PortableServer::POAManager::INACTIVE;
   if( old_state == (int) PortableServer::POAManager::HOLDING ) {
     omni::internalLock->unlock();
-    pd_signal.broadcast();
+    pd_signal->broadcast();
     omni::internalLock->lock();
   }
 
@@ -1958,6 +1962,7 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
     l << "Destruction of POA(" << (char*) pd_name << ") complete.\n";
   }
 
+  adapterDestroyed();
   CORBA::release(this);
 }
 
@@ -1969,7 +1974,7 @@ omniOrbPOA::pm_change_state(PortableServer::POAManager::State new_state)
   pd_rq_state = (int) new_state;
   omni::internalLock->unlock();
 
-  pd_signal.broadcast();
+  pd_signal->broadcast();
 }
 
 
@@ -1985,7 +1990,7 @@ omniOrbPOA::pm_waitForReqCmpltnOrSttChnge(omniOrbPOAManager::State state)
   pd_signalOnZeroInvocations++;
 
   while( pd_rq_state == (int) state && pd_nReqActive )
-    pd_signal.wait();
+    pd_signal->wait();
 
   pd_signalOnZeroInvocations--;
 
@@ -2453,7 +2458,7 @@ omniOrbPOA::synchronise_request(omniLocalIdentity* lid)
       omni_thread::get_time(&sec, &nsec,
 			    orbParameters::poaHoldRequestTimeout/1000,
 			    (orbParameters::poaHoldRequestTimeout%1000)*1000000);
-      if( !pd_signal.timedwait(sec, nsec) ) {
+      if( !pd_signal->timedwait(sec, nsec) ) {
 	// We have to do startRequest() here, since the identity
 	// will do endInvocation() when we pass through there.
 	startRequest();
@@ -2462,7 +2467,7 @@ omniOrbPOA::synchronise_request(omniLocalIdentity* lid)
       }
     }
     else
-      pd_signal.wait();
+      pd_signal->wait();
   }
 
   switch( pd_rq_state ) {

@@ -1,9 +1,21 @@
+Thu Sep 20 10:25:55 BST 2001 dpg1
+=================================
+
+- Remove assertion failure on exit if not all POAs are deleted.
+
+src/lib/omniORB/include/objectAdapter.h
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
 Wed Sep 19 18:42:43 BST 2001 sll
 ================================
 
-- Remove obsolute system exception WRONG_TRANSACTION
+- Remove obsolete system exception WRONG_TRANSACTION
 
 include/omniORB4/userexception.h
+
 
 Wed Sep 19 18:19:58 BST 2001 dpg1
 =================================
