@@ -1,4 +1,4 @@
-SUBDIRS = dummystub alone
+SUBDIRS = dummystub #alone
 
 ifdef UnixPlatform
 SUBDIRS += tcpwrapper
