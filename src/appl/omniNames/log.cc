@@ -59,6 +59,10 @@
 #include <sys/param.h>
 #endif
 
+#if defined(__nextstep__)
+#include <sys/param.h>
+#endif
+
 
 #ifdef _NO_STRDUP
 
