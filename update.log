@@ -1,3 +1,11 @@
+Wed Mar  1 12:24:49 GMT 2000 dpg1
+=================================
+
+- Bug with AdapterActivators
+
+src/lib/omniORB2/orbcore/poa.cc
+
+
 Wed Feb 23 12:53:39 GMT 2000 dpg1
 =================================
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2000/03/01 12:28:36  dpg1
+  find_POA() now correctly throws AdapterNonExistent if an
+  AdapterActivator fails to activate the POA.
+
   Revision 1.1.2.14  2000/02/04 18:11:03  djr
   Minor mods for IRIX (casting pointers to ulong instead of int).
 
@@ -435,6 +439,8 @@ omniOrbPOA::find_POA(const char* adapter_name, CORBA::Boolean activate_it)
   if( !activate_it || !pd_adapterActivator )  throw AdapterNonExistent();
 
   poa = attempt_to_activate_adapter(adapter_name);
+
+  if( !poa ) throw AdapterNonExistent();
 
   return poa;
 }
