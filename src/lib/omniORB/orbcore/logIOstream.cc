@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.4  1999/01/07 15:59:13  djr
+  Corrected minor bug in fprintf format.
+
   Revision 1.3  1998/08/14 13:48:52  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -117,14 +120,14 @@ omniORB::logStream::operator<<(unsigned int n)
 omniORB::logStream&
 omniORB::logStream::operator<<(long n)
 {
-  fprintf(stderr,"%dl",n);
+  fprintf(stderr,"%ld",n);
   return *this;
 }
 
 omniORB::logStream&
 omniORB::logStream::operator<<(unsigned long n)
 {
-  fprintf(stderr,"%ul",n);
+  fprintf(stderr,"%lu",n);
   return *this;
 }
 
