@@ -30,6 +30,10 @@
 
 /* 
  * $Log$
+ * Revision 1.11  1998/08/14 13:55:01  sll
+ * Added pragma hdrstop to control pre-compile header if the compiler feature
+ * is available.
+ *
  * Revision 1.10  1998/08/11 11:48:49  sll
  * Extended workaround in CORBA::TypeCode::_nil() to cover up to DEC Cxx
  * v5.5-015.
@@ -66,6 +70,11 @@
 
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include "tcParseEngine.h"
 
 static CORBA::TypeCode_ptr        _nil_TypeCodeV = 0;
