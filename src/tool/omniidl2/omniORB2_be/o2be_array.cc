@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.15  1999/02/19 11:23:54  djr
+  Fixed dim_iterator - which fails if array type is nested more than
+  2 levels deep.
+
   Revision 1.14  1999/01/07 09:51:56  djr
   Changes to support new TypeCode/Any implementation, which is now
   placed in a new file ...DynSK.cc (by default). Other minor
@@ -218,64 +222,6 @@ o2be_array::getNumOfDims()
   return d;
 }
 
-o2be_array::
-dim_iterator::dim_iterator(o2be_array* v)
-{
-  pd_ndim = v->getNumOfDims();
-  pd_next = 0;
-  pd_dims = new AST_Expression* [pd_ndim];
-
-  int i;
-  int ndim;
-  AST_Expression **d;
-
-  d = v->dims();
-  ndim = v->n_dims();
-  for (i=0; i < ndim; i++) {
-    pd_dims[pd_next++] = d[i];
-  }
-
-  while (pd_next < pd_ndim) {
-    AST_Decl* decl = v->base_type();
-    while (decl->node_type() == AST_Decl::NT_typedef)
-      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-    d = o2be_array::narrow_from_decl(decl)->dims();
-    ndim = o2be_array::narrow_from_decl(decl)->n_dims();
-    for (i=0; i < ndim; i++) {
-      pd_dims[pd_next++] = d[i];
-    }
-  };
-    
-  pd_next = 0;
-  return;
-}
-
-size_t
-o2be_array::
-dim_iterator::operator() ()
-{
-  AST_Expression::AST_ExprValue* v;
-
-  if (pd_next < pd_ndim)
-    v = pd_dims[pd_next++]->ev();
-  else
-    return 0;
-
-  switch (v->et) 
-    {
-    case AST_Expression::EV_short:
-      return (size_t)v->u.sval;
-    case AST_Expression::EV_ushort:
-      return (size_t)v->u.usval;
-    case AST_Expression::EV_long:
-      return (size_t)v->u.lval;
-    case AST_Expression::EV_ulong:
-      return (size_t)v->u.ulval;
-    default:
-      throw o2be_internal_error(__FILE__,__LINE__,"unexpected type for array dimension");
-    }
-  return 0;
-}
 
 const char*
 o2be_array::member_name(AST_Decl* decl, AST_Decl* in)
@@ -1122,3 +1068,59 @@ o2be_array::out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in) const
 
 IMPL_NARROW_METHODS1(o2be_array, AST_Array)
 IMPL_NARROW_FROM_DECL(o2be_array)
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// dim_iterator ////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+o2be_array::
+dim_iterator::dim_iterator(o2be_array* array)
+{
+  pd_ndim = array->getNumOfDims();
+  pd_next = 0;
+  pd_dims = new AST_Expression* [pd_ndim];
+
+  while( pd_next < pd_ndim ) {
+
+    int ndims = array->n_dims();
+    AST_Expression** dims = array->dims();
+
+    for( int i = 0; i < ndims; i++ )
+      pd_dims[pd_next++] = dims[i];
+
+    AST_Decl* bt = array->base_type();
+    while( bt->node_type() == AST_Decl::NT_typedef )
+      bt = o2be_typedef::narrow_from_decl(bt)->base_type();
+    array = o2be_array::narrow_from_decl(bt);
+  }
+
+  pd_next = 0;
+}
+
+
+size_t
+o2be_array::
+dim_iterator::operator() ()
+{
+  AST_Expression::AST_ExprValue* v;
+
+  if( pd_next >= pd_ndim )  return 0;
+
+  v = pd_dims[pd_next++]->ev();
+
+  switch (v->et)
+    {
+    case AST_Expression::EV_short:
+      return (size_t)v->u.sval;
+    case AST_Expression::EV_ushort:
+      return (size_t)v->u.usval;
+    case AST_Expression::EV_long:
+      return (size_t)v->u.lval;
+    case AST_Expression::EV_ulong:
+      return (size_t)v->u.ulval;
+    default:
+      throw o2be_internal_error(__FILE__, __LINE__,
+				"unexpected type for array dimension");
+    }
+  return 0;
+}
