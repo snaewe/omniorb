@@ -47,7 +47,12 @@ Known issues
 ------------
 
 This release has the following known issues and omissions. They are
-planned for later in the 4.0 series.
+planned for the 4.1 series.
+
+ - valuetype is not supported.
+
+ - local interfaces are not supported.
 
  - iostream insertion and extraction operators for CORBA types are not
    implemented.
+
