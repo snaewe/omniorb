@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.13  1998/04/08 19:36:41  sll
+ *** empty log message ***
+
  Revision 1.12  1998/04/07 18:54:52  sll
  Use std::fstream instead of fstream.
  New helper functions VarToken and FriendToken to support the
@@ -843,7 +846,7 @@ public:
   const char *wrapproxy_fqname() const { return pd_wrapproxy_fqname; }
 
   const char *IRrepoId() const { return pd_IRrepoId; }
-  const size_t IRrepoIdSize() const { return pd_IRrepoIdSize; }
+  size_t IRrepoIdSize() const { return pd_IRrepoIdSize; }
   const char *inout_adptarg_name(AST_Decl* used_in) const;
   const char *out_adptarg_name(AST_Decl* used_in) const;
 
