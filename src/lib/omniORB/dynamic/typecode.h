@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.3  1999/02/18 15:49:30  djr
+ * Simplified NP_namesEqualOrNull()
+ *
  * Revision 1.2  1999/01/18 13:56:20  djr
  * Fixed bug in TypeCode_union.
  *
@@ -207,13 +210,13 @@ public:
   virtual ~TypeCode_base();
 
   // omniORB2 marshalling routines specific to simple typecodes
-  virtual void NP_marshalSimpleParams(NetBufferedStream &nbuf,
-				      TypeCode_offsetTable *) const;
-  virtual void NP_marshalSimpleParams(MemBufferedStream &nbuf,
-				      TypeCode_offsetTable *) const;
+  virtual void NP_marshalSimpleParams(NetBufferedStream& nbuf,
+				      TypeCode_offsetTable*) const;
+  virtual void NP_marshalSimpleParams(MemBufferedStream& nbuf,
+				      TypeCode_offsetTable*) const;
 
   // omniORB2 marshalling routines specific to complex typecodes
-  virtual void NP_marshalComplexParams(MemBufferedStream &,
+  virtual void NP_marshalComplexParams(MemBufferedStream&,
 				       TypeCode_offsetTable*) const;
 
   // omniORB2 recursive typecode & reference count handling
@@ -224,28 +227,26 @@ public:
 
   // omniORB2 functions to get the aligned size of the parameter data
   virtual size_t NP_alignedSimpleParamSize(size_t initialoffset,
-					   TypeCode_offsetTable *otbl) const;
+					   TypeCode_offsetTable* otbl) const;
   virtual size_t NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable *otbl) const;
+					    TypeCode_offsetTable* otbl) const;
 
   // omniORB2 equality check support functions
   static const TypeCode_base* NP_expand(const TypeCode_base* tc);
   inline static CORBA::Boolean NP_namesEqualOrNull(const char* name1,
 						   const char* name2) {
-    return (strcmp(name1, "") == 0)
-      ||   (strcmp(name2, "") == 0)
-      ||   (strcmp(name1, name2) == 0);
+    return !*name1 || !*name2 || !strcmp(name1, name2);
   }
 
   // omniORB2 internal versions of the OMG TypeCode interface
   CORBA::TCKind  NP_kind() const { return pd_tck; }
   CORBA::Boolean NP_equal(const TypeCode_base* TCp,
 			  CORBA::Boolean langEquiv,
-			  const TypeCode_pairlist *pl) const;
+			  const TypeCode_pairlist* pl) const;
 
   virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
 					  CORBA::Boolean langEquiv,
-					  const TypeCode_pairlist *pl) const;
+					  const TypeCode_pairlist* pl) const;
 
   virtual const char*    NP_id() const;
   virtual const char*    NP_name() const;
@@ -341,18 +342,18 @@ public:
 
   virtual ~TypeCode_string();
 
-  virtual void NP_marshalSimpleParams(NetBufferedStream &,
-				      TypeCode_offsetTable *) const;
-  virtual void NP_marshalSimpleParams(MemBufferedStream &,
-				      TypeCode_offsetTable *) const;
+  virtual void NP_marshalSimpleParams(NetBufferedStream&,
+				      TypeCode_offsetTable*) const;
+  virtual void NP_marshalSimpleParams(MemBufferedStream&,
+				      TypeCode_offsetTable*) const;
 
-  static TypeCode_base* NP_unmarshalSimpleParams(NetBufferedStream &s,
+  static TypeCode_base* NP_unmarshalSimpleParams(NetBufferedStream& s,
 						 TypeCode_offsetTable*);
-  static TypeCode_base* NP_unmarshalSimpleParams(MemBufferedStream &s,
+  static TypeCode_base* NP_unmarshalSimpleParams(MemBufferedStream& s,
 						 TypeCode_offsetTable*);
 
   virtual size_t NP_alignedSimpleParamSize(size_t initialoffset,
-					   TypeCode_offsetTable *otbl) const;
+					   TypeCode_offsetTable* otbl) const;
 
   // OMG Interface:
   virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
@@ -423,24 +424,24 @@ public:
   virtual ~TypeCode_alias();
 
   // omniORB2 marshalling routines specific to complex types
-  virtual void NP_marshalComplexParams(MemBufferedStream &,
-				       TypeCode_offsetTable *) const;
+  virtual void NP_marshalComplexParams(MemBufferedStream&,
+				       TypeCode_offsetTable*) const;
 
-  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream &s,
-						  TypeCode_offsetTable *);
+  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream& s,
+						  TypeCode_offsetTable*);
 
   // omniORB2 recursive typecode handling
-  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base * tc,
+  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base* tc,
 							 CORBA::ULong offset);
 
   // omniORB2 parameter list handling
   virtual size_t NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable *otbl) const;
+					    TypeCode_offsetTable* otbl) const;
 
   // OMG Interface:
-  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base * TCp,
+  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
 					  CORBA::Boolean langEquiv,
-					  const TypeCode_pairlist *tcpl) const;
+					  const TypeCode_pairlist* tcpl) const;
 
   virtual const char* NP_id() const;
   virtual const char* NP_name() const;
@@ -474,25 +475,25 @@ public:
   virtual ~TypeCode_sequence();
 
   // omniORB2 marshalling routines specific to complex types
-  virtual void NP_marshalComplexParams(MemBufferedStream &,
-				       TypeCode_offsetTable *) const;
+  virtual void NP_marshalComplexParams(MemBufferedStream&,
+				       TypeCode_offsetTable*) const;
 
-  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream &s,
-						  TypeCode_offsetTable *);
+  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream& s,
+						  TypeCode_offsetTable*);
 
   // omniORB2 recursive typecode handling
-  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base * tc,
+  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base* tc,
 							 CORBA::ULong offset);
 
   // omniORB2 parameter list handling
   virtual TypeCode_paramListType NP_paramListType() const;
   virtual size_t NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable *otbl) const;
+					    TypeCode_offsetTable* otbl) const;
 
   // OMG Interface:
-  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base * TCp,
+  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
 					  CORBA::Boolean langEquiv,
-					  const TypeCode_pairlist *tcpl) const;
+					  const TypeCode_pairlist* tcpl) const;
 
   virtual CORBA::ULong   NP_length() const;
   virtual TypeCode_base* NP_content_type() const;
@@ -523,24 +524,24 @@ public:
   virtual ~TypeCode_array();
 
   // omniORB2 marshalling routines specific to complex types
-  virtual void NP_marshalComplexParams(MemBufferedStream &,
-				       TypeCode_offsetTable *) const;
+  virtual void NP_marshalComplexParams(MemBufferedStream&,
+				       TypeCode_offsetTable*) const;
 
-  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream &s,
-						  TypeCode_offsetTable *);
+  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream& s,
+						  TypeCode_offsetTable*);
 
   // omniORB2 recursive typecode handling
-  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base * tc,
+  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base* tc,
 							 CORBA::ULong offset);
 
   // omniORB2 parameter list handling
   virtual size_t NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable *otbl) const;
+					    TypeCode_offsetTable* otbl) const;
 
   // OMG Interface:
-  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base * TCp,
+  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
 					  CORBA::Boolean langEquiv,
-					  const TypeCode_pairlist *tcpl) const;
+					  const TypeCode_pairlist* tcpl) const;
 
   virtual CORBA::ULong NP_length() const;
   virtual TypeCode_base* NP_content_type() const;
@@ -583,17 +584,17 @@ public:
 						  TypeCode_offsetTable*);
 
   // omniORB2 recursive typecode handling
-  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base * tc,
+  virtual CORBA::Boolean NP_complete_recursive_sequences(TypeCode_base* tc,
 							 CORBA::ULong offset);
 
   // omniORB2 parameter list handling
   virtual size_t NP_alignedComplexParamSize(size_t initialoffset,
-					    TypeCode_offsetTable *otbl) const;
+					    TypeCode_offsetTable* otbl) const;
 
   // OMG Interface:
-  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base * TCp,
+  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
 					  CORBA::Boolean langEquiv,
-					  const TypeCode_pairlist *tcpl) const;
+					  const TypeCode_pairlist* tcpl) const;
 
   virtual const char* NP_id() const;
   virtual const char* NP_name() const;
@@ -697,7 +698,7 @@ public:
   virtual void NP_marshalComplexParams(MemBufferedStream&,
 				       TypeCode_offsetTable*) const;
 
-  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream &s,
+  static TypeCode_base* NP_unmarshalComplexParams(MemBufferedStream& s,
 						  TypeCode_offsetTable*);
 
   // omniORB2 parameter list handling
@@ -868,7 +869,7 @@ public:
   //      i.e.  The offset passed to B->addEntry is relative to offset zero
   //            in table B.  The is automatically mapped to the corresponding
   //            offset in table A.
-  TypeCode_offsetTable(TypeCode_offsetTable *parent, CORBA::Long base_offset);
+  TypeCode_offsetTable(TypeCode_offsetTable* parent, CORBA::Long base_offset);
 
   // Routine to add an offset->typecode mapping
   void addEntry(CORBA::Long offset, TypeCode_base* typecode);
@@ -882,12 +883,12 @@ public:
   void setOffset(CORBA::Long i) { pd_curr_offset = i;    }
 
 private:
-  TypeCode_offsetEntry *pd_table;
+  TypeCode_offsetEntry* pd_table;
   CORBA::Long pd_curr_offset;
 
   // Fields for use when this offsetTable is actually just a wrapper round
   // an existing offsetTable
-  TypeCode_offsetTable *pd_parent_table;
+  TypeCode_offsetTable* pd_parent_table;
   CORBA::Long pd_parent_base_offset;
 };
 
@@ -901,14 +902,14 @@ private:
 class TypeCode_pairlist
 {
 public:
-  TypeCode_pairlist(const TypeCode_pairlist *next,
+  TypeCode_pairlist(const TypeCode_pairlist* next,
 		    const TypeCode_base* tc1,
 		    const TypeCode_base* tc2)
     : d_next(next), d_tc1(tc1), d_tc2(tc2) {}
 
-  const TypeCode_pairlist *d_next;
-  const TypeCode_base *d_tc1;
-  const TypeCode_base *d_tc2;
+  const TypeCode_pairlist* d_next;
+  const TypeCode_base*     d_tc1;
+  const TypeCode_base*     d_tc2;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -920,23 +921,23 @@ class TypeCode_marshaller
 public:
 
   // Marshal/unmarshal to NetBufferedStream
-  static void marshal(TypeCode_base *obj,
-		      NetBufferedStream &s,
-		      TypeCode_offsetTable *otbl);
-  static TypeCode_base * unmarshal(NetBufferedStream &s,
-				   TypeCode_offsetTable *otbl);
+  static void marshal(TypeCode_base* obj,
+		      NetBufferedStream& s,
+		      TypeCode_offsetTable* otbl);
+  static TypeCode_base* unmarshal(NetBufferedStream& s,
+				   TypeCode_offsetTable* otbl);
 
   // Marshal/unmarshal to MemBufferedStream
-  static void marshal(TypeCode_base *obj,
-		      MemBufferedStream &s,
-		      TypeCode_offsetTable *otbl);
-  static TypeCode_base * unmarshal(MemBufferedStream &s,
-				   TypeCode_offsetTable *otbl);
+  static void marshal(TypeCode_base* obj,
+		      MemBufferedStream& s,
+		      TypeCode_offsetTable* otbl);
+  static TypeCode_base* unmarshal(MemBufferedStream& s,
+				   TypeCode_offsetTable* otbl);
 
   // Calculate how much space the typecode will take up in a stream
-  static size_t alignedSize(const TypeCode_base *obj,
+  static size_t alignedSize(const TypeCode_base* obj,
 			    size_t offset,
-			    TypeCode_offsetTable *otbl);
+			    TypeCode_offsetTable* otbl);
 
   // Find out what kind of parameter list the given TypeCode Kind requires
   static TypeCode_paramListType paramListType(CORBA::ULong kind);
@@ -951,22 +952,22 @@ class TypeCode_collector
 public:
 
   // Duplicate a typecode pointer
-  static TypeCode_base * duplicateRef(TypeCode_base *tc);
+  static TypeCode_base* duplicateRef(TypeCode_base* tc);
 
   // Release a typecode pointer
-  static void releaseRef(TypeCode_base *tc);
+  static void releaseRef(TypeCode_base* tc);
 
   // Traverse a typecode tree, marking all nodes that are part of a loop
-  static void markLoopMembers(TypeCode_base *tc);
+  static void markLoopMembers(TypeCode_base* tc);
 
 private:
 
   // Internal routines used by releaseRef
 
-  static CORBA::ULong markLoops(TypeCode_base *tc, CORBA::ULong depth);
+  static CORBA::ULong markLoops(TypeCode_base* tc, CORBA::ULong depth);
 
-  static void countInternalRefs(TypeCode_base *tc);
-  static CORBA::Boolean checkInternalRefs(TypeCode_base *tc,
+  static void countInternalRefs(TypeCode_base* tc);
+  static CORBA::Boolean checkInternalRefs(TypeCode_base* tc,
 					  CORBA::ULong depth);
 };
 
@@ -993,9 +994,9 @@ public:
   // required type.
 
   static void marshalLabel(TypeCode_union::Discriminator,
-			   CORBA::TypeCode_ptr tc, MemBufferedStream &s);
+			   CORBA::TypeCode_ptr tc, MemBufferedStream& s);
   static void marshalLabel(TypeCode_union::Discriminator,
-			   CORBA::TypeCode_ptr tc, NetBufferedStream &s);
+			   CORBA::TypeCode_ptr tc, NetBufferedStream& s);
   // Marshal a discriminator value (as the given type).
 
   static TypeCode_union::Discriminator
