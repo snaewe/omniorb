@@ -1,3 +1,21 @@
+Wed Mar 12 13:57:22 GMT 2003 dgrisby
+====================================
+
+- MacOS port. Thanks Wolfgang Textor.
+
+ReleaseNotes_4.0.1.txt
+etc/macos.zip                         -- new
+include/omnithread.h
+include/omniORB4/CORBA_sysdep_trad.h
+readmes/README.macos                  -- new
+src/lib/omnithread/posix.cc
+
+- Remove obsolete AIX patch.
+
+patches/README
+patches/aix_xlC_5.0.patch             -- deleted
+
+
 Tue Mar 11 15:47:44 GMT 2003 dgrisby
 ====================================
 
