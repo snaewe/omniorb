@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.4.2.5  2003/03/31 15:34:30  dgrisby
+# Code generated for forward declared structs inside interfaces would
+# not compile on MSVC.
+#
 # Revision 1.4.2.4  2001/06/08 17:12:15  dpg1
 # Merge all the bug fixes from omni3_develop.
 #
@@ -91,6 +95,12 @@ def visitStruct(node):
         n.accept(self)
 
 def visitUnion(node):
+    pass
+
+def visitStructForward(node):
+    pass
+
+def visitUnionForward(node):
     pass
 
 def visitStringType(type):

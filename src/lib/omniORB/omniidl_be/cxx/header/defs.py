@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.15  2003/03/31 15:35:08  dgrisby
+# Code generated for forward declared structs inside interfaces would
+# not compile on MSVC.
+#
 # Revision 1.33.2.14  2001/10/29 17:42:39  dpg1
 # Support forward-declared structs/unions, ORB::create_recursive_tc().
 #
@@ -652,7 +656,7 @@ def visitTypedef(node):
                     # templates with abstract virtual functions
                     # instead.
 
-                    element = element_ptr = d_seqType.base()
+                    element = element_ptr = seqType.base(environment)
 
                     def bounds(bounded = bounded,
                                derivedName = derivedName,
