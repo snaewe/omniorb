@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.6  2003/10/23 11:55:12  dgrisby
+# Fix hex_word for Python 1.5.2.
+#
 # Revision 1.1.4.5  2003/08/21 15:06:03  dgrisby
 # Avoid spurious Python 2.3 complaints about unsigned long integers.
 #
@@ -215,7 +218,12 @@ def get_interface_operation_descriptor(iname, operation_name, signature):
     return descriptor
 
 
-# takes an int and returns the int in hex, without leading 0x and
-# with 0s padding
+# Takes an int and returns the int in hex, without leading 0x and with
+# 0s padding. Can't use %08x because Python 1.5.2 can't do it with
+# longs >= 2**31.
+
 def hex_word(x):
-    return "%08x" % x
+    s = hex(x)[2:]
+    if s[-1] == "L":
+        s = s[:-1]
+    return string.zfill(s, 8)

@@ -1,3 +1,11 @@
+Thu Oct 23 12:52:32 BST 2003 dgrisby
+====================================
+
+- Fix hex_word for Python 1.5.2.
+
+src/lib/omniORB/omniidl_be/cxx/descriptor.py
+
+
 Mon Oct 20 17:10:12 BST 2003 dgrisby
 ====================================
 
