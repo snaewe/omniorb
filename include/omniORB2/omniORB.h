@@ -29,6 +29,17 @@
 
 /*
   $Log$
+  Revision 1.22.2.1  1999/09/21 20:37:14  sll
+  -Simplified the scavenger code and the mechanism in which connections
+   are shutdown. Now only one scavenger thread scans both incoming
+   and outgoing connections. A separate thread do the actual shutdown.
+  -omniORB::scanGranularity() now takes only one argument as there is
+   only one scan period parameter instead of 2.
+  -Trace messages in various modules have been updated to use the logger
+   class.
+  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                 -ORBscanIncomingPeriod.
+
   Revision 1.22  1999/09/01 12:57:26  djr
   Added atomic logging class omniORB::logger, and methods logf() and logs().
 
@@ -292,8 +303,6 @@ _CORBA_MODULE_BEG
 
 
   ////////////////////////////////////////////////////////////////////////
-  enum scanType { scanOutgoing, scanIncoming };                         //
-  //                                                                    //
   // The granularity at which the ORB scan for idle connections or	//
   // stuck remote calls can be changed by scanGranularity().            //
   // This value determines the minimum value that      	       	        //
@@ -303,14 +312,13 @@ _CORBA_MODULE_BEG
   // both scan for idle connections or stuck remote calls are disabled  //
   // as well.                                                           //
   //                                                                    //
-  _CORBA_MODULE_FN void scanGranularity(scanType direction,
-                                        CORBA::ULong sec);              //
+  _CORBA_MODULE_FN void scanGranularity(CORBA::ULong sec);              //
   // Note: This function is *non-thread safe*!!! The behaviour of       //
   //       concurrent calls to this function is undefined.              //
   //                                                                    //
   // CORBA::ULong scanGranularity()                                     //
   //   Returns the current timeout value                                //
-  _CORBA_MODULE_FN CORBA::ULong scanGranularity(scanType direction);    //
+  _CORBA_MODULE_FN CORBA::ULong scanGranularity();                      //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
