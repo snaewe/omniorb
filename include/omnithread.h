@@ -37,7 +37,7 @@
 #define __omnithread_h_
 
 #ifndef NULL
-#define NULL (void*)0
+#define NULL 0
 #endif
 
 class omni_mutex;
