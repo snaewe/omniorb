@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 16:57:15  sll
+  Replaced marshalling operators for MemBufferedStream and NetBufferedStream
+  with just one type for cdrStream.
+
   Revision 1.2.2.1  2000/07/17 10:35:36  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -46,69 +50,24 @@
 #ifndef __OMNI_POA_OPERATORS_H__
 #define __OMNI_POA_OPERATORS_H__
 
-
-inline size_t
-PortableServer::AdapterActivator::_alignedSize(PortableServer::AdapterActivator_ptr obj, size_t offset) {
-  return CORBA::AlignedObjRef(obj, _PD_repoId, 48, offset);
+inline void
+PortableServer::AdapterActivator::_marshalObjRef(PortableServer::AdapterActivator_ptr obj, cdrStream& s) {
+  omniObjRef::_marshal(obj->_PR_getobj(),s);
 }
 
 inline void
-PortableServer::AdapterActivator::_marshalObjRef(PortableServer::AdapterActivator_ptr obj, NetBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, 48, s);
+PortableServer::ServantManager::_marshalObjRef(PortableServer::ServantManager_ptr obj, cdrStream& s) {
+  omniObjRef::_marshal(obj->_PR_getobj(),s);
 }
 
 inline void
-PortableServer::AdapterActivator::_marshalObjRef(PortableServer::AdapterActivator_ptr obj, MemBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, 48, s);
-}
-
-
-inline size_t
-PortableServer::ServantManager::_alignedSize(PortableServer::ServantManager_ptr obj, size_t offset) {
-  return CORBA::AlignedObjRef(obj, _PD_repoId, 46, offset);
+PortableServer::ServantActivator::_marshalObjRef(PortableServer::ServantActivator_ptr obj, cdrStream& s) {
+  omniObjRef::_marshal(obj->_PR_getobj(),s);
 }
 
 inline void
-PortableServer::ServantManager::_marshalObjRef(PortableServer::ServantManager_ptr obj, NetBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, 46, s);
+PortableServer::ServantLocator::_marshalObjRef(PortableServer::ServantLocator_ptr obj, cdrStream& s) {
+  omniObjRef::_marshal(obj->_PR_getobj(),s);
 }
-
-inline void
-PortableServer::ServantManager::_marshalObjRef(PortableServer::ServantManager_ptr obj, MemBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, 46, s);
-}
-
-
-inline size_t
-PortableServer::ServantActivator::_alignedSize(PortableServer::ServantActivator_ptr obj, size_t offset) {
-  return CORBA::AlignedObjRef(obj, _PD_repoId, 48, offset);
-}
-
-inline void
-PortableServer::ServantActivator::_marshalObjRef(PortableServer::ServantActivator_ptr obj, NetBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, 48, s);
-}
-
-inline void
-PortableServer::ServantActivator::_marshalObjRef(PortableServer::ServantActivator_ptr obj, MemBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, 48, s);
-}
-
-
-inline size_t
-PortableServer::ServantLocator::_alignedSize(PortableServer::ServantLocator_ptr obj, size_t offset) {
-  return CORBA::AlignedObjRef(obj, _PD_repoId, 46, offset);
-}
-
-inline void
-PortableServer::ServantLocator::_marshalObjRef(PortableServer::ServantLocator_ptr obj, NetBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, 46, s);
-}
-
-inline void
-PortableServer::ServantLocator::_marshalObjRef(PortableServer::ServantLocator_ptr obj, MemBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, 46, s);
-}
-
 
 #endif  // __OMNI_POA_OPERATORS_H__

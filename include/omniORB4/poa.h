@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 16:57:14  sll
+  Replaced marshalling operators for MemBufferedStream and NetBufferedStream
+  with just one type for cdrStream.
+
   Revision 1.2.2.1  2000/07/17 10:35:35  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -63,10 +67,10 @@
 #define __OMNIPOA_H__
 
 #ifndef __OMNISERVANT_H__
-#include <omniORB3/omniServant.h>
+#include <omniORB4/omniServant.h>
 #endif
 #ifndef __OMNIOBJREF_H__
-#include <omniORB3/omniObjRef.h>
+#include <omniORB4/omniObjRef.h>
 #endif
 
 
@@ -93,11 +97,8 @@ _CORBA_MODULE_BEG
     static _CORBA_Boolean is_nil(_ptr_type);
     static void release(_ptr_type);
     static void duplicate(_ptr_type);
-    static inline size_t NP_alignedSize(_ptr_type, size_t) { return 0; }
-    static inline void marshalObjRef(_ptr_type, NetBufferedStream&) {}
-    static inline _ptr_type unmarshalObjRef(NetBufferedStream&) { return 0; }
-    static inline void marshalObjRef(_ptr_type, MemBufferedStream&) {}
-    static inline _ptr_type unmarshalObjRef(MemBufferedStream&) { return 0; }
+    static inline void marshalObjRef(_ptr_type, cdrStream&) {}
+    static inline _ptr_type unmarshalObjRef(cdrStream&) { return 0; }
   };
 
   class ServantBase;
@@ -474,11 +475,8 @@ _CORBA_MODULE_BEG
 	return _downcast(e);
       }
 
-      size_t _NP_alignedSize(size_t) const;
-      void operator>>=(NetBufferedStream&) const;
-      void operator>>=(MemBufferedStream&) const;
-      void operator<<=(NetBufferedStream&);
-      void operator<<=(MemBufferedStream&);
+      void operator>>=(cdrStream&) const;
+      void operator<<=(cdrStream&);
 
       static _core_attr insertExceptionToAny    insertToAnyFn;
       static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;
@@ -489,8 +487,7 @@ _CORBA_MODULE_BEG
       virtual CORBA::Exception* _NP_duplicate() const;
       virtual const char* _NP_typeId() const;
       virtual const char* _NP_repoId(int*) const;
-      virtual void _NP_marshal(NetBufferedStream&) const;
-      virtual void _NP_marshal(MemBufferedStream&) const;
+      virtual void _NP_marshal(cdrStream&) const;
     };
 
     // POA creation and destruction
@@ -755,7 +752,7 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN ObjectId* string_to_ObjectId(const char* s);
 
 
-#include <omniORB3/poa_defs.h>
+#include <omniORB4/poa_defs.h>
 // This brings in the declarations for:
 //  AdapterActivator
 //  ServantManager
@@ -766,8 +763,8 @@ _CORBA_MODULE_BEG
 _CORBA_MODULE_END  // PortableServer
 
 
-#include <omniORB3/poa_operators.h>
-#include <omniORB3/poa_poa.h>
+#include <omniORB4/poa_operators.h>
+#include <omniORB4/poa_poa.h>
 // This brings in the skeletons for:
 //  AdapterActivator
 //  ServantActivator

@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 16:57:14  sll
+  Replaced marshalling operators for MemBufferedStream and NetBufferedStream
+  with just one type for cdrStream.
+
   Revision 1.2.2.1  2000/07/17 10:35:36  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -84,11 +88,8 @@ public:
     return _downcast(e);
   }
 
-  size_t _NP_alignedSize(size_t) const;
-  void operator>>=(NetBufferedStream&) const;
-  void operator>>=(MemBufferedStream&) const;
-  void operator<<=(NetBufferedStream&);
-  void operator<<=(MemBufferedStream&);
+  void operator>>=(cdrStream&) const;
+  void operator<<=(cdrStream&);
 
   static _core_attr insertExceptionToAny    insertToAnyFn;
   static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;
@@ -99,8 +100,7 @@ private:
   virtual CORBA::Exception* _NP_duplicate() const;
   virtual const char* _NP_typeId() const;
   virtual const char* _NP_repoId(int*) const;
-  virtual void _NP_marshal(NetBufferedStream&) const;
-  virtual void _NP_marshal(MemBufferedStream&) const;
+  virtual void _NP_marshal(cdrStream&) const;
 };
 
 
@@ -125,11 +125,8 @@ public:
   static _CORBA_Boolean is_nil(_ptr_type);
   static void release(_ptr_type);
   static void duplicate(_ptr_type);
-  static size_t NP_alignedSize(_ptr_type, size_t);
-  static void marshalObjRef(_ptr_type, NetBufferedStream&);
-  static _ptr_type unmarshalObjRef(NetBufferedStream&);
-  static void marshalObjRef(_ptr_type, MemBufferedStream&);
-  static _ptr_type unmarshalObjRef(MemBufferedStream&);
+  static void marshalObjRef(_ptr_type, cdrStream&);
+  static _ptr_type unmarshalObjRef(cdrStream&);
 };
 
 typedef _CORBA_ObjRef_Var<_objref_AdapterActivator, AdapterActivator_Helper> AdapterActivator_var;
@@ -148,22 +145,14 @@ public:
   static _ptr_type _narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
-  static inline size_t _alignedSize(_ptr_type, size_t);
-  static inline void _marshalObjRef(_ptr_type, NetBufferedStream&);
-  static inline void _marshalObjRef(_ptr_type, MemBufferedStream&);
+  static inline void _marshalObjRef(_ptr_type, cdrStream&);
 
-  static inline _ptr_type _unmarshalObjRef(NetBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
-  }
-
-  static inline _ptr_type _unmarshalObjRef(MemBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
+  static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
+    omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
+    if (o)
+      return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
+    else
+      return _nil();
   }
 
   static _core_attr const char* _PD_repoId;
@@ -180,7 +169,7 @@ public:
   CORBA::Boolean unknown_adapter(POA_ptr parent, const char* name);
 
   inline _objref_AdapterActivator() { _PR_setobj(0); }  // nil
-  _objref_AdapterActivator(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
+  _objref_AdapterActivator(omniIOR*, omniIdentity*, omniLocalIdentity*);
 
 protected:
   virtual ~_objref_AdapterActivator();
@@ -199,7 +188,7 @@ public:
   inline _pof_AdapterActivator() : proxyObjectFactory(AdapterActivator::_PD_repoId) {}
   virtual ~_pof_AdapterActivator();
 
-  virtual omniObjRef* newObjRef(const char*, IOP::TaggedProfileList*,
+  virtual omniObjRef* newObjRef(omniIOR* ior,
                                 omniIdentity*, omniLocalIdentity*);
   virtual _CORBA_Boolean is_a(const char*) const;
 };
@@ -243,11 +232,8 @@ public:
   static _CORBA_Boolean is_nil(_ptr_type);
   static void release(_ptr_type);
   static void duplicate(_ptr_type);
-  static size_t NP_alignedSize(_ptr_type, size_t);
-  static void marshalObjRef(_ptr_type, NetBufferedStream&);
-  static _ptr_type unmarshalObjRef(NetBufferedStream&);
-  static void marshalObjRef(_ptr_type, MemBufferedStream&);
-  static _ptr_type unmarshalObjRef(MemBufferedStream&);
+  static void marshalObjRef(_ptr_type, cdrStream&);
+  static _ptr_type unmarshalObjRef(cdrStream&);
 };
 
 typedef _CORBA_ObjRef_Var<_objref_ServantManager, ServantManager_Helper> ServantManager_var;
@@ -266,22 +252,14 @@ public:
   static _ptr_type _narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
-  static inline size_t _alignedSize(_ptr_type, size_t);
-  static inline void _marshalObjRef(_ptr_type, NetBufferedStream&);
-  static inline void _marshalObjRef(_ptr_type, MemBufferedStream&);
+  static inline void _marshalObjRef(_ptr_type, cdrStream&);
 
-  static inline _ptr_type _unmarshalObjRef(NetBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
-  }
-
-  static inline _ptr_type _unmarshalObjRef(MemBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
+  static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
+    omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
+    if (o)
+      return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
+    else
+      return _nil();
   }
 
   static _core_attr const char* _PD_repoId;
@@ -297,7 +275,7 @@ class _objref_ServantManager :
 public:
 
   inline _objref_ServantManager() { _PR_setobj(0); }  // nil
-  _objref_ServantManager(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
+  _objref_ServantManager(omniIOR*, omniIdentity*, omniLocalIdentity*);
 
 protected:
   virtual ~_objref_ServantManager();
@@ -316,7 +294,7 @@ public:
   inline _pof_ServantManager() : proxyObjectFactory(ServantManager::_PD_repoId) {}
   virtual ~_pof_ServantManager();
 
-  virtual omniObjRef* newObjRef(const char*, IOP::TaggedProfileList*,
+  virtual omniObjRef* newObjRef(omniIOR*,
                                 omniIdentity*, omniLocalIdentity*);
   virtual _CORBA_Boolean is_a(const char*) const;
 };
@@ -359,11 +337,8 @@ public:
   static _CORBA_Boolean is_nil(_ptr_type);
   static void release(_ptr_type);
   static void duplicate(_ptr_type);
-  static size_t NP_alignedSize(_ptr_type, size_t);
-  static void marshalObjRef(_ptr_type, NetBufferedStream&);
-  static _ptr_type unmarshalObjRef(NetBufferedStream&);
-  static void marshalObjRef(_ptr_type, MemBufferedStream&);
-  static _ptr_type unmarshalObjRef(MemBufferedStream&);
+  static void marshalObjRef(_ptr_type, cdrStream&);
+  static _ptr_type unmarshalObjRef(cdrStream&);
 };
 
 typedef _CORBA_ObjRef_Var<_objref_ServantActivator, ServantActivator_Helper> ServantActivator_var;
@@ -382,22 +357,14 @@ public:
   static _ptr_type _narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
-  static inline size_t _alignedSize(_ptr_type, size_t);
-  static inline void _marshalObjRef(_ptr_type, NetBufferedStream&);
-  static inline void _marshalObjRef(_ptr_type, MemBufferedStream&);
+  static inline void _marshalObjRef(_ptr_type, cdrStream&);
 
-  static inline _ptr_type _unmarshalObjRef(NetBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
-  }
-
-  static inline _ptr_type _unmarshalObjRef(MemBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
+  static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
+    omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
+    if (o)
+      return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
+    else
+      return _nil();
   }
 
   static _core_attr const char* _PD_repoId;
@@ -415,7 +382,7 @@ public:
   void etherealize(const ObjectId& oid, POA_ptr adapter, Servant serv, CORBA::Boolean cleanup_in_progress, CORBA::Boolean remaining_activations);
 
   inline _objref_ServantActivator() { _PR_setobj(0); }  // nil
-  _objref_ServantActivator(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
+  _objref_ServantActivator(omniIOR*, omniIdentity*, omniLocalIdentity*);
 
 protected:
   virtual ~_objref_ServantActivator();
@@ -434,7 +401,7 @@ public:
   inline _pof_ServantActivator() : proxyObjectFactory(ServantActivator::_PD_repoId) {}
   virtual ~_pof_ServantActivator();
 
-  virtual omniObjRef* newObjRef(const char*, IOP::TaggedProfileList*,
+  virtual omniObjRef* newObjRef(omniIOR*,
                                 omniIdentity*, omniLocalIdentity*);
   virtual _CORBA_Boolean is_a(const char*) const;
 };
@@ -479,11 +446,8 @@ public:
   static _CORBA_Boolean is_nil(_ptr_type);
   static void release(_ptr_type);
   static void duplicate(_ptr_type);
-  static size_t NP_alignedSize(_ptr_type, size_t);
-  static void marshalObjRef(_ptr_type, NetBufferedStream&);
-  static _ptr_type unmarshalObjRef(NetBufferedStream&);
-  static void marshalObjRef(_ptr_type, MemBufferedStream&);
-  static _ptr_type unmarshalObjRef(MemBufferedStream&);
+  static void marshalObjRef(_ptr_type, cdrStream&);
+  static _ptr_type unmarshalObjRef(cdrStream&);
 };
 
 typedef _CORBA_ObjRef_Var<_objref_ServantLocator, ServantLocator_Helper> ServantLocator_var;
@@ -502,22 +466,14 @@ public:
   static _ptr_type _narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
-  static inline size_t _alignedSize(_ptr_type, size_t);
-  static inline void _marshalObjRef(_ptr_type, NetBufferedStream&);
-  static inline void _marshalObjRef(_ptr_type, MemBufferedStream&);
+  static inline void _marshalObjRef(_ptr_type, cdrStream&);
 
-  static inline _ptr_type _unmarshalObjRef(NetBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
-  }
-
-  static inline _ptr_type _unmarshalObjRef(MemBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
+  static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
+    omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
+    if (o)
+      return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
+    else
+      return _nil();
   }
 
   static _core_attr const char* _PD_repoId;
@@ -537,7 +493,7 @@ public:
   void postinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, ServantLocator::Cookie the_cookie, Servant the_servant);
 
   inline _objref_ServantLocator() { _PR_setobj(0); }  // nil
-  _objref_ServantLocator(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
+  _objref_ServantLocator(omniIOR*, omniIdentity*, omniLocalIdentity*);
 
 protected:
   virtual ~_objref_ServantLocator();
@@ -556,7 +512,7 @@ public:
   inline _pof_ServantLocator() : proxyObjectFactory(ServantLocator::_PD_repoId) {}
   virtual ~_pof_ServantLocator();
 
-  virtual omniObjRef* newObjRef(const char*, IOP::TaggedProfileList*,
+  virtual omniObjRef* newObjRef(omniIOR*,
                                 omniIdentity*, omniLocalIdentity*);
   virtual _CORBA_Boolean is_a(const char*) const;
 };

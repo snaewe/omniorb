@@ -314,6 +314,31 @@ public:
     if( index >= pd_len )  _CORBA_bound_check_error();
     return pd_buf[index];
   }
+
+  inline _CORBA_Boolean release() const { return pd_rel; }
+  
+  inline T* get_buffer(_CORBA_Boolean orphan = 0) {
+    if (!orphan) {
+      return pd_buf;
+    }
+    else {
+      if (!pd_rel)
+	return 0;
+      else {
+	T* tmp = pd_buf;
+	pd_buf = 0;
+	pd_max = 0;
+	pd_len = 0;
+	pd_rel = 1;
+	return tmp;
+      }
+    }
+  }
+
+  inline const T* get_buffer() const { 
+    return pd_buf;
+  }
+
   static inline T* allocbuf(_CORBA_ULong nelems) { return new T[nelems]; }
   static inline void freebuf(T* b) { if( b )  delete[] b; }
 
@@ -467,25 +492,11 @@ inline ~_CORBA_ObjRef_Member() {
 
   inline T_ptr operator->() const { return _ptr; }
 
-  inline size_t _NP_alignedSize(size_t initialoffset) const {
-    return T_Helper::NP_alignedSize(_ptr,initialoffset);
-  }
-
-  inline void operator>>= (NetBufferedStream& s) const {
+  inline void operator>>= (cdrStream& s) const {
     T_Helper::marshalObjRef(_ptr,s);
   }
 
-  inline void operator<<= (NetBufferedStream& s) {
-    T_ptr _result = T_Helper::unmarshalObjRef(s);
-    T_Helper::release(_ptr);
-    _ptr = _result;
-  }
-
-  inline void operator>>= (MemBufferedStream& s) const {
-    T_Helper::marshalObjRef(_ptr,s);
-  }
-
-  inline void operator<<= (MemBufferedStream& s) {
+  inline void operator<<= (cdrStream& s) {
     T_ptr _result = T_Helper::unmarshalObjRef(s);
     T_Helper::release(_ptr);
     _ptr = _result;

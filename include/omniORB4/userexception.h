@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/09/27 16:58:07  sll
+ Replaced marshalling operators for MemBufferedStream and NetBufferedStream
+ with just one type for cdrStream.
+
  Revision 1.2.2.1  2000/07/17 10:35:38  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -83,11 +87,8 @@ public:  \
     return _downcast(_ex);  \
   }  \
   \
-  inline size_t _NP_alignedSize(size_t os) const { return os; }  \
-  inline void operator>>=(NetBufferedStream&) const {}  \
-  inline void operator>>=(MemBufferedStream&) const {}  \
-  inline void operator<<=(NetBufferedStream&) {}  \
-  inline void operator<<=(MemBufferedStream&) {}  \
+  inline void operator>>=(cdrStream&) const {}  \
+  inline void operator<<=(cdrStream&) {}  \
   \
   static attr insertExceptionToAny    insertToAnyFn;  \
   static attr insertExceptionToAnyNCP insertToAnyFnNCP;  \
@@ -98,8 +99,7 @@ private:  \
   virtual CORBA::Exception* _NP_duplicate() const;  \
   virtual const char* _NP_typeId() const;  \
   virtual const char* _NP_repoId(int* size) const;  \
-  virtual void _NP_marshal(NetBufferedStream&) const;  \
-  virtual void _NP_marshal(MemBufferedStream&) const;  \
+  virtual void _NP_marshal(cdrStream&) const;  \
 };
 
 
@@ -123,11 +123,8 @@ public:  \
     return _downcast(_ex);  \
   }  \
   \
-  inline size_t _NP_alignedSize(size_t os) const { return os; }  \
-  inline void operator>>=(NetBufferedStream&) const {}  \
-  inline void operator>>=(MemBufferedStream&) const {}  \
-  inline void operator<<=(NetBufferedStream&) {}  \
-  inline void operator<<=(MemBufferedStream&) {}  \
+  inline void operator>>=(cdrStream&) const {}  \
+  inline void operator<<=(cdrStream&) {}  \
   \
   static attr insertExceptionToAny    insertToAnyFn;  \
   static attr insertExceptionToAnyNCP insertToAnyFnNCP;  \
@@ -138,8 +135,7 @@ private:  \
   virtual Exception* _NP_duplicate() const;  \
   virtual const char* _NP_typeId() const;  \
   virtual const char* _NP_repoId(int* size) const;  \
-  virtual void _NP_marshal(NetBufferedStream&) const;  \
-  virtual void _NP_marshal(MemBufferedStream&) const;  \
+  virtual void _NP_marshal(cdrStream&) const;  \
 };
 
 
