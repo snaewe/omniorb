@@ -3,7 +3,7 @@
 // valueBase.cc               Created on: 2003/08/20
 //                            Author    : Duncan Grisby
 //
-//    Copyright (C) 2003 Apasphere Ltd.
+//    Copyright (C) 2003-2005 Apasphere Ltd.
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2005/01/17 14:36:56  dgrisby
+  Heap allocate value refcount lock so it is not deallocated too early.
+
   Revision 1.1.2.6  2005/01/06 16:39:25  dgrisby
   DynValue and DynValueBox implementations; misc small fixes.
 
@@ -51,6 +54,9 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/valueType.h>
+#include <omniORB4/objTracker.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// ValueBase ///////////////////////////////
@@ -98,23 +104,62 @@ CORBA::ValueBase::~ValueBase() {}
 
 
 //////////////////////////////////////////////////////////////////////
-///////////////////// DefaultValueRefCountBase ///////////////////////
+///////////////////// Reference count lock ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-static omni_tracedmutex ref_count_lock;
+static omni_tracedmutex* ref_count_lock = 0;
+
+#ifdef HAS_Cplusplus_Namespace
+namespace {
+#endif
+  class valueBaseLockTracker : public omniTrackedObject {
+  public:
+    valueBaseLockTracker();
+    virtual ~valueBaseLockTracker();
+  };
+#ifdef HAS_Cplusplus_Namespace
+};
+#endif
+
+valueBaseLockTracker::valueBaseLockTracker()
+{
+  OMNIORB_ASSERT(!ref_count_lock);
+  ref_count_lock = new omni_tracedmutex();
+}
+
+valueBaseLockTracker::~valueBaseLockTracker()
+{
+  OMNIORB_ASSERT(ref_count_lock);
+  delete ref_count_lock;
+  ref_count_lock = 0;
+}
+
+static void init_lock()
+{
+  if (!ref_count_lock) {
+    valueBaseLockTracker* t = new valueBaseLockTracker();
+    registerTrackedObject(t);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+///////////////////// DefaultValueRefCountBase ///////////////////////
+//////////////////////////////////////////////////////////////////////
 
 void
 CORBA::DefaultValueRefCountBase::_add_ref()
 {
-  omni_tracedmutex_lock sync(ref_count_lock);
+  init_lock();
+  omni_tracedmutex_lock sync(*ref_count_lock);
   _pd_refCount++;
 }
 
 void
 CORBA::DefaultValueRefCountBase::_remove_ref()
 {
+  init_lock();
   {
-    omni_tracedmutex_lock sync(ref_count_lock);
+    omni_tracedmutex_lock sync(*ref_count_lock);
     OMNIORB_ASSERT(_pd_refCount > 0);
 
     if (--_pd_refCount > 0)
@@ -126,7 +171,8 @@ CORBA::DefaultValueRefCountBase::_remove_ref()
 CORBA::ULong
 CORBA::DefaultValueRefCountBase::_refcount_value()
 {
-  omni_tracedmutex_lock sync(ref_count_lock);
+  init_lock();
+  omni_tracedmutex_lock sync(*ref_count_lock);
   return _pd_refCount;
 }
 
@@ -143,19 +189,19 @@ CORBA::DefaultValueRefCountBase::~DefaultValueRefCountBase() {
 void
 PortableServer::ValueRefCountBase::_add_ref()
 {
-  PortableServer::ServantBase::_add_ref();
+  OMNIORB_BASE_CTOR(PortableServer::)ServantBase::_add_ref();
 }
 
 void
 PortableServer::ValueRefCountBase::_remove_ref()
 {
-  PortableServer::ServantBase::_remove_ref();
+  OMNIORB_BASE_CTOR(PortableServer::)ServantBase::_remove_ref();
 }
 
 CORBA::ULong
 PortableServer::ValueRefCountBase::_refcount_value()
 {
-  return PortableServer::ServantBase::_refcount_value();
+  return OMNIORB_BASE_CTOR(PortableServer::)ServantBase::_refcount_value();
 }
 
 PortableServer::ValueRefCountBase::~ValueRefCountBase() {
@@ -169,15 +215,17 @@ PortableServer::ValueRefCountBase::~ValueRefCountBase() {
 void
 CORBA::ValueFactoryBase::_add_ref()
 {
-  omni_tracedmutex_lock sync(ref_count_lock);
+  init_lock();
+  omni_tracedmutex_lock sync(*ref_count_lock);
   _pd_refCount++;
 }
 
 void
 CORBA::ValueFactoryBase::_remove_ref()
 {
+  init_lock();
   {
-    omni_tracedmutex_lock sync(ref_count_lock);
+    omni_tracedmutex_lock sync(*ref_count_lock);
     OMNIORB_ASSERT(_pd_refCount > 0);
 
     if (--_pd_refCount > 0)
