@@ -1,4 +1,4 @@
-// anyExample_impl.cc - This is the source code of the example used in 
+// anyExample_clt.cc -  This is the source code of the example used in 
 //                      Chapter 9 "Type Any and TypeCode" of the omniORB2 
 //                      users guide.
 //
