@@ -1,3 +1,12 @@
+Fri Nov  3 12:18:46 GMT 2000 dpg1
+=================================
+
+- Another 2.4 update to omniidl. #pragma ID can now be declared more
+  than once for a type, as long as the id is the same.
+
+src/tool/omniidl/cxx/idlrepoId.cc
+
+
 Thu Nov  2 10:07:12 GMT 2000 dpg1
 =================================
 
