@@ -75,6 +75,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #if __DECCXX_VER >= 60000000
 #define HAS_Cplusplus_Namespace
 #define HAS_Std_Namespace
+#define __USE_STD_IOSTREAM 
 #endif
 
 #elif defined(_MSC_VER)
