@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.17  2001/07/13 15:23:09  sll
+  New ORB initialisation options.
+
   Revision 1.33.2.16  2001/06/18 16:28:49  dpg1
   Print out distribution date at ORB_init()
 
@@ -1224,6 +1227,150 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	continue;
       }
 
+      // -ORBoneCallPerConnection
+      if( strcmp(argv[idx],"-ORBoneCallPerConnection") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBoneCallPerConnection parameter (0 or 1).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBoneCallPerConnection parameter.");
+	  return 0;
+	}
+	omniORB::oneCallPerConnection = v ? 1 : 0;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBmaxTcpConnectionPerServer
+      if( strcmp(argv[idx],"-ORBmaxTcpConnectionPerServer") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBmaxTcpConnectionPerServer parameter (n > 0).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBmaxTcpConnectionPerServer parameter.");
+	  return 0;
+	}
+	omniORB::maxTcpConnectionPerServer = v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBthreadPerConnectionPolicy
+      if( strcmp(argv[idx],"-ORBthreadPerConnectionPolicy") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBthreadPerConnectionPolicy parameter (0 or 1).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBthreadPerConnectionPolicy parameter.");
+	  return 0;
+	}
+	omniORB::threadPerConnectionPolicy = v ? 1 : 0;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBmaxServerThreadPerConnection
+      if( strcmp(argv[idx],"-ORBmaxServerThreadPerConnection") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBmaxServerThreadPerConnection parameter (n > 0).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBmaxServerThreadPerConnection parameter.");
+	  return 0;
+	}
+	omniORB::maxServerThreadPerConnection = v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBmaxInterleavedCallsPerConnection
+      if( strcmp(argv[idx],"-ORBmaxInterleavedCallsPerConnection") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBmaxInterleavedCallsPerConnection parameter (n > 0).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBmaxInterleavedCallsPerConnection parameter.");
+	  return 0;
+	}
+	omniORB::maxInterleavedCallsPerConnection = v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBmaxServerThreadPoolSize
+      if( strcmp(argv[idx],"-ORBmaxServerThreadPoolSize") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBmaxServerThreadPoolSize parameter (n > 0).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBmaxServerThreadPoolSize parameter.");
+	  return 0;
+	}
+	omniORB::maxServerThreadPoolSize = v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBthreadPerConnectionUpperLimit
+      if( strcmp(argv[idx],"-ORBthreadPerConnectionUpperLimit") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBthreadPerConnectionUpperLimit parameter (n > 0).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBthreadPerConnectionUpperLimit parameter.");
+	  return 0;
+	}
+	omniORB::threadPerConnectionUpperLimit = v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBthreadPerConnectionLowerLimit
+      if( strcmp(argv[idx],"-ORBthreadPerConnectionLowerLimit") == 0 ) {
+	if( idx + 1 >= argc ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
+			" -ORBthreadPerConnectionLowerLimit parameter (n > 0).");
+	  return 0;
+	}
+	unsigned int v;
+	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
+	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
+			" -ORBthreadPerConnectionLowerLimit parameter.");
+	  return 0;
+	}
+	omniORB::threadPerConnectionLowerLimit = v;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
       // -ORBendpoint <endpoint uri>
       // -ORBendpoint_no_publish <endpoint uri>
       // -ORBendpoint_no_listen <endpoint uri>
@@ -1381,6 +1528,14 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  "    -ORBInitialHost <name>\n"
 	  "    -ORBInitialPort <1-65535>\n"
 	  "    -ORBno_bootstrap_agent\n"
+	  "    -ORBoneCallPerConnection <0|1>\n"
+	  "    -ORBmaxTcpConnectionPerServer <n connections>\n"
+	  "    -ORBthreadPerConnectionPolicy <0|1>\n"
+	  "    -ORBmaxServerThreadPerConnection <n threads>\n"
+	  "    -ORBmaxInterleavedCallsPerConnection <n requests>\n"
+	  "    -ORBmaxServerThreadPoolSize <n threads>\n"
+	  "    -ORBthreadPerConnectionLowerLimit <n connections>\n"
+	  "    -ORBthreadPerConnectionUpperLimit <n connections>\n"
 	  "    -ORBdiiThrowsSysExceptions <0|1>\n"
 	  "    -ORBabortOnInternalError <0|1>\n"
 	  "    -ORBverifyObjectExistsAndType <0|1>\n"
