@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  1999/10/05 20:35:33  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.1.2.3  1999/10/02 18:24:32  sll
   Reformatted trace messages.
 
@@ -45,7 +49,11 @@
 
 #include <omniORB2/CORBA.h>
 #include <scavenger.h>
+#include <giopObjectInfo.h>
 #include <giopStreamImpl.h>
+#include <ropeFactory.h>
+#include <tcpSocket.h>
+#include <objectManager.h>
 
 #define DIRECT_RCV_CUTOFF 1024
 #define DIRECT_SND_CUTOFF 8192
@@ -56,6 +64,15 @@
 #define STRAND_READ_UNLOCK()   assert(pd_rdlocked); pd_rdlocked = 0; RdUnlock(1)
 
 #define PARANOID
+
+#define LOGMESSAGE(level,prefix,message) do {\
+   if (omniORB::trace(level)) {\
+     omniORB::logger log("omniORB: giopStream " ## prefix ## ": ");\
+	log << message ## "\n";\
+   }\
+} while (0)
+
+#define PTRACE(prefix,message) LOGMESSAGE(25,prefix,message)
 
 giopStream::~giopStream()
 {
@@ -965,6 +982,70 @@ giopStreamImpl::release(giopStream* g)
 
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//  giopStream::requestInfo                                                 //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
+
+void
+giopStream::
+requestInfo::unmarshalIORAddressingInfo(cdrStream& s)
+{
+  GIOP::AddressingDisposition vp;
+  CORBA::ULong   vl;
+
+  resetKey();
+
+  vp <<= s;
+  if (vp == GIOP::KeyAddr) {
+    vl <<= s;
+    if (!s.checkInputOverrun(1,vl)) {
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    }
+    keysize(vl);
+    s.get_char_array((CORBA::Char*)key(),vl);
+  }
+  else {
+    GIOP::IORAddressingInfo& ta = pd_target_address;
+    if (vp == GIOP::ProfileAddr) {
+      ta.ior.profiles.length(1);
+      ta.ior.profiles[0] <<= s;
+      ta.selected_profile_index = 0;
+    }
+    else {
+      // GIOP::ReferenceAddr
+      ta.selected_profile_index <<= s;
+      ta.ior <<= s;
+    }
+    if (ta.selected_profile_index >= ta.ior.profiles.length() ||
+	ta.ior.profiles[ta.selected_profile_index].tag != IOP::TAG_INTERNET_IOP) {
+      PTRACE("unmarshalRequestHeader","MARSHAL exception (corrupted targetAddress");
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    }
+    
+    IOP::TaggedProfile& tp = ta.ior.profiles[ta.selected_profile_index];
+    Endpoint_var addr;
+    GIOPObjectInfo_var objectInfo = new GIOPObjectInfo();
+    ropeFactoryType::findType(tcpSocketEndpoint::protocol_name)
+      ->decodeIOPprofile(tp,addr.out(),objectInfo);
+
+    ropeFactory_iterator iter(omniObjectManager::root(1)
+			      ->incomingRopeFactories());
+    incomingRopeFactory* factory;
+    while ((factory = (incomingRopeFactory*) iter())) {
+      objectInfo->rope_ = factory->findIncoming((Endpoint*)addr);
+      if (objectInfo->rope()) {
+	// Finally! we know this request is target an object in this
+	// address space.
+	keysize(objectInfo->keysize());
+	memcpy((void*)key(),(void*)objectInfo->key(),objectInfo->keysize());
+	break;
+      }
+    }
+    // Reach here either we have got the key of the target object
+    // or we have the target address info in targetAddress().
+  }
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //

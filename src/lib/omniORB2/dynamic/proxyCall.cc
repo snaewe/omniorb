@@ -35,6 +35,10 @@
 
 /*
  $Log$
+ Revision 1.7.4.3  1999/10/05 20:35:32  sll
+ Added support to GIOP 1.2 to recognise all TargetAddress mode.
+ Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
  Revision 1.7.4.2  1999/10/02 18:24:31  sll
  Reformatted trace messages.
 
@@ -65,6 +69,7 @@
 
 #include <omniORB2/CORBA.h>
 #include <omniORB2/proxyCall.h>
+#include <orbcore/giopObjectInfo.h>
 
 #define LOGMESSAGE(level,prefix,message) do {\
    if (omniORB::trace(level)) {\
@@ -158,12 +163,21 @@ OmniProxyCallWrapper::invoke(omniObject* o,
 			   (rc == GIOP::LOCATION_FORWARD_PERM) ? 0 : 1);
 	  LOGMESSAGE(10,"OmniProxyCallWrapper","GIOP::LOCATION_FORWARD: retry request.");
 	}
-      break;
+	break;
 
       case GIOP::NEEDS_ADDRESSING_MODE:
-	giop_client.RequestCompleted();
-	throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
-	break; // redundent.
+	{
+	  GIOP::AddressingDisposition v;
+	  v <<= ((cdrStream&)giop_client);
+	  invokeInfo->addrMode(v);
+	  giop_client.RequestCompleted();
+	  if (omniORB::trace(10)) {
+	    omniORB::logger log("omniORB: ");
+	    log << "OmniProxyCallWrapper: GIOP::NEEDS_ADDRESSING_MODE: "
+		<< (int) v << " retry request.\n";
+	  }
+	}
+	break;
 
       default:
 	throw omniORB::fatalException(__FILE__,__LINE__,

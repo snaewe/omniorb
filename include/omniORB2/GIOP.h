@@ -31,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.3.4.2  1999/10/05 20:35:31  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.3.4.1  1999/09/15 20:18:15  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -84,6 +88,12 @@ public:
   static _core_attr const AddressingDisposition KeyAddr;
   static _core_attr const AddressingDisposition ProfileAddr;
   static _core_attr const AddressingDisposition ReferenceAddr;
+
+  struct IORAddressingInfo {
+    _CORBA_ULong  selected_profile_index;
+    IOP::IOR      ior;
+  };
+
 
   class RequestHeader {
   public:

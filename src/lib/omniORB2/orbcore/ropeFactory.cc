@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.9.4.4  1999/10/05 20:35:36  sll
+ Added support to GIOP 1.2 to recognise all TargetAddress mode.
+ Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
  Revision 1.9.4.3  1999/10/02 18:21:29  sll
  Added support to decode optional tagged components in the IIOP profile.
  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -135,6 +139,7 @@ ropeFactory::iopProfilesToRope(GIOPObjectInfo* objectInfo)
 	(void) factorytype->decodeIOPprofile((*profiles)[i],
 					     addr.out(),
 					     objectInfo);
+	objectInfo->addr_selected_profile_index_ = i;
 	{
 	// Determine if this is a local object
 	// In future, we have to partially decode the object key to

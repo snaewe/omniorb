@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/05 20:35:32  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.1.2.1  1999/09/15 20:35:44  sll
   *** empty log message ***
 
@@ -157,34 +161,45 @@ public:
       }
     }
 
-    inline _CORBA_ULong keysize() const { return pd_objkeysize; }
+    inline int keysize() const { return pd_objkeysize; }
 
     inline _CORBA_Octet* key() const {
-      return ((pd_objkeysize <= sizeof(omniObjectKey)) ? 
+      return ((pd_objkeysize <= (int)sizeof(omniObjectKey)) ? 
 	      (_CORBA_Octet*) (&pd_objkey) : foreign);
     }
 
     inline void keysize(_CORBA_ULong sz) {
-      if (pd_objkeysize > sizeof(omniObjectKey)) {
+      if (pd_objkeysize > (int)sizeof(omniObjectKey)) {
 	delete [] foreign;
-	pd_objkeysize = sizeof(omniObjectKey);
+	pd_objkeysize = (int) sizeof(omniObjectKey);
       }
       if (sz > sizeof(omniObjectKey)) {
 	foreign = new _CORBA_Octet[sz];
       }
-      pd_objkeysize = sz;
+      pd_objkeysize = (int)sz;
     }
+
+    inline void resetKey() { 
+      if (pd_objkeysize > (int)sizeof(omniObjectKey)) delete [] foreign;
+      pd_objkeysize = -1; 
+    }
+
+    inline GIOP::IORAddressingInfo& targetAddress() { 
+      return pd_target_address;
+    }
+
+    void unmarshalIORAddressingInfo(cdrStream& s);
 
     inline requestInfo() : pd_request_id(0), 
                            pd_response_expected(0),
                            pd_result_expected(0),
-                           pd_objkeysize(sizeof(omniObjectKey)),
+                           pd_objkeysize(-1),
 		           pd_operation((char*)pd_op_buffer),
 		           pd_principal(pd_pr_buffer),
                            pd_principal_len(0) {}
 
     inline ~requestInfo() {
-      if (pd_objkeysize > sizeof(omniObjectKey)) delete [] foreign;
+      if (pd_objkeysize > (int)sizeof(omniObjectKey)) delete [] foreign;
       if (pd_operation != (char*)pd_op_buffer) delete [] pd_operation;
       if (pd_principal != pd_pr_buffer) delete [] pd_principal;
     }
@@ -198,7 +213,7 @@ public:
       _CORBA_Octet*  foreign;
       omniObjectKey  pd_objkey;
     };
-    _CORBA_ULong          pd_objkeysize;
+    int             pd_objkeysize;
   
     char*           pd_operation;
     char            pd_op_buffer[GIOPSTREAM_INLINE_BUF_SIZE];
@@ -206,7 +221,10 @@ public:
     _CORBA_Octet    pd_pr_buffer[GIOPSTREAM_INLINE_BUF_SIZE];
     _CORBA_ULong    pd_principal_len;
 
-    // XXX Added the extra fields to hold the new targetAddress in GIOP 1.2
+    // If pd_objkeysize < 0, pd_target_address contains the
+    // full IOR that the client has sent. Only used in GIOP 1.2.
+    GIOP::IORAddressingInfo   pd_target_address;
+
   };
 
   GIOP::MsgType inputRequestMessageBegin(requestInfo& f);

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.18.4.3  1999/10/05 20:35:35  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.18.4.2  1999/10/02 18:21:28  sll
   Added support to decode optional tagged components in the IIOP profile.
   Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -66,6 +70,10 @@
   Temporary work-around for egcs compiler.
 
   $Log$
+  Revision 1.18.4.3  1999/10/05 20:35:35  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.18.4.2  1999/10/02 18:21:28  sll
   Added support to decode optional tagged components in the IIOP profile.
   Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -688,7 +696,10 @@ internal_get_interface(const char* repoId)
 /////////////////////// GIOPObjectInfo         ///////////////////////
 //////////////////////////////////////////////////////////////////////
 
-GIOPObjectInfo::GIOPObjectInfo() : iopProfiles_(0), 
+
+GIOPObjectInfo::GIOPObjectInfo() : addr_mode_(omniORB::giopTargetAddressMode),
+				   addr_selected_profile_index_(0),
+				   iopProfiles_(0), 
                                    orb_type_(0), tag_components_(0),
                                    opaque_data_(0),
                                    pd_refcount(1) {}
@@ -853,4 +864,28 @@ omniObject::getKey(omniObjectKey& k) const
   assert(!is_proxy());
 
   memcpy((void*)&k,(void*)&pd_data.l.pd_key,sizeof(k));
+}
+
+void
+GIOPObjectInfo::marshalIORAddressingInfo(cdrStream& s)
+{
+  addr_mode_ >>= s;
+  if (addr_mode_ == GIOP::KeyAddr) {
+    object_key_.length() >>= s;
+    s.put_char_array((CORBA::Char*) object_key_.get_buffer(),
+		     object_key_.length());
+  }
+  else if (addr_mode_ == GIOP::ProfileAddr) {
+    (*iopProfiles_)[addr_selected_profile_index_] >>= s;
+  }
+  else {
+    addr_selected_profile_index_ >>= s;
+    IOP::IOR ior;
+    ior.type_id = repositoryID_;
+    ior.profiles.replace(iopProfiles_->maximum(),
+			 iopProfiles_->length(),
+			 iopProfiles_->get_buffer(),0);
+    ior >>= s;
+  }
+
 }

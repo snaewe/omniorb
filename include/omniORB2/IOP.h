@@ -31,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.7.4.3  1999/10/05 20:35:31  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.7.4.2  1999/10/02 18:21:24  sll
   Added support to decode optional tagged components in the IIOP profile.
   Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -164,10 +168,16 @@ public:
     TaggedProfileList_out operator=( const _T_var&);
   };
 
+  
 
   struct IOR {
-    _CORBA_Char       *type_id;
-    TaggedProfileList  profiles;
+    _CORBA_String_member  type_id;
+    TaggedProfileList     profiles;
+
+    // the following are omniORB2 private functions
+    void operator>>= (cdrStream &s);
+    void operator<<= (cdrStream &s);
+    static char* unmarshaltype_id(cdrStream&);
   };
 
   typedef _CORBA_ULong ComponentId;

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/05 20:35:34  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.1.2.2  1999/10/02 18:24:32  sll
   Reformatted trace messages.
 
@@ -40,6 +44,9 @@
 #include <omniORB2/CORBA.h>
 #include <giopObjectInfo.h>
 #include <giopStreamImpl.h>
+#include <ropeFactory.h>
+#include <tcpSocket.h>
+#include <objectManager.h>
 
 #define PARANOID
 
@@ -1350,20 +1357,7 @@ private:
     vb <<= s;
 
     // object key
-    GIOP::AddressingDisposition vp;
-
-    vp <<= s;
-    if (vp != GIOP::KeyAddr) {
-      // XXX For the moment, only support KeyAddr AddressingDisposition
-      PTRACE("unmarshalRequestHeader","MARSHAL exception (unsupported target address type)");
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-    }
-    vl <<= s;
-    if (!s.checkInputOverrun(1,vl)) {
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-    }
-    r.keysize(vl);
-    s.get_char_array((CORBA::Char*)r.key(),vl);
+    r.unmarshalIORAddressingInfo(s);
 
     // operation
     vl <<= s;
@@ -1404,23 +1398,7 @@ private:
     g->pd_request_id = vl;
 
     // object key
-    GIOP::AddressingDisposition vp;
-
-    vp <<= s;
-    if (vp != GIOP::KeyAddr) {
-      // XXX For the moment, only support KeyAddr AddressingDisposition
-      PTRACE("unmarshalLocateRequestHeader","MARSHAL exception (unsupported target address type)");
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-    }
-
-    vl <<= s;
-    if (!s.checkInputOverrun(1,vl)) {
-      PTRACE("unmarshalLocateRequestHeader","MARSHAL exception (corrupted header");
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-    }
-    r.keysize(vl);
-    s.get_char_array((CORBA::Char*)r.key(),vl);
-
+    r.unmarshalIORAddressingInfo(s);
   }
 
   //////////////////////////////////////////////////////////////////
@@ -1441,13 +1419,7 @@ private:
     case GIOP::USER_EXCEPTION:
     case GIOP::LOCATION_FORWARD:
     case GIOP::LOCATION_FORWARD_PERM:
-      break;
     case GIOP::NEEDS_ADDRESSING_MODE:
-      // XXX Not supported yet
-      PTRACE("unmarshalReplyHeader","Error (NEEDS_ADDRESSING_MODE not supported");
-      setTerminalError(g);
-      g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
-      // never reach here.
       break;
     default:
       // Should never receive anything other that the above
@@ -1492,13 +1464,7 @@ private:
     case GIOP::OBJECT_FORWARD:
     case GIOP::OBJECT_FORWARD_PERM:
     case GIOP::LOC_SYSTEM_EXCEPTION:
-      break;
     case GIOP::LOC_NEEDS_ADDRESSING_MODE:
-      // XXX Not supported yet
-      setTerminalError(g);
-      PTRACE("unmarshalLocateReplyHeader","Error (LOC_NEEDS_ADDRESSING_MODE not supported");
-      g->pd_strand->raiseException(0,CORBA::COMPLETED_NO);
-      // never reach here.
       break;
     default:
       // Should never receive anything other that the above
@@ -1538,10 +1504,8 @@ void giop_1_2_Impl::marshalRequestHeader::marshalData()
   v >>= s;
   v >>= s;
 
-  // object key
-  GIOP::KeyAddr >>= s;
-  pd_i->keysize() >>= s;
-  s.put_char_array((CORBA::Char*) pd_i->key(), pd_i->keysize());
+  // Target address
+  pd_i->marshalIORAddressingInfo(s);
 
     // operation
   operator>>= ((CORBA::ULong) pd_opsize, s);
@@ -1566,10 +1530,8 @@ size_t giop_1_2_Impl::marshalRequestHeader::dataSize(size_t initialoffset)
 
   // It is OK to let the stream skip 3 bytes.
 
-  // object key
-  GIOP::KeyAddr >>= s;
-  pd_i->keysize() >>= s;
-  s.put_char_array((CORBA::Char*) pd_i->key(), pd_i->keysize());
+  // Target address
+  pd_i->marshalIORAddressingInfo(s);
 
     // operation
   operator>>= ((CORBA::ULong) pd_opsize, s);
@@ -1590,10 +1552,8 @@ void giop_1_2_Impl::marshalLocateRequestHeader::marshalData()
 
   pd_request_id >>= s;
 
-  // object key
-  GIOP::KeyAddr >>= s;
-  pd_i->keysize() >>= s;
-  s.put_char_array((CORBA::Char*) pd_i->key(), pd_i->keysize());
+  // Target address
+  pd_i->marshalIORAddressingInfo(s);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -1603,10 +1563,8 @@ size_t giop_1_2_Impl::marshalLocateRequestHeader::dataSize(size_t initialoffset)
 
   pd_request_id >>= s;
 
-  // object key
-  GIOP::KeyAddr >>= s;
-  pd_i->keysize() >>= s;
-  s.put_char_array((CORBA::Char*) pd_i->key(), pd_i->keysize());
+  // Target address
+  pd_i->marshalIORAddressingInfo(s);
   
   return s.total();
 }

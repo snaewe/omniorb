@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.8.4.4  1999/10/05 20:35:36  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.8.4.3  1999/10/02 18:21:30  sll
   Added support to decode optional tagged components in the IIOP profile.
   Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -192,8 +196,6 @@ tcpSocketFactoryType::decodeIOPprofile(const IOP::TaggedProfile& profile,
   CORBA::ULong len = body.object_key.length();
   objectInfo->object_key_.replace(max,len,body.object_key.get_buffer(1),1);
   addr = new tcpSocketEndpoint((CORBA::Char*)body.host._ptr,body.port);
-  body.host._ptr = 0;
-
   return 1;
 }
 

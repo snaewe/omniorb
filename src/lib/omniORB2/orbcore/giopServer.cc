@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.21.4.2  1999/10/05 20:35:33  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.21.4.1  1999/09/15 20:18:31  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -273,7 +277,7 @@ GIOP_S::HandleRequest()
 
   try {
 
-    if (pd_invokeInfo.keysize() == 0) {
+    if (pd_invokeInfo.keysize() < 0) {
       // This case is only possible with GIOP version 1.2 or
       // above. The target object's identity is encoded in a
       // GIOP::IORAddressingInfo struct. inputRequestHeader() has looked
@@ -285,10 +289,10 @@ GIOP_S::HandleRequest()
       // to look at this request header and if it can return an omniObject
       // we'll use it to dispatch the call.
       if (MapTargetAddressToObjectFunction) {
-	obj = MapTargetAddressToObjectFunction(pd_invokeInfo);
+	obj = MapTargetAddressToObjectFunction(pd_invokeInfo.targetAddress());
       }
     }
-    else if (pd_invokeInfo.keysize() != sizeof(omniObjectKey)) {
+    else if (pd_invokeInfo.keysize() != (int)sizeof(omniObjectKey)) {
 
       // This key did not come from this orb.
 
@@ -493,7 +497,7 @@ GIOP_S::HandleLocateRequest()
 
   try {
 
-    if (pd_invokeInfo.keysize() == 0) {
+    if (pd_invokeInfo.keysize() < 0) {
       // This case is only possible with GIOP version 1.2 or
       // above. The target object's identity is encoded in a
       // GIOP::IORAddressingInfo struct. inputRequestHeader() has looked
@@ -505,10 +509,10 @@ GIOP_S::HandleLocateRequest()
       // to look at this request header and if it can return an omniObject
       // we'll use it to dispatch the call.
       if (MapTargetAddressToObjectFunction) {
-	obj = MapTargetAddressToObjectFunction(pd_invokeInfo);
+	obj = MapTargetAddressToObjectFunction(pd_invokeInfo.targetAddress());
       }
     }
-    else if (pd_invokeInfo.keysize() != sizeof(omniObjectKey)) {
+    else if (pd_invokeInfo.keysize() != (int)sizeof(omniObjectKey)) {
 
       // This key did not come from this orb.
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/05 20:35:33  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.1.2.2  1999/10/02 18:21:28  sll
   Added support to decode optional tagged components in the IIOP profile.
   Added support to negogiate with a firewall proxy- GIOPProxy to invoke
@@ -52,6 +56,8 @@ public:
 
   GIOP::Version                    version_;
   _CORBA_Unbounded_Sequence_Octet  object_key_;
+  GIOP::AddressingDisposition      addr_mode_;
+  CORBA::ULong                     addr_selected_profile_index_;
   Rope_var                         rope_;
   IOP::TaggedProfileList* 	   iopProfiles_;
   CORBA::ULong                     orb_type_;
@@ -70,6 +76,12 @@ public:
   inline const CORBA::Octet* key() const { return object_key_.get_buffer(); }
   inline CORBA::ULong  keysize() const { return object_key_.length(); }
 
+  inline GIOP::AddressingDisposition addrMode() const { return addr_mode_; }
+  inline void addrMode(GIOP::AddressingDisposition d) { addr_mode_ = d; }
+  inline CORBA::ULong addrSelectedProfileIndex() const { 
+    return addr_selected_profile_index_;
+  }
+
   inline const char* repositoryID() { return repositoryID_; }
   inline const IOP::TaggedProfileList* iopProfiles() { return iopProfiles_; }
 
@@ -81,6 +93,8 @@ public:
 
   GIOPObjectInfo();
   ~GIOPObjectInfo();
+
+  void marshalIORAddressingInfo(cdrStream& s);
 
 private:
   int pd_refcount;

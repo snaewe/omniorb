@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.12.4.2  1999/10/05 20:35:32  sll
+  Added support to GIOP 1.2 to recognise all TargetAddress mode.
+  Now handles NEEDS_ADDRESSING_MODE and LOC_NEEDS_ADDRESSING_MODE.
+
   Revision 1.12.4.1  1999/09/15 20:18:31  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -138,6 +142,8 @@ GIOP_C::ReceiveReply()
   case GIOP::NO_EXCEPTION:
   case GIOP::USER_EXCEPTION:
   case GIOP::LOCATION_FORWARD:
+  case GIOP::LOCATION_FORWARD_PERM:
+  case GIOP::NEEDS_ADDRESSING_MODE:
     break;
   default:
     // Should never receive anything other that the above
@@ -186,14 +192,11 @@ GIOP_C::IssueLocateRequest()
   case GIOP::OBJECT_HERE:
   case GIOP::OBJECT_FORWARD:
   case GIOP::OBJECT_FORWARD_PERM:
+  case GIOP::LOC_NEEDS_ADDRESSING_MODE:
     break;
   case GIOP::LOC_SYSTEM_EXCEPTION:
     UnMarshallSystemException();
     break;
-  case GIOP::LOC_NEEDS_ADDRESSING_MODE:
-    RequestCompleted();
-    throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
-    break; // redundent.
   default:
     // Should never receive anything other that the above
     // Same treatment as wrong header
