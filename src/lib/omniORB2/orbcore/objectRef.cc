@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.17  1998/08/15 14:31:41  sll
+  Added using omniORB::operator== when the compiler supports namespace but
+  no the Koenig Lookup rule.
+
   Revision 1.16  1998/08/14 13:50:28  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -71,6 +75,10 @@
 
 #include <omniORB2/proxyFactory.h>
 #include <ropeFactory.h>
+
+#if defined(HAS_Cplusplus_Namespace) && defined(NO_Koenig_Lookup)
+using omniORB::operator==;
+#endif
 
 // The points to note are:
 //
@@ -219,14 +227,7 @@ omni::objectIsReady(omniObject *obj)
       omniObject **p = &omniObject::localObjectTable[omniORB::hash(obj->pd_objkey.native)];
       omniObject **pp = p;
       while (*p) {
-#ifdef HAS_Cplusplus_Namespace
-        // operator== is defined in the omniORB namespace
-	if (omniORB::operator==(((omniORB::objectKey)(*p)->pd_objkey.native),
-				((omniORB::objectKey) obj->pd_objkey.native))){
-#else
-	// operator== is defined in the global namespace
 	if ((*p)->pd_objkey.native == obj->pd_objkey.native) {
-#endif
 	  obj->pd_next = 0;
 	  omniObject::objectTableLock.unlock();
 	  throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
@@ -344,21 +345,13 @@ omni::disposeObject(omniObject *obj)
   return;
 }
 
-
 omniObject *
 omni::locateObject(omniObjectManager*,omniObjectKey &k)
 {
   omniObject::objectTableLock.lock();
   omniObject **p = &omniObject::localObjectTable[omniORB::hash(k)];
   while (*p) {
-#ifdef HAS_Cplusplus_Namespace
-    // operator== is defined in the omniORB namespace
-    if (omniORB::operator==((omniORB::objectKey)(*p)->pd_objkey.native,
-			    (omniORB::objectKey)k)) {
-#else
-    // operator== is defined in the global namespace
     if ((*p)->pd_objkey.native == k) {
-#endif
       (*p)->setRefCount((*p)->getRefCount()+1);
       omniObject::objectTableLock.unlock();
       return *p;
