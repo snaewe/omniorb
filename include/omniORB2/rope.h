@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.11.4.4  2000/03/27 17:41:31  sll
+  Removed Sync class.
+  Redefined the reference counting rule for Strand.
+  New member Rope::oneCallPerConnection().
+
   Revision 1.11.4.3  2000/02/14 18:06:45  sll
   Support GIOP 1.2 fragment interleaving. This requires minor access control
   changes to the relevant classes.
@@ -113,6 +118,7 @@ class Endpoint;
 class cdrStream;
 class Strand_iterator;
 class Rope_iterator;
+class giopStream;
 
 class Strand {
 public:
@@ -127,6 +133,7 @@ public:
   // Post-condition:
   //    Still hold <MUTEX> on exit, even if an exception is raised
 
+protected:
   virtual ~Strand();
   // Concurrency Control:
   //    MUTEX = pd_rope->pd_lock
@@ -135,6 +142,7 @@ public:
   // Post-condition:
   //    Still hold <MUTEX> on exit
 
+public:
   virtual size_t MaxMTU() const = 0;
   // Maximum message transfer unit. This value is transport dependent.
 
@@ -376,7 +384,6 @@ public:
   // Notice that this function may be called by one thread while another
   // is blocking on a receive or a send on the network connection.
 
-
   void incrRefCount(_CORBA_Boolean held_rope_mutex = 0);
   // Concurrency Control:
   //      MUTEX = pd_rope->pd_lock
@@ -385,9 +392,11 @@ public:
   //      Hold <MUTEX> on enter if held_rope_mutex == TRUE              
   // Post-condition:
   //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
+  //
+  // Increment the reference count by one. Call this once when a thread
+  // holds a reference/pointer to this object.
 
-  void decrRefCount(_CORBA_Boolean held_rope_mutex = 0,
-		    _CORBA_Boolean deleteflag = 0);
+  void decrRefCount(_CORBA_Boolean held_rope_mutex = 0);
   // Concurrency Control:
   //      MUTEX = pd_rope->pd_lock
   // Pre-condition:
@@ -396,19 +405,12 @@ public:
   // Post-condition:
   //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
   //
-  // Decrement reference count. If reference count == 0 and deleteflag == TRUE
-  // delete the strand.
-
-  _CORBA_Boolean is_idle(_CORBA_Boolean held_rope_mutex = 0);
-  // Return TRUE(1) if the reference count is zero.
-  //
-  // Concurrency Control:
-  //      MUTEX = pd_rope->pd_lock
-  // Pre-condition:
-  //      Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
-  //      Hold <MUTEX> on enter if held_rope_mutex == TRUE              
-  // Post-condition:
-  //      Restore <MUTEX> to the same state as indicated by held_rope_mutex
+  // Decrement reference count. If reference count == 0 and 
+  // _strandIsDying() is TRUE, delete the strand.
+  // Call this once when a thread previously holding a reference/pointer to
+  // this object no longer does so. Caller should not assume that a pointer
+  // to this object remains valid after this call as the object could have
+  // been deleted.
 
   void setReUseFlag();
   // Concurrency Control:
@@ -434,115 +436,6 @@ public:
   // setReUseFlag().
   // The arguments are passed verbatim to the ctor of the system exceptions.
 
-  class Sync {
-
-  public:
-
-    Sync(Strand *s);
-    // Concurrency Control:
-    //    MUTEX = s->pd_rope->pd_lock
-    // Pre-condition:
-    //    Must hold <MUTEX> on entry
-    // Post-condition:
-    //    Still hold <MUTEX> on exit.
-    //
-    // This object must be heap allocated.
-    //
-    // This ctor has the side effect of entering the Sync object to
-    // the private queue of the Strand.
-    //
-    // Caller must ensure that the reference count of the argument strand <s>
-    // is non-zero. This ctor also increment the reference count of the
-    // strand internally using Strand::incrRefCount().
-    //
-
-    virtual ~Sync();
-    // Concurrency Control:
-    // 	  MUTEX = pd_strand->pd_rope->pd_lock
-    // Pre-condition:
-    //    Must <MUTEX> on entry
-    // Post-condition:
-    //    Still <MUTEX> on exit
-    //    
-    // IMPORTANT: the destructor DOES NOT check whether a read or a write
-    //            lock is held by this object. Make sure that any lock
-    //            is released, using RdUnlock() and WrUnlock(), before this
-    //            destructor is called.
-    //
-    // This dtor decrement the reference count of the strand by calling
-    // Strand::decrRefCount(). 
-    //
-    // If the reference count reaches 0 (Strand::is_idle() returns TRUE) and 
-    // the strand has been flagged for closing down (Strand::StrandIsDying() 
-    // returns TRUE), the dtor of the strand is called.
-
-
-    virtual _CORBA_Boolean garbageCollect();
-    // Concurrency Control:
-    // 	  MUTEX = pd_strand->pd_rope->pd_lock
-    //
-    // Pre-condition:
-    //    Must hold <MUTEX> on enter.
-    // Post-condition:
-    //    Still hold <MUTEX> on exit.
-    //
-    // Return TRUE if pd_strand can safely be shutdown.
-
-    virtual _CORBA_Boolean is_unused();
-    // Concurrency Control:
-    // 	  MUTEX = pd_strand->pd_rope->pd_lock
-    //
-    // Pre-condition:
-    //    Must hold <MUTEX> on enter.
-    // Post-condition:
-    //    Still hold <MUTEX> on exit.
-    //
-    // Return true if pd_strand is not in use.
-
-    static Sync* getSync(Strand* s);
-    // Concurrency Control:
-    // 	  MUTEX = s->pd_rope->pd_lock
-    // Pre-condition:
-    //    Must hold <MUTEX> on enter
-    // Post-condition:
-    //    Still hold <MUTEX> on exit
-    //
-    // Return the head of the private queue of Sync objects in the strand.
-
-    static void        setStrandIsDying(Strand*);
-
-    static omni_mutex& getMutex(Strand*);
-
-  protected:
-
-    static omni_mutex& getMutex(Rope*);
-    static Strand*     getStrand(Rope*);
-
-    void RdLock(_CORBA_Boolean held_rope_mutex=0);
-    void WrLock(_CORBA_Boolean held_rope_mutex=0);
-    void RdUnlock(_CORBA_Boolean held_rope_mutex=0);
-    void WrUnlock(_CORBA_Boolean held_rope_mutex=0);
-    // IMPORTANT: to avoid deadlock, the following protocol MUST BE obeyed.
-    //            1. Acquire Read lock before Write Lock.
-    //            2. Never acquire a Read lock while holding a Write lock.
-    //               Must release the Read lock first.
-    // Concurrency Control:
-    // 	  MUTEX = pd_strand->pd_rope->pd_lock
-    // Pre-condition:
-    //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
-    //          Does not hold <MUTEX> on enter if held_rope_mutex == FALSE
-    //          Hold <MUTEX> on enter if held_rope_mutex == TRUE
-    // Post-condition:
-    //      For RdLock(), WrLock(), RdUnlock(), WrUnlock():
-    //        Restore <MUTEX> to the same state as indicated by held_rope_mutex
-    //
-    // WrLock blocks until it has acquired a write lock on the strand.
-  
-    Sync*   pd_next;
-    Strand* pd_strand;
-
-    Sync();
-  };
 
   _CORBA_Boolean _strandIsDying() { return pd_dying; }
 
@@ -550,7 +443,7 @@ protected:
 
   void _setStrandIsDying() { pd_dying = 1; return; }
 
-  friend class Sync;
+  friend class giopStream;
   friend class Strand_iterator;
   friend class Rope;
   friend class Rope_iterator;
@@ -562,14 +455,27 @@ private:
   omni_condition  pd_wrcond;
   int             pd_wr_nwaiting;
 
-  Sync           *pd_head;
+  giopStream     *pd_head;
   Strand         *pd_next;
   Rope           *pd_rope;
   _CORBA_Boolean  pd_dying;
   int		  pd_refcount;
-  _CORBA_ULong     pd_seqNumber;
+  _CORBA_ULong    pd_seqNumber;
 
   _CORBA_Boolean  pd_reuse;
+
+  GIOP::Version   pd_giop_version;
+  _CORBA_Boolean  pd_giop_biDir;
+
+  int             pd_clicks;
+  void setClicks(int c) { pd_clicks = c; }
+  int  Clicks() { return pd_clicks; }
+  int  decrClicks() { return --pd_clicks; }
+  int  incrClicks() { return ++pd_clicks; }
+
+public:
+  // XXX Temporary
+  _CORBA_Boolean garbageCollect();
 
 public:
   Strand         *pd_ripper_next;
@@ -580,8 +486,6 @@ public:
   Strand(const Strand&);
   Strand &operator=(const Strand&);
 };
-
-typedef Strand::Sync Strand_Sync;
 
 class Endpoint {
 public:
@@ -749,6 +653,11 @@ public:
   // Concurrency Control:
   //      None required.
 
+  virtual _CORBA_Boolean oneCallPerConnection();
+  // Returns TRUE if this is an outgoing rope and there *CANNOT* be more
+  // than one call in progress on the same strand at the same time.
+  // Otherwise returns FALSE.
+
   void incrRefCount(_CORBA_Boolean held_anchor_mutex = 0);
   // Concurrency Control:
   //      MUTEX = pd_anchor->pd_lock
@@ -766,15 +675,10 @@ public:
   //      Hold <MUTEX> on enter if held_anchor_mutex == TRUE              
   // Post-condition:
   //      Restore <MUTEX> to the same state as indicated by held_anchor_mutex
-
-  _CORBA_Boolean is_idle(_CORBA_Boolean held_anchor_mutex = 0);
-  // Concurrency Control:
-  //      MUTEX = pd_anchor->pd_lock
-  // Pre-condition:
-  //      Does not hold <MUTEX> on enter if held_anchor_mutex == FALSE
-  //      Hold <MUTEX> on enter if held_anchor_mutex == TRUE              
-  // Post-condition:
-  //      Restore <MUTEX> to the same state as indicated by held_anchor_mutex
+  //
+  // Decrement reference count. If reference count == 0, shutdown all strands
+  // that are attached to this rope. Furthermore, if no strand is attached,
+  // call delete on this rope.
 
 
   Anchor* anchor() const { return pd_anchor; }
@@ -782,19 +686,19 @@ public:
   friend class Strand;
   friend class Strand_iterator;
   friend class Rope_iterator;
+  friend class giopStream;
 
 #ifndef __DECCXX
-  // DEC C++ compiler (as of version 5.4) fails to recognise class Strand::Sync
-  // is a friend and allows access to the following protected members.
-
-  friend class Strand::Sync;
 
 protected:
 
 #endif
 
-  omni_mutex pd_lock;
-  virtual Strand *getStrand();
+  omni_mutex     pd_lock;
+  omni_condition pd_cond;
+  int            pd_nwaiting;
+
+  void waitForIdleStrand();
   // Concurrency Control:
   //     MUTEX = pd_lock
   // Pre-condition:
@@ -802,12 +706,12 @@ protected:
   // Post-condition:
   //     Must hold <MUTEX> on exit, even if an exception is raised
   //
-  // getStrand() returns a ptr to an unused Strand, i.e. there is no
-  // Strand::Sync object associated with it. If none is available and
-  // the number of strands has not exceeded pd_maxStrands, call newStrand()
-  // to create a new one.
-  // A thread may be blocked in this function until a free strand is available.
-  //
+  // Block until one of the following conditions:
+  //     1. A strand is now unused, i.e. its pd_refcount == 0
+  //     2. The no. of strand drops below pd_maxStrands.
+  // If one of the two conditions is met, returns.
+  // Spurious wakeups may cause this call to returns. Should always check
+  // again if there is a free strand.
 
   virtual Strand *newStrand() = 0;
   // Concurrency Control:
@@ -840,8 +744,8 @@ private:
 
   Strand         *pd_head;
   Rope           *pd_next;
-  Anchor          *pd_anchor;
-  int              pd_refcount;
+  Anchor         *pd_anchor;
+  int             pd_refcount;
 
   Rope();
 };
@@ -926,7 +830,8 @@ public:
   Rope *operator() ();
 
 private:
-  const Anchor *pd_anchor;
+  const Anchor   *pd_anchor;
+  _CORBA_Boolean  pd_initialised;
   Rope *pd_r;
   Rope_iterator();
 };
