@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.10.4.6  2000/03/27 17:29:37  sll
+  Get ride of Sync class and selection functions to pick a strand from a
+  rope. Replace with new mechanisum in giopStream.
+
   Revision 1.10.4.5  1999/11/04 20:20:23  sll
   GIOP engines can now do callback to the higher layer to calculate total
   message size if necessary.
@@ -123,33 +127,32 @@ class omniORB_Ripper;
 
 static omniORB_Ripper* ripper = 0;
 
+//#########################################################################
 Strand::Strand(Rope *r)
-  : pd_rdcond(&r->pd_lock), pd_wrcond(&r->pd_lock)
+  : pd_rdcond(&r->pd_lock), pd_rd_nwaiting(0),
+    pd_wrcond(&r->pd_lock), pd_wr_nwaiting(0),
+    pd_head(0), pd_rope(r), pd_dying(0), pd_refcount(0),
+    pd_seqNumber(1), pd_reuse(0), pd_giop_biDir(0)
 {
-  pd_head = 0;
-  pd_rd_nwaiting = 0;
-  pd_wr_nwaiting = 0;
+  pd_giop_version.major = 0; pd_giop_version.minor = 0;
 
   // enter this to the list in rope <r>
   pd_next = r->pd_head;
   r->pd_head = this;
-  pd_rope = r;
-  pd_dying = 0;
-  pd_refcount = 0;
-  pd_seqNumber = 1;
-  pd_reuse = 0;
+
   pd_ripper_next = this;
   return;
 }
 
 
+//#########################################################################
 Strand::~Strand()
 {
   if (!pd_rope) return;
   
-  // When this destructor is called, there should be no Strand::Sync 
-  // objects remain on the Sync queue.
-  assert(is_idle(1));
+  assert(pd_refcount == 0);
+
+  giopStream::deleteAll(this);
 
   // remove this from the list in rope <pd_rope>
   Strand **p = &pd_rope->pd_head;
@@ -164,6 +167,7 @@ Strand::~Strand()
   return;
 }
 
+//#########################################################################
 void
 Strand::incrRefCount(CORBA::Boolean held_rope_mutex)
 {
@@ -176,42 +180,38 @@ Strand::incrRefCount(CORBA::Boolean held_rope_mutex)
   return;
 }
 
+//#########################################################################
 void
-Strand::decrRefCount(CORBA::Boolean held_rope_mutex,CORBA::Boolean deleteflag)
+Strand::decrRefCount(CORBA::Boolean held_rope_mutex)
 {
-  Rope* r;
+  Rope* r = pd_rope;
   if (!held_rope_mutex) {
-    r = pd_rope;
     r->pd_lock.lock();
   }
   pd_refcount--;
   assert(pd_refcount >= 0);
-  if (pd_refcount == 0 && deleteflag) {
-    delete this;
+  if (pd_refcount == 0) {
+    if (_strandIsDying()) {
+      delete this;
+    }
+    if (r->pd_nwaiting) {	// Some threads are blocking in
+				// Rope::waitForIdleStrand()
+      r->pd_cond.signal();
+    }
   }
   if (!held_rope_mutex)
     r->pd_lock.unlock();
   return;
 }
 
-CORBA::Boolean
-Strand::is_idle(CORBA::Boolean held_rope_mutex)
-{
-  CORBA::Boolean idle;
-  if (!held_rope_mutex)
-    pd_rope->pd_lock.lock();
-  idle = ((pd_refcount == 0)? 1: 0);
-  if (!held_rope_mutex)
-    pd_rope->pd_lock.unlock();
-  return idle;
-}
-
+//#########################################################################
 void
 Strand::setReUseFlag()
 {
   pd_reuse = 1;
 }
 
+//#########################################################################
 void
 Strand::raiseException(CORBA::ULong minor, CORBA::ULong completed)
 {
@@ -224,179 +224,10 @@ Strand::raiseException(CORBA::ULong minor, CORBA::ULong completed)
 }
 
 
-Strand::Sync*
-Strand::
-Sync::getSync(Strand* s)
-{
-  return s->pd_head;
-}
-
-omni_mutex&
-Strand::
-Sync::getMutex(Strand* s)
-{
-  return s->pd_rope->pd_lock;
-}
-
-omni_mutex&
-Strand::
-Sync::getMutex(Rope* s)
-{
-  return s->pd_lock;
-}
-
-Strand*
-Strand::
-Sync::getStrand(Rope* s)
-{
-  return s->getStrand();
-}
-
-void
-Strand::
-Sync::setStrandIsDying(Strand* s)
-{
-  s->_setStrandIsDying();
-}
-
-Strand::
-Sync::Sync(Strand *s) 
-{
-  // Caller of this function must ensure that pd_refcount is not zero.
-
-  pd_strand = s;
-  pd_next = s->pd_head;
-  s->pd_head = this;
-  s->incrRefCount(1);
-}
-
-Strand::
-Sync::~Sync()
-{
-  if (!pd_strand) return;
-
-  // remove this from the list in strand <pd_strand>
-  Strand::Sync **p = &pd_strand->pd_head;
-  while (*p && *p != this)
-    p = &((*p)->pd_next);
-  if (*p) {
-    *p = (*p)->pd_next;
-  }
-  pd_strand->decrRefCount(1);
-
-  // If this is the last sync object and the strand is dying, delete it.
-  if (pd_strand->is_idle(1) && pd_strand->_strandIsDying())
-    {
-      delete pd_strand;
-    }
-  
-  pd_strand = 0;
-}
-
-void
-Strand::
-Sync::RdLock(CORBA::Boolean held_rope_mutex)
-{
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.lock();
-
-  while (pd_strand->pd_rd_nwaiting < 0) {
-    pd_strand->pd_rd_nwaiting--;
-    pd_strand->pd_rdcond.wait();
-    if (pd_strand->pd_rd_nwaiting >= 0)
-      pd_strand->pd_rd_nwaiting--;
-    else
-      pd_strand->pd_rd_nwaiting++;
-  }
-  pd_strand->pd_rd_nwaiting = -pd_strand->pd_rd_nwaiting - 1;
-
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.unlock();
-  return;
-}
-
-void
-Strand::
-Sync::RdUnlock(CORBA::Boolean held_rope_mutex)
-{
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.lock();
-
-  assert(pd_strand->pd_rd_nwaiting < 0);
-  pd_strand->pd_rd_nwaiting = -pd_strand->pd_rd_nwaiting - 1;
-  if (pd_strand->pd_rd_nwaiting > 0)
-    pd_strand->pd_rdcond.signal();
-
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.unlock();
-
-  return;
-}
-
-void
-Strand::
-Sync::WrLock(CORBA::Boolean held_rope_mutex)
-{
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.lock();
-
-  while (pd_strand->pd_wr_nwaiting < 0) {
-    pd_strand->pd_wr_nwaiting--;
-    pd_strand->pd_wrcond.wait();
-    if (pd_strand->pd_wr_nwaiting >= 0)
-      pd_strand->pd_wr_nwaiting--;
-    else
-      pd_strand->pd_wr_nwaiting++;
-  }
-  pd_strand->pd_wr_nwaiting = -pd_strand->pd_wr_nwaiting - 1;
-
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.unlock();
-  return;
-
-}
-
-void
-Strand::
-Sync::WrUnlock(CORBA::Boolean held_rope_mutex)
-{
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.lock();
-
-  assert(pd_strand->pd_wr_nwaiting < 0);
-  pd_strand->pd_wr_nwaiting = -pd_strand->pd_wr_nwaiting - 1;
-  if (pd_strand->pd_wr_nwaiting > 0)
-    pd_strand->pd_wrcond.signal();
-
-  if (!held_rope_mutex)
-    pd_strand->pd_rope->pd_lock.unlock();
-
-  return;
-}
-
-CORBA::Boolean
-Strand::
-Sync::garbageCollect()
-{
-  // The default is not to garbageCollect.
-  // This function should be overloaded by the derived class to
-  // determine whether it is appropriate to garbage collect this strand.
-  return 0;
-}
-
-CORBA::Boolean
-Strand::
-Sync::is_unused()
-{
-  // The default is always indicate the strand is unused.
-  // This function should be overloaded by the derived class to
-  // determine whether it is really unused.
-  return 1;
-}
-
+//#########################################################################
 Rope::Rope(Anchor *a,
 	   unsigned int maxStrands)
-  : pd_lock()
+  : pd_lock(), pd_cond(&pd_lock), pd_nwaiting(0)
 {
   pd_head = 0;
   pd_maxStrands = maxStrands;
@@ -407,14 +238,14 @@ Rope::Rope(Anchor *a,
   return;
 }
 
-
+//#########################################################################
 Rope::~Rope()
 {
   if (!pd_anchor) return;
 
   // When this destructor is called, there should be no Strand objects
   // remain on the strand queue
-  assert(is_idle(1));
+  assert(pd_refcount == 0);
 
   // remove this from the list in anchor <pd_anchor>
   Rope **p = &pd_anchor->pd_head;
@@ -427,6 +258,7 @@ Rope::~Rope()
   pd_anchor = 0;
 }
 
+//#########################################################################
 void
 Rope::CutStrands(CORBA::Boolean held_rope_mutex)
 {
@@ -439,45 +271,12 @@ Rope::CutStrands(CORBA::Boolean held_rope_mutex)
   return;
 }
 
-Strand *
-Rope::getStrand()
-{
-  Strand *p;
-  unsigned int n = 0;
-  {
-    Strand_iterator next(this,1);
-    while ((p = next())) {
-      if (!p->_strandIsDying()) {
-	n++;
-	Strand::Sync* q;
-	if (!(q = Strand::Sync::getSync(p)) || q->is_unused())
-	  break;
-      }
-    }
-  }
-  if (!p) {
-    if (n < pd_maxStrands) {
-      p = newStrand();
-    }
-    else {
-      Strand_iterator next(this,1);
-      p = next();
-    }
-  }
-  return p;
-}
-
+//#########################################################################
 void
 Rope::incrRefCount(CORBA::Boolean held_anchor_mutex)
 {
   if (!held_anchor_mutex)
     pd_anchor->pd_lock.lock();
-  {
-    if (omniORB::trace(20)) {
-      omniORB::logger log("omniORB: ");
-      log << "strand Rope::incrRefCount: old value = " << pd_refcount << "\n";
-    }
-  }
   assert(pd_refcount >= 0);
   pd_refcount++;
   if (!held_anchor_mutex)
@@ -485,39 +284,86 @@ Rope::incrRefCount(CORBA::Boolean held_anchor_mutex)
   return;
 }
 
+//#########################################################################
 void
 Rope::decrRefCount(CORBA::Boolean held_anchor_mutex)
 {
+  Anchor* anchor = pd_anchor;
+
   if (!held_anchor_mutex)
-    pd_anchor->pd_lock.lock();
-
-  {
-    if (omniORB::trace(20)) {
-      omniORB::logger log("omniORB: ");
-      log << "strand Rope::decrRefCount: old value = " << pd_refcount << "\n";
-    }
-  }
-
+    anchor->pd_lock.lock();
   pd_refcount--;
   assert(pd_refcount >=0);
+
+  CORBA::Boolean detected_application_error = 0;
+
+  if (pd_refcount == 0) {
+    // This Rope is not used by any object reference
+    // Make sure that all the strands are closed down before calling the dtor 
+    // of the Rope
+    Strand* p = pd_head;
+    if (p) {
+      while (p) {
+	if (p->pd_refcount) {
+	  detected_application_error = 1;
+	}
+	else {
+	  p->shutdown();
+	}
+	p = p->pd_next;
+      }
+    }
+    else if (pd_nwaiting) {
+      detected_application_error = 1;
+    }
+    else {
+      delete this;
+    }
+  }
+  if (detected_application_error) {
+      LOGMESSAGE(0,"Rope::decRefCount","Detected Application error. All object references that refer to a remote address space has been released. Therefore no thread should be talking to that address space. Instead, the ORB has detected a client thread is still invoking on the objects in that address space. The most likely cause is that an object reference returned to the application has been released but another thread is using the object to do a remote call. This function call will return and does not raise an exception but this race condition can cause random failures.");
+  }
+
   if (!held_anchor_mutex)
-    pd_anchor->pd_lock.unlock();
+    anchor->pd_lock.unlock();
   return;
 }
 
-CORBA::Boolean
-Rope::is_idle(CORBA::Boolean held_anchor_mutex)
+void
+Rope::waitForIdleStrand()
 {
-  CORBA::Boolean idle;
-  if (!held_anchor_mutex)
-    pd_anchor->pd_lock.lock();
-  idle = ((pd_refcount == 0)? 1: 0);
-  if (!held_anchor_mutex)
-    pd_anchor->pd_lock.unlock();
-  return idle;
+ again:
+  Strand *p;
+  unsigned int n = 0;
+  {
+    Strand_iterator iter(this,1);
+    while ((p = iter())) {
+      n++;
+      if (p->pd_refcount == 1 && !p->_strandIsDying()) {
+	// Strand_iterator::operator() returns the strand with
+	// refcount incremented by 1, so we know the strand
+	// is not claimed by any thread if refcount == 1.
+	break;
+      }
+    }
+  }
+  if (p || n < pd_maxStrands) return;
+
+  // Reach here means that we have to block.
+  pd_nwaiting++;
+  pd_cond.wait();	// Wake up by Strand::decrRefCount()
+  pd_nwaiting--;
+  goto again;
 }
 
 
+CORBA::Boolean
+Rope::oneCallPerConnection()
+{
+  return 0;
+}
+
+//#########################################################################
 Anchor::Anchor() : pd_lock()
 {
   pd_head = 0;
@@ -525,6 +371,7 @@ Anchor::Anchor() : pd_lock()
 }
 
 
+//#########################################################################
 Anchor::~Anchor()
 {
   //  assert(pd_head == 0);
@@ -534,6 +381,7 @@ Anchor::~Anchor()
 }
 
 
+//#########################################################################
 Strand_iterator::Strand_iterator(const Rope *r,
 				 CORBA::Boolean held_rope_mutex)
 {
@@ -547,6 +395,7 @@ Strand_iterator::Strand_iterator(const Rope *r,
 }
 
 
+//#########################################################################
 Strand_iterator::~Strand_iterator()
 {
   if (pd_s) {
@@ -558,21 +407,18 @@ Strand_iterator::~Strand_iterator()
   return;
 }
 
+//#########################################################################
 Strand *
 Strand_iterator::operator() ()
 {
   if (pd_s) {
-    pd_s->decrRefCount(1);
+    Strand* t = pd_s;
     pd_s = pd_s->pd_next;
+    t->decrRefCount(1);
   }
   else if (!pd_initialised) {
     pd_s = pd_rope->pd_head;
     pd_initialised = 1;
-  }
-  while (pd_s && pd_s->is_idle(1) && pd_s->_strandIsDying()) {
-    Strand *p=pd_s;
-    pd_s = pd_s->pd_next;
-    delete p;
   }
   if (pd_s) {
     pd_s->incrRefCount(1);
@@ -580,29 +426,58 @@ Strand_iterator::operator() ()
   return pd_s;
 }
 
+//#########################################################################
 Rope_iterator::Rope_iterator(const Anchor *a)
 {
   ((Anchor *)a)->pd_lock.lock();
-  pd_r = a->pd_head;
   pd_anchor = a;
+  pd_initialised = 0;
+  pd_r = 0;
   return;
 }
 
-
+//#########################################################################
 Rope_iterator::Rope_iterator(ropeFactory* rf)
 {
   rf->anchor()->pd_lock.lock();
-  pd_r = rf->anchor()->pd_head;
   pd_anchor = rf->anchor();
+  pd_initialised = 0;
+  pd_r = 0;
   return;
 }
 
-
+//#########################################################################
 Rope_iterator::~Rope_iterator()
 {
+  if (pd_r) {
+    pd_r->decrRefCount(1);
+    pd_r = 0;
+  }
   ((Anchor *)pd_anchor)->pd_lock.unlock();
   return;
 }
+
+//#########################################################################
+Rope *
+Rope_iterator::operator() ()
+{
+  if (pd_r) {
+    Rope* t = pd_r;
+    pd_r = pd_r->pd_next;
+    t->decrRefCount(1);
+  }
+  else if (!pd_initialised) {
+    pd_r = pd_anchor->pd_head;
+    pd_initialised = 1;
+  }
+  if (pd_r) {
+    pd_r->incrRefCount(1);
+  }
+  return pd_r;
+}
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 // omniORB_Ripper
@@ -613,12 +488,15 @@ Rope_iterator::~Rope_iterator()
 // the strand should be shutdown and does not want to wait till it
 // is done.
 //
+//#########################################################################
+//#########################################################################
 class omniORB_Ripper : public omni_thread {
 public:
   omniORB_Ripper() : pd_cond(&pd_mutex),
 		     pd_isdying(0), 
 		     pd_head(0) { start_undetached(); }
 
+  //#######################################################################
   void enqueue(Strand* p) {
     omni_mutex_lock sync(pd_mutex);
     if (p->pd_ripper_next != p) return;   // Already queued
@@ -628,11 +506,13 @@ public:
     pd_cond.signal();
   }
 
+  //#######################################################################
   CORBA::Boolean isPending(Strand* p) {
     omni_mutex_lock sync(pd_mutex);
     return (p->pd_ripper_next == p) ? 0 : 1;
   }
 
+  //#######################################################################
   void* run_undetached(void*) {
 
     LOGMESSAGE(15,"Ripper","start.");
@@ -667,6 +547,7 @@ public:
     return 0;
   }
 
+  //#######################################################################
   void kill() {
 
     {
@@ -677,6 +558,7 @@ public:
     join(0);
   }
 
+  //#######################################################################
   virtual ~omniORB_Ripper() {}
 
 private:
@@ -687,8 +569,7 @@ private:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////
-
+//#########################################################################
 void
 Strand::shutdown()
 {
@@ -698,61 +579,22 @@ Strand::shutdown()
 }
 
 
-/////////////////////////////////////////////////////////////////////////////
-Rope *
-Rope_iterator::operator() ()
-{
-  Rope *rp;
-  while (1) 
-    {
-      rp = pd_r;
-      if (rp) 
-	{
-	  pd_r = pd_r->pd_next;
-	  if (rp->is_idle(1)) 
-	    {
-	      // This Rope is not used by any object reference
-	      // First close down all the strands before calling the dtor of the Rope
-	      LOGMESSAGE(10,"Rope_iterator","delete unused Rope.");
-	      CORBA::Boolean can_delete = 1;
-
-	      {
-		Strand_iterator next_strand(rp);
-		Strand* p;
-		while ((p = next_strand())) {
-		  can_delete = 0;
-		  Strand::Sync* q;
-		  if ((q = Strand::Sync::getSync(p)) && !q->is_unused()) {
-		    LOGMESSAGE(0,"Rope_iterator","Detected Application error. An object reference returned to the application has been released but it is currently being used to do a remote call. This thread will now raise a omniORB::fatalException.");
-		  }
-		  else {
-		    p->_setStrandIsDying();
-		  }
-		}
-	      }
-	      if (can_delete) {
-		delete rp;
-	      }
-	      continue;
-	    }
-	}
-      break;
-    }
-  return rp;
-}
-
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
+//#########################################################################
+//#########################################################################
 class omni_strand_initialiser : public omniInitialiser {
 public:
 
+  //#######################################################################
   void attach() {
     ripper = new omniORB_Ripper();
   }
 
+  //#######################################################################
   void detach() {
     ripper->kill();
     ripper = 0;
@@ -762,3 +604,10 @@ public:
 static omni_strand_initialiser initialiser;
 
 omniInitialiser& omni_strand_initialiser_ = initialiser;
+
+
+//#########################################################################
+CORBA::Boolean
+Strand::garbageCollect() {
+  return 0;
+}
