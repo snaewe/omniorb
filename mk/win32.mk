@@ -104,9 +104,13 @@ COPTIONS       = $(MSVC_DLL_CNODEBUGFLAGS)
 
 endif
 
-IMPORT_CPPFLAGS += -D__WIN32__
+ifndef WINVER
+WINVER = 0x0400
+endif
 
-SOCKET_LIB = wsock32.lib
+IMPORT_CPPFLAGS += -D__WIN32__ -D_WIN32_WINNT=$(WINVER)
+
+SOCKET_LIB = ws2_32.lib mswsock.lib
 
 
 #
@@ -461,10 +465,10 @@ msvc_work_around_stub = $(patsubst %,$(LibPattern),msvcstub) \
 OMNIORB_LIB = $(omniorb_dll_name) \
 		$(omnidynamic_dll_name) \
                 $(OMNIASYNCINVOKER_LIB) \
-		$(OMNITHREAD_LIB) wsock32.lib advapi32.lib
+		$(OMNITHREAD_LIB) $(SOCKET_LIB) advapi32.lib
 OMNIORB_LIB_NODYN = $(omniorb_dll_name) $(msvc_work_around_stub) \
                 $(OMNIASYNCINVOKER_LIB) \
-		$(OMNITHREAD_LIB) wsock32.lib advapi32.lib
+		$(OMNITHREAD_LIB) $(SOCKET_LIB) advapi32.lib
 
 OMNIORB_LIB_NODYN_DEPEND := $(omniORB_lib_depend) \
                             $(OMNIASYNCINVOKER_LIB_DEPEND) \

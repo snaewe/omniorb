@@ -5,6 +5,8 @@
 WindowsNT = 1
 x86Processor = 1
 
+WINVER = 0x0400
+
 BINDIR = bin/x86_win32
 LIBDIR = lib/x86_win32
 
