@@ -1,3 +1,21 @@
+Wed Apr 5 11:50:00 BST 2000 djs
+===============================
+
+- omniIDL C++ backend code tidying
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+
+- scoping bug wrt generated proxies for attributes
+
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+
+- DynSK.cc generation was slightly broken when a union had a switch
+  type included from another file (missing extern function declaration)
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
+
+
 Thu Mar 30 12:34:26 BST 2000 dpg1
 =================================
 
