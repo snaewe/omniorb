@@ -399,7 +399,7 @@ public:
   const T& in() const { return *pd_data; }
   T& inout() { return *pd_data; }
   T*& out() { return pd_data; }
-  T* _retn() { T* tmp = pd_seq; pd_seq = 0; return tmp; }
+  T* _retn() { T* tmp = pd_data; pd_data = 0; return tmp; }
 
   friend class _CORBA_Sequence_OUT_arg<T,_CORBA_Sequence_Var<T,ElmType> >;
 
