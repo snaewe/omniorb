@@ -63,6 +63,11 @@
 #include <sys/param.h>
 #endif
 
+#ifndef O_SYNC
+#ifdef  O_FSYNC              // FreeBSD 3.2 does not have O_SYNC???
+#define O_SYNC O_FSYNC
+#endif
+#endif
 
 #ifdef _NO_STRDUP
 
