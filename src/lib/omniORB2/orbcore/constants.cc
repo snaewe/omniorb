@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14  1999/05/25 17:22:40  sll
+  Added magic number constants for all the pseudo objects.
+
   Revision 1.13  1999/04/15 11:01:27  djr
   Updated version variable to omniORB_2_8
 
@@ -273,6 +276,28 @@ const GIOP_Basetypes::_SysExceptRepoID
 const GIOP_Basetypes::_SysExceptRepoID 
       GIOP_Basetypes::SysExceptRepoID::WRONG_TRANSACTION ((CORBA::Char *)
 				  "IDL:omg.org/CORBA/WRONG_TRANSACTION");
+
+//////////////////////////////////////////////////////////////////////
+// Each pseudo object type must be assigned a magic number.
+// This magic number is written into the member pd_magic of each instance
+// The static function PR_is_valid() in each of the pseudo object class 
+// can be used to test if the instance is indeed valid. If a random pointer 
+// is passed to isvalid(), it is unlikely that the magic number would match.
+const CORBA::ULong CORBA::BOA::PR_magic             = 0x424F4154U; // BOAT
+const CORBA::ULong CORBA::Context::PR_magic         = 0x43545854U; // CTXT
+const CORBA::ULong CORBA::ContextList::PR_magic     = 0x4354584CU; // CTXL
+const CORBA::ULong CORBA::DynAny::PR_magic          = 0x44594E54U; // DYNT
+const CORBA::ULong CORBA::Environment::PR_magic     = 0x454E564CU; // ENVI
+const CORBA::ULong CORBA::Exception::PR_magic       = 0x45584354U; // EXCT
+const CORBA::ULong CORBA::ExceptionList::PR_magic   = 0x4558434CU; // EXCL
+const CORBA::ULong CORBA::NamedValue::PR_magic      = 0x4E56414CU; // NVAL
+const CORBA::ULong CORBA::NVList::PR_magic          = 0x4E564C54U; // NVLT
+const CORBA::ULong CORBA::Object::PR_magic          = 0x434F424AU; // COBJ
+const CORBA::ULong CORBA::ORB::PR_magic             = 0x4F524254U; // ORBT
+const CORBA::ULong CORBA::Request::PR_magic         = 0x52455154U; // REQT
+const CORBA::ULong CORBA::TypeCode::PR_magic        = 0x54594F4CU; // TCOL
+
+
 
 
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
