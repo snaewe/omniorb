@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.6  1999/11/17 17:50:42  dpg1
+// Unions with nested declarations now output properly.
+//
 // Revision 1.5  1999/11/02 17:07:27  dpg1
 // Changes to compile on Solaris.
 //
@@ -316,7 +319,17 @@ visitUnionCase(UnionCase* c)
   printf("\n");
   ++indent_;
   printIndent();
-  c->caseType()->accept(*this);
+
+  if (c->constrType()) {
+    assert(c->caseType()->kind() == IdlType::tk_struct ||
+	   c->caseType()->kind() == IdlType::tk_union  ||
+	   c->caseType()->kind() == IdlType::tk_enum);
+
+    ((DeclaredType*)c->caseType())->decl()->accept(*this);
+  }
+  else
+    c->caseType()->accept(*this);
+
   printf(" %s", c->declarator()->identifier());
   --indent_;
 }
