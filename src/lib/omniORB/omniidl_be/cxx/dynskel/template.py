@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.9  2001/08/15 10:29:53  dpg1
+# Update DSI to use Current, inProcessIdentity.
+#
 # Revision 1.3.2.8  2001/06/13 17:26:41  sll
 # Remove '+' from 'namespace' in the generated code.
 #
@@ -108,7 +111,7 @@ header = """\
 
 OMNI_USING_NAMESPACE(omni)
 
-static const char* @prefix@_library_version = @library@;
+static const char* @prefix@_dyn_library_version = @library@;
 """
 
 # Required symbols:

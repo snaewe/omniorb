@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.5  2001/08/15 10:29:53  dpg1
+# Update DSI to use Current, inProcessIdentity.
+#
 # Revision 1.1.4.4  2001/04/10 10:55:31  dpg1
 # Minor fix to new output routine.
 #
@@ -54,8 +57,11 @@ import string
 createdFiles = []
 
 def createFile(filename):
-    file = open(filename, "w")
-    createdFiles.append(filename)
+    if filename in createdFiles:
+        file = open(filename, "a")
+    else:
+        file = open(filename, "w")
+        createdFiles.append(filename)
     return file
 
 def listAllCreatedFiles():
@@ -226,6 +232,8 @@ class Stream:
         self.file.write("\n")
         self.do_indent = 1
 
+    def close(self):
+        self.file.close()
 
 class StringStream(Stream):
     """Writes to a string buffer rather than a file."""

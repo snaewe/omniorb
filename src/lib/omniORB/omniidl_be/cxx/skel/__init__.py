@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7.2.7  2001/08/15 10:29:52  dpg1
+# Update DSI to use Current, inProcessIdentity.
+#
 # Revision 1.7.2.6  2001/05/29 17:03:50  dpg1
 # In process identity.
 #
@@ -160,7 +163,4 @@ def run(tree):
         # generate one big chunk of code
         monolithic(stream, tree)
 
-
-
-
-
+    stream.close()
