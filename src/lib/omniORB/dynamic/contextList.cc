@@ -90,6 +90,9 @@ ContextListImpl::add_consume(char* s)
 const char*
 ContextListImpl::item(CORBA::ULong index)
 {
+  if (index >= pd_list.length())
+    throw CORBA::ContextList::Bounds();
+
   return pd_list[index];
 }
 
@@ -97,6 +100,10 @@ ContextListImpl::item(CORBA::ULong index)
 CORBA::Status
 ContextListImpl::remove(CORBA::ULong index)
 {
+  if (index >= pd_list.length())
+    throw CORBA::ContextList::Bounds();
+
+
   // operator[] on the sequence will do the bounds check for us here
   CORBA::string_free(pd_list[index]);
 
@@ -168,14 +175,16 @@ static NilCtList _nilContextList;
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::ContextList::~ContextList() {}
+CORBA::ContextList::~ContextList() { pd_magic = 0; }
 
 
 CORBA::ContextList_ptr
 CORBA::
-ContextList::_duplicate(ContextList_ptr p)
+ContextList::_duplicate(CORBA::ContextList_ptr p)
 {
-  if( p )  return p->NP_duplicate();
+  if (!PR_is_valid(p))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
 
@@ -192,9 +201,9 @@ ContextList::_nil()
 //////////////////////////////////////////////////////////////////////
 
 void
-CORBA::release(ContextList_ptr p)
+CORBA::release(CORBA::ContextList_ptr p)
 {
-  if( !p->NP_is_nil() )
+  if( CORBA::ContextList::PR_is_valid(p) && !CORBA::is_nil(p) )
     ((ContextListImpl*)p)->decrRefCount();
 }
 
