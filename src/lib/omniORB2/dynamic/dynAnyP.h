@@ -230,8 +230,13 @@ public:
     CORBA::Long         lv;
     CORBA::ULong        ulv;
 #ifndef NO_FLOAT
+#ifndef USING_PROXY_FLOAT
     CORBA::Float        fv;
     CORBA::Double       dv;
+#else
+    float		fv;
+    double		dv;
+#endif
 #endif
     const char*         stiv;
     char*               stov;
