@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.14  1999/01/07 18:44:55  djr
+ *** empty log message ***
+
  Revision 1.13  1998/04/07 20:01:05  sll
  Added specialised marshalling functions for sequence boolean,
  sequence array boolean when bool type is used to represent CORBA::Boolean.
@@ -66,6 +69,10 @@
 
 class NetBufferedStream;
 class MemBufferedStream;
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// _CORBA_Sequence //////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T>
 class _CORBA_Sequence {
@@ -167,32 +174,28 @@ public:
     pd_len = length;
     return;
   }
-  inline T &operator[] (_CORBA_ULong index)
-  {
+  inline T &operator[] (_CORBA_ULong index) {
     if (index >= length()) {
       _CORBA_bound_check_error();
     }
     return pd_buf[index];
   }
-  inline const T &operator[] (_CORBA_ULong index) const
-  {
+  inline const T& operator[] (_CORBA_ULong index) const {
     if (index >= length()) {
       _CORBA_bound_check_error();
     }
     return pd_buf[index];
   }
-  static inline T* allocbuf(_CORBA_ULong nelems)
-  {
+  static inline T* allocbuf(_CORBA_ULong nelems) {
     return new T[nelems];
   }
-  static inline void freebuf(T * b)
-  {
+  static inline void freebuf(T * b) {
     if (b) delete [] b; 
     return;
   }
   // omniORB2 extensions
-  inline T *NP_data() const { return pd_buf; }
-  inline void NP_norelease() { pd_rel = 0; }
+  inline T* NP_data() const   { return pd_buf; }
+  inline void NP_norelease()  { pd_rel = 0;    }
   inline void operator>>= (NetBufferedStream &s) const;
   inline void operator<<= (NetBufferedStream &s);
   inline void operator>>= (MemBufferedStream &s) const;
@@ -203,6 +206,10 @@ private:
   _CORBA_Boolean  pd_rel;
   T              *pd_buf;
 };
+
+//////////////////////////////////////////////////////////////////////
+////////////////////// _CORBA_Unbounded_Sequence /////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T>
 class _CORBA_Unbounded_Sequence : public _CORBA_Sequence<T> {
@@ -227,6 +234,10 @@ public:
   inline void operator>>= (MemBufferedStream &s) const;
   inline void operator<<= (MemBufferedStream &s);
 };
+
+//////////////////////////////////////////////////////////////////////
+///////////// _CORBA_Unbounded_Sequence_w_FixSizeElement /////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T,int elmSize,int elmAlignment>
 class _CORBA_Unbounded_Sequence_w_FixSizeElement 
@@ -261,6 +272,10 @@ public:
   inline void operator<<= (MemBufferedStream &s);
 };
 
+//////////////////////////////////////////////////////////////////////
+///////////////// _CORBA_Unbounded_Sequence__Boolean /////////////////
+//////////////////////////////////////////////////////////////////////
+
 class _CORBA_Unbounded_Sequence__Boolean
    : public _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Boolean,1,1>
 {
@@ -286,6 +301,10 @@ public:
 #endif
 };
 
+//////////////////////////////////////////////////////////////////////
+////////////////// _CORBA_Unbounded_Sequence__Octet //////////////////
+//////////////////////////////////////////////////////////////////////
+
 class _CORBA_Unbounded_Sequence__Octet
    : public _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Octet,1,1>
 {
@@ -305,6 +324,9 @@ public:
   inline ~_CORBA_Unbounded_Sequence__Octet() {}
 };
 
+//////////////////////////////////////////////////////////////////////
+/////////////////////// _CORBA_Bounded_Sequence //////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T,int max>
 class _CORBA_Bounded_Sequence : public _CORBA_Sequence<T> {
@@ -327,6 +349,9 @@ public:
   inline void operator<<= (MemBufferedStream &s);
 };
 
+//////////////////////////////////////////////////////////////////////
+////////////// _CORBA_Bounded_Sequence_w_FixSizeElement //////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T,int max,int elmSize, int elmAlignment>
 class _CORBA_Bounded_Sequence_w_FixSizeElement 
@@ -342,11 +367,9 @@ public:
       _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>& s) 
     : _CORBA_Sequence<T>(s) {}
   inline ~_CORBA_Bounded_Sequence_w_FixSizeElement() {}
-  inline _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment> &
-      operator= 
-        (const 
-          _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>&
-            s);
+
+  inline _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>& operator=(const _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment>& s);
+
   inline _CORBA_ULong length() const;
   inline void length(_CORBA_ULong len);
   // omniORB2 extensions
@@ -356,6 +379,10 @@ public:
   inline void operator>>= (MemBufferedStream &s) const;
   inline void operator<<= (MemBufferedStream &s);
 };
+
+//////////////////////////////////////////////////////////////////////
+////////////////// _CORBA_Bounded_Sequence__Boolean //////////////////
+//////////////////////////////////////////////////////////////////////
 
 template <int max>
 class _CORBA_Bounded_Sequence__Boolean
@@ -380,6 +407,10 @@ public:
 #endif
 };
 
+//////////////////////////////////////////////////////////////////////
+/////////////////// _CORBA_Bounded_Sequence__Octet ///////////////////
+//////////////////////////////////////////////////////////////////////
+
 template <int max>
 class _CORBA_Bounded_Sequence__Octet
    : public _CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Octet,max,1,1>
@@ -396,7 +427,10 @@ public:
 
   inline ~_CORBA_Bounded_Sequence__Octet() {}
 };
-////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////// _CORBA_Sequence_Array ///////////////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T,class T_slice,class Telm,int dimension>
 class _CORBA_Sequence_Array {
@@ -505,6 +539,8 @@ public:
     pd_len = length;
     return;
   }
+  // These have to return pointer to slice to support brain-dead compilers
+  // (such as MSVC, which handles references to arrays poorly).
   inline T_slice* operator[] (_CORBA_ULong index)
   {
     if (index >= length()) {
@@ -539,8 +575,12 @@ private:
   _CORBA_ULong    pd_max;
   _CORBA_ULong    pd_len;
   _CORBA_Boolean  pd_rel;
-  T              *pd_buf;
+  T*              pd_buf;
 };
+
+//////////////////////////////////////////////////////////////////////
+/////////////////// _CORBA_Unbounded_Sequence_Array //////////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T,class T_slice,class Telm,int dimension>
 class _CORBA_Unbounded_Sequence_Array : public _CORBA_Sequence_Array<T,T_slice,Telm,dimension> {
@@ -568,6 +608,10 @@ public:
   inline void operator>>= (MemBufferedStream &s) const;
   inline void operator<<= (MemBufferedStream &s);
 };
+
+//////////////////////////////////////////////////////////////////////
+////////// _CORBA_Unbounded_Sequence_Array_w_FixSizeElement //////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T,class T_slice, class Telm,int dimension,int elmSize,int elmAlignment>
 class _CORBA_Unbounded_Sequence_Array_w_FixSizeElement 
@@ -605,6 +649,10 @@ public:
   inline void operator<<= (MemBufferedStream &s);
 };
 
+//////////////////////////////////////////////////////////////////////
+/////////////// _CORBA_Unbounded_Sequence_Array__Boolean /////////////
+//////////////////////////////////////////////////////////////////////
+
 template<class T, class T_slice, int dimension>
 class _CORBA_Unbounded_Sequence_Array__Boolean
    : public _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,1,1>
@@ -631,6 +679,9 @@ public:
 #endif
 };
 
+//////////////////////////////////////////////////////////////////////
+//////////////// _CORBA_Unbounded_Sequence_Array_Octet ///////////////
+//////////////////////////////////////////////////////////////////////
 
 template<class T, class T_slice, int dimension>
 class _CORBA_Unbounded_Sequence_Array__Octet
@@ -651,6 +702,10 @@ public:
 
   inline ~_CORBA_Unbounded_Sequence_Array__Octet() {}
 };
+
+//////////////////////////////////////////////////////////////////////
+//////////////////// _CORBA_Bounded_Sequence_Array ///////////////////
+//////////////////////////////////////////////////////////////////////
 
 template <class T,class T_slice,class Telm,int dimension,int max>
 class _CORBA_Bounded_Sequence_Array : public _CORBA_Sequence_Array<T,T_slice,Telm,dimension> {
@@ -676,6 +731,10 @@ public:
   inline void operator<<= (MemBufferedStream &s);
 };
 
+//////////////////////////////////////////////////////////////////////
+/////////// _CORBA_Bounded_Sequence_Array_w_FixSizeElement ///////////
+//////////////////////////////////////////////////////////////////////
+
 template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 class _CORBA_Bounded_Sequence_Array_w_FixSizeElement 
   : public _CORBA_Sequence_Array<T,T_slice,Telm,dimension> 
@@ -683,23 +742,21 @@ class _CORBA_Bounded_Sequence_Array_w_FixSizeElement
 public:
   inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement() {}
   inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement(_CORBA_ULong length,
-							T           *value,
-							_CORBA_Boolean release = 0)
+						T* value,
+						_CORBA_Boolean release = 0)
     : _CORBA_Sequence_Array<T,T_slice,Telm,dimension>(max,length,value,release) {}
   inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement(const 
       _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>& s) 
     : _CORBA_Sequence_Array<T,T_slice,Telm,dimension>(s) {}
   inline ~_CORBA_Bounded_Sequence_Array_w_FixSizeElement() {}
-  inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment> &
-      operator= 
-        (const 
-          _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>&
-            s);
+  inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>& operator=(const _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>& s);
+
   inline T *NP_data() const {
       return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::NP_data();
   }
   inline _CORBA_ULong length() const;
   inline void length(_CORBA_ULong len);
+
   // omniORB2 extensions
   inline size_t NP_alignedSize(size_t initialoffset) const;
   inline void operator>>= (NetBufferedStream &s) const;
@@ -708,6 +765,10 @@ public:
   inline void operator<<= (MemBufferedStream &s);
 };
 
+//////////////////////////////////////////////////////////////////////
+//////////////// _CORBA_Bounded_Sequence_Array__Boolean //////////////
+//////////////////////////////////////////////////////////////////////
+
 template<class T, class T_slice, int dimension, int max>
 class _CORBA_Bounded_Sequence_Array__Boolean
    : public _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,max,1,1>
@@ -715,8 +776,8 @@ class _CORBA_Bounded_Sequence_Array__Boolean
 public:
   inline _CORBA_Bounded_Sequence_Array__Boolean() {}
   inline _CORBA_Bounded_Sequence_Array__Boolean(_CORBA_ULong length,
-						        T *value,
-							_CORBA_Boolean release = 0)
+						T* value,
+						_CORBA_Boolean release=0)
     :  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,max,1,1>(length,value,release) {}
   inline _CORBA_Bounded_Sequence_Array__Boolean(const 
       _CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>& s) 
@@ -730,6 +791,10 @@ public:
   inline void operator<<= (MemBufferedStream &s);
 #endif
 };
+
+//////////////////////////////////////////////////////////////////////
+///////////////// _CORBA_Bounded_Sequence_Array_Octet ////////////////
+//////////////////////////////////////////////////////////////////////
 
 template<class T, class T_slice, int dimension, int max>
 class _CORBA_Bounded_Sequence_Array__Octet
@@ -751,9 +816,5 @@ public:
 
 typedef _CORBA_Unbounded_Sequence__Octet _CORBA_Unbounded_Sequence_Octet;
 
+
 #endif // __SEQTEMPLATES_H__
-
-
-
-
-
