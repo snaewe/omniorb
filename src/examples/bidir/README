@@ -8,8 +8,8 @@ parameters set:
 
   Server:
     acceptBiDirectionalGIOP = 1
-    serverTransportRule = "unix,tcp,bidir"
+    serverTransportRule = "* unix,tcp,bidir"
 
   Client:
     offerBiDirectionalGIOP = 1
-    clientTransportRule = "unix,tcp,bidir"
+    clientTransportRule = "* unix,tcp,bidir"

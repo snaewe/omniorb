@@ -65,9 +65,7 @@ int main(int argc, char** argv)
 
 
     {
-      // Get the reference the server.
-      CORBA::Object_var obj = orb->string_to_object(argv[1]);
-      cb::Server_var server = cb::Server::_narrow(obj);
+      CORBA::Object_var obj;
 
       // Initialise the POA.
       obj = orb->resolve_initial_references("RootPOA");
@@ -83,6 +81,10 @@ int main(int argc, char** argv)
       pl[0] = orb->create_policy(BiDirPolicy::BIDIRECTIONAL_POLICY_TYPE, a);
 
       PortableServer::POA_var poa = rootpoa->create_POA("bidir", pman, pl);
+
+      // Get the reference the server.
+      obj = orb->string_to_object(argv[1]);
+      cb::Server_var server = cb::Server::_narrow(obj);
 
       // Register a CallBack object in this process.
       cb_i* mycallback = new cb_i();
