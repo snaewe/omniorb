@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.4  1999/05/25 18:10:46  sll
+  Now CORBA::ORB::ObjectIdList and CORBA_InitialReference::ObjIdList
+  are different types.
+
   Revision 1.3  1999/03/11 16:25:51  djr
   Updated copyright notice
 
@@ -53,7 +57,7 @@ class omniInitialReferences {
  public:
   void set(const char* identifier,CORBA::Object_ptr obj);
   CORBA::Object_ptr get(const char* identifier);
-  CORBA::ORB::ObjectIdList* list();
+  CORBA_InitialReferences::ObjIdList* list();
 
   void initialise_bootstrap_agentImpl();
   CORBA_InitialReferences_i* has_bootstrap_agentImpl();
@@ -98,7 +102,7 @@ public:
   CORBA::Object_ptr get (const char* id) {
     return omniInitialReferences::singleton()->get(id);
   }
-  CORBA::ORB::ObjectIdList* list () {
+  ObjIdList* list () {
     return omniInitialReferences::singleton()->list();
   }
   CORBA_InitialReferences_i(CORBA::BOA_ptr boa) {
