@@ -61,7 +61,10 @@ The general form of an omniidl command line is:<BR>
 <TD ALIGN=left NOWRAP>Do not warn about unresolved forward declarations.</TD>
 </TR>
 <TR><TD ALIGN=left NOWRAP><TT>-k</TT></TD>
-<TD ALIGN=left NOWRAP>Keep comments as strings to be used by some back-ends.</TD>
+<TD ALIGN=left NOWRAP>Keep comments after declarations, to be used by some back-ends.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-K</TT></TD>
+<TD ALIGN=left NOWRAP>Keep comments before declarations, to be used by some back-ends.</TD>
 </TR>
 <TR><TD ALIGN=left NOWRAP><TT>-C</TT><I>dir</I></TD>
 <TD ALIGN=left NOWRAP>Change directory to <I>dir</I> before writing output files.</TD>
@@ -114,6 +117,25 @@ interface J {
 you have a lot of IDL with this sort of construct, you will drown
 under the warning messages. Use the <TT>-nf</TT> option to suppress
 them.<BR>
+<BR>
+
+<H3>5.1.3&nbsp;&nbsp; Comments</H3>By default, omniidl discards comments in the input IDL. However, with
+the <TT>-k</TT> and <TT>-K</TT> options, it preserves the comments
+for use by the back-ends. The C++ back-end ignores this information,
+but it is relatively easy to write new back-ends which <EM>do</EM> make
+use of comments.<BR>
+<BR>
+The two different options relate to how comments are attached to
+declarations within the IDL. Given IDL like:<BR>
+<BR>
+<PRE>
+interface I {
+  void op1();
+  // A comment
+  void op2();
+};
+</PRE>the <TT>-k</TT> flag will attach the comment to <TT>op1()</TT>;
+the <TT>-K</TT> flag will attach it to <TT>op2()</TT>.<BR>
 <BR>
 <A NAME="toc24"></A>
 <H2>5.2&nbsp;&nbsp; C++ back-end options</H2>When you specify the C++ back-end (with <TT>-bcxx</TT>), the

@@ -2926,7 +2926,10 @@ The following options are common to all back-ends:
      \> Do not warn about unresolved forward declarations.\\
 
 \cmdline{-k}
-     \> Keep comments as strings to be used by some back-ends.\\
+     \> Keep comments after declarations, to be used by some back-ends.\\
+
+\cmdline{-K}
+     \> Keep comments before declarations, to be used by some back-ends.\\
 
 \cmdline{-C}\textit{dir}
      \> Change directory to \textit{dir} before writing output files.\\
@@ -2990,6 +2993,29 @@ interface J {
 you have a lot of IDL with this sort of construct, you will drown
 under the warning messages. Use the \cmdline{-nf} option to suppress
 them.
+
+
+\subsection{Comments}
+
+By default, omniidl discards comments in the input IDL. However, with
+the \cmdline{-k} and \cmdline{-K} options, it preserves the comments
+for use by the back-ends. The C++ back-end ignores this information,
+but it is relatively easy to write new back-ends which \emph{do} make
+use of comments.
+
+The two different options relate to how comments are attached to
+declarations within the IDL. Given IDL like:
+
+\begin{idllisting}
+interface I {
+  void op1();
+  // A comment
+  void op2();
+};
+\end{idllisting}
+
+\noindent the \cmdline{-k} flag will attach the comment to \op{op1};
+the \cmdline{-K} flag will attach it to \op{op2}.
 
 
 
