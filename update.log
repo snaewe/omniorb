@@ -6,6 +6,10 @@ Mon Jul 19 10:50:03 BST 1999 djr
 
 src/tool/omniidl2/omniORB2_be/o2be_exception.cc
 
+- Removed redundant tests for nil object references.
+
+include/omniORB2/templatedecls.h
+
 
 Fri Jul  9 22:01:23 BST 1999 sll
 ================================
