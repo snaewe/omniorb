@@ -58,6 +58,10 @@ ifdef Win32Platform
 CXXOPTIONS += -Zm200
 endif
 
+ifdef HPUX
+CXXDEBUGFLAGS =
+endif
+
 lib = $(patsubst %,$(LibPattern),omniORB2_be)
 
 
