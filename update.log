@@ -8,6 +8,18 @@ Thu Jan 14 10:16:08 GMT 1999 djr
 src/tool/omniidl2/omniORB2_be/o2be_union.cc
 
 
+- Added CORBA_*_PATTERN variables (which had been mistakenly removed).
+
+mk/beforedir.mk
+
+- Changes to sharedlib makefiles for HPUX.
+
+src/lib/omnithread/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
+
+
 Wed Jan 13 15:14:11 GMT 1999 djr
 ================================
 
