@@ -27,9 +27,14 @@
 
 /*
  $Log$
- Revision 1.11  1998/01/27 16:30:42  ewc
- Added support for type any and TypeCode
+ Revision 1.12  1998/04/07 18:54:52  sll
+ Use std::fstream instead of fstream.
+ New helper functions VarToken and FriendToken to support the
+ use of namespace to map module.
 
+ * Revision 1.11  1998/01/27  16:30:42  ewc
+ * Added support for type any and TypeCode
+ *
  Revision 1.10  1997/12/23 19:29:58  sll
  New member o2be_array::produce_typedef_skel.
 
@@ -48,7 +53,6 @@
 #ifndef _O2BE_CLASSES_H_
 #define _O2BE_CLASSES_H_
 
-#include <fstream.h>
 #include <string.h>
 
 #define USE_SEQUENCE_TEMPLATE_IN_PLACE 1
@@ -132,9 +136,9 @@ public:
 						   AST_Decl *used_in,
 						   idl_bool use_fqname=I_FALSE);
   static void narrow_and_produce_typecode_skel(AST_Decl *type, 
-					       fstream& s);
+					       std::fstream& s);
   static void produce_typecode_member(AST_Decl *type, 
-				      fstream& s,
+				      std::fstream& s,
 				      idl_bool new_ptr=I_TRUE);
   static idl_bool narrow_and_check_recursive_seq(AST_Decl *decl);
 
@@ -161,7 +165,7 @@ public:
   virtual ~o2be_sequence_chain() {}
   void set_seq_decl(o2be_sequence *d);
   o2be_sequence *get_seq_decl()  { return pd_seq_decl; }
-  void produce_seq_hdr_if_defined(fstream &s);
+  void produce_seq_hdr_if_defined(std::fstream &s);
 private:
   o2be_sequence_chain();
   o2be_sequence *pd_seq_decl;
@@ -180,7 +184,7 @@ public:
   DEF_NARROW_METHODS1(o2be_predefined_type, AST_PredefinedType);
   DEF_NARROW_FROM_DECL(o2be_predefined_type);
 
-  void produce_typedef_hdr (fstream &s, o2be_typedef *tdef);
+  void produce_typedef_hdr (std::fstream &s, o2be_typedef *tdef);
 
   const char* fieldMemberTypeName();
   static const char* TypeCodeMemberName();
@@ -206,8 +210,8 @@ public:
   DEF_NARROW_METHODS1(o2be_constant, AST_Constant);
   DEF_NARROW_FROM_DECL(o2be_constant);
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
 
 private:
   o2be_constant();
@@ -226,11 +230,11 @@ public:
   DEF_NARROW_FROM_DECL(o2be_enum);
   DEF_NARROW_FROM_SCOPE(o2be_enum);
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
-  void produce_typedef_hdr (fstream &s, o2be_typedef *tdef);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
+  void produce_typedef_hdr (std::fstream &s, o2be_typedef *tdef);
 
-  void produce_typecode_skel(fstream &s);
+  void produce_typecode_skel(std::fstream &s);
 
   void set_hdr_produced_in_field() { pd_hdr_produced_in_field = I_TRUE; }
   idl_bool get_hdr_produced_in_field() { return pd_hdr_produced_in_field; }
@@ -270,7 +274,7 @@ public:
   DEF_NARROW_FROM_DECL(o2be_string);
 
   static const char *fieldMemberTypeName();
-  static void produce_typedef_hdr (fstream &s, o2be_typedef *tdef);
+  static void produce_typedef_hdr (std::fstream &s, o2be_typedef *tdef);
 
   size_t max_length();
 
@@ -309,11 +313,11 @@ public:
 
   virtual AST_UnionBranch *add_union_branch(AST_UnionBranch *un);
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
-  void produce_typedef_hdr (fstream &s, o2be_typedef *tdef);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
+  void produce_typedef_hdr (std::fstream &s, o2be_typedef *tdef);
 
-  void produce_typecode_skel(fstream &s);
+  void produce_typecode_skel(std::fstream &s);
   idl_bool check_recursive_seq();
 
   idl_bool isVariable() { return pd_isvar; }
@@ -368,11 +372,11 @@ public:
   DEF_NARROW_FROM_DECL(o2be_structure);
   DEF_NARROW_FROM_SCOPE(o2be_structure);
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
-  void produce_typedef_hdr (fstream &s, o2be_typedef *tdef);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
+  void produce_typedef_hdr (std::fstream &s, o2be_typedef *tdef);
 
-  void produce_typecode_skel(fstream &s);
+  void produce_typecode_skel(std::fstream &s);
   idl_bool check_recursive_seq();
 
   idl_bool isVariable() { return pd_isvar; }
@@ -405,10 +409,10 @@ public:
   DEF_NARROW_FROM_DECL(o2be_exception);
   DEF_NARROW_FROM_SCOPE(o2be_exception);
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
 
-  void produce_typecode_skel(fstream &s);
+  void produce_typecode_skel(std::fstream &s);
   idl_bool check_recursive_seq();
 
   size_t repoIdConstLen() const { return pd_repoidsize; }
@@ -463,30 +467,30 @@ public:
     AST_Expression **pd_dims;
   };
 
-  void produce_hdr (fstream &s, o2be_typedef *tdef);
-  void produce_skel(fstream &s, o2be_typedef *tdef);
+  void produce_hdr (std::fstream &s, o2be_typedef *tdef);
+  void produce_skel(std::fstream &s, o2be_typedef *tdef);
 
-  void produce_typecode_skel(fstream &s);
-  void produce_typecode_member(fstream &s, idl_bool new_ptr);
+  void produce_typecode_skel(std::fstream &s);
+  void produce_typecode_member(std::fstream &s, idl_bool new_ptr);
   idl_bool check_recursive_seq();
 
-  static void produce_typedef_hdr (fstream &s, o2be_typedef *tdef1,
+  static void produce_typedef_hdr (std::fstream &s, o2be_typedef *tdef1,
 				   o2be_typedef *tdef2);
-  static void produce_typedef_skel (fstream &s, o2be_typedef *tdef1,
+  static void produce_typedef_skel (std::fstream &s, o2be_typedef *tdef1,
 				    o2be_typedef *tdef2);
-  void produce_typedef_in_union(fstream &s, const char *tname,
+  void produce_typedef_in_union(std::fstream &s, const char *tname,
 				AST_Decl* used_in);
   // Looks at the scope-name relation between this node and the one it is
   // used in. Generate the fieldmember type that used the unambiguous name
   // of this node in the scope where it is used.
 
-  void produce_struct_member_decl (fstream &s, AST_Decl *fieldtype,
+  void produce_struct_member_decl (std::fstream &s, AST_Decl *fieldtype,
 				   AST_Decl* used_in);
   // Looks at the scope-name relation between <fieldtype> and the one it is
   // used in. Generate the fieldmember type that used the unambiguous name
   // of <fieldtype> in the scope where it is used.
 
-  void produce_union_member_decl (fstream &s, AST_Decl *fieldtype,
+  void produce_union_member_decl (std::fstream &s, AST_Decl *fieldtype,
 				  AST_Decl* used_in);
   // Looks at the scope-name relation between <fieldtype> and the one it is
   // used in. Generate the fieldmember type that used the unambiguous name
@@ -496,7 +500,7 @@ public:
 
 private:
   o2be_array();
-  void _produce_member_decl(fstream &s, char *varname,AST_Decl* used_in);
+  void _produce_member_decl(std::fstream &s, char *varname,AST_Decl* used_in);
 };
 
 class o2be_sequence : public virtual AST_Sequence,
@@ -522,15 +526,15 @@ public:
   DEF_NARROW_FROM_DECL(o2be_sequence);
   DEF_NARROW_FROM_SCOPE(o2be_sequence);
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
-  void produce_typedef_hdr (fstream &s, o2be_typedef *tdef);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
+  void produce_typedef_hdr (std::fstream &s, o2be_typedef *tdef);
 
-  void produce_typecode_skel(fstream &s);
-  void produce_typecode_member(fstream &s, idl_bool new_ptr);
+  void produce_typecode_skel(std::fstream &s);
+  void produce_typecode_member(std::fstream &s, idl_bool new_ptr);
   idl_bool check_recursive_seq();
 
-  static void produce_hdr_for_predefined_types(fstream &s);
+  static void produce_hdr_for_predefined_types(std::fstream &s);
   static AST_Sequence *attach_seq_to_base_type(AST_Sequence *se);
 
   const char *out_adptarg_name(o2be_typedef* tdef,AST_Decl* used_in) const;
@@ -570,58 +574,58 @@ public:
   DEF_NARROW_FROM_DECL(o2be_attribute);
   DEF_NARROW_FROM_SCOPE(o2be_attribute);
 
-  void produce_decl_rd(fstream &s,
+  void produce_decl_rd(std::fstream &s,
 		       const char *prefix = 0,
 		       idl_bool out_var_default = I_TRUE,
 		       idl_bool use_fully_qualified_names = I_FALSE);
 
-  void produce_decl_wr(fstream &s,
+  void produce_decl_wr(std::fstream &s,
 		       const char *prefix = 0,
 		       idl_bool out_var_default = I_TRUE,
 		       idl_bool use_fully_qualified_names = I_FALSE);
 
-  void produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in);
+  void produce_proxy_rd_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the definition of the proxy's method to get this attribute
 
-  void produce_proxy_wr_skel(fstream &s,o2be_interface &defined_in);
+  void produce_proxy_wr_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the definition of the proxy's method to set this attribute
 
-  void produce_server_rd_skel(fstream &s,o2be_interface &defined_in);
+  void produce_server_rd_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the code fragment within the server's dispatch routine
   // to handle getting this attribute
 
-  void produce_server_wr_skel(fstream &s,o2be_interface &defined_in);
+  void produce_server_wr_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the code fragment within the server's dispatch routine
   // to handle setting this attirbute
 
-  void produce_nil_rd_skel(fstream &s);
+  void produce_nil_rd_skel(std::fstream &s);
   // produce the definition of the nil object's method to get this attribute
 
-  void produce_nil_wr_skel(fstream &s);
+  void produce_nil_wr_skel(std::fstream &s);
   // produce the definition of the nil object's method to set this attribute
 
-  void produce_dead_rd_skel(fstream &s);
+  void produce_dead_rd_skel(std::fstream &s);
   // produce the definition of the dead object's get method
 
-  void produce_dead_wr_skel(fstream &s);
+  void produce_dead_wr_skel(std::fstream &s);
   // produce the definition of the dead object's set method
 
-  void produce_home_rd_skel(fstream &s,o2be_interface &defined_in);
+  void produce_home_rd_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the _wrap_home get method
 
-  void produce_home_wr_skel(fstream &s,o2be_interface &defined_in);
+  void produce_home_wr_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the _wrap_home set method
 
-  void produce_lcproxy_rd_skel(fstream &s,o2be_interface &defined_in);
+  void produce_lcproxy_rd_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the LifeCycle proxy's method to get this attribute
 
-  void produce_lcproxy_wr_skel(fstream &s,o2be_interface &defined_in);
+  void produce_lcproxy_wr_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the LifeCycle proxy's method to set this attribute
 
-  void produce_wrapproxy_rd_skel(fstream &s,o2be_interface &defined_in);
+  void produce_wrapproxy_rd_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the _wrap_proxy get method
 
-  void produce_wrapproxy_wr_skel(fstream &s,o2be_interface &defined_in);
+  void produce_wrapproxy_wr_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the _wrap_proxy set method
 
 private:
@@ -641,41 +645,41 @@ public:
   DEF_NARROW_FROM_DECL(o2be_operation);
   DEF_NARROW_FROM_SCOPE(o2be_operation);
 
-  void produce_decl(fstream &s,
+  void produce_decl(std::fstream &s,
 		    const char *prefix = 0,
 		    const char *alias_prefix = 0,
 		    idl_bool out_var_default = I_TRUE,
 		    idl_bool use_fully_qualified_names = I_FALSE);
   // produce the declaration of the mapping of this operation
 
-  void produce_proxy_skel(fstream &s,o2be_interface &defined_in,
+  void produce_proxy_skel(std::fstream &s,o2be_interface &defined_in,
 			  const char* alias_prefix=0);
   // produce the definition of the proxy's method to invoke this
   // operation
 
-  void produce_server_skel(fstream &s,o2be_interface &defined_in);
+  void produce_server_skel(std::fstream &s,o2be_interface &defined_in);
   // produce the code fragment within the server's dispatch routine
   // to handle this operation
 
-  void produce_nil_skel(fstream &s,const char* alias_prefix=0);
+  void produce_nil_skel(std::fstream &s,const char* alias_prefix=0);
   // produce the definition of the nil object's method
 
-  void produce_dead_skel(fstream &s,const char* alias_prefix=0);
+  void produce_dead_skel(std::fstream &s,const char* alias_prefix=0);
   // produce the definition of the dead object's method
 
-  void produce_home_skel(fstream &s,o2be_interface &defined_in,
+  void produce_home_skel(std::fstream &s,o2be_interface &defined_in,
 			 const char* alias_prefix=0);
   // produce the _wrap_home method
 
-  void produce_lcproxy_skel(fstream &s,o2be_interface &defined_in,
+  void produce_lcproxy_skel(std::fstream &s,o2be_interface &defined_in,
 			    const char* alias_prefix=0);
   // produce the LifeCycle proxy's method to invoke this operation
 
-  void produce_wrapproxy_skel(fstream &s,o2be_interface &defined_in,
+  void produce_wrapproxy_skel(std::fstream &s,o2be_interface &defined_in,
 			      const char* alias_prefix=0);
   // produce the _wrap_proxy method
 
-  void produce_mapping_with_indirection(fstream& s,
+  void produce_mapping_with_indirection(std::fstream& s,
 					const char* alias_prefix);
   // produce the mapping for this operation using the adaptation classes
   // <T>_INOUT_arg and <T>_OUT_arg.
@@ -689,7 +693,7 @@ public:
   idl_bool return_is_void();
   // returns I_TRUE if the return value of this operation is void
 
-  void produce_invoke(fstream &s);
+  void produce_invoke(std::fstream &s);
   // produce an invocation. Use the argument names as defined in the
   // IDL.
 
@@ -731,37 +735,37 @@ private:
   argType ast2ArgMapping(AST_Decl *decl,argWhich dir,argMapping &mapping);
 
   static
-  void declareVarType(fstream &s, AST_Decl *decl, AST_Decl* used_in,
+  void declareVarType(std::fstream &s, AST_Decl *decl, AST_Decl* used_in,
 		      idl_bool is_var=0,
 		      idl_bool is_arrayslice=0);
 
   static
-  void produceUnMarshalCode(fstream &s, AST_Decl *decl, AST_Decl* used_in,
+  void produceUnMarshalCode(std::fstream &s, AST_Decl *decl, AST_Decl* used_in,
 			    const char *netstream,
 			    const char *argname,
 			    argType type, argMapping mapping,
 			    idl_bool no_size_check=0);
 
   static
-  void produceMarshalCode(fstream &s, AST_Decl *decl, AST_Decl* used_in,
+  void produceMarshalCode(std::fstream &s, AST_Decl *decl, AST_Decl* used_in,
 			  const char *netstream,
 			  const char *argname,
 			  argType type, argMapping mapping);
 
   static
-  void produceSizeCalculation(fstream &s, AST_Decl *decl, AST_Decl* used_in,
+  void produceSizeCalculation(std::fstream &s, AST_Decl *decl, AST_Decl* used_in,
 			      const char *netstream,
 			      const char *sizevar,
 			      const char *argname,
 			      argType type, argMapping mapping);
 
   static
-  void produceConstStringMarshalCode(fstream &s,
+  void produceConstStringMarshalCode(std::fstream &s,
 				     const char *netstream,
 				     const char *str,size_t len);
 
   static
-  void produceConstStringSizeCalculation(fstream &s,
+  void produceConstStringSizeCalculation(std::fstream &s,
 					 const char *sizevar,
 					 size_t len);
 };
@@ -777,10 +781,10 @@ public:
   DEF_NARROW_METHODS1(o2be_typedef, AST_Typedef);
   DEF_NARROW_FROM_DECL(o2be_typedef);
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
 
-  void produce_typecode_skel(fstream &s);
+  void produce_typecode_skel(std::fstream &s);
   idl_bool check_recursive_seq();
 
   const char *fieldMemberType_uqname() const { return pd_fm_uqname; }
@@ -808,9 +812,9 @@ public:
   DEF_NARROW_FROM_DECL(o2be_interface);
   DEF_NARROW_FROM_SCOPE(o2be_interface);
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
-  void produce_typedef_hdr (fstream &s, o2be_typedef *tdef);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
+  void produce_typedef_hdr (std::fstream &s, o2be_typedef *tdef);
 
   const char *objref_uqname() const { return pd_objref_uqname; }
   const char *objref_fqname() const { return pd_objref_fqname; }
@@ -908,7 +912,7 @@ public:
   DEF_NARROW_FROM_DECL(o2be_interface_fwd);
   DEF_NARROW_FROM_SCOPE(o2be_interface_fwd);
 
-  void produce_hdr(fstream &s);
+  void produce_hdr(std::fstream &s);
 
 private:
   o2be_interface_fwd();
@@ -926,8 +930,8 @@ public:
   DEF_NARROW_FROM_DECL(o2be_module);
   DEF_NARROW_FROM_SCOPE(o2be_module);
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
 
 private:
   o2be_module();
@@ -955,11 +959,11 @@ private:
 
   char *basename;
   int   baselen;
-  fstream pd_hdr;
-  fstream pd_skel;
+  std::fstream pd_hdr;
+  std::fstream pd_skel;
 
-  void produce_hdr(fstream &s);
-  void produce_skel(fstream &s);
+  void produce_hdr(std::fstream &s);
+  void produce_skel(std::fstream &s);
 };
 
 
@@ -1167,5 +1171,23 @@ private:
   const char *pd_errmsg;
   o2be_fileio_error();
 };
+
+static inline char const* FriendToken(AST_Decl& decl) {
+  if (decl.defined_in()==idl_global->root())
+    return "";
+  else if (decl.defined_in()->scope_node_type()==AST_Decl::NT_module)
+    return "_CORBA_MODULE_OP";
+  else
+    return "friend";
+}
+
+static inline char const* VarToken(AST_Decl& decl) {
+  if (decl.defined_in()==idl_global->root())
+    return "extern";
+  else if (decl.defined_in()->scope_node_type()==AST_Decl::NT_module)
+    return "_CORBA_MODULE_VAR";
+  else
+    return "static _LC_attr";
+}
 
 #endif
