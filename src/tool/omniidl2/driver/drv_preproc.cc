@@ -237,8 +237,13 @@ DRV_stripped_name(char *fn)
     if (n == NULL)
 	return NULL;
     l = strlen(n);
+#ifdef __NT__
+    for (n += l; l > 0 && *n != '\\'; l--, n--);
+    if (*n == '\\') n++;
+#else
     for (n += l; l > 0 && *n != '/'; l--, n--);
     if (*n == '/') n++;
+#endif
     return n;
 }
 
