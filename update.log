@@ -1,3 +1,11 @@
+Wed Jul 25 15:19:22 BST 2001 dpg1
+=================================
+
+- Same old static initialiser problem, this time with transports.
+
+src/lib/omniORB/orbcore/giopEndpoint.cc
+
+
 Wed Jul 25 14:38:42 BST 2001 dpg1
 =================================
 

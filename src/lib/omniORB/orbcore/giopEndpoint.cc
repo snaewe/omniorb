@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/07/25 14:22:02  dpg1
+  Same old static initialiser problem, this time with transports.
+
   Revision 1.1.2.3  2001/07/13 15:13:32  sll
   giopConnection is now reference counted.
 
@@ -49,7 +52,10 @@
 OMNI_NAMESPACE_BEGIN(omni)
 
 ////////////////////////////////////////////////////////////////////////
-static giopTransportImpl* implHead = 0;
+static giopTransportImpl*& implHead() {
+  static giopTransportImpl* head_ = 0;
+  return head_;
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -91,7 +97,7 @@ matchType(const char* uri,const char*& param,CORBA::Boolean allowShortHand) {
     }
   }
 
-  giopTransportImpl* impl = implHead;
+  giopTransportImpl* impl = implHead();
 
   while (impl) {
     int len = strlen(impl->type);
@@ -159,7 +165,7 @@ giopEndpoint::addToIOR(const char* endpoint) {
 
 ////////////////////////////////////////////////////////////////////////
 giopTransportImpl::giopTransportImpl(const char* t) : type(t), next(0) {
-  giopTransportImpl** pp = &implHead;
+  giopTransportImpl** pp = &implHead();
   while (*pp) pp = &((*pp)->next);
   *pp = this;
 }
