@@ -1,3 +1,38 @@
+Mon Oct 18 01:43:33 BST 2004 dgrisby
+====================================
+
+- Updates for 4.0.5 release.
+
+README.FIRST
+README.FIRST.txt
+README.win32
+README.win32.txt
+ReleaseNotes_4.0.4.txt
+ReleaseNotes_4.0.5.txt
+THIS_IS_OMNIORB_4_0_4
+THIS_IS_OMNIORB_4_0_5
+bugfixes-403.xml
+bugfixes-404.xml
+configure
+configure.ac
+mk/beforeauto.mk.in
+mk/mingw.mk
+mk/rtems.mk
+mk/unix.mk
+mk/vxWorks.mk
+mk/win32.mk
+src/examples/anyExample/dir.mak
+src/examples/bidir/dir.mak
+src/examples/boa/dir.mak
+src/examples/call_back/dir.mak
+src/examples/dii/dir.mak
+src/examples/echo/dir.mak
+src/examples/echo/dir.mk
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/servant_manager/dir.mak
+
+
 Mon Oct 18 01:23:00 BST 2004 dgrisby
 ====================================
 

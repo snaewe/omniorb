@@ -21,7 +21,7 @@
 
 <bug id="8" date="Thu Jul  1 20:01:13 BST 2004" user="dgrisby">
   <summary>Fixed point broken</summary>
-  <reported>Simon Viani</reported>
+  <reported>Simone Viani</reported>
   <text>
   Numerous problems in fixed point rounding.
   </text>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
+
+<!-- The following bugs have been fixed since the omniORB 4.0.4     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist version="4.0.4">
+
+<bug id="1" date="Mon Sep 13 16:27:09 BST 2004" user="dgrisby">
+  <summary>Connections incorrectly refused on Windows</summary>
+  <text>
+  A change to make Unix servers more robust in heavy use accidentally
+  meant that Windows servers could reject valid connections.
+  </text>
+</bug>
+
+<bug id="2" date="Sun Oct 17 22:27:47 BST 2004" user="dgrisby">
+  <summary>Reusing an NVList failed</summary>
+  <reported>Paul Haesler</reported>
+  <text>
+  The cached data inside Anys was not reset, meaning that reusing an
+  NVList did not work.
+  </text>
+</bug>
+
+<bug id="3" date="Sun Oct 17 22:58:47 BST 2004" user="dgrisby">
+  <summary>Errors in accept() not handled.</summary>
+  <reported>Kamaldeep Singh Khanuja</reported>
+  <text>
+  Recoverable errors from accept() were not handled.
+  </text>
+</bug>
+
+<bug id="4" date="Sun Oct 17 23:17:07 BST 2004" user="dgrisby">
+  <summary>Broken stubs for typedef to sequence of forward-declared structs</summary>
+  <reported>Jeremy Van Grinsven</reported>
+</bug>
+
+<bug id="5" date="Sun Oct 17 23:22:21 BST 2004" user="dgrisby">
+  <summary>wchar missing from TypeCode unmarshalling</summary>
+  <reported>Luke Deller</reported>
+</bug>
+
+<bug id="6" date="Mon Oct 18 01:20:32 BST 2004" user="dgrisby">
+  <summary>Intermittent errors using GIOP 1.0 with bidirectional
+  settings</summary>
+  <reported>Luke Tunmer</reported>
+  <text>
+  When bidirectional GIOP is selected, a thread is started to read
+  incoming messages. That thread would be upset if it received a
+  message from GIOP 1.0 or 1.1. The thread should not be started
+  unless the connection is used for GIOP 1.2.
+  </text>
+</bug>
+
+</buglist>

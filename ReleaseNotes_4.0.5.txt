@@ -1,9 +1,17 @@
-RELEASE NOTES for omniORB 4.0.4
+RELEASE NOTES for omniORB 4.0.5
 ===============================
 
-This is omniORB 4.0.4. It is a stable release.
+This is omniORB 4.0.5. It is a stable release.
 
-See README.unix or README.win32 for building instructions.
+See README.unix or README.win32.txt for building instructions.
+
+
+New features since omniORB 4.0.4
+--------------------------------
+
+ - Bug fixes.
+ - New makedeffile.py script to help build Windows DLLs.
+ - OpenVMS is supported again.
 
 
 New features since omniORB 4.0.3
