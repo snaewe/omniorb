@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9.6.4  1999/12/10 12:33:16  djr
+  Fixed deadlock in bootstrap agent.
+
   Revision 1.9.6.3  1999/10/04 17:08:31  djr
   Some more fixes/MSVC work-arounds.
 
@@ -79,9 +82,8 @@
 #include <initialiser.h>
 
 
-static omni_mutex the_lock;
-static CORBA_InitialReferences_ptr the_bootagent = 0;
 static CORBA_InitialReferences_i*  the_bootagentImpl = 0;
+static omni_tracedmutex ba_lock;
 
 struct serviceRecord {
   CORBA::String_member id;
@@ -89,6 +91,8 @@ struct serviceRecord {
 };
 
 static _CORBA_PseudoValue_Sequence<serviceRecord> the_serviceList;
+static CORBA_InitialReferences_ptr the_bootagent = 0;
+static omni_tracedmutex sl_lock;
 
 
 //////////////////////////////////////////////////////////////////////
@@ -118,7 +122,7 @@ CORBA_InitialReferences_i::get(const char* id)
 CORBA_InitialReferences::ObjIdList*
 CORBA_InitialReferences_i::list()
 {
-  omni_mutex_lock sync(the_lock);
+  omni_tracedmutex_lock sync(sl_lock);
 
   CORBA_InitialReferences::ObjIdList* result =
     new CORBA_InitialReferences::ObjIdList(the_serviceList.length());
@@ -141,7 +145,7 @@ CORBA_InitialReferences_i::list()
 void
 omniInitialReferences::set(const char* identifier, CORBA::Object_ptr obj)
 {
-  omni_mutex_lock sync(the_lock);
+  omni_tracedmutex_lock sync(sl_lock);
 
   CORBA::ULong index;
   for (index=0; index < the_serviceList.length(); index++) {
@@ -164,7 +168,7 @@ omniInitialReferences::get(const char* identifier)
   CORBA::Object_ptr result = CORBA::Object::_nil();
   CORBA::Boolean    update = 0;
   {
-    omni_mutex_lock sync(the_lock);
+    omni_tracedmutex_lock sync(sl_lock);
 
     for( CORBA::ULong index = 0; index < the_serviceList.length(); index++ ) {
       if( !strcmp((const char*)the_serviceList[index].id,identifier) ) {
@@ -216,7 +220,7 @@ omniInitialReferences::get(const char* identifier)
 CORBA::ORB::ObjectIdList*
 omniInitialReferences::list()
 {
-  omni_mutex_lock sync(the_lock);
+  omni_tracedmutex_lock sync(sl_lock);
 
   CORBA::ORB::ObjectIdList* result =
     new CORBA::ORB::ObjectIdList(the_serviceList.length());
@@ -236,19 +240,19 @@ omniInitialReferences::list()
 void
 omniInitialReferences::initialise_bootstrap_agentImpl()
 {
-  the_lock.lock();
+  ba_lock.lock();
 
   if( !the_bootagentImpl )
     the_bootagentImpl = new CORBA_InitialReferences_i();
 
-  the_lock.unlock();
+  ba_lock.unlock();
 }
 
 
 int
 omniInitialReferences::invoke_bootstrap_agentImpl(GIOP_S& giop_s)
 {
-  omni_mutex_lock sync(the_lock);
+  omni_tracedmutex_lock sync(ba_lock);
 
   if( !the_bootagentImpl )  return 0;
 
@@ -268,7 +272,7 @@ void
 omniInitialReferences::initialise_bootstrap_agent(const char* host,
 						  CORBA::UShort port)
 {
-  omni_mutex_lock sync(the_lock);
+  omni_tracedmutex_lock sync(sl_lock);
 
   try {
     
