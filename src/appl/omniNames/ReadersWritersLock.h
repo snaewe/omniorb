@@ -20,7 +20,7 @@ public:
 		// (-n times).
   int writerId;
 
-  ReadersWritersLock(void) : n(0), c(&m), writerId(0) {}
+  ReadersWritersLock(void) : c(&m), n(0), writerId(0) {}
 
   void readerIn(void) {
     m.lock();

@@ -38,7 +38,7 @@ public:
     bl = list;
     list = new CosNaming::BindingList(bl->length() - how_many);
     list->length(bl->length() - how_many);
-    for (int i = 0; i < list->length(); i++) {
+    for (unsigned int i = 0; i < list->length(); i++) {
       (*list)[i] = (*bl)[i + how_many];
     }
 
