@@ -109,7 +109,7 @@ public:
   virtual ~AST_PredefinedType() {}
 
   // Data Accessors
-  const PredefinedType	pt();
+  PredefinedType pt() const;
 
   // Narrowing
   DEF_NARROW_METHODS1(AST_PredefinedType, AST_ConcreteType);
