@@ -86,11 +86,10 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 static void
 DRV_version()
 {
-  cerr << idl_global->prog_name() 
-       << GTDEVEL(", version ")
-       << IDL_CFE_VERSION 
-       << "\n";
-  (*DRV_BE_version)();
+  cerr << "Omniidl 2.2.0\n"
+       << "Copyright (C) 1996, 1997 Olivetti & Oracle Research Laborartory, Cambridge, UK.\n"
+       << "Omniidl comes with ABSOLUTELY NO WARRANTY.\n"
+       << endl;
 }
 
 /*
