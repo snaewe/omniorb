@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.5  1997/03/19 14:33:21  ewc
-  Fixed minor bug in ATMos version.
+  Revision 1.6  1997/04/14 17:24:55  ewc
+  Added a proper IP address checker.
 
+// Revision 1.5  1997/03/19  14:33:21  ewc
+// Fixed minor bug in ATMos version.
+//
 // Revision 1.4  1997/02/19  11:01:26  ewc
 // Fixed a small bug in ATMos code.
 //
@@ -30,6 +33,9 @@
 
 #include <omniORB2/CORBA.h>
 #include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include "libcWrapper.h"
 
 int
@@ -196,19 +202,73 @@ again:
 }
 
 
+
 int LibcWrapper::isipaddr(const char* hname)
 {
   // Test if string contained hname is ipaddress
-  // Return: -1: fail,  0: not ip address,  1: is ip address
+  // Return: 0: not ip address,  1: is ip address
 
-int hlen;
-if ((hlen = strlen(hname)) > 15) return 0;
+  int hlen = strlen(hname);
+  
+  // Quick tests for invalidity:
 
-for(int count=0; count<hlen;count++)
-  {
-    if (((int)hname[count] < 48 || (int)hname[count]>57) &&
-	                     (int)hname[count] != 46) return 0;
-  }
+  if (hlen < 7 || hlen > 15) return 0;
+  if ((int) hname[0] < 48 || (int) hname[0] > 57) return 0;
+  
 
-return 1;
+  // Full test:
+
+  char* orig_pos = new char[hlen+1];
+  strcpy(orig_pos,hname);
+  char* curr_pos = orig_pos;
+
+  for(int count = 0; count <4; count++)
+    { 
+      char* dot_pos;
+      
+      if (((dot_pos = strchr(curr_pos,'.')) == 0) && count < 3) 
+	{
+	  delete[] orig_pos;
+	  return 0;
+	}
+      else if (count == 3) dot_pos = orig_pos+hlen;
+
+      int ip_component_len = (dot_pos - curr_pos) / sizeof(char);
+      if (ip_component_len <1 || ip_component_len > 3) 
+	{
+	  delete[] orig_pos;
+	  return 0;
+	}
+
+      char* ip_component = new char[ip_component_len+1];
+      strncpy(ip_component,curr_pos,ip_component_len);
+      ip_component[ip_component_len] = '\0';
+
+      for(int str_iter=0; str_iter < ip_component_len; str_iter++)
+	{
+	  if ((int) ip_component[str_iter] < 48 || 
+	                       (int) ip_component[str_iter] > 57)
+	    {
+	      delete[] ip_component;
+	      delete[] orig_pos;
+
+	      return 0;
+	    }
+	}
+
+      int ip_value = atoi(ip_component);
+      delete[] ip_component;
+
+      if (ip_value < 0 || ip_value > 255) 
+	{
+	  delete[] orig_pos;
+	  return 0;
+	}
+
+      curr_pos = dot_pos+1;
+    }
+      
+  delete[] orig_pos;
+
+  return 1;
 }
