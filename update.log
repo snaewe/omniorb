@@ -1,3 +1,21 @@
+Mon Oct 29 17:20:21 GMT 2001 dpg1
+=================================
+
+- Back-port sll's cygwin fixes from omni4_0_develop.
+
+external_merge/bin/x86_win32/clwrapper.exe
+external_merge/bin/x86_win32/libwrapper.exe
+external_merge/bin/x86_win32/linkwrapper.exe
+external_merge/bin/x86_win32/oidlwrapper.exe
+external_merge/bin/x86_win32/omkdepend.exe
+src/tool/omkdepend/gnuwin32.c
+src/tool/win32/clwrapper.c
+src/tool/win32/dir.mk
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+src/tool/win32/oidlwrapper.c
+
+
 Mon Oct 22 11:34:48 BST 2001 dpg1
 =================================
 

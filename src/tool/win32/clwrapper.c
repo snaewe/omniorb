@@ -243,10 +243,42 @@ GetCygwinMounts()
     DWORD	len;
     DWORD	i;
     LONG	rc;
+    char        c;
+    char*       drvprefix;
 
     if (RegOpenKeyEx (HKEY_CURRENT_USER, key, 0, KEY_READ, &hkey)
 	!= ERROR_SUCCESS)
 	return 0;
+
+    nmounts = 0;
+
+    if (RegQueryValueEx (hkey, "cygdrive prefix", NULL, NULL, NULL, &len)
+	    == ERROR_SUCCESS) {
+
+      drvprefix = (char *) malloc (len + 2);
+      RegQueryValueEx (hkey, "cygdrive prefix", NULL, NULL, drvprefix, &len);
+      if (drvprefix[strlen(drvprefix)-1] == '/')
+	drvprefix[strlen(drvprefix)-1] = '\0';
+    
+      for (c = 'A'; c <= 'Z'; c++) {
+	unix[nmounts] = (char *)malloc(strlen(drvprefix) + 4);
+	sprintf(unix[nmounts], "%s/%c/", drvprefix, c);
+	dos[nmounts] = (char *)malloc(4);
+	sprintf(dos[nmounts], "%c:/", c);
+	index[nmounts] = nmounts;
+	nmounts++;
+      }
+
+      for (c = 'a'; c <= 'z'; c++) {
+	unix[nmounts] = (char *)malloc(strlen(drvprefix) + 4);
+	sprintf(unix[nmounts], "%s/%c/", drvprefix, c);
+	dos[nmounts] = (char *)malloc(4);
+	sprintf(dos[nmounts], "%c:/", c);
+	index[nmounts] = nmounts;
+	nmounts++;
+      }
+
+    }
 
     for (i = 0; i < MAX_MOUNTS; i++) {
 	upathlen = sizeof(upath);
@@ -262,24 +294,24 @@ GetCygwinMounts()
 	    printf ("RegOpenKeyEx() failed - error %d\n", GetLastError());
 	    exit(1);
 	}
-	unix[i] = (char *) malloc (upathlen + 1);
-	strcpy (unix[i], upath);
+	unix[nmounts] = (char *) malloc (upathlen + 1);
+	strcpy (unix[nmounts], upath);
 	if (RegQueryValueEx (hkey1, "native", NULL, NULL, NULL, &len)
 	    != ERROR_SUCCESS) {
 	    printf("RegQueryValueEx failed - error %d\n",GetLastError());
 	    exit(1);
 	}
-	if (strcmp (unix[i], "/") == 0) {
-	    dos[i] = (char *) malloc (len + 2);
-	    RegQueryValueEx (hkey1, "native", NULL, NULL, dos[i], &len);
-	    dos[i][len-1] = '\\';
-	    dos[i][len] = 0;
+	if (strcmp (unix[nmounts], "/") == 0) {
+	    dos[nmounts] = (char *) malloc (len + 2);
+	    RegQueryValueEx (hkey1, "native", NULL, NULL, dos[nmounts], &len);
+	    dos[nmounts][len-1] = '\\';
+	    dos[nmounts][len] = 0;
 	} else {
-	    dos[i] = (char *) malloc (len + 1);
-	    RegQueryValueEx (hkey1, "native", NULL, NULL, dos[i], &len);
+	    dos[nmounts] = (char *) malloc (len + 1);
+	    RegQueryValueEx (hkey1, "native", NULL, NULL, dos[nmounts], &len);
 	}
+	nmounts++;
     }
-    nmounts = i;
     return 1;
 }
 

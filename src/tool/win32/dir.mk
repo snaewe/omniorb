@@ -1,4 +1,4 @@
-all:: clwrapper.exe libwrapper.exe linkwrapper.exe oidlwrapper.exe omake.exe
+all:: clwrapper.exe libwrapper.exe linkwrapper.exe oidlwrapper.exe #omake.exe
 
 define CompileWrapper
 cat $< >tmp.c
@@ -22,5 +22,5 @@ oidlwrapper.exe: oidlwrapper.c
 omake.exe: omake.c
 	gcc $< -o omake.exe
 
-export:: clwrapper.exe libwrapper.exe linkwrapper.exe oidlwrapper.exe omake.exe
+export:: clwrapper.exe libwrapper.exe linkwrapper.exe oidlwrapper.exe #omake.exe
 	@$(ExportExecutable)
