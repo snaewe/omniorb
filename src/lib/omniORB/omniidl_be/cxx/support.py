@@ -42,7 +42,7 @@ def checkIDL(tree):
 
 error_body = """\
 omniORB does not currently support:
-  IDL types longdouble, wchar, wstring, fixed, valuetypes
+  IDL type valuetype, abstract interfaces
 """
 
 def unsupportedIDL(found):
