@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/05/11 14:30:12  sll
+  Message size limit is now enforced.
+
   Revision 1.1.4.4  2001/05/04 13:55:58  sll
   Silly mistake that causes non-copy marshalling to do the wrong thing
   in GIOP 1.0.
@@ -57,6 +60,15 @@
 #include <exceptiondefs.h>
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/omniInterceptors.h>
+
+// Define PRE_CALCULATE_MESSAGE_SIZE to force the code to pre-calculate
+// the total size of the message before the actual marshalling.
+// The implementation can actually avoid this calculation if full message
+// can be fully buffered.
+// We however have to force pre-calculation because at the moment, the Any
+// marshalling implementation is not re-entrant. 
+#define PRE_CALCULATE_MESSAGE_SIZE
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -184,6 +196,18 @@ giopImpl10::inputMessageBegin(giopStream* g,
 CORBA::Boolean
 giopImpl10::inputReplyBegin(giopStream* g, 
 			    void (*unmarshalHeader)(giopStream*)) {
+
+  if (g->inputMessageSize() > omniORB::MaxMessageSize()) {
+
+    // This is not the perfect solution if we are multiplexing calls onto
+    // this connection. The reply we are getting here may not be for the
+    // call of this thread. If that is the case, we are sending the wrong
+    // exception to the threads. On the otherhand, the server side is
+    // quite doggy and it is not prudent to trust the message content.
+    // Therefore, decoding the message further may not be doing any good.
+    OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimitOnClient,
+		  CORBA::COMPLETED_YES);
+  }
 
   char* hdr = (char*)g->pd_currentInputBuffer + 
                      g->pd_currentInputBuffer->start;
@@ -443,7 +467,10 @@ giopImpl10::unmarshalWildCardRequestHeader(giopStream* g) {
   case GIOP::Request:
   case GIOP::LocateRequest:
   case GIOP::CancelRequest:
-    break;
+    if (g->inputMessageSize() <= omniORB::MaxMessageSize()) {
+      break;
+    }
+    // falls through if the message has exceeded the size limit.
   default:
     inputTerminalProtocolError(g);
     // Never reach here.
@@ -781,14 +808,7 @@ giopImpl10::currentInputPtr(const giopStream* g) {
 void
 giopImpl10::inputTerminalProtocolError(giopStream* g) {
 
-  // XXX We may choose to send a message error to the other end.
-  if (omniORB::trace(1)) {
-    omniORB::logger l;
-    l << "From endpoint: " << g->pd_strand->connection->peeraddress()
-      <<". Detected GIOP 1.0 protocol error in input message. "
-      << "Connection is closed.\n";
-  }
-
+  sendMsgErrorMessage(g);
   CORBA::ULong minor;
   CORBA::Boolean retry;
   g->notifyCommFailure(minor,retry);
@@ -954,6 +974,13 @@ giopImpl10::marshalRequestHeader(giopStream* g) {
     cs.put_octet_array((CORBA::Octet*) calldesc.op(), calldesc.op_len());
     operator>>= ((CORBA::ULong)0,cs);
     *((CORBA::ULong*)(hdr+8)) = cs.total();
+
+#if defined(PRE_CALCULATE_MESSAGE_SIZE)
+    giop_c.calldescriptor()->marshalArguments(cs);
+    CORBA::ULong msgsz = cs.total() - 12;
+    *((CORBA::ULong*)(hdr + 8)) = msgsz;
+    outputSetMessageSize(g,msgsz);
+#endif
   }
 
   // service context
@@ -1036,6 +1063,13 @@ giopImpl10::marshalReplyHeader(giopStream* g) {
     giop_s.requestId() >>= cs;
     rc >>= cs;
     *((CORBA::ULong*)(hdr+8)) = cs.total();
+
+#if defined(PRE_CALCULATE_MESSAGE_SIZE)
+    giop_s.calldescriptor()->marshalReturnedValues(cs);
+    CORBA::ULong msgsz = cs.total() - 12;
+    *((CORBA::ULong*)(hdr + 8)) = msgsz;
+    outputSetMessageSize(g,msgsz);
+#endif
   }
 
   // Service context
@@ -1056,16 +1090,25 @@ giopImpl10::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 
   if (giop_s.state() == GIOP_S::ReplyIsBeingComposed) {
     // This system exception is raised during the marshalling of the reply.
-    // We cannot marshal the exception. Can only indicate that something
+    // If we have already send part of the message out, it is too late
+    // to marshal the exception. Can only indicate that something
     // fatal about this request.
-    sendMsgErrorMessage(g);
 
-    CORBA::ULong minor;
-    CORBA::Boolean retry;
-    giop_s.notifyCommFailure(minor,retry);
-    giopStream::CommFailure::_raise(minor,(CORBA::CompletionStatus)
-				    giop_s.completion(),
-				    retry,__FILE__,__LINE__);
+#if defined(PRE_CALCULATE_MESSAGE_SIZE)
+    if (0)
+#else
+    if (g->outputMessageSize())
+#endif
+      {
+	sendMsgErrorMessage(g);
+
+	CORBA::ULong minor;
+	CORBA::Boolean retry;
+	giop_s.notifyCommFailure(minor,retry);
+	giopStream::CommFailure::_raise(minor,(CORBA::CompletionStatus)
+					giop_s.completion(),
+					retry,__FILE__,__LINE__);
+      }
   }
 
   outputNewMessage(g);
@@ -1430,8 +1473,35 @@ void
 giopImpl10::outputSetMessageSize(giopStream* g,CORBA::ULong msz) {
 
   if (msz > omniORB::MaxMessageSize()) {
-    OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimit,
-		  (CORBA::CompletionStatus)g->completion());
+    char* hdr = (char*)((omni::ptr_arith_t) g->pd_currentOutputBuffer + 
+			g->pd_currentOutputBuffer->start);
+
+    switch ((GIOP::MsgType)hdr[7]) {
+    case GIOP::Request:
+    case GIOP::LocateRequest:
+      {
+	// We have detected a limit error on the client side, since
+	// we have not sent any part of the message yet, we can
+	// safely relinquish this giopStream so that another request
+	// can proceed. There is no need to close the connection.
+	((GIOP_C*)g)->state(IOP_C::Idle);
+	omni_tracedmutex_lock sync(*omniTransportLock);
+	g->wrUnLock();
+	OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimitOnClient,
+		      (CORBA::CompletionStatus)g->completion());
+      }
+      break;
+    case GIOP::Reply:
+    case GIOP::LocateReply:
+      {
+	// We have detected a limit error on the server side
+	OMNIORB_THROW(MARSHAL,MARSHAL_MessageSizeExceedLimitOnServer,
+		      (CORBA::CompletionStatus)g->completion());
+      }
+      break;
+    default:
+      OMNIORB_ASSERT(0);
+    }
   }
   g->outputMessageSize(msz);
 }
