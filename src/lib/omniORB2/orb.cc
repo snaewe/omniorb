@@ -11,9 +11,16 @@
  
 /*
   $Log$
-  Revision 1.5  1997/02/19 11:03:29  ewc
-  Added support for NT
+  Revision 1.6  1997/03/10 12:10:20  sll
+  - Support for ORB and BOA initialisation arguments.
+  -  Add runtime configurable trace messages.
+  - omni::init will only throws CORBA::INITIALIZE exception if anything goes
+    wrong.
+  - Minor cleanup to accomodate the creation of a public API for omniORB2.
 
+// Revision 1.5  1997/02/19  11:03:29  ewc
+// Added support for NT
+//
   Revision 1.4  1997/01/23 16:53:35  sll
   Changed to use the static member variables defined in the class omniORB etc.
   Previously they were local static variables.
@@ -22,7 +29,7 @@
 // Added support for initial reference interface.
 //
 // Revision 1.2  1997/01/08  18:21:06  ewc
-// Corrected bug in omniORB::iopProfilesToRope (code assumed that profile
+// Corrected bug in omni::iopProfilesToRope (code assumed that profile
 // tag was IOP::TAG_INTERNET_IOP)
 //
 // Revision 1.1  1996/10/10  14:37:53  sll
@@ -47,13 +54,23 @@
 #include "tcpSocket_ATMos.h"
 #elif defined(NTArchitecture)
 #include "tcpSocket_NT.h"
+
 #else
 #error "No tcpSocket.h header for this architecture."
+#endif
+
+#if defined(UnixArchitecture)
+#include <sys/time.h>
+#include <unistd.h>
+#elif defined(NTArchitecture)
+#include <sys/types.h>
+#include <sys/timeb.h>
 #endif
 
 #ifdef __atmos__
 #include <kernel.h>
 #include <timelib.h>
+#include <sys/time.h>
 #endif
 
 // XXX Some work needs to be done to either remove the explicit reference
@@ -106,92 +123,126 @@ public:
   virtual void run(void *arg);
 };
 
+static
+CORBA::Boolean 
+parse_ORB_args(int &argc,char **argv,const char *orb_identifier);
+
+static
+CORBA::Boolean
+parse_BOA_args(int &argc,char **argv,const char *orb_identifier);
+
 void
-omniORB::init(int &argc,char **argv,const char *orb_identifier)
+omni::init(int &argc,char **argv,const char *orb_identifier)
 {
   extern void objectRef_init();
 
-  objectRef_init();
+  if (!parse_ORB_args(argc,argv,orb_identifier)) {
+    throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+  }
 
+  try {
+    objectRef_init();
 
 #ifdef __NT__
 
-  // Initialize WinSock:
+    // Initialize WinSock:
   
-  WORD versionReq;  
-  WSADATA wData; 
-  versionReq = MAKEWORD(1, 1);  // Nothing specific to releases > 1.1 used
+    WORD versionReq;  
+    WSADATA wData; 
+    versionReq = MAKEWORD(1, 1);  // Nothing specific to releases > 1.1 used
  
-  int rc = WSAStartup(versionReq, &wData); 
+    int rc = WSAStartup(versionReq, &wData); 
  
-  if (rc != 0) 
-    {
+    if (rc != 0) 
+      {
 	// Couldn't find a usable DLL.
-      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);	
-    }
+	throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);	
+      }
  
-  // Confirm that the returned Windows Sockets DLL supports 1.1
+    // Confirm that the returned Windows Sockets DLL supports 1.1
  
-  if ( LOBYTE( wData.wVersion ) != 1 || 
-           HIBYTE( wData.wVersion ) != 1 ) 
-    { 
-      // Couldn't find a usable DLL
-      WSACleanup(); 
-      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
-    }
+    if ( LOBYTE( wData.wVersion ) != 1 || 
+	 HIBYTE( wData.wVersion ) != 1 ) 
+      { 
+	// Couldn't find a usable DLL
+	WSACleanup(); 
+	throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+      }
 
-  // Get configuration information:
-  // XXXXX: To be replaced by System Registry functions
+    // Get configuration information:
+    // XXXXX: To be replaced by System Registry functions
 
-  configFile = new initFile;
-  configFile->initialize();
+    configFile = new initFile;
+    configFile->initialize();
   
 #else
 
-  // Get configuration information:
-  configFile = new initFile;
-  configFile->initialize();
+    // Get configuration information:
+    configFile = new initFile;
+    configFile->initialize();
 
 #endif
 
-
-  CORBA::ULong l = strlen("nobody")+1;
-  CORBA::Octet *p = (CORBA::Octet *) "nobody";
-  omniORB::myPrincipalID.length(l);
-  unsigned int i;
-  for (i=0; i < l; i++) {
-    omniORB::myPrincipalID[i] = p[i];
-  }
+    // myPrincipalID, to be used in the principal field of IIOP calls
+    CORBA::ULong l = strlen("nobody")+1;
+    CORBA::Octet *p = (CORBA::Octet *) "nobody";
+    omni::myPrincipalID.length(l);
+    unsigned int i;
+    for (i=0; i < l; i++) {
+      omni::myPrincipalID[i] = p[i];
+    }
+    
+    omniORB::seed.hi = omniORB::seed.med = 0;
 
 #ifdef _HAS_SIGNAL
-  struct sigaction act;
-  sigemptyset(&act.sa_mask);
-  act.sa_handler = SIG_IGN;
-  act.sa_flags = 0;
-  if (sigaction(SIGPIPE,&act,0) < 0) {
-    cerr << "Warning: omniORB::init() cannot install the SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")" << endl;
-  }
+    struct sigaction act;
+    sigemptyset(&act.sa_mask);
+    act.sa_handler = SIG_IGN;
+    act.sa_flags = 0;
+    if (sigaction(SIGPIPE,&act,0) < 0) {
+      if (omniORB::traceLevel > 0) {
+	cerr << "Warning: omni::init() cannot install the SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")" << endl;
+      }
+    }
 #endif // _HAS_SIGNAL
-
+  }
+  catch (const CORBA::INITIALIZE &ex) {
+    throw;
+  }
+  catch (...) {
+    throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+  }
   return;
 }
 
 void
-omniORB::boaInit(int &argc,char **argv,const char *orb_identifier)
+omni::boaInit(int &argc,char **argv,const char *orb_identifier)
 {
-  Rope *r;
-  {
-    Rope_iterator anchorLocked(&Anchor::incomingAnchor);
-    tcpSocketEndpoint e ((CORBA::Char *)"",0);
-    // let the ctor to initialise the host name and port number
-    r = new tcpSocketRope(&Anchor::incomingAnchor,0,&e,1,1);
+  if (!parse_BOA_args(argc,argv,orb_identifier)) {
+    throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
   }
-  if (!r)
-    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+
+  try {
+    Rope *r;
+    Rope_iterator next(&Anchor::incomingAnchor);
+    if (next() == 0) {
+      // No port number is specified on the command line using
+      // the -BOAiiop_port <port> option
+      tcpSocketEndpoint e ((CORBA::Char *)"",0);
+      // let the ctor to initialise the host name and port number
+      r = new tcpSocketRope(&Anchor::incomingAnchor,0,&e,1,1);
+      if (omniORB::traceLevel >= 2) {
+	cerr << "Accept IIOP calls on port " << e.port() << endl;
+      }
+    }
+  }
+  catch(...) {
+    throw  CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+  }      
   return;
 }
 
-omniObject* omniORB::resolveInitRef(const char* identifier)
+omniObject* omni::resolveInitRef(const char* identifier)
 {
   // Resolve initial references:
 
@@ -203,7 +254,7 @@ omniObject* omniORB::resolveInitRef(const char* identifier)
     }
   else if (strcmp(identifier,"NameService") == 0)
     {
-      if (omniORB::configFile->NameService == NULL)
+      if (omni::configFile->NameService == NULL)
 	{
 	  // Failed to get a reference to the Naming Service during ORB 
 	  // initialization
@@ -213,7 +264,7 @@ omniObject* omniORB::resolveInitRef(const char* identifier)
 	}
       else 
 	{
-	  return omniORB::configFile->NameService;
+	  return omni::configFile->NameService;
 	}
     }
   else
@@ -227,7 +278,7 @@ omniObject* omniORB::resolveInitRef(const char* identifier)
 
 
 unsigned long
-omniORB::listInitServices(char**& servicelist)
+omni::listInitServices(char**& servicelist)
 {
   // List known initial CORBA Services for which ORB can return a reference
   
@@ -235,7 +286,7 @@ omniORB::listInitServices(char**& servicelist)
 
   servicelist = new char*[number_services];
 
-  if (omniORB::configFile->NameService != NULL)
+  if (omni::configFile->NameService != NULL)
     {
       servicelist[0] = new char[12];
       strcpy(servicelist[0],"NameService");
@@ -248,7 +299,7 @@ omniORB::listInitServices(char**& servicelist)
 }
 
 Rope *
-omniORB::iopProfilesToRope(const IOP::TaggedProfileList *profiles,
+omni::iopProfilesToRope(const IOP::TaggedProfileList *profiles,
 			   _CORBA_Octet *&objkey,
 			   size_t &keysize)
 {
@@ -342,7 +393,7 @@ else
 
 
 IOP::TaggedProfileList *
-omniORB::objectToIopProfiles(omniObject *obj)
+omni::objectToIopProfiles(omniObject *obj)
 {
   if (obj->is_proxy()) {
     IOP::TaggedProfileList * p = new IOP::TaggedProfileList(1);
@@ -383,9 +434,9 @@ omniORB::objectToIopProfiles(omniObject *obj)
 
 
 void
-omniORB::orbIsReady()
+omni::orbIsReady()
 {
-  omniORB::initLock.lock();
+  omni::initLock.lock();
   if (!tcpSocketRendezvous::has_spawned_rendevous_threads) 
     {
       Rope_iterator next(&Anchor::incomingAnchor);
@@ -419,24 +470,10 @@ omniORB::orbIsReady()
 
       tcpSocketRendezvous::has_spawned_rendevous_threads = 1;
     }
-  omniORB::initLock.unlock();
+  omni::initLock.unlock();
   return;
 }
 
-static int tmp_seed = 1;
-void
-omniObjectKey::generateNewKey(omniObjectKey &k)
-{
-  // XXX This is just a temporary hack.
-  // Eventually, this function should initialise the object key to
-  // a unique ID that is guarantteed not to repeat on the same machine
-  // ever.
-  omniORB::initLock.lock();
-  k.lo = tmp_seed++;
-  omniORB::initLock.unlock();
-  k.med = k.hi = 0;
-  return;
-}
 
 size_t
 omniORB::MaxMessageSize()
@@ -467,7 +504,9 @@ tcpsock_rendezvouser::run(void *arg)
 #if defined(__sunos__) && defined(__sparc__) && defined(SVR4)
   set_terminate(abort);
 #endif
-  cerr << "tcpsock_rendezvouser thread: starts." << endl;
+  if (omniORB::traceLevel >= 5) {
+    cerr << "tcpsock_rendezvouser thread: starts." << endl;
+  }
 
   tcpSocketRendezvous *r = pd_r->getRendezvous();
   tcpSocketStrand *newSt = 0;
@@ -476,16 +515,20 @@ tcpsock_rendezvouser::run(void *arg)
   while (!die) {
     try {
       newSt = r->accept();
-      cerr << "tcpsock_rendezvouser thread: accept new strand." << endl;
+      if (omniORB::traceLevel >= 5) {
+	cerr << "tcpsock_rendezvouser thread: accept new strand." << endl;
+      }
       newthr = new strand_server(newSt);
       if (!newthr) {
 	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
       }
     }
     catch(omniORB::fatalException &ex) {
-      cerr << "#### You have caught an omniORB2 bug, details are as follows:" << endl;
-      cerr << ex.file() << " " << ex.line() << ":" << ex.errmsg() << endl; 
-      cerr << "Server rendezvouser thread exited." << endl;
+      if (omniORB::traceLevel > 0) {
+	cerr << "#### You have caught an omniORB2 bug, details are as follows:" << endl;
+	cerr << ex.file() << " " << ex.line() << ":" << ex.errmsg() << endl; 
+	cerr << "Server rendezvouser thread exited." << endl;
+      }
       die = 1;
     }
     catch(...) {
@@ -495,11 +538,16 @@ tcpsock_rendezvouser::run(void *arg)
       newSt->decrRefCount();
       newSt->shutdown();
       if (!newthr) {
-	cerr << "tcpsock_rendezvouser thread cannot spawn a new server thread." 	<< endl;
+	if (omniORB::traceLevel >= 5) {
+	  cerr << "tcpsock_rendezvouser thread cannot spawn a new server thread."
+	       << endl;
+	}
       }
     }
   }
-  cerr << "tcpsock_rendezvouser thread: exits." << endl;
+  if (omniORB::traceLevel >= 5) {
+    cerr << "tcpsock_rendezvouser thread: exits." << endl;
+  }
 }
 
 strand_server::strand_server(Strand *s) : pd_sync(s,0,0)
@@ -516,20 +564,26 @@ strand_server::run(void *arg)
 #if defined(__sunos__) && defined(__sparc__) && defined(SVR4)
   set_terminate(abort);
 #endif
-
-  cerr << "strand_server thread: starts." << endl;
+  
+  if (omniORB::traceLevel >= 5) {
+    cerr << "strand_server thread: starts." << endl;
+  }
   while (1) {
     try {
       GIOP_S::dispatcher(pd_s);
     }
     catch (CORBA::COMM_FAILURE &ex) {
-      cerr << "#### Commnication failure (minor = " << ex.minor() 
-	   << "). Connection closed." << endl;
+      if (omniORB::traceLevel >= 5) {
+	cerr << "#### Commnication failure (minor = " << ex.minor() 
+	     << "). Connection closed." << endl;
+      }
       break;
     }
     catch(omniORB::fatalException &ex) {
-      cerr << "#### You have caught an omniORB2 bug, details are as follows:" << endl;
-      cerr << ex.file() << " " << ex.line() << ":" << ex.errmsg() << endl; 
+      if (omniORB::traceLevel > 0) {
+	cerr << "#### You have caught an omniORB2 bug, details are as follows:" << endl;
+	cerr << ex.file() << " " << ex.line() << ":" << ex.errmsg() << endl; 
+      }
       break;
     }
 #if defined(__sunos__) && defined(__sparc__) && defined(SVR4)
@@ -537,12 +591,16 @@ strand_server::run(void *arg)
     // a core dump.
 #else
     catch (...) {
-      cerr << "#### A system exception has occured and was caught by strand_server thread." << endl;
+      if (omniORB::traceLevel > 0) {
+	cerr << "#### A system exception has occured and was caught by strand_server thread." << endl;
+      }
       abort();  // never returns
     }
 #endif
   }
-  cerr << "strand_server thread: exits." << endl;
+  if (omniORB::traceLevel >= 5) {
+    cerr << "strand_server thread: exits." << endl;
+  }
 }
 
 
@@ -580,3 +638,209 @@ killer::run(void *arg)
   return;
 }
 
+static
+void
+move_args(int& argc,char **argv,int idx,int nargs)
+{
+  if ((idx+nargs) <= argc)
+    {
+      for (int i=idx+nargs; i < argc; i++) {
+	argv[i-nargs] = argv[i];
+      }
+      argc -= nargs;
+    }
+}
+
+static
+CORBA::Boolean
+parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
+{
+  CORBA::Boolean orbId_match = 0;
+
+  if (orb_identifier && strcmp(orb_identifier,omni::myORBId)!=0)
+    {
+      if (omniORB::traceLevel > 0) {
+	cerr << "CORBA::ORB_init failed: the ORBid ("
+	     << orb_identifier << ") is not " << omni::myORBId << endl;
+      }
+      return 0;
+    }
+
+  int idx = 1;
+  while (argc > idx) 
+    {
+      // -ORBxxxxxxx ??
+      if (strlen(argv[idx]) < 4 ||
+	  !(argv[idx][0] == '-' && argv[idx][1] == 'O' &&
+	    argv[idx][2] == 'R' && argv[idx][3] == 'B'))
+	{
+	  idx++;
+	  continue;
+	}
+
+
+      // -ORBid <id>
+      if (strcmp(argv[idx],"-ORBid") == 0) {
+	if ((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "CORBA::ORB_init failed: missing -ORBid parameter." << endl;
+	  }
+	  return 0;
+	}
+	if (strcmp(argv[idx+1],omni::myORBId) != 0)
+	  {
+	    if (omniORB::traceLevel > 0) {
+	      cerr << "CORBA::ORB_init failed: the ORBid ("
+		   << argv[idx+1] << ") is not " << omni::myORBId << endl;
+	    }
+	    return 0;
+	  }
+	orbId_match = 1;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBtraceLevel
+      if (strcmp(argv[idx],"-ORBtraceLevel") == 0) {
+	if((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "CORBA::ORB_init failed: missing -ORBtraceLevel parameter."
+		 << endl;
+	  }
+	  return 0;
+	}
+	if (sscanf(argv[idx+1],"%u",&omniORB::traceLevel) != 1) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "CORBA::ORB_init failed: invalid -ORBtraceLevel parameter."
+		 << endl;
+	  }
+	  return 0;
+	}
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+      
+      // Reach here only if the argument in this form: -ORBxxxxx
+      // is not recognised.
+      if (omniORB::traceLevel > 0) {
+	cerr << "CORBA::ORB_init failed: unknown ORB argument ("
+	     << argv[idx] << ")" << endl;
+      }
+      return 0;
+    }
+
+  if (!orb_identifier && !orbId_match) {
+    if (omniORB::traceLevel > 0) {
+      cerr << "CORBA::ORB_init failed: ORBid is not specified." << endl;
+    }
+    return 0;
+  }
+  return 1;
+}
+
+
+static
+CORBA::Boolean
+parse_BOA_args(int &argc,char **argv,const char *orb_identifier)
+{
+  CORBA::Boolean orbId_match = 0;
+  if (orb_identifier && strcmp(orb_identifier,omni::myBOAId) != 0)
+    {
+      if (omniORB::traceLevel > 0) {
+	cerr << "BOA_init failed: the BOAid ("
+	     << orb_identifier << ") is not " <<  omni::myBOAId << endl;
+      }
+      return 0;
+    }
+
+  int idx = 1;
+  while (argc > idx)
+    {
+      // -BOAxxxxxxxx ??
+      if (strlen(argv[idx]) < 4 ||
+	  !(argv[idx][0] == '-' && argv[idx][1] == 'B' &&
+	    argv[idx][2] == 'O' && argv[idx][3] == 'A'))
+	{
+	  idx++;
+	  continue;
+	}
+	  
+      // -BOAid <id>
+      if (strcmp(argv[idx],"-BOAid") == 0) {
+	if ((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "BOA_init failed: missing -BOAid parameter." << endl;
+	  }
+	  return 0;
+	}
+	if (strcmp(argv[idx+1],omni::myBOAId) != 0)
+	  {
+	    if (omniORB::traceLevel > 0) {
+	      cerr << "BOA_init failed: the BOAid ("
+		   << argv[idx+1] << ") is not " << omni::myBOAId << endl;
+	    }
+	    return 0;
+	  }
+	orbId_match = 1;
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -BOAiiop_port <port number>[,<port number>]*
+      if (strcmp(argv[idx],"-BOAiiop_port") == 0) {
+	if ((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "BOA_init failed: missing -BOAiiop_port parameter." << endl;
+	  }
+	  return 0;
+	}
+	CORBA::ULong port;
+	if (sscanf(argv[idx+1],"%u",&port) != 1 ||
+            (port == 0 || port >= 65536)) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "BOA_init failed: invalid -BOAiiop_port parameter." << endl;
+	  }
+	  return 0;
+	}
+	try {
+	  Rope *r;
+	  {
+	    Rope_iterator anchorLocked(&Anchor::incomingAnchor);
+	    tcpSocketEndpoint e ((CORBA::Char *)"",(CORBA::UShort)port);
+	    // let the ctor to initialise the host name
+	    r = new tcpSocketRope(&Anchor::incomingAnchor,0,&e,1,1);
+	    if (omniORB::traceLevel >= 2) {
+	      cerr << "Accept IIOP calls on port " << e.port() << endl;
+	    }
+	  }
+	  if (!r)
+	    throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
+	}
+	catch (...) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "BOA_init falied: cannot use port " << port
+		 << " to accept incoming IIOP calls." << endl;
+	  }
+	  return 0;
+	}
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // Reach here only if the argument in this form: -ORBxxxxx
+      // is not recognised.
+      if (omniORB::traceLevel > 0) {
+	cerr << "BOA_init failed: unknown BOA argument ("
+	     << argv[idx] << ")" << endl;
+      }
+      return 0;
+    }
+
+  if (!orb_identifier && !orbId_match) {
+    if (omniORB::traceLevel > 0) {
+      cerr << "BOA_init failed: BOAid is not specified." << endl;
+    }
+    return 0;
+  }
+  return 1;
+}
