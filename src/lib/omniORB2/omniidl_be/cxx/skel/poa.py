@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7.2.3  2000/06/26 16:24:18  djs
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.7.2.2  2000/04/26 18:22:56  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -62,7 +65,7 @@
 # similar to o2be_root::produce_poa_skel in the old C++ BE
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import tyutil, util, id, config
+from omniidl_be.cxx import tyutil, util, id
 from omniidl_be.cxx.skel import template
 
 import poa

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.11  2000/06/26 16:24:17  djs
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.27.2.10  2000/06/06 14:45:07  djs
 # Produces flattened name typedefs for _all_ inherited interfaces (not just
 # those which are immediate decendents) in SK.cc
@@ -608,7 +611,7 @@ _call_desc.set_context_info(&_ctxt_info);""",
                
     
     # BOA compatible skeletons
-    if config.BOAFlag():
+    if config.state['BOA Skeletons']:
         stream.out(template.interface_sk,
                    sk_fqname = sk_name.fullyQualify(),
                    sk_name = sk_name.unambiguous(environment))
@@ -1023,8 +1026,9 @@ def visitException(node):
             if is_array_declarator:
                 # we use the internal typedef'ed type if the member is an array
                 # declarator
-                memberType_name_arg = "const " + config.privatePrefix() + "_" + \
-                                      decl_name
+                memberType_name_arg = "const "                       +\
+                                      config.state['Private Prefix'] +\
+                                      "_" + decl_name
             elif d_memberType.sequence():
                 if memberType.typedef():
                     memberType_name_arg = "const " + id.Name(memberType.type().decl().scopedName()).unambiguous(environment)

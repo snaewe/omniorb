@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.6  2000/06/26 16:23:27  djs
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.14.2.5  2000/05/04 14:35:12  djs
 # Added new flag splice-modules which causes all continuations to be output
 # as one lump. Default is now to output them in pieces following the IDL.
@@ -213,7 +216,7 @@ def external_linkage(decl, mangled_name = ""):
     tc_name = tc_name.fullyQualify()
 
     if mangled_name == "":
-        mangled_name = mangleName(config.privatePrefix() + "_tc_",
+        mangled_name = mangleName(config.state['Private Prefix'] + "_tc_",
                                   decl.scopedName())
 
     if alreadyDefined(tc_name):
@@ -333,7 +336,7 @@ def mkTypeCode(type, declarator = None, node = None):
 
     guard_name = id.Name(type.scopedName()).guard()
 
-    return config.privatePrefix() + "_tc_" + guard_name
+    return config.state['Private Prefix'] + "_tc_" + guard_name
         
 # ---------------------------------------------------------------
 # Tree-walking part of module starts here
@@ -377,7 +380,7 @@ def visitModule(node):
 # to all the TypeCodes of the structure members
 def buildMembersStructure(node):
     struct = util.StringStream()
-    mangled_name = mangleName(config.privatePrefix() + \
+    mangled_name = mangleName(config.state['Private Prefix'] + \
                               "_structmember_", node.scopedName())
     if alreadyDefined(mangled_name):
         # no need to regenerate
@@ -442,14 +445,16 @@ def visitStruct(node):
     tophalf.out(str(buildMembersStructure(node)))
 
     scopedName = node.scopedName()
-    mangled_name = mangleName(config.privatePrefix() + "_tc_", scopedName)
+    mangled_name = mangleName(config.state['Private Prefix'] +\
+                              "_tc_", scopedName)
     if not(alreadyDefined(mangled_name)):
         # only define the name once
 
         defineName(mangled_name)
     
-        structmember_mangled_name = mangleName(config.privatePrefix() + \
-                                               "_structmember_", scopedName)
+        structmember_mangled_name =\
+                                  mangleName(config.state['Private Prefix'] + \
+                                             "_structmember_", scopedName)
         assert alreadyDefined(structmember_mangled_name), \
                "The name \"" + structmember_mangled_name + \
                "\" should be defined by now"
@@ -482,7 +487,8 @@ def visitUnion(node):
         return
 
     scopedName = node.scopedName()
-    mangled_name = mangleName(config.privatePrefix() + "_tc_", scopedName)
+    mangled_name = mangleName(config.state['Private Prefix'] +\
+                              "_tc_", scopedName)
     if alreadyDefined(mangled_name):
         return
 
@@ -552,7 +558,7 @@ def visitUnion(node):
     repoID = node.repoId()
 
     union_name = id.Name(scopedName).simple()
-    unionmember_mangled_name = mangleName(config.privatePrefix() + \
+    unionmember_mangled_name = mangleName(config.state['Private Prefix'] + \
                                           "_unionMember_", scopedName)
     
     default_str = ""
@@ -589,7 +595,8 @@ def visitEnum(node):
         return
     
     scopedName = node.scopedName()
-    mangled_name = mangleName(config.privatePrefix() + "_tc_", scopedName)
+    mangled_name = mangleName(config.state['Private Prefix'] +\
+                              "_tc_", scopedName)
     if alreadyDefined(mangled_name):
         return
     
@@ -604,7 +611,7 @@ def visitEnum(node):
     repoID = node.repoId()
 
     tc_name = id.Name(scopedName).prefix("_tc_").fullyQualify()
-    enummember_mangled_name = mangleName(config.privatePrefix() + \
+    enummember_mangled_name = mangleName(config.state['Private Prefix'] + \
                                          "_enumMember_", scopedName)
 
     tophalf.out("""\
@@ -692,7 +699,8 @@ def visitDeclarator(declarator):
     recurse(aliasType)
     
     scopedName = declarator.scopedName()
-    mangled_name = mangleName(config.privatePrefix() + "_tc_", scopedName)
+    mangled_name = mangleName(config.state['Private Prefix'] +\
+                              "_tc_", scopedName)
     if alreadyDefined(mangled_name):
         return
     
@@ -739,7 +747,8 @@ def visitException(node):
         return
 
     scopedName = node.scopedName()
-    mangled_name = mangleName(config.privatePrefix() + "_tc_", scopedName)
+    mangled_name = mangleName(config.state['Private Prefix'] +\
+                              "_tc_", scopedName)
     if alreadyDefined(mangled_name):
         return
     defineName(mangled_name)
@@ -777,7 +786,7 @@ def visitException(node):
 
     repoID = node.repoId()
     ex_name = id.Name(scopedName).simple()
-    structmember_mangled_name = mangleName(config.privatePrefix() + \
+    structmember_mangled_name = mangleName(config.state['Private Prefix'] + \
                                            "_structmember_", scopedName)
     if num == 0:
         structmember_mangled_name = "(CORBA::PR_structMember*) 0"

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.4  2000/06/26 16:24:16  djs
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.17.2.3  2000/04/26 18:22:54  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -549,7 +552,7 @@ def attribute_write(attribute, ident):
     if not(is_array) and d_attrType.string():
         unmarshal.out(template.unmarshal_string_tmp,
                       item_name = "value",
-                      private_prefix = config.privatePrefix())
+                      private_prefix = config.state['Private Prefix'])
     else:
         skutil.unmarshall(unmarshal, environment, attrType, None, "value",
                           1, "giop_s")

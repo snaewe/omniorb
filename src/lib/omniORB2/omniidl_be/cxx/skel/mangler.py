@@ -30,6 +30,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13.2.5  2000/06/26 16:24:18  djs
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.13.2.4  2000/04/26 18:22:56  djs
 # Rewrote type mapping code (now in types.py)
 # Rewrote identifier handling code (now in id.py)
@@ -110,9 +113,10 @@ self = mangler
 # -------------------------
 # Standard prefixes
 
-CALL_DESC_PREFIX            = config.privatePrefix() + "_cd_"
-LCALL_DESC_PREFIX           = config.privatePrefix() + "_lcfn_"
-CTX_DESC_PREFIX             = config.privatePrefix() + "_ctx_"
+private_prefix = config.state['Private Prefix']
+CALL_DESC_PREFIX            = private_prefix + "_cd_"
+LCALL_DESC_PREFIX           = private_prefix + "_lcfn_"
+CTX_DESC_PREFIX             = private_prefix + "_ctx_"
 STD_PROXY_CALL_DESC_PREFIX  = "omniStdCallDesc::"
 
 # -------------------------

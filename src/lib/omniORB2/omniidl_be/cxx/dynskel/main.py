@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.9  2000/06/26 16:23:26  djs
+# Refactoring of configuration state mechanism.
+#
 # Revision 1.12.2.8  2000/06/05 13:03:04  djs
 # Removed union member name clash (x & pd_x, pd__default, pd__d)
 # Removed name clash when a sequence is called "pd_seq"
@@ -219,7 +222,7 @@ def visitInterface(node):
 
     objref_member = "_CORBA_ObjRef_Member<" + objref_name + ", " +\
                     helper_name + ">"
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
 
     # <--- Check we have the necessary definitions already output
     required_symbols = [ prefix + "_tcParser_setObjectPtr_" + guard_name,
@@ -249,7 +252,7 @@ def visitEnum(node):
     scopedName = id.Name(node.scopedName())
     guard_name = scopedName.guard()
     fqname = scopedName.fullyQualify()
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
 
     # <--- Check we have the necessary definitions already output
     required_symbols = []
@@ -260,7 +263,7 @@ def visitEnum(node):
     
     stream.out(template.enum,
                guard_name = guard_name,
-               private_prefix = config.privatePrefix(),
+               private_prefix = config.state['Private Prefix'],
                fqname = fqname)
 
     finishingNode()
@@ -301,7 +304,7 @@ def prototype(decl, where, member = None):
     guard_name = "_c" + scopedName.guard()
     fqname = scopedName.fullyQualify()
 
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
 
     # <---
     generated_symbol = prefix + "_buildDesc" + guard_name
@@ -366,7 +369,7 @@ def visitDeclaredType(type):
 def visitStringType(type):
     bound = type.bound()
     if bound != 0:
-        prefix = config.privatePrefix()
+        prefix = config.state['Private Prefix']
         n = str(bound)
         # <---
         generated_symbol = prefix + "_buildDesc_c" + n + "string"
@@ -405,7 +408,7 @@ def visitSequenceType(type):
         thing = docast(seqType, None, thing)
 
     elementDesc = util.StringStream()
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
     # djr and jnw's "Super-Hacky Optimisation"
     if isinstance(d_seqType.type(), idltype.Base)   and \
        not(d_seqType.variable()) and \
@@ -439,7 +442,7 @@ def visitSequenceType(type):
                cname = memberType_cname, thing_cname = seqType_cname,
                sequence_template = sequence_template,
                elementDesc = str(elementDesc),
-               private_prefix = config.privatePrefix())
+               private_prefix = config.state['Private Prefix'])
 
 def canonDims(d):
     canon = map(lambda x:"_a" + str(x), d)
@@ -506,7 +509,7 @@ def visitArray(type, declarator):
         alias_cname = mangler.canonTypeName(types.Type(type.type().decl().alias().aliasType()))
 
     prev_cname = canonDims(current_dims) + alias_cname
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
     builddesc_nonarray_str = prefix + "_buildDesc" + alias_cname +\
                              "(_desc, " + prefix + "_tmp);"
 
@@ -698,7 +701,7 @@ def visitStruct(node):
     scopedName = id.Name(node.scopedName())
     guard_name = scopedName.guard()
     fqname = scopedName.fullyQualify()
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
     
     # if it's recursive, stick in a forward declaration
     if (node.recursive()):
@@ -740,7 +743,7 @@ def visitTypedef(node):
     aliasType = types.Type(node.aliasType())
     deref_aliasType = aliasType.deref()
     type_dims = aliasType.dims()
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
 
     if node.constrType():
         aliasType.type().decl().accept(self)
@@ -803,7 +806,7 @@ def visitTypedef(node):
                        type = alias_tyname,
                        dtype = argtype,
                        tail_dims = tail_dims,
-                       private_prefix = config.privatePrefix(),
+                       private_prefix = config.state['Private Prefix'],
                        tcname = tc_name,
                        guard_name = guard_name)
 
@@ -815,7 +818,7 @@ def visitTypedef(node):
                        fqname = fqname,
                        tcname = tc_name,
                        decl_cname = decl_cname,
-                       private_prefix = config.privatePrefix(),
+                       private_prefix = config.state['Private Prefix'],
                        guard_name = guard_name)
 
     finishingNode()
@@ -838,7 +841,7 @@ def visitUnion(node):
     allCaseValues = tyutil.allCases(node)
     isExhaustive = tyutil.exhaustiveMatch(switchType, allCaseValues)
 
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
 
     # grab the default case if it exists
     default_case = None
@@ -976,7 +979,7 @@ def visitForward(node):
         return
     scopedName = id.Name(node.scopedName())
     guard_name = scopedName.guard()
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
 
     symbol = prefix + "_buildDesc_c" + guard_name
     if not(isDefined(symbol)):
@@ -1004,7 +1007,7 @@ def visitException(node):
     scopedName = id.Name(node.scopedName())
     guard_name = scopedName.guard()
     fqname = scopedName.fullyQualify()
-    prefix = config.privatePrefix()
+    prefix = config.state['Private Prefix']
 
     for m in node.members():
         memberType = m.memberType()
@@ -1021,7 +1024,7 @@ def visitException(node):
 
     stream.out(template.exception,
                guard_name = guard_name, fqname = fqname,
-               private_prefix = config.privatePrefix())
+               private_prefix = config.state['Private Prefix'])
 
 
     finishingNode()
