@@ -191,6 +191,13 @@ omniLifeCycle.hh omniLifeCycleSK.cc: omniLifeCycle.idl
 	-if [ "$^" != omniLifeCycle.idl ]; then $(CP) $^ . ; fi
 	$(OMNIORB2_IDL_FPATH) omniLifeCycle.idl
 
+export:: Naming.hh
+	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
+
+export:: omniLifeCycle.hh
+	@(file="omniLifeCycle.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
+
+
 endif
 
 clean::
@@ -204,13 +211,6 @@ export:: $(lclib)
 
 export::
 	@$(MakeSubdirs)
-
-export:: Naming.hh
-	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
-
-export:: omniLifeCycle.hh
-	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
-
 
 ifdef Win32Platform
 
