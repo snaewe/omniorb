@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/06/20 18:35:15  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.1.2.1  2001/04/18 18:10:43  sll
   Big checkin with the brand new internal APIs.
 
@@ -46,10 +51,10 @@ public:
   tcpEndpoint(const char* address);
   const char* type() const;
   const char* address() const;
-  CORBA::Boolean bind();
-  giopConnection* accept();
-  void poke();
-  void shutdown();
+  CORBA::Boolean Bind();
+  giopConnection* Accept();
+  void Poke();
+  void Shutdown();
 
   ~tcpEndpoint();
 
@@ -61,6 +66,7 @@ public:
   tcpEndpoint();
   tcpEndpoint(const tcpEndpoint&);
 };
+
 
 OMNI_NAMESPACE_END(omni)
 

@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/06/20 18:35:15  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.1.2.3  2001/06/13 20:13:49  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -99,7 +104,7 @@ tcpEndpoint::address() const {
 
 /////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
-tcpEndpoint::bind() {
+tcpEndpoint::Bind() {
 
   OMNIORB_ASSERT(pd_socket == RC_INVALID_SOCKET);
 
@@ -187,7 +192,7 @@ tcpEndpoint::bind() {
 
 /////////////////////////////////////////////////////////////////////////
 giopConnection*
-tcpEndpoint::accept() {
+tcpEndpoint::Accept() {
 
   OMNIORB_ASSERT(pd_socket != RC_INVALID_SOCKET);
 
@@ -204,11 +209,11 @@ tcpEndpoint::accept() {
 
 /////////////////////////////////////////////////////////////////////////
 void
-tcpEndpoint::poke() {
+tcpEndpoint::Poke() {
 
   tcpAddress* target = new tcpAddress(pd_address);
   tcpConnection* conn;
-  if ((conn = (tcpConnection*)target->connect()) == 0) {
+  if ((conn = (tcpConnection*)target->Connect()) == 0) {
     if (omniORB::trace(1)) {
       omniORB::logger log;
       log << "Warning: Fail to connect to myself ("
@@ -224,7 +229,7 @@ tcpEndpoint::poke() {
 
 /////////////////////////////////////////////////////////////////////////
 void
-tcpEndpoint::shutdown() {
+tcpEndpoint::Shutdown() {
   SHUTDOWNSOCKET(pd_socket);
 }
 

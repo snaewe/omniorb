@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/06/20 18:35:18  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.1.4.1  2001/04/18 18:10:50  sll
   Big checkin with the brand new internal APIs.
 
@@ -49,7 +54,7 @@ giopRendezvouser::execute() {
     exit_on_error = 0;
     giopConnection* newconn = 0;
     try {
-      newconn = pd_endpoint->accept();
+      newconn = pd_endpoint->Accept();
       if (newconn)
 	pd_server->notifyRzNewConnection(this,newconn);
       else {
@@ -82,7 +87,7 @@ giopRendezvouser::execute() {
 
 void
 giopRendezvouser::terminate() {
-  pd_endpoint->poke();
+  pd_endpoint->Poke();
 }
 
 

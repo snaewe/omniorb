@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/06/20 18:35:16  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.1.2.1  2001/04/18 18:10:44  sll
   Big checkin with the brand new internal APIs.
 
@@ -47,7 +52,7 @@ class tcpAddress : public giopAddress {
   const char* type() const;
   const char* address() const;
   giopAddress* duplicate() const;
-  giopConnection* connect(unsigned long deadline_secs = 0,
+  giopConnection* Connect(unsigned long deadline_secs = 0,
 			  unsigned long deadline_nanosecs = 0) const;
 
   ~tcpAddress() {}

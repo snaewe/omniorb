@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/06/20 18:35:16  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.1.2.3  2001/06/13 20:13:49  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -98,7 +103,7 @@ tcpAddress::duplicate() const {
 
 /////////////////////////////////////////////////////////////////////////
 giopConnection*
-tcpAddress::connect(unsigned long deadline_secs,
+tcpAddress::Connect(unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) const {
 
   struct sockaddr_in raddr;

@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.22.2.9  2001/06/20 18:35:17  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.22.2.8  2001/06/11 18:00:52  sll
   Fixed silly mistake in shutdown multiple endpoints.
 
@@ -77,7 +82,7 @@ giopServer::instantiate(const char* uri,
 
     OMNIORB_ASSERT(pd_state != ZOMBIE);
     
-    if (ept->bind()) {
+    if (ept->Bind()) {
       pd_endpoints.push_back(ept);
       if (pd_state == ACTIVE) activate();
       uri =  ept->address();
@@ -166,7 +171,7 @@ giopServer::remove()
   i    = pd_endpoints.begin();
   
   while (i != pd_endpoints.end()) {
-    (*i)->shutdown();
+    (*i)->Shutdown();
     delete *i;
     pd_endpoints.erase(i);
   }
@@ -327,7 +332,7 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
     log << "Unrecoverable error for this endpoint: ";
     log << ept->address();
     log << ", it will no longer be serviced.\n";
-    ept->shutdown();
+    ept->Shutdown();
     delete ept;
   }
   else {

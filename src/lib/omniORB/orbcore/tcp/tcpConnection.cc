@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/06/20 18:35:16  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.1.2.2  2001/06/13 20:13:49  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -146,7 +151,7 @@ tcpConnection::ip4ToString(CORBA::ULong ipv4,CORBA::UShort port,
 
 /////////////////////////////////////////////////////////////////////////
 int
-tcpConnection::send(void* buf, size_t sz,
+tcpConnection::Send(void* buf, size_t sz,
 		    unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) {
 
@@ -215,7 +220,7 @@ tcpConnection::send(void* buf, size_t sz,
 
 /////////////////////////////////////////////////////////////////////////
 int
-tcpConnection::recv(void* buf, size_t sz,
+tcpConnection::Recv(void* buf, size_t sz,
 		    unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) {
 
@@ -300,7 +305,7 @@ tcpConnection::recv(void* buf, size_t sz,
 
 /////////////////////////////////////////////////////////////////////////
 void
-tcpConnection::shutdown() {
+tcpConnection::Shutdown() {
   SHUTDOWNSOCKET(pd_socket);
 }
 

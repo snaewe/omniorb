@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/06/20 18:35:17  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.1.4.1  2001/04/18 18:10:48  sll
   Big checkin with the brand new internal APIs.
 
@@ -82,7 +87,7 @@ giopWorker::execute() {
 
 void
 giopWorker::terminate() {
-  pd_strand->connection->shutdown();
+  pd_strand->connection->Shutdown();
 }
 
 OMNI_NAMESPACE_END(omni)

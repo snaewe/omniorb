@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/06/20 18:35:18  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.1.4.5  2001/05/11 14:28:56  sll
   Temporarily replaced all  MARSHAL_MessageSizeExceedLimit with
   MARSHAL_MessageSizeExceedLimitOnServer.
@@ -1052,7 +1057,7 @@ giopImpl11::sendMsgErrorMessage(giopStream* g) {
   hdr[7] = (char)GIOP::MessageError;
   hdr[8] = hdr[9] = hdr[10] = hdr[11] = 0;
 
-  (void)  g->pd_strand->connection->send(hdr,12, 0, 0);
+  (void)  g->pd_strand->connection->Send(hdr,12, 0, 0);
   // XXX no deadline set.
 
   g->pd_strand->state(giopStrand::DYING);

@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/06/20 18:35:17  sll
+  Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
   Revision 1.1.2.2  2001/06/18 20:27:56  sll
   Use strchr instead of index() for maximal portability.
 
@@ -100,7 +105,7 @@ sslAddress::duplicate() const {
 
 /////////////////////////////////////////////////////////////////////////
 giopConnection*
-sslAddress::connect(unsigned long deadline_secs,
+sslAddress::Connect(unsigned long deadline_secs,
 		    unsigned long deadline_nanosecs) const {
 
   struct sockaddr_in raddr;
