@@ -1,3 +1,11 @@
+Thu Dec 19 11:46:33 GMT 2002 dgrisby
+====================================
+
+- Vladimir Panov's SSL fixes.
+
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+
+
 Wed Dec 18 17:46:49 GMT 2002 dgrisby
 ====================================
 
