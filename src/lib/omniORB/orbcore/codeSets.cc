@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2001/07/25 10:56:28  dpg1
+  Fix static initialiser problem with codesets.
+
   Revision 1.1.2.7  2001/06/13 20:12:32  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -64,10 +67,22 @@ OMNI_NAMESPACE_BEGIN(omni)
 // Linked lists of code set objects
 //
 
-static omniCodeSet::NCS_C* ncs_c_head = 0;
-static omniCodeSet::NCS_W* ncs_w_head = 0;
-static omniCodeSet::TCS_C* tcs_c_head = 0;
-static omniCodeSet::TCS_W* tcs_w_head = 0;
+static omniCodeSet::NCS_C*& ncs_c_head() {
+  static omniCodeSet::NCS_C* head_ = 0;
+  return head_;
+}
+static omniCodeSet::NCS_W*& ncs_w_head() {
+  static omniCodeSet::NCS_W* head_ = 0;
+  return head_;
+}
+static omniCodeSet::TCS_C*& tcs_c_head() {
+  static omniCodeSet::TCS_C* head_ = 0;
+  return head_;
+}
+static omniCodeSet::TCS_W*& tcs_w_head() {
+  static omniCodeSet::TCS_W* head_ = 0;
+  return head_;
+}
 
 static inline _CORBA_Boolean
 versionMatch(GIOP::Version v1, GIOP::Version v2)
@@ -106,7 +121,7 @@ omniCodeSet::NCS_C*
 omniCodeSet::getNCS_C(CONV_FRAME::CodeSetId id)
 {
   omniCodeSet::Base* cs;
-  for (cs = ncs_c_head; cs; cs = cs->pd_next) {
+  for (cs = ncs_c_head(); cs; cs = cs->pd_next) {
     if (cs->id() == id)
       return (NCS_C*)cs;
   }
@@ -117,7 +132,7 @@ omniCodeSet::NCS_W*
 omniCodeSet::getNCS_W(CONV_FRAME::CodeSetId id)
 {
   omniCodeSet::Base* cs;
-  for (cs = ncs_w_head; cs; cs = cs->pd_next) {
+  for (cs = ncs_w_head(); cs; cs = cs->pd_next) {
     if (cs->id() == id)
       return (NCS_W*)cs;
   }
@@ -129,7 +144,7 @@ omniCodeSet::getTCS_C(CONV_FRAME::CodeSetId id, GIOP::Version v)
 {
   omniCodeSet::Base*  cs;
   omniCodeSet::TCS_C* tcs;
-  for (cs = tcs_c_head; cs; cs = cs->pd_next) {
+  for (cs = tcs_c_head(); cs; cs = cs->pd_next) {
     tcs = (omniCodeSet::TCS_C*)cs;
     if (tcs->id() == id && versionMatch(tcs->giopVersion(), v))
       return tcs;
@@ -142,7 +157,7 @@ omniCodeSet::getTCS_W(CONV_FRAME::CodeSetId id, GIOP::Version v)
 {
   omniCodeSet::Base*  cs;
   omniCodeSet::TCS_W* tcs;
-  for (cs = tcs_w_head; cs; cs = cs->pd_next) {
+  for (cs = tcs_w_head(); cs; cs = cs->pd_next) {
     tcs = (omniCodeSet::TCS_W*)cs;
     if (tcs->id() == id && versionMatch(tcs->giopVersion(), v))
       return tcs;
@@ -154,7 +169,7 @@ omniCodeSet::NCS_C*
 omniCodeSet::getNCS_C(const char* name)
 {
   omniCodeSet::Base* cs;
-  for (cs = ncs_c_head; cs; cs = cs->pd_next) {
+  for (cs = ncs_c_head(); cs; cs = cs->pd_next) {
     if (omni::strMatch(cs->name(), name))
       return (NCS_C*)cs;
   }
@@ -165,7 +180,7 @@ omniCodeSet::NCS_W*
 omniCodeSet::getNCS_W(const char* name)
 {
   omniCodeSet::Base* cs;
-  for (cs = ncs_w_head; cs; cs = cs->pd_next) {
+  for (cs = ncs_w_head(); cs; cs = cs->pd_next) {
     if (omni::strMatch(cs->name(), name))
       return (NCS_W*)cs;
   }
@@ -177,7 +192,7 @@ omniCodeSet::getTCS_C(const char* name, GIOP::Version v)
 {
   omniCodeSet::Base*  cs;
   omniCodeSet::TCS_C* tcs;
-  for (cs = tcs_c_head; cs; cs = cs->pd_next) {
+  for (cs = tcs_c_head(); cs; cs = cs->pd_next) {
     tcs = (omniCodeSet::TCS_C*)cs;
     if (omni::strMatch(cs->name(), name) &&
 	versionMatch(tcs->giopVersion(), v))
@@ -191,7 +206,7 @@ omniCodeSet::getTCS_W(const char* name, GIOP::Version v)
 {
   omniCodeSet::Base*  cs;
   omniCodeSet::TCS_W* tcs;
-  for (cs = tcs_w_head; cs; cs = cs->pd_next) {
+  for (cs = tcs_w_head(); cs; cs = cs->pd_next) {
     tcs = (omniCodeSet::TCS_W*)cs;
     if (omni::strMatch(cs->name(), name) &&
 	versionMatch(tcs->giopVersion(), v))
@@ -205,29 +220,29 @@ omniCodeSet::getTCS_W(const char* name, GIOP::Version v)
 void
 omniCodeSet::registerNCS_C(omniCodeSet::NCS_C* cs)
 {
-  cs->pd_next = ncs_c_head;
-  ncs_c_head  = cs;
+  cs->pd_next  = ncs_c_head();
+  ncs_c_head() = cs;
 }
 
 void
 omniCodeSet::registerNCS_W(omniCodeSet::NCS_W* cs)
 {
-  cs->pd_next = ncs_w_head;
-  ncs_w_head  = cs;
+  cs->pd_next  = ncs_w_head();
+  ncs_w_head() = cs;
 }
 
 void
 omniCodeSet::registerTCS_C(omniCodeSet::TCS_C* cs)
 {
-  cs->pd_next = tcs_c_head;
-  tcs_c_head  = cs;
+  cs->pd_next  = tcs_c_head();
+  tcs_c_head() = cs;
 }
 
 void
 omniCodeSet::registerTCS_W(omniCodeSet::TCS_W* cs)
 {
-  cs->pd_next = tcs_w_head;
-  tcs_w_head  = cs;
+  cs->pd_next  = tcs_w_head();
+  tcs_w_head() = cs;
 }
 
 //
@@ -383,27 +398,27 @@ omniCodeSet::logCodeSets()
   omniCodeSet::Base* cs;
 
   {
-    omniORB::logger    l;
+    omniORB::logger l;
     l << "Native char code sets:";
-    for (cs = ncs_c_head; cs; cs = cs->pd_next) l << " " << cs->name();
+    for (cs = ncs_c_head(); cs; cs = cs->pd_next) l << " " << cs->name();
     l << ".\n";
   }
   {
-    omniORB::logger    l;
+    omniORB::logger l;
     l << "Transmission char code sets:";
-    for (cs = tcs_c_head; cs; cs = cs->pd_next) l << " " << cs->name();
+    for (cs = tcs_c_head(); cs; cs = cs->pd_next) l << " " << cs->name();
     l << ".\n";
   }
   {
-    omniORB::logger    l;
+    omniORB::logger l;
     l << "Native wide char code sets:";
-    for (cs = ncs_w_head; cs; cs = cs->pd_next) l << " " << cs->name();
+    for (cs = ncs_w_head(); cs; cs = cs->pd_next) l << " " << cs->name();
     l << ".\n";
   }
   {
-    omniORB::logger    l;
+    omniORB::logger l;
     l << "Transmission wide char code sets:";
-    for (cs = tcs_w_head; cs; cs = cs->pd_next) l << " " << cs->name();
+    for (cs = tcs_w_head(); cs; cs = cs->pd_next) l << " " << cs->name();
     l << ".\n";
   }
 }
