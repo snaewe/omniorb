@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.29.6.15  2000/04/27 10:46:30  dpg1
+  Interoperable Naming Service
+
+  Add initialisers for URI and initRefs modules.
+  object_to_string() and string_to_object() use omniURI:: functions.
+  resolve_initial_references() replaced with omniInitialReferences::resolve().
+  Add -ORBInitRef and -ORBDefaultInitRef command-line options.
+
   Revision 1.29.6.14  2000/02/04 18:11:01  djr
   Minor mods for IRIX (casting pointers to ulong instead of int).
 
@@ -159,12 +167,13 @@
 #endif
 
 #include <corbaOrb.h>
-#include <bootstrap_i.h>
+#include <initRefs.h>
 #include <omniORB3/omniObjRef.h>
 #include <poaimpl.h>
 #include <initialiser.h>
 #include <dynamicLib.h>
 #include <exception.h>
+#include <omniORB3/omniURI.h>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -197,11 +206,12 @@ extern "C" int sigaction(int, const struct sigaction *, struct sigaction *);
 ///////////////////////////////////////////////////////////////////////
 //          Per module initialisers.
 //
+extern omniInitialiser& omni_uri_initialiser_;
 extern omniInitialiser& omni_corbaOrb_initialiser_;
 extern omniInitialiser& omni_ropeFactory_initialiser_;
 extern omniInitialiser& omni_omniInternal_initialiser_;
 extern omniInitialiser& omni_initFile_initialiser_;
-extern omniInitialiser& omni_bootstrap_i_initialiser_;
+extern omniInitialiser& omni_initRefs_initialiser_;
 extern omniInitialiser& omni_strand_initialiser_;
 extern omniInitialiser& omni_scavenger_initialiser_;
 
@@ -265,6 +275,9 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     OMNIORB_THROW(BAD_INV_ORDER, 0, CORBA::COMPLETED_NO);
   }
 
+  // URI initialiser must be called before args are parsed
+  omni_uri_initialiser_.attach();
+
   if( !parse_ORB_args(argc,argv,orb_identifier) ) {
     OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
   }
@@ -286,14 +299,14 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_scavenger_initialiser_.attach();
     omni_ropeFactory_initialiser_.attach();
     omni_initFile_initialiser_.attach();
-    omni_bootstrap_i_initialiser_.attach();
+    omni_initRefs_initialiser_.attach();
 
     if( bootstrapAgentHostname ) {
       // The command-line option -ORBInitialHost has been specified.
       // Override any previous NamesService object reference
       // that may have been read from the configuration file.
-      omniInitialReferences::set("NameService", CORBA::Object::_nil());
-      omniInitialReferences::set("InterfaceRepository", CORBA::Object::_nil());
+      omniInitialReferences::remFromFile("NameService");
+      omniInitialReferences::remFromFile("InterfaceRepository");
       omniInitialReferences::initialise_bootstrap_agent(bootstrapAgentHostname,
 							bootstrapAgentPort);
     }
@@ -343,28 +356,15 @@ char*
 omniOrbORB::object_to_string(CORBA::Object_ptr obj)
 {
   CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
-
-  if( obj && obj->_NP_is_pseudo() )
-    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_NO);
-
-  return omni::objectToString(obj ? obj->_PR_getobj() : 0);
+  return omniURI::objectToString(obj);
 }
 
 
 CORBA::Object_ptr
-omniOrbORB::string_to_object(const char* sior)
+omniOrbORB::string_to_object(const char* uri)
 {
   CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
-  if( !sior )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
-
-  omniObjRef* objref;
-
-  if( !omni::stringToObject(objref, sior) )
-    OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
-
-  return objref ?
-    (CORBA::Object_ptr) objref->_ptrToObjRef(CORBA::Object::_PD_repoId)
-    : CORBA::Object::_nil();
+  return omniURI::stringToObject(uri);
 }
 
 
@@ -389,40 +389,7 @@ CORBA::Object_ptr
 omniOrbORB::resolve_initial_references(const char* id)
 {
   CHECK_NOT_NIL_SHUTDOWN_OR_DESTROYED();
-
-  if( !id )  throw CORBA::ORB::InvalidName();
-
-  if( !strcmp(id, "POACurrent") ) {
-    OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
-  }
-  else if( !strcmp(id, "RootPOA") ) {
-    // Instantiate the root POA on demand.
-    // NB. No race condition problem here - this fn is thread safe.
-    return omniOrbPOA::rootPOA();
-
-    // We cannot insert the reference into the initial references
-    // map, since holding a reference there would prevent the poa
-    // from being released properly when it has been destroyed.
-  }
-  else {
-    CORBA::Object_ptr obj = omniInitialReferences::get(id);
-
-    if( !CORBA::is_nil(obj) )  return obj;
-
-    if( !strcmp(id, "InterfaceRepository") ||
-	!strcmp(id, "NameService") ||
-	!strcmp(id, "TradingService") ||
-	!strcmp(id, "SecurityCurrent") ||
-	!strcmp(id, "TransactionCurrent") )
-      // Resource not found.
-      OMNIORB_THROW(NO_RESOURCES,0,CORBA::COMPLETED_NO);
-
-    // The identifier is not defined.
-    throw CORBA::ORB::InvalidName();
-  }
-
-  // Never get here...
-  return 0;
+  return omniInitialReferences::resolve(id);
 }
 
 
@@ -573,7 +540,7 @@ omniOrbORB::actual_shutdown()
   omniObjAdapter::shutdown();
 
   // Call detach method of the initialisers in reverse order.
-  omni_bootstrap_i_initialiser_.detach();
+  omni_initRefs_initialiser_.detach();
   omni_initFile_initialiser_.detach();
   omni_ropeFactory_initialiser_.detach();
   omni_scavenger_initialiser_.detach();
@@ -704,6 +671,9 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  continue;
 	}
 
+      //
+      // Standard options
+      //
 
       // -ORBid <id>
       if (strcmp(argv[idx],"-ORBid") == 0) {
@@ -727,6 +697,54 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	move_args(argc,argv,idx,2);
 	continue;
       }
+
+      // -ORBInitRef <ObjectId>=<ObjectURI>
+      if (strcmp(argv[idx],"-ORBInitRef") == 0) {
+	if ((idx+1) >= argc) {
+	  omniORB::logs(1,"CORBA::ORB_init failed: "
+			"missing -ORBInitRef parameter.");
+	  return 0;
+	}
+	{
+	  unsigned int slen = strlen(argv[idx+1]) + 1;
+	  CORBA::String_var id  = CORBA::string_alloc(slen);
+	  CORBA::String_var uri = CORBA::string_alloc(slen);
+	  if (sscanf(argv[idx+1], "%[^=]=%s", (char*)id, (char*)uri) != 2) {
+	    if (omniORB::trace(1)) {
+	      omniORB::logger l;
+	      l << "CORBA::ORB_init failed: invalid -ORBInitRef parameter `"
+		<< argv[idx+1] << "'.\n";
+	    }
+	    return 0;
+	  }
+	  if (!omniInitialReferences::setFromArgs(id, uri)) {
+	    if (omniORB::trace(1)) {
+	      omniORB::logger l;
+	      l << "CORBA::ORB_init failed: syntactically incorrect URI `"
+		<< uri << "'\n";
+	    }
+	    return 0;
+	  }
+	}
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBDefaultInitRef <default>
+      if (strcmp(argv[idx],"-ORBDefaultInitRef") == 0) {
+	if ((idx+1) >= argc) {
+	  omniORB::logs(1,"CORBA::ORB_init failed: "
+			"missing -ORBDefaultInitRef parameter.");
+	  return 0;
+	}
+	omniInitialReferences::setDefaultInitRefFromArgs(argv[idx+1]);
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      //
+      // omniORB specific options
+      //
 
       // -ORBtraceLevel
       if (strcmp(argv[idx],"-ORBtraceLevel") == 0) {
@@ -1012,7 +1030,13 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	omniORB::logger l;
 	l <<
 	  "Valid -ORB<options> are:\n"
-	  "    -ORBid omniORB2\n"
+	  "\n"
+	  "  Standard options:\n"
+	  "    -ORBid omniORB3\n"
+	  "    -ORBInitRef <ObjectID>=<ObjectURI>\n"
+	  "    -ORBDefaultInitRef <Default URI>\n"
+	  "\n"
+	  "  omniORB specific options:\n"
 	  "    -ORBtraceLevel <n>\n"
 	  "    -ORBtraceInvocations\n"
 	  "    -ORBstrictIIOP <0|1>\n"
