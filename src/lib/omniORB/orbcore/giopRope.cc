@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/06/11 18:01:58  sll
+  Temporarily hardwared to choose ssl over tcp transport if the IOR has both.
+
   Revision 1.1.4.3  2001/05/31 16:18:13  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -85,6 +88,16 @@ giopRope::giopRope(const giopAddressList& addrlist) :
   for (index = 0; index < total; index++)
     pd_addresses_order.push_back(index);
   pd_address_in_use = 0;
+
+
+  // XXX Make SSL the first one to try if it is available.
+  for (index = 0; index < total; index++) {
+    if (strcmp(pd_addresses[index]->type(),"giop:ssl")==0) {
+      pd_addresses_order[index] = pd_addresses_order[0];
+      pd_addresses_order[0] = index;
+      break;
+    }
+  }
 }
 
 
