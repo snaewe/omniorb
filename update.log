@@ -6,10 +6,12 @@ Mon Jul 26 13:46:45 BST 2004 dgrisby
 README.FIRST
 README.unix
 README.win32
-\ReleaseNotes_4.0.3.txt  -- deleted
+ReleaseNotes_4.0.3.txt  -- deleted
 ReleaseNotes_4.0.4.txt  -- new
 THIS_IS_OMNIORB_4_0_3   -- deleted
 THIS_IS_OMNIORB_4_0_4   -- new
+configure
+configure.ac
 mk/beforeauto.mk.in
 mk/mingw.mk
 mk/rtems.mk
