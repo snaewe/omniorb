@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.16  2001/06/18 16:28:49  dpg1
+  Print out distribution date at ORB_init()
+
   Revision 1.33.2.15  2001/06/18 16:18:49  dpg1
   Print out distribution date at ORB_init()
 
@@ -390,7 +393,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     return the_orb;
   }
 
-  if (omniORB::trace(1)) {
+  if (omniORB::trace(2)) {
     omniORB::logger l;
     l << "Distribution date: " OMNIORB_DIST_DATE "\n";
   }
