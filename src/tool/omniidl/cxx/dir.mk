@@ -112,9 +112,6 @@ libname = _omniidlmodule.so
 soname = $(libname).$(IDLMODULE_MAJOR)
 lib = $(soname).$(IDLMODULE_MINOR)
 
-DIR_CPPFLAGS += -I/usr/local/include
-
-
 ifeq ($(notdir $(CXX)),CC)
 
 CXXOPTIONS   += -Kpic
@@ -172,13 +169,13 @@ ifdef Win32Platform
 
 DIR_CPPFLAGS += -DMSDOS -DOMNIIDL_EXECUTABLE
 
-PYPREFIX1 := $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.prefix)')
-PYPREFIX  := $(subst Program Files,progra~1,$(PYPREFIX1))
+PYPREFIX1 := "$(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.prefix)')"
+PYPREFIX  := $(subst Program Files,progra~1,$(subst \,/,$(PYPREFIX1)))
 PYINCDIR  := $(PYPREFIX)/include
-PYLIBDIR  := $(PYPREFIX)/libs
+PYLIBDIR  := $(PYPREFIX)/libs $(PYPREFIX)/lib/x86_win32
 
-DIR_CPPFLAGS += -I"$(PYINCDIR)" -I"$(PYINCDIR)/python1.5"
-CXXLINKOPTIONS += -libpath:"$(PYLIBDIR)"
+DIR_CPPFLAGS += -I$(PYINCDIR) -I$(PYINCDIR)/python1.5
+CXXLINKOPTIONS += $(patsubst %,-libpath:%,$(PYLIBDIR))
 
 omniidl = $(patsubst %,$(BinPattern),omniidl)
 

@@ -55,7 +55,7 @@ else
 CONFIG_DEFAULT_LOCATION = /project/omni/var/omniORB_NEW.cfg
 endif
 
-CXXDEBUGFLAGS = -g
+#CXXDEBUGFLAGS = -g
 
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
 NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o

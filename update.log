@@ -1,3 +1,19 @@
+Tue Jun 27 16:53:15 BST 2000 sll
+================================
+
+- Fixes to WIN 32 related build and compiler issues
+
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idlexpr.cc
+src/tool/omniidl/cxx/cccp/dir.mk
+
+- Removed CXXDEBUGFLAGS assignment (was set to -g) in make files
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omniORB2/dynamic/dir.mk
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+
+
 Tue Jun 27 16:48:56 BST 2000 sll
 ================================
 
