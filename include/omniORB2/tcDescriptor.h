@@ -63,7 +63,6 @@ union tcDescriptor;
 
 // Complex type descriptors
 struct tcObjrefDesc;
-struct tcStringDesc;
 
 // Constructed type descriptors
 struct tcUnionDesc;
@@ -111,34 +110,7 @@ struct tcObjrefDesc
 
   // Data members for use only in the callbacks
   void * opq_objref;
-};
-
-//////////////
-// tcString //
-//////////////
-
-// The lengths passed through this string interface are numbers of
-// characters, EXCLUDING the terminating zero character!
-
-typedef void (*tcStringSetLengthFn)
-  (tcStringDesc *, CORBA::ULong);
-typedef CORBA::ULong (*tcStringGetLengthFn)
-  (tcStringDesc *);
-typedef char* (*tcStringGetBufferFn)
-  (tcStringDesc *);
-
-struct tcStringDesc
-{
-  // Set the length of the string buffer
-  tcStringSetLengthFn setLength;
-  // Get the length of the string buffer
-  tcStringGetLengthFn getLength;
-  // Get the string buffer
-  tcStringGetBufferFn getBuffer;
-
-  // Data members for use only in the callbacks
-  CORBA::ULong opq_len;
-  void* opq_string;
+  CORBA::Boolean opq_release;
 };
 
 // COMPLEX DESCRIPTOR CLASSES
@@ -275,11 +247,15 @@ union tcDescriptor {
   //   if the _ptr still points to valid storage then that storage is lost
   CORBA::PrincipalID*  p_Principal;
 
+  // appendItem() will read in the string from string pointer
+  // fetchItem() will overwrite the string pointer to a new string - 
+  //   if *p_string is not nil, it will be freed.
+  char**               p_string;
+
   // CONSTRUCTED types
   // These types have manager classes to help handle them, since their
   // internal details are not generally known to the tcParser
   tcObjrefDesc p_objref;
-  tcStringDesc p_string;
 
   tcUnionDesc    p_union;
   tcStructDesc   p_struct;
@@ -368,30 +344,13 @@ _0RL_buildDesc_cany(tcDescriptor &desc, const CORBA::Any& data)
 }
 
 ///////////////////
-// String_member //
+// String        //
 ///////////////////
 
-extern void
-_0RL_tcParser_stringmember_setLength(tcStringDesc *desc, CORBA::ULong _len);
-
-extern CORBA::ULong
-_0RL_tcParser_stringmember_getLength(tcStringDesc *desc);
-
-extern char*
-_0RL_tcParser_stringmember_getBuffer(tcStringDesc *desc);
-
 inline void
-_0RL_buildDesc_cstring(tcDescriptor &desc, const CORBA::String_member &data)
+_0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_member& data)
 {
-  desc.p_string.opq_string = (void *) &data;
-  desc.p_string.setLength = _0RL_tcParser_stringmember_setLength;
-  desc.p_string.getLength = _0RL_tcParser_stringmember_getLength;
-  desc.p_string.getBuffer = _0RL_tcParser_stringmember_getBuffer;
-  if (((const char *)data) != 0) {
-    desc.p_string.opq_len = strlen(data);
-  } else {
-    desc.p_string.opq_len = 0;
-  }
+  desc.p_string = &data._ptr;
 }
 
 ///////////////////
@@ -407,11 +366,13 @@ _0RL_tcParser_objref_getObjectPtr(tcObjrefDesc* desc);
 inline void
 _0RL_buildDesc_cCORBA_sObject(tcDescriptor& desc, const CORBA::Object_member& data)
 {
-  desc.p_objref.opq_objref = (void*) &data;
+  desc.p_objref.opq_objref = (void*) &data._ptr;
+  desc.p_objref.opq_release = data.pd_rel;
   desc.p_objref.setObjectPtr = _0RL_tcParser_objref_setObjectPtr;
   desc.p_objref.getObjectPtr = _0RL_tcParser_objref_getObjectPtr;
 }
 
+#if 0
 extern void
 _0RL_tcParser_objref2_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr);
 
@@ -421,10 +382,11 @@ _0RL_tcParser_objref2_getObjectPtr(tcObjrefDesc* desc);
 inline void
 _0RL_buildDesc_cCORBA_sObject(tcDescriptor& desc, const _CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>& data)
 {
-  desc.p_objref.opq_objref = (void*) &data;
+  desc.p_objref.opq_objref = (void*) &data._ptr;
   desc.p_objref.setObjectPtr = _0RL_tcParser_objref2_setObjectPtr;
   desc.p_objref.getObjectPtr = _0RL_tcParser_objref2_getObjectPtr;
 }
+#endif
 
 /////////////////////
 // TypeCode_member //
