@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.12  2001/03/20 17:27:11  dpg1
+# Incorrect TypeCode constants for some recursive sequences.
+#
 # Revision 1.14.2.11  2001/01/24 13:47:58  sll
 # omniidl cxx backend bug fix.
 #
@@ -184,19 +187,11 @@ def startingNode(node):
     self.__currentNodes.append(node)
 def finishingNode():
     assert(self.__currentNodes != [])
-    self.__currentNodes = self.__currentNodes[0:len(self.__currentNodes)-1]
+    self.__currentNodes = self.__currentNodes[:-1]
 def currently_being_defined(node):
     return node in self.__currentNodes
 def recursive_Depth(node):
-    outer = self.__currentNodes[:]
-    depth = 1
-
-    while(1):
-        if outer[-1] == node:
-            return depth
-        depth = depth + 1
-        outer = outer[0:len(outer)-1]
-
+    return len(self.__currentNodes) - self.__currentNodes.index(node)
 
 def __init__(stream):
     self.stream = stream
@@ -341,8 +336,11 @@ def mkTypeCode(type, declarator = None, node = None):
                     return prefix + "recursive_sequence_tc(" +\
                            str(type.bound()) + ", " + str(depth) + ")"
             
-        return prefix + "sequence_tc(" + str(type.bound()) + ", " +\
-               mkTypeCode(types.Type(type.seqType())) + ")"
+        startingNode(type)
+        ret = prefix + "sequence_tc(" + str(type.bound()) + ", " +\
+              mkTypeCode(types.Type(type.seqType())) + ")"
+        finishingNode()
+        return ret
 
     if isinstance(type, idltype.Fixed):
         util.fatalError("Fixed types are not supported")
