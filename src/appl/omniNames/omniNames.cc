@@ -29,7 +29,8 @@ static void
 insertArgs(int& argc, char**& argv, int idx, int nargs)
 {
   char** newArgv = new char*[argc+nargs];
-  for (int i = 0; i < idx; i++) {
+  int i;
+  for (i = 0; i < idx; i++) {
     newArgv[i] = argv[i];
   }
   for (i = idx; i < argc; i++) {
@@ -47,6 +48,10 @@ insertArgs(int& argc, char**& argv, int idx, int nargs)
 int
 main(int argc, char **argv)
 {
+  //
+  // If we have a "-start" option, get the given port number.
+  //
+
   int port = 0;
 
   if ((argc > 1) && (strcmp(argv[1], "-start") == 0)) {
@@ -55,27 +60,46 @@ main(int argc, char **argv)
     removeArgs(argc, argv, 1, 2);
   }
 
-  // find the port from the log file
+
+  //
+  // Set up an instance of class log.  This also gives us back the port
+  // number from the log file if "-start" wasn't specified.
+  //
 
   log l(port);
+
+
+  //
+  // Add a fake command line option to tell the BOA which port to use.
+  //
 
   insertArgs(argc, argv, 1, 2);
   argv[1] = strdup("-BOAiiop_port");
   argv[2] = new char[16];
   sprintf(argv[2], "%d", port);
 
-  // Initialize the ORB and the object adaptor:
+
+  //
+  // Initialize the ORB and the object adaptor.
+  //
 
   CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
   CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
 
   boa->impl_is_ready(0,1);
 
-  // Do all that log stuff
 
-  l.redo(orb, boa);
+  //
+  // Read the log file and set up all the naming contexts described in it.
+  //
 
-  // Checkpoint once every so often
+  l.init(orb, boa);
+
+
+  //
+  // Now this thread has nothing much to do.  Simply take a checkpoint once
+  // every so often.
+  //
 
   int idle_time_btw_chkpt;
   char *itbc = getenv("OMNINAMES_ITBC");
@@ -87,10 +111,10 @@ main(int argc, char **argv)
 
   m.lock();
   while (1) {
+    l.checkpoint();
     unsigned long s, n;
     omni_thread::get_time(&s, &n, idle_time_btw_chkpt);
     c.timed_wait(s,n);
-    l.checkpoint();
   }
   m.unlock();
 
