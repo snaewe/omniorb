@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/09/03 16:50:43  sll
+  Added the deadline parameter and access functions. All member functions
+  that previously had deadline arguments now use the per-object deadline
+  implicitly.
+
   Revision 1.1.4.4  2001/08/03 17:43:19  sll
   Make sure dll import spec for win32 is properly done.
 
@@ -103,6 +108,18 @@ class giopStream : public cdrStream {
 
   void impl(giopStreamImpl* impl) { pd_impl = impl; }
   // No thread safety precondition
+
+  inline void getDeadline(unsigned long& secs, unsigned long& nanosecs) const {
+    secs = pd_deadline_secs;
+    nanosecs = pd_deadline_nanosecs;
+  }
+  // No thread safety precondition
+
+  inline void setDeadline(unsigned long secs, unsigned long nanosecs) {
+    pd_deadline_secs = secs;
+    pd_deadline_nanosecs = nanosecs;
+  }
+  // No thread safety precondition
   
   ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
@@ -110,20 +127,20 @@ class giopStream : public cdrStream {
   //   Caller of these strand locking functions must hold the
   //   omniTransportLock before calling.
 
-  virtual void rdLock(unsigned long deadline_secs = 0,
-		      unsigned long deadline_nanosecs = 0); 
+  virtual void rdLock();
   // Acquire read lock on the strand.
-  // The optional arguments, if specified, define a deadline in real time
-  // when the func should give up waiting to be unblock.
+  //
+  // The function honours the deadline set on the the object. If the deadline
+  // is reached, the function should give up waiting.
   //
   // Error conditions. If the deadline has expired, this call raises the
   // CommFailure exception.
 
-  virtual void wrLock(unsigned long deadline_secs = 0,
-		      unsigned long deadline_nanosecs = 0); 
+  virtual void wrLock();
   // Acquire write lock on the strand.
-  // The optional arguments, if specified, define a deadline in real time
-  // when the func should give up waiting to be unblock.
+  //
+  // The function honours the deadline set on the the object. If the deadline
+  // is reached, the function should give up waiting.
   //
   // Error conditions. If the deadline has expired, this call raises the
   // CommFailure exception.
@@ -135,20 +152,22 @@ class giopStream : public cdrStream {
   // Acquire read lock but do not block if another thread is already
   // holding one. Return True if read lock is acquired.
 
-  virtual void sleepOnRdLock(unsigned long deadline_secs = 0,
-			     unsigned long deadline_nanosecs = 0);
+  virtual void sleepOnRdLock();
   // Block until the read lock is available.
-  // The optional arguments, if specified, define a deadline in real time
-  // when the func should give up waiting to be unblock.
+  //
+  // The function honours the deadline set on the the object. If the deadline
+  // is reached, the function should give up waiting.
   //
   // Error conditions. If the deadline has expired, this call raises the
   // CommFailure exception.
 
-  virtual void sleepOnRdLockAlways(unsigned long deadline_secs = 0,
-				   unsigned long deadline_nanosecs = 0);
+  virtual void sleepOnRdLockAlways();
   // Irrespective of the state of the read lock. Block the thread
   // on the read lock condition variable until it is signalled by another
-  // thread or the option deadline in real time has expired.
+  // thread or the deadline in real time has expired.
+  //
+  // The function honours the deadline set on the the object. If the deadline
+  // is reached, the function should give up waiting.
   //
   // Error conditions. If the deadline has expired, this call raises the
   // CommFailure exception.
@@ -266,7 +285,8 @@ protected:
   CORBA::Boolean             pd_rdlocked;
   CORBA::Boolean             pd_wrlocked;
   giopStreamImpl*            pd_impl;
-  
+  unsigned long              pd_deadline_secs;
+  unsigned long              pd_deadline_nanosecs;
 
 private:
   giopStream();
@@ -387,13 +407,13 @@ private:
     pd_inputFragmentToCome = fsz;
   }
 
-  giopStream_Buffer* inputMessage(unsigned long deadline_secs = 0,
-				  unsigned long deadline_nanosecs = 0);
+  giopStream_Buffer* inputMessage();
   // Read the next GIOP message from the connection. This function does the
   // basic sanity check on the message header. 
-  // The optional arguments, if specified, define a deadline in real time
-  // when inputMessage should give up waiting for a message to come in.
-
+  //
+  // The function honours the deadline set on the the object. If the deadline
+  // is reached, the function should give up waiting.
+  //
   // Error conditions. If the data do not look like a GIOP message or
   // the connection reports an error in reading data or the deadline has
   // expired, this call raises the CommFailure exception. The strand
@@ -407,9 +427,7 @@ private:
   // Thread Safety preconditions:
   //   Caller must have acquired the read lock on the strand.
   
-  giopStream_Buffer* inputChunk(CORBA::ULong maxsize,
-				unsigned long deadline_secs = 0,
-				unsigned long deadline_nanosecs = 0);
+  giopStream_Buffer* inputChunk(CORBA::ULong maxsize);
   // Same as inputMessage except that no sanity check is done on the
   // data received. The buffer returned contains up to maxsize bytes of
   // data. The <size> field is not applicable and is set to 0.
@@ -417,10 +435,7 @@ private:
   // Thread Safety preconditions:
   //   Caller must have acquired the read lock on the strand.
 
-  void inputCopyChunk(void* dest,
-		      CORBA::ULong size,
-		      unsigned long deadline_secs = 0,
-		      unsigned long deadline_nanosecs = 0);
+  void inputCopyChunk(void* dest,CORBA::ULong size);
   // Same as inputChunk except that data is copied directly into the
   // destination buffer.
   //
@@ -472,23 +487,19 @@ private:
 
   // GIOP message are sent via these member functions
 
-  void sendChunk(giopStream_Buffer*,
-		 unsigned long deadline_secs = 0,
-		 unsigned long deadline_nanosecs = 0);
+  void sendChunk(giopStream_Buffer*);
   // Send the buffer to the strand.
-  // The optional arguments, if specified, define a deadline in real time
-  // when sendChunk should give up waiting for a message to come in.
   //
-
+  // The function honours the deadline set on the the object. If the deadline
+  // is reached, the function should give up waiting.
+  //
   // Thread Safety preconditions:
   //   Caller must have acquired the write lock on the strand.
 
-  void sendCopyChunk(void*,
-		     CORBA::ULong size,
-		     unsigned long deadline_secs = 0,
-		     unsigned long deadline_nanosecs = 0);
+  void sendCopyChunk(void*,CORBA::ULong size);
   // Same as sendChunk() except that the data is copied directly from
   // the application buffer.
+  //
   // Thread Safety preconditions:
   //   Caller must have acquired the write lock on the strand.
 

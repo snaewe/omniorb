@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2001/09/03 16:51:01  sll
+  Added the deadline parameter and access functions. All member functions
+  that previously had deadline arguments now use the per-object deadline
+  implicitly.
+
   Revision 1.1.4.15  2001/08/06 15:51:28  sll
   In errorOnSend, make sure that the retry flag returns by notifyCommFailure
   is not overwritten if the send failed on TRANSIENT_ConnectFailed.
@@ -90,6 +95,8 @@ giopStream::giopStream(giopStrand* strand) :
   pd_rdlocked(0),
   pd_wrlocked(0),
   pd_impl(0),
+  pd_deadline_secs(0),
+  pd_deadline_nanosecs(0),
   pd_currentInputBuffer(0),
   pd_input(0),
   pd_inputFullyBuffered(0),
@@ -145,6 +152,7 @@ giopStream::reset() {
   }
   inputFullyBuffered(0);
   inputMatchedId(0);
+  setDeadline(0,0);
 }
 
 
@@ -156,8 +164,7 @@ giopStream::version() {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::rdLock(unsigned long deadline_secs,
-		   unsigned long deadline_nanosecs) {
+giopStream::rdLock() {
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
@@ -167,10 +174,11 @@ giopStream::rdLock(unsigned long deadline_secs,
     pd_strand->rd_nwaiting--;
 
     // Now blocks.
-    if (!(deadline_secs || deadline_nanosecs))
+    if (!(pd_deadline_secs || pd_deadline_nanosecs))
       pd_strand->rdcond.wait();
     else {
-      if (!pd_strand->rdcond.timedwait(deadline_secs,deadline_nanosecs)) {
+      if (!pd_strand->rdcond.timedwait(pd_deadline_secs,
+				       pd_deadline_nanosecs)) {
 	// Timeout. 
 	errorOnReceive(0,__FILE__,__LINE__,0);
       }
@@ -217,8 +225,7 @@ giopStream::rdUnLock() {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::wrLock(unsigned long deadline_secs,
-		   unsigned long deadline_nanosecs) {
+giopStream::wrLock() {
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
@@ -228,10 +235,11 @@ giopStream::wrLock(unsigned long deadline_secs,
     pd_strand->wr_nwaiting--;
 
     // Now blocks.
-    if (!(deadline_secs || deadline_nanosecs))
+    if (!(pd_deadline_secs || pd_deadline_nanosecs))
       pd_strand->wrcond.wait();
     else {
-      if (!pd_strand->wrcond.timedwait(deadline_secs,deadline_nanosecs)) {
+      if (!pd_strand->wrcond.timedwait(pd_deadline_secs,
+				       pd_deadline_nanosecs)) {
 	// Timeout. 
 	errorOnReceive(0,__FILE__,__LINE__,0);
       }
@@ -305,8 +313,7 @@ giopStream::rdLockNonBlocking(giopStrand* strand) {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::sleepOnRdLock(unsigned long deadline_secs,
-			  unsigned long deadline_nanosecs) {
+giopStream::sleepOnRdLock() {
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
@@ -314,10 +321,11 @@ giopStream::sleepOnRdLock(unsigned long deadline_secs,
     pd_strand->rd_nwaiting--;
 
     // Now blocks.
-    if (!(deadline_secs || deadline_nanosecs))
+    if (!(pd_deadline_secs || pd_deadline_nanosecs))
       pd_strand->rdcond.wait();
     else {
-      if (!pd_strand->rdcond.timedwait(deadline_secs,deadline_nanosecs)) {
+      if (!pd_strand->rdcond.timedwait(pd_deadline_secs,
+				       pd_deadline_nanosecs)) {
 	// Timeout. 
 	errorOnReceive(0,__FILE__,__LINE__,0);
       }
@@ -348,8 +356,7 @@ giopStream::sleepOnRdLock(giopStrand* strand) {
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::sleepOnRdLockAlways(unsigned long deadline_secs,
-				unsigned long deadline_nanosecs) {
+giopStream::sleepOnRdLockAlways() {
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
 
@@ -361,10 +368,11 @@ giopStream::sleepOnRdLockAlways(unsigned long deadline_secs,
   pd_strand->rd_n_justwaiting++;
 
   // Now blocks.
-  if (!(deadline_secs || deadline_nanosecs))
+  if (!(pd_deadline_secs || pd_deadline_nanosecs))
     pd_strand->rdcond.wait();
   else {
-    if (!pd_strand->rdcond.timedwait(deadline_secs,deadline_nanosecs)) {
+    if (!pd_strand->rdcond.timedwait(pd_deadline_secs,
+				     pd_deadline_nanosecs)) {
       // Timeout. 
       errorOnReceive(0,__FILE__,__LINE__,0);
     }
@@ -698,8 +706,7 @@ giopStream::ensureSaneHeader(const char* filename, CORBA::ULong lineno,
 
 ////////////////////////////////////////////////////////////////////////
 giopStream_Buffer*
-giopStream::inputMessage(unsigned long deadline_secs,
-			 unsigned long deadline_nanosecs) {
+giopStream::inputMessage() {
 
   OMNIORB_ASSERT(pd_rdlocked);
 
@@ -735,7 +742,8 @@ giopStream::inputMessage(unsigned long deadline_secs,
     int rsz = pd_strand->connection->Recv((void*)
 					  ((omni::ptr_arith_t)buf+buf->last),
 					  (size_t) (buf->end - buf->last),
-					  deadline_secs, deadline_nanosecs);
+					  pd_deadline_secs,
+					  pd_deadline_nanosecs);
     if (rsz > 0) {
       buf->last += rsz;
     }
@@ -769,7 +777,8 @@ giopStream::inputMessage(unsigned long deadline_secs,
       int rsz = pd_strand->connection->Recv((void*)
 					    ((omni::ptr_arith_t)buf+buf->last),
 					    (size_t) total,
-					    deadline_secs, deadline_nanosecs);
+					    pd_deadline_secs,
+					    pd_deadline_nanosecs);
       if (rsz > 0) {
 	if (omniORB::trace(25)) {
 	  omniORB::logger log;
@@ -837,9 +846,7 @@ giopStream::inputMessage(unsigned long deadline_secs,
 
 ////////////////////////////////////////////////////////////////////////
 giopStream_Buffer*
-giopStream::inputChunk(CORBA::ULong maxsize,
-		       unsigned long deadline_secs,
-		       unsigned long deadline_nanosecs) {
+giopStream::inputChunk(CORBA::ULong maxsize) {
 
   OMNIORB_ASSERT(pd_rdlocked);
 
@@ -875,7 +882,8 @@ giopStream::inputChunk(CORBA::ULong maxsize,
     int rsz = pd_strand->connection->Recv((void*)
 					  ((omni::ptr_arith_t)buf+buf->last),
 					  (size_t) maxsize,
-					  deadline_secs, deadline_nanosecs);
+					  pd_deadline_secs,
+					  pd_deadline_nanosecs);
     if (rsz > 0) {
       buf->last += rsz;
       maxsize -= rsz;
@@ -899,10 +907,7 @@ giopStream::inputChunk(CORBA::ULong maxsize,
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::inputCopyChunk(void* dest,
-			   CORBA::ULong size,
-			   unsigned long deadline_secs,
-			   unsigned long deadline_nanosecs) {
+giopStream::inputCopyChunk(void* dest, CORBA::ULong size) {
 
   OMNIORB_ASSERT(pd_rdlocked);
 
@@ -929,9 +934,9 @@ giopStream::inputCopyChunk(void* dest,
   }
 
   while (size) {
-    int rsz = pd_strand->connection->Recv((void*)p,
-					  (size_t) size,
-					  deadline_secs, deadline_nanosecs);
+    int rsz = pd_strand->connection->Recv((void*)p,(size_t) size,
+					  pd_deadline_secs,
+					  pd_deadline_nanosecs);
     if (rsz > 0) {
       if (omniORB::trace(30)) {
 	dumpbuf((unsigned char*)p,rsz);
@@ -949,15 +954,13 @@ giopStream::inputCopyChunk(void* dest,
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::sendChunk(giopStream_Buffer* buf,
-		      unsigned long deadline_secs,
-		      unsigned long deadline_nanosecs) {
+giopStream::sendChunk(giopStream_Buffer* buf) {
 
   if (!pd_strand->connection) {
     OMNIORB_ASSERT(pd_strand->address);
     if (pd_strand->state() != giopStrand::DYING) {
-      giopActiveConnection* c = pd_strand->address->Connect(deadline_secs,
-							    deadline_nanosecs);
+      giopActiveConnection* c = pd_strand->address->Connect(pd_deadline_secs,
+							    pd_deadline_nanosecs);
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {
@@ -988,7 +991,8 @@ giopStream::sendChunk(giopStream_Buffer* buf,
     int ssz = pd_strand->connection->Send((void*)
 					  ((omni::ptr_arith_t)buf+first),
 					  total,
-					  deadline_secs, deadline_nanosecs);
+					  pd_deadline_secs,
+					  pd_deadline_nanosecs);
     if (ssz > 0) {
       first += ssz;
     }
@@ -1001,16 +1005,13 @@ giopStream::sendChunk(giopStream_Buffer* buf,
 
 ////////////////////////////////////////////////////////////////////////
 void
-giopStream::sendCopyChunk(void* buf,
-			  CORBA::ULong size,
-			  unsigned long deadline_secs,
-			  unsigned long deadline_nanosecs) {
+giopStream::sendCopyChunk(void* buf,CORBA::ULong size) {
 
   if (!pd_strand->connection) {
     OMNIORB_ASSERT(pd_strand->address);
     if (pd_strand->state() != giopStrand::DYING) {
-      giopActiveConnection* c = pd_strand->address->Connect(deadline_secs,
-							    deadline_nanosecs);
+      giopActiveConnection* c = pd_strand->address->Connect(pd_deadline_secs,
+							    pd_deadline_nanosecs);
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {
@@ -1037,7 +1038,8 @@ giopStream::sendCopyChunk(void* buf,
   while (size) {
     int ssz = pd_strand->connection->Send(buf,
 					  size,
-					  deadline_secs, deadline_nanosecs);
+					  pd_deadline_secs,
+					  pd_deadline_nanosecs);
     if (ssz > 0) {
       size -= ssz;
       buf = (void*)((omni::ptr_arith_t)buf + ssz);
