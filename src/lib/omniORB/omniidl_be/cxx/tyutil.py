@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.20  1999/12/26 16:40:28  djs
+# Better char value -> C++ char constant handling (needs rewriting)
+# Typedef to Struct / Union passed as operation argument fix
+#
 # Revision 1.19  1999/12/25 21:44:58  djs
 # Better TypeCode support
 #
@@ -508,16 +512,22 @@ def operationArgumentType(type, environment, virtualFn = 0, fully_scope = 0):
                  param_type + "_Helper >" ,
                  param_type + "_Helper >" ]                 
                  #param_type + "_ptr&" ]
-    elif isVariable:
- #       param_type =principalID(deref_type, scope)
+
+    out_base_type = param_type
+    if isVariable:
+        # Strangeness: if actually a typedef to a struct or union, the _out
+        # type is dereferenced, whilst the others aren't?
+        if isTypedef(type) and (isStruct(deref_type) or isUnion(deref_type)):
+            out_base_type = environment.principalID(deref_type, fully_scope)
+
         return [ param_type + "*",
                  "const " + param_type + "& ",
-                 param_type + "_out ",
+                 out_base_type + "_out ",
                  param_type + "& "]
     else:
         return [ param_type,
                  "const " + param_type + "& ",
-                 param_type + "& ",
+                 out_base_type + "& ",
                  param_type + "& " ]
     
 # ------------------------------------------------------------------
@@ -736,6 +746,9 @@ def valueString(type, value, environment):
     # chars are single-quoted
     if type.kind() == idltype.tk_char      or \
        type.kind() == idltype.tk_wchar:
+        # FIXME: need isalphanum() fn and proper formatting
+        if ord(value) < 32:
+            return r"'\00" + str(ord(value)) + r"'" 
         return "'" + str(value) + "'"
     # booleans are straightforward
     if type.kind() == idltype.tk_boolean:
