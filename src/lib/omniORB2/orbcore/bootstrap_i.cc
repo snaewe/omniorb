@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9.6.2  1999/09/24 15:01:32  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
   Revision 1.9.6.1  1999/09/22 14:26:42  djr
   Major rewrite of orbcore to support POA.
 
@@ -70,6 +73,7 @@
 #include <bootstrap_i.h>
 #include <ropeFactory.h>
 #include <tcpSocket.h>
+#include <initialiser.h>
 
 
 static omni_mutex the_lock;
@@ -307,3 +311,25 @@ _omni_set_NameService(CORBA::Object_ptr ns)
 {
   omniInitialReferences::set((const char*) "NameService", ns);
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_bootstrap_i_initialiser : public omniInitialiser {
+public:
+  void attach() {
+  }
+
+  void detach() {
+    delete the_bootagentImpl;
+    the_bootagentImpl = 0;
+    if( the_bootagent )  CORBA::release(the_bootagent);
+    the_bootagent = 0;
+  }
+};
+
+static omni_bootstrap_i_initialiser initialiser;
+
+omniInitialiser& omni_bootstrap_i_initialiser_ = initialiser;

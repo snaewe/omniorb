@@ -29,8 +29,19 @@
 
 /*
  $Log$
- Revision 1.5.6.1  1999/09/22 14:27:11  djr
- Major rewrite of orbcore to support POA.
+ Revision 1.5.6.2  1999/09/24 15:01:39  djr
+ Added module initialisers, and sll's new scavenger implementation.
+
+ Revision 1.5.2.1  1999/09/21 20:37:18  sll
+ -Simplified the scavenger code and the mechanism in which connections
+  are shutdown. Now only one scavenger thread scans both incoming
+  and outgoing connections. A separate thread do the actual shutdown.
+ -omniORB::scanGranularity() now takes only one argument as there is
+  only one scan period parameter instead of 2.
+ -Trace messages in various modules have been updated to use the logger
+  class.
+ -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                -ORBscanIncomingPeriod.
 
  Revision 1.5  1999/07/09 21:04:29  sll
  Added private data member in tcpSocketMTincomingFactory.
@@ -196,7 +207,7 @@ public:
   // Post-condition:
   //    Still hold <MUTEX> on exit
 
-  void shutdown();
+  void real_shutdown();
   void ll_send(void* buf,size_t sz);
   size_t ll_recv(void* buf,size_t sz);
 

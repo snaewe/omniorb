@@ -3,7 +3,7 @@
 // relStream.cc               Created on: 18/3/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.3.8.2  1999/09/24 15:01:35  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
   Revision 1.3.8.1  1999/09/22 14:27:05  djr
   Major rewrite of orbcore to support POA.
 

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/24 15:01:35  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
   Revision 1.1.2.1  1999/09/22 14:26:57  djr
   Major rewrite of orbcore to support POA.
 
@@ -48,6 +51,7 @@
 #include <objectAdapter.h>
 #include <ropeFactory.h>
 #include <anonObject.h>
+#include <initialiser.h>
 
 
 #if defined(HAS_Cplusplus_Namespace)
@@ -237,29 +241,6 @@ omniInternal::resizeObjectTable()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////// omni ////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-
-void
-omni::globalInit()
-{
-  OMNIORB_ASSERT(!objectTable);
-
-  numObjectsInTable = 0;
-  minNumObjects = 0;
-
-  if( omniORB::objectTableSize ) {
-    objectTableSize = omniORB::objectTableSize;
-    maxNumObjects = 1ul << 31;
-  }
-  else {
-    objectTableSizeI = 0;
-    objectTableSize = objTblSizes[objectTableSizeI];
-    maxNumObjects = objectTableSize * 2 / 3;
-  }
-
-  objectTable = new omniLocalIdentity* [objectTableSize];
-  for( int i = 0; i < objectTableSize; i++ )  objectTable[i] = 0;
-}
-
 
 _CORBA_ULong
 omni::hash(const CORBA::Octet* key, int keysize)
@@ -955,3 +936,37 @@ omni::assertFail(const char* file, int line, const char* expr)
   }
   throw omniORB::fatalException(file, line, expr);
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_omniInternal_initialiser : public omniInitialiser {
+public:
+
+  void attach() {
+    OMNIORB_ASSERT(!objectTable);
+
+    numObjectsInTable = 0;
+    minNumObjects = 0;
+
+    if( omniORB::objectTableSize ) {
+      objectTableSize = omniORB::objectTableSize;
+      maxNumObjects = 1ul << 31;
+    }
+    else {
+      objectTableSizeI = 0;
+      objectTableSize = objTblSizes[objectTableSizeI];
+      maxNumObjects = objectTableSize * 2 / 3;
+    }
+
+    objectTable = new omniLocalIdentity* [objectTableSize];
+    for( int i = 0; i < objectTableSize; i++ )  objectTable[i] = 0;
+  }
+
+  void detach() {}
+};
+
+static omni_omniInternal_initialiser initialiser;
+
+omniInitialiser& omni_omniInternal_initialiser_ = initialiser;

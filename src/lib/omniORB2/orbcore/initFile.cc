@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.30.6.2  1999/09/24 15:01:34  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
   Revision 1.30.6.1  1999/09/22 14:26:50  djr
   Major rewrite of orbcore to support POA.
 
@@ -112,6 +115,7 @@
 #include <omniORB3/omniObjRef.h>
 #include <bootstrap_i.h>
 #include <gatekeeper.h>
+#include <initialiser.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -608,3 +612,23 @@ void initFile::formaterr(char* entryname)
 }
 
 #endif
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_initFile_initialiser : public omniInitialiser {
+public:
+
+  void attach() {
+    initFile configFile;
+    configFile.initialize();
+  }
+
+  void detach() {
+  }
+};
+
+static omni_initFile_initialiser initialiser;
+
+omniInitialiser& omni_initFile_initialiser_ = initialiser;

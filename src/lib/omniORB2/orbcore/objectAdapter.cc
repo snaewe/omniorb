@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  1999/09/24 15:01:34  djr
+ Added module initialisers, and sll's new scavenger implementation.
+
  Revision 1.1.2.1  1999/09/22 14:26:55  djr
  Major rewrite of orbcore to support POA.
 
@@ -180,7 +183,7 @@ omniObjAdapter::shutdown()
       factory->removeIncoming();
   }
 
-  StrandScavenger::killInScavenger();
+  StrandScavenger::removeRopeFactories(incomingFactories);
 
   if( loopback ) {
     loopback->decrRefCount();
@@ -212,9 +215,8 @@ omniObjAdapter::adapterActive()
       while( (factory = (incomingRopeFactory*) iter()) )
 	factory->startIncoming();
     }
-
-    // NB. This does nothing if already initialised.
-    StrandScavenger::initInScavenger();
+    //?? Hmmm.  What if done adapterActive, adapterInactive, adapterActive?
+    StrandScavenger::addRopeFactories(incomingFactories);
   }
 
   pd_isActive = 1;

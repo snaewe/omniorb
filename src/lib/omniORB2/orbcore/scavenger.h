@@ -28,8 +28,19 @@
 
 /*
   $Log$
-  Revision 1.3.6.1  1999/09/22 14:27:08  djr
-  Major rewrite of orbcore to support POA.
+  Revision 1.3.6.2  1999/09/24 15:01:37  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
+  Revision 1.3.2.1  1999/09/21 20:37:17  sll
+  -Simplified the scavenger code and the mechanism in which connections
+   are shutdown. Now only one scavenger thread scans both incoming
+   and outgoing connections. A separate thread do the actual shutdown.
+  -omniORB::scanGranularity() now takes only one argument as there is
+   only one scan period parameter instead of 2.
+  -Trace messages in various modules have been updated to use the logger
+   class.
+  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                 -ORBscanIncomingPeriod.
 
   Revision 1.3  1999/08/30 16:47:46  sll
   New member functions.
@@ -46,15 +57,13 @@
 #ifndef __SCAVENGER_H__
 #define __SCAVENGER_H__
 
+class ropeFactoryList;
+
 class StrandScavenger {
 public:
-  static void initInScavenger();
-  static void pokeInScavenger();
-  static void killInScavenger();
 
-  static void initOutScavenger();
-  static void pokeOutScavenger();
-  static void killOutScavenger();
+  static void addRopeFactories(ropeFactoryList* l);
+  static void removeRopeFactories(ropeFactoryList* l);
 
   static int clientCallTimeLimit();
   // This number determines how long the ORB is prepare to wait before

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.3  1999/09/24 15:01:33  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
   Revision 1.29.6.2  1999/09/24 10:27:30  djr
   Improvements to ORB and BOA options.
 
@@ -121,12 +124,11 @@
 #endif
 
 #include <corbaOrb.h>
-#include <initFile.h>
-#include <scavenger.h>
 #include <bootstrap_i.h>
 #include <omniORB3/omniObjRef.h>
 #include <poaimpl.h>
 #include <ropeFactory.h>
+#include <initialiser.h>
 #ifndef __atmos__
 #include <tcpSocket.h>
 #define _tcpOutgoingFactory tcpSocketMToutgoingFactory
@@ -160,6 +162,18 @@ static CORBA::UShort     bootstrapAgentPort      = 900;
 //
 extern "C" int sigaction(int, const struct sigaction *, struct sigaction *);
 #endif
+
+
+///////////////////////////////////////////////////////////////////////
+//          Per module initialisers.
+//
+extern omniInitialiser& omni_corbaOrb_initialiser_;
+extern omniInitialiser& omni_ropeFactory_initialiser_;
+extern omniInitialiser& omni_omniInternal_initialiser_;
+extern omniInitialiser& omni_initFile_initialiser_;
+extern omniInitialiser& omni_bootstrap_i_initialiser_;
+extern omniInitialiser& omni_strand_initialiser_;
+extern omniInitialiser& omni_scavenger_initialiser_;
 
 
 static CORBA::Boolean
@@ -225,115 +239,26 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omniORB::serverName = CORBA::string_dup("unknown");
 
   try {
-    // initialise object tables
-    omni::globalInit();
-
-    if( !globalOutgoingRopeFactories ) {
-      // Now initialise all the rope factories that will be used to
-      // create outgoing ropes.
-      globalOutgoingRopeFactories = new ropeFactoryList;
-      globalOutgoingRopeFactories->insert(new _tcpOutgoingFactory);
-    }
-
-    // Add rope factories for other transports here.
-
-    // get configuration information:
-    {
-      initFile configFile;
-      configFile.initialize();
-    }
+    // Call attach method of each initialiser object.
+    // The order of these calls must take into account of the dependency
+    // among the modules.
+    omni_omniInternal_initialiser_.attach();
+    omni_corbaOrb_initialiser_.attach();
+    omni_strand_initialiser_.attach();
+    omni_scavenger_initialiser_.attach();
+    omni_ropeFactory_initialiser_.attach();
+    omni_initFile_initialiser_.attach();
+    omni_bootstrap_i_initialiser_.attach();
 
     if( bootstrapAgentHostname ) {
       // The command-line option -ORBInitialHost has been specified.
       // Override any previous NamesService object reference
       // that may have been read from the configuration file.
       omniInitialReferences::set("NameService", CORBA::Object::_nil());
+      omniInitialReferences::set("InterfaceRepository", CORBA::Object::_nil());
       omniInitialReferences::initialise_bootstrap_agent(bootstrapAgentHostname,
 							bootstrapAgentPort);
     }
-
-    // myPrincipalID, to be used in the principal field of IIOP calls
-    CORBA::ULong l = strlen("nobody") + 1;
-    CORBA::Octet *p = (CORBA::Octet *) "nobody";
-    omni::myPrincipalID.length(l);
-    unsigned int i;
-    for (i=0; i < l; i++)
-      omni::myPrincipalID[i] = p[i];
-
-#ifdef _HAS_SIGNAL
-#ifndef _USE_MACH_SIGNAL
-#  ifndef __SINIX__
-    struct sigaction act;
-    sigemptyset(&act.sa_mask);
-    act.sa_handler = SIG_IGN;
-    act.sa_flags = 0;
-    if (sigaction(SIGPIPE,&act,0) < 0) {
-      if( omniORB::trace(1) ) {
-	omniORB::logger l;
-	l << "WARNING -- ORB_init() cannot install the\n"
-	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
-      }
-    }
-#  else
-    // SINUX
-    struct sigaction act;
-    sigemptyset(&act.sa_mask);
-    act.sa_handler = (void (*)())0;
-    act.sa_flags = 0;
-    if (sigaction(SIGPIPE,&act,0) < 0) {
-      if( omniORB::trace(1) ) {
-	omniORB::logger l;
-	l << "WARNING -- ORB_init() cannot install the\n"
-	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
-      }
-    }
-#  endif
-#else
-    struct sigvec act;
-    act.sv_mask = 0;
-    act.sv_handler = SIG_IGN;
-    act.sv_flags = 0;
-    if (sigvec(SIGPIPE,&act,0) < 0) {
-      if( omniORB::trace(1) ) {
-	omniORB::logger l;
-	l << "WARNING -- ORB_init() cannot install the\n"
-	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
-      }
-    }
-#endif
-#endif // _HAS_SIGNAL
-
-#ifdef __WIN32__
-
-    // Initialize WinSock:
-
-    WORD versionReq;
-    WSADATA wData;
-    versionReq = MAKEWORD(1, 1);  // Nothing specific to releases > 1.1 used
-
-    int rc = WSAStartup(versionReq, &wData);
-
-    if (rc != 0)
-      // Couldn't find a usable DLL.
-      throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
-
-    // Confirm that the returned Windows Sockets DLL supports 1.1
-
-    if( LOBYTE( wData.wVersion ) != 1 ||
-	HIBYTE( wData.wVersion ) != 1 ) {
-      // Couldn't find a usable DLL
-      WSACleanup();
-      throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
-    }
-
-#endif
-
-    // Initialise a giopServerThreadWrapper singelton
-    omniORB::giopServerThreadWrapper::setGiopServerThreadWrapper(
-					 new omniORB::giopServerThreadWrapper);
-
-    // Start the thread to cleanup idle outgoing strands.
-    StrandScavenger::initOutScavenger();
 
     // Attach the dynamic library hook, and initialise.
     if( omniDynamicLib::hook )
@@ -626,8 +551,14 @@ omniOrbORB::actual_shutdown()
   // Shutdown incoming connections.
   omniObjAdapter::shutdown();
 
-  // Shutdown outgoing scavenger.
-  StrandScavenger::killOutScavenger();
+  // Call detach method of the initialisers in reverse order.
+  omni_bootstrap_i_initialiser_.detach();
+  omni_initFile_initialiser_.detach();
+  omni_ropeFactory_initialiser_.detach();
+  omni_scavenger_initialiser_.detach();
+  omni_strand_initialiser_.detach();
+  omni_corbaOrb_initialiser_.detach();
+  omni_omniInternal_initialiser_.detach();
 
   proxyObjectFactory::shutdown();
 
@@ -1023,38 +954,20 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	continue;
       }
 
-      // -ORBscanOutgoingPeriod
-      if( strcmp(argv[idx],"-ORBscanOutgoingPeriod") == 0 ) {
+      // -ORBscanGranularity
+      if( strcmp(argv[idx],"-ORBscanGranularity") == 0 ) {
 	if( idx + 1 >= argc ) {
 	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBscanOutgoingPeriod parameter.");
+			" -ORBscanGranularity parameter.");
 	  return 0;
 	}
 	unsigned int v;
 	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
 	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBscanOutgoingPeriod parameter.");
+			" -ORBscanGranularity parameter.");
 	  return 0;
 	}
-	omniORB::scanGranularity(omniORB::scanOutgoing, v);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBscanIncomingPeriod
-      if( strcmp(argv[idx],"-ORBscanIncomingPeriod") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBscanIncomingPeriod parameter.");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBscanIncomingPeriod parameter.");
-	  return 0;
-	}
-	omniORB::scanGranularity(omniORB::scanIncoming, v);
+	omniORB::scanGranularity(v);
 	move_args(argc,argv,idx,2);
 	continue;
       }
@@ -1086,8 +999,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  "    -ORBoutConScanPeriod <n seconds>\n"
 	  "    -ORBclientCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
-	  "    -ORBscanOutgoingPeriod <n seconds>\n"
-	  "    -ORBscanIncomingPeriod <n seconds>\n"
+	  "    -ORBscanGranularity <n seconds>\n"
 	  "    -ORBlcdMode\n"
 	  "    -ORBpoa_iiop_port <port no.>\n"
 	  "    -ORBpoa_iiop_name_port <hostname[:port no.]>\n";
@@ -1187,3 +1099,105 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
   return 1;
 }
 
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_corbaOrb_initialiser : public omniInitialiser {
+public:
+
+  void attach() {
+
+    // myPrincipalID, to be used in the principal field of IIOP calls
+    CORBA::ULong l = strlen("nobody")+1;
+    CORBA::Octet *p = (CORBA::Octet *) "nobody";
+    omni::myPrincipalID.length(l);
+    unsigned int i;
+    for (i=0; i < l; i++) {
+      omni::myPrincipalID[i] = p[i];
+    }
+
+
+#if defined(_HAS_SIGNAL) && !defined(__CIAO__)
+#ifndef _USE_MACH_SIGNAL
+#  ifndef __SINIX__
+    struct sigaction act;
+    sigemptyset(&act.sa_mask);
+    act.sa_handler = SIG_IGN;
+    act.sa_flags = 0;
+    if (sigaction(SIGPIPE,&act,0) < 0) {
+      if( omniORB::trace(1) ) {
+	omniORB::logger l;
+	l << "WARNING -- ORB_init() cannot install the\n"
+	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
+      }
+    }
+#  else
+    // SINUX
+    struct sigaction act;
+    sigemptyset(&act.sa_mask);
+    act.sa_handler = (void (*)())0;
+    act.sa_flags = 0;
+    if (sigaction(SIGPIPE,&act,0) < 0) {
+      if( omniORB::trace(1) ) {
+	omniORB::logger l;
+	l << "WARNING -- ORB_init() cannot install the\n"
+	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
+      }
+    }
+#  endif
+#else
+    struct sigvec act;
+    act.sv_mask = 0;
+    act.sv_handler = SIG_IGN;
+    act.sv_flags = 0;
+    if (sigvec(SIGPIPE,&act,0) < 0) {
+      if( omniORB::trace(1) ) {
+	omniORB::logger l;
+	l << "WARNING -- ORB_init() cannot install the\n"
+	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
+      }
+    }
+#endif
+#endif // _HAS_SIGNAL
+
+#ifdef __WIN32__
+
+    // Initialize WinSock:
+
+    WORD versionReq;
+    WSADATA wData;
+    versionReq = MAKEWORD(1, 1);  // Nothing specific to releases > 1.1 used
+
+    int rc = WSAStartup(versionReq, &wData);
+
+    if (rc != 0)
+      {
+	// Couldn't find a usable DLL.
+	throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+      }
+
+    // Confirm that the returned Windows Sockets DLL supports 1.1
+
+    if ( LOBYTE( wData.wVersion ) != 1 ||
+	 HIBYTE( wData.wVersion ) != 1 )
+      {
+	// Couldn't find a usable DLL
+	WSACleanup();
+	throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
+      }
+
+#endif
+  }
+
+  void detach() {
+#ifdef __WIN32__
+    (void) WSACleanup();
+#endif
+  }
+};
+
+static omni_corbaOrb_initialiser initialiser;
+
+omniInitialiser& omni_corbaOrb_initialiser_ = initialiser;

@@ -29,8 +29,25 @@
 
 /*
   $Log$
-  Revision 1.22.6.1  1999/09/22 14:27:11  djr
-  Major rewrite of orbcore to support POA.
+  Revision 1.22.6.2  1999/09/24 15:01:39  djr
+  Added module initialisers, and sll's new scavenger implementation.
+
+  Revision 1.22.2.3  1999/09/22 19:56:52  sll
+  Correct typo.
+
+  Revision 1.22.2.2  1999/09/22 12:10:01  sll
+  Merged port to SCO Unixware 7.
+
+  Revision 1.22.2.1  1999/09/21 20:37:18  sll
+  -Simplified the scavenger code and the mechanism in which connections
+   are shutdown. Now only one scavenger thread scans both incoming
+   and outgoing connections. A separate thread do the actual shutdown.
+  -omniORB::scanGranularity() now takes only one argument as there is
+   only one scan period parameter instead of 2.
+  -Trace messages in various modules have been updated to use the logger
+   class.
+  -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                 -ORBscanIncomingPeriod.
 
   Revision 1.22  1999/08/30 16:54:24  sll
   Wait much less time in tcpSocketStrand::shutdown. Added trace message.
@@ -147,6 +164,12 @@
 #  endif
 #endif
 
+#if defined (__uw7__)
+#ifdef shutdown
+#undef shutdown
+#endif
+#endif
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -193,6 +216,15 @@ extern "C" int gethostname(char *name, int namelen);
 #define recv(a,b,c,d) tcpSocketVaxRecv(a,b,c,d)
 #define send(a,b,c,d) tcpSocketVaxSend(a,b,c,d)
 #endif
+
+#define LOGMESSAGE(level,prefix,message) do {\
+   if (omniORB::trace(level)) {\
+     omniORB::logger log("tcpSocketMTfactory " ## prefix ## ": ");\
+	log << message ## "\n";\
+   }\
+} while (0)
+
+#define PTRACE(prefix,message) LOGMESSAGE(15,prefix,message)
 
 class tcpSocketRendezvouser : public omni_thread {
 public:
@@ -366,8 +398,7 @@ tcpSocketMTincomingFactory::removeIncoming()
       if (pd_shutdown_nthreads > 0) {
 	pd_shutdown_nthreads = -pd_shutdown_nthreads;
       }
-      omniORB::logs(20, "tcpSocketMTincomingFactory::removeIncoming: "
-		    "blocks waiting for worker threads to exit.");
+      PTRACE("removeIncoming","blocks waiting for worker threads to exit");
       pd_shutdown_cond.wait();
     }
   }
@@ -390,7 +421,7 @@ tcpSocketMTincomingFactory::removeIncoming()
     }
     catch(...) {}
   }
-  omniORB::logs(20, "tcpSocketMTincomingFactory::removeIncoming: done.");
+  PTRACE("removeIncoming","Done");
 }
 
 Rope*
@@ -490,7 +521,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
     // GNU C library uses socklen_t * instead of int* in getsockname().
     // This is suppose to be compatible with the upcoming POSIX standard.
     socklen_t l;
-#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__)
+#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
     size_t l;
 # else
     int l;
@@ -555,8 +586,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 
 tcpSocketIncomingRope::~tcpSocketIncomingRope()
 {
-  omniORB::logs(15, "tcpSocketIncomingRope::~tcpSocketIncomingRope().");
-
+  PTRACE("~tcpSocketIncomingRope","called");
   if (me) {
     delete me;
     me = 0;
@@ -640,14 +670,9 @@ tcpSocketIncomingRope::cancelThreads()
     pd_shutdown = NO_THREAD;
     pd_lock.unlock();
 
-    omniORB::logs(15, "tcpSocketMTincomingFactory::stopIncoming: Waiting"
-		  " for tcpSocketMT Rendezvouser to exit...");
-
+    PTRACE("stopIncoming","Waiting for tcpSocketMT Rendezvouser to exit...");
     rendezvouser->join(0); // Wait till the rendezvouser to come back
-
-    omniORB::logs(15, "tcpSocketMTincomingFactory::stopIncoming: tcpSocketMT"
-		  " Rendezvouser has exited.");
-
+    PTRACE("stopIncoming","tcpSocketMT Rendezvouser has exited");
     rendezvouser = 0;
   }
 }
@@ -716,8 +741,7 @@ tcpSocketOutgoingRope::tcpSocketOutgoingRope(tcpSocketMToutgoingFactory* f,
 
 tcpSocketOutgoingRope::~tcpSocketOutgoingRope()
 {
-  omniORB::logs(15, "tcpSocketOutgoingRope::~tcpSocketOutgoingRope().");
-
+  PTRACE("~tcpSocketOutgoingRope","called");
   if (remote) {
     delete remote;
     remote = 0;
@@ -859,9 +883,9 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
       }
     break;
   }
-  if( omniORB::trace(25) ) {
-    fprintf(stderr, "ll_recv: %d bytes\n", rx);
-    ::dumpbuf((unsigned char*) buf, rx);
+  if (omniORB::trace(30)) {
+      fprintf(stderr,"ll_recv: %d bytes\n",rx);
+      ::dumpbuf((unsigned char*)buf,rx);
   }
   return (size_t)rx;
 }
@@ -888,9 +912,9 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
   int tx;
   char *p = (char *)buf;
 
-  if( omniORB::trace(25) ) {
-    fprintf(stderr, "ll_send: %d bytes\n", sz);
-    ::dumpbuf((unsigned char*) buf, sz);
+  if (omniORB::trace(30)) {
+      fprintf(stderr,"ll_send: %d bytes\n",sz);
+      ::dumpbuf((unsigned char*)buf,sz);
   }
 
   while (sz) {
@@ -929,7 +953,7 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
 
 
 void
-tcpSocketStrand::shutdown()
+tcpSocketStrand::real_shutdown()
 {
   if (pd_send_giop_closeConnection)
     {
@@ -971,14 +995,10 @@ tcpSocketStrand::shutdown()
       }
     }
   _setStrandIsDying();
-  if (omniORB::trace(25)) {
-    omniORB::logger l;
-    l << "tcpSocketStrand::shutdown() fd no. " << pd_socket << '\n';
-  }
   SHUTDOWNSOCKET(pd_socket);
-  if (omniORB::trace(25)) {
+  if (omniORB::trace(15)) {
     omniORB::logger l;
-    l << "tcpSocketStrand::shutdown() fd no. " << pd_socket << " Done\n";
+    l << "tcpSocketStrand::real_shutdown() fd no. " << pd_socket << " Done\n";
   }
   return;
 }
@@ -1103,7 +1123,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
   set_terminate(abort);
 #endif
 #endif
-  omniORB::logs(5, "tcpSocketMT Rendezvouser thread: starts.");
+  PTRACE("Rendezvouser","start.");
 
   tcpSocketStrand *newSt = 0;
   tcpSocketWorker *newthr = 0;
@@ -1120,7 +1140,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       // GNU C library uses socklen_t * instead of int* in accept ().
       // This is suppose to be compatible with the upcoming POSIX standard.
       socklen_t l;
-#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__)
+#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
     size_t l;
 #else
     int l;
@@ -1128,7 +1148,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
       l = sizeof(struct sockaddr_in);
 
-      omniORB::logs(15, "tcpSocketMT Rendezvouser thread: block on accept().");
+      PTRACE("Rendezvouser","block on accept()");
 
       if ((new_sock = ::accept(r->pd_rendezvous,(struct sockaddr *)&raddr,&l)) 
 	                          == RC_INVALID_SOCKET) {
@@ -1139,8 +1159,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 #endif
       }
 
-      omniORB::logs(15, "tcpSocketMT Rendezvouser thread: unblock "
-		    "from accept().");
+      PTRACE("Rendezvouser","unblock from accept()");
 
       {
 	omni_mutex_lock sync(r->pd_lock);
@@ -1156,7 +1175,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	newSt->incrRefCount(1);
       }
 
-      omniORB::logs(5, "tcpSocketMT Rendezvouser thread: accept new strand.");
+      PTRACE("Rendezvouser","accept new strand.");
 
       omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
       if (pd_factory->pd_shutdown_nthreads >= 0) {
@@ -1179,7 +1198,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	// and the rendezvous; close down idle connections; reasign
 	// threads to strands; etc.
 	newSt->decrRefCount();
-	newSt->shutdown();
+	newSt->real_shutdown();
 
 	omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
 	OMNIORB_ASSERT(pd_factory->pd_shutdown_nthreads != 0);
@@ -1202,13 +1221,12 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       //            else the limit is 16(?)
       // The following is a temporary fix, this thread just wait for a while
       // and tries again. Hopfully, some connections might be freed by then.
-      omniORB::logs(5, "tcpSocketMT Rendezvouser thread: accept fails.\n"
-		    " Too many file descriptors opened?");
+      PTRACE("Rendezvouser","accept fails. Too many file descriptors opened?");
       omni_thread::sleep(1,0);
       continue;
     }
     catch(const omniORB::fatalException& ex) {
-      if (omniORB::trace(1)) {
+      if (omniORB::trace(0)) {
 	omniORB::logger l;
 	l << "You have caught an omniORB bug, details are as follows:\n" <<
 	  " file: " << ex.file() << "\n"
@@ -1219,14 +1237,14 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       die = 1;
     }
     catch(...) {
-      omniORB::logs(1,
+      omniORB::logs(0,
        "Unexpected exception caught by tcpSocketMT Rendezvouser\n"
        " tcpSocketMT Rendezvouser thread will not accept new connection.");
       die = 1;
     }
     if (die && newSt) {
       newSt->decrRefCount();
-      newSt->shutdown();
+      newSt->real_shutdown();
       if (!newthr) {
 	omniORB::logs(5, "tcpSocketMT Rendezvouser thread cannot spawn a"
 		      " new server thread.");
@@ -1269,8 +1287,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	  die = 1;
 	}
 #endif
-	omniORB::logs(15, "tcpSocketMT Rendezvouser thread: waiting on"
-		      " shutdown state to change to NO_THREAD.");
+	PTRACE("Rendezvouser","waiting on shutdown state to change to NO_THREAD.");
 	continue;
       }
     }
@@ -1281,7 +1298,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
     // GNU C library uses socklen_t * instead of int* in accept ().
     // This is suppose to be compatible with the upcoming POSIX standard.
     socklen_t l;
-#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__)
+#elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
     size_t l;
 #else
     int l;
@@ -1297,8 +1314,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
     CLOSESOCKET(new_sock);
   }
 
-  omniORB::logs(5, "tcpSocketMT Rendezvouser thread: exits.");
-
+  PTRACE("Rendezvouser","exit.");
   return 0;
 }
 
@@ -1323,10 +1339,10 @@ tcpSocketWorker::_realRun(void *arg)
 #endif
 #endif
   
-  omniORB::logs(5, "tcpSocketMT Worker thread: starts.");
+  PTRACE("Worker","start.");
 
   if (!gateKeeper::checkConnect(s)) {
-    s->shutdown();
+    s->real_shutdown();
   }
   else {
     while (1) {
@@ -1334,11 +1350,11 @@ tcpSocketWorker::_realRun(void *arg)
 	GIOP_S::dispatcher(s);
       }
       catch (CORBA::COMM_FAILURE&) {
-	omniORB::logs(5, "Communication failure. Connection closed.");
+	PTRACE("Worker","#### Communication failure. Connection closed.");
 	break;
       }
       catch(const omniORB::fatalException& ex) {
-	if( omniORB::trace(1) ) {
+	if( omniORB::trace(0) ) {
 	  omniORB::logger l;
 	  l << "You have caught an omniORB bug, details are as follows:\n"
 	    " file: " << ex.file() << "\n"
@@ -1348,12 +1364,12 @@ tcpSocketWorker::_realRun(void *arg)
 	break;
       }
       catch (...) {
-	omniORB::logs(1, "An exception has occured and was caught by"
+	omniORB::logs(0, "An exception has occured and was caught by"
 		      " tcpSocketMT Worker thread.");
 	break;
       }
     }
   }
 
-  omniORB::logs(5, "tcpSocketMT Worker thread: exits.");
+  PTRACE("Worker","exit.");
 }

@@ -28,8 +28,26 @@
 
 /*
  $Log$
- Revision 1.9.6.1  1999/09/22 14:27:07  djr
- Major rewrite of orbcore to support POA.
+ Revision 1.9.6.2  1999/09/24 15:01:36  djr
+ Added module initialisers, and sll's new scavenger implementation.
+
+ Revision 1.9.2.1  1999/09/21 20:37:17  sll
+ -Simplified the scavenger code and the mechanism in which connections
+  are shutdown. Now only one scavenger thread scans both incoming
+  and outgoing connections. A separate thread do the actual shutdown.
+ -omniORB::scanGranularity() now takes only one argument as there is
+  only one scan period parameter instead of 2.
+ -Trace messages in various modules have been updated to use the logger
+  class.
+ -ORBscanGranularity replaces -ORBscanOutgoingPeriod and
+                                -ORBscanIncomingPeriod.
+
+ Revision 1.9  1999/08/16 19:26:56  sll
+ Added a per-compilation unit initialiser object.
+
+ Revision 1.8  1999/08/14 16:38:53  sll
+ Changed as locateObject no longer throws an exception when the object is
+ not found.
 
  Revision 1.7  1999/07/02 19:27:21  sll
  Fixed typo in ropeFactory_iterator.
@@ -62,7 +80,9 @@
 #endif
 
 #include <ropeFactory.h>
+#include <scavenger.h>
 #include <objectAdapter.h>
+#include <initialiser.h>
 #ifndef __atmos__
 #include <tcpSocket.h>
 #define _tcpOutgoingFactory tcpSocketMToutgoingFactory
@@ -70,7 +90,6 @@
 #include <tcpATMos.h>
 #define _tcpOutgoingFactory tcpATMosMToutgoingFactory
 #endif
-
 
 ropeFactoryType* ropeFactoryTypeList = 0;
 ropeFactoryList* globalOutgoingRopeFactories = 0;
@@ -153,7 +172,6 @@ ropeFactory::iopProfilesToRope(const IOP::TaggedProfileList& profiles,
 
 static omniORB::giopServerThreadWrapper* giopServerThreadWrapperP = 0;
 
-
 void
 omniORB::
 giopServerThreadWrapper::setGiopServerThreadWrapper(
@@ -165,7 +183,6 @@ giopServerThreadWrapper::setGiopServerThreadWrapper(
   if (p) delete p;
 }
 
-
 omniORB::giopServerThreadWrapper*
 omniORB::
 giopServerThreadWrapper::getGiopServerThreadWrapper()
@@ -173,12 +190,9 @@ giopServerThreadWrapper::getGiopServerThreadWrapper()
   return giopServerThreadWrapperP;
 }
 
-
 ropeFactoryType::~ropeFactoryType() {}
 
-
 ropeFactory::~ropeFactory() {}
-
 
 incomingRopeFactory::~incomingRopeFactory() {}
 
@@ -209,3 +223,37 @@ ropeFactoryList_ThreadSafe::~ropeFactoryList_ThreadSafe()  {}
 Endpoint::~Endpoint() {
   delete [] pd_protocolname;
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_ropeFactory_initialiser : public omniInitialiser {
+public:
+
+  void attach() {
+
+    globalOutgoingRopeFactories = new ropeFactoryList;
+
+    // Initialise all the rope factories that will be used to
+    // create outgoing ropes.
+    globalOutgoingRopeFactories->insert(new _tcpOutgoingFactory );
+
+    // Add rope factories for other transports here.
+
+    // Initialise a giopServerThreadWrapper singelton
+    omniORB::giopServerThreadWrapper::setGiopServerThreadWrapper(
+       new omniORB::giopServerThreadWrapper);
+
+    StrandScavenger::addRopeFactories(globalOutgoingRopeFactories);
+  }
+
+  void detach() {
+    StrandScavenger::removeRopeFactories(globalOutgoingRopeFactories);
+  }
+};
+
+static omni_ropeFactory_initialiser initialiser;
+
+omniInitialiser& omni_ropeFactory_initialiser_ = initialiser;
