@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/06/02 14:20:15  dpg1
+  Using boa_lock for the nil BOA's condition variable caused an
+  assertion failure on exit.
+
   Revision 1.1.2.2  1999/09/28 10:54:33  djr
   Removed pretty-printing of object keys from object adapters.
 
@@ -134,7 +138,7 @@ private:
   // synchronise_request().
   //  Protected by <omni::internalLock>.
 
-  omni_tracedcondition             pd_state_signal;
+  omni_tracedcondition*            pd_state_signal;
   // Uses <omni::internalLock> as lock.  Signalled
   // on state change.
 };

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.13.6.12  2000/06/02 14:20:15  dpg1
+  Using boa_lock for the nil BOA's condition variable caused an
+  assertion failure on exit.
+
   Revision 1.13.6.11  2000/04/27 10:42:08  dpg1
   Interoperable Naming Service
 
@@ -190,7 +194,10 @@ const char* CORBA::BOA::_PD_repoId = "IDL:omg.org/CORBA/BOA:1.0";
     OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);  \
 
 
-omniOrbBOA::~omniOrbBOA()  {}
+omniOrbBOA::~omniOrbBOA()
+{
+  if (pd_state_signal) delete pd_state_signal;
+}
 
 
 omniOrbBOA::omniOrbBOA(int nil)
@@ -200,11 +207,15 @@ omniOrbBOA::omniOrbBOA(int nil)
     pd_activeObjList(0),
     pd_nblocked(0),
     pd_nwaiting(0),
-    pd_state_signal(nil ? &boa_lock : omni::internalLock)
+    pd_state_signal(0)
 {
-  // NB. If nil, then omni::internalLock may be zero, so we cannot
-  // use it to initialise the condition variable.  So we use
-  // &boa_lock instead.  But this will of course never be used...
+  if (!nil)
+    pd_state_signal = new omni_tracedcondition(omni::internalLock);
+
+  // NB. If nil, then omni::internalLock may be zero, so we cannot use
+  // it to initialise the condition variable. However, since the
+  // condition variable will never be used, we don't bother to create
+  // it.
 }
 
 
@@ -246,7 +257,7 @@ omniOrbBOA::impl_is_ready(CORBA::ImplementationDef_ptr,
     }
 
     // Wake-up anyone stuck in synchronise_request().
-    if( /* anyone stuck */ 1 )  pd_state_signal.broadcast();
+    if( /* anyone stuck */ 1 )  pd_state_signal->broadcast();
   }
 
   if( !dont_block ) {
@@ -254,7 +265,7 @@ omniOrbBOA::impl_is_ready(CORBA::ImplementationDef_ptr,
 
     omni::internalLock->lock();
     boa_lock.unlock();
-    pd_state_signal.wait();
+    pd_state_signal->wait();
     omni::internalLock->unlock();
 
     boa_lock.lock();
@@ -301,7 +312,7 @@ omniOrbBOA::impl_shutdown()
     if( state_changed ) {
       try { adapterInactive(); }
       catch(...) {
-	if( wake_blockers )  pd_state_signal.broadcast();
+	if( wake_blockers )  pd_state_signal->broadcast();
 	throw;
       }
     }
@@ -314,7 +325,7 @@ omniOrbBOA::impl_shutdown()
   // There is only a problem if using both POA and BOA.
 
   // Wake-up anyone stuck in impl_is_ready().
-  if( wake_blockers )  pd_state_signal.broadcast();
+  if( wake_blockers )  pd_state_signal->broadcast();
 }
 
 
@@ -381,7 +392,7 @@ omniOrbBOA::destroy()
 
   // We need to kick anyone stuck in synchronise_request(),
   // or impl_is_ready().
-  pd_state_signal.broadcast();
+  pd_state_signal->broadcast();
 
   // Wait until outstanding invocations have completed.
   waitForAllRequestsToComplete(0);
@@ -773,7 +784,7 @@ omniOrbBOA::synchronise_request()
   }
 
   pd_nwaiting++;
-  while( pd_state == IDLE )  pd_state_signal.wait();
+  while( pd_state == IDLE )  pd_state_signal->wait();
   pd_nwaiting--;
 
   switch( pd_state ) {
