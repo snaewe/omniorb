@@ -8,6 +8,25 @@
 
 <buglist version="3.0.2">
 
+<bug id="15" date="Sun Jan 28 15:30:10 GMT 2001" user="djs">
+
+  <summary>omniIDL/C++ backend interface inheritance errors</summary>
+  <reported>Gnana</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2000-12/0157.html"/>
+  <text>
+  The C++ backend failed to map the names of some interfaces to unambiguous
+  C++ class names in some circumstances. Example IDL:
+    <pre>
+    interface I{};
+    module M{
+      interface I : ::I{};
+      interface J : I{};
+    };
+    </pre>
+  </text>
+</bug>
+
 <bug id="14" date="Wed Jan 24 13:28:27 GMT 2001" user="sll">
 
   <summary>Bug in omniidl C++ back-end with struct member within a union which in turn is within a namespace. Only causes compilation problem with MSVC++.</summary>

@@ -1,3 +1,25 @@
+
+Sun Jan 28 15:30:10 GMT 2001 djs
+================================
+
+- omniIDL/C++ name mapping error triggered by IDL like the following:
+
+  interface I {};
+  module M{
+    interface I: ::I {};   // caused bad things to happen
+    interface J: I {};     // caused worse things to happen
+  };
+
+  Problem could be solved by fully scoping all names, but this is known to
+  cause problems on some compilers.
+  Instead an existing workaround has been extended-- instead of referring
+  to a fully scoped name (eg ::M::I) we refer to a flat typedef global in
+  the SK.cc file.
+
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
 Wed Jan 24 13:45:48 GMT 2001 sll
 ================================
 
