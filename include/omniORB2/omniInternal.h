@@ -11,9 +11,13 @@
 
 /*
   $Log$
-  Revision 1.4  1997/01/21 14:50:44  ewc
-  Added support for resolve initial references functions.
+  Revision 1.5  1997/01/23 15:07:15  sll
+  Redefined some local static variables to static members of class omniORB.
+  They are initialised in a single file.
 
+ * Revision 1.4  1997/01/21  14:50:44  ewc
+ * Added support for resolve initial references functions.
+ *
  * Revision 1.3  1997/01/13  15:10:06  sll
  * Semantics of createObjRef() changed. Changed comments to document this.
  *
@@ -42,7 +46,7 @@
 #endif
 #include <omniORB2/CORBA_sysdep.h>
 #include <omniORB2/CORBA_basetypes.h>
-#include <omniORB2/CORBA_templates.h>
+#include <omniORB2/seqtemplates.h>
 #include <omniORB2/IOP.h>
 #include <omniORB2/GIOP.h>
 #include <omniORB2/IIOP.h>
@@ -53,6 +57,7 @@ class GIOP_S;
 class GIOP_C;
 class omniObject;
 class omniObjectKey;
+class initFile;
 
 class omniORB {
 
@@ -67,6 +72,10 @@ public:
 #endif
 
   static const _CORBA_Boolean myByteOrder;
+  static omni_mutex initLock;
+  static _CORBA_Boolean orb_initialised;
+  static _CORBA_Boolean boa_initialised;
+  static initFile*      configFile;
 
   enum alignment_t { ALIGN_1 = 1, ALIGN_2 = 2, ALIGN_4 = 4, ALIGN_8 = 8 };
   static const alignment_t max_alignment;  // Maximum value of alignment_t
@@ -263,6 +272,10 @@ public:
     return pd_iopprofile; 
   }
 
+  static omni_mutex          objectTableLock;
+  static omniObject*         proxyObjectTable;
+  static omniObject**        localObjectTable;
+
 private:
   union {
     _CORBA_Octet *foreign;
@@ -295,6 +308,6 @@ private:
 #include <omniORB2/rope.h>
 #include <omniORB2/bufferedStream.h>
 #include <omniORB2/giopDriver.h>
-#include <omniORB2/bufStream_templates.h>
 #include <omniORB2/initFile.h>
+
 #endif // __OMNIORB_H__
