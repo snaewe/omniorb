@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/09/27 18:17:19  sll
+ Use the new omniIOR class in defaultLoopBack().
+
  Revision 1.2.2.1  2000/07/17 10:35:55  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -63,7 +66,7 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -163,7 +166,7 @@ omniObjAdapter::initialise()
 	  for( ListenPortList::iterator i = options.incomingPorts.begin();
 	       i != options.incomingPorts.end(); i++ ) {
 
-	    _tcpEndpoint e((const CORBA::Char*)(char*) i->host, i->port);
+	    _tcpEndpoint e(i->host, i->port);
 	    factory->instantiateIncoming(&e, 1);
 
 	  }
@@ -172,7 +175,7 @@ omniObjAdapter::initialise()
 	  // Instantiate a rope.  Let the OS pick a port number.
 	  const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
 	  if( !hostname )  hostname = "";
-	  _tcpEndpoint e((const CORBA::Char*) hostname, 0);
+	  _tcpEndpoint e(hostname, 0);
 	  factory->instantiateIncoming(&e, 1);
 	}
 
@@ -362,39 +365,57 @@ omniObjAdapter::defaultLoopBack()
 
   if( !loopback ) {
 
-    Endpoint* myaddr = 0;
+    // Until we have a fast in-memory loop back. We use a tcp loopback to
+    // talk to ourself.
+    Endpoint_var myaddr;
 
-    // Locate the incoming tcpSocket Rope, read its address and
-    // use this address to create a new outgoing tcpSocket Rope.
+    ropeFactoryType* f = ropeFactoryType::findType(IOP::TAG_INTERNET_IOP);
+
     {
       ropeFactory_iterator iter(incomingFactories);
       incomingRopeFactory* factory;
 
       while( (factory = (incomingRopeFactory*) iter()) ) {
-	if( factory->getType()->is_protocol(_tcpEndpoint::protocol_name) ) {
+	if( factory->getType() == f ) {
 	  Rope_iterator riter(factory);
 	  _tcpIncomingRope* r = (_tcpIncomingRope*) riter();
-	  if( r )
-	    r->this_is(myaddr);
-	  else
-	    // This is tough!!! Haven't got a loop back!
-	    // May be the BOA has been destroyed!!!
-	    OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
+	  if( r ) {
+	    Endpoint* addr;
+	    r->this_is(addr);
+	    myaddr = addr;
+	    break;
+	  }
 	}
       }
     }
 
+    if (!((Endpoint*)myaddr)) {
+      // This is tough!!! Haven't got a loop back!
+      // May be the object adaptor has been destroyed!!!
+      OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
+    }
+
     {
+      tcpSocketEndpoint* taddr = tcpSocketEndpoint::castup(myaddr);
+      IIOP::Address addr = taddr->address();
+
+      _CORBA_Unbounded_Sequence_Octet key;
+      key.length(1); key[0] = '\0';
+
+      omniIOR ior("",key,&addr,1);
+
       ropeFactory_iterator iter(globalOutgoingRopeFactories);
       outgoingRopeFactory* factory;
 
-      while( (factory = (outgoingRopeFactory*) iter()) )
-	if( (loopback = factory->findOrCreateOutgoing((Endpoint*) myaddr)) )
+      while( (factory = (outgoingRopeFactory*) iter()) ) {
+	if ( factory->getType() == f ) {
+	  loopback = factory->findOrCreateOutgoing(&ior);
+	  OMNIORB_ASSERT(loopback);
 	  break;
+	}
+      }
     }
-    delete myaddr;
   }
-
   return loopback;
 }
 
