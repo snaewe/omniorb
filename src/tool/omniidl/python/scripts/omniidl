@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/11/02 17:40:01  dpg1
+# Support for multiple back-ends in one run.
+#
 # Revision 1.6  1999/11/02 17:07:23  dpg1
 # Changes to compile on Solaris.
 #
@@ -51,7 +54,7 @@ def version():
 omniidl = os.path.basename(sys.argv[0])
 
 def usage():
-    print "\nUsage:", omniidl, " [flags] file1 file2 ..."
+    print "\nUsage:", omniidl, " [flags] -b<back_end> file1 file2 ..."
     print """
 The supported flags are:
 
@@ -62,8 +65,8 @@ The supported flags are:
   -Ycmd           Sets command for the preprocessor
   -N              Does not run pre-processor
   -Wparg          Sends arg to the preprocessor
+  -bback_end      Selects the back-end to be used. More than one permitted.
   -Wbarg          Sends arg to the back-end
-  -bback_end      Selects the back-end to be used
   -d              Dumps the syntax tree then exits
   -V              Prints version info then exits
   -u              Prints usage message and exits
@@ -75,8 +78,8 @@ preprocessor_only = 0
 preprocessor_cmd  = _omniidl.cpp_location + " " + _omniidl.cpp_flags + \
                     " -D__OMNIIDL__"
 no_preprocessor   = 0
-backend           = "dump"
-backend_args      = []
+backends          = []
+backends_args     = []
 dump_only         = 0
 verbose           = 0
 
@@ -114,14 +117,20 @@ def parseArgs(args):
 
         elif o == "-W":
             if   a[0] == "p": preprocessor_args.append(a[1:])
-            elif a[0] == "b": backend_args.append(a[1:])
+            elif a[0] == "b":
+                if len(backends) == 0:
+                    sys.stderr.write("Error in arguments: "
+                                     "no back-ends selected")
+                    sys.exit(1)
+                backends_args[-1].append(a[1:])
             else:
                 sys.stderr.write("Error in arguments: option " + o + \
                                  " not recognized\n")
                 sys.stderr.write("Use " + omniidl + " -u for usage\n")
 
         elif o == "-b":
-            backend = a
+            backends.append(a)
+            backends_args.append([])
 
         elif o == "-d":
             dump_only = 1
@@ -187,15 +196,20 @@ def main(argv):
             if tree is None:
                 sys.exit(1)
 
-            if verbose: print omniidl + ": Running back-end `" + backend + "'"
+            i = 0
+            for backend in backends:
+                if verbose:
+                    print omniidl + ": Running back-end `" + backend + "'"
 
-            try:
-                exec "import omniidl.be." + backend
-            except ImportError:
-                sys.stderr.write(omniidl + ": Could not import back-end `" + \
-                                 backend + "'\n")
-                sys.exit(1)
+                try:
+                    exec "import omniidl.be." + backend
+                except ImportError:
+                    sys.stderr.write(omniidl + \
+                                     ": Could not import back-end `" + \
+                                     backend + "'\n")
+                    sys.exit(1)
 
-            exec "omniidl.be." + backend + ".run(tree, backend_args)"
+                exec "omniidl.be." + backend + ".run(tree, backends_args[i])"
+                i = i + 1
 
 main(sys.argv)
