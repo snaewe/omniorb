@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/10/06 16:36:07  sll
+  Removed omniConnectionBroken. Has been superceded by raiseException() in
+  the strand interface.
+
   Revision 1.2.2.2  2000/09/27 17:42:38  sll
   Updated to use the new cdrStream abstraction
 
@@ -59,20 +63,6 @@
 
 #ifndef __OMNIORB_EXCEPTION_H__
 #define __OMNIORB_EXCEPTION_H__
-
-
-class omniConnectionBroken {
-public:
-  inline omniConnectionBroken(CORBA::ULong m, CORBA::CompletionStatus c)
-    : pd_minor(m), pd_status(c) {}
-
-  inline CORBA::ULong minor()                const { return pd_minor;  }
-  inline CORBA::CompletionStatus completed() const { return pd_status; }
-
-private:
-  CORBA::ULong            pd_minor;
-  CORBA::CompletionStatus pd_status;
-};
 
 
 #ifndef OMNIORB_NO_EXCEPTION_LOGGING
