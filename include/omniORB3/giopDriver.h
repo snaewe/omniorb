@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/30 11:49:27  djr
+  Implemented catching user-exceptions in GIOP_S for all compilers.
+
   Revision 1.1.2.1  1999/09/24 09:51:45  djr
   Moved from omniORB2 + some new files.
 
@@ -432,6 +435,10 @@ private:
   void HandleCancelRequest(_CORBA_Boolean byteorder);
   void HandleMessageError();
   void HandleCloseConnection();
+
+  void MaybeMarshalUserException(void*);
+  // Okay -- the void* is a nasty hack.  Its actually
+  // a CORBA::UserException*.
 };
 
 

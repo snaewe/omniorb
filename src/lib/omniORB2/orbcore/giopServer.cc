@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.21.6.4  1999/09/30 11:49:28  djr
+  Implemented catching user-exceptions in GIOP_S for all compilers.
+
   Revision 1.21.6.3  1999/09/28 09:48:31  djr
   Check for zero length 'operation' string when unmarshalling GIOP
   Request header.  Fixed bug -- 'principal' field need not be zero
@@ -585,10 +588,10 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
 
   }
 
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+#ifndef HAS_Cplusplus_catch_exception_by_base
 
   // We have to catch each type of system exception separately
-  // here to support gcc 2.7.2, which cannot catch more derived
+  // here to support compilers which cannot catch more derived
   // types.
 
 #define CATCH_AND_MAYBE_MARSHAL(name)  \
@@ -628,8 +631,8 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
   CATCH_AND_MAYBE_MARSHAL(WRONG_TRANSACTION)
 #undef CATCH_AND_MAYBE_MARSHAL
 
-  catch(const UserException& ex) {
-    //?? user-defined exceptions ...
+  catch(omniORB::StubUserException& ex) {
+    MaybeMarshalUserException(&ex.ex());
   }
 
 #else
@@ -664,32 +667,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
   }
 
   catch(CORBA::UserException& ex) {
-    int i, repoid_size;
-    const char* repoid = ex._NP_repoId(&repoid_size);
-
-    //?? Turn this into a binary search (list is sorted).
-    for( i = 0; i < pd_n_user_exns; i++ )
-      if( !strcmp(pd_user_exns[i], repoid) ) {
-	size_t msgsize = ReplyHeaderSize();
-	msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4 + repoid_size;
-	msgsize = ex._NP_alignedSize(msgsize);
-	InitialiseReply(GIOP::USER_EXCEPTION, msgsize);
-	CORBA::ULong(repoid_size) >>= *this;
-	put_char_array((const CORBA::Char*) repoid, repoid_size);
-	ex._NP_marshal(*this);
-	ReplyCompleted();
-	break;
-      }
-
-    if( i == pd_n_user_exns ) {
-      if( omniORB::trace(1) ) {
-	omniORB::logger l;
-	l << "WARNING -- method \'" << operation() << "\' on: " << pd_key
-	  << "\n raised the exception: " << repoid << '\n';
-      }
-      CORBA::UNKNOWN ex(0, CORBA::COMPLETED_MAYBE);
-      CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN, ex);
-    }
+    MaybeMarshalUserException(&ex);
   }
 
 #endif
@@ -740,9 +718,6 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN,ex);
   }
 }
-
-
-#undef CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION
 
 
 void
@@ -906,6 +881,42 @@ GIOP_S::SendMsgErrorMessage()
   WrUnlock();
   return;
 }
+
+
+void
+GIOP_S::MaybeMarshalUserException(void* pex)
+{
+  CORBA::UserException& ex = * (CORBA::UserException*) pex;
+
+  int i, repoid_size;
+  const char* repoid = ex._NP_repoId(&repoid_size);
+
+  // Could turn this into a binary search (list is sorted).
+  // Usually a short list though -- probably not worth it.
+  for( i = 0; i < pd_n_user_exns; i++ )
+    if( !strcmp(pd_user_exns[i], repoid) ) {
+      size_t msgsize = ReplyHeaderSize();
+      msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4 + repoid_size;
+      msgsize = ex._NP_alignedSize(msgsize);
+      InitialiseReply(GIOP::USER_EXCEPTION, msgsize);
+      CORBA::ULong(repoid_size) >>= *this;
+      put_char_array((const CORBA::Char*) repoid, repoid_size);
+      ex._NP_marshal(*this);
+      ReplyCompleted();
+      break;
+    }
+
+  if( i == pd_n_user_exns ) {
+    if( omniORB::trace(1) ) {
+      omniORB::logger l;
+      l << "WARNING -- method \'" << operation() << "\' on: " << pd_key
+	<< "\n raised the exception: " << repoid << '\n';
+    }
+    CORBA::UNKNOWN ex(0, CORBA::COMPLETED_MAYBE);
+    CHECK_AND_MAYBE_MARSHALL_SYSTEM_EXCEPTION (UNKNOWN, ex);
+  }
+}
+
 
 static
 void 

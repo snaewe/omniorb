@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  1999/09/30 11:49:27  djr
+  Implemented catching user-exceptions in GIOP_S for all compilers.
+
   Revision 1.1.2.4  1999/09/27 11:01:09  djr
   Modifications to logging.
 
@@ -802,6 +805,30 @@ _CORBA_MODULE_BEG
 private:
 #endif
   _CORBA_MODULE_VAR _core_attr objectKey seed;
+
+
+#ifndef HAS_Cplusplus_catch_exception_by_base
+  // Internal omniORB class.  Used in the stubs to pass
+  // user-defined exceptions to a lower level.
+
+  class StubUserException {
+  public:
+    // This exception is thrown in the stubs to pass a
+    // CORBA::UserException down.  It is needed because
+    // gcc 2.7 cannot catch exceptions by base class.
+
+    inline StubUserException(CORBA::UserException* e) : pd_e(e) {}
+    inline ~StubUserException() { delete pd_e; }
+
+    inline CORBA::UserException& ex() { return *pd_e; }
+
+  private:
+    StubUserException();
+    StubUserException(const StubUserException&);
+    StubUserException& operator=(const StubUserException&);
+  };
+#endif
+
 
 _CORBA_MODULE_END
 
