@@ -29,6 +29,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  2000/01/07 20:31:28  djs
+# Regression tests in CVSROOT/testsuite now pass for
+#   * no backend arguments
+#   * tie templates
+#   * flattened tie templates
+#   * TypeCode and Any generation
+#
 # Revision 1.2  1999/12/24 18:14:30  djs
 # Fixed handling of #include'd .idl files
 #
@@ -87,7 +94,7 @@ def visitInterface(node):
         d.accept(self)
 
     cxxname = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
-    idLen = len(node.repoId()) + 1
+    idLen = len(tyutil.mapRepoID(node.repoId())) + 1
     stream.out("""\
 inline size_t
 @name@::_alignedSize(@name@_ptr obj, size_t offset) {

@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  2000/01/07 20:31:29  djs
+# Regression tests in CVSROOT/testsuite now pass for
+#   * no backend arguments
+#   * tie templates
+#   * flattened tie templates
+#   * TypeCode and Any generation
+#
 # Revision 1.3  1999/12/24 18:14:30  djs
 # Fixed handling of #include'd .idl files
 #
@@ -223,6 +230,10 @@ def visitDeclarator(node):
 def visitException(node):
     if not(node.mainFile()):
         return
+
+    for m in node.members():
+        if m.constrType():
+            m.memberType().decl().accept(self)
     
     # don't need to do anything unless generating TypeCodes and Any
     if not(config.TypecodeFlag()):

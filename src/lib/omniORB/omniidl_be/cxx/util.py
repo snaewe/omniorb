@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  2000/01/07 20:31:18  djs
+# Regression tests in CVSROOT/testsuite now pass for
+#   * no backend arguments
+#   * tie templates
+#   * flattened tie templates
+#   * TypeCode and Any generation
+#
 # Revision 1.8  1999/11/29 19:27:00  djs
 # Code tidied and moved around. Some redundant code eliminated.
 #
@@ -238,12 +245,14 @@ def zip(a, b):
 
 # Build a loop iterating over every element of a multidimensional
 # thing and return the indexing string
-def start_loop(where, dims, prefix = "_i"):
+# Everywhere but in exception skeletons is iter_type = CORBA::ULong.
+def start_loop(where, dims, prefix = "_i", iter_type = "CORBA::ULong"):
     index = 0
     istring = ""
     for dimension in dims:
         where.out("""\
-for (CORBA::ULong @prefix@@n@ = 0;@prefix@@n@ < @dim@;_i@n@++) {""",
+for (@iter_type@ @prefix@@n@ = 0;@prefix@@n@ < @dim@;_i@n@++) {""",
+                  iter_type = iter_type,
                   prefix = prefix,
                   n = str(index),
                   dim = str(dimension))
@@ -259,10 +268,10 @@ def finish_loop(where, dims):
         where.out("}")
     
 # Create a nested block as a container and call start_loop
-def block_begin_loop(string, full_dims):
+def block_begin_loop(string, full_dims, iter_type = "CORBA::ULong"):
     string.out("{")
     string.inc_indent()
-    return start_loop(string, full_dims)
+    return start_loop(string, full_dims, iter_type = iter_type)
 
 # finish the loop and close the nested block
 def block_end_loop(string, full_dims):

@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  2000/01/07 20:31:24  djs
+# Regression tests in CVSROOT/testsuite now pass for
+#   * no backend arguments
+#   * tie templates
+#   * flattened tie templates
+#   * TypeCode and Any generation
+#
 # Revision 1.4  1999/12/24 18:16:39  djs
 # Array handling and TypeCode building fixes (esp. across multiple files)
 #
@@ -46,6 +53,20 @@
 
 """Produce the #ifdef ...buildDesc... blocks for types"""
 
+# Even though the old backend wraps each function with #ifdef, define, endif
+# guards it will still output functions and extern declarations multiple times.
+# In future it might be better (more readable here) to either:
+#   * always output everything
+#       The #define guards nullify repeats, compiler's dead code elimination
+#       should be able to eliminate the unnecessary fns
+#   * only output functions as we need them, and add them to an environment
+#     to prevent silly repeats.
+#
+# The second would probably be faster (hashtable lookup overhead, but saves
+# a lot of extra computation and output) and would result in more readable
+# generated code.
+
+
 import string
 
 from omniidl import idlast, idltype, idlutil
@@ -60,20 +81,136 @@ self = bdesc
 
 self.__buildDesc = {}
 
+
+# Used to limit recursion on typedef chains when they point to external
+# declarations. Only recurse if haven't seen that declarator node before.
+# If the declarator is defined in the same file, it has necessarily already
+# been fully considered.
+self.__seenDeclarators = {}
+
+# We need to be able to detect recursive types so keep track of the current
+# node here
+self.__currentNode = None
+
+def __init__(s, env):
+    self.stream = s
+    self.__environment = env
+
+def canonDims(d):
+    canon = map(lambda x:"_a" + str(x), d)
+    return string.join(canon, "")
+
+
+def write_array_desc(where, aliasType, dims):
+    assert isinstance(aliasType, idltype.Type)
+
+    env = name.Environment()
+
+    type_dims = tyutil.typeDims(aliasType)
+    type_is_array = type_dims != []
+
+    full_dims = dims + type_dims
+    tail_dims = tyutil.dimsToString(full_dims[1:])
+
+    cname = mangler.canonTypeName(deref_aliasType)
+
+
+
+
+
+    where.out("""\
+#ifndef __0RL_tcParser_getElementDesc@this_cname@__
+#define __0RL_tcParser_getElementDesc@this_cname@__
+static CORBA::Boolean
+_0RL_tcParser_getElementDesc@this_cname@(tcArrayDesc* _adesc, CORBA::ULong _index, tcDescriptor &_desc)
+{
+  @type@ (&_0RL_tmp)@tail_dims@ = (*((@type@(*)@index_string@)_adesc->opq_array))[_index];
+  @builddesc@
+  return 1;
+}
+#endif
+""",
+                   this_cname = this_cname,
+                   type = element_name,
+                   tail_dims = string.join(dims_tail_index, ""),
+                   builddesc = builddesc_str,
+                   index_string = string.join(dims_index, ""))
+
+    # need to build the tcParser_getElementDesc function
+    # If we amount to a single dimensional array, then we do
+    # an array index
+
+    
+    if tyutil.isSequence(deref_aliasType) and \
+       tyutil.isTypedef(aliasType):
+        alias = aliasType.decl().alias()
+        cname = mangler.canonTypeName(alias.aliasType())
+
+    elif tyutil.isTypedef(aliasType):
+        cname = mangler.canonTypeName(aliasType.decl().alias().aliasType())
+
+
+    if tyutil.isObjRef(deref_aliasType):
+        # this could easily now be broken:
+        objref_name = tyutil.objRefTemplate(deref_aliasType, "Member", env)
+        argtype = objref_name
+
+    argtype = env.principalID(deref_aliasType)
+
+    if tyutil.isSequence(deref_aliasType):
+        argtype = tyutil.sequenceTemplate(deref_aliasType, env)
+    elif tyutil.isTypeCode(deref_aliasType):
+        argtype = "CORBA::TypeCode_member"
+
+    where.out("""\
+#ifndef __0RL_tcParser_buildDesc@decl_cname@__
+#define __0RL_tcParser_buildDesc@decl_cname@__
+static void
+_0RL_buildDesc@cname@(tcDescriptor& _desc, const @dtype@(*_data)@tail_dims@)
+{
+  _desc.p_array.getElementDesc = _0RL_tcParser_getElementDesc@cname@;
+  _desc.p_array.opq_array = (void*) _data;
+}
+#endif
+""",
+             cname = cname,
+             tail_dims = tail_dims,
+             dtype = argtype,
+             type = alias_tyname)
+
+
+
+def bstring(type):
+    assert tyutil.isString(type)
+    bound = type.bound()
+    desc = util.StringStream()
+    if bound != 0:
+        desc.out("""\
+#ifndef _0RL_buildDesc_c@n@string
+#define _0RL_buildDesc_c@n@string _0RL_buildDesc_cstring
+#endif""", n = str(bound))
+    return desc
+    
+
 # Creates the #ifdefs for an array type. Also handles anonymous
 # arrays via the declarator argument.
-def array(aliasType, declarator):
+def array(aliasType, declarator = None, scopedName = ""):
     assert isinstance(aliasType, idltype.Type)
-    assert isinstance(declarator, idlast.Declarator)
-    # should be an array declarator
-    decl_dims = declarator.sizes()
-    assert (decl_dims != [])
+    if declarator:
+        assert isinstance(declarator, idlast.Declarator)
+        # should be an array declarator
+        decl_dims = declarator.sizes()
+        scopedName = declarator.scopedName()
+        assert (decl_dims != [])
+    else:
+        decl_dims = []
 
+        
     deref_aliasType = tyutil.deref(aliasType)
     type_dims = tyutil.typeDims(aliasType)
     full_dims = decl_dims + type_dims
     env = name.Environment()
-    scopedName = declarator.scopedName()
+
     fqname = env.nameToString(scopedName)
     tc_name = name.prefixName(scopedName, "_tc_")
     guard_name = tyutil.guardName(scopedName)
@@ -84,6 +221,7 @@ def array(aliasType, declarator):
         alias_cname = mangler.canonTypeName(alias.aliasType())
     else:
         # assume that dimensions are handled later on by hand
+        #alias_cname = mangler.canonTypeName(tyutil.derefKeepDims(aliasType))
         alias_cname = mangler.canonTypeName(deref_aliasType)
     alias_tyname = env.principalID(aliasType)
     deref_keep_dims_alias_tyname = env.principalID(tyutil.derefKeepDims(aliasType))
@@ -91,6 +229,9 @@ def array(aliasType, declarator):
     decl_cname = mangler.canonTypeName(aliasType, declarator)
 
     desc = util.StringStream()
+    #desc.out("/// start  decl = " + repr(declarator))
+    #if not(declarator):
+    #    desc.out("///   " + repr(scopedName))
 
     if tyutil.isObjRef(deref_aliasType):
         # this could easily now be broken:
@@ -102,10 +243,27 @@ def array(aliasType, declarator):
         if type_dims == []:
             desc.out(str(interface(aliasType)))
 
-    def canonDims(d):
-        canon = map(lambda x:"_a" + str(x), d)
-        return string.join(canon, "")
+    # if the thing being aliased is defined in another file we need to build
+    # more than the normal set of getElementDesc macros
+    defined_outside = isinstance(aliasType, idltype.Declared) and \
+                      not(aliasType.decl().mainFile())
 
+    if defined_outside:
+        if full_dims != []:
+            if tyutil.isTypedef(aliasType):
+                # the old backend will only recurse once per AST declaration node
+                # (even though each function block has #ifdef,define,endif guards)
+                alias_declarator = aliasType.decl()
+                if not(self.__seenDeclarators.has_key(alias_declarator)):
+                    self.__seenDeclarators[alias_declarator] = 1
+                    desc.out(str(array(alias_declarator.alias().aliasType(),
+                                       alias_declarator)))
+            elif tyutil.isStruct(aliasType) or \
+                 tyutil.isUnion(aliasType)  or \
+                 tyutil.isEnum(aliasType):
+                desc.out(str(external(aliasType)))
+            #if declarator:
+            #    desc.out(str(array(aliasType, scopedName = scopedName)))
 
     # for some reason, a multidimensional declarator will create
     # several of these functions, slowly adding dimensions
@@ -117,8 +275,12 @@ def array(aliasType, declarator):
     if tyutil.isTypedef(aliasType):
         #current_dims = aliasType.decl().sizes()
         current_dims = tyutil.typeDims(aliasType)
+        current_dims = aliasType.decl().sizes()
+        alias_cname = mangler.canonTypeName(aliasType.decl().alias().aliasType())
+    #print "current = " + canonDims(current_dims) + "  alias = " + alias_cname    
     prev_cname = canonDims(current_dims) + alias_cname
-        
+    #print " makes " + prev_cname
+    #print "prev_cname = " + prev_cname
             
     builddesc_flat_str = "_0RL_buildDesc" + alias_cname +\
                          "(_desc, _0RL_tmp);"
@@ -136,8 +298,9 @@ _desc.p_array.opq_array = &_0RL_tmp;"""
             element_name = deref_alias_tyname # String_member
     elif tyutil.isSequence(aliasType):
         element_name = tyutil.sequenceTemplate(aliasType, env)
-    elif tyutil.isTypeCode(aliasType):
-        element_name = "CORBA::TypeCode_member"
+    elif tyutil.isTypeCode(deref_aliasType):
+        if type_dims == []:
+            element_name = "CORBA::TypeCode_member"
 
     element_dims = []
     while index >= 0:
@@ -208,6 +371,7 @@ _0RL_buildDesc@decl_cname@(tcDescriptor& _desc, const @dtype@(*_data)@tail_dims@
                dtype = argtype,
                type = alias_tyname)
 
+    #desc.out("/// done")
     return desc
 
 
@@ -271,17 +435,57 @@ def sequence(type):
     seqType_dims = tyutil.typeDims(seqType)
     is_array = seqType_dims != []
 
+
+    desc = util.StringStream()
+
+
+    # if the thing being aliased is defined in another file we need to build
+    # more than the normal set of getElementDesc macros
+    defined_outside = isinstance(seqType, idltype.Declared) and \
+                      not(seqType.decl().mainFile())
+    # also if type is recursive
+    recursive = isinstance(seqType, idltype.Declared) and \
+                seqType.decl() == self.__currentNode
+
+    if defined_outside or recursive:
+
+        if tyutil.isStruct(seqType) or \
+           tyutil.isUnion(seqType)  or \
+           tyutil.isEnum(seqType):
+            desc.out(str(external(seqType)))
+        elif tyutil.isTypedef(seqType):            
+            # sequence is of some kind of typedef
+            seqType_decl = seqType.decl()
+            #print "decl = " + repr(seqType_decl)
+            #print "alias = " + repr(seqType_decl.alias())
+
+            # have we seen this declarator before?
+            if not(self.__seenDeclarators.has_key(seqType_decl)):
+                self.__seenDeclarators[seqType_decl] = 1
+            
+                seqType_dims = seqType_decl.sizes() + tyutil.typeDims(seqType)
+                deref_seqType = tyutil.deref(seqType)
+                # if its an array we need to generate that
+                if seqType_dims != []:
+                    desc.out(str(array(seqType.decl().alias().aliasType(), seqType_decl)))
+                elif tyutil.isSequence(deref_seqType):
+                    desc.out(str(sequence(deref_seqType)))
+                
+        
+
+
     # something very strange happens here with strings and casting
     thing = "(*((" + sequence_template + "*)_desc->opq_seq))[_index]"
     if is_array:
         thing = docast(seqType, None, thing)
 
-    desc = util.StringStream()
-
     if tyutil.isObjRef(deref_seqType):
         objref_name = tyutil.objRefTemplate(deref_seqType, "Member", env)
         if not(is_array):
             desc.out(str(interface(seqType)))
+
+    elif tyutil.isString(deref_seqType):
+        desc.out(str(bstring(deref_seqType)))
 
     elif tyutil.isSequence(seqType):
         # element is an _anonymous_ sequence
@@ -354,7 +558,7 @@ def member(node, modify_for_exception = 0):
             num_members = num_members + len(memberType.decl().enumerators())
         
         if tyutil.isObjRef(deref_memberType):
-            m_scopedName = memberType.decl().scopedName()
+            m_scopedName = map(tyutil.mapID, memberType.decl().scopedName())
             objref_name = name.prefixName(m_scopedName, "_objref_")
             helper_name = name.suffixName(m_scopedName, "_Helper")
             objref_member = "_CORBA_ObjRef_Member<" + objref_name + ", " +\
@@ -364,12 +568,27 @@ def member(node, modify_for_exception = 0):
         elif tyutil.isSequence(memberType):
             desc.out(str(sequence(memberType)))
         elif tyutil.isString(memberType):
-            bound = memberType.bound()
-            if bound != 0:
-                desc.out("""\
+            desc.out(str(bstring(memberType)))
+            #bound = memberType.bound()
+            #if bound != 0:
+            #    desc.out("""\
 #ifndef _0RL_buildDesc_c@n@string
 #define _0RL_buildDesc_c@n@string _0RL_buildDesc_cstring
 #endif""", n = str(bound))
+        # FIXME: unify with  dynskel/main/visitUnion
+        elif tyutil.isStruct(memberType) or \
+             tyutil.isUnion(memberType)  or \
+             tyutil.isEnum(memberType):
+            # only if not defined in this file
+            if not(memberType.decl().mainFile()):
+                desc.out(str(external(memberType)))
+                #mem_scopedName = memberType.decl().scopedName()
+                #mem_guard_name = tyutil.guardName(mem_scopedName)
+                #mem_fqname = env.nameToString(mem_scopedName)
+                #desc.out("""\
+#extern void _0RL_buildDesc_c@guard_name@(tcDescriptor &, const @fqname@&);""",
+                #         guard_name = mem_guard_name,
+                #         fqname = mem_fqname)
 
 
         # build the cases
@@ -444,3 +663,55 @@ void _0RL_buildDesc_c@guard_name@(tcDescriptor &_desc, const @fqname@& _data)
              cases = str(cases))
     return desc
    
+
+def external(type):
+    scopedName = type.decl().scopedName()
+    guard_name = tyutil.guardName(scopedName)
+    env = name.Environment()
+    fqname = env.nameToString(scopedName)
+    fn_name = "_0RL_buildDesc_c" + guard_name
+
+    desc = util.StringStream()
+    desc.out("""\
+extern void _0RL_buildDesc_c@guard_name@(tcDescriptor &, const @fqname@&);""",
+                         guard_name = guard_name,
+                         fqname = fqname)
+    return desc
+
+
+def visitTypedef(node):
+    aliasType = node.aliasType()
+
+    # if the alias points to an "anonymous" sequence type
+    # then we need to build it too
+    if tyutil.isSequence(aliasType):
+        stream.out(str(bdesc.sequence(aliasType)))
+
+    # If the alias points to another typedef which has dimensions,
+    # force generation of code for it if it is external.
+    # else if the alias points to a declared thing which was declared in
+    # another file, add an extern
+    elif isinstance(aliasType, idltype.Declared) and \
+         not(aliasType.decl().mainFile()):
+        if tyutil.isTypedef(aliasType):
+            type = aliasType.decl().alias().aliasType()
+            decl = aliasType.decl()
+            is_array_decl = decl.sizes() != []
+
+            if is_array_decl:
+                #stream.out(str(bdesc.array(type, decl)))
+                return
+            
+            #print "is this the recursion step?"
+            #stream.out("recurse")
+            #print "sizes = " + repr(aliasType.decl().sizes())
+            aliasType.decl().alias().accept(self)
+        elif tyutil.isStruct(aliasType) or \
+             tyutil.isUnion(aliasType)  or \
+             tyutil.isEnum(aliasType):
+            pass
+            #stream.out(str(bdesc.external(aliasType)))
+
+
+            
+    

@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  2000/01/07 20:31:17  djs
+# Regression tests in CVSROOT/testsuite now pass for
+#   * no backend arguments
+#   * tie templates
+#   * flattened tie templates
+#   * TypeCode and Any generation
+#
 # Revision 1.4  1999/12/14 11:53:56  djs
 # Support for CORBA::TypeCode and CORBA::Any
 #
@@ -147,7 +154,6 @@ class Environment:
     #   typedef ::alias test;
     # surely this clashes with the innermost typedef?
     def relName(self, scopedName):
-        #print "\n\nrelName(" + repr(scopedName) + ")"
         # add the name to the environment anyway. Not the job of the
         # backend to find IDL name problems
         slashName = idlutil.slashName(scopedName)
@@ -155,6 +161,54 @@ class Environment:
 
         if scopedName == []:
             return [None]
+
+        # search a list of possibilities:
+        #  1. Use the innermost part of the name
+        #  2. Try pruning off scope in common with the current environment
+        #  3. Use the scoped name as is
+        #  4. Use a rooted :: scoped name
+
+        target = [None] + scopedName
+        possibilities = [ [tyutil.name(scopedName)],
+                          idlutil.pruneScope(scopedName, self.__scope),
+                          scopedName,
+                          [None] + scopedName ]
+        for p in possibilities:
+            try:
+                if self.lookup(p) == target:
+                    return p
+            except KeyError:
+                pass
+
+        assert(0)
+
+        # Check to see if the name is ambiguous
+        try:
+            if self.lookup([name]) == [None] + scopedName:
+                return [name]
+        except KeyError:
+            pass
+
+        prunedName = idlutil.pruneScope(scopedName, self.__scope)
+        try:
+            lookedup = self.lookup(prunedName)
+            if lookedup == [None] + scopedName:
+                return prunedName
+        except KeyError:
+            pass
+        # Is the non-globally qualified name abiguous
+        try:
+            lookedup = self.lookup(scopedName)
+            if self.lookup(scopedName) == [None] + scopedName:
+                return scopedName
+        except KeyError:
+            pass
+        # globally specify it
+        return [None] + scopedName
+
+
+        # ----------------
+        assert(0)
         
         prunedName = idlutil.pruneScope(scopedName, self.__scope)
         # if we just pruned the whole name away, add a bit back
@@ -179,7 +233,7 @@ class Environment:
                 lookedup = self.lookup(prunedName)
                 #print "result = " + repr(lookedup)
                 if lookedup == scopedName:
-                    #print "returning"
+                    #print "returning " + repr(prunedName)
                     return prunedName
             except KeyError:
                 pass
@@ -193,7 +247,7 @@ class Environment:
     def nameToString(self, partialName):
         # a bug in the old backend (as described above) means
         # that names are never globally scoped (::alias)
-        if config.EMULATE_BUGS() and partialName[0] == None:
+        if 0 and config.EMULATE_BUGS() and partialName[0] == None:
             partialName = partialName[1:len(partialName)]
         # map the None onto an empty string
         if partialName[0] == None:
@@ -225,7 +279,7 @@ class Environment:
         # ----- IMPLEMENT ME -----
 
         scopedName = type.scopedName()
-        if fully_scope:
+        if 0 and fully_scope:
             if config.EMULATE_BUGS():
                 relName = scopedName
             else:
@@ -233,7 +287,12 @@ class Environment:
         else:
             relName = self.relName(scopedName)
         return self.nameToString(relName)
-               
+
+
+# just don't write to it
+def globalScope():
+    return Environment()
+
         
 def scopetest():
     a = Environment()
@@ -260,4 +319,5 @@ def scopetest():
                       ["module", "inner", "name"] ]:
             print "scope = " + scope + " \t fullname = " + repr(name) + \
                   " \t C++ name = " + repr(env.nameToString(env.relName(name)))
+
 

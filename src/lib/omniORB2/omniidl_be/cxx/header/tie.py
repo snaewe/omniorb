@@ -28,6 +28,13 @@
 #
 # $Id$
 # $Log$
+# Revision 1.3  2000/01/07 20:31:29  djs
+# Regression tests in CVSROOT/testsuite now pass for
+#   * no backend arguments
+#   * tie templates
+#   * flattened tie templates
+#   * TypeCode and Any generation
+#
 # Revision 1.2  1999/12/26 16:43:53  djs
 # Fix for (not) generating tie templates of #included .idl
 #
@@ -57,13 +64,22 @@ self.__nested = 0
 
 self.__environment = name.Environment()
 
+def add(name):
+    try:
+        self.__environment.add(name)
+    except KeyError:
+        pass    
+    #print "env now = " + str(self.__environment)
 def enter(scope):
+    # the exception is thrown in the case of a forward declared interface
+    # being properly defined. Needs tidying up?
+    add(scope)
     self.__environment = self.__environment.enterScope(scope)
+
 def leave():
     self.__environment = self.__environment.leaveScope()
 def currentScope():
     return self.__environment.scope()
-
 
 
 def POA_prefix(nested):
@@ -75,6 +91,7 @@ def POA_prefix(nested):
 # Control arrives here
 #
 def visitAST(node):
+    #print "yup"
     for n in node.declarations():
         n.accept(self)
 
@@ -127,6 +144,7 @@ def template(env, node, nested = self.__nested):
     where = util.StringStream()
 
     def buildCallables(interface, where, env, continuation):
+        global_env = name.Environment()
         callables = interface.callables()
         operations = filter(lambda x:isinstance(x, idlast.Operation),
                             callables)
@@ -137,8 +155,7 @@ def template(env, node, nested = self.__nested):
             has_return_value = not(tyutil.isVoid(returnType))
             # FIXME: return types are fully scoped but argument types
             # arent?
-            returnType_name = tyutil.operationArgumentType(returnType, env,
-                                                           fully_scope = 1)[0]
+            returnType_name = tyutil.operationArgumentType(returnType, global_env)[0]
             operation_name = tyutil.mapID(identifier)
             
             signature = []
@@ -172,8 +189,8 @@ def template(env, node, nested = self.__nested):
         for attribute in attributes:
             identifiers = attribute.identifiers()
             attrType = attribute.attrType()
-            attrType_names = tyutil.operationArgumentType(attrType, env,
-                                                          fully_scope = 1)
+            attrType_names = tyutil.operationArgumentType(attrType, global_env)
+
             attrType_name_RET = attrType_names[0]
             attrType_name_IN = attrType_names[1]
             
@@ -251,24 +268,43 @@ private:
 def visitInterface(node):
     if not(node.mainFile()):
         return
+
+    env = self.__environment
+    enter(node.identifier())
+    template(env, node)
+
+    for n in node.declarations():
+        n.accept(self)
     
-    template(self.__environment, node)
+    leave()
 
 def visitEnum(node):
     pass
 def visitStruct(node):
+    #print "adding " + node.identifier()
+    add(node.identifier())
+    for n in node.members():
+        n.accept(self)
+        
     pass
 def visitUnion(node):
+    add(node.identifier())
     pass
 def visitForward(node):
+    add(node.identifier())
     pass
 def visitConst(node):
     pass
 def visitDeclarator(node):
     pass
 def visitMember(node):
+    if node.constrType():
+        node.memberType().decl().accept(self)
     pass
 def visitException(node):
+    add(node.identifier())
     pass
 def visitTypedef(node):
+    for d in node.declarators():
+        add(tyutil.name(d.scopedName()))
     pass

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SUFFIX=SK.cc
+SUFFIX=.hh
 
 TOOLS=/home/djs/src/omni/cvs/src/omniidl/python/be/cxx/tools
 

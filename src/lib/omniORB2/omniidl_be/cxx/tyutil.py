@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.21  2000/01/07 20:31:18  djs
+# Regression tests in CVSROOT/testsuite now pass for
+#   * no backend arguments
+#   * tie templates
+#   * flattened tie templates
+#   * TypeCode and Any generation
+#
 # Revision 1.20  1999/12/26 16:40:28  djs
 # Better char value -> C++ char constant handling (needs rewriting)
 # Typedef to Struct / Union passed as operation argument fix
@@ -218,6 +225,31 @@ def mapID(identifier):
         if i == identifier:
             return "_cxx_" + identifier
     return identifier
+
+
+
+# It appears that the old compiler will map names in repository IDs
+# to avoid supposed clashes with C++ keywords, but this is totally
+# broken
+# eg mapRepoID("IDL:Module/If/Then") -> "IDL:Module/_cxx_If/_cxx_Then"
+def mapRepoID(id):
+    # extract the naming part of the ID
+    regex = re.compile(r"(IDL:)*(.+):(.+)")
+    match = regex.match(id)
+    first_bit = match.group(1)
+    if not(first_bit):
+        first_bit = ""
+    the_name = match.group(2)
+    ver = match.group(3)
+    # extract the name 
+    elements = re.split(r"/", the_name)
+    mapped_elements = []
+    for element in elements:
+        mapped_elements.append(tyutil.mapID(element))
+    # put it all back together again
+    return first_bit + string.join(mapped_elements, "/") + ":" + ver
+
+
 
 # ------------------------------------------------------------------
 
@@ -459,6 +491,17 @@ def operationArgumentType(type, environment, virtualFn = 0, fully_scope = 0):
                      "CORBA::String_out ",
                      "char*& " ]
         elif isObjRef(deref_type):
+            scopedName = deref_type.scopedName()
+            if scopedName == ["CORBA", "Object"]:
+                return [ "CORBA::Object_ptr",
+                         "CORBA::Object_ptr",
+                         "CORBA::Object_OUT_arg",
+                         "CORBA::Object_ptr&" ]
+            
+                return [ param_type + "_ptr",
+                         param_type + "_ptr",
+                         "CORBA::Object_OUT_arg",
+                         param_type + "_ptr&" ]
             param_type = environment.principalID(deref_type, fully_scope)
             return [ param_type + "_ptr",
                      param_type + "_ptr",
@@ -503,6 +546,11 @@ def operationArgumentType(type, environment, virtualFn = 0, fully_scope = 0):
                  param_type + "& ",
                  param_type + "& " ]
     elif deref_type.kind() == idltype.tk_objref:
+        if deref_type.scopedName() == ["CORBA", "Object"]:
+            return [ "CORBA::Object_ptr",
+                     "CORBA::Object_ptr",
+                     "CORBA::Object_OUT_arg",
+                     "CORBA::Object_INOUT_arg" ]
         param_type = environment.principalID(deref_type, fully_scope)
         return [ param_type + "_ptr",
                  param_type + "_ptr",
@@ -534,12 +582,23 @@ def operationArgumentType(type, environment, virtualFn = 0, fully_scope = 0):
 
 
 # Used to build the types for exception constructors
-def makeConstructorArgumentType(type, environment):
+def makeConstructorArgumentType(type, environment, decl = None):
     # idl.type -> string
     typeName = environment.principalID(type)
     isVariable = tyutil.isVariableType(type)
     derefType = tyutil.deref(type)
     derefTypeName = environment.principalID(derefType)
+    dims = typeDims(type)
+    decl_dims = []
+    if decl != None:
+        decl_dims = decl.sizes()
+    full_dims = decl_dims + dims
+    
+    is_array = full_dims != []
+    is_array_declarator = decl_dims != []
+
+    if is_array:
+        return "const " + typeName
 
     if isTypeCode(derefType):
         return "CORBA::TypeCode_ptr"
@@ -704,8 +763,13 @@ def sequenceTemplate(sequence, environment):
         
     elif isObjRef(derefSeqType):
        scopedName = derefSeqType.decl().scopedName()
-       scopedName = self.scope(scopedName) + \
-                    ["_objref_" + self.name(scopedName)]
+       is_CORBA_Object = scopedName == ["CORBA", "Object"]
+
+       if not(is_CORBA_Object):
+           # CORBA::Object doesn't have an _objref_xxx
+           scopedName = self.scope(scopedName) + \
+                        ["_objref_" + self.name(scopedName)]
+           
        rel_name = environment.relName(scopedName)
        objref_name = environment.nameToString(rel_name)
        #scopedName = idlutil.pruneScope(scopedName, scope)

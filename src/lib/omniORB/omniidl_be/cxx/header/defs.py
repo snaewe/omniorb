@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.19  2000/01/07 20:31:27  djs
+# Regression tests in CVSROOT/testsuite now pass for
+#   * no backend arguments
+#   * tie templates
+#   * flattened tie templates
+#   * TypeCode and Any generation
+#
 # Revision 1.18  1999/12/26 16:43:06  djs
 # Enum scope fix
 # Handling default case of char discriminated switch fixed
@@ -114,6 +121,7 @@ self.__insideClass = 0
 # being used
 #self.__scope = []
 self.__environment = name.Environment()
+self.__globalScope = name.globalScope()
 #self.__scope = util.Environment()
 
 def enter(scope):
@@ -505,14 +513,15 @@ def visitConst(node):
     environment = self.__environment
     
     constType = node.constType()
-    if isinstance(constType, idltype.String):
+    deref_constType = tyutil.deref(constType)
+    if isinstance(deref_constType, idltype.String):
         type_string = "char *"
     else:
-        type_string = environment.principalID(constType)
+        type_string = environment.principalID(deref_constType)
     name = tyutil.mapID(node.identifier())
-    value = tyutil.valueString(constType, node.value(), environment)
+    value = tyutil.valueString(deref_constType, node.value(), environment)
 
-    representedByInteger =tyutil.const_init_in_def(constType)
+    representedByInteger =tyutil.const_init_in_def(deref_constType)
 
     # depends on whether we are inside a class / in global scope
     # etc
@@ -664,7 +673,8 @@ typedef CORBA::Any_var @name@_var;""",
 
                 # typedefs to basic types are always fully qualified?
                 # IDL oddity?
-                basicReferencedTypeID = environment.principalID(aliasType, 1)
+                basicReferencedTypeID = self.__globalScope.principalID(aliasType)
+                #basicReferencedTypeID = environment.principalID(aliasType, 1)
                 stream.out("""\
 typedef @base@ @derived@;
 """,
@@ -688,17 +698,34 @@ typedef @base@_out @name@_out;
             # Non-array of objrect reference
             elif tyutil.isObjRef(derefType):
                 # Note that the base name is fully flattened
-                    stream.out("""\
+                is_CORBA_Object = derefType.scopedName() == ["CORBA", "Object"]
+                impl_base = ""
+                objref_base = ""
+                if not(is_CORBA_Object):
+                    scopedName = derefType.decl().scopedName()
+                    impl_scopedName = tyutil.scope(scopedName) + \
+                                      ["_impl_" + tyutil.name(scopedName)]
+                    objref_scopedName = tyutil.scope(scopedName) + \
+                                        ["_objref_" + tyutil.name(scopedName)]
+                    impl_name = environment.nameToString(environment.relName(impl_scopedName))
+                    objref_name = environment.nameToString(environment.relName(objref_scopedName))
+                    impl_base = "typedef " + impl_name + "_impl_" + derivedName + ";"
+                    objref_base = "typedef " + objref_name + "_objref_" + \
+                                  derivedName + ";"
+
+                stream.out("""\
 typedef @base@ @name@;
 typedef @base@_ptr @name@_ptr;
 typedef @base@Ref @name@Ref;
-typedef _impl_@base@ _impl_@name@;
+@impl_base@
 typedef @base@_Helper @name@_Helper;
-typedef _objref_@base@ _objref_@name@;
+@objref_base@
 typedef @base@_var @name@_var;
 typedef @base@_out @name@_out;""",
-                               base = derefTypeID,
-                               name = derivedName)
+                           base = derefTypeID,
+                           name = derivedName,
+                           impl_base = impl_base,
+                           objref_base = objref_base)
             # Non-array of user declared types
             elif isinstance(derefType, idltype.Declared):
                 stream.out("""\
@@ -1050,7 +1077,6 @@ def visitMember(node):
 def visitStruct(node):
     if not(node.mainFile()):
         return
-
     addName(node.identifier())
     
     name = tyutil.mapID(node.identifier())
@@ -1191,59 +1217,63 @@ def visitException(node):
     environment = self.__environment
     insideClass = self.__insideClass
     self.__insideClass = 1
-    
+
     # if the exception has no members, inline some no-ops
     no_members = (node.members() == [])
 
 
-    # Used to build the types for exception constructors
-    def makeConstructorArgumentType(type, environment = environment):
-        raise "moved"
-        # idl.type -> string
-        typeName = environment.principalID(type)
-        isVariable = tyutil.isVariableType(type)
-        derefType = tyutil.deref(type)
-        derefTypeName = environment.principalID(derefType)
+    stream.out("""\
+class @name@ : public CORBA::UserException {
+public:
+  """, name = exname)
 
-        if isinstance(derefType, idltype.Base) or \
-           tyutil.isEnum(derefType):
-            return typeName
-        if tyutil.isStruct(derefType)          or \
-           tyutil.isUnion(derefType):
-            return "const " + typeName + "&"
-        if tyutil.isObjRef(derefType):
-            return derefTypeName + "_ptr"
-        if tyutil.isSequence(type, 0):
-            return "const " + tyutil.sequenceTemplate(derefType, environment)
-        elif tyutil.isSequence(type, 1):
-            return "const " + typeName
-        else:
-            return tyutil.operationArgumentType(type, environment)[1]
-
-    
     # deal with the datamembers and constructors
     data = util.StringStream()
     ctor_args = []
     for m in node.members():
         memberType = m.memberType()
         derefType = tyutil.deref(memberType)
-        for d in m.declarators():
-            ctor_arg_type = tyutil.makeConstructorArgumentType(memberType,
-                                                               environment)
+        type_dims = tyutil.typeDims(memberType)
 
-            if tyutil.isObjRef(derefType):
+        # is it constructed here?
+        if m.constrType():
+            memberType.decl().accept(self)
+        
+        for d in m.declarators():
+            decl_dims = d.sizes()
+            full_dims = decl_dims + type_dims
+            is_array = full_dims != []
+            is_array_declarator = decl_dims != []
+
+            if is_array:
+                type = environment.principalID(memberType)
+            elif tyutil.isObjRef(derefType):
                 type = tyutil.objRefTemplate(derefType, "Member", environment)
             elif tyutil.isTypeCode(derefType):
-                type = "CORBA::TypeCode_member"                
+                type = "CORBA::TypeCode_member"
+            elif tyutil.isString(derefType):
+                type = "CORBA::String_member"
             elif tyutil.isTypedef(memberType):
                 type = environment.principalID(memberType)
             elif tyutil.isSequence(derefType):
                 type = tyutil.sequenceTemplate(derefType, environment)
+                
             else:
                 type = environment.principalID(memberType)
             name = tyutil.mapID(d.identifier())
+            dims = tyutil.dimsToString(decl_dims)
+
+            ctor_arg_type = tyutil.makeConstructorArgumentType(memberType,
+                                                               environment)
+
+            if is_array_declarator:
+                ctor_arg_type = "const _0RL_" + name                
+                data.out("""\
+    typedef @type@ _0RL_@name@@dims@;
+    typedef @type@ _@name@_slice;""", type = type, name = name, dims = dims)
+                
             data.out("""\
-    @type@ @name@;""", type = type, name = name)
+    @type@ @name@@dims@;""", type = type, name = name, dims = dims)
             type = tyutil.operationArgumentType(memberType, environment)[1]
             ctor_args.append(ctor_arg_type + " i_" + name)
     ctor = ""
@@ -1260,8 +1290,6 @@ def visitException(node):
         alignedSize = "size_t _NP_alignedSize(size_t) const;"
             
     stream.out("""\
-class @name@ : public CORBA::UserException {
-public:
   @datamembers@
 
   inline @name@() {

@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.10  2000/01/07 20:31:32  djs
+# Regression tests in CVSROOT/testsuite now pass for
+#   * no backend arguments
+#   * tie templates
+#   * flattened tie templates
+#   * TypeCode and Any generation
+#
 # Revision 1.9  1999/12/25 21:47:18  djs
 # Better TypeCode support
 #
@@ -68,7 +75,7 @@ import string
 
 from omniidl import idlutil, idltype, idlast
 
-from omniidl.be.cxx import util, tyutil, skutil
+from omniidl.be.cxx import util, tyutil, skutil, name
 
 from omniidl.be.cxx.skel import proxy
 
@@ -78,6 +85,7 @@ self = dispatch
 
 def __init__(environment, stream):
     self.__environment = environment.leaveScope()
+    self.__globalScope = name.globalScope()
     self.__stream = stream
     return self
 
@@ -108,20 +116,22 @@ def argument_instance(type):
         return mapping
 
     # all object references and typecodes are _var types
-    if (tyutil.isObjRef(deref_type) and not(is_array)):
+    if tyutil.isObjRef(deref_type) and not(is_array):
+#        name = self.__globalScope.principalID(deref_type)
         name = environment.principalID(deref_type, fully_scope = 0)
         mapping = [name + "_var", name + "_var", name + "_var"]
 
         return mapping
 
                 
-    if (tyutil.isTypeCode(deref_type) and not(is_array)):
+    if tyutil.isTypeCode(deref_type) and not(is_array):
         name = "CORBA::TypeCode"
         mapping = [name + "_var", name + "_var", name + "_var"]
         return mapping
 
     # typedefs aren't dereferenced
     if tyutil.isTypedef(type):
+#        name = self.__globalScope.principalID(type)
         name = environment.principalID(type, fully_scope = 0)
         mapping[0] = name
         # out types have storage allocated here
@@ -133,7 +143,7 @@ def argument_instance(type):
         
         return mapping
 
-
+#    name = self.__globalScope.principalID(type)
     name = environment.principalID(type, fully_scope = 0)
     mapping = [name, name, name]
     if is_variable:
@@ -196,8 +206,9 @@ def is_pointer(type):
 def operation(operation):
     environment = self.__environment
     stream = self.__stream
-    
-    operation_name = tyutil.mapID(operation.identifier())
+
+    idl_operation_name = operation.identifier()
+    operation_name = tyutil.mapID(idl_operation_name)
 
     return_type = operation.returnType()
     deref_return_type = tyutil.deref(return_type)
@@ -232,6 +243,7 @@ def operation(operation):
         argument_prefixed_name = prefix + argument_name
         direction = argument.direction()
         argument_type = argument.paramType()
+#        argument_type_name = self.__globalScope.principalID(argument_type)
         argument_type_name = environment.principalID(argument_type,
                                                      fully_scope = 0)
         argument_is_variable = tyutil.isVariableType(argument_type)
@@ -278,9 +290,10 @@ def operation(operation):
                 tyutil.isUnion(deref_argument_type)) and \
                not(argument_is_variable):
                 pass
-            
-            elif not(isinstance(deref_argument_type, idltype.Base)) and \
-               not(tyutil.isEnum(deref_argument_type)):
+            # TypeCodes and Anys are variable base types
+            elif not(isinstance(deref_argument_type, idltype.Base) and \
+                     not(tyutil.isAny(deref_argument_type))) and \
+                 not(tyutil.isEnum(deref_argument_type)):
                 marshal_name = argument_slice_name
                 align_name = argument_slice_name
 
@@ -337,7 +350,9 @@ def operation(operation):
         marshal_name = "result"
         align_name = "result"
         if return_is_array:
-            if not(isinstance(deref_return_type, idltype.Base)) and \
+            # TypeCodes and Anys are variable base types (see above)
+            if not(isinstance(deref_return_type, idltype.Base) and \
+                   not(tyutil.isAny(deref_return_type))) and \
                not(tyutil.isEnum(deref_return_type)):
                 marshal_name = "((" + return_type_name + "_slice*)result)"
             align_name = marshal_name
@@ -395,7 +410,7 @@ giop_s.set_user_exceptions(_user_exns, @n@);""",
 
     # main block of code goes here
     stream.out("""\
-  if( !strcmp(giop_s.operation(), \"@operation_name@\") ) {
+  if( !strcmp(giop_s.operation(), \"@idl_operation_name@\") ) {
     @exception_decls@
     @get_arguments@
     giop_s.RequestReceived();
@@ -415,6 +430,7 @@ giop_s.set_user_exceptions(_user_exns, @n@);""",
     return 1;
   }""",
                operation_name = operation_name,
+               idl_operation_name = idl_operation_name,
                exception_decls = str(exceptions),
                get_arguments = str(get_arguments),
                decl_result = str(decl_result),
@@ -437,6 +453,7 @@ giop_s.set_user_exceptions(_user_exns, @n@);""",
 def attribute_read(attribute, id):
     assert isinstance(attribute, idlast.Attribute)
 
+    cxx_id = tyutil.mapID(id)
     environment = self.__environment
     stream = self.__stream
     
@@ -448,9 +465,11 @@ def attribute_read(attribute, id):
     is_array = attr_dims != []
 
     is_pointer = 0
+    dereference = 0
 
     if tyutil.isSequence(deref_attrType):
         is_pointer = 1
+        dereference = 1
 
     # similar code exists in skel/main.py, handling pd_result
     # basic types don't have slices
@@ -459,7 +478,6 @@ def attribute_read(attribute, id):
             result_name = "result"
         else:
             result_name = "((" + attrib_type_name + "_slice*)" + "result)"
-            
         attrib_type_name = attrib_type_name + "_var"
         
     elif tyutil.isString(deref_attrType):
@@ -468,7 +486,9 @@ def attribute_read(attribute, id):
     elif tyutil.isVariableType(attrType):
         if tyutil.isObjRef(deref_attrType):
             attrib_type_name = environment.principalID(deref_attrType)
-        
+        elif tyutil.isTypeCode(deref_attrType):
+            attrib_type_name = "CORBA::TypeCode"
+            
         attrib_type_name = attrib_type_name + "_var"
         result_name = "(result.operator->())"
         if tyutil.isStruct(deref_attrType) or \
@@ -477,13 +497,15 @@ def attribute_read(attribute, id):
            tyutil.isTypeCode(deref_attrType):
             is_pointer = 1
 
-    # ---
+            if not(tyutil.isTypeCode(deref_attrType)):
+                dereference = 1
 
+    # ---
     size_calc = skutil.sizeCalculation(environment, attrType,
                                        None, "msgsize", result_name, 1, is_pointer)
     marshal = util.StringStream()
 
-    if is_pointer:
+    if dereference:
         result_name = "*" + result_name
         
     skutil.marshall(marshal, environment, attrType, None, result_name, "giop_s")
@@ -491,7 +513,7 @@ def attribute_read(attribute, id):
     stream.out("""\
 if( !strcmp(giop_s.operation(), \"_get_@attrib_name@\") ) {    
   giop_s.RequestReceived();
-  @attrib_type@ result = this->@attrib_name@();
+  @attrib_type@ result = this->@cxx_attrib_name@();
   if( giop_s.response_expected() ) {
     size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
     @size_calculation@
@@ -504,6 +526,7 @@ if( !strcmp(giop_s.operation(), \"_get_@attrib_name@\") ) {
                marshall_result = str(marshal),
                attrib_type = attrib_type_name,
                attrib_name = id,
+               cxx_attrib_name = cxx_id,
                size_calculation = size_calc)
 
 
@@ -513,6 +536,8 @@ if( !strcmp(giop_s.operation(), \"_get_@attrib_name@\") ) {
 def attribute_write(attribute, id):
     assert isinstance(attribute, idlast.Attribute)
 
+    cxx_id = tyutil.mapID(id)
+    
     environment = self.__environment
     stream = self.__stream
 
@@ -535,6 +560,9 @@ def attribute_write(attribute, id):
 
     elif tyutil.isObjRef(deref_attrType):
         attrib_type_name = environment.principalID(deref_attrType)
+        attrib_type_name = attrib_type_name + "_var"
+    elif tyutil.isTypeCode(deref_attrType):
+        attrib_type_name = "CORBA::TypeCode"
         attrib_type_name = attrib_type_name + "_var"
 
     elif tyutil.isSequence(deref_attrType):
@@ -560,7 +588,7 @@ if( !strcmp(giop_s.operation(), \"_set_@attrib_name@\") ) {
   @attrib_type@ value;
   @unmarshall_value@
   giop_s.RequestReceived();
-  this->@attrib_name@(value);
+  this->@cxx_attrib_name@(value);
   if( giop_s.response_expected() ) {
     size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
     giop_s.InitialiseReply(GIOP::NO_EXCEPTION, (CORBA::ULong) msgsize);
@@ -570,4 +598,5 @@ if( !strcmp(giop_s.operation(), \"_set_@attrib_name@\") ) {
 }""",
                unmarshall_value = str(unmarshal),
                attrib_type = attrib_type_name,
-               attrib_name = id)    
+               attrib_name = id,
+               cxx_attrib_name = cxx_id)    
