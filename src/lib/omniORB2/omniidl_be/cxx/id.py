@@ -26,7 +26,7 @@
 #   
 #   Environment handling, identifier scoping, naming
 
-from omniidl import idlvisitor
+from omniidl import idlvisitor, idlutil
 
 import id, config, util
 
@@ -132,27 +132,36 @@ class Name:
         """relName(id.Name, id.Environment): string list
            Returns a list of the name components essential to making
            the name unambiguous"""
-        # first try to progressively add scopes
-        sn = self.__scopedName[:]
-        sn.reverse()
-        relName = [ sn[0] ]
-        del sn[0]
+        rscope = idlutil.relativeScope(environment._Environment__scope,
+                                       self.__scopedName)
+        if rscope and rscope[0] is None:
+            return None
+        else:
+            return rscope
 
-        name = None
-        while 1:
-            name = environment.lookup(relName)
-            # case name of None  => nothing was found at all
-            #            | self  => lookup was successful
-            #            | other => too ambiguous still
-            if name != None and (name.__scopedName == self.__scopedName):
-                return relName
-            if sn == []:
-                # the fully scoped (not from root) name is
-                # not unambiguous- must go from root
-                return None
-            # add more scope and continue
-            relName = [ sn[0] ] + relName
-            del sn[0]
+        # Old broken implementation follows...
+        
+#          # first try to progressively add scopes
+#          sn = self.__scopedName[:]
+#          sn.reverse()
+#          relName = [ sn[0] ]
+#          del sn[0]
+
+#          name = None
+#          while 1:
+#              name = environment.lookup(relName)
+#              # case name of None  => nothing was found at all
+#              #            | self  => lookup was successful
+#              #            | other => too ambiguous still
+#              if name != None and (name.__scopedName == self.__scopedName):
+#                  return relName
+#              if sn == []:
+#                  # the fully scoped (not from root) name is
+#                  # not unambiguous- must go from root
+#                  return None
+#              # add more scope and continue
+#              relName = [ sn[0] ] + relName
+#              del sn[0]
 
     def unambiguous(self, environment, cxx = 1):
         """unambiguous(id.Name, id.Environment option, cxx boolean): string

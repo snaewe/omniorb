@@ -8,6 +8,29 @@
 
 <buglist version="3.0.4">
 
+<bug id="4" date="Fri Jul 27 17:55:52 BST 2001" user="dpg1">
+  <summary>Incorrect omniidl output with repeated names in nested
+  scopes</summary>
+  <reported>Juan Bernabó</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-07/0218.html"/>
+  <text>
+  IDL like <pre>
+         module a {
+	   module b {
+	     interface Address {};
+	   };
+	   module c {
+	     module b {
+	       interface BAddress : a::b::Address { };
+	     };
+	   };
+	 };
+    </pre>
+  would result in invalid invalid C++.
+  </text>
+</bug>
+
 <bug id="3" date="Tue Jul 24 15:53:44 BST 2001" user="dpg1">
 
   <summary>Incorrect behaviour with incarnate/etherealize</summary>

@@ -1,8 +1,17 @@
+Fri Jul 27 17:55:52 BST 2001 dpg1
+=================================
+
+- Fix bug with relative scoped names in C++ back-end output.
+
+src/lib/omniORB2/omniidl_be/cxx/id.py
+
+
 Wed Jul 25 11:41:15 BST 2001 dpg1
 =================================
 
 - Hack the showast.py back-end so it is clear that it's broken.
 
+src/lib/omniORB2/omniidl_be/dir.mk
 src/lib/omniORB2/omniidl_be/showast.py
 
 
