@@ -118,6 +118,11 @@ void PollSet::add(const socket_t fd){
   omni_mutex_lock sync(guard);
   assert(nactive < maxfds);
 
+  // make this operation idempotent by allowing an fd to be
+  // added more than once
+  for (int i=0;i<nactive;i++)
+    if (ufds[i].fd == fd) return;
+
   ufds[nactive].fd = fd;
   ufds[nactive].events = POLLIN | POLLERR | POLLHUP;
   ufds[nactive].revents = 0;

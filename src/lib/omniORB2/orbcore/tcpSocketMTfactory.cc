@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.10.2.6  2000/05/19 14:55:21  djs
+  Preliminary instance of leader-follow pattern
+
   Revision 1.22.6.10.2.5  2000/03/07 17:27:59  djs
   Minor changes to make it compile on solaris (sun4_sosV_5.7)
   Stupid bug in PollSet_Active_Iterator fixed
@@ -303,7 +306,9 @@ extern "C" int gethostname(char *name, int namelen);
   omniORB::logs(15, "tcpSocketMTfactory " prefix ": " message)
 
 #undef EXTRADEBUG
-#define THREADPOOL
+#define LEADERFOLLOWER
+#undef THREADPOOL
+#undef ONETOONE
 
 const unsigned int poolSize = 5;
 class tcpStrandWorker;
@@ -313,12 +318,18 @@ class PoolWorker;
 class tcpSocketRendezvouser;
 class OneToOneRendezvouser;
 class PoolRendezvouser;
+class LeaderFollower;
+
 #ifdef ONETOONE
 # define RENDEZVOUSER OneToOneRendezvouser
 #endif
 #ifdef THREADPOOL
 # define RENDEZVOUSER PoolRendezvouser
 #endif
+#ifdef LEADERFOLLOWER
+# define RENDEZVOUSER LeaderFollower
+#endif
+
 #ifdef EXTRADEBUG
 void dump_fdset(fd_set*, int);
 #endif
@@ -358,7 +369,6 @@ private:
   tcpSocketRendezvouser();
 };
 
-#ifdef ONETOONE
 class OneToOneRendezvouser: public tcpSocketRendezvouser{
 public:
   OneToOneRendezvouser(tcpSocketIncomingRope *r,
@@ -368,6 +378,8 @@ public:
   }
 
   virtual ~OneToOneRendezvouser() { }
+
+  friend PoolWorker;
 
 protected:
   void watchStrand(tcpSocketStrand *s){
@@ -384,13 +396,22 @@ protected:
 private:
   OneToOneRendezvouser();
 };
-#endif
-
-#ifdef THREADPOOL
 
 // Max # open file descriptors?
 int queueLength = getdtablesize();
 //const int queueLength = 5;
+
+// If only one IO thread, no sync required.
+// If more than one IO thread, care is required (although it doesn't
+// make sense for more than one thread to select() at a time)
+Poller poller;
+// Mapping of filedescriptors to strands
+// (assumes an array is efficient)
+tcpSocketStrand** fdstrandmap;
+
+// Fixed length queue of requests to be processed
+FixedQueue<tcpSocketStrand*> *queue;
+
 
 class PoolRendezvouser: public tcpSocketRendezvouser{
 public:
@@ -399,17 +420,10 @@ public:
 
   virtual ~PoolRendezvouser() { };
 
-  void *run_undetached(void*);
+  virtual void *run_undetached(void*);
 
   friend PoolWorker;
 protected:
-
-  // Fixed length queue of requests to be processed
-  FixedQueue<tcpSocketStrand*> pd_q;
-
-  // Mapping of filedescriptors to strands
-  // (assumes an array is efficient)
-  tcpSocketStrand** pd_fdstrandmap;
 
   // watchStrand and waitForEvents depend on the policy for waking up
   // the rendezvouser thread when a worker has finished with a strand
@@ -420,11 +434,14 @@ protected:
   virtual void strandIsActive(tcpSocketStrand *);
   virtual void newConnectionAttempted(tcpSocketStrand *);
 
-  Poller poller;
+  // build the thread pool
+  virtual void buildPool(tcpSocketMTincomingFactory *f);
+
+  //Poller poller;
 private:
   PoolRendezvouser();
+  tcpSocketMTincomingFactory *pd_factory;
 };
-#endif
 
 static RENDEZVOUSER* rendezvous;
 
@@ -438,9 +455,11 @@ static RENDEZVOUSER* rendezvous;
 
 class tcpStrandWorker: public omni_thread{
 public:
-  tcpStrandWorker(tcpSocketMTincomingFactory *f):
+  tcpStrandWorker(tcpSocketMTincomingFactory *f, 
+		  CORBA::Boolean start_detached = TRUE):
     omni_thread(this), pd_factory(f){
-    start();
+    if (start_detached)
+      start();
   }
   virtual ~tcpStrandWorker(){
     omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
@@ -465,7 +484,139 @@ private:
   Strand::Sync *pd_sync;
 };
 
-#ifdef ONETOONE
+omni_mutex pd_firstleader_lock;
+CORBA::Boolean firstleader = TRUE;
+
+static omni_mutex     pd_leader_lock;
+//static omni_condition pd_leader_cond(&pd_leader_lock);
+//static CORBA::Boolean pd_leader_position_vacant = TRUE;
+
+
+class LeaderFollower: public virtual PoolRendezvouser,
+                      public virtual tcpStrandWorker{
+private:
+  tcpSocketStrand *strand;
+
+  tcpSocketIncomingRope *pd_rope;
+  tcpSocketMTincomingFactory *pd_factory;
+
+protected:
+  
+  virtual void buildPool(tcpSocketMTincomingFactory *f){
+    // done in the constructor directly
+    PTRACE("LeaderFollower", "buildPool");
+  }
+
+  virtual void run(void *arg){
+    PTRACE("LeaderFollower", "overriding ::run");
+  }
+
+  void *run_undetached(void *arg){
+    PTRACE("LeaderFollower", "::run_undetached");
+    tcpSocketIncomingRope* r = (tcpSocketIncomingRope*) arg;
+
+#ifdef LEADERFOLLOWER
+    rendezvous = this;
+#endif
+    poller.add(r->pd_rendezvous);
+
+    return tcpSocketRendezvouser::run_undetached(arg);
+  }
+
+  virtual tcpSocketStrand *findStrandWithRequestPending(){
+    if (strand == NULL){
+      // dispatch finished, pretend the strand is dead
+      return NULL;
+    }
+    //OMNIORB_ASSERT(strand != NULL);
+    tcpSocketStrand *toreturn = strand;
+    strand = NULL;
+    return toreturn;
+  }
+
+  virtual CORBA::Boolean strandDied(tcpSocketStrand *s){
+    if (s == strand)
+      strand = NULL;
+    // if we return true here then the StrandWorker will loop round
+    // and call findStrandWithRequestPending(). We want to cease being
+    // a worker and try to be a Leader again.
+    return FALSE;
+  }
+
+  virtual void strandIsActive(tcpSocketStrand *s){
+    // if we have nothing else to do, take this strand
+    if (strand == NULL){ 
+      strand = s;
+      // mark this strand as uninteresting
+      poller.remove(s->handle());
+    }
+    // else this thread is already allocated so ignore the
+    // service request (someone else will pick it up later)
+  }
+
+  virtual void waitForEvents(tcpSocketIncomingRope *r){
+    strand = NULL; // we haven't found work to do yet
+
+    {
+      // become the leader
+      omni_mutex_lock lock(pd_leader_lock);
+
+      //while (!pd_leader_position_vacant)
+      //pd_leader_cond.wait();
+
+      while (strand == NULL){
+	// sleep waiting for something to do
+	PoolRendezvouser::waitForEvents(r);
+      }
+
+      // give up leadership    
+    }
+    // no longer the leader, have a non-NULL strand object allocated
+    // _noone else has a reference to this strand_
+    PTRACE("LeaderFollower", "has a strand to service");
+    socket_t handle = strand->handle();
+    // dispatch a single request
+    _realRun((tcpStrandWorker*) this);
+    // is the strand still connected or not?
+
+
+    //poller.add(handle);
+  }
+
+
+public:
+  LeaderFollower(tcpSocketIncomingRope *r,
+		 tcpSocketMTincomingFactory *f):
+    PoolRendezvouser(r, f), tcpStrandWorker(f, FALSE),
+    pd_rope(r), pd_factory(f) {
+    PTRACE("LeaderFollower", "constructor");
+
+    CORBA::Boolean construct_peers;
+    {
+      omni_mutex_lock lock(pd_firstleader_lock);
+      construct_peers = firstleader;
+      firstleader = FALSE;
+    }
+
+    if (construct_peers){
+      // build all my peers
+      for (unsigned int i=0;i<(poolSize-1);i++) new LeaderFollower(r, f);
+    }					  
+    //start_undetached();
+    PoolRendezvouser::start_undetached();
+  }
+
+  //virtual void watchStrand(tcpSocketStrand *s){
+  //  PoolRendezvouser::watchStrand(s);
+  //}
+
+  //virtual void newConnectionAttempted(tcpSocketStrand *s){
+  //  PoolRendezvouser::newConnectionAttempted(s);
+  //}
+
+
+};
+
 class OneToOneWorker: public tcpStrandWorker{
 public:
   OneToOneWorker(tcpSocketStrand *s, tcpSocketMTincomingFactory *f):
@@ -488,13 +639,11 @@ protected:
 private:
   tcpSocketStrand *pd_strand;
 };
-#endif
 
-#ifdef THREADPOOL
 class PoolWorker: public tcpStrandWorker{
 public:
   PoolWorker(PoolRendezvouser *r, tcpSocketMTincomingFactory *f):
-    tcpStrandWorker(f), pd_q(&(r->pd_q)){
+    tcpStrandWorker(f), pd_q(queue){
     PTRACE("PoolWorker", "Constructed");
   }
   virtual ~PoolWorker() { }
@@ -517,7 +666,6 @@ private:
   // and invalidates this pointer....
   Queue<tcpSocketStrand*> *pd_q;
 };
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -758,7 +906,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
   }
 
   // Make it a passive socket
-  if (listen(pd_rendezvous,5) == RC_SOCKET_ERROR) {
+  if (listen(pd_rendezvous,500) == RC_SOCKET_ERROR) {
     CLOSESOCKET(pd_rendezvous);
 #ifndef __WIN32__
     OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
@@ -1404,8 +1552,20 @@ void tcpStrandWorker::_realRun(void *arg){
   CORBA::Boolean alive = TRUE;
   // fetch strand, service and repeat
   try {
+    tcpSocketStrand *s;
     while (alive) {
-      tcpSocketStrand *s = me->findStrandWithRequestPending();
+      tcpSocketStrand *new_s = me->findStrandWithRequestPending();
+      if (new_s == NULL){
+	// ONLY happens with LeaderFollower- every other strategy
+	// allows worker to block on the strand or on the queue
+	//
+	// FIXME: BADBADBAD
+	poller.add(s->handle());
+
+	return;
+      }
+      s = new_s;
+
 #ifdef EXTRADEBUG
       cerr << "Worker assigned FD == " << s->handle() << endl;
       fflush(stderr);
@@ -1455,7 +1615,6 @@ void tcpStrandWorker::dispatchOne(tcpSocketStrand *s){
   PTRACE("Worker", "worker finishing request dispatch");
 }
 
-#ifdef THREADPOOL
 void PoolWorker::dispatchOne(tcpSocketStrand *s){
   tcpStrandWorker::dispatchOne(s);
   // wake up the rendezvous thread
@@ -1463,5 +1622,4 @@ void PoolWorker::dispatchOne(tcpSocketStrand *s){
   // (for the last time for that request)
   rendezvous->watchStrand(s);
 }
-#endif
 

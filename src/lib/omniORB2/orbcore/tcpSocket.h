@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.6.3.2.3  2000/05/19 14:55:20  djs
+ Preliminary instance of leader-follow pattern
+
  Revision 1.5.6.3.2.2  2000/03/01 17:08:35  djs
  Restructuring of Rendezvouser into:
                     Rendezvouser
@@ -269,6 +272,7 @@ public:
   friend class tcpSocketRendezvouser;
   friend class OneToOneRendezvouser;
   friend class PoolRendezvouser;
+  friend class LeaderFollower;
   friend class SelectSignalRendezvouser;
 
 private:

@@ -127,7 +127,6 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
 ////////////////////////////////////////////////////////////////////////////
 // Implementation of the class OneToOneRendezvouser
-#ifdef ONETOONE
 void OneToOneRendezvouser::waitForEvents(tcpSocketIncomingRope *r){
   tcpSocketHandle_t new_sock;
   struct sockaddr_in raddr;
@@ -213,35 +212,48 @@ void OneToOneRendezvouser::newConnectionAttempted(tcpSocketStrand *newSt){
 
   }
 }
-#endif
-
-#ifdef THREADPOOL
 
 int maxstrands = getdtablesize();
 
 PoolRendezvouser::PoolRendezvouser(tcpSocketIncomingRope *r,
 				   tcpSocketMTincomingFactory *f):
-  tcpSocketRendezvouser(r, f), poller(), pd_q(queueLength){
+  tcpSocketRendezvouser(r, f), pd_factory(f){
     //cerr << "PoolRendezvouser::pd_factory = " << pd_factory << endl;
     //cerr << "maxstrands set to " << maxstrands << endl;
 
-  { // Build the fd -> tcpSocketStrand* table
-    pd_fdstrandmap = new tcpSocketStrand*[maxstrands];
+  { 
+    // FIXME: is this data potentially shared?
+
+    // Build the fd -> tcpSocketStrand* table
+    fdstrandmap = new tcpSocketStrand*[maxstrands];
     // Clean table entries
-    for (int i=0;i<maxstrands;i++) pd_fdstrandmap[i] = NULL;
+    for (int i=0;i<maxstrands;i++) fdstrandmap[i] = NULL;
+    // Initialise the queue if hasn't been done already
+    if (!queue)
+      queue = new FixedQueue<tcpSocketStrand*>(queueLength);
+
   }
 
+#ifdef THREADPOOL
+  start_undetached();
+#endif
+}
+
+void PoolRendezvouser::buildPool(tcpSocketMTincomingFactory *f){
+  PTRACE("PoolRendezvouser", "buildPool");
   // build the thread pool
   for (unsigned int i=0;i<poolSize;i++) new PoolWorker(this, f);
-
-  start_undetached();
 }
 
 void *PoolRendezvouser::run_undetached(void *arg){
   PTRACE("PoolRendezvouser", "::run_undetached");
   tcpSocketIncomingRope* r = (tcpSocketIncomingRope*) arg;
 
+  buildPool(pd_factory);
+
+#ifdef THREADPOOL
   rendezvous = this;
+#endif 
 
   poller.add(r->pd_rendezvous);
 
@@ -256,7 +268,7 @@ void PoolRendezvouser::waitForEvents(tcpSocketIncomingRope *r){
   tcpSocketHandle_t new_sock;
   struct sockaddr_in raddr;
 
-  PTRACE("Rendezvouser","::waitForEvents");
+  PTRACE("PoolRendezvouser","::waitForEvents");
 #if (defined(__GLIBC__) && __GLIBC__ >= 2)
   // GNU C library uses socklen_t * instead of int* in accept ().
   // This is suppose to be compatible with the upcoming POSIX standard.
@@ -269,13 +281,25 @@ void PoolRendezvouser::waitForEvents(tcpSocketIncomingRope *r){
 
   l = sizeof(struct sockaddr_in);
 
+#ifdef EXTRADEBUG
+  {
+    PollSet_Active_Iterator set = poller.wait();
+    socket_t fd;
+    while ((fd = set()) != SOCKET_UNDEFINED){
+      cerr << "active fd = " << fd << endl;
+    }
+  }
+#endif
+
   PollSet_Active_Iterator set = poller.wait();
   socket_t fd;
   while ((fd = set()) != SOCKET_UNDEFINED){
-    if (fd == r->pd_rendezvous){
-      PTRACE("Rendezvouser", "new connection attempted");
 #ifdef EXTRADEBUG
-      cerr << "accept?" << endl;
+    fprintf(stderr, "fd = %d\n", fd);
+#endif
+    if (fd == r->pd_rendezvous){
+      PTRACE("PoolRendezvouser", "new connection attempted");
+#ifdef EXTRADEBUG
       fflush(stderr);
 #endif
       if ((new_sock = ::accept(r->pd_rendezvous,(struct sockaddr *)&raddr,&l)) 
@@ -287,10 +311,10 @@ void PoolRendezvouser::waitForEvents(tcpSocketIncomingRope *r){
 #endif
       }
 #ifdef EXTRADEBUG
-      cerr << "accepted." << endl;
+      cerr << "accepted fd = " << new_sock << endl;
       fflush(stderr);
 #endif
-      PTRACE("Rendezvouser","unblock from select(), accept() successful");
+      PTRACE("PoolRendezvouser","unblock from select(), accept() successful");
       {
 	omni_mutex_lock sync(r->pd_lock);
 	
@@ -310,7 +334,7 @@ void PoolRendezvouser::waitForEvents(tcpSocketIncomingRope *r){
       // data available on an existing strand
 
       
-      PTRACE("Rendezvouser","accept new strand.");
+      PTRACE("PoolRendezvouser","accept new strand.");
 
       OMNIORB_ASSERT(pd_factory != NULL);
       omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
@@ -323,7 +347,7 @@ void PoolRendezvouser::waitForEvents(tcpSocketIncomingRope *r){
       continue;
     }
     // which strands were the requests on?
-    tcpSocketStrand *s = pd_fdstrandmap[fd];
+    tcpSocketStrand *s = fdstrandmap[fd];
     OMNIORB_ASSERT(s != NULL);
     strandIsActive(s);
   }      
@@ -336,7 +360,7 @@ void PoolRendezvouser::strandIsActive(tcpSocketStrand *s){
   poller.remove(s->handle());
 
   // add this strand to the Queue of things to process
-  pd_q.add(s);
+  queue->add(s);
 }
 
 void PoolRendezvouser::newConnectionAttempted(tcpSocketStrand *s){
@@ -348,7 +372,7 @@ void PoolRendezvouser::newConnectionAttempted(tcpSocketStrand *s){
 
   // add the strand to the lookup table
   OMNIORB_ASSERT(new_sock < maxstrands);
-  pd_fdstrandmap[new_sock] = s;
+  fdstrandmap[new_sock] = s;
 }
 
 #if 0
@@ -367,7 +391,7 @@ void SelectSignalRendezvouser::newConnectionAttempted(tcpSocketStrand *s){
 
   // add the strand to the lookup table
   OMNIORB_ASSERT(new_sock < maxstrands);
-  pd_fdstrandmap[new_sock] = s;
+  fdstrandmap[new_sock] = s;
 }
 
 void SelectSignalRendezvouser::strandIsActive(tcpSocketStrand *s){
@@ -379,7 +403,7 @@ void SelectSignalRendezvouser::strandIsActive(tcpSocketStrand *s){
   }
   sem_post(FD_semaphore);
   // add this strand to the Queue of things to process
-  pd_q.add(s);
+  queue->add(s);
 }
 
 // Updates the state of the rendezvouser thread to make it watch
@@ -394,7 +418,7 @@ void SelectSignalRendezvouser::watchStrand(tcpSocketStrand *s){
 #endif
   // this handle is actually a strand isn't it?
   OMNIORB_ASSERT(s->handle() < maxstrands);
-  OMNIORB_ASSERT(rendezvous->pd_fdstrandmap[s->handle()]);
+  OMNIORB_ASSERT(rendezvous->fdstrandmap[s->handle()]);
 
   PTRACE("Rendezvouser", " adding FD to interestingFDs [acquiring sem]");
   sem_wait(rendezvous->FD_semaphore);
@@ -605,7 +629,7 @@ void SelectSignalRendezvouser::waitForEvents(tcpSocketIncomingRope *r){
 	OMNIORB_ASSERT(fd <= highestFD);
 	if (FD_ISSET(fd, &readFDs)){
 	  OMNIORB_ASSERT(fd < maxstrands);
-	  tcpSocketStrand *s = pd_fdstrandmap[fd];
+	  tcpSocketStrand *s = fdstrandmap[fd];
 	  OMNIORB_ASSERT(s != NULL);
 	  strandIsActive(s);
 
@@ -618,5 +642,4 @@ void SelectSignalRendezvouser::waitForEvents(tcpSocketIncomingRope *r){
     }
   }
 }
-#endif
 #endif
