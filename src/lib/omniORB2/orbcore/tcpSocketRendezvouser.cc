@@ -221,8 +221,9 @@ int maxstrands = getdtablesize();
 
 PoolRendezvouser::PoolRendezvouser(tcpSocketIncomingRope *r,
 				   tcpSocketMTincomingFactory *f):
-  tcpSocketRendezvouser(r, f), poller(){
-  cerr << "PoolRendezvouser::pd_factory = " << pd_factory << endl;
+  tcpSocketRendezvouser(r, f), poller(), pd_q(queueLength){
+    //cerr << "PoolRendezvouser::pd_factory = " << pd_factory << endl;
+    //cerr << "maxstrands set to " << maxstrands << endl;
 
   { // Build the fd -> tcpSocketStrand* table
     pd_fdstrandmap = new tcpSocketStrand*[maxstrands];

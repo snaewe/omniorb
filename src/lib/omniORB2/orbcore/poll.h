@@ -13,7 +13,7 @@
 
 #define SOCKET_UNDEFINED -1
 
-const int maxfds = 100;
+#define MAXFDS (getdtablesize())
 
 class Poller;
 
@@ -99,9 +99,8 @@ class Poller: public EventMonitor{
 };
 
 
-PollSet::PollSet(const int maxfds){
-  ufds = new struct pollfd[maxfds];
-  this->maxfds = maxfds;
+PollSet::PollSet(const int max): maxfds(max){
+  ufds = new struct pollfd[max];
   nactive = 0;
 }
 
@@ -159,16 +158,15 @@ PollSet_Active_Iterator::PollSet_Active_Iterator(PollSet &ps):
 
 socket_t PollSet_Active_Iterator::operator() (){
   while ((index > -1) && (! (set.ufds[index].revents))){
-    //    cerr << "index " << index << endl;
     index--;
   }
-  if (set.ufds[index].revents)
+  if ((index > -1) && (set.ufds[index].revents)){
     return set.ufds[index--].fd;
-
+  }
   return SOCKET_UNDEFINED;
 }
 
-Poller::Poller(): ps(maxfds), state(awake), nthreads_waiting(0),
+Poller::Poller(): ps(MAXFDS), state(awake), nthreads_waiting(0),
                   wakeUP_cond(&state_guard) {
   pipe_fd = new socket_t[2];
   if (pipe(pipe_fd) != 0){

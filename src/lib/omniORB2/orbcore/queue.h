@@ -40,14 +40,18 @@ template<class T> class Queue {
 // A fixed length, thread safe Queue template
 // FIXME: for some (nodoubt silly) reason it wouldn't link properly
 // when I defined add and remove out-of-line.
-template<class T, int i> class FixedQueue: public Queue<T> {
+template<class T> class FixedQueue: public Queue<T> {
  public:
-  FixedQueue(): Queue(), 
+  FixedQueue(const int length): Queue(), 
     next_read_index(0), next_write_index(0),
-    num_slots(i), used_slots(0),
-    pd_cond(&pd_lock) { };
+    num_slots(length), used_slots(0),
+    pd_cond(&pd_lock) {
+      items = new T[length];
+  };
 
-  virtual ~FixedQueue() { };
+  virtual ~FixedQueue() {
+    delete[] items;
+  };
 
   void add(T& thing){
     pd_lock.lock();
@@ -93,7 +97,7 @@ template<class T, int i> class FixedQueue: public Queue<T> {
   // the queue is represented by an array and a pair of
   // read, write pointers
 
-  T items[i];
+  T *items;
   int next_read_index, next_write_index;
   int num_slots;
   int used_slots;
