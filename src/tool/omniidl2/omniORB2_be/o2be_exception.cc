@@ -25,9 +25,14 @@
 
 /*
   $Log$
-  Revision 1.4  1997/05/06 13:54:46  sll
-  Public release.
+  Revision 1.5  1997/08/13 09:23:38  sll
+  o2be_exception::repoIdConstLen() now returns the correct length of the
+  repository ID. Previously, it wrongly returns the length of the header macro
+  name.
 
+// Revision 1.4  1997/05/06  13:54:46  sll
+// Public release.
+//
   */
 
 #include <idl.hh>
@@ -45,7 +50,7 @@ o2be_exception::o2be_exception(UTL_ScopedName *n, UTL_StrList *p)
   pd_repoid = new char[strlen(_fqname())+strlen(IRREPOID_POSTFIX)+1];
   strcpy(pd_repoid,_fqname());
   strcat(pd_repoid,IRREPOID_POSTFIX);
-  pd_repoidsize = strlen(pd_repoid)+1;
+  pd_repoidsize = strlen(repositoryID())+1;
 }
 
 void
