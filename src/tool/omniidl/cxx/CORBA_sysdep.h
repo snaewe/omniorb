@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.3  2000/02/04 12:17:10  dpg1
+ Support for VMS.
+
  Revision 1.2  1999/12/08 20:04:52  dpg1
  long long is broken in gcc with Sparc, and maybe other platforms, so
  limit it to x86.
@@ -191,6 +194,8 @@
 #     define SIZEOF_PTR  8
 #  endif
 #  if __DECCXX_VER >= 60000000
+#     define HAS_LongLong
+#     define HAS_LongDouble
 #     ifndef NO_Cplusplus_Bool
 #       define HAS_Cplusplus_Bool
 #     endif

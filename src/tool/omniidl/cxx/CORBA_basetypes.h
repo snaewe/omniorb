@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2  2000/02/04 12:17:10  dpg1
+ Support for VMS.
+
  Revision 1.1  1999/10/27 14:06:01  dpg1
  *** empty log message ***
 
@@ -163,6 +166,12 @@ public:
 };
 
 #undef cvt_
+
+//  Assume long double type is compatible with the CORBA standard.
+
+#ifdef HAS_LongDouble
+typedef long double               _CORBA_LongDouble;
+#endif
 
 #endif   // VMS float test
 #endif   // !defined(NO_FLOAT)

@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14  2000/02/04 12:17:05  dpg1
+# Support for VMS.
+#
 # Revision 1.13  2000/01/18 17:15:05  dpg1
 # Changes for "small" distribution.
 #
@@ -110,7 +113,7 @@ if hasattr(_omniidl, "__file__"):
 else:
     preprocessor_path = os.path.dirname(sys.argv[0])
 
-preprocessor      = os.path.join(preprocessor_path, "omni-cpp")
+preprocessor      = os.path.join(preprocessor_path, "omnicpp")
 preprocessor_cmd  = preprocessor + " -lang-c++ -undef -D__OMNIIDL__=" + \
                     _omniidl.version
 

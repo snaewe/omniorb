@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.8  2000/02/04 12:17:09  dpg1
+// Support for VMS.
+//
 // Revision 1.7  1999/11/17 17:17:00  dpg1
 // Changes to remove static initialisation of objects.
 //
@@ -387,8 +390,13 @@ private:
     _CORBA_Long         long_;
     _CORBA_UShort       ushort_;
     _CORBA_ULong        ulong_;
+#ifndef __VMS
     _CORBA_Float        float_;
     _CORBA_Double       double_;
+#else
+    float               float_;
+    double              double_;
+#endif
     _CORBA_Boolean      boolean_;
     _CORBA_Char         char_;
     _CORBA_Octet        octet_;

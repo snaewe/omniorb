@@ -9,9 +9,9 @@ endif
 
 DIR_CPPFLAGS += -DHAVE_CONFIG_H -I.
 
-omni-cpp = $(patsubst %,$(BinPattern),omni-cpp)
+omnicpp = $(patsubst %,$(BinPattern),omnicpp)
 
-all:: $(omni-cpp)
+all:: $(omnicpp)
 
 
 #############################################################################
@@ -24,17 +24,17 @@ endif
 
 ifdef Win32Platform
 
-export:: $(omni-cpp)
+export:: $(omnicpp)
 	$(ExportExecutable)
 
 else
 
-export:: $(omni-cpp)
-	@(dir="$(EXPORT_TREE)/$(LIBDIR)"; file="$(omni-cpp)"; \
+export:: $(omnicpp)
+	@(dir="$(EXPORT_TREE)/$(LIBDIR)"; file="$(omnicpp)"; \
 	$(ExportExecutableFileToDir))
 
 endif
 
 
-$(omni-cpp): $(OBJS)
+$(omnicpp): $(OBJS)
 	@(libs=""; $(CExecutable))

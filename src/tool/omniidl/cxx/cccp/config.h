@@ -16,6 +16,9 @@
 #elif defined(__hpux__)
 #include "config-hpux.h"
 
+#elif defined(__VMS)
+#include "config-vms.h"
+
 #endif
 
 #define BITS_PER_UNIT SIZEOF_UNSIGNED_CHAR

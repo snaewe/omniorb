@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.9  2000/02/04 12:17:09  dpg1
+// Support for VMS.
+//
 // Revision 1.8  1999/12/28 18:16:07  dpg1
 // positive_int_const isn't allowed to be zero.
 //
@@ -80,6 +83,17 @@ extern int yylex();
 // Nasty hack for abstract valuetypes
 ValueAbs* valueabs_hack = 0;
 
+#ifdef __VMS
+/*  Apparently, __ALLOCA is defined for some versions of the C (but not C++)
+    compiler on VAX. */
+#if defined(__ALPHA) || defined(__DECC) && __DECC_VER >= 60000000
+#include <builtins.h>
+#define alloca __ALLOCA
+#else
+#define alloca malloc
+#endif
+#endif
+
 %}
 
 %union {
@@ -87,7 +101,11 @@ ValueAbs* valueabs_hack = 0;
   int                      int_val;
   _CORBA_ULong             ulong_val;
   IdlIntLiteral            int_literal_val;
+#ifndef __VMS
   IdlFloatLiteral          float_literal_val;
+#else
+  double                   float_literal_val;
+#endif
   char                     char_val;
   char*                    string_val;
   _CORBA_WChar             wchar_val;

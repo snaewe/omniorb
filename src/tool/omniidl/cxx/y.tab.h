@@ -3,7 +3,11 @@ typedef union {
   int                      int_val;
   _CORBA_ULong             ulong_val;
   IdlIntLiteral            int_literal_val;
+#ifndef __VMS
   IdlFloatLiteral          float_literal_val;
+#else
+  double                   float_literal_val;
+#endif
   char                     char_val;
   char*                    string_val;
   _CORBA_WChar             wchar_val;

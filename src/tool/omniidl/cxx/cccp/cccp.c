@@ -1395,14 +1395,20 @@ main (argc, argv)
 	if (!strcmp (argv[i], "-include")) {
 	  if (i + 1 == argc)
 	    fatal ("Filename missing after `-include' option");
-	  else
-	    simplify_filename (pend_includes[i] = argv[++i]);
+	  else {
+	    /* removed undefined behavior 28-JAN-2000 12:05:36.43 bcv */
+	    int tmp=i;
+	    simplify_filename (pend_includes[tmp] = argv[++i]);
+	  }
 	}
 	if (!strcmp (argv[i], "-imacros")) {
 	  if (i + 1 == argc)
 	    fatal ("Filename missing after `-imacros' option");
-	  else
-	    simplify_filename (pend_files[i] = argv[++i]);
+	  else {
+	    /* removed undefined behavior 28-JAN-2000 12:05:36.43 bcv */
+	    int tmp=i;
+	    simplify_filename (pend_files[tmp] = argv[++i]);
+	  }
 	}
 	if (!strcmp (argv[i], "-iprefix")) {
 	  if (i + 1 == argc)
@@ -10233,6 +10239,7 @@ fopen (fname, type)
     return (*vmslib_fopen) (fname, type, "mbc=32");
 }
 
+
 static int 
 open (fname, flags, prot)
      char *fname;
@@ -10262,7 +10269,6 @@ extern unsigned long sys$parse(), sys$search();
    failure as "normal successful completion."  */
 
 #undef fstat	/* get back to library version */
-
 static int
 VMS_fstat (fd, statbuf)
      int fd;

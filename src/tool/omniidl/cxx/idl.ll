@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.7  2000/02/04 12:17:10  dpg1
+// Support for VMS.
+//
 // Revision 1.6  1999/12/28 17:44:01  dpg1
 // Stupid string allocation bug.
 //
@@ -61,7 +64,11 @@
 #include <idlexpr.h>
 #include <idlast.h>
 
+#ifndef __VMS
 #include <y.tab.h>
+#else
+#include <y_tab.h>
+#endif
 
 char*          currentFile;
 _CORBA_Boolean mainFile  = 1; // Are we processing the main file
