@@ -91,8 +91,34 @@ shlib := $(shell $(SharedLibraryFullName) $(namespec))
 
 DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
 
+ifdef AIX
+
+DIR_CPPFLAGS += -I. -I/usr/local/include -DNO_STRCASECMP
+
+# shlib = _omniidlmodule.a
+shlib := $(shell $(SharedLibraryFullName) $(namespec))
+
+libinit = init_omniidl
+py_exp = $(PYPREFIX)/lib/python$(PYVERSION)/config/python.exp
+
+$(shlib): $(OBJS) $(PYOBJS)
+	@(set -x; \
+	$(RM) $@; \
+	$(MAKECPPSHAREDLIB) \
+	     -o $(shlib) \
+	     -bI:$(py_exp) \
+	     -n $(libinit) \
+	     $(IMPORT_LIBRARY_FLAGS) \
+	     -bhalt:4 -T512 -H512 \
+	     $(filter-out $(LibSuffixPattern),$^) \
+	     -p 40 \
+	 ; \
+       )
+
+else
 $(shlib): $(OBJS) $(PYOBJS)
 	@(namespec="$(namespec)"; $(MakeCXXSharedLibrary))
+endif
 
 all:: $(shlib)
 

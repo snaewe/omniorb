@@ -1,3 +1,14 @@
+Sun Mar  2 17:08:17 GMT 2003 dgrisby
+====================================
+
+- AIX patches integrated in main tree.
+
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/cdrStream.h
+mk/beforeauto.mk.in
+src/tool/omniidl/cxx/dir.mk
+
+
 Tue Feb 25 12:26:38 GMT 2003 dgrisby
 ====================================
 

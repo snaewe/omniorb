@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.23  2003/03/02 17:10:40  dgrisby
+ AIX patches integrated in main tree.
+
  Revision 1.2.2.22  2003/02/17 02:03:07  dgrisby
  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 
@@ -169,6 +172,9 @@
 #endif
 
 
+#if defined(__aix__) && defined(__xlC__)
+#  define OMNI_NO_INLINE_FRIENDS
+#endif
 
 
 //

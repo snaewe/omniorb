@@ -925,7 +925,7 @@ OMNITHREAD_CPPFLAGS = -D_REENTRANT
 OMNITHREAD_LIB += -lpthread
 
 SHAREDLIB_SUFFIX = a
-PythonSHAREDLIB_SUFFIX = a
+PythonSHAREDLIB_SUFFIX = so
 
 SharedLibraryFullNameTemplate = lib$$1$$2.$$3.$$4.$(SHAREDLIB_SUFFIX)
 SharedLibrarySoNameTemplate = lib$$1$$2.$$3.$(SHAREDLIB_SUFFIX)

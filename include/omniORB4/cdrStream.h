@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.20  2003/03/02 17:10:41  dgrisby
+  AIX patches integrated in main tree.
+
   Revision 1.1.2.19  2002/03/14 14:39:44  dpg1
   Obscure bug in objref creation with unaligned buffers.
 
@@ -218,6 +221,7 @@ public:
 #endif
   }
 
+#ifndef OMNI_NO_INLINE_FRIENDS
   friend inline void operator>>= (_CORBA_Short a, cdrStream& s) {
     if (s.pd_marshal_byte_swap) {
       _CORBA_Short t = Swap16(a);
@@ -313,9 +317,24 @@ public:
       a = t;
     }
   }
+#else
+  friend inline void operator>>= (_CORBA_Short      a, cdrStream& s);
+  friend inline void operator<<= (_CORBA_Short&     a, cdrStream& s);
+  friend inline void operator>>= (_CORBA_UShort     a, cdrStream& s);
+  friend inline void operator<<= (_CORBA_UShort&    a, cdrStream& s);
+  friend inline void operator>>= (_CORBA_Long       a, cdrStream& s);
+  friend inline void operator<<= (_CORBA_Long&      a, cdrStream& s);
+  friend inline void operator>>= (_CORBA_ULong      a, cdrStream& s);
+  friend inline void operator<<= (_CORBA_ULong&     a, cdrStream& s);
+  friend inline void operator>>= (_CORBA_LongLong   a, cdrStream& s);
+  friend inline void operator<<= (_CORBA_LongLong&  a, cdrStream& s);
+  friend inline void operator>>= (_CORBA_ULongLong  a, cdrStream& s);
+  friend inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s);
+#endif
 
 #if !defined(NO_FLOAT)
 
+#ifndef OMNI_NO_INLINE_FRIENDS
   friend inline void operator>>= (_CORBA_Float a, cdrStream& s) {
     if (s.pd_marshal_byte_swap) {
       union {
@@ -369,11 +388,18 @@ public:
       a = v.d;
     }
   }
-
+#else
+  friend inline void operator>>= (_CORBA_Float      a, cdrStream& s);
+  friend inline void operator<<= (_CORBA_Float&     a, cdrStream& s);
+  friend inline void operator>>= (_CORBA_Double     a, cdrStream& s);
+  friend inline void operator<<= (_CORBA_Double&    a, cdrStream& s);
+#endif
 #endif
 
 #ifdef HAS_LongDouble
 #if SIZEOF_LONG_DOUBLE == 16
+
+#ifndef OMNI_NO_INLINE_FRIENDS
   friend inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
     if (s.pd_marshal_byte_swap) {
       union {
@@ -405,6 +431,10 @@ public:
       a = v.d;
     }
   }
+#else
+  friend inline void operator>>= (_CORBA_LongDouble  a, cdrStream& s);
+  friend inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s);
+#endif
 #else
   // Code for long double < 16 bytes is too painful to put inline
   friend void operator>>= (_CORBA_LongDouble  a, cdrStream& s);
@@ -750,6 +780,200 @@ private:
   // cdrStreamAdapter needs to access protected pointers and virtual
   // functions.
 };
+
+#ifdef OMNI_NO_INLINE_FRIENDS
+
+inline void operator>>= (_CORBA_Short a, cdrStream& s) {
+  if (s.pd_marshal_byte_swap) {
+    _CORBA_Short t = Swap16(a);
+    a = t;
+  }
+  CdrMarshal(s,_CORBA_Short,omni::ALIGN_2,a);
+}
+
+inline void operator<<= (_CORBA_Short& a, cdrStream& s) {
+  CdrUnMarshal(s,_CORBA_Short,omni::ALIGN_2,a);
+  if (s.pd_unmarshal_byte_swap) {
+    _CORBA_Short t = Swap16(a);
+    a = t;
+  }
+}
+
+inline void operator>>= (_CORBA_UShort a, cdrStream& s) {
+  if (s.pd_marshal_byte_swap) {
+    _CORBA_UShort t = Swap16(a);
+    a = t;
+  }
+  CdrMarshal(s,_CORBA_UShort,omni::ALIGN_2,a);
+}
+
+inline void operator<<= (_CORBA_UShort& a, cdrStream& s) {
+  CdrUnMarshal(s,_CORBA_UShort,omni::ALIGN_2,a);
+  if (s.pd_unmarshal_byte_swap) {
+    _CORBA_UShort t = Swap16(a);
+    a = t;
+  }
+}
+
+inline void operator>>= (_CORBA_Long a, cdrStream& s) {
+  if (s.pd_marshal_byte_swap) {
+    _CORBA_Long t = Swap32(a);
+    a = t;
+  }
+  CdrMarshal(s,_CORBA_Long,omni::ALIGN_4,a);
+}
+
+inline void operator<<= (_CORBA_Long& a, cdrStream& s) {
+  CdrUnMarshal(s,_CORBA_Long,omni::ALIGN_4,a);
+  if (s.pd_unmarshal_byte_swap) {
+    _CORBA_Long t = Swap32(a);
+    a = t;
+  }
+}
+
+inline void operator>>= (_CORBA_ULong a, cdrStream& s) {
+  if (s.pd_marshal_byte_swap) {
+    _CORBA_ULong t = Swap32(a);
+    a = t;
+  }
+  CdrMarshal(s,_CORBA_ULong,omni::ALIGN_4,a);
+}
+
+inline void operator<<= (_CORBA_ULong& a, cdrStream& s) {
+  CdrUnMarshal(s,_CORBA_ULong,omni::ALIGN_4,a);
+  if (s.pd_unmarshal_byte_swap) {
+    _CORBA_ULong t = Swap32(a);
+    a = t;
+  }
+}
+
+inline void operator>>= (_CORBA_LongLong a, cdrStream& s) {
+  if (s.pd_marshal_byte_swap) {
+    _CORBA_LongLong t = Swap64(a);
+    a = t;
+  }
+  CdrMarshal(s,_CORBA_LongLong,omni::ALIGN_8,a);
+}
+
+inline void operator<<= (_CORBA_LongLong& a, cdrStream& s) {
+  CdrUnMarshal(s,_CORBA_LongLong,omni::ALIGN_8,a);
+  if (s.pd_unmarshal_byte_swap) {
+    _CORBA_LongLong t = Swap64(a);
+    a = t;
+  }
+}
+
+inline void operator>>= (_CORBA_ULongLong a, cdrStream& s) {
+  if (s.pd_marshal_byte_swap) {
+    _CORBA_ULongLong t = Swap64(a);
+    a = t;
+  }
+  CdrMarshal(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+}
+
+inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s) {
+  CdrUnMarshal(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+  if (s.pd_unmarshal_byte_swap) {
+    _CORBA_ULongLong t = Swap64(a);
+    a = t;
+  }
+}
+
+#if !defined(NO_FLOAT)
+
+inline void operator>>= (_CORBA_Float a, cdrStream& s) {
+  if (s.pd_marshal_byte_swap) {
+    union {
+      _CORBA_Float f;
+      _CORBA_ULong l;
+    } u;
+    u.f = a;
+    u.l = Swap32(u.l);
+    a = u.f;
+  }
+  CdrMarshal(s,_CORBA_Float,omni::ALIGN_4,a);
+}
+
+inline void operator<<= (_CORBA_Float& a, cdrStream& s) {
+  CdrUnMarshal(s,_CORBA_Float,omni::ALIGN_4,a);
+  if (s.pd_unmarshal_byte_swap) {
+    union {
+      _CORBA_Float f;
+      _CORBA_ULong l;
+    } u;
+    u.f = a;
+    u.l = Swap32(u.l);
+    a = u.f;
+  }
+}
+
+inline void operator>>= (_CORBA_Double a, cdrStream& s) {
+  if (s.pd_marshal_byte_swap) {
+    union {
+      _CORBA_Double d;
+      _CORBA_ULong l[2];
+    } u, v;
+    u.d = a;
+    v.l[0] = Swap32(u.l[1]);
+    v.l[1] = Swap32(u.l[0]);
+    a = v.d;
+  }
+  CdrMarshal(s,_CORBA_Double,omni::ALIGN_8,a);
+}
+
+inline void operator<<= (_CORBA_Double& a, cdrStream& s) {
+  CdrUnMarshal(s,_CORBA_Double,omni::ALIGN_8,a);
+  if (s.pd_unmarshal_byte_swap) {
+    union {
+      _CORBA_Double d;
+      _CORBA_ULong l[2];
+    } u, v;
+    u.d = a;
+    v.l[0] = Swap32(u.l[1]);
+    v.l[1] = Swap32(u.l[0]);
+    a = v.d;
+  }
+}
+
+#endif
+
+#ifdef HAS_LongDouble
+#if SIZEOF_LONG_DOUBLE == 16
+inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
+  if (s.pd_marshal_byte_swap) {
+    union {
+      _CORBA_LongDouble d;
+      _CORBA_ULong l[4];
+    } u, v;
+    u.d = a;
+    v.l[0] = Swap32(u.l[3]);
+    v.l[1] = Swap32(u.l[2]);
+    v.l[2] = Swap32(u.l[1]);
+    v.l[3] = Swap32(u.l[0]);
+    a = v.d;
+  }
+  CdrMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+}
+
+inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
+  CdrUnMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+  if (s.pd_unmarshal_byte_swap) {
+    union {
+      _CORBA_LongDouble d;
+      _CORBA_ULong l[4];
+    } u, v;
+    u.d = a;
+    v.l[0] = Swap32(u.l[3]);
+    v.l[1] = Swap32(u.l[2]);
+    v.l[2] = Swap32(u.l[1]);
+    v.l[3] = Swap32(u.l[0]);
+    a = v.d;
+  }
+}
+#endif
+#endif
+ 
+#endif
 
 #undef CdrMarshal
 #undef CdrUnMarshal
