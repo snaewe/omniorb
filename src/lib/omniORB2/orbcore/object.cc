@@ -25,10 +25,13 @@
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-//      
- 
+//
+
 /*
   $Log$
+  Revision 1.16  1999/01/07 16:12:12  djr
+  Added support for the server side _interface() operation.
+
   Revision 1.15  1998/08/26 11:13:32  sll
   Minor updates to remove warnings when compiled with standard C++ compiler.
 
@@ -43,6 +46,9 @@
   Temporary work-around for egcs compiler.
 
   $Log$
+  Revision 1.16  1999/01/07 16:12:12  djr
+  Added support for the server side _interface() operation.
+
   Revision 1.15  1998/08/26 11:13:32  sll
   Minor updates to remove warnings when compiled with standard C++ compiler.
 
@@ -82,6 +88,12 @@
 #include <ropeFactory.h>
 #include <objectManager.h>
 #include <excepthandler.h>
+#include <omniORB2/proxyCall.h>
+#include <bootstrap_i.h>
+
+
+static CORBA::Object_ptr internal_get_interface(const char* repoId);
+
 
 omniObject::omniObject(omniObjectManager* m)    // ctor for local object
 {
@@ -97,7 +109,7 @@ omniObject::omniObject(omniObjectManager* m)    // ctor for local object
   pd_flags.commfail_exception_handler = 0;
   pd_flags.system_exception_handler = 0;
   pd_flags.existent_and_type_verified = 1;
-  if (m != omniObject::nilObjectManager()) {
+  if( m != omniObject::nilObjectManager() ) {
     omniORB::generateNewKey(pd_objkey.native);
     pd_objkeysize = sizeof(pd_objkey.native);
     pd_manager = ((m) ? m : omniObjectManager::root());
@@ -132,7 +144,6 @@ omniObject::omniObject(const char *repoId,   // ctor for proxy object
   if (!repoId || !r || !profiles)
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
   // keysize may be >= 0, key may be nil.
-
 
   pd_repoIdsize = strlen(repoId)+1;
   pd_repoId = new char[pd_repoIdsize];
@@ -360,7 +371,8 @@ omniObject::dispatch(GIOP_S &_s,const char *_op,
   if (is_proxy()) {
     // If this code is ever called, it is certainly because of a bug.
     throw omniORB::fatalException(__FILE__,__LINE__,
-	                          "omniObject::dispatch()- unexpected call to this function inside a proxy object.");
+	                          "omniObject::dispatch()- unexpected call to"
+				  " this function inside a proxy object.");
   }
   
   if (strcmp(_op,"_is_a") == 0)
@@ -405,27 +417,31 @@ omniObject::dispatch(GIOP_S &_s,const char *_op,
     }
   else if (strcmp(_op,"_interface") == 0)
     {
-      if (omniORB::traceLevel > 0) {
-	omniORB::log << "Warning: received GIOP request - get_interface, this function is not supported yet.\n" 
-	     << "         A CORBA::BAD_OPERATION is raised.\n";
-	omniORB::log.flush();
-      }
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      _s.RequestReceived();
+      CORBA::Object_ptr result;
+      result = internal_get_interface(NP_IRRepositoryId());
+      size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
+      msgsize = CORBA::Object::NP_alignedSize(result, msgsize);
+      _s.InitialiseReply(GIOP::NO_EXCEPTION, CORBA::ULong(msgsize));
+      CORBA::Object::marshalObjRef(result, _s);
+      _s.ReplyCompleted();
+      return 1;
     }
   else if (strcmp(_op,"_implementation") == 0)
     {
-      if (omniORB::traceLevel > 0) {
-	omniORB::log << "Warning: received GIOP request - get_implementation, this function is not supported yet.\n" 
-	     << "         A CORBA::BAD_OPERATION is raised.\n";
+      if( omniORB::traceLevel > 1 ) {
+	omniORB::log <<
+	  "omniORB: WARNING received GIOP request <get_implementation>.\n"
+	  " This function is not yet supported.\n"
+	  " CORBA::BAD_OPERATION was raised.\n";
 	omniORB::log.flush();
       }
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      throw CORBA::NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
     }
   else
     return 0;
 
 #ifdef NEED_DUMMY_RETURN
-  // For MSVC++ 4.2:
   return 0;
 #endif
 }
@@ -856,3 +872,64 @@ omniObject::nilObjectManager()
 }
 
 
+//////////////////////////////////////////////////////////////////////
+/////////////////////// internal_get_interface ///////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class OmniORBGetInterfaceCallDesc : public OmniProxyCallDesc {
+public:
+  inline OmniORBGetInterfaceCallDesc(const char* _search_id)
+    : OmniProxyCallDesc("lookup_id", 10),
+      arg_search_id(_search_id)  {}
+
+  virtual CORBA::ULong alignedSize(CORBA::ULong size_in);
+  virtual void marshalArguments(GIOP_C&);
+  virtual void unmarshalReturnedValues(GIOP_C&);
+
+  inline CORBA::Object_ptr result() { return pd_result; }
+
+private:
+  const char* arg_search_id;
+  CORBA::Object_ptr pd_result;
+};
+
+
+CORBA::ULong
+OmniORBGetInterfaceCallDesc::alignedSize(CORBA::ULong msgsize)
+{
+  msgsize = omni::align_to(msgsize,omni::ALIGN_4);
+  return msgsize + 4 + (arg_search_id ? strlen(arg_search_id) + 1 : 1);
+}
+
+
+void
+OmniORBGetInterfaceCallDesc::marshalArguments(GIOP_C& giop_client)
+{
+  CORBA::String_member s;
+  s._ptr = (char*) arg_search_id;
+  s >>= giop_client;
+  s._ptr = 0;
+}
+
+
+void
+OmniORBGetInterfaceCallDesc::unmarshalReturnedValues(GIOP_C& giop_client)
+{
+  pd_result = CORBA::Object::unmarshalObjRef(giop_client);
+}
+
+
+static CORBA::Object_ptr
+internal_get_interface(const char* repoId)
+{
+  // Obtain the object reference for the interface repository.
+  CORBA::Object_var repository = omniInitialReferences::singleton()
+    ->get("InterfaceRepository");
+  if( CORBA::is_nil(repository) )
+    throw CORBA::INTF_REPOS(0, CORBA::COMPLETED_NO);
+
+  // Make a call to the interface repository.
+  OmniORBGetInterfaceCallDesc call_desc(repoId);
+  OmniProxyCallWrapper::invoke(repository->PR_getobj(), call_desc);
+  return call_desc.result();
+}
