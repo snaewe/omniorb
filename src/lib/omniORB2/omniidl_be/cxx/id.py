@@ -91,7 +91,7 @@ class Name:
            Add a prefix to the name
                ie ::A::B::C -> ::A::B::_objref_C"""
         new = Name(self.__scopedName)
-        new.__prefix = prefix
+        new.__prefix = prefix + self.__prefix
         new.__suffix = self.__suffix
         return new
 
@@ -101,7 +101,7 @@ class Name:
                ie ::A::B::C -> ::A::B::C_ptr"""
         new = Name(self.__scopedName)
         new.__prefix = self.__prefix
-        new.__suffix = suffix
+        new.__suffix = self.__suffix + suffix
         return new
 
     def __map_cxx(self):
@@ -180,8 +180,30 @@ class Name:
             return re.sub(r"\W", "_", text)
         scopedName = map(escapeChars, self.__scopedName[:])
 
-        return string.join(scopedName, "_m")
-        
+        return string.join(self.__apply_presuffix(scopedName), "_m")
+
+    # comment copied from src/tool/omniidl2/omniORB2_be/o2be_interface.cc:
+
+    # MSVC {4.2,5.0} cannot deal with a call to a virtual member
+    # of a base class using the member function's fully/partially
+    # scoped name. Have to use the alias for the base class in the
+    # global scope to refer to the virtual member function instead.
+    #
+    # We scan all the base interfaces to see if any of them has to
+    # be referred to by their fully/partially qualified names. If
+    # that is necessary, we generate a typedef to define an alias for
+    # this base interface. This alias is used in the stub generated below
+    #
+    # FIXME: is this a solution to the OMNI_BASE_CTOR stuff below?
+    #
+    def flatName(self):
+        return string.join(self.fullName(), "_")
+    
+    def needFlatName(self, environment):
+        # does the name have scope :: qualifiers
+        return len(self.relName(environment)) > 1
+
+
     def hash(self):
         """hash(id.Name): string
            Returns a hashable unique key for this object"""
@@ -275,6 +297,13 @@ class Environment:
 # (facilitates multiple passes of the AST, by precaching naming info)
 id._environments = None
 
+# List of AST nodes which should be predefined in the system
+id._predefined_decls = []
+
+def predefine_decl(node):
+    id._predefined_decls.append(node)
+
+
 # modules can't emulate sequence types?
 def lookup(node):
     """lookup : AST node -> Environment"""
@@ -282,7 +311,7 @@ def lookup(node):
         return id._environments[node]
     except KeyError:
         util.fatalError("Failed to find environment corresponding to node" +\
-                        " (= " + repr(node) + ")")
+                        " (= " + repr(node.scopedName()) + ")")
 
 class WalkTree(idlvisitor.AstVisitor):
     """Walks over the AST once building the hash of
@@ -314,6 +343,11 @@ class WalkTree(idlvisitor.AstVisitor):
         predefined = [ ["CORBA", "Object"] ]
         for scopedName in predefined:
             self.__env.addName(scopedName)
+
+        for decl in id._predefined_decls:
+            self.__env.addName(decl.scopedName())
+            id._environments[decl] = self.__env
+
         
     # Tree walking functions
     def visitAST(self, node):

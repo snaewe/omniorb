@@ -16,10 +16,6 @@ Combined list of things to-do and things to think about
     interface T {};
     interface T_var {};
 
-* Fix handling of floats. Mainly aesthetic problem caused by lack of python
-  float type. Floats in source appear with extra digits when output. Not
-  an error, just a difference. (Worth verifying)
-
 * Slight assymmetry in call desc unmarshalling code (positions where temp
   variables are declared seems to vary)
 

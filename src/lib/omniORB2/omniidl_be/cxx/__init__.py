@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.21.2.3  2000/08/21 11:34:31  djs
+# Lots of omniidl/C++ backend changes
+#
 # Revision 1.21.2.2  2000/08/07 17:48:14  dpg1
 # Merge from omni3_develop again.
 #
@@ -128,16 +131,12 @@
 # is to make it so complicated that there are no obvious deficiencies." 
 #
 
-# -----------------------------
-# Output generation functions
-from omniidl_be.cxx import header
-from omniidl_be.cxx import skel
-from omniidl_be.cxx import dynskel
-from omniidl_be.cxx import impl
+## Import Output generation functions ###################################
+## 
+from omniidl_be.cxx import header, skel, dynskel, impl, ami
 
-from omniidl_be.cxx import id
-
-from omniidl_be.cxx import config
+## Utility functions
+from omniidl_be.cxx import id, config, ast, output, support
 
 import re, sys, os.path
 
@@ -151,6 +150,7 @@ usage_string = """\
   -Wbtf             Generate flattened 'tie' implementation skeletons
   -Wbsplice-modules Splice together multiply opened modules into one 
   -Wbexample        Generate example implementation code
+  -WbAMI            Generate AMI code for interfaces
   -WbF              Generate code fragments (for expert only)
   -WbBOA            Generate BOA compatible skeletons
   -Wbold            Generate old CORBA 2.1 signatures for skeletons
@@ -176,6 +176,8 @@ def process_args(args):
             config.state['Splice Modules']    = 1
         elif arg == "example":
             config.state['Example Code']      = 1
+        elif arg == "AMI":
+            config.state['AMI']               = 1    
         elif arg == "F":
             config.state['Fragment']          = 1
         elif arg == "BOA":
@@ -212,12 +214,20 @@ def run(tree, args):
     process_args(args)
 
     try:
-        # build the list of include files
-        walker = config.WalkTreeForIncludes()
-        tree.accept(walker)
+        # Check the input tree only contains stuff we understand
+        support.checkIDL(tree)
+        
+        # AMI code hooks into existing infrastructure (ie doesn't need to
+        # be driven explicitly here)
+        if config.state['AMI']:
+            ami.__init__()
+            ami.init_hooks()
         
         environments = id.WalkTree()
         tree.accept(environments)
+
+        # initialise the handy ast module
+        ast.__init__(tree)
 
         header.run(tree)
         
@@ -241,7 +251,10 @@ def run(tree, args):
         util.fatalError("An AttributeError exception was caught")
     except SystemExit, e:
         # fatalError function throws SystemExit exception
-        # *** Should delete partial output files here
+        # delete all possibly partial output files
+        for file in output.listAllCreatedFiles():
+            os.unlink(file)
+        
         raise e
     except:
         util.fatalError("An internal exception was caught")

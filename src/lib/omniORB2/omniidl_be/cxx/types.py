@@ -29,7 +29,7 @@
 import string
 
 from omniidl import idltype, idlast
-from omniidl_be.cxx import util, config, id, tyutil
+from omniidl_be.cxx import util, config, id
 
 # direction constants
 IN     = 0
@@ -543,8 +543,8 @@ class Type:
         elif d_SeqType.octet():
             template["suffix"] = "__Octet"
                     
-        elif tyutil.typeSizeAlignMap.has_key(d_SeqType.type().kind()):
-            template["fixed"] = tyutil.typeSizeAlignMap[d_SeqType.type().\
+        elif typeSizeAlignMap.has_key(d_SeqType.type().kind()):
+            template["fixed"] = typeSizeAlignMap[d_SeqType.type().\
                                                         kind()]
         
         elif d_SeqType.objref():
@@ -637,7 +637,111 @@ class Type:
 
         return name
 
+    def _var(self, environment = None):
+        """Returns a representation of the type which is responsible for its
+           own destruction. Assigning a heap allocated thing to this type
+           should allow the user to forget about deallocation."""
+        d_T = self.deref()
 
+        if self.array() or d_T.struct()    or d_T.union() or \
+                           d_T.exception() or d_T.sequence() or \
+                           d_T.objref():
+            name = id.Name(self.type().decl().scopedName()).suffix("_var")
+            return name.unambiguous(environment)
+
+        if d_T.typecode(): return "CORBA::TypeCode_var"
+        if d_T.any():      return "CORBA::Any_var"
+        if d_T.string():   return "CORBA::String_var"
+        if d_T.enum():
+            name = id.Name(self.type().decl().scopedName())
+            return name.unambiguous(environment)
+        
+        if d_T.kind() in basic_map.keys():
+            return basic_map[d_T.kind()]
+        
+        if d_T.void():     raise "No such thing as a void _var type"
+
+        raise "Unknown _var type, kind = " + str(d_T.kind())
+
+    def _ptr(self, environment = None):
+        """Returns a representation of a type which is not responsible for its
+           own destruction. Assigning a heap alloccated thing to this type
+           does not relieve the user of the responsibility of deallocation"""
+
+        if self.array():
+            name = id.Name(self.type().decl().scopedName()).suffix("_slice*")
+            return name.unambiguous(environment)
+
+        d_T = self.deref()
+
+        if d_T.typecode(): return "CORBA::TypeCode_ptr"
+        if d_T.any():      return "CORBA::Any*"
+        if d_T.string():   return "const char*"
+        if d_T.enum():
+            name = id.Name(self.type().decl().scopedName())
+            return name.unambiguous(environment)
+
+        if d_T.struct() or d_T.union() or d_T.exception() or \
+           d_T.sequence() or d_T.objref():
+            name = id.Name(self.type().decl().scopedName()).suffix("_ptr")
+            return name.unambiguous(environment)
+
+        if d_T.kind() in basic_map.keys():
+            return basic_map[d_T.kind()]
+        
+        if d_T.void():     raise "No such thing as a void _ptr type"
+
+        raise "Unknown _ptr type, kind = " + str(d_T.kind())
+
+    def free(self, thing, environment = None):
+        """Ensures that any heap allocated storage associated with this type
+           has been deallocated."""
+
+        if self.array():
+            name = id.Name(self.type().decl().scopedName()).suffix("_free")
+            return name.unambiguous(environment) + "(" + thing + ");"
+
+        d_T = self.deref()
+
+        if d_T.objref() or d_T.typecode():
+            return "CORBA::release(" + thing + ");"
+        if d_T.string():   return "CORBA::String_free(" + thing + ");"
+
+        if d_T.struct() or d_T.union() or d_T.exception() or \
+           d_T.sequence() or d_T.any():
+            return "delete " + thing + ";"
+
+        if d_T.enum() or d_T.void() or (d_T.kind() in basic_map.keys()): return
+
+        raise "Don't know how to free type, kind = " + str(d_T.kind())
+
+    def copy(self, src, dest, environment = None):
+        """Copies an entity from src to dest"""
+
+        if self.array():
+            name = id.Name(self.type().decl().scopedName()).suffix("_dup")
+            return dest + " = " + name.unambiguous(environment) + "("+src+");"
+
+        d_T = self.deref()
+        if d_T.objref() or d_T.typecode():
+            name = id.Name(self.type().decl().scopedName())
+            return dest + " = " + name.unambiguous(environment) + \
+                   "::_duplicate(" + src + ");"
+        if d_T.string():
+            return dest + " = CORBA::string_dup(" + src + ");"
+        if d_T.any():
+            return dest + " = new CORBA::Any(" + src + ");"
+        
+        if d_T.struct() or d_T.union() or d_T.exception() or d_T.sequence():
+            name = id.Name(self.type().decl().scopedName()).\
+                   unambiguous(environment)
+            return dest + " = new " + name + "(" + src + ");"
+        
+        if d_T.enum() or (d_T.kind() in basic_map.keys()):
+            return dest + " = " + src + ";"
+
+        raise "Don't know how to free type, kind = " + str(d_T.kind())
+               
     def representable_by_int(self):
         """representable_by_int(types.Type): boolean
            Returns true if the type is representable by an integer"""
@@ -860,3 +964,19 @@ for key in basic_map.keys():
     basic_map_out[key] = basic_map[key] + "_out"
 
 
+# Info on size and alignment of basic types
+typeSizeAlignMap = {
+    idltype.tk_char:    (1, 1),
+    idltype.tk_boolean: (1, 1),
+    idltype.tk_wchar:   (2, 2),
+    idltype.tk_short:   (2, 2),
+    idltype.tk_ushort:  (2, 2),
+    idltype.tk_long:    (4, 4),
+    idltype.tk_ulong:   (4, 4),
+    idltype.tk_float:   (4, 4),
+    idltype.tk_enum:    (4, 4),
+    idltype.tk_double:  (8, 8),
+    idltype.tk_octet:   (1, 1),
+    idltype.tk_longlong: (8, 8),
+    idltype.tk_ulonglong: (8, 8)
+    }
