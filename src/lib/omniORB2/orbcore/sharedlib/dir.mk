@@ -481,7 +481,7 @@ endif
 ifdef HPUX
 ifeq ($(notdir $(CXX)),aCC)
 
-DIR_CPPFLAGS += +z
+DIR_CPPFLAGS += +Z
 
 libname = libomniORB$(major_version).sl
 soname  = $(libname).$(minor_version)
