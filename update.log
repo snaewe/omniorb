@@ -1,3 +1,14 @@
+Mon Aug 20 16:05:36 BST 2001 sll
+================================
+
+- Changed the names of the configuration options to be consistent with
+  sample.cfg
+       endpoint -> endPoint, endpointNoPublish -> endPointNoPublish
+       endpointNoListen -> endPointNotListen
+
+src/lib/omniORB/orbcore/objectAdapter.cc
+
+
 Mon Aug 20 14:25:42 BST 2001 dpg1
 =================================
 
