@@ -29,9 +29,13 @@
 
 /*
   $Log$
-  Revision 1.11  1998/03/04 15:21:39  ewc
-  giopServerThreadWrapper singelton initialised
+  Revision 1.12  1998/04/07 19:32:38  sll
+  Replace cerr with omniORB::log.
+  Use namespace and bool type if available.
 
+// Revision 1.11  1998/03/04  15:21:39  ewc
+// giopServerThreadWrapper singelton initialised
+//
 // Revision 1.10  1998/02/26  10:41:18  sll
 // Parse_ORB_args once again handles the case when argv is a NULL pointer
 // properly.
@@ -71,11 +75,27 @@
 
 
 // Globals defined in class omniORB
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the variables external linkage otherwise. Its a bug.
+namespace omniORB {
+
+CORBA::ULong             traceLevel = 1;
+CORBA::Boolean           strictIIOP = 0;
+char*                    serverName = 0;
+CORBA::Boolean           tcAliasExpand = 0; 
+
+}
+
+#else
 CORBA::ULong                    omniORB::traceLevel = 1;
 CORBA::Boolean                  omniORB::strictIIOP = 0;
-CORBA::String_var		omniORB::serverName = (const char *) "unknown";
+CORBA::String_var		omniORB::serverName = (const char*)"unknown";
 CORBA::Boolean                  omniORB::tcAliasExpand = 0; 
+#endif
+
 _CORBA_Unbounded_Sequence_Octet omni::myPrincipalID;
+
+
 
 static const char*       myORBId          = "omniORB2";
 static CORBA::ORB_ptr    orb              = 0;
@@ -114,6 +134,10 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
   if (orb)
     return CORBA::ORB::_duplicate(orb);
 
+  if ((char*)omniORB::serverName == 0) {
+    omniORB::serverName = CORBA::string_dup("unknown");
+  }
+
   try {
     // initialise object tables
     omniObject::globalInit();
@@ -149,7 +173,8 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
     act.sa_flags = 0;
     if (sigaction(SIGPIPE,&act,0) < 0) {
       if (omniORB::traceLevel > 0) {
-	cerr << "Warning: omni::init() cannot install the SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")" << endl;
+	omniORB::log << "Warning: omni::init() cannot install the SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
+	omniORB::log.flush();
       }
     }
 #else
@@ -159,7 +184,8 @@ CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
     act.sv_flags = 0;
     if (sigvec(SIGPIPE,&act,0) < 0) {
       if (omniORB::traceLevel > 0) {
-	cerr << "Warning: omni::init() cannot install the SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")" << endl;
+	omniORB::log << "Warning: omni::init() cannot install the SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
+	omniORB::log.flush();
       }
     }
 #endif
@@ -371,8 +397,9 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
   if (orb_identifier && strcmp(orb_identifier,myORBId)!=0)
     {
       if (omniORB::traceLevel > 0) {
-	cerr << "CORBA::ORB_init failed: the ORBid ("
-	     << orb_identifier << ") is not " << myORBId << endl;
+	omniORB::log << "CORBA::ORB_init failed: the ORBid ("
+		     << orb_identifier << ") is not " << myORBId << "\n";
+	omniORB::log.flush();
       }
       return 0;
     }
@@ -385,7 +412,10 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
     // of passing the command line arguments to ORB_init in verbatim form.
     // 
     // XXX Should we trim this to a leafname?
-    omniORB::serverName = (const char *)(argv[0]);
+#ifdef HAS_Cplusplus_Namespace
+    if (omniORB::serverName) CORBA::string_free(omniORB::serverName);
+#endif    
+    omniORB::serverName = CORBA::string_dup(argv[0]);
   }
 
   int idx = 1;
@@ -405,15 +435,17 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
       if (strcmp(argv[idx],"-ORBid") == 0) {
 	if ((idx+1) >= argc) {
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: missing -ORBid parameter." << endl;
+	    omniORB::log << "CORBA::ORB_init failed: missing -ORBid parameter.\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
 	if (strcmp(argv[idx+1],myORBId) != 0)
 	  {
 	    if (omniORB::traceLevel > 0) {
-	      cerr << "CORBA::ORB_init failed: the ORBid ("
-		   << argv[idx+1] << ") is not " << myORBId << endl;
+	      omniORB::log << "CORBA::ORB_init failed: the ORBid ("
+			   << argv[idx+1] << ") is not " << myORBId << "\n";
+	      omniORB::log.flush();
 	    }
 	    return 0;
 	  }
@@ -426,8 +458,8 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
       if (strcmp(argv[idx],"-ORBtraceLevel") == 0) {
 	if((idx+1) >= argc) {
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: missing -ORBtraceLevel parameter."
-		 << endl;
+	    omniORB::log << "CORBA::ORB_init failed: missing -ORBtraceLevel parameter.\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
@@ -437,8 +469,8 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	if (sscanf(argv[idx+1],"%u",&omniORB::traceLevel) != 1) {
 #endif
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: invalid -ORBtraceLevel parameter."
-		 << endl;
+	    omniORB::log << "CORBA::ORB_init failed: invalid -ORBtraceLevel parameter.\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
@@ -450,16 +482,16 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
       if (strcmp(argv[idx],"-ORBstrictIIOP") == 0) {
 	if((idx+1) >= argc) {
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: missing -ORBstrictIIOP parameter (0 or 1)."
-		 << endl;
+	    omniORB::log << "CORBA::ORB_init failed: missing -ORBstrictIIOP parameter (0 or 1).\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
 	unsigned int v;
 	if (sscanf(argv[idx+1],"%u",&v) != 1) {
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: invalid -ORBstrictIIOP parameter."
-		 << endl;
+	    omniORB::log << "CORBA::ORB_init failed: invalid -ORBstrictIIOP parameter.\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
@@ -472,16 +504,16 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
       if (strcmp(argv[idx],"-ORBtcAliasExpand") == 0) {
 	if((idx+1) >= argc) {
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: missing -ORBtcAliasExpand parameter (0 or 1)."
-		 << endl;
+	    omniORB::log << "CORBA::ORB_init failed: missing -ORBtcAliasExpand parameter (0 or 1).\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
 	unsigned int v;
 	if (sscanf(argv[idx+1],"%u",&v) != 1) {
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: invalid -ORBtcAliasExpand parameter."
-		 << endl;
+	    omniORB::log << "CORBA::ORB_init failed: invalid -ORBtcAliasExpand parameter.\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
@@ -494,8 +526,8 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
       if (strcmp(argv[idx],"-ORBgiopMaxMsgSize") == 0) {
 	if((idx+1) >= argc) {
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: missing -ORBgiopMaxMsgSize parameter."
-		 << endl;
+	    omniORB::log << "CORBA::ORB_init failed: missing -ORBgiopMaxMsgSize parameter.\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
@@ -506,8 +538,8 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	if (sscanf(argv[idx+1],"%u",&sz) != 1) {
 #endif
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: invalid -ORBgiopMaxMsgSize parameter."
-		 << endl;
+	    omniORB::log << "CORBA::ORB_init failed: invalid -ORBgiopMaxMsgSize parameter.\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
@@ -520,11 +552,14 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
       if (strcmp(argv[idx],"-ORBserverName") == 0) {
 	if((idx+1) >= argc) {
 	  if (omniORB::traceLevel > 0) {
-	    cerr << "CORBA::ORB_init failed: missing -ORBserverName parameter."
-		 << endl;
+	    omniORB::log << "CORBA::ORB_init failed: missing -ORBserverName parameter.\n";
+	    omniORB::log.flush();
 	  }
 	  return 0;
 	}
+#ifdef HAS_Cplusplus_Namespace
+	if (omniORB::serverName) CORBA::string_free(omniORB::serverName);
+#endif
 	omniORB::serverName = CORBA::string_dup(argv[idx+1]);
 	move_args(argc,argv,idx,2);
 	continue;
@@ -533,15 +568,17 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
       // Reach here only if the argument in this form: -ORBxxxxx
       // is not recognised.
       if (omniORB::traceLevel > 0) {
-	cerr << "CORBA::ORB_init failed: unknown ORB argument ("
-	     << argv[idx] << ")" << endl;
+	omniORB::log << "CORBA::ORB_init failed: unknown ORB argument (\n"
+		     << argv[idx] << ")";
+	omniORB::log.flush();
       }
       return 0;
     }
 
   if (!orb_identifier && !orbId_match) {
     if (omniORB::traceLevel > 0) {
-      cerr << "CORBA::ORB_init failed: ORBid is not specified." << endl;
+      omniORB::log << "CORBA::ORB_init failed: ORBid is not specified.\n";
+      omniORB::log.flush();
     }
     return 0;
   }
