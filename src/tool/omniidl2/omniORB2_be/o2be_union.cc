@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.24  1999/06/03 17:11:46  sll
+  Updated to CORBA 2.2.
+
   Revision 1.23  1999/05/26 10:24:39  sll
   Use o2be_nested_typedef to generate stub code for nested types.
   Fixed bug so that a char constant greater than 127 and used as a
@@ -175,8 +178,6 @@
 #pragma hdrstop
 #endif
 
-#define ADPT_CLASS_TEMPLATE  "_CORBA_ConstrType_Variable_OUT_arg"
-
 static void
 produce_disc_value(std::fstream& s,AST_ConcreteType *t,AST_Expression *exp,
 		   AST_Decl* used_in, idl_bool use_fqname=I_FALSE);
@@ -217,15 +218,7 @@ o2be_union::o2be_union(UTL_ScopedName *n, UTL_StrList *p)
 {
   pd_isvar = I_FALSE;
   pd_nodefault = I_TRUE;
-  pd_out_adptarg_name = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
-				 strlen(fqname())+
-				 strlen(fqname())+strlen("_var")+1];
-  strcpy(pd_out_adptarg_name,ADPT_CLASS_TEMPLATE);
-  strcat(pd_out_adptarg_name,"<");
-  strcat(pd_out_adptarg_name,fqname());
-  strcat(pd_out_adptarg_name,",");
-  strcat(pd_out_adptarg_name,fqname());
-  strcat(pd_out_adptarg_name,"_var>");  
+  pd_out_adptarg_name = 0;
 }
 
 AST_UnionBranch *
@@ -1273,7 +1266,10 @@ o2be_union::produce_hdr(std::fstream& s)
   IND(s); s << "typedef _CORBA_ConstrType_"
 	    << ((isVariable())?"Variable":"Fix")
 	    << "_Var<" << uqname() << "> " 
-	      << uqname() << "_var;\n\n";
+	      << uqname() << "_var;\n";
+  IND(s); s << "typedef " << out_adptarg_name(this)  << " "
+	    << uqname()
+	    <<"_out;\n\n";
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
@@ -2291,6 +2287,8 @@ o2be_union::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
 	    << " " << tdef->uqname() << ";\n";
   IND(s); s << "typedef " << unambiguous_name(tdef)
 	    << "_var " << tdef->uqname() << "_var;\n";
+  IND(s); s << "typedef " << unambiguous_name(tdef)
+	    << "_out " << tdef->uqname() << "_out;\n";
 }
 
 
@@ -2707,8 +2705,29 @@ produce_default_break(o2be_union& u, std::fstream& s)
 }
 
 const char*
-o2be_union::out_adptarg_name(AST_Decl* used_in) const
+o2be_union::out_adptarg_name(AST_Decl* used_in)
 {
+  const char* tname;
+
+  if (isVariable()) {
+    tname = "_CORBA_ConstrType_Variable_OUT_arg";
+  }
+  else {
+    tname = "_CORBA_ConstrType_Fix_OUT_arg";
+  }
+
+  if (!pd_out_adptarg_name) {
+    pd_out_adptarg_name = new char[strlen(tname)+strlen("<,>")+
+				  strlen(fqname())+
+				  strlen(fqname())+strlen("_var")+1];
+    strcpy(pd_out_adptarg_name,tname);
+    strcat(pd_out_adptarg_name,"<");
+    strcat(pd_out_adptarg_name,fqname());
+    strcat(pd_out_adptarg_name,",");
+    strcat(pd_out_adptarg_name,fqname());
+    strcat(pd_out_adptarg_name,"_var>");  
+  }
+
   if (o2be_global::qflag()) {
     return pd_out_adptarg_name;
   }
@@ -2718,10 +2737,10 @@ o2be_union::out_adptarg_name(AST_Decl* used_in) const
       return pd_out_adptarg_name;
     }
     else {
-      char* result = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
+      char* result = new char[strlen(tname)+strlen("<,>")+
 		       strlen(ubname)+
 		       strlen(ubname)+strlen("_var")+1];
-      strcpy(result,ADPT_CLASS_TEMPLATE);
+      strcpy(result,tname);
       strcat(result,"<");
       strcat(result,ubname);
       strcat(result,",");

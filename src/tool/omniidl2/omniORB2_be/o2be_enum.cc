@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.13  1999/06/03 17:12:01  sll
+  Updated to CORBA 2.2.
+
   Revision 1.12  1999/05/26 10:49:11  sll
   Use o2be_nested_typedef.
 
@@ -96,7 +99,8 @@ o2be_enum::produce_hdr(std::fstream &s)
 	s << ", ";
     }
   }
-  s << " };\n\n";
+  s << " };\n";
+  s << "typedef " << uqname() << "& " << uqname() << "_out;\n\n";
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration

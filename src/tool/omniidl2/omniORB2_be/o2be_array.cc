@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.17  1999/06/03 17:11:54  sll
+  Updated to CORBA 2.2.
+
   Revision 1.16  1999/03/11 16:26:11  djr
   Updated copyright notice
 
@@ -418,6 +421,9 @@ o2be_array::produce_hdr (std::fstream &s, o2be_typedef* tdef)
 	    << tdef->uqname() << "_copyHelper,"
 	    << tdef->uqname() << "_slice> "
 	    << tdef->uqname() << "_var;\n";
+  IND(s); s << "typedef " << out_adptarg_name(tdef,tdef)  << " "
+	    << tdef->uqname()
+	    <<"_out;\n";
   IND(s); s << "typedef _CORBA_Array_Forany<"
 	    << tdef->uqname() << "_copyHelper,"
 	    << tdef->uqname() << "_slice> "
@@ -688,6 +694,8 @@ o2be_array::produce_typedef_hdr(std::fstream &s, o2be_typedef* tdef1,
 	    << "_copyHelper " << tdef1->uqname() << "_copyHelper;\n";
   IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
 	    << "_var " << tdef1->uqname() << "_var;\n";
+  IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
+	    << "_out " << tdef1->uqname() << "_out;\n";
   IND(s); s << "typedef " << tdef2->unambiguous_name(tdef1) 
 	    << "_forany " << tdef1->uqname() << "_forany;\n";
   IND(s); s << ( !(tdef1->defined_in()==idl_global->root()) ?

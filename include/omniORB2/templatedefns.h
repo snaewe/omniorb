@@ -417,44 +417,6 @@ _CORBA_ObjRef_Member<T,T_Helper>::operator<<= (MemBufferedStream& s)
 }
 
 //////////////////////////////////////////////////////////////////////
-///////////////////////// _CORBA_Sequence_Var ////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-template <class T,class ElmType>
-__INLINE_CTOR_DEFN__
-_CORBA_Sequence_Var<T,ElmType>::
-_CORBA_Sequence_Var(const _CORBA_Sequence_Var<T,ElmType>& p)
-{
-  if( !p.pd_data ) {
-    pd_data = 0;
-  }
-  else {
-    pd_data = new T;
-    if( !pd_data )  _CORBA_new_operator_return_null();
-    *pd_data = *p.pd_data;
-  }
-}
-
-
-template <class T,class ElmType>
-inline _CORBA_Sequence_Var<T,ElmType>&
-_CORBA_Sequence_Var<T,ElmType>::operator= (const _CORBA_Sequence_Var<T,ElmType>& p)
-{
-  if( p.pd_data ) {
-    if( !pd_data ) {
-      pd_data = new T;
-      if (!pd_data)  _CORBA_new_operator_return_null();
-    }
-    *pd_data = *p.pd_data;
-  }
-  else {
-    if( pd_data )  delete pd_data;
-    pd_data = 0;
-  }
-  return *this;
-}
-
-//////////////////////////////////////////////////////////////////////
 /////////////////// _CORBA_ConstrType_Variable_Var ///////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -604,55 +566,6 @@ _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmS
 {
   if( len > max )  _CORBA_bound_check_error();
   _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length(len);
-}
-
-//////////////////////////////////////////////////////////////////////
-////////////////////// _CORBA_Sequence_Array_Var /////////////////////
-//////////////////////////////////////////////////////////////////////
-
-template <class T,class T_slice>
-inline _CORBA_Sequence_Array_Var<T,T_slice>&
-_CORBA_Sequence_Array_Var<T,T_slice>::operator= (const _CORBA_Sequence_Array_Var<T,T_slice>& p)
-{
-  if (p.pd_data) {
-    if (!pd_data) {
-      pd_data = new T;
-      if (!pd_data) {
-	_CORBA_new_operator_return_null();
-	// never reach here
-      }
-    }
-    *pd_data = *p.pd_data;
-  }
-  else {
-    if (pd_data) delete pd_data;
-    pd_data = 0;
-  }
-  return *this;
-}
-
-
-template <class T,class T_slice>
-inline
-_CORBA_Sequence_Array_Var<T,T_slice>::
-_CORBA_Sequence_Array_Var(const _CORBA_Sequence_Array_Var<T,T_slice>& p)
-{
-  if( !p.pd_data )  pd_data = 0;
-  else {
-    pd_data = new T;
-    if( !pd_data )  _CORBA_new_operator_return_null();
-    *pd_data = *p.pd_data;
-  }
-}
-
-
-template <class T,class T_slice>
-inline _CORBA_Sequence_Array_Var<T,T_slice>&
-_CORBA_Sequence_Array_Var<T,T_slice>::operator= (T* p)
-{
-  if (pd_data) delete pd_data;
-  pd_data = p;
-  return *this;
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.16  1999/06/03 17:12:09  sll
+  Updated to CORBA 2.2.
+
   Revision 1.15  1999/05/31 17:56:44  sll
   Added C++ keyword export.
 
@@ -544,8 +547,13 @@ internal_check_name_for_reserved_words(char *keyw)
       if (!strcmp(*rp,keyw))
 	{
 	  // This is a reserved word, prefix it by '_'
-	  char *str = new char[strlen(keyw)+2];
-	  strcpy(str,"_");
+	  char *str = new char[strlen(keyw)+6];
+	  if (idl_global->compile_flags() & IDL_BE_2_1_COMPATIBLE) {
+	    strcpy(str,"_");
+	  }
+	  else {
+	    strcpy(str,"_cxx_");
+	  }
 	  strcat(str,keyw);
 	  return str;
 	}
