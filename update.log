@@ -1,3 +1,28 @@
+Mon Jun 18 21:22:03 BST 2001 sll
+================================
+
+- Make the ORB compiles with GCC 3.0
+  The compiler does not like to deal with 2 conversion operators, one const
+  and the other non-const, to convert a T_var type to a T*. In fact, it
+  SEGV if we define both operators for sequence types.
+  Change to define just one operator fix the problem.
+
+include/omniORB4/CORBA.h
+include/omniORB4/templatedecls.h
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+src/appl/omniNames/log.cc
+src/lib/omniParTcl/omniParTcl.cc
+
+- Minor cleanup
+
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+
+
 Mon Jun 18 17:12:34 BST 2001 dpg1
 =================================
 
