@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.6  1998/08/10 16:55:08  sll
+  Remove redundent quote ' from constant char definition.
+
   Revision 1.5  1998/04/09 19:14:31  sll
   For const integral type, specify the initializer in its declaration.
 
@@ -59,7 +62,6 @@ o2be_constant::o2be_constant(AST_Expression::ExprType et,
 void
 o2be_constant::produce_hdr(std::fstream &s)
 {
-  char *quote = "";
   char *initializer = "_init_in_decl_( ";
   idl_bool intfconst = 0;
 
@@ -92,7 +94,6 @@ o2be_constant::produce_hdr(std::fstream &s)
     s << " const CORBA::Double";
     break;
   case AST_Expression::EV_char:
-    quote = "'";
     s <<  (!intfconst?"INT":"") << " const CORBA::Char";
     break;
   case AST_Expression::EV_octet:
@@ -111,9 +112,9 @@ o2be_constant::produce_hdr(std::fstream &s)
   }
   s << " " << uqname();
   if (initializer) {
-    s << " " << initializer << " = " << quote;
+    s << " " << initializer << " = ";
     constant_value()->dump(s);
-    s << quote << " )";
+    s << " )";
   }
   s << ";\n";
   return;
@@ -154,7 +155,6 @@ o2be_constant::produce_skel(std::fstream &s)
     break;
   case AST_Expression::EV_char:
     typestr = "const CORBA::Char";
-    quote = "'";
     break;
   case AST_Expression::EV_octet:
     typestr = "const CORBA::Octet";
