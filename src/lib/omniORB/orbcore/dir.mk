@@ -18,9 +18,16 @@ GIOP_SRCS = \
             giopImpl10.cc \
             giopImpl11.cc \
             giopImpl12.cc \
+            giopBiDir.cc \
+            giopMonitor.cc \
+            SocketCollection.cc
 
 TRANSPORT_SRCS = \
-            tcpLib.cc 
+            tcpTransportImpl.cc \
+            tcpConnection.cc \
+            tcpEndpoint.cc \
+            tcpAddress.cc \
+            tcpActive.cc
 
 CODESET_SRCS = \
 	    codeSets.cc \
@@ -124,7 +131,9 @@ CXXSRCS       = $(ORB_SRCS)
 
 ifdef NoGateKeeper
 ORB_OBJS     += gatekeeper.o
-vpath %.cc $(VPATH):$(VPATH:%=%/gatekeepers/dummystub)
+vpath %.cc $(VPATH):$(VPATH:%=%/tcp):$(VPATH:%=%/gatekeepers/dummystub)
+else
+vpath %.cc $(VPATH):$(VPATH:%=%/tcp)
 endif
 
 LIB_NAME     := omniORB

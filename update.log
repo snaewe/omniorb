@@ -1,8 +1,103 @@
 Tue Jul 31 16:56:57 BST 2001 sll
 ================================
 
+- Added GIOP BiDir support
+
+src/lib/omniORB/orbcore/dir.mk
+
+include/omniORB4/BiDirPolicy.h NEW
+include/omniORB4/IOP.h
+include/omniORB4/minorCode.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniORB.h
+
+src/lib/omniORB/include/poaimpl.h
+
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/poa.cc
+
+src/lib/omniORB/include/giopRope.h
+src/lib/omniORB/orbcore/giopRope.cc
+
+src/lib/omniORB/include/giopBiDir.h
+src/lib/omniORB/include/giopMonitor.h
+src/lib/omniORB/include/giopServer.h
+src/lib/omniORB/include/giopStrand.h
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/giopMonitor.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+
+- New primitives to acquire read lock on a connection
+
+src/lib/omniORB/include/giopStream.h
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
 
 
+- New transport interface to support the monitoring of active connections.
+
+include/omniORB4/giopEndpoint.h
+
+src/lib/omniORB/include/SocketCollection.h      NEW
+src/lib/omniORB/orbcore/SocketCollection.cc     NEW
+
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/lib/omniORB/orbcore/ssl/sslActive.cc        NEW
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.h
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.h
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
+src/lib/omniORB/orbcore/tcp/tcpActive.cc        NEW
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.h
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.h
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.h
+
+src/lib/omniORB/orbcore/tcpLib.cc
+
+- Added marshalling operators for IIOP::Address
+
+include/omniORB4/IIOP.h
+
+- Make call descriptor available from omniCurrent in the 
+  unmarshalling of arguments on the server side.
+
+src/lib/omniORB/orbcore/callHandle.cc
+
+
+- Added virtual function to check if a cdrStream is a giopStream.
+  That is, a poor man's substitute for dynamic_cast.
+
+include/omniORB4/cdrStream.h
+src/lib/omniORB/orbcore/cdrStream.cc
+
+- New function listMyEndpoints(). Remove explicit instantiation of
+  giopServer, do it via interceptor.
+
+src/lib/omniORB/include/objectAdapter.h
+src/lib/omniORB/orbcore/objectAdapter.cc
+
+- remove dead code.
+
+src/lib/omniORB/orbcore/exception.cc
 
 Tue Jul 31 16:51:49 BST 2001 sll
 ================================
