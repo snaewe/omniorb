@@ -2,20 +2,22 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
  The Basics
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB001.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB003.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>Chapter&nbsp;2&nbsp;&nbsp; The Basics</H1>
-<A NAME="ch_basic"></A>In this chapter, we go through three examples to illustrate the
+<H1><A NAME="htoc10">Chapter&nbsp;2</A>&nbsp;&nbsp;The Basics</H1>
+<A NAME="ch_basic"></A>
+In this chapter, we go through three examples to illustrate the
 practical steps to use omniORB. By going through the source code of
 each example, the essential concepts and APIs are introduced. If you
 have no previous experience with using CORBA, you should study this
@@ -29,28 +31,26 @@ omniORB supports the Portable Object Adapter, there are very few
 omniORB specific details.<BR>
 <BR>
 <A NAME="toc4"></A>
-<H2>2.1&nbsp;&nbsp; The Echo Object Example</H2>Our example is an object which has only one method. The method simply
-echos the argument string. We have to:<BR>
-<BR>
-<OL type=1>
-<LI> define the object interface in IDL;
-
-<LI> use the IDL compiler to generate the stub code<A NAME="text3" HREF="#note3"><SUP><FONT SIZE=2>1</FONT></SUP></A>;
-
-<LI> provide the <I>servant</I> object implementation;
-
-<LI> write the client code.</OL>The source code of this example is included in the last section of
+<H2><A NAME="htoc11">2.1</A>&nbsp;&nbsp;The Echo Object Example</H2>
+Our example is an object which has only one method. The method simply
+echos the argument string. We have to:
+<OL type=1><LI>define the object interface in IDL;
+<LI>use the IDL compiler to generate the stub code<SUP><A NAME="text3" HREF="#note3"><FONT SIZE=2>1</FONT></A></SUP>;
+<LI>provide the <I>servant</I> object implementation;
+<LI>write the client code.</OL>
+The source code of this example is included in the last section of
 this chapter. A makefile written to be used under the OMNI Development
 Environment (ODE)&nbsp;[<A HREF="omniORB014.html#tjr96b"><CITE>Ric96a</CITE></A>] is also included.<BR>
 <BR>
 <A NAME="toc5"></A>
-<H2>2.2&nbsp;&nbsp; Specifying the Echo interface in IDL</H2>We define an object interface, called <TT>Echo</TT>, as follows:<BR>
-<BR>
+<H2><A NAME="htoc12">2.2</A>&nbsp;&nbsp;Specifying the Echo interface in IDL</H2>
+We define an object interface, called <TT>Echo</TT>, as follows:
 <PRE>
 interface Echo {
     string echoString(in string mesg);
 };
-</PRE>If you are new to IDL, you can learn about its syntax in Chapter 3 of
+</PRE>
+If you are new to IDL, you can learn about its syntax in Chapter 3 of
 the CORBA specification 2.3&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>]. For the moment, you
 only need to know that the interface consists of a single operation,
 <TT>echoString()</TT>, which takes a string as an argument and returns a
@@ -74,39 +74,39 @@ convention is agreed globally. Nevertheless, a well-chosen module name
 can help a lot.<BR>
 <BR>
 <A NAME="toc6"></A>
-<H2>2.3&nbsp;&nbsp; Generating the C++ stubs</H2>From the IDL file, we use the IDL compiler to produce the C++ mapping
+<H2><A NAME="htoc13">2.3</A>&nbsp;&nbsp;Generating the C++ stubs</H2>
+From the IDL file, we use the IDL compiler to produce the C++ mapping
 of the interface. The IDL compiler for omniORB is called omniidl.
 Given the IDL file, omniidl produces two stub files: a C++ header file
 and a C++ source file. For example, from the file <TT>echo.idl</TT>, the
-following files are produced:<BR>
-<BR>
-<UL>
-<LI>
+following files are produced:
+<UL><LI>
 <TT>echo.hh</TT>
-
 <LI><TT>echoSK.cc</TT>
-</UL>omniidl must be invoked with the <TT>-bcxx</TT> argument to
+</UL>
+omniidl must be invoked with the <TT>-bcxx</TT> argument to
 tell it to generate C++ stubs. The following command line generates
-the stubs for <TT>echo.idl</TT>:<BR>
-<BR>
+the stubs for <TT>echo.idl</TT>:
 <PRE>
 omniidl -bcxx echo.idl
-</PRE>If you are using our make environment (ODE), you don't need
+</PRE>
+If you are using our make environment (ODE), you don't need
 to invoke omniidl explicitly. In the example file <TT>dir.mk</TT>, we
-have the following line:<BR>
-<BR>
+have the following line:
 <PRE>
 CORBA_INTERFACES = echo
-</PRE>That is all we need to instruct ODE to generate the stubs.
+</PRE>
+That is all we need to instruct ODE to generate the stubs.
 Remember, you won't find the stubs in your working directory because
 all stubs are written into the <TT>stub</TT> directory at the top level
 of your build tree.<BR>
 <BR>
 The full arguments to omniidl are detailed in
-chapter&nbsp;<A HREF="omniORB005.html#chap:omniidl">5</A>.<BR>
+chapter&nbsp;<A HREF="omniORB005.html#chap:omniidl">557The IDL compilerchapter.5</A>.<BR>
 <BR>
 <A NAME="toc7"></A>
-<H2>2.4&nbsp;&nbsp; Object References and Servants</H2>We contact a CORBA object through an <I>object reference</I>. The
+<H2><A NAME="htoc14">2.4</A>&nbsp;&nbsp;Object References and Servants</H2>
+We contact a CORBA object through an <I>object reference</I>. The
 actual implementation of a CORBA object is termed a <I>servant</I>.<BR>
 <BR>
 Object references and servants are quite separate entities, and it is
@@ -117,8 +117,7 @@ distinct C++ types for object references and servants, so the compiler
 will complain if you use a servant when an object reference is
 expected, or vice-versa.<BR>
 <BR>
-<HR SIZE=2><DL COMPACT=compact>
-<DT><DD>
+<HR SIZE=2><DL COMPACT=compact><DT><DD>
 <DIV ALIGN=center><B>Warning</B></DIV><BR>
 omniORB 2 <EM>did not</EM> use distinct types for object references and
 servants, and often accepted a pointer to a servant when the CORBA
@@ -128,7 +127,8 @@ even under omniORB 3's BOA compatibility mode.
 </DL><HR SIZE=2><BR>
 <BR>
 <A NAME="toc8"></A>
-<H2>2.5&nbsp;&nbsp; A Quick Tour of the C++ stubs</H2>The C++ stubs conform to the mapping defined in the CORBA 2.3
+<H2><A NAME="htoc15">2.5</A>&nbsp;&nbsp;A Quick Tour of the C++ stubs</H2>
+The C++ stubs conform to the mapping defined in the CORBA 2.3
 specification (chapter 23). It is important to understand the mapping
 before you start writing any serious CORBA applications. Before going
 any further, it is worth knowing what the mapping looks like.<BR>
@@ -137,8 +137,7 @@ For the example interface <TT>Echo</TT>, the C++ mapping for its object
 reference is <TT>Echo_ptr</TT>. The type is defined in <TT>echo.hh</TT>.
 The relevant section of the code is reproduced below. The stub code
 produced by other ORBs will be functionally equivalent to omniORB's,
-but will almost certainly look very different.<BR>
-<BR>
+but will almost certainly look very different.
 <PRE>
 class Echo;
 class _objref_Echo;
@@ -165,7 +164,8 @@ public:
 
   // ... methods generated for internal use
 };
-</PRE>In a compliant application, the operations defined in an object
+</PRE>
+In a compliant application, the operations defined in an object
 interface should <B>only</B> be invoked via an object reference.
 This is done by using arrow (`<TT>-&gt;</TT>') on an object reference.
 For example, the call to the operation <TT>echoString()</TT> would be
@@ -184,11 +184,11 @@ static member functions in the class <TT>Echo</TT>: <TT>_nil()</TT>,
 <TT>_duplicate()</TT>, and <TT>_narrow()</TT>.<BR>
 <BR>
 The <TT>_nil()</TT> function returns a nil object reference of the Echo
-interface. The following call is guaranteed to return TRUE:<BR>
-<BR>
+interface. The following call is guaranteed to return TRUE:
 <PRE>
 CORBA::Boolean true_result = CORBA::is_nil(Echo::_nil());
-</PRE>Remember, <TT>CORBA::is_nil()</TT> is the only compliant way to check if an
+</PRE>
+Remember, <TT>CORBA::is_nil()</TT> is the only compliant way to check if an
 object reference is nil. You should not use the equality
 <TT>operator==</TT>.<BR>
 <BR>
@@ -207,8 +207,8 @@ reference is therefore conceptually inherited from
 <BR>
 The <TT>_narrow()</TT> function takes an argument of type
 <TT>CORBA::Object_ptr</TT> and returns a new object reference of the
-<TT>Echo</TT> interface. If the actual (runtime) type of the argument
-object reference can be widened to <TT>Echo_ptr</TT>, <TT>_narrow()</TT>
+<TT>Echo</TT> interface. If the actual runtime type of the argument
+object reference can be narrowed to <TT>Echo_ptr</TT>, <TT>_narrow()</TT>
 will return a valid object reference. Otherwise it will return a nil
 object reference. Note that <TT>_narrow()</TT> performs an implicit
 duplication of the object reference, so the result must be released.
@@ -218,14 +218,14 @@ type of the object, so it may throw CORBA system exceptions such as
 <BR>
 To indicate that an object reference will no longer be accessed, you
 must call the <TT>CORBA::release()</TT> operation. Its signature is as
-follows:<BR>
-<BR>
+follows:
 <PRE>
 class CORBA {
   static void release(CORBA::Object_ptr obj);
   ... // other methods
 };
-</PRE>Once you have called <TT>CORBA::release()</TT> on an object reference, you
+</PRE>
+Once you have called <TT>CORBA::release()</TT> on an object reference, you
 should no longer use that reference. This is because the associated
 resources may have been deallocated. Notice that we are referring to
 the resources associated with the object reference and <B>not the
@@ -237,15 +237,15 @@ distributed garbage collection.<BR>
 As described above, the equality <TT>operator==</TT> should not be used
 on object references. To test if two object references are equivalent,
 the member function <TT>_is_equivalent()</TT> of the generic object
-<TT>CORBA::Object</TT> can be used. Here is an example of its usage:<BR>
-<BR>
+<TT>CORBA::Object</TT> can be used. Here is an example of its usage:
 <PRE>
 Echo_ptr A;
 ...            // initialise A to a valid object reference 
 Echo_ptr B = A;
 CORBA::Boolean true_result = A-&gt;_is_equivalent(B); 
 // Note: the above call is guaranteed to be TRUE
-</PRE>You have now been introduced to most of the operations that can be
+</PRE>
+You have now been introduced to most of the operations that can be
 invoked via <TT>Echo_ptr</TT>. The generic object <TT>CORBA::Object</TT>
 provides a few more operations and all of them can be invoked via
 <TT>Echo_ptr</TT>. These operations deal mainly with CORBA's dynamic
@@ -256,18 +256,17 @@ specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A
 Since object references must be released explicitly, their usage is
 prone to error and can lead to memory leakage. The mapping defines the
 <I>object reference variable</I> type to make life easier. In our
-example, the variable type <TT>Echo_var</TT> is defined<A NAME="text4" HREF="#note4"><SUP><FONT SIZE=2>2</FONT></SUP></A>.<BR>
+example, the variable type <TT>Echo_var</TT> is defined<SUP><A NAME="text4" HREF="#note4"><FONT SIZE=2>2</FONT></A></SUP>.<BR>
 <BR>
 The <TT>Echo_var</TT> is more convenient to use because it will
 automatically release its object reference when it is deallocated or
 when assigned a new object reference. For many operations, mixing data
 of type <TT>Echo_var</TT> and <TT>Echo_ptr</TT> is possible without any
-explicit operations or castings<A NAME="text5" HREF="#note5"><SUP><FONT SIZE=2>3</FONT></SUP></A>. For instance, the operation
+explicit operations or castings<SUP><A NAME="text5" HREF="#note5"><FONT SIZE=2>3</FONT></A></SUP>. For instance, the operation
 <TT>echoString()</TT> can be called using the arrow (`<TT>-&gt;</TT>') on a
 <TT>Echo_var</TT>, as one can do with a <TT>Echo_ptr</TT>.<BR>
 <BR>
-The usage of <TT>Echo_var</TT> is illustrated below:<BR>
-<BR>
+The usage of <TT>Echo_var</TT> is illustrated below:
 <PRE>
 Echo_var a;
 Echo_ptr p = ... // somehow obtain an object reference
@@ -281,14 +280,16 @@ p = ...          // somehow obtain another object reference
 a = Echo::_duplicate(p);     // release old object reference
                              // a now holds a copy of p.
 </PRE>
-<H3>2.5.1&nbsp;&nbsp; Servant Object Implementation</H3>
-<A NAME="stubobjimpl"></A>Before the Portable Object Adapter (POA) specification, many of the
+
+<H3><A NAME="htoc16">2.5.1</A>&nbsp;&nbsp;Servant Object Implementation</H3>
+<A NAME="stubobjimpl"></A>
+Before the Portable Object Adapter (POA) specification, many of the
 details of how servant objects should be implemented and registered
 with the system were unspecified, so server-side code was not portable
 between ORBs. The POA specification rectifies that. omniORB 3 still
 supports the old omniORB 2.x BOA mapping, but you should always use
 the POA mapping for new code. BOA code and POA code can coexist within
-a single program. See section&nbsp;<A HREF="omniORB003.html#sec:BOAcompat">3.2</A> for details of the
+a single program. See section&nbsp;<A HREF="omniORB003.html#sec:BOAcompat">3.246BOA compatibilitysection.3.2</A> for details of the
 BOA compatibility, and problems you may encounter.<BR>
 <BR>
 For each object interface, a <I>skeleton</I> class is generated. In
@@ -298,8 +299,7 @@ implementation can be written by creating an implementation class that
 derives from the skeleton class.<BR>
 <BR>
 The skeleton class <TT>POA_Echo</TT> is defined in <TT>echo.hh</TT>. The
-relevant section of the code is reproduced below.<BR>
-<BR>
+relevant section of the code is reproduced below.
 <PRE>
 class _impl_Echo :
   public virtual omniServant
@@ -317,25 +317,27 @@ public:
   Echo_ptr _this();
   // ...
 };
-</PRE>The code fragment shows the only member functions that can be used in
+</PRE>
+The code fragment shows the only member functions that can be used in
 the object implementation code. Other member functions are generated
 for internal use only. As with the code generated for object
 references, other POA-based ORBs will generate code which looks
-different, but is functionally equivalent to this.<BR>
-<BR>
-<DL COMPACT=compact>
-<DT><TT>echoString()</TT><DD><BR>It is through this abstract function that an implementation class
+different, but is functionally equivalent to this.
+<DL COMPACT=compact><DT><B><TT>echoString()</TT></B><DD><BR>
+It is through this abstract function that an implementation class
 provides the implementation of the <TT>echoString()</TT> operation. Notice
 that its signature is the same as the <TT>echoString()</TT> function that
 can be invoked via the <TT>Echo_ptr</TT> object reference.<BR>
 <BR>
-
-<DT><TT>_this()</TT><DD><BR>This function returns an object reference for the target object,
+<DT><B><TT>_this()</TT></B><DD><BR>
+This function returns an object reference for the target object,
 provided the POA policies permit it. The returned value must be
-deallocated via <TT>CORBA::release()</TT>. See section&nbsp;<A HREF="#objeg1">2.8</A>
-for an example of how this function is used.</DL><A NAME="toc9"></A>
-<H2>2.6&nbsp;&nbsp; Writing the servant implementation</H2>
-<A NAME="objimpl"></A>You define an implementation class to provide the servant
+deallocated via <TT>CORBA::release()</TT>. See section&nbsp;<A HREF="#objeg1">2.815Example 1 --- Colocated Client and Implementationsection.2.8</A>
+for an example of how this function is used.</DL>
+<A NAME="toc9"></A>
+<H2><A NAME="htoc17">2.6</A>&nbsp;&nbsp;Writing the servant implementation</H2>
+<A NAME="objimpl"></A>
+You define an implementation class to provide the servant
 implementation. There is little constraint on how you design your
 implementation class except that it has to inherit from the stubs'
 skeleton class and to implement all the abstract functions defined in
@@ -343,8 +345,7 @@ the skeleton class. Each of these abstract functions corresponds to an
 operation of the interface. They are the hooks for the ORB to perform
 upcalls to your implementation.<BR>
 <BR>
-Here is a simple implementation of the Echo object.<BR>
-<BR>
+Here is a simple implementation of the Echo object.
 <PRE>
 class Echo_i : public POA_Echo,
         public PortableServer::RefCountServantBase
@@ -359,10 +360,10 @@ char* Echo_i::echoString(const char* mesg)
 {
   return CORBA::string_dup(mesg);
 }
-</PRE>There are four points to note here:<BR>
-<BR>
-<DL COMPACT=compact>
-<DT>Storage Responsibilities<DD><BR>A string, which is used both as an in argument and the return value of
+</PRE>
+There are four points to note here:
+<DL COMPACT=compact><DT><B>Storage Responsibilities</B><DD><BR>
+A string, which is used both as an in argument and the return value of
 <TT>echoString()</TT>, is a variable size data type. Other examples of
 variable size data types include sequences, type `any', etc. For these
 data types, you must be clear about whose responsibility it is to
@@ -375,8 +376,8 @@ passes the ownership to the client. The client must release the
 storage when the variables will no longer be used. For details,
 please refer section 23.22 of the CORBA 2.3 specification.<BR>
 <BR>
-
-<DT>Multi-threading<DD><BR>As omniORB is fully multithreaded, multiple threads may perform the
+<DT><B>Multi-threading</B><DD><BR>
+As omniORB is fully multithreaded, multiple threads may perform the
 same upcall to your implementation concurrently. It is up to your
 implementation to synchronise the threads' accesses to shared data.
 In our simple example, we have no shared data to protect so no thread
@@ -386,8 +387,8 @@ Alternatively, you can create a POA which has the
 <TT>SINGLE_THREAD_MODEL</TT> Thread Policy. This guarantees that all
 calls to that POA are processed sequentially.<BR>
 <BR>
-
-<DT>Reference Counting<DD><BR>As well as inheriting from the Echo skeleton class, the servant class
+<DT><B>Reference Counting</B><DD><BR>
+As well as inheriting from the Echo skeleton class, the servant class
 is also derived from <TT>PortableServer::RefCountServantBase</TT> which,
 as the name suggests, is a mixin class which provides reference
 counting for the servant object. This means that an <TT>Echo_i</TT>
@@ -397,13 +398,15 @@ from the reference counting which is associated with object
 references---a servant object is <EM>never</EM> deleted due to a CORBA
 object reference being released.<BR>
 <BR>
-
-<DT>Instantiation<DD><BR>Servants which derive from <TT>PortableServer::RefCountServantBase</TT>
+<DT><B>Instantiation</B><DD><BR>
+Servants which derive from <TT>PortableServer::RefCountServantBase</TT>
 must not be instantiated as automatic variables (i.e. on the
 stack). Instead, you should always instantiate them using the
 <TT>new</TT> operator, i.e. their storage is allocated on the
-heap. Otherwise, the POA may attempt to delete an object on the stack.</DL><A NAME="toc10"></A>
-<H2>2.7&nbsp;&nbsp; Writing the client</H2>Here is an example of how an <TT>Echo_ptr</TT> object reference is
+heap. Otherwise, the POA may attempt to delete an object on the stack.</DL>
+<A NAME="toc10"></A>
+<H2><A NAME="htoc18">2.7</A>&nbsp;&nbsp;Writing the client</H2>
+Here is an example of how an <TT>Echo_ptr</TT> object reference is
 used.<BR>
 <BR>
 
@@ -427,7 +430,8 @@ used.<BR>
 17    cerr &lt;&lt; "I said,\"" &lt;&lt; src &lt;&lt; "\"."
 18         &lt;&lt; " The Object said,\"" &lt;&lt; dest &lt;&lt;"\"" &lt;&lt; endl;
 19  }
-</PRE>Briefly, the function <TT>hello()</TT> accepts a generic object reference.
+</PRE>
+Briefly, the function <TT>hello()</TT> accepts a generic object reference.
 The object reference (<TT>obj</TT>) is narrowed to <TT>Echo_ptr</TT>. If
 the object reference returned by <TT>Echo::_narrow()</TT> is not nil, the
 operation <TT>echoString()</TT> is invoked. Finally, both the argument to
@@ -452,11 +456,11 @@ the destructor of <TT>CORBA::String_var</TT>. It is called
 automatically when the variable goes out of scope (as the function
 returns). Line 15 shows how <TT>CORBA::String_var</TT> variables are
 used. They can be used in place of a string (for which the mapping is
-<TT>char*</TT>)<A NAME="text6" HREF="#note6"><SUP><FONT SIZE=2>4</FONT></SUP></A>. As used in line 12, assigning a constant string
+<TT>char*</TT>)<SUP><A NAME="text6" HREF="#note6"><FONT SIZE=2>4</FONT></A></SUP>. As used in line 12, assigning a constant string
 (<TT>const char*</TT>) to a <TT>CORBA::String_var</TT> causes the string
 to be copied. On the other hand, assigning a <TT>char*</TT> to a
 <TT>CORBA::String_var</TT>, as used in line 15, causes the latter to
-assume the ownership of the string<A NAME="text7" HREF="#note7"><SUP><FONT SIZE=2>5</FONT></SUP></A>.<BR>
+assume the ownership of the string<SUP><A NAME="text7" HREF="#note7"><FONT SIZE=2>5</FONT></A></SUP>.<BR>
 <BR>
 Under the C++ mapping, <TT>T_var</TT> types are provided for all the
 non-basic data types. It is obvious that one should use automatic
@@ -466,8 +470,9 @@ it is a good practice to use the <TT>T_var</TT> types to manage the
 heap storage.<BR>
 <BR>
 <A NAME="toc11"></A>
-<H2>2.8&nbsp;&nbsp; Example 1 --- Colocated Client and Implementation</H2>
-<A NAME="objeg1"></A>Having introduced the client and the object implementation, we can now
+<H2><A NAME="htoc19">2.8</A>&nbsp;&nbsp;Example 1 --- Colocated Client and Implementation</H2>
+<A NAME="objeg1"></A>
+Having introduced the client and the object implementation, we can now
 describe how to link up the two via the ORB and POA. In this section,
 we describe an example in which both the client and the object
 implementation are in the same address space. In the next two
@@ -500,16 +505,18 @@ The code for this example is reproduced below:<BR>
 20    orb-&gt;destroy();
 21    return 0;
 22  }
-</PRE>The example illustrates several important interactions among the ORB,
+</PRE>
+The example illustrates several important interactions among the ORB,
 the POA, the servant, and the client. Here are the details:<BR>
 <BR>
 
-<H3>2.8.1&nbsp;&nbsp; ORB initialisation</H3><DL COMPACT=compact>
-<DT>Line 4<DD><BR>The ORB is initialised by calling the <TT>CORBA::ORB_init()</TT>
+<H3><A NAME="htoc20">2.8.1</A>&nbsp;&nbsp;ORB initialisation</H3>
+<DL COMPACT=compact><DT><B>Line 4</B><DD><BR>
+The ORB is initialised by calling the <TT>CORBA::ORB_init()</TT>
 function. The function uses the 3rd argument to determine which ORB
 should be returned. To use omniORB 3, this argument must either be
 `omniORB3' or NULL. If it is NULL, there must be an argument, -ORBid
-`omniORB3', in <TT>argv</TT><A NAME="text8" HREF="#note8"><SUP><FONT SIZE=2>6</FONT></SUP></A>. Like all command-line
+`omniORB3', in <TT>argv</TT><SUP><A NAME="text8" HREF="#note8"><FONT SIZE=2>6</FONT></A></SUP>. Like all command-line
 arguments understood by the ORB, it will be removed from <TT>argv</TT>
 when <TT>CORBA::ORB_init()</TT> returns. Therefore, an application is not
 required to handle any command-line arguments it does not
@@ -519,11 +526,13 @@ If supplied, omniORB also reads the configuration file
 <TT>omniORB.cfg</TT>. Among other things, the file provides a list of
 initial object references. One example of these object references is
 the Naming service. Its use will be discussed in
-section&nbsp;<A HREF="#resolveinit">2.10.1</A>. If any error occurs during the processing
+section&nbsp;<A HREF="#resolveinit">2.10.121Obtaining the Root Context Object Referencesubsection.2.10.1</A>. If any error occurs during the processing
 of the configuration file, the system exception
 <TT>CORBA::INITIALIZE</TT> is raised.</DL>
-<H3>2.8.2&nbsp;&nbsp; Obtaining the Root POA</H3><DL COMPACT=compact>
-<DT>Lines 6--7<DD><BR>To activate our servant object and make it available to clients, we
+
+<H3><A NAME="htoc21">2.8.2</A>&nbsp;&nbsp;Obtaining the Root POA</H3>
+<DL COMPACT=compact><DT><B>Lines 6--7</B><DD><BR>
+To activate our servant object and make it available to clients, we
 must register it with a POA. In this example, we use the <I>Root
 POA</I>, rather than creating any child POAs. The Root POA is found with
 <TT>orb-&gt;resolve_initial_references()</TT>, which returns a plain
@@ -535,19 +544,21 @@ suitable policies for many simple servers, and closely matches the
 `policies' used by omniORB 2's BOA. See Chapter 11 of the CORBA 2.3
 specification[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>] for details of all the POA policies
 which are available.</DL>
-<H3>2.8.3&nbsp;&nbsp; Object initialisation</H3><DL COMPACT=compact>
-<DT>Line 9<DD><BR>An instance of the Echo object is initialised using the <TT>new</TT>
+
+<H3><A NAME="htoc22">2.8.3</A>&nbsp;&nbsp;Object initialisation</H3>
+<DL COMPACT=compact><DT><B>Line 9</B><DD><BR>
+An instance of the Echo object is initialised using the <TT>new</TT>
 operator.<BR>
 <BR>
-
-<DT>Line 10<DD><BR>The servant object is activated in the Root POA using
+<DT><B>Line 10</B><DD><BR>
+The servant object is activated in the Root POA using
 <TT>poa-&gt;activate_object()</TT>, which returns an object identifier
 (of type <TT>PortableServer::ObjectId*</TT>). The object id must
 be passed back to various POA operations. The caller is responsible
 for freeing the object id, so it is assigned to a <TT>_var</TT> type.<BR>
 <BR>
-
-<DT>Line 12<DD><BR>The object reference is obtained from the servant object by calling
+<DT><B>Line 12</B><DD><BR>
+The object reference is obtained from the servant object by calling
 <TT>_this()</TT>. Like all object references, the return value of
 <TT>_this()</TT> must be released by <TT>CORBA::release()</TT> when it is no
 longer needed. In this case, we assign it to a <TT>_var</TT> type, so
@@ -567,24 +578,30 @@ applicable not only to object references returned by <TT>_this()</TT>, but
 to any object references that are passed around within the same
 address space or received from other address spaces via IIOP calls.<BR>
 <BR>
-
-<DT>Line 13<DD><BR>The server code releases the reference it holds to the servant
+<DT><B>Line 13</B><DD><BR>
+The server code releases the reference it holds to the servant
 object. The only reference to that object is now held by the POA (it
 gained the reference on the call to <TT>activate_object()</TT>), so when
 the object is deactivated (or the POA is destroyed), the servant
 object will be deleted automatically. After this point, the code must
 no longer use the <TT>myecho</TT> pointer.</DL>
-<H3>2.8.4&nbsp;&nbsp; Activating the POA</H3><DL COMPACT=compact>
-<DT>Lines 15--16<DD><BR>POAs are initially in the <I>holding</I> state, meaning that incoming
+
+<H3><A NAME="htoc23">2.8.4</A>&nbsp;&nbsp;Activating the POA</H3>
+<DL COMPACT=compact><DT><B>Lines 15--16</B><DD><BR>
+POAs are initially in the <I>holding</I> state, meaning that incoming
 requests are blocked. Lines 15 and 16 acquire a reference to the POA's
 POA manager, and use it to put the POA into the <I>active</I> state.
 Incoming requests are now served.</DL>
-<H3>2.8.5&nbsp;&nbsp; Performing a call</H3><DL COMPACT=compact>
-<DT>Line 18<DD><BR>At long last, we can call <TT>hello()</TT> with this object reference. The
+
+<H3><A NAME="htoc24">2.8.5</A>&nbsp;&nbsp;Performing a call</H3>
+<DL COMPACT=compact><DT><B>Line 18</B><DD><BR>
+At long last, we can call <TT>hello()</TT> with this object reference. The
 argument is widened implicitly to the generic object reference
 <TT>CORBA::Object_ptr</TT>.</DL>
-<H3>2.8.6&nbsp;&nbsp; ORB destruction</H3><DL COMPACT=compact>
-<DT>Line 20<DD><BR>Shutdown the ORB permanently. This call causes the ORB to release all
+
+<H3><A NAME="htoc25">2.8.6</A>&nbsp;&nbsp;ORB destruction</H3>
+<DL COMPACT=compact><DT><B>Line 20</B><DD><BR>
+Shutdown the ORB permanently. This call causes the ORB to release all
 its resources, e.g. internal threads, and also to deactivate any
 servant objects which are currently active. When it deactivates the
 <TT>Echo_i</TT> instance, the object's reference count drops to zero,
@@ -592,8 +609,10 @@ so the object is deleted.<BR>
 <BR>
 This call is particularly important when writing a CORBA DLL on
 Windows NT that is to be used from ActiveX. If this call is absent,
-the application will hang when the CORBA DLL is unloaded.</DL><A NAME="toc12"></A>
-<H2>2.9&nbsp;&nbsp; Example 2 --- Different Address Spaces</H2>In this example, the client and the object implementation reside in
+the application will hang when the CORBA DLL is unloaded.</DL>
+<A NAME="toc12"></A>
+<H2><A NAME="htoc26">2.9</A>&nbsp;&nbsp;Example 2 --- Different Address Spaces</H2>
+In this example, the client and the object implementation reside in
 two different address spaces. The code of this example is almost the
 same as the previous example. The only difference is the extra work
 which needs to be done to pass the object reference from the object
@@ -608,7 +627,8 @@ example. In the next example, we shall introduce a better way of
 passing the object reference using the CORBA Naming Service.<BR>
 <BR>
 
-<H3>2.9.1&nbsp;&nbsp; Object Implementation: Generating a Stringified Object Reference</H3>The <TT>main()</TT> function of the server side is reproduced below. The
+<H3><A NAME="htoc27">2.9.1</A>&nbsp;&nbsp;Object Implementation: Generating a Stringified Object Reference</H3>
+The <TT>main()</TT> function of the server side is reproduced below. The
 full listing (<TT>eg2_impl.cc</TT>) can be found at the end of this
 chapter.<BR>
 <BR>
@@ -638,25 +658,26 @@ chapter.<BR>
 22    orb-&gt;destroy();
 23    return 0;
 24  }
-</PRE>The stringified object reference is obtained by calling the ORB's
+</PRE>
+The stringified object reference is obtained by calling the ORB's
 <TT>object_to_string()</TT> function (line 13). This results in a
 string starting with the signature `IOR:' and followed by some
 hexadecimal digits. All CORBA 2 compliant ORBs are able to convert the
 string into its internal representation of a so-called Interoperable
 Object Reference (IOR). The IOR contains the location information and
 a key to uniquely identify the object implementation in its own
-address space<A NAME="text9" HREF="#note9"><SUP><FONT SIZE=2>7</FONT></SUP></A>. From the IOR, an object reference can
+address space<SUP><A NAME="text9" HREF="#note9"><FONT SIZE=2>7</FONT></A></SUP>. From the IOR, an object reference can
 be constructed.<BR>
 <BR>
 
-<H3>2.9.2&nbsp;&nbsp; Client: Using a Stringified Object Reference</H3>
-<A NAME="clnt2"></A>The stringified object reference is passed to the client as a
+<H3><A NAME="htoc28">2.9.2</A>&nbsp;&nbsp;Client: Using a Stringified Object Reference</H3>
+<A NAME="clnt2"></A>
+The stringified object reference is passed to the client as a
 command-line argument. The client uses the ORB's
 <TT>string_to_object()</TT> function to convert the string into a generic
 object reference (<TT>CORBA::Object_ptr</TT>). The relevant section of
 the code is reproduced below. The full listing (<TT>eg2_clt.cc</TT>) can
-be found at the end of this chapter.<BR>
-<BR>
+be found at the end of this chapter.
 <PRE>
 try {
   CORBA::Object_var obj = orb-&gt;string_to_object(argv[1]);
@@ -666,17 +687,19 @@ catch(CORBA::COMM_FAILURE&amp; ex) {
   ... // code to handle communication failure
 }
 </PRE>
-<H3>2.9.3&nbsp;&nbsp; Catching System Exceptions</H3>When omniORB detects an error condition, it may raise a system
+
+<H3><A NAME="htoc29">2.9.3</A>&nbsp;&nbsp;Catching System Exceptions</H3>
+When omniORB detects an error condition, it may raise a system
 exception. The CORBA specification defines a series of exceptions
 covering most of the error conditions that an ORB may encounter. The
 client may choose to catch these exceptions and recover from the error
-condition<A NAME="text10" HREF="#note10"><SUP><FONT SIZE=2>8</FONT></SUP></A>. For instance, the code fragment, shown in
-section&nbsp;<A HREF="#clnt2">2.9.2</A>, catches the <TT>COMM_FAILURE</TT> system exception
+condition<SUP><A NAME="text10" HREF="#note10"><FONT SIZE=2>8</FONT></A></SUP>. For instance, the code fragment, shown in
+section&nbsp;<A HREF="#clnt2">2.9.219Client: Using a Stringified Object Referencesubsection.2.9.2</A>, catches the <TT>COMM_FAILURE</TT> system exception
 which indicates that communication with the object implementation in
 another address space has failed.<BR>
 <BR>
 All system exceptions inherit from <TT>CORBA::SystemException</TT>. With
-compilers that properly support RTTI<A NAME="text11" HREF="#note11"><SUP><FONT SIZE=2>9</FONT></SUP></A>, a single catch of <TT>CORBA::SystemException</TT> will
+compilers that properly support RTTI<SUP><A NAME="text11" HREF="#note11"><FONT SIZE=2>9</FONT></A></SUP>, a single catch of <TT>CORBA::SystemException</TT> will
 catch all the different system exceptions thrown by omniORB.<BR>
 <BR>
 When omniORB detects an internal error that is most likely to be
@@ -690,14 +713,15 @@ raised. If this occurs, you are strongly encouraged to file a bug
 report and point out the location.<BR>
 <BR>
 
-<H3>2.9.4&nbsp;&nbsp; Lifetime of a CORBA object</H3>CORBA objects are either <I>transient</I> or <I>persistent</I>. The
+<H3><A NAME="htoc30">2.9.4</A>&nbsp;&nbsp;Lifetime of a CORBA object</H3>
+CORBA objects are either <I>transient</I> or <I>persistent</I>. The
 majority are transient, meaning that the lifetime of the CORBA object
 (as contacted through an object reference) is the same as the lifetime
 of its servant object. Persistent objects can live beyond the
 destruction of their servant object, the POA they were created in, and
 even their process. Persistent objects are, of course, only
 contactable when their associated servants are active, or can be
-activated by their POA with a servant manager<A NAME="text12" HREF="#note12"><SUP><FONT SIZE=2>10</FONT></SUP></A>. A reference to
+activated by their POA with a servant manager<SUP><A NAME="text12" HREF="#note12"><FONT SIZE=2>10</FONT></A></SUP>. A reference to
 a persistent object can be published, and will remain valid even if
 the server process is restarted.<BR>
 <BR>
@@ -715,7 +739,8 @@ that can be used for this purpose. The next section describes an
 example of how to use the COS Naming Service.<BR>
 <BR>
 <A NAME="toc13"></A>
-<H2>2.10&nbsp;&nbsp; Example 3 --- Using the Naming Service</H2>In this example, the object implementation uses the Naming
+<H2><A NAME="htoc31">2.10</A>&nbsp;&nbsp;Example 3 --- Using the Naming Service</H2>
+In this example, the object implementation uses the Naming
 Service&nbsp;[<A HREF="omniORB014.html#corbaservices"><CITE>OMG98</CITE></A>] to pass on the object reference to the
 client. This method is far more practical than using stringified
 object references. The full listing of the object implementation
@@ -732,7 +757,7 @@ bound to an object reference.<BR>
 <BR>
 Sequences of name components can be represented as a flat string,
 using `.' to separate the id and kind fields, and `/' to separate name
-components from each other<A NAME="text13" HREF="#note13"><SUP><FONT SIZE=2>11</FONT></SUP></A>. In our example, the Echo object
+components from each other<SUP><A NAME="text13" HREF="#note13"><FONT SIZE=2>11</FONT></A></SUP>. In our example, the Echo object
 reference is bound to the stringified name
 `<TT>test.my_context/Echo.Object</TT>'.<BR>
 <BR>
@@ -745,13 +770,13 @@ values for <TT>test</TT> and <TT>Echo</TT> are chosen to be
 arbitrary choice as there is no standardised set of kind values.<BR>
 <BR>
 
-<H3>2.10.1&nbsp;&nbsp; Obtaining the Root Context Object Reference</H3>
-<A NAME="resolveinit"></A>The initial contact with the Naming Service can be established via the
+<H3><A NAME="htoc32">2.10.1</A>&nbsp;&nbsp;Obtaining the Root Context Object Reference</H3>
+<A NAME="resolveinit"></A>
+The initial contact with the Naming Service can be established via the
 <I>root</I> context. The object reference to the root context is
 provided by the ORB and can be obtained by calling
 <TT>resolve_initial_references()</TT>. The following code fragment shows
-how it is used:<BR>
-<BR>
+how it is used:
 <PRE>
 CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB3");
 
@@ -760,7 +785,8 @@ initServ = orb-&gt;resolve_initial_references("NameService");
 
 CosNaming::NamingContext_var rootContext;
 rootContext = CosNaming::NamingContext::_narrow(initServ);
-</PRE>Remember, omniORB constructs its internal list of initial references
+</PRE>
+Remember, omniORB constructs its internal list of initial references
 at initialisation time using the information provided in the
 configuration file <TT>omniORB.cfg</TT>, or given on the command
 line. If this file is not present, the internal list will be empty and
@@ -768,7 +794,8 @@ line. If this file is not present, the internal list will be empty and
 <TT>CORBA::ORB::InvalidName</TT> exception.<BR>
 <BR>
 
-<H3>2.10.2&nbsp;&nbsp; The Naming Service Interface</H3>It is beyond the scope of this chapter to describe in detail the
+<H3><A NAME="htoc33">2.10.2</A>&nbsp;&nbsp;The Naming Service Interface</H3>
+It is beyond the scope of this chapter to describe in detail the
 Naming Service interface. You should consult the CORBA services
 specification&nbsp;[<A HREF="omniORB014.html#corbaservices"><CITE>OMG98</CITE></A>] (chapter 3). The code listed in
 <TT>eg3_impl.cc</TT> and <TT>eg3_clt.cc</TT> are good examples of how the
@@ -776,7 +803,8 @@ service can be used. Please spend time to study the examples
 carefully.<BR>
 <BR>
 <A NAME="toc14"></A>
-<H2>2.11&nbsp;&nbsp; Example 4 --- Using tie implementation templates</H2>Since 2.6.0, omniORB has supported <I>tie</I> implementation templates
+<H2><A NAME="htoc34">2.11</A>&nbsp;&nbsp;Example 4 --- Using tie implementation templates</H2>
+Since 2.6.0, omniORB has supported <I>tie</I> implementation templates
 as an alternative way of providing servant classes. If you use the
 <TT>-Wbtp</TT> option to omniidl, it generates an extra template class
 for each interface. This template class can be used to tie a C++ class
@@ -793,8 +821,7 @@ every servant class to derive from CORBA classes.<BR>
 <BR>
 Secondly, the instantiation of a CORBA object now involves creating an
 instance of the implementation class <EM>and</EM> an instance of the
-template. Here is the relevant code fragment:<BR>
-<BR>
+template. Here is the relevant code fragment:
 <PRE>
 class Echo_i { ... };
 
@@ -802,7 +829,8 @@ Echo_i *myimpl = new Echo_i();
 POA_Echo_tie&lt;Echo_i&gt; myecho(myimpl);
 
 PortableServer::ObjectId_var myechoid = poa-&gt;activate_object(&amp;myecho);
-</PRE>For interface <TT>Echo</TT>, the name of its tie implementation template
+</PRE>
+For interface <TT>Echo</TT>, the name of its tie implementation template
 is <TT>POA_Echo_tie</TT>. The template parameter is the servant
 class that contains an implementation of each of the operations
 defined in the interface. As used above, the tie template takes
@@ -814,8 +842,10 @@ see section&nbsp;23.36.7 of the CORBA 2.3 C++ mapping
 specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>].<BR>
 <BR>
 <A NAME="toc15"></A>
-<H2>2.12&nbsp;&nbsp; Source Listings</H2>
-<H3>2.12.1&nbsp;&nbsp; eg1.cc</H3><PRE>
+<H2><A NAME="htoc35">2.12</A>&nbsp;&nbsp;Source Listings</H2>
+
+<H3><A NAME="htoc36">2.12.1</A>&nbsp;&nbsp;eg1.cc</H3>
+<PRE>
 // eg1.cc - This is the source code of example 1 used in Chapter 2
 //          "The Basics" of the omniORB user guide.
 //
@@ -930,7 +960,9 @@ int main(int argc, char** argv)
   return 0;
 }
 </PRE>
-<H3>2.12.2&nbsp;&nbsp; eg2_impl.cc</H3><PRE>
+
+<H3><A NAME="htoc37">2.12.2</A>&nbsp;&nbsp;eg2_impl.cc</H3>
+<PRE>
 // eg2_impl.cc - This is the source code of example 2 used in Chapter 2
 //               "The Basics" of the omniORB user guide.
 //
@@ -1006,7 +1038,9 @@ int main(int argc, char** argv)
   return 0;
 }
 </PRE>
-<H3>2.12.3&nbsp;&nbsp; eg2_clt.cc</H3><PRE>
+
+<H3><A NAME="htoc38">2.12.3</A>&nbsp;&nbsp;eg2_clt.cc</H3>
+<PRE>
 // eg2_clt.cc - This is the source code of example 2 used in Chapter 2
 //              "The Basics" of the omniORB user guide.
 //
@@ -1072,7 +1106,9 @@ int main(int argc, char** argv)
   return 0;
 }
 </PRE>
-<H3>2.12.4&nbsp;&nbsp; eg3_impl.cc</H3><PRE>
+
+<H3><A NAME="htoc39">2.12.4</A>&nbsp;&nbsp;eg3_impl.cc</H3>
+<PRE>
 // eg3_impl.cc - This is the source code of example 3 used in Chapter 2
 //               "The Basics" of the omniORB user guide.
 //
@@ -1249,7 +1285,9 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
   return 1;
 }
 </PRE>
-<H3>2.12.5&nbsp;&nbsp; eg3_clt.cc</H3><PRE>
+
+<H3><A NAME="htoc40">2.12.5</A>&nbsp;&nbsp;eg3_clt.cc</H3>
+<PRE>
 // eg3_clt.cc - This is the source code of example 3 used in Chapter 2
 //              "The Basics" of the omniORB user guide.
 //
@@ -1383,7 +1421,9 @@ getObjectReference(CORBA::ORB_ptr orb)
   return CORBA::Object::_nil();
 }
 </PRE>
-<H3>2.12.6&nbsp;&nbsp; eg3_tieimpl.cc</H3><PRE>
+
+<H3><A NAME="htoc41">2.12.6</A>&nbsp;&nbsp;eg3_tieimpl.cc</H3>
+<PRE>
 // eg3_tieimpl.cc - This example is similar to eg3_impl.cc except that
 //                  the tie implementation skeleton is used.
 //
@@ -1566,7 +1606,9 @@ bindObjectToName(CORBA::ORB_ptr orb, CORBA::Object_ptr objref)
   return 1;
 }
 </PRE>
-<H3>2.12.7&nbsp;&nbsp; dir.mk</H3><PRE>
+
+<H3><A NAME="htoc42">2.12.7</A>&nbsp;&nbsp;dir.mk</H3>
+<PRE>
 
 CXXSRCS = eg1.cc eg2_impl.cc eg2_clt.cc eg3_impl.cc eg3_clt.cc
 
@@ -1620,55 +1662,45 @@ ifndef NoTieExample
 $(eg3_tieimpl): eg3_tieimpl.o $(CORBA_STATIC_STUB_OBJS) $(CORBA_LIB_DEPEND)
  @(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))
 endif
-</PRE><HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note3" HREF="#text3"><FONT SIZE=5>1</FONT></A><DD> The stub
+</PRE>
+<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note3" HREF="#text3"><FONT SIZE=5>1</FONT></A><DD>The stub
 code is the C++ code that provides the object mapping as defined in
 the CORBA 2.3 specification.
-
-<DT><A NAME="note4" HREF="#text4"><FONT SIZE=5>2</FONT></A><DD> In
+<DT><A NAME="note4" HREF="#text4"><FONT SIZE=5>2</FONT></A><DD>In
 omniORB, all object reference variable types are instantiated from the
 template type <TT>_CORBA_ObjRef_Var</TT>.
-
-<DT><A NAME="note5" HREF="#text5"><FONT SIZE=5>3</FONT></A><DD> However, the implementation
+<DT><A NAME="note5" HREF="#text5"><FONT SIZE=5>3</FONT></A><DD>However, the implementation
 of the type conversion operator between <TT>Echo_var</TT> and
 <TT>Echo_ptr</TT> varies slightly among different C++ compilers; you
 may need to do an explicit cast if the compiler complains about the
 conversion being ambiguous.
-
-<DT><A NAME="note6" HREF="#text6"><FONT SIZE=5>4</FONT></A><DD> A conversion operator of
+<DT><A NAME="note6" HREF="#text6"><FONT SIZE=5>4</FONT></A><DD>A conversion operator of
 <TT>CORBA::String_var</TT> converts a <TT>CORBA::String_var</TT>
 to a <TT>char*</TT>.
-
-<DT><A NAME="note7" HREF="#text7"><FONT SIZE=5>5</FONT></A><DD> Please refer to the CORBA
+<DT><A NAME="note7" HREF="#text7"><FONT SIZE=5>5</FONT></A><DD>Please refer to the CORBA
 specification section 23.7 for the details of the String_var
 mapping. Other <TT>T_var</TT> types are also covered in chapter 23.
-
-<DT><A NAME="note8" HREF="#text8"><FONT SIZE=5>6</FONT></A><DD> For backwards compatibility, the
+<DT><A NAME="note8" HREF="#text8"><FONT SIZE=5>6</FONT></A><DD>For backwards compatibility, the
 ORB identifier `omniORB2' is also accepted.
-
-<DT><A NAME="note9" HREF="#text9"><FONT SIZE=5>7</FONT></A><DD> Notice that the object key is not globally
+<DT><A NAME="note9" HREF="#text9"><FONT SIZE=5>7</FONT></A><DD>Notice that the object key is not globally
 unique across address spaces.
-
-<DT><A NAME="note10" HREF="#text10"><FONT SIZE=5>8</FONT></A><DD> If a system exception is not caught, the C++
+<DT><A NAME="note10" HREF="#text10"><FONT SIZE=5>8</FONT></A><DD>If a system exception is not caught, the C++
 runtime will call the <TT>terminate()</TT> function. This function is
 defaulted to abort the whole process and on some systems will cause a
 core file to be produced.
-
-<DT><A NAME="note11" HREF="#text11"><FONT SIZE=5>9</FONT></A><DD> Run Time Type
+<DT><A NAME="note11" HREF="#text11"><FONT SIZE=5>9</FONT></A><DD>Run Time Type
 Identification
-
-<DT><A NAME="note12" HREF="#text12"><FONT SIZE=5>10</FONT></A><DD> The POA itself
+<DT><A NAME="note12" HREF="#text12"><FONT SIZE=5>10</FONT></A><DD>The POA itself
 can be activated on demand with an adapter activator.
-
-<DT><A NAME="note13" HREF="#text13"><FONT SIZE=5>11</FONT></A><DD> There are escaping rules to cope
+<DT><A NAME="note13" HREF="#text13"><FONT SIZE=5>11</FONT></A><DD>There are escaping rules to cope
 with id and kind fields which contain `.' and `/' characters. See
-chapter&nbsp;<A HREF="omniORB004.html#chap:ins">4</A> of this manual, and chapter 3 of the CORBA
+chapter&nbsp;<A HREF="omniORB004.html#chap:ins">449Interoperable Naming Servicechapter.4</A> of this manual, and chapter 3 of the CORBA
 services specification, as updated for the Interoperable Naming
 Service&nbsp;[<A HREF="omniORB014.html#inschapters"><CITE>OMG00</CITE></A>].
 </DL>
 <HR>
 <A HREF="omniORB001.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB003.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>

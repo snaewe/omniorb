@@ -159,31 +159,32 @@ User's Guide
 \vfill
 
 { \Large
-Sai-Lai Lo\\
-{\normalsize (\textit{email: \href{mailto:slo@uk.research.att.com}%
-                                  {\email{slo@uk.research.att.com}}})}\\[2ex]
+Sai-Lai Lo\\[2ex]
 %
-David Riddoch\\
-{\normalsize (\textit{email: \href{mailto:djr@uk.research.att.com}%
-                                  {\email{djr@uk.research.att.com}}})}\\[2ex]
+David Riddoch\\[2ex]
 %
-Duncan Grisby\\
-{\normalsize (\textit{email: \href{mailto:dgrisby@uk.research.att.com}%
-                                  {\email{dgrisby@uk.research.att.com}}})}%
-                                  \\[2ex]
+Duncan Grisby\\[4ex]
 %
-AT\&T Laboratories Cambridge\\
 }
 
+Previously from AT\&T Laboratories Cambridge\\
+
 
 \vfill
 \vfill
-May 2000
+June 2002
 \vfill
 
 \end{center}
 
 \clearpage
+
+{\Large \bf Changes and Additions, June 2002}
+\begin{itemize}
+\item Minor changes.
+\end{itemize}
+
+\vspace{2\baselineskip}
 
 {\Large \bf Changes and Additions, May 2000}
 \begin{itemize}
@@ -194,7 +195,9 @@ May 2000
 \cleardoublepage
 
 %HEVEA{\Large \bf Contents}
+%BEGIN LATEX
 \tableofcontents
+%END LATEX
 
 \cleardoublepage
 
@@ -313,20 +316,14 @@ chapter~\ref{chap:dsi} for a way to workaround this problem for now.
 
 These features may be implemented in the short to medium term. It is
 best to check out the latest status on the omniORB home page
-(\weburl{http://www.uk.research.att.com/omniORB/}).
+(\weburl{http://omniorb.sourceforge.net/}).
 
 
 \section{Setting Up Your Environment}
 \label{setup}
 
-At AT\&T Laboratories Cambridge, you should use the OMNI Development
-Environment (ODE)~\cite{tjr96b} and the OMNI tree version 5.0 or above
-to compile your programs. If this is the case, there is no extra setup
-you have to do other than those described in the ODE documentation.
-
-If you are running omniORB at other sites, you (or your system
-administrator) should install omniORB by following the instructions in
-the installation notes.
+To get omniORB running, you should first install omniORB by following
+the instructions in the installation notes for your platform.
 
 \begin{itemize}
 
@@ -335,9 +332,6 @@ variable \envvar{OMNIORB_CONFIG}. If this variable is defined, it
 contains the pathname of the omniORB configuration file. If the
 variable is not set, omniORB will use the compiled-in pathname to
 locate the file.
-
-\item On ARM/ATMos, the omniORB runtime looks for configuration
-information in the file \file{omniORB.cfg}.
 
 \item On Win32 platforms (Windows NT, 2000, 95, 98), omniORB first
 checks the environment variable \envvar{OMNIORB_CONFIG} to obtain the
@@ -694,8 +688,8 @@ reference is therefore conceptually inherited from
 
 The \op{\_narrow} function takes an argument of type
 \type{CORBA::Object\_ptr} and returns a new object reference of the
-\intf{Echo} interface.  If the actual (runtime) type of the argument
-object reference can be widened to \type{Echo\_ptr}, \op{\_narrow}
+\intf{Echo} interface.  If the actual runtime type of the argument
+object reference can be narrowed to \type{Echo\_ptr}, \op{\_narrow}
 will return a valid object reference. Otherwise it will return a nil
 object reference. Note that \op{\_narrow} performs an implicit
 duplication of the object reference, so the result must be released.
@@ -2902,8 +2896,7 @@ The general form of an omniidl command line is:
 \begin{quote} % Not the clearest bit of mark-up ever... :-)
 \cmdline{omniidl }[\textit{options}]\cmdline{ -b}%
 <\textit{back-end}>\cmdline{ }[\textit{back-end options}]%
-\cmdline{ }<\textit{file 1}>\cmdline{ }<\textit{file 2}>%
-\cmdline{ }\dots
+\cmdline{ }<\textit{file}>
 \end{quote}
 
 \section{Common options}
@@ -3212,17 +3205,11 @@ Generate the C++ headers and stubs for a file \file{a.idl}:
 \cmdline{omniidl -bcxx -Wba a.idl}
 \end{quote}
 
-\noindent Compile two files with Any support:
-
-\begin{quote}
-\cmdline{omniidl -bcxx -Wba a.idl b.idl}
-\end{quote}
-
-\noindent As above, but also generate Python stubs for the files
+\noindent As above, but also generate Python stubs for the file
 (assuming omniORBpy is installed):
 
 \begin{quote}
-\cmdline{omniidl -bcxx -Wba -bpython a.idl b.idl}
+\cmdline{omniidl -bcxx -Wba -bpython a.idl}
 \end{quote}
 
 \noindent Just check the IDL files for validity, generating no output:

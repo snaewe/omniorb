@@ -2,20 +2,22 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
  Type Any and TypeCode
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB008.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB010.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>Chapter&nbsp;9&nbsp;&nbsp; Type Any and TypeCode</H1>
-<A NAME="ch_any"></A>The CORBA specification provides for a type that can hold the value of
+<H1><A NAME="htoc97">Chapter&nbsp;9</A>&nbsp;&nbsp;Type Any and TypeCode</H1>
+<A NAME="ch_any"></A>
+The CORBA specification provides for a type that can hold the value of
 any OMG IDL type. This type is known as type Any. The OMG also
 specifies a pseudo-object, TypeCode, that can encode a description of
 any type specifiable in OMG IDL.<BR>
@@ -28,8 +30,7 @@ specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A
 TypeCode, refer to the Interface Repository chapter in the CORBA core
 section of the CORBA 2.3 specification.<BR>
 <BR>
-<HR SIZE=2><DL COMPACT=compact>
-<DT><DD>
+<HR SIZE=2><DL COMPACT=compact><DT><DD>
 <DIV ALIGN=center><B>Warning</B></DIV><BR>
 Since 2.8.0, omniORB has been updated to CORBA 2.3. In order to comply
 with the 2.3 specification, it is necessary to change the semantics of
@@ -43,44 +44,43 @@ uses the affected Any extraction operators will most certainly cause
 runtime errors to occur. To smooth the transition from the old usage
 to the new, an ORB configuration variable
 <TT>omniORB::omniORB_27_CompatibleAnyExtraction</TT> can be set to
-revert the any extraction operators to the old semantics.</DL><HR SIZE=2><BR>
+revert the any extraction operators to the old semantics.</DL>
+<HR SIZE=2><BR>
 <BR>
 <A NAME="toc47"></A>
-<H2>9.1&nbsp;&nbsp; Example using type Any</H2>Before going through this example, you should make sure that you have
-read and understood the examples in chapter&nbsp;<A HREF="omniORB002.html#ch_basic">2</A>. The
+<H2><A NAME="htoc98">9.1</A>&nbsp;&nbsp;Example using type Any</H2>
+Before going through this example, you should make sure that you have
+read and understood the examples in chapter&nbsp;<A HREF="omniORB002.html#ch_basic">27The Basicschapter.2</A>. The
 source code for this example is included in the omniORB distribution,
 in the directory <TT>src/examples/anyExample</TT>. A listing of the
 source code is provided at the end of this chapter.<BR>
 <BR>
 
-<H3>9.1.1&nbsp;&nbsp; Type Any in IDL</H3>
+<H3><A NAME="htoc99">9.1.1</A>&nbsp;&nbsp;Type Any in IDL</H3>
 Type Any allows one to delay the decision on the type used in an
 operation until run-time. To use type any in IDL, use the keyword
-<TT>any</TT>, as in the following example:<BR>
-<BR>
+<TT>any</TT>, as in the following example:
 <PRE>
 // IDL
 
 interface anyExample {
   any testOp(in any mesg);
 };
-</PRE>The operation <TT>testOp()()</TT> in this example can now take any value
+</PRE>
+The operation <TT>testOp()()</TT> in this example can now take any value
 expressible in OMG IDL as an argument, and can also return any type
 expressible in OMG IDL.<BR>
 <BR>
 Type Any is mapped into C++ as the type <TT>CORBA::Any</TT>. When passed
 as an argument or as a result of an operation, the following rules
 apply:<BR>
-<BR>
-<BR>
-<BR>
 <TABLE CELLSPACING=2 CELLPADDING=0>
 <TR><TD ALIGN=left NOWRAP><B>In </B></TD>
 <TD ALIGN=left NOWRAP><B>InOut </B></TD>
 <TD ALIGN=left NOWRAP><B>Out </B></TD>
 <TD ALIGN=left NOWRAP><B>Return </B></TD>
 </TR>
-<TR><TD BGCOLOR=black COLSPAN=4><TABLE BORDER=0 WIDTH="100%" CELLSPACING=0 CELLPADING=1><TR><TD></TD></TR></TABLE></TD>
+<TR><TD BGCOLOR=black COLSPAN=4><TABLE BORDER=0 WIDTH="100%" CELLSPACING=0 CELLPADDING=1><TR><TD></TD></TR></TABLE></TD>
 </TR>
 <TR><TD ALIGN=left NOWRAP><TT>const CORBA::Any&amp; </TT></TD>
 <TD ALIGN=left NOWRAP><TT>CORBA::Any&amp; </TT></TD>
@@ -88,10 +88,7 @@ apply:<BR>
 <TD ALIGN=left NOWRAP><TT>CORBA::Any* </TT></TD>
 </TR></TABLE>
 <BR>
-<BR>
-<BR>
-So, the above IDL would map to the following C++:<BR>
-<BR>
+So, the above IDL would map to the following C++:
 <PRE>
 // C++
 
@@ -102,37 +99,38 @@ public:
   virtual CORBA::Any* testOp(const CORBA::Any&amp; a);
 };
 </PRE>
-<H3>9.1.2&nbsp;&nbsp; Inserting and Extracting Basic Types from an Any</H3>The question now arises as to how values are inserted into and removed
+
+<H3><A NAME="htoc100">9.1.2</A>&nbsp;&nbsp;Inserting and Extracting Basic Types from an Any</H3>
+The question now arises as to how values are inserted into and removed
 from an Any. This is achieved using two overloaded operators:
 <TT>&lt;&lt;=</TT> and <TT>&gt;&gt;=</TT>.<BR>
 <BR>
 To insert a value into an Any, the <TT>&lt;&lt;=</TT> operator is used, as
-in this example:<BR>
-<BR>
+in this example:
 <PRE>
 // C++
 CORBA::Any an_any;
 CORBA::Long l = 100;
 an_any &lt;&lt;= l;
-</PRE>Note that the overloaded <TT>&lt;&lt;=</TT> operator has a return type of
+</PRE>
+Note that the overloaded <TT>&lt;&lt;=</TT> operator has a return type of
 <TT>void</TT>.<BR>
 <BR>
 To extract a value, the <TT>&gt;&gt;=</TT> operator is used, as in this
-example (where the Any contains a long):<BR>
-<BR>
+example (where the Any contains a long):
 <PRE>
 // C++
 CORBA::Long l;
 an_any &gt;&gt;= l;
 
 cout &lt;&lt; "This is a long: " &lt;&lt; l &lt;&lt; endl;
-</PRE>The overloaded <TT>&gt;&gt;=</TT> operator returns a <TT>CORBA::Boolean</TT>.
+</PRE>
+The overloaded <TT>&gt;&gt;=</TT> operator returns a <TT>CORBA::Boolean</TT>.
 If an attempt is made to extract a value from an Any when it contains
 a different type of value (e.g. an attempt to extract a long from an
 Any containing a double), the overloaded <TT>&gt;&gt;=</TT> operator will
 return False; otherwise it will return True. Thus, a common tactic to
-extract values from an Any is as follows:<BR>
-<BR>
+extract values from an Any is as follows:
 <PRE>
 // C++
 CORBA::Long l;
@@ -156,13 +154,14 @@ else {
     cout &lt;&lt; "Unknown value." &lt;&lt; endl;
 }
 </PRE>
-<H3>9.1.3&nbsp;&nbsp; Inserting and Extracting Constructed Types from an Any</H3>It is also possible to insert and extract constructed types and object
+
+<H3><A NAME="htoc101">9.1.3</A>&nbsp;&nbsp;Inserting and Extracting Constructed Types from an Any</H3>
+It is also possible to insert and extract constructed types and object
 references from an Any. omniidl will generate insertion and extraction
 operators for the constructed type. Note that it is necessary to
 specify the <TT>-WBa</TT> command-line flag when running omniidl in
 order to generate these operators. The following example illustrates
-the use of constructed types with type Any:<BR>
-<BR>
+the use of constructed types with type Any:
 <PRE>
 // IDL
 struct testStruct {
@@ -173,17 +172,16 @@ struct testStruct {
 interface anyExample {
   any testOp(in any mesg);
 };
-</PRE>Upon compiling the above IDL with <TT>omniidl -bcxx -Wba</TT>, the
-following overloaded operators are generated:<BR>
-<BR>
-<OL type=1>
-<LI>
- <CODE>void operator&lt;&lt;=(CORBA::Any&amp;, const testStruct&amp;)</CODE>
-
-<LI> <CODE>void operator&lt;&lt;=(CORBA::Any&amp;, testStruct*)</CODE>
-
-<LI> <CODE>CORBA::Boolean operator&gt;&gt;=(const CORBA::Any&amp;,</CODE><BR><CODE>const testStruct*&amp;)</CODE>
-</OL>Operators of this form are generated for all constructed types, and
+</PRE>
+Upon compiling the above IDL with <TT>omniidl -bcxx -Wba</TT>, the
+following overloaded operators are generated:
+<OL type=1><LI>
+<CODE>void operator&lt;&lt;=(CORBA::Any&amp;, const testStruct&amp;)</CODE>
+<LI><CODE>void operator&lt;&lt;=(CORBA::Any&amp;, testStruct*)</CODE>
+<LI><CODE>CORBA::Boolean operator&gt;&gt;=(const CORBA::Any&amp;,</CODE><BR>
+<CODE>const testStruct*&amp;)</CODE>
+</OL>
+Operators of this form are generated for all constructed types, and
 for interfaces.<BR>
 <BR>
 The first operator, <EM>(1)</EM>, copies the constructed type, and
@@ -192,8 +190,7 @@ constructed type into the Any, and then manages it. Note that if the
 second operator is used, the Any consumes the constructed type, and
 the caller should not use the pointer to access the data after
 insertion. The following is an example of how to insert a value into
-an Any using operator <EM>(1)</EM>:<BR>
-<BR>
+an Any using operator <EM>(1)</EM>:
 <PRE>
 // C++
 CORBA::Any an_any;
@@ -203,9 +200,9 @@ t.l = 456;
 t.s = 8;
 
 an_any &lt;&lt;= t;
-</PRE>The third operator, <EM>(3)</EM>, is used to extract the constructed
-type from the Any, and can be used as follows:<BR>
-<BR>
+</PRE>
+The third operator, <EM>(3)</EM>, is used to extract the constructed
+type from the Any, and can be used as follows:
 <PRE>
 const testStruct* tp;   // From CORBA 2.3 onwards, use 
                         // const testStruct* instead of testStruct*
@@ -217,7 +214,8 @@ if (an_any &gt;&gt;= tp) {
 else {
     cout &lt;&lt; "Unknown value contained in Any." &lt;&lt; endl;
 }
-</PRE>As with basic types, if an attempt is made to extract a type from an
+</PRE>
+As with basic types, if an attempt is made to extract a type from an
 Any that does not contain a value of that type, the extraction
 operator returns False. If the Any does contain that type, the
 extraction operator returns True. If the extraction is successful, the
@@ -237,8 +235,7 @@ bounded strings, booleans, chars, and octets. Please refer to the C++
 Mapping chapter of the CORBA 2.3 specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>] for
 further information.<BR>
 <BR>
-<HR SIZE=2><DL COMPACT=compact>
-<DT><DD>
+<HR SIZE=2><DL COMPACT=compact><DT><DD>
 <DIV ALIGN=center><B>Warning</B></DIV><BR>
 In pre-omniORB 2.8.0 releases, it was unclear in the CORBA
 specification whether or not object references should be managed by an
@@ -253,11 +250,13 @@ compatibility, the runtime variable
 <TT>omniORB::omniORB_27_CompatibleAnyExtraction</TT> can be set to 1
 to get back the old behaviour. Notice that this should be used as a
 transitional measure and in the long run, applications should be
-written to use the new behaviour.</DL><HR SIZE=2><BR>
+written to use the new behaviour.</DL>
+<HR SIZE=2><BR>
 <BR>
 <A NAME="toc48"></A>
-<H2>9.2&nbsp;&nbsp; Type Any in omniORB</H2>
-<A NAME="anyOmniORB"></A>This section contains some notes on the use and behaviour of type Any
+<H2><A NAME="htoc102">9.2</A>&nbsp;&nbsp;Type Any in omniORB</H2>
+<A NAME="anyOmniORB"></A>
+This section contains some notes on the use and behaviour of type Any
 in omniORB.<BR>
 <BR>
 
@@ -271,10 +270,9 @@ should be specified when running omniidl.<BR>
 When an attempt is made to extract a type from an Any, the TypeCode of
 the type is checked for <EM>equivalence</EM> with the TypeCode of the
 type stored by the Any. The <TT>equivalent()</TT> test in the TypeCode
-interface is used for this purpose<A NAME="text20" HREF="#note20"><SUP><FONT SIZE=2>1</FONT></SUP></A>.<BR>
+interface is used for this purpose<SUP><A NAME="text20" HREF="#note20"><FONT SIZE=2>1</FONT></A></SUP>.<BR>
 <BR>
-Examples:<BR>
-<BR>
+Examples:
 <PRE>
 // IDL 1
 typedef double Double1;
@@ -282,7 +280,8 @@ typedef double Double1;
 struct Test1 {
   Double1 a;
 };
-</PRE><PRE>
+</PRE>
+<PRE>
 // IDL 2
 typedef double Double2;
 
@@ -308,14 +307,14 @@ TypeCode, below). This behaviour is necessary, as two types that
 differ only by a top-level alias can use the same insertion and
 extraction operators. If the <TT>tk_alias</TT> is not removed, one of
 the types could be transmitted with an incorrect <TT>tk_alias</TT>
-TypeCode. Example:<BR>
-<BR>
+TypeCode. Example:
 <PRE>
 // IDL 3
 typedef sequence&lt;double&gt; seqDouble1;
 typedef sequence&lt;double&gt; seqDouble2;
 typedef seqDouble2       seqDouble3;
-</PRE>If either <TT>seqDouble1</TT> or <TT>seqDouble2</TT> is inserted into an
+</PRE>
+If either <TT>seqDouble1</TT> or <TT>seqDouble2</TT> is inserted into an
 Any, the TypeCode stored in the Any will be for a
 <TT>sequence&lt;double&gt;</TT>, and not for an alias to a
 <TT>sequence&lt;double&gt;</TT>.<BR>
@@ -353,14 +352,14 @@ types will contain the complete TypeCode for the type (including any
 <H5>Recursive TypeCodes.</H5>
 omniORB (as of version 2.7) supports recursive TypeCodes. This means
 that types such as the following can be inserted or extracted from an
-Any:<BR>
-<BR>
+Any:
 <PRE>
 // IDL 4
 struct Test4 {
   sequence&lt;Test4&gt; a;
 };
 </PRE>
+
 <H5>Type-unsafe construction and insertion.</H5>
 If using the type-unsafe Any constructor, or the
 <TT>CORBA::Any::replace()</TT> member function, ensure that the value
@@ -369,11 +368,11 @@ TypeCode returned by the <TT>CORBA::Any::type()</TT> member function are
 used as arguments to the constructor or function. Using other values
 or TypeCodes may result in a mismatch, and is undefined behaviour.<BR>
 <BR>
-Note that a non-CORBA 2 function,<BR>
-<BR>
+Note that a non-CORBA 2 function,
 <PRE>
 CORBA::ULong CORBA::Any::NP_length() const
-</PRE>is supplied. This member function returns the length of the value
+</PRE>
+is supplied. This member function returns the length of the value
 returned by the <TT>CORBA::Any::value()</TT> member function. It may be
 necessary to use this function if the Any's value is to be stored in a
 file.<BR>
@@ -389,13 +388,14 @@ protect the Any with a mutex, as this condition should rarely arise,
 and adding a mutex would lead to performance penalties.<BR>
 <BR>
 <A NAME="toc49"></A>
-<H2>9.3&nbsp;&nbsp; TypeCode in omniORB</H2>This section contains some notes on the use and behaviour of TypeCode
+<H2><A NAME="htoc103">9.3</A>&nbsp;&nbsp;TypeCode in omniORB</H2>
+This section contains some notes on the use and behaviour of TypeCode
 in omniORB<BR>
 <BR>
 
-<H5>TypeCodes in IDL.</H5>When using TypeCodes in IDL, note that they are defined in the CORBA
-scope. Therefore, <TT>CORBA::TypeCode</TT> should be used. Example:<BR>
-<BR>
+<H5>TypeCodes in IDL.</H5>
+When using TypeCodes in IDL, note that they are defined in the CORBA
+scope. Therefore, <TT>CORBA::TypeCode</TT> should be used. Example:
 <PRE>
 // IDL 5
 struct Test5 {
@@ -403,29 +403,33 @@ struct Test5 {
   CORBA::TypeCode desc;
 };
 </PRE>
-<H5>orb.idl</H5>Inclusion of the file <TT>orb.idl</TT> in IDL using
+
+<H5>orb.idl</H5>
+Inclusion of the file <TT>orb.idl</TT> in IDL using
 <TT>CORBA::TypeCode</TT> is optional. An empty <TT>orb.idl</TT> file is
 provided for compatibility purposes.<BR>
 <BR>
 
-<H5>Generating TypeCodes for constructed types.</H5>To generate a TypeCode for constructed types, specify the
+<H5>Generating TypeCodes for constructed types.</H5>
+To generate a TypeCode for constructed types, specify the
 <TT>-Wba</TT> command-line flag when running omniidl. This will
 generate a <TT>_tc_</TT> TypeCode describing the type, at the same
-scope as the type (as per the CORBA 2.3 specification). Example:<BR>
-<BR>
+scope as the type (as per the CORBA 2.3 specification). Example:
 <PRE>
 // IDL 6
 struct Test6 {
   double a;
   sequence&lt;long&gt; b;
 };
-</PRE>A TypeCode, <TT>_tc_Test6</TT>, will be generated to describe the
+</PRE>
+A TypeCode, <TT>_tc_Test6</TT>, will be generated to describe the
 struct <TT>Test6</TT>. The operations defined in the TypeCode interface
 (see section 10.7 of the CORBA 2.3 specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>])
 can be used to query the TypeCode about the type it represents.<BR>
 <BR>
 
-<H5>TypeCode equality.</H5>The behaviour of <TT>CORBA::TypeCode::equal()</TT> member function from
+<H5>TypeCode equality.</H5>
+The behaviour of <TT>CORBA::TypeCode::equal()</TT> member function from
 omniORB 2.8.0 onwards is different from pre-omniORB 2.8.0 releases.
 In summary, the pre-omniORB 2.8.0 is close to the semantics of the new
 <TT>CORBA::TypeCode::equivalent()</TT> member function. Details are as
@@ -459,8 +463,10 @@ changed to enforce strict equality. The pre-2.8.0 behaviour can be
 obtained with <TT>equivalent()</TT>.<BR>
 <BR>
 <A NAME="toc50"></A>
-<H2>9.4&nbsp;&nbsp; Source Listing</H2>
-<H3>9.4.1&nbsp;&nbsp; anyExample_impl.cc</H3><PRE>
+<H2><A NAME="htoc104">9.4</A>&nbsp;&nbsp;Source Listing</H2>
+
+<H3><A NAME="htoc105">9.4.1</A>&nbsp;&nbsp;anyExample_impl.cc</H3>
+<PRE>
 // anyExample_impl.cc - This is the source code of the example used in
 //                      Chapter 9 "Type Any and TypeCode" of the omniORB
 //                      users guide.
@@ -568,7 +574,9 @@ int main(int argc, char** argv)
   return 0;
 }
 </PRE>
-<H3>9.4.2&nbsp;&nbsp; anyExample_clt.cc</H3><PRE>
+
+<H3><A NAME="htoc106">9.4.2</A>&nbsp;&nbsp;anyExample_clt.cc</H3>
+<PRE>
 // anyExample_clt.cc -  This is the source code of the example used in 
 //                      Chapter 9 "Type Any and TypeCode" of the omniORB 
 //                      users guide.
@@ -677,8 +685,8 @@ int main(int argc, char** argv)
   }
   return 0;
 }
-</PRE><HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note20" HREF="#text20"><FONT SIZE=5>1</FONT></A><DD> In pre-omniORB 2.8.0
+</PRE>
+<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note20" HREF="#text20"><FONT SIZE=5>1</FONT></A><DD>In pre-omniORB 2.8.0
 releases, omniORB performs an equality test and will ignore any alias
 TypeCodes (<TT>tk_alias</TT>) when making this comparison. The
 semantics is similar to the <TT>equivalent()</TT> test in the TypeCode
@@ -686,7 +694,7 @@ interface of CORBA 2.3.
 </DL>
 <HR>
 <A HREF="omniORB008.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB010.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>

@@ -1,3 +1,32 @@
+Tue Jun  4 00:30:39 BST 2002 dgrisby
+====================================
+
+- 3.0.5 release.
+
+README.FIRST
+README.Linux
+README.SGI
+README.rtems
+doc/omniORB.pdf
+doc/omniORB.ps
+doc/omniORB/index.html
+doc/omniORB/omniORB001.html
+doc/omniORB/omniORB002.html
+doc/omniORB/omniORB003.html
+doc/omniORB/omniORB004.html
+doc/omniORB/omniORB005.html
+doc/omniORB/omniORB006.html
+doc/omniORB/omniORB007.html
+doc/omniORB/omniORB008.html
+doc/omniORB/omniORB009.html
+doc/omniORB/omniORB010.html
+doc/omniORB/omniORB011.html
+doc/omniORB/omniORB012.html
+doc/omniORB/omniORB013.html
+doc/omniORB/omniORB014.html
+doc/tex/omniORB.tex
+
+
 Thu May 30 13:09:14 BST 2002 dgrisby
 ====================================
 

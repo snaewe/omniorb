@@ -2,23 +2,25 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
  Introduction
 </TITLE>
 </HEAD>
 <BODY >
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB002.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>Chapter&nbsp;1&nbsp;&nbsp; Introduction</H1>
+<H1><A NAME="htoc1">Chapter&nbsp;1</A>&nbsp;&nbsp;Introduction</H1>
+
 omniORB is an Object Request Broker (ORB) that implements the 2.3
 specification of the Common Object Request Broker Architecture
-(CORBA)&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>]<A NAME="text1" HREF="#note1"><SUP><FONT SIZE=2>1</FONT></SUP></A>. It has passed the Open
+(CORBA)&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>]<SUP><A NAME="text1" HREF="#note1"><FONT SIZE=2>1</FONT></A></SUP>. It has passed the Open
 Group CORBA compliant testsuite and is one of the three ORBs to have
-been granted the CORBA brand in June 1999<A NAME="text2" HREF="#note2"><SUP><FONT SIZE=2>2</FONT></SUP></A>.<BR>
+been granted the CORBA brand in June 1999<SUP><A NAME="text2" HREF="#note2"><FONT SIZE=2>2</FONT></A></SUP>.<BR>
 <BR>
 This user guide tells you how to use omniORB to develop CORBA
 applications. It assumes a basic understanding of CORBA.<BR>
@@ -27,8 +29,10 @@ In this chapter, we give an overview of the main features of omniORB
 and what you need to do to setup your environment to run omniORB.<BR>
 <BR>
 <A NAME="toc1"></A>
-<H2>1.1&nbsp;&nbsp; Features</H2>
-<H3>1.1.1&nbsp;&nbsp; CORBA 2.3 compliant</H3>omniORB implements the Internet Inter-ORB Protocol (IIOP). This
+<H2><A NAME="htoc2">1.1</A>&nbsp;&nbsp;Features</H2>
+
+<H3><A NAME="htoc3">1.1.1</A>&nbsp;&nbsp;CORBA 2.3 compliant</H3>
+omniORB implements the Internet Inter-ORB Protocol (IIOP). This
 protocol provides omniORB the means of achieving interoperability with
 the ORBs implemented by other vendors. In fact, this is the native
 protocol used by omniORB for the communication amongst its objects
@@ -41,7 +45,8 @@ supported since 2.7.0. The C++ mapping has been updated to the CORBA
 2.3 specification since 2.8.0. The POA was introduced with 3.0.<BR>
 <BR>
 
-<H3>1.1.2&nbsp;&nbsp; Multithreading</H3>omniORB is fully multithreaded. To achieve low IIOP call overhead,
+<H3><A NAME="htoc4">1.1.2</A>&nbsp;&nbsp;Multithreading</H3>
+omniORB is fully multithreaded. To achieve low IIOP call overhead,
 unnecessary call-multiplexing is eliminated. At any time, there is at
 most one call in-flight in each communication channel between two
 address spaces. To do so without limiting the level of concurrency,
@@ -55,7 +60,8 @@ sent as soon as they are processed while the other arguments are being
 marshalled.<BR>
 <BR>
 
-<H3>1.1.3&nbsp;&nbsp; Portability</H3>At AT&amp;T Laboratories, the ability to target a single source tree to
+<H3><A NAME="htoc5">1.1.3</A>&nbsp;&nbsp;Portability</H3>
+At AT&amp;T Laboratories, the ability to target a single source tree to
 multiple platforms is very important. This is difficult to achieve if
 the IDL to C++ mapping for these platforms are different. We avoid
 this problem by making sure that only one IDL to C++ mapping is used.
@@ -84,69 +90,55 @@ platform that either supports the POSIX thread standard or has a
 thread package that supports similar capabilities.<BR>
 <BR>
 
-<H3>1.1.4&nbsp;&nbsp; Missing features</H3>
-<A NAME="missing"></A>omniORB is not (yet) a complete implementation of the CORBA 2.3 core.
-The following is a list of the missing features.<BR>
-<BR>
-<UL>
-<LI> omniORB does not have its own Interface Repository. However, it
+<H3><A NAME="htoc6">1.1.4</A>&nbsp;&nbsp;Missing features</H3>
+<A NAME="missing"></A>
+omniORB is not (yet) a complete implementation of the CORBA 2.3 core.
+The following is a list of the missing features.
+<UL><LI>omniORB does not have its own Interface Repository. However, it
 can act as a client to an IR.<BR>
 <BR>
-
-<LI> The IDL types wchar, wstring, fixed, and valuetype are not
+<LI>The IDL types wchar, wstring, fixed, and valuetype are not
 supported in this release.<BR>
 <BR>
-
-<LI> The <TT>PortableServer::Current</TT> interface is not yet
+<LI>The <TT>PortableServer::Current</TT> interface is not yet
 supported.<BR>
 <BR>
-
-<LI> The DSI interface has changed significantly. Old code will have
+<LI>The DSI interface has changed significantly. Old code will have
 to be re-written to the new interface. There is no support for using
 the DSI with the BOA. This part of the ORB is incomplete, since it
 depends in part on <TT>PortableServer::Current</TT>. See
-chapter&nbsp;<A HREF="omniORB012.html#chap:dsi">12</A> for a way to workaround this problem for now.</UL>These features may be implemented in the short to medium term. It is
+chapter&nbsp;<A HREF="omniORB012.html#chap:dsi">12131The Dynamic Skeleton Interfacechapter.12</A> for a way to workaround this problem for now.</UL>
+These features may be implemented in the short to medium term. It is
 best to check out the latest status on the omniORB home page
-(<A HREF="http://www.uk.research.att.com/omniORB/"><TT>http://www.uk.research.att.com/omniORB/</TT></A>).<BR>
+(<A HREF="http://omniorb.sourceforge.net/"><TT>http://omniorb.sourceforge.net/</TT></A>).<BR>
 <BR>
 <A NAME="toc2"></A>
-<H2>1.2&nbsp;&nbsp; Setting Up Your Environment</H2>
-<A NAME="setup"></A>At AT&amp;T Laboratories Cambridge, you should use the OMNI Development
-Environment (ODE)&nbsp;[<A HREF="omniORB014.html#tjr96b"><CITE>Ric96a</CITE></A>] and the OMNI tree version 5.0 or above
-to compile your programs. If this is the case, there is no extra setup
-you have to do other than those described in the ODE documentation.<BR>
-<BR>
-If you are running omniORB at other sites, you (or your system
-administrator) should install omniORB by following the instructions in
-the installation notes.<BR>
-<BR>
-<UL>
-<LI> On Unix platforms, the omniORB runtime looks for the environment
+<H2><A NAME="htoc7">1.2</A>&nbsp;&nbsp;Setting Up Your Environment</H2>
+<A NAME="setup"></A>
+To get omniORB running, you should first install omniORB by following
+the instructions in the installation notes for your platform.
+<UL><LI>On Unix platforms, the omniORB runtime looks for the environment
 variable <TT>OMNIORB_CONFIG</TT>. If this variable is defined, it
 contains the pathname of the omniORB configuration file. If the
 variable is not set, omniORB will use the compiled-in pathname to
 locate the file.<BR>
 <BR>
-
-<LI> On ARM/ATMos, the omniORB runtime looks for configuration
-information in the file <TT>omniORB.cfg</TT>.<BR>
-<BR>
-
-<LI> On Win32 platforms (Windows NT, 2000, 95, 98), omniORB first
+<LI>On Win32 platforms (Windows NT, 2000, 95, 98), omniORB first
 checks the environment variable <TT>OMNIORB_CONFIG</TT> to obtain the
 pathname of the configuration file. If this is not set, it then
 attempts to obtain configuration data in the system registry. It
 searches for the data under the key
-<CODE>HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0</CODE>.</UL>The configuration file is used to obtain an object reference for the
+<CODE>HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0</CODE>.</UL>
+The configuration file is used to obtain an object reference for the
 Naming Service, via either a stringified IOR or an Interoperable
 Naming Service URI. The entry in the configuration file should be
-specified in the form:<BR>
-<BR>
+specified in the form:
 <PRE>
    ORBInitRef NameService=&lt;URI for the Naming Service&gt;
-</PRE>The easiest way of specifying the Naming Service is with a
+</PRE>
+The easiest way of specifying the Naming Service is with a
 <TT>corbaname:</TT> URI, as described in
-section&nbsp;<A HREF="omniORB004.html#sec:corbaname">4.1.2</A>.<BR>
+section&nbsp;<A HREF="omniORB004.html#sec:corbaname">4.1.250corbanamesubsection.4.1.2</A>.<BR>
 <BR>
 Comments in the configuration file should be prefixed with a
 `<TT>#</TT>' character.<BR>
@@ -157,19 +149,20 @@ key
 <CODE>HKEY_LOCAL_MACHINE\SOFTWARE\ORL\omniORB\2.0</CODE>.<BR>
 <BR>
 
-<H3>1.2.1&nbsp;&nbsp; Deprecated configuration file entries</H3><TT>ORBInitRef</TT> is new with omniORB 3.0. The omniORB 2 formats are
+<H3><A NAME="htoc8">1.2.1</A>&nbsp;&nbsp;Deprecated configuration file entries</H3>
+<TT>ORBInitRef</TT> is new with omniORB 3.0. The omniORB 2 formats are
 still supported, so you can specify the Naming Service IOR using a
-line of the form:<BR>
-<BR>
+line of the form:
 <PRE>
    NAMESERVICE &lt;IOR for the Naming Service&gt;
-</PRE>Since 2.6.0, two other entries have been supported, but are now made
-obsolete by the Interoperable Naming Service URIs:<BR>
-<BR>
+</PRE>
+Since 2.6.0, two other entries have been supported, but are now made
+obsolete by the Interoperable Naming Service URIs:
 <PRE>
    ORBInitialHost &lt;hostname string&gt;
    ORBInitialPort &lt;port number (1-65535)&gt;
-</PRE>The corresponding entries under the Win32 system registry are the keys
+</PRE>
+The corresponding entries under the Win32 system registry are the keys
 named <TT>ORBInitialHost</TT> and <TT>ORBInitialPort</TT>.<BR>
 <BR>
 The two entries provide information to the ORB to locate a
@@ -178,9 +171,9 @@ able to return the initial object reference for the Naming Service and
 others.<BR>
 <BR>
 <A NAME="toc3"></A>
-<H2>1.3&nbsp;&nbsp; Platform specific variables</H2>To compile omniORB programs correctly, several C++ preprocessor defines
+<H2><A NAME="htoc9">1.3</A>&nbsp;&nbsp;Platform specific variables</H2>
+To compile omniORB programs correctly, several C++ preprocessor defines
 <B>must</B> be specified to identify the target platform.<BR>
-<BR>
 <DIV ALIGN=left>
 <TABLE BORDER=1 CELLSPACING=0 CELLPADDING=1>
 <TR><TD ALIGN=left NOWRAP>Platform</TD>
@@ -252,23 +245,21 @@ In a single source multi-target environment, you can put the
 preprocessor defines as the command-line arguments for the compiler.
 Alternately, you could create a sitedef.h file in the same directory
 as <TT>omniORB3/CORBA.h</TT>. Write into the file the appropriate set of
-preprocessor defines and add<BR>
-<BR>
+preprocessor defines and add
 <PRE>
 #include &lt;omniORB3/sitedef.h&gt;
-</PRE>at the beginning of <TT>omniORB3/CORBA_sysdep.h</TT>.<BR>
+</PRE>
+at the beginning of <TT>omniORB3/CORBA_sysdep.h</TT>.<BR>
 <BR>
-<HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note1" HREF="#text1"><FONT SIZE=5>1</FONT></A><DD> Most of the 2.3 features have
+<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note1" HREF="#text1"><FONT SIZE=5>1</FONT></A><DD>Most of the 2.3 features have
 been implemented. The features still missing in this release are listed
-in section&nbsp;<A HREF="#missing">1.1.4</A>. Where possible, backward compatibility has
+in section&nbsp;<A HREF="#missing">1.1.42Missing featuressubsection.1.1.4</A>. Where possible, backward compatibility has
 been maintained up to specification 2.0.
-
-<DT><A NAME="note2" HREF="#text2"><FONT SIZE=5>2</FONT></A><DD> More information
+<DT><A NAME="note2" HREF="#text2"><FONT SIZE=5>2</FONT></A><DD>More information
 can be found at <A HREF="http://www.opengroup.org/press/7jun99_b.htm"><TT>http://www.opengroup.org/press/7jun99_b.htm</TT></A>
 </DL>
 <HR>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB002.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>

@@ -2,19 +2,21 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
  The Dynamic Invocation Interface
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB010.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB012.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>Chapter&nbsp;11&nbsp;&nbsp; The Dynamic Invocation Interface</H1>
+<H1><A NAME="htoc122">Chapter&nbsp;11</A>&nbsp;&nbsp;The Dynamic Invocation Interface</H1>
+
 The Dynamic Invocation Interface (or DII) allows applications to
 invoke operations on CORBA objects about which they have no static
 information. That is to say the application has not been linked with
@@ -27,12 +29,13 @@ Interface Repository.
 This chapter presents an overview of the Dynamic Invocation Interface.
 A toy example use of the DII can be found in the omniORB distribution
 in the <TT>src/examples/dii</TT> directory. The DII makes extensive use
-of the type Any, so ensure that you have read chapter&nbsp;<A HREF="omniORB009.html#ch_any">9</A>.
+of the type Any, so ensure that you have read chapter&nbsp;<A HREF="omniORB009.html#ch_any">985Type Any and TypeCodechapter.9</A>.
 For more information refer to the Dynamic Invocation Interface and C++
 Mapping sections of the CORBA specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>].<BR>
 <BR>
 <A NAME="toc60"></A>
-<H2>11.1&nbsp;&nbsp; Overview</H2>To invoke an operation on a CORBA object an application needs an
+<H2><A NAME="htoc123">11.1</A>&nbsp;&nbsp;Overview</H2>
+To invoke an operation on a CORBA object an application needs an
 object reference, the name of the operation and a list of the
 parameters. In addition the application must know whether the
 operation is one-way, what user-defined exceptions it may throw, any
@@ -50,11 +53,12 @@ the invocation causes an exception to be thrown then this may be
 retrieved and inspected, or the return value on success.<BR>
 <BR>
 <A NAME="toc61"></A>
-<H2>11.2&nbsp;&nbsp; Pseudo Objects</H2>The DII defines a number of psuedo-object types, all defined in the
+<H2><A NAME="htoc124">11.2</A>&nbsp;&nbsp;Pseudo Objects</H2>
+The DII defines a number of psuedo-object types, all defined in the
 <TT>CORBA</TT> namespace. These objects behave in many ways like CORBA
 objects. They should only be accessed by reference (through
 <TT>foo_ptr</TT> or <TT>foo_var</TT>), may not be instantiated directly
-and should be released by calling <TT>CORBA::release()</TT><A NAME="text26" HREF="#note26"><SUP><FONT SIZE=2>1</FONT></SUP></A>. A nil reference should only be
+and should be released by calling <TT>CORBA::release()</TT><SUP><A NAME="text26" HREF="#note26"><FONT SIZE=2>1</FONT></A></SUP>. A nil reference should only be
 represented by <TT>foo::_nil()</TT>.<BR>
 <BR>
 These pseudo objects, although defined in pseudo-IDL in the
@@ -65,9 +69,9 @@ of these objects may only be created by the ORB. A number of methods
 are defined in <TT>CORBA::ORB</TT> to do this.<BR>
 <BR>
 
-<H3>11.2.1&nbsp;&nbsp; Request</H3>A <TT>Request</TT> encapsulates a single operation invocation. It may
-<EM>not</EM> be re-used---even for another call with the same arguments.<BR>
-<BR>
+<H3><A NAME="htoc125">11.2.1</A>&nbsp;&nbsp;Request</H3>
+A <TT>Request</TT> encapsulates a single operation invocation. It may
+<EM>not</EM> be re-used---even for another call with the same arguments.
 <PRE>
 class Request {
 public:
@@ -101,10 +105,11 @@ public:
   static Request_ptr _nil();
 };
 </PRE>
-<H3>11.2.2&nbsp;&nbsp; NamedValue</H3>A pair consisting of a string and a value---encapsulated in an Any.
+
+<H3><A NAME="htoc126">11.2.2</A>&nbsp;&nbsp;NamedValue</H3>
+A pair consisting of a string and a value---encapsulated in an Any.
 The name is optional. This type is used to encapsulate parameters and
-returned values.<BR>
-<BR>
+returned values.
 <PRE>
 class NamedValue {
 public:
@@ -120,8 +125,9 @@ public:
   static NamedValue_ptr _nil();
 };
 </PRE>
-<H3>11.2.3&nbsp;&nbsp; NVList</H3>A list of <TT>NamedValue</TT> objects.<BR>
-<BR>
+
+<H3><A NAME="htoc127">11.2.3</A>&nbsp;&nbsp;NVList</H3>
+A list of <TT>NamedValue</TT> objects.
 <PRE>
 class NVList {
 public:
@@ -138,8 +144,9 @@ public:
   static NVList_ptr _nil();
 };
 </PRE>
-<H3>11.2.4&nbsp;&nbsp; Context</H3>Represents a set of context strings.<BR>
-<BR>
+
+<H3><A NAME="htoc128">11.2.4</A>&nbsp;&nbsp;Context</H3>
+Represents a set of context strings.
 <PRE>
 class Context {
 public:
@@ -160,9 +167,10 @@ public:
   static Context_ptr _nil();
 };
 </PRE>
-<H3>11.2.5&nbsp;&nbsp; ContextList</H3>A <TT>ContextList</TT> is a list of strings, and is used to specify
-which strings from the `context' should be sent with an operation.<BR>
-<BR>
+
+<H3><A NAME="htoc129">11.2.5</A>&nbsp;&nbsp;ContextList</H3>
+A <TT>ContextList</TT> is a list of strings, and is used to specify
+which strings from the `context' should be sent with an operation.
 <PRE>
 class ContextList {
 public:
@@ -180,9 +188,10 @@ public:
   static ContextList_ptr _nil();
 };
 </PRE>
-<H3>11.2.6&nbsp;&nbsp; ExceptionList</H3><TT>ExceptionList</TT>s contain a list of TypeCodes---and are used to
-specify which user-defined exceptions an operation may throw.<BR>
-<BR>
+
+<H3><A NAME="htoc130">11.2.6</A>&nbsp;&nbsp;ExceptionList</H3>
+<TT>ExceptionList</TT>s contain a list of TypeCodes---and are used to
+specify which user-defined exceptions an operation may throw.
 <PRE>
 class ExceptionList {
 public:
@@ -200,12 +209,13 @@ public:
   static ExceptionList_ptr _nil();
 };
 </PRE>
-<H3>11.2.7&nbsp;&nbsp; UnknownUserException</H3>When a user-defined exception is thrown by an operation it is
+
+<H3><A NAME="htoc131">11.2.7</A>&nbsp;&nbsp;UnknownUserException</H3>
+When a user-defined exception is thrown by an operation it is
 unmarshalled into a value of type Any. This is encapsulated in an
 <TT>UnknownUserException</TT>. This type follows all the usual rules for
 user-defined exceptions---it is not a pseudo object, and its resources
-may be released by using <TT>delete</TT>.<BR>
-<BR>
+may be released by using <TT>delete</TT>.
 <PRE>
 class UnknownUserException : public UserException {
 public:
@@ -224,9 +234,10 @@ public:
   // use _downcast instead.
 };
 </PRE>
-<H3>11.2.8&nbsp;&nbsp; Environment</H3>An <TT>Environment</TT> is used to hold an instance of a system
-exception or an <TT>UnknownUserException</TT>.<BR>
-<BR>
+
+<H3><A NAME="htoc132">11.2.8</A>&nbsp;&nbsp;Environment</H3>
+An <TT>Environment</TT> is used to hold an instance of a system
+exception or an <TT>UnknownUserException</TT>.
 <PRE>
 class Environment {
   virtual void exception(Exception*);
@@ -236,11 +247,12 @@ class Environment {
   static Environment_ptr _duplicate(Environment_ptr);
   static Environment_ptr _nil();
 };
-</PRE><A NAME="toc62"></A>
-<H2>11.3&nbsp;&nbsp; Creating Requests</H2><TT>CORBA::Object</TT> defines three methods which may be used to create
+</PRE>
+<A NAME="toc62"></A>
+<H2><A NAME="htoc133">11.3</A>&nbsp;&nbsp;Creating Requests</H2>
+<TT>CORBA::Object</TT> defines three methods which may be used to create
 a <TT>Request</TT> object which may be used to perform a single
-operation invocation on that object:<BR>
-<BR>
+operation invocation on that object:
 <PRE>
 class Object {
   ...
@@ -263,7 +275,8 @@ class Object {
   Request_ptr _request(const char* operation);
   ...
 };
-</PRE><TT>operation</TT> is the name of the operation---which is the same as
+</PRE>
+<TT>operation</TT> is the name of the operation---which is the same as
 the name given in IDL. To access attributes the name should be
 prefixed by <TT>_get_</TT> or <TT>_set_</TT>.<BR>
 <BR>
@@ -292,12 +305,12 @@ be given if a non-empty <TT>ContextList</TT> is specified. The
 <TT>req_flags</TT> argument is not used in the C++ mapping.<BR>
 <BR>
 
-<H3>11.3.1&nbsp;&nbsp; Examples</H3>An operation might be specified in IDL as:<BR>
-<BR>
+<H3><A NAME="htoc134">11.3.1</A>&nbsp;&nbsp;Examples</H3>
+An operation might be specified in IDL as:
 <PRE>
 short anOpn(in string a);
-</PRE>An operation invocation may be created as follows:<BR>
-<BR>
+</PRE>
+An operation invocation may be created as follows:
 <PRE>
 CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
 ...
@@ -311,32 +324,35 @@ result-&gt;value()-&gt;replace(CORBA::_tc_short, 0);
 
 CORBA::Request_var req = obj-&gt;_create_request(CORBA::Context::_nil(),
                                         "anOpn", args, result, 0);
-</PRE>or alternatively and much more concisely:<BR>
-<BR>
+</PRE>
+or alternatively and much more concisely:
 <PRE>
 CORBA::Request_var req = obj-&gt;_request("anOpn");
 req-&gt;add_in_arg() &lt;&lt;= (const char*) "Hello World!";
 req-&gt;set_return_type(CORBA::_tc_short);
-</PRE><A NAME="toc63"></A>
-<H2>11.4&nbsp;&nbsp; Invoking Operations</H2>
-<A NAME="dii_invoke"></A>Once the <TT>Request</TT> object has been properly constructed, the
+</PRE>
+<A NAME="toc63"></A>
+<H2><A NAME="htoc135">11.4</A>&nbsp;&nbsp;Invoking Operations</H2>
+<A NAME="dii_invoke"></A>
+Once the <TT>Request</TT> object has been properly constructed, the
 operation may be invoked by calling one of the following methods on
 the request object:<BR>
 <BR>
 
-<H5> <TT>invoke()</TT></H5>blocks until the request has completed. The application should then
+<H5><TT>invoke()</TT></H5>
+blocks until the request has completed. The application should then
 test to see if an exception was raised. Since the CORBA spec is not
 clear about whether or not system exceptions should be thrown from
 this method, a runtime configuration variable is supplied so that you
-can specify the behavior:<BR>
-<BR>
+can specify the behavior:
 <PRE>
 namespace omniORB {
   ...
   CORBA::Boolean diiThrowsSysExceptions;
   ...
 };
-</PRE>If this is FALSE, and the application should call the <TT>env()</TT> method
+</PRE>
+If this is FALSE, and the application should call the <TT>env()</TT> method
 of the request to retrieve an exception (it returns 0 (nil) if no
 exception was generated). If it is TRUE then system exceptions will be
 thrown out of <TT>invoke()</TT>. User-defined exceptions are always passed
@@ -345,19 +361,20 @@ via <TT>env()</TT>, which will return a pointer to a
 which type of exception was returned by <TT>env()()</TT> by calling the
 <TT>_narrow()</TT> method defined for each exception type.<BR>
 <BR>
-<HR SIZE=2><DL COMPACT=compact>
-<DT><DD>
+<HR SIZE=2><DL COMPACT=compact><DT><DD>
 <DIV ALIGN=center><B>Warning</B></DIV><BR>
 In pre-omniORB 2.8.0 releases, the default value of
 <TT>diiThrowsSysExceptions</TT> is FALSE. From omniORB 2.8.0 onwards,
-the default value is TRUE.</DL><HR SIZE=2><BR>
+the default value is TRUE.</DL>
+<HR SIZE=2><BR>
 <BR>
 After determining that no exception was thrown the application may
 retrieve any returned values by calling <TT>return_value()</TT> and
 <TT>arguments()</TT>.<BR>
 <BR>
 
-<H5> <TT>send_oneway()</TT></H5>has the same semantics as a <EM>oneway</EM> IDL operation. It is
+<H5><TT>send_oneway()</TT></H5>
+has the same semantics as a <EM>oneway</EM> IDL operation. It is
 important to note that oneway operations have at-most-once semantics,
 and it is not guaranteed that they will not block. Any operation may
 be invoked `oneway' using the DII, even if it was not declared as
@@ -366,19 +383,18 @@ will either be thrown or may be retrieved using <TT>env()</TT> depending on
 <TT>diiThrowsSysExceptions</TT> as above.<BR>
 <BR>
 
-<H5> <TT>send_deferred()</TT></H5>initiates the invocation, and then returns without waiting for the
+<H5><TT>send_deferred()</TT></H5>
+initiates the invocation, and then returns without waiting for the
 result. At some point in the future the application must retrieve the
 result of the operation---but other than testing for completion of the
 operation the application must not call any of the request's methods
-in the meantime.<BR>
-<BR>
-<UL>
-<LI>
- <TT>get_response()</TT> blocks until the reply is received.
-
-<LI> <TT>poll_response()</TT> returns TRUE if the reply has been received,
+in the meantime.
+<UL><LI>
+<TT>get_response()</TT> blocks until the reply is received.
+<LI><TT>poll_response()</TT> returns TRUE if the reply has been received,
  and FALSE if not. It does not block.
-</UL>Once <TT>poll_response()</TT> has returned TRUE, or <TT>get_response()</TT> has
+</UL>
+Once <TT>poll_response()</TT> has returned TRUE, or <TT>get_response()</TT> has
 been called and returned, the application may test for an exception
 and retrieve returned values as above. If
 <TT>diiThrowsSysExceptions</TT> is true, then a system exception may be
@@ -391,9 +407,9 @@ could be one of the methods to retrieve values from the request, or
 <TT>get_response()</TT>.<BR>
 <BR>
 <A NAME="toc64"></A>
-<H2>11.5&nbsp;&nbsp; Multiple Requests</H2>The following methods are provided by the ORB to enable multiple requests to
-be invoked asynchronously.<BR>
-<BR>
+<H2><A NAME="htoc136">11.5</A>&nbsp;&nbsp;Multiple Requests</H2>
+The following methods are provided by the ORB to enable multiple requests to
+be invoked asynchronously.
 <PRE>
 namespace CORBA {
   ...
@@ -409,14 +425,17 @@ namespace CORBA {
   ...
 };
 </PRE>
-<H5> <TT>send_multiple_requests_oneway()</TT></H5>is used to invoke a number of oneway requests. An attempt will be made
+
+<H5><TT>send_multiple_requests_oneway()</TT></H5>
+is used to invoke a number of oneway requests. An attempt will be made
 to invoke each of the requests, even if one or more of the early
 requests fails. The application may check for failure of any of the
 requests by testing the request's <TT>env()</TT> method. System exceptions
 are never raised by this method.<BR>
 <BR>
 
-<H5> <TT>send_multiple_requests_deferred()</TT></H5>will initiate an invocation of each of the given requests, and return
+<H5><TT>send_multiple_requests_deferred()</TT></H5>
+will initiate an invocation of each of the given requests, and return
 without waiting for the reply. At some point in the future the
 application must retrieve the reply by calling
 <TT>get_next_response()</TT>, which returns a completed request. If no
@@ -441,13 +460,12 @@ requests have yet been invoked---in which case the calling thread
 blocks until another thread invokes a request and the reply is
 received.<BR>
 <BR>
-<HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note26" HREF="#text26"><FONT SIZE=5>1</FONT></A><DD> if not
+<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note26" HREF="#text26"><FONT SIZE=5>1</FONT></A><DD>if not
 managed by a <TT>_var</TT> type.
 </DL>
 <HR>
 <A HREF="omniORB010.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB012.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>

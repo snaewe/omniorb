@@ -8,7 +8,7 @@ requirements on the order in which share libraries are specified on the
 command line:
 
     1. Two libraries cross reference each other, as it is the case with 
-       -lomniORB2 and -ltcpwrapGK means that -lomniORB2 has to be
+       -lomniORB3 and -ltcpwrapGK means that -lomniORB3 has to be
        repeated after -ltcpwrapGK
     2. Multi-threaded programs must have -lpthread as the last option
        on the command line.

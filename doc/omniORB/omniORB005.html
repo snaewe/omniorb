@@ -2,31 +2,34 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
  The IDL compiler
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB004.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB006.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>Chapter&nbsp;5&nbsp;&nbsp; The IDL compiler</H1>
-<A NAME="chap:omniidl"></A>omniORB 3 has a brand new IDL compiler, named omniidl. It consists of
+<H1><A NAME="htoc60">Chapter&nbsp;5</A>&nbsp;&nbsp;The IDL compiler</H1>
+<A NAME="chap:omniidl"></A>
+omniORB 3 has a brand new IDL compiler, named omniidl. It consists of
 a generic front-end parser written in C++, and a number of back-ends
 written in Python. omniidl is very strict about IDL validity, so you
 may find that it reports errors in IDL which compiles fine with
 earlier versions of omniORB, and with other ORBs.<BR>
 <BR>
-The general form of an omniidl command line is:<BR>
-<BR>
-<BLOCKQUOTE> <TT>omniidl </TT>[<I>options</I>]<TT> -b</TT>&lt;<I>back-end</I>&gt;<TT> </TT>[<I>back-end options</I>]<TT> </TT>&lt;<I>file 1</I>&gt;<TT> </TT>&lt;<I>file 2</I>&gt;<TT> </TT>...</BLOCKQUOTE><A NAME="toc23"></A>
-<H2>5.1&nbsp;&nbsp; Common options</H2>The following options are common to all back-ends:<BR>
-<BR>
-<TABLE CELLSPACING=2 CELLPADDING=0>
+The general form of an omniidl command line is:
+<BLOCKQUOTE> <TT>omniidl </TT>[<I>options</I>]<TT> -b</TT>&lt;<I>back-end</I>&gt;<TT> </TT>[<I>back-end options</I>]<TT> </TT>&lt;<I>file</I>&gt;
+</BLOCKQUOTE>
+<A NAME="toc23"></A>
+<H2><A NAME="htoc61">5.1</A>&nbsp;&nbsp;Common options</H2>
+The following options are common to all back-ends:<BR>
+<TABLE border=0 cellspacing=0 cellpadding=0>
 <TR><TD ALIGN=left NOWRAP></TD>
 </TR>
 <TR><TD ALIGN=left NOWRAP><TT>-D</TT><I>name</I>[<TT>=</TT><I>value</I>]</TD>
@@ -91,7 +94,8 @@ Most of these options are self explanatory, but some are not
 so obvious.<BR>
 <BR>
 
-<H3>5.1.1&nbsp;&nbsp; Preprocessor interactions</H3>IDL is processed by the C preprocessor before omniidl parses it.
+<H3><A NAME="htoc62">5.1.1</A>&nbsp;&nbsp;Preprocessor interactions</H3>
+IDL is processed by the C preprocessor before omniidl parses it.
 Unlike the old IDL compiler, which used different C preprocessors on
 different platforms, omniidl always uses the GNU C preprocessor (which
 it builds with the name omnicpp). The <TT>-D</TT>, <TT>-U</TT>, and
@@ -103,7 +107,8 @@ directives inserted by other preprocessors are likely to confuse
 omniidl.<BR>
 <BR>
 
-<H4> Windows 9x</H4>The output from the C preprocessor is normally fed to the omniidl
+<H4>Windows 9x</H4>
+The output from the C preprocessor is normally fed to the omniidl
 parser through a pipe. On some Windows 98 machines (but not all!) the
 pipe does not work, and the preprocessor output is echoed to the
 screen. When this happens, the omniidl parser sees an empty file, and
@@ -112,51 +117,53 @@ problem, use the `<TT>-T</TT>' option to create a temporary file
 between the two stages.<BR>
 <BR>
 
-<H3>5.1.2&nbsp;&nbsp; Forward-declared interfaces</H3>If you have an IDL file like:<BR>
-<BR>
+<H3><A NAME="htoc63">5.1.2</A>&nbsp;&nbsp;Forward-declared interfaces</H3>
+If you have an IDL file like:
 <PRE>
 interface I;
 interface J {
   attribute I the_I;
 };
-</PRE>then omniidl will normally issue a warning:<BR>
-<BR>
+</PRE>
+then omniidl will normally issue a warning:
 <PRE>
   test.idl:1: Warning: Forward declared interface `::I' was never
   fully defined
-</PRE>It is illegal to declare such IDL in isolation, but it
+</PRE>
+It is illegal to declare such IDL in isolation, but it
 <EM>is</EM> valid to define interface <TT>I</TT> in a separate file. If
 you have a lot of IDL with this sort of construct, you will drown
 under the warning messages. Use the <TT>-nf</TT> option to suppress
 them.<BR>
 <BR>
 
-<H3>5.1.3&nbsp;&nbsp; Comments</H3>By default, omniidl discards comments in the input IDL. However, with
+<H3><A NAME="htoc64">5.1.3</A>&nbsp;&nbsp;Comments</H3>
+By default, omniidl discards comments in the input IDL. However, with
 the <TT>-k</TT> and <TT>-K</TT> options, it preserves the comments
 for use by the back-ends. The C++ back-end ignores this information,
 but it is relatively easy to write new back-ends which <EM>do</EM> make
 use of comments.<BR>
 <BR>
 The two different options relate to how comments are attached to
-declarations within the IDL. Given IDL like:<BR>
-<BR>
+declarations within the IDL. Given IDL like:
 <PRE>
 interface I {
   void op1();
   // A comment
   void op2();
 };
-</PRE>the <TT>-k</TT> flag will attach the comment to <TT>op1()</TT>;
+</PRE>
+the <TT>-k</TT> flag will attach the comment to <TT>op1()</TT>;
 the <TT>-K</TT> flag will attach it to <TT>op2()</TT>.<BR>
 <BR>
 <A NAME="toc24"></A>
-<H2>5.2&nbsp;&nbsp; C++ back-end options</H2>When you specify the C++ back-end (with <TT>-bcxx</TT>), the
+<H2><A NAME="htoc65">5.2</A>&nbsp;&nbsp;C++ back-end options</H2>
+When you specify the C++ back-end (with <TT>-bcxx</TT>), the
 following <TT>-Wb</TT> options are available. Note that the
 <TT>-Wb</TT> options must be specified <EM>after</EM> the
 <TT>-bcxx</TT> option, so omniidl knows which back-end to give the
 arguments to.<BR>
-<BR>
-<TABLE CELLSPACING=2 CELLPADDING=0>
+<TABLE border=0 cellspacing=0 cellpadding=0>
 <TR><TD ALIGN=left NOWRAP></TD>
 </TR>
 <TR><TD ALIGN=left NOWRAP><TT>-Wbh=</TT><I>suffix</I></TD>
@@ -210,12 +217,12 @@ arguments to.<BR>
 Again, most of these are self-explanatory.<BR>
 <BR>
 
-<H3>5.2.1&nbsp;&nbsp; Module splicing</H3>On C++ compilers without namespace support, IDL modules map to C++
+<H3><A NAME="htoc66">5.2.1</A>&nbsp;&nbsp;Module splicing</H3>
+On C++ compilers without namespace support, IDL modules map to C++
 classes, and so cannot be reopened. For some IDL, it is possible to
 `splice' reopened modules on to the first occurrence of the module, so
 all module definitions are in a single class. It is possible in this
-sort of situation:<BR>
-<BR>
+sort of situation:
 <PRE>
 module M1 {
   interface I {};
@@ -230,8 +237,8 @@ module M1 {
     attribute I still_ok;
   };
 };
-</PRE>but not if there are cross-module dependencies:<BR>
-<BR>
+</PRE>
+but not if there are cross-module dependencies:
 <PRE>
 module M1 {
   interface I {};
@@ -246,7 +253,8 @@ module M1 {
     attribute M2::J oh_dear;
   };
 };
-</PRE>In both of these cases, the <TT>-Wbsplice-modules</TT>
+</PRE>
+In both of these cases, the <TT>-Wbsplice-modules</TT>
 option causes omniidl to put all of the definitions for module
 <TT>M1</TT> into a single C++ class. For the first case, this will work
 fine. For the second case, class <TT>M1::K</TT> will contain a reference
@@ -254,7 +262,8 @@ to <TT>M2::J</TT>, which has not yet been defined; the C++ compiler will
 complain.<BR>
 <BR>
 
-<H3>5.2.2&nbsp;&nbsp; Flattened tie classes</H3>Another problem with mapping IDL modules to C++ classes arises with
+<H3><A NAME="htoc67">5.2.2</A>&nbsp;&nbsp;Flattened tie classes</H3>
+Another problem with mapping IDL modules to C++ classes arises with
 tie templates. The C++ mapping says that for the interface
 <TT>M::I</TT>, the C++ tie template class should be named
 <TT>POA_M::I_tie</TT>. However, since template classes cannot be
@@ -268,7 +277,8 @@ template class is declared at global scope with the name
 replaced by `<TT>_</TT>'.<BR>
 <BR>
 
-<H3>5.2.3&nbsp;&nbsp; Generating example implementations</H3>If you use the <TT>-Wbexample</TT> flag, omniidl will generate an
+<H3><A NAME="htoc68">5.2.3</A>&nbsp;&nbsp;Generating example implementations</H3>
+If you use the <TT>-Wbexample</TT> flag, omniidl will generate an
 example implementation file as well as the stubs and skeletons. For
 IDL file <TT>foo.idl</TT>, the example code is written to
 <TT>foo_i.cc</TT>. The example file contains class and method
@@ -278,30 +288,27 @@ object. You still have to fill in the operation implementations, of
 course.<BR>
 <BR>
 <A NAME="toc25"></A>
-<H2>5.3&nbsp;&nbsp; Examples</H2>Generate the C++ headers and stubs for a file <TT>a.idl</TT>:<BR>
-<BR>
+<H2><A NAME="htoc69">5.3</A>&nbsp;&nbsp;Examples</H2>
+Generate the C++ headers and stubs for a file <TT>a.idl</TT>:
 <BLOCKQUOTE>
 <TT>omniidl -bcxx a.idl</TT>
-</BLOCKQUOTE>Generate with Any support:<BR>
-<BR>
+</BLOCKQUOTE>
+Generate with Any support:
 <BLOCKQUOTE>
 <TT>omniidl -bcxx -Wba a.idl</TT>
-</BLOCKQUOTE>Compile two files with Any support:<BR>
-<BR>
+</BLOCKQUOTE>
+As above, but also generate Python stubs for the file
+(assuming omniORBpy is installed):
 <BLOCKQUOTE>
-<TT>omniidl -bcxx -Wba a.idl b.idl</TT>
-</BLOCKQUOTE>As above, but also generate Python stubs for the files
-(assuming omniORBpy is installed):<BR>
-<BR>
-<BLOCKQUOTE>
-<TT>omniidl -bcxx -Wba -bpython a.idl b.idl</TT>
-</BLOCKQUOTE>Just check the IDL files for validity, generating no output:<BR>
-<BR>
+<TT>omniidl -bcxx -Wba -bpython a.idl</TT>
+</BLOCKQUOTE>
+Just check the IDL files for validity, generating no output:
 <BLOCKQUOTE>
 <TT>omniidl a.idl b.idl</TT>
-</BLOCKQUOTE><HR>
+</BLOCKQUOTE>
+<HR>
 <A HREF="omniORB004.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB006.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>

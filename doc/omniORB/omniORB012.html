@@ -2,20 +2,22 @@
             "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
+
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<META name="GENERATOR" content="hevea 1.05">
+<META name="GENERATOR" content="hevea 1.06">
 <TITLE>
  The Dynamic Skeleton Interface
 </TITLE>
 </HEAD>
 <BODY >
 <A HREF="omniORB011.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB013.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 <HR>
 
-<H1>Chapter&nbsp;12&nbsp;&nbsp; The Dynamic Skeleton Interface</H1>
+<H1><A NAME="htoc137">Chapter&nbsp;12</A>&nbsp;&nbsp;The Dynamic Skeleton Interface</H1>
 <A NAME="chap:dsi"></A>
+
 The Dynamic Skeleton Interface (or DSI) allows applications to provide
 implementations of the operations on CORBA objects without static
 knowledge of the object's interface. It is the server-side equivalent
@@ -34,7 +36,8 @@ facilities are available. This chapter describes an approach to
 building DSI servers which works with omniORB 3.<BR>
 <BR>
 <A NAME="toc65"></A>
-<H2>12.1&nbsp;&nbsp; Overview</H2>When an ORB receives an invocation request, the information includes
+<H2><A NAME="htoc138">12.1</A>&nbsp;&nbsp;Overview</H2>
+When an ORB receives an invocation request, the information includes
 the object reference and the name of the operation. Typically this
 information is used by the ORB to select a servant object and call
 into the implementation of the operation (which knows how to unmarshal
@@ -51,25 +54,21 @@ override the method <TT>invoke()</TT>. An instance of this class is
 registered with a POA and is assigned an object reference (see below).
 When the ORB receives a request for that object the <TT>invoke()</TT> method
 is called and will be passed a <TT>CORBA::ServerRequest</TT> object
-which provides:<BR>
-<BR>
-<UL>
-<LI>
- the operation name
+which provides:
+<UL><LI>
+the operation name
+<LI>context strings
+<LI>access to the parameters
+<LI>a way to set the returned values
+<LI>a way to throw user-defined exceptions.
+</UL>
+<A NAME="toc66"></A>
+<H2><A NAME="htoc139">12.2</A>&nbsp;&nbsp;DSI Types</H2>
 
-<LI> context strings
-
-<LI> access to the parameters
-
-<LI> a way to set the returned values
-
-<LI> a way to throw user-defined exceptions.
-</UL><A NAME="toc66"></A>
-<H2>12.2&nbsp;&nbsp; DSI Types</H2>
-<H3>12.2.1&nbsp;&nbsp; PortableServer::DynamicImplementation</H3>This class must be sub-classed by the application to provide an
+<H3><A NAME="htoc140">12.2.1</A>&nbsp;&nbsp;PortableServer::DynamicImplementation</H3>
+This class must be sub-classed by the application to provide an
 implementation for DSI objects. The method <TT>invoke()</TT> will be called
-for each operation invocation.<BR>
-<BR>
+for each operation invocation.
 <PRE>
 namespace PortableServer {
   ...
@@ -92,9 +91,10 @@ namespace PortableServer {
   ...
 };
 </PRE>
-<H3>12.2.2&nbsp;&nbsp; ServerRequest</H3>A <TT>ServerRequest</TT> object provides the interface between a dynamic
-implementation and the ORB.<BR>
-<BR>
+
+<H3><A NAME="htoc141">12.2.2</A>&nbsp;&nbsp;ServerRequest</H3>
+A <TT>ServerRequest</TT> object provides the interface between a dynamic
+implementation and the ORB.
 <PRE>
 namespace CORBA {
   ...
@@ -113,26 +113,26 @@ namespace CORBA {
   };
   ...
 };
-</PRE><A NAME="toc67"></A>
-<H2>12.3&nbsp;&nbsp; Creating Dynamic Implementations</H2>The application must override the <TT>invoke()</TT> method of
+</PRE>
+<A NAME="toc67"></A>
+<H2><A NAME="htoc142">12.3</A>&nbsp;&nbsp;Creating Dynamic Implementations</H2>
+The application must override the <TT>invoke()</TT> method of
 <TT>DynamicImplementation</TT> to provide an implementation for DSI
-objects. This method must behave as follows:<BR>
-<BR>
-<UL>
-<LI>
- It may be called concurrently by multiple threads of execution,
+objects. This method must behave as follows:
+<UL><LI>
+It may be called concurrently by multiple threads of execution,
 and so must be thread-safe.<BR>
 <BR>
-
-<LI> It may not throw any exceptions. Both user-defined and system
+<LI>It may not throw any exceptions. Both user-defined and system
 exceptions are passed in a value of type Any via a call to
 <TT>ServerRequest::set_exception()</TT>.<BR>
 <BR>
-
-<LI> The operations on the <TT>ServerRequest</TT> object must be
+<LI>The operations on the <TT>ServerRequest</TT> object must be
 carried out in the correct order, as described below.
 </UL>
-<H3>12.3.1&nbsp;&nbsp; Operations on the ServerRequest</H3><TT>operation()</TT> will return the name of the operation, and may be
+
+<H3><A NAME="htoc143">12.3.1</A>&nbsp;&nbsp;Operations on the ServerRequest</H3>
+<TT>operation()</TT> will return the name of the operation, and may be
 called at any time. For attribute access the operation name is the IDL
 name of the attribute, prefixed by <TT>_get_</TT> or
 <TT>_set_</TT>. If the operation name is not recognised a
@@ -141,7 +141,7 @@ through <TT>set_exception()</TT>. This will allow the ORB to then see if it
 is one of the standard object operations.<BR>
 <BR>
 Firstly <TT>arguments()</TT> must be called passing a
-<TT>CORBA::NVList</TT><A NAME="text27" HREF="#note27"><SUP><FONT SIZE=2>1</FONT></SUP></A> which must be initialised to contain
+<TT>CORBA::NVList</TT><SUP><A NAME="text27" HREF="#note27"><FONT SIZE=2>1</FONT></A></SUP> which must be initialised to contain
 the type and mode of the parameters. The ORB consumes this value and
 will release it when the operation is complete. At this point any
 <EM>in</EM>/<EM>inout</EM> arguments will be unmarshalled, and when this
@@ -166,20 +166,21 @@ Within the <TT>invoke()</TT> method <TT>_this()</TT> may be called to obtain the
 object reference. This method may not be used at any other time.<BR>
 <BR>
 <A NAME="toc68"></A>
-<H2>12.4&nbsp;&nbsp; Registering Dynamic Objects</H2>To use a <TT>DynamicImplementation</TT> servant, a CORBA object must be
+<H2><A NAME="htoc144">12.4</A>&nbsp;&nbsp;Registering Dynamic Objects</H2>
+To use a <TT>DynamicImplementation</TT> servant, a CORBA object must be
 created and associated with it, just as for any other servant. Dynamic
 servants can also be created on demand by Servant Managers, just like
 static servants.<BR>
 <BR>
 <A NAME="toc69"></A>
-<H2>12.5&nbsp;&nbsp; Example</H2>This implementation of <TT>DynamicImplementation::invoke()</TT> is taken
+<H2><A NAME="htoc145">12.5</A>&nbsp;&nbsp;Example</H2>
+This implementation of <TT>DynamicImplementation::invoke()</TT> is taken
 from an example which can be found in the omniORB distribution. The
-<TT>echoString()</TT> operation is declared in IDL as:<BR>
-<BR>
+<TT>echoString()</TT> operation is declared in IDL as:
 <PRE>
 string echoString(in string mesg);
-</PRE>Here is the Dynamic Implementation Routine:<BR>
-<BR>
+</PRE>
+Here is the Dynamic Implementation Routine:
 <PRE>
 void
 MyDynImpl::invoke(CORBA::ServerRequest_ptr request)
@@ -216,13 +217,13 @@ MyDynImpl::invoke(CORBA::ServerRequest_ptr request)
     request-&gt;set_exception(a);
   }
 }
-</PRE><HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note27" HREF="#text27"><FONT SIZE=5>1</FONT></A><DD> obtained by calling
+</PRE>
+<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note27" HREF="#text27"><FONT SIZE=5>1</FONT></A><DD>obtained by calling
 <TT>CORBA::ORB::create_list()</TT>
 </DL>
 <HR>
 <A HREF="omniORB011.html"><IMG SRC ="previous_motif.gif" ALT="Previous"></A>
-<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Contents"></A>
+<A HREF="index.html"><IMG SRC ="contents_motif.gif" ALT="Up"></A>
 <A HREF="omniORB013.html"><IMG SRC ="next_motif.gif" ALT="Next"></A>
 </BODY>
 </HTML>
