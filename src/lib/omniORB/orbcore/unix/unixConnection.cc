@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/24 15:56:45  sll
+  Fixed code which made the wrong assumption about the semantics of
+  do { ...; continue; } while(0)
+
   Revision 1.1.2.2  2001/08/07 15:42:17  sll
   Make unix domain connections distinguishable on both the server and client
   side.
@@ -115,7 +119,9 @@ unixConnection::Send(void* buf, size_t sz,
     else if (tx == 0)
       return -1;
 
-  } while(0);
+    break;
+
+  } while(1);
 
   return tx;
 
@@ -202,7 +208,9 @@ unixConnection::Recv(void* buf, size_t sz,
     else if (rx == 0)
       return -1;
 
-  } while(0);
+    break;
+
+  } while(1);
 
   return rx;
 }

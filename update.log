@@ -1,3 +1,14 @@
+Fri Aug 24 16:53:28 BST 2001 sll
+================================
+
+- Fixed code which made the wrong assumption about the semantics of
+  do { ...; continue; } while(0) 
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+
 Fri Aug 24 16:19:13 BST 2001 sll
 ================================
 

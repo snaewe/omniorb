@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/08/24 15:56:44  sll
+  Fixed code which made the wrong assumption about the semantics of
+  do { ...; continue; } while(0)
+
   Revision 1.1.2.3  2001/08/02 13:00:53  sll
   Do not use select(0,0,0,0,&timeout), it doesn't work on win32.
 
@@ -388,7 +392,9 @@ SocketCollection::Peek(SocketHandle_t sock) {
 	return 1;
       }
     }
-  } while(0);
+    break;
+
+  } while(1);
 
   return 0;
 }

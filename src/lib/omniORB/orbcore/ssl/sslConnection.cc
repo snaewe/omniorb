@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2001/08/24 15:56:44  sll
+  Fixed code which made the wrong assumption about the semantics of
+  do { ...; continue; } while(0)
+
   Revision 1.1.2.7  2001/07/31 16:16:23  sll
   New transport interface to support the monitoring of active connections.
 
@@ -158,7 +162,9 @@ sslConnection::Send(void* buf, size_t sz,
 
     OMNIORB_ASSERT(tx != 0);
 
-  } while(0);
+    break;
+
+  } while(1);
 
   return tx;
 }
@@ -266,7 +272,9 @@ sslConnection::Recv(void* buf, size_t sz,
 
     OMNIORB_ASSERT(rx != 0);
 
-  } while(0);
+    break;
+
+  } while(1);
 
   return rx;
 }

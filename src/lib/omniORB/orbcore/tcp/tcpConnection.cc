@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2001/08/24 15:56:44  sll
+  Fixed code which made the wrong assumption about the semantics of
+  do { ...; continue; } while(0)
+
   Revision 1.1.2.7  2001/08/23 16:47:01  sll
   Fixed missing cleanup in the switch to use orbParameters to store all
    configuration parameters.
@@ -169,7 +173,9 @@ tcpConnection::Send(void* buf, size_t sz,
     else if (tx == 0)
       return -1;
 
-  } while(0);
+    break;
+
+  } while(1);
 
   return tx;
 
@@ -255,7 +261,9 @@ tcpConnection::Recv(void* buf, size_t sz,
     else if (rx == 0)
       return -1;
 
-  } while(0);
+    break;
+
+  } while(1);
 
   return rx;
 }
