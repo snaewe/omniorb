@@ -85,67 +85,10 @@ AST_Union::AST_Union()
 {
 }
 
-AST_Union::AST_Union(AST_ConcreteType *dt, UTL_ScopedName *n, UTL_StrList *p)
+AST_Union::AST_Union(UTL_ScopedName *n, UTL_StrList *p)
 	 : AST_Decl(AST_Decl::NT_union, n, p),
-	   UTL_Scope(AST_Decl::NT_union)
+	   UTL_Scope(AST_Decl::NT_union), pd_disc_type(0)
 {
-  AST_PredefinedType *pdt;
-
-  if (dt == NULL) {
-    pd_disc_type = NULL;
-    pd_udisc_type = AST_Expression::EV_none;
-    return;
-  }
-  /*
-   * If the discriminator type is a predefined type
-   * then install the equivalent coercion target type in
-   * the pd_udisc_type field.
-   */
-  if (dt->node_type() == AST_Decl::NT_pre_defined) {
-    pdt = AST_PredefinedType::narrow_from_decl(dt);
-    if (pdt == NULL) {
-        pd_disc_type = NULL;
-        pd_udisc_type = AST_Expression::EV_none;
-        return;
-    }
-    pd_disc_type = dt;
-    switch (pdt->pt()) {
-    case AST_PredefinedType::PT_long:
-      pd_udisc_type = AST_Expression::EV_long;
-      break;
-    case AST_PredefinedType::PT_ulong:
-      pd_udisc_type = AST_Expression::EV_ulong;
-      break;
-    case AST_PredefinedType::PT_short:
-      pd_udisc_type = AST_Expression::EV_short;
-      break;
-    case AST_PredefinedType::PT_ushort:
-      pd_udisc_type = AST_Expression::EV_ushort;
-      break;
-    case AST_PredefinedType::PT_char:
-      pd_udisc_type = AST_Expression::EV_char;
-      break;
-    case AST_PredefinedType::PT_octet:
-      pd_udisc_type = AST_Expression::EV_octet;
-      break;
-    case AST_PredefinedType::PT_boolean:
-      pd_udisc_type = AST_Expression::EV_bool;
-      break;
-    default:
-      pd_udisc_type = AST_Expression::EV_none;
-      pd_disc_type = NULL;
-      break;
-    }
-  } else if (dt->node_type() == AST_Decl::NT_enum) {
-    pd_udisc_type = AST_Expression::EV_any;
-    pd_disc_type = dt;
-  } else {
-    pd_udisc_type = AST_Expression::EV_none;
-    pd_disc_type = NULL;
-  }
-
-  if (pd_disc_type == NULL)
-    idl_global->err()->error2(UTL_Error::EIDL_DISC_TYPE, this, dt);
 }
 
 /*
@@ -465,9 +408,14 @@ AST_Enum *AST_Union::fe_add_enum(AST_Enum *t)
     }
   }
   /*
-   * Add it to local types
+   * Add it to scope
+   * Previously, add_to_local_types(t) is used instead. This is changed
+   * to add_to_scope(t) to reflect the fact that any enum type spec
+   * defined within the union's scope should cause a type definition
+   * generated for the enum type within the union's scope.
+   * 
    */
-  add_to_local_types(t);
+  add_to_scope(t);
   /*
    * Add it to set of locally referenced symbols
    */
@@ -534,6 +482,68 @@ AST_Union::dump( std:: ostream &o)
 /*
  * Data accessors
  */
+void
+AST_Union::disc_type(AST_ConcreteType * dt)
+{
+  AST_PredefinedType *pdt;
+
+  if (dt == NULL) {
+    pd_disc_type = NULL;
+    pd_udisc_type = AST_Expression::EV_none;
+    return;
+  }
+  /*
+   * If the discriminator type is a predefined type
+   * then install the equivalent coercion target type in
+   * the pd_udisc_type field.
+   */
+  if (dt->node_type() == AST_Decl::NT_pre_defined) {
+    pdt = AST_PredefinedType::narrow_from_decl(dt);
+    if (pdt == NULL) {
+        pd_disc_type = NULL;
+        pd_udisc_type = AST_Expression::EV_none;
+        return;
+    }
+    pd_disc_type = dt;
+    switch (pdt->pt()) {
+    case AST_PredefinedType::PT_long:
+      pd_udisc_type = AST_Expression::EV_long;
+      break;
+    case AST_PredefinedType::PT_ulong:
+      pd_udisc_type = AST_Expression::EV_ulong;
+      break;
+    case AST_PredefinedType::PT_short:
+      pd_udisc_type = AST_Expression::EV_short;
+      break;
+    case AST_PredefinedType::PT_ushort:
+      pd_udisc_type = AST_Expression::EV_ushort;
+      break;
+    case AST_PredefinedType::PT_char:
+      pd_udisc_type = AST_Expression::EV_char;
+      break;
+    case AST_PredefinedType::PT_octet:
+      pd_udisc_type = AST_Expression::EV_octet;
+      break;
+    case AST_PredefinedType::PT_boolean:
+      pd_udisc_type = AST_Expression::EV_bool;
+      break;
+    default:
+      pd_udisc_type = AST_Expression::EV_none;
+      pd_disc_type = NULL;
+      break;
+    }
+  } else if (dt->node_type() == AST_Decl::NT_enum) {
+    pd_udisc_type = AST_Expression::EV_any;
+    pd_disc_type = dt;
+  } else {
+    pd_udisc_type = AST_Expression::EV_none;
+    pd_disc_type = NULL;
+  }
+
+  if (pd_disc_type == NULL)
+    idl_global->err()->error2(UTL_Error::EIDL_DISC_TYPE, this, dt);
+}
+
 
 AST_ConcreteType *
 AST_Union::disc_type()
