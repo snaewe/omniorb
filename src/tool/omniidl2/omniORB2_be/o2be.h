@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.27  1999/08/09 12:26:05  sll
+ Removed pd_out_adptarg_name from o2be_array
+
  Revision 1.26  1999/06/18 20:46:12  sll
  *** empty log message ***
 
@@ -746,7 +749,6 @@ private:
   idl_bool pd_have_produced_tcParser_buildDesc_code;
   idl_bool pd_have_calc_rec_seq_offset;
   size_t   pd_rec_seq_offset;
-  char* pd_out_adptarg_name;
 };
 
 
