@@ -148,8 +148,7 @@ public:
 					  UTL_StrList *p);
 
   // Create a node representing a union
-  virtual AST_Union	*create_union(AST_ConcreteType *dt,
-				      UTL_ScopedName *n,
+  virtual AST_Union	*create_union(UTL_ScopedName *n,
 				      UTL_StrList *p);
 
   // Create a node representing one branch in a union
