@@ -28,9 +28,15 @@
 
 /*
   $Log$
-  Revision 1.6  1998/01/27 16:35:19  ewc
-   Added support for type any and TypeCode
+  Revision 1.7  1998/04/07 18:45:26  sll
+  Use std::fstream instead of fstream.
+  Stub code contains workaround code for MSVC++ to initialise typecode const
+  properly.
+  Stub code modified to accomodate namespace support.
 
+// Revision 1.6  1998/01/27  16:35:19  ewc
+//  Added support for type any and TypeCode
+//
   Revision 1.5  1997/12/09 19:55:06  sll
   *** empty log message ***
 
@@ -56,7 +62,7 @@ o2be_enum::o2be_enum(UTL_ScopedName *n, UTL_StrList *p)
 }
 
 void
-o2be_enum::produce_hdr(fstream &s)
+o2be_enum::produce_hdr(std::fstream &s)
 {
   IND(s); s << "enum " << uqname() << " { ";
   {
@@ -70,18 +76,20 @@ o2be_enum::produce_hdr(fstream &s)
   }
   s << " };\n\n";
 
-  IND(s); s << (!(defined_in()==idl_global->root())?"friend ":"")
-	    << "inline void operator>>= (" << uqname() << " _e,NetBufferedStream &s) {\n";
+  IND(s); s << FriendToken(*this) << " inline void operator>>= (" << uqname()
+	    << " _e,NetBufferedStream &s) {\n";
+
   INC_INDENT_LEVEL();
   IND(s); s << "::operator>>=((CORBA::ULong)_e,s);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << (!(defined_in()==idl_global->root())?"friend ":"")
-	    << "inline void operator<<= (" << uqname() << " &_e,NetBufferedStream &s) {\n";
+  IND(s); s << FriendToken(*this) << " inline void operator<<= (" << uqname()
+	    << " &_e,NetBufferedStream &s) {\n";
+
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong __e;\n";
-  IND(s); s << "__e <<= s;\n";
+  IND(s); s << "::operator<<=(__e,s);\n";
   IND(s); s << "switch (__e) {\n";
   INC_INDENT_LEVEL();
   {
@@ -104,18 +112,18 @@ o2be_enum::produce_hdr(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << (!(defined_in()==idl_global->root())?"friend ":"")
-	    << "inline void operator>>= (" << uqname() << " _e,MemBufferedStream &s) {\n";
+  IND(s); s << FriendToken(*this) << " inline void operator>>= (" << uqname()
+	    << " _e,MemBufferedStream &s) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "::operator>>=((CORBA::ULong)_e,s);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << (!(defined_in()==idl_global->root())?"friend ":"")
-	    << "inline void operator<<= (" << uqname() << " &_e,MemBufferedStream &s) {\n";
+  IND(s); s << FriendToken(*this) << " inline void operator<<= (" << uqname()
+	    << " &_e,MemBufferedStream &s) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::ULong __e;\n";
-  IND(s); s << "__e <<= s;\n";
+  IND(s); s << "::operator<<=(__e,s);\n";
   IND(s); s << "switch (__e) {\n";
   INC_INDENT_LEVEL();
   {
@@ -140,13 +148,12 @@ o2be_enum::produce_hdr(fstream &s)
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
-    IND(s); s << ((defined_in() == idl_global->root()) ? "extern " :
-		  "static ") 
-	      << "const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+    IND(s); s << VarToken(*this)
+	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
 
     // any insertion operator (inline definition)
-    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-	      << "inline void operator<<=(CORBA::Any& _a, " 
+    IND(s); s << FriendToken(*this)
+	      << " inline void operator<<=(CORBA::Any& _a, " 
 	      << uqname() << " _s) {\n";
     INC_INDENT_LEVEL();
     IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
@@ -157,8 +164,8 @@ o2be_enum::produce_hdr(fstream &s)
     IND(s); s << "}\n\n";
 
     // any extraction operator (declaration)
-    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-	      << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+    IND(s); s << FriendToken(*this)
+	      << " CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
 	      << uqname() << "& _s);\n\n";
   }
 
@@ -167,14 +174,42 @@ o2be_enum::produce_hdr(fstream &s)
 }
 
 void
-o2be_enum::produce_skel(fstream &s)
+o2be_enum::produce_skel(std::fstream &s)
 {
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // Produce code for types any and TypeCode
     this->produce_typecode_skel(s);
     
-    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-	      << "_01RL_" << _fqtcname() << ";\n\n";
+    if (defined_in() != idl_global->root() &&
+	defined_in()->scope_node_type() == AST_Decl::NT_module)
+      {
+	s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
+	IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
+	AST_Decl* inscope = ScopeAsDecl(defined_in());
+	char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
+	if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
+	  {
+	    scopename = o2be_name::narrow_and_produce__fqname(inscope);
+	    IND(s); s << "namespace " << scopename << " = " 
+		      << o2be_name::narrow_and_produce_fqname(inscope)
+		      << ";\n";
+	  }
+	IND(s); s << "namespace " << scopename << " {\n";
+	INC_INDENT_LEVEL();
+	IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+	DEC_INDENT_LEVEL();
+	IND(s); s << "}\n";
+	s << "#else\n";
+	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+	s << "#endif\n";
+      }
+    else
+      {
+	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+      }
     
     IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
 	      << fqname() << "& _s) {\n";
@@ -201,14 +236,14 @@ o2be_enum::produce_skel(fstream &s)
 }
 
 void
-o2be_enum::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
+o2be_enum::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 {
   IND(s); s << "typedef " << unambiguous_name(tdef) 
 	    << " " << tdef->uqname() << ";\n";
 }
 
 void
-o2be_enum::produce_typecode_skel(fstream &s)
+o2be_enum::produce_typecode_skel(std::fstream &s)
 {
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";
