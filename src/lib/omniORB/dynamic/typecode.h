@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.10.2.5  2000/11/17 19:09:39  dpg1
+ * Support codeset conversion in any.
+ *
  * Revision 1.10.2.4  2000/11/09 12:27:55  dpg1
  * Huge merge from omni3_develop, plus full long long from omni3_1_develop.
  *
@@ -114,6 +117,7 @@ class TypeCode_collector;
 class TypeCode_base;
 
 class TypeCode_string;
+class TypeCode_wstring;
 class TypeCode_objref;
 class TypeCode_alias;
 class TypeCode_sequence;
@@ -440,6 +444,39 @@ public:
 
 private:
   TypeCode_string();
+
+  CORBA::ULong pd_length;
+};
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// TypeCode_wstring /////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class TypeCode_wstring : public TypeCode_base {
+public:
+
+  // omniORB interface:
+  TypeCode_wstring(CORBA::ULong maxLen);
+
+  virtual ~TypeCode_wstring();
+
+  virtual void NP_marshalSimpleParams(cdrStream&,
+				      TypeCode_offsetTable*) const;
+
+  static TypeCode_base* NP_unmarshalSimpleParams(cdrStream& s,
+						 TypeCode_offsetTable*);
+
+  // OMG Interface:
+  virtual CORBA::Boolean NP_extendedEqual(const TypeCode_base* TCp,
+					  CORBA::Boolean equivalent,
+					  const TypeCode_pairlist* tcpl) const;
+
+  virtual CORBA::ULong NP_length() const;
+  virtual CORBA::Long NP_param_count() const;
+  virtual CORBA::Any* NP_parameter(CORBA::Long) const;
+
+private:
+  TypeCode_wstring();
 
   CORBA::ULong pd_length;
 };

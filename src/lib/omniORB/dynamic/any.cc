@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.19.2.5  2000/11/17 19:09:36  dpg1
+ * Support codeset conversion in any.
+ *
  * Revision 1.19.2.4  2000/11/09 12:27:52  dpg1
  * Huge merge from omni3_develop, plus full long long from omni3_1_develop.
  *
@@ -451,6 +454,15 @@ CORBA::Any::operator<<=(from_char c)
 }
 
 
+void
+CORBA::Any::operator<<=(from_wchar c)
+{
+  tcDescriptor tcd;
+  tcd.p_wchar = &(c.val);
+  pdAnyP()->setData(CORBA::_tc_wchar, tcd);
+}
+
+
 void 
 CORBA::Any::operator<<=(from_octet o)
 {
@@ -467,7 +479,7 @@ CORBA::Any::operator<<=(const char* s)
   tcd.p_string.ptr = (char**) &s;
   // tcd.p_string.release not needed for insertion
   pdAnyP()->setData(CORBA::_tc_string, tcd);
-}  
+}
 
 
 void 
@@ -484,6 +496,33 @@ CORBA::Any::operator<<=(from_string s)
     pdAnyP()->setData(CORBA::_tc_string, tcd);
 
   if( s.nc )  CORBA::string_free(s.val);
+}
+
+
+void
+CORBA::Any::operator<<=(const CORBA::WChar* s)
+{
+  tcDescriptor tcd;
+  tcd.p_wstring.ptr = (CORBA::WChar**) &s;
+  // tcd.p_wstring.release not needed for insertion
+  pdAnyP()->setData(CORBA::_tc_wstring, tcd);
+}  
+
+
+void 
+CORBA::Any::operator<<=(from_wstring s)
+{
+  tcDescriptor tcd;
+  tcd.p_wstring.ptr = &s.val;
+  // tcd.p_wstring.release not needed for insertion
+
+  if( s.bound ) {
+    CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_wstring_tc(s.bound);
+    pdAnyP()->setData(newtc, tcd);
+  }else
+    pdAnyP()->setData(CORBA::_tc_wstring, tcd);
+
+  if( s.nc )  CORBA::wstring_free(s.val);
 }
 
 
@@ -678,6 +717,15 @@ CORBA::Any::operator>>=(to_char c) const
 
     
 CORBA::Boolean
+CORBA::Any::operator>>=(to_wchar c) const
+{
+  tcDescriptor tcd;
+  tcd.p_wchar = &c.ref;
+  return pdAnyP()->getData(CORBA::_tc_wchar, tcd);
+}
+
+    
+CORBA::Boolean
 CORBA::Any::operator>>=(to_octet o) const
 {
   tcDescriptor tcd;
@@ -757,6 +805,75 @@ CORBA::Any::operator>>=(to_string s) const
     {
       if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
 	((CORBA::Any*)this)->PR_setCachedData(sp,delete_string);
+      }
+      s.val = sp; return 1;
+    }
+    else {
+      s.val = 0; return 0;
+    }
+  }
+  else {
+    CORBA::TypeCode_var tc = type();
+    if (tc->equivalent(newtc)) {
+      s.val = sp; return 1;
+    }
+    else {
+      s.val = 0; return 0;
+    }
+  }
+}
+
+
+static
+void delete_wstring(void* data) {
+  CORBA::WChar* sp = (CORBA::WChar*) data;
+  CORBA::wstring_free(sp);
+}
+
+CORBA::Boolean
+CORBA::Any::operator>>=(const CORBA::WChar*& s) const
+{
+  CORBA::WChar* sp = (CORBA::WChar*) PR_getCachedData();
+  if (sp == 0) {
+    tcDescriptor tcd;
+    tcd.p_wstring.ptr = &sp;
+    tcd.p_wstring.release = 0;
+
+    if (pdAnyP()->getData(CORBA::_tc_wstring, tcd))
+    {
+      ((CORBA::Any*)this)->PR_setCachedData(sp,delete_wstring);
+      s = sp; return 1;
+    }
+    else {
+      s = 0; return 0;
+    }
+  }
+  else {
+    CORBA::TypeCode_var tc = type();
+    if (tc->equivalent(CORBA::_tc_wstring)) {
+      s = sp; return 1;
+    }
+    else {
+      s = 0; return 0;
+    }
+  }
+}
+
+CORBA::Boolean
+CORBA::Any::operator>>=(to_wstring s) const
+{
+  CORBA::TypeCode_var newtc = CORBA::TypeCode::NP_wstring_tc(s.bound);
+
+  CORBA::WChar* sp = (CORBA::WChar*) PR_getCachedData();
+  if (sp == 0) {
+    tcDescriptor tcd;
+    tcd.p_wstring.ptr = &sp;
+    tcd.p_wstring.release = 0;
+
+    if (pdAnyP()->getData(newtc, tcd))
+    {
+      if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
+	((CORBA::Any*)this)->PR_setCachedData(sp,delete_wstring);
       }
       s.val = sp; return 1;
     }

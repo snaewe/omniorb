@@ -72,6 +72,9 @@ public:
   virtual void insert_char(CORBA::Char value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
+  virtual void insert_wchar(CORBA::WChar value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
   virtual void insert_short(CORBA::Short value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
@@ -108,6 +111,9 @@ public:
   virtual void insert_string(const char* value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
+  virtual void insert_wstring(const CORBA::WChar* value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
   virtual void insert_reference(CORBA::Object_ptr value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
@@ -126,6 +132,10 @@ public:
     return 0;
   }
   virtual CORBA::Char get_char() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::WChar get_wchar() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
@@ -172,6 +182,10 @@ public:
 #endif
 #endif
   virtual char* get_string() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::WChar* get_wstring() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }

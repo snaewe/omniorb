@@ -35,7 +35,7 @@
 
 #include <tcParser.h>
 #include <typecode.h>
-
+#include <codeSetUtil.h>
 
 #ifndef TRUE
 #define TRUE 1
@@ -52,7 +52,9 @@
 // the same alignment at any point - 'cos we can then just byte
 // copy EVERYTHING from there onwards.
 // ie. if( src_posn % 8 == dst_posn % 8 ) ...
-//  The only interesting question is knowing when to stop ...
+//  The only interesting question is knowing when to stop.
+//  Code set conversion means that we would have to stop at any char
+//  or wchar data.
 
 inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 {
@@ -80,6 +82,35 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 	switch( tc->NP_kind() ) {
 
 	  //?? Some of these could be faster (Any, TypeCode, objref ...)
+
+	case CORBA::tk_char:
+	  {
+	    if (ibuf.TCS_C() == obuf.TCS_C()) {
+	      // No conversion necessary
+	      CORBA::Octet o = ibuf.unmarshalOctet(); obuf.marshalOctet(o);
+	    }
+	    else {
+	      omniCodeSet::UniChar uc = ibuf.TCS_C()->unmarshalChar(ibuf);
+	      obuf.TCS_C()->marshalChar(obuf, uc);
+	    }
+	    break;
+	  }
+
+	case CORBA::tk_wchar:
+	  {
+	    if (ibuf.TCS_W() == obuf.TCS_W()) {
+	      // No conversion necessary
+	      CORBA::Octet len = ibuf.unmarshalOctet();
+	      obuf.marshalOctet(len);
+	      ibuf.copy_to(obuf, len, omni::ALIGN_1);
+	    }
+	    else {
+	      omniCodeSet::UniChar uc = ibuf.TCS_W()->unmarshalWChar(ibuf);
+	      obuf.TCS_W()->marshalWChar(obuf, uc);
+	    }
+	    break;
+	  }
+
 	case CORBA::tk_any:
 	  { CORBA::Any d; d <<= ibuf; d >>= obuf; break; }
 
@@ -100,10 +131,39 @@ inline void fastCopyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 
 	case CORBA::tk_string:
 	  {
-	    CORBA::ULong len;
-	    len <<= ibuf;
-	    len >>= obuf;
-	    ibuf.copy_to(obuf,len);
+	    if (ibuf.TCS_C() == obuf.TCS_C()) {
+	      // No conversion necessary
+	      CORBA::ULong len;
+	      len <<= ibuf;
+	      len >>= obuf;
+	      ibuf.copy_to(obuf,len);
+	    }
+	    else {
+	      // Convert via UTF-16
+	      omniCodeSet::UniChar* us;
+	      CORBA::ULong len = ibuf.TCS_C()->unmarshalString(ibuf, 0, us);
+	      omniCodeSetUtil::HolderU uh(us);
+	      obuf.TCS_C()->marshalString(obuf, len, us);
+	    }
+	    break;
+	  }
+
+	case CORBA::tk_wstring:
+	  {
+	    if (ibuf.TCS_W() == obuf.TCS_W()) {
+	      // No conversion necessary
+	      CORBA::ULong len;
+	      len <<= ibuf;
+	      len >>= obuf;
+	      ibuf.copy_to(obuf,len);
+	    }
+	    else {
+	      // Convert via UTF-16
+	      omniCodeSet::UniChar* us;
+	      CORBA::ULong len = ibuf.TCS_W()->unmarshalWString(ibuf, 0, us);
+	      omniCodeSetUtil::HolderU uh(us);
+	      obuf.TCS_W()->marshalWString(obuf, len, us);
+	    }
 	    break;
 	  }
 
@@ -228,8 +288,6 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
     case CORBA::tk_boolean:
       { CORBA::Boolean d; d = ibuf.unmarshalBoolean(); 
         obuf.marshalBoolean(d); return; }
-    case CORBA::tk_char:
-      { CORBA::Char d; d = ibuf.unmarshalChar(); obuf.marshalChar(d); }
     case CORBA::tk_octet:
       { CORBA::Octet d; d = ibuf.unmarshalOctet(); obuf.marshalOctet(d); }
     case CORBA::tk_enum:
@@ -250,6 +308,28 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
       { CORBA::Any d;     d <<= ibuf; d >>= obuf; return; }
 
     // COMPLEX TYPES
+    case CORBA::tk_char:
+      {
+	if (ibuf.TCS_C() == obuf.TCS_C()) {
+	  // No conversion necessary
+	  CORBA::Octet o = ibuf.unmarshalOctet(); obuf.marshalOctet(o);
+	}
+	else {
+	  omniCodeSet::UniChar uc = ibuf.TCS_C()->unmarshalChar(ibuf);
+	  obuf.TCS_C()->marshalChar(obuf, uc);
+	}
+	return;
+      }
+
+    case CORBA::tk_wchar:
+      {
+	// Always do a conversion via UTF-16, to avoid the pain of
+	// possibly byteswapping.
+	omniCodeSet::UniChar uc = ibuf.TCS_W()->unmarshalWChar(ibuf);
+	obuf.TCS_W()->marshalWChar(obuf, uc);
+	return;
+      }
+
     case CORBA::tk_Principal:
       {
 	CORBA::ULong len;
@@ -267,10 +347,22 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
 
     case CORBA::tk_string:
       {
-	CORBA::ULong len;
-	len <<= ibuf;
-	len >>= obuf;
-	ibuf.copy_to(obuf,len);
+	// Convert via UTF-16
+	omniCodeSet::UniChar* us;
+	CORBA::ULong len = ibuf.TCS_C()->unmarshalString(ibuf, 0, us);
+	omniCodeSetUtil::HolderU uh(us);
+	obuf.TCS_C()->marshalString(obuf, len, us);
+	return;
+      }
+      
+
+    case CORBA::tk_wstring:
+      {
+	// Convert via UTF-16
+	omniCodeSet::UniChar* us;
+	CORBA::ULong len = ibuf.TCS_W()->unmarshalWString(ibuf, 0, us);
+	omniCodeSetUtil::HolderU uh(us);
+	obuf.TCS_W()->marshalWString(obuf, len, us);
 	return;
       }
 
@@ -379,11 +471,29 @@ void skipUsingTC(TypeCode_base* tc, cdrStream& buf)
 	switch( tc->NP_kind() ) {
 
 	  //?? Some of these could be faster (Any, TypeCode, objref ...)
+	case CORBA::tk_char:
+	  { buf.unmarshalOctet(); break; }
+
+	case CORBA::tk_wchar:
+	  {
+	    CORBA::Octet len = buf.unmarshalOctet();
+	    buf.skipInput(len);
+	    break;
+	  }
+
 	case CORBA::tk_any:
 	  { CORBA::Any d; d <<= buf; break; }
 
 	case CORBA::tk_Principal:
 	case CORBA::tk_string:
+	  {
+	    CORBA::ULong len;
+	    len <<= buf;
+	    buf.skipInput(len);
+	    break;
+	  }
+
+	case CORBA::tk_wstring:
 	  {
 	    CORBA::ULong len;
 	    len <<= buf;
@@ -593,6 +703,9 @@ tcParser::appendSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
     case CORBA::tk_char:
       pd_mbuf.marshalChar(*tcdata.p_char);
       break;
+    case CORBA::tk_wchar:
+      pd_mbuf.marshalWChar(*tcdata.p_wchar);
+      break;
     case CORBA::tk_octet:
       pd_mbuf.marshalOctet(*tcdata.p_octet);
       break;
@@ -641,6 +754,7 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
   case CORBA::tk_double:
   case CORBA::tk_boolean:
   case CORBA::tk_char:
+  case CORBA::tk_wchar:
   case CORBA::tk_octet:
   case CORBA::tk_enum:
 #ifdef HAS_LongLong
@@ -678,6 +792,12 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
   case CORBA::tk_string:
     {
       pd_mbuf.marshalString(*tcdata.p_string.ptr);
+      break;
+    }
+
+  case CORBA::tk_wstring:
+    {
+      pd_mbuf.marshalWString(*tcdata.p_wstring.ptr);
       break;
     }
 
@@ -877,6 +997,9 @@ tcParser::fetchSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
     case CORBA::tk_char:
       *tcdata.p_char = pd_mbuf.unmarshalChar();
       break;
+    case CORBA::tk_wchar:
+      *tcdata.p_wchar = pd_mbuf.unmarshalWChar();
+      break;
     case CORBA::tk_octet:
       *tcdata.p_octet = pd_mbuf.unmarshalOctet();
       break;
@@ -925,6 +1048,7 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
   case CORBA::tk_double:
   case CORBA::tk_boolean:
   case CORBA::tk_char:
+  case CORBA::tk_wchar:
   case CORBA::tk_octet:
   case CORBA::tk_enum:
 #ifdef HAS_LongLong
@@ -968,6 +1092,14 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
       if(tcdata.p_string.release )
 	_CORBA_String_helper::free(*tcdata.p_string.ptr);
       *tcdata.p_string.ptr = pd_mbuf.unmarshalString();
+      break;
+    }
+
+  case CORBA::tk_wstring:
+    {
+      if(tcdata.p_wstring.release )
+	_CORBA_WString_helper::free(*tcdata.p_wstring.ptr);
+      *tcdata.p_wstring.ptr = pd_mbuf.unmarshalWString();
       break;
     }
 

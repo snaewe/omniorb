@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.5  2000/11/17 19:09:37  dpg1
+ Support codeset conversion in any.
+
  Revision 1.5.2.4  2000/11/09 12:27:53  dpg1
  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -203,6 +206,7 @@ public:
   virtual void insert_boolean(CORBA::Boolean value);
   virtual void insert_octet(CORBA::Octet value);
   virtual void insert_char(CORBA::Char value);
+  virtual void insert_wchar(CORBA::WChar value);
   virtual void insert_short(CORBA::Short value);
   virtual void insert_ushort(CORBA::UShort value);
   virtual void insert_long(CORBA::Long value);
@@ -219,12 +223,14 @@ public:
 #endif
 #endif
   virtual void insert_string(const char* value);
+  virtual void insert_wstring(const CORBA::WChar* value);
   virtual void insert_reference(CORBA::Object_ptr value);
   virtual void insert_typecode(CORBA::TypeCode_ptr value);
   virtual void insert_any(const CORBA::Any& value);
   virtual CORBA::Boolean get_boolean();
   virtual CORBA::Octet get_octet();
   virtual CORBA::Char get_char();
+  virtual CORBA::WChar get_wchar();
   virtual CORBA::Short get_short();
   virtual CORBA::UShort get_ushort();
   virtual CORBA::Long get_long();
@@ -241,6 +247,7 @@ public:
 #endif
 #endif
   virtual char* get_string();
+  virtual CORBA::WChar* get_wstring();
   virtual CORBA::Object_ptr get_reference();
   virtual CORBA::TypeCode_ptr get_typecode();
   virtual CORBA::Any* get_any();
@@ -369,6 +376,7 @@ public:
   virtual void insert_boolean(CORBA::Boolean value);
   virtual void insert_octet(CORBA::Octet value);
   virtual void insert_char(CORBA::Char value);
+  virtual void insert_wchar(CORBA::WChar value);
   virtual void insert_short(CORBA::Short value);
   virtual void insert_ushort(CORBA::UShort value);
   virtual void insert_long(CORBA::Long value);
@@ -385,12 +393,14 @@ public:
 #endif
 #endif
   virtual void insert_string(const char* value);
+  virtual void insert_wstring(const CORBA::WChar* value);
   virtual void insert_reference(CORBA::Object_ptr value);
   virtual void insert_typecode(CORBA::TypeCode_ptr value);
   virtual void insert_any(const CORBA::Any& value);
   virtual CORBA::Boolean get_boolean();
   virtual CORBA::Octet get_octet();
   virtual CORBA::Char get_char();
+  virtual CORBA::WChar get_wchar();
   virtual CORBA::Short get_short();
   virtual CORBA::UShort get_ushort();
   virtual CORBA::Long get_long();
@@ -407,6 +417,7 @@ public:
 #endif
 #endif
   virtual char* get_string();
+  virtual CORBA::WChar* get_wstring();
   virtual CORBA::Object_ptr get_reference();
   virtual CORBA::TypeCode_ptr get_typecode();
   virtual CORBA::Any* get_any();
@@ -636,6 +647,7 @@ public:
   virtual void insert_boolean(CORBA::Boolean value);
   virtual void insert_octet(CORBA::Octet value);
   virtual void insert_char(CORBA::Char value);
+  virtual void insert_wchar(CORBA::WChar value);
   virtual void insert_short(CORBA::Short value);
   virtual void insert_ushort(CORBA::UShort value);
   virtual void insert_long(CORBA::Long value);
@@ -652,6 +664,7 @@ public:
 #endif
 #endif
   virtual void insert_string(const char* value);
+  virtual void insert_wstring(const CORBA::WChar* value);
   virtual void insert_reference(CORBA::Object_ptr value);
   virtual void insert_typecode(CORBA::TypeCode_ptr value);
   virtual void insert_any(const CORBA::Any& value);
@@ -735,6 +748,7 @@ public:
   virtual void insert_boolean(CORBA::Boolean value);
   virtual void insert_octet(CORBA::Octet value);
   virtual void insert_char(CORBA::Char value);
+  virtual void insert_wchar(CORBA::WChar value);
   virtual void insert_short(CORBA::Short value);
   virtual void insert_ushort(CORBA::UShort value);
   virtual void insert_long(CORBA::Long value);
@@ -751,12 +765,14 @@ public:
 #endif
 #endif
   virtual void insert_string(const char* value);
+  virtual void insert_wstring(const CORBA::WChar* value);
   virtual void insert_reference(CORBA::Object_ptr value);
   virtual void insert_typecode(CORBA::TypeCode_ptr value);
   virtual void insert_any(const CORBA::Any& value);
   virtual CORBA::Boolean get_boolean();
   virtual CORBA::Octet get_octet();
   virtual CORBA::Char get_char();
+  virtual CORBA::WChar get_wchar();
   virtual CORBA::Short get_short();
   virtual CORBA::UShort get_ushort();
   virtual CORBA::Long get_long();
@@ -773,6 +789,7 @@ public:
 #endif
 #endif
   virtual char* get_string();
+  virtual CORBA::WChar* get_wstring();
   virtual CORBA::Object_ptr get_reference();
   virtual CORBA::TypeCode_ptr get_typecode();
   virtual CORBA::Any* get_any();

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.8  2000/11/17 19:09:36  dpg1
+ Support codeset conversion in any.
+
  Revision 1.2.2.7  2000/11/15 17:03:14  sll
  Moved include codeSets.h to omniInternal.h
 
@@ -429,6 +432,8 @@ _CORBA_MODULE_BEG
 
     void operator<<=(const char* s);	
 
+    void operator<<=(const WChar* s);
+
     struct from_boolean {
       from_boolean(Boolean b) : val(b) {}
       Boolean val;
@@ -444,6 +449,11 @@ _CORBA_MODULE_BEG
       Char val;
     };
 
+    struct from_wchar {
+      from_wchar(WChar b) : val(b) {}
+      WChar val;
+    };
+
     struct from_string {
       from_string(const char* s, ULong b, Boolean nocopy = 0)
 	: val((char*)s), bound(b), nc(nocopy) { }
@@ -455,14 +465,29 @@ _CORBA_MODULE_BEG
       Boolean nc;
     };
 
+    struct from_wstring {
+      from_wstring(const WChar* s, ULong b, Boolean nocopy = 0)
+	: val((WChar*)s), bound(b), nc(nocopy) { }
+      from_wstring(WChar* s, ULong b, Boolean nocopy = 0)
+	: val(s), bound(b), nc(nocopy) { }   // deprecated
+
+      WChar* val;
+      ULong bound;
+      Boolean nc;
+    };
+
 
     void operator<<=(from_boolean f);
 
-    void operator<<=(from_char c);	
+    void operator<<=(from_char c);
+
+    void operator<<=(from_wchar wc);
 
     void operator<<=(from_octet o);
 
     void operator<<=(from_string s);
+
+    void operator<<=(from_wstring s);
 
     // OMG Extraction operators
     Boolean operator>>=(Short& s) const;
@@ -500,6 +525,8 @@ _CORBA_MODULE_BEG
     Boolean operator>>=(char*& s) const; // deprecated
 #endif
 
+    Boolean operator>>=(const WChar*& s) const;
+
     struct to_boolean {
       to_boolean(Boolean& b) : ref(b) {}
       Boolean& ref;
@@ -508,6 +535,11 @@ _CORBA_MODULE_BEG
     struct to_char {
       to_char(Char& b) : ref(b) {}
       Char& ref;
+    };
+
+    struct to_wchar {
+      to_wchar(WChar& b) : ref(b) {}
+      WChar& ref;
     };
 
     struct to_octet {
@@ -523,6 +555,14 @@ _CORBA_MODULE_BEG
       ULong bound;
     };
 
+    struct to_wstring {
+      to_wstring(const WChar*& s, ULong b) : val((WChar*&)s), bound(b) { }
+      to_wstring(WChar*& s, ULong b) : val(s), bound(b) { } // deprecated
+
+      WChar*& val;
+      ULong bound;
+    };
+
     struct to_object {
       to_object(Object_ptr& obj) : ref(obj) { }
       Object_ptr& ref;
@@ -532,11 +572,15 @@ _CORBA_MODULE_BEG
 
     Boolean operator>>=(to_char c) const;
 
+    Boolean operator>>=(to_wchar wc) const;
+
     Boolean operator>>=(to_octet o) const;
 
 #ifndef _NO_ANY_STRING_EXTRACTION_
     Boolean operator>>=(to_string s) const;
 #endif
+
+    Boolean operator>>=(to_wstring s) const;
 
     Boolean operator>>=(to_object o) const;
 
@@ -688,6 +732,10 @@ _CORBA_MODULE_BEG
       *pd_data <<= s;
     }
 	
+    inline void operator<<=(const WChar* s) {
+      *pd_data <<= s;
+    }
+	
     inline void operator<<=(Any::from_boolean f) {
       *pd_data <<= f;
     }
@@ -695,7 +743,10 @@ _CORBA_MODULE_BEG
     inline void operator<<=(Any::from_char c) {
       *pd_data <<= c;
     }
-	
+
+    inline void operator<<=(Any::from_wchar c) {
+      *pd_data <<= c;
+    }
 
     inline void operator<<=(Any::from_octet o) {
       *pd_data <<= o;
@@ -705,6 +756,9 @@ _CORBA_MODULE_BEG
       *pd_data <<= s;
     }
 
+    inline void operator<<=(Any::from_wstring s){
+      *pd_data <<= s;
+    }
 
     // Any member-function extraction operators:
 
@@ -777,11 +831,19 @@ _CORBA_MODULE_BEG
     }
 #endif
 
+    inline Boolean operator>>=(const WChar*& s) const {
+      return (*pd_data >>= s);
+    }
+
     inline Boolean operator>>=(Any::to_boolean b) const {
       return (*pd_data >>= b);
     }
 
     inline Boolean operator>>=(Any::to_char c) const {
+      return (*pd_data >>= c);
+    }
+
+    inline Boolean operator>>=(Any::to_wchar c) const {
       return (*pd_data >>= c);
     }
 
@@ -794,6 +856,10 @@ _CORBA_MODULE_BEG
       return (*pd_data >>= s);
     }
 #endif
+
+    inline Boolean operator>>=(Any::to_wstring s) const {
+      return (*pd_data >>= s);
+    }
 
     inline Boolean operator>>=(Any::to_object o) const {
       return (*pd_data >>= o);
@@ -1721,6 +1787,7 @@ _CORBA_MODULE_BEG
 				    TypeCode_ptr original_type);
     static TypeCode_ptr NP_interface_tc(const char* id, const char* name);
     static TypeCode_ptr NP_string_tc(ULong bound);
+    static TypeCode_ptr NP_wstring_tc(ULong bound);
     static TypeCode_ptr NP_sequence_tc(ULong bound, TypeCode_ptr element_type);
     static TypeCode_ptr NP_array_tc(ULong length, TypeCode_ptr element_type);
     static TypeCode_ptr NP_recursive_sequence_tc(ULong bound, ULong offset);
@@ -1759,12 +1826,14 @@ _CORBA_MODULE_BEG
     static TypeCode_ptr PR_double_tc();
     static TypeCode_ptr PR_boolean_tc();
     static TypeCode_ptr PR_char_tc();
+    static TypeCode_ptr PR_wchar_tc();
     static TypeCode_ptr PR_octet_tc();
     static TypeCode_ptr PR_any_tc();
     static TypeCode_ptr PR_TypeCode_tc();
     static TypeCode_ptr PR_Principal_tc();
     static TypeCode_ptr PR_Object_tc();
     static TypeCode_ptr PR_string_tc();
+    static TypeCode_ptr PR_wstring_tc();
 #ifdef HAS_LongLong
     static TypeCode_ptr PR_longlong_tc();
     static TypeCode_ptr PR_ulonglong_tc();
@@ -1805,12 +1874,14 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_double;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_boolean;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_char;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_wchar;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_octet;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_any;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_TypeCode;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_Principal;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_Object;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_string;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_wstring;
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_NamedValue;
 #ifdef HAS_LongLong
   _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_longlong;
@@ -1875,6 +1946,7 @@ _CORBA_MODULE_BEG
     virtual void insert_boolean(Boolean value) = 0;
     virtual void insert_octet(Octet value) = 0;
     virtual void insert_char(Char value) = 0;
+    virtual void insert_wchar(WChar value) = 0;
     virtual void insert_short(Short value) = 0;
     virtual void insert_ushort(UShort value) = 0;
     virtual void insert_long(Long value) = 0;
@@ -1891,12 +1963,14 @@ _CORBA_MODULE_BEG
 #endif
 #endif
     virtual void insert_string(const char* value) = 0;
+    virtual void insert_wstring(const WChar* value) = 0;
     virtual void insert_reference(Object_ptr value) = 0;
     virtual void insert_typecode(TypeCode_ptr value) = 0;
     virtual void insert_any(const Any& value) = 0;
     virtual Boolean get_boolean() = 0;
     virtual Octet get_octet() = 0;
     virtual Char get_char() = 0;
+    virtual WChar get_wchar() = 0;
     virtual Short get_short() = 0;
     virtual UShort get_ushort() = 0;
     virtual Long get_long() = 0;
@@ -1913,6 +1987,7 @@ _CORBA_MODULE_BEG
 #endif
 #endif
     virtual char* get_string() = 0;
+    virtual WChar* get_wstring() = 0;
     virtual Object_ptr get_reference() = 0;
     virtual TypeCode_ptr get_typecode() = 0;
     virtual Any* get_any() = 0;
@@ -2515,6 +2590,7 @@ _CORBA_MODULE_BEG
 				     const StructMemberSeq& members);
     TypeCode_ptr create_interface_tc(const char* id, const char* name);
     TypeCode_ptr create_string_tc(ULong bound);
+    TypeCode_ptr create_wstring_tc(ULong bound);
     TypeCode_ptr create_sequence_tc(ULong bound,
 				    TypeCode_ptr element_type);
     TypeCode_ptr create_array_tc(ULong length, TypeCode_ptr etype);

@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.38.2.6  2000/11/17 19:09:38  dpg1
+ * Support codeset conversion in any.
+ *
  * Revision 1.38.2.5  2000/11/09 12:27:54  dpg1
  * Huge merge from omni3_develop, plus full long long from omni3_1_develop.
  *
@@ -466,6 +469,12 @@ CORBA::TypeCode::NP_string_tc(CORBA::ULong bound)
 }
 
 CORBA::TypeCode_ptr
+CORBA::TypeCode::NP_wstring_tc(CORBA::ULong bound)
+{
+  return new TypeCode_wstring(bound);
+}
+
+CORBA::TypeCode_ptr
 CORBA::TypeCode::NP_sequence_tc(CORBA::ULong bound,
 				CORBA::TypeCode_ptr element_type)
 {
@@ -732,7 +741,6 @@ TypeCode_base::TypeCode_base(CORBA::TCKind tck)
     break;
 
   case CORBA::tk_boolean:
-  case CORBA::tk_char:
   case CORBA::tk_octet:
     pd_alignmentTable.setNumEntries(1);
     pd_alignmentTable.addSimple(omni::ALIGN_1, 1);
@@ -772,6 +780,13 @@ TypeCode_base::TypeCode_base(CORBA::TCKind tck)
     break;
 #endif
 
+  case CORBA::tk_char:
+  case CORBA::tk_wchar:
+    pd_alignmentTable.setNumEntries(1);
+    pd_alignmentTable.addNasty(this);
+    pd_aliasExpandedTc = pd_compactTc = this;
+    break;
+
   case CORBA::tk_any:
   case CORBA::tk_TypeCode:
   case CORBA::tk_Principal:
@@ -781,6 +796,10 @@ TypeCode_base::TypeCode_base(CORBA::TCKind tck)
     break;
 
   case CORBA::tk_string:
+    pd_compactTc = this;
+    break;
+
+  case CORBA::tk_wstring:
     pd_compactTc = this;
     break;
 
@@ -1128,6 +1147,101 @@ TypeCode_string::NP_parameter(CORBA::Long index) const
 
   return rv;
 }
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// TypeCode_wstring /////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+// Notes:
+// WString typecodes have SIMPLE parameter lists (i.e. ones NOT enclosed in an
+// octet sequence encapsualtion)
+
+TypeCode_wstring::TypeCode_wstring(CORBA::ULong maxLen)
+  : TypeCode_base(CORBA::tk_wstring)
+{
+  pd_length = maxLen;
+
+  pd_alignmentTable.setNumEntries(1);
+  pd_alignmentTable.addNasty(this);
+}
+
+
+TypeCode_wstring::TypeCode_wstring()
+  : TypeCode_base(CORBA::tk_wstring)
+{
+  pd_alignmentTable.setNumEntries(1);
+  pd_alignmentTable.addNasty(this);
+}
+
+
+TypeCode_wstring::~TypeCode_wstring() {}
+
+
+void
+TypeCode_wstring::NP_marshalSimpleParams(cdrStream &s,
+					 TypeCode_offsetTable* ) const
+{
+  pd_length >>= s;
+}
+
+TypeCode_base*
+TypeCode_wstring::NP_unmarshalSimpleParams(cdrStream &s,
+					   TypeCode_offsetTable* otbl)
+{
+  TypeCode_wstring* _ptr = new TypeCode_wstring;
+
+  otbl->addEntry(otbl->currentOffset(), _ptr);
+
+  _ptr->pd_length <<= s;
+
+  return _ptr;
+}
+
+
+CORBA::Boolean
+TypeCode_wstring::NP_extendedEqual(const TypeCode_base*  TCp,
+				   CORBA::Boolean,
+				   const TypeCode_pairlist*) const
+{
+  return ((NP_kind() == TCp->NP_kind()) && (NP_length() == TCp->NP_length()));
+}
+
+
+CORBA::ULong
+TypeCode_wstring::NP_length() const
+{
+  return pd_length;
+}
+
+
+CORBA::Long
+TypeCode_wstring::NP_param_count() const
+{
+  return 1;
+}
+
+
+CORBA::Any*
+TypeCode_wstring::NP_parameter(CORBA::Long index) const
+{
+  CORBA::Any* rv = new CORBA::Any;
+
+  try {
+    switch (index) {
+    case 0:
+      *rv <<= pd_length;
+      break;
+    default:
+      throw CORBA::TypeCode::Bounds();
+    };
+  } catch (...) {
+    delete rv;
+    throw;
+  }
+
+  return rv;
+}
+
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// TypeCode_objref //////////////////////////
@@ -4782,12 +4896,14 @@ CORBA::TypeCode_ptr         CORBA::_tc_float;
 CORBA::TypeCode_ptr         CORBA::_tc_double;
 CORBA::TypeCode_ptr         CORBA::_tc_boolean;
 CORBA::TypeCode_ptr         CORBA::_tc_char;
+CORBA::TypeCode_ptr         CORBA::_tc_wchar;
 CORBA::TypeCode_ptr         CORBA::_tc_octet;
 CORBA::TypeCode_ptr         CORBA::_tc_any;
 CORBA::TypeCode_ptr         CORBA::_tc_TypeCode;
 CORBA::TypeCode_ptr         CORBA::_tc_Principal;
 CORBA::TypeCode_ptr         CORBA::_tc_Object;
 CORBA::TypeCode_ptr         CORBA::_tc_string;
+CORBA::TypeCode_ptr         CORBA::_tc_wstring;
 CORBA::TypeCode_ptr         CORBA::_tc_NamedValue;
 #ifdef HAS_LongLong
 CORBA::TypeCode_ptr         CORBA::_tc_longlong;
@@ -4832,12 +4948,14 @@ static void check_static_data_is_initialised()
   CORBA::_tc_double = new TypeCode_base(CORBA::tk_double);
   CORBA::_tc_boolean = new TypeCode_base(CORBA::tk_boolean);
   CORBA::_tc_char = new TypeCode_base(CORBA::tk_char);
+  CORBA::_tc_wchar = new TypeCode_base(CORBA::tk_wchar);
   CORBA::_tc_octet = new TypeCode_base(CORBA::tk_octet);
   CORBA::_tc_any = new TypeCode_base(CORBA::tk_any);
   CORBA::_tc_TypeCode = new TypeCode_base(CORBA::tk_TypeCode);
   CORBA::_tc_Principal = new TypeCode_base(CORBA::tk_Principal);
   CORBA::_tc_Object = new TypeCode_objref("IDL:omg.org/CORBA/Object:1.0","Object");
   CORBA::_tc_string = new TypeCode_string(0);
+  CORBA::_tc_wstring = new TypeCode_wstring(0);
 #ifdef HAS_LongLong
   CORBA::_tc_longlong   = new TypeCode_base(CORBA::tk_longlong);
   CORBA::_tc_ulonglong  = new TypeCode_base(CORBA::tk_ulonglong);

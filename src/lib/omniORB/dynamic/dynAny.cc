@@ -29,6 +29,9 @@
 
 /* 
    $Log$
+   Revision 1.11.2.6  2000/11/17 19:09:37  dpg1
+   Support codeset conversion in any.
+
    Revision 1.11.2.5  2000/11/09 12:27:53  dpg1
    Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -507,6 +510,13 @@ DynAnyImpl::insert_char(CORBA::Char value)
 
 
 void
+DynAnyImpl::insert_wchar(CORBA::WChar value)
+{
+  doWrite(CORBA::tk_wchar).marshalWChar(value);
+}
+
+
+void
 DynAnyImpl::insert_short(CORBA::Short value)
 {
   value >>= doWrite(CORBA::tk_short);
@@ -583,6 +593,17 @@ DynAnyImpl::insert_string(const char* value)
 
 
 void
+DynAnyImpl::insert_wstring(const CORBA::WChar* value)
+{
+  if( !value || tckind() != CORBA::tk_wstring )
+    throw CORBA::DynAny::InvalidValue();
+  CORBA::ULong maxlen = actualTc()->NP_length();
+  cdrMemoryStream& buf = doWrite(CORBA::tk_wstring);
+  buf.marshalWString(value,maxlen);
+}
+
+
+void
 DynAnyImpl::insert_reference(CORBA::Object_ptr value)
 {
   if ( !CORBA::Object::_PR_is_valid(value) )
@@ -629,6 +650,13 @@ CORBA::Char
 DynAnyImpl::get_char()
 {
   return doRead(CORBA::tk_char).unmarshalChar();
+}
+
+
+CORBA::WChar
+DynAnyImpl::get_wchar()
+{
+  return doRead(CORBA::tk_wchar).unmarshalWChar();
 }
 
 
@@ -723,6 +751,18 @@ DynAnyImpl::get_string()
   CORBA::ULong length;
   CORBA::ULong maxlen = actualTc()->NP_length();
   char* value = buf.unmarshalString(maxlen);
+  return value;
+}
+
+
+CORBA::WChar*
+DynAnyImpl::get_wstring()
+{
+  cdrMemoryStream& buf = doRead(CORBA::tk_wstring);
+
+  CORBA::ULong length;
+  CORBA::ULong maxlen = actualTc()->NP_length();
+  CORBA::WChar* value = buf.unmarshalWString(maxlen);
   return value;
 }
 
@@ -1026,6 +1066,13 @@ DynAnyConstrBase::insert_char(CORBA::Char value)
 
 
 void
+DynAnyConstrBase::insert_wchar(CORBA::WChar value)
+{
+  writeCurrent(CORBA::tk_wchar).marshalWChar(value);
+}
+
+
+void
 DynAnyConstrBase::insert_short(CORBA::Short value)
 {
   value >>= writeCurrent(CORBA::tk_short);
@@ -1109,6 +1156,22 @@ DynAnyConstrBase::insert_string(const char* value)
 
 
 void
+DynAnyConstrBase::insert_wstring(const CORBA::WChar* value)
+{
+  if( !value )  throw CORBA::DynAny::InvalidValue();
+  if( pd_curr_index < 0 )  throw CORBA::DynAny::InvalidValue();
+
+  TypeCode_base* tc = (TypeCode_base*) TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
+  if( tc->NP_kind() != CORBA::tk_wstring )
+    throw CORBA::DynAny::InvalidValue();
+
+  CORBA::ULong maxlen = tc->NP_length();
+  cdrMemoryStream& buf = writeCurrent(CORBA::tk_wstring);
+  buf.marshalWString(value,maxlen);
+}
+
+
+void
 DynAnyConstrBase::insert_reference(CORBA::Object_ptr value)
 {
   if ( !CORBA::Object::_PR_is_valid(value) )
@@ -1155,6 +1218,13 @@ CORBA::Char
 DynAnyConstrBase::get_char()
 {
   return readCurrent(CORBA::tk_char).unmarshalChar();
+}
+
+
+CORBA::WChar
+DynAnyConstrBase::get_wchar()
+{
+  return readCurrent(CORBA::tk_wchar).unmarshalWChar();
 }
 
 
@@ -1251,6 +1321,18 @@ DynAnyConstrBase::get_string()
   TypeCode_base* tc = (TypeCode_base*)TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
   CORBA::ULong maxlen = tc->NP_length();
   char* value = buf.unmarshalString(maxlen);
+  return value;
+}
+
+
+CORBA::WChar*
+DynAnyConstrBase::get_wstring()
+{
+  cdrMemoryStream& buf = readCurrent(CORBA::tk_wstring);
+
+  TypeCode_base* tc = (TypeCode_base*)TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
+  CORBA::ULong maxlen = tc->NP_length();
+  CORBA::WChar* value = buf.unmarshalWString(maxlen);
   return value;
 }
 
@@ -1771,6 +1853,14 @@ DynUnionImpl::insert_char(CORBA::Char value)
 
 
 void
+DynUnionImpl::insert_wchar(CORBA::WChar value)
+{
+  writeCurrent(CORBA::tk_wchar).marshalWChar(value);
+  discriminatorHasChanged();
+}
+
+
+void
 DynUnionImpl::insert_short(CORBA::Short value)
 {
   value >>= writeCurrent(CORBA::tk_short);
@@ -1862,6 +1952,21 @@ DynUnionImpl::insert_string(const char* value)
 
 
 void
+DynUnionImpl::insert_wstring(const CORBA::WChar* value)
+{
+  if( !value )  throw CORBA::DynAny::InvalidValue();
+
+  if( pd_curr_index != 1 || pd_member_kind != CORBA::tk_wstring )
+    throw CORBA::DynAny::InvalidValue();
+  CORBA::ULong maxlen = pd_member->actualTc()->NP_length();
+
+  cdrMemoryStream& buf = writeCurrent(CORBA::tk_wstring);
+  buf.marshalWString(value,maxlen);
+  discriminatorHasChanged();
+}
+
+
+void
 DynUnionImpl::insert_reference(CORBA::Object_ptr value)
 {
   if ( !CORBA::Object::_PR_is_valid(value) )
@@ -1911,6 +2016,13 @@ CORBA::Char
 DynUnionImpl::get_char()
 {
   return readCurrent(CORBA::tk_char).unmarshalChar();
+}
+
+
+CORBA::WChar
+DynUnionImpl::get_wchar()
+{
+  return readCurrent(CORBA::tk_wchar).unmarshalWChar();
 }
 
 
@@ -2006,6 +2118,17 @@ DynUnionImpl::get_string()
 
   CORBA::ULong maxlen = pd_member->actualTc()->NP_length();
   char* value = buf.unmarshalString(maxlen);
+  return value;
+}
+
+
+CORBA::WChar*
+DynUnionImpl::get_wstring()
+{
+  cdrMemoryStream& buf = readCurrent(CORBA::tk_wstring);
+
+  CORBA::ULong maxlen = pd_member->actualTc()->NP_length();
+  CORBA::WChar* value = buf.unmarshalWString(maxlen);
   return value;
 }
 
@@ -2371,6 +2494,14 @@ DynUnionDisc::insert_char(CORBA::Char value)
 
 
 void
+DynUnionDisc::insert_wchar(CORBA::WChar value)
+{
+  // Not a legal discriminator type.
+  throw CORBA::DynAny::InvalidValue();
+}
+
+
+void
 DynUnionDisc::insert_short(CORBA::Short value)
 {
   value >>= doWrite(CORBA::tk_short);
@@ -2455,6 +2586,14 @@ DynUnionDisc::insert_string(const char* value)
 
 
 void
+DynUnionDisc::insert_wstring(const CORBA::WChar* value)
+{
+  // Not a legal discriminator type.
+  throw CORBA::DynAny::InvalidValue();
+}
+
+
+void
 DynUnionDisc::insert_reference(CORBA::Object_ptr value)
 {
   // Not a legal discriminator type.
@@ -2525,7 +2664,6 @@ DynUnionDisc::set_value(TypeCode_union::Discriminator v)
     insert_ulonglong((CORBA::ULongLong)v);
     break;
 #endif
-  // case CORBA::tk_wchar:
   default:
     throw omniORB::fatalException(__FILE__,__LINE__,
        "DynUnionDisc::set_value() - illegal disciminator type");
@@ -3151,12 +3289,13 @@ create_dyn_any(TypeCode_base* tc, CORBA::Boolean is_root)
 #endif
     case CORBA::tk_boolean:
     case CORBA::tk_char:
-    // case CORBA::tk_wchar:
+    case CORBA::tk_wchar:
     case CORBA::tk_octet:
     case CORBA::tk_any:
     case CORBA::tk_TypeCode:
     case CORBA::tk_objref:
     case CORBA::tk_string:
+    case CORBA::tk_wstring:
       da = new DynAnyImpl(tc, dt_any, is_root);
       break;
     case CORBA::tk_enum:
@@ -3257,12 +3396,13 @@ CORBA::ORB::create_basic_dyn_any(TypeCode_ptr tc)
 #endif
   case CORBA::tk_boolean:
   case CORBA::tk_char:
-    // case CORBA::tk_wchar:
+  case CORBA::tk_wchar:
   case CORBA::tk_octet:
   case CORBA::tk_any:
   case CORBA::tk_TypeCode:
   case CORBA::tk_objref:
   case CORBA::tk_string:
+  case CORBA::tk_wstring:
   case CORBA::tk_enum:
     break;
   default:

@@ -237,6 +237,7 @@ union tcDescriptor {
   CORBA::Double*     p_double;
   CORBA::Boolean*    p_boolean;
   CORBA::Char*       p_char;
+  CORBA::WChar*      p_wchar;
   CORBA::Octet*      p_octet;
   CORBA::ULong*      p_enum;
 #ifdef HAS_LongLong
@@ -269,14 +270,19 @@ union tcDescriptor {
   //   If new memory is allocated for the string and release is not 1 then it is
   //   the callers responsibility to free.
   struct {
-    char**          ptr;
+    char**         ptr;
     _CORBA_Boolean release;
   } p_string;
+
+  struct {
+    _CORBA_WChar** ptr;
+    _CORBA_Boolean release;
+  } p_wstring;
 
   // CONSTRUCTED types
   // These types have manager classes to help handle them, since their
   // internal details are not generally known to the tcParser
-  tcObjrefDesc p_objref;
+  tcObjrefDesc   p_objref;
 
   tcUnionDesc    p_union;
   tcStructDesc   p_struct;
@@ -314,6 +320,12 @@ inline void
 _0RL_buildDesc_cchar(tcDescriptor &desc, const CORBA::Char &data)
 {
   desc.p_char = (CORBA::Char *)&data;
+}
+
+inline void
+_0RL_buildDesc_cwchar(tcDescriptor &desc, const CORBA::WChar &data)
+{
+  desc.p_wchar = (CORBA::WChar *)&data;
 }
 
 inline void
@@ -404,6 +416,25 @@ _0RL_buildDesc_cstring(tcDescriptor &desc,_CORBA_String_element const& data)
 {
   desc.p_string.ptr = (char**) &data.pd_data;
   desc.p_string.release = data.pd_rel;
+}
+
+///////////////////
+// WString       //
+///////////////////
+
+inline void
+_0RL_buildDesc_cwstring(tcDescriptor &desc,_CORBA_WString_member const& data)
+{
+  desc.p_wstring.ptr = (_CORBA_WChar**)&data._ptr;
+  desc.p_wstring.release
+    = (data._ptr==_CORBA_WString_helper::empty_wstring) ? 0 : 1;
+}
+
+inline void
+_0RL_buildDesc_cwstring(tcDescriptor &desc,_CORBA_WString_element const& data)
+{
+  desc.p_wstring.ptr = (_CORBA_WChar**) &data.pd_data;
+  desc.p_wstring.release = data.pd_rel;
 }
 
 ///////////////////
