@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.2  2000/03/20 11:50:18  djs
+# Removed excess buffering- output templates have code attached which is
+# lazily evaluated when required.
+#
 # Revision 1.12.2.1  2000/02/14 18:34:55  dpg1
 # New omniidl merged in.
 #
@@ -177,48 +181,73 @@ def monolithic(stream, tree):
 
     # see o2be_root::produce_hdr and o2be_root::produce_hdr_defs
 
-    forward_dec = util.StringStream()
     # generate the header definitions
-    forward = omniidl_be.cxx.header.forward.__init__(forward_dec)
-    tree.accept(forward)
+    def forward_dec(stream = stream, tree = tree):
+        forward = omniidl_be.cxx.header.forward.__init__(stream)
+        tree.accept(forward)
+    #forward_dec = util.StringStream()
+    #forward = omniidl_be.cxx.header.forward.__init__(forward_dec)
+    #tree.accept(forward)
 
-    string_tcparser = util.StringStream()
     # generate the bounded string tcParser stuff
-    tcstring = omniidl_be.cxx.header.tcstring.__init__(string_tcparser)
-    tree.accept(tcstring)
+    def string_tcparser(stream = stream, tree = tree):
+        tcstring = omniidl_be.cxx.header.tcstring.__init__(stream)
+        tree.accept(tcstring)
+    #string_tcparser = util.StringStream()
+    #tcstring = omniidl_be.cxx.header.tcstring.__init__(string_tcparser)
+    #tree.accept(tcstring)
 
-    main_defs = util.StringStream()
-    defs = omniidl_be.cxx.header.defs.__init__(main_defs)
-    tree.accept(defs)
+    def main_defs(stream = stream, tree = tree):
+        defs = omniidl_be.cxx.header.defs.__init__(stream)
+        tree.accept(defs)
+    #main_defs = util.StringStream()
+    #defs = omniidl_be.cxx.header.defs.__init__(main_defs)
+    #tree.accept(defs)
 
-    main_poa = util.StringStream()
-    main_tie = util.StringStream()
+    def main_poa(stream = stream, tree = tree):
+        poa = omniidl_be.cxx.header.poa.__init__(stream)
+        tree.accept(poa)
+    def main_tie(stream = stream, tree = tree):
+        if config.FlatTieFlag():
+            tie = omniidl_be.cxx.header.tie.__init__(stream)
+            tree.accept(tie)
+
+    #main_poa = util.StringStream()
+    #main_tie = util.StringStream()
     
-    poa = omniidl_be.cxx.header.poa.__init__(main_poa)
-    tree.accept(poa)
-    if config.FlatTieFlag():
-        tie = omniidl_be.cxx.header.tie.__init__(main_tie)
-        tree.accept(tie)
+    #poa = omniidl_be.cxx.header.poa.__init__(main_poa)
+    #tree.accept(poa)
+    #if config.FlatTieFlag():
+    #    tie = omniidl_be.cxx.header.tie.__init__(main_tie)
+    #    tree.accept(tie)
 
     # see o2be_root::produce_hdr and o2be_root::produce_hdr_defs
-    main_opers = util.StringStream()
-    opers = omniidl_be.cxx.header.opers.__init__(main_opers)
-    tree.accept(opers)
+    def main_opers(stream = stream, tree = tree):
+        opers = omniidl_be.cxx.header.opers.__init__(stream)
+        tree.accept(opers)
+        
+    #main_opers = util.StringStream()
+    #opers = omniidl_be.cxx.header.opers.__init__(main_opers)
+    #tree.accept(opers)
 
-    main_marshal = util.StringStream()
-    marshal = omniidl_be.cxx.header.marshal.__init__(main_marshal)
-    tree.accept(marshal)
+    def main_marshal(stream = stream, tree = tree):
+        marshal = omniidl_be.cxx.header.marshal.__init__(stream)
+        tree.accept(marshal)
+    #main_marshal = util.StringStream()
+    #marshal = omniidl_be.cxx.header.marshal.__init__(main_marshal)
+    #tree.accept(marshal)
+
 
     # other stuff
     stream.out(template.main,
                includes = str(includes),
-               forward_declarations = str(forward_dec),
-               string_tcParser_declarations = str(string_tcparser),
-               defs = str(main_defs),
-               poa = str(main_poa),
-               tie = str(main_tie),
-               operators = str(main_opers),
-               marshalling = str(main_marshal),
+               forward_declarations = forward_dec,
+               string_tcParser_declarations = string_tcparser,
+               defs = main_defs,
+               poa = main_poa,
+               tie = main_tie,
+               operators = main_opers,
+               marshalling = main_marshal,
                guard = guard)
 
 
@@ -244,7 +273,7 @@ def run(tree):
     else:
         # build the full header file
         header_filename = config.basename() + config.hdrsuffix()
-        stream = util.Stream(open(header_filename, "w"), 2)
+        stream = util.LazyStream(open(header_filename, "w"), 2)
         # generate one big chunk of header
         monolithic(stream, tree)
 

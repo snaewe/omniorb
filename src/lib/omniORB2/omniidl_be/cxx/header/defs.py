@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.31.2.2  2000/03/20 11:50:18  djs
+# Removed excess buffering- output templates have code attached which is
+# lazily evaluated when required.
+#
 # Revision 1.31.2.1  2000/02/14 18:34:55  dpg1
 # New omniidl merged in.
 #
@@ -237,17 +241,21 @@ def visitInterface(node):
 
     # recursively take care of other IDL declared within this
     # scope
-    Other_IDL = util.StringStream()
-    _stream = self.stream
-    self.stream = Other_IDL
-    for n in node.declarations():
-        n.accept(self)
-    self.stream = _stream
+    def Other_IDL(stream = self.stream, node = node):
+        for n in node.declarations():
+            n.accept(self)
+            
+    #Other_IDL = util.StringStream()
+    #_stream = self.stream
+    #self.stream = Other_IDL
+    #for n in node.declarations():
+    #    n.accept(self)
+    #self.stream = _stream
 
     # Output the this interface's corresponding class
     stream.out(template.interface_type,
                name = cxx_name,
-               Other_IDL = str(Other_IDL))
+               Other_IDL = Other_IDL)
     
         
     # build methods corresponding to attributes, operations etc
@@ -664,33 +672,33 @@ def visitTypedef(node):
                 # seq_dims contains dimensions if a sequence of arrays
                 # templateName contains the template instantiation
 
-                bounds = util.StringStream()
-                if not(bounded):
-                    bounds.out(template.sequence_type_bounds,
-                               name = derivedName,
-                               element = element_ptr,
-                               derived = templateName)
+                def bounds(bounded = bounded, derivedName = derivedName,
+                           element_ptr = element_ptr,
+                           templateName = templateName):
+                    if not(bounded):
+                        stream.out(template.sequence_type_bounds,
+                                   name = derivedName,
+                                   element = element_ptr,
+                                   derived = templateName)
+                        
+                #bounds = util.StringStream()
+                #if not(bounded):
+                #    bounds.out(template.sequence_type_bounds,
+                #               name = derivedName,
+                #               element = element_ptr,
+                #               derived = templateName)
+
                 # output the main sequence definition
                 stream.out(template.sequence_type,
                            name = derivedName,
                            derived = templateName,
-                           bounds = str(bounds))
+                           bounds = bounds)
                 
 
                 # start building the _var and _out types
-                subscript_operator_var = util.StringStream()
-                subscript_operator_out = util.StringStream()
 
-                # subscripting operators depend on what it is
-                # fundamentally a type of
-                if is_array:
-                    subscript_operator_var.out(
-                        template.sequence_var_array_subscript,
-                        element = element_ptr)
-                    subscript_operator_out.out(
-                        template.sequence_out_array_subscript,
-                        element = element_ptr)
-                else:
+                element_reference = ""
+                if not(is_array):
                     if tyutil.isString(seqDerefType):
                         # special case alert
                         element_reference = element
@@ -704,23 +712,38 @@ def visitTypedef(node):
                             seqDerefType, environment) + "&"
                     else:
                         element_reference = element + "&"
-                    subscript_operator_var.out(
-                        template.sequence_var_subscript,
-                        element = element_reference)
-                    subscript_operator_out.out(
-                        template.sequence_out_subscript,
-                        element = element_reference)                        
+                        
+                def subscript_operator_var(stream = stream,
+                                           is_array = is_array,
+                                           element_ptr = element_ptr,
+                                           element_ref = element_reference):
+                    if is_array:
+                        stream.out(template.sequence_var_array_subscript,
+                                   element = element_ptr)
+                    else:
+                        stream.out(template.sequence_var_subscript,
+                                   element = element_ref)
 
-
+                def subscript_operator_out(stream = stream,
+                                           is_array = is_array,
+                                           element_ptr = element_ptr,
+                                           element_ref = element_reference):
+                    if is_array:
+                        stream.out(template.sequence_out_array_subscript,
+                                   element = element_ptr)
+                    else:
+                        stream.out(template.sequence_out_subscript,
+                                   element = element_ref)
+                    
                 # write the _var class definition
                 stream.out(template.sequence_var,
                            name = derivedName,
-                           subscript_operator = str(subscript_operator_var))
+                           subscript_operator = subscript_operator_var)
 
                 # write the _out class definition
                 stream.out(template.sequence_out,
                            name = derivedName,
-                           subscript_operator = str(subscript_operator_out))
+                           subscript_operator = subscript_operator_out)
 
             else:
                 # FIXME: finish the rest later
@@ -749,26 +772,26 @@ def visitTypedef(node):
                            name = derivedName)
             else:
                 # build the _dup loop
-                dup_loop = util.StringStream()
-                index = util.start_loop(dup_loop, all_dims,
-                                        iter_type = "unsigned int")
-                dup_loop.out("_data@index@ = _s@index@;",
-                             index = index)
-                util.finish_loop(dup_loop, all_dims)
+                def dup_loop(stream = stream, all_dims = all_dims):
+                    index = util.start_loop(stream, all_dims,
+                                            iter_type = "unsigned int")
+                    stream.out("\n_data@index@ = _s@index@;\n",
+                               index = index)
+                    util.finish_loop(stream, all_dims)
 
                 # build the _copy loop
-                copy_loop = util.StringStream()
-                index = util.start_loop(copy_loop, all_dims,
-                                        iter_type = "unsigned int")
-                copy_loop.out("_to@index@ = _from@index@;", index = index)
-                util.finish_loop(copy_loop, all_dims)
+                def copy_loop(stream = stream, all_dims = all_dims):
+                    index = util.start_loop(stream, all_dims,
+                                            iter_type = "unsigned int")
+                    stream.out("\n_to@index@ = _from@index@;\n", index = index)
+                    util.finish_loop(stream, all_dims)
 
                 # output the static functions
                 stream.out(template.typedef_array_static,
                            name = derivedName,
                            firstdim = repr(all_dims[0]),
-                           dup_loop = str(dup_loop),
-                           copy_loop = str(copy_loop))
+                           dup_loop = dup_loop,
+                           copy_loop = copy_loop)
                             
             # output the _copyHelper class
             stream.out(template.typedef_array_copyHelper,
@@ -808,47 +831,44 @@ def visitStruct(node):
         type = "Variable"
 
     # Deal with types constructed here
-    _stream = self.stream
-    Other_IDL = util.StringStream()
-    self.stream = Other_IDL
-    for m in node.members():
-        if m.constrType():
-            m.memberType().decl().accept(self)
-    self.stream = _stream
+    def Other_IDL(stream = stream, node = node):
+        for m in node.members():
+            if m.constrType():
+                m.memberType().decl().accept(self)
             
     # Deal with the actual struct members
-    members = util.StringStream()
-    for m in node.members():
-        memberType = m.memberType()
-        derefType = tyutil.deref(memberType)
-        is_array = tyutil.typeDims(memberType) != []
+    def members(stream = stream, node = node, environment = environment):
+        for m in node.members():
+            memberType = m.memberType()
+            derefType = tyutil.deref(memberType)
+            is_array = tyutil.typeDims(memberType) != []
+            
+            memtype = tyutil.memberType(environment, memberType)
 
-        memtype = tyutil.memberType(environment, memberType)
+            for d in m.declarators():
+                id = d.identifier()
+                cxx_id = tyutil.mapID(id)
 
-        for d in m.declarators():
-            id = d.identifier()
-            cxx_id = tyutil.mapID(id)
+                decl_dims = d.sizes()
+                is_array_declarator = decl_dims != []
 
-            decl_dims = d.sizes()
-            is_array_declarator = decl_dims != []
-
-            # non-arrays of direct sequences are done via a typedef
-            if not(is_array_declarator) and tyutil.isSequence(memberType):
-                members.out(template.struct_nonarray_sequence,
-                            memtype = memtype,
-                            cxx_id = cxx_id)
-            else:
-                members.out(template.struct_normal_member,
-                            memtype = memtype,
-                            cxx_id = cxx_id,
-                            dims = tyutil.dimsToString(decl_dims))
+                # non-arrays of direct sequences are done via a typedef
+                if not(is_array_declarator) and tyutil.isSequence(memberType):
+                    stream.out(template.struct_nonarray_sequence,
+                               memtype = memtype,
+                               cxx_id = cxx_id)
+                else:
+                    stream.out(template.struct_normal_member,
+                               memtype = memtype,
+                               cxx_id = cxx_id,
+                               dims = tyutil.dimsToString(decl_dims))
             
     # Output the structure itself
     stream.out(template.struct,
                name = cxx_name,
                type = type,
-               Other_IDL = str(Other_IDL),
-               members = str(members))
+               Other_IDL = Other_IDL,
+               members = members)
     
     self.__insideClass = insideClass
 
@@ -881,55 +901,60 @@ def visitException(node):
     no_members = (node.members() == [])
 
     # other types constructed within this one
-    Other_IDL = util.StringStream()
-    _stream = self.stream
-    self.stream = Other_IDL
-    for m in node.members():
-        if m.constrType():
-            m.memberType().decl().accept(self)
-    self.stream = _stream
+    def Other_IDL(stream = stream, node = node):
+        for m in node.members():
+            if m.constrType():
+                m.memberType().decl().accept(self)
 
     # deal with the exceptions members
-    members = util.StringStream()
-    # and constructor arguments
+    def members(stream = stream, node = node, environment = environment):
+        for m in node.members():
+            memberType = m.memberType()
+            derefType = tyutil.deref(memberType)
+            type_dims = tyutil.typeDims(memberType)
+
+            for d in m.declarators():
+                decl_dims = d.sizes()
+                full_dims = decl_dims + type_dims
+                is_array = full_dims != []
+                is_array_declarator = decl_dims != []
+                
+                memtype = tyutil.memberType(environment, memberType)
+                id = d.identifier()
+                cxx_id = tyutil.mapID(id)
+
+                dims_string = tyutil.dimsToString(decl_dims)
+                
+                if is_array_declarator:
+                    stream.out(template.exception_array_declarator,
+                               memtype = memtype,
+                               cxx_id = cxx_id,
+                               dims = dims_string,
+                               private_prefix = config.privatePrefix())
+
+                stream.out(template.exception_member,
+                           memtype = memtype,
+                           cxx_id = cxx_id,
+                           dims = dims_string)
+
+    # deal with ctor args
     ctor_args = []
     for m in node.members():
         memberType = m.memberType()
-        derefType = tyutil.deref(memberType)
-        type_dims = tyutil.typeDims(memberType)
-
         for d in m.declarators():
             decl_dims = d.sizes()
-            full_dims = decl_dims + type_dims
-            is_array = full_dims != []
             is_array_declarator = decl_dims != []
-
-            memtype = tyutil.memberType(environment, memberType)
-            id = d.identifier()
-            cxx_id = tyutil.mapID(id)
-
-            dims_string = tyutil.dimsToString(decl_dims)
-
             ctor_arg_type = tyutil.makeConstructorArgumentType(memberType,
                                                                environment)
+            id = d.identifier()
+            cxx_id = tyutil.mapID(id)
 
             if is_array_declarator:
                 ctor_arg_type = "const " + config.privatePrefix() +\
                                 "_" + cxx_id
-            
-                members.out(template.exception_array_declarator,
-                            memtype = memtype,
-                            cxx_id = cxx_id,
-                            dims = dims_string,
-                            private_prefix = config.privatePrefix())
-
             ctor_args.append(ctor_arg_type + " i_" + cxx_id)
 
-            members.out(template.exception_member,
-                        memtype = memtype,
-                        cxx_id = cxx_id,
-                        dims = dims_string)
-
+       
     ctor = ""
     if ctor_args != []:
         ctor = cxx_exname + "(" + string.join(ctor_args, ", ") + ");"
@@ -946,8 +971,8 @@ def visitException(node):
     # output the main exception declaration
     stream.out(template.exception,
                name = cxx_exname,
-               Other_IDL = str(Other_IDL),
-               members = str(members),
+               Other_IDL = Other_IDL,
+               members = members,
                constructor = ctor,
                alignedSize = alignedSize,
                inline = inline,
@@ -1070,240 +1095,254 @@ def visitUnion(node):
     if tyutil.isVariableDecl(node):
         fixed = "Variable"
 
-    Other_IDL = util.StringStream()
-    _stream = self.stream
-    self.stream = Other_IDL
-    
-    # deal with constructed switch type
-    if node.constrType():
-        node.switchType().decl().accept(self)
+    def Other_IDL(stream = stream, node = node):
+        # deal with constructed switch type
+        if node.constrType():
+            node.switchType().decl().accept(self)
         
-    # deal with children defined in this scope
-    for n in node.cases():
-        if n.constrType():
-            n.caseType().decl().accept(self)
+        # deal with children defined in this scope
+        for n in node.cases():
+            if n.constrType():
+                n.caseType().decl().accept(self)
 
-    self.stream = _stream
     
     # create the default constructor body
-    default_constructor = util.StringStream()
-    if implicitDefault:
-        default_constructor.out(template.union_constructor_implicit)
-    elif hasDefault:
-        default_constructor.out(template.union_constructor_default,
-                                default = chooseArbitraryDefault())
+    def default_constructor(stream = stream,
+                            implicitDefault = implicitDefault,
+                            hasDefault = hasDefault,
+                            choose = chooseArbitraryDefault):
+        if implicitDefault:
+            stream.out(template.union_constructor_implicit)
+        elif hasDefault:
+            stream.out(template.union_constructor_default,
+                       default = choose())
+        return
+
+    def ctor_cases(stream = stream, node = node, switchType = switchType,
+                   environment = environment, exhaustive = exhaustive):
+        for c in node.cases():
+            for l in c.labels():
+                if l.default(): continue
+                
+                discrimvalue = tyutil.valueString(switchType, l.value(),
+                                                  environment)
+                name = tyutil.mapID(c.declarator().identifier())
+                stream.out(template.union_ctor_case,
+                           discrimvalue = discrimvalue,
+                           name = tyutil.mapID(c.declarator().identifier()))
+        # Booleans are a special case (isn't everything?)
+        booleanWrap = tyutil.isBoolean(switchType) and exhaustive
+        if booleanWrap:
+            stream.out(template.union_ctor_bool_default)
+        else:
+            stream.out(template.union_ctor_default)
+        return
 
     # create the copy constructor and the assignment operator
     # bodies
-    copy_constructor = util.StringStream()
-    # build the switch() case body
-    ctor_cases = util.StringStream()
-    for c in node.cases():
-        for l in c.labels():
-            if l.default(): continue
-            discrimvalue = tyutil.valueString(switchType, l.value(),
-                                              environment)
-            ctor_cases.out(template.union_ctor_case,
-                           discrimvalue = discrimvalue,
-                           name = tyutil.mapID(c.declarator().identifier()))
-
-    # Booleans are a special case (isn't everything?)
-    booleanWrap = tyutil.isBoolean(switchType) and exhaustive
-    if booleanWrap:
-        ctor_cases.out(template.union_ctor_bool_default)
-    else:
-        ctor_cases.out(template.union_ctor_default)
-        
-    if not(exhaustive):
-        # grab the default case
-        default = ""
-        for c in node.cases():
-            if c.isDefault:
-                case_id = c.declarator().identifier()
-                cxx_case_id = tyutil.mapID(case_id)
-                default = cxx_case_id + "(_value.pd_" + cxx_case_id + ");"
+    def copy_constructor(stream = stream, exhaustive = exhaustive,
+                         node = node, ctor_cases = ctor_cases):
+        if not(exhaustive):
+            # grab the default case
+            default = ""
+            for c in node.cases():
+                if c.isDefault:
+                    case_id = c.declarator().identifier()
+                    cxx_case_id = tyutil.mapID(case_id)
+                    default = cxx_case_id + "(_value.pd_" + cxx_case_id + ");"
 
 
-        copy_constructor.out(template.union_ctor_nonexhaustive,
-                             default = default,
-                             cases = str(ctor_cases))
-    else:
-        copy_constructor.out(template.union_ctor_exhaustive,
-                             cases = str(ctor_cases))
+            stream.out(template.union_ctor_nonexhaustive,
+                       default = default,
+                       cases = ctor_cases)
+        else:
+            stream.out(template.union_ctor_exhaustive,
+                       cases = ctor_cases)
+        return
         
     # do we need an implicit _default function?
-    implicit_default = util.StringStream()
-    if implicitDefault:
-        implicit_default.out(template.union_implicit_default,
-                             arbitraryDefault = chooseArbitraryDefault())
+    def implicit_default(stream = stream, choose = chooseArbitraryDefault,
+                         implicitDefault = implicitDefault):
+        if implicitDefault:
+            stream.out(template.union_implicit_default,
+                       arbitraryDefault = choose())
+        return
 
     # get and set functions for each case:
-    members = util.StringStream()
-    for c in node.cases():
-        # Following the typedef chain will deliver the base type of
-        # the alias. Whether or not it is an array is stored in an
-        # ast.Typedef node.
-        caseType = c.caseType()
-        dims = tyutil.typeDims(caseType)
+    def members(stream = stream, node = node, environment = environment,
+                choose = chooseArbitraryDefault, switchType = switchType):
+        for c in node.cases():
+            # Following the typedef chain will deliver the base type of
+            # the alias. Whether or not it is an array is stored in an
+            # ast.Typedef node.
+            caseType = c.caseType()
+            dims = tyutil.typeDims(caseType)
             
-        # find the dereferenced type of the member if its an alias
-        derefType = tyutil.deref(caseType)
+            # find the dereferenced type of the member if its an alias
+            derefType = tyutil.deref(caseType)
 
-        # the mangled name of the member
-        decl = c.declarator()
-        decl_dims = decl.sizes()
+            # the mangled name of the member
+            decl = c.declarator()
+            decl_dims = decl.sizes()
 
-        full_dims = decl_dims + dims
-
-        is_array = full_dims != []
-        is_array_declarator = decl_dims != []
-        alias_array = dims != []
+            full_dims = decl_dims + dims
+            
+            is_array = full_dims != []
+            is_array_declarator = decl_dims != []
+            alias_array = dims != []
         
-        member = tyutil.mapID(decl.identifier())
+            member = tyutil.mapID(decl.identifier())
+            
+            memtype = tyutil.memberType(environment, caseType)
+            
+            # CORBA 2.3 C++ language mapping (June, 1999) 1-34:
+            # ... Setting the union value through a modifier function
+            # automatically sets the discriminant and may release the
+            # storage associated with the previous value ... If a
+            # modifier for a union member with multiple legal
+            # discriminant values is used to set the value of the
+            # discriminant, the union implementation is free to set
+            # the discriminant to any one of the legal values for that
+            # member. The actual discriminant value chose under these
+            # circumstances is implementation-dependent. ...
+            
+            # Do we pick the first element (seems obvious)?
+            # Or pick another one, hoping to trip-up people who write
+            # non-compliant code and make an incorrect assumption?
+            
+            labels = c.labels()
+            if labels != []:
+                non_default_labels = filter(lambda x:not(x.default()), labels)
+                if non_default_labels == []:
+                    # only one label and it's the default
+                    label = labels[0]
+                    discrimvalue = choose()
+                elif len(non_default_labels) > 1:
+                    # oooh, we have a choice. Let's pick the second one.
+                    # no-one will be expecting that
+                    label = non_default_labels[1]
+                else:
+                    # just the one interesting label
+                    label = non_default_labels[0]
 
-        memtype = tyutil.memberType(environment, caseType)
+                if label.default():
+                    discrimvalue = choose()
+                else:
+                    discrimvalue = tyutil.valueString(switchType,
+                                                      label.value(),
+                                                      environment)
 
-        # CORBA 2.3 C++ language mapping (June, 1999) 1-34:
-        # ... Setting the union value through a modifier function
-        # automatically sets the discriminant and may release the
-        # storage associated with the previous value ... If a
-        # modifier for a union member with multiple legal
-        # discriminant values is used to set the value of the
-        # discriminant, the union implementation is free to set
-        # the discriminant to any one of the legal values for that
-        # member. The actual discriminant value chose under these
-        # circumstances is implementation-dependent. ...
+                # FIXME: stupid special case, see above
+                if tyutil.isChar(switchType) and label.value() == '\0':
+                    discrimvalue = "0000"
 
-        # Do we pick the first element (seems obvious)?
-        # Or pick another one, hoping to trip-up people who write
-        # non-compliant code and make an incorrect assumption?
-
-        labels = c.labels()
-        if labels != []:
-            non_default_labels = filter(lambda x:not(x.default()), labels)
-            if non_default_labels == []:
-                # only one label and it's the default
-                label = labels[0]
-                discrimvalue = chooseArbitraryDefault()
-            elif len(non_default_labels) > 1:
-                # oooh, we have a choice. Let's pick the second one.
-                # no-one will be expecting that
-                label = non_default_labels[1]
-            else:
-                # just the one interesting label
-                label = non_default_labels[0]
-
-            if label.default():
-                discrimvalue = chooseArbitraryDefault()
-            else:
-                discrimvalue = tyutil.valueString(switchType, label.value(),
-                                                  environment)
-
-            # FIXME: stupid special case, see above
-            if tyutil.isChar(switchType) and label.value() == '\0':
-                discrimvalue = "0000"
-
-            # only different when array declarator
-            const_type_str = memtype
+                # only different when array declarator
+                const_type_str = memtype
                 
-            # anonymous arrays are handled slightly differently
-            if is_array_declarator:
-                prefix = config.privatePrefix()
-                members.out(template.union_array_declarator,
-                            prefix = prefix,
-                            memtype = memtype,
-                            name = member,
-                            dims = tyutil.dimsToString(decl.sizes()),
-                            tail_dims = tyutil.dimsToString(decl.sizes()[1:]))
-                const_type_str = prefix + "_" + member
-                memtype = "_" + member
+                # anonymous arrays are handled slightly differently
+                if is_array_declarator:
+                    prefix = config.privatePrefix()
+                    stream.out(template.union_array_declarator,
+                               prefix = prefix,
+                               memtype = memtype,
+                               name = member,
+                               dims = tyutil.dimsToString(decl.sizes()),
+                               tail_dims = tyutil.dimsToString(decl.sizes()[1:]))
+                    const_type_str = prefix + "_" + member
+                    memtype = "_" + member
              
-            if is_array:
-                # build the loop
-                loop = util.StringStream()
-                index = util.start_loop(loop, full_dims,
-                                        iter_type = "unsigned int")
-                loop.out("pd_" + member + index + " = _value" + index + ";")
-                util.finish_loop(loop, full_dims)
-                members.out(template.union_array,
-                            memtype = memtype,
-                            const_type = const_type_str,
-                            name = member,
-                            isDefault = str(c.isDefault),
-                            discrimvalue = discrimvalue,
-                            loop = str(loop))
-            elif derefType.kind() == idltype.tk_any:
-                # note type != CORBA::Any when its an alias...
-                members.out(template.union_any,
-                            type = memtype,
-                            name = member,
-                            isDefault = str(c.isDefault),
-                            discrimvalue = discrimvalue)
-            elif derefType.kind() == idltype.tk_TypeCode:
-                members.out(template.union_typecode,
-                            name = member,
-                            isDefault = str(c.isDefault),
-                            discrimvalue = discrimvalue)
+                if is_array:
+                    # build the loop
+                    def loop(stream = stream, full_dims = full_dims,
+                             member = member):
+                        index = util.start_loop(stream, full_dims,
+                                                iter_type = "unsigned int")
+                        stream.out("\npd_" + member + index + " = _value" +\
+                                   index + ";\n")
+                        util.finish_loop(stream, full_dims)
+                        return
+                    
+                    stream.out(template.union_array,
+                               memtype = memtype,
+                               const_type = const_type_str,
+                               name = member,
+                               isDefault = str(c.isDefault),
+                               discrimvalue = discrimvalue,
+                               loop = loop)
+                    
+                elif derefType.kind() == idltype.tk_any:
+                    # note type != CORBA::Any when its an alias...
+                    stream.out(template.union_any,
+                               type = memtype,
+                               name = member,
+                               isDefault = str(c.isDefault),
+                               discrimvalue = discrimvalue)
+                elif derefType.kind() == idltype.tk_TypeCode:
+                    stream.out(template.union_typecode,
+                               name = member,
+                               isDefault = str(c.isDefault),
+                               discrimvalue = discrimvalue)
                 
-                
-            elif isinstance(derefType, idltype.Base) or \
-                            tyutil.isEnum(derefType):
-                # basic type
-                members.out(template.union_basic,
-                            type = memtype,
-                            name = member,
-                            isDefault = str(c.isDefault),
-                            discrimvalue = discrimvalue)
+                    
+                elif isinstance(derefType, idltype.Base) or \
+                     tyutil.isEnum(derefType):
+                    # basic type
+                    stream.out(template.union_basic,
+                               type = memtype,
+                               name = member,
+                               isDefault = str(c.isDefault),
+                               discrimvalue = discrimvalue)
+                    
+                elif isinstance(derefType, idltype.String):
+                    stream.out(template.union_string,
+                               name = member,
+                               isDefault = str(c.isDefault),
+                               discrimvalue = discrimvalue)
+                elif tyutil.isObjRef(derefType):
+                    scopedName = derefType.decl().scopedName()
+                    ptr_name = name.suffixName(scopedName, "_ptr", environment)
+                    Helper_name = name.suffixName(scopedName, "_Helper",
+                                                  environment)
+                    var_name = name.suffixName(scopedName, "_var", environment)
 
-            elif isinstance(derefType, idltype.String):
-                members.out(template.union_string,
-                            name = member,
-                            isDefault = str(c.isDefault),
-                            discrimvalue = discrimvalue)
-            elif tyutil.isObjRef(derefType):
-                scopedName = derefType.decl().scopedName()
-                ptr_name = name.suffixName(scopedName, "_ptr", environment)
-                Helper_name = name.suffixName(scopedName, "_Helper",
-                                              environment)
-                var_name = name.suffixName(scopedName, "_var", environment)
+                    stream.out(template.union_objref,
+                               member = member,
+                               memtype = memtype,
+                               ptr_name = ptr_name,
+                               var_name = var_name,
+                               Helper_name = Helper_name,
+                               isDefault = str(c.isDefault),
+                               discrimvalue = discrimvalue)
+                elif tyutil.isTypedef(caseType) or \
+                     tyutil.isStruct(derefType) or \
+                     tyutil.isUnion(derefType):
+                    stream.out(template.union_constructed,
+                               type = memtype,
+                               name = member,
+                               isDefault = str(c.isDefault),
+                               discrimvalue = discrimvalue)
 
-                members.out(template.union_objref,
-                            member = member,
-                            memtype = memtype,
-                            ptr_name = ptr_name,
-                            var_name = var_name,
-                            Helper_name = Helper_name,
-                            isDefault = str(c.isDefault),
-                            discrimvalue = discrimvalue)
-            elif tyutil.isTypedef(caseType) or \
-                 tyutil.isStruct(derefType) or \
-                 tyutil.isUnion(derefType):
-                members.out(template.union_constructed,
-                            type = memtype,
-                            name = member,
-                            isDefault = str(c.isDefault),
-                            discrimvalue = discrimvalue)
+                elif isinstance(derefType, idltype.Sequence):
+                    sequence_template = tyutil.sequenceTemplate(derefType,
+                                                                environment)
+                    stream.out(template.union_sequence,
+                               sequence_template = sequence_template,
+                               member = member,
+                               isDefault = str(c.isDefault),
+                               discrimvalue = discrimvalue)
 
-            elif isinstance(derefType, idltype.Sequence):
-                sequence_template  = tyutil.sequenceTemplate(derefType,
-                                                             environment)
-                members.out(template.union_sequence,
-                            sequence_template = sequence_template,
-                            member = member,
-                            isDefault = str(c.isDefault),
-                            discrimvalue = discrimvalue)
-
-            else:
-                raise "Don't know how to output code for union type: "+type
+                else:
+                    raise "Don't know how to output code for union type: "+type
+        return
 
     # Typecode and Any
-    tcParser_unionHelper = util.StringStream()
-    if config.TypecodeFlag():
-        guard_name = tyutil.guardName(node.scopedName())
+    def tcParser_unionHelper(stream = stream, node = node):
+        if config.TypecodeFlag():
+            guard_name = tyutil.guardName(node.scopedName())
         
-        tcParser_unionHelper.out(template.union_tcParser_friend,
-                                 name = guard_name,
-                                 private_prefix = config.privatePrefix())
+            stream.out(template.union_tcParser_friend,
+                       name = guard_name,
+                       private_prefix = config.privatePrefix())
 
 
     # declare the instance of the discriminator and
@@ -1384,13 +1423,13 @@ def visitUnion(node):
     stream.out(template.union,
                unionname = cxx_id,
                fixed = fixed,
-               Other_IDL = str(Other_IDL),
-               default_constructor = str(default_constructor),
-               copy_constructor = str(copy_constructor),
+               Other_IDL = Other_IDL,
+               default_constructor = default_constructor,
+               copy_constructor = copy_constructor,
                discrimtype = discrimtype,
-               implicit_default = str(implicit_default),
-               members = str(members),
-               tcParser_unionHelper = str(tcParser_unionHelper),
+               implicit_default = implicit_default,
+               members = members,
+               tcParser_unionHelper = tcParser_unionHelper,
                union = str(inside),
                outsideUnion = str(outside))
                

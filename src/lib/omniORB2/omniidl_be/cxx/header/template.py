@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.5  2000/03/20 11:50:20  djs
+# Removed excess buffering- output templates have code attached which is
+# lazily evaluated when required.
+#
 # Revision 1.3.2.4  2000/03/10 12:01:03  djr
 # Re-fixed omniidl (make exception _NP_duplicate() public).
 #
@@ -831,7 +835,8 @@ void @name@ (const @const_type@ _value) {
   pd__d = @discrimvalue@;
   pd__default = @isDefault@;
   @loop@
-}"""
+}
+"""
 
 union_any = """\
 const @type@ &@name@ () const { return pd_@name@; }
@@ -840,7 +845,8 @@ void @name@ (const @type@& _value) {
   pd__d = @discrimvalue@;
   pd__default = @isDefault@;
   pd_@name@ = _value;
-}"""
+}
+"""
 
 union_typecode = """\
 CORBA::TypeCode_ptr @name@ () const { return pd_@name@._ptr; }
@@ -858,7 +864,8 @@ void @name@(const CORBA::TypeCode_var& _value) {
   pd__d = @discrimvalue@;
   pd__default = @isDefault@;
   pd_@name@ = _value;
-}"""
+}
+"""
 
 union_basic = """\
 @type@ @name@ () const { return pd_@name@; }
@@ -866,7 +873,8 @@ void @name@ (@type@  _value) {
   pd__d = @discrimvalue@;
   pd__default = @isDefault@;
   pd_@name@ = _value;
-}"""
+}
+"""
 
 union_string = """\
 const char * @name@ () const { return (const char*) pd_@name@; }
@@ -889,7 +897,8 @@ void @name@(const CORBA::String_member& _value) {
   pd__d = @discrimvalue@;
   pd__default = @isDefault@;
   pd_@name@ = _value;
-}"""
+}
+"""
 
 union_objref = """\
 @ptr_name@ @member@ () const { return pd_@member@._ptr; }

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.2  2000/03/20 11:50:25  djs
+# Removed excess buffering- output templates have code attached which is
+# lazily evaluated when required.
+#
 # Revision 1.5.2.1  2000/02/14 18:34:54  dpg1
 # New omniidl merged in.
 #
@@ -96,7 +100,7 @@ def fragment(stream, tree):
 def run(tree):
     # create somewhere to put the output
     skel_filename = config.basename() + config.skelsuffix()
-    stream = util.Stream(open(skel_filename, "w"), 2)
+    stream = util.LazyStream(open(skel_filename, "w"), 2)
 
     # clear all state
     mangler.__init__()

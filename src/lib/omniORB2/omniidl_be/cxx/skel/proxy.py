@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.3  2000/03/20 11:50:27  djs
+# Removed excess buffering- output templates have code attached which is
+# lazily evaluated when required.
+#
 # Revision 1.15.2.2  2000/02/16 16:30:04  djs
 # Fix to proxy call descriptor code- failed to handle special case of
 #   Object method(in string x)
@@ -315,10 +319,12 @@ def operation(operation):
     if need_to_marshal:
         marshal_arguments_decl = """\
         virtual CORBA::ULong alignedSize(CORBA::ULong size_in);
-        virtual void marshalArguments(GIOP_C&);"""
+        virtual void marshalArguments(GIOP_C&);
+"""
     if need_to_unmarshal:
         unmarshal_arguments_decl = """\
-        virtual void unmarshalReturnedValues(GIOP_C&);"""
+        virtual void unmarshalReturnedValues(GIOP_C&);
+"""
 
     # are there any user exceptions
     user_exceptions_decl = ""
@@ -326,7 +332,7 @@ def operation(operation):
     has_user_exceptions = raises != []
     if has_user_exceptions:
         user_exceptions_decl = \
-                             "virtual void userException(GIOP_C&, const char*);"
+                             "virtual void userException(GIOP_C&, const char*);\n"
     
     # Write the proxy class definition
     stream.out(template.interface_proxy_class,
@@ -414,11 +420,13 @@ def operation(operation):
 
             if is_out:
                 pre_decls.out("""\
-@temp_type_name@ @temp@ = @init_value@;""", temp_type_name = temp_type_name,
+@temp_type_name@ @temp@ = @init_value@;
+""", temp_type_name = temp_type_name,
                               temp = temp, init_value = init_value)
             elif is_inout:
                 unmarshal_block.out("""\
-@temp_type_name@ @temp@;""", temp_type_name = temp_type_name,
+@temp_type_name@ @temp@;
+""", temp_type_name = temp_type_name,
                                     temp = temp)
 
             # This bit is almost certainly wrong. It seems that when an
@@ -450,21 +458,25 @@ def operation(operation):
                 if tyutil.isString(deref_type):
                     unmarshal_block.out("""\
 CORBA::string_free(@name@);
-@name@ = @temp@;""", name = name, temp = temp)
+@name@ = @temp@;
+""", name = name, temp = temp)
                 elif tyutil.isObjRef(deref_type):
                     unmarshal_block.out("""\
 @helper_name@::release(@name@);
-@name@ = @temp@;""", helper_name = helper_name,
+@name@ = @temp@;
+""", helper_name = helper_name,
                                         name = name, temp = temp)
                 elif tyutil.isTypeCode(deref_type):
                     unmarshal_block.out("""\
 CORBA::release(@name@);
-@name@ = @temp@._retn();""", name = name, temp = temp)
+@name@ = @temp@._retn();
+""", name = name, temp = temp)
                 
 
             if is_out:
                 post_assign.out("""\
-@name@ = @temp@;""", name = name, temp = temp)
+@name@ = @temp@;
+""", name = name, temp = temp)
 
         # handle the return value, if one exists. This could be
         # simplified- surely having a return type is semantically
@@ -488,13 +500,15 @@ CORBA::release(@name@);
                    tyutil.isUnion(deref_return_type):
                     name = "((" + return_type_base + "_slice*) pd_result)"
                 unmarshal_block.out("""\
-pd_result = @type@_alloc();""", type = return_type_base)
+pd_result = @type@_alloc();
+""", type = return_type_base)
             elif return_is_variable and (tyutil.isStruct(deref_return_type) or \
                                          tyutil.isUnion(deref_return_type)  or \
                                          tyutil.isSequence(deref_return_type) or \
                                          tyutil.isAny(deref_return_type)):
                 unmarshal_block.out("""\
-pd_result = new @type@;""", type = return_type_base)
+pd_result = new @type@;
+""", type = return_type_base)
                 name = "*" + name
 
             skutil.unmarshall(unmarshal_block, environment, return_type, None,
@@ -611,7 +625,8 @@ pd_result = new @type@;""", type = return_type_base)
   _ex <<= giop_client;
   giop_client.RequestCompleted();
   throw _ex;
-}""", switch = switch, repoID_str = repoID_str, exname = exname)
+}
+""", switch = switch, repoID_str = repoID_str, exname = exname)
 
         # write the user exception template
         stream.out(template.interface_proxy_exn,
@@ -705,17 +720,18 @@ def attribute(attribute):
         else:
             objref_helper = attrType_name + "_Helper"
         unmarshal_ret = "\
-pd_result = " + objref_helper + "::unmarshalObjRef(giop_client);"
+pd_result = " + objref_helper + "::unmarshalObjRef(giop_client);\n"
     elif tyutil.isTypeCode(deref_attrType):
         unmarshal_ret = "\
-pd_result = CORBA::TypeCode::unmarshalTypeCode(giop_client);"
+pd_result = CORBA::TypeCode::unmarshalTypeCode(giop_client);\n"
     elif tyutil.isVariableType(deref_attrType):
         unmarshal_ret = "\
 pd_result = new " + attrType_name + ";\n" + "\
-*pd_result <<= giop_client;"
+*pd_result <<= giop_client;\n"
     else:
         unmarshal_ret = """\
-pd_result <<= giop_client;"""
+pd_result <<= giop_client;
+"""
 
     # -------------------------------------------------------------
 
@@ -724,9 +740,9 @@ pd_result <<= giop_client;"""
     inherits_list = "omniCallDescriptor(lcfn, op, oplen, oneway)"
     if need_read_proxy:
         # write the read class template
-        unmarshal_decl = "virtual void unmarshalReturnedValues(GIOP_C&);"
-        result_mem_fn = "inline " + return_type + " result() { return pd_result; }"
-        result_mem_data = return_type + " pd_result;"
+        unmarshal_decl = "virtual void unmarshalReturnedValues(GIOP_C&);\n"
+        result_mem_fn = "inline " + return_type + " result() { return pd_result; }\n"
+        result_mem_data = return_type + " pd_result;\n"
         stream.out(template.interface_proxy_class,
                    signature = read_signature,
                    call_descriptor = read_desc,
@@ -755,8 +771,8 @@ pd_result <<= giop_client;"""
         ctor_args = ctor_args + ", " + fully_scoped_in_type + " a_0"
         inherits_list = inherits_list + ",\n" + "arg_0(a_0)"
         marshal_decl = "virtual CORBA::ULong alignedSize(CORBA::ULong);\n" +\
-                       "virtual void marshalArguments(GIOP_C&);"
-        member_data = fully_scoped_in_type + " arg_0;"
+                       "virtual void marshalArguments(GIOP_C&);\n"
+        member_data = fully_scoped_in_type + " arg_0;\n"
         stream.out(template.interface_proxy_class,
                    signature = write_signature,
                    call_descriptor = write_desc,

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.4  2000/03/20 11:50:26  djs
+# Removed excess buffering- output templates have code attached which is
+# lazily evaluated when required.
+#
 # Revision 1.27.2.3  2000/02/16 16:30:02  djs
 # Fix to proxy call descriptor code- failed to handle special case of
 #   Object method(in string x)
@@ -529,67 +533,71 @@ def visitInterface(node):
     # _impl_ class (contains the callable dispatch code)
 
     # dispatch operations and attributes from this class
-    this_dispatch = util.StringStream()
-    dispatcher = dispatch.__init__(environment, this_dispatch)
-    for callable in node.callables():
-        # This isn't quite as neat as it could be
-        if isinstance(callable, idlast.Operation):
-            identifiers = [callable.identifier()]
-        else:
-            identifiers = callable.identifiers()
-
-        # separate case for each callable thing
-        for ident in identifiers:
-            id_name = tyutil.mapID(ident)
+    def this_dispatch(stream = stream, node = node,
+                      environment = environment):
+        dispatcher = dispatch.__init__(environment, stream)
+        for callable in node.callables():
+            # This isn't quite as neat as it could be
             if isinstance(callable, idlast.Operation):
-                dispatcher.operation(callable)
+                identifiers = [callable.identifier()]
+            else:
+                identifiers = callable.identifiers()
 
-            elif isinstance(callable, idlast.Attribute):
-                dispatcher.attribute_read(callable, ident)
+            # separate case for each callable thing
+            for ident in identifiers:
+                id_name = tyutil.mapID(ident)
+                if isinstance(callable, idlast.Operation):
+                    dispatcher.operation(callable)
 
-                if not(callable.readonly()):
-                    dispatcher.attribute_write(callable, ident)
+                elif isinstance(callable, idlast.Attribute):
+                    dispatcher.attribute_read(callable, ident)
 
+                    if not(callable.readonly()):
+                        dispatcher.attribute_write(callable, ident)
+        return
+    
     # dispatch operations and attributes inherited from base classes
-    inherited_dispatch = util.StringStream()
-    for i in node.inherits():
-       inherited_name = tyutil.mapID(tyutil.name(i.scopedName()))
-       impl_inherits = "_impl_" + inherited_name
-       # The MSVC workaround might be needed here again
-       i_scopedName = i.scopedName()
-       relName = environment.relName(i_scopedName)
-       # does this name have scope :: qualifiers?
-       if len(relName) > 1:
-          i_impl_scopedName = tyutil.scope(i_scopedName) + \
-                              ["_impl_" + tyutil.name(i_scopedName)]
-          impl_inherits = string.join(i_impl_scopedName, "_")
+    def inherited_dispatch(stream = stream, node = node,
+                           environment = environment):
+        for i in node.inherits():
+            inherited_name = tyutil.mapID(tyutil.name(i.scopedName()))
+            impl_inherits = "_impl_" + inherited_name
+            # The MSVC workaround might be needed here again
+            i_scopedName = i.scopedName()
+            relName = environment.relName(i_scopedName)
+            # does this name have scope :: qualifiers?
+            if len(relName) > 1:
+                i_impl_scopedName = tyutil.scope(i_scopedName) + \
+                                    ["_impl_" + tyutil.name(i_scopedName)]
+                impl_inherits = string.join(i_impl_scopedName, "_")
           
-       inherited_dispatch.out(template.interface_impl_inherit_dispatch,
-                              impl_inherited_name = impl_inherits)
+            stream.out(template.interface_impl_inherit_dispatch,
+                       impl_inherited_name = impl_inherits)
 
-    Other_repoIDs = util.StringStream()
-    # it's a bit odd that it will fully qualify the current class name
-    # but it will strip off as much scope as possible for the inherited
-    # ones
-    for i in all_inherits:
-       i_scopedName = i.scopedName()
-       i_rel_scopedName = environment.relName(i_scopedName)
-       i_impl_name = name.prefixName(i_rel_scopedName, "_impl_")
-       inherited_name = environment.nameToString(i_rel_scopedName)
-       
-       Other_repoIDs.out(template.interface_impl_repoID,
-                  inherited_name = inherited_name,
-                  impl_inherited_name = i_impl_name)
+    def Other_repoIDs(stream = stream, all_inherits = all_inherits,
+                      environment = environment):
+        # it's a bit odd that it will fully qualify the current class name
+        # but it will strip off as much scope as possible for the inherited
+        # ones
+        for i in all_inherits:
+            i_scopedName = i.scopedName()
+            i_rel_scopedName = environment.relName(i_scopedName)
+            i_impl_name = name.prefixName(i_rel_scopedName, "_impl_")
+            inherited_name = environment.nameToString(i_rel_scopedName)
+            
+            stream.out(template.interface_impl_repoID,
+                       inherited_name = inherited_name,
+                       impl_inherited_name = i_impl_name)
 
 
     # Output the _impl_ class
     stream.out(template.interface_impl,
                impl_fqname = impl_fqname,
                uname = u_name,
-               this_dispatch = str(this_dispatch),
-               inherited_dispatch = str(inherited_dispatch),
+               this_dispatch = this_dispatch,
+               inherited_dispatch = inherited_dispatch,
                impl_name = impl_name,
-               Other_repoIDs = str(Other_repoIDs),
+               Other_repoIDs = Other_repoIDs,
                name = id)
                
     
@@ -677,43 +685,55 @@ def visitStruct(node):
 
     size_calculation = "omni::align_to(_msgsize, omni::ALIGN_4) + 4"
 
-    marshall = util.StringStream()
-    Mem_unmarshall = util.StringStream()
-    Net_unmarshall = util.StringStream()
-    msgsize = util.StringStream()
-
-
     for n in node.members():
         n.accept(self)
-        memberType = n.memberType()
-        type_dims = tyutil.typeDims(memberType)
-        
-        for d in n.declarators():
-            decl_dims = d.sizes()
-            full_dims = decl_dims + type_dims
-            is_array = full_dims != []
-            # marshall and unmarshall the struct members
-            member_name = tyutil.mapID(tyutil.name(d.scopedName()))
 
-            skutil.marshall_struct_union(marshall, outer_environment,
-                                         memberType, d, member_name)
-            skutil.unmarshall_struct_union(Mem_unmarshall, outer_environment,
-                                           memberType, d, member_name, 0)
-            skutil.unmarshall_struct_union(Net_unmarshall, outer_environment,
-                                           memberType, d, member_name, 1)
-            # computation of aligned size
-            size = skutil.sizeCalculation(outer_environment, memberType, d,
-                                          "_msgsize", member_name)
-            msgsize.out(size)
-            
-            
-            
+    def marshal(stream = stream, node = node,
+                outer_env = outer_environment):
+        for n in node.members():
+            memberType = n.memberType()
+            for d in n.declarators():
+                member_name = tyutil.mapID(tyutil.name(d.scopedName()))
+                skutil.marshall_struct_union(stream, outer_env,
+                                            memberType, d, member_name)
+        return
+
+    def Mem_unmarshal(stream = stream, node = node,
+                      outer_env = outer_environment):
+        for n in node.members():
+            memberType = n.memberType()
+            for d in n.declarators():
+                member_name = tyutil.mapID(tyutil.name(d.scopedName()))
+                skutil.unmarshall_struct_union(stream, outer_env,
+                                               memberType, d, member_name, 0)
+        return
+
+    def Net_unmarshal(stream = stream, node = node,
+                      outer_env = outer_environment):
+        for n in node.members():
+            memberType = n.memberType()
+            for d in n.declarators():
+                member_name = tyutil.mapID(tyutil.name(d.scopedName()))
+                skutil.unmarshall_struct_union(stream, outer_env,
+                                               memberType, d, member_name, 1)
+        return
+
+    def msgsize(stream = stream, node = node, outer_env = outer_environment):
+        for n in node.members():
+            memberType = n.memberType()
+            for d in n.declarators():
+                member_name = tyutil.mapID(tyutil.name(d.scopedName()))
+                size = skutil.sizeCalculation(outer_env, memberType, d,
+                                              "_msgsize", member_name)
+                stream.out(size)
+        return
+
     stream.out(template.struct,
                name = name,
-               size_calculation = str(msgsize),
-               marshall_code = str(marshall),
-               mem_unmarshall_code = str(Mem_unmarshall),
-               net_unmarshall_code = str(Net_unmarshall))
+               size_calculation = msgsize,
+               marshall_code = marshal,
+               mem_unmarshall_code = Mem_unmarshal,
+               net_unmarshall_code = Net_unmarshal)
 
     stream.reset_indent()
     
@@ -730,6 +750,7 @@ def visitUnion(node):
     exhaustive = tyutil.exhaustiveMatch(switchType,
                                         tyutil.allCases(node))
     defaultCase = tyutil.getDefaultCaseAndMark(node)
+    defaultMember = ""
     if defaultCase:
         defaultLabel = tyutil.getDefaultLabel(defaultCase)
         defaultMember = tyutil.name(map(tyutil.mapID,
@@ -758,56 +779,60 @@ def visitUnion(node):
 
     # build the switch case in the alignedSize method
     # build the cases...
-    cases = util.StringStream()
-    for c in node.cases():
-        caseType = c.caseType()
-        deref_caseType = tyutil.deref(caseType)
-        decl = c.declarator()
-        decl_name =  tyutil.name(map(tyutil.mapID, decl.scopedName()))
-        for l in c.labels():
-            # default case was already taken care of
-            if not(l.default()):
-                 discrim_value = tyutil.valueString(switchType, l.value(),
-                                                    environment)
-                 # FIXME: stupid special case. An explicit discriminator
-                 # value of \0 -> 0000 whereas an implicit one (valueString)
-                 # \0 -> '\000'
-                 if tyutil.isChar(switchType) and l.value() == '\0':
-                    discrim_value = "0000"
+    def cases(stream = stream, node = node, switchType = switchType,
+              environment = environment, booleanWrap = booleanWrap):
+        for c in node.cases():
+            caseType = c.caseType()
+            deref_caseType = tyutil.deref(caseType)
+            decl = c.declarator()
+            decl_name =  tyutil.name(map(tyutil.mapID, decl.scopedName()))
+            for l in c.labels():
+                # default case was already taken care of
+                if not(l.default()):
+                    discrim_value = tyutil.valueString(switchType, l.value(),
+                                                       environment)
+                    # FIXME: stupid special case. An explicit discriminator
+                    # value of \0 -> 0000 whereas an implicit one (valueString)
+                    # \0 -> '\000'
+                    if tyutil.isChar(switchType) and l.value() == '\0':
+                        discrim_value = "0000"
                     
-                 cases.out("case " + str(discrim_value) + ":")
-                 size_calc = skutil.sizeCalculation(environment, caseType,
-                                                    decl, "_msgsize",
-                                                    "pd_" + decl_name)
-                 cases.out(size_calc)
-                 cases.out("break;")
-    if booleanWrap:
-        cases.out(template.union_default_bool)
-    else:
-        cases.out(template.union_default)
+                    stream.out("case " + str(discrim_value) + ":\n")
+                    size_calc = skutil.sizeCalculation(environment, caseType,
+                                                       decl, "_msgsize",
+                                                       "pd_" + decl_name)
+                    stream.out(size_calc)
+                    stream.out("\nbreak;\n")
+        if booleanWrap:
+            stream.out(template.union_default_bool)
+        else:
+            stream.out(template.union_default)
 
     # build the switch itself
-    switch = util.StringStream()
-    if not(exhaustive):
-        size_calc = ""
-        if hasDefault:
-            caseType = defaultCase.caseType()
-            decl = defaultCase.declarator()
-            size_calc = skutil.sizeCalculation(environment, caseType,
-                                               decl, "_msgsize",
-                                               "pd_" + defaultMember)
-        switch.out(template.union_align_nonexhaustive,
-                   size_calc = size_calc,
-                   cases = str(cases))
-    else:
-        switch.out(template.union_align_exhaustive,
-                   cases = str(cases))
+    def switch(stream = stream, exhaustive = exhaustive,
+               hasDefault = hasDefault, defaultCase = defaultCase,
+               environment = environment, defaultMember = defaultMember,
+               cases = cases):
+        if not(exhaustive):
+            size_calc = "\n"
+            if hasDefault:
+                caseType = defaultCase.caseType()
+                decl = defaultCase.declarator()
+                size_calc = skutil.sizeCalculation(environment, caseType,
+                                                   decl, "_msgsize",
+                                                   "pd_" + defaultMember)
+            stream.out(template.union_align_nonexhaustive,
+                       size_calc = size_calc,
+                       cases = cases)
+        else:
+            stream.out(template.union_align_exhaustive,
+                       cases = cases)
 
     # output the alignedSize method
     stream.out(template.union,
                name = name,
                discriminator_size_calc = discriminator_size_calc,
-               switch = str(switch))
+               switch = switch)
     
 
     # --------------------------------------------------------------
@@ -864,26 +889,34 @@ def visitUnion(node):
         marshal_cases.out(template.union_default)
 
 
-    marshal = util.StringStream()
-    if not(exhaustive):
-        default = util.StringStream()
-        if hasDefault:
-            caseType = defaultCase.caseType()
-            decl = defaultCase.declarator()
-            decl_name =  tyutil.name(map(tyutil.mapID, decl.scopedName()))
-            skutil.marshall_struct_union(default, environment, caseType,
-                                         decl, "pd_" + decl_name)
-        marshal.out(template.union_operators_nonexhaustive,
-                    default = str(default),
-                    cases = str(marshal_cases))
-    else:
-        marshal.out(template.union_operators_exhaustive,
-                    cases = str(marshal_cases))
+    def marshal(stream = stream, exhaustive = exhaustive,
+                hasDefault = hasDefault, defaultCase = defaultCase,
+                environment = environment, defaultMember = defaultMember,
+                marshal_cases = marshal_cases):
+        if not(exhaustive):
+
+            def default(stream = stream, exhaustive = exhaustive,
+                        hasDefault = hasDefault, defaultCase = defaultCase,
+                        environment = environment,
+                        defaultMember = defaultMember):
+                if hasDefault:
+                    caseType = defaultCase.caseType()
+                    decl = defaultCase.declarator()
+                    decl_name =  tyutil.name(map(tyutil.mapID,
+                                                 decl.scopedName()))
+                    skutil.marshall_struct_union(stream, environment, caseType,
+                                                 decl, "pd_" + decl_name)
+            stream.out(template.union_operators_nonexhaustive,
+                        default = default,
+                        cases = str(marshal_cases))
+        else:
+            stream.out(template.union_operators_exhaustive,
+                        cases = str(marshal_cases))
 
     # write the operators
     stream.out(template.union_operators,
                name = name,
-               marshal_cases = str(marshal),
+               marshal_cases = marshal,
                unmarshal_cases = str(unmarshal_cases))
                 
         
@@ -915,11 +948,13 @@ def visitConst(node):
     if init_in_def:
         if self.__insideInterface:
             stream.out("""\
-const @type@ @name@ _init_in_cldef_( = @value@ );""",
+const @type@ @name@ _init_in_cldef_( = @value@ );
+""",
                        type = type_string, name = name, value = value)
         else:
             stream.out("""\
-_init_in_def_( const @type@ @name@ = @value@; )""",
+_init_in_def_( const @type@ @name@ = @value@; )
+""",
                        type = type_string, name = name, value = value)
         return
 
@@ -935,7 +970,8 @@ _init_in_def_( const @type@ @name@ = @value@; )""",
         
     else:
         stream.out("""\
-const @type@ @name@ = @value@;""",
+const @type@ @name@ = @value@;
+""",
                    type = type_string, name = name, value = value)
         
 

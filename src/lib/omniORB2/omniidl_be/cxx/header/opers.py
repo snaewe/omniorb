@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.7.2.2  2000/03/20 11:50:20  djs
+# Removed excess buffering- output templates have code attached which is
+# lazily evaluated when required.
+#
 # Revision 1.7.2.1  2000/02/14 18:34:54  dpg1
 # New omniidl merged in.
 #
@@ -139,15 +143,15 @@ def visitEnum(node):
 
     cxx_fqname = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
     # build the cases
-    cases = util.StringStream()
-    for d in node.enumerators():
-        labelname = idlutil.ccolonName(map(tyutil.mapID, d.scopedName()))
-        cases.out("case " + labelname + ":")
+    def cases(stream = stream, node = node):
+        for d in node.enumerators():
+            labelname = idlutil.ccolonName(map(tyutil.mapID, d.scopedName()))
+            stream.out("case " + labelname + ":\n")
 
     stream.out(template.enum_operators,
                name = cxx_fqname,
                private_prefix = config.privatePrefix(),
-               cases = str(cases))
+               cases = cases)
 
     # Typecode and Any
     if config.TypecodeFlag():
