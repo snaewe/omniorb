@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.7  1999/03/17 12:43:40  djr
+  Corrected error in Rope_var copy constructor.
+
   Revision 1.6  1999/01/25 18:06:24  sll
   Added comment on the side-effect of WrTimedLock and WrUnlock(Strand*).
 
@@ -816,10 +819,6 @@ public:
   }
 
   inline Rope_var(const Rope_var& p) {
-    if (_ptr) {
-      _ptr->decrRefCount();
-      _ptr = 0;
-    }
     if (p._ptr) {
       p._ptr->incrRefCount();
     }
