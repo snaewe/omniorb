@@ -51,11 +51,11 @@ MyDynImpl::invoke(CORBA::ServerRequest_ptr request, CORBA::Environment& env)
 
     request->params(args);
 
-    CORBA::String_var mesg;
-    *(args->item(0)->value()) >>= mesg.out();
+    const char* mesg;
+    *(args->item(0)->value()) >>= mesg;
 
     CORBA::Any* result = new CORBA::Any();
-    *result <<= CORBA::Any::from_string(mesg._retn(), 0);
+    *result <<= CORBA::Any::from_string(mesg, 0);
     request->result(result);
   }
   catch(CORBA::SystemException& ex){
