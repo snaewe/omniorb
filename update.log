@@ -1,3 +1,49 @@
+Sat Jun 26 18:50:18 BST 1999 sll
+================================
+
+- Merged patches for unsupported platforms:
+    irix 6.{2-5}, openvms, freebsd, hpux 11.0
+- Added rebase to avoid dll load address clash on win32
+- fixed lifecycle build so that the dll on win32 correctly exports its symbols
+
+include/omnithread.h
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/giopDriver.h
+include/omniORB2/omniInternal.h
+include/omniORB2/omniLC.h
+include/omniORB2/omniORB.h
+src/appl/omniNames/log.cc
+src/appl/omniNames/omniNames.cc
+src/appl/utils/catior/dir.mk
+src/appl/utils/convertior/dir.mk
+src/appl/utils/genior/dir.mk
+src/examples/lifecycle/dir.mk
+src/lib/dir.mk
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/proxyCall.cc
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/lifecycle/dir.mk
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/libcWrapper.cc
+src/lib/omniORB2/orbcore/objectKey.cc
+src/lib/omniORB2/orbcore/proxyCall.cc
+src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/percent_m.c
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/tcpd.h
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+src/tool/omkdepend/main.c
+src/tool/omniidl2/driver/drv_fork.cc
+src/tool/omniidl2/driver/drv_preproc.cc
+src/tool/omniidl2/include/idl.hh
+
+
 Fri Jun 25 16:18:33 BST 1999 sll
 ===============================
 
