@@ -59,9 +59,11 @@ idlc = $(patsubst %,$(BinPattern),idlc)
 
 ifdef UnixPlatform
 #CXXDEBUGFLAGS = -g
-PYPREFIX := $(shell $(PYTHON) -c 'import sys; print sys.exec_prefix')
-PYINCDIR := $(PYPREFIX)/include
-DIR_CPPFLAGS += -I$(PYINCDIR)
+PYPREFIX  := $(shell $(PYTHON) -c 'import sys; print sys.exec_prefix')
+PYVERSION := $(shell $(PYTHON) -c 'import sys; print sys.version[:3]')
+PYINCDIR  := $(PYPREFIX)/include
+PYINCFILE := "<python$(PYVERSION)/Python.h>"
+DIR_CPPFLAGS += -I$(PYINCDIR) -DPYTHON_INCLUDE=$(PYINCFILE)
 endif
 
 
@@ -171,10 +173,13 @@ DIR_CPPFLAGS += -DMSDOS -DOMNIIDL_EXECUTABLE
 
 PYPREFIX1 := "$(shell $(PYTHON) -c 'import sys,string; sys.stdout.write(string.lower(sys.prefix))')"
 PYPREFIX  := $(subst program files,progra~1,$(subst \,/,$(PYPREFIX1)))
+PYVERSION := $(shell $(PYTHON) -c 'import sys; print sys.version[:3]')
 PYINCDIR  := $(PYPREFIX)/include
 PYLIBDIR  := $(PYPREFIX)/libs $(PYPREFIX)/lib/x86_win32
 
-DIR_CPPFLAGS += -I$(PYINCDIR) -I$(PYINCDIR)/python1.5
+DIR_CPPFLAGS += -I$(PYINCDIR) -I$(PYINCDIR)/python$(PYVERSION) \
+                -DPYTHON_INCLUDE="<Python.h>"
+
 CXXLINKOPTIONS += $(patsubst %,-libpath:%,$(PYLIBDIR))
 
 omniidl = $(patsubst %,$(BinPattern),omniidl)
@@ -325,13 +330,13 @@ ifeq ($(notdir $(CXX)),aCC)
 #       is compiled and linked with aCC.
 
 DIR_CPPFLAGS += +Z
-  
+
 libname = _omniidlmodule.sl
 soname = $(libname).$(IDLMODULE_MAJOR)
 lib = $(soname).$(IDLMODULE_MINOR)
-  
+
 all:: $(lib)
-  
+
 $(lib): $(OBJS) $(PYOBJS)
 	(set -x; \
          $(RM) $@; \
@@ -339,7 +344,7 @@ $(lib): $(OBJS) $(PYOBJS)
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) ; \
         )
-  
+
 clean::
 	$(RM) $(lib)
 

@@ -1,3 +1,18 @@
+Wed Sep  6 12:13:30 BST 2000 dpg1
+=================================
+
+- New note about the Python 1.6 license
+
+external_merge/README.Python  -- new
+
+- Minor changes to support Python versions above 1.5.2
+
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/python/omniidl/main.py
+src/tool/omniidl/python/scripts/omniidlrun.py
+
+
 Mon Sep  4 10:02:41 BST 2000 dpg1
 =================================
 

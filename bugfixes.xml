@@ -8,6 +8,16 @@
 
 <buglist>
 
+<bug id="8" date="Wed Sep  6 12:13:30 BST 2000" user="dpg1">
+
+  <summary>Support for Python 1.6 and 2.0b1</summary>
+  <text>
+  omniidl was hard-coded to require Python 1.5.2, just in case later
+  versions were incompatible. 1.6 and 2.0b1 are compatible, so they
+  are now supported.
+  </text>
+</bug>
+
 <bug id="7" date="Mon Sep  4 10:02:41 BST 2000" user="dpg1">
 
   <summary>#includes of iostream.h left in omniORB headers</summary>

@@ -29,10 +29,10 @@
 
 import sys
 
-if sys.version[:6] != "1.5.2 ":
+if sys.hexversion < 0x10502f0:
     sys.stderr.write("\n\n")
     sys.stderr.write("omniidl: WARNING!!\n\n")
-    sys.stderr.write("omniidl: Python version 1.5.2 is required.\n")
+    sys.stderr.write("omniidl: Python version 1.5.2 or later is required.\n")
     sys.stderr.write("omniidl: " + sys.executable + " is version " + \
                      sys.version + "\n")
     sys.stderr.write("omniidl: Execution is likely to fail.\n")

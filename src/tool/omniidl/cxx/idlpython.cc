@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.15  2000/09/06 11:20:50  dpg1
+// Support for Python 1.6 and 2.0b1.
+//
 // Revision 1.15.2.14  2000/08/30 18:12:46  dpg1
 // Register operation declarations so they can be found with findDecl().
 //
@@ -124,15 +127,13 @@
 // First revision.
 //
 
-#if defined(__WIN32__)
-#include <Python.h>
-#elif defined(__VMS)
+#if defined(__VMS)
 #  if defined(__DECCXX) && __DECCXX_VER < 60000000
       struct _typeobject;
 #  endif
 #include <python_include/python.h>
 #else
-#include <python1.5/Python.h>
+#include PYTHON_INCLUDE
 #endif
 
 #include <idlsysdep.h>
@@ -147,7 +148,7 @@
 
 // PyLongFromLongLong is broken in Python 1.5.2. Workaround here:
 #ifdef HAS_LongLong
-#  if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0X01050200)
+#  if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x01050200)
 #    error "omniidl requires Python 1.5.2 or higher"
 
 #  elif (PY_VERSION_HEX < 0x02000000)
