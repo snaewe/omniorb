@@ -8,6 +8,15 @@
 
 <buglist version="3.0.2">
 
-<nobugs/>
+<bug id="1" date="Fri Oct  6 09:58:55 BST 2000" user="dpg1">
+
+  <summary>C++ back-end claims that it does not support long long</summary>
+  <reported>Chris Knight</reported>
+  <text>
+  A new check added to the C++ back-end incorrectly reported that long
+  long is not supported, even though it is. Note that long long is not
+  currently supported in Any.
+  </text>
+</bug>
 
 </buglist>
