@@ -76,7 +76,7 @@ define CompileJavaSourcesToJar
  echo;									      \
  echo $(JAVAC) $$javac_flags -d . -classpath $$java_classpath $$java_sources; \
  $(JAVAC) $$javac_flags -d . -classpath $$java_classpath $$java_sources;      \
- classfiles=`find * -name '*.class' -print`;				      \
+ classfiles=`zsh -c 'echo **/*.class'`;				      \
  echo;									      \
  echo $(JAR) cMf $$target $$classfiles;					      \
  $(JAR) cMf $$target $$classfiles;					      \
