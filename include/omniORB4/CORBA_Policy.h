@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:08:07  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:04:23  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -128,7 +131,7 @@ public:
     }
     return *this;
   }
-  inline Policy* operator [] (_CORBA_ULong _s) {
+  inline Policy_member& operator [] (_CORBA_ULong _s) {
     return (*_pd_seq)[_s];
   }
   inline PolicyList* operator -> () { return _pd_seq; }

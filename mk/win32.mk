@@ -57,6 +57,10 @@ INSTEXEFLAGS	=
 CP = cp
 MV = mv -f
 
+#
+# Compile flags for VS.NET compilers are different
+#
+ifeq "$(MSVC7)" ""
 
 # Use the following set of flags to build and use multithreaded DLLs
 #
@@ -102,6 +106,9 @@ CLINKOPTIONS   = $(MSVC_DLL_CLINKNODEBUGOPTIONS)
 CDEBUGFLAGS    = -O2
 COPTIONS       = $(MSVC_DLL_CNODEBUGFLAGS)
 
+endif
+
+#vs_7
 endif
 
 ifndef WINVER
@@ -194,7 +201,7 @@ IMPORT_LIBRARY_FLAGS = $(patsubst %,$(LibPathPattern),$(IMPORT_LIBRARY_DIRS))
 define CXXExecutable
 (set -x; \
  $(RM) $@; \
- $(CXXLINK) -out:$@ $(CXXLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) \
+ $(CXXLINK) -out:$@ $(CXXLINKOPTIONS) -PDB:$@.pdb $(IMPORT_LIBRARY_FLAGS) \
       $(filter-out $(LibPattern),$^) $$libs; \
 )
 endef
@@ -202,7 +209,7 @@ endef
 define CExecutable
 (set -x; \
  $(RM) $@; \
- $(CLINK) -out:$@ $(CLINKOPTIONS) $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibPattern),$^) $$libs; \
+ $(CLINK) -out:$@ $(CLINKOPTIONS) -PDB:$@.pdb $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibPattern),$^) $$libs; \
 )
 endef
 
@@ -423,8 +430,6 @@ shareddebug/%.o: %.c
 #################################################################################
 # CORBA stuff
 #
-
-# Note that the DLL version is being used, so link to omniorb3_rt.lib
 
 OMNIORB_VERSION = 4.1.0
 OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/01/06 23:10:29  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:02:14  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -534,7 +537,10 @@ giopStrand::releaseServer(IOP_S* iop_s)
     giop_s->giopStreamList::insert(servers);
   }
 
-  if (remove) delete giop_s;
+  if (remove && giop_s->state() != IOP_S::WaitingForReply)
+    delete giop_s;
+  else
+    restart_idle = 0;
 
   if (restart_idle && !biDir) {
     CORBA::Boolean success = startIdleCounter();
@@ -785,6 +791,7 @@ Scavenger::terminate()
 void
 Scavenger::initialise()
 {
+  Scavenger::shutdown = 0;
   Scavenger::mutex = new omni_tracedmutex();
   Scavenger::cond  = new omni_tracedcondition(Scavenger::mutex);
 }

@@ -50,7 +50,11 @@ BUILTIN_STUB_SRCS = \
 	    objectStub.cc \
 	    poastubs.cc 
 
-ifndef vxWorksPlatform
+ifdef vxWorksPlatform
+ifndef vxNamesRequired
+BUILTIN_STUB_SRCS += Namingstub.cc
+endif
+else 
 BUILTIN_STUB_SRCS += Namingstub.cc
 endif
 
@@ -157,7 +161,7 @@ endif
 
 ifdef Win32Platform
   DIR_CPPFLAGS += -D"NTArchitecture"
-  EXTRA_LIBS    = $(SOCKET_LIB) advapi32.lib
+  EXTRA_LIBS    = $(SOCKET_LIB) $(patsubst %,$(LibNoDebugSearchPattern),advapi32)
   SHARED_ONLY_OBJS = msvcdllstub.o
   MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
   MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC

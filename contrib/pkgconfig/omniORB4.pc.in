@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+omniidl=@bindir@/omniidl
+
+Name: omniORB4
+Description: CORBA Object Request Broker.
+Version: @PACKAGE_VERSION@
+Requires: omnithread3
+Libs: -L${libdir} -lomniORB4
+Cflags: -I${includedir}
+unloadable_stubs=-DOMNI_UNLOADABLE_STUBS

@@ -56,7 +56,12 @@ CORBA::Boolean orbParameters::supportCurrent      = 1;
 /////////////////////////////////////////////////////////////////////////////
 
 
-CORBA::Current::Current(int nil) { _PR_setobj((omniObjRef*)(nil ? 0:1)); }
+CORBA::Current::Current(int nil) {
+  if (nil)
+    _PR_setobj((omniObjRef*)0);
+  else
+    _PR_setobj((omniObjRef*)1);
+}
 
 CORBA::Current::~Current() {}
 
@@ -111,7 +116,8 @@ CORBA::Current::_PD_repoId = "IDL:omg.org/CORBA/Current:1.0";
 //            omniCurrent                                                  //
 /////////////////////////////////////////////////////////////////////////////
 
-omni_thread::key_t omniCurrent::thread_key;
+omni_thread::key_t omniCurrent::thread_key = 0;
+// DEC CXX needs the zero initialiser for some reason
 
 void
 omniCurrent::init()
@@ -187,7 +193,10 @@ PortableServer::Current::_nil()
   static omniOrbPOACurrent* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbPOACurrent(1);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new omniOrbPOACurrent(1);
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;

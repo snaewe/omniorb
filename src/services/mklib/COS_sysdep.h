@@ -27,14 +27,21 @@
 // 	Define a set of flags in C++ macros to facilitate the use of
 //      the COS stub library.
 
-#ifndef __COS_SYSDEP_H__
-#define __COS_SYSDEP_H__
+// NOTE: No inclusion guards. This file must be re-included by every
+// COS header.
 
 #if !defined(_COS_LIBRARY)
 
-#define USE_core_stub_in_nt_dll
-#define USE_dyn_stub_in_nt_dll
-
+#  ifndef USE_core_stub_in_nt_dll
+#    define USE_core_stub_in_nt_dll
+#  endif
+#  ifndef USE_dyn_stub_in_nt_dll
+#    define USE_dyn_stub_in_nt_dll
+#  endif
 #endif
 
-#endif // __COS_SYSDEP_H__
+// COS stubs used to incorrectly use an external guard to only include
+// this file once. We undefine the guard name here, to make sure old
+// stubs work.
+
+#undef __COS_SYSDEP_H_EXTERNAL_GUARD__

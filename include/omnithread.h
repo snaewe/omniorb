@@ -88,14 +88,14 @@ class omni_thread;
 #include <omnithread/nt.h>
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__BCPLUSPLUS__)
 
-// Using MSVC++ to compile. If compiling library as a DLL,
-// define _OMNITHREAD_DLL. If compiling as a statuc library, define
-// _WINSTATIC
-// If compiling an application that is to be statically linked to omnithread,
-// define _WINSTATIC (if the application is  to be dynamically linked, 
-// there is no need to define any of these macros).
+// Using MSVC++ or Borland C++ to compile. If compiling library as a
+// DLL, define _OMNITHREAD_DLL. If compiling as a static library,
+// define _WINSTATIC. If compiling an application that is to be
+// statically linked to omnithread, define _WINSTATIC (if the
+// application is to be dynamically linked, there is no need to define
+// any of these macros).
 
 #if defined (_OMNITHREAD_DLL) && defined(_WINSTATIC)
 #error "Both _OMNITHREAD_DLL and _WINSTATIC are defined."
@@ -152,6 +152,9 @@ class omni_thread;
 #include <omnithread/posix.h>
 
 #elif defined(__freebsd__)
+#include <omnithread/posix.h>
+
+#elif defined(__openbsd__)
 #include <omnithread/posix.h>
 
 #elif defined(__rtems__)
@@ -421,8 +424,8 @@ protected:
 
     virtual ~omni_thread(void);
 	// destructor cannot be called by user (except via a derived class).
-	// Use exit() or cancel() instead. This also means a thread object must
-	// be allocated with new - it cannot be statically or automatically
+	// Use exit() instead. This also means a thread object must be
+	// allocated with new - it cannot be statically or automatically
 	// allocated. The destructor of a class that inherits from omni_thread
 	// shouldn't be public either (otherwise the thread object can be
 	// destroyed while the underlying thread is still running).

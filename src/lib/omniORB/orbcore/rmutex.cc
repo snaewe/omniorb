@@ -34,20 +34,28 @@
 omni_rmutex::omni_rmutex()
   : pd_cond(&pd_lock),
     pd_holder(0),
-    pd_depth(0)
+    pd_depth(0),
+    pd_dummy(0)
 {
 }
 
 omni_rmutex::~omni_rmutex()
 {
   OMNIORB_ASSERT(!pd_holder);
+  OMNIORB_ASSERT(!pd_dummy);
 }
 
 void
 omni_rmutex::lock()
 {
   omni_thread* me = omni_thread::self();
-  OMNIORB_ASSERT(me); // Can only be used by threads with an omni_thread
+
+  if (!me) {
+    // Create a dummy thread
+    omniORB::logs(15, "Create dummy omni_thread in rmutex lock.");
+    me = omni_thread::create_dummy();
+    pd_dummy = 1;
+  }
 
   omni_mutex_lock sync(pd_lock);
 
@@ -76,5 +84,11 @@ omni_rmutex::unlock()
   if (--pd_depth == 0) {
     pd_holder = 0;
     pd_cond.signal();
+
+    if (pd_dummy) {
+      omniORB::logs(15, "Release dummy omni_thread in rmutex unlock.");
+      omni_thread::release_dummy();
+      pd_dummy = 0;
+    }
   }
 }

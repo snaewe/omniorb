@@ -44,6 +44,35 @@
 // identifies platform that don't.
 //
 
+#ifdef __VMS
+# define pthread_attr_destroy PTHREAD_ATTR_DESTROY
+# define pthread_attr_init PTHREAD_ATTR_INIT
+# define pthread_attr_setschedparam PTHREAD_ATTR_SETSCHEDPARAM
+# define pthread_attr_setstacksize PTHREAD_ATTR_SETSTACKSIZE
+# define pthread_cond_broadcast PTHREAD_COND_BROADCAST
+# define pthread_cond_destroy PTHREAD_COND_DESTROY
+# define pthread_cond_init PTHREAD_COND_INIT
+# define pthread_cond_signal PTHREAD_COND_SIGNAL
+# define pthread_cond_timedwait PTHREAD_COND_TIMEDWAIT
+# define pthread_cond_wait PTHREAD_COND_WAIT
+# define pthread_create PTHREAD_CREATE
+# define pthread_delay_np PTHREAD_DELAY_NP
+# define pthread_detach PTHREAD_DETACH
+# define pthread_exit PTHREAD_EXIT
+# define pthread_get_expiration_np PTHREAD_GET_EXPIRATION_NP
+# define pthread_getspecific PTHREAD_GETSPECIFIC
+# define pthread_join32 PTHREAD_JOIN32
+# define pthread_key_create PTHREAD_KEY_CREATE
+# define pthread_mutex_destroy PTHREAD_MUTEX_DESTROY
+# define pthread_mutex_init PTHREAD_MUTEX_INIT
+# define pthread_mutex_lock PTHREAD_MUTEX_LOCK
+# define pthread_mutex_unlock PTHREAD_MUTEX_UNLOCK
+# define pthread_self PTHREAD_SELF
+# define pthread_setschedparam PTHREAD_SETSCHEDPARAM
+# define pthread_setspecific PTHREAD_SETSPECIFIC
+# define pthread_yield_np PTHREAD_YIELD_NP
+#endif
+
 #include <stdlib.h>
 #include <errno.h>
 #include <time.h>
@@ -223,11 +252,8 @@ omni_semaphore::trywait(void)
 void
 omni_semaphore::post(void)
 {
-    {
-        omni_mutex_lock l(m);
-        value++;
-    }
-
+    omni_mutex_lock l(m);
+    value++;
     c.signal();
 }
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2005/01/06 23:10:40  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.4.2.1  2003/03/23 21:02:07  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -344,7 +347,12 @@ omniOrbPOAManager::deactivate(CORBA::Boolean etherealize_objects,
 
   void** args = new void* [3];
   args[0] = ppoas;
-  args[1] = (void*) (int) etherealize_objects;
+
+  if (etherealize_objects)
+    args[1] = (void*)1;
+  else
+    args[1] = (void*)0;
+
   args[2] = &pd_deactivated;
 
   if( wait_for_completion )

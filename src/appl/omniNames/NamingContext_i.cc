@@ -22,12 +22,20 @@
 //  USA.
 //
 
-#include <iostream.h>
+#include <string.h>
+
 #include <assert.h>
 #include <NamingContext_i.h>
 #include <ObjectBinding.h>
 #include <BindingIterator_i.h>
 #include <omniORB4/omniURI.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 #ifdef DEBUG_NC
 #define DB(x) x

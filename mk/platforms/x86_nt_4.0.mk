@@ -15,13 +15,14 @@ ABSTOP = $(shell cd $(TOP); pwd)
 #
 # Python set-up
 #
-# You must set a path to a Python 1.5.2 interpreter. If you do not
-# wish to make a complete installation, you may download a minimal
-# Python from ftp://ftp.uk.research.att.com/pub/omniORB/python/
+# You must set a path to a Python 1.5.2 (or later) interpreter. If you
+# do not wish to make a complete installation, you may download a
+# minimal Python from
+# http://sourceforge.net/project/showfiles.php?group_id=51138
 # In that case, uncomment the first line below.
 
 #PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
-#PYTHON = /cygdrive/c/progra~1/Python/python
+#PYTHON = /cygdrive/c/Python23/python
 
 
 #
@@ -45,7 +46,7 @@ OMNINAMES_LOG_DEFAULT_LOCATION = C:\\temp
 # the top level directory of the openssl library. The default is to disable
 # the build.
 #
-#OPEN_SSL_ROOT = /D/openssl
+#OPEN_SSL_ROOT = /cygdrive/c/openssl
 #
 
 OPEN_SSL_CPPFLAGS = -I$(OPEN_SSL_ROOT)/include

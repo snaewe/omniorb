@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.2  2005/01/06 23:08:10  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.5.2.1  2003/03/23 21:04:13  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -221,6 +224,13 @@ _CORBA_MODULE_BEG
   //     option: -ORBtraceLevel <n>, or by direct assignment to this   //
   //     variable.                                                     //
   //                                                                   //
+  _CORBA_MODULE_VAR _core_attr _CORBA_Boolean traceExceptions;         //
+  //                                                                   //
+  //     This value can be changed at runtime either by command-line   //
+  //     option: -ORBtraceExceptions, or by direct assignment to this  //
+  //     variable.  If true, then system exceptions are logged when    //
+  //     they are thrown.                                              //
+  //                                                                   //
   _CORBA_MODULE_VAR _core_attr _CORBA_Boolean traceInvocations;        //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
@@ -304,6 +314,18 @@ _CORBA_MODULE_BEG
   // the header). This value is set by the ORB option giopMaxMsgSize.   //
   //                                                                    //
   _CORBA_MODULE_FN _CORBA_ULong giopMaxMsgSize();                       //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // setPersistentServerIdentifier()                                    //
+  //                                                                    //
+  // Sets an octet sequence used to persistently identify "this"        //
+  // server. Stored object references matching this identifier are      //
+  // re-written to use the current endpoint details.                    //
+  //                                                                    //
+  _CORBA_MODULE_FN void setPersistentServerIdentifier(                  //
+                            const _CORBA_Unbounded_Sequence_Octet& id); //
   ////////////////////////////////////////////////////////////////////////
 
 

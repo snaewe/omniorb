@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/01/06 23:10:30  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:02:14  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -420,7 +423,7 @@ public:
   void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::ULong v;
-    if (!orbOptions::getULong(value,v)) {
+    if (!orbOptions::getULong(value,v) || v < 1) {
       throw orbOptions::BadParam(key(),value,
 			 orbOptions::expect_greater_than_zero_ulong_msg);
     }

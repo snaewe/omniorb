@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.12.2.2  2005/01/06 23:10:30  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.12.2.1  2003/03/23 21:02:13  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -521,7 +524,7 @@ omniIOR::dump_TAG_ORB_TYPE(const IOP::TaggedComponent& c)
   else {
     len += 16;
     outstr = CORBA::string_alloc(len);
-    sprintf(outstr,"%s 0x%08lx","TAG_ORB_TYPE",orb_type);
+    sprintf(outstr,"%s 0x%08lx","TAG_ORB_TYPE",(unsigned long)orb_type);
   }
   return outstr._retn();
 }
@@ -806,10 +809,8 @@ omniIOR::unmarshal_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent& c ,
   // Check if we are on the same host and hence can use unix socket.
   char self[64];
   if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
-    if (omniORB::trace(1)) {
-      omniORB::logger log;
-      log << "Cannot get the name of this host\n";
-    }
+    self[0] = '\0';
+    omniORB::logs(1, "Cannot get the name of this host.");
   }
   if (strcmp(self,host) != 0) return;
 
@@ -847,6 +848,114 @@ omniIOR::dump_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent& c) {
   return outstr._retn();
 
 }
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+void
+omniIOR::unmarshal_TAG_OMNIORB_PERSISTENT_ID(const IOP::TaggedComponent& c,
+					     omniIOR& ior)
+{
+  OMNIORB_ASSERT(c.tag == IOP::TAG_OMNIORB_PERSISTENT_ID);
+
+  CORBA::ULong len = orbParameters::persistentId.length();
+
+  if (len && len == c.component_data.length()) {
+
+    const CORBA::Octet* a = c.component_data.get_buffer();
+    const CORBA::Octet* b = orbParameters::persistentId.get_buffer();
+    for (CORBA::ULong i=0; i < len; i++) {
+      if (*a++ != *b++)
+	return;
+    }
+    
+    omniIOR::IORExtraInfoList& extra = ior.pd_iorInfo->extraInfo();
+    CORBA::ULong index = extra.length();
+    extra.length(index+1);
+    extra[index] = new IORExtraInfo(IOP::TAG_OMNIORB_PERSISTENT_ID);
+  }
+}
+
+
+char*
+omniIOR::dump_TAG_OMNIORB_PERSISTENT_ID(const IOP::TaggedComponent& c)
+{
+  OMNIORB_ASSERT(c.tag == IOP::TAG_OMNIORB_PERSISTENT_ID);
+
+  const char* prefix = "TAG_OMNIORB_PERSISTENT_ID ";
+
+  CORBA::String_var outstr;
+
+  CORBA::ULong prefix_len = strlen(prefix);
+  outstr = CORBA::string_alloc(prefix_len + c.component_data.length() * 2);
+
+  strcpy((char*)outstr, prefix);
+
+  char* o = (char*)outstr + prefix_len;
+
+  int d, n;
+  for (CORBA::ULong i=0; i < c.component_data.length(); i++) {
+    d = c.component_data[i];
+    n = (d & 0xf0) >> 4;
+    if (n >= 10)
+      *o++ = 'a' + n - 10;
+    else
+      *o++ = '0' + n;
+
+    n = d & 0xf;
+    if (n >= 10)
+      *o++ = 'a' + n - 10;
+    else
+      *o++ = '0' + n;
+  }
+  *o = '\0';
+
+  return outstr._retn();
+}
+
+static void
+logPersistentIdentifier()
+{
+  omniORB::logger l;
+  l << "Persistent server identifier: ";
+
+  int c, n;
+  for (CORBA::ULong i=0; i < orbParameters::persistentId.length(); i++) {
+    c = orbParameters::persistentId[i];
+    n = (c & 0xf0) >> 4;
+    if (n >= 10)
+      l << (char)('a' + n - 10);
+    else
+      l << (char)('0' + n);
+
+    n = c & 0xf;
+    if (n >= 10)
+      l << (char)('a' + n - 10);
+    else
+      l << (char)('0' + n);
+  }
+  l << "\n";
+}  
+
+
+void
+omniORB::
+setPersistentServerIdentifier(const _CORBA_Unbounded_Sequence_Octet& id)
+{
+  if (orbParameters::persistentId.length()) {
+    // Once set, it must not be changed
+    OMNIORB_THROW(INITIALIZE, INITIALIZE_FailedLoadLibrary,
+		  CORBA::COMPLETED_NO);
+  }
+
+  orbParameters::persistentId = id;
+
+  if (omniORB::trace(10)) {
+    logPersistentIdentifier();
+  }
+}
+
+
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -917,6 +1026,10 @@ static struct {
     omniIOR::unmarshal_TAG_OMNIORB_UNIX_TRANS,
     omniIOR::dump_TAG_OMNIORB_UNIX_TRANS },
 
+  { IOP::TAG_OMNIORB_PERSISTENT_ID,
+    omniIOR::unmarshal_TAG_OMNIORB_PERSISTENT_ID,
+    omniIOR::dump_TAG_OMNIORB_PERSISTENT_ID },
+
   { 0xffffffff, 0, 0 }
 };
 
@@ -970,7 +1083,7 @@ IOP::dumpComponent(const IOP::TaggedComponent& c) {
     strcpy(p,tagname);
   }
   else {
-    sprintf(p,"unknown tag(0x%08lx)",c.tag);
+    sprintf(p,"unknown tag(0x%08lx)",(unsigned long)c.tag);
   }
   p += strlen(p);
   *p++ = ' ';
@@ -1008,6 +1121,8 @@ static _CORBA_Unbounded_Sequence_Octet my_orb_type;
 static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_alternative_addr;
 static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_ssl_addr;
 static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_unix_addr;
+
+_CORBA_Unbounded_Sequence_Octet orbParameters::persistentId;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -1089,10 +1204,8 @@ omniIOR::add_TAG_OMNIORB_UNIX_TRANS(const char* filename) {
 
   char self[64];
   if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
-    if (omniORB::trace(1)) {
-      omniORB::logger log;
-      log << "Cannot get the name of this host\n";
-    }
+    omniORB::logs(1, "Cannot get the name of this host.");
+    self[0] = '\0';
   }
 
   if (strlen(my_address.host) == 0) {
@@ -1194,6 +1307,17 @@ CORBA::Boolean insertSupportedComponents(omniInterceptors::encodeIOR_T::info_T& 
     }
   }
 
+  if (v.major > 1 || v.minor >= 1) {
+    // 1.1 or later, insert omniORB persistent id
+    if (orbParameters::persistentId.length()) {
+      IOP::TaggedComponent& c = omniIOR::newIIOPtaggedComponent(cs);
+      c.tag = IOP::TAG_OMNIORB_PERSISTENT_ID;
+      c.component_data.replace(orbParameters::persistentId.maximum(),
+			       orbParameters::persistentId.length(),
+			       orbParameters::persistentId.get_buffer(), 0);
+    }
+  }
+
   return (info.default_only ? 0 : 1);
 }
 
@@ -1261,6 +1385,10 @@ public:
     omniORB_TAG_ORB_TYPE >>= s;
     _CORBA_Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
     my_orb_type.replace(max,len,p,1);
+
+    if (omniORB::trace(10) && orbParameters::persistentId.length()) {
+      logPersistentIdentifier();
+    }
 
   }
 

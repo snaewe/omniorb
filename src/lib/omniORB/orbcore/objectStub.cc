@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:36  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:02:12  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -54,7 +57,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 void
 omni_is_a_CallDesc::marshalArguments(cdrStream& s)
 {
-  s.marshalString(a_1);
+  s.marshalRawString(a_1);
 }
 
 void
@@ -66,7 +69,7 @@ omni_is_a_CallDesc::unmarshalReturnedValues(cdrStream& s)
 void
 omni_is_a_CallDesc::unmarshalArguments(cdrStream& s)
 {
-  a_1 = s.unmarshalString();
+  a_1 = s.unmarshalRawString();
 }
 
 void
@@ -122,7 +125,15 @@ void
 omni_interface_CallDesc::lcfn(omniCallDescriptor* cd, omniServant* servant)
 {
   omniObjRef* intf = servant->_do_get_interface();
-  ((omni_interface_CallDesc*) cd)->pd_result = (CORBA::Object_ptr)intf->_ptrToObjRef(CORBA::Object::_PD_repoId);
+  omni_interface_CallDesc* icd = (omni_interface_CallDesc*)cd;
+
+  if (intf) {
+    icd->pd_result = (CORBA::Object_ptr)
+                     intf->_ptrToObjRef(CORBA::Object::_PD_repoId);
+  }
+  else {
+    icd->pd_result = CORBA::Object::_nil();
+  }
 }
 
 OMNI_NAMESPACE_END(omni)

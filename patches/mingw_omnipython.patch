@@ -1,0 +1,11 @@
+--- ./include/python1.5/config.h.orig   2000-07-11 13:19:13.000000000 +0200
++++ ./include/python1.5/config.h        2004-06-11 14:19:18.000000000 +0200
+@@ -1027,7 +1027,7 @@
+ 
+ /* Microsoft C defines _MSC_VER */
+ 
+-#if defined(_MSC_VER) && _MSC_VER > 850
++#if ( defined( _MSC_VER) && _MSC_VER > 850 ) || defined(__MINGW32__)
+ /* Start of defines for MS_WIN32 using VC++ 2.0 and up */
+ #define NT     /* NT is obsolete - please use MS_WIN32 instead */
+ #define MS_WIN32

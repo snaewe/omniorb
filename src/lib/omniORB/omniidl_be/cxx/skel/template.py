@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.5  2005/01/06 23:10:10  dgrisby
+# Big merge from omni4_0_develop.
+#
 # Revision 1.6.2.4  2005/01/06 16:35:18  dgrisby
 # Narrowing for abstract interfaces.
 #
@@ -327,6 +330,10 @@ interface_nil = """\
 @name@_ptr
 @name@::_nil()
 {
+#ifdef OMNI_UNLOADABLE_STUBS
+  static @objref_name@ _the_nil_obj;
+  return &_the_nil_obj;
+#else
   static @objref_name@* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
@@ -337,6 +344,7 @@ interface_nil = """\
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
+#endif
 }
 
 const char* @name@::_PD_repoId = "@repoID@";
@@ -349,8 +357,9 @@ interface_objref = """\
 
 
 @fq_objref_name@::@objref_name@(omniIOR* ior, omniIdentity* id) :
+   omniObjRef(::@name@::_PD_repoId, ior, id, 1)@comma@
    @inherits_str@
-   omniObjRef(::@name@::_PD_repoId, ior, id, 1)@init_shortcut@
+   @init_shortcut@
 {
   _PR_setobj(this);
 }
@@ -361,27 +370,27 @@ void*
   if( id == ::@name@::_PD_repoId )
     return (::@name@_ptr) this;
   @_ptrToObjRef_ptr@
-  if( id == CORBA::Object::_PD_repoId )
-    return (CORBA::Object_ptr) this;
+  if( id == ::CORBA::Object::_PD_repoId )
+    return (::CORBA::Object_ptr) this;
 
   if( omni::strMatch(id, ::@name@::_PD_repoId) )
     return (::@name@_ptr) this;
   @_ptrToObjRef_str@
-  if( omni::strMatch(id, CORBA::Object::_PD_repoId) )
-    return (CORBA::Object_ptr) this;
+  if( omni::strMatch(id, ::CORBA::Object::_PD_repoId) )
+    return (::CORBA::Object_ptr) this;
 
   return 0;
 }
 """
 
 interface_objref_repoID_ptr = """\
-if( id == @inherits_fqname@::_PD_repoId )
-  return (@inherits_fqname@_ptr) this;
+if( id == ::@inherits_fqname@::_PD_repoId )
+  return (::@inherits_fqname@_ptr) this;
 """
 
 interface_objref_repoID_str = """\
-if( omni::strMatch(id, @inherits_fqname@::_PD_repoId) )
-  return (@inherits_fqname@_ptr) this;
+if( omni::strMatch(id, ::@inherits_fqname@::_PD_repoId) )
+  return (::@inherits_fqname@_ptr) this;
 """
 
 interface_shortcut = """\
@@ -404,7 +413,7 @@ interface_shortcut_inh = """\
 interface_callback = """\
 // Local call call-back function.
 static void
-@local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
+@local_call_descriptor@(omniCallDescriptor*@cd@, omniServant* svnt)
 {
   @get_call_descriptor@
   @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
@@ -600,15 +609,15 @@ void*
 @impl_fqname@::_ptrToInterface(const char* id)
 {
   if( id == ::@name@::_PD_repoId )
-    return (@impl_name@*) this;
+    return (::@impl_fqname@*) this;
   @_ptrToInterface_ptr@
-  if( id == CORBA::Object::_PD_repoId )
+  if( id == ::CORBA::Object::_PD_repoId )
     return (void*) 1;
 
   if( omni::strMatch(id, ::@name@::_PD_repoId) )
-    return (@impl_name@*) this;
+    return (::@impl_fqname@*) this;
   @_ptrToInterface_str@
-  if( omni::strMatch(id, CORBA::Object::_PD_repoId) )
+  if( omni::strMatch(id, ::CORBA::Object::_PD_repoId) )
     return (void*) 1;
   return 0;
 }
@@ -621,9 +630,18 @@ const char*
 """
 
 interface_impl_inherit_dispatch = """\
+
+#ifndef _MSC_VER
 if( @impl_inherited_name@::_dispatch(_handle) ) {
   return 1;
 }
+#else
+// Work-around for incorrect MSVC code generation.
+if( ((@impl_inherited_name@*)this)->
+    @impl_inherited_name@::_dispatch(_handle) ) {
+  return 1;
+}
+#endif
 """
 
 interface_impl_not_abstract = """\
@@ -631,13 +649,13 @@ void @impl_fqname@::_interface_is_abstract() {}
 """
 
 interface_impl_repoID_ptr = """\
-if( id == @inherited_name@::_PD_repoId )
-  return (@impl_inherited_name@*) this;
+if( id == ::@inherited_name@::_PD_repoId )
+  return (::@impl_inherited_name@*) this;
 """
 
 interface_impl_repoID_str = """\
-if( omni::strMatch(id, @inherited_name@::_PD_repoId) )
-  return (@impl_inherited_name@*) this;
+if( omni::strMatch(id, ::@inherited_name@::_PD_repoId) )
+  return (::@impl_inherited_name@*) this;
 """
 
 interface_sk = """\
@@ -664,52 +682,6 @@ if( omni::strMatch(op, "@idl_operation_name@") ) {
   @prepare_out_args@
   _handle.upcall(this,_call_desc);
   return 1;
-}
-"""
-
-##
-## Typedef
-##
-typedef_global_array_declarator = """\
-
-@fq_derived@_slice* @fq_derived@_alloc() {
-  return new @fq_derived@_slice@decl_first_dim_str@;
-}
-
-@fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* _s)
-{
-  if (!_s) return 0;
-  @fq_derived@_slice* _data = @fq_derived@_alloc();
-  if (_data) {
-    @dup_loop@
-  }
-  return _data;
-}
-
-void @fq_derived@_copy(@fq_derived@_slice* _to, const @fq_derived@_slice* _from) {
-  @copy_loop@
-}
-
-void @fq_derived@_free(@fq_derived@_slice* _s) {
-  delete [] _s;
-}
-"""
-
-typedef_global_simple_array = """\
-@fq_derived@_slice* @fq_derived@_alloc() {
-  return @fq_aliased@_alloc();
-}
-
-@fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* p) {
-  return @fq_aliased@_dup(p);
-}
-
-void @fq_derived@_copy( @fq_derived@_slice* _to, const @fq_derived@_slice* _from){
-  @fq_aliased@_copy(_to, _from);
-}
-
-void @fq_derived@_free( @fq_derived@_slice* p) {
-   @fq_aliased@_free(p);
 }
 """
 
@@ -759,6 +731,7 @@ void
   switch(_pd__d) {
     @unmarshal_cases@
   }
+  _pd__initialised = 1;
 }
 """
 

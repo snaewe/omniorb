@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.3  2005/01/06 23:10:01  dgrisby
+# Big merge from omni4_0_develop.
+#
 # Revision 1.17.2.2  2003/10/23 11:25:55  dgrisby
 # More valuetype support.
 #
@@ -194,6 +197,16 @@ def monolithic(stream, tree):
 
     header(stream, guard)
 
+    # Extra DLL include stuff?
+    if config.state['DLLIncludes']:
+        sub_include_pre  = output.StringStream()
+        sub_include_post = output.StringStream()
+        sub_include_pre .out(template.sub_include_pre,  guard=guard)
+        sub_include_post.out(template.sub_include_post, guard=guard)
+    else:
+        sub_include_pre  = ""
+        sub_include_post = ""
+
     # Add in any direct C++ from toplevel pragma if present
     cxx_direct_include = []
     directive = "hh "
@@ -292,7 +305,9 @@ def monolithic(stream, tree):
                other_tie = other_tie,
                operators = main_opers,
                marshalling = main_marshal,
-               guard = guard)
+               guard = guard,
+               sub_include_pre = sub_include_pre,
+               sub_include_post = sub_include_post)
 
 
 def run(tree):

@@ -8,7 +8,12 @@
 // which returns a value.
 //
 
-#include <iostream.h>
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 #include <omnithread.h>
 
 class thread_with_data : public omni_thread {

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2005/01/06 23:10:12  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.3  2003/11/06 11:56:57  dgrisby
   Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 
@@ -391,7 +394,7 @@ static void write_codeset_name(char* buf, const char* cname,
     strcat(buf,cname);
   else {
     char* p = buf + strlen(buf);
-    sprintf(p,"0x%08lx",id);
+    sprintf(p,"0x%08lx",(unsigned long)id);
   }
 }
 

@@ -3,6 +3,8 @@
 // This file contains the subset of the interface repository
 // definitions that is required to build the ORB.
 
+#ifndef _omniorb_corbaidl_idl_
+#define _omniorb_corbaidl_idl_
 
 #pragma prefix "omg.org"
 
@@ -56,13 +58,14 @@ module CORBA {
 
   // Sequences of basic types. From CORBA 2.6 section 5.5.2.
   
+  typedef sequence<any>                AnySeq;
   typedef sequence<boolean>            BooleanSeq;
   typedef sequence<char>               CharSeq;
   typedef sequence<wchar>              WCharSeq;
   typedef sequence<octet>              OctetSeq;
   typedef sequence<short>              ShortSeq;
-  typedef sequence<long>               LongSeq;
   typedef sequence<unsigned short>     UShortSeq;
+  typedef sequence<long>               LongSeq;
   typedef sequence<unsigned long>      ULongSeq;
 #ifdef HAS_LongLong
   typedef sequence<long long>          LongLongSeq;
@@ -80,3 +83,6 @@ module CORBA {
 //////////////////////////////////////////////////////////////////////
 };
 //////////////////////////////////////////////////////////////////////
+
+
+#endif // _omniorb_corbaidl_idl_

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:14  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:02:20  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -141,9 +144,9 @@ public:
 				     _CORBA_ULong&       length,
 				     char*&              s);
 
-  TCS_C_UTF_8()
+  TCS_C_UTF_8(GIOP::Version v)
     : omniCodeSet::TCS_C(omniCodeSet::ID_UTF_8, "UTF-8",
-			 omniCodeSet::CS_Other, omniCodeSetUtil::GIOP12)
+			 omniCodeSet::CS_Other, v)
   { }
 
   virtual ~TCS_C_UTF_8() {}
@@ -840,13 +843,15 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
 //
 
 static NCS_C_UTF_8 _NCS_C_UTF_8;
-static TCS_C_UTF_8 _TCS_C_UTF_8;
+static TCS_C_UTF_8 _TCS_C_UTF_8_11(omniCodeSetUtil::GIOP11);
+static TCS_C_UTF_8 _TCS_C_UTF_8_12(omniCodeSetUtil::GIOP12);
 
 class CS_UTF_8_init {
 public:
   CS_UTF_8_init() {
     omniCodeSet::registerNCS_C(&_NCS_C_UTF_8);
-    omniCodeSet::registerTCS_C(&_TCS_C_UTF_8);
+    omniCodeSet::registerTCS_C(&_TCS_C_UTF_8_11);
+    omniCodeSet::registerTCS_C(&_TCS_C_UTF_8_12);
   }
 };
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:56  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:01:58  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -88,6 +91,7 @@ private:
   SocketHandle_t                   pd_new_conn_socket;
   giopConnection::notifyReadable_t pd_callback_func;
   void*                            pd_callback_cookie;
+  CORBA::Boolean                   pd_poked;
 
   tcpEndpoint();
   tcpEndpoint(const tcpEndpoint&);

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.4.2.3  2005/01/06 23:10:40  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.4.2.2  2004/02/16 10:10:32  dgrisby
   More valuetype, including value boxes. C++ mapping updates.
 
@@ -358,7 +361,8 @@ PortableServer::ServantBase::_do_get_interface()
     call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, repoId);
   repository->_PR_getobj()->_invoke(call_desc);
 
-  return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
+  CORBA::Object_ptr result = call_desc.result();
+  return result ? result->_PR_getobj() : 0;
 }
 
 

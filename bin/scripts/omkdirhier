@@ -1,33 +1,8 @@
 #!/bin/sh
 #
-# The installed mkdirhier on some platforms (Solaris 2.5) causes problems
-# with group sticky-bits, so we use this script instead.
+# This script is taken from the X11 distribution.
 #
-# 
-# *****************************************************************
-# *                                                               *
-# *    Copyright (c) Digital Equipment Corporation, 1991, 1994    *
-# *                                                               *
-# *   All Rights Reserved.  Unpublished rights  reserved  under   *
-# *   the copyright laws of the United States.                    *
-# *                                                               *
-# *   The software contained on this media  is  proprietary  to   *
-# *   and  embodies  the  confidential  technology  of  Digital   *
-# *   Equipment Corporation.  Possession, use,  duplication  or   *
-# *   dissemination of the software and media is authorized only  *
-# *   pursuant to a valid written license from Digital Equipment  *
-# *   Corporation.                                                *
-# *                                                               *
-# *   RESTRICTED RIGHTS LEGEND   Use, duplication, or disclosure  *
-# *   by the U.S. Government is subject to restrictions  as  set  *
-# *   forth in Subparagraph (c)(1)(ii)  of  DFARS  252.227-7013,  *
-# *   or  in  FAR 52.227-19, as applicable.                       *
-# *                                                               *
-# *****************************************************************
-#
-# HISTORY
-# 
-# $XConsortium: mkdirhier.sh,v 1.6 91/08/13 18:13:04 rws Exp $
+# $Xorg: mkdirhier.sh,v 1.3 2000/08/17 19:41:53 cpqbld Exp $
 # Courtesy of Paul Eggert
 
 newline='
@@ -60,6 +35,12 @@ do
 
 	IFS=/
 	set x $directory
+	case $2 in
+	    */*)	# IFS parsing is broken
+		IFS=' '
+		set x `echo $directory | tr / ' '`
+		;;
+	esac
 	IFS=$newline
 	shift
 

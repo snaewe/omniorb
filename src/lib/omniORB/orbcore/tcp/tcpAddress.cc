@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:54  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:01:58  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -87,6 +90,10 @@
 #include <tcp/tcpAddress.h>
 #include <stdio.h>
 #include <omniORB4/linkHacks.h>
+
+#if defined(__vxWorks__)
+#include "selectLib.h"
+#endif
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(tcpAddress);
 
@@ -151,7 +158,7 @@ tcpAddress::Connect(unsigned long deadline_secs,
   if (pd_address.port == 0) return 0;
 
   LibcWrapper::AddrInfo_var ai;
-  ai = LibcWrapper::getaddrinfo(pd_address.host, pd_address.port);
+  ai = LibcWrapper::getAddrInfo(pd_address.host, pd_address.port);
 
   if ((LibcWrapper::AddrInfo*)ai == 0)
     return 0;
@@ -171,6 +178,30 @@ tcpAddress::Connect(unsigned long deadline_secs,
 
 #if !defined(USE_NONBLOCKING_CONNECT)
 
+#if defined(__VMS)
+  if (deadline_secs || deadline_nanosecs) {
+    SocketSetTimeOut(deadline_secs,deadline_nanosecs,t);
+    if (t.tv_sec == 0 && t.tv_usec == 0) {
+      // Already timeout.
+      CLOSESOCKET(sock);
+      return 0;
+    }
+    // Sadly, 1 second is the best we can do (in fact, the tcp docs
+    // are a little hazy on this.  It looks like the sysconfig
+    // settable default value is in half seconds, but the setsockopt
+    // value is in seconds...)
+    int sec=t.tv_sec;
+    if (sec==0)
+      sec=1;
+    else if (tv.tv_usec > 500000)
+      ++sec;
+    if (setsockopt(sock,IPPROTO_TCP,TCP_KEEPINIT,
+                   (char*)&sec,sizeof(sec)) ==  RC_INVALID_SOCKET) {
+      CLOSESOCKET(sock);
+      return 0;
+    }
+  }
+#endif
   if (::connect(sock,ai->addr(),ai->addrSize()) == RC_SOCKET_ERROR) {
     CLOSESOCKET(sock);
     return 0;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.17.2.4  2005/01/06 23:10:12  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.17.2.3  2003/09/26 16:12:54  dgrisby
   Start of valuetype support.
 
@@ -169,8 +172,9 @@ const IOP::ComponentId IOP::TAG_PRIMARY = 90002; // XXX NEED THE REAL CONSTANT!
 const IOP::ComponentId IOP::TAG_HEARTBEAT_ENABLED = 90003; 
                                                // XXX NEED THE REAL CONSTANT !
 
-const IOP::ComponentId IOP::TAG_OMNIORB_BIDIR      = 0x41545401; 
-const IOP::ComponentId IOP::TAG_OMNIORB_UNIX_TRANS = 0x41545402; 
+const IOP::ComponentId IOP::TAG_OMNIORB_BIDIR         = 0x41545401;
+const IOP::ComponentId IOP::TAG_OMNIORB_UNIX_TRANS    = 0x41545402;
+const IOP::ComponentId IOP::TAG_OMNIORB_PERSISTENT_ID = 0x41545403;
 
 
 
@@ -209,6 +213,7 @@ static struct {
   { IOP::TAG_HEARTBEAT_ENABLED, "TAG_HEARTBEAT_ENABLED" },
   { IOP::TAG_OMNIORB_BIDIR, "TAG_OMNIORB_BIDIR" },
   { IOP::TAG_OMNIORB_UNIX_TRANS, "TAG_OMNIORB_UNIX_TRANS" },
+  { IOP::TAG_OMNIORB_PERSISTENT_ID, "TAG_OMNIORB_PERSISTENT_ID" },
   { 0, 0 }
 };
 

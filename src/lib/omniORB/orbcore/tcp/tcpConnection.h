@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:55  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:01:58  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -86,6 +89,8 @@ public:
   void setSelectable(CORBA::Boolean now = 0,CORBA::Boolean data_in_buffer = 0);
 
   void clearSelectable();
+
+  CORBA::Boolean isSelectable();
 
   void Peek(notifyReadable_t func,void* cookie);
 

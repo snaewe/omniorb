@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:37  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:02:08  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -84,7 +87,7 @@ invalid_syntax_error(const char* filename, int lineno,
 
 static CORBA::Boolean parseOldConfigOption(orbOptions& opt, char* line);
 
-void
+CORBA::Boolean
 orbOptions::importFromFile(const char* filename) throw (orbOptions::Unknown,
 							orbOptions::BadParam) {
 
@@ -92,7 +95,7 @@ orbOptions::importFromFile(const char* filename) throw (orbOptions::Unknown,
   CORBA::String_var line(CORBA::string_alloc(LINEBUFSIZE));
   unsigned int lnum = 0;
 
-  if ( !filename || !strlen(filename) ) return;
+  if ( !filename || !strlen(filename) ) return 0;
 
   if ( !(file = fopen(filename, "r")) ) {
     if ( omniORB::trace(2) ) {
@@ -100,7 +103,7 @@ orbOptions::importFromFile(const char* filename) throw (orbOptions::Unknown,
       log << "Configuration file \"" << filename
 	  << "\" either does not exist or is not a file. No settings read.\n";
     }
-    return;
+    return 0;
   }
   else if ( omniORB::trace(2) ) {
     omniORB::logger log;
@@ -201,6 +204,7 @@ orbOptions::importFromFile(const char* filename) throw (orbOptions::Unknown,
     addOption(key,value,fromFile);
   }
   fclose(file);
+  return 1;
 }
 
 #if SUPPORT_OLD_CONFIG_FORMAT

@@ -8,3 +8,9 @@ compile omniORB on this platform, please send an up to date patch to
 the omniORB mailing list.
 
   dec_CXX_5.6.patch
+
+
+This patch is for the omnipython minimal Python 1.5 distribution,
+required when compiling with the mingw GCC compiler on Windows.
+
+   mingw_omnipython.patch

@@ -10,6 +10,9 @@
 %% Notes:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% $Log$
+%% Revision 1.1.4.2  2005/01/06 23:08:27  dgrisby
+%% Big merge from omni4_0_develop.
+%%
 %% Revision 1.1.4.1  2003/03/23 21:03:40  dgrisby
 %% Start of omniORB 4.1.x development branch.
 %%
@@ -56,8 +59,6 @@ extern "C" void omni_thread_wrapper(void* ptr);
    bool m_bConstructed;
 
 #define OMNI_CONDITION_IMPLEMENTATION \
-   long waiters_; \
-   SEM_ID waiters_lock_; \
    SEM_ID sema_;
 
 #define OMNI_SEMAPHORE_IMPLEMENTATION \

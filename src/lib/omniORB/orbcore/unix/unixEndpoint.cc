@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:59  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:01:57  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -135,6 +138,8 @@ unixEndpoint::Bind() {
 
   unlink(pd_filename);
 
+  SocketSetCloseOnExec(pd_socket);
+
   struct sockaddr_un addr;
 
   memset((void*)&addr,0,sizeof(addr));
@@ -222,20 +227,42 @@ CORBA::Boolean
 unixEndpoint::notifyReadable(SocketHandle_t fd) {
 
   if (fd == pd_socket) {
+    // New connection
     SocketHandle_t sock;
+again:
     sock = ::accept(pd_socket,0,0);
     if (sock == RC_SOCKET_ERROR) {
-      return 0;
+      if (ERRNO == RC_EBADF) {
+        omniORB::logs(20, "accept() returned EBADF, unable to continue");
+        return 0;
+      }
+      else if (ERRNO == RC_EINTR) {
+        omniORB::logs(20, "accept() returned EINTR, trying again");
+        goto again;
+      }
+      else if (ERRNO == RC_EAGAIN) {
+        omniORB::logs(20, "accept() returned EAGAIN, trying again");
+        goto again;
+      }
+      if (omniORB::trace(20)) {
+        omniORB::logger log;
+        log << "accept() failed with unknown error " << ERRNO << "\n";
+      }
     }
-    pd_new_conn_socket = sock;
+    else {
+      pd_new_conn_socket = sock;
+    }
     setSelectable(pd_socket,1,0,1);
     return 1;
   }
-  SocketLink* conn = findSocket(fd,1);
-  if (conn) {
-    pd_callback_func(pd_callback_cookie,(unixConnection*)conn);
+  else {
+    // Existing connection
+    SocketLink* conn = findSocket(fd,1);
+    if (conn) {
+      pd_callback_func(pd_callback_cookie,(unixConnection*)conn);
+    }
+    return 1;
   }
-  return 1;
 }
 
 OMNI_NAMESPACE_END(omni)

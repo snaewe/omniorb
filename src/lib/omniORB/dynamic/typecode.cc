@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.8  2005/01/06 23:09:46  dgrisby
+ * Big merge from omni4_0_develop.
+ *
  * Revision 1.40.2.7  2005/01/06 16:39:24  dgrisby
  * DynValue and DynValueBox implementations; misc small fixes.
  *
@@ -5290,6 +5293,9 @@ TypeCode_marshaller::unmarshal(cdrStream& s,
     case CORBA::tk_char:
       otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_char));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_char));
+    case CORBA::tk_wchar:
+      otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_wchar));
+      return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_wchar));
     case CORBA::tk_octet:
       otbl->addEntry(otbl->currentOffset(), ToTcBase(CORBA::_tc_octet));
       return TypeCode_collector::duplicateRef(ToTcBase(CORBA::_tc_octet));

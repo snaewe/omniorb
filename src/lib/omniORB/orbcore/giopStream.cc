@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/01/06 23:10:29  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:02:14  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -120,7 +123,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 static void dumpbuf(unsigned char* buf, size_t sz);
 
 ////////////////////////////////////////////////////////////////////////
-CORBA::ULong giopStream::directSendCutOff = 1024;
+CORBA::ULong giopStream::directSendCutOff = 16384;
 CORBA::ULong giopStream::directReceiveCutOff = 1024;
 CORBA::ULong giopStream::bufferSize = 8192;
 
@@ -510,7 +513,7 @@ giopStream::CommFailure::_raise(CORBA::ULong minor,
 {
   if (status != CORBA::COMPLETED_NO) retry = 0;
 #ifndef OMNIORB_NO_EXCEPTION_LOGGING
-  if( omniORB::trace(10) ) {
+  if( omniORB::traceExceptions ) {
     omniORB::logger l;
     l << "throw giopStream::CommFailure from "
       << omniExHelper::strip(filename) 	
@@ -871,17 +874,14 @@ giopStream::inputMessage() {
   }
   else if (buf->size < (buf->last - buf->start)) {
 
-    if (omniORB::trace(40)) {
-      omniORB::logger log;
-      log << "Split input data to multiple messages\n";
-    }
-
     // Too much data in the buffer. Locate the beginning of the next
     // message header(s) and uses a separate Buffer for each message.
     CORBA::ULong first = buf->start + buf->size;
     giopStream_Buffer** tail = &pd_strand->head;
     while (*tail)
       tail = &(*tail)->next;
+
+    int splitcount = 0;
 
     do {
       CORBA::ULong sz = buf->last - first;
@@ -922,12 +922,18 @@ giopStream::inputMessage() {
 	omniORB::logger log;
 	log << "Split to new buffer\n";
       }
+      splitcount++;
 
       *tail = newbuf;
       tail = &(newbuf->next);
       first += sz;
     } while (first != buf->last);
     buf->last = buf->start + buf->size;
+
+    if (omniORB::trace(30)) {
+      omniORB::logger log;
+      log << "Split input data into " << splitcount << " messages\n";
+    }
   }
   return buf;
 }
@@ -1046,9 +1052,15 @@ giopStream::sendChunk(giopStream_Buffer* buf) {
 
   if (!pd_strand->connection) {
     OMNIORB_ASSERT(pd_strand->address);
+      
     if (pd_strand->state() != giopStrand::DYING) {
+      if (omniORB::trace(25)) {
+	omniORB::logger log;
+	log << "Client attempt to connect to "
+	    << pd_strand->address->address() << "\n";
+      }
       giopActiveConnection* c = pd_strand->address->Connect(pd_deadline_secs,
-							    pd_deadline_nanosecs);
+							 pd_deadline_nanosecs);
       if (c) pd_strand->connection = &(c->getConnection());
     }
     if (!pd_strand->connection) {

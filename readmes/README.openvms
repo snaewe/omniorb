@@ -1,249 +1,178 @@
 omniORB on OpenVMS platforms
 ============================
 
-This file contains information on building omniORB on OpenVMS (Alpha
-and VAX) platforms. The last port of omniORB to OpenVMS was for
-omniORB 3.0.x. Some modifications to the 4.0.x code base will probably
-be required to make it work. If you successfully compile omniORB 4.0.x
-on OpenVMS, please report your success to the omniORB mailing list.
+This file contains information on building and running omniORB on
+OpenVMS platforms.
 
-Changes in 3.0.0 prerelease
----------------------------
+The current version of omniORB has been compiled on the following platforms:
 
-New requirements
-................
+        Compaq C++ V6.5-001 for OpenVMS Alpha V7.3
+        Compaq C V6.2-003 on OpenVMS Alpha V7.3
+        Python 2.3.1
+        MMS V3.4-3
 
-At least OpenVMS version 7.1 is now required.  OpenVMS VAX and Compaq
-C++ 5.6 are still supported but Compaq C++ 6.2 is recommended
-(available only on Alpha).
+and:
 
-Note that if you need to use Compaq C++ 5.6 you will need to apply the
-dec_cxx_5_6.patch located in the [patches] directory.  A good port of
-patch for OpenVMS resides at:
-ftp.sidhe.org/VMSPerl_Community/non-perl_utils.
+        Compaq C++ V6.5-021 for OpenVMS Alpha V7.3-1
+        Compaq C V6.5-001 on OpenVMS Alpha V7.3-1
+        Python 1.5.2
+        MMS V3.4-3
 
-Anyone wishing to port to OpenVMS 6.x is encouraged to try.  See the
-file, readme.openvms_v6.
+Requirements
+------------
 
-Python for OpenVMS must be installed prior to building the
-distribution. The minimum version is 1.5.2-V007b.
+Built and tested on OpenVMS Alpha 7.3 and 7.3-1.  Older or newer
+versions may work but at least 7.1 is recommended.
 
-The following python logical names are used:
+It is recommended to use an ODS-5 disk volume for the omniORB distribution.
+
+omniORB has not been tested on the VAX platform for quite some time.
+However, support utilities and instructions remain in place in case
+anyone wishes once again to port to that platform.  Good luck.
+Alternatively, older versions of omniORB (2.8.0?) may still work on
+the VAX.
+
+omniORB has not been tested on the Itanium platform.
+
+HP C++ for OpenVMS is required.
+
+HP C for OpenVMS is required for building the GNU preprocessor which
+is used by the omniORB IDL compiler (omniidl).
+
+MMS is required for building the distribution.  Note that a somewhat
+recent version of MMS is required (MMS V3.4-3 is the tested version).
+For example, the makefiles utilize the "predefined functions" ($(subst
+...) $(patsubst ...) and $(foreach ...)) that are now provided.
+Therefore, the freely available MMK likely won't work without some
+effort (unfortunately).
+
+Python is required for the IDL compiler (omniidl) and to support the OpenVMS
+build environment.
+
+Python version 1.5.2 will still work even though it is no longer
+available for download.  If you use this version then you must ensure
+that the following logical names are defined:
 
 	Logical name	Definition
 	---------------	-------------------------------------------------
 	python_include	pyvms_disk:[python.python-1_5_2.include]
 	python_olb	pyvms_disk:[python.python-1_5_2.vms.o_'platform']
 
-Note that release builds will utilize object libraries built with
-python configured for noDEBUG and THREADS (python_olb:*_d0t.olb) and
-vice versa (debug builds require python_olb:*_ddt.olb).
+Recent versions of Python are available for download from
+http://vmspython.dyndns.org and also from
+http://www.hp.com/go/openvms/freeware (browse or download the freeware
+V6 CD).
 
-DEC C must be installed.  This distibution has been tested with:
-
-	DEC C V5.7-004 on OpenVMS Alpha V7.1-2
-	DEC C V5.6-003 on OpenVMS VAX V7.1
-
-Other versions of DEC/Compaq C may be possible, but note that VAX C
-will not work.
-
-It is now required that an additional concealed, rooted logical name
-(`your-name' in this paragraph) be defined. This logical name must be
-defined so that the file that you are now reading resides in
-your-name:[000000]. In order to build the entire tree, set default to
-your-name:[src] and type "make export".  Note that `your-name' is
-user-selectable.  You might wish to use something that indicates the
-omniORB version (e.g., omniORB300root).  This logical name will need
-to be available for debugging.  The remainder of this document assumes
-that the default device is `your-name:'.
+At this writing, Python for OpenVMS requires SSL, ZLIB, and LIBBZ2.
+See the installation instructions for Python from one of the above two
+links.
 
 New features
-............
+------------
 
-The omniORB for OpenVMS developement environment has been largely
-redesigned with the goals of making it easier to maintain.
+It is no longer necessary to define a rooted logical name in order to
+build omniORB.
 
-It is no longer necessary to invoke make /macro=(initialize_mms=1) to
-prepare a source directory for building.  The makefile system will now
-invoke a premake step in order to create the necessary dependency
-files.
+Build performance for shareable images has been improved (believe it
+or not it used to be worse!).
 
-Module dependency files now have the extension `.d', rather than
-`.mms'.
+A setup.com file has been added for convenience.
 
-An autoconfig feature has been added that will automatically determine
-compiler, hardware, and operating system version.  The results are
-written to [mk]platform.mms.  This feature is enabled by default
-(autoconfig=1 in [config]config.mms).  To reconfigure, perform a
-veryclean build of the entire directory tree.  Afterwards, the file
-[mk]dirs.mms should be empty.
-
-$(TOP) is no longer defined.  It is assumed that [000000] is "top".
-$(EXPORT_TREE) and $(IMPORT_TREES) are no longer defined by default.
-Thus they may be defined in other sub-trees such as directories
-containing contributed software.
-
-The format of the descrip.mms file has changed.  In addition to
-removing the definition of $(TOP), it now defines current as a "_"
-seperated list of directory names.
-
-C++ files that need to be compiled should be listed in the MMS macro
-CXXSRCS which is a space seperated list.  (CXXSRCS_x, x=0 to 9 are
-also available due to VMS draconian limits.)
-
-Macros no longer should be quoted and should appear in a space
-seperated list.  However, to pass an actual quote character, the quote
-should be quadrupled.  For example,
-
-	DIR_CXXMACROS=tcpSocketVaxRoutines\
-		CONFIG_DEFAULT_LOCATION=""""omniCFG:omniORB.cfg""""
-
-Caveats
-.......
-
-The premake step now invokes `MMS/macro=dir.mms...'.  This qualifier
-is somewhat broken, in that it apparently recognizes only "-" as the
-continuation character and ignores .IFDEF statements.  Thus:
-
-	.IFDEF FOO
-	BAR=x
-	.ELSE
-	BAR=y
-	.ENDIF
-
-must be rewritten:
-
-	.IFDEF FOO
-	FOOBAR=x
-	.ELSE
-	NOFOOBAR=y
-	.ENDIF
-	BAR=$(FOOBAR)$(NOFOOBAR)
-
-if it resides in a dir.mms file.
-
-Shareable images are now supported for all platforms.  It is intended
-that future versions will be "upwards compatable" (see the OpenVMS
-LINK manual) but the mechanism for ensuring this is under development.
-
-Changes in 2.8.0
-----------------
-
-To simplify linking, seperate omniORB floating point libraries are no
-longer required.
-
-There are additional configuration parameters in [config]config.mms.
-
-Downloading the distribution
-----------------------------
-
-Refer to http://www.uk.research.att.com/omniORB/VMSDownload.html for
-downloading and unpacking the distribution.
-
+The omniORB libraries are now compatable with CXX /NAME=AS_IS (see below).
 
 Building the distribution
 -------------------------
 
-This distribution requires the use of MMS, although it should be
-possible to use the freely available MMK with minor changes.  It has
-been tested on Compaq C++ 6.2 for OpenVMS Alpha 7.1-2, and DEC C++ 5.6
-for OpenVMS VAX 7.1.  Some version of TCPIP Services (formerly known
-as UCX) is also required.  Has not been tested with other transports
-such as multinet.
+You must set default to the top level directory and unzip the
+[.etc]openvms.zip file before building the distribution.  Unzip for
+OpenVMS is available from the HP sponsored freeware CD
+(http://www.hp.com/go/openvms/freeware).
 
-The MMS files assume the use of the MMS /Skip qualifier.  You should
-define a "make" symbol as follows:
+To build, simply SET DEFAULT to the [...src] directory
+and type "MMS /SKIP /EXTENDED_SYNTAX EXPORT".  You may wish to define
+a make symbol such as:
 
-	$ make=="mms/skip"
+  MAKE == "mms/skip/extended_syntax"
 
-Define a concealed rooted logical so that this file resides in its
-[000000] directory.  Set default to the [src] directory.  E.g.,
-supposing that this file resides in dua0:[omni.omniorb_300]:
+After typing "make export" from the [...src] directory, you should
+have all of the libraries and executables needed to build and run
+CORBA applications on your OpenVMS system.  Note that it is no longer
+required to perform a seperate make to build the debug libraries.
 
-	$ define /trans=conc omniORB300root dua0:[omni.omniorb_300.]
-	$ set default omniORB300root:[src]
+Using omniORB
+-------------
 
-Before starting the build, you should review configuration settings by
-editing the file [config]config.mms.
+setup.com
+.........
 
-You should now be ready to build. Just type 'make export'.
+For convenient access to the omniORB libraries and executables,
+execute (via "@") the setup.com file located in the top level
+directory of this distribution.  Optionally, a logical name table
+(e.g., LNM$GROUP, LNM$SYSTEM) may be passed as the first argument to
+indicate the logical name table to use.  Default is LNM$PROCESS.
 
-To build debug versions of the library and/or executables, type:
+The following logical names are defined:
 
-	$ make/macro=(debug=1)
+        logical name            description
+        ----------------------- -----------------------------------------------
+        OMNIEXE                 directory containing omniORB utility
+                                executables
+        OMNILIB                 directory containing omniORB object
+                                libraries and shareable images
+        OMNIINC                 top level include directory
+        OMNICODESETS4_RT        codeset library shareable image.
+        OMNICODESETS4_RTD       codeset library shareable image (debug version)
+        OMNIDYNAMIC4_RT         dynamic library shareable image
+        OMNIDYNAMIC4_RTD        dynamic library shareable image (debug version)
+        OMNIORB4_RT             core library shareable image
+        OMNIORB4_RTD            core library shareable image (debug version)
+        OMNITHREAD_RT           thread library
+        OMNITHREAD_RTD          thread library (debug version)
 
-This will create libraries and executables with a "d" suffix.  For
-example, omniORB3d.olb.
+In addition a "PATH" global symbol is defined ("points" to
+[.bin.scripts]path.com) and executed to add the proper "bin" directory
+to the DCL$PATH "search list" logical name.
+
+You may wish to invoke the setup.com file from your login.com.
+
+The CXX /NAME qualifier
+.......................
+
+You may now use the CXX /NAME=AS_IS qualifier with the omniORB static
+libraries or shareable images.  However, if you do not wish to use the
+CXX /NAME=AS_IS qualifier, you must now link against the shareable
+images.  The shareable images now contain upper case aliases that
+allow for comptability with the default setting of CXX/NAME=UPPERCASE.
+
+There are additional configuration parameters in [config]config.mms.
 
 Setting up your environment
 ---------------------------
 
-If your operating system is 6.2 or above, you should add the
-directory: myroot:[bin.platform] to the logical name DCL$PATH (where
-platform is openvms_{alpha|vax}_(6|7)_{1|2} and myroot:[000000] is the
-directory containing the file you are reading).  DCL$PATH should be
-defined as a search list logical.
-
-If your operating system is 6.1 or below, you should define each of
-the executables in that directory as foreign commands.  E.g.:
-
-	$ omniidl2=="mydisk:[myroot.bin.openvms_vax_6_1]omniidl2.exe"
-
-You will also need to define the logical OMNICFG to point to an
+You will need to define the OMNICFG logical name to point to an
 existing directory for name service configuration information.  The
 omniNames server will use this directory.
 
 You will need to create a file called "omnicfg:omniorb.cfg" to contain
-the nameservice IOR as described in the omniORB3 documentation.  The
-file should contain:
-
-ORBInitialHost <omninames-host-name>
-ORBInitialPort <omninames-port-number>
+the nameservice URI as described in the omniORB documentation.
 
 Once you have created this file, you should startup the omniNames
 server as a detached process.  This should be added to your system
 startup procedure.
 
-Building omniORB3 applications
+Building omniORB applications
 -----------------------------
 
-Include directories
-...................
-
-With OpenVMS 7.1 and above you can use a single logical name (e.g.,
-omni_include) to point to the [include] directory.  You can then
-compile with /include=("./", "/omni_include") and the compiler should
-find the others.
-
-With OpenVMS 6.x you may need to define some additional logicals:
-
-	$ define <qualifiers> omniORB3 myroot:[include.omniORB3]
-	$ define <qualifiers> omniVms myroot:[include.omniVms]
-	$ define <qualifiers> omnithread myroot:[include.omnithread]
-
-To link against the omniORB3 libraries, you should define the
-following logical name:
-
-	$ define <qualifiers> omnilib mydisk:[myroot.lib.platform]
-
-With the above definitions in place, you should add
-/include=("./","/omni_include")/exceptions to your CXX compiles.
-
-The logical name omnilib is used as a convenience for the cxxlink
-command line.
+Assuming that setup.com has run, you should add:
+/include=("./","/OMNIINC")/name=as_is to your CXX compiles.
 
 To link against the shareable images, you should use the
-omnilib:omni_share.olb (or omnilib:omni_shared.olb) library.  To run
-the resulting executable, you will need to redefine sys$share.  E.g.,
+omnilib:omni_share.olb (or omnilib:omni_shared.olb) library.
+
+To run the resulting executable, you will need to run setup.com or
+redefine sys$share.  E.g.,
 
 	$ define sys$share omnilib,sys$library
-
-Alternatively, you can define a logical name for each of the shareable
-images contained in omni_shre.olb:
-
-	$ define omnithread_rt omnilib:omnithread_rt.exe
-	$ define omniORB3_rt omnilib:omniORB3_rt.exe
-	...
 
 You may wish to use or adapt the development environment provided in
 the DCL and MMS files contained in [etc]openvms.zip to accomplish the
@@ -254,21 +183,9 @@ Floating point support
 
 The CORBA standard mandates that an implementation should use the IEEE
 standard for floating point types (CORBA::Float and CORBA::Double).
-Since native IEEE floating point is not available on the VAX platform
-and to provide additional flexibility for the Alpha platform, these
-types are proxy types.
-
-The omniORB3 for VMS development environment provides for different
-floating point formats by allowing one of:
-
-	make /macro=(D_FLOAT=1)
-	make /macro=(G_FLOAT=1)
-	make /macro=(IEEE_FLOAT=1)
-
-to explicitly build for D, G, or IEEE floating point support.  The
-default is G_Float and D_FLOAT on Alpha and VAX, respectively
-(consistent with the CXX default).  You do not need to supply these
-qualifiers when building the distribution.
+Since native IEEE floating point was not available on the VAX platform
+and to provide additional flexibility for the Alpha platform, proxy
+classes have been defined for these types on the OpenVMS platform.
 
 Building the examples
 =====================
@@ -277,13 +194,13 @@ You are strongly encouraged to try out the examples provided in
 [src.examples]. Go into [src.examples] and type 'make all' (where make
 is defined as above).
 
-Study the documentations in [doc] (in the omniORB distribution) before
+Study the documentations in ['top'.doc] (in the omniORB distribution) before
 you run any of the example programs.
 
 Documentation
 =============
 
-You must read the omniORB3 and the OMNI naming service user
+You must read the omniORB and the OMNI naming service user
 guides. Follow the instructions in the guides to complete the
 configuration process.
 

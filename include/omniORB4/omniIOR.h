@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:08:09  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:04:14  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -218,7 +221,8 @@ public:
   omniIOR(const char* repoId,
 	  const _CORBA_Unbounded_Sequence_Octet& key,
 	  const IIOP::Address* addrs, _CORBA_ULong naddrs,
-	  GIOP::Version ver, interceptorOption call_interceptors);
+	  GIOP::Version ver, interceptorOption call_interceptors,
+          const IOP::MultipleComponentProfile* tagged_components = 0);
 
   ~omniIOR();
 
@@ -302,7 +306,12 @@ public:
   static char* dump_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent&);
   static void  add_TAG_OMNIORB_UNIX_TRANS(const char* filename);
 
-  ///
+  ////
+  static void  unmarshal_TAG_OMNIORB_PERSISTENT_ID(const IOP::TaggedComponent&,
+						   omniIOR&);
+  static char* dump_TAG_OMNIORB_PERSISTENT_ID(const IOP::TaggedComponent&);
+
+  ////
   static void  add_IIOP_ADDRESS(const IIOP::Address&);
   // Add this address to the IIOP profile.
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/01/06 23:08:23  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:03:56  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -199,6 +202,7 @@ class GIOP_S : public IOP_S, public giopStream, public giopStreamList {
     if (sz > GIOP_S_INLINE_BUF_SIZE) {
       pd_principal = new _CORBA_Octet[sz];
     }
+    pd_principal_len = sz;
   }
 
   //////////////////////////////////////////////////////////////////

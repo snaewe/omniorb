@@ -11,7 +11,12 @@
 //        anyExample_clt.
 //
 
-#include <iostream.h>
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 #include <anyExample.hh>
 
 
@@ -41,8 +46,10 @@ CORBA::Any* anyExample_i::testOp(const CORBA::Any& a)
     cout << "Long: " << l << endl;
   }
 #ifndef NO_FLOAT
+  // XXX - should we provide stream ops for _CORBA_Double_ and
+  // _CORBA_Float_on VMS??
   else if (a >>= d) {
-    cout << "Double: " << d << endl;
+    cout << "Double: " << (double)d << endl;
   }
 #endif
   else if (a >>= str) {

@@ -2,28 +2,29 @@ READ ME FIRST!
 
 This is the development tree for omniORB 4.1.x.
 
-It is (pre-)Alpha code. Do not use it for production applications.
+It is beta code. Do not use it for production applications.
 
 omniORB is copyright AT&T Laboratories Cambridge, Apasphere Ltd and
 others. It is free software. The programs in omniORB are distributed
 under the GNU General Public Licence as published by the Free Software
 Foundation.  See the file COPYING for copying permission of these
 programs. The libraries in omniORB are distributed under the GNU
-Library General Public Licence. See the file COPYING.LIB for copying
+Lesser General Public Licence. See the file COPYING.LIB for copying
 permission of these libraries.
 
 We impose no restriction on the use of the IDL compiler output. The
 stub code produced by the IDL compiler is not considered a derived
 work of it.
 
+
 README files
 ============
 
-README.win32 - contains important information on building and using
-               omniORB on Windows NT and Windows 95.
+README.win32.txt - contains important information on building and
+                   using omniORB on Windows NT and Windows 95.
 
-README.unix  - contains important information on building and using
-               omniORB on Unix platforms.
+README.unix -      contains important information on building and
+                   using omniORB on Unix platforms.
 
 Other readmes live the the readmes/ subdirectory. See if there is one
 for your platform.
@@ -77,8 +78,8 @@ Work in progress
 omniORB is not yet a complete implementation of the CORBA core. The
 following features are not supported in the current release.
 
-- Objects by value.
 - Portable Interceptors.
+- Local interfaces.
 
 
 Missing features
@@ -98,8 +99,8 @@ Installation
 
 Installation instructions are provided in the following files:
 
-- README.unix  for all unix platforms
-- README.win32 for Windows NT and Windows 95
+- README.unix      for all unix platforms
+- README.win32.txt for Windows NT and Windows 95
 
 
 Documentation

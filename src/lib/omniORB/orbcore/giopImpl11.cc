@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/01/06 23:10:15  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:02:15  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -227,8 +230,11 @@ giopImpl11::inputMessageBegin(giopStream* g,
       g->impl()->inputMessageBegin(g,g->impl()->unmarshalWildCardRequestHeader);
       return;
     }
-    inputTerminalProtocolError(g);
-    // never reaches here.
+    // We accept a CloseConnection message with any GIOP version.
+    if ((GIOP::MsgType)hdr[7] != GIOP::CloseConnection) {
+      inputTerminalProtocolError(g);
+      // never reaches here.
+    }
   }
 
   g->pd_unmarshal_byte_swap = (((hdr[6] & 0x1) == _OMNIORB_HOST_BYTE_ORDER_)
@@ -1158,8 +1164,8 @@ giopImpl11::marshalRequestHeader(giopStream* g) {
   omniInterceptors::clientSendRequest_T::info_T info(*g,
 				                     *(giop_c.ior()),
 						     calldesc.op(),
-						     response_expected,
-						     !response_expected);
+						     !response_expected,
+						     response_expected);
   omniInterceptorP::visit(info);
 
   // service context
@@ -1272,6 +1278,8 @@ giopImpl11::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 
   int repoid_size;
   const char* repoid = ex._NP_repoId(&repoid_size);
+
+  outputNewMessage(g);
 
   char* hdr = (char*) g->pd_currentOutputBuffer + 
                       g->pd_currentOutputBuffer->start;
@@ -1583,7 +1591,14 @@ giopImpl11::outputFlush(giopStream* g,CORBA::Boolean knownFragmentSize) {
     avail = (avail ? avail - 4 : 0);
 
     omni::ptr_arith_t newmkr = (omni::ptr_arith_t) g->pd_outb_mkr + avail;
-    if (newmkr < (omni::ptr_arith_t)g->pd_outb_end) {
+
+    // If the new position is inside the buffer, set the end pointer.
+    // Note that if avail is very large, newmkr may wrap around and be
+    // < pd_outb_mkr.
+
+    if ((newmkr >= (omni::ptr_arith_t)g->pd_outb_mkr &&
+	 newmkr <  (omni::ptr_arith_t)g->pd_outb_end)) {
+
       g->pd_outb_end = (void*) newmkr;
     }
   }

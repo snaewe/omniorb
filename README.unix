@@ -11,8 +11,8 @@ files.
 
 omniORB has been tested on the following Unix platforms:
 
-  o Solaris 2.{5,6,7,8}/ Sun SparcCompiler C++ version 4.2, 5.x
-  o Linux 2.x (x86)/gcc-2.95/binutils-2.9.1.0.14/GNU Libc version 2
+  o Linux on x86, Alpha, Sparc, IBM zSeries.
+  o Solaris 2.{5,6,7,8,9}/ Sun SparcCompiler C++ version 4.2, 5.x, gcc.
   o HPUX 11.00/ aC++
   o SGI Irix 6.x/SGI C++ compiler 7.2
 
@@ -71,6 +71,8 @@ On most Unix platforms, omniORB can be configured using the common
 Autoconf configure script, that tries to figure out the specifics of
 your machine.
 
+The Autoconf build does not currently work for cross compiling.
+
 Although you can run configure and make in the main omniORB source
 directory, you are strongly advised to build in a different
 directory. e.g.
@@ -100,7 +102,7 @@ compilers and Python. It will always choose gcc over the platform's
 native compiler if it is available. To change the choices it makes,
 use variables CC, CXX and PYTHON, e.g.:
 
-  ../configure CXX=/usr/bin/platform_c++ PYTHON=/usr/local/bin/python2.2
+  ../configure CXX=/usr/bin/platform_c++ PYTHON=/usr/local/bin/python2.3
 
 There are various omniORB specific options:
 
@@ -279,7 +281,7 @@ ATMos 4.0           |__arm__    __atmos__     __OSVERSION__=4            |
 NextStep 3.x        |__m68k__   __nextstep__  __OSVERSION__=3            |
 Unixware 7          |__x86__    __uw7__       __OSVERSION__=5            |
 
-You should also specify the preprocessor defines (e.g. -D\_REENTRANT) for
+You should also specify the preprocessor defines (e.g. -D_REENTRANT) for
 compiling multithreaded programs.
 
 

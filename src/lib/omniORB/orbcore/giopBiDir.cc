@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:15  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:02:17  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -456,6 +459,20 @@ BiDirServerRope::decrRefCount() {
     RopeLink::remove();
     delete this;
   }
+  else {
+    RopeLink* p = pd_strands.next;
+    for (; p != &pd_strands; p = p->next) {
+      giopStrand* g = (giopStrand*)p;
+      if (g->state() != giopStrand::DYING) {
+	if (omniORB::trace(30)) {
+	  omniORB::logger l;
+	  l << "Bi-directional rope is no longer referenced; strand "
+	    << (void*)g << " is a candidate for scavenging.\n";
+	}
+	g->startIdleCounter();
+      }
+    }
+  }
 }
 
 
@@ -487,6 +504,17 @@ BiDirClientRope::acquireClient(const omniIOR* ior,
 			       omniCallDescriptor* calldesc) {
 
   GIOP_C* giop_c = (GIOP_C*) giopRope::acquireClient(ior,key,keysize,calldesc);
+
+  // Bidirectional is only supported in GIOP 1.2 and above
+  GIOP::Version v = ior->getIORInfo()->version();
+  if (!(v.major > 1 || v.minor >= 2)) {
+    if (omniORB::trace(20)) {
+      omniORB::logger log;
+      log << "Bidirectional client using normal connection because "
+	  << "it is only GIOP " << (int)v.major << "." << (int)v.minor << "\n";
+    }
+    return giop_c;
+  }
 
   omni_tracedmutex_lock sync(pd_lock);
   giopStrand& s = (giopStrand&)((giopStream&)(*giop_c));

@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.17.2.3  2005/01/06 23:09:49  dgrisby
+# Big merge from omni4_0_develop.
+#
 # Revision 1.17.2.2  2003/10/23 11:25:54  dgrisby
 # More valuetype support.
 #
@@ -129,6 +132,9 @@ class ConfigurationState:
 
             # Generate local servant shortcut code?
             'Shortcut':              0,
+
+            # Extra ifdefs for stubs in dlls?
+            'DLLIncludes':           0,
 
             # Are we in DEBUG mode?
             'Debug':                 0

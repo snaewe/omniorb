@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.11.2.2  2005/01/06 23:10:32  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.11.2.1  2003/03/23 21:02:12  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -265,11 +268,13 @@ omniORB::logger::operator<<(const omniLocalIdentity* id)
   omniObjTableEntry* entry=omniObjTableEntry::downcast((omniLocalIdentity*)id);
   if (entry) {
     switch (entry->state()) {
-    case omniObjTableEntry::ACTIVATING:    *this << " (activating)";    break;
-    case omniObjTableEntry::ACTIVE:        *this << " (active)";        break;
-    case omniObjTableEntry::DEACTIVATING:  *this << " (deactivating)";  break;
-    case omniObjTableEntry::ETHEREALISING: *this << " (etherealising)"; break;
-    case omniObjTableEntry::DEAD:          *this << " (dead)";          break;
+    case omniObjTableEntry::ACTIVATING:    *this << " (activating)";     break;
+    case omniObjTableEntry::ACTIVE:        *this << " (active)";         break;
+    case omniObjTableEntry::DEACTIVATING:  *this << " (deactivating)";   break;
+    case omniObjTableEntry::DEACTIVATING_OA:
+                                           *this << " (deactivating OA)";break;
+    case omniObjTableEntry::ETHEREALISING: *this << " (etherealising)";  break;
+    case omniObjTableEntry::DEAD:          *this << " (dead)";           break;
     default:                               *this << " (???)";
     }
   }
@@ -482,6 +487,10 @@ omniORB::do_logs(const char* mesg)
 #define TRANSIENT_SUFFIX_SEP    '\xfe'
 #define TRANSIENT_SUFFIX_SIZE   8
 
+static char cm[] = { '0', '1', '2', '3', '4', '5', '6', '7',
+		     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+
 static int is_poa_key(const CORBA::Octet* key, int keysize)
 {
   const char* k = (const char*) key;
@@ -521,7 +530,7 @@ static char* pp_poa_key(const CORBA::Octet* key, int keysize)
   // We play safe with the size.  It can be slightly bigger than
   // the key because we prefix 'root', and the object id may be
   // pretty printed larger than its octet representation.
-  char* ret = new char[keysize + 20];
+  char* ret = new char[keysize * 2 + 20];
   char* s = ret;
 
   strcpy(s, "root");  s += 4;
@@ -539,11 +548,23 @@ static char* pp_poa_key(const CORBA::Octet* key, int keysize)
 
   k++;
   *s++ = '<';
-  int idsize = kend - k;
+  CORBA::ULong idsize = kend - k;
+  if (idsize == 12) {
+    // Persistent POA key (we hope)
+
+    while (idsize > 4) {
+      *s++ = cm[(unsigned char)*k >> 4];
+      *s++ = cm[(unsigned char)*k & 0xf];
+      k++;
+      idsize--;
+    }
+    *s++ = '/';
+  }
   if( idsize == 4 ) {
-    CORBA::ULong val;
-    char* p = (char*) &val;
-    *p++ = *k++;  *p++ = *k++;  *p++ = *k++;  *p++ = *k++;
+    CORBA::ULong val = 0;
+    while (idsize--)
+      val += ((CORBA::ULong)((unsigned char)*k++)) << (idsize * 8);
+
     sprintf(s, "%lu", (unsigned long) val);
     s += strlen(s);
   }
@@ -557,9 +578,6 @@ static char* pp_poa_key(const CORBA::Octet* key, int keysize)
   return ret;
 }
 
-
-static char cm[] = { '0', '1', '2', '3', '4', '5', '6', '7',
-		     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 
 static char* pp_boa_key(const CORBA::Octet* key, int keysize)
@@ -587,19 +605,18 @@ static char* pp_boa_key(const CORBA::Octet* key, int keysize)
 
 static char* pp_key(const CORBA::Octet* key, int keysize)
 {
-  // output: key<key-in-hex>
+  // output: key<keystring>
 
-  int size = 8 + keysize * 2;
+  int size = 8 + keysize;
   char* ret = new char[size];
   char* s = ret;
-  strcpy(s, "key<0x");
+  strcpy(s, "key<");
   s += strlen(s);
 
-  const unsigned char* k = (const unsigned char*) key;
+  const char* k = (const char*) key;
 
   for( int i = 0; i < keysize; i++, k++ ) {
-    *s++ = cm[*k >> 4];
-    *s++ = cm[*k & 0xf];
+    *s++ = isalnum(*k) ? *k : '.';
   }
   *s++ = '>';
   *s++ = '\0';

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2005/01/06 23:10:37  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.4.2.1  2003/03/23 21:02:07  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -701,22 +704,37 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
   // invocations) and then remove self from parent.
 
   {
-    omni_tracedmutex_lock sync(pd_lock);
+    pd_lock.lock();
 
-    if( pd_destroyed )  OMNIORB_THROW(OBJECT_NOT_EXIST,
-				      OBJECT_NOT_EXIST_POANotInitialised,
-				      CORBA::COMPLETED_NO);
+    if( pd_destroyed ) {
+      pd_lock.unlock ();
+      OMNIORB_THROW(OBJECT_NOT_EXIST,
+		    OBJECT_NOT_EXIST_POANotInitialised,
+		    CORBA::COMPLETED_NO);
+    }
 
     if( pd_dying ) {
       // Need to be able to handle multiple concurrent calls to
       // destroy.  If destruction is in progress and wait_f_c is
       // true, must wait to complete.  Otherwise can just return.
-      if( wait_for_completion )
+      if( wait_for_completion ) {
+
+	incrRefCount();
+
 	while( pd_destroyed != 2 )  pd_deathSignal.wait();
+
+	pd_lock.unlock ();
+	decrRefCount();
+
+      } else {
+	pd_lock.unlock ();
+      }
       return;
     }
 
     pd_dying = 1;
+
+    pd_lock.unlock ();
   }
 
   {
@@ -936,13 +954,11 @@ omniOrbPOA::set_servant(PortableServer::Servant p_servant)
   if( pd_policy.req_processing != RPP_DEFAULT_SERVANT )
     throw WrongPolicy();
 
-  pd_lock.lock();
+  omni_tracedmutex_lock l(pd_lock);
 
   if( pd_defaultServant )  pd_defaultServant->_remove_ref();
   if( p_servant         )  p_servant->_add_ref();
   pd_defaultServant = p_servant;
-
-  pd_lock.unlock();
 }
 
 
@@ -1119,7 +1135,11 @@ omniOrbPOA::deactivate_object(const PortableServer::ObjectId& oid)
   CORBA::ULong hashv = omni::hash(key.key(), key.size());
 
   pd_lock.lock();
-  CHECK_NOT_DESTROYED();
+  if( pd_destroyed ) {
+    pd_lock.unlock();
+    OMNIORB_THROW(OBJECT_NOT_EXIST,OBJECT_NOT_EXIST_POANotInitialised,
+		  CORBA::COMPLETED_NO);
+  }
   omni::internalLock->lock();
 
   omniObjTableEntry* entry = omniObjTable::locate(key.key(),key.size(),hashv);
@@ -1474,7 +1494,7 @@ omniOrbPOA::reference_to_servant(CORBA::Object_ptr reference)
     }
 
     if (entry && (entry->state() == omniObjTableEntry::ACTIVE ||
-		  entry->state() == omniObjTableEntry::DEACTIVATING)) {
+		  entry->state() &  omniObjTableEntry::DEACTIVATING)) {
 
       omniServant* servant = entry->servant();
       OMNIORB_ASSERT(servant);
@@ -1767,13 +1787,20 @@ omniOrbPOA::dispatch(omniCallHandle& handle,
   handle.poa(this);
 
   // Check that the key is the right size (if system generated).
-  if( !pd_policy.user_assigned_id &&
-      keysize - pd_poaIdSize != SYS_ASSIGNED_ID_SIZE )
+  if( !pd_policy.user_assigned_id ) {
+    CORBA::ULong length_check;
 
-    OMNIORB_THROW(OBJECT_NOT_EXIST,
-		  OBJECT_NOT_EXIST_NoMatch,
-		  CORBA::COMPLETED_NO);
+    if (!pd_policy.transient && poaUniquePersistentSystemIds)
+      length_check = SYS_ASSIGNED_ID_SIZE + TRANSIENT_SUFFIX_SIZE;
+    else
+      length_check = SYS_ASSIGNED_ID_SIZE;
 
+    if (keysize - pd_poaIdSize != length_check) {
+      OMNIORB_THROW(OBJECT_NOT_EXIST,
+		    OBJECT_NOT_EXIST_NoMatch,
+		    CORBA::COMPLETED_NO);
+    }
+  }
   switch( pd_policy.req_processing ) {
   case RPP_ACTIVE_OBJ_MAP:
     OMNIORB_THROW(OBJECT_NOT_EXIST,
@@ -1872,9 +1899,20 @@ omniOrbPOA::lastInvocationHasCompleted(omniLocalIdentity* id)
   // which is an objectTableEntry, since those are the only ones which
   // can be deactivated.
 
+  if (entry->state() == omniObjTableEntry::DEACTIVATING_OA) {
+    if (omniORB::trace(15)) {
+      omniORB::logger l;
+      l << "POA(" << (char*) pd_name << ") not etherealising object "
+	<< entry <<".\n";
+    }
+    omni::internalLock->unlock();
+    return;
+  }
+
   if( omniORB::trace(15) ) {
     omniORB::logger l;
-    l << "POA(" << (char*) pd_name << ") etherealising object.\n"
+    l << "POA(" << (char*) pd_name << ") etherealising object "
+      << entry <<".\n"
       << " id: " << id->servant()->_mostDerivedRepoId() << "\n";
   }
 
@@ -1903,7 +1941,13 @@ omniOrbPOA::lastInvocationHasCompleted(omniLocalIdentity* id)
     if( pd_dying && !pd_destroyed ) {
       // We cannot etherealise until apparent destruction is complete.
       // Wait for apparent destruction.
+      if (omniORB::trace(25)) {
+	omniORB::logger l;
+	l << "Waiting for destruction of POA before etherealising "
+	  << entry << ".\n";
+      }
       while( !pd_destroyed )  pd_deathSignal.wait();
+      omniORB::logs(25, "POA destroyed; continuing with etherealisation.");
     }
   }
 
@@ -1919,7 +1963,15 @@ omniOrbPOA::lastInvocationHasCompleted(omniLocalIdentity* id)
     omni::internalLock->lock();
     entry->setDead();
     omni::internalLock->unlock();
-    servant->_remove_ref();
+    try {
+      servant->_remove_ref();
+    }
+    catch (...) {
+      // _remove_ref should not throw exceptions, but in case it does,
+      // we deal with it here.
+      met_detached_object();
+      throw;
+    }
     met_detached_object();
   }
 }
@@ -2107,7 +2159,6 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   pd_destroyed = 1;
   PortableServer::Servant defaultServant = pd_defaultServant;
   pd_defaultServant = 0;
-  pd_lock.unlock();
 
   if( omniORB::trace(10) ) {
     omniORB::logger l;
@@ -2117,6 +2168,7 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   // Signal so that any detached objects waiting to etherealise
   // can proceed.
   pd_deathSignal.broadcast();
+  pd_lock.unlock();
 
   // Etherealise the objects.
   this->etherealise_objects(obj_list, etherealize_objects, sa);
@@ -2196,8 +2248,10 @@ omniOrbPOA::pm_deactivate(_CORBA_Boolean etherealize_objects)
   if( pd_dying ) {
     // If being destroyed by another thread, then we just
     // have to wait until that completes.
+    incrRefCount();
     while( pd_destroyed != 2 )  pd_deathSignal.wait();
     pd_lock.unlock();
+    decrRefCount();
     return;
   }
 
@@ -2746,7 +2800,7 @@ omniOrbPOA::deactivate_objects(omniObjTableEntry* entry)
     next = entry->nextInOAObjList();
 
     if (entry->state() == omniObjTableEntry::ACTIVE)
-      entry->setDeactivating();
+      entry->setDeactivatingOA();
 
     if (!entry->is_idle()) {
       // Entry has outstanding invocations. When the last invocation
@@ -2771,7 +2825,7 @@ omniOrbPOA::complete_object_deactivation(omniObjTableEntry* entry)
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
   while( entry ) {
-    if (entry->state() == omniObjTableEntry::DEACTIVATING)
+    if (entry->state() & omniObjTableEntry::DEACTIVATING)
       entry->setEtherealising();
 
     OMNIORB_ASSERT(entry->is_idle());

@@ -2,11 +2,18 @@
 #include <windows.h>
 #include "gnuwin32.h"
 
+//#define DEBUG_MOUNTS
 
 #define MAX_MOUNTS 256
 
+#ifdef __MINGW32__
+#include <stdio.h>
+
+void GetMinGW32Mounts(void);
+#else
 int  GetCygwinMounts(void);
 void GetGnuwin32Mounts(void);
+#endif
 void GetOpenNTMounts(void);
 void SortMounts();
 
@@ -82,14 +89,19 @@ char *TranslateFileNameD2U(char *in, int offset)
     }
   }
 
-  /* Any residue dos drive, i.e. [A-Za-z]:, convert to //[A-Za-z]
+  /* Any residue dos drive, i.e. [A-Za-z]:,
+     convert to //[A-Za-z] on cygwin/opennt
+     resp.   to /[A-Za-z] on mingw
    */
   if (strlen(out) >= 2 && out[1] == ':') {
     char* newout = malloc(strlen(out) + 2);
-    newout[0] = '/';
-    newout[1] = '/';
-    newout[2] = out[0];
-    newout[3] = '\0';
+    int io = 0;
+    newout[io++] = '/';
+#ifndef __MINGW32__
+    newout[io++] = '/';
+#endif
+    newout[io++] = out[0];
+    newout[io++] = '\0';
     strcat(newout,out+2);
     out = newout;
   }
@@ -100,8 +112,12 @@ char *TranslateFileNameD2U(char *in, int offset)
 void GetMounts(int gnuwin)
 {
   if (gnuwin) {
+#ifdef __MINGW32__
+    GetMinGW32Mounts();
+#else
     if (!GetCygwinMounts())
       GetGnuwin32Mounts();
+#endif
   }
   else {
     GetOpenNTMounts();
@@ -134,6 +150,117 @@ void GetOpenNTMounts(void)
   }
 }
 
+#ifdef __MINGW32__
+void GetMinGW32Mounts(void)
+{
+  HKEY hkey;
+  char *msys_path,*fstab_name;
+  int len,c;
+  FILE *fstab;
+  const char *key = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\MSYS-1.0_is1";
+
+  nmounts = 0;
+
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		   key, 0, KEY_READ, &hkey) == ERROR_SUCCESS) {
+    if (RegQueryValueEx(hkey,"Inno Setup: App Path",NULL,NULL,NULL,&len) != ERROR_SUCCESS) {
+      printf("RegQueryValueEx failed - error %d\n",GetLastError());
+      exit(1);
+    }
+  
+    msys_path = (char *)malloc(len+2);
+
+    if (RegQueryValueEx(hkey,"Inno Setup: App Path",NULL,NULL,msys_path,&len) != ERROR_SUCCESS) {
+      printf("RegQueryValueEx failed - error %d\n",GetLastError());
+      exit(1);
+    }
+
+    len = strlen(msys_path);
+    if (len && msys_path[len-1] != '\\')
+      {
+	msys_path[len] = '\\';
+	++len;
+	msys_path[len] = '\0';
+      }
+
+    // add default mounts.
+    unix[nmounts] = strdup("/");
+    dos[nmounts] = msys_path;
+    ++nmounts;
+
+    unix[nmounts] = strdup("/usr/");
+    dos[nmounts] = msys_path;
+    ++nmounts;
+
+    fstab_name = (char *)malloc(len+10);
+    strcpy(fstab_name,msys_path);
+    strcat(fstab_name,"etc\\fstab");
+
+    // now scan /etc/fstab
+    fstab = fopen(fstab_name,"rb");
+
+    free(fstab_name);
+
+    if (fstab) {
+      char u[1024],d[1024];
+
+      while (nmounts < MAX_MOUNTS) {
+
+	c = fgetc(fstab);
+
+	if (c != '#') {
+	  while (c==' ' || c == '\t')
+	    c = fgetc(fstab);
+
+	  if (c != '\n') {
+	    ungetc(c,fstab);
+	    
+	    if (fscanf (fstab,"%1024s %1024s",d,u) == 2) {
+	      unix[nmounts] = strdup(u);
+	      dos[nmounts] = strdup(d);
+	      ++nmounts;
+	    }
+	    else
+	      break;
+	    while (c==' ' || c == '\t')
+	      c = fgetc(fstab);
+	    
+	  }
+	}
+	else {
+	  while (c != EOF && c != '\n')
+	    c = fgetc(fstab);
+	}
+      
+	if (c!= '\n') break;
+      }
+
+      fclose(fstab);
+    }
+  }
+
+  // drive mounts.
+  for (c = 'A'; c <= 'Z'; c++) {
+    unix[nmounts] = (char *)malloc(4);
+    sprintf(unix[nmounts], "/%c/", c);
+    dos[nmounts] = (char *)malloc(4);
+    sprintf(dos[nmounts], "%c:/", c);
+    index[nmounts] = nmounts;
+    nmounts++;
+  }
+
+  for (c = 'a'; c <= 'z'; c++) {
+    unix[nmounts] = (char *)malloc(4);
+    sprintf(unix[nmounts], "/%c/", c);
+    dos[nmounts] = (char *)malloc(4);
+    sprintf(dos[nmounts], "%c:/", c);
+    index[nmounts] = nmounts;
+    nmounts++;
+  }
+
+}
+
+#else
 void GetGnuwin32Mounts(void)
 {
   HKEY hkey;
@@ -261,6 +388,7 @@ GetCygwinMounts()
     }
     return 1;
 }
+#endif
 
 int
 longest_first (const void *pi, const void *pj)
@@ -278,4 +406,10 @@ SortMounts()
     for (i = 0; i < nmounts; i++)
 	index[i] = i;
     qsort (index, nmounts, sizeof(int), longest_first);
+
+#ifdef DEBUG_MOUNTS
+    for (i = 0; i < nmounts; i++)
+      printf("SortMounts: i,unix,dos = %d,%s,%s.\n",
+	      i,unix[index[i]],dos[index[i]]);
+#endif
 }

@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.5.2.2  2005/01/06 23:08:07  dgrisby
+ Big merge from omni4_0_develop.
+
  Revision 1.5.2.1  2003/03/23 21:04:22  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -101,10 +104,17 @@
 // Macro to provide const_cast functionality on all platforms.
 //
 #ifdef HAS_Cplusplus_const_cast
-  #define OMNI_CONST_CAST(_t, _v) const_cast<_t>(_v)
+#  define OMNI_CONST_CAST(_t, _v) const_cast<_t>(_v)
 #else
-  #define OMNI_CONST_CAST(_t, _v) (_t)(_v)
+#  define OMNI_CONST_CAST(_t, _v) (_t)(_v)
 #endif
+
+#ifdef HAS_Cplusplus_reinterpret_cast
+#  define OMNI_REINTERPRET_CAST(_t, _v) reinterpret_cast<_t const&>(_v)
+#else
+#  define OMNI_REINTERPRET_CAST(_t, _v) (*(_t*)(&_v))
+#endif
+
 
 #if defined(__GNUG__)
 // GNU G++ compiler
@@ -188,6 +198,13 @@
 
 #  define NEED_DUMMY_RETURN
 
+// VC.NET 2003 (v. 7.1) has problems recognizing inline friend
+// operators.
+
+#  if (_MSC_VER == 1310)
+#    define OMNI_NO_INLINE_FRIENDS
+#  endif
+
 //
 // _OMNIORB_LIBRARY         is defined when the omniORB library is compiled.
 // _OMNIORB_DYNAMIC_LIBRARY is defined when the dynamic library is compiled.
@@ -236,6 +253,14 @@
 #    define _OMNIORB_NTDLL_IMPORT
 #  else
 #    define _OMNIORB_NTDLL_IMPORT  __declspec(dllimport)
+#  endif
+
+#elif defined(__MINGW32__)
+
+#  ifdef _WINSTATIC
+#    define _OMNIORB_NTDLL_IMPORT
+#  else
+#    define _OMNIORB_NTDLL_IMPORT  __attribute__((dllimport))
 #  endif
 
 #else

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:15  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:02:16  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -243,6 +246,11 @@ giopTransportImpl::giopTransportImpl(const char* t) : type(t), next(0) {
 
 ////////////////////////////////////////////////////////////////////////
 giopTransportImpl::~giopTransportImpl() {
+
+  giopTransportImpl** pp = &implHead();
+  while (*pp && *pp != this) pp = &((*pp)->next);
+
+  if (*pp == this) *pp = this->next;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -290,7 +298,14 @@ giopTransportImpl::initialise() {
 ////////////////////////////////////////////////////////////////////////////
 //             Configuration options                                      //
 ////////////////////////////////////////////////////////////////////////////
-CORBA::String_var orbParameters::unixTransportDirectory((const char*)"/tmp/omni-%u");
+#ifdef __HP_aCC
+CORBA::String_var orbParameters::unixTransportDirectory =
+                                                (const char*)"/tmp/omni-%u";
+#else
+CORBA::String_var orbParameters::unixTransportDirectory(
+		                                (const char*)"/tmp/omni-%u");
+#endif
+
 //  Applies to the server side. Determine the directory in which
 //  the unix domain socket is to be created.
 //
@@ -406,7 +421,7 @@ public:
 #ifdef __ETS_KERNEL__
     versionReq = MAKEWORD(1, 1);  // ETS kernel only supports 1.1
 #else
-    versionReq = MAKEWORD(2, 0);  // Must use 2.2 in order to use
+    versionReq = MAKEWORD(2, 0);  // Must use 2.0 in order to use
                                   // SIO_ADDRESS_LIST_QUERY
 #endif
 

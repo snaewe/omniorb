@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.4.2.2  2005/01/06 23:08:22  dgrisby
+ Big merge from omni4_0_develop.
+
  Revision 1.4.2.1  2003/03/23 21:04:01  dgrisby
  Start of omniORB 4.1.x development branch.
 
@@ -211,14 +214,14 @@ public:
 #endif
 
   inline char& operator[] (_CORBA_ULong index_) {
-    if (!_data || (_CORBA_ULong)strlen(_data) < index_) {
+    if (!_data) {
       _CORBA_bound_check_error();	// never return
     }
     return _data[index_];
   }
 
   inline char operator[] (_CORBA_ULong index_) const {
-    if (!_data || (_CORBA_ULong)strlen(_data) < index_) {
+    if (!_data) {
       _CORBA_bound_check_error();	// never return
     }
     return _data[index_];
@@ -311,14 +314,14 @@ public:
   inline _CORBA_String_member& operator=(const _CORBA_String_element& s);
 
   inline char& operator[] (_CORBA_ULong index_) {
-    if (!_ptr || (_CORBA_ULong)strlen(_ptr) < index_) {
+    if (!_ptr) {
       _CORBA_bound_check_error();	// never return
     }
     return _ptr[index_];
   }
 
   inline char operator[] (_CORBA_ULong index_) const {
-    if (!_ptr || (_CORBA_ULong)strlen(_ptr) < index_) {
+    if (!_ptr) {
       _CORBA_bound_check_error();	// never return
     }
     return _ptr[index_];
@@ -397,7 +400,7 @@ public:
       if (s.pd_data && s.pd_data != _CORBA_String_helper::empty_string)
 	pd_data = _CORBA_String_helper::dup(s.pd_data);
       else {
-	pd_data = OMNI_CONST_CAST(char*, s.pd_data);
+	pd_data = OMNI_CONST_CAST(char*, (const char*)s.pd_data);
       }
     }
     return *this;
@@ -426,14 +429,14 @@ public:
   }
 
   inline char& operator[] (_CORBA_ULong index_) {
-    if (!((char*)pd_data) || (_CORBA_ULong)strlen(pd_data) < index_) {
+    if (!((char*)pd_data)) {
       _CORBA_bound_check_error();	// never return
     }
     return pd_data[index_];
   }
 
   inline char operator[] (_CORBA_ULong index_) const {
-    if (!((char*)pd_data) || (_CORBA_ULong)strlen(pd_data) < index_) {
+    if (!((char*)pd_data)) {
       _CORBA_bound_check_error();	// never return
     }
     return pd_data[index_];
@@ -644,9 +647,9 @@ public:
   }
 
 #if SIZEOF_PTR == SIZEOF_LONG
-  typedef long ptr_arith_t;
+  typedef unsigned long ptr_arith_t;
 #elif SIZEOF_PTR == SIZEOF_INT
-  typedef int ptr_arith_t;
+  typedef unsigned int ptr_arith_t;
 #else
 #error "No suitable type to do pointer arithmetic"
 #endif

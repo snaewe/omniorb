@@ -117,7 +117,7 @@ $(shlib): $(OBJS) $(PYOBJS)
 else
 #### ugly AIX section end, normal build command
 $(shlib): $(OBJS) $(PYOBJS)
-	@(namespec="$(namespec)"; $(MakeCXXSharedLibrary))
+	@(namespec="$(namespec)"; extralibs="$(extralibs)"; $(MakeCXXSharedLibrary))
 endif
 
 all:: $(shlib)
@@ -139,6 +139,15 @@ clean::
 veryclean::
 	$(RM) *.o
 	(dir=.; $(CleanSharedLibrary))
+
+ifdef Cygwin
+
+SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-soname=$$soname,--export-dynamic,--enable-auto-import
+
+extralibs += -L$(PYPREFIX)/lib/python$(PYVERSION)/config \
+ -lpython$(PYVERSION).dll
+
+endif
 
 else
 
@@ -246,17 +255,26 @@ ifdef Win32Platform
 
 DIR_CPPFLAGS += -DMSDOS -DOMNIIDL_EXECUTABLE
 
+# A Python Windows source tree has PC/pyconfig.h and PCbuild/*.lib
+# We specify all directories for both a source and binary tree -
+# the others just wont be used.
 PYPREFIX1 := "$(shell $(PYTHON) -c 'import sys,string; sys.stdout.write(string.lower(sys.prefix))')"
 PYPREFIX  := $(subst program files,progra~1,$(subst \,/,$(PYPREFIX1)))
 PYVERSION := $(shell $(PYTHON) -c 'import sys; sys.stdout.write(sys.version[:3])')
 PYINCDIR  := $(PYPREFIX)/include
-PYLIBDIR  := $(PYPREFIX)/libs $(PYPREFIX)/lib/x86_win32
-PYLIB     := python$(subst .,,$(PYVERSION)).lib
+PYLIBDIR  := $(PYPREFIX)/libs $(PYPREFIX)/lib/x86_win32 $(PYPREFIX)/PCbuild
 
-DIR_CPPFLAGS += -I$(PYINCDIR) -I$(PYINCDIR)/python$(PYVERSION) \
+DIR_CPPFLAGS += -I$(PYINCDIR) -I$(PYPREFIX)/PC \
+                -I$(PYINCDIR)/python$(PYVERSION) \
                 -DPYTHON_INCLUDE="<Python.h>"
 
+ifdef MinGW32Build
+PYLIB     := -lpython$(subst .,,$(PYVERSION))
+CXXLINKOPTIONS += $(patsubst %,-L%,$(PYLIBDIR))
+else
+PYLIB     := python$(subst .,,$(PYVERSION)).lib
 CXXLINKOPTIONS += $(patsubst %,-libpath:%,$(PYLIBDIR))
+endif
 
 omniidl = $(patsubst %,$(BinPattern),omniidl)
 

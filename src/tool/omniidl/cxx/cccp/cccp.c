@@ -502,6 +502,8 @@ static struct file_buf {
   char *fname;
   /* Filename specified with #line directive.  */
   char *nominal_fname;
+  /* omni: Filename of #included file */
+  char *include_fname;
   /* Include file description.  */
   struct include_file *inc;
   /* Record where in the search path this file was found.
@@ -661,6 +663,8 @@ struct include_file {
   struct include_file *next; /* for include_hashtab */
   struct include_file *next_ino; /* for include_ino_hashtab */
   char *fname;
+  /* omni: original #included name */
+  char *include_fname;
   /* If the following is the empty string, it means #pragma once
      was seen in this include file, or #import was applied to the file.
      Otherwise, if it is nonzero, it is a macro name.
@@ -1101,7 +1105,7 @@ static size_t simplify_filename PROTO((char *));
 
 static char *read_filename_string PROTO((int, FILE *));
 static struct file_name_map *read_name_map PROTO((char *));
-static int open_include_file PROTO((char *, struct file_name_list *, U_CHAR *, struct include_file **));
+static int open_include_file PROTO((char *, char *, struct file_name_list *, U_CHAR *, struct include_file **));
 static char *remap_include_file PROTO((char *, struct file_name_list *));
 static int lookup_ino_include PROTO((struct include_file *));
 
@@ -1804,7 +1808,7 @@ main (argc, argv)
   fp = &instack[++indepth];
   if (in_fname == NULL)
     in_fname = "";
-  fp->nominal_fname = fp->fname = in_fname;
+  fp->nominal_fname = fp->fname = fp->include_fname = in_fname;
   fp->lineno = 0;
 
   /* In C++, wchar_t is a distinct basic type, and we can expect
@@ -2150,7 +2154,8 @@ main (argc, argv)
   for (i = 1; i < argc; i++)
     if (pend_files[i]) {
       struct include_file *inc;
-      int fd = open_include_file (pend_files[i], NULL_PTR, NULL_PTR, &inc);
+      int fd = open_include_file (pend_files[i], NULL_PTR,
+				  NULL_PTR, NULL_PTR, &inc);
       if (fd < 0) {
 	perror_with_name (pend_files[i]);
 	return FATAL_EXIT_CODE;
@@ -2171,7 +2176,7 @@ main (argc, argv)
 
   if (fstat (f, &st) != 0)
     pfatal_with_name (in_fname);
-  fp->nominal_fname = fp->fname = in_fname;
+  fp->nominal_fname = fp->fname = fp->include_fname = in_fname;
   fp->lineno = 1;
   fp->system_header_p = 0;
   /* JF all this is mine about reading pipes and ttys */
@@ -2238,7 +2243,7 @@ main (argc, argv)
   for (i = 1; i < argc; i++)
     if (pend_includes[i]) {
       struct include_file *inc;
-      int fd = open_include_file (pend_includes[i], NULL_PTR, NULL_PTR, &inc);
+      int fd = open_include_file (pend_includes[i], NULL_PTR, NULL_PTR, NULL_PTR, &inc);
       if (fd < 0) {
 	perror_with_name (pend_includes[i]);
 	return FATAL_EXIT_CODE;
@@ -3573,6 +3578,7 @@ expand_to_temp_buffer (buf, limit, output_marks, assertions)
   ip = &instack[indepth];
   ip->fname = 0;
   ip->nominal_fname = 0;
+  ip->include_fname = 0;
   ip->inc = 0;
   ip->system_header_p = 0;
   ip->macro = 0;
@@ -4443,7 +4449,7 @@ get_filename:
 
   if (absolute_filename (fbeg)) {
     strcpy (fname, fbeg);
-    f = open_include_file (fname, NULL_PTR, importing, &inc);
+    f = open_include_file (fname, NULL_PTR, NULL_PTR, importing, &inc);
   } else {
 
     struct bypass_dir {
@@ -4488,7 +4494,7 @@ get_filename:
 	}
       }
 #endif /* VMS */
-      f = open_include_file (fname, searchptr, importing, &inc);
+      f = open_include_file (fname, fbeg, searchptr, importing, &inc);
       if (f != -1) {
 	if (bypass_slot && searchptr != first_bracket_include) {
 	  /* This is the first time we found this include file,
@@ -4898,8 +4904,9 @@ read_name_map (dirname)
    read_name_map.  */
 
 static int
-open_include_file (filename, searchptr, importing, pinc)
+open_include_file (filename, include_filename, searchptr, importing, pinc)
      char *filename;
+     char *include_filename;
      struct file_name_list *searchptr;
      U_CHAR *importing;
      struct include_file **pinc;
@@ -4930,6 +4937,14 @@ open_include_file (filename, searchptr, importing, pinc)
       inc = (struct include_file *) xmalloc (sizeof (struct include_file));
       inc->next = head;
       inc->fname = fname;
+
+      if (include_filename) {
+	inc->include_fname = (char*)xmalloc(strlen(include_filename) + 1);
+	strcpy(inc->include_fname, include_filename);
+      }
+      else
+	inc->include_fname = fname;
+
       inc->control_macro = 0;
       inc->deps_output = 0;
       if (fstat (fd, &inc->st) != 0)
@@ -5060,6 +5075,7 @@ finclude (f, inc, op, system_header_p, dirptr)
   fp = &instack[indepth + 1];
   bzero ((char *) fp, sizeof (FILE_BUF));
   fp->nominal_fname = fp->fname = fname;
+  fp->include_fname = inc->include_fname;
   fp->inc = inc;
   fp->length = 0;
   fp->lineno = 1;
@@ -7894,14 +7910,16 @@ output_line_directive (ip, op, conditional, file_change)
     ip->bufp++;
   }
 
-  line_directive_buf = (char *) alloca (4 * strlen (ip->nominal_fname) + 100);
+  line_directive_buf = (char *) alloca (4 * strlen (ip->include_fname) + 100);
   sprintf (line_directive_buf, "# %d ", ip->lineno);
   line_end = quote_string (line_directive_buf + strlen (line_directive_buf),
-			   ip->nominal_fname);
+			   ip->include_fname);
   if (file_change != same_file) {
     *line_end++ = ' ';
     *line_end++ = file_change == enter_file ? '1' : '2';
   }
+  /* omni: suppress extra info */
+#if 0
   /* Tell cc1 if following text comes from a system header file.  */
   if (ip->system_header_p) {
     *line_end++ = ' ';
@@ -7913,6 +7931,7 @@ output_line_directive (ip, op, conditional, file_change)
     *line_end++ = ' ';
     *line_end++ = '4';
   }
+#endif
 #endif
   *line_end++ = '\n';
   len = line_end - line_directive_buf;
@@ -8323,6 +8342,7 @@ macroexpand (hp, op)
 
     ip2->fname = 0;
     ip2->nominal_fname = 0;
+    ip2->include_fname = 0;
     ip2->inc = 0;
     /* This may not be exactly correct, but will give much better error
        messages for nested macro calls than using a line number of zero.  */
@@ -9686,7 +9706,7 @@ make_definition (str, op)
   }
   
   ip = &instack[++indepth];
-  ip->nominal_fname = ip->fname = "*Initialization*";
+  ip->nominal_fname = ip->fname = ip->include_fname = "*Initialization*";
 
   ip->buf = ip->bufp = buf;
   ip->length = strlen ((char *) buf);
@@ -9715,7 +9735,7 @@ make_undef (str, op)
   struct directive *kt;
 
   ip = &instack[++indepth];
-  ip->nominal_fname = ip->fname = "*undef*";
+  ip->nominal_fname = ip->fname = ip->include_fname = "*undef*";
 
   ip->buf = ip->bufp = (U_CHAR *) str;
   ip->length = strlen (str);
@@ -9771,7 +9791,7 @@ make_assertion (option, str)
   }
   
   ip = &instack[++indepth];
-  ip->nominal_fname = ip->fname = "*Initialization*";
+  ip->nominal_fname = ip->fname = ip->include_fname = "*Initialization*";
 
   ip->buf = ip->bufp = buf;
   ip->length = strlen ((char *) buf);

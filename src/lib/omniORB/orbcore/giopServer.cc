@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25.2.2  2005/01/06 23:10:27  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.25.2.1  2003/03/23 21:02:15  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -485,8 +488,10 @@ giopServer::deactivate()
     Link* p = pd_rendezvousers.next;
     if (p != &pd_rendezvousers) waitforcompletion = 1;
 
-    for (; p != &pd_rendezvousers; p = p->next) {
-      ((giopRendezvouser*)p)->terminate();
+    if (!pd_nconnections) {
+      for (; p != &pd_rendezvousers; p = p->next) {
+        ((giopRendezvouser*)p)->terminate();
+      }
     }
   }
 
@@ -732,6 +737,22 @@ giopServer::notifyRzNewConnection(giopRendezvouser* r, giopConnection* conn)
 	conn->pd_n_workers++;
       }
       else {
+	if (!conn->isSelectable()) {
+	  if (omniORB::trace(20)) {
+	    omniORB::logger log;
+	    log << "Connection from " << conn->peeraddress()
+		<< " is not selectable. Closing it.\n";
+	  }
+	  {
+	    omni_tracedmutex_lock sync(*omniTransportLock);
+	    cs->strand->safeDelete();
+	  }
+	  csRemove(conn);
+	  pd_lock.unlock();
+	  delete cs;
+	  pd_lock.lock();
+	  throw outOfResource();
+	}
 	pd_lock.unlock();
 	conn->setSelectable(1);
 	pd_lock.lock();
@@ -781,9 +802,8 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
   }
 
   if (pd_state == INFLUX) {
-    if (Link::is_empty(pd_rendezvousers) &&
-	pd_nconnections == 0             &&
-	Link::is_empty(pd_bidir_monitors)   ) {
+    if ((Link::is_empty(pd_rendezvousers) || pd_nconnections == 0) &&
+	Link::is_empty(pd_bidir_monitors)) {
       pd_cond.broadcast();
     }
   }
@@ -851,7 +871,7 @@ giopServer::removeConnectionAndWorker(giopWorker* w)
     giopConnection* conn = w->strand()->connection;
 
     conn->pd_dying = 1; // From now on, the giopServer will not create
-    // any more workers to serve this connection.
+                        // any more workers to serve this connection.
 
     cs = csLocate(conn);
 
@@ -881,9 +901,8 @@ giopServer::removeConnectionAndWorker(giopWorker* w)
     }
 
     if (pd_state == INFLUX) {
-      if (Link::is_empty(pd_rendezvousers) &&
-	  pd_nconnections == 0             &&
-	  Link::is_empty(pd_bidir_monitors)   ) {
+      if ( ( Link::is_empty(pd_rendezvousers) || pd_nconnections == 0 ) &&
+	   Link::is_empty(pd_bidir_monitors ) ) {
 	pd_cond.broadcast();
       }
     }
@@ -934,6 +953,12 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 	  return 1;
 	}
       }
+      if (conn->pd_n_workers == 1 && conn->pd_dying) {
+	// Connection is dying. Go round again so this thread spots
+	// the condition.
+	omniORB::logs(25, "Last worker sees connection is dying.");
+	return 1;
+      }
       w->remove();
       delete w;
       conn->pd_n_workers--;
@@ -963,21 +988,11 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       if (conn->pd_n_workers > 1 ||
 	  pd_n_temporary_workers > orbParameters::maxServerThreadPoolSize) {
 
-	w->remove();
-	delete w;
-	conn->pd_n_workers--;
-	pd_n_temporary_workers--;
-
 	select_and_return = 1;
       }
     }
-    if (select_and_return) {
-      // Connection is selectable now
-      conn->setSelectable(1);
-      return 0;
-    }
 
-    if (orbParameters::threadPoolWatchConnection) {
+    if (orbParameters::threadPoolWatchConnection && !select_and_return) {
       // Call Peek(). This thread will be used for a short time to
       // monitor the connection. If the connection is available for
       // reading, the callback function peekCallBack is called. We can
@@ -991,24 +1006,43 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
 	return 1;
       }
     }
-    else {
-      // Connection is selectable now
-      conn->setSelectable(1);
-    }
+
+    // Connection is selectable now
+    conn->setSelectable(1);
 
     // Worker is no longer needed.
+    CORBA::Boolean dying = 0;
     {
       omni_tracedmutex_lock sync(pd_lock);
-      w->remove();
-      delete w;
-      conn->pd_n_workers--;
-      pd_n_temporary_workers--;
+
+      if (conn->pd_n_workers == 1) {
+	if (conn->pd_dying) {
+	  // Connection is dying. Go round again so this thread spots
+	  // the condition.
+	  omniORB::logs(25, "Last worker sees connection is dying.");
+	  dying = 1;
+	}
+	if (pd_state == INFLUX) {
+	  // In flux. Go around again.
+	  omniORB::logs(25, "Last worker sees server state in flux.");
+	  dying = 1;
+	}
+      }
+      if (!dying) {
+	w->remove();
+	delete w;
+	conn->pd_n_workers--;
+	pd_n_temporary_workers--;
+      }
     }
-    return 0;
+    return dying ? 1 : 0;
   }
-  // Never reach here
+#ifndef __DECCXX
+  // Never reach here (and the hp/compaq/dec compiler is smart enough
+  // to figure that out).
   OMNIORB_ASSERT(0);
   return 0;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1039,7 +1073,12 @@ giopServer::notifyWkPreUpCall(giopWorker* w, CORBA::Boolean data_in_buffer) {
 	omni_tracedmutex_lock sync(pd_lock);
 	conn->pd_dedicated_thread_in_upcall = 1;
       }
-      conn->setSelectable(0,data_in_buffer);
+      if (orbParameters::maxServerThreadPerConnection > 1) {
+	// If only one thread per connection is allowed, there is no
+	// need to setSelectable, since we won't be able to act on any
+	// interleaved calls that arrive.
+	conn->setSelectable(0,data_in_buffer);
+      }
     }
     else {
       // This is a temporary worker thread
@@ -1089,9 +1128,8 @@ giopServer::notifyMrDone(giopMonitor* m, CORBA::Boolean exit_on_error)
   m->remove();
   delete m;
   if (pd_state == INFLUX) {
-    if (Link::is_empty(pd_rendezvousers) &&
-	pd_nconnections == 0             &&
-	Link::is_empty(pd_bidir_monitors)   ) {
+    if ( ( Link::is_empty(pd_rendezvousers) || pd_nconnections == 0 ) &&
+	   Link::is_empty(pd_bidir_monitors ) ) {
       pd_cond.broadcast();
     }
   }

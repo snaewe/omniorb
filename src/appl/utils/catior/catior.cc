@@ -24,11 +24,19 @@
 //
 // Lists contents of an IOR.
 
-#include <iostream.h>
-#include <iomanip.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include <omniORB4/CORBA.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+#  include <iomanip>
+   using namespace std;
+#else
+#  include <iostream.h>
+#  include <iomanip.h>
+#endif
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
@@ -254,20 +262,25 @@ void
 print_tagged_components(IOP::MultipleComponentProfile& components)
 {
   CORBA::ULong total = components.length();
-  
+
   for (CORBA::ULong index=0; index < total; index++) {
-    CORBA::String_var content;
-    content = IOP::dumpComponent(components[index]);
-    char* p = content;
-    char* q;
-    do {
-      q = strchr(p,'\n');
-      if (q) {
-	*q++ = '\0';
-      }
-      cout << "            " << (const char*) p << endl;
-      p = q;
-    } while (q);
+    try {
+      CORBA::String_var content;
+      content = IOP::dumpComponent(components[index]);
+      char* p = content;
+      char* q;
+      do {
+	q = strchr(p,'\n');
+	if (q) {
+	  *q++ = '\0';
+	}
+	cout << "            " << (const char*) p << endl;
+	p = q;
+      } while (q);
+    }
+    catch (CORBA::MARSHAL& ex) {
+      cout << "            Broken component" << endl;
+    }
   }
 }
 
@@ -423,7 +436,7 @@ int main(int argc, char* argv[])
 	}
 	else {
 	  cout << "Unrecognised profile tag: 0x"
-	       << hex << (unsigned)(ior.profiles[count].tag)
+	       << hex << (unsigned)(ior.profiles[count].tag) << dec
 	       << endl;
 	}
       }

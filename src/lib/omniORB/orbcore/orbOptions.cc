@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:37  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:02:08  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -64,6 +67,7 @@
 #include <initialiser.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -346,7 +350,8 @@ orbOptions::sequenceString*
 orbOptions::dumpSpecified() const {
 
   sequenceString_var result(new sequenceString(pd_values.size()));
-  
+  result->length(pd_values.size());
+
   omnivector<HandlerValuePair*>::const_iterator i = pd_values.begin();
   omnivector<HandlerValuePair*>::const_iterator last = pd_values.end();
 
@@ -369,7 +374,7 @@ orbOptions::dumpCurrentSet() const {
 
   if (!pd_handlers_sorted) ((orbOptions*)this)->sortHandlers();
 
-  sequenceString_var result(new sequenceString(pd_handlers.size()));
+  sequenceString_var result(new sequenceString());
 
   omnivector<orbOptions::Handler*>::const_iterator i = pd_handlers.begin();
   omnivector<orbOptions::Handler*>::const_iterator last = pd_handlers.end();
@@ -378,7 +383,6 @@ orbOptions::dumpCurrentSet() const {
     (*i)->dump(result.inout());
   }
   return result._retn();
-  
 }
 
 
@@ -408,9 +412,9 @@ orbOptions::getBoolean(const char* value, CORBA::Boolean& result) {
 CORBA::Boolean
 orbOptions::getULong(const char* value, CORBA::ULong& result) {
 
-  long v;
-  v = strtol(value,0,10);
-  if (v == LONG_MIN || v == LONG_MAX || v < 0) return 0;
+  unsigned long v;
+  v = strtoul(value,0,10);
+  if (v == ULONG_MAX && errno == ERANGE) return 0;
   result = v;
   return 1;
 }
@@ -442,7 +446,7 @@ orbOptions::addKVULong(const char* key, CORBA::ULong value,
 
   l = strlen(key) + 16;
   kv = CORBA::string_alloc(l);
-  sprintf(kv,"%s = %lu",key,value);
+  sprintf(kv,"%s = %lu",key,(unsigned long)value);
 
   l = result.length();
   result.length(l+1);

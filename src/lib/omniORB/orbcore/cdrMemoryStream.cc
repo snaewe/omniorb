@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.3  2005/01/06 23:10:12  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.6.2  2004/07/31 23:47:11  dgrisby
   Properly set pd_clear_memory flag in all situations.
 
@@ -524,7 +527,7 @@ cdrEncapsulationStream::getOctetStream(CORBA::Octet*& databuffer,
   
   max = ((omni::ptr_arith_t) pd_outb_end - (omni::ptr_arith_t) begin);
   len = ((omni::ptr_arith_t) pd_outb_mkr - (omni::ptr_arith_t) begin);
-  if (begin == pd_bufp) {
+  if (begin == pd_bufp && pd_bufp != pd_inline_buffer) {
     databuffer = (CORBA::Octet*) pd_bufp;
     pd_readonly_and_external_buffer = 1;
   }

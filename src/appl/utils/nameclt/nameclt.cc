@@ -22,10 +22,17 @@
 //  USA.
 //
 
-#include <iostream.h>
+#include <string.h>
 #include <stdlib.h>
 #include <omniORB4/Naming.hh>
 #include <omniORB4/omniURI.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 OMNI_USING_NAMESPACE(omni)
 

@@ -7,7 +7,12 @@
 // Usage: eg2_clt <object reference>
 //
 
-#include <iostream.h>
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 #include <becho.hh>
 
 

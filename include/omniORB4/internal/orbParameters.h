@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/06 23:08:26  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.2  2003/11/06 11:56:55  dgrisby
   Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 
@@ -447,10 +450,14 @@ _CORBA_MODULE_VAR _core_attr CORBA::UShort unixTransportPermission;
 //  Valid values = unix permission mode bits in octal radix (e.g. 0755)
 
 _CORBA_MODULE_VAR _core_attr CORBA::Boolean supportBootstrapAgent;
-//Applies to the server side. 1 means enable the support for Sun's
-//bootstrap agent protocol.  This enables interoperability between omniORB
-//servers and Sun's javaIDL clients. When this option is enabled, an
-//omniORB server will response to a bootstrap agent request.
+//  Applies to the server side. 1 means enable the support for Sun's
+//  bootstrap agent protocol.  This enables interoperability between omniORB
+//  servers and Sun's javaIDL clients. When this option is enabled, an
+//  omniORB server will response to a bootstrap agent request.
+
+_CORBA_MODULE_VAR _core_attr _CORBA_Unbounded_Sequence_Octet persistentId;
+//  Persistent identifier used to detect object references that should
+//  be considered to be in this process.
 
 _CORBA_MODULE_END
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.5  2005/01/06 23:08:10  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.5.2.4  2005/01/06 17:31:06  dgrisby
   Changes (mainly from omni4_0_develop) to compile on gcc 3.4.
 
@@ -271,9 +274,9 @@ _CORBA_MODULE_BEG
 
 
 #if SIZEOF_PTR == SIZEOF_LONG
-  typedef long ptr_arith_t;
+  typedef unsigned long ptr_arith_t;
 #elif SIZEOF_PTR == SIZEOF_INT
-  typedef int ptr_arith_t;
+  typedef unsigned int ptr_arith_t;
 #else
 #error "No suitable type to do pointer arithmetic"
 #endif
@@ -304,7 +307,7 @@ _CORBA_MODULE_BEG
 
   _CORBA_MODULE_FN inline ptr_arith_t align_to(ptr_arith_t p,
 					       alignment_t align) {
-    return (p + ((int) align - 1)) & ~((int) align - 1);
+    return (p + ((ptr_arith_t) align - 1)) & ~((ptr_arith_t) align - 1);
   }
 
   _CORBA_MODULE_FN _CORBA_ULong hash(const _CORBA_Octet* key, int keysize);

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:33  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:02:12  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -52,12 +55,12 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define DeclareLookupEntry(name, value) { name, #name }
 
 minorCodeLookup UNKNOWN_LookupTable[] = {
-  DECLARE_UNKNOWN_minors(DeclareLookupEntry,COMMA),
+  DECLARE_UNKNOWN_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup BAD_PARAM_LookupTable[] = {
-  DECLARE_BAD_PARAM_minors(DeclareLookupEntry,COMMA),
+  DECLARE_BAD_PARAM_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
@@ -66,17 +69,17 @@ minorCodeLookup NO_MEMORY_LookupTable[] = {
 };
 
 minorCodeLookup IMP_LIMIT_LookupTable[] = {
-  DECLARE_IMP_LIMIT_minors(DeclareLookupEntry,COMMA),
+  DECLARE_IMP_LIMIT_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup COMM_FAILURE_LookupTable[] = {
-  DECLARE_COMM_FAILURE_minors(DeclareLookupEntry,COMMA),
+  DECLARE_COMM_FAILURE_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup INV_OBJREF_LookupTable[] = {
-  DECLARE_INV_OBJREF_minors(DeclareLookupEntry,COMMA),
+  DECLARE_INV_OBJREF_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
@@ -89,32 +92,32 @@ minorCodeLookup INTERNAL_LookupTable[] = {
 };
 
 minorCodeLookup MARSHAL_LookupTable[] = {
-  DECLARE_MARSHAL_minors(DeclareLookupEntry,COMMA),
+  DECLARE_MARSHAL_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup INITIALIZE_LookupTable[] = {
-  DECLARE_INITIALIZE_minors(DeclareLookupEntry,COMMA),
+  DECLARE_INITIALIZE_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 }   
 };
 
 minorCodeLookup NO_IMPLEMENT_LookupTable[] = {
-  DECLARE_NO_IMPLEMENT_minors(DeclareLookupEntry,COMMA),
+  DECLARE_NO_IMPLEMENT_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup BAD_TYPECODE_LookupTable[] = {
-  DECLARE_BAD_TYPECODE_minors(DeclareLookupEntry,COMMA),
+  DECLARE_BAD_TYPECODE_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 }
 };
 
 minorCodeLookup BAD_OPERATION_LookupTable[] = { 
-  DECLARE_BAD_OPERATION_minors(DeclareLookupEntry,COMMA),
+  DECLARE_BAD_OPERATION_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup NO_RESOURCES_LookupTable[] = { 
-  DECLARE_NO_RESOURCES_minors(DeclareLookupEntry,COMMA),
+  DECLARE_NO_RESOURCES_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
@@ -127,12 +130,12 @@ minorCodeLookup PERSIST_STORE_LookupTable[] = {
 };
 
 minorCodeLookup BAD_INV_ORDER_LookupTable[] = {
-  DECLARE_BAD_INV_ORDER_minors(DeclareLookupEntry,COMMA),
+  DECLARE_BAD_INV_ORDER_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup TRANSIENT_LookupTable[] = {
-  DECLARE_TRANSIENT_minors(DeclareLookupEntry,COMMA),
+  DECLARE_TRANSIENT_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
@@ -150,27 +153,27 @@ minorCodeLookup INV_FLAG_LookupTable[] = {
 };
 
 minorCodeLookup INTF_REPOS_LookupTable[] = { 
-  DECLARE_INTF_REPOS_minors(DeclareLookupEntry,COMMA),
+  DECLARE_INTF_REPOS_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup BAD_CONTEXT_LookupTable[] = { 
-  DECLARE_BAD_CONTEXT_minors(DeclareLookupEntry,COMMA),
+  DECLARE_BAD_CONTEXT_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup OBJ_ADAPTER_LookupTable[] = {
-  DECLARE_OBJ_ADAPTER_minors(DeclareLookupEntry,COMMA),
+  DECLARE_OBJ_ADAPTER_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup DATA_CONVERSION_LookupTable[] = {
-  DECLARE_DATA_CONVERSION_minors(DeclareLookupEntry,COMMA),
+  DECLARE_DATA_CONVERSION_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
 minorCodeLookup OBJECT_NOT_EXIST_LookupTable[] = {
-  DECLARE_OBJECT_NOT_EXIST_minors(DeclareLookupEntry,COMMA),
+  DECLARE_OBJECT_NOT_EXIST_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 
@@ -187,12 +190,8 @@ minorCodeLookup INVALID_TRANSACTION_LookupTable[] = {
   { 0, 0 } 
 };
 
-minorCodeLookup WRONG_TRANSACTION_LookupTable[] = { 
-  { 0, 0 } 
-};
-
 minorCodeLookup INV_POLICY_LookupTable[] = { 
-  DECLARE_INV_POLICY_minors(DeclareLookupEntry,COMMA),
+  DECLARE_INV_POLICY_minors(DeclareLookupEntry,OMNI_COMMA),
   { 0, 0 } 
 };
 

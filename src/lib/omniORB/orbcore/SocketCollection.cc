@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:12  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:02:31  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -87,8 +90,18 @@
 
 #if defined(__vxWorks__)
 #  include "pipeDrv.h"
+#  include "selectLib.h"
 #  include "iostream.h"
 #endif
+
+#if defined(__VMS)
+#  include <stropts.h>
+#endif
+
+#if !defined(__WIN32__)
+#  define SELECTABLE_FD_LIMIT FD_SETSIZE
+#endif
+
 
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -121,21 +134,27 @@ SocketSetTimeOut(unsigned long abs_sec,
 /////////////////////////////////////////////////////////////////////////
 int
 SocketSetnonblocking(SocketHandle_t sock) {
-# if !defined(__WIN32__)
-  int fl = O_NONBLOCK;
-  if (fcntl(sock,F_SETFL,fl) == RC_SOCKET_ERROR) {
-    return RC_INVALID_SOCKET;
-  }
-  return 0;
-# elif defined(__vxWorks__)
+# if defined(__vxWorks__)
   int fl = TRUE;
   if (ioctl(sock, FIONBIO, (int)&fl) == ERROR) {
     return RC_INVALID_SOCKET;
   }
   return 0;
-# else
+# elif defined(__VMS)
+  int fl = 1;
+  if (ioctl(sock, FIONBIO, &fl) == RC_INVALID_SOCKET) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
+# elif defined(__WIN32__)
   u_long v = 1;
   if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
+# else
+  int fl = O_NONBLOCK;
+  if (fcntl(sock,F_SETFL,fl) == RC_SOCKET_ERROR) {
     return RC_INVALID_SOCKET;
   }
   return 0;
@@ -145,21 +164,46 @@ SocketSetnonblocking(SocketHandle_t sock) {
 /////////////////////////////////////////////////////////////////////////
 int
 SocketSetblocking(SocketHandle_t sock) {
-# if !defined(__WIN32__)
-  int fl = 0;
-  if (fcntl(sock,F_SETFL,fl) == RC_SOCKET_ERROR) {
-    return RC_INVALID_SOCKET;
-  }
-  return 0;
-# elif defined(__vxWorks__)
+# if defined(__vxWorks__)
   int fl = FALSE;
   if (ioctl(sock, FIONBIO, (int)&fl) == ERROR) {
     return RC_INVALID_SOCKET;
   }
   return 0;
-# else
+# elif defined(__VMS)
+  int fl = 0;
+  if (ioctl(sock, FIONBIO, &fl) == RC_INVALID_SOCKET) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
+# elif defined(__WIN32__)
   u_long v = 0;
   if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
+# else
+  int fl = 0;
+  if (fcntl(sock,F_SETFL,fl) == RC_SOCKET_ERROR) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
+# endif
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+int
+SocketSetCloseOnExec(SocketHandle_t sock) {
+# if defined(__vxWorks__) || defined(__ETS_KERNEL__)
+  // Not supported on vxWorks or ETS
+  return 0;
+# elif defined(__WIN32__)
+  SetHandleInformation((HANDLE)sock, HANDLE_FLAG_INHERIT, 0);
+  return 0;
+# else
+  int fl = FD_CLOEXEC;
+  if (fcntl(sock,F_SETFD,fl) == RC_SOCKET_ERROR) {
     return RC_INVALID_SOCKET;
   }
   return 0;
@@ -231,8 +275,8 @@ SocketCollection::~SocketCollection()
 #  ifdef __vxWorks__
   // *** How do we clean up on vxWorks?
 #  else
-  close(pd_pipe_read);
-  close(pd_pipe_write);
+  if (pd_pipe_read > 0)  close(pd_pipe_read);
+  if (pd_pipe_write > 0) close(pd_pipe_write);
 #  endif
 #endif
 }
@@ -244,6 +288,11 @@ SocketCollection::setSelectable(SocketHandle_t sock,
 				CORBA::Boolean now,
 				CORBA::Boolean data_in_buffer,
 				CORBA::Boolean hold_lock) {
+
+#ifdef SELECTABLE_FD_LIMIT
+  if (sock >= SELECTABLE_FD_LIMIT)
+    return;
+#endif
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_fdset_lock, hold_lock);
 
@@ -282,7 +331,13 @@ SocketCollection::setSelectable(SocketHandle_t sock,
 
 /////////////////////////////////////////////////////////////////////////
 void
-SocketCollection::clearSelectable(SocketHandle_t sock) {
+SocketCollection::clearSelectable(SocketHandle_t sock)
+{
+
+#ifdef SELECTABLE_FD_LIMIT
+  if (sock >= SELECTABLE_FD_LIMIT)
+    return;
+#endif
 
   omni_tracedmutex_lock sync(pd_fdset_lock);
 
@@ -299,6 +354,18 @@ SocketCollection::clearSelectable(SocketHandle_t sock) {
     FD_CLR(sock,&pd_fdset_dib);
   }
 }
+
+/////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+SocketCollection::isSelectable(SocketHandle_t sock)
+{
+#ifdef SELECTABLE_FD_LIMIT
+  return sock < SELECTABLE_FD_LIMIT;
+#else
+  return 1;
+#endif
+}
+
 
 #ifdef GDB_DEBUG
 
@@ -344,6 +411,9 @@ SocketCollection::Select() {
 
   int maxfd = 0;
   int fd = 0;
+
+#ifndef __WIN32__
+  // Win32 ignores the first argument to select()
   while (total) {
     if (FD_ISSET(fd,&rfds)) {
       maxfd = fd;
@@ -351,6 +421,9 @@ SocketCollection::Select() {
     }
     fd++;
   }
+#else
+  fd = total;
+#endif
 
   int nready;
 
@@ -590,7 +663,7 @@ SocketCollection::removeSocket(SocketHandle_t sock)
 /////////////////////////////////////////////////////////////////////////
 SocketLink*
 SocketCollection::findSocket(SocketHandle_t sock,
-				CORBA::Boolean hold_lock) {
+			     CORBA::Boolean hold_lock) {
 
   if (!hold_lock) pd_fdset_lock.lock();
 

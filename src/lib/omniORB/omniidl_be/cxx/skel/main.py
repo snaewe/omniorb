@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.7  2005/01/06 23:10:07  dgrisby
+# Big merge from omni4_0_develop.
+#
 # Revision 1.32.2.6  2005/01/06 16:35:18  dgrisby
 # Narrowing for abstract interfaces.
 #
@@ -391,33 +394,7 @@ def visitTypedef(node):
 
         fq_derived = scopedName.fullyQualify()
 
-        if is_global_scope and is_array_declarator:
-            # build _dup and _copy loops
-            dup_loop = output.StringStream()
-            loop = cxx.For(dup_loop, full_dims)
-            index = loop.index()
-            dup_loop.out("_data" + index + " = _s" + index + ";")
-            loop.end()
-
-            copy_loop = output.StringStream()
-            loop = cxx.For(copy_loop, full_dims)
-            index = loop.index()
-            copy_loop.out("_to" + index + " = _from" + index + ";")
-            loop.end()
-
-            stream.out(template.typedef_global_array_declarator,
-                       fq_derived = fq_derived,
-                       decl_dims_str = decl_dims_str,
-                       decl_first_dim_str = decl_first_dim_str,
-                       dup_loop = str(dup_loop),
-                       copy_loop = str(copy_loop))
-
-        elif is_global_scope and is_array:
-            stream.out(template.typedef_global_simple_array,
-                       fq_derived = fq_derived,
-                       fq_aliased = fq_aliased)
-
-        elif d_type.sequence():
+        if d_type.sequence() and not aliasType.typedef():
             seqType = types.Type(d_type.type().seqType())
             d_seqType = seqType.deref()
             if d_seqType.structforward() or d_seqType.unionforward():
@@ -438,7 +415,6 @@ def visitTypedef(node):
 
                 stream.out(template.sequence_forward_defns,
                            fqname=fqname, name=name, element=element)
-                
 
 def visitEnum(node):
     return
@@ -540,7 +516,11 @@ def visitUnion(node):
         decl = c.declarator()
         decl_scopedName = id.Name(decl.scopedName())
         decl_name = decl_scopedName.simple()
-        isDefault = defaultCase == c
+
+        if defaultCase == c:
+            isDefault = 1
+        else:
+            isDefault = 0
         
         for l in c.labels():
             value = l.value()
@@ -549,24 +529,27 @@ def visitUnion(node):
                 unmarshal_cases.out("default:")
             else:
                 unmarshal_cases.out("case " + discrim_value + ":")
-
                 marshal_cases.out("case " + discrim_value + ":")
+
                 marshal_cases.inc_indent()
                 skutil.marshall(marshal_cases, environment,
                                 caseType, decl, "_pd_" + decl_name, "_n")
-                marshal_cases.dec_indent()
                 marshal_cases.out("break;")
+                marshal_cases.dec_indent()
 
             unmarshal_cases.inc_indent()
             unmarshal_cases.out("_pd__default = " + str(isDefault) + ";")
             skutil.unmarshall(unmarshal_cases, environment,
                               caseType, decl, "_pd_" + decl_name, "_n")
-            unmarshal_cases.dec_indent()
             unmarshal_cases.out("break;")
+            unmarshal_cases.dec_indent()
 
     if not hasDefault and not exhaustive:
-        unmarshal_cases.out("default: _pd__default = 1; break;")
-        
+        unmarshal_cases.out("""\
+default:
+  _pd__default = 1;
+  break;""")
+
             
     if booleanWrap:
         marshal_cases.out(template.union_default_bool)

@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.4.2  2005/01/06 23:10:12  dgrisby
+// Big merge from omni4_0_develop.
+//
 // Revision 1.1.4.1  2003/03/23 21:02:23  dgrisby
 // Start of omniORB 4.1.x development branch.
 //
@@ -164,7 +167,7 @@ CORBA::Fixed::Fixed(CORBA::ULongLong val) :
 CORBA::Fixed::Fixed(CORBA::Double val) :
   pd_idl_digits(0), pd_idl_scale(0)
 {
-  if (val > 1e32 || val < -1e32) {
+  if ((double)val > 1e32 || (double)val < -1e32) {
     // Too big
     OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_RangeError,
 		  CORBA::COMPLETED_NO);
@@ -185,7 +188,7 @@ CORBA::Fixed::Fixed(CORBA::LongDouble val) :
   pd_idl_digits(0), pd_idl_scale(0)
 {
   if (val > 1e32 || val < -1e32) {
-    // Too big
+    // Too big / small
     OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_RangeError,
 		  CORBA::COMPLETED_NO);
   }
@@ -225,10 +228,16 @@ CORBA::Fixed::Fixed(const CORBA::Octet* val,
   OMNIORB_ASSERT(digits <= OMNI_FIXED_DIGITS);
   OMNIORB_ASSERT(scale  <= digits);
 
-  if (digits == 0) pd_negative = 0;
+  while (pd_digits > 0 && pd_scale > 0 && val[0] == 0) {
+    pd_digits--;
+    pd_scale--;
+    val++;
+  }
+
+  if (pd_digits == 0) pd_negative = 0;
 
   memcpy(pd_val, val, digits);
-  memset(pd_val + digits, 0, OMNI_FIXED_DIGITS - digits);
+  memset(pd_val + pd_digits, 0, OMNI_FIXED_DIGITS - pd_digits);
 }
 
 
@@ -310,7 +319,11 @@ CORBA::Fixed::operator CORBA::LongDouble() const
 
 CORBA::Fixed::operator CORBA::Double() const
 {
+#ifdef __VMS
+  double r = 0, s = 0;
+#else
   CORBA::Double r = 0, s = 0;
+#endif
   int i;
 
   // Digits before decimal point
@@ -343,20 +356,20 @@ CORBA::Fixed::round(CORBA::UShort scale) const
 
   if (pd_val[cut - 1] >= 5) {
     // Round up
-    CORBA::Octet work[OMNI_FIXED_DIGITS];
+    CORBA::Octet work[OMNI_FIXED_DIGITS + 1];
     memcpy(work, pd_val, OMNI_FIXED_DIGITS);
+    work[OMNI_FIXED_DIGITS] = 0;
 
     int i = cut;
-    for (i = cut; i < OMNI_FIXED_DIGITS; ++i) {
-      if (++work[cut] <= 9) break;
-      work[cut] = 0;
+    for (i = cut; i <= OMNI_FIXED_DIGITS; ++i) {
+      if (++work[i] <= 9) break;
+      work[i] = 0;
     }
-    if (i == OMNI_FIXED_DIGITS) {
-      // Overflow
-      OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_RangeError,
-		    CORBA::COMPLETED_NO);
-    }
-    return CORBA::Fixed(work + cut, pd_digits - cut, scale, pd_negative);
+    int new_digits = pd_digits - cut;
+    if (i >= pd_digits)
+      new_digits++;
+
+    return CORBA::Fixed(work + cut, new_digits, scale, pd_negative);
   }
   else
     return CORBA::Fixed(pd_val + cut, pd_digits - cut, scale, pd_negative);
@@ -686,8 +699,8 @@ absCmp(const CORBA::Fixed& a, const CORBA::Fixed& b)
     if (c) return c;
     --ai; --bi;
   }
-  if (ai > 0) return  1;
-  if (bi > 0) return -1;
+  if (ai >= 0) return  1;
+  if (bi >= 0) return -1;
   return 0;
 }
 
@@ -1020,7 +1033,7 @@ realDiv(const CORBA::Fixed& a, const CORBA::Fixed& b, CORBA::Boolean negative)
 
   // Skip an initial zero if we weren't expecting one
   if (unscale >= 0) {
-    while (work[wi] == 0) {
+    while (work[wi] == 0 && unscale > 0) {
       --wi; --unscale;
     }
   }

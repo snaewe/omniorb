@@ -5,16 +5,18 @@
 # Uncomment one of the following platform line to build for the target
 # platform
 #
+#  x86_nt_3.5                x86 Windows NT 3.5, MS VC++ 5.0
+#  x86_nt_4.0                x86 Windows NT 4.0, MS VC++ 5.0
+#  x86_nt_4.0_vs_7           x86 Windows NT 4.0 (or later), MS VC++ 7.x (.NET)
+#  x86_nt_4.0_mingw          x86 Windows NT 4.0 (or later), mingw/g++ build
+#  x86_win95                 Windows 95, MS VC++ 5.0
+#  x86_win32_dmc             x86 Win32, Digital Mars C++ (>= 8.32.14)
 #  sun4_sosV_5.5             Solaris 2.5, Sunpro C++/gcc
 #  sun4_sosV_5.6             Solaris 2.6, Sunpro C++/gcc
 #  sun4_sosV_5.7             Solaris 7, Sunpro C++/gcc
 #  i586_linux_2.0            x86 Redhat linux 4.2, gcc-2.7.2
 #  i586_linux_2.0_glibc      x86 Redhat linux 5.1,egcs-980302 or later snapshot
 #  i586_linux_2.0_glibc2.1   x86 Redhat linux 6, etc
-#  x86_nt_3.5                x86 Windows NT 3.5, MS VC++ 5.0
-#  x86_nt_4.0                x86 Windows NT 4.0, MS VC++ 5.0
-#  x86_win95                 Windows 95, MS VC++ 5.0
-#  x86_win32_dmc             x86 Win32, Digital Mars C++ (>= 8.32.14)
 #  alpha_nt_4.0              Alpha Windows NT 4.0, MS VC++ 5.0
 #  alpha_osf1_3.2            Digital Unix 3.2, DEC C++ v5.5
 #  alpha_osf1_4.0            Digital Unix 4.0, DEC C++ v6.0
@@ -46,16 +48,18 @@
 # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
 # edit the make variables, such as CC and CXX, in the file.
 
+#platform = x86_nt_4.0
+#platform = x86_nt_4.0_vs_7
+#platform = x86_nt_4.0_mingw
+#platform = x86_nt_3.5
+#platform = x86_win95
+#platform = x86_win32_dmc
 #platform = sun4_sosV_5.5
 #platform = sun4_sosV_5.6
 #platform = sun4_sosV_5.7
 #platform = i586_linux_2.0
 #platform = i586_linux_2.0_glibc
 #platform = i586_linux_2.0_glibc2.1
-#platform = x86_nt_3.5
-#platform = x86_nt_4.0
-#platform = x86_win95
-#platform = x86_win32_dmc
 #platform = alpha_nt_4.0
 #platform = alpha_osf1_3.2
 #platform = alpha_osf1_4.0
@@ -84,9 +88,11 @@
 #platform = x86_freebsd_4.0
 #platform = pc486_rtems_4.5.0
 
-# On Win32 platforms, uncomment the following line to build all the binaries
-# with debugging information. Useful if you want to debug the binaries under
-# MSVC developer's studio
+# This setting is used on Windows platforms to build debug versions of
+# the omniORB executables. It is not required if you want to debug
+# your own code, or for building debug versions of the omniORB
+# libraries. Setting this variable causes the build to break in subtle
+# ways. DO NOT SET THIS UNLESS YOU KNOW WHAT YOU ARE DOING.
 #
 #BuildDebugBinary = 1
 #

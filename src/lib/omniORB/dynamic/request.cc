@@ -43,6 +43,7 @@
 #include <exceptiondefs.h>
 #include <omniORB4/IOP_C.h>
 #include <orbParameters.h>
+#include <invoker.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -479,6 +480,7 @@ RequestImpl::send_deferred()
 
   pd_state = RS_DEFERRED;
   pd_deferredRequest = new DeferredRequest(this);
+  orbAsyncInvoker->insert(pd_deferredRequest);
 }
 
 

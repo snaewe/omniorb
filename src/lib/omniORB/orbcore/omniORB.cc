@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2005/01/06 23:10:37  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.4.2.1  2003/03/23 21:02:09  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -143,6 +146,10 @@ void
 omniORB::setClientCallTimeout(CORBA::Object_ptr obj, CORBA::ULong v)
 {
   omniObjRef* oo = obj->_PR_getobj();
+  if (!oo)
+    OMNIORB_THROW(INV_OBJREF, INV_OBJREF_InvokeOnNilObjRef,
+		  CORBA::COMPLETED_NO);
+
   oo->_setTimeout(v / 1000, (v % 1000) * 1000000);
 }
 

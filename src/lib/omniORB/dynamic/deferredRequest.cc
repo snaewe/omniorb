@@ -44,9 +44,7 @@ DeferredRequest::DeferredRequest(RequestImpl* request)
   pd_request = request;
   pd_ready = 0;
   pd_exception = 0;
-  orbAsyncInvoker->insert(this);
 }
-
 
 DeferredRequest::~DeferredRequest()
 {
@@ -90,8 +88,8 @@ DeferredRequest::execute()
   {
     omni_tracedmutex_lock lock(pd_readyMutex);
     pd_ready = 1;
+    pd_readyCondition.signal();
   }
-  pd_readyCondition.signal();
 }
 
 OMNI_NAMESPACE_END(omni)

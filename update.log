@@ -1,3 +1,304 @@
+Thu Jan  6 22:53:18 GMT 2005 dgrisby
+====================================
+
+- Big merge from omni4_0_develop.
+
+GNUmakefile.in
+README.FIRST				-- deleted
+README.FIRST.txt			-- new
+README.unix
+README.win32				-- deleted
+README.win32.txt			-- new
+acinclude.m4
+aclocal.m4
+configure
+configure.ac
+sample.cfg
+sample.reg
+bin/scripts/java_weatherman		-- deleted
+bin/scripts/makedeffile.py		-- new
+bin/scripts/obuildtree			-- deleted
+bin/scripts/ols				-- deleted
+bin/scripts/omake			-- deleted
+bin/scripts/omkdirhier
+bin/scripts/opriv			-- deleted
+bin/scripts/oshadow			-- deleted
+config/config.mk
+contrib/GNUmakefile.in			-- new
+contrib/RPMs/omniORB.spec		-- new
+contrib/pkgconfig/GNUmakefile.in	-- new
+contrib/pkgconfig/omniCOS4.pc.in	-- new
+contrib/pkgconfig/omniCOSDynamic4.pc.in	-- new
+contrib/pkgconfig/omniDynamic4.pc.in	-- new
+contrib/pkgconfig/omniORB4.pc.in	-- new
+contrib/pkgconfig/omnithread3.pc.in	-- new
+doc/omniORB/omniORB013.html		-- new
+doc/tex/omniORB.bib
+doc/tex/omniORB.tex
+etc/openvms.zip
+etc/init.d/omniNames.SuSE.in		-- new
+etc/init.d/omniNames.in			-- new
+idl/corbaidl.idl
+idl/ir.idl
+idl/poa_include.idl
+idl/COS/AttNotifyChannelAdmin.idl	-- deleted
+idl/COS/CosCollection.idl
+idl/COS/CosCompoundLifeCycle.idl
+idl/COS/CosConcurrencyControl.idl
+idl/COS/CosContainment.idl
+idl/COS/CosEventChannelAdmin.idl
+idl/COS/CosEventComm.idl
+idl/COS/CosExternalization.idl
+idl/COS/CosExternalizationContainment.idl
+idl/COS/CosExternalizationReference.idl
+idl/COS/CosGraphs.idl
+idl/COS/CosLicensingManager.idl
+idl/COS/CosLifeCycle.idl
+idl/COS/CosLifeCycleContainment.idl
+idl/COS/CosLifeCycleReference.idl
+idl/COS/CosNaming.idl
+idl/COS/CosNotification.idl
+idl/COS/CosNotifyChannelAdmin.idl
+idl/COS/CosNotifyComm.idl
+idl/COS/CosNotifyFilter.idl
+idl/COS/CosObjectIdentity.idl
+idl/COS/CosPersistenceDDO.idl
+idl/COS/CosPersistenceDS_CLI.idl
+idl/COS/CosPersistencePDS.idl
+idl/COS/CosPersistencePDS_DA.idl
+idl/COS/CosPersistencePID.idl
+idl/COS/CosPersistencePO.idl
+idl/COS/CosPersistencePOM.idl
+idl/COS/CosPropertyService.idl
+idl/COS/CosQuery.idl
+idl/COS/CosQueryCollection.idl
+idl/COS/CosReference.idl
+idl/COS/CosRelationships.idl
+idl/COS/CosStream.idl
+idl/COS/CosTSPortability.idl
+idl/COS/CosTime.idl
+idl/COS/CosTimerEvent.idl
+idl/COS/CosTrading.idl
+idl/COS/CosTradingDynamic.idl
+idl/COS/CosTradingRepos.idl
+idl/COS/CosTransactions.idl
+idl/COS/CosTypedEventChannelAdmin.idl
+idl/COS/CosTypedEventComm.idl
+idl/COS/CosTypedNotifyChannelAdmin.idl
+idl/COS/CosTypedNotifyComm.idl
+idl/COS/DCE_CIOPSecurity.idl
+idl/COS/GNUmakefile.in
+idl/COS/LifeCycleService.idl
+idl/COS/Lname-library.idl
+idl/COS/NRService.idl
+idl/COS/RDITestTypes.idl
+idl/COS/SECIOP.idl
+idl/COS/SSLIOP.idl
+idl/COS/Security.idl
+idl/COS/SecurityAdmin.idl
+idl/COS/SecurityLevel1.idl
+idl/COS/SecurityLevel2.idl
+idl/COS/SecurityReplaceable.idl
+idl/COS/TimeBase.idl
+include/omnithread.h
+include/omniORB4/CORBA_BOA.h
+include/omniORB4/CORBA_ORB.h
+include/omniORB4/CORBA_Policy.h
+include/omniORB4/CORBA_basetypes.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/CORBA_sysdep_auto.h
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/IOP.h
+include/omniORB4/acconfig.h.in
+include/omniORB4/cdrStream.h
+include/omniORB4/dynAny.h
+include/omniORB4/giopEndpoint.h
+include/omniORB4/minorCode.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniInternal.h
+include/omniORB4/omniORB.h
+include/omniORB4/poa.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/sslContext.h
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+include/omniORB4/internal/GIOP_S.h
+include/omniORB4/internal/SocketCollection.h
+include/omniORB4/internal/invoker.h
+include/omniORB4/internal/libcWrapper.h
+include/omniORB4/internal/objectTable.h
+include/omniORB4/internal/omniCurrent.h
+include/omniORB4/internal/orbOptions.h
+include/omniORB4/internal/orbParameters.h
+include/omniORB4/internal/rmutex.h
+include/omnithread/VxThread.h
+include/omnithread/nt.h
+include/omnithread/posix.h
+man/man1/obuildtree.1			-- deleted
+man/man1/ols.1				-- deleted
+man/man1/omake.1			-- deleted
+man/man1/opriv.1			-- deleted
+man/man1/oshadow.1			-- deleted
+mk/beforeauto.mk.in
+mk/mingw.mk				-- new
+mk/mklib.mk
+mk/vxWorks.mk
+mk/win32.mk
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/powerpc_vxWorks_5.3.mk	-- new
+mk/platforms/x86_nt_4.0.mk
+mk/platforms/x86_nt_4.0_mingw.mk	-- new
+mk/platforms/x86_nt_4.0_vs_7.mk		-- new
+patches/README
+patches/mingw_omnipython.patch		-- new
+readmes/README.openvms
+src/appl/omniMapper/omniMapper.cc
+src/appl/omniNames/NamingContext_i.cc
+src/appl/omniNames/log.cc
+src/appl/omniNames/log.h
+src/appl/omniNames/omniNames.cc
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/appl/utils/genior/genior.cc
+src/appl/utils/nameclt/nameclt.cc
+src/examples/anyExample/anyExample_clt.cc
+src/examples/anyExample/anyExample_impl.cc
+src/examples/anyExample/dir.mak
+src/examples/bidir/dir.mak
+src/examples/boa/dir.mak
+src/examples/boa/eg2_clt.cc
+src/examples/boa/eg2_impl.cc
+src/examples/call_back/cb_client.cc
+src/examples/call_back/cb_server.cc
+src/examples/call_back/cb_shutdown.cc
+src/examples/call_back/dir.mak
+src/examples/dii/dir.mak
+src/examples/dii/echo_diiclt.cc
+src/examples/dsi/dir.mak
+src/examples/dsi/echo_dsiimpl.cc
+src/examples/echo/dir.mak
+src/examples/echo/echo.hh		-- deleted
+src/examples/echo/echoexamples.module	-- deleted
+src/examples/echo/eg1.cc
+src/examples/echo/eg2_clt.cc
+src/examples/echo/eg2_impl.cc
+src/examples/echo/eg3_clt.cc
+src/examples/echo/eg3_impl.cc
+src/examples/echo/eg3_tieimpl.cc
+src/examples/poa/implicit_activation/dir.mak
+src/examples/poa/implicit_activation/eg1.cc
+src/examples/poa/persistent_objref/dir.mak
+src/examples/poa/persistent_objref/eg2_impl.cc
+src/examples/poa/servant_manager/dir.mak
+src/examples/poa/servant_manager/servant_activator.cc
+src/examples/poa/servant_manager/servant_locator.cc
+src/examples/poa/threading/mainthread.cc
+src/examples/thread/diner.cc
+src/examples/thread/prio.cc
+src/examples/thread/prodcons.cc
+src/examples/thread/thrspecdata.cc
+src/lib/omniORB/dir.mk
+src/lib/omniORB/codesets/cs-UCS-4.cc
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/dynamic/deferredRequest.cc
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/policy.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/omniidl_be/cxx/__init__.py
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/config.py
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/tcstring.py
+src/lib/omniORB/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/impl/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/GIOP_C.cc
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/cdrStreamAdapter.cc
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaFixed.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/exceptn.cc
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/inProcessIdentity.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/minorCode.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/objectStub.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+src/lib/omniORB/orbcore/orbOptionsFile.cc
+src/lib/omniORB/orbcore/orbOptionsReg.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poamanager.cc
+src/lib/omniORB/orbcore/portableserver.cc
+src/lib/omniORB/orbcore/proxyFactory.cc
+src/lib/omniORB/orbcore/rmutex.cc
+src/lib/omniORB/orbcore/transportRules.cc
+src/lib/omniORB/orbcore/uri.cc
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.h
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.h
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+src/lib/omnithread/dir.mk
+src/lib/omnithread/posix.cc
+src/lib/omnithread/vxWorks.cc
+src/services/mklib/COS_sysdep.h
+src/services/mklib/dir.mk
+src/tool/omkdepend/def.h
+src/tool/omkdepend/dir.mk
+src/tool/omkdepend/gnuwin32.c
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/idlsysdep.h
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/cccp/cccp.c
+src/tool/omniidl/cxx/cccp/config-linux.h
+src/tool/omniidl/cxx/cccp/config-windows.h
+src/tool/omniidl/cxx/cccp/dir.mk
+src/tool/omniidl/python/omniidl/main.py
+
+
 Thu Jan  6 17:27:37 GMT 2005 dgrisby
 ====================================
 

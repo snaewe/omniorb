@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.6  2005/01/06 23:09:50  dgrisby
+# Big merge from omni4_0_develop.
+#
 # Revision 1.20.2.5  2004/10/13 17:58:22  dgrisby
 # Abstract interfaces support; values support interfaces; value bug fixes.
 #
@@ -260,8 +263,13 @@ else """,
 
     if dims != []:
         type_name = d_type.base(environment)
+        if type_name == element_name:
+            type_name = d_type.base()
     else:
         type_name = type.base(environment)
+        if type_name == element_name:
+            type_name = type.base()
+            
     bounded = ""
     kind = d_type.type().kind()
     
@@ -384,8 +392,12 @@ def unmarshall(to, environment, type, decl, name, from_where):
     
     if dims != []:
         type_name = d_type.base(environment)
+        if type_name == element_name:
+            type_name = d_type.base()
     else:
         type_name = type.base(environment)
+        if type_name == element_name:
+            type_name = type.base()
         
     bounded = ""
     kind = d_type.type().kind()

@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.21.2.2  2005/01/06 23:11:24  dgrisby
+# Big merge from omni4_0_develop.
+#
 # Revision 1.21.2.1  2003/03/23 21:01:37  dgrisby
 # Start of omniORB 4.1.x development branch.
 #
@@ -211,7 +214,12 @@ def parseArgs(args):
             preprocessor_args.append("-D" + a)
 
         elif o == "-I":
-            preprocessor_args.append("-I" + a)
+            if sys.platform != "OpenVMS":
+                preprocessor_args.append('-I "%s"' % a)
+            else:
+                # It would be stupid, rude, and evil to put spaces in
+                # a dirname on VMS
+                preprocessor_args.append('-I%s' % a)
 
         elif o == "-U":
             preprocessor_args.append("-U" + a)

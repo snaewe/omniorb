@@ -22,6 +22,8 @@ AC_PROG_MAKE_SET
 
 AM_PATH_PYTHON
 
+AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+
 AC_LANG(C++)
 
 
@@ -34,6 +36,7 @@ dnl ** Headers
 
 AC_CHECK_HEADERS(errno.h fcntl.h netdb.h signal.h stdlib.h string.h strings.h)
 AC_CHECK_HEADERS(unistd.h nan.h sys/if.h sys/ioctl.h sys/param.h sys/time.h)
+AC_CHECK_HEADERS(ifaddrs.h)
 AC_HEADER_TIME
 
 
@@ -67,6 +70,7 @@ dnl ** C++ features
 AC_CXX_BOOL
 AC_CXX_CONST_CAST
 AC_CXX_DYNAMIC_CAST
+AC_CXX_REINTERPRET_CAST
 AC_CXX_NAMESPACES
 AC_CXX_HAVE_STD
 AC_CXX_MEMBER_CONSTANTS
@@ -127,7 +131,7 @@ else
   *-*-irix*)
     compiler_name="Compiler_SGI"
   ;;
-  *-*-irix*)
+  *-*-aix*)
     compiler_name="Compiler_xlC"
   ;;
   esac
@@ -159,6 +163,7 @@ case "$host" in
   *-*-freebsd3*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="3";;
   *-*-freebsd4*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="4";;
   *-*-freebsd5*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="5";;
+  *-*-openbsd*)  plat_name="OpenBSD";  plat_def="__openbsd__";  os_v="3";;
   *-*-sco*)      plat_name="OSR5";     plat_def="__osr5__";     os_v="5";;
 esac
 
@@ -254,4 +259,15 @@ AC_CONFIG_FILES(include/GNUmakefile
 AC_CONFIG_FILES(idl/GNUmakefile
                 idl/COS/GNUmakefile)
 
-AC_OUTPUT
+AC_CONFIG_FILES(etc/init.d/omniNames)
+
+AC_CONFIG_FILES(contrib/GNUmakefile
+                contrib/pkgconfig/GNUmakefile)
+
+AC_OUTPUT([
+contrib/pkgconfig/omnithread3.pc
+contrib/pkgconfig/omniORB4.pc
+contrib/pkgconfig/omniDynamic4.pc
+contrib/pkgconfig/omniCOS4.pc
+contrib/pkgconfig/omniCOSDynamic4.pc
+])

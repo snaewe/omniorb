@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/06 23:08:09  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.2  2005/01/06 16:39:23  dgrisby
   DynValue and DynValueBox implementations; misc small fixes.
 
@@ -212,7 +215,10 @@ _CORBA_MODULE_BEG
 
   protected:
     inline DynAny(int is_nil = 0) : pd_dynmagic(PR_magic) {
-      _PR_setobj((omniObjRef*)(is_nil ? 0:1));
+      if (is_nil)
+	_PR_setobj((omniObjRef*)0);
+      else
+	_PR_setobj((omniObjRef*)1);
     }
     virtual ~DynAny();
 
@@ -1107,7 +1113,10 @@ _CORBA_MODULE_BEG
     virtual void* _ptrToObjRef(const char* repoId) = 0;
 
     inline DynAnyFactory(int is_nil = 0) {
-      _PR_setobj((omniObjRef*)(is_nil ? 0:1));
+      if (is_nil)
+	_PR_setobj((omniObjRef*)0);
+      else
+	_PR_setobj((omniObjRef*)1);
     }
     virtual ~DynAnyFactory();
 

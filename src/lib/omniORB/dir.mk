@@ -19,15 +19,11 @@ EXPORTHEADERS = omniORB4/distdate.hh \
                 omniORB4/ir_defs.hh \
                 omniORB4/ir_operators.hh \
                 omniORB4/ir_poa.hh \
-		omniORB4/omniTypedefs.hh
+		omniORB4/omniTypedefs.hh \
+                omniORB4/bootstrap.hh
 
 
-STUBHEADERS = $(EXPORTHEADERS) \
-              omniORB4/bootstrap.hh
-
-all:: $(STUBHEADERS)
-
-export:: omniORB4/bootstrap.hh
+all:: $(EXPORTHEADERS)
 
 export:: $(EXPORTHEADERS)
 	@(for i in $^; do \
@@ -47,7 +43,7 @@ endif
 
 
 veryclean::
-	$(RM) $(STUBHEADERS) omniORB4/*SK.cc
+	$(RM) $(EXPORTHEADERS) omniORB4/*SK.cc
 
 all::
 	@$(MakeSubdirs)

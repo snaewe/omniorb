@@ -10,6 +10,10 @@
 #define DONT_DECLARE_STRERROR 1
 #define STDC_HEADERS 1
 
+#ifdef __MINGW32__
+#define HAVE_VPRINTF
+#endif
+
 #pragma warning (disable: 4018)
 
 char *index( char *s, int c );

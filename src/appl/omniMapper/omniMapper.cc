@@ -23,6 +23,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.3  2005/01/06 23:08:47  dgrisby
+// Big merge from omni4_0_develop.
+//
 // Revision 1.5.2.2  2004/02/20 00:03:34  dgrisby
 // Compilation fixes. Thanks Gary Duzan for pointing them out.
 //
@@ -65,8 +68,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <iostream.h>
-#include <fstream.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+#  include <fstream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#  include <fstream.h>
+#endif
 
 static void
 usage()
@@ -192,7 +202,7 @@ static int
 processConfigFile(const char* configFile)
 {
 #ifdef __WIN32__
-  ifstream cfile(configFile, ios::in | ios::nocreate);
+  ifstream cfile(configFile, ios::in);
 #else
   ifstream cfile(configFile);
 #endif
@@ -284,6 +294,7 @@ main(int argc, char** argv)
   }
   catch (CORBA::INITIALIZE& ex) {
     cerr << "Failed to initialise the ORB." << endl;
+    usage();
     return 1;
   }
 
@@ -298,6 +309,7 @@ main(int argc, char** argv)
   catch (CORBA::INITIALIZE& ex) {
     cerr << "Failed to initialise the POA. "
 	 << "Is omniMapper already running?" << endl;
+    usage();
     return 1;
   }
 

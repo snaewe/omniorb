@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:10:53  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:01:59  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -139,6 +142,8 @@ sslContext::internal_initialise() {
   set_CA();
   set_DH();
   set_ephemeralRSA();
+  // Allow the user to overwrite the SSL verification types.
+  SSL_CTX_set_verify(pd_ctx,set_verify_mode(),NULL);
   thread_setup();
 }
 
@@ -334,6 +339,14 @@ sslContext::set_ephemeralRSA() {
   }
   RSA_free(rsa);
 }
+
+
+/////////////////////////////////////////////////////////////////////////
+int
+sslContext::set_verify_mode() {
+  return SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 static omni_tracedmutex *openssl_locks = 0;

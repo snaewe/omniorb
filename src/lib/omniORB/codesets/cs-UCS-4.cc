@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/06 23:09:43  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.2  2003/05/20 16:53:14  dgrisby
   Valuetype marshalling support.
 
@@ -336,7 +339,7 @@ TCS_W_UCS_4::marshalWString(cdrStream& stream,
   
   stream.declareArrayLength(omni::ALIGN_4, mlen);
 
-  for (_CORBA_ULong i=0; i<=len; i++) {
+  for (_CORBA_ULong i=0; i < len; i++) {
     uc = us[i];
 
     if (uc < 0xd800) {

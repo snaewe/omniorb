@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.4  2005/01/06 23:10:11  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.6.3  2003/11/06 11:56:56  dgrisby
   Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 
@@ -220,7 +223,6 @@ GIOP_S::dispatcher() {
     impl()->inputMessageBegin(this,impl()->unmarshalWildCardRequestHeader);
 
     {
-      ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
       omni_tracedmutex_lock sync(*omniTransportLock);
       pd_state = RequestHeaderIsBeingProcessed;
       if (!pd_strand->stopIdleCounter()) {
@@ -557,9 +559,11 @@ CORBA::Boolean
 GIOP_S::handleCancelRequest() {
   // We do not have the means to asynchronously abort the execution of
   // an upcall by another thread. Therefore it is not possible to
-  // cancel a request that has already been in progress. 
-  omniORB::logs(5, "Received and ignored a CancelRequest message.");
-  pd_state = ReplyCompleted;
+  // cancel a request that has already been in progress. The best we
+  // can do is prevent the reply from happening.
+  omniORB::logs(5, "Received a CancelRequest message.");
+  pd_state = WaitingForReply;
+  response_expected(0);
   return 1;
 }
 
@@ -625,6 +629,14 @@ GIOP_S::SkipRequestBody() {
   OMNIORB_ASSERT(pd_state == RequestIsBeingProcessed);
 
   pd_state = WaitingForReply;
+
+  CORBA::Boolean data_in_buffer = 0;
+  if (pd_rdlocked) {
+    giopStrand& s = (giopStrand&) *this;
+    data_in_buffer = ((s.head) ? 1 : 0);
+  }
+  pd_worker->server()->notifyWkPreUpCall(pd_worker,data_in_buffer);
+
   impl()->inputMessageEnd(this,1);
 }
 
@@ -634,7 +646,10 @@ GIOP_S::SendReply() {
 
   OMNIORB_ASSERT(pd_state == WaitingForReply);
 
-  if (!response_expected()) throw terminateProcessing();
+  if (!response_expected()) {
+    pd_state = ReplyCompleted;
+    return;
+  }
 
   pd_service_contexts.length(0);
 

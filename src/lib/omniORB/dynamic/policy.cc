@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.4.4  2005/01/06 23:09:46  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.3  2004/07/23 10:29:58  dgrisby
   Completely new, much simpler Any implementation.
 
@@ -142,11 +145,8 @@ ORB::create_policy(CORBA::PolicyType t, const CORBA::Any& value) {
 
   // omniORB specific policies
   CASE_CPFN_OMNI(/*LOCAL_SHORTCUT_POLICY_TYPE*/0x41545401, LocalShortcutPolicy)
-
-  // Anything else we do not know
-  default:
-    throw CORBA::PolicyError(CORBA::BAD_POLICY);
   }
+  throw CORBA::PolicyError(CORBA::BAD_POLICY);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -164,13 +164,6 @@ _init_in_def_( const PolicyErrorCode BAD_POLICY_VALUE = 3; )
 _init_in_def_( const PolicyErrorCode UNSUPPORTED_POLICY_VALUE = 4; )
 
 }
-#elif defined(__vxWorks__)
-//?? Is this really necessary?
-_init_in_decl_( const PolicyErrorCode CORBA::BAD_POLICY = 0; )
-_init_in_decl_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY = 1; )
-_init_in_decl_( const PolicyErrorCode CORBA::BAD_POLICY_TYPE = 2; )
-_init_in_decl_( const PolicyErrorCode CORBA::BAD_POLICY_VALUE = 3; )
-_init_in_decl_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY_VALUE = 4; )
 #else
 _init_in_def_( const PolicyErrorCode CORBA::BAD_POLICY = 0; )
 _init_in_def_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY = 1; )

@@ -1,4 +1,7 @@
 
+#ifndef _omniorb_poa_include_idl_
+#define _omniorb_poa_include_idl_
+
 #pragma prefix "omg.org"
 
 #include <corbaidl.idl>
@@ -23,3 +26,5 @@ module PortableServer {
 //////////////////////////////////////////////////////////////////////
 };
 //////////////////////////////////////////////////////////////////////
+
+#endif // _omniorb_poa_include_idl_

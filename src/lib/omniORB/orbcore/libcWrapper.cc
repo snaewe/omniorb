@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.21.2.2  2005/01/06 23:10:31  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.21.2.1  2003/03/23 21:02:12  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -216,7 +219,7 @@ static inline CORBA::ULong hostent_to_ip4(struct hostent* entp)
 }
 
 
-LibcWrapper::AddrInfo* LibcWrapper::getaddrinfo(const char* node,
+LibcWrapper::AddrInfo* LibcWrapper::getAddrInfo(const char* node,
 						CORBA::UShort port)
 {
   if (!node) {
@@ -241,6 +244,7 @@ LibcWrapper::AddrInfo* LibcWrapper::getaddrinfo(const char* node,
   char* buffer = new char[256];
   int buflen = 256;
   int rc;
+  IP4AddrInfo* ret;
 
 again:
   if (gethostbyname_r(node,&ent,buffer,buflen,&rc) == 0) {
@@ -251,10 +255,77 @@ again:
       buffer = new char [buflen];
       goto again;
     }
-    else
-      return 0;
+    else {
+      ret = 0;
+    }
   }
-  return new IP4AddrInfo(hostent_to_ip4(&ent), port);
+  else {
+    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+  }
+  delete [] buffer;
+  return ret;
+
+#elif defined(__irix__) && __OSVERSION__ >= 6
+
+  // Use gethostbyname_r() on Irix 6.5
+
+  struct hostent ent;
+  char* buffer = new char[256];
+  int buflen = 256;
+  int rc;
+  IP4AddrInfo* ret;
+
+again:
+  if (gethostbyname_r(node,&ent,buffer,buflen,&rc) == 0) {
+    if (errno == ERANGE) {
+      // buffer is too small to store the result, try again
+      delete [] buffer;
+      buflen = buflen * 2;
+      buffer = new char [buflen];
+      goto again;
+    }
+    else {
+      ret = 0;
+    }
+  }
+  else {
+    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+  }
+  delete [] buffer;
+  return ret;
+
+#elif defined(__linux__) && __OSVERSION__ >= 2 && !defined(__cygwin__)
+
+  // Use gethostbyname_r() on Linux 
+
+  struct hostent ent;
+  char* buffer = new char[256];
+  int buflen = 256;
+  int rc, retValue;
+  struct hostent *hp;
+  IP4AddrInfo* ret;
+
+again:
+  retValue = gethostbyname_r(node,&ent,buffer,buflen,&hp,&rc);
+  if (hp == 0) {
+    if (retValue == ERANGE) {
+      // buffer is too small to store the result, try again
+      delete [] buffer;
+      buflen = buflen * 2;
+      buffer = new char [buflen];
+      goto again;
+    }
+    else {
+      ret = 0;
+    }
+  }
+  else {
+    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+  }
+  delete [] buffer;
+  return ret;
+
+
 
 #elif defined(__osf1__)
 
@@ -266,10 +337,15 @@ again:
   // XXX Is it possible that the pointer buffer is at a wrong alignment
   //     for a struct hostent_data?
 
-  if (gethostbyname_r(node,&ent,(struct hostent_data *)buffer) < 0)
-    return 0;
+  IP4AddrInfo* ret;
 
-  return new IP4AddrInfo(hostent_to_ip4(&ent), port);
+  if (gethostbyname_r(node,&ent,(struct hostent_data *)buffer) < 0)
+    ret = 0;
+  else
+    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
+
+  delete [] buffer;
+  return ret;
 
 #elif defined(__hpux__)
 
@@ -290,13 +366,22 @@ again:
   struct hostent ent;
   char* buffer = new char[sizeof(hostent_data)];
   memset((void*)buffer,0,sizeof(hostent_data));
+  IP4AddrInfo* ret;
 
   if (gethostbyname_r(node,&ent,(hostent_data*)buffer) == -1)
-    return 0;
+    ret = 0;
+  else
+    ret = new IP4AddrInfo(hostent_to_ip4(&ent), port);
 
-  return new IP4AddrInfo(hostent_to_ip4(&ent), port);
+  delete [] buffer;
+  return ret;
 
 # endif
+
+#elif defined(__vxWorks__)
+  int ip4 = hostGetByName(const_cast<char*>(node)); // grep /etc/hosts
+  if (ip4 == ERROR) return 0;
+  return new IP4AddrInfo(ip4, port);
 
 #else
   // Use non-reentrant gethostbyname()
@@ -316,7 +401,7 @@ again:
 #endif
 }
 
-void LibcWrapper::freeaddrinfo(LibcWrapper::AddrInfo* ai)
+void LibcWrapper::freeAddrInfo(LibcWrapper::AddrInfo* ai)
 {
   delete ai;
 }

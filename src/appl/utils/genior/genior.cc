@@ -26,12 +26,19 @@
 // Program to generate IORs
 
 
-#include <iostream.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <omniORB4/CORBA.h>
+
+#ifdef HAVE_STD
+#  include <iostream>
+   using namespace std;
+#else
+#  include <iostream.h>
+#endif
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
@@ -253,18 +260,18 @@ genRef(const char* IRTypeId, const char* hostname, int port,
 	int hi,lo;
 	
 	if (curr >= '0' && curr <= '9')
-	  hi = ((curr - 48) << 4);
+	  hi = ((curr - '0') << 4);
 	else if (curr >= 'a' && curr <='f')
-	  hi = ((curr - 87) << 4);
+	  hi = ((curr - 'a' + 10) << 4);
 	else {
 	  cerr << "Hexadecimal key is corrupted." << endl;
 	  return 0;
 	}
 	curr = tolower(objKey[j+1]);
 	if (curr >= '0' && curr <= '9')
-	  lo = curr - 48;
+	  lo = curr - '0';
 	else if (curr >= 'a' && curr <='f')
-	  lo = curr - 87;
+	  lo = curr - 'a' + 10;
 	else {
 	  cerr << "Hexadecimal key is corrupted." << endl;
 	  return 0;

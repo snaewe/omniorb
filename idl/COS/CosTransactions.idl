@@ -5,10 +5,7 @@
 #define _COS_TRANSACTIONS_IDL_
 
 // omniORB specific pragmas to insert extra includes into the stub header.
-#pragma hh #ifndef __COS_SYSDEP_H_EXTERNAL_GUARD__
-#pragma hh #define __COS_SYSDEP_H_EXTERNAL_GUARD__
 #pragma hh #include "COS_sysdep.h"
-#pragma hh #endif
 
 #include <orb.idl>
 
@@ -17,7 +14,9 @@
 module CosTransactions {
 
 	// Forward references for interfaces defined later in module
+#ifdef __DEFINE_CURRENT__
 	interface Current;
+#endif
 	interface TransactionFactory;
 	interface Control;
 	interface Terminator;
@@ -81,7 +80,9 @@ module CosTransactions {
 	exception InvalidControl {};
 	exception Unavailable {};
 	exception SynchronizationUnavailable {};
-	
+
+#ifdef __DEFINE_CURRENT__
+
 	// Current transaction 
 	interface Current : CORBA::Current {
 		void begin()
@@ -106,6 +107,7 @@ module CosTransactions {
 			raises(InvalidControl);
 	};
 
+#endif
 
 	interface TransactionFactory {
 		Control create(in unsigned long time_out);

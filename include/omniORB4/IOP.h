@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.2  2005/01/06 23:08:09  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.4.2.1  2003/03/23 21:04:20  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -224,8 +227,10 @@ public:
   static _core_attr const ComponentId TAG_PRIMARY; // FT SPEC
   static _core_attr const ComponentId TAG_HEARTBEAT_ENABLED; // FT SPEC
 
-  static _core_attr const ComponentId TAG_OMNIORB_BIDIR; // omniORB4 specific
-  static _core_attr const ComponentId TAG_OMNIORB_UNIX_TRANS; // omniORB4 specific
+  // omniORB specific:
+  static _core_attr const ComponentId TAG_OMNIORB_BIDIR;
+  static _core_attr const ComponentId TAG_OMNIORB_UNIX_TRANS;
+  static _core_attr const ComponentId TAG_OMNIORB_PERSISTENT_ID;
 
 
   static const char* ComponentIDtoName(ComponentId);

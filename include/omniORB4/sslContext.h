@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 23:08:22  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.4.1  2003/03/23 21:04:02  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -69,7 +72,9 @@ OMNI_FORCE_LINK(omnisslTP);
 #     define _core_attr _OMNIORB_NTDLL_IMPORT
 #endif
 
+#define crypt _openssl_broken_crypt
 #include <openssl/ssl.h>
+#undef crypt
 
 OMNI_NAMESPACE_BEGIN(omni)
   class omni_sslTransport_initialiser;
@@ -124,6 +129,10 @@ class sslContext {
   virtual void set_DH();
 
   virtual void set_ephemeralRSA();
+
+  virtual int set_verify_mode();
+  // Set the SSL verify mode.
+  // Defaults to return SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT.
 
   sslContext();
 

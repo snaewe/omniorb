@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.6.2  2005/01/06 23:08:25  dgrisby
+  Big merge from omni4_0_develop.
+
   Revision 1.1.6.1  2003/03/23 21:03:45  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -83,6 +86,7 @@
 #define __LIBCWRAPPER_H__
 
 #if defined(__WIN32__)
+#  define FD_SETSIZE 2048
 #  include <winsock2.h>
 #else
 #  include <netdb.h>
@@ -97,13 +101,16 @@ public:
   static int isipaddr(const char* node);
   // True if node is an IPv4 address.
 
-  static AddrInfo* getaddrinfo(const char* node, CORBA::UShort port);
+  // On VMS getaddrinfo is a macro in <netdb.h> as of VMS 7.3-1.  So,
+  // made this mixed case:
+  static AddrInfo* getAddrInfo(const char* node, CORBA::UShort port);
   // Return an AddrInfo object for the specified node and port. If
   // node is zero, address is INADDR_ANY. If node is invalid, returns
   // zero.
 
-  static void freeaddrinfo(AddrInfo* ai);
-  // Release the AddrInfo object returned by getaddrinfo(), and any in
+  // made this mixed case for consistency:
+  static void freeAddrInfo(AddrInfo* ai);
+  // Release the AddrInfo object returned by getAddrInfo(), and any in
   // its linked list.
 
   class AddrInfo {
@@ -136,10 +143,10 @@ public:
     inline AddrInfo_var() : pd_ai(0) {}
     inline AddrInfo_var(AddrInfo* ai) : pd_ai(ai) {}
     inline ~AddrInfo_var() {
-      if (pd_ai) LibcWrapper::freeaddrinfo(pd_ai);
+      if (pd_ai) LibcWrapper::freeAddrInfo(pd_ai);
     }
     inline AddrInfo_var& operator=(AddrInfo* ai) {
-      if (pd_ai) LibcWrapper::freeaddrinfo(pd_ai);
+      if (pd_ai) LibcWrapper::freeAddrInfo(pd_ai);
       pd_ai = ai;
       return *this;
     }
@@ -153,13 +160,15 @@ public:
 
 OMNI_NAMESPACE_END(omni)
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(_WINSTATIC)
 #  if defined(_OMNIORB_LIBRARY)
 #    define _NT_DLL_ATTR __declspec(dllexport)
 #  else
 #    define _NT_DLL_ATTR __declspec(dllimport)
 #  endif
-#else
+#endif
+
+#ifndef _NT_DLL_ATTR
 #  define _NT_DLL_ATTR
 #endif
 
