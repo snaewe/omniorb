@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14  1999/06/18 20:52:29  sll
+  Updated with new sequence string implementation.
+
   Revision 1.13  1999/04/21 11:17:43  djr
   Strings now defined outside CORBA scope, and typedefed. New sequence types.
 
@@ -113,55 +116,6 @@ CORBA::string_dup(const char* p)
     }
   }
   return 0;
-}
-
-//////////////////////////////////////////////////////////////////////
-///////////////////////////// String_var /////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-_CORBA_String_var::_CORBA_String_var(const _CORBA_String_member& s)
-{
-  if ((const char*)s) {
-    _data = ALLOC_BYTES(strlen(s) + 1);
-    strcpy(_data,s);
-  }
-  else
-    _data = 0;
-}
-
-
-_CORBA_String_var&
-_CORBA_String_var::operator= (const _CORBA_String_member& s)
-{
-  if (_data) {
-    FREE_BYTES(_data);
-    _data = 0;
-  }
-  if ((const char*)s) {
-    _data = ALLOC_BYTES(strlen(s) + 1);
-    strcpy(_data,s);
-  }
-  return *this;
-}
-
-
-char &
-_CORBA_String_var::operator[] (CORBA::ULong index) 
-{
-  if (!_data || (CORBA::ULong)strlen(_data) < index) {
-    _CORBA_bound_check_error();	// never return
-  }
-  return _data[index];
-}
-
-
-char
-_CORBA_String_var::operator[] (CORBA::ULong index) const
-{
-  if (!_data || (CORBA::ULong)strlen(_data) < index) {
-    _CORBA_bound_check_error();	// never return
-  }
-  return _data[index];
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -279,81 +233,28 @@ _CORBA_String_member::NP_alignedSize(size_t initialoffset) const
 ////////////////// _CORBA_Unbounded_Sequence__String /////////////////
 //////////////////////////////////////////////////////////////////////
 
-_CORBA_Unbounded_Sequence__String::
-_CORBA_Unbounded_Sequence__String(_CORBA_ULong max,
-				  _CORBA_ULong length,
-				  char**       value,
-				  _CORBA_Boolean release)
-  : pd_max(max), pd_len(length), pd_buf(new _CORBA_String_member[max])
-{
-  if( release ) {
-    for( _CORBA_ULong i = 0; i < length; i++ )  pd_buf[i]._ptr = value[i];
-    delete[] value;
-  }
-  else {
-    for( _CORBA_ULong i = 0; i < length; i++ )
-      pd_buf[i] = (const char*) value[i];
-  }
-}
-
-
-_CORBA_Unbounded_Sequence__String&
-_CORBA_Unbounded_Sequence__String::operator= (
-			      const _CORBA_Unbounded_Sequence__String& s)
-{
-  if( pd_max < s.pd_max ) {
-    delete[] pd_buf;
-    pd_buf = new _CORBA_String_member[s.pd_max];
-  }
-  pd_max = s.pd_max;
-  pd_len = s.pd_len;
-  for( _CORBA_ULong i = 0; i < pd_len; i++ )  pd_buf[i] = s.pd_buf[i];
-  return *this;
-}
-
-
-void
-_CORBA_Unbounded_Sequence__String::length(_CORBA_ULong len)
-{
-  if( len > pd_max ) {
-    _CORBA_String_member* newbuf = new _CORBA_String_member[len];
-    for( _CORBA_ULong i = 0; i < pd_len; i++ ) {
-      newbuf[i]._ptr = pd_buf[i]._ptr;
-      pd_buf[i]._ptr = 0;
-    }
-    pd_max = len;
-    delete[] pd_buf;
-    pd_buf = newbuf;
-  }
-  // If we've shrunk we need to clear the entries at the top.
-  for( _CORBA_ULong i = len; i < pd_len; i++ )  pd_buf[i] = (char*) 0;
-  pd_len = len;
-}
-
-
 size_t
-_CORBA_Unbounded_Sequence__String::NP_alignedSize(size_t size) const
+_CORBA_Sequence__String::NP_alignedSize(size_t size) const
 {
   size = omni::align_to(size, omni::ALIGN_4) + 4;
 
   for( _CORBA_ULong i = 0; i < pd_len; i++ ) {
     size = omni::align_to(size, omni::ALIGN_4);
-    if( pd_buf[i]._ptr )  size += strlen(pd_buf[i]) + 5;
+    if( pd_data[i] )  size += strlen(pd_data[i]) + 5;
     else                  size += 5;
   }
 
   return size;
 }
 
-
 template<class buf_t>
-inline void marshal_ss(const _CORBA_String_member* pd_buf,
+inline void marshal_ss(char** buf,
 		       _CORBA_ULong pd_len, buf_t& s)
 {
   _CORBA_ULong(pd_len) >>= s;
 
   for( _CORBA_ULong i = 0; i < pd_len; i++ ) {
-    char* p = pd_buf[i]._ptr;
+    char* p = buf[i];
 
     if( p ) {
       _CORBA_ULong len = strlen(p) + 1;
@@ -370,27 +271,29 @@ inline void marshal_ss(const _CORBA_String_member* pd_buf,
 
 
 void
-_CORBA_Unbounded_Sequence__String::operator >>= (NetBufferedStream& s) const
+_CORBA_Sequence__String::operator >>= (NetBufferedStream& s) const
 {
-  marshal_ss(pd_buf, pd_len, s);
+  marshal_ss(pd_data, pd_len, s);
 }
 
 
 void
-_CORBA_Unbounded_Sequence__String::operator >>= (MemBufferedStream& s) const
+_CORBA_Sequence__String::operator >>= (MemBufferedStream& s) const
 {
-  marshal_ss(pd_buf, pd_len, s);
+  marshal_ss(pd_data, pd_len, s);
 }
 
 
 template<class buf_t>
-inline void unmarshal_ss(_CORBA_String_member* pd_buf,
-			 _CORBA_ULong slen, buf_t& s)
+inline void unmarshal_ss(char** buf,
+			 _CORBA_ULong slen, 
+			 _CORBA_Boolean rel,
+			 buf_t& s)
 {
   for( _CORBA_ULong i = 0; i < slen; i++ ) {
-    char*& p = pd_buf[i]._ptr;
+    char*& p = (char*&) buf[i];
 
-    if( p ) { FREE_BYTES(p); p = 0; }
+    if( p && rel) { FREE_BYTES(p); p = 0; }
 
     _CORBA_ULong len;
     len <<= s;
@@ -418,22 +321,30 @@ inline void unmarshal_ss(_CORBA_String_member* pd_buf,
 
 
 void
-_CORBA_Unbounded_Sequence__String::operator <<= (NetBufferedStream& s)
+_CORBA_Sequence__String::operator <<= (NetBufferedStream& s)
 {
   _CORBA_ULong slen;
   slen <<= s;
+  if (slen > s.RdMessageUnRead() || (pd_bounded && slen > pd_max)) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
   length(slen);
-  unmarshal_ss(pd_buf, slen, s);
+  unmarshal_ss(pd_data, slen, pd_rel, s);
 }
 
 
 void
-_CORBA_Unbounded_Sequence__String::operator <<= (MemBufferedStream& s)
+_CORBA_Sequence__String::operator <<= (MemBufferedStream& s)
 {
   _CORBA_ULong slen;
   slen <<= s;
+  if (s.unRead() < slen || (pd_bounded && slen > pd_max)) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
   length(slen);
-  unmarshal_ss(pd_buf, slen, s);
+  unmarshal_ss(pd_data, slen, pd_rel, s);
 }
 
 //////////////////////////////////////////////////////////////////////
