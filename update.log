@@ -1,3 +1,15 @@
+Wed Jan 10 15:21:47 GMT 2001 dpg1
+=================================
+
+- Print minor code when tracing omniConnectionBroken exception.
+
+src/lib/omniORB2/orbcore/exceptn.cc
+
+- Propagate omniConnectionBroken out of HandleRequest().
+
+src/lib/omniORB2/orbcore/giopServer.cc
+
+
 Fri Jan  5 16:02:23 GMT 2001 dpg1
 =================================
 
