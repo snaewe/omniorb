@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.29  1999/08/30 18:48:39  sll
+  *** empty log message ***
+
   Revision 1.28  1999/08/09 12:27:39  sll
   Updated how _out name is generated
 
@@ -922,14 +925,14 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   IND(s); s << "class " << (const char*) var_type << " {\n";
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "typedef " << tdef->uqname() << " _T;\n";
+  IND(s); s << "typedef " << tdef->uqname() << " _Tseq;\n";
   IND(s); s << "typedef " << (const char*) var_type << " _T_var;\n\n";
 
   IND(s); s << "inline " << (const char*) var_type << "() : pd_seq(0) {}\n";
-  IND(s); s << "inline " << (const char*) var_type << "(_T* s) : pd_seq(s) {}\n";
+  IND(s); s << "inline " << (const char*) var_type << "(_Tseq* s) : pd_seq(s) {}\n";
   IND(s); s << "inline " << (const char*) var_type << "(const _T_var& sv) {\n";
   IND(s); s << "  if( sv.pd_seq ) {\n";
-  IND(s); s << "    pd_seq = new _T;\n";
+  IND(s); s << "    pd_seq = new _Tseq;\n";
   IND(s); s << "    *pd_seq = *sv.pd_seq;\n";
   IND(s); s << "  } else\n";
   IND(s); s << "    pd_seq = 0;\n";
@@ -937,14 +940,14 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   IND(s); s << "inline ~" << (const char*) var_type
 	    << "() { if( pd_seq ) delete pd_seq; }\n\n";
 
-  IND(s); s << "inline _T_var& operator = (_T* s) {\n";
+  IND(s); s << "inline _T_var& operator = (_Tseq* s) {\n";
   IND(s); s << "  if( pd_seq )  delete pd_seq;\n";
   IND(s); s << "  pd_seq = s;\n";
   IND(s); s << "  return *this;\n";
   IND(s); s << "}\n";
   IND(s); s << "inline _T_var& operator = (const _T_var& sv) {\n";
   IND(s); s << "  if( sv.pd_seq ) {\n";
-  IND(s); s << "    if( !pd_seq )  pd_seq = new _T;\n";
+  IND(s); s << "    if( !pd_seq )  pd_seq = new _Tseq;\n";
   IND(s); s << "    *pd_seq = *sv.pd_seq;\n";
   IND(s); s << "  } else if( pd_seq ) {\n";
   IND(s); s << "    delete pd_seq;\n";
@@ -960,18 +963,18 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
       << ") ((pd_seq->NP_data())[i]); }\n";
   else
     s << "  return (*pd_seq)[i]; }\n";
-  IND(s); s << "inline _T* operator -> () { return pd_seq; }\n";
+  IND(s); s << "inline _Tseq* operator -> () { return pd_seq; }\n";
   s << "#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7\n";
-  IND(s); s << "inline operator _T& () const { return *pd_seq; }\n";
+  IND(s); s << "inline operator _Tseq& () const { return *pd_seq; }\n";
   s << "#else\n";
-  IND(s); s << "inline operator const _T& () const { return *pd_seq; }\n";
-  IND(s); s << "inline operator _T& () { return *pd_seq; }\n";
+  IND(s); s << "inline operator const _Tseq& () const { return *pd_seq; }\n";
+  IND(s); s << "inline operator _Tseq& () { return *pd_seq; }\n";
   s << "#endif\n\n";
 
-  IND(s); s << "inline const _T& in() const { return *pd_seq; }\n";
-  IND(s); s << "inline _T& inout() { return *pd_seq; }\n";
-  IND(s); s << "inline _T*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }\n";
-  IND(s); s << "inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; "
+  IND(s); s << "inline const _Tseq& in() const { return *pd_seq; }\n";
+  IND(s); s << "inline _Tseq& inout() { return *pd_seq; }\n";
+  IND(s); s << "inline _Tseq*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }\n";
+  IND(s); s << "inline _Tseq* _retn() { _Tseq* tmp = pd_seq; pd_seq = 0; "
 	    "return tmp; }\n\n";
 
   IND(s); s << "friend class " << (const char*) out_type << ";\n\n";
@@ -979,7 +982,7 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   DEC_INDENT_LEVEL();
   IND(s); s << "private:\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "_T* pd_seq;\n";
+  IND(s); s << "_Tseq* pd_seq;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
 
@@ -990,20 +993,20 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   IND(s); s << "class " << (const char*) out_type << " {\n";
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "typedef " << tdef->uqname() << " _T;\n";
+  IND(s); s << "typedef " << tdef->uqname() << " _Tseq;\n";
   IND(s); s << "typedef " << (const char*) var_type << " _T_var;\n\n";
 
-  IND(s); s << "inline " << (const char*) out_type << "(_T*& s) : _data(s) { _data = 0; }\n";
+  IND(s); s << "inline " << (const char*) out_type << "(_Tseq*& s) : _data(s) { _data = 0; }\n";
   IND(s); s << "inline " << (const char*) out_type << "(_T_var& sv)\n";
-  IND(s); s << "  : _data(sv.pd_seq) { sv = (_T*) 0; }\n";
+  IND(s); s << "  : _data(sv.pd_seq) { sv = (_Tseq*) 0; }\n";
   IND(s); s << "inline " << (const char*) out_type << "(const "
 	    << (const char*) out_type  << "& s) : _data(s._data) { }\n";
   IND(s); s << "inline " << (const char*) out_type << "& operator=(const "
 	    << (const char*) out_type << "& s) { _data = s._data; return *this; }\n";
-  IND(s); s << "inline " << (const char*) out_type << "& operator=(_T* s) { _data = s; return *this; }\n";
-  IND(s); s << "inline operator _T*&() { return _data; }\n";
-  IND(s); s << "inline _T*& ptr() { return _data; }\n";
-  IND(s); s << "inline _T* operator->() { return _data; }\n";
+  IND(s); s << "inline " << (const char*) out_type << "& operator=(_Tseq* s) { _data = s; return *this; }\n";
+  IND(s); s << "inline operator _Tseq*&() { return _data; }\n";
+  IND(s); s << "inline _Tseq*& ptr() { return _data; }\n";
+  IND(s); s << "inline _Tseq* operator->() { return _data; }\n";
   IND(s); s << "inline " << (const char*) index_ret_type
 	    << " operator [] (_CORBA_ULong i) { ";
   if( is_seq_of_array )
@@ -1012,7 +1015,7 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   else
     s << "  return (*_data)[i]; }\n";
 
-  IND(s); s << "_T*& _data;\n\n";
+  IND(s); s << "_Tseq*& _data;\n\n";
 
   DEC_INDENT_LEVEL();
   IND(s); s << "private:\n";

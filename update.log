@@ -1,3 +1,16 @@
+Mon Aug 30 19:46:21 BST 1999 sll
+================================
+
+- Remove default ENABLE_CLIENT_IR_SUPPORT define in CORBA_sysdep.h
+  Application code must define this macro explicitly if it wants to
+  act as a client of an interface Repository.
+
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/CORBA.h
+src/lib/omniORB2/dynamic/irstub.cc
+src/lib/omniORB2/dynamic/irdynstub.cc
+
+
 Mon Aug 30 19:16:15 BST 1999 sll
 ================================
 
