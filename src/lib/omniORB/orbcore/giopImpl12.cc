@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/05/01 17:15:17  sll
+  Non-copy input now works correctly.
+
   Revision 1.1.4.2  2001/05/01 16:07:32  sll
   All GIOP implementations should now work with fragmentation and abitrary
   sizes non-copy transfer.
@@ -1053,11 +1056,14 @@ giopImpl12::copyInputData(giopStream* g,void* b, size_t sz,
 
 	if ( b && sz >= giopStream::directReceiveCutOff ) {
 	  
-	  CORBA::ULong transz = (sz >> 3) << 3;
+	  CORBA::ULong transz = g->inputFragmentToCome();
+	  if (transz > sz) transz = sz;
+	  transz = (transz >> 3) << 3;
 	  g->inputCopyChunk(b,transz,0,0);
 	  // XXX no deadline set
 	  sz -= transz;
 	  b = (void*)((omni::ptr_arith_t)b + transz);
+	  g->inputFragmentToCome(g->inputFragmentToCome() - transz);
 	  continue;
 	}
 	else {

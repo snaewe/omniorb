@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2001/05/01 17:15:17  sll
+  Non-copy input now works correctly.
+
   Revision 1.1.4.7  2001/05/01 16:07:31  sll
   All GIOP implementations should now work with fragmentation and abitrary
   sizes non-copy transfer.
@@ -741,23 +744,27 @@ giopStream::inputCopyChunk(void* dest,
 
   char* p = (char*) dest;
 
+  if (omniORB::trace(30)) {
+    fprintf(stderr,"omniORB: inputCopyChunk: from %s %lu bytes\n",
+	    pd_strand->connection->peeraddress(),size);
+  }
+
   while (size) {
     int rsz = pd_strand->connection->recv((void*)p,
 					  (size_t) size,
 					  deadline_secs, deadline_nanosecs);
     if (rsz > 0) {
+      if (omniORB::trace(30)) {
+	dumpbuf((unsigned char*)p,rsz);
+      }
       p += rsz;
       size -= rsz;
+
     }
     else {
       errorOnReceive(rsz,__FILE__,__LINE__,0);
       // never reaches here.
     }
-  }
-  if (omniORB::trace(30)) {
-    fprintf(stderr,"omniORB: inputCopyChunk: from %s %lu bytes\n",
-	    pd_strand->connection->peeraddress(),size);
-    dumpbuf((unsigned char*)dest,size);
   }
 }
 
