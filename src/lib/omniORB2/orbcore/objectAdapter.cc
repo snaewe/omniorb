@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.6  2000/03/03 09:44:04  djr
+ Fix to prevent tracedmutex assertion failure.
+
  Revision 1.1.2.5  1999/10/27 17:32:12  djr
  omni::internalLock and objref_rc_lock are now pointers.
 
@@ -385,7 +388,7 @@ omniObjAdapter::omniObjAdapter()
   : pd_nReqInThis(0),
     pd_nReqActive(0),
     pd_signalOnZeroInvocations(0),
-    pd_signal(omni::internalLock ? omni::internalLock : &oa_lock),
+    pd_signal(omni::internalLock ? omni::internalLock : &omni::nilRefLock()),
     pd_nDetachedObjects(0),
     pd_signalOnZeroDetachedObjects(0),
     pd_isActive(0)
