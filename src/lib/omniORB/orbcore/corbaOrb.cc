@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.10  2001/04/19 11:16:39  sll
+  Missing -ORBhelp listing for -ORBmaxGIOPVersion
+
   Revision 1.33.2.9  2001/04/18 18:18:09  sll
   Big checkin with the brand new internal APIs.
 
@@ -1327,6 +1330,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  "    -ORBstrictIIOP <0|1>\n"
 	  "    -ORBtcAliasExpand <0|1>\n"
 	  "    -ORBgiopMaxMsgSize <n bytes>\n"
+	  "    -ORBmaxGIOPVersion <major no>.<minor no>\n"
 	  "    -ORBobjectTableSize <n entries>\n"
 	  "    -ORBserverName <name>\n"
 	  "    -ORBInitialHost <name>\n"
