@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.18  2002/09/04 23:29:30  dgrisby
+  Avoid memory corruption with multiple list removals.
+
   Revision 1.1.4.17  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -470,8 +473,6 @@ giopStrand::acquireServer(giopWorker* w)
 void
 giopStrand::releaseServer(IOP_S* iop_s)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
-
   omni_tracedmutex_lock sync(*omniTransportLock);
 
   GIOP_S* giop_s = (GIOP_S*) iop_s;
@@ -1032,6 +1033,7 @@ giopStreamList::remove()
 {
   prev->next = next;
   next->prev = prev;
+  next = prev = this;
 }
 
 ////////////////////////////////////////////////////////////////////////////

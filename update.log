@@ -1,3 +1,13 @@
+Thu Sep  5 00:22:25 BST 2002 dgrisby
+====================================
+
+- Avoid memory corruption with multiple list removals.
+
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/omniTransport.cc
+
+
 Tue Sep  3 10:27:44 BST 2002 dgrisby
 ====================================
 

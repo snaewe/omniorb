@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.22  2002/09/04 23:29:30  dgrisby
+  Avoid memory corruption with multiple list removals.
+
   Revision 1.22.2.21  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -1094,6 +1097,7 @@ giopServer::Link::remove()
 {
   prev->next = next;
   next->prev = prev;
+  next = prev = this;
 }
 
 ////////////////////////////////////////////////////////////////////////////
