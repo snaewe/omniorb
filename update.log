@@ -1,3 +1,12 @@
+Tue Jul 11 11:26:48 BST 2000 dpg1
+=================================
+
+- Rationalise stdout/stderr output from catior and genior
+
+src/appl/utils/catior/catior.cc
+src/appl/utils/genior/genior.cc
+
+
 Mon Jul 10 17:47:18 BST 2000 dpg1
 =================================
 
