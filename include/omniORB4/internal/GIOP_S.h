@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/07/13 15:17:38  sll
+  Ctor takes a giopWorker rather than a giopServer.
+
   Revision 1.1.4.3  2001/05/02 14:22:05  sll
   Cannot rely on the calldescriptor still being there when a user exception
   is raised.
@@ -52,13 +55,13 @@ class omniCallDescriptor;
 
 OMNI_NAMESPACE_BEGIN(omni)
 
-class giopServer;
+class giopWorker;
 
 class GIOP_S : public IOP_S, public giopStream, public giopStreamList {
  public:
 
 
-  GIOP_S(giopStrand*,giopServer*);
+  GIOP_S(giopStrand*);
   GIOP_S(const GIOP_S&);
   ~GIOP_S();
 
@@ -182,9 +185,11 @@ class GIOP_S : public IOP_S, public giopStream, public giopStreamList {
     ~terminateProcessing() {}
   };
 
+  void worker(giopWorker* w) { pd_worker = w; }
+
 private:
   IOP_S::State             pd_state;
-  giopServer*              pd_server;
+  giopWorker*              pd_worker;
   omniCallDescriptor*      pd_calldescriptor;
   const char* const*       pd_user_excns;
   int                      pd_n_user_excns;
@@ -223,7 +228,7 @@ private:
 ////////////////////////////////////////////////////////////////////////
 class GIOP_S_Holder {
 public:
-  GIOP_S_Holder(giopStrand*, giopServer*);
+  GIOP_S_Holder(giopStrand*, giopWorker*);
   ~GIOP_S_Holder();
 
   GIOP_S* operator->() { return pd_iop_s; }
