@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/10/10 10:14:27  sll
+  Extra ctor for cdrEncapsulationStream which initialise the buffer by
+  fetching data from the argument cdrStream.
+
   Revision 1.1.2.1  2000/09/27 16:54:08  sll
   *** empty log message ***
 
@@ -558,6 +562,10 @@ public:
   cdrEncapsulationStream(const _CORBA_Octet* databuffer, 
 			 _CORBA_ULong bufsize,
 			 _CORBA_Boolean allowAlign4 = 0);
+
+  cdrEncapsulationStream(cdrStream& s,_CORBA_ULong fetchsize);
+  // copy from <s> <fetchsize> bytes of data.
+
 
   void getOctetStream(_CORBA_Octet*& databuffer, _CORBA_ULong& max, 
 		      _CORBA_ULong& len);
