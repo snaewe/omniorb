@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/20 10:43:28  sll
+  New orb configuration parsing now works with NT registry.
+
   Revision 1.1.2.1  2001/08/20 08:19:24  sll
   Read the new ORB configuration file format. Can still read old format.
   Can also set configuration parameters from environment variables.
@@ -164,8 +167,12 @@ void parseConfigReg(orbOptions& opt, HKEY rootkey) {
 
   DWORD index = 0;
   while (index < total) {
-    if (!getRegEntry(rootkey,index,keybuf,keybufsize,valuebuf,valuebufsize,
-		     key,value))
+		char* key;
+		char* value;
+    if (!getRegEntry(rootkey,index,
+                     keybuf,keybufsize+1,
+                     valuebuf,valuebufsize+1,
+		                 key,value))
       return;
     opt.addOption(key,value);
     index++;
@@ -193,13 +200,12 @@ void parseOldConfigReg(orbOptions& opt, HKEY rootkey) {
   RegQueryInfoKey(rootkey,NULL,NULL,NULL,NULL,NULL,NULL,
 		  &total,&keybufsize,&valuebufsize,NULL,NULL);
 
-
   if (total) {
     keybuf = CORBA::string_alloc(keybufsize);
     valuebuf = CORBA::string_alloc(valuebufsize);
   }
 
-  if (!omniORB::trace(1)) {
+  if (omniORB::trace(1)) {
     omniORB::logger log;
     log << "Warning: the registry entries are in the old pre-omniORB4 format.\n"
  "omniORB: For the moment this is accepted to maintain backword compatibility.\n"
@@ -209,8 +215,13 @@ void parseOldConfigReg(orbOptions& opt, HKEY rootkey) {
 
   DWORD index = 0;
   while (index < total) {
-    if (!getRegEntry(rootkey,index,keybuf,keybufsize,valuebuf,valuebufsize,
-		     key,value))
+		char* key;
+		char* value;
+
+    if (!getRegEntry(rootkey,index,
+                     keybuf,keybufsize+1,
+                     valuebuf,valuebufsize+1,
+		                 key,value))
       return;
 
     if (strcmp(key,"ORBInitRef") == 0) {
@@ -244,12 +255,10 @@ void parseOldConfigReg(orbOptions& opt, HKEY rootkey) {
       opt.addOption("bootstrapAgentPort",value);
     }
     else if (strcmp(key,"GATEKEEPER_ALLOWFILE") == 0) {
-      oldconfig_warning("GATEKEEPER_ALLOWFILE","accepted");
-      gateKeeper::allowFile = CORBA::string_dup(value);
+      oldconfig_warning("GATEKEEPER_ALLOWFILE","ignored");
     }
     else if (strcmp(key,"GATEKEEPER_DENYFILE") == 0) {
-      oldconfig_warning("GATEKEEPER_DENYFILE","accepted");
-      gateKeeper::denyFile = CORBA::string_dup(value);
+      oldconfig_warning("GATEKEEPER_DENYFILE","ignored");
     }
     else {
       throw orbOptions::Unknown(key,value);
@@ -257,7 +266,7 @@ void parseOldConfigReg(orbOptions& opt, HKEY rootkey) {
 
     index++;
   }
-  
+
 }
 
 OMNI_NAMESPACE_END(omni)
