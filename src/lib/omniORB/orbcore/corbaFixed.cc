@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.15  2004/07/23 13:22:53  dgrisby
+// Fixed point rounding was still broken.
+//
 // Revision 1.1.2.14  2004/07/01 19:15:17  dgrisby
 // Fix fixed point. It was broken point. Thanks Simone Viani.
 //
@@ -352,17 +355,18 @@ CORBA::Fixed::round(CORBA::UShort scale) const
 
   if (pd_val[cut - 1] >= 5) {
     // Round up
-    CORBA::Octet work[OMNI_FIXED_DIGITS];
+    CORBA::Octet work[OMNI_FIXED_DIGITS + 1];
     memcpy(work, pd_val, OMNI_FIXED_DIGITS);
+    work[OMNI_FIXED_DIGITS] = 0;
 
     int i = cut;
-    for (i = cut; i < OMNI_FIXED_DIGITS; ++i) {
+    for (i = cut; i <= OMNI_FIXED_DIGITS; ++i) {
       if (++work[i] <= 9) break;
       work[i] = 0;
     }
     int new_digits = pd_digits - cut;
-    if (i == pd_digits)
-      new_digits ++;
+    if (i >= pd_digits)
+      new_digits++;
 
     return CORBA::Fixed(work + cut, new_digits, scale, pd_negative);
   }
