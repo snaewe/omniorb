@@ -8,6 +8,7 @@ ORB_SRCS = \
            abstractBase.cc \
            any.cc \
            anyP.cc \
+           anyStream.cc \
            constants.cc \
            context.cc \
            contextList.cc \
@@ -39,7 +40,8 @@ BUILTIN_STUB_SRCS = \
            irstub.cc \
            ir.cc \
            irdynstub.cc \
-           Namingdynstub.cc
+           Namingdynstub.cc \
+           omniTypedefs.cc
 
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))

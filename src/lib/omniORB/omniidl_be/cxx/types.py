@@ -467,6 +467,18 @@ class Type:
         return "_CORBA_ObjRef_" + suffix + \
                "< " + objref_uname + ", " + uname + "_Helper> "
 
+    def valueTemplate(self, suffix, environment = None, gscope = 0):
+        """valueTemplate(types.Type, suffix string, id.Environment option):
+           Returns a template value instance for the current type"""
+        type = self.deref().__type
+        name = type.decl().scopedName()
+        name = id.Name(name)
+        uname = name.unambiguous(environment)
+        if gscope:
+            uname = "::" + uname
+
+        return "_CORBA_Value_%s< %s> " % (suffix, uname)
+
     def literal(self, value, environment = None):
         """literal(types.Type, value any, id.Environment option): string
            Returns a C++ representation of a value"""
@@ -628,6 +640,22 @@ class Type:
             template["objref_template"] = objref_template
             template["objref_helper"]   = SeqTypeID + "_Helper"
             template["objref"]          = 1
+
+        elif d_SeqType.value() or d_SeqType.valuebox():
+            scopedName = d_SeqType.type().decl().scopedName()
+            scopedName = id.Name(scopedName)
+            
+            value_name = scopedName.unambiguous(environment)
+
+            if not is_array:
+                value_template = d_SeqType.valueTemplate("Element", environment)
+            else:
+                value_template = d_SeqType.valueTemplate("Member", environment)
+
+            template["value_name"]     = value_name
+            template["value_template"] = value_template
+            template["value"]          = 1
+
         return self.__templateToString(template)
 
     # converts a hash of template properties into a template instance
@@ -651,6 +679,9 @@ class Type:
         elif template.has_key("objref") and not template["array"]:
             name = name + "_ObjRef"
 
+        elif template.has_key("value") and not template["array"]:
+            name = name + "_Value"
+
         if template.has_key("fixed"):
             name = name + "_w_FixSizeElement"
 
@@ -669,6 +700,9 @@ class Type:
             if template.has_key("objref"):
                 args.append(template["objref_template"])
 
+            elif template.has_key("value"):
+                args.append(template["value_template"])
+
             elif not template.has_key("suffix"):
                 # __Boolean __Octet __String
                 # these already contain the type info- no need for another
@@ -681,6 +715,11 @@ class Type:
             args.extend([template["objref_name"],
                          template["objref_template"],
                          template["objref_helper"]])
+
+        elif template.has_key("value"):
+            args.extend([template["value_name"],
+                         template["value_template"]])
+
         elif not template.has_key("suffix"):
             # see above
             args.append(seqTypeID)

@@ -18,7 +18,8 @@ EXPORTHEADERS = omniORB4/distdate.hh \
                 omniORB4/corbaidl_poa.hh \
                 omniORB4/ir_defs.hh \
                 omniORB4/ir_operators.hh \
-                omniORB4/ir_poa.hh
+                omniORB4/ir_poa.hh \
+		omniORB4/omniTypedefs.hh
 
 
 STUBHEADERS = $(EXPORTHEADERS) \
@@ -85,6 +86,10 @@ omniORB4/ir_defs.hh omniORB4/ir_operators.hh omniORB4/ir_poa.hh: ir.idl
 omniORB4/corbaidl_defs.hh corbaidl_operators.hh corbaidl_poa.hh: corbaidl.idl
 	@(dir=omniORB4; $(CreateDir))
 	$(OMNIORB_IDL) -v -nf -P -WbF -ComniORB4 $<
+
+omniORB4/omniTypedefs.hh: omniTypedefs.idl
+	@(dir=omniORB4; $(CreateDir))
+	$(OMNIORB_IDL_ONLY) -v -ComniORB4 $<
 
 ciao:: $(STUBHEADERS)
 	@$(MakeSubdirs)

@@ -305,8 +305,17 @@ def lookup(node):
     try:
         return id._environments[node]
     except KeyError:
-        util.fatalError("Failed to find environment corresponding to node" +\
-                        " (= " + repr(node.scopedName()) + ")")
+        try:
+            nname = node.scopedName()
+        except:
+            nname = repr(node)
+
+        util.fatalError("Failed to find environment corresponding to node (%s)"
+                        % nname)
+
+def addNode(node, env):
+    _environments[node] = env
+
 
 class WalkTree(idlvisitor.AstVisitor):
     """Walks over the AST once building the hash of

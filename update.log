@@ -1,3 +1,41 @@
+Mon Jul  5 00:44:14 BST 2004 dgrisby
+====================================
+
+- More ValueType TypeCode and Any support.
+
+idl/omniTypedefs.idl
+include/omniORB4/CORBA_ValueBase.h
+include/omniORB4/cdrStream.h
+include/omniORB4/omniInternal.h
+include/omniORB4/valueTemplatedecls.h
+include/omniORB4/valueType.h
+include/omniORB4/internal/anyP.h
+include/omniORB4/internal/anyStream.h         -- new
+include/omniORB4/internal/dynAnyImpl.h
+include/omniORB4/internal/tcParser.h
+include/omniORB4/internal/valueTrackerImpl.h
+src/lib/omniORB/dir.mk
+src/lib/omniORB/dynamic/anyP.cc
+src/lib/omniORB/dynamic/anyStream.cc          -- new
+src/lib/omniORB/dynamic/constants.cc
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/omniTypedefs.cc       -- new
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/dynamic/valueBase.cc
+src/lib/omniORB/dynamic/valueType.cc
+src/lib/omniORB/omniidl_be/cxx/id.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/value.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/opers.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+
+
 Tue May 25 15:19:11 BST 2004 dgrisby
 ====================================
 

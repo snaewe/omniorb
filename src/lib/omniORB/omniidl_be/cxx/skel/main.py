@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.4  2004/07/04 23:53:39  dgrisby
+# More ValueType TypeCode and Any support.
+#
 # Revision 1.32.2.3  2003/11/06 11:56:56  dgrisby
 # Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 #
@@ -416,7 +419,6 @@ def visitTypedef(node):
                 stream.out(template.sequence_forward_defns,
                            fqname=fqname, name=name, element=element)
                 
-    pass
 
 def visitEnum(node):
     return

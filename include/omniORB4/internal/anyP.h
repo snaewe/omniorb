@@ -1,3 +1,5 @@
+// -*- Mode: C++; -*-
+//                            Package   : omniORB
 // anyP.h                     Created on: 04/08/98
 //                            Author    : James Weatherall (jnw)
 //
@@ -30,6 +32,7 @@
 #define __ANYP_H__
 
 #include <tcParser.h>
+#include <anyStream.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -106,13 +109,13 @@ public:
   }
   // Return the start of the data buffer.
 
-  inline cdrMemoryStream& getWRableMemoryStream() {
+  inline cdrAnyMemoryStream& getWRableMemoryStream() {
     pd_mbuf.rewindPtrs(); return pd_mbuf;
   }
   // Returns a reference to the internal MemoryStream.
   // NOTE: The stream is emptied before being returned.
 
-  inline const cdrMemoryStream& theMemoryStream() {
+  inline const cdrAnyMemoryStream& theMemoryStream() {
     return pd_mbuf;
   }
   // Returns a reference to the internal MemoryStream. It may only be
@@ -144,7 +147,7 @@ public:
 private:
   // PRIVATE DATA
 
-  cdrMemoryStream pd_mbuf;
+  cdrAnyMemoryStream pd_mbuf;
   CORBA::TypeCode_var pd_tc;
 
   // If the AnyP was created using a void* pointer and TypeCode.

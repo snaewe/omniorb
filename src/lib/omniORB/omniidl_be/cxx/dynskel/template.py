@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.3  2004/07/04 23:53:38  dgrisby
+# More ValueType TypeCode and Any support.
+#
 # Revision 1.5.2.2  2004/04/02 13:26:22  dgrisby
 # Start refactoring TypeCode to support value TypeCodes, start of
 # abstract interfaces support.
@@ -127,7 +130,7 @@ header = """\
 
 OMNI_USING_NAMESPACE(omni)
 
-static const char* @prefix@_dyn_library_version = @library@;
+static const char* @prefix@_dyn_library_version = @library@_dyn;
 
 static CORBA::TypeCode::_Tracker @prefix@_tcTrack(__FILE__);
 """

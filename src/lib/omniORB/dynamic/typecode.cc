@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.4  2004/07/04 23:53:37  dgrisby
+ * More ValueType TypeCode and Any support.
+ *
  * Revision 1.40.2.3  2004/05/25 14:20:51  dgrisby
  * ValueType TypeCode support.
  *
@@ -941,7 +944,7 @@ CORBA::TypeCode::PR_value_tc(const char* id, const char* name,
   if (r) {
     indirect = ToTcBase(r);
     if (indirect->NP_kind() == CORBA::_np_tk_indirect) {
-      // Resolving a forward struct. We create the struct then
+      // Resolving a forward value. We create the value then
       // complete the indirection below.
     }
     else {

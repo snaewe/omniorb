@@ -1,5 +1,5 @@
 // -*- Mode: C++; -*-
-//                            Package   : omniORB2
+//                            Package   : omniORB
 // cdrStream.h                Created on: 11/1/99
 //                            Author    : Sai Lai Lo (sll)
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2004/07/04 23:53:35  dgrisby
+  More ValueType TypeCode and Any support.
+
   Revision 1.1.4.4  2003/11/06 11:56:55  dgrisby
   Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 

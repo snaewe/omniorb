@@ -28,32 +28,23 @@
 //
 // TypeCode-oriented data parser.
 //
-//  The tcParser class is initialised with a TypeCode and
-// a cdrMemoryStream. The cdrMemoryStream is used to
-// store data of type described by the associated TypeCode.
+// The tcParser is used to maniuplate data described by TypeCodes.
 //
-//  The operations <copyTo> and <copyFrom> are used to
-// insert and extract the data from the cdrMemoryStream.
-// Overloaded versions are provided to marshal the data
-// into and out of cdrStream - this is
-// used for (un)marshalling values of type Any.
-//
-//  In addition the data passed into and out of the internal
-// cdrMemoryStream may be described by a tcDescriptor.
-// The user of the tcParser will setup a tcDescriptor to
-// describe where the data to be copied to/from the
-// cdrMemoryStream is in memory. For simple types this is
-// a pointer to the location in memory. For more complex
-// types the tcDescriptor provides call-backs to provide
-// additional information such as the length and data of
-// a string, or to create a tcDescriptor for the members
-// of a struct.
+// Functions are provided to copy from one stream to another, and to
+// copy into and out of tcDescriptors. The user of the tcParser will
+// setup a tcDescriptor to describe where the data to be copied
+// to/from the cdrStream. For simple types this is a pointer to the
+// location in memory. For more complex types the tcDescriptor
+// provides call-backs to provide additional information such as the
+// length and data of a string, or to create a tcDescriptor for the
+// members of a struct.
 //
 
 #ifndef __TCPARSER_H__
 #define __TCPARSER_H__
 
 #include <omniORB4/tcDescriptor.h>
+#include <anyStream.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -103,14 +94,14 @@ void skip(const CORBA::TypeCode_ptr tc, cdrStream &s);
 inline _CORBA_MODULE_FN
 void copyStreamToMemStream_flush(const CORBA::TypeCode_ptr tc,
 				 cdrStream& src,
-				 cdrMemoryStream& dest) {
+				 cdrAnyMemoryStream& dest) {
   dest.rewindPtrs();
   copyStreamToStream(tc, src, dest);
 }
 inline _CORBA_MODULE_FN
 void copyTcDescriptorToMemStream_flush(const CORBA::TypeCode_ptr tc,
 				       const tcDescriptor& src,
-				       cdrMemoryStream &dest) {
+				       cdrAnyMemoryStream &dest) {
   dest.rewindPtrs();
   copyTcDescriptorToStream(tc, src, dest);
 } 
@@ -121,16 +112,16 @@ void copyTcDescriptorToMemStream_flush(const CORBA::TypeCode_ptr tc,
   
 inline _CORBA_MODULE_FN
 void copyMemStreamToStream_rdonly(const CORBA::TypeCode_ptr tc,
-				  const cdrMemoryStream& src,
+				  const cdrAnyMemoryStream& src,
 				  cdrStream& dest) {
-  cdrMemoryStream tmp_mbs(src, 1);
+  cdrAnyMemoryStream tmp_mbs(src);
   copyStreamToStream(tc, tmp_mbs, dest);
 }
 inline _CORBA_MODULE_FN
 void copyMemStreamToTcDescriptor_rdonly(const CORBA::TypeCode_ptr tc,
-					const cdrMemoryStream& src,
+					const cdrAnyMemoryStream& src,
 					tcDescriptor& dest) {
-  cdrMemoryStream tmp_mbs(src, 1);
+  cdrAnyMemoryStream tmp_mbs(src);
   copyStreamToTcDescriptor(tc, tmp_mbs, dest);
 }  
 // Read data of type <tc> from a memory stream to a cdrStream
@@ -138,7 +129,7 @@ void copyMemStreamToTcDescriptor_rdonly(const CORBA::TypeCode_ptr tc,
 // Data will be read through a read-only memory stream.
 // Same exception behaviour as copyStreamToStream,
 // copyStreamToTcDescriptor functions.
-  
+
 _CORBA_MODULE_END
 
 OMNI_NAMESPACE_END(omni)

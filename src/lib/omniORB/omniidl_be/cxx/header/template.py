@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.4  2004/07/04 23:53:39  dgrisby
+# More ValueType TypeCode and Any support.
+#
 # Revision 1.8.2.3  2004/02/16 10:10:32  dgrisby
 # More valuetype, including value boxes. C++ mapping updates.
 #
@@ -1291,6 +1294,13 @@ void operator<<=(CORBA::Any& _a, const @fqname@& _s);
 void operator<<=(CORBA::Any& _a, const @fqname@* _sp);
 CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
 """
+
+any_value = """\
+void operator<<=(CORBA::Any& _a, @fqname@* _s);
+void operator<<=(CORBA::Any& _a, @fqname@** _s);
+CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _s);
+"""
+
 
 enum_operators = """\
 inline void operator >>=(@name@ _e, cdrStream& s) {

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5.2.3  2004/07/04 23:53:35  dgrisby
+  More ValueType TypeCode and Any support.
+
   Revision 1.5.2.2  2003/09/26 16:12:53  dgrisby
   Start of valuetype support.
 
@@ -245,6 +248,7 @@ class omniObjAdapter;
 //   2.5.1.
 //
 extern _core_attr const char* omniORB_4_1;
+extern _dyn_attr  const char* omniORB_4_1_dyn;
 extern _core_attr const _CORBA_ULong omniORB_TAG_ORB_TYPE; // ATT\x00
 
 class Strand;

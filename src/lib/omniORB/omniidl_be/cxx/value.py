@@ -86,7 +86,7 @@ public:
 
   virtual void* _ptrToValue(const char* id);
 
-  static void _NP_marshal(const @name@*, cdrStream&);
+  static void _NP_marshal(@name@*, cdrStream&);
   static @name@* _NP_unmarshal(cdrStream&);
 
   virtual void _PR_marshal_state(cdrStream&) const;
@@ -209,7 +209,7 @@ void*
 }
 
 void
-@fqname@::_NP_marshal(const @fqname@* _v, cdrStream& _0s)
+@fqname@::_NP_marshal(@fqname@* _v, cdrStream& _0s)
 {
   omniValueType::marshal(_v, @fqname@::_PD_repoId, _0s);
 }
@@ -2198,6 +2198,7 @@ class ValueType (mapping.Decl):
 
         elif d_mType.sequence():
             sequence_template = d_mType.sequenceTemplate(environment)
+
             base_s.out(statemember_sequence_typedef,
                        sequence_template = sequence_template,
                        name = member)
@@ -2358,6 +2359,13 @@ class ValueType (mapping.Decl):
 
         if not (has_callables or has_factories):
             stream.out(valuefactory_class_no_operations, name=cxx_name)
+
+        if config.state['Typecode']:
+            from omniidl_be.cxx.header import defs, template
+            qualifier = defs.const_qualifier()
+            stream.out(template.typecode,
+                       qualifier = qualifier, name = cxx_name)
+
 
 
     def poa_module_decls(self, stream, visitor):
@@ -2600,7 +2608,6 @@ class ValueBox (mapping.Decl):
         outer_environment = id.lookup(astdecl)
         self._environment = outer_environment
         self._fullname    = id.Name(astdecl.scopedName())
-        value_name        = self._fullname.fullyQualify()
 
     # Methods to make this look enough like a cxx.Class to make
     # cxx.Method happy.
@@ -2623,9 +2630,36 @@ class ValueBox (mapping.Decl):
         if astdecl.constrType():
             astdecl.boxedType().decl().accept(visitor)
 
+        boxedType = types.Type(astdecl.boxedType())
+
+        anonSeq = 0
+        if astdecl.boxedType().kind() == idltype.tk_sequence:
+            # Boxed anonymous sequence. We create a pretend typedef to
+            # the sequence, mangling the name of the valuebox.
+            anonSeq = 1
+            dname = "_0RL_boxed_" + astdecl.identifier()
+            
+            declarator = idlast.Declarator(astdecl.file(), astdecl.line(),
+                                           astdecl.mainFile(), [], [],
+                                           dname, [dname], "omni:internal",
+                                           [])
+
+            typedef = idlast.Typedef(astdecl.file(), astdecl.line(),
+                                     astdecl.mainFile(), [], [],
+                                     astdecl.boxedType(), 0, [declarator])
+
+            declarator._setAlias(typedef)
+
+            env = id.lookup(astdecl)
+            id.addNode(typedef, env)
+
+            newtype = idltype.Declared(declarator, [dname],
+                                       idltype.tk_alias, 0)
+            boxedType = types.Type(newtype)
+            typedef.accept(visitor)
+
         member_funcs = output.StringStream()
 
-        boxedType   = types.Type(astdecl.boxedType())
         d_boxedType = boxedType.deref()
 
         if boxedType.dims():
@@ -2707,6 +2741,12 @@ class ValueBox (mapping.Decl):
             d_seqType    = seqType.deref()
             bounded      = d_boxedType.type().bound()
 
+            if anonSeq:
+                assert btype[:2] == "::"
+                assert boxed_member[:2] == "::"
+                btype = btype[2:]
+                boxed_member = boxed_member[2:]
+
             if seqType.array():
                 element = "INVALID"
                 element_ptr = seqType.base(environment)
@@ -2782,6 +2822,12 @@ class ValueBox (mapping.Decl):
         stream.out(valuebox_class, name=cxx_name,
                    member_funcs=member_funcs,
                    boxed_member=boxed_member)
+
+        if config.state['Typecode']:
+            from omniidl_be.cxx.header import defs, template
+            qualifier = defs.const_qualifier()
+            stream.out(template.typecode,
+                       qualifier = qualifier, name = cxx_name)
 
 
     def _struct_accessor_funcs(self, members):

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.16.2.4  2004/07/04 23:53:38  dgrisby
+# More ValueType TypeCode and Any support.
+#
 # Revision 1.16.2.3  2004/02/16 10:10:31  dgrisby
 # More valuetype, including value boxes. C++ mapping updates.
 #
@@ -186,10 +189,8 @@ def __init__(stream):
 # any undefined ones (would cause compile/ link error)
 
 # Add entries for all the built in types. These functions are defined
-# in src/include/omniORB3/tcDescriptor.h
+# in include/omniORB4/tcDescriptor.h
 
-# Note in particular that omniidl3 would add in externs for CORBA::Object
-# but not for any others of these. Seems slightly inconsistent.
 def initSymbols():
     for name in [ "_0RL_buildDesc_cboolean",
                   "_0RL_buildDesc_coctet",
@@ -1137,6 +1138,13 @@ def visitException(node):
 
 def visitValue(node):
     print "*** visitValue dynskel main"
+
+def visitValueForward(node):
+    print "*** visitValue dynskel main"
+    pass
+
+def visitValueAbs(node):
+    print "*** value typecode"
 
 def visitValueBox(node):
     print "*** visitValueBox dynskel main"

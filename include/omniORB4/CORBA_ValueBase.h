@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2004/07/04 23:53:35  dgrisby
+  More ValueType TypeCode and Any support.
+
   Revision 1.1.2.2  2003/11/06 11:56:55  dgrisby
   Yet more valuetype. Plain valuetype and abstract valuetype are now working.
 
@@ -89,7 +92,7 @@ public:
   static _dyn_attr const char* _PD_repoId;
   static _dyn_attr const ULong _PR_magic;
 
-  static void _NP_marshal(const ValueBase* v, cdrStream& s);
+  static void _NP_marshal(ValueBase* v, cdrStream& s);
   // Marshal value specified in IDL as ValueBase. Marshals the type
   // information then calls _PR_marshal_state().
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.19.2.5  2004/07/04 23:53:38  dgrisby
+# More ValueType TypeCode and Any support.
+#
 # Revision 1.19.2.4  2004/04/02 13:26:22  dgrisby
 # Start refactoring TypeCode to support value TypeCodes, start of
 # abstract interfaces support.
@@ -905,8 +908,214 @@ static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_exception_tc("@r
 
     finishingNode()
 
+
+
+
+# builds an instance of CORBA::PR_valueMember containing pointers
+# to all the TypeCodes of the value statemembers
+def buildStateMembersStructure(node):
+    struct = output.StringStream()
+    mangled_name = mangleName(config.state['Private Prefix'] + \
+                              "_valuemember_", node.scopedName())
+    if alreadyDefined(mangled_name):
+        # no need to regenerate
+        return struct
+    
+    defineName(mangled_name)
+    
+    members = node.statemembers()
+    array = []
+
+    for m in members:
+        memberType = types.Type(m.memberType())
+        access = m.memberAccess()
+        for d in m.declarators():
+            this_name = id.Name(d.scopedName()).simple()
+            typecode = mkTypeCode(memberType, d, node)
+            array.append('{"%s", %s, %d}' % (this_name, typecode, access))
+
+    struct.out("""\
+static CORBA::PR_valueMember @mangled_name@[] = {
+  @members@
+};""", members = string.join(array, ",\n"), mangled_name = mangled_name)
+
+    return struct
+
+# Convenience function to total up the number of members, treating
+# declarators separately.
+def numStateMembers(node):
+    members = node.statemembers()
+    num = 0
+    for m in members:
+        num = num + len(m.declarators())
+
+    return num
+
+
 def visitValue(node):
-    print "*** value typecode"
+    # Used for abstract value too
+    
+    startingNode(node)
+    
+    scopedName = node.scopedName()
+    mangled_name = mangleName(config.state['Private Prefix'] +
+                              "_tc_", scopedName)
+
+    visitValueForward(node)
+
+    # the key here is to redirect the bottom half to a buffer
+    # just for now
+    oldbottomhalf = self.bottomhalf
+    self.bottomhalf = output.StringStream()
+
+    insideModule = self.__immediatelyInsideModule
+    self.__immediatelyInsideModule = 0
+
+    # handle nested types
+    for n in node.declarations():
+        n.accept(self)
+
+    # create the static typecodes for constructed types by setting
+    # the resolving_dependency flag and recursing
+    save_resolving_dependency = self.__resolving_dependency
+    self.__resolving_dependency = 1
+    
+    for child in node.statemembers():
+        memberType = child.memberType()
+        if isinstance(memberType, idltype.Declared):
+            decl = memberType.decl()
+            if not currently_being_defined(decl):
+                decl.accept(self)
+        elif isinstance(memberType, idltype.Sequence):
+            # anonymous sequence (maybe sequence<sequence<...<T>>>)
+            # Find the ultimate base type, and if it's user declared then
+            # produce a typecode definition for it.
+            base_type = memberType.seqType()
+            while isinstance(base_type, idltype.Sequence):
+                base_type = base_type.seqType()
+
+            if isinstance(base_type, idltype.Declared):
+                decl = base_type.decl()
+                if not currently_being_defined(decl):
+                    decl.accept(self)
+                        
+    self.__resolving_dependency = save_resolving_dependency
+
+    tophalf.out(str(buildStateMembersStructure(node)))
+
+    if not alreadyDefined(mangled_name):
+        # only define the name once
+        defineName(mangled_name)
+    
+        valuemember_mangled_name = mangleName(config.state['Private Prefix'] +
+                                              "_valuemember_", scopedName)
+        assert alreadyDefined(valuemember_mangled_name), \
+               "The name \"" + valuemember_mangled_name + \
+               "\" should be defined by now"
+    
+        num = numStateMembers(node)
+        repoID = node.repoId()
+        value_name = id.Name(scopedName).simple()
+
+        # Value modifiers
+        modifierl = []
+        if isinstance(node, idlast.Value):
+            if node.custom():
+                modifierl.append("CORBA::VM_CUSTOM")
+            if node.truncatable():
+                modifierl.append("CORBA::VM_TRUNCATABLE")
+        else:
+            assert isinstance(node, idlast.ValueAbs)
+            modifierl.append("CORBA::VM_ABSTRACT")
+
+        if modifierl:
+            modifiers = string.join(modifierl, "|")
+        else:
+            modifiers = "CORBA::VM_NONE"
+
+        # Concrete base
+        inherits = node.inherits()
+        if (isinstance(node, idlast.Value) and
+            inherits and isinstance(inherits[0], idlast.Value)):
+
+            visitValueForward(inherits[0])
+            bscopedName = inherits[0].scopedName()
+            concrete_base = mangleName(config.state['Private Prefix'] +
+                                       "_tc_", scopedName)
+        else:
+            concrete_base = "CORBA::TypeCode::PR_null_tc()"
+
+        tophalf.out("""\
+#ifdef @mangled_name@
+#  undef @mangled_name@
+#endif
+static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_value_tc("@repoID@", "@name@", @modifiers@, @concrete_base@, @valuemember_mangled_name@, @n@, &@pprefix@_tcTrack);
+""",
+                    mangled_name = mangled_name,
+                    modifiers = modifiers,
+                    concrete_base = concrete_base,
+                    valuemember_mangled_name = valuemember_mangled_name,
+                    name = value_name, n = str(num),
+                    repoID = repoID, pprefix=config.state['Private Prefix'])
+
+    self.__immediatelyInsideModule = insideModule
+
+    external_linkage(node)
+    # restore the old bottom half
+    oldbottomhalf.out(str(self.bottomhalf))
+    self.bottomhalf = oldbottomhalf
+    finishingNode()
+
+
+def visitValueForward(node):
+    scopedName = node.scopedName()
+    mangled_name = mangleName(config.state['Private Prefix'] +
+                              "_tc_", scopedName)
+    fmangled_name = mangleName(config.state['Private Prefix'] +
+                               "_ft_", scopedName)
+
+    if not alreadyDefined(fmangled_name):
+        defineName(fmangled_name)
+
+        tophalf.out("""\
+static CORBA::TypeCode_ptr @fmangled_name@ = CORBA::TypeCode::PR_forward_tc("@repoId@", &@pprefix@_tcTrack);
+#define @mangled_name@ @fmangled_name@
+""",
+                    mangled_name = mangled_name,
+                    fmangled_name = fmangled_name,
+                    repoId = node.repoId(),
+                    pprefix=config.state['Private Prefix'])
+
+
+def visitValueAbs(node):
+    visitValue(node)
 
 def visitValueBox(node):
-    print "*** valuebox typecode"
+    boxedType = types.Type(node.boxedType())
+
+    recurse(boxedType)
+    
+    scopedName = node.scopedName()
+    mangled_name = mangleName(config.state['Private Prefix'] +\
+                              "_tc_", scopedName)
+    if alreadyDefined(mangled_name):
+        return
+    
+    repoID = node.repoId()
+    typecode = mkTypeCode(boxedType)
+
+    scopedName = node.scopedName()
+    boxed_name = id.Name(scopedName).simple()
+    
+    tophalf.out("""\
+static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_value_box_tc("@repoID@", "@name@", @typecode@, &@pprefix@_tcTrack);
+
+""",
+                mangled_name = mangled_name,
+                repoID = repoID,
+                name = boxed_name,
+                typecode = typecode,
+                pprefix = config.state['Private Prefix'])
+
+    defineName(mangled_name)
+    external_linkage(node)    

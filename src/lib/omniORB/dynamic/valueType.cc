@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2004/07/04 23:53:37  dgrisby
+  More ValueType TypeCode and Any support.
+
   Revision 1.1.2.2  2004/02/16 10:10:30  dgrisby
   More valuetype, including value boxes. C++ mapping updates.
 
@@ -40,6 +43,7 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/valueType.h>
 #include <valueTrackerImpl.h>
+#include <anyStream.h>
 
 //
 // Tag constants
@@ -83,12 +87,28 @@ unmarshalHeaderAndBody(cdrStream& stream, cdrValueChunkStream* cstreamp,
 
 void
 omniValueType::
-marshal(const CORBA::ValueBase* val, const char* repoId, cdrStream& stream)
+marshal(CORBA::ValueBase* val, const char* repoId, cdrStream& stream)
 {
   CORBA::Long tag;
 
   if (val == 0) { // Nil
     tag = 0;
+    tag >>= stream;
+    return;
+  }
+
+  cdrAnyMemoryStream* astream = cdrAnyMemoryStream::downcast(&stream);
+  if (astream) {
+    // Value is being marshalled into an Any. We can't marshal it into
+    // the Any's memory stream since that could break value sharing
+    // semantics, so we put it into the any stream's list of values.
+    // In the stream, we store the value's index in the array plus 1
+    // (since zero is used for nil values).
+    omniTypedefs::ValueBaseSeq& seq = astream->valueSeq();
+    tag = seq.length() + 1;
+    seq.length(tag);
+    val->_add_ref();
+    seq[tag - 1] = val;
     tag >>= stream;
     return;
   }
@@ -287,6 +307,15 @@ unmarshal(const char* repoId, CORBA::ULong hashval, cdrStream& stream)
   if (tag == 0) {
     // nil
     return 0;
+  }
+
+  cdrAnyMemoryStream* astream = cdrAnyMemoryStream::downcast(&stream);
+  if (astream) {
+    // Value is in Any's value sequence. Tag is offset in sequence plus 1.
+    omniTypedefs::ValueBaseSeq& seq = astream->valueSeq();
+    CORBA::ValueBase* val = seq[tag - 1];
+    val->_add_ref();
+    return val;
   }
 
   if (!stream.valueTracker()) {

@@ -63,6 +63,7 @@ AnyP::AnyP(const AnyP* existing)
   }
   catch (CORBA::MARSHAL&) {
     pd_mbuf.rewindPtrs();
+    pd_mbuf.clearValueSeq();
   }
   pd_cached_data_ptr = 0;
 }
@@ -84,6 +85,7 @@ AnyP::setTC_and_reset(const CORBA::TypeCode_ptr tc) {
   
   // Empty the buffer and replace the typecode
   pd_mbuf.rewindPtrs();
+  pd_mbuf.clearValueSeq();
   pd_tc = CORBA::TypeCode::_duplicate(tc);
   
   // Free the cached data
