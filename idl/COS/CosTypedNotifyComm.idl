@@ -1,0 +1,32 @@
+//File: CosTypedNotifyComm.idl
+//Part of the Notification Service
+
+#ifndef _COS_TYPED_NOTIFY_COMM_IDL_
+#define _COS_TYPED_NOTIFY_COMM_IDL_
+
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #ifndef __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #define __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #include "COS_sysdep.h"
+#pragma hh #endif
+
+#include <CosNotifyChannelAdmin.idl>
+#include <CosTypedEventComm.idl>
+
+#pragma prefix "omg.org"
+
+module CosTypedNotifyComm {
+
+	interface TypedPushConsumer :
+		CosTypedEventComm::TypedPushConsumer,
+		CosNotifyComm::NotifyPublish {
+	}; // TypedPushConsumer
+
+	interface TypedPullSupplier :
+		CosTypedEventComm::TypedPullSupplier,
+		CosNotifyComm::NotifySubscribe {
+	}; // TypedPullSupplier
+
+}; // CosTypedNotifyComm
+
+#endif /* _COS_TYPED_NOTIFY_COMM_IDL_ */

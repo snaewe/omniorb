@@ -1,0 +1,42 @@
+//File: CosExternalization.idl
+//Part of the Externalization Service
+
+#ifndef _COS_EXTERNALIZATION_IDL_
+#define _COS_EXTERNALIZATION_IDL_
+
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #ifndef __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #define __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #include "COS_sysdep.h"
+#pragma hh #endif
+
+#include <CosLifeCycle.idl>
+#include <CosStream.idl>
+
+#pragma prefix "omg.org"
+
+module CosExternalization {
+	exception InvalidFileNameError{};
+	exception ContextAlreadyRegistered{};
+	interface Stream: CosLifeCycle::LifeCycleObject{
+		void externalize(
+			in CosStream::Streamable theObject);
+		CosStream::Streamable internalize( 
+			in CosLifeCycle::FactoryFinder there)
+			raises( CosLifeCycle::NoFactory,
+					CosStream::StreamDataFormatError );
+		void begin_context()
+			raises( ContextAlreadyRegistered);
+		void end_context(); 
+		void flush();
+	};
+	interface StreamFactory {
+		Stream create();
+	};
+	interface FileStreamFactory {
+		Stream create(
+			in string theFileName) 
+			raises( InvalidFileNameError );
+	};
+};
+#endif /* ifndef _COS_EXTERNALIZATION_IDL_ */

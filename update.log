@@ -1,3 +1,80 @@
+Mon Nov  6 12:48:39 GMT 2000 dpg1
+=================================
+
+- Merge COS library stuff from omni3_develop
+
+idl/COS/AttNotifyChannelAdmin.idl           NEW
+idl/COS/CosCollection.idl                    "
+idl/COS/CosCompoundLifeCycle.idl             "
+idl/COS/CosConcurrencyControl.idl            .
+idl/COS/CosContainment.idl                   .
+idl/COS/CosEventChannelAdmin.idl             .
+idl/COS/CosEventComm.idl
+idl/COS/CosExternalization.idl
+idl/COS/CosExternalizationContainment.idl
+idl/COS/CosExternalizationReference.idl
+idl/COS/CosGraphs.idl
+idl/COS/CosLicensingManager.idl
+idl/COS/CosLifeCycle.idl
+idl/COS/CosLifeCycleContainment.idl
+idl/COS/CosLifeCycleReference.idl
+idl/COS/CosNaming.idl
+idl/COS/CosNotification.idl
+idl/COS/CosNotifyChannelAdmin.idl
+idl/COS/CosNotifyComm.idl
+idl/COS/CosNotifyFilter.idl
+idl/COS/CosObjectIdentity.idl
+idl/COS/CosPersistenceDDO.idl
+idl/COS/CosPersistenceDS_CLI.idl
+idl/COS/CosPersistencePDS.idl
+idl/COS/CosPersistencePDS_DA.idl
+idl/COS/CosPersistencePID.idl
+idl/COS/CosPersistencePO.idl
+idl/COS/CosPersistencePOM.idl
+idl/COS/CosPropertyService.idl
+idl/COS/CosQuery.idl
+idl/COS/CosQueryCollection.idl
+idl/COS/CosReference.idl
+idl/COS/CosRelationships.idl
+idl/COS/CosStream.idl
+idl/COS/CosTSPortability.idl
+idl/COS/CosTime.idl
+idl/COS/CosTimerEvent.idl
+idl/COS/CosTrading.idl
+idl/COS/CosTradingDynamic.idl
+idl/COS/CosTradingRepos.idl
+idl/COS/CosTransactions.idl
+idl/COS/CosTypedEventChannelAdmin.idl
+idl/COS/CosTypedEventComm.idl
+idl/COS/CosTypedNotifyChannelAdmin.idl
+idl/COS/CosTypedNotifyComm.idl
+idl/COS/DCE_CIOPSecurity.idl
+idl/COS/LifeCycleService.idl
+idl/COS/Lname-library.idl
+idl/COS/NRService.idl
+idl/COS/RDITestTypes.idl
+idl/COS/SECIOP.idl
+idl/COS/SSLIOP.idl
+idl/COS/Security.idl
+idl/COS/SecurityAdmin.idl
+idl/COS/SecurityLevel1.idl
+idl/COS/SecurityLevel2.idl
+idl/COS/SecurityReplaceable.idl
+idl/COS/TimeBase.idl
+src/services/dir.mk
+src/services/include/BootStrapAgent.h
+src/services/include/CosNaming_i.h
+src/services/include/CosNotify.h
+src/services/include/CosNotifyComm_i.h
+src/services/include/corba_wrappers.h
+src/services/mklib/COS_sysdep.h
+src/services/mklib/cosinterfaces.mk
+src/services/mklib/dir.mk
+src/services/mklib/libdefs.mk
+src/services/mklib/mkBOAlib/COS_sysdep.h
+src/services/mklib/mkBOAlib/dir.mk           NEW
+
+
 Fri Nov  3 19:14:21 GMT 2000 sll
 ================================
 
