@@ -1,3 +1,11 @@
+Fri Aug  3 19:08:35 BST 2001 sll
+================================
+
+- Added MAIN_THREAD_MODEL to the typecode of ThreadPolicyValue.
+
+src/lib/omniORB/dynamic/poastubs.cc
+
+
 Fri Aug  3 18:36:13 BST 2001 sll
 ================================
 

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/03 18:11:41  sll
+  Added MAIN_THREAD_MODEL to the typecode of ThreadPolicyValue.
+
   Revision 1.1.2.1  2001/07/31 16:04:06  sll
   Added ORB::create_policy() and associated types and operators.
 
@@ -41,8 +44,8 @@ OMNI_USING_NAMESPACE(omni)
 
 static const char* _0RL_library_version = omniORB_4_0;
 
-static const char* _0RL_enumMember_PortableServer_mThreadPolicyValue[] = { "ORB_CTRL_MODEL", "SINGLE_THREAD_MODEL" };
-static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mThreadPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/ThreadPolicyValue" PS_VERSION, "ThreadPolicyValue", _0RL_enumMember_PortableServer_mThreadPolicyValue, 2);
+static const char* _0RL_enumMember_PortableServer_mThreadPolicyValue[] = { "ORB_CTRL_MODEL", "SINGLE_THREAD_MODEL", "MAIN_THREAD_MODEL" };
+static CORBA::TypeCode_ptr _0RL_tc_PortableServer_mThreadPolicyValue = CORBA::TypeCode::PR_enum_tc("IDL:PortableServer/ThreadPolicyValue" PS_VERSION, "ThreadPolicyValue", _0RL_enumMember_PortableServer_mThreadPolicyValue, 3);
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
 namespace PortableServer { 
