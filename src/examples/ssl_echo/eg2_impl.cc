@@ -55,7 +55,7 @@ int main(int argc, char** argv)
   int    my_argc = argc + 2;
   char** my_argv = new (char*)[my_argc];
   memcpy(my_argv,argv,sizeof(char*)*argc);
-  my_argv[my_argc - 2] = "-ORBendpoint";
+  my_argv[my_argc - 2] = "-ORBendPoint";
   my_argv[my_argc - 1] = "giop:ssl::";
 
   argc = my_argc;
