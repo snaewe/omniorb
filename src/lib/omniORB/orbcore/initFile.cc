@@ -29,9 +29,8 @@
 
 /*
   $Log$
-  Revision 1.11  1997/05/12 13:24:20  ewc
-  Changed initFile so that semantics with regard to not finding configuration
-  information are the same as the UNIX versions.
+  Revision 1.12  1997/05/12 14:13:33  ewc
+  Minor cosmetic change.
 
 // Revision 1.9  1997/05/06  15:21:25  sll
 // Public release.
@@ -447,12 +446,14 @@ void initFile::invref(char* entryname)
 void initFile::noValsFound()
 {
   if (omniORB::traceLevel > 0) {
-    cerr << "Configuration error: No values found in registry key " 
+    cerr << "Configuration error: No values found in registry key"
+         << "\nHKEY_LOCAL_MACHINE\\" 
 	 << INIT_REGKEY << endl;
     cerr << "Either set the environment variable OMNIORB_CONFIG to point"
          << "\nto the omniORB configuration file, or enter the IOR for the"
          << "\nnaming service in to the registry in the (string) value"
-         << "\nNAMESERVICE , under the registry entry " << INIT_REGKEY << endl;
+         << "\nNAMESERVICE , under the registry entry HKEY_LOCAL_MACHINE\\" 
+	 << INIT_REGKEY << endl;
   }
 }
 
