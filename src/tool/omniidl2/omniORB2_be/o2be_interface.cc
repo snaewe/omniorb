@@ -10,16 +10,20 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/13 15:41:15  sll
-  If the name of the interface is Object, rename it to CORBA::Object.
-  New member function produce_typedef_hdr(). This is called when a typedef
-  declaration is encountered.
-  Defined a new class <interface>_Helper. This is used to instantiate
-  the template _CORBA_ObjRef_Var and _CORBA_ObjRef_Member.
-  This is necessary because the interface can be recurively used within
-  its scope, e.g. as a user exception value and the _nil() and marshalling
-  functions cannot be used.
+  Revision 1.3  1997/01/23 17:08:29  sll
+  Changed <X>_proxyObjectFactory() class to include a new static member
+  function that returns a nil object of X.
 
+// Revision 1.2  1997/01/13  15:41:15  sll
+// If the name of the interface is Object, rename it to CORBA::Object.
+// New member function produce_typedef_hdr(). This is called when a typedef
+// declaration is encountered.
+// Defined a new class <interface>_Helper. This is used to instantiate
+// the template _CORBA_ObjRef_Var and _CORBA_ObjRef_Member.
+// This is necessary because the interface can be recurively used within
+// its scope, e.g. as a user exception value and the _nil() and marshalling
+// functions cannot be used.
+//
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -32,7 +36,7 @@
 #define PROXY_CLASS_PREFIX        "_proxy_"
 #define SERVER_CLASS_PREFIX       "_sk_"
 #define NIL_CLASS_PREFIX           "_nil_"
-#define PROXY_OBJ_FACTORY_POSTFIX "_proxyObjectFacory"
+#define PROXY_OBJ_FACTORY_POSTFIX "_proxyObjectFactory"
 #define IRREPOID_POSTFIX          "_IntfRepoID"
 #define FIELD_MEMBER_TEMPLATE     "_CORBA_ObjRef_Member"
 
@@ -54,6 +58,11 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
       set__fqname("CORBA_Object");
       set_scopename("CORBA");
       set__scopename("CORBA");
+      pd_objref_uqname = "Object_ptr";
+      pd_objref_fqname = "CORBA::Object_ptr";
+      pd_fieldmem_uqname = "Object_member";
+      pd_fieldmem_fqname = "CORBA::Object_member";
+      return;
     }
 
   pd_objref_uqname = new char[strlen(uqname())+strlen("_ptr")+1];
@@ -690,16 +699,6 @@ o2be_interface::produce_skel(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
   
-  // static nil object
-  IND(s); s << "static " << nil_fqname()
-	    << " " << NIL_CLASS_PREFIX << _fqname() << ";\n\n";
-
-  IND(s); s << objref_fqname() << "\n";
-  IND(s); s << fqname() << "::_nil() {\n";
-  INC_INDENT_LEVEL()
-    IND(s); s << "return &" << NIL_CLASS_PREFIX << _fqname() << ";\n";
-  DEC_INDENT_LEVEL()
-  IND(s); s << "}\n\n";
 
   // _duplicate
   IND(s); s << objref_fqname() << "\n";
@@ -877,6 +876,21 @@ o2be_interface::produce_skel(fstream &s)
   IND(s); s << "virtual const char *irRepoId() const;\n";
   IND(s); s << "virtual CORBA::Object_ptr newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release);\n";
   IND(s); s << "virtual CORBA::Boolean is_a(const char *base_repoId) const;\n";
+  // _nil()
+  IND(s); s << "static " << objref_fqname() << " _nil() {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "if (!_" << nil_uqname() << ") {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_" << nil_uqname() << " = new " << nil_fqname() << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "return _" << nil_uqname() << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "private:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "static " << objref_fqname() << " _" << nil_uqname() << ";\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
   // _irRepoId()
@@ -907,12 +921,24 @@ o2be_interface::produce_skel(fstream &s)
   IND(s); s << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::is_a(const char *base_repoId) const\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "return " << fqname() << "::_is_a(base_repoId);\n";
+  IND(s); s << "return " << fqname() << "::_is_a(base_repoId);\n\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
+
+  IND(s); s << objref_fqname() << "\n";
+  IND(s); s << fqname() << "::_nil() {\n";
+  INC_INDENT_LEVEL()
+    IND(s); s << "return " << _fqname() 
+	      << PROXY_OBJ_FACTORY_POSTFIX << "::_nil();\n";
+  DEC_INDENT_LEVEL()
+  IND(s); s << "}\n\n";
+
   // single const instance
   IND(s); s << "static const " << _fqname() << PROXY_OBJ_FACTORY_POSTFIX
 	    << " " << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << ";\n";
+  IND(s); s << objref_fqname() << " " 
+	    << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << "::_"
+	    << nil_uqname() << " = 0;\n\n";
 }
 
 void
