@@ -112,6 +112,7 @@ extern "C" char * mktemp(char *);
 
 static	char	*arglist[MAX_ARGLIST];
 static	long	argcount = 0;
+static  idl_bool  copy_src = I_TRUE;
 
 /*
  * Push the new CPP location if we got a -Yp argument
@@ -148,8 +149,10 @@ DRV_cpp_init()
   // If this is gcc, we need to put in a -x c flag to stop it from
   // guessing from the file extension what language this file is
   char *p = strrchr(idl_global->cpp_location(),'g');
-  if (p != NULL && strcmp(p,"gcc") == 0)
+  if (p != NULL && strcmp(p,"gcc") == 0) {
     DRV_cpp_putarg("-xc++");
+    copy_src = I_FALSE;
+  }
   DRV_cpp_putarg("-E");
   DRV_cpp_putarg("-DIDL");
   DRV_cpp_putarg("-I.");
@@ -262,9 +265,11 @@ DRV_pre_proc(char *myfile)
     DRV_copy_input(stdin, tmp_ifile);
     idl_global->set_read_from_stdin(I_TRUE);
   } else {
-    FILE *fd = fopen(myfile, "r");
-    DRV_copy_input(fd, tmp_ifile);
-    fclose(fd);
+    if (copy_src) {
+      FILE *fd = fopen(myfile, "r");
+      DRV_copy_input(fd, tmp_ifile);
+      fclose(fd);
+    }
     idl_global->set_read_from_stdin(I_FALSE);
     idl_global->set_filename((*DRV_FE_new_UTL_String)(myfile));
     idl_global->set_main_filename((*DRV_FE_new_UTL_String)(myfile));
@@ -272,11 +277,19 @@ DRV_pre_proc(char *myfile)
         set_stripped_filename(
             (*DRV_FE_new_UTL_String)(DRV_stripped_name(myfile))
         );
-    idl_global->set_real_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+    if (copy_src) {
+      idl_global->set_real_filename((*DRV_FE_new_UTL_String)(tmp_ifile));
+    }
+    else {
+      idl_global->set_real_filename((*DRV_FE_new_UTL_String)(myfile));
+    }
   }
   switch (child_pid = fork()) {
   case 0:	/* Child - call cpp */
-    DRV_cpp_putarg(tmp_ifile);
+    if (copy_src)
+      DRV_cpp_putarg(tmp_ifile);
+    else 
+      DRV_cpp_putarg(myfile);
     {
       int fd = open(tmp_file, O_WRONLY | O_CREAT | O_TRUNC, 0777);
       if (fd < 0) {
@@ -315,7 +328,7 @@ DRV_pre_proc(char *myfile)
 	     << GTDEVEL(": Preprocessor returned non-zero status ")
 	     << (int) WEXITSTATUS(wait_status)
 	     << "\n";
-	unlink(tmp_ifile);
+	if (copy_src) unlink(tmp_ifile);
 	unlink(tmp_file);
         exit(WEXITSTATUS(wait_status));
       }
@@ -324,7 +337,7 @@ DRV_pre_proc(char *myfile)
       cerr << idl_global->prog_name()
 	   << GTDEVEL(": Preprocessor terminated abnormally")
 	   << "\n";
-      unlink(tmp_ifile);
+      if (copy_src) unlink(tmp_ifile);
       unlink(tmp_file);
       exit(1);
     }
@@ -342,7 +355,7 @@ DRV_pre_proc(char *myfile)
 	   << wait_status
 #endif	// defined(apollo) || defined(SUNOS4)
 	   << "\n";
-      unlink(tmp_ifile);
+      if (copy_src) unlink(tmp_ifile);
       unlink(tmp_file);
 #if defined(apollo) || defined(SUNOS4)
       exit(wait_status.w_status);
@@ -365,12 +378,14 @@ DRV_pre_proc(char *myfile)
     sprintf(catbuf, "cat < %s", tmp_file);
     system(catbuf);
   }
-  if (unlink(tmp_ifile) != 0) {
-    cerr << idl_global->prog_name()
-         << GTDEVEL(": Could not remove cpp input file ")
-	 << tmp_ifile
-	 << "\n";
-    exit(99);
+  if (copy_src) {
+    if (unlink(tmp_ifile) != 0) {
+      cerr << idl_global->prog_name()
+	   << GTDEVEL(": Could not remove cpp input file ")
+	   << tmp_ifile
+	   << "\n";
+      exit(99);
+    }
   }
   if (unlink(tmp_file) != 0) {
     cerr << idl_global->prog_name()
