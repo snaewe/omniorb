@@ -19,7 +19,7 @@
   <tr>
     <td width="15%"><img src="images/omniORB3logo.gif"/></td>
     <td align="center" bgcolor="#000000"><h1 class="banner">
-        <font color="#FFFFFF"><em>omniORB 3.0.0 Bug List</em></font></h1>
+        <font color="#FFFFFF"><em>omniORB 3.0.1 Bug List</em></font></h1>
     </td>
 
     <td width="15%"><p align="center">
