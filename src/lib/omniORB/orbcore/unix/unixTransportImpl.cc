@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/08/08 15:59:23  sll
+  Now accepts shorthand endpoint string "giop:unix:". Make use of
+  unixTransportDirectory.
+
   Revision 1.1.2.1  2001/08/06 15:47:45  sll
   Added support to use the unix domain socket as the local transport.
 
@@ -45,6 +49,12 @@
 #include <unix/unixEndpoint.h>
 #include <unix/unixTransportImpl.h>
 #include <omniORB4/linkHacks.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <pwd.h>
+
 
 OMNI_FORCE_LINK(unixAddress);
 OMNI_FORCE_LINK(unixConnection);
@@ -67,10 +77,55 @@ unixTransportImpl::~unixTransportImpl() {
 giopEndpoint*
 unixTransportImpl::toEndpoint(const char* param) {
 
-  if (param) 
-    return (giopEndpoint*)(new unixEndpoint(param));
-  else
-    return 0;
+  if (!param)  return 0;
+
+  CORBA::String_var dname;
+  CORBA::String_var fname;
+  struct stat sb;
+
+  if (strlen(param) == 0) {
+    param = omniORB::unixTransportDirectory;
+    if (!param) {
+      struct passwd* pw = getpwuid(getuid());
+      if (!pw) {
+	omniORB::logger log;	
+	log << "Error: cannot get password entry of uid: " << getuid() << "\n";
+	return 0;
+      }
+      const char* format = "/tmp/omni-%s";
+      dname = CORBA::string_alloc(strlen(format)+strlen(pw->pw_name));
+      sprintf(dname,format,pw->pw_name);
+      param = dname;
+    }
+    if (stat(param,&sb) == 0) {
+      if (!(sb.st_mode & S_IFDIR)) {
+	omniORB::logger log;	
+	log << "Error: " << param << " exists and is not a directory. "
+	    << "Please remove it and try again\n";
+	return 0;
+      }
+    }
+    else {
+      if (mkdir(param,0755) < 0) {
+	omniORB::logger log;	
+	log << "Error: cannot create directory: " << param << "\n";
+	return 0;
+      }
+    }
+  }
+
+  if (stat(param,&sb) == 0 && (sb.st_mode & S_IFDIR)) {
+    const char* format = "%s/%09u-%09u";
+    fname = CORBA::string_alloc(strlen(param)+24);
+
+    unsigned long now_sec, now_nsec;
+    omni_thread::get_time(&now_sec,&now_nsec);
+    
+    sprintf(fname,format,param,(unsigned int)getpid(),(unsigned int)now_sec);
+    param = fname;
+  }
+
+  return (giopEndpoint*)(new unixEndpoint(param));
 }
 
 /////////////////////////////////////////////////////////////////////////
