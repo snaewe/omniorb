@@ -8,6 +8,18 @@
 
 <buglist version="3.0.2">
 
+<bug id="7" date="Tue Nov 21 10:46:54 GMT 2000" user="dpg1">
+
+  <summary>Invalid object references handled incorrectly</summary>
+  <reported>Nick Belshaw</reported>
+  <text>
+  An IOR containing no recognised profiles (e.g. from ORBit with
+  default settings) would be treated as nil by string_to_object, and a
+  MARSHAL exception by the unmarshalling code. The correct exception
+  is INV_OBJREF.
+  </text>
+</bug>
+
 <bug id="6" date="Mon Nov 13 11:47:35 GMT 2000" user="djr">
 
   <summary>System exceptions not forwarded from incarnate() and preinvoke()</summary>

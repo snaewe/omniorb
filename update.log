@@ -1,3 +1,12 @@
+Tue Nov 21 10:46:54 GMT 2000 dpg1
+=================================
+
+- Poperly throw INV_OBJREF for object references containing no
+  profiles we understand.
+
+src/lib/omniORB2/orbcore/corbaObject.cc
+src/lib/omniORB2/orbcore/uri.cc
+
 
 Mon Nov 13 11:47:35 GMT 2000 djr
 ================================

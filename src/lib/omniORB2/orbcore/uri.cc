@@ -30,6 +30,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.8  2000/11/21 10:59:27  dpg1
+// Poperly throw INV_OBJREF for object references containing no profiles
+// we understand.
+//
 // Revision 1.1.2.7  2000/09/13 11:45:05  dpg1
 // Minor cut-and-paste error in URI handling meant that ior: was not
 // accepted as a URI format.
@@ -242,10 +246,10 @@ iorURIHandler::toObject(const char* sior, unsigned int cycles)
 					  profiles, 1, 0);
   delete[] repoId;
 
-  if (objref)
-    return (CORBA::Object_ptr)objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
-  else
-    return CORBA::Object::_nil();
+  if (!objref)
+    OMNIORB_THROW(INV_OBJREF, 0, CORBA::COMPLETED_NO);
+
+  return (CORBA::Object_ptr)objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
 }
 
 CORBA::Boolean
@@ -651,11 +655,9 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
     }
     omniObjRef* objref = omni::createObjRef("", CORBA::Object::_PD_repoId,
 					    profiles, 1, 0);
-    if (objref) {
-      return (CORBA::Object_ptr)objref->
-	                           _ptrToObjRef(CORBA::Object::_PD_repoId);
-    }
-    else return CORBA::Object::_nil();
+    OMNIORB_ASSERT(objref);
+
+    return (CORBA::Object_ptr)objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
   }
   OMNIORB_ASSERT(0);
   return 0;

@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.19.6.10  2000/11/21 10:59:27  dpg1
+  Poperly throw INV_OBJREF for object references containing no profiles
+  we understand.
+
   Revision 1.19.6.9  2000/06/22 10:40:14  dpg1
   exception.h renamed to exceptiondefs.h to avoid name clash on some
   platforms.
@@ -591,7 +595,7 @@ CORBA::UnMarshalObjRef(const char* repoId, MemBufferedStream& s)
       delete[] id;
       id = 0;
 
-      if( !objref )  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
+      if( !objref )  OMNIORB_THROW(INV_OBJREF, 0, CORBA::COMPLETED_MAYBE);
       return (CORBA::Object_ptr)  objref->_ptrToObjRef(Object::_PD_repoId);
     }
   }
