@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/07/13 15:36:24  sll
+  Revised declaration to match the changes in giopConnection.
+
   Revision 1.1.2.3  2001/06/20 18:35:16  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -52,6 +55,8 @@
 
 OMNI_NAMESPACE_BEGIN(omni)
 
+class sslEndpoint;
+
 class sslConnection : public giopConnection {
  public:
 
@@ -69,18 +74,28 @@ class sslConnection : public giopConnection {
 
   const char* peeraddress();
 
+  void setSelectable(CORBA::Boolean now = 0,CORBA::Boolean data_in_buffer = 0);
+
+  void clearSelectable();
+
+  void Peek(giopEndpoint::notifyReadable_t func,void* cookie);
+
   tcpSocketHandle_t handle() const { return pd_socket; }
   ::SSL*            ssl_handle() const { return pd_ssl; }
 
-  sslConnection(tcpSocketHandle_t,::SSL*);
+  sslConnection(tcpSocketHandle_t,::SSL*,sslEndpoint* endpoint = 0);
 
   ~sslConnection();
 
+  friend class sslEndpoint;
+
  private:
   tcpSocketHandle_t pd_socket;
+  sslEndpoint*      pd_endpoint;
   ::SSL*            pd_ssl;
   CORBA::String_var pd_myaddress;
   CORBA::String_var pd_peeraddress;
+  sslConnection*    pd_next;
 };
 
 OMNI_NAMESPACE_END(omni)

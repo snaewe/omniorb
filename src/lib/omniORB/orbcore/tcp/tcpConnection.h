@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/07/13 15:33:28  sll
+  Revised declaration to match the changes in giopConnection.
+
   Revision 1.1.2.4  2001/06/20 18:35:16  sll
   Upper case send,recv,connect,shutdown to avoid silly substutition by
   macros defined in socket.h to rename these socket functions
@@ -104,6 +107,7 @@
 OMNI_NAMESPACE_BEGIN(omni)
 
 typedef SOCKET tcpSocketHandle_t;
+typedef fd_set tcpSocketHandleSet_t;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -178,6 +182,7 @@ extern "C" int select (int,fd_set*,fd_set*,fd_set*,struct timeval *);
 OMNI_NAMESPACE_BEGIN(omni)
 
 typedef int    tcpSocketHandle_t;
+typedef fd_set tcpSocketHandleSet_t;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -188,6 +193,8 @@ extern "C" int gethostname(char *name, int namelen);
 #endif
 
 OMNI_NAMESPACE_BEGIN(omni)
+
+class tcpEndpoint;
 
 class tcpConnection : public giopConnection {
  public:
@@ -206,9 +213,15 @@ class tcpConnection : public giopConnection {
 
   const char* peeraddress();
 
+  void setSelectable(CORBA::Boolean now = 0,CORBA::Boolean data_in_buffer = 0);
+
+  void clearSelectable();
+
+  void Peek(giopEndpoint::notifyReadable_t func,void* cookie);
+
   tcpSocketHandle_t handle() const;
 
-  tcpConnection(tcpSocketHandle_t);
+  tcpConnection(tcpSocketHandle_t,tcpEndpoint* endpoint = 0);
 
   ~tcpConnection();
 
@@ -222,10 +235,14 @@ class tcpConnection : public giopConnection {
   static char* ip4ToString(CORBA::ULong);
   static char* ip4ToString(CORBA::ULong,CORBA::UShort,const char* prefix=0);
 
+  friend class tcpEndpoint;
+
  private:
   tcpSocketHandle_t pd_socket;
+  tcpEndpoint*      pd_endpoint;
   CORBA::String_var pd_myaddress;
   CORBA::String_var pd_peeraddress;
+  tcpConnection*    pd_next;
 };
 
 OMNI_NAMESPACE_END(omni)
