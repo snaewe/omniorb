@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15  2000/02/14 12:49:57  dpg1
+# Python version check. New -p option.
+#
 # Revision 1.14  2000/02/04 12:17:05  dpg1
 # Support for VMS.
 #
@@ -75,15 +78,27 @@
 
 """IDL Compiler front-end main function"""
 
+import sys
+
+if sys.version[:5] != "1.5.2":
+    sys.stdout.write("\n\n")
+    sys.stdout.write("omniidl: WARNING!!\n\n")
+    sys.stdout.write("omniidl: Python version 1.5.2 is required.\n")
+    sys.stdout.write("omniidl: " + sys.executable + " is version " + \
+                     sys.version + "\n")
+    sys.stdout.write("omniidl: Execution is likely to fail.\n")
+    sys.stdout.write("\n\n\n")
+    sys.stdout.flush()
+
 import _omniidl
-import sys, getopt, os, os.path, string
+import getopt, os, os.path, string
 
 import idlast, idltype
 
+cmdname = os.path.basename(sys.argv[0])
+
 def version():
     print "omniidl version 0.1"
-
-cmdname = os.path.basename(sys.argv[0])
 
 def usage():
     print "\nUsage:", cmdname, "[flags] -b<back_end> file1 file2 ..."
@@ -101,6 +116,7 @@ The supported flags are:
   -Wbarg[,arg...] Send args to the back-end
   -Cdir           Change directory to dir before writing output
   -d              Dump the parsed IDL then exit
+  -ppath          Path to omniidl back-ends
   -V              Print version info then exit
   -u              Print this usage message and exit
   -v              Trace compilation stages"""
@@ -132,7 +148,7 @@ def parseArgs(args):
     global verbose, quiet, print_usage
 
     try:
-        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:C:dVuhvq")
+        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:C:dVuhvqp:")
     except getopt.error, e:
         sys.stderr.write("Error in arguments: " + e + "\n")
         sys.stderr.write("Use " + cmdname + " -u for usage\n")
@@ -203,6 +219,9 @@ def parseArgs(args):
         elif o == "-q":
             quiet = 1
 
+        elif o == "-p":
+            sys.path.insert(0, a)
+
     return files
 
 
@@ -212,6 +231,12 @@ def my_import(name):
     for comp in components[1:]:
         mod = getattr(mod, comp)
     return mod
+
+def be_import(name):
+    try:
+        return my_import("omniidl.be." + name)
+    except ImportError:
+        return my_import(name)
 
 def main(argv=None):
     global preprocessor_args, preprocessor_only, preprocessor_cmd
@@ -237,16 +262,15 @@ def main(argv=None):
             sys.stderr.write(cmdname + ": Importing back-end `" +\
                              backend + "'\n")
         try:
-            be = my_import("omniidl.be." + backend)
+            be = be_import(backend)
         except ImportError:
-            try:
-                be = my_import(backend)
-            except ImportError:
-                if not quiet:
-                    sys.stderr.write(cmdname + \
-                                     ": Could not import back-end `" + \
-                                     backend + "'\n")
-                sys.exit(1)
+            if not quiet:
+                sys.stderr.write(cmdname + \
+                                 ": Could not import back-end `" + \
+                                 backend + "'\n")
+                sys.stderr.write(cmdname + \
+                                 ": Maybe you need to use the -p option?\n")
+            sys.exit(1)
 
         bemodules.append(be)
         if hasattr(be, "cpp_args"):
