@@ -6,7 +6,7 @@
 IRIX = 1
 IndigoProcessor = 1
 
-
+ABSTOP = $(shell cd $(TOP); pwd)
 
 #
 # Python set-up

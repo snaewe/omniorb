@@ -5,6 +5,8 @@
 HPUX = 1
 HppaProcessor = 1
 
+ABSTOP = $(shell cd $(TOP); pwd)
+
 #
 # Python set-up
 #

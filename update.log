@@ -1,3 +1,11 @@
+Thu Jul 13 19:12:53 BST 2000 sll
+================================
+
+- Missed make variable
+
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+
 Thu Jul 13 18:15:02 BST 2000 dpg1
 =================================
 
