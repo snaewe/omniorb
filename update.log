@@ -1,3 +1,11 @@
+Wed Feb  4 12:11:30 GMT 1998 ewc
+================================
+
+- Added (empty) orb.idl file for compatibility with the CORBA 2 spec.
+
+idl/orb.idl   NEW
+
+
 Tue Feb  3 16:48:44 GMT 1998 ewc
 ================================
 
