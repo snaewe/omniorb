@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.23  1999/01/07 18:36:13  djr
+  Changes to support split of omniORB library in two.
+
   Revision 1.22  1998/10/08 13:07:24  sll
   OpenVMS needs string.h (POSIX or System V) instead of strings.h (BSD).
 
@@ -89,13 +92,26 @@
 #else
 #include <string.h>
 #endif
+#include <omnithread.h>
 #include <omniORB2/CORBA_sysdep.h>
 #include <omniORB2/CORBA_basetypes.h>
 #include <omniORB2/seqtemplates.h>
+
+
+#ifdef _LC_attr
+# error "A local CPP macro _LC_attr has already been defined."
+#else
+# ifdef _OMNIORB2_LIBRARY
+#  define _LC_attr
+# else
+#  define _LC_attr _OMNIORB_NTDLL_IMPORT
+# endif
+#endif
+
+
 #include <omniORB2/IOP.h>
 #include <omniORB2/GIOP.h>
 #include <omniORB2/IIOP.h>
-#include <omnithread.h>
 
 class Rope;
 class GIOP_S;
@@ -109,19 +125,25 @@ class omniObjectManager;
 //   Define this variable to trap the mismatch of the stub and the runtime
 //   library. The two digits x,y should be the same as the shared library
 //   major version number and minor version number. For example, for shared
-//   library 2.5.0 the variable number should be omniORB_2.5. Notice that
+//   library 2.5.0 the variable number should be omniORB_2_5. Notice that
 //   the variable name stays the same with compatible shared library, e.g.
 //   2.5.1.
 //
-extern const char* _OMNIORB_NTDLL_IMPORT omniORB_2_6;
+extern const char* _LC_attr omniORB_2_7;
+
 
 #include <omniORB2/rope.h>
+
 
 struct omniObjectKey {
   _CORBA_ULong hi;
   _CORBA_ULong med;
   _CORBA_ULong lo;
 };
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////// omni ////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 class omni {
 
@@ -135,19 +157,20 @@ public:
 #error "No suitable type to do pointer arithmetic"
 #endif
 
-  static _OMNIORB_NTDLL_IMPORT const _CORBA_Char myByteOrder;
+  static _LC_attr const _CORBA_Char myByteOrder;
 
   enum alignment_t { ALIGN_1 = 1, ALIGN_2 = 2, ALIGN_4 = 4, ALIGN_8 = 8 };
-  static _OMNIORB_NTDLL_IMPORT const alignment_t max_alignment;  // Maximum value of alignment_t
+  static _LC_attr const alignment_t max_alignment;
+  // Maximum value of alignment_t
 
   static inline ptr_arith_t align_to(ptr_arith_t p,alignment_t align) {
     return (p + ((int) align - 1)) & ~((int) align - 1);
   }
 
-  static _OMNIORB_NTDLL_IMPORT _CORBA_Unbounded_Sequence_Octet myPrincipalID;
+  static _LC_attr _CORBA_Unbounded_Sequence_Octet myPrincipalID;
 
-  static void objectIsReady(omniObject *obj);
-  static void objectDuplicate(omniObject *obj);
+  static void objectIsReady(omniObject* obj);
+  static void objectDuplicate(omniObject* obj);
   // Increment the reference count.
 
   static void objectRelease(omniObject *obj);
@@ -201,6 +224,10 @@ public:
   // CORBA::Object from which all interfaces derived.
 
 };
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// omniRopeAndKey ///////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 class omniRopeAndKey {
 public:
@@ -256,6 +283,10 @@ private:
   omniRopeAndKey(const omniRopeAndKey&);
 };
 
+//////////////////////////////////////////////////////////////////////
+///////////////////////////// omniObject /////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
 class omniObject {
 
 protected:
@@ -272,7 +303,7 @@ protected:
 
   virtual ~omniObject();
 
-  void  PR_IRRepositoryId(const char *s);
+  void  PR_IRRepositoryId(const char* s);
   // Set the IR repository ID of this object to <s>.
   // NOTE: this function is **not thread-safe**. It *should not* be called
   //       if there is any chance that the object might be accessed
@@ -310,20 +341,17 @@ public:
   // the return value is 1.
   // This function is thread-safe.
 
-  void getKey(_CORBA_Octet*& key,_CORBA_ULong& ksize) const {
+  void getKey(_CORBA_Octet*& key, _CORBA_ULong& ksize) const {
     // This is a non-thread safe function to read the key of this object.
     // The object continues to own the storage of <key>.
     // If the key is modified concurrently by another thread's call to
-    // setRopeAndKey(), the behaviour is underfine.
-    if (is_proxy()) {
-      key = pd_objkey.foreign;
-    }
-    else {
-      key = (_CORBA_Octet*) &pd_objkey.native;
-    }
+    // setRopeAndKey(), the behaviour is undefined.
+    if( is_proxy() )  key = pd_objkey.foreign;
+    else              key = (_CORBA_Octet*) &pd_objkey.native;
+
     ksize = pd_objkeysize;
   }
-  
+
 
   void assertObjectExistent();
   // If this is a local object, 
@@ -359,13 +387,13 @@ public:
   // Return 1 if this is a proxy object, 0 if this is a local object.
   // This function is thread-safe.
 
-  inline const char *NP_IRRepositoryId() const { return pd_repoId; }
+  inline const char* NP_IRRepositoryId() const { return pd_repoId; }
   // Return the IR repository ID of this object. The value is returned 
   // is either the value given to the ctor or set by the most recent
   // call to PR_IRRepositoryID().
-  // This function is thread-safe.
+  //  This function is thread-safe.
 
-  virtual void *_widenFromTheMostDerivedIntf(const char *type_id,
+  virtual void* _widenFromTheMostDerivedIntf(const char* type_id,
 					     _CORBA_Boolean is_cxx_type_id=0);
   // The most derived class which override this virtual function will be
   // called to return a pointer to the base class object identified by
@@ -389,7 +417,7 @@ public:
   // This function DO NOT throw any exception under any circumstance.
   // This function is thread-safe.
 
-  inline IOP::TaggedProfileList * iopProfiles() const { 
+  inline IOP::TaggedProfileList* iopProfiles() const { 
     // This function is thread-safe.
     return pd_iopprofile; 
   }
@@ -486,54 +514,59 @@ public:
 
 private:
   union {
-    _CORBA_Octet *foreign;
-    omniObjectKey     native;
-  }                             pd_objkey;
-  size_t                        pd_objkeysize;
-  char *                        pd_repoId;
-  size_t                        pd_repoIdsize;
-  char *                        pd_original_repoId;
+    _CORBA_Octet* foreign;
+    omniObjectKey native;
+  }                    pd_objkey;
+  size_t               pd_objkeysize;
+  char*                pd_repoId;
+  size_t               pd_repoIdsize;
+  char*                pd_original_repoId;
   union {
-    Rope *                      pd_rope;
-    omniObjectManager*          pd_manager;
+    Rope*              pd_rope;
+    omniObjectManager* pd_manager;
   };
-  int                           pd_refCount;
-  omniObject *                      pd_next;
+  int                  pd_refCount;
+  omniObject*          pd_next;
 
   struct {
-    _CORBA_UShort              proxy                       : 1;
-    _CORBA_UShort              disposed                    : 1;
-    _CORBA_UShort              existent_and_type_verified  : 1;
-    _CORBA_UShort              forwardlocation             : 1;
-    _CORBA_UShort              transient_exception_handler : 1;
-    _CORBA_UShort              commfail_exception_handler  : 1;
-    _CORBA_UShort              system_exception_handler    : 1;
+    _CORBA_UShort proxy                       : 1;
+    _CORBA_UShort disposed                    : 1;
+    _CORBA_UShort existent_and_type_verified  : 1;
+    _CORBA_UShort forwardlocation             : 1;
+    _CORBA_UShort transient_exception_handler : 1;
+    _CORBA_UShort commfail_exception_handler  : 1;
+    _CORBA_UShort system_exception_handler    : 1;
   } pd_flags;
-  
-  IOP::TaggedProfileList *      pd_iopprofile;
-  
-  inline int getRefCount() const { return pd_refCount; }
-  inline void setRefCount(int count) { pd_refCount = count; return; }
 
-  friend void omni::objectIsReady(omniObject *obj);
-  friend void omni::objectDuplicate(omniObject *obj);
-  friend omniObject *omni::locateObject(omniObjectManager*,omniObjectKey &k);
-  friend void omni::disposeObject(omniObject *obj);
-  friend void omni::objectRelease(omniObject *obj);
-  friend char* omni::objectToString(const omniObject *obj);
-  friend omniObject* omni::stringToObject(const char *str);
-  friend omniObject * omni::createObjRef(const char *mostDerivedRepoId,
-					 const char *targetRepoId,
-					 IOP::TaggedProfileList *profiles,
+  IOP::TaggedProfileList* pd_iopprofile;
+
+  inline int getRefCount() const     { return pd_refCount;  }
+  inline void setRefCount(int count) { pd_refCount = count; }
+
+  friend void omni::objectIsReady(omniObject* obj);
+  friend void omni::objectDuplicate(omniObject* obj);
+  friend omniObject* omni::locateObject(omniObjectManager*,omniObjectKey &k);
+  friend void omni::disposeObject(omniObject* obj);
+  friend void omni::objectRelease(omniObject* obj);
+  friend char* omni::objectToString(const omniObject* obj);
+  friend omniObject* omni::stringToObject(const char* str);
+  friend omniObject*  omni::createObjRef(const char* mostDerivedRepoId,
+					 const char* targetRepoId,
+					 IOP::TaggedProfileList* profiles,
 					 _CORBA_Boolean release);
+  friend class ProxyObjectTableCleaner;
 };
+
 
 #include <omniORB2/bufferedStream.h>
 #include <omniORB2/giopDriver.h>
 
+
 template <class T>
 class _CORBA_ConstrType_Variable_Var;
 
-class tcParseEngine;
+
+#undef _LC_attr
+
 
 #endif // __OMNIINTERNAL_H__
