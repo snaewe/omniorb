@@ -31,6 +31,9 @@
 
 /*
  $Log$
+ Revision 1.23  1998/08/05 18:10:39  sll
+ Added DynAny.
+
  Revision 1.22  1998/04/18 10:07:28  sll
  Renamed __e with _0RL_e in operator<<=() of DefinitionKind.
 
@@ -376,51 +379,6 @@ typedef _CORBA_Double  Double;
     Any(TypeCode_ptr tc, void* value, Boolean release = 0,
 	Boolean nocheck = 0);	
 
-    
-    void operator>>= (NetBufferedStream& s) const;  // Marshalling and 
-    void operator<<= (NetBufferedStream& s);  // unmarshalling member functions
-
-    void operator>>= (MemBufferedStream& s) const;
-    void operator<<= (MemBufferedStream& s);
-
-    size_t NP_alignedSize(size_t initialoffset) const;
-
-    void NP_memAlignMarshal(MemBufferedStream& m);
-
-    inline ULong NP_length() const {
-      return (ULong) pd_mbuf.unRead();
-    }
-
-    void NP_holdData(void* data, void (*del)(void*)) const;
-    void NP_getBuffer(MemBufferedStream& mbuf) const;
-    void* NP_data() const { return pd_data; }
-	
-    void NP_replaceData(TypeCode_ptr tcp, const MemBufferedStream& mb);
-
-  protected:
-    inline void PR_fill(UShort fillerLen,MemBufferedStream& mbuf) const {
-      if (fillerLen > 0) {
-	Char* filler = new Char[fillerLen];
-	try {
-	  mbuf.put_char_array(filler,fillerLen);
-	}
-	catch (...) {
-	  delete[] filler;
-	  throw;
-	}
-	delete[] filler;
-      }
-    }
-
-    inline void PR_deleteData() {
-      if (pd_data) {
-	(*deleteData)(pd_data);	
-	pd_data = 0;
-      }
-    }
-
-  public:
-
     Any &operator=(const Any& a);
 
     void operator<<=(Short s);
@@ -542,6 +500,86 @@ typedef _CORBA_Double  Double;
 
     const void *value() const;
 
+    // omniORB2 specific starts here.
+    void operator>>= (NetBufferedStream& s) const;  // Marshalling and 
+    void operator<<= (NetBufferedStream& s);  // unmarshalling member functions
+
+    void operator>>= (MemBufferedStream& s) const;
+    void operator<<= (MemBufferedStream& s);
+
+    size_t NP_alignedSize(size_t initialoffset) const;
+
+
+    // NP_memAlignMarshal
+    //
+    // omniORB2 specific. Should not be used in application code.
+    //
+    //    - marshal this any type into the output stream <m>.
+    //    - If the typecode indicates that this is a double or any
+    //      constructed type that may contain a double, the internal 
+    //      alignment of the data in pd_mbuf may not be correct if the 
+    //      data is copied verbatim to the output stream. In this case, 
+    //      the data in the buffer have to be unpickled and marshalled again.
+    void NP_memAlignMarshal(MemBufferedStream& m);
+
+
+    // NP_getBuffer returns a MemBufferedStream from which the value
+    // of the any can be unmarshalled.
+    //
+    // NP_replaceData replaces the current typecode and value of the
+    // any with the supplied argument. Both arguments are copied by
+    // this function.
+    //
+    // The MemBufferedStream argument of the two functions must satisify
+    // the invariant of pd_mbuf below.
+    //
+    // Both functions should not be used in application code.
+    //
+    void NP_getBuffer(MemBufferedStream& mbuf) const;
+    void NP_replaceData(TypeCode_ptr tcp, const MemBufferedStream& mb);
+
+    // omniORB2 specific. Should not be used in application code.
+    // Deprecated function.
+    inline ULong NP_length() const {
+      return (ULong) pd_mbuf.unRead();
+    }
+
+    // omniORB2 specific. Should not be used in application code.
+    // Deprecated function.
+    void NP_holdData(void* data, void (*del)(void*)) const;
+
+    // omniORB2 specific. Should not be used in application code.
+    // Deprecated function.
+    inline void* NP_data() const { return pd_data; }
+
+
+  protected:
+    // omniORB2 specific. Should not be used in application code.
+    // Deprecated function.
+    inline void PR_fill(UShort fillerLen,MemBufferedStream& mbuf) const {
+      if (fillerLen > 0) {
+	Char* filler = new Char[fillerLen];
+	try {
+	  mbuf.put_char_array(filler,fillerLen);
+	}
+	catch (...) {
+	  delete[] filler;
+	  throw;
+	}
+	delete[] filler;
+      }
+    }
+
+    // omniORB2 specific. Should not be used in application code.
+    // Deprecated function.
+    inline void PR_deleteData() {
+      if (pd_data) {
+	(*deleteData)(pd_data);	
+	pd_data = 0;
+      }
+    }
+
+
   private:
     void operator<<=(unsigned char);
     Boolean operator>>=(unsigned char&) const;
@@ -551,6 +589,18 @@ typedef _CORBA_Double  Double;
 
     TypeCode_ptr pd_tc;
     MemBufferedStream pd_mbuf;
+    // pd_mbuf contains the value of this any.
+    // Invariant:
+    //     0-3 padding bytes are inserted at the beginning of the
+    //     stream. The number of padding bytes is calculated as follows:
+    //         n paddings = <size of the marshalled typecode> % 4
+    //                    = (pd_tc->pd_param).alreadyWritten() % 4
+    //                    = pd_tc->NP_alignedSize(0) % 4
+    //
+    // If the value does not contain any data member that
+    // has to be 8-byte aligned, the content of this stream can be
+    // appended in bulk to the end of the typecode when this any is 
+    // marshalled.
   };
 
   
@@ -1482,6 +1532,11 @@ typedef _CORBA_Double  Double;
     TCKind pd_tck;
     ULong  pd_maxLen;
     MemBufferedStream pd_param;
+    // pd_param contains the encapsulation stream of the simple or
+    // complex parameter list. The first byte contains a boolean
+    // value indicating the byte order of the rest of the stream.
+    // The total length of the stream is given by 
+    //   pd_param.alreadyWritten()
 
     Boolean PR_equal(TypeCode_ptr, Boolean expand) const;
 
@@ -1585,99 +1640,537 @@ typedef _CORBA_Double  Double;
   };
 
 
-  _CORBA_MODULE_FN inline Boolean is_nil(TypeCode_ptr o) { 
-    return (o) ? o->NP_is_nil() : 1; 
-  }
+////////////////////////////////////////////////////////////////////////
+//                   DynAny                                           //
+////////////////////////////////////////////////////////////////////////
 
-  _CORBA_MODULE_FN inline void release(TypeCode_ptr o) {
-    if (!CORBA::is_nil(o)) delete o;
-  }
+  class DynAny;
+  typedef DynAny* DynAny_ptr;
 
-  class TypeCode_INOUT_arg;
-  class TypeCode_OUT_arg;
+  class DynFixed;
+  typedef DynFixed *DynFixed_ptr;
+  typedef DynFixed_ptr DynFixedRef;
 
+  class DynEnum;
+  typedef DynEnum *DynEnum_ptr;
+  typedef DynEnum_ptr DynEnumRef;
 
-  class TypeCode_var {
+  class DynStruct;
+  typedef DynStruct *DynStruct_ptr;
+  typedef DynStruct_ptr DynStructRef;
+
+  class DynUnion;
+  typedef DynUnion* DynUnion_ptr;
+  typedef DynUnion_ptr DynUnionRef;
+
+  class DynSequence;
+  typedef DynSequence* DynSequence_ptr;
+  typedef DynSequence_ptr DynSequenceRef;
+  
+  class DynArray;
+  typedef DynArray* DynArray_ptr;
+  typedef DynArray_ptr DynArrayRef;
+
+  class DynAny_member;
+
+  class DynAny_var {
   public:
-    inline TypeCode_var() { pd_TC = CORBA::TypeCode::_nil(); }
+    DynAny_var();
+    DynAny_var(DynAny_ptr p);
+    ~DynAny_var();
+    DynAny_var(const DynAny_var& p);
+    DynAny_var(const DynAny_member& p);
+    DynAny_var& operator= (DynAny_ptr p);
+    DynAny_var& operator= (const DynAny_var& p);
+    DynAny_var& operator= (const DynAny_member& p);
+    DynAny_ptr operator->() const;
+    operator DynAny_ptr() const;
+    friend class DynAny_member;
+  private:
+    DynAny_ptr pd_d;
+  };
 
-    inline TypeCode_var(TypeCode_ptr p) { pd_TC = p; }
+#if 0
+  class	DynFixed_member;
+  class DynFixed_var {
+  public:
+    DynFixed_var();
+    DynFixed_var(DynFixed_ptr p);
+    ~DynFixed_var();
+    DynFixed_var(const DynFixed_var& p);
+    DynFixed_var(const DynFixed_member& p);
+    DynFixed_var& operator= (DynFixed_ptr p);
+    DynFixed_var& operator= (const DynFixed_var& p);
+    DynFixed_var& operator= (const DynFixed_member& p);
+    DynFixed_ptr operator->() const;
+    operator DynFixed_ptr() const;
+    friend class DynFixed_member;
+  private:
+    DynFixed_ptr pd_d;
+  };
+#endif
 
-    inline TypeCode_var(const TypeCode_var& p) { 
-	pd_TC = CORBA::TypeCode::_duplicate(p.pd_TC); 
-    }
+  class DynEnum_member;
+  class DynEnum_var {
+  public:
+    DynEnum_var();
+    DynEnum_var(DynEnum_ptr p);
+    ~DynEnum_var();
+    DynEnum_var(const DynEnum_var& p);
+    DynEnum_var(const DynEnum_member& p);
+    DynEnum_var& operator= (DynEnum_ptr p);
+    DynEnum_var& operator= (const DynEnum_var& p);
+    DynEnum_var& operator= (const DynEnum_member& p);
+    DynEnum_ptr operator->() const;
+    operator DynEnum_ptr() const;
+    friend class DynEnum_member;
+  private:
+    DynEnum_ptr pd_d;
+  };
 
-    inline ~TypeCode_var() { CORBA::release(pd_TC); }
+  class DynStruct_member;
+  class DynStruct_var {
+  public:
+    DynStruct_var();
+    DynStruct_var(DynStruct_ptr p);
+    ~DynStruct_var();
+    DynStruct_var(const DynStruct_var& p);
+    DynStruct_var(const DynStruct_member& p);
+    DynStruct_var& operator= (DynStruct_ptr p);
+    DynStruct_var& operator= (const DynStruct_var& p);
+    DynStruct_var& operator= (const DynStruct_member& p);
+    DynStruct_ptr operator->() const;
+    operator DynStruct_ptr() const;
+    friend class DynStruct_member;
+  private:
+    DynStruct_ptr pd_d;
+  };
 
-    TypeCode_var(const TypeCode_member& p) { 
-      pd_TC = CORBA::TypeCode::_duplicate(p._ptr);
-    }
+  class DynUnion_member;
+  class DynUnion_var {
+  public:
+    DynUnion_var();
+    DynUnion_var(DynUnion_ptr p);
+    ~DynUnion_var();
+    DynUnion_var(const DynUnion_var& p);
+    DynUnion_var(const DynUnion_member& p);
+    DynUnion_var& operator= (DynUnion_ptr p);
+    DynUnion_var& operator= (const DynUnion_var& p);
+    DynUnion_var& operator= (const DynUnion_member& p);
+    DynUnion_ptr operator->() const;
+    operator DynUnion_ptr() const;
+    friend class DynUnion_member;
+  private:
+    DynUnion_ptr pd_d;
+  };
 
-    inline TypeCode_var& operator= (TypeCode_ptr p) {
-      CORBA::release(pd_TC);
-      pd_TC = p;
-      return *this;
-    }
+  class DynSequence_member;
+  class DynSequence_var {
+  public:
+    DynSequence_var();
+    DynSequence_var(DynSequence_ptr p);
+    ~DynSequence_var();
+    DynSequence_var(const DynSequence_var& p);
+    DynSequence_var(const DynSequence_member& p);
+    DynSequence_var& operator= (DynSequence_ptr p);
+    DynSequence_var& operator= (const DynSequence_var& p);
+    DynSequence_var& operator= (const DynSequence_member& p);
+    DynSequence_ptr operator->() const;
+    operator DynSequence_ptr() const;
+    friend class DynSequence_member;
+  private:
+    DynSequence_ptr pd_d;
+  };
 
-    inline TypeCode_var& operator= (const TypeCode_var& p) {
-      if (this != &p)
-	{
-	  CORBA::release(pd_TC);
-	  pd_TC = CORBA::TypeCode::_duplicate(p.pd_TC);
-	}
-      return *this;
-    }
+  class DynArray_member;
+  class DynArray_var {
+  public:
+    DynArray_var();
+    DynArray_var(DynArray_ptr p);
+    ~DynArray_var();
+    DynArray_var(const DynArray_var& p);
+    DynArray_var(const DynArray_member& p);
+    DynArray_var& operator= (DynArray_ptr p);
+    DynArray_var& operator= (const DynArray_var& p);
+    DynArray_var& operator= (const DynArray_member& p);
+    DynArray_ptr operator->() const;
+    operator DynArray_ptr() const;
+    friend class DynArray_member;
+  private:
+    DynArray_ptr pd_d;
+  };
+  
+  // omniORB2 private class
+  class DynAny_member {
+  public:
+    DynAny_member();
+    DynAny_member(DynAny_ptr p);
+    DynAny_member(const DynAny_member& p);
+    ~DynAny_member();
+    DynAny_member& operator= (DynAny_ptr p);
+    DynAny_member& operator= (const DynAny_member& p);
+    DynAny_member& operator= (const DynAny_var& p);
+    DynAny_ptr operator->() const;
+    operator DynAny_ptr () const;
+    DynAny_ptr _ptr;
+  };
 
-    inline TypeCode_var& operator=(const TypeCode_member& p) {
-      CORBA::release(pd_TC);
-      pd_TC = CORBA::TypeCode::_duplicate(p._ptr);
-      return *this;
-    }
+#if 0
+  class DynFixed_member {
+  public:
+    DynFixed_member();
+    DynFixed_member(DynFixed_ptr p);
+    DynFixed_member(const DynFixed_member& p);
+    ~DynFixed_member();
+    DynFixed_member& operator= (DynFixed_ptr p);
+    DynFixed_member& operator= (const DynFixed_member& p);
+    DynFixed_member& operator= (const DynFixed_var& p);
+    DynFixed_ptr operator->() const;
+    operator DynFixed_ptr () const;
+    DynFixed_ptr _ptr;
+  };
+#endif
+
+  class DynEnum_member {
+  public:
+    DynEnum_member();
+    DynEnum_member(DynEnum_ptr p);
+    DynEnum_member(const DynEnum_member& p);
+    ~DynEnum_member();
+    DynEnum_member& operator= (DynEnum_ptr p);
+    DynEnum_member& operator= (const DynEnum_member& p);
+    DynEnum_member& operator= (const DynEnum_var& p);
+    DynEnum_ptr operator->() const;
+    operator DynEnum_ptr () const;
+    DynEnum_ptr _ptr;
+  };
+
+  class DynStruct_member {
+  public:
+    DynStruct_member();
+    DynStruct_member(DynStruct_ptr p);
+    DynStruct_member(const DynStruct_member& p);
+    ~DynStruct_member();
+    DynStruct_member& operator= (DynStruct_ptr p);
+    DynStruct_member& operator= (const DynStruct_member& p);
+    DynStruct_member& operator= (const DynStruct_var& p);
+    DynStruct_ptr operator->() const;
+    operator DynStruct_ptr () const;
+    DynStruct_ptr _ptr;
+  };
+
+  class DynUnion_member {
+  public:
+    DynUnion_member();
+    DynUnion_member(DynUnion_ptr p);
+    DynUnion_member(const DynUnion_member& p);
+    ~DynUnion_member();
+    DynUnion_member& operator= (DynUnion_ptr p);
+    DynUnion_member& operator= (const DynUnion_member& p);
+    DynUnion_member& operator= (const DynUnion_var& p);
+    DynUnion_ptr operator->() const;
+    operator DynUnion_ptr () const;
+    DynUnion_ptr _ptr;
+  };
+
+  class DynSequence_member {
+  public:
+    DynSequence_member();
+    DynSequence_member(DynSequence_ptr p);
+    DynSequence_member(const DynSequence_member& p);
+    ~DynSequence_member();
+    DynSequence_member& operator= (DynSequence_ptr p);
+    DynSequence_member& operator= (const DynSequence_member& p);
+    DynSequence_member& operator= (const DynSequence_var& p);
+    DynSequence_ptr operator->() const;
+    operator DynSequence_ptr () const;
+    DynSequence_ptr _ptr;
+  };
+
+  class DynArray_member {
+  public:
+    DynArray_member();
+    DynArray_member(DynArray_ptr p);
+    DynArray_member(const DynArray_member& p);
+    ~DynArray_member();
+    DynArray_member& operator= (DynArray_ptr p);
+    DynArray_member& operator= (const DynArray_member& p);
+    DynArray_member& operator= (const DynArray_var& p);
+    DynArray_ptr operator->() const;
+    operator DynArray_ptr () const;
+    DynArray_ptr _ptr;
+  };
+
+  class DynAny {
+  public:    
+
+    class Invalid : public UserException {
+    public:    
+      Invalid() : UserException() {} 
+      virtual ~Invalid() {};
+    };
+    
+    class InvalidValue : public UserException {
+    public:
+      InvalidValue() : UserException() {}
+      virtual ~InvalidValue() {}
+    };
+
+    class TypeMismatch : public UserException {
+    public:
+      TypeMismatch() : UserException() {}
+      virtual ~TypeMismatch() {}
+    };
+
+    class InvalidSeq : public UserException {
+    public:
+      InvalidSeq() : UserException() {};
+      virtual ~InvalidSeq() {};
+    };
+
+
+    typedef _CORBA_Unbounded_Sequence__Octet OctetSeq;
+
+    virtual TypeCode_ptr type() const;
+    virtual void assign(DynAny_ptr dyn_any);
+    virtual void from_any(const Any& value);
+    virtual Any* to_any();
+    virtual void destroy();
+    virtual DynAny_ptr copy();
+    virtual void insert_boolean(Boolean value);
+    virtual void insert_octet(Octet value);
+    virtual void insert_char(Char value);
+    virtual void insert_short(Short value);
+    virtual void insert_ushort(UShort value);
+    virtual void insert_long(Long value);
+    virtual void insert_ulong(ULong value);
+#ifndef NO_FLOAT
+    virtual void insert_float(Float value);
+    virtual void insert_double(Double value);
+#endif
+    virtual void insert_string(const char* value);
+    virtual void insert_reference(Object_ptr value);
+    virtual void insert_typecode(TypeCode_ptr value);
+    virtual void insert_any(const Any& value);
+    virtual Boolean get_boolean();
+    virtual Octet get_octet();
+    virtual Char get_char();
+    virtual Short get_short();
+    virtual UShort get_ushort();
+    virtual Long get_long();
+    virtual ULong get_ulong();
+#ifndef NO_FLOAT
+    virtual Float get_float();
+    virtual Double get_double();
+#endif
+    virtual char* get_string();
+    virtual Object_ptr get_reference();
+    virtual TypeCode_ptr get_typecode();
+    virtual Any* get_any();
+    virtual DynAny_ptr current_component();
+    virtual Boolean next();
+    virtual Boolean seek(Long index);
+    virtual void rewind();
+
+    static DynAny_ptr _duplicate(DynAny_ptr);
+    static DynAny_ptr _narrow(DynAny_ptr);
+    static DynAny_ptr _nil();
+ 
+    virtual ~DynAny();
+
+    enum nodetype_t { dt_any,
+		      dt_enum,
+		      dt_fixed,
+		      dt_struct,
+		      dt_union,
+		      dt_seq,
+		      dt_array };
+
+  protected:
+    // omniORB2 specific.
+    void*        pd;
+    nodetype_t   pd_nodetype;
+
+  public:
+    void NP_release();
+    Boolean NP_is_nil() { return ((pd)?0:1); }
+    inline nodetype_t NP_nodetype() const { return pd_nodetype; }
+    void* NP_pd() const { return pd; }
+    virtual void NP_real_from_any(const Any& value);
+
+    DynAny(void* p,nodetype_t n) : pd(p), pd_nodetype(n) {}
+
+  private:
+    DynAny();
+    DynAny(const DynAny&);
+    DynAny& operator=(const DynAny&);
+
+  };
+
+#if 0
+  // DynFixed
+
+  class DynFixed :  public DynAny {
+  public:
+
+    virtual OctetSeq* get_value();
+    virtual void set_value(const OctetSeq& val);
+
+    static DynFixed_ptr _duplicate(DynFixed_ptr);
+    static DynFixed_ptr _narrow(DynAny_ptr);
+    static DynFixed_ptr _nil();
+
+    virtual ~DynFixed() {}
+
+    DynFixed(void* p) : DynAny(p,DynAny::dt_fixed) {}
+
+  private:
+    DynFixed();
+    DynFixed(const DynFixed&);
+    DynFixed& operator=(const DynFixed&);
+  };
+#endif
+
+  // DynEnum
+
+  class DynEnum :  public DynAny {
+  public:
+
+    virtual char* value_as_string();
+    virtual void value_as_string(const char* value);
+    virtual ULong value_as_ulong();
+    virtual void value_as_ulong(ULong value);
+
+    static DynEnum_ptr _duplicate(DynEnum_ptr);
+    static DynEnum_ptr _narrow(DynAny_ptr);
+    static DynEnum_ptr _nil();
+
+    virtual ~DynEnum() {}
+
+    DynEnum(void* p) : DynAny(p,DynAny::dt_enum) {}
+
+  private:
+    DynEnum();
+    DynEnum(const DynEnum&);
+    DynEnum& operator=(const DynEnum&);
+  };
+
+  // DynStruct
+
+  typedef char* FieldName;
+  typedef String_var FieldName_var;
+
+  struct NameValuePair {
+    String_member id;
+    Any value;
+
+    size_t NP_alignedSize(size_t initialoffset) const;
+    void operator>>= (NetBufferedStream &) const;
+    void operator<<= (NetBufferedStream &);
+    void operator>>= (MemBufferedStream &) const;
+    void operator<<= (MemBufferedStream &);
+  };
+
+  typedef _CORBA_ConstrType_Variable_Var<NameValuePair> NameValuePair_var;
+  typedef _CORBA_Unbounded_Sequence<NameValuePair > NameValuePairSeq;
+
+  class DynStruct :  public DynAny {
+  public:
+
+    virtual char*  current_member_name();
+    virtual TCKind current_member_kind();
+    virtual NameValuePairSeq* get_members();
+    virtual void set_members(const NameValuePairSeq& NVSeqVal);
+
+    static DynStruct_ptr _duplicate(DynStruct_ptr);
+    static DynStruct_ptr _narrow(DynAny_ptr);
+    static DynStruct_ptr _nil();
+
+    virtual ~DynStruct() {}
+
+    DynStruct(void* p) : DynAny(p,DynAny::dt_struct) {}
+
+  private:
+    DynStruct();
+    DynStruct(const DynStruct&);
+    DynStruct& operator=(const DynStruct&);
+  };
+
+  // DynUnion
+
+  class DynUnion :  public DynAny {
+  public:
+
+    virtual Boolean set_as_default();
+    virtual void set_as_default(Boolean value);
+    virtual DynAny_ptr discriminator();
+    virtual TCKind discriminator_kind();
+    virtual DynAny_ptr member();
+    virtual char*  member_name();
+    virtual void member_name(const char* value);
+    virtual TCKind member_kind();
+
+    static DynUnion_ptr _duplicate(DynUnion_ptr);
+    static DynUnion_ptr _narrow(DynAny_ptr);
+    static DynUnion_ptr _nil();
+
+    virtual ~DynUnion() {}
+
+    DynUnion(void* p) : DynAny(p,DynAny::dt_union) {}
+
+  private:
+    DynUnion();
+    DynUnion(const DynUnion&);
+    DynUnion& operator=(const DynUnion&);
       
-
-    inline TypeCode_ptr operator->() const { return (TypeCode_ptr) pd_TC; }
-    
-    inline operator TypeCode_ptr() const { return pd_TC; }
-
-    friend class TypeCode_member;
-    friend class TypeCode_INOUT_arg;
-    friend class TypeCode_OUT_arg;
-
-  private:
-    TypeCode_ptr pd_TC;
   };
 
+  // DynSequence
 
+  typedef _CORBA_Unbounded_Sequence<Any > AnySeq;
 
-  class TypeCode_INOUT_arg {
+  class DynSequence :  public DynAny {
   public:
-    inline TypeCode_INOUT_arg(TypeCode_ptr& p) : _data(p) { }
-    inline TypeCode_INOUT_arg(TypeCode_var& p) : _data(p.pd_TC) { }
-    inline TypeCode_INOUT_arg(TypeCode_member& p) : _data(p._ptr) { }
-    inline ~TypeCode_INOUT_arg() { }
 
-    TypeCode_ptr& _data;
+    virtual ULong length();
+    virtual void length (ULong value);
+    virtual AnySeq* get_elements();
+    virtual void set_elements(const AnySeq& value);
+
+    static DynSequence_ptr _duplicate(DynSequence_ptr);
+    static DynSequence_ptr _narrow(DynAny_ptr);
+    static DynSequence_ptr _nil();
+
+    virtual ~DynSequence() {}
+
+    DynSequence(void* p) : DynAny(p,DynAny::dt_seq) {}
 
   private:
-    TypeCode_INOUT_arg();
+    DynSequence();
+    DynSequence(const DynSequence&);
+    DynSequence& operator=(const DynSequence&);
   };
 
+  // DynArray
 
-  class TypeCode_OUT_arg {
+  class DynArray : public DynAny {
   public:
-    TypeCode_OUT_arg(TypeCode_ptr& p) : _data(p) { }
-    TypeCode_OUT_arg(TypeCode_var& p) : _data(p.pd_TC) {
-      p = CORBA::TypeCode::_nil();
-    }
-    inline TypeCode_OUT_arg(TypeCode_member& p) : _data(p._ptr) {
-      p = CORBA::TypeCode::_nil();
-    }
-    inline ~TypeCode_OUT_arg() { }
-    
-    TypeCode_ptr& _data;
+
+    virtual AnySeq* get_elements();
+    virtual void set_elements(const AnySeq& value);
+
+    static DynArray_ptr _duplicate(DynArray_ptr);
+    static DynArray_ptr _narrow(DynAny_ptr);
+    static DynArray_ptr _nil();
+
+    virtual ~DynArray() {}
+
+    DynArray(void* p) : DynAny(p,DynAny::dt_array) {}
 
   private:
-    TypeCode_OUT_arg();
+    DynArray();
+    DynArray(const DynArray&);
+    DynArray& operator=(const DynArray&);
   };
 
 
@@ -1795,6 +2288,7 @@ typedef _CORBA_Double  Double;
 
     char *object_to_string(Object_ptr) ;
     Object_ptr string_to_object(const char *) ;
+    char *object_to_string(DynAny_ptr) ;
 
 #if defined(SUPPORT_DII)
     typedef sequence<Request_ptr> RequestSeq;
@@ -1949,6 +2443,29 @@ typedef _CORBA_Double  Double;
     TypeCode_ptr
     create_recursive_sequence_tc(ULong bound, ULong offset);
 
+    class InconsistentTypeCode : public UserException {
+    public:    
+      InconsistentTypeCode() : UserException() {} 
+      virtual ~InconsistentTypeCode() {};
+    };
+
+    DynAny_ptr create_dyn_any(const Any& value);
+
+    DynAny_ptr create_basic_dyn_any(TypeCode_ptr tc);
+
+    DynStruct_ptr create_dyn_struct(TypeCode_ptr tc);
+
+    DynSequence_ptr create_dyn_sequence(TypeCode_ptr tc);
+
+    DynArray_ptr create_dyn_array(TypeCode_ptr tc);
+
+    DynUnion_ptr create_dyn_union(TypeCode_ptr tc);
+
+    DynEnum_ptr create_dyn_enum(TypeCode_ptr tc);
+
+#if 0
+    DynFixed_ptr create_dyn_fixed(TypeCode_ptr tc);
+#endif
 
     static ORB_ptr _duplicate(ORB_ptr p);
     static ORB_ptr _nil();
@@ -1986,7 +2503,10 @@ typedef _CORBA_Double  Double;
   _CORBA_MODULE_FN Boolean is_nil(NamedValue_ptr);
   _CORBA_MODULE_FN Boolean is_nil(NVList_ptr);
   _CORBA_MODULE_FN Boolean is_nil(Request_ptr);
-
+  _CORBA_MODULE_FN inline Boolean is_nil(TypeCode_ptr o) { 
+    return (o) ? o->NP_is_nil() : 1; 
+  }
+  _CORBA_MODULE_FN Boolean is_nil(DynAny_ptr d);
 
   _CORBA_MODULE_FN void release(Environment_ptr);
   _CORBA_MODULE_FN void release(Context_ptr);
@@ -2003,6 +2523,10 @@ typedef _CORBA_Double  Double;
   _CORBA_MODULE_FN void release(NamedValue_ptr);
   _CORBA_MODULE_FN void release(NVList_ptr);
   _CORBA_MODULE_FN void release(Request_ptr);
+  _CORBA_MODULE_FN void inline release(TypeCode_ptr o) {
+    if (!CORBA::is_nil(o)) delete o;
+  }
+  _CORBA_MODULE_FN void release(DynAny_ptr d);
 
   // omniORB2 private function.
   _CORBA_MODULE_FN Object_ptr UnMarshalObjRef(const char *repoId, NetBufferedStream &s); 
@@ -2169,6 +2693,94 @@ private:
   private:
     Object_OUT_arg();
   };
+
+  class TypeCode_INOUT_arg;
+  class TypeCode_OUT_arg;
+
+  class TypeCode_var {
+  public:
+    inline TypeCode_var() { pd_TC = CORBA::TypeCode::_nil(); }
+
+    inline TypeCode_var(TypeCode_ptr p) { pd_TC = p; }
+
+    inline TypeCode_var(const TypeCode_var& p) { 
+	pd_TC = CORBA::TypeCode::_duplicate(p.pd_TC); 
+    }
+
+    inline ~TypeCode_var() { CORBA::release(pd_TC); }
+
+    TypeCode_var(const TypeCode_member& p) { 
+      pd_TC = CORBA::TypeCode::_duplicate(p._ptr);
+    }
+
+    inline TypeCode_var& operator= (TypeCode_ptr p) {
+      CORBA::release(pd_TC);
+      pd_TC = p;
+      return *this;
+    }
+
+    inline TypeCode_var& operator= (const TypeCode_var& p) {
+      if (this != &p)
+	{
+	  CORBA::release(pd_TC);
+	  pd_TC = CORBA::TypeCode::_duplicate(p.pd_TC);
+	}
+      return *this;
+    }
+
+    inline TypeCode_var& operator=(const TypeCode_member& p) {
+      CORBA::release(pd_TC);
+      pd_TC = CORBA::TypeCode::_duplicate(p._ptr);
+      return *this;
+    }
+      
+
+    inline TypeCode_ptr operator->() const { return (TypeCode_ptr) pd_TC; }
+    
+    inline operator TypeCode_ptr() const { return pd_TC; }
+
+    friend class TypeCode_member;
+    friend class TypeCode_INOUT_arg;
+    friend class TypeCode_OUT_arg;
+
+  private:
+    TypeCode_ptr pd_TC;
+  };
+
+  class TypeCode_INOUT_arg {
+  public:
+    inline TypeCode_INOUT_arg(TypeCode_ptr& p) : _data(p) { }
+    inline TypeCode_INOUT_arg(TypeCode_var& p) : _data(p.pd_TC) { }
+    inline TypeCode_INOUT_arg(TypeCode_member& p) : _data(p._ptr) { }
+    inline ~TypeCode_INOUT_arg() { }
+
+    TypeCode_ptr& _data;
+
+  private:
+    TypeCode_INOUT_arg();
+  };
+
+
+  class TypeCode_OUT_arg {
+  public:
+    TypeCode_OUT_arg(TypeCode_ptr& p) : _data(p) { }
+    TypeCode_OUT_arg(TypeCode_var& p) : _data(p.pd_TC) {
+      p = CORBA::TypeCode::_nil();
+    }
+    inline TypeCode_OUT_arg(TypeCode_member& p) : _data(p._ptr) {
+      p = CORBA::TypeCode::_nil();
+    }
+    inline ~TypeCode_OUT_arg() { }
+    
+    TypeCode_ptr& _data;
+
+  private:
+    TypeCode_OUT_arg();
+  };
+
+
+
+
 
   class BOA_var {
   public:
