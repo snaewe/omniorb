@@ -31,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.7  1998/04/07 19:57:16  sll
+  Replace _OMNIORB2_NTDLL_ specification on class IIOP with
+  _OMNIORB_NTDLL_IMPORT on static member constants.
+
   Revision 1.6  1997/12/09 20:39:38  sll
   Removed profileToEncapStream and EncapStreamToProfile.
 
@@ -45,7 +49,7 @@
 #ifndef __IIOP_H__
 #define __IIOP_H__
 
-class _OMNIORB2_NTDLL_ IIOP {
+class IIOP {
 
   public:
  
@@ -55,8 +59,8 @@ class _OMNIORB2_NTDLL_ IIOP {
   };
  
   // Current IIOP Protocol version
-  static const _CORBA_Char current_major;
-  static const _CORBA_Char current_minor;
+  static _OMNIORB_NTDLL_IMPORT const _CORBA_Char current_major;
+  static _OMNIORB_NTDLL_IMPORT const _CORBA_Char current_minor;
  
   struct ProfileBody {
     Version                 iiop_version;
