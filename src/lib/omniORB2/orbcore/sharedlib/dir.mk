@@ -257,7 +257,6 @@ $(lib): $(ORB2_OBJS)
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
        )
 
-
 clean::
 	$(RM) $(lib)
 
