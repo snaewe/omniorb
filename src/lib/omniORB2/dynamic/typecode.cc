@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.6.9  2000/03/20 15:09:30  djr
+ * Fixed signed/unsigned mismatch.
+ *
  * Revision 1.33.6.8  2000/02/21 10:59:13  djr
  * Another TypeCode_union w aliased discriminator fix.
  *
@@ -3212,7 +3215,7 @@ TypeCode_union::NP_member_label(CORBA::ULong i) const
   CORBA::Any* a = new CORBA::Any;
   if( !a )  _CORBA_new_operator_return_null();
 
-  if (i != pd_default) {
+  if (CORBA::Long(i) != pd_default) {
     TypeCode_union_helper::insertLabel(*a, pd_members[i].alabel, pd_discrim_tc);
   } else {
     (*a) <<= CORBA::Any::from_octet((CORBA::Octet)0);

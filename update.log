@@ -1,3 +1,12 @@
+
+Mon Mar 20 15:00:13 GMT 2000 djr
+================================
+
+- Signed/unsigned mismatch fixed.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
 Mon Mar 20 11:51:00 GMT 2000 djs
 ================================
 
