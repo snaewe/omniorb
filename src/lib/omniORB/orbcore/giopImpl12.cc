@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.16  2002/07/04 15:14:41  dgrisby
+  Correct usage of MessageErrors, fix log messages.
+
   Revision 1.1.4.15  2002/03/27 11:44:52  dpg1
   Check in interceptors things left over from last week.
 
@@ -1316,7 +1319,7 @@ giopImpl12::sendMsgErrorMessage(giopStream* g) {
   if (omniORB::trace(1)) {
     omniORB::logger l;
     l << "To endpoint: " << g->pd_strand->connection->peeraddress()
-      <<". Send GIOP 1.2 ErrorMessage because a protocol error has been detected. "
+      <<". Send GIOP 1.2 MessageError because a protocol error has been detected. "
       << "Connection is closed.\n";
   }
 

@@ -1,5 +1,16 @@
-Wed Jul  3 16:44:38 BST 2002 dpg1
-=================================
+Thu Jul  4 16:07:49 BST 2002 dgrisby
+====================================
+
+- Correct usage of MessageErrors, fix log messages.
+
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
+Wed Jul  3 16:44:38 BST 2002 dgrisby
+====================================
 
 - Correct suggested path for Python.
 
