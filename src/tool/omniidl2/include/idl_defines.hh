@@ -82,5 +82,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #define IDL_CF_ANY              (1 << 7)
 #define IDL_CF_REOPENMODULE     (1 << 8)
 #define IDL_BE_GENERATE_TIE     (1 << 9)
+#define IDL_BE_GENERATE_FRAGMENT (1 << 10)
 
 #endif	// _IDL_DEFINES_IDL_DEFINES_HH
