@@ -1,4 +1,12 @@
+#ifndef __ECHO_IDL__
+#define __ECHO_IDL__
+
+
 #pragma javaPackage "UK.co.orl.omniorb"
+
 interface Echo {
   string echoString(in string mesg);
 };
+
+
+#endif  // __ECHO_IDL__
