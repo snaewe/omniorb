@@ -1,4 +1,12 @@
 
+Wed Feb 17 16:11:43 GMT 1999 djr
+================================
+
+- Fixed bug in implementation of omni_semaphore over POSIX.
+
+src/lib/omnithread/posix.cc
+
+
 Fri Feb 12 11:52:23 GMT 1999 djr
 ================================
 
