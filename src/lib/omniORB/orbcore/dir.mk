@@ -63,8 +63,6 @@ DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
 DIR_CPPFLAGS += -D_OMNIORB_LIBRARY
 
-DIR_CPPFLAGS += -DSuppress_Spurious_gcc_Warnings
-
 ##########################################################################
 ifdef OMNIORB_CONFIG_DEFAULT_LOCATION
   CONFIG_DEFAULT_LOCATION = $(OMNIORB_CONFIG_DEFAULT_LOCATION)
