@@ -1,3 +1,20 @@
+Mon Aug 14 15:32:04 BST 2000 dpg1
+=================================
+
+- Slightly more clever path guessing in omniidl. It now copes with
+  omniidl in /usr/local/bin and Python modules in /usr/local/lib, for
+  example.
+
+src/tool/omniidl/python/scripts/omniidlrun.py
+
+- IDL dumping now properly escapes string and char constants
+
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idldump.h
+src/tool/omniidl/python/omniidl/idltype.py
+src/tool/omniidl/python/omniidl_be/dump.py
+
+
 Mon Aug 14 12:47:07 BST 2000 sll
 ================================
 
