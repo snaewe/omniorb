@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.13  2000/01/05 11:21:08  dpg1
+// Removed warning about signed/unsigned comparison.
+// * can only be the last character of a context key.
+//
 // Revision 1.12  1999/12/28 18:15:45  dpg1
 // Bounds of string constants now checked.
 //
@@ -625,7 +629,7 @@ Const(const char* file, int line, _CORBA_Boolean mainFile,
       v_.wstring_        = idl_wstrdup(expr->evalAsWString());
       _CORBA_ULong bound = ((WStringType*)t)->bound();
 
-      if (bound && idl_wstrlen(v_.wstring_) > bound) {
+      if (bound && (unsigned)idl_wstrlen(v_.wstring_) > bound) {
 	IdlError(file, line,
 		 "Length of bounded wide string constant exceeds bound");
       }
@@ -1316,12 +1320,13 @@ ContextSpec(const char* c, const char* file, int line)
 
   _CORBA_Boolean bad = 0;
 
-  if (!isalpha(*c))
+  if (!isalpha(*c++))
     bad = 1;
   else {
     for (; *c; c++) {
-      if (!isalnum(*c) && *c != '.' && *c != '_' && *c != '*') {
-	bad = 1;
+      if (!isalnum(*c) && *c != '.' && *c != '_') {
+	if (!(*c == '*' && *(c+1) == '\0'))
+	  bad = 1;
 	break;
       }
     }
