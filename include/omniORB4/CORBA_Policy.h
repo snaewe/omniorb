@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2005/01/24 18:29:53  dgrisby
+  HPUX 11.23 support. Thanks Matej Kenda.
+
   Revision 1.1.2.5  2003/11/05 12:59:03  dgrisby
   Wrong return type from PolicySeq_var operator[].
 
@@ -221,6 +224,9 @@ private:
 #ifdef OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS
 #error OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS is already defined!
 #endif
+
+#define OMNIORB_POLICY_VALUE(policy) policy##Value
+
 #define OMNIORB_DECLARE_POLICY_OBJECT_OPERATORS(name) \
-void operator<<=(CORBA::Any&, name##Value); \
-CORBA::Boolean operator>>=(const CORBA::Any&,name##Value& );
+void operator<<=(CORBA::Any &, name); \
+CORBA::Boolean operator>>=(const CORBA::Any&, name& );
