@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.21  1999/05/25 13:22:25  sll
+  Added marshalling operators for the new _CORBA_*Sequence_ObjRef templates.
+
   Revision 1.20  1999/03/22 13:31:58  djr
   Do proper conversion between Char and Boolean for pd_byte_order.
 
@@ -1844,6 +1847,171 @@ _CORBA_Bounded_Sequence_Array__Boolean<T,T_slice,dimension,max>::
 
 #endif
 
+
+template <class T, class ElemT>
+inline void
+_CORBA_Sequence_ObjRef<T,ElemT>::operator>>= (NetBufferedStream& s) const
+{
+  ::operator>>=(_CORBA_ULong(pd_len), s);
+  for( int i = 0; i < (int)pd_len; i++ )
+    pd_buf[i] >>= s;
+}
+
+
+template <class T, class ElemT>
+inline void
+_CORBA_Sequence_ObjRef<T,ElemT>::operator<<= (NetBufferedStream& s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l > s.RdMessageUnRead()) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for( _CORBA_ULong i = 0; i < l; i++ )
+    pd_buf[i] <<= s;
+}
+
+
+template <class T, class ElemT>
+inline void
+_CORBA_Sequence_ObjRef<T,ElemT>::operator>>= (MemBufferedStream& s) const
+{
+  pd_len >>= s;
+  for (int i=0; i<(int)pd_len; i++)
+    pd_buf[i] >>= s;
+}
+
+
+template <class T, class ElemT>
+inline void
+_CORBA_Sequence_ObjRef<T,ElemT>::operator<<= (MemBufferedStream& s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (s.unRead() < l) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++)
+    pd_buf[i] <<= s;
+}
+
+
+template <class T, class ElemT>
+inline
+size_t
+_CORBA_Unbounded_Sequence_ObjRef<T,ElemT>::NP_alignedSize(size_t initialoffset) const 
+{
+  size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
+  for (unsigned long i=0; i < length(); i++) {
+    alignedsize = (pd_buf)[i].NP_alignedSize(alignedsize);
+  }
+  return alignedsize;
+}
+
+template <class T, class ElemT>
+inline 
+void 
+_CORBA_Unbounded_Sequence_ObjRef<T,ElemT>::operator>>= (NetBufferedStream& s) const
+{
+  _CORBA_Sequence_ObjRef<T,ElemT>::operator>>=(s);
+}
+
+
+template <class T, class ElemT>
+inline
+void
+_CORBA_Unbounded_Sequence_ObjRef<T,ElemT>::operator<<= (NetBufferedStream& s)
+{
+  _CORBA_Sequence_ObjRef<T,ElemT>::operator<<=(s);
+}
+
+
+template <class T, class ElemT>
+inline
+void 
+_CORBA_Unbounded_Sequence_ObjRef<T,ElemT>::operator>>= (MemBufferedStream& s) const
+{
+  _CORBA_Sequence_ObjRef<T,ElemT>::operator>>=(s);
+}
+
+
+template <class T, class ElemT>
+inline
+void 
+_CORBA_Unbounded_Sequence_ObjRef<T,ElemT>::operator<<= (MemBufferedStream& s)
+{
+  _CORBA_Sequence_ObjRef<T,ElemT>::operator<<=(s);
+}
+
+template <class T,class ElemT,int max>
+inline 
+size_t
+_CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>::NP_alignedSize(size_t initialoffset) const 
+{
+  size_t alignedsize = ((initialoffset+3) & ~((int)3))+sizeof(_CORBA_ULong);
+  for (unsigned long i=0; i < length(); i++) {
+    alignedsize = (pd_buf)[i].NP_alignedSize(alignedsize);
+  }
+  return alignedsize;
+}
+
+
+template <class T,class ElemT,int max>
+inline 
+void
+_CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>::operator>>= (NetBufferedStream& s) const
+{
+  _CORBA_Sequence_ObjRef<T,ElemT>::operator>>=(s);
+}
+
+
+template <class T,class ElemT,int max>
+inline void
+_CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>::operator<<= (NetBufferedStream& s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if (l > s.RdMessageUnRead() || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    (pd_buf)[i] <<= s;
+  }
+  return;
+}
+
+
+template <class T,class ElemT,int max>
+inline void
+_CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>::operator>>= (MemBufferedStream& s) const 
+{
+  _CORBA_Sequence_ObjRef<T,ElemT>::operator>>=(s);
+}
+
+
+template <class T,class ElemT,int max>
+inline void
+_CORBA_Bounded_Sequence_ObjRef<T,ElemT,max>::operator<<= (MemBufferedStream& s)
+{
+  _CORBA_ULong l;
+  l <<= s;
+  if ((s.unRead() < l) || l > max) {
+    _CORBA_marshal_error();
+    // never reach here
+  }
+  length(l);
+  for (_CORBA_ULong i=0; i<l; i++) {
+    (pd_buf)[i] <<= s;
+  }
+  return;
+}
 
 #undef Swap16
 #undef Swap32
