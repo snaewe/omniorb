@@ -1,3 +1,30 @@
+Thu Aug 13 19:01:24 BST 1998 sll
+================================
+
+- Update to work under DU 4.0D and DEC C++ 6.0
+- The lex and yacc files in the frontend are regenerated using flex and
+  bison.
+
+mk/platforms/alpha_osf1_4.0.mk
+
+include/omniORB2/CORBA.h
+include/omniORB2/CORBA_sysdep.h
+include/omniORB2/bufferedStream.h
+
+src/lib/omniORB2/dynAnyP.h
+src/lib/omniORB2/objectKey.cc
+src/lib/omniORB2/objectRef.cc
+src/lib/omniORB2/typecode.cc
+src/lib/omniORB2/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+src/tool/omniidl2/fe/dir.mk
+src/tool/omniidl2/fe/idl.ll
+src/tool/omniidl2/fe/idl.yy
+src/tool/omniidl2/fe/lex.yy.cc
+src/tool/omniidl2/fe/y.tab.cc
+src/tool/omniidl2/fe/y.tab.h
+
+
 Thu Aug 13 17:08:30 BST 1998 sll
 ================================
 
