@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4  2001/07/31 15:59:02  sll
+ Added new 2.4.2 System Exceptions
+
  Revision 1.2.2.3  2000/11/03 19:05:30  sll
  Added INV_POLICY and CODESET_INCOMPATIBLE.
 
@@ -179,7 +182,12 @@ doit (TRANSACTION_ROLLEDBACK) \
 doit (INVALID_TRANSACTION) \
 doit (WRONG_TRANSACTION) \
 doit (INV_POLICY) \
-doit (CODESET_INCOMPATIBLE)
+doit (CODESET_INCOMPATIBLE) \
+doit (REBIND) \
+doit (TIMEOUT) \
+doit (TRANSACTION_UNAVAILABLE) \
+doit (TRANSACTION_MODE) \
+doit (BAD_QOS)
 
 
 #endif // __OMNIORB_USEREXCEPTION_H__

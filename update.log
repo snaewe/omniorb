@@ -16,6 +16,10 @@ src/lib/omniAsyncInvoker/invoker.cc
 
 include/omniORB4/templatedecls.h
 
+- Added new 2.4.2 System Exceptions 
+
+include/omniORB4/userexception.h
+
 Tue Jul 31 09:58:07 BST 2001 dpg1
 =================================
 
