@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.26  2003/07/30 14:25:28  dgrisby
+  Increase direct send cut-off to 16k.
+
   Revision 1.1.4.25  2003/07/16 14:22:38  dgrisby
   Speed up oneway handling a little. More tracing for split messages.
 
@@ -120,7 +123,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 static void dumpbuf(unsigned char* buf, size_t sz);
 
 ////////////////////////////////////////////////////////////////////////
-CORBA::ULong giopStream::directSendCutOff = 1024;
+CORBA::ULong giopStream::directSendCutOff = 16384;
 CORBA::ULong giopStream::directReceiveCutOff = 1024;
 CORBA::ULong giopStream::bufferSize = 8192;
 

@@ -1,3 +1,20 @@
+Wed Jul 30 15:18:52 BST 2003 dgrisby
+====================================
+
+- Fix various race conditions in ORB shutdown.
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+- Support Intel C++ compiler.
+
+src/appl/omniNames/log.cc
+
+- Increase direct send cut-off to 16k. Seems to be a good compromise
+  on the platforms I've tested.
+
+src/lib/omniORB/orbcore/giopStream.cc
+
+
 Sun Jul 27 20:18:34 BST 2003 dgrisby
 ====================================
 
