@@ -1,10 +1,18 @@
+Tue Apr 20 17:30:43 BST 1999 dpg1
+=================================
+
+- Oops -- #pragma prefix moved back outside module.
+  #pragma prefix "" addded at end of file.
+
+idl/Naming.idl
+
+
 Tue Apr 20 14:43:52 BST 1999 dpg1
 =================================
 
 - Moved #pragma prefix inside module
 
 idl/Naming.idl
-
 
 
 Thu Apr 15 15:12:25 BST 1999 djr
