@@ -270,7 +270,7 @@ Functions:
     def scopedName(self): return self.__scopedName
 
     # Simple name
-    def name(self):       return self.__scopedName[-1:]
+    def name(self):       return self.__scopedName[-1]
 
 
 # Map of singleton Base Type objects

@@ -8,5 +8,17 @@
 
 <buglist>
 
+<bug id="1" date="Mon Aug 21 10:11:51 BST 2000" user="dpg1">
+
+  <summary>Typo in omniidl.idltype.Declared.name()</summary>
+
+  <reported>Richard Gruet</reported>
+
+  <text>
+  The <code>name()</code> function of <code>idltype.Declared</code>
+  accidentally returned a list containing a single string rather than
+  just the string itself.
+  </text>
+</bug>
 
 </buglist>
