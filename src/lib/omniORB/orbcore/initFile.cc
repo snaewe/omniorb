@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.27  1999/05/25 17:00:31  sll
+  Added new variable INTERFACE_REPOSITORY in the config file.
+
   Revision 1.26  1999/03/11 16:25:53  djr
   Updated copyright notice
 
@@ -164,6 +167,7 @@ void initFile::initialize()
 
   CORBA::String_var config_fname;
   CORBA::Object_var NameService;
+  CORBA::Object_var InterfaceRepository;
 
 // Get filename:
 
@@ -241,7 +245,6 @@ void initFile::initialize()
 
   CORBA::String_var entryname;
   CORBA::String_var data;
-  int multcheck[INIT_MAX_CONFIG] = { 0 }; 
   CORBA::String_var bootstrapAgentHostname;
   CORBA::UShort     bootstrapAgentPort = 900;
 
@@ -249,13 +252,11 @@ void initFile::initialize()
     {
       if (strcmp((const char*)entryname,"NAMESERVICE") == 0)
 	{
-	  if (multcheck[0] == 1)
-	    multerr(entryname);
-	  else 
-	    multcheck[0] = 1;
-	  
 	  try
 	    {
+	      if (!CORBA::is_nil(NameService)) {
+		multerr(entryname);
+	      }
 	      omniObject* objptr = omni::stringToObject(data);
 	      NameService = (CORBA::Object_ptr) 
 		                objptr->_widenFromTheMostDerivedIntf(0);
@@ -272,7 +273,39 @@ void initFile::initialize()
 	      // The object reference supplied is not for the NamingService
 	      
 	      invref(entryname);
+	    }
+	  omniInitialReferences::singleton()->set("NameService",NameService);
+	}
+      else if (strcmp(entryname, "INTERFACE_REPOSITORY") == 0)
+	{
+	  try
+	    {
+	      if (!CORBA::is_nil(InterfaceRepository)) {
+		multerr(entryname);
+	      }
+	      omniObject* objptr = omni::stringToObject(data);
+	      InterfaceRepository = (CORBA::Object_ptr)
+		objptr->_widenFromTheMostDerivedIntf(0);
+	      
+	    }
+	  catch(const CORBA::MARSHAL&)
+	    {
+	      invref(entryname);
+	    }
+#if 0
+	  // Doing this test would make the orbcore dependent on the
+	  // dynamic library.
+	  if((InterfaceRepository->PR_getobj()->_widenFromTheMostDerivedIntf(
+				     CORBA_Repository_IntfRepoID)) == 0)
+	    {
+	      // The object reference supplied is not for the interface 
+	      // repository
+	      
+	      invref(entryname);
 	    }    
+#endif
+	  omniInitialReferences::singleton()->set("InterfaceRepository",
+						  InterfaceRepository);
 	}
       else if (strcmp(entryname, "GATEKEEPER_ALLOWFILE") == 0)
 	{
@@ -311,17 +344,13 @@ void initFile::initialize()
 	 throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
 	}
     }
-  if (!CORBA::is_nil(NameService)) {
-    omniInitialReferences::singleton()->set("NameService",NameService);
-  }
-  else {
+  if (CORBA::is_nil(NameService) && CORBA::is_nil(InterfaceRepository)) {
     if ((char*)bootstrapAgentHostname != 0) {
       omniInitialReferences::singleton()
 	->initialise_bootstrap_agent(bootstrapAgentHostname,
 				     bootstrapAgentPort);
     }
   }
-  return;
 }
 
 
