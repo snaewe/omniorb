@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/07/31 16:32:02  sll
+  Added virtual function is_giopStream to check if a cdrStream is a giopStream.
+  That is, a poor man's substitute for dynamic_cast.
+
   Revision 1.1.2.4  2001/04/18 18:18:11  sll
   Big checkin with the brand new internal APIs.
 
@@ -57,6 +61,12 @@
 CORBA::ULong 
 cdrStream::completion() {
   return CORBA::COMPLETED_NO;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+cdrStream::is_giopStream() {
+  return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////

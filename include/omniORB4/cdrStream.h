@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2001/07/31 16:32:02  sll
+  Added virtual function is_giopStream to check if a cdrStream is a giopStream.
+  That is, a poor man's substitute for dynamic_cast.
+
   Revision 1.1.2.11  2001/06/13 19:58:37  sll
   Added omni namespace scoping for omniCodeSet.
 
@@ -648,6 +652,11 @@ public:
   // Note: the return value is really of type CORBA::CompletionStatus.
   // Since this declaration must appear before the CORBA declaration,
   // we have to live with returning a _CORBA_ULong.
+
+  /////////////////////////////////////////////////////////////////////
+  virtual _CORBA_Boolean is_giopStream();
+  // Returns true if this instance is actually a giopStream.
+  // We could have used dynamic_cast<> if we have standard C++.
 
 private:
   cdrStream(const cdrStream&);
