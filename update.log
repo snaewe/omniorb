@@ -1,3 +1,15 @@
+Thu Apr  9 20:15:38 BST 1998 sll
+===============================
+
+- Initializers are specified for integral constants in their declarations
+  when the compiler is up to it.
+
+include/omniORB2/CORBA_sysdep.h
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_constant.cc
+src/tool/omniidl2/omniORB2_be/o2be_module.cc
+
+
 Thu Apr  9 15:44:26 BST 1998 tjr
 ================================
 
