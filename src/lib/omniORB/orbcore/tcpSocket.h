@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.3  1998/11/09 10:56:17  sll
+ Removed the use of the reserved keyword "export".
+
  Revision 1.2  1998/03/19 19:52:03  sll
  Added delay connect to tcpSocketStrand.
 
@@ -109,7 +112,7 @@ public:
   }
 
   CORBA::Boolean isIncoming(Endpoint* addr) const;
-  void instantiateIncoming(Endpoint* addr,CORBA::Boolean export);
+  void instantiateIncoming(Endpoint* addr,CORBA::Boolean exportflag);
   void startIncoming();
   void stopIncoming();
   void removeIncoming();
@@ -218,7 +221,7 @@ private:
   tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 			unsigned int maxStrands,
 			tcpSocketEndpoint *e,
-			CORBA::Boolean export);
+			CORBA::Boolean exportflag);
   // Create a tcpSocket incoming Rope.
   //      Creates a passive socket. e->port() specifies the port number to
   //      bind to or 0 if an arbitary port number can be assigned). 
