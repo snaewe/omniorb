@@ -1,3 +1,27 @@
+Wed Feb 13 15:56:19 GMT 2002 dpg1
+=================================
+
+- Stability fixes thanks to Bastiaan Bakker, plus threading
+  optimisations inspired by investigating Bastiaan's bug reports.
+
+src/lib/omniORB/include/SocketCollection.h
+src/lib/omniORB/include/giopServer.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopWorker.cc
+src/lib/omniORB/orbcore/invoker.cc
+
+- Memory leak due to missing virtual destructor.
+
+src/lib/omniORB/orbcore/uri.cc
+
+- Rearrange includes so omnithread sees system dependencies.
+
+include/omniORB4/omniInternal.h
+
+
+
 Mon Feb 11 17:05:43 GMT 2002 dpg1
 =================================
 
