@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2003/03/03 15:00:52  dgrisby
+  Safe unloading of proxy object factories. Thanks Christian Perez.
+
   Revision 1.2.2.5  2001/09/19 17:26:53  dpg1
   Full clean-up after orb->destroy().
 
@@ -57,27 +60,25 @@
 
 OMNI_NAMESPACE_BEGIN(omni)
 
-static proxyObjectFactory** ofl = 0;
-static int                  ofl_size = 0;
-static int                  ofl_len = 0;
-
-
-proxyObjectFactory::~proxyObjectFactory()  {}
+static proxyObjectFactory** ofl       = 0;
+static int                  ofl_size  = 0;
+static int                  ofl_len   = 0;
+static omni_tracedmutex*    ofl_mutex = 0;
 
 
 proxyObjectFactory::proxyObjectFactory(const char* repoId)
   : pd_repoId(repoId)
 {
-  // These factories are constructed statically in the stubs, thus
-  // there should be no possiblilty of concurrency.
-
   OMNIORB_ASSERT(repoId);
 
   if( !ofl ) {
-    ofl_size = 5;
-    ofl = new proxyObjectFactory* [ofl_size];
-    ofl_len = 0;
+    ofl_size  = 5;
+    ofl       = new proxyObjectFactory* [ofl_size];
+    ofl_len   = 0;
+    ofl_mutex = new omni_tracedmutex();
   }
+
+  omni_tracedmutex_lock sync(*ofl_mutex);
 
   if( ofl_len == ofl_size ) {
     int new_ofl_size = ofl_size * 2;
@@ -119,12 +120,64 @@ proxyObjectFactory::proxyObjectFactory(const char* repoId)
 }
 
 
+proxyObjectFactory::~proxyObjectFactory()
+{
+  // As we reach here, the list should still exist, since each
+  // compilation unit with a proxyObjectFactory should be holding a
+  // reference to the final cleanup object. Just to be safe, we check
+  // the list still exists, and do nothing if it has already been
+  // deleted.
+  if (!ofl) return;
+
+  OMNIORB_ASSERT(pd_repoId);
+
+  omni_tracedmutex_lock sync(*ofl_mutex);
+
+  // Binary search to find the factory.
+
+  int bottom = 0;
+  int top = ofl_len;
+  int pos = -1;
+  while( bottom < top ) {
+
+    int middle = (bottom + top) / 2;
+
+    int cmp = strcmp(pd_repoId, ofl[middle]->pd_repoId);
+
+    if( cmp < 0 )       top = middle;
+    else if( cmp > 0 )  bottom = middle + 1;
+    else                { pos = middle; break; }
+  }
+
+  // sanity check
+  if (pos == -1) {
+    if( omniORB::trace(2) ) {
+      omniORB::logger l;
+      l << "Could not find proxyObjectFactory " << pd_repoId
+	<< " within its desctructor at "
+	<< __FILE__ << ": line " << __LINE__ << "\n";
+    }
+  }
+  else {
+    // remove it by shifting all pointers
+    ofl_len--;
+    for (int i=pos; i < ofl_len; i++)
+      ofl[i] = ofl[i+1];
+  }
+}
+
+
 void
 proxyObjectFactory::shutdown()
 {
+  ofl_mutex->lock(); 
   ofl_size = 0;
   ofl_len = 0;
   delete[] ofl;
+  ofl = 0;
+  ofl_mutex->unlock();
+  delete ofl_mutex;
+  ofl_mutex = 0;
 }
 
 
@@ -139,6 +192,8 @@ proxyObjectFactory::lookup(const char* repoId)
   // reference at the same time as they are shutting down the ORB.
 
   OMNIORB_ASSERT(repoId);
+
+  omni_tracedmutex_lock sync(*ofl_mutex);
 
   // Binary search to find the factory.
 
