@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.8.2.3  2000/06/05 18:13:27  dpg1
+// Comments can be attached to subsequent declarations (with -K). Better
+// idea of most recent decl in operation declarations
+//
 // Revision 1.8.2.2  2000/03/07 10:36:38  dpg1
 // More sensible idea of the "most recent" declaration.
 //
@@ -116,10 +120,14 @@ public:
   static void append(const char* commentText);
   static void clear() { mostRecent_ = 0; }
 
+  static Comment* grabSaved();
+  // Return any saved comments, and clear the saved comment list
+
 private:
   char*           commentText_;
   Comment*        next_;
   static Comment* mostRecent_;
+  static Comment* saved_;
 
   friend class AST;
   friend class Decl;
@@ -906,6 +914,7 @@ public:
 
   void accept(AstVisitor& visitor) { visitor.visitOperation(this); }
 
+  void closeParens();
   void finishConstruction(Parameter* parameters, RaisesSpec* raises,
 			  ContextSpec* contexts);
 
@@ -975,6 +984,7 @@ public:
 
   void accept(AstVisitor& visitor) { visitor.visitFactory(this); }
 
+  void closeParens();
   void finishConstruction(Parameter* parameters);
 
 private:

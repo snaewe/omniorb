@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.14.2.4  2000/06/05 18:13:26  dpg1
+// Comments can be attached to subsequent declarations (with -K). Better
+// idea of most recent decl in operation declarations
+//
 // Revision 1.14.2.3  2000/03/16 17:35:21  dpg1
 // Bug with comments in input when keepComments is false.
 //
@@ -100,6 +104,7 @@ extern int   yylineno;
 AST*     AST::tree_           = 0;
 Decl*    Decl::mostRecent_    = 0;
 Comment* Comment::mostRecent_ = 0;
+Comment* Comment::saved_      = 0;
 
 // Pragma
 void
@@ -118,10 +123,20 @@ void
 Comment::
 add(const char* commentText)
 {
-  if (Decl::mostRecent())
-    Decl::mostRecent()->addComment(commentText);
-  else
-    AST::tree()->addComment(commentText);
+  if (Config::keepComments) {
+    if (Config::commentsFirst) {
+      if (saved_)
+	mostRecent_->next_ = new Comment(commentText);
+      else
+	saved_ = new Comment(commentText);
+    }
+    else {
+      if (Decl::mostRecent())
+	Decl::mostRecent()->addComment(commentText);
+      else
+	AST::tree()->addComment(commentText);
+    }
+  }
 }
 
 void
@@ -137,6 +152,15 @@ append(const char* commentText)
     delete [] mostRecent_->commentText_;
     mostRecent_->commentText_ = newText;
   }
+}
+
+Comment*
+Comment::
+grabSaved()
+{
+  Comment* ret = saved_;
+  saved_ = 0;
+  return ret;
 }
 
 
@@ -168,14 +192,12 @@ void
 AST::
 addComment(const char* commentText)
 {
-  if (Config::keepComments) {
-    Comment* p = new Comment(commentText);
-    if (comments_)
-      lastComment_->next_ = p;
-    else
-      comments_ = p;
-    lastComment_ = p;
-  }
+  Comment* p = new Comment(commentText);
+  if (comments_)
+    lastComment_->next_ = p;
+  else
+    comments_ = p;
+  lastComment_ = p;
 }
 
 
@@ -203,6 +225,9 @@ process(FILE* f, const char* name)
 
   int yr = yyparse();
   if (yr) IdlError(currentFile, yylineno, "Syntax error");
+
+  if (Config::keepComments && Config::commentsFirst)
+    tree()->comments_ = Comment::grabSaved();
 
   return IdlReportErrors();
 }
@@ -256,6 +281,9 @@ Decl(Kind kind, const char* file, int line, _CORBA_Boolean mainFile)
 {
   last_       = this;
   mostRecent_ = this;
+
+  if (Config::keepComments && Config::commentsFirst)
+    comments_ = Comment::grabSaved();
 }
 
 Decl::
@@ -301,14 +329,12 @@ void
 Decl::
 addComment(const char* commentText)
 {
-  if (Config::keepComments) {
-    Comment* p = new Comment(commentText);
-    if (comments_)
-      lastComment_->next_ = p;
-    else
-      comments_ = p;
-    lastComment_ = p;
-  }
+  Comment* p = new Comment(commentText);
+  if (comments_)
+    lastComment_->next_ = p;
+  else
+    comments_ = p;
+  lastComment_ = p;
 }
 
 
@@ -1466,6 +1492,14 @@ Operation::
   if (delType_)    delete returnType_;
 }
 
+
+void
+Operation::
+closeParens()
+{
+  mostRecent_ = this;
+}
+
 void
 Operation::
 finishConstruction(Parameter* parameters, RaisesSpec* raises,
@@ -1501,7 +1535,6 @@ finishConstruction(Parameter* parameters, RaisesSpec* raises,
     }
   }
   Scope::endScope();
-  mostRecent_ = this;
 }
 
 
@@ -1575,13 +1608,21 @@ Factory::
   if (parameters_) delete parameters_;
 }
 
+
+void
+Factory::
+closeParens()
+{
+  mostRecent_ = this;
+}
+
+
 void
 Factory::
 finishConstruction(Parameter* parameters)
 {
   parameters_ = parameters_;
   Scope::endScope();
-  mostRecent_ = this;
 }
 
 ValueBase::
