@@ -27,6 +27,8 @@ endif
 
 ifdef Win32Platform
   DIR_CPPFLAGS += -D "NTArchitecture" 
+  vpath %.cc $(VPATH):$(VPATH:%=%/../orbcore)
+  SHARED_ONLY_OBJS = msvcdllstub.o
   EXTRA_LIBS    = wsock32.lib advapi32.lib
   MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
   MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC
@@ -44,5 +46,6 @@ LIB_IMPORTS  := $(patsubst %,$(LibPathPattern),../orbcore/shared) \
                 $(OMNIORB_DLL_NAME) \
                 $(OMNIASYNCINVOKER_LIB) $(OMNITHREAD_LIB) \
                 $(EXTRA_LIBS)
+LIB_SHARED_ONLY_OBJS := $(SHARED_ONLY_OBJS)
 
 include $(BASE_OMNI_TREE)/mk/mklib.mk
