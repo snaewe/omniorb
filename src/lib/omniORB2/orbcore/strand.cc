@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.6.8  2000/06/12 13:02:02  dpg1
+  sll's fix for sll's fix for rope deletion race condition :-)
+
   Revision 1.10.6.7  2000/06/12 11:16:08  dpg1
   sll's fix for rope deletion race condition
 
@@ -802,9 +805,10 @@ Rope_iterator::operator() ()
 	      // First close down all the strands before calling
 	      // the dtor of the Rope.
 	      LOGMESSAGE(10,"Rope_iterator","delete unused Rope.");
-
+              CORBA::Boolean can_delete;
 	      {
-		Strand_iterator next_strand(rp);
+		omni_mutex_lock sync(rp->pd_lock);
+		Strand_iterator next_strand(rp,1);
 		Strand* p;
 		while ((p = next_strand())) {
 		  if (p->is_unused(1)) {
@@ -814,16 +818,18 @@ Rope_iterator::operator() ()
 		    LOGMESSAGE(0,"Rope_iterator","Detected Application error. An object reference returned to the application has been released but it is currently being used to do a remote call. This thread will now raise a omniORB::fatalException.");
 		  }
 		}
-	      }
-	      if (!rp->pd_head) {
-		// notice that Strand_iterator does not returns
+		// notice that Strand_iterator does not return
 		// strands that are in the dying state. So there
 		// may still be (dying) strands associated with the Rope
 		// even when Strand_iterator returns no strands.
 		// The only way to ensure there is no strand left is to
 		// look for pd_head == 0.
+                can_delete = ((!rp->pd_head) ? 1 : 0);
+	      }
+	      if (can_delete) {
 		delete rp;
 	      }
+	      continue;
 	    }
 	}
       break;
