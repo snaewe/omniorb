@@ -10,6 +10,7 @@ src/lib/omniORB/orbcore/dir.mk
 src/lib/omniORB/orbcore/giopEndpoint.cc
 src/lib/omniORB/orbcore/orbOptionsReg.cc
 src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/lib/omnithread/dir.mk
 
 - Tweaks to avoid compiler warnings.
 
