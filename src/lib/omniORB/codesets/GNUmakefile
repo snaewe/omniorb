@@ -1,3 +1,4 @@
+
 TOP=../../../..
-CURRENT=src/lib/omniORB2/omniidl_be
+CURRENT=src/lib/omniORB/codesets
 include $(TOP)/config/config.mk

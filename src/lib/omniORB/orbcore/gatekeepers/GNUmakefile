@@ -1,4 +1,4 @@
 
 TOP=../../../../..
-CURRENT=src/lib/omniORB2/dynamic/sharedlib
+CURRENT=src/lib/omniORB/orbcore/gatekeepers
 include $(TOP)/config/config.mk

@@ -1,4 +1,4 @@
-SUBDIRS = omnithread omniORB2
+SUBDIRS = omnithread omniORB
 
 all::
 	@$(MakeSubdirs)

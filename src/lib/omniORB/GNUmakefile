@@ -1,4 +1,4 @@
 
 TOP=../../..
-CURRENT=src/lib/omniORB2
+CURRENT=src/lib/omniORB
 include $(TOP)/config/config.mk

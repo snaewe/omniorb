@@ -1,3 +1,3 @@
 TOP=../../../../../..
-CURRENT=src/lib/omniORB2/omniidl_be/cxx/skel
+CURRENT=src/lib/omniORB/omniidl_be/cxx/header
 include $(TOP)/config/config.mk

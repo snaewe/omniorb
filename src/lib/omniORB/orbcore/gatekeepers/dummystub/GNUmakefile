@@ -1,4 +1,4 @@
 
 TOP=../../../../../..
-CURRENT=src/lib/omniORB2/orbcore/gatekeepers/alone
+CURRENT=src/lib/omniORB/orbcore/gatekeepers/dummystub
 include $(TOP)/config/config.mk
