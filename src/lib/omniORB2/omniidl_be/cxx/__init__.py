@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.18.2.2  2000/02/18 23:01:19  djs
+# Updated example implementation code generating module
+#
 # Revision 1.18.2.1  2000/02/14 18:34:57  dpg1
 # New omniidl merged in.
 #
@@ -104,6 +107,7 @@
 from omniidl_be.cxx import header
 from omniidl_be.cxx import skel
 from omniidl_be.cxx import dynskel
+from omniidl_be.cxx import impl
 
 from omniidl_be.cxx import env
 from omniidl_be.cxx import config
@@ -117,6 +121,7 @@ usage_string = """\
   -Wba            Generate code for TypeCodes and Any
   -Wbtp           Generate 'tie' implementation skeletons
   -Wbtf           Generate flattened 'tie' implementation skeletons
+  -Wbexample      Generate example implementation code
   -WbF            Generate code fragments (for expert only)
   -WbBOA          Generate BOA compatible skeletons
   -Wbold          Generate old CORBA 2.1 signatures for skeletons
@@ -143,6 +148,9 @@ def boa():
 def old():
     config.setOldFlag(1)
 
+def example():
+    config.setExampleFlag(1)
+
 def old_prefix():
     config.setReservedPrefix("_")
 
@@ -161,6 +169,8 @@ def process_args(args):
             tie()
         elif arg == "tf":
             flat_tie()
+        elif arg == "example":
+            example()
         elif arg == "F":
             fragments()
         elif arg == "BOA":
@@ -205,6 +215,7 @@ def run(tree, args):
     config.setTieFlag(0)
     config.setFlatTieFlag(0)
     config.setFragmentFlag(0)
+    config.setExampleFlag(0)
     config.setBOAFlag(0)
     config.setOldFlag(0)
 
@@ -218,3 +229,6 @@ def run(tree, args):
     # we need to create the DynSK.cc file
     if config.TypecodeFlag():
         dynskel.run(tree)
+
+    if config.ExampleFlag():
+        impl.run(tree)
