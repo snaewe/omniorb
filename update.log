@@ -1,3 +1,25 @@
+Sun Aug  1 00:42:42 BST 2004 dgrisby
+====================================
+
+- Properly handle null and void Anys; store omniObjRef pointer for
+  objrefs in Anys.
+
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+
+- ifdef for forward declared union typecodes.
+
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+
+- Correct constness of exception Any insertion operator.
+
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+
+- Properly set pd_clear_memory flag in all situations.
+
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+
+
 Tue Jul 27 00:52:10 BST 2004 dgrisby
 ====================================
 
