@@ -30,6 +30,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.4  2000/11/20 11:58:39  dpg1
+// No need to initialise omniIOR module before uri module.
+//
 // Revision 1.2.2.3  2000/11/09 12:27:59  dpg1
 // Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 //
@@ -230,13 +233,18 @@ iorURIHandler::toObject(const char* sior, unsigned int)
 CORBA::Boolean
 iorURIHandler::syntaxIsValid(const char* sior)
 {
-  try {
-    CORBA::Object_var obj = toObject(sior,0);
-    return 1;
+  // Just check that the IOR is a sequence of hex digits
+  for (int i=4; sior[i]; i++) {
+    if (!((sior[i] >= '0' && sior[i] <= '9') ||
+	  (sior[i] >= 'a' && sior[i] <= 'f') ||
+	  (sior[i] >= 'A' && sior[i] <= 'F')))
+      return 0;
   }
-  catch (...) {
+  if (i == 4 || i % 2) {
+    // No digits, or odd number
+    return 0;
   }
-  return 0;
+  return 1;
 }
 
 
