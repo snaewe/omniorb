@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/07/13 15:13:32  sll
+  giopConnection is now reference counted.
+
   Revision 1.1.2.2  2001/06/13 20:13:15  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -39,6 +42,7 @@
 */
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/omniTransport.h>
 #include <omniORB4/giopEndpoint.h>
 #include <initialiser.h>
 
@@ -163,5 +167,29 @@ giopTransportImpl::giopTransportImpl(const char* t) : type(t), next(0) {
 ////////////////////////////////////////////////////////////////////////
 giopTransportImpl::~giopTransportImpl() {
 }
+
+////////////////////////////////////////////////////////////////////////
+void
+giopConnection::incrRefCount() {
+
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
+  OMNIORB_ASSERT(pd_refcount >= 0);
+  pd_refcount++;
+}
+
+////////////////////////////////////////////////////////////////////////
+int
+giopConnection::decrRefCount(CORBA::Boolean forced) {
+  
+  if (!forced) {
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
+  }
+  int rc = --pd_refcount;
+  OMNIORB_ASSERT(rc >= 0);
+  if (rc == 0)
+    delete this;
+  return rc;
+}
+
 
 OMNI_NAMESPACE_END(omni)
