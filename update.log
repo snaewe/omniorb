@@ -1,3 +1,10 @@
+Tue Mar 16 09:27:01 GMT 1999 sll
+===============================
+
+- On i586_linux_2.0_glibc, switch to use egcs-1.1.2
+
+mk/platforms/i586_linux_2.0_glibc.mk
+
 
 Mon Mar 15 16:39:02 GMT 1999 djr
 ================================
