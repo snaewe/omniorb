@@ -95,7 +95,8 @@ endif
 
 ifdef SunOS
 
-CXXOPTIONS += -Kpic -I/usr/local/include
+CXXOPTIONS   += -Kpic
+DIR_CPPFLAGS += -I/usr/local/include
 
 libname = _omniidlmodule.so
 soname = $(libname).$(IDLMODULE_MAJOR)
@@ -133,7 +134,7 @@ endif
 
 ifdef Win32Platform
 
-DIR_CPPFLAGS += -DMSDOS
+DIR_CPPFLAGS += -DMSDOS -DOMNIIDL_EXECUTABLE
 
 DIR_CPPFLAGS += -I"c:\progra~1/Python/include"
 CXXLINKOPTIONS += -libpath:"c:\progra~1\Python\libs"
@@ -161,7 +162,7 @@ endif
 
 ifdef AIX
 
-CXXOPTIONS += -I. -I/usr/local/include
+DIR_CPPFLAGS += -I. -I/usr/local/include -DNO_STRCASECMP
 
 lib = _omniidlmodule.so
 libinit = init_omniidl

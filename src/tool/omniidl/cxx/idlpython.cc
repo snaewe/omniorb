@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.11  1999/11/17 14:34:42  dpg1
+// More multi-platform support (NT and AIX).
+//
 // Revision 1.10  1999/11/11 15:55:19  dpg1
 // Python back-end interface now supports valuetype declarations.
 // Back-ends still don't support them, though.
@@ -1128,7 +1131,7 @@ extern "C" {
   }
 }
 
-#ifdef __WIN32__
+#ifdef OMNIIDL_EXECUTABLE
 
 // It's awkward to make a command named `omniidl' on NT which runs
 // Python, so we make the front-end a Python executable which always

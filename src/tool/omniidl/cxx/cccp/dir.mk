@@ -7,10 +7,20 @@ OBJS  += index.o
 CSRCS += index.c
 endif
 
+DIR_CPPFLAGS += -DHAVE_CONFIG_H
+
 omni-cpp = $(patsubst %,$(BinPattern),omni-cpp)
 
 all:: $(omni-cpp)
 
+
+#############################################################################
+#   Platform specific things                                                #
+#############################################################################
+
+ifdef AIX
+DIR_CPPFLAGS += -ma
+endif
 
 ifdef Win32Platform
 
@@ -24,6 +34,7 @@ export:: $(omni-cpp)
 	$(ExportExecutableFileToDir))
 
 endif
+
 
 $(omni-cpp): $(OBJS)
 	@(libs=""; $(CExecutable))
