@@ -1,3 +1,13 @@
+Mon Jun 28 18:35:45 BST 1999 sll
+================================
+
+- Fixed bug in marhalling Any when tcAliasExpand is set to 1.
+- Added packet dump in tcpSocketMTfactory + openvms merge.
+
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
 Mon Jun 28 14:29:56 BST 1999 dpg1
 =================================
 
