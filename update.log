@@ -1,3 +1,17 @@
+Wed Mar 25 14:25:46 GMT 1998 sll
+================================
+
+- Added code to generate a temporary work-around in the stubs for egcs.
+  This work-around code is activated only when EGCS_WORKAROUND CPP macro
+  is defined. This macro is currently defined in CORBA_sysdep.h for gcc
+  compilers.
+
+include/omniORB2/CORBA_sysdep.h
+src/lib/omniORB2/object.cc
+src/lib/omniORB2/corbaObject.cc
+src/tool/omniidl2/omniORB2_be/o2be_attribute.cc
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
 Fri Mar 20 12:31:05 GMT 1998 sll
 ================================
 
