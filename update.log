@@ -3,7 +3,7 @@ Thu May 27 21:28:03 BST 1999 sll
 
 - after IR client support is enabled on win32, the orbcore DLL fails to build.
   A feature or a bug in MSVC++ causes it to generate a bunch of references
-  to a list of functions even though none of the these functions are actually
+  to a list of functions even though none of  these functions are actually
   used in the DLL. A stub version of these functions have to be added. The
   real function definitions are in the dynamic DLL. Notice that none
   of the stubs are exported by this DLL so they would not clash with
