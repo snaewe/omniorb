@@ -19,9 +19,22 @@ NamingContext_i* NamingContext_i::tailContext = (NamingContext_i*)0;
 // Ctor.
 //
 
+#if defined(__NT__) && defined(_MSC_VER)
+
+// Work-around MSVC++ 4.2 nested class bug
+typedef CosNaming::_sk_NamingContext CosNaming__sk_NamingContext;
+
+NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
+				 const omniORB::objectKey& k, log* l)
+  : CosNaming__sk_NamingContext(k), redolog(l)
+
+#else
+
 NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
 				 const omniORB::objectKey& k, log* l)
   : CosNaming::_sk_NamingContext(k), redolog(l)
+
+#endif
 {
   headBinding = tailBinding = (ObjectBinding*)0;
   size = 0;
@@ -95,6 +108,7 @@ NamingContext_i::resolve_simple(const CosNaming::Name& n)
 
   throw CosNaming::NamingContext::NotFound(CosNaming::NamingContext::
 					   missing_node, n);
+  return 0;
 }
 
 

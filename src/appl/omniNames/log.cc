@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <time.h>
-#include <sys/utsname.h>
 #include <iostream.h>
 #include <fcntl.h>
 #include "NamingContext_i.h"
@@ -14,6 +12,21 @@
 #include "iomanip.h"
 #include "default.h"
 
+#ifdef __NT__
+
+#include <io.h>
+#include <winbase.h>
+#include <winsock.h>
+
+#define stat(x,y) _stat(x,y)
+#define unlink(x) _unlink(x)
+
+#else
+
+#include <unistd.h>
+#include <sys/utsname.h>
+
+#endif
 
 //
 // This class can be used to generate timestamps.  The t() method normally
@@ -62,13 +75,19 @@ log::log(int& p) : port(p)
   startingUp = 1;
   checkpointNeeded = 1;
   line = 1;
+
+#ifdef __NT__
+  struct _stat sb;
+#else
   struct stat sb;
+#endif
 
   char* logdir;
 
   if ((logdir = getenv("OMNINAMES_LOGDIR")) == NULL)
     logdir = DEFAULT_LOGDIR;
-  
+
+#ifndef __NT__  
   if (logdir[0] != '/') {
     cerr << ts.t() << "Error: OMNINAMES_LOGDIR (" << logdir
 	 << ") is not an absolute path name." << endl;
@@ -82,12 +101,63 @@ log::log(int& p) : port(p)
   struct utsname un;
   if (uname(&un) < 0) {
     cerr << ts.t() << "Error: cannot get the name of this host." << endl;
+	
     exit(1);
   }
 
   char* logname = new char[strlen(logdir) + strlen("/omninames-")
 			   + strlen(un.nodename) + 1];
   sprintf(logname, "%s/omninames-%s", logdir, un.nodename);
+
+#else
+
+  // Get host name:
+
+    // Initialize WinSock:
+  
+    WORD versionReq;  
+    WSADATA wData; 
+    versionReq = MAKEWORD(1, 1);  // Nothing specific to releases > 1.1 used
+ 
+    int rc = WSAStartup(versionReq, &wData); 
+ 
+    if (rc != 0) 
+      {
+	// Couldn't find a usable DLL.
+	cerr << ts.t() << "Error: Couldn't load WinSock DLL." << endl;	
+      }
+ 
+    // Confirm that the returned Windows Sockets DLL supports 1.1
+ 
+    if ( LOBYTE( wData.wVersion ) != 1 || 
+	 HIBYTE( wData.wVersion ) != 1 ) 
+      { 
+	// Couldn't find a usable DLL
+	WSACleanup(); 
+       	cerr << ts.t() << "Error: Couldn't find a usable WinSock DLL." << endl;	
+      }
+
+  char self[64];
+  if (gethostname(&self[0],64) == SOCKET_ERROR) {
+    cerr << ts.t() << "Error: cannot get the name of this host." << endl;
+    /*    cerr << "Error: ";
+
+    switch(WSAGetLastError())
+      {
+      case WSAEFAULT:
+	cerr << "WSAEFAULT" << endl;
+	break;
+      default:
+	;
+	}
+     */
+    exit(1);
+  }
+
+  char* logname = new char[strlen(logdir) + strlen("\\omninames-")
+			   + 64 + 1];
+  sprintf(logname, "%s\\omninames-%s", logdir, self);
+#endif
 
   active = new char[strlen(logname)+strlen(".log")+1];
   sprintf(active,"%s.log",logname);
@@ -181,7 +251,12 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
     cerr << ts.t() << "Starting omniNames for the first time." << endl;
 
     try {
+#ifdef __NT__
+      int fd = _open(active, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
+#else
       int fd = open(active, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
+#endif
+
       if (fd < 0)
 	throw IOError();
       logf.attach(fd);
@@ -285,7 +360,12 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
   CORBA::release(rootContext);	// dispose of the object reference
 
+#ifdef __NT__
+  int fd = _open(active, O_WRONLY | O_APPEND);
+#else
   int fd = open(active, O_WRONLY | O_APPEND | O_SYNC);
+#endif
+
   if (fd < 0) {
     cerr << ts.t() << "Error: cannot open log file '" << active
 	 << "' for writing." << endl;
@@ -387,7 +467,11 @@ log::checkpoint(void)
 
   ofstream ckpf;
 
+#ifdef __NT__
+  int fd = _open(checkpt, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
+#else
   int fd = open(checkpt, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
+#endif
 
   try {
     if (fd < 0) {
@@ -453,7 +537,11 @@ log::checkpoint(void)
 
   unlink(backup);
 
+#ifdef __NT__
+  if (!CopyFile(active,backup,TRUE)) {
+#else
   if (link(active,backup) < 0) {
+#endif
     // Failure here leaves old active and checkpoint file.
     cerr << ts.t() << "Error: failed to link backup file '" << backup
 	 << "' to old log file '" << active << "'." << endl;
@@ -467,7 +555,12 @@ log::checkpoint(void)
     exit(1);
   }
 
+
+#ifdef __NT__
+  if (!CopyFile(checkpt,active,TRUE)) {
+#else
   if (link(checkpt,active) < 0) {
+#endif
     // Failure here leaves no active but backup points to the old file.
     cerr << ts.t() << "Error: failed to link log file '" << active
 	 << "' to checkpoint file '" << checkpt << "'." << endl;
@@ -481,7 +574,12 @@ log::checkpoint(void)
     exit(1);
   }
 
+#ifdef __NT__
+  fd = _open(active, O_WRONLY | O_APPEND);
+#else
   fd = open(active, O_WRONLY | O_APPEND | O_SYNC);
+#endif
+
   if (fd < 0) {
     cerr << ts.t() << "Error: cannot open new log file '" << active
 	 << "' for writing." << endl;
