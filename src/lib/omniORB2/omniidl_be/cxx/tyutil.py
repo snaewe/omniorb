@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.23  2000/01/11 11:35:46  djs
+# Removed redundant code
+#
 # Revision 1.22  2000/01/10 15:39:34  djs
 # Better name and scope handling.
 #
@@ -280,37 +283,6 @@ ttsMap = {
     }
 
 
-def principalID(type, from_scope=[]):
-    raise "tyutil.principalID deprecated"
-    assert isinstance(type, idltype.Type)
-    # check if type is a basic type first
-    if ttsMap.has_key(type.kind()):
-        return ttsMap[type.kind()]
-
-    if isinstance(type, idltype.String):
-        return "CORBA::String_member"
-    if type.kind() == idltype.tk_TypeCode:
-        return "CORBA::TypeCode_member"
-    if isinstance(type, idltype.Sequence):
-        return principalID(type.seqType(), from_scope)
-
-    # ----- IMPLEMENT ME -----
-    if isinstance(type, idltype.WString):
-        raise "No code for wide strings"
-    if isinstance(type, idltype.Fixed):
-        raise "No code for Fixed type"
-    # ----- IMPLEMENT ME -----
-
-    scopedName = type.scopedName()
-
-    scopedName = idlutil.pruneScope(scope(scopedName), from_scope) + \
-                 [name(scopedName)]
-    
-    # escape all components of the name
-    scopedName = map(mapID, scopedName)
-
-    return string.join(scopedName, "::")
-
 # ------------------------------------------------------------------
 
 # An entry in this table indicates we already know is a type is
@@ -464,11 +436,6 @@ def objRefTemplate(type, suffix, environment):
 # ------------------------------------------------------------------
 
 def operationArgumentType(type, environment, virtualFn = 0, fully_scope = 0):
-    #try:
-    #    outer_env = environment.leaveScope()
-    #    environment = outer_env
-    #except AttributeError:
-    #    pass
     param_type = environment.principalID(type, fully_scope)
     isVariable = isVariableType(type)
     type_dims = typeDims(type)
@@ -725,7 +692,6 @@ def sequenceTemplate(sequence, environment):
     if tyutil.isTypeCode(derefSeqType):
         derefSeqTypeID = "CORBA::TypeCode_member"
         seqTypeID = "CORBA::TypeCode_member"
-#        #if tyutil.isTypeCode(seqType):
 
 
     seq_dims = typeDims(seqType)
@@ -775,8 +741,7 @@ def sequenceTemplate(sequence, environment):
            
        rel_name = environment.relName(scopedName)
        objref_name = environment.nameToString(rel_name)
-       #scopedName = idlutil.pruneScope(scopedName, scope)
-       #objref_name = idlutil.ccolonName(map(mapID, scopedName))
+
        objref_template = objRefTemplate(derefSeqType, "Member", environment)
        template["objref_name"]     = objref_name
        template["objref_template"] = objref_template
@@ -801,12 +766,10 @@ def valueString(type, value, environment):
        type.kind() == idltype.tk_longlong  or \
        type.kind() == idltype.tk_ulong     or \
        type.kind() == idltype.tk_ulonglong:
-        #return str(repr(value))
         s = str(value)
         if s[-1] == 'L':
             return s[0:-1]
         return s
-        #return str(int(eval(str(value))))
     if type.kind() == idltype.tk_float     or \
        type.kind() == idltype.tk_double:
         return str(value)
@@ -827,9 +790,6 @@ def valueString(type, value, environment):
         rel_name = environment.relName(target_name)
         rel_name_string = environment.nameToString(rel_name)
         return rel_name_string
-#        return environment.principalID(rel_name_string)
-#       rel_scope = idlutil.pruneScope(target_scope, from_scope)
-#       return idlutil.ccolonName(rel_scope) + str(value)
     if type.kind() == idltype.tk_string:
         return "\"" + value + "\""
     if type.kind() == idltype.tk_octet:
@@ -886,26 +846,6 @@ def sizeCalculation(environment, type, decl, sizevar, argname):
 @sizevar@ = omni::align_to(@sizevar@, omni::ALIGN_@n@) + @n@""",
                        sizevar = sizevar, n = str(size))
             return str(string)
-
-        # FIXME:
-        if 0:
-            if isString(deref_type):
-                string.out("""\
-@sizevar@ = omni::align_to(@sizevar, omni::ALIGN_4) + 4;
-@sizevar@ += ((const char*) @argname@) + 1 : 1""",
-                           sizevar = sizevar, argname = argname)
-                return str(string)
-
-        # FIXME:
-        # this corresponds to case tObjref in the old BE
-        # what is the difference between tObjrefMember and tObjref?
-        if 0:
-            if isObjRef(deref_type):
-                name = environment.principalID(deref_type)
-                string.out("""\
-@sizevar@ = @name@_Helper::NP_alignedSize(@argname@, @sizevar@)""",
-                           sizevar = sizevar, name = name, argname = argname)
-                return str(string)
 
         # typecodes may be an exception here
         string.out("""\
