@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9  1998/01/27 15:32:14  ewc
+  Added -ORBtcAliasExpand flag
+
   Revision 1.8  1997/12/12 18:42:24  sll
   New command line option to set omniORB::serverName.
 
@@ -64,6 +67,7 @@
 CORBA::ULong                    omniORB::traceLevel = 1;
 CORBA::Boolean                  omniORB::strictIIOP = 0;
 CORBA::String_var		omniORB::serverName = (const char *) "unknown";
+CORBA::Boolean                  omniORB::tcAliasExpand = 0; 
 _CORBA_Unbounded_Sequence_Octet omni::myPrincipalID;
 
 static const char*       myORBId          = "omniORB2";
@@ -442,6 +446,28 @@ parse_ORB_args(int &argc,char **argv,const char *orb_identifier)
 	  return 0;
 	}
 	omniORB::strictIIOP = ((v)?1:0);
+	move_args(argc,argv,idx,2);
+	continue;
+      }
+
+      // -ORBtcAliasExpand
+      if (strcmp(argv[idx],"-ORBtcAliasExpand") == 0) {
+	if((idx+1) >= argc) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "CORBA::ORB_init failed: missing -ORBtcAliasExpand parameter (0 or 1)."
+		 << endl;
+	  }
+	  return 0;
+	}
+	unsigned int v;
+	if (sscanf(argv[idx+1],"%u",&v) != 1) {
+	  if (omniORB::traceLevel > 0) {
+	    cerr << "CORBA::ORB_init failed: invalid -ORBtcAliasExpand parameter."
+		 << endl;
+	  }
+	  return 0;
+	}
+	omniORB::tcAliasExpand = ((v)?1:0);
 	move_args(argc,argv,idx,2);
 	continue;
       }
