@@ -791,7 +791,7 @@ omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 #elif defined(__linux__) || defined(__aix__)
 
     if (secs > 2000) {
-      while (secs = ::sleep(secs)) ;
+      while ((secs = ::sleep(secs))) ;
     } else {
 	usleep(secs * 1000000 + (nanosecs / 1000));
     }
