@@ -29,9 +29,15 @@
 
 /*
   $Log$
-  Revision 1.5  1997/12/18 17:32:40  sll
-  *** empty log message ***
+  Revision 1.6  1998/01/21 12:13:04  sll
+  Now accepts null pointer as marshalling argument. Substituted with a
+  proper nil string.  Print a warning if traceLevel > 1.
+  Now unmarshal zero size string. Substituted with a proper nil string.
+  Print a warning if traceLevel > 1.
 
+// Revision 1.5  1997/12/18  17:32:40  sll
+// *** empty log message ***
+//
 // Revision 1.4  1997/05/06  15:11:48  sll
 // Public release.
 //
@@ -125,11 +131,21 @@ CORBA::String_var::operator[] (CORBA::ULong index) const
 void
 CORBA::String_member::operator>>= (NetBufferedStream &s) const
 {
-  if (!_ptr)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  CORBA::ULong _len = strlen((char *)_ptr)+1;
-  _len >>= s;
-  s.put_char_array((CORBA::Char *)_ptr,_len);
+  CORBA::ULong _len;
+  if (!_ptr) {
+    if (omniORB::traceLevel > 1) {
+      _CORBA_null_string_ptr(0);
+    }
+    _len = 1;
+    _len >>= s;
+    CORBA::Char _dummy = '\0';
+    _dummy >>= s;
+  }
+  else {
+    _len = strlen((char *)_ptr)+1;
+    _len >>= s;
+    s.put_char_array((CORBA::Char *)_ptr,_len);
+  }
   return;
 }
 
@@ -138,7 +154,13 @@ CORBA::String_member::operator<<= (NetBufferedStream &s)
 {  
   CORBA::ULong _len;
   _len <<= s;
-  if (!_len || s.RdMessageUnRead() < _len)
+  if (!_len) {
+    if (omniORB::traceLevel > 1) {
+      _CORBA_null_string_ptr(1);
+    }
+    _len = 1;
+  }
+  else if (s.RdMessageUnRead() < _len)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   if (_ptr) {
     CORBA::string_free(_ptr);
@@ -147,18 +169,32 @@ CORBA::String_member::operator<<= (NetBufferedStream &s)
   _ptr = CORBA::string_alloc(_len);
   if (!_ptr)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  s.get_char_array((CORBA::Char *)_ptr,_len);
+  if (_len > 1)
+    s.get_char_array((CORBA::Char *)_ptr,_len);
+  else
+    *((CORBA::Char*)_ptr) <<= s;
+    
   return;
 }
 
 void
 CORBA::String_member::operator>>= (MemBufferedStream &s) const
 {
-  if (!_ptr)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  CORBA::ULong _len = strlen((char *)_ptr)+1;
-  _len >>= s;
-  s.put_char_array((CORBA::Char *)_ptr,_len);
+  CORBA::ULong _len;
+  if (!_ptr) {
+    if (omniORB::traceLevel > 1) {
+      _CORBA_null_string_ptr(0);
+    }
+    _len = 1;
+    _len >>= s;
+    CORBA::Char _dummy = '\0';
+    _dummy >>= s;
+  }
+  else {
+    _len = strlen((char *)_ptr)+1;
+    _len >>= s;
+    s.put_char_array((CORBA::Char *)_ptr,_len);
+  }
   return;
 }
 
@@ -167,7 +203,13 @@ CORBA::String_member::operator<<= (MemBufferedStream &s)
 {
   CORBA::ULong _len;
   _len <<= s;
-  if (!_len || s.unRead() < _len)
+  if (!_len) {
+    if (omniORB::traceLevel > 1) {
+      _CORBA_null_string_ptr(1);
+    }
+    _len = 1;
+  }
+  else if (s.unRead() < _len)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   if (_ptr) {
     CORBA::string_free(_ptr);
@@ -176,17 +218,39 @@ CORBA::String_member::operator<<= (MemBufferedStream &s)
   _ptr = CORBA::string_alloc(_len);
   if (!_ptr)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-  s.get_char_array((CORBA::Char *)_ptr,_len);
+  if (_len > 1)
+    s.get_char_array((CORBA::Char *)_ptr,_len);
+  else
+    *((CORBA::Char*)_ptr) <<= s;
   return;
 }
 
 size_t
 CORBA::String_member::NP_alignedSize(size_t initialoffset) const
 {
-  if (!_ptr)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   size_t alignedsize = omni::align_to(initialoffset,omni::ALIGN_4);
-  alignedsize += 4 + strlen((char *)_ptr) + 1;
+  if (!_ptr) {
+    alignedsize += 4 + 1;
+  }
+  else {
+    alignedsize += 4 + strlen((char *)_ptr) + 1;
+  }
   return alignedsize;
 }
 
+
+void 
+_CORBA_null_string_ptr(_CORBA_Boolean unmarshal)
+{
+  if (unmarshal) {
+    cerr << "Warning: unmarshal received a zero size string.\n"
+	 << "         Substituted with a proper nil string \"\\0\"."
+	 << endl;
+  }
+  else {
+    cerr << "Warning: try to marshal a null pointer as a string.\n"
+	 << "         Substituted with a proper nil string \"\\0\"."
+	 << endl;
+  }
+
+}
