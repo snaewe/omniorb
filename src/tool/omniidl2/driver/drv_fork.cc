@@ -85,7 +85,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #endif
 #endif
 
-#if defined(__osf1__)
+#if defined(__osf1__) || defined(__VMS)
 #include	<unistd.h>		// POSIX standard types
 #include	<wait.h>		// POSIX definition of wait()
 #endif
@@ -110,7 +110,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include <wait.h>
 #endif
 
-#ifndef __WIN32__
+#if !defined(__WIN32__) && !defined(__VMS)
 
 // Note that Windows NT version can only handle one file on command line.
 
