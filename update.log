@@ -1,3 +1,11 @@
+Wed Nov 15 17:46:07 GMT 2000 dpg1
+=================================
+
+- Typo in Monday's servant manager fix
+
+src/lib/omniORB/orbcore/poa.cc
+
+
 Wed Nov 15 16:56:08 GMT 2000 sll
 ================================
 
@@ -35,7 +43,6 @@ src/lib/omniORB/orbcore/ior.cc
 src/lib/omniORB/orbcore/omniIOR.cc
 src/lib/omniORB/orbcore/remoteIdentity.cc
 src/lib/omniORB/orbcore/strand.cc
-
 
 
 Mon Nov 13 12:38:44 GMT 2000 dpg1

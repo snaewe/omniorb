@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.5  2000/11/15 17:47:58  dpg1
+  Typo in Monday's servant manager fix
+
   Revision 1.2.2.4  2000/11/13 12:39:54  dpg1
   djr's fix to exceptions in servant managers from omni3_develop
 
@@ -2494,6 +2497,7 @@ omniOrbPOA::dispatch_to_sl(GIOP_S& giop_s, const CORBA::Octet* key,
   try {
     servant = sl->preinvoke(oid, this, giop_s.invokeInfo().operation(),
 			    cookie);
+  }
 #ifndef HAS_Cplusplus_catch_exception_by_base
 #define RETHROW_EXCEPTION(name) catch(CORBA::name&) { exitAdapter(); throw; }
   OMNIORB_FOR_EACH_SYS_EXCEPTION(RETHROW_EXCEPTION)
