@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.29  2004/07/29 10:45:22  dgrisby
+# Bug with unmarshalling unions with multiple case labels.
+#
 # Revision 1.3.2.28  2004/07/23 14:07:04  dgrisby
 # Subtly incorrect generated code for arrays.
 #
@@ -654,6 +657,7 @@ void
   switch(_pd__d) {
     @unmarshal_cases@
   }
+  _pd__initialised = 1;
 }
 """
 
