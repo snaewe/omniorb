@@ -1,4 +1,19 @@
 
+Tue Jul 20 15:23:06 BST 1999 djr
+================================
+
+- Accept nil ref in DynAny::insert_reference().
+- Allow DynAny with type tk_void.
+
+src/lib/omniORB2/dynamic/dynAny.cc
+
+- Allocate an exception list if CORBA::Request::exception() is
+  accessed and no exception list was given.  Similarly for
+  context lists.
+
+src/lib/omniORB2/dynamic/request.cc
+
+
 Mon Jul 19 10:50:03 BST 1999 djr
 ================================
 
