@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2  1997/12/12 18:45:49  sll
+  Added call to print out the version of gatekeeper.
+
   Revision 1.1  1997/12/09 18:43:17  sll
   Initial revision
 
@@ -36,6 +39,7 @@
 #include <omniORB2/CORBA.h>
 #include <ropeFactory.h>
 #include <tcpATMos.h>
+#include <gatekeeper.h>
 
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
@@ -63,6 +67,10 @@ tcpATMosFactoryType::init()
   singleton = new tcpATMosFactoryType;
   singleton->next = ropeFactoryTypeList;
   ropeFactoryTypeList = singleton;
+
+  if (omniORB::traceLevel >= 2) {
+    cerr << "omniORB2 gateKeeper is " << gateKeeper::version() << endl;
+  }
 
   // XXX There is no known order in the startup of ATMos processes. In
   // order to give the IP stack a chance to bootstrap to the
