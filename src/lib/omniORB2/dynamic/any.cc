@@ -28,16 +28,39 @@
 
 
 /* $Log$
-/* Revision 1.1  1998/01/27 15:43:47  ewc
-/* Initial revision
+/* Revision 1.2  1998/04/07 19:30:45  sll
+/* Moved inline functions to this module.
 /*
+// Revision 1.1  1998/01/27  15:43:47  ewc
+// Initial revision
+//
+// Revision 1.1  1998/01/27  15:43:47  ewc
+// Initial revision
+//
  */
 
-#include <iostream.h>
 #include <string.h>
 
 #include <omniORB2/CORBA.h>
 #include "tcParseEngine.h"
+
+CORBA::Any::Any() : pd_data(0)
+{ 
+  pd_tc = new TypeCode(tk_null); 
+}
+
+CORBA::Any::~Any()
+{ 
+  CORBA::release(pd_tc); 
+  PR_deleteData();
+}
+
+CORBA::Any::Any(const Any& a) : pd_data(0) 
+{
+  if ((a.pd_tc)->NP_is_nil()) pd_tc = TypeCode::_nil();
+  else pd_tc = new TypeCode(*(a.pd_tc));
+  pd_mbuf = a.pd_mbuf;
+}
 
 
 CORBA::Any::Any(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release,
@@ -89,6 +112,17 @@ CORBA::Any::Any(CORBA::TypeCode_ptr tc, void* value, CORBA::Boolean release,
     }
 }  
 	  
+
+CORBA::Any& CORBA::Any::operator=(const CORBA::Any& a) {
+      if (this != &a) {
+	CORBA::release(pd_tc);
+	PR_deleteData();
+	if ((a.pd_tc)->NP_is_nil()) pd_tc = TypeCode::_nil();
+	else pd_tc = new TypeCode(*(a.pd_tc));
+	pd_mbuf = a.pd_mbuf;
+      }
+      return *this;
+    }    
 
 /**************************************************************************/
 
@@ -536,3 +570,230 @@ CORBA::Any::replace(CORBA::TypeCode_ptr tc, void* value,
 }
 
 
+void 
+CORBA::Any::operator<<=(CORBA::Short s) 
+{
+  MemBufferedStream mbuf;
+  s >>= mbuf;
+  NP_replaceData(_tc_short, mbuf);
+}
+
+void
+CORBA::Any::operator<<=(CORBA::UShort u)
+{
+  MemBufferedStream mbuf;
+  u >>= mbuf;
+  NP_replaceData(_tc_ushort, mbuf);
+}	
+
+void
+CORBA::Any::operator<<=(CORBA::Long l)
+{
+  MemBufferedStream mbuf;
+  l >>= mbuf;
+  NP_replaceData(_tc_long, mbuf);
+}
+
+void
+CORBA::Any::operator<<=(CORBA::ULong u)
+{
+  MemBufferedStream mbuf;
+  u >>= mbuf;
+  NP_replaceData(_tc_ulong, mbuf);
+}
+
+#if !defined(NO_FLOAT)
+void
+CORBA::Any::operator<<=(CORBA::Float f)
+{
+  MemBufferedStream mbuf;
+  f >>= mbuf;
+  NP_replaceData(_tc_float, mbuf); 	
+}
+
+void
+CORBA::Any::operator<<=(CORBA::Double d)
+{
+  MemBufferedStream mbuf;
+  d >>= mbuf;
+  NP_replaceData(_tc_double, mbuf);
+}
+#endif
+
+void
+CORBA::Any::operator<<=(const Any& a)
+{
+  MemBufferedStream mbuf;
+  a >>= mbuf;
+  NP_replaceData(_tc_any,mbuf);
+}	
+
+
+void
+CORBA::Any::operator<<=(CORBA::TypeCode_ptr tc)
+{
+  // Copying version
+  MemBufferedStream mbuf;
+  *tc >>= mbuf;
+  NP_replaceData(_tc_TypeCode, mbuf);
+}
+
+void
+CORBA::Any::operator<<=(CORBA::TypeCode_ptr* tcp) 
+{
+  // Non - copying version
+  this->operator<<=(*tcp);
+  CORBA::release(*tcp);
+}
+
+    
+void
+CORBA::Any::operator<<=(const char*& s) 
+{
+  MemBufferedStream mbuf;
+  ULong _len = strlen(s) + 1;
+  _len >>= mbuf;
+  mbuf.put_char_array((const CORBA::Char*) s, _len);
+  NP_replaceData(_tc_string, mbuf);
+}
+
+void
+CORBA::Any::operator<<=(CORBA::Any::from_boolean f) 
+{
+  MemBufferedStream mbuf;
+  f.val >>= mbuf;
+  NP_replaceData(_tc_boolean, mbuf);
+}
+      
+void
+CORBA::Any::operator<<=(CORBA::Any::from_char c)
+{
+  MemBufferedStream mbuf;
+  c.val >>= mbuf;
+  NP_replaceData(_tc_char, mbuf);
+}
+	
+
+void
+CORBA::Any::operator<<=(CORBA::Any::from_octet o) 
+{
+  MemBufferedStream mbuf;
+  o.val >>= mbuf;
+  NP_replaceData(_tc_octet, mbuf);
+}
+    
+CORBA::Boolean
+CORBA::Any::operator>>=(CORBA::Short& s) const
+{
+  if (!pd_tc->NP_expandEqual(_tc_short,1)) return 0;
+  else {
+    MemBufferedStream tmp_mbuf(pd_mbuf,1);
+    s <<= tmp_mbuf;
+    return 1;
+  }
+}
+    
+CORBA::Boolean
+CORBA::Any::operator>>=(CORBA::UShort& u) const
+{
+  if (!pd_tc->NP_expandEqual(_tc_ushort,1)) return 0;
+  else {
+    MemBufferedStream tmp_mbuf(pd_mbuf,1);
+    u <<= tmp_mbuf;
+    return 1;
+  }
+}
+
+CORBA::Boolean
+CORBA::Any::operator>>=(CORBA::Long& l) const
+{
+  if (!pd_tc->NP_expandEqual(_tc_long,1)) return 0;
+  else {
+    MemBufferedStream tmp_mbuf(pd_mbuf,1);
+    l <<= tmp_mbuf;
+    return 1;
+  }
+}
+
+CORBA::Boolean 
+CORBA::Any::operator>>=(CORBA::ULong& u) const 
+{
+  if (!pd_tc->NP_expandEqual(_tc_ulong,1)) return 0;
+  else {
+    MemBufferedStream tmp_mbuf(pd_mbuf,1);
+    u <<= tmp_mbuf;
+    return 1;
+  }
+}
+    
+#if !defined(NO_FLOAT)
+CORBA::Boolean
+CORBA::Any::operator>>=(CORBA::Float& f) const
+{
+  if (!pd_tc->NP_expandEqual(_tc_float,1)) return 0;
+  else {
+    MemBufferedStream tmp_mbuf(pd_mbuf,1);
+    f <<= tmp_mbuf;
+    return 1;
+  }
+}
+
+CORBA::Boolean
+CORBA::Any::operator>>=(CORBA::Double& d) const
+{
+  if (!pd_tc->NP_expandEqual(_tc_double,1)) return 0;
+  else {
+    MemBufferedStream tmp_mbuf(pd_mbuf,1);
+    d <<= tmp_mbuf;
+    return 1;
+  }
+}
+
+#endif
+
+CORBA::Boolean
+CORBA::Any::operator>>=(CORBA::Any::to_boolean b) const
+{
+  if (!pd_tc->NP_expandEqual(_tc_boolean,1)) return 0;
+  else {
+    MemBufferedStream tmp_mbuf(pd_mbuf,1);
+    b.ref <<= tmp_mbuf;
+    return 1;
+  }
+}
+
+CORBA::Boolean
+CORBA::Any::operator>>=(CORBA::Any::to_char c) const
+{
+  if (!pd_tc->NP_expandEqual(_tc_char,1)) return 0;
+  else {
+    MemBufferedStream tmp_mbuf(pd_mbuf,1);
+    c.ref <<= tmp_mbuf;
+    return 1;
+  }
+}
+    
+CORBA::Boolean
+CORBA::Any::operator>>=(CORBA::Any::to_octet o) const
+{
+  if (!pd_tc->NP_expandEqual(_tc_octet,1)) return 0;
+  else {
+    MemBufferedStream tmp_mbuf(pd_mbuf,1);
+    o.ref <<= tmp_mbuf;
+    return 1;
+  }
+}
+
+CORBA::TypeCode_ptr 
+CORBA::Any::type() const 
+{
+  if (pd_tc->NP_is_nil()) return TypeCode::_nil();
+  else return new TypeCode(*pd_tc);
+}
+
+const void *
+CORBA::Any::value() const
+{
+  return pd_mbuf.data();
+}
+	
