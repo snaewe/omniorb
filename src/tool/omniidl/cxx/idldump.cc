@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.11.2.6  2001/06/12 11:35:25  dpg1
+// Minor omniidl tweaks for valuetype.
+//
 // Revision 1.11.2.5  2001/03/13 10:32:11  dpg1
 // Fixed point support.
 //
@@ -609,17 +612,83 @@ visitValueBox(ValueBox* b)
 
 void
 DumpVisitor::
-visitValueAbs(ValueAbs* a)
+visitValueAbs(ValueAbs* v)
 {
-  printf("[abstract valuetype]");
+  printf("abstract valuetype %s ", v->identifier());
+
+  if (v->inherits()) {
+    printf(": ");
+    char* ssn;
+    for (ValueInheritSpec* vis = v->inherits(); vis; vis = vis->next()) {
+      ssn = vis->value()->scopedName()->toString();
+      printf("%s%s%s ",
+	     vis->truncatable() ? "truncatable " : "",
+	     ssn, vis->next() ? "," : "");
+      delete [] ssn;
+    }
+  }
+  if (v->supports()) {
+    printf("supports ");
+    char* ssn;
+    for (InheritSpec* is = v->supports(); is; is = is->next()) {
+      ssn = is->interface()->scopedName()->toString();
+      printf("%s%s ", ssn, is->next() ? "," : "");
+      delete [] ssn;
+    }
+  }
+  printf("{\n");
+
+  ++indent_;
+  for (Decl* d = v->contents(); d; d = d->next()) {
+    printIndent();
+    d->accept(*this);
+    printf(";\n");
+  }
+  --indent_;
+  printIndent();
+  printf("}");
 }
 
 void
 DumpVisitor::
 visitValue(Value* v)
 {
-  printf("[valuetype]");
+  if (v->custom()) printf("custom ");
+  printf("valuetype %s ", v->identifier());
+
+  if (v->inherits()) {
+    printf(": ");
+    char* ssn;
+    for (ValueInheritSpec* vis = v->inherits(); vis; vis = vis->next()) {
+      ssn = vis->value()->scopedName()->toString();
+      printf("%s%s%s ",
+	     vis->truncatable() ? "truncatable " : "",
+	     ssn, vis->next() ? "," : "");
+      delete [] ssn;
+    }
+  }
+  if (v->supports()) {
+    printf("supports ");
+    char* ssn;
+    for (InheritSpec* is = v->supports(); is; is = is->next()) {
+      ssn = is->interface()->scopedName()->toString();
+      printf("%s%s ", ssn, is->next() ? "," : "");
+      delete [] ssn;
+    }
+  }
+  printf("{\n");
+
+  ++indent_;
+  for (Decl* d = v->contents(); d; d = d->next()) {
+    printIndent();
+    d->accept(*this);
+    printf(";\n");
+  }
+  --indent_;
+  printIndent();
+  printf("}");
 }
+
 
 // Types
 

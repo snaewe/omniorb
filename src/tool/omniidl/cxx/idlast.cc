@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.7  2001/06/12 11:35:25  dpg1
+// Minor omniidl tweaks for valuetype.
+//
 // Revision 1.16.2.6  2001/06/08 17:12:22  dpg1
 // Merge all the bug fixes from omni3_develop.
 //
@@ -2265,7 +2268,8 @@ Factory::
 Factory(const char* file, int line, IDL_Boolean mainFile,
 	const char* identifier)
 
-  : Decl(D_FACTORY, file, line, mainFile)
+  : Decl(D_FACTORY, file, line, mainFile),
+    parameters_(0)
 {
   if (identifier[0] == '_')
     identifier_ = idl_strdup(identifier+1);
@@ -2273,7 +2277,7 @@ Factory(const char* file, int line, IDL_Boolean mainFile,
     identifier_ = idl_strdup(identifier);
 
   Scope* s = Scope::current()->newOperationScope(file, line);
-  Scope::current()->addCallable(identifier, s, this, file, line);
+  Scope::current()->addDecl(identifier, s, this, 0, file, line);
   Scope::startScope(s);
 }
 
@@ -2450,6 +2454,14 @@ ValueBox(const char* file, int line, IDL_Boolean mainFile,
     constrType_(constrType)
 {
   checkValidType(file, line, boxedType);
+
+  IdlType* ubt = boxedType->unalias();
+  if (ubt->kind() == IdlType::tk_value ||
+      ubt->kind() == IdlType::tk_value_box) {
+
+    IdlError(file, line, "Value types cannot be boxed");
+  }
+
   thisType_ = new DeclaredType(IdlType::tk_value_box, this, this);
   Scope::current()->addDecl(identifier, 0, this, thisType_, file, line);
 }
