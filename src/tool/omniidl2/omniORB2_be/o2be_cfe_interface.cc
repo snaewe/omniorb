@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.19  1999/01/07 09:48:23  djr
+  Changes to support new output file ...DynSK.cc
+
   Revision 1.18  1998/10/26 12:19:58  sll
   Added catch for o2be_fe_error exception.
 
@@ -153,9 +156,10 @@ getopt(int num_args, char* const* args, const char* optstring)
 #endif
 
 
-o2be_root *o2be_global::myself = NULL;
-char *o2be_global::pd_hdrsuffix = DEFAULT_IDL_HDR_SUFFIX;
-char *o2be_global::pd_skelsuffix = DEFAULT_IDL_SKEL_SUFFIX;
+o2be_root* o2be_global::myself = NULL;
+char* o2be_global::pd_hdrsuffix = DEFAULT_IDL_HDR_SUFFIX;
+char* o2be_global::pd_skelsuffix = DEFAULT_IDL_SKEL_SUFFIX;
+char* o2be_global::pd_dynskelsuffix = DEFAULT_IDL_DYNSKEL_SUFFIX;
 size_t o2be_global::pd_suffixlen = DEFAULT_IDL_SUFFIXLEN;
 int o2be_global::pd_fflag = 0;
 int o2be_global::pd_aflag = 0;
@@ -169,7 +173,7 @@ int o2be_global::pd_mflag = 1;
 // Remember that none of the FE initialization has been done, when you
 // add stuff here.
 //
-AST_Generator *
+AST_Generator*
 BE_init()
 {
   AST_Generator	*g = new o2be_generator();	
@@ -241,10 +245,10 @@ usage()
   std::cerr << GTDEVEL(" -Uname\t\t\tundefines name for preprocessor\n");
   std::cerr << GTDEVEL(" -V\t\t\tprints version info then exits\n");
   std::cerr << GTDEVEL(" -a\t\t\tgenerates code required by type any\n");
-  std::cerr << GTDEVEL(" -h suffix   Specify non-default suffix for the generated header file(s)\n");
+  std::cerr << GTDEVEL(" -h suffix\t\tspecify suffix for the generated header file(s)\n");
   std::cerr << GTDEVEL(" -l\t\t\tgenerates code required by LifeCycle service\n");
   std::cerr << GTDEVEL(" -m\t\t\tallow modules to be reopened\n");
-  std::cerr << GTDEVEL(" -s suffix   Specify non-default suffix for the generated stub file(s)\n");
+  std::cerr << GTDEVEL(" -s suffix\t\tspecify suffix for the generated stub file(s)\n");
   std::cerr << GTDEVEL(" -t\t\t\tgenerate 'tie' implementation skeleton\n");
   std::cerr << GTDEVEL(" -u\t\t\tprints usage message and exits\n");
 
@@ -272,13 +276,14 @@ BE_parse_args(int argc, char **argv)
   char *buffer;
 
 #ifdef __WIN32__
- o2be_global::set_skelsuffix("SK.cpp");
+  o2be_global::set_skelsuffix("SK.cpp");
+  o2be_global::set_dynskelsuffix("DynSK.cpp");
 #endif
 
 #ifdef HAS_Cplusplus_Namespace
- // Enable reopen module by default
- idl_global->set_compile_flags(idl_global->compile_flags() |
-			       IDL_CF_REOPENMODULE);
+  // Enable reopen module by default
+  idl_global->set_compile_flags(idl_global->compile_flags() |
+				IDL_CF_REOPENMODULE);
 #endif
 
   DRV_cpp_init();
@@ -306,7 +311,14 @@ BE_parse_args(int argc, char **argv)
 	  o2be_global::set_hdrsuffix(optarg);
 	  break;
 	case 's':
-	  o2be_global::set_skelsuffix(optarg);
+	  {
+	    o2be_global::set_skelsuffix(optarg);
+	    char* s = new char[strlen(optarg) + strlen("Dyn") + 1];
+	    strcpy(s, "Dyn");
+	    strcat(s, optarg);
+	    o2be_global::set_dynskelsuffix(s);
+	    delete[] s;
+	  }
 	  break;
 	case 'u':
 	  usage();
