@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/09/03 13:27:12  sll
+  Minor update to comments.
+
   Revision 1.1.2.2  2001/08/29 17:50:39  sll
   New method dumpRule.
 
@@ -97,7 +100,7 @@ class transportRules {
 		       CORBA::ULong& priority/* return arg */);
   // Return true if <endpoint> matches one of the transport rules.
   // The action list of the matched rule is returned in <actions>.
-  // The priority of the matched rule is returned in <priority>.
+  // The index of the matched rule is returned in <priority>.
   // Return false if <endpoint> does not match any rule. In that case
   // <actions and <priority> are not initialised.
 
