@@ -1,4 +1,12 @@
 
+Tue Nov 23 10:45:38 GMT 1999 djr
+================================
+
+- Added _var_type and _ptr_type to POA.
+
+include/omniORB3/poa.h
+
+
 Mon Nov 22 10:48:48 GMT 1999 djr
 ================================
 
