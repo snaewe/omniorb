@@ -29,8 +29,11 @@
 
 /*
   $Log$
-  Revision 1.33  2000/07/04 15:22:58  dpg1
-  Merge from omni3_develop.
+  Revision 1.34  2000/07/13 15:25:58  dpg1
+  Merge from omni3_develop for 3.0 release.
+
+  Revision 1.29.6.20  2000/07/10 10:56:43  sll
+  Minor rearrangement to keep DEC C++ 5.6 happy.
 
   Revision 1.29.6.19  2000/06/22 10:40:14  dpg1
   exception.h renamed to exceptiondefs.h to avoid name clash on some
@@ -1209,6 +1212,15 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 /////////////////////////////////////////////////////////////////////////////
 
 class omni_hooked_initialiser : public omniInitialiser {
+
+private:
+  struct initHolder {
+    initHolder(omniInitialiser* i) : init(i), next(0) {}
+
+    omniInitialiser* init;
+    initHolder*      next;
+  };
+
 public:
 
   omni_hooked_initialiser() : pd_head(0), pd_tail(0) {}
@@ -1237,12 +1249,6 @@ public:
   }
 
 private:
-  struct initHolder {
-    initHolder(omniInitialiser* i) : init(i), next(0) {}
-
-    omniInitialiser* init;
-    initHolder*      next;
-  };
 
   initHolder* pd_head;
   initHolder* pd_tail;

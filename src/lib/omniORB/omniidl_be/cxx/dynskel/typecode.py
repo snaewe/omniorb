@@ -28,8 +28,8 @@
 
 # $Id$
 # $Log$
-# Revision 1.16  2000/07/04 15:23:06  dpg1
-# Merge from omni3_develop.
+# Revision 1.17  2000/07/13 15:26:00  dpg1
+# Merge from omni3_develop for 3.0 release.
 #
 # Revision 1.14.2.7  2000/07/03 14:56:43  djs
 # Fixed bug generating typecodes for struct members which are anonymous

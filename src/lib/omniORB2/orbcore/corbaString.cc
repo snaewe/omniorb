@@ -29,8 +29,8 @@
 
 /*
   $Log$
-  Revision 1.17  2000/07/04 15:22:58  dpg1
-  Merge from omni3_develop.
+  Revision 1.18  2000/07/13 15:25:58  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.14.6.6  2000/06/27 16:15:10  sll
   New classes: _CORBA_String_element, _CORBA_ObjRef_Element,

@@ -23,8 +23,8 @@
 
 // $Id$
 // $Log$
-// Revision 1.2  2000/07/04 15:23:25  dpg1
-// Merge from omni3_develop.
+// Revision 1.3  2000/07/13 15:26:04  dpg1
+// Merge from omni3_develop for 3.0 release.
 //
 // Revision 1.1.2.2  2000/06/19 15:25:57  dpg1
 // Explicit cast to (const char*) when using String_var with logger.

@@ -33,6 +33,8 @@ extern PortableServer::POA_var the_poa;
 extern PortableServer::POA_var the_ins_poa;
 
 
+class ObjectBinding;
+
 class NamingContext_i : public POA_CosNaming::NamingContextExt,
 			public PortableServer::RefCountServantBase
 {

@@ -30,8 +30,8 @@
 
 /*
  * $Log$
- * Revision 1.10  2000/07/04 15:23:13  dpg1
- * Merge from omni3_develop.
+ * Revision 1.11  2000/07/13 15:26:02  dpg1
+ * Merge from omni3_develop for 3.0 release.
  *
  * Revision 1.8.6.5  2000/06/22 10:40:13  dpg1
  * exception.h renamed to exceptiondefs.h to avoid name clash on some

@@ -28,8 +28,8 @@
 
 // $Id$
 // $Log$
-// Revision 1.7  2000/07/04 15:22:42  dpg1
-// Merge from omni3_develop.
+// Revision 1.8  2000/07/13 15:25:52  dpg1
+// Merge from omni3_develop for 3.0 release.
 //
 // Revision 1.5.2.1  2000/03/06 10:40:29  dpg1
 // Typo in string constant.

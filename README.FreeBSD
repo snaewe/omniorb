@@ -1,3 +1,7 @@
+omniORB 3 has been tested on FreeBSD 4.0.
+
+For FreeBSD 3.2, the following information may be useful.
+
 This information is provided by Andre Fornacon.
 If you have questions regarding omniORB on FreeBSD send them to afo@zlug.org.
 [Last modified: 1999/06/13 13:10:39 by afo@xxo.zlug.org]

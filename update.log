@@ -1,3 +1,348 @@
+Thu Jul 13 15:42:03 BST 2000 sll
+================================
+
+- Documentation update. Remove pre-release status
+
+external_merge/ReleaseNote_omniORB_300              new
+external_merge/ReleaseNote_omniORB_300_per3         removed
+external_merge/THIS_IS_3_0_0_PRERELEASE_3           removed
+external_merge/THIS_IS_omniORB_3_0_0                new
+
+
+Thu Jul 13 11:51:22 BST 2000 sll
+================================
+
+- README updates
+
+external_merge/CHANGES_280  (previously ReleaseNote_omniORB_280)
+external_merge/CREDITS
+external_merge/README.FIRST
+external_merge/README.unix
+external_merge/README.win32
+external_merge/README.SGI
+exteranl_merge/README.FreeBSD
+
+external_merge/ReleaseNote_981223        removed
+external_merge/ReleaseNote_omniORB_270   removed
+external_merge/ReleaseNote_omniORB_271   removed
+external_merge/ReleaseNote_omniORB_280   removed
+
+
+Thu Jul 13 11:31:33 BST 2000 dpg1
+=================================
+
+- External documentation updates
+
+external_merge/doc/lifecycle.pdf              -- deleted
+external_merge/doc/lifecycle.ps               -- deleted
+external_merge/doc/omniNames.dvi              -- deleted
+external_merge/doc/omniNames.html             -- deleted
+external_merge/doc/omniNames.pdf
+external_merge/doc/omniNames.ps
+external_merge/doc/omniNames.tex
+external_merge/doc/omnithread.dvi             -- deleted
+external_merge/doc/omnithread.html            -- new
+external_merge/doc/omnithread.pdf
+external_merge/doc/omnithread.ps
+external_merge/doc/utilities.dvi              -- deleted
+external_merge/doc/utilities.html             -- new
+external_merge/doc/utilities.pdf
+external_merge/doc/utilities.ps
+external_merge/doc/utilities.tex
+external_merge/doc/omniNames/node1.html       -- deleted
+external_merge/doc/omniNames/node2.html       -- deleted
+external_merge/doc/omniNames/node3.html       -- deleted
+external_merge/doc/omniNames/omniNames.html   -- deleted
+external_merge/doc/omnithread/images.aux      -- deleted
+external_merge/doc/omnithread/images.log      -- deleted
+external_merge/doc/omnithread/images.pl       -- deleted
+external_merge/doc/omnithread/images.tex      -- deleted
+external_merge/doc/omnithread/img1.gif        -- deleted
+external_merge/doc/omnithread/node1.html      -- deleted
+external_merge/doc/omnithread/node2.html      -- deleted
+external_merge/doc/omnithread/node3.html      -- deleted
+external_merge/doc/omnithread/node4.html      -- deleted
+external_merge/doc/omnithread/node5.html      -- deleted
+external_merge/doc/omnithread/node6.html      -- deleted
+external_merge/doc/omnithread/omnithread.html -- deleted
+external_merge/doc/utilities/images.aux       -- deleted
+external_merge/doc/utilities/images.log       -- deleted
+external_merge/doc/utilities/images.pl        -- deleted
+external_merge/doc/utilities/images.tex       -- deleted
+external_merge/doc/utilities/img1.gif         -- deleted
+external_merge/doc/utilities/img2.gif         -- deleted
+external_merge/doc/utilities/node1.html       -- deleted
+external_merge/doc/utilities/node2.html       -- deleted
+external_merge/doc/utilities/node3.html       -- deleted
+external_merge/doc/utilities/utilities.html   -- deleted
+
+
+Wed Jul 12 15:14:33 BST 2000 djs
+================================
+
+- Minor fix to omniidl/C++ backend option -Wbsplice-modules
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+src/lib/omniORB2/omniidl_be/cxx/header/poa.py
+
+
+Wed Jul 12 15:19:27 BST 2000 dpg1
+=================================
+
+- Minor fix to HTML version of omniORB manual
+
+doc/tex/omniORB.tex
+external_merge/doc/omniORB/omniORB004.html
+
+
+Wed Jul 12 14:50:25 BST 2000 sll
+================================
+
+- OpenVMS merge, new rules for omniORBpy
+
+external_merge/etc/openvms.zip
+
+
+
+Wed Jul 12 14:18:46 BST 2000 sll
+================================
+
+- Documented IRIX CPP macro for pthread
+
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+
+Wed Jul 12 14:03:17 BST 2000 dpg1
+=================================
+
+- The default corbaloc port is 2809, not 2089 as specified in the
+  specification!
+
+doc/tex/omniORB.tex
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniORB/omniORB004.html
+external_merge/doc/omniORB/omniORB006.html
+external_merge/doc/omniORB/omniORB007.html
+external_merge/doc/omniORB/omniORB009.html
+external_merge/doc/omniORB/omniORB010.html
+external_merge/doc/omniORB/omniORB011.html
+external_merge/doc/omniORB/omniORB012.html
+src/lib/omniORB2/orbcore/constants.cc
+
+
+Tue Jul 11 21:04:36 BST 2000 sll
+================================
+
+- Fixed a bug in dir.mk caused by a recent change that omit gatekeeper.o
+  from those platforms that are built with no gatekeeper support.
+  The affected platforms are HPUX, AIX and SINIX.
+
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+
+
+Tue Jul 11 20:58:59 BST 2000 sll
+================================
+
+- Create a new lib on Win32- msvcstub.lib. This can be used to resolve
+  unnecessary reference from stub *SK.cc files to a few functions in
+  omniDynamic300_rt.dll. 
+- Updated nmake examples to use the stub lib.
+
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+src/lib/omniORB2/orbcore/dir.mk
+
+Tue Jul 11 16:14:24 BST 2000 dpg1
+=================================
+
+- Win32 makefile updates
+
+external_merge/mk/win32.mk
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+
+- Change #include from <echo.hh> to <becho.hh>
+
+src/examples/boa/eg2_clt.cc
+
+
+Tue Jul 11 13:46:58 BST 2000 sll
+================================
+
+- Updated omniidl build rules for HPUX 11.00
+
+src/tool/omniidl/cxx/dir.mk
+
+
+Tue Jul 11 13:37:05 BST 2000 sll
+================================
+
+- Added omnipython distribution for HPUX 11.00 and IRIX 6.5. Updated
+  documentation to reflect this.
+
+external_merge/README.KNOWN_ISSUES         Deleted
+external_merge/README.hpux11               New
+external_merge/README.SunC++5
+external_merge/README.unix
+
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+
+
+Tue Jul 11 11:26:48 BST 2000 dpg1
+=================================
+
+- Rationalise stdout/stderr output from catior and genior
+
+src/appl/utils/catior/catior.cc
+src/appl/utils/genior/genior.cc
+
+
+Mon Jul 10 17:47:18 BST 2000 dpg1
+=================================
+
+- Change repoId of CORBA::CompletionStatus to
+  IDL:omg.org/CORBA/completion_status:1.0
+
+src/lib/omniORB2/dynamic/dynException.cc
+
+
+Mon Jul 10 14:03:49 BST 2000 dpg1
+=================================
+
+- Initialisation of Any insertion functions was missing from system
+  exceptions.
+
+include/omniORB3/CORBA.h
+
+
+Mon Jul 10 12:22:08 BST 2000 dpg1
+=================================
+
+- More omniORB 2 references changed
+
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/thread/README
+
+
+Mon Jul 10 11:56:56 BST 2000 sll
+================================
+
+- openVMS build merge
+
+external_merge/etc/openvms.zip
+
+Mon Jul 10 11:48:04 BST 2000 sll
+================================
+
+- Minor rearrangement to keep DEC C++ 5.6 happy.
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
+Mon Jul 10 11:43:51 BST 2000 dpg1
+=================================
+
+- Add patch file for AIX VisualAge C++ 5.0.
+
+external_merge/README.aix                  -- new
+external_merge/patches/README
+external_merge/patches/aix_xlC_5.0.patch   -- new
+
+- Various references to omniORB2 changed.
+
+external_merge/README.ETSKernel
+external_merge/README.Linux
+external_merge/README.SunC++5
+external_merge/README.unix
+external_merge/README.win32
+
+
+Mon Jul 10 11:41:10 BST 2000 sll
+================================
+
+- Some platforms' stream::flush() function requires an addition
+  low level sync() call to ensure that the data is flushed to disk.
+  Whenever a transaction is to be flushed to the redolog, omniNames now
+  call reallyFlush() which may call sync() if necessary.
+
+src/appl/omniNames/log.cc
+
+
+
+Fri Jul  7 11:28:19 BST 2000 sll
+================================
+
+- DEC C++ 6.{0,1} on Digital Unix requires #define OMNI_REQUIRES_FQ_BASE_CTOR
+
+include/omniORB3/CORBA_sysdep.h
+
+
+Fri Jul  7 11:24:51 BST 2000 sll
+================================
+
+- More openVMS merge
+
+external_merge/etc/openvms.zip
+
+
+Fri Jul  7 11:15:21 BST 2000 sll
+================================
+
+- Fixed breakage caused by previous AIX xlC 5 checkin
+
+include/omniORB3/CORBA_sysdep.h
+
+
+Thu Jul  6 17:20:28 BST 2000 sll
+================================
+
+- Further openVMS merge
+
+external_merge/README.openvms
+external_merge/etc/openvms.zip
+external_merge/patches/dec_CXX_5.6.patch
+idl/ir.idl
+
+Thu Jul  6 10:26:43 BST 2000 dpg1
+=================================
+
+- Clarify omniidl usage in documentation and omniidl -u
+
+doc/tex/omniORB.tex
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniORB/omniORB002.html
+src/tool/omniidl/python/omniidl/main.py
+
+
+Wed Jul  5 12:08:06 BST 2000 dpg1
+=================================
+
+- Untested support for AIX with xlC 5.
+
+external_merge/config/config.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk -- new
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk -- new
+include/omniORB3/CORBA_sysdep.h
+src/appl/omniNames/NamingContext_i.h
+
+
 Fri Jun 30 17:03:43 BST 2000 sll
 ================================
 

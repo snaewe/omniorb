@@ -198,16 +198,6 @@ ifndef OMNIORB_IDL_FPATH
 OMNIORB_IDL_FPATH = $(OMNIORB_IDL)
 endif
 
-ifndef BuildWin32DebugLibraries
-
-#bootstrapSK.cc: ../bootstrapSK.cc
-#	$(CP) $< $@
-#
-#NamingSK.cc: ../NamingSK.cc
-#	$(CP) $< $@
-
-endif
-
 export:: $(lib)
 	@$(ExportLibrary)
 
@@ -224,5 +214,38 @@ ifdef Win32Platform
 #
 gatekeeper.o: gatekeepers/dummystub/gatekeeper.cc
 	$(CXX) -c $(CXXFLAGS) -Fo$@ $<
+
+
+# When compiling the *SK.cc stubs, a feature or a bug in MSVC++ causes it to
+# generate a bunch of references to a list of functions even though none of
+# the these functions are actually used.
+# Consequently, even though an application does not use any features
+# provided by the *DynSK.cc stubs, i.e. Any and typecodes, the omniORB dynamic
+# dll has to be linked.
+# To remove this dependency, a small library msvcdllstub.lib is provided
+# which can be used in place of the omniORB dynamic dll. It contains
+# nothing other than skeleton for the functions wrongly referenced by MSVC++.
+
+msvcstub.o: sharedlib/msvcdllstub.cc
+	$(CXX) -c $(CXXFLAGS) -Fo$@ $<
+
+ifndef BuildWin32DebugLibraries
+
+msvcstublib = $(patsubst %,$(LibPattern),msvcstub)
+
+else
+
+msvcstublib = $(patsubst %,$(LibDebugPattern),msvcstub)
+
+endif
+
+all:: $(msvcstublib)
+
+$(msvcstublib): msvcstub.o
+	@$(StaticLinkLibrary)
+
+export:: $(msvcstublib)
+	@$(ExportLibrary)
+
 
 endif

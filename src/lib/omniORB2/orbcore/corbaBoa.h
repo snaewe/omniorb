@@ -29,8 +29,8 @@
 
 /*
   $Log$
-  Revision 1.2  2000/07/04 15:22:58  dpg1
-  Merge from omni3_develop.
+  Revision 1.3  2000/07/13 15:25:58  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.1.2.3  2000/06/02 14:20:15  dpg1
   Using boa_lock for the nil BOA's condition variable caused an

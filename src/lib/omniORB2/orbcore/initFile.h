@@ -29,8 +29,8 @@
 
 /*
   $Log$
-  Revision 1.10  2000/07/04 15:22:57  dpg1
-  Merge from omni3_develop.
+  Revision 1.11  2000/07/13 15:25:57  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.9.8.2  2000/05/24 17:21:07  dpg1
   Fix const-correctness in error functions

@@ -29,8 +29,8 @@
 
 /*
  $Log$
- Revision 1.4  2000/07/04 15:22:51  dpg1
- Merge from omni3_develop.
+ Revision 1.5  2000/07/13 15:25:55  dpg1
+ Merge from omni3_develop for 3.0 release.
 
  Revision 1.2.8.3  2000/01/28 15:57:09  djr
  Removed superflouous ref counting in Strand_iterator.

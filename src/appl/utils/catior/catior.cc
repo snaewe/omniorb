@@ -402,11 +402,11 @@ int main(int argc, char* argv[])
     IOP::EncapStrToIor(str_ior, repoID, profiles);
 
     if (*repoID == '\0' && profiles->length() == 0) {
-      cerr << "IOR is a nil object reference." << endl;
+      cout << "IOR is a nil object reference." << endl;
     }
     else {
-      cerr << "Type ID: \"" << (char*) repoID << "\"" << endl;
-      cerr << "Profiles:" << endl;
+      cout << "Type ID: \"" << (char*) repoID << "\"" << endl;
+      cout << "Profiles:" << endl;
 
       for (unsigned long count=0; count < profiles->length(); count++) {
 	cout << count+1 << ". ";

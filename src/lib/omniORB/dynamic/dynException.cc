@@ -256,8 +256,8 @@ static const char* mCompletionStatus[] = { "COMPLETED_YES",
 					   "COMPLETED_MAYBE"};
 
 static CORBA::TypeCode_ptr _tc_CompletionStatus =
-CORBA::TypeCode::PR_enum_tc("IDL:omg.org/CORBA/CompletionStatus:1.0",
-			    "CompletionStatus", mCompletionStatus, 3);
+CORBA::TypeCode::PR_enum_tc("IDL:omg.org/CORBA/completion_status:1.0",
+			    "completion_status", mCompletionStatus, 3);
 
 
 static CORBA::PR_structMember mSystemException[] = {

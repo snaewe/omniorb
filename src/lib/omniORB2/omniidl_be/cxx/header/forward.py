@@ -28,8 +28,8 @@
 
 # $Id$
 # $Log$
-# Revision 1.8  2000/07/04 15:23:05  dpg1
-# Merge from omni3_develop.
+# Revision 1.9  2000/07/13 15:26:00  dpg1
+# Merge from omni3_develop for 3.0 release.
 #
 # Revision 1.6.2.4  2000/06/26 16:23:59  djs
 # Better handling of #include'd files (via new commandline options)

@@ -85,19 +85,25 @@ following files are produced:<BR>
 <TT>echo.hh</TT>
 
 <LI><TT>echoSK.cc</TT>
-</UL>If you are using ODE, you don't need to invoke omniidl explicitly. In
-the example file <TT>dir.mk</TT>, we have the following line:<BR>
+</UL>omniidl must be invoked with the <TT>-bcxx</TT> argument to
+tell it to generate C++ stubs. The following command line generates
+the stubs for <TT>echo.idl</TT>:<BR>
+<BR>
+<PRE>
+omniidl -bcxx echo.idl
+</PRE>If you are using our make environment (ODE), you don't need
+to invoke omniidl explicitly. In the example file <TT>dir.mk</TT>, we
+have the following line:<BR>
 <BR>
 <PRE>
 CORBA_INTERFACES = echo
-</PRE>That is all we need to instruct ODE to generate the stubs. Remember,
-you won't find the stubs in your working directory because all stubs
-are written into the <TT>stub</TT> directory at the top level of your
-build tree.<BR>
+</PRE>That is all we need to instruct ODE to generate the stubs.
+Remember, you won't find the stubs in your working directory because
+all stubs are written into the <TT>stub</TT> directory at the top level
+of your build tree.<BR>
 <BR>
-If you are not using ODE, you must invoke omniidl manually, or write
-your own make rules, with the correct command line arguments.
-omniidl's arguments are detailed in chapter&nbsp;<A HREF="omniORB005.html#chap:omniidl">5</A>.<BR>
+The full arguments to omniidl are detailed in
+chapter&nbsp;<A HREF="omniORB005.html#chap:omniidl">5</A>.<BR>
 <BR>
 <A NAME="toc7"></A>
 <H2>2.4&nbsp;&nbsp; Object References and Servants</H2>We contact a CORBA object through an <I>object reference</I>. The

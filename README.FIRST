@@ -1,8 +1,7 @@
-This is version 3.0 pre-release 3 of omniORB. We also refer to this
-version as omniORB3.
+This is version 3.0 of omniORB. We also refer to this version as omniORB3.
 
 The last public release was 2.8.0. For a summary of changes since the
-last release, please read the file ReleaseNote_omniORB_300_pre2.
+last release, please read the file ReleaseNote_omniORB_300.
 
 omniORB3 is copyright AT&T Laboratories - Cambridge. It is free
 software. The programs in omniORB3 are distributed under the GNU
@@ -25,17 +24,28 @@ README.win32 - contains important information on building and using omniORB3
 README.unix  - contains important information on building and using omniORB3
                on Unix platforms.
 
-README.openvms - contains important information on building and using omniORB3
-               on openVMS.
+README.openvms 
+README.openvms_6 - contains important information on building and using
+                   omniORB3 on openVMS.
 
-README.linux - contains further information on using omniORB3 on linux.
+
+README.aix
+README.FreeBSD
+README.linux
+README.hpux11
+README.SGI   - contains further information on using omniORB3 on the
+               different unix variants.
 
 README.egcs  - contains information on building omniORB3 with egcs-1.0.
 
 README.ETSKernel  - contains important information on building and using
                     omniORB3 with Phar Lap's ETS kernel.
 
+README.SunC++5 - contains warnings on using omniORB3 with Sun C++ v5
+
 PORTING      - contains instructions on porting omniORB3.
+
+CHANGES_280      - contains details of changes from 2.7.1 to 2.8.0.
 
 CHANGES_271      - contains details of changes from 2.6.1 to 2.7.1.
 
@@ -45,18 +55,13 @@ CHANGES_250      - contains details of changes from 2.4.0 to 2.5.0.
 
 CHANGES_240      - contains details of changes from 2.2.0 to 2.4.0.
 
-ReleaseNote_omniORB_300_pre3 - release notes of 3.0.0 pre-release 3
+ReleaseNote_omniORB_300 - release notes of 3.0.0
 
-IMPORTANT NOTE for users upgrading from 2.2.0: 
-		From release 2.4.0 onwards, the naming service uses
-                the #pragma prefix "omg.org". This is introduced to
-                bring our environment in line with the clarifications
-                in the CORBA specification. Unfortunately, this
-                results in on-the-wire incompatibility with clients
-                that are linked with the old library, i.e. any
-                programs linked before version 2.4.0 was released.
-                Please read the installation instructions in
-                README.win32 or README.unix for details.
+IMPORTANT NOTE for users upgrading from 2.7.1 or earlier:
+   Since 2.8.0, omniORB2 has been updated to CORBA 2.3. In order to comply 
+   with the 2.3 specification, it is necessary to change the
+   semantics of the extraction of string, object reference and typecode
+   from an Any. Please read CHANGES_280 for details.
 
 
 Technical Highlights
@@ -110,12 +115,12 @@ specification 2.3 of the Common Object Request Broker Architecture (CORBA).
   o SCO Unixware 7
   o Linux 2.x powerpc/Debian
 
-  o A port to MacOS exists but has not been fully integrated into the
+  o An earlier port to MacOS exists but has not been fully integrated into the
     source tree. An adaption kit is available here:
 
             http://www.cia.com.au/stevec/
  
-  o A port to the embedded OS RTEMS exists. More information is
+  o An earlier port to the embedded OS RTEMS exists. More information is
     available here:
 
             http://www.connecttel.com/corba/rtems_omni.html

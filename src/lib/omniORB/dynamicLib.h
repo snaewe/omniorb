@@ -29,8 +29,8 @@
 
 /*
   $Log$
-  Revision 1.2  2000/07/04 15:23:18  dpg1
-  Merge from omni3_develop.
+  Revision 1.3  2000/07/13 15:26:03  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.1.2.2  2000/02/08 13:25:24  djr
   Added a couple of missing _core_attr.

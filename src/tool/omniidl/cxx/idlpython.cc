@@ -28,8 +28,8 @@
 
 // $Id$
 // $Log$
-// Revision 1.17  2000/07/04 15:22:43  dpg1
-// Merge from omni3_develop.
+// Revision 1.18  2000/07/13 15:25:53  dpg1
+// Merge from omni3_develop for 3.0 release.
 //
 // Revision 1.15.2.9  2000/06/27 16:23:25  sll
 // Merged OpenVMS port.

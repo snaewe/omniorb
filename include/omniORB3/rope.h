@@ -29,8 +29,8 @@
 
 /*
   $Log$
-  Revision 1.2  2000/07/04 15:23:30  dpg1
-  Merge from omni3_develop.
+  Revision 1.3  2000/07/13 15:26:04  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.1.2.4  2000/06/27 15:43:31  sll
   New member Strand::isOutgoing().

@@ -10,14 +10,18 @@ Changes in 3.0.0 prerelease
 New requirements
 ................
 
-At least OpenVMS version 7.1 is now required.  OpenVMS VAX and DEC C++ 5.6 are
-still supported but Compaq C++ 6.2 is recommended (available only on Alpha).
+At least OpenVMS version 7.1 is now required.  OpenVMS VAX and Compaq C++ 5.6
+are still supported but Compaq C++ 6.2 is recommended (available only on Alpha).
+
+Note that if you need to use Compaq C++ 5.6 you will need to apply the
+dec_cxx_5_6.patch located in the [patches] directory.  A good port of patch for
+OpenVMS resides at: ftp.sidhe.org/VMSPerl_Community/non-perl_utils.
 
 Anyone wishing to port to OpenVMS 6.x is encouraged to try.  See the file,
 readme.openvms_v6.
 
 Python for OpenVMS must be installed prior to building the distribution. The
-minimum version is 1.5.2-V007a (not yet publicly available as of 9-MAR-2000).
+minimum version is 1.5.2-V007b.
 
 The following python logical names are used:
 
@@ -27,8 +31,8 @@ The following python logical names are used:
 	python_olb	pyvms_disk:[python.python-1_5_2.vms.o_'platform']
 
 Note that release builds will utilize object libraries built with python
-configured for noDEBUG and THREADS (python_olb:*_0t.olb) and vice versa (debug
-builds require python_olb:*_dt.olb).
+configured for noDEBUG and THREADS (python_olb:*_d0t.olb) and vice versa (debug
+builds require python_olb:*_ddt.olb).
 
 DEC C must be installed.  This distibution has been tested with:
 
@@ -64,22 +68,11 @@ hardware, and operating system version.  The results are written to
 [mk]platform.mms.  This feature is enabled by default (autoconfig=1 in
 [config]config.mms).  To reconfigure, perform a veryclean build of the entire
 directory tree.  Afterwards, the file [mk]dirs.mms should be empty. 
-Alternatively,
-
-	$ make reconfigure
-
-should set the [mk]platform.mms file.
-
-	XXX - make reconfigure doesn't work!  Don't know why!  Just make
-	veryclean the tree (making sure and delete the [mk]platform.mms file.
 
 $(TOP) is no longer defined.  It is assumed that [000000] is "top".
 $(EXPORT_TREE) and $(IMPORT_TREES) are no longer defined by default.  Thus they
 may be defined in other sub-trees such as directories containing contributed
 software.
-
-	XXX - not yet tested fully: in fact, I think buildcorbastubs needs to
-	be able to find idl files in $(IMPORT_TREES)[idl].
 
 The format of the descrip.mms file has changed.  In addition to removing the
 definition of $(TOP), it now defines current as a "_" seperated list of
@@ -203,10 +196,6 @@ detached process.  This should be added to your system startup procedure.
 Building omniORB3 applications
 -----------------------------
 
-XXX - This is getting wordy.  Maybe I should just provide an example setup
-command procedure to set everything up (depending on platform and configuration)
-and leave it at that.
-
 Include directories
 ...................
 
@@ -226,14 +215,9 @@ name:
 	$ define <qualifiers> omnilib mydisk:[myroot.lib.platform]
 
 With the above definitions in place, you should add
-/include=("./","/omni_include")/exceptions to your CXX compiles.  In addition,
-if the compiler version is 5.6 or below, you may need to add
-/Warnings=(Disable=CANTCOMPLETE) to your command line.
+/include=("./","/omni_include")/exceptions to your CXX compiles.
 
 The logical name omnilib is used as a convenience for the cxxlink command line.
-You will link against omnilib:omniORB3.olb/library, and the POSIX threads
-shareable image for your platform (VMS 6.x only: you can use
-omnilib:share.opt/options for this).
 
 To link against the shareable images, you should use the omnilib:omni_share.olb
 (or omnilib:omni_shared.olb) library.  To run the resulting executable, you will
@@ -270,18 +254,6 @@ to explicitly build for D, G, or IEEE floating point support.  The default is
 G_Float and D_FLOAT on Alpha and VAX, respectively (consistent with the CXX
 default).  You do not need to supply these qualifiers when building the
 distribution.
-
-Notes
------
-
-If you are running OpenVMS version 6.1, please ensure that you have
-installed the latest ECOs for the DEC C RTL and C++ Class Library.
-
-This release of omniORB3 is incompatable with the backport library supplied with
-DEC C++ version 5.6 (however, see "Using tcpSocketVaxRoutines.cc on OpenVMS
-6.x", below).  Therefore, if your operating system is below 7.0 and you use DEC
-C++ version 5.6 or above, be sure that the logical name DECC$CRTLMAP is not
-defined.
 
 Building the examples
 =====================
@@ -328,14 +300,7 @@ Therefore, upgrading to at least OpenVMS 7.1 is advised.
 tcpSocketVaxRoutines.cc
 -----------------------
 
-The file [etc]openvms.zip file contains the module tcpSocketVaxRoutines.cc. Note
-that as of this writing it is located in the directory
-[src.lib.omniORB2.orbcore] (rather than [src.lib.omniORB3.orbcore].  By default,
-this module is not compiled into the omniORB3[d].olb library.  In order to use
-this enhancement, you should (after a clean build of the source tree):
-
-	$ useTcpSocketVaxRoutines==1
-	$ set default [src.lib.omniORB3.orbcore]
-	$ lib/delete=tcpsocketmtfactory omniORB3.olb ! repeat for omniORB3d.olb
-	$ make export	! make/macro=(debug=1) export
-
+The file [etc]openvms.zip file contains the source file tcpSocketVaxRoutines.cc.
+Inclusion of this module into the omniORB object library is controled by the MMS
+macro, useTcpSocketVaxRoutines.  This macro is automatically set if the platform
+is OpenVMS VAX 7.x.

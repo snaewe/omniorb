@@ -29,8 +29,8 @@
 
 /*
   $Log$
-  Revision 1.2  2000/07/04 15:22:49  dpg1
-  Merge from omni3_develop.
+  Revision 1.3  2000/07/13 15:25:54  dpg1
+  Merge from omni3_develop for 3.0 release.
 
   Revision 1.1.2.5  2000/06/02 14:18:26  dpg1
   Race condition in tracedcondition

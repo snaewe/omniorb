@@ -22,13 +22,13 @@ TOP = ..\..\..
 
 
 ##########################################################################
-# Essential flags to use omniORB2
+# Essential flags to use omniORB
 #
 DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #
 #
 CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-CORBA_LIB      = omniORB280_rt.lib omniDynamic280_rt.lib omnithread2_rt.lib \
+CORBA_LIB      = omniORB300_rt.lib omniDynamic300_rt.lib omnithread2_rt.lib \
                  wsock32.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
 CXXFLAGS       = -O2 -MD -GX $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
@@ -43,7 +43,7 @@ CXXLINKOPTIONS =
 # Replace the above with the following:
 #
 #CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-#CORBA_LIB      = omniORB280_rtd.lib omniDynamic280_rtd.lib \
+#CORBA_LIB      = omniORB300_rtd.lib omniDynamic300_rtd.lib \
 #                 omnithread2_rtd.lib wsock32.lib \
 #                 advapi32.lib -libpath:$(TOP)\lib\x86_win32
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
@@ -68,8 +68,5 @@ veryclean::
   -del *.exe
 
 
-# Notice the extra -l which instructs the idl compiler to generate
-# stubs to support the life cycle service.
-#
 anyExample.hh anyExampleSK.cc: anyExample.idl
 	$(TOP)\bin\x86_win32\omniidl -bcxx -Wbh=.hh -Wbs=SK.cc -Wba anyExample.idl

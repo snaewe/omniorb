@@ -28,8 +28,8 @@
 
 # $Id$
 # $Log$
-# Revision 1.10  2000/07/04 15:23:09  dpg1
-# Merge from omni3_develop.
+# Revision 1.11  2000/07/13 15:26:01  dpg1
+# Merge from omni3_develop for 3.0 release.
 #
 # Revision 1.8.2.3  2000/04/26 18:22:13  djs
 # Rewrote type mapping code (now in types.py)

@@ -295,7 +295,7 @@ to access the current component. It is possible that the current
 component pointer is not pointing to a valid component, for instance,
 the <TT>next()</TT> operation has been invoked and there is no more
 component. Under this circumstance, the <TT>current_component()</TT>
-operation returns a nil DynAny object reference<A NAME="text20" HREF="#note20"><SUP><FONT SIZE=2>1</FONT></SUP></A>. For components which are just basic data types,
+operation returns a nil DynAny object reference<A NAME="text21" HREF="#note21"><SUP><FONT SIZE=2>1</FONT></SUP></A>. For components which are just basic data types,
 calling <TT>current_component()</TT> is an overkill because we can just use
 the basic type extraction and insertion functions directly.<BR>
 <BR>
@@ -321,7 +321,7 @@ dv-&gt;next();
 type as requested. Otherwise, the object throws a <TT>TypeMismatch</TT>
 exception. If the current component pointer is invalid when a get
 operation is called, the object also throws a <TT>TypeMismatch</TT>
-exception<A NAME="text21" HREF="#note21"><SUP><FONT SIZE=2>2</FONT></SUP></A>.<BR>
+exception<A NAME="text22" HREF="#note22"><SUP><FONT SIZE=2>2</FONT></SUP></A>.<BR>
 <BR>
 To repeatedly access the components, one can use the <TT>rewind()</TT> or
 <TT>seek()</TT> operations to manipulate the current component pointer. For
@@ -451,7 +451,7 @@ dv-&gt;next();
 type as the inserted value. Otherwise, the object throws an
 <TT>InvalidValue</TT> exception. If the current component pointer is
 invalid when an insert operation is called, the object also throws a
-<TT>InvalidValue</TT> exception<A NAME="text22" HREF="#note22"><SUP><FONT SIZE=2>3</FONT></SUP></A>.<BR>
+<TT>InvalidValue</TT> exception<A NAME="text23" HREF="#note23"><SUP><FONT SIZE=2>3</FONT></SUP></A>.<BR>
 <BR>
 Sometimes, one may just want to modify one component in an Any
 value. For instance, one may just want to change the value of the
@@ -513,7 +513,7 @@ dv-&gt;destroy();          // destroy the DynAny object.
 </PRE>In addition to the DynAny interface, a number of derived interfaces
 are defined. These interfaces are specialisation of the DynAny
 interface to facilitate the handling of any values containing
-non-basic types: struct, sequence, array, enum and union<A NAME="text23" HREF="#note23"><SUP><FONT SIZE=2>4</FONT></SUP></A>. The next few sections will provide more details on
+non-basic types: struct, sequence, array, enum and union<A NAME="text24" HREF="#note24"><SUP><FONT SIZE=2>4</FONT></SUP></A>. The next few sections will provide more details on
 these interfaces.<BR>
 <BR>
 <A NAME="toc52"></A>
@@ -659,7 +659,7 @@ allows the enum value to be extracted or inserted as an unsigned long.<BR>
 <A NAME="toc56"></A>
 <H2>10.7&nbsp;&nbsp; The DynUnion Interface</H2>Union values are handled by the DynUnion interface. Unfortunately, the
 CORBA 2.2 specification does not define the DynUnion interface in
-sufficient details to nail down its intended usage<A NAME="text24" HREF="#note24"><SUP><FONT SIZE=2>5</FONT></SUP></A>. In this section, we try to fill in the gaps and describe a
+sufficient details to nail down its intended usage<A NAME="text25" HREF="#note25"><SUP><FONT SIZE=2>5</FONT></SUP></A>. In this section, we try to fill in the gaps and describe a
 sensible way to use the DynUnion interface. Where necessary, the
 semantics of the operations is clarified. It is possible that the
 behavior of this interface in another ORB is different from this
@@ -939,29 +939,29 @@ copy of the current object.<BR>
 
 <DT><TT>type()</TT><DD> returns the typecode associated with the DynAny
 object.</DL><HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note20" HREF="#text20"><FONT SIZE=5>1</FONT></A><DD> Testing a nil
+<DT><A NAME="note21" HREF="#text21"><FONT SIZE=5>1</FONT></A><DD> Testing a nil
 DynAny object with CORBA::is_nil() returns TRUE(1). The CORBA 2.2
 specification does not specify what is the return value of this
 function when the current component pointer is invalid. To ensure
 portability, it is best to avoid calling <TT>current_component()</TT> under
 this condition.
 
-<DT><A NAME="note21" HREF="#text21"><FONT SIZE=5>2</FONT></A><DD> The CORBA 2.2 specification does not define the
+<DT><A NAME="note22" HREF="#text22"><FONT SIZE=5>2</FONT></A><DD> The CORBA 2.2 specification does not define the
 behavior of this error condition. To ensure portability, it is best to
 avoid calling the get operations when the current component pointer is
 known to be invalid.
 
-<DT><A NAME="note22" HREF="#text22"><FONT SIZE=5>3</FONT></A><DD> The CORBA 2.2 specification
+<DT><A NAME="note23" HREF="#text23"><FONT SIZE=5>3</FONT></A><DD> The CORBA 2.2 specification
 does not define the behavior of this error condition. To ensure
 portability, it is best to avoid calling the insert operations when
 the current component pointer is known to be invalid.
 
-<DT><A NAME="note23" HREF="#text23"><FONT SIZE=5>4</FONT></A><DD> In
+<DT><A NAME="note24" HREF="#text24"><FONT SIZE=5>4</FONT></A><DD> In
 the CORBA 2.2 specification, the DynFixed interface is defined to
 handle the fixed data type. This is not supported in this
 implementation.
 
-<DT><A NAME="note24" HREF="#text24"><FONT SIZE=5>5</FONT></A><DD> This
+<DT><A NAME="note25" HREF="#text25"><FONT SIZE=5>5</FONT></A><DD> This
 interface is currently an open issue with the ORB revision task
 force.
 </DL>

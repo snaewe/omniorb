@@ -32,8 +32,17 @@
 
 /*
  $Log$
- Revision 1.2  2000/07/04 15:23:35  dpg1
- Merge from omni3_develop.
+ Revision 1.3  2000/07/13 15:26:06  dpg1
+ Merge from omni3_develop for 3.0 release.
+
+ Revision 1.1.2.14  2000/07/07 10:31:33  sll
+ DEC C++ 6.{0,1} on Digital Unix needs OMNI_REQUIRES_FQ_BASE_CTOR.
+
+ Revision 1.1.2.13  2000/07/07 10:18:33  sll
+ Fixed unbalanced #if #endif.
+
+ Revision 1.1.2.12  2000/07/05 11:13:56  dpg1
+ Untested support for AIX with xlC 5.
 
  Revision 1.1.2.11  2000/06/30 14:12:07  dpg1
  Minor fixes for FreeBSD.
@@ -227,6 +236,7 @@
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Std_Namespace
 #     define HAS_pch
+#     define OMNI_REQUIRES_FQ_BASE_CTOR
 // Uncomment the following lines to enable the use of namespace with cxx v5.6
 // Notice that the source code may have to be patched to compile.
 //#  elif __DECCXX_VER >= 50600000
@@ -320,13 +330,16 @@
 #     define SIZEOF_PTR 8
 #endif
 
-#elif defined(__xlC__) && (__xlC__ <= 0x0301)
+#elif defined(__xlC__)
+#  if (__xlC__ <= 0x0306)
+#    undef HAS_Cplusplus_const_cast
+#  elif (__xlC__ >= 0x0500) // added in xlC 5.0 (a.k.a. Visual Age 5.0)
+#    define HAS_Cplusplus_Bool
+#    define HAS_Cplusplus_Namespace
+#    define HAS_Std_Namespace
+#  endif
 
-#undef HAS_Cplusplus_const_cast
-
-#endif
-
-#if defined(__hpux__)
+#elif defined(__hpux__)
 // Recent versions of HP aCC (A01.18 and A.03.13) have an identifying macro.
 // In the future, we should be able to remove the gcc test.
 // In case this is an older compiler aCC, test if this is gcc, if not assume 
