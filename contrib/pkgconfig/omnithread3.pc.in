@@ -8,4 +8,4 @@ Description: Threading library for omniORB4
 Version: @PACKAGE_VERSION@
 Requires:
 Libs: -L${libdir} -lomnithread
-Cflags: -D@PROCESSOR_DEFINE@ -D@PLATFORM_DEFINE@ -D__OSVERSION__=@OSVERSION@
+Cflags: -D@PROCESSOR_DEFINE@ -D@PLATFORM_DEFINE@ -D__OSVERSION__=@OSVERSION@ -I${includedir}

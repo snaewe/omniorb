@@ -9,4 +9,5 @@ Description: CORBA Object Request Broker.
 Version: @PACKAGE_VERSION@
 Requires: omnithread3
 Libs: -L${libdir} -lomniORB4
-Cflags: 
+Cflags: -I${includedir}
+unloadable_stubs=-DOMNI_UNLOADABLE_STUBS
