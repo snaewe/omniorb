@@ -1,3 +1,15 @@
+Tue Jan 25 16:41:11 GMT 2005 dgrisby
+====================================
+
+- Properly handle data_in_buffer indicator.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+- pd_socket member was not removed as it should have been.
+
+src/lib/omniORB/orbcore/unix/unixEndpoint.h
+
+
 Tue Jan 25 12:23:42 GMT 2005 dgrisby
 ====================================
 

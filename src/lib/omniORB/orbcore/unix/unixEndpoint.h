@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2005/01/25 16:44:15  dgrisby
+  pd_socket member was not removed as it should have been.
+
   Revision 1.1.4.2  2005/01/13 21:10:17  dgrisby
   New SocketCollection implementation, using poll() where available and
   select() otherwise. Windows specific version to follow.
@@ -74,9 +77,8 @@ protected:
   
 
 private:
-  SocketHandle_t       pd_socket;
-  CORBA::String_var    pd_filename;
-  CORBA::String_var    pd_address_string;
+  CORBA::String_var pd_filename;
+  CORBA::String_var pd_address_string;
 
   SocketHandle_t                   pd_new_conn_socket;
   giopConnection::notifyReadable_t pd_callback_func;
