@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/10/29 10:01:12  dpg1
+// Small fixes.
+//
 // Revision 1.1  1999/10/27 14:05:58  dpg1
 // *** empty log message ***
 //
@@ -43,7 +46,7 @@ DumpVisitor::
 DumpVisitor()
   : indent_(0)
 {
-  printf("Dumping...\n");
+  printf("\nDumping...\n");
 }
 
 DumpVisitor::
@@ -78,7 +81,6 @@ visitAST(AST* a)
     d->accept(*this);
     printf(";\n\n");
   }
-  printf("\n\n");
 }
 
 void
@@ -266,30 +268,32 @@ DumpVisitor::
 visitCaseLabel(CaseLabel* l)
 {
   if (l->isDefault())
-    printf("default:");
-  else {
+    printf("default /* ");
+  else
     printf("case ");
 
-    switch(l->labelKind()) {
-    case IdlType::tk_short:  printf("%hd", l->labelAsShort());  break;
-    case IdlType::tk_long:   printf("%ld", l->labelAsLong());   break;
-    case IdlType::tk_ushort: printf("%hu", l->labelAsUShort()); break;
-    case IdlType::tk_ulong:  printf("%lu", l->labelAsULong());  break;
-    case IdlType::tk_boolean:
-      printf("%s", l->labelAsBoolean() ? "TRUE" : "FALSE");
-      break;
-    case IdlType::tk_char:      printf("'%c'", l->labelAsChar());     break;
+  switch(l->labelKind()) {
+  case IdlType::tk_short:  printf("%hd", l->labelAsShort());  break;
+  case IdlType::tk_long:   printf("%ld", l->labelAsLong());   break;
+  case IdlType::tk_ushort: printf("%hu", l->labelAsUShort()); break;
+  case IdlType::tk_ulong:  printf("%lu", l->labelAsULong());  break;
+  case IdlType::tk_boolean:
+    printf("%s", l->labelAsBoolean() ? "TRUE" : "FALSE");
+    break;
+  case IdlType::tk_char:      printf("'%c'", l->labelAsChar());     break;
 #ifdef HAS_LongLong
-    case IdlType::tk_longlong:  printf("%Ld", l->labelAsLongLong());  break;
-    case IdlType::tk_ulonglong: printf("%Lu", l->labelAsULongLong()); break;
+  case IdlType::tk_longlong:  printf("%Ld", l->labelAsLongLong());  break;
+  case IdlType::tk_ulonglong: printf("%Lu", l->labelAsULongLong()); break;
 #endif
-    case IdlType::tk_wchar:     printf("'\\u%hx", l->labelAsWChar()); break;
-    case IdlType::tk_enum: l->labelAsEnumerator()->accept(*this); break;
-    default:
-      assert(0);
-    }
-    printf(":");
+  case IdlType::tk_wchar:     printf("'\\u%hx", l->labelAsWChar()); break;
+  case IdlType::tk_enum: l->labelAsEnumerator()->accept(*this);     break;
+  default:
+    assert(0);
   }
+  if (l->isDefault())
+    printf(" */:");
+  else
+    printf(":");
 }
 
 void
@@ -304,6 +308,7 @@ visitUnionCase(UnionCase* c)
   ++indent_;
   printIndent();
   c->caseType()->accept(*this);
+  printf(" %s", c->declarator()->identifier());
   --indent_;
 }
 
@@ -329,7 +334,9 @@ void
 DumpVisitor::
 visitEnumerator(Enumerator* e)
 {
-  printf("%s", e->identifier());
+  const char* ssn = e->scopedName()->toString();
+  printf("%s", ssn);
+  delete [] ssn;
 }
 
 void
@@ -340,8 +347,7 @@ visitEnum(Enum* e)
   ++indent_;
   for (Enumerator* n = e->enumerators(); n; n = (Enumerator*)n->next()) {
     printIndent();
-    n->accept(*this);
-    printf(";\n");
+    printf("%s;\n", n->identifier());
   }
   --indent_;
   printIndent();
