@@ -1,3 +1,17 @@
+Wed Aug 26 11:57:20 BST 1998 sll
+================================
+
+- Minor updates to remove warnings when compiled with standard C++ compilers.
+
+src/tool/omniidl2/fe/idl.ll
+src/tool/omniidl2/fe/lex.yy.cc
+src/appl/omniNames/NamingContext_i.cc
+src/lib/omniORB2/corbaObject.cc
+src/lib/omniORB2/dynAnyP.cc
+src/lib/omniORB2/mbufferedStream.cc
+src/lib/omniORB2/object.cc
+src/lib/omniORB2/objectRef.cc
+
 Tue Aug 25 19:50:00 BST 1998 sll
 ================================
 
