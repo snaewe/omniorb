@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.11.2.18  2003/11/20 13:37:13  dgrisby
+   Remove incorrect warning message in DynAny destruction.
+
    Revision 1.11.2.17  2002/12/18 15:59:14  dgrisby
    Proper clean-up of recursive TypeCodes.
 
@@ -317,11 +320,6 @@ DynAnyImplBase::_NP_decrRefCount()
     if( pd_refcount > 0 )  pd_refcount--;
 
     if( pd_refcount == 0 && pd_is_root ) {
-      if ( !pd_destroyed && omniORB::trace(25)) {
-	omniORB::logger l;
-	l << "Warning: Last reference to DynAny dropped without having "
-	     "called destroy()\n";
-      }
       do_delete = 1;
       // This hook allows derived types to detach their children
       // so that they will be destroyed when their ref count goes
