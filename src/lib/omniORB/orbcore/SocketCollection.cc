@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.22  2004/08/31 14:59:09  dgrisby
+  Don't bother calculating fd count on Windows because it ignores it.
+
   Revision 1.1.2.21  2004/08/17 14:59:47  dgrisby
   New selectable socket limit was wrong on Windows.
 
@@ -401,6 +404,9 @@ SocketCollection::Select() {
 
   int maxfd = 0;
   int fd = 0;
+
+#ifndef __WIN32__
+  // Win32 ignores the first argument to select()
   while (total) {
     if (FD_ISSET(fd,&rfds)) {
       maxfd = fd;
@@ -408,6 +414,7 @@ SocketCollection::Select() {
     }
     fd++;
   }
+#endif
 
   int nready;
 
