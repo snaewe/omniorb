@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2001/07/26 16:37:20  dpg1
+  Make sure static initialisers always run.
+
   Revision 1.1.2.9  2001/07/26 11:28:58  dpg1
   Print GIOP version information when listing code sets.
 
@@ -61,8 +64,17 @@
 */
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/linkHacks.h>
 #include <codeSetUtil.h>
 #include <initialiser.h>
+
+//
+// Make sure built-in code set modules are always linked
+
+OMNI_FORCE_LINK(CS_8859_1);
+OMNI_FORCE_LINK(CS_UTF_8);
+OMNI_FORCE_LINK(CS_UTF_16);
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 

@@ -56,7 +56,10 @@ sys.stdout.write("""\
 //
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/linkHacks.h>
 #include <codeSetUtil.h>
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 static const omniCodeSet::UniChar toUCS[] = {""" % sys.argv[1])
 
@@ -123,4 +126,8 @@ public:
   }
 };
 static CS_%(csid)s_init _CS_%(csid)s_init_;
+
+OMNI_NAMESPACE_END(omni)
+
+OMNI_EXPORT_LINK_FORCE_SYMBOL(CS_%(csid)s);
 """ % vars()

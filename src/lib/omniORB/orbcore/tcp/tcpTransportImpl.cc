@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/07/26 16:37:22  dpg1
+  Make sure static initialisers always run.
+
   Revision 1.1.2.2  2001/06/13 20:13:50  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -46,6 +49,9 @@
 #include <tcp/tcpAddress.h>
 #include <tcp/tcpEndpoint.h>
 #include <tcp/tcpTransportImpl.h>
+#include <omniORB4/linkHacks.h>
+
+OMNI_EXPORT_LINK_FORCE_SYMBOL(tcpTransportImpl);
 
 OMNI_NAMESPACE_BEGIN(omni)
 

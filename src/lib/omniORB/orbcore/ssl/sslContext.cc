@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/07/26 16:37:21  dpg1
+  Make sure static initialisers always run.
+
   Revision 1.1.2.2  2001/06/20 18:53:34  sll
   Rearrange the declaration of for-loop index variable to work with old and
   standard C++.
@@ -48,6 +51,9 @@
 #include <ssl/sslTransportImpl.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
+#include <omniORB4/linkHacks.h>
+
+OMNI_EXPORT_LINK_FORCE_SYMBOL(sslContext);
 
 static void report_error();
 

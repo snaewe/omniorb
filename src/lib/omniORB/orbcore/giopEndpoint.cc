@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/07/26 16:37:21  dpg1
+  Make sure static initialisers always run.
+
   Revision 1.1.2.4  2001/07/25 14:22:02  dpg1
   Same old static initialiser problem, this time with transports.
 
@@ -47,7 +50,14 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/omniTransport.h>
 #include <omniORB4/giopEndpoint.h>
+#include <omniORB4/linkHacks.h>
 #include <initialiser.h>
+
+//
+// Make sure built-in transports are always linked
+
+OMNI_FORCE_LINK(tcpTransportImpl);
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 

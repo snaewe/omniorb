@@ -29,12 +29,14 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/07/26 16:37:21  dpg1
+  Make sure static initialisers always run.
+
   Revision 1.1.2.2  2001/06/18 20:27:56  sll
   Use strchr instead of index() for maximal portability.
 
   Revision 1.1.2.1  2001/06/11 18:11:05  sll
   *** empty log message ***
-
 
 */
 
@@ -54,6 +56,15 @@
 #include <initialiser.h>
 #include <exceptiondefs.h>
 #include <omniORB4/minorCode.h>
+#include <omniORB4/linkHacks.h>
+
+OMNI_FORCE_LINK(sslAddress);
+OMNI_FORCE_LINK(sslConnection);
+OMNI_FORCE_LINK(sslContext);
+OMNI_FORCE_LINK(sslEndpoint);
+
+OMNI_EXPORT_LINK_FORCE_SYMBOL(omnisslTP);
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 

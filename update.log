@@ -1,3 +1,39 @@
+Thu Jul 26 17:31:30 BST 2001 dpg1
+=================================
+
+- Make sure static initialisers in the ORB core always run. Add
+  support for optional features in static initialisers outside the ORB
+  core.
+
+bin/scripts/make8bitcs.py
+include/omniORB4/linkHacks.h                    -- new
+include/omniORB4/optionalFeatures.h             -- new
+src/lib/omniORB/codesets/cs-8859-10.cc
+src/lib/omniORB/codesets/cs-8859-2.cc
+src/lib/omniORB/codesets/cs-8859-3.cc
+src/lib/omniORB/codesets/cs-8859-4.cc
+src/lib/omniORB/codesets/cs-8859-5.cc
+src/lib/omniORB/codesets/cs-8859-6.cc
+src/lib/omniORB/codesets/cs-8859-7.cc
+src/lib/omniORB/codesets/cs-8859-8.cc
+src/lib/omniORB/codesets/cs-8859-9.cc
+src/lib/omniORB/codesets/cs-UCS-4.cc
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/codesets/omniCodeSets.cc        -- new
+src/lib/omniORB/orbcore/codeSets.cc
+src/lib/omniORB/orbcore/cs-8859-1.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+
 Thu Jul 26 11:51:01 BST 2001 dpg1
 =================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/07/26 16:37:21  dpg1
+  Make sure static initialisers always run.
+
   Revision 1.1.2.5  2001/07/13 15:35:57  sll
   Enter a mapping from a socket to a giopConnection in the endpoint's hash
   table.
@@ -60,6 +63,9 @@
 #include <ssl/sslEndpoint.h>
 #include <tcp/tcpEndpoint.h>
 #include <stdio.h>
+#include <omniORB4/linkHacks.h>
+
+OMNI_EXPORT_LINK_FORCE_SYMBOL(sslConnection);
 
 OMNI_NAMESPACE_BEGIN(omni)
 

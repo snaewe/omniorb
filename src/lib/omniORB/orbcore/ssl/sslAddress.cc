@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/07/26 16:37:21  dpg1
+  Make sure static initialisers always run.
+
   Revision 1.1.2.4  2001/07/13 15:35:09  sll
    Error in setblocking and setnonblocking now causes the socket to be closed
    as well.
@@ -54,6 +57,9 @@
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>
 #include <openssl/err.h>
+#include <omniORB4/linkHacks.h>
+
+OMNI_EXPORT_LINK_FORCE_SYMBOL(sslAddress);
 
 OMNI_NAMESPACE_BEGIN(omni)
 

@@ -6,6 +6,7 @@
 //
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/linkHacks.h>
 #include <codeSetUtil.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -211,3 +212,4 @@ static CS_8859_3_init _CS_8859_3_init_;
 
 OMNI_NAMESPACE_END(omni)
 
+OMNI_EXPORT_LINK_FORCE_SYMBOL(CS_8859_3);
