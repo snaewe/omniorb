@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.4.5  2000/03/27 17:40:08  sll
+  New memeber maxGIOPVersion().
+
   Revision 1.22.4.4  1999/10/05 20:36:31  sll
   Added option -ORBgiopTargetAddressMode <0|1|2> to control the
   TargetAddress mode used when invoking on a remote object using GIOP 1.2
@@ -620,6 +623,21 @@ _CORBA_MODULE_BEG
   // certain types of erroneous message are received on the wire.       //
   //   	       	       	       	       	       	       	       	       	//
   _CORBA_MODULE_FN void enableLcdMode();                                //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // maxGIOPVersion()                                                   //
+  // Set the maximum GIOP version the ORB should support. The ORB tries //
+  // to match the <major>.<minor> version as specified. This function   //
+  // should only be called before ORB_init(). Calling this function     //
+  // after ORB_init()  does not cause the ORB to change its maximum     //
+  // supported version, in this case the ORB just returns its version   //
+  // number in <major>.<minor>.                                         //
+  // This function has the same effect as a command-line option:        //
+  //   -ORBmaxGIOPVersion <major no>.<minor no>                         //
+  //   	       	       	       	       	       	       	       	       	//
+  _CORBA_MODULE_FN void maxGIOPVersion(_CORBA_Char& major,              // 
+				       _CORBA_Char& minor);             //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
