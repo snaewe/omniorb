@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/06/13 20:08:13  sll
+  Minor update to make the ORB compiles with MSVC++.
+
   Revision 1.1.2.2  2001/05/01 16:03:16  sll
   Silly typo in a switch statement causes random failure due to corrupted
   link list.
@@ -56,7 +59,7 @@ if (omniAsyncInvoker::traceLevel >= level) { \
 class omniAsyncWorker : public omni_thread {
 public:
 
-  omniAsyncWorker(omniAsyncInvoker* pool, omniTask* task) : 
+  omniAsyncWorker(omniAsyncInvoker* pool, omniTask* task) :
     pd_pool(pool), pd_task(task), pd_cond(pool->pd_lock), pd_next(0),
     pd_id(id())
   {
@@ -110,7 +113,7 @@ public:
 	}
       }
 
-      unsigned int immediate = (pd_task->category() == 
+      unsigned int immediate = (pd_task->category() ==
 				omniTask::ImmediateDispatch);
 
       pd_pool->pd_lock->unlock();
@@ -122,7 +125,7 @@ public:
       }
       pd_task = 0;
       pd_pool->pd_lock->lock();
-      
+
       if (immediate) {
 	pd_pool->pd_nthreads++;
       }
@@ -195,7 +198,7 @@ omniAsyncInvoker::~omniAsyncInvoker() {
 ///////////////////////////////////////////////////////////////////////////
 int
 omniAsyncInvoker::insert(omniTask* t) {
-  
+
   omni_mutex_lock sync(*pd_lock);
 
   switch (t->category()) {
@@ -257,16 +260,18 @@ omniAsyncInvoker::insert(omniTask* t) {
 ///////////////////////////////////////////////////////////////////////////
 int
 omniAsyncInvoker::cancel(omniTask* t) {
-  
+
   omni_mutex_lock sync(*pd_lock);
 
-  for (omniTaskLink* l = pd_anytime_tq.next; l != &pd_anytime_tq; l =l->next) {
+ 	omniTaskLink* l;
+
+  for (l = pd_anytime_tq.next; l != &pd_anytime_tq; l =l->next) {
     if ((omniTask*)l == t) {
       l->deq();
       return 1;
     }
   }
-  for (omniTaskLink* l=pd_dedicate_tq.next; l != &pd_dedicate_tq; l =l->next) {
+  for (l=pd_dedicate_tq.next; l != &pd_dedicate_tq; l =l->next) {
     if ((omniTask*)l == t) {
       l->deq();
       return 1;

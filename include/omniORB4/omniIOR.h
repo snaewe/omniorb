@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-//	
+//
 
 /*
   $Log$
+  Revision 1.1.2.7  2001/06/13 20:07:25  sll
+  Minor update to make the ORB compiles with MSVC++.
+
   Revision 1.1.2.6  2001/06/11 17:53:23  sll
    The omniIOR ctor used by genior and corbaloc now has the option to
    select whether to call interceptors and what set of interceptors to call.
@@ -90,7 +93,7 @@ public:
   GIOP::AddressingDisposition addr_mode() const {
     return pd_addr_mode;
   }
-  
+
   void addr_mode(GIOP::AddressingDisposition m) {
     pd_addr_mode = m;
   }
@@ -103,11 +106,11 @@ public:
   //
   class IORInfo;
   IORInfo* getIORInfo() const;
-    
+
   // Within IORInfo, additional decoded info can be deposited using
   // the IORExtraInfo class. Typically this is used by decodeIOR interceptors
   // to insert extra info into the IOR for later retreival.
-  // 
+  //
   class IORExtraInfo {
   public:
     IORExtraInfo(const IOP::ComponentId cid) : compid(cid) {}
@@ -124,7 +127,7 @@ public:
   class IORInfo {
   public:
 
-    // GIOP version. 
+    // GIOP version.
     const GIOP::Version& version() const {
       return pd_version;
     }
@@ -143,12 +146,12 @@ public:
     void orbType(_CORBA_ULong t) { pd_orb_type = t; }
 
     // Transmission code set for char and string
-    omniCodeSet::TCS_C* TCS_C() const { return pd_tcs_c; }
-    void TCS_C(omniCodeSet::TCS_C* tcs_c) { pd_tcs_c = tcs_c; }
+    _OMNI_NS(omniCodeSet::TCS_C)* TCS_C() const { return pd_tcs_c; }
+    void TCS_C(_OMNI_NS(omniCodeSet::TCS_C)* tcs_c) { pd_tcs_c = tcs_c; }
 
     // Transmission code set for wchar and wstring
-    omniCodeSet::TCS_W* TCS_W() const { return pd_tcs_w; }
-    void TCS_W(omniCodeSet::TCS_W* tcs_w) { pd_tcs_w = tcs_w; }
+    _OMNI_NS(omniCodeSet::TCS_W)* TCS_W() const { return pd_tcs_w; }
+    void TCS_W(_OMNI_NS(omniCodeSet::TCS_W)* tcs_w) { pd_tcs_w = tcs_w; }
 
     // Extra info list
     IORExtraInfoList& extraInfo() { return pd_extra_info; }
@@ -160,8 +163,8 @@ public:
     GIOP::Version                      pd_version;
     _OMNI_NS(giopAddressList)          pd_addresses;
     _CORBA_ULong                       pd_orb_type;
-    omniCodeSet::TCS_C*                pd_tcs_c;
-    omniCodeSet::TCS_W*                pd_tcs_w;
+    _OMNI_NS(omniCodeSet::TCS_C)*      pd_tcs_c;
+    _OMNI_NS(omniCodeSet::TCS_W)*                pd_tcs_w;
     IORExtraInfoList                   pd_extra_info;
   };
 
@@ -181,11 +184,11 @@ public:
   //
   // ** Caller holds lock on internalLock.
 
-  enum interceptorOption { NoInterceptor, 
-			   DefaultInterceptors, 
+  enum interceptorOption { NoInterceptor,
+			   DefaultInterceptors,
 			   AllInterceptors };
 
-  omniIOR(const char* repoId, 
+  omniIOR(const char* repoId,
 	  const _CORBA_Unbounded_Sequence_Octet& key,
 	  const IIOP::Address* addrs, _CORBA_ULong naddrs,
 	  GIOP::Version ver, interceptorOption call_interceptors);
@@ -239,7 +242,7 @@ public:
   ////
   static void  unmarshal_TAG_CODE_SETS(const IOP::TaggedComponent&, omniIOR&);
   static char* dump_TAG_CODE_SETS(const IOP::TaggedComponent&);
-  static void  add_TAG_CODE_SETS(const CONV_FRAME::CodeSetComponentInfo&);
+  static void  add_TAG_CODE_SETS(const _OMNI_NS(CONV_FRAME::CodeSetComponentInfo)&);
 
   ////
   static void  unmarshal_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent&,
@@ -252,7 +255,7 @@ public:
   static char* dump_TAG_GROUP(const IOP::TaggedComponent&);
 
   ////
-  static void  unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent&, 
+  static void  unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent&,
 					   omniIOR&);
   static char* dump_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent&);
   static void  add_TAG_SSL_SEC_TRANS(const IIOP::Address&,
@@ -286,7 +289,7 @@ public:
   inline omniIOR* _retn() { omniIOR* p = pd_ior; pd_ior = 0; return p; }
   inline operator omniIOR* () const { return pd_ior; }
   inline omniIOR* operator->() const { return pd_ior; }
-  inline omniIOR_var& operator=(omniIOR* p) { 
+  inline omniIOR_var& operator=(omniIOR* p) {
     if (pd_ior) pd_ior->release();
     pd_ior = p;
     return *this;

@@ -19,17 +19,20 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //      Implementation of the CORBA::TypeCode psuedo object
-//	
+//
 
 
-/* 
+/*
  * $Log$
+ * Revision 1.38.2.13  2001/06/13 20:10:04  sll
+ * Minor update to make the ORB compiles with MSVC++.
+ *
  * Revision 1.38.2.12  2001/06/08 17:12:10  dpg1
  * Merge all the bug fixes from omni3_develop.
  *
@@ -554,7 +557,7 @@ CORBA::TypeCode::PR_struct_tc(const char* id, const char* name,
 {
   check_static_data_is_initialised();
 
-  TypeCode_struct::Member* new_members 
+  TypeCode_struct::Member* new_members
     = new TypeCode_struct::Member[memberCount];
 
   for( ULong i = 0; i < memberCount; i++ ) {
@@ -2241,7 +2244,7 @@ TypeCode_struct::NP_extendedEqual(const TypeCode_base*  TCp,
     return 0;
 
   for( CORBA::ULong i=0; i < pd_nmembers; i++ ) {
-    if ((!is_equivalent && !NP_namesEqual(pd_members[i].name, 
+    if ((!is_equivalent && !NP_namesEqual(pd_members[i].name,
 				       TCp->NP_member_name(i))) ||
 	(!ToTcBase(pd_members[i].type)->NP_equal(TCp->NP_member_type(i),
 						 is_equivalent, tcpl)))
@@ -5049,12 +5052,14 @@ TypeCode_ptr         _tc_float;
 TypeCode_ptr         _tc_double;
 TypeCode_ptr         _tc_boolean;
 TypeCode_ptr         _tc_char;
+TypeCode_ptr         _tc_wchar;
 TypeCode_ptr         _tc_octet;
 TypeCode_ptr         _tc_any;
 TypeCode_ptr         _tc_TypeCode;
 TypeCode_ptr         _tc_Principal;
 TypeCode_ptr         _tc_Object;
 TypeCode_ptr         _tc_string;
+TypeCode_ptr         _tc_wstring;
 TypeCode_ptr         _tc_NamedValue;
 #ifdef HAS_LongLong
 TypeCode_ptr         _tc_longlong;
@@ -5157,7 +5162,7 @@ static void check_static_data_is_initialised()
     nvMembers[2].type = CORBA::_tc_long;
     nvMembers[3].name = "arg_modes";
     nvMembers[3].type = tc_Flags;
-    
+
     CORBA::_tc_NamedValue = CORBA::TypeCode::PR_struct_tc("IDL:omg.org/CORBA/NamedValue:1.0", "NamedValue",nvMembers, 4);
   }
 }

@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/06/13 20:11:37  sll
+  Minor update to make the ORB compiles with MSVC++.
+
   Revision 1.1.4.1  2001/04/18 17:18:15  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -86,7 +89,7 @@ public:
   // lock is released.
 
   _CORBA_Boolean is_equivalent(const omniIdentity* id) {
-    // Returns TRUE(1) if the two identity objects refer to the same CORBA 
+    // Returns TRUE(1) if the two identity objects refer to the same CORBA
     // Object. This function do not raise any exception.
 
     // We rely on the concrete implementation of this abstract class to
@@ -101,7 +104,7 @@ public:
   }
 
 protected:
-#ifndef __GNUG__ 
+#ifndef __GNUG__
   inline ~omniIdentity() {}
   // Should only be destroyed by implementation of derived classes.
   // This doesn't need to be virtual, since it is only ever deleted
@@ -124,13 +127,15 @@ protected:
     : pd_key(key, keysize) {}
   // Consumes <key>.
 
+public:
   typedef _CORBA_Boolean (*equivalent_fn)(const omniIdentity*,
 					  const omniIdentity*);
 
+protected:
   virtual equivalent_fn get_real_is_equivalent() const = 0;
   // return a pointer to the function that can compute whether 2 identity
   // objects of the same derived class are equivalent.
-  
+
 
 private:
   omniIdentity(const omniIdentity&);

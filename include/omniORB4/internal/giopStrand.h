@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/06/13 20:11:37  sll
+  Minor update to make the ORB compiles with MSVC++.
+
   Revision 1.1.4.1  2001/04/18 17:19:00  sll
   Big checkin with the brand new internal APIs.
 
@@ -65,7 +68,10 @@ public:
   giopStreamList* next;
   giopStreamList* prev;
 
-  giopStreamList() : next(this), prev(this) {}
+  giopStreamList() {
+		next = this;
+		prev = this;
+	}
 
   void insert(giopStreamList& head);
   void remove();
@@ -101,7 +107,7 @@ class giopStrand : public Strand {
   // Acquire a GIOP_S from the strand. Normally this is only  done on
   // passive strands. However, it can also be used for active strands when
   // they become birectional, i.e. BiDir == 1.
-  // 
+  //
   // Thread Safety preconditions:
   //    Caller must not hold omniTransportLock, it is used internally for
   //    synchronisation.
@@ -110,7 +116,7 @@ class giopStrand : public Strand {
   // Release the GIOP_S to the strand. The GIOP_S must have been acquired
   // previously through acquireServer from this strand. Passing in a GIOP_S
   // from a different strand would result in undefined behaviour.
-  // 
+  //
   // Thread Safety preconditions:
   //    Caller must not hold omniTransportLock, it is used internally for
   //    synchronisation.
@@ -133,13 +139,13 @@ class giopStrand : public Strand {
   // No thread safety precondition, use with extreme care
 
   void resetIdleCounter(CORBA::ULong nbeats) { idlebeats = nbeats; }
-  // Reset the idle counter to <nbeats> so that the idle countdown starts from 
-  // that value. 
+  // Reset the idle counter to <nbeats> so that the idle countdown starts from
+  // that value.
   //
   // No thread safety precondition, use with extreme care
 
   ////////////////////////////////////////////////////////////////////////
-  // When idlebeats go to 0, the strand has been idle for a sufficently 
+  // When idlebeats go to 0, the strand has been idle for a sufficently
   // long time and should be deleted.
   // This variable SHOULD NOT be manipulated outside the implementation of
   // giopStrand.
@@ -206,7 +212,7 @@ class giopStrand : public Strand {
   //   and the GIOP version for which the convertors apply.
 
 
-  // conditional variables and counters to implement giopStream locking 
+  // conditional variables and counters to implement giopStream locking
   // functions.
   omni_tracedcondition rdcond;
   int                  rd_nwaiting;
@@ -216,7 +222,7 @@ class giopStrand : public Strand {
 
   CORBA::ULong newSeqNumber();
   // Return a number suitable for use as the GIOP request id.
-  // 
+  //
   // Thread Safety preconditions:
   //    Caller must hold omniTransportLock.
 
@@ -234,9 +240,9 @@ public:
   static _core_attr StrandList  active_timedout;
   static _core_attr StrandList  passive;
   // Throughout the lifetime of a strand, it is a member of one and only one
-  // of the lists: 
+  // of the lists:
   //   active           - the ORB uses this connection in the role of a client
-  //                      it is 'active' in the sense that the connection was 
+  //                      it is 'active' in the sense that the connection was
   //                      initiated by this ORB
   //   active_timedout  - the connection was previously active and has been
   //                      idled for some time. It will be deleted soon.
@@ -248,7 +254,7 @@ public:
 
   struct timeValue {
     unsigned long secs;
-    unsigned long nanosecs; 
+    unsigned long nanosecs;
   };
 
   static _core_attr CORBA::ULong idleOutgoingBeats;

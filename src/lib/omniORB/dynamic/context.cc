@@ -19,7 +19,7 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.12.2.7  2001/06/13 20:10:03  sll
+ Minor update to make the ORB compiles with MSVC++.
+
  Revision 1.12.2.6  2001/04/19 09:14:16  sll
  Scoped where appropriate with the omni namespace.
 
@@ -94,17 +97,9 @@
 
 #include <ctype.h>
 #include <dynamicLib.h>
-
+#include <libcWrapper.h>
 
 #define INIT_MAX_SEQ_LENGTH  6
-
-
-#ifdef _HAS_NOT_GOT_strcasecmp
-extern int strcasecmp(const char *s1, const char *s2);
-#endif
-#ifdef _HAS_NOT_GOT_strncasecmp
-extern int strncasecmp(const char *s1, const char *s2, size_t n);
-#endif
 
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -130,7 +125,7 @@ ContextImpl::~ContextImpl()
 {
   // This destructor can only be called when the reference count
   // has gone to zero, and there are no children.
-  if( pd_refCount || pd_children ) 
+  if( pd_refCount || pd_children )
     throw omniORB::fatalException(__FILE__, __LINE__,
 		  "Application deleted a CORBA::Context explicitly");
 
@@ -186,7 +181,7 @@ ContextImpl::set_one_value(const char* prop_name, const CORBA::Any& value)
   if( !(value >>= strval) )
     OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
-  insert_single_consume(name._retn(), 
+  insert_single_consume(name._retn(),
 			((omniORB::omniORB_27_CompatibleAnyExtraction)?
                                 (char*)strval:CORBA::string_dup(strval)));
   RETURN_CORBA_STATUS;
@@ -391,8 +386,8 @@ ContextImpl::matchPattern(const char* pattern, CORBA::ULong& bottom_out,
     CORBA::ULong i = (bottom + top) / 2;
     int cmp;
 
-    if( wildcard )  cmp = strncasecmp(pattern, pd_entries[i].name, pat_len);
-    else            cmp = strcasecmp(pattern, pd_entries[i].name);
+    if( wildcard )  cmp = ::strncasecmp(pattern, pd_entries[i].name, pat_len);
+    else            cmp = ::strcasecmp(pattern, pd_entries[i].name);
 
     if( cmp < 0 )       top = i;
     else if( cmp > 0 )  bottom = (bottom == i) ? i + 1 : i;

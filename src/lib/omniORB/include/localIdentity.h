@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //    Encapsulation of the identity of a local object implementation.
-//      
- 
+//
+
 /*
   $Log$
+  Revision 1.1.4.3  2001/06/13 20:11:37  sll
+  Minor update to make the ORB compiles with MSVC++.
+
   Revision 1.1.4.2  2001/05/29 17:03:49  dpg1
   In process identity.
 
@@ -106,9 +109,11 @@ public:
   virtual void gainObjRef(omniObjRef*);
   virtual void loseObjRef(omniObjRef*);
   virtual void locateRequest();
+protected:
   virtual omniIdentity::equivalent_fn get_real_is_equivalent() const;
   // Override omniIdentity.
 
+public:
   void dispatch(omniCallHandle&);
   // Dispatches a remote invocation.  Grabs a reference
   // to this identity, and dispatches the call to the

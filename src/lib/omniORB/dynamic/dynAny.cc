@@ -19,7 +19,7 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
@@ -27,8 +27,11 @@
 //      Implementation of type DynAny
 
 
-/* 
+/*
    $Log$
+   Revision 1.11.2.8  2001/06/13 20:10:04  sll
+   Minor update to make the ORB compiles with MSVC++.
+
    Revision 1.11.2.7  2001/04/19 09:14:15  sll
    Scoped where appropriate with the omni namespace.
 
@@ -140,8 +143,8 @@
   of each member in the struct.
 
   [clarification end]
-  If the struct has not bee completely initialised, raise a 
-  CORBA::SystemException. 
+  If the struct has not bee completely initialised, raise a
+  CORBA::SystemException.
   [clarification begin]
 
 
@@ -150,8 +153,8 @@
   ---------------------------------------
   The DynUnion interface as defined in CORBA 2.2 is lacking in detail on the
   behaviour of the member functions. As a result a number of intepretations
-  could be applied. A number of these issues are currently opened with the ORB 
-  revision task force. Until the issues are resolved, the following 
+  could be applied. A number of these issues are currently opened with the ORB
+  revision task force. Until the issues are resolved, the following
   interpretation is used in this implementation:
 
   DynUnion objects are associated with unions.
@@ -168,7 +171,7 @@
   The DynUnion interface allows for the insertion/extraction of an OMG
   IDL union type into/from a DynUnion object.
 
-  The TCKind associated with the discriminator is returned by 
+  The TCKind associated with the discriminator is returned by
   discriminator_kind().
 
   TCKind discriminator_kind();
@@ -180,7 +183,7 @@
   DynAny discriminator();
 
   [clarification begin]
-  Insert a value into the discriminator select the member. 
+  Insert a value into the discriminator select the member.
 
   If the discriminator has already been initialised by a previous insert
   operation, the new insert may cause a different member to be selected. In
@@ -190,7 +193,7 @@
   is confusing. Developers are STRONG DISCOURAGED from writing code that
   relies on this behaviour. It is possible that a future CORBA revision may
   disallow this completely.
-  [clarification end] 
+  [clarification end]
 
   The member operation retuns a DynAny object reference that is used in order
   to insert/get the member of the union:
@@ -207,9 +210,9 @@
   the DynAny returned by discriminator() or through the value copied from
   the argument when the DynUnion was constructed, member() returns a
   nil DynAny (CORBA::DynAny::_nil()). member_kind() returns tk_null.
-  
-  Suppose a member() call returns a DynAny_ptr A. Then a different 
-  discriminant value is inserted  causing a different member to be selected. 
+
+  Suppose a member() call returns a DynAny_ptr A. Then a different
+  discriminant value is inserted  causing a different member to be selected.
   In this case, inserting a value through A would not affect the value of
   the DynUnion. A effectively is detached from the union. If A already contains
   a valid value, this value would be returned by A and would not be the
@@ -225,11 +228,11 @@
   [clarification begin]
   Setting the name of the union member automatically causes the value of
   the discriminator to changed to the corresponding value reflecting the
-  selection. 
+  selection.
 
   If the discriminant has already been initialised to a different value-member
   selection, the description above applies.
-  
+
   [clarification end]
 
   The set_as_default attribute determines whether the discriminator
@@ -262,7 +265,7 @@
   3. Use member() to obtain the DynAny of the member.
   4. Insert value into the member DynAny.
 
-  Never change the discriminator once it has been initialised.  
+  Never change the discriminator once it has been initialised.
 
 
 
@@ -305,6 +308,14 @@
 #include <anyP.h>
 #include <exceptiondefs.h>
 
+CORBA::DynAny::DynAny() { pd_magic = CORBA::DynAny::PR_magic; }
+CORBA::DynAny::~DynAny() { pd_magic = 0; }
+CORBA::DynEnum::~DynEnum() {}
+CORBA::DynStruct::~DynStruct() {}
+CORBA::DynUnion::~DynUnion() {}
+CORBA::DynSequence::~DynSequence() {}
+CORBA::DynArray::~DynArray() {}
+
 OMNI_NAMESPACE_BEGIN(omni)
 
 // Note:
@@ -318,14 +329,6 @@ create_dyn_any(TypeCode_base* tc, CORBA::Boolean is_root);
 
 static DynUnionDisc*
 create_dyn_any_discriminator(TypeCode_base* tc, DynUnionImpl* du);
-
-CORBA::DynAny::DynAny() { pd_magic = CORBA::DynAny::PR_magic; }
-CORBA::DynAny::~DynAny() { pd_magic = 0; }
-CORBA::DynEnum::~DynEnum() {}
-CORBA::DynStruct::~DynStruct() {}
-CORBA::DynUnion::~DynUnion() {}
-CORBA::DynSequence::~DynSequence() {}
-CORBA::DynArray::~DynArray() {}
 
 
 //////////////////////////////////////////////////////////////////////
@@ -2944,7 +2947,7 @@ DynArrayImpl::DynArrayImpl(TypeCode_base* tc, CORBA::Boolean is_root)
   : DynAnyConstrBase(tc, dt_array, is_root)
 {
   setNumComponents(actualTc()->NP_length());
-  
+
 }
 
 
@@ -3259,7 +3262,7 @@ CORBA::DynArray::_duplicate(CORBA::DynArray_ptr p)
 void
 CORBA::release(CORBA::DynAny_ptr p)
 {
-  if( CORBA::DynAny::PR_is_valid(p) && !CORBA::is_nil(p) )  
+  if( CORBA::DynAny::PR_is_valid(p) && !CORBA::is_nil(p) )
     ToDynAnyImplBase(p)->decrRefCount();
 }
 
@@ -3376,7 +3379,7 @@ CORBA::ORB::create_dyn_any(const Any& value)
   if( CORBA::is_nil(tc) )
     OMNIORB_THROW(BAD_TYPECODE,0, CORBA::COMPLETED_NO);
 
-  DynAnyImplBase* da = ::create_dyn_any(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)), DYNANY_ROOT);
+  DynAnyImplBase* da = _OMNI_NS(create_dyn_any)(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)), DYNANY_ROOT);
   da->from_any(value);
   return da;
 }

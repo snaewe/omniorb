@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-//	
+//
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/06/13 20:07:25  sll
+  Minor update to make the ORB compiles with MSVC++.
+
   Revision 1.1.4.1  2001/04/18 17:26:28  sll
   Big checkin with the brand new internal APIs.
 
@@ -64,7 +67,10 @@ public:
   StrandList* next;
   StrandList* prev;
 
-  StrandList() : next(this), prev(this) {}
+  StrandList() {
+		next = this;
+		prev = this;
+	}
 
   void insert(StrandList& head);
   void remove();
@@ -76,6 +82,26 @@ private:
 };
 
 
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+class RopeLink {
+public:
+  RopeLink* next;
+  RopeLink* prev;
+
+  RopeLink() {
+		next = this;
+		prev = this;
+	}
+
+  void insert(RopeLink& head);
+  void remove();
+  static _CORBA_Boolean is_empty(RopeLink& head);
+
+private:
+  RopeLink(const RopeLink&);
+  RopeLink& operator=(const RopeLink&);
+};
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -95,27 +121,12 @@ public:
   virtual void decrRefCount() = 0;
 
 
-  class Link {
-  public:
-    Link* next;
-    Link* prev;
-
-    Link() : next(this), prev(this) {}
-
-    void insert(Link& head);
-    void remove();
-    static _CORBA_Boolean is_empty(Link& head);
-
-  private:
-    Link(const Link&);
-    Link& operator=(const Link&);
-  };
 
   friend class Strand;
 
 protected:
-  Link pd_strands; // this is a list of strands that connects to the same
-                   // remote address space.
+  RopeLink pd_strands; // this is a list of strands that connects to the same
+                       // remote address space.
 
 private:
   Rope(const Rope&);
@@ -124,7 +135,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
-class Strand : public Rope::Link, public StrandList {
+class Strand : public RopeLink, public StrandList {
 public:
 
   Strand() {}
