@@ -2322,6 +2322,6 @@ yywrap()
  * idl_global->err() operations
  */
 void
-yyerror(char *)
+yyerror(const char *)
 {
 }
