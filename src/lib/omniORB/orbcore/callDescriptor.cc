@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4  2000/11/03 18:46:19  sll
+ Moved string marshal functions into cdrStream.
+
  Revision 1.2.2.3  2000/10/06 16:36:51  sll
  Removed inline definition of the marshal method in the client and server
  marshallers.
@@ -136,7 +139,7 @@ omniCallDescriptor::marshalReturnedValues(cdrStream&)
 
 void omniStdCallDesc::_cCORBA_mObject_i_cstring::marshalArguments(cdrStream& s)
 {
-  _CORBA_String_helper::marshal(arg_0,s);
+  s.marshalString(arg_0);
 }
 
 
@@ -148,7 +151,7 @@ void omniStdCallDesc::_cCORBA_mObject_i_cstring::unmarshalReturnedValues(cdrStre
 
 void omniStdCallDesc::_cCORBA_mObject_i_cstring::unmarshalArguments(cdrStream& s)
 {
-  arg_0 = _CORBA_String_helper::unmarshal(s);
+  arg_0 = s.unmarshalString();
 }
 
 

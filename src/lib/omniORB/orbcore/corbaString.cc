@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.17.2.3  2000/11/03 18:46:19  sll
+  Moved string marshal functions into cdrStream.
+
   Revision 1.17.2.2  2000/09/27 18:02:21  sll
   Updated to use the new cdrStream abstraction.
 
@@ -147,34 +150,36 @@ CORBA::string_dup(const char* p)
 }
 
 void
-_CORBA_String_helper::marshal(const char* p, cdrStream& s)
+cdrStream::marshalString(const char* p, int bounded)
 {
   if( p ) {
     CORBA::ULong len = strlen((char*)p) + 1;
-    len >>= s;
-    s.put_char_array((CORBA::Char*)p, len);
+    if (bounded && len > (CORBA::ULong)(bounded+1))
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
+    len >>= *this;
+    put_octet_array((CORBA::Octet*)p, len);
   }
   else {
     if (omniORB::traceLevel > 1) {
       _CORBA_null_string_ptr(0);
     }
-    CORBA::ULong(1) >>= s;
-    CORBA::Char('\0') >>= s;
+    CORBA::ULong(1) >>= *this;
+    marshalChar('\0');
   }
 }
 
 char*
-_CORBA_String_helper::unmarshal(cdrStream& s)
+cdrStream::unmarshalString(int bounded)
 {
   CORBA::String_var p;
 
   CORBA::ULong len;
-  len <<= s;
+  len <<= *this;
   if( !len && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(1);
 
   CORBA::ULong nbytes = len ? len : 1;
 
-  if (!s.checkInputOverrun(1,len)) {
+  if (!checkInputOverrun(1,len) || (bounded && len > (CORBA::ULong)bounded)) {
     OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
   }
 
@@ -182,7 +187,7 @@ _CORBA_String_helper::unmarshal(cdrStream& s)
   if( !(char*)p )  OMNIORB_THROW(NO_MEMORY,0, CORBA::COMPLETED_MAYBE);
 
   if( len ) {
-    s.get_char_array((CORBA::Char*)((char*)p), len);
+    get_octet_array((CORBA::Octet*)((char*)p), len);
     if( p[len - 1] != '\0' )
       OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
   }
@@ -203,7 +208,12 @@ _CORBA_String_member::operator <<= (cdrStream& s)
     _CORBA_String_helper::free(_ptr);
   _ptr = 0;
 
-  _ptr = _CORBA_String_helper::unmarshal(s);
+  _ptr = s.unmarshalString();
+}
+
+void
+_CORBA_String_member::operator >>= (cdrStream& s) const { 
+  s.marshalString(_ptr); 
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -211,19 +221,19 @@ _CORBA_String_member::operator <<= (cdrStream& s)
 //////////////////////////////////////////////////////////////////////
 
 void
-_CORBA_Sequence__String::operator >>= (cdrStream& s) const
+_CORBA_Sequence_String::operator >>= (cdrStream& s) const
 {
   pd_len >>= s;
 
   for( CORBA::ULong i = 0; i < pd_len; i++ ) {
     char* p = pd_data[i];
-    _CORBA_String_helper::marshal(p,s);
+    s.marshalString(p);
   }
 }
 
 
 void
-_CORBA_Sequence__String::operator <<= (cdrStream& s)
+_CORBA_Sequence_String::operator <<= (cdrStream& s)
 {
   _CORBA_ULong slen;
   slen <<= s;
@@ -245,7 +255,7 @@ _CORBA_Sequence__String::operator <<= (cdrStream& s)
 
     if( p ) { _CORBA_String_helper::free(p); p = 0; }
 
-    p = _CORBA_String_helper::unmarshal(s);
+    p = s.unmarshalString();
   }
 }
 
