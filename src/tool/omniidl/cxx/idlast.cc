@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5  1999/11/01 16:38:40  dpg1
+// Missed an update when adding recursive union detection.
+//
 // Revision 1.4  1999/11/01 10:05:00  dpg1
 // New file attribute to AST.
 //
@@ -932,6 +935,7 @@ Union(const char* file, int line, _CORBA_Boolean mainFile,
     DeclRepoId(identifier),
     switchType_(0),
     cases_(0),
+    recursive_(0),
     finished_(0)
 {
   Scope* s  = Scope::current()->newUnionScope(identifier, file, line);
