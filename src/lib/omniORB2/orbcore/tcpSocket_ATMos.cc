@@ -13,9 +13,14 @@
 
 /*
   $Log$
-  Revision 1.4  1997/02/19 11:04:22  ewc
-  Small change to output message.
+  Revision 1.5  1997/03/10 13:53:46  sll
+  tcpSocketRope ctor now returns the passive endpoint created by
+  the tcpSocketRendezvous ctor. The value is returned via the argument
+  Endpoint *e.
 
+// Revision 1.4  1997/02/19  11:04:22  ewc
+// Small change to output message.
+//
 // Revision 1.3  1997/01/21  14:42:44  ewc
 // Minor change to comments.
 //
@@ -64,7 +69,7 @@
 // Size of transmit and receive buffers
 const 
 unsigned int 
-tcpSocketStrand::buffer_size = 8192 + (int)omniORB::max_alignment;
+tcpSocketStrand::buffer_size = 8192 + (int)omni::max_alignment;
 
 tcpSocketStrand::tcpSocketStrand(tcpSocketRope *rope,
 				 tcpSocketEndpoint   *r,
@@ -213,27 +218,27 @@ tcpSocketStrand::receive(size_t size,
 {
   giveback_received(0);
 
-  size_t bsz = ((omniORB::ptr_arith_t) pd_rx_end - 
-    (omniORB::ptr_arith_t) pd_rx_begin);
+  size_t bsz = ((omni::ptr_arith_t) pd_rx_end - 
+    (omni::ptr_arith_t) pd_rx_begin);
 
   int current_alignment;
-  omniORB::ptr_arith_t new_align_ptr;
+  omni::ptr_arith_t new_align_ptr;
 
   if (!bsz) {
     // No data left in receive buffer, fetch() and try again
     // rewind the buffer pointers to the beginning of the buffer and
     // at the same alignment as they were previously
-    current_alignment = (omniORB::ptr_arith_t) pd_rx_begin &
-      ((int)omniORB::max_alignment - 1);
+    current_alignment = (omni::ptr_arith_t) pd_rx_begin &
+      ((int)omni::max_alignment - 1);
     if (current_alignment == 0) {
-      current_alignment = (int) omniORB::max_alignment;
+      current_alignment = (int) omni::max_alignment;
     }
-    new_align_ptr = omniORB::align_to((omniORB::ptr_arith_t) pd_rx_buffer,
-				      omniORB::max_alignment) + 
+    new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_rx_buffer,
+				      omni::max_alignment) + 
                     current_alignment;
-    if (new_align_ptr >= ((omniORB::ptr_arith_t)pd_rx_buffer + 
-			  (int)omniORB::max_alignment)) {
-      new_align_ptr -= (int) omniORB::max_alignment;
+    if (new_align_ptr >= ((omni::ptr_arith_t)pd_rx_buffer + 
+			  (int)omni::max_alignment)) {
+      new_align_ptr -= (int) omni::max_alignment;
     }
     pd_rx_begin = pd_rx_received_end = pd_rx_end = (void *)new_align_ptr;
 
@@ -241,23 +246,23 @@ tcpSocketStrand::receive(size_t size,
     return receive(size,exactly,align);
   }
 
-  if (align > (int)omniORB::max_alignment) {
+  if (align > (int)omni::max_alignment) {
     throw CORBA::INTERNAL(0,CORBA::COMPLETED_MAYBE);
   }
 
-  current_alignment = (omniORB::ptr_arith_t) pd_rx_begin &
-    ((int)omniORB::max_alignment - 1);
+  current_alignment = (omni::ptr_arith_t) pd_rx_begin &
+    ((int)omni::max_alignment - 1);
   if (current_alignment == 0) {
-    current_alignment = (int) omniORB::max_alignment;
+    current_alignment = (int) omni::max_alignment;
   }
 
   if (current_alignment != align) {
     // alignment is not right, move the data to the correct alignment
-    new_align_ptr = omniORB::align_to((omniORB::ptr_arith_t) pd_rx_buffer,
-				      omniORB::max_alignment) + align;
-    if (new_align_ptr >= ((omniORB::ptr_arith_t)pd_rx_buffer + 
-			  (int)omniORB::max_alignment)) {
-      new_align_ptr -= (int) omniORB::max_alignment;
+    new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_rx_buffer,
+				      omni::max_alignment) + align;
+    if (new_align_ptr >= ((omni::ptr_arith_t)pd_rx_buffer + 
+			  (int)omni::max_alignment)) {
+      new_align_ptr -= (int) omni::max_alignment;
     }
     memmove((void *)new_align_ptr,(void *)pd_rx_begin,bsz);
     pd_rx_begin = pd_rx_received_end = (void *)new_align_ptr;
@@ -277,21 +282,21 @@ tcpSocketStrand::receive(size_t size,
 
       
       size_t avail = tcpSocketStrand::buffer_size - 
-	                ((omniORB::ptr_arith_t) pd_rx_end - 
-			 (omniORB::ptr_arith_t) pd_rx_buffer) + bsz;
+	                ((omni::ptr_arith_t) pd_rx_end - 
+			 (omni::ptr_arith_t) pd_rx_buffer) + bsz;
       if (avail < size) {
 	// Not enough empty space, got to move existing data
-	current_alignment = (omniORB::ptr_arith_t) pd_rx_begin &
-	  ((int)omniORB::max_alignment - 1);
+	current_alignment = (omni::ptr_arith_t) pd_rx_begin &
+	  ((int)omni::max_alignment - 1);
 	if (current_alignment == 0) {
-	  current_alignment = (int) omniORB::max_alignment;
+	  current_alignment = (int) omni::max_alignment;
 	}
-	new_align_ptr = omniORB::align_to((omniORB::ptr_arith_t) pd_rx_buffer,
-					  omniORB::max_alignment) + 
+	new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_rx_buffer,
+					  omni::max_alignment) + 
 	                 current_alignment;
-	if (new_align_ptr >= ((omniORB::ptr_arith_t)pd_rx_buffer + 
-			      (int)omniORB::max_alignment)) {
-	  new_align_ptr -= (int) omniORB::max_alignment;
+	if (new_align_ptr >= ((omni::ptr_arith_t)pd_rx_buffer + 
+			      (int)omni::max_alignment)) {
+	  new_align_ptr -= (int) omni::max_alignment;
 	}
 	memmove((void *)new_align_ptr,pd_rx_begin,bsz);
 	pd_rx_begin = pd_rx_received_end = (void *)new_align_ptr;
@@ -305,7 +310,7 @@ tcpSocketStrand::receive(size_t size,
       size = bsz;
     }
   }
-  pd_rx_received_end = (void *)((omniORB::ptr_arith_t)pd_rx_begin + size);
+  pd_rx_received_end = (void *)((omni::ptr_arith_t)pd_rx_begin + size);
   Strand::sbuf result;
   result.buffer = pd_rx_begin;
   result.size   = size;
@@ -315,13 +320,13 @@ tcpSocketStrand::receive(size_t size,
 void 
 tcpSocketStrand::giveback_received(size_t leftover) 
 {
-  size_t total = (omniORB::ptr_arith_t)pd_rx_received_end -
-    (omniORB::ptr_arith_t)pd_rx_begin;
+  size_t total = (omni::ptr_arith_t)pd_rx_received_end -
+    (omni::ptr_arith_t)pd_rx_begin;
   if (total < leftover) {
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   }
   total -= leftover;
-  pd_rx_begin = (void *)((omniORB::ptr_arith_t)pd_rx_begin + total);
+  pd_rx_begin = (void *)((omni::ptr_arith_t)pd_rx_begin + total);
   pd_rx_received_end = pd_rx_begin;
   return;
 }
@@ -329,7 +334,7 @@ tcpSocketStrand::giveback_received(size_t leftover)
 size_t 
 tcpSocketStrand::max_receive_buffer_size() 
 {
-  return tcpSocketStrand::buffer_size - (int)omniORB::max_alignment;
+  return tcpSocketStrand::buffer_size - (int)omni::max_alignment;
 }
 
 void
@@ -340,14 +345,14 @@ tcpSocketStrand::receive_and_copy(Strand::sbuf b)
   size_t sz = b.size;
   char  *p = (char *)b.buffer;
 
-  size_t bsz = ((omniORB::ptr_arith_t)pd_rx_end - 
-		(omniORB::ptr_arith_t)pd_rx_begin);
+  size_t bsz = ((omni::ptr_arith_t)pd_rx_end - 
+		(omni::ptr_arith_t)pd_rx_begin);
   if (bsz) {
     if (bsz > sz) {
       bsz = sz;
     }
     memcpy((void *)p,pd_rx_begin,bsz);
-    pd_rx_begin = (void *)((omniORB::ptr_arith_t) pd_rx_begin + bsz);
+    pd_rx_begin = (void *)((omni::ptr_arith_t) pd_rx_begin + bsz);
     pd_rx_received_end = pd_rx_begin;
     sz -= bsz;
     p += bsz;
@@ -393,10 +398,10 @@ tcpSocketStrand::skip(size_t size)
     if (sz > size) {
       sz = size;
     }
-    int current_alignment = (omniORB::ptr_arith_t) pd_rx_begin &
-      ((int)omniORB::max_alignment - 1);
+    int current_alignment = (omni::ptr_arith_t) pd_rx_begin &
+      ((int)omni::max_alignment - 1);
     if (current_alignment == 0) {
-      current_alignment = (int) omniORB::max_alignment;
+      current_alignment = (int) omni::max_alignment;
     }
     Strand::sbuf sb = receive(sz,0,current_alignment);
     size -= sb.size;
@@ -408,7 +413,7 @@ void
 tcpSocketStrand::fetch()
 {
   size_t bsz = tcpSocketStrand::buffer_size -
-    ((omniORB::ptr_arith_t) pd_rx_end - (omniORB::ptr_arith_t) pd_rx_buffer);
+    ((omni::ptr_arith_t) pd_rx_end - (omni::ptr_arith_t) pd_rx_buffer);
 
   if (!bsz) return;
 
@@ -436,7 +441,7 @@ tcpSocketStrand::fetch()
   kprintf("tcpSocketStrand::fetched -- %d bytes.\n",rx);
 #endif
 
-  pd_rx_end = (void *)((omniORB::ptr_arith_t) pd_rx_end + rx);
+  pd_rx_end = (void *)((omni::ptr_arith_t) pd_rx_end + rx);
   return;
 }
 
@@ -450,7 +455,7 @@ tcpSocketStrand::reserve(size_t size,
   giveback_reserved(0,tx);
   
   size_t bsz = tcpSocketStrand::buffer_size -
-    ((omniORB::ptr_arith_t) pd_tx_end - (omniORB::ptr_arith_t) pd_tx_buffer);
+    ((omni::ptr_arith_t) pd_tx_end - (omni::ptr_arith_t) pd_tx_buffer);
   
   if (!bsz) {
     // No space left, transmit and try again
@@ -458,14 +463,14 @@ tcpSocketStrand::reserve(size_t size,
     return reserve(size,exactly,align,tx);
   }
 
-  if (align > (int)omniORB::max_alignment) {
+  if (align > (int)omni::max_alignment) {
     throw CORBA::INTERNAL(0,CORBA::COMPLETED_MAYBE);
   }
 
-  int current_alignment = (omniORB::ptr_arith_t) pd_tx_end & 
-    ((int)omniORB::max_alignment - 1);
+  int current_alignment = (omni::ptr_arith_t) pd_tx_end & 
+    ((int)omni::max_alignment - 1);
   if (current_alignment == 0) {
-    current_alignment = (int)omniORB::max_alignment;
+    current_alignment = (int)omni::max_alignment;
   }
 
   if (current_alignment != align) {
@@ -473,17 +478,17 @@ tcpSocketStrand::reserve(size_t size,
     if (pd_tx_end == pd_tx_begin) {
       // There is nothing in the buffer, we could adjust
       // pd_tx_begin and pd_tx_end to the required alignment
-      omniORB::ptr_arith_t new_align_ptr;
+      omni::ptr_arith_t new_align_ptr;
 
-      new_align_ptr = omniORB::align_to((omniORB::ptr_arith_t) pd_tx_buffer,
-					omniORB::max_alignment) + align;
-      if (new_align_ptr >= ((omniORB::ptr_arith_t)pd_tx_buffer + 
-			   (int)omniORB::max_alignment)) {
-	new_align_ptr -= (int) omniORB::max_alignment;
+      new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_tx_buffer,
+					omni::max_alignment) + align;
+      if (new_align_ptr >= ((omni::ptr_arith_t)pd_tx_buffer + 
+			   (int)omni::max_alignment)) {
+	new_align_ptr -= (int) omni::max_alignment;
       }
       pd_tx_begin = pd_tx_end = pd_tx_reserved_end = (void *)new_align_ptr;
-      bsz = tcpSocketStrand::buffer_size - ((omniORB::ptr_arith_t) pd_tx_end 
-		    - (omniORB::ptr_arith_t) pd_tx_buffer);
+      bsz = tcpSocketStrand::buffer_size - ((omni::ptr_arith_t) pd_tx_end 
+		    - (omni::ptr_arith_t) pd_tx_buffer);
     }
     else {
       // transmit what is left and try again
@@ -506,7 +511,7 @@ tcpSocketStrand::reserve(size_t size,
       size = bsz;
     }
   }
-  pd_tx_reserved_end = (void *)((omniORB::ptr_arith_t)pd_tx_end + size);
+  pd_tx_reserved_end = (void *)((omni::ptr_arith_t)pd_tx_end + size);
   Strand::sbuf result;
   result.buffer = pd_tx_end;
   result.size   = size;
@@ -517,13 +522,13 @@ void
 tcpSocketStrand::giveback_reserved(size_t leftover,
 			  CORBA::Boolean tx) 
 {
-  size_t total = (omniORB::ptr_arith_t)pd_tx_reserved_end -
-    (omniORB::ptr_arith_t)pd_tx_end;
+  size_t total = (omni::ptr_arith_t)pd_tx_reserved_end -
+    (omni::ptr_arith_t)pd_tx_end;
   if (total < leftover) {
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
   }
   total -= leftover;
-  pd_tx_end = (void *)((omniORB::ptr_arith_t)pd_tx_end + total);
+  pd_tx_end = (void *)((omni::ptr_arith_t)pd_tx_end + total);
   pd_tx_reserved_end = pd_tx_end;
   if (tx) {
     transmit();
@@ -571,14 +576,14 @@ tcpSocketStrand::reserve_and_copy(Strand::sbuf b,
 size_t
 tcpSocketStrand::max_reserve_buffer_size() 
 {
-  return tcpSocketStrand::buffer_size - (int)omniORB::max_alignment;
+  return tcpSocketStrand::buffer_size - (int)omni::max_alignment;
 }
 
 void
 tcpSocketStrand::transmit() 
 {
-  size_t sz = (omniORB::ptr_arith_t)pd_tx_end - 
-              (omniORB::ptr_arith_t)pd_tx_begin;
+  size_t sz = (omni::ptr_arith_t)pd_tx_end - 
+              (omni::ptr_arith_t)pd_tx_begin;
   int tx;
   char *p = (char *)pd_tx_begin;
   while (sz) {
@@ -789,6 +794,7 @@ tcpSocketRope::tcpSocketRope(Anchor *a,
   else {
     pd_endpoint.me = new tcpSocketEndpoint(te);
     pd_rendezvous = new tcpSocketRendezvous(this,pd_endpoint.me);
+    *te = *pd_endpoint.me;
   }
   return;
 }
