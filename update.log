@@ -1,3 +1,26 @@
+
+Mon Jul 31 14:12:54 BST 2000 djr
+================================
+
+- Added new examples for ServantLocator and ServantActivator.
+
+external_merge/src/examples/poa/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak       NEW
+external_merge/src/examples/poa/servant_manager/GNUmakefile   NEW
+src/examples/poa/dir.mk
+src/examples/poa/servant_manager/dir.mk                       NEW
+src/examples/poa/servant_manager/servant_activator.cc         NEW
+src/examples/poa/servant_manager/servant_locator.cc           NEW
+
+- Added optional command line arg to specify the message.
+
+src/examples/echo/eg2_clt.cc
+
+- Check that -ORBpoa_iiop_port is given on command line (ish).
+
+src/examples/poa/persistent_objref/eg2_impl.cc
+
+
 Fri Jul 28 20:20:23 BST 2000 sll
 ================================
 
@@ -20,9 +43,9 @@ Fri Jul 28 17:37:49 BST 2000 sll
 - Rearranged the make rules to put the linker flags for omnithread and its
   related libraries after all the omniORB libraries.
 
-
 mk/unix.mk
 external_merge/mk/unix.mk
+
 
 Wed Jul 26 16:21:09 BST 2000 djs
 ================================
