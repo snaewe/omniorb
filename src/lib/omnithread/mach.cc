@@ -120,21 +120,21 @@ typedef struct alarmclock_args {
 any_t alarmclock(any_t arg)
 {
   alarmclock_args* alarm = (alarmclock_args*)arg;
-  
+	
   omni_thread::sleep(alarm->secs, alarm->nsecs);
-  
+
   mutex_lock(alarm->mutex);
-  
+			
   alarm->wakeup = TRUE;
-  
+	
   condition_signal(alarm->condition);
-  
+		
   mutex_unlock(alarm->mutex);
-  
+
   return (any_t)TRUE;
 }
 
-int omni_condition::timed_wait(unsigned long abs_secs, unsigned long abs_nsecs)
+int omni_condition::timedwait(unsigned long abs_secs, unsigned long abs_nsecs)
 {
   alarmclock_args alarm;
 
@@ -142,7 +142,7 @@ int omni_condition::timed_wait(unsigned long abs_secs, unsigned long abs_nsecs)
 	
   if (abs_secs < alarm.secs || (abs_secs == alarm.secs && abs_nsecs <= alarm.nsecs))
     return ETIMEDOUT;
-  
+
   alarm.secs = abs_secs - alarm.secs;
   if (abs_nsecs <= alarm.nsecs) {
     alarm.nsecs = 1000000 - alarm.nsecs + abs_nsecs;
@@ -151,27 +151,27 @@ int omni_condition::timed_wait(unsigned long abs_secs, unsigned long abs_nsecs)
   else {
     alarm.nsecs = abs_nsecs - alarm.nsecs;
   }
-  
+
   alarm.mutex = &mutex->mach_mutex;
   alarm.condition = &mach_cond;
   alarm.wakeup = FALSE;
-  
+	
   cthread_t ct = cthread_fork((cthread_fn_t)alarmclock, (any_t)&alarm);
   cthread_detach(ct);
-  
+	
   condition_wait(&mach_cond, &mutex->mach_mutex);
-  
+		
   if (alarm.wakeup) {
-    return ETIMEDOUT;
+    return 0;
   }
-  
+	
   // interrupt the alarmclock thread sleep
   cthread_abort(ct);
-  
+	
   // wait until it has signalled the condition
   condition_wait(&mach_cond, &mutex->mach_mutex);
 
-  return 0;
+  return 1;
 }
 
 
@@ -206,58 +206,39 @@ omni_semaphore::~omni_semaphore(void)
 }
 
 
-int omni_semaphore::wait(void)
+void 
+omni_semaphore::wait(void)
 {
-  m.lock();
+  omni_mutex_lock l(m);
 
-  while (value == 0) {
-    
-    int rc = c.wait();
-
-    if (rc != 0) {
-      m.unlock();
-      return rc;
-    }
-  }
+  while (value == 0)
+    c.wait();
 
   value--;
-  
-  m.unlock();
-
-  return 0;
 }
 
 
-int omni_semaphore::try_wait(void)
+int
+omni_semaphore::trywait(void)
 {
-  m.lock();
+  omni_mutex_lock l(m);
 
-  if (value == 0) {
-    m.unlock();
-    return EAGAIN;
-  }
+  if (value == 0)
+    return 0;
 
   value--;
-
-  m.unlock();
-
-  return 0;
 }
 
 
-int omni_semaphore::post(void)
+void
+omni_semaphore::post(void)
 {
-  m.lock();
+  omni_mutex_lock l(m);
 
-  if (value == 0) {
+  if (value == 0)
     c.signal();
-  }
 
   value++;
-
-  m.unlock();
-
-  return 0;
 }
 
 
@@ -428,42 +409,37 @@ omni_thread::~omni_thread(void)
 // Start the thread
 //
 
-int omni_thread::start(void)
+void 
+omni_thread::start(void)
 {
-  int rc;
-    
-  mutex.lock();
-  
-  if (_state != STATE_NEW) {
-    mutex.unlock();
-    DB(cerr << "omni_thread::start: thread not in \"new\" state\n");
-    return EINVAL;
-  }
+  omni_mutex_lock l(mutex);
 
-  mach_thread = cthread_fork(wrapper, (any_t)this);
+  int rc;
+
+  if (_state != STATE_NEW)
+    throw omni_thread_invalid();
+
+  mach_thread = cthread_fork(omni_thread_wrapper, (any_t)this);
 	
   _state = STATE_RUNNING;
 
   if (detached) {
     cthread_detach(mach_thread);
   }
-	
-  mutex.unlock();
-
-  return 0;
 }
 
 //
 // Start a thread which will run the member function run_undetached().
 //
 
-int omni_thread::start_undetached(void)
+void
+omni_thread::start_undetached(void)
 {
   if ((fn_void != NULL) || (fn_ret != NULL))
-    return EINVAL;
+    throw omni_thread_invalid();
 
   detached = 0;
-  return start();
+  start();
 }
 
 
@@ -471,36 +447,30 @@ int omni_thread::start_undetached(void)
 // join - simply check error conditions & call cthread_join.
 //
 
-int omni_thread::join(void** status)
+void 
+omni_thread::join(void** status)
 {
   mutex.lock();
-  
+
   if ((_state != STATE_RUNNING) && (_state != STATE_TERMINATED)) {
     mutex.unlock();
-    DB(cerr << "omni_thread::join: thread not in running or "
-       << "terminated state\n");
-    return EINVAL;
+    throw omni_thread_invalid();
   }
 
   mutex.unlock();
 
-  if (this == self()) {
-    DB(cerr << "omni_thread::join: can't join with self\n");
-    return EINVAL;
-  }
+  if (this == self()) 	
+    throw omni_thread_invalid();
 
-  if (detached) {
-    DB(cerr << "omni_thread::join: can't join with detached thread\n");
-    return EINVAL;
-  }
-  
+  if (detached)
+    throw omni_thread_invalid();
+
   DB(cerr << "omni_thread::join: doing cthread_join\n");
 
-  *status = cthread_join(mach_thread);
+  int rc = cthread_join(mach_thread);
+  if (rc != 0) throw omni_thread_fatal(rc);
 
   delete this;
-
-  return 0;
 }
 
 
@@ -508,30 +478,21 @@ int omni_thread::join(void** status)
 // Change this thread's priority.
 //
 
-int omni_thread::set_priority(priority_t pri)
+void
+omni_thread::set_priority(priority_t pri)
 {
-  mutex.lock();
+  omni_mutex_lock l(mutex);
 
-  if (_state != STATE_RUNNING) {
-    mutex.unlock();
-    DB(cerr << "omni_thread::set_priority: thread not in running state\n");
-    return EINVAL;
-  }
+  if (_state != STATE_RUNNING)
+    throw omni_thread_invalid();
 
   _priority = pri;
 
   kern_return_t rc = cthread_priority(mach_thread, mach_priority(pri), FALSE);
 	
-  if (rc != KERN_SUCCESS) {
-    mutex.unlock();
-    return EINVAL;
-  }
-
-  mutex.unlock();
-  
-  return 0;
+  if (rc != KERN_SUCCESS)
+    throw omni_thread_fatal(errno);
 }
-
 
 //
 // create - construct a new thread object and start it running.  Returns thread
@@ -540,34 +501,24 @@ int omni_thread::set_priority(priority_t pri)
 
 // detached version
 
-omni_thread* omni_thread::create(void (*fn)(void*), void* arg, priority_t pri)
+omni_thread* 
+omni_thread::create(void (*fn)(void*), void* arg, priority_t pri)
 {
   omni_thread* t = new omni_thread(fn, arg, pri);
 
-  int rc = t->start();
-
-  if (rc != 0) {
-    cerr << "omni_thread::create: start error " << rc << endl;
-    delete t;
-    return (omni_thread*)NULL;
-  }
+  t->start();
 
   return t;
 }
 
 // undetached version
 
-omni_thread* omni_thread::create(void* (*fn)(void*), void* arg, priority_t pri)
+omni_thread*
+omni_thread::create(void* (*fn)(void*), void* arg, priority_t pri)
 {
   omni_thread* t = new omni_thread(fn, arg, pri);
 
-  int rc = t->start();
-
-  if (rc != 0) {
-    cerr << "omni_thread::create: start error " << rc << endl;
-    delete t;
-    return (omni_thread*)NULL;
-  }
+  t->start();
 
   return t;
 }
@@ -593,7 +544,7 @@ void omni_thread::exit(void* return_value)
   me->_state = STATE_TERMINATED;
 
   me->mutex.unlock();
-  
+
   DB(cerr << "omni_thread::exit: thread " << me->id() << " detached "
      << me->detached << " return value " << return_value << endl);
 
@@ -619,11 +570,12 @@ void omni_thread::yield(void)
 
 #define MAX_SLEEP_SECONDS (unsigned)4294966	// (2**32-2)/1000
 
-int omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
+void
+omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 {
   if (secs <= MAX_SLEEP_SECONDS) {
     thread_switch(THREAD_NULL, SWITCH_OPTION_WAIT, secs * 1000 + nanosecs / 1000000);
-    return 0;
+    return;
   }
 
   unsigned no_of_max_sleeps = secs / MAX_SLEEP_SECONDS;
@@ -634,11 +586,12 @@ int omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
   thread_switch(THREAD_NULL, SWITCH_OPTION_WAIT, 
 		(secs % MAX_SLEEP_SECONDS) * 1000 + nanosecs / 1000000);
 	
-  return 0;
+  return;
 }
 
-int omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
-			  unsigned long rel_sec, unsigned long rel_nsec)
+void
+omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
+		      unsigned long rel_sec, unsigned long rel_nsec)
 {
   int rc;
   unsigned long tv_sec;
@@ -646,7 +599,7 @@ int omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
   struct timeval tv;
 	
   rc = gettimeofday(&tv, NULL); 
-  if (rc)	return rc;
+  if (rc)	throw omni_thread_fatal(rc);
 
   tv_sec = tv.tv_sec;
   tv_nsec = tv.tv_usec * 1000;
@@ -657,12 +610,11 @@ int omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 
   *abs_sec = tv_sec;
   *abs_nsec = tv_nsec;
-
-  return rc;
 }
 
 
-int omni_thread::mach_priority(priority_t pri)
+int 
+omni_thread::mach_priority(priority_t pri)
 {
   switch (pri) {
 
