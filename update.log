@@ -1,4 +1,16 @@
 
+Mon Jan 31 10:53:23 GMT 2000 djr
+================================
+
+- Removed superflouous reference counting in Strand_iterator.
+
+- Improved allocation of client requests to strands.  If no strands are
+  currently available, and the maximum number has been reached, then
+  strands are allocated randomly (rather always using the first).
+
+src/lib/omniORB2/orbcore/strand.cc
+
+
 Thu Jan 27 18:06:52 GMT 2000 djr
 ================================
 
@@ -36,6 +48,7 @@ external_merge/bin/x86_win32/bin/x86_win32/libwrapper.exe
 external_merge/bin/x86_win32/bin/x86_win32/linkwrapper.exe
 external_merge/bin/x86_win32/bin/x86_win32/oidl2wrapper.exe
 external_merge/bin/x86_win32/bin/x86_win32/oidlwrapper.exe
+
 
 Tue Jan 18 14:54:30 GMT 2000 dme
 ================================
