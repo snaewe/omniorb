@@ -105,7 +105,7 @@ GENERATE_LIB_DEPEND = $(firstword \
 # Phony targets
 #
 
-.PHONY: all export clean veryclean redepend
+.PHONY: all export clean veryclean redepend lastveryclean
 
 
 #############################################################################

@@ -206,12 +206,6 @@ ifndef BuildWin32DebugLibraries
 
 endif
 
-clean::
-	@$(MakeSubdirs)
-
-clean::
-	$(RM) $(lib) $(dynlib) bootstrapSK.cc NamingSK.cc
-
 export:: $(lib)
 	@$(ExportLibrary)
 
