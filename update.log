@@ -1,3 +1,30 @@
+Mon Aug  6 16:44:02 BST 2001 sll
+================================
+
+- Added support to use the unix domain socket as the local transport
+  Use -ORBendpoint giop:unix:<filename> to tell the ORB to create a
+  unix domain endpoint.
+
+include/omniORB4/IOP.h
+include/omniORB4/omniIOR.h
+
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/ior.cc
+
+src/lib/omniORB/orbcore/unix/unixActive.cc      NEW
+src/lib/omniORB/orbcore/unix/unixAddress.cc     NEW
+src/lib/omniORB/orbcore/unix/unixAddress.h      NEW
+src/lib/omniORB/orbcore/unix/unixConnection.cc  NEW
+src/lib/omniORB/orbcore/unix/unixConnection.h   NEW
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc    NEW
+src/lib/omniORB/orbcore/unix/unixEndpoint.h     NEW
+src/lib/omniORB/orbcore/unix/unixTransportImpl.cc  NEW
+src/lib/omniORB/orbcore/unix/unixTransportImpl.h   NEW
+
+
 Fri Aug  3 19:08:35 BST 2001 sll
 ================================
 
