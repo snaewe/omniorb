@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/08/29 17:54:00  sll
+  Make the old configuration parameter GATEKEEPER_ALLOWFILE and
+  GATEKEEPER_DENYFILE obsolute.
+
   Revision 1.1.2.3  2001/08/21 11:02:17  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -180,9 +184,6 @@ orbOptions::importFromFile(const char* filename) throw (orbOptions::Unknown,
 }
 
 #if SUPPORT_OLD_CONFIG_FORMAT
-OMNI_NAMESPACE_END(omni)
-#include <gatekeeper.h>
-OMNI_NAMESPACE_BEGIN(omni)
 
 static
 void
@@ -266,12 +267,10 @@ parseOldConfigOption(orbOptions& opt, char* line) {
     opt.addOption("bootstrapAgentPort",value,orbOptions::fromFile);
   }
   else if (strcmp(key,"GATEKEEPER_ALLOWFILE") == 0) {
-    oldconfig_warning("GATEKEEPER_ALLOWFILE","accepted");
-    gateKeeper::allowFile = CORBA::string_dup(value);
+    oldconfig_warning("GATEKEEPER_ALLOWFILE","Ignored. Use serverTransportRule instead.");
   }
   else if (strcmp(key,"GATEKEEPER_DENYFILE") == 0) {
-    oldconfig_warning("GATEKEEPER_DENYFILE","accepted");
-    gateKeeper::denyFile = CORBA::string_dup(value);
+    oldconfig_warning("GATEKEEPER_DENYFILE","Ignored. Use serverTransportRule instead.");
   }
   else {
     return 0;
