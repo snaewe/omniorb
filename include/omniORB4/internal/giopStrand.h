@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2001/09/10 17:43:11  sll
+  Replaced the non-thread safe resetIdleCounter with startIdleCounter and
+  stopIdleCounter. Added orderly_closed to indicate that a stand is orderly
+  closed because a GIOP CloseConnection message has been received.
+
   Revision 1.1.4.7  2001/08/29 17:51:06  sll
   Updated description for gatekeeper_checked.
 
@@ -210,11 +215,24 @@ public:
   void state(State s) { pd_state = s; }
   // No thread safety precondition, use with extreme care
 
-  void resetIdleCounter(CORBA::ULong nbeats) { idlebeats = nbeats; }
-  // Reset the idle counter to <nbeats> so that the idle countdown starts from
-  // that value.
+
+  /////////////////////////////////////////////////////////////////////////
+  CORBA::Boolean startIdleCounter();
+  // returns 1 if the idle counter has been successfully started.
+  // returns 0 if the idle counter is already active or has already expired.
   //
-  // No thread safety precondition, use with extreme care
+  // Thread Safety preconditions:
+  //    Caller must hold omniTransportLock.
+
+  CORBA::Boolean stopIdleCounter();
+  // returns 1 if the idle counter has been successfully stopped.
+  // returns 0 if the idle counter has already expired and cannot be reset.
+  // In the latter case, the caller should assume that the strand is about
+  // to be shutdown and hence should cleanup its usage accordingly.
+  //
+  // Thread Safety preconditions:
+  //    Caller must hold omniTransportLock.
+
 
   ////////////////////////////////////////////////////////////////////////
   // When idlebeats go to 0, the strand has been idle for a sufficently
@@ -268,6 +286,12 @@ public:
   // only applies to active strand. TRUE(1) means this connection has
   // not been used to carry an invocation before.
   // This flag is set to 1 by ctor and reset to 0 by GIOP_C.
+
+  CORBA::Boolean      orderly_closed;
+  // only applies to active strand. TRUE(1) means a GIOP CloseConnection
+  // was received and cause the strand state to change to DYING.
+  // This flag is set to 0 by ctor and set to 1 by the giopImpl?? classes.
+
 
   CORBA::Boolean      biDir_initiated;
   // only applies to active strand. TRUE(1) means biDir service context
