@@ -30,6 +30,10 @@
 
 /* 
  * $Log$
+ * Revision 1.33.4.2  1999/10/26 20:02:51  sll
+ * DynAny no longer do alias expansion on the typecode. In other words, all
+ * aliases in the typecode are preserved.
+ *
  * Revision 1.33.4.1  1999/09/15 20:18:20  sll
  * Updated to use the new cdrStream abstraction.
  * Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -4268,7 +4272,9 @@ TypeCode_union::Discriminator
 TypeCode_union_helper::unmarshalLabel(CORBA::TypeCode_ptr tc,
 				      cdrStream& s)
 {
-  switch( tc->kind() ) {
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
+
+  switch( aetc->kind() ) {
   case CORBA::tk_char:
     {
       CORBA::Char c;

@@ -29,6 +29,10 @@
 
 /* 
    $Log$
+   Revision 1.8.4.3  1999/10/26 20:02:49  sll
+   DynAny no longer do alias expansion on the typecode. In other words, all
+   aliases in the typecode are preserved.
+
    Revision 1.8.4.2  1999/09/25 17:00:16  sll
    Merged changes from omni2_8_develop branch.
 
@@ -527,7 +531,7 @@ DynAnyImpl::insert_string(const char* value)
     throw CORBA::DynAny::InvalidValue();
 
   CORBA::ULong length = strlen(value) + 1;
-  CORBA::ULong maxlen = tc()->NP_length();
+  CORBA::ULong maxlen = actualTc()->NP_length();
   if( maxlen && length - 1 > maxlen )
     throw CORBA::DynAny::InvalidValue();
 
@@ -653,7 +657,7 @@ DynAnyImpl::get_string()
   cdrMemoryStream& buf = doRead(CORBA::tk_string);
 
   CORBA::ULong length;
-  CORBA::ULong maxlen = tc()->NP_length();
+  CORBA::ULong maxlen = actualTc()->NP_length();
   char* value;
 
   length <<= buf;
@@ -822,9 +826,9 @@ DynEnumImpl::value_as_string()
     val <<= pd_buf;
   }
 
-  if( val >= tc()->NP_member_count() )  return CORBA::string_dup("");
+  if( val >= actualTc()->NP_member_count() )  return CORBA::string_dup("");
 
-  return CORBA::string_dup(tc()->NP_member_name(val));
+  return CORBA::string_dup(actualTc()->NP_member_name(val));
 }
 
 
@@ -833,7 +837,7 @@ DynEnumImpl::value_as_string(const char* value)
 {
   if( !value )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
-  CORBA::Long index = tc()->NP_member_index(value);
+  CORBA::Long index = actualTc()->NP_member_index(value);
   if( index < 0 )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
   pd_buf.rewindPtrs();
@@ -847,13 +851,13 @@ DynEnumImpl::value_as_ulong()
 {
   CORBA::ULong val;
   {
-    if( !isValid() )  throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    if( !isValid() )  throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     pd_buf.rewindInputPtr();
     val <<= pd_buf;
   }
 
-  if( val >= tc()->NP_member_count() )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+  if( val >= actualTc()->NP_member_count() )
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return val;
 }
@@ -862,7 +866,7 @@ DynEnumImpl::value_as_ulong()
 void
 DynEnumImpl::value_as_ulong(CORBA::ULong value)
 {
-  if( value >= tc()->NP_member_count() )
+  if( value >= actualTc()->NP_member_count() )
     throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
   pd_buf.rewindPtrs();
@@ -1022,7 +1026,7 @@ DynAnyConstrBase::insert_string(const char* value)
 
   if( pd_curr_index < 0 )  throw CORBA::DynAny::InvalidValue();
 
-  TypeCode_base* tc = nthComponentTC(pd_curr_index);
+  TypeCode_base* tc = (TypeCode_base*) TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
   if( tc->NP_kind() != CORBA::tk_string )
     throw CORBA::DynAny::InvalidValue();
 
@@ -1151,7 +1155,7 @@ DynAnyConstrBase::get_string()
 {
   cdrMemoryStream& buf = readCurrent(CORBA::tk_string);
 
-  TypeCode_base* tc = nthComponentTC(pd_curr_index);
+  TypeCode_base* tc = (TypeCode_base*)TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
   CORBA::ULong maxlen = tc->NP_length();
 
   CORBA::ULong length;
@@ -1489,7 +1493,7 @@ DynAnyConstrBase::component_from_any(unsigned i, const CORBA::Any& a)
 DynStructImpl::DynStructImpl(TypeCode_base* tc, CORBA::Boolean is_root)
   : DynAnyConstrBase(tc, dt_struct, is_root)
 {
-  setNumComponents(tc->NP_member_count());
+  setNumComponents(actualTc()->NP_member_count());
 }
 
 
@@ -1520,9 +1524,9 @@ char*
 DynStructImpl::current_member_name()
 {
   if( pd_curr_index < 0 )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
-  return CORBA::string_dup(tc()->NP_member_name(pd_curr_index));
+  return CORBA::string_dup(actualTc()->NP_member_name(pd_curr_index));
 }
 
 
@@ -1530,9 +1534,9 @@ CORBA::TCKind
 DynStructImpl::current_member_kind()
 {
   if( pd_curr_index < 0 )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
-  return tc()->NP_member_type(pd_curr_index)->NP_kind();
+  return actualTc()->NP_member_type(pd_curr_index)->NP_kind();
 }
 
 
@@ -1544,10 +1548,10 @@ DynStructImpl::get_members()
   nvps->length(pd_n_components);
 
   for( unsigned i = 0; i < pd_n_components; i++ ) {
-    (*nvps)[i].id = CORBA::string_dup(tc()->NP_member_name(i));
+    (*nvps)[i].id = CORBA::string_dup(actualTc()->NP_member_name(i));
     if( !component_to_any(i, (*nvps)[i].value) ) {
       delete nvps;
-      throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+      throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     }
   }
   return nvps;
@@ -1595,7 +1599,7 @@ DynStructImpl::nthComponentTC(unsigned n)
     throw omniORB::fatalException(__FILE__,__LINE__,
 		    "DynStructImpl::nthComponentTC() - n out of bounds");
 
-  return tc()->NP_member_type(n);
+  return actualTc()->NP_member_type(n);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1606,7 +1610,7 @@ DynUnionImpl::DynUnionImpl(TypeCode_base* tc, CORBA::Boolean is_root)
   : DynAnyImplBase(tc, dt_union, is_root)
 {
   CORBA::TypeCode_ptr tcdup =
-    CORBA::TypeCode::_duplicate(tc->NP_discriminator_type());
+    CORBA::TypeCode::_duplicate(actualTc()->NP_discriminator_type());
   pd_disc = create_dyn_any_discriminator(ToTcBase(tcdup), this);
   pd_disc_type = ToTcBase(tcdup);
   pd_disc_kind = pd_disc_type->NP_kind();
@@ -1747,7 +1751,7 @@ DynUnionImpl::insert_string(const char* value)
 
   if( pd_curr_index != 1 || pd_member_kind != CORBA::tk_string )
     throw CORBA::DynAny::InvalidValue();
-  CORBA::ULong maxlen = pd_member->tc()->NP_length();
+  CORBA::ULong maxlen = pd_member->actualTc()->NP_length();
   if( maxlen && length - 1 > maxlen )
     throw CORBA::DynAny::InvalidValue();
 
@@ -1876,7 +1880,7 @@ DynUnionImpl::get_string()
 {
   cdrMemoryStream& buf = readCurrent(CORBA::tk_string);
 
-  CORBA::ULong maxlen = pd_member->tc()->NP_length();
+  CORBA::ULong maxlen = pd_member->actualTc()->NP_length();
 
   CORBA::ULong length;
   length <<= buf;
@@ -1989,7 +1993,7 @@ DynUnionImpl::rewind()
 CORBA::Boolean
 DynUnionImpl::set_as_default()
 {
-  CORBA::Long defaulti = tc()->NP_default_index();
+  CORBA::Long defaulti = actualTc()->NP_default_index();
 
   try {
     switch( defaulti ) {
@@ -2000,14 +2004,14 @@ DynUnionImpl::set_as_default()
 	pd_disc->pd_buf.rewindInputPtr();
 	TypeCode_union::Discriminator disc_value =
 	  TypeCode_union_helper::unmarshalLabel(pd_disc_type, pd_disc->pd_buf);
-	return tc()->NP_index_from_discriminator(disc_value) < 0;
+	return actualTc()->NP_index_from_discriminator(disc_value) < 0;
       }
     default:
       {
 	pd_disc->pd_buf.rewindInputPtr();
 	TypeCode_union::Discriminator disc_value =
 	  TypeCode_union_helper::unmarshalLabel(pd_disc_type, pd_disc->pd_buf);
-	return tc()->NP_index_from_discriminator(disc_value) == defaulti;
+	return actualTc()->NP_index_from_discriminator(disc_value) == defaulti;
       }
     }
   }
@@ -2023,7 +2027,7 @@ DynUnionImpl::set_as_default(CORBA::Boolean set)
 {
   if( !set )  return;
 
-  CORBA::Long defaulti = tc()->NP_default_index();
+  CORBA::Long defaulti = actualTc()->NP_default_index();
 
   switch( defaulti ) {
 
@@ -2035,7 +2039,7 @@ DynUnionImpl::set_as_default(CORBA::Boolean set)
   default:
     {
       // Set implicit default.
-      pd_disc->set_value(tc()->NP_default_value());
+      pd_disc->set_value(actualTc()->NP_default_value());
       break;
     }
   }
@@ -2075,7 +2079,7 @@ char*
 DynUnionImpl::member_name()
 {
   if( pd_member )
-    return CORBA::string_dup(tc()->NP_member_name(pd_disc_index));
+    return CORBA::string_dup(actualTc()->NP_member_name(pd_disc_index));
   else
     return CORBA::string_dup("");
 }
@@ -2086,12 +2090,12 @@ DynUnionImpl::member_name(const char* name)
 {
   if( !name )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
-  CORBA::ULong mcount = tc()->NP_member_count();
+  CORBA::ULong mcount = actualTc()->NP_member_count();
 
   for( CORBA::ULong i = 0; i < mcount; i++ )
-    if( !strcmp(name, tc()->NP_member_name(i)) ) {
+    if( !strcmp(name, actualTc()->NP_member_name(i)) ) {
       // Set discriminator value ...
-      pd_disc->set_value(tc()->NP_member_label_val(i));
+      pd_disc->set_value(actualTc()->NP_member_label_val(i));
       return;
     }
 
@@ -2175,14 +2179,14 @@ DynUnionImpl::discriminatorHasChanged()
   pd_disc_value = newdisc;
   if( pd_member )  detachMember();
 
-  pd_disc_index = tc()->NP_index_from_discriminator(newdisc);
+  pd_disc_index = actualTc()->NP_index_from_discriminator(newdisc);
   if( pd_disc_index < 0 ) {
     // Invalid label - implicit default.
     return;
   }
 
   // Create new member of the appropriate type.
-  CORBA::TypeCode_ptr mtc = tc()->member_type(pd_disc_index);
+  CORBA::TypeCode_ptr mtc = actualTc()->member_type(pd_disc_index);
   pd_member = create_dyn_any(ToTcBase(mtc), DYNANY_CHILD);
   pd_member_kind = mtc->kind();
 }
@@ -2430,9 +2434,9 @@ DynUnionEnumDisc::value_as_string()
     val <<= pd_buf;
   }
 
-  if( val >= tc()->NP_member_count() )  return CORBA::string_dup("");
+  if( val >= actualTc()->NP_member_count() )  return CORBA::string_dup("");
 
-  return CORBA::string_dup(tc()->NP_member_name(val));
+  return CORBA::string_dup(actualTc()->NP_member_name(val));
 }
 
 
@@ -2441,7 +2445,7 @@ DynUnionEnumDisc::value_as_string(const char* value)
 {
   if( !value )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
-  CORBA::Long index = tc()->NP_member_index(value);
+  CORBA::Long index = actualTc()->NP_member_index(value);
   if( index < 0 )  throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
   pd_buf.rewindPtrs();
@@ -2456,13 +2460,13 @@ DynUnionEnumDisc::value_as_ulong()
 {
   CORBA::ULong val;
   {
-    if( !isValid() )  throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    if( !isValid() )  throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     pd_buf.rewindInputPtr();
     val <<= pd_buf;
   }
 
-  if( val >= tc()->NP_member_count() )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+  if( val >= actualTc()->NP_member_count() )
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   return val;
 }
@@ -2471,7 +2475,7 @@ DynUnionEnumDisc::value_as_ulong()
 void
 DynUnionEnumDisc::value_as_ulong(CORBA::ULong value)
 {
-  if( value >= tc()->NP_member_count() )
+  if( value >= actualTc()->NP_member_count() )
     throw CORBA::BAD_PARAM(0, CORBA::COMPLETED_NO);
 
   pd_buf.rewindPtrs();
@@ -2514,7 +2518,7 @@ DynUnionEnumDisc::set_value(TypeCode_union::Discriminator v)
 DynSequenceImpl::DynSequenceImpl(TypeCode_base* tc, CORBA::Boolean is_root)
   : DynAnyConstrBase(tc, dt_seq, is_root)
 {
-  pd_bound = tc->NP_length();
+  pd_bound = actualTc()->NP_length();
 }
 
 
@@ -2552,7 +2556,7 @@ void
 DynSequenceImpl::length (CORBA::ULong value)
 {
   if( pd_bound && value > pd_bound )
-    throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
 
   setNumComponents(value);
 }
@@ -2567,7 +2571,7 @@ DynSequenceImpl::get_elements()
   for( unsigned i = 0; i < pd_n_components; i++ ) {
     if( !component_to_any(i, (*as)[i]) ) {
       delete as;
-      throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+      throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     }
   }
   return as;
@@ -2642,7 +2646,7 @@ DynSequenceImpl::copy_from(cdrMemoryStream& mbs)
 TypeCode_base*
 DynSequenceImpl::nthComponentTC(unsigned n)
 {
-  return tc()->NP_content_type();
+  return actualTc()->NP_content_type();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2652,7 +2656,7 @@ DynSequenceImpl::nthComponentTC(unsigned n)
 DynArrayImpl::DynArrayImpl(TypeCode_base* tc, CORBA::Boolean is_root)
   : DynAnyConstrBase(tc, dt_array, is_root)
 {
-  setNumComponents(tc->NP_length());
+  setNumComponents(actualTc()->NP_length());
   
 }
 
@@ -2689,7 +2693,7 @@ DynArrayImpl::get_elements()
   for( unsigned i = 0; i < pd_n_components; i++ ) {
     if( !component_to_any(i, (*as)[i]) ) {
       delete as;
-      throw CORBA::SystemException(0, CORBA::COMPLETED_NO);
+      throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
     }
   }
   return as;
@@ -2732,7 +2736,7 @@ DynArrayImpl::NP_narrow()
 TypeCode_base*
 DynArrayImpl::nthComponentTC(unsigned n)
 {
-  return tc()->NP_content_type();
+  return actualTc()->NP_content_type();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2972,7 +2976,7 @@ CORBA::release(CORBA::DynAny_ptr p)
 ///////////////////////////// CORBA::ORB /////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-// <tc> must be the alias-expanded TypeCode, and is consumed.
+// <tc> is consumed. Since 2.8.0 it no longer have to alias-expand
 static DynAnyImplBase*
 create_dyn_any(TypeCode_base* tc, CORBA::Boolean is_root)
 {
@@ -2985,7 +2989,7 @@ create_dyn_any(TypeCode_base* tc, CORBA::Boolean is_root)
   DynAnyImplBase* da = 0;
 
   try {
-    switch( tc->NP_kind() ) {
+    switch( TypeCode_base::NP_expand(tc)->NP_kind() ) {
     case CORBA::tk_void:
     case CORBA::tk_short:
     case CORBA::tk_long:
@@ -3033,7 +3037,7 @@ create_dyn_any(TypeCode_base* tc, CORBA::Boolean is_root)
 }
 
 
-// <tc> must be the alias-expanded TypeCode, and is consumed.
+// <tc> is consumed. Since 2.8.0 it no longer have to alias-expand
 static DynUnionDisc*
 create_dyn_any_discriminator(TypeCode_base* tc, DynUnionImpl* du)
 {
@@ -3046,7 +3050,7 @@ create_dyn_any_discriminator(TypeCode_base* tc, DynUnionImpl* du)
   DynUnionDisc* da = 0;
 
   try {
-    switch( tc->NP_kind() ) {
+    switch( TypeCode_base::NP_expand(tc)->NP_kind() ) {
     case CORBA::tk_enum:
       da = new DynUnionEnumDisc(tc, du);
       break;
@@ -3070,8 +3074,7 @@ CORBA::ORB::create_dyn_any(const Any& value)
   if( CORBA::is_nil(tc) )
     throw CORBA::BAD_TYPECODE(0, CORBA::COMPLETED_NO);
 
-  TypeCode_base* aetc = TypeCode_base::aliasExpand(ToTcBase(tc));
-  DynAnyImplBase* da = ::create_dyn_any(aetc, DYNANY_ROOT);
+  DynAnyImplBase* da = ::create_dyn_any(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)), DYNANY_ROOT);
   da->from_any(value);
   return da;
 }
@@ -3083,7 +3086,7 @@ CORBA::ORB::create_basic_dyn_any(TypeCode_ptr tc)
   if (!CORBA::TypeCode::PR_is_valid(tc))
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  TypeCode_base* aetc = TypeCode_base::aliasExpand(ToTcBase_Checked(tc));
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
 
   switch( aetc->kind() ) {
   case CORBA::tk_void:
@@ -3109,7 +3112,8 @@ CORBA::ORB::create_basic_dyn_any(TypeCode_ptr tc)
     throw CORBA::DynAny::TypeMismatch();
   }
 
-  return new DynAnyImpl(aetc, dt_any, DYNANY_ROOT);
+  return new DynAnyImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
+			dt_any, DYNANY_ROOT);
 }
 
 
@@ -3119,14 +3123,13 @@ CORBA::ORB::create_dyn_struct(TypeCode_ptr tc)
   if (!CORBA::TypeCode::PR_is_valid(tc))
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  TypeCode_base* aetc = TypeCode_base::aliasExpand(ToTcBase_Checked(tc));
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
 
-  if( aetc->kind() != CORBA::tk_struct && aetc->kind() != CORBA::tk_except ) {
-    CORBA::release(aetc);
+  if( aetc->kind() != CORBA::tk_struct && aetc->kind() != CORBA::tk_except )
     throw CORBA::DynAny::TypeMismatch();
-  }
 
-  return new DynStructImpl(aetc, DYNANY_ROOT);
+  return new DynStructImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
+			   DYNANY_ROOT);
 }
 
 
@@ -3136,14 +3139,13 @@ CORBA::ORB::create_dyn_sequence(TypeCode_ptr tc)
   if (!CORBA::TypeCode::PR_is_valid(tc))
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  TypeCode_base* aetc = TypeCode_base::aliasExpand(ToTcBase_Checked(tc));
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
 
-  if( aetc->kind() != CORBA::tk_sequence ) {
-    CORBA::release(aetc);
+  if( aetc->kind() != CORBA::tk_sequence )
     throw CORBA::DynAny::TypeMismatch();
-  }
 
-  return new DynSequenceImpl(aetc, DYNANY_ROOT);
+  return new DynSequenceImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
+			     DYNANY_ROOT);
 }
 
 
@@ -3153,14 +3155,13 @@ CORBA::ORB::create_dyn_array(TypeCode_ptr tc)
   if (!CORBA::TypeCode::PR_is_valid(tc))
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  TypeCode_base* aetc = TypeCode_base::aliasExpand(ToTcBase_Checked(tc));
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
 
-  if( aetc->kind() != CORBA::tk_array ) {
-    CORBA::release(aetc);
+  if( aetc->kind() != CORBA::tk_array )
     throw CORBA::DynAny::TypeMismatch();
-  }
 
-  return new DynArrayImpl(aetc, DYNANY_ROOT);
+  return new DynArrayImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
+			  DYNANY_ROOT);
 }
 
 
@@ -3170,14 +3171,13 @@ CORBA::ORB::create_dyn_union(TypeCode_ptr tc)
   if (!CORBA::TypeCode::PR_is_valid(tc))
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  TypeCode_base* aetc = TypeCode_base::aliasExpand(ToTcBase_Checked(tc));
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
 
-  if( aetc->kind() != CORBA::tk_union ) {
-    CORBA::release(aetc);
+  if( aetc->kind() != CORBA::tk_union )
     throw CORBA::DynAny::TypeMismatch();
-  }
 
-  return new DynUnionImpl(aetc, DYNANY_ROOT);
+  return new DynUnionImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
+			  DYNANY_ROOT);
 }
 
 
@@ -3187,14 +3187,13 @@ CORBA::ORB::create_dyn_enum(TypeCode_ptr tc)
   if (!CORBA::TypeCode::PR_is_valid(tc))
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  TypeCode_base* aetc = TypeCode_base::aliasExpand(ToTcBase_Checked(tc));
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
 
-  if( aetc->kind() != CORBA::tk_enum ) {
-    CORBA::release(aetc);
+  if( aetc->kind() != CORBA::tk_enum )
     throw CORBA::DynAny::TypeMismatch();
-  }
 
-  return new DynEnumImpl(aetc, DYNANY_ROOT);
+  return new DynEnumImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
+			 DYNANY_ROOT);
 }
 
 
@@ -3205,12 +3204,12 @@ CORBA::ORB::create_dyn_fixed(TypeCode_ptr tc)
   if (!CORBA::TypeCode::PR_is_valid(tc))
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
 
-  TypeCode_base* aetc = TypeCode_base::aliasExpand(ToTcBase_Checked(tc));
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
 
   if( aetc->kind() != CORBA::tk_fixed )
-    CORBA::release(aetc);
     throw CORBA::DynAny::TypeMismatch();
 
-  return new DynImpl(aetc, DYNANY_ROOT);
+  return new DynImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
+		     DYNANY_ROOT);
 }
 #endif
