@@ -17,68 +17,6 @@ typedef CosNotification::EventBatch      _EventBatch;
 
 // ------------------------------------------------------------- //
 
-/**
-  *	--------- THIS MAY NOT BE NEEDED ---------
-  */
-
-class NotifyPublish_i :
-	 public virtual CosNotifyComm::_sk_NotifyPublish {
-public:
-  NotifyPublish_i() {;}
-  inline void offer_change(const _EventTypeSeq& added, 
-	        	   const _EventTypeSeq& removed);
-};
-
-inline 
-void NotifyPublish_i::offer_change(const _EventTypeSeq& added
-				   const _EventTypeSeq& removed)
-{
-  CORBA::ULong indx;
-  _EventType   type;
-
-  cout << "NotifyPublish: offer_change contains: " << endl;
-  for (indx = 0; indx < added.length(); indx++) {
- 	type = added[indx];
-	cout << "\t+ " << type.domain_name << "::" << type.type_name << endl; 
-  }
-  for (indx = 0; indx < removed.length(); indx++) {
-	type = removed[indx];
-	cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
-  }
-}
-
-/**
-  *	--------- THIS MAY NOT BE NEEDED ---------
-  */
-
-class NotifySubscribe_i :
-	public virtual CosNotifyComm::_sk_NotifySubscribe {
-public:
-  NotifySubscribe_i();
-  inline void subscription_change(const _EventTypeSeq& added, 
-			   	  const _EventTypeSeq& removed);
-};
-
-inline
-void NotifySubscribe_i::subscription_change(const _EventTypeSeq& added,
-					    const _EventTypeSeq& removed)
-{
-  CORBA::ULong indx;
-  _EventType   type;
-
-  cout << "NotifySubscribe: subscription_change contains: " << endl;
-  for (indx = 0; indx < added.length(); indx++) {
-        type = added[indx]; 
-        cout << "\t+ " << type.domain_name << "::" << type.type_name << endl;
-  }
-  for (indx = 0; indx < removed.length(); indx++) {
-        type = removed[indx];
-        cout << "\t- " << type.domain_name << "::" << type.type_name << endl;
-  }
-}
-
-// ------------------------------------------------------------- //
-
 /** The simplest push consumer -- it accepts CORBA::Any events
   *
   */
@@ -191,7 +129,7 @@ CORBA::Any* PullSupplier_i::try_pull(CORBA::Boolean& has_event)
   CORBA::Any *any = new CORBA::Any();
   *any <<= ++event_value;
   cout << "PullSupplier: try_pull() called for event " << event_value << endl;
-  has_event = true;
+  has_event = 1;
   return any;
 }
 
@@ -382,7 +320,7 @@ _StructuredEvent* StructuredPullSupplier_i::try_pull_structured_event(
   event->header.variable_header.length(0);
   event->filterable_data.length(0);
   event->remainder_of_body <<= ++num_events;
-  has_event = true;
+  has_event = 1;
   return event;
 }
 
@@ -569,7 +507,7 @@ _EventBatch* SequencePullSupplier_i::pull_structured_events(
   event.header.variable_header.length(0);
   event.filterable_data.length(0);
   event.remainder_of_body <<= ++num_events;
-  batch->lenght(1);
+  batch->length(1);
   (*batch)[0] = event;
   return batch;
 }
@@ -586,9 +524,9 @@ _EventBatch* SequencePullSupplier_i::try_pull_structured_events(
   event.header.variable_header.length(0);
   event.filterable_data.length(0);
   event.remainder_of_body <<= ++num_events;
-  batch->lenght(1);
+  batch->length(1);
   (*batch)[0] = event;
-  has_event = true;
+  has_event = 1;
   return batch;
 }
 
