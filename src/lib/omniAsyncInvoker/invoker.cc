@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/05/01 16:03:16  sll
+  Silly typo in a switch statement causes random failure due to corrupted
+  link list.
+
   Revision 1.1.2.1  2001/04/19 09:47:54  sll
   New library omniAsyncInvoker.
 
@@ -238,8 +242,8 @@ omniAsyncInvoker::insert(omniTask* t) {
 	  // Cannot start a new thread.
 	  return 0;
 	}
-	break;
       }
+      break;
     }
   case omniTask::DedicatedThread:
     {
