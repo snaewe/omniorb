@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.16  1999/12/24 18:14:29  djs
+# Fixed handling of #include'd .idl files
+#
 # Revision 1.15  1999/12/16 16:10:46  djs
 # TypeCode fixes
 #
@@ -127,14 +130,15 @@ def __init__(stream):
 # Control arrives here
 #
 def visitAST(node):
-#    print "visitAST(" + repr(node) + ")"
-#    print "stream = " + repr(stream)
-
     for n in node.declarations():
         n.accept(self)
 
 def visitModule(node):
-    # o2be_module::produce_hdr
+    # This may be incorrect wrt reopened modules in multiple
+    # files
+    if not(node.mainFile()):
+        return
+    
     addName(node.identifier())
     
     name = tyutil.mapID(node.identifier())
@@ -166,7 +170,8 @@ _CORBA_MODULE_END
     node.written = name;
 
 def visitInterface(node):
-#    print "[[[ visitInterface
+    if not(node.mainFile()):
+        return
     try:
         addName(node.identifier())
     except KeyError:
@@ -439,6 +444,9 @@ private:
     
 
 def visitForward(node):
+    if not(node.mainFile()):
+        return
+    
     # it's legal to have multiple forward declarations
     # of the same name. ignore the duplicates here
     try:
@@ -483,6 +491,9 @@ def visitForward(node):
 """, guard = guard, name = name)    
 
 def visitConst(node):
+    if not(node.mainFile()):
+        return
+    
     scope = currentScope()
     environment = self.__environment
     
@@ -528,13 +539,10 @@ def visitConst(node):
                        name = name)
 
 
-def visitDeclarator(node):
-    print "[[[ visitDeclarator ]]]"
-    print "[[[ node = " + repr(node) + "]]]"
-    raise "Shouldn't be using the visitor pattern to visit a declarator!"
-
-
 def visitTypedef(node):
+    if not(node.mainFile()):
+        return
+    
     # need to have some way of keeping track of current scope
     scope = currentScope()
     environment = self.__environment
@@ -1005,11 +1013,10 @@ typedef _CORBA_Array_Forany<@name@_copyHelper,@name@_slice> @name@_forany;
      
 
 def visitMember(node):
-#    print "[[[ visitMember ]]]"
+    if not(node.mainFile()):
+        return
+    
     memberType = node.memberType()
-#    print "memberType == " + repr(memberType)
-#    print "constrType == " + repr(node.constrType())
-
     if node.constrType():
         # if the type was declared here, it must be an instance
         # of idltype.Declared!
@@ -1018,10 +1025,9 @@ def visitMember(node):
 
 
 def visitStruct(node):
-#    print "[[[ visitStruct ]]]"
+    if not(node.mainFile()):
+        return
 
-#        if (hasattr(node,"written")):
-#            return node.written
     addName(node.identifier())
     
     name = tyutil.mapID(node.identifier())
@@ -1031,7 +1037,6 @@ def visitStruct(node):
     environment = self.__environment
     insideClass = self.__insideClass
     self.__insideClass = 1
-#    print "[[[ scope = " + repr(scope) + "]]]"
             
     stream.out("""\
 struct @name@ {""", name = name)
@@ -1145,11 +1150,12 @@ typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
 
 
     node.written = name
-#    print "[[[ scope = " + repr(currentScope()) + "]]]"
     leave()
 
 def visitException(node):
-#    print "[[[ visitException ]]]"
+    if not(node.mainFile()):
+        return
+    
     # the exception's name
     addName(node.identifier())
     
@@ -1286,7 +1292,9 @@ private:
 
 
 def visitUnion(node):
-#    print "[[[ visitUnion ]]]"
+    if not(node.mainFile()):
+        return
+    
     addName(node.identifier())
     
     enter(node.identifier())
@@ -1542,12 +1550,13 @@ public:
                 prefix = config.name_prefix()
                 stream.out("""\
    typedef @type_str@ @prefix@_@name@@dims@;
-   typedef @type_str@ _@name@_slice;
+   typedef @type_str@ _@name@_slice@tail_dims@;
    """,
-                           prefix = prefix,
-                           type_str = type_str,
-                           name = member,
-                           dims = tyutil.dimsToString(decl.sizes()))
+                        prefix = prefix,
+                        type_str = type_str,
+                        name = member,
+                        dims = tyutil.dimsToString(decl.sizes()),
+                        tail_dims = tyutil.dimsToString(decl.sizes()[1:]))
                 const_type_str = prefix + "_" + member
                 type_str = "_" + member
              
@@ -1875,7 +1884,9 @@ typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
 
 
 def visitEnum(node):
-#    print "[[[ visitEnum ]]]"
+    if not(node.mainFile()):
+        return
+    
     addName(node.identifier())
     
     if hasattr(node,"written"):

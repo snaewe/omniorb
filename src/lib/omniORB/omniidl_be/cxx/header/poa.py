@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/12/24 18:14:30  djs
+# Fixed handling of #include'd .idl files
+#
 # Revision 1.4  1999/12/13 15:40:27  djs
 # Added generation of "flattened" tie templates
 #
@@ -88,6 +91,11 @@ def visitAST(node):
         n.accept(self)
 
 def visitModule(node):
+    # again, check what happens with reopened modules spanning
+    # multiple files
+    if not(node.mainFile()):
+        return
+    
     name = tyutil.mapID(node.identifier())
     enter(name)
     scope = currentScope()
@@ -117,6 +125,9 @@ _CORBA_MODULE_END
 
 
 def visitInterface(node):
+    if not(node.mainFile()):
+        return
+    
     iname = tyutil.mapID(node.identifier())
 #    enter(name)
     scope = currentScope()

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/12/24 18:14:30  djs
+# Fixed handling of #include'd .idl files
+#
 # Revision 1.2  1999/12/01 17:01:09  djs
 # Moved ancillary marshalling and alignment code to another module
 # Added operator overloads for Typecodes and Anys
@@ -58,10 +61,18 @@ def visitAST(node):
         n.accept(self)
 
 def visitModule(node):
+    # again, check what happens with reopened modules spanning
+    # multiple files
+    if not(node.mainFile()):
+        return
+    
     for n in node.definitions():
         n.accept(self)
 
 def visitStruct(node):
+    if not(node.mainFile()):
+        return
+    
     for n in node.members():
         n.accept(self)
 
@@ -78,7 +89,9 @@ extern CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);""
                    fqname = fqname)
 
 def visitUnion(node):
-
+    if not(node.mainFile()):
+        return
+    
     # TypeCode and Any
     if config.TypecodeFlag():
         env = name.Environment()
@@ -93,10 +106,16 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@*& _sp);""",
 
 
 def visitMember(node):
+    if not(node.mainFile()):
+        return
+    
     if node.constrType():
         node.memberType().decl().accept(self)
 
 def visitEnum(node):
+    if not(node.mainFile()):
+        return
+    
     for s in ["NetBufferedStream", "MemBufferedStream"]:
         cxxname = idlutil.ccolonName(map(tyutil.mapID, node.scopedName()))
         stream.out("""\
@@ -134,6 +153,9 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @name@& _s);""",
                    name = cxxname)
 
 def visitInterface(node):
+    if not(node.mainFile()):
+        return
+    
     # interfaces act as containers for other declarations
     # output their operators here
     for d in node.declarations():
@@ -153,6 +175,9 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, @fqname@_ptr& _s);
         
 
 def visitTypedef(node):
+    if not(node.mainFile()):
+        return
+    
     # don't need to do anything unless generating TypeCodes and Any
     if not(config.TypecodeFlag()):
         return
@@ -196,6 +221,9 @@ def visitConst(node):
 def visitDeclarator(node):
     pass
 def visitException(node):
+    if not(node.mainFile()):
+        return
+    
     # don't need to do anything unless generating TypeCodes and Any
     if not(config.TypecodeFlag()):
         return

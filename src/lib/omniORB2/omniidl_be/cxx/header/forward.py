@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/12/24 18:14:30  djs
+# Fixed handling of #include'd .idl files
+#
 # Revision 1.1  1999/12/01 17:01:46  djs
 # New module to create necessary forward declarations in the header
 #
@@ -53,15 +56,26 @@ def visitAST(node):
         n.accept(self)
 
 def visitModule(node):
+    # again check what happens here wrt reopening modules spanning
+    # multiple files
+    if not(node.mainFile()):
+        return
+    
     for n in node.definitions():
         n.accept(self)
 
 
 def visitStruct(node):
+    if not(node.mainFile()):
+        return
+    
     for n in node.members():
         n.accept(self)
 
 def visitUnion(node):
+    if not(node.mainFile()):
+        return
+    
     # Typecode and Any
     if config.TypecodeFlag():
         env = name.Environment()
@@ -75,6 +89,9 @@ class _0RL_tcParser_unionhelper_@guard_name@;""",
         
 
 def visitMember(node):
+    if not(node.mainFile()):
+        return
+    
     if node.constrType():
         node.memberType().decl().accept(self)
 
