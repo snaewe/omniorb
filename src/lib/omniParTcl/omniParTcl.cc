@@ -14,9 +14,11 @@ extern "C"
 {
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 }
 
 #include <stream.h>
+#include <strstream.h>
 
 #include "omniParTcl.h"
 #include "scriptQueue.h"
@@ -142,6 +144,41 @@ void cxxTclScriptHandler(ClientData clientData, int mask)
     }
   }
 }
+
+int threadSafeExec(ClientData clientData, Tcl_Interp *interp,
+                   int argc, char *argv[])
+{
+  //
+  // Tcl's exec command uses vfork which is not thread-safe and therefore
+  // not omniParTcl-safe either.  Use threadSafeExec instead.
+  //
+  int i;
+  
+  if (argc < 2) {
+    Tcl_SetResult(interp, "omniParTcl: threadSafeExec requires an argument",
+                  TCL_VOLATILE);
+    return TCL_ERROR;
+  }
+
+  int cmdlen = 0;
+  for (i = 1; i < argc; i++) {
+    cmdlen += strlen(argv[i]) + 1;
+  }  
+  cmdlen += 1;
+
+  char *cmd = new char[cmdlen];
+  ostrstream cmdos(cmd,cmdlen);
+
+  for (i = 1; i < argc; i++) {
+    cmdos << argv[i] << " ";
+  }
+  cmdos << ends;
+
+  system(cmd);
+  delete cmd;
+
+  return TCL_OK;
+}
   
 int omniParTcl_Init(Tcl_Interp *interp)
 {
@@ -162,6 +199,12 @@ int omniParTcl_Init(Tcl_Interp *interp)
   Tk_CreateFileHandler(tclWakeupPipe[0], TK_READABLE, 
                        (Tk_FileProc *) cxxTclScriptHandler,
                        (ClientData) interp);
+
+  //
+  // Provide a thread-safe exec since Tcl doesn't.
+  //
+  Tcl_CreateCommand(interp, "threadSafeExec", threadSafeExec,
+                    (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 
   //
   // Set up synchronization stuff.
