@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2001/10/17 16:47:09  dpg1
+  New minor codes
+
   Revision 1.1.2.10  2001/08/03 17:41:20  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -153,8 +156,7 @@ NCS_W_UTF_16::marshalWChar(cdrStream& stream,
 			   omniCodeSet::TCS_W* tcs,
 			   _CORBA_WChar wc)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown,
-			  (CORBA::CompletionStatus)stream.completion());
+  OMNIORB_CHECK_TCS_W_FOR_MARSHAL(tcs, stream);
 
   if (tcs->fastMarshalWChar(stream, this, wc)) return;
 
@@ -174,8 +176,7 @@ NCS_W_UTF_16::marshalWString(cdrStream&          stream,
 			     _CORBA_ULong        len,
 			     const _CORBA_WChar* ws)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown,
-			  (CORBA::CompletionStatus)stream.completion());
+  OMNIORB_CHECK_TCS_W_FOR_MARSHAL(tcs, stream);
 
   if (tcs->fastMarshalWString(stream, this, bound, len, ws)) return;
 
@@ -207,8 +208,7 @@ _CORBA_WChar
 NCS_W_UTF_16::unmarshalWChar(cdrStream& stream,
 			     omniCodeSet::TCS_W* tcs)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown,
-			  (CORBA::CompletionStatus)stream.completion());
+  OMNIORB_CHECK_TCS_W_FOR_UNMARSHAL(tcs, stream);
 
   _CORBA_WChar wc;
   if (tcs->fastUnmarshalWChar(stream, this, wc)) return wc;
@@ -222,8 +222,7 @@ NCS_W_UTF_16::unmarshalWString(cdrStream& stream,
 			       _CORBA_ULong bound,
 			       _CORBA_WChar*& ws)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown,
-			  (CORBA::CompletionStatus)stream.completion());
+  OMNIORB_CHECK_TCS_W_FOR_UNMARSHAL(tcs, stream);
 
   _CORBA_ULong len;
   if (tcs->fastUnmarshalWString(stream, this, bound, len, ws)) return len;
@@ -358,7 +357,7 @@ TCS_W_UTF_16::unmarshalWString(cdrStream& stream,
   _CORBA_ULong len = mlen / 2; // Note no terminating null in marshalled form
 
   if (!stream.checkInputOverrun(1, mlen))
-    OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+    OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,
 		  (CORBA::CompletionStatus)stream.completion());
 
 

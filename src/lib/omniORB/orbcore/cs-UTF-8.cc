@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2001/10/17 16:47:09  dpg1
+  New minor codes
+
   Revision 1.1.2.12  2001/08/24 10:10:44  dpg1
   Fix braindead bound check bug in string unmarshalling.
 
@@ -536,7 +539,7 @@ TCS_C_UTF_8::unmarshalString(cdrStream& stream,
 
 
   if (!stream.checkInputOverrun(1, len))
-    OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
+    OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,
 		  (CORBA::CompletionStatus)stream.completion());
 
 
@@ -724,7 +727,7 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
 		    (CORBA::CompletionStatus)stream.completion());
 
     if (!stream.checkInputOverrun(1, mlen))
-      OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
+      OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,
 		    (CORBA::CompletionStatus)stream.completion());
 
     s = omniCodeSetUtil::allocC(mlen);
@@ -769,7 +772,7 @@ TCS_C_UTF_8::fastUnmarshalString(cdrStream&          stream,
 
 
     if (!stream.checkInputOverrun(1, mlen))
-      OMNIORB_THROW(MARSHAL, MARSHAL_StringIsTooLong, 
+      OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,
 		    (CORBA::CompletionStatus)stream.completion());
 
     omniCodeSetUtil::BufferC        b; // *** Could initialise to mlen here

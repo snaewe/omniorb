@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/10/17 16:47:08  dpg1
+  New minor codes
+
   Revision 1.1.2.5  2001/07/26 16:37:20  dpg1
   Make sure static initialisers always run.
 
@@ -141,11 +144,13 @@ NCS_W_UCS_4::marshalWChar(cdrStream& stream,
 			  omniCodeSet::TCS_W* tcs,
 			  _CORBA_WChar wc)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
+  OMNIORB_CHECK_TCS_W_FOR_MARSHAL(tcs, stream);
+
   if (tcs->fastMarshalWChar(stream, this, wc)) return;
 
   if (wc > 0xffff)
-    OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_WCharOutOfRange,
+		  (CORBA::CompletionStatus)stream.completion());
 
   tcs->marshalWChar(stream, wc);
 }
@@ -158,11 +163,13 @@ NCS_W_UCS_4::marshalWString(cdrStream&          stream,
 			    _CORBA_ULong        len,
 			    const _CORBA_WChar* ws)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
+  OMNIORB_CHECK_TCS_W_FOR_MARSHAL(tcs, stream);
+
   if (tcs->fastMarshalWString(stream, this, bound, len, ws)) return;
 
   if (bound && len > bound)
-    OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+		  (CORBA::CompletionStatus)stream.completion());
 
   omniCodeSetUtil::BufferU ub(len+1);
   _CORBA_WChar             wc;
@@ -180,7 +187,8 @@ NCS_W_UCS_4::marshalWString(cdrStream&          stream,
       ub.insert((wc &  0x3ff) + 0xdc00);
     }
     else
-      OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_CannotMapChar,
+		    (CORBA::CompletionStatus)stream.completion());
   }
   tcs->marshalWString(stream, len, ub.extract());
 }
@@ -190,7 +198,8 @@ _CORBA_WChar
 NCS_W_UCS_4::unmarshalWChar(cdrStream& stream,
 			    omniCodeSet::TCS_W* tcs)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
+  OMNIORB_CHECK_TCS_W_FOR_UNMARSHAL(tcs, stream);
+
   _CORBA_WChar wc;
   if (tcs->fastUnmarshalWChar(stream, this, wc)) return wc;
 
@@ -203,7 +212,8 @@ NCS_W_UCS_4::unmarshalWString(cdrStream& stream,
 			      _CORBA_ULong bound,
 			      _CORBA_WChar*& ws)
 {
-  if (!tcs) OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_NO);
+  OMNIORB_CHECK_TCS_W_FOR_UNMARSHAL(tcs, stream);
+
   _CORBA_ULong len;
   if (tcs->fastUnmarshalWString(stream, this, bound, len, ws)) return len;
 
@@ -228,19 +238,25 @@ NCS_W_UCS_4::unmarshalWString(cdrStream& stream,
       wc = (uc - 0xd800) << 10;
       if (++i == len) {
 	// No second half to surrogate pair
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(DATA_CONVERSION, 
+		      DATA_CONVERSION_BadInput,
+		      (CORBA::CompletionStatus)stream.completion());
       }
       uc = us[i];
       if (uc < 0xdc00 || uc > 0xdfff) {
 	// Value is not a valid second half to a surrogate pair
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(DATA_CONVERSION, 
+		      DATA_CONVERSION_BadInput,
+		      (CORBA::CompletionStatus)stream.completion());
       }
       wc = wc + uc - 0xdc00 + 0x10000;
       wb.insert(wc);
     }
     else if (uc < 0xe000) {
       // Second half of surrogate pair not allowed on its own
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(DATA_CONVERSION, 
+		    DATA_CONVERSION_BadInput,
+		    (CORBA::CompletionStatus)stream.completion());
     }
     else {
       wb.insert(uc);
@@ -278,7 +294,9 @@ TCS_W_UCS_4::marshalWChar(cdrStream& stream,
 
   if (0xd800 <= uc && uc <= 0xe000 ) {
     // Part of a surrogate pair -- can't be sent
-    OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(DATA_CONVERSION, 
+		  DATA_CONVERSION_BadInput,
+		  (CORBA::CompletionStatus)stream.completion());
   }
 
   if (stream.marshal_byte_swap()) {
@@ -319,18 +337,24 @@ TCS_W_UCS_4::marshalWString(cdrStream& stream,
       tc = (uc - 0xd800) << 10;
       if (++i == len) {
 	// No second half to surrogate pair
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(DATA_CONVERSION, 
+		      DATA_CONVERSION_BadInput,
+		      (CORBA::CompletionStatus)stream.completion());
       }
       uc = us[i];
       if (uc < 0xdc00 || uc > 0xdfff) {
 	// Value is not a valid second half to a surrogate pair
-	OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(DATA_CONVERSION, 
+		      DATA_CONVERSION_BadInput,
+		      (CORBA::CompletionStatus)stream.completion());
       }
       tc = tc + uc - 0xdc00 + 0x10000;
     }
     else if (uc < 0xe000) {
       // Second half of surrogate pair not allowed on its own
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(DATA_CONVERSION, 
+		    DATA_CONVERSION_BadInput,
+		    (CORBA::CompletionStatus)stream.completion());
       tc = 0; // To shut paranoid compilers up
     }
     else {
@@ -385,12 +409,14 @@ TCS_W_UCS_4::unmarshalWChar(cdrStream& stream)
 	o = stream.unmarshalOctet(); p[3] = o;
       }
       if (tc > 0xffff)
-	OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_CannotMapChar,
+		      (CORBA::CompletionStatus)stream.completion());
       uc = tc;
     }
     break;
   default:
-    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL, MARSHAL_InvalidWCharSize,
+		  (CORBA::CompletionStatus)stream.completion());
   }
   return uc;
 }
@@ -403,15 +429,18 @@ TCS_W_UCS_4::unmarshalWString(cdrStream& stream,
   _CORBA_ULong mlen; mlen <<= stream;
 
   if (mlen % 4)
-    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL, MARSHAL_InvalidWCharSize,
+		  (CORBA::CompletionStatus)stream.completion());
 
   _CORBA_ULong len = mlen / 4; // Note no terminating null in marshalled form
 
   if (bound && len > bound)
-    OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+		  (CORBA::CompletionStatus)stream.completion());
 
   if (!stream.checkInputOverrun(1, mlen))
-    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,
+		  (CORBA::CompletionStatus)stream.completion());
 
   omniCodeSetUtil::BufferU ub(len + 1);
   _CORBA_ULong             tc;
@@ -430,7 +459,8 @@ TCS_W_UCS_4::unmarshalWString(cdrStream& stream,
       ub.insert((tc &  0x3ff) + 0xdc00);
     }
     else
-      OMNIORB_THROW(DATA_CONVERSION, 0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_CannotMapChar,
+		    (CORBA::CompletionStatus)stream.completion());
   }
   ub.insert(0); // Null terminator
   us = ub.extract();
@@ -477,7 +507,8 @@ TCS_W_UCS_4::fastMarshalWString(cdrStream&          stream,
   if (ncs->id() == id()) { // Null transformation
 
     if (bound && len > bound)
-      OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+		    (CORBA::CompletionStatus)stream.completion());
 
     _CORBA_ULong mlen = len * 4; mlen >>= stream;
 
@@ -546,7 +577,8 @@ TCS_W_UCS_4::fastUnmarshalWChar(cdrStream&          stream,
       }
       break;
     default:
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL, MARSHAL_InvalidWCharSize,
+		    (CORBA::CompletionStatus)stream.completion());
     }
     return 1;
   }
@@ -565,15 +597,18 @@ TCS_W_UCS_4::fastUnmarshalWString(cdrStream&          stream,
     _CORBA_ULong mlen; mlen <<= stream;
 
     if (mlen % 4)
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(MARSHAL, MARSHAL_InvalidWCharSize,
+		    (CORBA::CompletionStatus)stream.completion());
 
     len = mlen / 4; // Note no terminating null in marshalled form
 
     if (bound && len > bound)
-      OMNIORB_THROW(BAD_PARAM, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(MARSHAL, MARSHAL_WStringIsTooLong, 
+		    (CORBA::CompletionStatus)stream.completion());
 
     if (!stream.checkInputOverrun(1, mlen))
-      OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(MARSHAL, MARSHAL_PassEndOfMessage,
+		    (CORBA::CompletionStatus)stream.completion());
 
     ws = omniCodeSetUtil::allocW(len + 1);
     omniCodeSetUtil::HolderW wh(ws);

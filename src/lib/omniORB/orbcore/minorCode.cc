@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/10/17 16:47:09  dpg1
+  New minor codes
+
   Revision 1.1.2.2  2001/09/24 10:41:10  dpg1
   Minor codes for Dynamic library and omniORBpy.
 
@@ -186,6 +189,7 @@ minorCodeLookup WRONG_TRANSACTION_LookupTable[] = {
 };
 
 minorCodeLookup INV_POLICY_LookupTable[] = { 
+  DECLARE_INV_POLICY_minors(DeclareLookupEntry,COMMA),
   { 0, 0 } 
 };
 

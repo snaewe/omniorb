@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/10/17 16:47:08  dpg1
+  New minor codes
+
   Revision 1.1.4.1  2001/04/18 17:18:18  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -42,7 +45,14 @@
 #ifndef __CODESETUTIL_H__
 #define __CODESETUTIL_H__
 
+#include <omniORB4/IOP_S.h>
 #include <exceptiondefs.h>
+#include <giopStream.h>
+#include <giopStrand.h>
+#include <giopRope.h>
+#include <GIOP_S.h>
+#include <GIOP_C.h>
+
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -251,6 +261,38 @@ public:
     _CORBA_WChar* pd_buf;
   };
 };
+
+// These macros check there is a wchar transmission code set and, if
+// not, throw the appropriate exceptions.
+
+#define OMNIORB_CHECK_TCS_W_FOR_UNMARSHAL(tcs, stream) \
+do { \
+  if (!tcs) { \
+    giopStream* gs = giopStream::downcast(&stream); \
+    if (gs) { \
+      GIOP::Version v = gs->version(); \
+      if (v.major == 1 && v.minor == 0) { \
+        if (GIOP_S::downcast(&stream)) \
+          OMNIORB_THROW(MARSHAL, MARSHAL_WCharSentByGIOP10Server, \
+                        (CORBA::CompletionStatus)stream.completion()); \
+        if (GIOP_C::downcast(&stream)) \
+          OMNIORB_THROW(MARSHAL, MARSHAL_WCharSentByGIOP10Client, \
+                        (CORBA::CompletionStatus)stream.completion()); \
+      } \
+    } \
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown, \
+		  (CORBA::CompletionStatus)stream.completion()); \
+  } \
+} while(0)
+
+#define OMNIORB_CHECK_TCS_W_FOR_MARSHAL(tcs, stream) \
+do { \
+  if (!tcs) { \
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_WCharTCSNotKnown, \
+		  (CORBA::CompletionStatus)stream.completion()); \
+  } \
+} while(0)
+
 
 OMNI_NAMESPACE_END(omni)
 
