@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.26  2001/08/24 16:44:59  sll
+  Switch to use Winsock 2. Replaced wsock32.lib with ws2_32.lib and mswsock.lib
+
   Revision 1.33.2.25  2001/08/23 16:01:43  sll
   Added initialisers for transportRules and giopEndpoint.
 
@@ -297,8 +300,8 @@ OMNI_USING_NAMESPACE(omni)
 #define ORB_ID_STRING "omniORB4"
 
 static const char* orb_ids[] = { ORB_ID_STRING,
-				 "omniORB3", 
-				 "omniORB2", 
+				 "omniORB3",
+				 "omniORB2",
 				 0 };
 
 #ifndef OMNIORB_PRINCIPAL_VAR
@@ -435,7 +438,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
 
   if( orb_destroyed ) {
     omniORB::logs(1, "The ORB cannot be re-initialised!");
-    OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_ORBHasShutdown, 
+    OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_ORBHasShutdown,
 		  CORBA::COMPLETED_NO);
   }
 
@@ -510,10 +513,10 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
   catch (const orbOptions::BadParam& ex) {
     if ( omniORB::trace(1) ) {
       omniORB::logger l;
-      l << "ORB_init failed: Bad parameter (" << ex.value 
-	<< ") for option " 
+      l << "ORB_init failed: Bad parameter (" << ex.value
+	<< ") for option "
 	<< ((option_source == option_src_5) ? "-ORB" : "")
-	<< ex.key << " in " <<  option_source << " reason: " 
+	<< ex.key << " in " <<  option_source << " reason: "
 	<< ex.why << "\n";
     }
     OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
@@ -526,8 +529,8 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
   catch (const orbOptions::BadParam& ex) {
     if ( omniORB::trace(1) ) {
       omniORB::logger l;
-      l << "ORB_init failed: Bad parameter (" << ex.value 
-	<< ") for ORB configuration option " << ex.key 
+      l << "ORB_init failed: Bad parameter (" << ex.value
+	<< ") for ORB configuration option " << ex.key
 	<< " reason: " << ex.why << "\n";
     }
     OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
@@ -655,7 +658,7 @@ omniOrbORB::list_initial_services()
   idl.length(len + 2);
   idl[len++] = CORBA::string_dup("RootPOA");
   idl[len++] = CORBA::string_dup("POACurrent");
-  
+
   return ids;
 }
 
@@ -895,7 +898,7 @@ namespace {
       while (!pd_done)
 	pd_cond.wait();
     }
-    
+
   private:
     omni_tracedmutex*     pd_mu;
     omni_tracedcondition  pd_cond;
@@ -1200,7 +1203,7 @@ CORBA::Boolean   orbParameters::lcdMode = 0;
 class helpHandler : public orbOptions::Handler {
 public:
 
-  helpHandler() : 
+  helpHandler() :
     orbOptions::Handler("help",
 			0,
 			1,
@@ -1231,7 +1234,7 @@ static helpHandler helpHandler_;
 class idHandler : public orbOptions::Handler {
 public:
 
-  idHandler() : 
+  idHandler() :
     orbOptions::Handler("id",
 			"id = " ORB_ID_STRING,
 			1,
@@ -1263,7 +1266,7 @@ static idHandler idHandler_;
 class dumpConfigurationHandler : public orbOptions::Handler {
 public:
 
-  dumpConfigurationHandler() : 
+  dumpConfigurationHandler() :
     orbOptions::Handler("dumpConfiguration",
 			"dumpConfiguration = 0 or 1",
 			1,
@@ -1292,7 +1295,7 @@ static dumpConfigurationHandler dumpConfigurationHandler_;
 class lcdModeHandler : public orbOptions::Handler {
 public:
 
-  lcdModeHandler() : 
+  lcdModeHandler() :
     orbOptions::Handler("lcdMode",
 			"lcdMode = 0 or 1",
 			1,
@@ -1324,7 +1327,7 @@ public:
 
 #define POA_IIOP_IS_OBSOLUTE "is now obsolute, use -ORBendpoint instead"
 
-  poa_iiop_portHandler() : 
+  poa_iiop_portHandler() :
     orbOptions::Handler("poa_iiop_port",0,1,0) {}
 
   void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
@@ -1344,7 +1347,7 @@ static poa_iiop_portHandler poa_iiop_portHandler_;
 class poa_iiop_name_portHandler : public orbOptions::Handler {
 public:
 
-  poa_iiop_name_portHandler() : 
+  poa_iiop_name_portHandler() :
     orbOptions::Handler("poa_iiop_name_port",0,1,0) {}
 
   void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
@@ -1441,35 +1444,6 @@ public:
 #endif
 #endif // _HAS_SIGNAL
 
-#ifdef __WIN32__
-
-    // Initialize WinSock:
-
-    WORD versionReq;
-    WSADATA wData;
-    versionReq = MAKEWORD(1, 1);  // Nothing specific to releases > 1.1 used
-
-    int rc = WSAStartup(versionReq, &wData);
-
-    if (rc != 0)
-      {
-	// Couldn't find a usable DLL.
-	OMNIORB_THROW(INITIALIZE,INITIALIZE_FailedLoadLibrary,
-		      CORBA::COMPLETED_NO);
-      }
-
-    // Confirm that the returned Windows Sockets DLL supports 1.1
-
-    if ( LOBYTE( wData.wVersion ) != 1 ||
-	 HIBYTE( wData.wVersion ) != 1 )
-      {
-	// Couldn't find a usable DLL
-	WSACleanup();
-	OMNIORB_THROW(INITIALIZE,INITIALIZE_FailedLoadLibrary,
-		      CORBA::COMPLETED_NO);
-      }
-
-#endif
     orbAsyncInvoker = new ORBAsyncInvoker(orbParameters::maxServerThreadPoolSize);
   }
 
