@@ -77,21 +77,35 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include	<stdio.h>
 #include	<fcntl.h>
 
-#ifdef		SOLARIS2
-
+#if defined(__sunos__) 
+#ifdef SVR4
 #include	<unistd.h>		// POSIX standard types
 #include	<wait.h>		// POSIX definition of wait()
+#else
+#include	<sys/unistd.h>		// POSIX standard types
+#include	<sys/wait.h>		// POSIX definition of wait()
+#ifndef SUNOS4
+#define SUNOS4
+#endif
+#endif
+#endif
 
-#endif		// SOLARIS2
+#if defined(__osf1__)
+#include	<unistd.h>		// POSIX standard types
+#include	<wait.h>		// POSIX definition of wait()
+extern "C" char * mktemp(char *);
+
+#endif
+
 
 #ifdef		apollo
 #include	<sysent.h>
 #endif		// apollo
 
-#if defined(hpux) || defined(__hpux) || defined(SUNOS4)
+#if defined(hpux) || defined(__hpux)
 #include	<unistd.h>		// POSIX definitions
 #include	<sys/wait.h>		// POSIX definition of wait()
-#endif		// defined(hpux) || defined(__hpux) || defined(SUNOS4)
+#endif		// defined(hpux) || defined(__hpux)
 
 #undef	MAX_ARGLIST
 #define	MAX_ARGLIST	128

@@ -74,21 +74,28 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include	<drv_private.hh>
 
-#ifdef		SOLARIS2
-
+#if defined(__sunos__) 
+#ifdef SVR4
 #include	<unistd.h>		// POSIX standard types
 #include	<wait.h>		// POSIX definition of wait()
-
-#endif		// SOLARIS2
-
-#if defined(apollo)
-#include	<sysent.h>
-#endif		// apollo
-
-#if defined(hpux) || defined(__hpux) || defined(SUNOS4)
+#else
 #include	<sys/unistd.h>		// POSIX standard types
 #include	<sys/wait.h>		// POSIX definition of wait()
-#endif		// defined(hpux) || defined(__hpux) || defined(SUNOS4)
+#ifndef SUNOS4
+#define SUNOS4
+#endif
+#endif
+#endif
+
+#if defined(__osf1__)
+#include	<unistd.h>		// POSIX standard types
+#include	<wait.h>		// POSIX definition of wait()
+#endif
+
+#if defined(hpux) || defined(__hpux)
+#include	<sys/unistd.h>		// POSIX standard types
+#include	<sys/wait.h>		// POSIX definition of wait()
+#endif		// defined(hpux) || defined(__hpux)
 
 
 /*
