@@ -30,6 +30,11 @@
 
 /* 
  * $Log$
+ * Revision 1.12  1998/08/15 14:33:47  sll
+ * Added NEED_DUMMY_RETURN macros to avoid better compiler to complain about
+ * unreachable code.
+ * Moved from CORBA.h inline member functions and operators.
+ *
  * Revision 1.11  1998/08/14 13:55:01  sll
  * Added pragma hdrstop to control pre-compile header if the compiler feature
  * is available.
@@ -1091,7 +1096,9 @@ CORBA::TypeCode::PR_equal(CORBA::TypeCode_ptr TCp, CORBA::Boolean expand) const
 	    default:
 	      {
 		throw CORBA::BAD_TYPECODE(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
 		return 0;
+#endif
 	      }
 	    }      
 	}
@@ -1124,7 +1131,9 @@ CORBA::TypeCode::id() const
     {
       // Operation not valid on this TypeCode.
       throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
 }
 
@@ -1158,7 +1167,9 @@ CORBA::TypeCode::name() const
     {
       // Operation not valid on this TypeCode.
       throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
 }
 
@@ -1205,7 +1216,9 @@ CORBA::TypeCode::member_count() const
     {
       // Operation not valid on this TypeCode.
       throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
 }
 
@@ -1285,7 +1298,9 @@ CORBA::TypeCode::member_name(CORBA::ULong index) const
    {
      // Operation not valid on this TypeCode.
      throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
      return 0;
+#endif
    }
 }
 
@@ -1369,7 +1384,9 @@ CORBA::TypeCode::member_type(CORBA::ULong index) const
     {
       // Operation not valid on this TypeCode.
       throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
 }
 
@@ -1456,7 +1473,9 @@ CORBA::TypeCode::member_label(CORBA::ULong index) const
     {
       // Operation not valid on this TypeCode.
       throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
 }
 
@@ -1500,7 +1519,9 @@ CORBA::TypeCode::discriminator_type() const
     {
       // Operation not valid on this TypeCode.
       throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
 }   
     
@@ -1542,7 +1563,9 @@ CORBA::TypeCode::default_index() const
     {
       // Operation not valid on this TypeCode.
       throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
 }   
 
@@ -1572,7 +1595,9 @@ CORBA::TypeCode::length() const
     {
       // Operation not valid on this TypeCode.
       throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
 }   
 
@@ -1619,7 +1644,9 @@ CORBA::TypeCode::content_type() const
     {
       // Operation not valid on this TypeCode.
       throw CORBA::TypeCode::BadKind();
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
 }   
 
@@ -1653,10 +1680,10 @@ CORBA::TypeCode::param_count() const
 
     default:
       throw CORBA::BAD_TYPECODE(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
       return 0;
+#endif
     }
-
-
 }
 
 
@@ -1884,7 +1911,9 @@ CORBA::TypeCode::parameter(CORBA::Long index) const
     }      
 
   throw CORBA::TypeCode::Bounds();
+#ifdef NEED_DUMMY_RETURN
   return 0;
+#endif
 }
 
 
@@ -1916,6 +1945,159 @@ CORBA::TypeCode::_nil()
 #endif
   }
   return _nil_TypeCodeV;
+}
+
+/**************************************************************************/
+
+CORBA::Boolean 
+CORBA::
+_nil_TypeCode::NP_is_nil() const 
+{ 
+  return 1; 
+}
+
+const char* 
+CORBA::
+_nil_TypeCode::id () const
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  char * _result= 0;
+  return _result;
+#endif
+}
+
+const char* 
+CORBA::
+_nil_TypeCode::name () const
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  char * _result= 0;
+  return _result;
+#endif
+}
+
+CORBA::ULong 
+CORBA::
+_nil_TypeCode::member_count () const 
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  ULong _result = 0;
+  return _result;
+#endif
+}
+
+const char* 
+CORBA::
+_nil_TypeCode::member_name(CORBA::ULong index) const 
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  char * _result= 0;
+  return _result;
+#endif
+}
+
+CORBA::TypeCode_ptr 
+CORBA::
+_nil_TypeCode::member_type(CORBA::ULong index) const
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  CORBA::TypeCode_ptr _result= CORBA::TypeCode::_nil();
+  return _result;
+#endif
+}
+
+CORBA::Any* 
+CORBA::
+_nil_TypeCode::member_label(ULong index) const
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  CORBA::Any * _result= 0;
+  return _result;
+#endif
+}
+
+CORBA::TypeCode_ptr 
+CORBA::
+_nil_TypeCode::discriminator_type() const
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  CORBA::TypeCode_ptr _result= CORBA::TypeCode::_nil();
+  return _result;
+#endif
+}
+
+CORBA::Long  
+CORBA::
+_nil_TypeCode::default_index() const 
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  CORBA::Long _result = 0;
+  return _result;
+#endif
+}
+
+CORBA::ULong 
+CORBA::
+_nil_TypeCode::length() const 
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  CORBA::ULong _result = 0;
+  return _result;
+#endif
+}
+
+CORBA::TypeCode_ptr 
+CORBA::
+_nil_TypeCode::content_type() const 
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  CORBA::TypeCode_ptr _result= 0;
+  return _result;
+#endif
+}
+
+CORBA::Long 
+CORBA::
+_nil_TypeCode::param_count() const
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  CORBA::Long _result = 0;
+  return _result;
+#endif
+}
+
+CORBA::Any* 
+CORBA::
+_nil_TypeCode::parameter(Long index) const 
+{
+  throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  // never reach here! Dummy return to keep some compilers happy.
+  CORBA::Any * _result= 0;
+  return _result;
+#endif
 }
 
 
@@ -1998,7 +2180,9 @@ CORBA::ORB::create_recursive_sequence_tc(CORBA::ULong bound,
 {
   // Not implemented yet
   throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
   return 0;
+#endif
 }
 
 /**************************************************************************/
@@ -2114,7 +2298,9 @@ CORBA::StructMember::NP_alignedSize(size_t initialoffset) const
 {
   // Not implemented - used by IR
   throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
   return 0;      
+#endif
 }
     
 void 
@@ -2152,7 +2338,9 @@ CORBA::UnionMember::NP_alignedSize(size_t initialoffset) const
 {
   // Not implemented - used by IR
   throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
   return 0;      
+#endif
 }
     
 void 
@@ -2188,13 +2376,6 @@ CORBA::Boolean
 CORBA::TypeCode::NP_is_nil() const 
 { 
   return 0; 
-}
-
-
-CORBA::Boolean 
-CORBA::_nil_TypeCode::NP_is_nil() const 
-{ 
-  return 1; 
 }
 
 
@@ -2309,6 +2490,140 @@ _nil_IDLType::type ()
 #endif
 }
 
+
+/**************************************************************************/
+
+CORBA::IRObject::~IRObject() 
+{
+}
+
+CORBA::DefinitionKind
+CORBA::IRObject::def_kind()
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  return dk_none;
+#endif
+}
+
+void
+CORBA::IRObject::destroy()
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+}
+
+CORBA::IRObject_ptr
+CORBA::IRObject::_duplicate(IRObject_ptr obj)
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
+}
+      
+CORBA::IRObject_ptr
+CORBA::IRObject::_narrow(Object_ptr obj) 
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
+}
+
+CORBA::IRObject_ptr
+CORBA::IRObject::_nil()
+{
+  throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+#ifdef NEED_DUMMY_RETURN
+  return 0;
+#endif
+}
+
+/**************************************************************************/
+
+#if defined(HAS_Cplusplus_Namespace) 
+
+// operators are defined in the CORBA namespace
+#define OPERATOR_PREFIX CORBA::
+
+#else
+// operators are defined in the global namespace
+#define OPERATOR_PREFIX
+#endif
+
+void
+OPERATOR_PREFIX operator>>= (CORBA::DefinitionKind _e,NetBufferedStream &s)
+{
+  ::operator>>=((CORBA::ULong)_e,s);
+}
+
+void
+OPERATOR_PREFIX operator<<= (CORBA::DefinitionKind &_e,NetBufferedStream &s) 
+{
+  CORBA::ULong _0RL_e;
+  _0RL_e <<= s;
+  switch (_0RL_e) {
+  case CORBA::dk_none:
+  case CORBA::dk_all:
+  case CORBA::dk_Attribute:
+  case CORBA::dk_Constant:
+  case CORBA::dk_Exception:
+  case CORBA::dk_Interface:
+  case CORBA::dk_Module:
+  case CORBA::dk_Operation:
+  case CORBA::dk_Typedef:
+  case CORBA::dk_Alias:
+  case CORBA::dk_Struct:
+  case CORBA::dk_Union:
+  case CORBA::dk_Enum:
+  case CORBA::dk_Primitive:
+  case CORBA::dk_String:
+  case CORBA::dk_Sequence:
+  case CORBA::dk_Array:
+  case CORBA::dk_Repository:
+    _e = (CORBA::DefinitionKind) _0RL_e;
+    break;
+  default:
+    _CORBA_marshal_error();
+  }
+}
+
+void 
+OPERATOR_PREFIX operator>>= (CORBA::DefinitionKind _e,MemBufferedStream &s)
+{
+  ::operator>>=((CORBA::ULong)_e,s);
+}
+
+void
+OPERATOR_PREFIX operator<<= (CORBA::DefinitionKind &_e,MemBufferedStream &s)
+{
+  CORBA::ULong _0RL_e;
+  _0RL_e <<= s;
+  switch (_0RL_e) {
+  case CORBA::dk_none:
+  case CORBA::dk_all:
+  case CORBA::dk_Attribute:
+  case CORBA::dk_Constant:
+  case CORBA::dk_Exception:
+  case CORBA::dk_Interface:
+  case CORBA::dk_Module:
+  case CORBA::dk_Operation:
+  case CORBA::dk_Typedef:
+  case CORBA::dk_Alias:
+  case CORBA::dk_Struct:
+  case CORBA::dk_Union:
+  case CORBA::dk_Enum:
+  case CORBA::dk_Primitive:
+  case CORBA::dk_String:
+  case CORBA::dk_Sequence:
+  case CORBA::dk_Array:
+  case CORBA::dk_Repository:
+    _e = (CORBA::DefinitionKind) _0RL_e;
+    break;
+  default:
+    _CORBA_marshal_error();
+  }
+}
 
 /**************************************************************************/
 
