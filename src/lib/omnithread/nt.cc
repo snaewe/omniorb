@@ -112,8 +112,8 @@ omni_condition::~omni_condition(void)
     DeleteCriticalSection(&crit);
     DB( if (waiting_head != NULL) {
 	cerr << "omni_condition::~omni_condition: list of waiting threads "
-	     << "is not empty\n" );
-    }
+	     << "is not empty\n";
+    } )
 }
 
 
