@@ -1,3 +1,16 @@
+Mon Nov  9 10:48:40 GMT 1998 sll
+===============================
+
+- Rename the use of "export" as variable name. "export" is a reserved C++
+  keyword in standard C++
+
+src/lib/omniORB2/ropeFactory.h
+src/lib/omniORB2/tcpSocket.h
+src/lib/omniORB2/tcpSocketMTfactory.cc
+src/lib/omniORB2/tcpATMos.h
+src/lib/omniORB2/tcpATMosMTfactory.cc
+
+
 Thu Nov  5 18:02:53 GMT 1998 sll
 ================================
 
