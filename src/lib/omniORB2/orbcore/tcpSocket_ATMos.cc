@@ -13,9 +13,12 @@
 
 /*
   $Log$
-  Revision 1.3  1997/01/21 14:42:44  ewc
-  Minor change to comments.
+  Revision 1.4  1997/02/19 11:04:22  ewc
+  Small change to output message.
 
+// Revision 1.3  1997/01/21  14:42:44  ewc
+// Minor change to comments.
+//
 // Revision 1.1  1997/01/08  18:35:17  ewc
 // Initial revision
 //
@@ -146,7 +149,7 @@ else
     pd_ipfilep = NULL;
     do
       {
-	kprintf("Connect attempt: %d.\n",retry);
+	kprintf("TCP connect attempt: %d.\n",retry);
 	pd_ipfilep = fopen(ipfstr,"wb+");
 
       }
