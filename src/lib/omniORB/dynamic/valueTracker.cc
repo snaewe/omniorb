@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2005/01/17 14:44:47  dgrisby
+  Surprisingly few changes to compile on Windows.
+
   Revision 1.1.2.1  2003/09/26 16:12:54  dgrisby
   Start of valuetype support.
 
@@ -44,6 +47,8 @@ OMNI_NAMESPACE_BEGIN(omni)
 // Hash table size
 static CORBA::ULong tableSize = 131;
 
+const CORBA::ULong OutputValueTracker::PD_MAGIC = 0x432b4f56; // "C+OV"
+const CORBA::ULong InputValueTracker::PD_MAGIC  = 0x432b4956; // "C+IV"
 
 // Hash table entries
 

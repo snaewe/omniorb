@@ -1,6 +1,6 @@
 // -*- Mode: C++; -*-
 //                            Package   : omniORB
-// anyStream.cc               Created on: 2004/06/22
+// omniTypedefs.cc            Created on: 2004/06/22
 //                            Author    : Duncan Grisby
 //
 //

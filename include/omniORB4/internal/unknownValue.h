@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2005/01/17 14:44:46  dgrisby
+  Surprisingly few changes to compile on Windows.
+
   Revision 1.1.2.2  2004/10/13 17:58:19  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 
@@ -64,7 +67,7 @@ public:
   UnknownValue(CORBA::TypeCode_ptr tc);
   virtual ~UnknownValue();
 
-  static UnknownValue* _downcast(ValueBase*);
+  static UnknownValue* _downcast(CORBA::ValueBase*);
 
 #ifdef OMNI_HAVE_COVARIANT_RETURNS
   virtual UnknownValue* _copy_value();

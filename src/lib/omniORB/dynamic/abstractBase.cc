@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2005/01/17 14:44:46  dgrisby
+  Surprisingly few changes to compile on Windows.
+
   Revision 1.1.2.2  2004/10/13 17:58:20  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 
@@ -111,7 +114,7 @@ CORBA::release(CORBA::AbstractBase_ptr a)
 CORBA::Boolean
 CORBA::_omni_AbstractBaseObjref::_NP_is_nil() const
 {
-  return this->CORBA::Object::_NP_is_nil();
+  return this->OMNIORB_BASE_CTOR(CORBA::)Object::_NP_is_nil();
 }
 
 CORBA::Object_ptr
