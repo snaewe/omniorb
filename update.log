@@ -1,3 +1,15 @@
+
+Tue Sep 28 10:33:30 BST 1999 djr
+================================
+
+- Properly escape characters in include file guards.
+  Removed dangerous default argument to StringBuf constructor.
+
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+src/tool/omniidl2/omniORB2_be/o2be_stringbuf.h
+src/tool/omniidl2/omniORB2_be/o2be_stringbuf.cc
+
+
 Mon Sep 27 17:55:00 BST 1999 sll
 ================================
 

@@ -43,6 +43,22 @@ StringBuf::reserve(size_t n)
 }
 
 
+void
+StringBuf::grab(char* s)
+{
+  if( s ) {
+    delete[] pd_start;
+    pd_start = s;
+    pd_current = s + strlen(s);
+    pd_end = pd_current + 1;
+  }
+  else {
+    pd_current = pd_start;
+    *pd_current = '\0';
+  }
+}
+
+
 char*
 StringBuf::release()
 {

@@ -37,14 +37,15 @@
 
 class StringBuf {
 public:
-  inline StringBuf(size_t size = STRING_BUF_INC) {
-    pd_current = pd_start = new char[size];
-    pd_end = pd_start + size;
+  inline StringBuf() {
+    pd_current = pd_start = new char[STRING_BUF_INC];
+    pd_end = pd_start + STRING_BUF_INC;
     *pd_current = '\0';
   }
   inline ~StringBuf() { delete[] pd_start; }
 
-  inline operator const char* () { return pd_start; }
+  inline operator const char* () const { return pd_start; }
+  inline const char* c_str() const     { return pd_start; }
 
   inline void operator += (const char* s) {
     size_t len = strlen(s);
@@ -69,6 +70,10 @@ public:
 
   void reserve(size_t n);
   // Allocate enough buffer st. there are at least n bytes of free space.
+
+  void grab(char*);
+  // Sets contents to the given string (which is consumed).
+  // If the string is zero, then this is the same as clear().
 
   char* release();
   // Return the string, and re-initialises this string to empty.
