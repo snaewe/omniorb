@@ -28,6 +28,13 @@
 
 /*
  $Log$
+ Revision 1.11.2.2  2000/09/27 18:28:30  sll
+ Changed decodeIOPprofile(), encodeIOPprofile(), findIncoming(),
+ findOrCreateOutgoing() to accept omniIOR as a parameter.
+ Removed getIncomingIOPprofiles().
+ Replaced iopProfilesToRope() with iorToRope().
+ New member findType().
+
  Revision 1.11.2.1  2000/07/17 10:35:58  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -83,7 +90,7 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -93,87 +100,69 @@
 #include <scavenger.h>
 #include <objectAdapter.h>
 #include <initialiser.h>
-#ifndef __atmos__
 #include <tcpSocket.h>
 #define _tcpOutgoingFactory tcpSocketMToutgoingFactory
-#else
-#include <tcpATMos.h>
-#define _tcpOutgoingFactory tcpATMosMToutgoingFactory
-#endif
 
 ropeFactoryType* ropeFactoryTypeList = 0;
 ropeFactoryList* globalOutgoingRopeFactories = 0;
 
-
-int
-ropeFactory::iopProfilesToRope(const IOP::TaggedProfileList& profiles,
-			       CORBA::Octet*& key, int& keysize,
-			       Rope*& rope, _CORBA_Boolean& is_local)
+ropeFactoryType*
+ropeFactoryType::findType(IOP::ProfileId tag)
 {
-  is_local = 0;
   ropeFactoryType* factorytype = ropeFactoryTypeList;
 
-  while( factorytype ) {
-
-    for( CORBA::ULong i = 0; i < profiles.length(); i++ ) {
-
-      if( factorytype->is_IOPprofileId(profiles[i].tag) ) {
-
-	Endpoint_var addr;
-	{
-	  Endpoint* addrp;
-	  size_t ks;
-	  (void) factorytype->decodeIOPprofile(profiles[i], addrp, key, ks);
-	  addr = addrp;
-	  keysize = ks;
-	}
-
-	// Determine if this is a local object
-
-	if( omniObjAdapter::isInitialised() ) {
-
-	  ropeFactory_iterator iter(omniObjAdapter::incomingRopeFactories());
-
-	  incomingRopeFactory* factory;
-
-	  while( (factory = (incomingRopeFactory*) iter()) ) {
-	    if( (rope = factory->findIncoming((Endpoint*) addr)) ) {
-	      // The endpoint is actually one of those exported by this 
-	      // address space.
-	      rope->decrRefCount();
-	      rope = 0;
-	      is_local = 1;
-	      return 1;
-	    }
-	  }
-	}
-	else {
-	  // Root object manager has not been initialised, this object
-	  // cannot be a local object. Treat this as a foreign object.
-	  rope = 0;
-	}
-
-	// Reach here because this is not a local object.
-	ropeFactory_iterator iter(globalOutgoingRopeFactories);
-	outgoingRopeFactory* factory;
-	while( (factory = (outgoingRopeFactory*) iter()) ) {
-	  if( (rope = factory->findOrCreateOutgoing((Endpoint*)addr)) ) {
-	    // Got it
-	    return 1;
-	  }
-	}
-
-	// Reach here because for some reason we could not instantiate
-	// a rope. Continue and see if we can use another factory type.
-	delete[] key;
-	key = 0;
-      }
-
-    } // for( ... )
-
+  while (factorytype) {
+    if (factorytype->is_IOPprofileId(tag))
+      return factorytype;
     factorytype = factorytype->next;
+  }
+  return 0;
+}
 
-  } // while( factorytype )
+int
+ropeFactory::iorToRope(omniIOR* ior,
+		       Rope*& rope, _CORBA_Boolean& is_local)
+{
+  if (!ior->selectedRopeFactoryType) return 0;
+
+  // Determine if this is a local object
+  if( omniObjAdapter::isInitialised() ) {
+
+    ropeFactory_iterator iter(omniObjAdapter::incomingRopeFactories());
+
+    incomingRopeFactory* factory;
+
+    while( (factory = (incomingRopeFactory*) iter()) ) {
+      if ( factory->getType() == ior->selectedRopeFactoryType &&
+	   (rope = factory->findIncoming(ior)) )
+	{
+	  // The endpoint is actually one of those exported by this 
+	  // address space.
+	  rope->decrRefCount();
+	  rope = 0;
+	  is_local = 1;
+	  return 1;
+	}
+    }
+  }
+  else {
+    // Root object manager has not been initialised, this object
+    // cannot be a local object. Treat this as a foreign object.
+    rope = 0;
+  }
+
+  // Reach here because this is not a local object.
+  ropeFactory_iterator iter(globalOutgoingRopeFactories);
+  outgoingRopeFactory* factory;
+  while( (factory = (outgoingRopeFactory*) iter()) ) {
+    if( factory->getType() == ior->selectedRopeFactoryType &&
+	(rope = factory->findOrCreateOutgoing(ior)) ) 
+      {
+	// Got it
+	is_local = 0;
+	return 1;
+      }
+  }
 
   // Reach here if none of the ropeFactories support the profiles.
   return 0;

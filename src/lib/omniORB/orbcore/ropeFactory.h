@@ -29,6 +29,13 @@
 
 /*
  $Log$
+ Revision 1.8.2.2  2000/09/27 18:28:30  sll
+ Changed decodeIOPprofile(), encodeIOPprofile(), findIncoming(),
+ findOrCreateOutgoing() to accept omniIOR as a parameter.
+ Removed getIncomingIOPprofiles().
+ Replaced iopProfilesToRope() with iorToRope().
+ New member findType().
+
  Revision 1.8.2.1  2000/07/17 10:35:59  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -100,7 +107,7 @@ class ropeFactoryList;
 class ropeFactory_iterator;
 class ropeFactory;
 class ropeFactoryType;
-
+class omniIOR;
 
 // This is the list of rope factory types the ORB understands. 
 // For instance, the ORB will use the ropeFactoryType::is_IOPprofileID() to
@@ -131,31 +138,28 @@ public:
   //
   // This function is thread-safe.
 
-  virtual CORBA::Boolean decodeIOPprofile(const IOP::TaggedProfile& profile,
-					  // return values:
-					  Endpoint*&     addr,
-					  CORBA::Octet*& objkey,
-					  size_t&        objkeysize) const = 0;
-  // If the return value is TRUE (1), the IOP profile can be decoded by
-  // this factory (i.e. is_IOPprofileId(profile.tag) returns TRUE). Its
-  // content is returned in <addr>, <objkey>, <objkeysize>. <addr> and <objkey>
-  // are heap allocated by this function and should be released by the caller.
+  virtual CORBA::Boolean decodeIOPprofile(omniIOR* ior, 
+					  CORBA::Boolean selected_profile=0)=0;
+  // If the return value is TRUE (1), the IOP profile(s) in the <ior> 
+  // can be decoded by this factory. Its content is returned in the <ior>.
+  // If <selected_profile> is TRUE(1), a specific profile indicated by
+  // ior->addr_selected_profile_index should be decoded.
   //
   // This function may raise a CORBA::MARSHALL or a CORBA::NO_MEMORY exception.
   //
   // This function is thread-safe.
 
-  virtual void encodeIOPprofile(const Endpoint* addr,
-				const CORBA::Octet* objkey,
-				const size_t objkeysize,
-				IOP::TaggedProfile& profile) const = 0;
-  // Encode <addr>, <objkey> into a IOP profile.
-  // <profile> is heap allocated by this function and should be released by
-  // the caller.
+
+  virtual CORBA::Boolean encodeIOPprofile(omniIOR* ior) = 0;
+  // Encode the info in ior into 1 or more iop profile(s) and deposit
+  // the profile(s) into the ior.
   //
   // This function may raise a CORBA::NO_MEMORY exception.
   //
   // This function is thread-safe.
+
+  static ropeFactoryType* findType(IOP::ProfileId Tag);
+
 
   friend class ropeFactory;
 
@@ -166,6 +170,7 @@ protected:
   }
   virtual ~ropeFactoryType();
 
+public:
   ropeFactoryType* next;
 };
 
@@ -220,19 +225,16 @@ public:
   // Rope_iterator() (defined in rope.h) and pass this factory instance to
   // its ctor.
 
+  static int iorToRope(omniIOR* ior, Rope*& rope, 
+		       _CORBA_Boolean& is_local);
 
-  static int iopProfilesToRope(const IOP::TaggedProfileList& profiles,
-			_CORBA_Octet*& key, int& keysize,
-			Rope*& rope, _CORBA_Boolean& is_local);
-  // Look at the IOP tagged profile list <profiles>, returns the most
-  // most suitable Rope to talk to the object, and its object key.
+  // Look at the IOR, returns the most
+  // most suitable Rope to talk to the object.
   // The reference count of the rope returned is first incremented.
-  // The caller is responsible for the storage allocated for the key.
   //  If the object is in fact a local object, set <is_local> to TRUE.
   // In this case <rope> will be 0 on return.
   //  Returns 0 on failure.
   //  This function does not throw any exceptions.
-
 
 protected:
   Anchor       pd_anchor;
@@ -301,24 +303,14 @@ public:
   //
   // This function is thread-safe.
 
-  virtual Rope* findIncoming(Endpoint* addr) const = 0;
+  virtual Rope* findIncoming(omniIOR* ior) const = 0;
+  //
   // Search all the incoming ropes instantiated by all the rope factories
   // derived from this class. Returns the rope that matches <addr>.  If no
   // rope matches the endpoint, return 0.
   // The reference count of the rope returned will be increased by 1.
   //
   // This function does not raise an exception.
-  //
-  // This function is thread-safe.
-
-  virtual void getIncomingIOPprofiles(const CORBA::Octet*     objkey,
-				      const size_t            objkeysize,
-				      IOP::TaggedProfileList& profilelist) const = 0;
-  // Append the IOP profiles for the incoming ropes instantiated by this
-  // factory to <profilelist>. The supplied object key is inserted into
-  // the new IOP profiles.
-  //
-  // This function may raise a CORBA::SystemException.
   //
   // This function is thread-safe.
 
@@ -337,6 +329,7 @@ public:
   virtual CORBA::Boolean isIncoming(Endpoint* addr) const;
 
   virtual CORBA::Boolean isOutgoing(Endpoint* addr) const = 0;
+  //
   // Returns TRUE (1) if the endpoint <addr> identifies one of the outgoing
   // rope instantiated by this factory.
   //
@@ -344,7 +337,10 @@ public:
   //
   // This function is thread-safe.
 
-  virtual Rope*  findOrCreateOutgoing(Endpoint* addr) = 0;
+  virtual Rope* findOrCreateOutgoing(omniIOR* ior) = 0;
+  // XXX
+  //  virtual Rope* findOrCreateOutgoing(Endpoint* addr,omniIOR* ior=0) = 0;
+  //
   // If <addr> is not the endpoint type supported by this factory, return 0.
   // else
   //     search all outgoing ropes instantiated by this
@@ -352,6 +348,12 @@ public:
   //     If no rope matches the endpoint, instantiate a new outgoing rope 
   //     to connect to that endpoint.
   //     The reference count of the rope returned will be increased by 1.
+  //
+  // The object info <g> may contain additional information to guide the
+  // creation/selection of the rope. If <g> is not nil, the rope member of g
+  // will also be updated. In that case, the Rope's reference count is managed
+  // by g. In other words, caller should not call Rope::decrRefCount on the
+  // return value.
   //
   // This function may raise a CORBA::SystemException.
   //
@@ -429,5 +431,7 @@ private:
 //   globalRopeFactories.insert().
 extern ropeFactoryList* globalOutgoingRopeFactories;
 
+// Utility function
+extern void dumpbuf(unsigned char*,size_t);
 
 #endif // __ROPEFACTORY_H__
