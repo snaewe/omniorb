@@ -35,6 +35,9 @@
 
 /*
  $Log$
+ Revision 1.7  1999/06/28 10:49:16  sll
+ Added missing check for verifyObjectExistsAndType in oneway invoke.
+
  Revision 1.6  1999/06/26 18:03:51  sll
  Added check for verifyObjectExistsAndType setting before doing
  assertObjectExistent().
@@ -216,7 +219,8 @@ _again:
 #else
   while(1) {
 #endif
-    o->assertObjectExistent();
+    if (omniORB::verifyObjectExistsAndType)
+      o->assertObjectExistent();
     omniRopeAndKey ropeAndKey;
     CORBA::Boolean fwd = o->getRopeAndKey(ropeAndKey);
     CORBA::Boolean reuse = 0;
