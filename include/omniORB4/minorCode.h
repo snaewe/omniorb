@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/11 14:28:14  sll
+  Separate  minor code MARSHAL_MessageSizeExceedLimit into distinct client and
+  server side codes.
+
   Revision 1.1.4.1  2001/04/18 17:26:29  sll
   Big checkin with the brand new internal APIs.
 
@@ -56,6 +60,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_9 OMNIORBMinorCode(9)
 #define OMNIORBMinorCode_10 OMNIORBMinorCode(10)
 #define OMNIORBMinorCode_11 OMNIORBMinorCode(11)
+#define OMNIORBMinorCode_12 OMNIORBMinorCode(12)
 
  
 // Taken from CORBA Spec. 2.4 Table 4-3.
@@ -109,7 +114,8 @@ enum MARSHAL_minor {
   MARSHAL_LocalObject                     = OMGMinorCode(4),
   MARSHAL_InvalidVariableLenComponentSize = OMNIORBMinorCode_9,
   MARSHAL_PassEndOfMessage                = OMNIORBMinorCode_10,
-  MARSHAL_MessageSizeExceedLimit          = OMNIORBMinorCode_11
+  MARSHAL_MessageSizeExceedLimitOnClient  = OMNIORBMinorCode_11,
+  MARSHAL_MessageSizeExceedLimitOnServer  = OMNIORBMinorCode_12
 };
 
 enum BAD_TYPECODE_minor {
