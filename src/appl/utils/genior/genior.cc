@@ -276,7 +276,9 @@ genRef(const char* IRTypeId, const char* hostname, int port,
     }
   }
   
-  omniIOR* ior = new omniIOR(IRTypeId,*keySeed,&addrs,1,giop_version,extra_profiles);
+  omniIOR* ior = new omniIOR(IRTypeId,*keySeed,&addrs,1,giop_version,
+			     ((extra_profiles) ? omniIOR::DefaultInterceptors
+			                       : omniIOR::NoInterceptor));
   omniObjRef* objref = omni::createObjRef(CORBA::Object::_PD_repoId,ior,0);
   
   CORBA::String_var result;

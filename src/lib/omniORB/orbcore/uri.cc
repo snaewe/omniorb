@@ -29,6 +29,10 @@
 //      
 
 // $Log$
+// Revision 1.2.2.8  2001/06/11 17:53:22  sll
+//  The omniIOR ctor used by genior and corbaloc now has the option to
+//  select whether to call interceptors and what set of interceptors to call.
+//
 // Revision 1.2.2.7  2001/06/08 17:12:22  dpg1
 // Merge all the bug fixes from omni3_develop.
 //
@@ -640,7 +644,7 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
     omniIOR* ior= new omniIOR((const char*)"",
 			      key,
 			      addrlist,parsed.addr_count_,
-			      ver,0);
+			      ver,omniIOR::NoInterceptor);
     delete [] addrlist;
 
     omniObjRef* objref = omni::createObjRef(CORBA::Object::_PD_repoId,ior,0);

@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.10.2.11  2001/06/11 17:53:22  sll
+   The omniIOR ctor used by genior and corbaloc now has the option to
+   select whether to call interceptors and what set of interceptors to call.
+
   Revision 1.10.2.10  2001/05/31 16:18:13  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -599,7 +603,7 @@ omniIOR::unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c ,
   }
   if (tcpaddr == 0) return;
 
-  const char* host = index(tcpaddr,':') + 1; host = index(tcpaddr,':') + 1;
+  const char* host = index(tcpaddr,':') + 1; host = index(host,':') + 1;
   CORBA::ULong hostlen = index(host,':') - host;
   CORBA::String_var copyhost(CORBA::string_alloc(hostlen));
   strncpy(copyhost,host,hostlen);
@@ -608,6 +612,7 @@ omniIOR::unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c ,
   const char* format = "giop:ssl:%s:%d";
   CORBA::String_var addrstr(CORBA::string_alloc(strlen(format)+hostlen+6));
   sprintf(addrstr,format,(const char*)copyhost,port);
+
   giopAddress* address = giopAddress::str2Address(addrstr);
   // If we do not have ssl transport linked the return value will be 0
   if (address == 0) return;
@@ -856,13 +861,27 @@ omniIOR::add_TAG_ALTERNATE_IIOP_ADDRESS(const IIOP::Address& address) {
 
 /////////////////////////////////////////////////////////////////////////////
 void
-omniIOR::add_TAG_SSL_SEC_TRANS(CORBA::UShort port,
+omniIOR::add_TAG_SSL_SEC_TRANS(const IIOP::Address& address,
 			       CORBA::UShort supports,CORBA::UShort requires) {
 
+  if (strlen(my_address.host) == 0) {
+    my_address.host = address.host;
+  }
+  else if (strcmp(my_address.host,address.host) != 0) {
+    // The address does not match. We cannot add this address to our IOR.
+    // Shouldn't have happened!
+    omniORB::logger log;
+    log << "Warning: cannot add this SSL address ("
+	<< address.host << "," << address.port
+	<< ") to the IOR because the host name does not match my host name ("
+	<< my_address.host << ")\n";
+    return;
+  }
+
   cdrEncapsulationStream s(CORBA::ULong(0),1);
-  port >>= s;
   supports >>= s;
   requires >>= s;
+  address.port >>= s;
 
   CORBA::ULong index = my_ssl_addr.length();
   my_ssl_addr.length(index+1);
@@ -881,7 +900,12 @@ CORBA::Boolean insertSupportedComponents(omniInterceptors::encodeIOR_T::info_T& 
   const GIOP::Version& v = info.iiop.version;
   IOP::MultipleComponentProfile& cs = info.iiop.components;
 
-  info.iiop.address = my_address;
+  if (strlen(info.iiop.address.host) == 0) {
+    if (strlen(my_address.host) == 0) {
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
+    }
+    info.iiop.address = my_address;
+  }
 
   if ((v.major > 1 || v.minor >= 1) && my_orb_type.length()) {
     // 1.1 or later, Insert ORB TYPE

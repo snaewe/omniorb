@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/06/11 17:53:23  sll
+   The omniIOR ctor used by genior and corbaloc now has the option to
+   select whether to call interceptors and what set of interceptors to call.
+
   Revision 1.2.2.6  2001/06/07 16:24:10  dpg1
   PortableServer::Current support.
 
@@ -721,7 +725,7 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
 
     GIOP::Version ver = { 1, 0 };
     omniIOR* ior= new omniIOR(CORBA_InitialReferences::_PD_repoId,
-			      objkey,&addr,1,ver,0);
+			      objkey,&addr,1,ver,omniIOR::NoInterceptor);
     
     omniObjRef* objref = omni::createObjRef(
                               CORBA_InitialReferences::_PD_repoId,ior,0);

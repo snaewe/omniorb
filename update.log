@@ -1,3 +1,17 @@
+Mon Jun 11 18:37:30 BST 2001 sll
+================================
+
+- The omniIOR ctor used by genior and corbaloc now has the option to
+  select whether to call interceptors and what set of interceptors to call.
+
+include/omniORB4/omniIOR.h
+src/appl/utils/genior/genior.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/uri.cc
+src/lib/omniORB/orbcore/initRefs.cc
+
+
 Mon Jun 11 12:35:31 BST 2001 dpg1
 =================================
 
