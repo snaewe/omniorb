@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/11/29 15:27:53  djs
+# Minor bugfixes
+#
 # Revision 1.6  1999/11/26 18:51:13  djs
 # Now uses proxy module for most proxy generation
 #
@@ -694,17 +697,20 @@ static void
     # attributes
     for attribute in attributes:
         seed = scopedName + [attribute.identifiers()[0]]
-        read_signature = mangler.produce_read_attribute_signature(attribute)
-        write_signature = mangler.produce_write_attribute_signature(attribute)
+        #read_signature = mangler.produce_read_attribute_signature(attribute)
+        #write_signature = mangler.produce_write_attribute_signature(attribute)
 
-        try:
-            # see if we already have proxies generated
-            mangler.attribute_read_descriptor_name(attribute)
-            need_proxies = 0
-        except KeyError:
-            mangler.generate_descriptors(attribute, seed)
-            need_proxies = 1
-        
+        Proxy = proxy.__init__(environment, stream)
+        Proxy.attribute(attribute, seed)
+        need_proxies = 0
+        #try:
+        #    # see if we already have proxies generated
+        #    mangler.attribute_read_descriptor_name(attribute)
+        #    need_proxies = 0
+        #except KeyError:
+        #    mangler.generate_descriptors(attribute, seed)
+        #    need_proxies = 1
+        # 
         read = mangler.attribute_read_descriptor_name(attribute)
         write = mangler.attribute_write_descriptor_name(attribute)
         attrType = attribute.attrType()
@@ -716,11 +722,15 @@ static void
 
         attrTypes = tyutil.operationArgumentType(attrType, environment, 0,
                                                  fully_scope = 1)
+        scoped_attrTypes = tyutil.operationArgumentType(attrType, environment, 0,
+                                                 fully_scope = 0)
         return_type = attrTypes[0]
         if is_array:
             in_type = attrTypes[1]+"_slice*"
+            scoped_in_type = scoped_attrTypes[1]+"_slice*"
         else:
             in_type = attrTypes[1]
+            scoped_in_type = scoped_attrTypes[1]
 
         size = skutil.sizeCalculation(environment, attrType, None ,
                                       "msgsize",
@@ -739,7 +749,7 @@ static void
                 result_string = "((" + attrType_name + "_slice*)" + "pd_result)"
 
             skutil.unmarshall(s, environment, attrType, None, result_string, 1,
-                              "giop_client")
+                              "giop_client", fully_scope = 1)
             unmarshalReturned = str(s)
             
         elif tyutil.isString(deref_attrType):
@@ -887,7 +897,7 @@ void @objref_fqname@::@attrib_name@(@in_type@ arg_0)
                            attrib_name = attrib_name,
                            set_attrib_name = set_attrib_name,
                            len = str(len(set_attrib_name) + 1),
-                           in_type = in_type)
+                           in_type = scoped_in_type)
 
 
     # _pof_
