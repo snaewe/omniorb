@@ -1,3 +1,14 @@
+Fri Apr 30 16:57:13 BST 2004 dgrisby
+====================================
+
+- Make ptr_arith_t unsigned.
+
+include/omniORB4/omniInternal.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+
+
 Fri Apr 30 15:53:04 BST 2004 dgrisby
 ====================================
 

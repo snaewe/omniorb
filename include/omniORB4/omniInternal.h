@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.16  2004/04/30 15:58:33  dgrisby
+  Make ptr_arith_t unsigned.
+
   Revision 1.2.2.15  2003/02/17 02:03:07  dgrisby
   vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 
@@ -257,9 +260,9 @@ _CORBA_MODULE_BEG
 
 
 #if SIZEOF_PTR == SIZEOF_LONG
-  typedef long ptr_arith_t;
+  typedef unsigned long ptr_arith_t;
 #elif SIZEOF_PTR == SIZEOF_INT
-  typedef int ptr_arith_t;
+  typedef unsigned int ptr_arith_t;
 #else
 #error "No suitable type to do pointer arithmetic"
 #endif

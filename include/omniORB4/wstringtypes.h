@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2004/04/30 15:58:33  dgrisby
+  Make ptr_arith_t unsigned.
+
   Revision 1.1.2.11  2003/11/06 10:17:36  dgrisby
   Remove calls to strlen in operator[]. Why were they ever considered a
   good idea?
@@ -618,9 +621,9 @@ public:
   }
 
 #if SIZEOF_PTR == SIZEOF_LONG
-  typedef long ptr_arith_t;
+  typedef unsigned long ptr_arith_t;
 #elif SIZEOF_PTR == SIZEOF_INT
-  typedef int ptr_arith_t;
+  typedef unsigned int ptr_arith_t;
 #else
 #error "No suitable type to do pointer arithmetic"
 #endif
