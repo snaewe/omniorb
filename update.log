@@ -1,3 +1,14 @@
+Mon Jul 10 12:22:08 BST 2000 dpg1
+=================================
+
+- More omniORB 2 references changed
+
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/thread/README
+
+
 Mon Jul 10 11:56:56 BST 2000 sll
 ================================
 

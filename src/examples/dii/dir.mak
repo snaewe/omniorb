@@ -49,13 +49,10 @@ CXXLINKOPTIONS =
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
 #CXXLINKOPTIONS = -debug -PDB:NONE	
 
-all:: anyExample_impl.exe anyExample_clt.exe
+all:: echo_diiclt.exe
 
-anyExample_impl.exe: anyExampleSK.obj anyExampleDynSK.obj anyExample_impl.obj
-  link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB)
-
-anyExample_clt.exe: anyExampleSK.obj anyExampleDynSK.obj anyExample_clt.obj
-  link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB)
+echo_diiclt.exe: echo_diiclt.obj
+  link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB) 
 
 clean::
   -del *.obj
@@ -64,9 +61,4 @@ clean::
 
 veryclean::
   -del *.obj
-  -del anyExampleSK.cc anyExample.hh
   -del *.exe
-
-
-anyExample.hh anyExampleSK.cc: anyExample.idl
-	$(TOP)\bin\x86_win32\omniidl -bcxx -Wbh=.hh -Wbs=SK.cc -Wba anyExample.idl
