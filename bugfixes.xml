@@ -8,6 +8,17 @@
 
 <buglist version="3.0.2">
 
+<bug id="3" date="Mon Oct 16 18:56:53 BST 2000" user="djs">
+
+  <summary>omniIDL/C++ backend tie template operation mapping error</summary>
+  <reported>Chris Newbold</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-10/0071.html"/>
+  <text>
+  The tie template code used the _objref argument mapping rather than the 
+  _impl mapping.
+  </text>
+</bug>
+
 <bug id="2" date="Fri Oct 13 09:56:03 BST 2000" user="djr">
 
   <summary>Race condition in POA triggers assertion failure</summary>

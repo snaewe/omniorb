@@ -1,3 +1,12 @@
+Mon Oct 16 18:56:53 BST 2000 djs
+================================
+
+- omniIDL/C++ backend tie template operation mapping error with inout types
+  (bug #3)
+
+src/lib/omniORB2/omniidl_be/cxx/header/tie.py
+
+
 Mon Oct 16 14:11:48 BST 2000 sll
 ================================
 
