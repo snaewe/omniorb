@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include "CosNotifyComm.hh"
 
+#include "corba_wrappers.h"
+
 // ------------------------------------------------------------- //
 // Here, we define the implementation of the client skeletons so //
 // that a "default" library can be provided to applications.  In //
@@ -28,27 +30,26 @@ typedef CosNotification::EventBatch      _EventBatch;
   *
   */
 
-class PushConsumer_i : 
-	public virtual CosNotifyComm::_sk_PushConsumer {
+class PushConsumer_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, PushConsumer) {
 public:
   PushConsumer_i() : num_push(0) {;}
 
-  inline void push(const CORBA::Any & data);
-  inline void disconnect_push_consumer();
+  inline void push(const CORBA::Any & data  WRAPPED_DECLARG );
+  inline void disconnect_push_consumer( WRAPPED_DECLARG_VOID );
   inline void offer_change(const _EventTypeSeq& added,
-                           const _EventTypeSeq& deled);
+                           const _EventTypeSeq& deled  WRAPPED_DECLARG );
 protected:
   CORBA::ULong num_push;
 };
 
-inline void PushConsumer_i::push(const CORBA::Any & data)
+inline void PushConsumer_i::push(const CORBA::Any & data    WRAPPED_IMPLARG )
 { cout << "PushConsumer: push() called " << ++num_push << " times" << endl; }
 
-inline void PushConsumer_i::disconnect_push_consumer()
+inline void PushConsumer_i::disconnect_push_consumer( WRAPPED_IMPLARG_VOID )
 { cout << "PushConsumer: disconnected" << endl; }
 
 inline void PushConsumer_i::offer_change(const _EventTypeSeq& added,
-				         const _EventTypeSeq& deled)
+				         const _EventTypeSeq& deled    WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -68,21 +69,20 @@ inline void PushConsumer_i::offer_change(const _EventTypeSeq& added,
   *
   */
 
-class PullConsumer_i :
-	public virtual CosNotifyComm::_sk_PullConsumer {
+class PullConsumer_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, PullConsumer) {
 public:
   PullConsumer_i() {;}
 
-  inline void disconnect_pull_consumer();
+  inline void disconnect_pull_consumer(  WRAPPED_DECLARG_VOID );
   inline void offer_change(const _EventTypeSeq& added,
-			   const _EventTypeSeq& deled);
+			   const _EventTypeSeq& deled     WRAPPED_DECLARG );
 };
 
-inline void PullConsumer_i::disconnect_pull_consumer()
+inline void PullConsumer_i::disconnect_pull_consumer( WRAPPED_IMPLARG_VOID )
 { cout << "PullConsumer: disconnected" << endl; }
 
 inline void PullConsumer_i::offer_change(const _EventTypeSeq& added,
-                                         const _EventTypeSeq& deled)
+                                         const _EventTypeSeq& deled     WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -102,21 +102,20 @@ inline void PullConsumer_i::offer_change(const _EventTypeSeq& added,
   *
   */
 
-class PullSupplier_i :
-	public virtual CosNotifyComm::_sk_PullSupplier {
+class PullSupplier_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, PullSupplier) {
 public:
   PullSupplier_i() : event_value(0) {;}
  
-  inline CORBA::Any* pull();
-  inline CORBA::Any* try_pull(CORBA::Boolean& has_event);
-  inline void        disconnect_pull_supplier();
+  inline CORBA::Any* pull( WRAPPED_DECLARG_VOID );
+  inline CORBA::Any* try_pull(CORBA::Boolean& has_event     WRAPPED_DECLARG );
+  inline void        disconnect_pull_supplier(  WRAPPED_DECLARG_VOID );
   inline void        subscription_change(const _EventTypeSeq& added,
-                                  	 const _EventTypeSeq& deled);
+                                  	 const _EventTypeSeq& deled   WRAPPED_DECLARG );
 protected:
   CORBA::ULong event_value;
 };
 
-inline CORBA::Any* PullSupplier_i::pull()
+inline CORBA::Any* PullSupplier_i::pull( WRAPPED_IMPLARG_VOID )
 { 
   CORBA::Any *any = new CORBA::Any();
   *any <<= ++event_value;
@@ -124,7 +123,7 @@ inline CORBA::Any* PullSupplier_i::pull()
   return any;
 }
 
-inline CORBA::Any* PullSupplier_i::try_pull(CORBA::Boolean& has_event)
+inline CORBA::Any* PullSupplier_i::try_pull(CORBA::Boolean& has_event    WRAPPED_IMPLARG )
 {
   CORBA::Any *any = new CORBA::Any();
   *any <<= ++event_value;
@@ -133,11 +132,11 @@ inline CORBA::Any* PullSupplier_i::try_pull(CORBA::Boolean& has_event)
   return any;
 }
 
-inline void PullSupplier_i::disconnect_pull_supplier()
+inline void PullSupplier_i::disconnect_pull_supplier( WRAPPED_IMPLARG_VOID )
 { cout << "PullSupplier: disconnected" << endl; }
 
 inline void PullSupplier_i::subscription_change(const _EventTypeSeq& added,
-					        const _EventTypeSeq& deled)
+					        const _EventTypeSeq& deled   WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -157,21 +156,20 @@ inline void PullSupplier_i::subscription_change(const _EventTypeSeq& added,
   *
   */
 
-class PushSupplier_i :
-	public virtual CosNotifyComm::_sk_PushSupplier {
+class PushSupplier_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, PushSupplier) {
 public:
   PushSupplier_i() {;}
 
-  inline void disconnect_push_supplier();
+  inline void disconnect_push_supplier(  WRAPPED_DECLARG_VOID );
   inline void subscription_change(const _EventTypeSeq& added,
-                                  const _EventTypeSeq& deled);
+                                  const _EventTypeSeq& deled    WRAPPED_DECLARG );
 };
 
-inline void PushSupplier_i::disconnect_push_supplier()
+inline void PushSupplier_i::disconnect_push_supplier( WRAPPED_IMPLARG_VOID )
 { cout << "PushSupplier: disconnected" << endl; }
 
 inline void PushSupplier_i::subscription_change(const _EventTypeSeq& added,
-					 	const _EventTypeSeq& deled)
+					 	const _EventTypeSeq& deled    WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -193,30 +191,29 @@ inline void PushSupplier_i::subscription_change(const _EventTypeSeq& added,
   *
   */
 
-class StructuredPushConsumer_i :
-	public virtual CosNotifyComm::_sk_StructuredPushConsumer {
+class StructuredPushConsumer_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, StructuredPushConsumer) {
 public:
   StructuredPushConsumer_i() : num_push(0) {;}
 
-  inline void push_structured_event(const _StructuredEvent& event);
-  inline void disconnect_structured_push_consumer();
+  inline void push_structured_event(const _StructuredEvent& event    WRAPPED_DECLARG );
+  inline void disconnect_structured_push_consumer(  WRAPPED_DECLARG_VOID );
   inline void offer_change(const _EventTypeSeq& added,
-                           const _EventTypeSeq& deled);
+                           const _EventTypeSeq& deled     WRAPPED_DECLARG );
 protected:
   CORBA::ULong num_push;
 };
 
 inline void StructuredPushConsumer_i::push_structured_event(
-				const _StructuredEvent& event)
+				const _StructuredEvent& event   WRAPPED_IMPLARG )
 { cout << "StructuredPushConsumer: push() called " << 
 	   ++num_push << " times" << endl; 
 }
 
-inline void StructuredPushConsumer_i::disconnect_structured_push_consumer()
+inline void StructuredPushConsumer_i::disconnect_structured_push_consumer( WRAPPED_IMPLARG_VOID )
 { cout << "StructuredPushConsumer: disconnected" << endl; }
 
 inline void StructuredPushConsumer_i::offer_change(const _EventTypeSeq& added,
-					    	   const _EventTypeSeq& deled)
+					    	   const _EventTypeSeq& deled   WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -236,20 +233,19 @@ inline void StructuredPushConsumer_i::offer_change(const _EventTypeSeq& added,
   *
   */
 
-class StructuredPullConsumer_i :
-	public virtual CosNotifyComm::_sk_StructuredPullConsumer {
+class StructuredPullConsumer_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, StructuredPullConsumer) {
 public:
   StructuredPullConsumer_i() {;}
-  inline void disconnect_structured_pull_consumer();
+  inline void disconnect_structured_pull_consumer(  WRAPPED_DECLARG_VOID );
   inline void offer_change(const _EventTypeSeq& added,
-			   const _EventTypeSeq& deled);
+			   const _EventTypeSeq& deled    WRAPPED_DECLARG );
 };
 
-inline void StructuredPullConsumer_i::disconnect_structured_pull_consumer()
+inline void StructuredPullConsumer_i::disconnect_structured_pull_consumer( WRAPPED_IMPLARG_VOID )
 { cout << "StructuredPullConsumer: disconnected" << endl; }
 
 inline void StructuredPullConsumer_i::offer_change(const _EventTypeSeq& added,
-						   const _EventTypeSeq& deled)
+						   const _EventTypeSeq& deled    WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -269,16 +265,15 @@ inline void StructuredPullConsumer_i::offer_change(const _EventTypeSeq& added,
   *
   */
 
-class StructuredPullSupplier_i :
-        public virtual CosNotifyComm::_sk_StructuredPullSupplier {
+class StructuredPullSupplier_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, StructuredPullSupplier) {
 public:
   inline StructuredPullSupplier_i();
 
-  inline _StructuredEvent* pull_structured_event();
-  inline _StructuredEvent* try_pull_structured_event(CORBA::Boolean& has_event);
-  inline void              disconnect_structured_pull_supplier();
+  inline _StructuredEvent* pull_structured_event(  WRAPPED_DECLARG_VOID );
+  inline _StructuredEvent* try_pull_structured_event(CORBA::Boolean& has_event    WRAPPED_DECLARG );
+  inline void              disconnect_structured_pull_supplier(  WRAPPED_DECLARG_VOID );
   inline void              subscription_change(const _EventTypeSeq& added,
-					       const _EventTypeSeq& deled);
+					       const _EventTypeSeq& deled    WRAPPED_DECLARG );
 protected:
   CORBA::ULong num_events;
   _EventType   event_type;
@@ -289,7 +284,7 @@ inline StructuredPullSupplier_i::StructuredPullSupplier_i() : num_events(0)
   event_type.type_name   = CORBA::string_dup("DummyType");
 }
 
-inline _StructuredEvent* StructuredPullSupplier_i::pull_structured_event()
+inline _StructuredEvent* StructuredPullSupplier_i::pull_structured_event( WRAPPED_IMPLARG_VOID )
 {
   _StructuredEvent* event = new _StructuredEvent();
   event->header.fixed_header.event_type.domain_name = event_type.domain_name;
@@ -302,7 +297,7 @@ inline _StructuredEvent* StructuredPullSupplier_i::pull_structured_event()
 }
 
 inline _StructuredEvent* StructuredPullSupplier_i::try_pull_structured_event(
-					CORBA::Boolean& has_event)
+					CORBA::Boolean& has_event   WRAPPED_IMPLARG )
 {
   _StructuredEvent* event = new _StructuredEvent();
   event->header.fixed_header.event_type.domain_name = event_type.domain_name; 
@@ -315,12 +310,12 @@ inline _StructuredEvent* StructuredPullSupplier_i::try_pull_structured_event(
   return event;
 }
 
-inline void StructuredPullSupplier_i::disconnect_structured_pull_supplier()
+inline void StructuredPullSupplier_i::disconnect_structured_pull_supplier(  WRAPPED_IMPLARG_VOID )
 { cout << " StructuredPullSupplier: disconnected" << endl; }
 
 inline void StructuredPullSupplier_i::subscription_change(
 					const _EventTypeSeq& added,
-					const _EventTypeSeq& deled)
+					const _EventTypeSeq& deled   WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -340,21 +335,20 @@ inline void StructuredPullSupplier_i::subscription_change(
   *
   */
 
-class StructuredPushSupplier_i :
-        public virtual CosNotifyComm::_sk_StructuredPushSupplier {
+class StructuredPushSupplier_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, StructuredPushSupplier) {
 public:
   StructuredPushSupplier_i()	{;}
-  inline void disconnect_structured_push_supplier();
+  inline void disconnect_structured_push_supplier(  WRAPPED_DECLARG_VOID );
   inline void subscription_change(const _EventTypeSeq& added,
-				  const _EventTypeSeq& deled);
+				  const _EventTypeSeq& deled    WRAPPED_DECLARG );
 };
 
-inline void StructuredPushSupplier_i::disconnect_structured_push_supplier()
+inline void StructuredPushSupplier_i::disconnect_structured_push_supplier( WRAPPED_IMPLARG_VOID )
 { cout << "StructuredPushSupplier: disconnected" << endl; }
 
 inline void StructuredPushSupplier_i::subscription_change(
 					const _EventTypeSeq& added,
-					const _EventTypeSeq& deled)
+					const _EventTypeSeq& deled   WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -376,22 +370,21 @@ inline void StructuredPushSupplier_i::subscription_change(
   *
   */
 
-class SequencePushConsumer_i :
-        public virtual CosNotifyComm::_sk_SequencePushConsumer {
+class SequencePushConsumer_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, SequencePushConsumer) {
 public:
   SequencePushConsumer_i() : num_batches(0), num_events(0) {;}
 
-  inline void push_structured_events(const _EventBatch& events);
-  inline void disconnect_sequence_push_consumer();
+  inline void push_structured_events(const _EventBatch& events    WRAPPED_DECLARG );
+  inline void disconnect_sequence_push_consumer(  WRAPPED_DECLARG_VOID );
   inline void offer_change(const _EventTypeSeq& added,
-			   const _EventTypeSeq& deled);
+			   const _EventTypeSeq& deled    WRAPPED_DECLARG );
 protected:
   CORBA::ULong num_batches;
   CORBA::ULong num_events;
 };
 
 inline void SequencePushConsumer_i::push_structured_events(
-					const _EventBatch& events)
+					const _EventBatch& events    WRAPPED_IMPLARG )
 { 
   num_batches += 1;
   num_events  += events.length();
@@ -399,11 +392,11 @@ inline void SequencePushConsumer_i::push_structured_events(
 	  num_events << " events so far" << endl;
 }
 
-inline void SequencePushConsumer_i::disconnect_sequence_push_consumer()
+inline void SequencePushConsumer_i::disconnect_sequence_push_consumer(  WRAPPED_IMPLARG_VOID )
 { cout << "SequencePushConsumer: disconnected" << endl; }
 
 inline void SequencePushConsumer_i::offer_change(const _EventTypeSeq& added,
-					  	 const _EventTypeSeq& deled)
+					  	 const _EventTypeSeq& deled   WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -423,21 +416,20 @@ inline void SequencePushConsumer_i::offer_change(const _EventTypeSeq& added,
   *
   */
 
-class SequencePullConsumer_i :
-        public virtual CosNotifyComm::_sk_SequencePullConsumer {
+class SequencePullConsumer_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, SequencePullConsumer) {
 public:
   SequencePullConsumer_i() {;}
 
-  inline void disconnect_sequence_pull_consumer();
+  inline void disconnect_sequence_pull_consumer(  WRAPPED_DECLARG_VOID );
   inline void offer_change(const _EventTypeSeq& added,
-			   const _EventTypeSeq& deled);
+			   const _EventTypeSeq& deled    WRAPPED_DECLARG );
 };
 
-inline void SequencePullConsumer_i::disconnect_sequence_pull_consumer()
+inline void SequencePullConsumer_i::disconnect_sequence_pull_consumer(  WRAPPED_IMPLARG_VOID )
 { cout << "SequencePullConsumer: disconnected" << endl; }
 
 inline void SequencePullConsumer_i::offer_change(const _EventTypeSeq& added,
-					  	 const _EventTypeSeq& deled)
+					  	 const _EventTypeSeq& deled   WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -457,17 +449,16 @@ inline void SequencePullConsumer_i::offer_change(const _EventTypeSeq& added,
   *
   */
 
-class SequencePullSupplier_i :
-        public virtual CosNotifyComm::_sk_SequencePullSupplier {
+class SequencePullSupplier_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, SequencePullSupplier) {
 public:
   inline SequencePullSupplier_i();
 
-  inline _EventBatch* pull_structured_events(CORBA::ULong max_number);
+  inline _EventBatch* pull_structured_events(CORBA::ULong max_number     WRAPPED_DECLARG );
   inline _EventBatch* try_pull_structured_events(CORBA::ULong max_number,
-						 CORBA::Boolean& has_event);
-  inline void         disconnect_sequence_pull_supplier();
+						 CORBA::Boolean& has_event     WRAPPED_DECLARG );
+  inline void         disconnect_sequence_pull_supplier(  WRAPPED_DECLARG_VOID );
   inline void         subscription_change(const _EventTypeSeq& added,
-					  const _EventTypeSeq& deled);
+					  const _EventTypeSeq& deled    WRAPPED_DECLARG );
 protected:
   CORBA::ULong num_events;
   _EventType   event_type;
@@ -479,7 +470,7 @@ inline SequencePullSupplier_i::SequencePullSupplier_i() : num_events(0)
 }
 
 inline _EventBatch* SequencePullSupplier_i::pull_structured_events(
-					CORBA::ULong max_number)
+					CORBA::ULong max_number   WRAPPED_IMPLARG )
 {
   _EventBatch*     batch = new _EventBatch;
   _StructuredEvent event;
@@ -496,7 +487,7 @@ inline _EventBatch* SequencePullSupplier_i::pull_structured_events(
 
 inline _EventBatch* SequencePullSupplier_i::try_pull_structured_events(
 					CORBA::ULong max_number,
-					CORBA::Boolean& has_event)
+					CORBA::Boolean& has_event    WRAPPED_IMPLARG )
 {
   _EventBatch*     batch = new _EventBatch;
   _StructuredEvent event;
@@ -512,12 +503,12 @@ inline _EventBatch* SequencePullSupplier_i::try_pull_structured_events(
   return batch;
 }
 
-inline void SequencePullSupplier_i::disconnect_sequence_pull_supplier()
+inline void SequencePullSupplier_i::disconnect_sequence_pull_supplier( WRAPPED_IMPLARG_VOID )
 { cout << "SequencePullSupplier: disconnected" << endl; }
 
 inline void SequencePullSupplier_i::subscription_change(
 					const _EventTypeSeq& added,
-					const _EventTypeSeq& deled)
+					const _EventTypeSeq& deled   WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
@@ -537,22 +528,21 @@ inline void SequencePullSupplier_i::subscription_change(
   *
   */
 
-class SequencePushSupplier_i :
-        public virtual CosNotifyComm::_sk_SequencePushSupplier {
+class SequencePushSupplier_i : WRAPPED_SKELETON_SUPER(CosNotifyComm::, SequencePushSupplier) {
 public:
   SequencePushSupplier_i() {;}
 
-  inline void disconnect_sequence_push_supplier();
+  inline void disconnect_sequence_push_supplier(  WRAPPED_DECLARG_VOID );
   inline void subscription_change(const _EventTypeSeq& added,
-				  const _EventTypeSeq& deled);
+				  const _EventTypeSeq& deled    WRAPPED_DECLARG );
 };
 
-inline void SequencePushSupplier_i::disconnect_sequence_push_supplier()
+inline void SequencePushSupplier_i::disconnect_sequence_push_supplier(  WRAPPED_IMPLARG_VOID )
 { cout << "SequencePushSupplier: disconnected" << endl; }
 
 inline void SequencePushSupplier_i::subscription_change(
 				const _EventTypeSeq& added,
-				const _EventTypeSeq& deled)
+				const _EventTypeSeq& deled    WRAPPED_IMPLARG )
 {
   CORBA::ULong indx;
   _EventType   type;
