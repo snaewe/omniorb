@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.27  1999/06/26 17:55:41  sll
+  Added string.h for all platforms by default.
+
   Revision 1.26  1999/06/18 21:15:17  sll
   Updated copyright notice.
 
@@ -99,6 +102,7 @@
 
 #if !defined(__atmos__) && !defined(_WIN32) && !defined(__VMS)
 #include <strings.h>
+#include <string.h>
 #else
 #include <string.h>
 #endif
