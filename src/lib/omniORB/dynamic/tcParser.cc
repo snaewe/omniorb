@@ -253,7 +253,6 @@ inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
     case CORBA::tk_TypeCode:
       { CORBA::TypeCode_member d; d <<= ibuf; d >>= obuf; return; }
 
-    // CONSTRUCTED TYPES
     case CORBA::tk_string:
       {
 	CORBA::ULong len;
@@ -263,6 +262,7 @@ inline void copyUsingTC(TypeCode_base* tc, ibuf_t& ibuf, obuf_t& obuf)
 	return;
       }
 
+    // CONSTRUCTED TYPES
     case CORBA::tk_union:
       {
 	// Fetch and copy the discriminator value
@@ -678,25 +678,23 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
     CORBA::TypeCode::marshalTypeCode(tcdata.p_TypeCode->_ptr, pd_mbuf);
     break;
 
-    // CONSTRUCTED TYPES
   case CORBA::tk_string:
     {
-      // Save the string's length
-      CORBA::ULong len = tcdata.p_string.getLength(&tcdata.p_string) + 1;
-      len >>= pd_mbuf;
-
-      char* buffer = tcdata.p_string.getBuffer(&tcdata.p_string);
-
-      // Then copy the data into the buffer
-      if( buffer )  pd_mbuf.put_char_array((unsigned char*) buffer, len);
-      else {
-	CORBA::Char(0) >>= pd_mbuf;
-	if( omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(0);
+      if (*tcdata.p_string) {
+	CORBA::ULong len = strlen(*tcdata.p_string) + 1;
+	len >>= pd_mbuf;
+	pd_mbuf.put_char_array((unsigned char*) *tcdata.p_string, len);
       }
-
+      else {
+	CORBA::ULong len = 1;
+	len >>= pd_mbuf;
+	CORBA::Char(0) >>= pd_mbuf;
+	if( omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(0);	
+      }
       break;
     }
 
+    // CONSTRUCTED TYPES
   case CORBA::tk_union:
     {
       tcUnionDiscriminatorType     disc_val;
@@ -928,23 +926,25 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
     *tcdata.p_TypeCode = CORBA::TypeCode::unmarshalTypeCode(pd_mbuf);
     break;
 
-    // CONSTRUCTED TYPES
   case CORBA::tk_string:
     {
-      // Get the length of the string
+      if (*tcdata.p_string) {
+	CORBA::string_free(*tcdata.p_string);
+	*tcdata.p_string = 0;
+      }
       CORBA::ULong len;
       len <<= pd_mbuf;
-
-      // Allocate space for it
-      tcdata.p_string.setLength(&tcdata.p_string, len-1);
-
-      // And read the data into it
-      pd_mbuf.get_char_array((unsigned char*)
-			     tcdata.p_string.getBuffer(&tcdata.p_string),
-			     len);
+      if (len) {
+	*tcdata.p_string = CORBA::string_alloc(len-1);
+	pd_mbuf.get_char_array((unsigned char*)*tcdata.p_string,len);
+      }
+      else {
+	*tcdata.p_string = CORBA::string_dup((const char*)"");
+      }
       break;
     }
 
+    // CONSTRUCTED TYPES
   case CORBA::tk_union:
     {
       // Allocate some space to load the discriminator into.
@@ -1164,7 +1164,6 @@ tcParser::calculateItemSize(const TypeCode_base*tc, const size_t initialoffset)
 	return tmp.NP_alignedSize(initialoffset);
       }
 
-    // CONSTRUCTED TYPES
     case CORBA::tk_string:
       {
 	// Get the length of the string
@@ -1182,6 +1181,7 @@ tcParser::calculateItemSize(const TypeCode_base*tc, const size_t initialoffset)
 	return _msgsize;
       }
 
+    // CONSTRUCTED TYPES
     case CORBA::tk_union:
       {
 	size_t _msgsize = initialoffset;
@@ -1327,41 +1327,23 @@ tcParser::calculateSimpleItemSize(const CORBA::TCKind tck,
 //////////////////////////////////////////////////////////////////////
 
 void
-_0RL_tcParser_stringmember_setLength(tcStringDesc* desc, CORBA::ULong _len)
-{
-  *((CORBA::String_member*) desc->opq_string) = CORBA::string_alloc(_len);
-  desc->opq_len = _len;
-}
-
-
-CORBA::ULong
-_0RL_tcParser_stringmember_getLength(tcStringDesc* desc)
-{
-  return desc->opq_len;
-}
-
-
-char*
-_0RL_tcParser_stringmember_getBuffer(tcStringDesc* desc)
-{
-  return (char*) (*((CORBA::String_member*)(desc->opq_string)));
-}
-
-
-void
 _0RL_tcParser_objref_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr)
 {
-  *((CORBA::Object_member*)desc->opq_objref) = ptr;
+  CORBA::Object_ptr* pp = (CORBA::Object_ptr*)desc->opq_objref;
+  if (desc->opq_release && !CORBA::is_nil(*pp)) {
+    CORBA::release(*pp);
+  }
+  *pp = ptr;
 }
 
 
 CORBA::Object_ptr
 _0RL_tcParser_objref_getObjectPtr(tcObjrefDesc* desc)
 {
-  return (CORBA::Object_ptr) ((CORBA::Object_member*)desc->opq_objref)->_ptr;
+  return *((CORBA::Object_ptr*)desc->opq_objref);
 }
 
-
+#if 0
 void
 _0RL_tcParser_objref2_setObjectPtr(tcObjrefDesc* desc, CORBA::Object_ptr ptr)
 {
@@ -1374,3 +1356,4 @@ _0RL_tcParser_objref2_getObjectPtr(tcObjrefDesc* desc)
 {
   return (CORBA::Object_ptr) ((_CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>*)desc->opq_objref)->_ptr;
 }
+#endif
