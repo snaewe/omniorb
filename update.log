@@ -1,3 +1,12 @@
+Wed Jul 12 15:19:27 BST 2000 dpg1
+=================================
+
+- Minor fix to HTML version of omniORB manual
+
+doc/tex/omniORB.tex
+external_merge/doc/omniORB/omniORB004.html
+
+
 Wed Jul 12 14:50:25 BST 2000 sll
 ================================
 
