@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.10  2000/06/06 14:45:07  djs
+# Produces flattened name typedefs for _all_ inherited interfaces (not just
+# those which are immediate decendents) in SK.cc
+#
 # Revision 1.27.2.9  2000/06/05 13:04:18  djs
 # Removed union member name clash (x & pd_x, pd__default, pd__d)
 # Removed name clash when a sequence is called "pd_seq"
@@ -249,7 +253,7 @@ def visitInterface(node):
         # does the name have scope :: qualifiers
         return len(name.relName(environment)) > 1
     
-    for i in node.inherits():
+    for i in tyutil.allInherits(node):
         inherits_name = id.Name(i.scopedName())
         if needFlatName(inherits_name):
             guard_name = inherits_name.guard()
