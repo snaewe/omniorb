@@ -121,10 +121,10 @@ class omni_thread;
 #error "Only SunOS 5.x or later is supported."
 #endif
 #endif
-#ifdef UsePthread
-#include <omnithread/posix.h>
-#else
+#ifdef UseSolarisThreads
 #include <omnithread/solaris.h>
+#else
+#include <omnithread/posix.h>
 #endif
 
 #elif defined(__linux__)
