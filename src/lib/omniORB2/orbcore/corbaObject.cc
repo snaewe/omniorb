@@ -29,12 +29,17 @@
  
 /*
   $Log$
-  Revision 1.8  1997/05/06 15:09:45  sll
-  Public release.
+  Revision 1.9  1997/12/09 17:26:32  sll
+  Updated _non_existent() to use the system exception handlers.
 
+// Revision 1.8  1997/05/06  15:09:45  sll
+// Public release.
+//
   */
 
 #include <omniORB2/CORBA.h>
+
+CORBA::Object       CORBA::Object::CORBA_Object_nil;
 
 
 CORBA::
@@ -110,12 +115,7 @@ Object::_is_a(const char *repoId)
       return 0;
   }
   else {
-    omniObject * objptr = PR_getobj();
-    if (objptr->_widenFromTheMostDerivedIntf(repoId))
-      return 1;
-    else {
-      return 0;
-    }
+    return PR_getobj()->_real_is_a(repoId);
   }
 }
 
@@ -212,16 +212,17 @@ Object::_non_existent()
     return 0;
   }
 
-  CORBA::Boolean forwardlocation;
+  CORBA::ULong   _retries = 0;
+NONEXIST_again:
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = objptr->getRopeAndKey(_r);
+  CORBA::Boolean _reuse = 0;
+  CORBA::Boolean _result;
   try {
-    omniRopeAndKey rak;
-    forwardlocation = objptr->getRopeAndKey(rak);
-
-    GIOP_C _c(rak.rope());
-    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(rak.keysize(),14);
-    CORBA::Boolean _result;
-    _c.InitialiseRequest(rak.key(),
-			 rak.keysize(),
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),14);
+    _c.InitialiseRequest(_r.key(),
+			 _r.keysize(),
 			 (char *)"_non_existent",14,_msgsize,0);
     switch (_c.ReceiveReply())
       {
@@ -229,9 +230,7 @@ Object::_non_existent()
 	{
 	  _result <<= _c;
 	  _c.RequestCompleted();
-	  if (_result) {
-	    throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);
-	  }
+	  return _result;
 	  break;
 	}
       case GIOP::USER_EXCEPTION:
@@ -256,29 +255,49 @@ Object::_non_existent()
 	      }
 	      throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
 	    }
-	    omniRopeAndKey __r;
-	    obj->PR_getobj()->getRopeAndKey(__r);
-	    objptr->setRopeAndKey(__r);
-	    _c.~GIOP_C();
+	    omniRopeAndKey _0RL_r;
+	    obj->PR_getobj()->getRopeAndKey(_0RL_r);
+	    objptr->setRopeAndKey(_0RL_r);
 	  }
 	  if (omniORB::traceLevel > 10) {
 	    cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
 	  }
-	  return _non_existent();
+	  break;
 	}
       }
   }
-  catch(const CORBA::COMM_FAILURE& ex) {
-    if (forwardlocation) {
-      objptr->resetRopeAndKey();
-      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
-    }
-    throw;
-  }
-  catch(const CORBA::OBJECT_NOT_EXIST& ex) {
+  catch (const CORBA::OBJECT_NOT_EXIST&) {
     return 1;
   }
-  return 0;
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_reuse || _fwd) {
+      if (_fwd)
+        objptr->resetRopeAndKey();
+      CORBA::TRANSIENT ex2(ex.minor(),ex.completed());
+      if (!_omni_callTransientExceptionHandler(objptr,_retries++,ex2))
+	throw ex2;
+    }
+    else {
+      if (!_omni_callCommFailureExceptionHandler(objptr,_retries++,ex))
+	throw;
+    }
+  }
+  catch (const CORBA::TRANSIENT& ex) {
+    if (!_omni_callTransientExceptionHandler(objptr,_retries++,ex))
+      throw;
+  }
+  catch (const CORBA::SystemException& ex) {
+    if (!_omni_callSystemExceptionHandler(objptr,_retries++,ex))
+      throw;
+  }
+  goto NONEXIST_again;
+#ifdef NEED_DUMMY_RETURN
+  {
+    // never reach here! Dummy return to keep some compilers happy.
+    CORBA::Boolean _result = 0;
+    return _result;
+  }
+#endif
 }
 
 
