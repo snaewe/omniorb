@@ -1,3 +1,16 @@
+
+Wed Jan  5 17:15:18 GMT 2000 djr
+================================
+
+- First post :)
+
+- Added check for attempted re-initialisation in ORB_init and BOA_init.
+  Throws BAD_INV_ORDER and prints a message if this happens.
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+
+
 Fri Dec 17 17:58:57 GMT 1999 dpg1
 =================================
 

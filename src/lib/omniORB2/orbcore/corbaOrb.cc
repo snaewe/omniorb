@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.2.3  2000/01/05 17:19:03  djr
+  Added check for reinitialisation in ORB_init and BOA_init.
+
   Revision 1.29.2.2  1999/09/22 18:43:58  sll
   Updated documentation
 
@@ -188,6 +191,7 @@ _CORBA_Unbounded_Sequence_Octet omni::myPrincipalID;
 
 static const char*       myORBId          = "omniORB2";
 static CORBA::ORB_ptr    orb              = 0;
+static int               orb_destroyed    = 0;
 static omni_mutex        internalLock;
 
 static const char*       bootstrapAgentHostname = 0;
@@ -233,6 +237,11 @@ CORBA::ORB_ptr
 CORBA::ORB_init(int &argc,char **argv,const char *orb_identifier)
 {
   omni_mutex_lock sync(internalLock);
+
+  if( orb_destroyed ) {
+    omniORB::logs(1, "The ORB cannot be re-initialised!");
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+  }
 
   if (!parse_ORB_args(argc,argv,orb_identifier)) {
     throw CORBA::INITIALIZE(0,CORBA::COMPLETED_NO);
@@ -416,6 +425,7 @@ ORB::NP_destroy()
 
   delete orb;
   orb = 0;
+  orb_destroyed = 1;
 }
 
 static

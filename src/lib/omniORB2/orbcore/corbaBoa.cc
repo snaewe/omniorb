@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.2.2  2000/01/05 17:19:02  djr
+  Added check for reinitialisation in ORB_init and BOA_init.
+
   Revision 1.13.2.1  1999/09/21 20:37:15  sll
   -Simplified the scavenger code and the mechanism in which connections
    are shutdown. Now only one scavenger thread scans both incoming
@@ -111,6 +114,7 @@
 #endif
 
 static CORBA::BOA_ptr     boa = 0;
+static int                boa_destroyed = 0;
 static const char*        myBOAId = "omniORB2_BOA";
 static omni_mutex         internalLock;
 static omni_condition     internalCond(&internalLock);
@@ -212,8 +216,13 @@ CORBA::
 ORB::BOA_init(int &argc, char **argv, const char *boa_identifier)
 {
   omni_mutex_lock sync(internalLock);
-  if (boa)
-    return CORBA::BOA::_duplicate(boa);
+
+  if( boa_destroyed ) {
+    omniORB::logs(1, "The BOA cannot be re-initialised!");
+    throw CORBA::BAD_INV_ORDER(0, CORBA::COMPLETED_NO);
+  }
+
+  if( boa )  return CORBA::BOA::_duplicate(boa);
 
   try {
     rootObjectManager = new BOAobjectManager;
@@ -363,6 +372,7 @@ BOA::destroy()
       internalBlockingFlag--;
     }
   }
+  boa_destroyed = 1;
 }
 
 
