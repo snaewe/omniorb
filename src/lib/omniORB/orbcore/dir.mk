@@ -139,9 +139,6 @@ DIR_CPPFLAGS += -DCONFIG_ENV='"$(CONFIG_ENV)"'
 ifdef UnixPlatform
 #  CXXDEBUGFLAGS = -g
   DIR_CPPFLAGS += -DUnixArchitecture
-  ifdef AIX
-    NoGateKeeper = 1
-  endif
   ifdef SunOS
     DIR_CPPFLAGS += -DBSD_COMP   # include BSD flags in ioctl.h
   endif
@@ -149,7 +146,6 @@ endif
 
 ifdef Win32Platform
   DIR_CPPFLAGS += -D "NTArchitecture"
-  NoGateKeeper  = 1
   EXTRA_LIBS    = $(SOCKET_LIB) advapi32.lib
   SHARED_ONLY_OBJS = msvcdllstub.o
   MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
@@ -161,11 +157,6 @@ endif
 
 ORB_OBJS      = $(ORB_SRCS:.cc=.o)
 CXXSRCS       = $(ORB_SRCS)
-
-ifdef NoGateKeeper
-ORB_OBJS     += gatekeeper.o
-CXXVPATH     += $(VPATH:%=%/gatekeepers/dummystub)
-endif
 
 vpath %cc $(CXXVPATH)
 
@@ -215,12 +206,6 @@ veryclean::
 endif
 
 #########################################################################
-ifndef NoGateKeeper
-
-SUBDIRS = gatekeepers
-
-endif
-
 ifdef OPEN_SSL_ROOT
 
 SUBDIRS += ssl
