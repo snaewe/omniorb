@@ -78,7 +78,7 @@ void GetMounts(void)
 
   for (nmounts = 0; nmounts < MAX_MOUNTS; nmounts++) {
     sprintf(key,
-	    "Software\\Cygnus Solutions\\CYGWIN.DLL setup\\b15.0\\mounts\\%02d"
+	    "Software\\Cygnus Solutions\\CYGWIN.DLL setup\\b15.0\\mounts\\%02X"
 	    ,nmounts);
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER,
