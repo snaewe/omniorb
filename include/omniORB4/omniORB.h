@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.17  2002/01/09 11:39:22  dpg1
+  New omniORB::setLogFunction() function.
+
   Revision 1.2.2.16  2001/09/19 17:30:04  dpg1
   New traceThreadId option to add omni_thread id to log messages.
 
@@ -269,6 +272,18 @@ _CORBA_MODULE_BEG
 
   static inline int trace(_CORBA_ULong tl) { return traceLevel >= tl; }
 
+  typedef void (*logFunction)(const char*);
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // setLogFunction()                                                   //
+  //                                                                    //
+  // Set a logging function. If set to a non-zero function pointer, the //
+  // provided function is called for all omniORB log messages.          //
+  //                                                                    //
+  _CORBA_MODULE_FN void setLogFunction(logFunction f);                  //
+  ////////////////////////////////////////////////////////////////////////
+
 
   class logger {
   public:
@@ -300,8 +315,8 @@ _CORBA_MODULE_BEG
     logger& operator<<(double n);
     logger& operator<<(float n) { return operator<<((double)n); }
 #endif
-    logger& operator<<(omniLocalIdentity*);
-    logger& operator<<(omniIdentity*);
+    logger& operator<<(const omniLocalIdentity*);
+    logger& operator<<(const omniIdentity*);
     logger& operator<<(omniObjKey&);
 
     logger& operator<<(const CORBA::SystemException&);
