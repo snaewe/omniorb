@@ -1,3 +1,11 @@
+Mon Sep  9 01:22:19 BST 2002 dgrisby
+====================================
+
+- Make sure various modules initialise. Needed by MacOSX.
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+
 Sun Sep  8 23:19:52 BST 2002 dgrisby
 ====================================
 

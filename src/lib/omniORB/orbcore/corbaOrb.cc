@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.41  2002/09/09 00:24:40  dgrisby
+  Make sure various modules initialise. Needed by MacOSX.
+
   Revision 1.33.2.40  2002/09/08 21:58:54  dgrisby
   Support for MSVC 7. (Untested.)
 
@@ -403,6 +406,9 @@ extern omniInitialiser& omni_objadpt_initialiser_;
 extern omniInitialiser& omni_giopEndpoint_initialiser_;
 extern omniInitialiser& omni_transportRules_initialiser_;
 extern omniInitialiser& omni_ObjRef_initialiser_;
+extern omniInitialiser& omni_orbOptions_initialiser_;
+extern omniInitialiser& omni_poa_initialiser_;
+extern omniInitialiser& omni_uri_initialiser_;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -616,6 +622,9 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
     omni_dynamiclib_initialiser_.attach();
     omni_ObjRef_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
+    omni_orbOptions_initialiser_.attach();
+    omni_poa_initialiser_.attach();
+    omni_uri_initialiser_.attach();
     omni_hooked_initialiser_.attach();
 
     if (orbParameters::lcdMode) {
@@ -851,6 +860,9 @@ omniOrbORB::destroy()
 
     // Call detach method of the initialisers in reverse order.
     omni_hooked_initialiser_.detach();
+    omni_uri_initialiser_.attach();
+    omni_poa_initialiser_.attach();
+    omni_orbOptions_initialiser_.attach();
     omni_initRefs_initialiser_.detach();
     omni_ObjRef_initialiser_.detach();
     omni_dynamiclib_initialiser_.detach();
