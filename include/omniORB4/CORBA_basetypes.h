@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.5  2001/08/03 17:46:39  sll
+ Replace _CORBA_marshal_error with _CORBA_marshal_sequence_range_check_error.
+
  Revision 1.2.2.4  2001/03/13 10:32:05  dpg1
  Fixed point support.
 
@@ -190,9 +193,11 @@ typedef _CORBA_LONGDOUBLE_DECL    _CORBA_LongDouble;
 #endif   // VMS float test
 #endif   // !defined(NO_FLOAT)
 
+class cdrStream;
+
 extern void _CORBA_new_operator_return_null();
 extern void _CORBA_bound_check_error();
-extern void _CORBA_marshal_error();
+extern void _CORBA_marshal_sequence_range_check_error(cdrStream&);
 extern _CORBA_Boolean _CORBA_use_nil_ptr_as_nil_objref();
 extern void _CORBA_null_string_ptr(_CORBA_Boolean);
 extern void _CORBA_invoked_nil_pseudo_ref();
