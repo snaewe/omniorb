@@ -11,6 +11,9 @@
  
 /*
   $Log$
+  Revision 1.6  1997/03/10 12:23:26  sll
+  Minor changes to accomodate the creation of a public API for omniORB2.
+
   Revision 1.5  1997/01/30 19:57:48  sll
   Added is_nil(), duplicate(), release() in Object_Helper class.
 
@@ -51,7 +54,7 @@ Object::_nil()
 
 CORBA::Boolean
 CORBA::
-Object::NP_is_nil()
+Object::NP_is_nil() const
 { 
   return (pd_obj)?0:1; 
 }
@@ -62,7 +65,7 @@ CORBA::
 Object::_duplicate(CORBA::Object_ptr obj)
 {
   if (!CORBA::is_nil(obj)) {
-    omniORB::objectDuplicate(obj->pd_obj);
+    omni::objectDuplicate(obj->pd_obj);
   }
   return obj;
 }
@@ -72,7 +75,7 @@ CORBA::
 Object::NP_release()
 { 
   if (!NP_is_nil()) {
-    omniORB::objectRelease(pd_obj); 
+    omni::objectRelease(pd_obj); 
   }
   return;
 }
