@@ -21,7 +21,7 @@
 <table border="0" cellspacing="0" cellpadding="0"
        width="100%" bgcolor="#000000">
   <tr>
-    <td width="15%"><img src="images/omniORB3logo.gif"/></td>
+    <td width="15%"><img src="images/omniORB2logo.gif"/></td>
     <td align="center" bgcolor="#000000"><h1 class="banner">
         <font color="#FFFFFF"><em>omniORB <xsl:value-of select="@version"/> Bug List</em></font></h1>
     </td>
