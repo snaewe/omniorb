@@ -184,7 +184,7 @@ std::ostream& operator << (std::ostream& s, o2be_verbatim v)
 	IND(s);
 	sb.clear();
 	sb += StringBuf::extent(p, e);
-	s << sb << '\n';
+	s << sb.c_str() << '\n';
       }
       p = e + 1;
     }
@@ -227,7 +227,7 @@ std::ostream& operator << (std::ostream& s, o2be_template t)
     else if( *e == '\n' ) {
       sb.clear();
       sb += StringBuf::extent(p, e);
-      s << sb << '\n';
+      s << sb.c_str() << '\n';
       p = e + 1;
       start_of_line = 1;
     }
@@ -235,7 +235,7 @@ std::ostream& operator << (std::ostream& s, o2be_template t)
       // isalpha(*e) || *e == '_'
       sb.clear();
       sb += StringBuf::extent(p, e);
-      s << sb;
+      s << sb.c_str();
 
       p = e;
       do e++; while( isalnum(*e) || *e == '_' );
@@ -244,7 +244,7 @@ std::ostream& operator << (std::ostream& s, o2be_template t)
       sb += StringBuf::extent(p, e);
       const char* val = t.map[sb];
       if( val )  s << val;
-      else       s << sb;
+      else       s << sb.c_str();
       p = e;
 
       // @ is used to concatenate ids, so skip.

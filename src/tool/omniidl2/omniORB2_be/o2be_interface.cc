@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.39.6.6  1999/10/04 15:51:52  djr
+  Various fixes/MSVC work-arounds.
+
   Revision 1.39.6.5  1999/09/29 13:51:03  djr
   Corrected tie implementation signatures.
 
@@ -490,7 +493,7 @@ o2be_interface::produce_hdr(std::fstream& s)
   DEC_INDENT_LEVEL();
 
   s << o2be_template(map,
-   "  inline proxy() : CORBA::Object(0) {}  // nil\n"
+   "  inline proxy() : Object(0) {}  // nil\n"
    "  proxy(const char*, IOP::TaggedProfileList*, omniIdentity*, "
            "omniLocalIdentity*);\n\n"
 

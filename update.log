@@ -1,4 +1,22 @@
 
+Mon Oct  4 16:39:10 BST 1999 djr
+================================
+
+- Constructor for _objref_foo calls Object rather than CORBA::Object to
+  avoid scoping problem with MSVC.
+
+include/omniORB3/poa_defs.hh
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+- Workaround for MSVC bug (inserting StringBuf into stream).
+
+src/tool/omniidl2/omniORB2_be/o2be_util.cc
+
+- Re-organised macros to avoid dodgy missing parameter.
+
+include/omniORB3/userexception.h
+
+
 Thu Sep 30 12:43:39 BST 1999 djr
 ================================
 
