@@ -153,7 +153,7 @@ private:
   // that data using CDR semantics, at the specified initialoffet,
   // into another buffer.
   size_t calculateItemSize(const TypeCode_base *tc,
-			   const size_t initialoffset);
+			   size_t initialoffset);
 
 
   // FIELDS
