@@ -86,9 +86,11 @@
 #platform = x86_freebsd_4.0
 #platform = pc486_rtems_4.5.0
 
-# On Win32 platforms, uncomment the following line to build all the binaries
-# with debugging information. Useful if you want to debug the binaries under
-# MSVC developer's studio
+# This setting is used on Windows platforms to build debug versions of
+# the omniORB executables. It is not required if you want to debug
+# your own code, or for building debug versions of the omniORB
+# libraries. Setting this variable causes the build to break in subtle
+# ways. DO NOT SET THIS UNLESS YOU KNOW WHAT YOU ARE DOING.
 #
 #BuildDebugBinary = 1
 #

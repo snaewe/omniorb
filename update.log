@@ -1,7 +1,15 @@
+Wed Feb 11 10:54:46 GMT 2004 dgrisby
+====================================
+
+- Modify comment about BuildDebugBinary.
+
+config/config.mk
+
+
 Fri Feb  6 16:18:15 GMT 2004 dgrisby
 ====================================
 
-- Fix omnithread comment.Fix omnithread comment.
+- Fix omnithread comment.
 
 include/omnithread.h
 
