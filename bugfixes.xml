@@ -8,6 +8,21 @@
 
 <buglist version="3.0.3">
 
+<bug id="4" date="Tue Mar 27 17:56:31 BST 2001" user="djr">
+
+  <summary>Bug in ORB core causes assertion failure</summary>
+  <reported>Roumen Ivanov</reported>
+  <link
+   href="http://www.uk.research.att.com/omniORB/archives/2001-03/0159.html"/>
+  <text>
+  A bug in the ORB core would causes an assertion failure when an object is
+  deactivated.  The problem occurs if the object has local references whose
+  c++ type disagrees with that of the object.
+  <p/>
+  This may explain a problem with omniNames, given in the link above.
+  </text>
+</bug>
+
 <bug id="3" date="Wed Mar 21 16:31:13 GMT 2001" user="dpg1">
 
   <summary>Incorrect TypeCode for union with multiple case

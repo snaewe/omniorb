@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.18  2001/03/27 17:12:26  djr
+  Bug in ORB core caused assertion failure.
+
   Revision 1.1.2.17  2000/11/06 17:14:47  dpg1
   Change assertion failure message.
 
@@ -199,26 +202,18 @@ omniInternal::replaceImplementation(omniObjRef* objref, omniIdentity* id,
   OMNIORB_ASSERT(objref);
   OMNIORB_ASSERT(id);
 
-  if( objref->_identity() == id ) {
-    OMNIORB_ASSERT(objref->_localId() == local_id );
-    return;
-  }
-
   omniLocalIdentity* old_lid = objref->_localId();
+  omniIdentity* old_id = objref->_identity();
 
-  if( objref->_identity() != old_lid )
-    objref->_identity()->loseObjRef(objref);
-  if( old_lid ) {
+  if( old_id != id )  old_id->loseObjRef(objref);
+  if( old_lid && old_lid != old_id )
     old_lid->omniLocalIdentity::loseObjRef(objref);
-    // NB. We removeAndDestroyDummyId if necassary, but we do it
-    // later -- just in case old_lid == local_id (and yes, that
-    // is possible).
-  }
 
   objref->_setIdentity(id, local_id);
 
-  if( local_id )  local_id->omniLocalIdentity::gainObjRef(objref);
-  if( id != local_id )  id->gainObjRef(objref);
+  if( old_id != id )  id->gainObjRef(objref);
+  if( local_id && local_id != id )
+    local_id->omniLocalIdentity::gainObjRef(objref);
 
   if( old_lid && !old_lid->servant() && !old_lid->localRefList() )
     removeAndDestroyDummyId(old_lid);
@@ -525,19 +520,20 @@ omni::deactivateObject(const CORBA::Octet* key, int keysize)
     while( objreflist ) {
       omniObjRef* next = *(objreflist->_addrOfLocalRefList());
       objreflist->pd_flags.object_exists = 0;
-      int has_remote_id = objreflist->_identity() != objreflist->_localId();
 
-      if( !remote_id && has_remote_id )
-	remote_id = objreflist->_identity();
+      if( !remote_id ) {
+	int has_remote_id = objreflist->_identity() != objreflist->_localId();
 
-      if( !has_remote_id ) {
-	if( !remote_id ) {
+	if( has_remote_id )
+	  remote_id = objreflist->_identity();
+	else {
 	  Rope* rope = omniObjAdapter::defaultLoopBack();
 	  rope->incrRefCount();
 	  remote_id = new omniRemoteIdentity(id->key(), id->keysize(), rope);
 	}
-	omniInternal::replaceImplementation(objreflist, remote_id, newid);
       }
+
+      omniInternal::replaceImplementation(objreflist, remote_id, newid);
       objreflist = next;
     }
     OMNIORB_ASSERT(id->localRefList() == 0);
