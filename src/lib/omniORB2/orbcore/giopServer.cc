@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.10  1997/12/23 19:24:27  sll
+  Removed unnecessary token concatination.
+
   Revision 1.9  1997/12/09 17:48:37  sll
   Updated to use the new rope and strand interface.
   Adapted to coordinate with the incoming rope scavenger.
@@ -386,7 +389,7 @@ GIOP_S::dispatcher(Strand *s)
 	} \
         else \
         { \
-	  MarshallSystemException(this,SysExceptRepoID::##exrepoid,exvar); \
+	  MarshallSystemException(this,SysExceptRepoID:: exrepoid ,exvar); \
 	}  \
       } \
     else { \
