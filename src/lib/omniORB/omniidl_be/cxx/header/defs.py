@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/11/08 19:29:03  djs
+# Rewrite of sequence template code
+# Fixed lots of typedef problems
+#
 # Revision 1.4  1999/11/04 19:05:08  djs
 # Finished moving code from tmp_omniidl. Regression tests ok.
 #
@@ -105,8 +109,7 @@ _CORBA_MODULE_BEG""", name = name)
 
     leave()
 
-    self.__insideMoule = insideModule
-
+    self.__insideModule = insideModule
     if not(isFragment):
         stream.dec_indent()
         stream.out("""\
@@ -250,8 +253,9 @@ public:
                 params.append(tuple[0] + " " + argname)
                 virtual_params.append(tuple[1] + " " + argname)
 #                print "[[[ tuple = " + repr(tuple) + "]]]"
-
             return_type = argumentTypeToString(c.returnType())[0]
+#            print "[[[ returnType = " + repr(c.returnType()) + \
+#                  "    text = " + repr(return_type) + "]]]"
             opname = tyutil.mapID(c.identifier())
             arguments = util.delimitedlist(params, ", ")
             virtual_arguments = util.delimitedlist(virtual_params, ", ")
@@ -291,6 +295,7 @@ public:
     impl_inherits = util.delimitedlist(impl_inherits, ", \n")
         
     stream.out("""\
+    
 };
 
 
@@ -409,9 +414,10 @@ def visitConst(node):
     else:
         type_string = tyutil.principalID(constType, scope)
     name = tyutil.mapID(node.identifier())
-    value = str(node.value())
-    if tyutil.isChar(constType):
-        value = "'" + value + "'"
+    value = tyutil.valueString(constType, node.value())
+#    value = str(node.value())
+#    if tyutil.isChar(constType):
+#        value = "'" + value + "'"
             
     # depends on whether enclosed by an interface or not
     if self.__insideInterface:
@@ -449,77 +455,114 @@ def visitDeclarator(node):
 
 
 def visitTypedef(node):
-#    print "[[[ visitTypedef ]]]"
-
     # need to have some way of keeping track of current scope
     scope = currentScope()
+
+    is_global_scope = not(self.__insideModule or self.__insideInterface)
     
     # don't define the same typedef twice...
     if (hasattr(node, "written")):
         raise "Is this check ever needed?"
         return node.written
     node.written = "dummy"
+
     aliasType = node.aliasType()
+    aliasTypeID = tyutil.principalID(aliasType, scope)
     
     # work out the actual type being aliased by walking the list
     derefType = tyutil.deref(aliasType)
     derefTypeID = tyutil.principalID(derefType, scope)
 
-    # the name of the immediately referenced type
-    referencedTypeID = tyutil.principalID(aliasType, scope)
+    # the basic name of the immediately aliased type
+    basicReferencedTypeID = tyutil.principalID(aliasType, scope)
+    
+    # for sequences and object references, construct the template
+    # instance
+    if tyutil.isSequence(derefType):
+        sequenceTemplate = tyutil.sequenceTemplate(derefType, scope)
+    elif tyutil.isObjRef(derefType):
+        objRefTemplate = tyutil.objRefTemplate(derefType, "Member", scope)
     
     # each one is handled independently
     for d in node.declarators():
+        # derivedName is the new typedef'd name
+        # alias_dims is a list of dimensions of the type being aliased
+        # is_array is true iff the aliased type is an array
         derivedName = tyutil.mapID(d.identifier())
-        dims = tyutil.typeDims(aliasType)
-        is_array = (dims != [])
+        alias_dims = tyutil.typeDims(aliasType)
+        is_array = (alias_dims != [])
+
+        # array_declarator indicates whether this is a simple (non-array)
+        # declarator or not
+        array_declarator = d.sizes() != []
 
         # is it a simple alias (ie not an array at this level)?
-        if d.sizes() == []:
-            # simple alias to an array must alias all the
-            # array handling functions
+        if not(array_declarator):
+            # not an array declarator but a simple declarator to an array
             if is_array:
-                # we don't need to duplicate array looping code since
-                # we can just call the functions for the base type
+                # simple alias to an array should alias all the
+                # array handling functions, but we don't need to duplicate
+                # array looping code since we can just call the functions
+                # for the base type
                 stream.out("""\
 typedef @base@ @derived@;
 typedef @base@_slice @derived@_slice;
 typedef @base@_copyHelper @derived@_copyHelper;
 typedef @base@_var @derived@_var;
 typedef @base@_out @derived@_out;
-typedef @base@_forany @derived@_forany;
+typedef @base@_forany @derived@_forany;""",
+                           base = basicReferencedTypeID,
+                           derived = derivedName)
+                # the declaration of the alloc(), dup() and free() methods
+                # depend on whether the declaration is in global scope
+                if not(is_global_scope):
+                    stream.out("""\
 static @derived@_slice* @derived@_alloc() { return @base@_alloc(); }
 static @derived@_slice* @derived@_dup(const @derived@_slice* p) { return @base@_dup(p); }
 static void @derived@_free( @derived@_slice* p) { @base@_free(p); }
-  """,
-                           base = referencedTypeID,
-                           derived = derivedName)
-            # is it a string? special case alert.
+""",
+                               base = basicReferencedTypeID,
+                               derived = derivedName)
+                else:
+                    stream.out("""\
+extern @derived@_slice* @derived@_alloc();
+extern @derived@_slice* @derived@_dup(const @derived@_slice* p);
+extern void @derived@_free( @derived@_slice* p);
+""",
+                               base = basicReferencedTypeID,
+                               derived = derivedName)
+                           
+            # Non-array of string
             elif tyutil.isString(derefType):
                 stream.out("""\
 typedef char* @name@;
 typedef CORBA::String_var @name@_var;""",
                            name = derivedName)
 
-            # is it a simple (builtin) type
+            # Non-array of basic type
             elif isinstance(derefType, idltype.Base):
-                # IDL oddity? fully qualife the base name
-                referencedTypeID = tyutil.principalID(aliasType)
+                # typedefs to basic types are always fully qualified?
+                # IDL oddity?
+                basicReferencedTypeID = tyutil.principalID(aliasType)
                 stream.out("""\
 typedef @base@ @derived@;""",
-                           base = referencedTypeID,
+                           base = basicReferencedTypeID,
                            derived = derivedName)
-            
-            elif isinstance(derefType, idltype.Declared):
-                if derefType.kind() == idltype.tk_struct or \
-                   derefType.kind() == idltype.tk_union:
-                    stream.out("""\
+            # a typedef to a struct or union, or a typedef to a
+            # typedef to a sequence
+            elif tyutil.isStruct(derefType) or \
+                 tyutil.isUnion(derefType)  or \
+                 (tyutil.isSequence(derefType) and \
+                  tyutil.isTypedef(aliasType)):
+                stream.out("""\
 typedef @base@ @name@;
 typedef @base@_var @name@_var;
 typedef @base@_out @name@_out;""",
-                               base = referencedTypeID,
-                               name = derivedName)
-                elif derefType.kind() == idltype.tk_objref:
+                           base = basicReferencedTypeID,
+                           name = derivedName)
+            # Non-array of objrect reference
+            elif tyutil.isObjRef(derefType):
+                # Note that the base name is fully flattened
                     stream.out("""\
 typedef @base@ @name@;
 typedef @base@_ptr @name@_ptr;
@@ -531,27 +574,42 @@ typedef @base@_var @name@_var;
 typedef @base@_out @name@_out;""",
                                base = derefTypeID,
                                name = derivedName)
-
-                else:
-                    stream.out("""\
+            # Non-array of user declared types
+            elif isinstance(derefType, idltype.Declared):
+                stream.out("""\
 typedef @base@ @name@;""",
-                               base = referencedTypeID,
-                               name = derivedName)
+                           base = basicReferencedTypeID,
+                           name = derivedName)
+            # Non-array of sequence
             elif isinstance(derefType, idltype.Sequence):
                 seqType = derefType.seqType()
                 seqDerefType = tyutil.deref(seqType)
-                if tyutil.isString(seqDerefType):
-                    element = "_CORBA_String_member"
-                    element_IN = "char *"
-                else:
-                    element = tyutil.principalID(seqType, scope)
-                    element_IN = element
-                    
-                dims = tyutil.typeDims(seqType)
-                is_array = (dims != [])
+                bounded = derefType.bound()
+                
+                seq_dims = tyutil.typeDims(seqType)
+                is_array = (seq_dims != [])
 
                 templateName = tyutil.sequenceTemplate(derefType, scope)
 
+                if tyutil.isString(seqDerefType):
+                    element = "_CORBA_String_member"
+                    element_IN = "char *"
+                elif tyutil.isObjRef(seqDerefType):
+                    element = tyutil.principalID(seqType, scope) + "_ptr"
+                    element_IN = element
+                else:
+                    element = tyutil.principalID(seqType, scope)
+                    element_IN = element
+                element_ptr = element_IN
+                if tyutil.isString(seqDerefType) and \
+                   not(is_array):
+                    element_ptr = "char*"
+                elif tyutil.isObjRef(seqDerefType) and \
+                     not(is_array):
+                    element_ptr = tyutil.principalID(seqType, scope) + "_ptr"
+                else:
+                    element_ptr = tyutil.principalID(seqType, scope)
+                    
                 # enums are a special case
                 # from o2be_sequence.cc:795:
                 # ----
@@ -561,21 +619,28 @@ typedef @base@ @name@;""",
                 # marshalling operators are not yet defined (and are
                 # not part of the type itself).
                 # ----
-#                print "[[[ derefType = " + repr(derefType) + "]]]"
-                if tyutil.isEnum(seqDerefType):
+                # Note that the fully dereferenced name is used
+                if is_global_scope:
+                    friend = ""
+                else:
+                    friend = "friend"
+                    
+                if tyutil.isEnum(seqDerefType) and \
+                   not(is_array):
                     stream.out("""\
 // Need to declare <<= for elem type, as GCC expands templates early
 #if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-  friend inline void operator >>= (@element@, NetBufferedStream&);
-  friend inline void operator <<= (@element@&, NetBufferedStream&);
-  friend inline void operator >>= (@element@, MemBufferedStream&);
-  friend inline void operator <<= (@element@&, MemBufferedStream&);
+ @friend@ inline void operator >>= (@element@, NetBufferedStream&);
+ @friend@ inline void operator <<= (@element@&, NetBufferedStream&);
+ @friend@ inline void operator >>= (@element@, MemBufferedStream&);
+ @friend@ inline void operator <<= (@element@&, MemBufferedStream&);
 #endif""",
-                    element = element)
+                    element = tyutil.principalID(seqDerefType, scope),
+                    friend = friend)
                         
                 # derivedName is the new type identifier
                 # element is the name of the basic element type
-                # dims contains dimensions if a sequence of arrays
+                # seq_dims contains dimensions if a sequence of arrays
                 # templateName contains the template instantiation
 
                 stream.out("""\
@@ -587,16 +652,27 @@ typedef @base@ @name@;""",
     inline @name@() {}
     inline @name@(const @name@& s)
       : @derived@(s) {}
+    """,
+                name = derivedName,
+                element = element_IN,
+                derived = templateName)
+                if not(bounded):
+                    
+                    stream.out("""\
     inline @name@(_CORBA_ULong _max)
       : @derived@(_max) {}
     inline @name@(_CORBA_ULong _max, _CORBA_ULong _len, @element@* _val, _CORBA_Boolean _rel=0)
       : @derived@(_max, _len, _val, _rel) {}
+    """,
+                               name = derivedName,
+                               element = element_ptr,
+                               derived = templateName)
+                stream.out("""\
     inline @name@& operator = (const @name@& s) {
       @derived@::operator=(s);
       return *this;
     }
-  };
-  """,
+  };""",
                 name = derivedName,
                 element = element_IN,
                 derived = templateName)
@@ -608,15 +684,19 @@ typedef @base@ @name@;""",
                     subscript_operator_var.out("""\
     inline @element@_slice* operator [] (_CORBA_ULong s) {
       return (@element@_slice*) ((pd_seq->NP_data())[s]);
-    }""", element = element)
+    }""", element = element_ptr)
                     subscript_operator_out.out("""\
     inline @element@_slice* operator [] (_CORBA_ULong i) {
       return (@element@_slice*) ((_data->NP_data())[i]);
-    }""", element = element)
+    }""", element = element_ptr)
                 else:
                     if tyutil.isString(seqDerefType):
                         # special case alert
                         element_reference = element
+                    elif tyutil.isObjRef(seqDerefType):
+                        element_reference = tyutil.objRefTemplate(seqDerefType,
+                                                                  "Member",
+                                                                  scope)
                     else:
                         element_reference = element + "&"
                     subscript_operator_var.out("""\
@@ -708,8 +788,7 @@ typedef @base@ @name@;""",
   private:
     @name@_out();
     @name@_out& operator=(const T_var&);
-  };
-  """,
+  };""",
                            name = derivedName,
                            element = element,
                            subscript_operator_var = str(subscript_operator_var),
@@ -717,21 +796,47 @@ typedef @base@ @name@;""",
             else:                  
                 # FIXME: finish the rest later
                 raise "No code for type = " + repr(type)
-        # handle arrays
-        elif d.sizes() != []:
-#            print "[[[ dims = " + repr(dims) + "  d.sizes() = " + repr(d.sizes()) + "]]]"
-            dims = d.sizes() + dims
+
+
+        # ----------------------------------------------------------------
+        # declarator is an array typedef declarator
+        elif array_declarator:
+
+            all_dims = d.sizes() + alias_dims
             append = lambda x,y: x + y
             dimsString = reduce(append,
                                 map(lambda x: "["+repr(x)+"]", d.sizes()))
             taildims = reduce(append,
                               map(lambda x: "["+repr(x)+"]", d.sizes()[1:]),"")
-            typestring = referencedTypeID
+            typestring = basicReferencedTypeID
+            if tyutil.isString(derefType) and \
+               not(is_array):
+                typestring = "CORBA::String_member"
+            elif tyutil.isObjRef(derefType) and \
+                 not(is_array):
+                typestring = objRefTemplate
+            elif tyutil.isSequence(aliasType) and \
+                 not(is_array):
+                typestring = sequenceTemplate
+                             
+
             stream.out("""\
-
 typedef @type@ @name@@dims@;
-typedef @type@ @name@_slice@taildims@;
+typedef @type@ @name@_slice@taildims@;""",
+                       name = derivedName,
+                       type = typestring,
+                       dims = dimsString,
+                       taildims = taildims)
 
+            # if in global scope we define the functions as extern
+            if is_global_scope:
+                stream.out("""\
+extern @name@_slice* @name@_alloc();
+extern @name@_slice* @name@_dup(const @name@_slice* _s);
+extern void @name@_free(@name@_slice* _s);
+""", name = derivedName)
+            else:
+                stream.out("""
 static inline @name@_slice* @name@_alloc() {
   return new @name@_slice[@firstdim@];
 }
@@ -740,30 +845,30 @@ static inline @name@_slice* @name@_dup(const @name@_slice* _s) {
    if (!_s) return 0;
    @name@_slice* _data = @name@_alloc();
    if (_data) {""",
-                       type = referencedTypeID,
-                       name = derivedName,
-                       dims = dimsString,
-                       firstdim = repr(dims[0]),
-                       taildims = taildims)
-            stream.inc_indent()
-            index = 0
-            subscript = ""
-            for dimension in dims:
-                stream.out("""\
-     for (unsigned int _i@index@ =0;_i@index@ < @dimension@;_i@index@++) {""",
-                           index = repr(index),
-                           dimension = repr(dimension))
+                           type = basicReferencedTypeID,
+                           name = derivedName,
+                           dims = dimsString,
+                           firstdim = repr(all_dims[0]),
+                           taildims = taildims)
                 stream.inc_indent()
-                subscript = subscript + "[_i" + repr(index)+"]"
-                index = index + 1
-            stream.out("""\
+                index = 0
+                subscript = ""
+                for dimension in all_dims:
+                    stream.out("""\
+     for (unsigned int _i@index@ =0;_i@index@ < @dimension@;_i@index@++) {""",
+                               index = repr(index),
+                               dimension = repr(dimension))
+                    stream.inc_indent()
+                    subscript = subscript + "[_i" + repr(index)+"]"
+                    index = index + 1
+                stream.out("""\
        _data@subscript@ = _s@subscript@;""", subscript = subscript)
-            for dimension in dims:
+                for dimension in all_dims:
+                    stream.dec_indent()
+                    stream.out("""\
+     }""")
                 stream.dec_indent()
                 stream.out("""\
-     }""")
-            stream.dec_indent()
-            stream.out("""\
    }
    return _data;
 }
@@ -771,7 +876,8 @@ static inline @name@_slice* @name@_dup(const @name@_slice* _s) {
 static inline void @name@_free(@name@_slice* _s) {
     delete [] _s;
 }
-
+""", name = derivedName)
+            stream.out("""\
 class @name@_copyHelper {
 public:
   static inline @name@_slice* alloc() { return @name@_alloc(); }
@@ -782,13 +888,8 @@ public:
 typedef _CORBA_Array_Var<@name@_copyHelper,@name@_slice> @name@_var;
 typedef _CORBA_Array_OUT_arg<@name@_slice,@name@_var > @name@_out;
 typedef _CORBA_Array_Forany<@name@_copyHelper,@name@_slice> @name@_forany;
-""",
-                       name = derivedName,
-                       dims = dimsString,
-                       firstdim = repr(dims[0]))
-        else:
-            # probably an impossible condition
-            raise("No code for declarator = " + repr(d))
+""", name = derivedName)
+                
      
 
 def visitMember(node):
@@ -1046,41 +1147,43 @@ def visitUnion(node):
         # where scoped_name must be an already declared version of one
         # of the simpler types
         discrimvalue = caselabel.value()
+
+        return tyutil.valueString(switchType, discrimvalue, from_scope)
         
         # CASE <integer_type>
-        if (switchType.kind() == idltype.tk_short     or
-            switchType.kind() == idltype.tk_ushort):
-            return str(discrimvalue)
-        elif (switchType.kind() == idltype.tk_long      or
-              switchType.kind() == idltype.tk_longlong  or
-              switchType.kind() == idltype.tk_ulong     or
-              switchType.kind() == idltype.tk_ulonglong):
-            # discrimvalue is of the form "\d+L"
-            string = str(int(eval(str(discrimvalue))))
-            return string
-        # CASE <char_type>
-        elif (switchType.kind() == idltype.tk_char    or
-              switchType.kind() == idltype.tk_wchar):
-            # HACK!
-            if (repr(discrimvalue) != "'None'"):
-                return "'" + discrimvalue + "'"
-            return "'" + "\\000" + "'"
-        # CASE <boolean_type>
-        elif (switchType.kind() == idltype.tk_boolean):
-            return str(discrimvalue)
-        # CASE <enum_type>
-        elif (switchType.kind() == idltype.tk_enum):
-            discrimvalue = tyutil.name(discrimvalue.scopedName())
-            target_scope = tyutil.scope(switchType.decl().scopedName())
-            rel_scope = idlutil.pruneScope(target_scope, from_scope)
-            return idlutil.ccolonName(rel_scope) + str(discrimvalue)
-        # CASE <scoped_name>
-        elif (switchType.kind() == idltype.tk_alias):
-            switchType = tyutil.deref(switchType)
-            return discrimValueToString(switchType, discrimvalue, from_scope)
-        else:
-            raise "discrimValueToString type="+repr(switchType)+ \
-                  " val="+repr(discrimvalue)
+#        if (switchType.kind() == idltype.tk_short     or
+#            switchType.kind() == idltype.tk_ushort):
+#            return str(discrimvalue)
+#        elif (switchType.kind() == idltype.tk_long      or
+#              switchType.kind() == idltype.tk_longlong  or
+#              switchType.kind() == idltype.tk_ulong     or
+#              switchType.kind() == idltype.tk_ulonglong):
+#            # discrimvalue is of the form "\d+L"
+#            string = str(int(eval(str(discrimvalue))))
+#            return string
+#        # CASE <char_type>
+#        elif (switchType.kind() == idltype.tk_char    or
+#              switchType.kind() == idltype.tk_wchar):
+#            # HACK!
+#            if (repr(discrimvalue) != "'None'"):
+#                return "'" + discrimvalue + "'"
+#            return "'" + "\\000" + "'"
+#        # CASE <boolean_type>
+#        elif (switchType.kind() == idltype.tk_boolean):
+#            return str(discrimvalue)
+#        # CASE <enum_type>
+#        elif (switchType.kind() == idltype.tk_enum):
+#            discrimvalue = tyutil.name(discrimvalue.scopedName())
+#            target_scope = tyutil.scope(switchType.decl().scopedName())
+#            rel_scope = idlutil.pruneScope(target_scope, from_scope)
+#            return idlutil.ccolonName(rel_scope) + str(discrimvalue)
+#        # CASE <scoped_name>
+#        elif (switchType.kind() == idltype.tk_alias):
+#            switchType = tyutil.deref(switchType)
+#            return discrimValueToString(switchType, discrimvalue, from_scope)
+#        else:
+#            raise "discrimValueToString type="+repr(switchType)+ \
+#                  " val="+repr(discrimvalue)
 
     def allCaseValues(node = node):
         list = []
@@ -1552,12 +1655,11 @@ private:
         stream.dec_indent()
         stream.out("""\
   };""")
+    stream.dec_indent()
     stream.out("""\
-  
-  typedef @Name@::_var_type @Name@_var;
-
-  typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
-  """,
+typedef @Name@::_var_type @Name@_var;
+typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
+""",
                isVariable = isVariable,
                Name = name)
     leave()

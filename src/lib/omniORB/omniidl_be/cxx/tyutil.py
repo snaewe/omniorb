@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/11/08 19:28:56  djs
+# Rewrite of sequence template code
+# Fixed lots of typedef problems
+#
 # Revision 1.4  1999/11/04 19:05:02  djs
 # Finished moving code from tmp_omniidl. Regression tests ok.
 #
@@ -111,6 +115,9 @@ from omniidl.be.cxx import util
 
 import re
 
+import tyutil
+self = tyutil
+
 def deref(type):
     assert isinstance(type, idltype.Type)
     while type.kind() == idltype.tk_alias:
@@ -187,7 +194,7 @@ def principalID(type, from_scope=[]):
     if isinstance(type, idltype.Fixed):
         raise "No code for Fixed type"
     # ----- IMPLEMENT ME -----
-    
+
     scopedName = type.scopedName()
 
     scopedName = idlutil.pruneScope(scope(scopedName), from_scope) + \
@@ -329,10 +336,14 @@ def guardName(scopedName):
 # ------------------------------------------------------------------
 
 def objRefTemplate(type, suffix, scope = []):
-    obj_name = principalID(type, scope)
-    
+    name = type.decl().scopedName()
+    name = idlutil.pruneScope(name, scope)
+    name = map(mapID, name)
+    objref_name = idlutil.ccolonName(self.scope(name) + \
+                                     ["_objref_" + self.name(name)])
+    obj_name = idlutil.ccolonName(name)
     return "_CORBA_ObjRef_" + suffix + \
-           "<_objref_" + obj_name + ", " + obj_name + "_Helper>"
+           "<" + objref_name + ", " + obj_name + "_Helper>"
 
 # ------------------------------------------------------------------
 
@@ -343,6 +354,7 @@ def operationArgumentType(type, scope = [], virtualFn = 0):
 
 #    print "[[[ type = " + repr(type) + " scope = " + repr(scope) + "]]]"
 #    print "[[[ param_type = "+ repr(param_type) + "]]]"
+#    print "[[[ isVariable = " + repr(isVariable) + "]]]"
 
     if virtualFn:
         if isinstance(type, idltype.String):
@@ -380,6 +392,7 @@ def operationArgumentType(type, scope = [], virtualFn = 0):
                  param_type + "_Helper >" ,
                  param_type + "_Helper >" ]                 
     elif isVariable:
+ #       param_type =principalID(deref_type, scope)
         return [ param_type + "*",
                  "const " + param_type + "& ",
                  param_type + "_out ",
@@ -394,7 +407,147 @@ def operationArgumentType(type, scope = [], virtualFn = 0):
 
 # This needs to be redesigned. It's too much like the old backend.
 
+typeSizeAlignMap = {
+    idltype.tk_char:    (1, 1),
+    idltype.tk_wchar:   (2, 2),
+    idltype.tk_short:   (2, 2),
+    idltype.tk_ushort:  (2, 2),
+    idltype.tk_long:    (4, 4),
+    idltype.tk_ulong:   (4, 4),
+    idltype.tk_float:   (4, 4),
+    idltype.tk_enum:    (4, 4),
+    idltype.tk_double:  (8, 8)
+    }
+
+# converts a hash of template properties into a template instance
+def templateToString(template):
+    # ------------------------------------
+    # work out the template name
+    if template["bounded"]:
+        name = "_CORBA_Bounded_Sequence"
+    else:
+        name = "_CORBA_Unbounded_Sequence"
+
+    if template["array"]:
+        name = name + "_Array"
+        
+    if template.has_key("suffix"):
+        name = name + template["suffix"]
+
+    elif template.has_key("objref") and not(template["array"]):
+        name = name + "_ObjRef"
+
+    if template.has_key("fixed"):
+        name = name + "_w_FixSizeElement"
+
+    # ------------------------------------
+    # build the argument list
+    args = []
+
+    seqTypeID      = template["seqTypeID"]
+    derefSeqTypeID = template["derefSeqTypeID"]
+    dimension      = template["dimension"]
+
+    # Note the difference between an ObjRef and an array of ObjRefs
+    if template["array"]:
+        args = args + [seqTypeID, seqTypeID + "_slice"]
+        
+        if template.has_key("objref"):
+            args = args + [template["objref_template"]]
+
+        elif not(template.has_key("suffix")):
+            # __Boolean __Octet __String
+            # these already contain the type info- no need for another
+            # parameter...
+            args = args + [derefSeqTypeID]
+            
+        args = args + [str(dimension)]
+        
+    elif template.has_key("objref"):
+        args = args + [template["objref_name"],
+                       template["objref_template"],
+                       template["objref_helper"]]
+    elif not(template.has_key("suffix")):
+        # see above
+        args = args + [seqTypeID]
+        
+
+
+    if template.has_key("bounded") and \
+       template["bounded"]:
+        args = args + [str(template["bounded"])]
+
+    if template.has_key("fixed"):
+        (element_size, alignment) = template["fixed"]
+        args = args + [str(element_size), str(alignment)]
+
+    # -----------------------------------
+    # build the template instance
+    args_string = util.delimitedlist(args)
+#    print "[[[ args = " + repr(args_string) + "]]]"
+    if (args_string != ""):
+        return name + "<" + args_string + ">"
+    return name
+
 def sequenceTemplate(sequence, scope=[]):
+    # returns a template instantiation suitable for the
+    # sequence type
+    # (similar in function to o2be_sequence::seq_template_name)
+    assert isinstance(sequence, idltype.Sequence)
+
+    seqType = sequence.seqType()
+    seqTypeID = principalID(seqType, scope)
+    derefSeqType = deref(seqType)
+    derefSeqTypeID = principalID(derefSeqType, scope)
+    seq_dims = typeDims(seqType)
+    is_array = seq_dims != []
+    dimension = reduce(lambda x,y: x * y, seq_dims, 1)
+
+    template = {}
+    template["bounded"]   = sequence.bound()
+    template["array"]     = is_array
+    template["dimension"] = dimension
+
+    template["seqTypeID"] = seqTypeID
+    template["derefSeqTypeID"] = derefSeqTypeID
+
+
+    if is_array:
+        if isSequence(derefSeqType):
+            template["derefSeqTypeID"] = sequenceTemplate(derefSeqType, scope)
+            
+    
+    if isBoolean(derefSeqType):
+        template["suffix"] = "__Boolean"
+    # strings are always special
+    if isString(derefSeqType) and not(is_array):
+        template["suffix"] = "__String"
+    if isOctet(derefSeqType):
+        template["suffix"] = "__Octet"
+                    
+    if typeSizeAlignMap.has_key(derefSeqType.kind()):
+        template["fixed"] = typeSizeAlignMap[derefSeqType.kind()]
+        
+    if isObjRef(derefSeqType):
+       scopedName = derefSeqType.decl().scopedName()
+       scopedName = self.scope(scopedName) + \
+                    ["_objref_" + self.name(scopedName)]
+       scopedName = idlutil.pruneScope(scopedName, scope)
+       objref_name = idlutil.ccolonName(map(mapID, scopedName))
+       objref_template = objRefTemplate(derefSeqType, "Member", scope)
+       template["objref_name"]     = objref_name
+       template["objref_template"] = objref_template
+       template["objref_helper"]   = seqTypeID + "_Helper"
+       template["objref"]          = 1
+
+       
+
+    return templateToString(template)
+
+    
+        
+    
+def sequenceTemplate_old(sequence, scope=[]):
     # returns a template instantiation suitable for the
     # sequence type
     # (similar in function to o2be_sequence::seq_template_name)
@@ -415,20 +568,21 @@ def sequenceTemplate(sequence, scope=[]):
     template_name = "(should have a template name for " + repr(sequence) + ")"
     if (sequence.bound()):
         CORBA_SEQUENCE = "_CORBA_Bounded_Sequence"
-        template_args.append(sequence.bound())
+        template_args.append(str(sequence.bound()))
     else:
         CORBA_SEQUENCE = "_CORBA_Unbounded_Sequence"
+
+    if is_array:
+        CORBA_SEQUENCE = CORBA_SEQUENCE + "_Array"
 
 
     # simple fixed types (char, integer types, real types, enum types)
     def fixedSizeElements(elmsize, alignment, prefix = CORBA_SEQUENCE,
-                          base_type_name = base_type_name,
+                          type_name = type_name,
                           args = template_args):
-#        print "[[[ args = " + repr(args) + "]]]"
-        args = [base_type_name] + args
+        args = [type_name] + args
         args = args + [str(elmsize), str(alignment)]
         template = prefix + "_w_FixSizeElement"
-#        print "[[[ args = " + repr(args) + "]]]"
         return (template, args)
     def fixedSizeArrayElements(elmsize, alignment, prefix = CORBA_SEQUENCE,
                                type_name = type_name,
@@ -441,94 +595,132 @@ def sequenceTemplate(sequence, scope=[]):
         template = prefix + "_w_FixSizeElement"
         return (template, args)
         
-        
-    if isBoolean(base_type):
-        template_name = CORBA_SEQUENCE + "__Boolean"
-    elif isOctet(base_type):
-        template_name = CORBA_SEQUENCE + "__Octet"
-    elif isString(base_type):
-        template_name = CORBA_SEQUENCE + "__String"
-    elif isObjRef(base_type):
-        template_name = CORBA_SEQUENCE + "_ObjRef"
-        template_args = ["OBJREF?!", base_type_name,
-                         base_type_name + "_Helper"] + template_args
-        
 
-    elif (kind == idltype.tk_char):
-        (template_name, template_args) = fixedSizeElements(1, 1)
-    elif (kind == idltype.tk_short):
-        (template_name, template_args) = fixedSizeElements(2, 2)
-    elif (kind == idltype.tk_long):
-        (template_name, template_args) = fixedSizeElements(4, 4)
-    elif (kind == idltype.tk_enum):
-        (template_name, template_args) = fixedSizeElements(4, 4)
-    elif (kind == idltype.tk_float):
-        (template_name, template_args) = fixedSizeElements(4, 4)
-    elif (kind == idltype.tk_double):
-        (template_name, template_args) = fixedSizeElements(8, 8)
-
-    elif not(is_array):
-        template_name = CORBA_SEQUENCE
-        template_args = [type_name]
-        
-    CORBA_SEQUENCE = CORBA_SEQUENCE + "_Array"
-    
-    # arrays of fixed length elements    
-    if is_array and not(is_variable):
+    if not(is_array):
         if isBoolean(base_type):
             template_name = CORBA_SEQUENCE + "__Boolean"
-            template_args = [base_type_name, base_type_name + "_slice",
-                             dimension] + template_args
         elif isOctet(base_type):
             template_name = CORBA_SEQUENCE + "__Octet"
-            template_args = [base_type_name, base_type_name + "_slice",
-                             dimension] + template_args
-        # simple types go here again
-
-        elif (kind == idltype.tk_char):
-            (template_name, template_args) = \
-                            fixedSizeArrayElements(1,1,CORBA_SEQUENCE)
-        elif (kind == idltype.tk_short):
-            (template_name, template_args) = \
-                            fixedSizeArrayElements(2,2,CORBA_SEQUENCE)
-        elif (kind == idltype.tk_long):
-            (template_name, template_args) = \
-                            fixedSizeArrayElements(4,4,CORBA_SEQUENCE)
-        elif (kind == idltype.tk_float):
-            (template_name, template_args) = \
-                            fixedSizeArrayElements(4,4,CORBA_SEQUENCE)
-        elif (kind == idltype.tk_enum):
-            (template_name, template_args) = \
-                            fixedSizeArrayElements(4,4,CORBA_SEQUENCE)            
-        elif (kind == idltype.tk_double):
-            (template_name, template_args) = \
-                            fixedSizeArrayElements(8,8,CORBA_SEQUENCE)
-        
-
-    elif is_array and is_variable:
-        if isObjRef(base_type):
-            pass
         elif isString(base_type):
-            pass
-        elif isSequence(base_type):
-            base_type_name = sequenceTemplate(base_type, scope)
-            pass
-        elif isTypeCode(base_type):
-            pass
+            template_name = CORBA_SEQUENCE + "__String"
+        elif isObjRef(base_type):
+            scopedName = base_type.decl().scopedName()
+            scopedName = self.scope(scopedName) + \
+                         ["_objref_" + self.name(scopedName)]
+            scopedName = idlutil.pruneScope(scopedName, scope)
+            objref_name = idlutil.ccolonName(map(mapID, scopedName))
+            template_name = CORBA_SEQUENCE + "_ObjRef"
+            template_args = [objref_name,
+                             objRefTemplate(base_type, "Member", scope),
+                             type_name + "_Helper"] +\
+                             template_args
+        # a basic type or an enum with a fixed size
         else:
-            pass
-        template_name = CORBA_SEQUENCE
-        template_args = [type_name, type_name + "_slice",
-                         base_type_name, str(dimension)] + template_args
+            try:
+                (size, alignment) = typeSizeAlignMap[base_type.kind()]
+                (template_name, template_args) = \
+                                fixedSizeElements(size, alignment)
+            except KeyError:
+                template_name = CORBA_SEQUENCE
+                template_args = [type_name] + template_args
+        
+    #CORBA_SEQUENCE = CORBA_SEQUENCE + "_Array"
+    
+    # arrays of fixed length elements
+    if is_array:
+        if not(is_variable):
+            if isBoolean(base_type):
+                template_name = CORBA_SEQUENCE + "__Boolean"
+                template_args = [type_name, type_name + "_slice",
+                                 str(dimension)] + template_args
+            elif isOctet(base_type):
+                template_name = CORBA_SEQUENCE + "__Octet"
+                template_args = [type_name, type_name + "_slice",
+                                 str(dimension)] + template_args
+                # simple types go here again
+
+            else:
+                try:
+                    (size, alignment) = typeSizeAlignMap[base_type.kind()]
+                    (template_name, template_args) = \
+                                    fixedSizeArrayElements(size, alignment)
+                except KeyError:
+                    pass
+#                    raise "sequenceTemplate of an unknown non-variable " + \
+#                          "type: " + repr(base_type) + " kind = " + \
+#                          repr(base_type.kind())
+                
+        elif is_variable:
+            if isObjRef(base_type):
+                scopedName = base_type.decl().scopedName()
+                scopedName = self.scope(scopedName) + \
+                             ["_objref_" + self.name(scopedName)]
+                scopedName = idlutil.pruneScope(scopedName, scope)
+                objref_name = idlutil.ccolonName(map(mapID, scopedName))
+                template_args = [type_name, type_name + "_slice",
+                                 objRefTemplate(base_type, "Member", scope),
+                                 str(dimension)] + template_args
+            else:
+                if isString(base_type):
+                    pass
+                elif isSequence(base_type):
+                    base_type_name = sequenceTemplate(base_type, scope)
+                    pass
+                elif isTypeCode(base_type):
+                    pass
+                else:
+                    pass
+                template_name = CORBA_SEQUENCE
+                template_args = [type_name, type_name + "_slice",
+                                 base_type_name, str(dimension)] + template_args
         
     # any handling goes here
-
+#    print "[[[ args = " + repr(template_args) + "]]]"
     template_args = util.delimitedlist(template_args)
     if (template_args != ""):
         return template_name + "<" + template_args + ">"
     return template_name
 
 
+
+# ------------------------------------------------------------------
+
+def valueString(type, value, from_scope = []):
+    type = deref(type)
+    # (unsigned) short ints are themselves
+    if type.kind() == idltype.tk_short     or \
+       type.kind() == idltype.tk_ushort:
+        return str(value)
+    # careful with long ints to avoid "L" postfix
+    if type.kind() == idltype.tk_long      or \
+       type.kind() == idltype.tk_longlong  or \
+       type.kind() == idltype.tk_ulong     or \
+       type.kind() == idltype.tk_ulonglong:
+        return str(int(eval(str(value))))
+    if type.kind() == idltype.tk_float     or \
+       type.kind() == idltype.tk_double:
+        return str(value)
+    # chars are single-quoted
+    if type.kind() == idltype.tk_char      or \
+       type.kind() == idltype.tk_wchar:
+        return "'" + value + "'"
+    # booleans are straightforward
+    if type.kind() == idltype.tk_boolean:
+        return str(value)
+    if type.kind() == idltype.tk_enum:
+        value = name(value.scopedName())
+        target_scope = scope(type.decl().scopedName())
+        rel_scope = idlutil.pruneScope(target_scope, from_scope)
+        return idlutil.ccolonName(rel_scope) + str(value)
+    if type.kind() == idltype.tk_string:
+        return value
+    if type.kind() == idltype.tk_octet:
+        return str(value)
+
+    raise "Cannot convert a value (" + repr(value) + ") of type: " +\
+          repr(type) + " into a string."
+        
+        
 
 # ------------------------------------------------------------------
 
