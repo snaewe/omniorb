@@ -6,11 +6,8 @@
 
 #include "omniParTcl/tclDStringClass.h"
 
-extern "C" 
-{
 #include <stdio.h>
 #include <string.h>
-}
 
 //
 //---------- Overloaded extensions to Tcl_DStringAppend() ----------
