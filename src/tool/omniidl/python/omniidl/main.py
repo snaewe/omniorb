@@ -29,6 +29,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.15  2000/08/29 15:20:29  dpg1
+# New relativeScope() function. New -i flag to enter interactive loop
+# after parsing
+#
 # Revision 1.15.2.14  2000/07/06 09:40:44  dpg1
 # Spelling mistake :-(
 #
@@ -165,6 +169,7 @@ The supported flags are:
   -K              Comments before declarations are kept for the back-ends
   -Cdir           Change directory to dir before writing output
   -d              Dump the parsed IDL then exit
+  -i              Enter interactive mode after parsing the IDL
   -pdir           Path to omniidl back-ends ($TOP/lib/python)
   -V              Print version info then exit
   -u              Print this usage message and exit
@@ -207,16 +212,17 @@ cd_to             = None
 verbose           = 0
 quiet             = 0
 print_usage       = 0
+interactive       = 0
 
 def parseArgs(args):
     global preprocessor_args, preprocessor_only, preprocessor_cmd
     global no_preprocessor, backend, backend_args, dump_only, cd_to
-    global verbose, quiet, print_usage
+    global verbose, quiet, print_usage, interactive
 
     paths = []
 
     try:
-        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:n:kKC:dVuhvqp:")
+        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:n:kKC:dVuhvqp:i")
     except getopt.error, e:
         sys.stderr.write("Error in arguments: " + e + "\n")
         sys.stderr.write("Use `" + cmdname + " -u' for usage\n")
@@ -310,6 +316,9 @@ def parseArgs(args):
         elif o == "-p":
             paths.append(a)
 
+        elif o == "-i":
+            interactive = 1
+
     sys.path = paths + sys.path
 
     return files
@@ -336,7 +345,7 @@ def be_import(name):
 def main(argv=None):
     global preprocessor_args, preprocessor_only, preprocessor_cmd
     global no_preprocessor, backend, backend_args, dump_only, cd_to
-    global verbose, quiet, print_usage
+    global verbose, quiet, print_usage, interactive
 
     if argv is None: argv = sys.argv
 
@@ -389,7 +398,8 @@ def main(argv=None):
     if print_usage:
         sys.exit(0)
 
-    if len(backends) == 0 and not (quiet or dump_only or preprocessor_only):
+    if len(backends) == 0 and \
+       not (quiet or dump_only or preprocessor_only or interactive):
         sys.stderr.write(cmdname + ": Warning: No back-ends specified; " \
                          "checking IDL for validity\n")
 
@@ -454,6 +464,14 @@ def main(argv=None):
 
                 bemodules[i].run(tree, backends_args[i])
                 i = i + 1
+
+            if interactive:
+                if verbose:
+                    sys.stderr.write(cmdname + ": Entering interactive loop\n")
+
+                idlast.tree = tree
+                _omniidl.runInteractiveLoop()
+                del idlast.tree
 
             if cd_to is not None:
                 os.chdir(old_wd)

@@ -1,3 +1,16 @@
+Tue Aug 29 16:17:38 BST 2000 dpg1
+=================================
+
+- New relativeScope() function.
+- New -i flag to enter interactive loop after parsing
+
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/idlscope.h
+src/tool/omniidl/python/omniidl/idlutil.py
+src/tool/omniidl/python/omniidl/main.py
+
+
 Tue Aug 29 11:17:26 BST 2000 dpg1
 =================================
 

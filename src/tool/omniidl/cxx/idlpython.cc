@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.13  2000/08/29 15:20:28  dpg1
+// New relativeScope() function. New -i flag to enter interactive loop
+// after parsing
+//
 // Revision 1.15.2.12  2000/08/29 10:20:26  dpg1
 // Operations and attributes now have repository ids.
 //
@@ -208,13 +212,14 @@ public:
 
   PyObject* result() { return result_; }
 
+  static PyObject* scopedNameToList(const ScopedName* sn);
+  static PyObject* wstringToList(const _CORBA_WChar* ws);
+
 private:
-  PyObject* scopedNameToList(const ScopedName* sn);
   PyObject* pragmasToList(const Pragma* ps);
   PyObject* commentsToList(const Comment* cs);
   void      registerPyDecl(const ScopedName* sn, PyObject* pydecl);
   PyObject* findPyDecl(const ScopedName* sn);
-  PyObject* wstringToList(const _CORBA_WChar* ws);
 
   PyObject* idlast_;
   PyObject* idltype_;
@@ -1316,13 +1321,91 @@ extern "C" {
     Py_INCREF(Py_None); return Py_None;
   }
 
+  static PyObject* IdlPyRelativeScopedName(PyObject* self, PyObject* args)
+  {
+    PyObject *pyfrom, *pyto;
+    if (!PyArg_ParseTuple(args, (char*)"OO", &pyfrom, &pyto)) return 0;
+
+    if (!PySequence_Check(pyfrom) || !PySequence_Check(pyto)) {
+      PyErr_SetString(PyExc_TypeError,
+		      (char*)"Both arguments must be sequences of strings");
+      return 0;
+    }
+
+    if (PyObject_Length(pyto) == 0) {
+      PyErr_SetString(PyExc_TypeError,
+		      (char*)"Argument 2 must be a non-empty sequence");
+      return 0;
+    }
+
+    ScopedName* from = 0;
+    ScopedName* to   = 0;
+
+    int i;
+    // Convert lists to absolute ScopedNames
+    for (i=0; i < PyObject_Length(pyfrom); i++) {
+      PyObject* tmp = PySequence_GetItem(pyfrom, i);
+
+      if (!PyString_Check(tmp)) {
+	if (from) delete from;
+	PyErr_SetString(PyExc_TypeError,
+			(char*)"Both arguments must be sequences of strings");
+	return 0;
+      }
+      if (from)
+	from->append(PyString_AsString(tmp));
+      else
+	from = new ScopedName(PyString_AsString(tmp), 1);
+    }
+
+    for (i=0; i < PyObject_Length(pyto); i++) {
+      PyObject* tmp = PySequence_GetItem(pyto, i);
+
+      if (!PyString_Check(tmp)) {
+	if (from) delete from;
+	if (to)   delete to;
+	PyErr_SetString(PyExc_TypeError,
+			(char*)"Both arguments must be sequences of strings");
+	return 0;
+      }
+      if (to)
+	to->append(PyString_AsString(tmp));
+      else
+	to = new ScopedName(PyString_AsString(tmp), 1);
+    }
+
+    ScopedName* result = Scope::relativeScopedName(from, to);
+
+    if (from) delete from;
+    delete to;
+
+    if (result) {
+      PyObject* pyresult = PythonVisitor::scopedNameToList(result);
+      if (result->absolute())
+	PyList_Insert(pyresult, 0, Py_None);
+      delete result;
+      return pyresult;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+  }
+
+  static PyObject* IdlPyRunInteractiveLoop(PyObject* self, PyObject* args)
+  {
+    PyRun_InteractiveLoop(stdin, (char*)"<stdin>");
+    Py_INCREF(Py_None);
+    return Py_None;
+  }
+
   static PyMethodDef omniidl_methods[] = {
-    {(char*)"compile",          IdlPyCompile,          METH_VARARGS},
-    {(char*)"clear",            IdlPyClear,            METH_VARARGS},
-    {(char*)"dump",             IdlPyDump,             METH_VARARGS},
-    {(char*)"quiet",            IdlPyQuiet,            METH_VARARGS},
-    {(char*)"noForwardWarning", IdlPyNoForwardWarning, METH_VARARGS},
-    {(char*)"keepComments",     IdlPyKeepComments,     METH_VARARGS},
+    {(char*)"compile",            IdlPyCompile,            METH_VARARGS},
+    {(char*)"clear",              IdlPyClear,              METH_VARARGS},
+    {(char*)"dump",               IdlPyDump,               METH_VARARGS},
+    {(char*)"quiet",              IdlPyQuiet,              METH_VARARGS},
+    {(char*)"noForwardWarning",   IdlPyNoForwardWarning,   METH_VARARGS},
+    {(char*)"keepComments",       IdlPyKeepComments,       METH_VARARGS},
+    {(char*)"relativeScopedName", IdlPyRelativeScopedName, METH_VARARGS},
+    {(char*)"runInteractiveLoop", IdlPyRunInteractiveLoop, METH_VARARGS},
     {NULL, NULL}
   };
 
