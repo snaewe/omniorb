@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2000/11/03 19:08:52  sll
+  Use virtual dtor with gcc.
+
   Revision 1.2.2.2  2000/09/27 17:39:28  sll
   Updated include/omniORB3 to include/omniORB4
 
@@ -74,10 +77,16 @@ public:
 
 
 protected:
+#ifndef __GNUG__ 
   inline ~omniIdentity() {}
   // Should only be destroyed by implementation of derived classes.
   // This doesn't need to be virtual, since it is only ever deleted
   // by the most derived type.
+#else
+  virtual ~omniIdentity() {}
+  // But gcc is rather anal and insits on a class with virtual functions must
+  // have a virtual dtor.
+#endif
 
   inline omniIdentity(omniObjKey& key)
     : pd_key(key, 1) {}
