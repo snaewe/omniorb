@@ -10,7 +10,7 @@ x86Processor = 1
 #
 # You must set a path to a Python 1.5.2 interpreter.
 
-#PYTHON = /usr/local/bin/python
+PYTHON = /usr/local/bin/python
 
 
 #
@@ -28,7 +28,7 @@ AR = ar cq
 
 CPP = /usr/libexec/cpp
 
-CXX = egcs++
+CXX = g++295
 CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = -O2
 
@@ -39,7 +39,7 @@ CXXOPTIONS      = -Wall -Wno-unused
 EgcsMajorVersion = 1
 EgcsMinorVersion = 1        # This is actually a post-1.0 egcs snapshot.
 
-CC           = egcs
+CC           = gcc295
 CMAKEDEPEND  = $(TOP)/$(BINDIR)/omkdepend -D__GNUC__
 CDEBUGFLAGS  = -O2
 
@@ -48,7 +48,7 @@ CLINKOPTIONS = $(CDEBUGFLAGS) $(COPTIONS)
 
 INSTALL = install -c
 
-IMPORT_CPPFLAGS += -D__x86__ -D__freebsd__ -D__OSVERSION__=3
+IMPORT_CPPFLAGS += -D__x86__ -D__freebsd__ -D__OSVERSION__=4
 
 
 omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK

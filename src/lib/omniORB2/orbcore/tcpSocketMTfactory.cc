@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.14  2000/07/03 15:38:20  dpg1
+  Support for FreeBSD 4.0. FreeBSD 3.2 hopefully works too.
+
   Revision 1.22.6.13  2000/06/27 15:18:15  sll
   On some platforms, e.g. HPUX 11 and Windows NT, shutdown() does not unblock
   a thread in recv() when the socket is of the active type, i.e.  a connect()
@@ -605,9 +608,10 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
   }
   
   {
-# if (defined(__GLIBC__) && __GLIBC__ >= 2)
+# if (defined(__GLIBC__) && __GLIBC__ >= 2) || (defined(__freebsd__) && __OSVERSION__ >= 4)
     // GNU C library uses socklen_t * instead of int* in getsockname().
     // This is suppose to be compatible with the upcoming POSIX standard.
+    // FreeBSD 4.0 uses it too.
     socklen_t l;
 # elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
     size_t l;
@@ -1354,14 +1358,15 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       tcpSocketHandle_t new_sock;
       struct sockaddr_in raddr;
  
-#if (defined(__GLIBC__) && __GLIBC__ >= 2)
+#if (defined(__GLIBC__) && __GLIBC__ >= 2) || (defined(__freebsd__) && __OSVERSION__ >= 4)
       // GNU C library uses socklen_t * instead of int* in accept ().
       // This is suppose to be compatible with the upcoming POSIX standard.
+      // FreeBSD 4.0 uses it too.
       socklen_t l;
 #elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
-    size_t l;
+      size_t l;
 #else
-    int l;
+      int l;
 #endif
 
       l = sizeof(struct sockaddr_in);
@@ -1513,9 +1518,10 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
     tcpSocketHandle_t new_sock;
     struct sockaddr_in raddr;
-#if (defined(__GLIBC__) && __GLIBC__ >= 2)
+#if (defined(__GLIBC__) && __GLIBC__ >= 2) || (defined(__freebsd__) && __OSVERSION__ >= 4)
     // GNU C library uses socklen_t * instead of int* in accept ().
     // This is suppose to be compatible with the upcoming POSIX standard.
+    // FreeBSD 4.0 uses it too.
     socklen_t l;
 #elif defined(__aix__) || defined(__VMS) || defined(__SINIX__) || defined(__uw7__)
     size_t l;

@@ -33,8 +33,9 @@
 #  mips_irix_6.5_64          SGI Irix 6.5 - 64bit mode
 #  x86_ets                   Phar Lap Realtime ETS-kernel
 #  x86_osr5                  SCO OpenServer 5
-#  x86_uw7		     SCO UnixWare 7 (7.1.0)
+#  x86_uw7                   SCO UnixWare 7 (7.1.0)
 #  x86_freebsd_3.2           x86 FreeBSD 3.2, egcs 1.1.2
+#  x86_freebsd_4.0           x86 FreeBSD 4.0, gcc 2.95
 
 # You should also look at <top>/mk/platforms/$(platform).mk and if necessary
 # edit the make variables, such as CC and CXX, in the file.
@@ -69,6 +70,7 @@
 #platform = x86_osr5
 #platform = x86_uw7
 #platform = x86_freebsd_3.2
+#platform = x86_freebsd_4.0
 
 # On Win32 platforms, uncomment the following line to build all the binaries
 # with debugging information. Useful if you want to debug the binaries under
