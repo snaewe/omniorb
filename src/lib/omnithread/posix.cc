@@ -49,7 +49,7 @@
 #include <time.h>
 #include <omnithread.h>
 
-#if (defined(__GLIBC__) && __GLIBC__ >= 2) || defined(__SCO_VERSION__)
+#if (defined(__GLIBC__) && __GLIBC__ >= 2) || defined(__SCO_VERSION__) || defined(__aix__)
 // typedef of struct timeval and gettimeofday();
 #include <sys/time.h>
 #include <unistd.h>
