@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2004/03/05 17:26:22  dgrisby
+  Typo in registry reading code.
+
   Revision 1.1.2.11  2003/08/21 14:57:52  dgrisby
   Really silly bug broke registry reading on Windows.
 
@@ -187,7 +190,7 @@ CORBA::Boolean getRegEntry(HKEY rootkey, DWORD index,
   while ( isspace(*p) )
     p++;
   key = p;
-  if (!*p != '\0') {
+  if (*p != '\0') {
     p += strlen(key) - 1;
     while ( isspace(*p) )
       p--;

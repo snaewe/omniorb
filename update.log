@@ -1,3 +1,11 @@
+Fri Mar  5 17:18:42 GMT 2004 dgrisby
+====================================
+
+- Typo in registry reading code.
+
+src/lib/omniORB/orbcore/orbOptionsReg.cc
+
+
 Fri Mar  5 14:23:33 GMT 2004 dgrisby
 ====================================
 
