@@ -7,11 +7,32 @@
 #endif
 
 static void
-usage()
+usage(const char* progname)
 {
-  cerr << "usage: nameclt [-ior <NameService-object-reference>] <operation>"
+  cerr << "usage: " << progname << " [-ior <NameService-object-reference>] <operation> [object name]"
+       << "\nwhere <operation> is one of: "
+       << "\n\n bind <object name> <stringified IOR>"
+       << "\n    (bind name and object)"
+       << "\n rebind <object name> <stringified IOR>"
+       << "\n    (bind name and object even if binding already exists)"
+       << "\n bind_context <object name> <stringified context IOR>"
+       << "\n    (bind name and context)"
+       << "\n rebind_context <object name> <stringified context IOR>"
+       << "\n    (bind name and context even if binding already exists)"
+       << "\n new_context"
+       << "\n    (returns stringified IOR for a new context)"
+       << "\n bind_new_context <context name>"
+       << "\n    (binds name to a new context, and returns the stringified context IOR)"
+       << "\n resolve <object name>"
+       << "\n    (returns stringified IOR bound to specified name)"
+       << "\n unbind <object name>"
+       << "\n    (unbinds name and object)"
+       << "\n list <context name>"
+       << "\n    (lists contexts and objects bound to the context with the specified name)"
+       << "\n\n    <object name>, <context name> :  name1_id name1_kind name2_id name2_kind ..."
+       << "\n     nameN_id NameN_kind"
        << endl;
-  exit(1);
+exit(1);
 }
 
 
@@ -23,7 +44,7 @@ main(int argc, char **argv)
   CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
   CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
 
-  if (argc < 2) usage();
+  if (argc < 2) usage(argv[0]);
   int n = 1;
 
 
@@ -38,7 +59,7 @@ main(int argc, char **argv)
     CORBA::Object_var initServ;
 
     if (strcmp(argv[n], "-ior") == 0) {
-      if (argc < 4) usage();
+      if (argc < 4) usage(argv[0]);
       n++;
       initServ = orb->string_to_object(argv[n]);
       n++;
@@ -70,7 +91,7 @@ main(int argc, char **argv)
     int n_components = (argc - n - 1) / 2;
 
     if (n_components < 1) {
-      cerr << "bind usage: name1.id name1.kind ... nameN.kind objref"
+      cerr << "bind usage: " << argv[0] <<" bind name1_id name1_kind ... nameN_kind objref"
 	   << endl;
       return 1;
     }
@@ -101,7 +122,7 @@ main(int argc, char **argv)
     int n_components = (argc - n - 1) / 2;
 
     if (n_components < 1) {
-      cerr << "rebind usage: name1.id name1.kind ... nameN.kind objref"
+      cerr << "rebind usage: " << argv[0] << " rebind name1_id name1_kind ... nameN_kind objref"
 	   << endl;
       return 1;
     }
@@ -132,7 +153,7 @@ main(int argc, char **argv)
     int n_components = (argc - n - 1) / 2;
 
     if (n_components < 1) {
-      cerr << "bind_context usage: name1.id name1.kind ... nameN.kind objref"
+      cerr << "bind_context usage: " << argv[0] << " bind_context name1_id name1_kind ... nameN_kind objref"
 	   << endl;
       return 1;
     }
@@ -171,7 +192,7 @@ main(int argc, char **argv)
     int n_components = (argc - n - 1) / 2;
 
     if (n_components < 1) {
-      cerr << "rebind_context usage: name1.id name1.kind ... nameN.kind objref"
+      cerr << "rebind_context usage: " << argv[0] << " rebind_context name1_id name1_kind ... nameN_kind objref"
 	   << endl;
       return 1;
     }
@@ -210,7 +231,7 @@ main(int argc, char **argv)
     int n_components = (argc - n) / 2;
 
     if (n_components < 1) {
-      cerr << "resolve usage: name1.id name1.kind ... nameN.kind"
+      cerr << "resolve usage: " << argv[0] << " resolve name1_id name1_kind ... nameN_kind"
 	   << endl;
       return 1;
     }
@@ -242,7 +263,7 @@ main(int argc, char **argv)
     int n_components = (argc - n) / 2;
 
     if (n_components < 1) {
-      cerr << "unbind usage: name1.id name1.kind ... nameN.kind"
+      cerr << "unbind usage: " << argv[0] << " unbind name1_id name1_kind ... nameN_kind"
 	   << endl;
       return 1;
     }
@@ -292,7 +313,7 @@ main(int argc, char **argv)
     int n_components = (argc - n) / 2;
 
     if (n_components < 1) {
-      cerr << "bind_new_context usage: name1.id name1.kind ... nameN.kind"
+      cerr << "bind_new_context usage: " << argv[0] << " bind_new_context name1_id name1_kind ... nameN_kind"
 	   << endl;
       return 1;
     }
@@ -309,24 +330,6 @@ main(int argc, char **argv)
 
     char* p = orb->object_to_string(context);
     cerr << p << endl;
-  }
-
-
-  //
-  // destroy
-  // -------
-  //
-
-  else if (strcmp(argv[n], "destroy") == 0) {
-
-    n++;
-
-    if (argc > n) {
-      cerr << "destroy takes no args" << endl;
-      return 1;
-    }
-
-    rootContext->destroy();
   }
 
 
@@ -369,12 +372,7 @@ main(int argc, char **argv)
     CosNaming::BindingList* bl = 0;
     CosNaming::BindingIterator_ptr bi = 0;
     int first_n = 5, repeat_n = 3;
-/*
-    if (argc > 3)
-      first_n = atoi(argv[3]);
-    if (argc > 4)
-      repeat_n = atoi(argv[4]);
-*/      
+
     context->list(first_n, bl, bi);
 
     do {
@@ -394,6 +392,6 @@ main(int argc, char **argv)
     bi->destroy();
 
   }
-
+  else usage(argv[0]);
   return 0;
 }
