@@ -30,6 +30,9 @@
  
 /*
   $Log$
+  Revision 1.11  1998/08/15 14:32:55  sll
+  Operators for omniORB::ObjectKey are defined in the omniORB namespace.
+
   Revision 1.10  1998/08/14 13:50:00  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -80,13 +83,20 @@
 #include <sys/time.h>
 #endif
 
-#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+#if defined(HAS_Cplusplus_Namespace) 
+
+#if defined(_MSC_VER)
 // MSVC++ does not give the variable external linkage otherwise. Its a bug.
 namespace omniORB {
   objectKey seed;
 }
+#else
+omniORB::objectKey       omniORB::seed;
+#endif
+
 // operators are defined in the omniORB namespace
 #define OPERATOR_PREFIX omniORB::
+
 #else
 // operators are defined in the global namespace
 omniORB::objectKey       omniORB::seed;
