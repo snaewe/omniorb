@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.11.2.16  2002/02/11 14:46:20  dpg1
+   Remove unnecessary ##s in macro.
+
    Revision 1.11.2.15  2001/11/14 17:13:41  dpg1
    Long double support.
 
@@ -836,13 +839,13 @@ DynAnyImpl::get_dyn_any()
 
 #define SEQUENCE_OPS(lcname, ucname) \
 void \
-DynAnyImpl::insert_##lcname##_seq(CORBA::##ucname##Seq& value) \
+DynAnyImpl::insert_##lcname##_seq(CORBA:: ucname##Seq& value) \
 { \
   CHECK_NOT_DESTROYED; \
   throw DynamicAny::DynAny::TypeMismatch(); \
 } \
 \
-CORBA::##ucname##Seq* \
+CORBA:: ucname##Seq* \
 DynAnyImpl::get_##lcname##_seq() \
 { \
   CHECK_NOT_DESTROYED; \
@@ -1856,7 +1859,7 @@ DynAnyConstrBase::insert_wchar_seq(CORBA::WCharSeq& value)
 
 #define INSERT_SEQ_OP(lcname, ucname, align, size) \
 void \
-DynAnyConstrBase::insert_##lcname##_seq(CORBA::##ucname##Seq& value) \
+DynAnyConstrBase::insert_##lcname##_seq(CORBA:: ucname##Seq& value) \
 { \
   CHECK_NOT_DESTROYED; \
 \
@@ -2008,7 +2011,7 @@ DynAnyConstrBase::get_wchar_seq()
 }
 
 #define GET_SEQ_OP(lcname, ucname, align, size) \
-CORBA::##ucname##Seq* \
+CORBA:: ucname##Seq* \
 DynAnyConstrBase::get_##lcname##_seq() \
 { \
   CHECK_NOT_DESTROYED; \
@@ -2017,9 +2020,9 @@ DynAnyConstrBase::get_##lcname##_seq() \
     if (pd_n_in_buf < pd_first_in_comp) \
       throw DynamicAny::DynAny::InvalidValue(); \
 \
-    CORBA::##ucname##Seq_var seq = new CORBA::##ucname##Seq(pd_n_components); \
+    CORBA:: ucname##Seq_var seq = new CORBA:: ucname##Seq(pd_n_components); \
     seq->length(pd_n_components); \
-    _CORBA_##ucname##* data = seq->NP_data(); \
+    _CORBA_##ucname * data = seq->NP_data(); \
 \
     if (pd_first_in_comp > 0) { \
       pd_buf.rewindInputPtr(); \
@@ -3563,7 +3566,7 @@ DynUnionImpl::get_dyn_any()
 
 #define UNION_SEQUENCE_OPS(lcname, ucname) \
 void \
-DynUnionImpl::insert_##lcname##_seq(CORBA::##ucname##Seq& value) \
+DynUnionImpl::insert_##lcname##_seq(CORBA:: ucname##Seq& value) \
 { \
   CHECK_NOT_DESTROYED; \
   if (pd_curr_index != 1 || !pd_member) \
@@ -3576,7 +3579,7 @@ DynUnionImpl::insert_##lcname##_seq(CORBA::##ucname##Seq& value) \
   pd_member->insert_##lcname##_seq(value); \
 }\
 \
-CORBA::##ucname##Seq* \
+CORBA:: ucname##Seq* \
 DynUnionImpl::get_##lcname##_seq() \
 { \
   CHECK_NOT_DESTROYED; \
