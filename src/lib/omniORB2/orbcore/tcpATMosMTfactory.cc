@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.6  1998/08/14 13:53:49  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.5  1998/04/07 19:39:04  sll
   Replace cerr with omniORB::log.
 
@@ -48,6 +52,11 @@
   */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <ropeFactory.h>
 #include <tcpATMos.h>
 

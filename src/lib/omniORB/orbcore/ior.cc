@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.7  1998/08/14 13:48:04  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.6  1997/12/09 17:32:39  sll
   Removed obsoluted functions IIOP::profileToEncapStream and
   IIOP::EncapStreamToProfile.
@@ -43,6 +47,10 @@
   */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #ifndef Swap16
 #define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))

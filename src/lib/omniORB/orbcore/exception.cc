@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.6  1998/08/14 13:46:37  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.5  1998/04/07 19:33:40  sll
   Replace cerr with omniORB::log.
   Use namespce when available.
@@ -47,6 +51,11 @@
   */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <excepthandler.h>
 
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)

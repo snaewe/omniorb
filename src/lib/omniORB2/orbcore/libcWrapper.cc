@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.14  1998/08/14 13:48:27  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.13  1998/08/11 19:08:33  sll
   Added CPP macro to recognise SCO OpenServer 5.
 
@@ -53,6 +57,11 @@
   */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>

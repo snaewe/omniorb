@@ -30,6 +30,10 @@
  
 /*
   $Log$
+  Revision 1.10  1998/08/14 13:50:00  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.9  1998/04/18 10:10:41  sll
   Added support for Borland C++
 
@@ -54,6 +58,11 @@
   */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <stdlib.h>
 
 #if defined(UnixArchitecture) || defined(__VMS)

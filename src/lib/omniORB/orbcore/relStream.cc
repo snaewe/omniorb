@@ -28,12 +28,21 @@
 
 /*
   $Log$
+  Revision 1.2  1998/08/14 13:50:58  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.1  1997/12/09 18:43:13  sll
   Initial revision
 
   */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <relStream.h>
 #include <limits.h>
 

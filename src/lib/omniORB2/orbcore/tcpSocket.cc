@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.6  1998/08/14 13:54:13  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.5  1998/08/13 16:10:07  sll
   Now can accept IOR with IIOP 1.1 profile. IIOP 1.1 specific part of
   the profile is ignored silently.
@@ -47,6 +51,11 @@
   */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <ropeFactory.h>
 #include <tcpSocket.h>
 #include <gatekeeper.h>

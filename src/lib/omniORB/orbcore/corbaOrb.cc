@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.15  1998/08/14 13:44:57  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.14  1998/04/18 10:09:52  sll
   Make the definition of omniORB::serverName consistent with omniORB.h
 
@@ -63,6 +67,11 @@
  */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <stdio.h>
 #include <initFile.h>
 #include <scavenger.h>

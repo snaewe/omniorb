@@ -28,11 +28,15 @@
 
 
 /* $Log$
-/* Revision 1.3  1998/08/05 17:59:11  sll
-/* Added some comment to document the implementation.
-/* Fixed bug in parseUnion() which did not handle the case when a union
-/* discriminant is set to select the implicit default branch.
+/* Revision 1.4  1998/08/14 13:53:04  sll
+/* Added pragma hdrstop to control pre-compile header if the compiler feature
+/* is available.
 /*
+ * Revision 1.3  1998/08/05 17:59:11  sll
+ * Added some comment to document the implementation.
+ * Fixed bug in parseUnion() which did not handle the case when a union
+ * discriminant is set to select the implicit default branch.
+ *
  * Revision 1.2  1998/04/07 19:37:54  sll
  * Remove iostream.h
  *
@@ -40,6 +44,12 @@
 // Initial revision
 //
  */
+
+#include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #include <string.h>
 

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.11  1998/08/14 13:54:38  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.10  1998/06/29 17:13:30  sll
   Fixed Solaris specific code in realConnect. Now switch the socket back
   to blocking mode after connect() until all circumstance.
@@ -65,6 +69,11 @@
   */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <ropeFactory.h>
 #include <tcpSocket.h>
 

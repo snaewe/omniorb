@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.23  1998/08/14 13:47:39  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.22  1998/08/11 18:14:24  sll
   Added support for Phar Lap ETS kernel. It supports win32 API but do not
   have registry.
@@ -68,6 +72,11 @@
 //
   */
 
+#include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,7 +101,6 @@
 #include <unistd.h>
 #endif
 
-#include <omniORB2/CORBA.h>
 #include <initFile.h>
 
 #include "gatekeeper.h"

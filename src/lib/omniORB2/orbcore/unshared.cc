@@ -32,6 +32,10 @@
 
 /*
   $Log$
+  Revision 1.8  1998/08/14 13:55:20  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.7  1997/09/20 17:00:34  dpg1
   Added LifeCycle support hash table.
 
@@ -44,6 +48,11 @@
  */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <initFile.h>
 #include "libcWrapper.h"
 #if defined(UnixArchitecture)

@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.3  1998/08/14 13:48:52  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.2  1998/04/18 10:11:47  sll
   Corrected typo (_log instead of log).
 
@@ -43,6 +47,10 @@
 // Macros to handle std namespace and streams header files
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #include <stdio.h>
 

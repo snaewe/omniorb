@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.9  1998/08/14 13:49:17  sll
+  Added pragma hdrstop to control pre-compile header if the compiler feature
+  is available.
+
   Revision 1.8  1998/04/07 19:35:50  sll
   Updated signature of NetBufferedStream::RdMessageSize(...).
 
@@ -41,6 +45,10 @@
   */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
 
 #define DIRECT_RCV_CUTOFF 1024
 #define DIRECT_SND_CUTOFF 8192

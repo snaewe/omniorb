@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.4  1998/08/14 13:51:22  sll
+ Added pragma hdrstop to control pre-compile header if the compiler feature
+ is available.
+
  Revision 1.3  1998/03/04 15:21:03  ewc
  Typo corrected - giopServerThreadWrapper
 
@@ -40,6 +44,11 @@
 */
 
 #include <omniORB2/CORBA.h>
+
+#ifdef HAS_pch
+#pragma hdrstop
+#endif
+
 #include <ropeFactory.h>
 #include <objectManager.h>
 
