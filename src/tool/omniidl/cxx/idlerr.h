@@ -29,6 +29,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2  1999/10/29 15:43:44  dpg1
+// Error counts now reset when Report...() is called.
+//
 // Revision 1.1  1999/10/27 14:05:57  dpg1
 // *** empty log message ***
 //
@@ -52,6 +55,5 @@ void IdlWarning(const char* file, int line, const char* fmt ...);
 void IdlWarningCont(const char* file, int line, const char* fmt ...);
 
 _CORBA_Boolean IdlReportErrors();
-
 
 #endif // _idlerr_h_
