@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.14.6.4  2000/07/12 13:07:17  dpg1
+  The default corbaloc port is 2809, not 2089 as specified in the
+  specification!
+
   Revision 1.14.6.3  2000/05/24 17:18:10  dpg1
   Rename IIOP::DEFAULT_PORT IIOP::DEFAULT_CORBALOC_PORT
 
@@ -93,7 +97,7 @@ const IOP::ProfileId       IOP::TAG_MULTIPLE_COMPONENTS = 1;
 const IOP::ServiceID       IOP::TransactionService      = 0;
 const CORBA::Char          IIOP::current_major          = 1;
 const CORBA::Char          IIOP::current_minor          = 0;
-const CORBA::UShort        IIOP::DEFAULT_CORBALOC_PORT  = 2089;
+const CORBA::UShort        IIOP::DEFAULT_CORBALOC_PORT  = 2809;
 
 
 const GIOP_Basetypes::MessageHeader::HeaderType

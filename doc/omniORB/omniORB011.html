@@ -54,7 +54,7 @@ retrieved and inspected, or the return value on success.<BR>
 <TT>CORBA</TT> namespace. These objects behave in many ways like CORBA
 objects. They should only be accessed by reference (through
 <TT>foo_ptr</TT> or <TT>foo_var</TT>), may not be instantiated directly
-and should be released by calling <TT>CORBA::release()</TT><A NAME="text25" HREF="#note25"><SUP><FONT SIZE=2>1</FONT></SUP></A>. A nil reference should only be
+and should be released by calling <TT>CORBA::release()</TT><A NAME="text26" HREF="#note26"><SUP><FONT SIZE=2>1</FONT></SUP></A>. A nil reference should only be
 represented by <TT>foo::_nil()</TT>.<BR>
 <BR>
 These pseudo objects, although defined in pseudo-IDL in the
@@ -442,7 +442,7 @@ blocks until another thread invokes a request and the reply is
 received.<BR>
 <BR>
 <HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note25" HREF="#text25"><FONT SIZE=5>1</FONT></A><DD> if not
+<DT><A NAME="note26" HREF="#text26"><FONT SIZE=5>1</FONT></A><DD> if not
 managed by a <TT>_var</TT> type.
 </DL>
 <HR>

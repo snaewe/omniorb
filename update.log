@@ -1,3 +1,22 @@
+Wed Jul 12 14:03:17 BST 2000 dpg1
+=================================
+
+- The default corbaloc port is 2809, not 2089 as specified in the
+  specification!
+
+doc/tex/omniORB.tex
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniORB/omniORB004.html
+external_merge/doc/omniORB/omniORB006.html
+external_merge/doc/omniORB/omniORB007.html
+external_merge/doc/omniORB/omniORB009.html
+external_merge/doc/omniORB/omniORB010.html
+external_merge/doc/omniORB/omniORB011.html
+external_merge/doc/omniORB/omniORB012.html
+src/lib/omniORB2/orbcore/constants.cc
+
+
 Tue Jul 11 21:04:36 BST 2000 sll
 ================================
 

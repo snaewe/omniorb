@@ -21,7 +21,7 @@ not covered by the CORBA specification. Obviously, if you use this
 API in your application, that part of your code is not going to be
 portable to run unchanged on other vendors' ORBs. To make it easier to
 identify omniORB dependent code, this API is defined under the name
-space `<TT>omniORB</TT>'<A NAME="text16" HREF="#note16"><SUP><FONT SIZE=2>1</FONT></SUP></A>.<BR>
+space `<TT>omniORB</TT>'<A NAME="text17" HREF="#note17"><SUP><FONT SIZE=2>1</FONT></SUP></A>.<BR>
 <BR>
 <A NAME="toc26"></A>
 <H2>6.1&nbsp;&nbsp; ORB initialisation options</H2>
@@ -254,7 +254,7 @@ exception.<BR>
 Service in omniORB 3, a mechanism is available for the ORB runtime to
 obtain the initial object references to CORBA services. The bootstrap
 service is a special object with the object key `INIT' and the
-following interface<A NAME="text17" HREF="#note17"><SUP><FONT SIZE=2>2</FONT></SUP></A>:<BR>
+following interface<A NAME="text18" HREF="#note18"><SUP><FONT SIZE=2>2</FONT></SUP></A>:<BR>
 <BR>
 <PRE>
   // IDL
@@ -588,10 +588,10 @@ public:
 passed.<BR>
 <BR>
 <HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note16" HREF="#text16"><FONT SIZE=5>1</FONT></A><DD> <TT>omniORB</TT> is a class name if the
+<DT><A NAME="note17" HREF="#text17"><FONT SIZE=5>1</FONT></A><DD> <TT>omniORB</TT> is a class name if the
 C++ compiler does not support the <TT>namespace</TT> keyword.
 
-<DT><A NAME="note17" HREF="#text17"><FONT SIZE=5>2</FONT></A><DD> This interface was first defined by Sun's
+<DT><A NAME="note18" HREF="#text18"><FONT SIZE=5>2</FONT></A><DD> This interface was first defined by Sun's
 NEO and is in used in Sun's JavaIDL.
 </DL>
 <HR>

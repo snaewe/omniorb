@@ -2479,13 +2479,13 @@ string, so the original URI can be written:
 \corbauri{corbaloc::myhost.example.com:1234/MyObjectKey}
 \end{quote}
 
-\noindent The IANA has assigned port number 2089 for use by
-\corbauri{corbaloc}, so if the server is listening on that port, you
-can leave the port number out.  The following two URIs refer to the
-same object:
+\noindent The IANA has assigned port number 2809\footnote{Not 2089 as
+printed in \cite{inschapters}!} for use by \corbauri{corbaloc}, so if
+the server is listening on that port, you can leave the port number
+out.  The following two URIs refer to the same object:
 
 \begin{quote}
-\corbauri{corbaloc::myhost.example.com:2089/MyObjectKey}\\
+\corbauri{corbaloc::myhost.example.com:2809/MyObjectKey}\\
 \corbauri{corbaloc::myhost.example.com/MyObjectKey}
 \end{quote}
 
@@ -2583,7 +2583,7 @@ with command line arguments of:
 
 \noindent \code{resolve\_initial\_references("NameService")} will
 return a reference to the object with key `NameService' available on
-myhost.example.com, port 2089. Since IOR-format strings are considered
+myhost.example.com, port 2809. Since IOR-format strings are considered
 URIs, you can also say things like:
 
 \begin{quote}
@@ -2775,7 +2775,7 @@ equivalents of the various bind operations.
 \subsection{Use with corbaname}
 
 To make it easy to use omniNames with \corbauri{corbaname} URIs, it
-now starts with the default port of 2089, and an object key of
+now starts with the default port of 2809, and an object key of
 `\texttt{NameService}' for the root naming context. This is only
 possible when it is started `fresh', rather than with a log file from
 an older omniNames version.
@@ -2791,10 +2791,10 @@ For the port number, there are two options. The first is to run
 omniNames with a command line argument like:
 
 \begin{quote}
-\cmdline{omniNames -logdir /the/log/dir -ORBpoa\_iiop\_port 2089}
+\cmdline{omniNames -logdir /the/log/dir -ORBpoa\_iiop\_port 2809}
 \end{quote}
 
-\noindent This causes it to listen on both port 2089 \emph{and}
+\noindent This causes it to listen on both port 2809 \emph{and}
 whatever port it listened on before. The disadvantage with this is
 that the IORs to all naming contexts now contain two IIOP profiles,
 one for each port, which, amongst other things, increases the size of
@@ -2806,11 +2806,11 @@ The second option is to use omniMapper, as described below.
 \section{omniMapper}
 \hyphenation{omni-Mapper}
 
-omniMapper is a simple daemon which listens on port 2089 (or any other
+omniMapper is a simple daemon which listens on port 2809 (or any other
 port), and redirects IIOP requests for configured object keys to
 associated persistent IORs. It can be used to make a naming service
 (even an old non-INS aware version of omniNames or other ORB's naming
-service) appear on port 2089 with the object key
+service) appear on port 2809 with the object key
 `\texttt{NameService}'. The same goes for any other service you may
 wish to specify, such as an interface repository. omniMapper is
 started with a command line of:
@@ -2822,7 +2822,7 @@ started with a command line of:
 \end{quote}
 
 \noindent The \cmdline{-port} option allows you to choose a port other
-than 2089 to listen on\footnote{You can also play the
+than 2809 to listen on\footnote{You can also play the
 \cmdline{-ORBpoa\_iiop\_port} trick to make it listen on more than one
 port.}. The \cmdline{-config} option specifies a location for the
 configuration file. The default name is \file{/etc/omniMapper.cfg}, or

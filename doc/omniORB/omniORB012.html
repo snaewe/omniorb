@@ -141,7 +141,7 @@ through <TT>set_exception()</TT>. This will allow the ORB to then see if it
 is one of the standard object operations.<BR>
 <BR>
 Firstly <TT>arguments()</TT> must be called passing a
-<TT>CORBA::NVList</TT><A NAME="text26" HREF="#note26"><SUP><FONT SIZE=2>1</FONT></SUP></A> which must be initialised to contain
+<TT>CORBA::NVList</TT><A NAME="text27" HREF="#note27"><SUP><FONT SIZE=2>1</FONT></SUP></A> which must be initialised to contain
 the type and mode of the parameters. The ORB consumes this value and
 will release it when the operation is complete. At this point any
 <EM>in</EM>/<EM>inout</EM> arguments will be unmarshalled, and when this
@@ -217,7 +217,7 @@ MyDynImpl::invoke(CORBA::ServerRequest_ptr request)
   }
 }
 </PRE><HR WIDTH="50%" SIZE=1><DL>
-<DT><A NAME="note26" HREF="#text26"><FONT SIZE=5>1</FONT></A><DD> obtained by calling
+<DT><A NAME="note27" HREF="#text27"><FONT SIZE=5>1</FONT></A><DD> obtained by calling
 <TT>CORBA::ORB::create_list()</TT>
 </DL>
 <HR>
