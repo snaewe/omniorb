@@ -1,3 +1,14 @@
+Tue Aug 11 18:45:23 BST 1998 sll
+================================
+
+- Merged Phar Lap Realtime ETS-Kernel patch
+
+src/dir.mk
+src/lib/omniORB2/dir.mk
+src/lib/omnithread/dir.mk
+src/lib/omniORB2/initFile.h
+src/lib/omniORB2/initFile.cc
+
 Tue Aug 11 12:42:56 BST 1998 sll
 ================================
 
