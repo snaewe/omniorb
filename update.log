@@ -5,6 +5,7 @@ Fri Nov 20 19:05:29 GMT 1998 sll
 
 src/lib/omniORB2/sharedlib/dir.mk
 src/lib/omnithread/sharedlib/dir.mk
+src/lib/omniORB2/gatekeepers/sharedlib/dir.mk
 
 Mon Nov  9 10:48:40 GMT 1998 sll
 ===============================
