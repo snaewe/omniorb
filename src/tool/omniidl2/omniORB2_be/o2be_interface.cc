@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.38  1999/07/02 19:15:28  sll
+  No longer inlined virtual destructors.
+
   Revision 1.37  1999/06/25 13:52:25  sll
   Updated any extraction operator to non-copy semantics but can be override
   by the value of omniORB_27_CompatibleAnyExtraction.
@@ -627,7 +630,7 @@ o2be_interface::produce_hdr(std::fstream &s)
   IND(s); s << "this->PR_setobj(this);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
-  IND(s); s << "virtual ~" << uqname() << "() {}\n";
+  IND(s); s << "virtual ~" << uqname() << "();\n";
   IND(s); s << "virtual void *_widenFromTheMostDerivedIntf(const char *repoId,CORBA::Boolean is_cxx_type_id=0);\n";
   s << "\n";
   DEC_INDENT_LEVEL();
@@ -656,7 +659,7 @@ o2be_interface::produce_hdr(std::fstream &s)
   INC_INDENT_LEVEL();
   IND(s); s << server_uqname() << "() {}\n";
   IND(s); s << server_uqname() << "(const " << objectkeytype(this) << "& k);\n";
-  IND(s); s << "virtual ~" << server_uqname() << "() {}\n";
+  IND(s); s << "virtual ~" << server_uqname() << "();\n";
   IND(s); s << objref_uqname() << " _this() { return "
 	    << uqname() << "::_duplicate(this); }\n";
   IND(s); s << "void _obj_is_ready(CORBA::BOA_ptr boa) { boa->obj_is_ready(this); }\n";
@@ -745,7 +748,7 @@ o2be_interface::produce_hdr(std::fstream &s)
   DEC_INDENT_LEVEL();
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
-  IND(s); s << "virtual ~" << proxy_uqname() << "() {}\n";
+  IND(s); s << "virtual ~" << proxy_uqname() << "();\n";
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
@@ -821,7 +824,7 @@ o2be_interface::produce_hdr(std::fstream &s)
   INC_INDENT_LEVEL();
   IND(s); s << nil_uqname() << "() : omniObject(omniObject::nilObjectManager())" 
 	    << " { this->PR_setobj(0); }\n";
-  IND(s); s << "virtual ~" << nil_uqname() << "() {}\n";
+  IND(s); s << "virtual ~" << nil_uqname() << "();\n";
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
@@ -883,7 +886,7 @@ o2be_interface::produce_hdr(std::fstream &s)
     INC_INDENT_LEVEL();
     IND(s); s << lcserver_uqname() << "() {}\n";
     IND(s); s << lcserver_uqname() << "(const omniORB::objectKey& k);\n";
-    IND(s); s << "virtual ~" << lcserver_uqname() << "() {}\n";
+    IND(s); s << "virtual ~" << lcserver_uqname() << "();\n";
     IND(s); s << objref_uqname() << " _this();\n";
     IND(s); s << "void _obj_is_ready(CORBA::BOA_ptr boa) { boa->obj_is_ready(this); }\n";
     IND(s); s << "CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }\n";
@@ -977,7 +980,7 @@ o2be_interface::produce_hdr(std::fstream &s)
     IND(s); s << "public:\n";
     INC_INDENT_LEVEL();
     IND(s); s << dead_uqname() << "() { }\n";
-    IND(s); s << "virtual ~" << dead_uqname() << "() {}\n";
+    IND(s); s << "virtual ~" << dead_uqname() << "();\n";
     {
       UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
       while (!i.is_done())
@@ -1141,7 +1144,7 @@ o2be_interface::produce_hdr(std::fstream &s)
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n";
 
-    IND(s); s << "virtual ~" << lcproxy_uqname() << "() {}\n";
+    IND(s); s << "virtual ~" << lcproxy_uqname() << "();\n";
 
     IND(s); s << "void _set_wrap_" << _fqname() << "("
 	      << wrapproxy_uqname() << " *wrap) {\n";
@@ -1312,7 +1315,7 @@ o2be_interface::produce_hdr(std::fstream &s)
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
   IND(s); s << uqname() << PROXY_OBJ_FACTORY_POSTFIX << " () {}\n";
-  IND(s); s << "virtual ~" << uqname() << PROXY_OBJ_FACTORY_POSTFIX << " () {}\n";
+  IND(s); s << "virtual ~" << uqname() << PROXY_OBJ_FACTORY_POSTFIX << " ();\n";
   IND(s); s << "virtual const char *irRepoId() const;\n";
   IND(s); s << "virtual CORBA::Object_ptr newProxyObject(Rope *r,CORBA::Octet *key,size_t keysize,IOP::TaggedProfileList *profiles,CORBA::Boolean release);\n";
   IND(s); s << "virtual CORBA::Boolean is_a(const char *base_repoId) const;\n";
@@ -1473,6 +1476,21 @@ o2be_interface::produce_skel(std::fstream &s)
 	i.next();
       }
   }
+
+  // virtual dtor of all the interface classes
+  IND(s); s << fqname() << "::~" << uqname() << " () {}\n\n";
+  IND(s); s << server_fqname() << "::~" << server_uqname() << " () {}\n\n";
+  IND(s); s << proxy_fqname() << "::~" << proxy_uqname() << " () {}\n\n";
+  IND(s); s << nil_fqname() << "::~" << nil_uqname() << " () {}\n\n";
+  IND(s); s << fqname() << PROXY_OBJ_FACTORY_POSTFIX 
+	    << "::~" << uqname() << PROXY_OBJ_FACTORY_POSTFIX << " () {}\n\n";
+
+  if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
+    IND(s); s << lcserver_fqname() << "::~" << lcserver_uqname() << " () {}\n\n";
+    IND(s); s << dead_fqname() << "::~" << dead_uqname() << " () {}\n\n";
+    IND(s); s << lcproxy_fqname() << "::~" << lcproxy_uqname() << " () {}\n\n";
+  }
+
 
   // proxy member functions
   {
