@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.3  1997/04/29 12:29:29  sll
-  Added support for prefix, ID and version pragmas.
+  Revision 1.4  1997/05/02 16:27:09  sll
+  Updated the list of C++ reserved words to the latest draft C++ standard.
 
+// Revision 1.3  1997/04/29  12:29:29  sll
+// Added support for prefix, ID and version pragmas.
+//
 // Revision 1.2  1997/02/17  18:09:56  ewc
 // Added support for Windows NT
 //
@@ -190,17 +193,23 @@ internal_produce_scope_name(UTL_ScopedName *n,char *separator)
 
 // reserved words are the keywords of C++ minus the keywords of CORBA IDL.
 static char *reserved_words[] = {
-  "asm", "auto", "break", 
-  "catch",  "class", "continue",
-  "delete", "do",
-  "else", "extern",
-  "for", "friend", 
-  "goto", "if", "inline", "int", "new", "operator",
+  "and", "and_eq", "asm", "auto", 
+  "bitand", "bitor", "break", 
+  "catch",  "class", "compl", "const_cast", "continue",
+  "delete", "do", "dynamic_cast",
+  "else", "explicit", "extern",
+  "false", "for", "friend", 
+  "goto", "if", "inline", "int", 
+  "mutable", 
+  "namespace", "new", "not", "not_eq",
+  "operator", "or", "or_eq",
   "private", "protected", "public",
-  "register", "return",
-  "signed", "sizeof", "static",
-  "template", "this", "throw", "try",
-  "virtual", "volatile", "while",
+  "register", "reinterpret_cast", "return",
+  "signed", "sizeof", "static", "static_cast",
+  "template", "this", "throw", "true", "try", "typeid", "typename",
+  "using", 
+  "virtual", "volatile", "wchar_t", "while",
+  "xor", "xor_eq",
   NULL
 };
 
