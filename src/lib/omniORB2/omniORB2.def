@@ -1,5 +1,5 @@
 LIBRARY omniorb2_rt
-VERSION 0.0
+VERSION 1.0
 EXPORTS
 ??0?$_CORBA_ConstrType_Variable_OUT_arg@UBinding@CosNaming@@V?$_CORBA_ConstrType_Variable_Var@UBinding@CosNaming@@@@@@QAE@AAV?$_CORBA_ConstrType_Variable_Var@UBinding@CosNaming@@@@@Z
 ??0?$_CORBA_ObjRef_OUT_arg@VBindingIterator@CosNaming@@V?$_CORBA_ObjRef_Var@VBindingIterator@CosNaming@@VBindingIterator_Helper@2@@@V?$_CORBA_ObjRef_Member@VBindingIterator@CosNaming@@VBindingIterator_Helper@2@@@VBindingIterator_Helper@2@@@QAE@AAV?$_CORBA_ObjRef_Var@VBindingIterator@CosNaming@@VBindingIterator_Helper@2@@@@Z
