@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.22.2.8  2000/11/29 13:55:29  sll
+  For those platforms which cannot be unblocked from a recv() by a
+  shutdown(), now do poll() or select() for both incoming and outgoing
+  strands.  This is necessary especialy for win32 or else the server side
+  socket will not shutdown until the client side close the socket. This
+  wasn't done previously as it was thought that shutdown() does have an
+  effect on recv() if this is a passive socket. This turns out to be wrong.
+
   Revision 1.22.2.7  2000/01/27 18:09:04  djr
   Fixed bug in dumpbuf().
 
@@ -146,6 +154,31 @@
 #include <ropeFactory.h>
 #include <tcpSocket.h>
 
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+//           Platform dependent includes and macros                       //
+//                                                                        //
+//  The ORB uses shutdown(2) to asynchronously notify a thread that is    //
+//  blocking on receiving data from a socket to give up on the wait.      //
+//  On some platforms, the shutdown call only has an effect on subsequent //
+//  recv() but not the ones that are in progress. For these platforms, we //
+//  have to block on a timeout so that the shutdown call will have a      //
+//  chance to notify the blocking thread.                                 //
+//  We can either use poll(2) or select(2), define either of the          //
+//  following macro to choose one of them iff the platform exhibits the   //
+//  above behaviour.                                                      //
+//    #define USE_POLL_ON_RECV                                            //
+//    #define USE_SELECT_ON_RECV                                          //
+//                                                                        //
+//  To put an upper bound on the time to wait for a connect() to succeed, //
+//  define this macro to enable non-blocking connect. Make sure that      //
+//  the platform supports this.                                           //
+//    #define USE_NONBLOCKING_CONNECT                                     //
+//
+//  The maximum number of seconds to wait for a connect() to succeed:
+#     define MAX_CONNECTION_WAIT   30
+////////////////////////////////////////////////////////////////////////////
+
 #if defined(__WIN32__)
 
 #include <winsock.h>
@@ -157,6 +190,9 @@
 #define INETSOCKET         PF_INET
 #define CLOSESOCKET(sock)  closesocket(sock)
 #define SHUTDOWNSOCKET(sock) ::shutdown(sock,2)
+#define USE_SELECT_ON_RECV
+#define USE_NONBLOCKING_CONNECT
+
 #else
 
 #include <sys/time.h>
@@ -187,7 +223,17 @@
 
 #if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
 #include <sys/types.h>
+#endif
+
+
+#if defined(__hpux__)
+#include <poll.h>
+#define USE_POLL_ON_RECV
+#endif
+
+#if !defined(__VMS)
 #include <fcntl.h>
+#define USE_NONBLOCKING_CONNECT
 #endif
 
 #define RC_INADDR_NONE     ((CORBA::ULong)-1)
@@ -766,7 +812,7 @@ unsigned int
 tcpSocketStrand::buffer_size = 8192 + (int)omni::max_alignment;
 
 
-static tcpSocketHandle_t realConnect(tcpSocketEndpoint* r);
+static tcpSocketHandle_t realConnect(tcpSocketEndpoint*,tcpSocketStrand*);
 
 
 tcpSocketStrand::tcpSocketStrand(tcpSocketOutgoingRope *rope,
@@ -824,11 +870,11 @@ static void dumpbuf(unsigned char* buf, size_t sz)
 {
   static omni_mutex lock;
   omni_mutex_lock sync(lock);
-  int i;
+  unsigned i;
   char row[80];
 
   // Do complete rows of 16 octets.
-  while( sz >= 16 ) {
+  while( sz >= 16u ) {
     sprintf(row, "%02x%02x %02x%02x %02x%02x %02x%02x "
 	         "%02x%02x %02x%02x %02x%02x %02x%02x ",
             (int) buf[0], (int) buf[1], (int) buf[2], (int) buf[3],
@@ -837,19 +883,19 @@ static void dumpbuf(unsigned char* buf, size_t sz)
             (int) buf[12], (int) buf[13], (int) buf[14], (int) buf[15]);
     fprintf(stderr, "%s", row);
     char* p = row;
-    for( i = 0; i < 16; i++ )  *p++ = printable_char(*buf++);
+    for( i = 0u; i < 16u; i++ )  *p++ = printable_char(*buf++);
     *p++ = '\0';
     fprintf(stderr,"%s\n", row);
-    sz -= 16;
+    sz -= 16u;
   }
 
   if( sz ) {
     // The final part-row.
-    for( i = 0; i < sz; i++ )
-      fprintf(stderr, (i & 1) ? "%02x ":"%02x", (int) buf[i]);
-    for( ; i < 16; i++ )
-      fprintf(stderr, (i & 1) ? "   ":"  ");
-    for( i = 0; i < sz; i++ )
+    for( i = 0u; i < sz; i++ )
+      fprintf(stderr, (i & 1u) ? "%02x ":"%02x", (int) buf[i]);
+    for( ; i < 16u; i++ )
+      fprintf(stderr, (i & 1u) ? "   ":"  ");
+    for( i = 0u; i < sz; i++ )
       fprintf(stderr, "%c", printable_char(buf[i]));
     fprintf(stderr,"\n");
   }
@@ -863,7 +909,7 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
     // We have not connect to the remote host yet. Do the connect now.
     // Note: May block on connect for sometime if the remote host is down
     //
-    if ((pd_socket = realConnect(pd_delay_connect)) == RC_INVALID_SOCKET) {
+    if ((pd_socket = realConnect(pd_delay_connect,this)) == RC_INVALID_SOCKET) {
       _setStrandIsDying();
 #ifndef __WIN32__
       throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
@@ -876,7 +922,54 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
   }
 
   int rx;
+
+#ifdef __VMS
+  // OpenVMS socket library cannot handle more than 64K buffer.
+  if (sz > 65535) sz = 65536-8;
+#endif
+
   while (1) {
+
+# if defined(USE_POLL_ON_RECV)
+    struct pollfd fds;
+    fds.fd = pd_socket;
+    fds.events = POLLIN;
+
+    while ((rx = poll(&fds,1,omniORB::scanGranularity()*1000)) <= 0) {
+      if (rx == RC_SOCKET_ERROR && errno != EINTR) 
+	break;
+    }
+
+# elif defined(USE_SELECT_ON_RECV)
+    do {
+      fd_set fds, efds;
+      FD_ZERO(&fds);
+      FD_ZERO(&efds);
+      FD_SET(pd_socket,&fds);
+      FD_SET(pd_socket,&efds);
+      struct timeval t;
+      t.tv_sec = omniORB::scanGranularity();
+      t.tv_usec = 0;
+      rx = select(pd_socket+1,&fds,0,&efds,&t);
+#   ifndef __WIN32__
+      if (rx == RC_SOCKET_ERROR && errno != EINTR)
+	break;
+#   else
+      if (rx == RC_SOCKET_ERROR && ::WSAGetLastError() != WSAEINTR)
+	break;
+
+      // Unfortunately, select() in WIN32 does not return with an error even
+      // when the socket has been shutdown. As a workaround, we
+      // check also if the strand is dying. Notice that reading the
+      // state of the strand is not synchronised. In the worst case,
+      // we may wait for an extra omniORB::scanGranularity() period before
+      // noticing that the strand is dying.
+      if (_strandIsDying()) break;
+
+#   endif
+    } while (rx <= 0);
+# endif
+    
     if ((rx = ::recv(pd_socket,(char*)buf,sz,0)) == RC_SOCKET_ERROR) {
       if (errno == EINTR)
 	continue;
@@ -915,7 +1008,7 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
     // We have not connect to the remote host yet. Do the connect now.
     // Note: May block on connect for sometime if the remote host is down
     //
-    if ((pd_socket = realConnect(pd_delay_connect)) == RC_INVALID_SOCKET) {
+    if ((pd_socket = realConnect(pd_delay_connect,this)) == RC_INVALID_SOCKET) {
       _setStrandIsDying();
 #ifndef __WIN32__
       throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
@@ -936,8 +1029,15 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
   }
 
   while (sz) {
-    if ((tx = ::send(pd_socket,p,sz,0)) == RC_SOCKET_ERROR) {
-#ifndef __WIN32__
+
+    size_t ssz = sz;
+#ifdef __VMS
+  // OpenVMS socket library cannot handle more than 64K buffer.
+  if (ssz > 65535) ssz = 65536-8;
+#endif
+
+    if ((tx = ::send(pd_socket,p,ssz,0)) == RC_SOCKET_ERROR) {
+#   ifndef __WIN32__
       if (errno == EINTR)
 	continue;
       else {
@@ -1023,7 +1123,7 @@ tcpSocketStrand::real_shutdown()
 
 static
 tcpSocketHandle_t
-realConnect(tcpSocketEndpoint* r)
+realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
 {
   struct sockaddr_in raddr;
   LibcWrapper::hostent_var h;
@@ -1064,39 +1164,99 @@ realConnect(tcpSocketEndpoint* r)
     return RC_INVALID_SOCKET;
   }
 
-#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#if defined(USE_NONBLOCKING_CONNECT)
   // Use non-blocking connect.
+# if !defined(__WIN32__)
   int fl = O_NONBLOCK;
   if (fcntl(sock,F_SETFL,fl) < RC_SOCKET_ERROR) {
     CLOSESOCKET(sock);
     return RC_INVALID_SOCKET;
   }
+# else
+  u_long v = 1;
+  if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
+    CLOSESOCKET(sock);
+    return RC_INVALID_SOCKET;
+  }
+# endif
   if (connect(sock,(struct sockaddr *)&raddr,
 	      sizeof(struct sockaddr_in)) == RC_SOCKET_ERROR) 
   {
+# ifndef __WIN32__
     if (errno != EINPROGRESS) {
       CLOSESOCKET(sock);
       return RC_INVALID_SOCKET;
     }
-    fd_set wrfds;
-#   ifndef __CIAO__
-    FD_ZERO(&wrfds);
-    FD_SET(sock,&wrfds);
-#   endif
-    struct timeval t = { 30,0 };
+# else
+    if (::WSAGetLastError() != WSAEWOULDBLOCK) {
+      CLOSESOCKET(sock);
+      return RC_INVALID_SOCKET;
+    }
+# endif
+
+    int tremain = MAX_CONNECTION_WAIT;
     int rc;
-    if ((rc = select(sock+1,0,&wrfds,0,&t)) <= 0) {
-      // Timeout, do not bother trying again.
+    while (tremain) {
+
+      fd_set wrfds, exfds;
+# ifndef __CIAO__
+      FD_ZERO(&wrfds);
+      FD_ZERO(&exfds);
+      FD_SET(sock,&wrfds);
+      FD_SET(sock,&exfds);
+# endif
+      struct timeval t;
+      int tselect = omniORB::scanGranularity();
+      if (tselect > tremain) tselect = tremain;
+      t.tv_sec = tselect;
+      t.tv_usec = 0;
+    again:
+      rc = select(sock+1,0,&wrfds,&exfds,&t);
+
+      if (rc == 0) {
+	tremain -= tselect;
+      }
+      else if (rc == RC_SOCKET_ERROR) {
+#   ifndef __WIN32__
+	if (errno == EINTR)
+	  continue;
+#   else 
+	if (::WSAGetLastError() == WSAEINTR)
+	  continue;
+#   endif
+	else
+	  break;
+      }
+      else {
+	if (FD_ISSET(sock,&exfds)) {
+	  rc = RC_SOCKET_ERROR;
+	}
+	break;
+      }
+      if (s->_strandIsDying()) {
+        tremain = 0;
+        break;
+      }
+    }
+    if (rc == RC_SOCKET_ERROR || !tremain) {
       CLOSESOCKET(sock);
       return RC_INVALID_SOCKET;
     }
   }
   // Set the socket back to blocking
+# if !defined(__WIN32__)
   fl = 0;
   if (fcntl(sock,F_SETFL,fl) == RC_SOCKET_ERROR) {
     CLOSESOCKET(sock);
     return RC_INVALID_SOCKET;
   }
+# else
+  v = 0;
+  if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
+    CLOSESOCKET(sock);
+    return RC_INVALID_SOCKET;
+  }
+# endif
 
 #else
   if (connect(sock,(struct sockaddr *)&raddr,
@@ -1117,7 +1277,7 @@ realConnect(tcpSocketEndpoint* r)
 #if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
 #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x420
 #include <signal.h>
-extern "C" void abort()
+static void abort()
 {
   kill (getpid(),SIGABRT);
   while (1) {
@@ -1357,10 +1517,14 @@ tcpSocketWorker::_realRun(void *arg)
   
   PTRACE("Worker","start.");
 
-  if (!gateKeeper::checkConnect(s)) {
+#ifndef _MSC_VER
+  //??
+  if ( !gateKeeper::checkConnect(s)) {
     s->real_shutdown();
   }
-  else {
+  else
+#endif
+    {
     while (1) {
       try {
 	GIOP_S::dispatcher(s);
