@@ -17,6 +17,7 @@ src/lib/omniORB/orbcore/giopWorker.cc
 src/lib/omniORB/orbcore/orbOptionsFile.cc
 src/lib/omniORB/orbcore/transportRules.cc
 
+src/lib/omniORB/include/gatekeeper.h               REMOVED
 src/lib/omniORB/orbcore/gatekeepers                REMOVED
 external_merge/src/lib/omniORB/orbcore/gatekeepers REMOVED
 
