@@ -40,10 +40,11 @@ NETLIBOBJS = tcpSocket_ATMos.o
 DIR_CPPFLAGS = -DATMosArchitecture
 endif
 
-# Required to build Naming.hh and NamingSK.cc:
-ifndef Win32Platform
 CorbaImplementation = OMNIORB2
 vpath %.idl $(VPATH)
+
+# Required to build Naming.hh and NamingSK.cc:
+ifndef Win32Platform
 CORBA_STUB_HDRS = Naming.hh
 NAMINGSRC = NamingSK.cc
 NAMINGOBJ = NamingSK.o
@@ -67,16 +68,19 @@ ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             libcWrapper.o mbufferedStream.o nbufferedStream.o $(NAMINGOBJ) \
             object.o objectRef.o objectKey.o orb.o strand.o $(NETLIBOBJS)
 
+LC_SRCS = omniLifeCycle.cc reDirect.cc omniLifeCycleSK.cc
+LC_OBJS = omniLifeCycle.o reDirect.o omniLifeCycleSK.o
+
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -I./..
 DIR_CPPFLAGS += -D__OMNIORB__
 
-CXXSRCS = $(ORB2_SRCS) $(UNSHARED_SRCS)
-
+CXXSRCS = $(ORB2_SRCS) $(UNSHARED_SRCS) $(LC_SRCS)
 
 lib = $(patsubst %,$(LibPattern),omniORB2)
+lclib = $(patsubst %,$(LibPattern),omniLC)
 
-all:: $(lib)
+all:: $(lib) $(lclib)
 
 all::
 	@$(MakeSubdirs)
@@ -84,18 +88,24 @@ all::
 $(lib): $(ORB2_OBJS) $(UNSHARED_OBJS)
 	@$(StaticLinkLibrary)
 
+$(lclib): $(LC_OBJS)
+	@$(StaticLinkLibrary)
+
 Naming.hh NamingSK.cc:	Naming.idl
+	$(OMNIORB2_IDL) $^
+
+omniLifeCycle.hh omniLifeCycleSK.cc: omniLifeCycle.idl
 	$(OMNIORB2_IDL) $^
 
 ifdef Win32Platform
 clean::
-	$(RM) $(lib)
+	$(RM) $(lib) $(lclib) omniLifeCycle.hh omniLifeCycleSK.cc
 else
 clean::
-	$(RM) $(lib) Naming.hh NamingSK.cc
+	$(RM) $(lib) $(lclib) omniLifeCycle.hh omniLifeCycleSK.cc Naming.hh NamingSK.cc
 endif
 
-export:: $(lib)
+export:: $(lib) $(lclib)
 	@$(ExportLibrary)
 
 ifndef Win32Platform
