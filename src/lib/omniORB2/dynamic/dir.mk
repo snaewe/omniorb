@@ -14,7 +14,7 @@ ORB2_SRCS = constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
           object.cc objectKey.cc objectRef.cc ropeFactory.cc \
           strand.cc scavenger.cc \
 	  typecode.cc any.cc tcParseEngine.cc \
-          $(NETLIBSRCS)
+          $(NETLIBSRCS) $(LOG_SRCS)
 
 ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             corbaString.o \
@@ -23,12 +23,16 @@ ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             object.o objectRef.o objectKey.o ropeFactory.o \
 	    strand.o scavenger.o \
 	    typecode.o any.o tcParseEngine.o \
-            $(NETLIBOBJS)
+            $(NETLIBOBJS) $(LOG_OBJS)
 
 LC_SRCS = omniLifeCycle.cc reDirect.cc omniLifeCycleSK.cc
 LC_OBJS = omniLifeCycle.o reDirect.o omniLifeCycleSK.o
 
-DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS) -I. -I./.. 
+LOG_SRCS = logIOstream.cc
+LOG_OBJS = logIOstream.o
+
+DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS) -I. -I./..
+DIR_CPPFLAGS += -DUSE_omniORB_logStream
 
 CXXSRCS = $(ORB2_SRCS) $(LC_SRCS)
 
