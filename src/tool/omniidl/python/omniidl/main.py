@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.10  2002/06/05 22:26:32  dgrisby
+# Cope with spaces in paths to IDL files.
+#
 # Revision 1.17.2.9  2002/04/25 23:12:44  dgrisby
 # Bug with invalid omniidl option reporting.
 #
@@ -386,12 +389,13 @@ def main(argv=None):
             sys.exit(1)
 
  	if sys.platform != 'OpenVMS' or len(preprocessor_args)==0:
- 	    preproc_cmd = preprocessor_cmd + " " + \
- 			  string.join(preprocessor_args, " ") + " " + file
+ 	    preproc_cmd = '%s %s "%s"' % (preprocessor_cmd,
+                                          string.join(preprocessor_args, ' '),
+                                          file)
  	else:
- 	    preproc_cmd = preprocessor_cmd + ' "' + \
-                       string.join(preprocessor_args, '" "') + '" ' + file
-
+            preproc_cmd = '%s "%s" %s' % (preprocessor_cmd,
+                                          string.join(preprocessor_args,'" "'),
+                                          file)
         if not no_preprocessor:
             if verbose:
                 sys.stderr.write(cmdname + ": Preprocessing '" +\

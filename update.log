@@ -1,3 +1,11 @@
+Wed Jun  5 23:20:39 BST 2002 dgrisby
+====================================
+
+- Cope with spaces in paths to IDL files.
+
+src/tool/omniidl/python/omniidl/main.py
+
+
 Wed May 29 15:25:04 BST 2002 dgrisby
 ====================================
 
