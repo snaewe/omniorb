@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.3  2001/06/08 17:12:14  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.8.2.2  2000/10/12 15:37:49  sll
 # Updated from omni3_1_develop.
 #
@@ -105,7 +108,7 @@ def generate(stream, tree):
     stream.out(template.header_comment,
                program = config.state['Program Name'],
                library = config.state['Library Version'])
-    if not(config.state['Fragment']):
+    if not config.state['Fragment']:
         stream.out(template.header,
                    basename = config.state['Basename'],
                    hh = config.state['HH Suffix'],

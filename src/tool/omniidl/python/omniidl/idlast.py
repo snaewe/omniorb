@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.5  2001/06/08 17:12:25  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.15.2.4  2000/11/01 15:57:03  dpg1
 # More updates for 2.4.
 #
@@ -181,6 +184,7 @@ Functions:
         self.__file     = file
         self.__line     = line
         self.__mainFile = mainFile
+        self.__builtIn  = 0
         self.__pragmas  = pragmas
         self.__comments = comments
 
@@ -189,6 +193,7 @@ Functions:
     def file(self):     return self.__file
     def line(self):     return self.__line
     def mainFile(self): return self.__mainFile
+    def builtIn(self):  return self.__builtIn
     def pragmas(self):  return self.__pragmas
     def comments(self): return self.__comments
 
@@ -1103,6 +1108,7 @@ CORBAObject = Interface("<built in>", 0, 0, [], [],
                         "Object", ["CORBA", "Object"],
                         "IDL:omg.org/CORBA/Object:1.0",
                         0, 0, [])
+CORBAObject._Decl__builtIn = 1
 registerDecl(["CORBA", "Object"], CORBAObject)
 
 CORBAModule = Module("<built in>", 0, 0, [], [], "CORBA", ["CORBA"],

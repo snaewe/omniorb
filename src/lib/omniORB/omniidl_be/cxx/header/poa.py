@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.3  2001/06/08 17:12:17  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.17.2.2  2000/10/12 15:37:51  sll
 # Updated from omni3_1_develop.
 #
@@ -144,7 +147,7 @@ def __init__(stream):
 
 
 def POA_prefix():
-    if not(self.__nested):
+    if not self.__nested:
         return "POA_"
     return ""
 
@@ -154,21 +157,17 @@ def POA_prefix():
 def visitAST(node):
     self.__completedModules = {}
     for n in node.declarations():
-        n.accept(self)
+        if ast.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
-    # again, check what happens with reopened modules spanning
-    # multiple files
-    if not(node.mainFile()):
-        return
-
     if self.__completedModules.has_key(node):
         return
     self.__completedModules[node] = 1
     
     name = id.mapID(node.identifier())
 
-    if not(config.state['Fragment']):
+    if not config.state['Fragment']:
         stream.out(template.POA_module_begin,
                    name = name,
                    POA_prefix = POA_prefix())
@@ -191,15 +190,12 @@ def visitModule(node):
 
     self.__nested = nested
 
-    if not(config.state['Fragment']):
+    if not config.state['Fragment']:
         stream.dec_indent()
         stream.out(template.POA_module_end)
     return
 
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-
     iname = id.mapID(node.identifier())
     environment = id.lookup(node)
     scopedName = id.Name(node.scopedName())
@@ -214,9 +210,14 @@ def visitInterface(node):
     for i in map(ast.remove_ast_typedefs, node.inherits()):
         name = id.Name(i.scopedName())
         i_POA_name = name.unambiguous(environment)
-        
-        if name.relName(environment) == i.scopedName():
-            # fully qualified POA name has a POA_ on the front
+
+        if name.relName(environment) == None:
+            # we need to fully qualify from the root
+            i_POA_name = "::POA_" + name.fullyQualify(environment)
+            
+        elif name.relName(environment) == i.scopedName():
+            # fully qualified (but not from root) POA name has a POA_ on the
+            # front
             i_POA_name = "POA_" + i_POA_name
             
         inherits.append("public virtual " + i_POA_name)

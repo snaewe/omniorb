@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.8  2001/06/08 17:12:19  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.29.2.7  2001/03/13 10:32:09  dpg1
 # Fixed point support.
 #
@@ -222,6 +225,12 @@ def __init__(stream):
     # To keep track of our depth with the AST
     self.__insideInterface = 0
     self.__insideModule = 0
+
+    # An entry in this dictionary indicates a flattened typedef
+    # already exists for this interface. See comments later for
+    # explanation.
+    self.__flattened_interfaces = {}
+    
     return self
 
 # ------------------------------------
@@ -229,8 +238,7 @@ def __init__(stream):
 
 def visitAST(node):
     for n in node.declarations():
-        # Not sure what should happen when modules are reopened
-        if n.mainFile():
+        if ast.shouldGenerateCodeForDecl(n):
             n.accept(self)
 
 def visitModule(node):
@@ -323,7 +331,7 @@ def visitInterface(node):
 
 def visitTypedef(node):
     environment = id.lookup(node)
-    is_global_scope = not(self.__insideModule or self.__insideInterface)
+    is_global_scope = not (self.__insideModule or self.__insideInterface)
 
     aliasType = types.Type(node.aliasType())
 
@@ -497,7 +505,7 @@ def visitUnion(node):
             unmarshal_cases.dec_indent()
             unmarshal_cases.out("break;")
 
-    if not(hasDefault) and not(exhaustive):
+    if not hasDefault and not exhaustive:
         unmarshal_cases.out("default: _pd__default = 1; break;")
         
             
@@ -511,7 +519,7 @@ def visitUnion(node):
                 hasDefault = hasDefault, defaultCase = defaultCase,
                 environment = environment, defaultMember = defaultMember,
                 marshal_cases = marshal_cases):
-        if not(exhaustive):
+        if not exhaustive:
 
             def default(stream = stream, exhaustive = exhaustive,
                         hasDefault = hasDefault, defaultCase = defaultCase,
@@ -566,35 +574,38 @@ def visitConst(node):
     value = d_constType.literal(node.value(), environment)
     
     init_in_def = d_constType.representable_by_int()
-
     
     if init_in_def:
         if self.__insideInterface:
-            stream.out("""\
-const @type@ @name@ _init_in_cldef_( = @value@ );
-""",
+            stream.out(template.const_in_interface,
                        type = type_string, name = name, value = value)
         else:
-            stream.out("""\
-_init_in_def_( const @type@ @name@ = @value@; )
-""",
+            stream.out(template.const_init_in_def,
                        type = type_string, name = name, value = value)
         return
 
     # not init_in_def
-    if self.__insideModule and not(self.__insideInterface):
+    if self.__insideModule and not self.__insideInterface:
         scopedName = node.scopedName()
         scopedName = map(id.mapID, scopedName)
-        scope_str = idlutil.ccolonName(scopedName[0:len(scopedName)-1])
-        name_str = scopedName[len(scopedName)-1]
+
+        open_namespace  = ""
+        close_namespace = ""
+
+        for s in scopedName[:-1]:
+            open_namespace  = open_namespace  + "namespace " + s + " { "
+            close_namespace = close_namespace + "} "
+
+        simple_name = scopedName[-1]
+
         stream.out(template.const_namespace,
-                   type = type_string, scope = scope_str, name = name_str,
-                   scopedName = name, value = value)
+                   open_namespace = open_namespace,
+                   close_namespace = close_namespace,
+                   type = type_string, simple_name = simple_name,
+                   name = name, value = value)
         
     else:
-        stream.out("""\
-const @type@ @name@ = @value@;
-""",
+        stream.out(template.const_simple,
                    type = type_string, name = name, value = value)
         
 
@@ -668,7 +679,7 @@ def visitException(node):
 @member_name@@index@ = _s.@member_name@@index@;""", member_name = decl_name,
                                index = index)
 
-            if d_memberType.objref() and not(is_array):
+            if d_memberType.objref() and not is_array:
                 # these are special resources which need to be explicitly
                 # duplicated (but not if an array?)
                 duplicate = string.replace(memberType_fqname,"_ptr","") + \

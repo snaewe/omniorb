@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.3  2001/06/08 17:12:24  dpg1
+// Merge all the bug fixes from omni3_develop.
+//
 // Revision 1.4.2.2  2000/10/27 16:31:10  dpg1
 // Clean up of omniidl dependencies and types, from omni3_develop.
 //
@@ -97,7 +100,7 @@ typedef _CORBA_ULONGLONG_DECL     IDL_ULongLong;
 
 #ifndef NO_FLOAT
 
-#ifndef __VMS
+#ifndef __VAX
 
 // This platform uses IEEE float
 typedef float                     IDL_Float;
@@ -107,30 +110,15 @@ typedef double                    IDL_Double;
 typedef _CORBA_LONGDOUBLE_DECL    IDL_LongDouble;
 #endif
 
-#else	// VMS float test
+#else	// VAX float test
 
-// VMS now always uses proxies for float.
+// VAX uses proxies for float.
 #define USING_PROXY_FLOAT
-
-#undef cvt_
-#if __D_FLOAT
-#define cvt_ cvt_d_
-#elif __G_FLOAT
-#define cvt_ cvt_g_
-#else
-#define cvt_ cvt_ieee_
-#endif
 
 class IDL_Float {
   IDL_Long pd_f;
-  void cvt_d_(float f);
-  float cvt_d_() const;
-  void cvt_g_(float f);
-  float cvt_g_() const;
-#ifndef __VAX
-  void cvt_ieee_(float f);
-  float cvt_ieee_() const;
-#endif
+  void cvt_(float f);
+  float cvt_() const;
 public:
   // using compiler generated copy constructor and copy assignment
   inline IDL_Float() {cvt_(0.0f);}
@@ -140,14 +128,8 @@ public:
 
 class IDL_Double {
   IDL_Long pd_d[2];
-  void cvt_d_(double d);
-  double cvt_d_() const;
-  void cvt_g_(double d);
-  double cvt_g_() const;
-#ifndef __VAX
-  void cvt_ieee_(double d);
-  double cvt_ieee_() const;
-#endif
+  void cvt_(double d);
+  double cvt_() const;
 public:
   // using compiler generated copy constructor and copy assignment
   inline IDL_Double() {cvt_(0.0);}
@@ -163,7 +145,7 @@ public:
 typedef _CORBA_LONGDOUBLE_DECL    IDL_LongDouble;
 #endif
 
-#endif   // VMS float test
+#endif   // VAX float test
 #endif   // !defined(NO_FLOAT)
 
 

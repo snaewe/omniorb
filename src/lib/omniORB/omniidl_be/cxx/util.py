@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.3  2001/06/08 17:12:14  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.14.2.2  2000/10/12 15:37:49  sll
 # Updated from omni3_1_develop.
 #
@@ -188,14 +191,14 @@ omniORB does not currently support:
 def union(a, b):
     result = a[:]
     for x in b:
-        if not(x in result):
+        if x not in result:
             result.append(x)
     return result
 
 def minus(a, b):
     result = []
     for x in a:
-        if not(x in b):
+        if x not in b:
             result.append(x)
     return result
 
@@ -209,7 +212,7 @@ def intersect(a, b):
 def setify(set):
     new_set = []
     for x in set:
-        if not(x in new_set):
+        if x not in new_set:
             new_set.append(x)
 
     return new_set

@@ -70,7 +70,7 @@ class Name:
 
 
     def __cmp__(self, other):
-        if not(isinstance(other, Name)): return 1
+        if not isinstance(other, Name): return 1
         return self.fullyQualify() == other.fullyQualify()
 
 
@@ -209,7 +209,7 @@ class Name:
     def needFlatName(self, environment):
         # does the name have scope :: qualifiers
         relName = self.relName(environment)
-        #if not(relName): return 0
+        #if not relName: return 0
             
         return len(relName) > 1
 
@@ -268,7 +268,7 @@ class Environment:
            allow_already_exists flag is set to 1"""
         name = Name(scopedName)
         hash = name.hash()
-        if self.__names.has_key(hash) and not(allow_already_exists):
+        if self.__names.has_key(hash) and not allow_already_exists:
             util.fatalError("Attempt to redefine existing name: " + str(name))
         self.__names[hash] = name
 

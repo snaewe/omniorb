@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.4  2001/06/08 17:12:12  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.1.4.3  2001/03/26 11:11:54  dpg1
 # Python clean-ups. Output routine optimised.
 #
@@ -47,7 +50,7 @@
 #
 
 from omniidl import idlvisitor, idlast
-from omniidl_be.cxx import config, id
+from omniidl_be.cxx import config, id, ast
 import string
 
 # All descriptors are of the form:
@@ -106,7 +109,8 @@ class HashVisitor(idlvisitor.AstVisitor):
         for declaration in node.declarations():
             if self.base_initialised:
                 return
-            declaration.accept(self)
+            if ast.shouldGenerateCodeForDecl(declaration):
+                declaration.accept(self)
 
     def visitModule(self, node):
         for definition in node.definitions():
@@ -115,8 +119,6 @@ class HashVisitor(idlvisitor.AstVisitor):
             definition.accept(self)
 
     def visitInterface(self, node):
-        if not(node.mainFile()): return
-        
         if node.callables() != []:
             name = node.scopedName()
 
@@ -185,7 +187,7 @@ def unique():
 def get_signature_descriptor(signature):
     global signature_descriptors
     
-    if not(signature_descriptors.has_key(signature)):
+    if not signature_descriptors.has_key(signature):
         signature_descriptors[signature] = unique()
 
     return signature_descriptors[signature]
@@ -196,7 +198,7 @@ def get_interface_operation_descriptor(iname, operation_name, signature):
     assert isinstance(iname, id.Name)
 
     key = iname.hash()
-    if not(iface_descriptors.has_key(key)):
+    if not iface_descriptors.has_key(key):
         iface_descriptors[key] = {}
 
     iface_table = iface_descriptors[key]

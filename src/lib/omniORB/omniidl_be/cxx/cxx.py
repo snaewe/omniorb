@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.2  2001/06/08 17:12:12  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.1.4.1  2000/10/12 15:37:46  sll
 # Updated from omni3_1_develop.
 #
@@ -68,7 +71,7 @@ for (CORBA::ULong @i@ = 0;@i@ < @bound@;@i@++){""", i = i, bound = bound)
         self.__stream = stream
         self.__closed = (bounds != [])
     def __del__(self):
-        if not(self.__closed):
+        if not self.__closed:
             warning("Possibly unterminated For loop generated")
     def index(self): return self.__index
     def end(self):
@@ -92,7 +95,7 @@ class Block:
         self.__stream = stream
         self.__closed = 0
     def __del__(self):
-        if not(self.__closed):
+        if not self.__closed:
             warning("Possibly unclosed Block generated")
     def end(self):
         self.__stream.dec_indent()

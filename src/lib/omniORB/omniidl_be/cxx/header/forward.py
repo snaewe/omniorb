@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.4  2001/06/08 17:12:17  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.8.2.3  2001/03/26 11:11:55  dpg1
 # Python clean-ups. Output routine optimised.
 #
@@ -84,7 +87,7 @@
 """Produce ancillary forward declarations for the header file"""
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import config, id
+from omniidl_be.cxx import config, id, ast
 from omniidl_be.cxx.header import template
 
 import forward
@@ -98,29 +101,21 @@ def __init__(stream):
 #
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if ast.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
     # again check what happens here wrt reopening modules spanning
     # multiple files
-    if not(node.mainFile()):
-        return
-    
     for n in node.definitions():
         n.accept(self)
 
 
 def visitStruct(node):
-    if not(node.mainFile()):
-        return
-    
     for n in node.members():
         n.accept(self)
 
 def visitUnion(node):
-    if not(node.mainFile()):
-        return
-
     for n in node.cases():
         if n.constrType():
             n.caseType().decl().accept(self)
@@ -137,25 +132,16 @@ def visitUnion(node):
 
             
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-
     for n in node.declarations():
         n.accept(self)
 
 
 
 def visitException(node):
-    if not(node.mainFile()):
-        return
-    
     for n in node.members():
         n.accept(self)
         
 def visitMember(node):
-    if not(node.mainFile()):
-        return
-    
     if node.constrType():
         node.memberType().decl().accept(self)
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16.2.7  2001/06/08 17:12:21  dpg1
+  Merge all the bug fixes from omni3_develop.
+
   Revision 1.16.2.6  2001/05/31 16:18:12  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -127,7 +130,7 @@ static omniORB::loader::mapKeyToObject_t MapKeyToObjectFunction = 0;
 
 static
 CORBA::Boolean
-parse_BOA_args(int &argc,char **argv,const char *orb_identifier);
+parse_BOA_args(int &argc,char **argv,const char *boa_identifier);
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////////////// CORBA::BOA /////////////////////////////
@@ -991,22 +994,24 @@ move_args(int& argc,char **argv,int idx,int nargs)
 
 static
 CORBA::Boolean
-parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
+parse_BOA_args(int& argc, char** argv, const char* boa_identifier)
 {
-  CORBA::Boolean orbId_match = 0;
-  if( orb_identifier && !isValidId(orb_identifier) ) {
-    if( omniORB::trace(1) ) {
-      omniORB::logger l;
-      l << "BOA_init failed -- the BOAid (" << orb_identifier << ")"
-	" is not " <<  myBoaId() << "\n";
+  CORBA::Boolean boaId_match = 0;
+  if (boa_identifier) {
+    if (!isValidId(boa_identifier)) {
+      if (omniORB::trace(1)) {
+	omniORB::logger l;
+	l << "BOA_init failed -- the BOAid (" << boa_identifier << ")"
+	  " is not " << myBoaId() << "\n";
+      }
+      return 0;
     }
-    return 0;
-  }
-  if( omniORB::trace(1) && strcmp(orb_identifier, myBoaId()) ) {
-    if( omniORB::trace(1) ) {
-      omniORB::logger l;
-      l << "WARNING -- using BOAid " << orb_identifier 
-	<< " (should be " << myBoaId() << ")." << "\n";
+    if( omniORB::trace(1) && strcmp(boa_identifier, myBoaId()) ) {
+      if( omniORB::trace(1) ) {
+	omniORB::logger l;
+	l << "WARNING -- using BOAid " << boa_identifier 
+	  << " (should be " << myBoaId() << ")." << "\n";
+      }
     }
   }
 
@@ -1040,11 +1045,11 @@ parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
 	if( strcmp(argv[idx + 1], myBoaId()) ) {
 	  if( omniORB::trace(1) ) {
 	    omniORB::logger l;
-	    l << "WARNING -- using BOAid " << orb_identifier 
+	    l << "WARNING -- using BOAid " << boa_identifier 
 	      << " (should be " << myBoaId() << ")." << "\n";
 	  }
 	}
-	orbId_match = 1;
+	boaId_match = 1;
 	move_args(argc,argv,idx,2);
 	continue;
       }
@@ -1089,7 +1094,7 @@ parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
       return 0;
     }
 
-  if (!orb_identifier && !orbId_match) {
+  if (!boa_identifier && !boaId_match) {
     omniORB::logs(1, "BOA_init failed: BOAid is not specified.");
     return 0;
   }

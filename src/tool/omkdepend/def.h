@@ -26,6 +26,10 @@ in this Software without prior written authorization from the X Consortium.
 
 */
 
+#if defined(__osf1__)
+#define NeedVarargsPrototypes
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>

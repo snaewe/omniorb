@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6.2.3  2001/06/08 17:12:17  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.6.2.2  2000/10/12 15:37:51  sll
 # Updated from omni3_1_develop.
 #
@@ -67,7 +70,7 @@
   for the C++ backend"""
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import config, id
+from omniidl_be.cxx import config, id, ast
 from omniidl_be.cxx.header import template
 
 import marshal
@@ -82,7 +85,8 @@ def __init__(stream):
 #
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if ast.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
     for n in node.definitions():
@@ -104,9 +108,6 @@ def visitEnum(node):
     pass
 
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-    
     # interfaces act as containers for other declarations
     # output their operators here
     for d in node.declarations():

@@ -92,6 +92,23 @@ define StaticLinkLibrary
 )
 endef
 
+#############################################################################
+# To use KAI C++ uncomment the following lines:                             #
+#############################################################################
+#KCC = 1
+#AR = KCC --thread_safe -o
+#CXX = /usr/local/bin/KCC
+#CXXMAKEDEPEND += -D__cplusplus
+#
+#CXXDEBUGFLAGS = +K0 --one_per --thread_safe --exceptions +Z
+#
+#CXXLINK         = $(CXX)
+#CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -Bdynamic --thread_safe \
+#		--exceptions 
+#
+#CXXOPTIONS      =
+
+
 ############################################################################
 # To use gcc uncomment the following lines:                                #
 ############################################################################
@@ -181,6 +198,12 @@ SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname
 
 ifeq ($(notdir $(CC)),gcc)
 SHAREDLIB_CFLAGS = -fPIC
+endif
+
+ifeq ($(notdir $(CC)),KCC)
+BuildSharedLibrary = 1
+SHAREDLIB_CPPFLAGS = +Z
+SharedLibraryPlatformLinkFlagsTemplate = --thread_safe --soname $$soname
 endif
 
 endif

@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.13.2.4  2001/06/08 17:12:18  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.13.2.3  2000/11/09 12:27:56  dpg1
 # Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 #
@@ -157,7 +160,7 @@ def write_template(name, inherits, node, stream,
             defined_so_far[identifier] = 1
             
             parameters = operation.parameters()
-            has_return_value = not(returnType.void())
+            has_return_value = not returnType.void()
             # FIXME: return types are fully scoped but argument types
             # arent?
             returnType_name = returnType.op(types.RET)
@@ -212,7 +215,7 @@ def write_template(name, inherits, node, stream,
                 where.out("""\
 @attr_type_ret_name@ @attribute_name@() { return pd_obj->@attribute_name@(); }""", attr_type_ret_name = attrType_name_RET,
                           attribute_name = ident)
-                if not(attribute.readonly()):
+                if not attribute.readonly():
                     where.out("""\
 void @attribute_name@(@attr_type_in_name@ _value) { pd_obj->@attribute_name@(_value); }""", attribute_name = ident,
                               attr_type_in_name = attrType_name_IN)                    
@@ -242,11 +245,11 @@ class BOATieTemplates(idlvisitor.AstVisitor):
     def __init__(self, stream):
         self.stream = stream
     def visitAST(self, node):
-        for d in node.declarations(): d.accept(self)
+        for d in node.declarations():
+            if ast.shouldGenerateCodeForDecl(d):
+                d.accept(self)
 
     def visitModule(self, node):
-        if not(node.mainFile()): return
-
         name = id.Name(node.scopedName())
         
         self.stream.out(template.module_begin,
@@ -260,8 +263,6 @@ class BOATieTemplates(idlvisitor.AstVisitor):
         
 
     def visitInterface(self, node):
-        if not(node.mainFile()): return
-        
         name = id.Name(node.scopedName())
 
         tie_name = name.simple()
@@ -279,12 +280,13 @@ class FlatTieTemplates(idlvisitor.AstVisitor):
     def __init__(self, stream):
         self.stream = stream
     def visitAST(self, node):
-        for d in node.declarations(): d.accept(self)
+        for d in node.declarations():
+            if ast.shouldGenerateCodeForDecl(d):
+                d.accept(self)
     def visitModule(self, node):
-        for d in node.definitions(): d.accept(self)
+        for d in node.definitions():
+            d.accept(self)
     def visitInterface(self, node):
-        if not(node.mainFile()): return
-        
         self.generate_POA_tie(node)
         if config.state['BOA Skeletons']:
             self.generate_BOA_tie(node)

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.4  2001/06/08 17:12:18  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.5.2.3  2000/11/20 14:43:25  sll
 # Added support for wchar and wstring.
 #
@@ -60,7 +63,7 @@
 """Produce bounded string #ifdefs for .hh"""
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import config, types
+from omniidl_be.cxx import config, types, ast
 from omniidl_be.cxx.header import template
 
 import tcstring
@@ -75,29 +78,20 @@ def __init__(stream):
 #
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if ast.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
-    # again check what happens here wrt reopening modules spanning
-    # multiple files
-    if not(node.mainFile()):
-        return
-    
     for n in node.definitions():
         n.accept(self)
 
 
 def visitStruct(node):
-    if not(node.mainFile()):
-        return
-    
     for n in node.members():
         n.accept(self)
 
 def visitUnion(node):
-    if not(node.mainFile()):
-        return
-
+    pass
 
 def visitStringType(type):
     if type.bound() == 0:
@@ -133,9 +127,6 @@ def visitOperation(node):
             paramType.type().accept(self)
             
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-
     for n in node.declarations():
         n.accept(self)
 
@@ -143,18 +134,11 @@ def visitInterface(node):
         c.accept(self)
 
 
-
 def visitException(node):
-    if not(node.mainFile()):
-        return
-    
     for n in node.members():
         n.accept(self)
         
 def visitMember(node):
-    if not(node.mainFile()):
-        return
-    
     if node.constrType():
         node.memberType().decl().accept(self)
 

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.14  2001/06/08 17:12:07  dpg1
+ Merge all the bug fixes from omni3_develop.
+
  Revision 1.2.2.13  2001/04/18 17:50:45  sll
  Big checkin with the brand new internal APIs.
  Scoped where appropriate with the omni namespace.
@@ -3033,6 +3036,15 @@ _CORBA_MODULE_END
 // put external guards around the include.
 #ifndef __CosNaming_hh_EXTERNAL_GUARD__
 #define __CosNaming_hh_EXTERNAL_GUARD__
+#endif
+
+#ifndef __corbaidl_hh_EXTERNAL_GUARD__
+#define __corbaidl_hh_EXTERNAL_GUARD__
+#endif
+#ifdef ENABLE_CLIENT_IR_SUPPORT
+#ifndef __ir_hh_EXTERNAL_GUARD__
+#define __ir_hh_EXTERNAL_GUARD__
+#endif
 #endif
 
 #endif // __CORBA_H__

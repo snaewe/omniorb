@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.6  2001/06/08 17:12:13  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.17.2.5  2001/04/19 10:04:13  dpg1
 # Bug in sort_exceptions()
 #
@@ -342,4 +345,3 @@ def sort_exceptions(ex):
     raises = ex[:]
     raises.sort(lexicographic)
     return raises
-

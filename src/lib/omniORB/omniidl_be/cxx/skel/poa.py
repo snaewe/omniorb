@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9.2.3  2001/06/08 17:12:20  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.9.2.2  2000/10/12 15:37:53  sll
 # Updated from omni3_1_develop.
 #
@@ -88,7 +91,7 @@ def __init__(stream):
     return poa
 
 def POA_prefix():
-    if not(self.__nested):
+    if not self.__nested:
         return "POA_"
     return ""
 
@@ -97,7 +100,8 @@ def POA_prefix():
 
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if ast.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
     name = id.mapID(node.identifier())
@@ -112,16 +116,12 @@ def visitModule(node):
 
 
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
     name = id.mapID(node.identifier())
     fqname = id.Name(node.scopedName()).fullyQualify()
     stream.out(template.interface_POA,
                POA_prefix = POA_prefix(),
                name = name,
                fqname = fqname)
-        
-
 
 def visitTypedef(node):
     pass

@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.1.2.2  2001/06/08 17:12:10  dpg1
+ * Merge all the bug fixes from omni3_develop.
+ *
  * Revision 1.1.2.1  2001/04/18 17:18:13  sll
  * Big checkin with the brand new internal APIs.
  * These files were relocated and scoped with the omni namespace.
@@ -653,6 +656,10 @@ public:
   virtual TypeCode_base* NP_aliasExpand(TypeCode_pairlist*);
 
   virtual void removeOptionalNames();
+
+  inline CORBA::Boolean  PR_content_is_assigned() const {
+    return !CORBA::is_nil(pd_content);
+  }
 
 private:
   TypeCode_sequence();

@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.9  2001/06/08 17:12:08  dpg1
+ Merge all the bug fixes from omni3_develop.
+
  Revision 1.2.2.8  2001/06/07 16:26:10  dpg1
  __WIN32__ misspelt as __win32__
 
@@ -242,7 +245,8 @@
 // Minor version number 91 is for egcs version 1.*  Some older
 // versions of 1.* may not support namespaces properly - this is
 // only tested for egcs 1.1.1
-#  if __GNUC_MINOR__ >= 91 || __GNUC_MINOR__ == 9
+#  if (__GNUG__ == 2 && (__GNUC_MINOR__ >= 91 || __GNUC_MINOR__ == 9)) || \
+      (__GNUG__ >= 3)
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Cplusplus_Bool
 #  endif
@@ -359,12 +363,22 @@
 #elif defined(__BCPLUSPLUS__)
 #define HAS_Cplusplus_Namespace
 
+#elif defined(__KCC)
+// Kai C++
+#define HAS_Cplusplus_Namespace
+#define HAS_Std_Namespace
+#define HAS_Cplusplus_Bool
+
 #elif defined(__sgi)
 
 #if _COMPILER_VERSION >= 721
 #define HAS_Cplusplus_Namespace
 #define HAS_Cplusplus_Bool
 #define OMNI_REQUIRES_FQ_BASE_CTOR
+#define HAS_LongLong
+#define _CORBA_LONGLONG_DECL long long
+#define _CORBA_ULONGLONG_DECL unsigned long long
+#define _CORBA_LONGLONG_CONST(x) (x##LL)
 #endif
 
 #if  _MIPS_SZINT == 64
@@ -397,14 +411,11 @@
 #define NEED_DUMMY_RETURN
 #define HAS_Cplusplus_Namespace
 #define HAS_Cplusplus_Bool
-#endif
+#define HAS_LongLong
+#define _CORBA_LONGLONG_DECL   long long
+#define _CORBA_ULONGLONG_DECL  unsigned long long
+#define _CORBA_LONGLONG_CONST(x) (x##LL)
 
-#if __OSVERSION__ < 11
-// Do we really need to include this here?   -SLL
-//  - not for HPUX 11.0
-//    need someone to check this for HPUX 10.20
-#include <stdio.h>
-#undef __ptr
 #endif
 
 #endif
@@ -501,6 +512,13 @@
 #elif defined(__hpux__) && defined(__hppa__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
+#if __OSVERSION__ < 11
+// Do we really need to include this here?   -SLL
+//  - not for HPUX 11.0
+//    need someone to check this for HPUX 10.20
+#include <stdio.h>
+#undef __ptr
+#endif
 #elif defined(__m68k__) && defined(__nextstep__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
@@ -523,6 +541,8 @@
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
 # define _USE_GETHOSTNAME 1
+#elif defined(__powerpc__)
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
 #else
 # error "The byte order of this platform is unknown"
 #endif

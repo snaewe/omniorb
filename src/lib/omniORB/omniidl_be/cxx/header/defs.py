@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.8  2001/06/08 17:12:16  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.33.2.7  2001/03/13 10:32:08  dpg1
 # Fixed point support.
 #
@@ -276,7 +279,7 @@ def __init__(stream):
 # Returns the prefix required inside a const declaration (it depends on
 # exactly what the declaration is nested inside)
 def const_qualifier(insideModule, insideClass):
-    if not(insideModule) and not(insideClass):
+    if not insideModule and not insideClass:
         return "_CORBA_GLOBAL_VAR"
     elif insideClass:
         return "static"
@@ -290,14 +293,10 @@ def const_qualifier(insideModule, insideClass):
 def visitAST(node):
     self.__completedModules = {}
     for n in node.declarations():
-        n.accept(self)
+        if ast.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
-    # This may be incorrect wrt reopened modules in multiple
-    # files?
-    if not(node.mainFile()):
-        return
-
     # Ensure we only output the definitions once.
     # In particular, when the splice-modules flag is set and this is
     # a reopened module, the node will be marked as completed already.
@@ -308,7 +307,7 @@ def visitModule(node):
     ident = node.identifier()
     cxx_id = id.mapID(ident)
 
-    if not(config.state['Fragment']):
+    if not config.state['Fragment']:
         stream.out(template.module_begin, name = cxx_id)
         stream.inc_indent()
 
@@ -329,16 +328,13 @@ def visitModule(node):
     # pop self.__insideModule
     self.__insideModule = insideModule
     
-    if not(config.state['Fragment']):
+    if not config.state['Fragment']:
         stream.dec_indent()
         stream.out(template.module_end, name = cxx_id)
 
         
 
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-
     # It's legal to have a forward interface declaration after
     # the actual interface definition. Make sure we ignore these.
     self.__interfaces[node] = 1
@@ -405,9 +401,6 @@ def visitInterface(node):
     
 
 def visitForward(node):
-    if not(node.mainFile()):
-        return
-    
     # Note it's legal to have multiple forward declarations
     # of the same name. So ignore the duplicates.
     if self.__interfaces.has_key(node):
@@ -432,9 +425,6 @@ def visitForward(node):
                name = name.unambiguous(environment))
 
 def visitConst(node):
-    if not(node.mainFile()):
-        return
-
     environment = id.lookup(node)
     scope = environment.scope()
 
@@ -484,13 +474,10 @@ def visitConst(node):
 
 
 def visitTypedef(node):
-    if not(node.mainFile()):
-        return
-
     environment = id.lookup(node)
     scope = environment.scope()
     
-    is_global_scope = not(self.__insideModule or self.__insideInterface)
+    is_global_scope = not (self.__insideModule or self.__insideInterface)
     
     aliasType = types.Type(node.aliasType())
     aliasTypeID = aliasType.member(environment)
@@ -526,7 +513,7 @@ def visitTypedef(node):
                        name = derivedName)
                     
         # is it a simple alias (ie not an array at this level)?
-        if not(array_declarator):
+        if not array_declarator:
             # not an array declarator but a simple declarator to an array
             if aliasType.array():
                 # simple alias to an array should alias all the
@@ -538,7 +525,7 @@ def visitTypedef(node):
                            derived = derivedName)
                 # the declaration of the alloc(), dup() and free() methods
                 # depend on whether the declaration is in global scope
-                if not(is_global_scope):
+                if not is_global_scope:
                     stream.out(template.typedef_simple_to_array_static_fn,
                                base = basicReferencedTypeID,
                                derived = derivedName)
@@ -594,7 +581,7 @@ def visitTypedef(node):
                 impl_base = ""
                 objref_base = ""
                 sk_base = ""
-                if not(is_CORBA_Object):
+                if not is_CORBA_Object:
                     scopedName = d_type.type().decl().scopedName()
                     name = id.Name(scopedName)
                     impl_scopedName = name.prefix("_impl_")
@@ -654,14 +641,14 @@ def visitTypedef(node):
                     element_IN = element
                     
                 element_ptr = element_IN
-                if d_seqType.string() and not(seqType.array()):
+                if d_seqType.string() and not seqType.array():
                     element_ptr = "char*"
-                elif d_seqType.wstring() and not(seqType.array()):
+                elif d_seqType.wstring() and not seqType.array():
                     element_ptr = "CORBA::WChar*"
-                elif d_seqType.objref() and not(seqType.array()):
+                elif d_seqType.objref() and not seqType.array():
                     element_ptr = seqType.base(environment)
                 # only if an anonymous sequence
-                elif seqType.sequence() and not(seqType.array()):
+                elif seqType.sequence() and not seqType.array():
                     element_ptr = element
                 elif d_seqType.typecode():
                     element_ptr = "CORBA::TypeCode_member"
@@ -684,7 +671,7 @@ def visitTypedef(node):
                 if is_global_scope:
                     friend = ""
                     
-                if d_seqType.enum() and not(seqType.array()):
+                if d_seqType.enum() and not seqType.array():
                     stream.out(template.typedef_enum_oper_friend,
                                element = d_seqType.base(environment),
                                friend = friend)
@@ -715,7 +702,7 @@ def visitTypedef(node):
 
                 # start building the _var and _out types
                 element_reference = ""
-                if not(aliasType.array()):
+                if not aliasType.array():
                     if d_seqType.string():
                         # special case alert
                         element_reference = element
@@ -814,9 +801,6 @@ def visitTypedef(node):
      
 
 def visitMember(node):
-    if not(node.mainFile()):
-        return
-    
     memberType = node.memberType()
     if node.constrType():
         # if the type was declared here, it must be an instance
@@ -826,9 +810,6 @@ def visitMember(node):
 
 
 def visitStruct(node):
-    if not(node.mainFile()):
-        return
-
     name = node.identifier()
     cxx_name = id.mapID(name)
 
@@ -865,7 +846,7 @@ def visitStruct(node):
                 is_array_declarator = decl_dims != []
 
                 # non-arrays of direct sequences are done via a typedef
-                if not(is_array_declarator) and memberType.sequence():
+                if not is_array_declarator and memberType.sequence():
                     stream.out(template.struct_nonarray_sequence,
                                memtype = memtype,
                                cxx_id = cxx_id)
@@ -895,9 +876,6 @@ def visitStruct(node):
 
 
 def visitException(node):
-    if not(node.mainFile()):
-        return
-    
     exname = node.identifier()
 
     cxx_exname = id.mapID(exname)
@@ -1011,9 +989,6 @@ def visitException(node):
 
 
 def visitUnion(node):
-    if not(node.mainFile()):
-        return
-    
     ident = node.identifier()
 
     cxx_id = id.mapID(ident)
@@ -1086,7 +1061,7 @@ def visitUnion(node):
     # a default case and not all permissible values of the union
     # discriminant are listed"
     exhaustive = ast.exhaustiveMatch(switchType, ast.allCaseLabelValues(node))
-    implicitDefault = not(hasDefault) and not(exhaustive)
+    implicitDefault = not hasDefault and not exhaustive
 
     fixed = "Fix"
     if types.variableDecl(node):
@@ -1138,7 +1113,7 @@ def visitUnion(node):
     # bodies
     def copy_constructor(stream = stream, exhaustive = exhaustive,
                          node = node, ctor_cases = ctor_cases):
-        if not(exhaustive):
+        if not exhaustive:
             # grab the default case
             default = ""
             for c in node.cases():
@@ -1205,7 +1180,7 @@ def visitUnion(node):
                          switchType = switchType, environment = environment):
             for c in node.cases():
                 for l in c.labels():
-                    if not(l in exceptions):
+                    if l not in exceptions:
                         cases.out("case @label@: goto fail;",
                                   label = switchType.literal(l.value(),
                                                              environment))
@@ -1222,7 +1197,7 @@ def visitUnion(node):
             # then the only legal action is to set it to its current value.
             # We've already checked for this in an if (...) statement before
             # here.
-            if len(c.labels()) == 1 and not(c.labels()[0].default()):
+            if len(c.labels()) == 1 and not c.labels()[0].default():
                 cases.out("case @label@: goto fail;",
                           label = switchType.literal(c.labels()[0].value(),
                                                      environment))
@@ -1274,7 +1249,7 @@ def visitUnion(node):
             cases.out("}\n")
             cases.dec_indent()
             
-        if not(outer_has_default) and not(implicitDefault):
+        if not outer_has_default and not implicitDefault:
             cases.out("default: goto fail;")
 
         # handle situation where have an implicit default member
@@ -1344,7 +1319,7 @@ def visitUnion(node):
             
             labels = c.labels()
             if labels != []:
-                non_default_labels = filter(lambda x:not(x.default()), labels)
+                non_default_labels = filter(lambda x:not x.default(), labels)
                 if non_default_labels == []:
                     # only one label and it's the default
                     label = labels[0]
@@ -1503,7 +1478,7 @@ def visitUnion(node):
         type_str = caseType.member(environment)
 
         # non-array sequences have had their template typedef'd somewhere
-        if not(is_array_declarator) and caseType.sequence():
+        if not is_array_declarator and caseType.sequence():
             type_str = "_" + member_name + "_seq"
         
         dims_str = cxx.dimsToString(decl_dims)
@@ -1511,7 +1486,7 @@ def visitUnion(node):
         # Decide what does inside and outside the union {} itself
         # Note: floats in unions are special cases
         if (d_caseType.float() or d_caseType.double()) and \
-           not(is_array):
+           not is_array:
             inside.out(template.union_noproxy_float,
                        type = type_str, name = member_name,
                        dims = dims_str)
@@ -1521,7 +1496,7 @@ def visitUnion(node):
             used_inside = used_outside = 1
         else:
             if is_array and d_caseType.struct() and \
-               not(caseType.variable()):
+               not caseType.variable():
                 this_stream = inside
                 used_inside = 1
             else:
@@ -1578,9 +1553,6 @@ def visitUnion(node):
 
 
 def visitEnum(node):
-    if not(node.mainFile()):
-        return
-
     name = id.mapID(node.identifier())
 
     enumerators = node.enumerators()

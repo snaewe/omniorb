@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.15  2001/06/08 17:12:22  dpg1
+  Merge all the bug fixes from omni3_develop.
+
   Revision 1.2.2.14  2001/05/31 16:18:14  dpg1
   inline string matching functions, re-ordered string matching in
   _ptrToInterface/_ptrToObjRef
@@ -511,6 +514,10 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 
 
   int retries = 0;
+#if defined(__DECCXX) && __DECCXX_VER < 60300000
+  // Work-around for bug in Compaq C++ optimiser
+  volatile
+#endif
   int fwd = 0;
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
@@ -759,6 +766,10 @@ void
 omniObjRef::_locateRequest()
 {
   int retries = 0;
+#if defined(__DECCXX) && __DECCXX_VER < 60300000
+  // Work-around for bug in Compaq C++ optimiser
+  volatile
+#endif
   int fwd = 0;
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/06/08 17:12:08  dpg1
+  Merge all the bug fixes from omni3_develop.
+
   Revision 1.1.4.2  2001/05/11 14:28:14  sll
   Separate  minor code MARSHAL_MessageSizeExceedLimit into distinct client and
   server side codes.
@@ -78,10 +81,10 @@ enum BAD_PARAM_minor {
   BAD_PARAM_4                             = OMGMinorCode(4),
   BAD_PARAM_5                             = OMGMinorCode(5),
   BAD_PARAM_6                             = OMGMinorCode(6),
-  BAD_PARAM_7                             = OMGMinorCode(7),
-  BAD_PARAM_8                             = OMGMinorCode(8),
-  BAD_PARAM_9                             = OMGMinorCode(9),
-  BAD_PARAM_10                            = OMGMinorCode(10),
+  BAD_PARAM_BadSchemeName                 = OMGMinorCode(7),
+  BAD_PARAM_BadAddress                    = OMGMinorCode(8),
+  BAD_PARAM_BadSchemeSpecificPart         = OMGMinorCode(9),
+  BAD_PARAM_BadURIOther                   = OMGMinorCode(10),
   BAD_PARAM_11                            = OMGMinorCode(11),
   BAD_PARAM_12                            = OMGMinorCode(12),
   BAD_PARAM_13                            = OMGMinorCode(13),

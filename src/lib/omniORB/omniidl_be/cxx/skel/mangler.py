@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.5  2001/06/08 17:12:20  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.15.2.4  2001/03/13 10:32:09  dpg1
 # Fixed point support.
 #
@@ -189,7 +192,7 @@ def canonTypeName(type, decl = None, useScopedName = 0):
 
     # sometimes we don't want to call a sequence a sequence
     # (operation signatures)
-    if useScopedName and not(is_array) and \
+    if useScopedName and not is_array and \
        type.typedef() and d_type.sequence():
         # find the last typedef in the chain
         while types.Type(type.type().decl().alias().aliasType()).typedef():
@@ -212,7 +215,7 @@ def canonTypeName(type, decl = None, useScopedName = 0):
         # straight forward sequences of sequences use their
         # flattened scoped name
         dkd_seqType = seqType.deref(keep_dims = 1)
-        if not(dkd_seqType.sequence()):
+        if not dkd_seqType.sequence():
             canon_name = canon_name + canonTypeName(dkd_seqType)
             return canon_name
         type = seqType
@@ -228,8 +231,7 @@ def canonTypeName(type, decl = None, useScopedName = 0):
         # we use the scopedName() of the immediately preceeding
         # typedef which is an instance of idltype.Declared
         while type.typedef() and \
-              not(types.Type(type.type().decl().alias().aliasType()).
-                  sequence()):
+              not types.Type(type.type().decl().alias().aliasType()).sequence():
             type = types.Type(type.type().decl().alias().aliasType())
 
         if name_map.has_key(type.type().kind()):

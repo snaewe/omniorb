@@ -35,6 +35,9 @@ AR = ar cq
 
 CPP = /usr/bin/cpp
 
+#############################################################################
+# To use g++ uncomment the following lines:                                 # 
+#############################################################################
 CXX = /usr/bin/g++
 CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
 CXXDEBUGFLAGS = -O2 
@@ -46,6 +49,21 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) \
 CXXOPTIONS      = -Wall -Wno-unused
 EgcsMajorVersion = 1
 EgcsMinorVersion = 1
+
+#############################################################################
+# To use KAI C++ uncomment the following lines:                             #
+#############################################################################
+#KCC = 1
+#AR = KCC --thread_safe -o 
+#CXX = /usr/local/KAI/KCC.pu-4.0b-1/KCC_BASE/bin/KCC
+#CXXMAKEDEPEND += -D__cplusplus -D__GNUG__ -D__GNUC__
+#CXXDEBUGFLAGS = +K0 --one_per --thread_safe --exceptions
+#
+#CXXLINK		= $(CXX)
+#CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) --thread_safe 
+#CXXOPTIONS      =
+
+#############################################################################
 
 CC           = /usr/bin/gcc
 CMAKEDEPEND  += -D__GNUC__
@@ -102,6 +120,11 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 #
 BuildSharedLibrary = 1       # Enable
 SHAREDLIB_CPPFLAGS = -fPIC   # compiler flag
+
+ifeq ($(notdir $(CC)),KCC)
+SharedLibraryPlatformLinkFlagsTemplate = --thread_safe --soname $$soname
+endif
+
 #
 # everything else is default from unix.mk
 

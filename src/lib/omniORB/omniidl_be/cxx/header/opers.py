@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9.2.3  2001/06/08 17:12:17  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.9.2.2  2000/10/12 15:37:51  sll
 # Updated from omni3_1_develop.
 #
@@ -84,7 +87,7 @@
 # similar to o2be_root::produce_hdr_operators in the old C++ BE
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import config, id, types
+from omniidl_be.cxx import config, id, types, ast
 from omniidl_be.cxx.header import template
 
 import opers
@@ -99,21 +102,14 @@ def __init__(stream):
 #
 def visitAST(node):
     for n in node.declarations():
-        n.accept(self)
+        if ast.shouldGenerateCodeForDecl(n):
+            n.accept(self)
 
 def visitModule(node):
-    # again, check what happens with reopened modules spanning
-    # multiple files
-    if not(node.mainFile()):
-        return
-    
     for n in node.definitions():
         n.accept(self)
 
 def visitStruct(node):
-    if not(node.mainFile()):
-        return
-    
     for n in node.members():
         n.accept(self)
 
@@ -125,9 +121,6 @@ def visitStruct(node):
                    fqname = fqname)
 
 def visitUnion(node):
-    if not(node.mainFile()):
-        return
-
     # deal with constructed switch type
     if node.constrType():
         node.switchType().decl().accept(self)
@@ -146,16 +139,10 @@ def visitUnion(node):
 
 
 def visitMember(node):
-    if not(node.mainFile()):
-        return
-    
     if node.constrType():
         node.memberType().decl().accept(self)
 
 def visitEnum(node):
-    if not(node.mainFile()):
-        return
-
     cxx_fqname = id.Name(node.scopedName()).fullyQualify()
     
     # build the cases
@@ -175,9 +162,6 @@ def visitEnum(node):
                    name = cxx_fqname)
 
 def visitInterface(node):
-    if not(node.mainFile()):
-        return
-    
     # interfaces act as containers for other declarations
     # output their operators here
     for d in node.declarations():
@@ -193,16 +177,13 @@ def visitInterface(node):
         
 
 def visitTypedef(node):
-    if not(node.mainFile()):
-        return
-    
     aliasType = types.Type(node.aliasType())
 
     if node.constrType():
         aliasType.type().decl().accept(self)
 
     # don't need to do anything unless generating TypeCodes and Any
-    if not(config.state['Typecode']):
+    if not config.state['Typecode']:
         return
     
     for d in node.declarators():
@@ -230,15 +211,12 @@ def visitConst(node):
 def visitDeclarator(node):
     pass
 def visitException(node):
-    if not(node.mainFile()):
-        return
-
     for m in node.members():
         if m.constrType():
             m.memberType().decl().accept(self)
     
     # don't need to do anything unless generating TypeCodes and Any
-    if not(config.state['Typecode']):
+    if not config.state['Typecode']:
         return
 
     fqname = id.Name(node.scopedName()).fullyQualify()

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.4  2001/06/08 17:12:21  dpg1
+  Merge all the bug fixes from omni3_develop.
+
   Revision 1.19.2.3  2001/04/18 18:18:07  sll
   Big checkin with the brand new internal APIs.
 
@@ -135,6 +138,7 @@ again:
   // Use gethostbyname_r() on Digital UNIX
   if (!h.pd_buffer) {
     h.pd_buffer = new char[sizeof(struct hostent_data)];
+    memset(h.pd_buffer,0,sizeof(struct hostent_data));
     // XXX Is it possible that the pointer h.pd_buffer is at a wrong alignment
     //     for a struct hostent_data?
     h.pd_buflen = sizeof(struct hostent_data);

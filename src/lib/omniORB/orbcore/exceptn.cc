@@ -60,12 +60,23 @@ CORBA::Exception*
 CORBA::
 Exception::_NP_is_a(const Exception* e, const char* typeId)
 {
+  // _NP_is_a tests to see if the given typeId is a prefix of the
+  // given exception's typeId. The test only succeeds if the
+  // exception's typeId is an exact match, or the match ends on a '/'.
+
   if( !e )  return 0;
-  size_t len = strlen(typeId);
-  if( strncmp(typeId, e->_NP_typeId(), len) )
-    return 0;
-  else
+
+  const char* a = typeId;
+  const char* b = e->_NP_typeId();
+
+  for (; *a && *b; ++a, ++b) {
+    if (*a != *b)
+      return 0;
+  }
+  if (*a == '\0' && (*b == '\0' || *b == '/'))
     return (Exception*) e;
+
+  return 0;
 }
 
 

@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.38.2.12  2001/06/08 17:12:10  dpg1
+ * Merge all the bug fixes from omni3_develop.
+ *
  * Revision 1.38.2.11  2001/04/19 09:14:12  sll
  * Scoped where appropriate with the omni namespace.
  *
@@ -1834,6 +1837,8 @@ TypeCode_sequence::NP_length() const
 TypeCode_base*
 TypeCode_sequence::NP_content_type() const
 {
+  // Sanity check that recursive sequences have been properly completed
+  OMNIORB_ASSERT(!CORBA::is_nil(pd_content));
   return ToTcBase(pd_content);
 }
 
@@ -4216,8 +4221,12 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 
       case CORBA::tk_alias:
       case CORBA::tk_array:
-      case CORBA::tk_sequence:
 	tc->pd_internal_depth = markLoops(tc->NP_content_type(), depth+1);
+	break;
+
+      case CORBA::tk_sequence:
+	if (((TypeCode_sequence*)tc)->PR_content_is_assigned())
+	  tc->pd_internal_depth = markLoops(tc->NP_content_type(), depth+1);
 	break;
 
       case CORBA::tk_struct:

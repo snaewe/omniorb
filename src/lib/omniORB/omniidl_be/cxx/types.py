@@ -132,7 +132,7 @@ class Type:
         # CORBA2.3 P1-204 Table 1-3 Basic argument and result mapping
         array = self.array()
         variable = self.variable()
-        if array and not(variable):
+        if array and not variable:
             # array of fixed size elements
             return ( (1, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 1) )[direction]
         if array and variable:
@@ -152,7 +152,7 @@ class Type:
             # objref_ptr objref_ptr& objref_ptr& objref_ptr
             return ( (0, 0, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
         if (kind == idltype.tk_struct or kind == idltype.tk_union) and \
-           not(variable):
+           not variable:
             # fixed struct or union
             return ( (1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
         if (kind == idltype.tk_struct or kind == idltype.tk_union) and \
@@ -178,7 +178,7 @@ class Type:
         return
 
     def op_is_pointer(self, direction):
-        if not(self.array()) and \
+        if not self.array() and \
            (self.deref().string() or self.deref().wstring()):
             return 0
         return self._argmapping(direction)[2]
@@ -306,13 +306,13 @@ class Type:
         old_sig = config.state['Old Signatures']
 
         # this is very superfluous:
-        if not(self.array()):
-            if d_type.any() and self.typedef() and not(old_sig):
+        if not self.array():
+            if d_type.any() and self.typedef() and not old_sig:
                 if direction == OUT:
                     return d_type.__base_type_OUT(environment)
 
 
-            if d_type.typecode() and not(old_sig):
+            if d_type.typecode() and not old_sig:
                 if direction == OUT:
                     return d_type.__base_type_OUT(environment)
                 elif direction == INOUT and use_out:
@@ -323,35 +323,36 @@ class Type:
 
         # Use the ObjRef template for non-arrays of objrefs rather than use
         # the (equivalent?) _out type?
-        if not(d_type.objref()) or type.array():
+        if not d_type.objref() or type.array():
 
             # if its an out type and a typedef (to a variable type),
             # use the predefined _out type
             if type.typedef() and type.variable() and direction == OUT:
 
-                if (not(d_type.string()) or not(d_type.wstring()) or \
+                if (not d_type.string() or not d_type.wstring() or \
                     (d_type.string() and type.array()) or \
                     (d_type.wstring() and type.array())):
+
                     base = id.Name(type.__type.scopedName()).unambiguous(environment)
                     base = base + "_out"
                     return base
         # superfluous deref for a typedef to an objref
-        if d_type.objref() and not(type.array()):
+        if d_type.objref() and not type.array():
             base = d_type.base(environment)
 
         # Deal with special cases ----------------------------------
-        if not(self.array()):
+        if not self.array():
 
-            if direction == OUT and not(use_out):
-                if d_type.string() and not(old_sig):
+            if direction == OUT and not use_out:
+                if d_type.string() and not old_sig:
                     return self.__base_type_OUT(environment)
-                if d_type.wstring() and not(old_sig):
+                if d_type.wstring() and not old_sig:
                     return self.__base_type_OUT(environment)
-                if d_type.objref() and not(old_sig):
+                if d_type.objref() and not old_sig:
                     return self.__base_type_OUT(environment)
-                if d_type.typecode() and not(old_sig):
+                if d_type.typecode() and not old_sig:
                     return self.__base_type_OUT(environment)
-                if d_type.any() and not(old_sig):
+                if d_type.any() and not old_sig:
                     return self.__base_type_OUT(environment)
                 
             if direction == OUT:
@@ -363,9 +364,9 @@ class Type:
                     return self.__base_type_OUT(environment)
                 if d_type.objref():
                     return self.__base_type_OUT(environment)
-                if d_type.any() and (not(old_sig) or use_out):
+                if d_type.any() and (not old_sig or use_out):
                     return self.__base_type_OUT(environment)
-                if d_type.variable() and (not(old_sig) or use_out):
+                if d_type.variable() and (not old_sig or use_out):
                     return self.__base_type_OUT(environment)
 
             if direction == INOUT:
@@ -379,10 +380,10 @@ class Type:
                     return self.__base_type_INOUT(environment)
                 
 
-        if d_type.string() and not(type.array()):
+        if d_type.string() and not type.array():
             base = d_type.base(environment)
 
-        if d_type.wstring() and not(type.array()):
+        if d_type.wstring() and not type.array():
             base = d_type.base(environment)
     
         # P1-104 mentions two cases: returning an array and a variable
@@ -404,7 +405,7 @@ class Type:
 
         is_array_declarator = decl_dims != []
 
-        if not(self.array()):
+        if not self.array():
             d_type = self.deref()
             if d_type.string():
                 return "CORBA::String_member"
@@ -444,7 +445,7 @@ class Type:
            Returns a C++ representation of a value"""
 
         def representChar(c):
-            if not(c in printable):
+            if c not in printable:
                 # use the octal representation
                 octal_string = str(oct(ord(c)))
                 return "\\" + "0" * (4 - len(octal_string)) + octal_string
@@ -470,11 +471,16 @@ class Type:
             if s[-1] == 'L':
                 s = s[:-1]
             return "_CORBA_LONGLONG_CONST(" + s + ")"
-        if kind in [ idltype.tk_float, idltype.tk_double ]:
+
+        if kind in [ idltype.tk_float ]:
+            return str(value) + "F"
+
+        if kind in [ idltype.tk_double ]:
             return str(value)
+
         # chars are single-quoted
         if kind in [ idltype.tk_char, idltype.tk_wchar ]:
-            if not(value in printable):
+            if value not in printable:
                 # use the octal representation
                 octal_string = str(oct(ord(value)))
                 return "0" * (4 - len(octal_string)) + octal_string
@@ -552,7 +558,7 @@ class Type:
 
         # if the seqType is a typedef to a sequence, use the typedef name
         # else if a direct sequence<sequence<...., do recursion
-        if d_SeqType.sequence() and not(SeqType.typedef()):
+        if d_SeqType.sequence() and not SeqType.typedef():
             element_template = d_SeqType.sequenceTemplate(environment)
             template["seqTypeID"] = element_template
             template["derefSeqTypeID"] = element_template
@@ -572,9 +578,9 @@ class Type:
         elif d_SeqType.octet():
             template["suffix"] = "_Octet"
             # strings are always special
-        elif d_SeqType.string() and not(is_array):
+        elif d_SeqType.string() and not is_array:
             template["suffix"] = "_String"
-        elif d_SeqType.wstring() and not(is_array):
+        elif d_SeqType.wstring() and not is_array:
             template["suffix"] = "_WString"
         elif typeSizeAlignMap.has_key(d_SeqType.type().kind()):
             template["fixed"] = typeSizeAlignMap[d_SeqType.type().\
@@ -585,13 +591,13 @@ class Type:
             is_CORBA_Object = scopedName == ["CORBA", "Object"]
             scopedName = id.Name(scopedName)
             
-            if not(is_CORBA_Object):
+            if not is_CORBA_Object:
                 # CORBA::Object doesn't have an _objref_xxx
                 scopedName = scopedName.prefix("_objref_")
            
             objref_name = scopedName.unambiguous(environment)
 
-            if not(is_array):
+            if not is_array:
                 objref_template = d_SeqType.objRefTemplate("Element", environment)
             else:
                 objref_template = d_SeqType.objRefTemplate("Member", environment)
@@ -616,7 +622,7 @@ class Type:
         if template.has_key("suffix"):
             name = name + template["suffix"]
 
-        elif template.has_key("objref") and not(template["array"]):
+        elif template.has_key("objref") and not template["array"]:
             name = name + "_ObjRef"
 
         if template.has_key("fixed"):
@@ -637,7 +643,7 @@ class Type:
             if template.has_key("objref"):
                 args = args + [template["objref_template"]]
 
-            elif not(template.has_key("suffix")):
+            elif not template.has_key("suffix"):
                 # __Boolean __Octet __String
                 # these already contain the type info- no need for another
                 # parameter...
@@ -649,7 +655,7 @@ class Type:
             args = args + [template["objref_name"],
                            template["objref_template"],
                            template["objref_helper"]]
-        elif not(template.has_key("suffix")):
+        elif not template.has_key("suffix"):
             # see above
             args = args + [seqTypeID]
         

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.7  2001/06/08 17:12:15  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.3.2.6  2001/04/19 09:30:12  sll
 #  Big checkin with the brand new internal APIs.
 # Scoped where appropriate with the omni namespace.
@@ -686,13 +689,10 @@ const CORBA::TypeCode_ptr _tc_wstring_@n@ = CORBA::TypeCode::PR_wstring_tc(@n@);
 external_linkage = """\
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.
-@namespace@
-namespace @scope@ {
++@open_namespace@
   const CORBA::TypeCode_ptr @tc_unscoped_name@ = @mangled_name@;
-}
++@close_namespace@
 #else
 const CORBA::TypeCode_ptr @tc_name@ = @mangled_name@;
 #endif
 """
-
-

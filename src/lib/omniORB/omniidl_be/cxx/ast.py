@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.5  2001/06/08 17:12:11  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.1.4.4  2001/03/26 11:11:54  dpg1
 # Python clean-ups. Output routine optimised.
 #
@@ -58,7 +61,7 @@
 """Routines for mangipulating the AST"""
 
 from omniidl import idlast, idltype, idlvisitor
-from omniidl_be.cxx import util
+from omniidl_be.cxx import util, config
 
 import string, re
 
@@ -87,8 +90,10 @@ def includes():
     assert(_initialised)
     return _includes
 
-# Traverses the tree making a list of all IDL files declarations have come
-# from.
+# Traverses the AST compiling the list of files #included at top level
+# in the main IDL file. Marks all nodes for which code should be
+# generated.
+
 class WalkTreeForIncludes(idlvisitor.AstVisitor):
 
     def __init__(self):
@@ -104,20 +109,137 @@ class WalkTreeForIncludes(idlvisitor.AstVisitor):
 
     def visitAST(self, node):
         self.add(node)
-        for d in node.declarations(): d.accept(self)
+        for d in node.declarations():
+            if not config.state['Inline Includes']:
+                self.add(d)
+            if d.mainFile() or config.state['Inline Includes']:
+                d.accept(self)
 
     def visitModule(self, node):
-        self.add(node)
-        for d in node.definitions(): d.accept(self)
+        node.cxx_generate = 1
+        for n in node.definitions():
+            n.accept(self)
 
-    def visitInterface(self, node): self.add(node)
-    def visitForward(self, node):   self.add(node)
-    def visitConst(self, node):     self.add(node)
-    def visitTypedef(self, node):   self.add(node)
-    def visitStruct(self, node):    self.add(node)
-    def visitException(self, node): self.add(node)
-    def visitUnion(self, node):     self.add(node)
-    def visitEnum(self, node):      self.add(node) 
+    def visitInterface(self, node):
+        node.cxx_generate = 1
+        for n in node.contents():
+            n.accept(self)
+
+    def visitForward(self, node):
+        node.cxx_generate = 1
+
+    def visitConst(self, node):
+        node.cxx_generate = 1
+
+    def visitDeclarator(self, node):
+        node.cxx_generate = 1
+
+    def visitTypedef(self, node):
+        node.cxx_generate = 1
+        for n in node.declarators():
+            n.accept(self)
+
+        if node.constrType():
+            node.aliasType().decl().accept(self)
+
+    def visitMember(self, node):
+        node.cxx_generate = 1
+        for n in node.declarators():
+            n.accept(self)
+
+        if node.constrType():
+            node.memberType().decl().accept(self)
+
+    def visitStruct(self, node):
+        node.cxx_generate = 1
+        for n in node.members():
+            n.accept(self)
+
+    def visitException(self, node):
+        node.cxx_generate = 1
+        for n in node.members():
+            n.accept(self)
+
+    def visitCaseLabel(self, node):
+        node.cxx_generate = 1
+
+    def visitUnionCase(self, node):
+        node.cxx_generate = 1
+        for n in node.labels():
+            n.accept(self)
+
+        if node.constrType():
+            node.caseType().decl().accept(self)
+
+    def visitUnion(self, node):
+        node.cxx_generate = 1
+        for n in node.cases():
+            n.accept(self)
+
+        if node.constrType():
+            node.switchType().decl().accept(self)
+
+    def visitEnumerator(self, node):
+        node.cxx_generate = 1
+
+    def visitEnum(self, node):
+        node.cxx_generate = 1
+        for n in node.enumerators():
+            n.accept(self)
+
+    def visitAttribute(self, node):
+        node.cxx_generate = 1
+        for n in node.declarators():
+            n.accept(self)
+
+    def visitParameter(self, node):
+        node.cxx_generate = 1
+
+    def visitOperation(self, node):
+        node.cxx_generate = 1
+        for n in node.parameters():
+            n.accept(self)
+
+    def visitNative(self, node):
+        node.cxx_generate = 1
+
+    def visitStateMember(self, node):
+        node.cxx_generate = 1
+        for n in node.declarators():
+            n.accept(self)
+
+        if node.constrType():
+            node.memberType().decl().accept(self)
+
+    def visitFactory(self, node):
+        node.cxx_generate = 1
+        for n in node.parameters():
+            n.accept(self)
+
+    def visitValueForward(self, node):
+        node.cxx_generate = 1
+
+    def visitValueBox(self, node):
+        node.cxx_generate = 1
+
+        if node.constrType():
+            node.boxedType().decl().accept(self)
+
+    def visitValueAbs(self, node):
+        node.cxx_generate = 1
+        for n in node.contents():
+            n.accept(self)
+
+    def visitValue(self, node):
+        node.cxx_generate = 1
+        for n in node.contents():
+            n.accept(self)
+
+def shouldGenerateCodeForDecl(decl):
+
+    """Return true if full code should be generated for the specified Decl node"""
+    return hasattr(decl, "cxx_generate")
+
 
 # Returns the list of all non-default union case labels (ie those which
 # have an explicit value)
@@ -126,7 +248,7 @@ def allCaseLabels(union):
     lst = []
     for case in union.cases():
         for label in case.labels():
-            if not(label.default()):
+            if not label.default():
                 lst.append(label)
     return lst
 
@@ -197,7 +319,7 @@ def exhaustiveMatch(type, values):
     def in_set(low, high, set):
         test = low
         while (test <= high):
-            if not(test in set): return 0
+            if test not in set: return 0
             test = test + 1
         return 1
 
@@ -215,7 +337,7 @@ def exhaustiveMatch(type, values):
     if type.enum():
         all_enums = type.type().decl().enumerators()
         for enum in all_enums:
-            if not(enum in values): return 0
+            if enum not in values: return 0
         return 1
 
     raise "exhaustiveMatch type="+repr(type)+ \
@@ -223,14 +345,20 @@ def exhaustiveMatch(type, values):
 
 
 # Return the base AST node after following all the typedef chains
-def remove_ast_typedefs_(node, recurse):
-    if isinstance(node, idlast.Declarator):
-        typedef = node.alias()
-        return recurse(typedef.aliasType().decl(), recurse)
+def remove_ast_typedefs(node):
+    while isinstance(node, idlast.Declarator):
+        node = node.alias().aliasType().decl()
+
     return node
 
-def remove_ast_typedefs(node, chain = remove_ast_typedefs_):
-    return chain(node, chain)
+def remove_ast_typedefs_and_forwards(node):
+    while isinstance(node, idlast.Declarator):
+        node = node.alias().aliasType().decl()
+
+    if isinstance(node, idlast.Forward):
+        node = node.fullDecl()
+
+    return node
 
 # Returns _all_ inherited interfaces by performing a breadth-first search
 # of the inheritance graph.
@@ -241,21 +369,18 @@ def allInherits(interface):
     # typedef nodes. These need to be removed...
 
     # breadth first search
-    def bfs(current, bfs, remove_typedefs = remove_ast_typedefs):
+    def bfs(current, bfs):
         if current == []:
             return []
         
         # extend search one level deeper than current
         next = []
-        for c in map(remove_typedefs, current):
-            if isinstance(c, idlast.Forward):
-                c = c.fullDecl()
-            next = next + c.inherits()
+        for c in current:
+            next.extend(map(remove_ast_typedefs_and_forwards, c.inherits()))
 
         return next + bfs(next, bfs)
 
-    start = map(remove_ast_typedefs, interface.inherits())
-    
-    list = start + bfs(start, bfs)
+    start = map(remove_ast_typedefs_and_forwards, interface.inherits())
+    list  = start + bfs(start, bfs)
 
     return util.setify(list)

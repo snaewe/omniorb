@@ -70,6 +70,14 @@
 #endif
 #endif
 
+#if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
+#define USE_STREAM_OPEN
+#define OPEN(name,mode,perm) open(name,mode,perm)
+#elif defined(__KCC)
+#define USE_STREAM_OPEN
+#define OPEN(name,mode,perm) open(name,mode)
+#endif
+
 #ifdef _NO_STRDUP
 
 
@@ -351,20 +359,19 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
     cerr << ts.t() << "Starting omniNames for the first time." << endl;
 
     try {
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#ifdef USE_STREAM_OPEN
+      logf.OPEN(active,ios::out|ios::trunc,0666);
+      if (!logf)
+	throw IOError();
+#else
 #  ifdef __WIN32__
       int fd = _open(active, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
 #  else
       int fd = open(active, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
 #  endif
-
       if (fd < 0)
 	throw IOError();
       logf.attach(fd);
-#else
-      logf.open(active,ios::out|ios::trunc,0666);
-      if (!logf)
-	throw IOError();
 #endif
       putPort(port, logf);
       reallyFlush(logf);
@@ -497,7 +504,14 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
 
   CORBA::release(rootContext);	// dispose of the object reference
 
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#ifdef USE_STREAM_OPEN
+  logf.OPEN(active,ios::out|ios::app,0666);
+  if (!logf) {
+    cerr << ts.t() << "Error: cannot open log file '" << active
+	 << "' for writing." << endl;
+    exit(1);
+  }
+#else
 #  ifdef __WIN32__
   int fd = _open(active, O_WRONLY | O_APPEND);
 #  else
@@ -510,13 +524,6 @@ omniNameslog::init(CORBA::ORB_ptr          the_orb,
     exit(1);
   }
   logf.attach(fd);
-#else
-  logf.open(active,ios::out|ios::app,0666);
-  if (!logf) {
-    cerr << ts.t() << "Error: cannot open log file '" << active
-	 << "' for writing." << endl;
-    exit(1);
-  }
 #endif
 
   startingUp = 0;
@@ -620,7 +627,14 @@ omniNameslog::checkpoint(void)
 
   try {
 
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#ifdef USE_STREAM_OPEN
+    ckpf.OPEN(checkpt,ios::out|ios::trunc,0666);
+    if (!ckpf) {
+      cerr << ts.t() << "Error: cannot open checkpoint file '"
+	   << checkpt << "' for writing." << endl;
+      throw IOError();
+    }
+#else
 #  ifdef __WIN32__
     fd = _open(checkpt, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
 #  else
@@ -634,13 +648,6 @@ omniNameslog::checkpoint(void)
     }
 
     ckpf.attach(fd);
-#else
-    ckpf.open(checkpt,ios::out|ios::trunc,0666);
-    if (!ckpf) {
-      cerr << ts.t() << "Error: cannot open checkpoint file '"
-	   << checkpt << "' for writing." << endl;
-      throw IOError();
-    }
 #endif
     putPort(port, ckpf);
 
@@ -742,7 +749,14 @@ omniNameslog::checkpoint(void)
   }
 #endif
 
-#if !defined(__SUNPRO_CC) || __SUNPRO_CC < 0x500
+#ifdef USE_STREAM_OPEN
+  logf.OPEN(active,ios::out|ios::app,0666);
+  if (!logf) {
+    cerr << ts.t() << "Error: cannot open log file '" << active
+	 << "' for writing." << endl;
+    exit(1);
+  }
+#else
 #  ifdef __WIN32__
   fd = _open(active, O_WRONLY | O_APPEND);
 #  else
@@ -755,13 +769,6 @@ omniNameslog::checkpoint(void)
     exit(1);
   }
   logf.attach(fd);
-#else
-  logf.open(active,ios::out|ios::app,0666);
-  if (!logf) {
-    cerr << ts.t() << "Error: cannot open log file '" << active
-	 << "' for writing." << endl;
-    exit(1);
-  }
 #endif
 
   NamingContext_i::lock.readerOut();

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.3  2001/06/08 17:12:11  dpg1
+# Merge all the bug fixes from omni3_develop.
+#
 # Revision 1.20.2.2  2000/10/12 15:37:45  sll
 # Updated from omni3_1_develop.
 #
@@ -165,6 +168,7 @@ usage_string = """\
   -WbBOA            Generate BOA compatible skeletons
   -Wbold            Generate old CORBA 2.1 signatures for skeletons
   -Wbold_prefix     Map C++ reserved words with prefix _
+  -Wbinline         Generate code for #included files inline with the main file
   -Wbkeep_inc_path  Preserve IDL #include path in header #includes
   -Wbuse_quotes     Use quotes in #includes: \"foo\" rather than <foo>"""
 
@@ -211,6 +215,8 @@ def process_args(args):
             config.state['SK Suffix']         = arg[2:]
         elif arg[:2] == "d=":
             config.state['DYNSK Suffix']      = arg[2:]
+        elif arg == "inline":
+            config.state['Inline Includes']   = 1
         else:
             util.fatalError("Argument \"" + str(arg) + "\" is unknown")
 
@@ -228,6 +234,9 @@ def run(tree, args):
         # Check the input tree only contains stuff we understand
         support.checkIDL(tree)
 
+        # initialise the handy ast module
+        ast.__init__(tree)
+
         # Initialise the descriptor generating code
         descriptor.__init__(tree)
 
@@ -241,10 +250,6 @@ def run(tree, args):
         #    tree.accept(id.WalkTree())
         # Not ported yet.
         
-
-        # initialise the handy ast module
-        ast.__init__(tree)
-
         header.run(tree)
         
         skel.run(tree)
