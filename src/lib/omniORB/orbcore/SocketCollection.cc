@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.23  2004/09/13 09:44:16  dgrisby
+  Avoid theoretical (?) problem with socket limit on Windows.
+
   Revision 1.1.2.22  2004/08/31 14:59:09  dgrisby
   Don't bother calculating fd count on Windows because it ignores it.
 
@@ -112,9 +115,7 @@
 #  include "iostream.h"
 #endif
 
-#if defined(__WIN32__)
-#  define SELECTABLE_FD_LIMIT INVALID_SOCKET
-#else
+#if !defined(__WIN32__)
 #  define SELECTABLE_FD_LIMIT FD_SETSIZE
 #endif
 
@@ -291,8 +292,10 @@ SocketCollection::setSelectable(SocketHandle_t sock,
 				CORBA::Boolean data_in_buffer,
 				CORBA::Boolean hold_lock) {
 
+#ifdef SELECTABLE_FD_LIMIT
   if (sock >= SELECTABLE_FD_LIMIT)
     return;
+#endif
 
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_fdset_lock, hold_lock);
 
@@ -331,10 +334,13 @@ SocketCollection::setSelectable(SocketHandle_t sock,
 
 /////////////////////////////////////////////////////////////////////////
 void
-SocketCollection::clearSelectable(SocketHandle_t sock) {
+SocketCollection::clearSelectable(SocketHandle_t sock)
+{
 
+#ifdef SELECTABLE_FD_LIMIT
   if (sock >= SELECTABLE_FD_LIMIT)
     return;
+#endif
 
   omni_tracedmutex_lock sync(pd_fdset_lock);
 
@@ -356,7 +362,11 @@ SocketCollection::clearSelectable(SocketHandle_t sock) {
 CORBA::Boolean
 SocketCollection::isSelectable(SocketHandle_t sock)
 {
+#ifdef SELECTABLE_FD_LIMIT
   return sock < SELECTABLE_FD_LIMIT;
+#else
+  return 1;
+#endif
 }
 
 

@@ -1,7 +1,23 @@
+Mon Sep 13 10:41:28 BST 2004 dgrisby
+====================================
+
+- Support multiple addresses in corbaloc URIs with IIOP 1.0.
+
+src/lib/omniORB/orbcore/omniIOR.cc
+
+- Limited support for ssliop scheme in corbaloc. Thanks Martin Laporte.
+
+src/lib/omniORB/orbcore/uri.cc
+
+- Avoid theoretical (?) problem with socket limit on Windows.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Tue Aug 31 16:18:53 BST 2004 dgrisby
 ====================================
 
-- Silly mistake in configure for AIX.o
+- Silly mistake in configure for AIX.
 
 configure
 configure.ac
