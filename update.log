@@ -1,3 +1,13 @@
+Fri Jan  8 11:06:35 GMT 1999 pjs
+================================
+
+- (back ported from version 5.6) ensured removal of duplicate entries
+  in CORBA_INTERFACES. Result is stored in a new variable named
+  UNIQUE_CORBA_INTERFACES: use this when you want to refer to the
+  corba interfaces in a make rule.
+
+mk/beforedir.mk
+
 Fri Jan  8 10:09:01 GMT 1999 djr
 ================================
 
