@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.16  2001/09/19 17:30:04  dpg1
+  New traceThreadId option to add omni_thread id to log messages.
+
   Revision 1.2.2.15  2001/09/12 19:42:35  sll
   Added back function to report max. GIOP message size.
 
@@ -212,6 +215,13 @@ _CORBA_MODULE_BEG
   //     option: -ORBtraceInvocations, or by direct assignment to this //
   //     variable.  If true, then each local and remote invocation     //
   //     will generate a trace message.                                //
+  //                                                                   //
+  _CORBA_MODULE_VAR _core_attr _CORBA_Boolean traceThreadId;           //
+  //     This value can be changed at runtime either by command-line   //
+  //     option: -ORBtraceThreadId, or by direct assignment to this    //
+  //     variable.  If true, then the logging messages emmited due to  //
+  //     the two options above will contain the thread id of the       //
+  //     logging thread.                                               //
   ///////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
