@@ -10,16 +10,20 @@
 
 /*
   $Log$
-  Revision 1.6  1997/03/10 16:36:30  sll
-  - Added omniORB2 specific functions in the  _sk_<interface> class. They
-    are: _this, _obj_is_ready, _dispose, _boa, _key. These functions
-    are part of omniORB2's public API.
-  - Changed the operation signatures in class T of interface T to use the
-    adaptation classes for passing variable length INOUT and OUT arguments.
-  - New member function inout_adptarg_name() and out_adptarg_name() to return
-    the name of the adaptation classes.
-  - T_var type is also generated inside interface forward declaration code.
+  Revision 1.7  1997/04/23 14:32:36  sll
+  - Changed implementation skeleton stub to use atmoic get and set
+    functions to obtain an object's rope and key.
 
+// Revision 1.6  1997/03/10  16:36:30  sll
+// - Added omniORB2 specific functions in the  _sk_<interface> class. They
+//   are: _this, _obj_is_ready, _dispose, _boa, _key. These functions
+//   are part of omniORB2's public API.
+// - Changed the operation signatures in class T of interface T to use the
+//   adaptation classes for passing variable length INOUT and OUT arguments.
+// - New member function inout_adptarg_name() and out_adptarg_name() to return
+//   the name of the adaptation classes.
+// - T_var type is also generated inside interface forward declaration code.
+//
   Revision 1.5  1997/01/30 20:29:01  sll
   Added is_nil, release and duplicate to _Helper class.
 
@@ -493,14 +497,14 @@ o2be_interface::produce_hdr(fstream &s)
   IND(s); s << "public:\n\n";
   INC_INDENT_LEVEL();
   IND(s); s << server_uqname() << "() {}\n";
-  IND(s); s << server_uqname() << "(const omniORB::objectKey& k) { NP_objkey(k); }\n";
+  IND(s); s << server_uqname() << "(const omniORB::objectKey& k);\n";
   IND(s); s << "virtual ~" << server_uqname() << "() {}\n";
   IND(s); s << objref_uqname() << " _this() { return "
 	    << uqname() << "::_duplicate(this); }\n";
   IND(s); s << "void _obj_is_ready(CORBA::BOA_ptr boa) { boa->obj_is_ready(this); }\n";
   IND(s); s << "CORBA::BOA_ptr _boa() { return CORBA::BOA::getBOA(); }\n";
   IND(s); s << "void _dispose() { _boa()->dispose(this); }\n";
-  IND(s); s << "omniORB::objectKey _key() { return (*(omniORB::objectKey*)objkey()); }\n";
+  IND(s); s << "omniORB::objectKey _key();\n";
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
     while (!i.is_done())
@@ -922,6 +926,25 @@ o2be_interface::produce_skel(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
   
+
+  IND(s); s << server_fqname() << "::" << server_uqname() 
+	    << " (const omniORB::objectKey& k)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "omniRopeAndKey l(0,(CORBA::Octet*)&k,(CORBA::ULong)sizeof(k));\n";
+  IND(s); s << "setRopeAndKey(l,0);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "omniORB::objectKey\n";
+  IND(s); s << server_fqname() << "::_key()\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "omniRopeAndKey l;\n";
+  IND(s); s << "getRopeAndKey(l);\n";
+  IND(s); s << "return (*((omniORB::objectKey*)l.key()));\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
 
   // _duplicate
   IND(s); s << objref_fqname() << "\n";
