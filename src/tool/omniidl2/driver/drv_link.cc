@@ -90,6 +90,7 @@ DRV_PF_BE_produce 	DRV_BE_produce;
 DRV_PF_BE_abort   	DRV_BE_abort;
 DRV_PF_BE_prep_arg	DRV_BE_prep_arg;
 DRV_PF_BE_version	DRV_BE_version;
+DRV_PF_BE_parse_args    DRV_BE_parse_args;
 
 void
 DRV_FE_open()
@@ -123,6 +124,7 @@ DRV_BE_open()
   DRV_BE_abort = &BE_abort;
   DRV_BE_prep_arg = &BE_prep_arg;
   DRV_BE_version = &BE_version;
+  DRV_BE_parse_args = &BE_parse_args;
 }
 
 void
@@ -133,4 +135,5 @@ DRV_BE_close()
   DRV_BE_abort = 0;
   DRV_BE_prep_arg = 0;
   DRV_BE_version = 0;
+  DRV_BE_parse_args = 0;
 }
