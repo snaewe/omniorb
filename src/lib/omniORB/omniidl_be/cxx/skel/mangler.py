@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.7  2001/11/13 15:23:52  dpg1
+# Bug in forward declared structs/unions.
+#
 # Revision 1.15.2.6  2001/10/29 17:42:42  dpg1
 # Support forward-declared structs/unions, ORB::create_recursive_tc().
 #
@@ -128,6 +131,7 @@ import string
 SCOPE_SEPARATOR         =    "_m"
 ARRAY_SEPARATOR         =    "_a"
 SEQ_SEPARATOR           =    "_s"
+FORWARD_SEQ_SEPARATOR   =    "_f"
 CANNON_NAME_SEPARATOR   =    "_c"
 ONEWAY_SEPARATOR        =    "_w"
 IN_SEPARATOR            =    "_i"
@@ -167,10 +171,8 @@ def canonTypeName(type, decl = None, useScopedName = 0):
 
     # flatten a list of dimensions into a string
     def dims(d):
-        if d == []:
-            return ""
-        d_str = map(str, d)
-        d_str = map(lambda x:ARRAY_SEPARATOR + x, d_str)
+        if d == []: return ""
+        d_str = map(lambda x:ARRAY_SEPARATOR + str(x), d)
         return string.join(d_str, "")
 
     full_dims = decl_dims + type_dims
@@ -207,8 +209,13 @@ def canonTypeName(type, decl = None, useScopedName = 0):
     # to simple aliases to sequences
     if d_type.sequence():
         bound = d_type.type().bound()
-        canon_name = canon_name + SEQ_SEPARATOR + str(bound)
         seqType = types.Type(d_type.type().seqType())
+
+        if seqType.structforward() or seqType.unionforward():
+            canon_name = canon_name + FORWARD_SEQ_SEPARATOR + str(bound)
+        else:
+            canon_name = canon_name + SEQ_SEPARATOR + str(bound)
+
 
         while seqType.sequence():
             bound = seqType.type().bound()

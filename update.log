@@ -1,3 +1,12 @@
+Tue Nov 13 15:22:17 GMT 2001 dpg1
+=================================
+
+- Bug in forward declared structs/unions.
+
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/skel/mangler.py
+
+
 Tue Nov 13 14:08:46 GMT 2001 dpg1
 =================================
 
@@ -30,7 +39,6 @@ src/lib/omniAsyncInvoker/invoker.cc
 - Bug when no catch by base class.
 
 src/lib/omniORB/omniidl_be/cxx/skel/template.py
-
 
 
 Mon Nov 12 13:43:43 GMT 2001 dpg1

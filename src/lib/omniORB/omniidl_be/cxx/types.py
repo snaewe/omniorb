@@ -564,8 +564,7 @@ class Type:
             if d_SeqType.sequence():
                 template["derefSeqTypeID"] = d_SeqType.\
                                              sequenceTemplate(environment)
-            
-    
+        
         if d_SeqType.char():
             template["suffix"] = "_Char"
         elif d_SeqType.wchar():
@@ -670,7 +669,7 @@ class Type:
 
         # -----------------------------------
         # build the template instance
-        if len(args):
+        if args:
             name = name + "< " + string.join(args, ", ") + " > "
             return name
 
