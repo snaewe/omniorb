@@ -27,6 +27,13 @@
 //   Implementation of CORBA::Context.
 //
 
+/*
+ $Log$
+ Revision 1.5  1999/04/21 11:24:37  djr
+ Added marshalling methods, plus a few minor mods.
+
+*/
+
 #include <context.h>
 #include <pseudo.h>
 #include <string.h>
@@ -66,8 +73,8 @@ ContextImpl::~ContextImpl()
   // This destructor can only be called when the reference count
   // has gone to zero, and there are no children.
   if( pd_refCount || pd_children ) 
-    throw omniORB::fatalException(__FILE__,__LINE__,
-				  "ContextImpl::~ContextImpl()");
+    throw omniORB::fatalException(__FILE__, __LINE__,
+		  "Application deleted a CORBA::Context explicitly");
 
   // <pd_name> freed by String_var.
   // We don't own <pd_parent>.
@@ -215,6 +222,7 @@ ContextImpl::NP_duplicate()
   pd_refCount++;
   return this;
 }
+
 
 const char*
 ContextImpl::lookup_single(const char* name) const
@@ -488,7 +496,7 @@ public:
 static NilContext _nilContext;
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
+/////////////////////////////// Context //////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 CORBA::Context::~Context() {}
@@ -497,8 +505,14 @@ CORBA::Context::~Context() {}
 CORBA::Context_ptr
 CORBA::Context::_duplicate(Context_ptr p)
 {
-  if( p )  return p->NP_duplicate();
-  else     return _nil();
+  if( p ) {
+    ContextImpl* c = (ContextImpl*) p;
+    omni_mutex_lock sync(c->pd_lock);
+    c->pd_refCount++;
+    return c;
+  }
+  else
+    return &_nilContext;
 }
 
 
@@ -508,8 +522,131 @@ CORBA::Context::_nil()
   return &_nilContext;
 }
 
+
+size_t
+CORBA::Context::NP_alignedSize(CORBA::Context_ptr ctxt,
+			       const char*const* which,
+			       int whichlen, size_t offset)
+{
+  // Space for the number of context entries ...
+  offset = omni::align_to(offset, omni::ALIGN_4) + 4;
+
+  if( CORBA::is_nil(ctxt) )  return offset;
+  ContextImpl* c = (ContextImpl*) ctxt;
+
+  for( int i = 0; i < whichlen; i++ ) {
+
+    const char* value = c->lookup_single(which[i]);
+    if( !value )  continue;
+
+    int len = strlen(which[i]) + 1;
+    offset = omni::align_to(offset, omni::ALIGN_4) + 4 + len;
+
+    len = strlen(value) + 1;
+    offset = omni::align_to(offset, omni::ALIGN_4) + 4 + len;
+
+  }
+
+  return offset;
+}
+
+
+template<class buf_t>
+inline void
+marshal(CORBA::Context_ptr ctxt, const char*const* which,
+	int whichlen, buf_t& s)
+{
+  if( CORBA::is_nil(ctxt) ) {
+    CORBA::ULong(0) >>= s;
+    return;
+  }
+  ContextImpl* c = (ContextImpl*) ctxt;
+
+  // The length of the sequence of strings is twice the
+  // number of context entries ...
+  CORBA::ULong(whichlen * 2) >>= s;
+
+  for( int i = 0; i < whichlen; i++ ) {
+
+    const char* value = c->lookup_single(which[i]);
+    if( !value )  continue;
+
+    CORBA::ULong len = strlen(which[i]) + 1;
+    len >>= s;
+    s.put_char_array((CORBA::Char*) which[i], len);
+
+    len = strlen(value) + 1;
+    len >>= s;
+    s.put_char_array((CORBA::Char*) value, len);
+
+  }
+}
+
+
+void
+CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
+			       const char*const* which,
+			       int whichlen, NetBufferedStream& s)
+{
+  marshal(ctxt, which, whichlen, s);
+}
+
+
+void
+CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
+			       const char*const* which,
+			       int whichlen, MemBufferedStream& s)
+{
+  marshal(ctxt, which, whichlen, s);
+}
+
+
+template<class buf_t>
+inline CORBA::Context_ptr
+unmarshal(buf_t& s)
+{
+  CORBA::ULong nentries;
+  nentries <<= s;
+  if( nentries % 1 )  throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+  nentries /= 2;
+
+  ContextImpl* c = new ContextImpl("", CORBA::Context::_nil());
+
+  try {
+    for( CORBA::ULong i = 0; i < nentries; i++ ) {
+
+      CORBA::String_member name, value;
+      name <<= s;
+      value <<= s;
+
+      c->insert_single_consume(name._retn(), value._retn());
+
+    }
+  }
+  catch(...) {
+    delete c;
+    throw;
+  }
+
+  return c;
+}
+
+
+CORBA::Context_ptr
+CORBA::Context::unmarshalContext(NetBufferedStream& s)
+{
+  return unmarshal(s);
+}
+
+
+CORBA::Context_ptr
+CORBA::Context::unmarshalContext(MemBufferedStream& s)
+{
+  return unmarshal(s);
+}
+
 //////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
+//////////////////////////////// CORBA ///////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 void
@@ -528,6 +665,6 @@ CORBA::ORB::get_default_context(CORBA::Context_out context_out)
   if( !default_context )
     default_context = new ContextImpl("default", CORBA::Context::_nil());
 
-  context_out = default_context->NP_duplicate();
+  context_out = CORBA::Context::_duplicate(default_context);
   RETURN_CORBA_STATUS;
 }
