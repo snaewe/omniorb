@@ -80,6 +80,9 @@ NamedValueImpl::NamedValueImpl(char* name, CORBA::Any* value,
 }
 
 
+NamedValueImpl::~NamedValueImpl() {}
+
+
 const char*
 NamedValueImpl::name() const
 {
