@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/08/17 13:44:08  dpg1
+  Change freeing behaviour of string members and elements.
+
   Revision 1.1.2.4  2000/11/17 19:11:16  dpg1
   Rename _CORBA_Sequence__WString to _CORBA_Sequence_WString.
 
@@ -212,6 +215,10 @@ public:
       _ptr = _CORBA_WString_helper::dup(s._ptr);
   }
 
+  inline _CORBA_WString_member(const _CORBA_WChar* s) {
+    _ptr = _CORBA_WString_helper::dup(s);
+  }
+
   inline ~_CORBA_WString_member() {
     _CORBA_WString_helper::free(_ptr);
   }
@@ -301,7 +308,7 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////
-//////////////////////////// WString_element ///////////////////////////
+//////////////////////////// WString_element /////////////////////////
 //////////////////////////////////////////////////////////////////////
 
 class _CORBA_WString_element {
@@ -312,7 +319,7 @@ public:
     : pd_rel(rel), pd_data(p) {}
 
   inline _CORBA_WString_element(const _CORBA_WString_element& s) 
-  : pd_rel(s.pd_rel), pd_data(s.pd_data) {}
+    : pd_rel(s.pd_rel), pd_data(s.pd_data) {}
 
   inline ~_CORBA_WString_element() {
   // intentionally does nothing.
@@ -326,52 +333,44 @@ public:
   }
 
   inline _CORBA_WString_element& operator= (const _CORBA_WChar* s) {
-    if (pd_rel) {
+    if (pd_rel)
       _CORBA_WString_helper::free(pd_data);
-      if (s)
-	pd_data = _CORBA_WString_helper::dup(s);
-      else
-	pd_data = 0;
-    } else {
-      pd_data = (_CORBA_WChar*)s;
-    }
+    if (s)
+      pd_data = _CORBA_WString_helper::dup(s);
+    else
+      pd_data = 0;
     return *this;
   }
 
   inline _CORBA_WString_element& operator=(const _CORBA_WString_element& s) {
     if (&s != this) {
-      if (pd_rel) {
+      if (pd_rel)
 	_CORBA_WString_helper::free(pd_data);
-	if (s.pd_data && s.pd_data != _CORBA_WString_helper::empty_wstring)
-	  pd_data = _CORBA_WString_helper::dup(s.pd_data);
-	else
-	  pd_data = (_CORBA_WChar*)s.pd_data;
-      } else
+      if (s.pd_data && s.pd_data != _CORBA_WString_helper::empty_wstring)
+	pd_data = _CORBA_WString_helper::dup(s.pd_data);
+      else
 	pd_data = (_CORBA_WChar*)s.pd_data;
     }
     return *this;
   }
 
   inline _CORBA_WString_element& operator=(const _CORBA_WString_var& s) {
-    if (pd_rel) {
+    if (pd_rel)
       _CORBA_WString_helper::free(pd_data);
-      if( (const _CORBA_WChar*)s )
-	pd_data = _CORBA_WString_helper::dup((const _CORBA_WChar*)s);
-      else
-	pd_data = 0;
-    } else
-      pd_data = (_CORBA_WChar*)(const _CORBA_WChar*)s;
+    if( (const _CORBA_WChar*)s )
+      pd_data = _CORBA_WString_helper::dup((const _CORBA_WChar*)s);
+    else
+      pd_data = 0;
     return *this;
   }
 
   inline _CORBA_WString_element& operator=(const _CORBA_WString_member& s) {
-    if (pd_rel) {
+    if (pd_rel)
       _CORBA_WString_helper::free(pd_data);
-      if( (const _CORBA_WChar*)s && (const _CORBA_WChar*) s != _CORBA_WString_helper::empty_wstring)
-	pd_data = _CORBA_WString_helper::dup((const _CORBA_WChar*)s);
-      else
-	pd_data = (_CORBA_WChar*)(const _CORBA_WChar*)s;
-    } else
+    if( (const _CORBA_WChar*)s &&
+	(const _CORBA_WChar*) s != _CORBA_WString_helper::empty_wstring)
+      pd_data = _CORBA_WString_helper::dup((const _CORBA_WChar*)s);
+    else
       pd_data = (_CORBA_WChar*)(const _CORBA_WChar*)s;
     return *this;
   }
