@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.8  1999/08/23 08:35:59  sll
+  Do not prepend the tcpSocketFactoryType singleton onto the
+  ropeFactoryTypeList. This has been done by the ctor of ropeFactoryType.
+
   Revision 1.7  1999/03/11 16:25:56  djr
   Updated copyright notice
 
@@ -87,8 +91,6 @@ tcpSocketFactoryType::init()
 {
   if (singleton) return;
   singleton = new tcpSocketFactoryType;
-  singleton->next = ropeFactoryTypeList;
-  ropeFactoryTypeList = singleton;
 
   if (omniORB::traceLevel >= 2) {
     omniORB::log << "omniORB2 gateKeeper is " << gateKeeper::version() 
