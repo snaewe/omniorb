@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/12/10 18:27:05  djs
+# Fixed bug to do with marshalling arrays of things, mirrored in the old
+# compiler
+#
 # Revision 1.6  1999/12/09 20:40:57  djs
 # Bugfixes and integration with dynskel/ code
 #
@@ -336,6 +340,7 @@ def operation(operation):
 
 
     raises = operation.raises()
+    raises_sorted = skutil.sort_exceptions(raises)
     has_user_exceptions = raises != []
     # need to declare user exceptions
     exceptions = util.StringStream()
@@ -344,7 +349,7 @@ def operation(operation):
     if has_user_exceptions:
         # old compiler seems to order repoIDs by exception definition
         # no need to duplicate that behaviour here
-        repoIDs = map(lambda x: "\"" + x.repoId() + "\"", raises)
+        repoIDs = map(lambda x: "\"" + x.repoId() + "\"", raises_sorted)
         exceptions.out("""\
 static const char* const _user_exns[] = {
   @repoID_list@

@@ -30,6 +30,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/12/10 18:27:05  djs
+# Fixed bug to do with marshalling arrays of things, mirrored in the old
+# compiler
+#
 # Revision 1.5  1999/12/09 20:40:58  djs
 # Bugfixes and integration with dynskel/ code
 #
@@ -61,7 +65,7 @@
 import re, string
 
 from omniidl import idlast, idltype
-from omniidl.be.cxx import util, tyutil
+from omniidl.be.cxx import util, tyutil, skutil
 
 import mangler
 self = mangler
@@ -262,6 +266,8 @@ def produce_canonical_name_for_type(type):
           repr(type) + " (kind = " + repr(type.kind()) + ")"
 
 
+
+
 def produce_operation_signature(operation):
     assert isinstance(operation, idlast.Operation)
 
@@ -284,19 +290,9 @@ def produce_operation_signature(operation):
 
         sig = sig + canonTypeName(param.paramType(),
                                   useScopedName = 1)
-        
+
     # exception list
-    # sort the exceptions into lexicographical order
-    def lexicographic(exception_a, exception_b):
-        name_a = tyutil.name(tyutil.mapID(exception_a.scopedName()))
-        name_b = tyutil.name(tyutil.mapID(exception_b.scopedName()))
-        # name_a <=> name_b
-        if name_a < name_b: return 1
-        if name_a > name_b: return 0
-        return 0
-        
-    raises = operation.raises()[:]
-    raises.sort(lexicographic)
+    raises = skutil.sort_exceptions(operation.raises())
 
     def exception_signature(exception):
         cname = CANNON_NAME_SEPARATOR +\
