@@ -32,6 +32,12 @@
 
 /*
  $Log$
+ Revision 1.1.2.16  2000/08/10 10:17:53  sll
+ Found the workaround for MSVC++ so that exceptions can be caught by base
+ class. All the copy ctor from the most derived to the base classes must be
+ public. Previously it was protected. CORBA exceptions can now be caught by
+ base class on win32 platforms.
+
  Revision 1.1.2.15  2000/08/07 15:34:33  dpg1
  Partial back-port of long long from omni3_1_develop.
 
@@ -325,8 +331,6 @@
 #endif
 #define _HAS_NOT_GOT_strcasecmp
 #define _HAS_NOT_GOT_strncasecmp
-// No current version of MSVC++ can catch exceptions by base class
-#undef HAS_Cplusplus_catch_exception_by_base
 
 #define HAS_LongLong
 #define _CORBA_LONGLONG_DECL   __int64

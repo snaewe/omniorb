@@ -1,3 +1,14 @@
+Thu Aug 10 11:14:19 BST 2000 sll
+================================
+
+- Found the workaround for MSVC++ so that exceptions can be caught by base
+  class. All the copy ctor from the most derived to the base classes must be
+  public. Previously it was protected.
+  CORBA exceptions can now be caught by base class on win32 platforms.
+
+include/omniORB3/CORBA.h
+include/omniORB3/CORBA_sysdep.h
+
 Thu Aug 10 11:03:13 BST 2000 sll
 ================================
 

@@ -29,6 +29,12 @@
 
 /*
  $Log$
+ Revision 1.1.2.12  2000/08/10 10:17:52  sll
+ Found the workaround for MSVC++ so that exceptions can be caught by base
+ class. All the copy ctor from the most derived to the base classes must be
+ public. Previously it was protected. CORBA exceptions can now be caught by
+ base class on win32 platforms.
+
  Revision 1.1.2.11  2000/08/07 15:34:32  dpg1
  Partial back-port of long long from omni3_1_develop.
 
@@ -800,11 +806,6 @@ _CORBA_MODULE_BEG
       pd_insertToAnyFnNCP(0),
       pd_magic(PR_magic)
       {}
-    inline Exception(const Exception& ex) :
-      pd_insertToAnyFn(ex.pd_insertToAnyFn),
-      pd_insertToAnyFnNCP(ex.pd_insertToAnyFnNCP),
-      pd_magic(ex.pd_magic)
-      {}
     inline Exception& operator = (const Exception& ex) {
       pd_magic = ex.pd_magic;
       pd_insertToAnyFn = ex.pd_insertToAnyFn;
@@ -815,6 +816,16 @@ _CORBA_MODULE_BEG
 
     insertExceptionToAny     pd_insertToAnyFn;
     insertExceptionToAnyNCP  pd_insertToAnyFnNCP;
+
+#if _MSC_VER      // Copy ctor has to be public for catch on this
+                  // base class to work when a derived class is thrown.
+  public:
+#endif
+    inline Exception(const Exception& ex) :
+      pd_insertToAnyFn(ex.pd_insertToAnyFn),
+      pd_insertToAnyFnNCP(ex.pd_insertToAnyFnNCP),
+      pd_magic(ex.pd_magic)
+      {}
 
   private:
     virtual Exception* _NP_duplicate() const = 0;
@@ -936,7 +947,13 @@ _CORBA_MODULE_BEG
 
   protected:
     inline UserException() {}
+
+#if _MSC_VER      // Copy ctor has to be public for catch on this
+                  // base class to work when a derived class is thrown.
+  public:
+#endif
     inline UserException(const UserException& ex) : Exception(ex) {}
+
   public: // Don't know why this needs to be public ...
     UserException& operator=(const UserException& ex) {
       Exception::operator=(ex);
