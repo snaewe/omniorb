@@ -234,7 +234,7 @@ defname=$$targetdir/$(SharedLibraryExportSymbolFileNameTemplate); \
 version=$(SharedLibraryVersionStringTemplate); \
 set -x; \
 $(RM) $@; \
-$(CXXLINK) -shared  -Wl,--dll -o$$dllname \
+$(CXXLINK) -shared -mthreads -Wl,-export-all -Wl,--dll -o$$dllname \
 -Wl,--out-implib,$@ -Wl,--output-def,$$defname \
 -Wl,--enable-runtime-pseudo-reloc \
 $$extralinkoption $(IMPORT_LIBRARY_FLAGS) \
