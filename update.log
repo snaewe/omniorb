@@ -1,3 +1,16 @@
+Wed Jul  2 11:54:20 BST 2003 dgrisby
+====================================
+
+- Race condition in POA destruction.
+
+bugfixes-401.xml
+include/omniORB4/internal/objectTable.h
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/poa.cc
+
+
 Fri Jun 27 10:26:37 BST 2003 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.32  2003/07/02 11:01:06  dgrisby
+  Race condition in POA destruction.
+
   Revision 1.2.2.31  2003/05/28 09:59:25  dgrisby
   HPUX fixes broke some platforms.
 
@@ -636,10 +639,33 @@ omniObjTableEntry::setDeactivating()
 }
 
 void
+omniObjTableEntry::setDeactivatingOA()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+  OMNIORB_ASSERT(pd_state == ACTIVE);
+  OMNIORB_ASSERT(pd_nInvocations > 0);
+
+  if( omniORB::trace(15) ) {
+    omniORB::logger l;
+    l << "State " << this << " -> deactivating (OA destruction)\n";
+  }
+
+  if (pd_nInvocations == 1)
+    pd_state = DEACTIVATING_OA;
+  else
+    pd_state = DEACTIVATING;
+
+  --pd_nInvocations;
+
+  if (pd_waiters)
+    pd_cond->broadcast();
+}
+
+void
 omniObjTableEntry::setEtherealising()
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
-  OMNIORB_ASSERT(pd_state == DEACTIVATING);
+  OMNIORB_ASSERT(pd_state & DEACTIVATING);
 
   pd_servant->_removeActivation(this);
 

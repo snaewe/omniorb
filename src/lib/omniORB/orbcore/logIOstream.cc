@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.8.2.11  2003/07/02 11:01:06  dgrisby
+  Race condition in POA destruction.
+
   Revision 1.8.2.10  2002/10/30 16:49:03  dgrisby
   Log flush broken when using log function.
 
@@ -262,11 +265,13 @@ omniORB::logger::operator<<(const omniLocalIdentity* id)
   omniObjTableEntry* entry=omniObjTableEntry::downcast((omniLocalIdentity*)id);
   if (entry) {
     switch (entry->state()) {
-    case omniObjTableEntry::ACTIVATING:    *this << " (activating)";    break;
-    case omniObjTableEntry::ACTIVE:        *this << " (active)";        break;
-    case omniObjTableEntry::DEACTIVATING:  *this << " (deactivating)";  break;
-    case omniObjTableEntry::ETHEREALISING: *this << " (etherealising)"; break;
-    case omniObjTableEntry::DEAD:          *this << " (dead)";          break;
+    case omniObjTableEntry::ACTIVATING:    *this << " (activating)";     break;
+    case omniObjTableEntry::ACTIVE:        *this << " (active)";         break;
+    case omniObjTableEntry::DEACTIVATING:  *this << " (deactivating)";   break;
+    case omniObjTableEntry::DEACTIVATING_OA:
+                                           *this << " (deactivating OA)";break;
+    case omniObjTableEntry::ETHEREALISING: *this << " (etherealising)";  break;
+    case omniObjTableEntry::DEAD:          *this << " (dead)";           break;
     default:                               *this << " (???)";
     }
   }

@@ -8,13 +8,23 @@
 
 <buglist version="4.0.1">
 
+<bug id="7" date="Wed Jul  2 11:54:20 BST 2003" user="dgrisby">
+  <summary>Race condition in POA destruction</summary>
+  <reported>Emmanuel Taurel</reported>
+  <text>
+  If a call happened in the middle of POA destruction, the servant was
+  sometimes etherealised twice, leading to an assertion failure.
+  </text>
+</bug>
+
 <bug id="6" date="Fri Jun 27 10:26:37 BST 2003" user="dgrisby">
   <summary>Deadlock after POA exception</summary>
   <reported>Vladimir Panov</reported>
   <listlink
   href="http://www.omniorb-support.com/pipermail/omniorb-list/2003-June/023803.html"/>
-  <text>Calling deactivate_object on a destroyed POA would leave a
-  mutex locked after throwing an exception.
+  <text>
+  Calling deactivate_object on a destroyed POA would leave a mutex
+  locked after throwing an exception.
   </text>
 </bug>
 
