@@ -10,6 +10,9 @@
 
 /* 
    $Log$
+   Revision 1.2  1997/01/13 15:31:29  sll
+   Added interface forward declaration as a valid node type.
+
    Revision 1.1  1997/01/08 17:32:59  sll
    Initial revision
 
@@ -129,6 +132,8 @@ o2be_module::produce_skel(fstream &s)
 	    break;
 	  case AST_Decl::NT_const:
 	    o2be_constant::narrow_from_decl(decl)->produce_skel(s);
+	    break;
+	  case AST_Decl::NT_interface_fwd:
 	    break;
 	  case AST_Decl::NT_enum:
 	    o2be_enum::narrow_from_decl(decl)->produce_skel(s);
