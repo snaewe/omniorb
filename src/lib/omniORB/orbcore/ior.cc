@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.17  2001/08/21 10:50:46  dpg1
+  Incorrect length calculation if no components.
+
   Revision 1.10.2.16  2001/08/17 17:12:39  sll
   Modularise ORB configuration parameters.
 
@@ -277,11 +280,9 @@ IIOP::encodeProfile(const IIOP::ProfileBody& body,IOP::TaggedProfile& profile)
 
     if (body.version.minor > 0) {
       CORBA::ULong total = body.components.length();
-      if (total) {
-	total >>= s;
-	for (CORBA::ULong index=0; index < total; index++) {
-	  body.components[index] >>= s;
-	}
+      total >>= s;
+      for (CORBA::ULong index=0; index < total; index++) {
+	body.components[index] >>= s;
       }
     }
     bufsize = s.total();
