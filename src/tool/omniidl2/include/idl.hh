@@ -77,7 +77,9 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #define HAS_Std_Namespace
 #define __USE_STD_IOSTREAM 
 #define HAS_pch
+#if defined(__VMS)
 #pragma message disable codeunreachable
+#endif
 #elif __DECCXX_VER >= 50600000
 #define HAS_Cplusplus_Namespace
 #endif
