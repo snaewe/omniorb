@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.7  2003/04/25 15:54:28  dgrisby
+// Remove unnecessary iostream.h include.
+//
 // Revision 1.5.2.6  2001/11/13 14:11:46  dpg1
 // Tweaks for CORBA 2.5 compliance.
 //
@@ -56,9 +59,6 @@
 // Revision 1.1  1999/10/27 14:05:56  dpg1
 // *** empty log message ***
 //
-
-#include <iostream.h>
-
 
 #include <idlrepoId.h>
 #include <idlast.h>

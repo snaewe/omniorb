@@ -1,3 +1,15 @@
+Fri Apr 25 16:48:09 BST 2003 dgrisby
+====================================
+
+- Work around OpenSSL crypt() clash.
+
+include/omniORB4/sslContext.h
+
+- Remove unnecessary iostream.h include.
+
+src/tool/omniidl/cxx/idlrepoId.cc
+
+
 Tue Apr 15 11:33:05 BST 2003 dgrisby
 ====================================
 
