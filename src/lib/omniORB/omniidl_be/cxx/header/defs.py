@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.10  1999/11/23 18:46:34  djs
+# Constant fixes
+# Moved exception constructor argument generator into a more central place
+#
 # Revision 1.9  1999/11/19 20:08:09  djs
 # Removed references to a non-existant utility function
 #
@@ -460,17 +464,20 @@ def visitConst(node):
 #    value = str(node.value())
 #    if tyutil.isChar(constType):
 #        value = "'" + value + "'"
-            
+
+    representedByInteger =tyutil.const_init_in_def(constType)
+    
     # depends on whether enclosed by an interface or not
     if self.__insideInterface:
-        stream.out("""\
+        if representedByInteger:
+            stream.out("""\
   static _core_attr const @type@ @name@ _init_in_cldecl_( = @val@ );""",
-                   type = type_string, name = name, val = value)
+                       type = type_string, name = name, val = value)
+        else:
+            stream.out("""\
+  static _core_attr const @type@ @name@;""",
+                       type = type_string, name = name)
     else:
-        representedByInteger = tyutil.isInteger(constType) or \
-                               tyutil.isChar(constType)    or \
-                               tyutil.isBoolean(constType) or \
-                               tyutil.isOctet(constType)
         if self.__insideModule:
             where = "MODULE"
         else:
@@ -1092,6 +1099,7 @@ def visitException(node):
 
     # Used to build the types for exception constructors
     def makeConstructorArgumentType(type, environment = environment):
+        raise "moved"
         # idl.type -> string
         typeName = environment.principalID(type)
         isVariable = tyutil.isVariableType(type)
@@ -1121,7 +1129,8 @@ def visitException(node):
         memberType = m.memberType()
         derefType = tyutil.deref(memberType)
         for d in m.declarators():
-            ctor_arg_type = makeConstructorArgumentType(memberType, environment)
+            ctor_arg_type = tyutil.makeConstructorArgumentType(memberType,
+                                                               environment)
 
             if tyutil.isObjRef(derefType):
                 type = tyutil.objRefTemplate(derefType, "Member", environment)
