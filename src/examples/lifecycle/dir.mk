@@ -20,10 +20,10 @@ export: $(lcserver) $(lcclient) $(lcremove)
 	@(module="lcexamples"; $(ExportExecutable))
 
 $(lcserver): lcserver.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
-	@(libs="$(CORBA_LIB) $(OMNIORB2_LC_LIB)"; $(CXXExecutable))
+	@(libs="$(OMNIORB2_LC_LIB) $(CORBA_LIB)"; $(CXXExecutable))
 
 $(lcclient): lcclient.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
-	@(libs="$(CORBA_LIB) $(OMNIORB2_LC_LIB)"; $(CXXExecutable))
+	@(libs="$(OMNIORB2_LC_LIB) $(CORBA_LIB)"; $(CXXExecutable))
 
 $(lcremove): lcremove.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
-	@(libs="$(CORBA_LIB) $(OMNIORB2_LC_LIB)"; $(CXXExecutable))
+	@(libs="$(OMNIORB2_LC_LIB) $(CORBA_LIB)"; $(CXXExecutable))
