@@ -4490,6 +4490,7 @@ get_filename:
 #endif /* VMS */
       f = open_include_file (fname, searchptr, importing, &inc);
       if (f != -1) {
+	strcpy (fname, fbeg);
 	if (bypass_slot && searchptr != first_bracket_include) {
 	  /* This is the first time we found this include file,
 	     and we found it after first_bracket_include.
