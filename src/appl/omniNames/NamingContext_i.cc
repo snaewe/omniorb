@@ -28,6 +28,8 @@ NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
 
   WriterLock w(lock);
 
+  redolog->create(k);
+
   prev = tailContext;
   next = (NamingContext_i*)0;
   tailContext = this;
@@ -38,8 +40,6 @@ NamingContext_i::NamingContext_i(CORBA::BOA_ptr boa,
   }
 
   _obj_is_ready(boa);
-
-  redolog->create(k);
 }
 
 
@@ -108,7 +108,7 @@ NamingContext_i::resolve_compound(const CosNaming::Name& n,
 				  CosNaming::Name& restOfName)
 {
   DB(cerr << "  resolve_compound name ");
-  for (int j = 0; j < n.length(); j++) {
+  for (unsigned int j = 0; j < n.length(); j++) {
     DB(cerr << "(" << n[j].id << "," << n[j].kind << ")");
   }
   DB(cerr << " in context " << this << endl);
@@ -120,7 +120,7 @@ NamingContext_i::resolve_compound(const CosNaming::Name& n,
   CosNaming::Name contextName = n;
   contextName.length(1);
   restOfName.length(n.length() - 1);
-  for (int i = 0; i < n.length() - 1; i++) {
+  for (unsigned int i = 0; i < n.length() - 1; i++) {
     restOfName[i] = n[i + 1];
   }
 
@@ -174,7 +174,7 @@ NamingContext_i::resolve(const CosNaming::Name& n)
   } else {
 
     DB(cerr << "resolve compound name ");
-    for (int i = 0; i < n.length(); i++) {
+    for (unsigned int i = 0; i < n.length(); i++) {
       DB(cerr << "(" << n[i].id << "," << n[i].kind << ")");
     }
     DB(cerr << " in context " << this << endl);
@@ -209,32 +209,36 @@ NamingContext_i::bind_helper(const CosNaming::Name& n, CORBA::Object_ptr obj,
 
     WriterLock w(lock);
 
-    try {
+    ObjectBinding* ob = 0;
 
-      ObjectBinding* ob = resolve_simple(n);
+    try {
+      ob = resolve_simple(n);
       if (!rebind)
 	throw CosNaming::NamingContext::AlreadyBound();
-      DB(cerr << "  rebind in context " << this
-	 << ": unbinding simple name (" << n[0].id << "," << n[0].kind
-	 << ") from " << ob->object << endl);
-      delete ob;
     }
     catch (CosNaming::NamingContext::NotFound& ex) {
       DB(cerr << "  bind in context " << this
 	 << ": caught not found exception from resolving simple name\n"
 	 << "    reason " << ex.why << " rest of name ");
 
-      for (int i = 0; i < ex.rest_of_name.length(); i++) {
+      for (unsigned int i = 0; i < ex.rest_of_name.length(); i++) {
 	DB(cerr << "(" << ex.rest_of_name[i].id << ","
 	   << ex.rest_of_name[i].kind << ")");
       }
       DB(cerr << endl);
     }
 
-    new ObjectBinding(n, t, CORBA::Object::_duplicate(obj), this);
-
     CosNaming::NamingContext_var nc = _this();
     redolog->bind(nc, n, obj, t);
+
+    if (ob) {
+      DB(cerr << "  rebind in context " << this
+	 << ": unbinding simple name (" << n[0].id << "," << n[0].kind
+	 << ") from " << ob->object << endl);
+      delete ob;
+    }
+
+    new ObjectBinding(n, t, CORBA::Object::_duplicate(obj), this);
 
     DB(cerr << "  bind in context " << this << ": bound simple name ("
        << n[0].id << "," << n[0].kind << ") to " << obj << endl);
@@ -247,7 +251,7 @@ NamingContext_i::bind_helper(const CosNaming::Name& n, CORBA::Object_ptr obj,
     //
 
     DB(cerr << "  bind compound name ");
-    for (int i = 0; i < n.length(); i++) {
+    for (unsigned int i = 0; i < n.length(); i++) {
       DB(cerr << "(" << n[i].id << "," << n[i].kind << ")");
     }
     DB(cerr << " to " << obj << " in context " << this << endl);
@@ -294,6 +298,9 @@ NamingContext_i::unbind(const CosNaming::Name& n)
 
     ObjectBinding* ob = resolve_simple(n);
 
+    CosNaming::NamingContext_var nc = _this();
+    redolog->unbind(nc, n);
+
     DB(cerr << "  unbind: removing (" << n[0].id << "," << n[0].kind << ")"
        << " from context " << this << " (was bound to "
        << ob->object << ")" << endl);
@@ -301,9 +308,6 @@ NamingContext_i::unbind(const CosNaming::Name& n)
     CORBA::release(ob->object);
 
     delete ob;
-
-    CosNaming::NamingContext_var nc = _this();
-    redolog->unbind(nc, n);
 
   } else {
 
@@ -313,7 +317,7 @@ NamingContext_i::unbind(const CosNaming::Name& n)
     //
 
     DB(cerr << "  unbind compound name ");
-    for (int i = 0; i < n.length(); i++) {
+    for (unsigned int i = 0; i < n.length(); i++) {
       DB(cerr << "(" << n[i].id << "," << n[i].kind << ")");
     }
     DB(cerr << " in context " << this << endl);
@@ -354,7 +358,7 @@ NamingContext_i::bind_new_context(const CosNaming::Name& n)
     //
 
     DB(cerr << "bind_new_context compound name ");
-    for (int i = 0; i < n.length(); i++) {
+    for (unsigned int i = 0; i < n.length(); i++) {
       DB(cerr << "(" << n[i].id << "," << n[i].kind << ")");
     }
     DB(cerr << " in context " << this << endl);
@@ -376,15 +380,13 @@ NamingContext_i::destroy()
 {
   DB(cerr << "destroy" << endl);
 
-  lock.writerIn();
+  WriterLock w(lock);
 
   if (headBinding)
     throw CosNaming::NamingContext::NotEmpty();
 
   CosNaming::NamingContext_var nc = _this();
   redolog->destroy(nc);
-
-  lock.writerOut();
 
   _dispose();
 }
@@ -406,7 +408,7 @@ NamingContext_i::list(CORBA::ULong how_many, CosNaming::BindingList*& bl,
   CosNaming::BindingList* all = new CosNaming::BindingList(size);
   all->length(size);
 
-  int i;
+  unsigned int i;
   ObjectBinding* ob;
 
   for (ob = headBinding, i = 0; ob; ob = ob->next, i++) {
@@ -443,7 +445,7 @@ NamingContext_i::~NamingContext_i()
 {
   DB(cerr << "~NamingContext_i" << endl);
 
-  lock.writerIn();
+  WriterLock w(lock);
 
   if (prev) {
     prev->next = next;
@@ -458,6 +460,4 @@ NamingContext_i::~NamingContext_i()
 
   while (headBinding)
     delete headBinding;
-
-  lock.writerOut();
 }
