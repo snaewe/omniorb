@@ -1,3 +1,19 @@
+Fri Jun 15 18:23:10 BST 2001 sll
+================================
+
+- Added ssl echo example
+
+external_merge/src/examples/ssl_echo/GNUmakefile
+src/examples/ssl_echo/README
+src/examples/ssl_echo/client.pem
+src/examples/ssl_echo/dir.mk
+src/examples/ssl_echo/echo.idl
+src/examples/ssl_echo/eg2_clt.cc
+src/examples/ssl_echo/eg2_impl.cc
+src/examples/ssl_echo/root.pem
+src/examples/ssl_echo/server.pem
+
+
 Fri Jun 15 11:07:03 BST 2001 sll
 ===============================
 

@@ -1,0 +1,101 @@
+This is a simple example to show how to use the SSL transport.
+
+1. Make sure that the ssl transport is built for your platform.
+   The ssl transport is built only if the make variable OPEN_SSL_ROOT is 
+   defined and points to the root directory of the openssl library.
+
+   For example, on linux with glibc2.1, 
+   the platform file i586_linux_2.0_glibc2.1.mk contains these lines at the
+   end of the file:
+
+   # To build the SSL transport, OPEN_SSL_ROOT must be defined and points to
+   # the top level directory of the openssl library. The default is to disable
+   # the build.
+   #
+   #OPEN_SSL_ROOT = /usr/local/openssl
+   #
+
+   OPEN_SSL_CPPFLAGS = -I$(OPEN_SSL_ROOT)/include
+   OPEN_SSL_LIB = -L$(OPEN_SSL_ROOT)/lib -lssl -lcrypto
+   OMNIORB_SSL_LIB += $(OPEN_SSL_LIB)
+   OMNIORB_SSL_CPPFLAGS += $(OPEN_SSL_CPPFLAGS)
+
+
+   If you have openssl installed in /usr/local/openssl, just uncomment
+   the line and build the whole distribution. (In fact, you can just go into
+   <top>/src/lib/omniORB/orbcore/ssl and do a gmake export.)
+
+   If you are using another platform, just copy the lines above into your
+   platform file, e.g. for Solaris 2.5, copy the lines into
+   <top>/mk/platform/sun4_sosV_5.5.mk.
+
+
+2. This example should build if you have done step 1.
+
+   Notice the example programs are linked with the SSL transport shared
+   library and the openssl library. The make variable, OMNIORB_SSL_LIB
+   defines all the necessary libraries for the ssl transport.
+   If you are using unix, the SSL transport shared library is called:
+        libomnisslTP4.so
+
+   To use ssl, you must link the executable with the ssl library.
+   If that is done, you must set up a few SSL context parameters before calling
+   ORB_init or you will get an INITIALIZE exception. The context parameters
+   are explained below.
+
+
+3. What does this example do?
+
+    a) eg2_impl is the server. On startup it creates a ssl endpoint and
+       exports only this endpoint. If you use catior to look at its IOR
+       content, you will see something like this:
+
+
+% catior IOR:010000000d00000049444c3a4563686f3a312e3000000000010000000000000074000000010102000e0000003135382e3132342e36352e33370000000e000000fee63c2a3b00007560000000000000000300000000000000080000000100000000545441010000001c0000000100000001000100010000000100010509010100010000000901010014000000080000000100600060007988
+Type ID: "IDL:Echo:1.0"
+Profiles:
+1. IIOP 1.2 158.124.65.37 0 "..<*;..u`....."
+            TAG_ORB_TYPE omniORB
+            TAG_CODE_SETS char native code set: ISO-8859-1
+                          char conversion code set: UTF-8
+                          wchar native code set: UTF-16
+                          wchar conversion code set: UTF-16
+ 
+            TAG_SSL_SEC_TRANS port = 34937 supports = 96 requires = 96
+ 
+
+       TAG_SSL_SEC_TRANS is the component which tells the client
+       ORB where the SSL endpoint is. Notice that the ORB does not
+       create a plain tcp endpoint as the port number in the IOR is 0.
+       You can ask the ORB to create the tcp endpoint as well by specifying
+       the argument -ORBendpoint giop:tcp::
+
+
+    b) eg2_clt is the ssl client, use it to talk to eg2_impl
+
+    c) If you look into the source code, you can see that the following are
+       setup before ORB_init is called:
+
+            sslContext::certificate_authority_file = "root.pem";
+            sslContext::key_file = "server.pem";
+            sslContext::key_file_password = "password";
+
+       Basically, you must tell the ssl transport 2 things:
+        i) The CA's certificate. This is given in the PEM format file
+            root.pem.
+        ii) Your own private key and certificate. In the example, the
+            file server.pem stores the information. The password to unlock
+            the key file is "password".
+
+      OpenSSL actually provides you with a lot of options to set up keys
+      and certificates etc, in future, you will be able to define your own
+      way to set up the context by defining a derived class of sslContext
+      and instantiating a singleton of that derived class before calling
+      ORB_init.
+
+    d) On the server side, you have to tell the ORB, via ORB_init, to
+       instantiate a SSL endpoint, this is done using the -ORBendpoint option.
+       e.g. -ORBendpoint giop:ssl::      (let the ORB pick a port number) 
+            -ORBendpoint giop:ssl::12345 (at port 12345)
+            -ORBendpoint giop:ssl:foo:12345 (at port 12345 and use hostname foo)
+
