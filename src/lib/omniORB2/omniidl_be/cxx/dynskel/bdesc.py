@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.4  2000/03/16 16:19:39  djs
+# Missed an extern function declaration when it didn't dereference a typedef
+# chain which lead to a structure defined outside the current file.
+#
 # Revision 1.12.2.3  2000/03/15 20:49:18  djs
 # Problem with typedefs to sequences or array declarators defined externally
 # and used within a local struct or union.
@@ -563,7 +567,15 @@ def member(node, modify_for_exception = 0):
         elif tyutil.isString(memberType):
             desc.out(str(bstring(memberType)))
 
-        elif tyutil.isTypedef(memberType):
+        # FIXME: unify with  dynskel/main/visitUnion
+        elif tyutil.isStruct(deref_memberType) or \
+             tyutil.isUnion(deref_memberType)  or \
+             tyutil.isEnum(deref_memberType):
+            # only if not defined in this file
+            if not(deref_memberType.decl().mainFile()):
+                desc.out(str(external(deref_memberType)))
+
+        if tyutil.isTypedef(memberType):
             memberType_decl = memberType.decl()
             if not(memberType_decl.mainFile()):
                 # have we seen this declarator before?
@@ -581,14 +593,6 @@ def member(node, modify_for_exception = 0):
                     elif tyutil.isSequence(full_deref_memberType):
                         desc.out(str(sequence(full_deref_memberType)))
             
-        # FIXME: unify with  dynskel/main/visitUnion
-        elif tyutil.isStruct(memberType) or \
-             tyutil.isUnion(memberType)  or \
-             tyutil.isEnum(memberType):
-            # only if not defined in this file
-            if not(memberType.decl().mainFile()):
-                desc.out(str(external(memberType)))
-
         # build the cases
         for d in member.declarators():
             member_scopedName = d.scopedName()
