@@ -204,6 +204,7 @@ protected:
   // in this scope using their unqualified name.
   void				add_to_parent_types(AST_Decl *e);
 
+public:
   // Look up a scoped name in the inherited interfaces of an
   // interface
   virtual AST_Decl		*look_in_inherited(UTL_ScopedName *,
