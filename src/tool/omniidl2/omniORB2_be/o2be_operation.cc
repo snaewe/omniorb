@@ -11,6 +11,10 @@
 
 /*
   $Log$
+  Revision 1.4  1997/01/24 19:40:46  sll
+  The operations for nil object now return properly initialised result values.
+  Fixed a bug in the marshalling of object reference and string as INOUT arg.
+
   Revision 1.3  1997/01/23 17:06:56  sll
   Now do the right thing to initialise typedefed arrays in result and out
   arguments.
@@ -37,6 +41,10 @@ o2be_operation::o2be_operation(AST_Type *rt, AST_Operation::Flags fl,
 		  UTL_Scope(AST_Decl::NT_op),
 		  o2be_name(this)
 {
+  o2be_interface *intf = o2be_interface::narrow_from_scope(defined_in());
+  if (o2be_interface::check_opname_clash(intf,uqname())) {
+    idl_global->err()->operation_name_clash(this);
+  }
 }
 
 void
@@ -354,8 +362,43 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in)
 	  case AST_Argument::dir_INOUT:
 	    {
 	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
-	      produceUnMarshalCode(s,a->field_type(),"_c",a->uqname(),
-				   ntype,mapping);
+	      switch (ntype) 
+		{
+		case tObjref:
+		  {
+		    char *_argname = new char[strlen(a->uqname())+2];
+		    strcpy(_argname,"_");
+		    strcat(_argname,a->uqname());
+		    IND(s);
+		    declareVarType(s,a->field_type(),0,0);
+		    s << " " << _argname << ";\n";
+		    produceUnMarshalCode(s,a->field_type(),"_c",_argname,
+					 ntype,mapping);
+		    IND(s); s << "CORBA::release(" << a->uqname() << ");\n";
+		    IND(s); s << a->uqname() << " = " << _argname << ";\n";
+		    delete [] _argname;
+		  }
+		  break;
+		case tString:
+		  {
+		    char *_argname = new char[strlen(a->uqname())+2];
+		    strcpy(_argname,"_");
+		    strcat(_argname,a->uqname());
+		    IND(s);
+		    declareVarType(s,a->field_type(),0,0);
+		    s << " " << _argname << ";\n";
+		    produceUnMarshalCode(s,a->field_type(),"_c",_argname,
+					 ntype,mapping);
+		    IND(s); s << "CORBA::string_free(" << a->uqname() << ");\n";
+		    IND(s); s << a->uqname() << " = " << _argname << ";\n";
+		    delete [] _argname;
+		  }
+		  break;
+		default:
+		  produceUnMarshalCode(s,a->field_type(),"_c",a->uqname(),
+				       ntype,mapping);
+		  break;
+		}
 	      break;
 	    }
 	  case AST_Argument::dir_OUT:
@@ -936,7 +979,46 @@ o2be_operation::produce_nil_skel(fstream &s)
 	{
 	  IND(s);
 	  declareVarType(s,return_type());
-	  s << " _result;\n";
+	  s << " _result";
+	  switch (ntype)
+	    {
+	    case tShort:
+	    case tLong:
+	    case tUShort:
+	    case tULong:
+	    case tFloat:
+	    case tDouble:
+	    case tBoolean:
+	    case tChar:
+	    case tOctet:
+	      s << " = 0;\n";
+	      break;
+	    case tEnum:
+	      {
+		s << " = ";
+		AST_Decl *decl = return_type();
+		while (decl->node_type() == AST_Decl::NT_typedef)
+		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+		UTL_ScopeActiveIterator i(o2be_enum::narrow_from_decl(decl),
+					  UTL_Scope::IK_decls);
+		AST_Decl *eval = i.item();
+		if (strlen(o2be_name::narrow_and_produce_scopename(decl))) {
+		  s << o2be_name::narrow_and_produce_scopename(decl);
+		}
+		else {
+		  s << "::";
+		}
+		s << o2be_name::narrow_and_produce_uqname(eval) << ";\n";
+	      }
+	      break;
+	    case tStructFixed:
+	      s << ";\n";
+	      s << "memset((void *)&_result,0,sizeof(_result));\n";
+	      break;
+	    default:
+	      s << ";\n";
+	      break;
+	    }
 	}
       IND(s); s << "return _result;\n";
     }
