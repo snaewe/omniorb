@@ -8525,10 +8525,7 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
- if test "$cross_compiling" = yes; then
-  omni_cv_cxx_need_fq_base_ctor=no
-else
-  cat >conftest.$ac_ext <<_ACEOF
+ cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
 #include "confdefs.h"
 
@@ -8547,28 +8544,39 @@ int main() {
   return 0;
 }
 
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+omni_cv_cxx_need_fq_base_ctor=no
+  ;
+  return 0;
+}
 _ACEOF
-rm -f conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && { ac_try='./conftest$ac_exeext'
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest.$ac_objext'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  omni_cv_cxx_need_fq_base_ctor=no
+  omni_cv_cxx_need_fq_base_ctor=yes
 else
-  echo "$as_me: program exited with status $ac_status" >&5
-echo "$as_me: failed program was:" >&5
+  echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
-( exit $ac_status )
-omni_cv_cxx_need_fq_base_ctor=yes
+omni_cv_cxx_need_fq_base_ctor=no
 fi
-rm -f core core.* *.core conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
-fi
+rm -f conftest.$ac_objext conftest.$ac_ext
  ac_ext=cc
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'

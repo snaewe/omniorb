@@ -82,7 +82,7 @@ AC_DEFUN([OMNI_CXX_NEED_FQ_BASE_CTOR],
 [AC_CACHE_CHECK(whether base constructors have to be fully-qualified,
 omni_cv_cxx_need_fq_base_ctor,
 [AC_LANG_PUSH(C++)
- AC_TRY_RUN([
+ AC_TRY_COMPILE([
 class A {
 public:
   class B {
