@@ -19,6 +19,10 @@ include/omniORB4/poa.h
 include/omniORB4/poa_defs.h
 include/omniORB4/proxyFactory.h
 include/omniORB4/tcDescriptor.h
+include/omniORB4/corba_operators.h
+include/omniORB4/IIOP.h
+include/omniORB4/IOP.h
+
 
 Wed Apr 18 18:16:26 BST 2001 sll
 ================================
