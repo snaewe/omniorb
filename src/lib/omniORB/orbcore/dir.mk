@@ -60,8 +60,10 @@ $(lib): $(ORB2_OBJS)
 Naming.hh:	Naming.idl
 	$(OMNIORB2_IDL) $^
 
+NamingSK.cc:
+
 clean::
-	$(RM) $(lib)
+	$(RM) $(lib) NamingSK.cc
 
 export:: $(lib)
 	@$(ExportLibrary)
