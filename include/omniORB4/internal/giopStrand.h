@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/07/13 15:20:56  sll
+  New member safeDelete is now the only method to delete a strand.
+
   Revision 1.1.4.2  2001/06/13 20:11:37  sll
   Minor update to make the ORB compiles with MSVC++.
 
@@ -57,6 +60,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class giopStream;
 class giopStreamImpl;
+class giopWorker;
 class giopServer;
 class GIOP_S;
 struct giopStream_Buffer;
@@ -90,23 +94,76 @@ class giopStrand : public Strand {
   giopStrand(const giopAddress*);
   // Ctor for an active strand. I.e. those that are used to connect to
   // a remote address space.
+  // When a connection is establshed, the refernce count goes to 1.
+  //
   // No thread safety precondition
 
 
-  giopStrand(giopConnection*);
+  giopStrand(giopConnection*,giopServer*);
   // Ctor for a passive strand. I.e. those that are created because a
   // client has connected to this address space.
+  // Increment the reference count on the connection.
+  //
   // No thread safety precondition
 
-  virtual ~giopStrand();
-  // Note: do not call dtor of connection. Caller must do so before
-  //       calling this dtor.
-  // No thread safety precondition
 
-  GIOP_S* acquireServer(giopServer*);
+public:
+
+  CORBA::Boolean safeDelete(CORBA::Boolean forced = 0);
+  // This should be the *ONLY* method to call to delete a strand.
+  // Return TRUE if the strand can be considered deleted.
+  //
+  // The function check if this connection is satisfied before it returns
+  // true:
+  //
+  //    giopStreamList::is_empty(clients) &&
+  //    giopStreamList::is_empty(servers) &&
+  //    giopStream::noLockWaiting(this)
+  //
+  // If the function returns true, the above condition becomes an invariant
+  // and should not be violated until the dtor of the strand is called.
+  //
+  // The <forced> flag, if set explicitly to 1, causes the function to
+  // skip checking for the above condition. Instead it just go ahead as if
+  // the condition is met. This flag is used for internal implementation
+  // and should not be used by any client of this class.
+  //
+  // Internally, the strand may stays on a bit longer until the connection's
+  // reference count goes to 0 as well.
+  //
+  // Thread Safety preconditions:
+  //    Caller must hold omniTransportLock unless forced == 1.
+
+private:
+  CORBA::Boolean pd_safelyDeleted;
+
+public:
+
+  CORBA::Boolean deletePending();
+  // Return true, if safeDelete() has been called and it returns true.
+  //
+  // If this method returns true, the following invariant is always true
+  // until the strand is deleted: 
+  //
+  //    giopStreamList::is_empty(clients) &&
+  //    giopStreamList::is_empty(servers) &&
+  //    giopStream::noLockWaiting(this)
+  //
+  // The caller must not do anything that would cause the strand to violate
+  // this invariant. For example, attempt or wait to acquire a lock on the
+  // strand, or to queue any GIOP_S or GIOP_C object to the strand.
+  //
+  // 
+  // Thread Safety preconditions:
+  //    Caller must hold omniTransportLock.
+
+
+  GIOP_S* acquireServer(giopWorker*);
   // Acquire a GIOP_S from the strand. Normally this is only  done on
   // passive strands. However, it can also be used for active strands when
   // they become birectional, i.e. BiDir == 1.
+  //
+  // Return 0 if a GIOP_S cannot be acquired.
   //
   // Thread Safety preconditions:
   //    Caller must not hold omniTransportLock, it is used internally for
@@ -170,7 +227,7 @@ class giopStrand : public Strand {
   CORBA::Boolean      biDir;
   // Indicate if the strand is used for bidirectional GIOP.
 
-  inline CORBA::Boolean isClient() { return (address != 0); }
+  inline CORBA::Boolean isClient() { return (server == 0); }
   // Return TRUE if this is an active strand on the client side. Unless
   // biDir is TRUE, only those messages expected by a GIOP client can be
   // received from this connection.
@@ -182,6 +239,10 @@ class giopStrand : public Strand {
   giopConnection*     connection;
   // connection is provided as ctor arg if this is a passive strand
   // otherwise it is obtained by address->connect().
+
+  giopServer*         server;
+  // server is provided as ctor arg if this is a passive strand
+  // otherwise it is 0.
 
   CORBA::Boolean      gatekeeper_checked;
   // only applies to passive strand. TRUE(1) means that the gatekeeper
@@ -271,7 +332,21 @@ public:
   static _core_attr timeValue outgoingCallTimeOut;
   static _core_attr timeValue incomingCallTimeOut;
 
- private:
+public:
+  void deleteStrandAndConnection(CORBA::Boolean forced=0);
+  // Decrement connection's reference count. If it goes to 0, delete
+  // this strand as well. This call ensures that both the strand and
+  // connection die at the same time.
+  //
+    // Thread Safety preconditions:
+  //    Caller must hold omniTransportLock unless forced == 1.
+
+#ifdef __GNUG__
+  friend class keep_gcc_happy;
+#endif
+
+private:
+  virtual ~giopStrand();
 
   State         pd_state;
 
