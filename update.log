@@ -1,3 +1,12 @@
+
+Tue Jan 12 18:44:44 GMT 1999 tjr
+================================
+
+- added java documentation
+
+doc/tex/ode.tex
+
+
 Tue Jan 12 16:40:50 GMT 1999 djr
 ================================
 
@@ -25,6 +34,7 @@ mk/platforms/sun4_sosV_5.6.mk		- new java stuff
 
 src/lib/dir.mk			- build omniORBj on i586_linux_2.0_glibc
 src/lib/omniORBj		- NEW DIRECTORY
+src/lib/omniORBj/...		- NEW FILES
 
 
 Tue Jan 12 11:12:52 GMT 1999 djr
