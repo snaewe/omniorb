@@ -1,0 +1,585 @@
+// -*- c++ -*-
+//                          Package   : omniidl
+// idldump.cc               Created on: 1999/10/26
+//			    Author    : Duncan Grisby (dpg1)
+//
+//    Copyright (C) 1999 AT&T Laboratories Cambridge
+//
+//  This file is part of omniidl.
+//
+//  omniidl is free software; you can redistribute it and/or modify it
+//  under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+//  02111-1307, USA.
+//
+// Description:
+//   
+//   Visitor object to dump the tree
+
+// $Id$
+// $Log$
+// Revision 1.1  1999/10/27 14:05:58  dpg1
+// *** empty log message ***
+//
+
+#include <idldump.h>
+#include <idlutil.h>
+#include <idlast.h>
+#include <idltype.h>
+
+#include <stdio.h>
+
+DumpVisitor::
+DumpVisitor()
+  : indent_(0)
+{
+  printf("Dumping...\n");
+}
+
+DumpVisitor::
+~DumpVisitor()
+{
+}
+
+void
+DumpVisitor::
+printIndent()
+{
+  for (int i=0; i<indent_; ++i)
+    printf("  ");
+}
+
+void
+DumpVisitor::
+printScopedName(const ScopedName* sn)
+{
+  const char* ssn = sn->toString();
+  printf("%s", ssn);
+  delete [] ssn;
+}
+
+
+void
+DumpVisitor::
+visitAST(AST* a)
+{
+  printf("\n");
+  for (Decl* d = a->declarations(); d; d = d->next()) {
+    d->accept(*this);
+    printf(";\n\n");
+  }
+  printf("\n\n");
+}
+
+void
+DumpVisitor::
+visitModule(Module* m)
+{
+  printf("module %s { // RepoId = %s, file = %s, line = %d, %s\n",
+	 m->identifier(), m->repoId(), m->file(), m->line(),
+	 m->mainFile() ? "in main file" : "not in main file");
+  ++indent_;
+  for (Decl* d = m->definitions(); d; d = d->next()) {
+    printIndent();
+    d->accept(*this);
+    printf(";\n");
+  }
+  --indent_;
+  printIndent();
+  printf("}");
+}
+
+void
+DumpVisitor::
+visitInterface(Interface* i)
+{
+  printf("interface %s ", i->identifier());
+
+  if (i->inherits()) {
+    printf(": ");
+    const char* ssn;
+    for (InheritSpec* is = i->inherits(); is; is = is->next()) {
+      ssn = is->interface()->scopedName()->toString();
+      printf("%s%s ", ssn, is->next() ? "," : "");
+      delete [] ssn;
+    }
+  }
+  printf("{ // RepoId = %s\n", i->repoId());
+
+  ++indent_;
+  for (Decl* d = i->contents(); d; d = d->next()) {
+    printIndent();
+    d->accept(*this);
+    printf(";\n");
+  }
+  --indent_;
+  printIndent();
+  printf("}");
+}
+
+void
+DumpVisitor::
+visitForward(Forward* f)
+{
+  printf("interface %s; // RepoId = %s", f->identifier(), f->repoId());
+}
+
+void
+DumpVisitor::
+visitConst(Const* c)
+{
+  printf("const ");
+
+  c->constType()->accept(*this);
+  printf(" %s = ", c->identifier());
+
+  switch(c->constKind()) {
+  case IdlType::tk_short:   printf("%hd", c->constAsShort());          break;
+  case IdlType::tk_long:    printf("%ld", c->constAsLong());           break;
+  case IdlType::tk_ushort:  printf("%hu", c->constAsUShort());         break;
+  case IdlType::tk_ulong:   printf("%lu", c->constAsULong());          break;
+  case IdlType::tk_float:   printf("%f",  (double)c->constAsFloat());  break;
+  case IdlType::tk_double:  printf("%f",  c->constAsDouble());         break;
+  case IdlType::tk_boolean:
+    printf("%s", c->constAsBoolean() ? "TRUE" : "FALSE");
+    break;
+  case IdlType::tk_char:    printf("'%c'",   c->constAsChar());        break;
+  case IdlType::tk_octet:   printf("%d",     (int)c->constAsOctet());  break;
+  case IdlType::tk_string:  printf("\"%s\"", c->constAsString());      break;
+#ifdef HAS_LongLong
+  case IdlType::tk_longlong:  printf("%Ld", c->constAsLongLong());     break;
+  case IdlType::tk_ulonglong: printf("%Lu", c->constAsULongLong());    break;
+#endif
+#ifdef HAS_LongDouble
+  case IdlType::tk_longdouble:printf("%Lf", c->constAsLongDouble());   break;
+#endif
+  case IdlType::tk_wchar:     printf("'\\u%hx'", c->constAsWChar());   break;
+  case IdlType::tk_wstring:   printf("[cannot show wide string]");     break;
+  case IdlType::tk_enum:      c->constAsEnumerator()->accept(*this);   break;
+  default:
+    assert(0);
+  }
+}
+
+void
+DumpVisitor::
+visitDeclarator(Declarator* d)
+{
+  printf("%s", d->identifier());
+  for (ArraySize* s = d->sizes(); s; s = s->next())
+    printf("[%d]", s->size());
+  if (d->alias())
+    printf(" /* RepoId = %s */", d->repoId());
+}
+
+void
+DumpVisitor::
+visitTypedef(Typedef* t)
+{
+  printf("typedef ");
+
+  if (t->constrType()) { 
+    assert(t->aliasType()->kind() == IdlType::tk_struct ||
+	   t->aliasType()->kind() == IdlType::tk_union  ||
+	   t->aliasType()->kind() == IdlType::tk_enum);
+
+    ((DeclaredType*)t->aliasType())->decl()->accept(*this);
+  }
+  else
+    t->aliasType()->accept(*this);
+
+  printf(" ");
+  for (Declarator* d = t->declarators(); d; d = (Declarator*)d->next()) {
+    d->accept(*this);
+    if (d->next()) printf(", ");
+  }
+}
+
+void
+DumpVisitor::
+visitMember(Member* m)
+{
+  if (m->constrType()) {
+    assert(m->memberType()->kind() == IdlType::tk_struct ||
+	   m->memberType()->kind() == IdlType::tk_union  ||
+	   m->memberType()->kind() == IdlType::tk_enum);
+
+    ((DeclaredType*)m->memberType())->decl()->accept(*this);
+  }
+  else
+    m->memberType()->accept(*this);
+
+  printf(" ");
+  for (Declarator* d = m->declarators(); d; d = (Declarator*)d->next()) {
+    d->accept(*this);
+    if (d->next())
+      printf(", ");
+  }
+}
+
+void
+DumpVisitor::
+visitStruct(Struct* s)
+{
+  printf("struct %s { // RepoId = %s\n", s->identifier(), s->repoId());
+
+  ++indent_;
+  for (Member* m = s->members(); m; m = (Member*)m->next()) {
+    printIndent();
+    m->accept(*this);
+    printf(";\n");
+  }
+  --indent_;
+  printIndent();
+  printf("}");
+}
+
+void
+DumpVisitor::
+visitException(Exception* e)
+{
+  printf("exception %s {\n", e->identifier());
+
+  ++indent_;
+  for (Member* m = e->members(); m; m = (Member*)m->next()) {
+    printIndent();
+    m->accept(*this);
+    printf(";\n");
+  }
+  --indent_;
+  printIndent();
+  printf("}");
+}
+
+void
+DumpVisitor::
+visitCaseLabel(CaseLabel* l)
+{
+  if (l->isDefault())
+    printf("default:");
+  else {
+    printf("case ");
+
+    switch(l->labelKind()) {
+    case IdlType::tk_short:  printf("%hd", l->labelAsShort());  break;
+    case IdlType::tk_long:   printf("%ld", l->labelAsLong());   break;
+    case IdlType::tk_ushort: printf("%hu", l->labelAsUShort()); break;
+    case IdlType::tk_ulong:  printf("%lu", l->labelAsULong());  break;
+    case IdlType::tk_boolean:
+      printf("%s", l->labelAsBoolean() ? "TRUE" : "FALSE");
+      break;
+    case IdlType::tk_char:      printf("'%c'", l->labelAsChar());     break;
+#ifdef HAS_LongLong
+    case IdlType::tk_longlong:  printf("%Ld", l->labelAsLongLong());  break;
+    case IdlType::tk_ulonglong: printf("%Lu", l->labelAsULongLong()); break;
+#endif
+    case IdlType::tk_wchar:     printf("'\\u%hx", l->labelAsWChar()); break;
+    case IdlType::tk_enum: l->labelAsEnumerator()->accept(*this); break;
+    default:
+      assert(0);
+    }
+    printf(":");
+  }
+}
+
+void
+DumpVisitor::
+visitUnionCase(UnionCase* c)
+{
+  for (CaseLabel* l = c->labels(); l; l = (CaseLabel*)l->next()) {
+    l->accept(*this);
+    if (l->next()) printf(" ");
+  }
+  printf("\n");
+  ++indent_;
+  printIndent();
+  c->caseType()->accept(*this);
+  --indent_;
+}
+
+void
+DumpVisitor::
+visitUnion(Union* u)
+{
+  printf("union %s switch (", u->identifier());
+  u->switchType()->accept(*this);
+  printf(") { // RepoId = %s\n", u->repoId());
+  ++indent_;
+  for (UnionCase* c = u->cases(); c; c = (UnionCase*)c->next()) {
+    printIndent();
+    c->accept(*this);
+    printf(";\n");
+  }
+  --indent_;
+  printIndent();
+  printf("}");
+}
+
+void
+DumpVisitor::
+visitEnumerator(Enumerator* e)
+{
+  printf("%s", e->identifier());
+}
+
+void
+DumpVisitor::
+visitEnum(Enum* e)
+{
+  printf("enum %s { // RepoId = %s\n", e->identifier(), e->repoId());
+  ++indent_;
+  for (Enumerator* n = e->enumerators(); n; n = (Enumerator*)n->next()) {
+    printIndent();
+    n->accept(*this);
+    printf(";\n");
+  }
+  --indent_;
+  printIndent();
+  printf("}");
+}
+
+void
+DumpVisitor::
+visitAttribute(Attribute* a)
+{
+  if (a->readonly()) printf("readonly ");
+  printf("attribute ");
+  a->attrType()->accept(*this);
+  printf(" ");
+  for (Declarator* d = a->declarators(); d; d = (Declarator*)d->next()) {
+    d->accept(*this);
+    if (d->next()) printf(", ");
+  }
+}
+
+void
+DumpVisitor::
+visitParameter(Parameter* p)
+{
+  switch (p->direction()) {
+  case 0: printf("in ");    break;
+  case 1: printf("out ");   break;
+  case 2: printf("inout "); break;
+  }
+  p->paramType()->accept(*this);
+  printf(" %s", p->identifier());
+}
+
+void
+DumpVisitor::
+visitOperation(Operation* o)
+{
+  if (o->oneway()) printf("oneway ");
+  o->returnType()->accept(*this);
+  printf(" %s(", o->identifier());
+
+  for (Parameter* p = o->parameters(); p; p = (Parameter*)p->next()) {
+    p->accept(*this);
+    if (p->next()) printf(", ");
+  }
+  printf(")");
+
+  if (o->raises()) {
+    printf(" raises (");
+    const char* ssn;
+    for (RaisesSpec* r = o->raises(); r; r = r->next()) {
+      ssn = r->exception()->scopedName()->toString();
+      printf("%s", ssn);
+      delete [] ssn;
+      if (r->next()) printf(", ");
+    }
+    printf(")");
+  }
+  if (o->contexts()) {
+    printf(" context (");
+    for (ContextSpec* c = o->contexts(); c; c = c->next()) {
+      printf("\"%s\"", c->context());
+      if (c->next()) printf(", ");
+    }
+    printf(")");
+  }
+}
+
+void
+DumpVisitor::
+visitNative(Native* n)
+{
+  printf("native %s", n->identifier());
+}
+
+void
+DumpVisitor::
+visitStateMember(StateMember* s)
+{
+  switch(s->memberAccess()) {
+  case 0: printf("public ");  break;
+  case 1: printf("private "); break;
+  }
+
+  if (s->constrType()) { 
+    assert(s->memberType()->kind() == IdlType::tk_struct ||
+	   s->memberType()->kind() == IdlType::tk_union  ||
+	   s->memberType()->kind() == IdlType::tk_enum);
+
+    ((DeclaredType*)s->memberType())->decl()->accept(*this);
+  }
+  else
+    s->memberType()->accept(*this);
+
+  printf(" ");
+
+  for (Declarator* d = s->declarators(); d; d = (Declarator*)d->next()) {
+    d->accept(*this);
+    if (d->next()) printf(", ");
+  }
+}
+
+void
+DumpVisitor::
+visitFactory(Factory* f)
+{
+  printf("factory %s(", f->identifier());
+  for (Parameter* p = f->parameters(); p; p = (Parameter*)p->next()) {
+    p->accept(*this);
+    if (p->next()) printf(", ");
+  }
+  printf(")");
+}
+
+void
+DumpVisitor::
+visitValueForward(ValueForward* f)
+{
+  if (f->abstract()) printf("abstract ");
+  printf("valuetype %s", f->identifier());
+}
+
+void
+DumpVisitor::
+visitValueBox(ValueBox* b)
+{
+  printf("valuetype %s ", b->identifier());
+
+  if (b->constrType()) { 
+    assert(b->boxedType()->kind() == IdlType::tk_struct ||
+	   b->boxedType()->kind() == IdlType::tk_union  ||
+	   b->boxedType()->kind() == IdlType::tk_enum);
+
+    ((DeclaredType*)b->boxedType())->decl()->accept(*this);
+  }
+  else
+    b->boxedType()->accept(*this);
+}
+
+void
+DumpVisitor::
+visitValueAbs(ValueAbs* a)
+{
+  printf("[abstract valuetype]");
+}
+
+void
+DumpVisitor::
+visitValue(Value* v)
+{
+  printf("[valuetype]");
+}
+
+// Types
+
+void
+DumpVisitor::
+visitBaseType(BaseType* t)
+{
+  printf("%s", t->kindAsString());
+}
+
+void
+DumpVisitor::
+visitStringType(StringType* t)
+{
+  if (t->bound())
+    printf("string<%ld>", t->bound());
+  else
+    printf("string");
+}
+
+void
+DumpVisitor::
+visitWStringType(WStringType* t)
+{
+  if (t->bound())
+    printf("wstring<%ld>", t->bound());
+  else
+    printf("wstring");
+}
+
+void
+DumpVisitor::
+visitSequenceType(SequenceType* t)
+{
+  printf("sequence<");
+  t->seqType()->accept(*this);
+
+  if (t->bound())
+    printf(", %ld>", t->bound());
+  else
+    printf(">");
+}
+
+void
+DumpVisitor::
+visitFixedType(FixedType* t)
+{
+  printf("fixed<%hu, %hd>", t->digits(), t->scale());
+}
+
+#define DTCASE(tk, dt, dk) \
+  case IdlType::tk: \
+    { \
+      dt* d = (dt*)t->decl(); \
+      assert(d->kind() == Decl::dk); \
+      printScopedName(d->scopedName()); \
+      break; \
+    }
+
+void
+DumpVisitor::
+visitDeclaredType(DeclaredType* t)
+{
+  switch(t->kind()) {
+  case IdlType::tk_objref:
+  case IdlType::tk_abstract_interface:
+    {
+      if (t->decl()) {
+	if (t->decl()->kind() == Decl::D_INTERFACE) {
+	  Interface* i = (Interface*)t->decl();
+	  printScopedName(i->scopedName());
+	}
+	else {
+	  assert(t->decl()->kind() == Decl::D_FORWARD);
+	  Forward* f = (Forward*)t->decl();
+	  printScopedName(f->scopedName());
+	}
+      }
+      else
+	printf("Object");
+      break;
+    }
+  DTCASE(tk_struct, Struct,     D_STRUCT)
+  DTCASE(tk_enum,   Enum,       D_ENUM)
+  DTCASE(tk_alias,  Declarator, D_DECLARATOR)
+  default:
+    printf("%s", t->kindAsString());
+  }
+}
