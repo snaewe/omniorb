@@ -1,3 +1,110 @@
+Tue May 25 13:53:29 BST 1999 sll
+================================
+
+- Changes necessary to bring the ORB to pass the VSORB testsuite.
+  The culmulated effect is to bring the ORB to CORBA 2.1 compliant.
+- Support for context added.
+- IDL compiler bug fixes: 
+	- constant expressions
+	- enum definition in union switch type declarator
+	- nested struct array member is not defined
+	- typecode constants for anonymous bounded string in
+          operation arguments are not defined
+- Each sequence type is now a distinct type, this is to avoid the problem
+  of picking up the wrong Any insertion and extraction operators
+- Sequence of object now uses a separate template so that the value ctor
+  is supported properly.
+- The langEquiv argument in TypeCode::equal is now  default to 0 (previously
+  it is 1).
+- DII interfaces now throw system exception by default instead of passing
+  back the value in the environment variable.
+- DII poll_response now throws system exception if the operation results in
+  a system exception.
+- Added check for invalid pseudo objects being passed as arguments to
+  static member functions. A magic number is attached to each pseudo object
+  instance, this member value is set to 0 when the object is deleted.
+
+
+include/omniORB2/CORBA.h
+include/omniORB2/templatedecls.h
+include/omniORB2/templatedefns.h
+include/omniORB2/seqtemplates.h
+include/omniORB2/bufferedStream.h
+include/omniORB2/stringtypes.h
+
+src/lib/omniORB2/orbcore/initFile.cc
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/orbcore/orbservice.cc        NEW
+src/lib/omniORB2/orbcore/policy.cc            NEW
+src/lib/omniORB2/orbcore/ior.cc
+src/lib/omniORB2/orbcore/current.cc           NEW
+src/lib/omniORB2/orbcore/corbaObject.cc
+src/lib/omniORB2/orbcore/domainManager.cc     NEW
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/constants.cc
+src/lib/omniORB2/orbcore/exceptn.cc
+src/lib/omniORB2/orbcore/bootstrap_i.cc
+
+src/lib/omniORB2/dynamic/corbaidldynstub.cc
+src/lib/omniORB2/dynamic/corbaidlstub.cc
+src/lib/omniORB2/dynamic/ir.cc
+src/lib/omniORB2/dynamic/irdynstub.cc
+src/lib/omniORB2/dynamic/irstub.cc
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+src/lib/omniORB2/dynamic/pseudo.h
+src/lib/omniORB2/dynamic/environment.cc
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/dir.mk
+src/lib/omniORB2/dynamic/wrongTranExn.cc
+src/lib/omniORB2/dynamic/request.cc
+src/lib/omniORB2/dynamic/typecode.h
+src/lib/omniORB2/dynamic/request.h
+src/lib/omniORB2/dynamic/context.h
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/contextList.cc
+src/lib/omniORB2/dynamic/namedValue.cc
+src/lib/omniORB2/dynamic/nvList.cc
+src/lib/omniORB2/dynamic/exceptionList.cc
+src/lib/omniORB2/dynamic/dynAny.cc
+src/lib/omniORB2/dynamic/dynException.cc
+src/lib/omniORB2/dynamic/any.cc
+
+src/lib/omniORB2/bootstrap_i.h
+src/tool/omniidl2/fe/idl.ll
+src/tool/omniidl2/fe/idl.yy
+src/tool/omniidl2/fe/lex.yy.cc
+src/tool/omniidl2/fe/y.tab.h
+src/tool/omniidl2/fe/y.tab.cc
+src/tool/omniidl2/ast/ast_union.cc
+src/tool/omniidl2/ast/ast_expression.cc
+src/tool/omniidl2/ast/ast_generator.cc
+src/tool/omniidl2/include/ast_generator.hh
+src/tool/omniidl2/include/ast_union.hh
+src/tool/omniidl2/include/utl_scope.hh
+src/tool/omniidl2/util/utl_scope.cc
+
+src/tool/omniidl2/omniORB2_be/dir.mk
+src/tool/omniidl2/omniORB2_be/o2be_nested_typedef.cc
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+src/tool/omniidl2/omniORB2_be/o2be_call_desc.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/omniORB2_be/o2be_generator.cc
+src/tool/omniidl2/omniORB2_be/o2be_name.cc
+src/tool/omniidl2/omniORB2_be/o2be_struct.cc
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_attribute.cc
+src/tool/omniidl2/omniORB2_be/o2be_string.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_enum.cc
+src/tool/omniidl2/omniORB2_be/o2be_name_mangle.cc
+src/tool/omniidl2/omniORB2_be/o2be_buildDesc.cc
+
+
+
 Sat May 22 18:36:21 BST 1999 sll
 ================================
 
