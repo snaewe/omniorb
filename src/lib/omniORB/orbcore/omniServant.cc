@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 18:10:23  sll
+  Use calldescriptor to handle upcalls to CORBA::Object operations.
+
   Revision 1.2.2.1  2000/07/17 10:35:56  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -53,16 +56,17 @@
 
 */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
 
-#include <omniORB3/omniServant.h>
+#include <omniORB4/omniServant.h>
 #include <localIdentity.h>
 #include <exceptiondefs.h>
-
+#include <omniORB4/callDescriptor.h>
+#include <objectStub.h>
 
 omniServant::~omniServant()
 {
@@ -121,62 +125,53 @@ omniServant::_non_existent()
   return 0;
 }
 
-
 _CORBA_Boolean
 omniServant::_dispatch(GIOP_S& giop_s)
 {
-  if( strcmp(giop_s.operation(), "_is_a") == 0 ) {
-    CORBA::String_member id;
-    id <<= giop_s;
-    giop_s.RequestReceived();
-    CORBA::Boolean result = this->_is_a(id);
-    if( giop_s.response_expected() ) {
-      size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      msgsize += 1;
-      giop_s.InitialiseReply(GIOP::NO_EXCEPTION, CORBA::ULong(msgsize));
-      result >>= giop_s;
-    }
-    giop_s.ReplyCompleted();
+  const char* op = giop_s.invokeInfo().operation();
+
+  if( strcmp(op, "_is_a") == 0 ) {
+    omni_is_a_CallDesc call_desc("_is_a",sizeof("_is_a"),0,1);
+    _upcall(giop_s,call_desc);
     return 1;
   }
 
-  if( strcmp(giop_s.operation(), "_non_existent") == 0 ) {
-    giop_s.RequestReceived();
-    CORBA::Boolean result = this->_non_existent();
-    if( giop_s.response_expected() ) {
-      size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      msgsize += 1;
-      giop_s.InitialiseReply(GIOP::NO_EXCEPTION, CORBA::ULong(msgsize));
-      result >>= giop_s;
-    }
-    giop_s.ReplyCompleted();
+  if( strcmp(op, "_non_existent") == 0 ) {
+    omni_non_existent_CallDesc call_desc("_non_existent",
+					 sizeof("_non_existent"),1);
+    _upcall(giop_s,call_desc);
     return 1;
   }
 
-  if( strcmp(giop_s.operation(), "_interface") == 0 ) {
-    giop_s.RequestReceived();
-    CORBA::Object_var result;
-    omniObjRef* intf = this->_do_get_interface();
-    if( intf )
-      result =(CORBA::Object_ptr)intf->_ptrToObjRef(CORBA::Object::_PD_repoId);
-    if( giop_s.response_expected() ) {
-      size_t msgsize = (size_t) GIOP_S::ReplyHeaderSize();
-      msgsize = CORBA::Object::_NP_alignedSize(result, msgsize);
-      giop_s.InitialiseReply(GIOP::NO_EXCEPTION, CORBA::ULong(msgsize));
-      CORBA::Object::_marshalObjRef(result, giop_s);
-    }
-    giop_s.ReplyCompleted();
+  if( strcmp(op, "_interface") == 0 ) {
+    omni_interface_CallDesc call_desc("_interface",
+				      sizeof("_interface"),1);
+    _upcall(giop_s,call_desc);
     return 1;
   }
 
-  if( strcmp(giop_s.operation(), "_implementation") == 0 ) {
+  if( strcmp(op, "_implementation") == 0 ) {
     omniORB::logs(2,
      "WARNING -- received GIOP request \'_implementation\'.\n"
      " This operation is not supported.  CORBA::NO_IMPLEMENT was raised.");
     OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
   }
-
   return 0;
+}
+
+void
+omniServant::_upcall(GIOP_S& giop_s, omniCallDescriptor& desc)
+{
+  giop_s.invokeInfo().set_user_exceptions(desc.user_excns(),
+					  desc.n_user_excns());
+  desc.unmarshalArguments((cdrStream&)giop_s);
+  giop_s.RequestReceived();
+  desc.doLocalCall(this);
+  if (!desc.is_oneway()) {
+    omniServerCallMarshaller m(desc);
+    giop_s.InitialiseReply(GIOP::NO_EXCEPTION,m);
+  }
+  giop_s.ReplyCompleted();
 }
 
 
