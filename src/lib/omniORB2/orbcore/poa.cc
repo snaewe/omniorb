@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.20  2000/06/12 11:15:52  dpg1
+  Clarifying comment about TRANSIENT exceptions on exiting HOLDING
+  state.
+
   Revision 1.1.2.19  2000/06/02 16:09:59  dpg1
   If an object is deactivated while its POA is in the HOLDING state,
   clients which were held now receive a TRANSIENT exception when the POA
@@ -2182,6 +2186,17 @@ omniOrbPOA::synchronise_request(omniLocalIdentity* lid)
 
   // Check to see if the object has been deactivated while we've been
   // holding. If so, throw a TRANSIENT exception.
+  //
+  // Note that in some cases, such as dispatch through a default
+  // servant or with a servant locator, the LocalIdentity is not in
+  // the POA's list of identities, so deactivated() returns true, even
+  // though "activated" is not really a meaningful concept. Rather
+  // than treat this as a special case (and detect if the default
+  // servant has changed under our feet, etc.), we always throw
+  // TRANSIENT and let the caller retry. It's a very rare situation,
+  // and if we've been holding, we aren't too concerned about
+  // performance anyway.
+
   CORBA::Boolean deactivated;
   pd_lock.lock();
   deactivated = lid->deactivated();
