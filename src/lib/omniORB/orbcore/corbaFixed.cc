@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.18  2005/03/29 16:09:48  dgrisby
+// Copying too many digits if truncating a fixed point value.
+//
 // Revision 1.1.2.17  2005/03/03 12:45:56  dgrisby
 // Bug in fixed point multiplication. Thanks Simone Viani.
 //
@@ -245,7 +248,7 @@ CORBA::Fixed::Fixed(const CORBA::Octet* val,
 
   if (pd_digits == 0) pd_negative = 0;
 
-  memcpy(pd_val, val, digits);
+  memcpy(pd_val, val, pd_digits);
   memset(pd_val + pd_digits, 0, OMNI_FIXED_DIGITS - pd_digits);
 }
 
