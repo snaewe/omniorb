@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/01/09 17:13:57  dpg1
+  Wrong spillover bytes written after fragmentation.
+
   Revision 1.1.4.3  2000/11/15 17:23:27  sll
   Added call interceptors. Added  char, wchar codeset convertor support.
 
@@ -552,7 +555,7 @@ public:
 
       if (spillover) {
 	memcpy((void*)g->pd_outb_mkr,
-	       (void*)((omni::ptr_arith_t)g->pd_outb_mkr + size),
+	       (void*)((omni::ptr_arith_t)buf + size),
 	       spillover);
 	g->pd_outb_mkr = (void*)((omni::ptr_arith_t)g->pd_outb_mkr+spillover);
       }
