@@ -24,6 +24,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.4  2001/09/19 17:33:17  dpg1
+// Update omniMapper and omniNames INS mapper to ORB core changes from a
+// while ago.
+//
 // Revision 1.2.2.3  2001/04/19 09:39:05  sll
 // Big checkin with the brand new internal APIs.
 //
@@ -57,7 +61,7 @@ public:
 
   ~INSMapper() {}
 
-  CORBA::Boolean _dispatch(_OMNI_NS(IOP_S&)) {
+  CORBA::Boolean _dispatch(omniCallHandle&) {
     throw omniORB::LOCATION_FORWARD(CORBA::Object::_duplicate(obj_),0);
     return 1;
   }
