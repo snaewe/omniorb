@@ -1,0 +1,15 @@
+// Modified form of the OMG Pseudo-IDL from the Messaging spec
+
+// (base valuetype replaced with a struct)
+
+module Messaging{
+
+  interface ReplyHandler {};
+
+  struct ExceptionHolder_base{ /* should be value */
+    boolean         is_system_exception;
+    boolean         byte_order;
+    sequence<octet> marshaled_exception;
+  };
+
+};
