@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  2000/01/13 14:16:24  djs
+# Properly clears state between processing separate IDL input files
+#
 # Revision 1.7  2000/01/11 12:02:37  djs
 # More tidying up
 #
@@ -85,20 +88,22 @@ import bdesc
 
 self = bdesc
 
-self.__buildDesc = {}
-
-
-# Used to limit recursion on typedef chains when they point to external
-# declarations. Only recurse if haven't seen that declarator node before.
-# If the declarator is defined in the same file, it has necessarily already
-# been fully considered.
-self.__seenDeclarators = {}
-
 # We need to be able to detect recursive types so keep track of the current
 # node here
 self.__currentNode = None
 
-def __init__(s, env):
+def __init__():
+
+    self.__buildDesc = {}
+
+    # Used to limit recursion on typedef chains when they point to external
+    # declarations. Only recurse if haven't seen that declarator node before.
+    # If the declarator is defined in the same file, it has necessarily already
+    # been fully considered.
+    self.__seenDeclarators = {}
+
+
+def setStreamEnv(s, env):
     self.stream = s
     self.__environment = env
 

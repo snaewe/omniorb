@@ -30,6 +30,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  2000/01/13 14:16:20  djs
+# Properly clears state between processing separate IDL input files
+#
 # Revision 1.1  2000/01/10 15:39:35  djs
 # Better name and scope handling.
 #
@@ -65,7 +68,6 @@ class WalkTree(idlvisitor.AstVisitor):
         self._env = self._env.leaveScope()
 
     def _add(self, name, allow_already_exists = 0):
-        #print "adding " + name + " to " + str(self._env)
         try:
             new = self._env.copy()
             new.add(name)
@@ -84,7 +86,8 @@ class WalkTree(idlvisitor.AstVisitor):
 
     def __init__(self):
         if env._environments != None:
-            raise RuntimeError("Class should only be instantiated once")
+            pass
+            # assume processing another source file- this is reasonable!
         env._environments = {}
 
         self._env = name.Environment()

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  2000/01/13 14:16:24  djs
+# Properly clears state between processing separate IDL input files
+#
 # Revision 1.7  2000/01/11 12:02:38  djs
 # More tidying up
 #
@@ -77,6 +80,9 @@ def __init__(stream):
     self.stream = stream
     self.__names = {}
     self.__override = 0
+
+    bdesc.__init__()
+
     return self
 
 def defineName(name):
@@ -220,7 +226,7 @@ def visitTypedef(node):
         alias_tyname = "CORBA::String_member"
 
 
-    bdesc.__init__(stream, env)
+    bdesc.setStreamEnv(stream, env)
 
     # The old backend does something funny with output order
     # this helps recreate it

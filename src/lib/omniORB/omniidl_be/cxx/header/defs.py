@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.25  2000/01/13 14:16:29  djs
+# Properly clears state between processing separate IDL input files
+#
 # Revision 1.24  2000/01/12 17:48:31  djs
 # Added option to create BOA compatible skeletons (same as -BBOA in omniidl3)
 #
@@ -123,16 +126,14 @@ import defs
 
 self = defs
 
-# State information (used to be passed as arguments during recursion)
-self.__insideInterface = 0
-self.__insideModule = 0
-self.__insideClass = 0
-
-self.__globalScope = name.globalScope()
-
-
 def __init__(stream):
     defs.stream = stream
+    self.__insideInterface = 0
+    self.__insideModule = 0
+    self.__insideClass = 0
+
+    self.__globalScope = name.globalScope()
+    
     return defs
 
 #

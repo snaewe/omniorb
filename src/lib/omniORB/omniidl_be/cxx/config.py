@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11  2000/01/13 14:16:20  djs
+# Properly clears state between processing separate IDL input files
+#
 # Revision 1.10  2000/01/13 11:45:47  djs
 # Added option to customise C++ reserved word name escaping
 #
@@ -68,25 +71,26 @@ from omniidl import idlvisitor
 import config
 self = config
 
-self._programName   = "omniidl3"
-self._libVersion    = "omniORB_3_0"
-self._hdrsuffix     = ".hh"
-self._skelsuffix    = "SK.cc"
-self._dynskelsuffix = "DynSK.cc"
-
-self._defs_fragment  = "_defs"
-self._opers_fragment = "_operators"
-self._poa_fragment   = "_poa"
-
-self._name_prefix   = "_0RL"
-
-self._res_prefix    = "_cxx_"
-#
 # Location where configuration data pertinent to the current run of the
 # compiler is stored
 #
 # similar in purpose to idl_global()-> data and o2be::global data in the
 # omniidl2 c++ compiler
+
+self._programName   = "omniidl3"    # programs own name
+self._libVersion    = "omniORB_3_0" # library version
+self._hdrsuffix     = ".hh"         # suffix for header files
+self._skelsuffix    = "SK.cc"       # suffix for stub files
+self._dynskelsuffix = "DynSK.cc"    # suffix for the dynamic stuff
+
+self._defs_fragment  = "_defs"      # header definitions fragment suffix
+self._opers_fragment = "_operators" # header operators fragment suffix
+self._poa_fragment   = "_poa"       # header POA fragment suffix
+
+self._name_prefix   = "_0RL"        # private name prefix
+
+self._res_prefix    = "_cxx_"       # prefix to map IDL identifiers which
+                                    # are C++ reserved words
 
 # name of the program itself
 def program_Name():
@@ -204,6 +208,8 @@ def EMULATE_BUGS():
 # IDL file. Note that types constructed within other types must necessarily
 # be in the same IDL file
 class WalkTreeForIncludes(idlvisitor.AstVisitor):
+    def __init__(self):
+        config.includes = []
     def add(self, node):
         file = node.file()
         if not(file in config.includes):
@@ -224,3 +230,4 @@ class WalkTreeForIncludes(idlvisitor.AstVisitor):
     def visitUnion(self, node):     self.add(node)
     def visitEnum(self, node):      self.add(node)
     
+

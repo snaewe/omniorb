@@ -28,6 +28,9 @@
 #
 # $Id$
 # $Log$
+# Revision 1.8  2000/01/13 14:16:30  djs
+# Properly clears state between processing separate IDL input files
+#
 # Revision 1.7  2000/01/11 12:02:41  djs
 # More tidying up
 #
@@ -69,10 +72,8 @@ self = tie
 
 def __init__(stream):
     self.stream = stream
+    self.__environment = name.Environment()
     return self
-
-
-self.__environment = name.Environment()
 
 
 def POA_prefix(nested):

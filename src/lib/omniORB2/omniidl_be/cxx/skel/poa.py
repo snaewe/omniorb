@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  2000/01/13 14:16:35  djs
+# Properly clears state between processing separate IDL input files
+#
 # Revision 1.5  2000/01/10 18:42:22  djs
 # Removed redundant code, tidied up.
 #
@@ -57,14 +60,10 @@ self = poa
 
 def __init__(stream):
     poa.stream = stream
+    self.__environment = name.Environment()
+
+    self.__nested = 0
     return poa
-
-# ------------------------------------
-# environment handling functions
-
-self.__environment = name.Environment()
-
-self.__nested = 0
 
 def POA_prefix():
     if not(self.__nested):

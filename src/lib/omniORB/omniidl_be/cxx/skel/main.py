@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20  2000/01/13 14:16:34  djs
+# Properly clears state between processing separate IDL input files
+#
 # Revision 1.19  2000/01/12 17:48:34  djs
 # Added option to create BOA compatible skeletons (same as -BBOA in omniidl3)
 #
@@ -105,17 +108,12 @@ from omniidl.be.cxx.skel import mangler, dispatch, proxy
 import main
 self = main
 
-# ------------------------------------
-# environment handling functions
-
-#self.__environment = name.Environment()
-self.__globalScope = name.globalScope()
-self.__insideInterface = 0
-self.__insideModule = 0
-
 
 def __init__(stream):
     self.stream = stream
+    self.__globalScope = name.globalScope()
+    self.__insideInterface = 0
+    self.__insideModule = 0
     return self
 
 # ------------------------------------
