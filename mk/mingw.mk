@@ -430,10 +430,6 @@ CorbaImplementation = OMNIORB
 # Use native win32 threads
 ThreadSystem = NT
 
-OMNITHREAD_VERSION = 3.0
-OMNITHREAD_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNITHREAD_VERSION)))
-OMNITHREAD_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNITHREAD_VERSION)))
-
 OMNITHREAD_LIB = $(patsubst %,$(DLLSearchPattern),omnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION))
 lib_depend := $(patsubst %,$(DLLPattern),omnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION))
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)

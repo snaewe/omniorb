@@ -1,3 +1,20 @@
+Tue Mar 22 13:51:04 GMT 2005 dgrisby
+====================================
+
+- Enable pthread_attr_setstacksize on Linux.
+
+src/lib/omnithread/posix.cc
+
+- Bump omnithread version number and update all makefiles to properly
+  use version.mk.
+
+mk/beforeauto.mk.in
+mk/mingw.mk
+mk/version.mk
+mk/vxWorks.mk
+mk/win32.mk
+
+
 Wed Mar 16 09:15:35 GMT 2005 dgrisby
 ====================================
 
