@@ -31,9 +31,12 @@
 
 /*
  $Log$
- Revision 1.18  1998/02/03 16:47:09  ewc
- Updated some interfaces.
+ Revision 1.19  1998/02/20 14:44:44  ewc
+ Changed to compile with aCC on HPUX
 
+ * Revision 1.18  1998/02/03  16:47:09  ewc
+ * Updated some interfaces.
+ *
  * Revision 1.17  1998/01/27  16:02:34  ewc
  * Added TypeCode and type Any
  *
@@ -289,6 +292,33 @@ typedef _CORBA_Double  Double;
 //                   Type Any                                         //
 ////////////////////////////////////////////////////////////////////////
 
+
+  enum TCKind {
+    tk_null     = 0,
+    tk_void     = 1,
+    tk_short    = 2,
+    tk_long     = 3,
+    tk_ushort	= 4,
+    tk_ulong	= 5,
+    tk_float	= 6,
+    tk_double	= 7,
+    tk_boolean	= 8,
+    tk_char	= 9,
+    tk_octet	= 10,
+    tk_any	= 11,
+    tk_TypeCode	= 12,
+    tk_Principal= 13,
+    tk_objref	= 14,
+    tk_struct	= 15,
+    tk_union	= 16,
+    tk_enum	= 17,
+    tk_string	= 18,
+    tk_sequence	= 19,
+    tk_array	= 20,
+    tk_alias	= 21,
+    tk_except	= 22
+  };
+  
   class Object;
   typedef Object *Object_ptr;
   typedef Object_ptr ObjectRef;
@@ -297,10 +327,30 @@ typedef _CORBA_Double  Double;
   typedef class TypeCode *TypeCode_ptr;
   typedef TypeCode_ptr TypeCodeRef;
 
+  static const TypeCode_ptr _tc_null;
+  static const TypeCode_ptr _tc_void;
+  static const TypeCode_ptr _tc_short;
+  static const TypeCode_ptr _tc_long;
+  static const TypeCode_ptr _tc_ushort;
+  static const TypeCode_ptr _tc_ulong;
+  static const TypeCode_ptr _tc_float;
+  static const TypeCode_ptr _tc_double;
+  static const TypeCode_ptr _tc_boolean;
+  static const TypeCode_ptr _tc_char;
+  static const TypeCode_ptr _tc_octet;
+  static const TypeCode_ptr _tc_any;
+  static const TypeCode_ptr _tc_TypeCode;
+  static const TypeCode_ptr _tc_Principal;
+  static const TypeCode_ptr _tc_Object;
+  static const TypeCode_ptr _tc_string;
+
+  static const TypeCode_ptr __nil_TypeCode; 
+
+
   class Any {
   public:
     Any() : pd_data(0) { 
-      pd_tc = TypeCode::_duplicate(_tc_null); 
+      pd_tc = new TypeCode(tk_null); 
     }
 
     ~Any() { 
@@ -309,7 +359,8 @@ typedef _CORBA_Double  Double;
     }
 
     Any(const Any& a) : pd_data(0) {
-      pd_tc = TypeCode::_duplicate(a.pd_tc);
+      if ((a.pd_tc)->NP_is_nil()) pd_tc = __nil_TypeCode;
+      else pd_tc = new TypeCode(*(a.pd_tc));
       pd_mbuf = a.pd_mbuf;
     }
     
@@ -365,7 +416,8 @@ typedef _CORBA_Double  Double;
       if (this != &a) {
 	CORBA::release(pd_tc);
 	PR_deleteData();
-	pd_tc = TypeCode::_duplicate(a.pd_tc);
+	if ((a.pd_tc)->NP_is_nil()) pd_tc = __nil_TypeCode;
+	else pd_tc = new TypeCode(*(a.pd_tc));
 	pd_mbuf = a.pd_mbuf;
       }
       return *this;
@@ -612,7 +664,8 @@ typedef _CORBA_Double  Double;
     void replace(TypeCode_ptr TCp, void* value, Boolean release = 0);
 
     inline TypeCode_ptr type() const {
-	return TypeCode::_duplicate(pd_tc);
+      if (pd_tc->NP_is_nil()) return __nil_TypeCode;
+      else return new TypeCode(*pd_tc);
       }
 
     inline const void *value() const {
@@ -1230,12 +1283,13 @@ typedef _CORBA_Double  Double;
 
   class TypeCode_member {
   public:
-    TypeCode_member() { _ptr = CORBA::TypeCode::_nil(); }
+    TypeCode_member() { _ptr = __nil_TypeCode; }
 
     inline TypeCode_member(TypeCode_ptr p) { _ptr = p; }
 
     inline TypeCode_member(const TypeCode_member& p) {
-	_ptr = CORBA::TypeCode::_duplicate(p._ptr);
+      if ((p._ptr)->NP_is_nil()) _ptr = __nil_TypeCode; 
+      else _ptr = new TypeCode(*(p._ptr));
       }
 
     ~TypeCode_member() { CORBA::release(_ptr); }
@@ -1251,14 +1305,16 @@ typedef _CORBA_Double  Double;
     inline TypeCode_member& operator=(const TypeCode_member& p) {
       if (this != &p) {
 	CORBA::release(_ptr);
-	_ptr = CORBA::TypeCode::_duplicate(p._ptr);
+      if ((p._ptr)->NP_is_nil()) _ptr = __nil_TypeCode; 
+      else _ptr = new TypeCode(*(p._ptr));
       }
       return *this;
     }
 
     inline TypeCode_member& operator=(const TypeCode_var& p) {
       CORBA::release(_ptr);
-      _ptr = CORBA::TypeCode::_duplicate(p.pd_TC);
+      if ((p.pd_TC)->NP_is_nil()) _ptr = __nil_TypeCode;
+      else _ptr = new TypeCode(*(p.pd_TC));
       return *this;
     }
 
@@ -1517,33 +1573,6 @@ typedef _CORBA_Double  Double;
     TypeCode_ptr type;
     _CORBA_ULong label;
   };
-
-  enum TCKind {
-    tk_null     = 0,
-    tk_void     = 1,
-    tk_short    = 2,
-    tk_long     = 3,
-    tk_ushort	= 4,
-    tk_ulong	= 5,
-    tk_float	= 6,
-    tk_double	= 7,
-    tk_boolean	= 8,
-    tk_char	= 9,
-    tk_octet	= 10,
-    tk_any	= 11,
-    tk_TypeCode	= 12,
-    tk_Principal= 13,
-    tk_objref	= 14,
-    tk_struct	= 15,
-    tk_union	= 16,
-    tk_enum	= 17,
-    tk_string	= 18,
-    tk_sequence	= 19,
-    tk_array	= 20,
-    tk_alias	= 21,
-    tk_except	= 22
-  };
-  
   
   
   class TypeCode {
@@ -1653,7 +1682,6 @@ typedef _CORBA_Double  Double;
     TCKind pd_tck;
     ULong  pd_maxLen;
     MemBufferedStream pd_param;
-    static const TypeCode_ptr __nil_TypeCode; 
 
     Boolean PR_equal(TypeCode_ptr, Boolean expand) const;
 
@@ -1845,22 +1873,6 @@ typedef _CORBA_Double  Double;
     TypeCode_OUT_arg();
   };
 
-  static const TypeCode_ptr _tc_null;
-  static const TypeCode_ptr _tc_void;
-  static const TypeCode_ptr _tc_short;
-  static const TypeCode_ptr _tc_long;
-  static const TypeCode_ptr _tc_ushort;
-  static const TypeCode_ptr _tc_ulong;
-  static const TypeCode_ptr _tc_float;
-  static const TypeCode_ptr _tc_double;
-  static const TypeCode_ptr _tc_boolean;
-  static const TypeCode_ptr _tc_char;
-  static const TypeCode_ptr _tc_octet;
-  static const TypeCode_ptr _tc_any;
-  static const TypeCode_ptr _tc_TypeCode;
-  static const TypeCode_ptr _tc_Principal;
-  static const TypeCode_ptr _tc_Object;
-  static const TypeCode_ptr _tc_string;
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Request                                     //

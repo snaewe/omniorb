@@ -29,9 +29,12 @@
 
 
 /* $Log$
-/* Revision 1.1  1998/01/27 15:41:24  ewc
-/* Initial revision
+/* Revision 1.2  1998/02/20 14:45:43  ewc
+/* Changed to compile with aCC on HPUX
 /*
+// Revision 1.1  1998/01/27  15:41:24  ewc
+// Initial revision
+//
  */
 
 
@@ -1858,7 +1861,7 @@ CORBA::TypeCode::_duplicate(CORBA::TypeCode_ptr t)
 CORBA::TypeCode_ptr
 CORBA::TypeCode::_nil()
 {
-  return __nil_TypeCode;
+  return CORBA::__nil_TypeCode;
 }
 
 
@@ -2047,7 +2050,7 @@ CORBA::_nil_TypeCode::NP_is_nil() const
 CORBA::IDLType_ptr CORBA::__nil_IDLType = 0;
 
 static CORBA::_nil_TypeCode __nil_TypeCode__;
-const CORBA::TypeCode_ptr CORBA::TypeCode::__nil_TypeCode = &__nil_TypeCode__;
+const CORBA::TypeCode_ptr CORBA::__nil_TypeCode = &__nil_TypeCode__;
 
 static CORBA::TypeCode _01RL__tc_null__(CORBA::tk_null);
 static CORBA::TypeCode _01RL__tc_void__(CORBA::tk_void);
