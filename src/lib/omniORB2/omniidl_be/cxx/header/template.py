@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  2000/02/01 09:26:45  djs
+# Tracking fixes in old compiler: powerpc-aix scoped identifier workarounds
+#
 # Revision 1.2  2000/01/19 11:23:29  djs
 # Moved most C++ code to template file
 #
@@ -280,8 +283,8 @@ public:
 
   @virtual_operations@
   @virtual_attributes@
-
-protected:
+  
+public:  // Really protected, workaround for xlC
   virtual _CORBA_Boolean _dispatch(GIOP_S&);
 
 private:
