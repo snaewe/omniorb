@@ -28,8 +28,15 @@
 
 # $Id$
 # $Log$
+# Revision 1.21.2.1  2000/08/02 10:52:03  dpg1
+# New omni3_1_develop branch, merged from omni3_develop.
+#
 # Revision 1.21  2000/07/13 15:26:02  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.18.2.8  2000/07/18 15:34:17  djs
+# Added -Wbvirtual_objref option to make attribute and operation _objref
+# methods virtual
 #
 # Revision 1.18.2.7  2000/06/26 16:23:09  djs
 # Added new backend arguments.
@@ -184,6 +191,8 @@ def process_args(args):
             config.state['Keep Include Path'] = 1
         elif arg == "use_quotes":
             config.state['Use Quotes']        = 1
+        elif arg == "virtual_objref":
+            config.state['Virtual Objref Methods'] = 1
         elif arg == "debug":
             config.state['Debug']             = 1
         elif arg[:2] == "h=":

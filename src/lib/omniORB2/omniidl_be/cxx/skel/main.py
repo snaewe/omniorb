@@ -28,8 +28,16 @@
 
 # $Id$
 # $Log$
+# Revision 1.30.2.1  2000/08/02 10:52:02  dpg1
+# New omni3_1_develop branch, merged from omni3_develop.
+#
 # Revision 1.30  2000/07/13 15:25:59  dpg1
 # Merge from omni3_develop for 3.0 release.
+#
+# Revision 1.27.2.12  2000/07/24 16:32:18  djs
+# Fixed typo in previous BOA skeleton bugfix.
+# Suppressed compiler warning (from gcc -Wall) when encountering a call with
+# no arguments and no return value.
 #
 # Revision 1.27.2.11  2000/06/26 16:24:17  djs
 # Refactoring of configuration state mechanism.
@@ -393,9 +401,16 @@ if( !strcmp(id, " + inherits_fqname + "::_PD_repoId) )\n\
         result_string = ""
         if has_return_value:
             result_string = "tcd->pd_result = "
+
+        # If we have no return value and no arguments at all then we don't
+        # need to fetch the call descriptor. This suppresses a warning in gcc
+        # about an unused variable.
+        get_cd = ""
+        if has_return_value or (impl_args != []):
+            get_cd = descriptor + "* tcd = (" + descriptor + "*) cd;"
         stream.out(template.interface_callback,
                    local_call_descriptor = local_call_descriptor,
-                   call_descriptor = descriptor,
+                   get_call_descriptor = get_cd,
                    impl_name = impl_name.unambiguous(environment),
                    impl_fqname = impl_name.fullyQualify(),
                    name = node_name.fullyQualify(),
@@ -470,10 +485,14 @@ _call_desc.set_context_info(&_ctxt_info);""",
             local_call_descriptor = mangler.generate_unique_name(
                 mangler.LCALL_DESC_PREFIX)
 
+            # We always have a result argument so always need the call
+            # descriptor (see operations above)
+            get_cd = read + "* tcd = (" + read + "*) cd;"
+
             # generate the callback
             stream.out(template.interface_callback,
                        local_call_descriptor = local_call_descriptor,
-                       call_descriptor = read,
+                       get_call_descriptor = get_cd,
                        impl_fqname = impl_name.fullyQualify(),
                        name = node_name.fullyQualify(),
                        result = "tcd->pd_result = ",
@@ -498,10 +517,14 @@ _call_desc.set_context_info(&_ctxt_info);""",
                 local_call_descriptor = mangler.generate_unique_name(
                     mangler.LCALL_DESC_PREFIX)
                 set_attrib_name = "_set_" + attrib_name
+
+                # again we always need the call descriptor
+                get_cd = write + "* tcd = (" + write + "*) cd;"
+                
                 # generate the callback
                 stream.out(template.interface_callback,
                            local_call_descriptor = local_call_descriptor,
-                           call_descriptor = write,
+                           get_call_descriptor = get_cd,
                            impl_fqname = impl_name.fullyQualify(),
                            name = node_name.fullyQualify(),
                            result = "",

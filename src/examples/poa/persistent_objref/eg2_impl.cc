@@ -16,6 +16,7 @@
 //
 
 #include <iostream.h>
+#include <stdlib.h>
 #include <echo.hh>
 
 
@@ -36,12 +37,21 @@ char* Echo_i::echoString(const char* mesg)
 
 //////////////////////////////////////////////////////////////////////
 
+void usage()
+{
+  cerr << "usage:  eg2_impl -ORBpoa_iiop_port <portnum>" << endl;
+  exit(-1);
+}
+
+
 int main(int argc, char** argv)
 {
   try {
-    
+    if( argc < 3 )  usage();
 
     CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
+
+    if( argc != 1 )  usage();
 
     CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
     PortableServer::POA_var root_poa = PortableServer::POA::_narrow(obj);

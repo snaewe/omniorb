@@ -88,3 +88,41 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 #CORBA_LIB_NODYN	+= -lomniORB3 -ltcpwrapGK -lomnithread
 #CORBA_LIB_NODYN	+= -Wl,-Bdynamic
 #OMNITHREAD_LIB_NODYN = -lomnithread
+
+# MakeCXXSharedLibrary- Build shared library
+#     Expect shell varables:
+#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
+#       libname = shared library name (e.g. libfoo.so)
+#
+# ExportSharedLibrary- export sharedlibrary
+#     Expect shell varables:
+#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
+#       libname = shared library name (e.g. libfoo.so)
+#      
+ifdef EgcsMajorVersion
+
+ELF_SHARED_LIBRARY = 1
+
+SHAREDLIB_CPPFLAGS = -fPIC
+
+define MakeCXXSharedLibrary
+(set -x; \
+ $(RM) $@; \
+ $(CXX) -shared -Wl,-soname,$$soname -o $@ $(IMPORT_LIBRARY_FLAGS) \
+ $(filter-out $(LibSuffixPattern),$^) $$extralibs; \
+)
+endef
+
+
+define ExportSharedLibrary
+$(ExportLibrary); \
+(set -x; \
+   cd $(EXPORT_TREE)/$(LIBDIR); \
+   $(RM) $$soname; \
+   ln -s $^ $$soname; \
+    $(RM) $$libname; \
+    ln -s $$soname $$libname; \
+  )
+endef
+
+endif

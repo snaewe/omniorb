@@ -28,8 +28,19 @@
 
 // $Id$
 // $Log$
+// Revision 1.14.2.1  2000/08/02 10:51:49  dpg1
+// New omni3_1_develop branch, merged from omni3_develop.
+//
 // Revision 1.14  2000/07/13 15:25:52  dpg1
 // Merge from omni3_develop for 3.0 release.
+//
+// Revision 1.11.2.2  2000/08/01 09:46:47  dpg1
+// No longer complain about inheriting an operation into an interface
+// with the same name.
+//
+// Revision 1.11.2.1  2000/07/19 17:24:54  dpg1
+// omniidl complains if a name which differs only in case is found during
+// name look-up
 //
 // Revision 1.11  1999/11/26 11:33:44  dpg1
 // Bug in findWithInheritance() when inherited interface was not found.
@@ -611,7 +622,7 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
     s = this;
 
   // Find entry for each name component
-  const Entry* e;
+  const Entry* e = 0;
   EntryList*   el;
   ScopedName::Fragment* f = sn->scopeList();
 
@@ -619,7 +630,7 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
 
   while (f) {
     do {
-      el = s->findWithInheritance(f->identifier());
+      el = s->iFindWithInheritance(f->identifier());
 
       e = 0;
       if (el) {
@@ -634,10 +645,12 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
 	  for (; el; el = el->tail()) {
 	    char* ssn=el->head()->container()->scopedName()->toString();
 	    IdlErrorCont(el->head()->file(), el->head()->line(),
-			 "(`%s' defined in `%s')", f->identifier(), ssn);
+			 "(`%s' defined in `%s')",
+			 el->head()->identifier(), ssn);
 	    delete [] ssn;
 	  }
-	  // Carry on with the first one we found
+	  delete el;
+	  return 0;
 	}
 	delete el;
 	break;
@@ -652,8 +665,20 @@ findScopedName(const ScopedName* sn, const char* file, int line) const
       delete [] ssn;
       return 0;
     }
-    f = f->next();
 
+    if (strcmp(f->identifier(), e->identifier())) {
+      // Case clash
+      char* ssn = sn->toString();
+      IdlError(file, line, "Error in look-up of `%s': `%s' differs in case",
+	       ssn, f->identifier());
+      delete [] ssn;
+      ssn = e->scopedName()->toString();
+      IdlErrorCont(e->file(), e->line(), "from `%s' declared here", ssn);
+      delete [] ssn;
+      return 0;
+    }
+
+    f = f->next();
     if (f) { // More name fragments: check that current entry forms a scope
       s = e->scope();
 
@@ -1008,11 +1033,14 @@ addInherited(const char* id, Scope* scope, Decl* decl,
       }
     case Entry::E_PARENT:
       {
-	IdlError(file, line,
-		 "Inherited %s `%s' clashes with interface name `%s'",
-		 decl->kindAsString(), id, clash->identifier());
-	IdlErrorCont(clash->file(), clash->line(),
-		     "(`%s' declared here)", clash->identifier());
+	// It's not clear whether this is OK, but the spec doesn't say
+	// it's definitely illegal
+
+//  	IdlWarning(file, line,
+//  		   "Inherited %s `%s' clashes with interface name `%s'",
+//  		   decl->kindAsString(), id, clash->identifier());
+//  	IdlWarningCont(decl->file(), decl->line(),
+//  		       "(%s `%s' declared here)", decl->kindAsString(), id);
 	break;
       }
     }

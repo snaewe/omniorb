@@ -150,14 +150,11 @@ OMNIORB_IDL = $(OMNIORB_IDL_ONLY) $(OMNIORB_IDL_ANY_FLAGS)
 OMNIORB_CPPFLAGS = -D__OMNIORB3__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
 
 OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
-		$(patsubst %,$(LibSearchPattern),omniDynamic3) \
-		$(OMNITHREAD_LIB) $(SOCKET_LIB)
-OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3) \
-		$(OMNITHREAD_LIB) $(SOCKET_LIB)
+		$(patsubst %,$(LibSearchPattern),omniDynamic3)
+OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3)
 
-OMNIORB_LIB_NODYN_DEPEND = $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND)
-OMNIORB_LIB_DEPEND = $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND) \
-		$(omniDynamic_lib_depend)
+OMNIORB_LIB_NODYN_DEPEND = $(omniORB_lib_depend)
+OMNIORB_LIB_DEPEND = $(omniORB_lib_depend) $(omniDynamic_lib_depend)
 
 OMNIORB_STATIC_STUB_OBJS = \
 	$(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%SK.o)
@@ -195,6 +192,14 @@ OMNIORB_LIB_NODYN += $($(omniORBGatekeeperImplementation)_LIB)
 OMNIORB_LIB_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
 OMNIORB_LIB_NODYN_DEPEND += $($(omniORBGatekeeperImplementation)_LIB_DEPEND)
 
+# thread libraries required by omniORB. Make sure this is the last in
+# the list of omniORB related libraries
+
+OMNIORB_LIB += $(OMNITHREAD_LIB) $(SOCKET_LIB)
+OMNIORB_LIB_NODYN += $(OMNITHREAD_LIB) $(SOCKET_LIB)
+OMNIORB_LIB_DEPEND += $(OMNITHREAD_LIB_DEPEND)
+OMNIORB_LIB_NODYN_DEPEND += $(OMNITHREAD_LIB_DEPEND)
+
 
 # LifeCycle stuff
 
@@ -229,3 +234,25 @@ define TclScriptExecutable
  chmod a+x $@; \
 )
 endef
+
+
+# Shared library support stuff
+#
+# Default setup. Work for most platforms. For those exceptions, override
+# the rules in their platform files.
+#
+SHAREDLIB_SUFFIX = so
+SharedLibraryFullName = $(shell fn() {\
+                                  echo lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3.$$4; \
+                                 }; \
+                                fn $(subst ., ,$(SharedLibraryNameSpec)))
+
+SharedLibrarySoName = $(shell fn() {\
+                                 echo lib$$1$$2.$(SHAREDLIB_SUFFIX).$$3; \
+                              }; \
+                              fn $(subst ., ,$(SharedLibraryNameSpec)))
+
+SharedLibraryName = $(shell fn() {\
+                                echo lib$$1$$2.$(SHAREDLIB_SUFFIX); \
+                            }; \
+                            fn $(subst ., ,$(SharedLibraryNameSpec)))

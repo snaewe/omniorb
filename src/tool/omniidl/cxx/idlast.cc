@@ -28,8 +28,15 @@
 
 // $Id$
 // $Log$
+// Revision 1.17.2.1  2000/08/02 10:51:49  dpg1
+// New omni3_1_develop branch, merged from omni3_develop.
+//
 // Revision 1.17  2000/07/13 15:25:54  dpg1
 // Merge from omni3_develop for 3.0 release.
+//
+// Revision 1.14.2.6  2000/07/26 10:59:14  dpg1
+// Incorrect error report when inheriting typedef to forward declared
+// interface
 //
 // Revision 1.14.2.5  2000/06/08 14:36:19  dpg1
 // Comments and pragmas are now objects rather than plain strings, so
@@ -417,21 +424,29 @@ InheritSpec(const ScopedName* sn, const char* file, int line)
 	  return;
 	}
 	else if (d->kind() == Decl::D_FORWARD) {
-	  char* ssn = ((Forward*)d)->scopedName()->toString();
-	  IdlError(file, line,
-		   "Inherited interface `%s' must be fully defined", ssn);
-
-	  if (decl_ != d) {
-	    char* tssn = sn->toString();
-	    IdlErrorCont(se->file(), se->line(),
-			 "(`%s' reached through typedef `%s')",
-			 ssn, tssn);
-	    delete [] tssn;
+	  Interface* def = ((Forward*)d)->definition();
+	  if (def) {
+	    interface_ = def;
+	    scope_     = interface_->scope();
+	    return;
 	  }
-	  IdlErrorCont(d->file(), d->line(),
-		       "(`%s' forward declared here)", ssn);
-	  delete [] ssn;
-	  return;
+	  else {
+	    char* ssn = ((Forward*)d)->scopedName()->toString();
+	    IdlError(file, line,
+		     "Inherited interface `%s' must be fully defined", ssn);
+
+	    if (decl_ != d) {
+	      char* tssn = sn->toString();
+	      IdlErrorCont(se->file(), se->line(),
+			   "(`%s' reached through typedef `%s')",
+			   ssn, tssn);
+	      delete [] tssn;
+	    }
+	    IdlErrorCont(d->file(), d->line(),
+			 "(`%s' forward declared here)", ssn);
+	    delete [] ssn;
+	    return;
+	  }
 	}
       }
     }
@@ -1824,21 +1839,37 @@ ValueInheritSpec(ScopedName* sn, const char* file, int line)
 	  return;
 	}
 	else if (d->kind() == Decl::D_VALUEFORWARD) {
-	  char* ssn = ((ValueForward*)d)->scopedName()->toString();
-	  IdlError(file, line,
-		   "Inherited valuetype `%s' must be fully defined", ssn);
+	  ValueBase* def = ((ValueForward*)d)->definition();
 
-	  if (decl_ != d) {
-	    char* tssn = sn->toString();
-	    IdlErrorCont(se->file(), se->line(),
-			 "(`%s' reached through typedef `%s')",
-			 ssn, tssn);
-	    delete [] tssn;
+	  if (def) {
+	    if (def->kind() == Decl::D_VALUE) {
+	      value_ = (Value*)def;
+	      scope_ = ((Value*)def)->scope();
+	      return;
+	    }
+	    else if (def->kind() == Decl::D_VALUEABS) {
+	      value_ = (ValueAbs*)def;
+	      scope_ = ((ValueAbs*)def)->scope();
+	      return;
+	    }
 	  }
-	  IdlErrorCont(d->file(), d->line(),
-		       "(`%s' forward declared here)", ssn);
-	  delete [] ssn;
-	  return;
+	  else {
+	    char* ssn = ((ValueForward*)d)->scopedName()->toString();
+	    IdlError(file, line,
+		     "Inherited valuetype `%s' must be fully defined", ssn);
+
+	    if (decl_ != d) {
+	      char* tssn = sn->toString();
+	      IdlErrorCont(se->file(), se->line(),
+			   "(`%s' reached through typedef `%s')",
+			   ssn, tssn);
+	      delete [] tssn;
+	    }
+	    IdlErrorCont(d->file(), d->line(),
+			 "(`%s' forward declared here)", ssn);
+	    delete [] ssn;
+	    return;
+	  }
 	}
       }
     }

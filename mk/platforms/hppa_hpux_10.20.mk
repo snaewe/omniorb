@@ -170,3 +170,46 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
+
+# MakeCXXSharedLibrary- Build shared library
+#     Expect shell varables:
+#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
+#       libname = shared library name (e.g. libfoo.so)
+#
+# ExportSharedLibrary- export sharedlibrary
+#     Expect shell varables:
+#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
+#       libname = shared library name (e.g. libfoo.so)
+#      
+
+SHAREDLIB_SUFFIX   = sl
+
+ifeq ($(notdir $(CXX)),aCC)
+
+ELF_SHARED_LIBRARY = 1
+
+SHAREDLIB_CPPFLAGS += +Z
+
+define MakeCXXSharedLibrary
+(set -x; \
+$(RM) $@; \
+  $(CXX) -b -Wl,+h$$soname -o $@  $(IMPORT_LIBRARY_FLAGS) \
+      $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
+           $(filter-out $(LibSuffixPattern),$^) $$extralibs; \
+)
+endef
+
+
+define ExportSharedLibrary
+$(ExportLibrary); \
+(set -x; \
+   cd $(EXPORT_TREE)/$(LIBDIR); \
+   $(RM) $$soname; \
+   ln -s $^ $$soname; \
+    $(RM) $$libname; \
+    ln -s $$soname $$libname; \
+  )
+endef
+
+
+endif

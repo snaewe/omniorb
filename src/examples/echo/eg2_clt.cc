@@ -4,17 +4,15 @@
 //              This is the client. The object reference is given as a
 //              stringified IOR on the command line.
 //
-// Usage: eg2_clt <object reference>
+// Usage: eg2_clt <object reference> [message]
 //
 
 #include <iostream.h>
 #include <echo.hh>
 
 
-static void hello(Echo_ptr e)
+static void hello(Echo_ptr e, const char* src)
 {
-  CORBA::String_var src = (const char*) "Hello!";
-
   CORBA::String_var dest = e->echoString(src);
 
   cerr << "I said, \"" << (char*)src << "\"." << endl
@@ -28,8 +26,8 @@ int main(int argc, char** argv)
   try {
     CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-    if( argc != 2 ) {
-      cerr << "usage:  eg2_clt <object reference>" << endl;
+    if( argc < 2 || argc > 3 ) {
+      cerr << "usage:  eg2_clt <object reference> [message]" << endl;
       return 1;
     }
 
@@ -39,7 +37,10 @@ int main(int argc, char** argv)
       cerr << "Can't narrow reference to type Echo (or it was nil)." << endl;
       return 1;
     }
-    hello(echoref);
+
+    const char* message = (argc == 3) ? argv[2] : "Hello!";
+
+    hello(echoref, message);
 
     orb->destroy();
   }
