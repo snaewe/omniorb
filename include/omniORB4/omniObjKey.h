@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 17:11:40  sll
+  Removed reference to the obsoluted MemBufferedStream and NetBufferedStream.
+
   Revision 1.2.2.1  2000/07/17 10:35:35  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -44,10 +47,6 @@
 #define __OMNIOBJKEY_H__
 
 #include <string.h>
-
-
-class MemBufferedStream;
-class NetBufferedStream;
 
 
 // This is just big enough to fit a root poa key.
