@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2000/10/18 16:07:45  djr
+  Moved call to _default_POA() in _do_this().
+
   Revision 1.1.2.11  2000/09/21 11:08:18  dpg1
   Add a user check to RefCountServantBase::_add_ref() which complains if
   it is called when the reference count is zero.
@@ -225,21 +228,20 @@ PortableServer::ServantBase::_do_this(const char* repoId)
   }
   else {
 
-    PortableServer::POA_var poa = this->_default_POA();
-
     {
       omni_tracedmutex_lock sync(*omni::internalLock);
 
       omniLocalIdentity* id = _identities();
 
       if( id && !id->servantsNextIdentity() ) {
-	// We only have a single activation -- return a
-	// reference to it.
+	// We only have a single activation -- return a reference to it.
 	omniObjRef* ref = omni::createObjRef(_mostDerivedRepoId(), repoId, id);
 	OMNIORB_ASSERT(ref);
 	return ref->_ptrToObjRef(repoId);
       }
     }
+
+    PortableServer::POA_var poa = this->_default_POA();
 
     if( CORBA::is_nil(poa) )
       OMNIORB_THROW(OBJ_ADAPTER,0, CORBA::COMPLETED_NO);

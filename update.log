@@ -1,3 +1,17 @@
+
+Wed Oct 18 16:54:10 BST 2000 djr
+================================
+
+- Minor change to PortableServer::ServantBase::_do_this(), to avoid call
+  to _default_POA() unless it is necassary.
+
+src/lib/omniORB/orbcore/portableserver.cc
+
+- Added call_back to list of subdirs.
+
+src/examples/dir.mk
+
+
 Mon Oct 16 18:56:53 BST 2000 djs
 ================================
 
@@ -15,10 +29,11 @@ Mon Oct 16 14:11:48 BST 2000 sll
 external_merge/mk/platforms/sun4_sosV_5.8.mk
 mk/platforms/sun4_sosV_5.8.mk
 
+
 Fri Oct 13 10:24:46 BST 2000 djr
 ================================
 
-- Fixed race between object-deactivation an completion of last invocation.
+- Fixed race between object-deactivation and completion of last invocation.
 
 src/lib/omniORB2/orbcore/poa.cc
 
