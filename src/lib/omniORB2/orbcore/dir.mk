@@ -1,6 +1,13 @@
 ifdef UnixArchitecture
-NETLIBSRCS = tcpSocket.cc
-NETLIBOBJS = tcpSocket.o
+NETLIBSRCS = tcpSocket_UNIX.cc
+NETLIBOBJS = tcpSocket_UNIX.o
+DIR_CPPFLAGS = -DUnixArchitecture
+endif
+
+ifdef ATMosArchitecture
+NETLIBSRCS = tcpSocket_ATMos.cc
+NETLIBOBJS = tcpSocket_ATMos.o
+DIR_CPPFLAGS = -DATMosArchitecture
 endif
 
 ORB2_SRCS = constants.cc corbaBoa.cc corbaObject.cc corbaOrb.cc \
@@ -15,7 +22,7 @@ ORB2_OBJS = constants.o corbaBoa.o corbaObject.o corbaOrb.o \
             libcWrapper.o mbufferedStream.o nbufferedStream.o \
             object.o objectRef.o orb.o strand.o $(NETLIBOBJS)
 
-DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
+DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 
 ifeq ($(CXX),g++)
 CXXDEBUGFLAGS = -g
@@ -25,7 +32,13 @@ CXXDEBUGFLAGS = -g
 DIR_CPPFLAGS += -D__OMNIORB__
 endif
 
+ifeq ($(platform),arm_atmos_4.0/atb)
+DIR_CPPFLAGS +=  -I/project/atmos/release4.0/atb/ip \
+	-D__cplusplus -fhandle-exceptions -Wall -Wno-unused
+endif
+
 CXXSRCS = $(ORB2_SRCS)
+
 
 lib = $(patsubst %,$(LibPattern),omniORB2)
 
