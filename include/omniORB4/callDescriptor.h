@@ -28,6 +28,12 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/09/27 17:18:35  sll
+ Updated to use the new cdrStream abstraction.
+ Added new member unmarshalArguments(), marshalReturnedValues() and modified
+ the ctor arguments to make the omniCallDescriptor class suitable for use in
+ the upcalls on the server side.
+
  Revision 1.2.2.1  2000/07/17 10:35:34  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -47,7 +53,6 @@ class omniObjRef;
 class omniServant;
 class GIOP_C;
 
-
 //////////////////////////////////////////////////////////////////////
 ///////////////////////// omniCallDescriptor /////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -57,23 +62,33 @@ public:
   typedef void (*LocalCallFn)(omniCallDescriptor*, omniServant*);
 
   inline omniCallDescriptor(LocalCallFn lcfn, const char* op,
-			    int op_len, _CORBA_Boolean oneway = 0)
+			    int op_len, _CORBA_Boolean oneway,
+			    const char*const* user_excns,
+			    int n_user_excns,
+                            _CORBA_Boolean is_upcall)
     : pd_localCall(lcfn),
       pd_is_oneway(oneway),
       pd_op(op), pd_oplen(op_len),
-      pd_ctxt(0) {}
+      pd_ctxt(0),
+      pd_assert_object_existent(omniORB::verifyObjectExistsAndType),
+      pd_user_excns(user_excns),
+      pd_n_user_excns(n_user_excns),
+      pd_is_upcall(is_upcall) {}
 
-  ///////////////////////////////
-  // Methods to implement call //
-  ///////////////////////////////
+#if defined(__GNUG__) && defined(Suppress_Spurious_gcc_Warnings)
+  virtual ~omniCallDescriptor() {}
+#endif
 
-  virtual _CORBA_ULong alignedSize(_CORBA_ULong);
+  //////////////////////////////////////////////////
+  // Methods to implement call on the client side //
+  //////////////////////////////////////////////////
+
+  virtual void initialiseCall(cdrStream&);
+
+  virtual void marshalArguments(cdrStream&);
   // Defaults to no arguments.
 
-  virtual void marshalArguments(GIOP_C&);
-  // Defaults to no arguments.
-
-  virtual void unmarshalReturnedValues(GIOP_C&);
+  virtual void unmarshalReturnedValues(cdrStream&);
   // Defaults to no arguments and returns void.
 
   virtual void userException(GIOP_C&, const char*);
@@ -81,6 +96,15 @@ public:
   // CORBA::MARSHAL.  Any version of this should in all
   // cases either throw a user exception or CORBA::MARSHAL.
   // Must call giop_client.RequestCompleted().
+
+  //////////////////////////////////////////////////
+  // Methods to implement call on the server side //
+  //////////////////////////////////////////////////
+  virtual void unmarshalArguments(cdrStream&);
+  // Defaults to no arguments.
+
+  virtual void marshalReturnedValues(cdrStream&);
+  // Defaults to no arguments and returns void.
 
   ///////////////
   // Accessors //
@@ -92,6 +116,9 @@ public:
   inline void doLocalCall(omniServant* servant) {
     pd_localCall(this, servant);
   }
+  inline const char*const* user_excns() { return pd_user_excns; }
+  inline int n_user_excns() { return pd_n_user_excns; }
+  inline _CORBA_Boolean is_upcall() const { return pd_is_upcall; }
 
   /////////////////////
   // Context support //
@@ -109,6 +136,9 @@ public:
   inline void set_context_info(const ContextInfo* ci) { pd_ctxt = ci; }
   inline const ContextInfo* context_info() { return pd_ctxt; }
 
+  inline void skipAssertObjectExistence() { pd_assert_object_existent = 0; }
+  inline _CORBA_Boolean doAssertObjectExistence() { return pd_assert_object_existent; }
+
 private:
   omniCallDescriptor(const omniCallDescriptor&);
   omniCallDescriptor& operator = (const omniCallDescriptor&);
@@ -119,6 +149,10 @@ private:
   const char*        pd_op;
   size_t             pd_oplen;
   const ContextInfo* pd_ctxt;
+  _CORBA_Boolean     pd_assert_object_existent;
+  const char*const*  pd_user_excns;
+  int                pd_n_user_excns;
+  _CORBA_Boolean     pd_is_upcall;
 };
 
 
@@ -138,21 +172,30 @@ public:
   class _cCORBA_mObject_i_cstring : public omniCallDescriptor {
   public:
     inline _cCORBA_mObject_i_cstring(LocalCallFn lcfn, const char* op,
-		     size_t oplen, _CORBA_Boolean oneway, const char* a_0) :
-      omniCallDescriptor(lcfn, op, oplen, oneway),
-      arg_0(a_0)  {}
+		     size_t oplen, const char* a_0,
+		     _CORBA_Boolean upcall=0) :
+      omniCallDescriptor(lcfn, op, oplen, 0, 0, 0, upcall),
+      arg_0((char*)a_0) {}
  
-    virtual CORBA::ULong alignedSize(CORBA::ULong size_in);
-    virtual void marshalArguments(GIOP_C&);
-    virtual void unmarshalReturnedValues(GIOP_C&);
+    inline ~_cCORBA_mObject_i_cstring() {
+      if (is_upcall()) { 
+	_CORBA_String_helper::free(arg_0);
+      }
+    }
+
+    void marshalArguments(cdrStream&);
+    void unmarshalReturnedValues(cdrStream&);
+    void unmarshalArguments(cdrStream&);
+    void marshalReturnedValues(cdrStream&);
  
-    inline CORBA::Object_ptr result() { return pd_result; }
+    inline CORBA::Object_ptr result() { return pd_result._retn(); }
  
-    const char* arg_0;
-    CORBA::Object_ptr pd_result;
+    char* arg_0;
+    CORBA::Object_var pd_result;
   };
 
 };
+
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////// omniLocalOnlyCallDescriptor ////////////////////
@@ -166,13 +209,47 @@ class omniLocalOnlyCallDescriptor : public omniCallDescriptor {
 public:
   omniLocalOnlyCallDescriptor(LocalCallFn lcfn, const char* op,
 			      int op_len, _CORBA_Boolean is_oneway = 0)
-    : omniCallDescriptor(lcfn, op, op_len, is_oneway) {}
+    : omniCallDescriptor(lcfn, op, op_len, is_oneway, 0, 0, 0) {}
 
+  // Only useful as client side descriptor. No set up for server side upcall.
 
   // We only need to override this one -- as it will throw an
   // exception, so the other members won't get called.
-  virtual _CORBA_ULong alignedSize(_CORBA_ULong);
+  void marshalArguments(cdrStream&);
 };
 
+
+//////////////////////////////////////////////////////////////////////
+///////////////////// omniClientCallMarshaller    ////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class omniClientCallMarshaller : public giopMarshaller {
+ public:
+  omniClientCallMarshaller(omniCallDescriptor& desc) : pd_descriptor(desc) {}
+
+  void marshal(cdrStream& s) {
+    pd_descriptor.marshalArguments(s);
+  }
+
+ private:
+  omniCallDescriptor& pd_descriptor;
+
+};
+
+//////////////////////////////////////////////////////////////////////
+///////////////////// omniServerCallMarshaller    ////////////////////
+//////////////////////////////////////////////////////////////////////
+class omniServerCallMarshaller : public giopMarshaller {
+ public:
+  omniServerCallMarshaller(omniCallDescriptor& desc) : pd_descriptor(desc) {}
+
+  void marshal(cdrStream& s) {
+    pd_descriptor.marshalReturnedValues(s);
+  }
+
+ private:
+  omniCallDescriptor& pd_descriptor;
+
+};
 
 #endif  // __OMNIORB_CALLDESCRIPTOR_H__
