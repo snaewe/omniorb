@@ -29,6 +29,11 @@
 
 /*
  $Log$
+ Revision 1.2.8.3  2000/01/28 15:57:09  djr
+ Removed superflouous ref counting in Strand_iterator.
+ Removed flags to indicate that Ropes and Strands are heap allocated.
+ Improved allocation of client requests to strands.
+
  Revision 1.2.8.2  1999/09/24 15:01:36  djr
  Added module initialisers, and sll's new scavenger implementation.
 
@@ -66,7 +71,7 @@ class reliableStreamStrand : public Strand {
 
 public:
 
-  reliableStreamStrand(size_t buffer_size, Rope* r, CORBA::Boolean h);
+  reliableStreamStrand(size_t buffer_size, Rope* r);
   virtual ~reliableStreamStrand();
 
   size_t MaxMTU() const;

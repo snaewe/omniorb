@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.22.6.10  2000/01/28 15:57:10  djr
+  Removed superflouous ref counting in Strand_iterator.
+  Removed flags to indicate that Ropes and Strands are heap allocated.
+  Improved allocation of client requests to strands.
+
   Revision 1.22.6.9  1999/12/06 14:02:47  djr
   Fixed bug in tcpSocketMTfactory.cc:dumpbuf().
 
@@ -481,7 +486,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 					     unsigned int maxStrands,
 					     tcpSocketEndpoint *e,
 					     CORBA::Boolean exportflag)
-  : Rope(f->anchor(),maxStrands,1), pd_export(exportflag), 
+  : Rope(f->anchor(),maxStrands), pd_export(exportflag), 
     pd_shutdown(NO_THREAD), rendezvouser(0)
 {
   struct sockaddr_in myaddr;
@@ -754,7 +759,7 @@ tcpSocketMToutgoingFactory::findOrCreateOutgoing(Endpoint* addr)
 tcpSocketOutgoingRope::tcpSocketOutgoingRope(tcpSocketMToutgoingFactory* f,
 					     unsigned int maxStrands,
 					     tcpSocketEndpoint *e)
-  : Rope(f->anchor(),maxStrands,1)
+  : Rope(f->anchor(),maxStrands)
 {
   remote = new tcpSocketEndpoint(e);
 }
@@ -771,7 +776,7 @@ tcpSocketOutgoingRope::~tcpSocketOutgoingRope()
 Strand *
 tcpSocketOutgoingRope::newStrand()
 {
-  return new tcpSocketStrand(this,remote,1);
+  return new tcpSocketStrand(this,remote);
 }
 
 
@@ -789,9 +794,8 @@ static tcpSocketHandle_t realConnect(tcpSocketEndpoint* r);
 
 
 tcpSocketStrand::tcpSocketStrand(tcpSocketOutgoingRope *rope,
-				 tcpSocketEndpoint   *r,
-				 CORBA::Boolean heapAllocated)
-  : reliableStreamStrand(tcpSocketStrand::buffer_size,rope,heapAllocated),
+				 tcpSocketEndpoint   *r)
+  : reliableStreamStrand(tcpSocketStrand::buffer_size,rope),
     pd_send_giop_closeConnection(0), pd_delay_connect(0)
 {
   // Do not try to connect to the remote host in this ctor.
@@ -811,9 +815,8 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketOutgoingRope *rope,
 }
 
 tcpSocketStrand::tcpSocketStrand(tcpSocketIncomingRope *r,
-				 tcpSocketHandle_t sock,
-				 CORBA::Boolean heapAllocated)
-  : reliableStreamStrand(tcpSocketStrand::buffer_size,r,heapAllocated),
+				 tcpSocketHandle_t sock)
+  : reliableStreamStrand(tcpSocketStrand::buffer_size,r),
     pd_socket(sock), pd_send_giop_closeConnection(1), pd_delay_connect(0)
 {
 }
@@ -850,12 +853,11 @@ static void dumpbuf(unsigned char* buf, size_t sz)
   while( sz >= 16 ) {
     sprintf(row, "%02x%02x %02x%02x %02x%02x %02x%02x "
 	         "%02x%02x %02x%02x %02x%02x %02x%02x ",
-	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++,
-	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++,
-	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++,
-	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++);
+            (int) buf[0], (int) buf[1], (int) buf[2], (int) buf[3],
+            (int) buf[4], (int) buf[5], (int) buf[6], (int) buf[7],
+            (int) buf[8], (int) buf[9], (int) buf[10], (int) buf[11],
+            (int) buf[12], (int) buf[13], (int) buf[14], (int) buf[15]);
     fprintf(stderr, "%s", row);
-    buf -= 16;
     char* p = row;
     for( i = 0; i < 16; i++ )  *p++ = printable_char(*buf++);
     *p++ = '\0';
@@ -1208,7 +1210,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	  continue;
 	}
 
-	newSt = new tcpSocketStrand(r,new_sock,1);
+	newSt = new tcpSocketStrand(r,new_sock);
 	newSt->incrRefCount(1);
       }
 

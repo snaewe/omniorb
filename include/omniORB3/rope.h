@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2000/01/28 15:57:08  djr
+  Removed superflouous ref counting in Strand_iterator.
+  Removed flags to indicate that Ropes and Strands are heap allocated.
+  Improved allocation of client requests to strands.
+
   Revision 1.1.2.2  1999/09/24 15:01:31  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -105,7 +110,7 @@ class Rope_iterator;
 class Strand {
 public:
 
-  Strand(Rope *r,_CORBA_Boolean heapAllocated = 0);
+  Strand(Rope *r);
   // Concurrency Control:
   //    MUTEX = r->pd_lock
   // Pre-condition:
@@ -539,7 +544,19 @@ public:
     // Same as Strand::_strandIsDying.
     
   private:
-    Sync *pd_next;
+    Strand* getLockableStrand(Rope* rope, _CORBA_Boolean& secondHand,
+			      _CORBA_Boolean rdlock, _CORBA_Boolean wrlock);
+    // Returns a strand which can be locked for both reading and/or
+    // writing (according to <rdlock> and <wrlock>) without blocking,
+    // or null if none available.
+    //  Must hold rope->pd_lock.
+
+    Strand* getLockedStrand(Rope* rope, _CORBA_Boolean& secondHand,
+			    _CORBA_Boolean rdlock, _CORBA_Boolean wrlock);
+    // Returns a strand which is locked according to <rdlock> and
+    // <wrlock>.  Blocks if necassary.
+    //  Must hold rope->pd_lock.
+
     Strand *pd_strand;
     _CORBA_Boolean pd_secondHand;
     Sync();
@@ -563,11 +580,13 @@ private:
   omni_condition  pd_wrcond;
   int             pd_wr_nwaiting;
 
-  Sync           *pd_head;
+  int             pd_useCount;
+  // Counts the number of Sync's interested in this strand.
+  // ?? Do we need this as well as pd_refcount?
+
   Strand         *pd_next;
   Rope           *pd_rope;
   _CORBA_Boolean  pd_dying;
-  _CORBA_Boolean  pd_heapAllocated;
   int		  pd_refcount;
   _CORBA_ULong    pd_seqNumber;
   int             pd_clicks;
@@ -692,8 +711,7 @@ private:
 class Rope {
 public:
   Rope(Anchor *a,
-       unsigned int maxStrands,
-       _CORBA_Boolean heapAllocated = 0);
+       unsigned int maxStrands);
   // Concurrency Control:
   //    MUTEX = a->pd_lock
   // Pre-condition:
@@ -788,7 +806,10 @@ protected:
 #endif
 
   omni_mutex pd_lock;
-  virtual Strand *getStrand(_CORBA_Boolean& secondHand);
+  omni_condition pd_cond;          // used to wait for a free strand
+  int            pd_cond_counter;  // number of threads waiting on pd_cond
+
+  virtual Strand* getStrand(_CORBA_Boolean& secondHand);
   // Concurrency Control:
   //     MUTEX = pd_lock
   // Pre-condition:
@@ -836,8 +857,6 @@ private:
 
 
   unsigned int    pd_maxStrands;
-
-  _CORBA_Boolean  pd_heapAllocated;
 
   Strand         *pd_head;
   Rope           *pd_next;

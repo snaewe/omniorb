@@ -1,4 +1,33 @@
 
+Fri Jan 28 15:43:09 GMT 2000 djr
+================================
+
+- Removed superflouous reference counting in Strand_iterator.
+
+- Removed flags to indicate whether Ropes and Strands are heap-
+  allocated.  They always are!
+
+- Improved allocation of client requests to strands.  Previously if
+  too many threads needed strands from the same rope, the allocation
+  was performed poorly (late threads all being allocated to the first
+  strand).  Now strands are allocated as the become available.
+
+include/omniORB3/rope.h
+src/lib/omniORB2/orbcore/relStream.cc
+src/lib/omniORB2/orbcore/relStream.h
+src/lib/omniORB2/orbcore/strand.cc
+src/lib/omniORB2/orbcore/tcpSocket.h
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
+Thu Jan 27 18:06:52 GMT 2000 djr
+================================
+
+- Fixed bug in dumpbuf() (doh!).
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
 Thu Jan 27 16:27:08 GMT 2000 djr
 ================================
 

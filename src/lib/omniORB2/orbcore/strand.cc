@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.10.6.6  2000/01/28 15:57:10  djr
+  Removed superflouous ref counting in Strand_iterator.
+  Removed flags to indicate that Ropes and Strands are heap allocated.
+  Improved allocation of client requests to strands.
+
   Revision 1.10.6.5  1999/10/14 16:22:17  djr
   Implemented logging when system exceptions are thrown.
 
@@ -110,10 +115,10 @@ class omniORB_Ripper;
 static omniORB_Ripper* ripper = 0;
 
 
-Strand::Strand(Rope *r, CORBA::Boolean heapAllocated)
+Strand::Strand(Rope *r)
   : pd_rdcond(&r->pd_lock), pd_wrcond(&r->pd_lock)
 {
-  pd_head = 0;
+  pd_useCount = 0;
   pd_rd_nwaiting = 0;
   pd_wr_nwaiting = 0;
 
@@ -122,7 +127,6 @@ Strand::Strand(Rope *r, CORBA::Boolean heapAllocated)
   r->pd_head = this;
   pd_rope = r;
   pd_dying = 0;
-  pd_heapAllocated = heapAllocated;
   pd_refcount = 0;
   pd_seqNumber = 1;
   pd_clicks = (r->is_incoming() ? StrandScavenger::inIdleTimeLimit() :
@@ -192,10 +196,9 @@ Strand::is_idle(CORBA::Boolean held_rope_mutex)
 CORBA::Boolean
 Strand::is_unused(CORBA::Boolean held_rope_mutex)
 {
-  CORBA::Boolean unused;
   if (!held_rope_mutex)
     pd_rope->pd_lock.lock();
-  unused = ((pd_head == 0)? 1: 0);
+  CORBA::Boolean unused = pd_useCount == 0;
   if (!held_rope_mutex)
     pd_rope->pd_lock.unlock();
   return unused;
@@ -219,11 +222,9 @@ Sync::Sync(Strand *s,CORBA::Boolean rdLock,CORBA::Boolean wrLock)
   }
 
   // enter this to the list in strand <s>
-  pd_next = s->pd_head;
-  s->pd_head = this;
-  pd_strand = s;
-
+  s->pd_useCount++;
   s->incrRefCount(1);
+  pd_strand = s;
 
   // Acquire the locks on the strand
   // Always do the Read lock before the Write lock to avoid deadlock
@@ -243,34 +244,19 @@ Sync::Sync(Rope *r,CORBA::Boolean rdLock,CORBA::Boolean wrLock)
 {
   pd_strand = 0;
   r->pd_lock.lock();
-  Strand *s;
 
   try {
-    s = r->getStrand(pd_secondHand);
+    pd_strand = getLockedStrand(r, pd_secondHand, rdLock, wrLock);
   }
   catch(...) {
     r->pd_lock.unlock();
     throw;
   }
 
-  pd_next = s->pd_head;	
-  s->pd_head = this;
-  pd_strand = s;
+  pd_strand->pd_useCount++;
+  pd_strand->incrRefCount(1);
 
-  s->incrRefCount(1);
-
-  // Acquire the locks on the strand
-  // Always do the Read lock before the Write lock to avoid deadlock
-
-  if (rdLock) {
-    RdLock(1);
-  }
-
-  if (wrLock) {
-    WrLock(1);
-  }
   r->pd_lock.unlock();
-  return;
 }
 
 
@@ -284,22 +270,12 @@ Sync::~Sync()
   r->pd_lock.lock();
 
   // remove this from the list in strand <pd_strand>
-  Strand::Sync **p = &pd_strand->pd_head;
-  while (*p && *p != this)
-    p = &((*p)->pd_next);
-  if (*p) {
-    *p = (*p)->pd_next;
-  }
+  pd_strand->pd_useCount--;
   pd_strand->decrRefCount(1);
 
   // If this is the last sync object and the strand is dying, delete it.
   if (pd_strand->is_idle(1) && strandIsDying())
-    {
-      if (pd_strand->pd_heapAllocated)
-  	delete pd_strand;
-      else
-  	pd_strand->~Strand();
-    }
+    delete pd_strand;
   
   pd_strand = 0;
   r->pd_lock.unlock();
@@ -339,6 +315,8 @@ Sync::RdUnlock(CORBA::Boolean held_rope_mutex)
   pd_strand->pd_rd_nwaiting = -pd_strand->pd_rd_nwaiting - 1;
   if (pd_strand->pd_rd_nwaiting > 0)
     pd_strand->pd_rdcond.signal();
+  if( pd_strand->pd_rope->pd_cond_counter )
+    pd_strand->pd_rope->pd_cond.broadcast();
 
   if (!held_rope_mutex)
     pd_strand->pd_rope->pd_lock.unlock();
@@ -380,6 +358,8 @@ Sync::WrUnlock(CORBA::Boolean held_rope_mutex)
   pd_strand->pd_wr_nwaiting = -pd_strand->pd_wr_nwaiting - 1;
   if (pd_strand->pd_wr_nwaiting > 0)
     pd_strand->pd_wrcond.signal();
+  if( pd_strand->pd_rope->pd_cond_counter )
+    pd_strand->pd_rope->pd_cond.broadcast();
 
   if (!held_rope_mutex)
     pd_strand->pd_rope->pd_lock.unlock();
@@ -437,13 +417,66 @@ Sync::isReUsingExistingConnection() const
   return pd_secondHand;
 }
 
+
+Strand*
+Strand::Sync::getLockableStrand(Rope* rope, _CORBA_Boolean& secondHand,
+				_CORBA_Boolean rdlock, _CORBA_Boolean wrlock)
+{
+  Strand* p;
+  unsigned n = 0;
+
+  { // Try to find an existing strand that we can lock.
+    Strand_iterator next(rope, 1);
+
+    while( (p = next()) ) {
+      if( !p->_strandIsDying() ) {
+	n++;
+	if( (!rdlock || p->pd_rd_nwaiting >= 0) &&
+	    (!wrlock || p->pd_wr_nwaiting >= 0) ) {
+	  // We can grab it straight away.
+	  secondHand = 1;
+	  break;
+	}
+      }
+    }
+  }
+  // If not too many, instantiate a new strand.
+  if( !p && n < rope->pd_maxStrands ) {
+    p = rope->newStrand();
+    secondHand = 0;
+  }
+
+  return p;
+}
+
+
+Strand*
+Strand::Sync::getLockedStrand(Rope* rope, _CORBA_Boolean& secondHand,
+			      _CORBA_Boolean rdlock, _CORBA_Boolean wrlock)
+{
+  Strand* p;
+
+  while( !(p = getLockableStrand(rope, secondHand, rdlock, wrlock)) ) {
+    rope->pd_cond_counter++;
+    rope->pd_cond.wait();
+    rope->pd_cond_counter--;
+  }
+
+  if( rdlock )  p->pd_rd_nwaiting = -p->pd_rd_nwaiting - 1;
+  if( wrlock )  p->pd_wr_nwaiting = -p->pd_wr_nwaiting - 1;
+
+  return p;
+}
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
 Rope::Rope(Anchor *a,
-	   unsigned int maxStrands,
-	   CORBA::Boolean heapAllocated)
-  : pd_lock()
+	   unsigned int maxStrands)
+  : pd_cond(&pd_lock), pd_cond_counter(0)
 {
   pd_head = 0;
-  pd_heapAllocated = heapAllocated;
   pd_maxStrands = maxStrands;
   pd_anchor = a;
   pd_refcount = 0;
@@ -598,10 +631,6 @@ Strand_iterator::Strand_iterator(const Rope *r,
 
 Strand_iterator::~Strand_iterator()
 {
-  if (pd_s) {
-    pd_s->decrRefCount(1);
-    pd_s = 0;                // Be paranoid
-  }
   if (!pd_leave_mutex)
     ((Rope *)pd_rope)->pd_lock.unlock();
   return;
@@ -611,7 +640,6 @@ Strand *
 Strand_iterator::operator() ()
 {
   if (pd_s) {
-    pd_s->decrRefCount(1);
     pd_s = pd_s->pd_next;
   }
   else if (!pd_initialised) {
@@ -621,13 +649,7 @@ Strand_iterator::operator() ()
   while (pd_s && pd_s->is_idle(1) && pd_s->_strandIsDying()) {
     Strand *p=pd_s;
     pd_s = pd_s->pd_next;
-    if (p->pd_heapAllocated)
-      delete p;
-    else
-      p->~Strand();
-  }
-  if (pd_s) {
-    pd_s->incrRefCount(1);
+    delete p;
   }
   return pd_s;
 }
@@ -784,10 +806,7 @@ Rope_iterator::operator() ()
 		  }
 		}
 	      }
-	      if (can_delete) {
-		if (rp->pd_heapAllocated) delete rp;
-		else rp->~Rope();
-	      }
+	      if (can_delete)  delete rp;
 	      continue;
 	    }
 	}

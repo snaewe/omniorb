@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.3.8.4  2000/01/28 15:57:09  djr
+  Removed superflouous ref counting in Strand_iterator.
+  Removed flags to indicate that Ropes and Strands are heap allocated.
+  Improved allocation of client requests to strands.
+
   Revision 1.3.8.3  1999/10/14 16:22:16  djr
   Implemented logging when system exceptions are thrown.
 
@@ -60,9 +65,8 @@
 #define  DO_NOT_AVOID_MISALIGNMENT    
 
 
-reliableStreamStrand::reliableStreamStrand(size_t buffer_size,
-					   Rope* r, CORBA::Boolean h)
-  : Strand(r,h), pd_buffer_size(buffer_size)
+reliableStreamStrand::reliableStreamStrand(size_t buffer_size, Rope* r)
+  : Strand(r), pd_buffer_size(buffer_size)
 {
   pd_tx_buffer = (void *) new char[pd_buffer_size];
   pd_tx_begin  = pd_tx_end = pd_tx_reserved_end = pd_tx_buffer;
