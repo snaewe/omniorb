@@ -193,12 +193,15 @@ BuildSharedLibrary = 1
 
 SHAREDLIB_CPPFLAGS += +Z
 
-SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname
+SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname -Wl,+s
 # May need  $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS))
+
+endif
 
 ifeq ($(notdir $(CC)),gcc)
 SHAREDLIB_CFLAGS = -fPIC
 endif
+
 
 ifeq ($(notdir $(CC)),KCC)
 BuildSharedLibrary = 1
@@ -206,4 +209,3 @@ SHAREDLIB_CPPFLAGS = +Z
 SharedLibraryPlatformLinkFlagsTemplate = --thread_safe --soname $$soname
 endif
 
-endif

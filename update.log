@@ -1,3 +1,10 @@
+Mon Jul 16 11:13:49 BST 2001 sll
+================================
+
+- Added the command line option -Wl,+s for HPUX when a shared library is built.
+
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+
 Fri Jul 13 16:03:52 BST 2001 sll
 ================================
 
