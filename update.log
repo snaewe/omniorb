@@ -14,6 +14,14 @@ src/lib/omniORB/orbcore/cs-8bit.cc
 src/lib/omniORB/orbcore/cs-UTF-16.cc
 src/lib/omniORB/orbcore/cs-UTF-8.cc
 
+- Missed out PR_wstring_tc() function.
+
+src/lib/omniORB/dynamic/typecode.cc
+
+- Treat empty host name in corbaloc: as localhost, as per 2.4 spec.
+
+src/lib/omniORB/orbcore/uri.cc
+
 
 Mon Nov 20 18:55:07 GMT 2000 sll
 ================================
