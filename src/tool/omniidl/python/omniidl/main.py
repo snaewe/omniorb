@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.14  2004/07/01 19:17:42  dgrisby
+# Cope with spaces in -I arguments.
+#
 # Revision 1.17.2.13  2002/12/19 13:55:14  dgrisby
 # Don't try to delete non-existent file when no preprocessor.
 #
@@ -208,7 +211,7 @@ def parseArgs(args):
             preprocessor_args.append("-D" + a)
 
         elif o == "-I":
-            preprocessor_args.append("-I" + a)
+            preprocessor_args.append('-I "%s"' % a)
 
         elif o == "-U":
             preprocessor_args.append("-U" + a)
