@@ -562,6 +562,9 @@ omni_thread::common_constructor(void* arg, priority_t pri, int det)
     cond_waiting = FALSE;
 
     handle = NULL;
+
+    _values      = 0;
+    _value_alloc = 0;
 }
 
 
@@ -572,6 +575,14 @@ omni_thread::common_constructor(void* arg, priority_t pri, int det)
 omni_thread::~omni_thread(void)
 {
     DB(cerr << "destructor called for thread " << id() << endl);
+    if (_values) {
+        for (key_t i=0; i < _value_alloc; i++) {
+	    if (_values[i]) {
+	        delete _values[i];
+	    }
+        }
+	delete [] _values;
+    }
     if (handle && !CloseHandle(handle))
 	throw omni_thread_fatal(GetLastError());
     if (cond_semaphore && !CloseHandle(cond_semaphore))
@@ -878,3 +889,8 @@ omni_thread::stacksize()
 {
   return stack_size;
 }
+
+
+#define INSIDE_THREAD_IMPL_CC
+#include "threaddata.cc"
+#undef INSIDE_THREAD_IMPL_CC

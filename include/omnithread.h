@@ -461,6 +461,43 @@ public:
         // The default value (0) means that the thread library default is
         // to be used.
 
+
+    // Per-thread data
+    //
+    // These functions allow you to attach additional data to an
+    // omni_thread. First allocate a key for yourself with
+    // allocate_key(). Then you can store any object whose class is
+    // derived from value_t. Any values still stored in the
+    // omni_thread when the thread exits are deleted.
+    //
+    // These functions are thread safe, so you can set data in a
+    // different thread to your current thread.
+
+    typedef unsigned int key_t;
+    static key_t allocate_key();
+
+    class value_t {
+    public:
+      virtual ~value_t() {}
+    };
+
+    value_t* set_value(key_t k, value_t* v);
+        // Sets a value associated with the given key. The key must
+        // have been allocated with allocate_key(). If a value has
+        // already been set with the specified key, the old value_t
+        // object is deleted and replaced. Returns the value which was
+        // set, or zero if the key is invalid.
+
+    value_t* get_value(key_t k);
+        // Returns the value associated with the key. If the key is
+        // invalid, or there is no value for the key, returns zero.
+
+    value_t* remove_value(key_t k);
+        // Removes the value associated with the key and returns it.
+        // If the key is invalid, or there is no value for the key,
+        // returns zero.
+
+
 private:
 
     virtual void run(void* arg) {}
@@ -474,7 +511,7 @@ private:
 
     omni_mutex mutex;
 	// used to protect any members which can change after construction,
-	// i.e. the following 2 members:
+	// i.e. the following 2 members and the per-thread data.
 
     state_t _state;
     priority_t _priority;
@@ -487,6 +524,8 @@ private:
     void* (*fn_ret)(void*);
     void* thread_arg;
     int detached;
+    value_t**     _values;
+    unsigned long _value_alloc;
 
 public:
 

@@ -1,3 +1,19 @@
+Thu Oct 12 14:47:01 BST 2000 dpg1
+=================================
+
+- omni_thread can now have arbitrary data attached to it. Values are
+  deleted when the thread exits.
+
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+include/omnithread.h
+src/lib/omnithread/mach.cc
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+src/lib/omnithread/solaris.cc
+src/lib/omnithread/threaddata.cc -- new
+
+
 Tue Oct 10 15:46:56 BST 2000 sll
 ================================
 

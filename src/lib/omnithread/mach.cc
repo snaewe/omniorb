@@ -391,6 +391,8 @@ void omni_thread::common_constructor(void* arg, priority_t pri, int det)
   thread_arg = arg;
   detached = det;	// may be altered in start_undetached()
 
+  _values      = 0;
+  _value_alloc = 0;
   // posix_thread is set up in initialisation routine or start().
 }
 
@@ -402,6 +404,14 @@ void omni_thread::common_constructor(void* arg, priority_t pri, int det)
 omni_thread::~omni_thread(void)
 {
   DB(cerr << "destructor called for thread " << id() << endl);
+  if (_values) {
+    for (key_t i=0; i < _value_alloc; i++) {
+      if (_values[i]) {
+	delete _values[i];
+      }
+    }
+    delete [] _values;
+  }
 }
 
 
@@ -654,3 +664,8 @@ omni_thread::stacksize()
 {
   return stack_size;
 }
+
+
+#define INSIDE_THREAD_IMPL_CC
+#include "threaddata.cc"
+#undef INSIDE_THREAD_IMPL_CC

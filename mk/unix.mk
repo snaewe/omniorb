@@ -124,7 +124,7 @@ endif
 
 # omnithread - platform libraries required by omnithread.
 # Use when building omnithread.
-OMNITHREAD_VERSION = 2.1
+OMNITHREAD_VERSION = 3.0
 OMNITHREAD_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNITHREAD_VERSION)))
 OMNITHREAD_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNITHREAD_VERSION)))
 
