@@ -1,3 +1,11 @@
+Thu Mar 12 16:28:47 GMT 1998 ewc
+================================
+
+- Patch to mach threads applied.
+
+src/lib/omnithread/mach.cc
+
+
 Mon Mar  9 17:21:33 GMT 1998 ewc
 ================================
 
