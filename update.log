@@ -1,3 +1,23 @@
+Wed Nov 28 11:39:49 GMT 2001 dpg1
+=================================
+
+- Correct omnithread documentation, rearrange things.
+
+doc/tex/omniNames.tex              -- new
+doc/tex/omnithread.tex
+doc/tex/utilities.tex              -- new
+external_merge/doc/omniNames.pdf
+external_merge/doc/omniNames.ps
+external_merge/doc/omniNames.tex   -- deleted
+external_merge/doc/omnithread.html
+external_merge/doc/omnithread.pdf
+external_merge/doc/omnithread.ps
+external_merge/doc/omnithread.tex  -- deleted
+external_merge/doc/utilities.pdf
+external_merge/doc/utilities.ps
+external_merge/doc/utilities.tex   -- deleted
+
+
 Mon Nov 12 12:43:10 GMT 2001 dpg1
 =================================
 
