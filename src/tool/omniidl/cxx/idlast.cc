@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.10  1999/11/22 11:07:46  dpg1
+// Correctly report error with interface which tries to inherit from
+// CORBA::Object.
+//
 // Revision 1.9  1999/11/17 17:17:00  dpg1
 // Changes to remove static initialisation of objects.
 //
@@ -273,7 +277,15 @@ InheritSpec(const ScopedName* sn, const char* file, int line)
 
 	Decl* d = ((DeclaredType*)t)->decl();
 
-	if (d->kind() == Decl::D_INTERFACE) {
+	if (!d) {
+	  char* ssn = sn->toString();
+	  IdlError(file, line, "Cannot inherit from CORBA::Object");
+	  IdlErrorCont(se->file(), se->line(),
+		       "(accessed through typedef `%s')", ssn);
+	  delete [] ssn;
+	  return;
+	}
+	else if (d->kind() == Decl::D_INTERFACE) {
 	  interface_ = (Interface*)d;
 	  scope_     = interface_->scope();
 	  return;
