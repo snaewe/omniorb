@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2004/04/30 14:59:49  dgrisby
+  Off-by-one error in UCS-4 marshalling. Thanks Brett Zimmerman.
+
   Revision 1.1.2.6  2001/10/17 16:47:08  dpg1
   New minor codes
 
@@ -326,7 +329,7 @@ TCS_W_UCS_4::marshalWString(cdrStream& stream,
   _CORBA_ULong         tc;
   omniCodeSet::UniChar uc;
   
-  for (_CORBA_ULong i=0; i<=len; i++) {
+  for (_CORBA_ULong i=0; i < len; i++) {
     uc = us[i];
 
     if (uc < 0xd800) {
