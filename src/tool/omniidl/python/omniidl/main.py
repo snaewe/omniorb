@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/11/12 15:53:48  dpg1
+# New functions omniORB.importIDL() and omniORB.importIDLString().
+#
 # Revision 1.2  1999/11/12 14:07:18  dpg1
 # If back-end foo is not found in omniidl.be.foo, now tries to import
 # foo.
@@ -63,6 +66,7 @@ The supported flags are:
   -V              Prints version info then exits
   -u              Prints usage message and exits
   -v              Traces compilation stages
+  -q              Quiet -- does not print anything
 """
 
 preprocessor_args = []
@@ -82,14 +86,15 @@ backends          = []
 backends_args     = []
 dump_only         = 0
 verbose           = 0
-
+quiet             = 0
 
 def parseArgs(args):
     global preprocessor_args, preprocessor_only, preprocessor_cmd
-    global no_preprocessor, backend, backend_args, dump_only, verbose
+    global no_preprocessor, backend, backend_args, dump_only
+    global verbose, quiet
 
     try:
-        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:dVuv")
+        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:dVuvq")
     except getopt.error, e:
         sys.stderr.write("Error in arguments: " + e + "\n")
         sys.stderr.write("Use " + cmdname + " -u for usage\n")
@@ -120,14 +125,17 @@ def parseArgs(args):
             if   a[0] == "p": preprocessor_args.append(a[1:])
             elif a[0] == "b":
                 if len(backends) == 0:
-                    sys.stderr.write("Error in arguments: "
-                                     "no back-ends selected")
+                    if not quiet:
+                        sys.stderr.write("Error in arguments: "
+                                         "no back-ends selected")
                     sys.exit(1)
                 backends_args[-1].append(a[1:])
             else:
-                sys.stderr.write("Error in arguments: option " + o + \
-                                 " not recognized\n")
-                sys.stderr.write("Use " + cmdname + " -u for usage\n")
+                if not quiet:
+                    sys.stderr.write("Error in arguments: option " + o + \
+                                     " not recognized\n")
+                    sys.stderr.write("Use " + cmdname + " -u for usage\n")
+                sys.exit(1)
 
         elif o == "-b":
             backends.append(a)
@@ -147,19 +155,24 @@ def parseArgs(args):
         elif o == "-v":
             verbose = verbose + 1
 
+        elif o == "-q":
+            quiet = 1
+
     return files
 
 
 def main(argv=None):
     global preprocessor_args, preprocessor_only, preprocessor_cmd
-    global no_preprocessor, backend, backend_args, dump_only, verbose
+    global no_preprocessor, backend, backend_args, dump_only
+    global verbose, quiet
 
     if argv is None: argv = sys.argv
 
     files = parseArgs(argv[1:])
 
     if len(files) == 0:
-        sys.stderr.write(cmdname + ": No files specified\n")
+        if not quiet:
+            sys.stderr.write(cmdname + ": No files specified\n")
         sys.exit(1)
 
     # Import back-ends, and add any pre-processor arguments
@@ -175,9 +188,10 @@ def main(argv=None):
             try:
                 be = __import__(backend, globals(), locals(), backend)
             except ImportError:
-                sys.stderr.write(cmdname + \
-                                 ": Could not import back-end `" + \
-                                 backend + "'\n")
+                if not quiet:
+                    sys.stderr.write(cmdname + \
+                                     ": Could not import back-end `" + \
+                                     backend + "'\n")
                 sys.exit(1)
 
         bemodules.append(be)
@@ -185,9 +199,10 @@ def main(argv=None):
             preprocessor_args.extend(be.cpp_args)
 
     for file in files:
-        if not os.path.isfile(file):
-            sys.stderr.write(cmdname + ": `" + file + "' does not exist\n")
-            break
+        if file != "-" and not os.path.isfile(file):
+            if not quiet:
+                sys.stderr.write(cmdname + ": `" + file + "' does not exist\n")
+            sys.exit(1)
 
         preproc_cmd = preprocessor_cmd + " " + \
                       string.join(preprocessor_args, " ") + " " + file
@@ -200,8 +215,9 @@ def main(argv=None):
             if preprocessor_only:
                 err = os.system(preproc_cmd)
                 if err:
-                    sys.stderr.write(cmdname + \
-                                     ": Error running preprocessor\n")
+                    if not quiet:
+                        sys.stderr.write(cmdname + \
+                                         ": Error running preprocessor\n")
                     sys.exit(1)
                 sys.exit(0)
 
@@ -219,7 +235,9 @@ def main(argv=None):
             tree = _omniidl.compile(file)
 
             if file.close():
-                sys.stderr.write(cmdname + ": Error running preprocessor\n")
+                if not quiet:
+                    sys.stderr.write(cmdname + \
+                                     ": Error running preprocessor\n")
                 sys.exit(1)
 
             if tree is None:
