@@ -1,4 +1,13 @@
 
+Fri Feb 19 11:21:18 GMT 1999 djr
+================================
+
+- Fixed bug in omniidl2. Generated incorrect code for array types
+  nested 3 or more levels deep.
+
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+
+
 Thu Feb 18 15:15:24 GMT 1999 djr
 ================================
 
