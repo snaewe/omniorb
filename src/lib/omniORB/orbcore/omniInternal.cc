@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.20  2001/08/20 13:27:43  dpg1
+  Correct description of objectTableSize configuration setting.
+
   Revision 1.2.2.19  2001/08/17 17:12:40  sll
   Modularise ORB configuration parameters.
 
@@ -196,14 +199,17 @@ CORBA::Boolean  omniORB::traceInvocations = 0;
 OMNI_USING_NAMESPACE(omni)
 
 CORBA::ULong orbParameters::objectTableSize = 0;
-//  Initial hash table size of the Active Object Map. The hash table is
-//  resized automatically depending on the number of active objects.
-//  If one is definitely going to instantiate a very large number of
-//  objects, change the table size to a large number would save the ORB
-//  a bit of time to readjust the hash table.
+//  Hash table size of the Active Object Map. If this is zero, the ORB
+//  uses a dynamically resized open hash table. This is normally the
+//  best option, but it leads to less predictable performance since
+//  any operation which adds or removes a table entry may trigger a
+//  resize. If you set this to a non-zero value, the hash table has
+//  the specified number of entries, and is never resized. Note that
+//  the hash table is open, so this does not limit the number of
+//  active objects, just how efficiently they can be located.
 //
 //  Valid values = (n >= 0)
-//                 0 --> let the ORB choose
+//                 0 --> use a dynamically resized table.
 
 CORBA::Boolean orbParameters::abortOnInternalError = 0;
 //  If the value of this variable is TRUE then the ORB will abort

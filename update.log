@@ -1,3 +1,11 @@
+Mon Aug 20 14:25:42 BST 2001 dpg1
+=================================
+
+- Correct description of objectTableSize configuration setting.
+
+src/lib/omniORB/orbcore/omniInternal.cc
+
+
 Mon Aug 20 14:00:50 BST 2001 dpg1
 =================================
 
