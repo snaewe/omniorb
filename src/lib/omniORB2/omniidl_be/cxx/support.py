@@ -42,7 +42,8 @@ def checkIDL(tree):
 
 error_body = """\
 omniORB does not currently support:
-  IDL types longdouble, wchar, wstring, fixed, valuetypes
+  longlong, longdouble, wchar, wstring, fixed, valuetypes,
+  CORBA::Principal, abstract interfaces, native
 """
 
 def unsupportedIDL(found):
