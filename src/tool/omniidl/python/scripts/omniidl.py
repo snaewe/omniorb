@@ -42,7 +42,7 @@ if sys.version[:6] != "1.5.2 ":
 import os, os.path
 
 pylibdir   = archlibdir = None
-binarchdir = os.path.dirname(sys.argv[0])
+binarchdir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 if binarchdir != "":
     sys.path.insert(0, binarchdir)

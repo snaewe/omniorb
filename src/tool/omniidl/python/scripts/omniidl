@@ -12,14 +12,16 @@
 case $0 in
   /*|*/*) dir=`dirname $0`;;
 esac
-me=`basename $0`
-dir=`(IFS=':'; for p in $PATH; do echo $p; done) |
-while read p ; do
-  if test -x $p/$me ; then
-    echo $p
-    break
-  fi
-done`
+if test -z $dir; then
+    me=`basename $0`
+    dir=`(IFS=':'; for p in $PATH; do echo $p; done) |
+    while read p ; do
+        if test -x $p/$me ; then
+        echo $p
+        break
+      fi
+    done`
+fi
 
 omnipython=$dir/omnipython
 omniidl=$dir/omniidl.py
