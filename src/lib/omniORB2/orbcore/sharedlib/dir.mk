@@ -105,7 +105,7 @@ CXXLINKOPTIONS = $(MSVC_DLL_CXXLINKDEBUGOPTIONS)
 tempvar := $(OMNITHREAD_LIB)
 OMNITHREAD_LIB = $(patsubst $(DLLNoDebugSearchPattern),$(DLLDebugSearchPattern),$(tempvar))
 
-DIR_CPPFLAGS += -I./../.. -I./../../..
+DIR_CPPFLAGS += -I./../.. -I./../../.. -I./../../../..
 
 SUBDIRS =
 
@@ -158,7 +158,7 @@ LOG_OBJS = logIOstream.o
 
 DIR_CPPFLAGS += $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
-DIR_CPPFLAGS += -I./.. -I./../..
+DIR_CPPFLAGS += -I./.. -I./../.. -I./../../..
 DIR_CPPFLAGS += -DUSE_omniORB_logStream
 DIR_CPPFLAGS += -D_OMNIORB2_LIBRARY
 
