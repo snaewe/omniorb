@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.20  1999/06/26 17:56:39  sll
+  New configuration variables: abortOnInternalError, verifyObjectExistAndType.
+
   Revision 1.19  1999/06/25 13:53:51  sll
   Renamed copyStringInAnyExtraction to omniORB_27_CompatibleAnyExtraction.
 
@@ -474,11 +477,7 @@ _CORBA_MODULE_BEG
   //                                                                    //
   class fatalException {                                                //
   public:                                                               //
-    fatalException(const char *file,int line,const char *errmsg) {      //
-      pd_file = file;                                                   //
-      pd_line = line;                                                   //
-      pd_errmsg = errmsg;                                               //
-    }                                                                   //
+    fatalException(const char *file,int line,const char *errmsg);       //
     ~fatalException() {}                                                //
     const char *file() const { return pd_file; }                        //
     int line() const { return pd_line; }                                //
@@ -513,13 +512,30 @@ _CORBA_MODULE_BEG
   // exceptions as appropriate. Otherwise the exception will be stored  //
   // in the Environment pseudo object associated with the Request.      //
   //  By default system exceptions are passed through the Environment   //
-  // object.                                                            //
+  // object. The default value is TRUE(1).                              //
   //   	       	       	       	       	       	       	       	       	//
   _CORBA_MODULE_VAR _core_attr CORBA::Boolean diiThrowsSysExceptions;   //
   //                                                                    //
   //     This value can be changed at runtime either by command-line    //
   //     option: -ORBdiiThrowsSysExceptions <0|1>, or by direct         //
   //     assignment to this variable.                                   //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // abortOnInternalError                                               //
+  //  If the value of this variable is TRUE then the ORB will abort     //
+  // instead of throwing an exception when a fatal internal error is    //
+  // detected. This is useful for debuging the ORB -- as the stack will //
+  // not be unwound by the exception handler, so a stack trace can be   //
+  // obtained. The default value is FALSE(0).                           //
+  //  It is hoped that this will not often be needed by users of        //
+  // omniORB!                                                           //
+  //   	       	       	       	       	       	       	       	       	//
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean abortOnInternalError;     //
+  //                                                                    //
+  //     This value can be changed at runtime either by command-line    //
+  //     option: -ORBabortOnInternalError, or by direct assignment to   //
+  //     this variable.                                                 //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -549,6 +565,21 @@ _CORBA_MODULE_BEG
   //                                                                    //
   _CORBA_MODULE_VAR _dyn_attr                                           //
                       CORBA::Boolean omniORB_27_CompatibleAnyExtraction;//
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  // verifyObjectExistsAndType                                          //
+  // If the value of this variable is FALSE then the ORB will not       //
+  // send a GIOP LOCATE_REQUEST message to verify the existence of      //
+  // the object prior to the first invocation. Setting this variable    //
+  // if the other end is a buggy ORB that cannot handle GIOP            //
+  // LOCATE_REQUEST. The default is TRUE(1).                            //
+  //   	       	       	       	       	       	       	       	       	//
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean verifyObjectExistsAndType;//
+  //                                                                    //
+  //     This value can be changed at runtime either by command-line    //
+  //     option: -ORBverifyObjectExistsAndType,or by direct assignment  //
+  //     to this variable.                                              //
   ////////////////////////////////////////////////////////////////////////
 
 
