@@ -1,3 +1,24 @@
+
+Tue Nov 24 19:10:23 GMT 1998 tjr
+================================
+
+- Set BASE_OMNI_TREE variable and check that there is only one base OMNI tree.
+  Always use omniidl2 and omkdepend from the base OMNI tree
+
+mk/beforedir.mk
+mk/unix.mk
+mk/win32.mk
+mk/platforms/alpha_linux_2.0.mk
+mk/platforms/alpha_osf1_3.2.mk
+mk/platforms/alpha_osf1_4.0.mk
+mk/platforms/alpha_osf1_4.0_oldcxx.mk
+mk/platforms/i586_linux_2.0.mk
+mk/platforms/i586_linux_2.0_egcs.mk
+mk/platforms/i586_linux_2.0_glibc.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/sun4_sosV_5.6.mk
+
+
 Tue Nov 24 14:52:49 GMT 1998 sll
 ================================
 
