@@ -1,7 +1,57 @@
+Tue Mar 13 10:13:19 GMT 2001 dpg1
+=================================
+
+- Fixed point support
+
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_basetypes.h
+include/omniORB4/fixed.h                            -- new
+include/omniORB4/tcDescriptor.h
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/dynamic/typecode.h
+src/lib/omniORB/omniidl_be/cxx/support.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/mangler.py
+src/lib/omniORB/orbcore/corbaFixed.cc               -- new
+src/lib/omniORB/orbcore/dir.mk
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idl.ll
+src/tool/omniidl/cxx/idl.yy
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idlexpr.cc
+src/tool/omniidl/cxx/idlexpr.h
+src/tool/omniidl/cxx/idlfixed.cc                    -- new
+src/tool/omniidl/cxx/idlfixed.h                     -- new
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idltype.h
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+src/tool/omniidl/cxx/y.tab.h
+src/tool/omniidl/python/omniidl_be/dump.py
+
+- Minor Python clean-ups
+
+src/lib/omniORB/omniidl_be/cxx/ast.py
+src/lib/omniORB/omniidl_be/cxx/descriptor.py
+src/lib/omniORB/omniidl_be/cxx/output.py
+src/tool/omniidl/python/omniidl/idlutil.py
+
+
 Thu Jan 25 12:59:58 GMT 2001 sll
 ================================
 
 - Updated GNUmakefiles to make the external copy build properly
+
 external_merge/src/lib/omniORB/codesets/GNUmakefile
 external_merge/src/lib/omniORB/GNUmakefile
 external_merge/src/lib/omniORB/omniidl_be/cxx/GNUmakefile
