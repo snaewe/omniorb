@@ -162,6 +162,7 @@ case "$host" in
   *-*-freebsd3*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="3";;
   *-*-freebsd4*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="4";;
   *-*-freebsd5*) plat_name="FreeBSD";  plat_def="__freebsd__";  os_v="5";;
+  *-*-netbsd*)   plat_name="NetBSD";   plat_def="__netbsd__";   os_v="1";;
   *-*-openbsd*)  plat_name="OpenBSD";  plat_def="__openbsd__";  os_v="3";;
   *-*-sco*)      plat_name="OSR5";     plat_def="__osr5__";     os_v="5";;
 esac
