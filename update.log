@@ -1,3 +1,11 @@
+Fri Mar 26 12:01:27 GMT 2004 dgrisby
+====================================
+
+- SetHandleInformation not supported on ETS.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Wed Mar 24 22:16:41 GMT 2004 dgrisby
 ====================================
 
