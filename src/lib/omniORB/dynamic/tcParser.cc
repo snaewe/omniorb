@@ -293,7 +293,8 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
       { CORBA::Boolean d; d = ibuf.unmarshalBoolean(); 
         obuf.marshalBoolean(d); return; }
     case CORBA::tk_octet:
-      { CORBA::Octet d; d = ibuf.unmarshalOctet(); obuf.marshalOctet(d); }
+      { CORBA::Octet d; d = ibuf.unmarshalOctet();
+      obuf.marshalOctet(d); return; }
     case CORBA::tk_enum:
       { CORBA::ULong d;   d <<= ibuf; d >>= obuf; return; }
 

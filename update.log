@@ -1,3 +1,21 @@
+Wed May 22 16:55:47 BST 2002 dgrisby
+====================================
+
+- IRIX, FreeBSD fixes.
+
+mk/beforeauto.mk.in
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omnithread/dir.mk
+
+- Minimise COS interfaces for omniNotify.
+
+src/services/mklib/cosinterfaces.mk
+
+- Missing return. Thanks to Teemu Torma for the bug report.
+
+src/lib/omniORB/dynamic/tcParser.cc
+
+
 Tue May  7 13:47:23 BST 2002 dgrisby
 ====================================
 
