@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2000/11/15 17:22:19  sll
+  Consolidated all the state variables of a giopstream that is associated
+  with a strand to a giopStreamInfo structure.
+  Added char, wchar codeset convertor support to giopStream.
+
   Revision 1.1.4.2  2000/11/03 19:12:06  sll
   Use new marshalling functions for byte, octet and char. Use get_octet_array
   instead of get_char_array and put_octet_array instead of put_char_array.
@@ -115,7 +120,7 @@ giopStream::~giopStream()
 #endif
 
   // remove this from the list in strand <pd_strand>
-  giopStream **p = &pd_strand->pd_head;
+  giopStream **p = &(streamInfo()->head);
   while (*p && *p != this)
     p = &((*p)->pd_next);
   if (*p) {
@@ -170,11 +175,14 @@ giopStream::acquireClient(Rope* r, GIOP::Version v)
       if (s->_strandIsDying()) {
 	ndying++;
       }
-      else if (s->pd_giop_version.major != v.major ||
-	       s->pd_giop_version.minor != v.minor) {
+      else if (s->pd_giop_info->version.major != v.major ||
+	       s->pd_giop_info->version.minor != v.minor) {
 
 	// Wrong GIOP version. Each strand can only be used
 	// for one GIOP version.
+	// If ever we allow more than one GIOP version requests
+	// to use one strand, make sure the client side interceptor
+	// for codeset is updated to reflect this.
 	nwrongver++;
       }
       else if (s->pd_refcount > 1) {
@@ -193,7 +201,7 @@ giopStream::acquireClient(Rope* r, GIOP::Version v)
     //  r->pd_maxStrands * <no. of supported GIOP versions> strands created.
     //
     s = r->newStrand();
-    s->pd_giop_version = v;
+    s->pd_giop_info->version = v;
   }
 
   if (!s) {
@@ -208,8 +216,8 @@ giopStream::acquireClient(Rope* r, GIOP::Version v)
       Strand* q = 0;
       while (n >= 0 && (s = iter())) {
 	if (!s->_strandIsDying() && 
-	    s->pd_giop_version.major == v.major &&
-	    s->pd_giop_version.minor == v.minor) {
+	    s->pd_giop_info->version.major == v.major &&
+	    s->pd_giop_info->version.minor == v.minor) {
 	  n--;
 	  if (!q) q = s;
 	}
@@ -221,7 +229,7 @@ giopStream::acquireClient(Rope* r, GIOP::Version v)
   s->incrRefCount(1);
   s->setClicks(INT_MAX);
 
-  giopStream* p = s->pd_head;
+  giopStream* p = s->pd_giop_info->head;
   while (p && p->pd_state != UnUsed) {
     p = p->pd_next;
   }
@@ -234,6 +242,11 @@ giopStream::acquireClient(Rope* r, GIOP::Version v)
   p->pd_impl = impl;
 
   p->pd_output_body_marshaller = 0;
+
+  // the codeset convertors are filled in by the codeset interceptor
+  // before a request is marshalled.
+  p->pd_tcs_c = 0;
+  p->pd_tcs_w = 0;
 
   return p;
 }
@@ -286,7 +299,7 @@ giopStream::acquireServer(Strand* s)
  again:
   // Scan the list to identify the 1st occurrance of an instance in
   // one of these states: UnUsed, InputFullyBuffered, InputPartiallyBuffered.
-  giopStream* p = s->pd_head;
+  giopStream* p = s->pd_giop_info->head;
   giopStream* up = 0; // 1st giopStream in unused state
   giopStream* fp = 0; // 1st giopStream in InputFullyBuffered state
   giopStream* pp = 0; // 1st giopStream in InputPartiallyBuffered state;
@@ -347,8 +360,8 @@ giopStream::acquireServer(Strand* s)
     // Use the following if in future we want to restrict on the server
     // side the protocol version used on a connection to that used in
     // the first request.
-    if (s->pd_giop_version.major) {
-      p->pd_impl = giopStreamImpl::matchVersion(s->pd_giop_verion);
+    if (s->pd_giop_info->version.major) {
+      p->pd_impl = giopStreamImpl::matchVersion(s->pd_giop_info->version);
     }
     else {
       p->pd_impl = giopStreamImpl::maxVersion();
@@ -356,6 +369,12 @@ giopStream::acquireServer(Strand* s)
 #endif
   }
   p->pd_output_body_marshaller = 0;
+
+  // the codeset convertors are filled in by the codeset interceptor
+  // before a request is marshalled.
+  p->pd_tcs_c = 0;
+  p->pd_tcs_w = 0;
+
   return p;
 }
 
@@ -363,7 +382,7 @@ giopStream*
 giopStream::findOnly(Strand* s,CORBA::ULong reqid)
 {
   // Caller holds mutex GET_SYNC_MUTEX(s)
-  giopStream* p = s->pd_head;
+  giopStream* p = s->pd_giop_info->head;
 
   while (p) {
     if (p->pd_request_id == reqid) break;
@@ -474,7 +493,9 @@ giopStream::release()
 void
 giopStream::deleteAll(Strand* s)
 {
-  giopStream* p = s->pd_head;
+  giopStreamInfo* info = s->pd_giop_info;
+
+  giopStream* p = info->head;
   while (p) {
     if (p->pd_impl && p->pd_impl->isBuffered(p))
       p->pd_impl->release(p);
@@ -482,7 +503,6 @@ giopStream::deleteAll(Strand* s)
     delete p;
     p = q;
   }
-  s->pd_head = 0;
 }
 
 void
@@ -493,6 +513,12 @@ giopStream::deleteThis()
   if (pd_impl && pd_impl->isBuffered(this))
     pd_impl->release(this);
   delete this;
+}
+
+GIOP::Version
+giopStream::version()
+{
+  return pd_impl->version();
 }
 
 giopStream::giopStream(Strand* s) : pd_impl(giopStreamImpl::maxVersion()),
@@ -517,8 +543,8 @@ giopStream::giopStream(Strand* s) : pd_impl(giopStreamImpl::maxVersion()),
 				    pd_output_header_marshaller(0),
 				    pd_output_body_marshaller(0)
 {
-  pd_next = s->pd_head;
-  s->pd_head = this;
+  pd_next = s->pd_giop_info->head;
+  s->pd_giop_info->head = this;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1008,9 +1034,9 @@ giopStream::inputRequestMessageBegin(giopStream::requestInfo& f)
 
   {
     omni_mutex_lock sync(GET_SYNC_MUTEX(pd_strand));
-    if (!pd_strand->pd_giop_version.major) {
+    if (!streamInfo()->version.major) {
       // Set the version no. based on the first request message.
-      pd_strand->pd_giop_version = pd_impl->version();
+      streamInfo()->version = pd_impl->version();
     }
     pd_strand->setClicks(StrandScavenger::serverCallTimeLimit());
   }
