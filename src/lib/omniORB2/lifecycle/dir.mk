@@ -172,14 +172,11 @@ endif
 
 ifndef BuildWin32DebugLibraries
 
-omniLifeCycle.hh omniLifeCycleSK.cc omniLifeCycleDynSK.cc: omniLifeCycle.idl
-	-if [ "$^" != omniLifeCycle.idl ]; then $(CP) $^ . ; fi
-	$(OMNIORB2_IDL_FPATH) omniLifeCycle.idl
+omniLifeCycleSK.cc: ../omniLifeCycleSK.cc
+	$(CP) $< $@
 
-export:: omniLifeCycle.hh
-	@(file="omniLifeCycle.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
-		$(ExportFileToDir))
-
+omniLifeCycleDynSK.cc: ../omniLifeCycleDynSK.cc
+	$(CP) $< $@
 
 endif
 

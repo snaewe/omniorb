@@ -30,5 +30,5 @@
 
 
 #if defined(HAS_Cplusplus_Namespace) && defined(ENABLE_CLIENT_IR_SUPPORT)
-# include <corbaidlDynSK.cc>
+# include <../corbaidlDynSK.cc>
 #endif
