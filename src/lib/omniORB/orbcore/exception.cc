@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.5  2001/07/31 16:38:05  sll
+  Remove dead code.
+
   Revision 1.10.2.4  2001/05/11 14:29:23  sll
   Default tranisent handler now do not retry at all.
 
@@ -160,31 +163,6 @@ omni_defaultTransientExcHandler(void*,
   // The normal retry due to cache connection shutdown has already been
   // dealt with by the caller.
   return 0;
-
-#if 0
-  // XXX Obsolute code to be removed.
-  CORBA::ULong why = ex.minor();
-
-  switch (why) {
-  case TRANSIENT_POANoResource:
-  case TRANSIENT_NoUsableProfile:
-  case TRANSIENT_ConnectFailed:
-    // No point to retry.
-    return 0;
-  }
-
-  if (omniORB::trace(10))
-    omniORB::logf("defaultTransientExceptionHandler: retry %dth times.",
-		  int(n_retries));
-
-  unsigned long secs = n_retries*omniORB::defaultTransientRetryDelayIncrement;
-  if (secs > omniORB::defaultTransientRetryDelayMaximum) {
-    secs = omniORB::defaultTransientRetryDelayMaximum;
-  }
-  if (secs)
-    omni_thread::sleep(secs,0);
-  return 1;
-#endif
 }
 
 
