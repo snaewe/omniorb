@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.11  1998/08/19 15:53:40  sll
+  New member function variable_qualifier() replaces the static VarToken.
+
   Revision 1.10  1998/08/13 22:39:01  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -1043,5 +1046,14 @@ o2be_name::narrow_and_check_recursive_seq(AST_Decl *decl)
       throw o2be_internal_error(__FILE__,__LINE__,"Unrecognised argument type");
       return I_FALSE;
     }
+}
+
+char const* o2be_name::variable_qualifier() {
+  if (defined_in()==idl_global->root())
+    return "_CORBA_GLOBAL_VAR";
+  else if (defined_in()->scope_node_type()==AST_Decl::NT_module)
+    return "_CORBA_MODULE_VAR";
+  else
+    return "static _LC_attr";
 }
 
