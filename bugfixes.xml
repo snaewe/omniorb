@@ -8,6 +8,19 @@
 
 <buglist>
 
+<bug id="13" date="Thu Aug  3 22:22:24 BST 2000" user="djs">
+
+  <summary>omniIDL/C++ generated method signature mismatch when using 
+           -Wbvirtual_objref</summary>
+
+  <reported>dme</reported>
+
+  <text>omniIDL generated a method prototype in the .hh file which didn't
+  match up with the implementation in the SK.cc file due to a variable
+  name typo in the C++ backend.</text>
+
+</bug>
+
 <bug id="12" date="Tue Aug  1 12:21:35 BST 2000" user="dpg1">
 
   <summary>Comments are incorrectly attached to struct

@@ -1,3 +1,12 @@
+Thu Aug  3 22:22:24 BST 2000 djs
+================================
+
+- Fixed omniidl/C++ bug causing _objref_I operation signature mismatch
+  (a typo in the -Wbvirtual_objref mode)
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+
+
 Tue Aug  1 18:28:25 BST 2000 sll
 ================================
 
