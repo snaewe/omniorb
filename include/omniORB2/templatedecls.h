@@ -594,7 +594,7 @@ public:
   }
   inline operator T*&()  { return _data; }
   inline T*& ptr()       { return _data; }
-  inline T* operator->() { return _data; }
+  inline T* operator->() const { return _data; }
 
   T*& _data;
 private:
@@ -881,7 +881,7 @@ public:
   inline operator T*&() { return _data; }
   inline T*& ptr() { return _data; }
   inline T& operator[] (_CORBA_ULong index) {
-    return *(pd_data + index);
+    return _data[index];
   }
 
   T*& _data;
