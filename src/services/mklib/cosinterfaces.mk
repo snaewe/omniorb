@@ -69,7 +69,10 @@ COS_NFY_INT = \
   CosNotifyFilter \
   CosNotifyChannelAdmin \
   CosTypedNotifyComm \
-  CosTypedNotifyChannelAdmin
+  CosTypedNotifyChannelAdmin \
+  AttNotifyChannelAdmin
+# Note: AttNotifyChannelAdmin defines non-standard extenions
+# to the CosNotifyChannelAdmin interface
 
 # Interfaces for Relationships
 COS_REL_INT = \

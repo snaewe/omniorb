@@ -1,3 +1,19 @@
+Mon Aug 14 12:47:07 BST 2000 sll
+================================
+
+- Added AttNotifyChannelAdmin to COS library
+  Can optionally define make variable CosUsesBoa before include cos.mk to
+  use the BOA version of the COS library
+
+- optionally include local modifications to make rules, for use in FP.
+
+external_merge/mk/cos.mk
+
+mk/beforedir.mk
+src/services/include/CosNotify.h
+src/services/include/CosNofifyComm_i.h
+src/services/mklib/cosinterfaces.mk
+
 Fri Aug 11 16:55:32 BST 2000 sll
 ================================
 

@@ -18,15 +18,27 @@
 # To compile the application stubs:
 #   DIR_CPPFLAGS += $(COS_CPPFLAGS)
 
-COS_IDLFLAGS     =  $(patsubst %,-I%/idl/COS,$(IMPORT_TREES))
 
-COS_CPPFLAGS     =  $(patsubst %,-I%/include/COS,$(IMPORT_TREES))
+COS_IDLFLAGS =  $(patsubst %,-I%/idl/COS,$(IMPORT_TREES))
 
-COS_VERSION      = $(OMNIORB_VERSION)
+COS_VERSION  = $(OMNIORB_VERSION)
+
+ifndef CosUsesBoa
+
+COS_CPPFLAGS =  $(patsubst %,-I%/include/COS,$(IMPORT_TREES))
+
+else
+
+COS_OA       = BOA
+COS_CPPFLAGS = $(patsubst %,-I%/include/COS/BOA,$(IMPORT_TREES)) -DCOS_USES_BOA
+
+endif
+
+
 
 ifndef Win32Platform
 
-cos_libname        = COS$(word 1,$(subst ., ,$(COS_VERSION)))
+cos_libname        = COS$(COS_OA)$(word 1,$(subst ., ,$(COS_VERSION)))
 cos_dynlibname     = COSDynamic$(word 1,$(subst ., ,$(COS_VERSION)))
 
 lib_depend        := $(patsubst %,$(LibPattern),$(cos_libname))
@@ -46,12 +58,12 @@ else
 
 ifndef BuildDebugBinary
 
-cos_dlln := $(shell $(SharedLibraryFullName) $(subst ., ,COS.$(COS_VERSION)))
+cos_dlln := $(shell $(SharedLibraryFullName) $(subst ., ,COS$(COS_OA).$(COS_VERSION)))
 cos_dyndlln := $(shell $(SharedLibraryFullName) $(subst ., ,COSDynamic.$(COS_VERSION)))
 
 else
 
-cos_dlln := $(shell $(SharedLibraryDebugFullName) $(subst ., ,COS.$(COS_VERSION)))
+cos_dlln := $(shell $(SharedLibraryDebugFullName) $(subst ., ,COS$(COS_OA).$(COS_VERSION)))
 cos_dyndlln := $(shell $(SharedLibraryDebugFullName) $(subst ., ,COSDynamic.$(COS_VERSION)))
 
 endif
