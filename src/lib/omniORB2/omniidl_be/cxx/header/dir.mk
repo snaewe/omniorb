@@ -24,3 +24,5 @@ export:: forward.py
 export:: marshal.py
 	@(file="marshal.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: tcstring.py
+	@(file="tcstring.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
