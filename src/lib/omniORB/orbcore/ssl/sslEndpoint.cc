@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2002/09/09 22:11:51  dgrisby
+  SSL transport cleanup even if certificates are wrong.
+
   Revision 1.1.2.15  2002/08/16 16:00:53  dgrisby
   Bugs accessing uninitialised String_vars with [].
 
@@ -102,7 +105,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 sslEndpoint::sslEndpoint(const IIOP::Address& address, sslContext* ctx) : 
   pd_socket(RC_INVALID_SOCKET), pd_address(address), pd_ctx(ctx),
   pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
-  pd_callback_cookie(0) {
+  pd_callback_cookie(0), pd_go(1) {
 
   pd_address_string = (const char*) "giop:ssl:255.255.255.255:65535";
   // address string is not valid until bind is called.
@@ -112,7 +115,7 @@ sslEndpoint::sslEndpoint(const IIOP::Address& address, sslContext* ctx) :
 sslEndpoint::sslEndpoint(const char* address, sslContext* ctx) : 
   pd_socket(RC_INVALID_SOCKET), pd_ctx(ctx),
   pd_new_conn_socket(RC_INVALID_SOCKET), pd_callback_func(0),
-  pd_callback_cookie(0) {
+  pd_callback_cookie(0), pd_go(1) {
 
   pd_address_string = address;
   // OMNIORB_ASSERT(strncmp(address,"giop:ssl:",9) == 0);
@@ -314,8 +317,11 @@ sslEndpoint::Poke() {
       omniORB::logger log;
       log << "Warning: Fail to connect to myself (" 
 	  << (const char*) pd_address_string << ") via ssl!\n";
-      log << "Warning: This is ignored but this may cause the ORB shutdown to hang.\n";
     }
+    pd_go = 0;
+    // No concurrency control on pd_go, but it should be safe to set
+    // it to zero here. The worst that can happen is AcceptAndMonitor
+    // goes one extra time around its loop before spotting the change.
   }
   else {
     delete conn;
@@ -342,7 +348,7 @@ sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
   pd_callback_cookie = cookie;
   setSelectable(pd_socket,1,0,0);
 
-  while (1) {
+  while (pd_go) {
     pd_new_conn_socket = RC_INVALID_SOCKET;
     if (!Select()) break;
     if (pd_new_conn_socket != RC_INVALID_SOCKET) {
@@ -376,8 +382,8 @@ sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 	      omniORB::logger log;
 	      char buf[128];
 	      ERR_error_string_n(ERR_get_error(),buf,128);
-	      log << "openSSL error detected in sslEndpoint::accept. Reason: "
-		  << (const char*) buf << "\n";
+	      log << "openSSL error detected in sslEndpoint::accept.\n"
+		  << "Reason: " << (const char*) buf << "\n";
 	    }
 	    SSL_free(ssl);
 	    CLOSESOCKET(pd_new_conn_socket);

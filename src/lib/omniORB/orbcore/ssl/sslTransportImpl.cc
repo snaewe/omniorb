@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2002/09/09 22:11:51  dgrisby
+  SSL transport cleanup even if certificates are wrong.
+
   Revision 1.1.2.8  2002/08/23 14:18:38  dgrisby
   Avoid init exceptioni when SSL linked but not configured.
 
@@ -248,8 +251,10 @@ public:
   }
 
   void detach() { 
-    // XXX Once created, we do not delete sslTransportImpl or sslContext.
-    //     Should be deleted when ORB->destroy() is called.
+    if (_the_sslTransportImpl) delete _the_sslTransportImpl;
+    _the_sslTransportImpl = 0;
+    if (sslContext::singleton) delete sslContext::singleton;
+    sslContext::singleton = 0;
   }
 
 

@@ -1,3 +1,15 @@
+Mon Sep  9 22:57:44 BST 2002 dgrisby
+====================================
+
+- SSL transport cleanup even if certificates are wrong.
+
+src/lib/omniORB/orbcore/giopRendezvouser.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.h
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
+
 Mon Sep  9 01:22:19 BST 2002 dgrisby
 ====================================
 

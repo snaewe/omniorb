@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/09/09 22:11:51  dgrisby
+  SSL transport cleanup even if certificates are wrong.
+
   Revision 1.1.2.5  2002/08/21 06:23:16  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -84,6 +87,7 @@ protected:
   SocketHandle_t                   pd_new_conn_socket;
   giopConnection::notifyReadable_t pd_callback_func;
   void*                            pd_callback_cookie;
+  int                              pd_go;
 
   sslEndpoint();
   sslEndpoint(const sslEndpoint&);

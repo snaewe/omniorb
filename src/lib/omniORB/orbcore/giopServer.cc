@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.23  2002/09/09 22:11:50  dgrisby
+  SSL transport cleanup even if certificates are wrong.
+
   Revision 1.22.2.22  2002/09/04 23:29:30  dgrisby
   Avoid memory corruption with multiple list removals.
 
@@ -764,7 +767,6 @@ giopServer::notifyRzDone(giopRendezvouser* r, CORBA::Boolean exit_on_error)
       log << ", it will no longer be serviced.\n";
     }
     ept->Shutdown();
-    delete ept;
   }
   else {
     pd_endpoints.push_back(ept);

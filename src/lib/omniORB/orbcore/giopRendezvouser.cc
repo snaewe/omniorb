@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2002/09/09 22:11:50  dgrisby
+  SSL transport cleanup even if certificates are wrong.
+
   Revision 1.1.4.5  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -68,7 +71,11 @@ giopRendezvouser::notifyReadable(void* this_,giopConnection* conn) {
 void
 giopRendezvouser::execute()
 {
-  omniORB::logs(25, "giopRendezvouser task execute.");
+  if (omniORB::trace(25)) {
+    omniORB::logger l;
+    l << "giopRendezvouser task execute for "
+      << pd_endpoint->address() << "\n";
+  }
 
   CORBA::Boolean exit_on_error;
 
