@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.22  2001/11/01 12:04:56  dpg1
+ * Don't return void in void function.
+ *
  * Revision 1.38.2.21  2001/10/29 17:42:36  dpg1
  * Support forward-declared structs/unions, ORB::create_recursive_tc().
  *
@@ -4029,7 +4032,7 @@ void
 TypeCode_indirect::removeOptionalNames()
 {
   CHECK_RESOLVED;
-  return pd_resolved->removeOptionalNames();
+  pd_resolved->removeOptionalNames();
 }
 
 
