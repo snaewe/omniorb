@@ -1,3 +1,14 @@
+Mon Jun 11 18:54:26 BST 2001 sll
+================================
+
+- External libraries can now hook-up to the orb initialiser list irrespective
+  of whether the global variables in the external libraries are initialised 
+  before the core library.
+
+src/lib/omniORB/include/initialiser.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+
 Mon Jun 11 18:37:30 BST 2001 sll
 ================================
 

@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/06/11 17:57:14  sll
+   External libraries can now hook-up to the orb initialiser list irrespective
+   of whether the global variables in the external libraries are initialised
+   before the core library.
+
   Revision 1.1.4.1  2001/04/18 17:18:16  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -64,6 +69,12 @@ public:
   // Hook to allow modules to add initialisers dynamically. These
   // initialisers are run after all statically declared ones. Not
   // thread safe.
+
+  class init_t {
+    static int count;
+  public:
+    init_t(void);
+  };
 };
 
 OMNI_NAMESPACE_END(omni)

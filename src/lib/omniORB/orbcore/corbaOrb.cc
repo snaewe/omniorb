@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.33.2.14  2001/06/11 17:57:13  sll
+   External libraries can now hook-up to the orb initialiser list irrespective
+   of whether the global variables in the external libraries are initialised
+   before the core library.
+
   Revision 1.33.2.13  2001/06/07 16:24:09  dpg1
   PortableServer::Current support.
 
@@ -1449,45 +1454,52 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omni_hooked_initialiser : public omniInitialiser {
 
-private:
+public:
+
   struct initHolder {
     initHolder(omniInitialiser* i) : init(i), next(0) {}
 
     omniInitialiser* init;
     initHolder*      next;
+
+    static initHolder*& head() {
+      static initHolder* head_ = 0;
+      return head_;
+    }
+
+    static initHolder*& tail() {
+      static initHolder* tail_ = 0;
+      return tail_;
+    }
   };
 
-public:
 
-  omni_hooked_initialiser() : pd_head(0), pd_tail(0) {}
+public:
+  omni_hooked_initialiser() {}
 
   void attach() {
-    for (initHolder* ih = pd_head; ih; ih = ih->next)
+    for (initHolder* ih = initHolder::head(); ih; ih = ih->next) {
       ih->init->attach();
+    }
   }
 
   void detach() {
     initHolder *ih, *nih;
-    for (ih = pd_head; ih; ih = nih) {
+    for (ih = initHolder::head(); ih; ih = nih) {
       ih->init->detach();
       nih = ih->next;
       delete ih;
     }
   }
 
-  void install(omniInitialiser* init) {
+  static void install(omniInitialiser* init) {
     initHolder* ih = new initHolder(init);
-    if (pd_tail)
-      pd_tail->next = ih;
+    if (initHolder::tail())
+      initHolder::tail()->next = ih;
     else
-      pd_head = ih;
-    pd_tail = ih;
+      initHolder::head() = ih;
+    initHolder::tail() = ih;
   }
-
-private:
-
-  initHolder* pd_head;
-  initHolder* pd_tail;
 };
 
 static omni_hooked_initialiser hinitialiser;
@@ -1495,11 +1507,9 @@ omniInitialiser& omni_hooked_initialiser_ = hinitialiser;
 
 void
 omniInitialiser::
-install(omniInitialiser* init)
-{
-  hinitialiser.install(init);
+install(omniInitialiser* init) {
+  omni_hooked_initialiser::install(init);
 }
-
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
