@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.11  2001/07/31 16:10:37  sll
+  Added GIOP BiDir support.
+
   Revision 1.2.2.10  2001/06/29 16:24:48  dpg1
   Support re-entrancy in single thread policy POAs.
 
@@ -292,11 +295,6 @@ DEFINE_CPFN(RequestProcessingPolicy, create_request_processing_policy)
 /////////////////////////// POA Exceptions ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-#ifdef VERSION
-#undef VERSION
-#endif
-#define VERSION ":2.4"
-
 OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(PortableServer::POA,
 				       AdapterAlreadyExists,
 	   "IDL:omg.org/PortableServer/POA/AdapterAlreadyExists" PS_VERSION)
@@ -417,6 +415,7 @@ omniOrbPOA::create_POA(const char* adapter_name,
   policy.retain_servants = 1;
   policy.req_processing = RPP_ACTIVE_OBJ_MAP;
   policy.implicit_activation = 0;
+  policy.bidirectional_accept = 0;
 
   transfer_and_check_policies(policy, policies);
 
@@ -1884,6 +1883,7 @@ initialise_poa()
   policy.retain_servants = 1;
   policy.req_processing = omniOrbPOA::RPP_ACTIVE_OBJ_MAP;
   policy.implicit_activation = 1;
+  policy.bidirectional_accept = 0;
 
   omniOrbPOAManager* manager = new omniOrbPOAManager();
 
@@ -1925,6 +1925,7 @@ omniOrbPOA::omniINSPOA()
     policy.retain_servants     = 1;
     policy.req_processing      = omniOrbPOA::RPP_ACTIVE_OBJ_MAP;
     policy.implicit_activation = 1;
+    policy.bidirectional_accept = 0;
 
     omni_tracedmutex_lock sync2(theRootPOA->pd_lock);
 
@@ -2782,6 +2783,7 @@ transfer_and_check_policies(omniOrbPOA::Policies& pout,
   seen.retain_servants = 0;
   seen.req_processing = 0;
   seen.implicit_activation = 0;
+  seen.bidirectional_accept = 0;
 
   // Check for policies which contradict one-another.
 
@@ -2889,6 +2891,20 @@ transfer_and_check_policies(omniOrbPOA::Policies& pout,
 	  throw PortableServer::POA::InvalidPolicy(i);
 	}
 	seen.req_processing = 1;
+	break;
+      }
+
+    case BiDirPolicy::BIDIRECTIONAL_POLICY_TYPE /* 37 */:
+      {
+	BiDirPolicy::BidirectionalPolicy_var p;
+	p = BiDirPolicy::BidirectionalPolicy::_narrow(pin[i]);
+	if (seen.bidirectional_accept) {
+	  throw PortableServer::POA::InvalidPolicy(i);
+	}
+	seen.bidirectional_accept = 1;
+	if (p->value() == BiDirPolicy::BOTH) {
+	  pout.bidirectional_accept = 1;
+	}
 	break;
       }
 

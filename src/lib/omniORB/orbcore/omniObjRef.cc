@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.16  2001/07/31 16:10:37  sll
+  Added GIOP BiDir support.
+
   Revision 1.2.2.15  2001/06/08 17:12:22  dpg1
   Merge all the bug fixes from omni3_develop.
 
@@ -114,8 +117,11 @@
 #include <excepthandler.h>
 #include <exceptiondefs.h>
 #include <objectStub.h>
+#include <giopStrand.h>
 #include <giopStream.h>
 #include <omniORB4/minorCode.h>
+#include <omniCurrent.h>
+#include <poaimpl.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -640,6 +646,20 @@ omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
 
   s.marshalRawString(ior->repositoryID());
   (const IOP::TaggedProfileList&)ior->iopProfiles() >>= s;
+
+  // Provide interim BiDir GIOP support. If this is a giopStream and this
+  // is the client side of a bidirectional stream, mark the stream to
+  // indicate that an object reference has been sent to the other end.
+  // We assume all these references are callback objects.
+  // The reason for doing so is that if subsequently this connection is
+  // broken, the callback objects would not be able to callback to us.
+  // We want the application to know about this.
+  if (s.is_giopStream()) {
+    giopStrand& g = (giopStrand&)((giopStream&)s);
+    if (g.biDir && g.isClient()) {
+      g.biDir_has_callbacks = 1;
+    }
+  }
 }
 
 char*
@@ -702,6 +722,30 @@ omniObjRef::_unMarshal(const char* repoId, cdrStream& s)
     // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
     // 
     omniIOR* ior = new omniIOR(id._retn(),profiles._retn());
+
+    // Provide interim BiDir GIOP support. Check the stream where this IOR
+    // comes from. If it is a giopStream and this is the server side of
+    // a bidirectional stream, add the component tag TAG_OMNIORB_BIDIR to the
+    // ior's IOP profile list. The component will be decoded in createObjRef.
+    //
+    // In the next revision to bidir giop, as documented in OMG doc. 2001-06-04 
+    // and if it ever gets adopted in a future GIOP version, the tag component
+    // TAG_BI_DIR_GIOP will be embedded in the IOR and this step will be
+    // redundent.
+    if (s.is_giopStream()) {
+      giopStrand& g = (giopStrand&)((giopStream&)s);
+      if (g.biDir && !g.isClient()) {
+	// Check the POA policy to see if the servant's POA is willing
+	// to use bidirectional on its callback objects.
+	omniCurrent* current = omniCurrent::get();
+	omniCallDescriptor* desc = ((current)? current->callDescriptor() : 0);
+	if (desc && desc->poa()->acceptBiDirectional()) {
+	  const char* sendfrom = g.connection->peeraddress();
+	  omniIOR::add_TAG_OMNIORB_BIDIR(sendfrom,*ior);
+	}
+      }
+    }
+
     omniObjRef* objref = omni::createObjRef(repoId,ior,0);
     return objref;
   }

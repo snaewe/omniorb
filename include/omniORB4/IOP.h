@@ -31,6 +31,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/07/31 16:10:39  sll
+  Added GIOP BiDir support.
+
   Revision 1.2.2.6  2001/04/18 17:52:19  sll
   Added FT specification constants.
 
@@ -213,6 +216,8 @@ public:
   static _core_attr const ComponentId TAG_GROUP; // FT SPEC
   static _core_attr const ComponentId TAG_PRIMARY; // FT SPEC
   static _core_attr const ComponentId TAG_HEARTBEAT_ENABLED; // FT SPEC
+
+  static _core_attr const ComponentId TAG_OMNIORB_BIDIR; // omniORB4 specific
 
 
   static const char* ComponentIDtoName(ComponentId);

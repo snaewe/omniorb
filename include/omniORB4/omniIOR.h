@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2001/07/31 16:10:38  sll
+  Added GIOP BiDir support.
+
   Revision 1.1.2.7  2001/06/13 20:07:25  sll
   Minor update to make the ORB compiles with MSVC++.
 
@@ -116,6 +119,10 @@ public:
     IORExtraInfo(const IOP::ComponentId cid) : compid(cid) {}
     virtual ~IORExtraInfo() {}
     IOP::ComponentId compid;
+  private:
+    IORExtraInfo();
+    IORExtraInfo(const IORExtraInfo&);
+    IORExtraInfo& operator=(const IORExtraInfo&);
   };
   // For each unique ComponentId (e.g., TAG_GROUP) one can add
   // an IORExtraInfo element to the extra_info list.
@@ -261,6 +268,13 @@ public:
   static void  add_TAG_SSL_SEC_TRANS(const IIOP::Address&,
 				     _CORBA_UShort supports,
 				     _CORBA_UShort requires);
+
+  ////
+  static void  unmarshal_TAG_OMNIORB_BIDIR(const IOP::TaggedComponent&,
+					   omniIOR&);
+  static char* dump_TAG_OMNIORB_BIDIR(const IOP::TaggedComponent&);
+  static void  add_TAG_OMNIORB_BIDIR(const char* sendfrom,
+				     omniIOR&);
 
   ///
   static void  add_IIOP_ADDRESS(const IIOP::Address&);

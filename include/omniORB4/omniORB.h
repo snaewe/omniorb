@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2001/07/31 16:10:38  sll
+  Added GIOP BiDir support.
+
   Revision 1.2.2.8  2001/07/13 15:16:56  sll
   New configuration variables: oneCallPerConnection, threadPerConnectionPolicy,
   maxServerThreadPerConnection, maxInterleavedCallsPerConnection,
@@ -681,6 +684,26 @@ _CORBA_MODULE_BEG
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
+  // acceptBiDirectionalGIOP   	                                        //
+  //   Applies to the client side. Set to TRUE to indicates that the    //
+  //   ORB may choose to use a connection to do bidirectional GIOP      //
+  //   calls. Set to FALSE means the ORB should never do bidirectional. //
+  //   	       	       	       	       	       	       	       	        //
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean acceptBiDirectionalGIOP;
+  // false by default.		  		                        //
+
+  ////////////////////////////////////////////////////////////////////////
+  // offerBiDirectionalGIOP   	                                        //
+  //   Applies to the server side. Set to TRUE to indicates that the    //
+  //   ORB may choose to accept a clients offer to use bidirectional    //
+  //   GIOP calls on a connection. Set to FALSE means the ORB should    //
+  //   never accept any bidirectional offer and should stick to normal  //
+  //   GIOP.   	       	       	       	       	       	       	        //
+  //   	       	       	       	       	       	       	       	        //
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean offerBiDirectionalGIOP;
+  // false by default.				                        //
+
+  ////////////////////////////////////////////////////////////////////////
   // diiThrowsSysExceptions                                             //
   //  If the value of this variable is TRUE then the Dynamic            //
   // Invacation Interface functions (Request::invoke, send_oneway,      //
@@ -842,14 +865,6 @@ _CORBA_MODULE_BEG
 
   ////////////////////////////////////////////////////////////////////////
   //                                                                    //
-  // noFirewallNavigation                                               //
-  //   set this boolean flag to TRUE(1) force the ORB to ignore all     //
-  //   firewall proxy information in an object reference(IOR). 	        //
-  _CORBA_MODULE_VAR _core_attr CORBA::Boolean noFirewallNavigation;     //
-  ////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////
-  //                                                                    //
   // getInterceptors()                                                  //
   //   Only call this function after ORB_init().                        //
   //   The returned object contains all the ORB processing points where //
@@ -893,6 +908,7 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN const char* anyCharCodeSet();
   _CORBA_MODULE_FN const char* anyWCharCodeSet();
   ////////////////////////////////////////////////////////////////////////
+
 
   // Internal configuration variables. Do not use!
 

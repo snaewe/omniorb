@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/07/31 16:10:38  sll
+  Added GIOP BiDir support.
+
   Revision 1.1.4.4  2001/06/29 16:24:47  dpg1
   Support re-entrancy in single thread policy POAs.
 
@@ -193,7 +196,12 @@ public:
     unsigned retain_servants        : 1;
     unsigned req_processing         : 2;
     unsigned implicit_activation    : 1;
+    unsigned bidirectional_accept   : 1;
   };
+
+  _CORBA_Boolean acceptBiDirectional() const { 
+    return pd_policy.bidirectional_accept;
+  }
 
   typedef _CORBA_PseudoValue_Sequence<omniOrbPOA*> ChildSeq;
 
