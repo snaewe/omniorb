@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.26  1999/06/02 16:43:32  sll
+  New flag -F.
+
   Revision 1.25  1999/05/31 17:18:29  sll
   -Y use DRV_cpp_new_location().
 
@@ -182,8 +185,6 @@ char* o2be_global::pd_hdrsuffix = DEFAULT_IDL_HDR_SUFFIX;
 char* o2be_global::pd_skelsuffix = DEFAULT_IDL_SKEL_SUFFIX;
 char* o2be_global::pd_dynskelsuffix = DEFAULT_IDL_DYNSKEL_SUFFIX;
 size_t o2be_global::pd_suffixlen = DEFAULT_IDL_SUFFIXLEN;
-int o2be_global::pd_fflag = 0;
-int o2be_global::pd_aflag = 0;
 int o2be_global::pd_qflag = 0;
 int o2be_global::pd_mflag = 1;
 
@@ -276,6 +277,7 @@ usage()
 
   std::cerr << GTDEVEL(" -v\t\t\ttraces compilation stages\n");
   std::cerr << GTDEVEL(" -w\t\t\tsuppresses IDL compiler warning messages\n");
+  std::cerr << GTDEVEL(" -F\t\t\tgenerates code fragments (for expert only)\n");
 
   return;
 }
@@ -317,7 +319,7 @@ BE_parse_args(int argc, char **argv)
 #endif
 
   idl_global->set_prog_name(argv[0]);
-  while ((c = getopt(argc,argv,"D:EI:U:VY:uvwh:s:lamt")) != EOF)
+  while ((c = getopt(argc,argv,"D:EFI:U:VY:uvwh:s:lamt")) != EOF)
     {
       switch (c) 
 	{
@@ -331,6 +333,10 @@ BE_parse_args(int argc, char **argv)
 	case 'E':
 	  idl_global->set_compile_flags(idl_global->compile_flags() |
 					IDL_CF_ONLY_PREPROC);
+	  break;
+	case 'F':
+	  idl_global->set_compile_flags(idl_global->compile_flags() |
+					IDL_BE_GENERATE_FRAGMENT);
 	  break;
 	case 'V':
 	  idl_global->set_compile_flags(idl_global->compile_flags() |
