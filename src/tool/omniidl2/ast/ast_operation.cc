@@ -198,21 +198,32 @@ AST_Argument *AST_Operation::fe_add_argument(AST_Argument *t)
   AST_Decl *d;
 
   /*
+   * Check if the argument name has been used in the operation's argument
+   * list or within the scope of the interface where this operation is
+   * defined.
    * Already defined and cannot be redefined? Or already used?
    */
-  if ((d = lookup_by_name_local(t->local_name(), I_FALSE)) != NULL) {
-    if (!can_be_redefined(d)) {
-      idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
-      return NULL;
+  if ((d = (defined_in()->lookup_for_add)(t, I_FALSE, I_TRUE)) == NULL) {
+    if ((d = lookup_for_add(t, I_FALSE,I_TRUE)) != NULL) {
+      if (!can_be_redefined(d)) {
+	idl_global->err()->error3(UTL_Error::EIDL_REDEF, t, this, d);
+	return NULL;
+      }
+      if (referenced(d)) {
+	idl_global->err()->error3(UTL_Error::EIDL_DEF_USE, t, this, d);
+	return NULL;
+      }
+      if (t->has_ancestor(d)) {
+	idl_global->err()->redefinition_in_scope(t, d);
+	return NULL;
+      }
     }
-    if (referenced(d)) {
-      idl_global->err()->error3(UTL_Error::EIDL_DEF_USE, t, this, d);
-      return NULL;
-    }
-    if (t->has_ancestor(d)) {
-      idl_global->err()->redefinition_in_scope(t, d);
-      return NULL;
-    }
+  }
+  else {
+    idl_global->err()->error3(UTL_Error::EIDL_REDEF,t,
+			      AST_Interface::narrow_from_scope(defined_in()),
+			      d);
+    return NULL;
   }
   /*
    * Cannot add OUT or INOUT argument to oneway operation
