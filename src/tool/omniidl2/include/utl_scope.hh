@@ -106,6 +106,7 @@ public:
       IK_both		// Iterate through both decls and local types
     , IK_decls		// Iterate only through decls
     , IK_localtypes	// Iterate only through local types
+    , IK_parenttypes    // Iterate only through parenttypes
   };
 
   // Operations
@@ -158,11 +159,13 @@ public:
 
   // Name Lookup Mechanism
   virtual AST_Decl		*lookup_by_name(UTL_ScopedName *,
-						idl_bool treat_as_ref);
+						idl_bool treat_as_ref,
+						idl_bool internal_recursion=0);
 
   // Look up the Identifier * specified only in the local scope
   virtual AST_Decl		*lookup_by_name_local(Identifier *,
-						      idl_bool treat_as_ref);
+						      idl_bool treat_as_ref,
+						      idl_bool ignore_case=0);
 
   // Look up a predefined type by its ExprType
   virtual AST_Decl
@@ -170,6 +173,14 @@ public:
 
   // How many entries are used?
   virtual unsigned long		nmembers();
+
+  // Lookup based on the local name for the purpose of checking for
+  // name clashes before addition. This function is intended to
+  // be used only by the fe_add_* functions.
+  virtual AST_Decl		*lookup_for_add(AST_Decl *d,
+						idl_bool treat_as_ref,
+						idl_bool ignore_case=0);
+
 
 protected:
   // UTL_Scope protected addition protocol. This protocol is
@@ -191,17 +202,14 @@ protected:
   // Has this node been referenced here already?
   idl_bool			referenced(AST_Decl *e);
 
+  // Add to parent types: nodes defined in the outer scope but are referenced 
+  // in this scope using their unqualified name.
+  void				add_to_parent_types(AST_Decl *e);
+
   // Look up a scoped name in the inherited interfaces of an
   // interface
   virtual AST_Decl		*look_in_inherited(UTL_ScopedName *,
 						   idl_bool treat_as_ref);
-protected:
-  // Operations
-
-  // Lookup based on the local name
-  virtual AST_Decl		*lookup_for_add(AST_Decl *d,
-						idl_bool treat_as_ref);
-
 private:
   // Data
 
@@ -223,6 +231,13 @@ private:
   AST_Decl			**pd_referenced;	// Store references
   long				pd_referenced_allocated;// How many allocated?
   long				pd_referenced_used;	// How many used?
+
+  // Storage for nodes defined in the outer scope but are referenced in this 
+  // scope using their unqualified name:
+  AST_Decl			**pd_parent_types;	// Store references
+  long				pd_parents_allocated;   // How many allocated?
+  long				pd_parents_used;	// How many used?
+
 
   // Friend class UTL_ScopeActiveIterator defines active iterator for
   // UTL_Scope. Definition follows below.
