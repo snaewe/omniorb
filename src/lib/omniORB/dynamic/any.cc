@@ -29,9 +29,12 @@
 
 
 /* $Log$
-/* Revision 1.15  1999/06/28 17:38:19  sll
-/* Fixed bug in Any marshalling when tcAliasExpand is set to 1.
+/* Revision 1.16  1999/07/02 19:10:46  sll
+/* Typecode extraction is now non-copy as well.
 /*
+ * Revision 1.15  1999/06/28 17:38:19  sll
+ * Fixed bug in Any marshalling when tcAliasExpand is set to 1.
+ *
  * Revision 1.14  1999/06/25 13:47:19  sll
  * Rename copyStringInAnyExtraction to omniORB_27_CompatibleAnyExtraction.
  * operator<<=(Object_ptr) now marshal the real repository ID of the object.
@@ -567,19 +570,41 @@ CORBA::Boolean CORBA::Any::operator>>=(Any& a) const
 }
 
 
+
+static
+void delete_typecode(void* data) {
+  CORBA::TypeCode_ptr sp = (CORBA::TypeCode_ptr) data;
+  CORBA::release(sp);
+}
+
 CORBA::Boolean
-CORBA::Any::operator>>=(TypeCode_ptr& tc) const
+CORBA::Any::operator>>=(CORBA::TypeCode_ptr& tc) const
 {
-  CORBA::TypeCode_member tcm;
-  tcDescriptor tcd;
-  tcd.p_TypeCode = &tcm;
-  CORBA::Boolean ret = pdAnyP()->getData(CORBA::_tc_TypeCode, tcd);
-  if( ret )
-    tc = tcm._ptr;
-  else
-    tc = CORBA::TypeCode::_nil();
-  tcm._ptr = CORBA::TypeCode::_nil();
-  return ret;
+  CORBA::TypeCode_ptr sp = (CORBA::TypeCode_ptr) PR_getCachedData();
+  if (sp == 0) {
+    CORBA::TypeCode_member tcm;
+    tcDescriptor tcd;
+    tcd.p_TypeCode = &tcm;
+    CORBA::Boolean ret = pdAnyP()->getData(CORBA::_tc_TypeCode, tcd);
+    if( ret ) {
+      if (!omniORB::omniORB_27_CompatibleAnyExtraction) {
+        PR_setCachedData((void*)tcm._ptr,delete_typecode);
+      }
+      tc = tmp._ptr;
+      tmp._ptr = CORBA::TypeCode::_nil(); return 1;
+    } else {
+      tc = CORBA::TypeCode::_nil(); return 0;
+    }
+  }
+  else {
+    CORBA::TypeCode_var t = type();
+    if (t->equivalent(CORBA::_tc_TypeCode)) {
+    tc = sp; return 1;
+    }
+    else {
+    tc = CORBA::TypeCode::_nil(); return 0;
+    }
+  }
 }
 
 CORBA::Boolean
