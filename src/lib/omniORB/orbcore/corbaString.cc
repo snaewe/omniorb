@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.17.2.4  2000/11/15 17:19:36  sll
+  Added cdrStream::marshalString and unmarshalString.
+
   Revision 1.17.2.3  2000/11/03 18:46:19  sll
   Moved string marshal functions into cdrStream.
 
@@ -147,54 +150,6 @@ CORBA::string_dup(const char* p)
     }
   }
   return 0;
-}
-
-void
-cdrStream::marshalString(const char* p, int bounded)
-{
-  if( p ) {
-    CORBA::ULong len = strlen((char*)p) + 1;
-    if (bounded && len > (CORBA::ULong)(bounded+1))
-      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-    len >>= *this;
-    put_octet_array((CORBA::Octet*)p, len);
-  }
-  else {
-    if (omniORB::traceLevel > 1) {
-      _CORBA_null_string_ptr(0);
-    }
-    CORBA::ULong(1) >>= *this;
-    marshalChar('\0');
-  }
-}
-
-char*
-cdrStream::unmarshalString(int bounded)
-{
-  CORBA::String_var p;
-
-  CORBA::ULong len;
-  len <<= *this;
-  if( !len && omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(1);
-
-  CORBA::ULong nbytes = len ? len : 1;
-
-  if (!checkInputOverrun(1,len) || (bounded && len > (CORBA::ULong)bounded)) {
-    OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-  }
-
-  p = _CORBA_String_helper::alloc(nbytes - 1);
-  if( !(char*)p )  OMNIORB_THROW(NO_MEMORY,0, CORBA::COMPLETED_MAYBE);
-
-  if( len ) {
-    get_octet_array((CORBA::Octet*)((char*)p), len);
-    if( p[len - 1] != '\0' )
-      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-  }
-  else
-    p[0] = '\0';
-
-  return p._retn();
 }
 
 //////////////////////////////////////////////////////////////////////
