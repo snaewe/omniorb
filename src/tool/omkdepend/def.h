@@ -28,6 +28,7 @@ in this Software without prior written authorization from the X Consortium.
 
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 #ifndef X_NOT_POSIX
 #ifndef _POSIX_SOURCE
 #define _POSIX_SOURCE
