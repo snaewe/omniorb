@@ -13,6 +13,9 @@
 
 /*
   $Log$
+  Revision 1.2  1997/03/09 12:18:43  sll
+  Minor cleanup.
+
   Revision 1.1  1997/01/08 17:28:30  sll
   Initial revision
 
@@ -40,7 +43,7 @@ class IIOP {
     _CORBA_Unbounded_Sequence_Octet  object_key;
   };
 
-  // omniORB2 extension
+  // omniORB2 private functions
   static void profileToEncapStream(ProfileBody &,_CORBA_Unbounded_Sequence_Octet &);
   static void EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &,ProfileBody &);
 };
