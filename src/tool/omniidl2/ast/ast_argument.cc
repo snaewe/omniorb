@@ -95,6 +95,7 @@ direction_to_string(AST_Argument::Direction d)
   case AST_Argument::dir_INOUT:
     return "inout";
   }
+  return 0; // for MSVC++ 4.2
 }
 
 /*

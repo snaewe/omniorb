@@ -116,6 +116,7 @@ exprtype_to_string(AST_Expression::ExprType et)
   case AST_Expression::EV_none:
     return "none";
   }
+  return 0; // for MSVC++ 4.2
 }
 
 /*

@@ -795,6 +795,7 @@ coerce_value(AST_Expression::AST_ExprValue *ev, AST_Expression::ExprType t)
       return NULL;
     }
   }
+  return 0; // for MSVC++ 4.2
 }
 
 /*
@@ -1141,6 +1142,7 @@ AST_Expression::eval_internal(AST_Expression::EvalKind ek)
   case EC_none:
     return NULL;
   }
+  return 0; // for MSVC++ 4.2
 }
 
 /*
@@ -1223,7 +1225,8 @@ AST_Expression::operator==(AST_Expression *vc)
   case EV_void:
   case EV_none:
     return I_FALSE;
-  }
+  } 
+  return 0; // for MSVC++ 4.2
 }
 
 long
@@ -1271,6 +1274,7 @@ AST_Expression::compare(AST_Expression *vc)
   case EV_none:
     return I_FALSE;
   }
+ return 0; // for MSVC++ 4.2
 }
 
 /*
@@ -1417,7 +1421,7 @@ AST_Expression::dump(ostream &o)
   case EC_none:
     break;
   default:
-    o << GTDEVEL("unsupported dump mode for expression with ec == ") << pd_ec ;
+    o << GTDEVEL("unsupported dump mode for expression with ec == ") << (int) pd_ec ;
     break;
   }
 }
