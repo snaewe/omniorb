@@ -28,12 +28,21 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  2000/01/12 11:52:09  djs
+# Added important comment :)
+#
 # Revision 1.2  1999/12/09 20:40:13  djs
 # TypeCode and Any generation option performs identically to old compiler for
 # all current test fragments.
 #
 # Revision 1.1  1999/11/12 17:18:06  djs
 # Skeleton of dynamic skeleton code :)
+#
+
+# All you really need to know for the moment is that the universe
+# is a lot more complicated than you might think, even if you
+# start from a position of thinking it's pretty damn complicated
+# in the first place.       Douglas Adams, "Mostly Harmless"
 #
 
 # -----------------------------
