@@ -29,6 +29,9 @@
 
 /* 
    $Log$
+   Revision 1.8  1999/06/28 13:21:17  dpg1
+   Updated for new proxy call system.
+
    Revision 1.7  1999/06/26 17:56:03  sll
    Corrected macros to import from lifecycle win32 DLL.
 
@@ -82,6 +85,8 @@
 #include <omniORB2/omniLifeCycle.hh>
 #endif
 
+#include <omniORB2/proxyCall.h>
+
 // Everything lives inside class omniLC:
 
 class omniLC {
@@ -129,6 +134,9 @@ public:
     // Reset all _wrap_proxies which are wrapping the given local object
     static void _reset_wraps(omniObject *obj);
 
+    // Forward the wrapper to a new _proxy object
+    virtual void _forward_to(CORBA::Object_ptr obj) = 0;
+
     // Reset the wrapper to use its original _proxy object (when the
     // object moves back out of our address space).
     virtual void _reset_proxy() = 0;
@@ -153,26 +161,11 @@ public:
     CORBA::Object_var  home;
 
   public:
-    LifeCycleInfo_i(_wrap_home *w, CORBA::Object_ptr h)
-      : wrap(w)
-    {
-      home = CORBA::Object::_duplicate(h);
-    };
-
+    LifeCycleInfo_i(_wrap_home *w, CORBA::Object_ptr h);
     virtual ~LifeCycleInfo_i() { };
-
-    void reportMove(CORBA::Object_ptr obj) {
-      wrap->_move(obj);
-    };
-
-    void reportRemove() {
-      wrap->_remove();
-      CORBA::BOA::getBOA()->dispose(this);
-    };
-
-    CORBA::Object_ptr homeObject() {
-      return CORBA::Object::_duplicate(home);
-    };
+    void reportMove(CORBA::Object_ptr obj);
+    void reportRemove();
+    CORBA::Object_ptr homeObject();
   };
 
 
@@ -184,26 +177,14 @@ public:
     omniLifeCycleInfo_var _linfo;
 
   protected:
-    void _set_linfo(omniLifeCycleInfo_ptr li) {
-      if (CORBA::is_nil(_linfo)) {
-	_linfo = omniLifeCycleInfo::_duplicate(li);
-      }
-      else {
-	// _set_linfo called after a call to _this() or called twice
-	assert(0);
-      }
-    };
-    omniLifeCycleInfo_ptr _get_linfo() {
-      return _linfo;
-    };
+    void _set_linfo(omniLifeCycleInfo_ptr li);
+    omniLifeCycleInfo_ptr _get_linfo();
 
   public:
     virtual void _move(CORBA::Object_ptr to) = 0;
     virtual void _remove() = 0;
 
-    _lc_sk() {
-      _linfo = omniLifeCycleInfo::_nil();
-    }
+    _lc_sk();
     virtual ~_lc_sk() {}
   };
 
@@ -323,7 +304,7 @@ public:
   // Two helper classes to make exception handling with the _threadControl
   // class easier:
 
-// Create a TheadOp object in all normal operations:
+  // Create a TheadOp object in all normal operations:
 
   class ThreadOp {
   public:
@@ -360,6 +341,27 @@ public:
   };
 
 };
+
+
+_CORBA_MODULE OmniLCProxyCallWrapper
+_CORBA_MODULE_BEG
+  _CORBA_MODULE_FN CORBA::Boolean invoke(omniObject*,
+					 OmniProxyCallDesc&,
+					 omniLC::_wrap_proxy*);
+
+  _CORBA_MODULE_FN CORBA::Boolean one_way(omniObject*,
+					  OmniOWProxyCallDesc&,
+					  omniLC::_wrap_proxy*);
+
+  _CORBA_MODULE_FN CORBA::Boolean invoke(omniObject*,
+					 OmniProxyCallDescWithContext&,
+					 omniLC::_wrap_proxy*);
+
+  _CORBA_MODULE_FN CORBA::Boolean one_way(omniObject*,
+					  OmniOWProxyCallDescWithContext&,
+					  omniLC::_wrap_proxy*);
+_CORBA_MODULE_END
+
 
 
 #endif // _omniLC_h_
