@@ -16,6 +16,9 @@ export:: dump.py
 export:: example.py
 	@(file="example.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: interactive.py
+	@(file="interactive.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+
 export::
 	@(set -x; \
 	cd $(PYLIBDIR); \
