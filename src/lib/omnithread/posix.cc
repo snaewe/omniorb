@@ -201,6 +201,7 @@ omni_semaphore::trywait(void)
 	return 0;
 
     value--;
+    return 1;
 }
 
 void
@@ -791,9 +792,8 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 int
 omni_thread::posix_priority(priority_t pri)
 {
-    switch (pri) {
-
 #ifdef PthreadSupportThreadPriority
+    switch (pri) {
 
     case PRIORITY_LOW:
 	return lowest_priority;
@@ -804,8 +804,8 @@ omni_thread::posix_priority(priority_t pri)
     case PRIORITY_HIGH:
 	return highest_priority;
 
-#endif
     }
+#endif
 
     throw omni_thread_invalid();
 }
