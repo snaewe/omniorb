@@ -237,7 +237,7 @@ char* toString(IOP::IOR& ior)
 {
   cdrMemoryStream buf(CORBA::ULong(0),1);
   buf.marshalBoolean(omni::myByteOrder);
-  ior.type_id >>= buf;
+  buf.marshalRawString(ior.type_id);
   ior.profiles >>= buf;
 
   // turn the encapsulation into a hex string with "IOR:" prepended

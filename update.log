@@ -1,3 +1,17 @@
+Wed Sep 11 07:36:42 BST 2002 dgrisby
+====================================
+
+- Typo in requires_fq_base_ctor check. Thanks Alan Commike for pointing it out.
+
+acinclude.m4
+aclocal.m4
+configure
+
+- convertior string marshal failure.
+
+src/appl/utils/convertior/convertior.cc
+
+
 Wed Sep 11 00:11:18 BST 2002 dgrisby
 ====================================
 
