@@ -32,13 +32,16 @@
 #include <bootstrap_i.h>
 
 
-#if defined(HAS_Cplusplus_Namespace) && defined(ENABLE_CLIENT_IR_SUPPORT)
+#if defined(ENABLE_CLIENT_IR_SUPPORT)
 
 
 CORBA::InterfaceDef_ptr
 CORBA::
 Object::_get_interface()
 {
+  if ( !PR_is_valid(this) ) 
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+
   if( !pd_obj )  _CORBA_invoked_nil_pseudo_ref();
 
   CORBA::Object_var o = omniInitialReferences::singleton()
