@@ -1,3 +1,32 @@
+Mon Aug  7 18:46:28 BST 2000 dpg1
+=================================
+
+- Another merge from omni3_develop
+
+bugfixes.xml
+update.log
+mk/unix.mk
+mk/win32.mk
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/i586_linux_2.0_glibc.mk
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+mk/platforms/mips_irix_6.2_n32.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/sun4_sosV_5.6.mk
+mk/platforms/sun4_sosV_5.7.mk
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/util.py
+src/services/mklib/dir.mk
+src/services/mklib/mkBOAlib/dir.mk
+src/services/mklib/mkBOAlib/sharedlib/dir.mk   -- deleted
+src/services/mklib/sharedlib/dir.mk            -- deleted
+src/tool/omniidl/cxx/cccp/config-freebsd.h
+src/tool/omniidl/cxx/cccp/config-linux.h
+src/tool/omniidl/cxx/cccp/config-solaris.h
+src/tool/omniidl/cxx/cccp/config.h
+
+
 Mon Aug  7 18:32:21 BST 2000 dpg1
 =================================
 
@@ -58,7 +87,7 @@ src/tool/omniidl/cxx/idlutil.h
 src/tool/omniidl/cxx/lex.yy.cc
 
 
-Wed Aug  2 11:46:47 BST 2000 dpg1
+Fri Aug  4 16:23:29 BST 2000 dpg1
 =================================
 
 - Create omni3_1_develop branch, and merge from 3_0_develop
