@@ -16,13 +16,13 @@ URL:     http://omniorb.sourceforge.net/
 #Provides:       corba
 BuildRequires:  python glibc-devel
 %if "%{_vendor}" == "MandrakeSoft"
-BuildRequires:  openssl-devel
+BuildRequires:  python-devel openssl-devel
 %endif
 %if "%{_vendor}" == "redhat"
 BuildRequires:  python-devel openssl-devel
 %endif
 %if "%{_vendor}" == "suse"
-BuildRequires:	openssl-devel
+BuildRequires:  python-devel openssl-devel
 %endif
 Buildroot:      %{_tmppath}/%{name}-%{version}-root
 #BuildArch:      i586
