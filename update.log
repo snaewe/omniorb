@@ -1,3 +1,11 @@
+Fri Jul  7 11:28:19 BST 2000 sll
+================================
+
+- DEC C++ 6.{0,1} on Digital Unix requires #define OMNI_REQUIRES_FQ_BASE_CTOR
+
+include/omniORB3/CORBA_sysdep.h
+
+
 Fri Jul  7 11:24:51 BST 2000 sll
 ================================
 
