@@ -1,4 +1,13 @@
 
+Wed Jul 30 15:47:49 BST 1997 tjr
+================================
+
+src/tool/win32/clwrapper.c	- fix for >9 mounts
+src/tool/win32/libwrapper.c	- fix for >9 mounts
+src/tool/win32/linkwrapper.c	- fix for >9 mounts
+src/tool/omkdepend/gnuwin32.c	- fix for >9 mounts
+
+
 Wed Jul 30 13:52:15 BST 1997 tjr
 ================================
 
