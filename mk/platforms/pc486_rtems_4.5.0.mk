@@ -17,8 +17,8 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
-# Revision 1.1.4.1  2000/08/17 15:52:25  sll
-# Merged RTEMS port.
+# Revision 1.1.4.2  2000/08/21 11:28:59  sll
+# *** empty log message ***
 #
 # Revision 1.1.2.1  2000/08/17 15:37:51  sll
 # Merged RTEMS port.

@@ -6,9 +6,15 @@ export::
 	@$(NoPythonError)
 endif
 
+ifndef EmbeddedSystem
 SUBDIRS += tool
+endif
 
 SUBDIRS += lib appl
+
+ifndef EmbeddedSystem
+SUBDIRS += services
+endif
 
 all::
 	@echo

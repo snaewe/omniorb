@@ -165,18 +165,18 @@ dummyvariable := $(shell $(RM) cdepend.tmp cxxdepend.tmp asdepend.tmp)
 
 depend.phony:
 	@if [ -f cdepend.tmp ]; then \
-	   echo $(CMAKEDEPEND) $(CPPFLAGS) `cat cdepend.tmp`; \
-	   $(CMAKEDEPEND) $(CPPFLAGS) `cat cdepend.tmp`; \
+	   echo $(CMAKEDEPEND) $(MDFLAGS) $(CPPFLAGS) `cat cdepend.tmp`; \
+	   $(CMAKEDEPEND) $(MDFLAGS) $(CPPFLAGS) `cat cdepend.tmp`; \
 	   rm -f cdepend.tmp; \
 	 fi; \
 	 if [ -f cxxdepend.tmp ]; then \
-	   echo $(CXXMAKEDEPEND) $(CPPFLAGS) `cat cxxdepend.tmp`; \
-	   $(CXXMAKEDEPEND) $(CPPFLAGS) `cat cxxdepend.tmp`; \
+	   echo $(CXXMAKEDEPEND) $(MDFLAGS) $(CPPFLAGS) `cat cxxdepend.tmp`; \
+	   $(CXXMAKEDEPEND) $(MDFLAGS) $(CPPFLAGS) `cat cxxdepend.tmp`; \
 	   rm -f cxxdepend.tmp; \
 	 fi; \
 	 if [ -f asdepend.tmp ]; then \
-	   echo $(ASMAKEDEPEND) $(CPPFLAGS) `cat asdepend.tmp`; \
-	   $(ASMAKEDEPEND) $(CPPFLAGS) `cat asdepend.tmp`; \
+	   echo $(ASMAKEDEPEND) $(MDFLAGS) $(CPPFLAGS) `cat asdepend.tmp`; \
+	   $(ASMAKEDEPEND) $(MDFLAGS) $(CPPFLAGS) `cat asdepend.tmp`; \
 	   rm -f asdepend.tmp; \
 	 fi
 

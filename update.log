@@ -1,3 +1,26 @@
+Mon Aug 21 12:24:40 BST 2000 sll
+================================
+
+- Merge omni3_develop make rules amd RTEMS updates
+
+mk/platforms/i586_linux_2.0_glic2.1.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/sun4_sosV_5.6.mk
+mk/platforms/sun4_sosV_5.7.mk
+
+external_merge/bin/x86_win32/omkdepend.exe
+external_merge/mk/afterdir.mk
+external_merge/mk/mklib.mk
+src/tool/omkdepend/main.c
+src/tool/omkdepend/pr.c
+
+external_merge/CREDITS
+external_merge/mk/rtems.mk
+external_merge/src/dir.mk
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/dir.mk
+
+external_merge/mk/platforms/pc486_rtems_4.5.0.mk  NEW
+
 Thu Aug 17 16:50:13 BST 2000 sll
 ================================
 
