@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.29  2002/02/13 17:39:58  dpg1
+  Don't put POA in DISCARDING state during destroy().
+
   Revision 1.2.2.28  2002/02/11 14:47:03  dpg1
   Bug in cleanup of nil POA.
 
@@ -640,13 +643,13 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
   }
 
   {
-    // If we're not already in the INACTIVE state, change state to DISCARDING
+    // If we're in the HOLDING state, change state to DISCARDING
 
     omni::internalLock->lock();
 
     int old_state = pd_rq_state;
 
-    if (pd_rq_state != (int) PortableServer::POAManager::INACTIVE)
+    if (pd_rq_state == (int) PortableServer::POAManager::HOLDING)
       pd_rq_state = (int) PortableServer::POAManager::DISCARDING;
 
     omni::internalLock->unlock();
