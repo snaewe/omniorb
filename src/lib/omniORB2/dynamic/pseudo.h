@@ -218,22 +218,16 @@ private:
 class RequestImpl : public CORBA::Request, public PseudoObjBase {
 public:
   RequestImpl(CORBA::Object_ptr target, const char* operation);
-  // Duplicates <operation>. Assumes target will remain valid
-  // throughout its lifetime.
 
   RequestImpl(CORBA::Object_ptr target, const char* operation,
 	      CORBA::Context_ptr context, CORBA::NVList_ptr arguments,
 	      CORBA::NamedValue_ptr result);
-  // Duplicates <operation>. Assumes that all other arguments will
-  // remain valid throughout its lifetime.
 
   RequestImpl(CORBA::Object_ptr target, const char* operation,
 	      CORBA::Context_ptr context, CORBA::NVList_ptr arguments,
 	      CORBA::NamedValue_ptr result,
 	      CORBA::ExceptionList_ptr exceptions,
 	      CORBA::ContextList_ptr contexts);
-  // Duplicates <operation>. Assumes that all other arguments will
-  // remain valid throughout its lifetime.
 
   virtual ~RequestImpl();
 
@@ -274,16 +268,16 @@ private:
     RS_DEFERRED
   };
 
-  CORBA::Object_ptr        pd_target;
+  CORBA::Object_var        pd_target;
   CORBA::String_var        pd_operation;
-  CORBA::NVList_ptr        pd_arguments;
+  CORBA::NVList_var        pd_arguments;
   CORBA::Boolean           pd_i_own_arguments;
-  CORBA::NamedValue_ptr    pd_result;
+  CORBA::NamedValue_var    pd_result;
   CORBA::Boolean           pd_i_own_result;
-  CORBA::Environment_ptr   pd_environment;
-  CORBA::ExceptionList_ptr pd_exceptions;  // may be nil
-  CORBA::ContextList_ptr   pd_contexts;    // may be nil
-  CORBA::Context_ptr       pd_context;     // may be nil
+  CORBA::Environment_var   pd_environment;
+  CORBA::ExceptionList_var pd_exceptions;  // may be nil
+  CORBA::ContextList_var   pd_contexts;    // may be nil
+  CORBA::Context_var       pd_context;     // may be nil
   State                    pd_state;
   DeferredRequest*         pd_deferredRequest;
 };
