@@ -13,6 +13,9 @@
 
 /*
  $Log$
+ Revision 1.6  1997/02/19 11:12:37  ewc
+ Added support for Windows NT / MSVC++ 4.2
+
  Revision 1.5  1997/01/30 20:18:23  sll
  Added new member functions in Object_Helper.
 
@@ -220,9 +223,11 @@ typedef _CORBA_Double  Double;
 
     String_member& operator= (const String_var & s);
 
+#ifndef _MSC_VER
     operator char* () const {
       return _ptr;
     }
+#endif
 
     operator const char* () const {
       return (const char*) _ptr;
@@ -869,7 +874,7 @@ typedef _CORBA_Double  Double;
     typedef char* ObjectId;
     typedef String_var ObjectId_var;
 
-    typedef _CORBA_Unbounded_Sequence<CORBA::String_member > ObjectIdList;
+    typedef _CORBA_Unbounded_Sequence<String_member > ObjectIdList;
     class ObjectIdList_var {
     public:
       typedef ObjectIdList* ptr_t;
@@ -922,7 +927,7 @@ typedef _CORBA_Double  Double;
       ObjectIdList* pd_data;
     };
 
-    class InvalidName : public CORBA::UserException {
+    class InvalidName : public UserException {
     public:
 
       InvalidName() { }
@@ -1115,6 +1120,10 @@ private:
 #include <omniORB2/proxyFactory.h>
 
 // Include the COSS Naming Service header:
+#ifdef __NT__
+#include <omniORB2/Naming_NT.hh>
+#else
 #include <omniORB2/Naming.hh>
+#endif
 
 #endif // __CORBA_H__
