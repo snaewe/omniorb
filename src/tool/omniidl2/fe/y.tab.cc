@@ -1465,7 +1465,7 @@ case 20:
 	     */
 	    if (s != NULL) {
 	      m = idl_global->gen()->create_module(n, p);
-	      (void) s->fe_add_module(m);
+	      AST_Module* sb = s->fe_add_module(m); if (sb != NULL) m = sb;
 	    }
 	    /*
 	     * Push it on the stack
