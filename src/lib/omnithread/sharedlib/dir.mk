@@ -201,7 +201,7 @@ lib = $(soname).$(micro_version)
 $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
-        $(CXX) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+        $(CXX) $(CXXOPTIONS) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^); \
        )
 
