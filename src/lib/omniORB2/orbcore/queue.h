@@ -5,11 +5,14 @@
 
 
 #undef DEBUG
-#ifdef DEBUG
-#  define PTRACE(prefix,message)  \
+
+#ifndef PTRACE
+#  ifdef DEBUG
+#    define QTRACE(prefix,message)  \
   omniORB::logs(15, "Queue " prefix ": " message)
-#else
-#  define PTRACE(x)
+#  else
+#    define QTRACE(x)
+#  endif
 #endif
 
 // Abstract Queue base type for defining the external
@@ -51,7 +54,7 @@ template<class T, int i> class FixedQueue: public Queue<T> {
     {
       if (used_slots == num_slots){
 	// queue is full
-	PTRACE("Attempt to add item to a full queue\n");
+	QTRACE("Attempt to add item to a full queue\n");
 	while (used_slots == num_slots) pd_cond.wait();
       }
       // else we can enter the data
@@ -71,7 +74,7 @@ template<class T, int i> class FixedQueue: public Queue<T> {
     {
       if (used_slots == 0){
 	// queue is empty
-	PTRACE("Attempt to remove item from an empty queue\n");
+	QTRACE("Attempt to remove item from an empty queue\n");
 	while (used_slots == 0) pd_cond.wait();
       }
       thing = items[next_read_index ++];

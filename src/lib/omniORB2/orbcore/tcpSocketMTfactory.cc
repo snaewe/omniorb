@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.10.2.2  2000/02/24 11:47:26  djs
+  Pieces connected together and tested.
+
   Revision 1.22.6.10.2.1  2000/02/22 11:04:57  djs
   Rendezvouser blocks in select() rather than accept()
   Rendezvouser maintains a bitmap of interesting FDs (in preparation for
@@ -241,6 +244,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <stdio.h>
+#include <iostream.h>
 
 #include <libcWrapper.h>
 #include <gatekeeper.h>
@@ -264,41 +268,131 @@ extern "C" int gethostname(char *name, int namelen);
 #define PTRACE(prefix,message)  \
   omniORB::logs(15, "tcpSocketMTfactory " prefix ": " message)
 
+#undef EXTRADEBUG
+#define THREADPOOL
+
+const unsigned int poolSize = 1;
+class tcpStrandWorker;
+class OneToOneWorker;
+class PoolWorker;
 
 class tcpSocketRendezvouser : public omni_thread {
 public:
   tcpSocketRendezvouser(tcpSocketIncomingRope *r,
-			tcpSocketMTincomingFactory *f) : 
-        omni_thread(r), pd_factory(f)
-    {
-      start_undetached();
-    }
+			tcpSocketMTincomingFactory *f);
+
   virtual ~tcpSocketRendezvouser() { }
   virtual void* run_undetached(void *arg);
 
-  static void wakeUp();
+  static void wakeUpWatchStrand(tcpSocketStrand*);
 private:
   tcpSocketMTincomingFactory* pd_factory;
-  omni_mutex pd_allowed_to_signal;
   tcpSocketRendezvouser();
 
   // Fixed length queue of requests to be processed
   const static int queueLength = 5; // relate this to the getdtablesize()?
   FixedQueue<tcpSocketStrand*, queueLength> pd_q;
+
+  // Mapping of filedescriptors to strands
+  tcpSocketStrand** pd_fdstrandmap;
+
 public:
+  omni_mutex allowed_to_signal;
+
+  // Bitmap of currently monitored filedescriptors
+  fd_set interestingFDs;
+  fd_set readFDs;
+
   void signalLock(){
-    PTRACE("Rendezvouser", "allowed_to_signal -> try to acquire");
-    pd_allowed_to_signal.lock();
-    PTRACE("Rendezvouser", "allowed_to_signal -> acquired");
+    OMNIORB_ASSERT(0);
+    //PTRACE("Rendezvouser", "allowed_to_signal -> try to acquire");
+    allowed_to_signal.lock();
+    //PTRACE("Rendezvouser", "allowed_to_signal -> acquired");
   }
   void signalUnlock(){
-    PTRACE("Rendezvouser", "allowed to signal -> released");
-    pd_allowed_to_signal.unlock();
+    OMNIORB_ASSERT(0);
+    //PTRACE("Rendezvouser", "allowed to signal -> released");
+    allowed_to_signal.unlock();
+  }
+  Queue<tcpSocketStrand*> *getQ(){
+    return &pd_q;
   }
 };
 
 static tcpSocketRendezvouser* rendezvous;
 
+////////////////////////////////////////////////////////////////////
+// A tcpStrandWorker is a thread which continually grabs strands
+// with pending requests and services them until told to stop.
+//
+// On top of this simple abstraction we can build workers with
+// specific task-allocation policies (eg 1-1 mapping onto strands,
+// multiplexed onto worker pool etc)
+
+class tcpStrandWorker: public omni_thread{
+public:
+  tcpStrandWorker(tcpSocketMTincomingFactory *f):
+    omni_thread(this), pd_factory(f){
+    start();
+  }
+  virtual ~tcpStrandWorker(){
+    omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
+    OMNIORB_ASSERT(pd_factory->pd_shutdown_nthreads != 0);
+    if (pd_factory->pd_shutdown_nthreads > 0) {
+      pd_factory->pd_shutdown_nthreads--;
+    }
+    else {
+      pd_factory->pd_shutdown_nthreads++;
+      pd_factory->pd_shutdown_cond.signal();
+    }
+  }
+  virtual void run(void *arg);
+  static void _realRun(void* arg);
+protected:
+  virtual tcpSocketStrand *findStrandWithRequestPending() = 0;
+  virtual void dispatchOne(tcpSocketStrand* s);
+private:
+  tcpSocketMTincomingFactory* pd_factory;
+};
+
+class OneToOneWorker: public tcpStrandWorker{
+public:
+  OneToOneWorker(tcpSocketStrand *s, tcpSocketMTincomingFactory *f):
+    tcpStrandWorker(f),  pd_strand(s){
+    s->decrRefCount();
+    PTRACE("OneToOneWorker", "Yup its me!");
+  }
+  virtual ~OneToOneWorker() { }
+protected:
+  virtual tcpSocketStrand *findStrandWithRequestPending(){
+    return pd_strand;
+  }
+private:
+  tcpSocketStrand *pd_strand;
+};
+
+class PoolWorker: public tcpStrandWorker{
+public:
+  PoolWorker(tcpSocketRendezvouser *r, tcpSocketMTincomingFactory *f):
+    tcpStrandWorker(f), pd_q(r->getQ()){
+    PTRACE("PoolWorker", "Constructed");
+  }
+  virtual ~PoolWorker() { }
+protected:
+  virtual tcpSocketStrand *findStrandWithRequestPending(){
+    PTRACE("PoolWorker", "Removing request from Q");
+    return pd_q->remove();
+  }
+  virtual void dispatchOne(tcpSocketStrand *s);
+private:
+  // Not sure if we need to stick a Sync object in here or not
+
+  // make sure all the pool workers die before the Rendezvouser goes
+  // and invalidates this pointer....
+  Queue<tcpSocketStrand*> *pd_q;
+};
+
+#if 0
 class tcpSocketWorker : public omni_thread {
 public:
   tcpSocketWorker(tcpSocketStrand* s, tcpSocketMTincomingFactory* f) : 
@@ -320,12 +414,14 @@ public:
   }
   virtual void run(void *arg);
   static void _realRun(void* arg);
-  static void _dispatchOne(tcpSocketStrand* s);
+  void _dispatchOne(tcpSocketStrand* s);
 
 private:
   tcpSocketMTincomingFactory* pd_factory;
   Strand::Sync    pd_sync;
 };
+#endif 
+
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -879,7 +975,7 @@ static void dumpbuf(unsigned char* buf, size_t sz)
 {
   static omni_mutex lock;
   omni_mutex_lock sync(lock);
-  int i;
+  unsigned int i;
   char row[80];
 
   // Do complete rows of 16 octets.
@@ -1192,21 +1288,58 @@ static pthread_t rendez_thread;
 static int wake_signal = SIGQUIT;
 
 void handle_signal(int signalno){
-
-  printf("Is printf safe in the face of threads _and_ signals?\n");
+  memcpy(&rendezvous->readFDs, &rendezvous->interestingFDs, sizeof(fd_set));
+  PTRACE("Rendezvouser signal handler", "Updated select FDs");
 }
 //struct sigaction sighandler = {SIG_IGN, NULL, NULL, NULL};
 // HACK
 
+tcpSocketRendezvouser::tcpSocketRendezvouser(tcpSocketIncomingRope *r,
+					       tcpSocketMTincomingFactory *f):
+  omni_thread(r), pd_factory(f){
+  // build the fd to strand table
+  int maxstrands = getdtablesize();
+  pd_fdstrandmap = new tcpSocketStrand*[maxstrands];
+  // is this array guaranteed to be initialised?
+  for (int i=0;i<maxstrands;i++) pd_fdstrandmap[i] = NULL;
+  
+#ifdef THREADPOOL
+  // build the thread pool
+  for (unsigned int i=0;i<poolSize;i++) new PoolWorker(this, f);
+#endif
 
-void tcpSocketRendezvouser::wakeUp(){
+  start_undetached();
+}
+
+// Updates the state of the rendezvouser thread to make it watch
+// a strand again for more data. Send a signal to the thread to
+// force it to rescan its filedescriptor set.
+void tcpSocketRendezvouser::wakeUpWatchStrand(tcpSocketStrand *s){
+
   PTRACE("Rendezvouser", "wakeUp called [acquiring lock]");
-  rendezvous->signalLock();
   {
+    omni_mutex_lock lock(rendezvous->allowed_to_signal);
+
+    // mark the strand as interesting again
+#ifdef EXTRADEBUG
+    cerr << "Watching strand fd = " << s->handle() << " again" << endl;
+    fflush(stderr);
+#endif
+    FD_SET(s->handle(), &rendezvous->interestingFDs);
+    // this handle is actually a strand isn't it?
+    OMNIORB_ASSERT(rendezvous->pd_fdstrandmap[s->handle()]);
     pthread_kill(rendez_thread, wake_signal);
+
+    PTRACE("Rendezvouser", "wakeUp finished [released lock]");
   }
-  PTRACE("Rendezvouser", "wakeUp finished [released lock]");
-  rendezvous->signalUnlock();
+
+}
+
+void dump_fdset(fd_set *f, int highestFD){
+  cerr << "[";
+  for (int i=0;i<=highestFD;i++)
+    if (FD_ISSET(i, f)) cerr << i << "  ";
+  cerr << "]" << endl;
 }
 
 void*
@@ -1231,18 +1364,19 @@ tcpSocketRendezvouser::run_undetached(void *arg)
   
   
   tcpSocketStrand *newSt = 0;
-  tcpSocketWorker *newthr = 0;
+  tcpStrandWorker *newthr = 0;
   CORBA::Boolean   die = 0;
 
   // build the interesting bitmap of file descriptors
-  fd_set interestingFDs;
   FD_ZERO(&interestingFDs);
   // we're always interested in new connections
   FD_SET(r->pd_rendezvous, &interestingFDs);
   int highestFD = r->pd_rendezvous;
   
   // noone is allowed to signal us unless we know it is safe
-  signalLock();
+  // (the omni_mutex_lock will ensure the lock is released if the
+  // stack is unwound pass this point eg by an exception)
+  omni_mutex_lock lock(allowed_to_signal);
   
   while (r->pd_shutdown == tcpSocketIncomingRope::ACTIVE  && !die) {
 
@@ -1256,10 +1390,12 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       // local copy.
 
       // FIXME: remember to lock shared data
-      fd_set FDs;
-      memcpy(&FDs, &interestingFDs, sizeof(fd_set));
-      
- 
+      memcpy(&readFDs, &interestingFDs, sizeof(fd_set));
+#ifdef EXTRADEBUG
+      cerr << "interestingFDs = "; dump_fdset(&interestingFDs, highestFD);
+      cerr << "readFDs        = "; dump_fdset(&readFDs, highestFD);
+#endif EXTRADEBUG 
+
 #if (defined(__GLIBC__) && __GLIBC__ >= 2)
       // GNU C library uses socklen_t * instead of int* in accept ().
       // This is suppose to be compatible with the upcoming POSIX standard.
@@ -1272,17 +1408,21 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
       l = sizeof(struct sockaddr_in);
 
-      PTRACE("Rendezvouser","block on select()");
-
       int signal_result;
       
       // ----------------------------------------------------------
-      // A worker thread can signal us while we are in here
-      signalUnlock();
+      // A worker thread can signal us safely while we are in here
+      // (safe == does not screw up important other syscalls) 
+      allowed_to_signal.unlock();
       {
-        signal_result = ::select(highestFD + 1, &FDs, NULL, NULL, NULL);
-      }
-      signalLock();
+	PTRACE("Rendezvouser","blocking on select()");
+#ifdef EXTRADEBUG
+	cerr << "Read FDs = ";
+	dump_fdset(&readFDs, highestFD);
+#endif
+        signal_result = ::select(highestFD + 1, &readFDs, NULL, NULL, NULL);
+      } 
+      allowed_to_signal.lock();
       // ----------------------------------------------------------
 	    
       if (signal_result == -1){
@@ -1302,7 +1442,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
       } else
 
 	// is it a new connection?
-	if (FD_ISSET(r->pd_rendezvous, &FDs)){
+	if (FD_ISSET(r->pd_rendezvous, &readFDs)){
 	  PTRACE("Rendezvouser", "new connection attempted");
 
 	  if ((new_sock = ::accept(r->pd_rendezvous,(struct sockaddr *)&raddr,&l)) 
@@ -1328,6 +1468,9 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 
 	    newSt = new tcpSocketStrand(r,new_sock);
 	    newSt->incrRefCount(1);
+
+	    // add the strand to the lookup table
+	    pd_fdstrandmap[new_sock] = newSt;
 	  }
 
 	  PTRACE("Rendezvouser","accept new strand.");
@@ -1338,11 +1481,11 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	  } else {
 	    pd_factory->pd_shutdown_nthreads--;
 	  }
-
-	  // ----- This is where we get the 1 - 1 mapping
+#ifdef ONETOONE
+	  // 1 - 1 Mapping
 	  try {
 	    PTRACE("Rendezvouser", "+    WORKER");
-	    newthr = new tcpSocketWorker(newSt,pd_factory);
+	    newthr = new OneToOneWorker(newSt,pd_factory);
 	    PTRACE("Rendezvouser", "+    OK");
 	  } catch(...) {
 	    newthr = 0;
@@ -1365,13 +1508,40 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 	      pd_factory->pd_shutdown_cond.signal();
 	    }
 	  }
+#endif
+#ifdef THREADPOOL
+	  // Add the new fd to the watch list
+	  FD_SET(new_sock, &interestingFDs);
+	  if (new_sock > highestFD) highestFD = new_sock;
+	  // is it important to reset that after removing a FD?
+#endif
 	
 	} else {
 	  PTRACE("Rendezvouser", "incoming request detected on strand?");
-	  // we need to find a free thread in the pool and allocate it
-	  abort();
+	  // (code is only ever reached iff the rendezvouser is looking
+	  // for incoming GIOP data ie never when using ONETOONE policy)
+
+	  // which strands were the requests on?
+	  int nactive = signal_result;
+	  int fd = 0;
+	  while (nactive){
+	    OMNIORB_ASSERT(fd <= highestFD);
+	    if (FD_ISSET(fd, &readFDs)){
+	      tcpSocketStrand *s = pd_fdstrandmap[fd];
+	      OMNIORB_ASSERT(s != NULL);
+	      // add this active strand to the request q
+	      PTRACE("Rendezvouser", "adding strand to the request Q");
+	      pd_q.add(s);
+	      // remove our interest in the strand
+	      // (do we need to potentially reduce highestFD?)
+	      FD_CLR(fd, &interestingFDs);
+	      // need to make this thread higher priority than any activated
+	      // worker because it is still holding the signal mutex?
+	      nactive--;
+	    }
+	    fd++;
+	  }
 	}
-      
     }
     catch(CORBA::COMM_FAILURE&) {
       // XXX accepts failed. The probable cause is that the number of
@@ -1479,6 +1649,90 @@ tcpSocketRendezvouser::run_undetached(void *arg)
   return 0;
 }
 
+///////////////////////////////////////////////////////////////////
+// Worker implementations
+
+void tcpStrandWorker::run(void *arg){
+  omniORB::giopServerThreadWrapper::
+    getGiopServerThreadWrapper()->run(tcpStrandWorker::_realRun,arg);
+  // the wrapper run() method will pass back control to tcpSocketWorker
+  // by calling  _realRun(arg) when it is ready.
+}
+
+void tcpStrandWorker::_realRun(void *arg){
+  tcpStrandWorker* me = (tcpStrandWorker*)arg;
+
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x420
+  set_terminate(abort);
+#endif
+#endif
+  
+  PTRACE("Worker","start.");
+
+  // fetch strand, service and repeat
+  try {
+    while (1) {
+      tcpSocketStrand *s = me->findStrandWithRequestPending();
+#ifdef EXTRADEBUG
+      cerr << "strand from Q == " << s << endl;
+      cerr << "fd # on strand == " << s->handle() << endl;
+      fflush(stderr);
+#endif
+      try{
+	me->dispatchOne(s);
+      } catch (CORBA::COMM_FAILURE&){
+	PTRACE("Worker", "Strand as died, but we live on. Muhahahha.");
+      }
+    }
+  } catch (...) {
+    // error handling is done in the other function
+  }
+
+  PTRACE("Worker","exit.");
+}
+
+void tcpStrandWorker::dispatchOne(tcpSocketStrand *s){
+  PTRACE("Worker", "in worker dispatch function");
+   
+  try {
+    // the old tcpSocketWorker did this in the constructor
+    Strand::Sync sync(s, /* RdLock = */ 0, /* WrLock = */ 0);
+    GIOP_S::dispatcher(s);
+  } catch (CORBA::COMM_FAILURE&) {
+    PTRACE("Worker","#### Communication failure. Connection closed.");
+    throw;
+  } catch(const omniORB::fatalException& ex) {
+    if( omniORB::trace(0) ) {
+      omniORB::logger l;
+      l << "You have caught an omniORB bug, details are as follows:\n"
+	" file: " << ex.file() << "\n"
+	" line: " << ex.line() << "\n"
+	" mesg: " << ex.errmsg() << "\n";
+    }
+    throw;
+  } catch (...) {
+    omniORB::logs(0, "An exception has occured and was caught by"
+		  " tcpSocketMT Worker thread.");
+    throw;
+  }
+  
+  // Waking up the rendezvouser is a policy decision
+  //rendezvous->wakeUp();
+             
+  PTRACE("Worker", "worker finishing request dispatch");
+}
+
+void PoolWorker::dispatchOne(tcpSocketStrand *s){
+  tcpStrandWorker::dispatchOne(s);
+  // wake up the rendezvous thread
+  rendezvous->wakeUpWatchStrand(s);
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// Old tcpSocketWorker
+#if 0
 void
 tcpSocketWorker::run(void *arg)
 {
@@ -1494,28 +1748,28 @@ tcpSocketWorker::_dispatchOne(tcpSocketStrand *s)
   PTRACE("Worker", "in worker dispatch function");
    
   try {
-		GIOP_S::dispatcher(s);
+    GIOP_S::dispatcher(s);
   } catch (CORBA::COMM_FAILURE&) {
-	  PTRACE("Worker","#### Communication failure. Connection closed.");
-	  throw;
+    PTRACE("Worker","#### Communication failure. Connection closed.");
+    throw;
   } catch(const omniORB::fatalException& ex) {
-	  if( omniORB::trace(0) ) {
-	    omniORB::logger l;
-	    l << "You have caught an omniORB bug, details are as follows:\n"
-	      " file: " << ex.file() << "\n"
-	      " line: " << ex.line() << "\n"
-	      " mesg: " << ex.errmsg() << "\n";
-  	}
-	  throw;
+    if( omniORB::trace(0) ) {
+      omniORB::logger l;
+      l << "You have caught an omniORB bug, details are as follows:\n"
+	" file: " << ex.file() << "\n"
+	" line: " << ex.line() << "\n"
+	" mesg: " << ex.errmsg() << "\n";
+    }
+    throw;
   } catch (...) {
-	  omniORB::logs(0, "An exception has occured and was caught by"
-		  	      " tcpSocketMT Worker thread.");
-   	throw;
+    omniORB::logs(0, "An exception has occured and was caught by"
+		  " tcpSocketMT Worker thread.");
+    throw;
   }
   
   rendezvous->wakeUp();
              
-	PTRACE("Worker", "worker finishing request dispatch");
+  PTRACE("Worker", "worker finishing request dispatch");
 }
 
 void
@@ -1549,3 +1803,4 @@ tcpSocketWorker::_realRun(void *arg)
 
   PTRACE("Worker","exit.");
 }
+#endif
