@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/12/14 11:53:56  djs
+# Support for CORBA::TypeCode and CORBA::Any
+#
 # Revision 1.3  1999/12/09 20:41:24  djs
 # Now runs typecode and any generator
 #
@@ -209,6 +212,8 @@ class Environment:
 
         if isinstance(type, idltype.String):
             return "CORBA::String_member"
+        if type.kind() == idltype.tk_TypeCode:
+            return "CORBA::TypeCode_member"
         if isinstance(type, idltype.Sequence):
             return self.principalID(type.seqType())
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15  1999/12/14 11:53:57  djs
+# Support for CORBA::TypeCode and CORBA::Any
+#
 # Revision 1.14  1999/12/09 20:41:25  djs
 # Now runs typecode and any generator
 #
@@ -217,7 +220,10 @@ ttsMap = {
     idltype.tk_boolean:    "CORBA::Boolean",
     idltype.tk_octet:      "CORBA::Octet",
     #
-    idltype.tk_void:       "void"
+    idltype.tk_void:       "void",
+    idltype.tk_any:        "CORBA::Any",
+    idltype.tk_TypeCode:   "CORBA::TypeCode"
+    
     }
 
 
@@ -230,6 +236,8 @@ def principalID(type, from_scope=[]):
 
     if isinstance(type, idltype.String):
         return "CORBA::String_member"
+    if type.kind() == idltype.tk_TypeCode:
+        return "CORBA::TypeCode_member"
     if isinstance(type, idltype.Sequence):
         return principalID(type.seqType(), from_scope)
 
@@ -286,6 +294,9 @@ def isVariableType(type):
     assert isinstance(type, idltype.Type)
     
     if isinstance(type, idltype.Base):
+        if type.kind() == idltype.tk_any or \
+           type.kind() == idltype.tk_TypeCode:
+            return 1
         return 0
     elif isinstance(type, idltype.Sequence) or \
          isinstance(type, idltype.Fixed)    or \
@@ -384,6 +395,9 @@ def guardName(scopedName):
 
 def objRefTemplate(type, suffix, environment):
     name = type.decl().scopedName()
+    if name == ["CORBA", "Object"]:
+        return "CORBA::Object_member"
+    
     rel_name = environment.relName(name)
     objref_rel_name = self.scope(rel_name) +\
                       ["_objref_" + self.name(rel_name)]
@@ -433,6 +447,11 @@ def operationArgumentType(type, environment, virtualFn = 0, fully_scope = 0):
                      "_CORBA_ObjRef_OUT_arg<_objref_" + param_type + "," + \
                      param_type + "_Helper >",
                      param_type + "_ptr&" ]
+        elif deref_type.kind() == idltype.tk_TypeCode:
+            return [ "CORBA::TypeCode_ptr",
+                     "CORBA::TypeCode_ptr",
+                     "CORBA::TypeCode_OUT_arg",
+                     "CORBA::TypeCode_ptr&" ]
         else:
             pass
             # same as the other kind
@@ -442,6 +461,16 @@ def operationArgumentType(type, environment, virtualFn = 0, fully_scope = 0):
                  "const char* ",
                  "CORBA::String_out ",
                  "CORBA::String_INOUT_arg " ]
+    elif deref_type.kind() == idltype.tk_any:
+        return [ "CORBA::Any*",
+                 "const CORBA::Any&",
+                 "CORBA::Any_OUT_arg",
+                 "CORBA::Any&" ]
+    elif deref_type.kind() == idltype.tk_TypeCode:
+        return [ "CORBA::TypeCode_ptr",
+                 "CORBA::TypeCode_ptr",
+                 "CORBA::TypeCode_OUT_arg",
+                 "CORBA::TypeCode_INOUT_arg" ]
     elif isinstance(deref_type, idltype.Base) or \
          deref_type.kind() == idltype.tk_enum:
         return [ param_type,
@@ -984,7 +1013,7 @@ def isSequence(type, force_deref = 0):
 def isTypeCode(type, force_deref = 0):
     if force_deref:
         type = deref(type)
-    return type.kind() == idltype.tk_typecode
+    return type.kind() == idltype.tk_TypeCode
 
 # Ignore the force_deref argument
 def isTypedef(type, force_deref = 0):
@@ -1004,6 +1033,12 @@ def isVoid(type, force_deref = 0):
     if force_deref:
         type = deref(type)
     return type.kind() == idltype.tk_void
+
+def isAny(type, force_deref = 0):
+    if force_deref:
+        type = deref(type)
+    return type.kind() == idltype.tk_any
+
 
 # ------------------------------------------------------------------
 

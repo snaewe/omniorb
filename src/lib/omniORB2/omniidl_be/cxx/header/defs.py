@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.12  1999/12/14 11:52:30  djs
+# Support for CORBA::TypeCode and CORBA::Any
+#
 # Revision 1.11  1999/12/01 17:03:15  djs
 # Added support for Typecodes and Anys
 #
@@ -1047,11 +1050,10 @@ typedef _CORBA_ConstrType_@type@_Var<@name@> _var_type;""",
                 memtype = "CORBA::String_member"
             elif tyutil.isObjRef(derefType):
                 memtype = tyutil.objRefTemplate(derefType, "Member", environment)    
+            elif tyutil.isTypeCode(derefType):
+                memtype = "CORBA::TypeCode_member"
             elif tyutil.isTypedef(memberType):
                 memtype = environment.principalID(memberType)
-                #memtype = tyutil.name(memberType.name())
-                #            print "[[[ memtype = " + repr(memtype) + "]]]"
-                # Deal with sequence members
             elif tyutil.isSequence(memberType):
                 sequence_template = tyutil.sequenceTemplate(memberType, environment)
 
@@ -1562,6 +1564,41 @@ public:
                            isDefault = str(c.isDefault),
                            discrimvalue = discrimvalue,
                            loop = str(loop))
+            elif derefType.kind() == idltype.tk_any:
+                stream.out("""\
+  const CORBA::Any &@name@ () const { return pd_@name@; }
+  CORBA::Any &@name@ () { return pd_@name@; }
+  void @name@ (const CORBA::Any& _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = _value;
+  }""",
+                           name = member,
+                           isDefault = str(c.isDefault),
+                           discrimvalue = discrimvalue)
+            elif derefType.kind() == idltype.tk_TypeCode:
+                stream.out("""\
+  CORBA::TypeCode_ptr @name@ () const { return pd_@name@._ptr; }
+  void @name@(CORBA::TypeCode_ptr _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = CORBA::TypeCode::_duplicate(_value);
+  }
+  void @name@(const CORBA::TypeCode_member& _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = _value;
+  }
+  void @name@(const CORBA::TypeCode_var& _value) {
+    pd__d = @discrimvalue@;
+    pd__default = @isDefault@;
+    pd_@name@ = _value;
+  }""",
+                           name = member,
+                           isDefault = str(c.isDefault),
+                           discrimvalue = discrimvalue)
+                
+                
             elif isinstance(derefType, idltype.Base) or \
                             tyutil.isEnum(derefType):
                 # basic type
@@ -1728,6 +1765,8 @@ private:
             else:
                 type_str = tyutil.objRefTemplate(derefType, "Member",
                                                  environment)
+        elif tyutil.isTypeCode(derefType):
+            type_str = "CORBA::TypeCode_member"
         elif tyutil.isSequence(caseType) and anonymous_array:
             # the typedef _name_seq is not defined in this case
             type_str = tyutil.sequenceTemplate(caseType, environment)
@@ -1755,7 +1794,9 @@ private:
             else:
                 if (isinstance(derefType, idltype.Declared) or  \
                     isinstance(derefType, idltype.Sequence) or  \
-                    isinstance(derefType, idltype.String))  and \
+                    isinstance(derefType, idltype.String)   or \
+                    derefType.kind() == idltype.tk_any      or \
+                    derefType.kind() == idltype.tk_TypeCode)  and \
                     not(tyutil.isEnum(derefType)):
                     this_stream = outside
                     used_outside = 1
