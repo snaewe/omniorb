@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.26  2004/12/20 20:13:21  dgrisby
+  Log when switching addresses in a rope.
+
   Revision 1.1.4.25  2003/09/25 13:12:20  dgrisby
   Correctly complain if some parameters are set to zero.
 
@@ -560,6 +563,11 @@ giopRope::notifyCommFailure(const giopAddress* addr,
     if (pd_address_in_use >= pd_addresses_order.size())
       pd_address_in_use = 0;
     addr_in_use = pd_addresses[pd_addresses_order[pd_address_in_use]];
+
+    if (omniORB::trace(20)) {
+      omniORB::logger l;
+      l << "Switch rope to use address " << addr_in_use->address() << "\n";
+    }
   }
 
   if (!heldlock) {

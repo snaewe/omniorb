@@ -1,3 +1,11 @@
+Mon Dec 20 20:11:38 GMT 2004 dgrisby
+====================================
+
+- Log when switching addresses in a rope.
+
+src/lib/omniORB/orbcore/giopRope.cc
+
+
 Mon Dec 20 18:06:02 GMT 2004 dgrisby
 ====================================
 
