@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/12/16 16:10:05  djs
+# Fix to make the output order consistent with the old compiler
+#
 # Revision 1.3  1999/12/14 11:51:53  djs
 # Support for CORBA::TypeCode, CORBA::Any and CORBA::Object
 #
@@ -54,9 +57,12 @@ self = typecode
 
 def __init__(stream):
     self.stream = stream
+    # declarations are built in two halves, this is to allow us
+    # to keep the same order as the old backend. It could be simpler.
+    self.tophalf = stream
+    self.bottomhalf = stream
     self.__needs_ms_workaround = 1
     self.__immediatelyInsideModule = 0
-    self.__put_it_here = None
     return self
 
 # Control arrives here
@@ -89,11 +95,7 @@ def mapRepoID(id):
 def external_linkage(decl, mangled_name = ""):
     assert isinstance(decl, idlast.DeclRepoId)
 
-    if self.__put_it_here == None:
-        where = stream
-    else:
-        where = self.__put_it_here
-
+    where = bottomhalf
     guard_name = tyutil.guardName(decl.scopedName())
     scopedName = map(tyutil.mapID, decl.scopedName())
     scope = tyutil.scope(scopedName)
@@ -114,7 +116,7 @@ const CORBA::TypeCode_ptr @tc_name@ = @mangled_name@;
                    tc_name = tc_name, mangled_name = mangled_name)
         return
 
-    stream.out("""\
+    where.out("""\
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
 // MSVC++ does not give the constant external linkage otherwise.""")
     if len(scope) > 1:
@@ -260,11 +262,19 @@ def visitStruct_structMember(node):
         if config.EMULATE_BUGS():
             repoID = mapRepoID(repoID)
             struct_name = tyutil.mapID(tyutil.name(scopedName))
-            stream.out("""\
+            tophalf.out("""\
 static CORBA::TypeCode_ptr _0RL_tc_@mangled_name@ = CORBA::TypeCode::PR_struct_tc("@repoID@", "@name@", _0RL_structmember_@mangled_name@, @n@);""",
                        mangled_name = mangled_name,
                        name = struct_name, n = str(num),
                        repoID = repoID)
+
+    for child in node.members():
+        if child.constrType():
+            child.memberType().decl().accept(self)
+
+    tophalf.out(str(buildMembersStructure(node)))
+    mkTypeCode(node)
+    return
 
     # Filter the children who are nested structures
     nested_struct = filter(lambda x: x.constrType() and \
@@ -277,10 +287,23 @@ static CORBA::TypeCode_ptr _0RL_tc_@mangled_name@ = CORBA::TypeCode::PR_struct_t
         visitStruct_structMember(child_node)
 
     # Build the StructMember for this structure
-    stream.out(str(buildMembersStructure(node)))
+    tophalf.out(str(buildMembersStructure(node)))
     mkTypeCode(node)
 
 def visitStruct_linkage(node):
+
+    insideModule = self.__immediatelyInsideModule
+    self.__immediatelyInsideModule = 0
+    for child in node.members():
+        if child.constrType():
+            child.memberType().decl().accept(self)
+    self.__immediatelyInsideModule = insideModule
+
+    external_linkage(node)
+    return
+    
+        
+    
     # Filter the children who are nested structures
     nested_struct = filter(lambda x: x.constrType() and \
                            tyutil.isStruct(x.memberType()),
@@ -298,83 +321,23 @@ def visitStruct_linkage(node):
     
 def visitStruct(node):
 
+    # the key here is to redirect the bottom half to a buffer
+    # just for now
+    oldbottomhalf = self.bottomhalf
+    self.bottomhalf = util.StringStream()
+    # do the recursion
+
+    insideModule = self.__immediatelyInsideModule
+    self.__immediatelyInsideModule = 0    
     visitStruct_structMember(node)
-    visitStruct_linkage(node)
-    return
-
-    def mkTypeCode(node):
-        scopedName = node.scopedName()
-        mangled_name = tyutil.guardName(scopedName)
-        num = numMembers(node)
-        repoID = node.repoId()
-        if config.EMULATE_BUGS():
-            repoID = mapRepoID(repoID)
-            struct_name = tyutil.mapID(tyutil.name(scopedName))
-            stream.out("""\
-static CORBA::TypeCode_ptr _0RL_tc_@mangled_name@ = CORBA::TypeCode::PR_struct_tc("@repoID@", "@name@", _0RL_structmember_@mangled_name@, @n@);""",
-                       mangled_name = mangled_name,
-                       name = struct_name, n = str(num),
-                       repoID = repoID)
-
-    # Filter the children who are nested structures
-    nested_struct = filter(lambda x: x.constrType() and \
-                           isinstance(x, idlast.Struct),
-                           node.members())
+    self.__immediatelyInsideModule = insideModule
     
-    # Build the StructMember for the nested struct children
-    for child in nested_struct:
-        stream.out(str(buildMembersStructure(child)))
-        mkTypeCode(child)
-        
-    # Build the StructMember for this structure
-    stream.out(str(buildMembersStructure(node)))
-    mkTypeCode(node)
-
-    # Sort out the external linkage for the nested struct children
-    for child in nested_struct:
-        external_linkage(child)
-
-    # Sort out our own external linkage
+    #visitStruct_linkage(node)
     external_linkage(node)
-    
+    # restore the old bottom half
+    oldbottomhalf.out(str(self.bottomhalf))
+    self.bottomhalf = oldbottomhalf
     return
-    
-    needs_ms_workaround = self.__needs_ms_workaround
-    # bit of a hack to store the linkage stuff for later
-    # just to mimic the old backend
-    if self.__needs_ms_workaround == 1:
-        # first level of nesting
-        self.__put_it_here = util.StringStream()
-        
-    self.__needs_ms_workaround = 0
-    for m in node.members():
-        # deal with nested definitions
-        m.accept(self)
-
-    num = numMembers(node)
-            
-    self.__needs_ms_workaround = needs_ms_workaround
-
-    scopedName = node.scopedName()
-    mangled_name = tyutil.guardName(scopedName)
-    stream.out(str(buildMembersStructure(node)))
-    
-    repoID = node.repoId()
-    if config.EMULATE_BUGS():
-        repoID = mapRepoID(repoID)
-    struct_name = tyutil.mapID(tyutil.name(scopedName))
-    stream.out("""\
-static CORBA::TypeCode_ptr _0RL_tc_@mangled_name@ = CORBA::TypeCode::PR_struct_tc("@repoID@", "@name@", _0RL_structmember_@mangled_name@, @n@);""",
-               mangled_name = mangled_name, name = struct_name, n = str(num),
-               repoID = repoID)
-
-    if self.__needs_ms_workaround == 1:
-        # first level of nesting
-        stream.out(str(self.__put_it_here))
-        self.__put_it_here = None
-    
-
-    external_linkage(node)
 
     
 
@@ -418,7 +381,7 @@ def visitUnion(node):
     if hasDefault != None:
         default_str = ", " + str(hasDefault)
 
-    stream.out("""\
+    tophalf.out("""\
 static CORBA::PR_unionMember _0RL_unionMember_@mangled_name@[] = {
   @members@
 };
@@ -452,7 +415,7 @@ def visitEnum(node):
 
     tc_name = name.prefixName(scopedName, "_tc_")
 
-    stream.out("""\
+    tophalf.out("""\
 static const char* _0RL_enumMember_@mangled_name@[] = { @elements@ };
 static CORBA::TypeCode_ptr _0RL_tc_@mangled_name@ = CORBA::TypeCode::PR_enum_tc("@repoID@", "@name@", _0RL_enumMember_@mangled_name@, @numcases@);""",
                mangled_name = mangled_name,
@@ -496,7 +459,7 @@ def visitTypedef(node):
         typedef_name = tyutil.mapID(tyutil.name(scopedName))
         mangled_name = "_0RL_tc_" + tyutil.guardName(scopedName)
 
-        stream.out("""\
+        tophalf.out("""\
 static CORBA::TypeCode_ptr @mangled_name@ = CORBA::TypeCode::PR_alias_tc("@repoID@", "@name@", @typecode@);
 
 """, mangled_name = mangled_name, repoID = repoID,
@@ -529,7 +492,7 @@ def visitException(node):
     struct_member = "_0RL_structmember_" + mangled_name
     if num == 0:
         struct_member = "(CORBA::PR_structMember*) 0"
-    stream.out("""\
+    tophalf.out("""\
 static CORBA::TypeCode_ptr _0RL_tc_@mangled_name@ = CORBA::TypeCode::PR_exception_tc("@repoID@", "@name@", @struct_member@, @n@);""",
                mangled_name = mangled_name, name = ex_name, n = str(num),
                struct_member = struct_member,
