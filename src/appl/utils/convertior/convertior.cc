@@ -26,7 +26,7 @@
 
 #include <iostream.h>
 #include <stdlib.h>
-#if defined(UnixArchitecture)
+#ifndef __WIN32__
 #include <unistd.h>
 #endif
 
