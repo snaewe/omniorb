@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2003/07/10 21:52:31  dgrisby
+  Value chunks should start after URL / repoids.
+
   Revision 1.1.4.2  2003/05/20 16:53:12  dgrisby
   Valuetype marshalling support.
 
@@ -1320,8 +1323,8 @@ class cdrValueChunkStream : public cdrStream {
 public:
   cdrValueChunkStream(cdrStream& stream) :
     pd_actual(stream), pd_nestLevel(0), pd_lengthPtr(0),
-    pd_remaining(0), pd_inChunk(0), pd_justEnded(0), pd_reader(0),
-    pd_exception(0)
+    pd_remaining(0), pd_inHeader(0), pd_inChunk(0), pd_justEnded(0),
+    pd_reader(0), pd_exception(0)
   {
     pd_unmarshal_byte_swap = pd_actual.pd_unmarshal_byte_swap;
     pd_marshal_byte_swap   = pd_actual.pd_marshal_byte_swap;
@@ -1334,16 +1337,23 @@ public:
 
   virtual ~cdrValueChunkStream();
 
-  void startOutputValue(_CORBA_Long valueTag);
-  // Start a chunk for a new value, with the given value tag.
-  // Increments the nesting level. Must be called at least once before
-  // using the stream for writing.
+  void startOutputValueHeader(_CORBA_Long valueTag);
+  // Start a new value with the given value tag. The value tag must
+  // specify chunking. Must be called at least once before using the
+  // stream for writing.
+
+  void startOutputValueBody();
+  // End the value header and start a chunk for the value body.
 
   void endOutputValue();
   // End the current value, decrementing the nesting level.
 
   void initialiseInput();
   // Initialise stream as an input stream.
+
+  void startInputValueBody();
+  // Start reading the value body.
+
 
   inline _CORBA_Long nestLevel() {
     return pd_nestLevel;
@@ -1440,6 +1450,7 @@ private:
   _CORBA_Long    pd_nestLevel; // The nesting level of chunks
   _CORBA_Long*   pd_lengthPtr; // Pointer to the chunk length field
   _CORBA_ULong   pd_remaining; // !=0 => octets remaining in chunk
+  _CORBA_Boolean pd_inHeader;  // True if we're inside a value header
   _CORBA_Boolean pd_inChunk;   // True if we're inside a chunk
   _CORBA_Boolean pd_justEnded; // True if we've just ended a value
   _CORBA_Boolean pd_reader;    // True if we're a reader not a writer
