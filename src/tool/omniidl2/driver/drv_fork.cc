@@ -114,6 +114,11 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 typedef int pid_t;
 #endif
 
+#if defined(__irix__) 
+#include      <unistd.h>              // POSIX standard types
+#include      <wait.h>                // POSIX definition of wait()
+#endif
+
 #if !defined(__WIN32__) && !defined(__VMS)
 
 // Note that Windows NT version can only handle one file on command line.

@@ -129,6 +129,11 @@ extern "C" char * mktemp(char *);
 typedef int pid_t;
 #endif
 
+#if defined(__irix__) 
+#include      <unistd.h>              // POSIX standard types
+#include      <wait.h>                // POSIX definition of wait()
+#endif
+
 #ifdef __WIN32__
 #include <io.h>
 #include <process.h>
@@ -152,6 +157,10 @@ static  idl_bool  copy_src = I_TRUE;
 void
 DRV_cpp_new_location(char *new_loc)
 {
+#ifdef __irix__
+  char *help = strchr (new_loc, ' ');
+  if (help) *help = '\0';
+#endif
   arglist[0] = new_loc;
 }
 
@@ -161,6 +170,10 @@ DRV_cpp_new_location(char *new_loc)
 void
 DRV_cpp_putarg(char *str)
 {
+#ifdef __irix__
+  char *help = strchr (str, ' ');
+  if (help) *help = '\0';
+#endif
   if (argcount >= MAX_ARGLIST) {
     std::cerr << idl_global->prog_name()
          << GTDEVEL(": More than ")
