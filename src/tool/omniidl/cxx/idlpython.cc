@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.18  2001/01/05 16:04:17  dpg1
+// Error in import exception handling when omniidl is an executable.
+//
 // Revision 1.15.2.17  2000/11/30 11:40:47  dpg1
 // Add -nc option to omniidl to accept invalid IDL with identifiers
 // differing only by case.
@@ -1469,7 +1472,7 @@ main(int argc, char** argv)
 "\n"
 "try:\n"
 "    import omniidl.main\n"
-"except ImportError:\n"
+"except ImportError, msg:\n"
 "    sys.stderr.write('\\n\\n')\n"
 "    sys.stderr.write('omniidl: ERROR!\\n\\n')\n"
 "    sys.stderr.write('omniidl: Could not open Python files for IDL compiler\\n')\n"

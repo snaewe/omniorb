@@ -1,3 +1,11 @@
+Fri Jan  5 16:02:23 GMT 2001 dpg1
+=================================
+
+- Error in import exception handling when omniidl is an executable.
+
+src/tool/omniidl/idlpython.cc
+
+
 Mon Dec 11 09:51:35 GMT 2000 dpg1
 =================================
 
