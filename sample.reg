@@ -55,7 +55,7 @@ REGEDIT4
 ;   to match the <major>.<minor> version as specified. This function
 ;   should only be called before ORB_init(). Calling this function
 ;   after ORB_init()  does not cause the ORB to change its maximum
-;   supported version, in this case the ORB just returns its version
+;   supported version; in this case the ORB just returns its version
 ;   number in <major>.<minor>.
 ;
 ;   Valid values = 1.0 | 1.1 | 1.2
@@ -93,14 +93,14 @@ REGEDIT4
 ;    rejected. If you set it to zero, the ORB will silently skip the
 ;    unread part. The problem with this behaviour is that the header
 ;    message size may actually be garbage, caused by a bug in the
-;    sender's code. The receiving thread may forever block on the
+;    sender's code. The receiving thread may block forever on the
 ;    strand as it tries to read more data from it. In this case the
 ;    sender won't send any more as it thinks it has marshalled in all
 ;    the data.
 ;
 ;    Valid values = 0 or 1
 ;
-"strictIIOP" = "0"
+"strictIIOP" = "1"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; lcdMode
@@ -119,9 +119,9 @@ REGEDIT4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; tcAliasExpand flag
 ;
-;    This flag is used to indicate whether TypeCodes associated with anys
+;    This flag is used to indicate whether TypeCodes associated with Anys
 ;    should have aliases removed. This functionality is included because
-;    some ORBs will not recognise an Any containing a TypeCode containing
+;    some ORBs will not recognise an Any containing a TypeCode with
 ;    aliases to be the same as the actual type contained in the Any. Note
 ;    that omniORB will always remove top-level aliases, but will not remove
 ;    aliases from TypeCodes that are members of other TypeCodes (e.g.
@@ -140,10 +140,10 @@ REGEDIT4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; useTypeCodeIndirections
 ;
-;    If true (the default), typecode indirectional will be used. Set
+;    If true (the default), typecode indirections will be used. Set
 ;    this to false to disable that. Setting this to false might be
 ;    useful to interoperate with another ORB implementation that cannot
-;    handle indirectional properly.
+;    handle indirections properly.
 ;   
 ;    Valid values = 0 or 1
 "useTypeCodeIndirections" = "1"
@@ -202,12 +202,12 @@ REGEDIT4
 ;     1. unbounded string operator>>=(char*&)
 ;     2. bounded string   operator>>=(to_string)
 ;     3. object reference operator>>=(A_ptr&) for interface A
-;   Returns a copy of the value. The caller must free the returned
+;   Return a copy of the value. The caller must free the returned
 ;   value later.
 ;
 ;   With 2.8.0 and later, the semantics becomes non-copy, i.e. the Any
 ;   still own the storage of the returned value.
-;   This would cause problem in programs that is written to use the
+;   This would cause a problem in programs that is written to use the
 ;   pre-2.8.0 semantics. To make it easier for the transition,
 ;   set omniORB_27_CompatibleAnyExtraction to 1.
 ;   This would revert the semantics to the pre-2.8.0 versions.
@@ -243,10 +243,10 @@ REGEDIT4
 ; InitRef
 ;
 ;   Specify the IOR the ORB should return in response to a call to
-;   resolve_initial_reference.
+;   resolve_initial_references.
 ;
-;   There can be more than one configuration lines defining InitRef.
-;   Each lines add one initial reference to the ORB.
+;   There can be more than one configuration line defining InitRef.
+;   Each line adds one initial reference to the ORB.
 ;
 ;   Here are some valid examples:
 ;
@@ -280,7 +280,7 @@ REGEDIT4
 ;   A call to resolve_initial_references("MyService") will return the object
 ;   reference denoted by `corbaloc::myhost.example.com/MyService'.
 ;
-;   The default for is empty.
+;   The default is empty.
 [HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\DefaultInitRef]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -290,8 +290,8 @@ REGEDIT4
 ;    the server, the rules in clientTransportRule filter and prioritise
 ;    the order in which the transports are used. 
 ;
-;    There can be more than one configuration lines of this type.
-;    Each lines add one rule to the selection process. The rules are applied
+;    There can be more than one configuration line of this type.
+;    Each line adds one rule to the selection process. The rules are applied
 ;    in the order it is defined. The relative positions of the rules define
 ;    the relative priority. The first rule has the highest priority.
 ;
@@ -316,13 +316,13 @@ REGEDIT4
 ;        clientTransportRule =     *   unix,tcp,ssl
 ;    If any rule is specified, no implicit rule will be applied.
 ;
-;    Give an IOR and for each of the addresses within it, the ORB matches the
+;    Give an IOR, for each of the addresses within it, the ORB matches the
 ;    address to the rules. If one is found, the position of the matched rule
 ;    and the action is noted. If the action is none, the address is discarded.
 ;    If the action does not contain the transport the address is specified for,
 ;    e.g. the action is "ssl" but the address is "tcp", the address is 
 ;    discarded. Otherwise, the address and action is entered as one of the
-;    candidate to use. Having gone through all the addresses, the candidiates
+;    candidates to use. Having gone through all the addresses, the candidiates
 ;    available are then ordered based on the priority of the matching rules and
 ;    used accordingly.
 ;
@@ -373,10 +373,10 @@ REGEDIT4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; maxGIOPConnectionPerServer
 ;
-;   The ORB could open more than one connections to a server
+;   The ORB could open more than one connection to a server
 ;   depending on the number of concurrent invocations to the same
-;   server. This variable decide what is the maximum number of
-;   connections to use per server. This variable is read only once
+;   server. This variable decides the maximum number of connections
+;   to use per server. This variable is read only once
 ;   at ORB_init. If the number of concurrent invocations exceed this
 ;   number, the extra invocations would be blocked until the
 ;   the outstanding ones return.
@@ -398,7 +398,7 @@ REGEDIT4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; offerBiDirectionalGIOP
 ;
-;   Applies to the client side. Set to 1 to indicates that the
+;   Applies to the client side. Set to 1 to indicate that the
 ;   ORB may choose to use a connection to do bidirectional GIOP
 ;   calls. Set to 0 means the ORB should never do bidirectional.
 ;
@@ -418,14 +418,14 @@ REGEDIT4
 ;
 ;   Valid values = 0 or 1
 ;
-"diiThrowsSysExceptions" = "1"
+"diiThrowsSysExceptions" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; verifyObjectExistsAndType
 ;
 ;   If the value of this variable is 0 then the ORB will not
 ;   send a GIOP LOCATE_REQUEST message to verify the existence of
-;   the object prior to the first invocation. Setting this variable
+;   the object prior to the first invocation. Set this variable
 ;   if the other end is a buggy ORB that cannot handle GIOP
 ;   LOCATE_REQUEST. 
 ;
@@ -450,7 +450,7 @@ REGEDIT4
 ;
 ; Applies to the client side. Non-zero enables the use of Sun's bootstrap
 ; agent protocol to resolve initial references. The value is the host name
-; where requests for initial references should be sent. Only uses this
+; where requests for initial references should be sent. Only use this
 ; option to interoperate with Sun's javaIDL.
 ;
 ;"bootstrapAgentHostname" = "localhost"
@@ -482,8 +482,8 @@ REGEDIT4
 ;         endPointNoPublish - same as endPoint but do not publish it in IORs
 ;         endPointNoListen - only publish it in IORs
 ;
-;    There can be more than one configuration lines defining an endPoint.
-;    Each lines add one endpoint to the server.
+;    There can be more than one configuration line defining endPoints.
+;    Each line adds one endpoint to the server.
 ;
 ;    Each configuration line can start with the key 'endPoint', e.g.
 ;
@@ -498,7 +498,7 @@ REGEDIT4
 ;         1. giop:tcp:[<host>]:[<port>]
 ;               The <host> and <port> parameter are optional. If either or
 ;               both are missing, the ORB fills in the blank. For example,
-;               "giop:tcp::" will cause the ORB to pick a random tcp port
+;               "giop:tcp::" will cause the ORB to pick an arbitrary tcp port
 ;               as the endpoint and it will pick one IP address of the host
 ;               as the host name.
 ;
@@ -518,8 +518,8 @@ REGEDIT4
 ;   It is possible to use the ORB's transport extension framework to add
 ;   a new transport to the ORB. In that case, the transport must define its
 ;   own transport string format and must obey the colon separation rule.
-;   For example, if one is to create a transport which execute an arbitrary
-;   shell script and let the ORB uses its stdin and stdout for sending and
+;   For example, if one is to create a transport which executes an arbitrary
+;   shell script and let the ORB use its stdin and stdout for sending and
 ;   receiving giop messages,  a transport string could look like this:
 ;         giop:shell:magic_gw
 ;                ^     ^
@@ -532,7 +532,7 @@ REGEDIT4
 ;   is specified in the configuration file
 ;
 ;   Other than tcp, none of the transports are guaranteed to be available
-;   on all platforms. If one specify say:
+;   on all platforms. If one specifies say:
 ;          endPoint = giop:ssl::
 ;   and the ORB cannot initialise an ssl endpoint, the INITIALIZE exception
 ;   will be raised. Even though ssl is supported on a platform, its transport
@@ -564,12 +564,12 @@ REGEDIT4
 ; serverTransportRule
 ;
 ;    When the server sees a connection request from a client, it looks at the
-;    client's address and use the rules in serverTransportRule to determine
+;    client's address and uses the rules in serverTransportRule to determine
 ;    if the connection should be accepted.
 ;
-;    There can be more than one configuration lines of this type.
-;    Each lines add one rule to the selection process. The rules are applied
-;    in the order it is defined until one matching rule is found. 
+;    There can be more than one configuration line of this type.
+;    Each line adds one rule to the selection process. The rules are applied
+;    in the order they are defined until one matching rule is found. 
 ;
 ;    The syntax of a rule is as follows:
 ;[HKEY_LOCAL_MACHINE\SOFTWARE\ATT\omniORB\serverTransportRule]
@@ -654,7 +654,7 @@ REGEDIT4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; maxServerThreadPerConnection
 ;
-;   The max. no. of threads the server will dispatch to server the
+;   The max. no. of threads the server will dispatch to serve the
 ;   requests coming from one connection.
 ;
 ;   Valid values = (n >= 1) 
@@ -711,8 +711,8 @@ REGEDIT4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; acceptBiDirectionalGIOP
 ;
-;   Applies to the server side. Set to 1 to indicates that the
-;   ORB may choose to accept a clients offer to use bidirectional
+;   Applies to the server side. Set to 1 to indicate that the
+;   ORB may choose to accept a client's offer to use bidirectional
 ;   GIOP calls on a connection. Set to 0 means the ORB should
 ;   never accept any bidirectional offer and should stick to normal
 ;   GIOP.
@@ -745,14 +745,17 @@ REGEDIT4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; objectTableSize
 ;
-;   Initial hash table size of the Active Object Map. The hash table is
-;   resized automatically depending on the number of active objects.
-;   If one is definitely going to instantiate a very large number of
-;   objects, change the table size to a large number would save the ORB
-;   a bit of time to readjust the hash table.
+;   Hash table size of the Active Object Map. If this is zero, the ORB
+;   uses a dynamically resized open hash table. This is normally the  
+;   best option, but it leads to less predictable performance since   
+;   any operation which adds or removes a table entry may trigger a   
+;   resize. If you set this to a non-zero value, the hash table has   
+;   the specified number of entries, and is never resized. Note that  
+;   the hash table is open, so this does not limit the number of      
+;   active objects, just how efficiently they can be located.
 ;
 ;   Valid values = (n >= 0)
-;                  0 --> let the ORB choose
+;                  0 --> use a dynamically resized table.
 ;
 "objectTableSize" = "0"
 
