@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.25  1998/09/23 09:56:24  sll
+  Close registry key on WIN32 in the dtor of initFile.
+
   Revision 1.24  1998/08/21 19:11:36  sll
   Now store the initial object reference to the NameService into
   omniInitialReferences::singleton().
@@ -144,6 +147,11 @@ initFile::~initFile()
   if (fData) {
     delete [] fData;
   }
+#if defined(NTArchitecture)
+  if (use_registry) {
+    RegCloseKey(init_hkey);
+  }
+#endif
 }
 
 
