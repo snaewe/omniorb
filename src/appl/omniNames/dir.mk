@@ -1,8 +1,4 @@
-CORBA_INTERFACES = Naming
-
-DIR_CPPFLAGS = $(CORBA_CPPFLAGS) $(DEBUG_CPPFLAGS)
-
-CXXDEBUGFLAGS = -g
+DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
 
 CXXSRCS = omniNames.cc NamingContext_i.cc log.cc
 
@@ -18,5 +14,5 @@ export:: $(omniNames)
 
 OBJS = $(CXXSRCS:.cc=.o)
 
-$(omniNames): $(OBJS) $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+$(omniNames): $(OBJS) $(CORBA_LIB_DEPEND)
 	@(libs="$(CORBA_LIB)"; $(CXXExecutable))
