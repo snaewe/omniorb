@@ -28,10 +28,13 @@
 
 /*
   $Log$
-  Revision 1.13  1997/08/22 12:42:20  sll
-  Oh well, gcc does not like variable names starting with __, changed
-  the prefix to _0RL_.
+  Revision 1.14  1997/09/20 16:46:48  dpg1
+  Added LifeCycle code generation.
 
+// Revision 1.13  1997/08/22  12:42:20  sll
+// Oh well, gcc does not like variable names starting with __, changed
+// the prefix to _0RL_.
+//
   Revision 1.12  1997/08/21 21:13:09  sll
   Names of internal variables inside the stub code now all start with the
   prefix __ to avoid potential clash with identifiers defined in IDL.
@@ -698,6 +701,75 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in,
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 
+  IND(s); s << "catch (const CORBA::OBJECT_NOT_EXIST& ex) {\n";
+  INC_INDENT_LEVEL();
+
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+	
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	if (a->direction() == AST_Argument::dir_OUT)
+	  {
+	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	    if (mapping.is_arrayslice)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete [] _" << a->uqname() << ";\n";
+	      }
+	    else if (mapping.is_reference && mapping.is_pointer)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete _" << a->uqname() << ";\n";
+	      }
+	    else if (ntype == tObjref)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::release(_" << a->uqname() <<");\n";
+		  }	
+	    else if (ntype == tString)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::string_free(_"
+			  << a->uqname() << ");\n";
+	      }
+	  }
+	i.next();
+      }
+  }
+  if (!return_is_void())
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      
+      if (mapping.is_arrayslice)
+	{
+	  IND(s); s << "if (_0RL_result) delete [] _0RL_result;\n";
+	}
+      else if (ntype == tObjref)
+	{
+	  IND(s); s << "if (_0RL_result) CORBA::release(_0RL_result);\n";
+	}
+      else if (ntype == tString)
+	{
+	  IND(s); s << "if (_0RL_result) CORBA::string_free(_0RL_result);\n";
+	}
+      else if (mapping.is_pointer)
+	{
+	  IND(s); s << "if (_0RL_result) delete _0RL_result;\n";
+	}
+    }
+  IND(s); s << "if (_0RL_fwd) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "resetRopeAndKey();\n";
+  IND(s); s << "throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "throw;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
   IND(s); s << "catch (...) {\n";
   INC_INDENT_LEVEL();
   {
@@ -1235,6 +1307,840 @@ o2be_operation::produce_nil_skel(fstream &s,const char* alias_prefix)
   IND(s); s << "}\n";
 }
 
+void
+o2be_operation::produce_lcproxy_skel(fstream &s,o2be_interface &defined_in,
+				     const char* alias_prefix)
+{
+  idl_bool hasVariableLenOutArgs = I_FALSE;
+
+  IND(s); produce_decl(s,defined_in.lcproxy_fqname(),alias_prefix,I_FALSE);
+  s << "\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "assertObjectExistent();\n";
+  IND(s); s << "omniRopeAndKey _0RL_r;\n";
+  IND(s); s << "getRopeAndKey(_0RL_r);\n";
+
+  // Declare a local variable for result and variable length OUT arguments.
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	if (a->direction() == AST_Argument::dir_OUT)
+	  {
+	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	    if (ntype == tObjref || ntype == tString ||
+		(mapping.is_arrayslice) ||
+		(mapping.is_reference && mapping.is_pointer)) 
+	      {
+		hasVariableLenOutArgs = I_TRUE;
+		// Declare a local pointer variable
+		IND(s);
+		declareVarType(s,a->field_type(),0,mapping.is_arrayslice);
+		s << ((ntype != tObjref && ntype != tString)?" *":"") 
+		  << " _" << a->uqname() << "= 0;\n";
+	      }
+	  }
+	i.next();
+      }
+  }
+  if (!return_is_void()) 
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      if (ntype == tObjref || ntype == tString ||
+	  (mapping.is_arrayslice) ||
+	  (mapping.is_pointer))
+	{
+	  hasVariableLenOutArgs = I_TRUE;
+	  IND(s);
+	  declareVarType(s,return_type(),0,mapping.is_arrayslice);
+	  s << ((ntype != tObjref && ntype != tString)?" *":"") 
+	    << " _0RL_result" << "= 0;\n";
+	}
+      else
+	{
+	  IND(s);
+	  declareVarType(s,return_type());
+	  s << " _0RL_result;\n";
+	}
+    }
+
+  IND(s); s << "try {\n";
+  INC_INDENT_LEVEL();
+
+  IND(s); s << "GIOP_C _0RL_c(_0RL_r.rope());\n";
+  
+  // calculate request message size
+  IND(s); s << "CORBA::ULong _0RL_msgsize = GIOP_C::RequestHeaderSize(_0RL_r.keysize(),"
+	    << strlen(local_name()->get_string()) + 1 
+	    << ");\n";
+
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	switch(a->direction())
+	  {
+	  case AST_Argument::dir_IN:
+	    {
+	      ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
+	      produceSizeCalculation(s,a->field_type(),"_0RL_c","_0RL_msgsize",
+				     a->uqname(),ntype,mapping);
+	      break;
+	    }
+	  case AST_Argument::dir_INOUT:
+	    {
+	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
+	      produceSizeCalculation(s,a->field_type(),"_0RL_c","_0RL_msgsize",
+				     a->uqname(),ntype,mapping);
+	      break;
+	    }
+	  case AST_Argument::dir_OUT:
+	    break;
+	  }
+	i.next();
+      }
+  }
+
+
+  IND(s); s << "_0RL_c.InitialiseRequest(_0RL_r.key(),_0RL_r.keysize(),(char *)\""
+	    << local_name()->get_string() << "\"," << strlen(local_name()->get_string()) + 1 << ",_0RL_msgsize,"
+	    << ((flags() == AST_Operation::OP_oneway)?"1":"0")
+	    << ");\n";
+
+  // marshall arguments;
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	switch(a->direction())
+	  {
+	  case AST_Argument::dir_IN:
+	    {
+	      ntype = ast2ArgMapping(a->field_type(),wIN,mapping);
+	      produceMarshalCode(s,a->field_type(),"_0RL_c",
+				 a->uqname(),ntype,mapping);
+	      break;
+	    }
+	  case AST_Argument::dir_INOUT:
+	    {
+	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
+	      produceMarshalCode(s,a->field_type(),"_0RL_c",
+				 a->uqname(),ntype,mapping);
+	      break;
+	    }
+	  case AST_Argument::dir_OUT:
+	      break;
+	  }
+	i.next();
+      }
+  }
+
+  IND(s); s << "switch (_0RL_c.ReceiveReply())\n";  // invoke method
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+
+  IND(s); s << "case GIOP::NO_EXCEPTION:\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  // unmarshall results
+  if (hasVariableLenOutArgs)
+    {
+      {
+	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+	while (!i.is_done())
+	  {
+	    argMapping mapping;
+	    argType ntype;
+
+	    o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	    if (a->direction() == AST_Argument::dir_OUT)
+	      {
+		ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+		if (mapping.is_arrayslice) {
+		  IND(s); s << "_" << a->uqname() << " = ";
+		  AST_Decl *truetype = a->field_type();
+		  while (truetype->node_type() == AST_Decl::NT_typedef) {
+		    truetype = o2be_typedef::narrow_from_decl(truetype)->base_type();
+		  }
+		  s << o2be_array::narrow_from_decl(truetype)->fqname()
+		    << "_alloc();\n";
+		}
+		else if (mapping.is_reference && mapping.is_pointer) {
+		  IND(s); s << "_" << a->uqname() << " = new ";
+		  declareVarType(s,a->field_type());
+		  s << ";\n";
+		}
+	      }
+	    i.next();
+	  }
+      }
+      if (!return_is_void())
+	{
+	  argMapping mapping;
+	  argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+	  if (mapping.is_arrayslice) {
+	    IND(s); s << "_0RL_result = ";
+	    AST_Decl *truetype = return_type();
+	    while (truetype->node_type() == AST_Decl::NT_typedef) {
+	      truetype = o2be_typedef::narrow_from_decl(truetype)->base_type();
+	    }
+	    s << o2be_array::narrow_from_decl(truetype)->fqname()
+	      << "_alloc();\n";
+
+	  }
+	  else if (mapping.is_pointer) {
+	    IND(s); s << "_0RL_result = new ";
+	    declareVarType(s,return_type());
+	    s << ";\n";
+	  }
+	}
+    }
+
+  if (!return_is_void())
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      produceUnMarshalCode(s,return_type(),"_0RL_c","_0RL_result",ntype,mapping);
+    }
+
+
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	switch(a->direction())
+	  {
+	  case AST_Argument::dir_INOUT:
+	    {
+	      ntype = ast2ArgMapping(a->field_type(),wINOUT,mapping);
+	      switch (ntype) 
+		{
+		case tObjref:
+		  {
+		    char *_argname = new char[strlen(a->uqname())+2];
+		    strcpy(_argname,"_");
+		    strcat(_argname,a->uqname());
+		    IND(s);
+		    declareVarType(s,a->field_type(),0,0);
+		    s << " " << _argname << ";\n";
+		    produceUnMarshalCode(s,a->field_type(),"_0RL_c",_argname,
+					 ntype,mapping);
+		    IND(s); s << "CORBA::release(" << a->uqname() << ");\n";
+		    IND(s); s << a->uqname() << " = " << _argname << ";\n";
+		    delete [] _argname;
+		  }
+		  break;
+		case tString:
+		  {
+		    char *_argname = new char[strlen(a->uqname())+2];
+		    strcpy(_argname,"_");
+		    strcat(_argname,a->uqname());
+		    IND(s);
+		    declareVarType(s,a->field_type(),0,0);
+		    s << " " << _argname << ";\n";
+		    produceUnMarshalCode(s,a->field_type(),"_0RL_c",_argname,
+					 ntype,mapping);
+		    IND(s); s << "CORBA::string_free(" << a->uqname() << ");\n";
+		    IND(s); s << a->uqname() << " = " << _argname << ";\n";
+		    delete [] _argname;
+		  }
+		  break;
+		default:
+		  produceUnMarshalCode(s,a->field_type(),"_0RL_c",a->uqname(),
+				       ntype,mapping);
+		  break;
+		}
+	      break;
+	    }
+	  case AST_Argument::dir_OUT:
+	    {
+	      ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	      if (ntype == tObjref || ntype == tString ||
+		  (mapping.is_arrayslice) ||
+		  (mapping.is_reference && mapping.is_pointer)) 
+		{
+		  char *_argname = new char[strlen(a->uqname())+2];
+		  strcpy(_argname,"_");
+		  strcat(_argname,a->uqname());
+		  produceUnMarshalCode(s,a->field_type(),"_0RL_c",_argname,
+				       ntype,mapping);
+		  delete [] _argname;
+		}
+	      else
+		{
+		  produceUnMarshalCode(s,a->field_type(),"_0RL_c",a->uqname(),
+				       ntype,mapping);
+		}
+	      break;
+	    }
+	  case AST_Argument::dir_IN:
+	    break;
+	  }
+	i.next();
+      }
+  }
+
+  IND(s); s << "_0RL_c.RequestCompleted();\n";
+
+  if (hasVariableLenOutArgs)
+    {
+      {
+	UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+	while (!i.is_done())
+	  {
+	    argMapping mapping;
+	    argType ntype;
+
+	    o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	    if (a->direction() == AST_Argument::dir_OUT)
+	      {
+		ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+		if (ntype == tObjref || ntype == tString ||
+		    (mapping.is_arrayslice) ||
+		    (mapping.is_reference && mapping.is_pointer)) 
+		  {
+		    IND(s); s << a->uqname() << " = _" << a->uqname() << ";\n";
+		  }
+	      }
+	    i.next();
+	  }
+      }
+      if (!return_is_void()) {
+	IND(s); s << "return _0RL_result;\n";
+      }
+    }
+  else
+    {
+      if (!return_is_void()) {
+	IND(s); s << "return _0RL_result;\n";
+      }
+    }
+  IND(s); s << "break;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  
+  IND(s); s << "case GIOP::USER_EXCEPTION:\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  if (no_user_exception()) {
+    IND(s); s << "_0RL_c.RequestCompleted(1);\n";
+    IND(s); s << "throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);\n";
+  }
+  else {
+    // unmarshall user exceptions
+    size_t maxIdsize = 0;
+    {
+      UTL_ExceptlistActiveIterator i(exceptions());
+      while (!i.is_done())
+	{
+	  o2be_exception *excpt = o2be_exception::narrow_from_decl(i.item());
+	  if (excpt->repoIdConstLen() > maxIdsize)
+	    maxIdsize = excpt->repoIdConstLen();
+	  i.next();
+	}
+    }
+    IND(s); s << "CORBA::Char _0RL_excId[" << maxIdsize << "];\n";
+    IND(s); s << "CORBA::ULong _0RL_len;\n";
+    IND(s); s << "_0RL_len <<= _0RL_c;\n";
+    IND(s); s << "if (_0RL_len > " << maxIdsize << ") {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_0RL_c.RequestCompleted(1);\n";
+    IND(s); s << "throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+    IND(s); s << "else {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_0RL_c.get_char_array(_0RL_excId,_0RL_len);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+
+    UTL_ExceptlistActiveIterator i(exceptions());
+    idl_bool firstexc = I_TRUE;
+    while (!i.is_done())
+      {
+	o2be_exception *excpt = o2be_exception::narrow_from_decl(i.item());
+	IND(s); s << ((firstexc)? "if" : "else if") 
+		  << " (strcmp((const char *)_0RL_excId,"
+		  << excpt->repoIdConstName()
+		  << ") == 0) {\n";
+	INC_INDENT_LEVEL();
+	IND(s); s << excpt->fqname() << " _0RL_ex;\n";
+	argType ntype = tStructVariable;
+	argMapping mapping = {I_FALSE,I_TRUE,I_FALSE,I_FALSE};
+	produceUnMarshalCode(s,i.item(),"_0RL_c","_0RL_ex",ntype,mapping);
+	IND(s); s << "_0RL_c.RequestCompleted();\n";
+	IND(s); s << "throw _0RL_ex;\n";
+	DEC_INDENT_LEVEL();
+	IND(s); s << "}\n";
+	i.next();
+	firstexc = I_FALSE;
+      }
+    IND(s); s << "else {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << "_0RL_c.RequestCompleted(1);\n";
+    IND(s); s << "throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n";
+  }
+  IND(s); s << "break;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  IND(s); s << "case GIOP::SYSTEM_EXCEPTION:\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_0RL_c.RequestCompleted(1);\n";
+  IND(s); s << "throw omniORB::fatalException(__FILE__,__LINE__,\"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()\");\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  IND(s); s << "case GIOP::LOCATION_FORWARD:\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_0RL_c);\n";
+  IND(s); s << "_0RL_c.RequestCompleted();\n";
+  IND(s); s << "if (CORBA::is_nil(obj)) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "if (omniORB::traceLevel > 10) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "cerr << \"Received GIOP::LOCATION_FORWARD message that contains a nil object reference.\" << endl;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "_0RL_c.~GIOP_C();\n";
+  IND(s); s << defined_in.wrapproxy_fqname() << " *_0RL_w = _get_wrap_"
+	    << defined_in._fqname() << "();\n";
+  IND(s); s << "_0RL_w->_forward_to(obj);\n";
+  IND(s); s << "if (omniORB::traceLevel > 10) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "cerr << \"GIOP::LOCATION_FORWARD: retry request.\" << endl;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s);
+  if (!return_is_void()) {
+    s << "return _0RL_w->";
+    produce_invoke(s);
+    s << ";\n";
+  }
+  else {
+    s << "_0RL_w->";
+    produce_invoke(s);
+    s << ";\n";
+    IND(s); s << "return;\n";
+  }
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "catch (const CORBA::COMM_FAILURE& ex) {\n";
+  INC_INDENT_LEVEL();
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+	
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	if (a->direction() == AST_Argument::dir_OUT)
+	  {
+	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	    if (mapping.is_arrayslice)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete [] _" << a->uqname() << ";\n";
+	      }
+	    else if (mapping.is_reference && mapping.is_pointer)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete _" << a->uqname() << ";\n";
+	      }
+	    else if (ntype == tObjref)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::release(_" << a->uqname() <<");\n";
+		  }	
+	    else if (ntype == tString)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::string_free(_"
+			  << a->uqname() << ");\n";
+	      }
+	  }
+	i.next();
+      }
+  }
+  if (!return_is_void())
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      
+      if (mapping.is_arrayslice)
+	{
+	  IND(s); s << "if (_0RL_result) delete [] _0RL_result;\n";
+	}
+      else if (ntype == tObjref)
+	{
+	  IND(s); s << "if (_0RL_result) CORBA::release(_0RL_result);\n";
+	}
+      else if (ntype == tString)
+	{
+	  IND(s); s << "if (_0RL_result) CORBA::string_free(_0RL_result);\n";
+	}
+      else if (mapping.is_pointer)
+	{
+	  IND(s); s << "if (_0RL_result) delete _0RL_result;\n";
+	}
+    }
+  IND(s); s << defined_in.wrapproxy_uqname()
+	    << " *_0RL_w = _get_wrap_" << defined_in._fqname() << "();\n";
+  IND(s); s << "if (_0RL_w->_forwarded()) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_0RL_w->_reset_proxy();\n";
+  IND(s); s << "throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "throw;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  IND(s); s << "catch (const CORBA::OBJECT_NOT_EXIST& ex) {\n";
+  INC_INDENT_LEVEL();
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+	
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	if (a->direction() == AST_Argument::dir_OUT)
+	  {
+	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	    if (mapping.is_arrayslice)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete [] _" << a->uqname() << ";\n";
+	      }
+	    else if (mapping.is_reference && mapping.is_pointer)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete _" << a->uqname() << ";\n";
+	      }
+	    else if (ntype == tObjref)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::release(_" << a->uqname() <<");\n";
+		  }	
+	    else if (ntype == tString)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::string_free(_"
+			  << a->uqname() << ");\n";
+	      }
+	  }
+	i.next();
+      }
+  }
+  if (!return_is_void())
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      
+      if (mapping.is_arrayslice)
+	{
+	  IND(s); s << "if (_0RL_result) delete [] _0RL_result;\n";
+	}
+      else if (ntype == tObjref)
+	{
+	  IND(s); s << "if (_0RL_result) CORBA::release(_0RL_result);\n";
+	}
+      else if (ntype == tString)
+	{
+	  IND(s); s << "if (_0RL_result) CORBA::string_free(_0RL_result);\n";
+	}
+      else if (mapping.is_pointer)
+	{
+	  IND(s); s << "if (_0RL_result) delete _0RL_result;\n";
+	}
+    }
+  IND(s); s << defined_in.wrapproxy_uqname()
+	    << " *_0RL_w = _get_wrap_" << defined_in._fqname() << "();\n";
+  IND(s); s << "if (_0RL_w->_forwarded()) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_0RL_w->_reset_proxy();\n";
+  IND(s); s << "throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  IND(s); s << "throw;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  IND(s); s << "catch (...) {\n";
+  INC_INDENT_LEVEL();
+  {
+    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
+    while (!i.is_done())
+      {
+	argMapping mapping;
+	argType ntype;
+	
+	o2be_argument *a = o2be_argument::narrow_from_decl(i.item());
+	if (a->direction() == AST_Argument::dir_OUT)
+	  {
+	    ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
+	    if (mapping.is_arrayslice)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete [] _" << a->uqname() << ";\n";
+	      }
+	    else if (mapping.is_reference && mapping.is_pointer)
+	      {
+		IND(s); s << "if (_" << a->uqname() << ") delete _" << a->uqname() << ";\n";
+	      }
+	    else if (ntype == tObjref)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::release(_" << a->uqname() <<");\n";
+		  }	
+	    else if (ntype == tString)
+	      {
+		IND(s); s << "if (_" << a->uqname() 
+			  << ") CORBA::string_free(_"
+			  << a->uqname() << ");\n";
+	      }
+	  }
+	i.next();
+      }
+  }
+  if (!return_is_void())
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      
+      if (mapping.is_arrayslice)
+	{
+	  IND(s); s << "if (_0RL_result) delete [] _0RL_result;\n";
+	}
+      else if (ntype == tObjref)
+	{
+	  IND(s); s << "if (_0RL_result) CORBA::release(_0RL_result);\n";
+	}
+      else if (ntype == tString)
+	{
+	  IND(s); s << "if (_0RL_result) CORBA::string_free(_0RL_result);\n";
+	}
+      else if (mapping.is_pointer)
+	{
+	  IND(s); s << "if (_0RL_result) delete _0RL_result;\n";
+	}
+    }
+  IND(s); s << "throw;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+
+  if (!return_is_void())
+    {
+      IND(s); s << "{\n";
+      INC_INDENT_LEVEL();
+      IND(s); s << "// never reach here! Dummy return to keep some compilers happy.\n";
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      if (ntype == tObjref || ntype == tString ||
+	  (mapping.is_arrayslice) ||
+	  (mapping.is_pointer))
+	{
+	  IND(s);
+	  declareVarType(s,return_type(),0,mapping.is_arrayslice);
+	  s << ((ntype != tObjref && ntype != tString)?" *":"") 
+	    << " _0RL_result" << "= 0;\n";
+	}
+      else
+	{
+	  IND(s);
+	  declareVarType(s,return_type());
+	  s << " _0RL_result";
+	  switch (ntype)
+	    {
+	    case tShort:
+	    case tLong:
+	    case tUShort:
+	    case tULong:
+	    case tFloat:
+	    case tDouble:
+	    case tBoolean:
+	    case tChar:
+	    case tOctet:
+	      s << " = 0;\n";
+	      break;
+	    case tEnum:
+	      {
+		s << " = ";
+		AST_Decl *decl = return_type();
+		while (decl->node_type() == AST_Decl::NT_typedef)
+		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+		UTL_ScopeActiveIterator i(o2be_enum::narrow_from_decl(decl),
+					  UTL_Scope::IK_decls);
+		AST_Decl *eval = i.item();
+		if (strlen(o2be_name::narrow_and_produce_scopename(decl))) {
+		  s << o2be_name::narrow_and_produce_scopename(decl);
+		}
+		else {
+		  s << "::";
+		}
+		s << o2be_name::narrow_and_produce_uqname(eval) << ";\n";
+	      }
+	      break;
+	    case tStructFixed:
+	      s << ";\n";
+	      s << "memset((void *)&_0RL_result,0,sizeof(_0RL_result));\n";
+	      break;
+	    default:
+	      s << ";\n";
+	      break;
+	    }
+	}
+      IND(s); s << "return _0RL_result;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+    }
+    
+  DEC_INDENT_LEVEL();
+  IND(s);s << "}\n";
+  return;
+}
+
+void
+o2be_operation::produce_dead_skel(fstream& s, const char* alias_prefix)
+{
+  IND(s); produce_decl(s,0,alias_prefix);
+  s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "throw CORBA::OBJECT_NOT_EXIST(0,CORBA::COMPLETED_NO);\n";
+  IND(s); s << "// never reach here! Dummy return to keep some compilers happy.\n";
+  if (!return_is_void())
+    {
+      argMapping mapping;
+      argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
+      if (ntype == tObjref || ntype == tString ||
+	  (mapping.is_arrayslice) ||
+	  (mapping.is_pointer))
+	{
+	  IND(s);
+	  declareVarType(s,return_type(),0,mapping.is_arrayslice);
+	  s << ((ntype != tObjref && ntype != tString)?" *":"") 
+	    << " _0RL_result" << "= 0;\n";
+	}
+      else
+	{
+	  IND(s);
+	  declareVarType(s,return_type());
+	  s << " _0RL_result";
+	  switch (ntype)
+	    {
+	    case tShort:
+	    case tLong:
+	    case tUShort:
+	    case tULong:
+	    case tFloat:
+	    case tDouble:
+	    case tBoolean:
+	    case tChar:
+	    case tOctet:
+	      s << " = 0;\n";
+	      break;
+	    case tEnum:
+	      {
+		s << " = ";
+		AST_Decl *decl = return_type();
+		while (decl->node_type() == AST_Decl::NT_typedef)
+		  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+		UTL_ScopeActiveIterator i(o2be_enum::narrow_from_decl(decl),
+					  UTL_Scope::IK_decls);
+		AST_Decl *eval = i.item();
+		if (strlen(o2be_name::narrow_and_produce_scopename(decl))) {
+		  s << o2be_name::narrow_and_produce_scopename(decl);
+		}
+		else {
+		  s << "::";
+		}
+		s << o2be_name::narrow_and_produce_uqname(eval) << ";\n";
+	      }
+	      break;
+	    case tStructFixed:
+	      s << ";\n";
+	      s << "memset((void *)&_0RL_result,0,sizeof(_0RL_result));\n";
+	      break;
+	    default:
+	      s << ";\n";
+	      break;
+	    }
+	}
+      IND(s); s << "return _0RL_result;\n";
+    }
+  else
+    {
+      IND(s); s << "return;\n";
+    }
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+}
+
+void
+o2be_operation::produce_home_skel(fstream& s, o2be_interface &defined_in,
+				  const char* alias_prefix)
+{
+  IND(s); produce_decl(s,0,alias_prefix);
+  s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s);
+  if (!return_is_void())
+    s << "return ";
+  s << "_actual_" << defined_in._fqname() << "->";
+  produce_invoke(s);
+  s << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+}
+
+void
+o2be_operation::produce_wrapproxy_skel(fstream& s,
+				       o2be_interface &defined_in,
+				       const char* alias_prefix)
+{
+  IND(s); produce_decl(s,0,alias_prefix);
+  s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s);
+  if (!return_is_void())
+    s << "return ";
+  s << "_actual_" << defined_in._fqname() << "->";
+  produce_invoke(s);
+  s << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+}
 
 void
 o2be_operation::produce_mapping_with_indirection(fstream& s,
