@@ -787,7 +787,7 @@ define MakeCXXSharedLibrary
  $(RM) $@; \
  ld -shared -soname $$soname -set_version $$soname -o $@ \
     $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs \
-    -lcxxstd -lcxx -lexc -lots -lc;
+    -lpthread -lcxxstd -lcxx -lexc -lots -lc;
 endef
 
 ifdef Compiler_DEC61
@@ -859,17 +859,14 @@ endif
 
 ifdef Compiler_aCC
 CXXDEBUGFLAGS     = -O
-CXXOPTIONS   	 += -w +inst_v +DAportable \
-                    -D_THREAD_SAFE \
-                    -DRWSTD_MULTI_THREAD \
-                    -DRW_MULTI_THREAD 
-CXXLINKOPTIONS   += +A -Wl,+s
+CXXOPTIONS       += -w +inst_v +DAportable -mt
+CXXLINKOPTIONS   += -Wl,+s
 CDEBUGFLAGS       = -O
-COPTIONS	  = -w -Aa -D_HPUX_SOURCE +DAportable
-CLINKOPTIONS      = -noshared -Wl,+s
+COPTIONS          = -w -Aa -D_HPUX_SOURCE +DAportable
+CLINKOPTIONS      = -Wl,+s
 
 SHAREDLIB_CPPFLAGS += +Z
-SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname -Wl,+s -lstd_v2 -lCsup_v2 -lC
+SharedLibraryPlatformLinkFlagsTemplate = -b -Wl,+h$$soname -Wl,+s -lstd -lCsup
 endif
 
 endif
