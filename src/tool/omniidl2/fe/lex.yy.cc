@@ -172,7 +172,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 #include <y.tab.hh>
 #endif
 
-#include <iostream.h>
 #include <string.h>
 
 static char	idl_escape_reader(char *);
