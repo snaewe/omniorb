@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/10/29 17:44:59  dpg1
+  Missing loop increment.
+
   Revision 1.1.2.4  2001/10/19 11:06:45  dpg1
   Principal support for GIOP 1.0. Correct some spelling mistakes.
 
@@ -156,8 +159,7 @@ void
 orbOptions::addOptions(const char* options[][2]) throw (orbOptions::Unknown,
 							orbOptions::BadParam) {
 
-  int i = 0;
-  while (options[i][0]) {
+  for (int i=0; options[i][0]; i++) {
     addOption(options[i][0],options[i][1],fromArray);
   }
 }
