@@ -442,17 +442,24 @@ omni_thread::exit(void* return_value)
 {
     omni_thread* me = self();
 
-    me->mutex.lock();
+    if (me)
+      {
+	me->mutex.lock();
 
-    me->_state = STATE_TERMINATED;
+	me->_state = STATE_TERMINATED;
 
-    me->mutex.unlock();
+	me->mutex.unlock();
 
-    DB(cerr << "omni_thread::exit: thread " << me->id() << " detached "
-       << me->detached << " return value " << return_value << endl);
+	DB(cerr << "omni_thread::exit: thread " << me->id() << " detached "
+	   << me->detached << " return value " << return_value << endl);
 
-    if (me->detached)
-	delete me;
+	if (me->detached)
+	  delete me;
+      }
+    else
+      {
+	DB(cerr << "omni_thread::exit: called with a non-omnithread. Exit quietly." << endl);
+      }
 
     thr_exit(return_value);
 }
@@ -464,6 +471,12 @@ omni_thread::self(void)
     omni_thread* me;
 
     THROW_ERRORS(thr_getspecific(self_key, (void**)&me));
+
+    if (!me) {
+      // This thread is not created by omni_thread::start because it
+      // doesn't has a class omni_thread instance attached to its key.
+      DB(cerr << "omni_thread::self: called with a non-ominthread. NULL is returned." << endl);
+    }
 
     return me;
 }
