@@ -27,9 +27,13 @@
 
 /*
   $Log$
-  Revision 1.11  1998/02/19 12:13:56  ewc
-  Fix to recursive unions.
+  Revision 1.12  1998/04/07 18:51:13  sll
+  Use std::fstream instead of fstream.
+  Stub code modified to accommodate the use of namespace to represent module.
 
+// Revision 1.11  1998/02/19  12:13:56  ewc
+// Fix to recursive unions.
+//
 // Revision 1.10  1998/01/27  16:48:28  ewc
 // Added support for type Any and TypeCode
 //
@@ -621,7 +625,7 @@ o2be_sequence::seq_member_name(AST_Decl* used_in)
 }
 
 void
-o2be_sequence::produce_hdr(fstream &s)
+o2be_sequence::produce_hdr(std::fstream &s)
 {
 #ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
   return;
@@ -884,13 +888,13 @@ o2be_sequence::produce_hdr(fstream &s)
 }
 
 void
-o2be_sequence::produce_skel(fstream &s)
+o2be_sequence::produce_skel(std::fstream &s)
 {  
   return;
 }
 
 void 
-o2be_sequence::produce_typecode_skel(fstream &s)
+o2be_sequence::produce_typecode_skel(std::fstream &s)
 {
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // All array TypeCodes are generated in-place when they are used.
@@ -907,7 +911,7 @@ o2be_sequence::produce_typecode_skel(fstream &s)
 }
 
 void 
-o2be_sequence::produce_typecode_member(fstream &s, idl_bool new_ptr)
+o2be_sequence::produce_typecode_member(std::fstream &s, idl_bool new_ptr)
 {
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     AST_Decl *decl = base_type();
@@ -939,7 +943,7 @@ o2be_sequence::check_recursive_seq()
 }
 
 void
-o2be_sequence::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
+o2be_sequence::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 {
 #ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
   IND(s); s << "typedef " << seq_template_name(tdef) 
@@ -984,12 +988,12 @@ o2be_sequence::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
 	  delete[] tmpName;
 	  }
 
-      s << "#ifndef __04RL_" << guardName << "__" << endl;
-      s << "#define __04RL_" << guardName << "__\n" << endl;
+      s << "#ifndef __04RL_" << guardName << "__" << std::endl;
+      s << "#define __04RL_" << guardName << "__\n" << std::endl;
     
       // any insertion operators (inline definitions)
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "inline void operator<<=(CORBA::Any& _a, const " 
+      IND(s); s << FriendToken(*this)
+		<< " inline void operator<<=(CORBA::Any& _a, const " 
 		<< tdef->uqname() << "& _s) {\n";
       INC_INDENT_LEVEL();
       IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
@@ -999,18 +1003,18 @@ o2be_sequence::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
 
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "inline void operator<<=(CORBA::Any& _a, " << tdef->uqname() 
+      IND(s); s << FriendToken(*this)
+		<< " inline void operator<<=(CORBA::Any& _a, " << tdef->uqname() 
 		<< "* _sp) {\n";
       INC_INDENT_LEVEL();
-      IND(s); s << "::operator<<=(_a,*_sp);\n";
+      IND(s); s << "_a <<= *_sp;\n";
       IND(s); s << "delete _sp;\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
 
       // deletion operator (inline definition)
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "inline void _03RL_" << tdef->_fqname() 
+      IND(s); s << FriendToken(*this)
+		<< " inline void _03RL_" << tdef->_fqname() 
 		<< "_delete(void* _data) {\n";
       INC_INDENT_LEVEL();
       IND(s); s << tdef->uqname() << "* _0RL_t = (" << tdef->uqname() 
@@ -1020,8 +1024,8 @@ o2be_sequence::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
       IND(s); s << "}\n\n";
 
       // any extraction operator (inline definition)
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "inline CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+      IND(s); s << FriendToken(*this)
+		<< " inline CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
 		<< tdef->uqname() << "*& _sp) {\n";
       INC_INDENT_LEVEL();
       IND(s); s << "CORBA::TypeCode_var _0RL_any_tc = _a.type();\n";
@@ -1316,7 +1320,7 @@ get_pd_string()
 }
 
 void
-o2be_sequence::produce_hdr_for_predefined_types(fstream &s)
+o2be_sequence::produce_hdr_for_predefined_types(std::fstream &s)
 {
   int j;
   for (j=0; j<pd_sizeof_predefined_type; j++)
@@ -1671,7 +1675,7 @@ o2be_sequence_chain::set_seq_decl(o2be_sequence *d)
 }
 
 void
-o2be_sequence_chain::produce_seq_hdr_if_defined(fstream &s)
+o2be_sequence_chain::produce_seq_hdr_if_defined(std::fstream &s)
 {
 #ifdef USE_SEQUENCE_TEMPLATE_IN_PLACE
   return;

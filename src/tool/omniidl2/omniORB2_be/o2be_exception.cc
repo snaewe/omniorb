@@ -25,9 +25,13 @@
 
 /*
   $Log$
-  Revision 1.8  1998/01/27 16:35:52  ewc
-   Added support for type any and TypeCode
+  Revision 1.9  1998/04/07 18:47:11  sll
+  Use std::fstream instead of fstream.
+  Stub code modified to accommodate the use of namespace to represent module.
 
+// Revision 1.8  1998/01/27  16:35:52  ewc
+//  Added support for type any and TypeCode
+//
   Revision 1.7  1997/12/23 19:27:31  sll
   Now generate the correct stub for exception with anonymous array member.
 
@@ -64,7 +68,7 @@ o2be_exception::o2be_exception(UTL_ScopedName *n, UTL_StrList *p)
 }
 
 void
-o2be_exception::produce_hdr(fstream &s)
+o2be_exception::produce_hdr(std::fstream &s)
 {
   s << "#define " << repoIdConstName() <<" \""<< repositoryID() << "\"\n\n";
   IND(s); s << "class " << uqname() << " : public CORBA::UserException {\n";
@@ -244,13 +248,12 @@ o2be_exception::produce_hdr(fstream &s)
     if (check_recursive_seq() == I_FALSE) {
       set_recursive_seq(I_FALSE);
       // TypeCode_ptr declaration
-      IND(s); s << ((defined_in() == idl_global->root()) ? "extern " : 
-		    "static ") 
-		<< "const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+      IND(s); s << VarToken(*this)
+		<< " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
 
     // any insertion operators (inline definitions)
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "inline void operator<<=(CORBA::Any& _a, const " << uqname() 
+      IND(s); s << FriendToken(*this)
+		<< " inline void operator<<=(CORBA::Any& _a, const " << uqname() 
 		<< "& _s) {\n";
       INC_INDENT_LEVEL();
       IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
@@ -261,18 +264,18 @@ o2be_exception::produce_hdr(fstream &s)
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
 
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "inline void operator<<=(CORBA::Any& _a, " << uqname() 
+      IND(s); s << FriendToken(*this)
+		<< " inline void operator<<=(CORBA::Any& _a, " << uqname() 
 		<< "* _sp) {\n";
       INC_INDENT_LEVEL();
-      IND(s); s << "::operator<<=(_a,*_sp);\n";
+      IND(s); s << "_a <<= *_sp;\n";
       IND(s); s << "delete _sp;\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
 
       // any extraction operator (declaration)
-      IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-		<< "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+      IND(s); s << FriendToken(*this)
+		<< " CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
 		<< uqname() << "*& _sp);\n\n";
     }
     else set_recursive_seq(I_TRUE);
@@ -280,7 +283,7 @@ o2be_exception::produce_hdr(fstream &s)
 }
 
 void
-o2be_exception::produce_skel(fstream &s)
+o2be_exception::produce_skel(std::fstream &s)
 {
   IND(s); s << fqname() << "::" << uqname()
 	    << "(const " << fqname() << " &_s)\n";
@@ -744,9 +747,37 @@ o2be_exception::produce_skel(fstream &s)
     // Produce code for types any and TypeCode
     this->produce_typecode_skel(s);
 
-    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-	      << "_01RL_" << _fqtcname() << ";\n\n";
-    
+    if (defined_in() != idl_global->root() &&
+	defined_in()->scope_node_type() == AST_Decl::NT_module)
+      {
+	s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
+	IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
+	AST_Decl* inscope = ScopeAsDecl(defined_in());
+	char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
+	if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
+	  {
+	    scopename = o2be_name::narrow_and_produce__fqname(inscope);
+	    IND(s); s << "namespace " << scopename << " = " 
+		      << o2be_name::narrow_and_produce_fqname(inscope)
+		      << ";\n";
+	  }
+	IND(s); s << "namespace " << scopename << " {\n";
+	INC_INDENT_LEVEL();
+	IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+	DEC_INDENT_LEVEL();
+	IND(s); s << "}\n";
+	s << "#else\n";
+	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+	s << "#endif\n";
+      }
+    else
+      {
+	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+      }
+
     IND(s); s << "void _03RL_" << _fqname() << "_delete(void* _data) {\n";
     INC_INDENT_LEVEL();
     IND(s); s << fqname() << "*" << " _0RL_t = (" << fqname() << "*) _data;\n";
@@ -789,7 +820,7 @@ o2be_exception::produce_skel(fstream &s)
 }
 
 void
-o2be_exception::produce_typecode_skel(fstream &s)
+o2be_exception::produce_typecode_skel(std::fstream &s)
 {
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     s << "#ifndef " << "__01RL_" << _fqtcname() << "__\n";

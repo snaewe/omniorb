@@ -28,9 +28,13 @@
 
 /*
   $Log$
-  Revision 1.9  1998/01/27 16:52:59  ewc
-  Incremented version to 2.5
+  Revision 1.10  1998/04/07 18:50:29  sll
+  Use std::fstream instead of fstream.
+  Stub code modified to accommodate the use of namespace to represent module.
 
+// Revision 1.9  1998/01/27  16:52:59  ewc
+// Incremented version to 2.5
+//
 // Revision 1.8  1998/01/20  19:13:46  sll
 // Added support for OpenVMS.
 //
@@ -54,8 +58,6 @@
 #include <idl.hh>
 #include <idl_extern.hh>
 #include <o2be.h>
-
-#include <iostream.h>
 
 #ifdef __WIN32__
 #include <stdio.h>
@@ -101,7 +103,7 @@ o2be_root::produce()
 
     // open header 
     strcat(stubfname,o2be_global::hdrsuffix());
-    pd_hdr.open(stubfname,ios::out|ios::trunc);
+    pd_hdr.open(stubfname, std::ios::out | std::ios::trunc);
     if (! pd_hdr)
       {
 	throw o2be_fileio_error("Can't open output header file");
@@ -110,7 +112,7 @@ o2be_root::produce()
 
     // open server
     strcat(stubfname,o2be_global::skelsuffix());
-    pd_skel.open(stubfname,ios::out|ios::trunc);
+    pd_skel.open(stubfname, std::ios::out | std::ios::trunc);
     if (! pd_skel)
       {
         throw o2be_fileio_error("Can't open output stub file");
@@ -167,15 +169,24 @@ o2be_root::produce()
 
 
 void
-o2be_root::produce_hdr(fstream &hdr)
+o2be_root::produce_hdr(std::fstream &hdr)
 {
   hdr << "#ifndef __" << basename << "_hh__\n"
       << "#define __" << basename << "_hh__\n\n"
-      << "#include <omniORB2/CORBA.h>\n\n";
+      << "#ifndef USE_omniORB_logStream\n"
+      << "#define USE_omniORB_logStream\n"
+      << "#endif\n\n"
+      << "#ifndef __CORBA_H_EXTERNAL_GUARD__\n"
+      << "#define __CORBA_H_EXTERNAL_GUARD__\n"
+      << "#include <omniORB2/CORBA.h>\n"
+      << "#endif\n\n";
 
   // XXX LifeCycle compile flag
   if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
-    hdr << "#include <omniORB2/omniLC.h>\n\n";
+    hdr << "#ifndef __OMNILC_H_EXTERNAL_GUARD__\n"
+	<< "#define __OMNILC_H_EXTERNAL_GUARD__\n"
+	<< "#include <omniORB2/omniLC.h>\n"
+	<< "#endif\n\n";
   }
 
   {
@@ -193,12 +204,24 @@ o2be_root::produce_hdr(fstream &hdr)
 	filename = new char[blen+1+o2be_global::suffixlen()];
 	strncpy(filename,bname,blen);
 	filename[blen] = '\0';
+	hdr << "#ifndef __" << filename << "_EXTERNAL_GUARD__\n"
+	    << "#define __" << filename << "_EXTERNAL_GUARD__\n";
 	strcat(filename,o2be_global::hdrsuffix());
-	hdr << "#include <" << filename << ">\n";
+	hdr << "#include <" << filename << ">\n"
+	    << "#endif\n";
 	delete [] filename;
       }
   }
 
+  hdr << "\n#ifdef _LC_attr\n"
+      << "#error \"A local CPP macro _LC_attr has already been defined.\"\n"
+      << "#else\n"
+      << "#ifdef  USE_stub_in_nt_dll\n"
+      << "#define _LC_attr _OMNIORB_NTDLL_IMPORT\n"
+      << "#else\n"
+      << "#define _LC_attr\n"
+      << "#endif\n"
+      << "#endif\n\n";
 
   if (idl_global->indent() == NULL)
     idl_global->set_indent(new UTL_Indenter());
@@ -207,21 +230,23 @@ o2be_root::produce_hdr(fstream &hdr)
 
   o2be_module::produce_hdr(hdr);
 
-  hdr << "#endif // __" << basename << "_hh__" << endl;
+  hdr << "\n#undef _LC_attr\n\n";
+
+  hdr << "#endif // __" << basename << "_hh__" << std::endl;
   return;
 }
 
 void
-o2be_root::produce_skel(fstream &skel)
+o2be_root::produce_skel(std::fstream &skel)
 {
-  skel << "#include \""<<basename<<o2be_global::hdrsuffix()<<"\"\n\n" << endl;
+  skel << "#include \""<<basename<<o2be_global::hdrsuffix()<<"\"\n\n" << std::endl;
 
 
   // Do not forget to update the version number in omniORB_x_y below.
   // The variable is defined in omniInternal.h.
   skel << "static const char* _0RL_library_version = "
        << "omniORB_2_5" 
-       << ";\n\n" << endl;
+       << ";\n\n" << std::endl;
 
   if (idl_global->indent() == NULL)
     idl_global->set_indent(new UTL_Indenter());

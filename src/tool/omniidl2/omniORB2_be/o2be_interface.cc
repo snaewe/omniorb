@@ -27,9 +27,13 @@
 
 /*
   $Log$
-  Revision 1.18  1998/03/09 14:24:33  ewc
-  Minor change - cast string literals
+  Revision 1.19  1998/04/07 18:48:03  sll
+  Use std::fstream instead of fstream.
+  Stub code modified to accommodate the use of namespace to represent module.
 
+// Revision 1.18  1998/03/09  14:24:33  ewc
+// Minor change - cast string literals
+//
 // Revision 1.17  1998/01/27  16:45:14  ewc
 // Added support for type Any and TypeCode
 //
@@ -369,7 +373,7 @@ o2be_interface::check_opname_clash(o2be_interface *p,char *opname)
 }
 
 void 
-o2be_interface::produce_hdr(fstream &s)
+o2be_interface::produce_hdr(std::fstream &s)
 {
   s << "#ifndef __" << _fqname() << "__\n";
   s << "#define __" << _fqname() << "__\n";
@@ -1287,13 +1291,12 @@ o2be_interface::produce_hdr(fstream &s)
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
-    IND(s); s << ((defined_in() == idl_global->root()) ? "extern " : 
-		  "static ") 
-	      << "const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+    IND(s); s << VarToken(*this)
+	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
 
     // any insertion operators (inline definitions)
-    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-	      << "inline void operator<<=(CORBA::Any& _a, " << objref_uqname() 
+    IND(s); s << FriendToken(*this)
+	      << " inline void operator<<=(CORBA::Any& _a, " << objref_uqname() 
 	      << " _s) {\n";
     INC_INDENT_LEVEL();
     IND(s); s << "MemBufferedStream _0RL_mbuf;\n";
@@ -1303,18 +1306,18 @@ o2be_interface::produce_hdr(fstream &s)
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n\n";
 
-    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-	      << "inline void operator<<=(CORBA::Any& _a, " << objref_uqname() 
+    IND(s); s << FriendToken(*this)
+	      << " inline void operator<<=(CORBA::Any& _a, " << objref_uqname() 
 	      << "* _sp) {\n";
     INC_INDENT_LEVEL();
-    IND(s); s << "::operator<<=(_a,*_sp);\n";
+    IND(s); s << "_a <<= *_sp;\n";
     IND(s); s << "CORBA::release(*_sp);\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n\n";
 
     // any extraction operator (declaration)
-    IND(s); s << (!(defined_in() == idl_global->root()) ? "friend " : "")
-	      << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
+    IND(s); s << FriendToken(*this)
+	      << " CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
 	      << objref_uqname() 
 	      << "& _s);\n\n";
   }
@@ -1325,7 +1328,7 @@ o2be_interface::produce_hdr(fstream &s)
 }
 
 void
-o2be_interface_fwd::produce_hdr(fstream &s)
+o2be_interface_fwd::produce_hdr(std::fstream &s)
 {
   o2be_interface *intf = o2be_interface::narrow_from_decl(full_definition());
   s << "#ifndef __" << intf->_fqname() << "__\n";
@@ -1381,7 +1384,7 @@ o2be_interface_fwd::produce_hdr(fstream &s)
 
 
 void
-o2be_interface::produce_skel(fstream &s)
+o2be_interface::produce_skel(std::fstream &s)
 {
   {
     UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
@@ -2440,10 +2443,37 @@ o2be_interface::produce_skel(fstream &s)
     IND(s); s << "static CORBA::TypeCode _01RL_" << _fqtcname() << "(\"" 
 	      << repositoryID() << "\", \"" << uqname() << "\");\n\n";
     s << "#endif\n\n"; 
-    
-    IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
-	      << "_01RL_" << _fqtcname() << ";\n\n";
-    
+
+    if (defined_in() != idl_global->root() &&
+	defined_in()->scope_node_type() == AST_Decl::NT_module)
+      {
+	s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
+	IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
+	AST_Decl* inscope = ScopeAsDecl(defined_in());
+	char* scopename = o2be_name::narrow_and_produce_uqname(inscope);
+	if (strcmp(scopename,o2be_name::narrow_and_produce_fqname(inscope)))
+	  {
+	    scopename = o2be_name::narrow_and_produce__fqname(inscope);
+	    IND(s); s << "namespace " << scopename << " = " 
+		      << o2be_name::narrow_and_produce_fqname(inscope)
+		      << ";\n";
+	  }
+	IND(s); s << "namespace " << scopename << " {\n";
+	INC_INDENT_LEVEL();
+	IND(s); s << "const CORBA::TypeCode_ptr " << tcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+	DEC_INDENT_LEVEL();
+	IND(s); s << "}\n";
+	s << "#else\n";
+	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+	s << "#endif\n";
+      }
+    else
+      {
+	IND(s); s << "const CORBA::TypeCode_ptr " << fqtcname() << " = & " 
+		  << "_01RL_" << _fqtcname() << ";\n\n";
+      }
     IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
 	      << objref_fqname() << "& _s) {\n";
     INC_INDENT_LEVEL();
@@ -2468,7 +2498,7 @@ o2be_interface::produce_skel(fstream &s)
 }
 
 void
-o2be_interface::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
+o2be_interface::produce_typedef_hdr(std::fstream &s, o2be_typedef *tdef)
 {
   IND(s); s << "typedef " << unambiguous_name(tdef) 
 	    << " " << tdef->uqname() << ";\n";
