@@ -1,3 +1,35 @@
+Wed Jun 20 19:27:36 BST 2001 sll
+================================
+
+- Upper case send,recv,connect,shutdown to avoid silly substutition by
+  macros defined in socket.h to rename these socket functions
+  to something else.
+
+include/omniORB4/giopEndpoint.h
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopRendezvouser.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStream.cc
+src/lib/omniORB/orbcore/giopWorker.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslAddress.h
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/ssl/sslConnection.h
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.h
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.h
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.h
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.h
+
+- minor update for Solaris gcc 3.0
+
+include/omniORB4/CORBA_sysdep.h
+
 Tue Jun 19 17:23:08 BST 2001 sll
 ================================
 
