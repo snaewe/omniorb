@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/28 09:47:57  djr
+  Corrected declaration of ObjectId_to_string and string_to_ObjectId.
+
   Revision 1.1.2.1  1999/09/24 09:51:49  djr
   Moved from omniORB2 + some new files.
 
@@ -720,8 +723,8 @@ _CORBA_MODULE_BEG
   //////////////////////// C++ Mapping Specific ////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  static char* ObjectId_to_string(const ObjectId& id);
-  static ObjectId* string_to_ObjectId(const char* s);
+  _CORBA_MODULE_FN char* ObjectId_to_string(const ObjectId& id);
+  _CORBA_MODULE_FN ObjectId* string_to_ObjectId(const char* s);
 
 
 #include <omniORB3/poa_defs.h>
