@@ -128,9 +128,11 @@ find_includes(filep, file, file_red, recursion, failOK)
 			add_include(filep, file, file_red, line, TRUE, failOK);
 			break;
 		case ERROR:
+		  /*
 		    	warning("(from %s) %s: %d: %s\n",
 				file_red->i_file, file->i_file,
 				 filep->f_line, line);
+		  */
 		    	break;
 		    
 		case PRAGMA:

@@ -1,3 +1,36 @@
+Wed Jan 16 11:29:02 GMT 2002 dpg1
+=================================
+
+- Race condition in use of registerNilCorbaObject/registerTrackedObject.
+  (Reported by Teemu Torma).
+
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/contextList.cc
+src/lib/omniORB/dynamic/dynAnyNil.cc
+src/lib/omniORB/dynamic/environment.cc
+src/lib/omniORB/dynamic/exceptionList.cc
+src/lib/omniORB/dynamic/namedValue.cc
+src/lib/omniORB/dynamic/nvList.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaObject.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/omniPolicy.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poamanager.cc
+src/lib/omniORB/orbcore/poastubs.cc
+src/lib/omniORB/orbcore/policy.cc
+src/lib/omniORB/orbcore/portableserver.cc
+
+- Suppress confusing #error warning from omkdepend.
+
+src/tool/omkdepend/parse.c
+
+
 Tue Jan 15 16:24:22 GMT 2002 dpg1
 =================================
 
