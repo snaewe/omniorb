@@ -1,3 +1,18 @@
+Tue Jul 11 20:58:59 BST 2000 sll
+================================
+
+- Create a new lib on Win32- msvcstub.lib. This can be used to resolve
+  unnecessary reference from stub *SK.cc files to a few functions in
+  omniDynamic300_rt.dll. 
+- Updated nmake examples to use the stub lib.
+
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+src/lib/omniORB2/orbcore/dir.mk
+
 Tue Jul 11 16:14:24 BST 2000 dpg1
 =================================
 
