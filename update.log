@@ -1,3 +1,10 @@
+Tue Jan  5 12:31:32 GMT 1999 sll
+================================
+
+- fix typo in #error message
+
+include/omniORB2/CORBA_sysdep.h
+
 
 Fri Dec 18 17:48:28 GMT 1998 tjr
 ================================
