@@ -7,8 +7,8 @@
 
 // Local directory where the trader keeps its logs
 
-#ifndef DEFAULT_LOGNAME
-#define DEFAULT_LOGNAME "/project/omni/var/omniNames"
+#ifndef DEFAULT_LOGDIR
+#define DEFAULT_LOGDIR "/project/omni/var"
 #endif
 
 // Minimum idle period before the trader takes a checkpoint (15 mins)
