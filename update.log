@@ -1,3 +1,40 @@
+Mon Aug  2 19:47:32 BST 1999 sll
+================================
+
+- Fixed bug in global scope lookup
+- The bug causes the following IDL to fail
+   
+  module A {
+   exception MyError {};
+  };
+
+  module B {
+    interface parent {};
+
+    interface child : parent {
+      void op() raises (A::MyError);
+    };
+  };
+
+src/tool/omniidl2/util/utl_scope.cc
+
+Mon Aug  2 14:41:39 BST 1999 sll
+================================
+
+- Linux glibc-2.0 platform (i586_linux_2.0_glibc) now uses gcc-2.95
+
+- The compiler is installed in /usr/local/gcc-2.95/bin
+- The compiler output is not compatible that of egcs-1.1.2
+
+mk/platforms/i586_linux_2.0_glibc.mk
+
+
+Mon Aug  2 11:56:13 BST 1999 sll
+================================
+
+- Correct non-standard C++ signature.
+
+include/omniORB2/tcDescriptor.h
 
 Fri Jul 23 12:24:32 BST 1999 djr
 ================================
