@@ -1,3 +1,15 @@
+Fri Jun  1 14:54:24 BST 2001 sll
+================================
+
+- Long long defines for HPUX aCC.
+
+include/omniORB3/CORBA_sysdep.h
+
+- added missing external guard for ir.h
+
+include/omniORB3/CORBA.h
+
+
 Tue May 29 12:06:29 BST 2001 sll
 ================================
 

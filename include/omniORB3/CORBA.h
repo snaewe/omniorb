@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.15  2001/06/01 13:56:57  sll
+ Long long define for HPUX.
+ External CPP define guard for IR.h
+
  Revision 1.1.2.14  2000/12/11 10:16:37  dpg1
  CORBA::Object::_narrow() failed to increment reference count.
 
@@ -2691,6 +2695,15 @@ _CORBA_MODULE_END
 // put external guards around the include.
 #ifndef __CosNaming_hh_EXTERNAL_GUARD__
 #define __CosNaming_hh_EXTERNAL_GUARD__
+#endif
+
+#ifndef __corbaidl_hh_EXTERNAL_GUARD__
+#define __corbaidl_hh_EXTERNAL_GUARD__
+#endif
+#ifdef ENABLE_CLIENT_IR_SUPPORT
+#ifndef __ir_hh_EXTERNAL_GUARD__
+#define __ir_hh_EXTERNAL_GUARD__
+#endif
 #endif
 
 
