@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.8  2001/11/14 17:13:43  dpg1
+// Long double support.
+//
 // Revision 1.1.2.7  2001/11/08 16:33:51  dpg1
 // Local servant POA shortcut policy.
 //
@@ -163,7 +166,20 @@ CORBA::Fixed::Fixed(CORBA::Double val) :
 
 #ifdef HAS_LongDouble
 
-# error "LongDouble not supported yet."
+CORBA::Fixed::Fixed(CORBA::LongDouble val) :
+  pd_idl_digits(0), pd_idl_scale(0)
+{
+  if (val > 1e32 || val < -1e32) {
+    // Too big
+    OMNIORB_THROW(DATA_CONVERSION, DATA_CONVERSION_RangeError,
+		  CORBA::COMPLETED_NO);
+  }
+  char buffer[80];
+  int len = sprintf(buffer, "%.31f", (double)val);
+  OMNIORB_ASSERT(len < 79);
+
+  NP_fromString(buffer);
+}
 
 #endif
 
@@ -254,7 +270,23 @@ CORBA::Fixed::operator CORBA::Long() const
 
 #  ifdef HAS_LongDouble
 
-#    error "LongDouble not supported yet."
+CORBA::Fixed::operator CORBA::LongDouble() const
+{
+  CORBA::LongDouble r = 0, s = 0;
+  int i;
+
+  // Digits before decimal point
+  for (i = pd_digits - 1; i >= pd_scale; --i) {
+    r = r * 10 + pd_val[i];
+  }
+
+  // Digits after decimal point
+  for (i=0; i < pd_scale; ++i) {
+    s = (s + pd_val[i]) / 10;
+  }
+
+  return r + s;
+}
 
 #  else
 

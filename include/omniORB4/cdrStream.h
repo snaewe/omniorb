@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.17  2001/11/14 17:13:41  dpg1
+  Long double support.
+
   Revision 1.1.2.16  2001/10/17 16:33:27  dpg1
   New downcast mechanism for cdrStreams.
 
@@ -351,10 +354,44 @@ public:
     }
   }
 
-#ifdef HAS_LongDouble
-#error "long double is not supported yet"
 #endif
 
+#ifdef HAS_LongDouble
+#if SIZEOF_LONG_DOUBLE == 16
+  friend inline void operator>>= (_CORBA_LongDouble a, cdrStream& s) {
+    if (s.pd_marshal_byte_swap) {
+      _CORBA_LongDouble t = a;
+      _CORBA_ULong tl1, tl2;
+      _CORBA_ULong* tp = (_CORBA_ULong*)&t;
+      _CORBA_ULong* ap = (_CORBA_ULong*)&a;
+
+      tl1 = tp[3]; tl2 = Swap32(tl1); ap[0] = tl2;
+      tl1 = tp[2]; tl2 = Swap32(tl1); ap[1] = tl2;
+      tl1 = tp[1]; tl2 = Swap32(tl1); ap[2] = tl2;
+      tl1 = tp[0]; tl2 = Swap32(tl1); ap[3] = tl2;
+    }
+    CdrMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+  }
+
+  friend inline void operator<<= (_CORBA_LongDouble& a, cdrStream& s) {
+    CdrUnMarshal(s,_CORBA_LongDouble,omni::ALIGN_8,a);
+    if (s.pd_unmarshal_byte_swap) {
+      _CORBA_LongDouble t = a;
+      _CORBA_ULong tl1, tl2;
+      _CORBA_ULong* tp = (_CORBA_ULong*)&t;
+      _CORBA_ULong* ap = (_CORBA_ULong*)&a;
+
+      tl1 = tp[3]; tl2 = Swap32(tl1); ap[0] = tl2;
+      tl1 = tp[2]; tl2 = Swap32(tl1); ap[1] = tl2;
+      tl1 = tp[1]; tl2 = Swap32(tl1); ap[2] = tl2;
+      tl1 = tp[0]; tl2 = Swap32(tl1); ap[3] = tl2;
+    }
+  }
+#else
+  // Code for long double < 16 bytes is too painful to put inline
+  friend void operator>>= (_CORBA_LongDouble  a, cdrStream& s);
+  friend void operator<<= (_CORBA_LongDouble& a, cdrStream& s);
+#endif
 #endif
 
   inline void marshalString(const char* s,int bounded=0) {

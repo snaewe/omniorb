@@ -200,8 +200,7 @@ class SupportedTypeVisitor(idlvisitor.TypeVisitor):
     def visitBaseType(self, type):
 
         not_supported = { idltype.tk_null:       "null",
-                          idltype.tk_Principal:  "CORBA::Principal",
-                          idltype.tk_longdouble: "long double" }
+                          idltype.tk_Principal:  "CORBA::Principal" }
 
         if type.kind() in not_supported.keys():
             unsupportedType(not_supported[type.kind()])

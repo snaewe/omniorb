@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.16  2001/11/14 17:13:41  dpg1
+ Long double support.
+
  Revision 1.2.2.15  2001/11/06 15:41:35  dpg1
  Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -250,6 +253,10 @@
 #     define SIZEOF_PTR  8
 #  endif
 
+#  if defined(__x86__)
+#     define SIZEOF_LONG_DOUBLE 12
+#  endif
+
 #  if __GNUG__ == 2 && __GNUC_MINOR__ == 7
 #     undef HAS_Cplusplus_catch_exception_by_base
 #  endif
@@ -272,6 +279,7 @@
 
 // GCC claims to support long long on all platforms
 #  define HAS_LongLong
+#  define HAS_LongDouble
 #  define _CORBA_LONGLONG_DECL   long long
 #  define _CORBA_ULONGLONG_DECL  unsigned long long
 #  define _CORBA_LONGDOUBLE_DECL long double 
@@ -338,11 +346,15 @@
 #  endif
 
 #  define HAS_LongLong
-//#  define HAS_LongDouble
 #  define _CORBA_LONGLONG_DECL   long long
 #  define _CORBA_ULONGLONG_DECL  unsigned long long
 #  define _CORBA_LONGDOUBLE_DECL long double 
 #  define _CORBA_LONGLONG_CONST(x) (x##LL)
+
+#  define HAS_LongDouble
+#  ifdef __x86__
+#    define SIZEOF_LONG_DOUBLE 12
+#  endif
 
 // XXX
 // This is a hack to work around a bug in SUN C++ compiler (seen on 4.2).
@@ -463,6 +475,10 @@
 
 #ifndef SIZEOF_PTR
 #define SIZEOF_PTR  4
+#endif
+
+#ifndef SIZEOF_LONG_DOUBLE
+#define SIZEOF_LONG_DOUBLE 16
 #endif
 
 #ifndef _CORBA_WCHAR_DECL

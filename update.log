@@ -1,3 +1,21 @@
+Wed Nov 14 17:10:28 GMT 2001 dpg1
+=================================
+
+- Long double support.
+
+idl/corbaidl.idl
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/cdrStream.h
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/omniidl_be/cxx/support.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/corbaFixed.cc
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/python/omniidl/main.py
+
+
 Tue Nov 13 15:22:17 GMT 2001 dpg1
 =================================
 

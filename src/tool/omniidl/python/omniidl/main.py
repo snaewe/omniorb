@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.5  2001/11/14 17:13:44  dpg1
+# Long double support.
+#
 # Revision 1.17.2.4  2001/10/17 16:48:35  dpg1
 # Minor error message tweaks
 #
@@ -83,6 +86,7 @@ The supported flags are:
   -E              Run preprocessor only, print on stdout
   -Ycmd           Set command for the preprocessor
   -N              Do not run preprocessor
+  -P              Add defines relevant to platform dependencies (internal use)
   -T              Use a temporary file, not a pipe, for preprocessor output
   -Wparg[,arg...] Send args to the preprocessor
   -bback_end      Select a back-end to be used. More than one permitted
@@ -147,7 +151,7 @@ def parseArgs(args):
     paths = []
 
     try:
-        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:n:kKC:dVuhvqp:iT")
+        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:n:kKC:dVuhvqp:iTP")
     except getopt.error, e:
         sys.stderr.write("Error in arguments: " + e + "\n")
         sys.stderr.write("Use '" + cmdname + " -u' for usage\n")
@@ -257,6 +261,9 @@ def parseArgs(args):
             except ImportError:
                 # No tempfile module. Just use current directory and hope...
                 temp_file = "omniidl-tmp" + `os.getpid()` + ".idl"
+
+        elif o == "-P":
+            preprocessor_args.extend(_omniidl.platformDefines())
 
     sys.path = paths + sys.path
 

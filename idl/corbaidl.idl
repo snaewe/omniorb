@@ -1,7 +1,6 @@
 
 #pragma prefix "omg.org"
 
-
 //////////////////////////////////////////////////////////////////////
 module CORBA {
 //////////////////////////////////////////////////////////////////////
@@ -41,8 +40,10 @@ module CORBA {
   typedef sequence<boolean>            BooleanSeq;
   typedef sequence<char>               CharSeq;
   typedef sequence<octet>              OctetSeq;
+#ifdef HAS_LongLong
   typedef sequence<long long>          LongLongSeq;
   typedef sequence<unsigned long long> ULongLongSeq;
+#endif
 #ifdef HAS_LongDouble
   typedef sequence<long double>        LongDoubleSeq;
 #endif

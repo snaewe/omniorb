@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.11  2001/11/14 17:13:43  dpg1
+  Long double support.
+
   Revision 1.1.2.10  2001/10/17 16:33:28  dpg1
   New downcast mechanism for cdrStreams.
 
@@ -147,6 +150,108 @@ cdrStream::copy_to(cdrStream& s,int size,omni::alignment_t align) {
     s.put_octet_array((const CORBA::Octet*)p1,size,align);
   }
 }
+
+/////////////////////////////////////////////////////////////////////////////
+#ifdef HAS_LongDouble
+#  if SIZEOF_LONG_DOUBLE == 12
+#    ifndef __x86__
+#      error "12-byte long double only supported for x86"
+#    endif
+
+// Intel x86 extended double is odd. Firstly, it's 80 bits, not 96, so
+// the two most significant bytes are always zero. Secondly, the
+// significand _includes_ the most significant bit. IEEE floating
+// point always missed out the msb, as do the other floating point
+// formats on x86. This means we have to do lots of bit shifting.
+//
+// This isn't the most efficient code in the world, but it's designed
+// to be easy to understand.
+
+void
+operator>>=(_CORBA_LongDouble a, cdrStream& s)
+{
+  _CORBA_Octet  mbuf[16];
+  _CORBA_Octet* dbuf = (_CORBA_Octet*)&a;
+
+  memset(mbuf, 0, 16);
+
+  if (s.pd_marshal_byte_swap) { // big endian
+    // Sign and exponent
+    mbuf[0] = dbuf[9];
+    mbuf[1] = dbuf[8];
+
+    // significand
+    mbuf[2] = (dbuf[7] << 1) | (dbuf[6] >> 7);
+    mbuf[3] = (dbuf[6] << 1) | (dbuf[5] >> 7);
+    mbuf[4] = (dbuf[5] << 1) | (dbuf[4] >> 7);
+    mbuf[5] = (dbuf[4] << 1) | (dbuf[3] >> 7);
+    mbuf[6] = (dbuf[3] << 1) | (dbuf[2] >> 7);
+    mbuf[7] = (dbuf[2] << 1) | (dbuf[1] >> 7);
+    mbuf[8] = (dbuf[1] << 1) | (dbuf[0] >> 7);
+    mbuf[9] = (dbuf[0] << 1);
+  }
+  else { // little endian
+    // Sign and exponent
+    mbuf[15] = dbuf[9];
+    mbuf[14] = dbuf[8];
+
+    // significand
+    mbuf[13] = (dbuf[7] << 1) | (dbuf[6] >> 7);
+    mbuf[12] = (dbuf[6] << 1) | (dbuf[5] >> 7);
+    mbuf[11] = (dbuf[5] << 1) | (dbuf[4] >> 7);
+    mbuf[10] = (dbuf[4] << 1) | (dbuf[3] >> 7);
+    mbuf[ 9] = (dbuf[3] << 1) | (dbuf[2] >> 7);
+    mbuf[ 8] = (dbuf[2] << 1) | (dbuf[1] >> 7);
+    mbuf[ 7] = (dbuf[1] << 1) | (dbuf[0] >> 7);
+    mbuf[ 6] = (dbuf[0] << 1);
+  }
+  s.put_octet_array((_CORBA_Octet*)mbuf, 16, omni::ALIGN_8);
+}
+
+void
+operator<<=(_CORBA_LongDouble& a, cdrStream& s)
+{
+  _CORBA_Octet  mbuf[16];
+  _CORBA_Octet* dbuf = (_CORBA_Octet*)&a;
+
+  s.get_octet_array((_CORBA_Octet*)mbuf, 16, omni::ALIGN_8);
+
+  dbuf[11] = dbuf[10] = 0;
+
+  if (s.pd_unmarshal_byte_swap) { // big endian
+    // Sign and exponent
+    dbuf[9] = mbuf[0];
+    dbuf[8] = mbuf[1];
+
+    // significand
+    dbuf[7] = (mbuf[0] == 0 && mbuf[1] == 0) ? 0 : 0x80 | (mbuf[2] >> 1);
+    dbuf[6] = (mbuf[2] << 7) | (mbuf[3] >> 1);
+    dbuf[5] = (mbuf[3] << 7) | (mbuf[4] >> 1);
+    dbuf[4] = (mbuf[4] << 7) | (mbuf[5] >> 1);
+    dbuf[3] = (mbuf[5] << 7) | (mbuf[6] >> 1);
+    dbuf[2] = (mbuf[6] << 7) | (mbuf[7] >> 1);
+    dbuf[1] = (mbuf[7] << 7) | (mbuf[8] >> 1);
+    dbuf[0] = (mbuf[8] << 7) | (mbuf[9] >> 1);
+  }
+  else { // little endian
+    // Sign and exponent
+    dbuf[9] = mbuf[15];
+    dbuf[8] = mbuf[14];
+
+    // significand
+    dbuf[7] = (mbuf[15] == 0 && mbuf[14] == 0) ? 0 : 0x80 | (mbuf[13] >> 1);
+    dbuf[6] = (mbuf[13] << 7) | (mbuf[12] >> 1);
+    dbuf[5] = (mbuf[12] << 7) | (mbuf[11] >> 1);
+    dbuf[4] = (mbuf[11] << 7) | (mbuf[10] >> 1);
+    dbuf[3] = (mbuf[10] << 7) | (mbuf[ 9] >> 1);
+    dbuf[2] = (mbuf[ 9] << 7) | (mbuf[ 8] >> 1);
+    dbuf[1] = (mbuf[ 8] << 7) | (mbuf[ 7] >> 1);
+    dbuf[0] = (mbuf[ 7] << 7) | (mbuf[ 6] >> 1);
+  }
+}
+
+#  endif // SIZEOF_LONG_DOUBLE == 12
+#endif // HAS_LongDouble
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.11.2.15  2001/11/14 17:13:41  dpg1
+   Long double support.
+
    Revision 1.11.2.14  2001/10/19 11:04:02  dpg1
    Avoid confusing (to gcc 2.95) inheritance of refcount functions.
 
@@ -1740,7 +1743,7 @@ DynAnyConstrBase::get_ulonglong()
 
 
 #ifdef HAS_LongDouble
-CORBA::Double
+CORBA::LongDouble
 DynAnyConstrBase::get_longdouble()
 {
   CHECK_NOT_DESTROYED;
@@ -3302,7 +3305,7 @@ DynUnionImpl::insert_ulonglong(CORBA::ULongLong value)
 
 #ifdef HAS_LongDouble
 void
-DynUnionImpl::insert_double(CORBA::LongDouble value)
+DynUnionImpl::insert_longdouble(CORBA::LongDouble value)
 {
   CHECK_NOT_DESTROYED;
   value >>= writeCurrent(CORBA::tk_longdouble);
