@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.15  1999/02/18 15:19:54  djr
+  New configuration function omniORB::enableLcdMode()
+
   Revision 1.14  1999/01/07 18:38:34  djr
   New configuration variable omniORB::diiThrowsSysExceptions.
 
@@ -517,6 +520,20 @@ _CORBA_MODULE_BEG
   //     assignment to this variable.                                   //
   ////////////////////////////////////////////////////////////////////////
 
+  ////////////////////////////////////////////////////////////////////////
+  // enableLcdMode()                                                    //
+  //  Call this function to enable 'Lowest Common Denominator' Mode.    //
+  // This will disable various features of IIOP and GIOP which are      //
+  // poorly supported by some ORBs, and disable warnings/errors when    //
+  // certain types of erroneous message are received on the wire.       //
+  //   	       	       	       	       	       	       	       	       	//
+  _CORBA_MODULE_FN void enableLcdMode();                                //
+  ////////////////////////////////////////////////////////////////////////
+
+  // Internal configuration variables. Do not use!
+
+  _CORBA_MODULE_VAR CORBA::Boolean useTypeCodeIndirections;
+  // true by default
 
 
   class logStream {
