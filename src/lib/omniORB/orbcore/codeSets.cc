@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2003/03/03 12:32:33  dgrisby
+  EBCDIC code sets. Thanks Coleman Corrigan.
+
   Revision 1.1.2.11  2002/12/19 13:56:58  dgrisby
   New Windows 1251 code set. (Thanks Vasily Tchekalkin).
 
@@ -127,6 +130,9 @@ const CONV_FRAME::CodeSetId omniCodeSet::ID_UCS_4   = 0x00010106;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_8   = 0x05010001;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_UTF_16  = 0x00010109;
 const CONV_FRAME::CodeSetId omniCodeSet::ID_CP1251  = 0x100204e3;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_037     = 0x10020025;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_500     = 0x100201f8;
+const CONV_FRAME::CodeSetId omniCodeSet::ID_EDF_4   = 0x10040366;
 
 
 //

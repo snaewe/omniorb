@@ -1,3 +1,17 @@
+Mon Mar  3 12:28:10 GMT 2003 dgrisby
+====================================
+
+- EBCDIC code sets. Thanks Coleman Corrigan.
+
+include/omniORB4/codeSets.h
+src/lib/omniORB/codesets/cs-037.cc
+src/lib/omniORB/codesets/cs-500.cc
+src/lib/omniORB/codesets/cs-EDF-4.cc
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/codesets/omniCodeSets.cc
+src/lib/omniORB/orbcore/codeSets.cc
+
+
 Sun Mar  2 17:08:17 GMT 2003 dgrisby
 ====================================
 

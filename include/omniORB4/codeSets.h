@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2003/03/03 12:32:32  dgrisby
+  EBCDIC code sets. Thanks Coleman Corrigan.
+
   Revision 1.1.2.8  2003/01/14 11:48:15  dgrisby
   Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
 
@@ -143,6 +146,9 @@ public:
   static _core_attr const CONV_FRAME::CodeSetId ID_UTF_16;  // Unicode with
                                                             //  surrogates
   static _core_attr const CONV_FRAME::CodeSetId ID_CP1251;  // windows-1251
+  static _core_attr const CONV_FRAME::CodeSetId ID_037;     // IBM Ebcdic
+  static _core_attr const CONV_FRAME::CodeSetId ID_500;
+  static _core_attr const CONV_FRAME::CodeSetId ID_EDF_4;
 
 
   class NCS_C; // Native code set for char and string

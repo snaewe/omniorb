@@ -12,6 +12,9 @@ ORB_SRCS = \
             cs-8859-10.cc \
             cs-UCS-4.cc   \
             cs-cp1251.cc  \
+            cs-037.cc     \
+            cs-500.cc     \
+            cs-EDF-4.cc   \
             omniCodeSets.cc
 
 
