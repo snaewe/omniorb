@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/11/26 18:51:44  djs
+# Generates nicer output when doing blank substitutions
+#
 # Revision 1.6  1999/11/19 20:05:39  djs
 # Removed superfluous function. Added zip.
 #
@@ -122,6 +125,13 @@ class Stream:
             lines = string.split(self.regex.sub(replace, strippedText), "\n")
             # lines now contains a list of strings (most of the time
             # a single element list)
+
+            # if the line only had a single @subst@ expression which
+            # was evaluated to nothing, then skip the extra newline
+            if self.regex.search(strippedText) and \
+               lines == [""]:
+                return []
+            
             indentedLines = []
             for line in lines:
 #                print "[[[ line = " + line + "]]]"
