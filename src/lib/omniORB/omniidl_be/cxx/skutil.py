@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/12/10 18:26:03  djs
+# Added a utility function to order exceptions based on their names
+#
 # Revision 1.7  1999/11/29 19:26:59  djs
 # Code tidied and moved around. Some redundant code eliminated.
 #
@@ -102,8 +105,8 @@ def marshall(string, environment, type, decl, argname, to="_n",
     full_dims = dims + type_dims
 
     # for some reason, a char[10][20][30] x
-    # becomes put_char_array(.... x[10][20]...)
-    dims_string = tyutil.dimsToString(full_dims[0:-1])
+    # becomes put_char_array(.... x[0][0]...)
+    zero_dims_string = "[0]" * (len(full_dims) - 1)
 
     anonymous_array = dims      != []
     is_array        = full_dims != []
@@ -126,7 +129,7 @@ def marshall(string, environment, type, decl, argname, to="_n",
             string.out("""\
 @to@.put_char_array((const _CORBA_Char*) ((const @type@*) @argname@@dims_string@), @size@@align@);""",
                        type = type_name, argname = argname,
-                       dims_string = dims_string,
+                       dims_string = zero_dims_string,
                        size = str(num_bytes), align = align_str, to = to)
             return
 
@@ -212,8 +215,8 @@ def unmarshall(to, environment, type, decl, name,
     full_dims = dims + type_dims
 
     # for some reason, a char[10][20][30] x
-    # becomes put_char_array(.... x[10][20]...)
-    dims_string = tyutil.dimsToString(full_dims[0:-1])
+    # becomes put_char_array(.... x[0][0]...)
+    zero_dims_string = "[0]" * (len(full_dims) - 1)
 
     anonymous_array = dims      != []
     is_array        = full_dims != []
@@ -224,7 +227,7 @@ def unmarshall(to, environment, type, decl, name,
     type_name = environment.principalID(deref_type, fully_scope)
     deref_type_name = environment.principalID(deref_type, fully_scope)
 
-    element_name = name + dims_string
+    element_name = name + zero_dims_string
 
     if is_array:
         # BASIC things
@@ -500,3 +503,16 @@ def unmarshal_string_via_temporary(variable_name, stream_name):
     
 
 
+def sort_exceptions(ex):
+    # sort the exceptions into lexicographical order
+    def lexicographic(exception_a, exception_b):
+        name_a = tyutil.name(tyutil.mapID(exception_a.scopedName()))
+        name_b = tyutil.name(tyutil.mapID(exception_b.scopedName()))
+        # name_a <=> name_b
+        if name_a < name_b: return -1
+        if name_a > name_b: return 1
+        return 0
+        
+    raises = ex[:]
+    raises.sort(lexicographic)
+    return raises
