@@ -1,7 +1,7 @@
 /* NamingSK_NT.cc                                       */
 /*                                                      */
 /* Manually Edited NamingSK for Windows NT/ MSVC++ 4.2  */
-/* Includes work-arounds for MSVC++ 4.3 bugs            */
+/* Includes work-arounds for MSVC++ 4.2 bugs            */
 
 #include "omniORB2/Naming_NT.hh"
 
@@ -304,345 +304,500 @@ CosNaming::NamingContext::NotEmpty::operator<<= (MemBufferedStream &_n)
 
 void CosNaming::_proxy_NamingContext::bind ( const CosNaming::Name & n, CORBA::Object_ptr  obj )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),5);
-  _msgsize = n.NP_alignedSize(_msgsize);
-  _msgsize = CORBA::Object::NP_alignedSize(obj,_msgsize);
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"bind",5,_msgsize,0);
-  n >>= _c;
-  CORBA::Object::marshalObjRef(obj,_c);
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),5);
+    _msgsize = n.NP_alignedSize(_msgsize);
+    _msgsize = CORBA::Object::NP_alignedSize(obj,_msgsize);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"bind",5,_msgsize,0);
+    n >>= _c;
+    CORBA::Object::marshalObjRef(obj,_c);
+    switch (_c.ReceiveReply())
     {
-      _c.RequestCompleted();
-      break;
-    }
-    case GIOP::USER_EXCEPTION:
-    {
-      CORBA::Char _excId[49];
-      CORBA::ULong _len;
-      _len <<= _c;
-      if (_len > 49) {
+      case GIOP::NO_EXCEPTION:
+      {
+        _c.RequestCompleted();
+        break;
+      }
+      case GIOP::USER_EXCEPTION:
+      {
+        CORBA::Char _excId[49];
+        CORBA::ULong _len;
+        _len <<= _c;
+        if (_len > 49) {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        else {
+          _c.get_char_array(_excId,_len);
+        }
+        if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::NotFound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
+          CosNaming::NamingContext::CannotProceed _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
+          CosNaming::NamingContext::InvalidName _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_AlreadyBound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::AlreadyBound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        break;
+      }
+      case GIOP::SYSTEM_EXCEPTION:
+      {
         _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
       }
-      else {
-        _c.get_char_array(_excId,_len);
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        bind ( n, obj );
+        return;
       }
-      if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::NotFound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
-        CosNaming::NamingContext::CannotProceed _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
-        CosNaming::NamingContext::InvalidName _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_AlreadyBound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::AlreadyBound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else {
-        _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
-      break;
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    throw;
   }
 }
 
 void CosNaming::_proxy_NamingContext::rebind ( const CosNaming::Name & n, CORBA::Object_ptr  obj )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),7);
-  _msgsize = n.NP_alignedSize(_msgsize);
-  _msgsize = CORBA::Object::NP_alignedSize(obj,_msgsize);
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"rebind",7,_msgsize,0);
-  n >>= _c;
-  CORBA::Object::marshalObjRef(obj,_c);
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),7);
+    _msgsize = n.NP_alignedSize(_msgsize);
+    _msgsize = CORBA::Object::NP_alignedSize(obj,_msgsize);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"rebind",7,_msgsize,0);
+    n >>= _c;
+    CORBA::Object::marshalObjRef(obj,_c);
+    switch (_c.ReceiveReply())
     {
-      _c.RequestCompleted();
-      break;
-    }
-    case GIOP::USER_EXCEPTION:
-    {
-      CORBA::Char _excId[49];
-      CORBA::ULong _len;
-      _len <<= _c;
-      if (_len > 49) {
+      case GIOP::NO_EXCEPTION:
+      {
+        _c.RequestCompleted();
+        break;
+      }
+      case GIOP::USER_EXCEPTION:
+      {
+        CORBA::Char _excId[49];
+        CORBA::ULong _len;
+        _len <<= _c;
+        if (_len > 49) {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        else {
+          _c.get_char_array(_excId,_len);
+        }
+        if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::NotFound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
+          CosNaming::NamingContext::CannotProceed _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
+          CosNaming::NamingContext::InvalidName _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        break;
+      }
+      case GIOP::SYSTEM_EXCEPTION:
+      {
         _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
       }
-      else {
-        _c.get_char_array(_excId,_len);
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        rebind ( n, obj );
+        return;
       }
-      if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::NotFound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
-        CosNaming::NamingContext::CannotProceed _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
-        CosNaming::NamingContext::InvalidName _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else {
-        _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
-      break;
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    throw;
   }
 }
 
 void CosNaming::_proxy_NamingContext::bind_context ( const CosNaming::Name & n, CosNaming::NamingContext_ptr  nc )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),13);
-  _msgsize = n.NP_alignedSize(_msgsize);
-  _msgsize = CosNaming::NamingContext::NP_alignedSize(nc,_msgsize);
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"bind_context",13,_msgsize,0);
-  n >>= _c;
-  CosNaming::NamingContext::marshalObjRef(nc,_c);
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),13);
+    _msgsize = n.NP_alignedSize(_msgsize);
+    _msgsize = CosNaming::NamingContext::NP_alignedSize(nc,_msgsize);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"bind_context",13,_msgsize,0);
+    n >>= _c;
+    CosNaming::NamingContext::marshalObjRef(nc,_c);
+    switch (_c.ReceiveReply())
     {
-      _c.RequestCompleted();
-      break;
-    }
-    case GIOP::USER_EXCEPTION:
-    {
-      CORBA::Char _excId[49];
-      CORBA::ULong _len;
-      _len <<= _c;
-      if (_len > 49) {
+      case GIOP::NO_EXCEPTION:
+      {
+        _c.RequestCompleted();
+        break;
+      }
+      case GIOP::USER_EXCEPTION:
+      {
+        CORBA::Char _excId[49];
+        CORBA::ULong _len;
+        _len <<= _c;
+        if (_len > 49) {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        else {
+          _c.get_char_array(_excId,_len);
+        }
+        if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::NotFound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
+          CosNaming::NamingContext::CannotProceed _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
+          CosNaming::NamingContext::InvalidName _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_AlreadyBound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::AlreadyBound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        break;
+      }
+      case GIOP::SYSTEM_EXCEPTION:
+      {
         _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
       }
-      else {
-        _c.get_char_array(_excId,_len);
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        bind_context ( n, nc );
+        return;
       }
-      if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::NotFound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
-        CosNaming::NamingContext::CannotProceed _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
-        CosNaming::NamingContext::InvalidName _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_AlreadyBound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::AlreadyBound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else {
-        _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
-      break;
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    throw;
   }
 }
 
 void CosNaming::_proxy_NamingContext::rebind_context ( const CosNaming::Name & n, CosNaming::NamingContext_ptr  nc )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),15);
-  _msgsize = n.NP_alignedSize(_msgsize);
-  _msgsize = CosNaming::NamingContext::NP_alignedSize(nc,_msgsize);
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"rebind_context",15,_msgsize,0);
-  n >>= _c;
-  CosNaming::NamingContext::marshalObjRef(nc,_c);
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),15);
+    _msgsize = n.NP_alignedSize(_msgsize);
+    _msgsize = CosNaming::NamingContext::NP_alignedSize(nc,_msgsize);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"rebind_context",15,_msgsize,0);
+    n >>= _c;
+    CosNaming::NamingContext::marshalObjRef(nc,_c);
+    switch (_c.ReceiveReply())
     {
-      _c.RequestCompleted();
-      break;
-    }
-    case GIOP::USER_EXCEPTION:
-    {
-      CORBA::Char _excId[49];
-      CORBA::ULong _len;
-      _len <<= _c;
-      if (_len > 49) {
+      case GIOP::NO_EXCEPTION:
+      {
+        _c.RequestCompleted();
+        break;
+      }
+      case GIOP::USER_EXCEPTION:
+      {
+        CORBA::Char _excId[49];
+        CORBA::ULong _len;
+        _len <<= _c;
+        if (_len > 49) {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        else {
+          _c.get_char_array(_excId,_len);
+        }
+        if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::NotFound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
+          CosNaming::NamingContext::CannotProceed _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
+          CosNaming::NamingContext::InvalidName _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        break;
+      }
+      case GIOP::SYSTEM_EXCEPTION:
+      {
         _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
       }
-      else {
-        _c.get_char_array(_excId,_len);
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        rebind_context ( n, nc );
+        return;
       }
-      if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::NotFound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
-        CosNaming::NamingContext::CannotProceed _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
-        CosNaming::NamingContext::InvalidName _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else {
-        _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
-      break;
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    throw;
   }
 }
 
 CORBA::Object_ptr  CosNaming::_proxy_NamingContext::resolve ( const CosNaming::Name & n )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),8);
-  _msgsize = n.NP_alignedSize(_msgsize);
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
   CORBA::Object_ptr _result= 0;
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"resolve",8,_msgsize,0);
-  n >>= _c;
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),8);
+    _msgsize = n.NP_alignedSize(_msgsize);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"resolve",8,_msgsize,0);
+    n >>= _c;
+    switch (_c.ReceiveReply())
     {
-      try {
+      case GIOP::NO_EXCEPTION:
+      {
         _result = CORBA::Object::unmarshalObjRef(_c);
         _c.RequestCompleted();
         return _result;
+        break;
       }
-      catch (...) {
-        if (_result) CORBA::release(_result);
-        throw;
+      case GIOP::USER_EXCEPTION:
+      {
+        CORBA::Char _excId[49];
+        CORBA::ULong _len;
+        _len <<= _c;
+        if (_len > 49) {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        else {
+          _c.get_char_array(_excId,_len);
+        }
+        if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::NotFound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
+          CosNaming::NamingContext::CannotProceed _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
+          CosNaming::NamingContext::InvalidName _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        break;
       }
-      break;
-    }
-    case GIOP::USER_EXCEPTION:
-    {
-      CORBA::Char _excId[49];
-      CORBA::ULong _len;
-      _len <<= _c;
-      if (_len > 49) {
+      case GIOP::SYSTEM_EXCEPTION:
+      {
         _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
       }
-      else {
-        _c.get_char_array(_excId,_len);
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        return resolve ( n );
       }
-      if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::NotFound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
-        CosNaming::NamingContext::CannotProceed _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
-        CosNaming::NamingContext::InvalidName _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else {
-        _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
-      break;
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_result) CORBA::release(_result);
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    if (_result) CORBA::release(_result);
+    throw;
   }
   {
     // never reach here! Dummy return to keep some compilers happy.
@@ -653,104 +808,163 @@ CORBA::Object_ptr  CosNaming::_proxy_NamingContext::resolve ( const CosNaming::N
 
 void CosNaming::_proxy_NamingContext::unbind ( const CosNaming::Name & n )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),7);
-  _msgsize = n.NP_alignedSize(_msgsize);
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"unbind",7,_msgsize,0);
-  n >>= _c;
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),7);
+    _msgsize = n.NP_alignedSize(_msgsize);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"unbind",7,_msgsize,0);
+    n >>= _c;
+    switch (_c.ReceiveReply())
     {
-      _c.RequestCompleted();
-      break;
-    }
-    case GIOP::USER_EXCEPTION:
-    {
-      CORBA::Char _excId[49];
-      CORBA::ULong _len;
-      _len <<= _c;
-      if (_len > 49) {
+      case GIOP::NO_EXCEPTION:
+      {
+        _c.RequestCompleted();
+        break;
+      }
+      case GIOP::USER_EXCEPTION:
+      {
+        CORBA::Char _excId[49];
+        CORBA::ULong _len;
+        _len <<= _c;
+        if (_len > 49) {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        else {
+          _c.get_char_array(_excId,_len);
+        }
+        if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::NotFound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
+          CosNaming::NamingContext::CannotProceed _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
+          CosNaming::NamingContext::InvalidName _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        break;
+      }
+      case GIOP::SYSTEM_EXCEPTION:
+      {
         _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
       }
-      else {
-        _c.get_char_array(_excId,_len);
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        unbind ( n );
+        return;
       }
-      if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::NotFound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
-        CosNaming::NamingContext::CannotProceed _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
-        CosNaming::NamingContext::InvalidName _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else {
-        _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
-      break;
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    throw;
   }
 }
 
 CosNaming::NamingContext_ptr  CosNaming::_proxy_NamingContext::new_context (  )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),12);
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
   CosNaming::NamingContext_ptr _result= 0;
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"new_context",12,_msgsize,0);
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),12);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"new_context",12,_msgsize,0);
+    switch (_c.ReceiveReply())
     {
-      try {
+      case GIOP::NO_EXCEPTION:
+      {
         _result = CosNaming::NamingContext::unmarshalObjRef(_c);
         _c.RequestCompleted();
         return _result;
+        break;
       }
-      catch (...) {
-        if (_result) CORBA::release(_result);
-        throw;
+      case GIOP::USER_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+        break;
       }
-      break;
+      case GIOP::SYSTEM_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+      }
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        return new_context (  );
+      }
     }
-    case GIOP::USER_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
-      break;
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_result) CORBA::release(_result);
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
-    }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    if (_result) CORBA::release(_result);
+    throw;
   }
   {
     // never reach here! Dummy return to keep some compilers happy.
@@ -761,79 +975,106 @@ CosNaming::NamingContext_ptr  CosNaming::_proxy_NamingContext::new_context (  )
 
 CosNaming::NamingContext_ptr  CosNaming::_proxy_NamingContext::bind_new_context ( const CosNaming::Name & n )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),17);
-  _msgsize = n.NP_alignedSize(_msgsize);
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
   CosNaming::NamingContext_ptr _result= 0;
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"bind_new_context",17,_msgsize,0);
-  n >>= _c;
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),17);
+    _msgsize = n.NP_alignedSize(_msgsize);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"bind_new_context",17,_msgsize,0);
+    n >>= _c;
+    switch (_c.ReceiveReply())
     {
-      try {
+      case GIOP::NO_EXCEPTION:
+      {
         _result = CosNaming::NamingContext::unmarshalObjRef(_c);
         _c.RequestCompleted();
         return _result;
+        break;
       }
-      catch (...) {
-        if (_result) CORBA::release(_result);
-        throw;
+      case GIOP::USER_EXCEPTION:
+      {
+        CORBA::Char _excId[49];
+        CORBA::ULong _len;
+        _len <<= _c;
+        if (_len > 49) {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        else {
+          _c.get_char_array(_excId,_len);
+        }
+        if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::NotFound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
+          CosNaming::NamingContext::CannotProceed _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
+          CosNaming::NamingContext::InvalidName _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else if (strcmp((const char *)_excId,CosNaming_NamingContext_AlreadyBound_IntfRepoID) == 0) {
+          CosNaming::NamingContext::AlreadyBound _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        break;
       }
-      break;
-    }
-    case GIOP::USER_EXCEPTION:
-    {
-      CORBA::Char _excId[49];
-      CORBA::ULong _len;
-      _len <<= _c;
-      if (_len > 49) {
+      case GIOP::SYSTEM_EXCEPTION:
+      {
         _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
       }
-      else {
-        _c.get_char_array(_excId,_len);
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        return bind_new_context ( n );
       }
-      if (strcmp((const char *)_excId,CosNaming_NamingContext_NotFound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::NotFound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_CannotProceed_IntfRepoID) == 0) {
-        CosNaming::NamingContext::CannotProceed _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_InvalidName_IntfRepoID) == 0) {
-        CosNaming::NamingContext::InvalidName _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else if (strcmp((const char *)_excId,CosNaming_NamingContext_AlreadyBound_IntfRepoID) == 0) {
-        CosNaming::NamingContext::AlreadyBound _ex;
-        _ex <<= _c;
-        _c.RequestCompleted();
-        throw _ex;
-      }
-      else {
-        _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
-      break;
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_result) CORBA::release(_result);
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    if (_result) CORBA::release(_result);
+    throw;
   }
   {
     // never reach here! Dummy return to keep some compilers happy.
@@ -844,98 +1085,159 @@ CosNaming::NamingContext_ptr  CosNaming::_proxy_NamingContext::bind_new_context 
 
 void CosNaming::_proxy_NamingContext::destroy (  )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),8);
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"destroy",8,_msgsize,0);
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),8);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"destroy",8,_msgsize,0);
+    switch (_c.ReceiveReply())
     {
-      _c.RequestCompleted();
-      break;
-    }
-    case GIOP::USER_EXCEPTION:
-    {
-      CORBA::Char _excId[44];
-      CORBA::ULong _len;
-      _len <<= _c;
-      if (_len > 44) {
-        _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
-      else {
-        _c.get_char_array(_excId,_len);
-      }
-      if (strcmp((const char *)_excId,CosNaming_NamingContext_NotEmpty_IntfRepoID) == 0) {
-        CosNaming::NamingContext::NotEmpty _ex;
-        _ex <<= _c;
+      case GIOP::NO_EXCEPTION:
+      {
         _c.RequestCompleted();
-        throw _ex;
+        break;
       }
-      else {
+      case GIOP::USER_EXCEPTION:
+      {
+        CORBA::Char _excId[44];
+        CORBA::ULong _len;
+        _len <<= _c;
+        if (_len > 44) {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        else {
+          _c.get_char_array(_excId,_len);
+        }
+        if (strcmp((const char *)_excId,CosNaming_NamingContext_NotEmpty_IntfRepoID) == 0) {
+          CosNaming::NamingContext::NotEmpty _ex;
+          _ex <<= _c;
+          _c.RequestCompleted();
+          throw _ex;
+        }
+        else {
+          _c.RequestCompleted(1);
+          throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        }
+        break;
+      }
+      case GIOP::SYSTEM_EXCEPTION:
+      {
         _c.RequestCompleted(1);
-        throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
       }
-      break;
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        destroy (  );
+        return;
+      }
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    throw;
   }
 }
 
 void CosNaming::_proxy_NamingContext::___list ( CORBA::ULong  how_many, CosNaming::BindingList *& bl, CosNaming::BindingIterator_ptr & bi )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),5);
-  _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
-  _msgsize += 4;
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
   CosNaming::BindingList * _bl= 0;
   CosNaming::BindingIterator_ptr _bi= 0;
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"list",5,_msgsize,0);
-  how_many >>= _c;
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),5);
+    _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
+    _msgsize += 4;
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"list",5,_msgsize,0);
+    how_many >>= _c;
+    switch (_c.ReceiveReply())
     {
-      try {
+      case GIOP::NO_EXCEPTION:
+      {
         _bl = new CosNaming::BindingList;
         *_bl <<= _c;
         _bi = CosNaming::BindingIterator::unmarshalObjRef(_c);
         _c.RequestCompleted();
         bl = _bl;
         bi = _bi;
+        break;
       }
-      catch (...) {
-        if (_bl) delete _bl;
-        if (_bi) CORBA::release(_bi);
-        throw;
+      case GIOP::USER_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+        break;
       }
-      break;
+      case GIOP::SYSTEM_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+      }
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        list ( how_many, bl, bi );
+        return;
+      }
     }
-    case GIOP::USER_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
-      break;
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_bl) delete _bl;
+    if (_bi) CORBA::release(_bi);
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
-    }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    if (_bl) delete _bl;
+    if (_bi) CORBA::release(_bi);
+    throw;
   }
 }
 
@@ -1448,6 +1750,20 @@ CosNaming::_sk_NamingContext::dispatch(GIOP_S &_s,const char *_op,CORBA::Boolean
   }
 }
 
+CosNaming::_sk_NamingContext::_sk_NamingContext (const omniORB::objectKey& k)
+{
+  omniRopeAndKey l(0,(CORBA::Octet*)&k,(CORBA::ULong)sizeof(k));
+  setRopeAndKey(l,0);
+}
+
+omniORB::objectKey
+CosNaming::_sk_NamingContext::_key()
+{
+  omniRopeAndKey l;
+  getRopeAndKey(l);
+  return (*((omniORB::objectKey*)l.key()));
+}
+
 CosNaming::NamingContext_ptr
 CosNaming::NamingContext::_duplicate(CosNaming::NamingContext_ptr obj)
 {
@@ -1567,45 +1883,72 @@ CosNaming::NamingContext_ptr CosNaming::NamingContext_proxyObjectFactory::__nil_
 
 CORBA::Boolean  CosNaming::_proxy_BindingIterator::___next_one ( CosNaming::Binding *& b )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),9);
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
   CosNaming::Binding * _b= 0;
   CORBA::Boolean _result;
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"next_one",9,_msgsize,0);
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),9);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"next_one",9,_msgsize,0);
+    switch (_c.ReceiveReply())
     {
-      try {
+      case GIOP::NO_EXCEPTION:
+      {
         _b = new CosNaming::Binding;
         _result <<= _c;
         *_b <<= _c;
         _c.RequestCompleted();
         b = _b;
         return _result;
+        break;
       }
-      catch (...) {
-        if (_b) delete _b;
-        throw;
+      case GIOP::USER_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+        break;
       }
-      break;
+      case GIOP::SYSTEM_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+      }
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        return next_one ( b );
+      }
     }
-    case GIOP::USER_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
-      break;
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_b) delete _b;
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
-    }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    if (_b) delete _b;
+    throw;
   }
   {
     // never reach here! Dummy return to keep some compilers happy.
@@ -1616,48 +1959,75 @@ CORBA::Boolean  CosNaming::_proxy_BindingIterator::___next_one ( CosNaming::Bind
 
 CORBA::Boolean  CosNaming::_proxy_BindingIterator::___next_n ( CORBA::ULong  how_many, CosNaming::BindingList *& bl )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),7);
-  _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
-  _msgsize += 4;
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
   CosNaming::BindingList * _bl= 0;
   CORBA::Boolean _result;
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"next_n",7,_msgsize,0);
-  how_many >>= _c;
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),7);
+    _msgsize = omni::align_to(_msgsize,omni::ALIGN_4);
+    _msgsize += 4;
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"next_n",7,_msgsize,0);
+    how_many >>= _c;
+    switch (_c.ReceiveReply())
     {
-      try {
+      case GIOP::NO_EXCEPTION:
+      {
         _bl = new CosNaming::BindingList;
         _result <<= _c;
         *_bl <<= _c;
         _c.RequestCompleted();
         bl = _bl;
         return _result;
+        break;
       }
-      catch (...) {
-        if (_bl) delete _bl;
-        throw;
+      case GIOP::USER_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+        break;
       }
-      break;
+      case GIOP::SYSTEM_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+      }
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        return next_n ( how_many, bl );
+      }
     }
-    case GIOP::USER_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
-      break;
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_bl) delete _bl;
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
-    }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    if (_bl) delete _bl;
+    throw;
   }
   {
     // never reach here! Dummy return to keep some compilers happy.
@@ -1668,32 +2038,64 @@ CORBA::Boolean  CosNaming::_proxy_BindingIterator::___next_n ( CORBA::ULong  how
 
 void CosNaming::_proxy_BindingIterator::destroy (  )
 {
-  GIOP_C _c(_rope());
-  CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(objkeysize(),8);
-  _c.InitialiseRequest(objkey(),objkeysize(),(char *)"destroy",8,_msgsize,0);
-  switch (_c.ReceiveReply())
-  {
-    case GIOP::NO_EXCEPTION:
+  assertObjectExistent();
+  omniRopeAndKey _r;
+  CORBA::Boolean _fwd = getRopeAndKey(_r);
+  try {
+    GIOP_C _c(_r.rope());
+    CORBA::ULong _msgsize = GIOP_C::RequestHeaderSize(_r.keysize(),8);
+    _c.InitialiseRequest(_r.key(),_r.keysize(),(char *)"destroy",8,_msgsize,0);
+    switch (_c.ReceiveReply())
     {
-      _c.RequestCompleted();
-      break;
+      case GIOP::NO_EXCEPTION:
+      {
+        _c.RequestCompleted();
+        break;
+      }
+      case GIOP::USER_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
+        break;
+      }
+      case GIOP::SYSTEM_EXCEPTION:
+      {
+        _c.RequestCompleted(1);
+        throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
+      }
+      case GIOP::LOCATION_FORWARD:
+      {
+        {
+          CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(_c);
+          _c.RequestCompleted();
+          if (CORBA::is_nil(obj)) {
+            if (omniORB::traceLevel > 10) {
+              cerr << "Received GIOP::LOCATION_FORWARD message that contains a nil object reference." << endl;
+            }
+            throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_NO);
+          }
+          omniRopeAndKey __r;
+          obj->PR_getobj()->getRopeAndKey(__r);
+          setRopeAndKey(__r);
+          _c.~GIOP_C();
+        }
+        if (omniORB::traceLevel > 10) {
+          cerr << "GIOP::LOCATION_FORWARD: retry request." << endl;
+        }
+        destroy (  );
+        return;
+      }
     }
-    case GIOP::USER_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(0,CORBA::COMPLETED_MAYBE);
-      break;
+  }
+  catch (const CORBA::COMM_FAILURE& ex) {
+    if (_fwd) {
+      resetRopeAndKey();
+      throw CORBA::TRANSIENT(0,CORBA::COMPLETED_NO);
     }
-    case GIOP::SYSTEM_EXCEPTION:
-    {
-      _c.RequestCompleted(1);
-      throw omniORB::fatalException(__FILE__,__LINE__,"GIOP::SYSTEM_EXCEPTION should not be returned by GIOP_C::ReceiveReply()");
-    }
-    case GIOP::LOCATION_FORWARD:
-    {
-      _c.RequestCompleted(1);
-      throw CORBA::UNKNOWN(2,CORBA::COMPLETED_NO);
-    }
+    throw;
+  }
+  catch (...) {
+    throw;
   }
 }
 
@@ -1754,6 +2156,20 @@ CosNaming::_sk_BindingIterator::dispatch(GIOP_S &_s,const char *_op,CORBA::Boole
   else {
     return 0;
   }
+}
+
+CosNaming::_sk_BindingIterator::_sk_BindingIterator (const omniORB::objectKey& k)
+{
+  omniRopeAndKey l(0,(CORBA::Octet*)&k,(CORBA::ULong)sizeof(k));
+  setRopeAndKey(l,0);
+}
+
+omniORB::objectKey
+CosNaming::_sk_BindingIterator::_key()
+{
+  omniRopeAndKey l;
+  getRopeAndKey(l);
+  return (*((omniORB::objectKey*)l.key()));
 }
 
 CosNaming::BindingIterator_ptr
