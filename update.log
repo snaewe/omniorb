@@ -1,3 +1,67 @@
+Fri Aug 17 17:52:32 BST 2001 sll
+================================
+
+- Modularise ORB configuration parameters and -ORB* options processing.
+
+include/omniORB4/CORBA_ORB.h
+include/omniORB4/callDescriptor.h
+include/omniORB4/cdrStream.h
+include/omniORB4/omniORB.h
+include/omniORB4/omniORBcompat.h            NEW
+include/omniORB4/omniURI.h
+src/lib/omniORB/dynamic/any.cc 
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/deferredRequest.cc
+src/lib/omniORB/dynamic/dynException.cc
+src/lib/omniORB/dynamic/dynamicImplementation.cc
+src/lib/omniORB/dynamic/dynamicLib.cc
+src/lib/omniORB/dynamic/pseudoBase.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/include/dynamicLib.h
+src/lib/omniORB/include/giopStrand.h
+src/lib/omniORB/include/objectAdapter.h
+src/lib/omniORB/include/omniCurrent.h
+src/lib/omniORB/include/orbOptions.h      NEW
+src/lib/omniORB/include/orbParameters.h   NEW
+src/lib/omniORB/include/poacurrentimpl.h
+src/lib/omniORB/orbcore/callDescriptor.cc
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/dynamicLib.cc
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/initFile.cc
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/omniTransport.cc
+src/lib/omniORB/orbcore/orbOptions.cc       NEW
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/tracedthread.cc
+src/lib/omniORB/orbcore/uri.cc
+src/lib/omniORB/orbcore/gatekeepers/tcpwrapper/gatekeeper.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixTransportImpl.cc
+
+
 Fri Aug 17 15:50:51 BST 2001 dpg1
 =================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2001/08/17 17:12:36  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.2.2.5  2001/08/15 10:31:23  dpg1
   Minor tweaks and fixes.
 
@@ -64,16 +67,79 @@
 */
 
 #include <omniORB4/CORBA.h>
-
-#ifdef HAS_pch
-#pragma hdrstop
-#endif
-
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
+#include <initialiser.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 
-OMNI_USING_NAMESPACE(omni)
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
 
+CORBA::Boolean  omniORB::omniORB_27_CompatibleAnyExtraction = 0;
+// In omniORB pre-2.8.0 versions, the CORBA::Any extraction operator for
+//   1. unbounded string operator>>=(char*&)
+//   2. bounded string   operator>>=(to_string)
+//   3. object reference operator>>=(A_ptr&) for interface A
+// Returns a copy of the value. The caller must free the returned
+// value later.
+//
+// With 2.8.0 and later, the semantics becomes non-copy, i.e. the Any
+// still own the storage of the returned value.
+// This would cause problem in programs that is written to use the
+// pre-2.8.0 semantics. To make it easier for the transition,
+// set omniORB_27_CompatibleAnyExtraction to 1.
+// This would revert the semantics to the pre-2.8.0 versions.
+//
+// Valid values = 0 or 1
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+CORBA::Boolean  orbParameters::tcAliasExpand          = 0;
+// This flag is used to indicate whether TypeCodes associated with anys
+// should have aliases removed. This functionality is included because
+// some ORBs will not recognise an Any containing a TypeCode containing
+// aliases to be the same as the actual type contained in the Any. Note
+// that omniORB will always remove top-level aliases, but will not remove
+// aliases from TypeCodes that are members of other TypeCodes (e.g.
+// TypeCodes for members of structs etc.), unless tcAliasExpand is set to 1.
+// There is a performance penalty when inserting into an Any if 
+// tcAliasExpand is set to 1. The default value is 0 (i.e. aliases of
+// member TypeCodes are not expanded). Note that aliases won't be expanded
+// when one of the non-type-safe methods of inserting into an Any is
+// used (i.e. when the replace() member function or non - type-safe Any
+// constructor is used. )
+//
+//  Valid values = 0 or 1
+
+CORBA::Boolean  orbParameters::diiThrowsSysExceptions = 0;
+// If the value of this variable is 1 then the Dynamic Invacation Interface
+// functions (Request::invoke, send_oneway, send_deferred, get_response,
+// poll_response) will throw system exceptions as appropriate. Otherwise 
+// the exception will be stored in the Environment pseudo object associated
+// with the Request. By default system exceptions are passed through the 
+// Environment object.
+//
+// Valid values = 0 or 1
+
+
+CORBA::Boolean  orbParameters::useTypeCodeIndirections = 1;
+// If true (the default), typecode indirectional will be used. Set
+// this to false to disable that. Setting this to false might be
+// useful to interoperate with another ORB implementation that cannot
+// handle indirectional properly.
+//
+// Valid values = 0 or 1
+
+CORBA::Boolean  orbParameters::acceptMisalignedTcIndirections = 0;
+// If true, try to fix a mis-aligned indirection in a typecode. This
+// could be used to work around some versions of Visibroker's Java ORB.
+//
+// Valid values = 0 or 1
+
+
+////////////////////////////////////////////////////////////////////////////
 static void init();
 static void deinit();
 static void marshal_context(cdrStream&, CORBA::Context_ptr cxtx,
@@ -122,3 +188,184 @@ lookup_id_lcfn(omniCallDescriptor* cd, omniServant* svnt)
   // library is not linked ...
   OMNIORB_ASSERT(0);
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class tcAliasExpandHandler : public orbOptions::Handler {
+public:
+
+  tcAliasExpandHandler() : 
+    orbOptions::Handler("tcAliasExpand",
+			"tcAliasExpand = 0 or 1",
+			1,
+			"-ORBtcAliasExpand < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::tcAliasExpand = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::tcAliasExpand,
+			     result);
+  }
+};
+
+static tcAliasExpandHandler tcAliasExpandHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class diiThrowsSysExceptionsHandler : public orbOptions::Handler {
+public:
+
+  diiThrowsSysExceptionsHandler() : 
+    orbOptions::Handler("diiThrowsSysExceptions",
+			"diiThrowsSysExceptions = 0 or 1",
+			1,
+			"-ORBdiiThrowsSysExceptions < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::diiThrowsSysExceptions = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::diiThrowsSysExceptions,
+			     result);
+  }
+};
+
+static diiThrowsSysExceptionsHandler diiThrowsSysExceptionsHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class omniORB_27_CompatibleAnyExtractionHandler : public orbOptions::Handler {
+public:
+
+  omniORB_27_CompatibleAnyExtractionHandler() : 
+    orbOptions::Handler("omniORB_27_CompatibleAnyExtraction",
+			"omniORB_27_CompatibleAnyExtraction = 0 or 1",
+			1,
+			"-ORBomniORB_27_CompatibleAnyExtraction < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    omniORB::omniORB_27_CompatibleAnyExtraction = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),omniORB::omniORB_27_CompatibleAnyExtraction,
+			     result);
+  }
+};
+
+static omniORB_27_CompatibleAnyExtractionHandler omniORB_27_CompatibleAnyExtractionHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class useTypeCodeIndirectionsHandler : public orbOptions::Handler {
+public:
+
+  useTypeCodeIndirectionsHandler() : 
+    orbOptions::Handler("useTypeCodeIndirections",
+			"useTypeCodeIndirections = 0 or 1",
+			1,
+			"-ORBuseTypeCodeIndirections < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::useTypeCodeIndirections = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::useTypeCodeIndirections,
+			     result);
+  }
+};
+
+static useTypeCodeIndirectionsHandler useTypeCodeIndirectionsHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class acceptMisalignedTcIndirectionsHandler : public orbOptions::Handler {
+public:
+
+  acceptMisalignedTcIndirectionsHandler() : 
+    orbOptions::Handler("acceptMisalignedTcIndirections",
+			"acceptMisalignedTcIndirections = 0 or 1",
+			1,
+			"-ORBacceptMisalignedTcIndirections < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::acceptMisalignedTcIndirections = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::acceptMisalignedTcIndirections,
+			     result);
+  }
+};
+
+static acceptMisalignedTcIndirectionsHandler acceptMisalignedTcIndirectionsHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+
+class omni_dynamiclib_initialiser : public omniInitialiser {
+public:
+
+  omni_dynamiclib_initialiser() {
+    orbOptions::singleton().registerHandler(tcAliasExpandHandler_);
+    orbOptions::singleton().registerHandler(diiThrowsSysExceptionsHandler_);
+    orbOptions::singleton().registerHandler(omniORB_27_CompatibleAnyExtractionHandler_);
+    orbOptions::singleton().registerHandler(useTypeCodeIndirectionsHandler_);
+    orbOptions::singleton().registerHandler(acceptMisalignedTcIndirectionsHandler_);
+  }
+
+  void attach() {
+    if( omniDynamicLib::hook )
+      omniDynamicLib::ops = omniDynamicLib::hook;
+    omniDynamicLib::ops->init();
+  }
+  void detach() {
+    omniDynamicLib::ops->deinit();
+  }
+};
+
+
+static omni_dynamiclib_initialiser initialiser;
+
+omniInitialiser& omni_dynamiclib_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)

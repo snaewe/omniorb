@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/17 17:12:42  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.2.2  2001/08/08 15:59:23  sll
   Now accepts shorthand endpoint string "giop:unix:". Make use of
   unixTransportDirectory.
@@ -44,6 +47,7 @@
 #include <omniORB4/giopEndpoint.h>
 #include <objectAdapter.h>
 #include <SocketCollection.h>
+#include <orbParameters.h>
 #include <unix/unixConnection.h>
 #include <unix/unixAddress.h>
 #include <unix/unixEndpoint.h>
@@ -84,15 +88,19 @@ unixTransportImpl::toEndpoint(const char* param) {
   struct stat sb;
 
   if (strlen(param) == 0) {
-    param = omniORB::unixTransportDirectory;
-    if (!param) {
+    param = orbParameters::unixTransportDirectory;
+    
+    char* p = strchr(param,'%');
+    if (p && *(p+1) == 'u') {
       struct passwd* pw = getpwuid(getuid());
       if (!pw) {
 	omniORB::logger log;	
 	log << "Error: cannot get password entry of uid: " << getuid() << "\n";
 	return 0;
       }
-      const char* format = "/tmp/omni-%s";
+      CORBA::String_var format = param;
+      p = strchr(format,'%');
+      *(p+1) = 's';
       dname = CORBA::string_alloc(strlen(format)+strlen(pw->pw_name));
       sprintf(dname,format,pw->pw_name);
       param = dname;

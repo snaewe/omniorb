@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.7  2001/08/17 17:12:34  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.4.6  2001/08/03 17:41:18  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -57,6 +60,7 @@
 */
 
 #include <omniORB4/CORBA.h>
+#include <orbParameters.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -82,8 +86,8 @@ cdrMemoryStream::cdrMemoryStream(CORBA::ULong initialBufsize,
 			      (omni::ptr_arith_t)pd_outb_end -
 			      (omni::ptr_arith_t)pd_bufp);
 
-  pd_tcs_c = default_tcs_c;
-  pd_tcs_w = default_tcs_w;
+  pd_tcs_c = orbParameters::anyCharCodeSet;
+  pd_tcs_w = orbParameters::anyWCharCodeSet;
 }
 
 cdrMemoryStream::~cdrMemoryStream()
@@ -295,8 +299,8 @@ cdrMemoryStream::currentOutputPtr() const
 
 cdrMemoryStream::cdrMemoryStream(void* databuffer)
 {
-  pd_tcs_c = default_tcs_c;
-  pd_tcs_w = default_tcs_w;
+  pd_tcs_c = orbParameters::anyCharCodeSet;
+  pd_tcs_w = orbParameters::anyWCharCodeSet;
 
   pd_readonly_and_external_buffer = 1;
   pd_bufp = databuffer;
@@ -313,8 +317,8 @@ cdrMemoryStream::cdrMemoryStream(void* databuffer)
 
 cdrMemoryStream::cdrMemoryStream(void* databuffer, size_t maxLen)
 {
-  pd_tcs_c = default_tcs_c;
-  pd_tcs_w = default_tcs_w;
+  pd_tcs_c = orbParameters::anyCharCodeSet;
+  pd_tcs_w = orbParameters::anyWCharCodeSet;
 
   pd_readonly_and_external_buffer = 1;
   pd_bufp = databuffer;

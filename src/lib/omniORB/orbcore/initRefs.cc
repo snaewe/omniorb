@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2001/08/17 17:12:39  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.2.2.8  2001/08/03 17:41:22  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -132,10 +135,33 @@
 #include <poaimpl.h>
 #include <poacurrentimpl.h>
 #include <omniORB4/omniURI.h>
-
+#include <orbOptions.h>
+#include <orbParameters.h>
+#include <stdio.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean orbParameters::supportBootstrapAgent = 1;
+// Applies to the server side. 1 means enable the support for Sun's
+// bootstrap agent protocol.  This enables interoperability between omniORB
+// servers and Sun's javaIDL clients. When this option is enabled, an
+// omniORB server will response to a bootstrap agent request.
+
+CORBA::String_var  orbParameters::bootstrapAgentHostname;
+// Applies to the client side. Non-zero enables the use of Sun's bootstrap
+// agent protocol to resolve initial references. The value is the host name
+// where requests for initial references should be sent. Only uses this
+// option to interoperate with Sun's javaIDL.
+
+CORBA::UShort  orbParameters::bootstrapAgentPort = 900;
+// Applies to the client side. Use this port no. to contact the bootstrap 
+// agent.
+
+
+////////////////////////////////////////////////////////////////////////////
 static CORBA_InitialReferences_i*  the_bootagentImpl = 0;
 static omni_tracedmutex ba_lock;
 
@@ -731,7 +757,162 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
   catch(...) {}
 }
 
+/////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////
+class DefaultInitRefHandler : public orbOptions::Handler {
+public:
+
+  DefaultInitRefHandler() : 
+    orbOptions::Handler("DefaultInitRef",
+			"DefaultInitRef = <Default URI>",
+			1,
+			"-ORBDefaultInitRef <Default URI> (standard option)") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+    omniInitialReferences::setDefaultInitRefFromArgs(value);
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    const char* v = the_argsDefaultInitRef;
+    if (!v) v = "";
+    orbOptions::addKVString(key(),v,result);
+  }
+};
+
+static DefaultInitRefHandler DefaultInitRefHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class InitRefHandler : public orbOptions::Handler {
+public:
+
+  InitRefHandler() : 
+    orbOptions::Handler("InitRef",
+			"InitRef = <ObjectID>=<ObjectURI>",
+			1,
+			"-ORBInitRef <ObjectID>=<ObjectURI> (standard option)") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    unsigned int slen = strlen(value) + 1;
+    CORBA::String_var id(CORBA::string_alloc(slen));
+    CORBA::String_var uri(CORBA::string_alloc(slen));
+    if (sscanf(value, "%[^=]=%s", (char*)id, (char*)uri) != 2) {
+      throw orbOptions::BadParam(key(),value,"Invalid argument, expect <ObjectID>=<ObjectURI>");
+    }
+    if (!omniInitialReferences::setFromArgs(id, uri)) {
+      throw orbOptions::BadParam(key(),value,"Invalid argument, expect <ObjectID>=<ObjectURI>");
+    }
+  }
+
+  void dumpRecord(serviceRecord& rec, orbOptions::sequenceString& result) {
+    CORBA::String_var v;
+    v = CORBA::string_alloc(strlen(rec.id)+strlen(rec.uri)+1);
+    sprintf(v,"%s=%s",(const char*)rec.id,(const char*)rec.uri);
+    orbOptions::addKVString(key(),v,result);
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    CORBA::ULong i;
+    for (i=0; i < the_argsServiceList.length(); i++) {
+      dumpRecord(the_argsServiceList[i],result);
+    }
+
+    for (i=0; i < the_fileServiceList.length(); i++) {
+      dumpRecord(the_fileServiceList[i],result);
+    }
+  }
+};
+
+static InitRefHandler InitRefHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class supportBootstrapAgentHandler : public orbOptions::Handler {
+public:
+
+  supportBootstrapAgentHandler() : 
+    orbOptions::Handler("supportBootstrapAgent",
+			"supportBootstrapAgent = 0 or 1",
+			1,
+			"-ORBsupportBootstrapAgent < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::supportBootstrapAgent = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::supportBootstrapAgent,
+			     result);
+  }
+};
+
+static supportBootstrapAgentHandler supportBootstrapAgentHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class bootstrapAgentPortHandler : public orbOptions::Handler {
+public:
+
+  bootstrapAgentPortHandler() : 
+    orbOptions::Handler("bootstrapAgentPort",
+			"bootstrapAgentPort = <1-65535>",
+			1,
+			"-ORBbootstrapAgentPort < 1-65535 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v) || !(v >=1 && v <=65535) ) {
+      throw orbOptions::BadParam(key(),value,
+				 "Invalid value, expect 1-65535");
+    }
+    orbParameters::bootstrapAgentPort = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::bootstrapAgentPort,
+			   result);
+  }
+};
+
+static bootstrapAgentPortHandler bootstrapAgentPortHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class bootstrapAgentHostnameHandler : public orbOptions::Handler {
+public:
+
+  bootstrapAgentHostnameHandler() : 
+    orbOptions::Handler("bootstrapAgentHostname",
+			"bootstrapAgentHostname = <hostname>",
+			1,
+			"-ORBbootstrapAgentHostname <hostname>") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    orbParameters::bootstrapAgentHostname = value;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    const char* v = orbParameters::bootstrapAgentHostname;
+    if (!v) v = "";
+    orbOptions::addKVString(key(),v,result);
+  }
+};
+
+static bootstrapAgentHostnameHandler bootstrapAgentHostnameHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
@@ -739,7 +920,25 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
 
 class omni_initRefs_initialiser : public omniInitialiser {
 public:
+
+  omni_initRefs_initialiser() {
+    orbOptions::singleton().registerHandler(DefaultInitRefHandler_);
+    orbOptions::singleton().registerHandler(InitRefHandler_);
+    orbOptions::singleton().registerHandler(supportBootstrapAgentHandler_);
+    orbOptions::singleton().registerHandler(bootstrapAgentHostnameHandler_);
+    orbOptions::singleton().registerHandler(bootstrapAgentPortHandler_);
+  }
+
   void attach() {
+
+    const char* v = orbParameters::bootstrapAgentHostname;
+    if (v && strlen(v)) {
+      omniInitialReferences::remFromFile("NameService");
+      omniInitialReferences::remFromFile("InterfaceRepository");
+      omniInitialReferences::
+	initialise_bootstrap_agent(orbParameters::bootstrapAgentHostname,
+				   orbParameters::bootstrapAgentPort);
+    }
   }
 
   void detach() {

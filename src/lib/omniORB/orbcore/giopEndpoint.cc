@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2001/08/17 17:12:36  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.2.7  2001/08/08 15:57:45  sll
   Allows something like giop:unix: to be used.
 
@@ -58,6 +61,8 @@
 #include <omniORB4/giopEndpoint.h>
 #include <omniORB4/linkHacks.h>
 #include <initialiser.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 #include <stdio.h>
 
 //
@@ -241,5 +246,121 @@ giopConnection::decrRefCount(CORBA::Boolean forced) {
     delete this;
   return rc;
 }
+
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+CORBA::String_var orbParameters::unixTransportDirectory((const char*)"/tmp/omni-%u");
+//  Applies to the server side. Determine the directory in which
+//  the unix domain socket is to be created.
+//
+//  Valid values = a valid pathname for a directory.
+//                 %u in the string will be expanded into the user name
+
+CORBA::UShort   orbParameters::unixTransportPermission = 0777;
+//  Applies to the server side. Determine the permission mode bits
+//  the unix domain socket is set to.
+//
+//  Valid values = unix permission mode bits in octal radix (e.g. 0755)
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class unixTransportDirectoryHandler : public orbOptions::Handler {
+public:
+
+  unixTransportDirectoryHandler() : 
+    orbOptions::Handler("unixTransportDirectory",
+			"unixTransportDirectory = <dir name>",
+			1,
+			"-ORBunixTransportDirectory <dir name>") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+    orbParameters::unixTransportDirectory = value;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    CORBA::String_var kv;
+    CORBA::ULong l;
+    
+    const char* format = "unixTransportDirectory = %s";
+
+    l = strlen(format) + strlen(orbParameters::unixTransportDirectory);
+    kv = CORBA::string_alloc(l);
+    sprintf(kv,format,(const char*)orbParameters::unixTransportDirectory);
+
+    l = result.length();
+    result.length(l+1);
+    result[l] = kv._retn();
+  }
+};
+
+static unixTransportDirectoryHandler unixTransportDirectoryHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class unixTransportPermissionHandler : public orbOptions::Handler {
+public:
+
+  unixTransportPermissionHandler() : 
+    orbOptions::Handler("unixTransportPermission",
+			"unixTransportPermission = <mode bits in octal radix>",
+			1,
+			"-ORBunixTransportPermission <mode bits in octal radix>") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    unsigned int v;
+    if( sscanf(value,"%o",&v) != 1 ) {
+      throw orbOptions::BadParam(key(),value,
+				 "Invalid value, expect mode bits in octal radix");
+    }
+    orbParameters::unixTransportPermission = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    CORBA::String_var kv;
+    CORBA::ULong l;
+    
+    const char* format = "unixTransportPermission = %4o";
+
+    l = strlen(format) + 10;
+    kv = CORBA::string_alloc(l);
+    sprintf(kv,format,orbParameters::unixTransportPermission);
+
+    l = result.length();
+    result.length(l+1);
+    result[l] = kv._retn();
+  }
+};
+
+static unixTransportPermissionHandler unixTransportPermissionHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+class omni_giopEndpoint_initialiser : public omniInitialiser {
+public:
+
+  omni_giopEndpoint_initialiser() {
+    orbOptions::singleton().registerHandler(unixTransportDirectoryHandler_);
+    orbOptions::singleton().registerHandler(unixTransportPermissionHandler_);
+  }
+
+  void attach() { }
+  void detach() { }
+};
+
+
+static omni_giopEndpoint_initialiser initialiser;
+
+omniInitialiser& omni_giopEndpoint_initialiser_ = initialiser;
 
 OMNI_NAMESPACE_END(omni)

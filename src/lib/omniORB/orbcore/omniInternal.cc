@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.19  2001/08/17 17:12:40  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.2.2.18  2001/08/16 14:37:07  dpg1
   Fix scoping of omni::internalLock.
 
@@ -165,9 +168,55 @@
 #include <omniORB4/omniInterceptors.h>
 #include <giopRope.h>
 #include <invoker.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+CORBA::ULong  omniORB::traceLevel = 1;
+//    level 0 - critical errors only
+//    level 1 - informational messages only
+//    level 2 - configuration information and warnings
+//    level 5 - the above plus report server thread creation and
+//              communication socket shutdown
+//    level 10 - the above plus execution trace messages
+//    level 25 - output trace message per send or receive giop message
+//    level 30 - dump up to 128 bytes of a giop message
+//    level 40 - dump the complete giop message
+//
+//    Valid values = (n >= 0)
+
+CORBA::Boolean  omniORB::traceInvocations = 0;
+//    If true, then each local and remote invocation will generate a trace 
+//    message.
+//
+//    Valid values = 0 or 1
 
 OMNI_USING_NAMESPACE(omni)
+
+CORBA::ULong orbParameters::objectTableSize = 0;
+//  Initial hash table size of the Active Object Map. The hash table is
+//  resized automatically depending on the number of active objects.
+//  If one is definitely going to instantiate a very large number of
+//  objects, change the table size to a large number would save the ORB
+//  a bit of time to readjust the hash table.
+//
+//  Valid values = (n >= 0)
+//                 0 --> let the ORB choose
+
+CORBA::Boolean orbParameters::abortOnInternalError = 0;
+//  If the value of this variable is TRUE then the ORB will abort
+//  instead of throwing an exception when a fatal internal error is
+//  detected. This is useful for debuging the ORB -- as the stack will
+//  not be unwound by the exception handler, so a stack trace can be
+//  obtained.
+//  It is hoped that this will not often be needed by users of omniORB!
+//
+//  Valid values = 0 or 1
+
+
+////////////////////////////////////////////////////////////////////////////
 
 #if defined(HAS_Cplusplus_Namespace)
 using omniORB::operator==;
@@ -1094,6 +1143,126 @@ omni::ucheckFail(const char* file, int line, const char* expr)
 }
 
 /////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class traceLevelHandler : public orbOptions::Handler {
+public:
+
+  traceLevelHandler() : 
+    orbOptions::Handler("traceLevel",
+			"traceLevel = n >= 0",
+			1,
+			"-ORBtraceLevel < n >= 0 >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_non_zero_ulong_msg);
+    }
+    omniORB::traceLevel = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),omniORB::traceLevel,
+			   result);
+  }
+
+};
+
+static traceLevelHandler traceLevelHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class traceInvocationsHandler : public orbOptions::Handler {
+public:
+
+  traceInvocationsHandler() : 
+    orbOptions::Handler("traceInvocations",
+			"traceInvocations = 0 or 1",
+			1,
+			"-ORBtraceInvocations < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    omniORB::traceInvocations = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),omniORB::traceInvocations,
+			     result);
+  }
+};
+
+static traceInvocationsHandler traceInvocationsHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class objectTableSizeHandler : public orbOptions::Handler {
+public:
+
+  objectTableSizeHandler() : 
+    orbOptions::Handler("objectTableSize",
+			"objectTableSize = n >= 0",
+			1,
+			"-ORBobjectTableSize < n >= 0 >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_non_zero_ulong_msg);
+    }
+    orbParameters::objectTableSize = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::objectTableSize,
+			   result);
+  }
+
+};
+
+static objectTableSizeHandler objectTableSizeHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class abortOnInternalErrorHandler : public orbOptions::Handler {
+public:
+
+  abortOnInternalErrorHandler() : 
+    orbOptions::Handler("abortOnInternalError",
+			"abortOnInternalError = 0 or 1",
+			1,
+			"-ORBabortOnInternalError < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::abortOnInternalError = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::abortOnInternalError,
+			     result);
+  }
+};
+
+static abortOnInternalErrorHandler abortOnInternalErrorHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1101,6 +1270,13 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omni_omniInternal_initialiser : public omniInitialiser {
 public:
+
+  omni_omniInternal_initialiser() {
+    orbOptions::singleton().registerHandler(traceLevelHandler_);
+    orbOptions::singleton().registerHandler(traceInvocationsHandler_);
+    orbOptions::singleton().registerHandler(objectTableSizeHandler_);
+    orbOptions::singleton().registerHandler(abortOnInternalErrorHandler_);
+  }
 
   void attach() {
     OMNIORB_ASSERT(!objectTable);  OMNIORB_ASSERT(!omni::internalLock);
@@ -1112,8 +1288,8 @@ public:
     numObjectsInTable = 0;
     minNumObjects = 0;
 
-    if( omniORB::objectTableSize ) {
-      objectTableSize = omniORB::objectTableSize;
+    if( orbParameters::objectTableSize ) {
+      objectTableSize = orbParameters::objectTableSize;
       maxNumObjects = 1ul << 31;
     }
     else {

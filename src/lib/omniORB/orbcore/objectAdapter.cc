@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.10  2001/08/17 17:12:39  sll
+ Modularise ORB configuration parameters.
+
  Revision 1.2.2.9  2001/08/03 17:41:23  sll
  System exception minor code overhaul. When a system exeception is raised,
  a meaning minor code is provided.
@@ -105,6 +108,9 @@
 #include <giopServer.h>
 #include <giopRope.h>
 #include <omniORB4/omniInterceptors.h>
+#include <initialiser.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -244,7 +250,7 @@ omniObjAdapter::initialise()
 
     instantiate_defaultloopback(myendpoints);
 
-    if( !options.noBootstrapAgent )
+    if( orbParameters::supportBootstrapAgent )
       omniInitialReferences::initialise_bootstrap_agentImpl();
   }
   catch (const CORBA::INITIALIZE&) {
@@ -547,5 +553,185 @@ Options::~Options() {
     delete (*i);
   }
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class endpointHandler : public orbOptions::Handler {
+public:
+
+  endpointHandler() : 
+    orbOptions::Handler("endpoint",
+			"endpoint = <endpoint uri>",
+			1,
+                        "-ORBendpoint = <endpoint uri>\n"
+"          <endpoint uri> = \"giop:tcp:<host>:<port>\" |\n"
+"                          *\"giop:ssl:<host>:<port>\" |\n"
+"                          *\"giop:unix:<filename>\"   |\n"
+"                          *\"giop:fd:<no.>\"          |\n"
+"                          *\"<other protocol>:<network protocol>:<options>\"\n"
+"                          * may not be supported on the platform.\n") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    omniObjAdapter::Options::EndpointURI* opt;
+    opt = new omniObjAdapter::Options::EndpointURI();
+    opt->no_publish = opt->no_listen = 0;
+    opt->uri = value;
+    omniObjAdapter::options.endpoints.push_back(opt);
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    omniObjAdapter::Options::EndpointURIList::iterator last, i;
+    i = omniObjAdapter::options.endpoints.begin();
+    last = omniObjAdapter::options.endpoints.end();
+
+    if (i == last) {
+      // none specified, output the default
+      orbOptions::addKVString(key(),"giop:tcp::",result);
+      return;
+    }
+
+    for (; i != last; i++) {
+      if (! ((*i)->no_publish || (*i)->no_listen) ) {
+	orbOptions::addKVString(key(),(*i)->uri,result);
+      }
+    }
+  }
+};
+
+static endpointHandler endpointHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class endpointNoPublishHandler : public orbOptions::Handler {
+public:
+
+  endpointNoPublishHandler() : 
+    orbOptions::Handler("endpointNoPublish",
+			"endpointNoPublish = <endpoint uri>",
+			1,
+			"-ORBendpointNoPublish <endpoint uri>") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    omniObjAdapter::Options::EndpointURI* opt;
+    opt = new omniObjAdapter::Options::EndpointURI();
+    opt->no_publish = 1; opt->no_listen = 0;
+    opt->uri = value;
+    omniObjAdapter::options.endpoints.push_back(opt);
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    omniObjAdapter::Options::EndpointURIList::iterator last, i;
+    i = omniObjAdapter::options.endpoints.begin();
+    last = omniObjAdapter::options.endpoints.end();
+    for (; i != last; i++) {
+      if ( (*i)->no_publish ) {
+	orbOptions::addKVString(key(),(*i)->uri,result);
+      }
+    }
+  }
+};
+
+static endpointNoPublishHandler endpointNoPublishHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class endpointNoListenHandler : public orbOptions::Handler {
+public:
+
+  endpointNoListenHandler() : 
+    orbOptions::Handler("endpointNoListen",
+			"endpointNoListen = <endpoint uri>",
+			1,
+			"-ORBendpointNoListen <endpoint uri>") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    omniObjAdapter::Options::EndpointURI* opt;
+    opt = new omniObjAdapter::Options::EndpointURI();
+    opt->no_publish = 0; opt->no_listen = 1;
+    opt->uri = value;
+    omniObjAdapter::options.endpoints.push_back(opt);
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+
+    omniObjAdapter::Options::EndpointURIList::iterator last, i;
+    i = omniObjAdapter::options.endpoints.begin();
+    last = omniObjAdapter::options.endpoints.end();
+    for (; i != last; i++) {
+      if ( (*i)->no_listen ) {
+	orbOptions::addKVString(key(),(*i)->uri,result);
+      }
+    }
+  }
+};
+
+static endpointNoListenHandler endpointNoListenHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+class omni_objadpt_initialiser : public omniInitialiser {
+public:
+
+  omni_objadpt_initialiser() {
+    orbOptions::singleton().registerHandler(endpointHandler_);
+    orbOptions::singleton().registerHandler(endpointNoPublishHandler_);
+    orbOptions::singleton().registerHandler(endpointNoListenHandler_);
+  }
+
+  void attach() { 
+
+    // Make sure that endpointNoListen or endpointNoPublish is not
+    // the only endpoint* option defined.
+
+    omniObjAdapter::Options::EndpointURIList::iterator last, i;
+    i = omniObjAdapter::options.endpoints.begin();
+    last = omniObjAdapter::options.endpoints.end();
+    if (i != last) {
+      CORBA::Boolean only_listen = 1;
+      CORBA::Boolean only_publish = 1;
+      for ( ; i != last; i++ ) {
+	if ((*i)->no_publish) {
+	  only_listen = 0;
+	}
+	else if ((*i)->no_listen) {
+	  only_publish = 0;
+	}
+	else {
+	  only_listen = only_publish = 0;
+	}
+      }
+      if ( only_listen || only_publish ) {
+	if ( omniORB::trace(1) ) {
+	  omniORB::logger log;
+	  log << "CORBA::ORB_init failed -- endpointNoListen or \n"
+	         "endpointNoPublish cannot be used alone.\n"
+	         "At least 1 endpoint or endpointNoPublish should be specified.\n";
+	}
+	OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
+		      CORBA::COMPLETED_NO);
+      }
+    }
+    
+  }
+  void detach() { }
+};
+
+
+static omni_objadpt_initialiser initialiser;
+
+omniInitialiser& omni_objadpt_initialiser_ = initialiser;
 
 OMNI_NAMESPACE_END(omni)

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/08/17 17:12:34  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.2.3  2001/08/01 10:08:20  dpg1
   Main thread policy.
 
@@ -90,7 +93,7 @@ public:
   inline poaCurrentStackInsert(omniCallDescriptor* desc)
     : pd_current(0)
   {
-    if (desc && omniORB::supportCurrent) {
+    if (desc && _OMNI_NS(orbParameters)::supportCurrent) {
       omni_thread* self = omni_thread::self();
       if (self)
 	pd_dummy = 0;

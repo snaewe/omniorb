@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.17  2001/08/17 17:12:41  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.2.2.16  2001/08/17 15:00:48  dpg1
   Fixes for pre-historic compilers.
 
@@ -173,6 +176,9 @@
 #include <poamanager.h>
 #include <exceptiondefs.h>
 #include <poacurrentimpl.h>
+#include <initialiser.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -202,6 +208,19 @@
 #define SYS_ASSIGNED_ID_SIZE    4
 
 OMNI_USING_NAMESPACE(omni)
+
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+  CORBA::ULong orbParameters::poaHoldRequestTimeout = 0;
+//  This variable can be used to set a time-out for calls being held
+//  in a POA which is in the HOLDING state.  It gives the time in
+//  seconds after which a TRANSIENT exception will be thrown if the
+//  POA is not transitioned to a different state.
+//
+//  Valid values = (n >= 0 in milliseconds) 
+//                  0 --> no time-out.
+
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////// PortableServer::POA_Helper /////////////////////
@@ -2413,9 +2432,11 @@ omniOrbPOA::synchronise_request(omniLocalIdentity* lid)
       omniORB::logger l;
       l << "POA for " << lid << " in HOLDING state; waiting...\n";
     }
-    if( omniORB::poaHoldRequestTimeout ) {
+    if( orbParameters::poaHoldRequestTimeout ) {
       unsigned long sec, nsec;
-      omni_thread::get_time(&sec, &nsec, omniORB::poaHoldRequestTimeout);
+      omni_thread::get_time(&sec, &nsec,
+			    orbParameters::poaHoldRequestTimeout/1000,
+			    (orbParameters::poaHoldRequestTimeout%1000)*1000000);
       if( !pd_signal.timedwait(sec, nsec) ) {
 	// We have to do startRequest() here, since the identity
 	// will do endInvocation() when we pass through there.
@@ -3495,3 +3516,60 @@ omniOrbPOA::shutdown()
   }
   servant_activator_queue = 0;
 }
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+/////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class poaHoldRequestTimeoutHandler : public orbOptions::Handler {
+public:
+
+  poaHoldRequestTimeoutHandler() : 
+    orbOptions::Handler("poaHoldRequestTimeout",
+			"poaHoldRequestTimeout = n >= 0 in msec",
+			1,
+			"-ORBpoaHoldRequestTimeout < n >= 0 in msec >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_non_zero_ulong_msg);
+    }
+    orbParameters::poaHoldRequestTimeout = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::poaHoldRequestTimeout,
+			   result);
+  }
+};
+
+static poaHoldRequestTimeoutHandler poaHoldRequestTimeoutHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+class omni_poa_initialiser : public omniInitialiser {
+public:
+
+  omni_poa_initialiser() {
+    orbOptions::singleton().registerHandler(poaHoldRequestTimeoutHandler_);
+  }
+
+  void attach() { }
+  void detach() { }
+};
+
+
+static omni_poa_initialiser initialiser;
+
+omniInitialiser& omni_poa_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)
+

@@ -41,6 +41,7 @@
 #include <remoteIdentity.h>
 #include <exceptiondefs.h>
 #include <omniORB4/IOP_C.h>
+#include <orbParameters.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -154,11 +155,11 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation,
 RequestImpl::~RequestImpl()
 {
   if( pd_deferredRequest && omniORB::traceLevel > 0 ){
-    omniORB::log <<
+    omniORB::logger log;
+    log <<
       "omniORB: WARNING -- The application has not collected the reponse of\n"
       " a deferred DII request.  Use Request::get_response() or\n"
       " poll_response().\n";
-    omniORB::log.flush();
   }
   if( pd_sysExceptionToThrow )  delete pd_sysExceptionToThrow;
 }
@@ -383,7 +384,7 @@ RequestImpl::invoke()
   // Either throw system exceptions, or store in pd_environment.
   catch(CORBA::SystemException& ex){
     INVOKE_DONE();
-    if( omniORB::diiThrowsSysExceptions ) {
+    if( orbParameters::diiThrowsSysExceptions ) {
       pd_sysExceptionToThrow = CORBA::Exception::_duplicate(&ex);
       throw;
     } else
@@ -421,7 +422,7 @@ RequestImpl::send_oneway()
   // Either throw system exceptions, or store in pd_environment.
   catch(CORBA::SystemException& ex){
     INVOKE_DONE();
-    if( omniORB::diiThrowsSysExceptions ) {
+    if( orbParameters::diiThrowsSysExceptions ) {
       pd_sysExceptionToThrow = CORBA::Exception::_duplicate(&ex);
       throw;
     } else
@@ -482,7 +483,7 @@ RequestImpl::poll_response()
 
     // XXX Opengroup vsOrb tests for poll_response to raise an
     //     exception when the invocation results in a system exception.
-    if( omniORB::diiThrowsSysExceptions ) {
+    if( orbParameters::diiThrowsSysExceptions ) {
       if (pd_sysExceptionToThrow) pd_sysExceptionToThrow->_raise();
     }
   }

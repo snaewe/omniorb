@@ -51,12 +51,13 @@ BUILTIN_STUB_SRCS = \
 	    Namingstub.cc
 
 ORB_SRCS =  \
+            orbOptions.cc \
 	    anonObject.cc \
 	    callDescriptor.cc \
 	    constants.cc \
 	    corbaObject.cc \
 	    corbaBoa.cc \
-	    corbaOrb.cc \
+            corbaOrb.cc \
             corbaFixed.cc \
 	    corbaString.cc \
 	    corbaWString.cc \
@@ -93,6 +94,7 @@ ORB_SRCS =  \
             $(CODESET_SRCS) \
             $(BUILTIN_STUB_SRCS) \
             $(TRANSPORT_SRCS)
+
 
 DIR_CPPFLAGS += -I.. $(patsubst %,-I%/..,$(VPATH))
 DIR_CPPFLAGS += -I../include $(patsubst %,-I%/../include,$(VPATH))

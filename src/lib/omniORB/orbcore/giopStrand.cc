@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/08/17 17:12:38  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.4.5  2001/07/31 16:27:59  sll
   Added GIOP BiDir support.
 
@@ -55,8 +58,39 @@
 #include <GIOP_C.h>
 #include <initialiser.h>
 #include <invoker.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
+
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+CORBA::ULong orbParameters::scanGranularity = 5;
+//  The granularity at which the ORB scan for idle connections.
+//  This value determines the minimum value that inConScanPeriod or
+//  outConScanPeriod can be implemented.
+//
+//  Valid values = (n >= 0 in seconds) 
+//                  0 --> do not scan for idle connections.
+
+CORBA::ULong orbParameters::outConScanPeriod = 120;
+//  Idle connections shutdown. The ORB periodically scans all the
+//  incoming connections to detect if they are idle.
+//  If no operation has passed through a connection for a scan period,
+//  the ORB would treat this connection idle and shut it down.
+//
+//  Valid values = (n >= 0 in seconds) 
+//                  0 --> do not close idle connections.
+
+CORBA::ULong orbParameters::inConScanPeriod = 180;
+//  Idle connections shutdown. The ORB periodically scans all the
+//  outgoing connections to detect if they are idle.
+//  If no operation has passed through a connection for a scan period,
+//  the ORB would treat this connection idle and shut it down.
+//
+//   Valid values = (n >= 0 in seconds) 
+//                   0 --> do not close idle connections.
 
 ////////////////////////////////////////////////////////////////////////
 class Scavenger : public omniTask {
@@ -477,9 +511,6 @@ StrandList giopStrand::passive;
 
 CORBA::ULong giopStrand::idleIncomingBeats = 36;
 CORBA::ULong giopStrand::idleOutgoingBeats = 24;
-CORBA::ULong giopStrand::scanPeriod = 5;
-giopStrand::timeValue giopStrand::outgoingCallTimeOut = { 0, 0 };
-giopStrand::timeValue giopStrand::incomingCallTimeOut = { 0, 0 };
 
 ////////////////////////////////////////////////////////////////////////
 void
@@ -515,10 +546,10 @@ Scavenger::execute()
   while (1) {
     {
       omni_tracedmutex_lock sync(*mutex);
-      if ( shutdown || !giopStrand::scanPeriod ) {
+      if ( shutdown || !orbParameters::scanGranularity ) {
 	goto died;
       }
-      omni_thread::get_time(&abs_sec,&abs_nsec,giopStrand::scanPeriod);
+      omni_thread::get_time(&abs_sec,&abs_nsec,orbParameters::scanGranularity);
       cond->timedwait(abs_sec,abs_nsec);
     }
 
@@ -584,7 +615,7 @@ void
 Scavenger::notify()
 {
   omni_tracedmutex_lock sycn(*mutex);
-  if ( !shutdown && giopStrand::scanPeriod &&!theTask ) {
+  if ( !shutdown && orbParameters::scanGranularity &&!theTask ) {
     theTask = new Scavenger();
     orbAsyncInvoker->insert(theTask);
   }
@@ -621,13 +652,133 @@ omni_tracedmutex*     Scavenger::mutex = 0;
 omni_tracedcondition* Scavenger::cond = 0;
 Scavenger*            Scavenger::theTask = 0;
 
+/////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class scanGranularityHandler : public orbOptions::Handler {
+public:
+
+  scanGranularityHandler() : 
+    orbOptions::Handler("scanGranularity",
+			"scanGranularity = n >= 0 sec",
+			1,
+			"-ORBscanGranularity < n >= 0 sec >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_non_zero_ulong_msg);
+    }
+    orbParameters::scanGranularity = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::scanGranularity,
+			   result);
+  }
+};
+
+static scanGranularityHandler scanGranularityHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class outConScanPeriodHandler : public orbOptions::Handler {
+public:
+
+  outConScanPeriodHandler() : 
+    orbOptions::Handler("outConScanPeriod",
+			"outConScanPeriod = n >= 0 sec",
+			1,
+			"-ORBoutConScanPeriod < n >= 0 sec >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_non_zero_ulong_msg);
+    }
+    orbParameters::outConScanPeriod = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::outConScanPeriod,
+			   result);
+  }
+};
+
+static outConScanPeriodHandler outConScanPeriodHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class inConScanPeriodHandler : public orbOptions::Handler {
+public:
+
+  inConScanPeriodHandler() : 
+    orbOptions::Handler("inConScanPeriod",
+			"inConScanPeriod = n >= 0 sec",
+			1,
+			"-ORBinConScanPeriod < n >= 0 sec >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_non_zero_ulong_msg);
+    }
+    orbParameters::inConScanPeriod = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::inConScanPeriod,
+			   result);
+  }
+};
+
+static inConScanPeriodHandler inConScanPeriodHandler_;
+
 ////////////////////////////////////////////////////////////////////////
 // Module initialiser
 ////////////////////////////////////////////////////////////////////////
 
 class omni_giopStrand_initialiser : public omniInitialiser {
 public:
+  omni_giopStrand_initialiser() {
+    orbOptions::singleton().registerHandler(scanGranularityHandler_);
+    orbOptions::singleton().registerHandler(outConScanPeriodHandler_);
+    orbOptions::singleton().registerHandler(inConScanPeriodHandler_);
+  }
+
   void attach() {
+
+    if (orbParameters::outConScanPeriod && orbParameters::scanGranularity) {
+      if (orbParameters::outConScanPeriod >= orbParameters::scanGranularity) {
+	giopStrand::idleOutgoingBeats = 1;
+      }
+      else {
+	giopStrand::idleOutgoingBeats = orbParameters::outConScanPeriod /
+      	                                orbParameters::scanGranularity;
+      }
+    }
+    else {
+      giopStrand::idleOutgoingBeats = INT_MAX;
+    }
+    if (orbParameters::inConScanPeriod && orbParameters::scanGranularity) {
+      if (orbParameters::inConScanPeriod >= orbParameters::scanGranularity) {
+	giopStrand::idleIncomingBeats = 1;
+      }
+      else {
+	giopStrand::idleIncomingBeats = orbParameters::inConScanPeriod /
+      	                                orbParameters::scanGranularity;
+      }
+    }
+    else {
+      giopStrand::idleIncomingBeats = INT_MAX;
+    }
+
     Scavenger::initialise();
   }
   void detach() {
@@ -667,96 +818,4 @@ giopStreamList::is_empty(giopStreamList& head)
 
 OMNI_NAMESPACE_END(omni)
 
-OMNI_USING_NAMESPACE(omni)
 
-
-/////////////////////////////////////////////////////////////////////////////
-void
-omniORB::scanGranularity(CORBA::ULong sec)
-{
-  giopStrand::scanPeriod = sec;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-CORBA::ULong
-omniORB::scanGranularity()
-{
-  return giopStrand::scanPeriod;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-void
-omniORB::idleConnectionScanPeriod(omniORB::idleConnType direction,
-				  CORBA::ULong sec)
-{
-  switch (direction)
-    {
-    case omniORB::idleIncoming:
-      if (sec && giopStrand::scanPeriod)
-	giopStrand::idleIncomingBeats = \
-	  ((sec >= giopStrand::scanPeriod) ?
-	   sec : giopStrand::scanPeriod) / giopStrand::scanPeriod;
-      else
-        giopStrand::idleIncomingBeats = INT_MAX;
-      break;
-    case omniORB::idleOutgoing:
-      if (sec && giopStrand::scanPeriod)
-	giopStrand::idleOutgoingBeats = \
-	  ((sec >= giopStrand::scanPeriod) ?
-	   sec : giopStrand::scanPeriod) / giopStrand::scanPeriod;
-      else
-        giopStrand::idleOutgoingBeats = INT_MAX;
-      break;
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-CORBA::ULong
-omniORB::idleConnectionScanPeriod(omniORB::idleConnType direction)
-{
-  switch (direction)
-    {
-    case omniORB::idleIncoming:
-      return ((giopStrand::idleIncomingBeats != INT_MAX) ?
-	      (giopStrand::idleIncomingBeats * giopStrand::scanPeriod) : 0);
-    case omniORB::idleOutgoing:
-    default:  // stop MSVC complaining
-      return ((giopStrand::idleOutgoingBeats != INT_MAX) ?
-	      (giopStrand::idleOutgoingBeats * giopStrand::scanPeriod) : 0);
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-void
-omniORB::callTimeOutPeriod(omniORB::callTimeOutType direction,
-			   CORBA::ULong sec, CORBA::ULong nanosec)
-{
-  switch (direction)
-    {
-    case omniORB::serverSide:
-      giopStrand::incomingCallTimeOut.secs = sec;
-      giopStrand::incomingCallTimeOut.nanosecs = nanosec;
-      break;
-    case omniORB::clientSide:
-      giopStrand::outgoingCallTimeOut.secs = sec;
-      giopStrand::outgoingCallTimeOut.nanosecs = nanosec;
-      break;
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////
-CORBA::ULong
-omniORB::callTimeOutPeriod(omniORB::callTimeOutType direction,
-			   CORBA::ULong* nanosec)
-{
-  switch (direction)
-    {
-    case omniORB::serverSide:
-      *nanosec = giopStrand::incomingCallTimeOut.nanosecs;
-      return giopStrand::incomingCallTimeOut.secs;
-    case omniORB::clientSide:
-    default:  // stop MSVC complaining
-      *nanosec = giopStrand::outgoingCallTimeOut.nanosecs;
-      return giopStrand::outgoingCallTimeOut.secs;
-    }
-}

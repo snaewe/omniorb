@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/08/17 17:10:05  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.4.5  2001/08/03 17:43:19  sll
   Make sure dll import spec for win32 is properly done.
 
@@ -337,24 +340,12 @@ public:
   //
 
 
-  struct timeValue {
-    unsigned long secs;
-    unsigned long nanosecs;
-  };
-
   static _core_attr CORBA::ULong idleOutgoingBeats;
   // Number to instantiate idlebeats when the active strand becomes idle.
 
   static _core_attr CORBA::ULong idleIncomingBeats;
   // idleIncomingBeats * scanPeriod == no. of sec. a passive strand should
   // be allowed to stay idle.
-
-  static _core_attr CORBA::ULong scanPeriod;
-  // Time in sec. the scavenger waits before doing a scan. ScanPeriod == 0
-  // means do not scan.
-
-  static _core_attr timeValue outgoingCallTimeOut;
-  static _core_attr timeValue incomingCallTimeOut;
 
 public:
   void deleteStrandAndConnection(CORBA::Boolean forced=0);

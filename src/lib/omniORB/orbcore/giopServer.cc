@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.12  2001/08/17 17:12:37  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.22.2.11  2001/07/31 16:28:00  sll
   Added GIOP BiDir support.
 
@@ -61,14 +64,56 @@
 #include <giopStrand.h>
 #include <initialiser.h>
 #include <omniORB4/omniInterceptors.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
+
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean orbParameters::threadPerConnectionPolicy      = 1;
+//   1 means the ORB should dedicate one thread per connection on the 
+//   server side. 0 means the ORB should dispatch a thread from a pool
+//   to a connection only when a request has arrived.
+//
+//  Valid values = 0 or 1
+
+CORBA::ULong   orbParameters::threadPerConnectionUpperLimit  = 10000;
+//   If the one thread per connection is in effect, this number is
+//   the max. no. of connections the server will allow before it
+//   switch off the one thread per connection policy and move to
+//   the thread pool policy.
+//
+//   Valid values = (n >= 1) 
+
+CORBA::ULong   orbParameters::threadPerConnectionLowerLimit  = 9000;
+//   If the one thread per connection was in effect and was switched
+//   off because threadPerConnectionUpperLimit has been exceeded
+//   previously, this number tells when the policy should be restored
+//   when the number of connections drop.
+//
+//   Valid values = (n >= 1 && n < threadPerConnectionUpperLimit) 
+
+CORBA::ULong   orbParameters::maxServerThreadPerConnection   = 100;
+//   The max. no. of threads the server will dispatch to server the
+//   requests coming from one connection.
+//
+//   Valid values = (n >= 1) 
+
+CORBA::ULong   orbParameters::maxServerThreadPoolSize        = 100;
+//   The max. no. of threads the server will allocate to do various
+//   ORB tasks. This number does not include the dedicated thread
+//   per connection when the threadPerConnectionPolicy is in effect
+//
+//   Valid values = (n >= 1) 
+
 
 ////////////////////////////////////////////////////////////////////////////
   giopServer::giopServer() : pd_state(IDLE), pd_nconnections(0),
 			     pd_cond(&pd_lock), pd_n_temporary_workers(0)
 {
-  pd_thread_per_connection = omniORB::threadPerConnectionPolicy;
+  pd_thread_per_connection = orbParameters::threadPerConnectionPolicy;
   pd_connectionState = new connectionState*[connectionState::hashsize];
   for (CORBA::ULong i=0; i < connectionState::hashsize; i++) {
     pd_connectionState[i] = 0;
@@ -469,12 +514,12 @@ giopServer::csRemove(giopConnection* conn)
       cs = *head;
       *head = cs->next;
       pd_nconnections--;
-      if (omniORB::threadPerConnectionPolicy) {
+      if (orbParameters::threadPerConnectionPolicy) {
 	// Check the number of connection and decide if we need to
 	// re-enable the one thread per connection policy that has
 	// been temporarily suspended.
 	if (!pd_thread_per_connection &&
-	    pd_nconnections <= omniORB::threadPerConnectionLowerLimit) {
+	    pd_nconnections <= orbParameters::threadPerConnectionLowerLimit) {
 	  pd_thread_per_connection = 1;
 	}
       }
@@ -510,11 +555,11 @@ giopServer::csInsert(giopConnection* conn)
 
   pd_nconnections++;
 
-  if (omniORB::threadPerConnectionPolicy) {
+  if (orbParameters::threadPerConnectionPolicy) {
     // Check the number of connection and decide if we need to
     // turn off the one thread per connection policy temporarily.
     if (pd_thread_per_connection &&
-	pd_nconnections >= omniORB::threadPerConnectionUpperLimit) {
+	pd_nconnections >= orbParameters::threadPerConnectionUpperLimit) {
       pd_thread_per_connection = 0;
     }
   }
@@ -543,11 +588,11 @@ giopServer::csInsert(giopStrand* s)
 
   pd_nconnections++;
 
-  if (omniORB::threadPerConnectionPolicy) {
+  if (orbParameters::threadPerConnectionPolicy) {
     // Check the number of connection and decide if we need to
     // turn off the one thread per connection policy temporarily.
     if (pd_thread_per_connection &&
-	pd_nconnections >= omniORB::threadPerConnectionUpperLimit) {
+	pd_nconnections >= orbParameters::threadPerConnectionUpperLimit) {
       pd_thread_per_connection = 0;
     }
   }
@@ -671,7 +716,7 @@ giopServer::notifyRzReadable(giopConnection* conn,
       if (conn->pd_dying) return;
 
       if (!force_create &&
-	  conn->pd_n_workers >= (int)omniORB::maxServerThreadPerConnection) {
+	  conn->pd_n_workers >= (int)orbParameters::maxServerThreadPerConnection) {
 	conn->pd_has_hit_n_workers_limit = 1;
 	return;
       }
@@ -821,7 +866,7 @@ giopServer::notifyWkDone(giopWorker* w, CORBA::Boolean exit_on_error)
       // there is no worker tasks that cannot be allocated to a thread from
       // the pool.
       doselect = (conn->pd_n_workers == 0 &&
-		  pd_n_temporary_workers < omniORB::maxServerThreadPoolSize);
+		  pd_n_temporary_workers < orbParameters::maxServerThreadPoolSize);
     }
     if (doselect) {
       // We could call conn->setSelectable(1).
@@ -964,11 +1009,169 @@ registerGiopServer(omniInterceptors::createORBServer_T::info_T& info) {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class threadPerConnectionPolicyHandler : public orbOptions::Handler {
+public:
+
+  threadPerConnectionPolicyHandler() : 
+    orbOptions::Handler("threadPerConnectionPolicy",
+			"threadPerConnectionPolicy = 0 or 1",
+			1,
+			"-ORBthreadPerConnectionPolicy < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::threadPerConnectionPolicy = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::threadPerConnectionPolicy,
+			     result);
+  }
+};
+
+static threadPerConnectionPolicyHandler threadPerConnectionPolicyHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class threadPerConnectionUpperLimitHandler : public orbOptions::Handler {
+public:
+
+  threadPerConnectionUpperLimitHandler() : 
+    orbOptions::Handler("threadPerConnectionUpperLimit",
+			"threadPerConnectionUpperLimit = n >= 1",
+			1,
+			"-ORBthreadPerConnectionUpperLimit < n >= 1 >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v) || v < 1) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_greater_than_zero_ulong_msg);
+    }
+    orbParameters::threadPerConnectionUpperLimit = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::threadPerConnectionUpperLimit,
+			   result);
+  }
+
+};
+
+static threadPerConnectionUpperLimitHandler threadPerConnectionUpperLimitHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class threadPerConnectionLowerLimitHandler : public orbOptions::Handler {
+public:
+
+  threadPerConnectionLowerLimitHandler() : 
+    orbOptions::Handler("threadPerConnectionLowerLimit",
+			"threadPerConnectionLowerLimit = n >= 1",
+			1,
+			"-ORBthreadPerConnectionLowerLimit < n >= 1 >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v) || v < 1) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_greater_than_zero_ulong_msg);
+    }
+    orbParameters::threadPerConnectionLowerLimit = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::threadPerConnectionLowerLimit,
+			   result);
+  }
+};
+
+static threadPerConnectionLowerLimitHandler threadPerConnectionLowerLimitHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class maxServerThreadPerConnectionHandler : public orbOptions::Handler {
+public:
+
+  maxServerThreadPerConnectionHandler() : 
+    orbOptions::Handler("maxServerThreadPerConnection",
+			"maxServerThreadPerConnection = n >= 1",
+			1,
+			"-ORBmaxServerThreadPerConnection < n >= 1 >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v) || v < 1) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_greater_than_zero_ulong_msg);
+    }
+    orbParameters::maxServerThreadPerConnection = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::maxServerThreadPerConnection,
+			   result);
+  }
+
+};
+
+static maxServerThreadPerConnectionHandler maxServerThreadPerConnectionHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
+class maxServerThreadPoolSizeHandler : public orbOptions::Handler {
+public:
+
+  maxServerThreadPoolSizeHandler() : 
+    orbOptions::Handler("maxServerThreadPoolSize",
+			"maxServerThreadPoolSize = n >= 1",
+			1,
+			"-ORBmaxServerThreadPoolSize < n >= 1 >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::ULong v;
+    if (!orbOptions::getULong(value,v) || v < 1) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_greater_than_zero_ulong_msg);
+    }
+    orbParameters::maxServerThreadPoolSize = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVULong(key(),orbParameters::maxServerThreadPoolSize,
+			   result);
+  }
+};
+
+static maxServerThreadPoolSizeHandler maxServerThreadPoolSizeHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
 class omni_giopserver_initialiser : public omniInitialiser {
 public:
+
+  omni_giopserver_initialiser() {
+    orbOptions::singleton().registerHandler(threadPerConnectionPolicyHandler_);
+    orbOptions::singleton().registerHandler(threadPerConnectionUpperLimitHandler_);
+    orbOptions::singleton().registerHandler(threadPerConnectionLowerLimitHandler_);
+    orbOptions::singleton().registerHandler(maxServerThreadPerConnectionHandler_);
+    orbOptions::singleton().registerHandler(maxServerThreadPoolSizeHandler_);
+  }
+
   void attach() {
     omniInterceptors* interceptors = omniORB::getInterceptors();
     interceptors->createORBServer.add(registerGiopServer);
@@ -1201,3 +1404,4 @@ OMNI_NAMESPACE_END(omni)
 //        dedicated thread - clearSelectable
 //        temporary thread - Do nothing
 //
+

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/17 17:12:36  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.2.2  2001/07/31 17:31:40  sll
   strchr returns const char*.
 
@@ -52,6 +55,10 @@
 #include <initialiser.h>
 #include <objectAdapter.h>
 #include <tcp/tcpTransportImpl.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 // XXX To-do
 // a) BiDirServerRope garbage collection. At the moment, the server
@@ -62,6 +69,24 @@
 //    been released. In other words, the reference count on the
 //    BiDirServerRope instance attached to the connection == 0.
 
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean orbParameters::acceptBiDirectionalGIOP = 0;
+//   Applies to the server side. Set to 1 to indicates that the
+//   ORB may choose to accept a clients offer to use bidirectional
+//   GIOP calls on a connection. Set to 0 means the ORB should
+//   never accept any bidirectional offer and should stick to normal
+//   GIOP.
+//
+//   Valid values = 0 or 1
+
+CORBA::Boolean orbParameters::offerBiDirectionalGIOP = 0;
+//   Applies to the client side. Set to 1 to indicates that the
+//   ORB may choose to use a connection to do bidirectional GIOP
+//   calls. Set to 0 means the ORB should never do bidirectional.
+//
+//   Valid values = 0 or 1
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -440,7 +465,7 @@ static
 CORBA::Boolean
 getBiDirServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info) {
 
-  if (!omniORB::acceptBiDirectionalGIOP) {
+  if (!orbParameters::acceptBiDirectionalGIOP) {
     // XXX If the ORB policy is "don't support bidirectional", don't bother 
     // doing any of the stuff below.
     return 1;
@@ -528,7 +553,7 @@ static
 CORBA::Boolean
 setBiDirServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
 
-  if (!omniORB::offerBiDirectionalGIOP) {
+  if (!orbParameters::offerBiDirectionalGIOP) {
     // XXX If the ORB policy is "don't support bidirectional", don't bother 
     // doing any of the stuff below.
     return 1;
@@ -589,11 +614,79 @@ setBiDirServiceContext(omniInterceptors::clientSendRequest_T::info_T& info) {
 }
 
 /////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class acceptBiDirectionalGIOPHandler : public orbOptions::Handler {
+public:
+
+  acceptBiDirectionalGIOPHandler() : 
+    orbOptions::Handler("acceptBiDirectionalGIOP",
+			"acceptBiDirectionalGIOP = 0 or 1",
+			1,
+			"-ORBacceptBiDirectionalGIOP < 0 | 1 >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::acceptBiDirectionalGIOP = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::acceptBiDirectionalGIOP,
+			     result);
+  }
+
+};
+
+static acceptBiDirectionalGIOPHandler acceptBiDirectionalGIOPHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class offerBiDirectionalGIOPHandler : public orbOptions::Handler {
+public:
+
+  offerBiDirectionalGIOPHandler() : 
+    orbOptions::Handler("offerBiDirectionalGIOP",
+			"offerBiDirectionalGIOP = 0 or 1",
+			1,
+			"-ORBofferBiDirectionalGIOP < 0 | 1 >") {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::offerBiDirectionalGIOP = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::offerBiDirectionalGIOP,
+			     result);
+  }
+
+};
+
+static offerBiDirectionalGIOPHandler offerBiDirectionalGIOPHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
 class omni_giopbidir_initialiser : public omniInitialiser {
 public:
+
+  omni_giopbidir_initialiser() {
+    orbOptions::singleton().registerHandler(offerBiDirectionalGIOPHandler_);
+    orbOptions::singleton().registerHandler(acceptBiDirectionalGIOPHandler_);
+  }
+
   void attach() {
 
     // install interceptors

@@ -35,9 +35,19 @@
 #include <initialiser.h>
 #include <objectTable.h>
 #include <exceptiondefs.h>
-
+#include <orbOptions.h>
 
 OMNI_USING_NAMESPACE(omni)
+
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean orbParameters::supportCurrent      = 1;
+//  If the value of this variable is TRUE, per-thread information is
+//  made available through the Current interfaces, e.g.
+//  PortableServer::Current. If you do not need this information, you
+//  can set the value to 0, resulting in a small performance
+//  improvement.
 
 /////////////////////////////////////////////////////////////////////////////
 //            CORBA::Current                                               //
@@ -323,6 +333,39 @@ omniOrbPOACurrent::real_get_servant(omniCallDescriptor* call_desc)
   return servant;
 }
 
+/////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class supportCurrentHandler : public orbOptions::Handler {
+public:
+
+  supportCurrentHandler() : 
+    orbOptions::Handler("supportCurrent",
+			"supportCurrent = 0 or 1",
+			1,
+			"-ORBsupportCurrent < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::supportCurrent = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::supportCurrent,
+			     result);
+  }
+};
+
+static supportCurrentHandler supportCurrentHandler_;
+
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -333,6 +376,10 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omni_omniCurrent_initialiser : public omniInitialiser {
 public:
+  omni_omniCurrent_initialiser() {
+    orbOptions::singleton().registerHandler(supportCurrentHandler_);
+  }
+
   void attach() {
     omniCurrent::init();
   }

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/08/17 17:12:41  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.4.2  2001/06/13 20:13:15  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -45,8 +48,6 @@
 OMNI_NAMESPACE_BEGIN(omni)
 
 omni_tracedmutex* omniTransportLock     = 0;
-size_t            max_giop_message_size = 2048 * 1024;
-
 
 ////////////////////////////////////////////////////////////////////////////
 IOP_C_Holder::IOP_C_Holder(const omniIOR* ior,
@@ -144,19 +145,5 @@ omniInitialiser& omni_omniTransport_initialiser_ = initialiser;
 
 OMNI_NAMESPACE_END(omni)
 
-OMNI_USING_NAMESPACE(omni)
 
-////////////////////////////////////////////////////////////////////////////
-size_t
-omniORB::MaxMessageSize()
-{
-  return max_giop_message_size;
-}
-
-////////////////////////////////////////////////////////////////////////////
-void
-omniORB::MaxMessageSize(size_t newvalue)
-{
-  max_giop_message_size = newvalue;
-}
 

@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.19.2.9  2001/08/17 17:08:05  sll
+ * Modularise ORB configuration parameters.
+ *
  * Revision 1.19.2.8  2001/08/17 13:45:55  dpg1
  * C++ mapping fixes.
  *
@@ -157,33 +160,12 @@
 
 #include <anyP.h>
 #include <typecode.h>
+#include <orbParameters.h>
+#include <omniORB4/linkHacks.h>
+
+OMNI_FORCE_LINK(dynamicLib);
 
 OMNI_USING_NAMESPACE(omni)
-
-////////////////////////////////////////////////////////////////////////
-// In pre-2.8.0 versions, the CORBA::Any extraction operator for
-//   1. unbounded string operator>>=(char*&)                    
-//   2. bounded string   operator>>=(to_string)                 
-//   3. object reference operator>>=(A_ptr&) for interface A
-// Returns a copy of the value. The caller must free the returned
-// value later.                                                 
-//
-// With 2.8.0 and later, the semantics becomes non-copy, i.e. the Any
-// still own the storage of the returned value.
-// This would cause problem in programs that is written to use the
-// pre-2.8.0 semantics. To make it easier for the transition,	  
-// set omniORB_27_CompatibleAnyExtraction to 1.
-// This would revert the semantics to the pre-2.8.0 versions.
-//
-// Globals defined in class omniORB
-#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
-// MSVC++ does not give the variables external linkage otherwise. Its a bug.
-namespace omniORB {
-CORBA::Boolean omniORB_27_CompatibleAnyExtraction = 0;
-}
-#else
-CORBA::Boolean omniORB::omniORB_27_CompatibleAnyExtraction = 0;
-#endif
 
 #define pdAnyP() ((AnyP*) (NP_pd()))
 #define pdAnyP2(a) ((AnyP*) ((a)->NP_pd()))
@@ -229,7 +211,7 @@ Any::Any(TypeCode_ptr tc, void* value, Boolean release)
 void
 CORBA::Any::operator>>= (cdrStream& s) const
 {
-  if( omniORB::tcAliasExpand ) {
+  if( orbParameters::tcAliasExpand ) {
     CORBA::TypeCode_var tc =
       TypeCode_base::aliasExpand(ToTcBase(pdAnyP()->getTC_parser()->getTC()));
     CORBA::TypeCode::marshalTypeCode(tc, s);

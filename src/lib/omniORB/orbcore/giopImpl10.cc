@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2001/08/17 17:12:36  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.4.7  2001/07/31 16:20:30  sll
   New primitives to acquire read lock on a connection.
 
@@ -68,6 +71,7 @@
 #include <exceptiondefs.h>
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/omniInterceptors.h>
+#include <orbParameters.h>
 
 // Define PRE_CALCULATE_MESSAGE_SIZE to force the code to pre-calculate
 // the total size of the message before the actual marshalling.
@@ -202,7 +206,7 @@ CORBA::Boolean
 giopImpl10::inputReplyBegin(giopStream* g, 
 			    void (*unmarshalHeader)(giopStream*)) {
 
-  if (g->inputMessageSize() > omniORB::MaxMessageSize()) {
+  if (g->inputMessageSize() > orbParameters::giopMaxMsgSize) {
 
     // This is not the perfect solution if we are multiplexing calls onto
     // this connection. The reply we are getting here may not be for the
@@ -345,7 +349,7 @@ giopImpl10::inputMessageEnd(giopStream* g,CORBA::Boolean disgard) {
 	l << "Garbage left at the end of input message from "
 	  << g->pd_strand->connection->peeraddress() << "\n";
       }
-      if (!omniORB::strictIIOP) {
+      if (!orbParameters::strictIIOP) {
 	disgard = 1;
       }
       else {
@@ -472,7 +476,7 @@ giopImpl10::unmarshalWildCardRequestHeader(giopStream* g) {
   case GIOP::Request:
   case GIOP::LocateRequest:
   case GIOP::CancelRequest:
-    if (g->inputMessageSize() <= omniORB::MaxMessageSize()) {
+    if (g->inputMessageSize() <= orbParameters::giopMaxMsgSize) {
       break;
     }
     // falls through if the message has exceeded the size limit.
@@ -1299,7 +1303,7 @@ size_t
 giopImpl10::outputRemaining(const giopStream* g) {
   CORBA::ULong total = g->outputMessageSize();
   if (!total) {
-    return omniORB::MaxMessageSize() - currentOutputPtr(g);
+    return orbParameters::giopMaxMsgSize - currentOutputPtr(g);
   }
   else {
     return total - currentOutputPtr(g);
@@ -1477,7 +1481,7 @@ giopImpl10::currentOutputPtr(const giopStream* g) {
 void
 giopImpl10::outputSetMessageSize(giopStream* g,CORBA::ULong msz) {
 
-  if (msz > omniORB::MaxMessageSize()) {
+  if (msz > orbParameters::giopMaxMsgSize) {
     char* hdr = (char*)((omni::ptr_arith_t) g->pd_currentOutputBuffer + 
 			g->pd_currentOutputBuffer->start);
 

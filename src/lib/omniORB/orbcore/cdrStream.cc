@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2001/08/17 17:12:35  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.2.7  2001/08/03 17:41:18  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -62,7 +65,38 @@
 #include <initialiser.h>
 #include <giopStreamImpl.h>
 #include <exceptiondefs.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 #include <stdio.h>
+
+OMNI_USING_NAMESPACE(omni)
+
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+omniCodeSet::NCS_C* orbParameters::nativeCharCodeSet = 0;
+//  set the native code set for char and string
+//
+
+omniCodeSet::NCS_W* orbParameters::nativeWCharCodeSet = 0;
+//  set the native code set for wchar and wstring
+//
+
+omniCodeSet::TCS_C* orbParameters::anyCharCodeSet = 0;
+//  set the preferred code set for char data inside anys
+//
+
+omniCodeSet::TCS_W* orbParameters::anyWCharCodeSet = 0;
+//  set the preferred code set for wchar data inside anys
+
+
+/////////////////////////////////////////////////////////////////////////////
+cdrStream::cdrStream() : pd_unmarshal_byte_swap(0), pd_marshal_byte_swap(0),
+			 pd_inb_end(0), pd_inb_mkr(0),
+			 pd_outb_end(0), pd_outb_mkr(0),
+			 pd_tcs_c(0), pd_tcs_w(0),
+			 pd_ncs_c(orbParameters::nativeCharCodeSet),
+			 pd_ncs_w(orbParameters::nativeWCharCodeSet) {}
 
 /////////////////////////////////////////////////////////////////////////////
 CORBA::ULong 
@@ -109,13 +143,6 @@ cdrStream::copy_to(cdrStream& s,int size,omni::alignment_t align) {
 OMNI_USING_NAMESPACE(omni)
 
 /////////////////////////////////////////////////////////////////////////////
-omniCodeSet::NCS_C* cdrStream::ncs_c = 0;
-omniCodeSet::NCS_W* cdrStream::ncs_w = 0;
-
-omniCodeSet::TCS_C* cdrMemoryStream::default_tcs_c = 0;
-omniCodeSet::TCS_W* cdrMemoryStream::default_tcs_w = 0;
-
-/////////////////////////////////////////////////////////////////////////////
 //            Deal with insert and extract codeset component in IOR        //
 /////////////////////////////////////////////////////////////////////////////
 static
@@ -125,11 +152,11 @@ void initialise_my_code_set()
 
   // Could put more conversion_code_sets but our default is sufficent for
   // most cases.
-  info.ForCharData.native_code_set = cdrStream::ncs_c->id();
+  info.ForCharData.native_code_set = orbParameters::nativeCharCodeSet->id();
   info.ForCharData.conversion_code_sets.length(1);
   info.ForCharData.conversion_code_sets[0] = omniCodeSet::ID_UTF_8;
 
-  info.ForWcharData.native_code_set = cdrStream::ncs_w->id();
+  info.ForWcharData.native_code_set = orbParameters::nativeWCharCodeSet->id();
   info.ForWcharData.conversion_code_sets.length(1);
   info.ForWcharData.conversion_code_sets[0] = omniCodeSet::ID_UTF_16;
 
@@ -499,98 +526,71 @@ getCodeSetServiceContext(omniInterceptors::serverReceiveRequest_T::info_T& info)
 
 
 /////////////////////////////////////////////////////////////////////////////
-//            omniORB API functions                                        //
+static const char* unknown_code_set_msg = "Unknown code set name";
+
 /////////////////////////////////////////////////////////////////////////////
+class nativeCharCodeSetHandler : public orbOptions::Handler {
+public:
 
-void
-omniORB::nativeCharCodeSet(const char* name)
-{
-  if (cdrStream::ncs_c)
-    OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_CodeSetNotKnownYet,
-		  CORBA::COMPLETED_NO);
+  nativeCharCodeSetHandler() : 
+    orbOptions::Handler("nativeCharCodeSet",
+			"nativeCharCodeSet = <code set name, e.g. ISO-8859-1>",
+			1,
+			"-ORBnativeCharCodeSet <code set name, e.g. ISO-8859-1>") {}
 
-  omniCodeSet::NCS_C* ncs = omniCodeSet::getNCS_C(name);
-  if (!ncs) OMNIORB_THROW(NO_RESOURCES, NO_RESOURCES_CodeSetNotSupported, 
-			  CORBA::COMPLETED_NO);
+  void visit(const char* value) throw (orbOptions::BadParam) {
+    
+    omniCodeSet::NCS_C* v = omniCodeSet::getNCS_C(value);
+    if (!v) {
+      throw orbOptions::BadParam(key(),value,unknown_code_set_msg);
+    }
+    orbParameters::nativeCharCodeSet = v;
+  }
 
-  cdrStream::ncs_c = ncs;
-}
+  void dump(orbOptions::sequenceString& result) {
 
-void
-omniORB::nativeWCharCodeSet(const char* name)
-{
-  if (cdrStream::ncs_w) 
-    OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_CodeSetNotKnownYet,
-		  CORBA::COMPLETED_NO);
+    const char* v;
+    if (orbParameters::nativeCharCodeSet)
+      v = orbParameters::nativeCharCodeSet->name();
+    else
+      v = "nil";
+    orbOptions::addKVString(key(),v,result);
+  }
+};
 
-  omniCodeSet::NCS_W* ncs = omniCodeSet::getNCS_W(name);
-  if (!ncs) OMNIORB_THROW(NO_RESOURCES, NO_RESOURCES_CodeSetNotSupported, 
-			  CORBA::COMPLETED_NO);
+static nativeCharCodeSetHandler nativeCharCodeSetHandler_;
 
-  cdrStream::ncs_w = ncs;
-}
+/////////////////////////////////////////////////////////////////////////////
+class nativeWCharCodeSetHandler : public orbOptions::Handler {
+public:
 
-void
-omniORB::anyCharCodeSet(const char* name)
-{
-  if (cdrMemoryStream::default_tcs_c)
-    OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_CodeSetNotKnownYet,
-		  CORBA::COMPLETED_NO);
+  nativeWCharCodeSetHandler() : 
+    orbOptions::Handler("nativeWCharCodeSet",
+			"nativeWCharCodeSet = <code set name, e.g. UTF-16>",
+			1,
+			"-ORBnativeWCharCodeSet <code set name, e.g. UTF-16>") {}
 
+  void visit(const char* value) throw (orbOptions::BadParam) {
+    
+    omniCodeSet::NCS_W* v = omniCodeSet::getNCS_W(value);
+    if (!v) {
+      throw orbOptions::BadParam(key(),value,unknown_code_set_msg);
+    }
+    orbParameters::nativeWCharCodeSet = v;
+  }
 
-  GIOP::Version ver = giopStreamImpl::maxVersion()->version();
-  omniCodeSet::TCS_C* tcs = omniCodeSet::getTCS_C(name, ver);
-  if (!tcs) OMNIORB_THROW(NO_RESOURCES, NO_RESOURCES_CodeSetNotSupported, 
-			  CORBA::COMPLETED_NO);
+  void dump(orbOptions::sequenceString& result) {
 
-  cdrMemoryStream::default_tcs_c = tcs;
-}
+    const char* v;
+    if (orbParameters::nativeWCharCodeSet)
+      v = orbParameters::nativeWCharCodeSet->name();
+    else
+      v = "nil";
+    orbOptions::addKVString(key(),v,result);
+  }
+};
 
-void
-omniORB::anyWCharCodeSet(const char* name)
-{
-  if (cdrMemoryStream::default_tcs_w)
-    OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_CodeSetNotKnownYet,
-		  CORBA::COMPLETED_NO);
-
-  GIOP::Version ver = giopStreamImpl::maxVersion()->version();
-  omniCodeSet::TCS_W* tcs = omniCodeSet::getTCS_W(name, ver);
-  if (!tcs)  OMNIORB_THROW(NO_RESOURCES, NO_RESOURCES_CodeSetNotSupported, 
-			  CORBA::COMPLETED_NO);
-
-  cdrMemoryStream::default_tcs_w = tcs;
-}
-
-const char*
-omniORB::nativeCharCodeSet()
-{
-  if (cdrStream::ncs_c) return cdrStream::ncs_c->name();
-  return 0;
-}
-
-const char*
-omniORB::nativeWCharCodeSet()
-{
-  if (cdrStream::ncs_w) return cdrStream::ncs_w->name();
-  return 0;
-}
-
-const char*
-omniORB::anyCharCodeSet()
-{
-  if (cdrMemoryStream::default_tcs_c)
-    return cdrMemoryStream::default_tcs_c->name();
-  return 0;
-}
-
-const char*
-omniORB::anyWCharCodeSet()
-{
-  if (cdrMemoryStream::default_tcs_w)
-    return cdrMemoryStream::default_tcs_w->name();
-  return 0;
-}
-
+static nativeWCharCodeSetHandler nativeWCharCodeSetHandler_;
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
@@ -599,23 +599,30 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omni_cdrStream_initialiser : public omniInitialiser {
 public:
+
+  omni_cdrStream_initialiser() {
+    orbOptions::singleton().registerHandler(nativeCharCodeSetHandler_);
+    orbOptions::singleton().registerHandler(nativeWCharCodeSetHandler_);
+  }
+
+
   void attach() {
 
-    if (!cdrStream::ncs_c)
-      cdrStream::ncs_c = omniCodeSet::getNCS_C(omniCodeSet::ID_8859_1);
+    if (!orbParameters::nativeCharCodeSet)
+      orbParameters::nativeCharCodeSet = omniCodeSet::getNCS_C(omniCodeSet::ID_8859_1);
 
-    if (!cdrStream::ncs_w)
-      cdrStream::ncs_w = omniCodeSet::getNCS_W(omniCodeSet::ID_UTF_16);
+    if (!orbParameters::nativeWCharCodeSet)
+      orbParameters::nativeWCharCodeSet = omniCodeSet::getNCS_W(omniCodeSet::ID_UTF_16);
 
     GIOP::Version ver = giopStreamImpl::maxVersion()->version();
 
-    if (!cdrMemoryStream::default_tcs_c)
-      cdrMemoryStream::default_tcs_c =
-	omniCodeSet::getTCS_C(cdrStream::ncs_c->id(), ver);
+    if (!orbParameters::anyCharCodeSet)
+      orbParameters::anyCharCodeSet =
+	omniCodeSet::getTCS_C(orbParameters::nativeCharCodeSet->id(), ver);
 
-    if (!cdrMemoryStream::default_tcs_w)
-      cdrMemoryStream::default_tcs_w =
-	omniCodeSet::getTCS_W(cdrStream::ncs_w->id(), ver);
+    if (!orbParameters::anyWCharCodeSet)
+      orbParameters::anyWCharCodeSet =
+	omniCodeSet::getTCS_W(orbParameters::nativeWCharCodeSet->id(), ver);
 
     // Create the tagged component for all IORs created by this ORB.
     initialise_my_code_set();
@@ -635,3 +642,4 @@ static omni_cdrStream_initialiser initialiser;
 omniInitialiser& omni_cdrStream_initialiser_ = initialiser;
 
 OMNI_NAMESPACE_END(omni)
+

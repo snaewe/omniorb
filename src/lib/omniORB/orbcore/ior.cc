@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.2.16  2001/08/17 17:12:39  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.10.2.15  2001/08/06 15:49:17  sll
   Added IOP component TAG_OMNIORB_UNIX_TRANS for omniORB specific local
   transport using the unix domain socket.
@@ -133,6 +136,7 @@
 #include <initialiser.h>
 #include <giopBiDir.h>
 #include <SocketCollection.h>
+#include <orbParameters.h>
 #include <stdio.h>
 
 OMNI_USING_NAMESPACE(omni)
@@ -262,8 +266,8 @@ IIOP::encodeProfile(const IIOP::ProfileBody& body,IOP::TaggedProfile& profile)
 
   CORBA::ULong bufsize;
   {
-    cdrCountingStream s(cdrMemoryStream::default_tcs_c,
-			cdrMemoryStream::default_tcs_w);
+    cdrCountingStream s(orbParameters::anyCharCodeSet,
+			orbParameters::anyWCharCodeSet);
     s.marshalOctet(omni::myByteOrder);
     s.marshalOctet(body.version.major);
     s.marshalOctet(body.version.minor);
@@ -315,8 +319,8 @@ IIOP::encodeMultiComponentProfile(const IOP::MultipleComponentProfile& body,
 
   CORBA::ULong bufsize;
   {
-    cdrCountingStream s(cdrMemoryStream::default_tcs_c,
-			cdrMemoryStream::default_tcs_w);
+    cdrCountingStream s(orbParameters::anyCharCodeSet,
+			orbParameters::anyWCharCodeSet);
     s.marshalOctet(omni::myByteOrder);
     CORBA::ULong total = body.length();
     if (total) {

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.20  2001/08/17 17:12:40  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.2.2.19  2001/08/15 17:59:11  dpg1
   Minor POA bugs.
 
@@ -132,9 +135,26 @@
 #include <giopStream.h>
 #include <omniCurrent.h>
 #include <poaimpl.h>
+#include <initialiser.h>
+#include <orbOptions.h>
+#include <orbParameters.h>
 
 OMNI_USING_NAMESPACE(omni)
 
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean orbParameters::verifyObjectExistsAndType = 1;
+//  If the value of this variable is 0 then the ORB will not
+//  send a GIOP LOCATE_REQUEST message to verify the existence of
+//  the object prior to the first invocation. Setting this variable
+//  if the other end is a buggy ORB that cannot handle GIOP
+//  LOCATE_REQUEST. 
+//
+//  Valid values = 0 or 1
+
+
+////////////////////////////////////////////////////////////////////////////
 const char*
 omniObjRef::_localServantTarget()
 {
@@ -262,12 +282,12 @@ omniObjRef::_assertExistsAndTypeVerified()
 
     if( !_remote_is_a(pd_intfRepoId) ) {
       if( omniORB::traceLevel > 1 ) {
-	omniORB::log <<
+	omniORB::logger log;
+	log <<
 	  "omniORB: The object with the IR repository ID: " <<
 	  pd_mostDerivedRepoId << "\n"
 	  " returns FALSE to the query _is_a(\"" << pd_intfRepoId << "\").\n"
 	  " A CORBA::INV_OBJREF is raised.\n";
-	omniORB::log.flush();
       }
       OMNIORB_THROW(INV_OBJREF,INV_OBJREF_InterfaceMisMatch,
 		    CORBA::COMPLETED_NO);
@@ -442,10 +462,10 @@ omniObjRef::~omniObjRef()
 
   if( pd_refCount ) {
     if( omniORB::traceLevel > 0 ) {
-      omniORB::log <<
+      omniORB::logger log;
+      log <<
 	"omniORB: ERROR -- an object reference has been explicity deleted.\n"
 	" This is not legal, and will probably lead to a crash. Good luck!\n";
-      omniORB::log.flush();
     }
   }
 
@@ -538,7 +558,7 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 
   while(1) {
 
-    if( omniORB::verifyObjectExistsAndType && do_assert )
+    if( orbParameters::verifyObjectExistsAndType && do_assert )
       _assertExistsAndTypeVerified();
 
     try{
@@ -595,9 +615,9 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
       if( CORBA::is_nil(ex.get_obj()) ) {
 	CORBA::TRANSIENT ex2(TRANSIENT_NoUsableProfile, CORBA::COMPLETED_NO);
 	if( omniORB::traceLevel > 10 ){
-	  omniORB::log << "Received GIOP::LOCATION_FORWARD message that"
+	  omniORB::logger log;
+	  log << "Received GIOP::LOCATION_FORWARD message that"
 	    " contains a nil object reference.\n";
-	  omniORB::log.flush();
 	}
 	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
 	  OMNIORB_THROW(TRANSIENT,ex2.minor(),ex2.completed());
@@ -868,9 +888,9 @@ omniObjRef::_locateRequest()
       if( CORBA::is_nil(ex.get_obj()) ) {
 	CORBA::TRANSIENT ex2(TRANSIENT_NoUsableProfile, CORBA::COMPLETED_NO);
 	if( omniORB::traceLevel > 10 ){
-	  omniORB::log << "Received GIOP::LOCATION_FORWARD message that"
+	  omniORB::logger log;
+	  log << "Received GIOP::LOCATION_FORWARD message that"
 	    " contains a nil object reference.\n";
-	  omniORB::log.flush();
 	}
 	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
 	  throw ex2;
@@ -892,3 +912,60 @@ omniObjRef::_setIdentity(omniIdentity* id)
     if (pd_id) pd_id->gainRef(this);
   }
 }
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+/////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class verifyObjectExistsAndTypeHandler : public orbOptions::Handler {
+public:
+
+  verifyObjectExistsAndTypeHandler() : 
+    orbOptions::Handler("verifyObjectExistsAndType",
+			"verifyObjectExistsAndType = 0 or 1",
+			1,
+			"-ORBverifyObjectExistsAndType < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::verifyObjectExistsAndType = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::verifyObjectExistsAndType,
+			     result);
+  }
+};
+
+static verifyObjectExistsAndTypeHandler verifyObjectExistsAndTypeHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Module initialiser                                           //
+/////////////////////////////////////////////////////////////////////////////
+class omni_ObjRef_initialiser : public omniInitialiser {
+public:
+
+  omni_ObjRef_initialiser() {
+    orbOptions::singleton().registerHandler(verifyObjectExistsAndTypeHandler_);
+  }
+
+  void attach() { }
+  void detach() { }
+};
+
+
+static omni_ObjRef_initialiser initialiser;
+
+omniInitialiser& omni_ObjRef_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)

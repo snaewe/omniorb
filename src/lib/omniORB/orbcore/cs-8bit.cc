@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2001/08/17 17:12:35  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.1.2.9  2001/08/03 17:41:20  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -65,6 +68,7 @@
 
 #include <omniORB4/CORBA.h>
 #include <codeSetUtil.h>
+#include <orbParameters.h>
 
 OMNI_USING_NAMESPACE(omni)
 
@@ -240,7 +244,7 @@ omniCodeSet::TCS_C_8bit::unmarshalString(cdrStream& stream,
   _CORBA_ULong mlen; mlen <<= stream;  // Includes terminating null
 
   if (mlen == 0) {
-    if (omniORB::strictIIOP) {
+    if (orbParameters::strictIIOP) {
       if (omniORB::trace(1)) {
 	omniORB::logger l;
 	l << "Error: received an invalid zero length string.\n";
@@ -342,7 +346,7 @@ omniCodeSet::TCS_C_8bit::fastUnmarshalString(cdrStream&          stream,
     _CORBA_ULong mlen; mlen <<= stream;
 
     if (mlen == 0) {
-      if (omniORB::strictIIOP) {
+      if (orbParameters::strictIIOP) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger l;
 	  l << "Error: received an invalid zero length string.\n";

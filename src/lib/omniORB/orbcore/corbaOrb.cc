@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.22  2001/08/17 17:12:35  sll
+  Modularise ORB configuration parameters.
+
   Revision 1.33.2.21  2001/08/08 15:57:11  sll
   New options unixTransportDirectory & unixTransportPermission.
 
@@ -261,7 +264,6 @@
 #include <omniORB4/omniObjRef.h>
 #include <poaimpl.h>
 #include <initialiser.h>
-#include <dynamicLib.h>
 #include <exceptiondefs.h>
 #include <omniORB4/omniURI.h>
 #include <omniORB4/minorCode.h>
@@ -269,6 +271,8 @@
 #include <invoker.h>
 #include <omniCurrent.h>
 #include <omniORB4/distdate.hh>
+#include <orbOptions.h>
+#include <orbParameters.h>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -279,7 +283,9 @@
 
 OMNI_USING_NAMESPACE(omni)
 
-static const char* orb_ids[] = { "omniORB4",
+#define ORB_ID_STRING "omniORB4"
+
+static const char* orb_ids[] = { ORB_ID_STRING,
 				 "omniORB3", 
 				 "omniORB2", 
 				 0 };
@@ -293,9 +299,6 @@ static int                  orb_destroyed             = 0;
 static omni_tracedmutex     orb_lock;
 static omni_tracedcondition orb_signal(&orb_lock);
 static volatile int         orb_n_blocked_in_run      = 0;
-
-static char*                bootstrapAgentHostname    = 0;
-static CORBA::UShort        bootstrapAgentPort        = 900;
 
 // For the main thread AsyncInvoker:
 static volatile int         invoker_threads           = 0;
@@ -319,7 +322,6 @@ OMNI_NAMESPACE_BEGIN(omni)
 ORBAsyncInvoker* orbAsyncInvoker = 0;
 
 extern omniInitialiser& omni_omniIOR_initialiser_;
-extern omniInitialiser& omni_uri_initialiser_;
 extern omniInitialiser& omni_corbaOrb_initialiser_;
 extern omniInitialiser& omni_omniInternal_initialiser_;
 extern omniInitialiser& omni_initFile_initialiser_;
@@ -331,15 +333,15 @@ extern omniInitialiser& omni_codeSet_initialiser_;
 extern omniInitialiser& omni_cdrStream_initialiser_;
 extern omniInitialiser& omni_giopStrand_initialiser_;
 extern omniInitialiser& omni_giopStreamImpl_initialiser_;
+extern omniInitialiser& omni_giopRope_initialiser_;
 extern omniInitialiser& omni_giopserver_initialiser_;
 extern omniInitialiser& omni_giopbidir_initialiser_;
 extern omniInitialiser& omni_omniTransport_initialiser_;
 extern omniInitialiser& omni_omniCurrent_initialiser_;
+extern omniInitialiser& omni_dynamiclib_initialiser_;
+extern omniInitialiser& omni_objadpt_initialiser_;
 
 OMNI_NAMESPACE_END(omni)
-
-static CORBA::Boolean
-parse_ORB_args(int& argc, char** argv, const char* orb_identifier);
 
 static void
 shutdownAsyncInvoker();
@@ -402,8 +404,20 @@ static void omni_abort()
 #endif
 #endif
 
+static void enableLcdMode() {
+  orbParameters::strictIIOP = 0;
+  orbParameters::tcAliasExpand = 1;
+  orbParameters::scanGranularity = 0;
+  orbParameters::outConScanPeriod = 0;
+  orbParameters::inConScanPeriod = 0;
+  orbParameters::useTypeCodeIndirections = 0;
+  orbParameters::verifyObjectExistsAndType = 0;
+  orbParameters::acceptMisalignedTcIndirections = 1;
+}
+
 CORBA::ORB_ptr
-CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
+CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
+		const char* options[][2])
 {
   omni_tracedmutex_lock sync(orb_lock);
 
@@ -413,25 +427,79 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
 		  CORBA::COMPLETED_NO);
   }
 
-  // URI initialiser must be called before args are parsed
-  omni_uri_initialiser_.attach();
-
-  if( !parse_ORB_args(argc,argv,orb_identifier) ) {
-    OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
-		  CORBA::COMPLETED_NO);
-  }
   if( the_orb ) {
     the_orb->_NP_incrRefCount();
     return the_orb;
   }
 
+  const char* option_src_1 = "configuration file";
+  const char* option_src_2 = "argument";
+  const char* option_src_3 = "option list";
+  const char* option_src_4 = "-ORB arguments";
+  const char* option_source;
+  try {
+
+    orbOptions::singleton().reset();
+
+    // Parse configuration file
+    option_source = option_src_1;
+    // XXX not done yet.
+    
+    if ( orb_identifier && strlen(orb_identifier) ) {
+      option_source = option_src_2;
+      orbOptions::singleton().addOption("id",orb_identifier);
+    }
+
+    if (options) {
+      option_source = option_src_3;
+      orbOptions::singleton().addOptions(options);
+    }
+
+    option_source = option_src_4;
+    orbOptions::singleton().extractInitOptions(argc,argv);
+
+  }
+  catch (const orbOptions::Unknown& ex) {
+    if ( omniORB::trace(1) ) {
+      omniORB::logger l;
+      l << "ORB_init failed: unknown option ("
+	<< ex.key << ") in " << option_source << "\n";
+    }
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
+		  CORBA::COMPLETED_NO);
+  }
+  catch (const orbOptions::BadParam& ex) {
+    if ( omniORB::trace(1) ) {
+      omniORB::logger l;
+      l << "ORB_init failed: Bad parameter (" << ex.value 
+	<< ") for option " 
+	<< ((option_source == option_src_4) ? "-ORB" : "")
+	<< ex.key << " in " <<  option_source << " reason: " 
+	<< ex.why << "\n";
+    }
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
+		  CORBA::COMPLETED_NO);
+  }
+
+  try {
+    orbOptions::singleton().visit();
+  }
+  catch (const orbOptions::BadParam& ex) {
+    if ( omniORB::trace(1) ) {
+      omniORB::logger l;
+      l << "ORB_init failed: Bad parameter (" << ex.value 
+	<< ") for ORB configuration option " << ex.key 
+	<< " reason: " << ex.why << "\n";
+    }
+    OMNIORB_THROW(INITIALIZE,INITIALIZE_InvalidORBInitArgs,
+		  CORBA::COMPLETED_NO);
+  }
+
+
   if (omniORB::trace(2)) {
     omniORB::logger l;
     l << "Distribution date: " OMNIORB_DIST_DATE "\n";
   }
-
-  if( (char*) omniORB::serverName == 0 )
-    omniORB::serverName = CORBA::string_dup("unknown");
 
   try {
     // Call attach method of each initialiser object.
@@ -439,6 +507,7 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     // among the modules.
     omni_omniInternal_initialiser_.attach();
     omni_corbaOrb_initialiser_.attach();
+    omni_objadpt_initialiser_.attach();
     omni_interceptor_initialiser_.attach();
     omni_giopStreamImpl_initialiser_.attach();
     omni_omniIOR_initialiser_.attach();
@@ -446,28 +515,29 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     omni_codeSet_initialiser_.attach();
     omni_cdrStream_initialiser_.attach();
     omni_omniTransport_initialiser_.attach();
+    omni_giopRope_initialiser_.attach();
     omni_giopserver_initialiser_.attach();
     omni_giopbidir_initialiser_.attach();
     omni_initFile_initialiser_.attach();
-    omni_initRefs_initialiser_.attach();
     omni_giopStrand_initialiser_.attach();
     omni_omniCurrent_initialiser_.attach();
+    omni_dynamiclib_initialiser_.attach();
+    omni_initRefs_initialiser_.attach();
     omni_hooked_initialiser_.attach();
+    omniAsyncInvoker::traceLevel = omniORB::traceLevel;
 
-    if( bootstrapAgentHostname ) {
-      // The command-line option -ORBInitialHost has been specified.
-      // Override any previous NamesService object reference
-      // that may have been read from the configuration file.
-      omniInitialReferences::remFromFile("NameService");
-      omniInitialReferences::remFromFile("InterfaceRepository");
-      omniInitialReferences::initialise_bootstrap_agent(bootstrapAgentHostname,
-							bootstrapAgentPort);
+    if (orbParameters::lcdMode) {
+      enableLcdMode();
     }
 
-    // Attach the dynamic library hook, and initialise.
-    if( omniDynamicLib::hook )
-      omniDynamicLib::ops = omniDynamicLib::hook;
-    omniDynamicLib::ops->init();
+    if (omniORB::trace(20) || orbParameters::dumpConfiguration) {
+      orbOptions::sequenceString_var currentSet;
+      currentSet = orbOptions::singleton().dumpCurrentSet();
+      omniORB::logger l;
+      l << "Current configuration is as follows:\n";
+      for (CORBA::ULong i = 0; i < currentSet->length(); i++)
+	l << "omniORB:   " << currentSet[i] << "\n";
+    }
   }
   catch (CORBA::INITIALIZE &ex) {
     throw;
@@ -676,12 +746,14 @@ omniOrbORB::destroy()
 
     // Call detach method of the initialisers in reverse order.
     omni_hooked_initialiser_.detach();
+    omni_initRefs_initialiser_.detach();
+    omni_dynamiclib_initialiser_.detach();
     omni_omniCurrent_initialiser_.detach();
     omni_giopStrand_initialiser_.detach();
-    omni_initRefs_initialiser_.detach();
     omni_initFile_initialiser_.detach();
     omni_giopbidir_initialiser_.detach();
     omni_giopserver_initialiser_.detach();
+    omni_giopRope_initialiser_.detach();
     omni_omniTransport_initialiser_.detach();
     omni_cdrStream_initialiser_.detach();
     omni_codeSet_initialiser_.detach();
@@ -689,9 +761,9 @@ omniOrbORB::destroy()
     omni_omniIOR_initialiser_.detach();
     omni_giopStreamImpl_initialiser_.detach();
     omni_interceptor_initialiser_.detach();
+    omni_objadpt_initialiser_.detach();
     omni_corbaOrb_initialiser_.detach();
     omni_omniInternal_initialiser_.detach();
-    omni_uri_initialiser_.detach();
 
     proxyObjectFactory::shutdown();
 
@@ -798,9 +870,6 @@ omniOrbORB::actual_shutdown()
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(orb_lock, 1);
   OMNIORB_ASSERT(pd_shutdown_in_progress);
-
-  // Deinitialise the dynamic library.
-  omniDynamicLib::ops->deinit();
 
   // Shutdown object adapters.  When this returns all
   // outstanding requests have completed.
@@ -999,908 +1068,6 @@ myOrbId() {
   return orb_ids[0];
 }
 
-static
-void
-move_args(int& argc,char **argv,int idx,int nargs)
-{
-  if ((idx+nargs) <= argc)
-    {
-      for (int i=idx+nargs; i < argc; i++) {
-	argv[i-nargs] = argv[i];
-      }
-      argc -= nargs;
-    }
-}
-
-
-static
-CORBA::Boolean
-parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
-{
-  CORBA::Boolean orbId_match = 0;
-
-  if (orb_identifier && orb_identifier[0] == '\0')
-    orb_identifier = myOrbId();
-
-  if( orb_identifier && !isValidId(orb_identifier) ) {
-    if( omniORB::trace(1) ) {
-      omniORB::logger l;
-      l << "CORBA::ORB_init failed -- the ORBid (" << orb_identifier << ")"
-	" is not " <<  myOrbId() << "\n";
-    }
-    return 0;
-  }
-  if( omniORB::trace(1) && strcmp(orb_identifier, myOrbId()) ) {
-    if( omniORB::trace(1) ) {
-      omniORB::logger l;
-      l << "WARNING -- using ORBid " << orb_identifier 
-	<< " (should be " << myOrbId() << ")." << "\n";
-    }
-  }
-
-  if (argc > 0) {
-    // Using argv[0] as the serverName implicitly assumes that the
-    // argv array follows the unix tradition of passing the command name
-    // as the first argument. This may not be the case on other platforms
-    // and the application may choose to create its own argv array instead
-    // of passing the command line arguments to ORB_init in verbatim form.
-    //
-    // XXX Should we trim this to a leafname?
-#ifdef HAS_Cplusplus_Namespace
-    if (omniORB::serverName) _CORBA_String_helper::free(omniORB::serverName);
-#endif
-    omniORB::serverName = CORBA::string_dup(argv[0]);
-  }
-
-  int idx = 1;
-  while (argc > idx)
-    {
-      // -ORBxxxxxxx ?
-      if (strlen(argv[idx]) < 4 ||
-	  !(argv[idx][0] == '-' && argv[idx][1] == 'O' &&
-	    argv[idx][2] == 'R' && argv[idx][3] == 'B'))
-	{
-	  idx++;
-	  continue;
-	}
-
-      //
-      // Standard options
-      //
-
-      // -ORBid <id>
-      if (strcmp(argv[idx],"-ORBid") == 0) {
-	if ((idx+1) >= argc) {
-	  omniORB::logs(1,"CORBA::ORB_init failed: missing -ORBid parameter.");
-	  return 0;
-	}
-	if (!isValidId(argv[idx+1]) )
-	  {
-	    if ( omniORB::trace(1) ) {
-	      omniORB::logger l;
-	      l << "CORBA::ORB_init failed -- the ORBid (" <<
-		argv[idx+1] << ") is not " << myOrbId() << "\n";
-	    }
-	    return 0;
-	  }
-	if( strcmp(argv[idx + 1], myOrbId()) ) {
-	  if( omniORB::trace(1) ) {
-	    omniORB::logger l;
-	    l << "WARNING -- using ORBid " << orb_identifier 
-	      << " (should be " << myOrbId() << ")." << "\n";
-	  }
-	}
-	orbId_match = 1;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBInitRef <ObjectId>=<ObjectURI>
-      if (strcmp(argv[idx],"-ORBInitRef") == 0) {
-	if ((idx+1) >= argc) {
-	  omniORB::logs(1,"CORBA::ORB_init failed: "
-			"missing -ORBInitRef parameter.");
-	  return 0;
-	}
-	{
-	  unsigned int slen = strlen(argv[idx+1]) + 1;
-	  CORBA::String_var id(CORBA::string_alloc(slen));
-	  CORBA::String_var uri(CORBA::string_alloc(slen));
-	  if (sscanf(argv[idx+1], "%[^=]=%s", (char*)id, (char*)uri) != 2) {
-	    if (omniORB::trace(1)) {
-	      omniORB::logger l;
-	      l << "CORBA::ORB_init failed: invalid -ORBInitRef parameter `"
-		<< argv[idx+1] << "'.\n";
-	    }
-	    return 0;
-	  }
-	  if (!omniInitialReferences::setFromArgs(id, uri)) {
-	    if (omniORB::trace(1)) {
-	      omniORB::logger l;
-	      l << "CORBA::ORB_init failed: syntactically incorrect URI `"
-		<< (const char*)uri << "'\n";
-	    }
-	    return 0;
-	  }
-	}
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBDefaultInitRef <default>
-      if (strcmp(argv[idx],"-ORBDefaultInitRef") == 0) {
-	if ((idx+1) >= argc) {
-	  omniORB::logs(1,"CORBA::ORB_init failed: "
-			"missing -ORBDefaultInitRef parameter.");
-	  return 0;
-	}
-	omniInitialReferences::setDefaultInitRefFromArgs(argv[idx+1]);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      //
-      // omniORB specific options
-      //
-
-      // -ORBtraceLevel
-      if (strcmp(argv[idx],"-ORBtraceLevel") == 0) {
-	if((idx+1) >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing -ORBtraceLevel"
-			" parameter.");
-	  return 0;
-	}
-	if( sscanf(argv[idx+1],"%d", &omniORB::traceLevel) != 1
-	    || omniORB::traceLevel < 0 ) {
-	  omniORB::logf("CORBA::ORB_init failed: invalid -ORBtraceLevel"
-			" parameter.");
-	  return 0;
-	}
-	omniAsyncInvoker::traceLevel = omniORB::traceLevel;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBtraceInvocations
-      if (strcmp(argv[idx],"-ORBtraceInvocations") == 0) {
-	omniORB::traceInvocations = 1;
-	move_args(argc,argv,idx,1);
-	continue;
-      }
-
-      // -ORBstrictIIOP
-      if (strcmp(argv[idx],"-ORBstrictIIOP") == 0) {
-	if((idx+1) >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing -ORBstrictIIOP"
-			" parameter (0 or 1).");
-	  return 0;
-	}
-	unsigned int v;
-	if (sscanf(argv[idx+1],"%u",&v) != 1) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid -ORBstrictIIOP"
-			" parameter.");
-	  return 0;
-	}
-	omniORB::strictIIOP = ((v)?1:0);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBtcAliasExpand
-      if (strcmp(argv[idx],"-ORBtcAliasExpand") == 0) {
-	if((idx+1) >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBtcAliasExpand parameter (0 or 1).");
-	  return 0;
-	}
-	unsigned int v;
-	if (sscanf(argv[idx+1],"%u",&v) != 1) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid "
-			"-ORBtcAliasExpand parameter.");
-	  return 0;
-	}
-	omniORB::tcAliasExpand = ((v)?1:0);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBgiopMaxMsgSize
-      if (strcmp(argv[idx],"-ORBgiopMaxMsgSize") == 0) {
-	if((idx+1) >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing "
-			"-ORBgiopMaxMsgSize parameter.");
-	  return 0;
-	}
-	CORBA::ULong sz;
-#if SIZEOF_LONG == 4
-	if (sscanf(argv[idx+1],"%lu",&sz) != 1) {
-#else
-	if (sscanf(argv[idx+1],"%u",&sz) != 1) {
-#endif
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBgiopMaxMsgSize parameter.");
-	  return 0;
-	}
-	omniORB::MaxMessageSize(sz);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBobjectTableSize
-      if (strcmp(argv[idx],"-ORBobjectTableSize") == 0) {
-	if((idx+1) >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing "
-			"-ORBobjectTableSize parameter.");
-	  return 0;
-	}
-	CORBA::ULong sz;
-#if SIZEOF_LONG == 4
-	if (sscanf(argv[idx+1],"%lu",&sz) != 1) {
-#else
-	if (sscanf(argv[idx+1],"%u",&sz) != 1) {
-#endif
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBobjectTableSize parameter.");
-	  return 0;
-	}
-	omniORB::objectTableSize = sz;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-	
-      // -ORBserverName
-      if (strcmp(argv[idx],"-ORBserverName") == 0) {
-	if((idx+1) >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing -ORBserverName"
-			" parameter.");
-	  return 0;
-	}
-#ifdef HAS_Cplusplus_Namespace
-	if (omniORB::serverName) _CORBA_String_helper::free(omniORB::serverName);
-#endif
-	omniORB::serverName = CORBA::string_dup(argv[idx+1]);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBInitialHost
-      if (strcmp(argv[idx],"-ORBInitialHost") == 0) {
-	if((idx+1) >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing -ORBInitialHost"
-			" parameter.");
-	  return 0;
-	}
-	bootstrapAgentHostname = CORBA::string_dup(argv[idx+1]);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBInitialPort
-      if (strcmp(argv[idx],"-ORBInitialPort") == 0) {
-	if((idx+1) >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing -ORBInitialPort"
-			" parameter.");
-	  return 0;
-	}
-        unsigned int port;
-	if (sscanf(argv[idx+1],"%u",&port) != 1 ||
-            (port == 0 || port >= 65536)) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid -ORBInitialPort"
-			" parameter.");
-	  return 0;
-	}
-	bootstrapAgentPort = (CORBA::UShort)port;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBdiiThrowsSysExceptions
-      if( strcmp(argv[idx],"-ORBdiiThrowsSysExceptions") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBdiiThrowsSysExceptions parameter (0 or 1).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBdiiThrowsSysExceptions parameter.");
-	  return 0;
-	}
-	omniORB::diiThrowsSysExceptions = v ? 1 : 0;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBabortOnInternalError
-      if( strcmp(argv[idx],"-ORBabortOnInternalError") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBabortOnInternalError parameter (0 or 1).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBabortOnInternalError parameter.");
-	  return 0;
-	}
-	omniORB::abortOnInternalError = v ? 1 : 0;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBverifyObjectExistsAndType
-      if( strcmp(argv[idx],"-ORBverifyObjectExistsAndType") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBverifyObjectExistsAndType parameter (0 or 1).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBverifyObjectExistsAndType parameter.");
-	  return 0;
-	}
-	omniORB::verifyObjectExistsAndType = v ? 1 : 0;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBinConScanPeriod
-      if( strcmp(argv[idx],"-ORBinConScanPeriod") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBinConScanPeriod parameter.");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBinConScanPeriod parameter.");
-	  return 0;
-	}
-	omniORB::idleConnectionScanPeriod(omniORB::idleIncoming, v);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBoutConScanPeriod
-      if( strcmp(argv[idx],"-ORBoutConScanPeriod") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed -- missing"
-			" -ORBoutConScanPeriod parameter.");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed -- invalid"
-			" -ORBoutConScanPeriod parameter.");
-	  return 0;
-	}
-	omniORB::idleConnectionScanPeriod(omniORB::idleOutgoing, v);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBclientCallTimeOutPeriod
-      if( strcmp(argv[idx],"-ORBclientCallTimeOutPeriod") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBclientCallTimeOutPeriod parameter.");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBclientCallTimeOutPeriod parameter.");
-	  return 0;
-	}
-	omniORB::callTimeOutPeriod(omniORB::clientSide, v, 0);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBserverCallTimeOutPeriod
-      if( strcmp(argv[idx],"-ORBserverCallTimeOutPeriod") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBserverCallTimeOutPeriod parameter.");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBserverCallTimeOutPeriod parameter.");
-	  return 0;
-	}
-	omniORB::callTimeOutPeriod(omniORB::serverSide, v, 0);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBscanGranularity
-      if( strcmp(argv[idx],"-ORBscanGranularity") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBscanGranularity parameter.");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1], "%u", &v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBscanGranularity parameter.");
-	  return 0;
-	}
-	omniORB::scanGranularity(v);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBlcdMode
-      if( strcmp(argv[idx],"-ORBlcdMode") == 0 ) {
-	omniORB::enableLcdMode();
-	move_args(argc,argv,idx,1);
-	continue;
-      }
-
-      // -ORBoneCallPerConnection
-      if( strcmp(argv[idx],"-ORBoneCallPerConnection") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBoneCallPerConnection parameter (0 or 1).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBoneCallPerConnection parameter.");
-	  return 0;
-	}
-	omniORB::oneCallPerConnection = v ? 1 : 0;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBmaxTcpConnectionPerServer
-      if( strcmp(argv[idx],"-ORBmaxTcpConnectionPerServer") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBmaxTcpConnectionPerServer parameter (n > 0).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBmaxTcpConnectionPerServer parameter.");
-	  return 0;
-	}
-	omniORB::maxTcpConnectionPerServer = v;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBthreadPerConnectionPolicy
-      if( strcmp(argv[idx],"-ORBthreadPerConnectionPolicy") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBthreadPerConnectionPolicy parameter (0 or 1).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBthreadPerConnectionPolicy parameter.");
-	  return 0;
-	}
-	omniORB::threadPerConnectionPolicy = v ? 1 : 0;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBmaxServerThreadPerConnection
-      if( strcmp(argv[idx],"-ORBmaxServerThreadPerConnection") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBmaxServerThreadPerConnection parameter (n > 0).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBmaxServerThreadPerConnection parameter.");
-	  return 0;
-	}
-	omniORB::maxServerThreadPerConnection = v;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBmaxInterleavedCallsPerConnection
-      if( strcmp(argv[idx],"-ORBmaxInterleavedCallsPerConnection") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBmaxInterleavedCallsPerConnection parameter (n > 0).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBmaxInterleavedCallsPerConnection parameter.");
-	  return 0;
-	}
-	omniORB::maxInterleavedCallsPerConnection = v;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBmaxServerThreadPoolSize
-      if( strcmp(argv[idx],"-ORBmaxServerThreadPoolSize") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBmaxServerThreadPoolSize parameter (n > 0).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBmaxServerThreadPoolSize parameter.");
-	  return 0;
-	}
-	omniORB::maxServerThreadPoolSize = v;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBthreadPerConnectionUpperLimit
-      if( strcmp(argv[idx],"-ORBthreadPerConnectionUpperLimit") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBthreadPerConnectionUpperLimit parameter (n > 0).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBthreadPerConnectionUpperLimit parameter.");
-	  return 0;
-	}
-	omniORB::threadPerConnectionUpperLimit = v;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBthreadPerConnectionLowerLimit
-      if( strcmp(argv[idx],"-ORBthreadPerConnectionLowerLimit") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBthreadPerConnectionLowerLimit parameter (n > 0).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBthreadPerConnectionLowerLimit parameter.");
-	  return 0;
-	}
-	omniORB::threadPerConnectionLowerLimit = v;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBendpoint <endpoint uri>
-      // -ORBendpoint_no_publish <endpoint uri>
-      // -ORBendpoint_no_listen <endpoint uri>
-      if( strcmp(argv[idx],"-ORBendpoint") == 0 ||
-	  strcmp(argv[idx],"-ORBendpoint_no_publish") == 0 ||
-	  strcmp(argv[idx],"-ORBendpoint_no_listen") == 0 ) {
-
-        if( (idx+1) >= argc ) {
-	  if (omniORB::trace(1)) {
-	    omniORB::logger log;
-	    log << "CORBA::ORB_init failed -- missing "
-		<< argv[idx] << " parameter\n";
-	  }
-	  return 0;
-        }
-	omniObjAdapter::Options::EndpointURI* opt;
-	opt = new omniObjAdapter::Options::EndpointURI();
-	opt->no_publish = opt->no_listen = 0;
-	opt->uri = (const char*)argv[idx+1];
-	if ( strcmp(argv[idx],"-ORBendpoint_no_publish") == 0 )
-	  opt->no_publish = 1;
-	else if ( strcmp(argv[idx],"-ORBendpoint_no_listen") == 0 )
-	  opt->no_listen = 1;
-	omniObjAdapter::options.endpoints.push_back(opt);
-
-	move_args(argc, argv, idx, 2);
-	continue;
-      }
-
-      // -ORBpoa_iiop_port  -- obsoluted option
-      // -ORBpoa_iiop_name_port <hostname[:port number]> -- obsoluted options
-      if( strcmp(argv[idx],"-ORBpoa_iiop_port") == 0 ||
-	  strcmp(argv[idx], "-ORBpoa_iiop_name_port") == 0) {
-
-	if (omniORB::trace(1)) {
-	  omniORB::logger log;
-	  log << "CORBA::ORB_init failed: "
-	      << argv[idx] << " is now obsolute, use -ORBendpoint instead.\n";
-	}
-	return 0;
-      }
-
-      // -ORBno_bootstrap_agent
-      if (strcmp(argv[idx],"-ORBno_bootstrap_agent") == 0) {
-	omniObjAdapter::options.noBootstrapAgent = 1;
-	move_args(argc,argv,idx,1);
-	continue;
-      }
-
-      // -ORBmaxGIOPVersion <major no>.<minor no>
-      if ( strcmp(argv[idx],"-ORBmaxGIOPVersion") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBmaxGIOPVersion parameter.");
-	  return 0;
-	}
-	unsigned int major, minor;
-	if ( sscanf(argv[idx+1], "%u.%u", &major, &minor) != 2 ||
-	     major > 255 || minor > 255) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBmaxGIOPVersion parameter.");
-	  return 0;
-	}
-	CORBA::Char ma = major;
-	CORBA::Char mi = minor;
-	omniORB::maxGIOPVersion(ma,mi);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBofferBiDirectionalGIOP
-      if( strcmp(argv[idx],"-ORBofferBiDirectionalGIOP") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBofferBiDirectionalGIOP parameter (0 or 1).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBofferBiDirectionalGIOP parameter.");
-	  return 0;
-	}
-	omniORB::offerBiDirectionalGIOP = v ? 1 : 0;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBacceptBiDirectionalGIOP
-      if( strcmp(argv[idx],"-ORBacceptBiDirectionalGIOP") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBacceptBiDirectionalGIOP parameter (0 or 1).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%u",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBacceptBiDirectionalGIOP parameter.");
-	  return 0;
-	}
-	omniORB::acceptBiDirectionalGIOP = v ? 1 : 0;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBnativeCharCodeSet
-      if (strcmp(argv[idx],"-ORBnativeCharCodeSet") == 0) {
-	if (idx +1 >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBnativeCharCodeSet parameter.");
-	}
-	cdrStream::ncs_c = omniCodeSet::getNCS_C(argv[idx+1]);
-	if (!cdrStream::ncs_c) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: unknown char code set.");
-	  return 0;
-	}
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBnativeWCharCodeSet
-      if (strcmp(argv[idx],"-ORBnativeWCharCodeSet") == 0) {
-	if (idx +1 >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBnativeWCharCodeSet parameter.");
-	}
-	cdrStream::ncs_w = omniCodeSet::getNCS_W(argv[idx+1]);
-	if (!cdrStream::ncs_w) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: unknown wchar code set.");
-	  return 0;
-	}
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBanyCharCodeSet
-      if (strcmp(argv[idx],"-ORBanyCharCodeSet") == 0) {
-	if (idx +1 >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBanyCharCodeSet parameter.");
-	}
-	GIOP::Version ver = giopStreamImpl::maxVersion()->version();
-	cdrMemoryStream::default_tcs_c = omniCodeSet::getTCS_C(argv[idx+1],
-							       ver);
-	if (!cdrMemoryStream::default_tcs_c) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: unknown char code set.");
-	  return 0;
-	}
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBanyWCharCodeSet
-      if (strcmp(argv[idx],"-ORBanyWCharCodeSet") == 0) {
-	if (idx +1 >= argc) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBanyWCharCodeSet parameter.");
-	}
-	GIOP::Version ver = giopStreamImpl::maxVersion()->version();
-	cdrMemoryStream::default_tcs_w = omniCodeSet::getTCS_W(argv[idx+1],
-							       ver);
-	if (!cdrMemoryStream::default_tcs_w) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: unknown wchar code set.");
-	  return 0;
-	}
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBunixTransportPermission
-      if( strcmp(argv[idx],"-ORBunixTransportPermission") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBunixTransportPermission parameter (mode mask in octal radix).");
-	  return 0;
-	}
-	unsigned int v;
-	if( sscanf(argv[idx+1],"%o",&v) != 1 ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: invalid"
-			" -ORBunixTransportPermission parameter.");
-	  return 0;
-	}
-	omniORB::unixTransportPermission = (CORBA::UShort)v;
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBunixTransportDirectory
-      if( strcmp(argv[idx],"-ORBunixTransportDirectory") == 0 ) {
-	if( idx + 1 >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed: missing"
-			" -ORBunixTransportDirectory parameter (mode mask in octal radix).");
-	  return 0;
-	}
-	omniORB::unixTransportDirectory = CORBA::string_dup(argv[idx+1]);
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -ORBhelp
-      if( strcmp(argv[idx],"-ORBhelp") == 0 ) {
-	omniORB::logger l;
-	l <<
-	  "Valid -ORB<options> are:\n"
-	  "\n"
-	  "  Standard options:\n"
-	  "    -ORBid omniORB4\n"
-	  "    -ORBInitRef <ObjectID>=<ObjectURI>\n"
-	  "    -ORBDefaultInitRef <Default URI>\n"
-	  "\n"
-	  "  omniORB specific options:\n"
-	  "    -ORBtraceLevel <n>\n"
-	  "    -ORBtraceInvocations\n"
-	  "    -ORBstrictIIOP <0|1>\n"
-	  "    -ORBtcAliasExpand <0|1>\n"
-	  "    -ORBgiopMaxMsgSize <n bytes>\n"
-	  "    -ORBmaxGIOPVersion <major no>.<minor no>\n"
-	  "    -ORBofferBiDirectionalGIOP <0|1>\n"
-	  "    -ORBacceptBiDirectionalGIOP <0|1>\n"
-	  "    -ORBobjectTableSize <n entries>\n"
-	  "    -ORBserverName <name>\n"
-	  "    -ORBInitialHost <name>\n"
-	  "    -ORBInitialPort <1-65535>\n"
-	  "    -ORBno_bootstrap_agent\n"
-	  "    -ORBoneCallPerConnection <0|1>\n"
-	  "    -ORBmaxTcpConnectionPerServer <n connections>\n"
-	  "    -ORBthreadPerConnectionPolicy <0|1>\n"
-	  "    -ORBmaxServerThreadPerConnection <n threads>\n"
-	  "    -ORBmaxInterleavedCallsPerConnection <n requests>\n"
-	  "    -ORBmaxServerThreadPoolSize <n threads>\n"
-	  "    -ORBthreadPerConnectionLowerLimit <n connections>\n"
-	  "    -ORBthreadPerConnectionUpperLimit <n connections>\n"
-	  "    -ORBdiiThrowsSysExceptions <0|1>\n"
-	  "    -ORBabortOnInternalError <0|1>\n"
-	  "    -ORBverifyObjectExistsAndType <0|1>\n"
-	  "    -ORBinConScanPeriod <n seconds>\n"
-	  "    -ORBoutConScanPeriod <n seconds>\n"
-	  "    -ORBclientCallTimeOutPeriod <n seconds>\n"
-	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
-	  "    -ORBscanGranularity <n seconds>\n"
-	  "    -ORBlcdMode\n"
-	  "    -ORBnativeCharCodeSet <code set>\n"
-	  "    -ORBnativeWCharCodeSet <code set>\n"
-	  "    -ORBanyCharCodeSet <code set>\n"
-	  "    -ORBanyWCharCodeSet <code set>\n"
-          "    -ORBendpoint <endpoint uri>\n"
-          "    -ORBendpoint_no_publish <endpoint uri>\n"
-          "    -ORBendpoint_no_listen <endpoint uri>\n"
-          "            <endpoint uri> = \"giop:tcp:<host>:<port>\" |\n"
-          "                            *\"giop:ssl:<host>:<port>\" |\n"
-          "                            *\"giop:unix:<filename>\"   |\n"
-          "                            *\"giop:fd:<no.>\"          |\n"
-          "                            *\"<other protocol>:<network protocol>:<options>\"\n"
-	  "                         * may not be supported on the platform.\n"
-          "    -ORBunixTransportPermission <mode mask in octal radix,e.g. 0777>\n"
-          "    -ORBunixTransportDirectory <directory name>\n";
-	move_args(argc,argv,idx,1);
-	continue;
-      }
-
-
-      // Reach here only if the argument in this form: -ORBxxxxx
-      // is not recognised.
-      if( omniORB::trace(1) ) {
-	omniORB::logger l;
-	l << "CORBA::ORB_init failed: unknown ORB argument ("
-	  << argv[idx] << ")\n";
-      }
-      return 0;
-    }
-
-  if (!orb_identifier && !orbId_match) {
-    omniORB::logs(1, "CORBA::ORB_init failed: ORBid is not specified.");
-    return 0;
-  }
-
-  // Make sure that -ORBendpoint_no_listen or -ORBendpoint_no_publish is not
-  // the only -ORBendpoint* option defined.
-  {
-    omniObjAdapter::Options::EndpointURIList::iterator last, i;
-    i = omniObjAdapter::options.endpoints.begin();
-    last = omniObjAdapter::options.endpoints.end();
-    if (i != last) {
-      CORBA::Boolean only_listen = 1;
-      CORBA::Boolean only_publish = 1;
-      for ( ; i != last; i++ ) {
-	if ((*i)->no_publish) {
-	  only_listen = 0;
-	}
-	else if ((*i)->no_listen) {
-	  only_publish = 0;
-	}
-	else {
-	  only_listen = only_publish = 0;
-	}
-      }
-      if ( only_listen || only_publish ) {
-	if ( omniORB::trace(1) ) {
-	  omniORB::logger log;
-	  log << "CORBA::ORB_init failed -- -ORBendpoint_no_listen or \n"
-	         "-ORBendpoint_no_publish cannot be used alone.\n"
-	         "At least 1 -ORBendpoint or -ORBendpoint_no_publish should be specified.\n";
-	}
-	return 0;
-      }
-    }
-  }
-
-  return 1;
-}
-
 OMNI_NAMESPACE_BEGIN(omni)
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1966,12 +1133,207 @@ install(omniInitialiser* init) {
   omni_hooked_initialiser::install(init);
 }
 
+////////////////////////////////////////////////////////////////////////////
+//             Configuration options                                      //
+////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean   orbParameters::dumpConfiguration = 0;
+//  Set to 1 to cause the ORB to dump the current set of configuration
+//  parameters.
+//
+//  Valid values = 0 or 1
+
+CORBA::Boolean   orbParameters::lcdMode = 0;
+//  Set to 1 to enable 'Lowest Common Denominator' Mode.
+//  This will disable various features of IIOP and GIOP which are
+//  poorly supported by some ORBs, and disable warnings/errors when
+//  certain types of erroneous message are received on the wire.
+//
+//  Valid values = 0 or 1
+
+
+/////////////////////////////////////////////////////////////////////////////
+//            Handlers for Configuration Options                           //
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+class helpHandler : public orbOptions::Handler {
+public:
+
+  helpHandler() : 
+    orbOptions::Handler("help",
+			0,
+			1,
+			"-ORBhelp ",
+			1) {}
+
+
+  void visit(const char*) throw (orbOptions::BadParam) {
+
+    orbOptions::sequenceString_var usage;
+    usage = orbOptions::singleton().usageArgv();
+
+    omniORB::logger l;
+    l << "Valid -ORB<options> are:\n";
+    for (CORBA::ULong i = 0; i < usage->length(); i++)
+      l << "  " << usage[i] << "\n";
+
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    return;
+  }
+};
+
+static helpHandler helpHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class idHandler : public orbOptions::Handler {
+public:
+
+  idHandler() : 
+    orbOptions::Handler("id",
+			"id = " ORB_ID_STRING,
+			1,
+			"-ORBid "ORB_ID_STRING" (standard option)") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    if (!isValidId(value)) {
+      throw orbOptions::BadParam(key(),value,"id is not "ORB_ID_STRING);
+    }
+    if( strcmp(value, myOrbId()) ) {
+      if( omniORB::trace(1) ) {
+	omniORB::logger l;
+	l << "WARNING -- using ORBid " << value
+	  << " (should be " << ORB_ID_STRING << ")." << "\n";
+      }
+    }
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVString(key(),ORB_ID_STRING,result);
+  }
+};
+
+static idHandler idHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class dumpConfigurationHandler : public orbOptions::Handler {
+public:
+
+  dumpConfigurationHandler() : 
+    orbOptions::Handler("dumpConfiguration",
+			"dumpConfiguration = 0 or 1",
+			1,
+			"-ORBdumpConfiguration < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::dumpConfiguration = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::dumpConfiguration,
+			     result);
+  }
+};
+
+static dumpConfigurationHandler dumpConfigurationHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class lcdModeHandler : public orbOptions::Handler {
+public:
+
+  lcdModeHandler() : 
+    orbOptions::Handler("lcdMode",
+			"lcdMode = 0 or 1",
+			1,
+			"-ORBlcdMode < 0 | 1 >") {}
+
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    CORBA::Boolean v;
+    if (!orbOptions::getBoolean(value,v)) {
+      throw orbOptions::BadParam(key(),value,
+				 orbOptions::expect_boolean_msg);
+    }
+    orbParameters::lcdMode = v;
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    orbOptions::addKVBoolean(key(),orbParameters::lcdMode,
+			     result);
+  }
+};
+
+static lcdModeHandler lcdModeHandler_;
+
+
+/////////////////////////////////////////////////////////////////////////////
+class poa_iiop_portHandler : public orbOptions::Handler {
+public:
+
+#define POA_IIOP_IS_OBSOLUTE "is now obsolute, use -ORBendpoint instead"
+
+  poa_iiop_portHandler() : 
+    orbOptions::Handler("poa_iiop_port",0,1,0) {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+
+    throw orbOptions::BadParam(key(),value,
+			       "poa_iiop_port"POA_IIOP_IS_OBSOLUTE);
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    return;
+  }
+};
+
+static poa_iiop_portHandler poa_iiop_portHandler_;
+
+/////////////////////////////////////////////////////////////////////////////
+class poa_iiop_name_portHandler : public orbOptions::Handler {
+public:
+
+  poa_iiop_name_portHandler() : 
+    orbOptions::Handler("poa_iiop_name_port",0,1,0) {}
+
+  void visit(const char* value) throw (orbOptions::BadParam) {
+    throw orbOptions::BadParam(key(),value,
+			       "poa_iiop_name_port"POA_IIOP_IS_OBSOLUTE);
+  }
+
+  void dump(orbOptions::sequenceString& result) {
+    return;
+  }
+};
+
+static poa_iiop_name_portHandler poa_iiop_name_portHandler_;
+
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
 /////////////////////////////////////////////////////////////////////////////
 
 class omni_corbaOrb_initialiser : public omniInitialiser {
 public:
+
+  omni_corbaOrb_initialiser() {
+    orbOptions::singleton().registerHandler(helpHandler_);
+    orbOptions::singleton().registerHandler(idHandler_);
+    orbOptions::singleton().registerHandler(dumpConfigurationHandler_);
+    orbOptions::singleton().registerHandler(lcdModeHandler_);
+    orbOptions::singleton().registerHandler(poa_iiop_portHandler_);
+    orbOptions::singleton().registerHandler(poa_iiop_name_portHandler_);
+  }
+
 
   void attach() {
 
@@ -2067,7 +1429,7 @@ public:
       }
 
 #endif
-    orbAsyncInvoker = new ORBAsyncInvoker(omniORB::maxServerThreadPoolSize);
+    orbAsyncInvoker = new ORBAsyncInvoker(orbParameters::maxServerThreadPoolSize);
   }
 
   void detach() {
