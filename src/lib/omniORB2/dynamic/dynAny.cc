@@ -29,6 +29,9 @@
 
 /* 
    $Log$
+   Revision 1.7  1999/06/18 21:01:11  sll
+   Use TypeCode equivalent() instead of equal().
+
    Revision 1.6  1999/05/25 18:05:00  sll
    Added check for invalid arguments using magic numbers.
 
@@ -308,7 +311,7 @@ void
 DynAnyImplBase::from_any(const CORBA::Any& value)
 {
   CORBA::TypeCode_var value_tc = value.type();
-  if( !value_tc->equal(tc()) )  throw CORBA::DynAny::Invalid();
+  if( !value_tc->equivalent(tc()) )  throw CORBA::DynAny::Invalid();
 
   MemBufferedStream& buf = ((AnyP*)value.NP_pd())->getMemBufferedStream();
   buf.rewind_in_mkr();
@@ -412,7 +415,7 @@ DynAnyImpl::assign(CORBA::DynAny_ptr da)
   if( CORBA::is_nil(da) )  throw CORBA::DynAny::Invalid();
 
   DynAnyImplBase* daib = ToDynAnyImplBase(da);
-  if( !tc()->equal(daib->tc()) )  throw CORBA::DynAny::Invalid();
+  if( !tc()->equivalent(daib->tc()) )  throw CORBA::DynAny::Invalid();
   DynAnyImpl* dai = ToDynAnyImpl(daib);
 
   Lock sync(this);
@@ -952,7 +955,7 @@ DynAnyConstrBase::assign(CORBA::DynAny_ptr da)
   if( CORBA::is_nil(da) )  throw CORBA::DynAny::Invalid();
 
   DynAnyImplBase* daib = ToDynAnyImplBase(da);
-  if( !tc()->equal(daib->tc()) )  throw CORBA::DynAny::Invalid();
+  if( !tc()->equivalent(daib->tc()) )  throw CORBA::DynAny::Invalid();
 
   // We do the copy via an intermediate buffer.
 
@@ -1508,7 +1511,7 @@ int
 DynAnyConstrBase::component_from_any(unsigned i, const CORBA::Any& a)
 {
   CORBA::TypeCode_var tc = a.type();
-  if( !tc->equal(nthComponentTC(i)) )  return 0;
+  if( !tc->equivalent(nthComponentTC(i)) )  return 0;
 
   if( canAppendComponent(i) ) {
     tcParser* tcp = ((AnyP*)a.NP_pd())->getTC_parser();
@@ -1697,7 +1700,7 @@ DynUnionImpl::assign(CORBA::DynAny_ptr da)
   if( CORBA::is_nil(da) )  throw CORBA::DynAny::Invalid();
 
   DynAnyImplBase* daib = ToDynAnyImplBase(da);
-  if( !tc()->equal(daib->tc()) )  throw CORBA::DynAny::Invalid();
+  if( !tc()->equivalent(daib->tc()) )  throw CORBA::DynAny::Invalid();
 
   // We do the copy via an intermediate buffer.
 
@@ -2308,7 +2311,7 @@ DynUnionDisc::assign(CORBA::DynAny_ptr da)
   if( CORBA::is_nil(da) )  throw CORBA::DynAny::Invalid();
 
   DynAnyImplBase* daib = ToDynAnyImplBase(da);
-  if( !tc()->equal(daib->tc()) )  throw CORBA::DynAny::Invalid();
+  if( !tc()->equivalent(daib->tc()) )  throw CORBA::DynAny::Invalid();
   DynAnyImpl* dai = ToDynAnyImpl(daib);
 
   Lock sync(this);
