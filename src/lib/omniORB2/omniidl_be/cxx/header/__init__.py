@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/11/12 17:18:39  djs
+# Lots of header generation bugfixes
+#
 # Revision 1.3  1999/11/04 19:05:08  djs
 # Finished moving code from tmp_omniidl. Regression tests ok.
 #
@@ -145,7 +148,10 @@ def monolithic(stream, tree):
 def run(tree):
     # create somewhere to put the output
     # stdout will do, since we are debugging
-    stream = util.Stream(sys.stdout, 2)
+    header_filename = config.basename() + config.hdrsuffix()
+    
+    stream = util.Stream(open(header_filename, "w"), 2)
+    #stream = util.Stream(sys.stdout, 2)
 
     # generate one big chunk of header
     monolithic(stream, tree)

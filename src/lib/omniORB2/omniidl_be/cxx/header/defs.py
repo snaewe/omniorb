@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/11/12 17:18:39  djs
+# Lots of header generation bugfixes
+#
 # Revision 1.6  1999/11/10 20:19:43  djs
 # Array struct element fix
 # Union sequence element fix
@@ -54,7 +57,7 @@
 
 from omniidl import idlast, idltype, idlutil
 
-from omniidl.be.cxx import tyutil, util, name
+from omniidl.be.cxx import tyutil, util, name, config
 
 import defs
 
@@ -592,7 +595,9 @@ typedef @base@ @derived@;""",
                 stream.out("""\
 typedef @base@ @name@;
 typedef @base@_var @name@_var;
-typedef @base@_out @name@_out;""",
+typedef @base@_out @name@_out;
+
+""",
                            base = basicReferencedTypeID,
                            name = derivedName)
             # Non-array of objrect reference
@@ -843,11 +848,6 @@ typedef @base@ @name@;""",
             dimsString = tyutil.dimsToString(d.sizes())
             taildims = tyutil.dimsToString(d.sizes()[1:])
             
-            #append = lambda x,y: x + y
-            #dimsString = reduce(append,
-            #                    map(lambda x: "["+repr(x)+"]", d.sizes()))
-            #taildims = reduce(append,
-            #                  map(lambda x: "["+repr(x)+"]", d.sizes()[1:]),"")
             typestring = basicReferencedTypeID
             if tyutil.isString(derefType) and \
                not(is_array):
@@ -1208,41 +1208,6 @@ def visitUnion(node):
 
         return tyutil.valueString(switchType, discrimvalue, environment)
         
-        # CASE <integer_type>
-#        if (switchType.kind() == idltype.tk_short     or
-#            switchType.kind() == idltype.tk_ushort):
-#            return str(discrimvalue)
-#        elif (switchType.kind() == idltype.tk_long      or
-#              switchType.kind() == idltype.tk_longlong  or
-#              switchType.kind() == idltype.tk_ulong     or
-#              switchType.kind() == idltype.tk_ulonglong):
-#            # discrimvalue is of the form "\d+L"
-#            string = str(int(eval(str(discrimvalue))))
-#            return string
-#        # CASE <char_type>
-#        elif (switchType.kind() == idltype.tk_char    or
-#              switchType.kind() == idltype.tk_wchar):
-#            # HACK!
-#            if (repr(discrimvalue) != "'None'"):
-#                return "'" + discrimvalue + "'"
-#            return "'" + "\\000" + "'"
-#        # CASE <boolean_type>
-#        elif (switchType.kind() == idltype.tk_boolean):
-#            return str(discrimvalue)
-#        # CASE <enum_type>
-#        elif (switchType.kind() == idltype.tk_enum):
-#            discrimvalue = tyutil.name(discrimvalue.scopedName())
-#            target_scope = tyutil.scope(switchType.decl().scopedName())
-#            rel_scope = idlutil.pruneScope(target_scope, from_scope)
-#            return idlutil.ccolonName(rel_scope) + str(discrimvalue)
-#        # CASE <scoped_name>
-#        elif (switchType.kind() == idltype.tk_alias):
-#            switchType = tyutil.deref(switchType)
-#            return discrimValueToString(switchType, discrimvalue, from_scope)
-#        else:
-#            raise "discrimValueToString type="+repr(switchType)+ \
-#                  " val="+repr(discrimvalue)
-
     def allCaseValues(node = node):
         list = []
         for n in node.cases():
@@ -1484,6 +1449,8 @@ public:
         full_dims = decl_dims + dims
 
         is_array = full_dims != []
+        anonymous_array = decl_dims != []
+        alias_array = dims != []
         
         member = tyutil.mapID(decl.identifier())
         # the name of the member type (not flattened)
@@ -1496,14 +1463,50 @@ public:
             else:
                 discrimvalue = discrimValueToString(switchType,
                                                     l, environment)
+
+            type_str = type
+
+            type_predefined = anonymous_array and not(alias_array) or \
+                              not(is_array)
             
+            if tyutil.isString(derefType) and \
+               (anonymous_array and not(alias_array) or \
+                not(is_array)):
+                type_str = "CORBA::String_member"
+            if tyutil.isObjRef(derefType):
+                if alias_array:
+                    type_str = type_str
+                elif anonymous_array:
+                    type_str = tyutil.objRefTemplate(derefType, "Member",
+                                                     environment)
+                else:
+                    type_str = environment.principalID(derefType)
+            elif tyutil.isSequence(caseType):
+                type_str = tyutil.sequenceTemplate(caseType, environment)
+                #type_str = "_" + member + "_seq"
+
+            # only different when array is anonymous
+            const_type_str = type_str
+                
+            # anonymous arrays are handled slightly differently
+            if anonymous_array:
+                prefix = config.name_prefix()
+                stream.out("""\
+   typedef @type_str@ @prefix@_@name@@dims@;
+   typedef @type_str@ _@name@_slice;
+   """,
+                           prefix = prefix,
+                           type_str = type_str,
+                           name = member,
+                           dims = tyutil.dimsToString(decl.sizes()))
+                const_type_str = prefix + "_" + member
+                type_str = "_" + member
+             
             if is_array:
                 # arrays
                 # build the loop
                 loop = util.StringStream()
-                append = lambda x,y: x + y
-                dimsString = reduce(append, map(lambda x: "[_i"+repr(x)+"]",
-                                                (range(0,len(full_dims)))))
+                dimsString = tyutil.dimsToString(range(0, len(full_dims)), "_i")
                 index = 0
                 for size in full_dims:
                     loop.out("""\
@@ -1520,12 +1523,13 @@ public:
     }""")             
                 stream.out("""\
   const @type@_slice *@name@ () const { return pd_@name@; }
-  void @name@ (const @type@ _value) {
+  void @name@ (const @const_type@ _value) {
     pd__d = @discrimvalue@;
     pd__default = @isDefault@;
     @loop@
   }""",
-                           type = type,
+                           type = type_str,
+                           const_type = const_type_str,
                            name = member,
                            isDefault = str(c.isDefault),
                            discrimvalue = discrimvalue,
@@ -1540,7 +1544,7 @@ public:
     pd__default = @isDefault@;
     pd_@name@ = _value;
   }""",
-                           type = type,
+                           type = type_str,
                            name = member,
                            isDefault = str(c.isDefault),
                            discrimvalue = discrimvalue)
@@ -1572,7 +1576,7 @@ public:
                            isDefault = str(c.isDefault),
                            discrimvalue = discrimvalue)
             elif tyutil.isObjRef(derefType):
-                type = environment.principalID(derefType)
+                #type = environment.principalID(derefType)
                 objref = tyutil.objRefTemplate(derefType, "Member", environment)
                 stream.out("""\
   @type@_ptr @member@ () const { return pd_@member@._ptr; }
@@ -1593,7 +1597,7 @@ public:
     pd_@member@ = _value;
   }""",
                            member = member,
-                           type = type,
+                           type = type_str,
                            objref = objref,
                            isDefault = str(c.isDefault),
                            discrimvalue = discrimvalue)
@@ -1609,7 +1613,7 @@ public:
     pd__default = @isDefault@;
     pd_@name@ = _value;
   }""",
-                           type = type,
+                           type = type_str,
                            name = member,
                            isDefault = str(c.isDefault),
                            discrimvalue = discrimvalue)
@@ -1617,8 +1621,6 @@ public:
             elif isinstance(derefType, idltype.Sequence):
                 sequence_template  = tyutil.sequenceTemplate(derefType,
                                                              environment)
-                
-                c.memtype = "_"+member+"_seq"
                 stream.out("""\
   typedef @sequence_template@ _@member@_seq;
   const _@member@_seq& @member@ () const { return pd_@member@; }
@@ -1660,50 +1662,72 @@ private:
         # find the dereferenced type of the member if its an alias
         caseType = c.caseType()
         derefType = tyutil.deref(caseType)
+        is_variable = tyutil.isVariableType(derefType)
 
         case_dims = tyutil.typeDims(caseType)
-        is_array = case_dims != []
 
-        if hasattr(c,"memtype"):
-            type_str = c.memtype
-        elif tyutil.isString(derefType) and not(is_array):
-            type_str = "CORBA::String_member"
-        elif tyutil.isObjRef(derefType):
-            type_str = tyutil.objRefTemplate(derefType, "Member", environment)
-        else:
-            type_str = environment.principalID(caseType)
+        decl = c.declarator()
+        decl_dims = decl.sizes()
+
+        full_dims = case_dims + decl_dims
+        
+        is_array = full_dims != []
+        anonymous_array = decl_dims != []
+        alias_array = case_dims != []
 
         member_name = tyutil.mapID(c.declarator().identifier())
         # put fixed types inside the union and variable types
         # outside. FIXME: is this if correct?
-#            if (((isinstance(c.type_spec(), idltypes.Declared))and
-#                not(c.type_spec().kind() == idltypes.tk_alias))or
-#                (util.isVariableType(c.type_spec()))):
-            # floats and doubles are special cases
-        if tyutil.isFloating(derefType) and not(is_array):
+        type_str = environment.principalID(caseType)
+        if tyutil.isString(derefType) and \
+               (anonymous_array and not(alias_array) or \
+                not(is_array)):
+                type_str = "CORBA::String_member"
+        if tyutil.isObjRef(derefType):
+            if alias_array:
+                type_str = type_str
+            else:
+                type_str = tyutil.objRefTemplate(derefType, "Member",
+                                                 environment)
+        elif tyutil.isSequence(caseType) and anonymous_array:
+            # the typedef _name_seq is not defined in this case
+            type_str = tyutil.sequenceTemplate(caseType, environment)
+        elif tyutil.isSequence(caseType) and not(anonymous_array):
+            # sequence template typedef already exists
+            type_str = "_" + member_name + "_seq"
+
+        dims_str = tyutil.dimsToString(decl_dims)
+            
+        # floats in unions are special cases
+        if tyutil.isFloating(derefType) and not(alias_array):
             inside.out("""\
 #ifndef USING_PROXY_FLOAT
-  @type@ pd_@name@;
-#endif""", type = type_str, name = member_name)
+  @type@ pd_@name@@dims@;
+#endif""", type = type_str, name = member_name, dims = dims_str)
             outside.out("""\
 #ifdef USING_PROXY_FLOAT
-  @type@ pd_@name@;
-#endif""", type = type_str, name = member_name)
+  @type@ pd_@name@@dims@;
+#endif""", type = type_str, name = member_name, dims = dims_str)
             used_inside = used_outside = 1
         else:
-            if (isinstance(derefType, idltype.Declared) or  \
-                isinstance(derefType, idltype.Sequence) or  \
-                isinstance(derefType, idltype.String))  and \
-                not(tyutil.isEnum(derefType)):
-                this_stream = outside
-                used_outside = 1
-            else:
+            if is_array and tyutil.isStruct(derefType) and not(is_variable):
                 this_stream = inside
                 used_inside = 1
+            else:
+                if (isinstance(derefType, idltype.Declared) or  \
+                    isinstance(derefType, idltype.Sequence) or  \
+                    isinstance(derefType, idltype.String))  and \
+                    not(tyutil.isEnum(derefType)):
+                    this_stream = outside
+                    used_outside = 1
+                else:
+                    this_stream = inside
+                    used_inside = 1
             this_stream.out("""\
-    @type@ pd_@name@;""",
+    @type@ pd_@name@@dims@;""",
                             type = type_str,
-                            name = member_name)
+                            name = member_name,
+                            dims = dims_str)
   
     discrimtype = environment.principalID(switchType)
         
