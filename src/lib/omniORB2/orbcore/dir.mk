@@ -62,7 +62,11 @@ DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 
 lib = $(patsubst %,$(LibPattern),omniORB3)
 
-SUBDIRS = sharedlib gatekeepers
+ifdef BuildSharedLibrary
+SUBDIRS = sharedlib 
+endif
+
+SUBDIRS += gatekeepers
 
 endif
 
@@ -88,7 +92,7 @@ CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS)
 
 SUBDIRS += debug
 
-ifndef ETSKernel
+ifdef BuildSharedLibrary
 SUBDIRS +=sharedlib
 endif
 

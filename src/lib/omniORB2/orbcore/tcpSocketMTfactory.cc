@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.18  2000/08/17 15:37:52  sll
+  Merged RTEMS port.
+
   Revision 1.22.6.17  2000/08/10 10:10:56  sll
   For those platforms which cannot be unblocked from a recv() by a
   shutdown(), now do poll() or select() for both incoming and outgoing
@@ -327,6 +330,10 @@ extern "C" int gethostname(char *name, int namelen);
 #define send(a,b,c,d) tcpSocketVaxSend(a,b,c,d)
 #endif
 
+#ifdef __rtems__
+extern "C" 
+int select (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *tv);
+#endif
 
 #define PTRACE(prefix,message)  \
   omniORB::logs(15, "tcpSocketMTfactory " prefix ": " message)
