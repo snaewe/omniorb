@@ -16,7 +16,6 @@
 
 #include <io.h>
 #include <winbase.h>
-#include <winsock.h>
 
 #define stat(x,y) _stat(x,y)
 #define unlink(x) _unlink(x)
@@ -113,50 +112,19 @@ log::log(int& p) : port(p)
 
   // Get host name:
 
-    // Initialize WinSock:
-  
-    WORD versionReq;  
-    WSADATA wData; 
-    versionReq = MAKEWORD(1, 1);  // Nothing specific to releases > 1.1 used
- 
-    int rc = WSAStartup(versionReq, &wData); 
- 
-    if (rc != 0) 
-      {
-	// Couldn't find a usable DLL.
-	cerr << ts.t() << "Error: Couldn't load WinSock DLL." << endl;	
-      }
- 
-    // Confirm that the returned Windows Sockets DLL supports 1.1
- 
-    if ( LOBYTE( wData.wVersion ) != 1 || 
-	 HIBYTE( wData.wVersion ) != 1 ) 
-      { 
-	// Couldn't find a usable DLL
-	WSACleanup(); 
-       	cerr << ts.t() << "Error: Couldn't find a usable WinSock DLL." << endl;	
-      }
-
-  char self[64];
-  if (gethostname(&self[0],64) == SOCKET_ERROR) {
+  DWORD machineName_len = MAX_COMPUTERNAME_LENGTH+1;
+  char* machineName = new char[machineName_len];
+  if (!GetComputerName((LPTSTR) machineName, &machineName_len)) {
     cerr << ts.t() << "Error: cannot get the name of this host." << endl;
-    /*    cerr << "Error: ";
-
-    switch(WSAGetLastError())
-      {
-      case WSAEFAULT:
-	cerr << "WSAEFAULT" << endl;
-	break;
-      default:
-	;
-	}
-     */
+	
     exit(1);
   }
 
   char* logname = new char[strlen(logdir) + strlen("\\omninames-")
-			   + 64 + 1];
-  sprintf(logname, "%s\\omninames-%s", logdir, self);
+			   + strlen(machineName) + 1];
+  sprintf(logname, "%s\\omninames-%s", logdir, machineName);
+  
+  delete[] machineName;
 #endif
 
   active = new char[strlen(logname)+strlen(".log")+1];
