@@ -28,11 +28,12 @@
 
 /*
  $Log$
- Revision 1.4  2000/08/18 14:09:13  dpg1
- Merge from omni3_develop for 3.0.1 release.
+ Revision 1.5  2000/10/02 17:21:26  dpg1
+ Merge for 3.0.2 release
 
- Revision 1.3  2000/07/13 15:25:57  dpg1
- Merge from omni3_develop for 3.0 release.
+ Revision 1.1.2.10  2000/08/22 14:57:46  sll
+ In omniObjAdaptor::initialise, throw CORBA::INITIALIZE instead of allowing
+ omniConnectionBroken to leak out of the ORB APIs.
 
  Revision 1.1.2.9  2000/08/08 15:01:44  dpg1
  -ORBpoa_iiop_port no longer overrides OMNIORB_USEHOSTNAME.
@@ -181,7 +182,7 @@ omniObjAdapter::initialise()
       omniInitialReferences::initialise_bootstrap_agentImpl();
   }
   catch (...) {
-    throw;//?? hmm - this is probably quite bad.
+    OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
   }
 
   initialised = 1;

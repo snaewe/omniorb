@@ -28,8 +28,14 @@
 
 /*
   $Log$
-  Revision 1.3  2000/07/13 15:26:05  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.4  2000/10/02 17:21:28  dpg1
+  Merge for 3.0.2 release
+
+  Revision 1.1.2.4  2000/09/04 09:09:43  dpg1
+  Remove #include <iostream.h> accidentally left over from debugging.
+
+  Revision 1.1.2.3  2000/08/30 10:14:39  dpg1
+  BOA constructor with object key failed to set the key in the servant.
 
   Revision 1.1.2.2  2000/03/03 14:29:16  djr
   Improvement to BOA skeletons (less generated code).
@@ -41,7 +47,6 @@
 
 #ifndef __OMNIORB_BOA_H__
 #define __OMNIORB_BOA_H__
-
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////// omniOrbBoaServant /////////////////////////
@@ -77,7 +82,7 @@ private:
   virtual omniObjRef* _do_get_interface();
   // Overrides omniServant.
 
-
+protected:
   omniOrbBoaKey pd_key;
   // This is used only for construction/initialisation.
   // When the object is activated, the key in the id is

@@ -28,12 +28,13 @@
 //	*** PROPRIETARY INTERFACE ***
 //
 
-#include <iostream.h>
-
 // $Id$
 // $Log$
-// Revision 1.3  2000/07/13 15:26:05  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.4  2000/10/02 17:21:28  dpg1
+// Merge for 3.0.2 release
+//
+// Revision 1.1.2.2  2000/09/04 09:09:43  dpg1
+// Remove #include <iostream.h> accidentally left over from debugging.
 //
 // Revision 1.1.2.1  2000/04/27 10:37:12  dpg1
 // Interoperable Naming Service

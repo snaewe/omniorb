@@ -29,8 +29,11 @@
 
 /*
   $Log$
-  Revision 1.3  2000/07/13 15:25:56  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.4  2000/10/02 17:21:26  dpg1
+  Merge for 3.0.2 release
+
+  Revision 1.1.2.8  2000/09/19 09:12:58  dpg1
+  Cast to wrong type in _ptrToObjRef()
 
   Revision 1.1.2.7  2000/06/22 10:40:17  dpg1
   exception.h renamed to exceptiondefs.h to avoid name clash on some
@@ -294,7 +297,7 @@ omniOrbPOAManager::_ptrToObjRef(const char* repoId)
   if( !strcmp(repoId, CORBA::Object::_PD_repoId) )
     return (CORBA::Object_ptr) this;
   if( !strcmp(repoId, PortableServer::POAManager::_PD_repoId) )
-    return (PortableServer::POA_ptr) this;
+    return (PortableServer::POAManager_ptr) this;
 
   return 0;
 }

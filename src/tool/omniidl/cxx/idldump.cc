@@ -28,11 +28,11 @@
 
 // $Id$
 // $Log$
-// Revision 1.13  2000/08/18 14:09:07  dpg1
-// Merge from omni3_develop for 3.0.1 release.
+// Revision 1.14  2000/10/02 17:21:25  dpg1
+// Merge for 3.0.2 release
 //
-// Revision 1.12  2000/07/13 15:25:53  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.9.2.2  2000/08/29 10:20:26  dpg1
+// Operations and attributes now have repository ids.
 //
 // Revision 1.9.2.1  2000/08/14 14:35:13  dpg1
 // IDL dumping now properly escapes string and char constants
@@ -245,8 +245,6 @@ visitDeclarator(Declarator* d)
   printf("%s", d->identifier());
   for (ArraySize* s = d->sizes(); s; s = s->next())
     printf("[%d]", s->size());
-  if (d->alias())
-    printf(" /* RepoId = %s */", d->repoId());
 }
 
 void

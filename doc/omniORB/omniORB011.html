@@ -29,9 +29,9 @@ A toy example use of the DII can be found in the omniORB distribution
 in the <TT>src/examples/dii</TT> directory. The DII makes extensive use
 of the type Any, so ensure that you have read chapter&nbsp;<A HREF="omniORB009.html#ch_any">9</A>.
 For more information refer to the Dynamic Invocation Interface and C++
-Mapping sections of the CORBA specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99a</CITE></A>].<BR>
+Mapping sections of the CORBA specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>].<BR>
 <BR>
-<A NAME="toc59"></A>
+<A NAME="toc60"></A>
 <H2>11.1&nbsp;&nbsp; Overview</H2>To invoke an operation on a CORBA object an application needs an
 object reference, the name of the operation and a list of the
 parameters. In addition the application must know whether the
@@ -49,7 +49,7 @@ above and call one of the methods to actually make the invocation. If
 the invocation causes an exception to be thrown then this may be
 retrieved and inspected, or the return value on success.<BR>
 <BR>
-<A NAME="toc60"></A>
+<A NAME="toc61"></A>
 <H2>11.2&nbsp;&nbsp; Pseudo Objects</H2>The DII defines a number of psuedo-object types, all defined in the
 <TT>CORBA</TT> namespace. These objects behave in many ways like CORBA
 objects. They should only be accessed by reference (through
@@ -60,7 +60,7 @@ represented by <TT>foo::_nil()</TT>.<BR>
 These pseudo objects, although defined in pseudo-IDL in the
 specification do not follow the normal mapping for CORBA objects. In
 particular the memory management rules are different---see the CORBA
-2.3 specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99a</CITE></A>] for more details. New instances
+2.3 specification&nbsp;[<A HREF="omniORB014.html#corba23-spec"><CITE>OMG99</CITE></A>] for more details. New instances
 of these objects may only be created by the ORB. A number of methods
 are defined in <TT>CORBA::ORB</TT> to do this.<BR>
 <BR>
@@ -236,7 +236,7 @@ class Environment {
   static Environment_ptr _duplicate(Environment_ptr);
   static Environment_ptr _nil();
 };
-</PRE><A NAME="toc61"></A>
+</PRE><A NAME="toc62"></A>
 <H2>11.3&nbsp;&nbsp; Creating Requests</H2><TT>CORBA::Object</TT> defines three methods which may be used to create
 a <TT>Request</TT> object which may be used to perform a single
 operation invocation on that object:<BR>
@@ -317,7 +317,7 @@ CORBA::Request_var req = obj-&gt;_create_request(CORBA::Context::_nil(),
 CORBA::Request_var req = obj-&gt;_request("anOpn");
 req-&gt;add_in_arg() &lt;&lt;= (const char*) "Hello World!";
 req-&gt;set_return_type(CORBA::_tc_short);
-</PRE><A NAME="toc62"></A>
+</PRE><A NAME="toc63"></A>
 <H2>11.4&nbsp;&nbsp; Invoking Operations</H2>
 <A NAME="dii_invoke"></A>Once the <TT>Request</TT> object has been properly constructed, the
 operation may be invoked by calling one of the following methods on
@@ -390,7 +390,7 @@ method to give the request an opportunity to raise the exception. This
 could be one of the methods to retrieve values from the request, or
 <TT>get_response()</TT>.<BR>
 <BR>
-<A NAME="toc63"></A>
+<A NAME="toc64"></A>
 <H2>11.5&nbsp;&nbsp; Multiple Requests</H2>The following methods are provided by the ORB to enable multiple requests to
 be invoked asynchronously.<BR>
 <BR>

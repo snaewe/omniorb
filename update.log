@@ -1,3 +1,406 @@
+Mon Oct  2 17:30:13 BST 2000 dpg1
+=================================
+
+- Updates for 3.0.2 release
+
+bugfixes-301.xml   -- new
+bugfixes.xml
+bugfixes.xsl
+doc/tex/cover.tex
+external_merge/PORTING
+external_merge/README.FIRST
+external_merge/README.SunC++5
+external_merge/README.hpux11
+external_merge/README.unix
+external_merge/README.win32
+external_merge/ReleaseNote_omniORB_301   -- deleted
+external_merge/ReleaseNote_omniORB_302   -- new
+external_merge/THIS_IS_omniORB_3_0_1     -- deleted
+external_merge/THIS_IS_omniORB_3_0_2     -- new
+external_merge/mk/rtems.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+
+- Fix dodgy line in OSF makefile
+
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+
+
+Fri Sep 29 15:44:42 BST 2000 sll
+================================
+
+- Added new platform file for Redhat 7.0 (gcc-2.96)
+
+mk/platforms/i586_linux_2.0_glibc2.1_gcc2.96.mk      NEW
+
+ 
+Mon Sep 25 11:52:16 BST 2000 dpg1
+=================================
+
+- Remove use of _T as a template class name
+
+include/omniORB3/CORBA_sysdep.h
+include/omniORB3/poa.h
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
+Fri Sep 22 11:45:38 BST 2000 dpg1
+=================================
+
+- Digital Unix uses strtoul, not strtoull
+
+src/tool/omniidl/cxx/idlutil.cc
+
+
+Thu Sep 21 15:13:09 BST 2000 sll
+================================
+
+- Added workaround to the unwind exception bug in Sun C++ 5.0 or the later
+  Forte WS C++ 6.0. It seems to work, at least it has no side effect if it
+  doesn't.
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
+Thu Sep 21 12:06:06 BST 2000 dpg1
+=================================
+
+- Add a user check to RefCountServantBase::_add_ref() which complains
+  if it is called when the reference count is zero.
+
+src/lib/omniORB2/orbcore/portableserver.cc
+
+
+Thu Sep 21 09:46:16 BST 2000 djs
+================================
+
+- C++ backend "unsupported IDL" error message now more completely lists 
+  the constructs it rejects.
+
+src/lib/omniORB2/omniidl_be/cxx/support.py
+
+
+Tue Sep 19 14:50:05 BST 2000 djs
+================================
+
+- C++ backend reversed order of #includes in the IDL.
+  Now it will output #includes in the order that it finds declarations in
+  the AST (basically a dfs, skipping files with no declarations at all)
+
+src/lib/omniORB2/omniidl_be/cxx/config.py
+
+
+Tue Sep 19 12:24:15 BST 2000 dpg1
+=================================
+
+- Minor documentation updates: new INS spec, omniidl -T,
+  OMNIORB_PRINCIPAL.
+
+doc/tex/omniORB.bib
+doc/tex/omniORB.tex
+doc/tex/omniidl.tex
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniidl.html
+external_merge/doc/omniidl.pdf
+external_merge/doc/omniidl.ps
+external_merge/doc/omniORB/index.html
+external_merge/doc/omniORB/omniORB001.html
+external_merge/doc/omniORB/omniORB002.html
+external_merge/doc/omniORB/omniORB003.html
+external_merge/doc/omniORB/omniORB004.html
+external_merge/doc/omniORB/omniORB005.html
+external_merge/doc/omniORB/omniORB006.html
+external_merge/doc/omniORB/omniORB007.html
+external_merge/doc/omniORB/omniORB008.html
+external_merge/doc/omniORB/omniORB009.html
+external_merge/doc/omniORB/omniORB010.html
+external_merge/doc/omniORB/omniORB011.html
+external_merge/doc/omniORB/omniORB012.html
+external_merge/doc/omniORB/omniORB014.html
+
+
+Tue Sep 19 10:08:31 BST 2000 dpg1
+=================================
+
+- String_var, _member, _element operator= now check for
+  self-assignment.
+
+include/omniORB3/stringtypes.h
+
+- Explicit public declarations for inheritance from omniNilDynAny.
+
+src/lib/omniORB2/dynamic/dynAnyNil.cc
+
+- Standard C++ does not permit type definitions in anonymous unions
+
+src/lib/omniORB2/dynamic/typecode.h
+
+- Cast to wrong type in _ptrToObjRef()
+
+src/lib/omniORB2/orbcore/poamanager.cc
+
+- Dodgy-looking line in rules for Digital Unix
+
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+
+- Scope::Entry::Kind renamed to Scope::Entry::EntryKind to avoid
+  problems with over-keen compilers
+
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/idlscope.h
+
+
+Wed Sep 13 14:55:26 BST 2000 djr
+================================
+
+- Gotten rid of message that gives repo id in ~omniServant.  It
+  will always be blank 'cos the object is being destroyed.
+
+src/lib/omniORB2/orbcore/omniServant.cc
+
+
+Wed Sep 13 12:37:42 BST 2000 dpg1
+=================================
+
+- Minor cut-and-paste error in URI handling meant that ior: was not
+  accepted as a URI format.
+
+src/lib/omniORB2/orbcore/uri.cc
+
+
+Wed Sep 13 10:09:43 BST 2000 djs
+================================
+
+- omniIDL/C++ backend bug setting the active discriminator value on unions
+  with implicit default cases
+  -- bug number 10
+
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
+
+
+Mon Sep 11 15:12:38 BST 2000 dpg1
+=================================
+
+- Fix name tags in bugfixes stylesheet
+
+bugfixes.xsl
+
+- DuplicateRoleName exception missing from
+  RelationshipFactory::create() as downloaded from omg.org
+
+idl/COS/CosRelationships.idl
+
+- New -T flag to omniidl, to use a temporary file instead of a pipe
+  between omnicpp and omniidl. This works-around the bug seen of some
+  Win98 machines.
+
+src/tool/omniidl/python/omniidl/main.py
+
+
+Thu Sep  7 17:20:37 BST 2000 dpg1
+=================================
+
+- Yesterday's Python 1.6+ update broke on Windows.
+
+src/tool/omniidl/cxx/dir.mk
+
+
+Wed Sep  6 12:13:30 BST 2000 dpg1
+=================================
+
+- New note about the Python 1.6 license
+
+external_merge/README.Python  -- new
+
+- Minor changes to support Python versions above 1.5.2
+
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/python/omniidl/main.py
+src/tool/omniidl/python/scripts/omniidlrun.py
+
+
+Mon Sep  4 10:02:41 BST 2000 dpg1
+=================================
+
+- Remove accidental #includes of iostream.h left over from debugging
+
+include/omniORB3/boa.h
+include/omniORB3/omniURI.h
+src/lib/omniORB2/orbcore/initRefs.cc
+
+
+Wed Aug 30 19:10:01 BST 2000 dpg1
+=================================
+
+- Register operation declarations so they can be found with
+  findDecl().
+
+src/tool/omniidl/cxx/idlpython.cc
+
+
+Wed Aug 30 16:12:53 BST 2000 dpg1
+=================================
+
+- New environment variable OMNIORB_PRINCIPAL which allows you to set
+  the IIOP principal field. This can be used to talk to Gnome's ORBit.
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
+Wed Aug 30 15:48:38 BST 2000 sll
+================================
+
+- Fixed a bug in the unmarshal code of a typecode of kind tk_objref.
+  The resulting typecode has its field pd_complete left as 0 which
+  should actually be 1. This normally isn't a problem unless the
+  typecode is a member of a sequence (or other complex structure) typecode and
+  is used in an environment with typecode alias expansion
+  (omniORB::tcAliasExpand) set to true.
+
+src/lib/omniORB2/dynamic/typecode.cc
+
+
+Wed Aug 30 10:43:34 BST 2000 dpg1
+=================================
+
+- BOA constructor with object key failed to set the key in the
+  servant.
+
+include/omniORB3/boa.h
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+
+Tue Aug 29 16:20:39 BST 2000 dpg1
+=================================
+
+- Document last two omniidl changes
+
+doc/tex/omniidl.tex
+external_merge/doc/omniidl.html
+external_merge/doc/omniidl.pdf
+external_merge/doc/omniidl.ps
+
+
+Tue Aug 29 16:17:38 BST 2000 dpg1
+=================================
+
+- New relativeScope() function.
+- New -i flag to enter interactive loop after parsing
+
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlscope.cc
+src/tool/omniidl/cxx/idlscope.h
+src/tool/omniidl/python/omniidl/idlutil.py
+src/tool/omniidl/python/omniidl/main.py
+
+
+Tue Aug 29 11:17:26 BST 2000 dpg1
+=================================
+
+- In omniidl, operations and attributes now have repository ids.
+
+src/tool/omniidl/cxx/idlast.cc
+src/tool/omniidl/cxx/idlast.h
+src/tool/omniidl/cxx/idldump.cc
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+src/tool/omniidl/cxx/lex.yy.cc
+src/tool/omniidl/cxx/y.tab.cc
+src/tool/omniidl/python/omniidl/idlast.py
+
+
+Fri Aug 25 14:25:20 BST 2000 dpg1
+=================================
+
+- Multiple comments preceding a declaration are now properly attached
+  on all platforms
+
+src/tool/omniidl/cxx/idlast.cc
+
+
+Thu Aug 24 12:26:28 BST 2000 dpg1
+=================================
+
+- Typo in error message % format string
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
+Wed Aug 23 18:26:48 BST 2000 dme
+================================
+
+- Don't build debug DLLs on Win32 if BuildSharedLibrary is unset
+
+external_merge/mk/mklib.mk
+
+
+Wed Aug 23 16:44:36 BST 2000 djs
+================================
+
+- MSVC5/6 bug workaround when marshalling a multidimensional array
+  of basic things (only as a return type, not as an out type)
+  -- bug number 4
+
+src/lib/omniORB2/omniidl_be/cxx/skutil.py
+
+
+Tue Aug 22 15:53:40 BST 2000 sll
+================================
+
+- If -ORBpoa_iiop_port specified a port which is already in use, throws
+  CORBA::INITIALIZE out of the ORB APIs rather than the internal omniORB
+  exception omniConnectionBroken.
+
+src/lib/omniORB2/orbcore/objectAdapter.cc
+bugfixes.xml
+
+Tue Aug 22 10:59:21 BST 2000 dpg1
+=================================
+
+- Make rules to build the shared omniDynamic library were missing for
+  Solaris GCC.
+
+src/lib/omniORB2/dynamic/sharedlib/dir.mk
+
+
+Mon Aug 21 10:26:45 BST 2000 dpg1
+=================================
+
+- <buglist> tag escaped into output html file.
+
+bugfixes.xsl
+
+
+Mon Aug 21 10:11:51 BST 2000 dpg1
+=================================
+
+- Typo in omniidl -- bug number 1.
+
+src/tool/omniidl/python/omniidl/idltype.py
+
+
+Mon Aug 21 09:51:23 BST 2000 sll
+================================
+
+- Put back linker flags to record ld load path in executable
+
+mk/platforms/i586_linux_2.0_glibc2.1.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/sun4_sosV_5.6.mk
+mk/platforms/sun4_sosV_5.7.mk
+
+
+Fri Aug 18 17:33:17 BST 2000 sll
+================================
+
+- update version no. to 3.0.1
+
+bugfixes.xsl
+
+
 Fri Aug 18 14:19:01 BST 2000 sll
 ================================
 

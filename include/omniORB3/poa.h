@@ -28,8 +28,11 @@
 
 /*
   $Log$
-  Revision 1.3  2000/07/13 15:26:04  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.4  2000/10/02 17:21:28  dpg1
+  Merge for 3.0.2 release
+
+  Revision 1.1.2.8  2000/09/25 11:03:28  dpg1
+  Remove use of _T as a template class name
 
   Revision 1.1.2.7  2000/06/27 16:15:08  sll
   New classes: _CORBA_String_element, _CORBA_ObjRef_Element,
@@ -202,28 +205,28 @@ _CORBA_MODULE_BEG
 
   class ObjectId_var {
   public:
-    typedef ObjectId _T;
-    typedef ObjectId_var _T_var;
+    typedef ObjectId T;
+    typedef ObjectId_var T_var;
 
     inline ObjectId_var() : pd_seq(0) {}
-    inline ObjectId_var(_T* s) : pd_seq(s) {}
-    inline ObjectId_var(const _T_var& sv) {
+    inline ObjectId_var(T* s) : pd_seq(s) {}
+    inline ObjectId_var(const T_var& sv) {
       if( sv.pd_seq ) {
-        pd_seq = new _T;
+        pd_seq = new T;
         *pd_seq = *sv.pd_seq;
       } else
         pd_seq = 0;
     }
     inline ~ObjectId_var() { if( pd_seq ) delete pd_seq; }
 
-    inline _T_var& operator = (_T* s) {
+    inline T_var& operator = (T* s) {
       if( pd_seq )  delete pd_seq;
       pd_seq = s;
       return *this;
     }
-    inline _T_var& operator = (const _T_var& sv) {
+    inline T_var& operator = (const T_var& sv) {
       if( sv.pd_seq ) {
-        if( !pd_seq )  pd_seq = new _T;
+        if( !pd_seq )  pd_seq = new T;
         *pd_seq = *sv.pd_seq;
       } else if( pd_seq ) {
         delete pd_seq;
@@ -233,45 +236,45 @@ _CORBA_MODULE_BEG
     }
 
     inline CORBA::Octet& operator [] (_CORBA_ULong i) {   return (*pd_seq)[i]; }
-    inline _T* operator -> () { return pd_seq; }
+    inline T* operator -> () { return pd_seq; }
 #if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-    inline operator _T& () const { return *pd_seq; }
+    inline operator T& () const { return *pd_seq; }
 #else
-    inline operator const _T& () const { return *pd_seq; }
-    inline operator _T& () { return *pd_seq; }
+    inline operator const T& () const { return *pd_seq; }
+    inline operator T& () { return *pd_seq; }
 #endif
 
-    inline const _T& in() const { return *pd_seq; }
-    inline _T& inout() { return *pd_seq; }
-    inline _T*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }
-    inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; return tmp; }
+    inline const T& in() const { return *pd_seq; }
+    inline T& inout() { return *pd_seq; }
+    inline T*& out() { if (pd_seq) { delete pd_seq; pd_seq = 0; } return pd_seq; }
+    inline T* _retn() { T* tmp = pd_seq; pd_seq = 0; return tmp; }
 
     friend class ObjectId_out;
 
   private:
-    _T* pd_seq;
+    T* pd_seq;
   };
 
   class ObjectId_out {
   public:
-    typedef ObjectId _T;
-    typedef ObjectId_var _T_var;
+    typedef ObjectId T;
+    typedef ObjectId_var T_var;
 
-    inline ObjectId_out(_T*& s) : _data(s) { _data = 0; }
-    inline ObjectId_out(_T_var& sv)
-      : _data(sv.pd_seq) { sv = (_T*) 0; }
+    inline ObjectId_out(T*& s) : _data(s) { _data = 0; }
+    inline ObjectId_out(T_var& sv)
+      : _data(sv.pd_seq) { sv = (T*) 0; }
     inline ObjectId_out(const ObjectId_out& s) : _data(s._data) { }
     inline ObjectId_out& operator=(const ObjectId_out& s) { _data = s._data; return *this; }
-    inline ObjectId_out& operator=(_T* s) { _data = s; return *this; }
-    inline operator _T*&() { return _data; }
-    inline _T*& ptr() { return _data; }
-    inline _T* operator->() { return _data; }
+    inline ObjectId_out& operator=(T* s) { _data = s; return *this; }
+    inline operator T*&() { return _data; }
+    inline T*& ptr() { return _data; }
+    inline T* operator->() { return _data; }
     inline CORBA::Octet& operator [] (_CORBA_ULong i) {   return (*_data)[i]; }
-    _T*& _data;
+    T*& _data;
 
   private:
     ObjectId_out();
-    ObjectId_out operator=( const _T_var&);
+    ObjectId_out operator=( const T_var&);
   };
 
   //////////////////////////////////////////////////////////////////////

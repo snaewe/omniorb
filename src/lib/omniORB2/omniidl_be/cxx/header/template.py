@@ -28,11 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.7  2000/08/18 14:09:14  dpg1
-# Merge from omni3_develop for 3.0.1 release.
+# Revision 1.8  2000/10/02 17:21:26  dpg1
+# Merge for 3.0.2 release
 #
-# Revision 1.6  2000/07/13 15:26:00  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.3.2.17  2000/09/25 11:03:28  dpg1
+# Remove use of _T as a template class name
 #
 # Revision 1.3.2.16  2000/08/10 10:38:23  sll
 # Support new pragma hh in the cxx omniidl backend.  Added CPP macro guards
@@ -1175,32 +1175,32 @@ inline void operator <<= (@name@& _e, MemBufferedStream& s) {
 ## tie template
 ##
 tie_template = """\
-template <class _T>
+template <class _omniT>
 class @tie_name@ : public virtual @inherits@
 {
 public:
-  @tie_name@(_T& t)
+  @tie_name@(_omniT& t)
     : pd_obj(&t), pd_poa(0), pd_rel(0) {}
-  @tie_name@(_T& t, PortableServer::POA_ptr p)
+  @tie_name@(_omniT& t, PortableServer::POA_ptr p)
     : pd_obj(&t), pd_poa(p), pd_rel(0) {}
-  @tie_name@(_T* t, CORBA::Boolean r=1)
+  @tie_name@(_omniT* t, CORBA::Boolean r=1)
     : pd_obj(t), pd_poa(0), pd_rel(r) {}
-  @tie_name@(_T* t, PortableServer::POA_ptr p,CORBA::Boolean r=1)
+  @tie_name@(_omniT* t, PortableServer::POA_ptr p,CORBA::Boolean r=1)
     : pd_obj(t), pd_poa(p), pd_rel(r) {}
   ~@tie_name@() {
     if( pd_poa )  CORBA::release(pd_poa);
     if( pd_rel )  delete pd_obj;
   }
 
-  _T* _tied_object() { return pd_obj; }
+  _omniT* _tied_object() { return pd_obj; }
 
-  void _tied_object(_T& t) {
+  void _tied_object(_omniT& t) {
     if( pd_rel )  delete pd_obj;
     pd_obj = &t;
     pd_rel = 0;
   }
 
-  void _tied_object(_T* t, CORBA::Boolean r=1) {
+  void _tied_object(_omniT* t, CORBA::Boolean r=1) {
     if( pd_rel )  delete pd_obj;
     pd_obj = t;
     pd_rel = r;
@@ -1217,20 +1217,20 @@ public:
   @callables@
 
 private:
-  _T*                      pd_obj;
+  _omniT*                      pd_obj;
   PortableServer::POA_ptr pd_poa;
   CORBA::Boolean          pd_rel;
 };
 """
 
 tie_template_old = """\
-template <class _T, CORBA::Boolean release>
+template <class _omniT, CORBA::Boolean release>
 class @tie_name@ : public virtual @inherits@
 {
 public:
-  @tie_name@(_T& t)
+  @tie_name@(_omniT& t)
     : pd_obj(&t), pd_rel(release) {}
-  @tie_name@(_T* t)
+  @tie_name@(_omniT* t)
     : pd_obj(t),  pd_rel(release) {}
   ~@tie_name@() {
     if( pd_rel )  delete pd_obj;
@@ -1239,7 +1239,7 @@ public:
   @callables@
 
 private:
-  _T*                      pd_obj;
+  _omniT*                      pd_obj;
   CORBA::Boolean           pd_rel;
 };
 """

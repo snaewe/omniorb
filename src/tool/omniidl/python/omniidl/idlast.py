@@ -28,8 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.16  2000/07/13 15:25:52  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.17  2000/10/02 17:21:24  dpg1
+# Merge for 3.0.2 release
+#
+# Revision 1.13.2.4  2000/08/29 10:20:29  dpg1
+# Operations and attributes now have repository ids.
 #
 # Revision 1.13.2.3  2000/06/29 14:08:11  dpg1
 # Incorrect visitor method called for Value nodes.
@@ -645,22 +648,26 @@ Functions:
 
   readonly()    -- boolean: true if the attribute is read only.
   attrType()    -- IdlType.Type object for the attribute's type.
-  identifiers() -- list of strings containing the attribute identifiers."""
+  declarators() -- list of the attribute's declarators.
+  identifiers() -- list of strings containing the attribute identifiers
+                     (equivalent to the identifiers inside the declarators)."""
 
     def __init__(self, file, line, mainFile, pragmas, comments,
-                 readonly, attrType, identifiers):
+                 readonly, attrType, declarators):
 
         Decl.__init__(self, file, line, mainFile, pragmas, comments)
 
-        self.__readonly = readonly
-        self.__attrType = attrType
-        self.__identifiers = identifiers
+        self.__readonly    = readonly
+        self.__attrType    = attrType
+        self.__declarators = declarators
+        self.__identifiers = map(lambda d: d.identifier(), declarators)
         #print line, "Attribute init:", readonly, identifiers
 
     def accept(self, visitor): visitor.visitAttribute(self)
 
     def readonly(self):    return self.__readonly
     def attrType(self):    return self.__attrType
+    def declarators(self): return self.__declarators
     def identifiers(self): return self.__identifiers
 
 
@@ -696,27 +703,26 @@ Functions:
     def identifier(self): return self.__identifier
 
 
-class Operation (Decl):
-    """Operation declaration (Decl)
+class Operation (Decl, DeclRepoId):
+    """Operation declaration (Decl, DeclRepoId)
 
 Functions:
 
   oneway()     -- boolean: true if operation is one way.
   returnType() -- IdlType.Type object for return type.
-  identifier() -- string of operation identifier.
   parameters() -- list of Parameter objects.
   raises()     -- list of Exception objects.
   contexts()   -- list of strings for context expressions."""
 
     def __init__(self, file, line, mainFile, pragmas, comments,
-                 oneway, returnType, identifier,
+                 oneway, returnType, identifier, scopedName, repoId,
                  parameters, raises, contexts):
 
         Decl.__init__(self, file, line, mainFile, pragmas, comments)
+        DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__oneway     = oneway
         self.__returnType = returnType
-        self.__identifier = identifier
         self.__parameters = parameters
         self.__raises     = raises
         self.__contexts   = contexts
@@ -726,7 +732,6 @@ Functions:
 
     def oneway(self):     return self.__oneway
     def returnType(self): return self.__returnType
-    def identifier(self): return self.__identifier
     def parameters(self): return self.__parameters
     def raises(self):     return self.__raises
     def contexts(self):   return self.__contexts

@@ -29,8 +29,18 @@
 
 # $Id$
 # $Log$
-# Revision 1.18  2000/07/13 15:25:51  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.19  2000/10/02 17:21:24  dpg1
+# Merge for 3.0.2 release
+#
+# Revision 1.15.2.17  2000/09/11 14:36:50  dpg1
+# New -T option to work around Win98 pipe problems.
+#
+# Revision 1.15.2.16  2000/09/06 11:20:50  dpg1
+# Support for Python 1.6 and 2.0b1.
+#
+# Revision 1.15.2.15  2000/08/29 15:20:29  dpg1
+# New relativeScope() function. New -i flag to enter interactive loop
+# after parsing
 #
 # Revision 1.15.2.14  2000/07/06 09:40:44  dpg1
 # Spelling mistake :-(
@@ -41,97 +51,16 @@
 # Revision 1.15.2.12  2000/06/27 16:23:26  sll
 # Merged OpenVMS port.
 #
-# Revision 1.15.2.11  2000/06/20 13:55:58  dpg1
-# omniidl now keeps the C++ tree until after the back-ends have run.
-# This means that back-ends can be C++ extension modules.
-#
-# Revision 1.15.2.10  2000/06/05 18:13:28  dpg1
-# Comments can be attached to subsequent declarations (with -K). Better
-# idea of most recent decl in operation declarations
-#
-# Revision 1.15.2.9  2000/03/17 16:28:46  dpg1
-# Small improvement to error reporting.
-#
-# Revision 1.15.2.8  2000/03/16 11:09:30  dpg1
-# Better error reporting if import fails.
-#
-# Revision 1.15.2.7  2000/03/14 14:54:17  dpg1
-# Incorrect message with omniidl -E.
-#
-# Revision 1.15.2.6  2000/03/06 15:03:45  dpg1
-# Minor bug fixes to omniidl. New -nf and -k flags.
-#
-# Revision 1.15.2.5  2000/03/02 11:22:46  dpg1
-# omniidl.py renamed omniidlrun.py to avoid problems with import
-# omniidl.main.
-#
-# Revision 1.15.2.4  2000/02/22 16:44:50  dpg1
-# Cosmetic change.
-#
-# Revision 1.15.2.3  2000/02/17 11:18:05  dpg1
-# Multiple -p flags now preserve the order, rather than reversing it.
-#
-# Revision 1.15.2.2  2000/02/16 16:23:52  dpg1
-# Support things for Python neophytes.
-#
-# Revision 1.15.2.1  2000/02/14 18:34:52  dpg1
-# New omniidl merged in.
-#
-# Revision 1.15  2000/02/14 12:49:57  dpg1
-# Python version check. New -p option.
-#
-# Revision 1.14  2000/02/04 12:17:05  dpg1
-# Support for VMS.
-#
-# Revision 1.13  2000/01/18 17:15:05  dpg1
-# Changes for "small" distribution.
-#
-# Revision 1.12  1999/12/21 16:03:57  dpg1
-# Warning if no back-ends are selected.
-#
-# Revision 1.11  1999/12/17 11:39:23  dpg1
-# Cosmetic change
-#
-# Revision 1.10  1999/11/30 10:41:20  dpg1
-# Back-ends can now have their own usage string.
-#
-# Revision 1.9  1999/11/23 16:59:22  dpg1
-# New command line option -C to send output to a different directory.
-#
-# Revision 1.8  1999/11/23 09:52:11  dpg1
-# Dumb bug where maps weren't cleared between runs.
-#
-# Revision 1.7  1999/11/17 15:01:20  dpg1
-# -Wb and -Wp now support multiple arguments separated by commas.
-#
-# Revision 1.6  1999/11/17 14:33:55  dpg1
-# Clean up of usage info.
-#
-# Revision 1.5  1999/11/15 15:49:22  dpg1
-# Documentation strings.
-#
-# Revision 1.4  1999/11/12 17:15:35  dpg1
-# Verbose messages now written to stderr.
-#
-# Revision 1.3  1999/11/12 15:53:48  dpg1
-# New functions omniORB.importIDL() and omniORB.importIDLString().
-#
-# Revision 1.2  1999/11/12 14:07:18  dpg1
-# If back-end foo is not found in omniidl.be.foo, now tries to import
-# foo.
-#
-# Revision 1.1  1999/11/08 11:43:34  dpg1
-# Changes for NT support.
-#
+# [...truncated...]
 
 """IDL Compiler front-end main function"""
 
 import sys
 
-if sys.version[:6] != "1.5.2 ":
+if sys.hexversion < 0x10502f0:
     sys.stderr.write("\n\n")
     sys.stderr.write("omniidl: WARNING!!\n\n")
-    sys.stderr.write("omniidl: Python version 1.5.2 is required.\n")
+    sys.stderr.write("omniidl: Python version 1.5.2 or later is required.\n")
     sys.stderr.write("omniidl: " + sys.executable + " is version " + \
                      sys.version + "\n")
     sys.stderr.write("omniidl: Execution is likely to fail.\n")
@@ -160,6 +89,7 @@ The supported flags are:
   -E              Run preprocessor only, print on stdout
   -Ycmd           Set command for the preprocessor
   -N              Do not run preprocessor
+  -T              Use a temporary file, not a pipe, for preprocessor output
   -Wparg[,arg...] Send args to the preprocessor
   -bback_end      Select a back-end to be used. More than one permitted
   -Wbarg[,arg...] Send args to the back-end
@@ -168,6 +98,7 @@ The supported flags are:
   -K              Comments before declarations are kept for the back-ends
   -Cdir           Change directory to dir before writing output
   -d              Dump the parsed IDL then exit
+  -i              Enter interactive mode after parsing the IDL
   -pdir           Path to omniidl back-ends ($TOP/lib/python)
   -V              Print version info then exit
   -u              Print this usage message and exit
@@ -210,16 +141,18 @@ cd_to             = None
 verbose           = 0
 quiet             = 0
 print_usage       = 0
+interactive       = 0
+temp_file         = None
 
 def parseArgs(args):
     global preprocessor_args, preprocessor_only, preprocessor_cmd
     global no_preprocessor, backend, backend_args, dump_only, cd_to
-    global verbose, quiet, print_usage
+    global verbose, quiet, print_usage, interactive, temp_file
 
     paths = []
 
     try:
-        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:n:kKC:dVuhvqp:")
+        opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:n:kKC:dVuhvqp:iT")
     except getopt.error, e:
         sys.stderr.write("Error in arguments: " + e + "\n")
         sys.stderr.write("Use `" + cmdname + " -u' for usage\n")
@@ -313,6 +246,17 @@ def parseArgs(args):
         elif o == "-p":
             paths.append(a)
 
+        elif o == "-i":
+            interactive = 1
+
+        elif o == "-T":
+            try:
+                import tempfile
+                temp_file = tempfile.mktemp(".idl")
+            except ImportError:
+                # No tempfile module. Just use current directory and hope...
+                temp_file = "omniidl-tmp" + `os.getpid()` + ".idl"
+
     sys.path = paths + sys.path
 
     return files
@@ -339,7 +283,7 @@ def be_import(name):
 def main(argv=None):
     global preprocessor_args, preprocessor_only, preprocessor_cmd
     global no_preprocessor, backend, backend_args, dump_only, cd_to
-    global verbose, quiet, print_usage
+    global verbose, quiet, print_usage, interactive
 
     if argv is None: argv = sys.argv
 
@@ -392,7 +336,8 @@ def main(argv=None):
     if print_usage:
         sys.exit(0)
 
-    if len(backends) == 0 and not (quiet or dump_only or preprocessor_only):
+    if len(backends) == 0 and \
+       not (quiet or dump_only or preprocessor_only or interactive):
         sys.stderr.write(cmdname + ": Warning: No back-ends specified; " \
                          "checking IDL for validity\n")
 
@@ -423,8 +368,27 @@ def main(argv=None):
                     sys.exit(1)
                 sys.exit(0)
 
-            file = os.popen(preproc_cmd, "r")
-        else:
+            if temp_file:
+                if verbose:
+                    sys.stderr.write(cmdname + \
+                                     ": cpp output to temporary file `" + \
+                                     temp_file + "'\n")
+                err = os.system(preproc_cmd + " >" + temp_file)
+                if err:
+                    if not quiet:
+                        sys.stderr.write(cmdname + \
+                                         ": Error running preprocessor\n")
+                    try:
+                        os.remove(temp_file)
+                    except:
+                        pass
+                    sys.exit(1)
+                file = open(temp_file, "r")
+
+            else:
+                file = os.popen(preproc_cmd, "r")
+
+        else: # No preprocessor
             file = open(file, "r")
 
         if verbose: sys.stderr.write(cmdname + ": Running front end\n")
@@ -433,6 +397,8 @@ def main(argv=None):
             if verbose:
                 sys.stderr.write(cmdname + ": Dumping\n")
             _omniidl.dump(file)
+            file.close()
+            if temp_file: os.remove(temp_file)
         else:
             tree = _omniidl.compile(file)
 
@@ -458,8 +424,19 @@ def main(argv=None):
                 bemodules[i].run(tree, backends_args[i])
                 i = i + 1
 
+            if interactive:
+                if verbose:
+                    sys.stderr.write(cmdname + ": Entering interactive loop\n")
+
+                idlast.tree = tree
+                _omniidl.runInteractiveLoop()
+                del idlast.tree
+
             if cd_to is not None:
                 os.chdir(old_wd)
+
+            if temp_file:
+                os.remove(temp_file)
 
             idlast.clear()
             idltype.clear()

@@ -65,6 +65,7 @@ module CosRelationships {
 			raises (RoleTypeError,
 					MaxCardinalityExceeded,
 					DegreeError,
+                                        DuplicateRoleName,
 					UnknownRoleName);
 	};
 

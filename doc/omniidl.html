@@ -77,6 +77,9 @@ The <FONT COLOR=purple>omniidl</FONT> command line has the form:<BR>
 <TR><TD ALIGN=left NOWRAP><TT>-N</TT></TD>
 <TD ALIGN=left NOWRAP>Do not run the preprocessor.</TD>
 </TR>
+<TR><TD ALIGN=left NOWRAP><TT>-T</TT></TD>
+<TD ALIGN=left NOWRAP>Use a temporary file, not a pipe, for preprocessor output.</TD>
+</TR>
 <TR><TD ALIGN=left NOWRAP><TT>-Wp</TT><I>arg</I>[,<I>arg</I>...]</TD>
 <TD ALIGN=left NOWRAP>Send arguments to the preprocessor.</TD>
 </TR>
@@ -97,6 +100,9 @@ The <FONT COLOR=purple>omniidl</FONT> command line has the form:<BR>
 </TR>
 <TR><TD ALIGN=left NOWRAP><TT>-C</TT><I>dir</I></TD>
 <TD ALIGN=left NOWRAP>Change directory to <I>dir</I> before writing output files.</TD>
+</TR>
+<TR><TD ALIGN=left NOWRAP><TT>-i</TT></TD>
+<TD ALIGN=left NOWRAP>Run the front end and back-ends, then enter the interactive loop.</TD>
 </TR>
 <TR><TD ALIGN=left NOWRAP><TT>-d</TT></TD>
 <TD ALIGN=left NOWRAP>Dump the parsed IDL then exit, without running a back-end.</TD>
@@ -143,6 +149,17 @@ search path by default---use `<TT>-I.</TT>' for that. The
 omnicpp. Beware that line directives inserted by other preprocessors
 are likely to confuse <FONT COLOR=purple>omniidl</FONT>.<BR>
 <BR>
+<!--TOC subsubsection Windows 9x-->
+
+<H4>1.3.1&nbsp;&nbsp; Windows 9x</H4><!--SEC END -->
+The output from the C preprocessor is normally fed to the <FONT COLOR=purple>omniidl</FONT>
+parser through a pipe. On some Windows 98 machines (but not all!) the
+pipe does not work, and the preprocessor output is echoed to the
+screen. When this happens, the <FONT COLOR=purple>omniidl</FONT> parser sees an empty file,
+and produces useless stub files with strange long names. To avoid the
+problem, use the `<TT>-T</TT>' option to create a temporary file
+between the two stages.<BR>
+<BR>
 <!--TOC subsection Forward-declared interfaces-->
 
 <H3>1.4&nbsp;&nbsp; Forward-declared interfaces</H3><!--SEC END -->
@@ -184,9 +201,19 @@ interface I {
 </PRE>the <TT>-k</TT> flag will attach the comment to <TT>op1()</TT>;
 the <TT>-K</TT> flag will attach it to <TT>op2()</TT>.<BR>
 <BR>
+<!--TOC subsection Interactive loop-->
+
+<H3>1.6&nbsp;&nbsp; Interactive loop</H3><!--SEC END -->
+When <FONT COLOR=purple>omniidl</FONT> is given the <TT>-i</TT> option, it runs the compiler
+front-end and any back-ends specified, and then drops into Python's
+interactive command loop. Within the interactive loop, you can
+<TT>import omniidl</TT>. The parsed AST is then available as
+<TT>omniidl.idlast.tree</TT>. This mode is useful for investigating the
+parsed tree.<BR>
+<BR>
 <!--TOC subsection Copyright-->
 
-<H3>1.6&nbsp;&nbsp; Copyright</H3><!--SEC END -->
+<H3>1.7&nbsp;&nbsp; Copyright</H3><!--SEC END -->
 All parts of <FONT COLOR=purple>omniidl</FONT> are licensed under the GNU General Public
 License, available in the file <TT>COPYING</TT>.<BR>
 <BR>
@@ -335,6 +362,12 @@ functions:<BR>
   &gt;&gt;&gt; pruneScope(['A','B','C','D'],['A','B','D'])
   ['C','D']
 </PRE>
+<DT><TT>relativeScope(from,dest)</TT><DD><BR>Given two globally-scoped name lists, return a minimal scoped name
+ list which identifies the destination scope, without clashing with
+ another identifier. If the only valid result is a globally-scoped
+ name, the result list is prefixed with <TT>None</TT>.<BR>
+<BR>
+
 <DT><TT>slashName(sn,from)</TT><DD>
 
 <DT><TT>dotName(sn,from)</TT><DD>
@@ -487,7 +520,9 @@ The declaration objects making up the tree have the following classes:<BR>
 <DT><TT>abstract()</TT><DD><BR>Boolean: true if the interface is declared abstract.<BR>
 <BR>
 
-<DT><TT>inherits()</TT><DD><BR>List of <TT>Interface</TT> objects from which this one inherits.<BR>
+<DT><TT>inherits()</TT><DD><BR>List of interfaces from which this one inherits. Each list member is
+ either an <TT>Interface</TT> object, or a <TT>Declarator</TT> object
+ belonging to a typedef to an interface.<BR>
 <BR>
 
 <DT><TT>contents()</TT><DD><BR>List of <TT>Decl</TT> objects for all items declared within this
@@ -509,7 +544,7 @@ The declaration objects making up the tree have the following classes:<BR>
  declaration or <TT>None</TT> if there is no full declaration.</DL><HR SIZE=2><BR>
 <BR>
 <HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Const (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Constant declaration</I></DIV><DL COMPACT=compact>
-<DT><TT>constType()</TT><DD><BR><TT>IdlType.Type</TT> object of the constant. Aliases not stripped.<BR>
+<DT><TT>constType()</TT><DD><BR><TT>idltype.Type</TT> object of the constant. Aliases not stripped.<BR>
 <BR>
 
 <DT><TT>constKind()</TT><DD><BR>TypeCode kind of the constant with aliases stripped. So for a
@@ -518,7 +553,7 @@ The declaration objects making up the tree have the following classes:<BR>
   typedef long MyLong;
   const MyLong foo = 123;
 </PRE><TT>constKind()</TT> will return <TT>tk_long</TT>, but
- <TT>constType()</TT> will return an <TT>IdlType.Declared</TT> object
+ <TT>constType()</TT> will return an <TT>idltype.Declared</TT> object
  (see page&nbsp;<A HREF="#cls:typeDeclared">??</A>) which refers to <TT>MyLong</TT>'s
  typedef <TT>Declarator</TT> object.<BR>
 <BR>
@@ -526,7 +561,7 @@ The declaration objects making up the tree have the following classes:<BR>
 <DT><TT>value()</TT><DD><BR>Value of the constant. Either an integer or an <TT>Enumerator</TT>
  object.</DL><HR SIZE=2><BR>
 <BR>
-<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Declarator (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Declarator used in typedefs, struct members, etc.</I></DIV><DL COMPACT=compact>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Declarator (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Declarator used in typedefs, struct members, attributes, etc.</I></DIV><DL COMPACT=compact>
 <DT><TT>sizes()</TT><DD><BR>List of array sizes, or <TT>None</TT> if it is a simple declarator.<BR>
 <BR>
 
@@ -534,7 +569,7 @@ The declaration objects making up the tree have the following classes:<BR>
  if the object is not a typedef declarator.</DL><HR SIZE=2><BR>
 <BR>
 <HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Typedef (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Typedef declaration</I></DIV><DL COMPACT=compact>
-<DT><TT>aliasType()</TT><DD><BR><TT>IdlType.Type</TT> object that this is an alias to.<BR>
+<DT><TT>aliasType()</TT><DD><BR><TT>idltype.Type</TT> object that this is an alias to.<BR>
 <BR>
 
 <DT><TT>constrType()</TT><DD><BR>Boolean: true if the alias type was constructed within this typedef
@@ -545,7 +580,7 @@ The declaration objects making up the tree have the following classes:<BR>
 <DT><TT>declarators()</TT><DD><BR>List of <TT>Declarator</TT> objects.</DL><HR SIZE=2><BR>
 <BR>
 <HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Member (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Member of a struct or exception</I></DIV><DL COMPACT=compact>
-<DT><TT>memberType()</TT><DD><BR><TT>IdlType.Type</TT> object for the type of this member.<BR>
+<DT><TT>memberType()</TT><DD><BR><TT>idltype.Type</TT> object for the type of this member.<BR>
 <BR>
 
 <DT><TT>constrType()</TT><DD><BR>Boolean: true if the member type was constructed within the member
@@ -591,7 +626,7 @@ The declaration objects making up the tree have the following classes:<BR>
 <DT><TT>labels()</TT><DD><BR>List of <TT>CaseLabel</TT> objects.<BR>
 <BR>
 
-<DT><TT>caseType()</TT><DD><BR><TT>IdlType.Type</TT> object for the case type.<BR>
+<DT><TT>caseType()</TT><DD><BR><TT>idltype.Type</TT> object for the case type.<BR>
 <BR>
 
 <DT><TT>constrType()</TT><DD><BR>Boolean: true if the case type was constructed within the case.<BR>
@@ -600,7 +635,7 @@ The declaration objects making up the tree have the following classes:<BR>
 <DT><TT>declarator()</TT><DD><BR><TT>Declarator</TT> object</DL><HR SIZE=2><BR>
 <BR>
 <HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Union (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Union declaration</I></DIV><DL COMPACT=compact>
-<DT><TT>switchType()</TT><DD><BR><TT>IdlType.Type</TT> object corresponding to the switch type.<BR>
+<DT><TT>switchType()</TT><DD><BR><TT>idltype.Type</TT> object corresponding to the switch type.<BR>
 <BR>
 
 <DT><TT>constrType()</TT><DD><BR>Boolean: true if the switch type was declared within the switch
@@ -622,10 +657,15 @@ The declaration objects making up the tree have the following classes:<BR>
 <DT><TT>readonly()</TT><DD><BR>Boolean: true if the attribute is read only.<BR>
 <BR>
 
-<DT><TT>attrType()</TT><DD><BR><TT>IdlType.Type</TT> object for the attribute's type.<BR>
+<DT><TT>attrType()</TT><DD><BR><TT>idltype.Type</TT> object for the attribute's type.<BR>
 <BR>
 
-<DT><TT>identifiers()</TT><DD><BR>List of strings containing the attribute identifiers. e.g. for the
+<DT><TT>declarators()</TT><DD><BR>List of <TT>Declarator</TT> objects for this attribute. All
+ declarators are guaranteed to be simple.<BR>
+<BR>
+
+<DT><TT>identifiers()</TT><DD><BR>Convenience function returning a list of strings containing the
+ attribute identifiers from the declarators. e.g. for the
  declaration<BR>
 <BR>
 <PRE>
@@ -642,19 +682,16 @@ The declaration objects making up the tree have the following classes:<BR>
 <DT><TT>is_out()</TT><DD><BR>Boolean: true if out or inout.<BR>
 <BR>
 
-<DT><TT>paramType()</TT><DD><BR><TT>IdlType.Type</TT> object for the parameter type.<BR>
+<DT><TT>paramType()</TT><DD><BR><TT>idltype.Type</TT> object for the parameter type.<BR>
 <BR>
 
 <DT><TT>identifier()</TT><DD><BR>String containing the parameter identifier.</DL><HR SIZE=2><BR>
 <BR>
-<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Operation (Decl)</TT></B></DIV><BR><DIV ALIGN=center><I>Operation declaration</I></DIV><DL COMPACT=compact>
+<HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.Operation (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Operation declaration</I></DIV><DL COMPACT=compact>
 <DT><TT>oneway()</TT><DD><BR>Boolean: true if the operation is one way.<BR>
 <BR>
 
-<DT><TT>returnType()</TT><DD><BR><TT>IdlType.Type</TT> object for the return type.<BR>
-<BR>
-
-<DT><TT>identifier()</TT><DD><BR>String containing the operation identifier.<BR>
+<DT><TT>returnType()</TT><DD><BR><TT>idltype.Type</TT> object for the return type.<BR>
 <BR>
 
 <DT><TT>parameters()</TT><DD><BR>List of <TT>Parameter</TT> objects.<BR>
@@ -674,7 +711,7 @@ No non-inherited functions.</DL><HR SIZE=2><BR>
 <DT><TT>memberAccess()</TT><DD><BR>Integer: 0 == public, 1 == private.<BR>
 <BR>
 
-<DT><TT>memberType()</TT><DD><BR><TT>IdlType.Type</TT> object for member type.<BR>
+<DT><TT>memberType()</TT><DD><BR><TT>idltype.Type</TT> object for member type.<BR>
 <BR>
 
 <DT><TT>constrType()</TT><DD><BR>Boolean: true if the member type is declared within the StateMember.<BR>
@@ -696,7 +733,7 @@ No non-inherited functions.</DL><HR SIZE=2><BR>
  valuetype declaration or <TT>None</TT> if there is no full declaration.</DL><HR SIZE=2><BR>
 <BR>
 <HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idlast.ValueBox (Decl,DeclRepoId)</TT></B></DIV><BR><DIV ALIGN=center><I>Boxed valuetype declaration</I></DIV><DL COMPACT=compact>
-<DT><TT>boxedType()</TT><DD><BR><TT>IdlType.Type</TT> object for the boxed type.<BR>
+<DT><TT>boxedType()</TT><DD><BR><TT>idltype.Type</TT> object for the boxed type.<BR>
 <BR>
 
 <DT><TT>constrType()</TT><DD><BR>Boolean: true if boxed type is declared inside the valuetype
@@ -756,6 +793,10 @@ All type objects are derived from the base class <TT>Type</TT>:<BR>
 <DT><TT>kind()</TT><DD><BR>TypeCode kind of type.<BR>
 <BR>
 
+<DT><TT>unalias()</TT><DD><BR>Return an equivalent <TT>Type</TT> object with top-level aliases
+ stripped. Only has an effect with typedef types.<BR>
+<BR>
+
 <DT><TT>accept(visitor)</TT><DD><BR>Visitor pattern accept.</DL><HR SIZE=2><BR>
 <BR>
 The basic CORBA types (null, void, short, long, unsigned short,
@@ -776,7 +817,7 @@ declaration.<BR>
 <DT><TT>bound()</TT><DD><BR>Bound of a bounded wstring, or 0 for unbounded wstrings.</DL><HR SIZE=2><BR>
 <BR>
 <HR SIZE=2><BR><DIV ALIGN=center><B><TT>omniidl.idltype.Sequence (Type)</TT></B></DIV><BR><DIV ALIGN=center><I>Sequence type</I></DIV><DL COMPACT=compact>
-<DT><TT>seqType()</TT><DD><BR><TT>IdlType.Type</TT> object representing what the sequence contains.<BR>
+<DT><TT>seqType()</TT><DD><BR><TT>idltype.Type</TT> object representing what the sequence contains.<BR>
 <BR>
 
 <DT><TT>bound()</TT><DD><BR>Bound of a bounded sequence, or 0 for unbounded sequences.</DL><HR SIZE=2><BR>

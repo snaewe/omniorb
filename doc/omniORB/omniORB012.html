@@ -33,7 +33,7 @@ mapping, but since the mapping depends on
 facilities are available. This chapter describes an approach to
 building DSI servers which works with omniORB 3.<BR>
 <BR>
-<A NAME="toc64"></A>
+<A NAME="toc65"></A>
 <H2>12.1&nbsp;&nbsp; Overview</H2>When an ORB receives an invocation request, the information includes
 the object reference and the name of the operation. Typically this
 information is used by the ORB to select a servant object and call
@@ -64,7 +64,7 @@ which provides:<BR>
 <LI> a way to set the returned values
 
 <LI> a way to throw user-defined exceptions.
-</UL><A NAME="toc65"></A>
+</UL><A NAME="toc66"></A>
 <H2>12.2&nbsp;&nbsp; DSI Types</H2>
 <H3>12.2.1&nbsp;&nbsp; PortableServer::DynamicImplementation</H3>This class must be sub-classed by the application to provide an
 implementation for DSI objects. The method <TT>invoke()</TT> will be called
@@ -113,7 +113,7 @@ namespace CORBA {
   };
   ...
 };
-</PRE><A NAME="toc66"></A>
+</PRE><A NAME="toc67"></A>
 <H2>12.3&nbsp;&nbsp; Creating Dynamic Implementations</H2>The application must override the <TT>invoke()</TT> method of
 <TT>DynamicImplementation</TT> to provide an implementation for DSI
 objects. This method must behave as follows:<BR>
@@ -165,13 +165,13 @@ then no further operations should be invoked on the
 Within the <TT>invoke()</TT> method <TT>_this()</TT> may be called to obtain the
 object reference. This method may not be used at any other time.<BR>
 <BR>
-<A NAME="toc67"></A>
+<A NAME="toc68"></A>
 <H2>12.4&nbsp;&nbsp; Registering Dynamic Objects</H2>To use a <TT>DynamicImplementation</TT> servant, a CORBA object must be
 created and associated with it, just as for any other servant. Dynamic
 servants can also be created on demand by Servant Managers, just like
 static servants.<BR>
 <BR>
-<A NAME="toc68"></A>
+<A NAME="toc69"></A>
 <H2>12.5&nbsp;&nbsp; Example</H2>This implementation of <TT>DynamicImplementation::invoke()</TT> is taken
 from an example which can be found in the omniORB distribution. The
 <TT>echoString()</TT> operation is declared in IDL as:<BR>

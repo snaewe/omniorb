@@ -29,8 +29,11 @@
 
 /*
   $Log$
-  Revision 1.3  2000/07/13 15:25:56  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.4  2000/10/02 17:21:26  dpg1
+  Merge for 3.0.2 release
+
+  Revision 1.1.2.6  2000/09/13 14:03:05  djr
+  Gotten rid of misguided printing of repo id in ~omniServant().
 
   Revision 1.1.2.5  2000/06/22 10:40:16  dpg1
   exception.h renamed to exceptiondefs.h to avoid name clash on some
@@ -65,8 +68,7 @@ omniServant::~omniServant()
 {
   if( pd_identities ) {
     omniORB::logger l;
-    l << "ERROR -- A servant has been deleted that is still activated.\n"
-      " repo id: " << _mostDerivedRepoId() << "\n";
+    l << "ERROR -- A servant has been deleted that is still activated.\n";
 
     omni::internalLock->lock();
     omniLocalIdentity* id = pd_identities;

@@ -8,7 +8,7 @@ the minimal python package from:
 
 Otherwise, you have to treak the build process of python to get python to
 install properly. On HPUX 11.00 (haven't tested on 10.x), the python 1.5.2
-source from python.org does not build out of the box. Some treakings are
+source from python.org does not build out of the box. Some tweakings are
 required.  The source from HP Software Porting And Archive Centre
 (http://hpux.cs.utah.edu/) is a good starting point but unfortunately the
 binary package cannot load C++ shared library as python extension modules.

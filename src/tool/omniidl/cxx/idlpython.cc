@@ -28,11 +28,21 @@
 
 // $Id$
 // $Log$
-// Revision 1.19  2000/08/18 14:09:06  dpg1
-// Merge from omni3_develop for 3.0.1 release.
+// Revision 1.20  2000/10/02 17:21:25  dpg1
+// Merge for 3.0.2 release
 //
-// Revision 1.18  2000/07/13 15:25:53  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.15.2.15  2000/09/06 11:20:50  dpg1
+// Support for Python 1.6 and 2.0b1.
+//
+// Revision 1.15.2.14  2000/08/30 18:12:46  dpg1
+// Register operation declarations so they can be found with findDecl().
+//
+// Revision 1.15.2.13  2000/08/29 15:20:28  dpg1
+// New relativeScope() function. New -i flag to enter interactive loop
+// after parsing
+//
+// Revision 1.15.2.12  2000/08/29 10:20:26  dpg1
+// Operations and attributes now have repository ids.
 //
 // Revision 1.15.2.11  2000/08/14 16:07:52  dpg1
 // Error message now says "Could not open..." rather than "Could not
@@ -120,15 +130,13 @@
 // First revision.
 //
 
-#if defined(__WIN32__)
-#include <Python.h>
-#elif defined(__VMS)
+#if defined(__VMS)
 #  if defined(__DECCXX) && __DECCXX_VER < 60000000
       struct _typeobject;
 #  endif
 #include <python_include/python.h>
 #else
-#include <python1.5/Python.h>
+#include PYTHON_INCLUDE
 #endif
 
 #include <idlsysdep.h>
@@ -143,7 +151,7 @@
 
 // PyLongFromLongLong is broken in Python 1.5.2. Workaround here:
 #ifdef HAS_LongLong
-#  if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0X01050200)
+#  if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x01050200)
 #    error "omniidl requires Python 1.5.2 or higher"
 
 #  elif (PY_VERSION_HEX < 0x02000000)
@@ -211,13 +219,14 @@ public:
 
   PyObject* result() { return result_; }
 
+  static PyObject* scopedNameToList(const ScopedName* sn);
+  static PyObject* wstringToList(const _CORBA_WChar* ws);
+
 private:
-  PyObject* scopedNameToList(const ScopedName* sn);
   PyObject* pragmasToList(const Pragma* ps);
   PyObject* commentsToList(const Comment* cs);
   void      registerPyDecl(const ScopedName* sn, PyObject* pydecl);
   PyObject* findPyDecl(const ScopedName* sn);
-  PyObject* wstringToList(const _CORBA_WChar* ws);
 
   PyObject* idlast_;
   PyObject* idltype_;
@@ -389,8 +398,8 @@ visitModule(Module* m)
 				scopedNameToList(m->scopedName()),
 				m->repoId(),
 				pydecls);
-  registerPyDecl(m->scopedName(), result_);
   ASSERT_RESULT;
+  registerPyDecl(m->scopedName(), result_);
 }
 
 void
@@ -839,65 +848,21 @@ visitAttribute(Attribute* a)
   PyObject* pyattrType = result_;
 
   Declarator* d;
-  int         i;
+  int         i, l;
 
-  for (i=0, d = a->declarators(); d; d = (Declarator*)d->next(), ++i);
-  PyObject* pyidentifiers = PyList_New(i);
-
-  PyObject *pragmas  = 0;
-  PyObject *comments = 0;
-  PyObject *tmp1, *tmp2;
+  for (l=0, d = a->declarators(); d; d = (Declarator*)d->next(), ++l);
+  PyObject* pydeclarators = PyList_New(l);
 
   for (i=0, d = a->declarators(); d; d = (Declarator*)d->next(), ++i) {
-    if (pragmas) {
-      tmp1 = pragmasToList(d->pragmas());
-      tmp2 = PySequence_Concat(pragmas, tmp1);
-      Py_DECREF(tmp1);
-      Py_DECREF(pragmas);
-      pragmas = tmp2;
-    }
-    else
-      pragmas = pragmasToList(d->pragmas());
-
-    if (comments) {
-      tmp1 = commentsToList(d->comments());
-      tmp2 = PySequence_Concat(comments, tmp1);
-      Py_DECREF(tmp1);
-      Py_DECREF(comments);
-      comments = tmp2;
-    }
-    else
-      comments = commentsToList(d->comments());
-
-    PyList_SetItem(pyidentifiers, i, PyString_FromString(d->identifier()));    
+    d->accept(*this);
+    PyList_SetItem(pydeclarators, i, result_);
   }
-
-  if (pragmas) {
-    tmp1 = pragmasToList(a->pragmas());
-    tmp2 = PySequence_Concat(pragmas, tmp1);
-    Py_DECREF(tmp1);
-    Py_DECREF(pragmas);
-    pragmas = tmp2;
-  }
-  else
-    pragmas = pragmasToList(a->pragmas());
-
-  if (comments) {
-    tmp1 = commentsToList(a->comments());
-    tmp2 = PySequence_Concat(comments, tmp1);
-    Py_DECREF(tmp1);
-    Py_DECREF(comments);
-    comments = tmp2;
-  }
-  else
-    comments = commentsToList(a->comments());
-
   result_ = PyObject_CallMethod(idlast_, (char*)"Attribute", (char*)"siiNNiNN",
 				a->file(), a->line(), (int)a->mainFile(),
-				pragmas,
-				comments,
+				pragmasToList(a->pragmas()),
+				commentsToList(a->comments()),
 				(int)a->readonly(), pyattrType,
-				pyidentifiers);
+				pydeclarators);
   ASSERT_RESULT;
 }
 
@@ -948,14 +913,18 @@ visitOperation(Operation* o)
     PyList_SetItem(pycontexts, i, PyString_FromString(c->context()));
 
   result_ =
-    PyObject_CallMethod(idlast_,(char*)"Operation",(char*)"siiNNiNsNNN",
+    PyObject_CallMethod(idlast_,(char*)"Operation",(char*)"siiNNiNsNsNNN",
 			o->file(), o->line(), (int)o->mainFile(),
 			pragmasToList(o->pragmas()),
 			commentsToList(o->comments()),
 			(int)o->oneway(), pyreturnType,
-			o->identifier(), pyparameters,
+			o->identifier(),
+			scopedNameToList(o->scopedName()),
+			o->repoId(),
+			pyparameters,
 			pyraises, pycontexts);
   ASSERT_RESULT;
+  registerPyDecl(o->scopedName(), result_);
 }
 
 void
@@ -1360,13 +1329,91 @@ extern "C" {
     Py_INCREF(Py_None); return Py_None;
   }
 
+  static PyObject* IdlPyRelativeScopedName(PyObject* self, PyObject* args)
+  {
+    PyObject *pyfrom, *pyto;
+    if (!PyArg_ParseTuple(args, (char*)"OO", &pyfrom, &pyto)) return 0;
+
+    if (!PySequence_Check(pyfrom) || !PySequence_Check(pyto)) {
+      PyErr_SetString(PyExc_TypeError,
+		      (char*)"Both arguments must be sequences of strings");
+      return 0;
+    }
+
+    if (PyObject_Length(pyto) == 0) {
+      PyErr_SetString(PyExc_TypeError,
+		      (char*)"Argument 2 must be a non-empty sequence");
+      return 0;
+    }
+
+    ScopedName* from = 0;
+    ScopedName* to   = 0;
+
+    int i;
+    // Convert lists to absolute ScopedNames
+    for (i=0; i < PyObject_Length(pyfrom); i++) {
+      PyObject* tmp = PySequence_GetItem(pyfrom, i);
+
+      if (!PyString_Check(tmp)) {
+	if (from) delete from;
+	PyErr_SetString(PyExc_TypeError,
+			(char*)"Both arguments must be sequences of strings");
+	return 0;
+      }
+      if (from)
+	from->append(PyString_AsString(tmp));
+      else
+	from = new ScopedName(PyString_AsString(tmp), 1);
+    }
+
+    for (i=0; i < PyObject_Length(pyto); i++) {
+      PyObject* tmp = PySequence_GetItem(pyto, i);
+
+      if (!PyString_Check(tmp)) {
+	if (from) delete from;
+	if (to)   delete to;
+	PyErr_SetString(PyExc_TypeError,
+			(char*)"Both arguments must be sequences of strings");
+	return 0;
+      }
+      if (to)
+	to->append(PyString_AsString(tmp));
+      else
+	to = new ScopedName(PyString_AsString(tmp), 1);
+    }
+
+    ScopedName* result = Scope::relativeScopedName(from, to);
+
+    if (from) delete from;
+    delete to;
+
+    if (result) {
+      PyObject* pyresult = PythonVisitor::scopedNameToList(result);
+      if (result->absolute())
+	PyList_Insert(pyresult, 0, Py_None);
+      delete result;
+      return pyresult;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+  }
+
+  static PyObject* IdlPyRunInteractiveLoop(PyObject* self, PyObject* args)
+  {
+    PyRun_InteractiveLoop(stdin, (char*)"<stdin>");
+    Py_INCREF(Py_None);
+    return Py_None;
+  }
+
   static PyMethodDef omniidl_methods[] = {
-    {(char*)"compile",          IdlPyCompile,          METH_VARARGS},
-    {(char*)"clear",            IdlPyClear,            METH_VARARGS},
-    {(char*)"dump",             IdlPyDump,             METH_VARARGS},
-    {(char*)"quiet",            IdlPyQuiet,            METH_VARARGS},
-    {(char*)"noForwardWarning", IdlPyNoForwardWarning, METH_VARARGS},
-    {(char*)"keepComments",     IdlPyKeepComments,     METH_VARARGS},
+    {(char*)"compile",            IdlPyCompile,            METH_VARARGS},
+    {(char*)"clear",              IdlPyClear,              METH_VARARGS},
+    {(char*)"dump",               IdlPyDump,               METH_VARARGS},
+    {(char*)"quiet",              IdlPyQuiet,              METH_VARARGS},
+    {(char*)"noForwardWarning",   IdlPyNoForwardWarning,   METH_VARARGS},
+    {(char*)"keepComments",       IdlPyKeepComments,       METH_VARARGS},
+    {(char*)"relativeScopedName", IdlPyRelativeScopedName, METH_VARARGS},
+    {(char*)"runInteractiveLoop", IdlPyRunInteractiveLoop, METH_VARARGS},
     {NULL, NULL}
   };
 

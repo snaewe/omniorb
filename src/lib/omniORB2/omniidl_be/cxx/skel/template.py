@@ -28,11 +28,11 @@
 
 # $Id$
 # $Log$
-# Revision 1.5  2000/08/18 14:09:13  dpg1
-# Merge from omni3_develop for 3.0.1 release.
+# Revision 1.6  2000/10/02 17:21:26  dpg1
+# Merge for 3.0.2 release
 #
-# Revision 1.4  2000/07/13 15:25:59  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.1.2.9  2000/08/30 10:14:39  dpg1
+# BOA constructor with object key failed to set the key in the servant.
 #
 # Revision 1.1.2.8  2000/07/24 16:32:19  djs
 # Fixed typo in previous BOA skeleton bugfix.
@@ -344,7 +344,7 @@ if( !strcmp(id, @inherited_name@::_PD_repoId) )
 """
 
 interface_sk = """\
-@sk_fqname@::@sk_name@(const omniOrbBoaKey& k): omniOrbBoaServant(k) {}
+@sk_fqname@::@sk_name@(const omniOrbBoaKey& k) { pd_key = k; }
 
 @sk_fqname@::~@sk_name@() {}
 """

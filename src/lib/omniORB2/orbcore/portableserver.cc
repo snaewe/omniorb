@@ -26,11 +26,15 @@
 // Description:
 //    Misc code from PortableServer module.
 //
- 
+
 /*
   $Log$
-  Revision 1.3  2000/07/13 15:25:55  dpg1
-  Merge from omni3_develop for 3.0 release.
+  Revision 1.4  2000/10/02 17:21:26  dpg1
+  Merge for 3.0.2 release
+
+  Revision 1.1.2.11  2000/09/21 11:08:18  dpg1
+  Add a user check to RefCountServantBase::_add_ref() which complains if
+  it is called when the reference count is zero.
 
   Revision 1.1.2.10  2000/06/27 16:23:25  sll
   Merged OpenVMS port.
@@ -303,6 +307,13 @@ void
 PortableServer::RefCountServantBase::_add_ref()
 {
   ref_count_lock.lock();
+  // If the reference count is 0, then the object is either in the
+  // process of being deleted by _remove_ref, or has already been
+  // deleted. It is too late to be trying to _add_ref now. If the
+  // reference count is less than zero, then _remove_ref has been
+  // called too many times.
+  OMNIORB_USER_CHECK(pd_refCount > 0);
+
   pd_refCount++;
   ref_count_lock.unlock();
 }

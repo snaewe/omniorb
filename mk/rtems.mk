@@ -13,8 +13,8 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
-# Revision 1.2  2000/08/18 14:09:34  dpg1
-# Merge from omni3_develop for 3.0.1 release.
+# Revision 1.3  2000/10/02 17:21:29  dpg1
+# Merge for 3.0.2 release
 #
 # Revision 1.1.2.3  2000/08/18 11:15:43  sll
 # Make current tree into omniORB 3.0.1 release.
@@ -222,7 +222,7 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 #
 CorbaImplementation = OMNIORB
 
-OMNIORB_VERSION = 3.0.1
+OMNIORB_VERSION = 3.0.2
 OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))

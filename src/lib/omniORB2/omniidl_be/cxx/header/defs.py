@@ -28,11 +28,12 @@
 
 # $Id$
 # $Log$
-# Revision 1.35  2000/08/18 14:09:14  dpg1
-# Merge from omni3_develop for 3.0.1 release.
+# Revision 1.36  2000/10/02 17:21:26  dpg1
+# Merge for 3.0.2 release
 #
-# Revision 1.34  2000/07/13 15:26:00  dpg1
-# Merge from omni3_develop for 3.0 release.
+# Revision 1.31.2.20  2000/09/13 10:53:00  djs
+# Bug in union _d member when an implicit default case is active
+# (after _default() is called)
 #
 # Revision 1.31.2.19  2000/08/03 21:27:39  djs
 # Typo in -Wbvirtual_objref code caused incorrect operation signatures to be
@@ -1266,9 +1267,6 @@ def visitUnion(node):
 
         cases = util.StringStream()
 
-        # keep track of which cases have been done
-        cases_done = []
-
 
         # Produce a set of "case <foo>: goto fail;" for every label
         # except those in an exception list
@@ -1280,56 +1278,67 @@ def visitUnion(node):
                         cases.out("case @label@: goto fail;",
                                   label = switchType.literal(l.value(),
                                                              environment))
-                        
 
-        # first switch on the current case
+
+        # switch (currently active case){
+        #
+        outer_has_default = 0 # only mention default: once
         for c in node.cases():
-            # optimisation: we've already checked for the simple case where
-            # we set the discriminator to the current value
-            if len(c.labels()) == 1 and not(c.labels()[0].default()):
-                # case has one label, for control to get here _value must
-                # be for a different label _unless_ the one label was itself
-                # a default: which means many label values are possible
-                continue
 
             need_switch = 1
-            # output one C++ case label for each IDL case label for this member
+
+            # If the currently active case has only one non-default label,
+            # then the only legal action is to set it to its current value.
+            # We've already checked for this in an if (...) statement before
+            # here.
+            if len(c.labels()) == 1 and not(c.labels()[0].default()):
+                cases.out("case @label@: goto fail;",
+                          label = switchType.literal(c.labels()[0].value(),
+                                                     environment))
+                continue
+
+            # output one C++ case label for each IDL case label
+            # case 1:
+            # case 2:
+            # default:
+
+            this_case_is_default = 0
             for l in c.labels():
                 if l.default():
-                    cases.out("default:")
+                    this_case_is_default = 1
                     outer_has_default = 1
-                    this_is_default = 1
-                else:
-                    cases.out("case @label@:",
-                              label = switchType.literal(l.value(),
-                                                         environment))
-                    cases_done.append(l)
-                    this_is_default = 0
+                    cases.out("default:")
+                    continue
 
-            # switch on the to-label
+                cases.out("case @label@:",
+                          label = switchType.literal(l.value(), environment))
+
+            # switch (case to switch to){
+            #
             cases.inc_indent()
             cases.out("switch (_value){\n")
             cases.inc_indent()
-            has_default = 0
+            inner_has_default = 0
 
 
-            # If we are in the default state, then make sure we're not trying
-            # to set the discriminator to a non-default value
-            if this_is_default:
+            # If we currently are in the default case, fail all attempts
+            # to switch cases.
+            if this_case_is_default:
                 fail_all_but(c.labels())
-                        
+                cases.out("default: _pd__d = _value; return;")
+                cases.dec_indent()
+                cases.out("}\n")
+                cases.dec_indent()
+                continue
+                
+            # This is not the default case, all possibilities have associated
+            # UnionCaseLabels
             for l in c.labels():
-                if l.default():
-                    cases.out("default: _pd__d = _value; return;")
-                    has_default = 1
-                elif not(this_is_default):
-                    cases.out("case @label@: _pd__d = @label@; return;",
-                              label = switchType.literal(l.value(),
-                                                         environment))
-                    cases_done.append(l)
+                cases.out("case @label@: _pd__d = @label@; return;",
+                          label = switchType.literal(l.value(), environment))
 
-            if not(has_default):
-                cases.out("default: goto fail;")
+            
+            cases.out("default: goto fail;")
             cases.dec_indent()
             cases.out("}\n")
             cases.dec_indent()
@@ -1337,9 +1346,12 @@ def visitUnion(node):
         if not(outer_has_default) and not(implicitDefault):
             cases.out("default: goto fail;")
 
-        # do we have an implicit default member (no actual case, but a
-        # legal set of discriminator values)
+        # handle situation where have an implicit default member
+        # (ie no actual case, but a legal set of discriminator values)
+        # (assumes that the current discriminator is set to one of the
+        # defaults)
         if implicitDefault:
+            need_switch = 1
             cases.out("default:")
             cases.out("switch (_value){")
             cases.inc_indent()
@@ -1351,7 +1363,8 @@ def visitUnion(node):
 
             cases.dec_indent()
             cases.out("}")
-                      
+
+
 
         # output the code here
         switch = util.StringStream()

@@ -1,8 +1,41 @@
-Release Notes for omniORB 3.0.1 (18 Aug 2000)
+Release Notes for omniORB 3.0.2 (2 Oct 2000)
 ===============================
 
-This is a minor release since omniORB 3.0.0. The release notes of the last
-major release, i.e. 3.0.0, are at the end of this file.
+This is a minor release since omniORB 3.0.1. The release notes of the last
+major release, i.e. 3.0.1, are at the end of this file.
+
+
+Changes since 3.0.1:
+
+  1. Bug fixes. The list of bugs fixed since 3.0.1 can be found by
+     following the links at:
+
+        http://www.uk.research.att.com/omniORB/omniORBbug.html
+
+  2. New OMNIORB_PRINCIPAL environment variable to set the IIOP
+     principal field.
+
+  3. Shared runtime version number change
+
+       On Windows NT/95, the omniORB runtime DLLs for this version are:
+        libomniORB302_rt.dll
+        libomniORB302_rt.lib
+        libomniDynamic302_rt.dll
+        libomniDynamic302_rt.lib
+
+       Make sure you update your Visual Studio to pick up the right
+       library.
+
+       On IBM AIX, the name is unchanged, i.e.
+        libomniORB30.a
+        libomniDynamic30.a
+
+       On various unices, the name is,
+         libomniORB3.so ---> libomniORB3.so.0 --> libomniORB3.so.0.2
+
+
+Release Notes for omniORB 3.0.1 (18 Aug 2000)
+===============================
 
 Changes since 3.0.0:
 

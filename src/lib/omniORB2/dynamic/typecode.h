@@ -30,8 +30,11 @@
 
 /*
  * $Log$
- * Revision 1.11  2000/07/13 15:26:02  dpg1
- * Merge from omni3_develop for 3.0 release.
+ * Revision 1.12  2000/10/02 17:21:27  dpg1
+ * Merge for 3.0.2 release
+ *
+ * Revision 1.8.6.6  2000/09/19 09:11:21  dpg1
+ * Standard C++ does not permit type definitions in anonymous unions
  *
  * Revision 1.8.6.5  2000/06/22 10:40:13  dpg1
  * exception.h renamed to exceptiondefs.h to avoid name clash on some
@@ -157,14 +160,17 @@ public:
 
   struct Alignment {
     InfoType type;
+
+    struct SimpleAlignment {
+      omni::alignment_t alignment;
+      CORBA::ULong      size;
+    };
+    struct NastyAlignment {
+      TypeCode_base*    tc;
+    };
     union {
-      struct {
-	omni::alignment_t alignment;
-	CORBA::ULong      size;
-      } simple;
-      struct {
-	TypeCode_base*    tc;
-      } nasty;
+      SimpleAlignment simple;
+      NastyAlignment  nasty;
     };
   };
 

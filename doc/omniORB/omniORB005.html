@@ -48,6 +48,9 @@ The general form of an omniidl command line is:<BR>
 <TR><TD ALIGN=left NOWRAP><TT>-N</TT></TD>
 <TD ALIGN=left NOWRAP>Do not run the preprocessor.</TD>
 </TR>
+<TR><TD ALIGN=left NOWRAP><TT>-T</TT></TD>
+<TD ALIGN=left NOWRAP>Use a temporary file, not a pipe, for preprocessor output.</TD>
+</TR>
 <TR><TD ALIGN=left NOWRAP><TT>-Wp</TT><I>arg</I>[,<I>arg</I>...]</TD>
 <TD ALIGN=left NOWRAP>Send arguments to the preprocessor.</TD>
 </TR>
@@ -98,6 +101,15 @@ current directory is not on the include search path by default---use
 specify a different preprocessor to omnicpp. Beware that line
 directives inserted by other preprocessors are likely to confuse
 omniidl.<BR>
+<BR>
+
+<H4> Windows 9x</H4>The output from the C preprocessor is normally fed to the omniidl
+parser through a pipe. On some Windows 98 machines (but not all!) the
+pipe does not work, and the preprocessor output is echoed to the
+screen. When this happens, the omniidl parser sees an empty file, and
+produces useless stub files with strange long names. To avoid the
+problem, use the `<TT>-T</TT>' option to create a temporary file
+between the two stages.<BR>
 <BR>
 
 <H3>5.1.2&nbsp;&nbsp; Forward-declared interfaces</H3>If you have an IDL file like:<BR>

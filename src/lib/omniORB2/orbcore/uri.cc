@@ -30,8 +30,12 @@
 
 // $Id$
 // $Log$
-// Revision 1.3  2000/07/13 15:25:54  dpg1
-// Merge from omni3_develop for 3.0 release.
+// Revision 1.4  2000/10/02 17:21:26  dpg1
+// Merge for 3.0.2 release
+//
+// Revision 1.1.2.7  2000/09/13 11:45:05  dpg1
+// Minor cut-and-paste error in URI handling meant that ior: was not
+// accepted as a URI format.
 //
 // Revision 1.1.2.6  2000/06/30 14:12:07  dpg1
 // Minor fixes for FreeBSD.
@@ -211,8 +215,8 @@ CORBA::Boolean
 iorURIHandler::supports(const char* uri)
 {
   return ((uri[0] == 'I' || uri[0] == 'i') &&
-	  (uri[1] == 'O' || uri[0] == 'o') &&
-	  (uri[2] == 'R' || uri[0] == 'r') &&
+	  (uri[1] == 'O' || uri[1] == 'o') &&
+	  (uri[2] == 'R' || uri[2] == 'r') &&
 	  (uri[3] == ':'));
 }
 
