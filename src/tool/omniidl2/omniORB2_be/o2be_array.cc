@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.20  2000/01/06 11:44:22  sll
+  Update from omni2_8_develop
+
   Revision 1.19  1999/08/09 12:26:36  sll
   Updated how _out name is generated.
 
@@ -254,6 +257,47 @@ o2be_array::member_name(AST_Decl* decl, AST_Decl* in)
 }
 
 void
+o2be_array::produce_copy_loops (std::fstream &s,
+				const char* to, const char *from)
+{
+  unsigned int ndim = 0;
+  unsigned int dimval;
+  o2be_array::dim_iterator next(this);
+  while (ndim < getNumOfDims())
+    {
+      dimval = next();
+      IND(s); s << "for (unsigned int _i" << ndim << " =0;"
+  	      << "_i" << ndim << " < " << dimval << ";"
+  	      << "_i" << ndim << "++) {\n";
+      INC_INDENT_LEVEL();
+      ndim++;
+    }
+  
+  IND(s); s << to;
+  ndim = 0;
+  while (ndim < getNumOfDims())
+    {
+      s << "[_i" << ndim << "]";
+      ndim++;
+    }
+  s << " = " << from;
+  ndim = 0;
+  while (ndim < getNumOfDims())
+    {
+      s << "[_i" << ndim << "]";
+      ndim++;
+    }
+  s << ";\n";
+  ndim = 0;
+  while (ndim < getNumOfDims())
+    {
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n";
+      ndim++;
+    }
+}
+
+void
 o2be_array::produce_hdr (std::fstream &s, o2be_typedef* tdef)
 {
   const char* elm_fqname = element_name(tdef);
@@ -336,6 +380,10 @@ o2be_array::produce_hdr (std::fstream &s, o2be_typedef* tdef)
       IND(s); s << "extern "
 		<< "void " << tdef->uqname() << "_free("
 		<< tdef->uqname() << "_slice* _s);\n";
+      IND(s); s << "extern "
+		<< "void " << tdef->uqname() << "_copy("
+		<< tdef->uqname() << "_slice* _to, const "
+		<< tdef->uqname() << "_slice* _from);\n";
     }
   else
     {
@@ -348,6 +396,7 @@ o2be_array::produce_hdr (std::fstream &s, o2be_typedef* tdef)
 		<< "];\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
+
       IND(s); s << "static inline "
 		<< tdef->uqname() << "_slice* "<< tdef->uqname() << "_dup(const "
 		<< tdef->uqname() << "_slice* _s) {\n";
@@ -357,48 +406,22 @@ o2be_array::produce_hdr (std::fstream &s, o2be_typedef* tdef)
 		<< tdef->uqname() << "_alloc();\n";
       IND(s); s << "if (_data) {\n";
       INC_INDENT_LEVEL();
-      {
-	unsigned int ndim = 0;
-	unsigned int dimval;
-	o2be_array::dim_iterator next(this);
-	while (ndim < getNumOfDims())
-	  {
-	    dimval = next();
-	    IND(s); s << "for (unsigned int _i" << ndim << " =0;"
-		      << "_i" << ndim << " < " << dimval << ";"
-		      << "_i" << ndim << "++) {\n";
-	    INC_INDENT_LEVEL();
-	    ndim++;
-	  }
-	
-	IND(s); s << "_data";
-	ndim = 0;
-	while (ndim < getNumOfDims())
-	  {
-	    s << "[_i" << ndim << "]";
-	    ndim++;
-	  }
-	s << " = _s";
-	ndim = 0;
-	while (ndim < getNumOfDims())
-	  {
-	    s << "[_i" << ndim << "]";
-	    ndim++;
-	  }
-	s << ";\n";
-	ndim = 0;
-	while (ndim < getNumOfDims())
-	  {
-	    DEC_INDENT_LEVEL();
-	    IND(s); s << "}\n";
-	    ndim++;
-	  }
-      }
+      produce_copy_loops(s, "_data", "_s");
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n";
       IND(s); s << "return _data;\n";
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
+
+      IND(s); s << "static inline "
+		<< "void " << tdef->uqname() << "_copy("
+		<< tdef->uqname() << "_slice* _to, const "
+		<< tdef->uqname() << "_slice* _from) {\n";
+      INC_INDENT_LEVEL();
+      produce_copy_loops(s, "_to", "_from");
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+
       IND(s); s << "static inline "
 		<< "void " << tdef->uqname() << "_free("
 		<< tdef->uqname() << "_slice* _s) {\n";
@@ -486,46 +509,17 @@ o2be_array::produce_skel (std::fstream &s, o2be_typedef* tdef)
 		<< tdef->uqname() << "_alloc();\n";
       IND(s); s << "if (_data) {\n";
       INC_INDENT_LEVEL();
-      {
-	unsigned int ndim = 0;
-	unsigned int dimval;
-	o2be_array::dim_iterator next(this);
-	while (ndim < getNumOfDims())
-	  {
-	    dimval = next();
-	    IND(s); s << "for (unsigned int _i" << ndim << " =0;"
-		      << "_i" << ndim << " < " << dimval << ";"
-		      << "_i" << ndim << "++) {\n";
-	    INC_INDENT_LEVEL();
-	    ndim++;
-	  }
-	
-	IND(s); s << "_data";
-	ndim = 0;
-	while (ndim < getNumOfDims())
-	  {
-	    s << "[_i" << ndim << "]";
-	    ndim++;
-	  }
-	s << " = _s";
-	ndim = 0;
-	while (ndim < getNumOfDims())
-	  {
-	    s << "[_i" << ndim << "]";
-	    ndim++;
-	  }
-	s << ";\n";
-	ndim = 0;
-	while (ndim < getNumOfDims())
-	  {
-	    DEC_INDENT_LEVEL();
-	    IND(s); s << "}\n";
-	    ndim++;
-	  }
-      }
+      produce_copy_loops(s, "_data", "_s");
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n";
       IND(s); s << "return _data;\n";
+      DEC_INDENT_LEVEL();
+      IND(s); s << "}\n\n";
+      IND(s); s << "void " << tdef->uqname() << "_copy("
+		<< tdef->uqname() << "_slice* _to, const "
+		<< tdef->uqname() << "_slice* _from) {\n";
+      INC_INDENT_LEVEL();
+      produce_copy_loops(s, "_to", "_from");
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n\n";
       IND(s); s << "void " << tdef->uqname() << "_free("
@@ -727,6 +721,18 @@ o2be_array::produce_typedef_hdr(std::fstream &s, o2be_typedef* tdef1,
   }
   IND(s); s << ( !(tdef1->defined_in()==idl_global->root()) ?
 		 "static " : "extern " )
+	    << "void " << tdef1->uqname() << "_copy("
+	    << tdef1->uqname() << "_slice* _to, const "
+	    << tdef1->uqname() << "_slice* _from) ";
+  if (!(tdef1->defined_in()==idl_global->root())) {
+    s << "{ " << tdef2->unambiguous_name(tdef1) 
+      << "_copy(_to, _from); }\n";
+  }
+  else {
+    s << ";\n";
+  }
+  IND(s); s << ( !(tdef1->defined_in()==idl_global->root()) ?
+		 "static " : "extern " )
 	    << "void " << tdef1->uqname() << "_free( "
 	    << tdef1->uqname() << "_slice* p) ";
   if (!(tdef1->defined_in()==idl_global->root())) {
@@ -756,6 +762,14 @@ o2be_array::produce_typedef_skel(std::fstream &s, o2be_typedef* tdef1,
 	      << "_slice* p) {\n";
     INC_INDENT_LEVEL();
     IND(s); s << "return " << tdef2->fqname() << "_dup(p);\n";
+    DEC_INDENT_LEVEL();
+    IND(s); s << "}\n\n";
+
+    IND(s); s << "extern void " << tdef1->uqname() << "_copy("
+		<< tdef1->uqname() << "_slice* _to, const "
+		<< tdef1->uqname() << "_slice* _from) {\n";
+    INC_INDENT_LEVEL();
+    IND(s); s << tdef2->fqname() << "_copy(_to, _from);\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n\n";
 

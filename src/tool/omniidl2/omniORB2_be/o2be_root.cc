@@ -28,8 +28,11 @@
 
 /*
   $Log$
-  Revision 1.24  1999/10/08 13:44:58  sll
+  Revision 1.25  2000/01/06 11:44:22  sll
   Update from omni2_8_develop
+
+  Revision 1.22.2.2  1999/09/28 15:59:50  djr
+  Ooops -- need to workaround MSVC bug in previous patch.
 
   Revision 1.22.2.1  1999/09/28 09:57:54  djr
   Properly escape characters in include file guards.
@@ -512,7 +515,7 @@ IMPL_NARROW_FROM_SCOPE(o2be_root)
 static char*
 internal_make_include_filename(const char* bname)
 {
-  char* ep = strrchr(bname, '.');
+  const char* ep = strrchr(bname, '.');
   size_t blen = ep ? (ep - bname) : strlen(bname);
   char* filename = new char[blen + 1 + o2be_global::suffixlen()];
   strncpy(filename, bname, blen);
