@@ -1,15 +1,24 @@
-MYSRCS = include.c main.c parse.c pr.c cppsetup.c ifparser.c gnuwin32.c
+MYSRCS = include.c main.c parse.c pr.c cppsetup.c ifparser.c
+
+DIR_CPPFLAGS = -DDEBUG
+
+ifdef NTArchitecture
+MYSRCS += gnuwin32.c
+LIBS = advapi32.lib
+DIR_CPPFLAGS += -DWIN32
+endif
+
 OBJS = $(MYSRCS:.c=.o)
 
-DIR_CPPFLAGS = -DWIN32 -DDEBUG
+prog = $(patsubst %,$(BinPattern),omkdepend)
 
-all:: omkdepend.exe
+all:: $(prog)
 
-omkdepend.exe: $(OBJS)
-	@(libs="advapi32.lib"; $(CExecutable))
+$(prog): $(OBJS)
+	@(libs="$(LIBS)"; $(CExecutable))
 
-export:: omkdepend.exe
+export:: $(prog)
 	@$(ExportExecutable)
 
 clean::
-	$(RM) omkdepend.exe
+	$(RM) $(prog)

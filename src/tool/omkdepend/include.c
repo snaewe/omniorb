@@ -101,7 +101,11 @@ struct inclist *inc_path(file, include, dot)
 	 */
 	if (!found)
 		for (pp = includedirs; *pp; pp++) {
+#ifdef WIN32
 			sprintf(path, "%s\\%s", *pp, include);
+#else
+			sprintf(path, "%s/%s", *pp, include);
+#endif
 			remove_dotdot(path);
 			if (stat(path, &st) == 0) {
 				ip = newinclude(path, include);
