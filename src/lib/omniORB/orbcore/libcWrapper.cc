@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.16  1999/01/07 15:57:39  djr
+  Implemented strcasecmp() and strncasecmp() for those platforms that do
+  not have it.
+
   Revision 1.15  1998/10/20 17:54:29  sll
   On HPUX, allocate memory hostent_data the right way.
 
@@ -69,9 +73,15 @@
 #include <string.h>
 #include <stdlib.h>
 
+#if defined(_HAS_NOT_GOT_strcasecmp) || defined(_HAS_NOT_GOT_strncasecmp)
+#include <ctype.h>  //  for toupper and tolower.
+#endif
+
 #include "libcWrapper.h"
 
-omni_mutex          LibcWrapper::non_reentrant;
+
+omni_mutex LibcWrapper::non_reentrant;
+
 
 int
 LibcWrapper::gethostbyname(const char *name,
@@ -255,7 +265,6 @@ again:
 }
 
 
-
 int LibcWrapper::isipaddr(const char* hname)
 {
   // Test if string contained hname is ipaddress
@@ -325,3 +334,31 @@ int LibcWrapper::isipaddr(const char* hname)
 
   return 1;
 }
+
+
+#ifdef _HAS_NOT_GOT_strcasecmp
+int
+strcasecmp(const char *s1, const char *s2)
+{
+  if( s1 == s2 )  return 0;
+
+  while( *s1 && tolower(*s1) == tolower(*s2) )
+    s1++, s2++;
+
+  return (int)*s1 - *s2;
+}
+#endif
+
+
+#ifdef _HAS_NOT_GOT_strncasecmp
+int
+strncasecmp(const char *s1, const char *s2, size_t n)
+{
+  if( s1 == s2 || !n )  return 0;
+
+  while( --n && *s1 && tolower(*s1) == tolower(*s2) )
+    s1++, s2++;
+
+  return (int)*s1 - *s2;
+}
+#endif
