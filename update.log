@@ -1,3 +1,11 @@
+Thu Feb 19 12:15:15 GMT 1998 ewc
+================================
+
+- Fix to recursive unions
+
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+
+
 Wed Feb 11 15:00:23 GMT 1998 ewc
 ================================
 
