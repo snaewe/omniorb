@@ -1,4 +1,62 @@
 
+Mon Jul 21 17:14:09 BST 1997 tjr
+================================
+
+Fix all dir.mk to use new platform make variables
+
+src/dir.mk
+src/tool/dir.mk
+src/tool/nt			- moved to win32
+src/tool/win32			- moved from nt
+src/tool/win32/dir.mk
+src/tool/omkdepend/dir.mk
+src/tool/omniidl2/dir.mk
+src/tool/omniidl2/ast/dir.mk
+src/tool/omniidl2/driver/dir.mk
+src/tool/omniidl2/fe/dir.mk
+src/tool/omniidl2/narrow/dir.mk
+src/tool/omniidl2/util/dir.mk
+src/tool/omniidl2/omniORB2_be/dir.mk
+src/lib/dir.mk
+src/lib/omnithread/dir.mk
+src/lib/omnithread/sharedlib/dir.mk - use same technique as omniORB2 sharedlib
+				      dir.mk
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/sharedlib/dir.mk
+src/appl/dir.mk
+src/appl/omniNames/dir.mk
+src/appl/utils/dir.mk
+src/examples/dir.mk
+
+
+Mon Jul 21 15:14:26 BST 1997 tjr
+=================================
+
+new method for doing dependencies + new make vars for determining platform
+
+mk/afterdir/mk
+mk/unix.mk
+mk/atmos.mk
+mk/nt.mk			- removed
+mk/win32.mk			- new file
+mk/platforms/x86_nt_3.5.mk	- use win32.mk not nt.mk
+mk/platforms/sun4_sosV_5.5.mk
+mk/platforms/i586_linux_2.0.mk
+mk/platforms/alpha_osf1_3.2.mk
+mk/platforms/alpha_linux_2.0.mk
+
+src/tool/omkdepend		- moved from src/tool/nt/omkdepend
+src/tool/omkdepend/dir.mk	- enable use on unix platforms
+src/tool/omkdepend/ifparser.c	- simpler parsing of #if expressions
+src/tool/omkdepend/include.c	- enable use on unix platforms
+src/tool/omkdepend/main.c	- Change the output so that processing xxx.c
+				  or xxx.cc produces xxx.d. Also remove
+				  unnecessary code.
+src/tool/omkdepend/pr.c		- enable use on unix platforms
+src/tool/dir.mk			- add omkdepend
+src/tool/nt/dir.mk		- remove omkdepend
+
+
 Mon Jul 21 14:40:26 BST 1997 tjr
 ================================
 
