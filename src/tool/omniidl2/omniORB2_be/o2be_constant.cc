@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.11  1999/06/18 20:46:44  sll
+  Replaced _LC_attr with _core_attr.
+
   Revision 1.10  1999/03/11 16:26:11  djr
   Updated copyright notice
 
@@ -92,37 +95,37 @@ o2be_constant::produce_hdr(std::fstream& s)
   AST_Expression::ExprType etype = et();
   switch (etype) {
   case AST_Expression::EV_short:
-    s << (!intfconst?"INT":"") << " const CORBA::Short";
+    s << (!intfconst?"INT":" _core_attr") << " const CORBA::Short";
     break;
   case AST_Expression::EV_ushort:
-    s << (!intfconst?"INT":"") << " const CORBA::UShort";
+    s << (!intfconst?"INT":" _core_attr") << " const CORBA::UShort";
     break;
   case AST_Expression::EV_long:
-    s << (!intfconst?"INT":"") << " const CORBA::Long";
+    s << (!intfconst?"INT":" _core_attr") << " const CORBA::Long";
     break;
   case AST_Expression::EV_ulong:
-    s << (!intfconst?"INT":"") << " const CORBA::ULong";
+    s << (!intfconst?"INT":" _core_attr") << " const CORBA::ULong";
     break;
   case AST_Expression::EV_float:
     initializer = 0;
-    s << " const CORBA::Float";
+    s << " _core_attr const CORBA::Float";
     break;
   case AST_Expression::EV_double:
     initializer = 0;
-    s << " const CORBA::Double";
+    s << " _core_attr const CORBA::Double";
     break;
   case AST_Expression::EV_char:
-    s <<  (!intfconst?"INT":"") << " const CORBA::Char";
+    s <<  (!intfconst?"INT":" _core_attr") << " const CORBA::Char";
     break;
   case AST_Expression::EV_octet:
-    s << (!intfconst?"INT":"") << " const CORBA::Octet";
+    s << (!intfconst?"INT":" _core_attr") << " const CORBA::Octet";
     break;
   case AST_Expression::EV_bool:
-    s << (!intfconst?"INT":"") << " const CORBA::Boolean";
+    s << (!intfconst?"INT":" _core_attr") << " const CORBA::Boolean";
     break;
   case AST_Expression::EV_string:
     initializer = 0;
-    s << " const char *";
+    s << " _core_attr const char *";
     break;
   default:
     throw o2be_internal_error(__FILE__,__LINE__,"unexpected type under constant class");
