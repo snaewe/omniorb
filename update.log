@@ -1,3 +1,16 @@
+Fri Aug 23 15:14:23 BST 2002 dgrisby
+====================================
+
+- Avoid exception with bidir when no POA.
+
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopRope.cc
+
+- Avoid init exceptioni when SSL linked but not configured.
+
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+
+
 Wed Aug 21 21:04:12 BST 2002 dgrisby
 ====================================
 

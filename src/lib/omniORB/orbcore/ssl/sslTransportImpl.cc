@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2002/08/23 14:18:38  dgrisby
+  Avoid init exceptioni when SSL linked but not configured.
+
   Revision 1.1.2.7  2002/04/16 12:44:27  dpg1
   Fix SSL accept bug, clean up logging.
 
@@ -211,35 +214,34 @@ public:
 	  stat(sslContext::certificate_authority_file,&sb) < 0) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger log;
-	  log << "Error: SSL CA certificate file is not set "
-	      << "or cannot be found\n";
+	  log << "Warning: SSL CA certificate file is not set "
+	      << "or cannot be found. SSL transport disabled.\n";
 	}
-	OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
-		      CORBA::COMPLETED_NO);
+	return;
       }
       
       if (!sslContext::key_file || stat(sslContext::key_file,&sb) < 0) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger log;
-	  log << "Error: SSL private key and certificate file is not set "
-	      << "or cannot be found\n";
+	  log << "Warning: SSL private key and certificate file is not set "
+	      << "or cannot be found. SSL transport disabled.\n";
 	}
-	OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
-		      CORBA::COMPLETED_NO);
+	return;
       }
       if (!sslContext::key_file_password) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger log;
-	  log << "Error: SSL password for private key and certificate file is not set\n";
+	  log << "Warning: SSL password for private key and certificate "
+	      << "file is not set. SSL transport disabled.\n";
 	}
-	OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
-		      CORBA::COMPLETED_NO);
+	return;
       }
 
       // Create the default singleton
-      sslContext::singleton = new sslContext(sslContext::certificate_authority_file,
-					     sslContext::key_file,
-					     sslContext::key_file_password);
+      sslContext::singleton =
+	new sslContext(sslContext::certificate_authority_file,
+		       sslContext::key_file,
+		       sslContext::key_file_password);
     }
     sslContext::singleton->internal_initialise();
     _the_sslTransportImpl = new sslTransportImpl(sslContext::singleton);
