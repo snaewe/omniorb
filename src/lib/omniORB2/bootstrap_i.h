@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2  1998/08/25 18:52:09  sll
+  Added dummy marshalling functions in serviceRecord to make gcc-2.7.2 happy.
+
   Revision 1.1  1998/08/21 19:28:15  sll
   Initial revision
 
@@ -71,6 +74,13 @@ class omniInitialReferences {
   struct serviceRecord {
     CORBA::String_member id;
     CORBA::Object_member ref;
+
+    // The following marshalling functions are not implemented.
+    size_t NP_alignedSize(size_t initialoffset) const;
+    void operator>>= (NetBufferedStream &s) const;
+    void operator<<= (NetBufferedStream &s);
+    void operator>>= (MemBufferedStream &s) const;
+    void operator<<= (MemBufferedStream &s);
   };
 
   _CORBA_Unbounded_Sequence< serviceRecord > pd_serviceList;
