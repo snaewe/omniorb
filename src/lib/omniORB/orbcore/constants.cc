@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.7  1997/12/12 20:00:00  sll
+  Defined new version variable omniORB_x_y.
+
   Revision 1.6  1997/12/09 18:31:47  sll
   New constant CORBA::Object::repositoryID.
   omni::myORBId and omni::myBOAId removed.
@@ -43,6 +46,9 @@
   */
 
 #include <omniORB2/CORBA.h>
+
+// See the description of this variable in omniInternal.h
+const char* omniORB_2_4 = "omniORB version 2.4.x";
 
 const IOP::ProfileId       IOP::TAG_INTERNET_IOP = 0;
 const IOP::ProfileId       IOP::TAG_MULTIPLE_COMPONENTS = 1;
