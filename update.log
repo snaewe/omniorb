@@ -1,3 +1,15 @@
+Fri Jan  7 00:15:43 GMT 2005 dgrisby
+====================================
+
+- Install valueTemplateDefns.h.
+
+include/omniORB4/GNUmakefile.in
+
+- Handle recursive structs/unions in containsValueType.
+
+src/tool/omniidl/python/omniidl/idltype.py
+
+
 Thu Jan  6 22:53:18 GMT 2005 dgrisby
 ====================================
 

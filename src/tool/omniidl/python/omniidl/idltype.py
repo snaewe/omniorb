@@ -263,13 +263,20 @@ Functions:
     def name(self):       return self.__scopedName[-1]
 
 
-def containsValueType(t):
+def containsValueType(t, track=None):
     """Returns true if the type contains valuetypes"""
 
     import idlast
 
+    if track is None:
+        track = {}
+
+    if track.has_key(id(t)):
+        return 0
+    track[id(t)] = None
+
     if isinstance(t, Sequence):
-        return containsValueType(t.seqType())
+        return containsValueType(t.seqType(), track)
 
     if isinstance(t, Declared):
         d = t.decl()
@@ -277,16 +284,16 @@ def containsValueType(t):
         if isinstance(d, idlast.Declarator):
             alias = d.alias()
             if alias:
-                return containsValueType(alias.aliasType())
+                return containsValueType(alias.aliasType(), track)
 
         if isinstance(d, idlast.Struct):
             for m in d.members():
-                if containsValueType(m.memberType()):
+                if containsValueType(m.memberType(), track):
                     return 1
 
         if isinstance(d, idlast.Union):
             for c in d.cases():
-                if containsValueType(c.caseType()):
+                if containsValueType(c.caseType(), track):
                     return 1
 
         if isinstance(d, idlast.ValueAbs):
