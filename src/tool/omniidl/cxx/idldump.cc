@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.11.2.10  2002/02/25 15:02:18  dpg1
+// Dump wstring constants properly.
+//
 // Revision 1.11.2.9  2002/02/18 11:59:22  dpg1
 // Full autoconf support.
 //
@@ -264,6 +267,35 @@ printlongdouble(IDL_LongDouble d)
 #endif
 
 
+static void
+printwchar(IDL_WChar wc)
+{
+  if (wc == '\\')
+    printf("L'\\\\'");
+  else if (wc < 0xff && isprint(wc))
+    printf("L'%c'", (char)wc);
+  else
+    printf("L'\\u%04x", (int)wc);
+}
+
+static void
+printwstring(const IDL_WChar* ws)
+{
+  printf("L\"");
+  int i, wc;
+  for (i=0; ws[i]; ++i) {
+    wc = ws[i];
+    if (wc == '\\')
+      printf("\\\\");
+    else if (wc < 0xff && isprint(wc))
+      putchar(wc);
+    else
+      printf("\\u%04x", (int)wc);
+  }
+  putchar('"');
+}
+
+
 void
 DumpVisitor::
 visitConst(Const* c)
@@ -302,8 +334,8 @@ visitConst(Const* c)
 #ifdef HAS_LongDouble
   case IdlType::tk_longdouble:printlongdouble(c->constAsLongDouble()); break;
 #endif
-  case IdlType::tk_wchar:     printf("'\\u%hx'", c->constAsWChar());   break;
-  case IdlType::tk_wstring:   printf("[cannot show wide string]");     break;
+  case IdlType::tk_wchar:     printwchar(c->constAsWChar());           break;
+  case IdlType::tk_wstring:   printwstring(c->constAsWString());       break;
 
   case IdlType::tk_fixed:
     {

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.7  2002/02/25 15:02:18  dpg1
+# Dump wstring constants properly.
+#
 # Revision 1.8.2.6  2001/08/29 11:54:23  dpg1
 # Clean up const handling in IDL compiler.
 #
@@ -148,7 +151,7 @@ module @id@ {""", id = node.identifier())
             value = 'L"' + idlutil.escapifyWString(node.value()) + '"'
 
         elif node.constKind() == idltype.tk_wchar:
-            value = "L'" + idlutil.escapifyWString(node.value()) + "'"
+            value = "L'" + idlutil.escapifyWString([node.value()]) + "'"
 
         elif node.constKind() in [idltype.tk_float, idltype.tk_double,
                                   idltype.tk_longdouble]:
