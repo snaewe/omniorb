@@ -41,7 +41,7 @@
 
 /* If someone has defined alloca as a macro,
    there must be some other way alloca is supposed to work.  */
-#ifndef alloca
+#if !defined(alloca) && !defined(HAVE_ALLOCA)
 
 #ifdef emacs
 #ifdef static

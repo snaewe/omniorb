@@ -4,6 +4,9 @@
 #elif defined(__sunos__)
 #include "config-solaris.h"
 
+#elif defined(__aix__)
+#include "config-aix.h"
+
 #elif defined(__WIN32__)
 #include "config-windows.h"
 

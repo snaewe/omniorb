@@ -156,6 +156,48 @@ endif
 
 
 #############################################################################
+#   Make rules for AIX                                                      #
+#############################################################################
+
+ifdef AIX
+
+CXXOPTIONS += -I. -I/usr/local/include
+
+lib = _omniidlmodule.so
+libinit = init_omniidl
+py_exp = /usr/local/lib/python1.5/config/python.exp
+
+ifeq ($(notdir $(CXX)),xlC_r)
+
+$(lib): $(OBJS) $(PYOBJS)
+	@(set -x; \
+	$(RM) $@; \
+	$(MAKECPPSHAREDLIB) \
+	     -o $(lib) \
+	     -bI:$(py_exp) \
+	     -n $(libinit) \
+	     $(IMPORT_LIBRARY_FLAGS) \
+	     -bhalt:4 -T512 -H512 \
+	     $(filter-out $(LibSuffixPattern),$^) \
+	     -p 40 \
+	 ; \
+       )
+
+endif
+
+all:: $(lib)
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+
+endif
+
+
+
+#############################################################################
 #   Test executable                                                         #
 #############################################################################
 
