@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.28  2004/07/23 14:07:04  dgrisby
+# Subtly incorrect generated code for arrays.
+#
 # Revision 1.3.2.27  2004/07/01 19:13:32  dgrisby
 # Suppress compiler warnings on void methods. Thanks Peter Klotz.
 #
@@ -602,52 +605,6 @@ if( omni::strMatch(op, "@idl_operation_name@") ) {
   @prepare_out_args@
   _handle.upcall(this,_call_desc);
   return 1;
-}
-"""
-
-##
-## Typedef
-##
-typedef_global_array_declarator = """\
-
-@fq_derived@_slice* @fq_derived@_alloc() {
-  return new @fq_derived@_slice@decl_first_dim_str@;
-}
-
-@fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* _s)
-{
-  if (!_s) return 0;
-  @fq_derived@_slice* _data = @fq_derived@_alloc();
-  if (_data) {
-    @dup_loop@
-  }
-  return _data;
-}
-
-void @fq_derived@_copy(@fq_derived@_slice* _to, const @fq_derived@_slice* _from) {
-  @copy_loop@
-}
-
-void @fq_derived@_free(@fq_derived@_slice* _s) {
-  delete [] _s;
-}
-"""
-
-typedef_global_simple_array = """\
-@fq_derived@_slice* @fq_derived@_alloc() {
-  return @fq_aliased@_alloc();
-}
-
-@fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* p) {
-  return @fq_aliased@_dup(p);
-}
-
-void @fq_derived@_copy( @fq_derived@_slice* _to, const @fq_derived@_slice* _from){
-  @fq_aliased@_copy(_to, _from);
-}
-
-void @fq_derived@_free( @fq_derived@_slice* p) {
-   @fq_aliased@_free(p);
 }
 """
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.22  2004/07/23 14:07:04  dgrisby
+# Subtly incorrect generated code for arrays.
+#
 # Revision 1.5.2.21  2004/04/19 09:25:21  dgrisby
 # Nil object references are bound to the lifetime of the skeleton file
 # if OMNI_UNLOADABLE_STUBS is defined.
@@ -472,20 +475,11 @@ typedef @base@_copyHelper @derived@_copyHelper;
 typedef @base@_var @derived@_var;
 typedef @base@_out @derived@_out;
 typedef @base@_forany @derived@_forany;
-"""
 
-typedef_simple_to_array_static_fn = """\
-static @derived@_slice* @derived@_alloc() { return @base@_alloc(); }
-static @derived@_slice* @derived@_dup(const @derived@_slice* p) { return @base@_dup(p); }
-static void @derived@_copy( @derived@_slice* _to, const @derived@_slice* _from ) { @base@_copy(_to, _from); }
-static void @derived@_free( @derived@_slice* p) { @base@_free(p); }
-"""
-
-typedef_simple_to_array_extern = """\
-extern @derived@_slice* @derived@_alloc();
-extern @derived@_slice* @derived@_dup(const @derived@_slice* p);
-extern void @derived@_copy( @derived@_slice* _to, const @derived@_slice* _from );
-extern void @derived@_free( @derived@_slice* p);
+@qualifier@ inline @derived@_slice* @derived@_alloc() { return @base@_alloc(); }
+@qualifier@ inline @derived@_slice* @derived@_dup(const @derived@_slice* p) { return @base@_dup(p); }
+@qualifier@ inline void @derived@_copy( @derived@_slice* _to, const @derived@_slice* _from ) { @base@_copy(_to, _from); }
+@qualifier@ inline void @derived@_free( @derived@_slice* p) { @base@_free(p); }
 """
 
 typedef_simple_string = """\
@@ -551,22 +545,12 @@ typedef_enum_oper_friend = """\
 typedef_array = """\
 typedef @type@ @name@@dims@;
 typedef @type@ @name@_slice@taildims@;
-"""
 
-# this is almost the same as typedef_simple_to_array_extern above
-typedef_array_extern = """\
-extern @name@_slice* @name@_alloc();
-extern @name@_slice* @name@_dup(const @name@_slice* _s);
-extern void @name@_free(@name@_slice* _s);
-extern void @name@_copy(@name@_slice* _to, const @name@_slice* _from);
-"""
-
-typedef_array_static = """\
-static inline @name@_slice* @name@_alloc() {
+@qualifier@ inline @name@_slice* @name@_alloc() {
   return new @name@_slice[@firstdim@];
 }
 
-static inline @name@_slice* @name@_dup(const @name@_slice* _s) {
+@qualifier@ inline @name@_slice* @name@_dup(const @name@_slice* _s) {
   if (!_s) return 0;
   @name@_slice* _data = @name@_alloc();
   if (_data) {
@@ -575,11 +559,11 @@ static inline @name@_slice* @name@_dup(const @name@_slice* _s) {
   return _data;
 }
 
-static inline void @name@_copy(@name@_slice* _to, const @name@_slice* _from){
+@qualifier@ inline void @name@_copy(@name@_slice* _to, const @name@_slice* _from){
   @copy_loop@
 }
 
-static inline void @name@_free(@name@_slice* _s) {
+@qualifier@ inline void @name@_free(@name@_slice* _s) {
     delete [] _s;
 }
 """

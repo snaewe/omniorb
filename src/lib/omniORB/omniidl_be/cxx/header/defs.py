@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.16  2004/07/23 14:07:04  dgrisby
+# Subtly incorrect generated code for arrays.
+#
 # Revision 1.33.2.15  2003/03/31 15:35:08  dgrisby
 # Code generated for forward declared structs inside interfaces would
 # not compile on MSVC.
@@ -309,6 +312,10 @@ def const_qualifier(insideModule, insideClass):
     else:
         return "_CORBA_MODULE_VAR"
 
+# Same logic for function qualifiers
+def func_qualifier():
+    return const_qualifier(__insideModule, __insideClass)
+
 
 #
 # Control arrives here
@@ -549,17 +556,8 @@ def visitTypedef(node):
                 # for the base type
                 stream.out(template.typedef_simple_to_array,
                            base = basicReferencedTypeID,
-                           derived = derivedName)
-                # the declaration of the alloc(), dup() and free() methods
-                # depend on whether the declaration is in global scope
-                if not is_global_scope:
-                    stream.out(template.typedef_simple_to_array_static_fn,
-                               base = basicReferencedTypeID,
-                               derived = derivedName)
-                else:
-                    stream.out(template.typedef_simple_to_array_extern,
-                               base = basicReferencedTypeID,
-                               derived = derivedName)
+                           derived = derivedName,
+                           qualifier = func_qualifier())
                            
             # Non-array of string
             elif d_type.string():
@@ -818,37 +816,30 @@ def visitTypedef(node):
             
             typestring = aliasType.member(environment)
 
+            # build the _dup loop
+            def dup_loop(stream = stream, all_dims = all_dims):
+                loop = cxx.For(stream, all_dims)
+                stream.out("\n_data@index@ = _s@index@;\n",
+                           index = loop.index())
+                loop.end()
+
+            # build the _copy loop
+            def copy_loop(stream = stream, all_dims = all_dims):
+                loop = cxx.For(stream, all_dims)
+                stream.out("\n_to@index@ = _from@index@;\n",
+                           index = loop.index())
+                loop.end()
+
             stream.out(template.typedef_array,
                        name = derivedName,
                        type = typestring,
                        dims = dimsString,
-                       taildims = taildims)
+                       taildims = taildims,
+                       firstdim = repr(all_dims[0]),
+                       dup_loop = dup_loop,
+                       copy_loop = copy_loop,
+                       qualifier = func_qualifier())
 
-            # if in global scope we define the functions as extern
-            if is_global_scope:
-                stream.out(template.typedef_array_extern,
-                           name = derivedName)
-            else:
-                # build the _dup loop
-                def dup_loop(stream = stream, all_dims = all_dims):
-                    loop = cxx.For(stream, all_dims)
-                    stream.out("\n_data@index@ = _s@index@;\n",
-                               index = loop.index())
-                    loop.end()
-
-                # build the _copy loop
-                def copy_loop(stream = stream, all_dims = all_dims):
-                    loop = cxx.For(stream, all_dims)
-                    stream.out("\n_to@index@ = _from@index@;\n",
-                               index = loop.index())
-                    loop.end()
-
-                # output the static functions
-                stream.out(template.typedef_array_static,
-                           name = derivedName,
-                           firstdim = repr(all_dims[0]),
-                           dup_loop = dup_loop,
-                           copy_loop = copy_loop)                            
             # output the _copyHelper class
             if types.variableDecl(node):
                 stream.out(template.typedef_array_copyHelper,

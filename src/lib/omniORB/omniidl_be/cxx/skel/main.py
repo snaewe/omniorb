@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.11  2004/07/23 14:07:04  dgrisby
+# Subtly incorrect generated code for arrays.
+#
 # Revision 1.29.2.10  2003/08/15 10:53:59  dgrisby
 # Avoid bool representation problem with Python 2.3.
 #
@@ -362,33 +365,7 @@ def visitTypedef(node):
 
         fq_derived = scopedName.fullyQualify()
 
-        if is_global_scope and is_array_declarator:
-            # build _dup and _copy loops
-            dup_loop = output.StringStream()
-            loop = cxx.For(dup_loop, full_dims)
-            index = loop.index()
-            dup_loop.out("_data" + index + " = _s" + index + ";")
-            loop.end()
-
-            copy_loop = output.StringStream()
-            loop = cxx.For(copy_loop, full_dims)
-            index = loop.index()
-            copy_loop.out("_to" + index + " = _from" + index + ";")
-            loop.end()
-
-            stream.out(template.typedef_global_array_declarator,
-                       fq_derived = fq_derived,
-                       decl_dims_str = decl_dims_str,
-                       decl_first_dim_str = decl_first_dim_str,
-                       dup_loop = str(dup_loop),
-                       copy_loop = str(copy_loop))
-
-        elif is_global_scope and is_array:
-            stream.out(template.typedef_global_simple_array,
-                       fq_derived = fq_derived,
-                       fq_aliased = fq_aliased)
-
-        elif d_type.sequence():
+        if d_type.sequence():
             seqType = types.Type(d_type.type().seqType())
             d_seqType = seqType.deref()
             if d_seqType.structforward() or d_seqType.unionforward():
@@ -409,8 +386,6 @@ def visitTypedef(node):
 
                 stream.out(template.sequence_forward_defns,
                            fqname=fqname, name=name, element=element)
-                
-    pass
 
 def visitEnum(node):
     return
