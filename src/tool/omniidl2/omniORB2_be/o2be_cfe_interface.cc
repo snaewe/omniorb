@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.16  1998/08/10 15:33:52  sll
+  Now catch all internal exceptions and print an error message instead
+  of causing a core dump.
+
   Revision 1.15  1998/08/06 16:27:03  sll
   Re-indent getopt(). Previously getopt() failed to check for null buf_left
   before it is de-referenced.
@@ -185,13 +189,11 @@ BE_produce()
          << " unsupported IDL syntax. " << ex.msg() << std::endl;
     idl_global->err_count();
   }
-#if 0
   catch (o2be_internal_error &ex) {
     std::cerr << "omniORB2 back end internal error: " 
 	 << ex.file() << ":" << ex.line() << "-" << ex.errmsg() << std::endl;
     idl_global->err_count();
   };
-#endif
   return;
 }
 
