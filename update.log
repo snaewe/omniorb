@@ -1,3 +1,16 @@
+Fri Dec 12 19:54:46 GMT 1997 sll
+================================
+
+- Defined a variable omniORB_x_y in the runtime library and produce stubs
+  that reference this variable in the SK.cc files. For shared libary version
+  2.4.0, the variable name is omniORB_2_4.
+  This variable is defined to detect at compile time and link time possible
+  mismatch in the stub and the runtime versions.
+
+include/omniORB2/omniInternal.h
+src/lib/omniORB2/constants.cc
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+ 
 Fri Dec 12 18:36:11 GMT 1997 sll
 ================================
 
@@ -21,80 +34,80 @@ mk/platforms/hppa_hpux_10.20.mk
 mk/platforms/i586_linux_2.0.mk
 mk/platforms/alpha_linux_2.0.mk
 
-lib/omniORB2/dir.mk
-lib/omniORB2/corbaOrb.cc
-lib/omniORB2/initFile.cc
-lib/omniORB2/tcpSocketMTfactory.cc
-lib/omniORB2/tcpSocket.cc
-lib/omniORB2/tcpATMosMTfactory.cc
-lib/omniORB2/tcpATMos.cc
-lib/omniORB2/sharedlib/dir.mk
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/corbaOrb.cc
+src/lib/omniORB2/initFile.cc
+src/lib/omniORB2/tcpSocketMTfactory.cc
+src/lib/omniORB2/tcpSocket.cc
+src/lib/omniORB2/tcpATMosMTfactory.cc
+src/lib/omniORB2/tcpATMos.cc
+src/lib/omniORB2/sharedlib/dir.mk
 
 include/omniORB2/omniORB.h
 
-lib/omniORB2/gatekeepers/dir.mk NEW
-lib/omniORB2/gatekeepers/dummystub/dir.mk NEW
-lib/omniORB2/gatekeepers/dummystub/gatekeeper.cc NEW
-lib/omniORB2/gatekeepers/tcpwrapper/BLURB NEW
-lib/omniORB2/gatekeepers/tcpwrapper/Banners.Makefile NEW
-lib/omniORB2/gatekeepers/tcpwrapper/CHANGES NEW
-lib/omniORB2/gatekeepers/tcpwrapper/DISCLAIMER NEW
-lib/omniORB2/gatekeepers/tcpwrapper/README NEW
-lib/omniORB2/gatekeepers/tcpwrapper/README.IRIX NEW
-lib/omniORB2/gatekeepers/tcpwrapper/README.NIS NEW
-lib/omniORB2/gatekeepers/tcpwrapper/clean_exit.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/diag.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/dir.mk NEW
-lib/omniORB2/gatekeepers/tcpwrapper/environ.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/eval.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/fakelog.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/fakelog2.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/fix_options.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/fromhost.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/gatekeeper.cc NEW
-lib/omniORB2/gatekeepers/tcpwrapper/hosts_access.3 NEW
-lib/omniORB2/gatekeepers/tcpwrapper/hosts_access.5 NEW
-lib/omniORB2/gatekeepers/tcpwrapper/hosts_access.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/hosts_ctl.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/hosts_options.5 NEW
-lib/omniORB2/gatekeepers/tcpwrapper/inetcf.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/inetcf.h NEW
-lib/omniORB2/gatekeepers/tcpwrapper/misc.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/miscd.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/mystdarg.h NEW
-lib/omniORB2/gatekeepers/tcpwrapper/myvsyslog.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/ncr.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/options.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/patchlevel.h NEW
-lib/omniORB2/gatekeepers/tcpwrapper/percent_m.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/percent_x.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/printf.ck NEW
-lib/omniORB2/gatekeepers/tcpwrapper/ptx.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/refuse.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/rfc931.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/safe_finger.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/scaffold.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/scaffold.h NEW
-lib/omniORB2/gatekeepers/tcpwrapper/setenv.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/shell_cmd.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/socket.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/strcasecmp.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tcpd.8 NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tcpd.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tcpd.h NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tcpdchk.8 NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tcpdchk.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tcpdmatch.8 NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tcpdmatch.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tli-sequent.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tli-sequent.h NEW
-lib/omniORB2/gatekeepers/tcpwrapper/tli.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/try-from.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/update.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/vfprintf.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/workarounds.c NEW
-lib/omniORB2/gatekeepers/tcpwrapper/sharedlib NEW
-lib/omniORB2/gatekeepers/tcpwrapper/sharedlib/dir.mk NEW
+src/lib/omniORB2/gatekeepers/dir.mk NEW
+src/lib/omniORB2/gatekeepers/dummystub/dir.mk NEW
+src/lib/omniORB2/gatekeepers/dummystub/gatekeeper.cc NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/BLURB NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/Banners.Makefile NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/CHANGES NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/DISCLAIMER NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/README NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/README.IRIX NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/README.NIS NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/clean_exit.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/diag.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/dir.mk NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/environ.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/eval.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/fakelog.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/fakelog2.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/fix_options.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/fromhost.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/gatekeeper.cc NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/hosts_access.3 NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/hosts_access.5 NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/hosts_access.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/hosts_ctl.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/hosts_options.5 NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/inetcf.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/inetcf.h NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/misc.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/miscd.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/mystdarg.h NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/myvsyslog.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/ncr.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/options.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/patchlevel.h NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/percent_m.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/percent_x.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/printf.ck NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/ptx.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/refuse.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/rfc931.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/safe_finger.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/scaffold.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/scaffold.h NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/setenv.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/shell_cmd.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/socket.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/strcasecmp.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tcpd.8 NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tcpd.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tcpd.h NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tcpdchk.8 NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tcpdchk.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tcpdmatch.8 NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tcpdmatch.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tli-sequent.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tli-sequent.h NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/tli.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/try-from.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/update.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/vfprintf.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/workarounds.c NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/sharedlib NEW
+src/lib/omniORB2/gatekeepers/tcpwrapper/sharedlib/dir.mk NEW
 
 
 Wed Dec 10 11:31:59 GMT 1997 sll
@@ -109,9 +122,9 @@ tool/omniidl2/omniORB2_be/o2be_interface.cc
 tool/omniidl2/omniORB2_be/o2be_operation.cc
 tool/omniidl2/omniORB2_be/o2be_root.cc
 
-lib/omniORB2/objectRef.cc
-lib/omniORB2/omniLifeCycle.cc
-lib/omniORB2/reDirect.cc
+src/lib/omniORB2/objectRef.cc
+src/lib/omniORB2/omniLifeCycle.cc
+src/lib/omniORB2/reDirect.cc
 
 examples/lifecycle/dir.mk
 examples/lifecycle/echolag.idl
@@ -149,10 +162,10 @@ omnithread
 - Added support for Mach (nextstep)
 - Patched for different thread creation behaviour in Posix Draft 8
 
-lib/omnithread/dir.mk
-lib/omnithread/posix.cc
-lib/omnithread/mach.cc                 NEW
-lib/omnithread/sharedlib/dir.mk
+src/lib/omnithread/dir.mk
+src/lib/omnithread/posix.cc
+src/lib/omnithread/mach.cc                 NEW
+src/lib/omnithread/sharedlib/dir.mk
 
 include/omnithread.h
 include/omnithread/posix.h
@@ -182,50 +195,50 @@ include/omniORB2/reDirect.h
 
 include/omniORB2/Naming_NT.hh        DELETED
 
-lib/omniORB2/dir.mk
-lib/omniORB2/sharedlib/dir.mk
-lib/omniORB2/constants.cc
-lib/omniORB2/corbaBoa.cc
-lib/omniORB2/corbaObject.cc
-lib/omniORB2/corbaOrb.cc
-lib/omniORB2/exception.cc
-lib/omniORB2/initFile.cc
-lib/omniORB2/initFile.h
-lib/omniORB2/ior.cc
-lib/omniORB2/giopClient.cc
-lib/omniORB2/giopServer.cc
-lib/omniORB2/libcWrapper.cc
-lib/omniORB2/libcWrapper.h
-lib/omniORB2/nbufferedStream.cc
-lib/omniORB2/object.cc
-lib/omniORB2/objectKey.cc
-lib/omniORB2/objectRef.cc
-lib/omniORB2/ropeFactory.h
-lib/omniORB2/strand.cc
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/sharedlibdir.mk
+src/lib/omniORB2/constants.cc
+src/lib/omniORB2/corbaBoa.cc
+src/lib/omniORB2/corbaObject.cc
+src/lib/omniORB2/corbaOrb.cc
+src/lib/omniORB2/exception.cc
+src/lib/omniORB2/initFile.cc
+src/lib/omniORB2/initFile.h
+src/lib/omniORB2/ior.cc
+src/lib/omniORB2/giopClient.cc
+src/lib/omniORB2/giopServer.cc
+src/lib/omniORB2/libcWrapper.cc
+src/lib/omniORB2/libcWrapper.h
+src/lib/omniORB2/nbufferedStream.cc
+src/lib/omniORB2/object.cc
+src/lib/omniORB2/objectKey.cc
+src/lib/omniORB2/objectRef.cc
+src/lib/omniORB2/ropeFactory.h
+src/lib/omniORB2/strand.cc
 
-lib/omniORB2/excepthandler.h NEW
-lib/omniORB2/objectManager.h NEW
-lib/omniORB2/relStream.h NEW
-lib/omniORB2/scavenger.h NEW
-lib/omniORB2/tcpATMos.h NEW
-lib/omniORB2/tcpSocket.h NEW
-lib/omniORB2/relStream.cc NEW
-lib/omniORB2/ropeFactory.cc NEW
-lib/omniORB2/scavenger.cc NEW
-lib/omniORB2/tcpATMos.cc NEW
-lib/omniORB2/tcpATMosMTfactory.cc NEW
-lib/omniORB2/tcpSocket.cc NEW
-lib/omniORB2/tcpSocketMTfactory.cc NEW
+src/lib/omniORB2/excepthandler.h NEW
+src/lib/omniORB2/objectManager.h NEW
+src/lib/omniORB2/relStream.h NEW
+src/lib/omniORB2/scavenger.h NEW
+src/lib/omniORB2/tcpATMos.h NEW
+src/lib/omniORB2/tcpSocket.h NEW
+src/lib/omniORB2/relStream.cc NEW
+src/lib/omniORB2/ropeFactory.cc NEW
+src/lib/omniORB2/scavenger.cc NEW
+src/lib/omniORB2/tcpATMos.cc NEW
+src/lib/omniORB2/tcpATMosMTfactory.cc NEW
+src/lib/omniORB2/tcpSocket.cc NEW
+src/lib/omniORB2/tcpSocketMTfactory.cc NEW
 
-lib/omniORB2/orb.cc                  DELETED
-lib/omniORB2/tcpSocket_NT.cc         DELETED
-lib/omniORB2/tcpSocket_ATMos.cc      DELETED
-lib/omniORB2/tcpSocket_UNIX.cc       DELETED
-lib/omniORB2/tcpSocket_NT.h         DELETED
-lib/omniORB2/tcpSocket_ATMos.h      DELETED
-lib/omniORB2/tcpSocket_UNIX.h       DELETED
-lib/omniORB2/unshared.cc            DELETED
-lib/omniORB2/NamingSK_NT.cc         DELETED
+src/lib/omniORB2/orb.cc                  DELETED
+src/lib/omniORB2/tcpSocket_NT.cc         DELETED
+src/lib/omniORB2/tcpSocket_ATMos.cc      DELETED
+src/lib/omniORB2/tcpSocket_UNIX.cc       DELETED
+src/lib/omniORB2/tcpSocket_NT.h         DELETED
+src/lib/omniORB2/tcpSocket_ATMos.h      DELETED
+src/lib/omniORB2/tcpSocket_UNIX.h       DELETED
+src/lib/omniORB2/unshared.cc            DELETED
+src/lib/omniORB2/NamingSK_NT.cc         DELETED
 
 omniidl2
 ---------
