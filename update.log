@@ -1,3 +1,12 @@
+Sun Mar 23 20:36:13 GMT 2003 dgrisby
+====================================
+
+- Assigning an Any to itself would incorrectly deallocate it.
+
+bugfixes-401.xml
+src/lib/omniORB/dynamic/any.cc
+
+
 Thu Mar 20 10:18:37 GMT 2003 dgrisby
 ====================================
 

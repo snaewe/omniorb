@@ -8,6 +8,13 @@
 
 <buglist version="4.0.1">
 
-<nobugs/>
+<bug id="1" date="Sun Mar 23 20:36:13 GMT 2003" user="dgrisby">
+  <summary>Deallocation bug assigning an Any to itself</summary>
+  <reported>Vasily Tchekalkin</reported>
+  <text>
+  Assigning an Any to itself would cause it to be incorrectly
+  deallocated.
+  </text>
+</bug>
 
 </buglist>
