@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/09/04 14:38:09  sll
+  Added the boolean argument to notifyCommFailure to indicate if
+  omniTransportLock is held by the caller.
+
   Revision 1.1.4.5  2001/09/03 16:50:43  sll
   Added the deadline parameter and access functions. All member functions
   that previously had deadline arguments now use the per-object deadline
@@ -198,7 +202,8 @@ class giopStream : public cdrStream {
   // Return True (1) if the read lock is held by some giopStream.
 
   ////////////////////////////////////////////////////////////////////////
-  virtual void notifyCommFailure(CORBA::ULong& minor,
+  virtual void notifyCommFailure(CORBA::Boolean heldlock,
+				 CORBA::ULong& minor,
 				 CORBA::Boolean& retry);
   // When the giopStream detects an error in sending or receiving data,
   // it raises the giopStream::CommFailure exception.
@@ -217,9 +222,8 @@ class giopStream : public cdrStream {
   // retry = 0.
   //
   // Thread Safety preconditions:
-  //    Caller must not hold omniTransportLock, it is used internally for
-  //    synchronisation.
-
+  //    Internally, omniTransportLock is used for synchronisation, if
+  //    <heldlock> is TRUE(1), the caller already hold the lock.
 
   ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
@@ -448,7 +452,8 @@ private:
   // Thread Safety preconditions:
   //   None.
 
-  void errorOnReceive(int,const char*,CORBA::ULong,giopStream_Buffer*);
+  void errorOnReceive(int,const char*,CORBA::ULong,giopStream_Buffer*,
+		      CORBA::Boolean);
   // internal helper function, do not use outside this class
 
   CORBA::ULong ensureSaneHeader(const char*,CORBA::ULong,
@@ -503,7 +508,7 @@ private:
   // Thread Safety preconditions:
   //   Caller must have acquired the write lock on the strand.
 
-  void errorOnSend(int,const char*,CORBA::ULong);
+  void errorOnSend(int,const char*,CORBA::ULong,CORBA::Boolean);
   // internal helper function, do not use outside this class
 
 protected:

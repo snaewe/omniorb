@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.10  2001/09/04 14:38:51  sll
+  Added the boolean argument to notifyCommFailure to indicate if
+  omniTransportLock is held by the caller.
+
   Revision 1.1.4.9  2001/09/03 16:55:41  sll
   Modified to match the new signature of the giopStream member functions that
   previously accept explicit deadline parameters. The deadline is now
@@ -240,7 +244,7 @@ giopImpl11::inputReplyBegin(giopStream* g,
     {
       CORBA::ULong minor;
       CORBA::Boolean retry;
-      g->notifyCommFailure(minor,retry);
+      g->notifyCommFailure(0,minor,retry);
       g->pd_strand->state(giopStrand::DYING);
       giopStream::CommFailure::_raise(minor,
 				      (CORBA::CompletionStatus)g->completion(),
@@ -937,7 +941,7 @@ giopImpl11::inputTerminalProtocolError(giopStream* g) {
 
   CORBA::ULong minor;
   CORBA::Boolean retry;
-  g->notifyCommFailure(minor,retry);
+  g->notifyCommFailure(0,minor,retry);
   g->pd_strand->state(giopStrand::DYING);
   giopStream::CommFailure::_raise(minor,
 				  (CORBA::CompletionStatus)g->completion(),
@@ -1176,7 +1180,7 @@ giopImpl11::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 
     CORBA::ULong minor;
     CORBA::Boolean retry;
-    giop_s.notifyCommFailure(minor,retry);
+    giop_s.notifyCommFailure(0,minor,retry);
     giopStream::CommFailure::_raise(minor,(CORBA::CompletionStatus)
 				    giop_s.completion(),
 				    retry,__FILE__,__LINE__);

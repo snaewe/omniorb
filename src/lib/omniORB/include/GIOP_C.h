@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/09/04 14:38:08  sll
+  Added the boolean argument to notifyCommFailure to indicate if
+  omniTransportLock is held by the caller.
+
   Revision 1.1.4.2  2001/05/01 16:07:33  sll
   All GIOP implementations should now work with fragmentation and abitrary
   sizes non-copy transfer.
@@ -60,7 +64,8 @@ class GIOP_C : public IOP_C, public giopStream, public giopStreamList {
 
   GIOP::LocateStatusType IssueLocateRequest();
 
-  void notifyCommFailure(CORBA::ULong& minor,
+  void notifyCommFailure(CORBA::Boolean heldlock,
+			 CORBA::ULong& minor,
 			 CORBA::Boolean& retry);
   // override giopStream member
 

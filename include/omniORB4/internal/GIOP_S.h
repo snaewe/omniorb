@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/09/04 14:38:09  sll
+  Added the boolean argument to notifyCommFailure to indicate if
+  omniTransportLock is held by the caller.
+
   Revision 1.1.4.4  2001/07/13 15:17:38  sll
   Ctor takes a giopWorker rather than a giopServer.
 
@@ -86,7 +90,8 @@ class GIOP_S : public IOP_S, public giopStream, public giopStreamList {
   void SendException(CORBA::Exception*);
   // override IOP_S
 
-  void notifyCommFailure(CORBA::ULong& minor,
+  void notifyCommFailure(CORBA::Boolean heldlock,
+			 CORBA::ULong& minor,
 			 CORBA::Boolean& retry);
   // override giopStream member
 

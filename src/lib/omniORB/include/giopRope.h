@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/09/04 14:38:09  sll
+  Added the boolean argument to notifyCommFailure to indicate if
+  omniTransportLock is held by the caller.
+
   Revision 1.1.4.4  2001/08/03 17:43:19  sll
   Make sure dll import spec for win32 is properly done.
 
@@ -145,7 +149,8 @@ class giopRope : public Rope, public RopeLink {
   //    Caller must not hold omniTransportLock, it is used internally for
   //    synchronisation.
 
-  virtual const giopAddress* notifyCommFailure(const giopAddress*);
+  virtual const giopAddress* notifyCommFailure(const giopAddress*,
+					       CORBA::Boolean heldlock);
   // Caller detects an error in sending or receiving data with this address.
   // It calls this function to indicate to the rope that the address is bad.
   // If the rope has other alternative addresses, it should select another
@@ -160,8 +165,8 @@ class giopRope : public Rope, public RopeLink {
   // the first call is made.
   //
   // Thread Safety preconditions:
-  //    Caller must not hold omniTransportLock, it is used internally for
-  //    synchronisation.
+  //    Internally, omniTransportLock is used for synchronisation, if
+  //    <heldlock> is TRUE(1), the caller already hold the lock.
 
   // Access functions to change the rope parameters. Notice that these
   // functions does not perform any mutual exclusion internally. It is
