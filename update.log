@@ -1,3 +1,52 @@
+Wed Sep 22 19:50:20 BST 1999 sll
+================================
+
+- Documentation update
+
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+doc/tex/omniORB2.tex
+external_merge/README.FIRST
+external_merge/README.Linux
+external_merge/README.SunC++5
+external_merge/README.egcs
+external_merge/README.unix
+external_merge/ReleaseNote_omniORB_270 DELETED
+external_merge/ReleaseNote_omniORB_271 DEKETED
+external_merge/ReleaseNote_omniORB_280
+external_merge/THIS_IS_2_8_0_PRERELEASE_2 DELETED
+external_merge/THIS_IS_2_8_0_RELEASE
+external_merge/doc/omniORB2.dvi
+external_merge/doc/omniORB2.pdf
+external_merge/doc/omniORB2.ps
+external_merge/doc/omniORB2.tex
+external_merge/doc/omniORB2/.ID_MAP.pag
+external_merge/doc/omniORB2/.IMG_PARAMS.pag
+external_merge/doc/omniORB2/.ORIG_MAP.pag
+external_merge/doc/omniORB2/footnode.html
+external_merge/doc/omniORB2/images.log
+external_merge/doc/omniORB2/images.pl
+external_merge/doc/omniORB2/images.tex
+external_merge/doc/omniORB2/img12.gif DELETED
+external_merge/doc/omniORB2/img8.gif DELETED 
+external_merge/doc/omniORB2/img9.gif
+external_merge/doc/omniORB2/node1.html
+external_merge/doc/omniORB2/node10.html
+external_merge/doc/omniORB2/node11.html
+external_merge/doc/omniORB2/node12.html
+external_merge/doc/omniORB2/node13.html
+external_merge/doc/omniORB2/node14.html
+external_merge/doc/omniORB2/node15.html
+external_merge/doc/omniORB2/node2.html
+external_merge/doc/omniORB2/node3.html
+external_merge/doc/omniORB2/node4.html
+external_merge/doc/omniORB2/node5.html
+external_merge/doc/omniORB2/node6.html
+external_merge/doc/omniORB2/node7.html
+external_merge/doc/omniORB2/node8.html
+external_merge/doc/omniORB2/node9.html
+external_merge/doc/omniORB2/omniORB2.html
+
 
 Wed Sep 22 17:27:15 BST 1999 djr
 ================================
@@ -6,6 +55,29 @@ Wed Sep 22 17:27:15 BST 1999 djr
 
 src/lib/omniORB2/dynamic/dynAny.h
 src/lib/omniORB2/dynamic/dynAny.cc
+
+Wed Sep 22 17:09:13 BST 1999 sll
+================================
+
+- Documentation update
+
+external_merge/ReleaseNote_omniORB_280
+external_merge/THIS_IS_2_8_0_PRERELEASE_2   DELETED
+
+src/lib/omniORB2/corbaOrb.cc
+
+
+Wed Sep 22 17:06:56 BST 1999 sll
+================================
+
+- updated for openVMS
+
+src/appl/omniNames/log.cc
+src/appl/utils/catior/catior.cc
+src/appl/utils/genior/genior.cc
+src/appl/utils/convertior/convertior.cc
+
+external_merge/etc/openvms.zip
 
 
 Wed Sep 22 15:16:55 BST 1999 sll
