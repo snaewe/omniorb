@@ -671,10 +671,16 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
       // Save the string's length
       CORBA::ULong len = tcdata.p_string.getLength(&tcdata.p_string) + 1;
       len >>= pd_mbuf;
+
+      char* buffer = tcdata.p_string.getBuffer(&tcdata.p_string);
+
       // Then copy the data into the buffer
-      pd_mbuf.put_char_array((unsigned char*)
-			     tcdata.p_string.getBuffer(&tcdata.p_string),
-			     len);
+      if( buffer )  pd_mbuf.put_char_array((unsigned char*) buffer, len);
+      else {
+	CORBA::Char(0) >>= pd_mbuf;
+	if( omniORB::traceLevel > 1 )  _CORBA_null_string_ptr(0);
+      }
+
       break;
     }
 
