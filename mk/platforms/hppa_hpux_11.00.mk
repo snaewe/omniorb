@@ -115,7 +115,7 @@ endef
 #			 -show-directory=yes -show-pc=yes -show-pc-offset=yes
 #
 #CC                = gcc
-#CMAKEDEPEND       +=  __GNUC__
+#CMAKEDEPEND       +=  -D__GNUC__
 #CDEBUGFLAGS       = -O
 #COPTIONS          = $(CDEBUGFLAGS) $(COPTIONS) \
 #              $(patsubst %,-Wl$(comma)-rpath$(comma)%,$(IMPORT_LIBRARY_DIRS))
@@ -133,8 +133,8 @@ THREAD_LIB =
 #
 # CORBA stuff
 #
-#omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
-omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
+omniORBGatekeeperImplementation = OMNIORB_TCPWRAPGK
+#omniORBGatekeeperImplementation = OMNIORB_DUMMYGK
 CorbaImplementation = OMNIORB
 
 #

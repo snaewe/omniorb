@@ -1,3 +1,46 @@
+Wed Aug 16 17:20:26 BST 2000 sll
+================================
+
+- Overhaul make rules to build omniORB and omnithread libraries. Use the
+  new shared library make rules.
+
+external_merge/mk/mklib.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+
+mk/platforms/hppa_hpux_11.00.mk
+
+src/lib/omniORB2/dir.mk
+src/lib/omniORB2/orbcore/dir.mk
+src/lib/omniORB2/orbcore/gatekeeper.cc                        NEW
+src/lib/omniORB2/orbcore/msvcdllstub.cc                       NEW
+src/lib/omniORB2/orbcore/gatekeepers/dir.mk
+src/lib/omniORB2/orbcore/gatekeepers/dummystub/dir.mk
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/dir.mk
+src/lib/omniORB2/dynamic/dir.mk
+
+src/lib/omnithread/dir.mk
+
+external_merge/src/lib/omniORB2/dynamic/sharedlib/GNUmakefile      REMOVED
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/GNUmakefile   REMOVED
+external_merge/src/lib/omniORB2/orbcore/sharedlib/GNUmakefile      REMOVED
+external_merge/src/lib/omnithread/sharedlib/GNUmakefile            REMOVED
+external_merge/src/services/mklib/mkBOAlib/sharedlib/GNUmakefile   REMOVED
+external_merge/src/services/mklib/sharedlib/GNUmakefile            REMOVED
+
+src/lib/omniORB2/dynamic/sharedlib/dir.mk                          REMOVED
+src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk   REMOVED
+src/lib/omniORB2/orbcore/sharedlib/dir.mk                          REMOVED
+src/lib/omniORB2/orbcore/sharedlib/msvcdllstub.cc                  REMOVED
+src/lib/omnithread/sharedlib/dir.mk                                REMOVED
+
+
+
 Wed Aug 16 12:16:02 BST 2000 sll
 ================================
 

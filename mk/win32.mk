@@ -217,7 +217,9 @@ endif
 #
 # Shared library support stuff
 #
+ifndef EmbeddedSystem
 BuildSharedLibrary = 1
+endif
 
 SharedLibraryFullNameTemplate = $(SharedLibraryLibNameTemplate).lib
 SharedLibraryLibNameTemplate  = $$1$$2$$3$$4_rt$${extrasuffix:-}
@@ -300,11 +302,14 @@ libname=$(SharedLibraryLibNameTemplate); \
 dllname=$$targetdir/$$libname.dll; \
 defname=$$targetdir/$(SharedLibraryExportSymbolFileNameTemplate); \
 version=$(SharedLibraryVersionStringTemplate); \
+if [ -z "$$nodeffile" ]; then \
 $(MakeCXXExportSymbolDefinitionFile) \
+defflag="-def:$$defname"; \
+fi; \
 set -x; \
 $(RM) $@; \
 $(CXXLINK) -out:$$dllname -DLL $(MSVC_DLL_CXXLINKNODEBUGOPTIONS) \
--def:$$defname -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
+$$defflag -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
 $^ $$extralibs;
 endef
 
@@ -485,9 +490,12 @@ ThreadSystem = NT
 #ThreadSystem = NTPosix
 #OMNITHREAD_CPPFLAGS= -D__POSIX_NT__
 
+OMNITHREAD_VERSION = 2.1
+OMNITHREAD_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNITHREAD_VERSION)))
+OMNITHREAD_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNITHREAD_VERSION)))
 
-
-OMNITHREAD_LIB = $(patsubst %,$(DLLSearchPattern),omnithread2)
-lib_depend := $(patsubst %,$(DLLPattern),omnithread2)
+OMNITHREAD_LIB = $(patsubst %,$(DLLSearchPattern),omnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION))
+lib_depend := $(patsubst %,$(DLLPattern),omnithread$(OMNITHREAD_MAJOR_VERSION)$(OMNITHREAD_MINOR_VERSION))
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
+OMNITHREAD_PLATFORM_LIB =
