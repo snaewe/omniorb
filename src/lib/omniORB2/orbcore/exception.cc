@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.9.6.5  2000/06/22 10:40:14  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.9.6.4  2000/06/12 11:16:23  dpg1
   Global exception handlers were returning a zero cookie.
 
@@ -79,7 +83,7 @@
 
 #include <excepthandler.h>
 #include <omniORB3/omniObjRef.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 #if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)

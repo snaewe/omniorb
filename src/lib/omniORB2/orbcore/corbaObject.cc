@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.19.6.9  2000/06/22 10:40:14  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.19.6.8  2000/02/07 15:27:36  dpg1
   Silly mistake in _is_equivalent() for pseudo object references.
 
@@ -91,7 +95,7 @@
 #include <objectAdapter.h>
 #include <ropeFactory.h>
 #include <anonObject.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// CORBA::Object ///////////////////////////

@@ -34,7 +34,7 @@
 #endif
 
 #include <pseudo.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 // The correct way of creating an environment object is to use

@@ -31,7 +31,7 @@
 #define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB3/CORBA.h>
 #include <initRefs.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 CORBA::InterfaceDef_ptr

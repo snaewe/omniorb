@@ -29,6 +29,10 @@
 
 /* 
    $Log$
+   Revision 1.8.6.5  2000/06/22 10:40:12  dpg1
+   exception.h renamed to exceptiondefs.h to avoid name clash on some
+   platforms.
+
    Revision 1.8.6.4  1999/10/26 20:18:18  sll
    DynAny no longer do alias expansion on the typecode. In other words, all
    aliases in the typecode are preserved.
@@ -274,7 +278,7 @@
 #include <dynAny.h>
 #include <tcParser.h>
 #include <anyP.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 // Note:

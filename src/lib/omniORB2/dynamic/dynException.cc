@@ -35,7 +35,7 @@
 
 #include <omniORB3/tcDescriptor.h>
 #include <dynException.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 //////////////////////////////////////////////////////////////////////
 ////////  Implementation of Any Insertion for Exception //////////////

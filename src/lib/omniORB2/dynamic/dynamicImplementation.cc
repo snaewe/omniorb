@@ -34,7 +34,7 @@
 #include <omniORB3/callDescriptor.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 //////////////////////////////////////////////////////////////////////

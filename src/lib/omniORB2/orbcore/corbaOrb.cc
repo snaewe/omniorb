@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.29.6.19  2000/06/22 10:40:14  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.29.6.18  2000/06/19 14:18:33  dpg1
   Explicit cast to (const char*) when using String_var with logger.
 
@@ -183,7 +187,7 @@
 #include <poaimpl.h>
 #include <initialiser.h>
 #include <dynamicLib.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 #include <omniORB3/omniURI.h>
 
 #ifdef _HAS_SIGNAL

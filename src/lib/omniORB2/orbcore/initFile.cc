@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.30.6.8  2000/06/22 10:40:14  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.30.6.7  2000/06/19 14:18:33  dpg1
   Explicit cast to (const char*) when using String_var with logger.
 
@@ -135,7 +139,7 @@
 #include <initRefs.h>
 #include <gatekeeper.h>
 #include <initialiser.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 #include <corbaOrb.h>
 
 #include <stdio.h>

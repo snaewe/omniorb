@@ -34,7 +34,7 @@
 #endif
 
 #include <pseudo.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 NamedValueImpl::NamedValueImpl(CORBA::Flags flags)

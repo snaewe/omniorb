@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.1.2.9  2000/06/22 10:40:17  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.1.2.8  2000/04/27 10:52:12  dpg1
   Interoperable Naming Service
 
@@ -64,7 +68,7 @@
 #include <omniORB3/callDescriptor.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////// Policy Interfaces /////////////////////////

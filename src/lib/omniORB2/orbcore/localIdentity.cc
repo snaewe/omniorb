@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/06/22 10:40:15  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.1.2.4  1999/10/27 17:32:11  djr
   omni::internalLock and objref_rc_lock are now pointers.
 
@@ -54,7 +58,7 @@
 #include <omniORB3/callDescriptor.h>
 #include <objectAdapter.h>
 #include <ropeFactory.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////

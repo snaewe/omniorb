@@ -34,7 +34,7 @@
 #endif
 
 #include <pseudo.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 #define INIT_MAX_SEQ_LENGTH  6

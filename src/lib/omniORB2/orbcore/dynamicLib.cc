@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/06/22 10:40:14  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.1.2.3  1999/10/14 16:22:08  djr
   Implemented logging when system exceptions are thrown.
 
@@ -47,7 +51,7 @@
 #endif
 
 #include <dynamicLib.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 static void init();

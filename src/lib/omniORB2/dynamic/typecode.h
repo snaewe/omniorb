@@ -30,6 +30,10 @@
 
 /*
  * $Log$
+ * Revision 1.8.6.5  2000/06/22 10:40:13  dpg1
+ * exception.h renamed to exceptiondefs.h to avoid name clash on some
+ * platforms.
+ *
  * Revision 1.8.6.4  2000/02/15 13:43:43  djr
  * Fixed bug in create_union_tc() -- problem if discriminator was an alias.
  *
@@ -70,7 +74,7 @@
 #define __TYPECODE_H__
 
 #include <omniutilities.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 ///////////////////////////

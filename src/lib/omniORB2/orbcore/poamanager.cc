@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2000/06/22 10:40:17  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.1.2.6  2000/02/04 18:11:03  djr
   Minor mods for IRIX (casting pointers to ulong instead of int).
 
@@ -58,7 +62,7 @@
 
 #include <poamanager.h>
 #include <poaimpl.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////// PortableServer::POAManager /////////////////////

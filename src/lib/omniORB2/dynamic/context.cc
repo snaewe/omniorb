@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.9.6.4  2000/06/22 10:40:11  dpg1
+ exception.h renamed to exceptiondefs.h to avoid name clash on some
+ platforms.
+
  Revision 1.9.6.3  1999/10/29 13:18:10  djr
  Changes to ensure mutexes are constructed when accessed.
 
@@ -64,7 +68,7 @@
 
 #include <context.h>
 #include <pseudo.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 #include <ctype.h>
 #include <dynamicLib.h>

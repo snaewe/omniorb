@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.8.6.5  2000/06/22 10:40:17  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.8.6.4  1999/10/16 13:22:55  djr
   Changes to support compiling on MSVC.
 
@@ -86,7 +90,7 @@
 #include <ropeFactory.h>
 #include <tcpSocket.h>
 #include <gatekeeper.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 #ifndef Swap16

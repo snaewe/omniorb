@@ -30,6 +30,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.4  2000/06/22 10:40:17  dpg1
+// exception.h renamed to exceptiondefs.h to avoid name clash on some
+// platforms.
+//
 // Revision 1.1.2.3  2000/06/19 14:18:33  dpg1
 // Explicit cast to (const char*) when using String_var with logger.
 //
@@ -49,7 +53,7 @@
 #include <initialiser.h>
 #include <ropeFactory.h>
 #include <tcpSocket.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 #include <omniORB3/omniURI.h>
 #include <initRefs.h>
 

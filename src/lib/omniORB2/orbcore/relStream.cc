@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.3.8.5  2000/06/22 10:40:17  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.3.8.4  2000/01/28 15:57:09  djr
   Removed superflouous ref counting in Strand_iterator.
   Removed flags to indicate that Ropes and Strands are heap allocated.
@@ -58,7 +62,7 @@
 #endif
 
 #include <relStream.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 #include <limits.h>
 
 

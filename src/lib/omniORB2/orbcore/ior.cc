@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.9.6.5  2000/06/22 10:40:15  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.9.6.4  2000/04/27 10:50:30  dpg1
   Interoperable Naming Service
 
@@ -72,7 +76,7 @@
 #pragma hdrstop
 #endif
 
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 #ifndef Swap16

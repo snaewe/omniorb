@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.1.2.14  2000/06/22 10:40:16  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.1.2.13  2000/04/27 10:51:13  dpg1
   Interoperable Naming Service
 
@@ -90,7 +94,7 @@
 #include <ropeFactory.h>
 #include <anonObject.h>
 #include <initialiser.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 #if defined(HAS_Cplusplus_Namespace)

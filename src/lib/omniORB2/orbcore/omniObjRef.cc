@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2000/06/22 10:40:16  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.1.2.5  2000/03/01 17:57:41  dpg1
   New omniObjRef::_compatibleServant() function to support object
   references and servants written for languages other than C++.
@@ -60,7 +64,7 @@
 #include <objectAdapter.h>
 #include <ropeFactory.h>
 #include <excepthandler.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 
 CORBA::Boolean

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.9.6.3  2000/06/22 10:40:15  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.9.6.2  1999/10/14 16:22:12  djr
   Implemented logging when system exceptions are thrown.
 
@@ -62,7 +66,7 @@
 #pragma hdrstop
 #endif
 
-#include <exception.h>
+#include <exceptiondefs.h>
 #include <limits.h>
 
 

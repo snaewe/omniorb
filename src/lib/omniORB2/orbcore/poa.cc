@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.21  2000/06/22 10:40:16  dpg1
+  exception.h renamed to exceptiondefs.h to avoid name clash on some
+  platforms.
+
   Revision 1.1.2.20  2000/06/12 11:15:52  dpg1
   Clarifying comment about TRANSIENT exceptions on exiting HOLDING
   state.
@@ -112,7 +116,7 @@
 #include <omniORB3/callDescriptor.h>
 #include <localIdentity.h>
 #include <poamanager.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 #include <ropeFactory.h>
 
 #include <ctype.h>

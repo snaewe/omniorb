@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.8  2000/06/22 10:40:15  dpg1
+ exception.h renamed to exceptiondefs.h to avoid name clash on some
+ platforms.
+
  Revision 1.1.2.7  2000/04/27 10:50:49  dpg1
  Interoperable Naming Service
 
@@ -66,7 +70,7 @@
 #include <initRefs.h>
 #include <poaimpl.h>
 #include <corbaBoa.h>
-#include <exception.h>
+#include <exceptiondefs.h>
 
 #include <stdlib.h>
 
