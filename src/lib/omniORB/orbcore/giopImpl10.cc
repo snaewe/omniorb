@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2001/09/12 19:43:19  sll
+  Enforce GIOP message size limit.
+
   Revision 1.1.4.11  2001/09/10 17:46:09  sll
   When a connection is broken, check if it has been shutdown orderly. If so,
   do a retry.
@@ -643,8 +646,10 @@ giopImpl10::getInputData(giopStream* g,omni::alignment_t align,size_t sz) {
   }
 
   if (g->inputMatchedId()) {
-    g->releaseInputBuffer(g->pd_currentInputBuffer);
-    g->pd_currentInputBuffer = 0;
+    if (g->pd_currentInputBuffer) {
+      g->releaseInputBuffer(g->pd_currentInputBuffer);
+      g->pd_currentInputBuffer = 0;
+    }
     if (!g->pd_input) {
       g->pd_currentInputBuffer = g->inputChunk(g->inputFragmentToCome());
     }
