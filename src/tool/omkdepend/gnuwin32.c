@@ -7,6 +7,7 @@
 
 int  GetCygwinMounts(void);
 void GetGnuwin32Mounts(void);
+void GetOpenNTMounts(void);
 void SortMounts();
 
 char *dos[MAX_MOUNTS];
@@ -76,11 +77,41 @@ char *TranslateFileNameD2U(char *in, int offset)
   return out;
 }
 
-void GetMounts(void)
+void GetMounts(int gnuwin)
 {
-  if (!GetCygwinMounts())
-    GetGnuwin32Mounts();
+  if (gnuwin) {
+    if (!GetCygwinMounts())
+      GetGnuwin32Mounts();
+  }
+  else {
+    GetOpenNTMounts();
+  }
   SortMounts();
+}
+
+void GetOpenNTMounts(void)
+{
+  char c;
+
+  nmounts = 0;
+
+  for (c = 'A'; c <= 'Z'; c++) {
+    unix[nmounts] = (char *)malloc(5);
+    sprintf(unix[nmounts], "//%c/", c);
+    dos[nmounts] = (char *)malloc(4);
+    sprintf(dos[nmounts], "%c:/", c);
+    index[nmounts] = nmounts;
+    nmounts++;
+  }
+
+  for (c = 'a'; c <= 'z'; c++) {
+    unix[nmounts] = (char *)malloc(5);
+    sprintf(unix[nmounts], "//%c/", c);
+    dos[nmounts] = (char *)malloc(4);
+    sprintf(dos[nmounts], "%c:/", c);
+    index[nmounts] = nmounts;
+    nmounts++;
+  }
 }
 
 void GetGnuwin32Mounts(void)

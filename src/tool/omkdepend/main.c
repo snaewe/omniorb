@@ -136,10 +136,17 @@ main(argc, argv)
 	char *endmarker = NULL;
 	char *defincdir = NULL;
 
-#ifdef WIN32
-	GetMounts();
-#endif
 	ProgramName = argv[0];
+
+#ifdef WIN32
+	if (argc > 1 && strcmp(argv[1], "-opennt") == 0) {
+	  GetMounts(0);
+	  argc--; argv++;
+	}
+	else {
+	  GetMounts(1);
+	}
+#endif
 
 	while (psymp->s_name)
 	{

@@ -1,3 +1,13 @@
+Tue Jun 27 16:48:56 BST 2000 sll
+================================
+
+- Updated omkdepend to accept a new flag "-opennt". Define this flag on the
+  command line to use omkdepend until uwin.
+
+src/tool/omkdepend/gnuwin32.c
+src/tool/omkdepend/gnuwin32.h
+src/tool/omkdepend/main.c
+
 
 Tue Jun 27 16:35:20 BST 2000 sll
 ================================
