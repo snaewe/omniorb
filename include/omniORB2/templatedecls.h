@@ -331,10 +331,10 @@ protected:
 template <class T,class T_Helper>
 class _CORBA_ObjRef_Member;
 
-template <class T,class T_var,class T_member>
+template <class T,class T_Helper>
 class _CORBA_ObjRef_INOUT_arg;
 
-template <class T,class T_var,class T_member,class T_Helper>
+template <class T,class T_Helper>
 class _CORBA_ObjRef_OUT_arg;
 
 template <class T, class T_Helper>
@@ -347,28 +347,65 @@ public:
 
   inline _CORBA_ObjRef_Var()        { pd_objref = T_Helper::_nil(); }
   inline _CORBA_ObjRef_Var(T_ptr p) { pd_objref = p;                }
-  inline _CORBA_ObjRef_Var(const T_var& p);
+  inline _CORBA_ObjRef_Var(const T_var& p) {
+    if( !T_Helper::is_nil(p.pd_objref) ) {
+      T_Helper::duplicate(p.pd_objref);
+      pd_objref = p.pd_objref;
+    }
+    else
+      pd_objref = T_Helper::_nil();
+  }
+
   inline _CORBA_ObjRef_Var(const T_member& m);
-  inline ~_CORBA_ObjRef_Var();
 
-  inline T_var& operator= (T_ptr p);
-  inline T_var& operator= (const T_var& p);
+  inline ~_CORBA_ObjRef_Var() {
+#if !defined(__DECCXX) || (__DECCXX_VER >= 50500000)
+    if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref);
+#else
+    if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
+#endif
+  }
+
+  inline T_var& operator= (T_ptr p) {
+    if( !T_Helper::is_nil(pd_objref) )  T_Helper::release(pd_objref);
+    pd_objref = p;
+    return *this;
+  }
+
+  inline T_var& operator= (const T_var& p) {
+    if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref);
+    if (!T_Helper::is_nil(p.pd_objref)) {
+      T_Helper::duplicate(p.pd_objref);
+      pd_objref = p.pd_objref;
+    }
+    else
+    pd_objref = T_Helper::_nil();
+    return *this;
+  }
+
   inline T_var& operator= (const T_member& m);
-
   inline T_ptr operator->() const { return pd_objref; }
   inline operator T_ptr () const  { return pd_objref; }
 
   inline const T* in() const { return pd_objref; }
   inline T_ptr& inout()         { return pd_objref; }
-  inline T_ptr& out();
-  inline T_ptr _retn();
 
-  friend class _CORBA_ObjRef_Member<T,T_Helper>;
-  friend class _CORBA_ObjRef_INOUT_arg<T, _CORBA_ObjRef_Var<T,T_Helper>,
-                                       _CORBA_ObjRef_Member<T,T_Helper> >;
-  friend class _CORBA_ObjRef_OUT_arg<T, _CORBA_ObjRef_Var<T,T_Helper>,
-                                     _CORBA_ObjRef_Member<T,T_Helper>,
-                                     T_Helper>;
+  inline T_ptr& out() {
+    if( !T_Helper::is_nil(pd_objref) ) {
+      T_Helper::release(pd_objref);
+      pd_objref = T_Helper::_nil();
+    }
+    return pd_objref;
+  }
+
+  inline T_ptr _retn() {
+    T_ptr tmp = pd_objref;
+    pd_objref = T_Helper::_nil();
+    return tmp;
+  }
+
+  friend class _CORBA_ObjRef_INOUT_arg<T,T_Helper>;
+  friend class _CORBA_ObjRef_OUT_arg<T,T_Helper>;
 
 private:
   T_ptr pd_objref;
@@ -385,41 +422,170 @@ public:
   typedef _CORBA_ObjRef_Member<T,T_Helper> T_member;
   typedef _CORBA_ObjRef_Var<T,T_Helper>    T_var;
 
-  inline _CORBA_ObjRef_Member()        { _ptr = T_Helper::_nil(); }
-  inline _CORBA_ObjRef_Member(T_ptr p) { _ptr = p;                }
-  inline _CORBA_ObjRef_Member(const T_member& p);
-  inline ~_CORBA_ObjRef_Member();
+  inline _CORBA_ObjRef_Member() : pd_rel(1), _ptr(pd_data) { 
+    pd_data = T_Helper::_nil();
+  }
+  inline _CORBA_ObjRef_Member(T_ptr& p, _CORBA_Boolean rel) 
+    : pd_rel(rel), _ptr(p) {
+    pd_data = T_Helper::_nil();
+  }
 
-  inline T_member& operator= (T_ptr p);
-  inline T_member& operator= (const T_member& p);
-  inline T_member& operator= (const T_var& p);
+  inline _CORBA_ObjRef_Member(T_ptr p) : pd_data(p), pd_rel(1), _ptr(pd_data) {}
+
+  inline _CORBA_ObjRef_Member(const T_member& p) : pd_rel(1), _ptr(pd_data) {
+    if (!T_Helper::is_nil(p._ptr)) {
+      T_Helper::duplicate(p._ptr);
+      pd_data = p._ptr;
+    }
+    else
+      pd_data = T_Helper::_nil();
+  }
+
+  inline ~_CORBA_ObjRef_Member() {
+#if !defined(__DECCXX) || (__DECCXX_VER >= 50500000)
+    if( pd_rel &&  !T_Helper::is_nil(pd_data) )  T_Helper::release(pd_data);
+#else
+    if( pd_rel && !CORBA::is_nil(pd_data) )  CORBA::release(pd_data);
+#endif
+    // Not _ptr! Only call delete when this is not a sequence member
+  }
+
+  inline T_member& operator= (T_ptr p) {
+    if( pd_rel && !T_Helper::is_nil(_ptr) )  T_Helper::release(_ptr);
+    _ptr = p;
+    return *this;
+  }
+
+  inline T_member& operator= (const T_member& p) {
+    if( pd_rel && !T_Helper::is_nil(_ptr) )  T_Helper::release(_ptr);
+    if( !T_Helper::is_nil(p._ptr) ) {
+      T_Helper::duplicate(p._ptr);
+      _ptr = p._ptr;
+    }
+    else  _ptr = T_Helper::_nil();
+
+    return *this;
+  }
+
+  inline T_member& operator= (const T_var& p) {
+    if ( pd_rel && !T_Helper::is_nil(_ptr)) T_Helper::release(_ptr);
+    if (!T_Helper::is_nil(p)) {
+      T_Helper::duplicate(p);
+      _ptr = ((T_ptr)p);
+    }
+    else
+     _ptr = T_Helper::_nil();
+    return *this;
+  }
+
 
   inline T_ptr operator->() const { return _ptr; }
 
-  inline size_t NP_alignedSize(size_t initialoffset) const;
-  inline void operator>>= (NetBufferedStream& s) const;
-  inline void operator<<= (NetBufferedStream& s);
-  inline void operator>>= (MemBufferedStream& s) const;
-  inline void operator<<= (MemBufferedStream& s);
+  inline size_t NP_alignedSize(size_t initialoffset) const {
+    return T_Helper::NP_alignedSize(_ptr,initialoffset);
+  }
+
+  inline void operator>>= (NetBufferedStream& s) const {
+    T_Helper::marshalObjRef(_ptr,s);
+  }
+
+  inline void operator<<= (NetBufferedStream& s) {
+    T_ptr _result = T_Helper::unmarshalObjRef(s);
+    T_Helper::release(_ptr);
+    _ptr = _result;
+  }
+
+  inline void operator>>= (MemBufferedStream& s) const {
+    T_Helper::marshalObjRef(_ptr,s);
+  }
+
+  inline void operator<<= (MemBufferedStream& s) {
+    T_ptr _result = T_Helper::unmarshalObjRef(s);
+    T_Helper::release(_ptr);
+    _ptr = _result;
+  }
 
   // The following conversion operators are needed to support the
   // implicit conversion from this type to its T* data member.
   // They are used when this type is used as the rvalue of an expression.
   inline operator T_ptr () const { return _ptr; }
 
-  T_ptr _ptr;
+  // omniORB private
+  inline T_ptr _retn() {
+    T_ptr tmp;
+    if (!pd_rel) {
+      T_Helper::duplicate(_ptr);
+    }
+    tmp = _ptr;
+    _ptr = T_Helper::_nil();
+    return tmp;
+  }
+
+private:
+  T_ptr pd_data;
+
+public:
+  _CORBA_Boolean pd_rel;
+  T_ptr&         _ptr;
 };
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////// _CORBA_ObjRef_var       //////////////////////
+/////////////////////// _CORBA_ObjRef_member      ////////////////////
+/////////////////////// operator= and copy ctors  ////////////////////
+//////////////////////////////////////////////////////////////////////
+
+template <class T, class T_Helper>
+inline
+_CORBA_ObjRef_Var<T,T_Helper>::
+_CORBA_ObjRef_Var(const _CORBA_ObjRef_Member<T,T_Helper>& m)
+{
+  if (!T_Helper::is_nil(m._ptr)) {
+    T_Helper::duplicate(m._ptr);
+    pd_objref = m._ptr;
+  }
+  else
+    pd_objref = T_Helper::_nil();
+}
+
+template <class T, class T_Helper>
+inline _CORBA_ObjRef_Var<T,T_Helper>&
+_CORBA_ObjRef_Var<T,T_Helper>::operator= (const _CORBA_ObjRef_Member<T,T_Helper>& p)
+{
+  if (!T_Helper::is_nil(pd_objref)) T_Helper::release(pd_objref);
+  if (!T_Helper::is_nil(p._ptr)) {
+    T_Helper::duplicate(p._ptr);
+    pd_objref = p._ptr;
+  }
+  else
+    pd_objref = T_Helper::_nil();
+  return *this;
+}
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////// _CORBA_ObjRef_INOUT_arg //////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template <class T,class T_var,class T_member>
+template <class T,class T_Helper>
 class _CORBA_ObjRef_INOUT_arg {
 public:
+  typedef _CORBA_ObjRef_Member<T,T_Helper> T_member;
+  typedef _CORBA_ObjRef_Var<T,T_Helper>    T_var;
   inline _CORBA_ObjRef_INOUT_arg(T*& p) : _data(p) {}
   inline _CORBA_ObjRef_INOUT_arg(T_var& p) : _data(p.pd_objref) {}
-  inline _CORBA_ObjRef_INOUT_arg(T_member& p) : _data(p._ptr) {}
+  inline _CORBA_ObjRef_INOUT_arg(T_member& p) : _data(p._ptr) {
+    // If the ObjRef_member is part of a sequence and the pd_rel == 0,
+    // the ObjRef is not owned by the sequence and should not
+    // be freed. Since this is an inout argument and the callee may call
+    // release, we duplicate the ObjRef and pass it to the callee. This will
+    // result in a memory leak! This only occurs when there is a programming
+    // error and cannot be trapped by the compiler.
+    if (!p.pd_rel && !T_Helper::is_nil(p._ptr) ) {
+      T_Helper::duplicate(p);
+    }
+  }
+  inline ~_CORBA_ObjRef_INOUT_arg() {}
+
   T*& _data;
 private:
   _CORBA_ObjRef_INOUT_arg();
@@ -429,10 +595,12 @@ private:
 //////////////////////// _CORBA_ObjRef_OUT_arg ///////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template <class T,class T_var,class T_member,class T_Helper>
+template <class T,class T_Helper>
 class _CORBA_ObjRef_OUT_arg {
 public:
-  typedef _CORBA_ObjRef_OUT_arg<T,T_var,T_member,T_Helper> T_out;
+  typedef _CORBA_ObjRef_OUT_arg<T,T_Helper> T_out;
+  typedef _CORBA_ObjRef_Member<T,T_Helper> T_member;
+  typedef _CORBA_ObjRef_Var<T,T_Helper>    T_var;
 
   inline _CORBA_ObjRef_OUT_arg(T*& p) : _data(p) { _data = T_Helper::_nil(); }
   inline _CORBA_ObjRef_OUT_arg(T_var& p) : _data(p.pd_objref) {
@@ -441,11 +609,21 @@ public:
   inline _CORBA_ObjRef_OUT_arg(T_member& p) : _data(p._ptr) {
     p = T_Helper::_nil();
   }
-  inline _CORBA_ObjRef_OUT_arg(T_out& p) : _data(p._data) {}
-  inline T_out& operator=(T_out& p) { _data = p._data; return *this; }
+
+  inline _CORBA_ObjRef_OUT_arg(const T_out& p) : _data(p._data) {}
+  inline ~_CORBA_ObjRef_OUT_arg() {}
+
+  inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
   inline T_out& operator=(T* p) { _data = p; return *this; }
   inline T_out& operator=(const T_var& p) { 
-    _data = T_Helper::duplicate(p); return *this;
+    T_Helper::duplicate(p); 
+    _data = ((T*)p);
+    return *this;
+  }
+  inline T_out& operator=(const T_member& p) {
+    T_Helper::duplicate(p); 
+    _data = ((T*)p);
+    return * this;
   }
   inline operator T*&() { return _data; }
   inline T*& ptr() { return _data; }
@@ -455,6 +633,7 @@ public:
 private:
   _CORBA_ObjRef_OUT_arg();
 };
+
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////// _CORBA_ConstrType_Fix_Var /////////////////////
@@ -513,7 +692,7 @@ public:
 
   friend class _CORBA_ConstrType_Fix_OUT_arg<T, T_var>;
 
-private:
+protected:
   T pd_data;
 };
 
@@ -527,8 +706,8 @@ public:
   typedef _CORBA_ConstrType_Fix_OUT_arg<T,T_var> T_out;
   inline _CORBA_ConstrType_Fix_OUT_arg(T*& p) : _data(p) { _data = 0; }
   inline _CORBA_ConstrType_Fix_OUT_arg(T_var& p) : _data(&p.pd_data) {}
-  inline _CORBA_ConstrType_Fix_OUT_arg(T_out& p) : _data(p._data) {}
-  inline T_out& operator=(T_out& p) { _data = p._data; return *this; }
+  inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
+  inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
   inline T_out& operator=(T* p) { _data = p; return *this; }
   inline operator T*&() { return _data; }
   inline T*& ptr() { return _data; }
@@ -555,11 +734,38 @@ public:
 
   inline _CORBA_ConstrType_Variable_Var() { pd_data = 0; }
   inline _CORBA_ConstrType_Variable_Var(T* p) { pd_data = p; }
-  inline _CORBA_ConstrType_Variable_Var(const T_var& p);
+  inline _CORBA_ConstrType_Variable_Var(const T_var& p) {
+    if( !p.pd_data )  pd_data = 0;
+    else {
+      pd_data = new T;
+      if( !pd_data )  _CORBA_new_operator_return_null();
+      *pd_data = *p.pd_data;
+    }
+  }
+
   inline ~_CORBA_ConstrType_Variable_Var() {  if( pd_data )  delete pd_data; }
 
-  inline T_var& operator= (T* p);
-  inline T_var& operator= (const T_var& p);
+  inline T_var& operator= (T* p) {
+    if( pd_data )  delete pd_data;
+    pd_data = p;
+    return *this;
+  }
+
+  inline T_var& operator= (const T_var& p) {
+    if( p.pd_data ) {
+      if( !pd_data ) {
+	pd_data = new T;
+	if( !pd_data )  _CORBA_new_operator_return_null();
+      }
+      *pd_data = *p.pd_data;
+    }
+    else {
+      if( pd_data )  delete pd_data;
+      pd_data = 0;
+    }
+    return *this;
+  }
+
   inline T* operator->() const { return (T*)pd_data; }
 
 #if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
@@ -586,7 +792,7 @@ public:
 
   friend class _CORBA_ConstrType_Variable_OUT_arg<T, T_var>;
 
-private:
+protected:
   T* pd_data;
 };
 
@@ -602,8 +808,8 @@ public:
   inline _CORBA_ConstrType_Variable_OUT_arg(T_var& p) : _data(p.pd_data) {
     p = (T*)0;
   }
-  inline _CORBA_ConstrType_Variable_OUT_arg(T_out& p) : _data(p._data) {}
-  inline T_out& operator=(T_out& p) { _data = p._data; return *this; }
+  inline _CORBA_ConstrType_Variable_OUT_arg(const T_out& p) : _data(p._data) {}
+  inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
   inline T_out& operator=(T* p) { _data = p; return *this; }
   inline operator T*&() { return _data; }
   inline T*& ptr() { return _data; }
@@ -630,11 +836,36 @@ public:
 
   inline _CORBA_Array_Var () { pd_data = 0; }
   inline _CORBA_Array_Var (T* p) { pd_data = p; }
-  inline _CORBA_Array_Var (const T_var& p);
+  inline _CORBA_Array_Var (const T_var& p) {
+    if( !p.pd_data )  pd_data = 0;
+    else {
+      pd_data = T_Helper::dup(p.pd_data);
+      if( !pd_data )  _CORBA_new_operator_return_null();
+    }
+  }
+
   inline ~_CORBA_Array_Var() { if( pd_data )  T_Helper::free(pd_data); }
 
-  inline T_var& operator= (T* p);
-  inline T_var& operator= (const T_var& p);
+  inline T_var& operator= (T* p) {
+    if (pd_data) T_Helper::free(pd_data);
+    pd_data = p;
+    return *this;
+  }
+
+  inline T_var& operator= (const T_var& p) {
+    if( pd_data )  T_Helper::free(pd_data);
+
+    if( p.pd_data ) {
+      pd_data = T_Helper::dup(p.pd_data);
+      if( !pd_data )  _CORBA_new_operator_return_null();
+    }
+    else {
+      pd_data = 0;
+    }
+    return *this;
+  }
+
+
   inline T& operator[] (_CORBA_ULong index) {
     return *(pd_data + index);
   }
@@ -677,8 +908,8 @@ public:
   inline _CORBA_Array_OUT_arg(T_var& p) : _data(p.pd_data) {
     p = (T*)0;
   }
-  inline _CORBA_Array_OUT_arg(T_out& p) : _data(p._data) {}
-  inline T_out& operator=(T_out& p) { _data = p._data; return *this; }
+  inline _CORBA_Array_OUT_arg(const T_out& p) : _data(p._data) {}
+  inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
   inline T_out& operator=(T* p) { _data = p; return *this; }
   inline operator T*&() { return _data; }
   inline T*& ptr() { return _data; }
