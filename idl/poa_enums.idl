@@ -1,0 +1,43 @@
+#pragma prefix "omg.org"
+
+module PortableServer
+{
+
+  enum ThreadPolicyValue {
+    ORB_CTRL_MODEL,
+    SINGLE_THREAD_MODEL,
+    MAIN_THREAD_MODEL
+  };
+
+  enum LifespanPolicyValue {
+    TRANSIENT,
+    PERSISTENT
+  };
+
+  enum IdUniquenessPolicyValue {
+    UNIQUE_ID,
+    MULTIPLE_ID
+  };
+
+  enum IdAssignmentPolicyValue {
+    USER_ID,
+    SYSTEM_ID
+  };
+
+  enum ImplicitActivationPolicyValue {
+    IMPLICIT_ACTIVATION,
+    NO_IMPLICIT_ACTIVATION
+  };
+
+  enum ServantRetentionPolicyValue {
+    RETAIN,
+    NON_RETAIN
+  };
+
+  enum RequestProcessingPolicyValue {
+    USE_ACTIVE_OBJECT_MAP_ONLY,
+    USE_DEFAULT_SERVANT,
+    USE_SERVANT_MANAGER
+  };
+
+};

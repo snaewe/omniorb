@@ -30,7 +30,8 @@
 #define _omniTypedefs_idl_
 
 module omniTypedefs {
-  typedef sequence <ValueBase> ValueBaseSeq;
+  typedef sequence <ValueBase>       ValueBaseSeq;
+  typedef sequence <CORBA::TypeCode> TypeCodeSeq;
 };
 
 #endif // _omniTypedefs_idl_

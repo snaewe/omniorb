@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2005/01/06 16:39:23  dgrisby
+  DynValue and DynValueBox implementations; misc small fixes.
+
   Revision 1.1.2.3  2004/07/04 23:53:35  dgrisby
   More ValueType TypeCode and Any support.
 
@@ -81,7 +84,9 @@ public:
 
   virtual _CORBA_Boolean _NP_custom() const = 0;
   // Return true if value is custom marshalled, false otherwise.
-  
+
+  virtual _CORBA_Boolean _NP_box() const;
+  // Return true if the value is a valuebox; false otherwise.
 
   static inline _CORBA_Boolean _PR_is_valid(ValueBase* p) {
     return p ? (p->_pd_magic == _PR_magic) : 1;

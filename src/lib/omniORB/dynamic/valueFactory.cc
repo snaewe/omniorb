@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2005/01/06 16:39:25  dgrisby
+  DynValue and DynValueBox implementations; misc small fixes.
+
   Revision 1.1.2.4  2004/04/02 13:26:23  dgrisby
   Start refactoring TypeCode to support value TypeCodes, start of
   abstract interfaces support.
@@ -115,7 +118,7 @@ valueFactoryTableTracker::
   for (CORBA::ULong i=0; i < vf_tablesize; i++) {
     ValueFactoryTableEntry *f, *n;
     for (f = vf_table[i]; f; f = n) {
-      if (omniORB::trace(26)) {
+      if (omniORB::trace(25)) {
 	omniORB::logger l;
 	l << "Release internal value factory for '" << f->repoId << "'.\n";
       }

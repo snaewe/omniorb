@@ -1,3 +1,30 @@
+Thu Jan  6 16:34:16 GMT 2005 dgrisby
+====================================
+
+- Narrowing for abstract interfaces.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/value.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+- DynValue and DynValueBox implementations; misc small fixes.
+
+idl/corbaidl.idl
+idl/omniTypedefs.idl
+idl/poa_enums.idl                        -- new
+include/omniORB4/CORBA_ValueBase.h
+include/omniORB4/dynAny.h
+include/omniORB4/internal/dynAnyImpl.h
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/dynAnyNil.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/dynamic/valueBase.cc
+src/lib/omniORB/dynamic/valueFactory.cc
+
+
 Wed Oct 13 18:47:42 BST 2004 dgrisby
 ====================================
 

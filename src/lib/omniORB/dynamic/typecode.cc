@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.40.2.7  2005/01/06 16:39:24  dgrisby
+ * DynValue and DynValueBox implementations; misc small fixes.
+ *
  * Revision 1.40.2.6  2004/10/13 17:58:20  dgrisby
  * Abstract interfaces support; values support interfaces; value bug fixes.
  *
@@ -2309,7 +2312,8 @@ TypeCode_sequence::NP_complete_recursive(TypeCode_base* tc, const char* repoId)
 {
   if (!pd_complete && !CORBA::is_nil(pd_content)) {
     pd_complete = ToTcBase(pd_content)->NP_complete_recursive(tc, repoId);
-    TypeCode_collector::markLoopMembers(tc);
+    if (pd_complete)
+      TypeCode_collector::markLoopMembers(tc);
   }
   return pd_complete;
 }
@@ -4739,6 +4743,7 @@ TypeCode_indirect::NP_complete_recursive(TypeCode_base* tc,
       OMNIORB_ASSERT(!pd_resolved);
       pd_complete = 1;
       pd_resolved = TypeCode_collector::duplicateRef(tc);
+      TypeCode_collector::markLoopMembers(tc);
       return 1;
     }
   }
@@ -5590,6 +5595,7 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 
       case CORBA::tk_alias:
       case CORBA::tk_array:
+      case CORBA::tk_value_box:
 	tc->pd_internal_depth = markLoops(tc->NP_content_type(), depth+1);
 	break;
 
@@ -5601,6 +5607,7 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
       case CORBA::tk_struct:
       case CORBA::tk_except:
       case CORBA::tk_union:
+      case CORBA::tk_value:
 	{
 	  CORBA::ULong memberCount = tc->NP_member_count();
 
@@ -5664,12 +5671,14 @@ TypeCode_collector::countInternalRefs(TypeCode_base* tc)
       case CORBA::tk_alias:
       case CORBA::tk_array:
       case CORBA::tk_sequence:
+      case CORBA::tk_value_box:
 	countInternalRefs(tc->NP_content_type());
 	break;
 
       case CORBA::tk_struct:
       case CORBA::tk_except:
       case CORBA::tk_union:
+      case CORBA::tk_value:
 	{
 	  CORBA::ULong memberCount = tc->NP_member_count();
 
@@ -5727,6 +5736,7 @@ TypeCode_collector::checkInternalRefs(TypeCode_base* tc, CORBA::ULong depth)
       case CORBA::tk_alias:
       case CORBA::tk_array:
       case CORBA::tk_sequence:
+      case CORBA::tk_value_box:
 	{
 	  TypeCode_base* child = tc->NP_content_type();
 	  CORBA::Boolean child_can_be_freed =
@@ -5755,6 +5765,7 @@ TypeCode_collector::checkInternalRefs(TypeCode_base* tc, CORBA::ULong depth)
       case CORBA::tk_struct:
       case CORBA::tk_except:
       case CORBA::tk_union:
+      case CORBA::tk_value:
 	{
 	  CORBA::Boolean can_be_freed = 1;
 	  CORBA::ULong memberCount = tc->NP_member_count();

@@ -36,16 +36,7 @@
 
 #include <dynAnyImpl.h>
 
-// *** DMC requires inheritance to be the opposite way around to that
-// used in previous omniORB releases. For a micro release, the order
-// must stay the same, for binary compatibility, hence this
-// ugliness...
-
-#ifndef __DMC__
-#  define NILINHERITANCE(x) public DynamicAny::x, public omniNilDynAny
-#else
-#  define NILINHERITANCE(x) public omniNilDynAny, public DynamicAny::x
-#endif
+#define NILINHERITANCE(x) public omniNilDynAny, public DynamicAny::x
 
 
 OMNI_USING_NAMESPACE(omni)
@@ -149,6 +140,13 @@ public:
   virtual void insert_dyn_any(DynamicAny::DynAny_ptr value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
+  virtual void insert_val(CORBA::ValueBase* value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_abstract(CORBA::AbstractBase_ptr value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+
   virtual CORBA::Boolean get_boolean() {
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
@@ -231,6 +229,15 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
+  virtual CORBA::ValueBase* get_val() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::AbstractBase_ptr get_abstract() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+
   virtual void insert_boolean_seq(CORBA::BooleanSeq&) {
     _CORBA_invoked_nil_pseudo_ref();
   }
@@ -750,6 +757,208 @@ DynamicAny::DynArray::_nil()
 }
 
 OMNI_NAMESPACE_BEGIN(omni)
+
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// omniNilDynValueCommon ////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class omniNilDynValueCommon : NILINHERITANCE(DynValueCommon) {
+public:
+  omniNilDynValueCommon() : OMNIORB_BASE_CTOR(DynamicAny::)DynAny(1) {}
+
+  virtual CORBA::Boolean is_null() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_to_null() {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void set_to_value() {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynValueCommon::_PD_repoId) )
+      return (DynamicAny::DynValueCommon_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
+  }
+};
+
+OMNI_NAMESPACE_END(omni)
+
+DynamicAny::DynValueCommon_ptr
+DynamicAny::DynValueCommon::_nil()
+{
+  static omniNilDynValueCommon* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new omniNilDynValueCommon;
+      registerNilCorbaObject(_the_nil_ptr);
+    }
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
+}
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// omniNilDynValue //////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class omniNilDynValue : NILINHERITANCE(DynValue) {
+public:
+  omniNilDynValue() {}
+
+  virtual CORBA::Boolean is_null() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_to_null() {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void set_to_value() {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual char* current_member_name() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::TCKind current_member_kind() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return CORBA::tk_null;
+  }
+  virtual DynamicAny::NameValuePairSeq* get_members() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_members(const DynamicAny::NameValuePairSeq& value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual DynamicAny::NameDynAnyPairSeq* get_members_as_dyn_any() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_members_as_dyn_any(const DynamicAny::NameDynAnyPairSeq& value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynValue::_PD_repoId) )
+      return (DynamicAny::DynValue_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynValueCommon::_PD_repoId) )
+      return (DynamicAny::DynValueCommon_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
+  }
+};
+
+OMNI_NAMESPACE_END(omni)
+
+DynamicAny::DynValue_ptr
+DynamicAny::DynValue::_nil()
+{
+  static omniNilDynValue* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new omniNilDynValue;
+      registerNilCorbaObject(_the_nil_ptr);
+    }
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
+}
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+
+//////////////////////////////////////////////////////////////////////
+/////////////////////////// omniNilDynValueBox ///////////////////////
+//////////////////////////////////////////////////////////////////////
+
+  class omniNilDynValueBox : NILINHERITANCE(DynValueBox) {
+public:
+  omniNilDynValueBox() {}
+
+  virtual CORBA::Boolean is_null() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_to_null() {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void set_to_value() {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual CORBA::Any* get_boxed_value() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_boxed_value(const CORBA::Any& value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual DynamicAny::DynAny_ptr get_boxed_value_as_dyn_any() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual void set_boxed_value_as_dyn_any(DynamicAny::DynAny_ptr value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  void* _ptrToObjRef(const char* repoId) {
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynValueBox::_PD_repoId) )
+      return (DynamicAny::DynValueBox_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynValueCommon::_PD_repoId) )
+      return (DynamicAny::DynValueCommon_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+      return (DynamicAny::DynAny_ptr) this;
+  
+    if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+      return (CORBA::Object_ptr) this;
+
+    return 0;
+  }
+};
+
+OMNI_NAMESPACE_END(omni)
+
+DynamicAny::DynValueBox_ptr
+DynamicAny::DynValueBox::_nil()
+{
+  static omniNilDynValueBox* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new omniNilDynValueBox;
+      registerNilCorbaObject(_the_nil_ptr);
+    }
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
+}
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+
+
+
 
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// omniNilDynAnyFactory /////////////////////

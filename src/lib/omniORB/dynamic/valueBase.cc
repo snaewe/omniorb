@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2005/01/06 16:39:25  dgrisby
+  DynValue and DynValueBox implementations; misc small fixes.
+
   Revision 1.1.2.5  2004/10/13 17:58:21  dgrisby
   Abstract interfaces support; values support interfaces; value bug fixes.
 
@@ -81,6 +84,12 @@ CORBA::ValueBase*
 CORBA::ValueBase::_NP_unmarshal(cdrStream& s)
 {
   return omniValueType::unmarshal(_PD_repoId, 0, 0, s);
+}
+
+CORBA::Boolean
+CORBA::ValueBase::_NP_box() const
+{
+  return 0;
 }
 
 CORBA::ValueBase::ValueBase() : _pd_magic(_PR_magic) {}

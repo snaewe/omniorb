@@ -31,6 +31,9 @@
 
 /*
  * $Log$
+ * Revision 1.21.2.5  2005/01/06 16:39:24  dgrisby
+ * DynValue and DynValueBox implementations; misc small fixes.
+ *
  * Revision 1.21.2.4  2004/10/13 17:58:20  dgrisby
  * Abstract interfaces support; values support interfaces; value bug fixes.
  *
@@ -287,12 +290,14 @@ CORBA::Any::operator=(const CORBA::Any& a)
 // Nasty deprecated constructor and replace() taking a void* buffer
 //
 
+#if 0
 static void voidDestructor_fn(void* ptr) {
   delete [] (char*) ptr;
 }
 static void voidInvalidMarshal_fn(cdrStream&, void*) {
   OMNIORB_ASSERT(0);
 }
+#endif
 
 CORBA::
 Any::Any(TypeCode_ptr tc, void* value, Boolean release)
@@ -475,7 +480,6 @@ PR_extract(CORBA::TypeCode_ptr     tc,
       // Extract the data
       data = 0;
       unmarshal(tbuf, data);
-      OMNIORB_ASSERT(data);
     }
 
     // Now set the data pointer
@@ -511,7 +515,9 @@ cdrAnyMemoryStream&
 CORBA::Any::PR_streamToRead() const
 {
   if (!pd_mbuf) {
-    OMNIORB_ASSERT(pd_marshal);
+
+    if (!pd_marshal)
+      OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidAny, CORBA::COMPLETED_NO);
 
     cdrAnyMemoryStream* mbuf = new cdrAnyMemoryStream;
 
@@ -680,9 +686,11 @@ void
 CORBA::Any::operator<<=(from_fixed f)
 {
   PR_clearData();
+  CORBA::Fixed g(f.val);
+  g.PR_setLimits(f.digits, f.scale);
   pd_tc = CORBA::TypeCode::NP_fixed_tc(f.digits,f.scale);
   pd_mbuf = new cdrAnyMemoryStream();
-  f.val >>= *pd_mbuf;
+  g >>= *pd_mbuf;
 }
 
 
@@ -846,7 +854,12 @@ CORBA::Any::operator>>=(to_fixed f) const
   if (!pd_tc->equivalent(tc)) return 0;
   OMNIORB_ASSERT(pd_mbuf);
   cdrAnyMemoryStream tbuf(*pd_mbuf, 1);
-  f.val <<= tbuf;
+
+  CORBA::Fixed g;
+  g.PR_setLimits(f.digits, f.scale);
+  g <<= tbuf;
+
+  f.val = g;
   return 1;
 }
 
@@ -1263,11 +1276,11 @@ CORBA::Any::operator<<=(from_string s)
   pd_tc = tc;
 
   if (s.nc) {
-    PR_insert(CORBA::_tc_string, marshalString_fn, deleteString_fn, s.val);
+    PR_insert(tc, marshalString_fn, deleteString_fn, s.val);
   }
   else {
     char* ns = CORBA::string_dup(s.val);
-    PR_insert(CORBA::_tc_string, marshalString_fn, deleteString_fn, ns);
+    PR_insert(tc, marshalString_fn, deleteString_fn, ns);
   }
 }
 
@@ -1340,11 +1353,11 @@ CORBA::Any::operator<<=(from_wstring s)
   pd_tc = tc;
 
   if (s.nc) {
-    PR_insert(CORBA::_tc_wstring, marshalWString_fn, deleteWString_fn, s.val);
+    PR_insert(tc, marshalWString_fn, deleteWString_fn, s.val);
   }
   else {
     CORBA::WChar* ns = CORBA::wstring_dup(s.val);
-    PR_insert(CORBA::_tc_wstring, marshalWString_fn, deleteWString_fn, ns);
+    PR_insert(tc, marshalWString_fn, deleteWString_fn, ns);
   }
 }
 

@@ -29,6 +29,9 @@
 
 /*
    $Log$
+   Revision 1.13.2.4  2005/01/06 16:39:24  dgrisby
+   DynValue and DynValueBox implementations; misc small fixes.
+
    Revision 1.13.2.3  2004/07/23 10:29:58  dgrisby
    Completely new, much simpler Any implementation.
 
@@ -159,6 +162,9 @@ DynamicAny::DynStruct::~DynStruct() {}
 DynamicAny::DynUnion::~DynUnion() {}
 DynamicAny::DynSequence::~DynSequence() {}
 DynamicAny::DynArray::~DynArray() {}
+DynamicAny::DynValueCommon::~DynValueCommon() {}
+DynamicAny::DynValue::~DynValue() {}
+DynamicAny::DynValueBox::~DynValueBox() {}
 DynamicAny::DynAnyFactory::~DynAnyFactory() {}
 
 const char* DynamicAny::DynAny::
@@ -181,6 +187,15 @@ _PD_repoId = "IDL:omg.org/DynamicAny/DynSequence:1.0";
 
 const char* DynamicAny::DynArray::
 _PD_repoId = "IDL:omg.org/DynamicAny/DynArray:1.0";
+
+const char* DynamicAny::DynValueCommon::
+_PD_repoId = "IDL:omg.org/DynamicAny/DynValueCommon:1.0";
+
+const char* DynamicAny::DynValue::
+_PD_repoId = "IDL:omg.org/DynamicAny/DynValue:1.0";
+
+const char* DynamicAny::DynValueBox::
+_PD_repoId = "IDL:omg.org/DynamicAny/DynValueBox:1.0";
 
 const char* DynamicAny::DynAnyFactory::
 _PD_repoId = "IDL:omg.org/DynamicAny/DynAnyFactory:1.0";
@@ -261,8 +276,13 @@ DynAnyImplBase::from_any(const CORBA::Any& value)
   CORBA::TypeCode_var value_tc = value.type();
   if( !value_tc->equivalent(tc()) )  throw DynamicAny::DynAny::TypeMismatch();
 
-  cdrAnyMemoryStream buf(value.PR_streamToRead(), 1);
-  if( !copy_from(buf) )  throw DynamicAny::DynAny::InvalidValue();
+  try {
+    cdrAnyMemoryStream buf(value.PR_streamToRead(), 1);
+    if( !copy_from(buf) )  throw DynamicAny::DynAny::InvalidValue();
+  }
+  catch (CORBA::BAD_PARAM&) {
+    throw DynamicAny::DynAny::InvalidValue();
+  }
 }
 
 CORBA::Any*
@@ -425,6 +445,7 @@ DynAnyImpl::equal(DynamicAny::DynAny_ptr dyn_any)
   if (!tc()->equivalent(ib->tc()))
     return 0;
 
+  
   switch (actualTc()->kind()) {
   case CORBA::tk_any:
     {
@@ -651,6 +672,32 @@ DynAnyImpl::insert_dyn_any(DynamicAny::DynAny_ptr value)
   a.in() >>= doWrite(CORBA::tk_any);
 }
 
+void
+DynAnyImpl::insert_val(CORBA::ValueBase* value)
+{
+  CHECK_NOT_DESTROYED;
+  throw DynamicAny::DynAny::TypeMismatch();
+}
+
+void
+DynAnyImpl::insert_abstract(CORBA::AbstractBase_ptr value)
+{
+  CHECK_NOT_DESTROYED;
+
+  cdrAnyMemoryStream& stream = doWrite(CORBA::tk_abstract_interface);
+
+  CORBA::Object_ptr o = value->_NP_to_object();
+  if (!CORBA::is_nil(o)) {
+    stream.marshalBoolean(1);
+    CORBA::Object::_marshalObjRef(0, stream);
+  }
+  else {
+    CORBA::ValueBase* v = value->_NP_to_value();
+    stream.marshalBoolean(0);
+    CORBA::ValueBase::_NP_marshal(v, stream);
+  }
+}
+
 
 CORBA::Boolean
 DynAnyImpl::get_boolean()
@@ -826,22 +873,62 @@ DynAnyImpl::get_wstring()
 CORBA::Any*
 DynAnyImpl::get_any()
 {
+  CHECK_NOT_DESTROYED;
   cdrAnyMemoryStream& buf = doRead(CORBA::tk_any);
 
   CORBA::Any* value = new CORBA::Any();
-  *value <<= buf;
+  try {
+    *value <<= buf;
+  }
+  catch (...) {
+    delete value;
+    throw;
+  }
   return value;
 }
 
 DynamicAny::DynAny_ptr
 DynAnyImpl::get_dyn_any()
 {
+  CHECK_NOT_DESTROYED;
+
   // This could be made faster by short-cutting the Any step, but it's
   // probably not worth the effort.
   cdrAnyMemoryStream& buf = doRead(CORBA::tk_any);
   CORBA::Any a;
   a <<= buf;
   return factory_create_dyn_any(a);
+}
+
+CORBA::ValueBase*
+DynAnyImpl::get_val()
+{
+  CHECK_NOT_DESTROYED;
+  throw DynamicAny::DynAny::TypeMismatch();
+}
+
+CORBA::AbstractBase_ptr
+DynAnyImpl::get_abstract()
+{
+  cdrAnyMemoryStream& stream = doRead(CORBA::tk_abstract_interface);
+
+  CORBA::AbstractBase_ptr a;
+
+  CORBA::Boolean b = stream.unmarshalBoolean();
+  if (b) {
+    CORBA::Object_ptr o = CORBA::Object::_unmarshalObjRef(stream);
+    if (CORBA::is_nil(o))
+      return CORBA::AbstractBase::_nil();
+
+    a = (CORBA::AbstractBase_ptr)o->
+                              _ptrToObjRef(CORBA::AbstractBase::_PD_repoId);
+  }
+  else {
+    CORBA::ValueBase* v = CORBA::ValueBase::_NP_unmarshal(stream);
+    a = (CORBA::AbstractBase_ptr)v->
+                              _ptrToValue(CORBA::AbstractBase::_PD_repoId);
+  }
+  return a;
 }
 
 
@@ -1607,6 +1694,34 @@ DynAnyConstrBase::insert_dyn_any(DynamicAny::DynAny_ptr value)
   a.in() >>= writeCurrent(CORBA::tk_any);
 }
 
+void
+DynAnyConstrBase::insert_val(CORBA::ValueBase* value)
+{
+  CHECK_NOT_DESTROYED;
+
+  CORBA::Any a;
+  a <<= value;
+  getCurrent()->from_any(a);
+}
+
+void
+DynAnyConstrBase::insert_abstract(CORBA::AbstractBase_ptr value)
+{
+  CHECK_NOT_DESTROYED;
+
+  cdrAnyMemoryStream& stream = writeCurrent(CORBA::tk_abstract_interface);
+
+  CORBA::Object_ptr o = value->_NP_to_object();
+  if (!CORBA::is_nil(o)) {
+    stream.marshalBoolean(1);
+    CORBA::Object::_marshalObjRef(0, stream);
+  }
+  else {
+    CORBA::ValueBase* v = value->_NP_to_value();
+    stream.marshalBoolean(0);
+    CORBA::ValueBase::_NP_marshal(v, stream);
+  }
+}
 
 
 
@@ -1808,6 +1923,44 @@ DynAnyConstrBase::get_dyn_any()
   CORBA::Any value;
   value <<= readCurrent(CORBA::tk_any);
   return factory_create_dyn_any(value);
+}
+
+CORBA::ValueBase*
+DynAnyConstrBase::get_val()
+{
+  CORBA::TCKind k = currentKind();
+
+  if (k != CORBA::tk_value && k != CORBA::tk_value_box)
+    throw DynamicAny::DynAny::TypeMismatch();
+
+  CORBA::Any_var a = getCurrent()->to_any();
+  CORBA::ValueBase* v;
+  a >>= v;
+  return v;
+}
+
+CORBA::AbstractBase_ptr
+DynAnyConstrBase::get_abstract()
+{
+  cdrAnyMemoryStream& stream = readCurrent(CORBA::tk_abstract_interface);
+
+  CORBA::AbstractBase_ptr a;
+
+  CORBA::Boolean b = stream.unmarshalBoolean();
+  if (b) {
+    CORBA::Object_ptr o = CORBA::Object::_unmarshalObjRef(stream);
+    if (CORBA::is_nil(o))
+      return CORBA::AbstractBase::_nil();
+
+    a = (CORBA::AbstractBase_ptr)o->
+                              _ptrToObjRef(CORBA::AbstractBase::_PD_repoId);
+  }
+  else {
+    CORBA::ValueBase* v = CORBA::ValueBase::_NP_unmarshal(stream);
+    a = (CORBA::AbstractBase_ptr)v->
+                              _ptrToValue(CORBA::AbstractBase::_PD_repoId);
+  }
+  return a;
 }
 
 //
@@ -2122,8 +2275,12 @@ DynamicAny::DynAny_ptr
 DynAnyConstrBase::current_component()
 {
   CHECK_NOT_DESTROYED;
-  if( pd_n_components == 0 && actualTc()->kind() != CORBA::tk_sequence )
-    throw DynamicAny::DynAny::TypeMismatch();
+
+  if( pd_n_components == 0 ) {
+    CORBA::TCKind k = actualTc()->kind();
+    if (k != CORBA::tk_sequence && k != CORBA::tk_value_box)
+      throw DynamicAny::DynAny::TypeMismatch();
+  }
 
   if( pd_curr_index < 0 )
     return DynamicAny::DynAny::_nil();
@@ -2367,6 +2524,9 @@ DynAnyConstrBase::component_from_any(unsigned i, const CORBA::Any& a)
       pd_n_really_in_buf++;
       return 0;
     }
+    catch (CORBA::BAD_PARAM&) {
+      throw DynamicAny::DynAny::InvalidValue();
+    }
     pd_n_in_buf++;
     pd_n_really_in_buf++;
     return 1;
@@ -2374,8 +2534,13 @@ DynAnyConstrBase::component_from_any(unsigned i, const CORBA::Any& a)
 
   if( i < pd_first_in_comp )  createComponent(i);
 
-  cdrAnyMemoryStream buf(a.PR_streamToRead(), 1);
-  return pd_components[i]->copy_from(buf);
+  try {
+    cdrAnyMemoryStream buf(a.PR_streamToRead(), 1);
+    return pd_components[i]->copy_from(buf);
+  }
+  catch (CORBA::BAD_PARAM&) {
+    throw DynamicAny::DynAny::InvalidValue();
+  }
 }
 
 
@@ -2525,8 +2690,17 @@ DynStructImpl::set_members_as_dyn_any(const DynamicAny::NameDynAnyPairSeq& nvps)
       pd_first_in_comp = pd_n_components;
       throw DynamicAny::DynAny::TypeMismatch();
     }
-    pd_components[i] = ToDynAnyImplBase(nvps[i].value);
-    pd_components[i]->_NP_incrRefCount();
+    DynAnyImplBase* daib = ToDynAnyImplBase(nvps[i].value);
+    if (daib->is_root()) {
+      // Take ownership
+      daib->_NP_incrRefCount();
+      daib->attach();
+    }
+    else {
+      DynamicAny::DynAny_ptr newda = daib->copy();
+      daib = ToDynAnyImplBase(newda);
+    }
+    pd_components[i] = daib;
   }
   pd_curr_index = (pd_n_components == 0) ? -1 : 0;
 }
@@ -2567,8 +2741,6 @@ DynStructImpl::prepareSequenceWrite(CORBA::TCKind kind, CORBA::ULong len)
   // tries to call insert on the sub-component, that call will check
   // the length.
 
-  const TypeCode_base* tc = actualTc();
-
   if (pd_curr_index < 0)
     throw DynamicAny::DynAny::InvalidValue();
 
@@ -2589,8 +2761,6 @@ DynStructImpl::prepareSequenceWrite(CORBA::TCKind kind, CORBA::ULong len)
 DynAnyConstrBase::SeqLocation
 DynStructImpl::prepareSequenceRead(CORBA::TCKind kind)
 {
-  const TypeCode_base* tc = actualTc();
-
   if (pd_curr_index < 0)
     throw DynamicAny::DynAny::InvalidValue();
 
@@ -2629,6 +2799,9 @@ DynStructImpl::_ptrToObjRef(const char* repoId)
   
   if( omni::ptrStrMatch(repoId, DynAnyImplBase::_PD_repoId) )
     return (DynAnyImplBase*) this;
+  
+  if( omni::ptrStrMatch(repoId, DynAnyImpl::_PD_repoId) )
+    return (DynAnyImpl*) this;
   
   if( omni::ptrStrMatch(repoId, DynamicAny::DynStruct::_PD_repoId) )
     return (DynamicAny::DynStruct_ptr) this;
@@ -2829,6 +3002,23 @@ DynUnionDisc::insert_dyn_any(DynamicAny::DynAny_ptr value)
   // Not a legal discriminator type.
   throw DynamicAny::DynAny::InvalidValue();
 }
+
+void
+DynUnionDisc::insert_val(CORBA::ValueBase* value)
+{
+  CHECK_NOT_DESTROYED;
+  // Not a legal discriminator type.
+  throw DynamicAny::DynAny::InvalidValue();
+}
+
+void
+DynUnionDisc::insert_abstract(CORBA::AbstractBase_ptr value)
+{
+  CHECK_NOT_DESTROYED;
+  // Not a legal discriminator type.
+  throw DynamicAny::DynAny::InvalidValue();
+}
+
 
 ///////////////////////////////
 // exposed private interface //
@@ -3042,6 +3232,9 @@ DynUnionEnumDisc::_ptrToObjRef(const char* repoId)
 {
   if( omni::ptrStrMatch(repoId, DynAnyImplBase::_PD_repoId) )
     return (DynAnyImplBase*) this;
+  
+  if( omni::ptrStrMatch(repoId, DynAnyImpl::_PD_repoId) )
+    return (DynAnyImpl*) this;
   
   if( omni::ptrStrMatch(repoId, DynamicAny::DynEnum::_PD_repoId) )
     return (DynamicAny::DynEnum_ptr) this;
@@ -3375,6 +3568,36 @@ DynUnionImpl::insert_dyn_any(DynamicAny::DynAny_ptr value)
   a.in() >>= writeCurrent(CORBA::tk_any);
 }
 
+void
+DynUnionImpl::insert_val(CORBA::ValueBase* value)
+{
+  CHECK_NOT_DESTROYED;
+
+  CORBA::Any a;
+  a <<= value;
+
+  ToDynAnyImpl(pd_member)->setValid();
+  pd_member->from_any(a);
+}
+
+void
+DynUnionImpl::insert_abstract(CORBA::AbstractBase_ptr value)
+{
+  CHECK_NOT_DESTROYED;
+
+  cdrAnyMemoryStream& stream = writeCurrent(CORBA::tk_abstract_interface);
+
+  CORBA::Object_ptr o = value->_NP_to_object();
+  if (!CORBA::is_nil(o)) {
+    stream.marshalBoolean(1);
+    CORBA::Object::_marshalObjRef(0, stream);
+  }
+  else {
+    CORBA::ValueBase* v = value->_NP_to_value();
+    stream.marshalBoolean(0);
+    CORBA::ValueBase::_NP_marshal(v, stream);
+  }
+}
 
 CORBA::Boolean
 DynUnionImpl::get_boolean()
@@ -3571,6 +3794,45 @@ DynUnionImpl::get_dyn_any()
   CORBA::Any value;
   value <<= readCurrent(CORBA::tk_any);
   return factory_create_dyn_any(value);
+}
+
+CORBA::ValueBase*
+DynUnionImpl::get_val()
+{
+  CORBA::TypeCode_ptr tc = actualTc();
+
+  CORBA::TCKind k = tc->kind();
+  if (k != CORBA::tk_value && k != CORBA::tk_value_box)
+    throw DynamicAny::DynAny::TypeMismatch();
+
+  CORBA::Any_var a = pd_member->to_any();
+  CORBA::ValueBase* v;
+  a >>= v;
+  return v;
+}
+
+CORBA::AbstractBase_ptr
+DynUnionImpl::get_abstract()
+{
+  cdrAnyMemoryStream& stream = readCurrent(CORBA::tk_abstract_interface);
+
+  CORBA::AbstractBase_ptr a;
+
+  CORBA::Boolean b = stream.unmarshalBoolean();
+  if (b) {
+    CORBA::Object_ptr o = CORBA::Object::_unmarshalObjRef(stream);
+    if (CORBA::is_nil(o))
+      return CORBA::AbstractBase::_nil();
+
+    a = (CORBA::AbstractBase_ptr)o->
+                              _ptrToObjRef(CORBA::AbstractBase::_PD_repoId);
+  }
+  else {
+    CORBA::ValueBase* v = CORBA::ValueBase::_NP_unmarshal(stream);
+    a = (CORBA::AbstractBase_ptr)v->
+                              _ptrToValue(CORBA::AbstractBase::_PD_repoId);
+  }
+  return a;
 }
 
 
@@ -3955,6 +4217,9 @@ DynUnionImpl::_ptrToObjRef(const char* repoId)
   if( omni::ptrStrMatch(repoId, DynAnyImplBase::_PD_repoId) )
     return (DynAnyImplBase*) this;
   
+  if( omni::ptrStrMatch(repoId, DynAnyImpl::_PD_repoId) )
+    return (DynAnyImpl*) this;
+  
   if( omni::ptrStrMatch(repoId, DynamicAny::DynUnion::_PD_repoId) )
     return (DynamicAny::DynUnion_ptr) this;
   
@@ -4281,6 +4546,9 @@ DynSequenceImpl::_ptrToObjRef(const char* repoId)
   if( omni::ptrStrMatch(repoId, DynAnyImplBase::_PD_repoId) )
     return (DynAnyImplBase*) this;
   
+  if( omni::ptrStrMatch(repoId, DynAnyImpl::_PD_repoId) )
+    return (DynAnyImpl*) this;
+  
   if( omni::ptrStrMatch(repoId, DynamicAny::DynSequence::_PD_repoId) )
     return (DynamicAny::DynSequence_ptr) this;
   
@@ -4516,6 +4784,9 @@ DynArrayImpl::_ptrToObjRef(const char* repoId)
   if( omni::ptrStrMatch(repoId, DynAnyImplBase::_PD_repoId) )
     return (DynAnyImplBase*) this;
   
+  if( omni::ptrStrMatch(repoId, DynAnyImpl::_PD_repoId) )
+    return (DynAnyImpl*) this;
+  
   if( omni::ptrStrMatch(repoId, DynamicAny::DynArray::_PD_repoId) )
     return (DynamicAny::DynArray_ptr) this;
   
@@ -4528,6 +4799,722 @@ DynArrayImpl::_ptrToObjRef(const char* repoId)
   return 0;
 }
 
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// DynValueImpl ////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+
+static void
+setValueComponentTypeCodes(omniTypedefs::TypeCodeSeq& tcs,
+			   CORBA::StringSeq& names,
+			   CORBA::TypeCode_ptr tc)
+{
+  CORBA::TypeCode_var base = tc->concrete_base_type();
+  if (base->kind() == CORBA::tk_value)
+    setValueComponentTypeCodes(tcs, names, base.in());
+
+  CORBA::ULong nmembers = tc->member_count();
+  CORBA::ULong len = tcs.length();
+  OMNIORB_ASSERT(names.length() == len);
+
+  tcs.length(len + nmembers);
+  names.length(len + nmembers);
+
+  CORBA::ULong i, j;
+
+  for (i=0, j=len; i < nmembers; i++, j++) {
+    tcs[j]   = tc->member_type(i);
+    names[j] = tc->member_name(i);
+  }
+}
+
+DynValueImpl::DynValueImpl(TypeCode_base* tc, CORBA::Boolean is_root)
+  : DynAnyConstrBase(tc, dt_value, is_root),
+    pd_null(1)
+{
+  setValueComponentTypeCodes(pd_componentTCs, pd_componentNames, tc);
+}
+
+
+DynValueImpl::~DynValueImpl()
+{
+}
+
+//////////////////////
+// public interface //
+//////////////////////
+
+CORBA::Boolean
+DynValueImpl::is_null()
+{
+  return pd_null;
+}
+
+void
+DynValueImpl::set_to_null()
+{
+  pd_null = 1;
+  pd_curr_index = -1;
+}
+
+void
+DynValueImpl::set_to_value()
+{
+  // If we're already set to a value, this is a no-op.
+  if (pd_null) {
+    pd_null = 0;
+    setNumComponents(pd_componentTCs.length());
+    pd_curr_index = 0;
+    DynAnyConstrBase::set_to_initial_value();
+  }
+}
+
+
+DynamicAny::DynAny_ptr
+DynValueImpl::copy()
+{
+  CHECK_NOT_DESTROYED;
+  DynValueImpl* da = new DynValueImpl(TypeCode_collector::duplicateRef(tc()),
+				      DYNANY_ROOT);
+  try {
+    da->assign(this);
+  }
+  catch(...) {
+    da->_NP_decrRefCount();
+    throw;
+  }
+  return da;
+}
+
+char*
+DynValueImpl::current_member_name()
+{
+  CHECK_NOT_DESTROYED;
+  if( pd_n_components == 0 ) throw DynamicAny::DynAny::TypeMismatch();    
+  if( pd_curr_index < 0 )    throw DynamicAny::DynAny::InvalidValue();
+
+  return CORBA::string_dup(pd_componentNames[pd_curr_index]);
+}
+
+
+CORBA::TCKind
+DynValueImpl::current_member_kind()
+{
+  CHECK_NOT_DESTROYED;
+  if( pd_n_components == 0 ) throw DynamicAny::DynAny::TypeMismatch();    
+  if( pd_curr_index < 0 )    throw DynamicAny::DynAny::InvalidValue();
+
+  return pd_componentTCs[pd_curr_index]->kind();
+}
+
+
+DynamicAny::NameValuePairSeq*
+DynValueImpl::get_members()
+{
+  CHECK_NOT_DESTROYED;
+
+  if (pd_null)
+    throw DynamicAny::DynAny::InvalidValue();
+
+  DynamicAny::NameValuePairSeq* nvps = new DynamicAny::NameValuePairSeq();
+  nvps->length(pd_n_components);
+
+  for( unsigned i = 0; i < pd_n_components; i++ ) {
+    (*nvps)[i].id = CORBA::string_dup(pd_componentNames[i]);
+    if( !component_to_any(i, (*nvps)[i].value) ) {
+      delete nvps;
+      OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_DynAnyNotInitialised,
+		    CORBA::COMPLETED_NO);
+    }
+  }
+  return nvps;
+}
+
+
+void
+DynValueImpl::set_members(const DynamicAny::NameValuePairSeq& nvps)
+{
+  CHECK_NOT_DESTROYED;
+
+  if (pd_null)
+    set_to_value();
+
+  if( nvps.length() != pd_n_components )
+    throw DynamicAny::DynAny::InvalidValue();
+
+  for( unsigned i = 0; i < pd_n_components; i++ ) {
+    if( ((const char*)(nvps[i].id))[0] != '\0' &&
+	strcmp((const char*)(nvps[i].id), pd_componentNames[i]))
+      throw DynamicAny::DynAny::TypeMismatch();
+
+    if( !component_from_any(i, nvps[i].value) )
+      throw DynamicAny::DynAny::TypeMismatch();
+  }
+  pd_curr_index = (pd_n_components == 0) ? -1 : 0;
+}
+
+
+DynamicAny::NameDynAnyPairSeq*
+DynValueImpl::get_members_as_dyn_any()
+{
+  CHECK_NOT_DESTROYED;
+
+  if (pd_null)
+    throw DynamicAny::DynAny::InvalidValue();
+
+  if (pd_n_in_buf != pd_first_in_comp)
+    OMNIORB_THROW(BAD_INV_ORDER, BAD_INV_ORDER_DynAnyNotInitialised,
+		  CORBA::COMPLETED_NO);
+
+  DynamicAny::NameDynAnyPairSeq* nvps = new DynamicAny::NameDynAnyPairSeq();
+  nvps->length(pd_n_components);
+
+  createComponent(0);
+  // All components are now in the buffer
+
+  for( unsigned i = 0; i < pd_n_components; i++ ) {
+    (*nvps)[i].id = CORBA::string_dup(pd_componentNames[i]);
+    pd_components[i]->_NP_incrRefCount();
+    (*nvps)[i].value = pd_components[i];
+  }
+  return nvps;
+}
+
+void
+DynValueImpl::set_members_as_dyn_any(const DynamicAny::NameDynAnyPairSeq& nvps)
+{
+  CHECK_NOT_DESTROYED;
+
+  if (pd_null)
+    set_to_value();
+
+  if( nvps.length() != pd_n_components )
+    throw DynamicAny::DynAny::InvalidValue();
+
+  pd_n_in_buf = 0;
+  pd_first_in_comp = 0;
+
+  CORBA::TypeCode_var tc;
+
+  for( unsigned i = 0; i < pd_n_components; i++ ) {
+    if( ((const char*)(nvps[i].id))[0] != '\0' &&
+	strcmp((const char*)(nvps[i].id), pd_componentNames[i]))
+      throw DynamicAny::DynAny::TypeMismatch();
+
+    tc = nvps[i].value->type();
+    if( !tc->equivalent(nthComponentTC(i)) ) {
+      pd_first_in_comp = pd_n_components;
+      throw DynamicAny::DynAny::TypeMismatch();
+    }
+    DynAnyImplBase* daib = ToDynAnyImplBase(nvps[i].value);
+    if (daib->is_root()) {
+      // Take ownership
+      daib->_NP_incrRefCount();
+      daib->attach();
+    }
+    else {
+      DynamicAny::DynAny_ptr newda = daib->copy();
+      daib = ToDynAnyImplBase(newda);
+    }
+    pd_components[i] = daib;
+  }
+  pd_curr_index = (pd_n_components == 0) ? -1 : 0;
+}
+
+
+
+///////////////////////////////
+// exposed private interface //
+///////////////////////////////
+
+int
+DynValueImpl::NP_nodetype() const
+{
+  return dt_value;
+}
+
+
+//////////////
+// internal //
+//////////////
+
+void
+DynValueImpl::set_to_initial_value()
+{
+  set_to_null();
+}
+
+int
+DynValueImpl::copy_to(cdrAnyMemoryStream& mbs)
+{
+  // The value in our buffer / components has the separate valuetype
+  // members; in the destination, we need a reference to a shareable
+  // valuetype. In the case that some values are in components, we use
+  // an intermediate memory stream to prepare the data for
+  // unmarshalling.
+
+  if (pd_n_in_buf != pd_first_in_comp) return 0;
+  pd_read_index = -1;
+
+  if (pd_null) {
+    CORBA::ValueBase::_NP_marshal(0, mbs);
+    return 1;
+  }
+
+  const char*  repoId = actualTc()->NP_id();
+  CORBA::ULong hash   = omniValueType::hash_id(repoId);
+
+  CORBA::ValueBase_var v(_omni_ValueFactoryManager::
+			 create_for_unmarshal(repoId, hash));
+  if (!v.operator->())
+    OMNIORB_THROW(MARSHAL, MARSHAL_NoValueFactory, CORBA::COMPLETED_NO);
+
+  if (pd_n_in_buf < pd_n_components) {
+    // Use an intermediate memory stream
+    cdrAnyMemoryStream src;
+    DynAnyConstrBase::copy_to(src);
+    v->_PR_unmarshal_state(src);
+  }
+  else {
+    // Use our buffer directly
+    cdrAnyMemoryStream src(pd_buf);
+    v->_PR_unmarshal_state(src);
+  }
+
+  // Now marshal the value into the destination buffer.
+  CORBA::ValueBase::_NP_marshal(v, mbs);
+  return 1;
+}
+
+int
+DynValueImpl::copy_from(cdrAnyMemoryStream& mbs)
+{
+  CORBA::ValueBase_var v = CORBA::ValueBase::_NP_unmarshal(mbs);
+  if (v.operator->()) {
+    set_to_value();
+    if (pd_n_in_buf < pd_n_components) {
+      // Use an intermediate memory stream
+      cdrAnyMemoryStream dst;
+      v->_PR_marshal_state(dst);
+      DynAnyConstrBase::copy_from(dst);
+    }
+    else {
+      // Use our buffer directly
+      cdrAnyMemoryStream dst(pd_buf);
+      v->_PR_marshal_state(dst);
+    }
+    return 1;
+  }
+  else {
+    // Nil
+    set_to_null();
+    return 1;
+  }
+}
+
+TypeCode_base*
+DynValueImpl::nthComponentTC(unsigned n)
+{
+  if( n >= pd_n_components )
+    throw omniORB::fatalException(__FILE__,__LINE__,
+		    "DynValueImpl::nthComponentTC() - n out of bounds");
+
+  return (TypeCode_base*)pd_componentTCs[n]._ptr;
+}
+
+
+DynAnyConstrBase::SeqLocation
+DynValueImpl::prepareSequenceWrite(CORBA::TCKind kind, CORBA::ULong len)
+{
+  // Note that we ignore then length here. When the insert function
+  // tries to call insert on the sub-component, that call will check
+  // the length.
+
+  if (pd_curr_index < 0)
+    throw DynamicAny::DynAny::InvalidValue();
+
+  const TypeCode_base* ctc;
+  ctc = TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
+  CORBA::TCKind k = ctc->NP_kind();
+
+  if ((k == CORBA::tk_sequence || k == CORBA::tk_array) &&
+      TypeCode_base::NP_expand(ctc->NP_content_type())->NP_kind() == kind) {
+    return SEQ_COMPONENT;
+  }
+  throw DynamicAny::DynAny::TypeMismatch();
+#ifdef NEED_DUMMY_RETURN
+  return SEQ_COMPONENT;
+#endif
+}
+
+DynAnyConstrBase::SeqLocation
+DynValueImpl::prepareSequenceRead(CORBA::TCKind kind)
+{
+  if (pd_curr_index < 0)
+    throw DynamicAny::DynAny::InvalidValue();
+
+  const TypeCode_base* ctc;
+  ctc = TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
+  CORBA::TCKind k = ctc->NP_kind();
+
+  if ((k == CORBA::tk_sequence || k == CORBA::tk_array) &&
+      TypeCode_base::NP_expand(ctc->NP_content_type())->NP_kind() == kind) {
+    return SEQ_COMPONENT;
+  }
+  throw DynamicAny::DynAny::TypeMismatch();
+#ifdef NEED_DUMMY_RETURN
+  return SEQ_COMPONENT;
+#endif
+}
+
+
+void
+DynValueImpl::_NP_incrRefCount()
+{
+  DynAnyImplBase::_NP_incrRefCount();
+}
+
+void
+DynValueImpl::_NP_decrRefCount()
+{
+  DynAnyImplBase::_NP_decrRefCount();
+}
+
+void*
+DynValueImpl::_ptrToObjRef(const char* repoId)
+{
+  if( omni::ptrStrMatch(repoId, DynAnyConstrBase::_PD_repoId) )
+    return (DynAnyConstrBase*) this;
+  
+  if( omni::ptrStrMatch(repoId, DynAnyImplBase::_PD_repoId) )
+    return (DynAnyImplBase*) this;
+  
+  if( omni::ptrStrMatch(repoId, DynAnyImpl::_PD_repoId) )
+    return (DynAnyImpl*) this;
+  
+  if( omni::ptrStrMatch(repoId, DynamicAny::DynValue::_PD_repoId) )
+    return (DynamicAny::DynValue_ptr) this;
+  
+  if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+    return (DynamicAny::DynAny_ptr) this;
+  
+  if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
+
+  return 0;
+}
+
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////// DynValueBoxImpl /////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+DynValueBoxImpl::DynValueBoxImpl(TypeCode_base* tc, CORBA::Boolean is_root)
+  : DynAnyConstrBase(tc, dt_value_box, is_root),
+    pd_null(1)
+{
+}
+
+
+DynValueBoxImpl::~DynValueBoxImpl()
+{
+}
+
+//////////////////////
+// public interface //
+//////////////////////
+
+CORBA::Boolean
+DynValueBoxImpl::is_null()
+{
+  return pd_null;
+}
+
+void
+DynValueBoxImpl::set_to_null()
+{
+  pd_null = 1;
+  pd_curr_index = -1;
+}
+
+void
+DynValueBoxImpl::set_to_value()
+{
+  // If we're already set to a value, this is a no-op.
+  if (pd_null) {
+    pd_null = 0;
+    setNumComponents(1);
+    pd_curr_index = 0;
+    DynAnyConstrBase::set_to_initial_value();
+  }
+}
+
+
+DynamicAny::DynAny_ptr
+DynValueBoxImpl::copy()
+{
+  CHECK_NOT_DESTROYED;
+  DynValueBoxImpl* da =
+    new DynValueBoxImpl(TypeCode_collector::duplicateRef(tc()), DYNANY_ROOT);
+
+  try {
+    da->assign(this);
+  }
+  catch(...) {
+    da->_NP_decrRefCount();
+    throw;
+  }
+  return da;
+}
+
+CORBA::Any*
+DynValueBoxImpl::get_boxed_value()
+{
+  CHECK_NOT_DESTROYED;
+
+  if (pd_null)
+    throw DynamicAny::DynAny::InvalidValue();
+
+  CORBA::Any_var a = new CORBA::Any();
+  
+  if (component_to_any(0, a))
+    return a._retn();
+
+  throw DynamicAny::DynAny::InvalidValue();
+}
+
+void
+DynValueBoxImpl::set_boxed_value(const CORBA::Any& value)
+{
+  CHECK_NOT_DESTROYED;
+
+  set_to_value();
+
+  if (component_from_any(0, value))
+    return;
+
+  throw DynamicAny::DynAny::TypeMismatch();
+}
+
+DynamicAny::DynAny_ptr
+DynValueBoxImpl::get_boxed_value_as_dyn_any()
+{
+  CHECK_NOT_DESTROYED;
+
+  if (pd_null)
+    throw DynamicAny::DynAny::InvalidValue();
+
+  createComponent(0);
+  pd_components[0]->_NP_incrRefCount();
+  return pd_components[0];
+}
+
+void
+DynValueBoxImpl::set_boxed_value_as_dyn_any(DynamicAny::DynAny_ptr value)
+{
+  CHECK_NOT_DESTROYED;
+
+  set_to_value();
+
+  pd_n_in_buf = 0;
+  pd_first_in_comp = 0;
+
+  CORBA::TypeCode_var tc = value->type();
+  if (!tc->equivalent(nthComponentTC(0))) {
+    pd_first_in_comp = 1;
+    pd_curr_index = -1;
+    throw DynamicAny::DynAny::TypeMismatch();
+  }
+
+  DynAnyImplBase* daib = ToDynAnyImplBase(value);
+  if (daib->is_root()) {
+    // Take ownership
+    daib->_NP_incrRefCount();
+    daib->attach();
+  }
+  else {
+    DynamicAny::DynAny_ptr newda = daib->copy();
+    daib = ToDynAnyImplBase(newda);
+  }
+  pd_components[0] = daib;
+}
+
+///////////////////////////////
+// exposed private interface //
+///////////////////////////////
+
+int
+DynValueBoxImpl::NP_nodetype() const
+{
+  return dt_value_box;
+}
+
+
+//////////////
+// internal //
+//////////////
+
+void
+DynValueBoxImpl::set_to_initial_value()
+{
+  set_to_null();
+}
+
+int
+DynValueBoxImpl::copy_to(cdrAnyMemoryStream& mbs)
+{
+  if (pd_n_in_buf != pd_first_in_comp) return 0;
+  pd_read_index = -1;
+
+  if (pd_null) {
+    CORBA::ValueBase::_NP_marshal(0, mbs);
+    return 1;
+  }
+
+  const char*  repoId = actualTc()->NP_id();
+  CORBA::ULong hash   = omniValueType::hash_id(repoId);
+
+  CORBA::ValueBase_var v(_omni_ValueFactoryManager::
+			 create_for_unmarshal(repoId, hash));
+  if (!v.operator->())
+    OMNIORB_THROW(MARSHAL, MARSHAL_NoValueFactory, CORBA::COMPLETED_NO);
+
+  if (pd_n_in_buf < pd_n_components) {
+    // Use an intermediate memory stream
+    cdrAnyMemoryStream src;
+    DynAnyConstrBase::copy_to(src);
+    v->_PR_unmarshal_state(src);
+  }
+  else {
+    // Use our buffer directly
+    cdrAnyMemoryStream src(pd_buf);
+    v->_PR_unmarshal_state(src);
+  }
+
+  // Now marshal the value into the destination buffer.
+  CORBA::ValueBase::_NP_marshal(v, mbs);
+  return 1;
+}
+
+int
+DynValueBoxImpl::copy_from(cdrAnyMemoryStream& mbs)
+{
+  CORBA::ValueBase_var v = CORBA::ValueBase::_NP_unmarshal(mbs);
+  if (v.operator->()) {
+    set_to_value();
+    if (pd_n_in_buf < pd_n_components) {
+      // Use an intermediate memory stream
+      cdrAnyMemoryStream dst;
+      v->_PR_marshal_state(dst);
+      DynAnyConstrBase::copy_from(dst);
+    }
+    else {
+      // Use our buffer directly
+      cdrAnyMemoryStream dst(pd_buf);
+      v->_PR_marshal_state(dst);
+    }
+    return 1;
+  }
+  else {
+    // Nil
+    set_to_null();
+    return 1;
+  }
+}
+
+TypeCode_base*
+DynValueBoxImpl::nthComponentTC(unsigned n)
+{
+  if (n > 0)
+    throw omniORB::fatalException(__FILE__,__LINE__,
+		    "DynValueBoxImpl::nthComponentTC() - n out of bounds");
+
+  return (TypeCode_base*)tc()->NP_content_type();
+}
+
+DynAnyConstrBase::SeqLocation
+DynValueBoxImpl::prepareSequenceWrite(CORBA::TCKind kind, CORBA::ULong len)
+{
+  // Note that we ignore then length here. When the insert function
+  // tries to call insert on the sub-component, that call will check
+  // the length.
+
+  if (pd_curr_index < 0)
+    throw DynamicAny::DynAny::InvalidValue();
+
+  const TypeCode_base* ctc;
+  ctc = TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
+  CORBA::TCKind k = ctc->NP_kind();
+
+  if ((k == CORBA::tk_sequence || k == CORBA::tk_array) &&
+      TypeCode_base::NP_expand(ctc->NP_content_type())->NP_kind() == kind) {
+    return SEQ_COMPONENT;
+  }
+  throw DynamicAny::DynAny::TypeMismatch();
+#ifdef NEED_DUMMY_RETURN
+  return SEQ_COMPONENT;
+#endif
+}
+
+DynAnyConstrBase::SeqLocation
+DynValueBoxImpl::prepareSequenceRead(CORBA::TCKind kind)
+{
+  if (pd_curr_index < 0)
+    throw DynamicAny::DynAny::InvalidValue();
+
+  const TypeCode_base* ctc;
+  ctc = TypeCode_base::NP_expand(nthComponentTC(pd_curr_index));
+  CORBA::TCKind k = ctc->NP_kind();
+
+  if ((k == CORBA::tk_sequence || k == CORBA::tk_array) &&
+      TypeCode_base::NP_expand(ctc->NP_content_type())->NP_kind() == kind) {
+    return SEQ_COMPONENT;
+  }
+  throw DynamicAny::DynAny::TypeMismatch();
+#ifdef NEED_DUMMY_RETURN
+  return SEQ_COMPONENT;
+#endif
+}
+
+
+void
+DynValueBoxImpl::_NP_incrRefCount()
+{
+  DynAnyImplBase::_NP_incrRefCount();
+}
+
+void
+DynValueBoxImpl::_NP_decrRefCount()
+{
+  DynAnyImplBase::_NP_decrRefCount();
+}
+
+void*
+DynValueBoxImpl::_ptrToObjRef(const char* repoId)
+{
+  if( omni::ptrStrMatch(repoId, DynAnyConstrBase::_PD_repoId) )
+    return (DynAnyConstrBase*) this;
+  
+  if( omni::ptrStrMatch(repoId, DynAnyImplBase::_PD_repoId) )
+    return (DynAnyImplBase*) this;
+  
+  if( omni::ptrStrMatch(repoId, DynAnyImpl::_PD_repoId) )
+    return (DynAnyImpl*) this;
+  
+  if( omni::ptrStrMatch(repoId, DynamicAny::DynValueBox::_PD_repoId) )
+    return (DynamicAny::DynValueBox_ptr) this;
+  
+  if( omni::ptrStrMatch(repoId, DynamicAny::DynAny::_PD_repoId) )
+    return (DynamicAny::DynAny_ptr) this;
+  
+  if( omni::ptrStrMatch(repoId, CORBA::Object::_PD_repoId) )
+    return (CORBA::Object_ptr) this;
+
+  return 0;
+}
 
 
 OMNI_NAMESPACE_END(omni)
@@ -4562,6 +5549,8 @@ DECLARE_NARROW_FN(DynStruct)
 DECLARE_NARROW_FN(DynUnion)
 DECLARE_NARROW_FN(DynSequence)
 DECLARE_NARROW_FN(DynArray)
+DECLARE_NARROW_FN(DynValue)
+DECLARE_NARROW_FN(DynValueBox)
 
 #undef DECLARE_NARROW_FN
 
@@ -4591,6 +5580,8 @@ DECLARE_DUPLICATE_FN(DynStruct)
 DECLARE_DUPLICATE_FN(DynUnion)
 DECLARE_DUPLICATE_FN(DynSequence)
 DECLARE_DUPLICATE_FN(DynArray)
+DECLARE_DUPLICATE_FN(DynValue)
+DECLARE_DUPLICATE_FN(DynValueBox)
 
 #undef DECLARE_DUPLICATE_FN
 
@@ -4689,6 +5680,12 @@ internal_create_dyn_any(TypeCode_base* tc, CORBA::Boolean is_root)
       break;
     case CORBA::tk_array:
       da = new DynArrayImpl(tc, is_root);
+      break;
+    case CORBA::tk_value:
+      da = new DynValueImpl(tc, is_root);
+      break;
+    case CORBA::tk_value_box:
+      da = new DynValueBoxImpl(tc, is_root);
       break;
     default:
       throw DynamicAny::DynAny::TypeMismatch();
@@ -4837,7 +5834,19 @@ factory_create_dyn_any_from_type_code(CORBA::TypeCode_ptr tc)
     
   case CORBA::tk_array:
     r = new DynArrayImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
-		     DYNANY_ROOT);
+			 DYNANY_ROOT);
+    r->set_to_initial_value();
+    return r;
+
+  case CORBA::tk_value:
+    r = new DynValueImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
+			 DYNANY_ROOT);
+    r->set_to_initial_value();
+    return r;
+
+  case CORBA::tk_value_box:
+    r = new DynValueBoxImpl(ToTcBase_Checked(CORBA::TypeCode::_duplicate(tc)),
+			    DYNANY_ROOT);
     r->set_to_initial_value();
     return r;
 

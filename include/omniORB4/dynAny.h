@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2005/01/06 16:39:23  dgrisby
+  DynValue and DynValueBox implementations; misc small fixes.
+
   Revision 1.1.4.1  2003/03/23 21:04:16  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -88,57 +91,61 @@ _CORBA_MODULE_BEG
     virtual void destroy() = 0;
     virtual DynAny_ptr copy() = 0;
 
-    virtual void insert_boolean   (CORBA::Boolean      value) = 0;
-    virtual void insert_octet     (CORBA::Octet        value) = 0;
-    virtual void insert_char      (CORBA::Char         value) = 0;
-    virtual void insert_short     (CORBA::Short        value) = 0;
-    virtual void insert_ushort    (CORBA::UShort       value) = 0;
-    virtual void insert_long      (CORBA::Long         value) = 0;
-    virtual void insert_ulong     (CORBA::ULong        value) = 0;
+    virtual void insert_boolean   (CORBA::Boolean      	   value) = 0;
+    virtual void insert_octet     (CORBA::Octet        	   value) = 0;
+    virtual void insert_char      (CORBA::Char         	   value) = 0;
+    virtual void insert_short     (CORBA::Short        	   value) = 0;
+    virtual void insert_ushort    (CORBA::UShort       	   value) = 0;
+    virtual void insert_long      (CORBA::Long         	   value) = 0;
+    virtual void insert_ulong     (CORBA::ULong        	   value) = 0;
 #ifndef NO_FLOAT
-    virtual void insert_float     (CORBA::Float        value) = 0;
-    virtual void insert_double    (CORBA::Double       value) = 0;
+    virtual void insert_float     (CORBA::Float        	   value) = 0;
+    virtual void insert_double    (CORBA::Double       	   value) = 0;
 #endif
-    virtual void insert_string    (const char*         value) = 0;
-    virtual void insert_reference (CORBA::Object_ptr   value) = 0;
-    virtual void insert_typecode  (CORBA::TypeCode_ptr value) = 0;
+    virtual void insert_string    (const char*         	   value) = 0;
+    virtual void insert_reference (CORBA::Object_ptr   	   value) = 0;
+    virtual void insert_typecode  (CORBA::TypeCode_ptr 	   value) = 0;
 #ifdef HAS_LongLong
-    virtual void insert_longlong  (CORBA::LongLong     value) = 0;
-    virtual void insert_ulonglong (CORBA::ULongLong    value) = 0;
+    virtual void insert_longlong  (CORBA::LongLong     	   value) = 0;
+    virtual void insert_ulonglong (CORBA::ULongLong    	   value) = 0;
 #endif
 #ifdef HAS_LongDouble
-    virtual void insert_longdouble(CORBA::LongDouble   value) = 0;
+    virtual void insert_longdouble(CORBA::LongDouble   	   value) = 0;
 #endif
-    virtual void insert_wchar     (CORBA::WChar        value) = 0;
-    virtual void insert_wstring   (const CORBA::WChar* value) = 0;
-    virtual void insert_any       (const CORBA::Any&   value) = 0;
-    virtual void insert_dyn_any   (DynAny_ptr          value) = 0;
+    virtual void insert_wchar     (CORBA::WChar        	   value) = 0;
+    virtual void insert_wstring   (const CORBA::WChar* 	   value) = 0;
+    virtual void insert_any       (const CORBA::Any&   	   value) = 0;
+    virtual void insert_dyn_any   (DynAny_ptr          	   value) = 0;
+    virtual void insert_val       (CORBA::ValueBase*   	   value) = 0;
+    virtual void insert_abstract  (CORBA::AbstractBase_ptr value) = 0;
 
-    virtual CORBA::Boolean      get_boolean()    = 0;
-    virtual CORBA::Octet        get_octet()      = 0;
-    virtual CORBA::Char         get_char()       = 0;
-    virtual CORBA::Short        get_short()      = 0;
-    virtual CORBA::UShort       get_ushort()     = 0;
-    virtual CORBA::Long         get_long()       = 0;
-    virtual CORBA::ULong        get_ulong()      = 0;
+    virtual CORBA::Boolean          get_boolean()    = 0;
+    virtual CORBA::Octet            get_octet()      = 0;
+    virtual CORBA::Char             get_char()       = 0;
+    virtual CORBA::Short            get_short()      = 0;
+    virtual CORBA::UShort           get_ushort()     = 0;
+    virtual CORBA::Long             get_long()       = 0;
+    virtual CORBA::ULong            get_ulong()      = 0;
 #ifndef NO_FLOAT
-    virtual CORBA::Float        get_float()      = 0;
-    virtual CORBA::Double       get_double()     = 0;
+    virtual CORBA::Float            get_float()      = 0;
+    virtual CORBA::Double           get_double()     = 0;
 #endif				
-    virtual char*               get_string()     = 0;
-    virtual CORBA::Object_ptr   get_reference()  = 0;
-    virtual CORBA::TypeCode_ptr get_typecode()   = 0;
+    virtual char*                   get_string()     = 0;
+    virtual CORBA::Object_ptr       get_reference()  = 0;
+    virtual CORBA::TypeCode_ptr     get_typecode()   = 0;
 #ifdef HAS_LongLong
-    virtual CORBA::LongLong     get_longlong()   = 0;
-    virtual CORBA::ULongLong    get_ulonglong()  = 0;
+    virtual CORBA::LongLong         get_longlong()   = 0;
+    virtual CORBA::ULongLong        get_ulonglong()  = 0;
 #endif				
 #ifdef HAS_LongDouble
-    virtual CORBA::LongDouble   get_longdouble() = 0;
+    virtual CORBA::LongDouble       get_longdouble() = 0;
 #endif				
-    virtual CORBA::WChar  	get_wchar()      = 0;
-    virtual CORBA::WChar* 	get_wstring()    = 0;
-    virtual CORBA::Any*   	get_any()        = 0;
-    virtual DynAny_ptr    	get_dyn_any()    = 0;
+    virtual CORBA::WChar  	    get_wchar()      = 0;
+    virtual CORBA::WChar* 	    get_wstring()    = 0;
+    virtual CORBA::Any*   	    get_any()        = 0;
+    virtual DynAny_ptr    	    get_dyn_any()    = 0;
+    virtual CORBA::ValueBase*       get_val()        = 0;
+    virtual CORBA::AbstractBase_ptr get_abstract()   = 0;
 
     // CORBA 2.5 sequence operations
     virtual void insert_boolean_seq   (CORBA::BooleanSeq&    value) = 0;
@@ -945,6 +952,130 @@ _CORBA_MODULE_BEG
   typedef DynArray::_var_type DynArray_var;
   typedef _CORBA_PseudoObj_Member<DynArray,DynArray_var> DynArray_member;
   typedef _CORBA_PseudoObj_Out<DynArray,DynArray_var>    DynArray_out;
+
+
+  //////////////////////////////////////////////////////////////////////
+  ////////////////////////////// DynValueCommon ////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  class DynValueCommon;
+  typedef DynValueCommon* DynValueCommon_ptr;
+
+  class DynValueCommon : public virtual DynAny {
+  public:
+    typedef DynValueCommon_ptr _ptr_type;
+    typedef _CORBA_PseudoObj_Var<DynValueCommon> _var_type;
+
+    virtual CORBA::Boolean is_null() = 0;
+    virtual void set_to_null() = 0;
+    virtual void set_to_value() = 0;
+
+    static DynValueCommon_ptr _duplicate(DynValueCommon_ptr);
+    static DynValueCommon_ptr _narrow(CORBA::Object_ptr);
+    static DynValueCommon_ptr _nil();
+
+    virtual ~DynValueCommon();
+
+    virtual void* _ptrToObjRef(const char* repoId) = 0;
+
+    // omniORB internal.
+    static _dyn_attr const char* _PD_repoId;
+
+  protected:
+    DynValueCommon() {}
+
+  private:
+    DynValueCommon(const DynValueCommon&);
+    DynValueCommon& operator=(const DynValueCommon&);
+  };
+
+  typedef DynValueCommon::_var_type DynValueCommon_var;
+  typedef _CORBA_PseudoObj_Member<DynValueCommon,DynValueCommon_var> DynValueCommon_member;
+  typedef _CORBA_PseudoObj_Out<DynValueCommon,DynValueCommon_var>    DynValueCommon_out;
+
+
+  //////////////////////////////////////////////////////////////////////
+  ////////////////////////////// DynValue //////////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  class DynValue;
+  typedef DynValue* DynValue_ptr;
+
+  class DynValue : public virtual DynValueCommon {
+  public:
+    typedef DynValue_ptr _ptr_type;
+    typedef _CORBA_PseudoObj_Var<DynValue> _var_type;
+
+    virtual char* current_member_name() = 0;
+    virtual CORBA::TCKind current_member_kind() = 0;
+    virtual NameValuePairSeq* get_members() = 0;
+    virtual void set_members(const NameValuePairSeq& value) = 0;
+    virtual NameDynAnyPairSeq* get_members_as_dyn_any() = 0;
+    virtual void set_members_as_dyn_any(const NameDynAnyPairSeq& value) = 0;
+
+    static DynValue_ptr _duplicate(DynValue_ptr);
+    static DynValue_ptr _narrow(CORBA::Object_ptr);
+    static DynValue_ptr _nil();
+
+    virtual ~DynValue();
+
+    virtual void* _ptrToObjRef(const char* repoId) = 0;
+
+    // omniORB internal.
+    static _dyn_attr const char* _PD_repoId;
+
+  protected:
+    DynValue() {}
+
+  private:
+    DynValue(const DynValue&);
+    DynValue& operator=(const DynValue&);
+  };
+
+  typedef DynValue::_var_type DynValue_var;
+  typedef _CORBA_PseudoObj_Member<DynValue,DynValue_var> DynValue_member;
+  typedef _CORBA_PseudoObj_Out<DynValue,DynValue_var>    DynValue_out;
+
+
+  //////////////////////////////////////////////////////////////////////
+  ////////////////////////////// DynValueBox ///////////////////////////
+  //////////////////////////////////////////////////////////////////////
+
+  class DynValueBox;
+  typedef DynValueBox* DynValueBox_ptr;
+
+  class DynValueBox : public virtual DynValueCommon {
+  public:
+    typedef DynValueBox_ptr _ptr_type;
+    typedef _CORBA_PseudoObj_Var<DynValueBox> _var_type;
+
+    virtual CORBA::Any* get_boxed_value() = 0;
+    virtual void set_boxed_value(const CORBA::Any& value) = 0;
+    virtual DynAny_ptr get_boxed_value_as_dyn_any() = 0;
+    virtual void set_boxed_value_as_dyn_any(DynAny_ptr value) = 0;
+
+    static DynValueBox_ptr _duplicate(DynValueBox_ptr);
+    static DynValueBox_ptr _narrow(CORBA::Object_ptr);
+    static DynValueBox_ptr _nil();
+
+    virtual ~DynValueBox();
+
+    virtual void* _ptrToObjRef(const char* repoId) = 0;
+
+    // omniORB internal.
+    static _dyn_attr const char* _PD_repoId;
+
+  protected:
+    DynValueBox() {}
+
+  private:
+    DynValueBox(const DynValueBox&);
+    DynValueBox& operator=(const DynValueBox&);
+  };
+
+  typedef DynValueBox::_var_type DynValueBox_var;
+  typedef _CORBA_PseudoObj_Member<DynValueBox,DynValueBox_var> DynValueBox_member;
+  typedef _CORBA_PseudoObj_Out<DynValueBox,DynValueBox_var>    DynValueBox_out;
 
 
 
