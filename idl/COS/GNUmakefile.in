@@ -2,6 +2,7 @@ TOP=../..
 CURRENT=idl/COS
 BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
+INSTALL=@INSTALL@
 
 INSTALLDIR = $(prefix)/idl/omniORB/COS
 

@@ -2,6 +2,7 @@ TOP=../..
 CURRENT=include/omnithread
 BASE_OMNI_TREE=@top_srcdir@
 VPATH=@srcdir@
+INSTALL=@INSTALL@
 
 INSTALLDIR = $(INSTALLINCDIR)/omnithread
 
