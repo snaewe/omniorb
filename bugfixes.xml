@@ -1,0 +1,39 @@
+<?xml version="1.0" standalone="yes"?>
+<?xml-stylesheet type="text/xsl" href="bugfixes.xsl"?>
+
+<!-- The following bugs have been fixed since the omniORB 3.0.0     -->
+<!-- release. This file is transformed into html with bugfixes.xsl. -->
+
+<!-- Editors: make sure the content you add is well-formed XML.     -->
+
+<buglist>
+
+<bug id="3" date="Mon Jul 17 15:20:18 BST 2000" user="dpg1">
+
+  <summary>OpenVMS patches from Bruce Visscher</summary>
+  <text>
+  <p>This adds some missing makefiles for a directory that contains
+  tools for building shareable images on the VAX platform. Also, some
+  minor problems with the build of omniORBpy were fixed.</p>
+
+  <p><em>Note:</em> This update is only available through CVS or the
+  FTP snapshots, not via the patch file.</p>
+
+  </text>
+</bug>
+
+<bug id="2" date="Mon Jul 17 14:22:25 BST 2000" user="dpg1">
+
+  <summary>String freeing bug in genior</summary>
+  <reported>Jean Francois Poilpret</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-07/0113.html"/>
+</bug>
+
+<bug id="1" date="Mon Jul 17 10:30:00 BST 2000" user="djs">
+
+  <summary>IDL compiler bug -- inheritance from typedef</summary>
+  <reported>Renzo Tomaselli</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-07/0116.html"/>
+</bug>
+
+</buglist>
