@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.13  1998/04/07 20:01:05  sll
+ Added specialised marshalling functions for sequence boolean,
+ sequence array boolean when bool type is used to represent CORBA::Boolean.
+
  Revision 1.12  1998/03/05 11:21:16  sll
  Added NP_data() to all the derived class of Sequence_Array. This is
  to remove the warning given by some compiler, such as HPUX C++.
@@ -274,6 +278,12 @@ public:
     :  _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Boolean,1,1>(s) {}
 
   inline ~_CORBA_Unbounded_Sequence__Boolean() {}
+#ifdef HAS_Cplusplus_Bool
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+#endif
 };
 
 class _CORBA_Unbounded_Sequence__Octet
@@ -362,6 +372,12 @@ public:
     :  _CORBA_Bounded_Sequence_w_FixSizeElement<_CORBA_Boolean,max,1,1>(s) {}
 
   inline ~_CORBA_Bounded_Sequence__Boolean() {}
+#ifdef HAS_Cplusplus_Bool
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+#endif
 };
 
 template <int max>
@@ -607,6 +623,12 @@ public:
     :   _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,1,1>(s) {}
 
   inline ~_CORBA_Unbounded_Sequence_Array__Boolean() {}
+#ifdef HAS_Cplusplus_Bool
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+#endif
 };
 
 
@@ -701,6 +723,12 @@ public:
     :  _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,_CORBA_Boolean,dimension,max,1,1>(s) {}
 
   inline ~_CORBA_Bounded_Sequence_Array__Boolean() {}
+#ifdef HAS_Cplusplus_Bool
+  inline void operator>>= (NetBufferedStream &s) const;
+  inline void operator<<= (NetBufferedStream &s);
+  inline void operator>>= (MemBufferedStream &s) const;
+  inline void operator<<= (MemBufferedStream &s);
+#endif
 };
 
 template<class T, class T_slice, int dimension, int max>
