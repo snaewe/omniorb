@@ -1,3 +1,17 @@
+
+Mon Aug 18 15:18:00 BST 1997 tjr
+================================
+
+Add dependency analysis to CORBA stubs
+
+mk/afterdir.mk		- new rule for compiling stubs - cd into the stub
+			  directory and use omake so that .d files are used.
+mk/beforedir.mk		- add new stub files to CORBA_STUB_FILES
+mk/unix.mk		- remove CompileCorbaStubRule
+mk/win32.mk		- remove CompileCorbaStubRule
+mk/atmos.mk		- remove CompileCorbaStubRule
+
+
 Wed Aug 13 10:23:55 BST 1997 sll
 ================================
 
