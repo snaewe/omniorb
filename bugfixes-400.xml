@@ -8,6 +8,17 @@
 
 <buglist version="4.0.0">
 
+<bug id="9" date="Tue Jan 28 12:05:54 GMT 2003" user="dgrisby">
+  <summary>Incorrect threading behaviour with multiple requests</summary>
+  <reported>Michael Sturm, Ulf Stoermer</reported>
+  <text>
+  If a client sent multiple requests in a single transfer (e.g. a
+  collection of oneways), the select loop could fail to notice them,
+  causing them to be serialised, rather than dispatched to separate
+  threads.
+  </text>
+</bug>
+
 <bug id="8" date="Thu Dec  5 12:16:33 GMT 2002" user="dgrisby">
   <summary>Various problems with recursive TypeCodes</summary>
   <reported>Clemens Fischer</reported>
