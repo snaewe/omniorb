@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/11/08 17:31:51  dgrisby
+  Another AIX patch.
+
   Revision 1.1.2.2  2002/11/06 11:58:28  dgrisby
   Partial AIX patches.
 
@@ -148,7 +151,7 @@ class omniTask : public omniTaskLink {
   omniTask& operator=(const omniTask&);
 };
 
-
+class omniAsyncWorker;
 
 ///////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
