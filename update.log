@@ -9,6 +9,10 @@ src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
 src/lib/omniORB/orbcore/ssl/sslEndpoint.h
 src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
 
+- Update CREDITS.
+
+CREDITS
+
 
 Mon Sep  9 01:22:19 BST 2002 dgrisby
 ====================================

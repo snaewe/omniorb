@@ -1,5 +1,5 @@
-This is a list of people that have contributed to omniORB2. It is sorted by
-the last name.
+This is a list of people that have contributed to omniORB. It is
+sorted by the last name.
 
 Name:         Peter Braun
 Email:        Peter.Braun@mchp.siemens.de
@@ -29,9 +29,9 @@ Email:        ilfranze@techfak.uni-bielefeld.de
 Description:  Irix port
 
 Name:         Duncan Grisby
-Email:        duncan@grisby.org
-Organisation: AT&T Laboratories, Cambridge
-Description:  Interoperable Naming Service, IDL compiler, ORB core maintainer
+Email:        duncan@apasphere.com
+Organisation: Apasphere Ltd.
+Description:  ORB core maintainer, IDL compiler, omniORBpy.
 
 Name:         Ben Harris
 Email:        bjh@orl.co.uk
@@ -43,9 +43,9 @@ Email:        lars@ibp.de
 Description:  Nextstep 3.3 port
 
 Name:         Sai-Lai Lo
-Email:        s.lo@uk.research.att.com
+Email:        sailai.lo@pobox.com
 Organisation: AT&T Laboratories, Cambridge
-Description:  omniORB architect and the main developer of the omniORB core
+Description:  omniORB architect and the original developer of the omniORB core
 
 Name:         H. J. Lu
 Email:        hjl@lucon.org
@@ -71,7 +71,7 @@ Description:  omnithread, omniNames, Omni Development Environment
 
 Name:         David Riddoch
 Email:        djr@uk.research.att.com
-Organisation: AT&T Laboratories, Cambridge
+Organisation: AT&T Laboratories, Cambridge / Laboratory for Comms. Engineering
 Description:  POA, DSI, DII, DynAny and misc. omniORB core
 
 Name:         James Riden
