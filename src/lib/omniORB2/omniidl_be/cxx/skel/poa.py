@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/11/23 18:48:26  djs
+# Bugfixes, more interface operations and attributes code
+#
 # Revision 1.2  1999/11/19 20:09:40  djs
 # Added trivial POA interface code
 #
@@ -58,6 +61,8 @@ self.__environment = name.Environment()
 self.__nested = 0
 
 def POA_prefix():
+    # is this different to the header?
+    #return "POA_"
     if not(self.__nested):
         return "POA_"
     return ""
@@ -94,13 +99,17 @@ def visitModule(node):
 
 def visitInterface(node):
     name = tyutil.mapID(node.identifier())
+    environment = self.__environment
+    fqname = environment.nameToString(node.scopedName())
+    
     enter(name)
     scope = currentScope()
     
     stream.out("""\
-@POA_prefix@@name@::~@POA_prefix@@name@() {}""",
+POA_@fqname@::~@POA_prefix@@name@() {}""",
                POA_prefix = POA_prefix(),
-               name = name)
+               name = name,
+               fqname = fqname)
         
 
     leave()

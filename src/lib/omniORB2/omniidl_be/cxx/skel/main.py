@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/11/23 18:48:25  djs
+# Bugfixes, more interface operations and attributes code
+#
 # Revision 1.4  1999/11/19 20:12:03  djs
 # Generates skeletons for interface operations and attributes
 #
@@ -61,6 +64,8 @@ self = main
 # environment handling functions
 
 self.__environment = name.Environment()
+self.__insideInterface = 0
+self.__insideModule = 0
 
 def enter(scope):
     self.__environment = self.__environment.enterScope(scope)
@@ -82,36 +87,57 @@ def visitAST(node):
 
 def visitModule(node):
     name = tyutil.mapID(node.identifier())
-#    enter(name)
+    enter(name)
     scope = currentScope()
 
+    insideModule = self.__insideModule
+    self.__insideModule = 1
     for n in node.definitions():
         n.accept(self)
 
-#    leave()
+    self.__insideModule = insideModule
+
+    leave()
 
 def visitInterface(node):
     name = tyutil.mapID(node.identifier())
-#    enter(name)
+    interface_environment = self.__environment
+    enter(name)
     scope = currentScope()
     environment = self.__environment
-    
+
+    insideInterface = self.__insideInterface
+    self.__insideInterface = 1
 
     # produce skeletons for types declared here
     for n in node.declarations():
         n.accept(self)
 
+    self.__insideInterface = insideInterface
+
+    #print "[[[ env = " + str(environment) + "]]]"
+    #print "[[[ scopedName = " + repr(node.scopedName()) + "]]]"
     scopedName = map(tyutil.mapID, node.scopedName())
-    name = string.join(scopedName, "::")
+    fqname = string.join(scopedName, "::")
+    name = environment.nameToString(scopedName)
 
     objref_scopedName = tyutil.scope(scopedName) + \
                         ["_objref_" + tyutil.name(scopedName)]
     
-    objref_name = string.join(objref_scopedName, "::")
+    objref_fqname = string.join(objref_scopedName, "::")
+    objref_name = environment.nameToString(environment.relName(objref_scopedName))
 
     impl_scopedName = tyutil.scope(scopedName) + \
                       ["_impl_" + tyutil.name(scopedName)]
-    impl_name = string.join(impl_scopedName, "::")
+    impl_fqname = string.join(impl_scopedName, "::")
+    impl_name = environment.nameToString(environment.relName(impl_scopedName))
+
+    #print "[[[  -> objrefName = " + repr(objref_scopedName) +\
+    #      "  name = " + repr(objref_name) + "]]]"
+    #print "[[[  -> implName = " + repr(impl_scopedName) +\
+    #      "  name = " + repr(impl_name) + "]]]"
+
+
 
     # build the helper class methods
     stream.out("""\
@@ -193,13 +219,20 @@ const char* @name@::_PD_repoId = \"@repoID@\";""",
 
     # build inherits list
     inherits_str = ""
+    inherited_repoIDs = ""
     for i in node.inherits():
         inherits_scopedName = map(tyutil.mapID, i.scopedName())
         inherits_name = string.join(inherits_scopedName, "::")
         inherits_objref_scopedName =  tyutil.scope(inherits_scopedName) + \
                                      ["_objref_" + tyutil.name(inherits_scopedName)]
-        inherits_objref_name = string.join(inherits_objref_scopedName, "::")
-        inherits_str = inherits_str + inherits_objref_name + "(mdri, p, id, lid),"
+        inherited_repoIDs = inherited_repoIDs + "\
+        if( !strcmp(id, " + inherits_name + "::_PD_repoId) )\n\
+          return (" + inherits_name + "_ptr) this;\n"
+        
+        inherits_objref_name = environment.nameToString(environment.relName(
+            inherits_objref_scopedName))
+        #inherits_objref_name = string.join(inherits_objref_scopedName, "::")
+        inherits_str = inherits_str + inherits_objref_name + "(mdri, p, id, lid),\n"
         
     # FIXME: may need to sort out name qualification here
     stream.out("""\
@@ -221,11 +254,11 @@ void*
     return (CORBA::Object_ptr) this;
   if( !strcmp(id, @name@::_PD_repoId) )
     return (@name@_ptr) this;
-  
+  @inherited_repoIDs@
   return 0;
 }
-""", name = name, fq_objref_name = objref_name, objref_name = objref_name,
-               inherits_str = inherits_str)
+""", name = name, fq_objref_name = objref_fqname, objref_name = objref_name,
+               inherits_str = inherits_str, inherited_repoIDs = inherited_repoIDs)
 
     # deal with callables
     callables = node.callables()
@@ -240,8 +273,13 @@ void*
         seed = scopedName + [operation.identifier()]
         mangled_signature = mangler.produce_operation_signature(operation)
         
-        mangler.generate_descriptors(operation, seed)
-        descriptor = mangler.operation_descriptor_name(operation)
+        try:
+            descriptor = mangler.operation_descriptor_name(operation)
+            need_proxies = 0
+        except KeyError:
+            mangler.generate_descriptors(operation, seed)
+            descriptor = mangler.operation_descriptor_name(operation)
+            need_proxies = 1
 
         parameters = operation.parameters()
         parameters_in  = filter(lambda x:x.is_in(),  parameters)
@@ -253,13 +291,16 @@ void*
 
         returnType = operation.returnType()
         result_type = tyutil.operationArgumentType(returnType,
-                                                   environment)[0]
+                                                   environment,0,1)[0]
         has_return_value = not(tyutil.isVoid(returnType))
 
         # compute the argument mapping for the operation parameters
         for parameter in parameters:
             paramType = parameter.paramType()
             deref_paramType = tyutil.deref(paramType)
+            param_dims = tyutil.typeDims(paramType)
+            is_array = param_dims != []
+            paramType_name = environment.principalID(paramType, fully_scope = 1)
             
             optypes = tyutil.operationArgumentType(paramType, environment)
             if parameter.is_in() and parameter.is_out():
@@ -269,14 +310,20 @@ void*
             elif parameter.is_out():
                 parameter_argmapping.append(optypes[2])
             # some day I'll figure out a better way of handling this
-            if tyutil.isString(deref_paramType) and parameter.is_out():
+            if is_array:
+                parameter_vargmapping.append(paramType_name + "_slice*")
+            elif tyutil.isString(deref_paramType) and parameter.is_out():
                 parameter_vargmapping.append("char*&")
             elif tyutil.isObjRef(deref_paramType) and parameter.is_out():
-                parameter_vargmapping.append(environment.principalID(paramType)+\
-                                             "_ptr&")
+                parameter_vargmapping.append(paramType_name + "_ptr&")
+            elif tyutil.isSequence(deref_paramType) and \
+                 parameter.direction() == 1:
+                # out only
+                parameter_vargmapping.append(paramType_name + "*&")
+                
                                              
             else:
-                optypes = tyutil.operationArgumentType(paramType, environment, 1)
+                optypes = tyutil.operationArgumentType(paramType, environment, 1, 1)
                 if parameter.is_in() and parameter.is_out():
                     parameter_vargmapping.append(optypes[3])
                 elif parameter.is_in():
@@ -328,7 +375,8 @@ void*
         if parameters_in == []:
             marshalArguments_str = ""
             
-        stream.out("""\
+        if need_proxies:
+            stream.out("""\
 // Proxy call descriptor class. Mangled signature:
 //  @mangled_signature@
 class @call_descriptor@
@@ -347,16 +395,16 @@ public:
 };
 
 """,
-                   mangled_signature = mangled_signature,
-                   call_descriptor = descriptor,
-                   ctor_args = string.join(ctor_args, ","),
-                   inherits_list = string.join(inherits_list, ",\n"),
-                   marshalArguments_str = marshalArguments_str,
-                   unmarshalArguments_str = unmarshalArguments_str,
-                   result_member_function = result_f,
-                   result_member_data = result_data,
-                   result_type = result_type,
-                   members = string.join(map(lambda x:x+";",members), "\n"))
+                       mangled_signature = mangled_signature,
+                       call_descriptor = descriptor,
+                       ctor_args = string.join(ctor_args, ","),
+                       inherits_list = string.join(inherits_list, ",\n"),
+                       marshalArguments_str = marshalArguments_str,
+                       unmarshalArguments_str = unmarshalArguments_str,
+                       result_member_function = result_f,
+                       result_member_data = result_data,
+                       result_type = result_type,
+                       members = string.join(map(lambda x:x+";",members), "\n"))
         # build the align method
 
         # do the size calculation (if there are -in- arguments)
@@ -372,8 +420,9 @@ public:
                 n = n + 1
                 
                 size_calculation = str(size)
-        
-            stream.out("""\
+
+            if need_proxies:
+                stream.out("""\
 CORBA::ULong @call_descriptor@::alignedSize(CORBA::ULong msgsize)
 {
   @size_calculation@
@@ -392,17 +441,19 @@ CORBA::ULong @call_descriptor@::alignedSize(CORBA::ULong msgsize)
                 if parameter.is_in():
                     paramType = parameter.paramType()
                     skutil.marshall(marshall, environment, paramType, None,
-                                    "arg_" + str(n), "giop_client")
+                                    "arg_" + str(n), "giop_client",
+                                    fully_scope = 1)
                 n = n + 1
-            
-            stream.out("""\
+
+            if need_proxies:
+                stream.out("""\
 void @call_descriptor@::marshalArguments(GIOP_C& giop_client)
 {
   @marshall@
 }
 """,
-                       call_descriptor = descriptor,
-                       marshall = str(marshall))
+                           call_descriptor = descriptor,
+                           marshall = str(marshall))
 
         # code to unmarshall the -out- arguments
         if parameters_out != [] or has_return_value:
@@ -424,10 +475,14 @@ void @call_descriptor@::marshalArguments(GIOP_C& giop_client)
             item_via_temporary = [1] * len(parameters)
 
             if has_return_value:
-                item_types.append(returnType)
-                item_names.append("pd_result")
-                item_direction.append(1)
-                item_via_temporary.append(0)
+                item_types = [returnType] + item_types
+                item_names = ["pd_result"] + item_names
+                item_direction = [1] + item_direction
+                item_via_temporary = [0] + item_via_temporary
+                #item_types.append(returnType)
+                #item_names.append("pd_result")
+                #item_direction.append(1)
+                #item_via_temporary.append(0)
             
             zipped_up = util.zip(item_types,
                                  util.zip(item_names,
@@ -438,15 +493,29 @@ void @call_descriptor@::marshalArguments(GIOP_C& giop_client)
             
             for (item_type, (item_name, (item_direction, via_tmp))) in zipped_up:
                 deref_item_type = tyutil.deref(item_type)
-                item_type_name = environment.principalID(item_type)
-                n = n + 1
+                type_dims = tyutil.typeDims(item_type)
+                is_array = type_dims != []
+                
+                item_type_name = environment.principalID(item_type, 1)
                 assign_to = "tmp_" + str(n)
+                n = n + 1
                 # this needs uniform(-ing?, -alising?)
-                if via_tmp == 0: assign_to = "pd_result"
+                if via_tmp == 0:
+                    assign_to = "pd_result"
+                    if is_array:
+                        start.out("""\
+pd_result = @item_type_name@_alloc();""",
+                              item_type_name = item_type_name)
+                    if tyutil.isVariableType(item_type):
+                        start.out("""\
+pd_result = new @item_type_name@;""", item_type_name = item_type_name)
 
+                if is_array:
+                    skutil.unmarshall(middle, environment, item_type, None,
+                                      item_name, 1, "giop_client")
                 # SWITCH(deref_item_type)
                 #  CASE(string)
-                if tyutil.isString(deref_item_type):
+                elif tyutil.isString(deref_item_type):
                     
                     if item_direction == 1:
                         # out only
@@ -496,9 +565,40 @@ CORBA::string_free(@item_name@);
 @item_name@ = @assign_to@;""", param_type = item_type_name,
                                    item_name = item_name,
                                    assign_to = assign_to)
+                #  CASE(sequence)
+                elif tyutil.isSequence(deref_item_type):
+                    if item_direction == 1:
+                        # out only
+                        if via_tmp:
+                            start.out("""\
+@param_type@* @assign_to@ = new @param_type@;""",
+                                      param_type = item_type_name,
+                                      assign_to = assign_to)
+                        else:
+                            # the pd_result
+
+                            middle.out("""\
+@assign_to@ = new @param_type@;""",
+                                      param_type = item_type_name,
+                                      assign_to = assign_to)
+
+                        middle.out("""\
+*@assign_to@ <<= giop_client;""", assign_to = assign_to)
+                        if via_tmp:
+                            end.out("""\
+@item_name@ = @assign_to@;""", item_name = item_name,
+                                    assign_to = assign_to)
+                    if item_direction == 2:
+                        # inout only
+                        middle.out("""\
+@item_name@ <<= giop_client;""", item_name = item_name)
+
+
+                    
                 #  DEFAULT
                 elif item_direction == 1 or item_direction == 2:
-                    skutil.unmarshall(end, environment, item_type,
+                    
+                    skutil.unmarshall(middle, environment, item_type,
                                       None, item_name, 0, "giop_client")
             
                     
@@ -531,13 +631,14 @@ static void
 @local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
 {
   @call_descriptor@* tcd = (@call_descriptor@*) cd;
-  @impl_name@* impl = (@impl_name@*) svnt->_ptrToInterface(@name@::_PD_repoId);
+  @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
   @result@impl->@operation_name@(@operation_arguments@);
 }
 """,
                    local_call_descriptor = local_call_descriptor,
                    call_descriptor = descriptor,
                    impl_name = impl_name,
+                   impl_fqname = impl_fqname,
                    name = name,
                    operation_name = operationName,
                    operation_arguments = string.join(impl_args, ", "),
@@ -547,15 +648,20 @@ static void
         objref_args = util.zip(parameter_argmapping, parameters_ID)
         objref_args = map(lambda (x,y): x + " " + y, objref_args)
         call_desc_args = [local_call_descriptor, "\"" + operationName + "\"",
-                          str(len(operationName) + 1), "0"] +\
-                          parameters_ID
+                          str(len(operationName) + 1)]
+        if operation.oneway():
+            call_desc_args.append("1/*oneway*/")
+        else:
+            call_desc_args.append("0")
+
+        call_desc_args = call_desc_args + parameters_ID
 
         return_string = ""
         if has_return_value:
             return_string = "return _call_desc.result();"
             
         stream.out("""\
-@result_type@ @objref_name@::@operation_name@(@arguments@)
+@result_type@ @objref_fqname@::@operation_name@(@arguments@)
 {
   @call_descriptor@ _call_desc(@call_desc_args@);
   
@@ -566,7 +672,7 @@ static void
 
 """,
                    result_type = result_type,
-                   objref_name = objref_name,
+                   objref_fqname = objref_fqname,
                    operation_name = operationName,
                    arguments = string.join(objref_args, ", "),
                    call_descriptor = descriptor,
@@ -591,26 +697,50 @@ static void
         read = mangler.attribute_read_descriptor_name(attribute)
         write = mangler.attribute_write_descriptor_name(attribute)
         attrType = attribute.attrType()
+        attr_dims = tyutil.typeDims(attrType)
+        is_array = attr_dims != []
+        
         deref_attrType = tyutil.deref(attrType)
-        attrType_name = environment.principalID(attrType)
+        attrType_name = environment.principalID(attrType, 1)
 
-        attrTypes = tyutil.operationArgumentType(deref_attrType, environment)
+        attrTypes = tyutil.operationArgumentType(attrType, environment, 0,
+                                                 fully_scope = 1)
         return_type = attrTypes[0]
-        in_type = attrTypes[1]
+        if is_array:
+            in_type = attrTypes[1]+"_slice*"
+        else:
+            in_type = attrTypes[1]
 
         size = skutil.sizeCalculation(environment, attrType, None ,
                                       "msgsize",
-                                      "arg_0", 1)
+                                      "arg_0", 1, fully_scope = 1)
         marshall_stream = util.StringStream()
         skutil.marshall(marshall_stream, environment, attrType, None,
-                        "arg_0", "giop_client")
+                        "arg_0", "giop_client", fully_scope = 1)
 
-        if tyutil.isString(deref_attrType):
+        if is_array:
+            s = util.StringStream()
+            s.out("pd_result = @name@_alloc();", name = attrType_name)
+            # basic types don't have slices
+            if tyutil.ttsMap.has_key(deref_attrType.kind()):
+                result_string = "pd_result"
+            else:
+                result_string = "((" + attrType_name + "_slice*)" + "pd_result)"
+
+            skutil.unmarshall(s, environment, attrType, None, result_string, 1,
+                              "giop_client")
+            unmarshalReturned = str(s)
+            
+        elif tyutil.isString(deref_attrType):
             unmarshalReturned = skutil.unmarshal_string_via_temporary("pd_result",
                                                                       "giop_client")
         elif tyutil.isObjRef(deref_attrType):
             unmarshalReturned = "\
 pd_result = " + attrType_name + "_Helper::unmarshalObjRef(giop_client);"
+        elif tyutil.isVariableType(deref_attrType):
+            unmarshalReturned = "\
+pd_result = new " + attrType_name + ";\n" + "\
+*pd_result <<= giop_client;"
         else:
             unmarshalReturned = """\
 pd_result <<= giop_client;"""
@@ -691,12 +821,12 @@ static void
 @local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
 {
   @read_descriptor@* tcd = (@read_descriptor@*) cd;
-  @impl_name@* impl = (@impl_name@*) svnt->_ptrToInterface(@name@::_PD_repoId);
+  @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
   tcd->pd_result = impl->@attrib_name@();
 }
 
 
-@return_type@ @objref_name@::@attrib_name@()
+@return_type@ @objref_fqname@::@attrib_name@()
 {
   @read_descriptor@ _call_desc(@local_call_descriptor@, \"@get_attrib_name@\", @len@, 0);
   
@@ -707,7 +837,8 @@ static void
                        local_call_descriptor = local_call_descriptor,
                        read_descriptor = read,
                        impl_name = impl_name,
-                       objref_name = objref_name,
+                       impl_fqname = impl_fqname,
+                       objref_fqname = objref_fqname,
                        name = name,
                        attrib_name = attrib_name,
                        get_attrib_name = get_attrib_name,
@@ -724,12 +855,12 @@ static void
 @local_call_descriptor@(omniCallDescriptor* cd, omniServant* svnt)
 {
   @write_descriptor@* tcd = (@write_descriptor@*) cd;
-  @impl_name@* impl = (@impl_name@*) svnt->_ptrToInterface(@name@::_PD_repoId);
+  @impl_fqname@* impl = (@impl_fqname@*) svnt->_ptrToInterface(@name@::_PD_repoId);
   impl->@attrib_name@(tcd->arg_0);
 }
 
 
-void @objref_name@::@attrib_name@(@in_type@ arg_0)
+void @objref_fqname@::@attrib_name@(@in_type@ arg_0)
 {
   @write_descriptor@ _call_desc(@local_call_descriptor@, \"@set_attrib_name@\", @len@, 0, arg_0);
   
@@ -739,7 +870,8 @@ void @objref_name@::@attrib_name@(@in_type@ arg_0)
                            local_call_descriptor = local_call_descriptor,
                            write_descriptor = write,
                            impl_name = impl_name,
-                           objref_name = objref_name,
+                           impl_fqname = impl_fqname,
+                           objref_fqname = objref_fqname,
                            name = name,
                            attrib_name = attrib_name,
                            set_attrib_name = set_attrib_name,
@@ -761,7 +893,7 @@ omniObjRef*
 @pof_name@::newObjRef(const char* mdri, IOP::TaggedProfileList* p,
                omniIdentity* id, omniLocalIdentity* lid)
 {
-  return new @objref_name@(mdri, p, id, lid);
+  return new @objref_fqname@(mdri, p, id, lid);
 }
 
 
@@ -772,13 +904,13 @@ CORBA::Boolean
     return 1;
     """,
                pof_name = pof_name,
-               objref_name = objref_name,
+               objref_fqname = objref_fqname,
                name = name,
                uname = u_name)
     for i in node.inherits():
         ancestor = string.join(map(tyutil.mapID, i.scopedName()), "::")
         stream.out("""\
-  if( !strcmp(id, @inherited@::_PD_repoID) )
+  if( !strcmp(id, @inherited@::_PD_repoId) )
     return 1;
   """, inherited = ancestor)
     stream.out("""\
@@ -795,12 +927,12 @@ const @pof_name@ _the_pof_@idname@;""",
     # _impl_
 
     stream.out("""\
-@impl_name@::~_impl_@name@() {}
+@impl_fqname@::~_impl_@uname@() {}
 
 
 CORBA::Boolean
-@impl_name@::_dispatch(GIOP_S& giop_s)
-{""", impl_name = impl_name, name = name)
+@impl_fqname@::_dispatch(GIOP_S& giop_s)
+{""", impl_fqname = impl_fqname, uname = u_name)
     stream.inc_indent()
     for callable in node.callables():
         if isinstance(callable, idlast.Operation):
@@ -813,18 +945,29 @@ CORBA::Boolean
             id_name = tyutil.mapID(id)
             if isinstance(callable, idlast.Operation):
 
-                skutil.operation_dispatch(callable, environment, stream)
+                skutil.operation_dispatch(callable, interface_environment,
+                                          stream)
 
             elif isinstance(callable, idlast.Attribute):
                 
-                skutil.attribute_read_dispatch(callable, environment,
+                skutil.attribute_read_dispatch(callable, interface_environment,
                                                id_name, stream)
 
                 if not(callable.readonly()):
 
-                    skutil.attribute_write_dispatch(callable, environment,
+                    skutil.attribute_write_dispatch(callable, interface_environment,
                                                     id_name, stream)
     stream.dec_indent()
+
+    # if we don't implement the operation/attrib ourselves, we need to
+    # call the objects we inherit from
+    for i in node.inherits():
+        inherited_name = tyutil.mapID(tyutil.name(i.scopedName()))
+        stream.out("""\
+  if( _impl_@inherited_name@::_dispatch(giop_s) ) {
+    return 1;
+  }""", inherited_name = inherited_name)
+        
     stream.out("""\
     return 0;
 }""")
@@ -832,30 +975,117 @@ CORBA::Boolean
     stream.out("""\
     
 void*
-@impl_name@::_ptrToInterface(const char* id)
+@impl_fqname@::_ptrToInterface(const char* id)
 {
   if( !strcmp(id, CORBA::Object::_PD_repoId) )
     return (void*) 1;
   if( !strcmp(id, @name@::_PD_repoId) )
     return (@impl_name@*) this;
+""",
+               impl_name = impl_name,
+               impl_fqname = impl_fqname,
+               name = name)
+    # again deal with inheritance
+    for i in node.inherits():
+        inherited_name = tyutil.mapID(tyutil.name(i.scopedName()))
+        stream.out("""\
+  if( !strcmp(id, @inherited_name@::_PD_repoId) )
+    return (_impl_@inherited_name@*) this;""",
+                   inherited_name = inherited_name)
 
+    stream.out("""\
+    
   return 0;
 }
 
 
 const char*
-@impl_name@::_mostDerivedRepoId()
+@impl_fqname@::_mostDerivedRepoId()
 {
   return @name@::_PD_repoId;
 }
 """,
-               impl_name = impl_name,
+               impl_fqname = impl_fqname,
                name = name)
     
 
-#    leave()
+    leave()
 
 def visitTypedef(node):
+    environment = self.__environment
+    is_global_scope = not(self.__insideModule or self.__insideInterface)
+
+    aliasType = node.aliasType()
+    alias_dims = tyutil.typeDims(aliasType)
+
+    fq_aliased = environment.principalID(aliasType, 1)
+
+    for d in node.declarators():
+        decl_dims = d.sizes()
+        decl_dims_str = tyutil.dimsToString(decl_dims)
+        
+        full_dims = decl_dims + alias_dims
+        is_array = full_dims != []
+        is_array_declarator = decl_dims != []
+        
+        fq_derived = idlutil.ccolonName(map(tyutil.mapID, d.scopedName()))
+
+        if is_global_scope and is_array_declarator:
+            
+            stream.out("""\
+@fq_derived@_slice* @fq_derived@_alloc() {
+  return new @fq_derived@_slice@decl_dims_str@;
+}
+
+@fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* _s)
+{
+  if (!_s) return 0;
+  @fq_derived@_slice* _data = @fq_derived@_alloc();
+  if (_data) {
+  """, fq_derived = fq_derived, decl_dims_str = decl_dims_str)
+            index_str = ""
+            i = 0
+            stream.inc_indent()
+            for dim in full_dims:
+                stream.out("for (unsigned int _i@i@ =0;_i@i@ < @n@;_i@i@++){",
+                           i = str(i), n = str(dim))
+                stream.inc_indent()
+                index_str = index_str + "[_i" + str(i) + "]"
+                i = i + 1
+            stream.out("_data@index@ = _s@index@;", index = index_str)
+            for dim in full_dims:
+                stream.dec_indent()
+                stream.out("}")
+            stream.dec_indent()
+            stream.out("""\
+  }
+  return _data;
+}
+
+void @fq_derived@_free(@fq_derived@_slice* _s) {
+  delete [] _s;
+}""", fq_derived = fq_derived)
+
+            return
+        
+
+        if is_global_scope and is_array:
+            stream.out("""\
+extern @fq_derived@_slice* @fq_derived@_alloc() {
+  return @fq_aliased@_alloc();
+}
+
+extern @fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* p) {
+  return @fq_aliased@_dup(p);
+}
+
+extern void @fq_derived@_free( @fq_derived@_slice* p) {
+   @fq_aliased@_free(p);
+}""",
+                       fq_derived = fq_derived,
+                       fq_aliased = fq_aliased)
+            
+    
     pass
 
 def visitEnum(node):
@@ -882,7 +1112,8 @@ def visitStruct(node):
     Mem_unmarshall = util.StringStream()
     Net_unmarshall = util.StringStream()
     msgsize = util.StringStream()
-    
+
+
     for n in node.members():
         n.accept(self)
         memberType = n.memberType()
@@ -893,7 +1124,7 @@ def visitStruct(node):
             full_dims = decl_dims + type_dims
             is_array = full_dims != []
             # marshall and unmarshall the struct members
-            member_name = tyutil.name(d.scopedName())
+            member_name = tyutil.mapID(tyutil.name(d.scopedName()))
 
             skutil.marshall_struct_union(marshall, environment,
                                          memberType, d, member_name)
@@ -1188,9 +1419,246 @@ void
 def visitForward(node):
     pass
 def visitConst(node):
+    environment = self.__environment
+    constType = node.constType()
+    if tyutil.isString(constType):
+        type_string = "char *"
+    else:
+        type_string = environment.principalID(constType)
+
+    scopedName = node.scopedName()
+    scopedName = map(tyutil.mapID, scopedName)
+    name = idlutil.ccolonName(scopedName)
+    value = tyutil.valueString(constType, node.value(), environment)
+    
+    init_in_def = tyutil.const_init_in_def(constType)
+
+    
+    if init_in_def:
+        if self.__insideInterface:
+            stream.out("""\
+const @type@ @name@ _init_in_cldef_( = @value@ );""",
+                       type = type_string, name = name, value = value)
+        else:
+            stream.out("""\
+_init_in_def_( const @type@ @name@ = @value@; )""",
+                       type = type_string, name = name, value = value)
+        return
+
+    # not init_in_def
+    if self.__insideModule and not(self.__insideInterface):
+        scopedName = node.scopedName()
+        scopedName = map(tyutil.mapID, scopedName)
+        scope_str = idlutil.ccolonName(tyutil.scope(scopedName))
+        name_str = tyutil.name(scopedName)
+        stream.out("""\
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the constant external linkage othewise.
+namespace @scope@ {
+  extern const @type@ @name@=@value@;
+}
+#else
+const @type@ @scopedName@ = @value@;
+#endif""",
+        type = type_string, scope = scope_str, name = name_str,
+        scopedName = name, value = value)
+        
+    else:
+        stream.out("""\
+const @type@ @name@ = @value@;""",
+                   type = type_string, name = name, value = value)
+        
+
+    
     pass
 def visitDeclarator(node):
     pass
 def visitException(node):
-    pass
+    name = tyutil.mapID(tyutil.name(node.scopedName()))
+    enter(name)
+    environment = self.__environment
+    scoped_name = environment.nameToString(node.scopedName())
+    name = tyutil.mapID(tyutil.name(node.scopedName()))
+    repoID = node.repoId()
 
+    # build the default ctor, copy ctor, assignment operator
+    copy_ctor_body = util.StringStream()
+    default_ctor_body = util.StringStream()
+    default_ctor_args = []
+    assign_op_body = util.StringStream()
+    has_default_ctor = 0
+
+    for m in node.members():
+        has_default_ctor = 1
+        if m.constrType():
+            raise "Doesn't handle types constructed within an exception"
+        memberType = m.memberType()
+        memberType_name = environment.principalID(memberType)
+        memberType_name_arg = tyutil.makeConstructorArgumentType(memberType,
+                                                                 environment)
+        for d in m.declarators():
+            decl_name = tyutil.mapID(tyutil.name(d.scopedName()))
+            copy_ctor_body.out("""\
+@member_name@ = _s.@member_name@;""", member_name = decl_name)
+            
+            default_ctor_args.append(memberType_name_arg + " _" + decl_name)
+            default_ctor_body.out("""\
+@member_name@ = _@member_name@;""", member_name = decl_name)
+
+            assign_op_body.out("""\
+@member_name@ = _s.@member_name@;""", member_name = decl_name)
+            
+        
+          
+        
+    
+    stream.out("""\
+CORBA::Exception::insertExceptionToAny @scoped_name@::insertToAnyFn = 0;
+CORBA::Exception::insertExceptionToAnyNCP @scoped_name@::insertToAnyFnNCP = 0;
+
+@scoped_name@::@name@(const @scoped_name@& _s) : CORBA::UserException(_s)
+{
+  @copy_ctor_body@
+}
+""",
+               scoped_name = scoped_name,
+               name = name,
+               copy_ctor_body = str(copy_ctor_body))
+    if has_default_ctor:
+        stream.out("""\
+@scoped_name@::@name@(@ctor_args@)
+{
+  pd_insertToAnyFn    = @scoped_name@::insertToAnyFn;
+  pd_insertToAnyFnNCP = @scoped_name@::insertToAnyFnNCP;
+  @default_ctor_body@
+}
+""",
+                   scoped_name = scoped_name,
+                   name = name,
+                   ctor_args = string.join(default_ctor_args, ", "),
+                   default_ctor_body = str(default_ctor_body))
+    stream.out("""\
+@scoped_name@& @scoped_name@::operator=(const @scoped_name@& _s)
+{
+  ((CORBA::UserException*) this)->operator=(_s);
+  @assign_op_body@
+  return *this;
+}
+
+@scoped_name@::~@name@() {}
+
+void @scoped_name@::_raise() { throw *this; }
+
+@scoped_name@* @scoped_name@::_downcast(CORBA::Exception* e) {
+  return (@name@*) _NP_is_a(e, \"Exception/UserException/@scoped_name@\");
+}
+
+const @scoped_name@* @scoped_name@::_downcast(const CORBA::Exception* e) {
+  return (const @name@*) _NP_is_a(e, \"Exception/UserException/@scoped_name@\");
+}
+
+const char* @scoped_name@::_PD_repoId = \"@repoID@\";
+
+CORBA::Exception* @scoped_name@::_NP_duplicate() const {
+  return new @name@(*this);
+}
+
+const char* @scoped_name@::_NP_typeId() const {
+  return \"Exception/UserException/@scoped_name@\";
+}
+
+const char* @scoped_name@::_NP_repoId(int* _size) const {
+  *_size = sizeof(\"@repoID@\");
+  return \"@repoID@\";
+}
+ 
+void @scoped_name@::_NP_marshal(NetBufferedStream& _s) const {
+  *this >>= _s;
+}
+
+void @scoped_name@::_NP_marshal(MemBufferedStream& _s) const {
+  *this >>= _s;
+}
+""",
+               scoped_name = scoped_name,
+               name = name,
+               repoID = repoID,
+               assign_op_body = str(assign_op_body))
+    
+
+    # deal with alignment, marshalling and demarshalling
+    needs_marshalling = node.members() != []
+    aligned_size = util.StringStream()
+    mem_marshal = util.StringStream()
+    net_marshal = util.StringStream()
+    mem_unmarshal = util.StringStream()
+    net_unmarshal = util.StringStream()
+    
+    for m in node.members():
+        memberType = m.memberType()
+        for d in m.declarators():
+            decl_name = tyutil.mapID(tyutil.name(d.scopedName()))
+            if tyutil.isString(memberType):
+                tmp = skutil.unmarshal_string_via_temporary(decl_name, "_n")
+                mem_unmarshal.out(tmp)
+                net_unmarshal.out(tmp)
+            else:
+                skutil.unmarshall(mem_unmarshal, environment,
+                                  memberType, d, decl_name, 0, "_n")
+                skutil.unmarshall(net_unmarshal, environment,
+                                  memberType, d, decl_name, 1, "_n")
+
+            skutil.marshall(mem_marshal, environment,
+                            memberType, d, decl_name, "_n")
+            skutil.marshall(net_marshal, environment,
+                            memberType, d, decl_name, "_n")
+
+            aligned_size.out(skutil.sizeCalculation(environment, memberType,
+                                                    d, "_msgsize", decl_name,
+                                                    fixme = 1))
+
+    if needs_marshalling:
+        stream.out("""\
+size_t
+@scoped_name@::_NP_alignedSize(size_t _msgsize) const
+{
+  @aligned_size@
+  return _msgsize;
+}
+
+void
+@scoped_name@::operator>>= (NetBufferedStream& _n) const
+{
+  @net_marshal@
+}
+
+void
+@scoped_name@::operator<<= (NetBufferedStream& _n)
+{
+  @net_unmarshal@
+}
+
+void
+@scoped_name@::operator>>= (MemBufferedStream& _n) const
+{
+  @mem_marshal@
+}
+
+void
+@scoped_name@::operator<<= (MemBufferedStream& _n)
+{
+  @mem_unmarshal@
+}
+""",
+                   scoped_name = scoped_name,
+                   aligned_size = str(aligned_size),
+                   net_marshal = str(net_marshal),
+                   mem_marshal = str(mem_marshal),
+                   net_unmarshal = str(net_unmarshal),
+                   mem_unmarshal = str(mem_unmarshal))
+
+
+    leave()
+            
+            
+                                           

@@ -30,6 +30,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/11/23 18:48:26  djs
+# Bugfixes, more interface operations and attributes code
+#
 # Revision 1.2  1999/11/19 20:09:03  djs
 # Fixed signature generating bug when return type is void
 #
@@ -111,7 +114,7 @@ def produce_canonical_name_for_type(type):
     assert isinstance(type, idltype.Type)
 
     full_dims = tyutil.typeDims(type)
-    type = tyutil.deref(type)
+    deref_type = tyutil.deref(type)
     
     dims = ""
     if full_dims != "":
@@ -119,25 +122,33 @@ def produce_canonical_name_for_type(type):
         dims_str = map(lambda x:ARRAY_SEPARATOR + x, dims_str)
         dims = string.join(dims_str, "")
         
-    if name_map.has_key(type.kind()):
-        return dims + CANNON_NAME_SEPARATOR + name_map[type.kind()]
+    # -----
+
+    if tyutil.isSequence(deref_type):
+        bound = ""
+        if deref_type.bound():
+            bound = str(deref_type.bound())
+        return dims + CANNON_NAME_SEPARATOR + bound +\
+               string.join(map(tyutil.mapID, type.scopedName()),
+                           SCOPE_SEPARATOR)
+               #produce_canonical_name_for_type(deref_type.seqType())
+
+
+        
+    if name_map.has_key(deref_type.kind()):
+        return dims + CANNON_NAME_SEPARATOR + name_map[deref_type.kind()]
 
     # return the canonical name (eg foo, bar, astruct etc)
-    if tyutil.isString(type):
+    if tyutil.isString(deref_type):
         bound = ""
-        if type.bound():
-            bound = str(type.bound())
+        if deref_type.bound():
+            bound = str(deref_type.bound())
         return dims + CANNON_NAME_SEPARATOR + bound + "string"
 
-    if tyutil.isSequence(type):
-        bound = ""
-        if type.bound():
-            bound = str(type.bound())
-        return dims + CANNON_NAME_SEPARATOR + bound +\
-               produce_canonical_name_for_type(type.seqType())
-
-    if isinstance(type, idltype.Declared):
-        name = tyutil.name(tyutil.mapID(type.scopedName()))
+    if isinstance(deref_type, idltype.Declared):
+        name = string.join(map(tyutil.mapID, deref_type.scopedName()),
+                           SCOPE_SEPARATOR)
+        #name = tyutil.name(tyutil.mapID(type.scopedName()))
         return dims + CANNON_NAME_SEPARATOR + name
 
     raise "Don't know how to produce canonical name for type: " + \
