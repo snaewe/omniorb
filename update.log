@@ -1,3 +1,11 @@
+Fri Apr 26 14:35:31 BST 2002 dgrisby
+====================================
+
+- Escaping of string constants was broken.
+
+src/lib/omniORB2/omniidl_be/cxx/types.py
+
+
 Fri Mar  1 15:44:58 GMT 2002 dpg1
 =================================
 

@@ -8,6 +8,15 @@
 
 <buglist version="3.0.4">
 
+<bug id="11" date="Fri Apr 26 14:35:31 BST 2002" user="dgrisby">
+  <summary>Incorrect escaping of string constants</summary>
+  <reported>Leandro Fanzone</reported>
+  <link href="http://www.omniorb.org/omniORB/archives/2002-04/0154.html"/>
+  <text>
+  Unprintable characters in strings were escaped wrong.
+  </text>
+</bug>
+
 <bug id="10" date="Tue Feb  5 12:09:40 GMT 2002" user="djr">
   <summary>Memory leak in string_to_object()</summary>
   <reported>Jose Hernandez</reported>

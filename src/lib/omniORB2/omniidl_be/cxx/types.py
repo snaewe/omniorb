@@ -28,7 +28,7 @@
 
 import string
 
-from omniidl import idltype, idlast
+from omniidl import idltype, idlast, idlutil
 from omniidl_be.cxx import util, config, id, tyutil
 
 # direction constants
@@ -459,27 +459,22 @@ class Type:
             return str(value)
 
         # chars are single-quoted
-        if kind in [ idltype.tk_char, idltype.tk_wchar ]:
-            if not(value in printable):
-                # use the octal representation
-                octal_string = str(oct(ord(value)))
-                return "0" * (4 - len(octal_string)) + octal_string
-            if value in need_escaping:
-                return "'\\" + str(value) + "'"
-            
-            return "'" + str(value) + "'"
+        if kind in [ idltype.tk_char ]:
+            return "'" + idlutil.escapifyString(value) + "'"
+
         # booleans are straightforward
         if kind in [ idltype.tk_boolean ]:
             return str(value)
+
         if kind in [ idltype.tk_enum ]:
             # value is an enumerator
             enum_name = id.Name(value.scopedName())
             #enum_name = id.Name(type.__type.decl().scopedName() + [str(value)])
             return enum_name.unambiguous(environment)
+
         if kind in [ idltype.tk_string ]:
-            chars = list(value)
-            chars = map(representChar, chars)
-            return "\"" + string.join(chars, "") + "\""
+            return '"' + idlutil.escapifyString(value) + '"'
+
         if kind in [ idltype.tk_octet ]:
             return str(value)
 
