@@ -1,3 +1,11 @@
+Thu Oct 18 13:39:58 BST 2001 dpg1
+=================================
+
+- Missed a Windows fix.
+
+src/lib/omniORB/dynamic/dynAnyNil.cc
+
+
 Wed Oct 17 19:47:21 BST 2001 dpg1
 =================================
 

@@ -731,7 +731,7 @@ OMNI_NAMESPACE_BEGIN(omni)
 
 class omniNilDynAnyFactory : public virtual DynamicAny::DynAnyFactory {
 public:
-  omniNilDynAnyFactory() : DynamicAny::DynAnyFactory(1) {}
+  omniNilDynAnyFactory() : OMNIORB_BASE_CTOR(DynamicAny::)DynAnyFactory(1) {}
 
   virtual DynamicAny::DynAny_ptr
   create_dyn_any(const CORBA::Any& value) {
