@@ -1,3 +1,15 @@
+Tue Nov 26 16:42:23 GMT 2002 dgrisby
+====================================
+
+- Fix exception interception.
+
+include/omniORB4/omniInterceptors.h
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+
 Tue Nov 26 14:35:53 GMT 2002 dgrisby
 ====================================
 

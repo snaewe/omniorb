@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2002/11/26 16:54:13  dgrisby
+  Fix exception interception.
+
   Revision 1.1.2.8  2002/11/26 14:50:43  dgrisby
   Implement missing interceptors.
 
@@ -234,9 +237,9 @@ public:
     class info_T {
     public:
       GIOP_S&                  giop_s;
-      CORBA::Exception*        exception;
+      const CORBA::Exception*  exception;
 
-      info_T(GIOP_S& s, CORBA::Exception* e) :
+      info_T(GIOP_S& s, const CORBA::Exception* e) :
 	giop_s(s), exception(e) {}
     private:
       info_T();

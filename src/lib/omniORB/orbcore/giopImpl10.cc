@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.18  2002/11/26 16:54:34  dgrisby
+  Fix exception interception.
+
   Revision 1.1.4.17  2002/11/26 14:51:50  dgrisby
   Implement missing interceptors.
 
@@ -1177,23 +1180,30 @@ giopImpl10::sendSystemException(giopStream* g,const CORBA::SystemException& ex) 
 
   hdr[7] = (char) GIOP::Reply;
 
-  if (giop_s.service_contexts().length() > 0) {
+  giop_s.service_contexts().length(0);
 
-    // Compute and initialise the message size field. Only necessary
-    // if there are service contexts, since we know a message without
-    // service contexts will fit in a single buffer.
+  if (omniInterceptorP::serverSendReply) {
+    omniInterceptors::serverSendException_T::info_T info(giop_s, &ex);
+    omniInterceptorP::visit(info);
 
-    cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12);
-    giop_s.service_contexts() >>= cs;
-    operator>>= ((CORBA::ULong)0,cs);
-    operator>>= ((CORBA::ULong)0,cs);
-    CORBA::ULong(repoid_size) >>= cs;
-    cs.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
-    ex.minor() >>= cs;
-    operator>>= ((CORBA::ULong)0,cs);
+    if (giop_s.service_contexts().length() > 0) {
 
-    outputSetMessageSize(g,cs.total()-12);
-    *((CORBA::ULong*)(hdr + 8)) = cs.total() - 12;
+      // Compute and initialise the message size field. Only necessary
+      // if there are service contexts, since we know a message without
+      // service contexts will fit in a single buffer.
+
+      cdrCountingStream cs(g->TCS_C(),g->TCS_W(),12);
+      giop_s.service_contexts() >>= cs;
+      operator>>= ((CORBA::ULong)0,cs);
+      operator>>= ((CORBA::ULong)0,cs);
+      CORBA::ULong(repoid_size) >>= cs;
+      cs.put_octet_array((const CORBA::Octet*) repoid, repoid_size);
+      ex.minor() >>= cs;
+      operator>>= ((CORBA::ULong)0,cs);
+
+      outputSetMessageSize(g,cs.total()-12);
+      *((CORBA::ULong*)(hdr + 8)) = cs.total() - 12;
+    }
   }
 
   // Service context
@@ -1232,6 +1242,13 @@ giopImpl10::sendUserException(giopStream* g,const CORBA::UserException& ex) {
                      g->pd_currentOutputBuffer->start;
 
   hdr[7] = (char)GIOP::Reply;
+
+  giop_s.service_contexts().length(0);
+
+  if (omniInterceptorP::serverSendReply) {
+    omniInterceptors::serverSendException_T::info_T info(giop_s, &ex);
+    omniInterceptorP::visit(info);
+  }
 
   // Compute and initialise the message size field
   {
