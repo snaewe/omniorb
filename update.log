@@ -1,3 +1,14 @@
+Fri Aug 18 12:25:31 BST 2000 dpg1
+=================================
+
+- Fix references to www.omg.org in omniORB documentation.
+
+doc/tex/omniORB.bib
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniORB/omniORB014.html
+
+
 Fri Aug 18 12:11:48 BST 2000 sll
 ================================
 
