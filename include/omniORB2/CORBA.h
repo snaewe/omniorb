@@ -13,6 +13,9 @@
 
 /*
  $Log$
+ Revision 1.5  1997/01/30 20:18:23  sll
+ Added new member functions in Object_Helper.
+
  Revision 1.4  1997/01/23 14:55:59  sll
  Removed non-essential template dependency
 
@@ -702,6 +705,9 @@ typedef _CORBA_Double  Double;
   public:
     // omniORB2 specifics
     static Object_ptr _nil();
+    static _CORBA_Boolean is_nil(Object_ptr obj);
+    static void release(Object_ptr obj);
+    static void duplicate(Object_ptr obj);
     static size_t NP_alignedSize(Object_ptr obj,size_t initialoffset);
     static void marshalObjRef(Object_ptr obj,NetBufferedStream &s);
     static Object_ptr unmarshalObjRef(NetBufferedStream &s);
