@@ -11,9 +11,15 @@
 
 /*
   $Log$
-  Revision 1.3  1997/03/26 18:24:56  ewc
-   Added support for new -ORBtraceLevel option.
+  Revision 1.4  1997/04/23 13:29:45  sll
+  - If a port number is provided, set socket option SO_REUSEADDR.
+  - Added code to avoid receiving data into the internal buffer that
+    might later found to be misaligned. The code is turned on by UNdefining
+    the macro DO_NOT_AVOID_MISALIGNMENT.
 
+// Revision 1.3  1997/03/26  18:24:56  ewc
+//  Added support for new -ORBtraceLevel option.
+//
 // Revision 1.2  1997/03/10  12:13:08  sll
 // tcpSocketRope ctor now returns the passive endpoint created by
 // the tcpSocketRendezvous ctor. The value is returned via the argument
@@ -37,7 +43,7 @@
 
 #include "libcWrapper.h"
 
-
+#define  DO_NOT_AVOID_MISALIGNMENT    
 
 // Size of transmit and receive buffers
 const 
@@ -54,32 +60,32 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketRope *rope,
   int  rc;
 
   if (! LibcWrapper::isipaddr( (char*) r->host()))
-      {
-	if (LibcWrapper::gethostbyname((char *)r->host(),h,rc) < 0) 
-	  {
+    {
+      if (LibcWrapper::gethostbyname((char *)r->host(),h,rc) < 0) 
+	{
 	  // XXX look at rc to decide what to do or if to give up what errno
 	  // XXX to return
 	  // XXX For the moment, just return EINVAL
 	  throw CORBA::COMM_FAILURE(EINVAL,CORBA::COMPLETED_NO);
-	  }
-	// We just pick the first address in the list, may be we should go
-	// through the list and if possible pick the one that is on the same
-	// subnet.
-	memcpy((void*)&raddr.sin_addr,
-	       (void*)h.hostent()->h_addr_list[0],
-	       sizeof(raddr.sin_addr));
-      }
-else
-      {
-	// The machine name is already an IP address
-	CORBA::ULong ip_p;
-	if ( (ip_p = inet_addr( (char*) r->host() )) == INADDR_NONE)
-	  {
-	    throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
-	  }
+	}
+      // We just pick the first address in the list, may be we should go
+      // through the list and if possible pick the one that is on the same
+      // subnet.
+      memcpy((void*)&raddr.sin_addr,
+	     (void*)h.hostent()->h_addr_list[0],
+	     sizeof(raddr.sin_addr));
+    }
+  else
+    {
+      // The machine name is already an IP address
+      CORBA::ULong ip_p;
+      if ( (ip_p = inet_addr( (char*) r->host() )) == INADDR_NONE)
+	{
+	  throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+	}
 
-	memcpy((void*) &raddr.sin_addr, (void*) &ip_p, sizeof(raddr.sin_addr));
-      }
+      memcpy((void*) &raddr.sin_addr, (void*) &ip_p, sizeof(raddr.sin_addr));
+    }
 
   raddr.sin_family = PF_INET;
   raddr.sin_port   = htons(r->port());
@@ -89,10 +95,10 @@ else
   }
   if (connect(pd_socket,(struct sockaddr *)&raddr,
 	      sizeof(struct sockaddr_in)) == SOCKET_ERROR) 
-  {
-    closesocket(pd_socket);
-    throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
-  }
+    {
+      closesocket(pd_socket);
+      throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+    }
   pd_tx_buffer = (void *) new char[tcpSocketStrand::buffer_size];
   pd_tx_begin  = pd_tx_end = pd_tx_reserved_end = pd_tx_buffer;
   pd_rx_buffer = (void *) new char[tcpSocketStrand::buffer_size];
@@ -117,7 +123,7 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketRope *r,
 tcpSocketStrand::~tcpSocketStrand() 
 {
   if (omniORB::traceLevel>=5) {
-  cerr << "tcpSocketStrand::~Strand() close socket no. " << pd_socket << endl;
+    cerr << "tcpSocketStrand::~Strand() close socket no. " << pd_socket << endl;
   }
   closesocket(pd_socket);
   pd_socket = 0;
@@ -140,13 +146,13 @@ tcpSocketStrand::MaxMTU() const {
 
 Strand::sbuf
 tcpSocketStrand::receive(size_t size,
-		CORBA::Boolean exactly,
-		int align) 
+			 CORBA::Boolean exactly,
+			 int align) 
 {
   giveback_received(0);
 
   size_t bsz = ((omni::ptr_arith_t) pd_rx_end - 
-    (omni::ptr_arith_t) pd_rx_begin);
+		(omni::ptr_arith_t) pd_rx_begin);
 
   int current_alignment;
   omni::ptr_arith_t new_align_ptr;
@@ -154,22 +160,20 @@ tcpSocketStrand::receive(size_t size,
   if (!bsz) {
     // No data left in receive buffer, fetch() and try again
     // rewind the buffer pointers to the beginning of the buffer and
-    // at the same alignment as they were previously
-    current_alignment = (omni::ptr_arith_t) pd_rx_begin &
-      ((int)omni::max_alignment - 1);
-    if (current_alignment == 0) {
-      current_alignment = (int) omni::max_alignment;
-    }
+    // at the same alignment as it is requested in <align>
     new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_rx_buffer,
-				      omni::max_alignment) + 
-                    current_alignment;
+				   omni::max_alignment) + align;
     if (new_align_ptr >= ((omni::ptr_arith_t)pd_rx_buffer + 
 			  (int)omni::max_alignment)) {
       new_align_ptr -= (int) omni::max_alignment;
     }
     pd_rx_begin = pd_rx_received_end = pd_rx_end = (void *)new_align_ptr;
-    
+
+#ifndef DO_NOT_AVOID_MISALIGNMENT    
+    fetch(size);
+#else
     fetch();
+#endif
     return receive(size,exactly,align);
   }
 
@@ -186,7 +190,7 @@ tcpSocketStrand::receive(size_t size,
   if (current_alignment != align) {
     // alignment is not right, move the data to the correct alignment
     new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_rx_buffer,
-				      omni::max_alignment) + align;
+				   omni::max_alignment) + align;
     if (new_align_ptr >= ((omni::ptr_arith_t)pd_rx_buffer + 
 			  (int)omni::max_alignment)) {
       new_align_ptr -= (int) omni::max_alignment;
@@ -209,8 +213,8 @@ tcpSocketStrand::receive(size_t size,
 
       
       size_t avail = tcpSocketStrand::buffer_size - 
-	                ((omni::ptr_arith_t) pd_rx_end - 
-			 (omni::ptr_arith_t) pd_rx_buffer) + bsz;
+	((omni::ptr_arith_t) pd_rx_end - 
+	 (omni::ptr_arith_t) pd_rx_buffer) + bsz;
       if (avail < size) {
 	// Not enough empty space, got to move existing data
 	current_alignment = (omni::ptr_arith_t) pd_rx_begin &
@@ -219,8 +223,8 @@ tcpSocketStrand::receive(size_t size,
 	  current_alignment = (int) omni::max_alignment;
 	}
 	new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_rx_buffer,
-					  omni::max_alignment) + 
-	                 current_alignment;
+				       omni::max_alignment) + 
+	  current_alignment;
 	if (new_align_ptr >= ((omni::ptr_arith_t)pd_rx_buffer + 
 			      (int)omni::max_alignment)) {
 	  new_align_ptr -= (int) omni::max_alignment;
@@ -229,7 +233,11 @@ tcpSocketStrand::receive(size_t size,
 	pd_rx_begin = pd_rx_received_end = (void *)new_align_ptr;
 	pd_rx_end = (void *)(new_align_ptr + bsz);
       }
+#ifndef DO_NOT_AVOID_MISALIGNMENT
+      fetch(size-bsz);
+#else
       fetch();
+#endif
       return receive(size,exactly,align);
     }
     else {
@@ -287,7 +295,7 @@ tcpSocketStrand::receive_and_copy(Strand::sbuf b)
     int rx;
 #ifdef TRACE_RECV
     if (omniORB::traceLevel>=10) {
-    cerr << "tcpSocketStrand::receive_and_copy--- recv " << pd_socket << endl;
+      cerr << "tcpSocketStrand::receive_and_copy--- recv " << pd_socket << endl;
     }
 #endif
 
@@ -307,8 +315,8 @@ tcpSocketStrand::receive_and_copy(Strand::sbuf b)
       }
 #ifdef TRACE_RECV
     if (omniORB::traceLevel >= 10) {
-    cerr << "tcpSocketStrand::receive_and_copy-- recv " << pd_socket << " "
-      << rx << " bytes" << endl;
+      cerr << "tcpSocketStrand::receive_and_copy-- recv " << pd_socket << " "
+	   << rx << " bytes" << endl;
     }
 #endif
     sz -= rx;
@@ -339,19 +347,21 @@ tcpSocketStrand::skip(size_t size)
 }
 
 void
-tcpSocketStrand::fetch()
+tcpSocketStrand::fetch(CORBA::ULong max)
 {
   size_t bsz = tcpSocketStrand::buffer_size -
     ((omni::ptr_arith_t) pd_rx_end - (omni::ptr_arith_t) pd_rx_buffer);
+
+  bsz = (max != 0 && bsz > max) ? max : bsz;
 
   if (!bsz) return;
 
   int rx;
 again:
 #ifdef TRACE_RECV
-    if (omniORB::traceLevel >= 10) {
-      cerr << "tcpSocketStrand::fetch--- recv " << pd_socket << endl;
-    }
+  if (omniORB::traceLevel >= 10) {
+    cerr << "tcpSocketStrand::fetch--- recv " << pd_socket << endl;
+  }
 #endif
 
   if ((rx = recv(pd_socket,(char *)pd_rx_end,bsz,0)) == SOCKET_ERROR) {
@@ -368,10 +378,10 @@ again:
       throw CORBA::COMM_FAILURE(0,CORBA::COMPLETED_MAYBE);
     }
 #ifdef TRACE_RECV
-    if (omniORB::traceLevel >= 10) {
-      cerr << "tcpSocketStrand::fetch-- recv " << pd_socket << " "
-	   << rx << " bytes" << endl;
-    }
+  if (omniORB::traceLevel >= 10) {
+    cerr << "tcpSocketStrand::fetch-- recv " << pd_socket << " "
+	 << rx << " bytes" << endl;
+  }
 #endif
 
   pd_rx_end = (void *)((omni::ptr_arith_t) pd_rx_end + rx);
@@ -381,9 +391,9 @@ again:
 
 Strand::sbuf 
 tcpSocketStrand::reserve(size_t size,
-		CORBA::Boolean exactly,
-		int align,
-		CORBA::Boolean tx) 
+			 CORBA::Boolean exactly,
+			 int align,
+			 CORBA::Boolean tx) 
 {
 
   giveback_reserved(0,tx);
@@ -415,14 +425,14 @@ tcpSocketStrand::reserve(size_t size,
       omni::ptr_arith_t new_align_ptr;
 
       new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_tx_buffer,
-					omni::max_alignment) + align;
+				     omni::max_alignment) + align;
       if (new_align_ptr >= ((omni::ptr_arith_t)pd_tx_buffer + 
-			   (int)omni::max_alignment)) {
+			    (int)omni::max_alignment)) {
 	new_align_ptr -= (int) omni::max_alignment;
       }
       pd_tx_begin = pd_tx_end = pd_tx_reserved_end = (void *)new_align_ptr;
       bsz = tcpSocketStrand::buffer_size - ((omni::ptr_arith_t) pd_tx_end 
-		    - (omni::ptr_arith_t) pd_tx_buffer);
+					    - (omni::ptr_arith_t) pd_tx_buffer);
     }
     else {
       // transmit what is left and try again
@@ -454,7 +464,7 @@ tcpSocketStrand::reserve(size_t size,
 
 void
 tcpSocketStrand::giveback_reserved(size_t leftover,
-			  CORBA::Boolean tx) 
+				   CORBA::Boolean tx) 
 {
   size_t total = (omni::ptr_arith_t)pd_tx_reserved_end -
     (omni::ptr_arith_t)pd_tx_end;
@@ -472,7 +482,7 @@ tcpSocketStrand::giveback_reserved(size_t leftover,
 
 void 
 tcpSocketStrand::reserve_and_copy(Strand::sbuf b,
-			 CORBA::Boolean transmit)
+				  CORBA::Boolean transmit)
 {
   // transmit anything that is left in the transmit buffer
   giveback_reserved(0,1);
@@ -516,7 +526,7 @@ void
 tcpSocketStrand::transmit() 
 {
   size_t sz = (omni::ptr_arith_t)pd_tx_end - 
-              (omni::ptr_arith_t)pd_tx_begin;
+    (omni::ptr_arith_t)pd_tx_begin;
   int tx;
   char *p = (char *)pd_tx_begin;
   while (sz) {
@@ -567,12 +577,23 @@ tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketEndpoint *me)
   myaddr.sin_family = PF_INET;
   myaddr.sin_addr.s_addr = INADDR_ANY;
   myaddr.sin_port = htons(me->port());
+
+  if (me->port()) {
+    int valtrue = 1;
+    if (setsockopt(pd_socket,SOL_SOCKET,
+		   SO_REUSEADDR,(char*)&valtrue,sizeof(int)) < 0)
+      {
+	close(pd_socket);
+	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+      }
+  }
+
   if (bind(pd_socket,(struct sockaddr *)&myaddr,
 	   sizeof(struct sockaddr_in)) == SOCKET_ERROR) 
-  {
-    closesocket(pd_socket);
-    throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
-  }
+    {
+      closesocket(pd_socket);
+      throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+    }
 
   // Make it a passive socket
   if (listen(pd_socket,5) == SOCKET_ERROR) {
@@ -600,23 +621,23 @@ tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketEndpoint *me)
     int rc;
 
     if (LibcWrapper::gethostbyname(self,h,rc) < 0) {
-	throw omniORB::fatalException(__FILE__,__LINE__,
+      throw omniORB::fatalException(__FILE__,__LINE__,
 				    "Cannot get the address of this host");
-	}
+    }
     memcpy((void *)&myaddr.sin_addr,
 	   (void *)h.hostent()->h_addr_list[0],
-	    sizeof(myaddr.sin_addr));
+	   sizeof(myaddr.sin_addr));
     char ipaddr[16];
     sprintf(ipaddr,"%d.%d.%d.%d",
-		(int)((ntohl(myaddr.sin_addr.s_addr) & 0xff000000) >> 24),
-		(int)((ntohl(myaddr.sin_addr.s_addr) & 0x00ff0000) >> 16),
-		(int)((ntohl(myaddr.sin_addr.s_addr) & 0x0000ff00) >> 8),
-		(int)((ntohl(myaddr.sin_addr.s_addr) & 0x000000ff)));
-     me->host((const CORBA::Char *) ipaddr);
-    }
+	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0xff000000) >> 24),
+	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0x00ff0000) >> 16),
+	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0x0000ff00) >> 8),
+	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0x000000ff)));
+    me->host((const CORBA::Char *) ipaddr);
+  }
     
-    pd_rope = r;
-    return;
+  pd_rope = r;
+  return;
 }
 
 tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketHandle_t sock) 
@@ -647,7 +668,7 @@ tcpSocketRendezvous::accept()
   l = sizeof(struct sockaddr_in);
 
   if ((new_sock = ::accept(pd_socket,(struct sockaddr *)&raddr,&l)) ==
-                           INVALID_SOCKET ) {
+      INVALID_SOCKET ) {
     throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
   }
 
