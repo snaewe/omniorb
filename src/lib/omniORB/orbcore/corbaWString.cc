@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/15 17:20:23  sll
+  Removed obsoluted marshalling functions.
+
   Revision 1.1.2.1  2000/10/27 15:42:07  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -71,21 +74,6 @@ CORBA::wstring_dup(const _CORBA_WChar* p)
   return 0;
 }
 
-void
-_CORBA_WString_helper::marshal(const _CORBA_WChar* p, cdrStream& s)
-{
-  // *** Use the current code sets to marshal
-  OMNIORB_ASSERT(0);
-}
-
-_CORBA_WChar*
-_CORBA_WString_helper::unmarshal(cdrStream& s)
-{
-  // *** Use the current code sets to unmarshal
-  OMNIORB_ASSERT(0);
-  return 0;
-}
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// WString_member ///////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -97,7 +85,12 @@ _CORBA_WString_member::operator <<= (cdrStream& s)
     _CORBA_WString_helper::free(_ptr);
   _ptr = 0;
 
-  _ptr = _CORBA_WString_helper::unmarshal(s);
+  _ptr = s.unmarshalWString();
+}
+
+void
+_CORBA_WString_member::operator >>= (cdrStream& s) const {
+  s.marshalWString(_ptr);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -111,7 +104,7 @@ _CORBA_Sequence__WString::operator >>= (cdrStream& s) const
 
   for( CORBA::ULong i = 0; i < pd_len; i++ ) {
     _CORBA_WChar* p = pd_data[i];
-    _CORBA_WString_helper::marshal(p,s);
+    s.marshalWString(p);
   }
 }
 
@@ -139,6 +132,6 @@ _CORBA_Sequence__WString::operator <<= (cdrStream& s)
 
     if( p ) { _CORBA_WString_helper::free(p); p = 0; }
 
-    p = _CORBA_WString_helper::unmarshal(s);
+    p = s.unmarshalWString();
   }
 }
