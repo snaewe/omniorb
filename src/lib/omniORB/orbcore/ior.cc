@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.10.2.15  2001/08/06 15:49:17  sll
+  Added IOP component TAG_OMNIORB_UNIX_TRANS for omniORB specific local
+  transport using the unix domain socket.
+
   Revision 1.10.2.14  2001/08/03 17:41:22  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -128,6 +132,7 @@
 #include <exceptiondefs.h>
 #include <initialiser.h>
 #include <giopBiDir.h>
+#include <SocketCollection.h>
 #include <stdio.h>
 
 OMNI_USING_NAMESPACE(omni)
@@ -707,7 +712,7 @@ omniIOR::dump_TAG_OMNIORB_BIDIR(const IOP::TaggedComponent& c) {
   CORBA::String_var sendfrom;
   sendfrom = e.unmarshalRawString();
   CORBA::String_var outstr;
-  CORBA::ULong len = sizeof("TAG_OMNIORB_BIDIR ")+strlen(outstr);
+  CORBA::ULong len = sizeof("TAG_OMNIORB_BIDIR ")+strlen(sendfrom);
   outstr = CORBA::string_alloc(len);
   sprintf(outstr,"%s %s","TAG_OMNIORB_BIDIR",(const char*)sendfrom);
   return outstr._retn();
@@ -730,6 +735,67 @@ omniIOR::add_TAG_OMNIORB_BIDIR(const char* sendfrom,omniIOR& ior) {
   IIOP::encodeMultiComponentProfile(body,ior.pd_iopProfiles[index]);
 }
 
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+void
+omniIOR::unmarshal_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent& c ,
+					  omniIOR& ior) {
+  
+  OMNIORB_ASSERT(c.tag == IOP::TAG_OMNIORB_UNIX_TRANS);
+  OMNIORB_ASSERT(ior.pd_iorInfo);
+
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  CORBA::String_var host;
+  host = e.unmarshalRawString();
+  CORBA::String_var filename;
+  filename = e.unmarshalRawString();
+
+  // Check if we are on the same host and hence can use unix socket.
+  char self[64];
+  if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+    if (omniORB::trace(0)) {
+      omniORB::logger log;
+      log << "Cannot get the name of this host\n";
+    }
+  }
+  if (strcmp(self,host) != 0) return;
+
+  const char* format = "giop:unix:%s";
+
+  CORBA::ULong len = strlen(filename);
+  if (len == 0) return;
+  len += strlen(format);
+  CORBA::String_var addrstr(CORBA::string_alloc(len));
+  sprintf(addrstr,format,(const char*)filename);
+  
+  giopAddress* address = giopAddress::str2Address(addrstr);
+  // If we do not have unix transport linked the return value will be 0
+  if (address == 0) return;
+  ior.getIORInfo()->addresses().push_back(address);
+}
+
+char*
+omniIOR::dump_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent& c) {
+
+  OMNIORB_ASSERT(c.tag == IOP::TAG_OMNIORB_UNIX_TRANS);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  CORBA::String_var host;
+  host = e.unmarshalRawString();
+  CORBA::String_var filename;
+  filename = e.unmarshalRawString();
+
+  const char* format = "TAG_OMNIORB_UNIX_TRANS %s %s";
+  CORBA::String_var outstr;
+  CORBA::ULong len = strlen(format) + strlen(host) + strlen(filename);
+  outstr = CORBA::string_alloc(len);
+  sprintf(outstr,format,(const char*)host,(const char*)filename);
+  return outstr._retn();
+
+}
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -795,6 +861,10 @@ static struct {
   { IOP::TAG_OMNIORB_BIDIR,
     omniIOR::unmarshal_TAG_OMNIORB_BIDIR,
     omniIOR::dump_TAG_OMNIORB_BIDIR },
+
+  { IOP::TAG_OMNIORB_UNIX_TRANS,
+    omniIOR::unmarshal_TAG_OMNIORB_UNIX_TRANS,
+    omniIOR::dump_TAG_OMNIORB_UNIX_TRANS },
 
   { 0xffffffff, 0, 0 }
 };
@@ -886,7 +956,7 @@ static _CORBA_Unbounded_Sequence_Octet my_code_set;
 static _CORBA_Unbounded_Sequence_Octet my_orb_type;
 static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_alternative_addr;
 static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_ssl_addr;
-
+static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_unix_addr;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -960,6 +1030,38 @@ omniIOR::add_TAG_SSL_SEC_TRANS(const IIOP::Address& address,
   my_ssl_addr[index].replace(max,len,p,1);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+void
+omniIOR::add_TAG_OMNIORB_UNIX_TRANS(const char* filename) {
+
+  OMNIORB_ASSERT(filename && strlen(filename) != 0);
+
+  char self[64];
+  if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
+    if (omniORB::trace(0)) {
+      omniORB::logger log;
+      log << "Cannot get the name of this host\n";
+    }
+  }
+
+  if (strlen(my_address.host) == 0) {
+    my_address.host = (const char*) self;
+  }
+
+  cdrEncapsulationStream s(CORBA::ULong(0),1);
+
+  s.marshalRawString(self);
+  s.marshalRawString(filename);
+
+  CORBA::ULong index = my_unix_addr.length();
+  my_unix_addr.length(index+1);
+
+  CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+
+  my_unix_addr[index].replace(max,len,p,1);
+}
+
+
 OMNI_NAMESPACE_BEGIN(omni)
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1023,6 +1125,21 @@ CORBA::Boolean insertSupportedComponents(omniInterceptors::encodeIOR_T::info_T& 
       len = my_ssl_addr[index].length();
       c.component_data.replace(max,len,
 			       my_ssl_addr[index].get_buffer(),0);
+    }
+  }
+
+  if (v.major > 1 || v.minor >= 2) {
+    // 1.2 or later, Insert omniORB unix transport
+    for (CORBA::ULong index = 0;
+	 index < my_unix_addr.length(); index++) {
+
+      IOP::TaggedComponent& c = omniIOR::newIIOPtaggedComponent(cs);
+      c.tag = IOP::TAG_OMNIORB_UNIX_TRANS;
+      CORBA::ULong max, len;
+      max = my_unix_addr[index].maximum();
+      len = my_unix_addr[index].length();
+      c.component_data.replace(max,len,
+			       my_unix_addr[index].get_buffer(),0);
     }
   }
 

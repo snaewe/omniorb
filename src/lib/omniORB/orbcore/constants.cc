@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.15.2.6  2001/08/06 15:49:17  sll
+  Added IOP component TAG_OMNIORB_UNIX_TRANS for omniORB specific local
+  transport using the unix domain socket.
+
   Revision 1.15.2.5  2001/07/31 16:28:01  sll
   Added GIOP BiDir support.
 
@@ -156,7 +160,8 @@ const IOP::ComponentId IOP::TAG_PRIMARY = 90002; // XXX NEED THE REAL CONSTANT!
 const IOP::ComponentId IOP::TAG_HEARTBEAT_ENABLED = 90003; 
                                                // XXX NEED THE REAL CONSTANT !
 
-const IOP::ComponentId IOP::TAG_OMNIORB_BIDIR = 0x41545401; 
+const IOP::ComponentId IOP::TAG_OMNIORB_BIDIR      = 0x41545401; 
+const IOP::ComponentId IOP::TAG_OMNIORB_UNIX_TRANS = 0x41545402; 
 
 
 
@@ -194,6 +199,7 @@ static struct {
   { IOP::TAG_PRIMARY, "TAG_PRIMARY" },
   { IOP::TAG_HEARTBEAT_ENABLED, "TAG_HEARTBEAT_ENABLED" },
   { IOP::TAG_OMNIORB_BIDIR, "TAG_OMNIORB_BIDIR" },
+  { IOP::TAG_OMNIORB_UNIX_TRANS, "TAG_OMNIORB_UNIX_TRANS" },
   { 0, 0 }
 };
 

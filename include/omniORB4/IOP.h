@@ -31,6 +31,10 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/08/06 15:49:16  sll
+  Added IOP component TAG_OMNIORB_UNIX_TRANS for omniORB specific local
+  transport using the unix domain socket.
+
   Revision 1.2.2.7  2001/07/31 16:10:39  sll
   Added GIOP BiDir support.
 
@@ -218,6 +222,7 @@ public:
   static _core_attr const ComponentId TAG_HEARTBEAT_ENABLED; // FT SPEC
 
   static _core_attr const ComponentId TAG_OMNIORB_BIDIR; // omniORB4 specific
+  static _core_attr const ComponentId TAG_OMNIORB_UNIX_TRANS; // omniORB4 specific
 
 
   static const char* ComponentIDtoName(ComponentId);

@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2001/08/06 15:49:17  sll
+  Added IOP component TAG_OMNIORB_UNIX_TRANS for omniORB specific local
+  transport using the unix domain socket.
+
   Revision 1.1.2.8  2001/07/31 16:10:38  sll
   Added GIOP BiDir support.
 
@@ -275,6 +279,12 @@ public:
   static char* dump_TAG_OMNIORB_BIDIR(const IOP::TaggedComponent&);
   static void  add_TAG_OMNIORB_BIDIR(const char* sendfrom,
 				     omniIOR&);
+
+  ////
+  static void  unmarshal_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent&,
+						omniIOR&);
+  static char* dump_TAG_OMNIORB_UNIX_TRANS(const IOP::TaggedComponent&);
+  static void  add_TAG_OMNIORB_UNIX_TRANS(const char* filename);
 
   ///
   static void  add_IIOP_ADDRESS(const IIOP::Address&);
