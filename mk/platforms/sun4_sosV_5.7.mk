@@ -60,10 +60,10 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 # Note: the -R linker option in CXXLINKOPTIONS instruct the Sun linker to
 # record the pathname of the shared libraries in the executable.
 
-#CC                = cc
-#CDEBUGFLAGS       = -O
-#COPTIONS	  =
-#CLINK             = $(CC)
+CC                = cc
+CDEBUGFLAGS       = -O
+COPTIONS	  =
+CLINK             = $(CC)
 #####################################################################
 
 #
@@ -84,12 +84,12 @@ CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
 # Note: the -R linker option in CXXLINKOPTIONS instruct the Sun linker to
 # record the pathname of the shared libraries in the executable.
 
-CC                = gcc
-CMAKEDEPEND       += -D__GNUC__
-CDEBUGFLAGS       = -O
-COPTIONS	  = -fpcc-struct-return
-
-CLINK             = $(CC)
+#CC                = gcc
+#CMAKEDEPEND       += -D__GNUC__
+#CDEBUGFLAGS       = -O
+#COPTIONS	  = -fpcc-struct-return
+#
+#CLINK             = $(CC)
 
 #######################################################################
 
