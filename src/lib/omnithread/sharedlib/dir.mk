@@ -382,3 +382,40 @@ export:: $(lib)
 endif
 endif
 
+#############################################################################
+#   Make rules for  SGI Irix 6.2                                            #
+#############################################################################
+
+ifdef IRIX
+ifeq ($(notdir $(CXX)),CC)
+
+DIR_CPPFLAGS += -KPIC
+
+libname = libomnithread.so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+$(lib): $(OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(LINK.cc) -KPIC -shared -Wl,-h,$(libname) -Wl,-set_version,$(soname) \
+         -o $@ $(IMPORT_LIBRARY_FLAGS) $^; \
+       )
+
+all:: $(lib)
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
+endif
