@@ -31,9 +31,13 @@
 
 /*
  $Log$
- Revision 1.19  1998/02/20 14:44:44  ewc
- Changed to compile with aCC on HPUX
+ Revision 1.20  1998/04/07 19:55:53  sll
+ Updated to use namespace if available.
+ Moved inline functions of Any and TypeCode out of this header file.
 
+ * Revision 1.19  1998/02/20  14:44:44  ewc
+ * Changed to compile with aCC on HPUX
+ *
  * Revision 1.18  1998/02/03  16:47:09  ewc
  * Updated some interfaces.
  *
@@ -67,9 +71,15 @@
 
 #include <omniORB2/omniInternal.h>
 
-class _OMNIORB2_NTDLL_ CORBA {
+#ifdef _LC_attr
+#error "A local CPP macro _LC_attr has already been defined."
+#else
+#define _LC_attr _OMNIORB_NTDLL_IMPORT
+#endif
 
-public:
+_CORBA_MODULE CORBA
+
+_CORBA_MODULE_BEG
 
 typedef void* Status;
 
@@ -93,9 +103,9 @@ typedef _CORBA_Double  Double;
 //                   Type String                                      //
 ////////////////////////////////////////////////////////////////////////
   
-  static char *string_alloc(ULong len);
-  static void string_free(char *);
-  static char *string_dup(const char *);
+  _CORBA_MODULE_FN char *string_alloc(ULong len);
+  _CORBA_MODULE_FN void string_free(char *);
+  _CORBA_MODULE_FN char *string_dup(const char *);
 
 
   class String_member;
@@ -327,42 +337,34 @@ typedef _CORBA_Double  Double;
   typedef class TypeCode *TypeCode_ptr;
   typedef TypeCode_ptr TypeCodeRef;
 
-  static const TypeCode_ptr _tc_null;
-  static const TypeCode_ptr _tc_void;
-  static const TypeCode_ptr _tc_short;
-  static const TypeCode_ptr _tc_long;
-  static const TypeCode_ptr _tc_ushort;
-  static const TypeCode_ptr _tc_ulong;
-  static const TypeCode_ptr _tc_float;
-  static const TypeCode_ptr _tc_double;
-  static const TypeCode_ptr _tc_boolean;
-  static const TypeCode_ptr _tc_char;
-  static const TypeCode_ptr _tc_octet;
-  static const TypeCode_ptr _tc_any;
-  static const TypeCode_ptr _tc_TypeCode;
-  static const TypeCode_ptr _tc_Principal;
-  static const TypeCode_ptr _tc_Object;
-  static const TypeCode_ptr _tc_string;
-
-  static const TypeCode_ptr __nil_TypeCode; 
-
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_null;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_void;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_short;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_long;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_ushort;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_ulong;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_float;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_double;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_boolean;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_char;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_octet;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_any;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_TypeCode;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_Principal;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_Object;
+  _CORBA_MODULE_VAR const TypeCode_ptr _tc_string;
+#ifndef HAS_Cplusplus_Namespace
+  // deprecated. Left here for backward compatability.
+  static _OMNIORB_NTDLL_IMPORT const TypeCode_ptr __nil_TypeCode; 
+#endif
 
   class Any {
   public:
-    Any() : pd_data(0) { 
-      pd_tc = new TypeCode(tk_null); 
-    }
+    Any();
 
-    ~Any() { 
-      CORBA::release(pd_tc); 
-      PR_deleteData();
-    }
+    ~Any();
 
-    Any(const Any& a) : pd_data(0) {
-      if ((a.pd_tc)->NP_is_nil()) pd_tc = __nil_TypeCode;
-      else pd_tc = new TypeCode(*(a.pd_tc));
-      pd_mbuf = a.pd_mbuf;
-    }
+    Any(const Any& a);
     
     Any(TypeCode_ptr tc, void* value, Boolean release = 0,
 	Boolean nocheck = 0);	
@@ -412,84 +414,29 @@ typedef _CORBA_Double  Double;
 
   public:
 
-    inline Any &operator=(const Any& a) {
-      if (this != &a) {
-	CORBA::release(pd_tc);
-	PR_deleteData();
-	if ((a.pd_tc)->NP_is_nil()) pd_tc = __nil_TypeCode;
-	else pd_tc = new TypeCode(*(a.pd_tc));
-	pd_mbuf = a.pd_mbuf;
-      }
-      return *this;
-    }    
+    Any &operator=(const Any& a);
 
+    void operator<<=(Short s);
 
+    void operator<<=(UShort u);
 
-    inline void operator<<=(Short s) {
-      MemBufferedStream mbuf;
-      s >>= mbuf;
-      NP_replaceData(_tc_short, mbuf);
-    }
+    void operator<<=(Long l);
 
-    inline void operator<<=(UShort u) {
-      MemBufferedStream mbuf;
-      u >>= mbuf;
-      NP_replaceData(_tc_ushort, mbuf);
-    }	
-
-    inline void operator<<=(Long l) {
-      MemBufferedStream mbuf;
-      l >>= mbuf;
-      NP_replaceData(_tc_long, mbuf);
-    }
-
-    inline void operator<<=(ULong u) {
-      MemBufferedStream mbuf;
-      u >>= mbuf;
-      NP_replaceData(_tc_ulong, mbuf);
-    }
+    void operator<<=(ULong u);
 
 #if !defined(NO_FLOAT)
-    inline void operator<<=(Float f) {
-      MemBufferedStream mbuf;
-      f >>= mbuf;
-      NP_replaceData(_tc_float, mbuf); 	
-    }
+    void operator<<=(Float f);
 
-    inline void operator<<=(Double d) {
-      MemBufferedStream mbuf;
-      d >>= mbuf;
-      NP_replaceData(_tc_double, mbuf);
-    }
+    void operator<<=(Double d);
 #endif
 
-    inline void operator<<=(const Any& a) {
-      MemBufferedStream mbuf;
-      a >>= mbuf;
-      NP_replaceData(_tc_any,mbuf);
-    }	
+    void operator<<=(const Any& a);
 
-    inline void operator<<=(TypeCode_ptr tc) {
-      // Copying version
-      MemBufferedStream mbuf;
-      *tc >>= mbuf;
-      NP_replaceData(_tc_TypeCode, mbuf);
-    }
+    void operator<<=(TypeCode_ptr tc);
 
-    inline void operator<<=(TypeCode_ptr* tcp) {
-      // Non - copying version
-      this->operator<<=(*tcp);
-      CORBA::release(*tcp);
-    }
+    void operator<<=(TypeCode_ptr* tcp);
     
-    inline void operator<<=(const char*& s) {
-      MemBufferedStream mbuf;
-      ULong _len = strlen(s) + 1;
-      _len >>= mbuf;
-      mbuf.put_char_array((const CORBA::Char*) s, _len);
-      NP_replaceData(_tc_string, mbuf);
-    }
-	
+    void operator<<=(const char*& s);	
 
     struct from_boolean {
       from_boolean(Boolean b) : val(b) {}
@@ -517,83 +464,26 @@ typedef _CORBA_Double  Double;
     };
 
 
-    inline void operator<<=(from_boolean f) {
-      MemBufferedStream mbuf;
-      f.val >>= mbuf;
-      NP_replaceData(_tc_boolean, mbuf);
-    }
+    void operator<<=(from_boolean f);
       
-    inline void operator<<=(from_char c) {
-      MemBufferedStream mbuf;
-      c.val >>= mbuf;
-      NP_replaceData(_tc_char, mbuf);
-    }
-	
+    void operator<<=(from_char c);	
 
-    inline void operator<<=(from_octet o) {
-      MemBufferedStream mbuf;
-      o.val >>= mbuf;
-      NP_replaceData(_tc_octet, mbuf);
-    }
+    void operator<<=(from_octet o);
     
     void operator<<=(from_string s);
 
-
-    inline Boolean operator>>=(Short& s) const {
-	if (!pd_tc->NP_expandEqual(_tc_short,1)) return 0;
-	else {
-	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	  s <<= tmp_mbuf;
-	  return 1;
-	}
-    }
+    Boolean operator>>=(Short& s) const;
     
-    inline Boolean operator>>=(UShort& u) const {
-	if (!pd_tc->NP_expandEqual(_tc_ushort,1)) return 0;
-	else {
-	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	  u <<= tmp_mbuf;
-	  return 1;
-	}
-    }
+    Boolean operator>>=(UShort& u) const;
 
-    inline Boolean operator>>=(Long& l) const {
-	if (!pd_tc->NP_expandEqual(_tc_long,1)) return 0;
-	else {
-	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	  l <<= tmp_mbuf;
-	  return 1;
-	}
-    }
+    Boolean operator>>=(Long& l) const;
 
-    inline Boolean operator>>=(ULong& u) const {
-	if (!pd_tc->NP_expandEqual(_tc_ulong,1)) return 0;
-	else {
-	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	  u <<= tmp_mbuf;
-	  return 1;
-	}
-    }
+    Boolean operator>>=(ULong& u) const;
     
 #if !defined(NO_FLOAT)
-    inline Boolean operator>>=(Float& f) const {
-	if (!pd_tc->NP_expandEqual(_tc_float,1)) return 0;
-	else {
-	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	  f <<= tmp_mbuf;
-	  return 1;
-	}
-      }
+    Boolean operator>>=(Float& f) const;
 
-    inline Boolean operator>>=(Double& d) const {
-	if (!pd_tc->NP_expandEqual(_tc_double,1)) return 0;
-	else {
-	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	  d <<= tmp_mbuf;
-	  return 1;
-	}
-    }
-
+    Boolean operator>>=(Double& d) const;
 #endif
 
     Boolean operator>>=(Any& a) const; 
@@ -601,7 +491,6 @@ typedef _CORBA_Double  Double;
     Boolean operator>>=(TypeCode_ptr& tc) const; 
 
     Boolean operator>>=(char*& s) const;
-
 
     struct to_boolean {
       to_boolean(Boolean &b) : ref(b) {}
@@ -630,32 +519,11 @@ typedef _CORBA_Double  Double;
       Object_ptr& ref;
     };
     
-    inline Boolean operator>>=(to_boolean b) const {
-      if (!pd_tc->NP_expandEqual(_tc_boolean,1)) return 0;
-      else {
-	MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	b.ref <<= tmp_mbuf;
-	return 1;
-      }
-    }
+    Boolean operator>>=(to_boolean b) const;
 
-    inline Boolean operator>>=(to_char c) const {
-      if (!pd_tc->NP_expandEqual(_tc_char,1)) return 0;
-      else {
-	MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	c.ref <<= tmp_mbuf;
-	return 1;
-      }
-    }
+    Boolean operator>>=(to_char c) const;
     
-    inline Boolean operator>>=(to_octet o) const {
-      if (!pd_tc->NP_expandEqual(_tc_octet,1)) return 0;
-      else {
-	MemBufferedStream tmp_mbuf(pd_mbuf,1);
-	o.ref <<= tmp_mbuf;
-	return 1;
-      }
-    }
+    Boolean operator>>=(to_octet o) const;
 
     Boolean operator>>=(to_string s) const;
 
@@ -663,15 +531,9 @@ typedef _CORBA_Double  Double;
 
     void replace(TypeCode_ptr TCp, void* value, Boolean release = 0);
 
-    inline TypeCode_ptr type() const {
-      if (pd_tc->NP_is_nil()) return __nil_TypeCode;
-      else return new TypeCode(*pd_tc);
-      }
+    TypeCode_ptr type() const;
 
-    inline const void *value() const {
-      return pd_mbuf.data();
-    }
-
+    const void *value() const;
 
   private:
     void operator<<=(unsigned char);
@@ -1165,11 +1027,11 @@ typedef _CORBA_Double  Double;
     dk_Primitive, dk_String, dk_Sequence, dk_Array, dk_Repository 
   };
 
-  friend inline void operator>>= (DefinitionKind _e,NetBufferedStream &s) {
+  _CORBA_MODULE_OP inline void operator>>= (DefinitionKind _e,NetBufferedStream &s) {
     ::operator>>=((CORBA::ULong)_e,s);
   }
 
-  friend inline void operator<<= (DefinitionKind &_e,NetBufferedStream &s) {
+  _CORBA_MODULE_OP inline void operator<<= (DefinitionKind &_e,NetBufferedStream &s) {
     CORBA::ULong __e;
     __e <<= s;
     switch (__e) {
@@ -1198,11 +1060,11 @@ typedef _CORBA_Double  Double;
     }
   }
 
-  friend inline void operator>>= (DefinitionKind _e,MemBufferedStream &s) {
+  _CORBA_MODULE_OP inline void operator>>= (DefinitionKind _e,MemBufferedStream &s) {
     ::operator>>=((CORBA::ULong)_e,s);
   }
 
-  friend inline void operator<<= (DefinitionKind &_e,MemBufferedStream &s) {
+  _CORBA_MODULE_OP inline void operator<<= (DefinitionKind &_e,MemBufferedStream &s) {
     CORBA::ULong __e;
     __e <<= s;
     switch (__e) {
@@ -1283,66 +1145,31 @@ typedef _CORBA_Double  Double;
 
   class TypeCode_member {
   public:
-    TypeCode_member() { _ptr = __nil_TypeCode; }
+    TypeCode_member();
 
-    inline TypeCode_member(TypeCode_ptr p) { _ptr = p; }
+    TypeCode_member(TypeCode_ptr p);
 
-    inline TypeCode_member(const TypeCode_member& p) {
-      if ((p._ptr)->NP_is_nil()) _ptr = __nil_TypeCode; 
-      else _ptr = new TypeCode(*(p._ptr));
-      }
+    TypeCode_member(const TypeCode_member& p);
 
-    ~TypeCode_member() { CORBA::release(_ptr); }
-
+    ~TypeCode_member();
     
-    inline TypeCode_member& operator=(TypeCode_ptr p) {
-    CORBA::release(_ptr);
-    _ptr = p;
-    return *this;
-    }
-
+    TypeCode_member& operator=(TypeCode_ptr p);
     
-    inline TypeCode_member& operator=(const TypeCode_member& p) {
-      if (this != &p) {
-	CORBA::release(_ptr);
-      if ((p._ptr)->NP_is_nil()) _ptr = __nil_TypeCode; 
-      else _ptr = new TypeCode(*(p._ptr));
-      }
-      return *this;
-    }
+    TypeCode_member& operator=(const TypeCode_member& p);
 
-    inline TypeCode_member& operator=(const TypeCode_var& p) {
-      CORBA::release(_ptr);
-      if ((p.pd_TC)->NP_is_nil()) _ptr = __nil_TypeCode;
-      else _ptr = new TypeCode(*(p.pd_TC));
-      return *this;
-    }
+    TypeCode_member& operator=(const TypeCode_var& p);
 
+    void operator>>=(NetBufferedStream& s) const;
+    void operator<<=(NetBufferedStream& s);
 
-    inline void operator>>=(NetBufferedStream& s) const { *_ptr >>= s; }
-    inline void operator<<=(NetBufferedStream& s) {
-	TypeCode_ptr _result = new TypeCode(tk_null);
-	*_result <<= s;
-	CORBA::release(_ptr);
-	_ptr = _result;
-      }
-
-    inline void operator>>=(MemBufferedStream& s) const { *_ptr >>= s; }
-    inline void operator<<=(MemBufferedStream& s) {
-	TypeCode_ptr _result = new TypeCode(tk_null);
-	*_result <<= s;
-	CORBA::release(_ptr);
-	_ptr = _result;
-    }
+    void operator>>=(MemBufferedStream& s) const;
+    void operator<<=(MemBufferedStream& s);
       
-    inline size_t NP_alignedSize(size_t initialoffset) const {
-      return _ptr->NP_alignedSize(initialoffset);
-    }
-
+    size_t NP_alignedSize(size_t initialoffset) const;
     
-    inline TypeCode_ptr operator->() const { return (TypeCode_ptr) _ptr; }
-    inline operator TypeCode_ptr() const { return _ptr; }
+    TypeCode_ptr operator->() const;
 
+    operator TypeCode_ptr() const;
 
     TypeCode_ptr _ptr;
   };
@@ -1478,7 +1305,10 @@ typedef _CORBA_Double  Double;
 
   class _nil_IDLType;
 
-  static IDLType_ptr __nil_IDLType;
+#ifndef HAS_Cplusplus_Namespace
+  // deprecated. Left here for backward compatiability.
+  static _OMNIORB_NTDLL_IMPORT IDLType_ptr __nil_IDLType;
+#endif
 
   class IDLType : public virtual IRObject, public virtual omniObject,
                   public virtual Object {
@@ -1486,56 +1316,25 @@ typedef _CORBA_Double  Double;
 
     // Not implemented yet - used by IR
 
-    virtual ~IDLType() {}
+    virtual ~IDLType();
 
-    virtual TypeCode_ptr type() {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return 0;
-    }
+    virtual TypeCode_ptr type();
 
-    static IDLType_ptr _duplicate(IDLType_ptr obj) {
-      if (CORBA::is_nil(obj))
-	return IDLType::_nil();
-      else {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return 0;
-      }
-    }
+    static IDLType_ptr _duplicate(IDLType_ptr obj);
     
-    static IDLType_ptr _narrow(Object_ptr obj) {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return 0;
-    }
-    
-    static inline IDLType_ptr _nil()  {
-      if (!CORBA::__nil_IDLType) {
-	CORBA::__nil_IDLType = new _nil_IDLType;
-      }
-      return __nil_IDLType;
-    }
+    static IDLType_ptr _narrow(Object_ptr obj);
+        
+    static IDLType_ptr _nil();
 
-    static inline size_t NP_alignedSize(IDLType_ptr obj,size_t initialoffset) {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return 0;      
-    }
+    static size_t NP_alignedSize(IDLType_ptr obj,size_t initialoffset);
 
-    static inline void marshalObjRef(IDLType_ptr obj,NetBufferedStream &s) {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-    }
+    static void marshalObjRef(IDLType_ptr obj,NetBufferedStream &s);
 
-    static inline IDLType_ptr unmarshalObjRef(NetBufferedStream &s) {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return 0;
-    }
+    static IDLType_ptr unmarshalObjRef(NetBufferedStream &s);
 
-    static inline void marshalObjRef(IDLType_ptr obj,MemBufferedStream &s) {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-    }
+    static void marshalObjRef(IDLType_ptr obj,MemBufferedStream &s);
 
-    static inline IDLType_ptr unmarshalObjRef(MemBufferedStream &s) {
-	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
-	return 0;
-    }
+    static IDLType_ptr unmarshalObjRef(MemBufferedStream &s);
 
   protected:
     
@@ -1544,16 +1343,10 @@ typedef _CORBA_Double  Double;
 
   class _nil_IDLType : public virtual IDLType {
   public:
-    _nil_IDLType() : omniObject(omniObject::nilObjectManager()) 
-      { this->PR_setobj(0); }
-    virtual ~_nil_IDLType() {}
+    _nil_IDLType();
+    virtual ~_nil_IDLType();
     
-    TypeCode_ptr type (){
-      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
-      // never reach here! Dummy return to keep some compilers happy.
-      TypeCode_ptr _result= 0;
-      return _result;
-    }
+    TypeCode_ptr type ();
   };
 
 
@@ -1785,6 +1578,13 @@ typedef _CORBA_Double  Double;
   };
 
 
+  _CORBA_MODULE_FN inline Boolean is_nil(TypeCode_ptr o) { 
+    return (o) ? o->NP_is_nil() : 1; 
+  }
+
+  _CORBA_MODULE_FN inline void release(TypeCode_ptr o) {
+    if (!CORBA::is_nil(o)) delete o;
+  }
 
   class TypeCode_INOUT_arg;
   class TypeCode_OUT_arg;
@@ -2152,18 +1952,16 @@ typedef _CORBA_Double  Double;
   };
 
   typedef char *ORBid;
-  static ORB_ptr ORB_init(int &argc, char **argv, const char *orb_identifier);
+  _CORBA_MODULE_FN ORB_ptr ORB_init(int &argc, char **argv, const char *orb_identifier);
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL release and is_null                         //
 ////////////////////////////////////////////////////////////////////////
 
-  static inline Boolean is_nil(TypeCode_ptr o) { return (o) ? o->NP_is_nil() 
-						            : 1; }
-  static Boolean is_nil(Environment_ptr);
-  static Boolean is_nil(Context_ptr);
-  static Boolean is_nil(Principal_ptr);
-  static inline Boolean is_nil(Object_ptr o) { 
+  _CORBA_MODULE_FN Boolean is_nil(Environment_ptr);
+  _CORBA_MODULE_FN Boolean is_nil(Context_ptr);
+  _CORBA_MODULE_FN Boolean is_nil(Principal_ptr);
+  _CORBA_MODULE_FN inline Boolean is_nil(Object_ptr o) { 
     if (o)
       return o->NP_is_nil(); 
     else {
@@ -2176,53 +1974,50 @@ typedef _CORBA_Double  Double;
       return _CORBA_use_nil_ptr_as_nil_objref();
     }
   }
-  static Boolean is_nil(BOA_ptr p);
-  static Boolean is_nil(ORB_ptr p);
-  static Boolean is_nil(NamedValue_ptr);
-  static Boolean is_nil(NVList_ptr);
-  static Boolean is_nil(Request_ptr);
+  _CORBA_MODULE_FN Boolean is_nil(BOA_ptr p);
+  _CORBA_MODULE_FN Boolean is_nil(ORB_ptr p);
+  _CORBA_MODULE_FN Boolean is_nil(NamedValue_ptr);
+  _CORBA_MODULE_FN Boolean is_nil(NVList_ptr);
+  _CORBA_MODULE_FN Boolean is_nil(Request_ptr);
 
-  static inline void release(TypeCode_ptr o) {
-    if (!CORBA::is_nil(o)) delete o;
-  }
 
-  static void release(Environment_ptr);
-  static void release(Context_ptr);
-  static void release(Principal_ptr);
-  static inline void release(Object_ptr o) 
+  _CORBA_MODULE_FN void release(Environment_ptr);
+  _CORBA_MODULE_FN void release(Context_ptr);
+  _CORBA_MODULE_FN void release(Principal_ptr);
+  _CORBA_MODULE_FN inline void release(Object_ptr o) 
   { 
     // see also omni::objectRelease()
     if (!CORBA::is_nil(o))
       o->NP_release(); 
     return;
   }
-  static void release(BOA_ptr);
-  static void release(ORB_ptr);
-  static void release(NamedValue_ptr);
-  static void release(NVList_ptr);
-  static void release(Request_ptr);
+  _CORBA_MODULE_FN void release(BOA_ptr);
+  _CORBA_MODULE_FN void release(ORB_ptr);
+  _CORBA_MODULE_FN void release(NamedValue_ptr);
+  _CORBA_MODULE_FN void release(NVList_ptr);
+  _CORBA_MODULE_FN void release(Request_ptr);
 
   // omniORB2 private function.
-  static Object_ptr UnMarshalObjRef(const char *repoId, NetBufferedStream &s); 
+  _CORBA_MODULE_FN Object_ptr UnMarshalObjRef(const char *repoId, NetBufferedStream &s); 
 
   // omniORB2 private function.
-  static void MarshalObjRef(Object_ptr obj,
+  _CORBA_MODULE_FN void MarshalObjRef(Object_ptr obj,
 			    const char *repoId,
 			    size_t repoIdSize,
 			    NetBufferedStream &s);
 
   // omniORB2 private function
-  static size_t AlignedObjRef(Object_ptr obj,
+  _CORBA_MODULE_FN size_t AlignedObjRef(Object_ptr obj,
 			      const char *repoId,
 			      size_t repoIdSize,
 			      size_t initialoffset);
 
   // omniORB2 private function
-  static Object_ptr UnMarshalObjRef(const char *repoId,
+  _CORBA_MODULE_FN Object_ptr UnMarshalObjRef(const char *repoId,
 				    MemBufferedStream &s);
 
   // omniORB2 private function
-  static void MarshalObjRef(Object_ptr obj,
+  _CORBA_MODULE_FN void MarshalObjRef(Object_ptr obj,
 			    const char *repoId,
 			    size_t repoIdSize,
 			    MemBufferedStream &s);
@@ -2434,8 +2229,9 @@ private:
     ORB_ptr pd_orbref;
   };
 
-};
+_CORBA_MODULE_END
 
+#undef _LC_attr
 
 #include <omniORB2/omniORB.h>
 #include <omniORB2/templates.h>
@@ -2465,6 +2261,17 @@ extern CORBA::Boolean _omni_callSystemExceptionHandler(omniObject*,
 					     const CORBA::SystemException&);
 
 // Include the COSS Naming Service header:
+#ifndef __CORBA_H_EXTERNAL_GUARD__
+#define __CORBA_H_EXTERNAL_GUARD__
+#endif
+
+#ifndef USE_stub_in_nt_dll
+#define USE_stub_in_nt_dll
 #include <omniORB2/Naming.hh>
+#undef  USE_stub_in_nt_dll
+#else
+#include <omniORB2/Naming.hh>
+#endif
+
 
 #endif // __CORBA_H__
