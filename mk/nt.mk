@@ -170,3 +170,5 @@ ORBIX_EXTRA_STUB_FILES = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%C.cc)
 
 ThreadSystem = NT
 OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread)
+lib_depend := $(patsubst %,$(LibPattern),omnithread)
+OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
