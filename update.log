@@ -1,3 +1,209 @@
+Tue Dec 23 19:16:09 GMT 1997 sll
+================================
+
+- Fixed idl compiler bugs list below.
+- Merged external modifications to support HPUX and AIX
+- omniORB2 shared library version is now 2.4.1, i.e. upward compatible with
+  2.4.0
+- omniidl2 version id is now 2.4.1
+
+include/omniORB2/templates.h
+include/omniORB2/bufferedStream.h
+
+mk/platforms/hppa_hpux_10.20.mk
+mk/platforms/powerpc_aix_4.2.mk       NEW
+
+src/lib/omniORB2/libcWrapper.cc
+src/lib/omniORB2/giopServer.cc
+src/lib/omniORB2/sharedlib/dir.mk
+src/lib/omniORB2/gatekeepers/tcpwrapper/sharedlib/dir.mk
+src/lib/omnithread/sharedlib/dir.mk
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_typedef.cc
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+src/tool/omniidl2/driver/drv_main.cc
+src/tool/omniidl2/fe/y.tab.cc
+src/tool/omniidl2/fe/idl.yy
+src/tool/omniidl2/include/drv_link.hh
+src/tool/omniidl2/include/fe_extern.hh
+
+
+- The idl compiler bugs that have been fixed are: 
+
+// Bug 1
+// If a forward declared interface is used in a constructed type, and
+// that constructed type is used in a Union, Digital C++ complains about the 
+// non-existance of CORBA::release() for that type.
+// (This is used in the destructor of the interfaceName_member template -
+// Digital C++, unlike other compilers, uses CORBA::release() instead of 
+// T_Helper::release() - a previous bug with templates in Digital C++ ? )
+// --- fixed
+ 
+interface intf1;
+
+struct aStruct {
+  intf1 an_intf1;
+};
+
+
+union unionb switch(long)
+{
+ case 1:
+   aStruct a;
+};
+
+
+// Bug 2
+// If typedef to forward declared interface, code is generated that tries to
+// create aliases for _proxy_, _sk_, and _nil_, which don't exist.
+// -- fixed
+
+typedef intf1 alias_intf1;
+
+
+// Bug 3
+// If a forward declared interface is used in a Union, the member function
+// to set that interface uses interfaceName::_duplicate(), which may not
+// exist if the interface is defined in another IDL file. Should use 
+// interfaceName_helper::duplicate() instead (have fixed this).
+// --- fixed
+
+union aUnion switch(long) {
+ case 1:
+   intf1 an_intf1;
+};
+
+// Bug 4
+// Incorrect code generated for anonymous arrays and sequences in exceptions.
+// --- fixed
+
+exception anException {
+  long arrayLong[10];
+  sequence<long> seqLong;
+};
+
+// Bug 5
+// Incorrect marshalling code generated for marshalling multi-dimensional
+// arrays of object references and for calculating size of the message using
+// NP_alignedSize. Generates a[_i0]._ptr[_i1]._ptr instead of a[_i0][i1]._ptr
+// (Have fixed the marshalling code for this, as it affects Any insertion
+// operator)
+// Digital C++ also complains about ambiguous type-conversions when 
+// marshalling a multi-dimensional array _slice of object references 
+// (both with and without the fix).
+// --- fixed
+
+interface intf4 {
+  void anOp();
+};
+
+typedef intf4 multiIntf4[10][20];
+
+interface intf5 {
+  void anOp(in multiIntf4 a, out multiIntf4 b);
+};
+
+// Bug 7
+// Typedef to type Object yields typedefs with only one argument for
+// _proxy_ , _sk_, and _nil_ .
+// --- fixed
+
+typedef Object aliasObject;
+
+
+
+// Bug 8
+// Union incorrectly places an array of fixed length Unions into 
+// an anonymous Union (whether the array is anonymous or not).
+// SunPro C++ complains:  
+//  "Error: A union member cannot require initialization or destruction."
+// --- fixed
+
+union Union1 switch(long) {
+ case 1:
+   long a;
+};
+
+typedef Union1 arrayUnion1[10];
+
+union Union2 switch(long) {
+ case 1:
+   arrayUnion1 b;
+};
+
+union Union3 switch(long) {
+ case 1:
+   Union1 b[10];
+};
+
+// Bug 9
+// A sequence of arrays of sequences produces an incorrect declaration in the
+// stubs header (.hh) file.
+// --- fixed
+
+typedef sequence<long> arraySeqLong[10];
+typedef sequence<arraySeqLong> seqArraySeqLong;
+
+#if !defined(TEST_EGCS) || (EGCS_MAJOR != 1 || EGCS_MINOR != 0)
+// The stub code of the following cannot be compiled by egcs-1.0 because of
+// a compiler bug.
+interface intf7 {
+  seqArraySeqLong op(in seqArraySeqLong a1,
+		     inout seqArraySeqLong a2,
+		     out seqArraySeqLong a3);
+};
+#endif
+
+// Bug 10
+// Defining a typedef to an array will result in _alloc(), _free(), and
+// _dup() functions being declared for the alias. These functions are declared
+// as extern and implemented in the stub header file. This results in 
+// multiply-defined clashes at link-time between the stubs skeleton (SK.cc) 
+// file and any file including the stubs header (.hh) file. Fix is to declare 
+// the functions as inline or friend inline.
+// --- Fixed
+
+typedef long arrayLong[10];
+typedef arrayLong aliasArrayLong;
+
+// Bug 11
+// An anonymous array in a union called d will result in the generation of 
+// an alias called _d, which clashes with the _d() used to get the discriminant
+// value of the union
+// --- fixed
+
+union sampleUnion switch(long) {
+case 1:
+long d[10];
+};
+
+// Bug 12 MSVC++ specific
+// If a multi-dimensional array of object references is used as the in
+// argument of an operation, MSVC++ 4.2 can't convert the type as necessary 
+// when the upcall to the implementation is made in the dispatch function.
+//  --- Not fixed
+
+interface intf8 {
+void op();
+};
+
+typedef intf8 multiIntf8[2][4][6];
+
+#if !defined(TEST_MSVC)
+interface intf2 {
+
+void multiOp(in multiIntf8 inArg);
+};
+
+#endif
+
+
+
 Mon Dec 22 18:09:26 GMT 1997 sll
 ================================
 
