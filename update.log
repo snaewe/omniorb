@@ -1,3 +1,38 @@
+Tue Nov 13 14:08:46 GMT 2001 dpg1
+=================================
+
+- Tweaks for CORBA 2.5 compliance.
+
+include/omniORB4/CORBA_NamedValue.h
+include/omniORB4/CORBA_ORB.h
+include/omniORB4/poa.h
+src/lib/omniORB/dynamic/dynamicImplementation.cc
+src/lib/omniORB/dynamic/serverRequest.cc
+src/lib/omniORB/include/corbaOrb.h
+src/lib/omniORB/include/dynamicImplementation.h
+src/lib/omniORB/include/initRefs.h
+src/lib/omniORB/include/poaimpl.h
+src/lib/omniORB/include/poamanager.h
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poamanager.cc
+src/tool/omniidl/cxx/idlrepoId.cc
+
+- omniidl manpage
+
+man/man1/omniidl.1
+
+- AsyncInvoker properly waits for threads to finish.
+
+src/lib/omniAsyncInvoker/invoker.cc
+
+- Bug when no catch by base class.
+
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+
+
 Mon Nov 12 13:43:43 GMT 2001 dpg1
 =================================
 
