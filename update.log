@@ -1,3 +1,15 @@
+Wed Mar  4 14:45:27 GMT 1998 sll
+================================
+
+- Added omniORB::giopServerThreadWrapper to allow application to customise
+  the run() of server threads.
+
+include/omniORB2/templates.h
+include/omniORB2/omniORB.h
+src/lib/omniORB2/ropeFactory.cc
+src/lib/omniORB2/tcpSocketMTfactory.cc
+src/lib/omniORB2/tcpATMosMTfactory.cc
+
 Mon Mar  2 17:06:11 GMT 1998 ewc
 ================================
 
