@@ -129,7 +129,7 @@ NamedValueImpl::NP_duplicate()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilNamedValue : public CORBA::NamedValue {
+class omniNilNV : public CORBA::NamedValue {
 public:
   virtual const char* name() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -150,8 +150,6 @@ public:
     return _nil();
   }
 };
-
-static NilNamedValue _nilNamedValue;
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -175,7 +173,13 @@ CORBA::NamedValue_ptr
 CORBA::
 NamedValue::_nil()
 {
-  return &_nilNamedValue;
+  static omniNilNV* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilNV;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////

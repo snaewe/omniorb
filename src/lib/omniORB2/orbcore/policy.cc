@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.6.5  1999/10/29 13:18:20  djr
+  Changes to ensure mutexes are constructed when accessed.
+
   Revision 1.2.6.4  1999/10/16 13:22:54  djr
   Changes to support compiling on MSVC.
 
@@ -108,13 +111,16 @@ CORBA::Policy::_narrow(CORBA::Object_ptr obj)
 }
 
 
-static CORBA::Policy the_nil_policy;
-
-
 CORBA::Policy_ptr
 CORBA::Policy::_nil()
 {
-  return &the_nil_policy;
+  static Policy* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new Policy;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 

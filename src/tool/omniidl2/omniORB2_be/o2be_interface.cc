@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.39.6.12  1999/10/29 13:18:21  djr
+  Changes to ensure mutexes are constructed when accessed.
+
   Revision 1.39.6.11  1999/10/21 11:05:00  djr
   Added _core_attr to declarations of _PD_repoId in interfaces.
 
@@ -900,9 +903,10 @@ o2be_interface::produce_skel(std::fstream &s)
    "foo::_nil()\n"
    "{\n"
    "  static proxy* _the_nil_ptr = 0;\n"
-   "  {\n"
-   "    omni_tracedmutex_lock sync(omni::nilRefLock);\n"
-   "    if( !_the_nil_ptr )  _the_nil_ptr = new proxy();\n"
+   "  if( !_the_nil_ptr ) {\n"
+   "    omni::nilRefLock().lock();\n"
+   "    if( !_the_nil_ptr )  _the_nil_ptr = new proxy;\n"
+   "    omni::nilRefLock().unlock();\n"
    "  }\n"
    "  return _the_nil_ptr;\n"
    "}\n\n\n"
@@ -927,14 +931,8 @@ o2be_interface::produce_skel(std::fstream &s)
     int ni = n_inherits();
     for( int i = 0; i < ni; i++ ) {
       o2be_interface* intf = o2be_interface::narrow_from_decl(intftable[i]);
-      //?? Does this need to be unambiguous to make MSVC happy?
-#if 1
-      IND(s); s << "   "
-		<< intf->unambiguous_proxy_name(this)
+      IND(s); s << "   " << intf->unambiguous_proxy_name(this)
 		<< "(mdri, p, id, lid),\n";
-#else
-      IND(s); s << "   " << intf->proxy_fqname() << "(mdri, p, id, lid),\n";
-#endif
     }
   }
   s << o2be_template(map,

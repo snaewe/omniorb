@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.4  1999/10/29 13:18:19  djr
+  Changes to ensure mutexes are constructed when accessed.
+
   Revision 1.1.2.3  1999/10/16 13:22:54  djr
   Changes to support compiling on MSVC.
 
@@ -199,9 +202,10 @@ PortableServer::AdapterActivator_ptr
 PortableServer::AdapterActivator::_nil()
 {
   static _objref_AdapterActivator* _the_nil_ptr = 0;
-  {
-    omni_tracedmutex_lock sync(omni::nilRefLock);
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new _objref_AdapterActivator();
+    omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
 }
@@ -382,9 +386,10 @@ PortableServer::ServantManager_ptr
 PortableServer::ServantManager::_nil()
 {
   static _objref_ServantManager* _the_nil_ptr = 0;
-  {
-    omni_tracedmutex_lock sync(omni::nilRefLock);
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new _objref_ServantManager();
+    omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
 }
@@ -527,9 +532,10 @@ PortableServer::ServantActivator_ptr
 PortableServer::ServantActivator::_nil()
 {
   static _objref_ServantActivator* _the_nil_ptr = 0;
-  {
-    omni_tracedmutex_lock sync(omni::nilRefLock);
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new _objref_ServantActivator();
+    omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
 }
@@ -757,9 +763,10 @@ PortableServer::ServantLocator_ptr
 PortableServer::ServantLocator::_nil()
 {
   static _objref_ServantLocator* _the_nil_ptr = 0;
-  {
-    omni_tracedmutex_lock sync(omni::nilRefLock);
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
     if( !_the_nil_ptr )  _the_nil_ptr = new _objref_ServantLocator();
+    omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
 }

@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.19.6.6  1999/10/29 13:18:16  djr
+  Changes to ensure mutexes are constructed when accessed.
+
   Revision 1.19.6.5  1999/10/16 13:22:53  djr
   Changes to support compiling on MSVC.
 
@@ -192,13 +195,16 @@ CORBA::Object::_duplicate(CORBA::Object_ptr obj)
 }
 
 
-static CORBA::Object the_nil_object;
-
-
 CORBA::Object_ptr
 CORBA::Object::_nil()
 {
-  return &the_nil_object;
+  static CORBA::Object* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new CORBA::Object;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 
@@ -308,7 +314,7 @@ CORBA::Object_ptr
 CORBA::
 Object_Helper::_nil() 
 {
-  return &the_nil_object;
+  return Object::_nil();
 }
 
 

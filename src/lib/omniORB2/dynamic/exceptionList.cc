@@ -148,7 +148,7 @@ ExceptionListImpl::free_entries()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilExList : public CORBA::ExceptionList {
+class omniNilExList : public CORBA::ExceptionList {
 public:
   virtual CORBA::ULong count() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -176,8 +176,6 @@ public:
   }
 };
 
-static NilExList _nilExceptionList;
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -200,7 +198,13 @@ CORBA::ExceptionList_ptr
 CORBA::
 ExceptionList::_nil()
 {
-  return &_nilExceptionList;
+  static omniNilExList* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilExList;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////

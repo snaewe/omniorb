@@ -148,7 +148,7 @@ ContextListImpl::free_entries()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilCtList : public CORBA::ContextList {
+class omniNilCtList : public CORBA::ContextList {
 public:
   virtual CORBA::ULong count() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -176,8 +176,6 @@ public:
   }
 };
 
-static NilCtList _nilContextList;
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -200,7 +198,13 @@ CORBA::ContextList_ptr
 CORBA::
 ContextList::_nil()
 {
-  return &_nilContextList;
+  static omniNilCtList* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilCtList;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.6.5  1999/10/29 13:18:12  djr
+ * Changes to ensure mutexes are constructed when accessed.
+ *
  * Revision 1.33.6.4  1999/10/26 20:18:20  sll
  * DynAny no longer do alias expansion on the typecode. In other words, all
  * aliases in the typecode are preserved.
@@ -301,19 +304,17 @@ CORBA::TypeCode::_duplicate(CORBA::TypeCode_ptr t)
   return TypeCode_collector::duplicateRef(ToTcBase(t));
 }
 
-// Initialised in check_static_data_is_initialised().
-static omni_mutex* _nil_TypeCode_lock = 0;
-static CORBA::TypeCode_ptr _nil_TypeCode_ptr = 0;
 
 CORBA::TypeCode_ptr
 CORBA::TypeCode::_nil()
 {
-  omni_mutex_lock l(*_nil_TypeCode_lock);
-
-  if( _nil_TypeCode_ptr == 0 )
-    _nil_TypeCode_ptr = new TypeCode;
-
-  return _nil_TypeCode_ptr;
+  static TypeCode* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new TypeCode;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 // omniORB2 marshalling routines
@@ -5295,7 +5296,6 @@ static void check_static_data_is_initialised()
   is_initialised = 1;
 
   // Mutexes
-  _nil_TypeCode_lock = new omni_mutex();
   aliasExpandedTc_lock = new omni_mutex();
   pd_cached_paramlist_lock = new omni_mutex();
   pd_refcount_lock = new omni_mutex();

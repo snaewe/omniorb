@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.6  1999/10/29 13:18:18  djr
+  Changes to ensure mutexes are constructed when accessed.
+
   Revision 1.1.2.5  1999/10/27 17:32:13  djr
   omni::internalLock and objref_rc_lock are now pointers.
 
@@ -71,7 +74,6 @@ using omniORB::operator==;
 
 const CORBA::Char                omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
 omni_tracedmutex*                omni::internalLock = 0;
-omni_tracedmutex                 omni::nilRefLock;
 _CORBA_Unbounded_Sequence__Octet omni::myPrincipalID;
 const omni::alignment_t          omni::max_alignment = ALIGN_8;
 
@@ -261,6 +263,21 @@ omni::hash(const CORBA::Octet* key, int keysize)
   while( keysize-- )  n = ((n << 5) ^ (n >> 27)) ^ *key++;
 
   return n;
+}
+
+
+omni_tracedmutex&
+omni::nilRefLock()
+{
+  // We are safe just testing this here, as we guarentee that
+  // it will be initialised during the static initialisation.
+  // (Which is single-threaded).  If not by this method, then
+  // by the static initialiser below.
+
+  static omni_tracedmutex* nil_ref_lock = 0;
+
+  if( !nil_ref_lock )  nil_ref_lock = new omni_tracedmutex;
+  return *nil_ref_lock;
 }
 
 
@@ -982,3 +999,17 @@ public:
 static omni_omniInternal_initialiser initialiser;
 
 omniInitialiser& omni_omniInternal_initialiser_ = initialiser;
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class static_initialiser {
+public:
+  inline static_initialiser() {
+    // Ensure that nil_ref_lock is initialised during
+    // static initialisation.
+    omni::nilRefLock();
+  }
+  static static_initialiser the_instance;
+};

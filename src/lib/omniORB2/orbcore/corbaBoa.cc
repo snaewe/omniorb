@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.6.9  1999/10/29 13:18:15  djr
+  Changes to ensure mutexes are constructed when accessed.
+
   Revision 1.13.6.8  1999/10/27 17:32:10  djr
   omni::internalLock and objref_rc_lock are now pointers.
 
@@ -153,13 +156,16 @@ CORBA::BOA::_narrow(CORBA::Object_ptr obj)
 }
 
 
-static omniOrbBOA the_nil_boa(1 /* is nil */);
-
-
 CORBA::BOA_ptr
 CORBA::BOA::_nil()
 {
-  return &the_nil_boa;
+  static omniOrbBOA* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbBOA(1 /* is nil */);
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 

@@ -1,3 +1,42 @@
+
+Fri Oct 29 11:26:38 BST 1999 djr
+================================
+
+- Removed reference to omni::internalLock in destructor of POA objects.
+  This caused the core library to seg-fault on shutdown if ORB_init()
+  was never called.
+
+src/lib/omniORB2/orbcore/poa.cc
+
+- Ensured that all nil objects are dynamically allocated and never
+  destroyed.  omni::nilRefLock is now accessed by a method to ensure
+  that it is properly initialised, even when accessed from static
+  initialisation code.
+
+- Added prefix 'omni' to a number of 'nil' object classes.
+
+include/omniORB3/omniInternal.h
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/contextList.cc
+src/lib/omniORB2/dynamic/dynAnyNil.cc
+src/lib/omniORB2/dynamic/environment.cc
+src/lib/omniORB2/dynamic/exceptionList.cc
+src/lib/omniORB2/dynamic/namedValue.cc
+src/lib/omniORB2/dynamic/nvList.cc
+src/lib/omniORB2/dynamic/request.cc
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/corbaObject.cc
+src/lib/omniORB2/orbcore/corbaOrb.cc
+src/lib/omniORB2/orbcore/omniInternal.cc
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poamanager.cc
+src/lib/omniORB2/orbcore/poastubs.cc
+src/lib/omniORB2/orbcore/policy.cc
+src/lib/omniORB2/orbcore/portableserver.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Wed Oct 27 19:06:02 BST 1999 sll
 ================================
 

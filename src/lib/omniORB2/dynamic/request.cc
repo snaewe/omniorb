@@ -800,7 +800,7 @@ RequestImpl::unmarshalArgs(GIOP_C& giop_c)
 
 static CORBA::Any dummy_any;
 
-class NilRequest : public CORBA::Request {
+class omniNilRequest : public CORBA::Request {
 public:
   virtual CORBA::Object_ptr target() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -896,8 +896,6 @@ public:
   }
 };
 
-static NilRequest _nilRequest;
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -920,7 +918,13 @@ CORBA::Request_ptr
 CORBA::
 Request::_nil()
 {
-  return &_nilRequest;
+  static omniNilRequest* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilRequest;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 //////////////////////////////////////////////////////////////////////

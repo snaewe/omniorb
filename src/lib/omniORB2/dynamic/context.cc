@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.9.6.3  1999/10/29 13:18:10  djr
+ Changes to ensure mutexes are constructed when accessed.
+
  Revision 1.9.6.2  1999/10/14 16:21:55  djr
  Implemented logging when system exceptions are thrown.
 
@@ -484,7 +487,7 @@ ContextImpl::loseChild(ContextImpl* child)
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilContext : public CORBA::Context {
+class omniNilContext : public CORBA::Context {
 public:
   virtual const char* context_name() const {
     _CORBA_invoked_nil_pseudo_ref();
@@ -525,8 +528,6 @@ public:
   }
 };
 
-static NilContext _nilContext;
-
 //////////////////////////////////////////////////////////////////////
 /////////////////////////////// Context //////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -546,14 +547,20 @@ CORBA::Context::_duplicate(Context_ptr p)
     return c;
   }
   else
-    return &_nilContext;
+    return _nil();
 }
 
 
 CORBA::Context_ptr
 CORBA::Context::_nil()
 {
-  return &_nilContext;
+  static omniNilContext* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilContext;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 

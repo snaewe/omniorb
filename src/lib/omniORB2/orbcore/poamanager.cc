@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  1999/10/29 13:18:19  djr
+  Changes to ensure mutexes are constructed when accessed.
+
   Revision 1.1.2.3  1999/10/14 16:22:15  djr
   Implemented logging when system exceptions are thrown.
 
@@ -84,13 +87,16 @@ PortableServer::POAManager::_narrow(CORBA::Object_ptr obj)
 }
 
 
-static omniOrbPOAManager the_nil_pm(1);
-
-
 PortableServer::POAManager_ptr
 PortableServer::POAManager::_nil()
 {
-  return &the_nil_pm;
+  static omniOrbPOAManager* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbPOAManager(1 /* is nil */);
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 

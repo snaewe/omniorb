@@ -128,7 +128,7 @@ Environment::NP_duplicate()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class NilEnv : public CORBA::Environment {
+class omniNilEnv : public CORBA::Environment {
 public:
   virtual void exception(CORBA::Exception*) {
     _CORBA_invoked_nil_pseudo_ref();
@@ -147,8 +147,6 @@ public:
     return _nil();
   }
 };
-
-static NilEnv _nilEnvironment;
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -193,7 +191,13 @@ CORBA::Environment_ptr
 CORBA::
 Environment::_nil()
 {
-  return &_nilEnvironment;
+  static omniNilEnv* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniNilEnv;
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 void

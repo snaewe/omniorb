@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.7  1999/10/29 13:18:17  djr
+  Changes to ensure mutexes are constructed when accessed.
+
   Revision 1.29.6.6  1999/10/14 16:22:06  djr
   Implemented logging when system exceptions are thrown.
 
@@ -219,13 +222,16 @@ CORBA::ORB::_narrow(CORBA::Object_ptr obj)
 }
 
 
-static omniOrbORB the_nil_orb(1);
-
-
 CORBA::ORB_ptr
 CORBA::ORB::_nil()
 {
-  return &the_nil_orb;
+  static omniOrbORB* _the_nil_ptr = 0;
+  if( !_the_nil_ptr ) {
+    omni::nilRefLock().lock();
+    if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbORB(1 /* is nil */);
+    omni::nilRefLock().unlock();
+  }
+  return _the_nil_ptr;
 }
 
 
