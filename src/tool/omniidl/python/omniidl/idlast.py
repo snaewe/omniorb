@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13.2.3  2000/06/29 14:08:11  dpg1
+# Incorrect visitor method called for Value nodes.
+#
 # Revision 1.13.2.2  2000/06/08 14:36:21  dpg1
 # Comments and pragmas are now objects rather than plain strings, so
 # they can have file,line associated with them.
@@ -942,7 +945,7 @@ Functions:
                                       isinstance(c, Factory)),
                                      contents)
 
-    def accept(self, visitor): visitor.visitValueAbs(self)
+    def accept(self, visitor): visitor.visitValue(self)
 
     def custom(self):       return self.__custom
     def inherits(self):     return self.__inherits
