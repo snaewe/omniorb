@@ -49,16 +49,20 @@
 
 
 PortableServer::POA_var the_poa;
+PortableServer::POA_var the_ins_poa;
 
 
 void
 usage()
 {
-  cerr << "\nusage: omniNames [-start <port>]\n"
+  cerr << "\nusage: omniNames [-start [<port>]]\n"
        <<   "                 [-logdir <directory name>]\n"
        <<   "                 [-errlog <file name>]\n"
        <<   "                 [<omniORB-options>...]" << endl;
   cerr << "\nUse -start option to start omniNames for the first time."
+       << endl
+       << "With no <port> argument, the standard default of "
+       << IIOP::DEFAULT_PORT << " is used."
        << endl;
   cerr << "\nUse -logdir option to specify the directory where the log/data files are kept.\n";
   cerr << "\nUse -errlog option to specify where standard error output is redirected.\n";
@@ -104,7 +108,8 @@ int
 main(int argc, char **argv)
 {
   //
-  // If we have a "-start" option, get the given port number.
+  // If we have a "-start" option, get the given port number, or use
+  // the default.
   //
 
   int port = 0;
@@ -112,9 +117,14 @@ main(int argc, char **argv)
 
   while (argc > 1) {
     if (strcmp(argv[1], "-start") == 0) {
-      if (argc < 3) usage();
-      port = atoi(argv[2]);
-      removeArgs(argc, argv, 1, 2);
+      if (argc < 3 || argv[2][0] == '-') {
+	port = IIOP::DEFAULT_PORT;
+	removeArgs(argc, argv, 1, 1);
+      }
+      else {
+	port = atoi(argv[2]);
+	removeArgs(argc, argv, 1, 2);
+      }
     }
     else if (strcmp(argv[1], "-logdir") == 0) {
       if (argc < 3) usage();
@@ -162,29 +172,36 @@ main(int argc, char **argv)
 
 
   //
-  // Initialize the ORB and the object adaptor.
+  // Initialize the ORB and the object adapter.
   //
 
   CORBA::ORB_ptr orb = CORBA::ORB_init(argc, argv, "omniORB3");
 
-  CORBA::Object_var poaref = orb->resolve_initial_references("RootPOA");
-  PortableServer::POA_var poa = PortableServer::POA::_narrow(poaref);
+  {
+    CORBA::Object_var poaref = orb->resolve_initial_references("RootPOA");
+    PortableServer::POA_var poa = PortableServer::POA::_narrow(poaref);
 
-  PortableServer::POAManager_var pman = poa->the_POAManager();
+    PortableServer::POAManager_var pman = poa->the_POAManager();
 
-  CORBA::PolicyList pl(1);
-  pl.length(1);
-  pl[0] = poa->create_lifespan_policy(PortableServer::PERSISTENT);
+    CORBA::PolicyList pl(1);
+    pl.length(1);
+    pl[0] = poa->create_lifespan_policy(PortableServer::PERSISTENT);
 
-  the_poa = poa->create_POA("", pman, pl);
-  pman->activate();
+    the_poa = poa->create_POA("", pman, pl);
+    pman->activate();
 
+    // Get the "magic" interoperable naming service POA
+    poaref      = orb->resolve_initial_references("omniINSPOA");
+    the_ins_poa = PortableServer::POA::_narrow(poaref);
+    pman        = the_ins_poa->the_POAManager();
+    pman->activate();
+  }
 
   //
   // Read the log file and set up all the naming contexts described in it.
   //
 
-  l.init(orb, the_poa);
+  l.init(orb, the_poa, the_ins_poa);
 
 
   //

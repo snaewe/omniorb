@@ -27,6 +27,7 @@
 #include <NamingContext_i.h>
 #include <ObjectBinding.h>
 #include <BindingIterator_i.h>
+#include <omniORB3/omniURI.h>
 
 #ifdef DEBUG_NC
 #define DB(x) x
@@ -42,25 +43,10 @@ NamingContext_i* NamingContext_i::tailContext = (NamingContext_i*)0;
 //
 // Ctor.
 //
-
-#if defined(__WIN32__) && defined(_MSC_VER)
-
-// Work-around MSVC++ 4.2 nested class bug
-//??typedef CosNaming::_sk_NamingContext CosNaming__sk_NamingContext;
-
 NamingContext_i::NamingContext_i(PortableServer::POA_ptr poa,
 				 const PortableServer::ObjectId& id,
 				 omniNameslog* l)
-  : redolog(l)
-
-#else
-
-NamingContext_i::NamingContext_i(PortableServer::POA_ptr poa,
-				 const PortableServer::ObjectId& id,
-				 omniNameslog* l)
-  : redolog(l)
-
-#endif
+  : redolog(l), nc_poa(poa)
 {
   headBinding = tailBinding = (ObjectBinding*)0;
   size = 0;
@@ -440,8 +426,8 @@ NamingContext_i::destroy()
   CosNaming::NamingContext_var nc = _this();
   redolog->destroy(nc);
 
-  PortableServer::ObjectId_var id = the_poa->servant_to_id(this);
-  the_poa->deactivate_object(id);
+  PortableServer::ObjectId_var id = nc_poa->servant_to_id(this);
+  nc_poa->deactivate_object(id);
 }
 
 
@@ -514,4 +500,34 @@ NamingContext_i::~NamingContext_i()
 
   while (headBinding)
     delete headBinding;
+}
+
+
+//
+// CosNaming::NamingContextExt operations
+//
+
+char*
+NamingContext_i::to_string(const CosNaming::Name& name)
+{
+  return omniURI::nameToString(name);
+}
+
+CosNaming::Name*
+NamingContext_i::to_name(const char* sn)
+{
+  return omniURI::stringToName(sn);
+}
+
+char*
+NamingContext_i::to_url(const char* addr, const char* sn)
+{
+  return omniURI::addrAndNameToURI(addr, sn);
+}
+
+CORBA::Object_ptr
+NamingContext_i::resolve_str(const char* sn)
+{
+  CosNaming::Name_var name = omniURI::stringToName(sn);
+  return resolve(name);
 }

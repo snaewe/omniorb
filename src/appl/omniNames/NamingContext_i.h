@@ -29,11 +29,11 @@
 #include <log.h>
 #include <omniORB3/Naming.hh>
 
-
 extern PortableServer::POA_var the_poa;
+extern PortableServer::POA_var the_ins_poa;
 
 
-class NamingContext_i : public POA_CosNaming::NamingContext,
+class NamingContext_i : public POA_CosNaming::NamingContextExt,
 			public PortableServer::RefCountServantBase
 {
 
@@ -46,8 +46,12 @@ public:
 		  const PortableServer::ObjectId& id,
 		  omniNameslog* l);
 
+  PortableServer::ObjectId* PR_id() {
+    return nc_poa->servant_to_id(this);
+  }
+
   //
-  // IDL operations:
+  // CosNaming::NamingContext operations:
   //
 
   void bind(const CosNaming::Name& n, CORBA::Object_ptr obj) {
@@ -80,10 +84,21 @@ public:
   void list(CORBA::ULong how_many, CosNaming::BindingList_out bl,
 	    CosNaming::BindingIterator_out bi);
 
+  //
+  // CosNaming::NamingContextExt operations
+  //
+
+  char*             to_string  (const CosNaming::Name& n);
+  CosNaming::Name*  to_name    (const char*            sn);
+  char*             to_url     (const char*            addr, const char* sn);
+  CORBA::Object_ptr resolve_str(const char*            n);
+
 
 private:
 
   omniNameslog* redolog;
+  PortableServer::POA_ptr nc_poa; // The POA this NamingContext is
+                                  // activated in
 
   //
   // This multiple-readers, single-writer lock is used to control access to
