@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.23  1999/05/26 10:24:39  sll
+  Use o2be_nested_typedef to generate stub code for nested types.
+  Fixed bug so that a char constant greater than 127 and used as a
+  label will be handled correctly.
+
   Revision 1.22  1999/03/11 16:26:10  djr
   Updated copyright notice
 
@@ -202,9 +207,8 @@ match_disc_value(o2be_union_branch& b,AST_Decl* disc_type,disc_value_t v);
 static o2be_union_branch*
 lookup_by_disc_value(o2be_union& u,disc_value_t v);
 
-o2be_union::o2be_union(AST_ConcreteType *dt,
-		       UTL_ScopedName *n, UTL_StrList *p)
-	: AST_Union(dt, n, p),
+o2be_union::o2be_union(UTL_ScopedName *n, UTL_StrList *p)
+	: AST_Union(n, p),
 	  AST_Decl(AST_Decl::NT_union, n, p),
           AST_Structure(AST_Decl::NT_union, n, p),
 	  UTL_Scope(AST_Decl::NT_union),
@@ -213,12 +217,6 @@ o2be_union::o2be_union(AST_ConcreteType *dt,
 {
   pd_isvar = I_FALSE;
   pd_nodefault = I_TRUE;
-  pd_hdr_produced_in_field = I_FALSE;
-  pd_skel_produced_in_field = I_FALSE;
-  pd_binary_operators_hdr_produced_in_field = I_FALSE;
-  pd_binary_operators_skel_produced_in_field = I_FALSE;
-  pd_have_produced_typecode_skel = I_FALSE;
-
   pd_out_adptarg_name = new char[strlen(ADPT_CLASS_TEMPLATE)+strlen("<,>")+
 				 strlen(fqname())+
 				 strlen(fqname())+strlen("_var")+1];
@@ -345,54 +343,8 @@ o2be_union::produce_hdr(std::fstream& s)
   IND(s); s << "class " << uqname() << " {\n";
   IND(s); s << "public:\n\n";
   INC_INDENT_LEVEL();
-  {
-    // declare any constructor types defined in this scope
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	if (d->node_type() == AST_Decl::NT_union_branch)
-	  {
-	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			       ->get_hdr_produced_in_field()) 
-		      {
-			o2be_enum::narrow_from_decl(decl)
-			       ->set_hdr_produced_in_field();
-			o2be_enum::narrow_from_decl(decl)->produce_hdr(s);
-		      }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			       ->get_hdr_produced_in_field()) 
-		      {
-			o2be_structure::narrow_from_decl(decl)
-			       ->set_hdr_produced_in_field();
-			o2be_structure::narrow_from_decl(decl)->produce_hdr(s);
-		      }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			       ->get_hdr_produced_in_field()) 
-		      {
-			o2be_union::narrow_from_decl(decl)
-			       ->set_hdr_produced_in_field();
-			o2be_union::narrow_from_decl(decl)->produce_hdr(s);
-		      }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
+
+  o2be_nested_typedef::produce_hdr(s,this);
 
   IND(s); s << uqname() << "() {\n";
   INC_INDENT_LEVEL();
@@ -1337,52 +1289,9 @@ void
 o2be_union::produce_skel(std::fstream& s)
 {
   s << "\n";
-  {
-    // declare any constructor types defined in this scope
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	if (d->node_type() == AST_Decl::NT_union_branch)
-	  {
-	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			       ->get_skel_produced_in_field()) {
-		      o2be_enum::narrow_from_decl(decl)
-			->set_skel_produced_in_field();
-		      o2be_enum::narrow_from_decl(decl)->produce_skel(s);
-		    }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			       ->get_skel_produced_in_field()) {
-		      o2be_structure::narrow_from_decl(decl)
-			->set_skel_produced_in_field();
-		      o2be_structure::narrow_from_decl(decl)->produce_skel(s);
-		    }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			       ->get_skel_produced_in_field()) {
-		      o2be_union::narrow_from_decl(decl)
-			->set_skel_produced_in_field();
-		      o2be_union::narrow_from_decl(decl)->produce_skel(s);
-		    }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
-  
+
+  o2be_nested_typedef::produce_skel(s,this);
+
   s << "\n";
 
   IND(s); s << "size_t\n";
@@ -1982,55 +1891,10 @@ o2be_union::produce_skel(std::fstream& s)
 void
 o2be_union::produce_dynskel(std::fstream& s)
 {
-  {
-    // declare any constructor types defined in this scope
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	if (d->node_type() == AST_Decl::NT_union_branch)
-	  {
-	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			       ->get_dynskel_produced_in_field()) {
-		      o2be_enum::narrow_from_decl(decl)
-			->set_dynskel_produced_in_field();
-		      o2be_enum::narrow_from_decl(decl)->produce_dynskel(s);
-		    }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			       ->get_dynskel_produced_in_field()) {
-		      o2be_structure::narrow_from_decl(decl)
-			->set_dynskel_produced_in_field();
-		      o2be_structure::narrow_from_decl(decl)
-			->produce_dynskel(s);
-		    }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			       ->get_dynskel_produced_in_field()) {
-		      o2be_union::narrow_from_decl(decl)
-			->set_dynskel_produced_in_field();
-		      o2be_union::narrow_from_decl(decl)->produce_dynskel(s);
-		    }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
-
   // Produce code for types any and TypeCode
   this->produce_typecode_skel(s);
+
+  o2be_nested_typedef::produce_dynskel(s,this);
 
   if (defined_in() != idl_global->root() &&
       defined_in()->scope_node_type() == AST_Decl::NT_module)
@@ -2069,57 +1933,7 @@ o2be_union::produce_dynskel(std::fstream& s)
 void
 o2be_union::produce_binary_operators_in_hdr(std::fstream &s)
 {
-  {
-    // declare any constructor types defined in this scope
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	if (d->node_type() == AST_Decl::NT_union_branch)
-	  {
-	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			  ->get_binary_operators_hdr_produced_in_field()) 
-		      {
-			o2be_enum::narrow_from_decl(decl)
-			  ->set_binary_operators_hdr_produced_in_field();
-			o2be_enum::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_hdr(s);
-		      }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			  ->get_binary_operators_hdr_produced_in_field()) 
-		      {
-			o2be_structure::narrow_from_decl(decl)
-			  ->set_binary_operators_hdr_produced_in_field();
-			o2be_structure::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_hdr(s);
-		      }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			  ->get_binary_operators_hdr_produced_in_field()) 
-		      {
-			o2be_union::narrow_from_decl(decl)
-			  ->set_binary_operators_hdr_produced_in_field();
-			o2be_union::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_hdr(s);
-		      }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
+  o2be_nested_typedef::produce_binary_operators_in_hdr(s,this);
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // any insertion and extraction operators
@@ -2136,56 +1950,7 @@ o2be_union::produce_binary_operators_in_hdr(std::fstream &s)
 void
 o2be_union::produce_binary_operators_in_dynskel(std::fstream& s)
 {
-  {
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while (!i.is_done())
-      {
-	AST_Decl* d = i.item();
-	if (d->node_type() == AST_Decl::NT_union_branch)
-	  {
-	    AST_Decl* decl=AST_UnionBranch::narrow_from_decl(d)->field_type();
-	    if (decl->has_ancestor(this))
-	      {
-		switch (decl->node_type())
-		  {
-		  case AST_Decl::NT_enum:
-		    if (!o2be_enum::narrow_from_decl(decl)
-			  ->get_binary_operators_skel_produced_in_field()) 
-		      {
-			o2be_enum::narrow_from_decl(decl)
-			  ->set_binary_operators_skel_produced_in_field();
-			o2be_enum::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_dynskel(s);
-		      }
-		    break;
-		  case AST_Decl::NT_struct:
-		    if (!o2be_structure::narrow_from_decl(decl)
-			  ->get_binary_operators_skel_produced_in_field()) 
-		      {
-			o2be_structure::narrow_from_decl(decl)
-			  ->set_binary_operators_skel_produced_in_field();
-			o2be_structure::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_dynskel(s);
-		      }
-		    break;
-		  case AST_Decl::NT_union:
-		    if (!o2be_union::narrow_from_decl(decl)
-			  ->get_binary_operators_skel_produced_in_field()) 
-		      {
-			o2be_union::narrow_from_decl(decl)
-			  ->set_binary_operators_skel_produced_in_field();
-			o2be_union::narrow_from_decl(decl)
-			  ->produce_binary_operators_in_dynskel(s);
-		      }
-		    break;
-		  default:
-		    break;
-		  }
-	      }
-	  }
-	i.next();
-      }
-  }
+  o2be_nested_typedef::produce_binary_operators_in_dynskel(s,this);
 
   //////////////////////////////////////////////////////////////////////
   //////////////////////// tcDescriptor generation /////////////////////
@@ -2415,17 +2180,8 @@ o2be_union::produce_typecode_skel(std::fstream& s)
   if( have_produced_typecode_skel() )  return;
   set_have_produced_typecode_skel();
 
-  { // Ensure we have the typecodes of the members ...
-    UTL_ScopeActiveIterator i(this,UTL_Scope::IK_decls);
-    while( !i.is_done() ) {
-      AST_Decl* d = i.item();
-      i.next();
-      if( d->node_type() != AST_Decl::NT_union_branch )
-	continue;
-      d = AST_UnionBranch::narrow_from_decl(d)->field_type();
-      o2be_name::narrow_and_produce_typecode_skel(d, s);
-    }
-  }
+  o2be_nested_typedef::produce_typecode_skel(s,this);
+
   // ... and the discriminant type.
   o2be_name::narrow_and_produce_typecode_skel(disc_type(), s);
 
@@ -2806,15 +2562,18 @@ produce_disc_value(std::fstream& s, AST_ConcreteType* t,
 	  break;
 	case AST_Expression::EV_char:
 	  {
-	    char c = v->u.cval;
-	    if (c >= ' ' && c <= '~')
-	      s << "'" << c << "'";
+	    if (v->u.cval == '\'')
+	      s << "'\\''";
+	    else if (v->u.cval == '\\')
+	      s << "'\\\\'";
+	    else if (v->u.cval >= ' ' && v->u.cval <= '~')
+	      s << "'" << v->u.cval << "'";
 	    else {
-	      s << "'\\"
-		<< (int) ((c & 0100) >> 6)
+	      unsigned char c = (unsigned char) v->u.cval;
+	      s << "0"
+		<< (int) ((c & 0300) >> 6)
 		<< (int) ((c & 070) >> 3)
-		<< (int) (c & 007)
-		<< "'";
+		<< (int) (c & 007);
 	    }
 	  }
 	  break;
