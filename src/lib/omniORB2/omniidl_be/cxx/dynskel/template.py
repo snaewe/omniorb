@@ -28,6 +28,12 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.4  2000/03/28 18:28:23  djs
+# Sequence deletion function used unescaped name "data" which could clash with a
+# user identifier
+#   eg typedef sequence<char> data
+# produces output that could not be parsed.
+#
 # Revision 1.1.2.3  2000/03/24 16:18:25  djs
 # Added missing prefix to CORBA::Any extraction operators used for
 #   typedef sequence<X> Y
@@ -329,9 +335,9 @@ void operator <<= (CORBA::Any& _a, const @fqname@& s)
   _a.PR_packFrom(@tcname@, &tcdesc);
 }
 
-void @private_prefix@_seq_delete_@guard_name@(void* data)
+void @private_prefix@_seq_delete_@guard_name@(void* _data)
 {
-  delete (@fqname@*)data;
+  delete (@fqname@*)_data;
 }
 
 CORBA::Boolean operator >>= (const CORBA::Any& _a, @fqname@*& s_out)
