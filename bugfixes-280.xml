@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
-<?xml-stylesheet type="text/xsl" href="bugfixes-280.xsl"?>
+<?xml-stylesheet type="text/xml" href="buglayout.xml"?>
 
 <!-- The following bugs have been fixed since the omniORB 2.8.0     -->
-<!-- release. This file is transformed into html with bugfixes.xsl. -->
+<!-- release.                                                       -->
 
 <!-- Editors: make sure the content you add is well-formed XML.     -->
 
