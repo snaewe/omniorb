@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/26 18:50:21  djs
+# Bugfixes and refinements
+#
 # Revision 1.1  1999/11/24 18:01:02  djs
 # New module to handle operation dispatching
 #
@@ -40,6 +43,7 @@ from omniidl import idlutil, idltype, idlast
 
 from omniidl.be.cxx import util, tyutil, skutil
 
+from omniidl.be.cxx.skel import proxy
 
 
 import dispatch
@@ -70,7 +74,7 @@ def argument_instance(type):
 
     # typedefs aren't dereferenced
     if tyutil.isTypedef(type):
-        name = environment.principalID(type)
+        name = environment.principalID(type, fully_scope = 1)
         mapping[0] = name
         # out types have storage allocated here
         if is_variable:
@@ -83,7 +87,7 @@ def argument_instance(type):
 
     # all object references are _var types
     if tyutil.isObjRef(deref_type):
-        name = environment.principalID(type)
+        name = environment.principalID(type, fully_scope = 1)
         mapping = [name + "_var", name + "_var", name + "_var"]
 
         return mapping
@@ -94,7 +98,7 @@ def argument_instance(type):
                    "CORBA::String_var"]
         return mapping
 
-    name = environment.principalID(type)
+    name = environment.principalID(type, fully_scope = 1)
     mapping = [name, name, name]
     if is_variable:
         mapping[1] = name + "_var"
@@ -187,6 +191,11 @@ def operation(operation):
         argument_prefixed_name = prefix + argument_name
         direction = argument.direction()
         argument_type = argument.paramType()
+        argument_type_name = environment.principalID(argument_type,
+                                                     fully_scope = 1)
+        argument_is_variable = tyutil.isVariableType(argument_type)
+        argument_dims = tyutil.typeDims(argument_type)
+        is_array = argument_dims != []
         deref_argument_type = tyutil.deref(argument_type)
 
         argument_type_names = argument_instance(argument_type)
@@ -197,28 +206,50 @@ def operation(operation):
                           argument_name = argument_prefixed_name)
         # consider the need to demarshal it
         if argument.is_in():
-            skutil.unmarshall(get_arguments, environment, argument_type,
-                              None, prefix + argument_name, 1, "giop_s")
+            #skutil.unmarshall(get_arguments, environment, argument_type,
+            #                  None, prefix + argument_name, 1, "giop_s")
+            Proxy = proxy.__init__(environment, None)
+            Proxy.unmarshal(argument_type, prefix + argument_name, "giop_s",
+                              get_arguments, can_throw_marshal = 1)
+
+        marshal_name = argument_prefixed_name
+        align_name = argument_prefixed_name
+        argument_slice_name = "((" + argument_type_name + "_slice*)" +\
+                              argument_prefixed_name + ")"
+        argument_operator_name = "(" + argument_prefixed_name +\
+                                 ".operator->())"
 
         is_pntr = is_pointer(argument_type)
-        if is_pntr:
-            argument_operator_name = "(" + argument_prefixed_name +\
-                                     ".operator->())"
+        arg_is_pntr = 0
+        if is_array and direction == 1: # only out
+            # fixed structures don't do slices?
+            if tyutil.isStruct(deref_argument_type) and \
+               not(argument_is_variable):
+                pass
+            
+            elif not(isinstance(deref_argument_type, idltype.Base)) and \
+               not(tyutil.isEnum(deref_argument_type)):
+                marshal_name = argument_slice_name
+                align_name = argument_slice_name
 
         # and consider the need to marshal it again
         if argument.is_out():
-            name = argument_prefixed_name
-            if is_pntr and direction == 1:
-                name = argument_operator_name
-                
-            skutil.marshall(put_arguments, environment, argument_type,
-                            None, name, "giop_s")
+            if is_pntr and direction == 1 and not(is_array):
+                marshal_name = argument_operator_name
+                align_name = argument_operator_name
+                arg_is_pntr = 1
+                if not(tyutil.isObjRef(deref_argument_type)):
+                    marshal_name = "*" + marshal_name
 
+            skutil.marshall(put_arguments, environment, argument_type,
+                            None, marshal_name, "giop_s")
+            #print "[[[ argispntr = " +str(arg_is_pntr) + "  is_pntr = " +\
+            #      str(is_pntr) + "]]]"
             size_calc_arguments.out(
                 skutil.sizeCalculation(environment, argument_type,
                                        None, "msgsize",
-                                       name,
-                                       is_pointer = is_pntr,
+                                       align_name,
+                                       is_pointer = arg_is_pntr,
                                        fixme = 1))
         # build the argument list
         argument_list.append(method_argument(argument_type,
@@ -231,7 +262,10 @@ def operation(operation):
         return_is_array = return_type_dims != []
         return_is_variable = tyutil.isVariableType(return_type)
         result_mapping = argument_instance(return_type)[1]
-
+        return_is_pointer = is_pointer(return_type) and not(return_is_array)
+        return_type_name = environment.principalID(return_type,
+                                                   fully_scope = 1)
+        
         # exception- arrays of fixed types use the _var mapping
         if not(return_is_variable) and return_is_array:
             result_mapping = result_mapping + "_var"
@@ -239,16 +273,26 @@ def operation(operation):
         decl_result.out("""\
 @result_type@ result;""", result_type = result_mapping)
 
-        name = "result"
-        if is_pointer(return_type):
-            name = "(result.operator->())"
+        marshal_name = "result"
+        align_name = "result"
+        if return_is_array:
+            if not(isinstance(deref_return_type, idltype.Base)) and \
+               not(tyutil.isEnum(deref_return_type)):
+                marshal_name = "((" + return_type_name + "_slice*)result)"
+            align_name = marshal_name
+        elif return_is_pointer:
+            align_name = "(result.operator->())"
+            marshal_name = align_name
+            if not(tyutil.isObjRef(deref_return_type)):
+                marshal_name = "*" + align_name
         # needs to be counted in the message size calculation
         size_calc_results.out(
             skutil.sizeCalculation(environment, return_type,
-                                   None, "msgsize", name,
+                                   None, "msgsize", align_name,
+                                   is_pointer = return_is_pointer,
                                    fixme = 1))
         skutil.marshall(put_results, environment, return_type, None,
-                        name, "giop_s")
+                        marshal_name, "giop_s")
         result_assignment = "result = "
 
 

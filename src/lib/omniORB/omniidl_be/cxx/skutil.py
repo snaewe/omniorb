@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/11/26 18:52:06  djs
+# Bugfixes and refinements
+#
 # Revision 1.4  1999/11/23 18:49:26  djs
 # Lots of fixes, especially marshalling code
 # Added todo list to keep track of issues
@@ -50,26 +53,38 @@ from omniidl import idlutil, idltype, idlast
 from omniidl.be.cxx import util, tyutil
 
 
+# Build a loop iterating over every element of a multidimensional
+# thing and return the indexing string
+def start_loop(where, dims, prefix = "_i"):
+    index = 0
+    istring = ""
+    for dimension in dims:
+        where.out("""\
+for (CORBA::ULong @prefix@@n@ = 0;@prefix@@n@ < @dim@;_i@n@++) {""",
+                  prefix = prefix,
+                  n = str(index),
+                  dim = str(dimension))
+        where.inc_indent()
+        istring = istring + "[" + prefix + str(index) + "]"
+        index = index + 1
+    return istring
 
+# Finish the loop
+def finish_loop(where, dims):
+    for dummy in dims:
+        where.dec_indent()
+        where.out("}")
+    
+
+# deprecated
 def begin_loop(string, full_dims):
     string.out("{")
     string.inc_indent()
-    index = 0
-    indexing_string = ""
-    for dim in full_dims:
-        string.out("""\
-for (CORBA::ULong _i@n@ = 0;_i@n@ < @dim@;_i@n@++) {""",
-                   n = str(index), dim = str(dim))
-        string.inc_indent()
-        indexing_string = indexing_string + "[_i" + str(index) + "]"
-        index = index + 1
+    return start_loop(string, full_dims)
 
-    return indexing_string
-
+# deprecated
 def end_loop(string, full_dims):
-    for dim in full_dims:
-        string.dec_indent()
-        string.out("}")
+    finish_loop(string, full_dims)
             
     string.dec_indent()
     string.out("}")
@@ -325,6 +340,7 @@ def sizeCalculation(environment, type, decl, sizevar, argname, fixme = 0,
                     is_pointer = 0, fully_scope = 0):
     #o2be_operation::produceSizeCalculation
     assert isinstance(type, idltype.Type)
+    
     # if decl == None then ignore
     if decl:
         assert isinstance(decl, idlast.Declarator)
@@ -524,34 +540,55 @@ def operation_dispatch(operation, environment, stream):
         type_dims = tyutil.typeDims(item_type)
         is_array = type_dims != []
 
-        if (tyutil.isString(deref_item_type) or \
-           tyutil.isObjRef(deref_item_type)) and \
-           not is_array:
-            if item_direction == 0:
-                # in
-                argument_list.append(item_name + ".in()")
-            elif item_direction == 1:
-                # out
-                argument_list.append(item_name + ".out()")
-            elif item_direction == 2:
-                # inout
-                argument_list.append(item_name + ".inout()")
-        elif tyutil.isSequence(deref_item_type) and \
-             item_direction == 1:
-            # out
-            argument_list.append(item_name + ".out()")
-        else:
-            argument_list.append(item_name)
+        arg = ["", "", ""]
+        arg[0] = item_name
+        arg[1] = item_name
+        arg[2] = item_name
+        if tyutil.isString(deref_item_type):
+            arg[0] = arg[0] + ".in()"
+            arg[1] = arg[1] + ".out()"
+            arg[2] = arg[2] + ".inout()"
+        elif tyutil.isVariableType(deref_item_type):
+            arg[1] = arg[1] + ".out()"
+
+        argument_list.append(arg[item_direction])
+
+        #if tyutil.isVariableType(deref_item_type) and \
+        #   out_arg
+        #if tyutil.isVariableType(deref_item_type) and \
+        #   not(tyutil.isStruct(deref_item_type) or \
+        #       tyutil.isUnion(deref_item_type)) and \
+        #   not is_array:
+        #    # and not sequence?
+        #    if item_direction == 0:
+        #        # in
+        #        argument_list.append(item_name + ".in()")
+        #    elif item_direction == 1:
+        #        # out
+        #        argument_list.append(item_name + ".out()")
+        #    elif item_direction == 2:
+        #        # inout
+        #        argument_list.append(item_name + ".inout()")
+        #elif (tyutil.isSequence(deref_item_type) or \
+        #     tyutil.isStruct(deref_item_type) or \
+        #     tyutil.isUnion(deref_item_type)) and \
+        #     item_direction == 1:
+        #    # out
+        #    argument_list.append(item_name + ".out()")
+        #else:
+        #    argument_list.append(item_name)
 
     # 2nd thing- handle the return value
     if has_return_value:
         result_string = "result"
         is_pointer = 0
-        if tyutil.isObjRef(deref_returnType) or \
-           tyutil.isSequence(deref_returnType):
+        if tyutil.isVariableType(deref_returnType) and \
+           not(tyutil.isString(deref_returnType)):
+        #if tyutil.isObjRef(deref_returnType) or \
+        #   tyutil.isSequence(deref_returnType):
             result_string = "(result.operator->())"
-        if tyutil.isSequence(deref_returnType):
-            is_pointer = 1
+            if not(tyutil.isObjRef(deref_returnType)):
+                is_pointer = 1
             
         size_calc.out(sizeCalculation(environment, returnType,
                                       None, "msgsize", result_string, 1,
@@ -586,7 +623,17 @@ def operation_dispatch(operation, environment, stream):
             if item_direction == 1 or item_direction == 2:
                 marshall(marshal_out, environment, item_type, None,
                          item_name, "giop_s")
+
+        is_pointer = 0
+        if tyutil.isVariableType(deref_item_type) and \
+           not(tyutil.isString(deref_item_type)):
+            item_name = "(" + item_name + ".operator->())"
+            is_pointer = 1
+        if tyutil.isSequence(deref_item_type) and \
+           item_direction == 1:
+            is_pointer = 1
         
+
         # SWITCH(deref_item_type)
         #  CASE(string)
         elif tyutil.isString(deref_item_type):
@@ -652,11 +699,17 @@ CORBA::String_var @item_name@;""", item_name = item_name)
                             
         #  DEFAULT
         else:
-                              
-            # this bit is probably too simplistic
-            unmarshal_in.out("@type@ @item_name@;",
-                             type = item_type_name,
-                             item_name = item_name)
+            if tyutil.isVariableType(item_type) and \
+               item_direction == 1:
+                unmarshal_in.out("""\
+// confusion reigns
+@type@_var @item_name@;""", type = item_type_name,
+                                 item_name = item_name)
+            else:
+                # this bit is probably too simplistic
+                unmarshal_in.out("@type@ @item_name@;",
+                                 type = item_type_name,
+                                 item_name = item_name)
             if item_direction == 0 or item_direction == 2:
                 unmarshal_in.out("@item_name@ <<= giop_s;",
                                  item_name = item_name)
@@ -664,20 +717,15 @@ CORBA::String_var @item_name@;""", item_name = item_name)
                 marshal_out.out("@item_name@ >>= giop_s;",
                                 item_name = item_name)
 
-        # is it a pointer?
-        is_pointer = 0
-        if tyutil.isSequence(deref_item_type) and \
-           item_direction == 1:
-            is_pointer = 1
-            
+
                         
         # if parameter is out or inout, alignment matters
         if item_direction == 1 or item_direction == 2:
-            if (tyutil.isObjRef(deref_item_type) or \
-                tyutil.isSequence(deref_item_type))and \
-               item_direction == 1:
-                # out only
-                item_name = "(" + item_name + ".operator->())"
+            #if (tyutil.isObjRef(deref_item_type) or \
+            #    tyutil.isSequence(deref_item_type))and \
+            #   item_direction == 1:
+            #    # out only
+            #    item_name = "(" + item_name + ".operator->())"
 
             calc = sizeCalculation(environment, item_type,
                                    None,
