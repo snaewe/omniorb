@@ -20,24 +20,57 @@ omni_cv_openssl_root,
                omni_cv_openssl_root=no
 	     fi)
 ])
-if test "$omni_cv_openssl_root" = "yes"; then
-  if test "x$prefix" != "xNONE"; then
-    omni_cv_openssl_root=$prefix/openssl
-  else
-    omni_cv_openssl_root=$ac_default_prefix/openssl
+
+dnl ugly kludge follows:
+dnl if  pkg-config is installed and openssl.pc then override the 
+dnl openssl-root given with --with-openssl
+
+if test "$omni_cv_openssl_root" = "no"; then
+  :
+else
+  AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+  if test "$PKG_CONFIG" != "no" ; then
+    PKG_CHECK_MODULES(OPENSSL, openssl,
+        [open_ssl_root=`$PKG_CONFIG --variable=prefix openssl`
+	 open_ssl_cppflags="$OPENSSL_CFLAGS"
+	 open_ssl_libs="$OPENSSL_LIBS"
+	 open_ssl_pkgconfig="yes"
+	 omni_cv_openssl_root="$open_ssl_root"
+        ],
+	[open_ssl_pkgconfig="no"])
   fi
-  if test -d $omni_cv_openssl_root; then
-    :
-  else
-    AC_MSG_ERROR(Can't find OpenSSL in '$omni_cv_openssl_root'. Please give me the full path or leave out --with-openssl.)
-    omni_cv_openssl_root=no
+  if test "$omni_cv_openssl_root" = "yes"; then
+    if test "x$open_ssl_pkgconfig" != "yes"; then
+      if test "x$prefix" != "xNONE"; then
+        omni_cv_openssl_root=$prefix/openssl
+      else
+        omni_cv_openssl_root=$ac_default_prefix/openssl
+      fi
+      if test -d $omni_cv_openssl_root; then
+        :
+      else
+        AC_MSG_ERROR(Can't find OpenSSL in '$omni_cv_openssl_root'. Please give me the full path or leave out --with-openssl.)
+        omni_cv_openssl_root=no
+      fi
+    fi
   fi
 fi
 open_ssl_root=$omni_cv_openssl_root
 if test "$open_ssl_root" = "no"; then
   open_ssl_root=""
+  open_ssl_cppflags=""
+  open_ssl_lib=""
+else 
+  if test "x$open_ssl_pkgconfig" = "xyes"; then
+    :
+  else
+    open_ssl_cppflags="-I$open_ssl_root/include"
+    open_ssl_libs="-L$open_ssl_root/lib -lssl -lcrypto"
+  fi
 fi
 AC_SUBST(OPEN_SSL_ROOT, $open_ssl_root)
+AC_SUBST(OPEN_SSL_CPPFLAGS, $open_ssl_cppflags)
+AC_SUBST(OPEN_SSL_LIB, $open_ssl_lib)
 ])
 
 
