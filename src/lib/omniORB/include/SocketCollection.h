@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/23 16:03:29  sll
+  Corrected typo __win32__, should be __WIN32__.
+
   Revision 1.1.2.2  2001/08/23 10:13:14  sll
   Cope with the different length type for getsockname and friends on
   different solaris versions.
@@ -61,7 +64,7 @@
 #   define USE_FAKE_INTERRUPTABLE_RECV
 #endif
 
-#if defined(__win32__)
+#if defined(__WIN32__)
 #   define USE_FAKE_INTERRUPTABLE_RECV
 #endif
 
