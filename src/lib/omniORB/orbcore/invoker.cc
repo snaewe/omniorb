@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2002/02/13 17:40:52  dpg1
+  Tweak to avoid destruction race in invoker.
+
   Revision 1.1.2.2  2002/02/13 16:02:40  dpg1
   Stability fixes thanks to Bastiaan Bakker, plus threading
   optimisations inspired by investigating Bastiaan's bug reports.
@@ -90,12 +93,11 @@ public:
 
     delete pd_cond;
     pd_pool->pd_lock->lock();
-    if (pd_pool->pd_totalthreads == 0) {
-      pd_pool->pd_lock->unlock();
+
+    if (--pd_pool->pd_totalthreads == 0)
       pd_pool->pd_cond->signal();
-    }
-    else
-      pd_pool->pd_lock->unlock();
+
+    pd_pool->pd_lock->unlock();
   }
 
   void run(void*) {
@@ -163,7 +165,6 @@ public:
       }
     }
 
-    pd_pool->pd_totalthreads--;
     pd_pool->pd_nthreads--;
     pd_pool->pd_lock->unlock();
   }
