@@ -1,3 +1,10 @@
+Fri Mar 24 17:32:02 GMT 2000 dpg1
+=================================
+
+- Incorrect make variable name for IRIX and Reliant Unix
+
+src/tool/omniidl/cxx/dir.mk
+
 
 Fri Mar 24 16:19:00 GMT 2000 djs
 ================================

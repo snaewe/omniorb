@@ -373,7 +373,7 @@ libname = _omniidlmodule.so
 soname = $(libname).$(IDLMODULE_MAJOR)
 lib = $(soname).$(IDLMODULE_MINOR)
 
-$(lib): $(ORB_OBJS)
+$(lib): $(OBJS) $(PYOBJS)
 	(set -x; \
          $(RM) $@; \
          CC -G -z text -KPIC -o $@ -h $(soname) \
@@ -424,7 +424,7 @@ lib = $(soname).$(IDLMODULE_MINOR)
 
 all:: $(lib)
 
-$(lib): $(ORB_OBJS)
+$(lib): $(OBJS) $(PYOBJS)
 	(set -x; \
          $(RM) $@; \
          $(LINK.cc) -KPIC -shared -Wl,-h,$(libname) \
