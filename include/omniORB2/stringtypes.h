@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2  1999/05/25 13:24:06  sll
+ Removed unnecessary const qualifier in operator char*().
+
  Revision 1.1  1999/04/21 11:18:31  djr
  Initial revision
 
@@ -101,7 +104,7 @@ public:
 
   _CORBA_String_var& operator=(const _CORBA_String_member& s);
 
-  inline operator char* () const       { return _data; }
+  inline operator char* ()             { return _data; }
   inline operator const char* () const { return _data; }
 
   char& operator[] (_CORBA_ULong index);
