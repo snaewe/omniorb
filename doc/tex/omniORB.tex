@@ -4499,9 +4499,9 @@ all.
 
 In general, the result of filtering the end point specifications in an
 IOR with the client transport rule will be a prioritised list of
-transports and networks. (If the transport rules are do not prioritise
-one end point over another, the order the end points are listed in the
-IOR is used.)  When trying to contact an object, the ORB tries its
+transports and networks. (If the transport rules do not prioritise one
+end point over another, the order the end points are listed in the IOR
+is used.)  When trying to contact an object, the ORB tries its
 possible end points in turn, until it finds one with which it can
 contact the object. Only after it has unsuccessfully tried all
 permissible transports will it raise a \code{TRANSIENT} exception to
