@@ -6,10 +6,14 @@
 // Copyright (C) Olivetti Research Limited, 1996
 //
 // Description:
+//	*** PROPRIETORY INTERFACE ***
 // 
 
 /*
  $Log$
+ Revision 1.3  1997/03/09 12:34:40  sll
+ Minor cleanup.
+
  Revision 1.2  1997/01/23 15:16:40  sll
  Added static member proxyStubs in proxyObjectFactory class.
 
