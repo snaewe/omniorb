@@ -27,6 +27,13 @@
 //   Implementation of CORBA::DynAny.
 //
 
+/*
+ $Log$
+ Revision 1.2.8.2  1999/09/22 16:15:59  djr
+ Removed MT locking.
+
+*/
+
 #ifndef __DYNANY_H__
 #define __DYNANY_H__
 
@@ -132,19 +139,6 @@ public:
   TypeCode_base* tc() const    { return pd_tc;            }
   CORBA::TCKind tckind() const { return pd_tc->NP_kind(); }
 
-  class Lock;
-  friend class Lock;
-
-  // Instantiating this class takes hold of the lock.
-  class Lock {
-  public:
-    Lock(DynAnyImplBase* p) {
-      lock.lock();
-    }
-    ~Lock() {
-      lock.unlock();
-    }
-  };
 
   MemBufferedStream pd_buf;
   // The value held by the DynAny. Basic DynAny values are
@@ -159,9 +153,6 @@ private:
   static omni_mutex refCountLock;
   int               pd_refcount;
   CORBA::Boolean    pd_is_root;
-
-  // Global lock.
-  static omni_mutex lock;
 };
 
 //////////////////////////////////////////////////////////////////////
