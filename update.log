@@ -146,6 +146,14 @@ ALL these files are REMOVED!
 include/omniORB4/giopDriver.h
 include/omniORB4/giopStream.h
 include/omniORB4/rope.h
+src/lib/omniORB/codeSetUtil.h
+src/lib/omniORB/exceptiondefs.h
+src/lib/omniORB/initialiser.h
+src/lib/omniORB/omniutilities.h
+src/lib/omniORB/dynamicLib.h
+src/lib/omniORB/initRefs.h
+src/lib/omniORB/omniIdentity.h
+src/lib/omniORB/remoteIdentity.h
 src/lib/omniORB/orbcore/firewallProxy.cc
 src/lib/omniORB/orbcore/firewallProxy.h
 src/lib/omniORB/orbcore/giopClient.cc
