@@ -1,4 +1,12 @@
 
+Wed Oct 13 16:11:27 BST 1999 sll
+================================
+
+- Added #include <unistd.h> for AIX
+
+src/lib/omnithread/posix.cc
+
+
 Wed Oct 13 13:38:21 BST 1999 djr
 ================================
 
