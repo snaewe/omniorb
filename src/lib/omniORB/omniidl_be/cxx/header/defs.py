@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.3  2000/11/03 19:19:46  sll
+# visitTypedef() just rely on types.base() to give the right type name for
+# object reference, instead of adding in a "_ptr" suffix.
+#
 # Revision 1.33.2.2  2000/10/12 15:37:50  sll
 # Updated from omni3_1_develop.
 #
@@ -609,7 +613,7 @@ def visitTypedef(node):
                     element = "_CORBA_String_element"
                     element_IN = "char *"
                 elif d_seqType.objref():
-                    element = seqType.base(environment) + "_ptr"
+                    element = seqType.base(environment)
                     element_IN = element
                 # only if an anonymous sequence
                 elif seqType.sequence():
@@ -623,7 +627,7 @@ def visitTypedef(node):
                 if d_seqType.string() and not(seqType.array()):
                     element_ptr = "char*"
                 elif d_seqType.objref() and not(seqType.array()):
-                    element_ptr = seqType.base(environment) + "_ptr"
+                    element_ptr = seqType.base(environment)
                 # only if an anonymous sequence
                 elif seqType.sequence() and not(seqType.array()):
                     element_ptr = element
