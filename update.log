@@ -1,3 +1,28 @@
+Thu Aug 23 16:54:55 BST 2001 sll
+================================
+
+- Can now parse clientTransportRule and serverTransportRule.
+  However, the rules are not enforced, not yet.
+- Use ioctl SIOCGIFCONF to get the IP addresses of all network interfaces.
+  ATM, only used in the transport rule matching.
+  Have not done the win32 equivalent yet.
+
+include/omniORB4/giopEndpoint.h
+src/lib/omniORB/include/SocketCollection.h
+src/lib/omniORB/include/SocketCollection.h
+src/lib/omniORB/include/transportRules.h      NEW
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/transportRules.cc     NEW
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.h
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.h
+src/lib/omniORB/orbcore/unix/unixTransportImpl.cc
+src/lib/omniORB/orbcore/unix/unixTransportImpl.h
+
+
 Thu Aug 23 12:30:48 BST 2001 dpg1
 =================================
 
