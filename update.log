@@ -1,3 +1,26 @@
+Sat Sep 21 21:56:33 BST 2002 dgrisby
+====================================
+
+- Update readmes.
+
+README.unix
+README.win32
+
+- Use C comments in omniconfig.h; Autoconf tweaks for building without
+  platform defines.
+
+configure
+configure.ac
+include/omniconfig.h
+include/omniconfig.h.in
+include/omnithread.h
+
+- Support ValueBase in omniidl. (No use to omniORB yet...)
+
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/python/omniidl/idlast.py
+
+
 Thu Sep 19 16:50:38 BST 2002 dgrisby
 ====================================
 
