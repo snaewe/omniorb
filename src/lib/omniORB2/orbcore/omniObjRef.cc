@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2000/03/01 17:57:41  dpg1
+  New omniObjRef::_compatibleServant() function to support object
+  references and servants written for languages other than C++.
+
   Revision 1.1.2.4  1999/11/08 09:45:17  djr
   Fixed bug in omniObjRef::_real_is_a().
 
@@ -57,6 +61,18 @@
 #include <ropeFactory.h>
 #include <excepthandler.h>
 #include <exception.h>
+
+
+CORBA::Boolean
+omniObjRef::_compatibleServant(omniServant* svnt)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+
+  if (svnt->_ptrToInterface(pd_intfRepoId))
+    return 1;
+  else
+    return 0;
+}
 
 
 int

@@ -1,3 +1,14 @@
+Wed Mar  1 17:55:15 GMT 2000 dpg1
+=================================
+
+- New omniObjRef::_compatibleServant() function to support object
+  references and servants written for languages other than C++.
+
+include/omniORB3/omniObjRef.h
+src/lib/omniORB2/orbcore/omniInternal.cc
+src/lib/omniORB2/orbcore/omniObjRef.cc
+
+
 Wed Mar  1 12:24:49 GMT 2000 dpg1
 =================================
 
