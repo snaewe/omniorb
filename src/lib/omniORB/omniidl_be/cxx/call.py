@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.12  2002/11/21 16:12:34  dgrisby
+# Oneway call descriptor bug.
+#
 # Revision 1.1.4.11  2001/11/27 14:35:08  dpg1
 # Context, DII fixes.
 #
@@ -112,7 +115,7 @@ class Callable:
         self.__raises = raises
         self.__contexts = contexts
         self.__signature = mangler.produce_signature(returnType, parameters,
-                                                     raises)
+                                                     raises, oneway)
     def interface(self):      return self.__interface
     def operation_name(self): return self.__operation_name
     def method_name(self):    return self.__method_name

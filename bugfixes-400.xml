@@ -8,6 +8,17 @@
 
 <buglist version="4.0.0">
 
+<bug id="7" date="Thu Nov 21 15:48:26 GMT 2002" user="dgrisby">
+  <summary>Call descriptor clash with oneways</summary>
+  <reported>Ilya Kreyer</reported>
+  <listlink
+  href="http://www.omniorb-support.com/pipermail/omniorb-list/2002-November/022299.html"/>
+  <text>
+  Functions with identical signatures except for onewayness would
+  incorrectly share call descriptor classes.
+  </text>
+</bug>
+
 <bug id="6" date="Fri Nov  8 17:17:14 GMT 2002" user="dgrisby">
   <summary>Hang on shutdown</summary>
   <reported>Norrie Quinn</reported>

@@ -38,7 +38,7 @@ INOUT  = 2
 RET    = 3
 
 # we don't support these yet
-unsupported_typecodes =[idltype.tk_Principal, idltype.tk_longdouble,
+unsupported_typecodes =[idltype.tk_Principal,
                         idltype.tk_value,
                         idltype.tk_value_box, idltype.tk_native,
                         idltype.tk_abstract_interface,
