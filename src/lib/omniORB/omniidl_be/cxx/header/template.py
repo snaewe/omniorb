@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.13  2001/08/17 13:45:56  dpg1
+# C++ mapping fixes.
+#
 # Revision 1.5.2.12  2001/08/15 10:26:10  dpg1
 # New object table behaviour, correct POA semantics.
 #
@@ -553,8 +556,15 @@ public:
 };
 
 typedef _CORBA_Array_@var_or_fix@_Var<@name@_copyHelper,@name@_slice> @name@_var;
-typedef _CORBA_Array_@var_or_fix@_OUT_arg<@name@_slice,@name@_var > @name@_out;
-typedef _CORBA_Array_Forany<@name@_copyHelper,@name@_slice> @name@_forany;
+typedef _CORBA_Array_@var_or_fix@_Forany<@name@_copyHelper,@name@_slice> @name@_forany;
+"""
+
+typedef_array_fix_out_type = """\
+typedef @name@_slice* @name@_out;
+"""
+
+typedef_array_variable_out_type = """\
+typedef _CORBA_Array_Variable_OUT_arg<@name@_slice,@name@_var > @name@_out;
 """
 
 ##
@@ -709,10 +719,9 @@ private:
 
 struct = """\
 struct @name@ {
-  typedef _CORBA_ConstrType_@type@_Var<@name@> _var_type;
+  typedef _CORBA_ConstrType_@fix_or_var@_Var<@name@> _var_type;
 
   @Other_IDL@
-
   @members@
 
   void operator>>= (cdrStream &) const;
@@ -720,9 +729,16 @@ struct @name@ {
 };
 
 typedef @name@::_var_type @name@_var;
-
-typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
 """
+
+struct_fix_out_type = """\
+typedef @name@& @name@_out;
+"""
+
+struct_variable_out_type = """\
+typedef _CORBA_ConstrType_Variable_OUT_arg< @name@,@name@_var > @name@_out;
+"""
+
 
 struct_nonarray_sequence = """\
 typedef @memtype@ _@cxx_id@_seq;
@@ -794,19 +810,21 @@ exception_member = """\
 
 union_ctor_nonexhaustive = """\
 if ((_pd__default = _value._pd__default)) {
-  _pd__d = _value._pd__d;
   @default@
 }
 else {
   switch(_value._pd__d) {
     @cases@
   }
-}"""
+}
+_pd__d = _value._pd__d;
+"""
 
 union_ctor_exhaustive = """\
 switch(_value._pd__d) {
   @cases@
-}"""
+}
+_pd__d = _value._pd__d;"""
 
 union_ctor_case = """\
 case @discrimvalue@: @name@(_value._pd_@name@); break;
@@ -871,8 +889,16 @@ private:
 };
 
 typedef @unionname@::_var_type @unionname@_var;
-typedef _CORBA_ConstrType_@fixed@_OUT_arg< @unionname@,@unionname@_var > @unionname@_out;
 """
+
+union_fix_out_type = """\
+typedef @unionname@& @unionname@_out;
+"""
+
+union_variable_out_type = """\
+typedef _CORBA_ConstrType_Variable_OUT_arg< @unionname@,@unionname@_var > @unionname@_out;
+"""
+
 union_union = """\
 union {
   @members@

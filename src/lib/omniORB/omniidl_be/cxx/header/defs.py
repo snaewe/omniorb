@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.33.2.12  2001/08/17 13:45:55  dpg1
+# C++ mapping fixes.
+#
 # Revision 1.33.2.11  2001/08/15 10:29:53  dpg1
 # Update DSI to use Current, inProcessIdentity.
 #
@@ -804,13 +807,19 @@ def visitTypedef(node):
                            dup_loop = dup_loop,
                            copy_loop = copy_loop)                            
             # output the _copyHelper class
-            var_or_fix = "Fix"
             if types.variableDecl(node):
-                var_or_fix = "Variable"
-            stream.out(template.typedef_array_copyHelper,
-                       var_or_fix = var_or_fix,
-                       name = derivedName)
-                
+                stream.out(template.typedef_array_copyHelper,
+                           var_or_fix = "Variable",
+                           name = derivedName)
+                stream.out(template.typedef_array_variable_out_type,
+                           name = derivedName)
+            else:
+                stream.out(template.typedef_array_copyHelper,
+                           var_or_fix = "Fix",
+                           name = derivedName)
+                stream.out(template.typedef_array_fix_out_type,
+                           name = derivedName)
+               
      
 
 def visitMember(node):
@@ -833,10 +842,6 @@ def visitStruct(node):
     insideClass = self.__insideClass
     self.__insideClass = 1
             
-    type = "Fix"
-    if types.variableDecl(node):
-        type = "Variable"
-
     # Deal with types constructed here
     def Other_IDL(stream = stream, node = node, environment = environment):
         for m in node.members():
@@ -870,11 +875,23 @@ def visitStruct(node):
                                dims = cxx.dimsToString(decl_dims))
             
     # Output the structure itself
-    stream.out(template.struct,
-               name = cxx_name,
-               type = type,
-               Other_IDL = Other_IDL,
-               members = members)
+    if types.variableDecl(node):
+        stream.out(template.struct,
+                   name = cxx_name,
+                   fix_or_var = "Variable",
+                   Other_IDL = Other_IDL,
+                   members = members)
+        stream.out(template.struct_variable_out_type,
+                   name = cxx_name)
+    else:
+        stream.out(template.struct,
+                   name = cxx_name,
+                   fix_or_var = "Fix",
+                   Other_IDL = Other_IDL,
+                   members = members)
+        stream.out(template.struct_fix_out_type,
+                   name = cxx_name)
+
     
     self.__insideClass = insideClass
 
@@ -1073,9 +1090,10 @@ def visitUnion(node):
     exhaustive = ast.exhaustiveMatch(switchType, ast.allCaseLabelValues(node))
     implicitDefault = not hasDefault and not exhaustive
 
-    fixed = "Fix"
     if types.variableDecl(node):
         fixed = "Variable"
+    else:
+        fixed = "Fix"
 
     def Other_IDL(stream = stream, node = node):
         # deal with constructed switch type
@@ -1548,7 +1566,13 @@ def visitUnion(node):
                tcParser_unionHelper = tcParser_unionHelper,
                union = str(inside),
                outsideUnion = str(outside))
-               
+
+    if types.variableDecl(node):
+        stream.out(template.union_variable_out_type,
+                   unionname = cxx_id)
+    else:
+        stream.out(template.union_fix_out_type,
+                   unionname = cxx_id)
 
     self.__insideClass = insideClass
 

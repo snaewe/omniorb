@@ -781,9 +781,6 @@ private:
 ////////////////////// _CORBA_ConstrType_Fix_Var /////////////////////
 //////////////////////////////////////////////////////////////////////
 
-template <class T, class T_var>
-class _CORBA_ConstrType_Fix_OUT_arg;
-
 template <class T>
 class _CORBA_ConstrType_Fix_Var {
 public:
@@ -833,34 +830,8 @@ public:
   T& out() { return pd_data; }
   T _retn() { return pd_data; }
 
-  friend class _CORBA_ConstrType_Fix_OUT_arg<T, T_var>;
-
 protected:
   T pd_data;
-};
-
-//////////////////////////////////////////////////////////////////////
-///////////////// _CORBA_ConstrType_Fix_OUT_arg      /////////////////
-//////////////////////////////////////////////////////////////////////
-
-template <class T, class T_var>
-class _CORBA_ConstrType_Fix_OUT_arg {
-public:
-  typedef _CORBA_ConstrType_Fix_OUT_arg<T,T_var> T_out;
-  inline _CORBA_ConstrType_Fix_OUT_arg(T*& p) : _data(p) {}
-  inline _CORBA_ConstrType_Fix_OUT_arg(T_var& p) : _data(&p.pd_data) {}
-  inline _CORBA_ConstrType_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
-  inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
-  inline T_out& operator=(T* p) { _data = p; return *this; }
-  inline operator T*&() { return _data; }
-  inline T*& ptr() { return _data; }
-  inline T* operator->() { return _data; }
-
-  T*& _data;
-
-private:
-  _CORBA_ConstrType_Fix_OUT_arg();  // not implemented
-  T_out& operator=(const T_var&);
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1020,8 +991,6 @@ public:
   }
 #endif
 
-  // Remove T* operator. Array _var type can no longer be used as IN
-  // arguments.
   inline operator T* () const { return pd_data; }
   // Define the const T* operator() causes conversion operator ambiguity with 
   // some compilers. Should be alright to leave this operator out. If not,
@@ -1050,10 +1019,6 @@ private:
 //////////////////////////////////////////////////////////////////////
 ////////////////////////// _CORBA_Array_Fix_Var     ////////////////
 //////////////////////////////////////////////////////////////////////
-
-template <class T, class T_var>
-class _CORBA_Array_Fix_OUT_arg;
-
 
 template <class T_Helper, class T>
 class _CORBA_Array_Fix_Var {
@@ -1101,8 +1066,6 @@ public:
   }
 #endif
 
-  // Remove T* operator. Array _var type can no longer be used as IN
-  // arguments.
   inline operator T* () const { return pd_data; }
   // Define the const T* operator() causes conversion operator ambiguity with 
   // some compilers. Should be alright to leave this operator out. If not,
@@ -1114,8 +1077,6 @@ public:
   T*       inout()    { return pd_data; }
   T* out() { return pd_data; }
   T* _retn() { T* tmp = pd_data; pd_data = 0; return tmp; }
-
-  friend class _CORBA_Array_Fix_OUT_arg<T, T_var>;
 
 private:
   T* pd_data;
@@ -1149,56 +1110,32 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////
-//////////////////// _CORBA_Array_Fix_OUT_arg ///////////////////
-//////////////////////////////////////////////////////////////////////
-
-template <class T, class T_var>
-class _CORBA_Array_Fix_OUT_arg {
-public:
-  typedef _CORBA_Array_Fix_OUT_arg<T,T_var> T_out;
-  inline _CORBA_Array_Fix_OUT_arg(T*& p) : _data(p) { }
-  inline _CORBA_Array_Fix_OUT_arg(T_var& p) : _data(p.pd_data) { }
-  inline _CORBA_Array_Fix_OUT_arg(const T_out& p) : _data(p._data) {}
-  inline T_out& operator=(const T_out& p) { _data = p._data; return *this; }
-  inline T_out& operator=(T* p) { _data = p; return *this; }
-  inline operator T*&() { return _data; }
-  inline T*& ptr() { return _data; }
-  inline T& operator[] (_CORBA_ULong index) {
-    return _data[index];
-  }
-
-  T*& _data;
-private:
-  _CORBA_Array_Fix_OUT_arg();
-  T_out& operator=(const T_var&);
-};
-
-//////////////////////////////////////////////////////////////////////
-///////////////////////// _CORBA_Array_Forany ////////////////////////
+///////////////////////// _CORBA_Array_Variable_Forany ///////////////
 //////////////////////////////////////////////////////////////////////
 
 template <class T_Helper,class T>
-class _CORBA_Array_Forany {
+class _CORBA_Array_Variable_Forany {
 public:
-  inline _CORBA_Array_Forany () { pd_data = 0; pd_nocopy = 0; }
+  inline _CORBA_Array_Variable_Forany () { pd_data = 0; pd_nocopy = 0; }
 
   // If nocopy = 0 (the default) then we just copy the pointer
   // given to us. If nocopy is set, this implies that the insertion
   // into the Any should consume the data. Thus it is Any insertion
   // operator, not the destructor here which delete's the data.
-  inline _CORBA_Array_Forany (T* p,_CORBA_Boolean nocopy = 0) {
+  inline _CORBA_Array_Variable_Forany (T* p,_CORBA_Boolean nocopy = 0) {
     pd_data = p;  pd_nocopy = nocopy;
   }
 
-  inline _CORBA_Array_Forany (const _CORBA_Array_Forany<T_Helper,T>& p) {
+  inline _CORBA_Array_Variable_Forany (const _CORBA_Array_Variable_Forany<T_Helper,T>& p)
+  {
     pd_data = p.pd_data;  pd_nocopy = 0;
   }
 
-  inline ~_CORBA_Array_Forany() {
+  inline ~_CORBA_Array_Variable_Forany() {
     // Does not delete the storage of the array.
   }
 
-  inline _CORBA_Array_Forany<T_Helper,T>& operator= (T* p) {
+  inline _CORBA_Array_Variable_Forany<T_Helper,T>& operator= (T* p) {
     pd_data = p;  pd_nocopy = 0;  return *this;
   }
 
@@ -1207,8 +1144,20 @@ public:
     return *( (const T*) (pd_data + index));
   }
 
-  inline operator T* () const             { return pd_data;           }
-  inline operator const T* () const       { return (const T*)pd_data; }
+  inline operator T* () const             { return pd_data; }
+  // inline operator const T* () const       { return (const T*)pd_data; }
+  // No need for const operator, and it upsets gcc.
+
+  const T* in() const { return (const T*)pd_data; }
+  T*       inout()    { return pd_data; }
+  T*& out() {  // ??? Is this correct?
+    if (pd_data) { 
+      T_Helper::free(pd_data); 
+      pd_data = 0; 
+    } 
+    return pd_data; 
+  }
+  T* _retn() { return pd_data; }
 
   inline T* NP_getSlice() const           { return pd_data;   }
   inline _CORBA_Boolean NP_nocopy() const { return pd_nocopy; }
@@ -1217,5 +1166,59 @@ private:
   T*             pd_data;
   _CORBA_Boolean pd_nocopy;
 };
+
+
+//////////////////////////////////////////////////////////////////////
+///////////////////////// _CORBA_Array_Fix_Forany ////////////////////
+//////////////////////////////////////////////////////////////////////
+
+template <class T_Helper,class T>
+class _CORBA_Array_Fix_Forany {
+public:
+  inline _CORBA_Array_Fix_Forany () { pd_data = 0; pd_nocopy = 0; }
+
+  // If nocopy = 0 (the default) then we just copy the pointer
+  // given to us. If nocopy is set, this implies that the insertion
+  // into the Any should consume the data. Thus it is Any insertion
+  // operator, not the destructor here which delete's the data.
+  inline _CORBA_Array_Fix_Forany (T* p,_CORBA_Boolean nocopy = 0) {
+    pd_data = p;  pd_nocopy = nocopy;
+  }
+
+  inline _CORBA_Array_Fix_Forany (const _CORBA_Array_Fix_Forany<T_Helper,T>& p)
+  {
+    pd_data = p.pd_data;  pd_nocopy = 0;
+  }
+
+  inline ~_CORBA_Array_Fix_Forany() {
+    // Does not delete the storage of the array.
+  }
+
+  inline _CORBA_Array_Fix_Forany<T_Helper,T>& operator= (T* p) {
+    pd_data = p;  pd_nocopy = 0;  return *this;
+  }
+
+  inline T& operator[] (_CORBA_ULong index) { return *(pd_data + index); }
+  inline const T& operator[] (_CORBA_ULong index) const {
+    return *( (const T*) (pd_data + index));
+  }
+
+  inline operator T* () const             { return pd_data; }
+  // inline operator const T* () const       { return (const T*)pd_data; }
+  // No need for const operator, and it upsets gcc.
+
+  const T* in() const { return (const T*)pd_data; }
+  T*       inout()    { return pd_data; }
+  T* out() { return pd_data; }
+  T* _retn() { return pd_data; }
+
+  inline T* NP_getSlice() const           { return pd_data;   }
+  inline _CORBA_Boolean NP_nocopy() const { return pd_nocopy; }
+
+private:
+  T*             pd_data;
+  _CORBA_Boolean pd_nocopy;
+};
+
 
 #endif  // __TEMPLATEDECLS_H__
