@@ -140,6 +140,7 @@ ORB2_SRCS = bootstrap_i.cc bootstrapSK.cc \
             libcWrapper.cc mbufferedStream.cc nbufferedStream.cc \
             object.cc objectKey.cc objectRef.cc ropeFactory.cc \
             strand.cc scavenger.cc exceptn.cc proxyCall.cc \
+            current.cc policy.cc orbservice.cc domainManager.cc \
             $(NETLIBSRCS) $(LOG_SRCS) NamingSK.cc
 
 ORB2_OBJS = bootstrap_i.o bootstrapSK.o \
@@ -149,6 +150,7 @@ ORB2_OBJS = bootstrap_i.o bootstrapSK.o \
             libcWrapper.o mbufferedStream.o nbufferedStream.o \
             object.o objectRef.o objectKey.o ropeFactory.o \
             strand.o scavenger.o exceptn.o proxyCall.o \
+            current.o policy.o orbservice.o domainManager.o \
             $(NETLIBOBJS) $(LOG_OBJS) NamingSK.o
 
 LOG_SRCS = logIOstream.cc
