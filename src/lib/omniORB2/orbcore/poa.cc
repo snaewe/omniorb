@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.26  2001/08/03 10:32:02  dpg1
+  Refcount not incremented in find_POA with AdapterActivator.
+
   Revision 1.1.2.25  2001/07/24 14:58:54  dpg1
   Fix race conditions with servant activators.
 
@@ -476,9 +479,13 @@ omniOrbPOA::find_POA(const char* adapter_name, CORBA::Boolean activate_it)
 
   poa = attempt_to_activate_adapter(adapter_name);
 
-  if( !poa ) throw AdapterNonExistent();
+  if( poa && !poa->pd_dying ) {
+    poa->incrRefCount();
+    return poa;
+  }
 
-  return poa;
+  throw AdapterNonExistent();
+  return 0; // For dumb compilers
 }
 
 
