@@ -1,3 +1,11 @@
+Mon Dec 11 09:51:35 GMT 2000 dpg1
+=================================
+
+- CORBA::Object::_narrow() failed to increment reference count.
+
+include/omniORB3/CORBA.h
+
+
 Tue Dec  5 11:57:03 GMT 2000 dpg1
 =================================
 

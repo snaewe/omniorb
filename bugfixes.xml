@@ -8,6 +8,14 @@
 
 <buglist version="3.0.2">
 
+<bug id="12" date="Mon Dec 11 09:51:35 GMT 2000" user="dpg1">
+
+  <summary>CORBA::Object::_narrow() does not increment the reference
+  count.</summary>
+  <reported>Kevin Bailey</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-12/0048.html"/>
+</bug>
+
 <bug id="11" date="Tue Dec  5 11:57:03 GMT 2000" user="dpg1">
 
   <summary>Invalid string in postinvoke() with long operation names</summary>
