@@ -8,13 +8,19 @@
 \author{Tristan Richardson\\
         ORL\\
         Cambridge}
-\date{29 October 1996}
+\date{31 October 1996}
 
 \begin{document}
 
 \maketitle
 
-{\Large Quick Summary of Differences from the Current ODE}
+\begin{center}
+{\it Note: this document replaces~\cite{lo95} and~\cite{ward95}.}
+\end{center}
+
+\vspace{0.2in}
+
+{\Large Summary of Differences from the ODE Versions 2 and 3}
 
 \begin{itemize}
 
@@ -499,6 +505,34 @@ export:: $(lib)
         @$(ExportLibrary)
 \end{verbatim}}
 
+As well as exporting the library itself, you should provide two MAKE variables
+to make it easier for others to use the library.  These variables should be of
+the form \verb|XXX_LIB| and \verb|XXX_LIB_DEPEND|, as described above for the
+omnithread library.  You put their definitions in the \verb|mk/beforedir.mk| of
+the import/export tree. Assuming your library has the name ``wob'', you need
+something like:
+
+{\small \begin{verbatim}
+WOB_LIB = $(patsubst %,$(LibSearchPattern),wob)
+lib_depend := $(patsubst %,$(LibPattern),wob)
+WOB_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+\end{verbatim}}
+
+You don't actually {\em need} to understand what these lines do but they are
+worth explaining anyway.  {\tt LibSearchPattern} is like {\tt LibPattern}
+except it specifies the library in such a way as to cause the linker to search
+for the library.  For example, on unix platforms this will be ``\verb|-l%|''
+(on ATMos and NT it happens to be the same as {\tt LibPattern}).  If your
+library requires any other libraries these should be added to \verb|WOB_LIB|.
+
+The two ``lib\_depend'' lines are slightly more complicated.  The variable
+\verb|GENERATE_LIB_DEPEND| actually acts more like a function than a
+variable. What it does is search through all the import trees for the library
+currently specified in the \verb|lib_depend| variable.  Since simple assignment
+(``{\tt :=}'') is used, the variable \verb|WOB_LIB_DEPEND| gets assigned the
+full pathname of the ``wob'' library in whichever import tree it is found.
+Hence it can be used in the dependencies of a link rule to cause relinking
+whenever that library changes.
 
 \subsection{Building in subdirectories}
 
@@ -662,7 +696,8 @@ change {\tt CorbaImplementation} before the first rule in your {\tt dir.mk}.
 This can either be done inside {\tt dir.mk} itself (for a one-off hack), or in
 the {\tt beforedir.mk} of an import tree.  If you change {\tt
 CorbaImplementation} in this way you must be careful to make sure that all
-relevant libraries have also been built with the same CORBA implementation.
+relevant libraries and stubs have also been built with the same CORBA
+implementation.
 
 \section{Building on NT}
 
@@ -687,11 +722,11 @@ bin}, {\tt usr} and {\tt tmp} subdirectories.
 
 Having made sure the tools are installed on the local machine you now need to
 set up your personal environment.  Firstly you need to put \verb|C:\gw14\bin|
-and \verb|C:\gw14\usr\bin| on your path.  It's probably also worth removing
-\verb|\\hazel\win32app\x86\bin| from your path since this contains several
-unix-like programs which will conflict with the GNU-WIN32 tools.  The next
-thing to do is ``mount'' the {\tt bin}, {\tt usr} and {\tt tmp} directories at
-the root:
+and \verb|C:\gw14\usr\bin| on your path.  If you also have
+\verb|\\hazel\win32app\x86\bin| on your path you should make sure that this is
+searched after the GNU-WIN32 directories since it contains several unix-like
+programs which conflict with the GNU-WIN32 tools.  The next thing to do is
+``mount'' the {\tt bin}, {\tt usr} and {\tt tmp} directories at the root:
 
 {\small \begin{verbatim}
 C:\>set path=c:\gw14\bin;c:\gw14\usr\bin;%path%
@@ -714,10 +749,10 @@ connecting it to a drive letter, by doing for example
 if the directory in question {\em is} actually connected to a drive letter.
 
 As well as \verb|/project/omni| and other project directories, you will also
-need Microsoft Visual C++ 4.2 installed on the machine.  This must be
-accessible as \verb|/msdev| in the GNU-WIN32 environment (since \verb|C:\| is
-the GNU-WIN32 root this is the normal place for it to be installed on a
-machine).  Additionally if you want to build Orbix programs then you also need
+need Microsoft Visual C++ installed on the machine.  This must be accessible as
+\verb|/msdev| in the GNU-WIN32 environment (since \verb|C:\| is the GNU-WIN32
+root this is the normal place for it to be installed on a machine).
+Additionally if you want to build Orbix programs then you also need
 \verb|\\hazel\win32app| mounted as \verb|/win32app|.
 
 Now that you have all the right directories mounted you need to finish off
@@ -734,8 +769,332 @@ Finally you need to set up the environment variables described in section
 \ref{settingenv}.  Now you should be able to use {\tt obuildtree}, {\tt omake},
 etc just as on any unix platform.
 
+\subsection{Other stuff}
+
+At the time of writing, the use of CORBA on NT has not really been tested
+fully.  Beano's scoping stuff is still needed, I believe (see section 4.2 of
+\cite{ward95}).  None of his Windows GUI stuff has yet been implemented in the
+new ODE (see section 5 of \cite{ward95}).
+
 \section{Building on ATMos}
 
+\subsection{Introduction}
+
+Building programs to run on ATMos is quite different from Unix and NT for a
+number of reasons.  On ATMos, programs are not started on demand as they are
+needed.  Instead all programs to run on a particular ATMos machine must be
+joined into a single ``image'' which is loaded at boot time and cannot be
+changed without rebooting the machine.  Another reason is that the development
+tools for ATMos are non-native -- programs must be cross-compiled on Unix
+platforms.  And most significantly ATMos has its own tool called ``{\tt
+aconfig}'' which is normally used for compiling code and generating the image
+files.
+
+The approach taken in the ODE is to try to make building on ATMos as similar to
+building on Unix and NT as possible.  This means using the {\tt aconfig}
+utility only when it really can't be avoided.  Many features of {\tt aconfig}
+are not used because the ODE provides a better way of achieving the same goal.
+For example header files are placed in the include directories of import/export
+trees rather than being made available using {\tt aconfig}'s {\tt Export
+Header} directive.
+
+Unlike the old imake-based ODE, there is no attempt to generate a final ATMos
+image file inside an OMNI build tree.  It's best to think of creating an ATMos
+image as being more like the first stage of {\em invoking} a program rather
+than part of the process of building.
+
+To get a program to run on an ATMos machine you must first build the program
+and export it using ``{\tt omake export}''.  The end result of this building
+and exporting will most probably be an ATMos ``package'' file.
+
+\label{imageanywhere}
+Once a program has been exported in this way, creating an actual image which
+contains the program can be done in any directory -- not necessarily underneath
+an OMNI build tree or import/export tree.  Generating the image should be
+a simple matter of creating an {\tt aconfig} SYSTEM file which includes the
+package file.  For example, to create an ATMos image which contains the
+``diner'' program from the {\tt /project/omni/version4.0} tree, simply write a
+SYSTEM file like this:
+
+{\small \begin{verbatim}
+Hardware atb
+Set Pthreads
+Package core
+
+ReleasePath /project/omni/version4.0/bin/arm_atmos_3.0/atb
+Path /project/omni/version4.0/bin/arm_atmos_3.0/atb
+
+Package diner
+\end{verbatim}}
+
+The first three lines are the same for all such SYSTEM files (for the ``atb''
+hardware anyway).  The next two lines simply tell aconfig to look in the OMNI
+import/export tree, and the last line tells aconfig to actually include the
+``diner'' package, which it will find inside the OMNI import/export tree.  Run
+{\tt aconfig} followed by {\tt make} in the normal ATMos way and you should get
+an ATMos image which when booted into a machine runs the diner program.
+
+To generate an image which also has the example calculator client and server
+programs, simply add a line ``{\tt Package calc}'' to the SYSTEM file and again
+run {\tt aconfig} followed by {\tt make}.
+
+\subsection{Hello World Revisited}
+
+This section goes through the steps necessary to build and run the simple
+``hello world'' example on an ATMos platform.  Your environment should be set
+up exactly as in section \ref{settingenv}.  Run {\tt obuildtree} as for unix,
+but this time specify the appropriate ATMos platform and make sure that the
+build tree {\em does} have an export tree. For example:
+
+{\small \begin{verbatim}
+$ cd /home/tjr
+$ mkdir wob
+$ cd wob
+$ obuildtree
+
+Enter the base OMNI tree for this build tree
+> [/project/omni/version4.0] 
+
+Enter the platform name from:
+alpha_osf1_3.2
+arm_atmos_3.0/atb
+i586_linux_2.0
+sun4_sosV_5.5
+x86_nt_3.5
+> [alpha_osf1_3.2] arm_atmos_3.0/atb
+
+Enter the destination directory
+> [arm_atmos_3.0/atb] atmos_hello
+
+Does this build tree have an export tree ?
+> [n] y
+
+Enter the export tree
+> /home/tjr/wob
+
+The first import tree will be /home/tjr/wob (the export tree)
+The final import tree will be /project/omni/version4.0 (the base OMNI tree)
+Enter any other import trees in search order
+> 
+
+Does this build tree have any source trees ?
+> [y] n
+
+************************************************************************
+
+Creating OMNI build tree "atmos_hello" for platform "arm_atmos_3.0/atb"
+
+Export tree is /home/tjr/wob
+
+Import trees are:
+/home/tjr/wob
+/project/omni/version4.0
+
+No source trees
+
+************************************************************************
+
+\end{verbatim}}
+
+Now go into your new build tree and write the ``hello world'' program:
+
+{\small \begin{verbatim}
+$ cd atmos_hello
+$ cat >hello.c
+#include <stdio.h>
+int main()
+{
+  printf("Hello world!\n");
+  return 0;
+}
+\end{verbatim}}
+
+The dir.mk is just as before:
+
+{\small \begin{verbatim}
+$ cat >dir.mk
+SRCS = hello.c
+
+HELLO = $(patsubst %,$(BinPattern),hello)
+
+all:: $(HELLO)
+
+$(HELLO): hello.o
+        @$(CExecutable)
+
+clean::
+        $(RM) $(HELLO)
+
+export:: $(HELLO)
+        @$(ExportExecutable)
+\end{verbatim}}
+
+You can now build an ``executable binary'' by running ``{\tt omake all}''.  The
+form this ``executable binary'' takes is actually an object file called
+\verb|hello_exe.o| (on ATMos platforms, {\tt BinPattern} is set to
+\verb|%_exe.o|):
+
+{\small \begin{verbatim}
+$ omake all
+
+make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET='all' 'all'
+
+/project/omni/version4.0/mk/afterdir.mk:105: hello.d: No such file or directory
+/bin/sh -ec "arm-gcc -nostdinc -fno-common -fno-builtin -M  -I.  -I/home/tjr/wo
+    .
+    .
+    .
++ catobj -o hello_exe.o hello.o 
+\end{verbatim}}
+
+As previously discussed, before the program can be run on an ATMos machine it
+needs to be incorporated into an image file.  It is this stage where we cannot
+avoid using {\tt aconfig}.  To help {\tt aconfig} we need to write a {\em
+module} file describing our executable.  This module file should not contain
+any directives other than {\tt Object}, {\tt Executable} and {\tt ULibrary}.
+In particular it should not have any {\tt Make} or {\tt Message} directives.
+See section \ref{atmosmessages} for information on defining ATMos messages.
+
+For a C program like {\tt hello.c} the module file should look like this:
+
+{\small \begin{verbatim}
+$ cat >hello.module
+Object hello_exe.o
+{
+    Executable hello
+    ULibrary llibc.o
+}
+\end{verbatim}}
+
+Now we need to put the module file and the \verb|_exe.o| file into a directory
+in such a way that {\tt aconfig} can use them.  This is done by exporting them
+to our export tree:
+
+{\small \begin{verbatim}
+$ omake export
+
+make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET='export' 'export'
+
++ mkdirhier /home/tjr/wob/bin/arm_atmos_3.0/atb/hello 
++ installbsd -c -m 0644 hello.module /home/tjr/wob/bin/arm_atmos_3.0/atb/hello 
++ installbsd -c -m 0644 hello_exe.o /home/tjr/wob/bin/arm_atmos_3.0/atb/hello 
+\end{verbatim}}
+
+At this stage we could create an image by writing a SYSTEM file with {\tt
+Module} and {\tt Process} directives in it, but it's cleaner to provide a
+single ``package'' file so that the SYSTEM file is kept as simple as possible.
+First we need to write the package file:
+
+{\small \begin{verbatim}
+$ cat >hello.pkg
+Module hello
+Process hello is hello/hello
+\end{verbatim}}
+
+Now we need one extra {\tt export} rule in dir.mk\footnote{Adding this rule
+doesn't make dir.mk ATMos-specific -- it is simply ignored on non-ATMos
+platforms}:
+
+{\small \begin{verbatim}
+$ cat >>dir.mk
+
+export::
+        @(packages="hello"; $(ExportATMosPackages))
+\end{verbatim}}
+
+Now run {\tt omake export} again:
+
+{\small \begin{verbatim}
+$ omake export
+
+make -r -f config/config.mk VPATH= TOP=. CURRENT=. OMAKE_TARGET='export' 'export'
+
+File hello.module hasn't changed.
+File hello_exe.o hasn't changed.
++ mkdirhier /home/tjr/wob/bin/arm_atmos_3.0/atb/software 
++ installbsd -c -m 0644 hello.pkg /home/tjr/wob/bin/arm_atmos_3.0/atb/software 
+\end{verbatim}}
+
+Finally the {\tt hello.pkg} in \verb|/home/tjr/wob/bin/arm_atmos_3.0/atb| can
+be used to include the hello world program in an ATMos image.  As described in
+section \ref{imageanywhere}, this can be done in any directory.  For example
+you could make a directory {\tt image} inside this build tree and create the
+image there:
+
+{\small \begin{verbatim}
+$ mkdir image
+$ cd image
+$ cat >SYSTEM
+Hardware atb
+Set Pthreads
+Package core
+
+ReleasePath /home/tjr/wob/bin/arm_atmos_3.0/atb
+Path /home/tjr/wob/bin/arm_atmos_3.0/atb
+
+Package hello
+
+$ aconfig
+ATMos Config (Jul 24 1996, 13:24:41)
+    .
+    .
+Config completed successfully.
+
+$ make
+(cd init; make -f makefile)
+    .
+    .
+syslink  -oimage -T0x00010000 -Ereset -Msyslink.map syslink.input
+
+\end{verbatim}}
+
+You should now be able to boot up an ATMos machine with this image and see the
+magic words ``Hello world!'' come out on the console.
+
+\subsection{Building C++ programs}
+
+When building a C++ program for ATMos the module file needs to be slightly
+different.  For example:
+
+{\small \begin{verbatim}
+Object prog_exe.o
+{
+    Executable prog Qhandler pthread_qhandler
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+}
+\end{verbatim}}
+
+\subsection{Building libraries}
+
+Building libraries on ATMos is exactly the same as for any other platform.  A
+statically-linked library gets built with the \verb|StaticLinkLibrary| rule,
+and gets exported using the \verb|ExportLibrary| rule.  We do not use {\tt
+aconfig}'s {\tt Export ULibrary} feature.  This means that libraries built in
+an OMNI tree cannot easily be used in ATMos programs built outside the OMNI
+development environment.
+
+\subsection{ATMos messages}
+\label{atmosmessages}
+
+Other than creating an ATMos image there is one other situation in which we
+cannot avoid using {\tt aconfig}.  This is when writing low-level ATMos code
+which uses ATMos messages.
+
 ...to be continued
+
+
+\begin{thebibliography}{ward95}
+
+\bibitem[Lo95]{lo95}
+{\em A Guide to the OMNI Development Environment},
+Sai Lai Lo, ORL, 15 August 1995.
+
+\bibitem[Ward95]{ward95}
+{\em A Guide to Windows NT Program Development in the OMNI Tree},
+Andrew M. R. Ward, ORL, August 1995.
+
+\end{thebibliography}
 
 \end{document}
