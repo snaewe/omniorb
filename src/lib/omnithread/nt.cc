@@ -584,7 +584,8 @@ omni_thread::join(void** status)
 
     DB(cerr << "omni_thread::join: WaitForSingleObject succeeded\n");
 
-    *status = return_val;
+    if (status)
+      *status = return_val;
 
     delete this;
 }
