@@ -8,6 +8,18 @@
 
 <buglist version="3.0.4">
 
+<bug id="8" date="Thu Aug 30 10:13:19 BST 2001" user="dpg1">
+  <summary>Incorrect result when assigning unsigned long long
+  consts</summary>
+  <reported>Carl Thompson</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-08/0266.html"/>
+  <text>
+  A cut-and-paste error caused the value of some unsigned long long
+  consts to be damaged.
+  </text>
+</bug>
+
 <bug id="7" date="Tue Aug 28 12:02:05 BST 2001" user="dpg1">
   <summary>Deadlock when a worker thread can't be started</summary>
   <reported>Gail Ollis</reported>

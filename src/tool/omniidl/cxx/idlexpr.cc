@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4.2.4  2001/08/30 09:18:59  dpg1
+// Cut-and-paste error in unsigned long long consts.
+//
 // Revision 1.4.2.3  2000/10/24 09:53:29  dpg1
 // Clean up omniidl system dependencies. Replace use of _CORBA_ types
 // with IDL_ types.
@@ -550,8 +553,8 @@ IDL_LongLong ConstExpr::evalAsLongLong() {
 }
 
 IDL_ULongLong ConstExpr::evalAsULongLong() {
-  IDL_Short   r;
-  IDL_Boolean p = 1;
+  IDL_ULongLong r;
+  IDL_Boolean   p = 1;
 
   switch (c_->constKind()) {
   case IdlType::tk_short: {
