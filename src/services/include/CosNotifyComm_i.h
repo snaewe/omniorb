@@ -1,3 +1,5 @@
+// -*- Mode: C++; -*-
+
 #ifndef _COS_NOTIFY_COMM_I_H_
 #define _COS_NOTIFY_COMM_I_H_
 
