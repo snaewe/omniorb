@@ -11,12 +11,18 @@
 
 /*
   $Log$
-  Revision 1.5  1997/03/10 14:11:54  sll
-  - tcpSocketRope ctor now returns the passive endpoint created by
-    the tcpSocketRendezvous ctor. The value is returned via the argument
-    Endpoint *e.
-  - Minor changes to accommodate the creation of a public API for omniORB2.
+  Revision 1.6  1997/04/23 11:27:26  sll
+  - If a port number is provided, set socket option SO_REUSEADDR.
+  - Added code to avoid receiving data into the internal buffer that
+    might later found to be misaligned. The code is turned on by defining
+   Commenting out the macro DO_NOT_AVOID_MISALIGNMENT.
 
+// Revision 1.5  1997/03/10  14:11:54  sll
+// - tcpSocketRope ctor now returns the passive endpoint created by
+//   the tcpSocketRendezvous ctor. The value is returned via the argument
+//   Endpoint *e.
+// - Minor changes to accommodate the creation of a public API for omniORB2.
+//
 // Revision 1.4  1997/03/04  10:36:40  ewc
 // Removed references to NT. [NT code is now in a seperate file].
 //
@@ -54,10 +60,13 @@
 extern "C" int gethostname(char *name, int namelen);
 #endif
 
+#define  DO_NOT_AVOID_MISALIGNMENT    
+
 // Size of transmit and receive buffers
 const 
 unsigned int 
 tcpSocketStrand::buffer_size = 8192 + (int)omni::max_alignment;
+
 
 tcpSocketStrand::tcpSocketStrand(tcpSocketRope *rope,
 				 tcpSocketEndpoint   *r,
@@ -169,22 +178,20 @@ tcpSocketStrand::receive(size_t size,
   if (!bsz) {
     // No data left in receive buffer, fetch() and try again
     // rewind the buffer pointers to the beginning of the buffer and
-    // at the same alignment as they were previously
-    current_alignment = (omni::ptr_arith_t) pd_rx_begin &
-      ((int)omni::max_alignment - 1);
-    if (current_alignment == 0) {
-      current_alignment = (int) omni::max_alignment;
-    }
+    // at the same alignment as it is requested in <align>
     new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_rx_buffer,
-				      omni::max_alignment) + 
-                    current_alignment;
+				   omni::max_alignment) + align;
     if (new_align_ptr >= ((omni::ptr_arith_t)pd_rx_buffer + 
 			  (int)omni::max_alignment)) {
       new_align_ptr -= (int) omni::max_alignment;
     }
     pd_rx_begin = pd_rx_received_end = pd_rx_end = (void *)new_align_ptr;
-    
+
+#ifndef DO_NOT_AVOID_MISALIGNMENT    
+    fetch(size);
+#else
     fetch();
+#endif
     return receive(size,exactly,align);
   }
 
@@ -244,7 +251,11 @@ tcpSocketStrand::receive(size_t size,
 	pd_rx_begin = pd_rx_received_end = (void *)new_align_ptr;
 	pd_rx_end = (void *)(new_align_ptr + bsz);
       }
+#ifndef DO_NOT_AVOID_MISALIGNMENT
+      fetch(size-bsz);
+#else
       fetch();
+#endif
       return receive(size,exactly,align);
     }
     else {
@@ -372,10 +383,12 @@ tcpSocketStrand::skip(size_t size)
 }
 
 void
-tcpSocketStrand::fetch()
+tcpSocketStrand::fetch(CORBA::ULong max)
 {
   size_t bsz = tcpSocketStrand::buffer_size -
     ((omni::ptr_arith_t) pd_rx_end - (omni::ptr_arith_t) pd_rx_buffer);
+
+  bsz = (max != 0 && bsz > max) ? max : bsz;
 
   if (!bsz) return;
 
@@ -624,6 +637,18 @@ tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketEndpoint *me)
   myaddr.sin_family = AF_INET;
   myaddr.sin_addr.s_addr = INADDR_ANY;
   myaddr.sin_port = htons(me->port());
+
+  
+  if (me->port()) {
+    int valtrue = 1;
+    if (setsockopt(pd_socket,SOL_SOCKET,
+		   SO_REUSEADDR,(char*)&valtrue,sizeof(int)) < 0)
+      {
+	close(pd_socket);
+	throw CORBA::COMM_FAILURE(errno,CORBA::COMPLETED_NO);
+      }
+  }
+
   if (bind(pd_socket,(struct sockaddr *)&myaddr,
 	   sizeof(struct sockaddr_in)) < 0) 
   {
