@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.4  1999/11/05 10:36:42  dpg1
+// Sorted out isatty() problems.
+//
 // Revision 1.3  1999/11/02 17:07:28  dpg1
 // Changes to compile on Solaris.
 //
@@ -37,6 +40,8 @@
 // Revision 1.1  1999/10/27 14:06:00  dpg1
 // *** empty log message ***
 //
+
+#define YY_NEVER_INTERACTIVE 1
 
 #include <stdlib.h>
 #include <string.h>

@@ -133,7 +133,7 @@ endif
 
 ifdef Win32Platform
 
-DIR_CPPFLAGS += -DMSDOS -DNO_STRCASECMP -DYY_NEVER_INTERACTIVE
+DIR_CPPFLAGS += -DMSDOS -DNO_STRCASECMP
 
 DIR_CPPFLAGS += -I"c:\progra~1/Python/include"
 PYLIBPATH = -libpath:"c:\progra~1\Python\libs"
