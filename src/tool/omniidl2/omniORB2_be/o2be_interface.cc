@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.35  1999/06/18 20:44:57  sll
+  Updated to support new sequence object reference template.
+
   Revision 1.34  1999/06/03 17:11:06  sll
   Updated to CORBA 2.2
 
@@ -140,6 +143,7 @@
 #define PROXY_OBJ_FACTORY_POSTFIX "_proxyObjectFactory"
 #define IRREPOID_POSTFIX          "_IntfRepoID"
 #define FIELD_MEMBER_TEMPLATE     "_CORBA_ObjRef_Member"
+#define SEQ_MEMBER_TEMPLATE       "_CORBA_ObjRef_Member"
 #define ADPT_INOUT_CLASS_TEMPLATE "_CORBA_ObjRef_INOUT_arg"
 #define ADPT_OUT_CLASS_TEMPLATE   "_CORBA_ObjRef_OUT_arg"
 #define TIE_CLASS_PREFIX          "_tie_"
@@ -173,6 +177,7 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
       pd_objref_fqname = (char*) "CORBA::Object_ptr";
       pd_fieldmem_uqname = (char*) "CORBA::Object_member";
       pd_fieldmem_fqname = (char*) "CORBA::Object_member";
+      pd_seqmem_fqname = (char*) "CORBA::Object_member";
       pd_inout_adptarg_name = (char*) "CORBA::Object_INOUT_arg";
       pd_out_adptarg_name = (char*) "CORBA::Object_OUT_arg";
       return;
@@ -318,54 +323,16 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
   strcat(pd_fieldmem_uqname,"_Helper");
   strcat(pd_fieldmem_uqname,">");
 
-  pd_fieldmem_fqname = new char[strlen(fqname())+
-			        strlen(fqname())+strlen("_Helper")+
-			        strlen(FIELD_MEMBER_TEMPLATE)+4];
-  strcpy(pd_fieldmem_fqname,FIELD_MEMBER_TEMPLATE);
-  strcat(pd_fieldmem_fqname,"<");
-  strcat(pd_fieldmem_fqname,fqname());
-  strcat(pd_fieldmem_fqname,",");
-  strcat(pd_fieldmem_fqname,fqname());
-  strcat(pd_fieldmem_fqname,"_Helper");
-  strcat(pd_fieldmem_fqname,">");
+  pd_fieldmem_fqname = 0;
+  pd_seqmem_fqname = 0;
 
   pd_IRrepoIdSize = strlen(_fqname()) + strlen(IRREPOID_POSTFIX) + 1;
   pd_IRrepoId = new char[pd_IRrepoIdSize];
   strcpy(pd_IRrepoId,_fqname());
   strcat(pd_IRrepoId,IRREPOID_POSTFIX);
 
-  pd_inout_adptarg_name = new char[strlen(ADPT_INOUT_CLASS_TEMPLATE)+
-				   strlen("<,, >")+
-                                   strlen(fqname())+
-				   strlen(fqname())+strlen("_var")+
-				   strlen(pd_fieldmem_fqname)+1];
-  strcpy(pd_inout_adptarg_name,ADPT_INOUT_CLASS_TEMPLATE);
-  strcat(pd_inout_adptarg_name,"<");
-  strcat(pd_inout_adptarg_name,fqname());
-  strcat(pd_inout_adptarg_name,",");
-  strcat(pd_inout_adptarg_name,fqname());
-  strcat(pd_inout_adptarg_name,"_var,");
-  strcat(pd_inout_adptarg_name,pd_fieldmem_fqname);
-  strcat(pd_inout_adptarg_name," >");
-
-  pd_out_adptarg_name = new char[strlen(ADPT_OUT_CLASS_TEMPLATE)+
-				   strlen("<,,, >")+
-                                   strlen(fqname())+
-				   strlen(fqname())+strlen("_var")+
-				   strlen(pd_fieldmem_fqname)+
-				   strlen(fqname())+strlen("_Helper")+1];
-  strcpy(pd_out_adptarg_name,ADPT_OUT_CLASS_TEMPLATE);
-  strcat(pd_out_adptarg_name,"<");
-  strcat(pd_out_adptarg_name,fqname());
-  strcat(pd_out_adptarg_name,",");
-  strcat(pd_out_adptarg_name,fqname());
-  strcat(pd_out_adptarg_name,"_var,");
-  strcat(pd_out_adptarg_name,pd_fieldmem_fqname);
-  strcat(pd_out_adptarg_name,",");
-  strcat(pd_out_adptarg_name,fqname());
-  strcat(pd_out_adptarg_name,"_Helper");
-  strcat(pd_out_adptarg_name," >");
-
+  pd_inout_adptarg_name = 0;
+  pd_out_adptarg_name = 0;
   pd_have_produced_buildDesc_decls = 0;
 }
 
@@ -581,6 +548,8 @@ o2be_interface::produce_hdr(std::fstream &s)
 	i.next();
       }
   }
+  IND(s); s << "typedef " << uqname() << "_var _var_type;\n";
+  IND(s); s << "typedef " << objref_uqname() << " _ptr_type;\n"; 
   IND(s); s << "static " << objref_uqname() << " _duplicate(" << objref_uqname() << ");\n";
   IND(s); s << "static " << objref_uqname() << " _narrow(CORBA::Object_ptr);\n";
   IND(s); s << "static " << objref_uqname() << " _nil();\n\n";
@@ -1366,7 +1335,7 @@ o2be_interface::produce_hdr(std::fstream &s)
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
     IND(s); s << variable_qualifier()
-	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+	      << " _dyn_attr const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
   }
 
 
@@ -3153,8 +3122,21 @@ o2be_interface::produce_buildDesc_decls(std::fstream& s,
 
 
 const char*
-o2be_interface::fieldMemberType_fqname(AST_Decl* used_in) const
+o2be_interface::fieldMemberType_fqname(AST_Decl* used_in)
 {
+  if (!pd_fieldmem_fqname) {
+    pd_fieldmem_fqname = new char[strlen(fqname())+
+				 strlen(fqname())+strlen("_Helper")+
+				 strlen(FIELD_MEMBER_TEMPLATE)+4];
+    strcpy(pd_fieldmem_fqname,FIELD_MEMBER_TEMPLATE);
+    strcat(pd_fieldmem_fqname,"<");
+    strcat(pd_fieldmem_fqname,fqname());
+    strcat(pd_fieldmem_fqname,",");
+    strcat(pd_fieldmem_fqname,fqname());
+    strcat(pd_fieldmem_fqname,"_Helper");
+    strcat(pd_fieldmem_fqname,">");
+  }
+
   if (o2be_global::qflag()) {
     return pd_fieldmem_fqname;
   }
@@ -3168,6 +3150,46 @@ o2be_interface::fieldMemberType_fqname(AST_Decl* used_in) const
 			        strlen(ubname)+strlen("_Helper")+
 			        strlen(FIELD_MEMBER_TEMPLATE)+4];
       strcpy(result,FIELD_MEMBER_TEMPLATE);
+      strcat(result,"<");
+      strcat(result,ubname);
+      strcat(result,",");
+      strcat(result,ubname);
+      strcat(result,"_Helper");
+      strcat(result,">");
+      return result;
+    }
+  }
+}
+
+const char*
+o2be_interface::seqMemberType_fqname(AST_Decl* used_in)
+{
+  if (!pd_seqmem_fqname) {
+    pd_seqmem_fqname = new char[strlen(fqname())+
+				 strlen(fqname())+strlen("_Helper")+
+				 strlen(SEQ_MEMBER_TEMPLATE)+4];
+    strcpy(pd_seqmem_fqname,SEQ_MEMBER_TEMPLATE);
+    strcat(pd_seqmem_fqname,"<");
+    strcat(pd_seqmem_fqname,fqname());
+    strcat(pd_seqmem_fqname,",");
+    strcat(pd_seqmem_fqname,fqname());
+    strcat(pd_seqmem_fqname,"_Helper");
+    strcat(pd_seqmem_fqname,">");
+  }
+
+  if (o2be_global::qflag()) {
+    return pd_seqmem_fqname;
+  }
+  else {
+    const char* ubname = unambiguous_name(used_in);
+    if (strcmp(fqname(),ubname) == 0) {
+      return pd_seqmem_fqname;
+    }
+    else {
+      char* result = new char[strlen(ubname)+
+			        strlen(ubname)+strlen("_Helper")+
+			        strlen(SEQ_MEMBER_TEMPLATE)+4];
+      strcpy(result,SEQ_MEMBER_TEMPLATE);
       strcat(result,"<");
       strcat(result,ubname);
       strcat(result,",");
@@ -3372,8 +3394,22 @@ o2be_interface::unambiguous_wrapproxy_name(AST_Decl* used_in,
 
 
 const char *
-o2be_interface::inout_adptarg_name(AST_Decl* used_in) const
+o2be_interface::inout_adptarg_name(AST_Decl* used_in)
 {
+  if (!pd_inout_adptarg_name) {
+    pd_inout_adptarg_name = new char[strlen(ADPT_INOUT_CLASS_TEMPLATE)+
+				    strlen("<, >")+
+				    strlen(fqname())+
+				    strlen(fqname())+strlen("_Helper")+1];
+    strcpy(pd_inout_adptarg_name,ADPT_INOUT_CLASS_TEMPLATE);
+    strcat(pd_inout_adptarg_name,"<");
+    strcat(pd_inout_adptarg_name,",");
+    strcat(pd_inout_adptarg_name,fqname());
+    strcat(pd_inout_adptarg_name,"_Helper");
+    strcat(pd_inout_adptarg_name,fqname());
+    strcat(pd_inout_adptarg_name," >");
+  }
+
   if (o2be_global::qflag()) {
     return pd_inout_adptarg_name;
   }
@@ -3385,17 +3421,15 @@ o2be_interface::inout_adptarg_name(AST_Decl* used_in) const
     else {
       const char* fm = fieldMemberType_fqname(used_in);
       char* result = new char[strlen(ADPT_INOUT_CLASS_TEMPLATE)+
-				   strlen("<,, >")+
+				   strlen("<, >")+
                                    strlen(ubname)+
-				   strlen(ubname)+strlen("_var")+
-				   strlen(fm)+1];
+				   strlen(ubname)+strlen("_Helper")+1];
       strcpy(result,ADPT_INOUT_CLASS_TEMPLATE);
       strcat(result,"<");
       strcat(result,ubname);
       strcat(result,",");
       strcat(result,ubname);
-      strcat(result,"_var,");
-      strcat(result,fm);
+      strcat(result,"_Helper");
       strcat(result," >");
       return result;
     }
@@ -3403,8 +3437,22 @@ o2be_interface::inout_adptarg_name(AST_Decl* used_in) const
 }
 
 const char *
-o2be_interface::out_adptarg_name(AST_Decl* used_in) const
+o2be_interface::out_adptarg_name(AST_Decl* used_in)
 {
+  if (!pd_out_adptarg_name) {
+    pd_out_adptarg_name = new char[strlen(ADPT_OUT_CLASS_TEMPLATE)+
+				  strlen("<, >")+
+				  strlen(fqname())+
+				  strlen(fqname())+strlen("_Helper")+1];
+    strcpy(pd_out_adptarg_name,ADPT_OUT_CLASS_TEMPLATE);
+    strcat(pd_out_adptarg_name,"<");
+    strcat(pd_out_adptarg_name,fqname());
+    strcat(pd_out_adptarg_name,",");
+    strcat(pd_out_adptarg_name,fqname());
+    strcat(pd_out_adptarg_name,"_Helper");
+    strcat(pd_out_adptarg_name," >");
+  }
+
   if (o2be_global::qflag()) {
     return pd_out_adptarg_name;
   }
@@ -3416,18 +3464,12 @@ o2be_interface::out_adptarg_name(AST_Decl* used_in) const
     else {
       const char* fm = fieldMemberType_fqname(used_in);
       char* result = new char[strlen(ADPT_OUT_CLASS_TEMPLATE)+
-			     strlen("<,,, >")+
+			     strlen("<, >")+
 			     strlen(ubname)+
-			     strlen(ubname)+strlen("_var")+
-			     strlen(fm)+
 			     strlen(ubname)+strlen("_Helper")+1];
       strcpy(result,ADPT_OUT_CLASS_TEMPLATE);
       strcat(result,"<");
       strcat(result,ubname);
-      strcat(result,",");
-      strcat(result,ubname);
-      strcat(result,"_var,");
-      strcat(result,fm);
       strcat(result,",");
       strcat(result,ubname);
       strcat(result,"_Helper");
