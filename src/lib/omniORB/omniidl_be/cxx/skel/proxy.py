@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/12/01 16:59:27  djs
+# Generates code to handle user exceptions being thrown.
+#
 # Revision 1.4  1999/11/29 19:27:05  djs
 # Code tidied and moved around. Some redundant code eliminated.
 #
@@ -73,6 +76,7 @@ public:
      @inherits_list@ {}
   
   @marshal_arguments_decl@
+  @user_exceptions_decl@
   @unmarshal_arguments_decl@  
   @result_member_function@
   @member_data@
@@ -101,6 +105,17 @@ marshal_template = """\
 void @call_descriptor@::marshalArguments(GIOP_C& giop_client)
 {
   @marshal_block@
+}
+"""
+
+exception_template = """\
+void @call_descriptor@::userException(GIOP_C& giop_client, const char* repoId)
+{
+  @exception_block@
+  else {
+    giop_client.RequestCompleted(1);
+    throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
+  }
 }
 """
 
@@ -248,6 +263,14 @@ def operation(operation, seed):
     if need_to_unmarshal:
         unmarshal_arguments_decl = """\
         virtual void unmarshalReturnedValues(GIOP_C&);"""
+
+    # are there any user exceptions
+    user_exceptions_decl = ""
+    raises = operation.raises()
+    has_user_exceptions = raises != []
+    if has_user_exceptions:
+        user_exceptions_decl = \
+                             "virtual void userException(GIOP_C&, const char*);"
     
     # Write the proxy class definition
     stream.out(proxy_class_template,
@@ -256,6 +279,7 @@ def operation(operation, seed):
                ctor_args = ctor_args_string,
                inherits_list = inherits_list_string,
                marshal_arguments_decl = marshal_arguments_decl,
+               user_exceptions_decl = user_exceptions_decl,
                unmarshal_arguments_decl = unmarshal_arguments_decl,
                result_member_function = result_member_function,
                member_data = member_list_string,
@@ -341,9 +365,6 @@ def operation(operation, seed):
                               from_where = "giop_client",
                               fully_scope = 1,
                               string_via_member = 1)
-            #unmarshal(type, deref_name, "giop_client", unmarshal_block,
-            #          can_throw_marshal = 1,
-            #          fully_scope = 1)
 
             if is_inout and not(is_array):
                 if tyutil.isString(deref_type):
@@ -389,10 +410,6 @@ pd_result = new @type@;""", type = return_type_base)
                               from_where = "giop_client",
                               fully_scope = 1,
                               string_via_member = 1)
-            #unmarshal(return_type, name, "giop_client",
-            #          unmarshal_block, can_throw_marshal = 1,
-            #          fully_scope = 1)
-                
         
         n = -1
         for parameter in operation.parameters():
@@ -463,11 +480,6 @@ pd_result = new @type@;""", type = return_type_base)
                                   from_where = "giop_client",
                                   fully_scope = 1,
                                   string_via_member = 1)
-                #unmarshal(param_type, arg_name, "giop_client",
-                #          unmarshal_block,
-                #          can_throw_marshal = 1,
-                #          fully_scope = 1)
-            
 
         # write the unmarshal function
         stream.out(unmarshal_template,
@@ -477,6 +489,38 @@ pd_result = new @type@;""", type = return_type_base)
                    post_assign = str(post_assign))
 
 
+    # -------------------------------------------------------------
+    
+    # consider user exceptions
+    if has_user_exceptions:
+        block = util.StringStream()
+        first_one = 1
+
+        for exception in raises:
+            scopedName = exception.scopedName()
+            repoID = scopedName + ["_PD_repoId"]
+            repoID_str = environment.nameToString(repoID)
+            exname = environment.nameToString(scopedName)
+            if first_one:
+                switch = "if"
+                first_one = 0
+            else:
+                switch = "else if"
+            block.out("""\
+@switch@( strcmp(repoId, @repoID_str@) == 0 ) {
+  @exname@ _ex;
+  _ex <<= giop_client;
+  giop_client.RequestCompleted();
+  throw _ex;
+}""", switch = switch, repoID_str = repoID_str, exname = exname)
+
+        # write the user exception template
+        stream.out(exception_template,
+                   call_descriptor = descriptor,
+                   exception_block = str(block))
+        
+
+        
 def attribute(attribute, seed):
     assert isinstance(attribute, idlast.Attribute)
 
@@ -568,6 +612,7 @@ pd_result <<= giop_client;"""
                ctor_args = ctor_args,
                inherits_list = inherits_list,
                marshal_arguments_decl = "",
+               user_exceptions_decl = "",
                unmarshal_arguments_decl = unmarshal_decl,
                result_member_function = result_mem_fn,
                member_data = "",
@@ -596,6 +641,7 @@ pd_result <<= giop_client;"""
                ctor_args = ctor_args,
                inherits_list = inherits_list,
                marshal_arguments_decl = marshal_decl,
+               user_exceptions_decl = "",
                unmarshal_arguments_decl = "",
                result_member_function = "",
                member_data = member_data,
