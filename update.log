@@ -7,6 +7,12 @@ Thu Oct 21 12:00:31 BST 1999 djr
 src/examples/boa/dir.mk
 src/examples/poa/implicit_activation/dir.mk
 
+- Added _core_attr to declaration of _PD_repoId in interfaces.
+  This fixes a bug seen on MSVC.
+
+include/omniORB3/CORBA.h
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
 
 Mon Oct 18 18:24:41 BST 1999 djr
 ================================

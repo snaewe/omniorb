@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.39.6.11  1999/10/21 11:05:00  djr
+  Added _core_attr to declarations of _PD_repoId in interfaces.
+
   Revision 1.39.6.10  1999/10/18 17:27:01  djr
   Work-around for MSVC scoping bug.
 
@@ -413,7 +416,7 @@ o2be_interface::produce_hdr(std::fstream& s)
    "    return result;\n"
    "  }\n\n"
 
-   "  static const char* _PD_repoId;\n\n"
+   "  static _core_attr const char* _PD_repoId;\n\n"
 
    "  // Other IDL defined within this scope.\n\n"
   );
