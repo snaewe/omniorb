@@ -12,3 +12,6 @@ export:: bdesc.py
 export:: typecode.py
 	@(file="typecode.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: tcstring.py
+	@(file="tcstring.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
+

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  2000/01/17 17:06:30  djs
+# Added tcParser #ifdefs for bounded strings
+#
 # Revision 1.4  2000/01/13 15:56:34  djs
 # Factored out private identifier prefix rather than hard coding it all through
 # the code.
@@ -57,6 +60,7 @@ from omniidl.be.cxx import config
 # Utility functions
 from omniidl.be.cxx import tyutil, util
 
+#import omniidl.be.cxx.dynskel.tcstring
 import omniidl.be.cxx.dynskel.typecode
 import omniidl.be.cxx.dynskel.main
 
@@ -68,6 +72,10 @@ def monolithic(stream, tree):
 
 static const char* @Config.privatePrefix()@_library_version = @Config.omniORB_Library_Version()@;
 """, Config = config)
+
+    # This is the bit shared with the header file?
+    tcstring = omniidl.be.cxx.dynskel.tcstring.__init__(stream)
+    #tree.accept(tcstring)
 
     Typecode = omniidl.be.cxx.dynskel.typecode.__init__(stream)
     tree.accept(Typecode)
