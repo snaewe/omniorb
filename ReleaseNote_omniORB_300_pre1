@@ -1,5 +1,5 @@
 
-Release Notes for omniORB 3.0.0 pre1  (24th September 1999)
+Release Notes for omniORB 3.0.0 pre1  (27th September 1999)
 ====================================
 
 The last release was 2.8.0 (31st August 1999).
@@ -66,8 +66,13 @@ Changes since 2.8.0
      o DSI is incomplete (depends on Current).
 
 
-2. IDL stubs must be regenerated with the new IDL compiler to be
-   compatible with the runtime library.
+2. IDL stubs.
+
+   There are a number of improvements.  You may find that the size of the
+   stub code generated is smaller.
+
+   The stubs must be regenerated with the new IDL compiler to be compatible
+   with the runtime library.
 
    The current shared runtime library versions are:
 
@@ -128,15 +133,22 @@ Changes since 2.8.0
       The default is zero, which indicates no timeout.
 
 
-4. New omniidl3 options:
+4. New omniidl3 flags:
 
     -t has been replaced by two new options:
 
       -tp   produce tie implementation skeletons
       -tf   generate flattened tie implementation skeletons
 
+    The latter is needed if on your platform modules are mapped to
+    c++ classes, and your compiler does not support template members
+    of classes.
+
     -b    generate BOA skeletons (_sk_foo).  By default only
           POA skeletons are generated.
+
+    To generate the old-style (BOA compatible) tie skeletons you
+    must supply both the -b and -tf flags.
 
 
 5. The member function CORBA::ORB::NP_destroy() is deprecated.  Use
@@ -197,6 +209,9 @@ Changes since 2.8.0
        now.
 
     d) The Lifecycle service has not yet been re-implemented.
+
+    e) The name of tie implementation skeletons has changed (in line
+       with the POA mapping).
 
 
 ---------------------------

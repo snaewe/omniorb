@@ -17,17 +17,20 @@
 clean::
 	$(CleanRule)
 
-ifneq ($(OMAKE_TARGET),veryclean)
 clean::
 	@$(MakeSubdirs)
-endif
 
+ifeq ($(MAKELEVEL),0)
 veryclean:: clean
+else
+veryclean::
+endif
 	$(VeryCleanRule)
 
 veryclean::
 	@$(MakeSubdirs)
 
+veryclean:: lastveryclean
 
 #############################################################################
 #

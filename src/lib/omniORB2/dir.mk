@@ -46,12 +46,6 @@ export:: omniLifeCycle.hh
 all::
 	@$(MakeSubdirs)
 
-clean::
-	@$(MakeSubdirs)
-
-veryclean::
-	@$(MakeSubdirs)
-
 export::
 	@$(MakeSubdirs)
 
@@ -88,7 +82,7 @@ omniLifeCycle.hh omniLifeCycleSK.cc omniLifeCycleDynSK.cc: omniLifeCycle.idl
 ciao:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh omniLifeCycle.hh
 	@$(MakeSubdirs)
 
-veryclean::
+lastveryclean::
 	$(RM)	Naming.idl Naming.hh NamingSK.cc NamingDynSK.cc \
 		bootstrap.idl bootstrap.hh bootstrapSK.cc bootstrapDynSK.cc \
 		ir.idl ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc \
