@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/20 15:38:56  sll
+  Multi-options, such as endPoint, InitRef are support in NT registry.
+
   Revision 1.1.2.2  2001/08/20 10:43:28  sll
   New orb configuration parsing now works with NT registry.
 
@@ -63,7 +66,7 @@ orbOptions::importFromRegistry() throw (orbOptions::Unknown,
 
   rootregname = NEW_REGKEY;
   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,rootregname,0,
-		   KEY_QUERY_VALUE,&rootkey) == ERROR_SUCCESS) {
+		   KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS,&rootkey) == ERROR_SUCCESS) {
     try {
       parseConfigReg(*this,rootkey);
       RegCloseKey(rootkey);
@@ -148,21 +151,74 @@ CORBA::Boolean getRegEntry(HKEY rootkey, DWORD index,
 }
 
 static
+void
+parseConfigInSubKey(orbOptions& opt, HKEY rootkey, char* subkeyname) {
+
+  HKEY subkey;
+
+  if (RegOpenKeyEx(rootkey,subkeyname,0,
+                   KEY_QUERY_VALUE,&subkey) == ERROR_SUCCESS) {
+   try {
+
+      DWORD total;
+      DWORD keybufsize;
+      DWORD valuebufsize;
+      CORBA::String_var keybuf;
+      CORBA::String_var valuebuf;
+
+      RegQueryInfoKey(subkey,NULL,NULL,NULL,NULL,NULL,NULL,
+		                  &total,&keybufsize,&valuebufsize,NULL,NULL);
+      if (total) {
+         keybuf = CORBA::string_alloc(keybufsize);
+         valuebuf = CORBA::string_alloc(valuebufsize);
+      }
+
+      DWORD index = 0;
+      while (index < total) {
+		    char* key;
+		    char* value;
+        if (!getRegEntry(subkey,index,
+                         keybuf,keybufsize+1,
+                         valuebuf,valuebufsize+1,
+		                     key,value))
+          return;
+        opt.addOption(subkeyname,value);
+        index++;
+      }
+      RegCloseKey(subkey);
+    }
+    catch (orbOptions::Unknown& ex) {
+      RegCloseKey(subkey);
+      throw;
+    }
+    catch (orbOptions::BadParam& ex) {
+      RegCloseKey(subkey);
+      throw;
+    }
+
+  }
+}
+
+static
 void parseConfigReg(orbOptions& opt, HKEY rootkey) {
 
   DWORD total;
+  DWORD totalsubkeys;
   DWORD keybufsize;
   DWORD valuebufsize;
+  DWORD subkeybufsize;
   CORBA::String_var keybuf;
   CORBA::String_var valuebuf;
+	CORBA::String_var subkeybuf;
 
-  RegQueryInfoKey(rootkey,NULL,NULL,NULL,NULL,NULL,NULL,
+  RegQueryInfoKey(rootkey,NULL,NULL,NULL,&totalsubkeys,&subkeybufsize,NULL,
 		  &total,&keybufsize,&valuebufsize,NULL,NULL);
 
 
   if (total) {
     keybuf = CORBA::string_alloc(keybufsize);
     valuebuf = CORBA::string_alloc(valuebufsize);
+    if (totalsubkeys) subkeybuf = CORBA::string_alloc(subkeybufsize);
   }
 
   DWORD index = 0;
@@ -177,6 +233,19 @@ void parseConfigReg(orbOptions& opt, HKEY rootkey) {
     opt.addOption(key,value);
     index++;
   }
+
+  index = 0;
+  while (index < totalsubkeys) {
+		DWORD subkeylen = subkeybufsize + 1;
+		if ( RegEnumKeyEx(rootkey,index,
+		                  (LPTSTR) ((char*)subkeybuf),&subkeylen,
+		                  NULL,NULL,NULL,NULL) != ERROR_SUCCESS ) {
+			 omniORB::logger log;
+			 log << "Cannot red subkey name for index " << index << "\n";
+		}
+		parseConfigInSubKey(opt,rootkey,subkeybuf);
+		index++;
+	}
 }
 
 static
