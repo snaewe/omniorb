@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.12  2002/10/28 12:20:45  dgrisby
+# Editing mishap.
+#
 # Revision 1.17.2.11  2002/10/28 11:56:50  dgrisby
 # Work around VC++ 7 problem with FILE* change.
 #
@@ -309,7 +312,7 @@ def genTempFileName():
         return tempfile.mktemp(".idl")
     except ImportError:
         # No tempfile module. Just use current directory and hope...
-        return = "omniidl-tmp" + `os.getpid()` + ".idl"
+        return "omniidl-tmp" + `os.getpid()` + ".idl"
 
 
 def my_import(name):
