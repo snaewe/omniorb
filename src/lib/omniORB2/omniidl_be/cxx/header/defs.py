@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.21  2000/01/10 16:13:13  djs
+# Removed a chunk of redundant code.
+#
 # Revision 1.20  2000/01/10 15:38:55  djs
 # Better name and scope handling.
 #
@@ -120,24 +123,7 @@ self.__insideInterface = 0
 self.__insideModule = 0
 self.__insideClass = 0
 
-# IDL (not C++) scope, should be filtered through tyutil.mapID before
-# being used
-#self.__scope = []
-#self.__environment = name.Environment()
 self.__globalScope = name.globalScope()
-#self.__scope = util.Environment()
-
-#def enter(scope):
-#    #self.__scope.append(scope)
-#    self.__environment = self.__environment.enterScope(scope)
-#def leave():
-#    #self.__scope = self.__scope[0:-1]
-#    self.__environment = self.__environment.leaveScope()
-#def currentScope():
-#    #return self.__scope[:]
-#    return self.__environment.scope()
-#def addName(name):
-#    self.__environment.add(name)
 
 
 def __init__(stream):
@@ -157,8 +143,6 @@ def visitModule(node):
     if not(node.mainFile()):
         return
     
-    #addName(node.identifier())
-    
     name = tyutil.mapID(node.identifier())
     
     if not(isFragment):
@@ -172,12 +156,8 @@ _CORBA_MODULE_BEG
     insideModule = self.__insideModule
     self.__insideModule = 1
 
-    #enter(node.identifier())
-    
     for n in node.definitions():
         n.accept(self)
-
-    #leave()
 
     self.__insideModule = insideModule
     if not(isFragment):
@@ -185,21 +165,15 @@ _CORBA_MODULE_BEG
         stream.out("""\
 _CORBA_MODULE_END
 """)
-    node.written = name;
+        
 
 def visitInterface(node):
     if not(node.mainFile()):
         return
-    #try:
-    #    addName(node.identifier())
-    #except KeyError:
-    #    pass
+
     name = node.identifier()
     cxx_name = tyutil.mapID(name)
-    #interface_scope = currentScope()
-    
-#    print "[[[ interface scope = " + repr(interface_scope) + "]]]"
-    #enter(node.identifier())
+
     outer_environment = env.lookup(node)
     environment = outer_environment.enterScope(name)
     scope = environment.scope()
@@ -279,12 +253,7 @@ public:
                guard = guard)
     # output code for other declarations within this scope
     for n in node.declarations():
-#        print "[[[ scope = " + repr(scope) + "  interface_scope = " + \
-#              repr(interface_scope) + "]]]"
         n.accept(self)
-#        print "[[[ scope = " + repr(scope) + "  interface_scope = " + \
-#              repr(interface_scope) + "]]]"
-#    print "[[[ ---- MARK ---- ]]]"
         
     # build methods corresponding to attributes, operations etc
     attributes = []
@@ -299,11 +268,6 @@ public:
             returnType = tyutil.operationArgumentType(attrType, outer_environment)[0]
             inType = tyutil.operationArgumentType(attrType, outer_environment)[1]
             
-            #if tyutil.isObjRef(derefAttrType):
-            #    type = tyutil.principalID(derefAttrType, scope) + "_ptr"
-            #
-            #else:
-            #    type = tyutil.operationArgumentType(attrType, interface_scope)[0]
             for i in c.identifiers():
                 attribname = tyutil.mapID(i)
                 attributes.append(returnType + " " + attribname + "()")
@@ -332,10 +296,8 @@ public:
                 argname = tyutil.mapID(p.identifier())
                 params.append(tuple[0] + " " + argname)
                 virtual_params.append(tuple[1] + " " + argname)
-#                print "[[[ tuple = " + repr(tuple) + "]]]"
+
             return_type = argumentTypeToString(c.returnType())[0]
-#            print "[[[ returnType = " + repr(c.returnType()) + \
-#                  "    text = " + repr(return_type) + "]]]"
             opname = tyutil.mapID(c.identifier())
             arguments = string.join(params, ", ")
             virtual_arguments = string.join(virtual_params, ", ")
@@ -459,19 +421,16 @@ private:
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;
 """, qualifier = qualifier, name = cxx_name)
         
-    #leave()
-
+    return
     
 
 def visitForward(node):
     if not(node.mainFile()):
         return
     
-    # it's legal to have multiple forward declarations
-    # of the same name. ignore the duplicates here
+    # Note it's legal to have multiple forward declarations
+    # of the same name. ignore the duplicates
     environment = env.lookup(node)
-    #print "e = " + str(environment)
-    #print 
     try:
         environment.lookup([None] + node.scopedName())
         # the name already exists in this scope so we
@@ -479,11 +438,6 @@ def visitForward(node):
         return
     except KeyError:
         pass
-    #try:
-    #    addName(node.identifier())
-    #except KeyError:
-    #    return
-    
 
     environment = env.lookup(node)
     scope = environment.scope()
@@ -528,7 +482,6 @@ def visitConst(node):
 
     environment = env.lookup(node)
     scope = environment.scope()
-    #environment = self.__environment
     
     constType = node.constType()
     deref_constType = tyutil.deref(constType)
@@ -577,19 +530,11 @@ def visitTypedef(node):
     if not(node.mainFile()):
         return
     
-    # need to have some way of keeping track of current scope
     environment = env.lookup(node)
     scope = environment.scope()
-    #environment = self.__environment
 
     is_global_scope = not(self.__insideModule or self.__insideInterface)
     
-    # don't define the same typedef twice...
-    if (hasattr(node, "written")):
-        raise "Is this check ever needed?"
-        return node.written
-    node.written = "dummy"
-
     aliasType = node.aliasType()
     aliasTypeID = environment.principalID(aliasType)
     
@@ -609,7 +554,6 @@ def visitTypedef(node):
     
     # each one is handled independently
     for d in node.declarators():
-        #addName(d.identifier())
         
         # derivedName is the new typedef'd name
         # alias_dims is a list of dimensions of the type being aliased
@@ -731,8 +675,6 @@ typedef @base@_out @name@_out;
                     impl_name = environment.nameToString(impl_scopedName)
                     objref_name = environment.nameToString(objref_scopedName)
                     
-                    #impl_name = environment.nameToString(environment.relName(impl_scopedName))
-                    #objref_name = environment.nameToString(environment.relName(objref_scopedName))
                     impl_base = "typedef " + impl_name + "_impl_" + derivedName + ";"
                     objref_base = "typedef " + objref_name + "_objref_" + \
                                   derivedName + ";"
@@ -1101,19 +1043,15 @@ def visitMember(node):
 def visitStruct(node):
     if not(node.mainFile()):
         return
-    #addName(node.identifier())
 
     name = node.identifier()
     cxx_name = tyutil.mapID(name)
-    #enter(node.identifier())
 
-    #scope = currentScope()
     outer_environment = env.lookup(node)
     environment = outer_environment.enterScope(name)
     
     scope = environment.scope()
     
-    #environment = self.__environment
     insideClass = self.__insideClass
     self.__insideClass = 1
             
@@ -1180,21 +1118,9 @@ _@memtype@ @instname@;""",
 
             elif tyutil.isEnum(memberType):
                 memtype = environment.principalID(memberType)
-                #memtype = tyutil.mapID(memberType.decl().identifier())
-                # If it's a user declared type then remember the type we assigned?
-            elif isinstance(memberType, idltype.Declared) and \
-                 hasattr(m,"memtype"):
-                if m.memtype != None:
-                    #                    print "[[[stored]]]"
-                    memtype = m.memtype
-                else:
-                    memtype = environment.principalID(memberType)
+
             else:
                 memtype = environment.principalID(memberType)
-                #print "environment = " + str(environment)
-                #print "memtype = " + memtype
-                #print
-
 
         for d in m.declarators():
             dims = d.sizes()
@@ -1232,27 +1158,17 @@ typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
 
 
 
-    node.written = name
-    #leave()
-
 def visitException(node):
     if not(node.mainFile()):
         return
     
-    # the exception's name
-    #addName(node.identifier())
-
     exname = node.identifier()
     cxx_exname = tyutil.mapID(exname)
-
-    #enter(node.identifier())
 
     outer_environment = env.lookup(node)
     environment = outer_environment.enterScope(exname)
     
     scope = environment.scope()
-    #scope = currentScope()
-    #environment = self.__environment
     insideClass = self.__insideClass
     self.__insideClass = 1
 
@@ -1380,25 +1296,18 @@ private:
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;
 """, qualifier = qualifier, name = cxx_exname)
     
-    #leave()
 
 
 def visitUnion(node):
     if not(node.mainFile()):
         return
     
-    #addName(node.identifier())
-    
-    #enter(node.identifier())
-
     name = node.identifier()
     cxx_name = tyutil.mapID(name)
     outer_environment = env.lookup(node)
     environment = outer_environment.enterScope(name)
     
     scope = environment.scope()
-    #scope = currentScope()
-    #environment = self.__environment
     insideClass = self.__insideClass
     self.__insideClass = 1
     
@@ -1406,7 +1315,7 @@ def visitUnion(node):
     
     # returns a representation of the union discriminator in a form
     # that is a legal value in C++
-    def discrimValueToString(switchType, caselabel, environment):
+    #def discrimValueToString(switchType, caselabel, environment):
         # CORBA 2.3draft 3.10.2.2
         #   switch type ::= <integer_type>
         #               |   <char_type>
@@ -1415,9 +1324,9 @@ def visitUnion(node):
         #               |   <scoped_name>
         # where scoped_name must be an already declared version of one
         # of the simpler types
-        discrimvalue = caselabel.value()
+    #    discrimvalue = caselabel.value()#
 
-        return tyutil.valueString(switchType, discrimvalue, environment)
+    #    return tyutil.valueString(switchType, discrimvalue, environment)
         
 
     # in the case where there is no default case and an implicit default
@@ -1466,8 +1375,6 @@ def visitUnion(node):
             enums = switchType.decl().enumerators()
             # pick the first enum not already in a case
             allcases = map(lambda x: x.value(), allCaseValues)
-#            print "[[[ enums = " + repr(enums) + "]]]"
-#            print "[[[ allcases = " + repr(allcases) + "]]]"
             difference = util.minus(enums, allcases)
             scopedName = difference[0].scopedName()
             # need to be careful of scope
@@ -1548,7 +1455,8 @@ public:
                 # FIXME: stupid special case. An explicit discriminator
                 # value of \0 -> 0000 whereas an implicit one (valueString)
                 # \0 -> '\000'
-                discrimvalue = discrimValueToString(switchType, l, environment)
+                discrimvalue = tyutil.valueString(switchType, l.value(), environment)
+                #discrimvalue = discrimValueToString(switchType, l, environment)
                 if tyutil.isChar(switchType) and l.value() == '\0':
                     discrimvalue = "0000"
                 stream.out("""\
@@ -1629,8 +1537,10 @@ public:
             if l.default():
                 discrimvalue = chooseArbitraryDefault()
             else:
-                discrimvalue = discrimValueToString(switchType,
-                                                    l, environment)
+                discrimvalue = tyutil.valueString(switchType, l.value(),
+                                                  environment)
+                #discrimvalue = discrimValueToString(switchType,
+                #                                    l, environment)
 
             # FIXME: stupid special case, see above
             if tyutil.isChar(switchType) and l.value() == '\0':
@@ -1786,7 +1696,6 @@ public:
                            isDefault = str(c.isDefault),
                            discrimvalue = discrimvalue)
             elif tyutil.isObjRef(derefType):
-                #type = environment.principalID(derefType)
                 objref = tyutil.objRefTemplate(derefType, "Member", environment)
                 stream.out("""\
   @type@_ptr @member@ () const { return pd_@member@._ptr; }
@@ -1997,17 +1906,13 @@ typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
                    qualifier = qualifier, name = cxx_name)
 
-    #leave()
+    return
 
 
 def visitEnum(node):
     if not(node.mainFile()):
         return
     
-    #addName(node.identifier())
-    
-    if hasattr(node,"written"):
-        return node.written;
     name = tyutil.mapID(node.identifier())
     cxx_name = tyutil.mapID(name)
     enumerators = node.enumerators()
@@ -2027,5 +1932,5 @@ typedef @name@& @name@_out;
                    qualifier = qualifier, name = cxx_name)
     
     node.written = cxx_name
-    return cxx_name
+    return
 
