@@ -1,3 +1,11 @@
+Wed Feb 20 13:31:07 GMT 2002 dpg1
+=================================
+
+- C++ back-end old signatures option did not work.
+
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+
+
 Thu Feb 14 14:07:50 GMT 2002 dpg1
 =================================
 
