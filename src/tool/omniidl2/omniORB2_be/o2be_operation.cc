@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.31  1999/07/23 11:27:28  djr
+  Implemented efficient marshalling/unmarshalling of array of basic types.
+
   Revision 1.30  1999/06/28 13:24:25  dpg1
   LifeCycle code updated for proxyCallWrapper and Context support.
 
@@ -109,6 +112,8 @@
 #ifdef HAS_pch
 #pragma hdrstop
 #endif
+
+#include <o2be_stringbuf.h>
 
 
 o2be_operation::o2be_operation(AST_Type* rt, AST_Operation::Flags fl,
@@ -2401,10 +2406,10 @@ o2be_operation::declareVarType(std::fstream& s,AST_Decl* decl,AST_Decl*
 
 
 void
-o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
+o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
 				     AST_Decl* used_in,
-				     const char *netstream,
-				     const char *argname,
+				     const char* netstream,
+				     const char* argname,
 				     argType type, argMapping mapping,
 				     idl_bool no_size_check)
 {
@@ -2467,40 +2472,92 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
 
     case tArrayFixed:
       {
+	o2be_array* array = o2be_array::narrow_from_decl(decl);
 	argMapping dummymapping;
-	argType atype = ast2ArgMapping(o2be_array::narrow_from_decl(decl)
-				       ->getElementType(),
+	argType atype = ast2ArgMapping(array->getElementType(),
 				       wIN,         // dummy argument
 				       dummymapping // ignored
 				       );
 
-	//?? Speed-ups possible here.
-	// We could do array of octet in one operation.
-	//  We could do arrays of integer types quickly if the
-	// byte order is right, and slowly otherwise. Just need
-	// to align ourselves before we start reading out.
+	int total_length = array->getNumOfElements();
+	StringBuf ptr_to_first_elm;
+	ptr_to_first_elm += "((";
+	ptr_to_first_elm += o2be_name::narrow_and_produce_unambiguous_name(
+					   array->getElementType(), used_in);
+	ptr_to_first_elm += "*) ";
+	ptr_to_first_elm += argname;
+	{
+	  size_t ndim = 0;
+	  o2be_array::dim_iterator next(array);
+	  while( ndim++ < array->getNumOfDims() - 1 ) {
+	    ptr_to_first_elm += '[';
+	    ptr_to_first_elm += (int) next();
+	    ptr_to_first_elm += ']';
+	  }
+	}
+	ptr_to_first_elm += ")";
+	std::cout << "ptr_to_first_elm = " << ptr_to_first_elm << std::endl;
 
 	switch (atype)
 	  {
 	  case tBoolean:
 	  case tChar:
 	  case tOctet:
+	    IND(s); s << netstream << ".get_char_array((_CORBA_Char*) "
+		      << ptr_to_first_elm << ", " << total_length << ");\n";
+	    break;
+
 	  case tShort:
+	    IND(s); s << "CdrStreamHelper_unmarshalArrayShort("
+		      << netstream << ", " << ptr_to_first_elm << ", "
+		      << total_length << ");\n";
+	    break;
+
 	  case tUShort:
+	    IND(s); s << "CdrStreamHelper_unmarshalArrayUShort("
+		      << netstream << ", " << ptr_to_first_elm << ", "
+		      << total_length << ");\n";
+	    break;
+
 	  case tLong:
+	    IND(s); s << "CdrStreamHelper_unmarshalArrayLong("
+		      << netstream << ", " << ptr_to_first_elm << ", "
+		      << total_length << ");\n";
+	    break;
+
 	  case tULong:
+	    IND(s); s << "CdrStreamHelper_unmarshalArrayULong("
+		      << netstream << ", " << ptr_to_first_elm << ", "
+		      << total_length << ");\n";
+	    break;
+
 	  case tEnum:
+	    IND(s); s << "CdrStreamHelper_unmarshalArrayULong("
+		      << netstream << ", (_CORBA_ULong*) "
+		      << ptr_to_first_elm << ", " << total_length << ");\n";
+	    break;
+
 	  case tFloat:
+	    IND(s); s << "CdrStreamHelper_unmarshalArrayFloat("
+		      << netstream << ", " << ptr_to_first_elm << ", "
+		      << total_length << ");\n";
+	    break;
+
 	  case tDouble:
+	    IND(s); s << "CdrStreamHelper_unmarshalArrayDouble("
+		      << netstream << ", " << ptr_to_first_elm << ", "
+		      << total_length << ");\n";
+	    break;
+
 	  case tStructFixed:
 	  case tUnionFixed:
 	    {
 	      unsigned int ndim = 0;
 	      unsigned int dimval;
-	      o2be_array::dim_iterator next(o2be_array::narrow_from_decl(decl));
+	      o2be_array::dim_iterator next(array);
 	      IND(s); s << "{\n";
 	      INC_INDENT_LEVEL();
-	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+	      while (ndim < array->getNumOfDims())
 		{
 		  dimval = next();
 		  IND(s); s << "for (CORBA::ULong _i" << ndim << " =0;"
@@ -2518,14 +2575,14 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
 			  << "_slice*) " << argname << ")";
 	      }
 	      ndim = 0;
-	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+	      while (ndim < array->getNumOfDims())
 		{
 		  s << "[_i" << ndim << "]";
 		  ndim++;
 		}
 	      s << " <<= " << netstream << ";\n";
 	      ndim = 0;
-	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+	      while (ndim < array->getNumOfDims())
 		{
 		  DEC_INDENT_LEVEL();
 		  IND(s); s << "}\n";
@@ -2538,7 +2595,7 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
 
 	  default:
 	    throw o2be_internal_error(__FILE__,__LINE__,
-				      "Unexpected element type for fixed array");
+			      "Unexpected element type for fixed array");
 	  }
       }
 
@@ -2762,15 +2819,15 @@ o2be_operation::produceUnMarshalCode(std::fstream &s, AST_Decl *decl,
 }
 
 void
-o2be_operation::produceMarshalCode(std::fstream &s, AST_Decl *decl,
+o2be_operation::produceMarshalCode(std::fstream& s, AST_Decl* decl,
 				   AST_Decl* used_in,
-				   const char *netstream,
-				   const char *argname,
+				   const char* netstream,
+				   const char* argname,
 				   argType type, argMapping mapping)
 {
-  while (decl->node_type() == AST_Decl::NT_typedef) {
+  while (decl->node_type() == AST_Decl::NT_typedef)
     decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-  }
+
   switch(type)
     {
     case tBoolean:
@@ -2849,36 +2906,72 @@ o2be_operation::produceMarshalCode(std::fstream &s, AST_Decl *decl,
 
     case tArrayFixed:
       {
+	o2be_array* array = o2be_array::narrow_from_decl(decl);
 	argMapping dummymapping;
-	argType atype = ast2ArgMapping(o2be_array::narrow_from_decl(decl)
-				         ->getElementType(),
+	argType atype = ast2ArgMapping(array->getElementType(),
 				       wIN,         // dummy argument
 				       dummymapping // ignored
 				       );
 
-	//?? We can do better than this.
+	int total_length = array->getNumOfElements();
+	StringBuf ptr_to_first_elm;
+	ptr_to_first_elm += "((const ";
+	ptr_to_first_elm += o2be_name::narrow_and_produce_unambiguous_name(
+					   array->getElementType(), used_in);
+	ptr_to_first_elm += "*) ";
+	ptr_to_first_elm += argname;
+	{
+	  size_t ndim = 0;
+	  o2be_array::dim_iterator next(array);
+	  while( ndim++ < array->getNumOfDims() - 1 ) {
+	    ptr_to_first_elm += '[';
+	    ptr_to_first_elm += (int) next();
+	    ptr_to_first_elm += ']';
+	  }
+	}
+	ptr_to_first_elm += ")";
+	std::cout << "ptr_to_first_elm = " << ptr_to_first_elm << std::endl;
 
 	switch (atype)
 	  {
 	  case tBoolean:
 	  case tChar:
 	  case tOctet:
+	    IND(s); s << netstream << ".put_char_array((const _CORBA_Char*) "
+		      << ptr_to_first_elm << ", " << total_length << ");\n";
+	    break;
+
 	  case tShort:
 	  case tUShort:
+	    IND(s); s << netstream << ".put_char_array((const _CORBA_Char*) "
+		      << ptr_to_first_elm << ", " << (total_length * 2)
+		      << ", omni::ALIGN_2);\n";
+	    break;
+
 	  case tLong:
 	  case tULong:
 	  case tEnum:
 	  case tFloat:
+	    IND(s); s << netstream << ".put_char_array((const _CORBA_Char*) "
+		      << ptr_to_first_elm << ", " << (total_length * 4)
+		      << ", omni::ALIGN_4);\n";
+	    break;
+
 	  case tDouble:
+	    IND(s); s << netstream << ".put_char_array((const _CORBA_Char*) "
+		      << ptr_to_first_elm << ", " << (total_length * 8)
+		      << ", omni::ALIGN_8);\n";
+	    break;
+
 	  case tStructFixed:
 	  case tUnionFixed:
 	    {
 	      unsigned int ndim = 0;
 	      unsigned int dimval;
-	      o2be_array::dim_iterator next(o2be_array::narrow_from_decl(decl));
+	      o2be_array::dim_iterator next(array);
 	      IND(s); s << "{\n";
 	      INC_INDENT_LEVEL();
-	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+	      while (ndim < array->getNumOfDims())
 		{
 		  dimval = next();
 		  IND(s); s << "for (CORBA::ULong _i" << ndim << " =0;"
@@ -2896,14 +2989,14 @@ o2be_operation::produceMarshalCode(std::fstream &s, AST_Decl *decl,
 			  << "_slice*) " << argname << ")";
 	      }
 	      ndim = 0;
-	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+	      while (ndim < array->getNumOfDims())
 		{
 		  s << "[_i" << ndim << "]";
 		  ndim++;
 		}
 	      s << " >>= " << netstream << ";\n";
 	      ndim = 0;
-	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+	      while (ndim < array->getNumOfDims())
 		{
 		  DEC_INDENT_LEVEL();
 		  IND(s); s << "}\n";
@@ -2916,7 +3009,7 @@ o2be_operation::produceMarshalCode(std::fstream &s, AST_Decl *decl,
 
 	  default:
 	    throw o2be_internal_error(__FILE__,__LINE__,
-				      "Unexpected element type for fixed array");
+			      "Unexpected element type for fixed array");
 	  }
       }
 
@@ -3147,8 +3240,7 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
     case tShort:
     case tUShort:
       IND(s); s << sizevar << " = omni::align_to(" << sizevar
-		<< ",omni::ALIGN_2);\n";
-      IND(s); s << sizevar << " += 2;\n";
+		<< ", omni::ALIGN_2) + 2;\n";
       break;
 
     case tLong:
@@ -3156,14 +3248,12 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
     case tEnum:
     case tFloat:
       IND(s); s << sizevar << " = omni::align_to(" << sizevar
-		<< ",omni::ALIGN_4);\n";
-      IND(s); s << sizevar << " += 4;\n";
+		<< ", omni::ALIGN_4) + 4;\n";
       break;
 
     case tDouble:
       IND(s); s << sizevar << " = omni::align_to(" << sizevar
-		<< ",omni::ALIGN_8);\n";
-      IND(s); s << sizevar << " += 8;\n";
+		<< ", omni::ALIGN_8) + 8;\n";
       break;
 
     case tStructFixed:
@@ -3187,9 +3277,9 @@ o2be_operation::produceSizeCalculation(std::fstream& s, AST_Decl* decl,
 
     case tString:
       IND(s); s << sizevar << " = omni::align_to(" << sizevar
-		<< ",omni::ALIGN_4);\n";
-      IND(s); s << sizevar << " += 4 + (((const char*) " << argname
-		  << ")? strlen((const char*) " << argname
+		<< ", omni::ALIGN_4) + 4\n";
+      IND(s); s << "  + (((const char*) " << argname
+		  << ") ? strlen((const char*) " << argname
 		  << ") + 1 : 1);\n";
       break;
 
