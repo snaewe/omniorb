@@ -29,6 +29,9 @@
 /*
  $Id$
  $Log$
+ Revision 1.1.2.5  2000/09/28 23:18:14  djs
+ Reordered initialiser list to match declaration order
+
  Revision 1.1.2.4  2000/09/28 18:28:36  djs
  Bugfixes in Poller (wrt timout behaviour and is_ready function)
  Removed traces of Private POA/ internal ReplyHandler servant for Poller
@@ -169,8 +172,8 @@ protected:
     reply_already_read(0),
     pd_is_from_poller(0),
     pd_associated_handler(Messaging::ReplyHandler::_nil()),
-    pd_op_name(opname),
-    pd_target(CORBA::Object::_duplicate(target)){ }
+    pd_target(CORBA::Object::_duplicate(target)),
+    pd_op_name(opname) { }
 
 
   // lock internal data, allow for blocking waits
