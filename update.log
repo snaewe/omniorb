@@ -6,6 +6,7 @@ Tue Aug  1 18:15:25 BST 2000 sll
   can build shared libraries.
 
 mk/unix.mk
+
 mk/platforms/hppa_hpux_11.00.mk
 mk/platforms/i586_linux_2.0_glibc.mk
 mk/platforms/i586_linux_2.0_glibc2.1.mk
@@ -20,6 +21,17 @@ external_merge/mk/platforms/powerpc_aix_4.2.mk
 external_merge/mk/platforms/powerpc_aix_4.2_egcs.mk
 external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk
 external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc.mk
+external_merge/mk/platforms/i586_linux_2.0_glibc2.1.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+external_merge/mk/platforms/sun4_sosV_5.5.mk
+external_merge/mk/platforms/sun4_sosV_5.6.mk
+external_merge/mk/platforms/sun4_sosV_5.7.mk
+external_merge/mk/platforms/x86_freebsd_3.2.mk
+external_merge/mk/platforms/x86_freebsd_4.0.mk
+external_merge/mk/platforms/x86_sosV_5.5.mk
 
 src/services/mklib/mkBOAlib/sharedlib/dir.mk
 src/services/mklib/sharedlib/dir.mk

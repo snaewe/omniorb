@@ -110,7 +110,6 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 ELF_SHARED_LIBRARY = 1
 
 SHAREDLIB_CPPFLAGS = -fPIC
-SHAREDLIB_SUFFIX   = .so
 
 define MakeCXXSharedLibrary
 (set -x; \

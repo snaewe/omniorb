@@ -149,8 +149,6 @@ OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
 #      
 ELF_SHARED_LIBRARY = 1
 
-SHAREDLIB_SUFFIX   = .so
-
 ifeq ($(notdir $(CXX)),CC)
 
 ELF_SHARED_LIBRARY = 1
