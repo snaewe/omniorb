@@ -385,7 +385,14 @@ NamingContext_i::bind_new_context(const CosNaming::Name& n)
     DB(cerr << "bind_new_context simple (" << n[0].id << "," << n[0].kind
        << ") in context " << this << endl);
     CosNaming::NamingContext_ptr nc = new_context();
-    bind_context(n, nc);
+    try {
+      bind_context(n, nc);
+    } catch (...) {
+      nc->destroy();
+      CORBA::release(nc);
+      throw;
+    }
+      
     return nc;
 
   } else {
