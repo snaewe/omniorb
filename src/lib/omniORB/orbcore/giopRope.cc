@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.14  2001/09/03 13:26:35  sll
+  In filterAndSortAddressList, change to use the lowest value to represent
+  the highest priority.
+
   Revision 1.1.4.13  2001/08/31 11:57:16  sll
   Client side transport selection is now determined by the clientTransportRules.
 
@@ -618,7 +622,7 @@ giopRope::filterAndSortAddressList(const giopAddressList& addrlist,
       for (i = 0; i < actions.length(); i++ ) {
 	size_t len = strlen(actions[i]);
 	if (strncmp(actions[i],transport,len) == 0 ) {
-	  priority = (matchedRule << 16) + actions.length() - i;
+	  priority = (matchedRule << 16) + i;
 	  matched = 1;
 	}
 	else if ( strcmp(actions[i],"none") == 0 ) {
@@ -648,7 +652,7 @@ giopRope::filterAndSortAddressList(const giopAddressList& addrlist,
     for (int gap=n/2; gap > 0; gap=gap/2 ) {
       for (int i=gap; i < n ; i++)
 	for (int j =i-gap; j>=0; j=j-gap) {
-	  if ( prioritylist[j] < prioritylist[j+gap] ) {
+	  if ( prioritylist[j] > prioritylist[j+gap] ) {
 	    CORBA::ULong temp = ordered_list[j];
 	    ordered_list[j] = ordered_list[j+gap];
 	    ordered_list[j+gap] = temp;
@@ -659,7 +663,7 @@ giopRope::filterAndSortAddressList(const giopAddressList& addrlist,
 	}
     }
   }
-#if 0
+#if 1
   {
     omniORB::logger log;
     log << "Sorted addresses are: \n";
