@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.19  2000/11/23 13:05:04  sll
+ Added support for KAI C++ 4.0.
+
  Revision 1.1.2.18  2000/09/25 11:03:27  dpg1
  Remove use of _T as a template class name
 
@@ -345,6 +348,12 @@
 #elif defined(__BCPLUSPLUS__)
 #define HAS_Cplusplus_Namespace
 
+#elif defined(__KCC)
+// Kai C++
+#define HAS_Cplusplus_Namespace
+#define HAS_Std_Namespace
+#define HAS_Cplusplus_Bool
+
 #elif defined(__sgi)
 
 #if _COMPILER_VERSION >= 721
@@ -383,14 +392,6 @@
 #define NEED_DUMMY_RETURN
 #define HAS_Cplusplus_Namespace
 #define HAS_Cplusplus_Bool
-#endif
-
-#if __OSVERSION__ < 11
-// Do we really need to include this here?   -SLL
-//  - not for HPUX 11.0
-//    need someone to check this for HPUX 10.20
-#include <stdio.h>
-#undef __ptr
 #endif
 
 #endif
@@ -458,6 +459,13 @@
 #elif defined(__hpux__) && defined(__hppa__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
+#if __OSVERSION__ < 11
+// Do we really need to include this here?   -SLL
+//  - not for HPUX 11.0
+//    need someone to check this for HPUX 10.20
+#include <stdio.h>
+#undef __ptr
+#endif
 #elif defined(__m68k__) && defined(__nextstep__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1

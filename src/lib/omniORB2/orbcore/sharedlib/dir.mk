@@ -690,3 +690,39 @@ export:: $(lib)
 
 endif
 endif
+
+#############################################################################
+#   Make rules for KAI C++ on multiple platforms, (Linux, HP-UX)            #
+#############################################################################
+ifdef KCC
+
+DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
+
+libname = libomniORB$(major_version).$(SHAREDLIB_SUFFIX)
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+all:: $(lib)
+
+$(lib): $(ORB_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) --thread_safe --soname $(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^); \
+       )
+
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
