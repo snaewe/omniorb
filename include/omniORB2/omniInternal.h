@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.14  1997/12/12 19:59:19  sll
+  Added version variable omniORB_x_y.
+
   Revision 1.13  1997/12/10 11:52:31  sll
   *** empty log message ***
 
@@ -78,6 +81,16 @@ class omniObject;
 class initFile;
 class omniORB;
 class omniObjectManager;
+
+// omniORB_x_y
+//   Define this variable to trap the mismatch of the stub and the runtime
+//   library. The two digits x,y should be the same as the shared library
+//   major version number and minor version number. For example, for shared
+//   library 2.4.0 the variable number should be omniORB_2.4. Notice that
+//   the variable name stays the same with compatible shared library, e.g.
+//   2.4.1.
+//
+extern const char* omniORB_2_4;
 
 #include <omniORB2/rope.h>
 
