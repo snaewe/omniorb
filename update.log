@@ -1,3 +1,13 @@
+Fri Jul 28 17:37:49 BST 2000 sll
+================================
+
+- Rearranged the make rules to put the linker flags for omnithread and its
+  related libraries after all the omniORB libraries.
+
+
+mk/unix.mk
+external_merge/mk/unix.mk
+
 Wed Jul 26 16:21:09 BST 2000 djs
 ================================
 
