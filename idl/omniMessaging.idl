@@ -1,6 +1,9 @@
 // Modified form of the OMG Pseudo-IDL from the Messaging spec
-
-// (base valuetype replaced with a struct)
+//
+// Treat the ExceptionHolder value as if it were a struct. Add methods
+// to it by inheritance.
+//
+// Poller valuetype is created by hand in Messaging.{cc, h}
 
 module Messaging{
 
