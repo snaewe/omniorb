@@ -1,3 +1,19 @@
+Thu Jul 26 11:51:01 BST 2001 dpg1
+=================================
+
+- Typo in C++ back-end broke wstring constants.
+
+src/lib/omniORB/omniidl_be/cxx/header/defs.py
+
+- Don't link omniCodeSets library with unnecessary libraries.
+
+src/lib/omniORB/codesets/dir.mk
+
+- Print GIOP version information when listing code sets.
+
+src/lib/omniORB/orbcore/codeSets.cc
+
+
 Wed Jul 25 15:19:22 BST 2001 dpg1
 =================================
 

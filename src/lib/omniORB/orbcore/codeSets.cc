@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2001/07/26 11:28:58  dpg1
+  Print GIOP version information when listing code sets.
+
   Revision 1.1.2.8  2001/07/25 10:56:28  dpg1
   Fix static initialiser problem with codesets.
 
@@ -396,6 +399,7 @@ void
 omniCodeSet::logCodeSets()
 {
   omniCodeSet::Base* cs;
+  GIOP::Version v;
 
   {
     omniORB::logger l;
@@ -406,7 +410,11 @@ omniCodeSet::logCodeSets()
   {
     omniORB::logger l;
     l << "Transmission char code sets:";
-    for (cs = tcs_c_head(); cs; cs = cs->pd_next) l << " " << cs->name();
+    for (cs = tcs_c_head(); cs; cs = cs->pd_next) {
+      v = ((omniCodeSet::TCS_C*)cs)->giopVersion();
+      l << " " << cs->name()
+	<< "(" << ((int)v.major) << "." << ((int)v.minor) << ")";
+    }
     l << ".\n";
   }
   {
@@ -418,7 +426,11 @@ omniCodeSet::logCodeSets()
   {
     omniORB::logger l;
     l << "Transmission wide char code sets:";
-    for (cs = tcs_w_head(); cs; cs = cs->pd_next) l << " " << cs->name();
+    for (cs = tcs_w_head(); cs; cs = cs->pd_next) {
+      v = ((omniCodeSet::TCS_W*)cs)->giopVersion();
+      l << " " << cs->name()
+	<< "(" << ((int)v.major) << "." << ((int)v.minor) << ")";
+    }
     l << ".\n";
   }
 }
