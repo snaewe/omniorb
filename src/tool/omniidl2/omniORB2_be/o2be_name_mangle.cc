@@ -41,13 +41,17 @@
 //
 // scope ::= basic "_m"
 //
-// idname ::= {basic "_m"} basic           ; unique name for identifier
+// idname ::= {basic "_m"} basic           ; fully scoped identifier
 //
 // array ::= "_a" dimension
 //
 // sequence ::= "_s" bound
 //
-// cannon_type_name ::= {array | sequence} "_c" cannon_type_name
+// string ::= [bound] "string"
+//
+// cannon_base_name ::= string | idname
+//
+// cannon_type_name ::= {array | sequence} "_c" cannon_base_name
 //                                         ; canonical name for a type
 //
 // return_type ::= cannon_type_name
@@ -119,14 +123,29 @@ o2be_name_mangler::produce_canonical_name(AST_Decl* decl)
 
   while(1) {
 
-    while( decl->node_type() == AST_Decl::NT_typedef )
-      decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-
     switch( decl->node_type() ) {
+
+    case AST_Decl::NT_typedef:
+      {
+	AST_Decl* to = o2be_typedef::narrow_from_decl(decl)->base_type();
+
+	switch( to->node_type() ) {
+	case AST_Decl::NT_sequence:
+	  // typedef of sequence is in fact a separate c++ type...
+	  result += CANNON_NAME_SEPARATOR;
+	  result += o2be_name::narrow_and_produce__idname(decl);
+	  return result.release();
+
+	default:
+	  decl = to;
+	  break;
+	}
+	break;
+      }
 
     case AST_Decl::NT_array:
       {
-	// we go through all dimensions of this array and sub-arrays
+	// We go through all dimensions of this array and sub-arrays
 	o2be_array* array = o2be_array::narrow_from_decl(decl);
 	o2be_array::dim_iterator dimit(array);
 	size_t ndims = array->getNumOfDims();
@@ -145,15 +164,36 @@ o2be_name_mangler::produce_canonical_name(AST_Decl* decl)
 
     case AST_Decl::NT_sequence:
       {
+	// We only get here for anonymous sequences. Typedef of sequence
+	// is dealt with above.
 	o2be_sequence* seq = o2be_sequence::narrow_from_decl(decl);
 	char strbound[20];
-	sprintf(strbound, "%d", (int)seq->bound());
+	sprintf(strbound, "%d", (int) seq->bound());
 
 	result += SEQ_SEPARATOR;
 	result += strbound;
 
 	decl = seq->base_type();
 	break;
+      }
+
+    case AST_Decl::NT_string:
+      {
+	// Although the c++ compiler cannot distinguish between them, we
+	// must distinguish between unbounded strings and bounded strings,
+	// and between bounded strings of different length.
+
+	o2be_string* str = o2be_string::narrow_from_decl(decl);
+	result += CANNON_NAME_SEPARATOR;
+
+	if( str->max_length() ) {
+	  char bound[20];
+	  sprintf(bound, "%d", (int) str->max_length());
+	  result += bound;
+	}
+	result += "string";
+
+	return result.release();
       }
 
     default:
