@@ -14,8 +14,8 @@
 #include <echo.hh>
 
 
-class Echo_i : public virtual POA_Echo,
-	       public virtual PortableServer::RefCountServantBase
+class Echo_i : public POA_Echo,
+	       public PortableServer::RefCountServantBase
 {
 public:
   inline Echo_i() {}
