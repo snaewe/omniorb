@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.11  2000/01/17 17:07:47  djs
+# Better handling of recursive types.
+#
 # Revision 1.10  2000/01/14 11:56:45  djs
 # Marked unused function as redundant. Not deleted as it might be useful
 # later.
@@ -98,7 +101,15 @@ self = bdesc
 
 # We need to be able to detect recursive types so keep track of the current
 # node here
-self.__currentNode = None
+self.__currentNodes = []
+
+def startingNode(node):
+    self.__currentNodes.append(node)
+def finishingNode():
+    assert(self.__currentNodes != [])
+    self.__currentNodes = self.__currentNodes[0:len(self.__currentNodes)-1]
+def recursive(node):
+    return node in self.__currentNodes
 
 def __init__():
 
@@ -456,10 +467,10 @@ def sequence(type):
     defined_outside = isinstance(seqType, idltype.Declared) and \
                       not(seqType.decl().mainFile())
     # also if type is recursive
-    recursive = isinstance(seqType, idltype.Declared) and \
-                seqType.decl() == self.__currentNode
+    is_recursive = isinstance(seqType, idltype.Declared) and \
+                recursive(seqType.decl())
 
-    if defined_outside or recursive:
+    if defined_outside or is_recursive:
 
         if tyutil.isStruct(seqType) or \
            tyutil.isUnion(seqType)  or \
