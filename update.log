@@ -1,4 +1,14 @@
 
+Thu Sep 30 09:58:02 BST 1999 djr
+================================
+
+- Fixed bug in omniNames.  Did not call _remove_ref() on implementation
+  objects after activating them -- so they were not cleaned up.
+
+src/appl/omniNames/log.cc
+src/appl/omniNames/NamingContext_i.cc
+
+
 Wed Sep 29 14:08:03 BST 1999 djr
 ================================
 

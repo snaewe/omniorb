@@ -94,8 +94,10 @@ NamingContext_i::new_context()
   PortableServer::ObjectId_var id = the_poa->reference_to_id(ref);
 
   NamingContext_i* nc = new NamingContext_i(the_poa, id, redolog);
+  CosNaming::NamingContext_ptr ncref = nc->_this();
+  nc->_remove_ref();
 
-  return nc->_this();
+  return ncref;
 }
 
 
@@ -477,6 +479,7 @@ NamingContext_i::list(CORBA::ULong how_many, CosNaming::BindingList_out bl,
   BindingIterator_i* bii = new BindingIterator_i(the_poa, all);
 
   bi = bii->_this();
+  bii->_remove_ref();
 
   if (CORBA::is_nil(bi.ptr())) {
     cerr << "couldn't narrow binding iterator" << endl;

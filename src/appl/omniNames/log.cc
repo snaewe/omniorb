@@ -795,6 +795,7 @@ omniNameslog::getCreate(istream& file)
   PortableServer::ObjectId id;
   getKey(id, file);
   NamingContext_i* rc = new NamingContext_i(poa, id, this);
+  rc->_remove_ref();
 }
 
 
