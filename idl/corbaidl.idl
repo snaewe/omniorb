@@ -8,9 +8,6 @@ module CORBA {
 
 
 interface IDLType;
-interface ImplementationDef;
-interface InterfaceDef;
-interface OperationDef;
 
 typedef string Identifier;
 
