@@ -1,3 +1,10 @@
+Thu Mar 16 17:25:53 GMT 2000 dpg1
+=================================
+
+- Bug with comments in omniidl input when keepComments is false.
+
+src/tool/omniidl/cxx/idlast.cc
+
 
 Thu Mar 16 16:17:00 GMT 2000 djs
 ================================
@@ -7,6 +14,7 @@ Thu Mar 16 16:17:00 GMT 2000 djs
   in another file
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/bdesc.py
+
 
 Thu Mar 16 14:13:38 GMT 2000 djr
 ================================
