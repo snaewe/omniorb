@@ -475,23 +475,3 @@ for s in $sources; do
   echo $s >>$dest/config/sources
 
 done
-
-
-
-###########################################################################
-#
-# See if we should shadow the source trees
-#
-
-if $interactive; then
-  echo "************************************************************************"
-  echo
-  cd $dest
-  for s in $sources; do
-    echo "Shadow $s ?"
-    myread shadow y
-    if [ "$shadow" = "y" ]; then
-      oshadow $s
-    fi
-  done
-fi
