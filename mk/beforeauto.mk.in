@@ -1002,6 +1002,15 @@ OMNITHREAD_LIB += -pthread
 endif
 
 ###################
+ifdef OpenBSD
+IMPORT_CPPFLAGS += -D__openbsd__
+
+OMNITHREAD_CPPFLAGS = -D_REENTRANT -D_THREAD_SAFE
+OMNITHREAD_POSIX_CPPFLAGS = -DUsePthread -DPthreadDraftVersion=10
+OMNITHREAD_LIB += -pthread
+endif
+
+###################
 ifdef OSR5
 IMPORT_CPPFLAGS += -D__osr5__
 

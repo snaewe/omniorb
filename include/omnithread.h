@@ -154,6 +154,9 @@ class omni_thread;
 #elif defined(__freebsd__)
 #include <omnithread/posix.h>
 
+#elif defined(__openbsd__)
+#include <omnithread/posix.h>
+
 #elif defined(__rtems__)
 #include <omnithread/posix.h>
 #include <sched.h>
