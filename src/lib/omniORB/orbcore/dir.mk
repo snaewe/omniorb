@@ -10,6 +10,10 @@ SUBDIRS = sharedlib
 endif
 endif
 
+ifdef NTArchitecture
+SUBDIRS = sharedlib
+endif
+
 ifdef UnixArchitecture
 # Default location of the omniORB2 configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
@@ -23,12 +27,11 @@ endif
 ifdef NTArchitecture
 # Default location of the omniORB2 configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
-CONFIG_DEFAULT_LOCATION = \"E:\\corba2\\test\"
 NETLIBSRCS = tcpSocket_NT.cc
 NETLIBOBJS = tcpSocket_NT.o
-DIR_CPPFLAGS = -MD -W3 -GX -O2 -D "NDEBUG" -D "WIN32" 
-DIR_CPPFLAGS += -D "_WINDOWS" -D "__NT__" -D "_X86_" -D "NTArchitecture"
-DIR_CPPFLAGS += -I"C:\MSDEV\INCLUDE" 
+DIR_CPPFLAGS = -D "NDEBUG" -D "_WINDOWS" 
+DIR_CPPFLAGS += -D "_X86_" -D "NTArchitecture" -D "_WINSTATIC"
+CXXOPTIONS += -MD -W3 -GX -O2 
 endif
 
 ifdef ATMosArchitecture
@@ -68,25 +71,6 @@ DIR_CPPFLAGS += $(OMNITHREAD_CPPFLAGS)
 DIR_CPPFLAGS += -I./..
 DIR_CPPFLAGS += -D__OMNIORB__
 
-ifeq ($(CXX),g++)
-CXXDEBUGFLAGS = -g
-DIR_CPPFLAGS += -fhandle-exceptions -Wall -Wno-unused
-endif
-
-ifeq ($(CXX),CC)
-CXXDEBUGFLAGS = -g
-endif
-
-ifeq ($(CXX),/usr/bin/cxx)
-CXXDEBUGFLAGS = -g
-endif
-
-ifeq ($(platform),arm_atmos_4.0/atb)
-CXXDEBUGFLAGS =
-DIR_CPPFLAGS +=  -I/project/atmos/release4.0/atb/ip \
-	-D__cplusplus -fhandle-exceptions -Wall -Wno-unused
-endif
-
 CXXSRCS = $(ORB2_SRCS) $(UNSHARED_SRCS)
 
 
@@ -103,8 +87,13 @@ $(lib): $(ORB2_OBJS) $(UNSHARED_OBJS)
 Naming.hh NamingSK.cc:	Naming.idl
 	$(OMNIORB2_IDL) $^
 
+ifdef NTArchitecture
+clean::
+	$(RM) $(lib)
+else
 clean::
 	$(RM) $(lib) Naming.hh NamingSK.cc
+endif
 
 export:: $(lib)
 	@$(ExportLibrary)
