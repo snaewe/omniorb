@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.21  2001/04/23 14:50:20  dpg1
+ Extend GCC check to cope with GCC 3.
+
  Revision 1.1.2.20  2000/12/04 13:46:43  dpg1
  Support PowerPC Linux.
 
@@ -234,7 +237,8 @@
 // Minor version number 91 is for egcs version 1.*  Some older
 // versions of 1.* may not support namespaces properly - this is
 // only tested for egcs 1.1.1
-#  if __GNUC_MINOR__ >= 91 || __GNUC_MINOR__ == 9
+#  if (__GNUG__ == 2 && (__GNUC_MINOR__ >= 91 || __GNUC_MINOR__ == 9)) || \
+      (__GNUG__ >= 3)
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Cplusplus_Bool
 #  endif

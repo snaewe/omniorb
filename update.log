@@ -1,3 +1,15 @@
+Mon Apr 23 15:47:39 BST 2001 dpg1
+=================================
+
+- Null pointer dereference in BOA_init()
+
+src/lib/omniORB2/orbcore/corbaBoa.cc
+
+- Extend GCC check to cope with GCC 3.
+
+include/omniORB3/CORBA_sysdep.h
+
+
 Mon Apr 23 15:13:31 BST 2001 dpg1
 =================================
 
