@@ -1,3 +1,14 @@
+Mon Aug  7 18:07:29 BST 2000 dpg1
+=================================
+
+- Error messages if platform defines aren't made in cccp's config.h
+
+src/tool/omniidl/cxx/cccp/config-freebsd.h
+src/tool/omniidl/cxx/cccp/config-linux.h
+src/tool/omniidl/cxx/cccp/config-solaris.h
+src/tool/omniidl/cxx/cccp/config.h
+
+
 Mon Aug  7 16:31:15 BST 2000 dpg1
 =================================
 
