@@ -158,6 +158,11 @@ AST_Operation::fe_add_exceptions(UTL_NameList *t)
   AST_Exception		     *fe;
   AST_Decl		     *d;
 
+  if (flags() == AST_Operation::OP_oneway) {
+      idl_global->err()->syntax_error(idl_global->parse_state());
+      return NULL;
+  }
+
   pd_exceptions = NULL;
   nl_i = new UTL_NamelistActiveIterator(t);
   while (!(nl_i->is_done())) {
