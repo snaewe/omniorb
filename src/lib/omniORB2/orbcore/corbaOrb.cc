@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.21  2000/07/21 10:03:08  dpg1
+  String_var copy initialisations changed to direct initialisations.
+
   Revision 1.29.6.20  2000/07/10 10:56:43  sll
   Minor rearrangement to keep DEC C++ 5.6 happy.
 
@@ -728,8 +731,8 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	}
 	{
 	  unsigned int slen = strlen(argv[idx+1]) + 1;
-	  CORBA::String_var id  = CORBA::string_alloc(slen);
-	  CORBA::String_var uri = CORBA::string_alloc(slen);
+	  CORBA::String_var id(CORBA::string_alloc(slen));
+	  CORBA::String_var uri(CORBA::string_alloc(slen));
 	  if (sscanf(argv[idx+1], "%[^=]=%s", (char*)id, (char*)uri) != 2) {
 	    if (omniORB::trace(1)) {
 	      omniORB::logger l;
