@@ -3,7 +3,7 @@
 // rope.h                     Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.9  1999/06/18 21:17:31  sll
+  Updated copyright notice.
+
   Revision 1.8  1999/05/26 11:46:30  sll
   Replaced WrTimedLock with WrTestLock.
   Changed the operator() of Strand_iterator to increment the ref count

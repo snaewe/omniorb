@@ -3,7 +3,7 @@
 // tcDescriptor.h             Created on: 9/98
 //                            Author    : James Weatherall (jnw)
 //
-//    Copyright (C) 1996-1999 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //

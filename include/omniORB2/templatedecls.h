@@ -3,7 +3,7 @@
 // templatedecls.h            Created on: 14/5/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //

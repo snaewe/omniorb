@@ -3,7 +3,7 @@
 // omniORB.h                  Created on: 6/2/96
 //                            Author    : Sai Lai Lo (sll)
 //
-//    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1996-1999 AT&T Laboratories Cambridge
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.18  1999/06/18 21:16:36  sll
+  Updated copyright notice.
+
   Revision 1.17  1999/06/18 20:37:04  sll
   Replaced _LC_attr with _core_attr and _dyn_attr.
   New variable copyStringInAnyExtraction.

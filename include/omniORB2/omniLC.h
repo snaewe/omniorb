@@ -3,7 +3,7 @@
 // omniLifeCycle.cc           Created on: 1997/09/20
 //                            Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 1997 Olivetti & Oracle Research Laboratory
+//    Copyright (C) 1997-1999 AT&T Laboratories Cambridge.
 //
 //    This file is part of the omniORB library
 //
@@ -29,6 +29,9 @@
 
 /* 
    $Log$
+   Revision 1.6  1999/06/18 21:15:53  sll
+   Updated copyright notice.
+
    Revision 1.5  1998/08/12 15:28:27  dpg1
    Added error checking to _lc_sk class. It is now a run-time error to
    call _set_lifecycle() on an _lc_sk_... object after a previous call to
