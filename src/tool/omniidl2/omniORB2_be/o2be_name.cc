@@ -27,9 +27,12 @@
 
 /*
   $Log$
-  Revision 1.5  1997/05/06 14:01:18  sll
-  Public release.
+  Revision 1.6  1997/08/21 21:16:26  sll
+  Minor cleanup.
 
+// Revision 1.5  1997/05/06  14:01:18  sll
+// Public release.
+//
   */
 
 #include "idl.hh"
@@ -67,10 +70,10 @@ o2be_name::repositoryID() {
   // Check the pragmas attached to this node to see if
   // pragma ID is defined to override the default repositoryID.
   UTL_String* id;
-  if (id = internal_search_pragma(pd_decl,"ID")) {
+  if ((id = internal_search_pragma(pd_decl,"ID")) != 0) {
     return id->get_string();
   }
-  else if (id = internal_search_pragma(pd_decl,"version")) {
+  else if ((id = internal_search_pragma(pd_decl,"version")) != 0) {
     // Check if pragma version is defined to override the
     // version number in the default repositoryID.
     char* p = strrchr(pd_repositoryID,':') + 1;
