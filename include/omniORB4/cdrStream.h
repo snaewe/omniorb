@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-//	
+//
 
 /*
   $Log$
+  Revision 1.1.2.11  2001/06/13 19:58:37  sll
+  Added omni namespace scoping for omniCodeSet.
+
   Revision 1.1.2.10  2001/05/10 15:03:50  dpg1
   Update cdrStreamAdapter to modified cdrStream interface.
 
@@ -113,7 +116,7 @@ public:
 		pd_inb_end(0), pd_inb_mkr(0),
 		pd_outb_end(0), pd_outb_mkr(0),
 		pd_tcs_c(0), pd_tcs_w(0) { }
-    
+
   virtual ~cdrStream() {}
 
 #ifndef CdrMarshal
@@ -386,7 +389,7 @@ public:
   virtual void skipInput(_CORBA_ULong size) = 0;
   // Skip <size> bytes from the input stream.
 
-  virtual _CORBA_Boolean checkInputOverrun(_CORBA_ULong itemSize, 
+  virtual _CORBA_Boolean checkInputOverrun(_CORBA_ULong itemSize,
 				_CORBA_ULong nItems,
 				omni::alignment_t align=omni::ALIGN_1) = 0;
   // Return TRUE(1) if the input stream contains data for at least one
@@ -394,18 +397,18 @@ public:
   // at <align>. Return FALSE(0) otherwise.
 
   virtual _CORBA_ULong currentInputPtr() const = 0;
-  // Return a value that represent the position of the next byte in the 
+  // Return a value that represent the position of the next byte in the
   // input stream. Later bytes in the stream has a higher return value.
   // The absolute value of the return value has no meaning.
-  // The only use of this function is to compute the distance between two 
-  // bytes in the stream. 
-  
+  // The only use of this function is to compute the distance between two
+  // bytes in the stream.
+
   virtual _CORBA_ULong currentOutputPtr() const = 0;
-  // Return a value that represent the position of the next byte in the 
+  // Return a value that represent the position of the next byte in the
   // output stream. Later bytes in the stream has a higher return value.
   // The absolute value of the return value has no meaning.
-  // The only use of this function is to compute the distance between two 
-  // bytes in the stream. 
+  // The only use of this function is to compute the distance between two
+  // bytes in the stream.
 
 
   virtual _CORBA_Boolean checkOutputOverrun(_CORBA_ULong itemSize,
@@ -415,11 +418,11 @@ public:
   // inserted to the output stream. The initial alignment of the data starts
   // at <align>. Return FALSE(0) otherwise.
 
-  virtual void copy_to(cdrStream&,int size, 
+  virtual void copy_to(cdrStream&,int size,
 		       omni::alignment_t align=omni::ALIGN_1);
   // From this stream, copy <size> bytes to the argument stream.
   // The initial alignment starts at <align>.
-  // Derived classes may provided more efficent implementation than the 
+  // Derived classes may provided more efficent implementation than the
   // default.
 
 
@@ -473,7 +476,7 @@ protected:
 
   //  Input buffer pointers, the region (*p) containing valid data
   //  is pd_inb_mkr <= p < pd_inb_end.
-  //  pd_inb_end and pd_inb_mkr are initialised by fetchInputData(). 
+  //  pd_inb_end and pd_inb_mkr are initialised by fetchInputData().
   //  pd_inb_mkr is also updated by the unmarshalling operators between
   //  calls to fetchInputData().
   void* pd_inb_end;
@@ -483,7 +486,7 @@ protected:
 			      size_t required)     = 0;
   // Fetch at least <required> bytes into the input buffer.
   // <required> must be no more than 8 bytes && align == required!!
-  // The data block should start at alignment <align>. 
+  // The data block should start at alignment <align>.
   // If the space available is less than specified, raise a
   // MARSHAL system exception.
 
@@ -491,11 +494,11 @@ protected:
   //  into is pd_outb_mkr <= p < pd_outb_end.
   //  pd_outb_end and pd_outb_mkr are initialised by reserveOutputSpace().
   //  pd_outb_mkr is also updated by the marshalling operators between
-  //  calls to reserveOutputSpace(). 
+  //  calls to reserveOutputSpace().
   void* pd_outb_end;
   void* pd_outb_mkr;
 
-  virtual 
+  virtual
   _CORBA_Boolean reserveOutputSpaceForPrimitiveType(omni::alignment_t align,
 						    size_t required) = 0;
   // Allocate at least <required> bytes in the output buffer.
@@ -507,7 +510,7 @@ protected:
   // When the return value is FALSE, the cdrStream would skip writing
   // the current argument quietly.
   // If the derived class do not want the cdrStream to skip writing
-  // quietly, it should raise a MARSHAL system exception instead of 
+  // quietly, it should raise a MARSHAL system exception instead of
   // returning FALSE.
 
   virtual _CORBA_Boolean maybeReserveOutputSpace(omni::alignment_t align,
@@ -519,23 +522,23 @@ protected:
   //    request. The caller should fall back to use put_octet_array or
   //    other means instead.
 
-  omniCodeSet::TCS_C* pd_tcs_c;
+  _OMNI_NS(omniCodeSet::TCS_C)* pd_tcs_c;
   // Transmission code set convertor for char and string
 
-  omniCodeSet::TCS_W* pd_tcs_w;
+  _OMNI_NS(omniCodeSet::TCS_W)* pd_tcs_w;
   // Transmission code set convertor for wchar and wstring
 
 public:
 
   // Access functions to the char and wchar code set convertors
-  inline omniCodeSet::TCS_C* TCS_C() const { return pd_tcs_c; }
-  inline void TCS_C(omniCodeSet::TCS_C* c) { pd_tcs_c = c; }
-  inline omniCodeSet::TCS_W* TCS_W() const { return pd_tcs_w; }
-  inline void TCS_W(omniCodeSet::TCS_W* c) { pd_tcs_w = c; }
+  inline _OMNI_NS(omniCodeSet::TCS_C)* TCS_C() const { return pd_tcs_c; }
+  inline void TCS_C(_OMNI_NS(omniCodeSet::TCS_C)* c) { pd_tcs_c = c; }
+  inline _OMNI_NS(omniCodeSet::TCS_W)* TCS_W() const { return pd_tcs_w; }
+  inline void TCS_W(_OMNI_NS(omniCodeSet::TCS_W)* c) { pd_tcs_w = c; }
 
   // ORB wide native codes convertor
-  static _core_attr omniCodeSet::NCS_C* ncs_c;
-  static _core_attr omniCodeSet::NCS_W* ncs_w;
+  static _core_attr _OMNI_NS(omniCodeSet::NCS_C)* ncs_c;
+  static _core_attr _OMNI_NS(omniCodeSet::NCS_W)* ncs_w;
 
   inline void
   unmarshalArrayChar(_CORBA_Short* a, int length)
@@ -663,7 +666,7 @@ private:
 
 class cdrMemoryStream : public cdrStream {
 public:
-  cdrMemoryStream(_CORBA_ULong initialBufsize = 0, 
+  cdrMemoryStream(_CORBA_ULong initialBufsize = 0,
 		  _CORBA_Boolean clearMemory = 0);
   ~cdrMemoryStream();
 
@@ -673,7 +676,7 @@ public:
   void rewindPtrs();
   // Rewind the both input and output pointers to the beginning of the buffer
   // bufSize() returns 0 after this call.
-  
+
   _CORBA_ULong bufSize() const;
   // Returns the size of the buffer containing valid data.
 
@@ -695,8 +698,8 @@ public:
 
   // By default, all cdrMemoryStream are initialised to use these two
   // tcs.
-  static _core_attr omniCodeSet::TCS_C* default_tcs_c;
-  static _core_attr omniCodeSet::TCS_W* default_tcs_w;
+  static _core_attr _OMNI_NS(omniCodeSet::TCS_C)* default_tcs_c;
+  static _core_attr _OMNI_NS(omniCodeSet::TCS_W)* default_tcs_w;
 
 protected:
   _CORBA_Boolean pd_readonly_and_external_buffer;
@@ -711,13 +714,13 @@ public:
   void get_octet_array(_CORBA_Octet* b,int size,
 		       omni::alignment_t align=omni::ALIGN_1);
   void skipInput(_CORBA_ULong size);
-  _CORBA_Boolean checkInputOverrun(_CORBA_ULong itemSize, 
+  _CORBA_Boolean checkInputOverrun(_CORBA_ULong itemSize,
 				   _CORBA_ULong nItems,
 				   omni::alignment_t align=omni::ALIGN_1);
   _CORBA_Boolean checkOutputOverrun(_CORBA_ULong itemSize,
 				    _CORBA_ULong nItems,
 				    omni::alignment_t align=omni::ALIGN_1);
-  void copy_to(cdrStream&,int size, 
+  void copy_to(cdrStream&,int size,
 	       omni::alignment_t align=omni::ALIGN_1);
   void fetchInputData(omni::alignment_t,size_t);
 
@@ -736,7 +739,7 @@ public:
   cdrEncapsulationStream(_CORBA_ULong initialBufsize = 0,
 			 _CORBA_Boolean clearMemory = 0);
 
-  cdrEncapsulationStream(const _CORBA_Octet* databuffer, 
+  cdrEncapsulationStream(const _CORBA_Octet* databuffer,
 			 _CORBA_ULong bufsize,
 			 _CORBA_Boolean allowAlign4 = 0);
 
@@ -744,16 +747,16 @@ public:
   // copy from <s> <fetchsize> bytes of data.
 
 
-  void getOctetStream(_CORBA_Octet*& databuffer, _CORBA_ULong& max, 
+  void getOctetStream(_CORBA_Octet*& databuffer, _CORBA_ULong& max,
 		      _CORBA_ULong& len);
 };
 
 class cdrCountingStream : public cdrStream {
 public:
-  cdrCountingStream(omniCodeSet::TCS_C* tcs_c,
-		    omniCodeSet::TCS_W* tcs_w,
-		    size_t initialoffset = 0) : 
-    pd_total(initialoffset) { 
+  cdrCountingStream(_OMNI_NS(omniCodeSet::TCS_C)* tcs_c,
+		    _OMNI_NS(omniCodeSet::TCS_W)* tcs_w,
+		    size_t initialoffset = 0) :
+    pd_total(initialoffset) {
     pd_tcs_c = tcs_c;
     pd_tcs_w = tcs_w;
   }
@@ -775,7 +778,7 @@ public:
 				    _CORBA_ULong nItems,
 				    omni::alignment_t align=omni::ALIGN_1);
 
-  void copy_to(cdrStream&,int size, 
+  void copy_to(cdrStream&,int size,
 	       omni::alignment_t align=omni::ALIGN_1);
 
   void get_octet_array(_CORBA_Octet* b,int size,
@@ -793,7 +796,7 @@ public:
 
 private:
   size_t pd_total;
-  
+
   cdrCountingStream(const cdrCountingStream&);
   cdrCountingStream& operator=(const cdrCountingStream&);
 };
