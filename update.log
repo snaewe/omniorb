@@ -1,3 +1,45 @@
+Tue Jun 27 11:44:21 BST 2000 dpg1
+=================================
+
+- Small documentation updates
+
+doc/tex/omniORB.tex
+external_merge/doc/omniORB.pdf
+external_merge/doc/omniORB.ps
+external_merge/doc/omniORB/index.html
+external_merge/doc/omniORB/omniORB001.html
+external_merge/doc/omniORB/omniORB002.html
+external_merge/doc/omniORB/omniORB003.html
+external_merge/doc/omniORB/omniORB005.html
+external_merge/doc/omniORB/omniORB006.html
+external_merge/doc/omniORB/omniORB007.html
+external_merge/doc/omniORB/omniORB008.html
+external_merge/doc/omniORB/omniORB009.html
+external_merge/doc/omniORB/omniORB010.html
+external_merge/doc/omniORB/omniORB011.html
+external_merge/doc/omniORB/omniORB012.html
+
+- Remove everything to do with obsolete LifeCycle support
+
+external_merge/src/examples/lifecycle/GNUmakefile                -- deleted
+external_merge/src/examples/lifecycle/dir.mak                    -- deleted
+external_merge/src/lib/omniORB2/lifecycle/GNUmakefile            -- deleted
+external_merge/src/lib/omniORB2/lifecycle/sharedlib/GNUmakefile  -- deleted
+src/examples/lifecycle/OBSOLETE                                  -- new
+src/examples/lifecycle/dir.mk                                    -- deleted
+src/examples/lifecycle/echolag.idl                               -- deleted
+src/examples/lifecycle/lcclient.cc                               -- deleted
+src/examples/lifecycle/lcexamples.module                         -- deleted
+src/examples/lifecycle/lcremove.cc                               -- deleted
+src/examples/lifecycle/lcserver.cc                               -- deleted
+src/lib/omniORB2/lifecycle/OBSOLETE                              -- new
+src/lib/omniORB2/lifecycle/dir.mk                                -- deleted
+src/lib/omniORB2/lifecycle/omniLifeCycle.cc                      -- deleted
+src/lib/omniORB2/lifecycle/reDirect.cc                           -- deleted
+src/lib/omniORB2/lifecycle/sharedlib/dir.mk                      -- deleted
+
+
+
 Mon Jun 26 17:15:00 BST 2000 djs
 ================================
 
