@@ -183,6 +183,11 @@ public:
 
     friend class omni_condition;
 
+private:
+    // dummy copy constructor and operator= to prevent copying
+    omni_mutex(const omni_mutex&);
+    omni_mutex& operator=(const omni_mutex&);
+
 OMNI_THREAD_EXPOSE:
     OMNI_MUTEX_IMPLEMENTATION
 };
@@ -211,6 +216,10 @@ class _OMNITHREAD_NTDLL_ omni_mutex_lock {
 public:
     omni_mutex_lock(omni_mutex& m) : mutex(m) { mutex.lock(); }
     ~omni_mutex_lock(void) { mutex.unlock(); }
+private:
+    // dummy copy constructor and operator= to prevent copying
+    omni_mutex_lock(const omni_mutex_lock&);
+    omni_mutex_lock& operator=(const omni_mutex_lock&);
 };
 
 
@@ -254,6 +263,11 @@ public:
 	// broadcast is like signal but wakes all threads which have called
 	// wait().
 
+private:
+    // dummy copy constructor and operator= to prevent copying
+    omni_condition(const omni_condition&);
+    omni_condition& operator=(const omni_condition&);
+
 OMNI_THREAD_EXPOSE:
     OMNI_CONDITION_IMPLEMENTATION
 };
@@ -283,6 +297,11 @@ public:
 	// if any threads are blocked in wait(), wake one of them up. Otherwise
 	// increment the value of the semaphore.
 
+private:
+    // dummy copy constructor and operator= to prevent copying
+    omni_semaphore(const omni_semaphore&);
+    omni_semaphore& operator=(const omni_semaphore&);
+
 OMNI_THREAD_EXPOSE:
     OMNI_SEMAPHORE_IMPLEMENTATION
 };
@@ -296,6 +315,10 @@ class _OMNITHREAD_NTDLL_ omni_semaphore_lock {
 public:
     omni_semaphore_lock(omni_semaphore& s) : sem(s) { sem.wait(); }
     ~omni_semaphore_lock(void) { sem.post(); }
+private:
+    // dummy copy constructor and operator= to prevent copying
+    omni_semaphore_lock(const omni_semaphore_lock&);
+    omni_semaphore_lock& operator=(const omni_semaphore_lock&);
 };
 
 
