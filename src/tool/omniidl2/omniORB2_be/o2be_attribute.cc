@@ -10,6 +10,9 @@
 
 /*
   $Log$
+  Revision 1.4  1997/01/24 19:39:04  sll
+  The skeleton code for nil object now returns a properly initialised result.
+
   Revision 1.3  1997/01/23 17:10:24  sll
   Now allocate typedefed array properly in get attribute operation.
 
@@ -504,7 +507,46 @@ o2be_attribute::produce_nil_rd_skel(fstream &s)
       {
 	IND(s);
 	o2be_operation::declareVarType(s,field_type());
-	s << " _result;\n";
+	s << " _result";
+	switch (ntype)
+	  {
+	  case o2be_operation::tShort:
+	  case o2be_operation::tLong:
+	  case o2be_operation::tUShort:
+	  case o2be_operation::tULong:
+	  case o2be_operation::tFloat:
+	  case o2be_operation::tDouble:
+	  case o2be_operation::tBoolean:
+	  case o2be_operation::tChar:
+	  case o2be_operation::tOctet:
+	    s << " = 0;\n";
+	    break;
+	  case o2be_operation::tEnum:
+	    {
+	      s << " = ";
+	      AST_Decl *decl = field_type();
+	      while (decl->node_type() == AST_Decl::NT_typedef)
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+	      UTL_ScopeActiveIterator i(o2be_enum::narrow_from_decl(decl),
+					UTL_Scope::IK_decls);
+	      AST_Decl *eval = i.item();
+	      if (strlen(o2be_name::narrow_and_produce_scopename(decl))) {
+		s << o2be_name::narrow_and_produce_scopename(decl);
+	      }
+	      else {
+		s << "::";
+	      }
+	      s << o2be_name::narrow_and_produce_uqname(eval) << ";\n";
+	    }
+	    break;
+	  case o2be_operation::tStructFixed:
+	    s << ";\n";
+	    s << "memset((void *)&_result,0,sizeof(_result));\n";
+	    break;
+	  default:
+	    s << ";\n";
+	    break;
+	  }
       }
   }
   IND(s); s << "return _result;\n";
