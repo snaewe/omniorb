@@ -1,3 +1,34 @@
+Tue Aug 21 11:58:29 BST 2001 sll
+================================
+
+- Environment variables to set the configuration parameters must now
+  prefix with "ORB". For instance, environment variable ORBtraceLevel
+  corresponds to parameter traceLevel.
+- orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
+src/lib/omniORB/include/orbOptions.h
+src/lib/omniORB/include/orbParameters.h
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/current.cc
+src/lib/omniORB/orbcore/dynamicLib.cc
+src/lib/omniORB/orbcore/giopBiDir.cc
+src/lib/omniORB/orbcore/giopEndpoint.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/orbOptions.cc
+src/lib/omniORB/orbcore/orbOptionsFile.cc
+src/lib/omniORB/orbcore/orbOptionsReg.cc
+src/lib/omniORB/orbcore/poa.cc
+
 Tue Aug 21 11:42:59 BST 2001 dpg1
 =================================
 

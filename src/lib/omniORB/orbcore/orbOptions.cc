@@ -29,6 +29,13 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/21 11:03:38  sll
+  Environment variables to set the configuration parameters must now
+  prefix with "ORB". For instance, environment variable ORBtraceLevel
+  corresponds to parameter traceLevel.
+  orbOptions handlers are now told where an option comes from. This
+  is necessary to process DefaultInitRef and InitRef correctly.
+
   Revision 1.1.2.2  2001/08/20 08:19:23  sll
   Read the new ORB configuration file format. Can still read old format.
   Can also set configuration parameters from environment variables.
@@ -123,21 +130,22 @@ orbOptions::visit() throw(orbOptions::BadParam) {
   omnivector<HandlerValuePair*>::iterator last = pd_values.end();
   
   for (; i != last; i++) {
-    (*i)->handler_->visit((*i)->value_);
+    (*i)->handler_->visit((*i)->value_,(*i)->source_);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////
 void
 orbOptions::addOption(const char* key,
-		      const char* value) throw (orbOptions::Unknown,
-						orbOptions::BadParam) {
+		      const char* value,
+		      orbOptions::Source source) throw (orbOptions::Unknown,
+							orbOptions::BadParam) {
 
   if (!pd_handlers_sorted) sortHandlers();
 
   orbOptions::Handler* handler = findHandler(key);
   if (!handler) throw orbOptions::Unknown(key,value);
-  pd_values.push_back(new HandlerValuePair(handler,value));
+  pd_values.push_back(new HandlerValuePair(handler,value,source));
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -147,7 +155,7 @@ orbOptions::addOptions(const char* options[][2]) throw (orbOptions::Unknown,
 
   int i = 0;
   while (options[i][0]) {
-    addOption(options[i][0],options[i][1]);
+    addOption(options[i][0],options[i][1],fromArray);
   }
 }
 
@@ -202,11 +210,11 @@ orbOptions::extractInitOptions(int& argc,char** argv)
 				     "Expected parameter missing");
 	}
 
-	addOption(k,argv[idx+1]);
+	addOption(k,argv[idx+1],fromArgv);
 	move_args(argc,argv,idx,2);
       }
       else {
-	addOption(k,0);
+	addOption(k,0,fromArgv);
 	move_args(argc,argv,idx,1);
       }
     }
@@ -230,14 +238,17 @@ orbOptions::extractInitOptions(int& argc,char** argv)
 
 ////////////////////////////////////////////////////////////////////////
 void
-orbOptions::importFromEnv() {
+orbOptions::importFromEnv() throw (orbOptions::Unknown,orbOptions::BadParam) {
   
   omnivector<orbOptions::Handler*>::const_iterator i = pd_handlers.begin();
   omnivector<orbOptions::Handler*>::const_iterator last = pd_handlers.end();
 
   for (; i != last; i++) {
-    const char* value = getenv((*i)->key());
-    if (value && strlen(value)) addOption((*i)->key(),value);
+    CORBA::String_var envkey;
+    envkey = CORBA::string_alloc(strlen((*i)->key())+3);
+    sprintf(envkey,"ORB%s",(*i)->key());
+    const char* value = getenv(envkey);
+    if (value && strlen(value)) addOption((*i)->key(),value,fromEnvironment);
   }
 }
 
