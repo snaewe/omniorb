@@ -1,3 +1,15 @@
+Fri Sep 26 16:21:21 BST 2003 dgrisby
+====================================
+
+- ifdef out Current definitions.
+
+idl/COS/CosTransactions.idl
+
+- Release nil Current.
+
+src/lib/omniORB/orbcore/current.cc
+
+
 Thu Sep 25 14:43:29 BST 2003 dgrisby
 ====================================
 

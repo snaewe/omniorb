@@ -192,7 +192,10 @@ PortableServer::Current::_nil()
   static omniOrbPOACurrent* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
-    if( !_the_nil_ptr )  _the_nil_ptr = new omniOrbPOACurrent(1);
+    if( !_the_nil_ptr ) {
+      _the_nil_ptr = new omniOrbPOACurrent(1);
+      registerNilCorbaObject(_the_nil_ptr);
+    }
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
