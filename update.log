@@ -1,4 +1,13 @@
 
+Wed Feb 10 15:15:01 GMT 1999 djr
+================================
+
+- Fixed bug in Any insertion code - can now marshal a
+  CORBA::Object_ptr into an Any.
+
+src/lib/omniORB2/dynamic/any.cc
+
+
 Wed Feb 10 09:42:34 GMT 1999 djr
 ================================
 
