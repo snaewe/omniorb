@@ -29,12 +29,28 @@
  
 /*
   $Log$
-  Revision 1.2  1997/05/06 15:12:21  sll
-  Public release.
+  Revision 1.3  1997/08/21 22:03:56  sll
+  Added system exception TRANSACTION_REQUIRED, TRANSACTION_ROLLEDBACK,
+  INVALID_TRANSACTION, WRONG_TRANSACTION.
+  INVALID_TRANSACTION, WRONG_TRANSACTION.
 
+// Revision 1.2  1997/05/06  15:12:21  sll
+// Public release.
+//
   */
 
 #include <omniORB2/CORBA.h>
+
+
+CORBA::Boolean 
+_CORBA_use_nil_ptr_as_nil_objref()
+{
+  if (omniORB::traceLevel > 10) {
+    cerr << "Warning: omniORB2 detects that a nil pointer is wrongly used as a nil object reference."
+	 << endl;
+  }
+  return 1;
+}
 
 void
 _CORBA_new_operator_return_null()
@@ -234,5 +250,30 @@ CORBA::
 DATA_CONVERSION::NP_RepositoryId() const
 {
   return (const char *) GIOP_Basetypes::SysExceptRepoID::DATA_CONVERSION.id;
+}
+
+const char *
+CORBA::
+TRANSACTION_REQUIRED::NP_RepositoryId() const
+{
+  return (const char *) GIOP_Basetypes::SysExceptRepoID::TRANSACTION_REQUIRED.id;
+}
+const char *
+CORBA::
+TRANSACTION_ROLLEDBACK::NP_RepositoryId() const
+{
+  return (const char *) GIOP_Basetypes::SysExceptRepoID::TRANSACTION_ROLLEDBACK.id;
+}
+const char *
+CORBA::
+INVALID_TRANSACTION::NP_RepositoryId() const
+{
+  return (const char *) GIOP_Basetypes::SysExceptRepoID::INVALID_TRANSACTION.id;
+}
+const char *
+CORBA::
+WRONG_TRANSACTION::NP_RepositoryId() const
+{
+  return (const char *) GIOP_Basetypes::SysExceptRepoID::WRONG_TRANSACTION.id;
 }
 
