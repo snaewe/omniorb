@@ -28,6 +28,13 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.8  2001/06/19 14:23:21  sll
+# In the marshalling and unmarshalling code, only cast from a sequence T_var to
+# T&. Otherwise, the generate code is wrong with gcc 3.0. Suppose T is a
+# sequence of A, even though T is always a derived class of the template
+# instance seq<A>, casting a T_var to a seq<A>& causes GCC 3.0 to generate
+# wrong code quietly!
+#
 # Revision 1.17.2.7  2001/06/15 10:22:09  sll
 # Work around for MSVC++ bug. Changed the casting of the array of base types
 # when they are marshalled using the quick method.
@@ -211,7 +218,8 @@ else """,
     indexing_string = loop.index()
     element_name = argname + indexing_string
 
-    type_name = d_type.base(environment)
+ #   type_name = d_type.base(environment)
+    type_name = type.base(environment)
     bounded = ""
     kind = d_type.type().kind()
     
@@ -326,7 +334,8 @@ def unmarshall(to, environment, type, decl, name, from_where):
     indexing_string = loop.index()
     element_name = name + indexing_string
     
-    type_name = d_type.base(environment)
+#    type_name = d_type.base(environment)
+    type_name = type.base(environment)
     bounded = ""
     kind = d_type.type().kind()
 
