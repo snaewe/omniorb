@@ -11,6 +11,11 @@
 
 /*
   $Log$
+  Revision 1.6  1997/03/10 11:38:49  sll
+  - File renamed to clearly indicated that these are internal interfaces.
+  - class omniORB renamed to class omni. (Class omniORB is now the public
+    API namespace.)
+
   Revision 1.5  1997/01/23 15:07:15  sll
   Redefined some local static variables to static members of class omniORB.
   They are initialised in a single file.
@@ -31,8 +36,8 @@
 
  */
 
-#ifndef __OMNIORB_H__
-#define __OMNIORB_H__
+#ifndef __OMNIINTERNAL_H__
+#define __OMNIINTERNAL_H__
 
 #include <assert.h>
 #include <iostream.h>
@@ -56,10 +61,16 @@ class Rope;
 class GIOP_S;
 class GIOP_C;
 class omniObject;
-class omniObjectKey;
 class initFile;
+class omniORB;
 
-class omniORB {
+struct omniObjectKey {
+  _CORBA_ULong hi;
+  _CORBA_ULong med;
+  _CORBA_ULong lo;
+};
+
+class omni {
 
 public:
 
@@ -72,15 +83,18 @@ public:
 #endif
 
   static const _CORBA_Boolean myByteOrder;
+  static const char*          myORBId;
+  static const char*          myBOAId;
   static omni_mutex initLock;
   static _CORBA_Boolean orb_initialised;
   static _CORBA_Boolean boa_initialised;
   static initFile*      configFile;
+  static _CORBA_ULong   traceLevel;
 
   enum alignment_t { ALIGN_1 = 1, ALIGN_2 = 2, ALIGN_4 = 4, ALIGN_8 = 8 };
   static const alignment_t max_alignment;  // Maximum value of alignment_t
 
-  static ptr_arith_t align_to(ptr_arith_t p,alignment_t align) {
+  static inline ptr_arith_t align_to(ptr_arith_t p,alignment_t align) {
     return (p + ((int) align - 1)) & ~((int) align - 1);
   }
 
@@ -192,34 +206,6 @@ public:
   };
 };
 
-class omniObjectKey {
-
-public:
-
-  _CORBA_ULong hi;
-  _CORBA_ULong med;
-  _CORBA_ULong lo;
-
-  static const unsigned int hash_table_size;
-
-  inline int hash() {
-    return (hi + med + lo) % hash_table_size;
-  }
-
-  static void generateNewKey(omniObjectKey &k);
-};
-
-inline int operator==(const omniObjectKey &k1,const omniObjectKey &k2) { 
-  return (k1.hi == k2.hi && 
-	  k1.med == k2.med &&
-	  k1.lo == k2.lo) ? 1 : 0; 
-}
-
-inline int operator!=(const omniObjectKey &k1,const omniObjectKey &k2) {
-    return (k1.hi != k2.hi ||
-	    k1.med != k2.med ||
-	    k1.lo != k2.lo) ? 1 : 0;
-}
 
 
 class omniObject {
@@ -244,20 +230,20 @@ protected:
 
 public:
 
-  Rope *_rope() const { return pd_rope; }
-  const void *objkey() const { return ((pd_proxy) ?
-				 ((void *)pd_objkey.foreign) :
-				 ((void *)&pd_objkey.native)); }
-  const size_t objkeysize() const { return pd_objkeysize; }
+  inline Rope *_rope() const { return pd_rope; }
+  inline const void *objkey() const { return ((pd_proxy) ?
+					      ((void *)pd_objkey.foreign) :
+					      ((void *)&pd_objkey.native)); }
+  inline const size_t objkeysize() const { return pd_objkeysize; }
 
   virtual _CORBA_Boolean dispatch(GIOP_S &,const char *operation,
 				  _CORBA_Boolean response_expected);
 
-  _CORBA_Boolean is_proxy() const { return pd_proxy; }
+  inline _CORBA_Boolean is_proxy() const { return pd_proxy; }
 
-  const char *NP_IRRepositoryId() const { return pd_repoId; }
+  inline const char *NP_IRRepositoryId() const { return pd_repoId; }
 
-  virtual void *_widenFromTheMostDerivedIntf(const char *repoId) throw();
+  virtual void *_widenFromTheMostDerivedIntf(const char *repoId);
   // The most derived class which override this virtual function will be
   // called to return a pointer to the base class object that implements
   // the interface identified by the IR repository ID <repoId>.
@@ -267,8 +253,7 @@ public:
   // null pointer will be returned.
   // This function DO NOT throw any exception under any circumstance.
 
-  IOP::TaggedProfileList * iopProfiles() const { 
-    assert(pd_iopprofile != 0);
+  inline IOP::TaggedProfileList * iopProfiles() const { 
     return pd_iopprofile; 
   }
 
@@ -291,18 +276,18 @@ private:
   
   IOP::TaggedProfileList *      pd_iopprofile;
   
-  int getRefCount() const { return pd_refCount; }
-  void setRefCount(int count) { pd_refCount = count; return; }
+  inline int getRefCount() const { return pd_refCount; }
+  inline void setRefCount(int count) { pd_refCount = count; return; }
 
-  friend void omniORB::objectIsReady(omniObject *obj);
-  friend char * omniORB::objectToString(const omniObject *obj);
-  friend void omniORB::objectDuplicate(omniObject *obj);
-  friend omniObject *omniORB::locateObject(omniObjectKey &k);
-  friend void omniORB::disposeObject(omniObject *obj);
-  friend void omniORB::objectRelease(omniObject *obj);
+  friend void omni::objectIsReady(omniObject *obj);
+  friend char * omni::objectToString(const omniObject *obj);
+  friend void omni::objectDuplicate(omniObject *obj);
+  friend omniObject *omni::locateObject(omniObjectKey &k);
+  friend void omni::disposeObject(omniObject *obj);
+  friend void omni::objectRelease(omniObject *obj);
   friend char *objectToString(const omniObject *obj);
   friend omniObject *stringToObject(const char *str);
-  friend IOP::TaggedProfileList *omniORB::objectToIopProfiles(omniObject *obj);
+  friend IOP::TaggedProfileList *omni::objectToIopProfiles(omniObject *obj);
 };
 
 #include <omniORB2/rope.h>
@@ -310,4 +295,4 @@ private:
 #include <omniORB2/giopDriver.h>
 #include <omniORB2/initFile.h>
 
-#endif // __OMNIORB_H__
+#endif // __OMNIINTERNAL_H__
