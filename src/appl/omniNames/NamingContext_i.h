@@ -77,8 +77,8 @@ public:
   CosNaming::NamingContext_ptr bind_new_context(const CosNaming::Name& n);
 
   void destroy();
-  void list(CORBA::ULong how_many, CosNaming::BindingList*& bl,
-	    CosNaming::BindingIterator_ptr& bi);
+  void list(CORBA::ULong how_many, CosNaming::BindingList_out bl,
+	    CosNaming::BindingIterator_out bi);
 
 
 private:

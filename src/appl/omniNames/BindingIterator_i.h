@@ -39,7 +39,7 @@ public:
     poa->activate_object(this);
   }
 
-  CORBA::Boolean next_one(CosNaming::Binding*& b) {
+  CORBA::Boolean next_one(CosNaming::Binding_out b) {
 
     CosNaming::BindingList* bl;
     CORBA::Boolean ret = next_n(1, bl);
@@ -52,7 +52,7 @@ public:
     return ret;
   }
 
-  CORBA::Boolean next_n(CORBA::ULong how_many, CosNaming::BindingList*& bl) {
+  CORBA::Boolean next_n(CORBA::ULong how_many, CosNaming::BindingList_out bl) {
 
     //
     // What we do here is return the current list to the caller, shortening

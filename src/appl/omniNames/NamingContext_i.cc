@@ -448,8 +448,8 @@ NamingContext_i::destroy()
 //
 
 void
-NamingContext_i::list(CORBA::ULong how_many, CosNaming::BindingList*& bl,
-		      CosNaming::BindingIterator_ptr& bi)
+NamingContext_i::list(CORBA::ULong how_many, CosNaming::BindingList_out bl,
+		      CosNaming::BindingIterator_out bi)
 {
   lock.readerIn();
 
@@ -478,7 +478,7 @@ NamingContext_i::list(CORBA::ULong how_many, CosNaming::BindingList*& bl,
 
   bi = bii->_this();
 
-  if (CORBA::is_nil(bi)) {
+  if (CORBA::is_nil(bi.ptr())) {
     cerr << "couldn't narrow binding iterator" << endl;
     return;
   }
