@@ -30,6 +30,7 @@
 #include <dynamicImplementation.h>
 #include <pseudo.h>
 #include <string.h>
+#include <dynException.h>
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////// DsiObject /////////////////////////////
@@ -130,18 +131,24 @@ DsiObject::dispatch(GIOP_S& s,const char *op, CORBA::Boolean response_expected)
 	break;
       }
 
-    case ServerRequestImpl::SR_EXCEPTION:  // User exception
+    case ServerRequestImpl::SR_EXCEPTION:  // User & System exception
       {
 	CORBA::ULong msgsize = (CORBA::ULong) GIOP_S::ReplyHeaderSize();
 
 	CORBA::TypeCode_var tc = server_request.exception()->type();
+
 	// Exception TypeCodes are guarenteed to have a non-empty id().
 	const char* intfRepoId = tc->id();
 	CORBA::ULong len = strlen(intfRepoId) + 1;
 	msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4 + len;
 	msgsize = server_request.exception()->NP_alignedDataOnlySize(msgsize);
 
-	s.InitialiseReply(GIOP::USER_EXCEPTION, msgsize);
+	if (isaSystemException(server_request.exception())) {
+	  s.InitialiseReply(GIOP::SYSTEM_EXCEPTION, msgsize);
+	}
+	else {
+	  s.InitialiseReply(GIOP::USER_EXCEPTION, msgsize);
+	}
 
 	len >>= s;
 	s.put_char_array((CORBA::Char*)intfRepoId, len);
