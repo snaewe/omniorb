@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2002/04/16 12:44:27  dpg1
+  Fix SSL accept bug, clean up logging.
+
   Revision 1.1.2.9  2002/03/19 15:42:04  dpg1
   Use list of IP addresses to pick a non-loopback interface if there is one.
 
@@ -302,7 +305,8 @@ sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
       SSL_set_fd(ssl, pd_new_conn_socket);
       SSL_set_accept_state(ssl);
 
-      while(1) {
+      int go = 1;
+      while(go) {
 	int result = SSL_accept(ssl);
 	int code = SSL_get_error(ssl, result);
 
@@ -331,11 +335,7 @@ sslEndpoint::AcceptAndMonitor(giopConnection::notifyReadable_t func,
 	    }
 	    SSL_free(ssl);
 	    CLOSESOCKET(pd_new_conn_socket);
-	    //break;
-	    // XXX We should be able to go back to accept again. But for
-	    //     some reason the SSL library SEGV if we do. For the time
-	    //     being, we returns 0 which effectively shutdown the endpoint.
-	    return 0;
+	    go = 0;
 	  }
 	}
       }

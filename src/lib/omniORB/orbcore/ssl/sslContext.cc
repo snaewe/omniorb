@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.10  2002/04/16 12:44:27  dpg1
+  Fix SSL accept bug, clean up logging.
+
   Revision 1.1.2.9  2002/02/25 11:17:14  dpg1
   Use tracedmutexes everywhere.
 
@@ -156,9 +159,11 @@ sslContext::set_CA() {
   {
     struct stat buf;
     if (!pd_cafile || stat(pd_cafile,&buf) < 0) {
-      omniORB::logger log;
-      log << "Error: sslContext CA file is not set "
-	  << "or cannot be found\n";
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "Error: sslContext CA file is not set "
+	    << "or cannot be found\n";
+      }
       OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
 		    CORBA::COMPLETED_NO);
     }
@@ -179,9 +184,11 @@ sslContext::set_certificate() {
   {
     struct stat buf;
     if (!pd_keyfile || stat(pd_keyfile,&buf) < 0) {
-      omniORB::logger log;
-      log << "Error: sslContext certificate file is not set "
-	  << "or cannot be found\n";
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "Error: sslContext certificate file is not set "
+	    << "or cannot be found\n";
+      }
       OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
     }
   }
@@ -214,7 +221,7 @@ void
 sslContext::set_privatekey() {
 
   if (!pd_password) {
-    {
+    if (omniORB::trace(1)) {
       omniORB::logger log;
       log << "Error: sslContext private key file is not set\n";
     }
@@ -324,18 +331,10 @@ extern "C"
 void sslContext_locking_callback(int mode, int type, const char *,int) { 
   
   if (mode & CRYPTO_LOCK) {
-    {
-      omniORB::logger log;
-      log << "SSL lock mutex no. " << type << "\n";
-    }
     openssl_locks[type].lock();
   }
   else {
     OMNIORB_ASSERT(mode & CRYPTO_UNLOCK);
-    {
-      omniORB::logger log;
-      log << "SSL unlock mutex no. " << type << "\n";
-    }
     openssl_locks[type].unlock();
   }
 }
@@ -345,10 +344,6 @@ void sslContext_locking_callback(int mode, int type, const char *,int) {
 extern "C"
 unsigned long sslContext_thread_id(void) {
   unsigned long id = (unsigned long)pthread_self();
-  {
-    omniORB::logger log;
-    log << "thread_id " << id << "\n";
-  }
   return id;
 }
 #endif

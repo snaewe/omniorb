@@ -1,3 +1,19 @@
+Tue Apr 16 13:42:39 BST 2002 dpg1
+=================================
+
+- include iomanip.h for hex manipulator.
+
+src/appl/utils/catior/catior.cc
+
+- Fix SSL accept bug, clean up logging.
+
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/ssl/sslTransportImpl.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+src/lib/omniORB/orbcore/unix/unixTransportImpl.cc
+
+
 Mon Apr 15 15:28:54 BST 2002 dpg1
 =================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2002/04/16 12:44:27  dpg1
+  Fix SSL accept bug, clean up logging.
+
   Revision 1.1.2.8  2002/03/13 16:05:40  dpg1
   Transport shutdown fixes. Reference count SocketCollections to avoid
   connections using them after they are deleted. Properly close
@@ -142,9 +145,11 @@ unixEndpoint::Bind() {
   }
 
   if (::chmod(pd_filename,orbParameters::unixTransportPermission & 0777) < 0) {
-    omniORB::logger log;
-    log << "Error: cannot change permission of " << pd_filename
-	<< " to " << (orbParameters::unixTransportPermission & 0777) << "\n";
+    if (omniORB::trace(1)) {
+      omniORB::logger log;
+      log << "Error: cannot change permission of " << pd_filename
+	  << " to " << (orbParameters::unixTransportPermission & 0777) << "\n";
+    }
     CLOSESOCKET(pd_socket);
     return 0;
   }

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2002/04/16 12:44:27  dpg1
+  Fix SSL accept bug, clean up logging.
+
   Revision 1.1.2.6  2001/08/23 16:02:58  sll
   Implement getInterfaceAddress().
 
@@ -193,35 +196,42 @@ public:
   }
 
   void attach() {
-    omniORB::logger log("sslTransportImpl initialiser Called\n");
     if (_the_sslTransportImpl) return;
 
     if (!sslContext::singleton) {
 
       if (omniORB::trace(5)) {
-	omniORB::logger log("No SSL context object supplied, attempt to create one with the default ctor.\n");
+	omniORB::logger log;
+	log << "No SSL context object supplied, attempt to create one "
+	    << "with the default ctor.\n";
       }
       struct stat sb;
 
       if (!sslContext::certificate_authority_file || 
 	  stat(sslContext::certificate_authority_file,&sb) < 0) {
-	omniORB::logger log;
-	log << "Error: SSL CA certificate file is not set "
-	    << "or cannot be found\n";
+	if (omniORB::trace(1)) {
+	  omniORB::logger log;
+	  log << "Error: SSL CA certificate file is not set "
+	      << "or cannot be found\n";
+	}
 	OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
 		      CORBA::COMPLETED_NO);
       }
       
       if (!sslContext::key_file || stat(sslContext::key_file,&sb) < 0) {
-	omniORB::logger log;
-	log << "Error: SSL private key and certificate file is not set "
-	    << "or cannot be found\n";
+	if (omniORB::trace(1)) {
+	  omniORB::logger log;
+	  log << "Error: SSL private key and certificate file is not set "
+	      << "or cannot be found\n";
+	}
 	OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
 		      CORBA::COMPLETED_NO);
       }
       if (!sslContext::key_file_password) {
-	omniORB::logger log;
-	log << "Error: SSL password for private key and certificate file is not set\n";
+	if (omniORB::trace(1)) {
+	  omniORB::logger log;
+	  log << "Error: SSL password for private key and certificate file is not set\n";
+	}
 	OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,
 		      CORBA::COMPLETED_NO);
       }

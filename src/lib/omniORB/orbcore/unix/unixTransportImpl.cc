@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2002/04/16 12:44:27  dpg1
+  Fix SSL accept bug, clean up logging.
+
   Revision 1.1.2.4  2001/08/23 16:02:58  sll
   Implement getInterfaceAddress().
 
@@ -97,8 +100,10 @@ unixTransportImpl::toEndpoint(const char* param) {
     if (p && *(p+1) == 'u') {
       struct passwd* pw = getpwuid(getuid());
       if (!pw) {
-	omniORB::logger log;	
-	log << "Error: cannot get password entry of uid: " << getuid() << "\n";
+	if (omniORB::trace(1)) {
+	  omniORB::logger l;	
+	  l << "Error: cannot get password entry of uid: " << getuid() << "\n";
+	}
 	return 0;
       }
       CORBA::String_var format = param;
@@ -110,16 +115,20 @@ unixTransportImpl::toEndpoint(const char* param) {
     }
     if (stat(param,&sb) == 0) {
       if (!(sb.st_mode & S_IFDIR)) {
-	omniORB::logger log;	
-	log << "Error: " << param << " exists and is not a directory. "
-	    << "Please remove it and try again\n";
+	if (omniORB::trace(1)) {
+	  omniORB::logger log;	
+	  log << "Error: " << param << " exists and is not a directory. "
+	      << "Please remove it and try again\n";
+	}
 	return 0;
       }
     }
     else {
       if (mkdir(param,0755) < 0) {
-	omniORB::logger log;	
-	log << "Error: cannot create directory: " << param << "\n";
+	if (omniORB::trace(1)) {
+	  omniORB::logger log;	
+	  log << "Error: cannot create directory: " << param << "\n";
+	}
 	return 0;
       }
     }
