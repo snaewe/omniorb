@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.12.2.10  2001/09/24 10:41:08  dpg1
+ Minor codes for Dynamic library and omniORBpy.
+
  Revision 1.12.2.9  2001/09/19 17:26:44  dpg1
  Full clean-up after orb->destroy().
 
@@ -179,14 +182,18 @@ CORBA::Status
 ContextImpl::set_one_value(const char* prop_name, const CORBA::Any& value)
 {
   // Check the property name is valid.
-  if( !prop_name )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if( !prop_name )  OMNIORB_THROW(BAD_PARAM,
+				  BAD_PARAM_NullStringUnexpected,
+				  CORBA::COMPLETED_NO);
   check_property_name(prop_name);
 
   CORBA::String_var name(CORBA::string_dup(prop_name));
 
   const char* strval;
   if( !(value >>= strval) )
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_AnyDoesNotContainAString,
+		  CORBA::COMPLETED_NO);
 
   insert_single_consume(name._retn(),
 			((omniORB::omniORB_27_CompatibleAnyExtraction)?
@@ -199,7 +206,7 @@ CORBA::Status
 ContextImpl::set_values(CORBA::NVList_ptr values)
 {
   if( !CORBA::NVList::PR_is_valid(values) || CORBA::is_nil(values) )
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InvalidNVList, CORBA::COMPLETED_NO);
 
   CORBA::ULong count = values->count();
 
@@ -218,7 +225,9 @@ ContextImpl::delete_values(const char* pattern)
   CORBA::ULong bottom, top;
 
   if( !matchPattern(pattern, bottom, top) )
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_CONTEXT,
+		  BAD_CONTEXT_NoMatchingProperty,
+		  CORBA::COMPLETED_NO);
 
   CORBA::ULong nmatches = top - bottom;
   CORBA::ULong count = pd_entries.length();
@@ -244,7 +253,8 @@ ContextImpl::get_values(const char* start_scope, CORBA::Flags op_flags,
     while( !CORBA::is_nil(c) && strcasecmp(c->pd_name, start_scope) )
       c = (ContextImpl*)c->pd_parent;
     if( CORBA::is_nil(c) )
-      OMNIORB_THROW(BAD_CONTEXT,0, CORBA::COMPLETED_NO);
+      OMNIORB_THROW(BAD_CONTEXT,
+		    BAD_CONTEXT_StartingScopeNotFound, CORBA::COMPLETED_NO);
   }
 
   int wildcard = 0;
@@ -374,7 +384,7 @@ ContextImpl::matchPattern(const char* pattern, CORBA::ULong& bottom_out,
 			  CORBA::ULong& top_out) const
 {
   if( !pattern || !*pattern )
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_EmptyContextPattern,CORBA::COMPLETED_NO);
 
   size_t pat_len = strlen(pattern);
   int wildcard = 0;
@@ -431,7 +441,7 @@ ContextImpl::add_values(ContextImpl* c, CORBA::Flags op_flags,
 			CORBA::NVList_ptr val_list)
 {
   if (!CORBA::NVList::PR_is_valid(val_list))
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidNVList, CORBA::COMPLETED_NO);
 
   CORBA::ULong bottom, top;
   omni_mutex_lock lock(c->pd_lock);
@@ -469,9 +479,14 @@ ContextImpl::add_values(ContextImpl* c, CORBA::Flags op_flags,
 void
 ContextImpl::check_context_name(const char* n)
 {
-  if( !isalpha(*n++) )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if( !isalpha(*n++) )  OMNIORB_THROW(BAD_PARAM,
+				      BAD_PARAM_InvalidContextName,
+				      CORBA::COMPLETED_NO);
   while( isalnum(*n) || *n == '_' )  n++;
-  if( *n != '\0' )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+
+  if( *n != '\0' )  OMNIORB_THROW(BAD_PARAM,
+				  BAD_PARAM_InvalidContextName,
+				  CORBA::COMPLETED_NO);
 }
 
 
@@ -479,11 +494,15 @@ void
 ContextImpl::check_property_name(const char* n)
 {
   do{
-    if( !isalpha(*n++) )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    if( !isalpha(*n++) )  OMNIORB_THROW(BAD_PARAM,
+					BAD_PARAM_InvalidContextName,
+					CORBA::COMPLETED_NO);
     while( isalnum(*n) || *n == '_' )  n++;
   }while( *n == '.' && (n++,1) );
 
-  if( *n != '\0' )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if( *n != '\0' )  OMNIORB_THROW(BAD_PARAM,
+				  BAD_PARAM_InvalidContextName,
+				  CORBA::COMPLETED_NO);
 }
 
 
@@ -573,7 +592,7 @@ CORBA::Context_ptr
 CORBA::Context::_duplicate(Context_ptr p)
 {
   if (!PR_is_valid(p))
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidContext, CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) ) {
     ContextImpl* c = (ContextImpl*) p;
     omni_mutex_lock sync(c->pd_lock);
@@ -634,7 +653,9 @@ CORBA::Context::unmarshalContext(cdrStream& s)
 {
   CORBA::ULong nentries;
   nentries <<= s;
-  if( nentries % 2 )  OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
+  if( nentries % 2 )  OMNIORB_THROW(MARSHAL,
+				    MARSHAL_InvalidContextList,
+				    CORBA::COMPLETED_MAYBE);
   nentries /= 2;
 
   ContextImpl* c = new ContextImpl("", CORBA::Context::_nil());

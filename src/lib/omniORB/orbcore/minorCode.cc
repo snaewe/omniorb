@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/09/24 10:41:10  dpg1
+  Minor codes for Dynamic library and omniORBpy.
+
   Revision 1.1.2.1  2001/08/03 17:49:33  sll
   New minor code and lookup table for translating a minor code to its memonic
   names.
@@ -146,6 +149,7 @@ minorCodeLookup INTF_REPOS_LookupTable[] = {
 };
 
 minorCodeLookup BAD_CONTEXT_LookupTable[] = { 
+  DECLARE_BAD_CONTEXT_minors(DeclareLookupEntry,COMMA),
   { 0, 0 } 
 };
 

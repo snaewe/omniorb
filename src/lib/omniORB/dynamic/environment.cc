@@ -37,6 +37,7 @@
 #include <pseudo.h>
 #include <exceptiondefs.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 // The correct way of creating an environment object is to use
 // the ORB::create_environment() method. The environment objects
@@ -88,7 +89,7 @@ CORBA::
 Environment::exception(CORBA::Exception* e)
 {
   if (!CORBA::Exception::PR_is_valid(e))
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InvalidException,CORBA::COMPLETED_NO);
   if( pd_exception )  delete pd_exception;
   pd_exception = e;
 }
@@ -186,7 +187,7 @@ CORBA::
 Environment::_duplicate(CORBA::Environment_ptr p)
 {
   if (!PR_is_valid(p))
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InvalidEnvironment,CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }

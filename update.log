@@ -1,9 +1,30 @@
+Mon Sep 24 11:07:30 BST 2001 dpg1
+=================================
+
+- Minor codes for Dynamic library and omniORBpy.
+
+include/omniORB4/minorCode.h
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/contextList.cc
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/environment.cc
+src/lib/omniORB/dynamic/exceptionList.cc
+src/lib/omniORB/dynamic/ir.cc
+src/lib/omniORB/dynamic/namedValue.cc
+src/lib/omniORB/dynamic/nvList.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/orbcore/minorCode.cc
+
+
 Thu Sep 20 16:08:33 BST 2001 sll
 ================================
 
 - Fail invocation on a location forwarded object now retry automatically.
 
 src/lib/omniORB/orbcore/exception.cc
+
 
 Thu Sep 20 15:15:20 BST 2001 dpg1
 =================================

@@ -50,7 +50,9 @@ NamedValueImpl::NamedValueImpl(CORBA::Flags flags)
 
 NamedValueImpl::NamedValueImpl(const char* name, CORBA::Flags flags)
 {
-  if( !name )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if( !name )  OMNIORB_THROW(BAD_PARAM,
+			     BAD_PARAM_NullStringUnexpected,
+			     CORBA::COMPLETED_NO);
   pd_flags = flags;
   pd_name = CORBA::string_dup(name);
   pd_value = new CORBA::Any;
@@ -61,7 +63,9 @@ NamedValueImpl::NamedValueImpl(const char* name, CORBA::Flags flags)
 NamedValueImpl::NamedValueImpl(const char* name, const CORBA::Any& value,
 			       CORBA::Flags flags)
 {
-  if( !name )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if( !name )  OMNIORB_THROW(BAD_PARAM,
+			     BAD_PARAM_NullStringUnexpected,
+			     CORBA::COMPLETED_NO);
   pd_flags = flags;
   pd_name = CORBA::string_dup(name);
   pd_value = new CORBA::Any(value);
@@ -71,7 +75,9 @@ NamedValueImpl::NamedValueImpl(const char* name, const CORBA::Any& value,
 
 NamedValueImpl::NamedValueImpl(char* name, CORBA::Flags flags)
 {
-  if( !name )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if( !name )  OMNIORB_THROW(BAD_PARAM,
+			     BAD_PARAM_NullStringUnexpected,
+			     CORBA::COMPLETED_NO);
   pd_flags = flags;
   pd_name = name;
   pd_value = new CORBA::Any;
@@ -82,7 +88,13 @@ NamedValueImpl::NamedValueImpl(char* name, CORBA::Flags flags)
 NamedValueImpl::NamedValueImpl(char* name, CORBA::Any* value,
 			       CORBA::Flags flags)
 {
-  if( !name || !value )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if( !name )   OMNIORB_THROW(BAD_PARAM,
+			      BAD_PARAM_NullStringUnexpected,
+			      CORBA::COMPLETED_NO);
+
+  if( !value )  OMNIORB_THROW(BAD_PARAM,
+			      BAD_PARAM_InvalidAny,
+			      CORBA::COMPLETED_NO);
   pd_flags = flags;
   pd_name = name;
   pd_value = value;
@@ -169,7 +181,7 @@ CORBA::
 NamedValue::_duplicate(NamedValue_ptr p)
 {
   if (!PR_is_valid(p))
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidNamedValue, CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }

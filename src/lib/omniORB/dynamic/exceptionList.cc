@@ -66,7 +66,7 @@ void
 ExceptionListImpl::add(CORBA::TypeCode_ptr tc)
 {
   if( !CORBA::TypeCode::PR_is_valid(tc) || CORBA::is_nil(tc) )
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InvalidTypeCode,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
 
@@ -84,7 +84,7 @@ void
 ExceptionListImpl::add_consume(CORBA::TypeCode_ptr tc)
 {
   if( !CORBA::TypeCode::PR_is_valid(tc) || CORBA::is_nil(tc) )
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_InvalidTypeCode,CORBA::COMPLETED_NO);
 
   CORBA::ULong len = pd_list.length();
 
@@ -194,7 +194,9 @@ CORBA::
 ExceptionList::_duplicate(ExceptionList_ptr p)
 {
   if (!PR_is_valid(p))
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidExceptionList,
+		  CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }

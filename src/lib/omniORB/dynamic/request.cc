@@ -71,7 +71,9 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation)
 	  "CORBA::RequestImpl::RequestImpl()");
 
   if( !operation || !*operation )
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_NullStringUnexpected,
+		  CORBA::COMPLETED_NO);
 }
 
 
@@ -108,7 +110,9 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation,
 	  "CORBA::RequestImpl::RequestImpl()");
 
   if( !operation || !*operation )
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_NullStringUnexpected,
+		  CORBA::COMPLETED_NO);
 }
 
 
@@ -149,7 +153,9 @@ RequestImpl::RequestImpl(CORBA::Object_ptr target, const char* operation,
 	  "CORBA::RequestImpl::RequestImpl()");
 
   if( !operation || !*operation )
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_NullStringUnexpected,
+		  CORBA::COMPLETED_NO);
 }
 
 
@@ -238,9 +244,14 @@ void
 RequestImpl::ctx(CORBA::Context_ptr context)
 {
   if (!CORBA::Context::PR_is_valid(context))
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidContext,
+		  CORBA::COMPLETED_NO);
+
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestConfiguredOutOfOrder,
+		  CORBA::COMPLETED_NO);
 
   pd_context = context;
 }
@@ -250,7 +261,9 @@ CORBA::Any&
 RequestImpl::add_in_arg()
 {
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestConfiguredOutOfOrder,
+		  CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add(CORBA::ARG_IN)->value());
 }
@@ -260,7 +273,9 @@ CORBA::Any&
 RequestImpl::add_in_arg(const char* name)
 {
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestConfiguredOutOfOrder,
+		  CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add_item(name, CORBA::ARG_IN)->value());
 }
@@ -270,7 +285,9 @@ CORBA::Any&
 RequestImpl::add_inout_arg()
 {
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestConfiguredOutOfOrder,
+		  CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add(CORBA::ARG_INOUT)->value());
 }
@@ -280,7 +297,9 @@ CORBA::Any&
 RequestImpl::add_inout_arg(const char* name)
 {
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestConfiguredOutOfOrder,
+		  CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add_item(name, CORBA::ARG_INOUT)->value());
 }
@@ -290,7 +309,9 @@ CORBA::Any&
 RequestImpl::add_out_arg()
 {
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestConfiguredOutOfOrder,
+		  CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add(CORBA::ARG_OUT)->value());
 }
@@ -300,7 +321,9 @@ CORBA::Any&
 RequestImpl::add_out_arg(const char* name)
 {
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestConfiguredOutOfOrder,
+		  CORBA::COMPLETED_NO);
 
   return *(pd_arguments->add_item(name, CORBA::ARG_OUT)->value());
 }
@@ -310,9 +333,14 @@ void
 RequestImpl::set_return_type(CORBA::TypeCode_ptr tc)
 {
   if (!CORBA::TypeCode::PR_is_valid(tc))
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidTypeCode,
+		  CORBA::COMPLETED_NO);
+
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestConfiguredOutOfOrder,
+		  CORBA::COMPLETED_NO);
 
   pd_result->value()->replace(tc, (void*)0);
 }
@@ -361,8 +389,9 @@ CORBA::Status
 RequestImpl::invoke()
 {
   if( pd_state != RS_READY && pd_state != RS_DEFERRED )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
-
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestAlreadySent,
+		  CORBA::COMPLETED_NO);
   try {
 
     CORBA::ULong operation_len = strlen(pd_operation) + 1;
@@ -400,7 +429,9 @@ CORBA::Status
 RequestImpl::send_oneway()
 {
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestAlreadySent,
+		  CORBA::COMPLETED_NO);
 
   try{
     CORBA::ULong operation_len = strlen(pd_operation) + 1;
@@ -438,7 +469,9 @@ CORBA::Status
 RequestImpl::send_deferred()
 {
   if( pd_state != RS_READY )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestAlreadySent,
+		  CORBA::COMPLETED_NO);
 
   pd_state = RS_DEFERRED;
   pd_deferredRequest = new DeferredRequest(this);
@@ -454,7 +487,9 @@ RequestImpl::get_response()
   if( pd_state == RS_DONE )  RETURN_CORBA_STATUS;
 
   if( pd_state != RS_DEFERRED || !pd_deferredRequest )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestIsSynchronous,
+		  CORBA::COMPLETED_NO);
 
   pd_deferredRequest->get_response();
   pd_sysExceptionToThrow = pd_deferredRequest->get_exception();
@@ -472,7 +507,9 @@ RequestImpl::poll_response()
   if( pd_state == RS_DONE )  return CORBA::Boolean(1);
 
   if( pd_state != RS_DEFERRED || !pd_deferredRequest )
-    OMNIORB_THROW(BAD_INV_ORDER,0, CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_INV_ORDER,
+		  BAD_INV_ORDER_RequestIsSynchronous,
+		  CORBA::COMPLETED_NO);
 
   CORBA::Boolean result = pd_deferredRequest->poll_response();
 
@@ -688,7 +725,9 @@ CORBA::
 Request::_duplicate(Request_ptr p)
 {
   if (!PR_is_valid(p))
-    OMNIORB_THROW(BAD_PARAM,0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidRequest,
+		  CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
@@ -728,14 +767,27 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 			       CORBA::Request_out request,
 			       CORBA::Flags req_flags)
 {
-  if( _NP_is_pseudo() )  OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
+  if( _NP_is_pseudo() )  OMNIORB_THROW(BAD_PARAM,
+				       BAD_PARAM_IsPseudoObject,
+				       CORBA::COMPLETED_NO);
 
   // NB. req_flags is ignored - ref. CORBA 2.2 section 20.28
-  if( !CORBA::Context::PR_is_valid(ctx) ||
-      !operation ||
-      !CORBA::NVList::PR_is_valid(arg_list) ||
-      !CORBA::NamedValue::PR_is_valid(result) )
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if (!CORBA::Context::PR_is_valid(ctx))
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidContext,
+		  CORBA::COMPLETED_NO);
+  if (!operation)
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_NullStringUnexpected,
+		  CORBA::COMPLETED_NO);
+  if (!CORBA::NVList::PR_is_valid(arg_list))
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidNVList,
+		  CORBA::COMPLETED_NO);
+  if (!CORBA::NamedValue::PR_is_valid(result))
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidNamedValue,
+		  CORBA::COMPLETED_NO);
 
   request = new RequestImpl(this, operation, ctx, arg_list, result);
   RETURN_CORBA_STATUS;
@@ -752,16 +804,35 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 			       CORBA::Request_out request,
 			       CORBA::Flags req_flags)
 {
-  if( _NP_is_pseudo() )  OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
+  if( _NP_is_pseudo() )  OMNIORB_THROW(BAD_PARAM,
+				       BAD_PARAM_IsPseudoObject,
+				       CORBA::COMPLETED_NO);
 
   // NB. req_flags is ignored - ref. CORBA 2.2 section 20.28
-  if( !CORBA::Context::PR_is_valid(ctx) ||
-      !operation ||
-      !CORBA::NVList::PR_is_valid(arg_list) ||
-      !CORBA::NamedValue::PR_is_valid(result) ||
-      !CORBA::ExceptionList::PR_is_valid(exceptions) ||
-      !CORBA::ContextList::PR_is_valid(ctxlist))
-    OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if (!CORBA::Context::PR_is_valid(ctx))
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidContext,
+		  CORBA::COMPLETED_NO);
+  if (!operation)
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_NullStringUnexpected,
+		  CORBA::COMPLETED_NO);
+  if (!CORBA::NVList::PR_is_valid(arg_list))
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidNVList,
+		  CORBA::COMPLETED_NO);
+  if (!CORBA::NamedValue::PR_is_valid(result))
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidNamedValue,
+		  CORBA::COMPLETED_NO);
+  if (!CORBA::ExceptionList::PR_is_valid(exceptions))
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidExceptionList,
+		  CORBA::COMPLETED_NO);
+  if (!CORBA::ContextList::PR_is_valid(ctxlist))
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidContextList,
+		  CORBA::COMPLETED_NO);
 
   request = new RequestImpl(this, operation, ctx, arg_list, result,
 			    exceptions, ctxlist);
@@ -772,8 +843,13 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 CORBA::Request_ptr
 CORBA::Object::_request(const char* operation) 
 {
-  if( _NP_is_pseudo() )  OMNIORB_THROW(NO_IMPLEMENT,0, CORBA::COMPLETED_NO);
-  if( !operation )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
+  if( _NP_is_pseudo() )  OMNIORB_THROW(BAD_PARAM,
+				       BAD_PARAM_IsPseudoObject,
+				       CORBA::COMPLETED_NO);
+
+  if( !operation )  OMNIORB_THROW(BAD_PARAM,
+				  BAD_PARAM_NullStringUnexpected,
+				  CORBA::COMPLETED_NO);
 
   return new RequestImpl(this, operation);
 }

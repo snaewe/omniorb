@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.9  2001/09/24 10:41:07  dpg1
+  Minor codes for Dynamic library and omniORBpy.
+
   Revision 1.1.4.8  2001/09/12 19:44:27  sll
   Added back MARSHAL_MessageSizeExceedLimit to report the error when it is
   not possible to tell whether this is the client or the server side.
@@ -138,6 +141,38 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define OMNIORBMinorCode_67 OMNIORBMinorCode(67)
 #define OMNIORBMinorCode_68 OMNIORBMinorCode(68)
 #define OMNIORBMinorCode_69 OMNIORBMinorCode(69)
+#define OMNIORBMinorCode_70 OMNIORBMinorCode(70)
+#define OMNIORBMinorCode_71 OMNIORBMinorCode(71)
+#define OMNIORBMinorCode_72 OMNIORBMinorCode(72)
+#define OMNIORBMinorCode_73 OMNIORBMinorCode(73)
+#define OMNIORBMinorCode_74 OMNIORBMinorCode(74)
+#define OMNIORBMinorCode_75 OMNIORBMinorCode(75)
+#define OMNIORBMinorCode_76 OMNIORBMinorCode(76)
+#define OMNIORBMinorCode_77 OMNIORBMinorCode(77)
+#define OMNIORBMinorCode_78 OMNIORBMinorCode(78)
+#define OMNIORBMinorCode_79 OMNIORBMinorCode(79)
+#define OMNIORBMinorCode_80 OMNIORBMinorCode(80)
+#define OMNIORBMinorCode_81 OMNIORBMinorCode(81)
+#define OMNIORBMinorCode_82 OMNIORBMinorCode(82)
+#define OMNIORBMinorCode_83 OMNIORBMinorCode(83)
+#define OMNIORBMinorCode_84 OMNIORBMinorCode(84)
+#define OMNIORBMinorCode_85 OMNIORBMinorCode(85)
+#define OMNIORBMinorCode_86 OMNIORBMinorCode(86)
+#define OMNIORBMinorCode_87 OMNIORBMinorCode(87)
+#define OMNIORBMinorCode_88 OMNIORBMinorCode(88)
+#define OMNIORBMinorCode_89 OMNIORBMinorCode(89)
+#define OMNIORBMinorCode_90 OMNIORBMinorCode(90)
+#define OMNIORBMinorCode_91 OMNIORBMinorCode(91)
+#define OMNIORBMinorCode_92 OMNIORBMinorCode(92)
+#define OMNIORBMinorCode_93 OMNIORBMinorCode(93)
+#define OMNIORBMinorCode_94 OMNIORBMinorCode(94)
+#define OMNIORBMinorCode_95 OMNIORBMinorCode(95)
+#define OMNIORBMinorCode_96 OMNIORBMinorCode(96)
+#define OMNIORBMinorCode_97 OMNIORBMinorCode(97)
+#define OMNIORBMinorCode_98 OMNIORBMinorCode(98)
+#define OMNIORBMinorCode_99 OMNIORBMinorCode(99)
+#define OMNIORBMinorCode_100 OMNIORBMinorCode(100)
+#define OMNIORBMinorCode_101 OMNIORBMinorCode(101)
 
 #define COMMA ,
 #define DeclareValue(name,value) name = value
@@ -148,54 +183,74 @@ OMNI_NAMESPACE_BEGIN(omni)
 #define DECLARE_UNKNOWN_minors(code,sep) \
 \
 code( UNKNOWN_UserException,   OMGMinorCode(1) ) sep \
-code( UNKNOWN_SystemException, OMGMinorCode(2) )
+code( UNKNOWN_SystemException, OMGMinorCode(2) ) sep \
+code( UNKNOWN_PythonException, OMNIORBMinorCode_98 )
 
 enum UNKNOWN_minor {
   DECLARE_UNKNOWN_minors(DeclareValue,COMMA)
 };
 
 // BAD_PARAM
-// XXX TODO Give the minor code a more descriptive names.
 #define DECLARE_BAD_PARAM_minors(code,sep) \
 \
-code( BAD_PARAM_1                    , OMGMinorCode(1) ) sep \
-code( BAD_PARAM_2                    , OMGMinorCode(2) ) sep \
-code( BAD_PARAM_3                    , OMGMinorCode(3) ) sep \
-code( BAD_PARAM_4                    , OMGMinorCode(4) ) sep \
-code( BAD_PARAM_5                    , OMGMinorCode(5) ) sep \
-code( BAD_PARAM_6                    , OMGMinorCode(6) ) sep \
-code( BAD_PARAM_BadSchemeName        , OMGMinorCode(7) ) sep \
-code( BAD_PARAM_BadAddress           , OMGMinorCode(8) ) sep \
-code( BAD_PARAM_BadSchemeSpecificPart, OMGMinorCode(9) ) sep \
-code( BAD_PARAM_BadURIOther          , OMGMinorCode(10) ) sep \
-code( BAD_PARAM_11                   , OMGMinorCode(11) ) sep \
-code( BAD_PARAM_12                   , OMGMinorCode(12) ) sep \
-code( BAD_PARAM_13                   , OMGMinorCode(13) ) sep \
-code( BAD_PARAM_InvalidObjectId      , OMGMinorCode(14) ) sep \
-code( BAD_PARAM_15                   , OMGMinorCode(15) ) sep \
-code( BAD_PARAM_16                   , OMGMinorCode(16) ) sep \
-code( BAD_PARAM_17                   , OMGMinorCode(17) ) sep \
-code( BAD_PARAM_18                   , OMGMinorCode(18) ) sep \
-code( BAD_PARAM_19                   , OMGMinorCode(19) ) sep \
-code( BAD_PARAM_20                   , OMGMinorCode(20) ) sep \
-code( BAD_PARAM_NotAnException       , OMGMinorCode(21) ) sep \
-code( BAD_PARAM_22                   , OMGMinorCode(22) ) sep \
-code( BAD_PARAM_WCharTCSNotKnown     , OMGMinorCode(23) ) sep \
-code( BAD_PARAM_24                   , OMGMinorCode(24) ) sep \
-code( BAD_PARAM_25                   , OMGMinorCode(25) ) sep \
-code( BAD_PARAM_IndexOutOfRange      , OMNIORBMinorCode_21 ) sep \
-code( BAD_PARAM_InvalidUnionDiscValue, OMNIORBMinorCode_27 ) sep \
-code( BAD_PARAM_InvalidInitialSize   , OMNIORBMinorCode_29 ) sep \
-code( BAD_PARAM_InvalidServant       , OMNIORBMinorCode_35 ) sep \
-code( BAD_PARAM_IsPseudoObject       , OMNIORBMinorCode_37 ) sep \
-code( BAD_PARAM_InvalidObjectRef     , OMNIORBMinorCode_43 ) sep \
-code( BAD_PARAM_WCharOutOfRange      , OMNIORBMinorCode_46 ) sep \
-code( BAD_PARAM_InternalInvariant    , OMNIORBMinorCode_49 ) sep \
-code( BAD_PARAM_NullStringUnexpected , OMNIORBMinorCode_57 ) sep \
-code( BAD_PARAM_InvalidPOAName       , OMNIORBMinorCode_59 ) sep \
-code( BAD_PARAM_LocalObjectExpected  , OMNIORBMinorCode_60 ) sep \
-code( BAD_PARAM_InvalidSystemId      , OMNIORBMinorCode_61 ) sep \
-code( BAD_PARAM_InvalidNVList        , OMNIORBMinorCode_64 )
+code( BAD_PARAM_ValueFactoryFailure  	     , OMGMinorCode(1) ) sep \
+code( BAD_PARAM_RIDAlreadyDefinedInIfR	     , OMGMinorCode(2) ) sep \
+code( BAD_PARAM_NameAlreadyUsedInIfR 	     , OMGMinorCode(3) ) sep \
+code( BAD_PARAM_TargetIsInvalidContainer     , OMGMinorCode(4) ) sep \
+code( BAD_PARAM_InheritedNameClash   	     , OMGMinorCode(5) ) sep \
+code( BAD_PARAM_IncorrectAbstractIntfType    , OMGMinorCode(6) ) sep \
+code( BAD_PARAM_BadSchemeName        	     , OMGMinorCode(7) ) sep \
+code( BAD_PARAM_BadAddress           	     , OMGMinorCode(8) ) sep \
+code( BAD_PARAM_BadSchemeSpecificPart	     , OMGMinorCode(9) ) sep \
+code( BAD_PARAM_BadURIOther          	     , OMGMinorCode(10) ) sep \
+code( BAD_PARAM_NonAbstractBase      	     , OMGMinorCode(11) ) sep \
+code( BAD_PARAM_SupportsTooManyConcreteIntfs , OMGMinorCode(12) ) sep \
+code( BAD_PARAM_IncompleteTypeCode   	     , OMGMinorCode(13) ) sep \
+code( BAD_PARAM_InvalidObjectId      	     , OMGMinorCode(14) ) sep \
+code( BAD_PARAM_BadNameArg           	     , OMGMinorCode(15) ) sep \
+code( BAD_PARAM_BadRepositoryIdArg   	     , OMGMinorCode(16) ) sep \
+code( BAD_PARAM_InvalidMemberName    	     , OMGMinorCode(17) ) sep \
+code( BAD_PARAM_DuplicateLabelValue  	     , OMGMinorCode(18) ) sep \
+code( BAD_PARAM_IncompatibleDiscriminatorType, OMGMinorCode(19) ) sep \
+code( BAD_PARAM_IllegitimateDiscriminatorType, OMGMinorCode(20) ) sep \
+code( BAD_PARAM_NotAnException       	     , OMGMinorCode(21) ) sep \
+code( BAD_PARAM_UnlistedUserException	     , OMGMinorCode(22) ) sep \
+code( BAD_PARAM_WCharTCSNotKnown     	     , OMGMinorCode(23) ) sep \
+code( BAD_PARAM_ServiceContextNotInRange     , OMGMinorCode(24) ) sep \
+code( BAD_PARAM_EnumValueOutOfRange  	     , OMGMinorCode(25) ) sep \
+code( BAD_PARAM_IndexOutOfRange      	     , OMNIORBMinorCode_21 ) sep \
+code( BAD_PARAM_InvalidUnionDiscValue	     , OMNIORBMinorCode_27 ) sep \
+code( BAD_PARAM_InvalidInitialSize   	     , OMNIORBMinorCode_29 ) sep \
+code( BAD_PARAM_InvalidServant       	     , OMNIORBMinorCode_35 ) sep \
+code( BAD_PARAM_IsPseudoObject       	     , OMNIORBMinorCode_37 ) sep \
+code( BAD_PARAM_InvalidObjectRef     	     , OMNIORBMinorCode_43 ) sep \
+code( BAD_PARAM_WCharOutOfRange      	     , OMNIORBMinorCode_46 ) sep \
+code( BAD_PARAM_InternalInvariant    	     , OMNIORBMinorCode_49 ) sep \
+code( BAD_PARAM_NullStringUnexpected 	     , OMNIORBMinorCode_57 ) sep \
+code( BAD_PARAM_InvalidPOAName       	     , OMNIORBMinorCode_59 ) sep \
+code( BAD_PARAM_LocalObjectExpected  	     , OMNIORBMinorCode_60 ) sep \
+code( BAD_PARAM_InvalidSystemId      	     , OMNIORBMinorCode_61 ) sep \
+code( BAD_PARAM_InvalidNVList        	     , OMNIORBMinorCode_64 ) sep \
+code( BAD_PARAM_InvalidTypeCode      	     , OMNIORBMinorCode_70 ) sep \
+code( BAD_PARAM_AnyDoesNotContainAString     , OMNIORBMinorCode_72 ) sep \
+code( BAD_PARAM_EmptyContextPattern          , OMNIORBMinorCode_73 ) sep \
+code( BAD_PARAM_InvalidContextName           , OMNIORBMinorCode_74 ) sep \
+code( BAD_PARAM_InvalidContext               , OMNIORBMinorCode_77 ) sep \
+code( BAD_PARAM_InvalidDynAny                , OMNIORBMinorCode_78 ) sep \
+code( BAD_PARAM_InvalidException             , OMNIORBMinorCode_80 ) sep \
+code( BAD_PARAM_InvalidExceptionList         , OMNIORBMinorCode_81 ) sep \
+code( BAD_PARAM_InvalidEnvironment           , OMNIORBMinorCode_82 ) sep \
+code( BAD_PARAM_InvalidAny                   , OMNIORBMinorCode_83 ) sep \
+code( BAD_PARAM_InvalidNamedValue            , OMNIORBMinorCode_84 ) sep \
+code( BAD_PARAM_InvalidRequest               , OMNIORBMinorCode_85 ) sep \
+code( BAD_PARAM_InvalidContextList           , OMNIORBMinorCode_87 ) sep \
+code( BAD_PARAM_WrongPythonType      	     , OMNIORBMinorCode_88 ) sep \
+code( BAD_PARAM_IncompletePythonType 	     , OMNIORBMinorCode_92 ) sep \
+code( BAD_PARAM_PythonValueOutOfRange	     , OMNIORBMinorCode_95 ) sep \
+code( BAD_PARAM_EmbeddedNullInPythonString   , OMNIORBMinorCode_96 ) sep \
+code( BAD_PARAM_StringIsTooLong              , OMNIORBMinorCode_100 ) sep \
+code( BAD_PARAM_SequenceIsTooLong            , OMNIORBMinorCode_101 )
+
 
 enum BAD_PARAM_minor {
   DECLARE_BAD_PARAM_minors(DeclareValue,COMMA)
@@ -213,11 +268,11 @@ enum IMP_LIMIT_minor {
 // INV_OBJREF
 #define DECLARE_INV_OBJREF_minors(code,sep) \
 \
-code( INV_OBJREF_WCharNotSupported   , OMGMinorCode(1) ) sep \
-code( INV_OBJREF_TryToInvokePseudoRemotely  , OMNIORBMinorCode_23 ) sep \
-code( INV_OBJREF_InvokeOnNilObjRef  , OMNIORBMinorCode_48 ) sep \
-code( INV_OBJREF_CorruptedObjRef    , OMNIORBMinorCode_54 ) sep \
-code( INV_OBJREF_InterfaceMisMatch  , OMNIORBMinorCode_55 )
+code( INV_OBJREF_WCharNotSupported        , OMGMinorCode(1) ) sep \
+code( INV_OBJREF_TryToInvokePseudoRemotely, OMNIORBMinorCode_23 ) sep \
+code( INV_OBJREF_InvokeOnNilObjRef  	  , OMNIORBMinorCode_48 ) sep \
+code( INV_OBJREF_CorruptedObjRef    	  , OMNIORBMinorCode_54 ) sep \
+code( INV_OBJREF_InterfaceMisMatch  	  , OMNIORBMinorCode_55 )
 
 
  
@@ -246,7 +301,11 @@ code( MARSHAL_AttemptToWriteToReadOnlyBuf     , OMNIORBMinorCode_28 ) sep \
 code( MARSHAL_InvalidFixedValue               , OMNIORBMinorCode_42 ) sep \
 code( MARSHAL_InvalidWCharSize                , OMNIORBMinorCode_47 ) sep \
 code( MARSHAL_InvalidIOR                      , OMNIORBMinorCode_52 ) sep \
-code( MARSHAL_ExceptionInDSINotPropagated     , OMNIORBMinorCode_67 )
+code( MARSHAL_ExceptionInDSINotPropagated     , OMNIORBMinorCode_67 ) sep \
+code( MARSHAL_InvalidContextList              , OMNIORBMinorCode_79 ) sep \
+code( MARSHAL_InvalidIndirection              , OMNIORBMinorCode_90 ) sep \
+code( MARSHAL_InvalidTypeCodeKind             , OMNIORBMinorCode_91 ) sep \
+code( MARSHAL_MessageTooLong                  , OMNIORBMinorCode_93 )
 
 
 
@@ -257,8 +316,11 @@ enum MARSHAL_minor {
 // BAD_TYPECODE
 #define DECLARE_BAD_TYPECODE_minors(code,sep) \
 \
-code( BAD_TYPECODE_InComplete        , OMGMinorCode(1) ) sep \
-code( BAD_TYPECODE_IllegitimateMember, OMGMinorCode(2) )
+code( BAD_TYPECODE_Incomplete        , OMGMinorCode(1) ) sep \
+code( BAD_TYPECODE_IllegitimateMember, OMGMinorCode(2) ) sep \
+code( BAD_TYPECODE_TypeCodeIsNil     , OMNIORBMinorCode_71 ) sep \
+code( BAD_TYPECODE_InvalidOperation  , OMNIORBMinorCode_89 ) sep \
+code( BAD_TYPECODE_UnknownKind       , OMNIORBMinorCode_94 )
 
 enum BAD_TYPECODE_minor {
   DECLARE_BAD_TYPECODE_minors(DeclareValue,COMMA)  
@@ -305,7 +367,8 @@ code( NO_IMPLEMENT_NoValueImpl        , OMGMinorCode(1) ) sep \
 code( NO_IMPLEMENT_IncompatibleVersion, OMGMinorCode(2) ) sep \
 code( NO_IMPLEMENT_NoUsableProfile    , OMGMinorCode(3) ) sep \
 code( NO_IMPLEMENT_DIIOnLocalObject   , OMGMinorCode(4) ) sep \
-code( NO_IMPLEMENT_Unsupported        , OMNIORBMinorCode_36 )
+code( NO_IMPLEMENT_Unsupported        , OMNIORBMinorCode_36 ) sep \
+code( NO_IMPLEMENT_NoPythonMethod     , OMNIORBMinorCode_99 )
 
 enum NO_IMPLEMENT_minor {
   DECLARE_NO_IMPLEMENT_minors(DeclareValue,COMMA)  
@@ -314,22 +377,23 @@ enum NO_IMPLEMENT_minor {
 // NO_IMPLEMENT
 #define DECLARE_BAD_INV_ORDER_minors(code,sep) \
 \
-code( BAD_INV_ORDER_1                 	     	, OMGMinorCode(1) ) sep \
-code( BAD_INV_ORDER_2                 	     	, OMGMinorCode(2) ) sep \
-code( BAD_INV_ORDER_WouldDeadLock     	     	, OMGMinorCode(3) ) sep \
-code( BAD_INV_ORDER_ORBHasShutdown    	     	, OMGMinorCode(4) ) sep \
-code( BAD_INV_ORDER_5                 	     	, OMGMinorCode(5) ) sep \
-code( BAD_INV_ORDER_ServantManagerAlreadySet 	, OMGMinorCode(6) ) sep \
-code( BAD_INV_ORDER_ArgumentsCalledOutOfOrder	, OMGMinorCode(7) ) sep \
-code( BAD_INV_ORDER_CtxCalledOutOfOrder	     	, OMGMinorCode(8) ) sep \
-code( BAD_INV_ORDER_SetResultCalledOutOfOrder	, OMGMinorCode(9) ) sep \
-code( BAD_INV_ORDER_10                	     	, OMGMinorCode(10) ) sep \
-code( BAD_INV_ORDER_11                	     	, OMGMinorCode(11) ) sep \
-code( BAD_INV_ORDER_12                	     	, OMGMinorCode(12) ) sep \
-code( BAD_INV_ORDER_13                	     	, OMGMinorCode(13) ) sep \
-code( BAD_INV_ORDER_CodeSetNotKnownYet	     	, OMNIORBMinorCode_24 ) sep \
-code( BAD_INV_ORDER_ArgumentsNotCalled          , OMNIORBMinorCode_65 ) sep \
-code( BAD_INV_ORDER_ErrorInDynamicImplementation, OMNIORBMinorCode_66 )
+code( BAD_INV_ORDER_DependencyPreventsDestruction, OMGMinorCode(1) ) sep \
+code( BAD_INV_ORDER_ObjectIndestructible     	 , OMGMinorCode(2) ) sep \
+code( BAD_INV_ORDER_WouldDeadLock     	     	 , OMGMinorCode(3) ) sep \
+code( BAD_INV_ORDER_ORBHasShutdown    	     	 , OMGMinorCode(4) ) sep \
+code( BAD_INV_ORDER_RequestUsedMoreThanOnce  	 , OMGMinorCode(5) ) sep \
+code( BAD_INV_ORDER_ServantManagerAlreadySet 	 , OMGMinorCode(6) ) sep \
+code( BAD_INV_ORDER_ArgumentsCalledOutOfOrder	 , OMGMinorCode(7) ) sep \
+code( BAD_INV_ORDER_CtxCalledOutOfOrder	     	 , OMGMinorCode(8) ) sep \
+code( BAD_INV_ORDER_SetResultCalledOutOfOrder	 , OMGMinorCode(9) ) sep \
+code( BAD_INV_ORDER_RequestAlreadySent    	 , OMGMinorCode(10) ) sep \
+code( BAD_INV_ORDER_RequestNotSentYet        	 , OMGMinorCode(11) ) sep \
+code( BAD_INV_ORDER_ResultAlreadyReceived    	 , OMGMinorCode(12) ) sep \
+code( BAD_INV_ORDER_RequestIsSynchronous     	 , OMGMinorCode(13) ) sep \
+code( BAD_INV_ORDER_CodeSetNotKnownYet	     	 , OMNIORBMinorCode_24 ) sep \
+code( BAD_INV_ORDER_ArgumentsNotCalled           , OMNIORBMinorCode_65 ) sep \
+code( BAD_INV_ORDER_ErrorInDynamicImplementation , OMNIORBMinorCode_66 ) sep \
+code( BAD_INV_ORDER_RequestConfiguredOutOfOrder  , OMNIORBMinorCode_86 )
 
 enum BAD_INV_ORDER_minor {
   DECLARE_BAD_INV_ORDER_minors(DeclareValue,COMMA)  
@@ -373,7 +437,8 @@ code( OBJ_ADAPTER_WrongIncarnatePolicy, OMGMinorCode(5) ) sep \
 code( OBJ_ADAPTER_BiDirNotAllowed     , OMNIORBMinorCode_15 ) sep \
 code( OBJ_ADAPTER_BOANotInitialised   , OMNIORBMinorCode_33 ) sep \
 code( OBJ_ADAPTER_POANotInitialised   , OMNIORBMinorCode_53 ) sep \
-code( OBJ_ADAPTER_ServantAlreadyActive, OMNIORBMinorCode_63 )
+code( OBJ_ADAPTER_ServantAlreadyActive, OMNIORBMinorCode_63 ) sep \
+code( OBJ_ADAPTER_IncompatibleServant , OMNIORBMinorCode_97 )
 
 
 enum OBJ_ADAPTER_minor {
@@ -421,9 +486,19 @@ code( INITIALIZE_ConfigFileError      , OMNIORBMinorCode_50 ) sep \
 code( INITIALIZE_NotOmniThread        , OMNIORBMinorCode_56 )
 
 
-
 enum INITIALIZE_minor {
   DECLARE_INITIALIZE_minors(DeclareValue,COMMA)  
+};
+
+// BAD_CONTEXT
+#define DECLARE_BAD_CONTEXT_minors(code,sep) \
+\
+code( BAD_CONTEXT_NoMatchingProperty    , OMNIORBMinorCode_75 ) sep \
+code( BAD_CONTEXT_StartingScopeNotFound , OMNIORBMinorCode_76 )
+
+
+enum BAD_CONTEXT_minor {
+  DECLARE_BAD_CONTEXT_minors(DeclareValue,COMMA)
 };
 
 
