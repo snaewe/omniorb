@@ -56,8 +56,10 @@ endif
 
 CXXDEBUGFLAGS = -g
 
-NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
-NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
+NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc \
+             tcpSocketMTImpl.cc poll.cc
+NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o    \
+             tcpSocketMTImpl.o poll.o
 DIR_CPPFLAGS += -DUnixArchitecture
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 endif
@@ -67,8 +69,10 @@ endif
 #############################################################################
 
 ifdef Win32Platform
-NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
-NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o  gatekeeper.o
+NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc \
+             tcpSocketMTImpl.cc poll.cc
+NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o    \
+             gatekeeper.o tcpSocketMTImpl.o poll.o
 # See the extra comments on gatekeeper.o at the end of this file
 
 DIR_CPPFLAGS += -DNTArchitecture
@@ -123,8 +127,10 @@ endif
 #############################################################################
 
 ifdef ATMos
-NETLIBSRCS = relStream.cc tcpATMos.cc tcpATMosMTfactory.cc
-NETLIBOBJS = relStream.o tcpATMos.o tcpATMosMTfactory.o
+NETLIBSRCS = relStream.cc tcpATMos.cc tcpATMosMTfactory.cc \
+             tcpSocketMTImpl.cc poll.cc
+NETLIBOBJS = relStream.o tcpATMos.o tcpATMosMTfactory.o    \
+             tcpSocketMTImpl.o poll.o
 DIR_CPPFLAGS = -DATMosArchitecture
 endif
 
