@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.6  2000/02/04 14:48:09  djr
+ Added a couple of feature test macros.
+
  Revision 1.1.2.5  2000/01/27 11:11:24  djr
  Correction.
 
@@ -261,6 +264,8 @@
 
 #if _COMPILER_VERSION >= 721
 #define HAS_Cplusplus_Namespace
+#define HAS_Cplusplus_Bool
+#define OMNI_REQUIRES_FQ_BASE_CTOR
 #endif
 
 #if  _MIPS_SZINT == 64
@@ -356,6 +361,7 @@
 #elif defined(__aix__) && defined(__powerpc__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
+# define OMNI_REQUIRES_FQ_BASE_CTOR 1
 #elif defined(__hpux__) && defined(__hppa__)
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
