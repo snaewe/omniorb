@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.36  1999/06/02 16:07:44  sll
+ Enabled IR client support for all platforms. Previously, IR client is
+ not available with compilers that do not support namespace.
+
  Revision 1.35  1999/05/26 12:21:35  sll
  Use ENABLE_CLIENT_IR_SUPPORT alone to enable IR support.
 
@@ -130,6 +134,10 @@
 #ifndef __CORBA_H__
 #define __CORBA_H__
 
+#ifndef __CORBA_H_EXTERNAL_GUARD__
+# define __CORBA_H_EXTERNAL_GUARD__
+#endif
+
 #include <omniORB2/omniInternal.h>
 #include <omniORB2/templatedecls.h>
 #include <omniORB2/stringtypes.h>
@@ -138,16 +146,31 @@
 #ifdef _LC_attr
 # error "A local CPP macro _LC_attr has already been defined."
 #else
-# ifdef _OMNIORB2_DYNAMIC_LIBRARY
-#  define _LC_attr
-# else
-#  define _LC_attr _OMNIORB_NTDLL_IMPORT
-# endif
+# define _LC_attr
 #endif
 
 // Must not define USE_stub_in_nt_dll when compiling dynamic.
 #if defined(USE_stub_in_nt_dll) && defined(_OMNIORB2_DYNAMIC_LIBRARY)
 # error "USE_stub_in_nt_dll and _OMNIORB2_DYNAMIC_LIBRARY are both defined."
+#endif
+
+#if defined(_OMNIORB2_LIBRARY) && defined(_OMNIORB2_DYNAMIC_LIBRARY)
+# error "_OMNIORB2_LIBRARY and _OMNIORB2_DYNAMIC_LIBRARY are both defined."
+#endif
+
+#if    defined(_OMNIORB2_LIBRARY)
+#         define _core_attr
+#         define _dyn_attr  _OMNIORB_NTDLL_IMPORT
+#elif  defined(_OMNIORB2_DYNAMIC_LIBRARY)
+#         define _core_attr _OMNIORB_NTDLL_IMPORT
+#         define _dyn_attr
+#else
+#         define _core_attr _OMNIORB_NTDLL_IMPORT
+#         define _dyn_attr  _OMNIORB_NTDLL_IMPORT
+#endif
+
+#ifndef USE_omniORB_logStream
+#define USE_omniORB_logStream
 #endif
 
 
@@ -605,7 +628,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const _CORBA_ULong PR_magic;
+    static _core_attr const _CORBA_ULong PR_magic;
 
   protected:
     Exception() { pd_magic = PR_magic; }
@@ -785,7 +808,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const _CORBA_ULong PR_magic;
+    static _core_attr const _CORBA_ULong PR_magic;
 
   private:
     CORBA::Exception* pd_exception;
@@ -842,7 +865,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const _CORBA_ULong PR_magic;
+    static _core_attr const _CORBA_ULong PR_magic;
 
   protected:
     NamedValue() { pd_magic = PR_magic; }
@@ -900,7 +923,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const _CORBA_ULong PR_magic;
+    static _core_attr const _CORBA_ULong PR_magic;
 
   protected:
     NVList() { pd_magic = PR_magic; }
@@ -960,7 +983,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const _CORBA_ULong PR_magic;
+    static _core_attr const _CORBA_ULong PR_magic;
 
   protected:
     Context() { pd_magic = PR_magic; }
@@ -1019,7 +1042,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const _CORBA_ULong PR_magic;
+    static _core_attr const _CORBA_ULong PR_magic;
 
   protected:
     ContextList() { pd_magic = PR_magic; }
@@ -1112,7 +1135,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const _CORBA_ULong PR_magic;
+    static _core_attr const _CORBA_ULong PR_magic;
 
   protected:
     ExceptionList() { pd_magic = PR_magic; }
@@ -1157,351 +1180,29 @@ _CORBA_MODULE_BEG
   };
 
 
-  //////////////////////////////////////////////////////////////////////
-  //////////////////////// Interface Repository ////////////////////////
-  //////////////////////////////////////////////////////////////////////
-
-#if defined(ENABLE_CLIENT_IR_SUPPORT)
-  // On platforms supporting namespaces we can generate the Interface
-  // Repository types automatically, and include them here.
-  //  The minimum set of definitions required for TypeCode are
-  // included here, and the rest at the bottom of this file.
-
+#ifdef HAS_Cplusplus_Namespace
 _CORBA_MODULE_END
-#undef _LC_attr
-#ifdef _OMNIORB2_DYNAMIC_LIBRARY
-# include <omniORB2/corbaidl.hh>
-# define _LC_attr
-#else
-# ifdef USE_stub_in_nt_dll
-#  include <omniORB2/corbaidl.hh>
-# else
-#  define USE_stub_in_nt_dll
-#  include <omniORB2/corbaidl.hh>
-#  undef USE_stub_in_nt_dll
-# endif
-# define _LC_attr _OMNIORB_NTDLL_IMPORT
-#endif
-#ifndef __corbaidl_hh_EXTERNAL_GUARD__
-#define __corbaidl_hh_EXTERNAL_GUARD__
-#endif
+
 _CORBA_MODULE CORBA
 _CORBA_MODULE_BEG
-
-#else
-  // Interface Repository types.
-  //  For platforms without namespaces we cannot use code generated
-  // from IDL which is in the CORBA module. Thus we must define those
-  // types which are required by other parts of the library here.
-
-  class IDLType;
-  typedef IDLType* IDLType_ptr;
-  typedef IDLType_ptr IDLTypeRef;
-
-  class IDLType {
-  public:
-    static IDLType_ptr _nil() { return 0; }
-  };
-
-  class IDLType_member {
-  public:
-    IDLType_member& operator=(IDLType_ptr) { return *this; }
-  };
-
-  struct StructMember {
-    String_member name;
-    TypeCode_member type;
-    IDLType_member type_def;
-  };
-  typedef _CORBA_ConstrType_Variable_Var<StructMember> StructMember_var;
-
-  class StructMemberSeq : public _CORBA_Unbounded_Sequence<StructMember > {
-  public:
-    inline StructMemberSeq() {}
-    inline StructMemberSeq(const StructMemberSeq& seq)
-      : _CORBA_Unbounded_Sequence<StructMember >(seq) {}
-    inline StructMemberSeq(CORBA::ULong max)
-      : _CORBA_Unbounded_Sequence<StructMember >(max) {}
-    inline StructMemberSeq(CORBA::ULong max, CORBA::ULong len, StructMember* val, CORBA::Boolean rel=0)
-      : _CORBA_Unbounded_Sequence<StructMember >(max, len, val, rel) {}
-    inline StructMemberSeq& operator = (const StructMemberSeq& seq) {
-      _CORBA_Unbounded_Sequence<StructMember >::operator=(seq);
-      return *this;
-    };
-  };
-
-  class StructMemberSeq_out;
-
-  class StructMemberSeq_var {
-  public:
-    typedef StructMemberSeq _T;
-    typedef StructMemberSeq_var _T_var;
-
-    inline StructMemberSeq_var() : pd_seq(0) {}
-    inline StructMemberSeq_var(_T* s) : pd_seq(s) {}
-    inline StructMemberSeq_var(const _T_var& sv) {
-      if( sv.pd_seq ) {
-	pd_seq = new _T;
-	*pd_seq = *sv.pd_seq;
-      } else
-	pd_seq = 0;
-    }
-    inline ~StructMemberSeq_var() {
-      if( pd_seq )  delete pd_seq;
-    }
-
-    inline _T_var& operator = (_T* s) {
-      if( pd_seq )  delete pd_seq;
-      pd_seq = s;
-      return *this;
-    }
-    inline _T_var& operator = (const _T_var& sv) {
-      if( sv.pd_seq ) {
-	if( !pd_seq )  pd_seq = new _T;
-	*pd_seq = *sv.pd_seq;
-      } else if( pd_seq ) {
-	delete pd_seq;
-	pd_seq = 0;
-      }
-      return *this;
-    }
-
-    inline StructMember& operator [] (_CORBA_ULong i) {
-      return (*pd_seq)[i];
-    }
-    inline _T* operator -> () { return pd_seq; }
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-    inline operator _T& () const { return *pd_seq; }
-#else
-    inline operator const _T& () const { return *pd_seq; }
-    inline operator _T& () { return *pd_seq; }
 #endif
 
-    inline const _T& in() const { return *pd_seq; }
-    inline _T& inout() { return *pd_seq; }
-    inline _T*& out() { return pd_seq; }
-    inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; return tmp; }
-
-    friend class StructMemberSeq_out;
-
-  private:
-    _T* pd_seq;
-  };
-
-  class StructMemberSeq_out {
-  public:
-    typedef StructMemberSeq _T;
-    typedef StructMemberSeq_var _T_var;
-
-    inline StructMemberSeq_out(_T*& s) : _data(s) {}
-    inline StructMemberSeq_out(_T_var& sv)
-      : _data(sv.pd_seq) { sv = (_T*) 0; }
-
-    _T*& _data;
-
-  private:
-    StructMemberSeq_out();
-  };
-
-
-  struct UnionMember {
-    String_member name;
-    Any label;
-    TypeCode_member type;
-    IDLType_member type_def;
-  };
-  typedef _CORBA_ConstrType_Variable_Var<UnionMember> UnionMember_var;
-
-  class UnionMemberSeq : public _CORBA_Unbounded_Sequence<UnionMember > {
-  public:
-    inline UnionMemberSeq() {}
-    inline UnionMemberSeq(const UnionMemberSeq& seq)
-      : _CORBA_Unbounded_Sequence<UnionMember >(seq) {}
-    inline UnionMemberSeq(CORBA::ULong max)
-      : _CORBA_Unbounded_Sequence<UnionMember >(max) {}
-    inline UnionMemberSeq(CORBA::ULong max, CORBA::ULong len, UnionMember* val, CORBA::Boolean rel=0)
-      : _CORBA_Unbounded_Sequence<UnionMember >(max, len, val, rel) {}
-    inline UnionMemberSeq& operator = (const UnionMemberSeq& seq) {
-      _CORBA_Unbounded_Sequence<UnionMember >::operator=(seq);
-      return *this;
-    };
-  };
-
-  class UnionMemberSeq_out;
-
-  class UnionMemberSeq_var {
-  public:
-    typedef UnionMemberSeq _T;
-    typedef UnionMemberSeq_var _T_var;
-
-    inline UnionMemberSeq_var() : pd_seq(0) {}
-    inline UnionMemberSeq_var(_T* s) : pd_seq(s) {}
-    inline UnionMemberSeq_var(const _T_var& sv) {
-      if( sv.pd_seq ) {
-	pd_seq = new _T;
-	*pd_seq = *sv.pd_seq;
-      } else
-	pd_seq = 0;
-    }
-    inline ~UnionMemberSeq_var() {
-      if( pd_seq )  delete pd_seq;
-    }
-
-    inline _T_var& operator = (_T* s) {
-      if( pd_seq )  delete pd_seq;
-      pd_seq = s;
-      return *this;
-    }
-    inline _T_var& operator = (const _T_var& sv) {
-      if( sv.pd_seq ) {
-	if( !pd_seq )  pd_seq = new _T;
-	*pd_seq = *sv.pd_seq;
-      } else if( pd_seq ) {
-	delete pd_seq;
-	pd_seq = 0;
-      }
-      return *this;
-    }
-
-    inline UnionMember& operator [] (_CORBA_ULong i) {
-      return (*pd_seq)[i];
-    }
-    inline _T* operator -> () { return pd_seq; }
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-    inline operator _T& () const { return *pd_seq; }
+#undef _LC_attr
+#ifdef _OMNIORB2_DYNAMIC_LIBRARY
+#  define _LC_attr
 #else
-    inline operator const _T& () const { return *pd_seq; }
-    inline operator _T& () { return *pd_seq; }
+#  define _LC_attr _OMNIORB_NTDLL_IMPORT
 #endif
+#include <omniORB2/corbaidl_defs.hh>
+#undef  _LC_attr
+#define _LC_attr
 
-    inline const _T& in() const { return *pd_seq; }
-    inline _T& inout() { return *pd_seq; }
-    inline _T*& out() { return pd_seq; }
-    inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; return tmp; }
+  class InterfaceDef;
 
-    friend class UnionMemberSeq_out;
-
-  private:
-    _T* pd_seq;
-  };
-
-  class UnionMemberSeq_out {
-  public:
-    typedef UnionMemberSeq _T;
-    typedef UnionMemberSeq_var _T_var;
-
-    inline UnionMemberSeq_out(_T*& s) : _data(s) {}
-    inline UnionMemberSeq_out(_T_var& sv)
-      : _data(sv.pd_seq) { sv = (_T*) 0; }
-
-    _T*& _data;
-
-  private:
-    UnionMemberSeq_out();
-  };
-
-  class EnumMemberSeq : public _CORBA_Unbounded_Sequence__String {
-  public:
-    inline EnumMemberSeq() {}
-    inline EnumMemberSeq(const EnumMemberSeq& seq)
-      : _CORBA_Unbounded_Sequence__String(seq) {}
-    inline EnumMemberSeq(CORBA::ULong max)
-      : _CORBA_Unbounded_Sequence__String(max) {}
-    inline EnumMemberSeq(CORBA::ULong max, CORBA::ULong len, char** val, CORBA::Boolean rel=0)
-      : _CORBA_Unbounded_Sequence__String(max, len, val, rel) {}
-    inline EnumMemberSeq& operator = (const EnumMemberSeq& seq) {
-      _CORBA_Unbounded_Sequence__String::operator=(seq);
-      return *this;
-    };
-  };
-
-  class EnumMemberSeq_out;
-
-  class EnumMemberSeq_var {
-  public:
-    typedef EnumMemberSeq _T;
-    typedef EnumMemberSeq_var _T_var;
-
-    inline EnumMemberSeq_var() : pd_seq(0) {}
-    inline EnumMemberSeq_var(_T* s) : pd_seq(s) {}
-    inline EnumMemberSeq_var(const _T_var& sv) {
-      if( sv.pd_seq ) {
-	pd_seq = new _T;
-	*pd_seq = *sv.pd_seq;
-      } else
-	pd_seq = 0;
-    }
-    inline ~EnumMemberSeq_var() {
-      if( pd_seq )  delete pd_seq;
-    }
-
-    inline _T_var& operator = (_T* s) {
-      if( pd_seq )  delete pd_seq;
-      pd_seq = s;
-      return *this;
-    }
-    inline _T_var& operator = (const _T_var& sv) {
-      if( sv.pd_seq ) {
-	if( !pd_seq )  pd_seq = new _T;
-	*pd_seq = *sv.pd_seq;
-      } else if( pd_seq ) {
-	delete pd_seq;
-	pd_seq = 0;
-      }
-      return *this;
-    }
-
-    inline _CORBA_String_member& operator [] (_CORBA_ULong i) {
-      return (*pd_seq)[i];
-    }
-    inline _T* operator -> () { return pd_seq; }
-#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
-    inline operator _T& () const { return *pd_seq; }
-#else
-    inline operator const _T& () const { return *pd_seq; }
-    inline operator _T& () { return *pd_seq; }
-#endif
-
-    inline const _T& in() const { return *pd_seq; }
-    inline _T& inout() { return *pd_seq; }
-    inline _T*& out() { return pd_seq; }
-    inline _T* _retn() { _T* tmp = pd_seq; pd_seq = 0; return tmp; }
-
-    friend class EnumMemberSeq_out;
-
-  private:
-    _T* pd_seq;
-  };
-
-  class EnumMemberSeq_out {
-  public:
-    typedef EnumMemberSeq _T;
-    typedef EnumMemberSeq_var _T_var;
-
-    inline EnumMemberSeq_out(_T*& s) : _data(s) {}
-    inline EnumMemberSeq_out(_T_var& sv)
-      : _data(sv.pd_seq) { sv = (_T*) 0; }
-
-    _T*& _data;
-
-  private:
-    EnumMemberSeq_out();
-  };
-
-
-  class ImplementationDef {};
+  class ImplementationDef;
   typedef ImplementationDef* ImplementationDef_ptr;
-  typedef ImplementationDef_ptr ImplementationDefRef;
 
-  class InterfaceDef {};
-  typedef InterfaceDef* InterfaceDef_ptr;
-  typedef InterfaceDef_ptr InterfaceDefRef;
-
-  class OperationDef {};
-  typedef OperationDef* OperationDef_ptr;
-  typedef OperationDef_ptr OperationDefRef;
-#endif
-
+  class OperationDef;
 
   //////////////////////////////////////////////////////////////////////
   /////////////////////////////// Object ///////////////////////////////
@@ -1550,7 +1251,8 @@ _CORBA_MODULE_BEG
     Request_ptr _request(const char* operation);
 
     ImplementationDef_ptr _get_implementation();
-    InterfaceDef_ptr      _get_interface();
+    InterfaceDef*           _get_interface();
+    //InterfaceDef_ptr      _get_interface();
     _CORBA_Boolean _is_a(const char *repoId);
     _CORBA_Boolean _non_existent();
     _CORBA_Boolean _is_equivalent(Object_ptr other_object);
@@ -1579,7 +1281,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const CORBA::ULong PR_magic;
+    static _core_attr const CORBA::ULong PR_magic;
 
   private:
     omniObject*  pd_obj;
@@ -1770,7 +1472,7 @@ _CORBA_MODULE_BEG
     static inline _CORBA_Boolean PR_is_valid(TypeCode_ptr p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
-    static const CORBA::ULong PR_magic;
+    static _core_attr const CORBA::ULong PR_magic;
 
   protected:
     // These operators are placed here to avoid them being used externally
@@ -1786,23 +1488,23 @@ _CORBA_MODULE_BEG
   /////////////////////// TypeCodes of Primitives //////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_null;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_void;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_short;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_long;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_ushort;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_ulong;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_float;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_double;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_boolean;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_char;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_octet;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_any;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_TypeCode;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_Principal;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_Object;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_string;
-  _CORBA_MODULE_VAR TypeCode_ptr _tc_NamedValue;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_null;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_void;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_short;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_long;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_ushort;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_ulong;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_float;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_double;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_boolean;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_char;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_octet;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_any;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_TypeCode;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_Principal;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_Object;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_string;
+  _CORBA_MODULE_VAR _dyn_attr TypeCode_ptr _tc_NamedValue;
 
   //////////////////////////////////////////////////////////////////////
   ////////////////////////// DynAny Interface //////////////////////////
@@ -1937,7 +1639,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const _CORBA_ULong PR_magic;
+    static _core_attr const _CORBA_ULong PR_magic;
   protected:
     DynAny();
 
@@ -2159,7 +1861,7 @@ _CORBA_MODULE_BEG
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
 
-    static const _CORBA_ULong PR_magic;
+    static _core_attr const _CORBA_ULong PR_magic;
 
   protected:
     Request() { pd_magic = PR_magic; }
@@ -2184,7 +1886,8 @@ _CORBA_MODULE_BEG
     virtual ~ServerRequest();
 
     virtual const char* op_name() = 0;
-    virtual OperationDef_ptr op_def() = 0;
+    virtual OperationDef* op_def() = 0;
+    // virtual OperationDef_ptr op_def() = 0;
     virtual Context_ptr ctx() = 0;
     virtual void params(NVList_ptr parameters) = 0;
     virtual void result(Any* value) = 0;
@@ -2227,7 +1930,7 @@ _CORBA_MODULE_BEG
 
   class BOA {
   public:
-    Object_ptr create(const ReferenceData&, InterfaceDef_ptr,
+    Object_ptr create(const ReferenceData&, InterfaceDef*,
 		      ImplementationDef_ptr);
     ReferenceData* get_id(Object_ptr);
     void change_implementation(Object_ptr,ImplementationDef_ptr);
@@ -2238,7 +1941,7 @@ _CORBA_MODULE_BEG
     void dispose(Object_ptr);
     // see omni::disposeObject()
 
-    void impl_is_ready(ImplementationDef_ptr=0, Boolean NonBlocking=0);
+    void impl_is_ready(ImplementationDef_ptr p=0, Boolean NonBlocking=0);
     // The argument <NonBlocking> is omniORB2 specific.
     // Calling this function will cause the BOA to start accepting requests
     // from other address spaces.
@@ -2346,12 +2049,13 @@ _CORBA_MODULE_BEG
 
   struct ServiceDetail {
     ServiceDetailType service_detail_type;
-    _CORBA_Unbounded_Sequence_Octet service_detail;
+    _CORBA_PseudoValue_Sequence<_CORBA_Octet> service_detail;
+
   };
 
   struct ServiceInformation {
-    _CORBA_Unbounded_Sequence<ServiceOption> service_options;
-    _CORBA_Unbounded_Sequence<ServiceDetail> service_details;
+    _CORBA_PseudoValue_Sequence<ServiceOption> service_options;
+    _CORBA_PseudoValue_Sequence<ServiceDetail> service_details;
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -2398,7 +2102,6 @@ _CORBA_MODULE_BEG
 
   typedef _CORBA_PseudoObj_Var<Policy> Policy_var;
   typedef _CORBA_PseudoObj_Member<Policy,Policy_var> Policy_member;
-
   typedef _CORBA_Pseudo_Unbounded_Sequence<Policy,Policy_member> PolicyList;
 
   _CORBA_MODULE_VARINT const PolicyType SecConstruction _init_in_decl_( = 11);
@@ -2409,7 +2112,7 @@ _CORBA_MODULE_BEG
 
   class ConstructionPolicy : public Policy {
   public:
-    void make_domain_manager(InterfaceDef_ptr object_type,
+    void make_domain_manager(InterfaceDef* object_type, // InterfaceDef_ptr
 			     Boolean constr_policy);
 
     static ConstructionPolicy_ptr _duplicate(ConstructionPolicy_ptr p);
@@ -2465,7 +2168,8 @@ _CORBA_MODULE_BEG
     typedef _CORBA_Pseudo_Unbounded_Sequence<Request,Request_member> RequestSeq;
 
     Status create_list(Long, NVList_out);
-    Status create_operation_list(OperationDef_ptr, NVList_out);
+    Status create_operation_list(OperationDef*, // OperationDef_ptr
+				 NVList_out);
     Status create_named_value(NamedValue_out);
     Status create_exception_list(ExceptionList_out);
     Status create_context_list(ContextList_out);
@@ -2654,7 +2358,7 @@ _CORBA_MODULE_BEG
     static inline _CORBA_Boolean PR_is_valid(ORB_ptr p ) {
       return ((p) ? (p->pd_magic == PR_magic) : 1);
     }
-    static const CORBA::ULong PR_magic;
+    static _core_attr const CORBA::ULong PR_magic;
 
     ORB();
     ~ORB();
@@ -3120,14 +2824,69 @@ private:
   typedef _CORBA_PseudoObj_Out<DynArray,DynArray_var>       DynArray_out;
 
 
+  // omniORB2 specific classes for creating proxy objects.
+  class proxyObjectFactory_iterator;
+  class proxyObjectFactory {
+  public:
+    proxyObjectFactory();
+    virtual ~proxyObjectFactory();
+  
+    virtual const char *irRepoId() const = 0;
+    // returns the Interface Repository ID.
+       
+    virtual CORBA::Object_ptr newProxyObject(Rope *r,
+					     _CORBA_Octet *key,
+					     size_t keysize,
+					     IOP::TaggedProfileList *profiles,
+					     _CORBA_Boolean release) = 0;
+    // returns a new proxy object.
+
+    virtual _CORBA_Boolean  is_a(const char *base_repoId) const = 0;
+    // Return true if <base_repoId> is the interface repository ID of
+    // a base interface.
+
+    friend class proxyObjectFactory_iterator;
+
+    static _core_attr proxyObjectFactory* proxyStubs;
+
+  private:
+    proxyObjectFactory *pd_next;
+  };
+
+
+  class proxyObjectFactory_iterator {
+  public:
+    proxyObjectFactory_iterator();
+    ~proxyObjectFactory_iterator() {}
+    proxyObjectFactory *operator() ();
+  private:
+    proxyObjectFactory *pd_f;
+  };
+
+#ifdef HAS_Cplusplus_Namespace
 _CORBA_MODULE_END
+
+_CORBA_MODULE CORBA
+_CORBA_MODULE_BEG
+#endif
+
+#undef _core_attr
+#undef _dyn_attr
 
 
 #undef _LC_attr
+#ifdef _OMNIORB2_DYNAMIC_LIBRARY
+#  define _LC_attr
+#else
+#  define _LC_attr _OMNIORB_NTDLL_IMPORT
+#endif
+#include <omniORB2/ir_defs.hh>
+#undef  _LC_attr
+
+_CORBA_MODULE_END
 
 
 #include <omniORB2/omniORB.h>
-#include <omniORB2/proxyFactory.h>
 #include <omniORB2/templatedefns.h>
 
 
@@ -3165,39 +2924,29 @@ _omni_callSystemExceptionHandler(omniObject*,
 
 extern void _omni_set_NameService(CORBA::Object_ptr);
 
-
-#ifndef __CORBA_H_EXTERNAL_GUARD__
-# define __CORBA_H_EXTERNAL_GUARD__
-#endif
-
-
-// Include the COS Naming Service and Interface Repository headers:
-
+// Include the COS Naming Service header:
+// Note: on WIN32, the typecode constants defined in the Naming Service
+//       header are not available because they are not exported by the
+//       dynamic library.
 #ifdef _OMNIORB2_DYNAMIC_LIBRARY
 // If compiling the dynamic library, USE_stub_in_nt_dll should
 // not be defined.
 # include <omniORB2/Naming.hh>
-# if defined(ENABLE_CLIENT_IR_SUPPORT)
-#  include <omniORB2/ir.hh>
-# endif
 #else
 // If not compiling the dynamic library, we need to ensure that
 // USE_stub_in_nt_dll is defined for these two includes. It must
 // revert to its previous value afterwards.
 # ifdef USE_stub_in_nt_dll
 #  include <omniORB2/Naming.hh>
-#  if defined(ENABLE_CLIENT_IR_SUPPORT)
-#   include <omniORB2/ir.hh>
-#  endif
 # else
 #  define USE_stub_in_nt_dll
 #  include <omniORB2/Naming.hh>
-#  if defined(ENABLE_CLIENT_IR_SUPPORT)
-#   include <omniORB2/ir.hh>
-#  endif
 #  undef USE_stub_in_nt_dll
+# endif
 #endif
-#endif
+
+#include <omniORB2/corbaidl_operators.hh>
+#include <omniORB2/ir_operators.hh>
 
 
 #endif // __CORBA_H__
