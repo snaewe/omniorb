@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.15  1999/02/19 12:22:33  djr
+  Fixed typo: sunsos -> sunos
+
   Revision 1.14  1998/11/09 10:56:57  sll
   Removed the use of the reserved keyword "export".
 
@@ -117,7 +120,7 @@
 #define RC_SOCKET_ERROR    (-1)
 #define INETSOCKET         AF_INET
 #define CLOSESOCKET(sock)   close(sock)
-#if defined(__sunsos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
 #define SHUTDOWNSOCKET(sock)  ::shutdown(sock,2)
 #elif defined(__osf1__) && defined(__alpha__)
 #define SHUTDOWNSOCKET(sock)  ::shutdown(sock,2)
