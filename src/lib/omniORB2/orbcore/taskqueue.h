@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/07/24 14:58:54  dpg1
+  Fix race conditions with servant activators.
+
   Revision 1.1.2.2  2000/02/07 15:26:59  dpg1
   Spurious \r characters removed.
 
@@ -38,6 +41,9 @@
 
 #ifndef __OMNIORB_TASKQUEUE_H__
 #define __OMNIORB_TASKQUEUE_H__
+
+// This is now obsolete. It is not used by any omniORB code, but it's
+// still here in case something elsewhere is using it.
 
 
 class omniTaskQueue : public omni_thread {

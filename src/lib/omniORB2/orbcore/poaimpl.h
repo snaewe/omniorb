@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2001/07/24 14:58:54  dpg1
+  Fix race conditions with servant activators.
+
   Revision 1.1.2.8  2000/06/02 16:09:59  dpg1
   If an object is deactivated while its POA is in the HOLDING state,
   clients which were held now receive a TRANSIENT exception when the POA
@@ -65,8 +68,6 @@
 
 #include <objectAdapter.h>
 #include <poamanager.h>
-#include <taskqueue.h>
-
 
 #define PS_VERSION  ":2.3"
 
@@ -153,6 +154,8 @@ public:
   //////////////////////
   // omniORB Internal //
   //////////////////////
+
+  class PendingOperation; // Forward declaration for later
 
   enum {
     RPP_ACTIVE_OBJ_MAP = 0,
@@ -298,12 +301,18 @@ private:
   void add_object_to_etherealisation_queue(PortableServer::Servant s,
 				PortableServer::ServantActivator_ptr sa,
 				const _CORBA_Octet* key, int keysize,
-				int cleanup_in_progress, int detached=0);
+				int cleanup_in_progress, int detached=0,
+				PendingOperation* pending=0);
   // Places the servant associated with the given object onto a queue
   // to be etherealised by the given ServantActivator.  This is done
   // in a separate thread.
-  //  If <detached> then the object has already been 'detached' from
+  //
+  // If <detached> then the object has already been 'detached' from
   // the adapter (so <pd_nOutstandingDeadObjects> is not incremented).
+  //
+  // If <pending> is non-zero, it is a pointer to a PendingOperation
+  // which is completed by the etherealisation.
+  //
   //  Must not hold <omni::internalLock>.
 
   void dispatch_to_ds(GIOP_S&, const _CORBA_Octet*, int);
@@ -345,32 +354,6 @@ private:
   // Returns true if this POA is in the process of invoking an
   // AdapterActivator to create the child <name>.
   //  Must hold <poa_lock>.
-
-
-  class Etherealiser : public omniTaskQueue::Task {
-  public:
-    inline Etherealiser(PortableServer::Servant s,
-			PortableServer::ServantActivator_ptr sa,
-			omniOrbPOA* poa, const _CORBA_Octet* id,
-			int idsize, CORBA::Boolean cleanup)
-      : pd_servant(s), pd_sa(sa),
-	pd_poa(poa), pd_cleanup(cleanup) {
-      pd_oid.length(idsize);
-      memcpy(pd_oid.NP_data(), id, idsize);
-    }
-    inline void set_is_last(int il) { pd_is_last = il; }
-
-    virtual void doit();
-
-  private:
-    PortableServer::Servant              pd_servant;
-    int                                  pd_is_last;
-    PortableServer::ServantActivator_ptr pd_sa;
-    omniOrbPOA*                          pd_poa;
-    PortableServer::ObjectId             pd_oid;
-    CORBA::Boolean                       pd_cleanup;
-  };
-  friend class Etherealiser;
 
 
   int                                  pd_destroyed;
@@ -477,6 +460,119 @@ private:
   // A list of objects activated in this adapter.  Includes only
   // those in the active object map.
   //  Protected by <pd_lock>.
+
+
+  // Each POA maintains a list of PendingOperation objects, which
+  // indicate that an activation or deactivation is pending for a
+  // particular object key. Constructing a PendingOperation object
+  // adds it to the specified POA's list. Calling done(), or deleting
+  // the PendingOperation removes it from the list again.
+  //
+  // If a PendingOperation is found, the finder may wait() for it to
+  // complete.
+  //
+  // Finding a PendingOperation is linear in the number of objects in
+  // the list, but hopefully there will only ever be a very small
+  // number of objects there.
+
+public:
+
+  class PendingOperation {
+  public:
+    inline PendingOperation(omniOrbPOA* poa, const CORBA::Octet* key,
+			    int keysize, CORBA::ULong hash)
+
+      : pd_poa(poa), pd_key(key), pd_keysize(keysize),
+	pd_hash(hash), pd_cond(0), pd_waiters(0)
+    {
+      ASSERT_OMNI_TRACEDMUTEX_HELD(pd_poa->pd_lock, 1);
+
+      pd_next = pd_poa->pd_pendingOperations;
+      pd_prev = &pd_poa->pd_pendingOperations;
+      if (pd_poa->pd_pendingOperations)
+	pd_poa->pd_pendingOperations->pd_prev = &pd_next;
+      pd_poa->pd_pendingOperations = this;
+    }
+    inline ~PendingOperation()
+    {
+      ASSERT_OMNI_TRACEDMUTEX_HELD(pd_poa->pd_lock, 0);
+      ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+
+      pd_poa->pd_lock.lock();
+      if (pd_prev) done();
+      while (pd_waiters) pd_cond->wait();
+      pd_poa->pd_lock.unlock();
+
+      if (pd_cond) delete pd_cond;
+    }
+
+    inline void done()
+    {
+      ASSERT_OMNI_TRACEDMUTEX_HELD(pd_poa->pd_lock, 1);
+      ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+      *pd_prev = pd_next;
+      if (pd_next) pd_next->pd_prev = pd_prev;
+      pd_prev = 0;
+
+      if (pd_waiters) {
+	OMNIORB_ASSERT(pd_cond);
+	pd_cond->broadcast();
+      }
+    }
+
+    inline void wait()
+    {
+      ASSERT_OMNI_TRACEDMUTEX_HELD(pd_poa->pd_lock, 1);
+      ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+      if (!pd_cond) pd_cond = new omni_tracedcondition(&pd_poa->pd_lock);
+      ++pd_waiters;
+      while (pd_prev)        pd_cond->wait();
+      if (--pd_waiters == 0) pd_cond->signal();
+    }
+
+  private:
+    omniOrbPOA*           pd_poa;
+    const _CORBA_Octet*   pd_key;
+    int                   pd_keysize;
+    _CORBA_ULong          pd_hash;
+    omni_tracedcondition* pd_cond;
+    int                   pd_waiters;
+    PendingOperation*     pd_next;
+    PendingOperation**    pd_prev;
+
+    friend class omniOrbPOA;
+  };
+  friend class PendingOperation;
+
+private:
+
+  PendingOperation* pd_pendingOperations;
+
+  inline PendingOperation* operationPending(const CORBA::Octet* key,
+					    int keysize, CORBA::ULong hash)
+  {
+    ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock, 1);
+    for (PendingOperation* po = pd_pendingOperations; po; po = po->pd_next) {
+      if (po->pd_hash == hash && po->pd_keysize == keysize) {
+	if (!memcmp(po->pd_key, key, keysize))
+	  return po;
+      }
+    }
+    return 0;
+  }
+  inline PendingOperation* operationPending(const CORBA::Octet* key,
+					    int keysize)
+  {
+    ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock, 1);
+    for (PendingOperation* po = pd_pendingOperations; po; po = po->pd_next) {
+      if (po->pd_keysize == keysize) {
+	if (!memcmp(po->pd_key, key, keysize))
+	  return po;
+      }
+    }
+    return 0;
+  }
+
 };
 
 

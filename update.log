@@ -1,3 +1,18 @@
+Tue Jul 24 15:53:44 BST 2001 dpg1
+=================================
+
+- Fix race conditions with servant activators.
+
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/localIdentity.cc
+src/lib/omniORB2/orbcore/localIdentity.h
+src/lib/omniORB2/orbcore/objectAdapter.h
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/poaimpl.h
+src/lib/omniORB2/orbcore/taskqueue.cc
+src/lib/omniORB2/orbcore/taskqueue.h
+
+
 Mon Jul 16 11:21:55 BST 2001 sll
 ================================
 

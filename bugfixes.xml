@@ -8,6 +8,18 @@
 
 <buglist version="3.0.4">
 
+<bug id="3" date="Tue Jul 24 15:53:44 BST 2001" user="dpg1">
+
+  <summary>Incorrect behaviour with incarnate/etherealize</summary>
+  <reported>William H Jones</reported>
+  <link
+  href="http://www.uk.research.att.com/omniORB/archives/2001-07/0116.html"/>
+  <text>
+  Multi-threaded access to servant activators could cause all sorts of
+  grief.
+  </text>
+</bug>
+
 <bug id="2" date="Mon Jul 16 11:25:55 BST 2001" user="sll">
 
   <summary>HPUX 11.00 shared libraries are not build with -Wl,+s</summary>
@@ -17,7 +29,6 @@
   SHLIB_PATH searching at runtime.
   </text>
 </bug>
-
 
 <bug id="1" date="Fri Jul  6 14:30:35 BST 2001" user="dpg1">
 

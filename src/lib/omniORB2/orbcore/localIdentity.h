@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.4  2001/07/24 14:58:53  dpg1
+  Fix race conditions with servant activators.
+
   Revision 1.1.2.3  2000/06/02 16:09:59  dpg1
   If an object is deactivated while its POA is in the HOLDING state,
   clients which were held now receive a TRANSIENT exception when the POA
@@ -110,7 +113,6 @@ public:
     OMNIORB_ASSERT(pd_nInvocations > 0);
     --pd_nInvocations;
   }
-  // This should only be called after doing omni::deactivateObject().
   //  Must hold <omni::internalLock>.
 
   void die();
@@ -203,6 +205,7 @@ private:
   // that it never goes to zero.  The initial value is 1 for
   // this reason.  deactivate() decrements this value, so that
   // the adapter will be told when there are no invocations.
+  // Protected by <omni::internalLock>.
 
   omniServant*           pd_servant;
   // Nil if this object is not yet incarnated, but once set

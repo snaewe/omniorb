@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.6.17  2001/07/24 14:58:53  dpg1
+  Fix race conditions with servant activators.
+
   Revision 1.13.6.16  2001/04/23 14:49:58  dpg1
   Null pointer dereference in BOA_init()
 
@@ -700,7 +703,13 @@ omniOrbBOA::objectExists(const _CORBA_Octet* key, int keysize)
 void
 omniOrbBOA::lastInvocationHasCompleted(omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+ 
+  // Make sure the object is gone from the object table
+  omniLocalIdentity* did = omni::deactivateObject(id->key(),
+						  id->keysize());
+  OMNIORB_ASSERT(did == id || did == 0);
+  omni::internalLock->unlock();
 
   if( omniORB::trace(15) ) {
     omniORB::logger l;
@@ -747,8 +756,11 @@ omniOrbBOA::dispose(omniLocalIdentity* lid)
     return;
   }
 
-  omniLocalIdentity* id = omni::deactivateObject(lid->key(), lid->keysize());
-  if( !id ) {
+  CORBA::ULong hash = omni::hash(lid->key(), lid->keysize());
+
+  omniLocalIdentity* id = omni::locateIdentity(lid->key(),
+					       lid->keysize(), hash);
+  if( !id || !id->servant() ) {
     omni::internalLock->unlock();
     boa_lock.unlock();
     return;
@@ -759,6 +771,11 @@ omniOrbBOA::dispose(omniLocalIdentity* lid)
   id->removeFromOAObjList();
 
   if( id->is_idle() ) {
+    // TODO: this should use lastInvocationHasCompleted()
+
+    omniLocalIdentity* did = omni::deactivateObject(id->key(), id->keysize());
+    OMNIORB_ASSERT(did == id);
+
     omni::internalLock->unlock();
     boa_lock.unlock();
 

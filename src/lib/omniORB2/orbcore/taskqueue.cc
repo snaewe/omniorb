@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/07/24 14:58:54  dpg1
+  Fix race conditions with servant activators.
+
   Revision 1.1.2.2  2000/02/07 15:26:59  dpg1
   Spurious \r characters removed.
 
@@ -35,6 +38,9 @@
   Major rewrite of orbcore to support POA.
 
 */
+
+// This is now obsolete. It is not used by any omniORB code, but it's
+// still here in case something elsewhere is using it.
 
 #include <omniORB3/CORBA.h>
 

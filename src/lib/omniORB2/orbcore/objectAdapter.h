@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.5  2001/07/24 14:58:53  dpg1
+ Fix race conditions with servant activators.
+
  Revision 1.1.2.4  2000/08/08 15:01:44  dpg1
  -ORBpoa_iiop_port no longer overrides OMNIORB_USEHOSTNAME.
 
@@ -180,7 +183,8 @@ public:
   // case the object adapter calls this), or when any outstanding
   // method invocations complete (in which case the
   // omniLocalIdentity calls this).
-  //  The caller must not hold any locks.
+  //  The caller must hold <omni::internalLock> on entry. It is
+  //  released on exit.
 
 
   ////////////////////
