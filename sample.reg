@@ -248,6 +248,11 @@ REGEDIT4
 ; [HKEY_LOCAL_MACHINE\SOFTWARE\omniORB\InitRef]
 ; "0"="NameService=IOR:010000002800000049444c3a6f6d672e6f72672f436f734e616d696e672f4e616d696e67436f6e746578743a312e300001000000000000002c000000010102000c0000003139322e3136382e312e3000f90a00000c000000349568c45cb1e6780000000100000000"
 ;
+;   Alternatively, and more cleanly, specify the Naming service with a
+;   corbaname URI:
+;
+; "0"="NameService=corbaname::my.host.name"
+;
 ;
 ;   Specify the Trading service and the interface repository using corbaloc:
 ;
