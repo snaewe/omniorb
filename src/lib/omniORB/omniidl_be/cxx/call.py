@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.8  2001/10/17 16:50:25  dpg1
+# Incorrect code with multiple out arguments
+#
 # Revision 1.1.4.7  2001/08/15 10:26:10  dpg1
 # New object table behaviour, correct POA semantics.
 #
@@ -399,7 +402,7 @@ class CallDescriptor:
                    idl_operation_name = operation,
                    call_descriptor = self.__name,
                    call_desc_args = string.join(ctor_args, ", "),
-                   prepare_out_args = string.join(prepare_out_args,", "),
+                   prepare_out_args = string.join(prepare_out_args,"\n"),
                    context = "// XXX Set context info if any");
 
     def __out_declaration(self,stream):
