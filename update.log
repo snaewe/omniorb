@@ -1,3 +1,15 @@
+Mon Nov 20 18:55:07 GMT 2000 sll
+================================
+
+- sequence templates were broken by the previous checkin. They are now fixed.
+
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/seqTemplatedefns.h
+
+- generate the right sequence template name
+
+src/lib/omniORB/omniidl_be/cxx/types.py
+
 Mon Nov 20 14:33:28 GMT 2000 sll
 ================================
 

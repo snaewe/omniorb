@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.4  2000/11/20 18:56:39  sll
+ Sequence templates were broken by the previous checkin. They are now fixed.
+
  Revision 1.1.2.3  2000/11/20 14:41:43  sll
  Simplified sequence template hierachy and added templates for sequence of
  wchar and sequence of array of wchar.
@@ -406,10 +409,10 @@ public:
 
 template <class T,int elmSize,int elmAlignment>
 class _CORBA_Unbounded_Sequence_w_FixSizeElement : 
-  public _CORBA_Sequence_w_FixSizeElement<T,elmSize,elmAlignment> {
+  public _CORBA_Unbounded_Sequence<T> {
 public:
   typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<T,elmSize,elmAlignment>  T_seq;
-  typedef _CORBA_Sequence_w_FixSizeElement<T,elmSize,elmAlignment> Base_T_seq;
+  typedef _CORBA_Unbounded_Sequence<T> Base_T_seq;
 
   inline _CORBA_Unbounded_Sequence_w_FixSizeElement() {}
   inline _CORBA_Unbounded_Sequence_w_FixSizeElement(_CORBA_ULong max) : 
@@ -437,6 +440,9 @@ public:
 		      _CORBA_Boolean release = 0) {
     Base_T_seq::replace(max,len,data,release);
   }
+
+  inline void operator>>= (cdrStream &s) const;
+  inline void operator<<= (cdrStream &s);
 };
 
 
@@ -446,17 +452,17 @@ public:
 
 template <class T,int max,int elmSize, int elmAlignment>
 class _CORBA_Bounded_Sequence_w_FixSizeElement : 
-  public _CORBA_Sequence_w_FixSizeElement<T,elmSize,elmAlignment> {
+  public _CORBA_Bounded_Sequence<T,max> {
 public:
   typedef _CORBA_Bounded_Sequence_w_FixSizeElement<T,max,elmSize,elmAlignment> T_seq;
-  typedef _CORBA_Sequence_w_FixSizeElement<T,elmSize,elmAlignment> Base_T_seq;
+  typedef _CORBA_Bounded_Sequence<T,max> Base_T_seq;
 
 
-  inline _CORBA_Bounded_Sequence_w_FixSizeElement() : Base_T_seq(max,1)  {}
+  inline _CORBA_Bounded_Sequence_w_FixSizeElement() {}
   inline _CORBA_Bounded_Sequence_w_FixSizeElement(_CORBA_ULong len,
 						  T           *value,
 						  _CORBA_Boolean rel = 0) : 
-    Base_T_seq(max,len,value,rel,1) {}
+    Base_T_seq(len,value,rel) {}
 
   inline _CORBA_Bounded_Sequence_w_FixSizeElement(const T_seq& s) : 
     Base_T_seq(s) {}
@@ -471,8 +477,11 @@ public:
   // CORBA 2.3 additions
 
   inline void replace(_CORBA_ULong len, T* data,_CORBA_Boolean release = 0) {
-    Base_T_seq::replace(max,len,data,release);
+    Base_T_seq::replace(len,data,release);
   }
+
+  inline void operator>>= (cdrStream &s) const;
+  inline void operator<<= (cdrStream &s);
 };
 
 
@@ -1058,7 +1067,7 @@ protected:
   }
 
 
-private:
+protected:
 
   void copybuffer(_CORBA_ULong newmax) {
     // replace pd_data with a new buffer of size newmax.
@@ -1160,57 +1169,16 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////
-////////// _CORBA_Sequence_Array_w_FixSizeElement           //////////
-//////////////////////////////////////////////////////////////////////
-
-template <class T,class T_slice, class Telm,int dimension,int elmSize,int elmAlignment>
-class _CORBA_Sequence_Array_w_FixSizeElement 
-   : public _CORBA_Sequence_Array<T,T_slice,Telm,dimension> 
-{
-protected:
-  typedef _CORBA_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment> T_seq;
-  typedef _CORBA_Sequence_Array<T,T_slice,Telm,dimension> Base_T_seq ;
-
-  inline _CORBA_Sequence_Array_w_FixSizeElement() {}
-
-  inline _CORBA_Sequence_Array_w_FixSizeElement(_CORBA_ULong max, 
-						_CORBA_Boolean bounded=0) :
-    Base_T_seq(max,bounded) {}
-
-  inline _CORBA_Sequence_Array_w_FixSizeElement(const T_seq& s) : 
-    Base_T_seq(s) {}
-
-  inline _CORBA_Sequence_Array_w_FixSizeElement(_CORBA_ULong max,
-						_CORBA_ULong len,
-						T           *value,
-						_CORBA_Boolean release = 0,
-						_CORBA_Boolean bounded = 0
-						)  : 
-    Base_T_seq(max,len,value,release,bounded) {}
-
-  inline T_seq &operator= (const T_seq &s) {
-    Base_T_seq::operator= (s);
-    return *this;
-  }
-
-  inline ~_CORBA_Sequence_Array_w_FixSizeElement() {}
-
-public:
-  inline void operator>>= (cdrStream &s) const;
-  inline void operator<<= (cdrStream &s);
-};
-
-//////////////////////////////////////////////////////////////////////
 ////////// _CORBA_Unbounded_Sequence_Array_w_FixSizeElement //////////
 //////////////////////////////////////////////////////////////////////
 
 template <class T,class T_slice, class Telm,int dimension,int elmSize,int elmAlignment>
 class _CORBA_Unbounded_Sequence_Array_w_FixSizeElement 
-   : public _CORBA_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment> 
+   : public _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension> 
 {
 public:
   typedef _CORBA_Unbounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment> T_seq;
-  typedef _CORBA_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment> Base_T_seq;
+  typedef _CORBA_Unbounded_Sequence_Array<T,T_slice,Telm,dimension> Base_T_seq;
 
   inline _CORBA_Unbounded_Sequence_Array_w_FixSizeElement() {}
   inline _CORBA_Unbounded_Sequence_Array_w_FixSizeElement(_CORBA_ULong max) : 
@@ -1237,6 +1205,9 @@ public:
 		      _CORBA_Boolean release = 0) {
     Base_T_seq::replace(max,len,data,release);
   }
+
+  inline void operator>>= (cdrStream &s) const;
+  inline void operator<<= (cdrStream &s);
 };
 
 
@@ -1246,19 +1217,18 @@ public:
 
 template <class T,class T_slice,class Telm,int dimension,int max,int elmSize, int elmAlignment>
 class _CORBA_Bounded_Sequence_Array_w_FixSizeElement 
-  : public _CORBA_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment> 
+  : public _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max> 
 {
 public:
   typedef _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment> T_seq;
-  typedef _CORBA_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,elmSize,elmAlignment> Base_T_seq;
+  typedef _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max> Base_T_seq;
 
-  inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement() : 
-    Base_T_seq(max,1) {}
+  inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement() {}
 
   inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement(_CORBA_ULong len,
 							T* value,
 							_CORBA_Boolean rel = 0)
-    : Base_T_seq(max,len,value,rel,1) {}
+    : Base_T_seq(len,value,rel) {}
 
   inline _CORBA_Bounded_Sequence_Array_w_FixSizeElement(const T_seq& s) : 
     Base_T_seq(s) {}
@@ -1273,8 +1243,11 @@ public:
   // CORBA 2.3 additions
 
   inline void replace(_CORBA_ULong len, T* data,_CORBA_Boolean release = 0) {
-    Base_T_seq::replace(max,len,data,release);
+    Base_T_seq::replace(len,data,release);
   }
+
+  inline void operator>>= (cdrStream &s) const;
+  inline void operator<<= (cdrStream &s);
 };
 
 
