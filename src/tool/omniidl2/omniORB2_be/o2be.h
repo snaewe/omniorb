@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.10  1997/12/23 19:29:58  sll
+ New member o2be_array::produce_typedef_skel.
+
  Revision 1.9  1997/12/09 19:54:23  sll
  *** empty log message ***
 
@@ -417,6 +420,8 @@ public:
   void produce_skel(fstream &s, o2be_typedef *tdef);
   static void produce_typedef_hdr (fstream &s, o2be_typedef *tdef1,
 				   o2be_typedef *tdef2);
+  static void produce_typedef_skel (fstream &s, o2be_typedef *tdef1,
+				    o2be_typedef *tdef2);
   void produce_typedef_in_union(fstream &s, const char *tname,
 				AST_Decl* used_in);
   // Looks at the scope-name relation between this node and the one it is
