@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/11/23 09:52:11  dpg1
+# Dumb bug where maps weren't cleared between runs.
+#
 # Revision 1.7  1999/11/17 15:01:20  dpg1
 # -Wb and -Wp now support multiple arguments separated by commas.
 #
@@ -56,6 +59,8 @@
 
 import _omniidl
 import sys, getopt, os, os.path, string
+
+import idlast, idltype
 
 def version():
     print "omniidl version 0.1"
@@ -266,3 +271,6 @@ def main(argv=None):
 
                 bemodules[i].run(tree, backends_args[i])
                 i = i + 1
+
+            idlast.clear()
+            idltype.clear()

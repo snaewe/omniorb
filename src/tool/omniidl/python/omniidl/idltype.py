@@ -342,3 +342,11 @@ def declaredType(decl, scopedName, kind):
         dt = Declared(decl, scopedName, kind)
         declaredTypeMap[sname] = dt
         return dt
+
+def clear():
+    """Clear back-end structures ready for another run"""
+    stringTypeMap.clear()
+    wstringTypeMap.clear()
+    sequenceTypeMap.clear()
+    fixedTypeMap.clear()
+    declaredTypeMap.clear()

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.10  1999/11/23 09:52:11  dpg1
+# Dumb bug where maps weren't cleared between runs.
+#
 # Revision 1.9  1999/11/15 15:49:23  dpg1
 # Documentation strings.
 #
@@ -436,7 +439,7 @@ class CaseLabel (Decl):
 
 Functions:
 
-  default()   -- boolean: true is this is the default label.
+  default()   -- boolean: true if this is the default label.
   value()     -- label value. Either an integer or an Enumerator
                  object. If default() is true, returns a value used by
                  none of the other union labels.
@@ -941,6 +944,11 @@ strings. Raises DeclNotFound if the name is not recognised."""
         raise DeclNotFound(scopedName)
     
     return declMap[sname]
+
+
+def clear():
+    """Clear back-end structures ready for another run"""
+    declMap.clear()
 
 
 # Declarations of non-basic `built-in' types
