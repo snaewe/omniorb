@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.6  1997/12/10 11:35:56  sll
+  Updated life cycle service stub.
+
   Revision 1.5  1997/12/09 19:55:31  sll
   *** empty log message ***
 
@@ -157,7 +160,7 @@ o2be_root::produce_hdr(fstream &hdr)
 
   // XXX LifeCycle compile flag
   if (idl_global->compile_flags() & IDL_CF_LIFECYCLE) {
-    hdr << "#include <omniORB2/omniLifeCycle.h>\n\n";
+    hdr << "#include <omniORB2/omniLC.h>\n\n";
   }
 
   {
