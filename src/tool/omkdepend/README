@@ -1,24 +1,38 @@
 omkdepend
 =========
 
-This code is taken from the X11R6 makedepend sources.  It is only meant to be
-used on NT, not on unix platforms.  All I have done is:
+This code is taken from the X11R6 makedepend sources.  All I have done is:
 
- * cut out bits that weren't needed or didn't work
- * add GNUWIN32 file name translation.
- * not require the "makefile" to already exist
+ * Add GNUWIN32 file name translation.
+ * Remove all predefined symbols, include directories and other
+   platform-specific behaviour.  Its behaviour should be the same on all
+   platforms.  All symbols and include directories must be explicitly given on
+   the command line with -D and -I flags.
+ * Fix processing of numbers in #if expressions.
+ * Fix processing of -D flag.
+ * Fix C++ comment handling.
+ * Improve #error warnings.
+ * Change the output so that processing "xxx.c" or "xxx.cc" produces "xxx.d".
 
 I disclaim all responsibility for the unclean nature of the code herein.
 
-TJR 17/6/97.
+TJR 17/7/97.
 
 
 For reference, here is a complete diff from the X11R6 source:
 
 % diff /packages/old/X11R6/src/xc/config/makedepend .
 Only in /packages/old/X11R6/src/xc/config/makedepend: Imakefile
-Only in .: RCS
 Only in /packages/old/X11R6/src/xc/config/makedepend: cpp.ed
+Only in /packages/old/X11R6/src/xc/config/makedepend: mkdepend.man
+Only in .: README
+Only in .: dir.mk
+Only in .: gnuwin32.c
+Only in .: gnuwin32.h
+
+
+  *************** def.h ***************
+
 diff /packages/old/X11R6/src/xc/config/makedepend/def.h ./def.h
 29,33d28
 < #include <X11/Xosdefs.h>
@@ -26,22 +40,34 @@ diff /packages/old/X11R6/src/xc/config/makedepend/def.h ./def.h
 < #include <X11/Xw32defs.h>
 < #endif
 < #include <X11/Xfuncproto.h>
-Only in .: dir.mk
-Only in .: gnuwin32.c
-Only in .: gnuwin32.h
+
+
+  *************** ifparser.c ***************
+
 diff /packages/old/X11R6/src/xc/config/makedepend/ifparser.c ./ifparser.c
-107c107
+102d101
+< #ifdef WIN32
+104,108d102
+< #else
+<     *valp = atoi (cp);
+<     /* EMPTY */
 <     for (cp++; isdigit(*cp); cp++) ;
----
->     for (cp++; (isxdigit(*cp) || (*cp == 'x')); cp++) ;
-210a211,212
->       if (cp[1] == '/')
->           break;
+< #endif
+
+
+  *************** include.c ***************
+
 diff /packages/old/X11R6/src/xc/config/makedepend/include.c ./include.c
-104c104
-<                       sprintf(path, "%s/%s", *pp, include);
----
+103a104,106
+> #ifdef WIN32
 >                       sprintf(path, "%s\\%s", *pp, include);
+> #else
+104a108
+> #endif
+
+
+  *************** main.c ***************
+
 diff /packages/old/X11R6/src/xc/config/makedepend/main.c ./main.c
 28a29
 > #include "gnuwin32.h"
@@ -51,29 +77,60 @@ diff /packages/old/X11R6/src/xc/config/makedepend/main.c ./main.c
 < #undef MAKEDEPEND
 ---
 > struct symtab predefs[] = { {NULL, NULL} };
-89c88
+89,90c88
 < char  *objsuffix = OBJSUFFIX;
+< char  *startat = "# DO NOT DELETE";
 ---
 > char  *objsuffix = ".o";
-138a138,139
+138a137,139
+> #ifdef WIN32
 >       GetMounts();
-> 
-202a204
+> #endif
+202a204,206
+> #ifdef WIN32
 >                       argv[0] = TranslateFileNameU2D(argv[0],0);
-225a228
->                       argv[0] = TranslateFileNameU2D(argv[0],2);
-288,289c291
+> #endif
+211a216,217
+>                   {
+>                       int offset = 2;
+214a221
+>                               offset = 0;
+216c223
+<                       for (p=argv[0] + 2; *p ; p++)
+---
+>                       for (p=argv[0] + offset; *p ; p++)
+221c228
+<                       define(argv[0] + 2, &maininclist);
+---
+>                       define(argv[0] + offset, &maininclist);
+222a230
+>                   }
+230a239,241
+> #ifdef WIN32
+>                       *(incp-1) = TranslateFileNameU2D(*(incp-1),0);
+> #endif
+275,294d285
+<               case 's':
+<                       if (endmarker) break;
+<                       startat = argv[0]+2;
+<                       if (*startat == '\0') {
+<                               startat = *(++argv);
+<                               argc--;
+<                       }
+<                       if (*startat != '#')
+<                               fatalerr("-s flag's value should start %s\n",
+<                                       "with '#'.");
+<                       break;
+<               case 'f':
+<                       if (endmarker) break;
 <                       makefile = argv[0]+2;
 <                       if (*makefile == '\0') {
----
->                       if (argv[0][2] == '\0') {
-290a293
->                               makefile = TranslateFileNameU2D(makefile,0);
-291a295,297
->                       } else {
->                               argv[0] = TranslateFileNameU2D(argv[0],2);
->                               makefile = argv[0]+2;
-312,324d317
+<                               makefile = *(++argv);
+<                               argc--;
+<                       }
+<                       break;
+< 
+312,324d302
 < #ifdef PREINCDIR
 <           if (incp >= includedirs + MAXDIRS)
 <               fatalerr("Too many -I flags.\n");
@@ -87,23 +144,66 @@ diff /packages/old/X11R6/src/xc/config/makedepend/main.c ./main.c
 <               fatalerr("Too many -I flags.\n");
 <           *incp++ = POSTINCDIR;
 < #endif
-503,511d495
+331,332d308
+<       redirect(startat, makefile);
+< 
+401a378,385
+>               char *base = base_name(*fp);
+>               char *depfile = (char *)malloc(strlen(base) + 3);
+>               sprintf(depfile,"%s.d",base);
+>               if (!freopen(depfile, "wb", stdout))
+>                   fatalerr("cannot open \"%s\"\n", depfile);
+>               free(depfile);
+>               free(base);
+>               printed = FALSE;
+405c389
+<               find_includes(filecontent, ip, ip, 0, FALSE);
+---
+>               find_includes(filecontent, ip, ip, 0, TRUE);
+408a393,394
+>               if (printed)
+>                       printf("\n");
+410,411d395
+<       if (printed)
+<               printf("\n");
+503d486
 < #ifdef WIN32
-<               else if (*p == '/' && *(p+1) == '/') { /* consume comments */
-<                       *p++ = ' ', *p++ = ' ';
-<                       while (*p && *p != '\n')
-<                               *p++ = ' ';
-<                       lineno++;
-<                       continue;
-<               }
+507a491
+>                       p--;    /* go back to before newline */
+511d494
 < #endif
-550c534,536
+550c533,535
 <       file = copy(file);
 ---
 >       for(p=file+strlen(file); p>file && *p != '/' && *p != '\\'; p--) ;
 >       if (p>file) p++;
 >       file = copy(p);
-583,612c569
+558,639d542
+< #if defined(USG) && !defined(CRAY) && !defined(SVR4)
+< int rename (from, to)
+<     char *from, *to;
+< {
+<     (void) unlink (to);
+<     if (link (from, to) == 0) {
+<       unlink (from);
+<       return 0;
+<     } else {
+<       return -1;
+<     }
+< }
+< #endif /* USGISH */
+< 
+< redirect(line, makefile)
+<       char    *line,
+<               *makefile;
+< {
+<       struct stat     st;
+<       FILE    *fdin, *fdout;
+<       char    backup[ BUFSIZ ],
+<               buf[ BUFSIZ ];
+<       boolean found = FALSE;
+<       int     len;
+< 
 <       /*
 <        * if makefile is "-" then let it pour onto stdout.
 <        */
@@ -134,9 +234,7 @@ diff /packages/old/X11R6/src/xc/config/makedepend/main.c ./main.c
 <               fatalerr("cannot rename %s to %s\n", makefile, backup);
 < #ifdef WIN32
 <       if ((fdin = fopen(backup, "r")) == NULL)
----
->       if ((fdout = freopen(makefile, "wb", stdout)) == NULL)
-614,638d570
+<               fatalerr("cannot open \"%s\"\n", backup);
 < #endif
 <       if ((fdout = freopen(makefile, "w", stdout)) == NULL)
 <               fatalerr("cannot open \"%s\"\n", backup);
@@ -162,43 +260,57 @@ diff /packages/old/X11R6/src/xc/config/makedepend/main.c ./main.c
 < #else
 <         fchmod(fileno(fdout), st.st_mode);
 < #endif /* USGISH */
-Only in /packages/old/X11R6/src/xc/config/makedepend: mkdepend.man
+< }
+
+
+  *************** parse.c ***************
+
 diff /packages/old/X11R6/src/xc/config/makedepend/parse.c ./parse.c
 131c131,132
 <                       warning("%s: %d: %s\n", file_red->i_file,
 ---
 >                       warning("(from %s) %s: %d: %s\n",
 >                               file_red->i_file, file->i_file,
+
+
+  *************** pr.c ***************
+
 diff /packages/old/X11R6/src/xc/config/makedepend/pr.c ./pr.c
 98d97
 <       static int      current_len;
-100a100
+100a100,104
+> #ifdef WIN32
 >       char *transfile = TranslateFileNameD2U(ip->i_file,0);
-103,104c103
+> #else
+>       char *transfile = ip->i_file;
+> #endif
+103,104c107
 <       len = strlen(ip->i_file)+1;
 <       if (current_len + len > width || file != lastfile) {
 ---
 >       if (file != lastfile) {
-106,108c105,106
+106,108c109,110
 <               sprintf(buf, "\n%s%s%s: %s", objprefix, base, objsuffix,
 <                       ip->i_file);
 <               len = current_len = strlen(buf);
 ---
->               sprintf(buf, "\n%s%s%s %s.d: %s", objprefix, base, objsuffix,
+>               sprintf(buf, "%s%s%s %s.d: %s", objprefix, base, objsuffix,
 >                       base, transfile);
-111,113c109
+111,113c113
 <               buf[0] = ' ';
 <               strcpy(buf+1, ip->i_file);
 <               current_len += len;
 ---
 >               sprintf(buf, " \\\n %s", transfile);
-115c111
+115c115
 <       fwrite(buf, len, 1, stdout);
 ---
 >       fwrite(buf, strlen(buf), 1, stdout);
-124c120
+124c124
 <       printf("\n# %s includes:", ip->i_file);
 ---
 >       printf("\n# %s includes:", transfile);
-126a123
+126a127,129
+> #ifdef WIN32
 >       free(transfile);
+> #endif
