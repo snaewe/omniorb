@@ -28,10 +28,13 @@
 
 /*
   $Log$
-  Revision 1.12  1998/03/04 14:48:34  sll
-  Disambiguous reference to NP_data() by adding the _CORBA_Sequence<T>::
-  prefix.
+  Revision 1.13  1998/03/04 15:07:50  ewc
+  Small bug fix to Sequence_Var types
 
+ * Revision 1.12  1998/03/04  14:48:34  sll
+ * Disambiguous reference to NP_data() by adding the _CORBA_Sequence<T>::
+ * prefix.
+ *
  * Revision 1.11  1998/01/27  16:11:06  ewc
  * Added support for type any.
  *
@@ -270,9 +273,9 @@ public:
   inline ~_CORBA_Sequence_Var() {  if (pd_data) delete pd_data; }
   inline _CORBA_Sequence_Var<T,ElmType> &operator= (T* p);
   inline _CORBA_Sequence_Var<T,ElmType> &operator= (const _CORBA_Sequence_Var<T,ElmType> &p);
-  inline ElmType &operator[] (_CORBA_ULong index) { return (pd_data->_CORBA_Sequence<T>::NP_data())[index]; }
+  inline ElmType &operator[] (_CORBA_ULong index) { return (pd_data->_CORBA_Sequence<ElmType>::NP_data())[index]; }
   inline const ElmType &operator[] (_CORBA_ULong index) const {
-    return (pd_data->_CORBA_Sequence<T>::NP_data())[index];
+    return (pd_data->_CORBA_Sequence<ElmType>::NP_data())[index];
   }
   inline T* operator->() const { return (T*)pd_data; }
 
@@ -309,9 +312,9 @@ public:
   inline ~_CORBA_Sequence_Array_Var() {  if (pd_data) delete pd_data; }
   inline _CORBA_Sequence_Array_Var<T,T_slice> &operator= (T* p);
   inline _CORBA_Sequence_Array_Var<T,T_slice> &operator= (const _CORBA_Sequence_Array_Var<T,T_slice> &p);
-  inline T_slice* operator[] (_CORBA_ULong index) { return (T_slice*)((pd_data->_CORBA_Sequence<T>::NP_data())[index]); }
+  inline T_slice* operator[] (_CORBA_ULong index) { return (T_slice*)((pd_data->_CORBA_Sequence<T_slice>::NP_data())[index]); }
   inline const T_slice* operator[] (_CORBA_ULong index) const {
-    return (const T_slice*)((pd_data->_CORBA_Sequence<T>::NP_data())[index]);
+    return (const T_slice*)((pd_data->_CORBA_Sequence<T_slice>::NP_data())[index]);
   }
   inline T* operator->() const { return (T*)pd_data; }
 
