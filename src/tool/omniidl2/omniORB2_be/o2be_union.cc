@@ -28,9 +28,12 @@
 
 /*
   $Log$
-  Revision 1.11  1998/01/27 16:51:01  ewc
-   Added support for type Any and TypeCode
+  Revision 1.12  1998/03/02 14:13:18  ewc
+  OpenVMS union patch applied.
 
+// Revision 1.11  1998/01/27  16:51:01  ewc
+//  Added support for type Any and TypeCode
+//
 // Revision 1.10  1998/01/20  19:13:56  sll
 // Added support for OpenVMS.
 //
@@ -1079,21 +1082,24 @@ o2be_union::produce_hdr(fstream &s)
 
 	    ntype =  o2be_operation::ast2ArgMapping(f->field_type(),
 				       o2be_operation::wResult,mapping);
-            if (ntype==o2be_operation::tFloat || ntype==o2be_operation::tDouble)
-              s << "#if !defined(__VMS) || __IEEE_FLOAT\n";
 	    switch (ntype)
 	      {
+	      case o2be_operation::tFloat:
+	      case o2be_operation::tDouble:
+	      case o2be_operation::tStructFixed:
+		s << "#ifndef USING_PROXY_FLOAT\n";
+		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
+			  << " pd_" << f->uqname() << ";\n";
+                s << "#endif\n";
+		break;
 	      case o2be_operation::tShort:
 	      case o2be_operation::tLong:
 	      case o2be_operation::tUShort:
 	      case o2be_operation::tULong:
-	      case o2be_operation::tFloat:
-	      case o2be_operation::tDouble:
 	      case o2be_operation::tBoolean:
 	      case o2be_operation::tChar:
 	      case o2be_operation::tOctet:
 	      case o2be_operation::tEnum:
-	      case o2be_operation::tStructFixed:
 		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
 			  << " pd_" << f->uqname() << ";\n";
 		break;
@@ -1133,8 +1139,6 @@ o2be_union::produce_hdr(fstream &s)
 	      default:
 		break;
 	      }
-            if (ntype==o2be_operation::tFloat || ntype==o2be_operation::tDouble)
-              s << "#endif\n";
 	  }
 	i.next();
       }
@@ -1154,8 +1158,6 @@ o2be_union::produce_hdr(fstream &s)
 
 	    ntype =  o2be_operation::ast2ArgMapping(f->field_type(),
 				       o2be_operation::wResult,mapping);
-            if (ntype==o2be_operation::tFloat || ntype==o2be_operation::tDouble)
-              s << "#if defined(__VMS) && !__IEEE_FLOAT\n";
 	    switch (ntype)
 	      {
 	      case o2be_operation::tString:
@@ -1178,10 +1180,14 @@ o2be_union::produce_hdr(fstream &s)
 		IND(s); s << o2be_predefined_type::TypeCodeMemberName()
 			  << " pd_" << f->uqname() << ";\n";
 		break;
-#ifdef __VMS
               case o2be_operation::tFloat:
               case o2be_operation::tDouble:
-#endif
+	      case o2be_operation::tStructFixed:
+		s << "#ifdef USING_PROXY_FLOAT\n";
+		IND(s); s << o2be_name::narrow_and_produce_unambiguous_name(f->field_type(),this)
+			  << " pd_" << f->uqname() << ";\n";
+		s << "#endif\n";
+		break;
 	      case o2be_operation::tStructVariable:
 	      case o2be_operation::tUnionFixed:
 	      case o2be_operation::tUnionVariable:
@@ -1245,8 +1251,6 @@ o2be_union::produce_hdr(fstream &s)
 	      default:
 		break;
 	      }
-            if (ntype==o2be_operation::tFloat || ntype==o2be_operation::tDouble)
-              s << "#endif\n";
 	  }
 	i.next();
       }
