@@ -1,3 +1,52 @@
+Thu May 31 17:02:57 BST 2001 dpg1
+=================================
+
+- Optimisations inspired by profiling:
+
+-  inline mutex lock/unlock
+
+include/omnithread.h
+include/omnithread/nt.h
+include/omnithread/posix.h
+src/lib/omnithread/nt.cc
+src/lib/omnithread/posix.cc
+
+-  inline string matching functions, re-ordered string matching in
+   _ptrToInterface/_ptrToObjRef
+
+include/omniORB4/omniInternal.h
+src/lib/omniORB/dynamic/dynamicImplementation.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/anonObject.cc
+src/lib/omniORB/orbcore/codeSets.cc
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaObject.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/omniServant.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poamanager.cc
+src/lib/omniORB/orbcore/poastubs.cc
+src/lib/omniORB/orbcore/policy.cc
+src/lib/omniORB/orbcore/portableserver.cc
+
+-  object references optionally just store a pointer to their
+   repository id string rather than copying it.
+
+include/omniORB4/omniObjRef.h
+src/lib/omniORB/include/anonObject.h
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/poastubs.cc
+
+
 Tue May 29 17:54:06 BST 2001 dpg1
 =================================
 
