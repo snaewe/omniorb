@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.8  2001/11/27 14:37:25  dpg1
+# long double TC descriptor.
+#
 # Revision 1.15.2.7  2001/11/13 15:23:52  dpg1
 # Bug in forward declared structs/unions.
 #
@@ -149,7 +152,7 @@ name_map = {
     idltype.tk_ulonglong:   "unsigned_plonglong",
     idltype.tk_float:       "float",
     idltype.tk_double:      "double",
-    idltype.tk_longdouble:  "long_pdouble",
+    idltype.tk_longdouble:  "longdouble",
     idltype.tk_char:        "char",
     idltype.tk_wchar:       "wchar",
     idltype.tk_boolean:     "boolean",
