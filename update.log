@@ -1,3 +1,45 @@
+Wed Jun 23 10:55:25 BST 1999 sll
+================================
+
+- omni_thread::sleep() no longer throws fatal exception when it is interrupt
+  by a signal. Instead it blocks again with the time left to sleep.
+  This makes the semantics of the function the same on all platforms.
+
+src/lib/omnithread/posix.cc
+
+
+Tue Jun 22 15:51:23 BST 1999 sll
+================================
+
+- New code to do insertion and extraction of string and object reference
+  using the tcParser. Old code keeps a reference to String_member and
+  ObjRef_member within a tcDescriptor. This no longer works because sequence
+  type only returns these members as temporary.
+
+- Fixed IDL compiler core dump when exception member contains a typedef of an
+  interface.
+
+- put back pre-2.3 Any::operator>>=(Any&).
+
+include/omniORB2/CORBA.h
+include/omniORB2/tcDescriptor.h
+
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/context.cc
+src/lib/omniORB2/dynamic/dynException.cc
+src/lib/omniORB2/dynamic/tcParser.cc
+src/lib/omniORB2/dynamic/typecode.cc
+src/lib/omniORB2/dynamic/unknownUserExn.cc
+src/lib/omniORB2/orbcore/corbaObject.cc
+
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+src/tool/omniidl2/omniORB2_be/o2be_struct.cc
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+
+
+
 Fri Jun 18 23:33:13 BST 1999 sll
 ================================
 
