@@ -36,6 +36,7 @@ dnl ** Headers
 
 AC_CHECK_HEADERS(errno.h fcntl.h netdb.h signal.h stdlib.h string.h strings.h)
 AC_CHECK_HEADERS(unistd.h nan.h sys/if.h sys/ioctl.h sys/param.h sys/time.h)
+AC_CHECK_HEADERS(ifaddrs.h)
 AC_HEADER_TIME
 
 

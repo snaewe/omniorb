@@ -1,3 +1,18 @@
+Wed Feb 11 16:59:08 GMT 2004 dgrisby
+====================================
+
+- Use getifaddrs where available. Thanks Craig Rodrigues.
+
+configure
+configure.ac
+include/omniORB4/acconfig.h.in
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+
+- HAVE_STD on Linux and Solaris.
+
+include/omniORB4/CORBA_sysdep_trad.h
+
+
 Wed Feb 11 15:51:59 GMT 2004 dgrisby
 ====================================
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.21  2004/02/11 17:01:13  dgrisby
+  Use getifaddrs where available. Thanks Craig Rodrigues.
+
   Revision 1.1.2.20  2004/02/11 12:19:17  dgrisby
   Cygwin patches. Thanks Douglas Brown.
 
@@ -111,6 +114,10 @@
 #  include <net/if.h>
 #endif
 
+#if defined(HAVE_IFADDRS_H)
+#  include <ifaddrs.h>
+#endif
+ 
 #if defined(NTArchitecture)
 #  include <libcWrapper.h>
 #  include <ws2tcpip.h>
@@ -227,6 +234,8 @@ tcpTransportImpl::addToIOR(const char* param) {
 /////////////////////////////////////////////////////////////////////////
 #if   defined(__vxWorks__)
 static void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs);
+#elif defined(HAVE_IFADDRS_H)
+static void ifaddrs_get_ifinfo(omnivector<const char*>& addrs);
 #elif defined(UnixArchitecture)
 static void unix_get_ifinfo(omnivector<const char*>& ifaddrs);
 #elif defined(NTArchitecture)
@@ -240,6 +249,8 @@ tcpTransportImpl::initialise() {
 
 #if   defined(__vxWorks__)
   vxworks_get_ifinfo(ifAddresses);
+#elif defined(HAVE_IFADDRS_H)
+  ifaddrs_get_ifinfo(ifAddresses);
 #elif defined(UnixArchitecture)
   unix_get_ifinfo(ifAddresses);
 #elif defined(NTArchitecture)
@@ -259,9 +270,45 @@ const tcpTransportImpl _the_tcpTransportImpl;
 
 
 /////////////////////////////////////////////////////////////////////////
-#if defined(UnixArchitecture)
+#if defined(HAVE_IFADDRS_H)
+static
+void ifaddrs_get_ifinfo(omnivector<const char*>& addrs) {
 
-#  if !defined(__vxWorks__)
+  struct ifaddrs *ifa_list;
+
+  if ( getifaddrs(&ifa_list) < 0 ) {
+    if ( omniORB::trace(1) ) {
+       omniORB::logger log;
+       log << "Warning: getifaddrs() failed.\n"
+           << "Unable to obtain the list of all interface addresses.\n";
+    }
+    return;
+  }
+
+  struct ifaddrs *p;
+  for (p = ifa_list; p != 0; p = p->ifa_next) {
+    if ( p->ifa_addr->sa_family == AF_INET ) {
+      struct sockaddr_in* iaddr = (struct sockaddr_in*)p->ifa_addr;
+      CORBA::String_var s;
+      s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
+      addrs.push_back(s._retn());
+    }
+  } 
+  freeifaddrs(ifa_list);
+
+  if ( orbParameters::dumpConfiguration || omniORB::trace(20) ) {
+    omniORB::logger log;
+    omnivector<const char*>::iterator i = addrs.begin();
+    omnivector<const char*>::iterator last = addrs.end();
+    log << "My addresses are: \n";
+    while ( i != last ) {
+      log << "omniORB: " << (const char*)(*i) << "\n";
+      i++;
+    }
+  }
+}
+
+#elif defined(UnixArchitecture) && !defined(__vxWorks__)
 
 #ifdef __aix__
 #  define OMNI_SIOCGIFCONF OSIOCGIFCONF
@@ -339,7 +386,7 @@ void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
 }
 
 /////////////////////////////////////////////////////////////////////////
-#  else // __vxWorks__
+#elif defined(__vxWorks__)
 void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs) {
 
   const int iMAX_ADDRESS_ENTRIES = 50;
@@ -425,9 +472,8 @@ void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs) {
   }
   close (s);
 }
-#  endif // __vxWorks__
 
-#endif // UnixArchitecture
+#endif
 
 
 /////////////////////////////////////////////////////////////////////////
