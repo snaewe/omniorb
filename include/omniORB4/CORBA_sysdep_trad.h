@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2004/07/30 10:53:16  dgrisby
+  Only set HAVE_STD if not already set. Thanks Matej Kenda.
+
   Revision 1.1.2.14  2004/07/01 19:08:11  dgrisby
   Support Windows build with mingw. Thanks Wolfgang Glas.
 
@@ -166,7 +169,9 @@
 #  if (__GNUG__ > 3 || (__GNUG__ == 3 && __GNUC_MINOR__ >= 3))
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Std_Namespace
-#     define HAVE_STD
+#     ifndef HAVE_STD
+#         define HAVE_STD 1
+#     endif
 #  endif
 
 // GCC claims to support long long on all platforms
@@ -232,7 +237,9 @@
 #    endif
 #    define HAS_Cplusplus_Namespace
 #    define HAS_Std_Namespace
-#    define HAVE_STD
+#    ifndef HAVE_STD
+#        define HAVE_STD 1
+#    endif
 #  endif
 
 #  define HAS_LongLong
@@ -391,10 +398,14 @@
 #if defined(__linux__)
 #  define OMNI_SOCKNAME_SIZE_T socklen_t
 #  define HAVE_STRTOULL 1
-#  define HAVE_STD 1
+#  ifndef HAVE_STD
+#    define HAVE_STD 1
+#  endif
 
 #elif defined(__sunos__)
-#  define HAVE_STD 1
+#  ifndef HAVE_STD
+#    define HAVE_STD 1
+#  endif
 #  define HAVE_STRTOULL 1
 #  define HAVE_ISNANORINF
 #  define HAVE_NAN_H
