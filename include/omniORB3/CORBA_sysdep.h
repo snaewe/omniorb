@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.12  2000/07/05 11:13:56  dpg1
+ Untested support for AIX with xlC 5.
+
  Revision 1.1.2.11  2000/06/30 14:12:07  dpg1
  Minor fixes for FreeBSD.
 
@@ -317,11 +320,14 @@
 #     define SIZEOF_PTR 8
 #endif
 
-#elif defined(__xlC__) && (__xlC__ <= 0x0301)
-
-#undef HAS_Cplusplus_const_cast
-
-#endif
+#elif defined(__xlC__)
+#  if (__xlC__ <= 0x0306)
+#    undef HAS_Cplusplus_const_cast
+#  elif (__xlC__ >= 0x0500) // added in xlC 5.0 (a.k.a. Visual Age 5.0)
+#    define HAS_Cplusplus_Bool
+#    define HAS_Cplusplus_Namespace
+#    define HAS_Std_Namespace
+#  endif
 
 #if defined(__hpux__)
 // Recent versions of HP aCC (A01.18 and A.03.13) have an identifying macro.

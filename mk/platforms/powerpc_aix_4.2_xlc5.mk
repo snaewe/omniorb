@@ -1,6 +1,6 @@
 #
-# powerpc_aix_4.2.mk - make variables and rules specific to AIX 4.2 on 
-#                      PowerPC.
+# powerpc_aix_4.2_xlc5.mk - make variables and rules specific to xlc version 5.0
+#                           on PowerPC AIX 4.2.
 #
 
 AIX = 1
@@ -27,20 +27,20 @@ include $(THIS_IMPORT_TREE)/mk/unix.mk
 # C preprocessor macro definitions for this architecture
 #
 
-IMPORT_CPPFLAGS = -D__aix__ -D__powerpc__ -D__OSVERSION__=4
+IMPORT_CPPFLAGS = -D__aix__ -D__powerpc__ -D__OSVERSION__=${AIX_MAJOR_VERS}
 
 #
 # Standard programs
 #
 
-AR              = ar cq
-RANLIB		= ranlib
-MKDIRHIER	= /usr/bin/X11/mkdirhier
-# INSTALL         = cp         # AIX does not have -p
+AR			= ar cq
+RANLIB			= ranlib
+MKDIRHIER		= mkdir -p
+# INSTALL		= cp         # AIX does not have -p
 # or use installbsd
-INSTALL_USER  = `id -un`
-INSTALL_GROUP = `id -gn`
-INSTALL       = installbsd -c -o $(INSTALL_USER) -g $(INSTALL_GROUP)
+INSTALL_USER	= `id -un`
+INSTALL_GROUP	= `id -gn`
+INSTALL		= installbsd -c -o $(INSTALL_USER) -g $(INSTALL_GROUP)
 
 CMAKEDEPEND     = $(TOP)/$(BINDIR)/omkdepend -D_AIX
 CXXMAKEDEPEND   = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D_AIX
@@ -52,22 +52,28 @@ CXXMAKEDEPEND   = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D_AIX
 # xlC_r 3.1.4 & xlC_r 3.6.6
 
 CXX             = xlC_r
-CXXDEBUGFLAGS   = -O
+CXXDEBUGFLAGS   =
 CXXLINK		= xlC_r
+CXXOPTIONS      = -qmaxmem=8192
 
 # Use C Set++ to compile your C source.
 #
-CC              = xlC_r
+CC		= xlC_r
 CLINK           = xlC_r
 
 # Get the compiler version
 XLCVERSION := $(shell echo "__xlC__" > /tmp/testAIXCompilerVersion.C )
 XLCVERSION := $(shell $(CXX) -+ -E /tmp/testAIXCompilerVersion.C | tail -1')
-  
+
 MAKECPPSHAREDLIB= /usr/ibmcxx/bin/makeC++SharedLib_r
- 
+
 ifeq ($(XLCVERSION),0x0301)
     MAKECPPSHAREDLIB = /usr/lpp/xlC/bin/makeC++SharedLib_r
+else
+ifeq ($(XLCVERSION),0x0500)
+#   Visual Age took over xlC
+	MAKECPPSHAREDLIB = /usr/vacpp/bin/makeC++SharedLib_r
+endif
 endif
 
 ############################################################################

@@ -1,3 +1,16 @@
+Wed Jul  5 12:08:06 BST 2000 dpg1
+=================================
+
+- Untested support for AIX with xlC 5.
+
+external_merge/config/config.mk
+external_merge/mk/platforms/powerpc_aix_4.2.mk
+external_merge/mk/platforms/powerpc_aix_4.2_xlc5.mk -- new
+external_merge/mk/platforms/powerpc_aix_4.3_xlc5.mk -- new
+include/omniORB3/CORBA_sysdep.h
+src/appl/omniNames/NamingContext_i.h
+
+
 Fri Jun 30 17:03:43 BST 2000 sll
 ================================
 

@@ -5,23 +5,25 @@
 # Uncomment one of the following platform line to build for the target
 # platform
 #
-#  sun4_sosV_5.5             Solaris 2.5, Sunpro C++/gcc-2.7.2
-#  sun4_sosV_5.6             Solaris 2.6, Sunpro C++/gcc-2.7.2
-#  sun4_sosV_5.7             Solaris 7, Sunpro C++/gcc-2.7.2
+#  sun4_sosV_5.5             Solaris 2.5, Sunpro C++/gcc
+#  sun4_sosV_5.6             Solaris 2.6, Sunpro C++/gcc
+#  sun4_sosV_5.7             Solaris 7, Sunpro C++/gcc
 #  i586_linux_2.0            x86 Redhat linux 4.2, gcc-2.7.2
-#  alpha_osf1_3.2            Digital Unix 3.2, DEC C++ v5.5
-#  alpha_osf1_4.0            Digital Unix 4.0, DEC C++ v6.0
-#  powerpc_aix_4.2           IBM AIX 4.2, IBM C Set++
-#  powerpc_linux_2.2_glibc   PowerPC linux, Debain
-#  hppa_hpux_10.20           HPUX 10.20, aC++ B3910B A.01.04
-#  hppa_hpux_11.00           HPUX 11.00, aC++ B3910B A.01.04
+#  i586_linux_2.0_glibc      x86 Redhat linux 5.1,egcs-980302 or later snapshot
+#  i586_linux_2.0_glibc2.1   x86 Redhat linux 6, etc
 #  x86_nt_3.5                x86 Windows NT 3.5, MS VC++ 5.0
 #  x86_nt_4.0                x86 Windows NT 4.0, MS VC++ 5.0
 #  x86_win95                 Windows 95, MS VC++ 5.0
 #  alpha_nt_4.0              Alpha Windows NT 4.0, MS VC++ 5.0
-#  i586_linux_2.0_glibc      x86 Redhat linux 5.1,egcs-980302 or later snapshot
-#  i586_linux_2.0_glibc2.1   x86 Redhat linux 6, etc
+#  alpha_osf1_3.2            Digital Unix 3.2, DEC C++ v5.5
+#  alpha_osf1_4.0            Digital Unix 4.0, DEC C++ v6.0
 #  alpha_linux_2.0           alpha linux (compiler problem,still doesn't work)
+#  powerpc_aix_4.2           IBM AIX 4.2, IBM C Set++
+#  powerpc_aix_4.2_xlc5      IBM AIX 4.2, XLC 5.0 (a.k.a. Visual Age 5.0)
+#  powerpc_aix_4.3_xlc5      IBM AIX 4.3, XLC 5.0 (a.k.a. Visual Age 5.0)
+#  powerpc_linux_2.2_glibc   PowerPC linux, Debian
+#  hppa_hpux_10.20           HPUX 10.20, aC++ B3910B A.01.04
+#  hppa_hpux_11.00           HPUX 11.00, aC++ B3910B A.01.04
 #  m68k_nextstep_3.3         NextStep 3.3, gcc-2.7.2
 #  x86_nextstep_3.3          NextStep 3.3, x86
 #  mips_sinux_5.43           Reliant UNIX from Siemens-Nixdorf (SNI)
@@ -43,20 +45,22 @@
 #platform = sun4_sosV_5.5
 #platform = sun4_sosV_5.6
 #platform = sun4_sosV_5.7
-#platform = alpha_osf1_3.2
-#platform = alpha_osf1_4.0
-#platform = powerpc_aix_4.2
-#platform = powerpc_aix_4.3
-#platform = hppa_hpux_10.20
-#platform = hppa_hpux_11.00
+#platform = i586_linux_2.0
+#platform = i586_linux_2.0_glibc
+#platform = i586_linux_2.0_glibc2.1
 #platform = x86_nt_3.5
 #platform = x86_nt_4.0
 #platform = x86_win95
 #platform = alpha_nt_4.0
-#platform = i586_linux_2.0
-#platform = i586_linux_2.0_glibc
-#platform = i586_linux_2.0_glibc2.1
+#platform = alpha_osf1_3.2
+#platform = alpha_osf1_4.0
+#platform = powerpc_aix_4.2
+#platform = powerpc_aix_4.3
+#platform = powerpc_aix_4.2_xlc5
+#platform = powerpc_aix_4.3_xlc5
 #platform = powerpc_linux_2.2_glibc
+#platform = hppa_hpux_10.20
+#platform = hppa_hpux_11.00
 #platform = m68k_nextstep_3.3
 #platform = x86_nextstep_3.3
 #platform = mips_sinux_5.43
