@@ -1,7 +1,16 @@
+Mon Mar  9 14:34:04 GMT 1998
+================================
+
+- Patches to allow compilation with aC++ on HPUX
+
+include/omniORB2/bufferedStream.h
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Mon Mar  9 14:12:56 GMT 1998 ewc
 ================================
 
-- Mach threads pathces from Lars Immisch applied
+- Mach threads patches from Lars Immisch applied
 
 src/lib/omnithread/mach.cc
 
