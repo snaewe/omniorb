@@ -39,7 +39,12 @@ ifdef UnixPlatform
 # Default location of the omniORB2 configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 #
+ifdef OMNIORB_CONFIG_DEFAULT_LOCATION
+CONFIG_DEFAULT_LOCATION = $(OMNIORB_CONFIG_DEFAULT_LOCATION)
+else
 CONFIG_DEFAULT_LOCATION = \"/project/omni/var/omniORB_NEW.cfg\"
+endif
+
 NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
 NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
 DIR_CPPFLAGS += -DUnixArchitecture
