@@ -11,9 +11,14 @@
 
 /*
   $Log$
-  Revision 1.3  1997/03/10 11:52:38  sll
-  Minor changes to accomodate the creation of a public API for omniORB2.
+  Revision 1.4  1997/04/23 12:52:59  sll
+  - introduced direct send/receive cutoff values.
+  - added DO_NOT_AVOID_MISALIGNMENT macro. If defined, try to receive
+    as much as the internal buffer allows.
 
+// Revision 1.3  1997/03/10  11:52:38  sll
+// Minor changes to accomodate the creation of a public API for omniORB2.
+//
 // Revision 1.2  1997/01/08  18:15:21  ewc
 // Added work-around for Windows NT / Visual C++ 4.2 nested class bug
 //
@@ -24,6 +29,9 @@
 
 #include <omniORB2/CORBA.h>
 
+#define DIRECT_RCV_CUTOFF 1024
+#define DIRECT_SND_CUTOFF 8192
+#define DO_NOT_AVOID_MISALIGNMENT
 
 NetBufferedStream::NetBufferedStream(Strand *s,
 				     CORBA::Boolean Rdlock,
@@ -91,7 +99,7 @@ void
 NetBufferedStream::get_char_array(CORBA::Char *b,int size) {
   Strand::sbuf s;
   if (!size) return;
-  if (size > 512) {
+  if (size >= DIRECT_RCV_CUTOFF) {
     ensure_rdlocked();
     giveback_received();
     if (RdMessageSize()) {
@@ -120,7 +128,7 @@ void
 NetBufferedStream::put_char_array(const CORBA::Char *b,int size) {
   Strand::sbuf s;
   if (!size) return;
-  if (size > 512) {
+  if (size >= DIRECT_SND_CUTOFF) {
     ensure_wrlocked();
     giveback_reserved();
     if (WrMessageSize()) {
@@ -228,18 +236,24 @@ NetBufferedStream::receive(size_t minimum) {
 	// Error, try to reserve more bytes than the message size limit
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
       }
-      else 
+      else {
 	if (bufsize > pd_strand->max_receive_buffer_size())
 	  bufsize = pd_strand->max_receive_buffer_size();
+      }
     }
   else
     {
       // Unlimited message size
+#ifndef DO_NOT_AVOID_MISALIGNMENT
       // Be conservative, just ask for the minimum
       bufsize = ((pd_ideal_buf_size) ? pd_ideal_buf_size :
 		 pd_strand->max_receive_buffer_size());
       if (bufsize > minimum)
 	bufsize = minimum;
+#else
+      bufsize = ((pd_ideal_buf_size) ? pd_ideal_buf_size :
+		 pd_strand->max_receive_buffer_size());
+#endif
     }
 
   b = pd_strand->receive(bufsize,0,current_inb_alignment());
