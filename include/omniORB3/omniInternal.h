@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/27 17:32:09  djr
+  omni::internalLock and objref_rc_lock are now pointers.
+
   Revision 1.1.2.2  1999/09/24 15:01:27  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -169,7 +172,7 @@ public:
 
 
   static _core_attr const _CORBA_Char                myByteOrder;
-  static _core_attr omni_tracedmutex                 internalLock;
+  static _core_attr omni_tracedmutex*                internalLock;
   static _core_attr omni_tracedmutex                 nilRefLock;
   static _core_attr _CORBA_Unbounded_Sequence__Octet myPrincipalID;
   static _core_attr const alignment_t                max_alignment;

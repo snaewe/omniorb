@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  1999/10/27 17:32:14  djr
+  omni::internalLock and objref_rc_lock are now pointers.
+
   Revision 1.1.2.7  1999/10/21 12:34:06  djr
   Removed duplicate include of exception.h.
 
@@ -322,7 +325,7 @@ static omniOrbPOA* theRootPOA = 0;
 
 omniOrbPOA::~omniOrbPOA()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
   if( pd_policy.single_threaded )  delete pd_call_lock;
 }
@@ -592,9 +595,9 @@ omniOrbPOA::set_servant_manager(PortableServer::ServantManager_ptr imgr)
 
   {
     // Check that <imgr> is a local object ...
-    omni::internalLock.lock();
+    omni::internalLock->lock();
     int islocal = imgr->_localId() ? 1 : 0;
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     if( !islocal )  OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
   }
 
@@ -664,7 +667,7 @@ omniOrbPOA::activate_object(PortableServer::Servant p_servant)
 
   omni_tracedmutex_lock sync(pd_lock);
   CHECK_NOT_DYING();
-  omni_tracedmutex_lock sync2(omni::internalLock);
+  omni_tracedmutex_lock sync2(*omni::internalLock);
 
   if( !pd_policy.multiple_id ) {
     // Check the servant's list of identities, to ensure that
@@ -718,7 +721,7 @@ omniOrbPOA::activate_object_with_id(const PortableServer::ObjectId& oid,
   CHECK_NOT_DYING();
   omniLocalIdentity* id = 0;
   {
-    omni_tracedmutex_lock sync2(omni::internalLock);
+    omni_tracedmutex_lock sync2(*omni::internalLock);
 
     if( !pd_policy.multiple_id ) {
       // Check the servant's list of identities, to ensure that
@@ -763,11 +766,11 @@ omniOrbPOA::deactivate_object(const PortableServer::ObjectId& oid)
 
   pd_lock.lock();
   CHECK_NOT_DESTROYED();
-  omni::internalLock.lock();
+  omni::internalLock->lock();
 
   omniLocalIdentity* id = omni::deactivateObject(key.key(), key.size());
   if( !id ) {
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     pd_lock.unlock();
     throw ObjectNotActive();
   }
@@ -779,7 +782,7 @@ omniOrbPOA::deactivate_object(const PortableServer::ObjectId& oid)
     // If the last method invocation has already completed on
     // this object, and it doesn't need etherealising, we
     // can just get rid of it now.
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     PortableServer::ServantActivator_ptr sa = pd_servantActivator;
     pd_lock.unlock();
 
@@ -797,7 +800,7 @@ omniOrbPOA::deactivate_object(const PortableServer::ObjectId& oid)
   else {
     // When outstanding requests have completed the object
     // will be etherealised.
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     detached_object();
     pd_lock.unlock();
 
@@ -818,7 +821,7 @@ omniOrbPOA::create_reference(const char* intf)
   CORBA::ULong hash;
 
   pd_lock.lock();
-  omni::internalLock.lock();
+  omni::internalLock->lock();
 
   // We need to be sure we use a new id ...
 
@@ -833,7 +836,7 @@ omniOrbPOA::create_reference(const char* intf)
   id = omni::locateIdentity(key.key(), key.size(), hash, 1);
   omniObjRef* objref = omni::createObjRef(intf, CORBA::Object::_PD_repoId,
 					  id, 0, 0, key.return_key());
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   OMNIORB_ASSERT(objref);
 
@@ -854,12 +857,12 @@ omniOrbPOA::create_reference_with_id(const PortableServer::ObjectId& oid,
   create_key(key, oid.NP_data(), oid.length());
   CORBA::ULong hash = omni::hash(key.key(), key.size());
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
 
   omniLocalIdentity* id = omni::locateIdentity(key.key(), key.size(), hash, 1);
   omniObjRef* objref = omni::createObjRef(intf, CORBA::Object::_PD_repoId,
 					  id, 0, 0, key.return_key());
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   OMNIORB_ASSERT(objref);
 
@@ -884,7 +887,7 @@ omniOrbPOA::servant_to_id(PortableServer::Servant p_servant)
     OMNIORB_ASSERT(0);
   }
 
-  omni_tracedmutex_lock sync2(omni::internalLock);
+  omni_tracedmutex_lock sync2(*omni::internalLock);
 
   if( !pd_policy.multiple_id ) {
     // Search the servants identities, to see if it is
@@ -952,7 +955,7 @@ omniOrbPOA::servant_to_reference(PortableServer::Servant p_servant)
     throw WrongPolicy();
 
   omni_tracedmutex_lock sync(pd_lock);
-  omni_tracedmutex_lock sync2(omni::internalLock);
+  omni_tracedmutex_lock sync2(*omni::internalLock);
 
   if( !pd_policy.multiple_id ) {
     // Search the servants identities, to see if it is
@@ -1017,7 +1020,7 @@ omniOrbPOA::reference_to_servant(CORBA::Object_ptr reference)
 
   if( pd_policy.retain_servants ) {
 
-    omni_tracedmutex_lock sync(omni::internalLock);
+    omni_tracedmutex_lock sync(*omni::internalLock);
 
     omniObjRef* objref = reference->_PR_getobj();
     omniLocalIdentity* id = objref->_localId();
@@ -1061,7 +1064,7 @@ omniOrbPOA::reference_to_id(CORBA::Object_ptr reference)
     OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
   if( reference->_NP_is_pseudo() )  throw WrongAdapter();
 
-  omni_tracedmutex_lock sync(omni::internalLock);
+  omni_tracedmutex_lock sync(*omni::internalLock);
 
   omniObjRef* objref = reference->_PR_getobj();
   omniLocalIdentity* id = objref->_localId();
@@ -1095,7 +1098,7 @@ omniOrbPOA::id_to_servant(const PortableServer::ObjectId& oid)
     create_key(key, oid.NP_data(), oid.length());
     CORBA::ULong hash = omni::hash(key.key(), key.size());
 
-    omni::internalLock.lock();
+    omni::internalLock->lock();
     omniLocalIdentity* id = omni::locateIdentity(key.key(), key.size(), hash);
 
     PortableServer::Servant s = 0;
@@ -1103,7 +1106,7 @@ omniOrbPOA::id_to_servant(const PortableServer::ObjectId& oid)
       s = DOWNCAST(id->servant());
       s->_add_ref();
     }
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     if( s )  return s;
   }
 
@@ -1135,19 +1138,19 @@ omniOrbPOA::id_to_reference(const PortableServer::ObjectId& oid)
   create_key(key, oid.NP_data(), oid.length());
   CORBA::ULong hash = omni::hash(key.key(), key.size());
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
 
   omniLocalIdentity* id = omni::locateIdentity(key.key(), key.size(), hash);
 
   if( !(id && id->servant()) ) {
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     throw ObjectNotActive();
   }
 
   omniObjRef* objref = omni::createObjRef(id->servant()->_mostDerivedRepoId(),
 					  CORBA::Object::_PD_repoId, id,
 					  0, 0, key.return_key());
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
   OMNIORB_ASSERT(objref);
 
   return (CORBA::Object_ptr) objref->_ptrToObjRef(CORBA::Object::_PD_repoId);
@@ -1242,7 +1245,7 @@ omniOrbPOA::decrRefCount()
 void
 omniOrbPOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(id);  OMNIORB_ASSERT(id->servant());
   OMNIORB_ASSERT(id->adapter() == this);
 
@@ -1253,7 +1256,7 @@ omniOrbPOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 
   startRequest();
 
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   omni_optional_lock sync(*pd_call_lock, !pd_policy.single_threaded,
 			  !pd_policy.single_threaded);
@@ -1276,7 +1279,7 @@ omniOrbPOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 void
 omniOrbPOA::dispatch(GIOP_S& giop_s, const CORBA::Octet* key, int keysize)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   OMNIORB_ASSERT(key);
   OMNIORB_ASSERT(keysize >= pd_poaIdSize &&
 		 !memcmp(key, pd_poaId, pd_poaIdSize));
@@ -1306,7 +1309,7 @@ omniOrbPOA::dispatch(GIOP_S& giop_s, const CORBA::Octet* key, int keysize)
 void
 omniOrbPOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(id);  OMNIORB_ASSERT(id->servant());
   OMNIORB_ASSERT(id->adapter() == this);
 
@@ -1317,7 +1320,7 @@ omniOrbPOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
 
   startRequest();
 
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   omni_optional_lock sync(*pd_call_lock, !pd_policy.single_threaded,
 			  !pd_policy.single_threaded);
@@ -1348,7 +1351,7 @@ omniOrbPOA::objectExists(const _CORBA_Octet*, int)
 void
 omniOrbPOA::lastInvocationHasCompleted(omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
   if( omniORB::trace(15) ) {
     omniORB::logger l;
@@ -1485,7 +1488,7 @@ omniOrbPOA::omniOrbPOA()  // nil constructor
 void
 omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock, 0);
   ASSERT_OMNI_TRACEDMUTEX_HELD(poa_lock, 0);
   OMNIORB_ASSERT(pd_dying);
@@ -1511,7 +1514,7 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   PortableServer::ServantActivator_ptr sa = pd_servantActivator;
   pd_lock.unlock();
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   deactivate_objects(obj_list);
 
   if( omniORB::trace(10) ) {
@@ -1527,14 +1530,14 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
   int old_state = pd_rq_state;
   pd_rq_state = (int) PortableServer::POAManager::INACTIVE;
   if( old_state == (int) PortableServer::POAManager::HOLDING ) {
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     pd_signal.broadcast();
-    omni::internalLock.lock();
+    omni::internalLock->lock();
   }
 
   waitForAllRequestsToComplete(1);
   complete_object_deactivation(obj_list);
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   // Apparent destruction of POA occurs before etherealisations.
   pd_lock.lock();
@@ -1590,9 +1593,9 @@ omniOrbPOA::do_destroy(CORBA::Boolean etherealize_objects)
 void
 omniOrbPOA::pm_change_state(PortableServer::POAManager::State new_state)
 {
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   pd_rq_state = (int) new_state;
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   pd_signal.broadcast();
 }
@@ -1601,11 +1604,11 @@ omniOrbPOA::pm_change_state(PortableServer::POAManager::State new_state)
 void
 omniOrbPOA::pm_waitForReqCmpltnOrSttChnge(omniOrbPOAManager::State state)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
   // Wait until all outstanding requests have completed,
   // or until the state has changed.
-  omni::internalLock.lock();
+  omni::internalLock->lock();
 
   pd_signalOnZeroInvocations++;
 
@@ -1614,14 +1617,14 @@ omniOrbPOA::pm_waitForReqCmpltnOrSttChnge(omniOrbPOAManager::State state)
 
   pd_signalOnZeroInvocations--;
 
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 }
 
 
 void
 omniOrbPOA::pm_deactivate(_CORBA_Boolean etherealize_objects)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock, 0);
 
   pd_lock.lock();
@@ -1643,11 +1646,11 @@ omniOrbPOA::pm_deactivate(_CORBA_Boolean etherealize_objects)
   if( obj_list )  detached_object();
   pd_lock.unlock();
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   deactivate_objects(obj_list);
   waitForAllRequestsToComplete(1);
   complete_object_deactivation(obj_list);
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
   if( obj_list ) {
     if( etherealize_objects )
       this->etherealise_objects(obj_list, etherealize_objects, sa);
@@ -1671,7 +1674,7 @@ omniOrbPOA::servant__this(PortableServer::Servant p_servant,
 
   omni_tracedmutex_lock sync(pd_lock);
   CHECK_NOT_DESTROYED();
-  omni_tracedmutex_lock sync2(omni::internalLock);
+  omni_tracedmutex_lock sync2(*omni::internalLock);
 
   if( !pd_policy.multiple_id ) {
     // Search the servants identities, to see if it is
@@ -2035,7 +2038,7 @@ omniOrbPOA::adapter_name_is_valid(const char* name)
 void
 omniOrbPOA::synchronise_request()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
   // Wait until the request can proceed, or discard it.
 
@@ -2047,7 +2050,7 @@ omniOrbPOA::synchronise_request()
 	// We have to do startRequest() here, since the identity
 	// will do endInvocation() when we pass through there.
 	startRequest();
-	omni::internalLock.unlock();
+	omni::internalLock->unlock();
 	OMNIORB_THROW(TRANSIENT,0, CORBA::COMPLETED_NO);
       }
     }
@@ -2066,14 +2069,14 @@ omniOrbPOA::synchronise_request()
     // We have to do startRequest() here, since the identity
     // will do endInvocation() when we pass through there.
     startRequest();
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     OMNIORB_THROW(TRANSIENT,0, CORBA::COMPLETED_NO);
 
   case (int) PortableServer::POAManager::INACTIVE:
     // We have to do startRequest() here, since the identity
     // will do endInvocation() when we pass through there.
     startRequest();
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     // This came from Henning & Vinoski.  Not sure it is
     // very appropriate looking at the description of
     // CORBA::OBJ_ADAPTER.
@@ -2085,7 +2088,7 @@ omniOrbPOA::synchronise_request()
 void
 omniOrbPOA::deactivate_objects(omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
   while( id ) {
     omni::deactivateObject(id->key(), id->keysize());
@@ -2097,7 +2100,7 @@ omniOrbPOA::deactivate_objects(omniLocalIdentity* id)
 void
 omniOrbPOA::complete_object_deactivation(omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
   while( id ) {
     id->deactivate();
@@ -2112,7 +2115,7 @@ omniOrbPOA::etherealise_objects(omniLocalIdentity* id,
 				_CORBA_Boolean etherealise,
 				PortableServer::ServantActivator_ptr sa)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   ASSERT_OMNI_TRACEDMUTEX_HELD(pd_lock, 0);
 
   while( id ) {
@@ -2146,7 +2149,7 @@ omniOrbPOA::add_object_to_etherealisation_queue(
 				const _CORBA_Octet* key, int keysize,
 				int cleanup_in_progress, int detached)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   OMNIORB_ASSERT(servant && key);
 
   Etherealiser* e = new Etherealiser(servant, sa, this, key + pd_poaIdSize,
@@ -2154,11 +2157,11 @@ omniOrbPOA::add_object_to_etherealisation_queue(
 
   if( !detached )  detached_object();
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   if( !etherealisation_queue )  etherealisation_queue = new omniTaskQueue;
   e->set_is_last(!servant->_identities());
   etherealisation_queue->insert(e);
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   // NB. remaining_activations is wrong at the mo' -- should only
   // refer to activations of the servant in *this* poa.  However,
@@ -2189,7 +2192,7 @@ omniOrbPOA::dispatch_to_ds(GIOP_S& giop_s, const CORBA::Octet* key,
 
   omniORB::logs(10, "Dispatching through default servant");
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   the_id.dispatch(giop_s);
 }
 
@@ -2231,7 +2234,7 @@ omniOrbPOA::dispatch_to_sa(GIOP_S& giop_s, const CORBA::Octet* key,
   // way to ensure this would be to put a place-holder in the object
   // table which says 'I'm about to be activated'.  Nasty.
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   omniLocalIdentity* id = omni::locateIdentity(key, keysize, hash);
   if( id && id->servant() ) {
     pd_lock.unlock();
@@ -2244,7 +2247,7 @@ omniOrbPOA::dispatch_to_sa(GIOP_S& giop_s, const CORBA::Octet* key,
   // be fully destroyed before these objects have a chance to
   // be 'postinvoke'd.
   enterAdapter();
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
   pd_lock.unlock();
 
   PortableServer::Servant servant;
@@ -2278,7 +2281,7 @@ omniOrbPOA::dispatch_to_sa(GIOP_S& giop_s, const CORBA::Octet* key,
     exitAdapter();
     return;
   }
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   if( !pd_policy.multiple_id ) {
     // Check the servant is not already active in this poa.
     id = servant->_identities();
@@ -2333,9 +2336,9 @@ omniOrbPOA::dispatch_to_sl(GIOP_S& giop_s, const CORBA::Octet* key,
   // We call enterAdapter() here to ensure that the POA can't
   // be fully destroyed before these objects have a chance to
   // be 'postinvoke'd.
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   enterAdapter();
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
   pd_lock.unlock();
 
   int idsize = keysize - pd_poaIdSize;
@@ -2366,7 +2369,7 @@ omniOrbPOA::dispatch_to_sl(GIOP_S& giop_s, const CORBA::Octet* key,
   omniLocalIdentity the_id(key, keysize);
   the_id.setServant((PortableServer::Servant) servant, this);
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   try {
     the_id.dispatch(giop_s);
   }

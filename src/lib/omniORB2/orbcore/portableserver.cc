@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.5  1999/10/27 17:32:16  djr
+  omni::internalLock and objref_rc_lock are now pointers.
+
   Revision 1.1.2.4  1999/10/16 13:22:54  djr
   Changes to support compiling on MSVC.
 
@@ -195,7 +198,7 @@ PortableServer::ServantBase::_do_this(const char* repoId)
     PortableServer::POA_var poa = this->_default_POA();
 
     {
-      omni_tracedmutex_lock sync(omni::internalLock);
+      omni_tracedmutex_lock sync(*omni::internalLock);
 
       omniLocalIdentity* id = _identities();
 

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/27 17:32:09  djr
+  omni::internalLock and objref_rc_lock are now pointers.
+
   Revision 1.1.2.1  1999/09/24 09:51:48  djr
   Moved from omniORB2 + some new files.
 
@@ -123,7 +126,7 @@ public:
   //  Must hold <omni::internalLock>.
 
   inline omniLocalIdentity* _identities() const {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     return pd_identities;
   }
   // Must hold <omni::internalLock>.

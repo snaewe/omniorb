@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.21.6.7  1999/10/27 17:32:11  djr
+  omni::internalLock and objref_rc_lock are now pointers.
+
   Revision 1.21.6.6  1999/10/18 11:27:39  djr
   Centralised list of system exceptions.
 
@@ -563,7 +566,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
     // Can we find the object in the local object table?
 
     CORBA::ULong hash = omni::hash(pd_key.key(), pd_key.size());
-    omni::internalLock.lock();
+    omni::internalLock->lock();
     omniLocalIdentity* id;
     id = omni::locateIdentity(pd_key.key(), pd_key.size(), hash);
 
@@ -572,7 +575,7 @@ GIOP_S::HandleRequest(CORBA::Boolean byteorder)
       return;
     }
 
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
 
     // Can we create a suitable object on demand?
 
@@ -740,11 +743,11 @@ GIOP_S::HandleLocateRequest(CORBA::Boolean byteorder)
   GIOP::LocateStatusType status = GIOP::UNKNOWN_OBJECT;
 
   CORBA::ULong hash = omni::hash(pd_key.key(), pd_key.size());
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   omniLocalIdentity* id;
   id = omni::locateIdentity(pd_key.key(), pd_key.size(), hash);
   if( id && id->servant() )  status = GIOP::OBJECT_HERE;
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   if( status == GIOP::UNKNOWN_OBJECT ) {
 

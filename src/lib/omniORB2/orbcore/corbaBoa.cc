@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.13.6.8  1999/10/27 17:32:10  djr
+  omni::internalLock and objref_rc_lock are now pointers.
+
   Revision 1.13.6.7  1999/10/14 16:22:05  djr
   Implemented logging when system exceptions are thrown.
 
@@ -182,8 +185,11 @@ omniOrbBOA::omniOrbBOA(int nil)
     pd_activeObjList(0),
     pd_nblocked(0),
     pd_nwaiting(0),
-    pd_state_signal(&omni::internalLock)
+    pd_state_signal(nil ? &boa_lock : omni::internalLock)
 {
+  // NB. If nil, then omni::internalLock may be zero, so we cannot
+  // use it to initialise the condition variable.  So we use
+  // &boa_lock instead.  But this will of course never be used...
 }
 
 
@@ -196,7 +202,7 @@ omniOrbBOA::impl_is_ready(CORBA::ImplementationDef_ptr,
   int state_changed = 0;
   boa_lock.lock();
   {
-    omni::internalLock.lock();
+    omni::internalLock->lock();
 
     switch( pd_state ) {
     case IDLE:
@@ -208,13 +214,13 @@ omniOrbBOA::impl_is_ready(CORBA::ImplementationDef_ptr,
       break;
 
     case DESTROYED:
-      omni::internalLock.unlock();
+      omni::internalLock->unlock();
       boa_lock.unlock();
       OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
       break;
     }
 
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
   }
 
   if( state_changed ) {
@@ -231,10 +237,10 @@ omniOrbBOA::impl_is_ready(CORBA::ImplementationDef_ptr,
   if( !dont_block ) {
     pd_nblocked++;
 
-    omni::internalLock.lock();
+    omni::internalLock->lock();
     boa_lock.unlock();
     pd_state_signal.wait();
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
 
     boa_lock.lock();
     --pd_nblocked;
@@ -256,7 +262,7 @@ omniOrbBOA::impl_shutdown()
     omni_tracedmutex_lock sync(boa_lock);
     int state_changed = 0;
 
-    omni::internalLock.lock();
+    omni::internalLock->lock();
 
     switch( pd_state ) {
     case IDLE:
@@ -268,12 +274,12 @@ omniOrbBOA::impl_shutdown()
       break;
 
     case DESTROYED:
-      omni::internalLock.unlock();
+      omni::internalLock->unlock();
       OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
       break;
     }
 
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
 
     wake_blockers = state_changed && pd_nblocked > 0;
 
@@ -309,7 +315,7 @@ omniOrbBOA::destroy()
   {
     boa_lock.lock();
     {
-      omni::internalLock.lock();
+      omni::internalLock->lock();
 
       switch( pd_state ) {
       case IDLE:
@@ -322,13 +328,13 @@ omniOrbBOA::destroy()
 	break;
 
       case DESTROYED:
-	omni::internalLock.unlock();
+	omni::internalLock->unlock();
 	boa_lock.unlock();
 	OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
 	break;
       }
 
-      omni::internalLock.unlock();
+      omni::internalLock->unlock();
     }
 
     OMNIORB_ASSERT(the_boa == this);
@@ -350,13 +356,13 @@ omniOrbBOA::destroy()
   }
 
   // Remove all my objects from the object table.
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   omniLocalIdentity* id = obj_list;
   while( id ) {
     omni::deactivateObject(id->key(), id->keysize());
     id = id->nextInOAObjList();
   }
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   // We need to kick anyone stuck in synchronise_request(),
   // or impl_is_ready().
@@ -419,7 +425,7 @@ omniOrbBOA::dispose(CORBA::Object_ptr obj)
     OMNIORB_THROW(BAD_PARAM,0, CORBA::COMPLETED_NO);
 
   boa_lock.lock();
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   dispose(obj->_PR_getobj()->_localId());
   // The locks will have been released on return.
 }
@@ -484,9 +490,11 @@ omniOrbBOA::_non_existent()
 {
   if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
 
-  omni_tracedmutex_lock sync(omni::internalLock);
+  omni::internalLock->lock();
+  _CORBA_Boolean ret = pd_state == DESTROYED ? 1 : 0;
+  omni::internalLock->unlock();
 
-  return pd_state == DESTROYED ? 1 : 0;
+  return ret;
 }
 
 
@@ -556,7 +564,7 @@ omniOrbBOA::decrRefCount()
 void
 omniOrbBOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(id);  OMNIORB_ASSERT(id->servant());
   OMNIORB_ASSERT(id->adapter() == this);
 
@@ -566,7 +574,7 @@ omniOrbBOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 
   startRequest();
 
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
@@ -586,7 +594,7 @@ omniOrbBOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 void
 omniOrbBOA::dispatch(GIOP_S& giop_s, const CORBA::Octet* key, int keysize)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   OMNIORB_ASSERT(key && keysize == sizeof(omniOrbBoaKey));
 
   omniORB::loader::mapKeyToObject_t loader = MapKeyToObjectFunction;
@@ -605,7 +613,7 @@ omniOrbBOA::dispatch(GIOP_S& giop_s, const CORBA::Octet* key, int keysize)
 void
 omniOrbBOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(id);  OMNIORB_ASSERT(id->servant());
   OMNIORB_ASSERT(id->adapter() == this);
 
@@ -615,7 +623,7 @@ omniOrbBOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
 
   startRequest();
 
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
@@ -630,7 +638,7 @@ omniOrbBOA::dispatch(omniCallDescriptor& call_desc, omniLocalIdentity* id)
 int
 omniOrbBOA::objectExists(const _CORBA_Octet* key, int keysize)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   OMNIORB_ASSERT(key && keysize == sizeof(omniOrbBoaKey));
 
   omniORB::loader::mapKeyToObject_t loader = MapKeyToObjectFunction;
@@ -650,7 +658,7 @@ omniOrbBOA::objectExists(const _CORBA_Octet* key, int keysize)
 void
 omniOrbBOA::lastInvocationHasCompleted(omniLocalIdentity* id)
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
   if( omniORB::trace(15) ) {
     omniORB::logger l;
@@ -683,23 +691,23 @@ void
 omniOrbBOA::dispose(omniLocalIdentity* lid)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(boa_lock, 1);
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
   if( pd_state == DESTROYED ) {
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     boa_lock.unlock();
     OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
   }
 
   if( !lid || !lid->servant() ) {
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     boa_lock.unlock();
     return;
   }
 
   omniLocalIdentity* id = omni::deactivateObject(lid->key(), lid->keysize());
   if( !id ) {
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     boa_lock.unlock();
     return;
   }
@@ -709,7 +717,7 @@ omniOrbBOA::dispose(omniLocalIdentity* lid)
   id->removeFromOAObjList();
 
   if( id->is_idle() ) {
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     boa_lock.unlock();
 
     omniORB::logs(15, "Object is idle -- delete now.");
@@ -720,7 +728,7 @@ omniOrbBOA::dispose(omniLocalIdentity* lid)
   else {
     // When outstanding requests have completed the object
     // will be etherealised.
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     detached_object();
     boa_lock.unlock();
 
@@ -732,7 +740,7 @@ omniOrbBOA::dispose(omniLocalIdentity* lid)
 void
 omniOrbBOA::synchronise_request()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
   // Wait until the request can proceed, or discard it.
 
@@ -745,7 +753,7 @@ omniOrbBOA::synchronise_request()
   // POA are used together.
   if( pd_nwaiting == /*??* max */ 5 ) {
     startRequest();
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     OMNIORB_THROW(COMM_FAILURE,0, CORBA::COMPLETED_NO);
   }
 
@@ -760,7 +768,7 @@ omniOrbBOA::synchronise_request()
 
   case DESTROYED:
     startRequest();
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     OMNIORB_THROW(OBJ_ADAPTER,0, CORBA::COMPLETED_NO);
   }
 }
@@ -781,7 +789,7 @@ omniOrbBoaServant::omniOrbBoaServant()
 void
 omniOrbBoaServant::_dispose()
 {
-  ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 0);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   ASSERT_OMNI_TRACEDMUTEX_HELD(boa_lock, 0);
 
   boa_lock.lock();
@@ -797,7 +805,7 @@ omniOrbBoaServant::_dispose()
   omniOrbBOA* boa = the_boa;
   CORBA::BOA_var ref_holder(boa);
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   boa->dispose(_identities());
 }
 
@@ -815,18 +823,18 @@ omniOrbBoaServant::_obj_is_ready()
 
   omniObjKey key((const CORBA::Octet*) &pd_key, sizeof(omniOrbBoaKey));
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
 
   omniLocalIdentity* id = omni::activateObject(this, the_boa, key);
 
   // Why throw this?
   if( !id ) {
-    omni::internalLock.unlock();
+    omni::internalLock->unlock();
     boa_lock.unlock();
     OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
   }
 
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
   id->insertIntoOAObjList(the_boa->activeObjList());
   boa_lock.unlock();
 }
@@ -840,7 +848,7 @@ omniOrbBoaServant::_this(const char* repoId)
   CORBA::ULong hash = omni::hash((const CORBA::Octet*) &pd_key,
 				 sizeof(omniOrbBoaKey));
 
-  omni::internalLock.lock();
+  omni::internalLock->lock();
   omniLocalIdentity* id = _identities();
   if( !id )
     // We do know the key, so we can generate a reference anyway.
@@ -848,7 +856,7 @@ omniOrbBoaServant::_this(const char* repoId)
 			      sizeof(omniOrbBoaKey), hash, 1);
 
   omniObjRef* objref = omni::createObjRef(_mostDerivedRepoId(), repoId, id);
-  omni::internalLock.unlock();
+  omni::internalLock->unlock();
 
   OMNIORB_ASSERT(objref);
 

@@ -1,4 +1,29 @@
 
+Wed Oct 27 18:08:28 BST 1999 djr
+================================
+
+- omni::internalLock and objref_rc_lock are now pointers.  This ensures
+  that they are not cleaned up at program termination.  Previously the
+  mutexes could be cleaned up before they were finished with, as they
+  may be used as a result of static object destructors.
+
+include/omniORB3/omniInternal.h
+include/omniORB3/omniObjRef.h
+include/omniORB3/omniServant.h
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/localIdentity.cc
+src/lib/omniORB2/orbcore/localIdentity.h
+src/lib/omniORB2/orbcore/objectAdapter.cc
+src/lib/omniORB2/orbcore/objectAdapter.h
+src/lib/omniORB2/orbcore/omniInternal.cc
+src/lib/omniORB2/orbcore/omniObjRef.cc
+src/lib/omniORB2/orbcore/omniServant.cc
+src/lib/omniORB2/orbcore/poa.cc
+src/lib/omniORB2/orbcore/portableserver.cc
+src/lib/omniORB2/orbcore/remoteIdentity.cc
+
+
 Wed Oct 27 16:10:16 BST 1999 djr
 ================================
 

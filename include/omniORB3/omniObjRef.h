@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/27 17:32:09  djr
+  omni::internalLock and objref_rc_lock are now pointers.
+
   Revision 1.1.2.1  1999/09/24 09:51:48  djr
   Moved from omniORB2 + some new files.
 
@@ -179,30 +182,30 @@ public:
   //  This function is thread-safe.
 
   inline omniObjRef** _addrOfLocalRefList() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     return &pd_nextInLocalRefList;
   }
   inline omniObjRef* _nextInLocalRefList() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     return pd_nextInLocalRefList;
   }
   // Used by omniLocalIdentity to insert/remove this from its local
   // ref list.
 
   inline omniIdentity* _identity() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     return pd_id;
   }
   // Must hold <omni::internalLock>.
 
   inline omniLocalIdentity* _localId() {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     return pd_localId;
   }
   // Must hold <omni::internalLock>.
 
   inline int _isForwardLocation() const {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     return pd_flags.forward_location;
   }
   //  Must hold <omni::internalLock>.
@@ -258,7 +261,7 @@ private:
   friend class omniInternal;
 
   inline void _setIdentity(omniIdentity* id, omniLocalIdentity* lid) {
-    ASSERT_OMNI_TRACEDMUTEX_HELD(omni::internalLock, 1);
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
     pd_id = id;
     pd_localId = lid;
   }
