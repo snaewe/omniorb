@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.6  2001/01/25 13:09:11  sll
+# Fixed up cxx backend to stop it from dying when a relative
+# path name is given to the -p option of omniidl.
+#
 # Revision 1.29.2.5  2000/11/20 14:43:25  sll
 # Added support for wchar and wstring.
 #
@@ -199,12 +203,15 @@
 import string
 
 from omniidl import idlast, idltype, idlutil
-from omniidl_be.cxx import cxx, ast, output, id, config, skutil, types, iface, call
+from omniidl_be.cxx import cxx, ast, output, id, config, skutil, types
 from omniidl_be.cxx.skel import template
+
+# XXX Cannot just use from omniidl_be.cxx import iface as it doesn't
+#     seem to work if a relative path is given to the -p option of omniidl
+import omniidl_be.cxx.iface
 
 import main
 self = main
-
 
 def __init__(stream):
     self.stream = stream
@@ -258,8 +265,8 @@ def visitInterface(node):
     #     names used by two different modules disjoint too. Not sure why
     #     as they are not externally visible?
 
-    I = iface.Interface(node)
-    I_Helper = iface.instance("I_Helper")(I)
+    I = omniidl_be.cxx.iface.Interface(node)
+    I_Helper = omniidl_be.cxx.iface.instance("I_Helper")(I)
     I_Helper.cc(stream)
 
 
@@ -293,13 +300,13 @@ def visitInterface(node):
                        objref_fqname = inherits_objref_name.fullyQualify(),
                        objref_flat_fqname = objref_flat_fqname)
 
-    _objref_I = iface.instance("_objref_I")(I)
+    _objref_I = omniidl_be.cxx.iface.instance("_objref_I")(I)
     _objref_I.cc(stream)
  
-    _pof_I = iface.instance("_pof_I")(I)
+    _pof_I = omniidl_be.cxx.iface.instance("_pof_I")(I)
     _pof_I.cc(stream)
 
-    _impl_I = iface.instance("_impl_I")(I)
+    _impl_I = omniidl_be.cxx.iface.instance("_impl_I")(I)
     _impl_I.cc(stream)
 
     

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.7.2.4  2001/01/25 13:09:11  sll
+# Fixed up cxx backend to stop it from dying when a relative
+# path name is given to the -p option of omniidl.
+#
 # Revision 1.7.2.3  2000/11/03 19:17:37  sll
 # Generated code use include omniORB4.
 #
@@ -80,6 +84,8 @@
 #
 
 from omniidl_be.cxx import config, output, ast, id
+import omniidl_be.cxx.skel.main
+import omniidl_be.cxx.skel.poa
 
 def monolithic(stream, tree):
     """Creates one large skeleton with all code inside"""
@@ -106,11 +112,9 @@ static const char* @prefix@_library_version = @library@;
                hh = config.state['HH Suffix'],
                prefix = config.state['Private Prefix'])
 
-    import omniidl_be.cxx.skel.main
     skel = omniidl_be.cxx.skel.main.__init__(stream)
     tree.accept(skel)
 
-    import omniidl_be.cxx.skel.poa
     poa_skel = omniidl_be.cxx.skel.poa.__init__(stream)
     tree.accept(poa_skel)
 
@@ -123,11 +127,9 @@ def fragment(stream, tree):
                program = config.state['Program Name'],
                library = config.state['Library Version'])
 
-    import omniidl_be.cxx.skel.main
     skel = omniidl_be.cxx.skel.main.__init__(stream)
     tree.accept(skel)
 
-    import omniidl_be.cxx.skel.poa
     poa_skel = omniidl_be.cxx.skel.poa.__init__(stream)
     tree.accept(poa_skel)
 

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.4  2001/01/25 13:09:11  sll
+# Fixed up cxx backend to stop it from dying when a relative
+# path name is given to the -p option of omniidl.
+#
 # Revision 1.1.4.3  2000/11/07 18:27:51  sll
 # Pass environment to out_objrefcall.
 #
@@ -57,7 +61,14 @@
 import string
 
 from omniidl import idlast, idltype
-from omniidl_be.cxx import types, id, call, header, skel, ast, cxx, output, config, descriptor
+from omniidl_be.cxx import types, id, call, ast, cxx, output, config, descriptor
+# from omniidl_be.cxx import header
+# from omniidl_be.cxx import skel
+# XXX it seems that the above import fails when this file is import by
+#     cxx.header.defs AND a relative patch -p argument is given to omniidl
+#     Use the following import works.
+import omniidl_be.cxx.skel
+import omniidl_be.cxx.header
 
 
 # Interface is a wrapper around an IDL interface
@@ -204,13 +215,13 @@ class I_Helper(Class):
     if config.state['BOA Skeletons']:
       class_sk_name = "class " + \
                       self.interface().name().prefix("_sk_").simple() + ";"
-    stream.out(header.template.interface_Helper,
+    stream.out(omniidl_be.cxx.header.template.interface_Helper,
                class_sk_name = class_sk_name,
                name = self.interface().name().simple(),
                guard = self.interface().name().guard())
 
   def cc(self, stream):
-    stream.out(skel.template.interface_Helper,
+    stream.out(omniidl_be.cxx.skel.template.interface_Helper,
                name = self.interface().name().fullyQualify())
 
 
@@ -243,7 +254,7 @@ class _objref_I(Class):
     for method in self.methods():
       methods.append(method.hh())
             
-    stream.out(header.template.interface_objref,
+    stream.out(omniidl_be.cxx.header.template.interface_objref,
                name = self.interface().name().simple(),
                inherits = string.join(objref_inherits, ",\n"),
                operations = string.join(methods, "\n"))
@@ -252,7 +263,7 @@ class _objref_I(Class):
 
     def _ptrToObjRef(self = self, stream = stream):
       for i in self.interface().allInherits():
-        stream.out(skel.template.interface_objref_repoID,
+        stream.out(omniidl_be.cxx.skel.template.interface_objref_repoID,
                    inherits_fqname = i.name().fullyQualify())
 
     # build the inherits list
@@ -283,7 +294,7 @@ class _objref_I(Class):
                             ")" + this_inherits_str
       inherits_str = inherits_str + this_inherits_str
 
-    stream.out(skel.template.interface_objref,
+    stream.out(omniidl_be.cxx.skel.template.interface_objref,
                name = self.interface().name().fullyQualify(),
                fq_objref_name = self.name().fullyQualify(),
                objref_name = self.name().simple(),
@@ -332,19 +343,19 @@ class _pof_I(Class):
     self._name = self._name.prefix("_pof_")
 
   def hh(self, stream):
-    stream.out(header.template.interface_pof,
+    stream.out(omniidl_be.cxx.header.template.interface_pof,
                name = self.interface().name().simple())
 
   def cc(self, stream):
     inherits = output.StringStream()
     for i in self.interface().allInherits():
       ancestor = i.name().fullyQualify()
-      inherits.out(skel.template.interface_pof_repoID, inherited = ancestor)
+      inherits.out(omniidl_be.cxx.skel.template.interface_pof_repoID, inherited = ancestor)
 
     node_name = self.interface().name()
     objref_name = node_name.prefix("_objref_")
     pof_name = node_name.prefix("_pof_")
-    stream.out(skel.template.interface_pof,
+    stream.out(omniidl_be.cxx.skel.template.interface_pof,
                pof_name = pof_name.fullyQualify(),
                objref_fqname = objref_name.fullyQualify(),
                name = node_name.fullyQualify(),
@@ -382,7 +393,7 @@ class _impl_I(Class):
     for method in self.methods():
         methods.append(method.hh(virtual = 1, pure = 1))
         
-    stream.out(header.template.interface_impl,
+    stream.out(omniidl_be.cxx.header.template.interface_impl,
                name = self.interface().name().simple(),
                inherits = string.join(impl_inherits, ",\n"),
                operations = string.join(methods, "\n"))
@@ -411,7 +422,7 @@ class _impl_I(Class):
         # The MSVC workaround might be needed here again
         if inherited_name.needFlatName(self._environment):
           impl_inherits = inherited_name.flatName()
-        stream.out(skel.template.interface_impl_inherit_dispatch,
+        stream.out(omniidl_be.cxx.skel.template.interface_impl_inherit_dispatch,
                    impl_inherited_name = impl_inherits)
 
     # For each of the inherited interfaces, check their repoId strings
@@ -424,14 +435,14 @@ class _impl_I(Class):
         if inherited_name.needFlatName(self._environment):
           inherited_str = inherited_name.flatName()
           impl_inherited_str = impl_inherited_name.flatName()
-        stream.out(skel.template.interface_impl_repoID,
+        stream.out(omniidl_be.cxx.skel.template.interface_impl_repoID,
                    inherited_name = inherited_str,
                    impl_inherited_name = impl_inherited_str)
 
     node_name = self.interface().name()
     impl_name = node_name.prefix("_impl_")
 
-    stream.out(skel.template.interface_impl,
+    stream.out(omniidl_be.cxx.skel.template.interface_impl,
                impl_fqname = impl_name.fullyQualify(),
                uname = node_name.simple(),
                dispatch = dispatch,
@@ -458,7 +469,7 @@ class _sk_I(Class):
     if self.interface().inherits() == []:
       sk_inherits   = [ "public virtual omniOrbBoaServant" ]
 
-    stream.out(header.template.interface_sk,
+    stream.out(omniidl_be.cxx.header.template.interface_sk,
                name = self.interface().name().simple(),
                inherits = string.join(sk_inherits, ",\n"))
 
