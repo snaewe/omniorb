@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.20.2.3  2003/07/10 21:54:47  dgrisby
+# Missed methods in ValueAbs.
+#
 # Revision 1.20.2.2  2003/05/20 16:53:17  dgrisby
 # Valuetype marshalling support.
 #
@@ -943,10 +946,13 @@ Functions:
   supports()     -- list of Interface objects which this supports.
   contents()     -- list of Decl objects for declarations within this
                     valuetype.
-  declarations() -- subset of contents() containing types, constants and
-                    exceptions.
+  declarations() -- subset of contents() containing types, constants
+                    and exceptions.
   callables()    -- subset of contents() containing Operations and
-                    Attributes."""
+                    Attributes.
+  statemembers() -- subset of contents() containing StateMembers.
+  factories()    -- subset of contents() containing Factory instances.
+  """
 
     def __init__(self, file, line, mainFile, pragmas, comments,
                  identifier, scopedName, repoId,
@@ -960,16 +966,28 @@ Functions:
         self.__contents     = []
         self.__declarations = []
         self.__callables    = []
+        self.__statemembers = []
+        self.__factories    = []
 
     def _setContents(self, contents):
         self.__contents     = contents
         self.__declarations = filter(lambda c: not \
                                      (isinstance(c, Attribute) or
-                                      isinstance(c, Operation)),
+                                      isinstance(c, Operation) or
+                                      isinstance(c, StateMember) or
+                                      isinstance(c, Factory)),
                                      contents)
         self.__callables    = filter(lambda c: \
                                      (isinstance(c, Attribute) or
                                       isinstance(c, Operation)),
+                                     contents)
+
+        self.__statemembers = filter(lambda c: \
+                                     (isinstance(c, StateMember)),
+                                     contents)
+
+        self.__factories    = filter(lambda c: \
+                                     (isinstance(c, Factory)),
                                      contents)
 
     def accept(self, visitor): visitor.visitValueAbs(self)
@@ -979,6 +997,8 @@ Functions:
     def contents(self):     return self.__contents
     def declarations(self): return self.__declarations
     def callables(self):    return self.__callables
+    def statemembers(self): return self.__statemembers
+    def factories(self):    return self.__factories
 
 
 class Value (Decl, DeclRepoId):
