@@ -1,3 +1,13 @@
+Fri Dec 12 20:04:17 GMT 1997 sll
+================================
+
+- Define the proper prefix pragma in Naming.idl
+- Old binaries with the stub from the old Naming.idl would not be able
+  to contact the naming service compiled with the new Naming.idl!!!!
+
+src/lib/omniORB2/Naming.idl
+
+
 Fri Dec 12 19:54:46 GMT 1997 sll
 ================================
 
