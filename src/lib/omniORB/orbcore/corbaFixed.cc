@@ -28,6 +28,9 @@
 //    Implementation of the fixed point type
 
 // $Log$
+// Revision 1.1.2.13  2003/06/02 13:26:14  dgrisby
+// Silly bug in fixed division when result has leading zeros.
+//
 // Revision 1.1.2.12  2003/02/25 12:35:20  dgrisby
 // Typo in assertion.
 //
@@ -1017,7 +1020,7 @@ realDiv(const CORBA::Fixed& a, const CORBA::Fixed& b, CORBA::Boolean negative)
 
   // Skip an initial zero if we weren't expecting one
   if (unscale >= 0) {
-    while (work[wi] == 0) {
+    while (work[wi] == 0 && unscale > 0) {
       --wi; --unscale;
     }
   }
