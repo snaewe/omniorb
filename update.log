@@ -1,3 +1,13 @@
+Fri Aug 11 14:52:49 BST 2000 sll
+================================
+
+- Fixed queue handling bug in DII interface. If responses to 
+  send_multiple_requests_deferred() come back not in the order as the
+  requests are sent, the internal request queue may be corrupted.
+
+src/lib/omniORB2/dynamic/orbMultiRequest.cc
+
+
 Fri Aug 11 14:40:57 BST 2000 sll
 ================================
 
