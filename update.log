@@ -1,3 +1,20 @@
+Wed Sep 12 20:39:58 BST 2001 sll
+================================
+
+- GIOP message size limit is enforced with GIOP 1.1 and 1.2 as well
+
+include/omniORB4/minorCode.h
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+- Added back function to report max. GIOP message size.
+
+include/omniORB4/omniORB.h
+src/lib/omniORB/orbcore/omniORB.cc
+
+
+
 Mon Sep 10 18:37:45 BST 2001 sll
 ================================
 
