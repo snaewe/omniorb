@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.44  2003/07/30 14:23:35  dgrisby
+  Fix various race conditions in ORB shutdown.
+
   Revision 1.33.2.43  2003/06/02 13:26:59  dgrisby
   Configuration dump error on some platforms.
 
@@ -860,6 +863,11 @@ omniOrbORB::destroy()
 
     if( !pd_shutdown )  do_shutdown(1);
 
+    if( pd_destroyed ) {
+      omniORB::logs(15, "ORB destroyed by another thread.");
+      return;
+    }
+
     // Call detach method of the initialisers in reverse order.
     omni_hooked_initialiser_.detach();
     omni_uri_initialiser_.attach();
@@ -966,6 +974,9 @@ omniOrbORB::actual_shutdown()
   ASSERT_OMNI_TRACEDMUTEX_HELD(orb_lock, 1);
   OMNIORB_ASSERT(pd_shutdown_in_progress);
 
+  //?? Is is safe to unlock orb_lock here?
+  orb_lock.unlock();
+
   // Shutdown object adapters.  When this returns all
   // outstanding requests have completed.
   omniOrbPOA::shutdown();
@@ -977,20 +988,18 @@ omniOrbORB::actual_shutdown()
   omniObjRef::_shutdown();
 
   // Wait for all client requests to complete
-  //?? Is is safe to unlock orb_lock here?
-  orb_lock.unlock();
   omniIdentity::waitForLastIdentity();
-  orb_lock.lock();
 
   omniORB::logs(10, "ORB shutdown is complete.");
 
+  orb_lock.lock();
   pd_shutdown = 1;
+
+  // Wake up threads stuck in run().
+  orb_signal.broadcast();
 
   // Wake up main thread if there is one running
   shutdownAsyncInvoker();
-
-  // Wake up everyone else stuck in run().
-  orb_signal.broadcast();
 }
 
 
@@ -1019,6 +1028,10 @@ omniOrbORB::do_shutdown(CORBA::Boolean wait_for_completion)
       orb_n_blocked_in_run++;
       while( !pd_shutdown )  orb_signal.wait();
       orb_n_blocked_in_run--;
+      omniORB::logs(15, "ORB shutdown complete -- finished waiting.");
+    }
+    else {
+      omniORB::logs(15, "ORB shutdown already in progress -- nothing to do.");
     }
     return;
   }
@@ -1079,6 +1092,7 @@ ORBAsyncInvoker::perform(unsigned long secs, unsigned long nanosecs)
 	if (invoker_signal.timedwait(secs, nanosecs) == 0) {
 	  // timeout
 	  invoker_threads--;
+	  if (invoker_shutting_down) invoker_signal.signal();
 	  orb_lock.unlock();
 	  return;
 	}
@@ -1105,6 +1119,7 @@ ORBAsyncInvoker::perform(unsigned long secs, unsigned long nanosecs)
   OMNIORB_ASSERT(omniTaskLink::is_empty(invoker_dedicated_tq));
 
   invoker_threads--;
+  if (invoker_shutting_down) invoker_signal.signal();
   orb_lock.unlock();
 }
 
@@ -1501,6 +1516,12 @@ public:
 
   void detach() {
     if (orbAsyncInvoker) {
+      if (invoker_threads) {
+	omniORB::logs(20, "Wait for ORB invoker threads to finish.");
+	while (invoker_threads)
+	  invoker_signal.wait();
+	omniORB::logs(20, "All ORB invoker threads finished.");
+      }
       delete orbAsyncInvoker;
       orbAsyncInvoker = 0;
       invoker_shutting_down = 0;
