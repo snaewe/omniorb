@@ -79,14 +79,52 @@ PortableServer::DynamicImplementation::_is_a(const char* logical_type_id)
 }
 
 
+class omni_DynamicImplementation_ResultMarshaller : public giopMarshaller {
+public:
+  omni_DynamicImplementation_ResultMarshaller(omniServerRequest& req) :
+    pd_req(req) {}
+
+  void marshal(cdrStream& s) {
+    pd_req.result().NP_marshalDataOnly(s);
+    for( CORBA::ULong j = 0; j < pd_req.params()->count(); j++ ){
+      CORBA::NamedValue_ptr arg = pd_req.params()->item(j);
+      if( arg->flags() & CORBA::ARG_OUT ||
+	  arg->flags() & CORBA::ARG_INOUT )
+	arg->value()->NP_marshalDataOnly(s);
+    }
+  }
+
+private:
+  omniServerRequest& pd_req;
+
+};
+
+class omni_DynamicImplementation_ExceptionMarshaller : public giopMarshaller {
+public:
+  omni_DynamicImplementation_ExceptionMarshaller(omniServerRequest& req) :
+    pd_req(req) {}
+
+  void marshal(cdrStream& s) {
+    CORBA::TypeCode_var tc = pd_req.exception().type();
+    _CORBA_String_helper::marshal(tc->id(),s);
+    pd_req.exception().NP_marshalDataOnly(s);
+  }
+
+private:
+  omniServerRequest& pd_req;
+
+};
+
 _CORBA_Boolean
 PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
 {
+  const char* op = giop_s.invokeInfo().operation();
+
   // We do not want to handle standard object operations ...
-  if( !strcmp(giop_s.operation(), "_is_a"          ) ||
-      !strcmp(giop_s.operation(), "_non_existent"  ) ||
-      !strcmp(giop_s.operation(), "_interface"     ) ||
-      !strcmp(giop_s.operation(), "_implementation") )
+  if( !strcmp(op, "_is_a"          ) ||
+      !strcmp(op, "_non_existent"  ) ||
+      !strcmp(op, "_interface"     ) ||
+      !strcmp(op, "_implementation") )
     return 0;
 
   omniServerRequest sreq(giop_s);
@@ -112,54 +150,27 @@ PortableServer::DynamicImplementation::_dispatch(GIOP_S& giop_s)
   case omniServerRequest::SR_GOT_PARAMS:
   case omniServerRequest::SR_GOT_CTX:
   case omniServerRequest::SR_GOT_RESULT:
-    if( giop_s.response_expected() ){
-      // Calculate the message size.
-      CORBA::ULong msgsize = (CORBA::ULong) GIOP_S::ReplyHeaderSize();
-      msgsize = sreq.result().NP_alignedDataOnlySize(msgsize);
-      CORBA::ULong num_args = sreq.params()->count();
-      for( CORBA::ULong i = 0; i < num_args; i++ ){
-	CORBA::NamedValue_ptr arg = sreq.params()->item(i);
-	if( arg->flags() & CORBA::ARG_OUT ||
-	    arg->flags() & CORBA::ARG_INOUT )
-	  msgsize = arg->value()->NP_alignedDataOnlySize(msgsize);
-      }
+    if( giop_s.invokeInfo().response_expected() ){
 
-      giop_s.InitialiseReply(GIOP::NO_EXCEPTION, msgsize);
-
-      // Marshal the result and OUT/INOUT parameters.
-      sreq.result().NP_marshalDataOnly(giop_s);
-      for( CORBA::ULong j = 0; j < num_args; j++ ){
-	CORBA::NamedValue_ptr arg = sreq.params()->item(j);
-	if( arg->flags() & CORBA::ARG_OUT ||
-	    arg->flags() & CORBA::ARG_INOUT )
-	  arg->value()->NP_marshalDataOnly(giop_s);
-      }
+      omni_DynamicImplementation_ResultMarshaller m(sreq);
+      giop_s.InitialiseReply(GIOP::NO_EXCEPTION, m);
     }
     break;
 
   case omniServerRequest::SR_EXCEPTION:  // User & System exception
-    if( giop_s.response_expected() ){
-      int msgsize = GIOP_S::ReplyHeaderSize();
-
-      CORBA::TypeCode_var tc = sreq.exception().type();
-
-      // Exception TypeCodes are guarenteed to have a non-empty id().
-      const char* intfRepoId = tc->id();
-      CORBA::ULong len = strlen(intfRepoId) + 1;
-      msgsize = omni::align_to(msgsize, omni::ALIGN_4) + 4 + len;
-      msgsize = sreq.exception().NP_alignedDataOnlySize(msgsize);
-
+    if( giop_s.invokeInfo().response_expected() ){
+      GIOP::ReplyStatusType status;
       if (isaSystemException(&sreq.exception()))
-	giop_s.InitialiseReply(GIOP::SYSTEM_EXCEPTION, msgsize);
+	status = GIOP::SYSTEM_EXCEPTION;
       else
-	giop_s.InitialiseReply(GIOP::USER_EXCEPTION, msgsize);
+	status = GIOP::USER_EXCEPTION;
 
-      len >>= giop_s;
-      giop_s.put_char_array((CORBA::Char*)intfRepoId, len);
-      sreq.exception().NP_marshalDataOnly(giop_s);
+      omni_DynamicImplementation_ExceptionMarshaller m(sreq);
+      giop_s.InitialiseReply(status, m);
     }
-    else
-      giop_s.SendMsgErrorMessage();
+    else {
+      OMNIORB_THROW(UNKNOWN,0,CORBA::COMPLETED_NO);
+    }
     break;
 
   case omniServerRequest::SR_DSI_ERROR:
@@ -221,7 +232,7 @@ PortableServer::DynamicImplementation::_do_get_interface()
 
   // Make a call to the interface repository.
   omniStdCallDesc::_cCORBA_mObject_i_cstring
-    call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, 0, repoId);
+    call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, repoId);
   repository->_PR_getobj()->_invoke(call_desc);
 
   return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
