@@ -1,3 +1,25 @@
+Fri Oct 16 12:26:39 BST 1998 sll
+================================
+
+- omniidl2 bug fix
+
+  Compiler generates wrong stub for the following IDL:
+
+   union X switch (boolean) {
+     case TRUE: short s;
+   };
+
+   union U switch (long) {
+      case 1: long x;
+      case 2: X    y[2];
+   };
+
+   The data member of x is missing in the stub.
+
+src/tool/omniidl2/omniORB2_be/o2be_union.cc
+
+
+
 Wed Oct 14 15:11:44 BST 1998 sll
 ================================
 
