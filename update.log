@@ -1,3 +1,46 @@
+Tue Jan 15 16:24:22 GMT 2002 dpg1
+=================================
+
+- On the road to autoconf. Dependencies refactored, configure.ac
+  written. No makefiles yet.
+
+acinclude.m4      		      -- new
+aclocal.m4        		      -- new
+configure.ac      		      -- new
+external_merge/mk/beforedir.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+include/omniORB4/CORBA_basetypes.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/CORBA_sysdep_auto.h  -- new
+include/omniORB4/CORBA_sysdep_trad.h  -- new
+mk/unix.mk
+mk/win32.mk
+src/appl/omniNames/log.cc
+src/appl/omniNames/omniNames.cc
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/appl/utils/genior/genior.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/include/SocketCollection.h
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/exception.cc
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/unix/unixAddress.cc
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+src/tool/omniidl/cxx/idlfixed.h
+src/tool/omniidl/cxx/idlmath.h
+src/tool/omniidl/cxx/idlsysdep.h
+src/tool/omniidl/cxx/idlutil.cc
+src/tool/omniidl/cxx/idlutil.h
+src/tool/omniidl/cxx/cccp/config.h
+
+
 Wed Jan  9 11:22:19 GMT 2002 dpg1
 =================================
 
