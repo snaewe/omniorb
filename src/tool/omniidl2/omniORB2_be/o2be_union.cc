@@ -11,10 +11,14 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/13 15:19:51  sll
-  New member function produce_typedef_hdr(). Called when a typedef declaration
-  is encountered.
+  Revision 1.3  1997/02/17 18:15:36  ewc
+  Fixed bug where empty union private data member was generated for
+  fixed-size unions.
 
+// Revision 1.2  1997/01/13  15:19:51  sll
+// New member function produce_typedef_hdr(). Called when a typedef declaration
+// is encountered.
+//
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -430,13 +434,13 @@ o2be_union::produce_hdr(fstream &s)
 	    ntype =  o2be_operation::ast2ArgMapping(f->field_type(),
 					   o2be_operation::wResult,mapping);
 
-	    if (ntype != o2be_operation::tString ||
-		ntype != o2be_operation::tObjref ||
-		ntype != o2be_operation::tStructVariable ||
-		ntype != o2be_operation::tUnionVariable ||
-		ntype != o2be_operation::tUnionFixed ||
-		ntype != o2be_operation::tSequence ||
-		ntype != o2be_operation::tArrayVariable ||
+	    if (ntype != o2be_operation::tString &&
+		ntype != o2be_operation::tObjref &&
+		ntype != o2be_operation::tStructVariable &&
+		ntype != o2be_operation::tUnionVariable &&
+		ntype != o2be_operation::tUnionFixed &&
+		ntype != o2be_operation::tSequence &&
+		ntype != o2be_operation::tArrayVariable &&
 		ntype != o2be_operation::tAny)
 	      {
 		has_fix_member = I_TRUE;
