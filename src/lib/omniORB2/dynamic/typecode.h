@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.8.6.3  1999/10/14 17:31:34  djr
+ * Minor corrections.
+ *
  * Revision 1.8.6.2  1999/10/14 16:22:04  djr
  * Implemented logging when system exceptions are thrown.
  *
@@ -64,6 +67,7 @@
 #define __TYPECODE_H__
 
 #include <omniutilities.h>
+#include <exception.h>
 
 
 ///////////////////////////

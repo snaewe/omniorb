@@ -35,7 +35,6 @@
 
 #include <tcParser.h>
 #include <typecode.h>
-#include <exception.h>
 
 
 #ifndef TRUE
