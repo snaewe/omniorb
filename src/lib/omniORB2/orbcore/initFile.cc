@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.15  1997/12/12 18:42:50  sll
+  New configuration option GATEKEEPER_ALLOWFILE and GATEKEEPER_DENYFILE.
+
   Revision 1.14  1997/12/09 18:21:46  sll
   Fixed memory leaks.
 
@@ -70,6 +73,8 @@
 
 #include <omniORB2/CORBA.h>
 #include <initFile.h>
+
+#include "gatekeeper.h"
 
 #ifndef INIT_ENV_VAR
 #define INIT_ENV_VAR "OMNIORB_CONFIG"    
@@ -218,6 +223,14 @@ void initFile::initialize()
 	      
 	      invref(entryname);
 	    }    
+	}
+      else if (strcmp(entryname, "GATEKEEPER_ALLOWFILE") == 0)
+	{
+	  gateKeeper::allowFile = CORBA::string_dup(data);	  
+	}
+      else if (strcmp(entryname, "GATEKEEPER_DENYFILE") == 0)
+	{
+	  gateKeeper::denyFile = CORBA::string_dup(data);
 	}
       else
 	{
