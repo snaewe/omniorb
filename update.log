@@ -1,4 +1,13 @@
 
+Mon Apr 12 10:07:12 BST 1999 djr
+================================
+
+- Updated omniidl2 version number.
+
+src/tool/omniidl2/omniORB2_be/o2be_root.cc
+src/tool/omniidl2/driver/drv_main.cc
+
+
 Tue Apr  6 09:30:57 BST 1999 djr
 ================================
 
