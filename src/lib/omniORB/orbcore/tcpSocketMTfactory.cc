@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.29.2.3  2000/09/27 18:32:41  sll
+  Use the new reference counting scheme of Strand.
+  New signature findIncoming() and findOrCreateOutgoing().
+  Extra test code to try out multiple threads handling requests from 1
+  connection.
+
   Revision 1.29.2.2  2000/08/21 13:32:32  sll
   rtems port.
 
@@ -206,12 +212,7 @@
 
   */
 
-#include <omniORB3/CORBA.h>
-
-#ifdef HAS_pch
-#pragma hdrstop
-#endif
-
+#include <omniORB4/CORBA.h>
 #include <ropeFactory.h>
 #include <tcpSocket.h>
 #include <exceptiondefs.h>
@@ -298,6 +299,8 @@
 #define USE_NONBLOCKING_CONNECT
 #endif
 
+/////////////////////////////////////////////////////////////////////////////
+
 #define RC_INADDR_NONE     ((CORBA::ULong)-1)
 #define RC_INVALID_SOCKET  (-1)
 #define RC_SOCKET_ERROR    (-1)
@@ -345,6 +348,11 @@ int select (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, stru
   omniORB::logs(15, "tcpSocketMTfactory " prefix ": " message)
 
 
+// Define this macro to enable the code to spawn multiple server threads per
+// connection
+#define TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+
+/////////////////////////////////////////////////////////////////////////////
 class tcpSocketRendezvouser : public omni_thread {
 public:
   tcpSocketRendezvouser(tcpSocketIncomingRope *r,
@@ -361,13 +369,14 @@ private:
   tcpSocketRendezvouser();
 };
 
+
+/////////////////////////////////////////////////////////////////////////////
 class tcpSocketWorker : public omni_thread {
 public:
   tcpSocketWorker(tcpSocketStrand* s, tcpSocketMTincomingFactory* f) : 
-          omni_thread(s), pd_factory(f), pd_sync(s,0,0) 
+          omni_thread(s), pd_factory(f)
     {
       start();
-      s->decrRefCount();
     }
   virtual ~tcpSocketWorker() { 
     omni_mutex_lock sync(pd_factory->pd_shutdown_lock);
@@ -385,7 +394,6 @@ public:
 
 private:
   tcpSocketMTincomingFactory* pd_factory;
-  Strand::Sync    pd_sync;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -401,6 +409,7 @@ tcpSocketMTincomingFactory::tcpSocketMTincomingFactory()
   
 }
  
+/////////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 tcpSocketMTincomingFactory::isIncoming(Endpoint* addr) const
 {
@@ -414,6 +423,7 @@ tcpSocketMTincomingFactory::isIncoming(Endpoint* addr) const
   return 0;
 }
 
+/////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketMTincomingFactory::instantiateIncoming(Endpoint* addr,
 						CORBA::Boolean exportflag)
@@ -433,11 +443,16 @@ tcpSocketMTincomingFactory::instantiateIncoming(Endpoint* addr,
   tcpSocketIncomingRope* r = new tcpSocketIncomingRope(this,0,te,exportflag);
   r->incrRefCount(1);
 
+  CORBA::ULong last = pd_endpoint_list.length();
+  pd_endpoint_list.length(last+1);
+  pd_endpoint_list[last] = r->me;
+  
   if (pd_state == ACTIVE) {
     r->rendezvouser = new tcpSocketRendezvouser(r,this);
   }
 }
 
+/////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketMTincomingFactory::startIncoming()
 {
@@ -462,6 +477,7 @@ tcpSocketMTincomingFactory::startIncoming()
   }
 }
 
+/////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketMTincomingFactory::stopIncoming()
 {
@@ -483,6 +499,7 @@ tcpSocketMTincomingFactory::stopIncoming()
   }
 }
 
+/////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketMTincomingFactory::removeIncoming()
 {
@@ -543,17 +560,18 @@ tcpSocketMTincomingFactory::removeIncoming()
   PTRACE("removeIncoming","Done");
 }
 
+/////////////////////////////////////////////////////////////////////////////
+
 Rope*
-tcpSocketMTincomingFactory::findIncoming(Endpoint* addr) const
+tcpSocketMTincomingFactory::findIncoming(omniIOR* ior) const
 {
-  tcpSocketEndpoint* te = tcpSocketEndpoint::castup(addr);
-  if (!te) return 0;
+  if (ior->selectedRopeFactoryType != getType()) return 0;
 
   Rope_iterator next_rope(&pd_anchor);
   Rope* r;
   while ((r = next_rope()))
     {
-      if (r->this_is(addr)) {
+      if (((tcpSocketIncomingRope*)r)->this_is(ior->iiop.address)) {
 	r->incrRefCount(1);
 	return r;
       }
@@ -561,21 +579,7 @@ tcpSocketMTincomingFactory::findIncoming(Endpoint* addr) const
   return 0;
 }
 
-void 
-tcpSocketMTincomingFactory::getIncomingIOPprofiles(const CORBA::Octet* objkey,
-						   const size_t objkeysize,
-			      IOP::TaggedProfileList& profilelist) const
-{
-  Rope_iterator next_rope(&pd_anchor);
-  tcpSocketIncomingRope* r;
-  while ((r = (tcpSocketIncomingRope*) next_rope()) && r->pd_export) {
-    CORBA::ULong index = profilelist.length();
-    profilelist.length(index+1);
-    tcpSocketFactoryType::singleton->encodeIOPprofile(r->me,objkey,objkeysize,
-						      profilelist[index]);
-  }
-}
-
+/////////////////////////////////////////////////////////////////////////////
 tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 					     unsigned int maxStrands,
 					     tcpSocketEndpoint *e,
@@ -663,7 +667,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 
     e->port(ntohs(myaddr.sin_port));
 
-    if (e->host() == 0 || strlen((const char*)e->host()) == 0) {
+    if (e->host() == 0 || strlen(e->host()) == 0) {
 
       char self[64];
       if (gethostname(&self[0],64) == RC_SOCKET_ERROR) {
@@ -689,7 +693,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
       int ip3 = (int)((ntohl(myaddr.sin_addr.s_addr) & 0x0000ff00) >> 8);
       int ip4 = (int)(ntohl(myaddr.sin_addr.s_addr) & 0x000000ff);
       sprintf(ipaddr,"%d.%d.%d.%d",ip1,ip2,ip3,ip4);
-      e->host((const CORBA::Char *) ipaddr);
+      e->host(ipaddr);
 
     }
     else {
@@ -705,6 +709,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
   me = new tcpSocketEndpoint(e);
 }
 
+/////////////////////////////////////////////////////////////////////////////
 tcpSocketIncomingRope::~tcpSocketIncomingRope()
 {
   PTRACE("~tcpSocketIncomingRope","called");
@@ -718,6 +723,7 @@ tcpSocketIncomingRope::~tcpSocketIncomingRope()
   }
 }
 
+/////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketIncomingRope::cancelThreads()
 {
@@ -744,16 +750,16 @@ tcpSocketIncomingRope::cancelThreads()
       tcpSocketEndpoint* te = (tcpSocketEndpoint*)e;
       myaddr.sin_family = INETSOCKET;
       myaddr.sin_port   = htons(te->port());
-      if (LibcWrapper::isipaddr((char*)te->host())) 
+      if (LibcWrapper::isipaddr(te->host())) 
 	{
-	  CORBA::ULong ip_p = inet_addr((char*) te->host());
+	  CORBA::ULong ip_p = inet_addr(te->host());
 	  memcpy((void*) &myaddr.sin_addr, (void*) &ip_p, sizeof(myaddr.sin_addr));
 	}
       else
 	{
 	  LibcWrapper::hostent_var h;
 	  int  rc;
-	  LibcWrapper::gethostbyname((char*)te->host(),h,rc);
+	  LibcWrapper::gethostbyname(te->host(),h,rc);
 	  memcpy((void*)&myaddr.sin_addr,
 		 (void*)h.hostent()->h_addr_list[0],
 		 sizeof(myaddr.sin_addr));
@@ -798,6 +804,7 @@ tcpSocketIncomingRope::cancelThreads()
   }
 }
 
+/////////////////////////////////////////////////////////////////////////////
 Strand *
 tcpSocketIncomingRope::newStrand()
 {
@@ -818,6 +825,7 @@ tcpSocketMToutgoingFactory::tcpSocketMToutgoingFactory()
   tcpSocketFactoryType::init();
 }
 
+/////////////////////////////////////////////////////////////////////////////
 CORBA::Boolean
 tcpSocketMToutgoingFactory::isOutgoing(Endpoint* addr) const
 {
@@ -831,27 +839,31 @@ tcpSocketMToutgoingFactory::isOutgoing(Endpoint* addr) const
   return 0;
 }
 
+/////////////////////////////////////////////////////////////////////////////
 Rope*
-tcpSocketMToutgoingFactory::findOrCreateOutgoing(Endpoint* addr)
+tcpSocketMToutgoingFactory::findOrCreateOutgoing(omniIOR* ior)
 {
-  tcpSocketEndpoint* te = tcpSocketEndpoint::castup(addr);
-  if (!te) return 0;
+  if (ior->selectedRopeFactoryType != getType()) return 0;
+
+  Rope* r;
+
+  if ((r = auxillaryTransportLookup(ior))) return r;
 
   Rope_iterator next_rope(&pd_anchor);
-  Rope* r;
-  while ((r = next_rope()))
-    {
-      if (r->remote_is(addr)) {
-	r->incrRefCount(1);
-	return r;
-      }
+
+  while ((r = next_rope())) {
+    if (((tcpSocketOutgoingRope*)r)->remote_is(ior->iiop.address)) {
+      r->incrRefCount(1);
+      return r;
     }
-  r = new tcpSocketOutgoingRope(this,omniORB::maxTcpConnectionPerServer,te);
+  }
+  tcpSocketEndpoint te(ior->iiop.address);
+  r = new tcpSocketOutgoingRope(this,omniORB::maxTcpConnectionPerServer,&te);
   r->incrRefCount(1);
   return r;
 }
 
-
+/////////////////////////////////////////////////////////////////////////////
 tcpSocketOutgoingRope::tcpSocketOutgoingRope(tcpSocketMToutgoingFactory* f,
 					     unsigned int maxStrands,
 					     tcpSocketEndpoint *e)
@@ -860,6 +872,7 @@ tcpSocketOutgoingRope::tcpSocketOutgoingRope(tcpSocketMToutgoingFactory* f,
   remote = new tcpSocketEndpoint(e);
 }
 
+/////////////////////////////////////////////////////////////////////////////
 tcpSocketOutgoingRope::~tcpSocketOutgoingRope()
 {
   PTRACE("~tcpSocketOutgoingRope","called");
@@ -869,12 +882,21 @@ tcpSocketOutgoingRope::~tcpSocketOutgoingRope()
   }
 }
 
+/////////////////////////////////////////////////////////////////////////////
 Strand *
 tcpSocketOutgoingRope::newStrand()
 {
   return new tcpSocketStrand(this,remote);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+tcpSocketOutgoingRope::oneCallPerConnection()
+{
+  // Returns 1 to enforce the restriction that there *CANNOT* be more
+  // than one call in progress on the same strand at the same time.
+  return 0;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -890,6 +912,7 @@ static tcpSocketHandle_t realConnect(tcpSocketEndpoint* r,
 				     tcpSocketStrand* s);
 
 
+/////////////////////////////////////////////////////////////////////////////
 tcpSocketStrand::tcpSocketStrand(tcpSocketOutgoingRope *rope,
 				 tcpSocketEndpoint   *r)
   : reliableStreamStrand(tcpSocketStrand::buffer_size,rope),
@@ -911,6 +934,7 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketOutgoingRope *rope,
   // Do the connect on first call to ll_recv or ll_send.
 }
 
+/////////////////////////////////////////////////////////////////////////////
 tcpSocketStrand::tcpSocketStrand(tcpSocketIncomingRope *r,
 				 tcpSocketHandle_t sock)
   : reliableStreamStrand(tcpSocketStrand::buffer_size,r),
@@ -919,6 +943,7 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketIncomingRope *r,
 }
 
 
+/////////////////////////////////////////////////////////////////////////////
 tcpSocketStrand::~tcpSocketStrand() 
 {
   if (omniORB::trace(5)) {
@@ -939,7 +964,7 @@ static inline char printable_char(char c) {
 }
 
 
-static void dumpbuf(unsigned char* buf, size_t sz)
+void dumpbuf(unsigned char* buf, size_t sz)
 {
   static omni_mutex lock;
   omni_mutex_lock sync(lock);
@@ -975,6 +1000,7 @@ static void dumpbuf(unsigned char* buf, size_t sz)
 }
 
 
+/////////////////////////////////////////////////////////////////////////////
 size_t
 tcpSocketStrand::ll_recv(void* buf, size_t sz)
 {
@@ -1076,6 +1102,7 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
   return (size_t)rx;
 }
 
+/////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketStrand::ll_send(void* buf,size_t sz) 
 {
@@ -1147,6 +1174,7 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
 
 
 
+/////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketStrand::real_shutdown()
 {
@@ -1198,6 +1226,7 @@ tcpSocketStrand::real_shutdown()
   return;
 }
 
+/////////////////////////////////////////////////////////////////////////////
 static
 tcpSocketHandle_t
 realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
@@ -1207,9 +1236,9 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
   int  rc;
   tcpSocketHandle_t sock;
 
-  if (! LibcWrapper::isipaddr( (char*) r->host()))
+  if (! LibcWrapper::isipaddr(r->host()))
     {
-      if (LibcWrapper::gethostbyname((char *)r->host(),h,rc) < 0) 
+      if (LibcWrapper::gethostbyname(r->host(),h,rc) < 0) 
 	{
 	  // XXX look at rc to decide what to do or if to give up what errno
 	  // XXX to return EINVAL.
@@ -1227,7 +1256,7 @@ realConnect(tcpSocketEndpoint* r,tcpSocketStrand* s)
     {
       // The machine name is already an IP address
       CORBA::ULong ip_p;
-      if ( (ip_p = inet_addr( (char*) r->host() )) == RC_INADDR_NONE)
+      if ( (ip_p = inet_addr(r->host())) == RC_INADDR_NONE)
 	{
 	  return RC_INVALID_SOCKET;
 	}
@@ -1367,6 +1396,7 @@ extern PFV set_terminate(PFV);
 #endif
 #endif
 
+/////////////////////////////////////////////////////////////////////////////
 void*
 tcpSocketRendezvouser::run_undetached(void *arg)
 {
@@ -1575,6 +1605,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
   return 0;
 }
 
+/////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketWorker::run(void *arg)
 {
@@ -1584,6 +1615,12 @@ tcpSocketWorker::run(void *arg)
   // by calling  _realRun(arg) when it is ready.
 }
 
+/////////////////////////////////////////////////////////////////////////////
+#ifdef TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+static void create_sidekick(tcpSocketStrand*);
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
 void
 tcpSocketWorker::_realRun(void *arg)
 {
@@ -1602,18 +1639,80 @@ tcpSocketWorker::_realRun(void *arg)
   if ( !gateKeeper::checkConnect(s)) {
     s->real_shutdown();
   }
-  else
+  else 
 #endif
     {
+#ifdef TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+      create_sidekick(s);
+#endif
+      while (1) {
+	try {
+
+#ifdef TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+	if (omniORB::trace(25)) {
+	  omniORB::logger l;
+	  l << "Worker dispatch: " << omni_thread::self()->id() << "\n";
+	}
+#endif
+
+	  GIOP_S::dispatcher(s);
+	}
+	catch (omniConnectionBroken&) {
+	  PTRACE("Worker","#### Connection closed.");
+	  break;
+	}
+	catch(const omniORB::fatalException& ex) {
+	  if( omniORB::trace(0) ) {
+	    omniORB::logger l;
+	    l << "You have caught an omniORB bug, details are as follows:\n"
+	      " file: " << ex.file() << "\n"
+	      " line: " << ex.line() << "\n"
+	      " mesg: " << ex.errmsg() << "\n";
+	  }
+	  break;
+	}
+	catch (...) {
+	  omniORB::logs(0, "An exception has occured and was caught by"
+			" tcpSocketMT Worker thread.");
+	  break;
+	}
+      }
+    }
+
+  s->decrRefCount();
+
+  PTRACE("Worker","exit.");
+}
+
+
+#ifdef TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
+
+class sideKick : public omni_thread {
+public:
+  sideKick(tcpSocketStrand* s) : 
+          omni_thread(s)
+    {
+      start();
+    }
+  virtual ~sideKick() {
+  }
+  virtual void run(void *arg) {
+    tcpSocketStrand* s = (tcpSocketStrand*)arg;
+    PTRACE("SideKick","start.");
     while (1) {
       try {
+
+	if (omniORB::trace(25)) {
+	  omniORB::logger log;
+	  log << "SideKick dispatch: " << omni_thread::self()->id() << "\n";
+	}
 	GIOP_S::dispatcher(s);
       }
       catch (omniConnectionBroken&) {
-	PTRACE("Worker","#### Connection closed.");
+	PTRACE("SideKick","Connection closed.");
 	break;
       }
-      catch(const omniORB::fatalException& ex) {
+      catch(const omniORB::fatalException &ex) {
 	if( omniORB::trace(0) ) {
 	  omniORB::logger l;
 	  l << "You have caught an omniORB bug, details are as follows:\n"
@@ -1624,12 +1723,33 @@ tcpSocketWorker::_realRun(void *arg)
 	break;
       }
       catch (...) {
-	omniORB::logs(0, "An exception has occured and was caught by"
-		      " tcpSocketMT Worker thread.");
+	if (omniORB::trace(0)) {
+	  omniORB::logger log("omniORB: tcpSocketMTfactory SideKick: ");
+	  log << "Caught a system exception.\n";
+	}
 	break;
       }
     }
+    s->decrRefCount();
+    if (omniORB::trace(25)) {
+      omniORB::logger log;
+      log << "SideKick exit: " << omni_thread::self()->id() << "\n";
+    }
   }
+};
 
-  PTRACE("Worker","exit.");
+static
+void create_sidekick(tcpSocketStrand* s)
+{
+  sideKick* k;
+  s->incrRefCount();
+  k = new sideKick(s);
+  s->incrRefCount();
+  k = new sideKick(s);
+  s->incrRefCount();
+  k = new sideKick(s);
+  s->incrRefCount();
+  k = new sideKick(s);
 }
+
+#endif // TESTING_MULTIPLE_WORKER_THREADS_PER_CONNECTION
