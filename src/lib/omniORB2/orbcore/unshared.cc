@@ -14,9 +14,12 @@
 
 /*
   $Log$
-  Revision 1.3  1997/03/10 12:10:46  sll
-  Minor changes to accomodate the creation of a public API for omniORB2.
+  Revision 1.4  1997/04/22 17:33:59  sll
+  Added omniORB::strictIIOP.
 
+// Revision 1.3  1997/03/10  12:10:46  sll
+// Minor changes to accomodate the creation of a public API for omniORB2.
+//
 // Revision 1.2  1997/02/19  11:07:58  ewc
 // Added support for Windows NT. Ensures that Naming stubs are linked into
 // library.
@@ -50,6 +53,8 @@ CORBA::Boolean      omni::orb_initialised = 0;
 CORBA::Boolean      omni::boa_initialised = 0;
 
 CORBA::ULong        omniORB::traceLevel = 1;
+
+CORBA::Boolean      omniORB::strictIIOP = 0;
 
 initFile*	    omni::configFile = 0;
 
