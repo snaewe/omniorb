@@ -111,7 +111,7 @@ libname = $(patsubst %.dll,%,$(lib))
 endif
 
 #############################################################################
-#   Make rules for to Solaris 2.x                                           #
+#   Make rules for  Solaris 2.x                                             #
 #############################################################################
 
 ifdef SunOS
@@ -150,7 +150,7 @@ endif
 endif
 
 #############################################################################
-#   Make rules for to Digital Unix                                          #
+#   Make rules for  Digital Unix                                            #
 #############################################################################
 
 ifdef OSF1
@@ -191,7 +191,7 @@ endif
 endif
 
 #############################################################################
-#   Make rules for to IBM AIX                                               #
+#   Make rules for IBM AIX                                                  #
 #############################################################################
 
 ifdef AIX
@@ -319,4 +319,44 @@ export:: $(implib)
 export::
 	@$(MakeSubdirs)
 
+endif
+
+#############################################################################
+#   Make rules for HPUX                                                     #
+#############################################################################
+
+ifdef HPUX
+ifeq ($(notdir $(CXX)),aCC)
+
+DIR_CPPFLAGS += +z
+
+libname = libomnithread.sl
+soname  = $(libname).$(minor_version)
+lib     = $(soname).$(micro_version)
+
+all:: $(lib)
+
+
+$(lib): $(OBJS)
+	(set -x; \
+        $(RM) $@; \
+         aCC -b -Wl,+h$(soname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
+         $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
+         $(filter-out $(LibSuffixPattern),$^)  -ldce -loodce -lcma ; \
+       )
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
 endif
