@@ -13,11 +13,14 @@
 
 /*
   $Log$
-  Revision 1.5  1997/03/10 13:53:46  sll
-  tcpSocketRope ctor now returns the passive endpoint created by
-  the tcpSocketRendezvous ctor. The value is returned via the argument
-  Endpoint *e.
+  Revision 1.6  1997/03/26 18:21:58  ewc
+  Added support for new -ORBtraceLevel option.
 
+// Revision 1.5  1997/03/10  13:53:46  sll
+// tcpSocketRope ctor now returns the passive endpoint created by
+// the tcpSocketRendezvous ctor. The value is returned via the argument
+// Endpoint *e.
+//
 // Revision 1.4  1997/02/19  11:04:22  ewc
 // Small change to output message.
 //
@@ -154,7 +157,9 @@ else
     pd_ipfilep = NULL;
     do
       {
-	kprintf("TCP connect attempt: %d.\n",retry);
+	if (omniORB::traceLevel >= 5) {
+	  kprintf("TCP connect attempt: %d.\n",retry);
+	}
 	pd_ipfilep = fopen(ipfstr,"wb+");
 
       }
@@ -360,8 +365,10 @@ tcpSocketStrand::receive_and_copy(Strand::sbuf b)
   while (sz) {
     int rx;
 #ifdef TRACE_RECV
-    kprintf("tcpSocketStrand::receive_and_copy--- fread(). size = %d\n",
+    if (omniORB::traceLevel >= 10) {
+      kprintf("tcpSocketStrand::receive_and_copy--- fread(). size = %d\n",
 	      (int) sz);
+    }
 #endif
 
     rx = fread((void*) p,1,sz,pd_ipfilep);
@@ -380,7 +387,9 @@ tcpSocketStrand::receive_and_copy(Strand::sbuf b)
       }
 
 #ifdef TRACE_RECV
-    kprintf("tcpSocketStrand::receive_and_copy-- %d bytes\n",rx);
+    if (omniORB::traceLevel >= 10) {
+      kprintf("tcpSocketStrand::receive_and_copy-- %d bytes\n",rx);
+    }
 #endif
     sz -= rx;
     p += rx;
@@ -420,7 +429,9 @@ tcpSocketStrand::fetch()
   int rx;
 
 #ifdef TRACE_RECV
-  kprintf("tcpSocketStrand::fetch bsz = %d\n",(int) bsz);
+    if (omniORB::traceLevel >= 10) {
+      kprintf("tcpSocketStrand::fetch bsz = %d\n",(int) bsz);
+    }
 #endif
  
     if (net_receive(pd_ipfilep,(BYTE*) pd_rx_end,(int) bsz,&rx) != 0) 
@@ -438,7 +449,9 @@ tcpSocketStrand::fetch()
       }
 
 #ifdef TRACE_RECV
-  kprintf("tcpSocketStrand::fetched -- %d bytes.\n",rx);
+    if (omniORB::traceLevel >= 10) {
+      kprintf("tcpSocketStrand::fetched -- %d bytes.\n",rx);
+    }
 #endif
 
   pd_rx_end = (void *)((omni::ptr_arith_t) pd_rx_end + rx);
@@ -549,7 +562,9 @@ tcpSocketStrand::reserve_and_copy(Strand::sbuf b,
   char *p = (char *)b.buffer;
   while (sz) {
 #ifdef TRACE_SEND
-    kprintf("tcpSocketStrand::reserve_and_copy-- send %d bytes\n",sz);
+    if (omniORB::traceLevel >= 10) {
+      kprintf("tcpSocketStrand::reserve_and_copy-- send %d bytes\n",sz);
+    }
 #endif
     tx = fwrite(p,1,sz,pd_ipfilep);
     fflush(pd_ipfilep);
@@ -588,8 +603,9 @@ tcpSocketStrand::transmit()
   char *p = (char *)pd_tx_begin;
   while (sz) {
 #ifdef TRACE_SEND
-    kprintf("tcpSocketStrand::transmit-- send %d bytes\n", sz);
-
+    if (omniORB::traceLevel >= 10) {
+      kprintf("tcpSocketStrand::transmit-- send %d bytes\n", sz);
+    }
 #endif
     tx = fwrite(p,1,sz,pd_ipfilep);
     fflush(pd_ipfilep);
