@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.7  2002/03/13 17:41:42  dpg1
+# omniidl had problems finding omnicpp on Windows.
+#
 # Revision 1.17.2.6  2002/02/18 11:59:23  dpg1
 # Full autoconf support.
 #
@@ -125,9 +128,14 @@ if hasattr(_omniidl, "__file__"):
 else:
     preprocessor_path = os.path.dirname(sys.argv[0])
 
+if sys.platform == "win32":
+    exe_suffix = ".exe"
+else:
+    exe_suffix = ""
+
 if sys.platform != "OpenVMS":
     preprocessor = os.path.join(preprocessor_path, "omnicpp")
-    if not os.path.isfile(preprocessor):
+    if not os.path.isfile(preprocessor + exe_suffix):
         # Try getting omnicpp from the PATH
         preprocessor = "omnicpp"
         

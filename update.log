@@ -1,3 +1,11 @@
+Wed Mar 13 17:38:53 GMT 2002 dpg1
+=================================
+
+- omniidl had problems finding omnicpp on Windows.
+
+src/tool/omniidl/python/omniidl/main.py
+
+
 Wed Mar 13 16:02:21 GMT 2002 dpg1
 =================================
 
