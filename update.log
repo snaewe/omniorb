@@ -1,3 +1,12 @@
+Wed Oct 30 16:41:56 GMT 2002 dgrisby
+====================================
+
+- Log flush broken when using log function.
+
+bugfixes-400.xml
+src/lib/omniORB/orbcore/logIOstream.cc
+
+
 Mon Oct 28 13:40:25 GMT 2002 dgrisby
 ====================================
 

@@ -8,6 +8,15 @@
 
 <buglist version="4.0.0">
 
+<bug id="5" date="Wed Oct 30 16:41:56 GMT 2002" user="dgrisby">
+  <summary>Log flush bug</summary>
+  <reported>John Fardo</reported>
+  <text>
+  The omniORB logger's flush function did not use the application
+  supplied log function.
+  </text>
+</bug>
+
 <bug id="4" date="Mon Oct 14 15:48:35 BST 2002" user="dgrisby">
   <summary>Object ids not unique in PERSISTENT SYSTEM_ID POAs</summary>
   <reported>Bjorn Rohde Jensen</reported>
