@@ -1,3 +1,15 @@
+Fri Aug 15 11:52:57 BST 2003 dgrisby
+====================================
+
+- Avoid bool representation problem with Python 2.3.
+
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+
+- Rearrange code to avoid SGI compiler bug.
+
+src/lib/omniORB/orbcore/proxyFactory.cc
+
+
 Thu Aug  7 00:54:21 BST 2003 dgrisby
 ====================================
 

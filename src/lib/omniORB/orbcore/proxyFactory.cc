@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2003/08/15 10:55:07  dgrisby
+  Rearrange code to avoid SGI compiler bug.
+
   Revision 1.2.2.6  2003/03/03 15:00:52  dgrisby
   Safe unloading of proxy object factories. Thanks Christian Perez.
 
@@ -127,42 +130,46 @@ proxyObjectFactory::~proxyObjectFactory()
   // reference to the final cleanup object. Just to be safe, we check
   // the list still exists, and do nothing if it has already been
   // deleted.
-  if (!ofl) return;
 
-  OMNIORB_ASSERT(pd_repoId);
+  // This code used to do "if (!ofl) return;", but that triggered a
+  // bug in SGI's compiler.
 
-  omni_tracedmutex_lock sync(*ofl_mutex);
+  if (ofl) {
+    OMNIORB_ASSERT(pd_repoId);
 
-  // Binary search to find the factory.
+    omni_tracedmutex_lock sync(*ofl_mutex);
 
-  int bottom = 0;
-  int top = ofl_len;
-  int pos = -1;
-  while( bottom < top ) {
+    // Binary search to find the factory.
 
-    int middle = (bottom + top) / 2;
+    int bottom = 0;
+    int top = ofl_len;
+    int pos = -1;
+    while( bottom < top ) {
 
-    int cmp = strcmp(pd_repoId, ofl[middle]->pd_repoId);
+      int middle = (bottom + top) / 2;
 
-    if( cmp < 0 )       top = middle;
-    else if( cmp > 0 )  bottom = middle + 1;
-    else                { pos = middle; break; }
-  }
+      int cmp = strcmp(pd_repoId, ofl[middle]->pd_repoId);
 
-  // sanity check
-  if (pos == -1) {
-    if( omniORB::trace(2) ) {
-      omniORB::logger l;
-      l << "Could not find proxyObjectFactory " << pd_repoId
-	<< " within its desctructor at "
-	<< __FILE__ << ": line " << __LINE__ << "\n";
+      if( cmp < 0 )       top = middle;
+      else if( cmp > 0 )  bottom = middle + 1;
+      else                { pos = middle; break; }
     }
-  }
-  else {
-    // remove it by shifting all pointers
-    ofl_len--;
-    for (int i=pos; i < ofl_len; i++)
-      ofl[i] = ofl[i+1];
+
+    // sanity check
+    if (pos == -1) {
+      if( omniORB::trace(2) ) {
+	omniORB::logger l;
+	l << "Could not find proxyObjectFactory " << pd_repoId
+	  << " within its desctructor at "
+	  << __FILE__ << ": line " << __LINE__ << "\n";
+      }
+    }
+    else {
+      // remove it by shifting all pointers
+      ofl_len--;
+      for (int i=pos; i < ofl_len; i++)
+	ofl[i] = ofl[i+1];
+    }
   }
 }
 
