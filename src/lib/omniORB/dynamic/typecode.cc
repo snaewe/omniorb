@@ -29,6 +29,9 @@
 
 /*
  * $Log$
+ * Revision 1.38.2.30  2003/03/10 11:13:52  dgrisby
+ * BAD_PARAM with invalid fixed limits.
+ *
  * Revision 1.38.2.29  2003/03/05 15:26:54  dgrisby
  * Missing Fixed typecode unmarshal. Thanks Renzo Tomaselli.
  *
@@ -1511,6 +1514,11 @@ TypeCode_wstring::NP_parameter(CORBA::Long index) const
 TypeCode_fixed::TypeCode_fixed(CORBA::UShort digits, CORBA::Short scale)
   : TypeCode_base(CORBA::tk_fixed)
 {
+  if (digits < 1 || digits > OMNI_FIXED_DIGITS || scale > digits)
+    OMNIORB_THROW(BAD_PARAM,
+		  BAD_PARAM_InvalidFixedPointLimits,
+		  CORBA::COMPLETED_NO);
+
   pd_digits = digits;
   pd_scale  = scale;
 
