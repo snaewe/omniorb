@@ -1,3 +1,12 @@
+Wed Jan 21 21:37:03 GMT 1998 bjh
+================================
+
+- Bug fixes of java build mechanism
+
+src/java/UK/co/orl/dir.mk
+src/java/UK/co/orl/weather/dir.mk
+
+
 Wed Jan 21 20:27:48 GMT 1998 bjh
 ================================
 
