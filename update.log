@@ -1,3 +1,27 @@
+Wed Nov 19 00:11:23 GMT 2003 dgrisby
+====================================
+
+- Update RPM specs; pkg-config support.
+
+GNUmakefile.in
+acinclude.m4
+aclocal.m4
+configure
+configure.ac
+contrib/GNUmakefile.in                  -- new
+contrib/RPMs/omniORB.spec
+contrib/pkgconfig/GNUmakefile.in        -- new
+contrib/pkgconfig/omniCOS4.pc.in        -- new
+contrib/pkgconfig/omniCOSDynamic4.pc.in -- new
+contrib/pkgconfig/omniDynamic4.pc.in    -- new
+contrib/pkgconfig/omniORB4.pc.in        -- new
+contrib/pkgconfig/omnithread3.pc.in     -- new
+etc/init.d/omniNames.in                 -- new
+etc/init.d/omninames.in                 -- deleted
+src/appl/omniNames/dir.mk
+src/appl/omniNames/omniNames-daemon.in  -- deleted
+
+
 Wed Nov 12 16:57:16 GMT 2003 dgrisby
 ====================================
 

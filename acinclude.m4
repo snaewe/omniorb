@@ -28,7 +28,6 @@ dnl openssl-root given with --with-openssl
 if test "$omni_cv_openssl_root" = "no"; then
   :
 else
-  AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
   if test "$PKG_CONFIG" != "no" ; then
     PKG_CHECK_MODULES(OPENSSL, openssl,
         [open_ssl_root=`$PKG_CONFIG --variable=prefix openssl`

@@ -22,6 +22,8 @@ AC_PROG_MAKE_SET
 
 AM_PATH_PYTHON
 
+AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+
 AC_LANG(C++)
 
 
@@ -252,6 +254,15 @@ AC_CONFIG_FILES(include/GNUmakefile
 AC_CONFIG_FILES(idl/GNUmakefile
                 idl/COS/GNUmakefile)
 
-AC_CONFIG_FILES(etc/init.d/omninames src/appl/omniNames/omniNames-daemon)
+AC_CONFIG_FILES(etc/init.d/omniNames)
 
-AC_OUTPUT
+AC_CONFIG_FILES(contrib/GNUmakefile
+                contrib/pkgconfig/GNUmakefile)
+
+AC_OUTPUT([
+contrib/pkgconfig/omnithread3.pc
+contrib/pkgconfig/omniORB4.pc
+contrib/pkgconfig/omniDynamic4.pc
+contrib/pkgconfig/omniCOS4.pc
+contrib/pkgconfig/omniCOSDynamic4.pc
+])
