@@ -300,8 +300,14 @@ idl_parse_line_and_file(char *buf)
   for (r++; *r == ' ' || *r == '\t'; r++);
   h = r;
   for (; *r != '\0' && *r != ' ' && *r != '\t'; r++);
-  *r++ = 0;
+  if (*r != '\0') {
+     *r++ = 0;
+  }
   idl_global->set_lineno(idl_atoi(h, 10));
+
+  if (*r == '\0') {
+    return;
+  }
   
   /* Find file name, if present */
   for (; *r != '"'; r++) {
@@ -375,8 +381,15 @@ idl_parse_line_and_file_NT(char *buf)
 
   h = r;
   for (; *r != '\0' && *r != ' ' && *r != '\t'; r++);
-  *r++ = 0;
+  if (*r != '\0') {
+    *r++ = 0;
+  }
   idl_global->set_lineno(idl_atoi(h, 10));
+
+  if (*r == '\0') {
+     return;
+  }
+  
   
   /* Find file name, if present */
   for (; *r != '"'; r++) {
