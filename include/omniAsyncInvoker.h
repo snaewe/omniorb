@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/08/01 10:03:39  dpg1
+  AyncInvoker no longer maintains its own dedicated thread queue.
+  Derived classes must provide the implementation.
+
   Revision 1.1.4.2  2001/06/13 20:06:17  sll
   Minor fix to make the ORB compile with MSVC++.
 
@@ -99,11 +103,12 @@
 #ifdef _MSC_VER
 
 // Using MSVC++ to compile. If compiling library as a DLL,
-// define _OMNIASYNC_DLL. If compiling as a statuc library, define
+// define _OMNIASYNC_DLL. If compiling as a static library, define
 // _WINSTATIC
-// If compiling an application that is to be statically linked to omniAsyncInvoker,
-// define _WINSTATIC (if the application is  to be dynamically linked,
-// there is no need to define any of these macros).
+// If compiling an application that is to be statically linked to
+// omniAsyncInvoker, define _WINSTATIC (if the application is to be
+// dynamically linked, there is no need to define any of these
+// macros).
 
 #if defined (_OMNIASYNC_DLL) && defined(_WINSTATIC)
 #error "Both _OMNIASYNC_DLL and _WINSTATIC are defined."
@@ -165,8 +170,8 @@ class _OMNIASYNC_NTDLL_ omniTask : public omniTaskLink {
  private:
   Category  pd_category;
 
-#ifndef _OMNIASYNC_DLL  // MSVC workaround. Do not define default ctor if dllexport is
-                        // defined.
+#ifndef _OMNIASYNC_DLL  // MSVC workaround. Do not define default ctor if
+			// dllexport is defined.
   omniTask();
 #endif
 
@@ -184,28 +189,37 @@ class _OMNIASYNC_NTDLL_ omniAsyncInvoker {
   // <max> specifies the maximum number of threads the object should
   // spawn to perform tasks in the Anytime category.
 
-  ~omniAsyncInvoker();
+  virtual ~omniAsyncInvoker();
   // Returns only when all the threads doing Anytime tasks have exited.
   // Notice that any tasks still sitting on the pending queue will be
   // discarded quietly.
 
   int insert(omniTask*);
-  // insert the task into the pending queue. The task will be dispatched
-  // according to its category.
+  // insert the task into the pending queue. The task will be
+  // dispatched according to its category. If the task is a
+  // DedicatedThread task, call insert_dedicated() to deal with it.
   //
   // returns 0 if the task cannot be inserted.
   // returns 1 if the task has been inserted successfully.
 
   int cancel(omniTask*);
+  // Cancel a task on the pending queue. If the task is a
+  // DedicatedThread task, call cancel_dedicated() to deal with it.
+  //
   // returns 0 if the task is not found in the pending queue
   // returns 1 if the task is successfully removed from the pending queue.
 
+  virtual int work_pending();
+  // Return 1 if there are DedicatedThread tasks pending, 0 if none.
+  // Default implementation always returns 0.
 
-  void perform(int polling = 0);
-  // Execute the tasks that is in the DedicatedThread category.
-  // if polling is non-zero, blocks within this method until a task is
-  // executed.
-  // else returns immediately if there is no task to execute.
+  virtual void perform(unsigned long secs = 0, unsigned long nanosecs = 0);
+  // Loop performing dedicated thread tasks. If a timeout is
+  // specified, must return when the absolute time passes.
+  // Implementations may return in other circumstances.
+  //
+  // Default implementation aborts!  Don't call this unless you have
+  // overriden it.
 
   friend class omniAsyncWorker;
 
@@ -218,21 +232,28 @@ class _OMNIASYNC_NTDLL_ omniAsyncInvoker {
                                     // control how much trace message is
                                     // emitted to stderr. The higher the no.
                                     // the more verbose it is. Default is 1.
+protected:
 
- private:
+  virtual int insert_dedicated(omniTask*);
+  // Override this in derived classes to support DedicatedThread
+  // tasks. Default version always returns 0.
 
-  unsigned int      pd_keep_working; // 0 means all threads should exit.
-  omni_mutex*       pd_lock;
-  omni_condition*   pd_cond;        // signal this conditional when all
-                                    // the threads serving Anytime tasks are
-                                    // exiting.
-  omniTaskLink      pd_anytime_tq;  // Anytime tasks
-  omniTaskLink      pd_dedicate_tq; // Dedicated thread tasks
-  omniAsyncWorker*  pd_idle_threads; // idle threads ready for Anytime tasks
-  unsigned int      pd_nthreads;   // No. of threads serving Anytime tasks
-  unsigned int      pd_maxthreads; // Max. no. of threads serving Anytime tasks
-  unsigned int      pd_totalthreads; // total no. of threads.
-  unsigned int      pd_dthreads;   // no. of dedicated threads.
+  virtual int cancel_dedicated(omniTask*);
+  // Override this in derived classes to support DedicatedThread
+  // tasks. Default version always returns 0.
+
+private:
+
+  unsigned int     pd_keep_working;// 0 means all threads should exit.
+  omni_mutex*      pd_lock;
+  omni_condition*  pd_cond;        // signal this conditional when all
+                                   // the threads serving Anytime tasks are
+                                   // exiting.
+  omniTaskLink     pd_anytime_tq;  // Anytime tasks
+  omniAsyncWorker* pd_idle_threads;// idle threads ready for Anytime tasks
+  unsigned int     pd_nthreads;    // No. of threads serving Anytime tasks
+  unsigned int     pd_maxthreads;  // Max. no. of threads serving Anytime tasks
+  unsigned int     pd_totalthreads;// total no. of threads.
 };
 
 #endif // __OMNIASYNCINVOKER_H__
