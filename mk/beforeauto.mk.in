@@ -938,6 +938,7 @@ CMAKEDEPEND     += -D_AIX
 CXXMAKEDEPEND   += -D_AIX
 CDEBUGFLAGS      =
 CXXDEBUGFLAGS    =
+CXXLINKOPTIONS  += -brtl -bnoipath -blibpath:/usr/lib:$(prefix)/lib
 
 CXXOPTIONS	= -qstaticinline -qmaxmem=8192 -qlonglong -qlongdouble
 
@@ -951,7 +952,8 @@ OMNITHREAD_LIB += -lpthread
 PythonSHAREDLIB_SUFFIX = so
 
 # this works only for xlc version >= 5
-SharedLibraryPlatformLinkFlagsTemplate = -qmkshrobj
+SharedLibraryPlatformLinkFlagsTemplate = -G -qmkshrobj \
+               -bnoipath -blibpath:/usr/lib:$(prefix)/lib
 
 endif	# compiler not gcc
 endif	# AIX
