@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/05/02 14:20:15  sll
+  Make sure that getStream() is used instead of casting to get a cdrStream
+  from a IOP_C and IOP_S.
+
   Revision 1.1.2.1  2001/04/18 17:26:29  sll
   Big checkin with the brand new internal APIs.
 
@@ -128,6 +132,11 @@ public:
 private:
   IOP_C(const IOP_C&);
   IOP_C& operator=(const IOP_C&);
+
+  operator cdrStream& ();
+  // This is to make sure that we do not have any code that blindly cast
+  // a reference to this object to a cdrStream&. All code should use
+  // getStream() instead.
 };
 
 ////////////////////////////////////////////////////////////////////////

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.6  2001/05/02 14:20:15  sll
+# Make sure that getStream() is used instead of casting to get a cdrStream
+# from a IOP_C and IOP_S.
+#
 # Revision 1.3.2.5  2001/04/19 09:30:11  sll
 #  Big checkin with the brand new internal APIs.
 # Scoped where appropriate with the omni namespace.
@@ -287,12 +291,12 @@ const char* const @call_descriptor@::_user_exns[] = {
   @exception_namelist@
 };
 
-void @call_descriptor@::userException(_OMNI_NS(IOP_C)& giop_client, const char* repoId)
+void @call_descriptor@::userException(_OMNI_NS(IOP_C)& iop_client, const char* repoId)
 {
-  cdrStream& s = (cdrStream&) giop_client;
+  cdrStream& s = iop_client.getStream();
   @exception_block@
   else {
-    giop_client.RequestCompleted(1);
+    iop_client.RequestCompleted(1);
     throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
   }
 }
@@ -350,9 +354,9 @@ interface_impl = """\
 
 
 CORBA::Boolean
-@impl_fqname@::_dispatch(_OMNI_NS(IOP_S)& _giop_s)
+@impl_fqname@::_dispatch(_OMNI_NS(IOP_S)& _iop_s)
 {
-  const char* op = _giop_s.operation_name();
+  const char* op = _iop_s.operation_name();
 
   @dispatch@
   return 0;
@@ -377,7 +381,7 @@ const char*
 """
 
 interface_impl_inherit_dispatch = """\
-if( @impl_inherited_name@::_dispatch(_giop_s) ) {
+if( @impl_inherited_name@::_dispatch(_iop_s) ) {
   return 1;
 }
 """
@@ -401,7 +405,7 @@ catch(@exname@& ex) {
 
 interface_operation_context = """\
 CORBA::Context_var _ctxt;
-_ctxt = CORBA::Context::unmarshalContext(giop_s);
+_ctxt = CORBA::Context::unmarshalContext(iop_s);
 """
 
 interface_operation_dispatch = """\
@@ -410,7 +414,7 @@ if( !strcmp(op, \"@idl_operation_name@\") ) {
   @call_descriptor@ _call_desc(@call_desc_args@);
   @context@
   @prepare_out_args@
-  _upcall(_giop_s,_call_desc);
+  _upcall(_iop_s,_call_desc);
   return 1;
 }
 """

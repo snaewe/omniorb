@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.5  2001/05/02 14:20:15  sll
+# Make sure that getStream() is used instead of casting to get a cdrStream
+# from a IOP_C and IOP_S.
+#
 # Revision 1.1.4.4  2001/04/19 09:30:12  sll
 #  Big checkin with the brand new internal APIs.
 # Scoped where appropriate with the omni namespace.
@@ -663,7 +667,7 @@ class CallDescriptor:
                       "if ( strcmp(repoId, @repoID_str@) == 0 ) {\n" + \
                       "  @exname@ _ex;\n" + \
                       "  _ex <<= s;\n" + \
-                      "  giop_client.RequestCompleted();\n" + \
+                      "  iop_client.RequestCompleted();\n" + \
                       "  throw _ex;\n" + \
                       "}\n",
                       repoID_str = repoID_str, exname = exname)
