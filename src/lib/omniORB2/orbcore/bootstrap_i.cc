@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.9.4.3  1999/10/02 18:21:26  sll
+  Added support to decode optional tagged components in the IIOP profile.
+  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+  Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
   Revision 1.9.4.2  1999/09/25 17:00:19  sll
   Merged changes from omni2_8_develop branch.
 
@@ -251,7 +257,11 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
     IOP::TaggedProfileList p;
     p.length(1);
 
-    t->encodeIOPprofile((Endpoint*)&addr,objkey,4,p[0]);
+    ropeFactoryType::EndpointList addrlist(1);
+    addrlist.length(1);
+    addrlist[0] = &addr;
+
+    t->encodeIOPprofile(addrlist,objkey,4,p[0]);
 
     CORBA::String_var ior(IOP::iorToEncapStr(
 			       CORBA_InitialReferences_IntfRepoID,&p));

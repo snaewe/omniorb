@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.30.4.2  1999/10/02 18:21:28  sll
+  Added support to decode optional tagged components in the IIOP profile.
+  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+  Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
   Revision 1.30.4.1  1999/09/15 20:24:10  sll
   Updated to use const char* casting.
 
@@ -341,6 +347,38 @@ void initFile::initialize()
 	    invref(entryname);
 	  }
 	  bootstrapAgentPort = (CORBA::UShort)port;
+	}
+      else if (strcmp(entryname, "GIOPProxy") == 0)
+	{
+	  if (omniORB::noFirewallNavigation) continue;
+
+	  CORBA::Object_var obj = (CORBA::Object_ptr) omni::stringToObject(data)->_widenFromTheMostDerivedIntf(0);
+	  IOP::TaggedComponent v;
+	  v.tag = IOP::TAG_FIREWALL_TRANS;
+
+	  cdrEncapsulationStream s;
+	  CORBA::ULong l = 1;
+	  l >>= s;
+
+	  l = 0; // FW_MECH_PROXY
+	  l >>= s;
+	  {
+	    cdrEncapsulationStream profile;
+	    CORBA::Object::marshalObjRef(obj,profile);
+	    CORBA::ULong len = profile.bufSize();
+	    len >>= s;
+	    s.put_char_array((CORBA::Char*)profile.bufPtr(),len);
+	  }
+	  {
+	    CORBA::Octet* p; CORBA::ULong max, len;
+	    s.getOctetStream(p,max,len);
+	    v.component_data.replace(max,len,p,1);
+	  }
+	  {
+	    ropeFactoryType* t = ropeFactoryType::findType(tcpSocketEndpoint::protocol_name);
+	    assert(t);
+	    ((tcpSocketFactoryType*)t)->insertOptionalIOPComponent(v);
+	  }
 	}
       else
 	{

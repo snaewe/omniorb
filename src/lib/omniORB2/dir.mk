@@ -5,7 +5,8 @@
 SUBDIRS = orbcore dynamic
 
 
-all:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh omniLifeCycle.hh
+all:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh \
+      omniLifeCycle.hh Firewall.hh
 
 
 export:: Naming.hh
@@ -34,6 +35,9 @@ export:: omniLifeCycle.hh
 	@(file="omniLifeCycle.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
 		$(ExportFileToDir))
 
+export:: Firewall.hh
+	@(file="Firewall.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; \
+		$(ExportFileToDir))
 
 all::
 	@$(MakeSubdirs)
@@ -50,37 +54,42 @@ ifndef OMNIORB2_IDL_FPATH
 OMNIORB2_IDL_FPATH = $(OMNIORB2_IDL)
 endif
 
+ifndef OMNIORB2_IDL_ONLY_FPATH
+OMNIORB2_IDL_ONLY_FPATH = $(OMNIORB2_IDL_ONLY)
+endif
+
+OMNIORB2_IDL_FPATH += $(patsubst %,-I%/idl,$(IMPORT_TREES))
+OMNIORB2_IDL_ONLY_FPATH += $(patsubst %,-I%/idl,$(IMPORT_TREES))
+
 Naming.hh NamingSK.cc NamingDynSK.cc: Naming.idl
-	-if [ "$<" != Naming.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB2_IDL_FPATH) Naming.idl
+	$(OMNIORB2_IDL_FPATH) $^
 
-bootstrap.hh bootstrapSK.cc bootstrapDynSK.cc: bootstrap.idl
-	-if [ "$<" != bootstrap.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB2_IDL_FPATH) bootstrap.idl
+bootstrap.hh bootstrapSK.cc: bootstrap.idl
+	$(OMNIORB2_IDL_ONLY_FPATH) $^
 
-ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc: ir.idl corbaidl_defs.hh
-	-if [ "$<" != ir.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB2_IDL_FPATH) -m -F -I. ir.idl
+ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc: ir.idl
+	$(OMNIORB2_IDL_FPATH) -m -F $(patsubst %.idl,%.idl,$^)
 
 corbaidl_defs.hh corbaidl_operators.hh corbaidlSK.cc corbaidlDynSK.cc: corbaidl.idl
-	-if [ "$<" != corbaidl.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB2_IDL_FPATH) -m -F corbaidl.idl
+	$(OMNIORB2_IDL_FPATH) -m -F $^
 
 omniLifeCycle.hh omniLifeCycleSK.cc omniLifeCycleDynSK.cc: omniLifeCycle.idl
-	-if [ "$<" != omniLifeCycle.idl ]; then $(CP) $< . ; fi
-	$(OMNIORB2_IDL_FPATH) -m omniLifeCycle.idl
+	$(OMNIORB2_IDL_FPATH) -m $^
+
+Firewall.hh FirewallSK.cc: Firewall.idl
+	$(OMNIORB2_IDL_ONLY_FPATH) -m -t $^
 
 
-ciao:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh omniLifeCycle.hh
+ciao:: Naming.hh bootstrap.hh ir_defs.hh corbaidl_defs.hh omniLifeCycle.hh Firewall.hh
 	@$(MakeSubdirs)
 
 lastveryclean::
-	$(RM)	Naming.idl Naming.hh NamingSK.cc NamingDynSK.cc \
-		bootstrap.idl bootstrap.hh bootstrapSK.cc bootstrapDynSK.cc \
-		ir.idl ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc \
-		corbaidl.idl corbaidl_defs.hh corbaidl_operators.hh \
+	$(RM)	Naming.hh NamingSK.cc NamingDynSK.cc \
+		bootstrap.hh bootstrapSK.cc \
+		ir_defs.hh ir_operators.hh irSK.cc irDynSK.cc \
+		corbaidl_defs.hh corbaidl_operators.hh \
                 corbaidlSK.cc corbaidlDynSK.cc \
-		omniLifeCycle.idl omniLifeCycle.hh omniLifeCycleSK.cc \
-			omniLifeCycleDynSK.cc
+		omniLifeCycle.hh omniLifeCycleSK.cc omniLifeCycleDynSK.cc \
+                Firewall.hh FirewallSK.cc
 
 

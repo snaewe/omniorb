@@ -42,6 +42,17 @@ DIR_CPPFLAGS += -D_OMNIORB2_LIBRARY
 
 CXXSRCS = $(ORB2_SRCS)
 
+# Further override vpath for *.cc to make sure that stub files are found.
+ifndef BuildWin32DebugLibraries
+
+vpath %.cc ..
+
+else
+
+vpath %.cc .. ../..
+
+endif
+
 
 #############################################################################
 #   Make variables for Unix platforms                                       #
@@ -57,8 +68,11 @@ else
 CONFIG_DEFAULT_LOCATION = /project/omni/var/omniORB_NEW.cfg
 endif
 
-NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
-NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
+NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc \
+             tcpSocketAux.cc firewallProxy.cc FirewallSK.cc
+NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o \
+             tcpSocketAux.o firewallProxy.o FirewallSK.o
+
 DIR_CPPFLAGS += -DUnixArchitecture
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 
@@ -75,8 +89,11 @@ endif
 
 ifdef Win32Platform
 
-NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
-NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o gatekeeper.o
+NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc \
+             tcpSocketAux.cc firewallProxy.cc FirewallSK.cc
+NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o \
+             tcpSocketAux.o firewallProxy.o FirewallSK.o gatekeeper.o
+
 # See extra comments on gatekeeper.o at the end of this file
 
 DIR_CPPFLAGS += -D "NTArchitecture" -D "_WINSTATIC"
@@ -198,16 +215,6 @@ $(lib): $(ORB2_OBJS)
 
 ifndef OMNIORB2_IDL_FPATH
 OMNIORB2_IDL_FPATH = $(OMNIORB2_IDL)
-endif
-
-ifndef BuildWin32DebugLibraries
-
-#bootstrapSK.cc: ../bootstrapSK.cc
-#	$(CP) $< $@
-#
-#NamingSK.cc: ../NamingSK.cc
-#	$(CP) $< $@
-
 endif
 
 export:: $(lib)

@@ -31,6 +31,12 @@
 
 /*
   $Log$
+  Revision 1.7.4.2  1999/10/02 18:21:24  sll
+  Added support to decode optional tagged components in the IIOP profile.
+  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+  Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
   Revision 1.7.4.1  1999/09/15 20:18:15  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -69,6 +75,7 @@ public:
   typedef _CORBA_ULong ProfileId;
   static _core_attr const   ProfileId    TAG_INTERNET_IOP;
   static _core_attr const   ProfileId    TAG_MULTIPLE_COMPONENTS;
+  static _core_attr const   ProfileId    TAG_SCCP_IOP;
 
   struct TaggedProfile {
     ProfileId tag;
@@ -178,6 +185,8 @@ public:
   static _core_attr const ComponentId TAG_SSL_SEC_TRANS;
   static _core_attr const ComponentId TAG_CSI_ECMA_PUBLIC_SEC_MECH;
   static _core_attr const ComponentId TAG_GENERIC_SEC_MECH;
+  static _core_attr const ComponentId TAG_FIREWALL_TRANS;
+  static _core_attr const ComponentId TAG_SCCP_CONTACT_INFO;
   static _core_attr const ComponentId TAG_JAVA_CODEBASE;
   static _core_attr const ComponentId TAG_COMPLETE_OBJECT_KEY;
   static _core_attr const ComponentId TAG_ENDPOINT_ID_POSITION;
@@ -186,6 +195,8 @@ public:
   static _core_attr const ComponentId TAG_DCE_BINDING_NAME;
   static _core_attr const ComponentId TAG_DCE_NO_PIPES;
   static _core_attr const ComponentId TAG_DCE_SEC_MECH;
+  static _core_attr const ComponentId TAG_INET_SEC_TRANS;
+
 
   static const char* ComponentIDtoName(ComponentId);
   // omniORB2 private function.
@@ -379,6 +390,8 @@ public:
   static _core_attr const ServiceID INVOCATION_POLICIES;
   static _core_attr const ServiceID FORWARDED_IDENTITY;
   static _core_attr const ServiceID UnknownExceptionInfo;
+  static _core_attr const ServiceID RTCorbaPriority;
+  static _core_attr const ServiceID RTCorbaPriorityRange;
 
   static const char* ServiceIDtoName(ServiceID);
   // omniORB2 private function.

@@ -28,6 +28,12 @@
 
 /*
   $Log$
+  Revision 1.8.4.3  1999/10/02 18:21:30  sll
+  Added support to decode optional tagged components in the IIOP profile.
+  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+  Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
   Revision 1.8.4.2  1999/09/25 17:00:22  sll
   Merged changes from omni2_8_develop branch.
 
@@ -94,14 +100,27 @@
 const char* tcpSocketEndpoint::protocol_name = "TCPIP";
 tcpSocketFactoryType* tcpSocketFactoryType::singleton = 0;
 
+static void unmarshalIOPComponent(cdrStream&,GIOPObjectInfo*);
+// XXX Temporary holding place for this function. More appropriate place
+//     is the IOP module.
+
+
 void
 tcpSocketFactoryType::init()
 {
   if (singleton) return;
   singleton = new tcpSocketFactoryType;
+  singleton->pd_optionalcomponents.length(1);
 
+  // Inside TAG_ORB_TYPE to identify omniORB
+  singleton->pd_optionalcomponents[0].tag = IOP::TAG_ORB_TYPE;
+  cdrEncapsulationStream s(8,1);
+  omniORB_TAG_ORB_TYPE >>= s;
+  CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+  singleton->pd_optionalcomponents[0].component_data.replace(max,len,p,1);
+  
   if (omniORB::trace(2)) {
-    omniORB::logger log("gateKeeper is ");
+    omniORB::logger log("omniORB: gateKeeper is ");
     log << gateKeeper::version() << "\n";
   }
 }
@@ -122,16 +141,6 @@ tcpSocketFactoryType::is_protocol(const char* name) const
   return (strcmp(name,tcpSocketEndpoint::protocol_name) == 0) ? 1 : 0;
 }
 
-
-#if 0
-CORBA::Boolean
-tcpSocketFactoryType::decodeIOPprofile(const IOP::TaggedProfile& profile,
-					  // return values:
-					  Endpoint*&     addr,
-					  CORBA::Octet*& objkey,
-					  size_t&        objkeysize,
-				       GIOPObjectInfo_var& objectInfo) const
-#endif
 CORBA::Boolean
 tcpSocketFactoryType::decodeIOPprofile(const IOP::TaggedProfile& profile,
 				       // return values:
@@ -168,12 +177,15 @@ tcpSocketFactoryType::decodeIOPprofile(const IOP::TaggedProfile& profile,
       throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
     break;
   default:
-    body.components <<= s;
+    {
+      CORBA::ULong ncomponents;
+      ncomponents <<= s;
+
+      for (CORBA::ULong i=0; i < ncomponents; i++) {
+	unmarshalIOPComponent(s,objectInfo);
+      }
+    }
   }
-
-  // XXX Examine all the profile components and extract the component
-  //     information we are interested in.
-
   objectInfo->version_.major = body.version.major;
   objectInfo->version_.minor = body.version.minor;
   CORBA::ULong max = body.object_key.maximum();
@@ -186,17 +198,41 @@ tcpSocketFactoryType::decodeIOPprofile(const IOP::TaggedProfile& profile,
 }
 
 void
-tcpSocketFactoryType::encodeIOPprofile(const Endpoint* addr,
+tcpSocketFactoryType::encodeIOPprofile(const ropeFactoryType::EndpointList& addrs,
 				       const CORBA::Octet* objkey,
 				       const size_t objkeysize,
 				       IOP::TaggedProfile& profile) const
 {
-  tcpSocketEndpoint* tcpaddr = tcpSocketEndpoint::castup(addr);
-  if (!tcpaddr)
-    throw omniORB::fatalException(__FILE__,__LINE__,
-				  "Endpoint is not tcpSocket");
+  tcpSocketEndpoint* tcpaddr;
+  CORBA::ULong hlen;
 
-  CORBA::ULong hlen = strlen((const char *)tcpaddr->host()) + 1;
+  // Check if we have multiple endpoints, if so create a tagged component
+  // for each of the extra endpoints.
+  IOP::MultipleComponentProfile alternate_iiop_address;
+  if (addrs.length() > 1) {
+
+    alternate_iiop_address.length(addrs.length() - 1);
+
+    for (CORBA::ULong index = 0; index < addrs.length()-1; index++) {
+
+      alternate_iiop_address[index].tag = IOP::TAG_ALTERNATE_IIOP_ADDRESS;
+
+      tcpaddr = tcpSocketEndpoint::castup(addrs[index+1]);
+      hlen = strlen((const char*)tcpaddr->host()) + 1;
+
+      cdrEncapsulationStream s(hlen+8,1);
+      hlen >>= s;
+      s.put_char_array((const CORBA::Char*)tcpaddr->host(),hlen);
+      tcpaddr->port() >>= s;
+
+      CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+      alternate_iiop_address[index].component_data.replace(max,len,p,1);
+    }
+  }
+
+  tcpaddr = tcpSocketEndpoint::castup(addrs[0]);
+  hlen = strlen((const char*)tcpaddr->host()) + 1;
+
   profile.tag = IOP::TAG_INTERNET_IOP;
 
   GIOP::Version ver = giopStreamImpl::maxVersion()->version();
@@ -214,8 +250,24 @@ tcpSocketFactoryType::encodeIOPprofile(const Endpoint* addr,
     s.put_char_array((CORBA::Char*)objkey,objkeysize);
 
     if (ver.minor > 0) {
-      // XXX extra component puts here.
-      ::operator>>=((CORBA::ULong)0,s);
+
+      CORBA::ULong total = alternate_iiop_address.length() + 
+	                   pd_optionalcomponents.length();
+
+      ::operator>>=(total,s);
+
+      CORBA::ULong index;
+
+      total = pd_optionalcomponents.length();
+      for (index=0; index < total; index++) {
+	pd_optionalcomponents[index].tag >>= s;
+	pd_optionalcomponents[index].component_data >>= s;
+      }
+      total = alternate_iiop_address.length();
+      for (index=0; index < total; index++) {
+	alternate_iiop_address[index].tag >>= s;
+	alternate_iiop_address[index].component_data >>= s;
+      }
     }
     bufsize = s.total();
   }
@@ -231,8 +283,24 @@ tcpSocketFactoryType::encodeIOPprofile(const Endpoint* addr,
     s.put_char_array((CORBA::Char*)objkey,objkeysize);
 
     if (ver.minor > 0) {
-      // XXX extra component puts here.
-      ::operator>>=((CORBA::ULong)0,s);
+
+      CORBA::ULong total = alternate_iiop_address.length() + 
+	                   pd_optionalcomponents.length();
+
+      ::operator>>=(total,s);
+
+      CORBA::ULong index;
+
+      total = pd_optionalcomponents.length();
+      for (index=0; index < total; index++) {
+	pd_optionalcomponents[index].tag >>= s;
+	pd_optionalcomponents[index].component_data >>= s;
+      }
+      total = alternate_iiop_address.length();
+      for (index=0; index < total; index++) {
+	alternate_iiop_address[index].tag >>= s;
+	alternate_iiop_address[index].component_data >>= s;
+      }
     }
 
     CORBA::Octet* p;
@@ -243,6 +311,20 @@ tcpSocketFactoryType::encodeIOPprofile(const Endpoint* addr,
   }
 }
 
+void
+tcpSocketFactoryType::insertOptionalIOPComponent(IOP::TaggedComponent& c)
+{
+  CORBA::ULong index = pd_optionalcomponents.length();
+  pd_optionalcomponents.length(index+1);
+  pd_optionalcomponents[index] = c;
+}
+
+
+const IOP::MultipleComponentProfile&
+tcpSocketFactoryType::getOptionalIOPComponents() const
+{
+  return pd_optionalcomponents;
+}
 
 tcpSocketEndpoint::tcpSocketEndpoint(CORBA::Char *h,CORBA::UShort p)
     : Endpoint((CORBA::Char *)tcpSocketEndpoint::protocol_name) 
@@ -369,6 +451,117 @@ tcpSocketOutgoingRope::remote_is(Endpoint *&e)
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+static void unmarshal_TAG_ORB_TYPE(cdrStream&,IOP::ComponentId,GIOPObjectInfo*);
+static void unmarshal_TAG_generic(cdrStream&,IOP::ComponentId,GIOPObjectInfo*);
+
+//////////////////////////////////////////////////////////////////////////
+// For the TAGs that the ORB will look at, add a handler to the following
+// table. Use unmarshal_TAG_generic just to store the encapsulated octet
+// stream in the GIOPObjectInfo
+//
+static struct {
+  IOP::ComponentId id;
+  void (*fn)(cdrStream&, IOP::ComponentId, GIOPObjectInfo*);
+} componentUnmarshalHandlers[] = {
+  // This table must be arranged in ascending order of IOP::ComponentId
+  { IOP::TAG_ORB_TYPE,  unmarshal_TAG_ORB_TYPE },
+  { IOP::TAG_CODE_SETS, 0 },
+  { IOP::TAG_POLICIES, 0 },
+  { IOP::TAG_ALTERNATE_IIOP_ADDRESS, unmarshal_TAG_generic },
+  { IOP::TAG_COMPLETE_OBJECT_KEY, 0 },
+  { IOP::TAG_ENDPOINT_ID_POSITION, 0 },
+  { IOP::TAG_LOCATION_POLICY, 0 },
+  { IOP::TAG_ASSOCIATION_OPTIONS, 0 },
+  { IOP::TAG_SEC_NAME, 0 },
+  { IOP::TAG_SPKM_1_SEC_MECH, 0 },
+  { IOP::TAG_SPKM_2_SEC_MECH, 0 },
+  { IOP::TAG_KERBEROSV5_SEC_MECH, 0 },
+  { IOP::TAG_CSI_ECMA_SECRET_SEC_MECH, 0 },
+  { IOP::TAG_CSI_ECMA_HYBRID_SEC_MECH, 0 },
+  { IOP::TAG_SSL_SEC_TRANS, unmarshal_TAG_generic },
+  { IOP::TAG_CSI_ECMA_PUBLIC_SEC_MECH, 0 },
+  { IOP::TAG_GENERIC_SEC_MECH, 0 },
+  { IOP::TAG_FIREWALL_TRANS, unmarshal_TAG_generic },
+  { IOP::TAG_SCCP_CONTACT_INFO, 0 },
+  { IOP::TAG_JAVA_CODEBASE, 0 },
+  { IOP::TAG_DCE_STRING_BINDING, 0 },
+  { IOP::TAG_DCE_BINDING_NAME, 0 },
+  { IOP::TAG_DCE_NO_PIPES, 0 },
+  { IOP::TAG_DCE_SEC_MECH, 0 },
+  { IOP::TAG_INET_SEC_TRANS, 0 },
+  { 0xffffffff, 0 }
+};
+
+//////////////////////////////////////////////////////////////////////////
+//  Unmarshal IOP Tag components.
+static
+void 
+unmarshalIOPComponent(cdrStream& s,GIOPObjectInfo* objectInfo)
+{
+  static int tablesize = 0;
+
+  if (!tablesize) {
+    while (componentUnmarshalHandlers[tablesize].id != 0xffffffff) tablesize++;
+  }
+
+  int top = tablesize;
+  int bottom = 0;
+
+  IOP::ComponentId v;
+  v <<= s;
+
+  do {
+    int index = (top + bottom) >> 1;
+    IOP::ComponentId id = componentUnmarshalHandlers[index].id;
+    if (id == v) {
+      if (componentUnmarshalHandlers[index].fn) {
+	componentUnmarshalHandlers[index].fn(s,v,objectInfo);
+	return;
+      }
+      break;
+    }
+    else if (id > v) {
+      top = index;
+    }
+    else {
+      bottom = index + 1;
+    }
+  } while (top != bottom);
+
+  // Default is to skip this component quietly
+  {
+    CORBA::ULong len;
+    len <<= s;
+    s.skipInput(len);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+unmarshal_TAG_ORB_TYPE(cdrStream& s, IOP::ComponentId, GIOPObjectInfo* g)
+{
+  _CORBA_Unbounded_Sequence_Octet v;
+  v <<= s;
+
+  cdrEncapsulationStream e(v.get_buffer(),v.length(),1);
+  g->orb_type_ <<= e;
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+unmarshal_TAG_generic(cdrStream& s, IOP::ComponentId id, GIOPObjectInfo* g)
+{
+  if (!g->tag_components_) {
+    g->tag_components_ = new IOP::MultipleComponentProfile(3);
+  }
+  CORBA::ULong index = g->tag_components_->length();
+  g->tag_components_->length(index+1);
+  (*(g->tag_components_))[index].tag = id;
+  (*(g->tag_components_))[index].component_data <<= s;
+}
 
 #undef Swap16
 #undef Swap32

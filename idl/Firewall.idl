@@ -1,0 +1,79 @@
+#ifndef __FIREWALL_IDL__
+#define __FIREWALL_IDL__
+
+#include <IOP.idl>
+
+#pragma prefix "omg.org"
+
+module Firewall {
+
+  const unsigned long TAG_FIREWALL_TRANS = 23;
+
+  typedef unsigned long FirewallProfileId;
+
+  struct FirewallMechanism {
+    FirewallProfileId tag;
+    sequence<octet> profile_data;
+  };
+
+  typedef sequence<FirewallMechanism> MultipleFirewallMechanisms;
+
+  const FirewallProfileId FW_MECH_PROXY = 0;
+  const FirewallProfileId FW_MECH_TCP = 1;
+  const FirewallProfileId FW_MECH_SOCKSV5 = 2;
+
+  enum ProxyMode { NORMAL, PASSTHRU };
+
+  interface GIOPProxy {
+    Object new_target(in Object target, in ProxyMode mode);
+    Object new_callback(in Object callback);
+  };
+
+  typedef GIOPProxy ProxyFirewallMechanism;
+
+  struct TcpFirewallMechanism {
+    string host;
+    unsigned short port;
+    IOP::MultipleComponentProfile components;
+  };
+
+  typedef unsigned short AuthMethodType;
+  
+  const AuthMethodType NONE = 0;
+  const AuthMethodType GSSAPI_KRB5 = 1;
+  const AuthMethodType PASSWORD = 2;
+  const AuthMethodType CHAP = 3;
+  const AuthMethodType SSL = 4;
+  const AuthMethodType CRAM = 5;
+
+  struct AuthSchemeKeyDistributor {
+    string key_distribution_host;
+    unsigned short key_distribution_port;
+  };
+
+  struct AuthenticationScheme {
+    AuthMethodType   auth_type;
+    sequence<octet>  auth_kdc;
+  };
+
+  struct SOCKSV5FirewallMechanism {
+    string host;
+    unsigned short port;
+    AuthenticationScheme method;
+  };
+
+  const unsigned long FORWARDED_IDENTITY = 1234; // XXX Final value to
+  // be assigned by OMG.
+  
+  typedef unsigned short IdTag;
+  
+  struct Identity {
+    IdTag  tag;
+    sequence<octet> data;
+  };
+
+  typedef sequence<Identity> IdentityList;
+
+};
+
+#endif

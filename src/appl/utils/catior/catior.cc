@@ -47,8 +47,9 @@
 #error "Swap32 has already been defined"
 #endif
 
+static int hexflag = 0;
 
-
+//////////////////////////////////////////////////////////////////////////
 static void usage(char* progname)
 {
   cerr << "usage: " << progname << " [-x] <stringified IOR>" << endl;
@@ -66,7 +67,7 @@ char* optarg;
 int optind = 1;
 
 
-
+//////////////////////////////////////////////////////////////////////////
 int
 getopt(int num_args, char* const* args, const char* optstring)
 {
@@ -121,109 +122,31 @@ getopt(int num_args, char* const* args, const char* optstring)
 #endif
 
 
+//////////////////////////////////////////////////////////////////////////
 static
 void
-EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &s,
-			   IIOP::ProfileBody &p)
-{
-  CORBA::ULong begin = 0;
-  CORBA::ULong end = 0;
-
-  // s[0] - byteorder
-  end += 1;
-  if (s.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-  CORBA::Boolean byteswap = ((s[begin] == omni::myByteOrder) ? 0 : 1);
-
-  // s[1] - iiop_version.major
-  // s[2] - iiop_version.minor
-  begin = end;
-  end = begin + 2;
-  if (s.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  p.iiop_version.major = s[begin];
-  p.iiop_version.minor = s[begin+1];
-  if (p.iiop_version.major != 1)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-  // s[3] - padding
-  // s[4] - s[7] host string length
-  begin = end + 1;
-  end = begin + 4;
-  if (s.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  {
-    CORBA::ULong len;
-    if (!byteswap) {
-      len = ((CORBA::ULong &) s[begin]);
-    }
-    else {
-      CORBA::ULong t = ((CORBA::ULong &) s[begin]);
-      len = Swap32(t);
-    }
-
-    // s[8] - s[8+len-1] host string
-    begin = end;
-    end = begin + len;
-    if (s.length() <= end)
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-    // Is this string null terminated?
-    if (((char)s[end-1]) != '\0')
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-    p.host = new CORBA::Char[len];
-    if (!p.host)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
-    memcpy((void *)p.host,(void *)&(s[begin]),len);
-  }
+write_char(char val,CORBA::Boolean inhex) {
+  if (inhex) {
+    int v = ((val & 0xf0) >> 4);
+    if (v < 10)
+      cout << (char)('0' + v);
+    else
+      cout << (char)('a' + (v - 10));
     
-  // align to CORBA::UShort
-  begin = (end + 1) & ~(1);
-  // s[begin] port number
-  end = begin + 2;
-  if (s.length() <= end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-  if (!byteswap) {
-    p.port = ((CORBA::UShort &) s[begin]);
+    v = (val & 0xf);
+    if (v < 10)
+      cout << (char)('0' + v);
+    else
+      cout << (char)('a' + (v - 10));
   }
   else {
-    CORBA::UShort t = ((CORBA::UShort &) s[begin]);
-    p.port = Swap16(t);
+    if (val >= ' ' && val <= '~')
+      cout << val;
+    else
+      cout << ".";
   }
-
-  // align to CORBA::ULong
-  begin = (end + 3) & ~(3);
-  // s[begin]  object key length
-  end = begin + 4;
-  if (s.length() < end)
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-  if (s.length() == end) {
-    p.object_key.length(0);
-  }
-  else {
-    CORBA::ULong len;
-    if (!byteswap) {
-      len = ((CORBA::ULong &) s[begin]);
-    }
-    else {
-      CORBA::ULong t = ((CORBA::ULong &) s[begin]);
-      len = Swap32(t);
-    }
-
-    begin = end;
-    end = begin + len;
-    if (s.length() < end)
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-
-    // extract object key
-    p.object_key.length(len);
-    memcpy((void *)&p.object_key[0],(void *)&(s[begin]),len);
-  }
-  return;
 }
+
 
 
 #if !defined(__WIN32__)
@@ -231,7 +154,9 @@ extern char* optarg;
 extern int optind;
 #endif
 
+static void decodeIIOPprofile(const _CORBA_Unbounded_Sequence_Octet&);
 
+//////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[])
 {
   if (argc < 2) 
@@ -244,7 +169,6 @@ int main(int argc, char* argv[])
   // Get options:
 
   int c;
-  int hexflag = 0;
 
   while((c = getopt(argc,argv,"x")) != EOF)
     {
@@ -271,12 +195,14 @@ int main(int argc, char* argv[])
   
   char* str_ior = argv[optind];
 
-  CORBA::Char* repoID;
+  char* repoID;
   IOP::TaggedProfileList* profiles;
+  CORBA::ORB_ptr orb;
 
   try
     {
-      IOP::EncapStrToIor((CORBA::Char*) str_ior, repoID, profiles);
+      orb = CORBA::ORB_init(argc,argv,"omniORB2");
+      IOP::EncapStrToIor(str_ior, repoID, profiles);
       if (*repoID == '\0' && profiles->length() == 0)
 	{
 	  cerr << "IOR is a nil object reference." << endl;
@@ -286,75 +212,22 @@ int main(int argc, char* argv[])
 	  cerr << "Type ID: \"" << (char*) repoID << "\"" << endl;
 	  cerr << "Profiles:" << endl;
 	  
-	  for (long count=0; count < profiles->length(); count++)
-	    {
-	      cout << count+1 << ". ";
+	  for (long count=0; count < profiles->length(); count++) {
+
+	    cout << count+1 << ". ";
 	      
-	      if ((*profiles)[count].tag == IOP::TAG_INTERNET_IOP)
-		  {
-		    IIOP::ProfileBody pBody;
-		    EncapStreamToProfile((*profiles)[count].profile_data,pBody);
-		    cout << "IIOP " << (int) pBody.iiop_version.major << "."
-			 << (int) pBody.iiop_version.minor << " ";
-		    cout << (char*) pBody.host << " " << pBody.port << " ";
-
-
-		    unsigned long j;
-		    if (hexflag)
-		      {
-			// Output key in hexadecimal form.
-			
-			cout << "0x";
-			
-
-			for (j=0; j < (pBody.object_key).length(); j++) 
-			  {
-			    int v = (((pBody.object_key)[j] & 0xf0) >> 4);
-
-			    if (v < 10)
-			      cout << (char)('0' + v);
-			    else
-			      cout << (char)('a' + (v - 10));
-
-			    v = (((pBody.object_key)[j] & 0xf));
-
-			    if (v < 10)
-			      cout << (char)('0' + v);
-			    else
-			      cout << (char)('a' + (v - 10));
-			  }
-
-			cout << "  (" << (pBody.object_key).length() 
-			     << " bytes)" << endl;
-		      }
-		    else
-		      {
-			  // Output key as text
-
-			  cout << "\"";
-			  
-			  for(j=0; j < (pBody.object_key).length(); j++)
-			    {
-				if ((char) ((pBody.object_key)[j]) >= ' ' &&
-				    (char) ((pBody.object_key)[j]) <= '~')
-				         cout << (char)((pBody.object_key)[j]);
-				else
-				    cout << ".";
-			    }
-			  cout << "\"" << endl;
-		      }
-		  }
-	      else if ((*profiles)[count].tag == IOP::TAG_MULTIPLE_COMPONENTS)
-		  {
-		    cout << "Multiple Component Tag" << endl;
-		  }
-	      else
-		  {
-		    cout << "Unrecognised profile tag: " 
-		         << (int) ((*profiles)[count].tag) 
-			 << endl;
-		  }
+	    if ((*profiles)[count].tag == IOP::TAG_INTERNET_IOP) {
+	      decodeIIOPprofile((*profiles)[count].profile_data);
 	    }
+	    else if ((*profiles)[count].tag == IOP::TAG_MULTIPLE_COMPONENTS) {
+	      cout << "Multiple Component Tag" << endl;
+	    }
+	    else {
+	      cout << "Unrecognised profile tag: " 
+		   << (int) ((*profiles)[count].tag) 
+		   << endl;
+	    }
+	  }
 	}
     }
   catch(CORBA::MARSHAL& ex)
@@ -363,13 +236,322 @@ int main(int argc, char* argv[])
       cerr << "(Minor = " << ex.minor() << ")" << endl;
       return -1;
     }
+#if 0
   catch(...)
     {
       cerr << "Exception while processing stringified IOR." << endl;
       return -1;
     }
-  
+#endif
+  orb->NP_destroy();
+
   delete[] repoID;
   delete profiles;
   return 1;
+}
+
+static void decodeIIOPComponents(IOP::TaggedComponent&);
+static void EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet&,
+				 IIOP::ProfileBody&);
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+decodeIIOPprofile(const _CORBA_Unbounded_Sequence_Octet &profile)
+{
+  IIOP::ProfileBody pBody;
+  EncapStreamToProfile(profile,pBody);
+
+  cout << "IIOP " << (int) pBody.version.major << "."
+       << (int) pBody.version.minor << " ";
+
+  cout << (char*) pBody.host << " " << pBody.port << " ";
+
+  unsigned long j;
+  if (hexflag)
+    {
+      // Output key in hexadecimal form.
+      
+      cout << "0x";
+      for (j=0; j < (pBody.object_key).length(); j++) {
+	write_char((pBody.object_key)[j],1);
+      }
+
+      cout << "  (" << (pBody.object_key).length() 
+	   << " bytes)" << endl;
+    }
+  else
+    {
+      // Output key as text
+      
+      cout << "\"";
+      for(j=0; j < (pBody.object_key).length(); j++) {
+	write_char((pBody.object_key)[j],0);
+      }
+      cout << "\"" << endl;
+    }
+
+  for (j=0; j < pBody.components.length(); j++) {
+    decodeIIOPComponents(pBody.components[j]);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+EncapStreamToProfile(const _CORBA_Unbounded_Sequence_Octet &profile,
+			   IIOP::ProfileBody &body)
+{
+  cdrEncapsulationStream s(profile.get_buffer(),profile.length(),1);
+  
+  body.version.major <<= s;
+  body.version.minor <<= s;
+  
+  if (body.version.major != 1) {
+    cerr << "Cannot decode IIOP profile with version no. = " 
+	 << body.version.major << endl;
+    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  }
+
+  body.host <<= s;
+
+  body.port <<= s;
+
+  body.object_key <<= s;
+
+  switch (body.version.minor) {
+  case 0:
+    // Check if the profile body ends here.
+    if (s.checkInputOverrun(1,1))
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    break;
+  default:
+    {
+      body.components <<= s;
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+static void decode_TAG_FIREWALL_TRANS(const _CORBA_Unbounded_Sequence_Octet&);
+static void decode_TAG_ORB_TYPE(const _CORBA_Unbounded_Sequence_Octet&);
+static void decode_TAG_ALTERNATE_IIOP_ADDRESS(const _CORBA_Unbounded_Sequence_Octet&);
+static void decode_TAG_SSL_SEC_TRANS(const _CORBA_Unbounded_Sequence_Octet&);
+
+static struct {
+  IOP::ComponentId id;
+  void (*fn)(const _CORBA_Unbounded_Sequence_Octet& data);
+} componentDecoders[] = {
+  // This table must be arranged in ascending order of IOP::ComponentId
+  { IOP::TAG_ORB_TYPE,  decode_TAG_ORB_TYPE },
+  { IOP::TAG_CODE_SETS, 0 },
+  { IOP::TAG_POLICIES, 0 },
+  { IOP::TAG_ALTERNATE_IIOP_ADDRESS, decode_TAG_ALTERNATE_IIOP_ADDRESS },
+  { IOP::TAG_COMPLETE_OBJECT_KEY, 0 },
+  { IOP::TAG_ENDPOINT_ID_POSITION, 0 },
+  { IOP::TAG_LOCATION_POLICY, 0 },
+  { IOP::TAG_ASSOCIATION_OPTIONS, 0 },
+  { IOP::TAG_SEC_NAME, 0 },
+  { IOP::TAG_SPKM_1_SEC_MECH, 0 },
+  { IOP::TAG_SPKM_2_SEC_MECH, 0 },
+  { IOP::TAG_KERBEROSV5_SEC_MECH, 0 },
+  { IOP::TAG_CSI_ECMA_SECRET_SEC_MECH, 0 },
+  { IOP::TAG_CSI_ECMA_HYBRID_SEC_MECH, 0 },
+  { IOP::TAG_SSL_SEC_TRANS, decode_TAG_SSL_SEC_TRANS },
+  { IOP::TAG_CSI_ECMA_PUBLIC_SEC_MECH, 0 },
+  { IOP::TAG_GENERIC_SEC_MECH, 0 },
+  { IOP::TAG_FIREWALL_TRANS, decode_TAG_FIREWALL_TRANS },
+  { IOP::TAG_SCCP_CONTACT_INFO, 0 },
+  { IOP::TAG_JAVA_CODEBASE, 0 },
+  { IOP::TAG_DCE_STRING_BINDING, 0 },
+  { IOP::TAG_DCE_BINDING_NAME, 0 },
+  { IOP::TAG_DCE_NO_PIPES, 0 },
+  { IOP::TAG_DCE_SEC_MECH, 0 },
+  { IOP::TAG_INET_SEC_TRANS, 0 },
+  { 0xffffffff, 0 }
+};
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+decodeIIOPComponents(IOP::TaggedComponent& component) {
+
+  static int tablesize = 0;
+
+  if (!tablesize) {
+    while (componentDecoders[tablesize].id != 0xffffffff) tablesize++;
+  }
+
+  int top = tablesize;
+  int bottom = 0;
+
+  cout << "        ";
+
+  do {
+    int index = (top + bottom) >> 1;
+    IOP::ComponentId id = componentDecoders[index].id;
+    if (id == component.tag) {
+      if (componentDecoders[index].fn) {
+	componentDecoders[index].fn(component.component_data);
+	return;
+      }
+      break;
+    }
+    else if (id > component.tag) {
+      top = index;
+    }
+    else {
+      bottom = index + 1;
+    }
+  } while (top != bottom);
+
+  // Default is to dump this tag uninterpreted
+  {
+    const char* tagname = IOP::ComponentIDtoName(component.tag);
+    if (tagname)
+      cout << tagname << " ";
+    else
+      cout << "UNKNOWN TAG(" << component.tag << ") ";
+
+    cout << "0x";
+    for (CORBA::ULong j=0; j < component.component_data.length(); j++) {
+      write_char(component.component_data[j],1);
+    }
+
+    cout << "  (" << component.component_data.length() 
+	 << " bytes)";
+  }
+  cout << endl;
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+decode_TAG_ORB_TYPE(const _CORBA_Unbounded_Sequence_Octet& data)
+{
+  cout << "TAG_ORB_TYPE ";
+  cdrEncapsulationStream s(data.get_buffer(),data.length(),1);
+  CORBA::ULong orb_type;
+  orb_type <<= s;
+  if (orb_type == omniORB_TAG_ORB_TYPE) {
+    cout << "omniORB";
+  }
+  else {
+    if (hexflag) {
+      cout << "0x" << hex << orb_type << dec;
+    }
+    else {
+      char v;
+      v = ((orb_type & 0xff000000) >> 24);
+      write_char(v,0); 
+      v = ((orb_type & 0x00ff0000) >> 16); 
+      write_char(v,0); 
+      v = ((orb_type & 0x0000ff00) >> 8);
+      write_char(v,0);
+      v = (orb_type & 0x000000ff);
+      write_char(v,0);
+    }
+  }
+  cout << endl;
+
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+decode_TAG_ALTERNATE_IIOP_ADDRESS(const _CORBA_Unbounded_Sequence_Octet& data)
+{
+  cout << "TAG_ALTERNATE_IIOP_ADDRESS ";
+  cdrEncapsulationStream s(data.get_buffer(),data.length(),1);
+  CORBA::String_member host;
+  CORBA::UShort        port;
+  host <<= s;
+  port <<= s;
+  cout << (const char*) host << " " << port << endl;
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+decode_TAG_SSL_SEC_TRANS(const _CORBA_Unbounded_Sequence_Octet& data)
+{
+  cout << "TAG_SSL_SEC_TRANS ";
+  cdrEncapsulationStream s(data.get_buffer(),data.length(),1);
+  CORBA::UShort v;
+  v <<= s;
+  cout << "target_supports 0x" << hex << v << dec << " ";
+  v <<= s;
+  cout << "target_requires 0x" << hex << v << dec << " ";
+  v <<= s;
+  cout << "port " << v << endl;
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
+void
+decode_TAG_FIREWALL_TRANS(const _CORBA_Unbounded_Sequence_Octet& data)
+{
+  cout << "TAG_FIREWALL_TRANS ";
+  cdrEncapsulationStream s(data.get_buffer(),data.length(),1);
+
+  CORBA::ULong total;
+  total <<= s;
+
+  for (CORBA::ULong i=0; i < total; i++) {
+    CORBA::ULong tag;
+    tag <<= s;
+    _CORBA_Unbounded_Sequence_Octet pdata;
+    pdata <<= s;
+    cdrEncapsulationStream profile(pdata.get_buffer(),pdata.length(),1);
+    switch (tag) {
+    case 0:  // FW_MECH_PROXY
+      {
+	cout << "| GIOP Proxy ";
+	CORBA::Object_var obj = CORBA::Object::unmarshalObjRef(profile);
+	CORBA::String_var str = omni::objectToString(obj->PR_getobj());
+	cout << (const char*) str;
+      }
+      break;
+    case 1:  // FW_MECH_TCP
+      {
+	cout << "TCP ";
+	CORBA::String_member host;
+	CORBA::UShort        port;
+	host <<= s;
+	port <<= s;
+	cout << (const char*) host << " " << port << " ";
+	IOP::MultipleComponentProfile components;
+	components <<= s;
+	if (components.length() > 1) {
+	  cout << "??spurious tagged components??";
+	}
+	for (CORBA::ULong index = 0; index < components.length(); index++) {
+	  if (components[index].tag == IOP::TAG_SSL_SEC_TRANS) {
+	    decodeIIOPComponents(components[index]);
+	  }
+	}
+      }
+      break;
+    case 2:  // FW_MECH_SOCKSV5
+      {
+	cout << "SOCKS ";
+	cout << "0x";
+	for (CORBA::ULong j=0; j < pdata.length(); j++) {
+	  write_char(pdata[j],1);
+	}
+
+	cout << "  (" << pdata.length() 
+	     << " bytes)";
+      }
+      break;
+    default:
+      cout << "Unknown Firewall Profile (" << tag << ")";
+      break;
+
+    }
+    cout << " |";
+  }
+
+  cout << endl;
 }

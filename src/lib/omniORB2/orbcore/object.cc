@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.18.4.2  1999/10/02 18:21:28  sll
+  Added support to decode optional tagged components in the IIOP profile.
+  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+  Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
   Revision 1.18.4.1  1999/09/15 20:18:30  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -60,6 +66,12 @@
   Temporary work-around for egcs compiler.
 
   $Log$
+  Revision 1.18.4.2  1999/10/02 18:21:28  sll
+  Added support to decode optional tagged components in the IIOP profile.
+  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+  Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
   Revision 1.18.4.1  1999/09/15 20:18:30  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -676,18 +688,35 @@ internal_get_interface(const char* repoId)
 /////////////////////// GIOPObjectInfo         ///////////////////////
 //////////////////////////////////////////////////////////////////////
 
-GIOPObjectInfo::GIOPObjectInfo() : pd_refcount(1) {}
+GIOPObjectInfo::GIOPObjectInfo() : iopProfiles_(0), 
+                                   orb_type_(0), tag_components_(0),
+                                   opaque_data_(0),
+                                   pd_refcount(1) {}
+
+GIOPObjectInfo::~GIOPObjectInfo() {
+  if (iopProfiles_) { delete iopProfiles_; iopProfiles_ = 0; }
+  if (tag_components_) { delete tag_components_; tag_components_ = 0; }
+  if (opaque_data_) { 
+    for (CORBA::ULong index = 0; index < opaque_data_->length(); index++) {
+      (*opaque_data_)[index].destructor((*opaque_data_)[index].data);
+    }
+    delete opaque_data_;	
+    opaque_data_ = 0;
+  }
+}
 
 GIOPObjectInfo*
 omniObject::getInvokeInfo(CORBA::Boolean& location_forwarded)
 {
   omni_mutex_lock sync(omniObject::objectTableLock);
 
-  if (!is_proxy()) {
+  if (!is_proxy() && !pd_objectInfo) {
 
-    // XXX We are holding the objectTableLock while creating the
-    //     GIOPObjectInfo. This is bad and would hurt MP performance.
-    //
+    if (omniORB::trace(15)) {
+      omniORB::logger log("omniORB");
+      log << "getInvokeInfo: invoke on local object\n";
+    }
+
     // We create a GIOPObjectInfo if we haven't got one yet.
     pd_objectInfo = new GIOPObjectInfo();
     pd_objectInfo->repositoryID_ = pd_repositoryID;
@@ -723,46 +752,62 @@ omniObject::getInvokeInfo(CORBA::Boolean& location_forwarded)
 void
 omniObject::setInvokeInfo(GIOPObjectInfo* g, CORBA::Boolean keepIOP)
 {
-  omni_mutex_lock sync(omniObject::objectTableLock);
+  GIOPObjectInfo *old,*org;
+  CORBA::Boolean delold = 0;
+  CORBA::Boolean delorg = 0;
+  {
+    omni_mutex_lock sync(omniObject::objectTableLock);
 
-  if (!is_proxy()) return;
+    if (!is_proxy()) return;
 
-  GIOPObjectInfo* old = pd_objectInfo;
-  pd_objectInfo = g;
+    old = pd_objectInfo;
+    pd_objectInfo = g;
 
-  if (keepIOP) {
-    pd_flags.forwardlocation = 1;
-    if (!pd_data.p.pd_originalInfo) {
-      pd_data.p.pd_originalInfo = old;
+    if (keepIOP) {
+      pd_flags.forwardlocation = 1;
+      if (!pd_data.p.pd_originalInfo) {
+	pd_data.p.pd_originalInfo = old;
+      }
+      else {
+	delold = (old->releaseNoLock() <= 0) ? 1 : 0;
+      }
     }
     else {
-      old->releaseNoLock();
+      pd_flags.forwardlocation = 0;
+      delold = (old->releaseNoLock() <= 0) ? 1 : 0;
+      if ((org = pd_data.p.pd_originalInfo)) {
+	delorg = (pd_data.p.pd_originalInfo->releaseNoLock() <= 0) ? 1 : 0;
+	pd_data.p.pd_originalInfo = 0;
+      }
     }
   }
-  else {
-    pd_flags.forwardlocation = 0;
-    old->releaseNoLock();
-    if (pd_data.p.pd_originalInfo) {
-      pd_data.p.pd_originalInfo->releaseNoLock();
-      pd_data.p.pd_originalInfo = 0;
-    }
-  }
+  // delete the objects only after the sync lock is released. This prevents
+  // any deadlock if the object recursively delete other GIOPObjectInfos
+  // stored in GIOPObjectInfo::opaque_sequence.
+  if (delold) delete old;
+  if (delorg) delete org;
 }
 
 void
 omniObject::resetInvokeInfo()
 {
-  omni_mutex_lock sync(omniObject::objectTableLock);
+  GIOPObjectInfo* g;
+  CORBA::Boolean delg = 0;
+  {
+    omni_mutex_lock sync(omniObject::objectTableLock);
 
-  if (!is_proxy()) return;
+    if (!is_proxy()) return;
 
-  if (pd_flags.forwardlocation) {
-    pd_objectInfo->releaseNoLock();
-    pd_objectInfo = pd_data.p.pd_originalInfo;
-    pd_data.p.pd_originalInfo = 0;
-    pd_flags.forwardlocation = 0;
-    pd_flags.existent_and_type_verified = 0;
+    if (pd_flags.forwardlocation) {
+      g = pd_objectInfo;
+      delg = ((g->releaseNoLock() <= 0) ? 1 : 0);
+      pd_objectInfo = pd_data.p.pd_originalInfo;
+      pd_data.p.pd_originalInfo = 0;
+      pd_flags.forwardlocation = 0;
+      pd_flags.existent_and_type_verified = 0;
+    }
   }
+  if (delg) delete g;
 }
 
 void
@@ -785,22 +830,25 @@ GIOPObjectInfo::duplicateNoLock()
 void
 GIOPObjectInfo::release()
 {
-  omni_mutex_lock sync(omniObject::objectTableLock);
-  releaseNoLock();
+  CORBA::Boolean del;
+  {
+    omni_mutex_lock sync(omniObject::objectTableLock);
+    del = ((releaseNoLock() <= 0) ? 1 : 0);
+  }
+  if (del) delete this;
 }
 
-void
+int
 GIOPObjectInfo::releaseNoLock()
 {
   if (pd_refcount <= 0)
     throw omniORB::fatalException(__FILE__,__LINE__,
 			    "GIOPObjectInfo::release() -ve ref count.");
-  pd_refcount--;
-  if (pd_refcount == 0) delete this;
+  return --pd_refcount;
 }
 
 void
-omniObject::getKey(omniObjectKey& k)
+omniObject::getKey(omniObjectKey& k) const
 {
   assert(!is_proxy());
 

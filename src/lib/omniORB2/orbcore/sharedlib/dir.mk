@@ -36,11 +36,11 @@ override VPATH := $(patsubst %,%/..,$(VPATH))
 
 ifndef BuildWin32DebugLibraries
 
-vpath %.cc ..
+vpath %.cc .. ../..
 
 else
 
-vpath %.cc ../..
+vpath %.cc ../.. ../../..
 
 endif
 
@@ -56,8 +56,10 @@ endif
 
 #CXXDEBUGFLAGS = -g
 
-NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
-NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o
+NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc \
+             tcpSocketAux.cc firewallProxy.cc FirewallSK.cc
+NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o \
+             tcpSocketAux.o firewallProxy.o FirewallSK.o
 DIR_CPPFLAGS += -DUnixArchitecture
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'
 endif
@@ -67,8 +69,10 @@ endif
 #############################################################################
 
 ifdef Win32Platform
-NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc
-NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o  gatekeeper.o
+NETLIBSRCS = relStream.cc tcpSocket.cc tcpSocketMTfactory.cc \
+             tcpSocketAux.cc firewallProxy.cc FirewallSK.cc
+NETLIBOBJS = relStream.o tcpSocket.o tcpSocketMTfactory.o \
+             tcpSocketAux.o firewallProxy.o FirewallSK.o gatekeeper.o
 # See the extra comments on gatekeeper.o at the end of this file
 
 DIR_CPPFLAGS += -DNTArchitecture

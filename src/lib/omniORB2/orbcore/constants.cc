@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.14.4.2  1999/10/02 18:21:26  sll
+  Added support to decode optional tagged components in the IIOP profile.
+  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+  Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
   Revision 1.14.4.1  1999/09/15 20:18:33  sll
   Updated to use the new cdrStream abstraction.
   Marshalling operators for NetBufferedStream and MemBufferedStream are now
@@ -79,6 +85,7 @@
 
 // See the description of this variable in omniInternal.h
 const char* omniORB_2_9 = "omniORB version 2.9.x";
+const CORBA::ULong omniORB_TAG_ORB_TYPE = 0x41545400; // ATT\x00
 const CORBA::Char          omni::myByteOrder = _OMNIORB_HOST_BYTE_ORDER_;
 const omni::alignment_t    omni::max_alignment = ALIGN_8;
 
@@ -95,6 +102,7 @@ const GIOP::AddressingDisposition GIOP::ReferenceAddr = 2;
 //////////////////////////////////////////////////////////////////////////
 const IOP::ProfileId  IOP::TAG_INTERNET_IOP = 0;
 const IOP::ProfileId  IOP::TAG_MULTIPLE_COMPONENTS = 1;
+const IOP::ProfileId  IOP::TAG_SCCP_IOP = 2;
 
 const IOP::ComponentId IOP::TAG_ORB_TYPE = 0;
 const IOP::ComponentId IOP::TAG_CODE_SETS = 1;
@@ -113,11 +121,14 @@ const IOP::ComponentId IOP::TAG_CSI_ECMA_HYBRID_SEC_MECH = 19;
 const IOP::ComponentId IOP::TAG_SSL_SEC_TRANS = 20;
 const IOP::ComponentId IOP::TAG_CSI_ECMA_PUBLIC_SEC_MECH = 21;
 const IOP::ComponentId IOP::TAG_GENERIC_SEC_MECH = 22;
+const IOP::ComponentId IOP::TAG_FIREWALL_TRANS = 23;
+const IOP::ComponentId IOP::TAG_SCCP_CONTACT_INFO = 24;
 const IOP::ComponentId IOP::TAG_JAVA_CODEBASE = 25;
 const IOP::ComponentId IOP::TAG_DCE_STRING_BINDING = 100;
 const IOP::ComponentId IOP::TAG_DCE_BINDING_NAME = 101;
 const IOP::ComponentId IOP::TAG_DCE_NO_PIPES = 102;
 const IOP::ComponentId IOP::TAG_DCE_SEC_MECH = 103;
+const IOP::ComponentId IOP::TAG_INET_SEC_TRANS = 123;
 
 static struct {
   IOP::ComponentId id;
@@ -141,11 +152,14 @@ static struct {
   { IOP::TAG_SSL_SEC_TRANS, "TAG_SSL_SEC_TRANS" },
   { IOP::TAG_CSI_ECMA_PUBLIC_SEC_MECH, "TAG_CSI_ECMA_PUBLIC_SEC_MECH" },
   { IOP::TAG_GENERIC_SEC_MECH, "TAG_GENERIC_SEC_MECH" },
+  { IOP::TAG_FIREWALL_TRANS, "TAG_FIREWALL_TRANS" },
+  { IOP::TAG_SCCP_CONTACT_INFO, "TAG_SCCP_CONTACT_INFO" },
   { IOP::TAG_JAVA_CODEBASE, "TAG_JAVA_CODEBASE" },
   { IOP::TAG_DCE_STRING_BINDING, "TAG_DCE_STRING_BINDING" },
   { IOP::TAG_DCE_BINDING_NAME, "TAG_DCE_BINDING_NAME" },
   { IOP::TAG_DCE_NO_PIPES, "TAG_DCE_NO_PIPES" },
   { IOP::TAG_DCE_SEC_MECH, "TAG_DCE_SEC_MECH" },
+  { IOP::TAG_INET_SEC_TRANS, "TAG_INET_SEC_TRANS" },
   { 0, 0 }
 };
 
@@ -189,6 +203,8 @@ const IOP::ServiceID IOP::SendingContextRunTime = 6;
 const IOP::ServiceID IOP::INVOCATION_POLICIES = 7;
 const IOP::ServiceID IOP::FORWARDED_IDENTITY = 8;
 const IOP::ServiceID IOP::UnknownExceptionInfo = 9;
+const IOP::ServiceID IOP::RTCorbaPriority = 10;
+const IOP::ServiceID IOP::RTCorbaPriorityRange = 11;
 
 static struct {
   IOP::ServiceID id;
@@ -205,6 +221,8 @@ static struct {
   { IOP::INVOCATION_POLICIES, "INVOCATION_POLICIES" },
   { IOP::FORWARDED_IDENTITY, "FORWARDED_IDENTITY" },
   { IOP::UnknownExceptionInfo, "UnknownExceptionInfo" },
+  { IOP::RTCorbaPriority, "RTCorbaPriority" },
+  { IOP::RTCorbaPriorityRange, "RTCorbaPriorityRange" },
   { 0, 0 }
 };
 
@@ -418,21 +436,3 @@ namespace omniORB {
 const unsigned int omniORB::hash_table_size = 103;
 #endif
 
-#if defined(__GNUG__)
-
-// The following template classes are defined before the template functions
-// inline void _CORBA_Sequence<T>::operator<<= (NetBufferedStream &s) etc
-// are defined.
-// G++ (2.7.2 or may be later versions as well) does not compile in the
-// template functions as a result.
-// The following is a workaround which explicitly instantiate the classes
-// again.
-
-#if 0
-//??
-template class _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Octet,1,1>;
-template class _CORBA_Sequence<_CORBA_Octet>;
-#endif
-
-
-#endif

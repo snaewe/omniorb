@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.22.4.3  1999/10/02 18:21:24  sll
+  Added support to decode optional tagged components in the IIOP profile.
+  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+  Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
   Revision 1.22.4.2  1999/09/25 17:00:11  sll
   Merged changes from omni2_8_develop branch.
 
@@ -675,6 +681,14 @@ _CORBA_MODULE_BEG
                                                                         //
     static void set(mapTargetAddressToObject_t);                        //
   };                                                                    //
+  ////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////
+  //                                                                    //
+  // noFirewallNavigation                                               //
+  //   set this boolean flag to TRUE(1) force the ORB to ignore all     //
+  //   firewall proxy information in an object reference(IOR). 	        //
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean noFirewallNavigation;     //
   ////////////////////////////////////////////////////////////////////////
 
   // Internal configuration variables. Do not use!

@@ -144,7 +144,7 @@ DYN2_SRCS = any.cc typecode.cc anyP.cc tcParser.cc \
 	    request.cc serverRequest.cc dynamicImplementation.cc \
 	    pseudoBase.cc dynException.cc ir.cc \
 	    irstub.cc irdynstub.cc corbaidlstub.cc corbaidldynstub.cc \
-            bootstrapdynstub.cc Namingdynstub.cc \
+            Namingdynstub.cc \
 	    orbMultiRequest.cc
 
 DYN2_OBJS = any.o typecode.o anyP.o tcParser.o \
@@ -155,7 +155,7 @@ DYN2_OBJS = any.o typecode.o anyP.o tcParser.o \
 	    request.o serverRequest.o dynamicImplementation.o \
 	    pseudoBase.o dynException.o ir.o \
 	    irstub.o irdynstub.o corbaidlstub.o corbaidldynstub.o \
-            bootstrapdynstub.o Namingdynstub.o \
+            Namingdynstub.o \
 	    orbMultiRequest.o
 
 DIR_CPPFLAGS += $(patsubst %,-I%/..,$(VPATH))

@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/10/02 18:21:28  sll
+  Added support to decode optional tagged components in the IIOP profile.
+  Added support to negogiate with a firewall proxy- GIOPProxy to invoke
+  remote objects inside a firewall.
+  Added tagged component TAG_ORB_TYPE to identify omniORB IORs.
+
   Revision 1.1.2.1  1999/09/15 20:37:27  sll
   *** empty log message ***
 
@@ -47,8 +53,17 @@ public:
   GIOP::Version                    version_;
   _CORBA_Unbounded_Sequence_Octet  object_key_;
   Rope_var                         rope_;
-
   IOP::TaggedProfileList* 	   iopProfiles_;
+  CORBA::ULong                     orb_type_;
+  IOP::MultipleComponentProfile*   tag_components_;
+
+  struct opaque {
+    void* data;
+    void (*destructor)(void*);
+  };
+
+  typedef _CORBA_PseudoValue_Sequence<opaque> opaque_sequence;
+  opaque_sequence* opaque_data_;
 
   Rope* rope() { return rope_; }
   inline GIOP::Version giopVersion() { return version_; }
@@ -65,6 +80,7 @@ public:
   void release();
 
   GIOPObjectInfo();
+  ~GIOPObjectInfo();
 
 private:
   int pd_refcount;
@@ -73,8 +89,12 @@ private:
   GIOPObjectInfo& operator=(const GIOPObjectInfo&);
 
 public:
+  // internal functions
   void duplicateNoLock();
-  void releaseNoLock();
+  int releaseNoLock();
+  // Return the reference count after it has been decremented.
+  // if the return value is 0, the caller should call delete on the object
+  // *after* the synchronisation lock is released.
 };
 
 class GIOPObjectInfo_var {

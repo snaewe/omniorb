@@ -1,0 +1,30 @@
+#ifndef __IOP_IDL__
+#define __IOP_IDL__
+
+module IOP {
+
+  typedef unsigned long  ProfileId;
+  const ProfileId        TAG_INTERNET_IOP = 0;
+  const ProfileId        TAG_MULTIPLE_COMPONENTS = 1;
+
+  struct TaggedProfile {
+    ProfileId       tag;
+    sequence<octet> profile_data;
+  };
+
+  struct IOR {
+    string type_id;
+    sequence<TaggedProfile> profiles;
+  };
+
+  typedef unsigned long ComponentId;
+
+  struct TaggedComponent {
+    ComponentId tag;
+    sequence<tag> component_data;
+  };
+
+  typedef sequence<TaggedComponent> MultipleComponentProfile;
+};
+
+#endif
