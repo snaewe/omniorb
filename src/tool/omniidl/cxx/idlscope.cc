@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.11.2.6  2000/09/19 09:14:26  dpg1
+// Scope::Entry::Kind renamed to Scope::Entry::EntryKind to avoid
+// problems with over-keen compilers
+//
 // Revision 1.11.2.5  2000/08/29 15:20:28  dpg1
 // New relativeScope() function. New -i flag to enter interactive loop
 // after parsing
@@ -213,7 +217,7 @@ append(const char* identifier)
 
 Scope::
 Entry::
-Entry(const Scope* container, Kind k, const char* identifier,
+Entry(const Scope* container, EntryKind k, const char* identifier,
       Scope* scope, Decl* decl, IdlType* idltype,
       Scope::Entry* inh_from, const char* file, int line)
 
