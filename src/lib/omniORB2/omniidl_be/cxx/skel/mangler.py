@@ -30,6 +30,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/12/01 16:59:01  djs
+# Fixed name generation for attributes with user exceptions.
+#
 # Revision 1.3  1999/11/23 18:48:26  djs
 # Bugfixes, more interface operations and attributes code
 #
@@ -191,8 +194,9 @@ def produce_operation_signature(operation):
     raises.sort(lexicographic)
 
     def exception_signature(exception):
-        name = tyutil.name(tyutil.mapID(exception.scopedName()))
-        return EXCEPTION_SEPARATOR + name
+        cname = CANNON_NAME_SEPARATOR +\
+                string.join(exception.scopedName(), SCOPE_SEPARATOR)
+        return EXCEPTION_SEPARATOR + cname
     
     raises_sigs = map(exception_signature, raises)
     raises_str = string.join(raises_sigs, "")
