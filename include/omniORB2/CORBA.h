@@ -31,6 +31,14 @@
 
 /*
  $Log$
+ Revision 1.26  1998/08/19 15:59:00  sll
+ All <<= and >>= operators are now defined in the global namespace.
+ In particular, the operator>>= and <<= for DefinitionKind have been
+ moved out of the namespace CORBA. This change should have no effect
+ on platforms which do not support C++ namespace. On platforms with
+ C++ namespace, the new code is expected to work whether or not the
+ compiler supports koenig lookup rule.
+
  Revision 1.25  1998/08/15 15:07:08  sll
  *** empty log message ***
 
@@ -1090,12 +1098,6 @@ typedef _CORBA_Double  Double;
     dk_Primitive, dk_String, dk_Sequence, dk_Array, dk_Repository 
   };
 
-  _CORBA_MODULE_OP void operator>>= (DefinitionKind _e,NetBufferedStream &s);
-  _CORBA_MODULE_OP void operator<<= (DefinitionKind &_e,NetBufferedStream &s);
-  _CORBA_MODULE_OP void operator>>= (DefinitionKind _e,MemBufferedStream &s);
-  _CORBA_MODULE_OP void operator<<= (DefinitionKind &_e,MemBufferedStream &s);
-
-  
   class IRObject;
   typedef IRObject *IRObject_ptr;
   typedef IRObject_ptr IRObjectRef;
@@ -1503,10 +1505,6 @@ typedef _CORBA_Double  Double;
   class DynAny;
   typedef DynAny* DynAny_ptr;
 
-  class DynFixed;
-  typedef DynFixed *DynFixed_ptr;
-  typedef DynFixed_ptr DynFixedRef;
-
   class DynEnum;
   typedef DynEnum *DynEnum_ptr;
   typedef DynEnum_ptr DynEnumRef;
@@ -1547,6 +1545,10 @@ typedef _CORBA_Double  Double;
   };
 
 #if 0
+  class DynFixed;
+  typedef DynFixed *DynFixed_ptr;
+  typedef DynFixed_ptr DynFixedRef;
+
   class	DynFixed_member;
   class DynFixed_var {
   public:
@@ -2705,6 +2707,13 @@ private:
   };
 
 _CORBA_MODULE_END
+
+void operator>>= (CORBA::DefinitionKind _e,NetBufferedStream &s);
+void operator<<= (CORBA::DefinitionKind &_e,NetBufferedStream &s);
+void operator>>= (CORBA::DefinitionKind _e,MemBufferedStream &s);
+void operator<<= (CORBA::DefinitionKind &_e,MemBufferedStream &s);
+
+  
 
 #undef _LC_attr
 
