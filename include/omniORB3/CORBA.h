@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.7  2000/06/02 14:15:17  dpg1
+ SystemException constructors now public so exceptions caught by base
+ class can be rethrown
+
  Revision 1.1.2.6  2000/03/03 14:29:15  djr
  Improvement to BOA skeletons (less generated code).
 
@@ -836,7 +840,6 @@ _CORBA_MODULE_BEG
       return _downcast(e);
     }
 
-  protected:
     inline SystemException() {
       pd_minor = 0;
       pd_status = COMPLETED_NO;
@@ -856,6 +859,7 @@ _CORBA_MODULE_BEG
       return *this;
     }
 
+  protected:
     ULong             pd_minor;
     CompletionStatus  pd_status;
 
