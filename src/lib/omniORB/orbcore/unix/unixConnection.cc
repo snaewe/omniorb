@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2003/04/15 10:40:47  dgrisby
+  Timeouts ignored in some cases when scan granularity set to zero.
+
   Revision 1.1.2.6  2002/03/21 10:59:13  dpg1
   HPUX fixes.
 
@@ -163,7 +166,8 @@ unixConnection::Recv(void* buf, size_t sz,
 	return 0;
       }
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      if (t.tv_sec > orbParameters::scanGranularity) {
+      if (orbParameters::scanGranularity > 0 && 
+	  t.tv_sec > orbParameters::scanGranularity) {
 	t.tv_sec = orbParameters::scanGranularity;
       }
 #endif

@@ -1,3 +1,14 @@
+Tue Apr 15 11:33:05 BST 2003 dgrisby
+====================================
+
+- Timeouts ignored in some cases when scan granularity set to zero.
+
+bugfixes-401.xml
+src/lib/omniORB/orbcore/ssl/sslConnection.cc
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc
+src/lib/omniORB/orbcore/unix/unixConnection.cc
+
+
 Mon Apr 14 14:55:40 BST 2003 dgrisby
 ====================================
 

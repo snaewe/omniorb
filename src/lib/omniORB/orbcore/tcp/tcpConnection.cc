@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2003/04/15 10:40:47  dgrisby
+  Timeouts ignored in some cases when scan granularity set to zero.
+
   Revision 1.1.2.11  2003/01/06 11:11:55  dgrisby
   New AddrInfo instead of gethostbyname.
 
@@ -223,7 +226,8 @@ tcpConnection::Recv(void* buf, size_t sz,
 	return 0;
       }
 #if defined(USE_FAKE_INTERRUPTABLE_RECV)
-      if (t.tv_sec > orbParameters::scanGranularity) {
+      if (orbParameters::scanGranularity > 0 && 
+	  t.tv_sec > orbParameters::scanGranularity) {
 	t.tv_sec = orbParameters::scanGranularity;
       }
 #endif

@@ -17,4 +17,15 @@
   </text>
 </bug>
 
+<bug id="2" date="Tue Apr 15 11:33:05 BST 2003" user="dgrisby">
+  <summary>Timeouts sometimes ignored when scan granularity is
+  zero</summary>
+  <reported>Clemens Fischer</reported>
+  <listlink href="http://www.omniorb-support.com/pipermail/omniorb-list/2003-April/023477.html"/>
+  <text>
+  A bug in connection handling meant that integer timeouts could be
+  ignored if the scan granularity was set to zero.
+  </text>
+</bug>
+
 </buglist>
