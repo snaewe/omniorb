@@ -27,6 +27,9 @@
 
 /*
  $Log$
+ Revision 1.14  1998/04/09 19:15:01  sll
+ VarToken now emits _CORBA_GLOBAL_VAR instead of extern for globals.
+
  Revision 1.13  1998/04/08 19:36:41  sll
  *** empty log message ***
 
@@ -1186,7 +1189,7 @@ static inline char const* FriendToken(AST_Decl& decl) {
 
 static inline char const* VarToken(AST_Decl& decl) {
   if (decl.defined_in()==idl_global->root())
-    return "extern";
+    return "_CORBA_GLOBAL_VAR";
   else if (decl.defined_in()->scope_node_type()==AST_Decl::NT_module)
     return "_CORBA_MODULE_VAR";
   else
