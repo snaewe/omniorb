@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/05/29 17:03:50  dpg1
+  In process identity.
+
   Revision 1.1.4.4  2001/05/04 13:55:27  sll
   When a system exception is raised, send the exception before skipping rest
   of the input message. Helpful if the client sends a message shorter than
@@ -52,6 +55,7 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/callHandle.h>
 #include <initRefs.h>
 #include <exceptiondefs.h>
 #include <localIdentity.h>
@@ -180,6 +184,9 @@ GIOP_S::handleRequest() {
       omniORB::getInterceptors()->serverReceiveRequest.visit(info);
     }
 
+    // Create a callHandle object
+    omniCallHandle call_handle(this);
+
     // Can we find the object in the local object table?
     if (keysize() < 0)
       OMNIORB_THROW(OBJECT_NOT_EXIST,0, CORBA::COMPLETED_NO);
@@ -191,7 +198,7 @@ GIOP_S::handleRequest() {
     id = omni::locateIdentity(key(), keysize(), hash);
 
     if( id && id->servant() ) {
-      id->dispatch(*this);
+      id->dispatch(call_handle);
       return 1;
     }
 
@@ -202,14 +209,14 @@ GIOP_S::handleRequest() {
     omniObjAdapter_var adapter(omniObjAdapter::getAdapter(key(),keysize()));
 
     if( adapter ) {
-      adapter->dispatch(*this, key(), keysize());
+      adapter->dispatch(call_handle, key(), keysize());
       return 1;
     }
 
     // Or is it the bootstrap agent?
 
     if( keysize() == 4 && !memcmp(key(), "INIT", 4) &&
-	omniInitialReferences::invoke_bootstrap_agentImpl(*this) )
+	omniInitialReferences::invoke_bootstrap_agentImpl(call_handle) )
       return 1;
 
     // Oh dear.

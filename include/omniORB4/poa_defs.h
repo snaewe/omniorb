@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2001/05/29 17:03:48  dpg1
+  In process identity.
+
   Revision 1.2.2.3  2001/04/18 17:50:43  sll
   Big checkin with the brand new internal APIs.
   Scoped where appropriate with the omni namespace.
@@ -207,7 +210,7 @@ public:
   virtual CORBA::Boolean unknown_adapter(POA_ptr parent, const char* name) = 0;
 
 protected:
-  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
+  virtual _CORBA_Boolean _dispatch(omniCallHandle&);
 
 private:
   virtual void* _ptrToInterface(const char*);
@@ -312,7 +315,7 @@ public:
 
 
 protected:
-  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
+  virtual _CORBA_Boolean _dispatch(omniCallHandle&);
 
 private:
   virtual void* _ptrToInterface(const char*);
@@ -421,7 +424,7 @@ public:
   virtual void etherealize(const ObjectId& oid, POA_ptr adapter, Servant serv, CORBA::Boolean cleanup_in_progress, CORBA::Boolean remaining_activations) = 0;
 
 protected:
-  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
+  virtual _CORBA_Boolean _dispatch(omniCallHandle&);
 
 private:
   virtual void* _ptrToInterface(const char*);
@@ -532,7 +535,7 @@ public:
   virtual void postinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, ServantLocator::Cookie the_cookie, Servant the_servant) = 0;
 
 protected:
-  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
+  virtual _CORBA_Boolean _dispatch(omniCallHandle&);
 
 private:
   virtual void* _ptrToInterface(const char*);

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.4  2001/05/29 17:03:48  dpg1
+  In process identity.
+
   Revision 1.2.2.3  2001/04/18 17:50:43  sll
   Big checkin with the brand new internal APIs.
   Scoped where appropriate with the omni namespace.
@@ -55,6 +58,7 @@
 
 class omniObjRef;
 class omniIdentity;
+class omniCallHandle;
 
 //: Base class for all Servants.
 
@@ -113,7 +117,7 @@ public:
   // GIOP _get_interface operation.  The returned reference really
   // ought to be of type CORBA::InterfaceDef_ptr.
 
-  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
+  virtual _CORBA_Boolean _dispatch(omniCallHandle&);
   // This is the point at which the ORB makes an upcall into the object
   // implementation when making method invocations from the wire.  This
   // function is called by the dispatcher of GIOP_S.  It should return
@@ -141,11 +145,6 @@ public:
     return pd_identities;
   }
   // Must hold <omni::internalLock>.
-
-protected:
-  void _upcall(_OMNI_NS(IOP_S)&, omniCallDescriptor&);
-  // Called by the dispatcher in the skeleton implementation stub to drive the 
-  // upcall into the implementation code.
 
 private:
   omniLocalIdentity* pd_identities;

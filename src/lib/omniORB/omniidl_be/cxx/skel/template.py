@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.7  2001/05/29 17:03:50  dpg1
+# In process identity.
+#
 # Revision 1.3.2.6  2001/05/02 14:20:15  sll
 # Make sure that getStream() is used instead of casting to get a cdrStream
 # from a IOP_C and IOP_S.
@@ -354,9 +357,9 @@ interface_impl = """\
 
 
 CORBA::Boolean
-@impl_fqname@::_dispatch(_OMNI_NS(IOP_S)& _iop_s)
+@impl_fqname@::_dispatch(omniCallHandle& _handle)
 {
-  const char* op = _iop_s.operation_name();
+  const char* op = _handle.operation_name();
 
   @dispatch@
   return 0;
@@ -381,7 +384,7 @@ const char*
 """
 
 interface_impl_inherit_dispatch = """\
-if( @impl_inherited_name@::_dispatch(_iop_s) ) {
+if( @impl_inherited_name@::_dispatch(_handle) ) {
   return 1;
 }
 """
@@ -414,7 +417,7 @@ if( !strcmp(op, \"@idl_operation_name@\") ) {
   @call_descriptor@ _call_desc(@call_desc_args@);
   @context@
   @prepare_out_args@
-  _upcall(_iop_s,_call_desc);
+  _handle.upcall(this,_call_desc);
   return 1;
 }
 """

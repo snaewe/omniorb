@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2001/05/29 17:03:51  dpg1
+  In process identity.
+
   Revision 1.2.2.3  2001/04/18 18:18:07  sll
   Big checkin with the brand new internal APIs.
 
@@ -144,7 +147,7 @@ omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
 
 
 void
-omniLocalIdentity::dispatch(IOP_S& giop_s)
+omniLocalIdentity::dispatch(omniCallHandle& handle)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(pd_adapter && pd_servant);
@@ -153,7 +156,7 @@ omniLocalIdentity::dispatch(IOP_S& giop_s)
 
   omni::remoteInvocationCount++;
 
-  pd_adapter->dispatch(giop_s, this);
+  pd_adapter->dispatch(handle, this);
 }
 
 

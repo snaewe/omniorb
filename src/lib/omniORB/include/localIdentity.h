@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/29 17:03:49  dpg1
+  In process identity.
+
   Revision 1.1.4.1  2001/04/18 17:18:16  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -60,6 +63,7 @@
 
 class omniServant;
 class omniObjRef;
+class omniCallHandle;
 
 OMNI_NAMESPACE_BEGIN(omni)
 class omniObjAdapter;
@@ -105,12 +109,12 @@ public:
   virtual omniIdentity::equivalent_fn get_real_is_equivalent() const;
   // Override omniIdentity.
 
-  void dispatch(_OMNI_NS(IOP_S)&);
+  void dispatch(omniCallHandle&);
   // Dispatches a remote invocation.  Grabs a reference
   // to this identity, and dispatches the call to the
   // object adapter (releasing the reference before
   // returning).
-  //  Must hold <omni::internalLock on entry.  It is not held
+  //  Must hold <omni::internalLock> on entry.  It is not held
   // on exit.
 
   void finishedWithDummyId();

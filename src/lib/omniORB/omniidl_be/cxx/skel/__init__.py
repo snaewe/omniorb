@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7.2.6  2001/05/29 17:03:50  dpg1
+# In process identity.
+#
 # Revision 1.7.2.5  2001/04/19 09:30:12  sll
 #  Big checkin with the brand new internal APIs.
 # Scoped where appropriate with the omni namespace.
@@ -106,6 +109,7 @@ def monolithic(stream, tree):
 #include <omniORB4/IOP_S.h>
 #include <omniORB4/IOP_C.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/callHandle.h>
 @include_omniAMICallDescriptor@
 
 OMNI_USING_NAMESPACE(omni)

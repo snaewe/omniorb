@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/05/29 17:03:52  dpg1
+  In process identity.
+
   Revision 1.2.2.6  2001/04/18 18:18:05  sll
   Big checkin with the brand new internal APIs.
 
@@ -135,6 +138,7 @@
 #include <poaimpl.h>
 #include <omniORB4/IOP_S.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/callHandle.h>
 #include <localIdentity.h>
 #include <poamanager.h>
 #include <exceptiondefs.h>
@@ -1292,7 +1296,7 @@ omniOrbPOA::decrRefCount()
 
 
 void
-omniOrbPOA::dispatch(IOP_S& giop_s, omniLocalIdentity* id)
+omniOrbPOA::dispatch(omniCallHandle& handle, omniLocalIdentity* id)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(id);  OMNIORB_ASSERT(id->servant());
@@ -1312,13 +1316,27 @@ omniOrbPOA::dispatch(IOP_S& giop_s, omniLocalIdentity* id)
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
-    l << "Dispatching remote call \'" << giop_s.operation_name()
-      << "\' to: " << id << '\n';
+    l << "Dispatching "
+      << (handle.call_desc() ? "in process" : "remote")
+      << " call '" << handle.operation_name()
+      << "' to: " << id << '\n';
   }
 
-  if( !id->servant()->_dispatch(giop_s) ) {
-    if( !id->servant()->omniServant::_dispatch(giop_s) ) {
-      giop_s.SkipRequestBody();
+  if (handle.call_desc() &&
+      handle.call_desc()->haslocalCallFn() &&
+      id->servant()->
+        _ptrToInterface(handle.call_desc()->objref()->_localServantTarget())) {
+
+    // The call descriptor has a local call function, and the servant
+    // is compatible with it, so do a direct up-call.
+    handle.upcall(id->servant(), *handle.call_desc());
+    return;
+  }
+
+  // Dispatch through the servant's _dispatch() function.
+  if( !id->servant()->_dispatch(handle) ) {
+    if( !id->servant()->omniServant::_dispatch(handle) ) {
+      handle.SkipRequestBody();
       OMNIORB_THROW(BAD_OPERATION,0, CORBA::COMPLETED_NO);
     }
   }
@@ -1326,12 +1344,13 @@ omniOrbPOA::dispatch(IOP_S& giop_s, omniLocalIdentity* id)
 
 
 void
-omniOrbPOA::dispatch(IOP_S& giop_s, const CORBA::Octet* key, int keysize)
+omniOrbPOA::dispatch(omniCallHandle& handle,
+		     const CORBA::Octet* key, int keysize)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   OMNIORB_ASSERT(key);
-  OMNIORB_ASSERT(keysize >= pd_poaIdSize &&
-		 !memcmp(key, (const char*) pd_poaId, pd_poaIdSize));
+  OMNIORB_ASSERT(keysize >= pd_poaIdSize);
+  //OMNIORB_ASSERT(!memcmp(key, (const char*) pd_poaId, pd_poaIdSize));
 
   // Check that the key is the right size (if system generated).
   if( !pd_policy.user_assigned_id &&
@@ -1344,12 +1363,12 @@ omniOrbPOA::dispatch(IOP_S& giop_s, const CORBA::Octet* key, int keysize)
     break;
 
   case RPP_DEFAULT_SERVANT:
-    dispatch_to_ds(giop_s, key, keysize);
+    dispatch_to_ds(handle, key, keysize);
     break;
 
   case RPP_SERVANT_MANAGER:
-    if( pd_policy.retain_servants )  dispatch_to_sa(giop_s, key, keysize);
-    else                             dispatch_to_sl(giop_s, key, keysize);
+    if( pd_policy.retain_servants )  dispatch_to_sa(handle, key, keysize);
+    else                             dispatch_to_sl(handle, key, keysize);
     break;
   };
 }
@@ -2309,8 +2328,8 @@ omniOrbPOA::add_object_to_etherealisation_queue(
 
 
 void
-omniOrbPOA::dispatch_to_ds(IOP_S& giop_s, const CORBA::Octet* key,
-			   int keysize)
+omniOrbPOA::dispatch_to_ds(omniCallHandle& handle,
+			   const CORBA::Octet* key, int keysize)
 {
   pd_lock.lock();
   if( !pd_defaultServant ) {
@@ -2328,13 +2347,13 @@ omniOrbPOA::dispatch_to_ds(IOP_S& giop_s, const CORBA::Octet* key,
   omniORB::logs(10, "Dispatching through default servant");
 
   omni::internalLock->lock();
-  the_id.dispatch(giop_s);
+  the_id.dispatch(handle);
 }
 
 
 void
-omniOrbPOA::dispatch_to_sa(IOP_S& giop_s, const CORBA::Octet* key,
-			   int keysize)
+omniOrbPOA::dispatch_to_sa(omniCallHandle& handle,
+			   const CORBA::Octet* key, int keysize)
 {
   // A bit of prep. outside the critical sections...
   int idsize = keysize - pd_poaIdSize;
@@ -2374,7 +2393,7 @@ omniOrbPOA::dispatch_to_sa(IOP_S& giop_s, const CORBA::Octet* key,
   if( id && id->servant() ) {
     pd_lock.unlock();
     servant_activator_lock.unlock();
-    id->dispatch(giop_s);
+    id->dispatch(handle);
     return;
   }
 
@@ -2464,13 +2483,13 @@ omniOrbPOA::dispatch_to_sa(IOP_S& giop_s, const CORBA::Octet* key,
   pd_lock.unlock();
   exitAdapter(1, 1);
 
-  id->dispatch(giop_s);
+  id->dispatch(handle);
 }
 
 
 void
-omniOrbPOA::dispatch_to_sl(IOP_S& giop_s, const CORBA::Octet* key,
-			   int keysize)
+omniOrbPOA::dispatch_to_sl(omniCallHandle& handle,
+			   const CORBA::Octet* key, int keysize)
 {
   pd_lock.lock();
   if( pd_dying ) {
@@ -2499,8 +2518,7 @@ omniOrbPOA::dispatch_to_sl(IOP_S& giop_s, const CORBA::Octet* key,
   PortableServer::Servant servant;
   PortableServer::ServantLocator::Cookie cookie = 0;
   try {
-    servant = sl->preinvoke(oid, this, giop_s.operation_name(),
-			    cookie);
+    servant = sl->preinvoke(oid, this, handle.operation_name(), cookie);
   }
 #ifndef HAS_Cplusplus_catch_exception_by_base
 #define RETHROW_EXCEPTION(name) catch(CORBA::name&) { exitAdapter(); throw; }
@@ -2531,37 +2549,45 @@ omniOrbPOA::dispatch_to_sl(IOP_S& giop_s, const CORBA::Octet* key,
   omniLocalIdentity the_id(key, keysize);
   the_id.setServant((PortableServer::Servant) servant, this);
 
+  // Create upcall hook
+  PostInvokeHook upcallHook(this, pd_policy.single_threaded ? pd_call_lock : 0,
+			    sl, oid, handle.operation_name(), cookie, servant);
+  handle.upcall_hook(&upcallHook);
+
   omni::internalLock->lock();
-  try {
-    the_id.dispatch(giop_s);
-  }
-  catch(...) {
-    call_postinvoke(sl, oid, giop_s.operation_name(), cookie, servant);
-    throw;
-  }
-  call_postinvoke(sl, oid, giop_s.operation_name(), cookie, servant);
+  the_id.dispatch(handle);
 }
 
+void
+omniOrbPOA::
+PostInvokeHook::
+upcall(omniServant* servant, omniCallDescriptor& desc)
+{
+  try {
+    desc.doLocalCall(servant);
+  }
+  catch (...) {
+    call_postinvoke();
+    throw;
+  }
+  call_postinvoke();
+}
 
 void
-omniOrbPOA::call_postinvoke(PortableServer::ServantLocator_ptr sl,
-			    PortableServer::ObjectId& oid,
-			    const char* op,
-			    PortableServer::ServantLocator::Cookie cookie,
-			    PortableServer::Servant servant)
+omniOrbPOA::
+PostInvokeHook::
+call_postinvoke()
 {
-  if( pd_policy.single_threaded )  pd_call_lock->lock();
-  try {
-    sl->postinvoke(oid, this, op, cookie, servant);
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+
+  if (pd_call_lock) {
+    omni_tracedmutex_lock l(*pd_call_lock);
+    pd_sl->postinvoke(pd_oid, pd_poa, pd_op, pd_cookie, pd_servant);
   }
-  catch(...) {
-    // The client is more interested in the request than the fact that
-    // object etherealisation failed -- so if this fails we don't tell
-    // the client.  Just log a message ...
-    omniORB::logs(5, "ServantLocator::postinvoke() raised an exception.");
-  }
-  if( pd_policy.single_threaded )  pd_call_lock->unlock();
-  exitAdapter();
+  else
+    pd_sl->postinvoke(pd_oid, pd_poa, pd_op, pd_cookie, pd_servant);
+
+  pd_poa->exitAdapter();
 }
 
 

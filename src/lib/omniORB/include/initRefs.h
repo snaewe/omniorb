@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/05/29 17:03:49  dpg1
+  In process identity.
+
   Revision 1.1.4.1  2001/04/18 17:18:16  sll
   Big checkin with the brand new internal APIs.
   These files were relocated and scoped with the omni namespace.
@@ -117,7 +120,7 @@ public:
 
   static void initialise_bootstrap_agentImpl();
 
-  static int invoke_bootstrap_agentImpl(IOP_S&);
+  static int invoke_bootstrap_agentImpl(omniCallHandle&);
   // Returns 0 if there is no bootstrap agent.  May throw
   // the usual exceptions for an object invocation...
 

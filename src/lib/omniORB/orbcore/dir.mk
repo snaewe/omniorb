@@ -69,6 +69,8 @@ ORB_SRCS =  \
 	    portableserver.cc \
 	    proxyFactory.cc \
 	    remoteIdentity.cc \
+	    inProcessIdentity.cc \
+            callHandle.cc \
 	    taskqueue.cc \
 	    tracedthread.cc \
 	    uri.cc \

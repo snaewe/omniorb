@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/05/29 17:03:48  dpg1
+  In process identity.
+
   Revision 1.2.2.7  2001/05/10 15:08:37  dpg1
   _compatibleServant() replaced with _localServantTarget().
   createIdentity() now takes a target string.
@@ -346,6 +349,10 @@ _CORBA_MODULE_BEG
   //
   // <locked> => hold <internalLock>.
 
+  _CORBA_MODULE_FN omniIdentity* createInProcessIdentity(const _CORBA_Octet* k,
+							 int keysize);
+  // Returns an omniIdentity to contact an object in this address
+  // space which is unsuitable for contact through a localIdentity.
 
   _CORBA_MODULE_FN omniIdentity* createLoopBackIdentity(omniIOR* ior,
 							const _CORBA_Octet* k,

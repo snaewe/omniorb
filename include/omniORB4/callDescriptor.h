@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.6  2001/05/29 17:03:47  dpg1
+ In process identity.
+
  Revision 1.2.2.5  2001/04/18 17:50:44  sll
  Big checkin with the brand new internal APIs.
  Scoped where appropriate with the omni namespace.
@@ -86,6 +89,7 @@ public:
       pd_user_excns(user_excns),
       pd_n_user_excns(n_user_excns),
       pd_is_upcall(is_upcall),
+      pd_objref(0),
       pd_first_address_used(0) {}
 
 #if defined(__GNUG__)
@@ -138,6 +142,9 @@ public:
   inline const _OMNI_NS(giopAddress)* firstAddressUsed() { 
     return pd_first_address_used;
   }
+  inline void objref(omniObjRef* o) { pd_objref = o; }
+  inline omniObjRef* objref() { OMNIORB_ASSERT(pd_objref); return pd_objref; }
+
   inline void firstAddressUsed(const _OMNI_NS(giopAddress)* a) { 
     pd_first_address_used = a;
   }
@@ -177,6 +184,10 @@ private:
   const char*const*            pd_user_excns;
   int                          pd_n_user_excns;
   _CORBA_Boolean               pd_is_upcall;
+
+  omniObjRef*                  pd_objref;
+  // On the client side, this is needed to check if a servant found by
+  // the in process identity can be used in a direct local call.
 
   const _OMNI_NS(giopAddress)* pd_first_address_used;
   // state holder for the giop transport in relation to this call. Not

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.13  2001/05/29 17:03:52  dpg1
+  In process identity.
+
   Revision 1.2.2.12  2001/05/11 14:26:29  sll
   Use OMNIORB_THROW in rethrows to get better tracing info.
 
@@ -143,7 +146,38 @@ omniObjRef::_realNarrow(const char* repoId)
   void* target = _ptrToObjRef(repoId);
 
   if( target ) {
-    omni::duplicateObjRef(this);
+    omni::internalLock->lock();
+
+    if (_localId() && _localId()->servant() &&
+	_localId()->servant()->_ptrToInterface(repoId)) {
+
+      omni::internalLock->unlock();
+      omni::duplicateObjRef(this);
+    }
+    else {
+      // The object is local, but cannot be used in the local case
+      // optimisation. Use an inProcessIdentity.
+      omni::internalLock->unlock();
+
+      omniObjRef* objref;
+      omniIOR*    ior;
+
+      {
+	omni_tracedmutex_lock sync(*omniIOR::lock);
+	ior = pd_ior->duplicateNoLock();
+      }
+
+      {
+	omni_tracedmutex_lock sync(*omni::internalLock);
+	objref = omni::createObjRef(repoId,ior,1,0,0);
+	objref->pd_flags.forward_location = pd_flags.forward_location;
+      }
+
+      if( objref ) {
+	target = objref->_ptrToObjRef(repoId);
+	OMNIORB_ASSERT(target);
+      }
+    }
   }
   else {
     // Either:
@@ -463,6 +497,8 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
 
+  call_desc.objref(this);
+
   while(1) {
 
     if( omniORB::verifyObjectExistsAndType && do_assert )
@@ -484,6 +520,8 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 	//
 	// This is not the normal case but could happen in rare circumstance,
 	// such as a DII call descriptor invoking on a local object.
+
+	// **** Should use inProcessIdentity
 	id = omni::createLoopBackIdentity(_getIOR(),id->key(),id->keysize());
       }
 

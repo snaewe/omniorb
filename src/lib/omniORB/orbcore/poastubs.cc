@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.4  2001/05/29 17:03:53  dpg1
+  In process identity.
+
   Revision 1.2.2.3  2001/04/18 18:18:05  sll
   Big checkin with the brand new internal APIs.
 
@@ -280,7 +283,7 @@ PortableServer::_impl_AdapterActivator::~_impl_AdapterActivator() {}
 
 
 CORBA::Boolean
-PortableServer::_impl_AdapterActivator::_dispatch(IOP_S& giop_s)
+PortableServer::_impl_AdapterActivator::_dispatch(omniCallHandle& handle)
 {
   return 0;
 }
@@ -413,7 +416,7 @@ PortableServer::_impl_ServantManager::~_impl_ServantManager() {}
 
 
 CORBA::Boolean
-PortableServer::_impl_ServantManager::_dispatch(IOP_S& giop_s)
+PortableServer::_impl_ServantManager::_dispatch(omniCallHandle& handle)
 {
   return 0;
 }
@@ -629,7 +632,7 @@ PortableServer::_impl_ServantActivator::~_impl_ServantActivator() {}
 
 
 CORBA::Boolean
-PortableServer::_impl_ServantActivator::_dispatch(IOP_S& giop_s)
+PortableServer::_impl_ServantActivator::_dispatch(omniCallHandle& handle)
 {
   return 0;
 }
@@ -851,7 +854,7 @@ PortableServer::_impl_ServantLocator::~_impl_ServantLocator() {}
 
 
 CORBA::Boolean
-PortableServer::_impl_ServantLocator::_dispatch(IOP_S& giop_s)
+PortableServer::_impl_ServantLocator::_dispatch(omniCallHandle& handle)
 {
   return 0;
 }

@@ -1,3 +1,39 @@
+Tue May 29 17:54:06 BST 2001 dpg1
+=================================
+
+- In process identity. DII/DSI still use TCP loopback at the moment.
+
+include/omniORB4/callDescriptor.h
+include/omniORB4/callHandle.h                     -- new
+include/omniORB4/omniInternal.h
+include/omniORB4/omniServant.h
+include/omniORB4/poa.h
+include/omniORB4/poa_defs.h
+src/lib/omniORB/dynamic/dynamicImplementation.cc
+src/lib/omniORB/dynamic/irstub.cc
+src/lib/omniORB/include/corbaBoa.h
+src/lib/omniORB/include/inProcessIdentity.h       -- new
+src/lib/omniORB/include/initRefs.h
+src/lib/omniORB/include/localIdentity.h
+src/lib/omniORB/include/objectAdapter.h
+src/lib/omniORB/include/poaimpl.h
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/skel/__init__.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/callHandle.cc             -- new
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/inProcessIdentity.cc      -- new
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/localIdentity.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/omniServant.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poastubs.cc
+
+
 Fri May 11 15:22:01 BST 2001 sll
 ================================
 

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.8  2001/05/29 17:03:50  dpg1
+# In process identity.
+#
 # Revision 1.5.2.7  2001/04/19 09:30:12  sll
 #  Big checkin with the brand new internal APIs.
 # Scoped where appropriate with the omni namespace.
@@ -372,7 +375,7 @@ public:
   @operations@
   
 public:  // Really protected, workaround for xlC
-  virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
+  virtual _CORBA_Boolean _dispatch(omniCallHandle&);
 
 private:
   virtual void* _ptrToInterface(const char*);

@@ -32,6 +32,7 @@
 #include <dynamicImplementation.h>
 #include <omniORB4/IOP_S.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/callHandle.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
@@ -81,9 +82,12 @@ PortableServer::DynamicImplementation::_is_a(const char* logical_type_id)
 
 
 _CORBA_Boolean
-PortableServer::DynamicImplementation::_dispatch(IOP_S& giop_s)
+PortableServer::DynamicImplementation::_dispatch(omniCallHandle& handle)
 {
-  const char* op = giop_s.operation_name();
+  OMNIORB_ASSERT(handle.iop_s());
+  _OMNI_NS(IOP_S)& iop_s = *handle.iop_s();
+
+  const char* op = iop_s.operation_name();
 
   // We do not want to handle standard object operations ...
   if( !strcmp(op, "_is_a"          ) ||
@@ -92,7 +96,7 @@ PortableServer::DynamicImplementation::_dispatch(IOP_S& giop_s)
       !strcmp(op, "_implementation") )
     return 0;
 
-  omniServerRequest sreq(giop_s);
+  omniServerRequest sreq(iop_s);
 
   // Upcall into application's DIR.
   invoke(&sreq);

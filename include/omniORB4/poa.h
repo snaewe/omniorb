@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2001/05/29 17:03:48  dpg1
+  In process identity.
+
   Revision 1.2.2.5  2001/04/18 17:50:43  sll
   Big checkin with the brand new internal APIs.
   Scoped where appropriate with the omni namespace.
@@ -760,9 +763,7 @@ _CORBA_MODULE_BEG
     // but may be overridden by subclasses.
 
     // omniORB internal.
-    virtual _CORBA_Boolean _dispatch(_OMNI_NS(IOP_S)&);
-    // DJR - NB. probably should not pass the standard object
-    // ops up to the invoke routine...
+    virtual _CORBA_Boolean _dispatch(omniCallHandle&);
 
   private:
     virtual omniObjRef* _do_get_interface();
