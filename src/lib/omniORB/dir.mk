@@ -72,15 +72,15 @@ omniORB4/distdate.hh : $(BASE_OMNI_TREE)/update.log
 
 omniORB4/Naming.hh : Naming.idl
 	@(dir=omniORB4; $(CreateDir))
-	$(OMNIORB_IDL) -ComniORB4 $<
+	$(OMNIORB_IDL) -v -ComniORB4 $<
 
 omniORB4/bootstrap.hh : bootstrap.idl
 	@(dir=omniORB4; $(CreateDir))
-	$(OMNIORB_IDL) -ComniORB4 $<
+	$(OMNIORB_IDL) -v -ComniORB4 $<
 
 omniORB4/ir_defs.hh omniORB4/ir_operators.hh omniORB4/ir_poa.hh: ir.idl
 	@(dir=omniORB4; $(CreateDir))
-	$(OMNIORB_IDL) -WbF $(IMPORT_IDLFLAGS) -ComniORB4 $<
+	$(OMNIORB_IDL) -v -WbF $(IMPORT_IDLFLAGS) -ComniORB4 $<
 
 omniORB4/corbaidl_defs.hh corbaidl_operators.hh corbaidl_poa.hh: corbaidl.idl
 	@(dir=omniORB4; $(CreateDir))

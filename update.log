@@ -1,3 +1,11 @@
+Tue Feb 26 14:47:48 GMT 2002 dpg1
+=================================
+
+- Add -v to omniidl flags when building ORB.
+
+src/lib/omniORB/dir.mk
+
+
 Tue Feb 26 13:57:20 GMT 2002 dpg1
 =================================
 
