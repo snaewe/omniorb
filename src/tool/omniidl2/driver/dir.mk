@@ -66,7 +66,14 @@ endif
 
 lib = $(patsubst %,$(LibPattern),drv)
 
-all:: $(lib)
+ifdef NTArchitecture
 
+all:: $(OBJS)
+
+else
+
+all:: $(lib)
 $(lib): $(OBJS)
 	@$(StaticLinkLibrary)
+
+endif
