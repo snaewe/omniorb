@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.18  1998/10/26 12:19:58  sll
+  Added catch for o2be_fe_error exception.
+
   Revision 1.17  1998/08/13 22:41:24  sll
   Added pragma hdrstop to control pre-compile header if the compiler feature
   is available.
@@ -189,6 +192,9 @@ BE_produce()
 {
   try {
     o2be_global::root()->produce();
+  }
+  catch (o2be_fe_error &ex) {
+    std::cerr << "Error: " << ex.errmsg() << std::endl;
   }
   catch (o2be_fileio_error &ex) {
     std::cerr << "Error: " << ex.errmsg() << std::endl;
