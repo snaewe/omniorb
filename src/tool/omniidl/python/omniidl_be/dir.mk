@@ -20,3 +20,5 @@ export:: python.py
 export:: showast.py
 	@(file="showast.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
 
+export:: example.py
+	@(file="example.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
