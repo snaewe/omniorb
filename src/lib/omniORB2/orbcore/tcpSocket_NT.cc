@@ -11,9 +11,14 @@
 
 /*
   $Log$
-  Revision 1.1  1997/02/19 11:05:18  ewc
-  Initial revision
+  Revision 1.2  1997/03/10 12:13:08  sll
+  tcpSocketRope ctor now returns the passive endpoint created by
+  the tcpSocketRendezvous ctor. The value is returned via the argument
+  Endpoint *e.
 
+// Revision 1.1  1997/02/19  11:05:18  ewc
+// Initial revision
+//
 
   */
 
@@ -666,6 +671,7 @@ tcpSocketRope::tcpSocketRope(Anchor *a,
   else {
     pd_endpoint.me = new tcpSocketEndpoint(te);
     pd_rendezvous = new tcpSocketRendezvous(this,pd_endpoint.me);
+    *te = *pd_endpoint.me;
   }
   return;
 }
