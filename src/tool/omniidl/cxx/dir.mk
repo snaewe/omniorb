@@ -1,5 +1,14 @@
-IDLMODULE_MAJOR = 0
-IDLMODULE_MINOR = 1
+IDLMODULE_MAJOR   = 0
+IDLMODULE_MINOR   = 1
+IDLMODULE_VERSION = 0x2301# => CORBA 2.3, front-end 0.1
+
+DIR_CPPFLAGS += -DIDLMODULE_VERSION="\"$(IDLMODULE_VERSION)\""
+
+SUBDIRS = cccp
+all::
+	@$(MakeSubdirs)
+export::
+	@$(MakeSubdirs)
 
 OBJS = y.tab.o lex.yy.o idlerr.o idlutil.o idltype.o \
 	idlrepoId.o idlscope.o idlexpr.o idlast.o idlvalidate.o \
@@ -15,7 +24,7 @@ YYSRC = idl.yy
 LLSRC = idl.ll
 
 FLEX = flex -t
-BISON = bison -d -v -o y.tab.c
+BISON = bison -d -o y.tab.c
 
 idlc = $(patsubst %,$(BinPattern),idlc)
 
@@ -51,9 +60,6 @@ endif
 ifdef Linux
 
 CXXOPTIONS += -fpic
-
-DIR_CPPFLAGS += -DCPP_LOCATION="\"/lib/cpp\"" \
-                -DCPP_FLAGS="\"-lang-c++ -undef\""
 
 libname = _omniidlmodule.so
 soname = $(libname).$(IDLMODULE_MAJOR)
@@ -91,8 +97,6 @@ endif
 ifdef SunOS
 
 CXXOPTIONS += -Kpic -I/usr/local/include
-
-DIR_CPPFLAGS += -DCPP_LOCATION="\"$(CPP)\"" -DCPP_FLAGS="\"-B -undef\""
 
 libname = _omniidlmodule.so
 soname = $(libname).$(IDLMODULE_MAJOR)

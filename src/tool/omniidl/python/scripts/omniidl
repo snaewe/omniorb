@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/11/04 11:46:12  dpg1
+# Now uses our own version of the GNU C preprocessor.
+#
 # Revision 1.7  1999/11/02 17:40:01  dpg1
 # Support for multiple back-ends in one run.
 #
@@ -51,10 +54,10 @@ import sys, getopt, os, os.path, string
 def version():
     print "omniidl version 0.1"
 
-omniidl = os.path.basename(sys.argv[0])
+cmdname = os.path.basename(sys.argv[0])
 
 def usage():
-    print "\nUsage:", omniidl, " [flags] -b<back_end> file1 file2 ..."
+    print "\nUsage:", cmdname, " [flags] -b<back_end> file1 file2 ..."
     print """
 The supported flags are:
 
@@ -75,13 +78,18 @@ The supported flags are:
 
 preprocessor_args = []
 preprocessor_only = 0
-preprocessor_cmd  = _omniidl.cpp_location + " " + _omniidl.cpp_flags + \
-                    " -D__OMNIIDL__"
+
+preprocessor      = os.path.join(os.path.dirname(_omniidl.__file__),
+                                 "omni-cpp")
+preprocessor_cmd  = preprocessor + " -lang-c++ -undef -D__OMNIIDL__=" + \
+                    _omniidl.version
+
 no_preprocessor   = 0
 backends          = []
 backends_args     = []
 dump_only         = 0
 verbose           = 0
+
 
 def parseArgs(args):
     global preprocessor_args, preprocessor_only, preprocessor_cmd
@@ -91,7 +99,7 @@ def parseArgs(args):
         opts,files = getopt.getopt(args, "D:I:U:EY:NW:b:dVuv")
     except getopt.error, e:
         sys.stderr.write("Error in arguments: " + e + "\n")
-        sys.stderr.write("Use " + omniidl + " -u for usage\n")
+        sys.stderr.write("Use " + cmdname + " -u for usage\n")
         sys.exit(1)
 
     for opt in opts:
@@ -126,7 +134,7 @@ def parseArgs(args):
             else:
                 sys.stderr.write("Error in arguments: option " + o + \
                                  " not recognized\n")
-                sys.stderr.write("Use " + omniidl + " -u for usage\n")
+                sys.stderr.write("Use " + cmdname + " -u for usage\n")
 
         elif o == "-b":
             backends.append(a)
@@ -156,24 +164,42 @@ def main(argv):
     files = parseArgs(argv[1:])
 
     if len(files) == 0:
-        sys.stderr.write(omniidl + ": No files specified\n")
+        sys.stderr.write(cmdname + ": No files specified\n")
         sys.exit(1)
+
+    # Import back-ends, and add any pre-processor arguments
+    for backend in backends:
+        if verbose:
+            print cmdname + ": Importing back-end `" + backend + "'"
+
+        try:
+            exec "import omniidl.be." + backend
+            exec "be = omniidl.be." + backend
+        except ImportError:
+            sys.stderr.write(cmdname + \
+                             ": Could not import back-end `" + backend + "'\n")
+            sys.exit(1)
+
+        if hasattr(be, "cpp_args"):
+            preprocessor_args.extend(be.cpp_args)
 
     for file in files:
         if not os.path.isfile(file):
-            sys.stderr.write(omniidl + ": `" + file + "' does not exist\n")
+            sys.stderr.write(cmdname + ": `" + file + "' does not exist\n")
             break
 
         preproc_cmd = preprocessor_cmd + " " + \
                       string.join(preprocessor_args, " ") + " " + file
 
         if not no_preprocessor:
-            if verbose: print omniidl + ": Preprocessing `" + file + "'"
+            if verbose:
+                print cmdname + ": Preprocessing `" + file + "' with `" + \
+                      preproc_cmd + "'"
 
             if preprocessor_only:
                 err = os.system(preproc_cmd)
                 if err:
-                    sys.stderr.write(omniidl + \
+                    sys.stderr.write(cmdname + \
                                      ": Error running preprocessor\n")
                     sys.exit(1)
                 sys.exit(0)
@@ -182,7 +208,7 @@ def main(argv):
         else:
             file = open(file, "r")
 
-        if verbose: print omniidl + ": Running front end"
+        if verbose: print cmdname + ": Running front end"
 
         if dump_only:
             _omniidl.dump(file)
@@ -190,7 +216,7 @@ def main(argv):
             tree = _omniidl.compile(file)
 
             if file.close():
-                sys.stderr.write(omniidl + ": Error running preprocessor\n")
+                sys.stderr.write(cmdname + ": Error running preprocessor\n")
                 sys.exit(1)
 
             if tree is None:
@@ -199,15 +225,7 @@ def main(argv):
             i = 0
             for backend in backends:
                 if verbose:
-                    print omniidl + ": Running back-end `" + backend + "'"
-
-                try:
-                    exec "import omniidl.be." + backend
-                except ImportError:
-                    sys.stderr.write(omniidl + \
-                                     ": Could not import back-end `" + \
-                                     backend + "'\n")
-                    sys.exit(1)
+                    print cmdname + ": Running back-end `" + backend + "'"
 
                 exec "omniidl.be." + backend + ".run(tree, backends_args[i])"
                 i = i + 1
