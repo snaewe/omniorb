@@ -27,7 +27,7 @@
 //   Implementation of CORBA::ContextList.
 //
 
-#include <omniORB/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
