@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.20  2000/12/04 13:46:43  dpg1
+ Support PowerPC Linux.
+
  Revision 1.1.2.19  2000/11/23 13:05:04  sll
  Added support for KAI C++ 4.0.
 
@@ -488,6 +491,8 @@
 # define _OMNIORB_HOST_BYTE_ORDER_ 0
 # define _HAS_SIGNAL 1
 # define _USE_GETHOSTNAME 1
+#elif defined(__powerpc__)
+# define _OMNIORB_HOST_BYTE_ORDER_ 0
 #else
 # error "The byte order of this platform is unknown"
 #endif

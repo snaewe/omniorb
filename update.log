@@ -1,3 +1,13 @@
+Mon Dec  4 13:44:48 GMT 2000 dpg1
+=================================
+
+- Support PowerPC Linux.
+
+external_merge/mk/platforms/powerpc_linux_2.2_glibc.mk     NEW
+include/omniORB3/CORBA_sysdep.h
+src/tool/omniidl/cxx/cccp/config-linux.h
+
+
 Thu Nov 30 11:39:00 GMT 2000 dpg1
 =================================
 
