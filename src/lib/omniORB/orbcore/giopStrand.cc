@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/07/13 15:28:17  sll
+  Use safeDelete to manage the lifecycle of a strand.
+
   Revision 1.1.4.3  2001/06/13 20:13:15  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -77,7 +80,9 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 giopStrand::giopStrand(const giopAddress* addr) :
-  biDir(0), address(addr), connection(0), gatekeeper_checked(0),first_use(1),
+  pd_safelyDeleted(0),
+  biDir(0), address(addr), connection(0), server(0),
+  gatekeeper_checked(0),first_use(1),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
   rdcond(omniTransportLock), rd_nwaiting(0),
   wrcond(omniTransportLock), wr_nwaiting(0),
@@ -91,8 +96,10 @@ giopStrand::giopStrand(const giopAddress* addr) :
 }
 
 ////////////////////////////////////////////////////////////////////////
-giopStrand::giopStrand(giopConnection* conn) :
-  biDir(0), address(0), connection(conn), gatekeeper_checked(0),first_use(0),
+giopStrand::giopStrand(giopConnection* conn, giopServer* serv) :
+  pd_safelyDeleted(0),
+  biDir(0), address(0), connection(conn), server(serv),
+  gatekeeper_checked(0),first_use(0),
   tcs_selected(0), tcs_c(0), tcs_w(0), giopImpl(0),
   rdcond(omniTransportLock), rd_nwaiting(0),
   wrcond(omniTransportLock), wr_nwaiting(0),
@@ -148,8 +155,71 @@ giopStrand::~giopStrand()
 }
 
 ////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopStrand::safeDelete(CORBA::Boolean forced)
+{
+  CORBA::Boolean deleted = 1;
+
+  if (!forced) {
+    ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
+
+    deleted = pd_safelyDeleted;
+
+    if (deleted) return 1;
+
+    if (giopStreamList::is_empty(clients) &&
+	giopStreamList::is_empty(servers) &&
+	giopStream::noLockWaiting(this)) {
+
+      // No other threads should be waiting for a read or write lock
+      // on the strand. Otherwise, the GIOP_C or GIOP_S lists would not
+      // be empty.
+      StrandList::remove();
+      RopeLink::remove();
+      deleted = pd_safelyDeleted = 1;
+      deleteStrandAndConnection();
+    }
+  }
+  else {
+    deleteStrandAndConnection(1);
+  }
+
+  return deleted;
+}
+
+////////////////////////////////////////////////////////////////////////
+void
+giopStrand::deleteStrandAndConnection(CORBA::Boolean forced)
+{
+  // Delete this strand only when connection's reference count goes to 0.
+  if (connection) {
+    int count;
+    if (!forced) {
+      count = connection->decrRefCount();
+      OMNIORB_ASSERT(count >= 0);
+      if (count != 0)
+	return;
+    }
+    else {
+      count = connection->decrRefCount(1);
+      OMNIORB_ASSERT(count == 0);
+    }
+  }
+  delete this;
+}
+
+////////////////////////////////////////////////////////////////////////
+CORBA::Boolean
+giopStrand::deletePending()
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,1);
+  return pd_safelyDeleted;
+}
+
+
+////////////////////////////////////////////////////////////////////////
 GIOP_S*
-giopStrand::acquireServer(giopServer* serv)
+giopStrand::acquireServer(giopWorker* w)
 {
   // Theory of operation:
   //
@@ -190,6 +260,25 @@ giopStrand::acquireServer(giopServer* serv)
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
 
   omni_tracedmutex_lock sync(*omniTransportLock);
+
+  if (deletePending()) {
+    // Check if safeDelete() has been called on the strand and has returned
+    // true. If this is is the case, we should not proceed or else the
+    // invarant
+    //
+    //    giopStreamList::is_empty(clients) &&
+    //	  giopStreamList::is_empty(servers) &&
+    //	  giopStream::noLockWaiting(this)
+    //     
+    // would be violated.
+    //
+    // Notice that giopServer (worker->server()) may schedule any number of
+    // threads to serve this strand and each of these threads may call this
+    // function at any time before or after safeDelete() is called and
+    // returned true.  We use this check to stop all these threads right
+    // here or else the invarant will be violated.
+    return 0;
+  }
 
  again:
   // Scan the list to identify the 1st occurrance of an instance in
@@ -239,7 +328,7 @@ giopStrand::acquireServer(giopServer* serv)
       sp->impl(0);
     }
     else {
-      sp = new GIOP_S(this,serv);
+      sp = new GIOP_S(this);
       sp->giopStreamList::insert(servers);
     }
     sp->markRdLock();
@@ -259,6 +348,7 @@ giopStrand::acquireServer(giopServer* serv)
   // before a request is unmarshalled.
   sp->TCS_C(0);
   sp->TCS_W(0);
+  sp->worker(w);
   return sp;
 }
 
@@ -308,19 +398,7 @@ giopStrand::releaseServer(IOP_S* iop_s)
       p = p->next;
     }
 
-    if ( giopStreamList::is_empty(s->clients) &&
-	 giopStreamList::is_empty(s->servers) &&
-	 giopStream::noLockWaiting(s)) {
-      // get ride of the strand.
-
-      // No other threads should be waiting for a read or write lock
-      // on the strand. Otherwise, the GIOP_C or GIOP_S lists would not
-      // be empty.
-      s->StrandList::remove();
-      s->RopeLink::remove();
-      if (s->connection) delete s->connection;
-      delete s;
-    }
+    s->safeDelete();
   }
   else if ( !giopStreamList::is_empty(s->servers) ) {
     remove = 1;
@@ -438,8 +516,7 @@ Scavenger::execute()
 	  omniORB::logger log;
 	  log << "Close connection to " << s->address->address() << "\n";
 	}
-	if (s->connection) delete s->connection;
-	delete s;
+	s->safeDelete(1);
       }
     }
 
