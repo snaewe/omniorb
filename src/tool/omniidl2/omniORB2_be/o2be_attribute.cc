@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.21  1999/05/26 10:44:37  sll
+  Added connection code to generate typecode constant for anonymous bounded
+  string defined used in attributed.
+
   Revision 1.20  1999/03/11 16:26:10  djr
   Updated copyright notice
 
@@ -1456,6 +1460,17 @@ o2be_attribute::produce_wrapproxy_wr_skel(std::fstream& s,
   IND(s); s << "}\n";
 }
 
+void
+o2be_attribute::produce_decls_at_global_scope_in_hdr(std::fstream& s)
+{
+  o2be_operation::check_and_produce_unnamed_argument_tc_decl(s,field_type());
+}
+
+void
+o2be_attribute::produce_dynskel(std::fstream& s)
+{
+  o2be_operation::check_and_produce_unnamed_argument_tc_value(s,field_type());
+}
 
 const char*
 o2be_attribute::mangled_read_signature()
