@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/16 13:22:52  djr
+  Changes to support compiling on MSVC.
+
   Revision 1.1.2.2  1999/10/04 15:51:51  djr
   Various fixes/MSVC work-arounds.
 
@@ -162,7 +165,7 @@ class _objref_AdapterActivator :
 public:
   CORBA::Boolean unknown_adapter(POA_ptr parent, const char* name);
 
-  inline _objref_AdapterActivator() : Object(0) {}  // nil
+  inline _objref_AdapterActivator() { _PR_setobj(0); }  // nil
   _objref_AdapterActivator(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
 
 protected:
@@ -279,7 +282,7 @@ class _objref_ServantManager :
 {
 public:
 
-  inline _objref_ServantManager() : Object(0) {}  // nil
+  inline _objref_ServantManager() { _PR_setobj(0); }  // nil
   _objref_ServantManager(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
 
 protected:
@@ -397,7 +400,7 @@ public:
   Servant incarnate(const ObjectId& oid, POA_ptr adapter);
   void etherealize(const ObjectId& oid, POA_ptr adapter, Servant serv, CORBA::Boolean cleanup_in_progress, CORBA::Boolean remaining_activations);
 
-  inline _objref_ServantActivator() : Object(0) {}  // nil
+  inline _objref_ServantActivator() { _PR_setobj(0); }  // nil
   _objref_ServantActivator(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
 
 protected:
@@ -519,7 +522,7 @@ public:
   Servant preinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, ServantLocator::Cookie& the_cookie);
   void postinvoke(const ObjectId& oid, POA_ptr adapter, const char* operation, ServantLocator::Cookie the_cookie, Servant the_servant);
 
-  inline _objref_ServantLocator() : Object(0) {}  // nil
+  inline _objref_ServantLocator() { _PR_setobj(0); }  // nil
   _objref_ServantLocator(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
 
 protected:

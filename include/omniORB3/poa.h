@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/16 13:22:51  djr
+  Changes to support compiling on MSVC.
+
   Revision 1.1.2.2  1999/09/28 09:47:57  djr
   Corrected declaration of ObjectId_to_string and string_to_ObjectId.
 
@@ -261,25 +264,25 @@ _CORBA_MODULE_BEG
   ////////////////////////// Policy Interfaces /////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-  _CORBA_MODULE_VARINT _core_attr const CORBA::ULong
+  _CORBA_MODULE_VARINT const CORBA::ULong
     THREAD_POLICY_ID _init_in_decl_( = 16 );
 
-  _CORBA_MODULE_VARINT _core_attr const CORBA::ULong
+  _CORBA_MODULE_VARINT const CORBA::ULong
     LIFESPAN_POLICY_ID _init_in_decl_( = 17 );
 
-  _CORBA_MODULE_VARINT _core_attr const CORBA::ULong
+  _CORBA_MODULE_VARINT const CORBA::ULong
     ID_UNIQUENESS_POLICY_ID _init_in_decl_( = 18 );
 
-  _CORBA_MODULE_VARINT _core_attr const CORBA::ULong
+  _CORBA_MODULE_VARINT const CORBA::ULong
     ID_ASSIGNMENT_POLICY_ID _init_in_decl_( = 19 );
 
-  _CORBA_MODULE_VARINT _core_attr const CORBA::ULong
+  _CORBA_MODULE_VARINT const CORBA::ULong
     IMPLICIT_ACTIVATION_POLICY_ID _init_in_decl_( = 20 );
 
-  _CORBA_MODULE_VARINT _core_attr const CORBA::ULong
+  _CORBA_MODULE_VARINT const CORBA::ULong
     SERVANT_RETENTION_POLICY_ID _init_in_decl_( = 21 );
 
-  _CORBA_MODULE_VARINT _core_attr const CORBA::ULong
+  _CORBA_MODULE_VARINT const CORBA::ULong
     REQUEST_PROCESSING_POLICY_ID _init_in_decl_( = 22 );
 
 
@@ -322,7 +325,7 @@ _CORBA_MODULE_BEG
 #ifdef OMNIORB_DECLARE_POLICY_OBJECT
 #error OMNIORB_DECLARE_POLICY_OBJECT is already defined!
 #endif
-#define OMNIORB_DECLARE_POLICY_OBJECT(name)  \
+#define OMNIORB_DECLARE_POLICY_OBJECT(name, type)  \
   class name;  \
   typedef name* name##_ptr;  \
   typedef name##_ptr name##Ref;  \
@@ -330,8 +333,8 @@ _CORBA_MODULE_BEG
   class name : public CORBA::Policy  \
   {  \
   public:  \
-    name(name##Value value);  \
-    name();  \
+    inline name(name##Value value) : CORBA::Policy(type), pd_value(value) {}  \
+    inline name() {}  \
     virtual ~name();  \
     \
     virtual CORBA::Policy_ptr copy();  \
@@ -351,13 +354,16 @@ _CORBA_MODULE_BEG
   \
   typedef _CORBA_PseudoObj_Var<name> name##_var;
 
-  OMNIORB_DECLARE_POLICY_OBJECT(ThreadPolicy)
-  OMNIORB_DECLARE_POLICY_OBJECT(LifespanPolicy)
-  OMNIORB_DECLARE_POLICY_OBJECT(IdUniquenessPolicy)
-  OMNIORB_DECLARE_POLICY_OBJECT(IdAssignmentPolicy)
-  OMNIORB_DECLARE_POLICY_OBJECT(ImplicitActivationPolicy)
-  OMNIORB_DECLARE_POLICY_OBJECT(ServantRetentionPolicy)
-  OMNIORB_DECLARE_POLICY_OBJECT(RequestProcessingPolicy)
+  OMNIORB_DECLARE_POLICY_OBJECT(ThreadPolicy, THREAD_POLICY_ID)
+  OMNIORB_DECLARE_POLICY_OBJECT(LifespanPolicy, LIFESPAN_POLICY_ID)
+  OMNIORB_DECLARE_POLICY_OBJECT(IdUniquenessPolicy, ID_UNIQUENESS_POLICY_ID)
+  OMNIORB_DECLARE_POLICY_OBJECT(IdAssignmentPolicy, ID_ASSIGNMENT_POLICY_ID)
+  OMNIORB_DECLARE_POLICY_OBJECT(ImplicitActivationPolicy,
+				IMPLICIT_ACTIVATION_POLICY_ID)
+  OMNIORB_DECLARE_POLICY_OBJECT(ServantRetentionPolicy,
+				SERVANT_RETENTION_POLICY_ID)
+  OMNIORB_DECLARE_POLICY_OBJECT(RequestProcessingPolicy,
+				REQUEST_PROCESSING_POLICY_ID)
 
 #undef OMNIORB_DECLARE_POLICY_OBJECT
 
@@ -393,8 +399,9 @@ _CORBA_MODULE_BEG
     static const char* _PD_repoId;
 
   protected:
-    inline POAManager(int is_nil = 0)
-      : Object((omniObjRef*) (is_nil ? 0 : 1)) {}
+    inline POAManager(int is_nil = 0) {
+      _PR_setobj((omniObjRef*) (is_nil ? 0:1));
+    }
     virtual ~POAManager();
 
   private:
@@ -548,7 +555,7 @@ _CORBA_MODULE_BEG
     static POA_ptr _the_root_poa();
 
   protected:
-    inline POA(int nil) : Object((omniObjRef*) (nil ? 0 : 1)) {}
+    inline POA(int nil) { _PR_setobj((omniObjRef*) (nil ? 0:1)); }
     virtual ~POA();
 
   private:

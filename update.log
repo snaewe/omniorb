@@ -1,4 +1,26 @@
 
+Sat Oct 16 14:18:56 BST 1999 djr
+================================
+
+- Various changes for MSVC.
+
+include/omniORB3/CORBA.h
+include/omniORB3/poa.h
+include/omniORB3/poa_defs.h
+src/lib/omniORB2/orbcore/anonObject.h
+src/lib/omniORB2/orbcore/corbaObject.cc
+src/lib/omniORB2/orbcore/gatekeeper.h
+src/lib/omniORB2/orbcore/initFile.cc
+src/lib/omniORB2/orbcore/poastubs.cc
+src/lib/omniORB2/orbcore/policy.cc
+src/lib/omniORB2/orbcore/portableserver.cc
+src/lib/omniORB2/orbcore/tcpSocket.cc
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/lib/omniORB2/orbcore/sharedlib/dir.mk
+src/lib/omniORB2/orbcore/sharedlib/msvcdllstub.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+
 Thu Oct 14 16:59:11 BST 1999 djr
 ================================
 

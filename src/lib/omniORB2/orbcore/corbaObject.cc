@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.19.6.5  1999/10/16 13:22:53  djr
+  Changes to support compiling on MSVC.
+
   Revision 1.19.6.4  1999/10/14 16:22:06  djr
   Implemented logging when system exceptions are thrown.
 
@@ -189,7 +192,7 @@ CORBA::Object::_duplicate(CORBA::Object_ptr obj)
 }
 
 
-static CORBA::Object the_nil_object(0);
+static CORBA::Object the_nil_object;
 
 
 CORBA::Object_ptr

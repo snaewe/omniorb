@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.4  1999/10/16 13:22:54  djr
+  Changes to support compiling on MSVC.
+
   Revision 1.1.2.3  1999/10/14 16:22:16  djr
   Implemented logging when system exceptions are thrown.
 
@@ -70,13 +73,7 @@ _init_in_def_( const CORBA::ULong
 	       PortableServer::REQUEST_PROCESSING_POLICY_ID = 22; )
 
 
-#define DEFINE_POLICY_OBJECT(name, type)  \
-  \
-PortableServer::name::name(name##Value value)  \
- : Object((omniObjRef*) 1), CORBA::Policy(type), pd_value(value) {}  \
-  \
-PortableServer::name::name()  \
- : Object(0) {}  \
+#define DEFINE_POLICY_OBJECT(name)  \
   \
 PortableServer::name::~name() {}  \
   \
@@ -134,13 +131,13 @@ const char*  \
 PortableServer::name::_PD_repoId = "IDL:omg.org/PortableServer/" #name PS_VERSION;
 
 
-DEFINE_POLICY_OBJECT(ThreadPolicy, THREAD_POLICY_ID)
-DEFINE_POLICY_OBJECT(LifespanPolicy, LIFESPAN_POLICY_ID)
-DEFINE_POLICY_OBJECT(IdUniquenessPolicy, ID_UNIQUENESS_POLICY_ID)
-DEFINE_POLICY_OBJECT(IdAssignmentPolicy, ID_ASSIGNMENT_POLICY_ID)
-DEFINE_POLICY_OBJECT(ImplicitActivationPolicy, IMPLICIT_ACTIVATION_POLICY_ID)
-DEFINE_POLICY_OBJECT(ServantRetentionPolicy, SERVANT_RETENTION_POLICY_ID)
-DEFINE_POLICY_OBJECT(RequestProcessingPolicy, REQUEST_PROCESSING_POLICY_ID)
+DEFINE_POLICY_OBJECT(ThreadPolicy)
+DEFINE_POLICY_OBJECT(LifespanPolicy)
+DEFINE_POLICY_OBJECT(IdUniquenessPolicy)
+DEFINE_POLICY_OBJECT(IdAssignmentPolicy)
+DEFINE_POLICY_OBJECT(ImplicitActivationPolicy)
+DEFINE_POLICY_OBJECT(ServantRetentionPolicy)
+DEFINE_POLICY_OBJECT(RequestProcessingPolicy)
 
 #undef DEFINE_POLICY_OBJECT
 

@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.3  1999/10/16 13:22:54  djr
+  Changes to support compiling on MSVC.
+
   Revision 1.1.2.2  1999/10/04 17:08:34  djr
   Some more fixes/MSVC work-arounds.
 
@@ -212,9 +215,9 @@ PortableServer::_objref_AdapterActivator::~_objref_AdapterActivator() {}
 
 PortableServer::_objref_AdapterActivator::_objref_AdapterActivator(const char* mdri, IOP::TaggedProfileList* p,
          omniIdentity* id, omniLocalIdentity* lid)
- : Object(this),
-   omniObjRef(PortableServer::AdapterActivator::_PD_repoId, mdri, p, id, lid)
+ : omniObjRef(PortableServer::AdapterActivator::_PD_repoId, mdri, p, id, lid)
 {
+  _PR_setobj(this);
 }
 
 
@@ -395,9 +398,9 @@ PortableServer::_objref_ServantManager::~_objref_ServantManager() {}
 
 PortableServer::_objref_ServantManager::_objref_ServantManager(const char* mdri, IOP::TaggedProfileList* p,
          omniIdentity* id, omniLocalIdentity* lid)
- : Object(this),
-   omniObjRef(PortableServer::ServantManager::_PD_repoId, mdri, p, id, lid)
+ : omniObjRef(PortableServer::ServantManager::_PD_repoId, mdri, p, id, lid)
 {
+  _PR_setobj(this);
 }
 
 
@@ -540,10 +543,10 @@ PortableServer::_objref_ServantActivator::~_objref_ServantActivator() {}
 
 PortableServer::_objref_ServantActivator::_objref_ServantActivator(const char* mdri, IOP::TaggedProfileList* p,
          omniIdentity* id, omniLocalIdentity* lid)
- : Object(this),
-   _objref_ServantManager(mdri, p, id, lid),
+ : _objref_ServantManager(mdri, p, id, lid),
    omniObjRef(PortableServer::ServantActivator::_PD_repoId, mdri, p, id, lid)
 {
+  _PR_setobj(this);
 }
 
 
@@ -770,10 +773,10 @@ PortableServer::_objref_ServantLocator::~_objref_ServantLocator() {}
 
 PortableServer::_objref_ServantLocator::_objref_ServantLocator(const char* mdri, IOP::TaggedProfileList* p,
          omniIdentity* id, omniLocalIdentity* lid)
- : Object(this),
-   _objref_ServantManager(mdri, p, id, lid),
+ : _objref_ServantManager(mdri, p, id, lid),
    omniObjRef(PortableServer::ServantLocator::_PD_repoId, mdri, p, id, lid)
 {
+  _PR_setobj(this);
 }
 
 

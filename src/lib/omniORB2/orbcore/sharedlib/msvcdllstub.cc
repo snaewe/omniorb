@@ -35,7 +35,8 @@
 //	
 
 #define ENABLE_CLIENT_IR_SUPPORT
-#include <omniORB2/CORBA.h>
+#include <omniORB3/CORBA.h>
+
 
 CORBA::TypeCode_member::~TypeCode_member() {}
 CORBA::Any::~Any() {}

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.7  1999/10/16 13:22:55  djr
+  Changes to support compiling on MSVC.
+
   Revision 1.22.6.6  1999/10/14 16:22:18  djr
   Implemented logging when system exceptions are thrown.
 
@@ -483,7 +486,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 #ifndef __WIN32__
     OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-    OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
   }
   myaddr.sin_family = INETSOCKET;
@@ -499,7 +502,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 #ifndef __WIN32__
 	OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-	OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+	OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
       }
   }
@@ -511,7 +514,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 #ifndef __WIN32__
     OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-    OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
   }
 
@@ -521,7 +524,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 #ifndef __WIN32__
     OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-    OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+    OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
   }
   
@@ -545,7 +548,7 @@ tcpSocketIncomingRope::tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
 #ifndef __WIN32__
       OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-      OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+      OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
     }
 
@@ -859,7 +862,7 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
 #ifndef __WIN32__
       OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-      OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+      OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
     }
     delete pd_delay_connect;
@@ -877,7 +880,7 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
 #ifndef __WIN32__
 	  OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-	  OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+	  OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
 	}
     }
@@ -887,7 +890,7 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
 #ifndef __WIN32__
 	OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-	OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+	OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
       }
     break;
@@ -911,7 +914,7 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
 #ifndef __WIN32__
       OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-      OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+      OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
     }
     delete pd_delay_connect;
@@ -940,7 +943,7 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
  	continue;
       else {
  	_setStrandIsDying();
-	OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_MAYBE);
+	OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_MAYBE);
       }
 #endif
     }
@@ -950,7 +953,7 @@ tcpSocketStrand::ll_send(void* buf,size_t sz)
 #ifndef __WIN32__
 	OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-	OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+	OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
       }
     sz -= tx;
@@ -1163,7 +1166,7 @@ tcpSocketRendezvouser::run_undetached(void *arg)
 #ifndef __WIN32__
 	OMNIORB_THROW(COMM_FAILURE,errno,CORBA::COMPLETED_NO);
 #else
-	OMNIORB_THROW(COMM_FAILURE(::WSAGetLastError,),CORBA::COMPLETED_NO);
+	OMNIORB_THROW(COMM_FAILURE,::WSAGetLastError(),CORBA::COMPLETED_NO);
 #endif
       }
 
@@ -1348,10 +1351,14 @@ tcpSocketWorker::_realRun(void *arg)
   
   PTRACE("Worker","start.");
 
-  if (!gateKeeper::checkConnect(s)) {
+#ifndef _MSC_VER
+  //??
+  if ( !gateKeeper::checkConnect(s)) {
     s->real_shutdown();
   }
-  else {
+  else
+#endif
+    {
     while (1) {
       try {
 	GIOP_S::dispatcher(s);

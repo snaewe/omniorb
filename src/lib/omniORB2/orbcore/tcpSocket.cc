@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.8.6.4  1999/10/16 13:22:55  djr
+  Changes to support compiling on MSVC.
+
   Revision 1.8.6.3  1999/10/14 16:22:17  djr
   Implemented logging when system exceptions are thrown.
 
@@ -111,10 +114,13 @@ tcpSocketFactoryType::init()
   if (singleton) return;
   singleton = new tcpSocketFactoryType;
 
+#ifndef _MSC_VER
+  //??
   if (omniORB::trace(2)) {
     omniORB::logger log;
     log << "gateKeeper is " << gateKeeper::version() << "\n";
   }
+#endif
 }
 
 tcpSocketFactoryType::tcpSocketFactoryType()

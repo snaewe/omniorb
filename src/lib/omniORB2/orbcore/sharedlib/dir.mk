@@ -168,13 +168,14 @@ CXXSRCS = $(ORB_SRCS) $(LOG_SRCS)
 #############################################################################
 
 ifdef SunOS
-ifeq ($(notdir $(CXX)),CC)
-
-DIR_CPPFLAGS += -KPIC
 
 libname = libomniORB$(major_version).so
 soname  = $(libname).$(minor_version)
 lib = $(soname).$(micro_version)
+
+ifeq ($(notdir $(CXX)),CC)
+
+DIR_CPPFLAGS += -KPIC
 
 all:: $(lib)
 
@@ -201,6 +202,35 @@ export:: $(lib)
          )
 
 endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+DIR_CPPFLAGS += -fPIC
+
+all:: $(lib)
+
+$(lib): $(ORB2_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-h,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
+       )
+
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+endif
+
 endif
 
 #############################################################################
@@ -225,7 +255,6 @@ $(lib): $(ORB_OBJS)
         $(CXX) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
        )
-
 
 clean::
 	$(RM) $(lib)
@@ -314,7 +343,7 @@ ifeq ($(notdir $(CXX)),xlC_r)
 $(lib): $(ORB_OBJS)
 	(set -x; \
         $(RM) $@; \
-        /usr/lpp/xlC/bin/makeC++SharedLib_r \
+        $(MAKECPPSHAREDLIB) \
              -o $(soname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
          -p 40; \

@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.2  1999/10/16 13:22:51  djr
+ Changes to support compiling on MSVC.
+
  Revision 1.1.2.1  1999/09/24 09:51:36  djr
  Moved from omniORB2 + some new files.
 
@@ -792,7 +795,7 @@ _CORBA_MODULE_BEG
   enum CompletionStatus { COMPLETED_YES, COMPLETED_NO, COMPLETED_MAYBE };
   enum exception_type { NO_EXCEPTION, USER_EXCEPTION, SYSTEM_EXCEPTION };
 
-  _CORBA_MODULE_VARINT _core_attr const ULong
+  _CORBA_MODULE_VARINT const ULong
        OMGVMCID _init_in_decl_(  = 1330446336 );
 
 
@@ -1145,7 +1148,7 @@ _CORBA_MODULE_BEG
     virtual const char* context_name() const = 0;
     virtual CORBA::Context_ptr parent() const = 0;
     virtual CORBA::Status create_child(const char*, Context_out) = 0;
-    virtual CORBA::Status set_one_value(const char*, const CORBA::Any&) = 0;
+    virtual CORBA::Status set_one_value(const char*, const Any&) = 0;
     virtual CORBA::Status set_values(CORBA::NVList_ptr) = 0;
     virtual CORBA::Status delete_values(const char*) = 0;
     virtual CORBA::Status get_values(const char* start_scope,
@@ -1459,12 +1462,12 @@ _CORBA_MODULE_BEG
     // omniORB internal //
     //////////////////////
 
-    inline Object(omniObjRef* obj) : pd_obj(obj), pd_magic(_PR_magic) {}
-    // <obj> is 0 for a nil reference, 1 for a pseudo reference.
+    inline Object() : pd_obj(0), pd_magic(_PR_magic) {}
 
     inline Boolean _NP_is_nil() const { return pd_obj == 0; }
     inline Boolean _NP_is_pseudo() const { return pd_obj == (omniObjRef*) 1; }
     inline omniObjRef* _PR_getobj() { return pd_obj; }
+    inline void _PR_setobj(omniObjRef* o) { pd_obj = o; }
     static inline _CORBA_Boolean _PR_is_valid(Object_ptr p) {
       return p ? (p->pd_magic == _PR_magic) : 1;
     }
@@ -1484,6 +1487,8 @@ _CORBA_MODULE_BEG
 
   private:
     omniObjRef* pd_obj;
+    // <obj> is 0 for a nil reference, 1 for a pseudo reference.
+
     ULong       pd_magic;
   };
 
@@ -2187,7 +2192,7 @@ _CORBA_MODULE_BEG
     static const char* _PD_repoId;
 
   protected:
-    inline BOA(int nil) : Object((omniObjRef*) (nil ? 0:1)) {}
+    inline BOA(int nil) { _PR_setobj((omniObjRef*) (nil ? 0:1)); }
     virtual ~BOA();
 
   private:
@@ -2404,7 +2409,7 @@ _CORBA_MODULE_BEG
     virtual ~ORB();
 
   protected:
-    inline ORB(int nil) : Object((omniObjRef*) (nil ? 0 : 1)) {}
+    inline ORB(int nil) { _PR_setobj((omniObjRef*) (nil ? 0:1)); }
 
   private:
     ORB(const ORB&);
