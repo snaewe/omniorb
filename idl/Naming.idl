@@ -8,13 +8,7 @@
 //	IDL interfaces for COSS Naming Service
 //	
 
-/*
-  $Log$
-  Revision 1.1  1997/01/21 14:38:57  ewc
-  Initial revision
-
-
-*/
+#pragma prefix "omg.org"
 
 
 module CosNaming {
