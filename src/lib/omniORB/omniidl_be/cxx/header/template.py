@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.19  2001/11/12 13:46:07  dpg1
+# _unchecked_narrow, improved _narrow.
+#
 # Revision 1.5.2.18  2001/11/08 16:33:51  dpg1
 # Local servant POA shortcut policy.
 #
@@ -347,6 +350,7 @@ public:
 
   static _ptr_type _duplicate(_ptr_type);
   static _ptr_type _narrow(CORBA::Object_ptr);
+  static _ptr_type _unchecked_narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
   static inline void _marshalObjRef(_ptr_type, cdrStream&);

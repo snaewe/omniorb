@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.26  2001/11/12 13:46:08  dpg1
+  _unchecked_narrow, improved _narrow.
+
   Revision 1.2.2.25  2001/11/08 16:33:52  dpg1
   Local servant POA shortcut policy.
 
@@ -216,15 +219,16 @@ omniObjRef::_realNarrow(const char* repoId)
     omni::internalLock->lock();
 
     omniLocalIdentity* lid = omniLocalIdentity::downcast(_identity());
-    if (lid && !lid->deactivated() && lid->servant() &&
-	lid->servant()->_ptrToInterface(repoId)) {
+    if (!lid ||
+	(lid && !lid->deactivated() && lid->servant() &&
+	 lid->servant()->_ptrToInterface(repoId))) {
 
-      // The object is local and activated, and the servant supports
-      // the required repoId.
+      // This object reference can be used directly.
       omni::internalLock->unlock();
       omni::duplicateObjRef(this);
     }
     else {
+      // The interface type is OK, but we can't use this objref.
       // Create a new objref based on the IOR
       omni::internalLock->unlock();
 
@@ -240,6 +244,8 @@ omniObjRef::_realNarrow(const char* repoId)
 	omni_tracedmutex_lock sync(*omni::internalLock);
 	objref = omni::createObjRef(repoId,ior,1,0);
 	objref->pd_flags.forward_location = pd_flags.forward_location;
+	objref->pd_flags.type_verified = 1;
+	objref->pd_flags.object_exists = 1;
       }
 
       if( objref ) {
@@ -280,6 +286,7 @@ omniObjRef::_realNarrow(const char* repoId)
 	objref = omni::createObjRef(repoId,ior,1,_identity());
 	objref->pd_flags.forward_location = pd_flags.forward_location;
 	objref->pd_flags.type_verified = 1;
+	objref->pd_flags.object_exists = 1;
       }
 
       if( objref ) {
@@ -290,6 +297,56 @@ omniObjRef::_realNarrow(const char* repoId)
   }
   return target;
 }
+
+
+void*
+omniObjRef::_uncheckedNarrow(const char* repoId)
+{
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
+  OMNIORB_ASSERT(repoId && *repoId);
+
+  // Attempt to narrow the reference using static type info.
+  void* target = _ptrToObjRef(repoId);
+
+  if( target ) {
+    omni::internalLock->lock();
+
+    omniLocalIdentity* lid = omniLocalIdentity::downcast(_identity());
+    if (!lid ||
+	(lid && !lid->deactivated() && lid->servant() &&
+	 lid->servant()->_ptrToInterface(repoId))) {
+
+      // This object reference can be used directly.
+      omni::internalLock->unlock();
+      omni::duplicateObjRef(this);
+    }
+    else {
+      omni::internalLock->unlock();
+      target = 0;
+    }
+  }
+  if( !target ) {
+    // Create a new objref based on the IOR
+
+    omniObjRef* objref;
+    omniIOR*    ior;
+
+    {
+      omni_tracedmutex_lock sync(*omniIOR::lock);
+      ior = pd_ior->duplicateNoLock();
+    }
+    {
+      omni_tracedmutex_lock sync(*omni::internalLock);
+      objref = omni::createObjRef(repoId,ior,1,0);
+      objref->pd_flags.forward_location = pd_flags.forward_location;
+      objref->pd_flags.type_verified = 1;
+    }
+    target = objref->_ptrToObjRef(repoId);
+  }
+  OMNIORB_ASSERT(target);
+  return target;
+}
+
 
 
 void

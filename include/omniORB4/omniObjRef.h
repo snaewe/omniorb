@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.11  2001/11/12 13:46:07  dpg1
+  _unchecked_narrow, improved _narrow.
+
   Revision 1.2.2.10  2001/11/08 16:33:49  dpg1
   Local servant POA shortcut policy.
 
@@ -141,13 +144,24 @@ public:
   //  This function is thread-safe.
 
   void* _realNarrow(const char* repoId);
-  // If the actual type of the object can be widened to the requested
+  // If the actual type of the object can be narrowed to the requested
   // interface type identified by the IR repository ID <repoId>, return
   // a valid object reference.  Otherwise, return 0.  The return value is
   // of type void* and can be casted to the T_ptr type of the interface
-  // T directly.  If necassary we contact the object itself to check the
+  // T directly.  If necessary we contact the object itself to check the
   // inheritance relation.  <repoId> must be a type for which there exists
   // a proxy object factory.
+  //  This function is thread-safe.
+  //  Does not throw any exceptions.
+
+  void* _uncheckedNarrow(const char* repoId);
+  // Return a valid object reference to the interface type identified
+  // by <repoId>. We do not contact the object itself to check the
+  // inheritance relation, so subsequent operations on this object may
+  // fail because it actually does not implement the interface. This
+  // function _always_ succeeds, no matter what interface we ask for.
+  // <repoId> must be a type for which there exists a proxy object
+  // factory.
   //  This function is thread-safe.
   //  Does not throw any exceptions.
 

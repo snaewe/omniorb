@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.20  2001/11/12 13:46:07  dpg1
+# _unchecked_narrow, improved _narrow.
+#
 # Revision 1.3.2.19  2001/11/09 09:56:11  dpg1
 # Missed a file in yesterday's checkin.
 #
@@ -214,6 +217,15 @@ interface_class = """\
 {
   if( !obj || obj->_NP_is_nil() || obj->_NP_is_pseudo() ) return _nil();
   _ptr_type e = (_ptr_type) obj->_PR_getobj()->_realNarrow(_PD_repoId);
+  return e ? e : _nil();
+}
+
+
+@name@_ptr
+@name@::_unchecked_narrow(CORBA::Object_ptr obj)
+{
+  if( !obj || obj->_NP_is_nil() || obj->_NP_is_pseudo() ) return _nil();
+  _ptr_type e = (_ptr_type) obj->_PR_getobj()->_uncheckedNarrow(_PD_repoId);
   return e ? e : _nil();
 }
 
