@@ -880,7 +880,7 @@ public:
   //  inline operator const T* () const { return (const T*) pd_data; }
 
   const T* in() const { return pd_data; }
-  T* inout() { return *pd_data; }
+  T* inout() { return pd_data; }
   T*& out()   {  // ??? Is this correct?
     if (pd_data) { 
       T_Helper::free(pd_data); 
