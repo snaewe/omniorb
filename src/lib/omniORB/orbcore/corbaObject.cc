@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.18  1999/06/18 20:52:56  sll
+  Moved Object_var copy ctor and operator= to header.
+
   Revision 1.17  1999/05/25 17:12:22  sll
   Added check for invalid parameter in static member functions.
 
@@ -503,25 +506,3 @@ Object_Helper::unmarshalObjRef(MemBufferedStream &s)
   return CORBA::Object::unmarshalObjRef(s);
 }
 
-CORBA::
-Object_var::Object_var(const CORBA::Object_member& p) 
-{
-  if (!CORBA::is_nil(p._ptr)) {
-    pd_objref = CORBA::Object::_duplicate(p._ptr);
-  }
-  else
-    pd_objref = CORBA::Object::_nil();
-}
-
-CORBA::Object_var&
-CORBA::
-Object_var::operator= (const CORBA::Object_member& p) 
-{
-  if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
-  if (!CORBA::is_nil(p._ptr)) {
-    pd_objref = CORBA::Object::_duplicate(p._ptr);
-  }
-  else
-    pd_objref = CORBA::Object::_nil();
-  return *this;
-}
