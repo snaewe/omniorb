@@ -1,0 +1,105 @@
+#!/bin/sh
+
+#
+# omake - OMNI front-end to GNU make.  This is a bash script which finds out
+# what sort of OMNI tree it's in and runs GNU make, pulling in the appropriate
+# ".mk" files.
+#
+
+if [ "$1" = "-quiet" ]; then
+  shift
+  quiet=1
+fi
+
+#
+# First find top of this tree and path from top to current directory.
+#
+
+top="."
+currentAbsolute=`pwd`
+current="."
+
+until [ -f $top/config/config.mk -a -f $top/config/sources ]; do
+  if [ $top = "." ]; then
+    top=".."
+    current=`basename $currentAbsolute`
+    currentAbsolute=`dirname $currentAbsolute`
+  else
+    top="../$top"
+    current="`basename $currentAbsolute`/$current"
+    currentAbsolute=`dirname $currentAbsolute`
+  fi
+
+  if [ $currentAbsolute = "/" ]; then
+    echo "ERROR: NOT IN AN OMNI TREE" >&2
+    exit 1
+  fi
+done
+
+if [ $top != "." ]; then
+  topslash="$top/"
+fi
+if [ $current != "." ]; then
+  slashcurrent="/$current"
+fi
+
+
+#
+# Find out the equivalent of the current directory in each of the source
+# trees.
+#
+
+topsources=`cat ${topslash}config/sources`
+
+for source in $topsources; do
+  case $source in
+  /*) ;;
+  *) source="$topslash$source";;
+  esac
+  sources="$sources $source$slashcurrent"
+done
+
+#
+# Generate the search path for included ".mk" files.  After the current
+# directory we search the equivalent directory in each of the source trees.
+#
+
+for source in $sources; do
+  makefileSearchPath="$makefileSearchPath -I $source"
+done
+
+
+#
+# Generate the VPATH.
+#
+
+for source in $sources; do
+  if [ "$vpath" = "" ]; then
+    vpath=$source
+  else
+    vpath="$vpath:$source"
+  fi
+done
+
+
+
+#
+# Finally run make
+#
+
+if [ "$GNUMAKE" != "" ]; then
+  makeCmd="$GNUMAKE"
+else
+  makeCmd="make"
+fi
+
+makeCmd="$makeCmd -r -f ${topslash}config/config.mk $makefileSearchPath"
+makeCmd="$makeCmd VPATH=$vpath TOP=$top CURRENT=$current MAKEARG1=$1 $*"
+
+if [ ! "$quiet" ]; then
+  echo
+  echo $makeCmd
+  echo
+fi
+
+$makeCmd
