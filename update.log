@@ -1,3 +1,31 @@
+Fri May  9 14:27:54 BST 2003 dgrisby
+====================================
+
+- No inline friends in VC.NET 2003.
+
+include/omniORB4/CORBA_sysdep.h
+
+- Restore LongLong ifdefs. Where did they go?
+
+include/omniORB4/cdrStream.h
+
+- Use standard iostreams if available.
+
+src/appl/omniMapper/omniMapper.cc
+src/appl/omniNames/NamingContext_i.cc
+src/appl/omniNames/log.cc
+src/appl/omniNames/log.h
+src/appl/omniNames/omniNames.cc
+src/appl/utils/catior/catior.cc
+src/appl/utils/convertior/convertior.cc
+src/appl/utils/genior/genior.cc
+src/appl/utils/nameclt/nameclt.cc
+
+- Fix race in deactivation. Thanks Teemu Torma.
+
+src/lib/omniORB/orbcore/poa.cc
+
+
 Sun May  4 12:20:35 BST 2003 dgrisby
 ====================================
 

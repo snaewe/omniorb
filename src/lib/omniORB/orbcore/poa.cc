@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.38  2003/05/09 15:54:15  dgrisby
+  Fix race in deactivation. Thanks Teemu Torma.
+
   Revision 1.2.2.37  2003/02/17 02:03:08  dgrisby
   vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
 
@@ -698,22 +701,37 @@ omniOrbPOA::destroy(CORBA::Boolean etherealize_objects,
   // invocations) and then remove self from parent.
 
   {
-    omni_tracedmutex_lock sync(pd_lock);
+    pd_lock.lock();
 
-    if( pd_destroyed )  OMNIORB_THROW(OBJECT_NOT_EXIST,
-				      OBJECT_NOT_EXIST_POANotInitialised,
-				      CORBA::COMPLETED_NO);
+    if( pd_destroyed ) {
+      pd_lock.unlock ();
+      OMNIORB_THROW(OBJECT_NOT_EXIST,
+		    OBJECT_NOT_EXIST_POANotInitialised,
+		    CORBA::COMPLETED_NO);
+    }
 
     if( pd_dying ) {
       // Need to be able to handle multiple concurrent calls to
       // destroy.  If destruction is in progress and wait_f_c is
       // true, must wait to complete.  Otherwise can just return.
-      if( wait_for_completion )
+      if( wait_for_completion ) {
+
+	incrRefCount();
+
 	while( pd_destroyed != 2 )  pd_deathSignal.wait();
+
+	pd_lock.unlock ();
+	decrRefCount();
+
+      } else {
+	pd_lock.unlock ();
+      }
       return;
     }
 
     pd_dying = 1;
+
+    pd_lock.unlock ();
   }
 
   {
@@ -2193,8 +2211,10 @@ omniOrbPOA::pm_deactivate(_CORBA_Boolean etherealize_objects)
   if( pd_dying ) {
     // If being destroyed by another thread, then we just
     // have to wait until that completes.
+    incrRefCount();
     while( pd_destroyed != 2 )  pd_deathSignal.wait();
     pd_lock.unlock();
+    decrRefCount();
     return;
   }
 
