@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.7  1999/08/30 19:02:39  sll
+ Added ENABLE_CLIENT_IR_SUPPORT.
+
  Revision 1.6  1999/06/18 20:59:12  sll
  Allow system exception to be returned inside exception().
 
@@ -37,6 +40,7 @@
 
 */
 
+#define ENABLE_CLIENT_IR_SUPPORT
 #include <dynamicImplementation.h>
 #include <pseudo.h>
 #include <context.h>
