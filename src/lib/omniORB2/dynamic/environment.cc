@@ -29,49 +29,92 @@
 
 #include <pseudo.h>
 
+// The correct way of creating an environment object is to use
+// the ORB::create_environment() method. The environment objects
+// created via this method is an EnvironmentImpl and is a proper
+// CORBA psuedo object.
+//
+// However, in the case of a C++ environment with no exception handling.
+// The CORBA specification allows environment objects to be created on the
+// stack or heap as follows:
+//
+//    static CORBA::Environment global_env;
+//    void foo() {
+//       CORBA::Environment  auto_env;
+//       CORBA::Environment* new_env = new CORBA::Environment;
+//    }
+//
+// Strictly speaking we can choose not to support this dialact. But to
+// make it less painful to convert code written prevously in such an
+// environment, we also support this variation.
+//
+// However, for these objects, we do not attempt to do reference counting.
+// In other words, calling CORBA::release() does not have any effect.
+// Calling Environment::duplicate() just return the argument pointer.
+// Therefore it is possible to leak memory if someone do this:
+//   void foo() {
+//      CORBA::Environment* new_env = new CORBA::Environment;
+//      CORBA::release(new_env);     // heap allocated object not deleted.
+//   }
+//
 
-EnvironmentImpl::~EnvironmentImpl()
+
+CORBA::
+Environment::Environment() : pd_exception(0), 
+                             pd_magic(CORBA::Environment::PR_magic),
+                             pd_is_pseudo(0)
+{
+}
+
+CORBA::
+Environment::~Environment()
 {
   if( pd_exception )  delete pd_exception;
+  pd_magic = 0;
 }
 
 
 void
-EnvironmentImpl::exception(CORBA::Exception* e)
+CORBA::
+Environment::exception(CORBA::Exception* e)
 {
+  if (!CORBA::Exception::PR_is_valid(e))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
   if( pd_exception )  delete pd_exception;
   pd_exception = e;
 }
 
 
 CORBA::Exception*
-EnvironmentImpl::exception() const
+CORBA::
+Environment::exception() const
 {
   return pd_exception;
 }
 
 
 void
-EnvironmentImpl::clear()
+CORBA::
+Environment::clear()
 {
   if( pd_exception )  delete pd_exception;
   pd_exception = 0;
 }
 
-
 CORBA::Boolean
-EnvironmentImpl::NP_is_nil() const
+CORBA::
+Environment::NP_is_nil() const
 {
   return 0;
 }
 
-
 CORBA::Environment_ptr
-EnvironmentImpl::NP_duplicate()
+CORBA::
+Environment::NP_duplicate()
 {
-  incrRefCount();
   return this;
 }
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -103,14 +146,37 @@ static NilEnv _nilEnvironment;
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-CORBA::Environment::~Environment() {}
+EnvironmentImpl::EnvironmentImpl()
+{
+  pd_is_pseudo = 1;
+}
+
+EnvironmentImpl::~EnvironmentImpl()
+{
+}
+
+
+CORBA::Environment_ptr
+EnvironmentImpl::NP_duplicate()
+{
+  incrRefCount();
+  return this;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
 
 
 CORBA::Environment_ptr
 CORBA::
-Environment::_duplicate(Environment_ptr p)
+Environment::_duplicate(CORBA::Environment_ptr p)
 {
-  if( p )  return p->NP_duplicate();
+  if (!PR_is_valid(p))
+    throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
+  if( !CORBA::is_nil(p) )  return p->NP_duplicate();
   else     return _nil();
 }
 
@@ -122,14 +188,10 @@ Environment::_nil()
   return &_nilEnvironment;
 }
 
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
 void
-CORBA::release(Environment_ptr p)
+CORBA::release(CORBA::Environment_ptr p)
 {
-  if( !p->NP_is_nil() )
+  if( CORBA::Environment::PR_is_valid(p) && !CORBA::is_nil(p) && p->pd_is_pseudo)
     ((EnvironmentImpl*)p)->decrRefCount();
 }
 
