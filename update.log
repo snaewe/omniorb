@@ -1,3 +1,11 @@
+Thu Aug 16 09:58:02 BST 2001 dpg1
+=================================
+
+- Union discriminator not copied.
+
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
 Fri Aug  3 11:09:01 BST 2001 dpg1
 =================================
 
