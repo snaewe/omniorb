@@ -31,6 +31,9 @@
 
 /*
  $Log$
+ Revision 1.17  1998/01/27 16:02:34  ewc
+ Added TypeCode and type Any
+
  Revision 1.16  1997/12/18 17:37:20  sll
  Added (const char*) type casting to help strcpy().
 
@@ -278,58 +281,161 @@ typedef _CORBA_Double  Double;
     String_OUT_arg();
   };
 
-  //////////////////////////////////////////////////////////////////////
-  //    Interface repository types                                    //
-  //////////////////////////////////////////////////////////////////////
-  typedef char *RepositoryId;
-  class InterfaceDef {
-  public:
-    _CORBA_Unbounded_Sequence_Octet _data;
-  private:
-    InterfaceDef();
-    // Not implemented yet
-  };
-  typedef class InterfaceDef *InterfaceDef_ptr;
-  typedef InterfaceDef_ptr InterfaceDefRef;
 
 ////////////////////////////////////////////////////////////////////////
 //                   Type Any                                         //
 ////////////////////////////////////////////////////////////////////////
 
+  class Object;
+  typedef Object *Object_ptr;
+  typedef Object_ptr ObjectRef;
+
   class TypeCode;
   typedef class TypeCode *TypeCode_ptr;
   typedef TypeCode_ptr TypeCodeRef;
+
   class Any {
   public:
-    Any();
-    ~Any();
-    Any(const Any&);
-    Any(TypeCode_ptr tc, void *value, Boolean release = 0);
+    Any() : pd_data(0) { 
+      pd_tc = TypeCode::_duplicate(_tc_null); 
+    }
 
-    Any &operator=(const Any&);
+    ~Any() { 
+      CORBA::release(pd_tc); 
+      PR_deleteData();
+    }
 
-    void operator<<=(Short);
-    void operator<<=(UShort);
-    void operator<<=(Long);
-    void operator<<=(ULong);
-#if !defined(NO_FLOAT)
-    void operator<<=(Float);
-    void operator<<=(Double);
-#endif
-    void operator<<=(const Any&);
-    void operator<<=(const char*);
-
-    Boolean operator>>=(Short&) const;
-    Boolean operator>>=(UShort&) const;
-    Boolean operator>>=(Long&) const;
-    Boolean operator>>=(ULong&) const;
-#if !defined(NO_FLOAT)
-    Boolean operator>>=(Float&) const;
-    Boolean operator>>=(Double&) const;
-#endif
-    Boolean operator>>=(Any&) const;
-    Boolean operator>>=(char*&) const;
+    Any(const Any& a) : pd_data(0) {
+      pd_tc = TypeCode::_duplicate(a.pd_tc);
+      pd_mbuf = a.pd_mbuf;
+    }
     
+    Any(TypeCode_ptr tc, void* value, Boolean release = 0,
+	Boolean nocheck = 0);	
+
+    
+    void operator>>= (NetBufferedStream& s) const;  // Marshalling and 
+    void operator<<= (NetBufferedStream& s);  // unmarshalling member functions
+
+    void operator>>= (MemBufferedStream& s) const;
+    void operator<<= (MemBufferedStream& s);
+
+    size_t NP_alignedSize(size_t initialoffset) const;
+
+    void NP_memAlignMarshal(MemBufferedStream& m);
+
+    inline ULong NP_length() const {
+      return (ULong) pd_mbuf.unRead();
+    }
+
+    void NP_holdData(void* data, void (*del)(void*)) const;
+    void NP_getBuffer(MemBufferedStream& mbuf) const;
+    void* NP_data() const { return pd_data; }
+	
+    void NP_replaceData(TypeCode_ptr tcp, const MemBufferedStream& mb);
+
+  protected:
+    inline void PR_fill(UShort fillerLen,MemBufferedStream& mbuf) const {
+      if (fillerLen > 0) {
+	Char* filler = new Char[fillerLen];
+	try {
+	  mbuf.put_char_array(filler,fillerLen);
+	}
+	catch (...) {
+	  delete[] filler;
+	  throw;
+	}
+	delete[] filler;
+      }
+    }
+
+    inline void PR_deleteData() {
+      if (pd_data) {
+	(*deleteData)(pd_data);	
+	pd_data = 0;
+      }
+    }
+
+  public:
+
+    inline Any &operator=(const Any& a) {
+      if (this != &a) {
+	CORBA::release(pd_tc);
+	PR_deleteData();
+	pd_tc = TypeCode::_duplicate(a.pd_tc);
+	pd_mbuf = a.pd_mbuf;
+      }
+      return *this;
+    }    
+
+
+
+    inline void operator<<=(Short s) {
+      MemBufferedStream mbuf;
+      s >>= mbuf;
+      NP_replaceData(_tc_short, mbuf);
+    }
+
+    inline void operator<<=(UShort u) {
+      MemBufferedStream mbuf;
+      u >>= mbuf;
+      NP_replaceData(_tc_ushort, mbuf);
+    }	
+
+    inline void operator<<=(Long l) {
+      MemBufferedStream mbuf;
+      l >>= mbuf;
+      NP_replaceData(_tc_long, mbuf);
+    }
+
+    inline void operator<<=(ULong u) {
+      MemBufferedStream mbuf;
+      u >>= mbuf;
+      NP_replaceData(_tc_ulong, mbuf);
+    }
+
+#if !defined(NO_FLOAT)
+    inline void operator<<=(Float f) {
+      MemBufferedStream mbuf;
+      f >>= mbuf;
+      NP_replaceData(_tc_float, mbuf); 	
+    }
+
+    inline void operator<<=(Double d) {
+      MemBufferedStream mbuf;
+      d >>= mbuf;
+      NP_replaceData(_tc_double, mbuf);
+    }
+#endif
+
+    inline void operator<<=(const Any& a) {
+      MemBufferedStream mbuf;
+      a >>= mbuf;
+      NP_replaceData(_tc_any,mbuf);
+    }	
+
+    inline void operator<<=(TypeCode_ptr tc) {
+      // Copying version
+      MemBufferedStream mbuf;
+      *tc >>= mbuf;
+      NP_replaceData(_tc_TypeCode, mbuf);
+    }
+
+    inline void operator<<=(TypeCode_ptr* tcp) {
+      // Non - copying version
+      this->operator<<=(*tcp);
+      CORBA::release(*tcp);
+    }
+    
+    inline void operator<<=(const char*& s) {
+      MemBufferedStream mbuf;
+      ULong _len = strlen(s) + 1;
+      _len >>= mbuf;
+      mbuf.put_char_array((const CORBA::Char*) s, _len);
+      NP_replaceData(_tc_string, mbuf);
+    }
+	
+
     struct from_boolean {
       from_boolean(Boolean b) : val(b) {}
       Boolean val;
@@ -345,9 +451,102 @@ typedef _CORBA_Double  Double;
       Char val;
     };
 
-    void operator<<=(from_boolean);
-    void operator<<=(from_char);
-    void operator<<=(from_octet);
+    struct from_string {
+      from_string(char* s, ULong b, Boolean nocopy = 0) : val(s), bound(b),
+	nc(nocopy) 
+	{ }
+      
+      char* val;
+      ULong bound;
+      Boolean nc;
+    };
+
+
+    inline void operator<<=(from_boolean f) {
+      MemBufferedStream mbuf;
+      f.val >>= mbuf;
+      NP_replaceData(_tc_boolean, mbuf);
+    }
+      
+    inline void operator<<=(from_char c) {
+      MemBufferedStream mbuf;
+      c.val >>= mbuf;
+      NP_replaceData(_tc_char, mbuf);
+    }
+	
+
+    inline void operator<<=(from_octet o) {
+      MemBufferedStream mbuf;
+      o.val >>= mbuf;
+      NP_replaceData(_tc_octet, mbuf);
+    }
+    
+    void operator<<=(from_string s);
+
+
+    inline Boolean operator>>=(Short& s) const {
+	if (!pd_tc->NP_expandEqual(_tc_short,1)) return 0;
+	else {
+	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
+	  s <<= tmp_mbuf;
+	  return 1;
+	}
+    }
+    
+    inline Boolean operator>>=(UShort& u) const {
+	if (!pd_tc->NP_expandEqual(_tc_ushort,1)) return 0;
+	else {
+	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
+	  u <<= tmp_mbuf;
+	  return 1;
+	}
+    }
+
+    inline Boolean operator>>=(Long& l) const {
+	if (!pd_tc->NP_expandEqual(_tc_long,1)) return 0;
+	else {
+	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
+	  l <<= tmp_mbuf;
+	  return 1;
+	}
+    }
+
+    inline Boolean operator>>=(ULong& u) const {
+	if (!pd_tc->NP_expandEqual(_tc_ulong,1)) return 0;
+	else {
+	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
+	  u <<= tmp_mbuf;
+	  return 1;
+	}
+    }
+    
+#if !defined(NO_FLOAT)
+    inline Boolean operator>>=(Float& f) const {
+	if (!pd_tc->NP_expandEqual(_tc_float,1)) return 0;
+	else {
+	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
+	  f <<= tmp_mbuf;
+	  return 1;
+	}
+      }
+
+    inline Boolean operator>>=(Double& d) const {
+	if (!pd_tc->NP_expandEqual(_tc_double,1)) return 0;
+	else {
+	  MemBufferedStream tmp_mbuf(pd_mbuf,1);
+	  d <<= tmp_mbuf;
+	  return 1;
+	}
+    }
+
+#endif
+
+    Boolean operator>>=(Any& a) const; 
+
+    Boolean operator>>=(TypeCode_ptr& tc) const; 
+
+    Boolean operator>>=(char*& s) const;
+
 
     struct to_boolean {
       to_boolean(Boolean &b) : ref(b) {}
@@ -364,49 +563,270 @@ typedef _CORBA_Double  Double;
       Octet &ref;
     };
 
-    Boolean operator>>=(to_boolean) const;
-    Boolean operator>>=(to_char) const;
-    Boolean operator>>=(to_octet) const;
+    struct to_string {
+      to_string(char*& s, ULong b) : val(s), bound(b) { }
+      
+      char*& val;
+      ULong bound;
+    };
+      
+    struct to_object {
+      to_object(Object_ptr& obj) : ref(obj) { }
+      Object_ptr& ref;
+    };
+    
+    inline Boolean operator>>=(to_boolean b) const {
+      if (!pd_tc->NP_expandEqual(_tc_boolean,1)) return 0;
+      else {
+	MemBufferedStream tmp_mbuf(pd_mbuf,1);
+	b.ref <<= tmp_mbuf;
+	return 1;
+      }
+    }
 
-    void replace(TypeCode_ptr, void *value, Boolean release = 0);
+    inline Boolean operator>>=(to_char c) const {
+      if (!pd_tc->NP_expandEqual(_tc_char,1)) return 0;
+      else {
+	MemBufferedStream tmp_mbuf(pd_mbuf,1);
+	c.ref <<= tmp_mbuf;
+	return 1;
+      }
+    }
+    
+    inline Boolean operator>>=(to_octet o) const {
+      if (!pd_tc->NP_expandEqual(_tc_octet,1)) return 0;
+      else {
+	MemBufferedStream tmp_mbuf(pd_mbuf,1);
+	o.ref <<= tmp_mbuf;
+	return 1;
+      }
+    }
 
-    TypeCode_ptr type() const;
-    const void *value() const;
+    Boolean operator>>=(to_string s) const;
+
+    Boolean operator>>=(to_object o) const;
+
+    void replace(TypeCode_ptr TCp, void* value, Boolean release = 0);
+
+    inline TypeCode_ptr type() const {
+	return TypeCode::_duplicate(pd_tc);
+      }
+
+    inline const void *value() const {
+      return pd_mbuf.data();
+    }
+
 
   private:
     void operator<<=(unsigned char);
     Boolean operator>>=(unsigned char&) const;
-    
-    MemBufferedStream pd_data;
-    MemBufferedStream pd_typecode;
+
+    void* pd_data;
+    void (*deleteData)(void*);
+
+    TypeCode_ptr pd_tc;
+    MemBufferedStream pd_mbuf;
   };
 
+  
   class Any_OUT_arg;
 
   class Any_var {
   public:
-    Any_var();
-    Any_var(Any *a);
-    Any_var(const Any_var &a);
-    ~Any_var();
+    inline Any_var() { pd_data = 0; }
+    inline Any_var(Any* p) { pd_data = p; }
+    inline Any_var(const Any_var &p) {
+      if (!p.pd_data) {
+	pd_data = 0;
+	return;
+      }
+      else {
+	pd_data = new Any;
+	if (!pd_data) {
+	  _CORBA_new_operator_return_null();
+	  // never reach here
+	}
+	*pd_data = *p.pd_data;
+      }
+    }
 
-    Any_var &operator=(Any *a);
-    Any_var &operator=(const Any_var &a);
-    Any *operator->() const;
+    inline ~Any_var() {  if (pd_data) delete pd_data; }
+    inline Any_var &operator= (Any* p) {  
+      if (pd_data) delete pd_data;
+      pd_data = p;
+      return *this;
+    }
+
+    inline Any_var &operator= (const Any_var &p) {
+        if (p.pd_data) {
+	  if (!pd_data) {
+	    pd_data = new Any;
+	    if (!pd_data) {
+	      _CORBA_new_operator_return_null();
+	      // never reach here
+	    }
+	  }
+	  *pd_data = *p.pd_data;
+	}
+	else {
+	  if (pd_data) delete pd_data;
+	  pd_data = 0;
+	}
+	return *this;
+    }
+
+    inline Any* operator->() const { return (Any*)pd_data; }
     
+#if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
+    inline operator Any& () const { return (Any&) *pd_data; }
+#else
+    inline operator const Any& () const { return *pd_data; }
+    inline operator Any& () { return *pd_data; }
+#endif
+
+
+    // Any member-function insertion operators:
+
+    inline void operator<<=(Short s) {
+      *pd_data <<= s;
+    }
+
+    inline void operator<<=(UShort u) {
+      *pd_data <<= u;
+    }	
+
+    inline void operator<<=(Long l) {
+      *pd_data <<= l;
+   }
+
+    inline void operator<<=(ULong u) {
+      *pd_data <<= u;
+    }
+
+#if !defined(NO_FLOAT)
+    inline void operator<<=(Float f) {
+      *pd_data <<= f;
+    }
+
+    inline void operator<<=(Double d) {
+      *pd_data <<= d;
+    }
+#endif
+
+    inline void operator<<=(const Any& a) {
+      *pd_data <<= a;
+    }	
+
+    inline void operator<<=(TypeCode_ptr tc) {
+      *pd_data <<= tc;
+    }
+
+    inline void operator<<=(TypeCode_ptr* tcp) {
+      *pd_data <<= tcp;
+    }
+    
+    inline void operator<<=(const char*& s) {
+      *pd_data <<= s;
+    }
+	
+    inline void operator<<=(Any::from_boolean f) {
+      *pd_data <<= f;
+    }
+      
+    inline void operator<<=(Any::from_char c) {
+      *pd_data <<= c;
+    }
+	
+
+    inline void operator<<=(Any::from_octet o) {
+      *pd_data <<= o;
+    }
+    
+    inline void operator<<=(Any::from_string s){
+      *pd_data <<= s;
+    }
+
+
+    // Any member-function extraction operators:
+
+    inline Boolean operator>>=(Short& s) const {
+      return (*pd_data >>= s);
+    }
+    
+    inline Boolean operator>>=(UShort& u) const {
+      return (*pd_data >>= u);
+    }
+
+    inline Boolean operator>>=(Long& l) const {
+      return (*pd_data >>= l);
+    }
+
+    inline Boolean operator>>=(ULong& u) const {
+      return (*pd_data >>= u);
+    }
+    
+#if !defined(NO_FLOAT)
+    inline Boolean operator>>=(Float& f) const {
+      return (*pd_data >>= f);
+      }
+
+    inline Boolean operator>>=(Double& d) const {
+      return (*pd_data >>= d);
+    }
+
+#endif
+
+    inline Boolean operator>>=(Any& a) const {
+      return (*pd_data >>= a);
+    }
+
+    inline Boolean operator>>=(TypeCode_ptr& tc) const {
+      return (*pd_data >>= tc);
+    }
+
+    inline Boolean operator>>=(char*& s) const {
+      return (*pd_data >>= s);
+    }
+
+    inline Boolean operator>>=(Any::to_boolean b) const {
+      return (*pd_data >>= b);
+    }
+
+    inline Boolean operator>>=(Any::to_char c) const {
+      return (*pd_data >>= c);
+    }
+    
+    inline Boolean operator>>=(Any::to_octet o) const {
+      return (*pd_data >>= o);
+    }
+
+    inline Boolean operator>>=(Any::to_string s) const {
+      return (*pd_data >>= s);
+    }
+
+    inline Boolean operator>>=(Any::to_object o) const {
+      return (*pd_data >>= o);
+    }
+
+
     friend class Any_OUT_arg;
+
+  private:
+    Any* pd_data;
   };
+
 
   class Any_OUT_arg {
   public:
-    Any_OUT_arg(char*& p);
-    Any_OUT_arg(Any_var& p);
-    ~Any_OUT_arg();
-    char*& _data;
-
+    inline Any_OUT_arg(Any*& p) : _data(p) {}
+    inline Any_OUT_arg(Any_var& p) : _data(p.pd_data) {
+      p = (Any*)0;
+    }
+    Any*& _data;
   private:
     Any_OUT_arg();
   };
+
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Exception                                   //
@@ -523,78 +943,6 @@ typedef _CORBA_Double  Double;
     UnknownUserException(); // not implemented yet
   };
 
-////////////////////////////////////////////////////////////////////////
-//                   PIDL TypeCode                                    //
-////////////////////////////////////////////////////////////////////////
-
-  enum TCKind {
-    tk_null     = 0,
-    tk_void     = 1,
-    tk_short    = 2,
-    tk_long     = 3,
-    tk_ushort	= 4,
-    tk_ulong	= 5,
-    tk_float	= 6,
-    tk_double	= 7,
-    tk_boolean	= 8,
-    tk_char	= 9,
-    tk_octet	= 10,
-    tk_any	= 11,
-    tk_TypeCode	= 12,
-    tk_Principal= 13,
-    tk_objref	= 14,
-    tk_struct	= 15,
-    tk_union	= 16,
-    tk_enum	= 17,
-    tk_string	= 18,
-    tk_sequence	= 19,
-    tk_array	= 20,
-    tk_alias	= 21,
-    tk_except	= 22
-  };
-  
-  
-  class TypeCode {
-  public:
-    class Bounds : public UserException {
-    public: 
-      Bounds () : UserException () {}
-      ~Bounds() { }
-    };
-
-    class BadKind : public UserException {
-    public:
-      BadKind () : UserException () {}
-      ~BadKind () { }
-    };
-
-    TCKind kind() const;
-    Boolean equal(TypeCode_ptr) const;
-
-    const char* id() const;
-    const char* name() const;
-    
-    ULong member_count() const;
-    const char* member_name(ULong index) const;
-
-    TypeCode_ptr member_type(ULong index) const;
-
-    Any *member_label(ULong index) const;
-    TypeCode_ptr discriminator_type() const;
-    Long default_index() const;
-
-    ULong length() const;
-
-    TypeCode_ptr content_type() const;
-
-    Long param_count() const;
-    Any *parameter(Long) const;
-
-    static TypeCode_ptr _duplicate();
-    static TypeCode_ptr _nil();
-  private:
-    TypeCode(); // Not implemented yet
-  };
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Environment                                 //
@@ -711,7 +1059,7 @@ typedef _CORBA_Double  Double;
   typedef Principal* Principal_ptr;
   typedef Principal_ptr PrincipalRef;
 
-  typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Octet,1,1> PrincipalID;
+  typedef _CORBA_Unbounded_Sequence_Octet PrincipalID;
 
   class Principal {
   public:
@@ -738,6 +1086,246 @@ typedef _CORBA_Double  Double;
   typedef ExceptionList* ExceptionList_ptr;
   typedef ExceptionList_ptr ExceptionListRef;
 
+
+  //////////////////////////////////////////////////////////////////////
+  //    Interface repository types                                    //
+  //////////////////////////////////////////////////////////////////////
+  typedef char *RepositoryId;
+
+  class InterfaceDef {
+  public:
+    _CORBA_Unbounded_Sequence_Octet _data;
+  private:
+    InterfaceDef();
+    // Not implemented yet
+  };
+  typedef class InterfaceDef *InterfaceDef_ptr;
+  typedef InterfaceDef_ptr InterfaceDefRef;
+
+  enum DefinitionKind { 
+    dk_none, dk_all, dk_Attribute, dk_Constant, 
+    dk_Exception, dk_Interface, dk_Module, dk_Operation, 
+    dk_Typedef, dk_Alias, dk_Struct, dk_Union, dk_Enum, 
+    dk_Primitive, dk_String, dk_Sequence, dk_Array, dk_Repository 
+  };
+
+  friend inline void operator>>= (DefinitionKind _e,NetBufferedStream &s) {
+    ::operator>>=((CORBA::ULong)_e,s);
+  }
+
+  friend inline void operator<<= (DefinitionKind &_e,NetBufferedStream &s) {
+    CORBA::ULong __e;
+    __e <<= s;
+    switch (__e) {
+      case dk_none:
+      case dk_all:
+      case dk_Attribute:
+      case dk_Constant:
+      case dk_Exception:
+      case dk_Interface:
+      case dk_Module:
+      case dk_Operation:
+      case dk_Typedef:
+      case dk_Alias:
+      case dk_Struct:
+      case dk_Union:
+      case dk_Enum:
+      case dk_Primitive:
+      case dk_String:
+      case dk_Sequence:
+      case dk_Array:
+      case dk_Repository:
+        _e = (DefinitionKind) __e;
+        break;
+      default:
+        _CORBA_marshal_error();
+    }
+  }
+
+  friend inline void operator>>= (DefinitionKind _e,MemBufferedStream &s) {
+    ::operator>>=((CORBA::ULong)_e,s);
+  }
+
+  friend inline void operator<<= (DefinitionKind &_e,MemBufferedStream &s) {
+    CORBA::ULong __e;
+    __e <<= s;
+    switch (__e) {
+      case dk_none:
+      case dk_all:
+      case dk_Attribute:
+      case dk_Constant:
+      case dk_Exception:
+      case dk_Interface:
+      case dk_Module:
+      case dk_Operation:
+      case dk_Typedef:
+      case dk_Alias:
+      case dk_Struct:
+      case dk_Union:
+      case dk_Enum:
+      case dk_Primitive:
+      case dk_String:
+      case dk_Sequence:
+      case dk_Array:
+      case dk_Repository:
+        _e = (DefinitionKind) __e;
+        break;
+      default:
+        _CORBA_marshal_error();
+    }
+  }
+
+  
+  class IRObject;
+  typedef IRObject *IRObject_ptr;
+  typedef IRObject_ptr IRObjectRef;
+
+  class IRObject {
+  public:
+
+    // Not implemented yet - used by IR
+
+    virtual ~IRObject() {}
+
+    virtual DefinitionKind def_kind() {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return dk_none;
+    }
+
+    virtual void destroy() {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+    }
+
+    static IRObject_ptr _duplicate(IRObject_ptr obj) {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return 0;
+    }
+      
+    static IRObject_ptr _narrow(Object_ptr obj) {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return 0;
+    }
+
+    static IRObject_ptr _nil() {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return 0;
+    }
+
+  protected:
+    IRObject() { }
+
+  private:    
+    IRObject(const IRObject&);
+    IRObject &operator=(const IRObject&);
+  };
+  
+  class IDLType;
+  typedef IDLType* IDLType_ptr;
+  typedef IDLType_ptr IDLTypeRef;
+
+  class TypeCode_var;
+
+  class TypeCode_member {
+  public:
+    TypeCode_member() { _ptr = CORBA::TypeCode::_nil(); }
+
+    inline TypeCode_member(TypeCode_ptr p) { _ptr = p; }
+
+    inline TypeCode_member(const TypeCode_member& p) {
+	_ptr = CORBA::TypeCode::_duplicate(p._ptr);
+      }
+
+    ~TypeCode_member() { CORBA::release(_ptr); }
+
+    
+    inline TypeCode_member& operator=(TypeCode_ptr p) {
+    CORBA::release(_ptr);
+    _ptr = p;
+    return *this;
+    }
+
+    
+    inline TypeCode_member& operator=(const TypeCode_member& p) {
+      if (this != &p) {
+	CORBA::release(_ptr);
+	_ptr = CORBA::TypeCode::_duplicate(p._ptr);
+      }
+      return *this;
+    }
+
+    inline TypeCode_member& operator=(const TypeCode_var& p) {
+      CORBA::release(_ptr);
+      _ptr = CORBA::TypeCode::_duplicate(p.pd_TC);
+      return *this;
+    }
+
+
+    inline void operator>>=(NetBufferedStream& s) const { *_ptr >>= s; }
+    inline void operator<<=(NetBufferedStream& s) {
+	TypeCode_ptr _result = new TypeCode(tk_null);
+	*_result <<= s;
+	CORBA::release(_ptr);
+	_ptr = _result;
+      }
+
+    inline void operator>>=(MemBufferedStream& s) const { *_ptr >>= s; }
+    inline void operator<<=(MemBufferedStream& s) {
+	TypeCode_ptr _result = new TypeCode(tk_null);
+	*_result <<= s;
+	CORBA::release(_ptr);
+	_ptr = _result;
+    }
+      
+    inline size_t NP_alignedSize(size_t initialoffset) const {
+      return _ptr->NP_alignedSize(initialoffset);
+    }
+
+    
+    inline TypeCode_ptr operator->() const { return (TypeCode_ptr) _ptr; }
+    inline operator TypeCode_ptr() const { return _ptr; }
+
+
+    TypeCode_ptr _ptr;
+  };
+
+
+
+  struct StructMember {    
+    String_member name;
+    TypeCode_member type;
+    IDLType_ptr type_def;
+
+    size_t NP_alignedSize(size_t initialoffset) const;
+    void operator>>= (NetBufferedStream &) const;
+    void operator<<= (NetBufferedStream &);
+    void operator>>= (MemBufferedStream &) const;
+    void operator<<= (MemBufferedStream &);
+  };
+
+  typedef _CORBA_ConstrType_Variable_Var<StructMember> StructMember_var;
+  typedef _CORBA_Unbounded_Sequence<StructMember> StructMemberSeq;
+
+
+  struct UnionMember {
+    String_member name;
+    Any label;
+    TypeCode_member type;
+    IDLType_ptr type_def;
+
+    size_t NP_alignedSize(size_t initialoffset) const;
+    void operator>>= (NetBufferedStream &) const;
+    void operator<<= (NetBufferedStream &);
+    void operator>>= (MemBufferedStream &) const;
+    void operator<<= (MemBufferedStream &);
+  };
+
+  typedef _CORBA_ConstrType_Variable_Var<UnionMember> UnionMember_var;
+  typedef _CORBA_Unbounded_Sequence<UnionMember> UnionMemberSeq;
+
+
+  typedef _CORBA_Unbounded_Sequence<String_member> EnumMemberSeq;
+
+
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Object                                      //
 ////////////////////////////////////////////////////////////////////////
@@ -745,10 +1333,6 @@ typedef _CORBA_Double  Double;
   class Request;
   typedef Request *Request_ptr;
   typedef Request_ptr RequestRef;
-
-  class Object;
-  typedef Object *Object_ptr;
-  typedef Object_ptr ObjectRef;
 
   typedef _CORBA_Unbounded_Sequence_Octet ReferenceData;
 
@@ -831,6 +1415,448 @@ typedef _CORBA_Double  Double;
   private:
     omniObject *pd_obj;
   };
+
+
+  class _nil_IDLType;
+
+  static IDLType_ptr __nil_IDLType;
+
+  class IDLType : public virtual IRObject, public virtual omniObject,
+                  public virtual Object {
+  public:
+
+    // Not implemented yet - used by IR
+
+    virtual ~IDLType() {}
+
+    virtual TypeCode_ptr type() {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return 0;
+    }
+
+    static IDLType_ptr _duplicate(IDLType_ptr obj) {
+      if (CORBA::is_nil(obj))
+	return IDLType::_nil();
+      else {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return 0;
+      }
+    }
+    
+    static IDLType_ptr _narrow(Object_ptr obj) {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return 0;
+    }
+    
+    static inline IDLType_ptr _nil()  {
+      if (!CORBA::__nil_IDLType) {
+	CORBA::__nil_IDLType = new _nil_IDLType;
+      }
+      return __nil_IDLType;
+    }
+
+    static inline size_t NP_alignedSize(IDLType_ptr obj,size_t initialoffset) {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return 0;      
+    }
+
+    static inline void marshalObjRef(IDLType_ptr obj,NetBufferedStream &s) {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+    }
+
+    static inline IDLType_ptr unmarshalObjRef(NetBufferedStream &s) {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return 0;
+    }
+
+    static inline void marshalObjRef(IDLType_ptr obj,MemBufferedStream &s) {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+    }
+
+    static inline IDLType_ptr unmarshalObjRef(MemBufferedStream &s) {
+	throw CORBA::NO_IMPLEMENT(0,CORBA::COMPLETED_NO);
+	return 0;
+    }
+
+  protected:
+    
+    IDLType() {}
+  };
+
+  class _nil_IDLType : public virtual IDLType {
+  public:
+    _nil_IDLType() { this->PR_setobj(0); }
+    virtual ~_nil_IDLType() {}
+    
+    TypeCode_ptr type (){
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      TypeCode_ptr _result= 0;
+      return _result;
+    }
+  };
+
+
+////////////////////////////////////////////////////////////////////////
+//                   PIDL TypeCode                                    //
+////////////////////////////////////////////////////////////////////////
+
+  struct PR_structMember {
+    // Private omniORB type
+    const char* name;
+    TypeCode_ptr type;
+  };
+
+  struct PR_unionMember {
+    // Private omniORB type
+    const char* name;
+    TypeCode_ptr type;
+    _CORBA_ULong label;
+  };
+
+  enum TCKind {
+    tk_null     = 0,
+    tk_void     = 1,
+    tk_short    = 2,
+    tk_long     = 3,
+    tk_ushort	= 4,
+    tk_ulong	= 5,
+    tk_float	= 6,
+    tk_double	= 7,
+    tk_boolean	= 8,
+    tk_char	= 9,
+    tk_octet	= 10,
+    tk_any	= 11,
+    tk_TypeCode	= 12,
+    tk_Principal= 13,
+    tk_objref	= 14,
+    tk_struct	= 15,
+    tk_union	= 16,
+    tk_enum	= 17,
+    tk_string	= 18,
+    tk_sequence	= 19,
+    tk_array	= 20,
+    tk_alias	= 21,
+    tk_except	= 22
+  };
+  
+  
+  
+  class TypeCode {
+  public:
+
+    TypeCode(TCKind t, ULong maxLen = 0); // Predefined-type and string
+
+    TypeCode(const char* repoId, const char* name);
+                            // Object Reference
+
+    TypeCode(const char* repoId, const char* name, 
+	     const TypeCode& contentTC);
+                            // Typedef
+    TypeCode(TCKind t, ULong length, const TypeCode& contentTC); 
+                                                  // Sequence, array
+    TypeCode(TCKind t, const char* repoId, const char* name, 
+	     const StructMemberSeq& members);          
+                                                 // Struct, Exception
+    TypeCode(const char* repoId, const char* name, 
+ 	     const EnumMemberSeq& members);            // Enum
+
+    TypeCode(const char* repoId, const char* name, 
+	     const TypeCode_ptr discriminatorTC, 
+	     const UnionMemberSeq& members);           // Union
+
+    // TypeCode interface for stubs:
+
+    TypeCode(TCKind t, const char* repoId, const char* name, 
+	     PR_structMember* members, ULong num_mems);          
+                                                 // Struct, Exception
+    TypeCode(const char* repoId, const char* name, 
+ 	     char** members, ULong num_mems);            // Enum
+
+    TypeCode(const char* repoId, const char* name, 
+	     const TypeCode& discriminatorTC, 
+	     PR_unionMember* members, ULong num_mems, Long def = -1);     
+                                                          // Union
+
+
+    virtual ~TypeCode() { }                          // Destructor
+
+    TypeCode(const TypeCode& tc);            // Copy Constructor
+    TypeCode& operator=(const TypeCode& tc); 
+ 
+    
+    void operator>>= (NetBufferedStream& s) const;  // Marshalling and 
+    void operator<<= (NetBufferedStream& s);  // unmarshalling member functions
+
+    void operator>>= (MemBufferedStream& s) const;
+    void operator<<= (MemBufferedStream& s);
+
+    size_t NP_alignedSize(size_t initialoffset) const;
+    Boolean NP_expandEqual(TypeCode_ptr, Boolean) const;
+    void NP_fillInit(MemBufferedStream& mbuf) const;
+    virtual Boolean NP_is_nil() const;
+    TypeCode_ptr NP_aliasExpand() const;
+    TypeCode_ptr NP_completeExpand() const;
+
+
+    // OMG Interface:
+
+    class Bounds : public UserException {
+    public: 
+      Bounds () : UserException () {}
+      ~Bounds() { }
+    };
+
+    class BadKind : public UserException {
+    public:
+      BadKind () : UserException () {}
+      ~BadKind () { }
+    };
+
+    
+
+    inline TCKind kind() const { return pd_tck; }
+    inline Boolean equal(TypeCode_ptr TCp) const { 
+      return NP_expandEqual(TCp,0); }
+
+    virtual const char* id() const;
+    virtual const char* name() const;
+    
+    virtual ULong member_count() const;
+    virtual const char* member_name(ULong index) const;
+
+    virtual TypeCode_ptr member_type(ULong index) const;
+
+    virtual Any *member_label(ULong index) const;
+    virtual TypeCode_ptr discriminator_type() const;
+    virtual Long default_index() const;
+
+    virtual ULong length() const;
+
+    virtual TypeCode_ptr content_type() const;
+
+    virtual Long param_count() const;
+    virtual Any *parameter(Long) const;
+
+    static TypeCode_ptr _duplicate(TypeCode_ptr t);
+    static TypeCode_ptr _nil();
+
+    friend class tcParseEngine;
+    friend class Any;
+
+  private:
+
+    TCKind pd_tck;
+    ULong  pd_maxLen;
+    MemBufferedStream pd_param;
+    static const TypeCode_ptr __nil_TypeCode; 
+
+    Boolean PR_equal(TypeCode_ptr, Boolean expand) const;
+
+    TypeCode();
+  };
+
+
+
+  class _nil_TypeCode : public virtual TypeCode {
+  public:
+    _nil_TypeCode() : TypeCode(tk_null) {  }
+    virtual ~_nil_TypeCode() {}
+
+    virtual Boolean NP_is_nil() const;
+
+    // OMG interface:
+
+    const char* id () const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      char * _result= 0;
+      return _result;
+    }
+
+    const char* name () const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      char * _result= 0;
+      return _result;
+    }
+
+    ULong member_count () const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      ULong _result = 0;
+      return _result;
+    }
+
+    const char* member_name(ULong index) const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      char * _result= 0;
+      return _result;
+    }
+
+    TypeCode_ptr member_type(ULong index) const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      TypeCode_ptr _result= 0;
+      return _result;
+    }
+
+    Any* member_label(ULong index) const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      Any * _result= 0;
+      return _result;
+    }
+
+    TypeCode_ptr discriminator_type() const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      TypeCode_ptr _result= 0;
+      return _result;
+    }
+
+    Long  default_index() const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      Long _result = 0;
+      return _result;
+    }
+
+    ULong length() const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      ULong _result = 0;
+      return _result;
+    }
+
+    TypeCode_ptr content_type() const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      TypeCode_ptr _result= 0;
+      return _result;
+    }
+
+    Long param_count() const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      Long _result = 0;
+      return _result;
+    }
+
+    Any* parameter(Long index) const {
+      throw CORBA::BAD_OPERATION(0,CORBA::COMPLETED_NO);
+      // never reach here! Dummy return to keep some compilers happy.
+      Any * _result= 0;
+      return _result;
+    }
+  };
+
+
+
+  class TypeCode_INOUT_arg;
+  class TypeCode_OUT_arg;
+
+
+  class TypeCode_var {
+  public:
+    inline TypeCode_var() { pd_TC = CORBA::TypeCode::_nil(); }
+
+    inline TypeCode_var(TypeCode_ptr p) { pd_TC = p; }
+
+    inline TypeCode_var(const TypeCode_var& p) { 
+	pd_TC = CORBA::TypeCode::_duplicate(p.pd_TC); 
+    }
+
+    inline ~TypeCode_var() { CORBA::release(pd_TC); }
+
+    TypeCode_var(const TypeCode_member& p) { 
+      pd_TC = CORBA::TypeCode::_duplicate(p._ptr);
+    }
+
+    inline TypeCode_var& operator= (TypeCode_ptr p) {
+      CORBA::release(pd_TC);
+      pd_TC = p;
+      return *this;
+    }
+
+    inline TypeCode_var& operator= (const TypeCode_var& p) {
+      if (this != &p)
+	{
+	  CORBA::release(pd_TC);
+	  pd_TC = CORBA::TypeCode::_duplicate(p.pd_TC);
+	}
+      return *this;
+    }
+
+    inline TypeCode_var& operator=(const TypeCode_member& p) {
+      CORBA::release(pd_TC);
+      pd_TC = CORBA::TypeCode::_duplicate(p._ptr);
+      return *this;
+    }
+      
+
+    inline TypeCode_ptr operator->() const { return (TypeCode_ptr) pd_TC; }
+    
+    inline operator TypeCode_ptr() const { return pd_TC; }
+
+    friend class TypeCode_member;
+    friend class TypeCode_INOUT_arg;
+    friend class TypeCode_OUT_arg;
+
+  private:
+    TypeCode_ptr pd_TC;
+  };
+
+
+
+  class TypeCode_INOUT_arg {
+  public:
+    inline TypeCode_INOUT_arg(TypeCode_ptr& p) : _data(p) { }
+    inline TypeCode_INOUT_arg(TypeCode_var& p) : _data(p.pd_TC) { }
+    inline TypeCode_INOUT_arg(TypeCode_member& p) : _data(p._ptr) { }
+    inline ~TypeCode_INOUT_arg() { }
+
+    TypeCode_ptr& _data;
+
+  private:
+    TypeCode_INOUT_arg();
+  };
+
+
+  class TypeCode_OUT_arg {
+  public:
+    TypeCode_OUT_arg(TypeCode_ptr& p) : _data(p) { }
+    TypeCode_OUT_arg(TypeCode_var& p) : _data(p.pd_TC) {
+      p = CORBA::TypeCode::_nil();
+    }
+    inline TypeCode_OUT_arg(TypeCode_member& p) : _data(p._ptr) {
+      p = CORBA::TypeCode::_nil();
+    }
+    inline ~TypeCode_OUT_arg() { }
+    
+    TypeCode_ptr& _data;
+
+  private:
+    TypeCode_OUT_arg();
+  };
+
+  static const TypeCode_ptr _tc_null;
+  static const TypeCode_ptr _tc_void;
+  static const TypeCode_ptr _tc_short;
+  static const TypeCode_ptr _tc_long;
+  static const TypeCode_ptr _tc_ushort;
+  static const TypeCode_ptr _tc_ulong;
+  static const TypeCode_ptr _tc_float;
+  static const TypeCode_ptr _tc_double;
+  static const TypeCode_ptr _tc_boolean;
+  static const TypeCode_ptr _tc_char;
+  static const TypeCode_ptr _tc_octet;
+  static const TypeCode_ptr _tc_any;
+  static const TypeCode_ptr _tc_TypeCode;
+  static const TypeCode_ptr _tc_Principal;
+  static const TypeCode_ptr _tc_Object;
+  static const TypeCode_ptr _tc_string;
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Request                                     //
@@ -1064,6 +2090,43 @@ typedef _CORBA_Double  Double;
     ObjectIdList* list_initial_services() ;
     Object_ptr resolve_initial_references(const char *identifier) ;
 
+    TypeCode_ptr 
+    create_struct_tc(const char* id, const char* name, 
+				  const StructMemberSeq& members);
+
+    TypeCode_ptr 
+    create_union_tc(const char* id, const char* name, 
+	      TypeCode_ptr discriminator_type, const UnionMemberSeq& members);
+
+    
+    TypeCode_ptr 
+    create_enum_tc(const char* id, const char* name, 
+				  const EnumMemberSeq& members);
+
+    TypeCode_ptr 
+    create_alias_tc(const char* id, const char* name, 
+				  TypeCode_ptr original_type);
+
+    TypeCode_ptr 
+    create_exception_tc(const char* id, const char* name, 
+				  const StructMemberSeq& members);
+
+    TypeCode_ptr 
+    create_interface_tc(const char* id, const char* name);
+
+    TypeCode_ptr 
+    create_string_tc(ULong bound);
+
+    TypeCode_ptr 
+    create_sequence_tc(ULong bound, TypeCode_ptr element_type);
+
+    TypeCode_ptr 
+    create_array_tc(ULong length, TypeCode_ptr element_type);
+
+    TypeCode_ptr
+    create_recursive_sequence_tc(ULong bound, ULong offset);
+
+
     static ORB_ptr _duplicate(ORB_ptr p);
     static ORB_ptr _nil();
 
@@ -1079,7 +2142,8 @@ typedef _CORBA_Double  Double;
 //                   PIDL release and is_null                         //
 ////////////////////////////////////////////////////////////////////////
 
-  static Boolean is_nil(TypeCode_ptr);
+  static inline Boolean is_nil(TypeCode_ptr o) { return (o) ? o->NP_is_nil() 
+						            : 1; }
   static Boolean is_nil(Environment_ptr);
   static Boolean is_nil(Context_ptr);
   static Boolean is_nil(Principal_ptr);
@@ -1102,7 +2166,10 @@ typedef _CORBA_Double  Double;
   static Boolean is_nil(NVList_ptr);
   static Boolean is_nil(Request_ptr);
 
-  static void release(TypeCode_ptr);
+  static inline void release(TypeCode_ptr o) {
+    if (!CORBA::is_nil(o)) delete o;
+  }
+
   static void release(Environment_ptr);
   static void release(Context_ptr);
   static void release(Principal_ptr);
