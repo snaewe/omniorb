@@ -10,6 +10,16 @@
 
 /*
   $Log$
+  Revision 1.2  1997/01/13 15:41:15  sll
+  If the name of the interface is Object, rename it to CORBA::Object.
+  New member function produce_typedef_hdr(). This is called when a typedef
+  declaration is encountered.
+  Defined a new class <interface>_Helper. This is used to instantiate
+  the template _CORBA_ObjRef_Var and _CORBA_ObjRef_Member.
+  This is necessary because the interface can be recurively used within
+  its scope, e.g. as a user exception value and the _nil() and marshalling
+  functions cannot be used.
+
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -34,6 +44,18 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
 	      o2be_name(this),
 	      o2be_sequence_chain(this)
 {
+  if (strcmp(fqname(),"Object") == 0)
+    {
+      // This node is for the psuedo object "Object" and should be mapped
+      // to CORBA::Object.
+      // Set the names to properly scoped under "CORBA::".
+      set_uqname("Object");
+      set_fqname("CORBA::Object");
+      set__fqname("CORBA_Object");
+      set_scopename("CORBA");
+      set__scopename("CORBA");
+    }
+
   pd_objref_uqname = new char[strlen(uqname())+strlen("_ptr")+1];
   strcpy(pd_objref_uqname,uqname());
   strcat(pd_objref_uqname,"_ptr");
@@ -93,16 +115,26 @@ o2be_interface::o2be_interface(UTL_ScopedName *n, AST_Interface **ih, long nih,
 
 
 
-  pd_fieldmem_uqname = new char[strlen(uqname())+strlen(FIELD_MEMBER_TEMPLATE)+3];
+  pd_fieldmem_uqname = new char[strlen(uqname())+
+			        strlen(uqname())+strlen("_Helper")+
+			        strlen(FIELD_MEMBER_TEMPLATE)+4];
   strcpy(pd_fieldmem_uqname,FIELD_MEMBER_TEMPLATE);
   strcat(pd_fieldmem_uqname,"<");
   strcat(pd_fieldmem_uqname,uqname());
+  strcat(pd_fieldmem_uqname,",");
+  strcat(pd_fieldmem_uqname,uqname());
+  strcat(pd_fieldmem_uqname,"_Helper");
   strcat(pd_fieldmem_uqname,">");
 
-  pd_fieldmem_fqname = new char[strlen(fqname())+strlen(FIELD_MEMBER_TEMPLATE)+3];
+  pd_fieldmem_fqname = new char[strlen(fqname())+
+			        strlen(fqname())+strlen("_Helper")+
+			        strlen(FIELD_MEMBER_TEMPLATE)+4];
   strcpy(pd_fieldmem_fqname,FIELD_MEMBER_TEMPLATE);
   strcat(pd_fieldmem_fqname,"<");
   strcat(pd_fieldmem_fqname,fqname());
+  strcat(pd_fieldmem_fqname,",");
+  strcat(pd_fieldmem_fqname,fqname());
+  strcat(pd_fieldmem_fqname,"_Helper");
   strcat(pd_fieldmem_fqname,">");
 
   pd_IRrepoIdSize = strlen(_fqname()) + strlen(IRREPOID_POSTFIX) + 1;
@@ -122,9 +154,30 @@ o2be_interface_fwd::o2be_interface_fwd(UTL_ScopedName *n, UTL_StrList *p)
 void 
 o2be_interface::produce_hdr(fstream &s)
 {
+  s << "#ifndef __" << _fqname() << "__\n";
+  s << "#define __" << _fqname() << "__\n";
   IND(s); s << "class   " << uqname() << ";\n";
   IND(s); s << "typedef " << uqname() << "* " << objref_uqname() << ";\n";
   IND(s); s << "typedef " << objref_uqname() << " " << uqname() << "Ref;\n\n";
+  IND(s); s << "class " << uqname() << "_Helper {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "public:\n";
+  IND(s); s << "static " << objref_uqname() << " _nil();\n";
+  IND(s); s << "static size_t NP_alignedSize("
+	    << objref_uqname() << " obj,size_t initialoffset);\n";
+  IND(s); s << "static void marshalObjRef("
+	    << objref_uqname() << " obj,NetBufferedStream &s);\n";
+  IND(s); s << "static "
+	    << objref_uqname() 
+	    << " unmarshalObjRef(NetBufferedStream &s);\n";
+  IND(s); s << "static void marshalObjRef("
+	    << objref_uqname() << " obj,MemBufferedStream &s);\n";
+  IND(s); s << "static "
+	    << objref_uqname() 
+	    << " unmarshalObjRef(MemBufferedStream &s);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n";
+  s << "#endif\n";
   s << "#define " << IRrepoId() << " \"" << repositoryID() << "\"\n\n";
 
 
@@ -288,7 +341,11 @@ o2be_interface::produce_hdr(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
 
-  IND(s); s << "typedef _CORBA_ObjRef_Var<"<<uqname()<< "> "<<uqname()<<"_var;\n\n";
+  IND(s); s << "typedef _CORBA_ObjRef_Var<"
+	    << uqname()
+	    << ","
+	    << uqname() << "_Helper"
+	    << "> "<<uqname()<<"_var;\n\n";
   
   IND(s); s << "class " << server_uqname() << " : ";
   {
@@ -462,7 +519,32 @@ void
 o2be_interface_fwd::produce_hdr(fstream &s)
 {
   o2be_interface *intf = o2be_interface::narrow_from_decl(full_definition());
-  IND(s); s << "class " << intf->uqname() << ";\n\n";
+  s << "#ifndef __" << intf->_fqname() << "__\n";
+  s << "#define __" << intf->_fqname() << "__\n";
+  IND(s); s << "class   " << intf->uqname() << ";\n";
+  IND(s); s << "typedef " << intf->uqname() << "* " 
+	    << intf->objref_uqname() << ";\n";
+  IND(s); s << "typedef " << intf->objref_uqname() << " " 
+	    << intf->uqname() << "Ref;\n\n";
+  IND(s); s << "class " << intf->uqname() << "_Helper {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "public:\n";
+  IND(s); s << "static " << intf->objref_uqname() << " _nil();\n";
+  IND(s); s << "static size_t NP_alignedSize("
+	    << intf->objref_uqname() << " obj,size_t initialoffset);\n";
+  IND(s); s << "static void marshalObjRef("
+	    << intf->objref_uqname() << " obj,NetBufferedStream &s);\n";
+  IND(s); s << "static "
+	    << intf->objref_uqname() 
+	    << " unmarshalObjRef(NetBufferedStream &s);\n";
+  IND(s); s << "static void marshalObjRef("
+	    << intf->objref_uqname() << " obj,MemBufferedStream &s);\n";
+  IND(s); s << "static "
+	    << intf->objref_uqname() 
+	    << " unmarshalObjRef(MemBufferedStream &s);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n";
+  s << "#endif\n";
   return;
 }
 
@@ -734,6 +816,55 @@ o2be_interface::produce_skel(fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
+  // T_Helper
+  IND(s); s << objref_fqname() << "\n";
+  IND(s); s << fqname() << "_Helper::_nil() {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return " << fqname() << "::_nil();\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "size_t\n";
+  IND(s); s << fqname() << "_Helper::NP_alignedSize("
+	    << objref_fqname() << " obj,size_t initialoffset) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return " << fqname() 
+	    << "::NP_alignedSize(obj,initialoffset);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "void\n";
+  IND(s); s << fqname() << "_Helper::marshalObjRef("
+	    << objref_fqname() << " obj,NetBufferedStream &s) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << fqname() << "::marshalObjRef(obj,s);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << objref_fqname()
+	    << " "
+	    << fqname() <<"_Helper::unmarshalObjRef(NetBufferedStream &s) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return " << fqname() << "::unmarshalObjRef(s);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "void\n";
+  IND(s); s << fqname() << "_Helper::marshalObjRef("
+	    << objref_fqname() << " obj,MemBufferedStream &s) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << fqname() << "::marshalObjRef(obj,s);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << objref_fqname()
+	    << " "
+	    << fqname() <<"_Helper::unmarshalObjRef(MemBufferedStream &s) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return " << fqname() << "::unmarshalObjRef(s);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
   s << "#include <omniORB2/proxyFactory.h>\n\n";
 
   // proxyObjectFactory
@@ -782,6 +913,25 @@ o2be_interface::produce_skel(fstream &s)
   // single const instance
   IND(s); s << "static const " << _fqname() << PROXY_OBJ_FACTORY_POSTFIX
 	    << " " << _fqname() << PROXY_OBJ_FACTORY_POSTFIX << ";\n";
+}
+
+void
+o2be_interface::produce_typedef_hdr(fstream &s, o2be_typedef *tdef)
+{
+  IND(s); s << "typedef " << fqname() << " " << tdef->uqname() << ";\n";
+  IND(s); s << "typedef " << objref_fqname() << " " << tdef->uqname() << "_ptr;\n";
+  IND(s); s << "typedef " << fqname() << "Ref " << tdef->uqname() << "Ref;\n";
+  IND(s); s << "typedef " << fqname() << "_Helper " << tdef->uqname() << "_Helper;\n";
+  IND(s); s << "typedef " << proxy_fqname()
+	    << " " << PROXY_CLASS_PREFIX << tdef->uqname() << ";\n";
+  IND(s); s << "typedef " << server_fqname()
+	    << " " << SERVER_CLASS_PREFIX << tdef->uqname() << ";\n";
+  IND(s); s << "typedef " << nil_fqname()
+	    << " " << NIL_CLASS_PREFIX << tdef->uqname() << ";\n";
+  IND(s); s << "typedef " << fqname() << "_var "
+	    << tdef->uqname() << "_var;\n";
+  s << "#define " << tdef->_fqname() << IRREPOID_POSTFIX << " " << IRrepoId()
+    << ";\n";
 }
 
 
