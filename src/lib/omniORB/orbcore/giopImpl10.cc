@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.21  2004/07/01 19:16:25  dgrisby
+  Client call interceptor oneway and response expected flipped. Thanks
+  John Fardo.
+
   Revision 1.1.4.20  2003/07/25 16:07:18  dgrisby
   Incorrect COMM_FAILURE with GIOP 1.2 CloseConnection.
 
@@ -1026,8 +1030,8 @@ giopImpl10::marshalRequestHeader(giopStream* g) {
   omniInterceptors::clientSendRequest_T::info_T info(*g,
 				                     *(giop_c.ior()),
 						     calldesc.op(),
-						     response_expected,
-						     !response_expected);
+						     !response_expected,
+						     response_expected);
   omniInterceptorP::visit(info);
 
   {

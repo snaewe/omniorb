@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.26  2004/07/01 19:16:23  dgrisby
+  Client call interceptor oneway and response expected flipped. Thanks
+  John Fardo.
+
   Revision 1.1.4.25  2004/06/18 14:45:24  dgrisby
   Obscure and rare bug in GIOP 1.2 system exception sending.
 
@@ -1418,8 +1422,8 @@ giopImpl12::marshalRequestHeader(giopStream* g) {
   omniInterceptors::clientSendRequest_T::info_T info(*g,
 				                     *(giop_c.ior()),
 						     calldesc.op(),
-						     response_expected,
-						     !response_expected);
+						     !response_expected,
+						     response_expected);
   omniInterceptorP::visit(info);
 
   CORBA::Octet v = 0;
