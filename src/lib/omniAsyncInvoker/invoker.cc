@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2001/08/16 09:53:18  sll
+  Added stdlib.h to give abort a prototype.
+
   Revision 1.1.2.5  2001/08/01 10:03:40  dpg1
   AyncInvoker no longer maintains its own dedicated thread queue.
   Derived classes must provide the implementation.
@@ -51,6 +54,7 @@
 
 #include <omnithread.h>
 #include <omniAsyncInvoker.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 
