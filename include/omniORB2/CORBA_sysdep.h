@@ -32,6 +32,10 @@
 
 /*
  $Log$
+ Revision 1.18  1998/04/09 19:17:59  sll
+ Extra macros defined for specifying initializers in the declaration
+ of integral constants.
+
  Revision 1.17  1998/04/08 16:11:20  sll
  Added support for Reliant UNIX 5.43.
 
@@ -88,7 +92,9 @@
 #     define SIZEOF_PTR  8
 #  endif
 #  if __DECCXX_VER >= 60000000
-#     define HAS_Cplusplus_Bool
+#     ifndef NO_Cplusplus_Bool
+#       define HAS_Cplusplus_Bool
+#     endif
 #     define HAS_Cplusplus_Namespace
 #     define HAS_Std_Namespace
 #  endif
@@ -103,7 +109,9 @@
 //  Microsoft Visual C++ compiler
 #define NEED_DUMMY_RETURN
 #if _MSC_VER >= 1000
-#define HAS_Cplusplus_Bool
+#  ifndef NO_Cplusplus_Bool
+#    define HAS_Cplusplus_Bool
+#  endif
 #define HAS_Cplusplus_Namespace
 #define HAS_Std_Namespace
 #endif
@@ -306,6 +314,73 @@ strdup (char* str)
 #error "Name conflict: _CORBA_MODULE_VAR is already defined."
 #endif
 
+#ifndef _CORBA_GLOBAL_VAR
+#define _CORBA_GLOBAL_VAR extern _LC_attr
+#else
+#error "Name conflict: _CORBA_GLOBAL_VAR is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_VARINT
+#define _CORBA_MODULE_VARINT
+#else
+#error "Name conflict: _CORBA_MODULE_VARINT is already defined."
+#endif
+
+#ifndef _CORBA_GLOBAL_VARINT
+#define _CORBA_GLOBAL_VARINT
+#else
+#error "Name conflict: _CORBA_GLOBAL_VARINT is already defined."
+#endif
+
+// Integral and enumuration constants are declared in the stub headers as:
+//    e.g.  class A {
+//              static const CORBA::Long AA _init_in_cldecl_( = 4 );
+//          };
+//          namespace B {
+//              const CORBA::Long BB _init_in_decl_( = 5 );
+//          };
+// And defined in the SK.cc:
+//    e.g.   const CORBA::Long A::AA _init_in_cldef_( = 4 );
+//           _init_in_def_( const CORBA::Long B::BB = 5 );
+//  
+// Final Draft (FD) allows declaration of static const integral or enum type 
+// be specified with a constant-initializer whereas ARM does not.
+// The _init_in_decl_ and _init_in_def_ macros are defined so that the same 
+// stub will compile on both FD and ARM compilers.
+// MSVC++ 5.0 is somewhere between FD and ARM.
+//
+#ifndef _init_in_decl_
+#define _init_in_decl_(x) x
+#else
+#error "Name conflict: _init_in_decl_ is already defined."
+#endif
+
+#ifndef _init_in_def_
+#define _init_in_def_(x)
+#else
+#error "Name conflict: _init_in_def_ is already defined."
+#endif
+
+#ifndef _init_in_cldecl_
+#  if !defined(_MSC_VER) || _MSC_VER > 1199
+#    define _init_in_cldecl_(x) x
+#  else
+#    define _init_in_cldecl_(x) 
+#  endif
+#else
+#error "Name conflict: _init_in_cldecl_ is already defined."
+#endif
+
+#ifndef _init_in_cldef_
+#  if !defined(_MSC_VER) || _MSC_VER > 1199
+#    define _init_in_cldef_(x)
+#  else
+#    define _init_in_cldef_(x) x 
+#  endif
+#else
+#error "Name conflict: _init_in_cldef_ is already defined."
+#endif
+
 #else
 
 #ifndef _CORBA_MODULE
@@ -343,6 +418,49 @@ strdup (char* str)
 #else
 #error "Name conflict: _CORBA_MODULE_VAR is already defined."
 #endif
+
+#ifndef _CORBA_GLOBAL_VAR
+#define _CORBA_GLOBAL_VAR extern _LC_attr
+#else
+#error "Name conflict: _CORBA_GLOBAL_VAR is already defined."
+#endif
+
+#ifndef _CORBA_MODULE_VARINT
+#define _CORBA_MODULE_VARINT static _LC_attr
+#else
+#error "Name conflict: _CORBA_MODULE_INTCONST is already defined."
+#endif
+
+#ifndef _CORBA_GLOBAL_VARINT
+#define _CORBA_GLOBAL_VARINT extern _LC_attr
+#else
+#error "Name conflict: _CORBA_GLOBAL_INTCONST is already defined."
+#endif
+
+#ifndef _init_in_decl_
+#define _init_in_decl_(x)
+#else
+#error "Name conflict: _init_in_decl_ is already defined."
+#endif
+
+#ifndef _init_in_def_
+#define _init_in_def_(x) x
+#else
+#error "Name conflict: _init_in_def_ is already defined."
+#endif
+
+#ifndef _init_in_cldecl_
+#define _init_in_cldecl_(x)
+#else
+#error "Name conflict: _init_in_cldecl_ is already defined."
+#endif
+
+#ifndef _init_in_cldef_
+#define _init_in_cldef_(x) x
+#else
+#error "Name conflict: _init_in_cldef_ is already defined."
+#endif
+
 
 // Deprecated. Old stubs still need this. Should be removed.
 #ifndef _CORBA_MODULE_PUBLIC
