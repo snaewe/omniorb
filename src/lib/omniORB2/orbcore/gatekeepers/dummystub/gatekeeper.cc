@@ -38,7 +38,7 @@ gateKeeper::version()
 
 
 CORBA::Boolean 
-gateKeeper::checkConnect(tcpSocketStrand *s)
+gateKeeper::checkConnect( _tcpStrand *s)
 {
   return 1;
 }
