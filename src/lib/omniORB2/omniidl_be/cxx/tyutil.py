@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/03 12:06:33  djs
+# Type utility functions now work with the new AST representation
+#
 # Revision 1.1  1999/11/03 11:09:50  djs
 # General module renaming
 #
@@ -90,6 +93,8 @@
 from omniidl import idlutil, idltype, idlast
 
 from omniidl.be.cxx import util
+
+import re
 
 def deref(type):
     assert isinstance(type, idltype.Type)
@@ -209,7 +214,6 @@ already_Variable = {
 
 def isVariableType(type):
     assert isinstance(type, idltype.Type)
-    print "isVariableType(" + repr(type) + ")"
     
     if isinstance(type, idltype.Base):
         return 0
@@ -224,7 +228,6 @@ def isVariableType(type):
 
 def isVariableDecl(node):
     assert isinstance(node, idlast.Decl)
-    print "isVariableDecl(" + repr(node) + ")"
     
     # interfaces are mapped to objects, which are always
     # variable types. same goes for exceptions.
@@ -253,11 +256,17 @@ def isVariableDecl(node):
     
     # a union is variable if any one if its constituents
     # is also variable
-    elif (isinstance(node, idlast.Union)):
+    elif isinstance(node, idlast.Union):
         for c in node.cases():
             if isVariableType(c.caseType()):
                 return 1
         return 0
+
+    # a declarator is variable if it is an alias to a variable
+    # type
+    elif isinstance(node, idlast.Declarator) and \
+         node.alias() != None:
+        return isVariableType(node.alias().aliasType())
 
     else:
         raise "util.isVariable called with a " + repr(node) + \
@@ -271,12 +280,13 @@ def typeDims(type):
     if isinstance(type, idltype.Declared):
         tyname = type.name()
         if type.kind() == idltype.tk_alias:
-            # get the declarators list and search for our name
-            for d in type.decl().declarators():
-                if d.identifier() == tyname:
-                    # return this and the rest of the dimensions
-                    rest = typeDims(type.decl().aliasType())
-                    return d.sizes() + rest
+            tydecl = type.decl()
+            sizes = []
+            if tydecl.sizes() != None:
+                sizes = tydecl.sizes()
+            if tydecl.alias() != None:
+                sizes = sizes + typeDims(tydecl.alias().aliasType())
+            return sizes
 
         # no arrays at this level
         if (hasattr(type.decl(), "aliasType")):
@@ -293,8 +303,8 @@ def guardName(scopedName):
     scopedName = map(escapeNonAlphanumChars, scopedName)
 
     # all but the identifier have _m appended (signifies a module?)
-    scope = map(lambda x: x + "_m", scope[0:-1])
-    guard = reduce(lambda x,y: x + y, scope, "") + scope[-1]
+    scope = map(lambda x: x + "_m", scopedName[0:-1])
+    guard = reduce(lambda x,y: x + y, scope, "") + scopedName[-1]
     
     return guard
 
@@ -308,7 +318,7 @@ def objRefTemplate(type, suffix, scope = []):
 
 # ------------------------------------------------------------------
 
-def operationArgumentType(type, scope = [], virualFn = 0):
+def operationArgumentType(type, scope = [], virtualFn = 0):
     param_type = principalID(type, scope)
     isVariable = isVariableType(type)
     deref_type = deref(type)
@@ -410,13 +420,13 @@ def sequenceTemplate(sequence, scope=[]):
         return (template, args)
         
         
-    if isBooleanType(base_type):
+    if isBoolean(base_type):
         template_name = CORBA_SEQUENCE + "__Boolean"
-    elif isOctetType(base_type):
+    elif isOctet(base_type):
         template_name = CORBA_SEQUENCE + "__Octet"
-    elif isStringType(base_type):
+    elif isString(base_type):
         template_name = CORBA_SEQUENCE + "__String"
-    elif isObjRefType(base_type):
+    elif isObjRef(base_type):
         template_name = CORBA_SEQUENCE + "_ObjRef"
         template_args = ["OBJREF?!", base_type_name,
                          base_type_name + "_Helper"] + template_args

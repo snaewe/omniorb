@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2  1999/11/03 12:06:19  djs
+# Type utility functions now work with the new AST representation
+#
 # Revision 1.1  1999/11/03 11:09:33  djs
 # General module renaming
 #
@@ -80,8 +83,10 @@ def showID(node):
     identifier = node.identifier()
     cxx_identifier = tyutil.mapID(identifier)
     st.out("""\
-IDL identifier = @idl@
-CXX identifier = @cxx@""", idl = identifier, cxx = cxx_identifier)
+IDL identifier  = @idl@
+CXX identifier  = @cxx@""",
+           idl = identifier,
+           cxx = cxx_identifier)
 
 def showVariable(node):
     variable = tyutil.isVariableDecl(node)
@@ -109,6 +114,8 @@ def visitModule(node):
 module {""")
     st.inc_indent()
     showID(node)
+    st.out("""\
+guard name = @guard@""", guard = tyutil.guardName(node.scopedName()))
     st.out("""\
 definitions:""")
     for n in node.definitions():
@@ -225,11 +232,18 @@ decl {""")
         m.memberType().accept(self)
         type = self.__result_type
         principalID = tyutil.principalID(m.memberType())
+        opINtype = tyutil.operationArgumentType(m.memberType())[1]
+        objrefTemplate = tyutil.objRefTemplate(m.memberType(), "Member")
         st.out("""\
 declarators { """)
         st.inc_indent()
         st.out("""\
-principalID = @id@""", id = principalID)
+principalID       = @id@
+objref template   = @objref@
+operation In type = @operin@""",
+               id = principalID,
+               objref = objrefTemplate,
+               operin = opINtype)
         for d in m.declarators():
             d.accept(self)
             st.out("""\
@@ -469,6 +483,9 @@ def visitSequenceType(type):
     else:
         self.__result_type = "sequence<" + self.__result_type + ", " +\
                              str(type.bound()) + ">"
+    self.__result_type = self.__result_type + \
+                         "   sequence template = " + \
+                         tyutil.sequenceTemplate(type)
 
 def visitFixedType(type):
     self.__result_type = "fixed <" + str(type.digits()) + ", " +\
