@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.2  2000/11/03 19:30:21  sll
+# Rationalise code generation. Consolidate all code that use call descriptors
+# into the CallDescriptor class.
+#
 # Revision 1.1.4.1  2000/10/12 15:37:47  sll
 # Updated from omni3_1_develop.
 #
@@ -105,20 +109,19 @@ class Interface:
     return self._environment
   
   
-import iface
-self = iface
-self.__classes = {}
+_classes = {}
+_proxy_call_descriptors = {}
 
 def instance(name):
-  if self.__classes.has_key(name):
-    return self.__classes[name]
+  if _classes.has_key(name):
+    return _classes[name]
 
   instance = eval(name)
-  self.__classes[name] = instance
+  _classes[name] = instance
   return instance
 
 def register_class(name, cl):
-  self.__classes[name] = cl
+  _classes[name] = cl
 
 
 # Class associated with an IDL interface.
@@ -259,7 +262,7 @@ class _objref_I(Class):
       if objref_name.needFlatName(self._environment):
         objref_str = objref_name.flatName()
 
-      this_inherits_str = objref_str + "(mdri, p, id, lid),\n"
+      this_inherits_str = objref_str + "(ior, id, lid),\n"
 
       # FIXME:
       # The powerpc-aix OMNIORB_BASE_CTOR workaround still works here
@@ -287,69 +290,37 @@ class _objref_I(Class):
       
     for method in self.methods():
       callable = self._callables[method]
-        
-      # Generate a proxy call descriptor if required
-      call_descriptor = call.proxy_call_descriptor(callable, stream)
 
-      # declare the operation context array thingy
-      context = output.StringStream()
-      if callable.contexts() != []:
-        context_descriptor = descriptor.context_descriptor\
-                             (callable.signature())
-        array = output.StringStream()
-        for c in callable.contexts():
-          array.out("\"" + c + "\",")
-        array.out("0")
-        stream.out(skel.template.interface_context_array,
-                   context_descriptor = context_descriptor,
-                   contexts = array)
-        # Create a ContextInfo structure and set the context for the call
-        context.out(skel.template.interface_objref_contextinfo,
-                    context_descriptor = context_descriptor,
-                    n = str(len(callable.contexts())))
+      # signature is a text string form of the complete operation signature
+      signature = callable.signature()
 
-      # ... and a local callback function
-      node_name = self.interface().name()
-      node = self.interface()._node
-      local_callback = call.local_callback_function(stream, node_name,
-                                                    callable)
-      
-      return_string = ""
-      if callable.returnType().kind() != idltype.tk_void:
-        return_string = "return _call_desc.result();"
-
-      # We have to instantiate an call-specific omniCallDescriptor object
-      # _call_desc(local callback function : function pointer,
-      #            operation name          : string,
-      #            operation name length   : integer,
-      #            oneway flag             : boolean,
-      #            argument list)
-                                                 
-      call_desc_args = [ local_callback,
-                         "\"" + callable.operation_name() + "\"",
-                         str(len(callable.operation_name()) + 1) ]
-      if callable.oneway():
-        call_desc_args.append("1/*oneway*/")
+      # we only need one descriptor for each _signature_ (not operation)
+      if _proxy_call_descriptors.has_key(signature):
+        call_descriptor = _proxy_call_descriptors[signature]
       else:
-        call_desc_args.append("0")
+        call_descriptor = call.CallDescriptor(signature,callable)
+        call_descriptor.out_desc(stream)
+        _proxy_call_descriptors[signature] = call_descriptor
 
-      # add the C++ parameter names
-      for parameter in callable.parameters():
-        call_desc_args.append(id.mapID(parameter.identifier()))
+      # produce a localcall function
+      node_name = self.interface().name()
+      localcall_fn = descriptor.local_callback_fn(node_name,
+                                                  callable.operation_name(),
+                                                  signature)
+      call_descriptor.out_localcall(stream,node_name,callable.method_name(),
+                                    localcall_fn)
 
-      # buffer to build the method body inside
+      # produce member function for this operation/attribute.
       body = output.StringStream()
-      body.out(skel.template.interface_operation,
-               call_descriptor = call_descriptor,
-               call_desc_args = string.join(call_desc_args, ", "),
-               context = context,
-               return_string = return_string)
-
-      #fn_scopedName = self.cxxname().fullName() + [callable.method_name()]
-      #method.implementation(stream, id.Name(fn_scopedName), body)
+      argnames = []
+      for parameter in callable.parameters():
+        argnames.append(parameter.identifier())
+        
+      call_descriptor.out_objrefcall(body,
+                                     callable.operation_name(),
+                                     argnames,
+                                     localcall_fn)
       method.cc(stream, body)
-      
-
 
 class _pof_I(Class):
   def __init__(self, I):
@@ -418,10 +389,15 @@ class _impl_I(Class):
     def dispatch(self = self, stream = stream):
       # first check if method is from this interface
       dispatched = []
-      for callable in self._callables.values():
+      for method in self.methods():
+        callable = self._callables[method]
         operation_name = callable.operation_name()
         if not(operation_name in dispatched):
-          call.impl_dispatch_method(stream, callable, self._environment)
+          signature = callable.signature()
+          call_descriptor = _proxy_call_descriptors[signature]
+          localcall_fn = descriptor.local_callback_fn(self.interface().name(),
+                                                      operation_name,signature)
+          call_descriptor.out_implcall(stream,operation_name,localcall_fn)
           dispatched.append(operation_name)
 
       # next call dispatch methods of superclasses
