@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.9  1999/06/18 20:53:10  sll
+  New function _CORBA_bad_param_freebuf().
+
   Revision 1.8  1999/03/11 16:25:52  djr
   Updated copyright notice
 
@@ -392,6 +395,15 @@ _CORBA_use_nil_ptr_as_nil_pseudo_objref(const char* objType)
     omniORB::log.flush();
   }
   return 1;
+}
+
+void
+_CORBA_bad_param_freebuf()
+{
+  if (omniORB::traceLevel > 1) {
+    omniORB::log << "Warning: omniORB2 detects that an invalid buffer pointer is passed to freebuf of string or object sequence\n";
+    omniORB::log.flush();
+  }
 }
 
 const char *
