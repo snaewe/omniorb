@@ -26,6 +26,27 @@
 #   
 #   IDL type representation
 
+"""Definitions for IDL type representation
+
+Classes:
+
+  Type     -- abstract base class.
+  Base     -- class for CORBA base types.
+  String   -- class for string types.
+  WString  -- class for wide string types.
+  Sequence -- class for sequence types.
+  Fixed    -- class for fixed-point types.
+  Declared -- class for declared types.
+
+TypeCode kind constants:
+
+  tk_null, tk_void, tk_short, tk_long, tk_ushort, tk_ulong, tk_float,
+  tk_double, tk_boolean, tk_char, tk_octet, tk_any, tk_TypeCode,
+  tk_Principal, tk_objref, tk_struct, tk_union, tk_enum, tk_string,
+  tk_sequence, tk_array, tk_alias, tk_except, tk_longlong,
+  tk_ulonglong, tk_longdouble, tk_wchar, tk_wstring, tk_fixed,
+  tk_value, tk_value_box, tk_native, tk_abstract_interface"""
+
 import idlutil
 
 tk_null               = 0
@@ -64,6 +85,8 @@ tk_abstract_interface = 32
 
 
 class Error:
+    """Exception class used by IdlType internals."""
+
     def __init__(self, err):
         self.err = err
 
@@ -72,15 +95,26 @@ class Error:
 
 
 class Type:
+    """Type abstract class.
+
+Function:
+
+  kind()          -- TypeCode kind of type.
+  accept(visitor) -- visitor pattern accept. See idlvisitor.py."""
+
     def __init__(self, kind):
         self.__kind  = kind
 
-    # Typecode kind
-    def kind(self):  return self.__kind
+    def kind(self):            return self.__kind
+    def accept(self, visitor): pass
 
 
 # Base types
 class Base (Type):
+    """Class for CORBA base types. (Type)
+
+No non-inherited functions."""
+
     def __init__(self, kind):
         if kind != tk_null       and \
            kind != tk_void       and \
@@ -115,6 +149,12 @@ class Base (Type):
 # relying on looking at the corresponding declaration
 
 class String (Type):
+    """Class for string types (Type)
+
+Function:
+
+  bound() -- bound of bounded string. 0 for unbounded."""
+
     def __init__(self, bound):
         Type.__init__(self, tk_string)
         self.__bound = bound
@@ -123,6 +163,12 @@ class String (Type):
     def bound(self): return self.__bound
 
 class WString (Type):
+    """Class for wide string types (Type)
+
+Function:
+
+  bound() -- bound of bounded wstring. 0 for unbounded."""
+
     def __init__(self, bound):
         Type.__init__(self, tk_string)
         self.__bound = bound
@@ -138,6 +184,13 @@ class WString (Type):
 # or inside a struct or union
 
 class Sequence (Type):
+    """Class for sequence types (Type)
+
+Functions:
+
+  seqType() -- Type this is a sequence of.
+  bound()   -- bound of bounded sequence. 0 for unbounded."""
+
     def __init__(self, seqType, bound):
         Type.__init__(self, tk_sequence)
         self.__seqType = seqType
@@ -151,6 +204,13 @@ class Sequence (Type):
 # Same goes for fixed
 
 class Fixed (Type):
+    """Class for fixed point types (Type)
+
+Functions:
+
+  digits() -- digits.
+  scale()  -- scale."""
+
     def __init__(self, digits, scale):
         Type.__init__(self, tk_fixed)
         self.__digits = digits
@@ -165,6 +225,14 @@ class Fixed (Type):
 # an associated declaration object
 
 class Declared (Type):
+    """Class for declared types (Type)
+
+Functions:
+
+  decl()       -- Decl object which corresponds to this type.
+  scopedName() -- Fully scoped name of the type as a list of strings.
+  name()       -- Simple name of the type."""
+
     def __init__(self, decl, scopedName, kind):
         if kind != tk_objref             and \
            kind != tk_struct             and \
@@ -230,7 +298,7 @@ fixedTypeMap = {}
 declaredTypeMap = {}
 
 
-# Functions to create or return existing Type objects
+# Private functions to create or return existing Type objects
 def baseType(kind):
     return baseTypeMap[kind]
 

@@ -26,10 +26,56 @@
 #
 #   IDL compiler output functions
 
+"""Output stream
+
+Class:
+
+  Stream -- output stream which outputs templates, performing
+            key/value substitution and indentation."""
+
 import re, string
 
 class Stream:
-    """IDL Compiler output stream."""
+    """IDL Compiler output stream class
+
+The output stream takes a template string containing keys enclosed in
+'@' characters and replaces the keys with their associated values. It
+also provides counted indentation levels.
+
+  eg. Given the template string:
+
+    template = \"\"\"\\
+class @id@ {
+public:
+  @id@(@type@ a) : a_(a) {}
+
+private:
+  @type@ a_;
+};\"\"\"
+
+  Calling s.out(template, id="foo", type="int") results in:
+
+    class foo {
+    public:
+      foo(int a) : a_(a) {}
+
+    private:
+      int a_;
+    };
+
+
+Functions:
+
+  __init__(file, indent_size)   -- Initialise the stream with the
+                                   given file and indent size.
+  inc_indent()                  -- Increment the indent level.
+  dec_indent()                  -- Decrement the indent level.
+  out(template, key=val, ...)   -- Output the given template with
+                                   key/value substitution and
+                                   indenting.
+  niout(template, key=val, ...) -- As out(), but with no indenting."""
+
+
     def __init__(self, file, indent_size = 4):
         self.indent  = 0
         self.file    = file

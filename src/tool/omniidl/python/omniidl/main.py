@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5  1999/11/15 15:49:22  dpg1
+# Documentation strings.
+#
 # Revision 1.4  1999/11/12 17:15:35  dpg1
 # Verbose messages now written to stderr.
 #
@@ -42,6 +45,8 @@
 # Revision 1.1  1999/11/08 11:43:34  dpg1
 # Changes for NT support.
 #
+
+"""IDL Compiler front-end main function"""
 
 import _omniidl
 import sys, getopt, os, os.path, string

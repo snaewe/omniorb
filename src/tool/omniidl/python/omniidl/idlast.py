@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  1999/11/15 15:49:23  dpg1
+# Documentation strings.
+#
 # Revision 1.8  1999/11/11 15:55:30  dpg1
 # Python back-end interface now supports valuetype declarations.
 # Back-ends still don't support them, though.
@@ -54,15 +57,64 @@
 # First revision.
 #
 
+"""Classes and functions for handling the IDL Abstract Syntax Tree
+
+Function:
+
+  findDecl(scopedName) -- find a Decl object given a fully-scoped
+                          name, represented as a list of strings.
+                          eg. ::foo::bar::baz is represented as
+                          ['foo', 'bar', 'baz'].
+Classes:
+
+  AST          -- top level of Abstract Syntax Tree.
+  Decl         -- base of all declarations.
+  DeclRepoId   -- mixin class for Decls with repository ids.
+  Module       -- module declaration.
+  Interface    -- interface declaration.
+  Forward      -- forward-declared interface.
+  Const        -- constant declaration.
+  Declarator   -- declarator used in typedef, struct members, etc.
+  Typedef      -- typedef.
+  Member       -- member of a struct or exception.
+  Struct       -- struct declaration.
+  Exception    -- exception declaration.
+  CaseLabel    -- case label within a union.
+  UnionCase    -- one case within a union.
+  Union        -- union declaration.
+  Enumerator   -- enumerator of an enum.
+  Enum         -- enum declaration.
+  Attribute    -- attribute declaration.
+  Parameter    -- parameter of an operation of factory.
+  Operation    -- operation declaration.
+  Native       -- native declaration.
+  StateMember  -- state member of a valuetype.
+  Factory      -- factory method of a valuetype.
+  ValueForward -- forward-declared valuetype.
+  ValueBox     -- boxed value declaration.
+  ValueAbs     -- abstract valuetype declaration.
+  Value        -- valuetype declaration."""
+
 import idlutil
 import idlvisitor
 
 class AST:
+    """Class for top-level Abstract Syntax Tree.
+
+Functions:
+
+  file()          -- the file name of the main IDL file.
+  declarations()  -- list of Decl objects corresponding to declarations
+                     at file scope.
+  pragmas()       -- list of strings containing #pragmas which occurred
+                     before any declarations. Later #pragmas are
+                     attached to Decl objects.
+  accept(visitor) -- visitor pattern accept. See idlvisitor.py."""
+
     def __init__(self, file, declarations, pragmas):
         self.__file         = file
         self.__declarations = declarations
         self.__pragmas      = pragmas
-        #print "AST init:", declarations
 
     def file(self):            return self.__file
     def declarations(self):    return self.__declarations
@@ -70,46 +122,69 @@ class AST:
     def accept(self, visitor): visitor.visitAST(self)
 
 
-# Base declaration
 class Decl:
+    """Base class for all declarations.
+
+Functions:
+
+  file()          -- the IDL file this declaration came from.
+  line()          -- the line number within the file.
+  mainFile()      -- boolean: true if the file was the main IDL file;
+                     false if it was an included file.
+  pragmas()       -- list of strings containing #pragmas which
+                     immediately followed this declaration.
+  accept(visitor) -- visitor pattern accept. See idlvisitor.py."""
+
     def __init__(self, file, line, mainFile, pragmas):
         self.__file     = file
         self.__line     = line
         self.__mainFile = mainFile
         self.__pragmas  = pragmas
 
-    # File name of declaration
+    def accept(self, visitor): pass
+
     def file(self):     return self.__file
-
-    # Line number of declaration
     def line(self):     return self.__line
-
-    # True if this declaration came from the main IDL file
     def mainFile(self): return self.__mainFile
-
-    # List of unknown pragmas, as strings, attached to this decl
     def pragmas(self):  return self.__pragmas
 
 
-# Mixin class for Decls which have a Repository Id
 class DeclRepoId :
+    """Mixin class for Decls which have a Repository Id
+
+Functions:
+
+  identifier() -- name of the declaration as a string
+  scopedName() -- list of strings forming the fully-scoped name of the
+                  declaration. e.g. ::foo::bar::baz is represented as
+                  ['foo', 'bar', 'baz'].
+  repoId()     -- repository identifier for this declaration."""
+
     def __init__(self, identifier, scopedName, repoId):
         self.__identifier = identifier
         self.__scopedName = scopedName
         self.__repoId     = repoId
 
-    # Name as a string
     def identifier(self): return self.__identifier
-
-    # Fully scoped name as a list of strings
     def scopedName(self): return self.__scopedName
-
-    # Repository Id string
     def repoId(self):     return self.__repoId
 
 
-# Module
 class Module (Decl, DeclRepoId):
+    """Module declaration (Decl, DeclRepoId)
+
+Functions:
+
+  definitions()   -- list of Decl objects declared within this module.
+  continuations() -- list containing continuations of this module.
+                     When modules are re-opened, multiple Module
+                     objects with the same name appear in the
+                     enclosing Module or AST object. In case it's
+                     useful, the first Module object for a particular
+                     module has a list containing continuations of
+                     that module. You will probably not have any use
+                     for this."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  definitions):
@@ -119,19 +194,28 @@ class Module (Decl, DeclRepoId):
 
         self.__definitions  = definitions
         self._continuations = []
-        #print line, "Module init:", identifier, definitions
 
     def accept(self, visitor): visitor.visitModule(self)
 
-    # List containing contents of module:
     def definitions(self):   return self.__definitions
-
-    # List containing continuations of this module
     def continuations(self): return self._continuations
 
 
-# Interface
 class Interface (Decl, DeclRepoId):
+    """Interface declaration (Decl, DeclRepoId)
+
+Functions:
+
+  abstract()     -- boolean: true if the interface is declared abstract.
+  inherits()     -- list of Interface objects from which this one
+                    inherits.
+  contents()     -- list of Decl objects for all items declared within
+                    this interface.
+  declarations() -- subset of contents() containing types, constants
+                    and exceptions.
+  callables()    -- subset of contents() containing Operations and
+                    Attributes."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  abstract, inherits):
@@ -144,7 +228,6 @@ class Interface (Decl, DeclRepoId):
         self.__contents     = []
         self.__declarations = []
         self.__callables    = []
-        #print line, "Interface init:", identifier, inherits
 
     def _setContents(self, contents):
         self.__contents     = contents
@@ -157,24 +240,22 @@ class Interface (Decl, DeclRepoId):
 
     def accept(self, visitor): visitor.visitInterface(self)
 
-    # Abstract?
     def abstract(self):     return self.__abstract
-
-    # List of Interface objects from which this one derives
     def inherits(self):     return self.__inherits
-
-    # List of complete contents
     def contents(self):     return self.__contents
-
-    # List of declarations of types, constants, exceptions
     def declarations(self): return self.__declarations
-
-    # List of operations and attributes
     def callables(self):    return self.__callables
 
 
-# Forward-declared interface.
 class Forward (Decl, DeclRepoId):
+    """Forward-declared interface (Decl, DeclRepoId)
+
+Functions:
+
+  abstract() -- boolean: true if the interface is declared abstract.
+  fullDecl() -- Interface object corresponding to full interface
+                declaration or None if there is no full declaration."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  abstract):
@@ -183,16 +264,26 @@ class Forward (Decl, DeclRepoId):
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__abstract = abstract
-        #print line, "Forward init:", identifier
+        self._fullDecl  = None
+        self._more      = []
 
     def accept(self, visitor): visitor.visitForward(self)
 
-    # Abstract?
     def abstract(self): return self.__abstract
+    def fullDecl(self): return self._fullDecl
 
 
-# Constant
 class Const (Decl, DeclRepoId):
+    """Constant declaration (Decl, DeclRepoId)
+
+Functions:
+
+  constType() -- IdlType.Type object of this constant. Aliases not
+                 stripped.
+  constKind() -- TypeCode kind of constant with aliases stripped.
+  value()     -- value of the constant. Either an integer or an
+                 Enumerator object."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  constType, constKind, value):
@@ -207,19 +298,21 @@ class Const (Decl, DeclRepoId):
 
     def accept(self, visitor): visitor.visitConst(self)
 
-    # IdlType object
     def constType(self):  return self.__constType
-
-    # Kind of const with aliases stripped
     def constKind(self):  return self.__constKind
-
-    # Value is either a number or an Enumerator object
     def value(self):      return self.__value
 
 
-# Declarator used in typedefs, struct and members, etc.
-
 class Declarator (Decl, DeclRepoId):
+    """Declarator used in typedefs, struct members, etc. (Decl, DeclRepoId)
+
+Functions:
+
+  sizes() -- list of array sizes, or None if this is a simple
+             declarator.
+  alias() -- Typedef object for this declarator if this is a typedef
+             declarator. None otherwise."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  sizes):
@@ -234,14 +327,20 @@ class Declarator (Decl, DeclRepoId):
 
     def accept(self, visitor): visitor.visitDeclarator(self)
 
-    # List of array sizes, or None if this is a simple declarator
     def sizes(self): return self.__sizes
-
-    # Typedef object if this is a typedef declarator, None if not
     def alias(self): return self.__alias
 
 
 class Typedef (Decl):
+    """Typedef (Decl)
+
+Functions:
+
+  aliasType()   -- IdlType.Type object that this is an alias to.
+  constrType()  -- boolean: true if the alias type was constructed
+                   within this typedef declaration.
+  declarators() -- list of Declarator objects."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  aliasType, constrType, declarators):
 
@@ -250,22 +349,24 @@ class Typedef (Decl):
         self.__aliasType   = aliasType
         self.__constrType  = constrType
         self.__declarators = declarators
-        #print line, "Typedef init:", aliasType
 
     def accept(self, visitor): visitor.visitTypedef(self)
 
-    # Type this is an alias to
     def aliasType(self):   return self.__aliasType
-
-    # True if the alias type was constructed within this typedef
     def constrType(self):  return self.__constrType
-
-    # List of Declarators
     def declarators(self): return self.__declarators
 
 
-# Struct / exception member
 class Member (Decl):
+    """Member of a struct or exception (Decl)
+
+Functions:
+
+  memberType()  -- IdlType.Type object for the type of this member.
+  constrType()  -- boolean: true if the member type was constructed
+                   within the member declaration.
+  declarators() -- list of Declarator objects."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  memberType, constrType, declarators):
 
@@ -274,21 +375,22 @@ class Member (Decl):
         self.__memberType  = memberType
         self.__constrType  = constrType
         self.__declarators = declarators
-        #print line, "Member init:", memberType
 
     def accept(self, visitor): visitor.visitMember(self)
 
-    # Type of this member
-    def memberType(self):   return self.__memberType
-
-    # True if the member type was constructed within this member
+    def memberType(self):  return self.__memberType
     def constrType(self):  return self.__constrType
-
-    # List of Declarators
     def declarators(self): return self.__declarators
 
 
 class Struct (Decl, DeclRepoId):
+    """Struct declaration (Decl, DeclRepoId)
+
+Functions:
+
+  members()   -- list of Member objects for the struct contents.
+  recursive() -- boolean: true if the struct is recursive."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  recursive):
@@ -297,21 +399,23 @@ class Struct (Decl, DeclRepoId):
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__recursive = recursive
-        #print line, "Struct init:", identifier
 
     def _setMembers(self, members):
         self.__members = members
 
     def accept(self, visitor): visitor.visitStruct(self)
 
-    # Members of the struct
     def members(self):    return self.__members
-
-    # True if the struct is recursive
     def recursive(self):  return self.__recursive
 
 
 class Exception (Decl, DeclRepoId):
+    """Exception declaration (Decl, DeclRepoId)
+
+Function:
+
+  members() -- list of Member objects for the exception contents."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  members):
@@ -324,11 +428,20 @@ class Exception (Decl, DeclRepoId):
 
     def accept(self, visitor): visitor.visitException(self)
 
-    # Members of the exception
     def members(self):    return self.__members
 
 
 class CaseLabel (Decl):
+    """Case label within a union (Decl)
+
+Functions:
+
+  default()   -- boolean: true is this is the default label.
+  value()     -- label value. Either an integer or an Enumerator
+                 object. If default() is true, returns a value used by
+                 none of the other union labels.
+  labelKind() -- TypeCode kind of label."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  default, value, labelKind):
 
@@ -340,18 +453,22 @@ class CaseLabel (Decl):
 
     def accept(self, visitor): visitor.visitCaseLabel(self)
 
-    # True if this is the default label
     def default(self): return self.__default
-
-    # Label value. If default, this value is a value used by none of
-    # the other labels.
     def value(self): return self.__value
-
-    # TypeCode kind for label
     def labelKind(self): return self.__labelKind
 
 
 class UnionCase (Decl):
+    """One case within a union (Decl)
+
+Functions:
+
+  labels()     -- list of CaseLabel objects.
+  caseType()   -- IdlType.Type object for the case type.
+  constrType() -- boolean: true if the case type was constructed
+                  within the case.
+  declarator() -- Declarator object"""
+
     def __init__(self, file, line, mainFile, pragmas,
                  labels, caseType, constrType, declarator):
 
@@ -361,7 +478,6 @@ class UnionCase (Decl):
         self.__caseType   = caseType
         self.__constrType = constrType
         self.__declarator = declarator
-        #print line, "UnionCase init"
 
     def accept(self, visitor): visitor.visitUnionCase(self)
 
@@ -372,6 +488,17 @@ class UnionCase (Decl):
 
 
 class Union (Decl, DeclRepoId):
+    """Union declaration (Decl, DeclRepoId)
+
+Functions:
+
+  switchType() -- IdlType.Type object corresponding to the switch type.
+  constrType() -- boolean: true if the switch type was declared within
+                  the switch statement. Only possible for Enums.
+  cases()      -- list of UnionCase objects.
+  recursive()  -- boolean: true if the union is recursive."""
+  
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  switchType, constrType, recursive):
@@ -382,7 +509,6 @@ class Union (Decl, DeclRepoId):
         self.__switchType = switchType
         self.__constrType = constrType
         self.__recursive  = recursive
-        #print line, "Union init:", identifier
 
     def _setCases(self, cases):
         self.__cases = cases
@@ -390,27 +516,32 @@ class Union (Decl, DeclRepoId):
     def accept(self, visitor): visitor.visitUnion(self)
 
     def switchType(self): return self.__switchType
-
-    # True if the switch type is declared inside the switch!
     def constrType(self): return self.__constrType
     def cases(self):      return self.__cases
-
-    # True if the union is recursive
     def recursive(self):  return self.__recursive
 
 
 class Enumerator (Decl, DeclRepoId):
+    """Enumerator of an Enum (Decl, DeclRepoId)
+
+No non-inherited functions."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId):
 
         Decl.__init__(self, file, line, mainFile, pragmas)
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
-        #print line, "Enumerator:", identifier
 
     def accept(self, visitor): visitor.visitEnumerator(self)
 
 
 class Enum (Decl, DeclRepoId):
+    """Enum declaration (Decl, DeclRepoId)
+
+Function:
+
+  enumerators() -- list of Enumerator objects."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  enumerators):
@@ -419,7 +550,6 @@ class Enum (Decl, DeclRepoId):
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__enumerators = enumerators
-        #print line, "Enum: ", identifier
 
     def accept(self, visitor): visitor.visitEnum(self)
 
@@ -427,6 +557,14 @@ class Enum (Decl, DeclRepoId):
 
 
 class Attribute (Decl):
+    """Attribute declaration (Decl)
+
+Functions:
+
+  readonly()    -- boolean: true if the attribute is read only.
+  attrType()    -- IdlType.Type object for the attribute's type.
+  identifiers() -- list of strings containing the attribute identifiers."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  readonly, attrType, identifiers):
 
@@ -445,6 +583,16 @@ class Attribute (Decl):
 
 
 class Parameter (Decl):
+    """A Parameter of an operation or factory specifier (Decl)
+
+Functions:
+
+  direction()  -- integer: 0 == in, 1 == out, 2 == inout.
+  is_in()      -- boolean: true if in or inout.
+  is_out()     -- boolean: true if out or inout.
+  paramType()  -- IdlType.Type object for the parameter type.
+  identifier() -- string of parameter identifier."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  direction, paramType, identifier):
 
@@ -467,6 +615,17 @@ class Parameter (Decl):
 
 
 class Operation (Decl):
+    """Operation declaration (Decl)
+
+Functions:
+
+  oneway()     -- boolean: true if operation is one way.
+  returnType() -- IdlType.Type object for return type.
+  identifier() -- string of operation identifier.
+  parameters() -- list of Parameter objects.
+  raises()     -- list of Exception objects.
+  contexts()   -- list of strings for context expressions."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  oneway, returnType, identifier,
                  parameters, raises, contexts):
@@ -492,6 +651,12 @@ class Operation (Decl):
 
 
 class Native (Decl, DeclRepoId):
+    """Native declaration (Decl, DeclRepoId)
+
+Native should not be used in normal IDL.
+
+No non-inherited functions."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId):
 
@@ -502,6 +667,16 @@ class Native (Decl, DeclRepoId):
 
 
 class StateMember (Decl):
+    """State member of a valuetype (Decl)
+
+Functions:
+
+  memberAccess() -- integer: 0 == public, 1 == private.
+  memberType()   -- IdlType.Type object for member type.
+  constrType()   -- boolean: true if member type is declared within
+                    the StateMember.
+  declarators()  -- list of Declarator objects."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  memberAccess, memberType, constrType, declarators):
 
@@ -522,6 +697,13 @@ class StateMember (Decl):
     
 
 class Factory (Decl):
+    """Factory method of valuetype (Decl)
+
+Functions:
+
+  identifier() -- string.
+  parameters() -- list of Parameter objects."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, parameters):
 
@@ -537,6 +719,15 @@ class Factory (Decl):
 
 
 class ValueForward (Decl, DeclRepoId):
+    """Forward declared valuetype (Decl, DeclRepoId)
+
+Function:
+
+  abstract() -- boolean: true if declared abstract.
+  fullDecl() -- Value or ValueAbs object corresponding to the full
+                valuetype declaration or None if there is no full
+                declaration."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  abstract):
@@ -545,13 +736,24 @@ class ValueForward (Decl, DeclRepoId):
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
         self.__abstract = abstract
+        self._fullDecl  = None
+        self._more      = []
 
     def accept(self, visitor): visitor.visitValueForward(self)
 
     def abstract(self): return self.__abstract
+    def fullDecl(self): return self._fullDecl
 
 
 class ValueBox (Decl, DeclRepoId):
+    """ValueBox declaration (Decl, DeclRepoId)
+
+Functions:
+
+  boxedType()  -- IdlType.Type object for boxed type.
+  constrType() -- boolean: true if boxed type is declared inside the
+                  ValueBox declaration."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  boxedType, constrType):
@@ -569,6 +771,19 @@ class ValueBox (Decl, DeclRepoId):
 
 
 class ValueAbs (Decl, DeclRepoId):
+    """Abstract valuetype declaration (Decl, DeclRepoId)
+
+Functions:
+
+  inherits()     -- list of ValueAbs objects from which this inherits.
+  supports()     -- list of Interface object which this supports.
+  contents()     -- list of Decl objects for declarations within this
+                    valuetype.
+  declarations() -- subset of contents() containing types, constants and
+                    exceptions.
+  callables()    -- subset of contents() containing Operations and
+                    Attributes."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  inherits, supports):
@@ -603,6 +818,24 @@ class ValueAbs (Decl, DeclRepoId):
 
 
 class Value (Decl, DeclRepoId):
+    """valuetype declaration (Decl, DeclRepoId)
+
+Functions:
+
+  custom()       -- boolean: true if declared custom.
+  inherits()     -- list of valuetypes from which this inherits. The
+                    first may be a Value object or a ValueAbs object;
+                    any others will be ValueAbs objects.
+  truncatable()  -- boolean: true if the inherited Value is declared
+                    truncatable.
+  supports()     -- list of Interface object which this supports.
+  contents()     -- list of Decl objects for all items declared within
+                    this valuetype.
+  declarations() -- subset of contents() containing types, constants
+                    and exceptions.
+  callables()    -- subset of contents() containing Operations,
+                    Attributes, StateMembers and Factorys."""
+
     def __init__(self, file, line, mainFile, pragmas,
                  identifier, scopedName, repoId,
                  custom, inherits, truncatable, supports):
@@ -641,9 +874,6 @@ class Value (Decl, DeclRepoId):
     def supports(self):     return self.__supports
     def contents(self):     return self.__contents
     def declarations(self): return self.__declarations
-
-    # StateMembers count as callables, so callables isn't really the
-    # right name. It's this way for consistency with Interfaces.
     def callables(self):    return self.__callables
 
 
@@ -654,35 +884,64 @@ class Value (Decl, DeclRepoId):
 declMap = {}
 
 def registerDecl(scopedName, decl):
+    """Private function"""
     sname = idlutil.slashName(scopedName)
     if declMap.has_key(sname):
-#        print "registerDecl asked to re-register:", sname
 
-        if isinstance(decl, Interface) and \
-           isinstance(declMap[sname], Forward):
-#            print "It's OK, it's resolving a forward interface."
-            declMap[sname]._definition = decl
+        rdecl = declMap[sname]
+
+        if (isinstance(decl, Interface) and isinstance(rdecl, Forward)) or \
+           ((isinstance(decl, ValueAbs) or isinstance(decl, Value)) and \
+            isinstance(rdecl, ValueForward)):
+
+            # resolving a forward declaration
+            rdecl._fullDecl = decl
+            for f in rdecl._more: f._fullDecl = decl
             declMap[sname] = decl
 
-        elif isinstance(decl, Forward) and \
-             isinstance(declMap[sname], Forward):
-#            print "It's OK, it's a repeat forward declaration."
-            pass
+        elif (isinstance(decl, Forward) and isinstance(rdecl, Forward)) or \
+             (isinstance(decl, ValueForward) and \
+              isinstance(rdecl, ValueForward)):
+            
+            # repeat forward declaration
+            rdecl._more.append(decl)
 
         elif isinstance(decl, Module) and \
-             isinstance(declMap[sname], Module):
-#            print "It's OK, it's a continued module."
-            declMap[sname]._continuations.append(decl)
+             isinstance(rdecl, Module):
+            # continued module
+            rdecl._continuations.append(decl)
+
+        else:
+            print "***Warning: attempt to re-register", sname
 
         return
+
     declMap[sname] = decl
 
+
+class DeclNotFound:
+
+    """Exception to indicate that findDecl() could not find the
+    requested Decl object."""
+
+    def __init__(self, scopedName):
+        self.__scopedName = scopedName
+
+    def scopedName(self): return self.__scopedName
+
+
 def findDecl(scopedName):
+    """findDecl(scopedName) -> Decl
+
+Find a Decl object given a fully scoped name represented as a list of
+strings. Raises DeclNotFound if the name is not recognised."""
+
     sname = idlutil.slashName(scopedName)
     if not declMap.has_key(sname):
-        print "WARNING! findDecl() couldn't find:", sname
-        return scopedName
+        raise DeclNotFound(scopedName)
+    
     return declMap[sname]
+
 
 # Declarations of non-basic `built-in' types
 

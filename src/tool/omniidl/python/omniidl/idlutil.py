@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/11/15 15:49:23  dpg1
+# Documentation strings.
+#
 # Revision 1.2  1999/11/01 20:18:30  dpg1
 # Added string escaping
 #
@@ -35,21 +38,54 @@
 # First revision.
 #
 
+"""Utility functions for IDL compilers
+
+escapifyString() -- return a string with non-printing characters escaped.
+slashName()      -- format a scoped name with '/' separating components.
+dotName()        -- format a scoped name with '.' separating components.
+ccolonName()     -- format a scoped name with '::' separating components.
+pruneScope()     -- remove common prefix from a scoped name."""
+
 import string
 
 def slashName(scopedName, our_scope=[]):
+    """slashName(list, [list]) -> string
+
+Return a scoped name given as a list of strings as a single string
+with the components separated by '/' characters. If a second list is
+given, remove a common prefix using pruneScope()."""
+    
     pscope = pruneScope(scopedName, our_scope)
     return string.join(pscope, "/")
 
 def dotName(scopedName, our_scope=[]):
+    """dotName(list, [list]) -> string
+
+Return a scoped name given as a list of strings as a single string
+with the components separated by '.' characters. If a second list is
+given, remove a common prefix using pruneScope()."""
+    
     pscope = pruneScope(scopedName, our_scope)
     return string.join(pscope, ".")
 
 def ccolonName(scopedName, our_scope=[]):
+    """ccolonName(list, [list]) -> string
+
+Return a scoped name given as a list of strings as a single string
+with the components separated by '::' strings. If a second list is
+given, remove a common prefix using pruneScope()."""
+    
     pscope = pruneScope(scopedName, our_scope)
     return string.join(pscope, "::")
 
 def pruneScope(target_scope, our_scope):
+    """pruneScope(list A, list B) -> list
+
+Given two lists of strings (scoped names), return a copy of list A
+with any prefix it shares with B removed.
+
+  e.g. pruneScope(['A', 'B', 'C', 'D'], ['A', 'B', 'D']) -> ['C', 'D']"""
+
     tscope = target_scope[:]
     i = 0
     while len(tscope) > 0 and \
@@ -60,6 +96,10 @@ def pruneScope(target_scope, our_scope):
     return tscope
 
 def escapifyString(str):
+    """escapifyString(string) -> string
+
+Return the given string with any non-printing characters escaped."""
+    
     l = list(str)
     vis = string.letters + string.digits + " _!$%^&*()-=+[]{};'#:@~,./<>?|`"
     for i in range(len(l)):
