@@ -1,3 +1,37 @@
+Wed Aug 22 14:18:58 BST 2001 dpg1
+=================================
+
+- Re-entrant Any marshalling.
+
+include/omniORB4/cdrStream.h
+include/omniORB4/tcDescriptor.h
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/anyP.cc
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/dynException.cc
+src/lib/omniORB/dynamic/policy.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/unknownUserExn.cc
+src/lib/omniORB/include/anyP.h
+src/lib/omniORB/include/tcParser.h
+src/lib/omniORB/omniidl_be/cxx/dynskel/main.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/template.py
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+
+- Christof's fixes for gcc 3.0.1.
+
+src/lib/omniORB/include/inProcessIdentity.h
+src/lib/omniORB/include/localIdentity.h
+src/lib/omniORB/include/objectTable.h
+src/lib/omniORB/include/remoteIdentity.h
+src/lib/omniORB/orbcore/omniORB.cc
+
+- Update ORBendpoint -> ORBendPoint.
+
+src/appl/omniNames/omniNames.cc
+
+
 Wed Aug 22 10:44:18 BST 2001 sll
 ================================
 

@@ -166,7 +166,7 @@ main(int argc, char **argv)
   //
 
   insertArgs(argc, argv, 1, 2);
-  argv[1] = strdup("-ORBendpoint");
+  argv[1] = strdup("-ORBendPoint");
   argv[2] = new char[20];
   sprintf(argv[2], "giop:tcp::%d", port);
 
