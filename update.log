@@ -1,3 +1,12 @@
+Wed Jan 24 13:45:48 GMT 2001 sll
+================================
+
+- omniidl C++ back-end bug fix. Only affects MSVC++ and with IDLs that
+  contains a struct definition inside a union inside a namespace.
+
+src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
+
+
 Tue Jan 16 12:52:13 GMT 2001 dpg1
 =================================
 

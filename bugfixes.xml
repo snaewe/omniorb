@@ -8,6 +8,29 @@
 
 <buglist version="3.0.2">
 
+<bug id="14" date="Wed Jan 24 13:28:27 GMT 2001" user="sll">
+
+  <summary>Bug in omniidl C++ back-end with struct member within a union which in turn is within a namespace. Only causes compilation problem with MSVC++.</summary>
+  <reported>Lars Immisch</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2001-01/0145.html"/>
+  <text>
+  IDL like the following would cause invalid code be generated for MSVC++:
+
+    <pre>
+     namespace A {
+       union B switch(long) {
+         case 0:
+              struct C {
+                  string op;
+              } ex;
+         default:
+              long digit;
+       };
+    };
+    </pre>
+  </text>
+</bug>
+
 <bug id="13" date="Mon Jan 15 15:49:43 GMT 2001" user="dpg1">
 
   <summary>Bug in omniidl C++ back-end with unusual
