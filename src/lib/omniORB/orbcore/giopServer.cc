@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.14  2001/09/10 17:47:57  sll
+  startIdleCounter in csInsert.
+
   Revision 1.22.2.13  2001/08/21 11:02:15  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -548,6 +551,7 @@ giopServer::csInsert(giopConnection* conn)
     ASSERT_OMNI_TRACEDMUTEX_HELD(*omniTransportLock,0);
     omni_tracedmutex_lock sync(*omniTransportLock);
     s->StrandList::insert(giopStrand::passive);
+    s->startIdleCounter();
   }
 
   connectionState* cs =  new connectionState(conn,s);
