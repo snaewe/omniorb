@@ -27,10 +27,12 @@
 //	*** PROPRIETARY INTERFACE ***
 //	
 
-#include <iostream.h>
-
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 18:15:16  sll
+  Use the new omniIOR class and createObjRef() to create the object reference
+  for the bootagent.
+
   Revision 1.2.2.1  2000/07/17 10:35:54  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -98,7 +100,7 @@
 
   */
 
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 
 #ifdef HAS_pch
 #pragma hdrstop
@@ -110,7 +112,7 @@
 #include <initialiser.h>
 #include <exceptiondefs.h>
 #include <poaimpl.h>
-#include <omniORB3/omniURI.h>
+#include <omniORB4/omniURI.h>
 
 static CORBA_InitialReferences_i*  the_bootagentImpl = 0;
 static omni_tracedmutex ba_lock;
@@ -699,41 +701,26 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
   omni_tracedmutex_lock sync(sl_lock);
 
   try {
-    
-    const ropeFactoryType* t;
+    IIOP::Address addr;
+    addr.host = host;
+    addr.port = port;
 
-    {
-      ropeFactory_iterator next(globalOutgoingRopeFactories);
-      const ropeFactory* f;
-      while ((f = next())) {
-	t = f->getType();
-	if (t->is_IOPprofileId(IOP::TAG_INTERNET_IOP))
-	  break;
-      }
-      if( !f )  return;  // Error no IIOP ropefactory has been initialised.
-    }
-
-    tcpSocketEndpoint addr((CORBA::Char*) host, port);
-    CORBA::Char objkey[4];
+    _CORBA_Unbounded_Sequence_Octet objkey;
+    objkey.length(4);
     objkey[0] = 'I'; objkey[1] = 'N'; objkey[2] = 'I'; objkey[3] = 'T';
-    IOP::TaggedProfileList p;
-    p.length(1);
 
-    t->encodeIOPprofile((Endpoint*) &addr, objkey, 4, p[0]);
-
-    CORBA::String_var ior((char*) IOP::iorToEncapStr((const CORBA::Char*)
-				     CORBA_InitialReferences::_PD_repoId, &p));
-
-    CORBA::Object_var o;
-
-    o = omniURI::stringToObject(ior);
-    if (!CORBA::is_nil(o)) {
-      the_bootagent = CORBA_InitialReferences::_narrow(o);
+    omniIOR* ior= new omniIOR(CORBA_InitialReferences::_PD_repoId,
+			      objkey,&addr,1);
+    
+    omniObjRef* objref = omni::createObjRef(
+                              CORBA_InitialReferences::_PD_repoId,ior,0);
+    if (!objref->_is_nil()) {
+      the_bootagent = (CORBA_InitialReferences_ptr) 
+   	      objref->_ptrToObjRef(CORBA_InitialReferences::_PD_repoId);
       the_bootagent->_noExistentCheck();
     }
   }
-  catch (...) {
-  }
+  catch(...) {}
 }
 
 
