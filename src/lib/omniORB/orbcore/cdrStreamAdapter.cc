@@ -28,6 +28,9 @@
 //
 
 // $Log$
+// Revision 1.1.2.5  2004/04/05 09:05:16  dgrisby
+// downcast of cdrStreamAdapter can downcast to adapted stream.
+//
 // Revision 1.1.2.4  2001/10/17 16:33:28  dpg1
 // New downcast mechanism for cdrStreams.
 //
@@ -165,7 +168,7 @@ cdrStreamAdapter::ptrToClass(int* cptr)
 {
   if (cptr == &cdrStreamAdapter::_classid) return (cdrStreamAdapter*)this;
   if (cptr == &cdrStream       ::_classid) return (cdrStream*)       this;
-  return 0;
+  return pd_actual.ptrToClass(cptr);
 }
 
 int cdrStreamAdapter::_classid;
