@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.5  2001/04/18 18:18:11  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.1.4.4  2000/11/15 17:18:20  sll
   Added char, wchar codeset convertor support to cdrMemoryStream and
   cdrEncapsulationStream.
@@ -140,11 +143,19 @@ cdrMemoryStream::fetchInputData(omni::alignment_t align, size_t required)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
 }
 
-
-size_t
-cdrMemoryStream::maxFetchInputData(omni::alignment_t) const
+CORBA::Boolean
+cdrMemoryStream::reserveOutputSpaceForPrimitiveType(omni::alignment_t align,
+						    size_t required)
 {
-  return ULONG_MAX;
+  return reserveOutputSpace(align,required);
+}
+
+
+CORBA::Boolean
+cdrMemoryStream::maybeReserveOutputSpace(omni::alignment_t align,
+					 size_t required)
+{
+  return reserveOutputSpace(align,required);
 }
 
 CORBA::Boolean
@@ -201,11 +212,15 @@ cdrMemoryStream::reserveOutputSpace(omni::alignment_t align,size_t required)
   return 1;
 }
 
-size_t
-cdrMemoryStream::maxReserveOutputSpace(omni::alignment_t) const
-{
-  return ULONG_MAX;
+void
+cdrMemoryStream::copy_to(cdrStream& s, int size, omni::alignment_t align) {
+
+  fetchInputData(align,size);
+  omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_inb_mkr,align);
+  s.put_octet_array((const CORBA::Octet*)p1,size,align);
+  pd_inb_mkr = (void*)(p1+size);
 }
+
 
 void
 cdrMemoryStream::rewindInputPtr()
@@ -413,7 +428,8 @@ cdrEncapsulationStream::cdrEncapsulationStream(cdrStream& s,
   pd_tcs_c = s.TCS_C();
   pd_tcs_w = s.TCS_W();
 
-  s.copy_to(*this,fetchsize);
+  s.get_octet_array((CORBA::Octet*)pd_outb_mkr,(int)fetchsize);
+  pd_outb_mkr = (void*)((omni::ptr_arith_t)pd_outb_mkr + fetchsize);
   rewindInputPtr();
   {
     CORBA::Boolean endian = unmarshalBoolean();
@@ -454,17 +470,19 @@ cdrCountingStream::put_octet_array(const CORBA::Octet* b, int size,
 }
 
 CORBA::Boolean
-cdrCountingStream::reserveOutputSpace(omni::alignment_t align,size_t required)
+cdrCountingStream::maybeReserveOutputSpace(omni::alignment_t align,
+					   size_t required)
 {
   omni::ptr_arith_t p1 = omni::align_to((omni::ptr_arith_t)pd_total,align);
   pd_total = p1 + required;
   return 0;
 }
 
-size_t
-cdrCountingStream::maxReserveOutputSpace(omni::alignment_t) const 
-{ 
-  return ULONG_MAX;
+CORBA::Boolean
+cdrCountingStream::reserveOutputSpaceForPrimitiveType(omni::alignment_t align,
+						      size_t required)
+{
+  return maybeReserveOutputSpace(align,required);
 }
 
 CORBA::Boolean
@@ -475,6 +493,9 @@ cdrCountingStream::checkOutputOverrun(CORBA::ULong,
   return 0;
 }
 
+void
+cdrCountingStream::copy_to(cdrStream&, int, omni::alignment_t) {
+}
 
 void
 cdrCountingStream::get_octet_array(CORBA::Octet*,int,omni::alignment_t)
@@ -496,12 +517,6 @@ cdrCountingStream::checkInputOverrun(CORBA::ULong,CORBA::ULong,
 void
 cdrCountingStream::fetchInputData(omni::alignment_t,size_t) 
 {
-}
-
-size_t 
-cdrCountingStream::maxFetchInputData(omni::alignment_t) const 
-{ 
-  return 0;
 }
 
 CORBA::ULong

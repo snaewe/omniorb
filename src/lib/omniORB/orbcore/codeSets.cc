@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/04/18 18:18:11  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.1.2.4  2000/11/22 14:37:59  dpg1
   Code set marshalling functions now take a string length argument.
 
@@ -47,6 +50,23 @@
 #include <omniORB4/CORBA.h>
 #include <codeSetUtil.h>
 #include <initialiser.h>
+
+//
+// Linked lists of code set objects
+//
+
+static omniCodeSet::NCS_C* ncs_c_head = 0;
+static omniCodeSet::NCS_W* ncs_w_head = 0;
+static omniCodeSet::TCS_C* tcs_c_head = 0;
+static omniCodeSet::TCS_W* tcs_w_head = 0;
+
+static inline _CORBA_Boolean
+versionMatch(GIOP::Version v1, GIOP::Version v2)
+{
+  return (v1.major == v2.major && v1.minor == v2.minor);
+}
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 //
 // Code set id constants
@@ -77,20 +97,6 @@ const GIOP::Version omniCodeSetUtil::GIOP11 = { 1,1 };
 const GIOP::Version omniCodeSetUtil::GIOP12 = { 1,2 };
 
 
-//
-// Linked lists of code set objects
-//
-
-static omniCodeSet::NCS_C* ncs_c_head = 0;
-static omniCodeSet::NCS_W* ncs_w_head = 0;
-static omniCodeSet::TCS_C* tcs_c_head = 0;
-static omniCodeSet::TCS_W* tcs_w_head = 0;
-
-static inline _CORBA_Boolean
-versionMatch(GIOP::Version v1, GIOP::Version v2)
-{
-  return (v1.major == v2.major && v1.minor == v2.minor);
-}
 
 omniCodeSet::NCS_C*
 omniCodeSet::getNCS_C(CONV_FRAME::CodeSetId id)
@@ -411,3 +417,5 @@ public:
 static omni_codeSet_initialiser initialiser;
 
 omniInitialiser& omni_codeSet_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)

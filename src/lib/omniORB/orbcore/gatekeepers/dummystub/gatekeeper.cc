@@ -30,6 +30,8 @@
 #include <omniORB4/CORBA.h>
 #include <gatekeeper.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
+
 const char*
 gateKeeper::version()
 {
@@ -38,7 +40,7 @@ gateKeeper::version()
 
 
 CORBA::Boolean 
-gateKeeper::checkConnect( _tcpStrand *s)
+gateKeeper::checkConnect( Strand *s)
 {
   return 1;
 }
@@ -48,3 +50,5 @@ char *hosts_allow_table = (char*)"";
 
 char *&gateKeeper::denyFile = hosts_deny_table;
 char *&gateKeeper::allowFile = hosts_allow_table;
+
+OMNI_NAMESPACE_END(omni)

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16.2.4  2001/04/18 18:18:10  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.16.2.3  2000/11/09 12:27:56  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -92,6 +95,7 @@
 
 #define ENABLE_CLIENT_IR_SUPPORT
 #include <omniORB4/CORBA.h>
+#include <omniORB4/IOP_S.h>
 #include <corbaBoa.h>
 #include <omniORB4/callDescriptor.h>
 #include <localIdentity.h>
@@ -100,6 +104,8 @@
 #include <exceptiondefs.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 static const char* boa_ids[] = { "omniORB4_BOA",
 				 "omniORB3_BOA", 
@@ -610,7 +616,7 @@ omniOrbBOA::decrRefCount()
 
 
 void
-omniOrbBOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
+omniOrbBOA::dispatch(IOP_S& giop_s, omniLocalIdentity* id)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(id);  OMNIORB_ASSERT(id->servant());
@@ -627,13 +633,13 @@ omniOrbBOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
   if( omniORB::traceInvocations ) {
     omniORB::logger l;
     l << "Dispatching remote call \'" 
-      << (const char*) giop_s.invokeInfo().operation() << "\' to: "
+      << giop_s.operation_name() << "\' to: "
       << id << '\n';
   }
 
   if( !id->servant()->_dispatch(giop_s) ) {
     if( !id->servant()->omniServant::_dispatch(giop_s) ) {
-      giop_s.RequestReceived(1);
+      giop_s.SkipRequestBody();
       OMNIORB_THROW(BAD_OPERATION,0, CORBA::COMPLETED_NO);
     }
   }
@@ -641,7 +647,7 @@ omniOrbBOA::dispatch(GIOP_S& giop_s, omniLocalIdentity* id)
 
 
 void
-omniOrbBOA::dispatch(GIOP_S& giop_s, const CORBA::Octet* key, int keysize)
+omniOrbBOA::dispatch(IOP_S& giop_s, const CORBA::Octet* key, int keysize)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
   OMNIORB_ASSERT(key && keysize == sizeof(omniOrbBoaKey));
@@ -1034,78 +1040,24 @@ parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
 	continue;
       }
 
-      // -BOAiiop_port <port number>[,<port number>]*
-      if (strcmp(argv[idx],"-BOAiiop_port") == 0) {
-	if ((idx+1) >= argc) {
-	  omniORB::logs(1, "BOA_init failed -- missing -BOAiiop_port"
-			" parameter.");
-	  return 0;
-	}
-        unsigned int port;
-	if (sscanf(argv[idx+1],"%u",&port) != 1 ||
-	    (port == 0 || port >= 65536)) {
-	  omniORB::logs(1, "BOA_init failed -- invalid -BOAiiop_port"
-			" parameter.");
-	  return 0;
-	}
-
-	const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
-	if( !hostname )  hostname = "";
-	omniObjAdapter::options.
-	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
-
-	move_args(argc,argv,idx,2);
-	continue;
-      }
-
-      // -BOAiiop_name_port <hostname[:port number]>
-      if (strcmp(argv[idx],"-BOAiiop_name_port") == 0) {
-        if ((idx+1) >= argc) {
-	  omniORB::logs(1, "BOA_init failed -- missing -BOAiiop_name_port"
-			" parameter.\n"
-		" usage: -BOAiiop_name_port <hostname[:port number]>+");
-          return 0;
-        }
-
-        // Copy the hostname part of the argument (including :port).
-        char hostname[255+1];
-        strncpy(hostname, argv[idx+1], 255);
-	hostname[255] = '\0';
-
-        // Find the :port part of the argument.  If the port is
-	// not specified, we default to 0 which lets the OS pick
-	// a number.
-        int port = 0;
-        char* port_str = strchr(hostname, ':');
-        if( port_str != 0 ) {
-	  // if the port-number is not specified, fall back to port=0
-	  if (port_str[1] == '\0')  port = 0;
-	  else if( sscanf(port_str+1, "%u", &port) != 1 ||
-		   (port < 0 || port >= 65536) ) {
-	    if ( omniORB::trace(1) ) {
-	      omniORB::logger l;
-	      l << "BOA_init failed -- invalid -BOAiiop_name_port\n"
-		" parameter.  Port number out of range: " << port << ".\n";
-	    }
-	    return 0;
-	  }
-
-	  // null terminate and isolate hostname argument
-	  *port_str = 0;
-        }
-
-	omniObjAdapter::options.
-	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
-
-        move_args(argc,argv,idx,2);
-        continue;
-      }
-
       // -BOAno_bootstrap_agent
       if (strcmp(argv[idx],"-BOAno_bootstrap_agent") == 0) {
 	omniObjAdapter::options.noBootstrapAgent = 1;
 	move_args(argc,argv,idx,1);
 	continue;
+      }
+
+      // -BOAiiop_port <port number>[,<port number>]*
+      // -BOAiiop_name_port <hostname[:port number]> -- obsoluted options
+      if (strcmp(argv[idx],"-BOAiiop_port") == 0 ||
+	  strcmp(argv[idx],"-BOAiiop_name_port") == 0) {
+
+	if (omniORB::trace(1)) {
+	  omniORB::logger log;
+	  log << "BOA_init failed: "
+	      << argv[idx] << " is now obsolute, use -ORBendpoint instead.\n";
+	}
+	return 0;
       }
 
       // -BOAhelp
@@ -1114,8 +1066,6 @@ parse_BOA_args(int& argc, char** argv, const char* orb_identifier)
 	l <<
 	  "Valid -BOA<options> are:\n"
 	  "    -BOAid omniORB4_BOA\n"
-	  "    -BOAiiop_port <port no.>[,<port no>]*\n"
-	  "    -BOAiiop_name_port <hostname[:port no.]>\n"
 	  "    -BOAno_bootstrap_agent\n";
 	move_args(argc,argv,idx,1);
 	continue;

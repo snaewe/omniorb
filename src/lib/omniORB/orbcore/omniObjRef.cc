@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.8  2001/04/18 18:18:06  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.2.2.7  2000/12/05 17:39:31  dpg1
   New cdrStream functions to marshal and unmarshal raw strings.
 
@@ -82,13 +85,14 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
 #include <localIdentity.h>
-#include <remoteIdentity.h>
 #include <objectAdapter.h>
-#include <ropeFactory.h>
 #include <excepthandler.h>
 #include <exceptiondefs.h>
 #include <objectStub.h>
+#include <giopStream.h>
+#include <omniORB4/minorCode.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 CORBA::Boolean
 omniObjRef::_compatibleServant(omniServant* svnt)
@@ -151,8 +155,6 @@ omniObjRef::_realNarrow(const char* repoId)
 
       omniObjRef* objref;
 
-      omni::internalLock->lock();
-
       omniIOR* ior;
 
       {
@@ -160,12 +162,7 @@ omniObjRef::_realNarrow(const char* repoId)
 	ior = pd_ior->duplicateNoLock();
       }
 
-      if( _localId() ) 
-	objref = omni::createObjRef(repoId, _localId(),ior);
-      else
-	objref = omni::createObjRef(repoId,ior,1);
-
-      omni::internalLock->unlock();
+      objref = omni::createObjRef(repoId,ior,0,0,_localId());
 
       if( objref ) {
 	target = objref->_ptrToObjRef(repoId);
@@ -226,35 +223,13 @@ omniObjRef::__is_equivalent(omniObjRef* o_obj)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 0);
 
-  int m_islocal, o_islocal;
-  const CORBA::Octet* m_key;
-  const CORBA::Octet* o_key;
-  int m_keysize, o_keysize;
-  
   {
     omni_tracedmutex_lock sync(*omni::internalLock);
 
-    m_key = pd_id->key();
-    m_keysize = pd_id->keysize();
+    omniIdentity* mid = (pd_localId) ? pd_localId : pd_id;
+    omniIdentity* oid = (o_obj->pd_localId) ? o_obj->pd_localId : o_obj->pd_id;
 
-    o_key = o_obj->pd_id->key();
-    o_keysize = o_obj->pd_id->keysize();
-
-    if (m_keysize != o_keysize || 
-	memcmp((void*)m_key,(void*)o_key,m_keysize) != 0)
-      // Object keys do not match
-      return 0;
-
-    m_islocal = pd_localId ? 1 : 0;
-    o_islocal = o_obj->pd_localId ? 1 : 0;
-
-    if (m_islocal && o_islocal)
-      return 1;
-    else if (m_islocal != o_islocal)
-      return 0;
-    else
-      return ((((omniRemoteIdentity*) pd_id)->rope()) == 
-	      (((omniRemoteIdentity*) o_obj->pd_id)->rope()));
+    return mid->is_equivalent(oid);
   }
 }
 
@@ -440,9 +415,9 @@ omniObjRef::omniObjRef(const char* intfRepoId, omniIOR* ior,
   pd_intfRepoId = new char[strlen(intfRepoId) + 1];
   strcpy(pd_intfRepoId, intfRepoId);
 
-  if( strcmp(intfRepoId, ior->repositoryID) ) {
-    pd_mostDerivedRepoId = new char[strlen(ior->repositoryID) + 1];
-    strcpy(pd_mostDerivedRepoId, ior->repositoryID);
+  if( strcmp(intfRepoId, ior->repositoryID()) ) {
+    pd_mostDerivedRepoId = new char[strlen(ior->repositoryID()) + 1];
+    strcpy(pd_mostDerivedRepoId, ior->repositoryID());
   }
   else
     pd_mostDerivedRepoId = pd_intfRepoId;
@@ -456,11 +431,21 @@ omniObjRef::omniObjRef(const char* intfRepoId, omniIOR* ior,
 }
 
 
+
+
 void
 omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 {
+#define	RECOVER_FORWARD do {\
+  omni::revertToOriginalProfile(this); \
+  CORBA::TRANSIENT ex2(TRANSIENT_FailedOnForwarded, ex.completed()); \
+  if( !_omni_callTransientExceptionHandler(this, retries++, ex2) ) \
+    throw ex2; \
+} while(0)
+
+
   int retries = 0;
-  int fwd;
+  int fwd = 0;
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
 
@@ -479,30 +464,42 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 	// This is a local object so a call to id->dispatch will cause
 	// the local call function in the call descriptor to be invoked.
 	// But we do not have a local call function! We have to create
-	// a remoteIdentity with the loop back transport to dispatch the call.
-	// The remoteIdentity will be deleted automatically when the
+	// an identity with the loop back transport to dispatch the call.
+	// The identity  object will be deleted automatically when the
 	// call finishes.
 	//
 	// This is not the normal case but could happen in rare circumstance,
 	// such as a DII call descriptor invoking on a local object.
-	Rope* rope = omniObjAdapter::defaultLoopBack();
-	rope->incrRefCount();
-	omniIOR* ior = _getIOR();
-	id = new omniRemoteIdentity(ior, rope);
+	id = omni::createLoopBackIdentity(_getIOR(),id->key(),id->keysize());
       }
 
       id->dispatch(call_desc);
       return;
 
     }
-    catch(CORBA::COMM_FAILURE& ex) {
+    catch(const giopStream::CommFailure& ex) {
+      if (ex.retry()) continue;
       if( fwd ) {
-	omni::revertToOriginalProfile(this);
+	RECOVER_FORWARD;
+	continue;
+      }
+      if (is_COMM_FAILURE_minor(ex.minor())) {
+	CORBA::COMM_FAILURE ex2(ex.minor(), ex.completed());
+	if( !_omni_callCommFailureExceptionHandler(this, retries++, ex2) )
+	  throw ex2;
+      }
+      else {
 	CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
 	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
 	  throw ex2;
       }
-      else if( !_omni_callCommFailureExceptionHandler(this, retries++, ex) )
+    }
+    catch(CORBA::COMM_FAILURE& ex) {
+      if( fwd ) {
+	RECOVER_FORWARD;
+	continue;
+      }
+      if( !_omni_callCommFailureExceptionHandler(this, retries++, ex) )
 	throw;
     }
     catch(CORBA::TRANSIENT& ex) {
@@ -510,13 +507,11 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 	throw;
     }
     catch(CORBA::OBJECT_NOT_EXIST& ex) {
-      if( fwd ){
-	omni::revertToOriginalProfile(this);
-	CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
-	  throw ex2;
+      if( fwd ) {
+	RECOVER_FORWARD;
+	continue;
       }
-      else if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
+      if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
 	throw;
     }
     catch(CORBA::SystemException& ex) {
@@ -525,18 +520,17 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
     }
     catch(omniORB::LOCATION_FORWARD& ex) {
       if( CORBA::is_nil(ex.get_obj()) ) {
-	CORBA::COMM_FAILURE ex2(0, CORBA::COMPLETED_NO);
+	CORBA::TRANSIENT ex2(TRANSIENT_NoUsableProfile, CORBA::COMPLETED_NO);
 	if( omniORB::traceLevel > 10 ){
 	  omniORB::log << "Received GIOP::LOCATION_FORWARD message that"
 	    " contains a nil object reference.\n";
 	  omniORB::log.flush();
 	}
-	if( !_omni_callCommFailureExceptionHandler(this, retries++, ex2) )
+	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
 	  throw ex2;
       }
       omni::locationForward(this,ex.get_obj()->_PR_getobj(),ex.is_permanent());
     }
-
   }
 }
 
@@ -567,8 +561,8 @@ omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
     ior =  objref->pd_ior->duplicateNoLock();
   }
 
-  s.marshalRawString(ior->repositoryID);
-  (IOP::TaggedProfileList&)ior->iopProfiles >>= s;
+  s.marshalRawString(ior->repositoryID());
+  (const IOP::TaggedProfileList&)ior->iopProfiles() >>= s;
 }
 
 char*
@@ -695,7 +689,7 @@ void
 omniObjRef::_locateRequest()
 {
   int retries = 0;
-  int fwd;
+  int fwd = 0;
 
   if( _is_nil() )  _CORBA_invoked_nil_objref();
 
@@ -710,18 +704,33 @@ omniObjRef::_locateRequest()
 	return;
       }
       fwd = pd_flags.forward_location;
-      ((omniRemoteIdentity*) _identity())->locateRequest();
+      _identity()->locateRequest();
       return;
 
     }
-    catch(CORBA::COMM_FAILURE& ex) {
+    catch(const giopStream::CommFailure& ex) {
+      if (ex.retry()) continue;
       if( fwd ) {
-	omni::revertToOriginalProfile(this);
+	RECOVER_FORWARD;
+	continue;
+      }
+      if (is_COMM_FAILURE_minor(ex.minor())) {
+	CORBA::COMM_FAILURE ex2(ex.minor(), ex.completed());
+	if( !_omni_callCommFailureExceptionHandler(this, retries++, ex2) )
+	  throw ex2;
+      }
+      else {
 	CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
 	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
 	  throw ex2;
       }
-      else if( !_omni_callCommFailureExceptionHandler(this, retries++, ex) )
+    }
+    catch(CORBA::COMM_FAILURE& ex) {
+      if( fwd ) {
+	RECOVER_FORWARD;
+	continue;
+      }
+      if( !_omni_callCommFailureExceptionHandler(this, retries++, ex) )
 	throw;
     }
     catch(CORBA::TRANSIENT& ex) {
@@ -729,12 +738,11 @@ omniObjRef::_locateRequest()
 	throw;
     }
     catch(CORBA::OBJECT_NOT_EXIST& ex) {
-      if( fwd ){
-	omni::revertToOriginalProfile(this);
-	CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
-	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
-	  throw ex2;
-      } else if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
+      if( fwd ) {
+	RECOVER_FORWARD;
+	continue;
+      }
+      if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
 	throw;
     }
     catch(CORBA::SystemException& ex) {
@@ -743,17 +751,16 @@ omniObjRef::_locateRequest()
     }
     catch(omniORB::LOCATION_FORWARD& ex) {
       if( CORBA::is_nil(ex.get_obj()) ) {
+	CORBA::TRANSIENT ex2(TRANSIENT_NoUsableProfile, CORBA::COMPLETED_NO);
 	if( omniORB::traceLevel > 10 ){
 	  omniORB::log << "Received GIOP::LOCATION_FORWARD message that"
 	    " contains a nil object reference.\n";
 	  omniORB::log.flush();
 	}
-	CORBA::COMM_FAILURE ex2(0, CORBA::COMPLETED_NO);
-	if( !_omni_callCommFailureExceptionHandler(this, retries++, ex2) )
+	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
 	  throw ex2;
       }
       omni::locationForward(this,ex.get_obj()->_PR_getobj(),ex.is_permanent());
     }
-
   }
 }

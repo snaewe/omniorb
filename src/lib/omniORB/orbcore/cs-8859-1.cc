@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/04/18 18:18:09  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.1.2.1  2000/10/27 15:42:08  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -36,6 +39,8 @@
 
 #include <omniORB4/CORBA.h>
 #include <codeSetUtil.h>
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 static const omniCodeSet::UniChar toUCS[] = {
   0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007,
@@ -159,6 +164,11 @@ static omniCodeSet::TCS_C_8bit _TCS_C_8859_1_10(omniCodeSet::ID_8859_1,
 						omniCodeSetUtil::GIOP10,
 						toUCS, fromUCS);
 
+static omniCodeSet::TCS_C_8bit _TCS_C_8859_1_11(omniCodeSet::ID_8859_1,
+						"ISO-8859-1",
+						omniCodeSetUtil::GIOP11,
+						toUCS, fromUCS);
+
 static omniCodeSet::TCS_C_8bit _TCS_C_8859_1_12(omniCodeSet::ID_8859_1,
 						"ISO-8859-1",
 						omniCodeSetUtil::GIOP12,
@@ -169,7 +179,10 @@ public:
   CS_8859_1_init() {
     omniCodeSet::registerNCS_C(&_NCS_C_8859_1);
     omniCodeSet::registerTCS_C(&_TCS_C_8859_1_10);
+    omniCodeSet::registerTCS_C(&_TCS_C_8859_1_11);
     omniCodeSet::registerTCS_C(&_TCS_C_8859_1_12);
   }
 };
 static CS_8859_1_init _CS_8859_1_init_;
+
+OMNI_NAMESPACE_END(omni)

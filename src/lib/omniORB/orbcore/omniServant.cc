@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2001/04/18 18:18:06  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.2.2.3  2000/11/09 12:27:58  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -68,8 +71,11 @@
 #include <omniORB4/omniServant.h>
 #include <localIdentity.h>
 #include <exceptiondefs.h>
+#include <omniORB4/IOP_S.h>
 #include <omniORB4/callDescriptor.h>
 #include <objectStub.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 omniServant::~omniServant()
 {
@@ -129,9 +135,9 @@ omniServant::_non_existent()
 }
 
 _CORBA_Boolean
-omniServant::_dispatch(GIOP_S& giop_s)
+omniServant::_dispatch(IOP_S& giop_s)
 {
-  const char* op = giop_s.invokeInfo().operation();
+  const char* op = giop_s.operation_name();
 
   if( strcmp(op, "_is_a") == 0 ) {
     omni_is_a_CallDesc call_desc("_is_a",sizeof("_is_a"),0,1);
@@ -163,18 +169,11 @@ omniServant::_dispatch(GIOP_S& giop_s)
 }
 
 void
-omniServant::_upcall(GIOP_S& giop_s, omniCallDescriptor& desc)
+omniServant::_upcall(IOP_S& giop_s, omniCallDescriptor& desc)
 {
-  giop_s.invokeInfo().set_user_exceptions(desc.user_excns(),
-					  desc.n_user_excns());
-  desc.unmarshalArguments((cdrStream&)giop_s);
-  giop_s.RequestReceived();
+  giop_s.ReceiveRequest(desc);
   desc.doLocalCall(this);
-  if (!desc.is_oneway()) {
-    omniServerCallMarshaller m(desc);
-    giop_s.InitialiseReply(GIOP::NO_EXCEPTION,m);
-  }
-  giop_s.ReplyCompleted();
+  giop_s.SendReply();
 }
 
 

@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2001/04/18 18:18:07  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.2.2.2  2000/09/27 17:57:05  sll
   Changed include/omniORB3 to include/omniORB4
 
@@ -64,12 +67,12 @@
 #include <localIdentity.h>
 #include <omniORB4/callDescriptor.h>
 #include <objectAdapter.h>
-#include <ropeFactory.h>
 #include <exceptiondefs.h>
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+OMNI_NAMESPACE_BEGIN(omni)
 
 class omniLocalIdentity_RefHolder {
 public:
@@ -95,9 +98,13 @@ private:
   omniLocalIdentity* pd_id;
 };
 
+OMNI_NAMESPACE_END(omni)
+
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
+OMNI_USING_NAMESPACE(omni)
 
 void
 omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
@@ -137,7 +144,7 @@ omniLocalIdentity::dispatch(omniCallDescriptor& call_desc)
 
 
 void
-omniLocalIdentity::dispatch(GIOP_S& giop_s)
+omniLocalIdentity::dispatch(IOP_S& giop_s)
 {
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
   OMNIORB_ASSERT(pd_adapter && pd_servant);
@@ -204,4 +211,33 @@ omniLocalIdentity::loseObjRef(omniObjRef* objref)
 
   *p = *(*p)->_addrOfLocalRefList();
   *(objref->_addrOfLocalRefList()) = 0;
+}
+
+void
+omniLocalIdentity::locateRequest() {
+  // Its a local object, and we know its here.
+  ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
+  omni::internalLock->unlock();
+}
+
+omniIdentity::equivalent_fn
+omniLocalIdentity::get_real_is_equivalent() const {
+  return real_is_equivalent;
+}
+
+CORBA::Boolean
+omniLocalIdentity::real_is_equivalent(const omniIdentity* id1,
+				      const omniIdentity* id2) {
+
+  const CORBA::Octet* key1 = id1->key();
+  int keysize1             = id1->keysize();
+
+  const CORBA::Octet* key2 = id2->key();
+  int keysize2             = id2->keysize();
+
+  if (keysize1 != keysize2 || memcmp((void*)key1,(void*)key2,keysize1) != 0)
+      // Object keys do not match
+      return 0;
+
+  return 1;
 }

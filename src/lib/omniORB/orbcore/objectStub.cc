@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/04/18 18:18:07  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.1.2.2  2000/11/03 19:12:07  sll
   Use new marshalling functions for byte, octet and char. Use get_octet_array
   instead of get_char_array and put_octet_array instead of put_char_array.
@@ -40,6 +43,8 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
 #include <objectStub.h>
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -117,3 +122,4 @@ omni_interface_CallDesc::lcfn(omniCallDescriptor* cd, omniServant* servant)
   ((omni_interface_CallDesc*) cd)->pd_result = (CORBA::Object_ptr)intf->_ptrToObjRef(CORBA::Object::_PD_repoId);
 }
 
+OMNI_NAMESPACE_END(omni)

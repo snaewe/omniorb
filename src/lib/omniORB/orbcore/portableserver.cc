@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.4  2001/04/18 18:18:05  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.2.2.3  2000/11/09 12:27:58  dpg1
   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
 
@@ -84,6 +87,8 @@
 #include <initRefs.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////// Policy Interfaces /////////////////////////

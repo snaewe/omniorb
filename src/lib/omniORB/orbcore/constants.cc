@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.15.2.4  2001/04/18 18:18:11  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.15.2.3  2000/11/03 19:10:24  sll
   Use OMNIORB_FOR_EACH_SYS_EXCEPTION to define repository IDs.
 
@@ -95,10 +98,14 @@
 
 #include <omniORB4/CORBA.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
+
 // See the description of this variable in omniInternal.h
 const char* omniORB_4_0 = "omniORB version 4.0.x";
 
 const CORBA::ULong omniORB_TAG_ORB_TYPE = 0x41545400; // ATT\x00
+
+OMNI_NAMESPACE_END(omni)
 
 //////////////////////////////////////////////////////////////////////////
 //                GIOP AddressingDisposition  constants                 //
@@ -141,6 +148,11 @@ const IOP::ComponentId IOP::TAG_DCE_BINDING_NAME = 101;
 const IOP::ComponentId IOP::TAG_DCE_NO_PIPES = 102;
 const IOP::ComponentId IOP::TAG_DCE_SEC_MECH = 103;
 const IOP::ComponentId IOP::TAG_INET_SEC_TRANS = 123;
+const IOP::ComponentId IOP::TAG_GROUP = 90001; // XXX NEED THE REAL CONSTANT !!
+const IOP::ComponentId IOP::TAG_PRIMARY = 90002; // XXX NEED THE REAL CONSTANT!
+const IOP::ComponentId IOP::TAG_HEARTBEAT_ENABLED = 90003; 
+                                               // XXX NEED THE REAL CONSTANT !
+
 
 static struct {
   IOP::ComponentId id;
@@ -217,6 +229,8 @@ const IOP::ServiceID IOP::FORWARDED_IDENTITY = 8;
 const IOP::ServiceID IOP::UnknownExceptionInfo = 9;
 const IOP::ServiceID IOP::RTCorbaPriority = 10;
 const IOP::ServiceID IOP::RTCorbaPriorityRange = 11;
+const IOP::ServiceID IOP::GROUP_VERSION = 90001;// XXX NEED THE REAL CONSTANT !
+const IOP::ServiceID IOP::REQUEST = 90002; // XXX NEED THE REAL CONSTANT !
 
 static struct {
   IOP::ServiceID id;
@@ -266,34 +280,6 @@ IOP::ServiceIDtoName(IOP::ServiceID v)
 
   return 0;
 }
-
-///////////////////////////////////////////////////////////////////////////
-//               Repository IDs                                          //
-///////////////////////////////////////////////////////////////////////////
-
-// Length of the longest system exception IR repository ID
-//   it is currently "IDL:omg.org/CORBA/TRANSACTION_ROLLEDBACK:1.0"
-// the value include the terminating null character
-const CORBA::ULong 
-      GIOP_Basetypes::SysExceptRepoID::maxIDLen = 
-           omniORB_GIOP_Basetypes_SysExceptRepoID_maxIDLen;
-
-const char *
-      GIOP_Basetypes::SysExceptRepoID::version = (":1.0");
-
-const CORBA::ULong 
-      GIOP_Basetypes::SysExceptRepoID::versionLen = 
-             strlen(GIOP_Basetypes::SysExceptRepoID::version);
-
-
-#define OMNIORB_DEFINE_SYS_EXCEPTION_REPOID(name) \
-const GIOP_Basetypes::_SysExceptRepoID \
-      GIOP_Basetypes::SysExceptRepoID::name ("IDL:omg.org/CORBA/"#name);
-
-
-OMNIORB_FOR_EACH_SYS_EXCEPTION(OMNIORB_DEFINE_SYS_EXCEPTION_REPOID)
-
-#undef OMNIORB_DEFINE_SYS_EXCEPTION_REPOID
 
 //////////////////////////////////////////////////////////////////////
 // Each pseudo object type must be assigned a magic number.

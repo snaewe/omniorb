@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2001/04/18 18:18:04  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.2.2.6  2000/12/05 17:39:31  dpg1
   New cdrStream functions to marshal and unmarshal raw strings.
 
@@ -81,10 +84,13 @@
 #endif
 
 #include <remoteIdentity.h>
+#include <omniORB4/omniTransport.h>
+#include <omniORB4/IOP_C.h>
 #include <omniORB4/callDescriptor.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -109,30 +115,9 @@ private:
   omniRemoteIdentity* pd_id;
 };
 
-//////////////////////////////////////////////////////////////////////
-//////////////////////// Call Marshaller      ////////////////////////
-//////////////////////////////////////////////////////////////////////
+OMNI_NAMESPACE_END(omni)
 
-class RemoteIdentityCallArgumentsMarshaller : public giopMarshaller {
-public:
-  RemoteIdentityCallArgumentsMarshaller(cdrStream& s,
-					omniCallDescriptor& desc) : 
-    pd_s(s), pd_desc(desc) {}
-
-  void marshalData() {
-    pd_desc.marshalArguments(pd_s);
-  }
-
-  size_t dataSize(size_t initialoffset) {
-    cdrCountingStream s(pd_s.TCS_C(),pd_s.TCS_W(),initialoffset);
-    pd_desc.marshalArguments(s);
-    return s.total();
-  }
-
-private:
-  cdrStream&     pd_s;
-  omniCallDescriptor& pd_desc;
-};
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -151,35 +136,29 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
     l << "Invoke '" << call_desc.op() << "' on remote: " << this << '\n';
   }
 
-  GIOP_C giop_client(pd_ior,pd_rope);
-  cdrStream& s = (cdrStream&)giop_client;
+  IOP_C_Holder iop_client(pd_ior,key(),keysize(),pd_rope,&call_desc);
+  cdrStream& s = ((IOP_C&)iop_client).getStream();
 
  again:
   call_desc.initialiseCall(s);
 
-  omniClientCallMarshaller m(call_desc);
-
-  giop_client.InitialiseRequest(call_desc.op(),
-				call_desc.op_len(),
-				call_desc.is_oneway(),
-				!call_desc.is_oneway(),
-				m);
+  iop_client->InitialiseRequest();
 
   // Wait for the reply.
   GIOP::ReplyStatusType rc;
 
-  switch( (rc = giop_client.ReceiveReply()) ) {
+  switch( (rc = iop_client->ReceiveReply()) ) {
   case GIOP::NO_EXCEPTION:
     // Unmarshal any result and out/inout arguments.
     call_desc.unmarshalReturnedValues(s);
-    giop_client.RequestCompleted();
+    iop_client->RequestCompleted();
     break;
 
   case GIOP::USER_EXCEPTION:
     {
       // Retrieve the Interface Repository ID of the exception.
       CORBA::String_var repoId(s.unmarshalRawString());
-      call_desc.userException(giop_client, repoId);
+      call_desc.userException(iop_client, repoId);
       // Never get here - this must throw either a user exception
       // or CORBA::MARSHAL.
       OMNIORB_ASSERT(0);
@@ -189,7 +168,7 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
   case GIOP::LOCATION_FORWARD_PERM:
     {
       CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(s));
-      giop_client.RequestCompleted();
+      iop_client->RequestCompleted();
       throw omniORB::LOCATION_FORWARD(obj._retn(),
 			       (rc == GIOP::LOCATION_FORWARD_PERM) ? 0 : 1);
     }
@@ -198,8 +177,8 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
     {
       GIOP::AddressingDisposition v;
       v <<= s;
-      pd_ior->addr_mode = v;
-      giop_client.RequestCompleted();
+      pd_ior->addr_mode(v);
+      iop_client->RequestCompleted();
       if (omniORB::trace(10)) {
 	omniORB::logger log;
 	log << "Remote invocation: GIOP::NEEDS_ADDRESSING_MODE: "
@@ -248,27 +227,28 @@ omniRemoteIdentity::locateRequest()
     l << "LocateRequest to remote: " << this << '\n';
   }
 
-  GIOP_C giop_client(pd_ior,pd_rope);
-  cdrStream& s = (cdrStream&)giop_client;
+  omniCallDescriptor dummy_calldesc(0,0,0,0,0,0,0);
+  IOP_C_Holder iop_client(pd_ior,key(),keysize(),pd_rope,&dummy_calldesc);
+  cdrStream& s = ((IOP_C&)iop_client).getStream();
 
   GIOP::LocateStatusType rc;
 
  again:
-  switch( (rc = giop_client.IssueLocateRequest()) ) {
+  switch( (rc = iop_client->IssueLocateRequest()) ) {
   case GIOP::OBJECT_HERE:
-    giop_client.RequestCompleted();
+    iop_client->RequestCompleted();
     break;
 
   case GIOP::UNKNOWN_OBJECT:
-    giop_client.RequestCompleted();
+    iop_client->RequestCompleted();
     OMNIORB_THROW(OBJECT_NOT_EXIST,0,CORBA::COMPLETED_NO);
     break;        // dummy break
 
   case GIOP::OBJECT_FORWARD:
   case GIOP::OBJECT_FORWARD_PERM:
     {
-      CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef((cdrStream&)giop_client));
-      giop_client.RequestCompleted();
+      CORBA::Object_var obj(CORBA::Object::_unmarshalObjRef(s));
+      iop_client->RequestCompleted();
       throw omniORB::LOCATION_FORWARD(obj._retn(),
 			       (rc == GIOP::OBJECT_FORWARD_PERM) ? 0 : 1);
     }
@@ -277,8 +257,8 @@ omniRemoteIdentity::locateRequest()
     {
       GIOP::AddressingDisposition v;
       v <<= s;
-      pd_ior->addr_mode = v;
-      giop_client.RequestCompleted();
+      pd_ior->addr_mode(v);
+      iop_client->RequestCompleted();
       if (omniORB::trace(10)) {
 	omniORB::logger log;
 	log << "Remote locatRequest: GIOP::NEEDS_ADDRESSING_MODE: "
@@ -299,4 +279,31 @@ omniRemoteIdentity::~omniRemoteIdentity()
   omniORB::logs(15, "omniRemoteIdentity deleted.");
   pd_rope->decrRefCount();
   pd_ior->release();
+}
+
+omniIdentity::equivalent_fn
+omniRemoteIdentity::get_real_is_equivalent() const {
+  return real_is_equivalent;
+}
+
+CORBA::Boolean
+omniRemoteIdentity::real_is_equivalent(const omniIdentity* id1,
+				       const omniIdentity* id2) {
+
+  omniRemoteIdentity* rid1 = (omniRemoteIdentity*)id1;
+  omniRemoteIdentity* rid2 = (omniRemoteIdentity*)id2;
+
+  if (rid1->pd_rope != rid2->pd_rope) return 0;
+
+  const CORBA::Octet* key1 = rid1->key();
+  int keysize1             = rid1->keysize();
+
+  const CORBA::Octet* key2 = rid2->key();
+  int keysize2             = rid2->keysize();
+
+  if (keysize1 != keysize2 || memcmp((void*)key1,(void*)key2,keysize1) != 0)
+      // Object keys do not match
+      return 0;
+
+  return 1;
 }

@@ -28,8 +28,10 @@
 //
 
 #include <omniORB4/CORBA.h>
+#include <giopStrand.h>
 #include <libcWrapper.h>
 #include <gatekeeper.h>
+#include <tcp/tcpConnection.h>
 
 extern "C" {
 #ifndef __STDC__
@@ -40,6 +42,8 @@ extern "C" {
   int allow_severity;
 }
 
+OMNI_NAMESPACE_BEGIN(omni)
+
 const char*
 gateKeeper::version()
 {
@@ -47,7 +51,7 @@ gateKeeper::version()
 }
 
 CORBA::Boolean
-gateKeeper::checkConnect(tcpSocketStrand *s) {
+gateKeeper::checkConnect(Strand *s) {
   // This code is stolen (heavily modified) from tcpd.c in
   // tcp_wrappers_7.6.  Hence:
   /************************************************************************
@@ -66,6 +70,11 @@ gateKeeper::checkConnect(tcpSocketStrand *s) {
   * warranties, including, without limitation, the implied warranties of
   * merchantibility and fitness for any particular purpose.
   ************************************************************************/
+
+  giopConnection* connection = ((giopStrand*)s)->connection;
+  if (strncmp(connection->peeraddress(),"giop:tcp",sizeof("giop:tcp")))
+    return 1;
+
   {
     // libwrap isn't MT-safe
     omni_mutex_lock l(LibcWrapper::non_reentrant);
@@ -77,7 +86,7 @@ gateKeeper::checkConnect(tcpSocketStrand *s) {
      */
 
     request_init(&request, RQ_DAEMON, (char *) omniORB::serverName,
-		 RQ_FILE, s->handle(), 0);
+		 RQ_FILE, ((tcpConnection*)connection)->handle(), 0);
     fromhost(&request);
     /*
      * Check whether this host can access the service in argv[0]. The
@@ -108,3 +117,5 @@ gateKeeper::checkConnect(tcpSocketStrand *s) {
 
 char *&gateKeeper::denyFile = hosts_deny_table;
 char *&gateKeeper::allowFile = hosts_allow_table;
+
+OMNI_NAMESPACE_END(omni)

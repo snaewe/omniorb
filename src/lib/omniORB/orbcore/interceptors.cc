@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/04/18 18:18:08  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.1.2.2  2000/11/15 17:23:52  sll
   Added interceptors along the giop request processing path.
 
@@ -38,9 +41,14 @@
 */
 
 #include <omniORB4/CORBA.h>
+#include <omniORB4/IOP_S.h>
+#include <omniORB4/IOP_C.h>
+#include <omniORB4/omniServer.h>
 #include <omniORB4/omniInterceptors.h>
 #include <exceptiondefs.h>
 #include <initialiser.h>
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 omniInterceptors::omniInterceptors() {}
 omniInterceptors::~omniInterceptors() {}
@@ -120,22 +128,23 @@ INTERCEPTOR_IMPLEMENTATION(interceptor) \
 void omniInterceptors::interceptor::visit(argt argn) { \
   omniInterceptorP::elmT* ep = pd_ilist->head; \
   while (ep) { \
-    (*((omniInterceptors::interceptor::interceptFunc)(ep->func)))(argn); \
+    if (!(*((omniInterceptors::interceptor::interceptFunc)(ep->func)))(argn)) \
+       return; \
     ep = ep->next; \
   } \
 }
 
 
-INTERCEPTOR_IMPLEMENTATION_1ARG(encodeIOR_T,omniIOR*,ior)
-INTERCEPTOR_IMPLEMENTATION_1ARG(decodeIOR_T,omniIOR*,ior)
+INTERCEPTOR_IMPLEMENTATION_1ARG(encodeIOR_T,encodeIOR_T::info_T&,info)
+INTERCEPTOR_IMPLEMENTATION_1ARG(decodeIOR_T,decodeIOR_T::info_T&,info)
 INTERCEPTOR_IMPLEMENTATION_1ARG(clientSendRequest_T,clientSendRequest_T::info_T&,info)
 INTERCEPTOR_IMPLEMENTATION_1ARG(clientReceiveReply_T,clientReceiveReply_T::info_T&,info)
 INTERCEPTOR_IMPLEMENTATION_1ARG(clientReceiveException_T,clientReceiveException_T::info_T&,info)
 INTERCEPTOR_IMPLEMENTATION_1ARG(serverReceiveRequest_T,serverReceiveRequest_T::info_T&,info)
 INTERCEPTOR_IMPLEMENTATION_1ARG(serverSendReply_T,serverSendReply_T::info_T&,info)
 INTERCEPTOR_IMPLEMENTATION_1ARG(serverSendException_T,serverSendException_T::info_T&,info)
-
-
+INTERCEPTOR_IMPLEMENTATION_1ARG(createIdentity_T,createIdentity_T::info_T&,info)
+INTERCEPTOR_IMPLEMENTATION_1ARG(createORBServer_T,createORBServer_T::info_T&,info)
 
 #undef INTERCEPTOR_IMPLEMENTATION
 #undef INTERCEPTOR_IMPLEMENTATION_1ARG
@@ -167,6 +176,9 @@ static omni_interceptor_initialiser initialiser;
 
 omniInitialiser& omni_interceptor_initialiser_ = initialiser;
 
+OMNI_NAMESPACE_END(omni)
+
+OMNI_USING_NAMESPACE(omni)
 /////////////////////////////////////////////////////////////////////////////
 omniInterceptors*
 omniORB::getInterceptors() {

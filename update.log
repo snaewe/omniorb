@@ -1,3 +1,82 @@
+]Wed Apr 18 19:01:34 BST 2001 sll
+================================
+
+- Big checkin with the brand new internal APIs.
+
+src/lib/omniORB/orbcore/GIOP_C.cc               NEW
+src/lib/omniORB/orbcore/GIOP_S.cc               NEW
+src/lib/omniORB/orbcore/anonObject.cc
+src/lib/omniORB/orbcore/callDescriptor.cc
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+src/lib/omniORB/orbcore/cdrStream.cc
+src/lib/omniORB/orbcore/codeSets.cc
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaObject.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/cs-16bit.cc
+src/lib/omniORB/orbcore/cs-8859-1.cc
+src/lib/omniORB/orbcore/cs-8bit.cc
+src/lib/omniORB/orbcore/cs-UTF-16.cc
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+src/lib/omniORB/orbcore/current.cc              NEW
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/dynamicLib.cc
+src/lib/omniORB/orbcore/exception.cc
+src/lib/omniORB/orbcore/exceptn.cc
+src/lib/omniORB/orbcore/giopEndpoint.cc         NEW
+src/lib/omniORB/orbcore/giopImpl10.cc           NEW
+src/lib/omniORB/orbcore/giopImpl11.cc           NEW
+src/lib/omniORB/orbcore/giopImpl12.cc           NEW
+src/lib/omniORB/orbcore/giopRendezvouser.cc     NEW
+src/lib/omniORB/orbcore/giopRope.cc             NEW
+src/lib/omniORB/orbcore/giopServer.cc           NEW
+src/lib/omniORB/orbcore/giopStrand.cc           NEW
+src/lib/omniORB/orbcore/giopStream.cc           NEW
+src/lib/omniORB/orbcore/giopStreamImpl.cc       NEW
+src/lib/omniORB/orbcore/giopWorker.cc           NEW
+src/lib/omniORB/orbcore/initFile.cc
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/interceptors.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/localIdentity.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/objectStub.cc
+src/lib/omniORB/orbcore/omniIOR.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/omniServant.cc 
+src/lib/omniORB/orbcore/omniTransport.cc       NEW
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poamanager.cc
+src/lib/omniORB/orbcore/poastubs.cc
+src/lib/omniORB/orbcore/portableserver.cc
+src/lib/omniORB/orbcore/proxyFactory.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+src/lib/omniORB/orbcore/taskqueue.cc
+src/lib/omniORB/orbcore/tcp                    NEW
+src/lib/omniORB/orbcore/tcpLib.cc              NEW
+src/lib/omniORB/orbcore/transport.txt          NEW
+src/lib/omniORB/orbcore/uri.cc
+
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc      NEW
+src/lib/omniORB/orbcore/tcp/tcpAddress.h       NEW
+src/lib/omniORB/orbcore/tcp/tcpConnection.cc   NEW
+src/lib/omniORB/orbcore/tcp/tcpConnection.h    NEW
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc     NEW
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.h       NEW
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc NEW
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.h  NEW
+
+src/lib/omniORB/orbcore/gatekeepers/dummystub/dir.mk 
+src/lib/omniORB/orbcore/gatekeepers/dummystub/gatekeeper.cc
+
+src/lib/omniORB/orbcore/gatekeepers/tcpwrapper/dir.mk
+src/lib/omniORB/orbcore/gatekeepers/tcpwrapper/gatekeeper.cc
+
+
+
 Wed Apr 18 18:41:35 BST 2001 sll
 ================================
 

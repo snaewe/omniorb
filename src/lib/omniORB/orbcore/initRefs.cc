@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2001/04/18 18:18:08  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.2.2.3  2000/10/03 17:39:25  sll
   Cleanup the_argsServiceList and the_fileServiceList in module detach().
 
@@ -110,15 +113,17 @@
 #endif
 
 #include <initRefs.h>
-#include <ropeFactory.h>
-#include <tcpSocket.h>
 #include <initialiser.h>
 #include <exceptiondefs.h>
 #include <poaimpl.h>
 #include <omniORB4/omniURI.h>
 
+
+OMNI_NAMESPACE_BEGIN(omni)
+
 static CORBA_InitialReferences_i*  the_bootagentImpl = 0;
 static omni_tracedmutex ba_lock;
+
 
 // When initial references are first set, they contain an id and a
 // uri. The first time they are resolved, the uri is replaced with an
@@ -679,7 +684,7 @@ omniInitialReferences::initialise_bootstrap_agentImpl()
 
 
 int
-omniInitialReferences::invoke_bootstrap_agentImpl(GIOP_S& giop_s)
+omniInitialReferences::invoke_bootstrap_agentImpl(IOP_S& giop_s)
 {
   omni_tracedmutex_lock sync(ba_lock);
 
@@ -712,8 +717,9 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
     objkey.length(4);
     objkey[0] = 'I'; objkey[1] = 'N'; objkey[2] = 'I'; objkey[3] = 'T';
 
+    GIOP::Version ver = { 1, 0 };
     omniIOR* ior= new omniIOR(CORBA_InitialReferences::_PD_repoId,
-			      objkey,&addr,1);
+			      objkey,&addr,1,ver,0);
     
     omniObjRef* objref = omni::createObjRef(
                               CORBA_InitialReferences::_PD_repoId,ior,0);
@@ -726,12 +732,6 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
   catch(...) {}
 }
 
-
-void
-_omni_set_NameService(CORBA::Object_ptr ns)
-{
-  setFromArgs((const char*) "NameService", ns);
-}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -763,3 +763,14 @@ public:
 static omni_initRefs_initialiser initialiser;
 
 omniInitialiser& omni_initRefs_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)
+
+OMNI_USING_NAMESPACE(omni)
+
+void
+_omni_set_NameService(CORBA::Object_ptr ns)
+{
+  setFromArgs((const char*) "NameService", ns);
+}
+

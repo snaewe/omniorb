@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.5  2001/04/18 18:18:11  sll
+ Big checkin with the brand new internal APIs.
+
  Revision 1.2.2.4  2000/11/03 18:46:19  sll
  Moved string marshal functions into cdrStream.
 
@@ -67,9 +70,12 @@
 #pragma hdrstop
 #endif
 
+#include <omniORB4/IOP_C.h>
 #include <omniORB4/callDescriptor.h>
 #include <exceptiondefs.h>
 #include <dynamicLib.h>
+
+OMNI_USING_NAMESPACE(omni)
 
 //////////////////////////////////////////////////////////////////////
 ///////////////////////// omniCallDescriptor /////////////////////////
@@ -96,7 +102,7 @@ omniCallDescriptor::unmarshalReturnedValues(cdrStream&)
 
 
 void
-omniCallDescriptor::userException(GIOP_C& giop_c, const char* repoId)
+omniCallDescriptor::userException(IOP_C& iop_c, const char* repoId)
 {
   // Server side returns a user-defined exception, but we seem
   // to think the operation has none.  The IDL used on each side
@@ -112,7 +118,7 @@ omniCallDescriptor::userException(GIOP_C& giop_c, const char* repoId)
     omniORB::log.flush();
   }
 
-  giop_c.RequestCompleted(1);
+  iop_c.RequestCompleted(1);
   OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
 }
 
@@ -167,30 +173,5 @@ void omniStdCallDesc::_cCORBA_mObject_i_cstring::marshalReturnedValues(cdrStream
 void omniLocalOnlyCallDescriptor::marshalArguments(cdrStream&)
 {
   OMNIORB_THROW(INV_OBJREF,0, CORBA::COMPLETED_NO);
-}
-
-//////////////////////////////////////////////////////////////////////
-///////////////////// omniClientCallMarshaller    ////////////////////
-//////////////////////////////////////////////////////////////////////
-
-void
-omniClientCallMarshaller::marshal(cdrStream& s) {
-  pd_descriptor.marshalArguments(s);
-  const omniCallDescriptor::ContextInfo* cinfo = pd_descriptor.context_info();
-  if (cinfo) {
-    omniDynamicLib::ops->marshal_context(s, cinfo->context,
-					 cinfo->expected,
-					 cinfo->num_expected);
-  }
-}
-
-
-//////////////////////////////////////////////////////////////////////
-///////////////////// omniServerCallMarshaller    ////////////////////
-//////////////////////////////////////////////////////////////////////
-
-void
-omniServerCallMarshaller::marshal(cdrStream& s) {
-  pd_descriptor.marshalReturnedValues(s);
 }
 

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.10.2.8  2001/04/18 18:18:07  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.10.2.7  2000/12/05 17:39:31  dpg1
   New cdrStream functions to marshal and unmarshal raw strings.
 
@@ -105,6 +108,8 @@
 #include <initialiser.h>
 #include <stdio.h>
 
+OMNI_USING_NAMESPACE(omni)
+
 void
 IOP::TaggedProfile::operator>>= (cdrStream &s) const {
     tag >>= s;
@@ -165,13 +170,13 @@ IOP::IOR::unmarshaltype_id(cdrStream& s) {
   idlen <<= s;
 
   if (!s.checkInputOverrun(1,idlen))
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
   switch (idlen) {
 
   case 0:
 #ifdef NO_SLOPPY_NIL_REFERENCE
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 #else
     // According to the CORBA specification 2.0 section 10.6.2:
     //   Null object references are indicated by an empty set of
@@ -192,7 +197,7 @@ IOP::IOR::unmarshaltype_id(cdrStream& s) {
     id = CORBA::string_alloc(1);
     id[0] = s.unmarshalOctet();
     if (((char*)id)[0] != '\0')
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
     idlen = 0;
     break;
     
@@ -200,31 +205,11 @@ IOP::IOR::unmarshaltype_id(cdrStream& s) {
     id = CORBA::string_alloc(idlen);
     s.get_octet_array((CORBA::Octet*)((const char*)id), idlen);
     if( ((char*)id)[idlen - 1] != '\0' )
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
     break;
   }
 
   return id._retn();
-}
-
-
-void
-IIOP::addAlternativeIIOPAddress(IOP::MultipleComponentProfile& components,
-				const IIOP::Address& addr)
-{
-
-  CORBA::ULong hlen = strlen(addr.host) + 1;
-  cdrEncapsulationStream s(hlen+8,1);
-  hlen >>= s;
-  s.put_octet_array((const CORBA::Octet*)(const char*)addr.host,hlen);
-  addr.port >>= s;
-
-  _CORBA_Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
-
-  CORBA::ULong index = components.length();
-  components.length(index+1);
-  components[index].tag = IOP::TAG_ALTERNATE_IIOP_ADDRESS;
-  components[index].component_data.replace(max,len,p,1);
 }
 
 
@@ -280,10 +265,48 @@ IIOP::encodeProfile(const IIOP::ProfileBody& body,IOP::TaggedProfile& profile)
   }
 }
 
+void
+IIOP::encodeMultiComponentProfile(const IOP::MultipleComponentProfile& body,
+				  IOP::TaggedProfile& profile)
+{
+  profile.tag = IOP::TAG_MULTIPLE_COMPONENTS;
+
+  CORBA::ULong bufsize;
+  {
+    cdrCountingStream s(cdrMemoryStream::default_tcs_c,
+			cdrMemoryStream::default_tcs_w);
+    s.marshalOctet(omni::myByteOrder);
+    CORBA::ULong total = body.length();
+    if (total) {
+      total >>= s;
+      for (CORBA::ULong index=0; index < total; index++) {
+	body[index] >>= s;
+      }
+    }
+    bufsize = s.total();
+  }
+
+  {
+    cdrEncapsulationStream s(bufsize,1);
+    CORBA::ULong total = body.length();
+    if (total) {
+      total >>= s;
+      for (CORBA::ULong index=0; index < total; index++) {
+	body[index] >>= s;
+      }
+    }
+    _CORBA_Octet* p;
+    CORBA::ULong max;
+    CORBA::ULong len;
+    s.getOctetStream(p,max,len);
+    profile.profile_data.replace(max,len,p,1);
+  }
+}
+
 
 void
-IIOP::decodeProfile(const IOP::TaggedProfile& profile,
-		    IIOP::ProfileBody& body)
+IIOP::unmarshalProfile(const IOP::TaggedProfile& profile,
+		       IIOP::ProfileBody& body)
 {
   OMNIORB_ASSERT(profile.tag == IOP::TAG_INTERNET_IOP);
 
@@ -295,7 +318,7 @@ IIOP::decodeProfile(const IOP::TaggedProfile& profile,
   body.version.minor = s.unmarshalOctet();
 
   if (body.version.major != 1) 
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
   body.address.host = s.unmarshalRawString();
   body.address.port <<= s;
@@ -306,7 +329,7 @@ IIOP::decodeProfile(const IOP::TaggedProfile& profile,
     total <<= s;
     if (total) {
       if (!s.checkInputOverrun(1,total))
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
       body.components.length(total);
       for (CORBA::ULong index=0; index<total; index++) {
 	body.components[index] <<= s;
@@ -315,12 +338,12 @@ IIOP::decodeProfile(const IOP::TaggedProfile& profile,
   }
   // Check if the profile body ends here.
   if (s.checkInputOverrun(1,1))
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 }
 
 void
-IIOP::decodeMultiComponentProfile(const IOP::TaggedProfile& profile,
-				  IIOP::ProfileBody& body)
+IIOP::unmarshalMultiComponentProfile(const IOP::TaggedProfile& profile,
+				     IOP::MultipleComponentProfile& body)
 {
   OMNIORB_ASSERT(profile.tag == IOP::TAG_MULTIPLE_COMPONENTS);
 
@@ -332,29 +355,30 @@ IIOP::decodeMultiComponentProfile(const IOP::TaggedProfile& profile,
   total <<= s;
   if (total) {
     if (!s.checkInputOverrun(1,total))
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 
-    CORBA::ULong index = body.components.length();
-    total += index;
-    body.components.length(total);
-    for ( ; index<total; index++) {
-      body.components[index] <<= s;
+    body.length(total);
+    for (CORBA::ULong index = 0; index<total; index++) {
+      body[index] <<= s;
     }
   }
   // Check if the profile body ends here.
   if (s.checkInputOverrun(1,1))
-    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+    OMNIORB_THROW(MARSHAL,0,CORBA::COMPLETED_NO);
 }
 
 
 //////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 void
-omniIOR::unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent& c , omniIOR* ior)
+omniIOR::unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent& c , omniIOR& ior)
 {
   OMNIORB_ASSERT(c.tag == IOP::TAG_ORB_TYPE);
   cdrEncapsulationStream e(c.component_data.get_buffer(),
 			   c.component_data.length(),1);
-  ior->orb_type <<= e;
+  CORBA::ULong v;
+  v <<= e;
+  ior.getIORInfo()->orbType(v);
 }
 
 
@@ -383,12 +407,237 @@ omniIOR::dump_TAG_ORB_TYPE(const IOP::TaggedComponent& c)
 }
 
 //////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+static
+giopAddress* unmarshal_IIOP_Address(const IIOP::Address& addr) {
+
+  const char* format = "giop:tcp:%s:%d";
+
+  CORBA::ULong len = strlen(addr.host);
+  if (len == 0) return 0;
+  len += strlen(format) + 6;
+  CORBA::String_var addrstr;
+  addrstr = CORBA::string_alloc(len);
+  sprintf(addrstr,format,(const char*)addr.host,addr.port);
+  return giopAddress::str2Address(addrstr);
+}
+
+
+void
+omniIOR::unmarshal_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent& c , omniIOR& ior)
+{
+  OMNIORB_ASSERT(c.tag == IOP::TAG_ALTERNATE_IIOP_ADDRESS);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  IIOP::Address v;
+  v.host = e.unmarshalRawString();
+  v.port <<= e;
+  giopAddress* address = unmarshal_IIOP_Address(v);
+  if (address == 0) return;
+  ior.getIORInfo()->addresses().push_back(address);
+}
+
+
+char*
+omniIOR::dump_TAG_ALTERNATE_IIOP_ADDRESS(const IOP::TaggedComponent& c)
+{
+  OMNIORB_ASSERT(c.tag == IOP::TAG_ALTERNATE_IIOP_ADDRESS);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  IIOP::Address v;
+  v.host = e.unmarshalRawString();
+  v.port <<= e;
+  CORBA::String_var outstr;
+  CORBA::ULong len = sizeof("TAG_ALTERNATE_IIOP_ADDRESS ")+strlen(v.host)+8;
+  outstr = CORBA::string_alloc(len);
+  sprintf(outstr,"%s %s %d","TAG_ALTERNATE_IIOP_ADDRESS",(const char*)v.host,
+	  v.port);
+  return outstr._retn();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+void
+omniIOR::unmarshal_TAG_GROUP(const IOP::TaggedComponent& c , omniIOR& ior)
+{
+  OMNIORB_ASSERT(c.tag == IOP::TAG_GROUP);
+
+#if 0
+  // XXX Temporarily disabled.
+  ior.pd_is_IOGR = 1;
+#endif
+
+#if 0
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+  GIOP::Version ftsvc_ver;
+  CORBA::FT::FTDomainId ftdom_id;
+  CORBA::FT::ObjectGroupId objgrp_id; 
+  CORBA::FT::ObjectGroupRefVersion objgrp_ver;
+  ftsvc_ver <<= e;
+  ftdom_id <<= e;
+  objgrp_id <<= e;
+  objgrp_ver <<= e;
+  // XXX STORE IN EXTRA INFO PART OF IOR
+#endif
+}
+
+
+char*
+omniIOR::dump_TAG_GROUP(const IOP::TaggedComponent& c)
+{
+  OMNIORB_ASSERT(c.tag == IOP::TAG_GROUP);
+
+#if 0
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+  GIOP::Version ftsvc_ver;
+  CORBA::FT::FTDomainId ftdom_id;
+  CORBA::FT::ObjectGroupId objgrp_id; 
+  CORBA::FT::ObjectGroupRefVersion objgrp_ver;
+  ftsvc_ver <<= e;
+  ftdom_id <<= e;
+  objgrp_id <<= e;
+  objgrp_ver <<= e;
+  // XXX Format everything into a string
+#endif
+  CORBA::String_var outstr((const char*)"TAG_GROUP");
+  return outstr._retn();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+void
+omniIOR::unmarshal_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c ,
+				     omniIOR& ior) {
+
+  OMNIORB_ASSERT(c.tag == IOP::TAG_SSL_SEC_TRANS);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  CORBA::UShort target_supports,target_requires, port;
+
+  try {
+    switch (c.component_data.length()) {
+      // Remember this is an encapsulation, so the length includes the
+      // first endian octet plus the necessary paddings after it
+    case 8:
+      {
+	// This is the standard format
+	target_supports <<= e;
+	target_requires <<= e;
+	port <<= e;
+	break;
+      }
+    default:
+      {
+      
+	omniORB::logs(1," decode TAG_SSL_SEC_TRANS "
+		      "WARNING: Wrong component size, attempt to decode it as the Visibroker non-compilant format");
+	CORBA::ULong v;
+	v <<= e; target_supports = v;
+	v <<= e; target_requires = v;
+	port <<= e;
+	break;
+      }
+    }
+  }
+  catch (...) {
+    omniORB::logs(1," decode TAG_SSL_SEC_TRANS "
+		  "WARNING: fail to decode the component. The format neither conforms to the standard or is visibroker proprietory.");
+    return;
+  }
+
+  giopAddressList& addresses = ior.getIORInfo()->addresses();
+  // The first address in the list is the host port combo stored in the
+  // IOR's address field. We have to copy the host name from there.
+  const char* tcpaddr = 0;
+  giopAddressList::iterator i, last;
+  i    = addresses.begin();
+  last = addresses.end();
+  for (; i != last; i++) {
+    if (strcmp((*i)->type(),"giop:tcp") == 0) {
+      tcpaddr = (*i)->address();
+      break;
+    }
+  }
+  if (tcpaddr == 0) return;
+
+  const char* host = index(tcpaddr,':') + 1; host = index(tcpaddr,':') + 1;
+  CORBA::ULong hostlen = index(host,':') - host;
+  CORBA::String_var copyhost(CORBA::string_alloc(hostlen));
+  strncpy(copyhost,host,hostlen);
+  copyhost[hostlen] = '\0';
+
+  const char* format = "giop:ssl:%s:%d";
+  CORBA::String_var addrstr(CORBA::string_alloc(strlen(format)+hostlen+6));
+  sprintf(addrstr,format,(const char*)copyhost,port);
+  giopAddress* address = giopAddress::str2Address(addrstr);
+  // If we do not have ssl transport linked the return value will be 0
+  if (address == 0) return;
+  ior.getIORInfo()->addresses().push_back(address);
+}
+
+char*
+omniIOR::dump_TAG_SSL_SEC_TRANS(const IOP::TaggedComponent& c) {
+
+  OMNIORB_ASSERT(c.tag == IOP::TAG_SSL_SEC_TRANS);
+  cdrEncapsulationStream e(c.component_data.get_buffer(),
+			   c.component_data.length(),1);
+
+  CORBA::UShort target_supports,target_requires, port;
+  CORBA::Boolean is_visi = 0;
+
+  CORBA::String_var outstr;
+
+  try {
+    switch (c.component_data.length()) {
+      // Remember this is an encapsulation, so the length includes the
+      // first endian octet plus the necessary paddings after it
+    case 8:
+      {
+	// This is the standard format
+	target_supports <<= e;
+	target_requires <<= e;
+	port <<= e;
+	break;
+      }
+    default:
+      {
+	// Try visibroker propriety format
+	CORBA::ULong v;
+	v <<= e; target_supports = v;
+	v <<= e; target_requires = v;
+	port <<= e;
+	is_visi = 1;
+	break;
+      }
+    }
+    const char* format = "TAG_SSL_SEC_TRANS port = %d supports = %d requires = %d";
+    const char* visiformat = " (visibroker format)";
+    outstr = CORBA::string_alloc(strlen(format)+strlen(visiformat)+36);
+    sprintf(outstr,format,port,target_supports,target_requires);
+    if (is_visi) strcat(outstr,visiformat);
+  }
+  catch (...) {
+    outstr = (const char*)"TAG_SSL_SEC_TRANS (non-standard and unknown format)";
+  }
+  return outstr._retn();
+}
+
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 // For the TAGs that the ORB will look at, add a handler to the following
 // table. 
 //
 static struct {
   IOP::ComponentId id;
-  void (*fn)(const IOP::TaggedComponent&,omniIOR*);
+  void (*fn)(const IOP::TaggedComponent&,omniIOR&);
   char* (*dump)(const IOP::TaggedComponent&);
 } componentUnmarshalHandlers[] = {
   // This table must be arranged in ascending order of IOP::ComponentId
@@ -402,7 +651,11 @@ static struct {
     omniIOR::dump_TAG_CODE_SETS },
 
   { IOP::TAG_POLICIES, 0, 0 },
-  { IOP::TAG_ALTERNATE_IIOP_ADDRESS, 0, 0 },
+
+  { IOP::TAG_ALTERNATE_IIOP_ADDRESS, 
+    omniIOR::unmarshal_TAG_ALTERNATE_IIOP_ADDRESS,
+    omniIOR::dump_TAG_ALTERNATE_IIOP_ADDRESS },
+
   { IOP::TAG_COMPLETE_OBJECT_KEY, 0, 0 },
   { IOP::TAG_ENDPOINT_ID_POSITION, 0, 0 },
   { IOP::TAG_LOCATION_POLICY, 0, 0 },
@@ -413,7 +666,11 @@ static struct {
   { IOP::TAG_KERBEROSV5_SEC_MECH, 0, 0 },
   { IOP::TAG_CSI_ECMA_SECRET_SEC_MECH, 0, 0 },
   { IOP::TAG_CSI_ECMA_HYBRID_SEC_MECH, 0, 0 },
-  { IOP::TAG_SSL_SEC_TRANS, 0, 0 },
+
+  { IOP::TAG_SSL_SEC_TRANS, 
+    omniIOR::unmarshal_TAG_SSL_SEC_TRANS,
+    omniIOR::dump_TAG_SSL_SEC_TRANS },
+
   { IOP::TAG_CSI_ECMA_PUBLIC_SEC_MECH, 0, 0 },
   { IOP::TAG_GENERIC_SEC_MECH, 0, 0 },
   { IOP::TAG_FIREWALL_TRANS, 0, 0 },
@@ -424,11 +681,21 @@ static struct {
   { IOP::TAG_DCE_NO_PIPES, 0, 0 },
   { IOP::TAG_DCE_SEC_MECH, 0, 0 },
   { IOP::TAG_INET_SEC_TRANS, 0, 0 },
+
+  { IOP::TAG_GROUP,
+    omniIOR::unmarshal_TAG_GROUP,
+    omniIOR::dump_TAG_GROUP  },
+
+  { IOP::TAG_PRIMARY, 0, 0 }, 
+  { IOP::TAG_HEARTBEAT_ENABLED, 0, 0 }, 
   { 0xffffffff, 0, 0 }
 };
 
 static int tablesize = 0;
 
+OMNI_NAMESPACE_END(omni)
+
+/////////////////////////////////////////////////////////////////////////////
 char*
 IOP::dumpComponent(const IOP::TaggedComponent& c) {
 
@@ -504,40 +771,158 @@ IOP::dumpComponent(const IOP::TaggedComponent& c) {
 /////////////////////////////////////////////////////////////////////////////
 //            Default interceptors                                         //
 /////////////////////////////////////////////////////////////////////////////
+OMNI_NAMESPACE_BEGIN(omni)
+
+static IIOP::Address                   my_address;
+static _CORBA_Unbounded_Sequence_Octet my_code_set;
 static _CORBA_Unbounded_Sequence_Octet my_orb_type;
+static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_alternative_addr;
+static _CORBA_Unbounded_Sequence<_CORBA_Unbounded_Sequence_Octet> my_ssl_addr;
 
+
+OMNI_NAMESPACE_END(omni)
+
+/////////////////////////////////////////////////////////////////////////////
 void
-omniIOR::add_TAG_ORB_TYPE(IOP::TaggedComponent& component, const omniIOR*)
-{
-  component.tag = IOP::TAG_ORB_TYPE;
-  CORBA::ULong max, len;
-  max = my_orb_type.maximum();
-  len = my_orb_type.length();
-  component.component_data.replace(max,len,my_orb_type.get_buffer(),0);
+omniIOR::add_IIOP_ADDRESS(const IIOP::Address& address) {
+  if (my_address.port == 0) {
+    my_address = address;
+  }
+  else {
+    add_TAG_ALTERNATE_IIOP_ADDRESS(address);
+  }
 }
 
-static
-void insertSupportedComponents(omniIOR* ior)
-{
-  CORBA::ULong index = ior->iiop.components.length();
-  ior->iiop.components.length(index+2);
+/////////////////////////////////////////////////////////////////////////////
+void
+omniIOR::add_TAG_CODE_SETS(const CONV_FRAME::CodeSetComponentInfo& info) {
 
-  // Insert ORB TYPE
-  omniIOR::add_TAG_ORB_TYPE(ior->iiop.components[index],ior);
+  cdrEncapsulationStream s(CORBA::ULong(0),1);
+  info >>= s;
 
-  if (ior->iiop.version.major > 1 || ior->iiop.version.minor != 0)
-    // Insert CODE SET
-    omniIOR::add_TAG_CODE_SETS(ior->iiop.components[index+1],ior);
+  CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+  my_code_set.replace(max,len,p,1);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+void
+omniIOR::add_TAG_ALTERNATE_IIOP_ADDRESS(const IIOP::Address& address) {
+
+  cdrEncapsulationStream s(CORBA::ULong(0),1);
+  s.marshalRawString(address.host);
+  address.port >>= s;
+
+  CORBA::ULong index = my_alternative_addr.length();
+  my_alternative_addr.length(index+1);
+
+  CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+
+  my_alternative_addr[index].replace(max,len,p,1);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void
+omniIOR::add_TAG_SSL_SEC_TRANS(CORBA::UShort port,
+			       CORBA::UShort supports,CORBA::UShort requires) {
+
+  cdrEncapsulationStream s(CORBA::ULong(0),1);
+  port >>= s;
+  supports >>= s;
+  requires >>= s;
+
+  CORBA::ULong index = my_ssl_addr.length();
+  my_ssl_addr.length(index+1);
+
+  CORBA::Octet* p; CORBA::ULong max,len; s.getOctetStream(p,max,len);
+
+  my_ssl_addr[index].replace(max,len,p,1);
+}
+
+OMNI_NAMESPACE_BEGIN(omni)
+
+/////////////////////////////////////////////////////////////////////////////
 static
-void extractSupportedComponents(omniIOR* ior)
+CORBA::Boolean insertSupportedComponents(omniInterceptors::encodeIOR_T::info_T& info)
 {
+  const GIOP::Version& v = info.iiop.version;
+  IOP::MultipleComponentProfile& cs = info.iiop.components;
+
+  info.iiop.address = my_address;
+
+  if ((v.major > 1 || v.minor >= 1) && my_orb_type.length()) {
+    // 1.1 or later, Insert ORB TYPE
+    IOP::TaggedComponent& c = omniIOR::newIIOPtaggedComponent(cs);
+    c.tag = IOP::TAG_ORB_TYPE;
+    CORBA::ULong max, len;
+    max = my_orb_type.maximum();
+    len = my_orb_type.length();
+    c.component_data.replace(max,len,my_orb_type.get_buffer(),0);
+  }
+
+  if ((v.major > 1 || v.minor >= 2) && my_code_set.length()) {
+    // 1.2 or later, Insert CODE SET
+    IOP::TaggedComponent& c = omniIOR::newIIOPtaggedComponent(cs);
+    c.tag = IOP::TAG_CODE_SETS;
+    CORBA::ULong max, len;
+    max = my_code_set.maximum();
+    len = my_code_set.length();
+    c.component_data.replace(max,len,my_code_set.get_buffer(),0);
+  }
+
+  if (v.major > 1 || v.minor >= 2) {
+    // 1.2 or later, Insert ALTERNATIVE IIOP ADDRESS
+    for (CORBA::ULong index = 0; 
+	 index < my_alternative_addr.length(); index++) {
+
+      IOP::TaggedComponent& c = omniIOR::newIIOPtaggedComponent(cs);
+      c.tag = IOP::TAG_ALTERNATE_IIOP_ADDRESS;
+      CORBA::ULong max, len;
+      max = my_alternative_addr[index].maximum();
+      len = my_alternative_addr[index].length();
+      c.component_data.replace(max,len,
+			       my_alternative_addr[index].get_buffer(),0);
+    }
+  }
+
+  if (v.major > 1 || v.minor >= 1) {
+    // 1.1 or later, Insert SSL_SEC_TRANS
+    for (CORBA::ULong index = 0; 
+	 index < my_ssl_addr.length(); index++) {
+
+      IOP::TaggedComponent& c = omniIOR::newIIOPtaggedComponent(cs);
+      c.tag = IOP::TAG_SSL_SEC_TRANS;
+      CORBA::ULong max, len;
+      max = my_ssl_addr[index].maximum();
+      len = my_ssl_addr[index].length();
+      c.component_data.replace(max,len,
+			       my_ssl_addr[index].get_buffer(),0);
+    }
+  }
+
+  return (info.default_only ? 0 : 1);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+static
+CORBA::Boolean extractSupportedComponents(omniInterceptors::decodeIOR_T::info_T& info) 
+{
+  if (!info.has_iiop_body) return 1;
+
+  omniIOR::IORInfo& iorInfo = *(info.ior.getIORInfo());
+
+  iorInfo.version(info.iiop.version);
+
+  giopAddress* address = unmarshal_IIOP_Address(info.iiop.address);
+  if (address)
+    iorInfo.addresses().push_back(address);
+
   if (!tablesize) {
     while (componentUnmarshalHandlers[tablesize].id != 0xffffffff) tablesize++;
   }
 
-  CORBA::ULong total = ior->iiop.components.length();
+  const IOP::MultipleComponentProfile& components = info.iiop.components;
+
+  CORBA::ULong total = components.length();
   for (CORBA::ULong index = 0; index < total; index++) {
 
     int top = tablesize;
@@ -546,13 +931,13 @@ void extractSupportedComponents(omniIOR* ior)
     do {
       int i = (top + bottom) >> 1;
       IOP::ComponentId id = componentUnmarshalHandlers[i].id;
-      if (id == ior->iiop.components[index].tag) {
+      if (id == components[index].tag) {
 	if (componentUnmarshalHandlers[i].fn) {
-	  componentUnmarshalHandlers[i].fn(ior->iiop.components[index],ior);
+	  componentUnmarshalHandlers[i].fn(components[index],info.ior);
 	}
 	break;
       }
-      else if (id > ior->iiop.components[index].tag) {
+      else if (id > components[index].tag) {
 	top = i;
       }
       else {
@@ -560,9 +945,8 @@ void extractSupportedComponents(omniIOR* ior)
       }
     } while (top != bottom);
   }
+  return 1;
 }
-
-
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -574,6 +958,7 @@ public:
   omni_ior_initialiser() {}
 
   void attach() {
+    my_address.port = 0;
     omniORB::getInterceptors()->encodeIOR.add(insertSupportedComponents);
     omniORB::getInterceptors()->decodeIOR.add(extractSupportedComponents);
 
@@ -595,3 +980,5 @@ public:
 static omni_ior_initialiser initialiser;
 
 omniInitialiser& omni_ior_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)

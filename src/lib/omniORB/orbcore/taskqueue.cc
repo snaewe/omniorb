@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.3  2001/04/18 18:18:04  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.2.2.2  2000/09/27 17:35:50  sll
   Updated include/omniORB3 to include/omniORB4
 
@@ -53,6 +56,7 @@
 
 #include <taskqueue.h>
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 class omniTaskQueueTask : public omniTaskQueue::Task {
 public:
@@ -147,3 +151,5 @@ omniTaskQueue::run_undetached(void*)
 //////////////////////////////////////////////////////////////////////
 
 omniTaskQueue::Task::~Task()  {}
+
+OMNI_NAMESPACE_END(omni)

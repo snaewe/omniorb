@@ -28,8 +28,10 @@
 //	*** PROPRIETARY INTERFACE ***
 //      
 
-// $Id$
 // $Log$
+// Revision 1.2.2.6  2001/04/18 18:18:04  sll
+// Big checkin with the brand new internal APIs.
+//
 // Revision 1.2.2.5  2000/11/22 14:39:55  dpg1
 // Treat empty host name in corbaloc: as localhost, as per 2.4 spec.
 //
@@ -75,12 +77,12 @@
 #include <stdlib.h>
 #include <omniORB4/CORBA.h>
 #include <initialiser.h>
-#include <ropeFactory.h>
-#include <tcpSocket.h>
 #include <exceptiondefs.h>
 #include <omniORB4/omniURI.h>
 #include <initRefs.h>
 #include <ctype.h>
+
+OMNI_NAMESPACE_BEGIN(omni)
 
 #define MAX_STRING_TO_OBJECT_CYCLES 10
 
@@ -605,6 +607,8 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
 
     IIOP::Address* addrlist = new IIOP::Address[parsed.addr_count_];
 
+    GIOP::Version ver = { 1, 0 };
+
     ObjAddr* addr;
     int i;
     for (i=0, addr = parsed.addrList_.head_; 
@@ -617,6 +621,11 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
 	    IiopObjAddr* iaddr = (IiopObjAddr*)addr;
 	    addrlist[i].host = iaddr->host();
 	    addrlist[i].port = iaddr->port();
+	    if (iaddr->majver() >= ver.major &&
+		iaddr->minver() >= ver.minor) {
+	      ver.major = iaddr->majver();
+	      ver.minor = iaddr->minver();
+	    }
 	  }
 	  break;
 	default:
@@ -629,8 +638,10 @@ corbalocURIHandler::locToObject(const char*& c, unsigned int cycles,
 		parsed.key_size_,
 		(CORBA::Octet*)(const char*)parsed.key_,0);
 
-    omniIOR* ior= new omniIOR((const char*)"",key,addrlist,parsed.addr_count_);
-
+    omniIOR* ior= new omniIOR((const char*)"",
+			      key,
+			      addrlist,parsed.addr_count_,
+			      ver,0);
     delete [] addrlist;
 
     omniObjRef* objref = omni::createObjRef(CORBA::Object::_PD_repoId,ior,0);
@@ -1012,3 +1023,5 @@ public:
 
 static omni_uri_initialiser initialiser;
 omniInitialiser& omni_uri_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)

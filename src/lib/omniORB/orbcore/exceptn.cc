@@ -179,7 +179,8 @@ OMNIORB_DEFINE_USER_EX_WITHOUT_MEMBERS(CORBA::ORB, InvalidName,
 
 #ifndef OMNIORB_NO_EXCEPTION_LOGGING
 
-static const char* strip(const char* fn)
+const char*
+_OMNI_NS(omniExHelper)::strip(const char* fn)
 {
   const char* p = fn + strlen(fn);
 
@@ -192,7 +193,7 @@ static const char* strip(const char* fn)
 
 
 #define STD_EXCEPTION(name) \
-  void omniExHelper::name(const char* file, int line, \
+  void _OMNI_NS(omniExHelper)::name(const char* file, int line, \
 		  CORBA::ULong minor , CORBA::CompletionStatus status) \
   { \
     if( omniORB::trace(10) ) { \

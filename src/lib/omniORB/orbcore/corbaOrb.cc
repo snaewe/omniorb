@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.9  2001/04/18 18:18:09  sll
+  Big checkin with the brand new internal APIs.
+
   Revision 1.33.2.8  2000/11/20 11:59:44  dpg1
   API to configure code sets.
 
@@ -221,6 +224,7 @@
 #include <exceptiondefs.h>
 #include <omniORB4/omniURI.h>
 #include <giopStreamImpl.h>
+#include <invoker.h>
 
 #ifdef _HAS_SIGNAL
 #include <signal.h>
@@ -229,6 +233,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+OMNI_USING_NAMESPACE(omni)
 
 static const char* orb_ids[] = { "omniORB4",
 				 "omniORB3", 
@@ -259,21 +264,24 @@ extern "C" int sigaction(int, const struct sigaction *, struct sigaction *);
 ///////////////////////////////////////////////////////////////////////
 //          Per module initialisers.
 //
+OMNI_NAMESPACE_BEGIN(omni)
+
 extern omniInitialiser& omni_omniIOR_initialiser_;
 extern omniInitialiser& omni_uri_initialiser_;
 extern omniInitialiser& omni_corbaOrb_initialiser_;
-extern omniInitialiser& omni_giopStreamImpl_initialiser_;
-extern omniInitialiser& omni_ropeFactory_initialiser_;
 extern omniInitialiser& omni_omniInternal_initialiser_;
 extern omniInitialiser& omni_initFile_initialiser_;
 extern omniInitialiser& omni_initRefs_initialiser_;
-extern omniInitialiser& omni_strand_initialiser_;
-extern omniInitialiser& omni_scavenger_initialiser_;
 extern omniInitialiser& omni_hooked_initialiser_;
 extern omniInitialiser& omni_interceptor_initialiser_;
 extern omniInitialiser& omni_ior_initialiser_;
 extern omniInitialiser& omni_codeSet_initialiser_;
 extern omniInitialiser& omni_cdrStream_initialiser_;
+extern omniInitialiser& omni_giopStrand_initialiser_;
+extern omniInitialiser& omni_giopStreamImpl_initialiser_;
+extern omniInitialiser& omni_omniTransport_initialiser_;
+
+OMNI_NAMESPACE_END(omni)
 
 static CORBA::Boolean
 parse_ORB_args(int& argc, char** argv, const char* orb_identifier);
@@ -365,17 +373,16 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
     // among the modules.
     omni_omniInternal_initialiser_.attach();
     omni_corbaOrb_initialiser_.attach();
-    omni_strand_initialiser_.attach();
-    omni_scavenger_initialiser_.attach();
-    omni_ropeFactory_initialiser_.attach();
-    omni_giopStreamImpl_initialiser_.attach();
     omni_interceptor_initialiser_.attach();
+    omni_giopStreamImpl_initialiser_.attach();
     omni_omniIOR_initialiser_.attach();
     omni_ior_initialiser_.attach();
     omni_codeSet_initialiser_.attach();
     omni_cdrStream_initialiser_.attach();
+    omni_omniTransport_initialiser_.attach();
     omni_initFile_initialiser_.attach();
     omni_initRefs_initialiser_.attach();
+    omni_giopStrand_initialiser_.attach();
     omni_hooked_initialiser_.attach();
 
     if( bootstrapAgentHostname ) {
@@ -629,17 +636,16 @@ omniOrbORB::actual_shutdown()
 
   // Call detach method of the initialisers in reverse order.
   omni_hooked_initialiser_.detach();
+  omni_giopStrand_initialiser_.detach();
   omni_initRefs_initialiser_.detach();
   omni_initFile_initialiser_.detach();
   omni_codeSet_initialiser_.detach();
+  omni_omniTransport_initialiser_.detach();
   omni_cdrStream_initialiser_.detach();
   omni_ior_initialiser_.detach();
-  omni_omniIOR_initialiser_.attach();
-  omni_interceptor_initialiser_.detach();
+  omni_omniIOR_initialiser_.detach();
   omni_giopStreamImpl_initialiser_.detach();
-  omni_ropeFactory_initialiser_.detach();
-  omni_scavenger_initialiser_.detach();
-  omni_strand_initialiser_.detach();
+  omni_interceptor_initialiser_.detach();
   omni_corbaOrb_initialiser_.detach();
   omni_omniInternal_initialiser_.detach();
   omni_uri_initialiser_.detach();
@@ -881,6 +887,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 			" parameter.");
 	  return 0;
 	}
+	omniAsyncInvoker::traceLevel = omniORB::traceLevel;
 	move_args(argc,argv,idx,2);
 	continue;
       }
@@ -1121,7 +1128,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 			" -ORBclientCallTimeOutPeriod parameter.");
 	  return 0;
 	}
-	omniORB::callTimeOutPeriod(omniORB::clientSide, v);
+	omniORB::callTimeOutPeriod(omniORB::clientSide, v, 0);
 	move_args(argc,argv,idx,2);
 	continue;
       }
@@ -1139,7 +1146,7 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 			" -ORBserverCallTimeOutPeriod parameter.");
 	  return 0;
 	}
-	omniORB::callTimeOutPeriod(omniORB::serverSide, v);
+	omniORB::callTimeOutPeriod(omniORB::serverSide, v, 0);
 	move_args(argc,argv,idx,2);
 	continue;
       }
@@ -1169,71 +1176,46 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	continue;
       }
 
-      // -ORBpoa_iiop_port  -- I think this wants a better name.
-      if( strcmp(argv[idx],"-ORBpoa_iiop_port") == 0 ) {
-	if( (idx+1) >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed -- missing "
-			"-ORBpoa_iiop_port parameter.");
-	  return 0;
-	}
-        unsigned port;
-	if( sscanf(argv[idx+1], "%u", &port) != 1 ||
-            (port == 0 || port >= 65536) ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed -- invalid "
-			"-ORBpoa_iiop_port parameter.");
-	  return 0;
-	}
+      // -ORBendpoint <endpoint uri>
+      // -ORBendpoint_no_publish <endpoint uri>
+      // -ORBendpoint_no_listen <endpoint uri>
+      if( strcmp(argv[idx],"-ORBendpoint") == 0 ||
+	  strcmp(argv[idx],"-ORBendpoint_no_publish") == 0 ||
+	  strcmp(argv[idx],"-ORBendpoint_no_listen") == 0 ) {
 
-	const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
-	if( !hostname )  hostname = "";
-	omniObjAdapter::options.
-	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
+        if( (idx+1) >= argc ) {
+	  if (omniORB::trace(1)) {
+	    omniORB::logger log;
+	    log << "CORBA::ORB_init failed -- missing "
+		<< argv[idx] << " parameter\n";
+	  }
+	  return 0;
+        }
+	omniObjAdapter::Options::EndpointURI* opt;
+	opt = new omniObjAdapter::Options::EndpointURI();
+	opt->no_publish = opt->no_listen = 0;
+	opt->uri = (const char*)argv[idx+1];
+	if ( strcmp(argv[idx],"-ORBendpoint_no_publish") == 0 )
+	  opt->no_publish = 1;
+	else if ( strcmp(argv[idx],"-ORBendpoint_no_listen") == 0 )
+	  opt->no_listen = 1;
+	omniObjAdapter::options.endpoints.push_back(opt);
 
 	move_args(argc, argv, idx, 2);
 	continue;
       }
 
+      // -ORBpoa_iiop_port  -- obsoluted option
+      // -ORBpoa_iiop_name_port <hostname[:port number]> -- obsoluted options
+      if( strcmp(argv[idx],"-ORBpoa_iiop_port") == 0 ||
+	  strcmp(argv[idx], "-ORBpoa_iiop_name_port") == 0) {
 
-      // -ORBpoa_iiop_name_port <hostname[:port number]>
-      if( strcmp(argv[idx], "-ORBpoa_iiop_name_port") == 0 ) {
-        if( (idx+1) >= argc ) {
-	  omniORB::logs(1, "CORBA::ORB_init failed -- missing "
-			"-ORBpoa_iiop_name_port parameter.");
-          return 0;
-        }
-
-        // Copy the hostname part of the argument (including :port).
-        char hostname[255+1];
-        strncpy(hostname, argv[idx+1], 255);
-	hostname[255] = '\0';
-
-        // Find the :port part of the argument.  If the port is
-	// not specified, we default to 0 which lets the OS pick
-	// a number.
-        int port = 0;
-        char* port_str = strchr(hostname, ':');
-        if( port_str != 0 ) {
-	  // if the port-number is not specified, fall back to port=0
-	  if( port_str[1] == '\0' )  port = 0;
-	  else if( sscanf(port_str+1, "%u", &port) != 1 ||
-		   (port < 0 || port >= 65536) ) {
-	    if ( omniORB::trace(1) ) {
-	      omniORB::logger l;
-	      l << "CORBA::ORB_init failed -- invalid -ORBpoa_iiop_name_port\n"
-		" parameter.  Port number out of range: " << port << ".\n";
-	    }
-	    return 0;
-	  }
-
-	  // null terminate and isolate hostname argument
-	  *port_str = 0;
-        }
-
-	omniObjAdapter::options.
-	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
-
-        move_args(argc, argv, idx, 2);
-        continue;
+	if (omniORB::trace(1)) {
+	  omniORB::logger log;
+	  log << "CORBA::ORB_init failed: "
+	      << argv[idx] << " is now obsolute, use -ORBendpoint instead.\n";
+	}
+	return 0;
       }
 
       // -ORBno_bootstrap_agent
@@ -1359,12 +1341,19 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  "    -ORBserverCallTimeOutPeriod <n seconds>\n"
 	  "    -ORBscanGranularity <n seconds>\n"
 	  "    -ORBlcdMode\n"
-	  "    -ORBpoa_iiop_port <port no.>\n"
-	  "    -ORBpoa_iiop_name_port <hostname[:port no.]>\n"
 	  "    -ORBnativeCharCodeSet <code set>\n"
 	  "    -ORBnativeWCharCodeSet <code set>\n"
 	  "    -ORBanyCharCodeSet <code set>\n"
-	  "    -ORBanyWCharCodeSet <code set>\n";
+	  "    -ORBanyWCharCodeSet <code set>\n"
+          "    -ORBendpoint <endpoint uri>\n"
+          "    -ORBendpoint_no_publish <endpoint uri>\n"
+          "    -ORBendpoint_no_listen <endpoint uri>\n"
+          "            <endpoint uri> = \"giop:tcp:<host>:<port>\" |\n"
+          "                            *\"giop:ssl:<host>:<port>\" |\n"
+          "                            *\"giop:unix:<filename>\"   |\n"
+          "                            *\"giop:fd:<no.>\"          |\n"
+          "                            *\"<other protocol>:<network protocol>:<options>\"\n"
+          "                         * may not be supported on the platform.\n";
 	move_args(argc,argv,idx,1);
 	continue;
       }
@@ -1384,9 +1373,43 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
     omniORB::logs(1, "CORBA::ORB_init failed: ORBid is not specified.");
     return 0;
   }
+
+  // Make sure that -ORBendpoint_no_listen or -ORBendpoint_no_publish is not
+  // the only -ORBendpoint* option defined.
+  {
+    omniObjAdapter::Options::EndpointURIList::iterator last, i;
+    i = omniObjAdapter::options.endpoints.begin();
+    last = omniObjAdapter::options.endpoints.end();
+    if (i != last) {
+      CORBA::Boolean only_listen = 1;
+      CORBA::Boolean only_publish = 1;
+      for ( ; i != last; i++ ) {
+	if ((*i)->no_publish) {
+	  only_listen = 0;
+	}
+	else if ((*i)->no_listen) {
+	  only_publish = 0;
+	}
+	else {
+	  only_listen = only_publish = 0;
+	}
+      }
+      if ( only_listen || only_publish ) {
+	if ( omniORB::trace(1) ) {
+	  omniORB::logger log;
+	  log << "CORBA::ORB_init failed -- -ORBendpoint_no_listen or \n"
+	         "-ORBendpoint_no_publish cannot be used alone.\n"
+	         "At least 1 -ORBendpoint or -ORBendpoint_no_publish should be specified.\n";
+	}
+	return 0;
+      }
+    }
+  }
+
   return 1;
 }
 
+OMNI_NAMESPACE_BEGIN(omni)
 
 /////////////////////////////////////////////////////////////////////////////
 //            Hooked initialiser                                           //
@@ -1557,3 +1580,5 @@ public:
 static omni_corbaOrb_initialiser initialiser;
 
 omniInitialiser& omni_corbaOrb_initialiser_ = initialiser;
+
+OMNI_NAMESPACE_END(omni)
