@@ -968,29 +968,57 @@ AST_Expression::eval_un_op(AST_Expression::EvalKind ek)
   pd_v1->set_ev(pd_v1->eval_internal(ek));
   if (pd_v1->ev() == NULL)
     return NULL;
-  pd_v1->set_ev(pd_v1->coerce(EV_double));
-  if (pd_v1->ev() == NULL)
-    return NULL;
 
   retval = new AST_ExprValue;
-  retval->et = EV_double;
 
   switch (pd_ec) {
   case EC_u_plus:
-    retval->u.lval = pd_v1->ev()->u.lval;
+    if (pd_v1->ev()->et == EV_float ||
+	pd_v1->ev()->et == EV_double) {
+
+      pd_v1->set_ev(pd_v1->coerce(EV_double));
+      if (pd_v1->ev() == NULL)
+	return NULL;
+      retval->et = EV_double;
+      retval->u.dval = pd_v1->ev()->u.dval;
+    }
+    else {
+      pd_v1->set_ev(pd_v1->coerce(EV_long));
+      if (pd_v1->ev() == NULL)
+	return NULL;
+      retval->et = EV_long;
+      retval->u.lval = pd_v1->ev()->u.lval;
+    }
     break;
   case EC_u_minus:
-    retval->u.lval = -(pd_v1->ev()->u.lval);
+    if (pd_v1->ev()->et == EV_float ||
+	pd_v1->ev()->et == EV_double) {
+
+      pd_v1->set_ev(pd_v1->coerce(EV_double));
+      if (pd_v1->ev() == NULL)
+	return NULL;
+      retval->et = EV_double;
+      retval->u.dval = -(pd_v1->ev()->u.dval);
+    }
+    else {
+      pd_v1->set_ev(pd_v1->coerce(EV_long));
+      if (pd_v1->ev() == NULL)
+	return NULL;
+      retval->et = EV_long;
+      retval->u.lval = -(pd_v1->ev()->u.lval);
+    }
     break;
   case EC_bit_neg:
     pd_v1->set_ev(pd_v1->coerce(EV_long));
     if (pd_v1->ev() == NULL)
       return NULL;
+    retval->et = EV_long;
     retval->u.lval = ~pd_v1->ev()->u.lval;
     break;
   default:
     return NULL;
   }
+
   return retval;
 }
 
@@ -1351,15 +1379,18 @@ dump_expr_val( std:: ostream &o, AST_Expression::AST_ExprValue *ev)
     break;
   case AST_Expression::EV_char:
     {
-      char c = ev->u.cval;
-      if (c >= ' ' && c <= '~')
-	o << "'" << c << "'";
+      if (ev->u.cval == '\'')
+	o << "'\\''";
+      else if (ev->u.cval == '\\')
+	o << "'\\\\'";
+      else if (ev->u.cval >= ' ' && ev->u.cval <= '~')
+	o << "'" << ev->u.cval << "'";
       else {
-	o << "'\\"
-	  << (int) ((c & 0100) >> 6)
+	unsigned char c = (unsigned char) ev->u.cval;
+	o << "0"
+	  << (int) ((c & 0300) >> 6)
 	  << (int) ((c & 070) >> 3)
-	  << (int) (c & 007)
-	  << "'";
+	  << (int) (c & 007);
       }
     }
     break;
