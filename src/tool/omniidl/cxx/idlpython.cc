@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.15.2.6  2000/06/06 15:21:47  dpg1
+// Comments and pragmas attached to attribute declarators are now
+// attached to the Python Attribute object.
+//
 // Revision 1.15.2.5  2000/06/05 18:13:27  dpg1
 // Comments can be attached to subsequent declarations (with -K). Better
 // idea of most recent decl in operation declarations
@@ -783,13 +787,58 @@ visitAttribute(Attribute* a)
   for (i=0, d = a->declarators(); d; d = (Declarator*)d->next(), ++i);
   PyObject* pyidentifiers = PyList_New(i);
 
-  for (i=0, d = a->declarators(); d; d = (Declarator*)d->next(), ++i)
+  PyObject *pragmas  = 0;
+  PyObject *comments = 0;
+  PyObject *tmp1, *tmp2;
+
+  for (i=0, d = a->declarators(); d; d = (Declarator*)d->next(), ++i) {
+    if (pragmas) {
+      tmp1 = pragmasToList(d->pragmas());
+      tmp2 = PySequence_Concat(pragmas, tmp1);
+      Py_DECREF(tmp1);
+      Py_DECREF(pragmas);
+      pragmas = tmp2;
+    }
+    else
+      pragmas = pragmasToList(d->pragmas());
+
+    if (comments) {
+      tmp1 = commentsToList(d->comments());
+      tmp2 = PySequence_Concat(comments, tmp1);
+      Py_DECREF(tmp1);
+      Py_DECREF(comments);
+      comments = tmp2;
+    }
+    else
+      comments = commentsToList(d->comments());
+
     PyList_SetItem(pyidentifiers, i, PyString_FromString(d->identifier()));    
+  }
+
+  if (pragmas) {
+    tmp1 = pragmasToList(a->pragmas());
+    tmp2 = PySequence_Concat(pragmas, tmp1);
+    Py_DECREF(tmp1);
+    Py_DECREF(pragmas);
+    pragmas = tmp2;
+  }
+  else
+    pragmas = pragmasToList(a->pragmas());
+
+  if (comments) {
+    tmp1 = commentsToList(a->comments());
+    tmp2 = PySequence_Concat(comments, tmp1);
+    Py_DECREF(tmp1);
+    Py_DECREF(comments);
+    comments = tmp2;
+  }
+  else
+    comments = commentsToList(a->comments());
 
   result_ = PyObject_CallMethod(idlast_, (char*)"Attribute", (char*)"siiNNiNN",
 				a->file(), a->line(), (int)a->mainFile(),
-				pragmasToList(a->pragmas()),
-				commentsToList(a->comments()),
+				pragmas,
+				comments,
 				(int)a->readonly(), pyattrType,
 				pyidentifiers);
   ASSERT_RESULT;
