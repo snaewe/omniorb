@@ -53,6 +53,13 @@ AC_CHECK_SIZEOF(wchar_t, 4)
 AC_CHECK_SIZEOF(void*, 4)
 
 
+dnl ** Struct members
+
+AC_CHECK_MEMBERS([struct sockaddr_in.sin_len, struct sockaddr_in.sin_zero],,,
+[#include <sys/socket.h>
+#include <netinet/in.h>])
+
+
 dnl ** C++ features
 
 AC_CXX_BOOL

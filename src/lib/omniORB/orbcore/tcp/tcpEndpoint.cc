@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.15  2002/08/27 10:32:27  dgrisby
+  FreeBSD fixes.
+
   Revision 1.1.2.14  2002/08/16 16:00:55  dgrisby
   Bugs accessing uninitialised String_vars with [].
 
@@ -170,6 +173,12 @@ tcpEndpoint::Bind() {
   addr.sin_family = INETSOCKET;
   addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(pd_address.port);
+#ifdef HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
+  addr.sin_len = sizeof(struct sockaddr_in);
+#endif
+#ifdef HAVE_STRUCT_SOCKADDR_IN_SIN_ZERO
+  memset((void *)&addr.sin_zero, 0, sizeof(addr.sin_zero));
+#endif
 
   if ((char*)pd_address.host && strlen(pd_address.host) != 0) {
     LibcWrapper::hostent_var h;
