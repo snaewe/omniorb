@@ -1,4 +1,13 @@
 
+Fri Feb 26 17:40:55 GMT 1999 djr
+================================
+
+- Accept null strings when inserting into Anys (but issue warning).
+
+src/lib/omniORB2/dynamic/any.cc
+src/lib/omniORB2/dynamic/tcParser.cc
+
+
 Mon Feb 22 09:21:56 GMT 1999 djr
 ================================
 
