@@ -26,7 +26,7 @@ endif
 ifeq ($(CXX),g++)
 DIR_CPPFLAGS += -fpic
 
-SharedLibPattern = lib%.so.1
+SharedLibPattern = lib%.so.2
 define SharedLibrary
 (set -x; \
  $(RM) $@; \
@@ -41,7 +41,7 @@ ifeq ($(CXX),CC)
 
 DIR_CPPFLAGS += -Kpic
 
-SharedLibPattern = lib%.so.1
+SharedLibPattern = lib%.so.2
 define SharedLibrary
 (set -x; \
  $(RM) $@; \
@@ -65,7 +65,7 @@ define SharedLibrary
  done; \
  set -x; \
  $(RM) $@; \
- ld -shared -set_version $@.1.0  -o $@ $(IMPORT_LIBRARY_FLAGS) \
+ ld -shared -set_version $@.2.0  -o $@ $(IMPORT_LIBRARY_FLAGS) \
     $(filter-out $(LibSuffixPattern),$^) $$libs -lpthreads -lmach -lc_r -lcxxstd -lcxx -lexc -lots -lc -rpath $$rpath; \
 )
 endef
