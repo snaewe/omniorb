@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.3  1999/09/22 19:56:52  sll
+  Correct typo.
+
   Revision 1.22.2.2  1999/09/22 12:10:01  sll
   Merged port to SCO Unixware 7.
 
@@ -161,6 +164,7 @@
 #if defined (__uw7__)
 #ifdef shutdown
 #undef shutdown
+#endif
 #endif
 
 #include <netinet/in.h>
