@@ -726,3 +726,40 @@ export:: $(lib)
          )
 
 endif
+
+#############################################################################
+#   Make rules for Darwin                                                   #
+#############################################################################
+
+ifdef Darwin
+
+DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
+
+libname = libomniORB$(major_version).dylib
+soname  = libomniORB$(major_version).$(minor_version).dylib
+lib     = libomniORB$(major_version).$(minor_version).$(micro_version).dylib
+
+all:: $(lib)
+
+$(lib): $(ORB_OBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -dynamiclib -undefined suppress -o $@ \
+         $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
+        )
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif

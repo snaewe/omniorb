@@ -28,7 +28,7 @@
 
 # $Id$
 # $Log$
-# Revision 1.20  2001/06/15 14:38:08  dpg1
+# Revision 1.21  2001/06/21 14:02:19  dpg1
 # Merge from omni3_develop for 3.0.4 release.
 #
 # Revision 1.14.2.15  2001/04/27 11:03:55  dpg1
@@ -204,13 +204,6 @@ def currently_being_defined(node):
     return node in self.__currentNodes
 def recursive_Depth(node):
     return len(self.__currentNodes) - self.__currentNodes.index(node)
-
-    while(1):
-        if outer[-1] == node:
-            return depth
-        depth = depth + 1
-        outer = outer[0:len(outer)-1]
-
 
 def __init__(stream):
     self.stream = stream

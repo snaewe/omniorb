@@ -28,7 +28,7 @@
  
 /*
   $Log$
-  Revision 1.18  2001/06/15 14:38:11  dpg1
+  Revision 1.19  2001/06/21 14:02:18  dpg1
   Merge from omni3_develop for 3.0.4 release.
 
   Revision 1.10.6.5  2001/05/29 11:10:35  sll
@@ -331,9 +331,6 @@ omniORB_Scavenger::run_undetached(void*)
 
   unsigned long abs_sec,abs_nsec;
   omni_thread::get_time(&abs_sec,&abs_nsec,ScanPeriod);
-
-  if (ScanPeriod)
-    abs_sec += ScanPeriod;
 
   omni_mutex_lock sync(pd_mutex);
 

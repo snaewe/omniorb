@@ -76,6 +76,9 @@
 #elif defined(__KCC)
 #define USE_STREAM_OPEN
 #define OPEN(name,mode,perm) open(name,mode)
+#elif defined(__GNUG__) && __GNUG__ >= 3
+#define USE_STREAM_OPEN
+#define OPEN(name,mode,perm) open(name,mode)
 #endif
 
 #ifdef _NO_STRDUP

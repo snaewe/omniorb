@@ -23,6 +23,7 @@
 #  powerpc_aix_4.2_xlc5      IBM AIX 4.2, XLC 5.0 (a.k.a. Visual Age 5.0)
 #  powerpc_aix_4.3_xlc5      IBM AIX 4.3, XLC 5.0 (a.k.a. Visual Age 5.0)
 #  powerpc_linux_2.2_glibc   PowerPC linux, Debian
+#  powerpc_darwin_1.3        PowerPC Darwin/Mac OS X
 #  hppa_hpux_10.20           HPUX 10.20, aC++ B3910B A.01.04
 #  hppa_hpux_11.00           HPUX 11.00, aC++ B3910B A.01.04
 #  m68k_nextstep_3.3         NextStep 3.3, gcc-2.7.2
@@ -62,6 +63,7 @@
 #platform = powerpc_aix_4.2_xlc5
 #platform = powerpc_aix_4.3_xlc5
 #platform = powerpc_linux_2.2_glibc
+#platform = powerpc_darwin_1.3
 #platform = hppa_hpux_10.20
 #platform = hppa_hpux_11.00
 #platform = m68k_nextstep_3.3

@@ -28,8 +28,14 @@
 
 // $Id$
 // $Log$
-// Revision 1.9  2001/02/21 14:12:07  dpg1
-// Merge from omni3_develop for 3.0.3 release.
+// Revision 1.10  2001/06/21 14:02:18  dpg1
+// Merge from omni3_develop for 3.0.4 release.
+//
+// Revision 1.3.2.6  2001/06/21 10:09:48  sll
+// HPUX does not have strtoul, use sscanf as a replacement.
+//
+// Revision 1.3.2.5  2001/06/18 17:42:59  dpg1
+// Preliminary support for Darwin / Mac OS X.
 //
 // Revision 1.3.2.4  2001/02/20 17:39:57  dpg1
 // FreeBSD update -- use strtouq instead of strtoull.
@@ -158,12 +164,34 @@ idl_strtoul(const char* text, int base)
   return strtoul(text, 0, base);
 }
 
-#  elif defined(__freebsd__)
+#  elif defined(__freebsd__) || defined (__darwin__)
 
 IdlIntLiteral
 idl_strtoul(const char* text, int base)
 {
   return strtouq(text, 0, base);
+}
+
+#  elif defined(__hpux__)
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  IdlIntLiteral ull;
+  switch (base) {
+  case 8:
+    sscanf(text, "%llo", &ull);
+    break;
+  case 10:
+    sscanf(text, "%lld", &ull);
+    break;
+  case 16:
+    sscanf(text, "%llx", &ull);
+    break;
+  default:
+    abort();
+  }
+  return ull;
 }
 
 #  else

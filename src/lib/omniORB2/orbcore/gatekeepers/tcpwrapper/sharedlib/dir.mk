@@ -357,3 +357,40 @@ export:: $(lib)
          )
 
 endif
+
+#############################################################################
+#   Make rules for Darwin                                                   #
+#############################################################################
+
+ifdef Darwin
+
+DIR_CPPFLAGS += $(SHAREDLIB_CPPFLAGS)
+
+libname = libtcpwrapGK.dylib
+soname  = libtcpwrapGK.$(minor_version).dylib
+lib     = libtcpwrapGK.$(minor_version).$(micro_version).dylib
+
+all:: $(lib)
+
+$(lib): $(OBJS) $(CXXOBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -dynamiclib -undefined suppress -o $@ \
+         $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^); \
+        )
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
