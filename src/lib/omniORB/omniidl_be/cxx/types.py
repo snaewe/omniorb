@@ -33,8 +33,8 @@ from omniidl_be.cxx import util, config, id
 
 # direction constants
 IN     = 0
-INOUT  = 1
-OUT    = 2
+OUT    = 1
+INOUT  = 2
 RET    = 3
 
 # we don't support these yet
@@ -124,8 +124,8 @@ class Type:
         if ref:   text = text + "&"
         return text
         
-    def __argmapping(self, direction):
-        # __argmapping(types.Type, int direction): const * reference * pointer
+    def _argmapping(self, direction):
+        # _argmapping(types.Type, int direction): const * reference * pointer
         #   Returns info on operation argument mapping for a type for
         #   a particular direction.
 
@@ -137,7 +137,7 @@ class Type:
             return ( (1, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 1) )[direction]
         if array and variable:
             # array of variable size elements
-            return ( (1, 0, 0), (0, 0, 0), (0, 1, 1), (0, 0, 1) )[direction]
+            return ( (1, 0, 0), (0, 1, 1), (0, 0, 0), (0, 0, 1) )[direction]
 
         type = self.deref().__type
         kind = type.kind()
@@ -158,11 +158,11 @@ class Type:
         if (kind == idltype.tk_struct or kind == idltype.tk_union) and \
            variable:
             # variable struct or union
-            return ( (1, 1, 0), (0, 1, 0), (0, 1, 1), (0, 0, 1) )[direction]
+            return ( (1, 1, 0), (0, 1, 1), (0, 1, 0), (0, 0, 1) )[direction]
         if kind == idltype.tk_string or kind == idltype.tk_wstring:
-            return ( (1, 0, 1), (0, 1, 1), (0, 1, 1), (0, 0, 1) )[direction]
+            return ( (1, 0, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
         if kind == idltype.tk_sequence or kind == idltype.tk_any:
-            return ( (1, 1, 0), (0, 1, 0), (0, 1, 1), (0, 0, 1) )[direction]
+            return ( (1, 1, 0), (0, 1, 1), (0, 1, 0), (0, 0, 1) )[direction]
         if kind == idltype.tk_fixed:
             return ( (1, 1, 0), (0, 1, 0), (0, 1, 0), (0, 0, 0) )[direction]
         if kind == idltype.tk_value or kind == idltype.tk_value_box:
@@ -179,10 +179,10 @@ class Type:
 
     def op_is_pointer(self, direction):
         if not(self.array()) and self.deref().string(): return 0
-        return self.__argmapping(direction)[2]
+        return self._argmapping(direction)[2]
 
     def __var_argmapping(self, direction):
-        # __var_argmapping(types.Type, direction): const * reference
+        # __var_argmapping(types.Type, direction): const * reference * pointer
         #  Returns info on argument mapping for a type in a _var
         #  context
         
@@ -198,22 +198,22 @@ class Type:
                         "concept")
         return
 
-    def __base_type(self, environment = None):
-        # __base_type(types.Type, id.Environment option): base C++ type string
-        #
+    def base(self, environment = None):
+        """base(types.Type, id.Environment option): C++ type string
+           Returns a basic C++ mapped version of the type"""
         kind = self.kind()
-        d_type = self.deref()
+        d_type = self.deref(1)
         d_kind = d_type.kind()
 
         # CORBA2.3 P1-15 1.5 Mapping for Basic Data Types
         if basic_map.has_key(kind):
             return basic_map[kind]
-        if self.string():
-            return "char"
-        if self.wstring():
-            return "WChar"
+        if self.string() or d_type.string():
+            return "char*"
+        if self.wstring() or d_type.wstring():
+            return "WChar*"
         if self.typecode():
-            return "CORBA::TypeCode"
+            return "CORBA::TypeCode_ptr"
         if self.any():
             return "CORBA::Any"
         if self.void():
@@ -222,13 +222,10 @@ class Type:
             return self.sequenceTemplate(environment)
 
         name = id.Name(self.type().scopedName()).unambiguous(environment)
-
-        return name
-
-    def base(self, environment = None):
-        """base(types.Type, id.Environment option): C++ type string
-           Returns a basic C++ mapped version of the type"""
-        return self.__base_type(environment)
+        if self.objref():
+            return name + "_ptr"
+        else:
+            return name
 
     def __base_type_OUT(self, environment = None):
         # ___base_type_OUT(types.Type, id.Environment option): special C++
@@ -295,7 +292,7 @@ class Type:
         type = Type(self.__type)
         d_type = type.deref()
 
-        base = self.__base_type(environment)
+        base = self.base(environment)
 
         old_sig = config.state['Old Signatures']
 
@@ -312,7 +309,7 @@ class Type:
                 elif direction == INOUT and use_out:
                     return d_type.__base_type_INOUT(environment)
                 else:
-                    base = d_type.__base_type(environment)
+                    base = d_type.base(environment)
 
 
         # Use the ObjRef template for non-arrays of objrefs rather than use
@@ -329,7 +326,7 @@ class Type:
                     return base
         # superfluous deref for a typedef to an objref
         if d_type.objref() and not(type.array()):
-            base = d_type.__base_type(environment)
+            base = d_type.base(environment)
 
         # Deal with special cases ----------------------------------
         if not(self.array()):
@@ -365,20 +362,15 @@ class Type:
                     return self.__base_type_INOUT(environment)
                 
 
-        if d_type.objref() and not(type.array()):
-            base = base + "_ptr"
-        if d_type.typecode() and not(type.array()):
-            base = base + "_ptr"
-                
         if d_type.string() and not(type.array()):
-            base = d_type.__base_type(environment)
+            base = d_type.base(environment)
             
         # P1-104 mentions two cases: returning an array and a variable
         # array out argument. For the latter rely on the _out type
         if (type.array() and direction == RET):
             base = base + "_slice"
             
-        mapping = self.__argmapping(direction)
+        mapping = self._argmapping(direction)
         
         return self.__apply_mapping(mapping, base)
 
@@ -408,7 +400,7 @@ class Type:
             # for the type to have dimensions, it must be a typedef
             return id.Name(self.__type.scopedName()).unambiguous(environment)
 
-        return self.__base_type(environment)
+        return self.base(environment)
 
     def objRefTemplate(self, suffix, environment = None):
         """objRefTemplate(types.Type, suffix string, id.Environment option):
@@ -503,16 +495,19 @@ class Type:
         if d_SeqType.typecode():
             d_SeqTypeID = "CORBA::TypeCode_member"
             SeqTypeID = "CORBA::TypeCode_member"
+        elif d_SeqType.objref():
+            d_SeqTypeID = string.replace(d_SeqTypeID,"_ptr","")
+            SeqTypeID = string.replace(SeqTypeID,"_ptr","")
         elif d_SeqType.string():
             d_SeqTypeID = "CORBA::String_member"
-
+        
         if SeqType.string():
             SeqTypeID = "CORBA::String_member"
 
         # silly special case (not needed?):
-        if d_SeqType.objref() and SeqType.typedef():
-            SeqTypeID = id.Name(SeqType.type().scopedName()).\
-                        unambiguous(environment)
+        #if d_SeqType.objref() and SeqType.typedef():
+        #    SeqTypeID = id.Name(SeqType.type().scopedName()).\
+        #                unambiguous(environment)
 
         seq_dims = SeqType.dims()
         is_array = seq_dims != []
@@ -539,14 +534,15 @@ class Type:
                                              sequenceTemplate(environment)
             
     
-        if d_SeqType.boolean():
-            template["suffix"] = "__Boolean"
+        if d_SeqType.char():
+            template["suffix"] = "_Char"
+        elif d_SeqType.boolean():
+            template["suffix"] = "_Boolean"
+        elif d_SeqType.octet():
+            template["suffix"] = "_Octet"
             # strings are always special
         elif d_SeqType.string() and not(is_array):
-            template["suffix"] = "__String"
-        elif d_SeqType.octet():
-            template["suffix"] = "__Octet"
-                    
+            template["suffix"] = "_String"
         elif typeSizeAlignMap.has_key(d_SeqType.type().kind()):
             template["fixed"] = typeSizeAlignMap[d_SeqType.type().\
                                                         kind()]
@@ -660,65 +656,15 @@ class Type:
             name = id.Name(self.type().decl().scopedName())
             return name.unambiguous(environment)
         
-        if d_T.kind() in basic_map.keys():
+        if self.is_basic_data_types():
             return basic_map[d_T.kind()]
         
         if d_T.void():     raise "No such thing as a void _var type"
 
         raise "Unknown _var type, kind = " + str(d_T.kind())
 
-    def _ptr_is_pointer(self):
-        """Returns whether a pointer to this type is actually a C++ pointer
-           rather than a _ptr typedef"""
-        if self.array(): return 0
-
-        d_T = self.deref()
-        if d_T.struct() or d_T.union() or d_T.exception():
-            return d_T.variable()
-
-        if d_T.sequence(): return 1
-
-        if d_T.any(): return 1
-        
-        return 0
-
-    def _ptr(self, environment = None):
-        """Returns a representation of a type which is not responsible for its
-           own destruction. Assigning a heap alloccated thing to this type
-           does not relieve the user of the responsibility of deallocation"""
-
-        if self.array():
-            name = id.Name(self.type().decl().scopedName()).suffix("_slice*")
-            return name.unambiguous(environment)
-
-        d_T = self.deref()
-
-        if d_T.typecode(): return "CORBA::TypeCode_ptr"
-        if d_T.any():      return "CORBA::Any*"
-        if d_T.string():   return "char*"
-        if d_T.enum():
-            name = id.Name(self.type().decl().scopedName())
-            return name.unambiguous(environment)
-
-        if d_T.struct() or d_T.union() or d_T.exception() or d_T.sequence():
-            name = id.Name(self.type().decl().scopedName())
-            name = name.unambiguous(environment)
-            if d_T._ptr_is_pointer(): name = name + "*"
-            return name
-        
-        if d_T.objref():
-            name = id.Name(self.type().decl().scopedName()).suffix("_ptr")
-            return name.unambiguous(environment)
-
-        if d_T.kind() in basic_map.keys():
-            return basic_map[d_T.kind()]
-        
-        if d_T.void():     raise "No such thing as a void _ptr type"
-
-        raise "Unknown _ptr type, kind = " + str(d_T.kind())
-
     def out(self, ident):
-        if self.kind() in basic_map.keys():
+        if self.is_basic_data_types():
             return ident
         
         return ident + ".out()"
@@ -743,7 +689,7 @@ class Type:
                 return "delete " + thing + ";"
             return "" # stored by value
 
-        if d_T.enum() or d_T.void() or (d_T.kind() in basic_map.keys()):
+        if d_T.enum() or d_T.void() or (self.is_basic_data_types()):
             return ""
 
         raise "Don't know how to free type, kind = " + str(d_T.kind())
@@ -776,7 +722,7 @@ class Type:
                 return dest + " = new " + name + "(" + src + ");"
             return dest + " = " + src + ";"
         
-        if d_T.enum() or (d_T.kind() in basic_map.keys()):
+        if d_T.enum() or self.is_basic_data_types():
             return dest + " = " + src + ";"
 
         raise "Don't know how to free type, kind = " + str(d_T.kind())
@@ -785,6 +731,10 @@ class Type:
         """representable_by_int(types.Type): boolean
            Returns true if the type is representable by an integer"""
         return self.integer() or self.char() or self.boolean() or self.octet()
+
+    def is_basic_data_types(self):
+        d_T = self.deref()
+        return d_T.kind() in basic_map.keys()
         
     def integer(self):
         type = self.__type
