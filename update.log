@@ -1,3 +1,16 @@
+Tue Aug  4 20:04:23 BST 1998 sll
+================================
+
+- New win32 wrappers to accomodate both GNU-WIN32 and OpenNT.
+
+mk/beforedir.mk
+mk/win32.mk
+src/tool/win32/dir.mk
+src/tool/win32/clwrapper.c
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+
+
 Tue Aug  4 09:04:23 BST 1998 sll
 ================================
 
