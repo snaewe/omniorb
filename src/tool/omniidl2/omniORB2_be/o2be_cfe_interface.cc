@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.28.6.2  1999/09/29 13:12:02  djr
+  Updated mapping of operation signatures for skeletons to use T_out types.
+  Renamed all flags relating to backwards-compatiblity.
+
   Revision 1.28.6.1  1999/09/24 10:05:23  djr
   Updated for omniORB3.
 
@@ -270,26 +274,28 @@ usage()
        << GTDEVEL(" [flag]* file [file]*\n");
 #endif
   std::cerr <<
-    GTDEVEL("Legal flags:\n")
-    GTDEVEL(" -Dname[=value]    defines name for preprocessor\n")
-    GTDEVEL(" -E                runs preprocessor only, prints on stdout\n")
-    GTDEVEL(" -Idir             includes dir in search path for preprocessor\n")
-    GTDEVEL(" -Uname            undefines name for preprocessor\n")
-    GTDEVEL(" -V                prints version info then exits\n")
-    GTDEVEL(" -Y <cpp location> defines location of preprocessor\n")
-    GTDEVEL(" -a                generates code for TypeCode and Any\n")
-    GTDEVEL(" -c                map C++ reserved words with prefix _\n")
-    GTDEVEL(" -h suffix         specify suffix for the generated header file(s)\n")
-    GTDEVEL(" -l                generates code required by LifeCycle service\n")
-    GTDEVEL(" -m                allow modules to be reopened\n")
-    GTDEVEL(" -s suffix         specify suffix for the generated stub file(s)\n")
-    GTDEVEL(" -tp               generate 'tie' implementation skeleton\n")
-    GTDEVEL(" -tf               generate flattened 'tie' implementation skeleton\n")
-    GTDEVEL(" -u                prints usage message and exits\n")
-    GTDEVEL(" -v                traces compilation stages\n")
-    GTDEVEL(" -w                suppresses IDL compiler warning messages\n")
-    GTDEVEL(" -F                generates code fragments (for expert only)\n")
-    GTDEVEL(" -b                generates BOA interface skeletons\n");
+GTDEVEL("Legal flags:\n")
+GTDEVEL(" -Dname[=value]        defines name for preprocessor\n")
+GTDEVEL(" -E                    runs preprocessor only, prints on stdout\n")
+GTDEVEL(" -Idir                 includes dir in preprocessor search path\n")
+GTDEVEL(" -Uname                undefines name for preprocessor\n")
+GTDEVEL(" -V                    prints version info then exits\n")
+GTDEVEL(" -Y <cpp location>     defines location of preprocessor\n")
+GTDEVEL(" -a                    generates code for TypeCode and Any\n")
+GTDEVEL(" -h suffix             specify suffix for generated header file(s)\n")
+GTDEVEL(" -l                    generates code for the LifeCycle service\n")
+GTDEVEL(" -m                    allow modules to be reopened\n")
+GTDEVEL(" -s suffix             specify suffix for generated stub file(s)\n")
+GTDEVEL(" -tp                   generate 'tie' implementation skeletons\n")
+GTDEVEL(" -tf                   generate flattened 'tie' skeletons\n")
+GTDEVEL(" -u                    prints usage message and exits\n")
+GTDEVEL(" -v                    traces compilation stages\n")
+GTDEVEL(" -w                    suppresses IDL compiler warning messages\n")
+GTDEVEL(" -F                    generates code fragments (for expert only)\n")
+GTDEVEL(" -Bold_reserved_prefix map C++ reserved words with prefix _\n")
+GTDEVEL(" -Bboa                 generates BOA compatible skeletons\n")
+GTDEVEL(" -Bold_signatures      use CORBA 2.1 signatures for skeletons\n")
+    ;
 }
 
 void
@@ -329,7 +335,7 @@ BE_parse_args(int argc, char **argv)
 #endif
 
   idl_global->set_prog_name(argv[0]);
-  while ((c = getopt(argc,argv,"D:EFI:U:VY:uvwh:s:lamt:cb")) != EOF)
+  while ((c = getopt(argc,argv,"D:EFI:U:VY:uvwh:s:lamt:B:")) != EOF)
     {
       switch (c) 
 	{
@@ -419,15 +425,16 @@ BE_parse_args(int argc, char **argv)
 	  }
 	  break;
 
-	case 'c':
-	  idl_global->set_compile_flags(idl_global->compile_flags() |
-					IDL_BE_2_1_COMPATIBLE);
-	  break;
-
-	case 'b':
-	  idl_global->set_compile_flags(idl_global->compile_flags() |
-					IDL_BE_GENERATE_BOA_SKEL);
-	  break;
+	case 'B':
+	  if( !strcmp(optarg, "old_reserved_prefix") )
+	    idl_global->set_compile_flags(idl_global->compile_flags() |
+					  IDL_BE_2_1_COMPATIBLE);
+	  else if( !strcmp(optarg, "boa") )
+	    idl_global->set_compile_flags(idl_global->compile_flags() |
+					  IDL_BE_GENERATE_BOA_SKEL);
+	  else if( !strcmp(optarg, "old_signatures") )
+	    idl_global->set_compile_flags(idl_global->compile_flags() |
+					  IDL_BE_OLD_SKEL_SIGNATURES);
 
 	case '?':
 	case ':':

@@ -27,6 +27,10 @@
 
 /*
   $Log$
+  Revision 1.39.6.4  1999/09/29 13:12:03  djr
+  Updated mapping of operation signatures for skeletons to use T_out types.
+  Renamed all flags relating to backwards-compatiblity.
+
   Revision 1.39.6.3  1999/09/27 11:41:27  djr
   Generate old BOA-style tie templates.
 
@@ -556,7 +560,10 @@ o2be_interface::produce_hdr(std::fstream& s)
     while( !i.is_done() ) {
       o2be_operation* op = i.item();
       IND(s); s << "virtual ";
-      op->produce_decl(s, module);
+      if( idl_global->compile_flags() & IDL_BE_OLD_SKEL_SIGNATURES )
+	op->produce_decl(s, module);
+      else
+	op->produce_client_decl(s, module);
       s << " = 0;\n";
       i.next();
     }
