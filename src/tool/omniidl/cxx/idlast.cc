@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.12  1999/12/28 18:15:45  dpg1
+// Bounds of string constants now checked.
+//
 // Revision 1.11  1999/11/30 18:06:19  dpg1
 // Alias dereferencing bugs.
 //
@@ -598,8 +601,17 @@ Const(const char* file, int line, _CORBA_Boolean mainFile,
   case IdlType::tk_boolean:    v_.boolean_    = expr->evalAsBoolean();   break;
   case IdlType::tk_char:       v_.char_       = expr->evalAsChar();      break;
   case IdlType::tk_octet:      v_.octet_      = expr->evalAsOctet();     break;
-  case IdlType::tk_string:     v_.string_     =
-				 idl_strdup(expr->evalAsString());       break;
+  case IdlType::tk_string:
+    {
+      v_.string_         = idl_strdup(expr->evalAsString());
+      _CORBA_ULong bound = ((StringType*)t)->bound();
+
+      if (bound && strlen(v_.string_) > bound) {
+	IdlError(file, line,
+		 "Length of bounded string constant exceeds bound");
+      }
+      break;
+    }
 #ifdef HAS_LongLong
   case IdlType::tk_longlong:   v_.longlong_   = expr->evalAsLongLong();  break;
   case IdlType::tk_ulonglong:  v_.ulonglong_  = expr->evalAsULongLong(); break;
@@ -608,8 +620,17 @@ Const(const char* file, int line, _CORBA_Boolean mainFile,
   case IdlType::tk_longdouble: v_.longdouble_ = expr->evalAsLongDouble();break;
 #endif
   case IdlType::tk_wchar:      v_.wchar_      = expr->evalAsWChar();     break;
-  case IdlType::tk_wstring:    v_.wstring_    =
-				 idl_wstrdup(expr->evalAsWString());     break;
+  case IdlType::tk_wstring:
+    {
+      v_.wstring_        = idl_wstrdup(expr->evalAsWString());
+      _CORBA_ULong bound = ((WStringType*)t)->bound();
+
+      if (bound && idl_wstrlen(v_.wstring_) > bound) {
+	IdlError(file, line,
+		 "Length of bounded wide string constant exceeds bound");
+      }
+      break;
+    }
   case IdlType::tk_fixed:      v_.fixed_      = expr->evalAsFixed(); break;
   case IdlType::tk_enum:
     v_.enumerator_ = expr->evalAsEnumerator((Enum*)((DeclaredType*)t)->decl());
