@@ -107,8 +107,8 @@ public:
   // Otherwise raises the BAD_TYPECODE exception
 
   void setTC_and_reset(CORBA::TypeCode_ptr tc);
-  // Clears the current cdrStream and replaces the typecode in use
-  // NEVER use this if the MemBuffered Stream is read-only...
+  // Clears the current cdrMemoryStream and replaces the typecode in use
+  // NEVER use this if the cdrMemoryStream is read-only...
 
   static void skip(cdrStream&, CORBA::TypeCode_ptr tc);
   // Read and discard a value of type <tc> from the stream.

@@ -533,6 +533,14 @@ tcParser::replaceTC(CORBA::TypeCode_ptr tc)
 }
 
 void
+tcParser::setTC_and_reset(CORBA::TypeCode_ptr tc)
+{
+  // Clear the buffer & change the typecode
+  pd_mbuf.rewindPtrs();
+  pd_tc = CORBA::TypeCode::_duplicate(tc);
+}
+
+void
 tcParser::skip(cdrStream& mbs, CORBA::TypeCode_ptr tc)
 {
   skipUsingTC(ToTcBase_Checked(tc), mbs);
