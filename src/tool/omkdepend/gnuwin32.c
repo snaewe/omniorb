@@ -78,8 +78,8 @@ void GetMounts(void)
 
   for (nmounts = 0; nmounts < MAX_MOUNTS; nmounts++) {
     sprintf(key,
-	    "Software\\Cygnus Support\\CYGWIN.DLL setup\\b14.0\\mounts\\%02d",
-	    nmounts);
+	    "Software\\Cygnus Solutions\\CYGWIN.DLL setup\\b15.0\\mounts\\%02d"
+	    ,nmounts);
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER,
 		     key, 0, KEY_READ, &hkey) != ERROR_SUCCESS) {
@@ -95,21 +95,21 @@ void GetMounts(void)
       printf("RegQueryValueEx failed - error %d\n",GetLastError());
       exit(1);
     }
-    unix[nmounts] = (char *)malloc(len);
+    unix[nmounts] = (char *)malloc(len+1);
     RegQueryValueEx(hkey, "unix", NULL, NULL, unix[nmounts], &len);
 
-    if (RegQueryValueEx(hkey,"dos",NULL,NULL,NULL,&len) != ERROR_SUCCESS) {
+    if (RegQueryValueEx(hkey,"native",NULL,NULL,NULL,&len) != ERROR_SUCCESS) {
       printf("RegQueryValueEx failed - error %d\n",GetLastError());
       exit(1);
     }
     if (strcmp(unix[nmounts], "/") == 0) {
-      dos[nmounts] = (char *)malloc(len + 1);
-      RegQueryValueEx(hkey, "dos", NULL, NULL, dos[nmounts], &len);
+      dos[nmounts] = (char *)malloc(len+2);
+      RegQueryValueEx(hkey, "native", NULL, NULL, dos[nmounts], &len);
       dos[nmounts][len-1] = '\\';
       dos[nmounts][len] = 0;
     } else {
-      dos[nmounts] = (char *)malloc(len);
-      RegQueryValueEx(hkey, "dos", NULL, NULL, dos[nmounts], &len);
+      dos[nmounts] = (char *)malloc(len+1);
+      RegQueryValueEx(hkey, "native", NULL, NULL, dos[nmounts], &len);
     }
   }
 }
