@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.7  2000/12/05 17:39:31  dpg1
+  New cdrStream functions to marshal and unmarshal raw strings.
+
   Revision 1.2.2.6  2000/11/07 18:44:03  sll
   Renamed omniObjRef::_hash and _is_equivalent to __hash and __is_equivalent
   to avoid name clash with the member functions of CORBA::Object.
@@ -564,10 +567,7 @@ omniObjRef::_marshal(omniObjRef* objref, cdrStream& s)
     ior =  objref->pd_ior->duplicateNoLock();
   }
 
-  const char* repoId = ior->repositoryID;
-  CORBA::ULong repoIdSize = strlen(repoId)+1;
-  repoIdSize >>= s;
-  s.put_octet_array((CORBA::Octet*) repoId, repoIdSize);
+  s.marshalRawString(ior->repositoryID);
   (IOP::TaggedProfileList&)ior->iopProfiles >>= s;
 }
 

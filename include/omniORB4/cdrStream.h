@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2000/12/05 17:39:31  dpg1
+  New cdrStream functions to marshal and unmarshal raw strings.
+
   Revision 1.1.2.6  2000/11/22 14:37:58  dpg1
   Code set marshalling functions now take a string length argument.
 
@@ -336,7 +339,16 @@ public:
     ncs_c->unmarshalString(*this,pd_tcs_c,bounded,s);
     return s;
   }
-  
+
+  inline void marshalRawString(const char* s) {
+    _CORBA_ULong len = strlen(s) + 1; len >>= *this;
+    put_octet_array((const _CORBA_Octet*)s, len);
+  }
+
+  char* unmarshalRawString();
+  // unmarshalRawString() can't be inline since it has to throw
+  // MARSHAL exceptions.
+
   inline void marshalWString(const _CORBA_WChar* s,int bounded=0) {
     OMNIORB_USER_CHECK(s);
     ncs_w->marshalWString(*this,pd_tcs_w,bounded,
@@ -648,6 +660,7 @@ private:
 #undef CdrUnMarshal
 #undef Swap16
 #undef Swap32
+#undef Swap64
 
 class cdrMemoryStream : public cdrStream {
 public:

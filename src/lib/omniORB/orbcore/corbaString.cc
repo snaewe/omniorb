@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.17.2.6  2000/12/05 17:39:31  dpg1
+  New cdrStream functions to marshal and unmarshal raw strings.
+
   Revision 1.17.2.5  2000/11/22 14:37:59  dpg1
   Code set marshalling functions now take a string length argument.
 
@@ -154,6 +157,27 @@ CORBA::string_dup(const char* p)
   }
   return 0;
 }
+
+// Function to unmarshal a raw string can't be inline since it needs
+// to be able to throw MARSHAL exceptions. Define it here.
+
+char*
+cdrStream::unmarshalRawString() {
+  _CORBA_ULong len; len <<= *this;
+
+  if (!checkInputOverrun(1, len))
+    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+
+  char* s = _CORBA_String_helper::alloc(len - 1);
+  get_octet_array((_CORBA_Octet*)s, len);
+
+  if (s[len-1] != '\0')
+    OMNIORB_THROW(MARSHAL, 0, CORBA::COMPLETED_MAYBE);
+
+  return s;
+}
+
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// String_member ///////////////////////////

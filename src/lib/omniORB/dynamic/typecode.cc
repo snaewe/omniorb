@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.38.2.9  2000/12/05 17:41:00  dpg1
+ * New cdrStream functions to marshal and unmarshal raw strings.
+ *
  * Revision 1.38.2.8  2000/11/22 14:39:01  dpg1
  * Missed out PR_wstring_tc() function.
  *
@@ -1296,8 +1299,8 @@ void
 TypeCode_objref::NP_marshalComplexParams(cdrStream &s,
 					 TypeCode_offsetTable* ) const
 {
-  pd_repoId >>= s;
-  pd_name >>= s;
+  s.marshalRawString(pd_repoId);
+  s.marshalRawString(pd_name);
 }
 
 TypeCode_base*
@@ -1308,8 +1311,8 @@ TypeCode_objref::NP_unmarshalComplexParams(cdrStream &s,
 
   otbl->addEntry(otbl->currentOffset(), _ptr);
 
-  _ptr->pd_repoId <<= s;
-  _ptr->pd_name <<= s;
+  _ptr->pd_repoId = s.unmarshalRawString();
+  _ptr->pd_name   = s.unmarshalRawString();
   _ptr->pd_complete = 1;
 
   return _ptr;
@@ -1420,8 +1423,8 @@ void
 TypeCode_alias::NP_marshalComplexParams(cdrStream &s,
 					TypeCode_offsetTable* otbl) const
 {
-  pd_repoId >>= s;
-  pd_name >>= s;
+  s.marshalRawString(pd_repoId);
+  s.marshalRawString(pd_name);
   TypeCode_marshaller::marshal(ToTcBase(pd_content), s, otbl);
 }
 
@@ -1433,8 +1436,8 @@ TypeCode_alias::NP_unmarshalComplexParams(cdrStream &s,
 
   otbl->addEntry(otbl->currentOffset(), _ptr);
 
-  _ptr->pd_repoId <<= s;
-  _ptr->pd_name <<= s;
+  _ptr->pd_repoId = s.unmarshalRawString();
+  _ptr->pd_name   = s.unmarshalRawString();
   _ptr->pd_content = TypeCode_marshaller::unmarshal(s, otbl);
   _ptr->pd_complete = 1;
   _ptr->pd_alignmentTable.set(ToTcBase(_ptr->pd_content)->alignmentTable());
@@ -2010,15 +2013,12 @@ void
 TypeCode_struct::NP_marshalComplexParams(cdrStream &s,
 					 TypeCode_offsetTable* otbl) const
 {
-  pd_repoId >>= s;
-  pd_name >>= s;
+  s.marshalRawString(pd_repoId);
+  s.marshalRawString(pd_name);
   pd_nmembers >>= s;
 
   for( CORBA::ULong i = 0; i < pd_nmembers; i++ ) {
-    CORBA::String_member name;
-    name = pd_members[i].name;
-    name >>= s;
-    name._ptr = 0;
+    s.marshalRawString(pd_members[i].name);
     TypeCode_marshaller::marshal(ToTcBase(pd_members[i].type), s, otbl);
   }
 }
@@ -2033,8 +2033,8 @@ TypeCode_struct::NP_unmarshalComplexParams(cdrStream& s,
   otbl->addEntry(otbl->currentOffset(), _ptr);
 
   try {
-    _ptr->pd_repoId <<= s;
-    _ptr->pd_name <<= s;
+    _ptr->pd_repoId = s.unmarshalRawString();
+    _ptr->pd_name   = s.unmarshalRawString();
     _ptr->pd_nmembers <<= s;
 
     // We need to initialised the members of <pd_members> to zero
@@ -2047,11 +2047,7 @@ TypeCode_struct::NP_unmarshalComplexParams(cdrStream& s,
     }
 
     for( CORBA::ULong i = 0; i < _ptr->pd_nmembers; i++ ) {
-      CORBA::String_member name;
-      name <<= s;
-      _ptr->pd_members[i].name = name._ptr;
-      name._ptr = 0;
-
+      _ptr->pd_members[i].name = s.unmarshalRawString();
       _ptr->pd_members[i].type = TypeCode_marshaller::unmarshal(s, otbl);
     }
   }
@@ -2375,15 +2371,12 @@ void
 TypeCode_except::NP_marshalComplexParams(cdrStream &s,
 					 TypeCode_offsetTable* otbl) const
 {
-  pd_repoId >>= s;
-  pd_name >>= s;
+  s.marshalRawString(pd_repoId);
+  s.marshalRawString(pd_name);
   pd_nmembers >>= s;
 
   for( CORBA::ULong i = 0; i < pd_nmembers; i++ ) {
-    CORBA::String_member name;
-    name = pd_members[i].name;
-    name >>= s;
-    name._ptr = 0;
+    s.marshalRawString(pd_members[i].name);
     TypeCode_marshaller::marshal(ToTcBase(pd_members[i].type), s, otbl);
   }
 }
@@ -2397,8 +2390,8 @@ TypeCode_except::NP_unmarshalComplexParams(cdrStream& s,
   otbl->addEntry(otbl->currentOffset(), _ptr);
 
   try {
-    _ptr->pd_repoId <<= s;
-    _ptr->pd_name <<= s;
+    _ptr->pd_repoId = s.unmarshalRawString();
+    _ptr->pd_name   = s.unmarshalRawString();
     _ptr->pd_nmembers <<= s;
 
     // We need to initialised the members of <pd_members> to zero
@@ -2411,11 +2404,7 @@ TypeCode_except::NP_unmarshalComplexParams(cdrStream& s,
     }
 
     for( CORBA::ULong i = 0; i < _ptr->pd_nmembers; i++ ) {
-      CORBA::String_member name;
-      name <<= s;
-      _ptr->pd_members[i].name = name._ptr;
-      name._ptr = 0;
-
+      _ptr->pd_members[i].name = s.unmarshalRawString();
       _ptr->pd_members[i].type = TypeCode_marshaller::unmarshal(s, otbl);
     }
   }
@@ -2734,9 +2723,17 @@ void
 TypeCode_enum::NP_marshalComplexParams(cdrStream& s,
 				       TypeCode_offsetTable* otbl) const
 {
-  pd_repoId >>= s;
-  pd_name >>= s;
-  pd_members >>= s;
+  s.marshalRawString(pd_repoId);
+  s.marshalRawString(pd_name);
+
+  // Can't use EnumMemberSeq's insertion operator since that would do
+  // code set conversion.
+  CORBA::ULong len = pd_members.length();
+  len >>= s;
+
+  const char* const* buffer = pd_members.get_buffer();
+  for (CORBA::ULong i=0; i < len; i++)
+    s.marshalRawString(buffer[i]);
 }
 
 
@@ -2748,9 +2745,17 @@ TypeCode_enum::NP_unmarshalComplexParams(cdrStream &s,
 
   otbl->addEntry(otbl->currentOffset(), _ptr);
 
-  _ptr->pd_repoId <<= s;
-  _ptr->pd_name <<= s;
-  _ptr->pd_members <<= s;
+  _ptr->pd_repoId = s.unmarshalRawString();
+  _ptr->pd_name   = s.unmarshalRawString();
+
+  CORBA::ULong len;
+  len <<= s;
+
+  _ptr->pd_members.length(len);
+  char** buffer = _ptr->pd_members.get_buffer(0);
+
+  for (CORBA::ULong i=0; i < len; i++)
+    buffer[i] = s.unmarshalRawString();
 
   return _ptr;
 }
@@ -3001,8 +3006,8 @@ void
 TypeCode_union::NP_marshalComplexParams(cdrStream &s,
 					TypeCode_offsetTable* otbl) const
 {
-  pd_repoId >>= s;
-  pd_name >>= s;
+  s.marshalRawString(pd_repoId);
+  s.marshalRawString(pd_name);
   TypeCode_marshaller::marshal(ToTcBase(pd_discrim_tc), s, otbl);
   pd_default >>= s;
 
@@ -3012,7 +3017,7 @@ TypeCode_union::NP_marshalComplexParams(cdrStream &s,
     {
       TypeCode_union_helper::marshalLabel(pd_members[i].alabel,
 					  pd_discrim_tc, s);
-      pd_members[i].aname >>= s;
+      s.marshalRawString(pd_members[i].aname);
       TypeCode_marshaller::marshal(ToTcBase(pd_members[i].atype), s, otbl);
     }
 }
@@ -3026,8 +3031,8 @@ TypeCode_union::NP_unmarshalComplexParams(cdrStream &s,
 
   otbl->addEntry(otbl->currentOffset(), _ptr);
 
-  _ptr->pd_repoId <<= s;
-  _ptr->pd_name <<= s;
+  _ptr->pd_repoId = s.unmarshalRawString();
+  _ptr->pd_name   = s.unmarshalRawString();
   _ptr->pd_discrim_tc = TypeCode_marshaller::unmarshal(s, otbl);
   _ptr->pd_default <<= s;
 
@@ -3048,7 +3053,7 @@ TypeCode_union::NP_unmarshalComplexParams(cdrStream &s,
     {
       _ptr->pd_members[i].alabel =
 	TypeCode_union_helper::unmarshalLabel(_ptr->pd_discrim_tc, s);
-      _ptr->pd_members[i].aname <<= s;
+      _ptr->pd_members[i].aname = s.unmarshalRawString();
       _ptr->pd_members[i].atype = TypeCode_marshaller::unmarshal(s, otbl);
     }
 
@@ -4108,12 +4113,12 @@ TypeCode_collector::markLoops(TypeCode_base* tc, CORBA::ULong depth)
 	tc->pd_loop_member = 1;
       else
 	tc->pd_loop_member = 0;
+
+      // Clear the mark
+      tc->pd_mark = 0;
     }
 
-  // Clear the mark
-  tc->pd_mark = 0;
-
-  // And return the least-deep accessible node
+  // Return the least-deep accessible node
   return tc->pd_internal_depth;
 }
 

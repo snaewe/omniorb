@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.6  2000/12/05 17:39:31  dpg1
+  New cdrStream functions to marshal and unmarshal raw strings.
+
   Revision 1.2.2.5  2000/11/15 17:25:45  sll
   cdrCountingStream must now be told explicitly what char and wchar
   codeset convertor to use.
@@ -175,13 +178,7 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
   case GIOP::USER_EXCEPTION:
     {
       // Retrieve the Interface Repository ID of the exception.
-      CORBA::ULong repoIdLen;
-      repoIdLen <<= s;
-      if (!s.checkInputOverrun(1,repoIdLen))
-	OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
-      CORBA::String_var repoId(_CORBA_String_helper::alloc(repoIdLen - 1));
-      s.get_octet_array((CORBA::Octet*)(char*) repoId, repoIdLen);
-
+      CORBA::String_var repoId(s.unmarshalRawString());
       call_desc.userException(giop_client, repoId);
       // Never get here - this must throw either a user exception
       // or CORBA::MARSHAL.
