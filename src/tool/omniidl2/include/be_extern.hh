@@ -69,14 +69,14 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 // Functions:
 
-extern "C" AST_Generator	*BE_init();
+extern AST_Generator	*BE_init();
 
-extern "C" void			BE_produce();
-extern "C" void			BE_abort();
-extern "C" void			BE_prep_arg(char *, idl_bool);
+extern void			BE_produce();
+extern void			BE_abort();
+extern void			BE_prep_arg(char *, idl_bool);
 
-extern "C" void			BE_version();
+extern void			BE_version();
 
-extern "C" void                 BE_parse_args(int argc, char **argv);
+extern void                 BE_parse_args(int argc, char **argv);
 
 #endif           // _BE_EXTERN_BE_EXTERN_HH
