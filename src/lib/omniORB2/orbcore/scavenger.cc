@@ -28,6 +28,10 @@
  
 /*
   $Log$
+  Revision 1.9  1999/08/30 16:49:00  sll
+  Scavenger threads now scan for idle connections and stuck remote calls.
+  Another thread Ripper_t is used to do the actual shutdown.
+
   Revision 1.8  1999/08/16 19:27:20  sll
   Added a per-compilation unit initialiser object.
   This object is called by ORB_init and ORB::shutdown.
@@ -64,14 +68,15 @@
 #pragma hdrstop
 #endif
 
+#include <limits.h>
+
 #include <ropeFactory.h>
 #include <objectManager.h>
 #include <scavenger.h>
 
-class _Scavenger : public omni_thread {
+class _Scavenger {
 public:
-  _Scavenger() : pd_isdying(0), pd_cond(&pd_mutex)  { start_undetached(); }
-  virtual void* run_undetached(void *arg) { return 0; }
+  _Scavenger() : pd_isdying(0), pd_cond(&pd_mutex)  {}
   void poke() { pd_cond.signal(); }
   void setIsDying() { omni_mutex_lock sync(pd_mutex); pd_isdying = 1; }
   CORBA::Boolean isDying() const { return pd_isdying; }
@@ -82,36 +87,82 @@ protected:
   omni_mutex     pd_mutex;
   omni_condition pd_cond;
 
+  // XXX The real scavenger classes multiple inherit this class
+  //     and the omni_thread class. An alternative would be
+  //     to use single inheritance with this class inherit
+  //     from omni_thread class.
+  //     Unfortunately, this *DOES NOT* work! At least with
+  //     gcc, in one out of 10 invocations, the overloaded virtual
+  //     function run_undetached() is not called! Instead the
+  //     default one in the omni_thread library is called. The
+  //     default returns immediately. The result is that the scavenger
+  //     thread never got a chance to start! Looks like this is a
+  //     compiler bug. Anyway, direct inheritance to omni_thread seems
+  //     to work.
 };
 
-class inScavenger_t : public _Scavenger {
+
+class Ripper_t : public _Scavenger, public omni_thread {
+  // Instance of this class do the dirty work of calling shutdown on the
+  // strand. The call shutdown may actually block for considerable time.
+  // We do not want the in or out scavenger thread to lose track of
+  // time because of this.
 public:
+  virtual void* run_undetached(void * arg);
+
+  Ripper_t(const char* id,ropeFactoryList* l) : pd_id(id), 
+                                                pd_scan(0), pd_l(l) {
+    start_undetached();
+  }
+  virtual ~Ripper_t() {}
+
+  void triggerScan() { omni_mutex_lock sync(pd_mutex); pd_scan = 1; poke(); }
+
+private:
+  const char*      pd_id;
+  CORBA::Boolean   pd_scan;
+  ropeFactoryList* pd_l;
+  Ripper_t();
+};
+
+class inScavenger_t : public _Scavenger, public omni_thread {
+public:
+  inScavenger_t () { start_undetached(); }
   virtual void* run_undetached(void *arg);
 protected:
   virtual ~inScavenger_t() {}
 };
 
-class outScavenger_t : public _Scavenger {
+
+class outScavenger_t : public _Scavenger, public omni_thread {
 public:
+  outScavenger_t () { start_undetached(); }
   virtual void* run_undetached(void *arg);
 protected:
   virtual ~outScavenger_t() {}
 };
 
 
-static CORBA::ULong inScanPeriod  = 30;		// seconds
-static CORBA::ULong outScanPeriod = 30;         // seconds
+static CORBA::ULong inScanPeriod  = 5;		// seconds
+static CORBA::ULong outScanPeriod = 5;          // seconds
+
 static inScavenger_t* inScavenger   = 0;
 static outScavenger_t* outScavenger = 0;
 
+static int serverCallTimeLimit_ = 18;
+static int clientCallTimeLimit_ = 12;
+static int outIdleTimeLimit_    = 24;
+static int inIdleTimeLimit_     = 36;
 
-static void scanForIdle(Anchor* anchor,char* thread_name);
+int StrandScavenger::clientCallTimeLimit() { return clientCallTimeLimit_; }
+int StrandScavenger::serverCallTimeLimit() { return serverCallTimeLimit_; }
+int StrandScavenger::outIdleTimeLimit() { return outIdleTimeLimit_; }
+int StrandScavenger::inIdleTimeLimit() { return inIdleTimeLimit_; }
 
 void
 StrandScavenger::initInScavenger()
 {
-  if (!inScavenger && inScanPeriod)
-    inScavenger = new inScavenger_t;
+  if (!inScavenger) inScavenger = new inScavenger_t;
 }
 
 void
@@ -133,29 +184,10 @@ StrandScavenger::killInScavenger()
   }
 }
 
-CORBA::ULong
-StrandScavenger::inScavengerScanPeriod()
-{
-  return inScanPeriod;
-}
- 
-void
-StrandScavenger::inScavengerScanPeriod(CORBA::ULong sec)
-{
-  inScanPeriod = sec;
-  if (inScavenger) {
-    inScavenger->poke();
-  }
-  else {
-    StrandScavenger::initInScavenger();
-  }
-}
-
 void
 StrandScavenger::initOutScavenger()
 {
-  if (!outScavenger && outScanPeriod)
-    outScavenger = new outScavenger_t;
+  if (!outScavenger) outScavenger = new outScavenger_t;
 }
 
 void
@@ -177,33 +209,91 @@ StrandScavenger::killOutScavenger()
   }
 }
 
-CORBA::ULong
-StrandScavenger::outScavengerScanPeriod()
+void*
+Ripper_t::run_undetached(void*)
 {
-  return outScanPeriod;
-}
- 
-void
-StrandScavenger::outScavengerScanPeriod(CORBA::ULong sec)
-{
-  outScanPeriod = sec;
-  if (outScavenger) {
-    outScavenger->poke();
+  if (omniORB::traceLevel >= 15) {
+    omniORB::log << pd_id << " Ripper: start.\n";
+    omniORB::log.flush();
   }
-  else {
-    StrandScavenger::initOutScavenger();
+
+  while (1) {
+
+    Strand *s;
+    {
+      omni_mutex_lock sync(pd_mutex);
+
+      while (!isDying() ) {
+	if (!pd_scan) {
+	  pd_cond.wait();
+	  continue;
+	}
+
+	if (omniORB::traceLevel >= 15) {
+	  omniORB::log << pd_id << " Ripper: scan.\n";
+	  omniORB::log.flush();
+	}
+
+	ropeFactory_iterator iter(pd_l);
+	ropeFactory* rp;
+
+	while ((rp = (ropeFactory*)iter())) {
+	  Rope_iterator next_rope(rp->anchor());
+	  Rope *r;
+	  while ((r = next_rope())) {
+	    Strand_iterator next_strand(r);
+	    while ((s = next_strand())) {
+	      if (!s->_strandIsDying() && Strand::Sync::clicksGet(s) < 0) {
+
+		// Should shutdown this strand. Release all mutexes before
+		// doing so. Increment the reference count on the strand
+		// to make sure that it does not go away once the
+		// mutexes have been released.
+		s->incrRefCount(1);
+		goto do_shutdown;
+	      }
+	    }
+	  }
+	}
+	pd_scan = 0;
+      }
+      goto cleanup;
+    }
+
+  do_shutdown:
+
+    // Do shutdown once the all the mutexes has been released.
+    // On some platform, e.g. linux and under certain condition,
+    // shutdown(2) actually blocks for seconds before returning.
+    // If we do shutdown while holding the mutexes, e.g. the
+    // rope mutex, we will stop the progress of other threads in
+    // the ORB. This is bad!
+
+    s->shutdown();
+    s->decrRefCount();
+
+    // XXX Go back to scan the strands all over again. This is rather
+    // inefficent especially when we have a long list of strands to
+    // shutdown.
   }
+ cleanup:
+
+  if (omniORB::traceLevel >= 15) {
+    omniORB::log << pd_id << " Ripper: exit.\n";
+    omniORB::log.flush();
+  }
+  return 0;
 }
-
-
 
 void*
-inScavenger_t::run_undetached(void *arg)
+inScavenger_t::run_undetached(void *)
 {
   if (omniORB::traceLevel >= 15) {
     omniORB::log << "inScavenger: start.\n";
     omniORB::log.flush();
   }
+
+  Ripper_t* ripper = new Ripper_t("in",omniObjectManager::root()->incomingRopeFactories());
   pd_mutex.lock();
   while (!isDying())
     {
@@ -228,20 +318,44 @@ inScavenger_t::run_undetached(void *arg)
       pd_mutex.unlock();
 
       if (omniORB::traceLevel >  10) {
-	omniORB::log << "inScavenger: scanning for idle incoming connections\n";
+	omniORB::log << "inScavenger: scanning incoming connections\n";
 	omniORB::log.flush();
       }
 
       {
 	ropeFactory_iterator iter(omniObjectManager::root()->incomingRopeFactories());
 	ropeFactory* rp;
+	CORBA::Boolean doshutdown = 0;
+
 	while ((rp = (ropeFactory*)iter())) {
-	  scanForIdle(rp->anchor(),"inScavenger");
+	  // Scan all the outgoing rope
+	  Rope_iterator next_rope(rp->anchor());
+	  Rope *r;
+	  while ((r = next_rope())) 
+	    {
+	      // For each rope, scan all the strands
+	      Strand_iterator next_strand(r);
+	      Strand *s;
+	      while ((s = next_strand())) 
+		{
+		  if (!s->_strandIsDying() && 
+		      Strand::Sync::clicksDecrAndGet(s) < 0) {
+		      doshutdown = 1;
+		  }
+		}
+	    }
 	}
+	if (doshutdown) ripper->triggerScan();
       }
       pd_mutex.lock();
     }
   pd_mutex.unlock();
+
+  ripper->setIsDying();
+  ripper->triggerScan();
+  ripper->join(0);
+  ripper = 0;
+
   if (omniORB::traceLevel >= 15) {
     omniORB::log << "inScavenger: exit.\n";
     omniORB::log.flush();
@@ -250,12 +364,15 @@ inScavenger_t::run_undetached(void *arg)
 }
 
 void*
-outScavenger_t::run_undetached(void *arg)
+outScavenger_t::run_undetached(void *)
 {
   if (omniORB::traceLevel >= 15) {
     omniORB::log << "outScavenger: start.\n";
     omniORB::log.flush();
   }
+
+  Ripper_t* ripper = new Ripper_t("out",globalOutgoingRopeFactories);
+
   pd_mutex.lock();
   while (!isDying())
     {
@@ -280,63 +397,49 @@ outScavenger_t::run_undetached(void *arg)
       pd_mutex.unlock();
 
       if (omniORB::traceLevel > 10) {
-	omniORB::log << "outScavenger: scanning for idle outgoing connections\n";
+	omniORB::log << "outScavenger: scanning outgoing connections\n";
 	omniORB::log.flush();
       }
       {
 	ropeFactory_iterator iter(globalOutgoingRopeFactories);
 	ropeFactory* rp;
+	CORBA::Boolean doshutdown = 0;
+
 	while ((rp = (ropeFactory*)iter())) {
-	  scanForIdle(rp->anchor(),"outScavenger");
+	  // Scan all the outgoing rope
+	  Rope_iterator next_rope(rp->anchor());
+	  Rope *r;
+	  while ((r = next_rope())) 
+	    {
+	      // For each rope, scan all the strands
+	      Strand_iterator next_strand(r);
+	      Strand *s;
+	      while ((s = next_strand())) 
+		{
+		  if (!s->_strandIsDying() && 
+		      Strand::Sync::clicksDecrAndGet(s) < 0) {
+		      doshutdown = 1;
+		  }
+		}
+	    }
 	}
+	if (doshutdown) ripper->triggerScan();
       }
       pd_mutex.lock();
     }
   pd_mutex.unlock();
+
+  ripper->setIsDying();
+  ripper->triggerScan();
+  ripper->join(0);
+  ripper = 0;
+
   if (omniORB::traceLevel >= 15) {
     omniORB::log << "outScavenger: exit.\n";
     omniORB::log.flush();
   }
   return 0;
 }
-
-static
-void
-scanForIdle(Anchor* anchor,char* thread_name)
-{
-  // Scan all the outgoing rope
-  Rope_iterator next_rope(anchor);
-  Rope *r;
-  while ((r = next_rope())) 
-    {
-      // For each rope, scan all the strands
-      Strand_iterator next_strand(r);
-      Strand *s;
-      while ((s = next_strand())) 
-	{
-	  unsigned long abs_sec,abs_nsec;
-	  // Set the heartbeat boolean to 1 and get back its value
-	  // prior to this update.
-	  CORBA::Boolean heartbeat = 1;
-	  if (Strand::Sync::WrTestLock(s,heartbeat))
-	    {
-	      if (heartbeat) 
-		{
-		  // Since the last time this thread set the heartbeat
-		  // value to 1, nobody has reset it to 0 (via
-		  // WrLock). Therefore the strand must have been idle
-		  // for over one scan period.  Shut it down.
-		  if (omniORB::traceLevel > 10) {
-		    omniORB::log << thread_name << ": shutting down idle connection\n";
-		    omniORB::log.flush();
-		  }
-		  s->shutdown();
-		}
-	    }
-	}
-    }
-}
-
 
 void 
 omniORB::idleConnectionScanPeriod(omniORB::idleConnType direction,
@@ -345,10 +448,18 @@ omniORB::idleConnectionScanPeriod(omniORB::idleConnType direction,
   switch (direction)
     {
     case omniORB::idleIncoming:
-      StrandScavenger::inScavengerScanPeriod(sec);
+      if (sec && inScanPeriod)
+	inIdleTimeLimit_ = ((sec >= inScanPeriod) ? sec : inScanPeriod) / 
+                           inScanPeriod;
+      else
+	inIdleTimeLimit_ = INT_MAX;
       break;
     case omniORB::idleOutgoing:
-      StrandScavenger::outScavengerScanPeriod(sec);
+      if (sec && outScanPeriod)
+	outIdleTimeLimit_ = ((sec >= outScanPeriod) ? sec : outScanPeriod)
+                             / outScanPeriod;
+      else
+	outIdleTimeLimit_ = INT_MAX;
       break;
     }
 }
@@ -359,10 +470,106 @@ omniORB::idleConnectionScanPeriod(omniORB::idleConnType direction)
   switch (direction)
     {
     case omniORB::idleIncoming:
-      return StrandScavenger::inScavengerScanPeriod();
+      return ((inIdleTimeLimit_ != INT_MAX) ? 
+	      (inIdleTimeLimit_ * inScanPeriod) : 0);
     case omniORB::idleOutgoing:
     default:  // stop MSVC complaining
-      return StrandScavenger::outScavengerScanPeriod();
+      return ((outIdleTimeLimit_ != INT_MAX) ? 
+	      (outIdleTimeLimit_ * outScanPeriod) : 0);
+    }
+}
+
+void 
+omniORB::callTimeOutPeriod(omniORB::callTimeOutType direction,
+			   CORBA::ULong sec)
+{
+  switch (direction)
+    {
+    case omniORB::serverSide:
+      if (sec && inScanPeriod)
+	serverCallTimeLimit_ = ((sec >= inScanPeriod) ? sec : inScanPeriod) / 
+                               inScanPeriod;
+      else
+	serverCallTimeLimit_ = INT_MAX;
+      break;
+    case omniORB::clientSide:
+      if (sec && outScanPeriod)
+	clientCallTimeLimit_ = ((sec >= outScanPeriod) ? sec : outScanPeriod)
+                                / outScanPeriod;
+      else
+	clientCallTimeLimit_ = INT_MAX;
+      break;
+    }
+}
+
+CORBA::ULong 
+omniORB::callTimeOutPeriod(omniORB::callTimeOutType direction)
+{
+  switch (direction)
+    {
+    case omniORB::serverSide:
+      return ((serverCallTimeLimit_ != INT_MAX) ? 
+	      (serverCallTimeLimit_ * inScanPeriod) : 0);
+    case omniORB::clientSide:
+    default:  // stop MSVC complaining
+      return ((clientCallTimeLimit_ != INT_MAX) ? 
+	      (clientCallTimeLimit_ * outScanPeriod) : 0);
+    }
+}
+
+void 
+omniORB::scanGranularity(omniORB::scanType direction,CORBA::ULong sec)
+{
+  switch (direction)
+    {
+    case omniORB::scanIncoming:
+      {
+	if (sec) {
+	  CORBA::ULong cl = omniORB::callTimeOutPeriod(omniORB::serverSide);
+	  CORBA::ULong il = omniORB::idleConnectionScanPeriod(omniORB::idleIncoming);
+	  inScanPeriod = sec;
+	  omniORB::callTimeOutPeriod(omniORB::serverSide,cl);
+	  omniORB::idleConnectionScanPeriod(omniORB::idleIncoming,il);
+	}
+	else {
+	  inScanPeriod = sec;
+	}
+
+	if (inScavenger) {
+	  inScavenger->poke();
+	}
+      }
+      break;
+    case omniORB::scanOutgoing:
+      {
+	if (sec) {
+	  CORBA::ULong cl = omniORB::callTimeOutPeriod(omniORB::clientSide);
+	  CORBA::ULong il = omniORB::idleConnectionScanPeriod(omniORB::idleOutgoing);
+	  outScanPeriod = sec;
+	  omniORB::callTimeOutPeriod(omniORB::clientSide,cl);
+	  omniORB::idleConnectionScanPeriod(omniORB::idleOutgoing,il);
+	}
+	else {
+	  outScanPeriod = sec;
+	}
+	if (outScavenger) {
+	  outScavenger->poke();
+	}
+      }
+      break;
+    }
+}
+
+CORBA::ULong 
+omniORB::scanGranularity(omniORB::scanType direction)
+{
+  switch (direction)
+    {
+    case omniORB::scanIncoming:
+      return inScanPeriod;
+    case omniORB::scanOutgoing:
+    default:  // stop MSVC complaining
+      return outScanPeriod;
     }
 }
 
