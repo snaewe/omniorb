@@ -1,6 +1,12 @@
 #include <omniORB3/Messaging.h>
 #include "PollableSet.h"
 
+Messaging::ExceptionHolder::~ExceptionHolder()
+{
+  if (local_exception_object)
+    delete local_exception_object;
+}
+
 void
 Messaging::ExceptionHolder::_NP_marshal_exception_to_sequence(const CORBA::Exception &e)
 {
