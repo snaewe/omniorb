@@ -27,9 +27,12 @@
 
 /*
   $Log$
-  Revision 1.6  1997/05/07 10:12:52  ewc
-  Changed win32 usage() message.
+  Revision 1.7  1997/09/20 16:37:24  dpg1
+  Added new -l flag for LifeCycle code generation.
 
+// Revision 1.6  1997/05/07  10:12:52  ewc
+// Changed win32 usage() message.
+//
 // Revision 1.5  1997/05/06  17:28:38  sll
 // Public release.
 //
@@ -200,6 +203,7 @@ usage()
 
   cerr << GTDEVEL(" -v\t\t\ttraces compilation stages\n");
   cerr << GTDEVEL(" -w\t\t\tsuppresses IDL compiler warning messages\n");
+  cerr << GTDEVEL(" -l\t\t\tgenerates code required by LifeCycle service\n");
   return;
 }
 
@@ -224,7 +228,7 @@ BE_parse_args(int argc, char **argv)
 
   DRV_cpp_init();
   idl_global->set_prog_name(argv[0]);
-  while ((c = getopt(argc,argv,"D:EI:U:Vuvwh:s:")) != EOF)
+  while ((c = getopt(argc,argv,"D:EI:U:Vuvwh:s:l")) != EOF)
     {
       switch (c) 
 	{
@@ -261,6 +265,10 @@ BE_parse_args(int argc, char **argv)
 	case 'w':
 	  idl_global->set_compile_flags(idl_global->compile_flags() |
 					IDL_CF_NOWARNINGS);
+	  break;
+	case 'l':
+	  idl_global->set_compile_flags(idl_global->compile_flags() |
+					IDL_CF_LIFECYCLE);
 	  break;
 	case '?':
 	  usage();
