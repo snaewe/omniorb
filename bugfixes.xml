@@ -8,6 +8,24 @@
 
 <buglist version="3.0.2">
 
+<bug id="9" date="Thu Nov 23 11:22:57 GMT 2000" user="sll">
+  <summary>New platform file for Tru64 5.0</summary>
+  <reported>dek_ml@konerding</reported>
+  <text>
+  Also fixed a problem with omkdepend when compiled with native cc.
+  </text>
+</bug>
+
+<bug id="8" date="Thu Nov 23 11:22:57 GMT 2000" user="sll">
+
+  <summary>On Digital Unix/Tru64, gethostbyname_r() is not used properly</summary>
+  <reported>Neeraj Bhatia</reported>
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-05/0064.html"/>
+  <text>
+  This bug causes intermittent problems and causes a crash in gethostbyname_r.
+  </text>
+</bug>
+
 <bug id="7" date="Tue Nov 21 10:46:54 GMT 2000" user="dpg1">
 
   <summary>Invalid object references handled incorrectly</summary>

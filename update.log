@@ -1,3 +1,15 @@
+Thu Nov 23 11:17:25 GMT 2000 sll
+================================
+
+- Digital Unix bug fix. Clear the buffer before passing it to gethostbyname_r.
+- Added new platform file for Tru64 5.0
+- omkdepend needs varargs on DU/Tru64.
+
+external_merge/config/config.mk
+external_merge/mk/platforms/alpha_osf1_5.0.mk
+src/lib/omniORB2/orbcore/libcWrapper.cc
+src/tool/omkdepend/def.h
+
 Tue Nov 21 12:20:18 GMT 2000 dpg1
 =================================
 
