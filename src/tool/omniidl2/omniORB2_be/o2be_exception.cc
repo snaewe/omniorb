@@ -25,6 +25,9 @@
 
 /*
   $Log$
+  Revision 1.16  1999/06/18 20:46:24  sll
+  Updated to support CORBA 2.3 mapping.
+
   Revision 1.15  1999/05/26 10:28:12  sll
   Use o2be_nested_typedef to generate stubs for nested types.
   Added code to generate _narrow and _raise code in the stub.
@@ -199,7 +202,12 @@ o2be_exception::produce_hdr(std::fstream &s)
   }
 
   IND(s); s << "\n";
-  IND(s); s << uqname() << "() {}\n";
+  IND(s); s << uqname() << "() {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "pd_insertToAnyFn    = insertToAnyFn;\n";
+  IND(s); s << "pd_insertToAnyFnNCP = insertToAnyFnNCP;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
   IND(s); s << uqname() << "(const " << uqname() << " &);\n";
   {
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
@@ -272,43 +280,34 @@ o2be_exception::produce_hdr(std::fstream &s)
     };
   }
   IND(s); s << uqname() << " & operator=(const " << uqname() << " &);\n";
-  IND(s); s << "virtual ~" << uqname() << "() {}\n";
-  IND(s); s << "virtual void _raise() { throw *this; }\n";
+  IND(s); s << "virtual ~" << uqname() << "();\n";
+  IND(s); s << "virtual void _raise();\n";
   IND(s); s << "static " << uqname()
-	    << "* _narrow(CORBA::Exception* e) {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return ("
-	    << uqname()
-	    << "*)_NP_is_a(e,\""
-	    << _fqname()
-	    << "\");\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
+	    << "* _downcast(CORBA::Exception* e);\n";
+  IND(s); s << "static const " << uqname()
+	    << "* _downcast(const CORBA::Exception* e);\n";
+  IND(s); s << "static " << uqname()
+	    << "* _narrow(CORBA::Exception* e);\n";
+  IND(s); s << "// NOTE: deprecated function from CORBA 2.2. Should use _downcast instead.\n";
   IND(s); s << "size_t NP_alignedSize(size_t initialoffset) const;\n";
   IND(s); s << "void operator>>= (NetBufferedStream &) const;\n";
   IND(s); s << "void operator<<= (NetBufferedStream &);\n";
   IND(s); s << "void operator>>= (MemBufferedStream &) const;\n";
   IND(s); s << "void operator<<= (MemBufferedStream &);\n";
+  IND(s); s << "static _core_attr CORBA::Exception::insertExceptionToAny    insertToAnyFn;\n";
+  IND(s); s << "static _core_attr CORBA::Exception::insertExceptionToAnyNCP insertToAnyFnNCP;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "private:\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "virtual CORBA::Exception* _NP_duplicate() const {\n";
-  INC_INDENT_LEVEL();
-  IND(s); s << "return new "
-	    << uqname()
-	    << "(*this);\n";
-  DEC_INDENT_LEVEL();
-  IND(s); s << "}\n";
-  IND(s); s << "virtual const char* _NP_mostDerivedTypeId() const {\n";
-  IND(s); s << "return \"" << _fqname() << "\";\n";
-  IND(s); s << "}\n";
+  IND(s); s << "virtual CORBA::Exception* _NP_duplicate() const;\n";
+  IND(s); s << "virtual const char* _NP_mostDerivedTypeId() const;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
 
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
     IND(s); s << variable_qualifier()
-	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+	      << " _dyn_attr const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
   }
 }
 
@@ -318,8 +317,14 @@ o2be_exception::produce_skel(std::fstream &s)
 {
   o2be_nested_typedef::produce_skel(s,this);
 
+  IND(s); s << "CORBA::Exception::insertExceptionToAny "
+	    << fqname() << "::insertToAnyFn = 0;\n";
+  IND(s); s << "CORBA::Exception::insertExceptionToAnyNCP "
+	    << fqname() << "::insertToAnyFnNCP = 0;\n\n";
+
+
   IND(s); s << fqname() << "::" << uqname()
-	    << "(const " << fqname() << " &_s)\n";
+	    << "(const " << fqname() << " &_s) : CORBA::UserException(_s) \n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
   {
@@ -465,6 +470,8 @@ o2be_exception::produce_skel(std::fstream &s)
       s << ")\n";
       IND(s); s << "{\n";
       INC_INDENT_LEVEL();
+      IND(s); s << "pd_insertToAnyFn    = "<< fqname() << "::insertToAnyFn;\n";
+      IND(s); s << "pd_insertToAnyFnNCP = "<< fqname() <<"::insertToAnyFnNCP;\n";
       {
 	UTL_ScopeActiveIterator ii(this, UTL_Scope::IK_decls);
 	while (!ii.is_done())
@@ -544,6 +551,7 @@ o2be_exception::produce_skel(std::fstream &s)
 	    << "::operator=(const " << fqname() << "& _s)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
+  IND(s); s << "((CORBA::UserException*)this)->operator=(_s);\n";
   {
     UTL_ScopeActiveIterator i(this, UTL_Scope::IK_decls);
     while (!i.is_done())
@@ -617,6 +625,50 @@ o2be_exception::produce_skel(std::fstream &s)
   IND(s); s << "return *this;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
+
+  IND(s); s << fqname() << "::~" << uqname() << "() {}\n\n";
+
+  IND(s); s << "void " << fqname() << "::_raise() { throw *this; }\n\n";
+
+  IND(s); s << fqname() << "* " << fqname() 
+	    << "::_downcast(CORBA::Exception* e) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return ("
+	    << fqname()
+	    << "*)_NP_is_a(e,\""
+	    << _fqname()
+	    << "\");\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "const " << fqname() << "* "
+	    << fqname() << "::_downcast(const CORBA::Exception* e) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return (const "
+	    << fqname()
+	    << "*)_NP_is_a(e,\""
+	    << _fqname()
+	    << "\");\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << fqname() << "* " << fqname() 
+	    << "::_narrow(CORBA::Exception* e) { return _downcast(e); }\n";
+  IND(s); s << "// NOTE: deprecated function from CORBA 2.2. Should use _downcast instead.\n\n";
+  IND(s); s << "CORBA::Exception* " << fqname() << "::_NP_duplicate() const {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return new "
+	    << fqname()
+	    << "(*this);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "const char* " << fqname() << "::_NP_mostDerivedTypeId() const {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return \"" << _fqname() << "\";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
 
   IND(s); s << "size_t\n";
   IND(s); s << fqname() << "::NP_alignedSize(size_t _initialoffset) const\n";
@@ -850,7 +902,7 @@ o2be_exception::produce_binary_operators_in_hdr(std::fstream &s)
     // any insertion and extraction operators
     IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
 	      << fqname() << "& _s);\n";
-    IND(s); s << "void operator<<=(CORBA::Any& _a, " 
+    IND(s); s << "void operator<<=(CORBA::Any& _a, const " 
 	      << fqname() <<"* _sp);\n";
     IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, " 
 	      << fqname() << "*& _sp);\n\n";
@@ -971,14 +1023,14 @@ o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
-  IND(s); s << "void operator<<=(CORBA::Any& _a, " << fqname() 
+  IND(s); s << "void operator<<=(CORBA::Any& _a, const " << fqname() 
 	    << "* _sp) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "tcDescriptor _0RL_tcdesc;\n";
   o2be_buildDesc::call_buildDesc(s, this, "_0RL_tcdesc", "*_sp");
   IND(s); s << "_a.PR_packFrom(_0RL_tc_" << _idname()
 	    << ", &_0RL_tcdesc);\n";
-  IND(s); s << "delete _sp;\n";
+  IND(s); s << "delete (" << fqname() << " *)_sp;\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
 
@@ -1012,7 +1064,7 @@ o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
   IND(s); s << "} else {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::TypeCode_var _0RL_tctmp = _a.type();\n";
-  IND(s); s << "if (_0RL_tctmp->equal(_0RL_tc_" << _idname()
+  IND(s); s << "if (_0RL_tctmp->equivalent(_0RL_tc_" << _idname()
 	    << ")) return 1;\n";
   IND(s); s << "delete _sp; _sp = 0;\n";
   IND(s); s << "return 0;\n";
@@ -1020,6 +1072,43 @@ o2be_exception::produce_binary_operators_in_dynskel(std::fstream &s)
   IND(s); s << "}\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n\n";
+
+  IND(s); s << "static void _0RL_insertToAny_"
+	    << canonical_name()
+	    << "(CORBA::Any& a,const CORBA::Exception& e) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "const "<< fqname()<< " & ex = (const "<< fqname() <<" &) e;\n";
+  IND(s); s << "operator<<=(a,ex);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "static void _0RL_insertToAnyNCP_"
+	    << canonical_name()
+	    << " (CORBA::Any& a,const CORBA::Exception* e) {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "const "<< fqname()<< " * ex = (const "<< fqname() <<" *) e;\n";
+  IND(s); s << "operator<<=(a,ex);\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "class _0RL_insertToAny_Singleton_"
+	    << canonical_name() << " {\n";
+  IND(s); s << "public:\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "_0RL_insertToAny_Singleton_"
+	    << canonical_name() << "() {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << fqname() << "::insertToAnyFn = _0RL_insertToAny_" 
+	    << canonical_name() << ";\n";
+  IND(s); s << fqname() << "::insertToAnyFnNCP = _0RL_insertToAnyNCP_"
+	    << canonical_name() << ";\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n";
+  IND(s); s << "static _0RL_insertToAny_Singleton_"
+	    << canonical_name() << " _0RL_insertToAny_Singleton_"
+	    << canonical_name() << "_;\n\n";
 }
 
 

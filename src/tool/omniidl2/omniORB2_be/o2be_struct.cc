@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.14  1999/06/18 20:45:49  sll
+  Updated to support CORBA 2.3 mapping.
+
   Revision 1.13  1999/06/03 17:11:13  sll
   Updated to CORBA 2.2
 
@@ -204,8 +207,19 @@ o2be_structure::add_field(AST_Field *f)
 void
 o2be_structure::produce_hdr(std::fstream &s)
 {
+#if 0
+  IND(s); s << "class " << uqname() << "_var;\n\n";
+#endif
   IND(s); s << "struct " << uqname() << " {\n";
   INC_INDENT_LEVEL();
+
+#if 0
+  IND(s); s << "typedef " << uqname() << "_var _var_type;\n";
+#else
+  IND(s); s << "typedef _CORBA_ConstrType_"
+	    << ((isVariable())?"Variable":"Fix")
+	    << "_Var<" << uqname() << "> _var_type;\n";
+#endif
 
   o2be_nested_typedef::produce_hdr(s,this);
 
@@ -265,10 +279,15 @@ o2be_structure::produce_hdr(std::fstream &s)
 	      case AST_Decl::NT_sequence:
 		{
 		  if (decl->node_type() == AST_Decl::NT_sequence) {
+		    s << "typedef ";
 		    s << o2be_sequence::narrow_from_decl(decl)->seq_template_name(this)
-		      << " "
-		      << o2be_field::narrow_from_decl(d)->uqname()
-		      << ";\n";
+		      << " _" << o2be_field::narrow_from_decl(d)->uqname()
+		      << "_seq;\n";
+		    IND(s); s << "_" 
+			      << o2be_field::narrow_from_decl(d)->uqname()
+			      << "_seq "
+			      << o2be_field::narrow_from_decl(d)->uqname()
+			      << ";\n";
 		  }
 		  else {
 		    s << o2be_typedef::narrow_from_decl(decl)->unambiguous_name(this);
@@ -293,11 +312,41 @@ o2be_structure::produce_hdr(std::fstream &s)
   IND(s); s << "void operator<<= (MemBufferedStream &);\n";
   DEC_INDENT_LEVEL();
   IND(s); s << "};\n\n";
-
-  IND(s); s << "typedef _CORBA_ConstrType_"
+#if 0
+  IND(s); s << "class " << uqname() << "_var : public _CORBA_ConstrType_"
 	    << ((isVariable())?"Variable":"Fix")
-	    << "_Var<" << uqname() << "> " 
-	      << uqname() << "_var;\n";
+	    << "_Var<" << uqname() << "> {\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "public:\n";
+  IND(s); s << "inline " << uqname() << "_var() {}\n";
+  IND(s); s << "inline " << uqname() << "_var(" 
+	    << uqname() << "* p) : _CORBA_ConstrType_"
+	    << ((isVariable())?"Variable":"Fix")
+	    << "_Var<" << uqname() << ">(p) {}\n";
+  IND(s); s << "inline " << uqname() << "_var(const " 
+	    << uqname() << "_var& p) : _CORBA_ConstrType_"
+	    << ((isVariable())?"Variable":"Fix")
+	    << "_Var<" << uqname() << ">(p) {}\n";
+  IND(s); s << "inline " << uqname() << "_var& operator= (" 
+	    << uqname() << "* p) {\n";
+  IND(s); s << "_CORBA_ConstrType_"
+	    << ((isVariable())?"Variable":"Fix")
+	    << "_Var<" << uqname() << ">::operator=(p); return *this; \n";
+  IND(s); s << "}\n";
+  IND(s); s << "inline " << uqname() << "_var& operator= (const " 
+	    << uqname() << "_var& p) {\n";
+  IND(s); s << "_CORBA_ConstrType_"
+	    << ((isVariable())?"Variable":"Fix")
+	    << "_Var<" << uqname() << ">::operator=(p); return *this; \n";
+  IND(s); s << "}\n";
+  IND(s); s << "friend class " << out_adptarg_name(this) << ";\n";
+
+  DEC_INDENT_LEVEL();
+  IND(s); s << "};\n\n";
+#else
+  IND(s); s << "typedef " << uqname() << "::_var_type " 
+	    << uqname() << "_var;\n\n";
+#endif
   IND(s); s << "typedef " << out_adptarg_name(this)  << " "
 	    << uqname()
 	    <<"_out;\n\n";
@@ -305,7 +354,7 @@ o2be_structure::produce_hdr(std::fstream &s)
   if (idl_global->compile_flags() & IDL_CF_ANY) {
     // TypeCode_ptr declaration
     IND(s); s << variable_qualifier()
-	      << " const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
+	      << " _dyn_attr const CORBA::TypeCode_ptr " << tcname() << ";\n\n";
   }
 
   produce_seq_hdr_if_defined(s);
@@ -588,6 +637,8 @@ o2be_structure::produce_binary_operators_in_hdr(std::fstream &s)
     IND(s); s << "extern void operator<<=(CORBA::Any& _a, "
 	      << fqname() <<"* _sp);\n";
     IND(s); s << "extern CORBA::Boolean operator>>=(const CORBA::Any& _a, "
+	      << fqname() << "*& _sp);\n";
+    IND(s); s << "extern CORBA::Boolean operator>>=(const CORBA::Any& _a, const "
 	      << fqname() << "*& _sp);\n\n";
   }
 }
@@ -729,6 +780,13 @@ o2be_structure::produce_binary_operators_in_dynskel(std::fstream &s)
   IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, "
 	    << fqname() << "*& _sp) {\n";
   INC_INDENT_LEVEL();
+  IND(s); s << "return _a >>= (const " << fqname() << "*&) _sp;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "CORBA::Boolean operator>>=(const CORBA::Any& _a, const "
+	    << fqname() << "*& _sp) {\n";
+  INC_INDENT_LEVEL();
   IND(s); s << "_sp = (" << fqname() << " *) _a.PR_getCachedData();\n";
   IND(s); s << "if (_sp == 0) {\n";
   INC_INDENT_LEVEL();
@@ -740,7 +798,7 @@ o2be_structure::produce_binary_operators_in_dynskel(std::fstream &s)
   INC_INDENT_LEVEL();
   // We take the address and cast to get past the
   // const qualifier on <_a>.
-  IND(s); s << "((CORBA::Any *)&_a)->PR_setCachedData(_sp, "
+  IND(s); s << "((CORBA::Any *)&_a)->PR_setCachedData((void*)_sp, "
 	    << "_0RL_delete_" << _idname() << ");\n";
   IND(s); s << "return 1;\n";
   DEC_INDENT_LEVEL();
@@ -754,7 +812,7 @@ o2be_structure::produce_binary_operators_in_dynskel(std::fstream &s)
   IND(s); s << "} else {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::TypeCode_var _0RL_tctmp = _a.type();\n";
-  IND(s); s << "if (_0RL_tctmp->equal(_0RL_tc_" << _idname()
+  IND(s); s << "if (_0RL_tctmp->equivalent(_0RL_tc_" << _idname()
 	    << ")) return 1;\n";
   IND(s); s << "_sp = 0;\n";
   IND(s); s << "return 0;\n";

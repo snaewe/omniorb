@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.23  1999/06/18 20:45:35  sll
+  Updated to support CORBA 2.3 mapping.
+
   Revision 1.22  1999/06/03 17:10:58  sll
   Updated to CORBA 2.2
 
@@ -89,93 +92,6 @@
 // Public release.
 //
   */
-
-/*
-  Example:
-
-  // IDL
-  typedef sequence<char,10> char_boundedseq;
-
-  // C++
-  class char_boundedseq {
-  public:
-     char_boundedseq();
-     char_boundedseq(CORBA::ULong,CORBA::Char *,CORBA::Boolean rel=0);
-     char_boundedseq(const char_boundedseq &);
-     ~char_boundedseq();
-     char_boundedseq &operator= (const char_boundedseq &);
-     CORBA::ULong maximum() const;
-     void length(CORBA::ULong);
-     CORBA::ULong length() const;
-     CORBA::Char &operator[] (CORBA::ULong);
-     const CORBA::Char &operator[] (CORBA::ULong) const;
-
-     static CORBA::Char *allocbuf(CORBA::ULong);
-     static void freebuf(CORBA::Char *);
-  };
-
-  class char_boundedseq_var {
-  public:
-     char_boundedseq_var();
-     char_boundedseq_var(char_boundedseq *);
-     char_boundedseq_var(const char_boundedseq_var &);
-     ~char_boundedseq_var();
-     char_boundedseq_var &operator=(char_boundedseq *);
-     char_boundedseq_var &operator=(const char_boundedseq_var &);
-     char_boundedseq *operator-> const ();
-     CORBA::Char & operator[] (CORBA::ULong index);
-     const CORBA::Char & operator[] (CORBA::ULong index);
-
-     // conversion operators to support parameter passing
-     operator char_boundedseq *() const;
-     operator const char_boundedseq &() const;
-     operator char_boundedseq &();
-
-  };
-
-
-  // IDL
-  typedef sequence<char>    char_unboundedseq;
-
-  // C++
-  class char_unboundedseq {
-  public:
-     char_unboundedseq();
-     char_unboundedseq(CORBA::ULong);
-     char_unboundedseq(CORBA::ULong,CORBA::ULong,
-                       CORBA::Char *,CORBA::Boolean rel=0);
-     char_unboundedseq(const char_unboundedseq &);
-     ~char_unboundedseq();
-     char_unboundedseq &operator= (const char_unboundedseq &);
-     CORBA::ULong maximum() const;
-     void length(CORBA::ULong);
-     CORBA::ULong length() const;
-     CORBA::Char &operator[] (CORBA::ULong);
-     const CORBA::Char &operator[] (CORBA::ULong) const;
-
-     static CORBA::Char *allocbuf(CORBA::ULong);
-     static void freebuf(CORBA::Char *);
-  };
-
-  class char_unboundedseq_var {
-  public:
-     char_unboundedseq_var();
-     char_unboundedseq_var(char_unboundedseq *);
-     char_unboundedseq_var(const char_unboundedseq_var &);
-     ~char_unboundedseq_var();
-     char_unboundedseq_var &operator=(char_unboundedseq *);
-     char_unboundedseq_var &operator=(const char_unboundedseq_var &);
-     char_unboundedseq *operator-> const ();
-     CORBA::Char & operator[] (CORBA::ULong index);
-     const CORBA::Char & operator[] (CORBA::ULong index);
-
-     // conversion operators to support parameter passing
-     operator char_unboundedseq *() const;
-     operator const char_unboundedseq &() const;
-     operator char_unboundedseq &();
-  };
-
-*/
 
 #include <idl.hh>
 #include <idl_extern.hh>
@@ -707,12 +623,7 @@ o2be_sequence::seq_member_name(AST_Decl* used_in)
 	AST_Decl* decl = base_type();
 	while (decl->node_type() == AST_Decl::NT_typedef)
 	  decl = o2be_typedef::narrow_from_decl(decl)->base_type();
-	baseclassname = o2be_interface::narrow_from_decl(decl)->fieldMemberType_fqname(used_in);
-	break;
-      }
-    case o2be_operation::tString:
-      {
-	baseclassname = o2be_string::fieldMemberTypeName();
+	baseclassname = o2be_interface::narrow_from_decl(decl)->seqMemberType_fqname(used_in);
 	break;
       }
     case o2be_operation::tTypeCode:
@@ -898,7 +809,7 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   switch( ntype ) {
   case o2be_operation::tString:
     t_star_constructor_arg += "char*";
-    index_ret_type += "_CORBA_String_member&";
+    index_ret_type += "_CORBA_String_member";
     break;
 
   case o2be_operation::tObjref:
@@ -906,7 +817,6 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
       o2be_name::narrow_and_produce_unambiguous_name(base_type(), tdef);
     t_star_constructor_arg += "_ptr";
     index_ret_type += seq_member_name(tdef);
-    index_ret_type += "&";
     break;
 
   case o2be_operation::tArrayFixed:
@@ -924,10 +834,15 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
     break;
   }
 
+  IND(s); s << "class " << tdef->uqname() << "_var;\n\n";
+
   IND(s); s << "class " << tdef->uqname() << " : public "
 	    << template_name << " {\n";
   IND(s); s << "public:\n";
   INC_INDENT_LEVEL();
+
+  IND(s); s << "typedef " << tdef->uqname() << "_var _var_type;\n";
+
   // Default constructor.
   IND(s); s << "inline " << tdef->uqname() << "() {}\n";
   // Copy constructor.
@@ -1052,9 +967,9 @@ o2be_sequence::produce_typedef_hdr(std::fstream& s, o2be_typedef* tdef)
   IND(s); s << "inline " << (const char*) out_type << "(_T*& s) : _data(s) { _data = 0; }\n";
   IND(s); s << "inline " << (const char*) out_type << "(_T_var& sv)\n";
   IND(s); s << "  : _data(sv.pd_seq) { sv = (_T*) 0; }\n";
-  IND(s); s << "inline " << (const char*) out_type << "("
+  IND(s); s << "inline " << (const char*) out_type << "(const "
 	    << (const char*) out_type  << "& s) : _data(s._data) { }\n";
-  IND(s); s << "inline " << (const char*) out_type << "& operator=("
+  IND(s); s << "inline " << (const char*) out_type << "& operator=(const "
 	    << (const char*) out_type << "& s) { _data = s._data; return *this; }\n";
   IND(s); s << "inline " << (const char*) out_type << "& operator=(_T* s) { _data = s; return *this; }\n";
   IND(s); s << "inline operator _T*&() { return _data; }\n";
@@ -1100,6 +1015,8 @@ o2be_sequence::produce_typedef_binary_operators_in_hdr(std::fstream& s,
     IND(s); s << "}\n";
 
     IND(s); s << "extern CORBA::Boolean operator >>= (const CORBA::Any& a, "
+	      << tdef->fqname() << "*& sp);\n";
+    IND(s); s << "extern CORBA::Boolean operator >>= (const CORBA::Any& a, const "
 	      << tdef->fqname() << "*& sp);\n\n";
   }
 }
@@ -1139,8 +1056,15 @@ o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream& s,
   IND(s); s << "}\n\n";
 
   // Any extraction operator.
-
   IND(s); s << "CORBA::Boolean operator >>= (const CORBA::Any& a, "
+	    << tdef->fqname() << "*& s_out)\n";
+  IND(s); s << "{\n";
+  INC_INDENT_LEVEL();
+  IND(s); s << "return a >>= (const " << tdef->fqname() << "*&) s_out;\n";
+  DEC_INDENT_LEVEL();
+  IND(s); s << "}\n\n";
+
+  IND(s); s << "CORBA::Boolean operator >>= (const CORBA::Any& a, const "
 	    << tdef->fqname() << "*& s_out)\n";
   IND(s); s << "{\n";
   INC_INDENT_LEVEL();
@@ -1155,7 +1079,7 @@ o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream& s,
   IND(s); s << "if( a.PR_unpackTo(" << tdef->fqtcname()
 	    << ", &tcdesc)) {\n";
   INC_INDENT_LEVEL();
-  IND(s); s << "((CORBA::Any*)&a)->PR_setCachedData(stmp, "
+  IND(s); s << "((CORBA::Any*)&a)->PR_setCachedData((void*)stmp, "
 	    << "_0RL_seq_delete_" << tdef_idname << ");\n";
   IND(s); s << "s_out = stmp;\n";
   IND(s); s << "return 1;\n";
@@ -1170,7 +1094,7 @@ o2be_sequence::produce_typedef_binary_operators_in_dynskel(std::fstream& s,
   IND(s); s << "} else {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "CORBA::TypeCode_var tctmp = a.type();\n";
-  IND(s); s << "if( tctmp->equal(" << tdef->fqtcname() << ") ) {\n";
+  IND(s); s << "if( tctmp->equivalent(" << tdef->fqtcname() << ") ) {\n";
   INC_INDENT_LEVEL();
   IND(s); s << "s_out = stmp;\n";
   IND(s); s << "return 1;\n";
