@@ -19,16 +19,19 @@
 //
 //    You should have received a copy of the GNU Library General Public
 //    License along with this library; if not, write to the Free
-//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  
+//    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 //    02111-1307, USA
 //
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-// 
+//
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/09/13 15:22:12  sll
+  Correct test macro for WIN32.
+
   Revision 1.1.2.4  2001/08/03 17:41:25  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -46,7 +49,11 @@
 */
 
 #include <stdlib.h>
+#ifndef __WIN32__
 #include <unistd.h>
+#else
+#include <process.h>
+#endif
 #include <sys/stat.h>
 #include <omniORB4/CORBA.h>
 #include <omniORB4/minorCode.h>
@@ -163,7 +170,7 @@ sslContext::set_cipher() {
 /////////////////////////////////////////////////////////////////////////
 static const char* ssl_password = 0;
 
-extern "C" 
+extern "C"
 int sslContext_password_cb (char *buf,int num,int,void *) {
   int size = strlen(ssl_password);
   if (num < size+1) return 0;
@@ -199,14 +206,14 @@ sslContext::seed_PRNG() {
 
     // This is not necessary on systems with /dev/urandom. Otherwise, the
     // application is strongly adviced to seed the PRNG using one of the
-    // seeding functions: RAND_seed(), RAND_add(), RAND_event() or 
+    // seeding functions: RAND_seed(), RAND_add(), RAND_event() or
     // RAND_screen().
     // What we do here is a last resort and does not necessarily give a very
     // good seed!
 
     int* data = new int[256];
 
-#if ! defined(__win32__)    
+#if ! defined(__WIN32__)
     srand(getuid() + getpid());
 #else
     srand(_getpid());
@@ -272,7 +279,7 @@ sslContext::set_ephemeralRSA() {
   RSA *rsa;
 
   rsa = RSA_generate_key(512,RSA_F4,NULL,NULL);
-    
+
   if (!SSL_CTX_set_tmp_rsa(pd_ctx,rsa)) {
     OMNIORB_THROW(INITIALIZE,INITIALIZE_TransportError,CORBA::COMPLETED_NO);
   }
