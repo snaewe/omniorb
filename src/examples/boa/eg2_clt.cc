@@ -8,7 +8,7 @@
 //
 
 #include <iostream.h>
-#include <echo.hh>
+#include <becho.hh>
 
 
 static void hello(Echo_ptr e)
