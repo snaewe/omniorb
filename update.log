@@ -1,3 +1,46 @@
+Thu Sep 28 19:26:28 BST 2000 djs
+================================
+
+- Fixed the Poller timeout behaviour and the is_ready function
+
+include/omniORB3/Messaging.h
+src/lib/omniORB2/orbcore/Messaging.cc
+
+- Removed last traces of the Private POA/ internal ReplyHandler servant
+  Polling strategy
+
+include/omniORB3/omniAMI.h
+src/lib/omniORB2/omniidl_be/cxx/ami/ami.py
+src/lib/omniORB2/omniidl_be/cxx/ami/poller.py
+src/lib/omniORB2/omniidl_be/cxx/ami/rhandler.py
+
+- Uses reference counting for valuetypes internally
+
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py
+src/lib/omniORB2/omniidl_be/cxx/ami/poller.py
+
+- Fixed nameclash problem in generated stubs
+
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py
+src/lib/omniORB2/omniidl_be/cxx/ami/ami.py
+src/lib/omniORB2/omniidl_be/cxx/ami/poller.py
+
+- Tidied up comments
+
+include/omniORB3/Messaging.h
+src/lib/omniORB2/orbcore/Messaging.cc
+src/lib/omniORB2/orbcore/omniAMI.cc
+src/lib/omniORB2/omniidl_be/cxx/ami/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/ami/ami.py
+src/lib/omniORB2/omniidl_be/cxx/ami/calldesc.py
+src/lib/omniORB2/omniidl_be/cxx/ami/exholder.py
+src/lib/omniORB2/omniidl_be/cxx/ami/hooks.py
+src/lib/omniORB2/omniidl_be/cxx/ami/main.py
+src/lib/omniORB2/omniidl_be/cxx/ami/objref.py
+src/lib/omniORB2/omniidl_be/cxx/ami/poller.py
+src/lib/omniORB2/omniidl_be/cxx/ami/rhandler.py
+
+
 Wed Sep 27 23:46:18 BST 2000 djs
 ================================
 

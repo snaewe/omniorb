@@ -2,7 +2,7 @@
 #define _QUEUE_H
 
 #include <omnithread.h>
-
+#include <iostream>
 // Queue implementation is a doubly-linked list of Elements supporting
 // the following interface:
 //
@@ -20,7 +20,8 @@ template<class T> class Element{
   Element<T> *pd_prev;
 public:
   Element(T d, Element<T> *prev, Element<T> *next): 
-    pd_data(d), pd_next(next), pd_prev(prev) {}
+    pd_data(d), pd_next(next), pd_prev(prev) { }
+  ~Element(){ }
   T            data(){ return pd_data; }
   Element<T>  *next(){ return pd_next; }
   Element<T>  *prev(){ return pd_prev; }
