@@ -10,6 +10,11 @@
 
 /*
   $Log$
+  Revision 1.2  1997/01/13 15:34:22  sll
+  Don't use operator->() if the return value is array_slice.
+  Don't use new (type)[i]. The brackets are unnecessary.
+  /
+
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -150,16 +155,20 @@ o2be_attribute::produce_proxy_rd_skel(fstream &s,o2be_interface &defined_in)
       o2be_operation::argMapping mapping;
       o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
       if (mapping.is_arrayslice) {
-	IND(s); s << "_result = new (";
+	IND(s); s << "_result = new ";
 	o2be_operation::declareVarType(s,field_type(),0,1);
-	s << ")[";
-	s << o2be_array::narrow_from_decl(field_type())->getSliceDim();
+	AST_Decl *truetype = field_type();
+	while (truetype->node_type() == AST_Decl::NT_typedef) {
+	  truetype = o2be_typedef::narrow_from_decl(truetype)->base_type();
+	}
+	s << "[";
+	s << o2be_array::narrow_from_decl(truetype)->getSliceDim();
 	s  << "];\n";
       }
       else if (mapping.is_pointer) {
-	IND(s); s << "_result = new (";
+	IND(s); s << "_result = new ";
 	o2be_operation::declareVarType(s,field_type());
-	s << ");\n";
+	s << ";\n";
       }
     }
 
@@ -347,6 +356,8 @@ o2be_attribute::produce_server_rd_skel(fstream &s,o2be_interface &defined_in)
   DEC_INDENT_LEVEL();
   IND(s); s << "}\n";
 
+  IND(s); s << "_s.RequestReceived();\n";
+
   {
     o2be_operation::argMapping mapping;
     o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
@@ -370,10 +381,9 @@ o2be_attribute::produce_server_rd_skel(fstream &s,o2be_interface &defined_in)
   {
     o2be_operation::argMapping mapping;
     o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
-    if (ntype == o2be_operation::tObjref ||
-	ntype == o2be_operation::tString ||
-	(mapping.is_arrayslice) ||
-	(mapping.is_pointer)) 
+    if ((ntype == o2be_operation::tObjref ||
+	 ntype == o2be_operation::tString ||
+	 mapping.is_pointer) && !mapping.is_arrayslice)
       {
 	// These are declared as <type>_var variable 
 	if (ntype == o2be_operation::tString) {
@@ -401,10 +411,10 @@ o2be_attribute::produce_server_rd_skel(fstream &s,o2be_interface &defined_in)
   {
     o2be_operation::argMapping mapping;
     o2be_operation::argType ntype = o2be_operation::ast2ArgMapping(field_type(),o2be_operation::wResult,mapping);
-    if (ntype == o2be_operation::tObjref || 
-	ntype == o2be_operation::tString ||
-	(mapping.is_arrayslice) ||
-	(mapping.is_pointer)) 
+    if ((ntype == o2be_operation::tObjref || 
+	 ntype == o2be_operation::tString ||
+	 mapping.is_pointer)
+	&& !mapping.is_arrayslice)
       {
 	// These are declared as <type>_var variable 
 	if (ntype == o2be_operation::tString) {
@@ -453,6 +463,8 @@ o2be_attribute::produce_server_wr_skel(fstream &s,o2be_interface &defined_in)
     o2be_operation::produceUnMarshalCode(s,field_type(),"_s","_value",
 					 ntype,mapping);
   }
+
+  IND(s); s << "_s.RequestReceived();\n";
 
   IND(s); s << uqname() << "(_value);\n";
 
