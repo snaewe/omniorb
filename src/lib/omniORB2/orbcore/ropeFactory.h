@@ -1,6 +1,6 @@
 // -*- Mode: C++; -*-
 //                            Package   : omniORB2
-// ropeFactory.cc             Created on: 11/7/96
+// ropeFactory.h              Created on: 30/9/97
 //                            Author    : Sai Lai Lo (sll)
 //
 //    Copyright (C) 1996, 1997 Olivetti & Oracle Research Laboratory
@@ -25,41 +25,357 @@
 //
 // Description:
 //	*** PROPRIETORY INTERFACE ***
-//      
- 
-/*
-  $Log$
-  Revision 1.2  1997/05/06 15:27:39  sll
-  Public release.
+// 
 
-  */
+/*
+ $Log$
+ Revision 1.3  1997/12/09 18:44:43  sll
+ New and extended ropeFactory interface.
+
+*/
 
 #ifndef __ROPEFACTORY_H__
 #define __ROPEFACTORY_H__
 
+
+// Each derived ropeFactory implements a set of policies:
+//
+//   1. Determines the threading model to dispatch incoming requests.
+//
+//   2. Determines how many strands can be created concurrently per
+//      incoming rope.
+//
+//   3. *Does not* determine the threading model of outgoing requests.
+//      This is fixed by the upper layer- the implemantation of the GIOP_C
+//      class. The current implemntation dictates that there can be only
+//      one request outstanding per strand. In otherwords, each thread 
+//      has exclusive access to a strand when it has a request outstanding.
+//
+//   3. Determines how many strands can be created concurrently per
+//      outgoing rope.
+//
+//     
+
+// NOTES
+//  To add a new network transport to the ORB:
+//    1. Define derived classes for the following abstract classes:
+//           a) ropeFactoryType
+//           b) ropeFactory
+//           c) incomingRopeFactory
+//           d) outgoingRopeFactory
+//           e) Strand
+//           f) Rope
+//           g) Endpoint
+//    2. If this transport is to be used automatically by the ORB to
+//       create outgoing ropes, insert an instance of its outgoingRopeFactory
+//       to globalRopeFactories (see below).
+//    3. If this transport is to be used to create incoming ropes for a
+//       omniObjectManager, instantiate one instance of the incomingRopeFactory
+//       the objectManager's rope factory list. 
+//       For an example, see corbaBOA.cc: BOAobjectManager.
+
+class ropeFactoryList;
 class ropeFactory_iterator;
+class ropeFactory;
+class ropeFactoryType;
+
+// This is the list of rope factory types the ORB understands. 
+// For instance, the ORB will use the ropeFactoryType::is_IOPprofileID() to
+// match a IOP::ProfileId it finds in an IOR.
+// Notice that a ropeFactoryType instance should be a singleton.
+extern ropeFactoryType* ropeFactoryTypeList;
+
+class ropeFactoryType {
+public:
+  virtual CORBA::Boolean is_IOPprofileId(IOP::ProfileId tag) const = 0;
+  // returns TRUE (1) if this rope factory uses the <tag> to identify the
+  // IOP profiles it creates in getIncomingIOPprofiles().
+  //
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+
+  virtual CORBA::Boolean is_protocol(const char* name) const = 0;
+  // Returns TRUE (1) if this rope factory supports the protocol identified
+  // by <name>.  Returns False (0) otherwise.
+  // 
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+
+  virtual CORBA::Boolean decodeIOPprofile(const IOP::TaggedProfile& profile,
+					  // return values:
+					  Endpoint*&     addr,
+					  CORBA::Octet*& objkey,
+					  size_t&        objkeysize) const = 0;
+  // If the return value is TRUE (1), the IOP profile can be decoded by
+  // this factory (i.e. is_IOPprofileId(profile.tag) returns TRUE). Its
+  // content is returned in <addr>, <objkey>, <objkeysize>. <addr> and <objkey>
+  // are heap allocated by this function and should be released by the caller.
+  //
+  // This function may raise a CORBA::MARSHALL or a CORBA::NO_MEMORY exception.
+  //
+  // This function is thread-safe.
+
+  virtual void encodeIOPprofile(const Endpoint* addr,
+				const CORBA::Octet* objkey,
+				const size_t objkeysize,
+				IOP::TaggedProfile& profile) const = 0;
+  // Encode <addr>, <objkey> into a IOP profile.
+  // <profile> is heap allocated by this function and should be released by
+  // the caller.
+  //
+  // This function may raise a CORBA::NO_MEMORY exception.
+  //
+  // This function is thread-safe.
+
+  friend class ropeFactory;
+
+protected:
+
+  ropeFactoryType() { next = ropeFactoryTypeList; ropeFactoryTypeList = this; }
+  virtual ~ropeFactoryType() {}
+
+  ropeFactoryType* next;
+};
+
 class ropeFactory {
 public:
-  ropeFactory();
-  virtual ~ropeFactory();
+  virtual CORBA::Boolean isIncoming(Endpoint* addr) const = 0;
+  // Returns TRUE (1) if the endpoint <addr> identifies one of the incoming
+  // rope instantiated by this factory.
+  //
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+  //
+  // Concurrency Control:
+  //      MUTEX = pd_anchor.pd_lock
+  // Pre-condition:
+  //      Does not hold <MUTEX>
+  // Post-condition:
+  //      Does not hold <MUTEX>
 
-  Rope *initIncoming(int &argc, char **argv,Anchor &a);
-  void  incomingIsReady();
-  Rope *initOutgoing(Anchor &a);
 
-  friend ropeFactory_iterator;
+  virtual CORBA::Boolean isOutgoing(Endpoint* addr) const = 0;
+  // Returns TRUE (1) if the endpoint <addr> identifies one of the outgoing
+  // rope instantiated by this factory.
+  //
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+  //
+  // Concurrency Control:
+  //      MUTEX = pd_anchor.pd_lock
+  // Pre-condition:
+  //      Does not hold <MUTEX>
+  // Post-condition:
+  //      Does not hold <MUTEX>
+
+  virtual const ropeFactoryType* getType() const = 0;
+
+  Anchor* anchor() { return &pd_anchor; }
+  
+  friend class ropeFactory_iterator;
+  friend class ropeFactoryList;
+
+  ropeFactory() {}
+  virtual ~ropeFactory() {}
+
+  // To iterate through all the ropes instantiated by this factory, use the
+  // Rope_iterator() (defined in rope.h) and pass this factory instance to
+  // its ctor.
+
+
+  static omniObject* iopProfilesToRope(const IOP::TaggedProfileList *profiles,
+				       _CORBA_Octet *&objkey,
+				       size_t &keysize,
+				       Rope_var& rope);
+  // Look at the IOP tagged profile list <profiles>, returns the most
+  // most suitable Rope to talk to the object and its object key.
+  // If no suitable Rope can be found, throw an exception.
+  // If the object is in fact a local object, return the object as well.
+  // Otherwise, return a nil (0) pointer. The caller should use <objkey>,
+  // <keysize> and <rope> to create a proxy object.
+  // The returned value <objkey> is heap allocated by this function and
+  // should be freed by the caller. The reference count of <rope> is
+  // incremented. 
+
+protected:
+  Anchor       pd_anchor;
+  ropeFactory* pd_next;
+
+};
+
+class incomingRopeFactory : public ropeFactory {
+public:
+
+  virtual CORBA::Boolean isIncoming(Endpoint* addr) const = 0;
+  // Returns TRUE (1) if the endpoint <addr> identifies one of the incoming
+  // rope instantiated by this factory.
+  //
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+
+  virtual CORBA::Boolean isOutgoing(Endpoint* addr) const { return 0; }
+
+  virtual void instantiateIncoming(Endpoint* addr,
+				   CORBA::Boolean export) = 0;
+  // Create an incoming rope to receive on the endpoint <addr>.
+  // The endpoint type must be supported by this factory. Otherwise, a
+  // omniORB::fatalException is raised.
+  // If startIncoming() has already been called on this factory, incoming
+  // requests on this rope will be served by the factory immediately.
+  //
+  // The value of <export> determines whether this endpoint is added to
+  // the profile list returned by getIncomingIopProfiles() (see below).
+  // If <export> is TRUE (1), the endpoint is added to the list.
+  //
+  // This function may raise a CORBA::SystemException.
+  //
+  // This function is thread-safe.
+
+  virtual void startIncoming() = 0;
+  // When this function returns, this factory will service
+  // requests from its incoming ropes.
+  //
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+
+  virtual void stopIncoming() = 0;
+  // When this function returns, this rope factory will no longer serve
+  // the requests from its incoming ropes.
+  // Existing strands would be shutdown. 
+  // However, the ropes will stay.
+  // This factory will serve incoming requests again when startIncoming()
+  // is called.
+  //
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+
+  virtual void removeIncoming() = 0;
+  // When this function returns, all incoming ropes created
+  // via instantiateIncoming() would be removed.
+  //
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+
+  virtual Rope* findIncoming(Endpoint* addr) const = 0;
+  // Search all the incoming ropes instantiated by all the rope factories
+  // derived from this class. Returns the rope that matches <addr>.  If no
+  // rope matches the endpoint, return 0.
+  // The reference count of the rope returned will be increased by 1.
+  //
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+
+  virtual void getIncomingIOPprofiles(const CORBA::Octet*     objkey,
+				      const size_t            objkeysize,
+				      IOP::TaggedProfileList& profilelist) const = 0;
+  // Append the IOP profiles for the incoming ropes instantiated by this
+  // factory to <profilelist>. The supplied object key is inserted into
+  // the new IOP profiles.
+  //
+  // This function may raise a CORBA::SystemException.
+  //
+  // This function is thread-safe.
+
+  incomingRopeFactory() {}
+  virtual ~incomingRopeFactory() {}
+
+};
+
+
+class outgoingRopeFactory : public ropeFactory {
+public:
+
+  virtual CORBA::Boolean isIncoming(Endpoint* addr) const { return 0; }
+
+  virtual CORBA::Boolean isOutgoing(Endpoint* addr) const = 0;
+  // Returns TRUE (1) if the endpoint <addr> identifies one of the outgoing
+  // rope instantiated by this factory.
+  //
+  // This function does not raise an exception.
+  //
+  // This function is thread-safe.
+
+  virtual Rope*  findOrCreateOutgoing(Endpoint* addr) = 0;
+  // If <addr> is not the endpoint type supported by this factory, return 0.
+  // else
+  //     search all outgoing ropes instantiated by this
+  //     factory. Returns the rope that matches <addr>.
+  //     If no rope matches the endpoint, instantiate a new outgoing rope 
+  //     to connect to that endpoint.
+  //     The reference count of the rope returned will be increased by 1.
+  //
+  // This function may raise a CORBA::SystemException.
+  //
+  // This function is thread-safe.
+
+  outgoingRopeFactory() {}
+  virtual ~outgoingRopeFactory() {}
+};
+
+class ropeFactoryList {
+public:
+  ropeFactoryList() : pd_head(0) {}
+  virtual ~ropeFactoryList() {}
+
+  virtual void insert(ropeFactory* p) { p->pd_next = pd_head; pd_head = p; }
+
+  friend class ropeFactory_iterator;
 private:
-  ropeFactory *pd_next;
-  rope *pd_rope;
+  virtual void lock() {}
+  virtual void unlock() {}
+  ropeFactory* pd_head;
+};
+
+
+class ropeFactoryList_ThreadSafe : public ropeFactoryList {
+public:
+  ropeFactoryList_ThreadSafe() {}
+  virtual ~ropeFactoryList_ThreadSafe() {}
+
+  virtual void insert(ropeFactory* p) { 
+    omni_mutex_lock sync(pd_lock);
+    ropeFactoryList::insert(p);
+  }
+  
+
+private:
+  virtual void lock() { pd_lock.lock(); }
+  virtual void unlock() { pd_lock.unlock(); }
+  omni_mutex pd_lock;
 };
 
 class ropeFactory_iterator {
 public:
-  ropeFactory_iterator();
-  ~ropeFactory_iterator() {}
-  ropeFactory_iterator *operator() ();
+  ropeFactory_iterator(ropeFactoryList& l) : pd_l(l) { 
+    l.lock(); 
+    pd_this = l.pd_head; 
+  }
+  virtual ~ropeFactory_iterator() { pd_l.unlock(); }
+  const ropeFactory* operator() () {
+    ropeFactory* p = pd_this;
+    if (pd_this)
+      pd_this = pd_this->pd_next;
+    return p;
+  }
 private:
-  ropeFactory *pd_f;
+  ropeFactoryList& pd_l;
+  ropeFactory* pd_this;
 };
+
+
+// This is the list of rope factories that can be used by the ORB to
+// make outgoing ropes. To make the ORB recognise and use a new rope
+// factory instance, the instance must be registered using:
+//   globalRopeFactories.insert().
+extern ropeFactoryList globalOutgoingRopeFactories;
 
 #endif // __ROPEFACTORY_H__
