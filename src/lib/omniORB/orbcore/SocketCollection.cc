@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2002/03/13 16:05:38  dpg1
+  Transport shutdown fixes. Reference count SocketCollections to avoid
+  connections using them after they are deleted. Properly close
+  connections when in thread pool mode.
+
   Revision 1.1.2.6  2002/02/26 14:06:45  dpg1
   Recent changes broke Windows.
 
@@ -128,7 +133,7 @@ CORBA::ULong  SocketCollection::hashsize           = 103;
 /////////////////////////////////////////////////////////////////////////
 SocketCollection::SocketCollection() :
   pd_n_fdset_1(0), pd_n_fdset_2(0), pd_n_fdset_dib(0),
-  pd_abs_sec(0), pd_abs_nsec(0)
+  pd_abs_sec(0), pd_abs_nsec(0), pd_refcount(1)
 {
   FD_ZERO(&pd_fdset_1);
   FD_ZERO(&pd_fdset_2);
@@ -141,7 +146,14 @@ SocketCollection::SocketCollection() :
 
 
 /////////////////////////////////////////////////////////////////////////
-SocketCollection::~SocketCollection() {
+SocketCollection::~SocketCollection()
+{
+  // refcount is permitted to be 1 here, since client-side collections
+  // are created statically. Assertions in incrRefCount and
+  // decrRefCount hopefully trigger if a collection is deleted
+  // prematurely.
+  OMNIORB_ASSERT(pd_refcount == 0 || pd_refcount == 1);
+  pd_refcount = -1;
 
   delete [] pd_hash_table;
 }
@@ -416,29 +428,59 @@ SocketCollection::Peek(SocketHandle_t sock) {
 
 /////////////////////////////////////////////////////////////////////////
 void
-SocketCollection::addSocket(SocketLink* conn) {
+SocketCollection::incrRefCount()
+{
+  omni_tracedmutex_lock sync(pd_fdset_lock);
+  OMNIORB_ASSERT(pd_refcount > 0);
+  pd_refcount++;
+}
 
+/////////////////////////////////////////////////////////////////////////
+void
+SocketCollection::decrRefCount()
+{
+  int refcount;
+  {
+    omni_tracedmutex_lock sync(pd_fdset_lock);
+    OMNIORB_ASSERT(pd_refcount > 0);
+    refcount = --pd_refcount;
+  }
+  if (refcount == 0) delete this;
+}
+
+/////////////////////////////////////////////////////////////////////////
+void
+SocketCollection::addSocket(SocketLink* conn)
+{
   omni_tracedmutex_lock sync(pd_fdset_lock);
   SocketLink** head = &(pd_hash_table[conn->pd_socket % hashsize]);
   conn->pd_next = *head;
   *head = conn;
+  OMNIORB_ASSERT(pd_refcount > 0);
+  pd_refcount++;
 }
 
 /////////////////////////////////////////////////////////////////////////
 SocketLink*
-SocketCollection::removeSocket(SocketHandle_t sock) {
-
-  omni_tracedmutex_lock sync(pd_fdset_lock);
+SocketCollection::removeSocket(SocketHandle_t sock)
+{
+  int refcount  = 0; // Initialise to stop over-enthusiastic compiler warnings
   SocketLink* l = 0;
-  SocketLink** head = &(pd_hash_table[sock % hashsize]);
-  while (*head) {
-    if ((*head)->pd_socket == sock) {
-      l = *head;
-      *head = (*head)->pd_next;
-      break;
+  {
+    omni_tracedmutex_lock sync(pd_fdset_lock);
+    SocketLink** head = &(pd_hash_table[sock % hashsize]);
+    while (*head) {
+      if ((*head)->pd_socket == sock) {
+	l = *head;
+	*head = (*head)->pd_next;
+	OMNIORB_ASSERT(pd_refcount > 0);
+	refcount = --pd_refcount;
+	break;
+      }
+      head = &((*head)->pd_next);
     }
-    head = &((*head)->pd_next);
   }
+  if (l && refcount == 0) delete this;
   return l;
 }
 

@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.33.2.38  2002/03/13 16:05:38  dpg1
+  Transport shutdown fixes. Reference count SocketCollections to avoid
+  connections using them after they are deleted. Properly close
+  connections when in thread pool mode.
+
   Revision 1.33.2.37  2002/02/21 15:57:46  dpg1
   Remove dead code.
 
@@ -325,7 +330,7 @@
 #include <orbParameters.h>
 #include <omniIdentity.h>
 
-#ifdef HAS_SIGNAL_H
+#ifdef HAVE_SIGNAL_H
 #  include <signal.h>
 #  include <errno.h>
 #endif
@@ -1431,7 +1436,7 @@ public:
   void attach() {
 
 #if !defined(__CIAO__)
-# if defined(HAS_SIGACTION)
+# if defined(HAVE_SIGACTION)
 
     struct sigaction act;
     sigemptyset(&act.sa_mask);
@@ -1448,7 +1453,7 @@ public:
 	  " SIG_IGN handler for signal SIGPIPE. (errno = " << errno << ")\n";
       }
     }
-# elif defined(HAS_SIGVEC)
+# elif defined(HAVE_SIGVEC)
     struct sigvec act;
     act.sv_mask = 0;
     act.sv_handler = SIG_IGN;

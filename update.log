@@ -1,3 +1,24 @@
+Wed Mar 13 16:02:21 GMT 2002 dpg1
+=================================
+
+- Transport shutdown fixes. Reference count SocketCollections to avoid
+  connections using them after they are deleted. Properly close
+  connections when in thread pool mode.
+
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/GIOP_S.cc
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/giopRendezvouser.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/giopStrand.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/lib/omniORB/orbcore/unix/unixEndpoint.cc
+
+
 Mon Mar 11 12:16:12 GMT 2002 dpg1
 =================================
 

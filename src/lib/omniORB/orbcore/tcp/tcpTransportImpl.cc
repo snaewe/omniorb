@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2002/03/13 16:05:40  dpg1
+  Transport shutdown fixes. Reference count SocketCollections to avoid
+  connections using them after they are deleted. Properly close
+  connections when in thread pool mode.
+
   Revision 1.1.2.8  2002/03/11 12:21:07  dpg1
   ETS things.
 
@@ -71,6 +76,10 @@
 #if defined(UnixArchitecture)
 #include <sys/ioctl.h>
 #include <net/if.h>
+#endif
+
+#if defined(NTArchitecture) && !defined(__ETS_KERNEL__)
+#include <winsock2.h>
 #endif
 
 #include <omniORB4/linkHacks.h>

@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.18  2002/03/13 16:05:38  dpg1
+  Transport shutdown fixes. Reference count SocketCollections to avoid
+  connections using them after they are deleted. Properly close
+  connections when in thread pool mode.
+
   Revision 1.1.4.17  2001/12/03 18:46:25  dpg1
   Race condition in giopWorker destruction.
 
@@ -212,7 +217,7 @@ GIOP_S::dispatcher() {
       return handleCancelRequest();
     }
     else {
-      if( omniORB::trace(0) ) {
+      if( omniORB::trace(1) ) {
 	omniORB::logger l;
 	l << "Unexpected message type (" << (CORBA::ULong) pd_requestType
 	  << ")received by a server thread at "
@@ -547,7 +552,7 @@ GIOP_S::ReceiveRequest(omniCallDescriptor& desc) {
   pd_n_user_excns = desc.n_user_excns();
   pd_user_excns = desc.user_excns();
 
-  cdrStream& s = (cdrStream&)*this;
+  cdrStream& s = *this;
   desc.unmarshalArguments(s);
   pd_state = WaitingForReply;
 

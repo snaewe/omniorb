@@ -29,6 +29,11 @@
 
 /*
   $Log$
+  Revision 1.1.2.9  2002/03/13 16:05:38  dpg1
+  Transport shutdown fixes. Reference count SocketCollections to avoid
+  connections using them after they are deleted. Properly close
+  connections when in thread pool mode.
+
   Revision 1.1.2.8  2002/02/26 14:06:44  dpg1
   Recent changes broke Windows.
 
@@ -243,9 +248,10 @@ class SocketCollection {
 public:
 
   SocketCollection();
-  virtual ~SocketCollection();
 
 protected:
+  virtual ~SocketCollection();
+
   virtual CORBA::Boolean notifyReadable(SocketHandle_t) = 0;
   // Callback used by Select(). This method is called while holding
   // pd_fdset_lock.
@@ -281,14 +287,18 @@ public:
   // Returns TRUE(1) if the socket becomes readable.
   // otherwise returns FALSE(0).
 
+  void incrRefCount();
+  void decrRefCount();
 
   void addSocket(SocketLink* conn);
   // Add this socket to the collection. <conn> is associated with the
   // socket and should be added to the table hashed by the socket number.
+  // Increments this collection's refcount.
 
   SocketLink* removeSocket(SocketHandle_t sock);
   // Remove the socket from this collection. Return the socket which has
   // been removed. Return 0 if the socket is not found.
+  // Decrements this collection's refcount if a socket is removed.
 
   SocketLink* findSocket(SocketHandle_t sock,
 			 CORBA::Boolean hold_lock=0);
@@ -312,6 +322,7 @@ private:
   omni_tracedmutex  pd_fdset_lock;
   unsigned long     pd_abs_sec;
   unsigned long     pd_abs_nsec;
+  int               pd_refcount;
 
 protected:
   SocketLink**      pd_hash_table;
