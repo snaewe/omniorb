@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.6.6  1999/11/25 11:32:34  djr
+  CORBA::Policy::destroy() no longer throws an exception.
+
   Revision 1.2.6.5  1999/10/29 13:18:20  djr
   Changes to ensure mutexes are constructed when accessed.
 
@@ -83,9 +86,6 @@ void
 CORBA::Policy::destroy()
 {
   if( _NP_is_nil() )  _CORBA_invoked_nil_pseudo_ref();
-
-  // We use reference counting -- don't allow destroying.
-  throw NO_PERMISSION();
 }
 
 

@@ -1,4 +1,12 @@
 
+Thu Nov 25 11:30:35 GMT 1999 djr
+================================
+
+- CORBA::Policy::destroy() no longer throws an exception.
+
+src/lib/omniORB2/orbcore/policy.cc
+
+
 Tue Nov 23 10:45:38 GMT 1999 djr
 ================================
 
