@@ -29,9 +29,13 @@
 
 /*
   $Log$
-  Revision 1.6  1997/05/06 15:30:32  sll
-  Public release.
+  Revision 1.7  1997/08/21 22:02:46  sll
+  - minor cleanup to get rid of purify's warnings.
+  - updated to match the new dtor of IIOP::ProfileBody.
 
+// Revision 1.6  1997/05/06  15:30:32  sll
+// Public release.
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -106,6 +110,8 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketRope *rope,
   pd_tx_begin  = pd_tx_end = pd_tx_reserved_end = pd_tx_buffer;
   pd_rx_buffer = (void *) new char[tcpSocketStrand::buffer_size];
   pd_rx_begin = pd_rx_end = pd_rx_received_end = pd_rx_buffer;
+  // Get rid of purify warning?
+  memset(pd_tx_buffer, 0, tcpSocketStrand::buffer_size);
   return;
 }
 
@@ -119,6 +125,8 @@ tcpSocketStrand::tcpSocketStrand(tcpSocketRope *r,
   pd_tx_begin  = pd_tx_end = pd_tx_reserved_end = pd_tx_buffer;
   pd_rx_buffer = (void *) new char[tcpSocketStrand::buffer_size];
   pd_rx_begin = pd_rx_end = pd_rx_received_end = pd_rx_buffer;
+  // Get rid of purify warning?
+  memset(pd_tx_buffer, 0, tcpSocketStrand::buffer_size);
   return;
 }
 
@@ -631,11 +639,13 @@ tcpSocketRendezvous::tcpSocketRendezvous(tcpSocketRope *r,tcpSocketEndpoint *me)
 	   (void *)h.hostent()->h_addr_list[0],
 	   sizeof(myaddr.sin_addr));
     char ipaddr[16];
-    sprintf(ipaddr,"%d.%d.%d.%d",
-	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0xff000000) >> 24),
-	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0x00ff0000) >> 16),
-	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0x0000ff00) >> 8),
-	    (int)((ntohl(myaddr.sin_addr.s_addr) & 0x000000ff)));
+    // To prevent purify from generating UMR warnings, use the following temp
+    // variables to store the IP address fields.
+    int ip1 = (int)((ntohl(myaddr.sin_addr.s_addr) & 0xff000000) >> 24);
+    int ip2 = (int)((ntohl(myaddr.sin_addr.s_addr) & 0x00ff0000) >> 16);
+    int ip3 = (int)((ntohl(myaddr.sin_addr.s_addr) & 0x0000ff00) >> 8);
+    int ip4 = (int)(ntohl(myaddr.sin_addr.s_addr) & 0x000000ff);
+    sprintf(ipaddr,"%d.%d.%d.%d",ip1,ip2,ip3,ip4);
     me->host((const CORBA::Char *) ipaddr);
   }
     
@@ -794,11 +804,15 @@ tcpSocketRope::iopProfile(const _CORBA_Octet *objkey,const size_t objkeysize,
   b.iiop_version.major = IIOP::current_major;
   b.iiop_version.minor = IIOP::current_minor;
   if (is_passive()) {
-    b.host = pd_endpoint.me->host();
+    CORBA::Long l = strlen((char*)pd_endpoint.me->host()) + 1;
+    b.host = new CORBA::Char [l];
+    memcpy((void*)b.host,(void*)pd_endpoint.me->host(),l);
     b.port = pd_endpoint.me->port();
   }
   else {
-    b.host = pd_endpoint.remote->host();
+    CORBA::Long l = strlen((char*)pd_endpoint.remote->host()) + 1;
+    b.host = new CORBA::Char [l];
+    memcpy((void*)b.host,(void*)pd_endpoint.remote->host(),l);
     b.port = pd_endpoint.remote->port();
   }
   b.object_key.length((CORBA::ULong)objkeysize);
