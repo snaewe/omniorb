@@ -3,7 +3,7 @@
 # All the interfaces:
 #COS_INTERFACES = $(COS_ALL_INT)
 # Or just the Notification interfaces:
-COS_INTERFACES = $(TIMEBASE_INT) $(COS_EVT_INT) $(COS_NFY_INT)
+COS_INTERFACES = $(TIMEBASE_INT) $(COS_EVT_INT) $(COS_NFY_INT) $(COS_LCB_INT)
 # Or pick your own subset
 # COS_INTERFACES = <pick you own subset from below>
 

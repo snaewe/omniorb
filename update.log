@@ -1,3 +1,16 @@
+Fri Aug 11 14:40:57 BST 2000 sll
+================================
+
+- Added CosLifeCycle.idl to the list of stubs in the COS library.
+  (Required by users of omniEvents).
+- Defined an external guard on CosNaming.hh to ensure that
+  any idl that include CosNaming.idl will compile as expected.
+
+include/omniORB3/CORBA.h
+src/services/mklib/cosinterfaces.mk
+src/services/mklib/libdefs.mk
+
+
 Thu Aug 10 18:05:42 BST 2000 sll
 ================================
 
