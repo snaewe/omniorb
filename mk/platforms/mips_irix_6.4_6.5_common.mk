@@ -1,0 +1,126 @@
+# mips_irix_6.4_6.5_common.mk - make variables and rules common to IRIX 6.4 
+#                                              and IRIX 6.5
+#
+
+
+IRIX = 1
+IndigoProcessor = 1
+
+
+
+#
+# Include general unix things
+#
+
+include $(THIS_IMPORT_TREE)/mk/unix.mk
+
+#
+# find out what ABI we're meant to be using (ie new 32-bit or 64-bit)
+#
+
+ifdef IRIX_n32
+ ABIFLAG=-n32
+ else
+ ifdef IRIX_64
+  ABIFLAG=-64
+ else
+  error Dont know what ABI to use, ie -n32 or -64 for new 32-bit or 64-bit builds
+ endif
+endif
+
+#
+# C preprocessor macro definitions for this architecture
+#
+
+IMPORT_CPPFLAGS += -D__mips__ -D__irix__ -D__OSVERSION__=6
+
+
+#
+# Standard programs
+#
+
+AR = ar cq
+RANLIB = true
+
+MKDIRHIER = mkdirhier
+INSTALL   = $(TOP)/bin/scripts/install-sh -c
+
+CPP = 'CC -E'
+
+# The cc/CC version 7.2 (mips)
+#
+CXX = CC
+CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__SGI_CC -D__cplusplus
+CXXDEBUGFLAGS = -O2 -OPT:Olimit=0
+CXXWOFFOPTIONS =  -woff 3303,1110,1182
+CXXOPTIONS     =  $(ABIFLAG) -float -ansi -LANG:exceptions=ON $(CXXWOFFOPTIONS)
+CXXLINK		= $(CXX)
+CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
+
+CC                = cc
+COPTIONS          = $(ABIFLAG)
+CLINKOPTIONS      = $(COPTIONS)
+CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend
+CLINK             = $(CC)
+
+#
+# OMNI thread stuff
+#
+
+Posix_OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) -lpthread
+Posix_OMNITHREAD_CPPFLAGS = -DUsePthread -D_REENTRANT 
+OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 \
+			    -DPthreadSupportThreadPriority
+
+OMNITHREAD_LIB = $($(ThreadSystem)_OMNITHREAD_LIB)
+OMNITHREAD_CPPFLAGS = $($(ThreadSystem)_OMNITHREAD_CPPFLAGS)
+
+ThreadSystem = Posix
+
+lib_depend := $(patsubst %,$(LibPattern),omnithread)
+OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
+
+#
+# CORBA stuff
+#
+
+omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
+CorbaImplementation = OMNIORB2
+
+# SGI linker has some peculiar requirements on the order in which share
+# libraries are specified on the command line.
+#    1. Two libraries cross reference each other, as it is the case with 
+#       -lomniORB2 and -ltcpwrapGK means that -lomniORB2 has to be
+#       repeated after -ltcpwrapGK
+#    2. Multi-threaded programs must have -lpthread as the last option
+#       on the command line.
+# To satisify #2, we arrange in OMNIORB2_LIB that -lpthread is the last
+# option. So as long as in a dir.mk, the $(CORBA_LIB) is the last one
+# in the assignment to libs, this condition is satisfied. 
+# E.g.
+#      $(eg1): eg1.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+#        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
+#
+
+# Here we reset the value of OMNIORB2_LIB to meet the above requirements. The
+# variable was original set in unix.mk
+
+OMNIORB2_LIB = $(patsubst %,$(LibSearchPattern),omniORB2) \
+		$(patsubst %,$(LibSearchPattern),omniDynamic2) \
+	        $($(omniORB2GatekeeperImplementation)_LIB) \
+                $(patsubst %,$(LibSearchPattern),omniORB2) \
+                $(OMNITHREAD_LIB)
+
+OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB2) \
+	        $($(omniORB2GatekeeperImplementation)_LIB) \
+                $(patsubst %,$(LibSearchPattern),omniORB2) \
+                $(OMNITHREAD_LIB)
+
+
+# Default location of the omniORB2 configuration file [falls back to this if
+# the environment variable OMNIORB_CONFIG is not set] :
+
+OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
+
+# Default directory for the omniNames log files.
+OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames

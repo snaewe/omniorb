@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html261 HREF="node5.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html259 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html253 HREF="node3.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html263 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html262 HREF="node5.html"> The omniORB2 API</A>
-<B>Up:</B> <A NAME=tex2html260 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html254 HREF="node3.html"> The Basics</A>
+ <BR> <HR><A NAME=tex2html264 HREF="node5.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html262 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html256 HREF="node3.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html266 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html265 HREF="node5.html"> The omniORB2 API</A>
+<B>Up:</B> <A NAME=tex2html263 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html257 HREF="node3.html"> The Basics</A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION00400000000000000000> IDL to C++ Language Mapping</A></H1>
 <P>
@@ -20,16 +20,46 @@
 <P>
 Now that you are familiar with the basics, it is important to
 familiar yourselves with the IDL to C++ language. The mapping is described
-in detail in [<A HREF="node15.html#corba2spec">OMG96a</A>]. If you have not done so, you should obtain
+in detail in [<A HREF="node15.html#corba2spec">OMG99a</A>]. If you have not done so, you should obtain
 a copy of the document and use that as the programming guide to
 omniORB2.
+<P>
+The specification is not an easy read. The alternative is to use one of the
+books on CORBA programming that has begun to appear. For instance, the
+``Advanced CORBA Programming with C++'' by Michi Henning and Steve Vinoski
+includes many example code bits to illustrate how to use the CORBA 2.3
+C++ mapping.
+<P>
+<H1><A NAME=SECTION00410000000000000000> Incompatibilities with pre-2.8.0 releases</A></H1>
+<P>
+Before 2.8.0, omniORB2 implements the CORBA 2.0 C++ mapping. Since 2.8.0,
+the mapping has been updated to CORBA 2.3. Unfortunately, to comply with
+the CORBA 2.3 specification, it is necessary to change the semantics of
+a few APIs in a way that is incompatible with older omniORB2 releases.
+The incompatible changes are limited to:
+<P>
+<OL><LI> the extraction of string, object reference and typecode from an Any. 
+<LI> the DII interface now defaults to report a system exception by
+raising a C++ exception instead of returning the exception as an
+environment value.
+</OL>
+<P>
+The changes are minor and requires minimal changes to the application
+source code. <b> However, it is not possible to detect the old usage at
+compile time. In particular, unmodified code that use the affected Any
+extraction operators would most certainly cause runtime errors to occur.</b>
+<P>
+To smooth the transition from the old usage to the new, an ORB configuration
+variable <tt> omniORB::omniORB_27_CompatibleAnyExtraction</tt> can be set to
+revert the any extraction operators to the old semantics. More information
+can be found in chapter <A HREF="node10.html#ch_any">9</A>.
 <P>
 
 <P>
 
 <BR> <HR>
 <P><ADDRESS>
-<I>David Riddoch <BR>
-Wed Feb 24 14:48:15 GMT 1999</I>
+<I>Sai Lai Lo <BR>
+Fri Jul  2 17:38:50 BST 1999</I>
 </ADDRESS>
 </BODY>

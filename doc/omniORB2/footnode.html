@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
-<DL> <A NAME=31><DT>...[#corba2spec##1#] <DD>The DynAny implmentation introduced in
-version 2.6.0 implements the facility in the 2.2 specification. Other parts
-of the 2.2 specification are also implemented where they do not clash
-with the 2.0 specification.</A>
+<DL> <A NAME=1261><DT>...[#corba2spec##1#] <DD>Most of the 2.3 features have been
+implemented. The features still missing in this release is listed
+in <A HREF="node2.html#missing">1.1.4</A>. Where possible, backward compatibility has been
+maintained up to specification 2.0.</A>
 <PRE><P>
 <P>
 <P>
@@ -43,7 +43,39 @@ with the 2.0 specification.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=78><DT>...code <DD>The stub code
+</PRE><A NAME=1262><DT>...1999 <DD>More information can be found at <em>
+http://www.opengroup.org/press/7jun99_b.htm</em></A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=92><DT>...code <DD>The stub code
 is the C++ code that provides the object mapping as defined in the CORBA 2.0
 specification.</A>
 <PRE><P>
@@ -76,7 +108,7 @@ specification.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=141><DT>...defined <DD>In omniORB2, all object
+</PRE><A NAME=155><DT>...defined <DD>In omniORB2, all object
 reference variable types are instantiated from the template type
 _CORBA_ObjRef_Var.</A>
 <PRE><P>
@@ -109,7 +141,7 @@ _CORBA_ObjRef_Var.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=145><DT>...castings <DD>However, the implementation of the type conversion operator()
+</PRE><A NAME=159><DT>...castings <DD>However, the implementation of the type conversion operator()
 between Echo_var and Echo_ptr varies slightly among different C++
 compilers, you may need to do an explicit casting when the compiler
 complains about the conversion being ambiguous.</A>
@@ -143,7 +175,7 @@ complains about the conversion being ambiguous.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=165><DT>...Adaptor <DD>The interface of a BOA is described in chapter 8 of the
+</PRE><A NAME=179><DT>...Adaptor <DD>The interface of a BOA is described in chapter 8 of the
 CORBA specification.</A>
 <PRE><P>
 <P>
@@ -175,7 +207,7 @@ CORBA specification.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=200><DT>...) <DD>A conversion operator() of CORBA::String_var converts a
+</PRE><A NAME=214><DT>...) <DD>A conversion operator() of CORBA::String_var converts a
 CORBA::String_var to a char*.</A>
 <PRE><P>
 <P>
@@ -207,7 +239,7 @@ CORBA::String_var to a char*.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=205><DT>...string <DD>Please refer to the CORBA
+</PRE><A NAME=219><DT>...string <DD>Please refer to the CORBA
 specification 16.7 for the details of the String_var mapping. Other T_var
 types are also covered in chapter 16.</A>
 <PRE><P>
@@ -240,7 +272,7 @@ types are also covered in chapter 16.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=231><DT>...argument <DD>The 1st argument is a pointer to the
+</PRE><A NAME=245><DT>...argument <DD>The 1st argument is a pointer to the
 implementation definition and is always ignored by omniORB2.</A>
 <PRE><P>
 <P>
@@ -272,7 +304,7 @@ implementation definition and is always ignored by omniORB2.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=1213><DT>...argument <DD>The CORBA specification does not specify
+</PRE><A NAME=1266><DT>...argument <DD>The CORBA specification does not specify
 when <tt> impl_is_ready</tt> should return. Many ORB vendors choose to
 implement <tt> impl_is_ready</tt> as blocking until a certain time-out value
 is exceeded. In a single threaded implementation this is necessary to give
@@ -307,7 +339,7 @@ the ORB the time to serve incoming requests.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=257><DT>...reference <DD>Object references held by clients in other address
+</PRE><A NAME=271><DT>...reference <DD>Object references held by clients in other address
 spaces will not prevent the object implementation from being disposed
 of. If these clients invoke on the object after it is disposed, the system
 exception INV_OBJREF is raised.</A>
@@ -341,7 +373,7 @@ exception INV_OBJREF is raised.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=265><DT>...space <DD>Notice that the
+</PRE><A NAME=279><DT>...space <DD>Notice that the
 object key is not globally unique across address spaces.</A>
 <PRE><P>
 <P>
@@ -373,7 +405,7 @@ object key is not globally unique across address spaces.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=1214><DT>...condition <DD>If a system
+</PRE><A NAME=1267><DT>...condition <DD>If a system
 exception is not caught, the C++ runtime will call the <tt> terminate</tt>
 function. This function is defaulted to abort the whole process and on some
 system will cause a core file to be produced.</A>
@@ -407,7 +439,7 @@ system will cause a core file to be produced.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=276><DT>...RTTI <DD>Run Time
+</PRE><A NAME=290><DT>...RTTI <DD>Run Time
 Type Identification</A>
 <PRE><P>
 <P>
@@ -439,7 +471,7 @@ Type Identification</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=277><DT>...RTTI <DD>A noticeable exception is the GNU C++
+</PRE><A NAME=291><DT>...RTTI <DD>A noticeable exception is the GNU C++
 compiler (version 2.7.2). It doesn't support RTTI unless the
 compilation flag -frtti is specified. The omniORB2 runtime is not compiled
 with the -frtti flag. It is said that RTTI will be properly supported in
@@ -474,7 +506,7 @@ the upcoming version 2.8.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=1215><DT>...Echo'' <DD>A pathname, or in the Naming Service's
+</PRE><A NAME=1268><DT>...Echo'' <DD>A pathname, or in the Naming Service's
 terminology- a <i> compound name</i>, is a sequence of textual names. Each
 name component except the last one is bound to a naming context. A naming
 context is analogous to a directory in a filing system, it can contain
@@ -512,7 +544,7 @@ compound name</i> that is registered with the Naming Service.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=340><DT>...``omniORB'' <DD>omniORB is a class name if the
+</PRE><A NAME=360><DT>...``omniORB'' <DD>omniORB is a class name if the
 C++ compiler does not support the namespace keyword.</A>
 <PRE><P>
 <P>
@@ -544,7 +576,7 @@ C++ compiler does not support the namespace keyword.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=409><DT>...interface <DD>This interface is
+</PRE><A NAME=434><DT>...interface <DD>This interface is
 first defined by Sun's NEO and is in used in Sun's JavaIDL</A>
 <PRE><P>
 <P>
@@ -576,7 +608,7 @@ first defined by Sun's NEO and is in used in Sun's JavaIDL</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=537><DT>...Format <DD>For further details
+</PRE><A NAME=573><DT>...Format <DD>For further details
 of the repository ID formats, see section 6.6 in the CORBA
 specification.</A>
 <PRE><P>
@@ -609,11 +641,10 @@ specification.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=713><DT>...destroyed <DD>It is unclear in the CORBA 
-specification whether or not object references should be managed by an Any. 
-The omniORB2 implementation leaves management of an extracted object reference
-to the caller. Therefore, the programmer should release object references and 
-TypeCodes that have been extracted from an Any.</A>
+</PRE><A NAME=1273><DT>...purpose <DD>In pre-omniORB 2.8.0 releases, omniORB2 performs an
+equality test and will ignore any alias TypeCodes (<tt> tk_alias</tt>) when
+making this comparison. The semantics is similar to the equivalent() test
+in the TypeCode interface of CORBA 2.3.</A>
 <PRE><P>
 <P>
 <P>
@@ -644,7 +675,7 @@ TypeCodes that have been extracted from an Any.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=1219><DT>...reference <DD>Testing a nil DynAny object with CORBA::is_nil()
+</PRE><A NAME=1275><DT>...reference <DD>Testing a nil DynAny object with CORBA::is_nil()
 returns TRUE(1). The CORBA 2.2 specification does not specify what is the
 return value of this function when the current component pointer is
 invalid. To ensure portability, it is best to avoid calling <tt>
@@ -679,7 +710,7 @@ current_component()</tt> under this condition.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=820><DT>...exception <DD>The CORBA 2.2
+</PRE><A NAME=869><DT>...exception <DD>The CORBA 2.2
 specification does not define the behavior of this error condition. To
 ensure portability, it is best to avoid calling the get operations when the
 current component pointer is known to be invalid.</A>
@@ -713,7 +744,7 @@ current component pointer is known to be invalid.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=852><DT>...exception <DD>The
+</PRE><A NAME=901><DT>...exception <DD>The
 CORBA 2.2 specification does not define the behavior of this error
 condition. To ensure portability, it is best to avoid calling the insert
 operations when the current component pointer is known to be invalid.</A>
@@ -747,7 +778,7 @@ operations when the current component pointer is known to be invalid.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=860><DT>...union <DD>In the CORBA 2.2 specification, the
+</PRE><A NAME=909><DT>...union <DD>In the CORBA 2.2 specification, the
 DynFixed interface is defined to handle the fixed data type. This is not
 supported in this implementation.</A>
 <PRE><P>
@@ -780,7 +811,7 @@ supported in this implementation.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=884><DT>...usage <DD>This interface is
+</PRE><A NAME=933><DT>...usage <DD>This interface is
 currently an open issue with the ORB revision task force.</A>
 <PRE><P>
 <P>
@@ -812,7 +843,7 @@ currently an open issue with the ORB revision task force.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=1220><DT>...CORBA::release() <DD>if not managed by a <tt> _var</tt> type.</A>
+</PRE><A NAME=1276><DT>...CORBA::release() <DD>if not managed by a <tt> _var</tt> type.</A>
 <PRE><P>
 <P>
 <P>
@@ -843,7 +874,7 @@ currently an open issue with the ORB revision task force.</A>
 <P>
 <P>
 <P>
-</PRE><A NAME=1221><DT>...CORBA::NVList <DD>obtained by calling <tt>
+</PRE><A NAME=1277><DT>...CORBA::NVList <DD>obtained by calling <tt>
 CORBA::ORB::create_list()</tt></A>
 <PRE><P>
 <P>
@@ -877,7 +908,7 @@ CORBA::ORB::create_list()</tt></A>
 <P>
 </PRE> </DL>
 <P><ADDRESS>
-<I>David Riddoch <BR>
-Wed Feb 24 14:48:15 GMT 1999</I>
+<I>Sai Lai Lo <BR>
+Fri Jul  2 17:38:50 BST 1999</I>
 </ADDRESS>
 </BODY>

@@ -72,12 +72,35 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 omniORB2GatekeeperImplementation = OMNIORB2_TCPWRAPGK
 CorbaImplementation = OMNIORB2
 
+# It is known that the linker on Irix 6.4 and 6.5 has some peculiar
+# requirements on the order in which share libraries are specified on the 
+# command line (see mips_irix_6.5_n32.mk).
+#
+# The same may apply to Irix 6.2 and 6.3.
+#
+# Here we reset the value of OMNIORB2_LIB to meet the requirements. The
+# variable was original set in unix.mk
+#
+# "Nilo Stolte" <nilo_stolte@my-dejanews.com> has confirmed that this setup
+# works on Irix 6.3 with 7.2.1 C++ compiler + patches to compiler, posix
+# threads etc.
+#
+OMNIORB2_LIB = $(patsubst %,$(LibSearchPattern),omniORB2) \
+		$(patsubst %,$(LibSearchPattern),omniDynamic2) \
+	        $($(omniORB2GatekeeperImplementation)_LIB) \
+                $(patsubst %,$(LibSearchPattern),omniORB2) \
+                $(OMNITHREAD_LIB)
+
+OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB2) \
+	        $($(omniORB2GatekeeperImplementation)_LIB) \
+                $(patsubst %,$(LibSearchPattern),omniORB2) \
+                $(OMNITHREAD_LIB)
 
 
 # Default location of the omniORB2 configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
-OMNIORB_CONFIG_DEFAULT_LOCATION = \"/etc/omniORB.cfg\"
+OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
-OMNINAMES_LOG_DEFAULT_LOCATION = \"/var/omninames\"
+OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames

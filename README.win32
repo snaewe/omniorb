@@ -182,10 +182,10 @@ c) Set up macros and libraries:
     5. Select the "Link" tab.
     6. In the "Category" box, select "Input". In the "Object/library modules"
        box, add the following libraries: wsock32.lib, advapi32.lib, 
-       omniORB271_rt.lib, omnithread2_rt.lib
+       omniORB280_rt.lib, omnithread2_rt.lib
 
    If you are building a debug executable, the debug version of the libraries:
-   omniORB271_rtd.lib and omnithread2_rtd.lib should be used.
+   omniORB280_rtd.lib and omnithread2_rtd.lib should be used.
 
 d) Your project is now set up, and you can build it.
 

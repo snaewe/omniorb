@@ -15,6 +15,10 @@ Email:        ewc@orl.co.uk
 Organisation: Olivetti & Oracle Research Laboratory
 Description:  Any and TypeCode, NT port, ATMos port, misc. omniORB2 core work
 
+Name:         Stephen Coy
+Email:        stevec@cia.com.au
+Description:  Mac port, HPUX 11.00 port
+
 Name:         Gary D. Duzan
 Email:        gduzan@gte.com
 Organisation: GTE Laboratories
@@ -23,6 +27,11 @@ Description:  AIX port
 Name:         Liutger Franzen
 Email:        ilfranze@techfak.uni-bielefeld.de
 Description:  Irix port
+
+Name:         Duncan Grisby
+Email:        dgrisby@uk.research.att.com
+Organisation: AT&T Laboratories, Cambridge
+Description:  Lifecycle support
 
 Name:         Ben Harris
 Email:        bjh@orl.co.uk
@@ -46,6 +55,10 @@ Name:         David Morgenlender
 Email:        dmorgen@alum.mit.edu
 Description:  Phar Lap Realtime ETS-Kernel port
 
+Name:         Jacques Progin
+Email:        jpr@wag.ch
+Description:  HPUX 11.00 port
+
 Name:         Ron Record
 Email:        rr@sco.com
 Organisation: SCO
@@ -60,6 +73,11 @@ NameL         David Riddoch
 Email:        djr@uk.research.att.com
 Organisation: AT&T Laboratories, Cambridge
 Description:  DSI, DII, DynAny and misc. omniORB2 core
+
+Name:         James Riden
+Email:        jamesr@europe.com
+Organisation: Harlequin
+Description:  Irix 6.5 port
 
 Name:         Marcel Ruff
 Email:        ruff@comsys.dofn.de

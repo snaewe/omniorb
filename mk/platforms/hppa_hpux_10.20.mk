@@ -54,14 +54,14 @@ CPP = /lib/cpp
 #
 CXX = aCC
 CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus
-CXXDEBUGFLAGS = -g
+CXXDEBUGFLAGS = -O2
 CXXOPTIONS   += -I /opt/aCC/include +inst_v +DAportable -D_CMA_NOWRAPPERS_ 
 CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS) -Wl,+s
 
 CC                = cc
 CMAKEDEPEND       = $(TOP)/$(BINDIR)/omkdepend
-CDEBUGFLAGS       = -g
+CDEBUGFLAGS       = -O2
 COPTIONS	  = -Aa -D_HPUX_SOURCE +DAportable
 CLINKOPTIONS      = -Wl,+s
 CLINK             = $(CC)
@@ -132,7 +132,8 @@ ThreadSystem = Posix
 
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=4
 OMNITHREAD_CPPFLAGS = -D_REENTRANT
-OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) -lcma
+OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) -ldce -lcma
+HPTHREADLIBS = -ldce -lcma
 
 lib_depend := $(patsubst %,$(LibPattern),omnithread)
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
@@ -157,7 +158,7 @@ OMNIPARTCL_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
 # Default location of the omniORB2 configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
-OMNIORB_CONFIG_DEFAULT_LOCATION = \"/etc/omniORB.cfg\"
+OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
-OMNINAMES_LOG_DEFAULT_LOCATION = \"/var/omninames\"
+OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames

@@ -28,7 +28,7 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #
 #
 CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-CORBA_LIB      = omniORB271_rt.lib omnithread2_rt.lib wsock32.lib advapi32.lib \
+CORBA_LIB      = omniORB280_rt.lib omniDynamic280_rt.lib omnithread2_rt.lib wsock32.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
 CXXFLAGS       = -O2 -MD -GX $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
 CXXLINKOPTIONS =
@@ -42,7 +42,7 @@ CXXLINKOPTIONS =
 # Replace the above with the following:
 #
 #CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-#CORBA_LIB      = omniORB271_rtd.lib omnithread2_rtd.lib wsock32.lib \
+#CORBA_LIB      = omniORB280_rtd.lib omniDynamic280_rtd.lib omnithread2_rtd.lib wsock32.lib \
 #                 advapi32.lib -libpath:$(TOP)\lib\x86_win32
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
 #CXXLINKOPTIONS = -debug -PDB:NONE	

@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html272 HREF="node6.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html270 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html264 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html274 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html273 HREF="node6.html"> The Basic Object </A>
-<B>Up:</B> <A NAME=tex2html271 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html265 HREF="node4.html"> IDL to C++ </A>
+ <BR> <HR><A NAME=tex2html275 HREF="node6.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html273 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html267 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html277 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html276 HREF="node6.html"> The Basic Object </A>
+<B>Up:</B> <A NAME=tex2html274 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html268 HREF="node4.html"> IDL to C++ </A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION00500000000000000000> The omniORB2 API</A></H1>
 <P>
@@ -25,7 +25,7 @@ functionalities that are not covered by the CORBA specification.
 Obviously, if you use this API in your application, that part of your code
 is not going to be portable to run unchanged on other vendors' ORBs. To
 make it easier to identify omniORB2 dependent code, this API is defined
-under the name space ``omniORB''<A NAME=tex2html16 HREF="footnode.html#340"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>.
+under the name space ``omniORB''<A NAME=tex2html17 HREF="footnode.html#360"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
 <P>
 <H1><A NAME=SECTION00510000000000000000> ORB and BOA initialisation options</A></H1>
 <P>
@@ -53,6 +53,12 @@ under the name space ``omniORB''<A NAME=tex2html16 HREF="footnode.html#340"><IMG
 <DD> See section <A HREF="node8.html#sec_shut">7.3</A>.
 <DT><tt> -ORBoutConScanPeriod &lt;0-65535&gt;
 <DD> See section <A HREF="node8.html#sec_shut">7.3</A>.
+<DT><tt> -ORBverifyObjectExistsAndType &lt;0 or 1&gt;
+<DD> See section <A HREF="node5.html#sec_lcd">4.7</A>.
+<DT><tt> -ORBlcdMode
+<DD> See secion <A HREF="node5.html#sec_lcd">4.7</A>
+<DT><tt> -ORBabortOnInternalError &lt;0 or 1&gt;
+<DD> See section <A HREF="node5.html#sec_fatal">4.8</A>.
 <P>
  </DL>
 <P>
@@ -66,6 +72,10 @@ TCP/IP port to use to accept IIOP calls. If this option is not specified,
 the BOA will use an arbitrary port assigned by the operating system.
 <DT><tt> -BOAno_bootstrap_agent
 <DD> See section <A HREF="node5.html#bootstrap">4.6</A>.
+<DT><tt> -BOAiiop_name_port &lt;hostname[:port number]&gt;
+<DD> This options
+tells the BOA the hostname and optionally the port number to use. See below
+for details.
 <P>
  </DL>
 <P>
@@ -74,15 +84,16 @@ address is recorded in the object references of the local objects.
 However, when the host has multiple network interfaces and multiple IP
 addresses, it may be desirable for the application to control what address
 the BOA should use. This can be done by defining the environment variable
-<tt> OMNIORB_USEHOSTNAME</tt> to contain the preferred host name or IP
-address in dot-numeric form.
+<tt> OMNIORB_USEHOSTNAME</tt> to contain the preferred host name or IP address
+in dot-numeric form. Alternatively, the same can be acheived using the <tt>
+-BOAiiop_name_port</tt> option.
 <P>
 As defined in the CORBA specification, any command-line arguments
 understood by the ORB/BOA will be removed from <tt> argv</tt> when the
 initialisation functions return. Therefore, an application is not required
 to handle any command-line arguments it does not understand.
 <P>
-</tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt><H1><A NAME=SECTION00520000000000000000> Run-time Tracing and Diagnostic Messages</A></H1>
+</tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt></tt><H1><A NAME=SECTION00520000000000000000> Run-time Tracing and Diagnostic Messages</A></H1>
 <P>
 <A NAME=rttrace>&#160;</A>
 <P>
@@ -109,6 +120,9 @@ At the moment, the following trace levels are defined:
 or communication endpoints are shutdown
 <DT>level 10-20
 <DD> the above plus execution traces
+<DT>level 25
+<DD> the above plus hex dump of all data sent and received by
+the ORB via its network connections.
 <P>
  </DL>
 <P>
@@ -236,7 +250,7 @@ obtain the initial object references to CORBA services. Previously, it is
 necessary to write the IOR string of these services in the configuration
 file (section <A HREF="node2.html#setup">1.2</A>). Now the object references can be obtained from
 a bootstrap service. The bootstrap service is a special object with the
-object key 'INIT' and the following interface<A NAME=tex2html17 HREF="footnode.html#409"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>.:
+object key 'INIT' and the following interface<A NAME=tex2html18 HREF="footnode.html#434"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.:
 <P>
 
 <P>
@@ -313,7 +327,29 @@ Alternatively, the command line options can be used, for example:
 <P>
 <tt> $ eg3_clt -ORBInitialHost wobble -ORBInitialPort 1234</tt>
 <P>
-<H1><A NAME=SECTION00570000000000000000> Trapping omniORB2 Internal Errors</A></H1>
+<H1><A NAME=SECTION00570000000000000000> GIOP Lowest Common Denominator Mode</A></H1>
+<P>
+<A NAME=sec_lcd>&#160;</A>
+<P>
+Sometimes, to cope with bugs in another ORB, it is necessary to disable
+various GIOP and IIOP features in order to achieve interoperability. If the
+command line option <tt> -ORBlcdMode</tt> or the function <tt>
+omniORB::enableLcdMode()</tt> is called, the ORB enters the so-called ``lowest
+common denominator mode''. It bends over backwards to cope with bugs in the
+ORB at the other end. This is purely a transitional measure. The long term
+solution is to report the bugs to the other vendors and ask them to fix
+them expediently.
+<P>
+By default, omniORB2 uses GIOP LOCATE_REQUEST message to verify the
+existence of an object prior to the first invocation. If another vendor's
+ORB is known not to be able to handle this GIOP message, set the variable
+<tt> omniORB::verifyObjectExistsAndType</tt> to 0 would disable this feature,
+and hence achieve interoperability. The option can also be set via the
+command line option <tt> -ORBverifyObjectExistsAndType</tt>.
+<P>
+<H1><A NAME=SECTION00580000000000000000> Trapping omniORB2 Internal Errors</A></H1>
+<P>
+<A NAME=sec_fatal>&#160;</A>
 <P>
 
 <PRE>class fatalException {
@@ -334,15 +370,20 @@ is best to exit the program immediately. The exception structure carries by
 and the line number) where the exception is raised. You are strongly
 encourage to file a bug report and point out the location.
 <P>
+It may help to cause a core-dump and look at the stack trace to locate
+where the exception was thrown. This can be done by setting the variable 
+<tt> omniORB::abortOnInternalError</tt> to 1. The variable can also be set
+via the command line option <tt> -ORBabortOnInternalError</tt>.
+<P>
 
-<BR> <HR><A NAME=tex2html272 HREF="node6.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html270 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html264 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html274 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html273 HREF="node6.html"> The Basic Object </A>
-<B>Up:</B> <A NAME=tex2html271 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html265 HREF="node4.html"> IDL to C++ </A>
+<BR> <HR><A NAME=tex2html275 HREF="node6.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html273 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html267 HREF="node4.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html277 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html276 HREF="node6.html"> The Basic Object </A>
+<B>Up:</B> <A NAME=tex2html274 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html268 HREF="node4.html"> IDL to C++ </A>
 <BR> <HR> <P>
 <BR> <HR>
 <P><ADDRESS>
-<I>David Riddoch <BR>
-Wed Feb 24 14:48:15 GMT 1999</I>
+<I>Sai Lai Lo <BR>
+Fri Jul  2 17:38:50 BST 1999</I>
 </ADDRESS>
 </BODY>

@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html327 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html325 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html319 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html329 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html328 HREF="node11.html"> Dynamic Management of </A>
-<B>Up:</B> <A NAME=tex2html326 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html320 HREF="node9.html"> Proxy Objects</A>
+ <BR> <HR><A NAME=tex2html330 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html328 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html322 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html332 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html331 HREF="node11.html"> Dynamic Management of </A>
+<B>Up:</B> <A NAME=tex2html329 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html323 HREF="node9.html"> Proxy Objects</A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION001000000000000000000> Type Any and TypeCode</A></H1>
 <P>
@@ -28,9 +28,22 @@ In this chapter, an example demonstrating the use of type Any is presented.
 This is followed by sections describing the behaviour of type Any and TypeCode 
 in omniORB2. 
 For further information on type Any, refer to the C++ Mapping section of the 
-CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG96a</A>], and for more information on 
+CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG99a</A>], and for more information on 
 TypeCode, refer to the Interface Repository chapter in the CORBA core section 
 of the CORBA 2 specification.
+<P>
+<b> WARNING: </b> Since 2.8.0, omniORB2 has been updated to CORBA 2.3. In
+order to comply with the 2.3 specification, it is necessary to change the
+semantics of <em> the extraction of string, object reference and typecode
+from an Any</em>. The memory of the extracted values of these types now belong
+to the Any value. The storage is freed when the Any value is
+deallocated. Previously the extracted value is a copy and the application
+is responsible to release the storage. It is not possible to detect the old
+usage at compile time. In particular, unmodified code that uses the
+affected Any extraction operators would most certainly cause runtime errors
+to occur.  To smooth the transition from the old usage to the new, an ORB
+configuration variable <tt> omniORB::omniORB_27_CompatibleAnyExtraction</tt>
+can be set to revert the any extraction operators to the old semantics.
 <P>
 <H1><A NAME=SECTION001010000000000000000> Example using type Any</A></H1>
 <P>
@@ -117,14 +130,14 @@ an attempt to extract a long from an Any containing a double), the overloaded
 <tt> &gt;&gt;= </tt>operator will return False; otherwise it will return True. Thus, a 
 common tactic to extract values from an Any is as follows:
 <P>
-<P>
 
 <PRE>// C++
 
 
 CORBA::Long l;
 CORBA::Double d;
-char* str;
+const char* str;     // From CORBA 2.3 onwards, uses const char*
+                     // instead of char*. 
 
 if (an_any &gt;&gt;= l) {
     cout &lt;&lt; &quot;Long: &quot; &lt;&lt; l &lt;&lt; endl;
@@ -134,6 +147,9 @@ else if (an_any &gt;&gt;= d) {
 }
 else if (an_any &gt;&gt;= str) {
     cout &lt;&lt; &quot;String: &quot; &lt;&lt; str &lt;&lt; endl;
+    // Since 2.8.0 the storage of the extracted string is still
+    // owned by the any.
+    // In pre-omniORB 2.8.0 releases, the string returned is a copy.
 }
 else {
     cout &lt;&lt; &quot;Unknown value.&quot; &lt;&lt; endl;
@@ -170,7 +186,7 @@ operators are generated:
 <P>
 <OL><LI> <tt> void operator&lt;&lt;=(CORBA::Any&amp;, const testStruct&amp; ) </tt>
 <LI> <tt> void operator&lt;&lt;=(CORBA::Any&amp;, testStruct* ) </tt>
-<LI> <tt> CORBA::Boolean operator&gt;&gt;=(const CORBA::Any&amp;, testStruct*&amp;) </tt>
+<LI> <tt> CORBA::Boolean operator&gt;&gt;=(const CORBA::Any&amp;, const testStruct*&amp;) </tt>
 </OL>
 <P>
 Operators of this form are generated for all constructed types, and for 
@@ -199,7 +215,8 @@ The third operator, <em> (3) </em>, is used to extract the constructed type
 from the Any, and can be used as follows:
 <P>
 
-<PRE>testStruct* tp;
+<PRE>const testStruct* tp;   // From CORBA 2.3 onwards, use 
+                        // const testStruct* instead of testStruct*
 
 if (an_any &gt;&gt;= tp) {
     cout &lt;&lt; &quot;testStruct: l: &quot; &lt;&lt; tp-&gt;l &lt;&lt; endl;
@@ -211,23 +228,36 @@ else {
 </PRE>
 
 <P>
-As with basic types, if an attempt is made to extract a type
-from an Any that does not contain a value of that type, the extraction 
-operator returns False. If the Any does contain that type, the extraction
-operator returns True. If the extraction is successful, the caller's pointer 
-will point to memory managed by the Any. The caller must not delete or 
-otherwise change this storage, and should not use this storage after the
-contents of the Any are replaced (either by insertion or assignment), or
-after the Any has been destroyed <A NAME=tex2html19 HREF="footnode.html#713"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>. In particular, management of
-the pointer should not be assigned to a <tt> _var</tt> type.
+As with basic types, if an attempt is made to extract a type from an Any
+that does not contain a value of that type, the extraction operator returns
+False. If the Any does contain that type, the extraction operator returns
+True. If the extraction is successful, the caller's pointer will point to
+memory managed by the Any. The caller must not delete or otherwise change
+this storage, and should not use this storage after the contents of the Any
+are replaced (either by insertion or assignment), or after the Any has been
+destroyed. In particular, management of the pointer should not be assigned
+to a <tt>_var</tt> type.
+<P>
+<b> WARNING!!!</b> In pre-omniORB 2.8.0 releases, it is unclear in the CORBA
+specification whether or not object references should be managed by an Any.
+The omniORB2 implementation leaves management of an extracted object
+reference to the caller. Therefore, the programmer should release object
+references and TypeCodes that have been extracted from an Any. The same
+also applies to string extraction. CORBA 2.3 has clarified this issue and
+decreed that the management of an extracted object reference still belongs
+to the Any! Since 2.8.0, the omniORB2 implementation conforms to the CORBA
+2.3 specification. For backward compatibility, the runtime variable <tt>
+omniORB::omniORB_27_CompatibleAnyExtraction</tt> can be set to 1 to get back
+the old behaviour. Notice that this should be used as a transitional
+measure and in the long run, applications should be written to use the new
+behaviour.
 <P>
 If the extraction fails, the caller's pointer will be set to point to null.
 <P>
-Note that there are special rules for inserting and extracting arrays (using 
-<tt> _forany</tt> types), and for inserting and extracting booleans, octets,
-chars, and bounded strings. Please refer to section 16.14 of the C++ Mapping 
-section of the CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG96a</A>] for further 
-information.
+Note that there are special rules for inserting and extracting arrays
+(using <tt> _forany</tt> types), and for inserting and extracting booleans,
+octets, chars, and bounded strings. Please refer to the C++ Mapping chapter
+of the CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG99a</A>] for further information.
 <P>
 <H1><A NAME=SECTION001020000000000000000> Type Any in omniORB2</A></H1>
 <P>
@@ -244,10 +274,12 @@ running <tt> omniidl2</tt>.
 <P>
 <H4><A NAME=SECTION001020020000000000000> TypeCode comparison when extracting from an Any.</A></H4>
 <P>
-When an attempt is made to extract a type from an Any, the TypeCode of the 
-type is checked for equality with the TypeCode of the type stored by the 
-Any. omniORB2 will ignore any alias TypeCodes (<tt> tk_alias</tt>) when 
-making this comparison. Examples:
+When an attempt is made to extract a type from an Any, the TypeCode of the
+type is checked for <b> equivalence</b> with the TypeCode of the type stored
+by the Any. The equivalent() test in the TypeCode interface is used for this
+purpose<A NAME=tex2html20 HREF="footnode.html#1273"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
+<P>
+ Examples:
 <P>
 
 <PRE>// IDL 1
@@ -278,37 +310,57 @@ vice-versa), as the two types differ only by an alias.
 <P>
 <H4><A NAME=SECTION001020030000000000000> Object references.</A></H4>
 <P>
-Note that type Any does not manage object reference types - it is unclear in 
-the CORBA specification whether this is required or not. Therefore, the 
-programmer should release object references and pseudo-objects (such as 
-TypeCode) that have been extracted from an Any. Type Any will, however, manage
-constructed types (as per the CORBA 2 specification) - constructed types
-extracted from an Any should not be deleted, as they will be deleted by the 
-Any when it is destroyed.
+<b> WARNING!!</b> In pre-omniORB 2.8.0 releases, the type Any does not manage
+object reference types - it was unclear in the pre-2.3 CORBA specification
+whether this is required or not. Therefore, the programmer should release
+object references and pseudo-objects (such as TypeCode) that have been
+extracted from an Any. Type Any will, however, manage constructed types (as
+per the CORBA 2 specification) - constructed types extracted from an Any
+should not be deleted, as they will be deleted by the Any when it is
+destroyed. CORBA 2.3 has clarified this issue and decreed that the
+management of an extracted object reference still belongs to the Any! Since
+2.8.0, the omniORB2 implementation conforms to the CORBA 2.3
+specification. For backward compatibility, the runtime variable <tt>
+omniORB::omniORB_27_CompatibleAnyExtraction</tt> can be set to 1 to get back
+the old behaviour.
 <P>
 <H4><A NAME=SECTION001020040000000000000> Top-level aliases.</A></H4>
 <P>
-When a type is inserted into an Any, the Any stores both the value of the type
-and the TypeCode for that type. If there are any top-level <tt> tk_alias</tt> 
-TypeCodes in the TypeCode, they will be removed from the TypeCode stored in 
-the Any. Note that this does not affect the <tt> _tc_ </tt>TypeCode generated to 
-represent the type (see section on TypeCode, below). This behaviour is 
-necessary, as two types that differ only by a top-level alias can use the 
-same insertion and extraction operators. If the <tt> tk_alias</tt> is not 
-removed, one of the types could be transmitted with an incorrect 
-<tt> tk_alias</tt> TypeCode. Example:
+When a type is inserted into an Any, the Any stores both the value of the
+type and the TypeCode for that type. The treatment of top-level aliases
+from omniORB 2.8.0 onwards is different from pre-omniORB 2.8.0 releases.
+<P>
+In pre-omniORB 2.8.0 releases, if there are any top-level <tt> tk_alias</tt>
+TypeCodes in the TypeCode, they will be removed from the TypeCode stored in
+the Any. Note that this does not affect the <tt> _tc_ </tt>TypeCode generated
+to represent the type (see section on TypeCode, below). This behaviour is
+necessary, as two types that differ only by a top-level alias can use the
+same insertion and extraction operators. If the <tt> tk_alias</tt> is not
+removed, one of the types could be transmitted with an incorrect <tt>
+tk_alias</tt> TypeCode. Example:
 <P>
 
 <PRE>// IDL 3
 
 typedef sequence&lt;double&gt; seqDouble1;
 typedef sequence&lt;double&gt; seqDouble2;
+typedef seqDouble2       seqDouble3;
 </PRE>
 
 <P>
-If either seqDouble1 or seqDouble2 is inserted into a TypeCode, the TypeCode
+If either seqDouble1 or seqDouble2 is inserted into an Any, the TypeCode
 stored will be for a <tt> sequence&lt;double&gt;</tt>, and not for an alias to a 
 <tt> sequence&lt;double&gt;</tt>.
+<P>
+From omniORB 2.8.0 onwards, there are two changes. Firstly, in the example,
+seqDouble1 and seqDouble2 are now distinct types and therefore each has its
+own set of C++ operators for Any insertion and extraction. Secondly, the
+top level aliases are not removed. For example, if seqDouble3 is inserted
+into an Any, the insertion operator for seqDouble2 is invoked (because 
+seqDouble3 is just a C++ typedef of seqDouble2). Therefore, the typecode in
+the Any would be that of seqDouble2. If this is not desirable, one can use
+the new member function 'void type(TypeCode_ptr)' of the Any interface to
+explicitly set the typecode to the correct one.
 <P>
 <H4><A NAME=SECTION001020050000000000000> Removing aliases from TypeCodes.</A></H4>
 <P>
@@ -317,12 +369,10 @@ TypeCodes. When using type Any while interoperating with these ORBs, it is
 necessary to remove <tt> tk_alias</tt> TypeCodes from throughout the TypeCode 
 representing a constructed type.
 <P>
-While omniORB2 will always remove top-level aliases, it doesn't remove aliases 
-contained in a constructed type (for example, <tt> Double1</tt> in the struct 
-<tt> Test1</tt> in example 1, above). To remove all <tt> tk_alias</tt> 
-TypeCodes from TypeCodes stored in Anys, supply the <tt> -ORBtcAliasExpand 1 </tt>
-command-line flag when running an omniORB2 executable. There will be some 
-(small) performance penalty when inserting values into an Any.
+To remove all <tt> tk_alias</tt> TypeCodes from TypeCodes stored in Anys,
+supply the <tt> -ORBtcAliasExpand 1 </tt> command-line flag when running an
+omniORB2 executable. There will be some (small) performance penalty when
+inserting values into an Any.
 <P>
 Note that the <tt> _tc_ </tt>TypeCodes generated for all constructed types will 
 contain the complete TypeCode for the type (including any <tt> tk_alias</tt> 
@@ -331,8 +381,9 @@ or not.
 <P>
 <H4><A NAME=SECTION001020060000000000000> Recursive TypeCodes.</A></H4>
 <P>
-omniORB2 does not yet support recursive TypeCodes. This means that types such 
-as the following can not be inserted or extracted from an Any:
+omniORB2 does now (as of version 2.7) support recursive TypeCodes. This
+means that types such as the following can be inserted or extracted from
+an Any:
 
 <PRE>   
 // IDL 4
@@ -342,12 +393,6 @@ struct Test4 {
 };
 </PRE>
 
-If these types are specified in IDL, omniidl2 will not generate Any insertion/
-extraction operators, so an attempt to insert/extract them will result in 
-compile-time errors. Similarly, it won't generate a <tt> _tc_</tt> TypeCode for
-the type. If another type contains a type which is recursive, operators won't 
-be generated for that type either, and so on. Recursive TypeCodes will be 
-supported in a future release of omniORB2.
 <P>
 <H4><A NAME=SECTION001020070000000000000> Type-unsafe construction and insertion.</A></H4>
 <P>
@@ -373,9 +418,9 @@ Inserting and extracting simultaneously from the same Any (in 2 different
 threads) is undefined behaviour.
 <P>
 Extracting simultaneously from the same Any (in 2 or more different threads)
-may result in a memory leak if the type being extracted is a constructed type.
-It was decided not to mutex the Any, as this condition should rarely arise, 
-and adding a mutex would lead to performance penalties.
+also leads to undefined behaviour.
+It was decided not to protect the Any with a mutex, as this condition
+should rarely arise, and adding a mutex would lead to performance penalties.
 <P>
 <H1><A NAME=SECTION001030000000000000000> TypeCode in omniORB2</A></H1>
 <P>
@@ -420,25 +465,39 @@ struct Test6 {
 <P>
 A TypeCode, <tt> _tc_Test6</tt>, will be generated to describe the struct 
 <tt> Test6</tt>. The operations defined in the TypeCode interface (see 
-section 6.7.1 of the CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG96a</A>] ) can be used to
+section 6.7.1 of the CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG99a</A>] ) can be used to
 query the TypeCode about the type it represents.
 <P>
 <H4><A NAME=SECTION001030040000000000000> TypeCode equality.</A></H4>
 <P>
-The <tt> CORBA::TypeCode::equal()</tt> member function will return true only if 
-the two TypeCodes are exactly the same. <tt> tk_alias</tt> TypeCodes are included
-in this comparison, unlike the comparison made when values are extracted from 
-an Any (see section on Any, above).
+The behaviour of <tt> CORBA::TypeCode::equal()</tt> member function from
+omniORB 2.8.0 onwards is different from pre-omniORB 2.8.0 releases.
+In summary, the pre-omniORB 2.8.0 is close to the semantics of the new <tt>
+CORBA::TypeCode::equivalent()</tt> member function. Details are as follows:
 <P>
-If one of the TypeCodes being checked is a <tt> tk_struct</tt>, <tt> tk_union</tt>,
-<tt> tk_enum</tt>, or <tt> tk_alias</tt>, and has an empty repository ID parameter,
-then the repository ID parameter will be ignored when checking for equality. 
-Similarly, if the <tt> name </tt>or <tt> member_name </tt>parameters of a TypeCode are
-empty strings, they will be ignored for equality checking purposes. This is 
-because a CORBA 2 ORB does not have to include these parameters in a TypeCode 
-(see section 12.3.4 of the Interoperability section of the CORBA 2 
-specification [<A HREF="node15.html#corba2spec">OMG96a</A>]). Note that these (optional) parameters are 
-included in TypeCodes generated by omniORB2.
+The <tt> CORBA::TypeCode::equal()</tt> member function will return true only if
+the two TypeCodes are <b> exactly</b> the same. <tt> tk_alias</tt> TypeCodes are
+included in this comparison, unlike the comparison made when values are
+extracted from an Any (see section on Any, above).
+<P>
+In pre-omniORB 2.8.0 releases, equality test would ignore the optional
+fields when one of the fields in the two typecodes is empty. For example,
+if one of the TypeCodes being checked is a <tt> tk_struct</tt>, <tt>
+tk_union</tt>, <tt> tk_enum</tt>, or <tt> tk_alias</tt>, and has an empty repository
+ID parameter, then the repository ID parameter will be ignored when
+checking for equality.  Similarly, if the <tt> name </tt>or <tt> member_name
+</tt>parameters of a TypeCode are empty strings, they will be ignored for
+equality checking purposes. This is because a CORBA 2 ORB does not have to
+include these parameters in a TypeCode (see the Interoperability section of
+the CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG99a</A>]). Note that these (optional)
+parameters are included in TypeCodes generated by omniORB2.
+<P>
+Since CORBA 2.3, the issue of typecode equality has been clarified. There
+is now a new member <tt> CORBA::TypeCode::equivalent()</tt> which provides the
+semantics of the <tt> CORBA::TypeCode::equal()</tt> as implemented in
+pre-omniORB 2.8.0 releases. So from omniORB 2.8.0 onwards, the <tt>
+CORBA::TypeCode::equal()</tt> function has been changed to enforce strict equality.
+The pre-2.8.0 behaviour can be obtained with <tt> equivalent()</tt>.
 <P>
 <H1><A NAME=SECTION001040000000000000000> Source Listing</A></H1>
 <P>
@@ -490,9 +549,11 @@ anyExample_i::testOp(const CORBA::Any&amp; a) {
 #endif
 
   CORBA::Long l;
-  char* str;
+  const char* str;      // From CORBA 2.3 onwards, uses const char*
+                        // instead of char*. 
 
-  testStruct* tp;
+  const testStruct* tp;   // From CORBA 2.3 onwards, use 
+                          // const testStruct* instead of testStruct*
 
 
   if (a &gt;&gt;= l) {
@@ -505,6 +566,9 @@ anyExample_i::testOp(const CORBA::Any&amp; a) {
 #endif
   else if (a &gt;&gt;= str) {
     cout &lt;&lt; &quot;String: &quot; &lt;&lt; str &lt;&lt; endl;
+    // Since 2.8.0 the storage of the extracted string is still
+    // owned by the any.
+    // In pre-omniORB 2.8.0 releases, the string returned is a copy.
   }
   else if (a &gt;&gt;= tp) {
     cout &lt;&lt; &quot;testStruct: l: &quot; &lt;&lt; tp-&gt;l &lt;&lt; endl;
@@ -846,14 +910,14 @@ invokeOp(anyExample_ptr&amp; tobj, const CORBA::Any&amp; a)
 </PRE>
 <P>
 
-<BR> <HR><A NAME=tex2html327 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html325 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html319 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html329 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html328 HREF="node11.html"> Dynamic Management of </A>
-<B>Up:</B> <A NAME=tex2html326 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html320 HREF="node9.html"> Proxy Objects</A>
+<BR> <HR><A NAME=tex2html330 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html328 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html322 HREF="node9.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html332 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html331 HREF="node11.html"> Dynamic Management of </A>
+<B>Up:</B> <A NAME=tex2html329 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html323 HREF="node9.html"> Proxy Objects</A>
 <BR> <HR> <P>
 <BR> <HR>
 <P><ADDRESS>
-<I>David Riddoch <BR>
-Wed Feb 24 14:48:15 GMT 1999</I>
+<I>Sai Lai Lo <BR>
+Fri Jul  2 17:38:50 BST 1999</I>
 </ADDRESS>
 </BODY>

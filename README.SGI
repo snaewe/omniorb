@@ -1,64 +1,26 @@
-The following information is provided by smant@nlr.nl (Geert Albert Smant),
+omniORB_2.8.0 should run on IRIX 6.4 and 6.5 with the latest MIPSpro 7.2.1
+compiler. It is recommended that you also apply the latest patches to the 
+compiler - see mips_irix_6.5.n32.mk for more details on patches.
 
-I compiled omniORB_2.6.0 on a SGI system running IRIX 6.5 with
-the latest MIPSpro 7.2.1 compilers installed.
+According to the information provided by smant@nlr.nl (Geert Albert Smant),
+and James Riden <jamesr@europe.com>, the SGI linker has some peculiar
+requirements on the order in which share libraries are specified on the
+command line:
 
-I had some problems during the compile tho.  So I made some changes
-to get things working (they were minor).  I've included the changed
-files in an attached .tar file to this e-mail.  I hope they are of
-some help to you and other people trying to install omniORB_2.6.0
-on SGI systems.
+    1. Two libraries cross reference each other, as it is the case with 
+       -lomniORB2 and -ltcpwrapGK means that -lomniORB2 has to be
+       repeated after -ltcpwrapGK
+    2. Multi-threaded programs must have -lpthread as the last option
+       on the command line.
 
-[ The changes have been merged into 2.6.1 - SLL ]
+ To satisify #2, we arrange in OMNIORB2_LIB that -lpthread is the last
+ option. So as long as in a dir.mk, the $(CORBA_LIB) is the last one
+ in the assignment to libs, this condition is satisfied. 
+ E.g.
+      $(eg1): eg1.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
 
-Next to this I found the following statement in the file
-'~omniORB_2.6.0/mk/platforms/mips_irix_6.4_n32.mk':
+ There are also some caveats on building and running 64-bit binaries.
+ See mips_irix_6.5_64.mk for more details.
 
-    # The linker seems to have problems linking two libraries that cross
-    # reference each other, as it is the case with -lomniORB2 and -ltcpwrapGK.
-    # One solution is to repeat -lomniORB2 after -ltcpwrapGK.
-    # The following line do just that:
-    OMNIORB2_LIB += $(patsubst %,$(LibSearchPattern),omniORB2)
-
-This one was also applicable to the 'MIPSpro 7.2.1' compiler version which
-I am using.  What the above does, is change the compile options for 'omniNames'
-from:
-
-	+ CC -o omniNames -n32 -float -ansi -LANG:exceptions=ON -woff 3303,1110,1182 -L../../../lib/mips_irix_6.2_n32 omniNames.o NamingContext_i.o log.o -lomniORB2 -lomnithread -lpthread -ltcpwrapGK
-
-to:
-
-	+ CC -o omniNames -n32 -float -ansi -LANG:exceptions=ON -woff 3303,1110,1182 -L../../../lib/mips_irix_6.4_n32 omniNames.o NamingContext_i.o log.o -lomniORB2 -lomnithread -lpthread -ltcpwrapGK -lomniORB2
-
-I had a similar problem with the compilation of 'nameclt' in the
-directory '~omniORB_2.6.0/src/appl/utils/nameclt' which initially gave the
-following error:
-
-===========================================================================
-+ CC -o nameclt -n32 -float -ansi -LANG:exceptions=ON -woff 3303,1110,1182 -L../../../../lib/mips_irix_6.4_n32 nameclt.o -lomniORB2 -lomnithread -lpthread -ltcpwrapGK -lomniORB2
-ld32: ERROR 33: Unresolved text symbol "omni_mutex::unlock(void)" -- 1st referenced by ../../../../lib/mips_irix_6.4_n32/libtcpwrapGK.a(gatekeeper.o).
-        Use linker option -v to see when and which objects, archives and dsos are loaded.  
-ld32: ERROR 33: Unresolved text symbol "omni_mutex::~omni_mutex(void)" -- 1st referenced by ../../../../lib/mips_irix_6.4_n32/libtcpwrapGK.a(gatekeeper.o).
-        Use linker option -v to see when and which objects, archives and dsos are loaded.  
-ld32: ERROR 33: Unresolved text symbol "omni_mutex::lock(void)" -- 1st referenced by ../../../../lib/mips_irix_6.4_n32/libtcpwrapGK.a(gatekeeper.o).
-        Use linker option -v to see when and which objects, archives and dsos are loaded.  
-ld32: INFO 152: Output file removed because of error.
-make: *** [nameclt] Error 2
-===========================================================================
-
-For this, the link order needs to be changed from:
-
-+ CC -o nameclt -n32 -float -ansi -LANG:exceptions=ON -woff 3303,1110,1182 -L../../../../lib/mips_irix_6.4_n32 nameclt.o -lomniORB2 -lomnithread -lpthread -ltcpwrapGK -lomniORB2
-
-to:
-
-CC -o nameclt -n32 -float -ansi -LANG:exceptions=ON -woff 3303,1110,1182 -L../../../../lib/mips_irix_6.4_n32 nameclt.o -lomnithread -lpthread -ltcpwrapGK -lomniORB2
-ld32: WARNING 84: ../../../../lib/mips_irix_6.4_n32/libtcpwrapGK.a is not used for resolving any symbol.
-
-But I had to do the compilation 'by hand' because I couldn't find out
-what to change in the makefiles to force this order of appearence for
-the libraries.
-
-
-[ Could someone tell me why nameclt fails to link but omniNames is alright? 
-                                                            - SLL ]
+For Irix 6.2 and 6.3, the mips_irix_6.2_n32.mk can be used.

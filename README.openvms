@@ -4,6 +4,18 @@ omniORB2 on OpenVMS platforms
 This file contains information on building omniORB2 on OpenVMS (Alpha and
 and VAX) platforms.
 
+Changes in 2.8.0
+----------------
+
+Starting with the 2.8.0 release, shareable images can be created and used for
+the Alpha platform.  Shareable images are currently not supported for the VAX
+platform.
+
+To simplify linking, seperate omniORB floating point libraries are no longer
+required.
+
+There are additional configuration parameters in [.config]config.mms.
+
 Downloading the distribution
 ----------------------------
 
@@ -14,8 +26,9 @@ downloading and unpacking the distribution.
 Building the distribution
 -------------------------
 
-This distribution requires the use of MMS.  It has been tested on OpenVMS Alpha
-version 6.2 and OpenVMS VAX version 6.1 using DEC C++ version 5.5 and 5.6.
+This distribution requires the use of MMS.  It has been tested on Compaq C++ 6.2
+for OpenVMS Alpha 7.1, DEC C++ 5.6 for OpenVMS Alpha 7.1, and DEC C++ 5.6 for
+OpenVMS VAX 6.1.
 
 The MMS files assume the use of the MMS /Skip qualifier.  You should define a
 "make" symbol as follows:
@@ -63,7 +76,9 @@ contains the single record:
 NAMESERVICE <stringified IOR>
 
 Once you have created this file, you should startup the omniNames server as a
-detached process.  This should be added to your system startup procedure.
+detached process.  This should be added to your system startup procedure.  One
+way to accomplish this is to configure the port as a UCX (or TCPIP services)
+service with the listen flag.
 
 Building omniORB2 applications
 -----------------------------
@@ -79,15 +94,18 @@ following logical names:
 
 (Note that the resulting logical names and translations will be in all upper
 case.)  With the above definitions in place, you should add
-/include=([],omni:)/exceptions to your CXX compiles.  The logical names,
-omniORB2, omniVms, and omnithread are needed because DEC C+for OpenVMS does
-not handle sub-directories of a directory in the include path properly.
+/include=([],omni:)/exceptions to your CXX compiles.
 
 The logical name omnilib is used as a convenience for the cxxlink command line.
-You will link against omnilib:omniORB2.olb/library, one of the floating point
-libraries provided (see the section "Floating point support" below), and the
-POSIX threads shareable image for your platform (you should use
-omnilib:share.opt/options for this).
+You will link against omnilib:omniORB2.olb/library, and the POSIX threads
+shareable image for your platform (you should use omnilib:share.opt/options for
+this).
+
+To link against the shareable images, you should use the omnilib:omni_share.olb
+(or omnilib:omni_shared.olb) library.  To run the resulting executable, you will
+need to redefine sys$share.  E.g.,
+
+	$ define sys$share omnilib,sys$library
 
 You may wish to use or adapt the development environment provided in the DCL 
 and MMS files contained in [.etc]openvms.zip to accomplish the above.
@@ -98,13 +116,7 @@ Floating point support
 The CORBA standard mandates that an implementation should use the IEEE standard
 for floating point types (CORBA::Float and CORBA::Double).  Since native IEEE
 floating point is not available on the VAX platform and to provide additional
-flexibility for the Alpha platform, these types are proxy types.  Therefore,
-additional libraries are provided in addition to omnilib:omniORB2.olb.  These
-are omnilib:omniORB2DFloat.olb, omnilib:omniORB2GFloat.olb, and
-omnilib:omniORB2IEEEFloat.olb.  These libraries must be added to the cxxlink
-command consistent with the option specified on the CXX command line (even if
-the default for the particular platform is taken).  Within an address space
-(i.e. executable image) you must set the /Float CXX qualifier consistently.
+flexibility for the Alpha platform, these types are proxy types.
 
 The omniORB2 for VMS development environment provides for different floating
 point formats by allowing one of:
@@ -113,11 +125,10 @@ point formats by allowing one of:
 	make /macro=(G_FLOAT=1)
 	make /macro=(IEEE_FLOAT=1)
 
-to explicitly build for D, G, or IEEE floating point support.  The default  is
+to explicitly build for D, G, or IEEE floating point support.  The default is
 G_Float and D_FLOAT on Alpha and VAX, respectively (consistent with the CXX
 default).  You do not need to supply these qualifiers when building the
 distribution.
-
 
 Notes
 -----
@@ -125,10 +136,11 @@ Notes
 If you are running OpenVMS version 6.1, please ensure that you have
 installed the latest ECOs for the DEC C RTL and C++ Class Library.
 
-This release of omniORB2 is incompatable with the backport library supplied
-with DEC C++ version 5.6.  Therefore, if your operating system is below 7.0
-and you use DEC C++ version 5.6, be sure that the logical name DECC$CRTLMAP
-is not defined.
+This release of omniORB2 is incompatable with the backport library supplied with
+DEC C++ version 5.6 (however, see "Using tcpSocketVaxRoutines.cc on OpenVMS
+6.x", below).  Therefore, if your operating system is below 7.0 and you use DEC
+C++ version 5.6 or above, be sure that the logical name DECC$CRTLMAP is not
+defined.
 
 Building the examples
 =====================
@@ -146,3 +158,64 @@ Documentation
 You must read the omniORB2 and the OMNI naming service user guides. Follow
 the instructions in the guides to complete the configuration process.
 
+Performance
+===========
+
+omniORB is implemented using synchronous socket calls in threads rather than
+asynchronous socket calls.  Thus, performance of omniORB relies heavily on the
+ability of the O/S to perform I/Os that block only the thread of execution
+(rather than the whole process) pending I/O completion.
+
+Alpha
+-----
+
+For OpenVMS Alpha platforms, the best way to acheive this behavior is to use
+link with /Thread=upcalls.  This requires at least 7.1 of OpenVMS.  Ideally, you
+should upgrade (if necessary) to 7.1 or 7.2 and use /Thread=upcalls.  If for
+some reason you cannot upgrade the O/S you can use the tcpSocketVaxRoutines.cc
+enhancement below.
+
+VAX
+---
+
+The OpenVMS VAX platform (effectively) ignores the /Thread=upcalls (at least as
+of 7.2).  Therefore you should use the tcpSocketVaxRoutines.cc enhancement
+below. However, since this enhancement relies on a DEC CRTL 7.0 feature, it
+requires using the backport libraries on versions of VMS prior to 7.1. 
+Therefore, upgrading to at least OpenVMS 7.1 is advised.
+
+tcpSocketVaxRoutines.cc
+-----------------------
+
+The file [.etc]openvms.zip file contains the module
+[.src.lib.omniORB2.orbcore]tcpSocketVaxRoutines.cc.  By default, this module is
+not compiled into the omniORB2[d].olb library.  In order to use this
+enhancement, you should (after a clean build of the source tree):
+
+	$ useTcpSocketVaxRoutines==1
+	$ set default [.src.lib.omniorb2.orbcore]
+	$ lib/delete=tcpsocketmtfactory omniorb2.olb ! repeat for omniorb2d.olb
+	$ make export	! make/macro=(debug=1) export
+
+Using tcpSocketVaxRoutines.cc on OpenVMS 6.x
+--------------------------------------------
+
+This requires the use of the DEC CRTL backport library (see
+sys$library:decc$crtl.readme) for OpenVMS versions older than 7.1. The backport
+library is incompatible with the DEC C++ class library and with VAXCRTL so this
+is going to be painful.  Numerous multiply defined external references will
+occur at link time.  In addition, if you need to link against code compiled
+under the VAX C compiler you will need to add statements like:
+
+PSECT_ATTR=ENVIRON,LCL
+PSECT_ATTR=STDERR,LCL
+PSECT_ATTR=STDIN,LCL
+PSECT_ATTR=STDOUT,LCL
+PSECT_ATTR=_CTYPE_,LCL
+PSECT_ATTR=RANDX,LCL
+PSECT_ATTR=ERRNO,LCL
+PSECT_ATTR=VAXC$ERRNO,LCL
+
+to a linker options file in order to create an executable.  It should be safe to
+ignore the multiply defined symbols that conflict with DECC$CRTL.OLB, but any
+other errors or warnings should be heeded.

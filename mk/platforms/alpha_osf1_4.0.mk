@@ -118,7 +118,7 @@ OMNITHREAD_CPPFLAGS = -D_REENTRANT -pthread
 # OMNITHREAD_CPPFLAGS = -D_PTHREAD_USE_D4 -D_REENTRANT
 
 OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread) \
-		 -lpthread -lmach -lc_r
+		 -lpthread -lexc
 
 lib_depend := $(patsubst %,$(LibPattern),omnithread)
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
@@ -126,7 +126,7 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 # Default location of the omniORB2 configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
-OMNIORB_CONFIG_DEFAULT_LOCATION = \"/etc/omniORB.cfg\"
+OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
-OMNINAMES_LOG_DEFAULT_LOCATION = \"/var/omninames\"
+OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames

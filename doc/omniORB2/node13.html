@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html360 HREF="node14.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html358 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html352 HREF="node12.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html362 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html361 HREF="node14.html"> hosts_access(5)</A>
-<B>Up:</B> <A NAME=tex2html359 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html353 HREF="node12.html"> The Dynamic Invocation </A>
+ <BR> <HR><A NAME=tex2html363 HREF="node14.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html361 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html355 HREF="node12.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html365 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html364 HREF="node14.html"> hosts_access(5)</A>
+<B>Up:</B> <A NAME=tex2html362 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html356 HREF="node12.html"> The Dynamic Invocation </A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION001300000000000000000> The Dynamic Skeleton Interface</A></H1>
 <P>
@@ -28,7 +28,10 @@ use it.
 An toy example use of the DSI can be found in the omniORB2 distribution in
 the <tt> &lt;top&gt;/src/examples/dsi</tt> directory.
 For further information refer to the Dynamic Skeleton Interface
-and C++ Mapping sections of the CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG96a</A>].
+and C++ Mapping sections of the CORBA 2 specification [<A HREF="node15.html#corba2spec">OMG99a</A>].
+<P>
+The DSI interface has changed in CORBA 2.3. The implementation described
+below conforms to CORBA 2.1 or 2.2.
 <P>
 <H1><A NAME=SECTION001310000000000000000> Overview</A></H1>
 <P>
@@ -121,11 +124,13 @@ This method must behave as follows:
 <UL><LI> It may be called concurrently by multiple threads of execution, and
 so must be thread-safe.
 <LI> It may not throw any exceptions. User-defined exceptions are passed
-in a value of type Any and given to
-<tt> ServerRequest::exception()</tt>, and system exceptions may be
-passed via the <tt> env</tt> parameter. Since the methods provided by
-<tt> ServerRequest</tt> may throw system exceptions, the application must catch
-any such exception, duplicate it and place the value in <tt> env</tt>.
+in a value of type Any and given to <tt> ServerRequest::exception()</tt>. In
+pre-omniORB 2.8.0 releases, system exceptions may be passed via the <tt>
+env</tt> parameter. From omniORB 2.8.0 onwards, system exceptions can be
+inserted into an Any and given to <tt> ServerRequest::exception()</tt> in the
+same way as user-defined exceptions. Since the methods provided by <tt>
+ServerRequest</tt> may throw system exceptions, the application must catch any
+such exception, passed it via <tt> ServerRequest::exception()</tt>.
 <LI> The operations on the <tt> ServerRequest</tt> object must be carried out
 in the correct order, as described below.
 </UL><H2><A NAME=SECTION001331000000000000000> Operations on the ServerRequest</A></H2>
@@ -138,7 +143,7 @@ back through <tt> env</tt>. This will allow the ORB to then see if it is one of
 the standard object operations.
 <P>
 Firstly <tt> params()</tt> must be called passing a
-<tt> CORBA::NVList</tt><A NAME=tex2html26 HREF="footnode.html#1221"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>
+<tt> CORBA::NVList</tt><A NAME=tex2html27 HREF="footnode.html#1277"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>
 which must be initialised to contain the type and mode of the parameters.
 The ORB consumes this
 value and will release it when the operation is complete. At this point any
@@ -155,8 +160,7 @@ return value (unless an exception is thrown). The value passed should be
 an Any allocated with <tt> new</tt>, and will be freed by the ORB.
 <P>
 At any point in the above sequence <tt> exception()</tt> may be called to set
-a user-defined exception, or a system exception may be inserted into
-the <tt> env</tt> parameter of the <tt> invoke()</tt> method. If this happens then no
+a user-defined exception or a system exception. If this happens then no
 further operations should be invoked on the <tt> ServerRequest</tt> object, and
 the <tt> invoke()</tt> method should return.
 <P>
@@ -229,9 +233,15 @@ MyDynImpl::invoke(CORBA::ServerRequest_ptr request, CORBA::Environment&amp; env)
     *result &lt;&lt;= CORBA::Any::from_string(input._retn(), 0);
     request-&gt;result(result);
   }
-  catch(CORBA::SystemException&amp; ex){
-    env.exception(CORBA::Exception::_duplicate(&amp;ex));
+  catch(CORBA::Exception&amp; ex) {
+    CORBA::Any* v = new CORBA::Any;
+    ::operator&lt;&lt;=(*v,ex);
+    request-&gt;exception(v);
   }
+  // In pre-omniORB 2.8.0, one has to do this:
+  //  catch(CORBA::SystemException&amp; ex){
+  //  env.exception(CORBA::Exception::_duplicate(&amp;ex));
+  //  }
   catch(...){
     cout &lt;&lt; &quot;echo_dsiimpl: MyDynImpl::invoke - caught an&quot;
         &quot; unknown exception.&quot; &lt;&lt; endl;
@@ -241,14 +251,14 @@ MyDynImpl::invoke(CORBA::ServerRequest_ptr request, CORBA::Environment&amp; env)
 </PRE>
 <P>
 
-<BR> <HR><A NAME=tex2html360 HREF="node14.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html358 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html352 HREF="node12.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html362 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html361 HREF="node14.html"> hosts_access(5)</A>
-<B>Up:</B> <A NAME=tex2html359 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html353 HREF="node12.html"> The Dynamic Invocation </A>
+<BR> <HR><A NAME=tex2html363 HREF="node14.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html361 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html355 HREF="node12.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html365 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html364 HREF="node14.html"> hosts_access(5)</A>
+<B>Up:</B> <A NAME=tex2html362 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html356 HREF="node12.html"> The Dynamic Invocation </A>
 <BR> <HR> <P>
 <BR> <HR>
 <P><ADDRESS>
-<I>David Riddoch <BR>
-Wed Feb 24 14:48:15 GMT 1999</I>
+<I>Sai Lai Lo <BR>
+Fri Jul  2 17:38:50 BST 1999</I>
 </ADDRESS>
 </BODY>

@@ -1,42 +1,83 @@
 The following contains instructions to use omniORB2 under ETS-Kernel. The
-information is provided by David MorgenLender <dmorgen@alum.mit.edu>.
+information is provided by David MorgenLender <dmorgen@alum.mit.edu> and
+Jon Kristensen <jon.kristensen@kongsberg-simrad.com>.
 
-1. Select the platform x86_ets in config/config.mk. 
+1.  Select the platform x86_ets in config/config.mk. 
 
-2. This platform requires the omniORB2 IDL compiler omniidl2.exe for 
-   Windows NT/95. Before you proceed to build the libraries, make sure that
-   you have obtained a copy of the compiler and it is in one of the directories
-   in your Path environment. omniidl2.exe is distributed in the 
-   <top>/bin/win32 directory of a binary distribution for x86_nt_4.0.
+2.  This platform is based on the NT 4.0 platform, and uses several of the NT 4.0
+    binaries located in the <top>/bin/x86_win32 directory of a binary distribution 
+    for x86_nt_4.0. Before proceeding with building this platform, make sure that
+    you have the required NT platform binaries in  <top>/bin/x86_win32.
+    Among the binaries required is the omniORB2 IDL compiler (omniidl2.exe) and
+    some of the compiler wrapper functions.
 
-3. Build the libraries by following the instructions given in
-   "Building omniORB2 from the source files" in README.win32. Only the 
-   libraries will be built and installed in
-           <top>\lib\x86_ets
+3.  Build the libraries by following the instructions given in
+    "Building omniORB2 from the source files" in README.win32. Only the 
+    libraries will be built and installed in
+           <top>\lib\x86_win32_ets
 
+    Note!   If you are building both the NT 4.0 and ETS kernel versions, a
+            "make clean" is required each time you switch configuration. Otherwise
+            the make utility may not recompile all files with the required compiler
+            switches. A "make clean" will remove all temporary object files, but
+            not the libraries and binary executables.
 
-4. ETS-Kernel does not support registry. The default setup is to read from
-   a configuration file (C:\OMNIORB.CFG) for the root context of the
-   COSNaming service.
+4.  ETS-Kernel does not support the registry. The default setup is to read the root
+    context of the COSNaming service from a configuration file (C:\OMNIORB.CFG).
+    
+        ORBInitialHost=192.168.1.1
+        ORBInitialPort=58000
+
+    Another option is to use command line switches, but this is only practical when
+    debugging.
 
 5.  The ETS-Kernel application should be built using the static version of
     omniORB (-D_WINSTATIC must be specified.) See mk/platforms/x86_ets.mk for
-    an example.
+    an example. Also __ETS_KERNEL__ must be defined.
 
 6.  Currently, there is a bug in ETS-Kernel:  bind() does not select a
     port, if it's given a port value of 0.  PharLap is working on a fix for
     this.  So for now, the app cannot depend upon omniORB to determine the port
     to use.  As a workaround, I specify a port # to use via a command line
     argument to the app.
+    This bug seems to have been fixed in either ETS kernel v9.1 or in any of the 
+    later patches.
 
 7.  omniORB requires that a hostname be specified, but ETS-Kernel does not
     support a pre-defined hostname.  The workaround is to specify a hostname
-    via an environment variable (OMNIORB_USEHOSTNAME), which I set during
-    the initialization of my app.
+    via an environment variable (OMNIORB_USEHOSTNAME), which can be set during
+    the initialization of the app.
+    An example that reads the IP address from the device driver and uses it as 
+    the HOST name is given below:
+
+    // This code should go at the top of function main()
+    #ifdef __ETS_KERNEL__
+	    char    envstr[40];
+        IN_ADDR ip;
+
+	    /* Obtain TcpIP configuration for Ether0 */
+    	DEVHANDLE	  hEth0 = EtsTCPGetDeviceHandle( "ether0" );
+	    EK_TCPIPCFG*  pTcpCfg = EtsTCPGetDeviceCfg( hEth0 );
+    	if (NULL == pTcpCfg)
+    	{
+	    	cerr << "Unable to Get device configuration for ether0" << endl;
+		    exit(1);
+    	}
+	    ip.S_un.S_addr = TcpCfg.nwIPAddress;
+    	strcpy( envstr, "OMNIORB_USEHOSTNAME=" );
+    	strcat( envstr, inet_ntoa(ip) );
+    	if (_putenv( envstr ) != 0)
+	    {
+		    cerr << "Unable to set host name" << endl;
+    		exit(1);
+	    }
+    	cerr << "Hostname set to " << getenv( "OMNIORB_USEHOSTNAME" ) << endl;
+    #endif
 
 8.  It's critical that ETS-Kernel is configured properly regarding the
     network card, IP information, etc.  The appropriate network card driver
     must be linked into the app.  The appropriate configuration information
     (e.g. IP address) must be configured into the ETS-Kernel monitor (which
     functions as a loader for the app).
+
 

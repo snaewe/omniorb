@@ -4,6 +4,15 @@
 
 Win32Platform = 1
 
+#
+# Define macro for path of wrapper executables
+#
+ifndef EmbeddedSystem
+WRAPPER_FPATH = $(BINDIR)
+else
+WRAPPER_FPATH = $(HOSTBINDIR)
+endif
+
 
 #
 # Standard "unix" programs.  Anything here not provided by the GNU-WIN32
@@ -13,15 +22,15 @@ ifndef OpenNTBuildTree
 
 # GNU-WIN32 wrappers
 
-AR = $(TOP)/$(BINDIR)/libwrapper -gnuwin32
+AR = $(TOP)/$(WRAPPER_FPATH)/libwrapper -gnuwin32
 
-CXX = $(TOP)/$(BINDIR)/clwrapper -gnuwin32
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D_MSC_VER
-CXXLINK	= $(TOP)/$(BINDIR)/linkwrapper -gnuwin32
+CXX = $(TOP)/$(WRAPPER_FPATH)/clwrapper -gnuwin32
+CXXMAKEDEPEND = $(TOP)/$(WRAPPER_FPATH)/omkdepend -D__cplusplus -D_MSC_VER
+CXXLINK	= $(TOP)/$(WRAPPER_FPATH)/linkwrapper -gnuwin32
 
-CC = $(TOP)/$(BINDIR)/clwrapper -gnuwin32
-CMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D_MSC_VER
-CLINK = $(TOP)/$(BINDIR)/linkwrapper -gnuwin32
+CC = $(TOP)/$(WRAPPER_FPATH)/clwrapper -gnuwin32
+CMAKEDEPEND = $(TOP)/$(WRAPPER_FPATH)/omkdepend -D_MSC_VER
+CLINK = $(TOP)/$(WRAPPER_FPATH)/linkwrapper -gnuwin32
 
 # There is a sort in %System32%/sort.exe and in GNU-WIN32. The shell of
 # GNU-WIN32 may pick either one depending on the PATH setup of the user.
@@ -34,14 +43,14 @@ else
 
 # OpenNT wrappers
 
-CXX = $(TOP)/$(BINDIR)/clwrapper.exe -opennt
-CXXLINK = $(TOP)/$(BINDIR)/linkwrapper.exe -opennt
-AR  = $(TOP)/$(BINDIR)/libwrapper.exe -opennt
+CXX = $(TOP)/$(WRAPPER_FPATH)/clwrapper.exe -opennt
+CXXLINK = $(TOP)/$(WRAPPER_FPATH)/linkwrapper.exe -opennt
+AR  = $(TOP)/$(WRAPPER_FPATH)/libwrapper.exe -opennt
 
-CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__cplusplus -D_MSC_VER
-CC = $(TOP)/$(BINDIR)/clwrapper.exe -opennt
-CMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D_MSC_VER
-CLINK = $(TOP)/$(BINDIR)/linkwrapper.exe -opennt
+CXXMAKEDEPEND = $(TOP)/$(WRAPPER_FPATH)/omkdepend -D__cplusplus -D_MSC_VER
+CC = $(TOP)/$(WRAPPER_FPATH)/clwrapper.exe -opennt
+CMAKEDEPEND = $(TOP)/$(WRAPPER_FPATH)/omkdepend -D_MSC_VER
+CLINK = $(TOP)/$(WRAPPER_FPATH)/linkwrapper.exe -opennt
 
 SORT = sort
 
@@ -228,9 +237,9 @@ endif
 
 # Note that the DLL version is being used, so link to omniorb2_rt.lib
 
-lib_depend := $(patsubst %,$(DLLPattern),omniORB271)
+lib_depend := $(patsubst %,$(DLLPattern),omniORB280)
 omniORB_lib_depend := $(GENERATE_LIB_DEPEND)
-lib_depend := $(patsubst %,$(DLLPattern),omniDynamic271)
+lib_depend := $(patsubst %,$(DLLPattern),omniDynamic280)
 omniDynamic_lib_depend := $(GENERATE_LIB_DEPEND)
 
 
@@ -239,10 +248,10 @@ OMNIORB2_IDL_ANY_FLAGS = -a
 OMNIORB2_IDL = $(OMNIORB2_IDL_ONLY) $(OMNIORB2_IDL_ANY_FLAGS)
 OMNIORB2_CPPFLAGS = -D__OMNIORB2__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
 
-OMNIORB2_LIB = $(patsubst %,$(DLLSearchPattern),omniORB271) \
-		$(patsubst %,$(DLLSearchPattern),omniDynamic271) \
+OMNIORB2_LIB = $(patsubst %,$(DLLSearchPattern),omniORB280) \
+		$(patsubst %,$(DLLSearchPattern),omniDynamic280) \
 		$(OMNITHREAD_LIB) wsock32.lib advapi32.lib
-OMNIORB2_LIB_NODYN = $(patsubst %,$(DLLSearchPattern),omniORB271) \
+OMNIORB2_LIB_NODYN = $(patsubst %,$(DLLSearchPattern),omniORB280) \
 		$(OMNITHREAD_LIB) wsock32.lib advapi32.lib
 
 OMNIORB2_LIB_NODYN_DEPEND := $(omniORB_lib_depend) $(OMNITHREAD_LIB_DEPEND)
@@ -267,7 +276,7 @@ OMNIORB2_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
 # LifeCycle stuff
 
 OMNIORB2_IDL_LC_FLAGS = -l
-OMNIORB2_LC_LIB = $(patsubst %,$(DLLSearchPattern),omniLC22)
+OMNIORB2_LC_LIB = $(patsubst %,$(DLLSearchPattern),omniLC30)
 
 CorbaImplementation = OMNIORB2
 

@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html338 HREF="node12.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html336 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html330 HREF="node10.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html340 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html339 HREF="node12.html"> The Dynamic Invocation </A>
-<B>Up:</B> <A NAME=tex2html337 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html331 HREF="node10.html"> Type Any and </A>
+ <BR> <HR><A NAME=tex2html341 HREF="node12.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html339 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html333 HREF="node10.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html343 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html342 HREF="node12.html"> The Dynamic Invocation </A>
+<B>Up:</B> <A NAME=tex2html340 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html334 HREF="node10.html"> Type Any and </A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION001100000000000000000> Dynamic Management of Any Values</A></H1>
 <P>
@@ -41,6 +41,11 @@ resolved, it is possible that a different implementation may choose to
 intepret the specification differently. This chapter provides
 clarifications to the specification, explains the interpretation used and
 offers some advice and warnings on potential portability problems.
+<P>
+Notice that the <b> DynAny</b> interface has been changed in CORBA 2.3,
+particularly with the addition of the support for the IDL type <tt> valuetype</tt>.
+Future releases of omniORB will be updated to implement the interface as
+defined in CORBA 2.3.
 <P>
 <H1><A NAME=SECTION001110000000000000000> C++ mapping</A></H1>
 <P>
@@ -309,7 +314,7 @@ current component. It is possible that the current component pointer is not
 pointing to a valid component, for instance, the <tt> next()</tt> operation has
 been invoked and there is no more component. Under this circumstance, the <tt>
 current_component()</tt> operation returns a nil DynAny object
-reference<A NAME=tex2html20 HREF="footnode.html#1219"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>. For components which are just
+reference<A NAME=tex2html21 HREF="footnode.html#1275"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. For components which are just
 basic data types, calling <tt> current_component()</tt> is an overkill because
 we can just use the basic type extraction and insertion functions directly.
 <P>
@@ -344,7 +349,7 @@ is equivalent to:
 The get operations ensure that the current component is of the same type as
 requested. Otherwise, the object throws a TypeMismatch exception. If the
 current component pointer is invalid when a get operation is called, the
-object also throws a TypeMismatch exception<A NAME=tex2html21 HREF="footnode.html#820"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>.
+object also throws a TypeMismatch exception<A NAME=tex2html22 HREF="footnode.html#869"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
 <P>
 To repeatedly access the components, one can use the <tt> rewind()</tt> or <tt>
 seek()</tt> operation to manipulate the current component pointer. For
@@ -500,7 +505,7 @@ is equivalent to:
 The insert operations ensure that the current component is of the same type
 as the inserted value. Otherwise, the object throws a InvalidValue
 exception. If the current component pointer is invalid when an insert operation
-is called, the object also throws a InvalidValue exception<A NAME=tex2html22 HREF="footnode.html#852"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>.
+is called, the object also throws a InvalidValue exception<A NAME=tex2html23 HREF="footnode.html#901"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
 <P>
 Sometimes, one may just want to modify one component in an Any value. For
 instance, one may just want to change the value of the double member in
@@ -573,7 +578,7 @@ follows:
 In addition to the DynAny interface, a number of derived interfaces are
 defined. These interfaces are specialisation of the DynAny interface to
 facilitate the handling of any values containing non-basic types: struct,
-sequence, array, enum and union<A NAME=tex2html23 HREF="footnode.html#860"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>. The next few sections will provide more
+sequence, array, enum and union<A NAME=tex2html24 HREF="footnode.html#909"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. The next few sections will provide more
 details on these interfaces.
 <P>
 <H1><A NAME=SECTION001130000000000000000> The DynStruct Interface</A></H1>
@@ -738,7 +743,7 @@ allow the enum value to be extracted or inserted as an unsigned long.
 <P>
 Union values are handled by the DynUnion interface. Unfortunately, the
 CORBA 2.2 specification does not define the DynUnion interface in sufficent
-details to nail down its intended usage<A NAME=tex2html24 HREF="footnode.html#884"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>. In this
+details to nail down its intended usage<A NAME=tex2html25 HREF="footnode.html#933"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. In this
 section, we try to fill in the gaps and describe a sensible way to use the
 DynUnion interface. Where necessary, the semantics of the operations is
 clarified. It is possible that the behavior of this interface in another
@@ -1047,14 +1052,14 @@ of the current object.
  </DL>
 <P>
 
-<BR> <HR><A NAME=tex2html338 HREF="node12.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html336 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html330 HREF="node10.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html340 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html339 HREF="node12.html"> The Dynamic Invocation </A>
-<B>Up:</B> <A NAME=tex2html337 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html331 HREF="node10.html"> Type Any and </A>
+<BR> <HR><A NAME=tex2html341 HREF="node12.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html339 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html333 HREF="node10.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html343 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html342 HREF="node12.html"> The Dynamic Invocation </A>
+<B>Up:</B> <A NAME=tex2html340 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html334 HREF="node10.html"> Type Any and </A>
 <BR> <HR> <P>
 <BR> <HR>
 <P><ADDRESS>
-<I>David Riddoch <BR>
-Wed Feb 24 14:48:15 GMT 1999</I>
+<I>Sai Lai Lo <BR>
+Fri Jul  2 17:38:50 BST 1999</I>
 </ADDRESS>
 </BODY>

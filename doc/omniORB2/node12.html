@@ -9,10 +9,10 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html349 HREF="node13.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html347 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html341 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html351 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html350 HREF="node13.html"> The Dynamic Skeleton </A>
-<B>Up:</B> <A NAME=tex2html348 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html342 HREF="node11.html"> Dynamic Management of </A>
+ <BR> <HR><A NAME=tex2html352 HREF="node13.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html350 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html344 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html354 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html353 HREF="node13.html"> The Dynamic Skeleton </A>
+<B>Up:</B> <A NAME=tex2html351 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html345 HREF="node11.html"> Dynamic Management of </A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION001200000000000000000> The Dynamic Invocation Interface</A></H1>
 <P>
@@ -33,7 +33,7 @@ the <tt> &lt;top&gt;/src/examples/dii</tt> directory.
 The DII makes extensive use of the type Any, so ensure that you have read
 chapter <A HREF="node10.html#ch_any">9</A>. For more information refer to the Dynamic Invocation
 Interface and C++ Mapping sections of the CORBA 2
-specification [<A HREF="node15.html#corba2spec">OMG96a</A>].
+specification [<A HREF="node15.html#corba2spec">OMG99a</A>].
 <P>
 <H1><A NAME=SECTION001210000000000000000> Overview</A></H1>
 <P>
@@ -60,13 +60,13 @@ namespace. These objects behave in many ways like CORBA objects. They
 should only be accessed by reference (through <tt> foo_ptr</tt> or
 <tt> foo_var</tt>), may not be
 instantiated directly and should be released by calling
-<tt> CORBA::release()</tt><A NAME=tex2html25 HREF="footnode.html#1220"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>.
+<tt> CORBA::release()</tt><A NAME=tex2html26 HREF="footnode.html#1276"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
 A nil reference should only be represented by <tt> foo::_nil()</tt>.
 <P>
 These pseudo objects, although defined in pseudo-IDL in the specification do
 not follow the normal mapping for CORBA objects. In particular the memory
 management rules are different - see the CORBA 2
-specification [<A HREF="node15.html#corba2spec">OMG96a</A>] for more details. New instances of these
+specification [<A HREF="node15.html#corba2spec">OMG99a</A>] for more details. New instances of these
 objects may only be created by the ORB. A number of methods are defined
 in <tt> CORBA::ORB</tt> to do this.
 <P>
@@ -237,7 +237,11 @@ public:
   Any&amp; exception();
 
   virtual void _raise();
-  static UnknownUserException* _narrow(Exception*);
+  static const UnknownUserException* _downcast(const Exception*);
+  static UnknownUserException* _downcast(Exception*);
+  static UnknownUserException* _narrow(Exception*); 
+  // _narrow is a deprecated function from CORBA 2.2, 
+  // use _downcast instead.
 };
 </PRE>
 <P>
@@ -321,12 +325,14 @@ An operation might be specified in IDL as:
 <P>
 An operation invocation may be created as follows:
 <P>
- <PRE>CORBA::NVList_var args;
-CORBA::ORB::create_list(1, args);
+ <PRE>CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, &quot;omniORB2&quot;);
+...
+CORBA::NVList_var args;
+orb-&gt;create_list(1, args);
 *(args-&gt;add(CORBA::ARG_IN)-&gt;value()) &lt;&lt;= (const char*) &quot;Hello World!&quot;;
 
 CORBA::NamedValue_var result;
-CORBA::ORB::create_named_value(result);
+orb-&gt;create_named_value(result);
 result-&gt;value()-&gt;replace(CORBA::_tc_short, 0);
 
 CORBA::Request_var req = obj-&gt;_create_request(CORBA::Context::_nil(),
@@ -360,7 +366,8 @@ the behavior:
   ...
 };
 </PRE>
-By default this is FALSE, and the application should call the <tt> env()</tt>
+<P>
+If this is FALSE, and the application should call the <tt> env()</tt>
 method of the request to retrieve an exception (it returns 0 (nil) if no
 exception was generated). If it is TRUE then system exceptions will be thrown
 out of <tt> invoke()</tt>. User-defined exceptions are always passed via
@@ -369,6 +376,10 @@ out of <tt> invoke()</tt>. User-defined exceptions are always passed via
 The application can determine which type of exception was returned by
 <tt> env()</tt>
 by calling the <tt> _narrow()</tt> method defined for each exception type.
+<P>
+<b> WARNING!!</b> In pre-omniORB 2.8.0 releases, the default value of <tt>
+diiThrowsSysExceptions</tt> is FALSE. From omniORB 2.8.0 onwards, the default
+value is TRUE.
 <P>
 After determining that no exception was thrown the application may retrieve
 any returned values by calling <tt> return_value()</tt> and <tt> arguments()</tt>.
@@ -392,15 +403,16 @@ request's methods in the meantime.
 <LI> <tt> poll_response()</tt> returns TRUE if the reply has been received,
       and FALSE if not. It does not block.
 </UL>
-Once <tt> poll_response()</tt> has returned TRUE, or <tt> get_response()</tt>
-has been called and returned, the application may test for an exception
-and retrieve returned values as above. If <tt> diiThrowsSysExceptions</tt> is
-true, then a system exception may be thrown from <tt> get_response()</tt>.
-It is guaranteed that <tt> poll_response()</tt> will not raise an
-exception, so if polling, the application must also call another method
-to give the request an opportunity to raise the exception. This can be
-one of the methods to retrieve values from the request, or
-<tt> get_response()</tt>.
+Once <tt> poll_response()</tt> has returned TRUE, or <tt> get_response()</tt> has
+been called and returned, the application may test for an exception and
+retrieve returned values as above. If <tt> diiThrowsSysExceptions</tt> is true,
+then a system exception may be thrown from <tt> get_response()</tt>.  From
+omniORB 2.8.0 onwards, <tt> poll_response()</tt> will raise a system exception
+if one has occured during the invocation. Previously, <tt>
+poll_response()</tt> will not raise an exception, so if polling, the
+application must also call another method to give the request an
+opportunity to raise the exception. This can be one of the methods to
+retrieve values from the request, or <tt> get_response()</tt>.
 <P>
 <H1><A NAME=SECTION001250000000000000000> Multiple Requests</A></H1>
 <P>
@@ -456,14 +468,14 @@ which case the calling thread blocks until another thread invokes a request
 and the reply is received.
 <P>
 
-<BR> <HR><A NAME=tex2html349 HREF="node13.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html347 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html341 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html351 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html350 HREF="node13.html"> The Dynamic Skeleton </A>
-<B>Up:</B> <A NAME=tex2html348 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html342 HREF="node11.html"> Dynamic Management of </A>
+<BR> <HR><A NAME=tex2html352 HREF="node13.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html350 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html344 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html354 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html353 HREF="node13.html"> The Dynamic Skeleton </A>
+<B>Up:</B> <A NAME=tex2html351 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html345 HREF="node11.html"> Dynamic Management of </A>
 <BR> <HR> <P>
 <BR> <HR>
 <P><ADDRESS>
-<I>David Riddoch <BR>
-Wed Feb 24 14:48:15 GMT 1999</I>
+<I>Sai Lai Lo <BR>
+Fri Jul  2 17:38:50 BST 1999</I>
 </ADDRESS>
 </BODY>

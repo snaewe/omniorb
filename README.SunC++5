@@ -1,0 +1,16 @@
+Sun C++ 4.2 is currently what we use to compile code to put into service.
+
+We are putting Sun C++ 5.0 under testing. There were a number of problems
+with Sun C++ 5.0. These ranges from incorrect code to simply unable to
+produce linkable object code. With the latest Sun C++ compiler patch
+(107311-03 of May 20), the compler at least seems to produce correct
+code. *BUT* it still generates incorrect exception handling code when using
+-O2 flag alone. Strangely, "-O2 -g" produces correct code. At least it
+seems to work with simple tests. If your programs crashes when there are
+concurrent activities, try recompile with -g only.
+
+Another anonying feature of the compiler is that it has a habit of taking
+up all the CPU cycles and huge amount of memory (350M) doing who knows
+what. Sometimes compiling a moderate size omniORB2 stub could take 20
+minutes or so on a 300MHz UltraSparc.
+

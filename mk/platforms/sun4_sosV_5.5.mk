@@ -36,7 +36,7 @@ CPP = /usr/ccs/lib/cpp
 #
 CXX = CC
 CXXMAKEDEPEND = $(TOP)/$(BINDIR)/omkdepend -D__SUNPRO_CC -D__cplusplus
-CXXDEBUGFLAGS = -O2 -fsimple
+CXXDEBUGFLAGS = -O2
 CXXMTFLAG     = -mt
 CXXLINK		= $(CXX)
 CXXLINKOPTIONS  = $(CXXDEBUGFLAGS) $(CXXOPTIONS)
@@ -119,7 +119,7 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 # Default location of the omniORB2 configuration file [falls back to this if
 # the environment variable OMNIORB_CONFIG is not set] :
 
-OMNIORB_CONFIG_DEFAULT_LOCATION = \"/etc/omniORB.cfg\"
+OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
-OMNINAMES_LOG_DEFAULT_LOCATION = \"/var/omninames\"
+OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames

@@ -28,10 +28,9 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #
 #
 CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-CORBA_LIB      = omniDynamic271_rt.lib omniORB271_rt.lib omnithread2_rt.lib \
+CORBA_LIB      = omniORB280_rt.lib omniDynamic280_rt.lib omnithread2_rt.lib \
                  wsock32.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
-CORBA_LC_LIB   = omniLC22_rt.lib
 CXXFLAGS       = -O2 -MD -GX $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
 CXXLINKOPTIONS =
 
@@ -44,20 +43,19 @@ CXXLINKOPTIONS =
 # Replace the above with the following:
 #
 #CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-#CORBA_LIB      = omniDynamic271_rtd.lib omniORB271_rtd.lib \
+#CORBA_LIB      = omniORB280_rtd.lib omniDynamic280_rtd.lib \
 #                 omnithread2_rtd.lib wsock32.lib \
 #                 advapi32.lib -libpath:$(TOP)\lib\x86_win32
-#CORBA_LC_LIB   = omniLC22_rtd.lib
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
 #CXXLINKOPTIONS = -debug -PDB:NONE	
 
 all:: anyExample_impl.exe anyExample_clt.exe
 
 anyExample_impl.exe: anyExampleSK.obj anyExampleDynSK.obj anyExample_impl.obj
-  link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB) $(CORBA_LC_LIB)
+  link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB)
 
 anyExample_clt.exe: anyExampleSK.obj anyExampleDynSK.obj anyExample_clt.obj
-  link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB) $(CORBA_LC_LIB)
+  link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB)
 
 clean::
   -del *.obj

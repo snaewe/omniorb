@@ -9,18 +9,21 @@
 <meta name="resource-type" value="document">
 <meta name="distribution" value="global">
 <P>
- <BR> <HR><A NAME=tex2html239 HREF="node3.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html237 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html231 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html241 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html240 HREF="node3.html"> The Basics</A>
-<B>Up:</B> <A NAME=tex2html238 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html232 HREF="node1.html">Contents</A>
+ <BR> <HR><A NAME=tex2html242 HREF="node3.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html240 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html234 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html244 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html243 HREF="node3.html"> The Basics</A>
+<B>Up:</B> <A NAME=tex2html241 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html235 HREF="node1.html">Contents</A>
 <BR> <HR> <P>
 <H1><A NAME=SECTION00200000000000000000> Introduction</A></H1>
 <P>
 
 <P>
-OmniORB2 is an Object Request Broker (ORB) that implements the 2.0
+OmniORB2 is an Object Request Broker (ORB) that implements the 2.3
 specification of the Common Object Request Broker Architecture
-(CORBA) [<A HREF="node15.html#corba2spec">OMG96a</A>]<A NAME=tex2html1 HREF="footnode.html#31"><IMG ALIGN=BOTTOM ALT="gif" SRC="foot_motif.gif"></A>.
+(CORBA) [<A HREF="node15.html#corba2spec">OMG99a</A>]<A NAME=tex2html1 HREF="footnode.html#1261"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>. It has passed the Open Group CORBA
+compliant testsuite and is one of the three ORBs to have been granted the
+CORBA brand in June 1999<A NAME=tex2html2 HREF="footnode.html#1262"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
+<P>
 This user guide tells you how to use omniORB2 to develop CORBA applications.
 It assumes a basic understanding of CORBA.
 <P>
@@ -39,7 +42,8 @@ residing in different address spaces. Moreover, the IDL to C++ language
 mapping provided by omniORB2 conforms to the latest revision of the CORBA
 specification. Type Any and TypeCode are now supported (introduced in version
 2.5.0). DynAny is supported since 2.6.0. The Dynamic Invocation Interface
-and Dynamic Skeleton Interface are supported since 2.7.0.
+and Dynamic Skeleton Interface are supported since 2.7.0. The C++ mapping
+has been updated to the CORBA 2.3 specification since 2.8.0.
 <P>
 <H2><A NAME=SECTION00212000000000000000> Multithreading</A></H2>
 <P>
@@ -86,12 +90,22 @@ or has a thread package that supports similar capabilities.
 <P>
 <H2><A NAME=SECTION00214000000000000000> Missing features</A></H2>
 <P>
-OmniORB2 is not (yet) a complete implementation of the CORBA core. 
+<A NAME=missing>&#160;</A>
+<P>
+OmniORB2 is not (yet) a complete implementation of the CORBA 2.3 core. 
 The following is a list of the missing features.
 <P>
 <UL><LI> The BOA only support the persistent server activation policy. Other
 dynamic activation and deactivation policies are not supported.
-<LI> OmniORB2 does not has its own Interface Repository.
+<P>
+<LI> OmniORB2 does not has its own Interface Repository. However, it can
+act as a client to an IR.
+<P>
+<LI> The POA is currently under development.
+<P>
+<LI> The IDL types wchar, wstring, fixed, valuetype and native are not
+      supported in this release.
+<P>
 </UL>
 <P>
 These features may be implemented in the short to medium term. It is
@@ -121,7 +135,7 @@ set, omniORB2 will use the compiled-in pathname to locate the file.
 information in the file <tt> omniORB.cfg</tt>.
 <P>
 <LI> On Win32 platforms (Windows NT, Windows '95), omniORB2 first checks the 
-environment variable (<tt> OMNIORB2_CONFIG</tt>) to obtain the pathname of the 
+environment variable (<tt> OMNIORB_CONFIG</tt>) to obtain the pathname of the 
 configuration file. If this is not set, it then attempts to obtain 
 configuration data in the system registry. It searches for the data under 
 the key <tt> HKEY_LOCAL_MACHINE<IMG  ALIGN=MIDDLE ALT="" SRC="img1.gif">SOFTWARE<IMG  ALIGN=MIDDLE ALT="" SRC="img2.gif">ORL<IMG  ALIGN=MIDDLE ALT="" SRC="img3.gif">omniORB<IMG  ALIGN=MIDDLE ALT="" SRC="img4.gif">2.0</tt>
@@ -177,14 +191,14 @@ omniORB2/CORBA_sysdep.h</tt>.
 <P>
 
 <P>
-<BR> <HR><A NAME=tex2html239 HREF="node3.html"><IMG ALIGN=BOTTOM ALT="next" SRC="next_motif.gif"></A>   <A NAME=tex2html237 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="up_motif.gif"></A>   <A NAME=tex2html231 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="previous_motif.gif"></A>   <A NAME=tex2html241 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="contents_motif.gif"></A>      <BR>
-<B> Next:</B> <A NAME=tex2html240 HREF="node3.html"> The Basics</A>
-<B>Up:</B> <A NAME=tex2html238 HREF="omniORB2.html">No Title</A>
-<B> Previous:</B> <A NAME=tex2html232 HREF="node1.html">Contents</A>
+<BR> <HR><A NAME=tex2html242 HREF="node3.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html240 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html234 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html244 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html243 HREF="node3.html"> The Basics</A>
+<B>Up:</B> <A NAME=tex2html241 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html235 HREF="node1.html">Contents</A>
 <BR> <HR> <P>
 <BR> <HR>
 <P><ADDRESS>
-<I>David Riddoch <BR>
-Wed Feb 24 14:48:15 GMT 1999</I>
+<I>Sai Lai Lo <BR>
+Fri Jul  2 17:38:50 BST 1999</I>
 </ADDRESS>
 </BODY>
