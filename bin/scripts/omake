@@ -91,7 +91,7 @@ done
 while [ "$1" != "" ]; do
   quotedArg=`echo x$1 | sed "s/^x//; s/'/'\\\\\''/g"`
   allArgs="$allArgs${allArgs+ }'$quotedArg'"
-  target='$quotedArg'
+  target="'$quotedArg'"
   shift
 done
 
