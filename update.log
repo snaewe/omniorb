@@ -1,3 +1,14 @@
+Thu Sep 13 16:16:09 BST 2001 sll
+================================
+
+- SSL support now built properly on win32 if openssl is installed
+
+external_merge/mk/platforms/x86_nt_4.0.mk
+external_merge/mk/win32.mk
+src/lib/omniORB/orbcore/ssl/dir.mk
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+mk/platforms/x86_nt_4.0.mk
+
 Wed Sep 12 20:39:58 BST 2001 sll
 ================================
 
