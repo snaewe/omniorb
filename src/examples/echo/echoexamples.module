@@ -44,3 +44,11 @@ Object eg3_impl_exe.o
     ULibrary netdb.o
 }
 
+Object eg3_tieimpl_exe.o
+{
+    Executable eg3_tieimpl
+    ULibrary libpthreads.o
+    ULibrary plibc.o
+    ULibrary llibc++.o
+    ULibrary netdb.o
+}
