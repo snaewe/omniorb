@@ -13,6 +13,8 @@
 #  else
 #    define QTRACE(x)
 #  endif
+#else
+#  define QTRACE(x) PTRACE("Queue", x)
 #endif
 
 // Abstract Queue base type for defining the external

@@ -29,6 +29,15 @@
 
 /*
   $Log$
+  Revision 1.22.6.10.2.7  2000/05/24 20:16:54  djs
+  * Restructured connections -> thread mapping code
+        (tcpSocketMTImpl.cc tcpSocketMTInterface.h)
+  * Added extra command line options:
+        -ORBconcurrencyModel {tpc, q, lf}    (tpc = Thread Per Connection
+                                              q   = Queue-based Thread Pool
+                                              lf  = Leader-Follower Thread Pool)
+        -ORBthreadPoolSize <n>
+
   Revision 1.22.6.10.2.6  2000/05/19 14:55:21  djs
   Preliminary instance of leader-follow pattern
 
@@ -208,11 +217,13 @@
 #include <tcpSocket.h>
 #include <exception.h>
 
+#ifdef OLD
 // the Fixed Length thread safe queue template
 #include <queue.h>
 // include the polling code
 #include "event.h"
 #include "poll.h"
+#endif
 
 // we need semaphores to modify data in a signal handler
 // (not on sparc though)
@@ -311,6 +322,10 @@ extern "C" int gethostname(char *name, int namelen);
 #undef ONETOONE
 
 const unsigned int poolSize = 5;
+
+#include "tcpSocketMTInterface.h"
+
+#ifdef OLD
 class tcpStrandWorker;
 class OneToOneWorker;
 class PoolWorker;
@@ -329,11 +344,13 @@ class LeaderFollower;
 #ifdef LEADERFOLLOWER
 # define RENDEZVOUSER LeaderFollower
 #endif
+#endif
 
 #ifdef EXTRADEBUG
 void dump_fdset(fd_set*, int);
 #endif
 
+#ifdef OLD
 ////////////////////////////////////////////////////////////////////
 // A tcpSocketRendezvouser is a thread which waits for events to
 // occur on its socket(s) and then does something appropriate 
@@ -667,7 +684,13 @@ private:
   Queue<tcpSocketStrand*> *pd_q;
 };
 
+#endif /* OLD */
+
 /////////////////////////////////////////////////////////////////////////////
+
+//typedef QPolicyController Controller;
+
+static Controller *rendezvouser;
 
 tcpSocketMTincomingFactory::~tcpSocketMTincomingFactory()  {}
 
@@ -713,7 +736,7 @@ tcpSocketMTincomingFactory::instantiateIncoming(Endpoint* addr,
   r->incrRefCount(1);
 
   if (pd_state == ACTIVE) {
-    r->rendezvouser = new RENDEZVOUSER(r,this);
+    r->rendezvouser = Controller::instance(r, this);
   }
 }
 
@@ -730,8 +753,7 @@ tcpSocketMTincomingFactory::startIncoming()
       while ((r = (tcpSocketIncomingRope*)next_rope())) {
 	if (r->pd_shutdown == tcpSocketIncomingRope::NO_THREAD) {
 	  r->pd_shutdown = tcpSocketIncomingRope::ACTIVE;
-	  r->rendezvouser = new RENDEZVOUSER(r, this);
-	  //r->rendezvouser = new tcpSocketRendezvouser(r,this);
+	  r->rendezvouser = Controller::instance(r, this);
 	}
       }
     }
@@ -1526,6 +1548,7 @@ extern PFV set_terminate(PFV);
 #endif
 #endif
 
+#ifdef OLD
 #include "tcpSocketRendezvouser.cc"
 
 ///////////////////////////////////////////////////////////////////
@@ -1622,4 +1645,4 @@ void PoolWorker::dispatchOne(tcpSocketStrand *s){
   // (for the last time for that request)
   rendezvous->watchStrand(s);
 }
-
+#endif

@@ -28,6 +28,15 @@
 
 /*
   $Log$
+  Revision 1.1.2.4.2.1  2000/05/24 20:16:52  djs
+  * Restructured connections -> thread mapping code
+        (tcpSocketMTImpl.cc tcpSocketMTInterface.h)
+  * Added extra command line options:
+        -ORBconcurrencyModel {tpc, q, lf}    (tpc = Thread Per Connection
+                                              q   = Queue-based Thread Pool
+                                              lf  = Leader-Follower Thread Pool)
+        -ORBthreadPoolSize <n>
+
   Revision 1.1.2.4  1999/10/14 16:22:13  djr
   Implemented logging when system exceptions are thrown.
 
@@ -77,7 +86,7 @@ int                      traceInvocations = 0;
 CORBA::Boolean           strictIIOP = 1;
 char*                    serverName = 0;
 CORBA::Boolean           tcAliasExpand = 0;
-unsigned int             maxTcpConnectionPerServer = 5;
+unsigned int             maxTcpConnectionPerServer = 500;
 CORBA::Boolean           diiThrowsSysExceptions = 0;
 CORBA::Boolean           abortOnInternalError = 0;
 _CORBA_ULong             objectTableSize = 0;
@@ -86,6 +95,8 @@ CORBA::Boolean           acceptMisalignedTcIndirections = 0;
 CORBA::Boolean           verifyObjectExistsAndType = 1;
 int                      poaHoldRequestTimeout = 0;
 objectKey                seed;
+unsigned int             threadPoolSize = 5;
+ConcurrencyModel         concurrencyModel = PerConnection;
 }
 
 #else
@@ -98,7 +109,7 @@ char*                    omniORB::serverName = 0;
 CORBA::String_var	 omniORB::serverName((const char*) "unknown");
 #endif
 CORBA::Boolean           omniORB::tcAliasExpand = 0;
-unsigned int             omniORB::maxTcpConnectionPerServer = 5;
+unsigned int             omniORB::maxTcpConnectionPerServer = 500;
 CORBA::Boolean           omniORB::diiThrowsSysExceptions = 0;
 CORBA::Boolean           omniORB::abortOnInternalError = 0;
 _CORBA_ULong             omniORB::objectTableSize = 0;
@@ -107,6 +118,8 @@ CORBA::Boolean           omniORB::acceptMisalignedTcIndirections = 0;
 CORBA::Boolean           omniORB::verifyObjectExistsAndType = 1;
 int                      omniORB::poaHoldRequestTimeout = 0;
 omniORB::objectKey       omniORB::seed;
+unsigned int             omniORB::threadPoolSize = 5;
+omniORB::ConcurrencyModel omniORB::concurrencyModel = omniORB::PerConnection;
 #endif
 
 

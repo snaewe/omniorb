@@ -29,6 +29,15 @@
 
 /*
  $Log$
+ Revision 1.5.6.3.2.4  2000/05/24 20:16:53  djs
+ * Restructured connections -> thread mapping code
+       (tcpSocketMTImpl.cc tcpSocketMTInterface.h)
+ * Added extra command line options:
+       -ORBconcurrencyModel {tpc, q, lf}    (tpc = Thread Per Connection
+                                             q   = Queue-based Thread Pool
+                                             lf  = Leader-Follower Thread Pool)
+       -ORBthreadPoolSize <n>
+
  Revision 1.5.6.3.2.3  2000/05/19 14:55:20  djs
  Preliminary instance of leader-follow pattern
 
@@ -121,6 +130,11 @@ class tcpSocketIncomingRope;
 class tcpSocketStrand;
 class tcpSocketRendezvouser;
 
+class Controller;
+class OOPolicyController;
+class QPolicyController;
+class LeaderFollower;
+
 class nobody;  // dummy class defined to silent gcc warning about
                // a private destructor without any friend 
 
@@ -176,6 +190,11 @@ public:
 
   friend class tcpSocketWorker;
   friend class tcpStrandWorker;
+
+  friend class OOWorker;
+  friend class OOPolicyController;
+
+  friend class QWorker;
 
 private:
   enum { IDLE, ACTIVE, ZOMBIE } pd_state;
@@ -275,6 +294,9 @@ public:
   friend class LeaderFollower;
   friend class SelectSignalRendezvouser;
 
+  friend class Dispatcher;
+  friend class SelectDispatcher;
+
 private:
 
   tcpSocketIncomingRope(tcpSocketMTincomingFactory* f,
@@ -314,7 +336,8 @@ private:
   tcpSocketHandle_t  pd_rendezvous;
   CORBA::Boolean     pd_export;
   enum { ACTIVE, SHUTDOWN, NO_THREAD } pd_shutdown;
-  tcpSocketRendezvouser *rendezvouser;
+  //tcpSocketRendezvouser *rendezvouser;
+  Controller *rendezvouser;
 };
 
 class tcpSocketOutgoingRope : public Rope {
