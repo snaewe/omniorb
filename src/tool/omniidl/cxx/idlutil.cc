@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3.2.4  2001/02/20 17:39:57  dpg1
+// FreeBSD update -- use strtouq instead of strtoull.
+//
 // Revision 1.3.2.3  2000/10/24 09:53:31  dpg1
 // Clean up omniidl system dependencies. Replace use of _CORBA_ types
 // with IDL_ types.
@@ -150,6 +153,14 @@ IdlIntLiteral
 idl_strtoul(const char* text, int base)
 {
   return strtoul(text, 0, base);
+}
+
+#  elif defined(__freebsd__)
+
+IdlIntLiteral
+idl_strtoul(const char* text, int base)
+{
+  return strtouq(text, 0, base);
 }
 
 #  else
