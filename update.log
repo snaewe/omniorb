@@ -1,3 +1,136 @@
+Wed Sep 27 18:24:14 BST 2000 sll
+===============================
+
+- Use new make rules to build libraries.
+
+src/lib/omniORB/dir.mk
+src/lib/omniORB/orbcore/dir.mk
+
+
+- New GIOP engine, supports GIOP 1.0 to 1.2. 
+  Updated existing code to use the new GIOP APIs.
+
+src/lib/omniORB/orbcore/cdrMemoryStream.cc            NEW
+src/lib/omniORB/orbcore/firewallProxy.cc              NEW
+src/lib/omniORB/orbcore/firewallProxy.h               NEW
+src/lib/omniORB/orbcore/giopStream.cc                 NEW
+src/lib/omniORB/orbcore/giopStream10.cc               NEW
+src/lib/omniORB/orbcore/giopStream11.cc               NEW
+src/lib/omniORB/orbcore/giopStream12.cc               NEW
+src/lib/omniORB/orbcore/giopStreamImpl.h              NEW
+src/lib/omniORB/orbcore/interceptors.cc               NEW
+src/lib/omniORB/orbcore/msvcdllstub.cc                NEW
+src/lib/omniORB/orbcore/objectStub.cc                 NEW
+src/lib/omniORB/orbcore/objectStub.h                  NEW
+src/lib/omniORB/orbcore/omniIOR.cc                    NEW
+src/lib/omniORB/orbcore/tcpSocketAux.cc               NEW
+
+src/lib/omniORB/orbcore/corbaObject.cc
+src/lib/omniORB/orbcore/giopClient.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/initRefs.cc
+src/lib/omniORB/orbcore/ior.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+src/lib/omniORB/orbcore/ropeFactory.cc
+src/lib/omniORB/orbcore/ropeFactory.h
+src/lib/omniORB/orbcore/strand.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniObjRef.cc
+src/lib/omniORB/orbcore/omniServant.cc
+src/lib/omniORB/orbcore/tcpSocket.cc
+src/lib/omniORB/orbcore/tcpSocket.h
+src/lib/omniORB/orbcore/tcpSocketMTfactory.cc
+src/lib/omniORB/orbcore/uri.cc
+
+- Updated to identify the ORB as omniORB4 and various constants and data
+  structures to support GIOP 1.2
+
+src/lib/omniORB/orbcore/constants.cc
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+- new members in call descriptor classes for use in the upcalls on the server
+  side
+
+src/lib/omniORB/orbcore/callDescriptor.cc
+src/lib/omniORB/orbcore/portableserver.cc
+
+- Use the new class omniIOR to store all the information in an IOR.
+
+src/lib/omniORB/remoteIdentity.h
+
+- Updated to match the changes in the proxyFactory class.
+
+src/lib/omniORB/orbcore/anonObject.cc
+src/lib/omniORB/orbcore/anonObject.h
+
+- Updated to use the new cdrStream abstraction
+
+src/lib/omniORB/dynamicLib.h
+src/lib/omniORB/exceptiondefs.h
+src/lib/omniORB/orbcore/dynamicLib.cc
+src/lib/omniORB/orbcore/exceptn.cc
+src/lib/omniORB/orbcore/corbaString.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poastubs.cc
+
+
+- Consolidate string allocation functions into the new _CORBA_String_helper
+  class
+
+src/lib/omniORB/orbcore/initFile.cc
+
+
+- Updated include/omniORB3 to include/omniORB4
+
+src/lib/omniORB/orbcore/proxyFactory.cc
+src/lib/omniORB/orbcore/scavenger.cc
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/localIdentity.cc
+src/lib/omniORB/orbcore/omniORB.cc
+src/lib/omniORB/orbcore/Namingstub.cc
+src/lib/omniORB/orbcore/bootstrapstub.cc
+src/lib/omniORB/orbcore/exception.cc
+src/lib/omniORB/orbcore/logIOstream.cc
+src/lib/omniORB/orbcore/taskqueue.cc
+src/lib/omniORB/orbcore/tracedthread.cc
+src/lib/omniORB/orbcore/relStream.cc
+src/lib/omniORB/orbcore/policy.cc
+src/lib/omniORB/orbcore/poamanager.cc
+src/lib/omniORB/orbcore/poamanager.h
+src/lib/omniORB/orbcore/gatekeepers/dummystub/gatekeeper.cc
+src/lib/omniORB/orbcore/gatekeepers/tcpwrapper/gatekeeper.cc
+
+src/lib/omniORB/exceptiondefs.h
+src/lib/omniORB/initRefs.h
+src/lib/omniORB/omniIdentity.h
+
+src/lib/omniORB/dynamic/*
+
+- Temporary hand-crafted stub files to be replaced later by code generated
+  by omniidl
+
+src/lib/omniORB/omniORB4/Naming.hh
+src/lib/omniORB/omniORB4/NamingDynSK.cc
+src/lib/omniORB/omniORB4/NamingSK.cc
+src/lib/omniORB/omniORB4/bootstrap.hh
+src/lib/omniORB/omniORB4/bootstrapDynSK.cc
+src/lib/omniORB/omniORB4/bootstrapSK.cc
+src/lib/omniORB/omniORB4/corbaidlDynSK.cc
+src/lib/omniORB/omniORB4/corbaidlSK.cc
+src/lib/omniORB/omniORB4/corbaidl_defs.hh
+src/lib/omniORB/omniORB4/corbaidl_operators.hh
+src/lib/omniORB/omniORB4/corbaidl_poa.hh
+src/lib/omniORB/omniORB4/irDynSK.cc
+src/lib/omniORB/omniORB4/irSK.cc
+src/lib/omniORB/omniORB4/ir_defs.hh
+src/lib/omniORB/omniORB4/ir_operators.hh
+src/lib/omniORB/omniORB4/ir_poa.hh
+src/examples/echo/dir.mk
+src/examples/echo/echo.hh
+src/examples/echo/echoSK.cc
+
 Wed Sep 27 17:40:58 BST 2000 sll
 ================================
 
