@@ -1,3 +1,12 @@
+Tue Oct  6 16:16:20 BST 1998 sll
+================================
+
+- Accept request-reply invocation with response_expected flag said to FALSE.
+  Apparently, this is allowed in DII (for reasons I do not understand).
+
+src/tool/omniidl2/o2be_operation.cc
+
+
 Fri Oct  2 20:24:54 BST 1998 sll
 ================================
 
