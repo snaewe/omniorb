@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.19  1999/02/01 15:16:14  djr
+  Replace copy-initialisation of _var types with direct initialisation.
+
   Revision 1.18  1999/01/07 15:33:34  djr
   New configuration variable omniORB::diiThrowsSysExceptions
   New command line options -ORBdiiThrowsSysExceptions
@@ -122,7 +125,7 @@ CORBA::Boolean                  omniORB::strictIIOP = 0;
 #if defined(HAS_Cplusplus_Namespace)
 char*                           omniORB::serverName = 0;
 #else
-CORBA::String_var		omniORB::serverName = (const char*)"unknown";
+CORBA::String_var		omniORB::serverName((const char*) "unknown");
 #endif
 CORBA::Boolean                  omniORB::tcAliasExpand = 0;
 unsigned int                    omniORB::maxTcpConnectionPerServer = 5;

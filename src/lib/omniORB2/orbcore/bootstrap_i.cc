@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.6  1999/02/01 15:13:04  djr
+  Replace copy-initialisation of _var types with direct initialisation.
+
   Revision 1.5  1999/01/11 09:45:53  djr
   *** empty log message ***
 
@@ -108,7 +111,7 @@ omniInitialReferences::get(const char* identifier)
 	//     out to be a chain of invocations and eventually go back
 	//     to us.
 	if (omniORB::traceLevel >= 10) {
-	  CORBA::String_var ior = omni::objectToString(pd_bootagent->PR_getobj());
+	  CORBA::String_var ior(omni::objectToString(pd_bootagent->PR_getobj()));
 	  omniORB::log << "omniORB: Getting initial object reference for "
 		       << identifier << " from '"
 		       << (const char*) ior << "'...";
@@ -168,7 +171,7 @@ omniInitialReferences::initialise_bootstrap_agentImpl()
 
   if (!pd_bootagentImpl) {
     try {
-      CORBA::BOA_var boa = CORBA::BOA::getBOA();
+      CORBA::BOA_var boa(CORBA::BOA::getBOA());
       pd_bootagentImpl = new CORBA_InitialReferences_i(boa);
     }
     catch(...) {
@@ -214,10 +217,10 @@ omniInitialReferences::initialise_bootstrap_agent(const char* host,
 
     t->encodeIOPprofile((Endpoint*)&addr,objkey,4,p[0]);
 
-    CORBA::String_var ior = (char*) IOP::iorToEncapStr((const CORBA::Char*)
-                                        CORBA_InitialReferences_IntfRepoID,&p);
-    CORBA::Object_var o = (CORBA::Object_ptr)(omni::stringToObject(ior)
-                               ->_widenFromTheMostDerivedIntf(0));
+    CORBA::String_var ior((char*) IOP::iorToEncapStr((const CORBA::Char*)
+				CORBA_InitialReferences_IntfRepoID,&p));
+    CORBA::Object_var o((CORBA::Object_ptr) (omni::stringToObject(ior)
+                               ->_widenFromTheMostDerivedIntf(0)));
     pd_bootagent = CORBA_InitialReferences::_narrow(o);
     pd_bootagent->noExistentCheck();
   }
@@ -271,8 +274,8 @@ omniInitialRefLister::~omniInitialRefLister()
 
   for( CORBA::ULong i = 0; i < list->length(); i++ ) {
     const char* name = (*list)[i];
-    CORBA::Object_var obj = _singleton->get(name);
-    CORBA::String_var sref = omni::objectToString(obj->PR_getobj());
+    CORBA::Object_var obj(_singleton->get(name));
+    CORBA::String_var sref(omni::objectToString(obj->PR_getobj()));
     omniORB::log <<
       "  Name  : " << name << "\n"
       "  IR ID : " << obj->PR_getobj()->NP_IRRepositoryId() << "\n"
