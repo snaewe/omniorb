@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/10/29 15:43:02  dpg1
+// Code to detect recursive structs and unions.
+//
 // Revision 1.2  1999/10/29 10:00:43  dpg1
 // Added code to find a value for the default case in a union.
 //
@@ -491,17 +494,21 @@ public:
   const char* kindAsString() const { return "struct"; }
 
   // Queries
-  Member*        members()  const { return members_; }
-  IdlType*       thisType() const { return thisType_; }
-  _CORBA_Boolean finished() const { return finished_; }
+  Member*        members()   const { return members_; }
+  IdlType*       thisType()  const { return thisType_; }
+  _CORBA_Boolean recursive() const { return recursive_; }
+  _CORBA_Boolean finished()  const { return finished_; }
 
   void accept(AstVisitor& visitor) { visitor.visitStruct(this); }
 
   void finishConstruction(Member* members);
 
+  void setRecursive() { recursive_ = 1; }
+
 private:
   Member*        members_;
   IdlType*       thisType_;
+  _CORBA_Boolean recursive_;
   _CORBA_Boolean finished_;
 };
 
@@ -629,16 +636,19 @@ public:
   IdlType*       switchType() const { return switchType_; }
   UnionCase*     cases()      const { return cases_; }
   IdlType*       thisType()   const { return thisType_; }
+  _CORBA_Boolean recursive()  const { return recursive_; }
   _CORBA_Boolean finished()   const { return finished_; }
 
   void accept(AstVisitor& visitor) { visitor.visitUnion(this); }
 
   void finishConstruction(IdlType* switchType, UnionCase* cases);
+  void setRecursive() { recursive_ = 1; }
 
 private:
   IdlType*       switchType_;
   UnionCase*     cases_;
   IdlType*       thisType_;
+  _CORBA_Boolean recursive_;
   _CORBA_Boolean finished_;
 };
 

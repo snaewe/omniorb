@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/10/29 15:43:15  dpg1
+// Code to detect recursive structs and unions.
+//
 // Revision 1.2  1999/10/29 10:01:12  dpg1
 // Small fixes.
 //
@@ -233,7 +236,8 @@ void
 DumpVisitor::
 visitStruct(Struct* s)
 {
-  printf("struct %s { // RepoId = %s\n", s->identifier(), s->repoId());
+  printf("struct %s { // RepoId = %s%s\n", s->identifier(), s->repoId(),
+	 s->recursive() ? " recursive" : "");
 
   ++indent_;
   for (Member* m = s->members(); m; m = (Member*)m->next()) {
@@ -318,7 +322,8 @@ visitUnion(Union* u)
 {
   printf("union %s switch (", u->identifier());
   u->switchType()->accept(*this);
-  printf(") { // RepoId = %s\n", u->repoId());
+  printf(") { // RepoId = %s%s\n", u->repoId(),
+	 u->recursive() ? " recursive" : "");
   ++indent_;
   for (UnionCase* c = u->cases(); c; c = (UnionCase*)c->next()) {
     printIndent();
@@ -583,6 +588,7 @@ visitDeclaredType(DeclaredType* t)
       break;
     }
   DTCASE(tk_struct, Struct,     D_STRUCT)
+  DTCASE(tk_union,  Union,      D_UNION)
   DTCASE(tk_enum,   Enum,       D_ENUM)
   DTCASE(tk_alias,  Declarator, D_DECLARATOR)
   default:
