@@ -1,4 +1,12 @@
 
+Thu Feb 10 14:06:05 GMT 2000 djr
+================================
+
+- Minor bug in omniidl3 (missing scope).
+
+src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
+
+
 Wed Feb  9 11:57:28 GMT 2000 djr
 ================================
 

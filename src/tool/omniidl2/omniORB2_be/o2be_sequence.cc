@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.29.6.4  2000/02/10 14:07:59  djr
+  Added missing scope.
+
   Revision 1.29.6.3  2000/02/09 12:04:55  djr
   Fixed memory allocation bug in Any insertion/extraction of strings.
   Optimisation for insertion/extraction of sequence of simple types.
@@ -1312,9 +1315,9 @@ o2be_sequence::produce_buildDesc_support(std::fstream& s)
   int do_contiguous_optimisation = 0;
   if( base_type()->node_type() == AST_Decl::NT_pre_defined ) {
     o2be_operation::argMapping dummymapping;
-    o2be_operation::argType atype = ast2ArgMapping(base_type(),
-						   o2be_operation::wIN,
-						   dummymapping);
+    o2be_operation::argType atype = o2be_operation::ast2ArgMapping(base_type(),
+							   o2be_operation::wIN,
+							   dummymapping);
     switch( atype ) {
     case o2be_operation::tBoolean:
     case o2be_operation::tChar:
