@@ -12,6 +12,10 @@ endif
 
 SUBDIRS += lib appl
 
+ifndef EmbeddedSystem
+SUBDIRS += services
+endif
+
 all::
 	@echo
 	@echo 'No "all" rule here.  If you want to build and export everything'

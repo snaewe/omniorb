@@ -1,3 +1,30 @@
+Fri Aug 18 12:11:48 BST 2000 sll
+================================
+
+- Make current tree into omniORB 3.0.1 release
+- Turns on <top>/src/services build by default.
+
+external_merge/README.FIRST
+external_merge/ReleaseNote_omniORB_300       REMOVED
+external_merge/ReleaseNote_omniORB_301       NEW
+external_merge/THIS_IS_omniORB_3_0_0         REMOVED
+external_merge/THIS_IS_omniORB_3_0_1         NEW
+external_merge/mk/rtems.mk
+external_merge/mk/unix.mk
+external_merge/mk/win32.mk
+external_merge/src/dir.mk
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak
+src/dir.mk
+
+
 Fri Aug 18 10:50:14 BST 2000 sll
 ================================
 

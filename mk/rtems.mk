@@ -13,6 +13,10 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
+# Revision 1.1.2.3  2000/08/18 11:15:43  sll
+# Make current tree into omniORB 3.0.1 release.
+# Turn on <top>/src/services build by default.
+#
 # Revision 1.1.2.2  2000/08/18 09:53:01  sll
 # Latest RTEMS updates.
 #
@@ -215,7 +219,7 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 #
 CorbaImplementation = OMNIORB
 
-OMNIORB_VERSION = 3.0.0
+OMNIORB_VERSION = 3.0.1
 OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))
