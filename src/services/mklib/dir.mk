@@ -4,8 +4,8 @@ include libdefs.mk
 # Look for .idl files in <top>/idl plus ../idl
 vpath %.idl ../idl $(IMPORT_TREES:%=%/idl) $(VPATH:%=%/../idl)
 
-DIR_IDLFLAGS += -I. -I../idl $(patsubst %,-I%/../idl,$(VPATH)) \
-                   $(patsubst %,-I%/idl,$(IMPORT_TREES))
+DIR_IDLFLAGS +=  -I. -I../idl $(patsubst %,-I%/../idl,$(VPATH)) \
+                 $(patsubst %,-I%/idl,$(IMPORT_TREES))
 
 COS_SKLIB_NAME    = COS
 COS_DYNSKLIB_NAME = COSDynamic
@@ -22,7 +22,7 @@ all:: mkstatic mkshared
 
 export:: mkstatic mkshared
 
-export:: $(COS_INTERFACES:%=%.hh)
+export:: $(COS_INTERFACES:%=%.hh) COS_sysdep.h
 	@(for i in $^; do \
             file="$$i"; \
             dir="$(EXPORT_TREE)/$(INCDIR)/COS"; \

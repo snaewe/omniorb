@@ -21,7 +21,7 @@ all:: mkstatic mkshared
 
 export:: mkstatic mkshared
 
-export:: $(COS_INTERFACES:%=%.hh)
+export:: $(COS_INTERFACES:%=%.hh) COS_sysdep.h
 	@(for i in $^; do \
             file="$$i"; \
             dir="$(EXPORT_TREE)/$(INCDIR)/COS/BOA"; \

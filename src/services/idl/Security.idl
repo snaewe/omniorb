@@ -11,6 +11,12 @@
 #ifndef _SECURITY_IDL
 #define _SECURITY_IDL
 
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #ifndef __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #define __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #include "COS_sysdep.h"
+#pragma hh #endif
+
 #include <orb.idl>
 #include <TimeBase.idl>
 

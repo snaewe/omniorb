@@ -1,6 +1,12 @@
 #ifndef _ATT_NOTIFY_CHANNEL_ADMIN_IDL_
 #define _ATT_NOTIFY_CHANNEL_ADMIN_IDL_
 
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #ifndef __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #define __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #include "COS_sysdep.h"
+#pragma hh #endif
+
 #pragma prefix "omg.org"
 
 #ifdef _IDL_TO_JAVA

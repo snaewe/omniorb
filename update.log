@@ -1,3 +1,75 @@
+Thu Aug 10 11:41:31 BST 2000 sll
+================================
+
+- Added pragma hh to COS IDLs so that COS_sysdep.h is included
+  by the stub headers. This is necessary so that the right
+  CPP macros can be inserted to instruct the compiler to use the
+  DLL version of the COS stub library on win32 platforms.
+
+src/services/idl/AttNotifyChannelAdmin.idl
+src/services/idl/CosCollection.idl
+src/services/idl/CosCompoundLifeCycle.idl
+src/services/idl/CosConcurrencyControl.idl
+src/services/idl/CosContainment.idl
+src/services/idl/CosEventChannelAdmin.idl
+src/services/idl/CosEventComm.idl
+src/services/idl/CosExternalization.idl
+src/services/idl/CosExternalizationContainment.idl
+src/services/idl/CosExternalizationReference.idl
+src/services/idl/CosGraphs.idl
+src/services/idl/CosLicensingManager.idl
+src/services/idl/CosLifeCycle.idl
+src/services/idl/CosLifeCycleContainment.idl
+src/services/idl/CosLifeCycleReference.idl
+src/services/idl/CosNaming.idl
+src/services/idl/CosNotification.idl
+src/services/idl/CosNotifyChannelAdmin.idl
+src/services/idl/CosNotifyComm.idl
+src/services/idl/CosNotifyFilter.idl
+src/services/idl/CosObjectIdentity.idl
+src/services/idl/CosPersistenceDDO.idl
+src/services/idl/CosPersistenceDS_CLI.idl
+src/services/idl/CosPersistencePDS.idl
+src/services/idl/CosPersistencePDS_DA.idl
+src/services/idl/CosPersistencePID.idl
+src/services/idl/CosPersistencePO.idl
+src/services/idl/CosPersistencePOM.idl
+src/services/idl/CosPropertyService.idl
+src/services/idl/CosQuery.idl
+src/services/idl/CosQueryCollection.idl
+src/services/idl/CosReference.idl
+src/services/idl/CosRelationships.idl
+src/services/idl/CosStream.idl
+src/services/idl/CosTSPortability.idl
+src/services/idl/CosTime.idl
+src/services/idl/CosTimerEvent.idl
+src/services/idl/CosTrading.idl
+src/services/idl/CosTradingDynamic.idl
+src/services/idl/CosTradingRepos.idl
+src/services/idl/CosTransactions.idl
+src/services/idl/CosTypedEventChannelAdmin.idl
+src/services/idl/CosTypedEventComm.idl
+src/services/idl/CosTypedNotifyChannelAdmin.idl
+src/services/idl/CosTypedNotifyComm.idl
+src/services/idl/DCE_CIOPSecurity.idl
+src/services/idl/LifeCycleService.idl
+src/services/idl/Lname-library.idl
+src/services/idl/NRService.idl
+src/services/idl/RDITestTypes.idl
+src/services/idl/SECIOP.idl
+src/services/idl/SSLIOP.idl
+src/services/idl/Security.idl
+src/services/idl/SecurityAdmin.idl
+src/services/idl/SecurityLevel1.idl
+src/services/idl/SecurityLevel2.idl
+src/services/idl/SecurityReplaceable.idl
+src/services/idl/TimeBase.idl
+src/services/mklib/COS_sysdep.h                    NEW
+src/services/mklib/dir.mk
+src/services/mklib/libdefs.mk
+src/services/mklib/mkBOAlib/COS_sysdep.h           NEW
+src/services/mklib/mkBOAlib/dir.mk
+
 Thu Aug 10 11:29:11 BST 2000 djs (ci by sll)
 ============================================
 

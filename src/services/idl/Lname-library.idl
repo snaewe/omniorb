@@ -16,6 +16,12 @@
 //  because this file is not intended to be "#include"d in any
 //  other .idl file. For that reason, there are also no guards.
 
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #ifndef __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #define __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #include "COS_sysdep.h"
+#pragma hh #endif
+
 #include <CosNaming.idl>
 
 	interface LNameComponent {                                                              // PIDL

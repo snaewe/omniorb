@@ -7,6 +7,12 @@
 //Note Even though this module is marked PIDL, it compiles with
 //     an IDL compiler. 
 
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #ifndef __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #define __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #include "COS_sysdep.h"
+#pragma hh #endif
+
 #include <CosTransactions.idl>
 
 #pragma prefix "omg.org"

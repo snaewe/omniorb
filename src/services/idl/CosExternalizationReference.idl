@@ -6,6 +6,12 @@
 #ifndef _COS_EXTERNALIZATION_REFERENCE_IDL_
 #define _COS_EXTERNALIZATION_REFERENCE_IDL_
 
+// omniORB specific pragmas to insert extra includes into the stub header.
+#pragma hh #ifndef __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #define __COS_SYSDEP_H_EXTERNAL_GUARD__
+#pragma hh #include "COS_sysdep.h"
+#pragma hh #endif
+
 #include <CosReference.idl>
 #include <CosStream.idl>
 
