@@ -1,3 +1,10 @@
+Wed Aug 23 18:26:48 BST 2000 dme
+================================
+- Don't build debug DLLs on Win32 if BuildSharedLibrary is unset
+
+external_merge/mk/mklib.mk
+
+
 Wed Aug 23 16:44:36 BST 2000 djs
 ================================
 
