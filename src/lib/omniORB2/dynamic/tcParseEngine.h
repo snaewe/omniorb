@@ -28,9 +28,12 @@
 
 
 /* $Log$
-/* Revision 1.1  1998/01/27 15:47:18  ewc
-/* Initial revision
+/* Revision 1.2  1998/04/07 19:38:25  sll
+/* Replace cerr with omniORB::log.
 /*
+ * Revision 1.1  1998/01/27  15:47:18  ewc
+ * Initial revision
+ *
  */
 
 #ifndef __tcParseEngine_h__
@@ -86,8 +89,10 @@ class tcParseEngine
 
   inline void setTCKind(CORBA::ULong utck) {
     if (utck > (CORBA::ULong) CORBA::tk_except) {
-      if (utck == (CORBA::ULong) 0xffffffff && omniORB::traceLevel >= 10) 
-	cerr << "\nIndirection TypeCodes not yet handled." << endl;
+      if (utck == (CORBA::ULong) 0xffffffff && omniORB::traceLevel >= 10) {
+	omniORB::log << "\nIndirection TypeCodes not yet handled.\n";
+	omniORB::log.flush();
+      }
       throw CORBA::BAD_TYPECODE(0,CORBA::COMPLETED_NO);
     }
     pd_tck = (CORBA::TCKind) utck;
@@ -102,7 +107,7 @@ class tcParseEngine
   
 
   inline void unsetByteOrder(CORBA::Boolean bOrder) {
-    if (pd_tmpParam.byteOrder() != bOrder) pd_tmpParam.byteOrder(bOrder);
+    if ((CORBA::Boolean)pd_tmpParam.byteOrder() != bOrder) pd_tmpParam.byteOrder((CORBA::Char)bOrder);
   }
 
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5  1998/04/07 19:39:04  sll
+  Replace cerr with omniORB::log.
+
   Revision 1.4  1998/03/20 12:30:30  sll
   Delay connect to the remote address space until the first send or recv.
   Previously, connect was made inside the ctor of tcpATMosStrand.
@@ -323,7 +326,8 @@ tcpATMosIncomingRope::tcpATMosIncomingRope(tcpATMosMTincomingFactory* f,
 tcpATMosIncomingRope::~tcpATMosIncomingRope()
 {
   if (omniORB::traceLevel >= 15) {
-    cerr << "tcpATMosIncomingRope::~tcpATMosIncomingRope: called." << endl;
+    omniORB::log << "tcpATMosIncomingRope::~tcpATMosIncomingRope: called.\n";
+    omniORB::log.flush();
   }
   if (me) {
     delete me;
@@ -360,11 +364,13 @@ tcpATMosIncomingRope::cancelThreads()
     pd_lock.unlock();
 
     if (omniORB::traceLevel >= 15) {
-      cerr << "tcpATMosMTincomingFactory::stopIncoming: Waiting for tcpATMosMT Rendezvouser to exit..." << endl;
+      omniORB::log << "tcpATMosMTincomingFactory::stopIncoming: Waiting for tcpATMosMT Rendezvouser to exit...\n";
+      omniORB::log.flush();
     }
     rendezvouser->join(0); // Wait till the rendezvouser to come back
     if (omniORB::traceLevel >= 15) {
-      cerr << "tcpATMosMTincomingFactory::stopIncoming: tcpATMosMT Rendezvouser has exited" << endl;
+      omniORB::log << "tcpATMosMTincomingFactory::stopIncoming: tcpATMosMT Rendezvouser has exited\n";
+      omniORB::log.flush();
     }
     rendezvouser = 0;
   }
@@ -432,7 +438,8 @@ tcpATMosOutgoingRope::tcpATMosOutgoingRope(tcpATMosMToutgoingFactory* f,
 tcpATMosOutgoingRope::~tcpATMosOutgoingRope()
 {
   if (omniORB::traceLevel >= 15) {
-    cerr << "tcpATMosOutgoingRope::~tcpATMosOutgoingRope: called." << endl;
+    omniORB::log << "tcpATMosOutgoingRope::~tcpATMosOutgoingRope: called.\n";
+    omniORB::log.flush();
   }
   if (remote) {
     delete remote;
@@ -493,7 +500,8 @@ tcpATMosStrand::tcpATMosStrand(tcpATMosIncomingRope *r,
 tcpATMosStrand::~tcpATMosStrand() 
 {
   if (omniORB::traceLevel >= 5) {
-    cerr << "tcpATMosStrand::~Strand() close file handle." << endl;
+    omniORB::log << "tcpATMosStrand::~Strand() close file handle.\n";
+    omniORB::log.flush();
   }
   if (pd_filehandle != 0)
     fclose(pd_filehandle);
@@ -658,7 +666,8 @@ tcpATMosRendezvouser::run_undetached(void *arg)
   tcpATMosIncomingRope* r = (tcpATMosIncomingRope*) arg;
 
   if (omniORB::traceLevel >= 5) {
-    cerr << "tcpATMosMT Rendezvouser thread: starts." << endl;
+    omniORB::log << "tcpATMosMT Rendezvouser thread: starts.\n";
+    omniORB::log.flush();
   }
 
   tcpATMosStrand *newSt = 0;
@@ -682,7 +691,8 @@ tcpATMosRendezvouser::run_undetached(void *arg)
       }
 
       if (omniORB::traceLevel >= 15) {
-	cerr << "tcpATMosMT Rendezvouser thread: block on net_listen()." << endl;
+	omniORB::log << "tcpATMosMT Rendezvouser thread: block on net_listen().\n";
+	omniORB::log.flush();
       }
       
       if (net_listen(real_filehandle,0,lportstr,0,0) != 0) {
@@ -692,8 +702,8 @@ tcpATMosRendezvouser::run_undetached(void *arg)
       }
 
       if (omniORB::traceLevel >= 15) {
-	cerr << "tcpATMosMT Rendezvouser thread: unblock from net_listen()." 
-	     << endl;
+	omniORB::log << "tcpATMosMT Rendezvouser thread: unblock from net_listen().\n";
+	omniORB::log.flush();
       }
 
       {
@@ -714,7 +724,8 @@ tcpATMosRendezvouser::run_undetached(void *arg)
       }
 
       if (omniORB::traceLevel >= 5) {
-	cerr << "tcpATMosMT Rendezvouser thread: accept new strand." << endl;
+	omniORB::log << "tcpATMosMT Rendezvouser thread: accept new strand.\n";
+	omniORB::log.flush();
       }
 
       if (!(newthr = new tcpATMosWorker(newSt))) {
@@ -733,23 +744,27 @@ tcpATMosRendezvouser::run_undetached(void *arg)
       // The following is a temporary fix, this thread just wait for a while
       // and tries again. Hopfully, some connections might be freed by then.
       if (omniORB::traceLevel >= 5) {
-	cerr << "tcpATMosMT Rendezvouser thread: accept fails. Too many file descriptors opened?" << endl;
+	omniORB::log << "tcpATMosMT Rendezvouser thread: accept fails. Too many file descriptors opened?\n";
+	omniORB::log.flush();
       }
       omni_thread::sleep(1,0);
       continue;
     }
     catch(const omniORB::fatalException &ex) {
       if (omniORB::traceLevel > 0) {
-	cerr << "#### You have caught an omniORB2 bug, details are as follows:" << endl;
-	cerr << ex.file() << " " << ex.line() << ":" << ex.errmsg() << endl; 
-	cerr << "tcpATMosMT Rendezvouser thread will not accept new connection." << endl;
+	omniORB::log << "#### You have caught an omniORB2 bug, details are as follows:\n"
+		     << ex.file() << " " << ex.line() << ":" << ex.errmsg()
+		     << "\n"
+		     << "tcpATMosMT Rendezvouser thread will not accept new connection.\n";
+	omniORB::log.flush();
       }
       die = 1;
     }
     catch(...) {
       if (omniORB::traceLevel > 0) {
-	cerr << "######## Unexpected exception caught by tcpATMosMT Rendezvouser" << endl;
-	cerr << "tcpATMosMT Rendezvouser thread will not accept new connection." << endl;
+	omniORB::log << "######## Unexpected exception caught by tcpATMosMT Rendezvouser\n"
+		     << "tcpATMosMT Rendezvouser thread will not accept new connection.\n";
+	omniORB::log.flush();
       }
       die = 1;
     }
@@ -758,14 +773,14 @@ tcpATMosRendezvouser::run_undetached(void *arg)
       newSt->shutdown();
       if (!newthr) {
 	if (omniORB::traceLevel >= 5) {
-	  cerr << "tcpATMosMT Rendezvouser thread cannot spawn a new server thread."
-	       << endl;
+	  omniORB::log << "tcpATMosMT Rendezvouser thread cannot spawn a new server thread.\n";
+	  omniORB::log.flush();
 	}
       }
     }
   }
   if (omniORB::traceLevel >= 5) {
-    cerr << "tcpATMosMT Rendezvouser thread: exits." << endl;
+    omniORB::log << "tcpATMosMT Rendezvouser thread: exits.\n";
   }
   return 0;
 }
@@ -785,7 +800,8 @@ tcpATMosWorker::_realRun(void *arg)
   tcpATMosStrand* s = (tcpATMosStrand*)arg;
 
   if (omniORB::traceLevel >= 5) {
-    cerr << "tcpATMosMT Worker thread: starts." << endl;
+    omniORB::log << "tcpATMosMT Worker thread: starts.\n";
+    omniORB::log.flush();
   }
 
   if (!gateKeeper::checkConnect(s)) {
@@ -798,26 +814,31 @@ tcpATMosWorker::_realRun(void *arg)
       }
       catch (const CORBA::COMM_FAILURE &) {
 	if (omniORB::traceLevel >= 5) {
-	  cerr << "#### Communication failure. Connection closed." << endl;
+	  omniORB::log << "#### Communication failure. Connection closed.\n";
+	  omniORB::log.flush();
 	}
 	break;
       }
       catch(const omniORB::fatalException &ex) {
 	if (omniORB::traceLevel > 0) {
-	  cerr << "#### You have caught an omniORB2 bug, details are as follows:" << endl;
-	  cerr << ex.file() << " " << ex.line() << ":" << ex.errmsg() << endl; 
+	  omniORB::log << "#### You have caught an omniORB2 bug, details are as follows:\n"
+		       << ex.file() << " " << ex.line() << ":" << ex.errmsg() 
+		       << "\n";
+	  omniORB::log.flush();
 	}
 	break;
       }
       catch (...) {
 	if (omniORB::traceLevel > 0) {
-	  cerr << "#### A system exception has occured and was caught by tcpATMosMT Worker thread." << endl;
+	  omniORB::log << "#### A system exception has occured and was caught by tcpATMosMT Worker thread.\n";
+	  omniORB::log.flush();
 	}
 	break;
       }
     }
   }
   if (omniORB::traceLevel >= 5) {
-    cerr << "tcpATMosMT Worker thread: exits." << endl;
+    omniORB::log << "tcpATMosMT Worker thread: exits.\n";
+    omniORB::log.flush();
   }
 }

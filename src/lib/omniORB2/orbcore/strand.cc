@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.5  1998/04/07 19:37:39  sll
+  Replace cerr with omniORB::log.
+
   Revision 1.4  1998/03/19 19:53:35  sll
   Bug fixed. WrTimedLock.
 
@@ -468,7 +471,8 @@ Rope::incrRefCount(CORBA::Boolean held_anchor_mutex)
   if (!held_anchor_mutex)
     pd_anchor->pd_lock.lock();
   if (omniORB::traceLevel >= 20) {
-    cerr << "Rope::incrRefCount: old value = " << pd_refcount << endl;
+    omniORB::log << "Rope::incrRefCount: old value = " << pd_refcount << "\n";
+    omniORB::log.flush();
   }
   assert(pd_refcount >= 0);
   pd_refcount++;
@@ -483,7 +487,8 @@ Rope::decrRefCount(CORBA::Boolean held_anchor_mutex)
   if (!held_anchor_mutex)
     pd_anchor->pd_lock.lock();
   if (omniORB::traceLevel >= 20) {
-    cerr << "Rope::decrRefCount: old value = " << pd_refcount << endl;
+    omniORB::log << "Rope::decrRefCount: old value = " << pd_refcount << "\n";
+    omniORB::log.flush();
   }
   pd_refcount--;
   assert(pd_refcount >=0);
@@ -601,8 +606,8 @@ Rope_iterator::operator() ()
 	      // This Rope is not used by any object reference
 	      // First close down all the strands before calling the dtor of the Rope
 	      if (omniORB::traceLevel > 10) {
-		cerr << "Rope_iterator::operator() (): delete unused Rope." 
-		     << endl;
+		omniORB::log << "Rope_iterator::operator() (): delete unused Rope.\n";
+		omniORB::log.flush();
 	      }
 	      rp->pd_lock.lock();
 	      Strand *p = rp->pd_head;

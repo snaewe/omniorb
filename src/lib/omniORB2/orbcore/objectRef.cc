@@ -29,9 +29,12 @@
  
 /*
   $Log$
-  Revision 1.14  1998/01/27 15:35:55  ewc
-  Added support for type any
+  Revision 1.15  1998/04/07 19:36:50  sll
+  Replace cerr with omniORB::log.
 
+// Revision 1.14  1998/01/27  15:35:55  ewc
+// Added support for type any
+//
   Revision 1.13  1997/12/10 13:23:41  sll
   Removed dependency on omniLC.h.
 
@@ -207,7 +210,14 @@ omni::objectIsReady(omniObject *obj)
       omniObject **p = &omniObject::localObjectTable[omniORB::hash(obj->pd_objkey.native)];
       omniObject **pp = p;
       while (*p) {
+#ifdef HAS_Cplusplus_Namespace
+        // operator== is defined in the omniORB namespace
+	if (omniORB::operator==(((omniORB::objectKey)(*p)->pd_objkey.native),
+				((omniORB::objectKey) obj->pd_objkey.native))){
+#else
+	// operator== is defined in the global namespace
 	if ((*p)->pd_objkey.native == obj->pd_objkey.native) {
+#endif
 	  obj->pd_next = 0;
 	  omniObject::objectTableLock.unlock();
 	  throw CORBA::INV_OBJREF(0,CORBA::COMPLETED_NO);
@@ -249,9 +259,9 @@ omni::objectRelease(omniObject *obj)
     // but the CORBA spec. says release *must not* throw CORBA exceptions.
     // Therefore, just generate a warning message and returns.
     if (omniORB::traceLevel > 0) {
-      cerr << "Warning: try to release an object with reference count <= 0.\n"
-	   << "Has CORBA::release() been called more than once on an object reference?"
-	   << endl;
+      omniORB::log << "Warning: try to release an object with reference count <= 0.\n"
+	   << "Has CORBA::release() been called more than once on an object reference?\n";
+      omniORB::log.flush();
     }
     return;
   }
@@ -332,7 +342,14 @@ omni::locateObject(omniObjectManager*,omniObjectKey &k)
   omniObject::objectTableLock.lock();
   omniObject **p = &omniObject::localObjectTable[omniORB::hash(k)];
   while (*p) {
+#ifdef HAS_Cplusplus_Namespace
+    // operator== is defined in the omniORB namespace
+    if (omniORB::operator==((omniORB::objectKey)(*p)->pd_objkey.native,
+			    (omniORB::objectKey)k)) {
+#else
+    // operator== is defined in the global namespace
     if ((*p)->pd_objkey.native == k) {
+#endif
       (*p)->setRefCount((*p)->getRefCount()+1);
       omniObject::objectTableLock.unlock();
       return *p;
@@ -685,16 +702,16 @@ CORBA::MarshalObjRef(CORBA::Object_ptr obj,
 {
   if (CORBA::is_nil(obj)) {
     // nil object reference
-    operator>>= ((CORBA::ULong)1,s);
-    operator>>= ((CORBA::Char) '\0',s);
-    operator>>= ((CORBA::ULong) 0,s);
+    ::operator>>= ((CORBA::ULong)1,s);
+    ::operator>>= ((CORBA::Char) '\0',s);
+    ::operator>>= ((CORBA::ULong) 0,s);
     return;
   }
 
   // non-nil object reference
   repoId = obj->PR_getobj()->NP_IRRepositoryId();
   repoIdSize = strlen(repoId)+1;
-  operator>>= ((CORBA::ULong) repoIdSize,s);
+  ::operator>>= ((CORBA::ULong) repoIdSize,s);
   s.put_char_array((CORBA::Char *)repoId,repoIdSize);
   IOP::TaggedProfileList * pl = obj->PR_getobj()->iopProfiles();
   *pl >>= s;
@@ -817,16 +834,16 @@ CORBA::MarshalObjRef(CORBA::Object_ptr obj,
 {
   if (CORBA::is_nil(obj)) {
     // nil object reference
-    operator>>= ((CORBA::ULong)1,s);
-    operator>>= ((CORBA::Char) '\0',s);
-    operator>>= ((CORBA::ULong) 0,s);
+    ::operator>>= ((CORBA::ULong)1,s);
+    ::operator>>= ((CORBA::Char) '\0',s);
+    ::operator>>= ((CORBA::ULong) 0,s);
     return;
   }
 
   // non-nil object reference
   repoId = obj->PR_getobj()->NP_IRRepositoryId();
   repoIdSize = strlen(repoId)+1;
-  operator>>= ((CORBA::ULong) repoIdSize,s);
+  ::operator>>= ((CORBA::ULong) repoIdSize,s);
   s.put_char_array((CORBA::Char *)repoId,repoIdSize);
   IOP::TaggedProfileList * pl = obj->PR_getobj()->iopProfiles();
   *pl >>= s;

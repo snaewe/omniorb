@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.4  1998/04/07 19:39:24  sll
+  Replace cerr with omniORB::log.
+
   Revision 1.3  1998/03/13 17:34:16  sll
   Bug fix. No longer reject an IOR with zero length object key.
 
@@ -72,7 +75,9 @@ tcpSocketFactoryType::init()
   ropeFactoryTypeList = singleton;
 
   if (omniORB::traceLevel >= 2) {
-    cerr << "omniORB2 gateKeeper is " << gateKeeper::version() << endl;
+    omniORB::log << "omniORB2 gateKeeper is " << gateKeeper::version() 
+		 << "\n";
+    omniORB::log.flush();
   }
 }
 

@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.12  1998/04/07 19:34:26  sll
+  Replace cerr with omniORB::log.
+
   Revision 1.11  1998/02/25 20:37:13  sll
   Added hooks for dynamic object loader.
 
@@ -142,7 +145,8 @@ GIOP_S::RequestReceived(CORBA::Boolean skip_msg)
 	  // If omniORB::strictIIOP non-zero, we expect incoming calls to
 	  // be well behaved and rejects anything that is not.
 	  if (omniORB::traceLevel >= 15) {
-	    cerr << "GIOP_S::RequestReceived: garbage left at the end of message." << endl;
+	    omniORB::log << "GIOP_S::RequestReceived: garbage left at the end of message.\n";
+	    omniORB::log.flush();
 	  }
 	  if (!omniORB::strictIIOP) {
 	    skip(RdMessageUnRead(),1);

@@ -28,9 +28,12 @@
  
 /*
   $Log$
-  Revision 1.2  1998/01/22 11:38:19  sll
-  Set the incoming and outgoing scan period to 30 seconds.
+  Revision 1.3  1998/04/07 19:37:14  sll
+  Replace cerr with omniORB::log.
 
+// Revision 1.2  1998/01/22  11:38:19  sll
+// Set the incoming and outgoing scan period to 30 seconds.
+//
   Revision 1.1  1997/12/09 18:43:11  sll
   Initial revision
 
@@ -175,7 +178,8 @@ void*
 inScavenger_t::run_undetached(void *arg)
 {
   if (omniORB::traceLevel >= 15) {
-    cerr << "inScavenger: start." << endl;
+    omniORB::log << "inScavenger: start.\n";
+    omniORB::log.flush();
   }
   pd_mutex.lock();
   while (!isDying())
@@ -186,7 +190,8 @@ inScavenger_t::run_undetached(void *arg)
 	int poke = pd_cond.timedwait(abs_sec,abs_nsec);
 	if (omniORB::traceLevel >= 15) {
 	  if (poke) {
-	    cerr << "inScavenger: woken by poke()" << endl;
+	    omniORB::log << "inScavenger: woken by poke()\n";
+	    omniORB::log.flush();
 	  }
 	}
       }
@@ -200,7 +205,8 @@ inScavenger_t::run_undetached(void *arg)
       pd_mutex.unlock();
 
       if (omniORB::traceLevel >  10) {
-	cerr << "inScavenger: scanning for idle incoming connections" << endl;
+	omniORB::log << "inScavenger: scanning for idle incoming connections\n";
+	omniORB::log.flush();
       }
 
       {
@@ -214,7 +220,8 @@ inScavenger_t::run_undetached(void *arg)
     }
   pd_mutex.unlock();
   if (omniORB::traceLevel >= 15) {
-    cerr << "inScavenger: exit." << endl;
+    omniORB::log << "inScavenger: exit.\n";
+    omniORB::log.flush();
   }
   return 0;
 }
@@ -223,7 +230,8 @@ void*
 outScavenger_t::run_undetached(void *arg)
 {
   if (omniORB::traceLevel >= 15) {
-    cerr << "outScavenger: start." << endl;
+    omniORB::log << "outScavenger: start.\n";
+    omniORB::log.flush();
   }
   pd_mutex.lock();
   while (!isDying())
@@ -234,7 +242,8 @@ outScavenger_t::run_undetached(void *arg)
 	int poke = pd_cond.timedwait(abs_sec,abs_nsec);
 	if (omniORB::traceLevel >= 15) {
 	  if (poke) {
-	    cerr << "outScavenger: woken by poke()" << endl;
+	    omniORB::log << "outScavenger: woken by poke()\n";
+	    omniORB::log.flush();
 	  }
 	}
       }
@@ -248,7 +257,8 @@ outScavenger_t::run_undetached(void *arg)
       pd_mutex.unlock();
 
       if (omniORB::traceLevel > 10) {
-	cerr << "outScavenger: scanning for idle outgoing connections" << endl;
+	omniORB::log << "outScavenger: scanning for idle outgoing connections\n";
+	omniORB::log.flush();
       }
       {
 	ropeFactory_iterator iter(globalOutgoingRopeFactories);
@@ -261,7 +271,8 @@ outScavenger_t::run_undetached(void *arg)
     }
   pd_mutex.unlock();
   if (omniORB::traceLevel >= 15) {
-    cerr << "outScavenger: exit." << endl;
+    omniORB::log << "outScavenger: exit.\n";
+    omniORB::log.flush();
   }
   return 0;
 }
@@ -294,7 +305,8 @@ scanForIdle(Anchor* anchor,char* thread_name)
 		  // WrLock). Therefore the strand must have been idle
 		  // for over one scan period.  Shut it down.
 		  if (omniORB::traceLevel > 10) {
-		    cerr << thread_name << ": shutting down idle connection" << endl;
+		    omniORB::log << thread_name << ": shutting down idle connection\n";
+		    omniORB::log.flush();
 		  }
 		  s->shutdown();
 		}
