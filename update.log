@@ -1,3 +1,57 @@
+Thu Jul  1 20:01:13 BST 2004 dgrisby
+====================================
+
+- Support Windows build with mingw. Thanks Wolfgang Glas.
+
+README.win32
+config/config.mk
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/CORBA_sysdep_trad.h
+mk/mingw.mk                           -- new
+mk/platforms/x86_nt_4.0_mingw.mk      -- new
+patches/README
+patches/mingw_omnipython.patch        -- new
+src/lib/omniORB/codesets/dir.mk
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/orbcore/dir.mk
+src/tool/omkdepend/dir.mk
+src/tool/omkdepend/gnuwin32.c
+src/tool/omniidl/cxx/dir.mk
+src/tool/omniidl/cxx/idlsysdep.h
+src/tool/omniidl/cxx/cccp/config-windows.h
+
+- Support OpenBSD. Thanks Mark Zimmerman and Adriaan Joubert.
+
+configure
+configure.ac
+include/omnithread.h
+mk/beforeauto.mk.in
+
+- Suppress compiler warnings on void methods. Thanks Peter Klotz.
+
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+
+- Fix fixed point. It was broken point. Thanks Simone Viani.
+
+src/lib/omniORB/orbcore/corbaFixed.cc
+
+- Client call interceptor oneway and response expected flipped. Thanks
+  John Fardo.
+
+src/lib/omniORB/orbcore/giopImpl10.cc
+src/lib/omniORB/orbcore/giopImpl11.cc
+src/lib/omniORB/orbcore/giopImpl12.cc
+
+- Avoid warnings on Fedora Core 2. Thanks Matej Kenda.
+
+src/tool/omniidl/cxx/cccp/config-linux.h
+
+- Cope with spaces in -I arguments.
+
+src/tool/omniidl/python/omniidl/main.py
+
+
 Fri Jun 18 15:43:49 BST 2004 dgrisby
 ====================================
 
