@@ -99,7 +99,7 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 
 #include	<stdlib.h>		// POSIX standard defns
 #include	<string.h>		// POSIX string funcs
-#if defined(__aix__) || defined(__SINIX__)
+#if defined(__aix__) || defined(__SINIX__) || defined(__uw7__)
 #include        <strings.h>
 #endif
 #include	<ctype.h>		// External functions

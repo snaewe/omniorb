@@ -1,3 +1,24 @@
+Wed Sep 22 13:06:18 BST 1999 sll
+================================
+
+- merged port to SCO Unixware 7
+
+include/omnithread.h
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+src/lib/omnithread/posix.cc
+src/tool/omniidl2/driver/drv_fork.cc
+src/tool/omniidl2/driver/drv_main.cc
+src/tool/omniidl2/driver/drv_preproc.cc
+src/tool/omniidl2/fe/idl.ll
+src/tool/omniidl2/fe/lex.yy.cc
+src/tool/omniidl2/include/idl.hh
+
+external_merge/config/config.mk
+external_merge/mk/afterdir.mk
+external_merge/mk/platforms/x86_uw7.mk   NEW
+external_merge/src/lib/omniORB2/orbcore/gatekeepers/alone/gatekeeper.cc
+
+
 Tue Sep 21 21:27:31 BST 1999 sll
 ================================
 
