@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.6  2001/08/29 11:55:23  dpg1
+# Enumerator nodes record their value.
+#
 # Revision 1.15.2.5  2001/06/08 17:12:25  dpg1
 # Merge all the bug fixes from omni3_develop.
 #
@@ -668,15 +671,21 @@ Functions:
 class Enumerator (Decl, DeclRepoId):
     """Enumerator of an Enum (Decl, DeclRepoId)
 
-No non-inherited functions."""
+Function:
+
+  value() -- integer value of enumerator, as marshalled."""
 
     def __init__(self, file, line, mainFile, pragmas, comments,
-                 identifier, scopedName, repoId):
+                 identifier, scopedName, repoId, value):
 
         Decl.__init__(self, file, line, mainFile, pragmas, comments)
         DeclRepoId.__init__(self, identifier, scopedName, repoId)
 
+        self.__value = value
+
     def accept(self, visitor): visitor.visitEnumerator(self)
+
+    def value(self): return self.__value
 
 
 class Enum (Decl, DeclRepoId):

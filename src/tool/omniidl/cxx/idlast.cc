@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.16.2.8  2001/08/29 11:55:22  dpg1
+// Enumerator nodes record their value.
+//
 // Revision 1.16.2.7  2001/06/12 11:35:25  dpg1
 // Minor omniidl tweaks for valuetype.
 //
@@ -1947,9 +1950,10 @@ Enumerator::
 
 void
 Enumerator::
-finishConstruction(Enum* container)
+finishConstruction(Enum* container, IDL_ULong value)
 {
   container_ = container;
+  value_     = value;
 }
 
 Enum::
@@ -1976,9 +1980,11 @@ Enum::
 finishConstruction(Enumerator* enumerators)
 {
   enumerators_ = enumerators;
+  IDL_ULong count = 0;
 
-  for (Enumerator* e = enumerators; e; e = (Enumerator*)e->next())
-    e->finishConstruction(this);
+  for (Enumerator* e = enumerators; e; e = (Enumerator*)e->next(), ++count)
+    e->finishConstruction(this, count);
+
   mostRecent_ = this;
 }
 
