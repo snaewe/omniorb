@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.6  2000/06/12 13:21:42  djs
+# Changed attribution of generated code from "omniidl3" to
+# "omniidl (C++ backend")
+#
 # Revision 1.12.2.5  2000/05/04 14:34:51  djs
 # Added new flag splice-modules which causes all continuations to be output
 # as one lump. Default is now to output them in pieces following the IDL.
@@ -99,7 +103,7 @@ self = config
 # similar in purpose to idl_global()-> data and o2be::global data in the
 # omniidl2 c++ compiler
 
-self._programName   = "omniidl3"    # programs own name
+self._programName   = "omniidl (C++ backend)"    # programs own name
 self._libVersion    = "omniORB_3_0" # library version
 self._hdrsuffix     = ".hh"         # suffix for header files
 self._skelsuffix    = "SK.cc"       # suffix for stub files
