@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.17  2000/01/13 10:52:04  djs
+# Rewritten argument handling
+# Added options to specify the header and stubs file prefix, mirroring omniidl3
+#
 # Revision 1.16  2000/01/12 19:54:47  djs
 # Added option to generate old CORBA 2.1 signatures for skeletons
 #
@@ -102,12 +106,14 @@ import re, sys
 
 cpp_args = ["-D__OMNIIDL_CXX__"]
 usage_string = """\
+  -Wbh=<sufix>    Specify suffix for generated header files
+  -Wbs=<suffix>   Specify suffix for generated stub files
   -Wba            Generate code for TypeCodes and Any
   -Wbtp           Generate 'tie' implementation skeletons
   -Wbtf           Generate flattened 'tie' implementation skeletons
-  -WbF            Generates code fragments (for expert only)
-  -WbBOA          Generates BOA compatible skeletons
-  -Wbold          Generates old CORBA 2.1 signatures for skeletons"""
+  -WbF            Generate code fragments (for expert only)
+  -WbBOA          Generate BOA compatible skeletons
+  -Wbold          Generate old CORBA 2.1 signatures for skeletons"""
 
 # -----------------------------
 # Process back end specific arguments
@@ -130,26 +136,37 @@ def boa():
 def old():
     config.setOldFlag(1)
 
+def headersuffix(hh):
+    config.sethdrsuffix(hh)
 
-arguments = {
-    "a":   typecode_any,
-    "tp":  tie,
-    "tf":  flat_tie,
-    "F":   fragments,
-    "BOA": boa,
-    "old": old,
-    }
+def stubsuffix(sk):
+    config.setskelsuffix(sk)
+
 
 def process_args(args):
     for arg in args:
-        if arguments.has_key(arg):
-            arguments[arg]()
+        if arg == "a":
+            typecode_any()
+        elif arg == "tp":
+            tie()
+        elif arg == "tf":
+            flat_tie()
+        elif arg == "F":
+            fragments()
+        elif arg == "BOA":
+            boa()
+        elif arg == "old":
+            old()
+        elif arg[:2] == "h=":
+            headersuffix(arg[2:])
+        elif arg[:2] == "s=":
+            stubsuffix(arg[2:])
         else:
             print "Argument \"" + str(arg) + "\" is unknown to the " +\
                   "C++ backend\n"
             print "omniidl -bcxx -u for usage"
             sys.exit(1)
-            
+
 
 def run(tree, args):
     """Entrypoint to the C++ backend"""

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.9  2000/01/13 10:52:04  djs
+# Rewritten argument handling
+# Added options to specify the header and stubs file prefix, mirroring omniidl3
+#
 # Revision 1.8  2000/01/12 19:54:47  djs
 # Added option to generate old CORBA 2.1 signatures for skeletons
 #
@@ -59,6 +63,19 @@
 
 from omniidl import idlvisitor
 import config
+self = config
+
+self._programName   = "omniidl3"
+self._libVersion    = "omniORB_3_0"
+self._hdrsuffix     = ".hh"
+self._skelsuffix    = "SK.cc"
+self._dynskelsuffix = "DynSK.cc"
+
+self._defs_fragment  = "_defs"
+self._opers_fragment = "_operators"
+self._poa_fragment   = "_poa"
+
+self._name_prefix   = "_0RL"
 
 #
 # Location where configuration data pertinent to the current run of the
@@ -69,95 +86,95 @@ import config
 
 # name of the program itself
 def program_Name():
-    return "omniidl3"
+    return self._programName
     
 # version of the library
 def omniORB_Library_Version():
-    return "omniORB_3_0"
+    return self._libVersion
     
 # base name of the file being processed
+self._basename = ""
 def setBasename(b):
-    global __basename
-    __basename = b
+    self._basename = b
 def basename():
-    global __basename
-    return __basename
+    return self._basename
 
 # generate code for TypeCodes and Any
+self._typecode = 0
 def setTypecodeFlag(flag):
-    global __typecode
-    __typecode = flag
+    self._typecode = flag
 def TypecodeFlag():
-    global __typecode
-    return __typecode
+    return self._typecode
 
 # generate code for 'tie' implementational skeletons
+self._tie = 0
 def setTieFlag(flag):
-    global __tie
-    __tie = flag
+    self._tie = flag
 def TieFlag():
-    global __tie
-    return __tie
+    return self._tie
 
 # generate code for flattened 'tie' implementational skeletons
+self._flat = 0
 def setFlatTieFlag(flag):
-    global __flattie
-    __flattie = flag
+    self._flat = flag
 def FlatTieFlag():
-    global __flattie
-    return __flattie
+    return self._flat
 
 # generate fragments
+self._fragment = 0
 def setFragmentFlag(flag):
-    global __fragment
-    __fragment = flag
+    self._fragment = flag
 def FragmentFlag():
-    global __fragment
-    return __fragment
+    return self._fragment
 
 # generate boa compatible skeletons
+self._BOA = 0
 def setBOAFlag(flag):
-    global __BOA
-    __BOA = flag
+    self._BOA = flag
 def BOAFlag():
-    global __BOA
-    return __BOA
+    return self._BOA
 
 # generate old CORBA 2.1 signatures for skeletons
+self._old = 0
 def setOldFlag(flag):
-    global __old
-    __old = flag
+    self._old = flag
 def OldFlag():
-    global __old
-    return __old
+    return self._old
     
 # suffix added to basename to get header filename
+def sethdrsuffix(hh):
+    self._hdrsuffix = hh
+    
 def hdrsuffix():
-    return ".hh"
+    return self._hdrsuffix
+
     
 # suffix added to basename to get the filename of the skeleton cc file
+def setskelsuffix(sk):
+    self._skelsuffix = sk
+    
 def skelsuffix():
-    return "SK.cc"
+    return self._skelsuffix
     
 # suffix added to basename to get the filename of the dynamic skeleton cc file
 def dynskelsuffix():
-    return "DynSK.cc"
+    return self._dynskelsuffix
 
 # suffix to be added to basename to get the filename of the defs fragment file
 def defs_fragment_suffix():
-    return "_defs"
+    return self._defs_fragment
 
 # suffix to be added to basename to get the filename of the operators fragment file
 def opers_fragment_suffix():
-    return "_operators"
+    return self._opers_fragment
 
 # suffix to be added to basename to get the filename of the operators fragment file
 def poa_fragment_suffix():
-    return "_poa"
+    return self._poa_fragment
 
 # prefix to be added to avoid occasional name clashes
 def name_prefix():
-    return "_0RL"
+    return self._name_prefix
     
 # list of all files #included in the IDL
 includes = []
