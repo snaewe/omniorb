@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.11  2002/07/04 14:41:52  dgrisby
+ Better error report if can't get host's address.
+
  Revision 1.1.2.10  2000/08/22 14:57:46  sll
  In omniObjAdaptor::initialise, throw CORBA::INITIALIZE instead of allowing
  omniConnectionBroken to leak out of the ORB APIs.
@@ -178,9 +181,13 @@ omniObjAdapter::initialise()
     if( !options.noBootstrapAgent )
       omniInitialReferences::initialise_bootstrap_agentImpl();
   }
+  catch (omniORB::fatalException& ex) {
+    throw;
+  }
   catch (...) {
     OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
   }
+
 
   initialised = 1;
 }

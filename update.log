@@ -1,3 +1,17 @@
+Thu Jul  4 15:29:59 BST 2002 dgrisby
+====================================
+
+- Remove MessageErrors sent on oneways.
+
+bugfixes-305.xml
+src/lib/omniORB2/orbcore/giopServer.cc
+
+- Better error report if can't get host's address.
+
+src/lib/omniORB2/orbcore/objectAdapter.cc
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
 Tue Jun  4 00:30:39 BST 2002 dgrisby
 ====================================
 
