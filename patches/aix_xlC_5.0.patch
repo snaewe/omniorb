@@ -1,6 +1,11 @@
---- include/omniORB3/bufferedStream.h	2000/02/10 18:03:04	1.1.2.2
-+++ include/omniORB3/bufferedStream.h	2000/07/10 10:42:39
-@@ -156,135 +156,28 @@
+Index: include/omniORB3/bufferedStream.h
+===================================================================
+RCS file: /project/omni/cvsroot/omni/include/omniORB3/bufferedStream.h,v
+retrieving revision 1.1.2.3
+diff -u -r1.1.2.3 bufferedStream.h
+--- include/omniORB3/bufferedStream.h	2000/08/07 15:34:33	1.1.2.3
++++ include/omniORB3/bufferedStream.h	2001/02/20 12:29:52
+@@ -175,170 +175,40 @@
  		    size_t Bufsize=0);
    ~NetBufferedStream();
  
@@ -20,15 +25,15 @@
 -    _CORBA_Char c = b ? 1 : 0;
 -    MARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
 -  }
--
+ 
 -  friend inline void operator<<= (_CORBA_Boolean& b, NetBufferedStream& s) {
 -    _CORBA_Char c;
 -    UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
 -    b = c ? true : false;
 -  }
--
 +  friend inline void operator>>= (_CORBA_Boolean b, NetBufferedStream& s);
 +  friend inline void operator<<= (_CORBA_Boolean& b, NetBufferedStream& s);
+ 
  #endif
 -
 -  friend inline void operator>>= (_CORBA_Short a, NetBufferedStream& s) {
@@ -79,18 +84,10 @@
 -    }
 -    return;
 -  }
- 
+-
 -  friend inline void operator>>= (_CORBA_ULong a, NetBufferedStream& s) {
 -    MARSHAL(s,_CORBA_ULong,omni::ALIGN_4,a);
 -  }
-+  friend inline void operator>>= (_CORBA_Short a, NetBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_Short& a, NetBufferedStream& s);
-+  friend inline void operator>>= (_CORBA_UShort a, NetBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_UShort& a, NetBufferedStream& s);
-+  friend inline void operator>>= (_CORBA_Long a, NetBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_Long& a, NetBufferedStream& s);
-+  friend inline void operator>>= (_CORBA_ULong a, NetBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_ULong& a, NetBufferedStream& s);
  
 -  friend inline void operator<<= (_CORBA_ULong& a, NetBufferedStream& s) {
 -    if (s.RdMessageByteOrder() != omni::myByteOrder) {
@@ -103,7 +100,55 @@
 -    }
 -    return;
 -  }
++  friend inline void operator>>= (_CORBA_Short a, NetBufferedStream& s);
++  friend inline void operator<<= (_CORBA_Short& a, NetBufferedStream& s);
++  friend inline void operator>>= (_CORBA_UShort a, NetBufferedStream& s);
++  friend inline void operator<<= (_CORBA_UShort& a, NetBufferedStream& s);
++  friend inline void operator>>= (_CORBA_Long a, NetBufferedStream& s);
++  friend inline void operator<<= (_CORBA_Long& a, NetBufferedStream& s);
++  friend inline void operator>>= (_CORBA_ULong a, NetBufferedStream& s);
++  friend inline void operator<<= (_CORBA_ULong& a, NetBufferedStream& s);
+ 
+ #ifdef HAS_LongLong
 -
+-  friend inline void operator>>= (_CORBA_LongLong a, NetBufferedStream& s) {
+-    MARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
+-  }
+ 
+-  friend inline void operator<<= (_CORBA_LongLong& a, NetBufferedStream& s) {
+-    if (s.RdMessageByteOrder() != omni::myByteOrder) {
+-      _CORBA_LongLong t;
+-      UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,t);
+-      a = Swap64(t);
+-    }
+-    else {
+-      UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
+-    }
+-    return;
+-  }
+-
+-  friend inline void operator>>= (_CORBA_ULongLong a, NetBufferedStream& s) {
+-    MARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+-  }
+-
+-  friend inline void operator<<= (_CORBA_ULongLong& a, NetBufferedStream& s) {
+-    if (s.RdMessageByteOrder() != omni::myByteOrder) {
+-      _CORBA_ULongLong t;
+-      UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,t);
+-      a = Swap64(t);
+-    }
+-    else {
+-      UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+-    }
+-    return;
+-  }
++  friend inline void operator>>= (_CORBA_LongLong a, NetBufferedStream& s);
++  friend inline void operator<<= (_CORBA_LongLong& a, NetBufferedStream& s);
++  friend inline void operator>>= (_CORBA_ULongLong a, NetBufferedStream& s);
++  friend inline void operator<<= (_CORBA_ULongLong& a, NetBufferedStream& s);
+ 
+ #endif
+ 
  #if !defined(NO_FLOAT)
 -
 -  friend inline void operator>>= (_CORBA_Float a, NetBufferedStream& s) {
@@ -127,7 +172,7 @@
 -  friend inline void operator>>= (_CORBA_Double a, NetBufferedStream& s) {
 -    MARSHAL(s,_CORBA_Double,omni::ALIGN_8,a);
 -  }
--
+ 
 -  friend inline void operator<<= (_CORBA_Double& a, NetBufferedStream& s) {
 -    if (s.RdMessageByteOrder() != omni::myByteOrder) {
 -      _CORBA_Double t;
@@ -144,49 +189,48 @@
 -    }
 -    return;
 -  }
--
 +  friend inline void operator>>= (_CORBA_Float a, NetBufferedStream& s);
 +  friend inline void operator<<= (_CORBA_Float& a, NetBufferedStream& s);
 +  friend inline void operator>>= (_CORBA_Double a, NetBufferedStream& s);
 +  friend inline void operator<<= (_CORBA_Double& a, NetBufferedStream& s);
- #endif
  
-   void put_char_array(const _CORBA_Char* b, int size,
-@@ -487,135 +380,28 @@
+ #ifdef HAS_LongDouble
+ #error "long double is not supported yet"
+@@ -546,171 +416,41 @@
    MemBufferedStream(void* databuffer, size_t maxLen);
    // Constructors for a read-only buffered stream.
  
 -  friend inline void operator>>= (_CORBA_Char a, MemBufferedStream& s) {
 -    MARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
 -  }
-+  friend inline void operator>>= (_CORBA_Char a, MemBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_Char& a, MemBufferedStream& s);
- 
+-
 -  friend inline void operator<<= (_CORBA_Char& a, MemBufferedStream& s) {
 -    UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,a);
 -  }
--
++  friend inline void operator>>= (_CORBA_Char a, MemBufferedStream& s);
++  friend inline void operator<<= (_CORBA_Char& a, MemBufferedStream& s);
+ 
  #ifdef HAS_Cplusplus_Bool
 -
 -  friend inline void operator>>= (_CORBA_Boolean b, MemBufferedStream& s) {
 -    _CORBA_Char c = b ? 1 : 0;
 -    MARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
 -  }
--
+ 
 -  friend inline void operator<<= (_CORBA_Boolean& b, MemBufferedStream& s) {
 -    _CORBA_Char c;
 -    UMARSHAL(s,_CORBA_Char,omni::ALIGN_1,c);
 -    b = c ? true : false;
 -  }
--
 +  friend inline void operator>>= (_CORBA_Boolean b, MemBufferedStream& s);
 +  friend inline void operator<<= (_CORBA_Boolean& b, MemBufferedStream& s);
+ 
  #endif
 -
 -  friend inline void operator>>= (_CORBA_Short a, MemBufferedStream& s) {
 -    MARSHAL(s,_CORBA_Short,omni::ALIGN_2,a);
 -  }
--
+ 
 -  friend inline void operator<<= (_CORBA_Short& a, MemBufferedStream& s) {
 -    if (s.byteOrder() != omni::myByteOrder) {
 -      _CORBA_Short t;
@@ -198,7 +242,15 @@
 -    }
 -    return;
 -  }
--
++  friend inline void operator>>= (_CORBA_Short a, MemBufferedStream& s);
++  friend inline void operator<<= (_CORBA_Short& a, MemBufferedStream& s);
++  friend inline void operator>>= (_CORBA_UShort a, MemBufferedStream& s);
++  friend inline void operator<<= (_CORBA_UShort& a, MemBufferedStream& s);
++  friend inline void operator>>= (_CORBA_Long a, MemBufferedStream& s);
++  friend inline void operator<<= (_CORBA_Long& a, MemBufferedStream& s);
++  friend inline void operator>>= (_CORBA_ULong a, MemBufferedStream& s);
++  friend inline void operator<<= (_CORBA_ULong& a, MemBufferedStream& s);
+ 
 -  friend inline void operator>>= (_CORBA_UShort a, MemBufferedStream& s) {
 -    MARSHAL(s,_CORBA_UShort,omni::ALIGN_2,a);
 -  }
@@ -214,16 +266,8 @@
 -    }
 -    return;
 -  }
- 
-+  friend inline void operator>>= (_CORBA_Short a, MemBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_Short& a, MemBufferedStream& s);
-+  friend inline void operator>>= (_CORBA_UShort a, MemBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_UShort& a, MemBufferedStream& s);
-+  friend inline void operator>>= (_CORBA_Long a, MemBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_Long& a, MemBufferedStream& s);
-+  friend inline void operator>>= (_CORBA_ULong a, MemBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_ULong& a, MemBufferedStream& s);
- 
+-
+-
 -  friend inline void operator>>= (_CORBA_Long a, MemBufferedStream& s) {
 -    MARSHAL(s,_CORBA_Long,omni::ALIGN_4,a);
 -  }
@@ -256,12 +300,56 @@
 -    return;
 -  }
 -
- #if !defined(NO_FLOAT)
+ #ifdef HAS_LongLong
 -
+-  friend inline void operator>>= (_CORBA_LongLong a, MemBufferedStream& s) {
+-    MARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
+-  }
+-
+-  friend inline void operator<<= (_CORBA_LongLong& a, MemBufferedStream& s) {
+-    if (s.RdMessageByteOrder() != omni::myByteOrder) {
+-      _CORBA_LongLong t;
+-      UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,t);
+-      a = Swap64(t);
+-    }
+-    else {
+-      UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
+-    }
+-    return;
+-  }
+ 
+-  friend inline void operator>>= (_CORBA_ULongLong a, MemBufferedStream& s) {
+-    MARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+-  }
+-
+-  friend inline void operator<<= (_CORBA_ULongLong& a, MemBufferedStream& s) {
+-    if (s.RdMessageByteOrder() != omni::myByteOrder) {
+-      _CORBA_ULongLong t;
+-      UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,t);
+-      a = Swap64(t);
+-    }
+-    else {
+-      UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+-    }
+-    return;
+-  }
++  friend inline void operator>>= (_CORBA_LongLong a, MemBufferedStream& s);
++  friend inline void operator<<= (_CORBA_LongLong& a, MemBufferedStream& s);
++  friend inline void operator>>= (_CORBA_ULongLong a, MemBufferedStream& s);
++  friend inline void operator<<= (_CORBA_ULongLong& a, MemBufferedStream& s);
+ 
+ #endif
+ 
+ #if !defined(NO_FLOAT)
+ 
 -  friend inline void operator>>= (_CORBA_Float a, MemBufferedStream& s) {
 -    MARSHAL(s,_CORBA_Float,omni::ALIGN_4,a);
 -  }
--
++  friend inline void operator>>= (_CORBA_Float a, MemBufferedStream& s);
++  friend inline void operator<<= (_CORBA_Float& a, MemBufferedStream& s);
++  friend inline void operator>>= (_CORBA_Double a, MemBufferedStream& s);
++  friend inline void operator<<= (_CORBA_Double& a, MemBufferedStream& s);
+ 
 -  friend inline void operator<<= (_CORBA_Float& a, MemBufferedStream& s) {
 -    if (s.byteOrder() != omni::myByteOrder) {
 -      _CORBA_Float t;
@@ -297,15 +385,11 @@
 -    return;
 -  }
 -
-+  friend inline void operator>>= (_CORBA_Float a, MemBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_Float& a, MemBufferedStream& s);
-+  friend inline void operator>>= (_CORBA_Double a, MemBufferedStream& s);
-+  friend inline void operator<<= (_CORBA_Double& a, MemBufferedStream& s);
+ #ifdef HAS_LongDouble
+ #error "long double is not supported yet"
  #endif
- 
-   void put_char_array(const _CORBA_Char* src,int size,
-@@ -831,6 +617,280 @@
-       ((_CORBA_ULong*) (a + i))[0] = tmp1;
+@@ -914,6 +654,353 @@
+       a[i] = * (_CORBA_Float*) &tmp;
      }
  }
 +
@@ -402,6 +486,42 @@
 +  }
 +  return;
 +}
++
++#ifdef HAS_LongLong
++
++inline void operator>>= (_CORBA_LongLong a, NetBufferedStream& s) {
++  MARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
++}
++
++inline void operator<<= (_CORBA_LongLong& a, NetBufferedStream& s) {
++  if (s.RdMessageByteOrder() != omni::myByteOrder) {
++    _CORBA_LongLong t;
++    UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,t);
++    a = Swap64(t);
++  }
++  else {
++    UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
++  }
++  return;
++}
++
++inline void operator>>= (_CORBA_ULongLong a, NetBufferedStream& s) {
++  MARSHAL(s,_CORBA_ULong,omni::ALIGN_8,a);
++}
++
++inline void operator<<= (_CORBA_ULongLong& a, NetBufferedStream& s) {
++  if (s.RdMessageByteOrder() != omni::myByteOrder) {
++    _CORBA_ULongLong t;
++    UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,t);
++    a = Swap64(t);
++  }
++  else {
++    UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
++  }
++  return;
++}
++
++#endif
 +
 +#if !defined(NO_FLOAT)
 +
@@ -540,6 +660,43 @@
 +  return;
 +}
 +
++#ifdef HAS_LongLong
++
++inline void operator>>= (_CORBA_LongLong a, MemBufferedStream& s) {
++  MARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
++}
++
++inline void operator<<= (_CORBA_LongLong& a, MemBufferedStream& s) {
++  if (s.byteOrder() != omni::myByteOrder) {
++    _CORBA_Long t;
++    UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,t);
++    a = Swap64(t);
++  }
++  else {
++    UMARSHAL(s,_CORBA_LongLong,omni::ALIGN_8,a);
++  }
++  return;
++}
++
++inline void operator>>= (_CORBA_ULongLong a, MemBufferedStream& s) {
++  MARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
++}
++
++inline void operator<<= (_CORBA_ULongLong& a, MemBufferedStream& s) {
++  if (s.byteOrder() != omni::myByteOrder) {
++    _CORBA_ULongLong t;
++    UMARSHAL(s,_CORBA_ULong,omni::ALIGN_8,t);
++    a = Swap64(t);
++  }
++  else {
++    UMARSHAL(s,_CORBA_ULongLong,omni::ALIGN_8,a);
++  }
++  return;
++}
++
++#endif
++
++
 +#if !defined(NO_FLOAT)
 +
 +inline void operator>>= (_CORBA_Float a, MemBufferedStream& s) {
@@ -584,4 +741,4 @@
 +#endif
  
  
- #undef MARSHAL
+ template <class buf_t>

@@ -1,3 +1,11 @@
+Tue Feb 20 12:31:41 GMT 2001 dpg1
+=================================
+
+- Yet another update for 3.0.3. Update AIX patch for long long.
+
+external_merge/patches/aix_xlC_5.0.patch
+
+
 Tue Feb 20 11:22:12 GMT 2001 dpg1
 =================================
 
