@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.6  2001/07/13 15:26:58  sll
+  Use safeDelete to remove a strand.
+
   Revision 1.1.4.5  2001/06/13 20:13:15  sll
   Minor updates to make the ORB compiles with MSVC++.
 
@@ -68,7 +71,7 @@ RopeLink giopRope::ropes;
 giopRope::giopRope(const giopAddressList& addrlist) :
   pd_refcount(0),
   pd_maxStrands(omniORB::maxTcpConnectionPerServer),
-  pd_oneCallPerConnection(1),
+  pd_oneCallPerConnection(omniORB::oneCallPerConnection),
   pd_nwaiting(0),
   pd_cond(omniTransportLock)
 {
@@ -109,7 +112,7 @@ giopRope::giopRope(giopAddress* addr,int initialRefCount) :
   pd_refcount(initialRefCount),
   pd_address_in_use(0),
   pd_maxStrands(omniORB::maxTcpConnectionPerServer),
-  pd_oneCallPerConnection(1),
+  pd_oneCallPerConnection(omniORB::oneCallPerConnection),
   pd_nwaiting(0),
   pd_cond(omniTransportLock)
 {
@@ -304,21 +307,11 @@ giopRope::releaseClient(IOP_C* iop_c) {
 
   if ( s->state()== giopStrand::DYING ) {
     remove = 1;
-    avail = 0;
-    if ( giopStreamList::is_empty(s->clients) &&
-	 giopStreamList::is_empty(s->servers) &&
-	 giopStream::noLockWaiting(s)) {
-      // get ride of the strand.
-
-      // No other threads should be waiting for a read or write lock
-      // on the strand. Otherwise, the GIOP_C or GIOP_S lists would not
-      // be empty.
-      s->StrandList::remove();
-      s->RopeLink::remove();
-      if (s->connection) delete s->connection;
-      delete s;
-      avail = 1;
-    }
+    avail = s->safeDelete(); // If safeDelete() returns 1, this strand
+                             // can be regarded as deleted. Therefore, we
+                             // flag avail to 1 to wake up any threads waiting
+                             // on the rope to have a chance to create
+                             // another strand.
   }
   else if ( !giopStreamList::is_empty(s->clients) ) {
     remove = 1;
