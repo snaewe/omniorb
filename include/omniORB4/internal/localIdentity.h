@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2001/11/27 14:36:17  dpg1
+  Local _is_equivalent fix.
+
   Revision 1.1.4.7  2001/11/08 16:33:50  dpg1
   Local servant POA shortcut policy.
 
@@ -166,6 +169,9 @@ public:
   // deactivated and the local shortcut can no longer be used. It is,
   // of course, totally unthreadsafe.
 
+  static _CORBA_Boolean real_is_equivalent(const omniIdentity*,
+					   const omniIdentity*);
+
 protected:
   int pd_nInvocations;
   // This count gives the number of method calls in progress
@@ -190,9 +196,6 @@ protected:
   // may not yet exist either.
   //  We do not hold a reference to this adapter, since it will
   // (must!) outlive this object.
-
-  static _CORBA_Boolean real_is_equivalent(const omniIdentity*,
-					   const omniIdentity*);
 
   _CORBA_Boolean pd_deactivated;
   // True if this localIdentity is no longer active, and cannot be

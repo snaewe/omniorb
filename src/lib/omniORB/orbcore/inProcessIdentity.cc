@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.7  2001/11/27 14:36:17  dpg1
+ Local _is_equivalent fix.
+
  Revision 1.1.2.6  2001/10/29 17:44:29  dpg1
  Wrong code when no catch by base class.
 
@@ -237,24 +240,7 @@ omniInProcessIdentity::locateRequest(omniCallDescriptor&) {
 
 omniIdentity::equivalent_fn
 omniInProcessIdentity::get_real_is_equivalent() const {
-  return real_is_equivalent;
-}
-
-CORBA::Boolean
-omniInProcessIdentity::real_is_equivalent(const omniIdentity* id1,
-					  const omniIdentity* id2) {
-
-  const CORBA::Octet* key1 = id1->key();
-  int keysize1             = id1->keysize();
-
-  const CORBA::Octet* key2 = id2->key();
-  int keysize2             = id2->keysize();
-
-  if (keysize1 != keysize2 || memcmp((void*)key1,(void*)key2,keysize1) != 0)
-      // Object keys do not match
-      return 0;
-
-  return 1;
+  return omniLocalIdentity::real_is_equivalent;
 }
 
 _CORBA_Boolean

@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.6  2001/11/27 14:36:17  dpg1
+ Local _is_equivalent fix.
+
  Revision 1.1.2.5  2001/09/19 17:26:46  dpg1
  Full clean-up after orb->destroy().
 
@@ -92,8 +95,9 @@ public:
   virtual void dispatch(omniCallDescriptor&);
   virtual void gainRef(omniObjRef* obj = 0);
   virtual void loseRef(omniObjRef* obj = 0);
+
   virtual omniIdentity::equivalent_fn get_real_is_equivalent() const;
-  // Overrides omniIdentity.
+  // Shares omniLocalIdentity's is_equivalent function.
 
   virtual void locateRequest(omniCallDescriptor&);
   // If this returns normally, then the object exists.
@@ -121,9 +125,6 @@ private:
   // Not implemented.
 
   int pd_refCount;
-
-  static _CORBA_Boolean real_is_equivalent(const omniIdentity*,
-					   const omniIdentity*);
 };
 
 
