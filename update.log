@@ -1,3 +1,10 @@
+Fri Oct 20 17:34:24 BST 2000 sll
+================================
+
+- Fixed typo bug which only has an effect on HPUX
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
 
 Wed Oct 18 16:54:10 BST 2000 djr
 ================================

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.19  2000/10/20 16:39:13  sll
+  Typo bug fix to poll() call. Only has an effect on HPUX.
+
   Revision 1.22.6.18  2000/08/17 15:37:52  sll
   Merged RTEMS port.
 
@@ -1002,7 +1005,7 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
     fds.fd = pd_socket;
     fds.events = POLLIN;
 
-    while (!(rx = poll(&fds,1,omniORB::scanGranularity()*1000) > 0)) {
+    while ((rx = poll(&fds,1,omniORB::scanGranularity()*1000)) <= 0) {
       if (rx == RC_SOCKET_ERROR && errno != EINTR) 
 	break;
     }
