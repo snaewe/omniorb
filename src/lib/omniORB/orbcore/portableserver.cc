@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.2  2000/09/27 18:04:43  sll
+  Use new string allocation functions. Updated to use the new calldescriptor.
+
   Revision 1.2.2.1  2000/07/17 10:35:58  sll
   Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -71,10 +74,10 @@
 */
 
 #define ENABLE_CLIENT_IR_SUPPORT
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #include <poaimpl.h>
 #include <localIdentity.h>
-#include <omniORB3/callDescriptor.h>
+#include <omniORB4/callDescriptor.h>
 #include <initRefs.h>
 #include <dynamicLib.h>
 #include <exceptiondefs.h>
@@ -279,7 +282,7 @@ PortableServer::ServantBase::_do_get_interface()
 
   // Make a call to the interface repository.
   omniStdCallDesc::_cCORBA_mObject_i_cstring
-    call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, 0, repoId);
+    call_desc(omniDynamicLib::ops->lookup_id_lcfn, "lookup_id", 10, repoId);
   repository->_PR_getobj()->_invoke(call_desc);
 
   return call_desc.result() ? call_desc.result()->_PR_getobj() : 0;
@@ -338,7 +341,7 @@ PortableServer::ObjectId_to_string(const ObjectId& id)
 {
   int len = id.length();
 
-  char* s = omni::allocString(len);
+  char* s = _CORBA_String_helper::alloc(len);
 
   for( int i = 0; i < len; i++ )
     if( (char) (s[i] = id[i]) == '\0' ) {
