@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.29.2.10  2003/08/15 10:53:59  dgrisby
+# Avoid bool representation problem with Python 2.3.
+#
 # Revision 1.29.2.9  2001/10/29 17:42:41  dpg1
 # Support forward-declared structs/unions, ORB::create_recursive_tc().
 #
@@ -509,7 +512,11 @@ def visitUnion(node):
         decl = c.declarator()
         decl_scopedName = id.Name(decl.scopedName())
         decl_name = decl_scopedName.simple()
-        isDefault = defaultCase == c
+
+        if defaultCase == c:
+            isDefault = 1
+        else:
+            isDefault = 0
         
         for l in c.labels():
             value = l.value()
