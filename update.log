@@ -1,3 +1,13 @@
+
+Tue Feb 24 18:53:56 GMT 1998 tjr
+================================
+
+- close cond_semaphore handle in omni_thread destructor for NT (pointed out
+  by Tim Woodall)
+
+src/lib/omnithread/nt.cc 
+
+
 Fri Feb 20 14:46:05 GMT 1998 ewc
 ================================
 
