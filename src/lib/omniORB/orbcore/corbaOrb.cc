@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.4  1997/03/10 11:54:28  sll
-  Minor changes to accomodate the creation of a public API for omniORB2.
+  Revision 1.5  1997/04/21 10:24:52  ewc
+  Bug fix to resolve_initial_references()
 
+// Revision 1.4  1997/03/10  11:54:28  sll
+// Minor changes to accomodate the creation of a public API for omniORB2.
+//
   Revision 1.3  1997/01/23 16:38:33  sll
   Locals like boa_initialised are now static members of the omniORB class.
 
@@ -132,7 +135,11 @@ CORBA::ORB::resolve_initial_references(const char* identifier)
   omniObject* objptr = omni::resolveInitRef(identifier);
 
   if (objptr)
-      return (CORBA::Object_ptr) (objptr->_widenFromTheMostDerivedIntf(0));
+    {
+      CORBA::Object_ptr retobj = (CORBA::Object_ptr) objptr->_widenFromTheMostDerivedIntf(0);
+      CORBA::Object::_duplicate(retobj);
+      return retobj;
+    }
   else return CORBA::Object::_nil();
 }
 
