@@ -1,4 +1,26 @@
 
+Wed Sep 29 14:08:03 BST 1999 djr
+================================
+
+- Updated mapping of operation signatures for skeletons to use
+  T_out types for out arguments.  The old signatures can be used
+  by specifying the -Bold_signatures flag.
+
+- Renamed all flags to omniidl3 relating to backwards-compatiblity
+    -c -> -Bold_reserved_prefix
+    -b -> -Bboa
+
+src/tool/omniidl2/include/idl_defines.hh
+src/tool/omniidl2/omniORB2_be/o2be_cfe_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+
+- Updated omniNames to use the new mapping.
+
+src/appl/omniNames/BindingIterator_i.h
+src/appl/omniNames/NamingContext_i.h
+src/appl/omniNames/NamingContext_i.cc
+
+
 Tue Sep 28 11:39:14 BST 1999 djr
 ================================
 
