@@ -1,3 +1,15 @@
+Mon Mar  3 14:46:51 GMT 2003 dgrisby
+====================================
+
+- Safe unloading of proxy object factories. Thanks Christian Perez.
+
+src/lib/omniORB/orbcore/proxyFactory.cc
+
+- -Wbvirtual_objref option went astray. Thanks Malge Nishant.
+
+src/lib/omniORB/omniidl_be/cxx/iface.py
+
+
 Mon Mar  3 12:28:10 GMT 2003 dgrisby
 ====================================
 
