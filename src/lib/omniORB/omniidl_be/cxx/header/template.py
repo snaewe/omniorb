@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.3  2000/11/03 19:20:41  sll
+# Replaced old marshal operators with a unified operator for cdrStream.
+#
 # Revision 1.5.2.2  2000/10/12 15:37:51  sll
 # Updated from omni3_1_develop.
 #
@@ -130,7 +133,7 @@ main = """\
 #endif
 
 #ifndef __CORBA_H_EXTERNAL_GUARD__
-#include <omniORB3/CORBA.h>
+#include <omniORB4/CORBA.h>
 #endif
 
 #ifndef  USE_core_stub_in_nt_dll
@@ -275,11 +278,8 @@ public:
   static _CORBA_Boolean is_nil(_ptr_type);
   static void release(_ptr_type);
   static void duplicate(_ptr_type);
-  static size_t NP_alignedSize(_ptr_type, size_t);
-  static void marshalObjRef(_ptr_type, NetBufferedStream&);
-  static _ptr_type unmarshalObjRef(NetBufferedStream&);
-  static void marshalObjRef(_ptr_type, MemBufferedStream&);
-  static _ptr_type unmarshalObjRef(MemBufferedStream&);
+  static void marshalObjRef(_ptr_type, cdrStream&);
+  static _ptr_type unmarshalObjRef(cdrStream&);
 };
 
 typedef _CORBA_ObjRef_Var<_objref_@name@, @name@_Helper> @name@_var;
@@ -299,22 +299,14 @@ public:
   static _ptr_type _narrow(CORBA::Object_ptr);
   static _ptr_type _nil();
 
-  static inline size_t _alignedSize(_ptr_type, size_t);
-  static inline void _marshalObjRef(_ptr_type, NetBufferedStream&);
-  static inline void _marshalObjRef(_ptr_type, MemBufferedStream&);
+  static inline void _marshalObjRef(_ptr_type, cdrStream&);
 
-  static inline _ptr_type _unmarshalObjRef(NetBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
-  }
-
-  static inline _ptr_type _unmarshalObjRef(MemBufferedStream& s) {
-    CORBA::Object_ptr obj = CORBA::UnMarshalObjRef(_PD_repoId, s);
-    _ptr_type result = _narrow(obj);
-    CORBA::release(obj);
-    return result;
+  static inline _ptr_type _unmarshalObjRef(cdrStream& s) {
+    omniObjRef* o = omniObjRef::_unMarshal(_PD_repoId,s);
+    if (o)
+      return (_ptr_type) o->_ptrToObjRef(_PD_repoId);
+    else
+      return _nil();
   }
 
   static _core_attr const char* _PD_repoId;
@@ -332,7 +324,7 @@ public:
   @operations@
 
   inline _objref_@name@() { _PR_setobj(0); }  // nil
-  _objref_@name@(const char*, IOP::TaggedProfileList*, omniIdentity*, omniLocalIdentity*);
+  _objref_@name@(omniIOR*, omniIdentity*, omniLocalIdentity*);
 
 protected:
   virtual ~_objref_@name@();
@@ -352,8 +344,7 @@ public:
   inline _pof_@name@() : proxyObjectFactory(@name@::_PD_repoId) {}
   virtual ~_pof_@name@();
 
-  virtual omniObjRef* newObjRef(const char*, IOP::TaggedProfileList*,
-                                omniIdentity*, omniLocalIdentity*);
+  virtual omniObjRef* newObjRef(omniIOR*,omniIdentity*, omniLocalIdentity*);
   virtual _CORBA_Boolean is_a(const char*) const;
 };
 """
@@ -394,19 +385,9 @@ public:
 """
 
 interface_marshal_forward = """\
-inline size_t
-@name@::_alignedSize(@name@_ptr obj, size_t offset) {
-  return CORBA::AlignedObjRef(obj, _PD_repoId, @idLen@, offset);
-}
-
 inline void
-@name@::_marshalObjRef(@name@_ptr obj, NetBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, @idLen@, s);
-}
-
-inline void
-@name@::_marshalObjRef(@name@_ptr obj, MemBufferedStream& s) {
-  CORBA::MarshalObjRef(obj, _PD_repoId, @idLen@, s);
+@name@::_marshalObjRef(@name@_ptr obj, cdrStream& s) {
+  omniObjRef::_marshal(obj->_PR_getobj(),s);
 }
 
 """
@@ -473,14 +454,11 @@ typedef @base@_var @name@_var;
 typedef @base@_out @name@_out;
 """
 
-
 typedef_enum_oper_friend = """\
 // Need to declare <<= for elem type, as GCC expands templates early
 #if defined(__GNUG__) && __GNUG__ == 2 && __GNUC_MINOR__ == 7
- @friend@ inline void operator >>= (@element@, NetBufferedStream&);
- @friend@ inline void operator <<= (@element@&, NetBufferedStream&);
- @friend@ inline void operator >>= (@element@, MemBufferedStream&);
- @friend@ inline void operator <<= (@element@&, MemBufferedStream&);
+ @friend@ inline void operator >>= (@element@, cdrStream&);
+ @friend@ inline void operator <<= (@element@&, cdrStream&);
 #endif
 """
 
@@ -693,11 +671,8 @@ struct @name@ {
 
   @members@
 
-  size_t _NP_alignedSize(size_t initialoffset) const;
-  void operator>>= (NetBufferedStream &) const;
-  void operator<<= (NetBufferedStream &);
-  void operator>>= (MemBufferedStream &) const;
-  void operator<<= (MemBufferedStream &);
+  void operator>>= (cdrStream &) const;
+  void operator<<= (cdrStream &);
 };
 
 typedef @name@::_var_type @name@_var;
@@ -742,12 +717,8 @@ public:
     return _downcast(_e);
   }
   
-  @alignedSize@
-
-  @inline@void operator>>=(NetBufferedStream&) const @body@
-  @inline@void operator>>=(MemBufferedStream&) const @body@
-  @inline@void operator<<=(NetBufferedStream&) @body@
-  @inline@void operator<<=(MemBufferedStream&) @body@
+  @inline@void operator>>=(cdrStream&) const @body@
+  @inline@void operator<<=(cdrStream&) @body@
 
   static _core_attr insertExceptionToAny    insertToAnyFn;
   static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;
@@ -759,8 +730,7 @@ public:
 private:
   virtual const char* _NP_typeId() const;
   virtual const char* _NP_repoId(int*) const;
-  virtual void _NP_marshal(NetBufferedStream&) const;
-  virtual void _NP_marshal(MemBufferedStream&) const;
+  virtual void _NP_marshal(cdrStream&) const;
 };
 """  
 
@@ -842,11 +812,8 @@ public:
 
   @members@
   
-  size_t _NP_alignedSize(size_t initialoffset) const;
-  void operator>>= (NetBufferedStream&) const;
-  void operator<<= (NetBufferedStream&);
-  void operator>>= (MemBufferedStream&) const;
-  void operator<<= (MemBufferedStream&);
+  void operator>>= (cdrStream&) const;
+  void operator<<= (cdrStream&);
 
   @tcParser_unionHelper@
 
@@ -1135,27 +1102,11 @@ CORBA::Boolean operator>>=(const CORBA::Any& _a, const @fqname@*& _sp);
 """
 
 enum_operators = """\
-inline void operator >>=(@name@ _e, NetBufferedStream& s) {
+inline void operator >>=(@name@ _e, cdrStream& s) {
   ::operator>>=((CORBA::ULong)_e, s);
 }
 
-inline void operator <<= (@name@& _e, NetBufferedStream& s) {
-  CORBA::ULong @private_prefix@_e;
-  ::operator<<=(@private_prefix@_e,s);
-  switch (@private_prefix@_e) {
-    @cases@
-    _e = (@name@) @private_prefix@_e;
-    break;
-  default:
-    _CORBA_marshal_error();
-  }
-}
-
-inline void operator >>=(@name@ _e, MemBufferedStream& s) {
-  ::operator>>=((CORBA::ULong)_e, s);
-}
-
-inline void operator <<= (@name@& _e, MemBufferedStream& s) {
+inline void operator <<= (@name@& _e, cdrStream& s) {
   CORBA::ULong @private_prefix@_e;
   ::operator<<=(@private_prefix@_e,s);
   switch (@private_prefix@_e) {
