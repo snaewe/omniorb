@@ -1,3 +1,12 @@
+Tue Jan 14 12:15:36 GMT 2003 dgrisby
+====================================
+
+- Verify that a connect really has connected.
+
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+
+
 Tue Jan 14 10:56:06 GMT 2003 dgrisby
 ====================================
 

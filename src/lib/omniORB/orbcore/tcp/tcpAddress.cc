@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.14  2003/01/14 12:20:34  dgrisby
+  Verify that a connect really has connected.
+
   Revision 1.1.2.13  2003/01/06 11:11:55  dgrisby
   New AddrInfo instead of gethostbyname.
 
@@ -241,7 +244,13 @@ tcpAddress::Connect(unsigned long deadline_secs,
       return 0;
 #endif
     }
-    else if (rc == RC_SOCKET_ERROR) {
+    if (rc != RC_SOCKET_ERROR) {
+      // Check to make sure that the socket is connected.
+      struct sockaddr_in peer;
+      SOCKNAME_SIZE_T len = sizeof(peer);
+      rc = getpeername(sock, (struct sockaddr*)&peer, &len);
+    }
+    if (rc == RC_SOCKET_ERROR) {
       if (ERRNO == RC_EINTR)
 	continue;
       else {
