@@ -175,10 +175,17 @@ ifndef NoGateKeeper
 
 SUBDIRS = gatekeepers
 
+endif
+
+ifdef OPEN_SSL_ROOT
+
+SUBDIRS += ssl
+
+endif
+
 all::
 	@$(MakeSubdirs)
 
 export::
 	@$(MakeSubdirs)
 
-endif
