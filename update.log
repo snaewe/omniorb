@@ -1,3 +1,11 @@
+Mon Nov 13 12:38:44 GMT 2000 dpg1
+=================================
+
+- djr's fix to exceptions in servant managers from omni3_develop
+
+src/lib/omniORB/orbcore/poa.cc
+
+
 Fri Nov 10 15:37:46 GMT 2000 dpg1
 =================================
 
