@@ -30,7 +30,7 @@ module CosNotification {
 	typedef PropertySeq QoSProperties;
 	typedef PropertySeq AdminProperties;
 
-	struct EventType {
+	struct _EventType {
 		string domain_name;
 		string type_name;
 	};
