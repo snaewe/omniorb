@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.2.3  2000/04/26 18:22:57  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+# Removed superfluous externs in front of function definitions
+#
 # Revision 1.1.2.2  2000/04/20 15:11:28  djr
 # Fixed bug when duplicating a nil object reference.
 #
@@ -229,7 +234,7 @@ interface_operation = """\
 
 
 interface_pof = """\
-@pof_name@::~_pof_@uname@() {}
+@pof_name@::~@uname@() {}
 
 
 omniObjRef*
@@ -423,20 +428,19 @@ void @fq_derived@_free(@fq_derived@_slice* _s) {
 """
 
 typedef_global_simple_array = """\
-
-extern @fq_derived@_slice* @fq_derived@_alloc() {
+@fq_derived@_slice* @fq_derived@_alloc() {
   return @fq_aliased@_alloc();
 }
 
-extern @fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* p) {
+@fq_derived@_slice* @fq_derived@_dup(const @fq_derived@_slice* p) {
   return @fq_aliased@_dup(p);
 }
 
-extern void @fq_derived@_copy( @fq_derived@_slice* _to, const @fq_derived@_slice* _from){
+void @fq_derived@_copy( @fq_derived@_slice* _to, const @fq_derived@_slice* _from){
   @fq_aliased@_copy(_to, _from);
 }
 
-extern void @fq_derived@_free( @fq_derived@_slice* p) {
+void @fq_derived@_free( @fq_derived@_slice* p) {
    @fq_aliased@_free(p);
 }
 """

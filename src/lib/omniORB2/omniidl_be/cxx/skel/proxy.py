@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.5  2000/04/26 18:22:56  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+# Removed superfluous externs in front of function definitions
+#
 # Revision 1.15.2.4  2000/04/05 10:58:03  djs
 # Scoping problem with generated proxies for attributes (not operations)
 #
@@ -101,7 +106,7 @@
 import string
 
 from omniidl import idlutil, idltype, idlast
-from omniidl_be.cxx import util, tyutil, skutil, name
+from omniidl_be.cxx import util, tyutil, skutil, id, types
 from omniidl_be.cxx.skel import mangler, template
 
 
@@ -109,78 +114,20 @@ import proxy
 self = proxy
 
 def __init__(environment, stream):
-    self.__environment = environment
-    self.__environment = name.globalScope()
     self.__stream = stream
     return self
 
 
-_proxy_class_template = """\
-// Proxy call descriptor class. Mangled signature:
-//  @signature@
-class @call_descriptor@
-  : public omniCallDescriptor
-{
-public:
-  inline @call_descriptor@(@ctor_args@):
-     @inherits_list@ {}
-  
-  @marshal_arguments_decl@
-  @unmarshal_arguments_decl@  
-  @user_exceptions_decl@
-  @result_member_function@
-  @member_data@
-  @result_member_data@
-};
-"""
-
-_unmarshal_template = """\
-void @call_descriptor@::unmarshalReturnedValues(GIOP_C& giop_client)
-{
-  @pre_decls@
-  @unmarshal_block@
-  @post_assign@
-}
-"""
-
-_alignment_template = """\
-CORBA::ULong @call_descriptor@::alignedSize(CORBA::ULong msgsize)
-{
-  @size_calculation@
-  return msgsize;
-}
-"""
-
-_marshal_template = """\
-void @call_descriptor@::marshalArguments(GIOP_C& giop_client)
-{
-  @marshal_block@
-}
-"""
-
-_exception_template = """\
-void @call_descriptor@::userException(GIOP_C& giop_client, const char* repoId)
-{
-  @exception_block@
-  else {
-    giop_client.RequestCompleted(1);
-    throw CORBA::MARSHAL(0, CORBA::COMPLETED_MAYBE);
-  }
-}
-"""
-
-
 def argmapping(type):
-    assert isinstance(type, idltype.Type)
-    environment = self.__environment
+    assert isinstance(type, types.Type)
 
-    deref_type = tyutil.deref(type)
-    type_dims = tyutil.typeDims(type)
+    d_type = type.deref()
+    type_dims = type.dims()
+    is_variable = type.variable()
     is_array = type_dims != []
-    is_variable = tyutil.isVariableType(deref_type)
 
-    type_name = environment.principalID(type)
-    deref_type_name = environment.principalID(deref_type)
+    type_name = type.base()
+    d_type_name = d_type.base()
 
     if is_array:
         if is_variable:
@@ -194,19 +141,19 @@ def argmapping(type):
                                type_name + "_slice*",
                                type_name + "_slice*"]
 
-    if tyutil.isObjRef(deref_type):
-        return [deref_type_name + "_ptr",
-                deref_type_name + "_ptr&",
-                deref_type_name + "_ptr&",
-                deref_type_name + "_ptr"]
+    if d_type.objref():
+        return [d_type_name + "_ptr",
+                d_type_name + "_ptr&",
+                d_type_name + "_ptr&",
+                d_type_name + "_ptr"]
     
-    if tyutil.isTypeCode(deref_type):
+    if d_type.typecode():
         return ["CORBA::TypeCode_ptr",
                 "CORBA::TypeCode_ptr&",
                 "CORBA::TypeCode_ptr&",
                 "CORBA::TypeCode_ptr"]        
 
-    if tyutil.isString(deref_type):
+    if d_type.string():
         return ["const char*",
                 "char *&",
                 "char *&",
@@ -220,8 +167,8 @@ def argmapping(type):
     
     # basic types are all representable by an integer so
     # passing by value is as cheap as by reference
-    if isinstance(deref_type, idltype.Base) or \
-       tyutil.isEnum(deref_type):
+    if isinstance(d_type.type(), idltype.Base) or \
+       d_type.enum():
         return [type_name,
                 type_name + "&",
                 type_name + "&",
@@ -236,18 +183,17 @@ def argmapping(type):
 
 
 def operation(operation):
-    environment = self.__environment
     stream = self.__stream
-    return_type = operation.returnType()
-    deref_return_type = tyutil.deref(return_type)
-    return_type_name = environment.principalID(return_type)
-    return_dims = tyutil.typeDims(return_type)
+    return_type = types.Type(operation.returnType())
+    d_return_type = return_type.deref()
+    return_type_name = return_type.base()
+    return_dims = return_type.dims()
     return_is_array = return_dims != []
-    has_return_value = not(tyutil.isVoid(deref_return_type))
+    has_return_value = not(d_return_type.void())
     has_arguments = operation.parameters() != []
     has_exceptions = operation.raises() != []
 
-    identifier = tyutil.mapID(operation.identifier())
+    identifier = id.mapID(operation.identifier())
 
     signature = mangler.produce_operation_signature(operation)
 
@@ -285,7 +231,7 @@ def operation(operation):
     n = -1
     for parameter in operation.parameters():
         n = n + 1
-        param_type = parameter.paramType()
+        param_type = types.Type(parameter.paramType())
         direction = parameter.direction()
 
         type_mapping = argmapping(param_type)[direction]
@@ -360,16 +306,17 @@ def operation(operation):
         for parameter in operation.parameters():
             n = n + 1
             if parameter.is_in():
-                param_type = parameter.paramType()
-                deref_param_type = tyutil.deref(param_type)
+                param_type = types.Type(parameter.paramType())
+                d_param_type = param_type.deref()
+                #deref_param_type = tyutil.deref(param_type)
                 is_pointer = 0
-                if tyutil.isTypeCode(deref_param_type):
+                if d_param_type.typecode():
                     is_pointer = 1
                 name = "arg_" + str(n)
                 size_calculation.out(skutil.sizeCalculation(
-                    environment, param_type, None, "msgsize", name,
+                    None, param_type, None, "msgsize", name,
                     fixme = 1, is_pointer = is_pointer))
-                skutil.marshall(marshal_block, environment, param_type,
+                skutil.marshall(marshal_block, None, param_type,
                                 None, name, "giop_client")
                 
         # write the alignment function
@@ -401,21 +348,21 @@ def operation(operation):
                            pre_decls = pre_decls,
                            unmarshal_block = unmarshal_block,
                            post_assign = post_assign,
-                           environment = environment):
-            dims = tyutil.typeDims(type)
+                           environment = None):
+            dims = type.dims()
             is_array = dims != []
-            deref_type = tyutil.deref(type)
-            is_variable = tyutil.isVariableType(deref_type)
+            d_type = type.deref()
+            is_variable = d_type.variable()
             is_out = direction == 1
             is_inout = direction == 2
             assert is_out or is_inout
 
-            deref_dims_type = tyutil.derefKeepDims(type)
+            d_dims_type = type.deref(keep_dims = 1)
 
-            if tyutil.isObjRef(deref_type) and not(is_array):
+            if d_type.objref() and not(is_array):
                 helper_name = temp_type_name + "_Helper"
                 temp_type_name = temp_type_name + "_ptr"
-            elif tyutil.isTypeCode(deref_type) and not(is_array):
+            elif d_type.typecode() and not(is_array):
                 if direction == 2:
                     temp_type_name = temp_type_name + "_var"
                 else:
@@ -437,39 +384,38 @@ def operation(operation):
             # type is used in the typedec but a dereferenced slice is used
             # elsewhere. Why?
             if is_array:
-                temp_type_name = environment.principalID(deref_dims_type) +\
-                                                         "_slice*"
+                temp_type_name = d_dims_type.base() + "_slice*"
                 
             if dereference:
                 deref_name = "*" + temp
             # 'Normal' base types don't have slices. TypeCodes and Anys are
             # variable base types though.
-            elif is_array and not(isinstance(deref_type, idltype.Base) and \
-                                  not(tyutil.isTypeCode(deref_type))   and \
-                                  not(tyutil.isAny(deref_type))):
+            elif is_array and not(isinstance(d_type.type(), idltype.Base) and \
+                                  not(d_type.typecode())   and \
+                                  not(d_type.any())):
                 deref_name = "((" + temp_type_name + ") " + temp + ")"
             else:
                 deref_name = temp
 
                 
-            skutil.unmarshall(unmarshal_block, environment, type, None,
+            skutil.unmarshall(unmarshal_block, None, type, None,
                               deref_name, can_throw_marshall = 1,
                               from_where = "giop_client",
                               string_via_member = 1)
 
             if is_inout and not(is_array):
-                if tyutil.isString(deref_type):
+                if d_type.string():
                     unmarshal_block.out("""\
 CORBA::string_free(@name@);
 @name@ = @temp@;
 """, name = name, temp = temp)
-                elif tyutil.isObjRef(deref_type):
+                elif d_type.objref():
                     unmarshal_block.out("""\
 @helper_name@::release(@name@);
 @name@ = @temp@;
 """, helper_name = helper_name,
                                         name = name, temp = temp)
-                elif tyutil.isTypeCode(deref_type):
+                elif d_type.typecode():
                     unmarshal_block.out("""\
 CORBA::release(@name@);
 @name@ = @temp@._retn();
@@ -486,35 +432,33 @@ CORBA::release(@name@);
         # identical to having a similarly named out argument?
         if has_return_value:
             name = "pd_result"
-            deref_dims_return_type = tyutil.derefKeepDims(return_type)
+            d_dims_return_type = return_type.deref(keep_dims = 1)
             # Something strange is happening here.
             # Need to investigate the array mapping further at a later stage
             # hopefully to remove this oddity
             if return_is_array:
-                return_type_base = environment.principalID(deref_dims_return_type)
+                return_type_base = d_dims_return_type.base()
             else:
-                return_type_base = environment.principalID(return_type)
-            return_is_variable = tyutil.isVariableType(return_type)
+                return_type_base = return_type.base()
+            return_is_variable = return_type.variable()
             # we need to allocate storage if the return is an
             # array
             if return_is_array:
                 if return_is_variable                or \
-                   tyutil.isStruct(deref_return_type) or \
-                   tyutil.isUnion(deref_return_type):
+                   d_return_type.struct() or d_return_type.union():
                     name = "((" + return_type_base + "_slice*) pd_result)"
                 unmarshal_block.out("""\
 pd_result = @type@_alloc();
 """, type = return_type_base)
-            elif return_is_variable and (tyutil.isStruct(deref_return_type) or \
-                                         tyutil.isUnion(deref_return_type)  or \
-                                         tyutil.isSequence(deref_return_type) or \
-                                         tyutil.isAny(deref_return_type)):
+            elif return_is_variable and d_return_type.type().kind() in \
+                 [idltype.tk_struct, idltype.tk_union,
+                  idltype.tk_sequence, idltype.tk_any ]:
                 unmarshal_block.out("""\
 pd_result = new @type@;
 """, type = return_type_base)
                 name = "*" + name
 
-            skutil.unmarshall(unmarshal_block, environment, return_type, None,
+            skutil.unmarshall(unmarshal_block, None, return_type, None,
                               name, can_throw_marshall = 1,
                               from_where = "giop_client",
                               string_via_member = 1)
@@ -529,53 +473,50 @@ pd_result = new @type@;
             
             arg_name = "arg_" + str(n)
             temp_name = "tmp_" + str(n)
-            param_type = parameter.paramType()
-            deref_param_type = tyutil.deref(param_type)
-            deref_dims_param_type = tyutil.derefKeepDims(param_type)
-            param_type_name = environment.principalID(param_type)
-            deref_dims_name = environment.principalID(deref_dims_param_type)
-            dims = tyutil.typeDims(param_type)
+            param_type = types.Type(parameter.paramType())
+            d_param_type = param_type.deref()
+            d_dims_param_type = param_type.deref(keep_dims = 1)
+            param_type_name = param_type.base()
+            d_dims_name = d_dims_param_type.base()
+            dims = param_type.dims()
             is_array = dims != []
             is_out = direction == 1
             in_inout = direction == 2
-            is_variable = tyutil.isVariableType(deref_param_type)
+            is_variable = d_param_type.variable()
 
             # for variable structs and unions, we need to *name
             dereference = 0
             # do we unmarshal via a temporary?
             # we need to setup the temporary variables
             temp_init_value = None
-            if (isinstance(deref_param_type, idltype.Base) and \
-                not tyutil.isAny(deref_param_type)         and \
-                not tyutil.isTypeCode(deref_param_type)) or \
-               tyutil.isEnum(deref_param_type):
+            if (isinstance(d_param_type.type(), idltype.Base) and \
+                not d_param_type.any() and not d_param_type.typecode()) or \
+                d_param_type.enum():
                 via_tmp = 0
             elif is_array:
                 if is_variable and is_out:
                     via_tmp = 1
                     # the temporary variable is an array slice
                     temp_type_name = param_type_name + "_slice*"
-                    temp_init_value = deref_dims_name + "_alloc()"
+                    temp_init_value = d_dims_name + "_alloc()"
                 else:
                     via_tmp = 0
             elif is_variable:
-                if tyutil.isString(deref_param_type):
+                if d_param_type.string():
                     via_tmp = 1
                     temp_type_name = "char*"
                     temp_init_value = "0"
-                elif tyutil.isObjRef(deref_param_type):
+                elif d_param_type.objref():
                     via_tmp = 1
-                    #temp_type_name = param_type_name
-                    temp_type_name = deref_dims_name
+                    temp_type_name = d_dims_name
                     temp_init_value = "0"
-                elif tyutil.isTypeCode(deref_param_type):
+                elif d_param_type.typecode():
                     via_tmp = 1
                     temp_type_name = "CORBA::TypeCode"
                     temp_init_value = "CORBA::TypeCode::_nil()"
-                elif tyutil.isStruct(deref_param_type) or \
-                     tyutil.isUnion(deref_param_type)  or \
-                     tyutil.isSequence(deref_param_type) or \
-                     tyutil.isAny(deref_param_type):
+                elif d_param_type.type().kind() in \
+                     [idltype.tk_struct, idltype.tk_union,
+                      idltype.tk_sequence, idltype.tk_any]:
                     if is_out:
                         via_tmp = 1
                         temp_type_name = param_type_name + "*"
@@ -592,7 +533,7 @@ pd_result = new @type@;
                                temp_type_name, temp_init_value,
                                direction, dereference)
             else:
-                skutil.unmarshall(unmarshal_block, environment, param_type, None,
+                skutil.unmarshall(unmarshal_block, None, param_type, None,
                                   arg_name, can_throw_marshall = 1,
                                   from_where = "giop_client",
                                   string_via_member = 1)
@@ -615,8 +556,8 @@ pd_result = new @type@;
         for exception in raises:
             scopedName = exception.scopedName()
             repoID = scopedName + ["_PD_repoId"]
-            repoID_str = environment.nameToString(repoID)
-            exname = environment.nameToString(scopedName)
+            repoID_str = id.Name(repoID).fullyQualify()
+            exname = id.Name(scopedName).fullyQualify()
             if first_one:
                 switch = "if"
                 first_one = 0
@@ -641,7 +582,6 @@ pd_result = new @type@;
 def attribute(attribute):
     assert isinstance(attribute, idlast.Attribute)
 
-    environment = self.__environment
     stream = self.__stream
 
     read_signature = mangler.produce_read_attribute_signature(attribute)
@@ -671,64 +611,59 @@ def attribute(attribute):
     read_desc = mangler.attribute_read_descriptor_name(attribute)
     write_desc = mangler.attribute_write_descriptor_name(attribute)
 
-    attrType = attribute.attrType()
-    attr_dims = tyutil.typeDims(attrType)
+    attrType = types.Type(attribute.attrType())
+    attr_dims = attrType.dims()
     is_array = attr_dims != []   
-    deref_attrType = tyutil.deref(attrType)
-    attrType_name = environment.principalID(attrType)
+    d_attrType = attrType.deref()
+    attrType_name = attrType.base()
 
-    fully_scoped_attrTypes = tyutil.operationArgumentType(attrType,
-                                                          environment, 0)
-    attrTypes = tyutil.operationArgumentType(attrType, environment, 0)
+    return_type = attrType.op(types.RET)
 
-
-    return_type = fully_scoped_attrTypes[0]
+    in_type = attrType.op(types.IN)
     if is_array:
-        in_type = attrTypes[1]+"_slice*"
-        fully_scoped_in_type = fully_scoped_attrTypes[1]+"_slice*"
-    else:
-        in_type = attrTypes[1]
-        fully_scoped_in_type = fully_scoped_attrTypes[1]
+        in_type = in_type + "_slice*"
 
     is_pointer = 0
-    if tyutil.isTypeCode(deref_attrType):
+    if d_attrType.typecode():
         is_pointer = 1
 
-    size = skutil.sizeCalculation(environment, attrType, None ,
+    size = skutil.sizeCalculation(None, attrType, None ,
                                   "msgsize",
                                   "arg_0", fixme = 1,
                                   is_pointer = is_pointer)
     marshal_arg = util.StringStream()
-    skutil.marshall(marshal_arg, environment, attrType, None,
+    skutil.marshall(marshal_arg, None, attrType, None,
                     "arg_0", "giop_client")
+
 
     if is_array:
         s = util.StringStream()
         s.out("pd_result = @name@_alloc();", name = attrType_name)
         # basic types don't have slices
-        if tyutil.ttsMap.has_key(deref_attrType.kind()):
+        if types.basic_map.has_key(d_attrType.type().kind()):
             result_string = "pd_result"
         else:
             result_string = "((" + attrType_name + "_slice*)" + "pd_result)"
 
-        skutil.unmarshall(s, environment, attrType, None, result_string, 1,
+        skutil.unmarshall(s, None, attrType, None, result_string, 1,
                           "giop_client")
         unmarshal_ret = str(s)
             
-    elif tyutil.isString(deref_attrType):
+    elif d_attrType.string():
         unmarshal_ret = skutil.unmarshal_string_via_temporary("pd_result",
                                                               "giop_client")
-    elif tyutil.isObjRef(deref_attrType):
-        if deref_attrType.scopedName() == ["CORBA", "Object"]:
+    elif d_attrType.objref():
+        if d_attrType.type().scopedName() == ["CORBA", "Object"]:
             objref_helper = "CORBA::Object_Helper"
         else:
             objref_helper = attrType_name + "_Helper"
         unmarshal_ret = "\
 pd_result = " + objref_helper + "::unmarshalObjRef(giop_client);\n"
-    elif tyutil.isTypeCode(deref_attrType):
+    elif d_attrType.typecode():
         unmarshal_ret = "\
 pd_result = CORBA::TypeCode::unmarshalTypeCode(giop_client);\n"
-    elif tyutil.isVariableType(deref_attrType):
+    elif d_attrType.variable():
+
         unmarshal_ret = "\
 pd_result = new " + attrType_name + ";\n" + "\
 *pd_result <<= giop_client;\n"
@@ -772,11 +707,11 @@ pd_result <<= giop_client;
 
     if need_write_proxy:
         # write the write class template
-        ctor_args = ctor_args + ", " + fully_scoped_in_type + " a_0"
+        ctor_args = ctor_args + ", " + in_type + " a_0"
         inherits_list = inherits_list + ",\n" + "arg_0(a_0)"
         marshal_decl = "virtual CORBA::ULong alignedSize(CORBA::ULong);\n" +\
                        "virtual void marshalArguments(GIOP_C&);\n"
-        member_data = fully_scoped_in_type + " arg_0;\n"
+        member_data = in_type + " arg_0;\n"
         stream.out(template.interface_proxy_class,
                    signature = write_signature,
                    call_descriptor = write_desc,
@@ -802,3 +737,5 @@ pd_result <<= giop_client;
         stream.out(template.interface_proxy_marshal,
                    call_descriptor = write_desc,
                    marshal_block = str(marshal_arg))
+
+

@@ -30,6 +30,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.13.2.4  2000/04/26 18:22:56  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+# Removed superfluous externs in front of function definitions
+#
 # Revision 1.13.2.3  2000/03/09 15:21:57  djs
 # Better handling of internal compiler exceptions (eg attempts to use
 # wide string types)
@@ -97,7 +102,7 @@
 import re, string
 
 from omniidl import idlast, idltype
-from omniidl_be.cxx import util, tyutil, skutil, config
+from omniidl_be.cxx import util, skutil, config, types
 
 import mangler
 self = mangler
@@ -157,9 +162,9 @@ name_map = {
 # FIXME: Think of some way of better handling types. Merging
 # in information from declarators would be sensible.
 def canonTypeName(type, decl = None, useScopedName = 0):
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
     
-    type_dims = tyutil.typeDims(type)
+    type_dims = type.dims()
     decl_dims = []
     if decl != None:
         assert isinstance(decl, idlast.Declarator)
@@ -181,14 +186,13 @@ def canonTypeName(type, decl = None, useScopedName = 0):
     # prepended to it.
     canon_name = dims_string
 
-    deref_type = tyutil.deref(type)
+    d_type = type.deref()
 
     # consider anonymous sequence<sequence<....
-    if tyutil.isSequence(type) and \
-          tyutil.isSequence(type.seqType()):
-        bound = type.bound()
+    if type.sequence() and types.Type(type.type().seqType()).sequence():
+        bound = type.type().bound()
         canon_name = canon_name + SEQ_SEPARATOR + str(bound) +\
-                     canonTypeName(type.seqType(), None, useScopedName)
+                     canonTypeName(types.Type(type.type().seqType()), None, useScopedName)
         
         return canon_name
         
@@ -196,70 +200,67 @@ def canonTypeName(type, decl = None, useScopedName = 0):
     # sometimes we don't want to call a sequence a sequence
     # (operation signatures)
     if useScopedName and not(is_array) and \
-       tyutil.isTypedef(type) and tyutil.isSequence(deref_type):
+       type.typedef() and d_type.sequence():
         # find the last typedef in the chain
-        while tyutil.isTypedef(type.decl().alias().aliasType()):
-            type = type.decl().alias().aliasType()
-        scopedName = produce_idname(type.scopedName())
+        while types.Type(type.type().decl().alias().aliasType()).typedef():
+            type = types.Type(type.type().decl().alias().aliasType())
+        scopedName = produce_idname(type.type().scopedName())
         return canon_name + CANNON_NAME_SEPARATOR + scopedName
 
     # _arrays_ of sequences seem to get handled differently
     # to simple aliases to sequences
-    #if (tyutil.isSequence(deref_type) and is_array) or \
-    #   tyutil.isSequence(type):
-    if tyutil.isSequence(deref_type):
-        bound = deref_type.bound()
+    if d_type.sequence():
+        bound = d_type.type().bound()
         canon_name = canon_name + SEQ_SEPARATOR + str(bound)
-        seqType = deref_type.seqType()
+        seqType = types.Type(d_type.type().seqType())
 
-        while (tyutil.isSequence(seqType)):
-            bound = seqType.bound()
+        while seqType.sequence():
+            bound = seqType.type().bound()
             canon_name = canon_name + SEQ_SEPARATOR + str(bound)
-            seqType = seqType.seqType()
+            seqType = types.Type(seqType.type().seqType())
 
         # straight forward sequences of sequences use their
         # flattened scoped name
-        dkd_seqType = tyutil.derefKeepDims(seqType)
-        if not(tyutil.isSequence(dkd_seqType)):
+        dkd_seqType = seqType.deref(keep_dims = 1)
+        if not(dkd_seqType.sequence()):
             canon_name = canon_name + canonTypeName(dkd_seqType)
             return canon_name
         type = seqType
-        deref_type = tyutil.deref(type)
+        d_type = type.deref()
         
 
     # add in the name for the most dereferenced type
     def typeName(type):
-        assert isinstance(type, idltype.Type)
-        deref_type = tyutil.deref(type)
+        assert isinstance(type, types.Type)
+        d_type = type.deref()
         # dereference the type, until just -before- it becomes a
         # sequence. Since a sequence doesn't have a scopedName(),
         # we use the scopedName() of the immediately preceeding
         # typedef which is an instance of idltype.Declared
-        while tyutil.isTypedef(type) and \
-              not(tyutil.isSequence(type.decl().alias().aliasType())):
-            type = type.decl().alias().aliasType()
+        while type.typedef() and \
+              not(types.Type(type.type().decl().alias().aliasType()).sequence()):
+            type = types.Type(type.type().decl().alias().aliasType())
 
-        if name_map.has_key(type.kind()):
-            return name_map[type.kind()]
-        if tyutil.isString(type):
+        if name_map.has_key(type.type().kind()):
+            return name_map[type.type().kind()]
+        if type.string():
             bound = ""
-            if type.bound() != 0:
-                bound = str(type.bound())
+            if type.type().bound() != 0:
+                bound = str(type.type().bound())
             return bound + "string"
-        if isinstance(type, idltype.Declared):
-            return produce_idname(type.scopedName())
-        if isinstance(type, idltype.WString):
+        if isinstance(type.type(), idltype.Declared):
+            return produce_idname(type.type().scopedName())
+        if isinstance(type.type(), idltype.WString):
             util.fatalError("Wide-strings are not supported")
-            
-        raise "Don't know how to generate a simple name for type: " +\
-              repr(type) + " (kind = " + repr(type.kind()) + ")"
+
+        util.fatalError("Error generating mangled name")
 
     canon_name = canon_name + CANNON_NAME_SEPARATOR + typeName(type)
     return canon_name
 
 # Given a type, produce a flat unique canonical name
 def produce_canonical_name_for_type(type):
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
 
     return canonTypeName(type, None)
 
@@ -268,10 +269,11 @@ def produce_canonical_name_for_type(type):
 def produce_operation_signature(operation):
     assert isinstance(operation, idlast.Operation)
 
-    returnType = operation.returnType()
+    returnType = types.Type(operation.returnType())
+    d_returnType = returnType.deref()
 
     # return type
-    if tyutil.isVoid(returnType, 1):
+    if d_returnType.void():
         sig = "void"
     else:
         sig = canonTypeName(returnType, useScopedName = 1)
@@ -285,7 +287,7 @@ def produce_operation_signature(operation):
         elif param.is_out():
             sig = sig + OUT_SEPARATOR
 
-        sig = sig + canonTypeName(param.paramType(),
+        sig = sig + canonTypeName(types.Type(param.paramType()),
                                   useScopedName = 1)
 
     # exception list
@@ -306,13 +308,15 @@ def produce_operation_signature(operation):
 def produce_read_attribute_signature(attribute):
     assert isinstance(attribute, idlast.Attribute)
 
-    return canonTypeName(attribute.attrType(), useScopedName = 1)
+    return canonTypeName(types.Type(attribute.attrType()),
+                         useScopedName = 1)
 
 def produce_write_attribute_signature(attribute):
     assert isinstance(attribute, idlast.Attribute)
 
     return "void" + IN_SEPARATOR +\
-           canonTypeName(attribute.attrType(), useScopedName = 1)
+           canonTypeName(types.Type(attribute.attrType()),
+                         useScopedName = 1)
         
 
 # ----------------

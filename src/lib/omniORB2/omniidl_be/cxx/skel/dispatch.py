@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.17.2.3  2000/04/26 18:22:54  djs
+# Rewrote type mapping code (now in types.py)
+# Rewrote identifier handling code (now in id.py)
+# Removed superfluous externs in front of function definitions
+#
 # Revision 1.17.2.2  2000/03/20 11:50:26  djs
 # Removed excess buffering- output templates have code attached which is
 # lazily evaluated when required.
@@ -103,7 +108,7 @@
 import string
 
 from omniidl import idlutil, idltype, idlast
-from omniidl_be.cxx import util, tyutil, skutil, name, config
+from omniidl_be.cxx import util, tyutil, skutil, id, config, types
 from omniidl_be.cxx.skel import proxy, template
 
 
@@ -111,8 +116,7 @@ import dispatch
 self = dispatch
 
 def __init__(environment, stream):
-    self.__environment = environment.leaveScope()
-    self.__globalScope = name.globalScope()
+    self.__environment = environment.leave()
     self.__stream = stream
     return self
 
@@ -124,40 +128,40 @@ def __init__(environment, stream):
 #  -in-, -inout- types have had their storage
 #        allocated by the caller
 def argument_instance(type):
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
     environment = self.__environment
     
-    deref_type = tyutil.deref(type)
-    dims = tyutil.typeDims(type)
+    d_type = type.deref()
+    dims = type.dims()
     
-    is_variable = tyutil.isVariableType(deref_type)
+    is_variable = d_type.variable()
     is_array = dims != []
 
     # in, out, inout (corresponds to idltype.Parameter.direction()
     mapping = ["", "", ""]
 
     # all strings are CORBA::String_var
-    if tyutil.isString(deref_type) and not(is_array):
+    if d_type.string() and not(is_array):
         mapping = ["CORBA::String_var", "CORBA::String_var",
                    "CORBA::String_var"]
         return mapping
 
     # all object references and typecodes are _var types
-    if tyutil.isObjRef(deref_type) and not(is_array):
-        name = environment.principalID(deref_type)
+    if d_type.objref() and not(is_array):
+        name = d_type.base(environment)
         mapping = [name + "_var", name + "_var", name + "_var"]
 
         return mapping
 
                 
-    if tyutil.isTypeCode(deref_type) and not(is_array):
+    if d_type.typecode() and not(is_array):
         name = "CORBA::TypeCode"
         mapping = [name + "_var", name + "_var", name + "_var"]
         return mapping
 
     # typedefs aren't dereferenced
-    if tyutil.isTypedef(type):
-        name = environment.principalID(type)
+    if type.typedef():
+        name = type.base(environment)
         mapping[0] = name
         # out types have storage allocated here
         if is_variable:
@@ -168,7 +172,7 @@ def argument_instance(type):
         
         return mapping
 
-    name = environment.principalID(type)
+    name = type.base(environment)
     mapping = [name, name, name]
     if is_variable:
         mapping[1] = name + "_var"
@@ -179,12 +183,12 @@ def argument_instance(type):
 # Given an argument type and a name, returns the thing actually
 # passed to the method call.
 def method_argument(type, name):
-    assert isinstance(type, idltype.Type)
+    assert isinstance(type, types.Type)
     environment = self.__environment
-    deref_type = tyutil.deref(type)
-    type_dims = tyutil.typeDims(type)
+    d_type = type.deref()
+    type_dims = type.dims()
     is_array = type_dims != []
-    is_variable = tyutil.isVariableType(deref_type)
+    is_variable = d_type.variable()
     
     # in, out, inout (corresponds to idltype.Parameter.direction()
     mapping = ["", "", ""]
@@ -195,12 +199,11 @@ def method_argument(type, name):
         return mapping
 
     # strings and object references and typecodes
-    if tyutil.isString(deref_type) or tyutil.isObjRef(deref_type) or \
-       tyutil.isTypeCode(deref_type):
+    if d_type.string() or d_type.objref() or d_type.typecode():
         mapping = [name + ".in()", name + ".out()", name + ".inout()"]
         return mapping
 
-    is_variable = tyutil.isVariableType(deref_type)
+    is_variable = d_type.variable()
     mapping = [name, name, name]
     if is_variable:
         mapping[1] = name + ".out()"
@@ -211,14 +214,14 @@ def method_argument(type, name):
 # Given an argument type and a name, indicates whether the thing
 # is passed by a pointer (involves .operator->() etc)
 def is_pointer(type):
-    assert isinstance(type, idltype.Type)
-    deref_type = tyutil.deref(type)
+    assert isinstance(type, types.Type)
+    d_type = type.deref()
 
     # strings are a special case
-    if tyutil.isString(deref_type):
+    if d_type.string():
         return 0
 
-    is_variable = tyutil.isVariableType(deref_type)
+    is_variable = d_type.variable()
     if is_variable:
         return 1
 
@@ -232,12 +235,12 @@ def operation(operation):
     stream = self.__stream
 
     idl_operation_name = operation.identifier()
-    operation_name = tyutil.mapID(idl_operation_name)
+    operation_name = id.mapID(idl_operation_name)
 
-    return_type = operation.returnType()
-    deref_return_type = tyutil.deref(return_type)
-    return_type_dims = tyutil.typeDims(return_type)
-    has_return_value = not(tyutil.isVoid(return_type))
+    return_type = types.Type(operation.returnType())
+    d_return_type = return_type.deref()
+    return_type_dims = return_type.dims()
+    has_return_value = not(return_type.void())
 
     # all arguments are prefixed, return value is called "return"
     prefix = "arg_"
@@ -263,18 +266,18 @@ def operation(operation):
     put_arguments = util.StringStream()
 
     for argument in operation.parameters():
-        argument_name = tyutil.mapID(argument.identifier())
+        argument_name = id.mapID(argument.identifier())
         argument_prefixed_name = prefix + argument_name
         direction = argument.direction()
-        argument_type = argument.paramType()
-        argument_type_name = environment.principalID(argument_type)
-        argument_is_variable = tyutil.isVariableType(argument_type)
-        argument_dims = tyutil.typeDims(argument_type)
+        argument_type = types.Type(argument.paramType())
+        argument_type_name = argument_type.base(environment)
+        argument_is_variable = argument_type.variable()
+        argument_dims = argument_type.dims()
         is_array = argument_dims != []
-        deref_argument_type = tyutil.deref(argument_type)
-        deref_dims_type = tyutil.derefKeepDims(argument_type)
-        deref_dims_name = environment.principalID(deref_dims_type)
-
+        d_argument_type = argument_type.deref()
+        d_dims_type = argument_type.deref(keep_dims = 1)
+        d_dims_name = d_dims_type.base(environment)
+                                              
         argument_type_names = argument_instance(argument_type)
         # declare the argument
         get_arguments.out("""\
@@ -294,7 +297,7 @@ def operation(operation):
         marshal_name = argument_prefixed_name
         align_name = argument_prefixed_name
         if is_array:
-            argument_slice_name = "((" + deref_dims_name + "_slice*)" +\
+            argument_slice_name = "((" + d_dims_name + "_slice*)" +\
                                   argument_prefixed_name + ")"
         else:
             argument_slice_name = "((" + argument_type_name + "_slice*)" +\
@@ -306,14 +309,13 @@ def operation(operation):
         arg_is_pntr = 0
         if is_array and direction == 1: # only out
             # fixed structures don't do slices?
-            if (tyutil.isStruct(deref_argument_type) or \
-                tyutil.isUnion(deref_argument_type)) and \
+            if (d_argument_type.struct() or d_argument_type.union()) and \
                not(argument_is_variable):
                 pass
             # TypeCodes and Anys are variable base types
-            elif not(isinstance(deref_argument_type, idltype.Base) and \
-                     not(tyutil.isAny(deref_argument_type))) and \
-                 not(tyutil.isEnum(deref_argument_type)):
+            elif not(isinstance(d_argument_type.type(), idltype.Base) and \
+                     not(d_argument_type.any())) and \
+                 not(d_argument_type.enum()):
                 marshal_name = argument_slice_name
                 align_name = argument_slice_name
 
@@ -323,11 +325,10 @@ def operation(operation):
                 marshal_name = argument_operator_name
                 align_name = argument_operator_name
                 arg_is_pntr = 1
-                if not(tyutil.isObjRef(deref_argument_type)) and \
-                   not(tyutil.isTypeCode(deref_argument_type)):
+                if not(d_argument_type.objref()) and \
+                   not(d_argument_type.typecode()):
                     marshal_name = "*" + marshal_name
-            if is_pntr and direction == 2 and \
-               tyutil.isTypeCode(deref_argument_type):
+            if is_pntr and direction == 2 and d_argument_type.typecode():
                 arg_is_pntr = 1
 
             skutil.marshall(put_arguments, environment, argument_type,
@@ -347,16 +348,16 @@ def operation(operation):
     
     if has_return_value:
         return_is_array = return_type_dims != []
-        return_is_variable = tyutil.isVariableType(return_type)
+        return_is_variable = return_type.variable()
         result_mapping = argument_instance(return_type)[1]
         return_is_pointer = is_pointer(return_type) and not(return_is_array)
-        dims_return_type = tyutil.derefKeepDims(return_type)
-        return_type_name = environment.principalID(return_type)
+        dims_return_type = return_type.deref(keep_dims = 1)
+        return_type_name = return_type.base(environment)
 
         # something very strange happening with array typedefs
         if return_is_array:
             return_type = dims_return_type
-            return_type_name = environment.principalID(dims_return_type)
+            return_type_name = dims_return_type.base(environment)
         
         # exception- arrays of fixed types use the _var mapping
         if not(return_is_variable) and return_is_array:
@@ -370,16 +371,14 @@ def operation(operation):
         align_name = "result"
         if return_is_array:
             # TypeCodes and Anys are variable base types (see above)
-            if not(isinstance(deref_return_type, idltype.Base) and \
-                   not(tyutil.isAny(deref_return_type))) and \
-               not(tyutil.isEnum(deref_return_type)):
+            if not(isinstance(d_return_type.type(), idltype.Base) and \
+                   not(d_return_type.any())) and not(d_return_type.enum()):
                 marshal_name = "((" + return_type_name + "_slice*)result)"
             align_name = marshal_name
         elif return_is_pointer:
             align_name = "(result.operator->())"
             marshal_name = align_name
-            if not(tyutil.isObjRef(deref_return_type)) and \
-               not(tyutil.isTypeCode(deref_return_type)):
+            if not(d_return_type.objref()) and not(d_return_type.typecode()):
                 marshal_name = "*" + align_name
         # needs to be counted in the message size calculation
         size_calc_results.out(
@@ -410,9 +409,9 @@ def operation(operation):
         try_.out(template.interface_operation_try)
         catch.out(template.interface_operation_catch_start)
         for exception in raises:
-            exname = environment.nameToString(exception.scopedName())
+            ex_scopedName = id.Name(exception.scopedName())
             catch.out(template.interface_operation_catch_exn,
-                      exname = exname)
+                      exname = ex_scopedName.fullyQualify())
             
         catch.out(template.interface_operation_catch_end)
 
@@ -447,60 +446,48 @@ def operation(operation):
 # ------------------------------------
 # Attribute read-dispatching
 
-def attribute_read(attribute, id):
+def attribute_read(attribute, ident):
     assert isinstance(attribute, idlast.Attribute)
 
-    cxx_id = tyutil.mapID(id)
+    cxx_id = id.mapID(ident)
     environment = self.__environment
     stream = self.__stream
     
-    attrType = attribute.attrType()
-    deref_attrType = tyutil.deref(attrType)
-    attrib_type_name = environment.principalID(attrType)
+    attrType = types.Type(attribute.attrType())
+    d_attrType = attrType.deref()
+    attrib_type_name = attrType.base(environment)
     result_name = "result"
-    attr_dims = tyutil.typeDims(attrType)
+    attr_dims = attrType.dims()
     is_array = attr_dims != []
 
     return_is_pointer = 0
     dereference = 0
 
-    #if tyutil.isSequence(deref_attrType):
-    #    return_is_pointer = 1
-    #    dereference = 1
-
     # similar code exists in skel/main.py, handling pd_result
     # basic types don't have slices
     if is_array:
-        if tyutil.ttsMap.has_key(deref_attrType.kind()):
+        if types.basic_map.has_key(d_attrType.type().kind()):
             result_name = "result"
         else:
             result_name = "((" + attrib_type_name + "_slice*)" + "result)"
         attrib_type_name = attrib_type_name + "_var"
         
-    elif tyutil.isString(deref_attrType):
+    elif d_attrType.string():
         attrib_type_name = "CORBA::String_var"
 
-    elif tyutil.isVariableType(attrType):
-        if tyutil.isObjRef(deref_attrType):
-            attrib_type_name = environment.principalID(deref_attrType)
-        elif tyutil.isTypeCode(deref_attrType):
+    elif attrType.variable():
+        if d_attrType.objref():
+            attrib_type_name = d_attrType.base(environment)
+        elif d_attrType.typecode():
             attrib_type_name = "CORBA::TypeCode"
             
         attrib_type_name = attrib_type_name + "_var"
         result_name = "(result.operator->())"
-        #if tyutil.isStruct(deref_attrType) or \
-        #   tyutil.isUnion(deref_attrType)  or \
-        #   tyutil.isAny(deref_attrType)    or \
-        #   tyutil.isTypeCode(deref_attrType):
-        #    #return_is_pointer = 1#
-
-            #if not(tyutil.isTypeCode(deref_attrType)):
-            #    dereference = 1
 
     return_is_pointer = is_pointer(attrType) and not(is_array)
     dereference = return_is_pointer and \
-                  not(tyutil.isObjRef(deref_attrType)) and \
-                  not(tyutil.isTypeCode(deref_attrType))
+                  not(d_attrType.objref()) and \
+                  not(d_attrType.typecode())
     # ---
     size_calc = skutil.sizeCalculation(environment, attrType,
                                        None, "msgsize", result_name, 1,
@@ -516,7 +503,7 @@ def attribute_read(attribute, id):
     stream.out(template.interface_attribute_read_dispatch,
                marshall_result = str(marshal),
                attrib_type = attrib_type_name,
-               attrib_name = id,
+               attrib_name = ident,
                cxx_attrib_name = cxx_id,
                size_calculation = size_calc)
 
@@ -524,45 +511,42 @@ def attribute_read(attribute, id):
 # ------------------------------------
 # Attribute write-dispatching
 
-def attribute_write(attribute, id):
+def attribute_write(attribute, ident):
     assert isinstance(attribute, idlast.Attribute)
 
-    cxx_id = tyutil.mapID(id)
+    cxx_id = id.mapID(ident)
     
     environment = self.__environment
     stream = self.__stream
 
-    attrType = attribute.attrType()
-    deref_attrType = tyutil.deref(attrType)
-    attrib_type_name = environment.principalID(attrType)
-    attr_dims = tyutil.typeDims(attrType)
+    attrType = types.Type(attribute.attrType())
+    d_attrType = attrType.deref()
+    attrib_type_name = attrType.base(environment)
+    attr_dims = attrType.dims()
     is_array = attr_dims != []
     
     is_pointer = 0
 
     if is_array:
-        if tyutil.ttsMap.has_key(deref_attrType.kind()):
-            pass
-        else:
-            attrib_type_name = attrib_type_name 
+        pass
         
-    elif tyutil.isString(deref_attrType):
+    elif d_attrType.string():
         attrib_type_name = "CORBA::String_var"
 
-    elif tyutil.isObjRef(deref_attrType):
-        attrib_type_name = environment.principalID(deref_attrType)
+    elif d_attrType.objref():
+        attrib_type_name = d_attrType.base(environment)
         attrib_type_name = attrib_type_name + "_var"
-    elif tyutil.isTypeCode(deref_attrType):
+    elif d_attrType.typecode():
         attrib_type_name = "CORBA::TypeCode"
         attrib_type_name = attrib_type_name + "_var"
 
-    elif tyutil.isSequence(deref_attrType):
+    elif d_attrType.sequence():
         # not a _var type
         is_pointer = 1    
 
 
     unmarshal = util.StringStream()
-    if not(is_array) and tyutil.isString(deref_attrType):
+    if not(is_array) and d_attrType.string():
         unmarshal.out(template.unmarshal_string_tmp,
                       item_name = "value",
                       private_prefix = config.privatePrefix())
@@ -573,7 +557,7 @@ def attribute_write(attribute, id):
     stream.out(template.interface_attribute_write_dispatch,
                unmarshall_value = str(unmarshal),
                attrib_type = attrib_type_name,
-               attrib_name = id,
+               attrib_name = ident,
                cxx_attrib_name = cxx_id)    
 
 
