@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.17  1999/06/18 20:37:04  sll
+  Replaced _LC_attr with _core_attr and _dyn_attr.
+  New variable copyStringInAnyExtraction.
+
   Revision 1.16  1999/03/19 15:17:44  djr
   New option acceptMisalignedIndirections
 
@@ -74,17 +78,6 @@
 #ifndef __OMNIORB_H__
 #define __OMNIORB_H__
 
-#ifdef _LC_attr
-# error "A local CPP macro _LC_attr has already been defined."
-#else
-# ifdef _OMNIORB2_LIBRARY
-#  define _LC_attr
-# else
-#  define _LC_attr _OMNIORB_NTDLL_IMPORT
-# endif
-#endif
-
-
 _CORBA_MODULE omniORB
 
 _CORBA_MODULE_BEG
@@ -99,9 +92,9 @@ _CORBA_MODULE_BEG
   //                                                                    //
   //									//
 #ifndef HAS_Cplusplus_Namespace                                         //
-  static CORBA::String_var serverName;		                        //
+  static _core_attr CORBA::String_var serverName;		        //
 #else                                                                   //
-  _CORBA_MODULE_VAR char* serverName;                                   //
+  _CORBA_MODULE_VAR _core_attr char* serverName;                        //
 #endif                                                                  //
   ////////////////////////////////////////////////////////////////////////
 
@@ -114,7 +107,7 @@ _CORBA_MODULE_BEG
   //               communication socket shutdown                       //
   //     level 10 - the above plus execution trace messages            //
   //     ...                                                           //
-  _CORBA_MODULE_VAR CORBA::ULong   traceLevel;                         //
+  _CORBA_MODULE_VAR _core_attr CORBA::ULong   traceLevel;              //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtraceLevel <n>, or by direct assignment to this   //
@@ -142,7 +135,7 @@ _CORBA_MODULE_BEG
   // the strand as it tries to read more data from it. In this case the//
   // sender won't send anymore as it thinks it has marshalled in all   //
   // the data.							       //
-  _CORBA_MODULE_VAR CORBA::Boolean   strictIIOP;                       //
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean   strictIIOP;            //
   //                                                                   //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBstrictIIOP <0|1>, or by direct assignment to this //
@@ -168,7 +161,7 @@ _CORBA_MODULE_BEG
   //              used (i.e. when the replace() member function or     //
   //              non - type-safe Any constructor is used. )           //
   //                                                                   //
-  _CORBA_MODULE_VAR CORBA::Boolean tcAliasExpand;                      //
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean tcAliasExpand;           //
   //     This value can be changed at runtime either by command-line   //
   //     option: -ORBtcAliasExpand <0|1>, or by direct assignment to   //
   //     this variable.                                                //
@@ -185,7 +178,7 @@ _CORBA_MODULE_BEG
   typedef omniObjectKey objectKey;                                      //
   //                                                                    //
   //  size of the hash table used by hash().                            //
-  _CORBA_MODULE_VAR const unsigned int hash_table_size;                 //
+  _CORBA_MODULE_VAR _core_attr const unsigned int hash_table_size;      //
   //                                                                    //
   //  hash()                                                            //
   //    return the hash value of this key. The return value             //
@@ -306,8 +299,8 @@ _CORBA_MODULE_BEG
 				 void* cookie,                          //
 				 transientExceptionHandler_t fn);       //
   //									//
-  _CORBA_MODULE_VAR CORBA::ULong defaultTransientRetryDelayIncrement;   //
-  _CORBA_MODULE_VAR CORBA::ULong defaultTransientRetryDelayMaximum;     //
+  _CORBA_MODULE_VAR _core_attr CORBA::ULong defaultTransientRetryDelayIncrement;   //
+  _CORBA_MODULE_VAR _core_attr CORBA::ULong defaultTransientRetryDelayMaximum;     //
   ////////////////////////////////////////////////////////////////////////
 
 
@@ -503,7 +496,7 @@ _CORBA_MODULE_BEG
   // number, the extra invocations would be blocked until the  	       	//
   // the outstanding ones return. (The default value is 5.)    	       	//
   //   	       	       	       	       	       	       	       	       	//
-  _CORBA_MODULE_VAR  unsigned int maxTcpConnectionPerServer;            //
+  _CORBA_MODULE_VAR _core_attr unsigned int maxTcpConnectionPerServer;  //
   ////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////
@@ -516,7 +509,7 @@ _CORBA_MODULE_BEG
   //  By default system exceptions are passed through the Environment   //
   // object.                                                            //
   //   	       	       	       	       	       	       	       	       	//
-  _CORBA_MODULE_VAR CORBA::Boolean diiThrowsSysExceptions;              //
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean diiThrowsSysExceptions;   //
   //                                                                    //
   //     This value can be changed at runtime either by command-line    //
   //     option: -ORBdiiThrowsSysExceptions <0|1>, or by direct         //
@@ -533,12 +526,27 @@ _CORBA_MODULE_BEG
   _CORBA_MODULE_FN void enableLcdMode();                                //
   ////////////////////////////////////////////////////////////////////////
 
+  ////////////////////////////////////////////////////////////////////////
+  // In pre-2.8.0 versions, the CORBA::Any extraction operator for     	//
+  // unbounded string ( operator>>= (char*&) ) copy the returned string.//
+  // In other words the caller must free the string later.              //
+  // With 2.8.0 and later, the semantics becomes non-copy, i.e. the Any //
+  // still own the storage of the returned string.   	       	       	//
+  // This would cause problem in programs that is written to use the    //
+  // pre-2.8.0 semantics. To make it easier for the transition,	       	//
+  // set copyStringInAnyExtraction to 1. This would revert the          //
+  // semantics to the pre-2.8.0 versions.                               //
+  //                                                                    //
+  _CORBA_MODULE_VAR _dyn_attr  CORBA::Boolean copyStringInAnyExtraction;//
+  ////////////////////////////////////////////////////////////////////////
+
+
   // Internal configuration variables. Do not use!
 
-  _CORBA_MODULE_VAR CORBA::Boolean useTypeCodeIndirections;
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean useTypeCodeIndirections;
   // true by default
 
-  _CORBA_MODULE_VAR CORBA::Boolean acceptMisalignedTcIndirections;
+  _CORBA_MODULE_VAR _core_attr CORBA::Boolean acceptMisalignedTcIndirections;
   // false by default
 
 
@@ -575,19 +583,16 @@ _CORBA_MODULE_BEG
     void* pd_state;
   };
 
-  _CORBA_MODULE_VAR logStream& log;
+  _CORBA_MODULE_VAR _core_attr logStream& log;
 
 #ifndef HAS_Cplusplus_Namespace
   friend class omni;
   friend class CORBA;
 private:
 #endif
-  _CORBA_MODULE_VAR objectKey seed;
+  _CORBA_MODULE_VAR _core_attr objectKey seed;
 
 _CORBA_MODULE_END
-
-
-#undef _LC_attr
 
 
 #endif // __OMNIORB_H__
