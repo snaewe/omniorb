@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/12/01 17:04:21  djs
+# Added global config options for Typecodes and Anys, and forms of tie templates
+#
 # Revision 1.3  1999/11/12 17:17:45  djs
 # Creates output files rather than using stdout
 # Utility functions useful for skeleton generation added
@@ -63,6 +66,31 @@ def setBasename(b):
 def basename():
     global __basename
     return __basename
+
+# generate code for TypeCodes and Any
+def setTypecodeFlag(flag):
+    global __typecode
+    __typecode = flag
+def TypecodeFlag():
+    global __typecode
+    return __typecode
+
+# generate code for 'tie' implementational skeletons
+def setTieFlag(flag):
+    global __tie
+    __tie = flag
+def TieFlag():
+    global __tie
+    return __tie
+
+# generate code for flattened 'tie' implementational skeletons
+def setFlatTieFlag(flag):
+    global __flattie
+    __flattie = flag
+def FlatTieFlag():
+    global __flattie
+    return __flattie
+
     
 # suffix added to basename to get header filename
 def hdrsuffix():
