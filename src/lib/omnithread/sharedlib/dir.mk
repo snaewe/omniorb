@@ -362,7 +362,7 @@ $(lib): $(OBJS)
         $(RM) $@; \
          aCC -b -Wl,+h$(soname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
          $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
-         $(filter-out $(LibSuffixPattern),$^)  -ldce -loodce -lcma ; \
+         $(filter-out $(LibSuffixPattern),$^)  -ldce -lcma ; \
        )
 
 clean::
