@@ -1,3 +1,13 @@
+Tue Jun 20 14:51:11 BST 2000 dpg1
+=================================
+
+- omniidl now keeps the C++ tree until after the back-ends have run.
+  This means that back-ends can be C++ extension modules.
+
+src/tool/omniidl/cxx/idlpython.cc
+src/tool/omniidl/python/omniidl/main.py
+
+
 Mon Jun 19 18:39:00 BST 2000 djs
 ================================
 

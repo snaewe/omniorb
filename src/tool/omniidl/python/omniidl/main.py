@@ -29,6 +29,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.15.2.11  2000/06/20 13:55:58  dpg1
+# omniidl now keeps the C++ tree until after the back-ends have run.
+# This means that back-ends can be C++ extension modules.
+#
 # Revision 1.15.2.10  2000/06/05 18:13:28  dpg1
 # Comments can be attached to subsequent declarations (with -K). Better
 # idea of most recent decl in operation declarations
@@ -424,3 +428,4 @@ def main(argv=None):
 
             idlast.clear()
             idltype.clear()
+            _omniidl.clear()
