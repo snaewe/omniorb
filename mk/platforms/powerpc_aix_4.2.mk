@@ -184,7 +184,7 @@ SHAREDLIB_CPPFLAGS =
 #
 
 define MakeCXXSharedLibrary
-fn() { \
+ $(ParseNameSpec); \
  soname=$(SharedLibrarySoNameTemplate); \
  set -x; \
  $(RM) $@; \
@@ -193,9 +193,7 @@ fn() { \
     $(filter-out $(LibSuffixPattern),$^) $$extralibs \
          -p 40; \
  ar cq $@ $$soname; \
- $(RM) $$soname; \
-}; \
-fn $$namespec;
+ $(RM) $$soname;
 endef
 
 endif
@@ -206,7 +204,7 @@ BuildSharedLibrary = 1       # Enable
 SHAREDLIB_CPPFLAGS =
 
 define MakeCXXSharedLibrary
-fn() { \
+ $(ParseNameSpec); \
  soname=$(SharedLibrarySoNameTemplate); \
  set -x; \
  $(RM) $@; \
@@ -214,9 +212,7 @@ fn() { \
      -o $$soname $(IMPORT_LIBRARY_FLAGS) \
     $(filter-out $(LibSuffixPattern),$^) $$extralibs ; \
  ar cq $@ $$soname; \
- $(RM) $$soname; \
-}; \
-fn $$namespec;
+ $(RM) $$soname;
 endef
 
 endif
@@ -229,12 +225,10 @@ endif
 #
 define ExportSharedLibrary
 $(ExportLibrary); \
-fn() { \
+$(ParseNameSpec); \
  libname=$(SharedLibraryLibNameTemplate); \
  set -x; \
  cd $(EXPORT_TREE)/$(LIBDIR); \
  $(RM) $$libname; \
- ln -s $(<F) $$libname; \
-}; \
-fn $$namespec;
+ ln -s $(<F) $$libname;
 endef

@@ -153,15 +153,13 @@ BuildSharedLibrary = 1       # Enable
 SHAREDLIB_CPPFLAGS =
 
 define MakeCXXSharedLibrary
-fn() { \
+ $(ParseNameSpec); \
  soname=$(SharedLibrarySoNameTemplate); \
  set -x; \
  $(RM) $@; \
   ld -shared -soname $$soname -set_version $$soname -o $@ \
  $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs; \
-  -lcxxstd -lcxx -lexc -lots -lc; \
-}; \
-fn $$namespec;
+  -lcxxstd -lcxx -lexc -lots -lc;
 endef
 
 endif

@@ -258,8 +258,14 @@ SharedLibraryPlatformLinkFlagsTemplate = -shared -Wl,-soname,$$soname
 
 define SharedLibraryFullName
 fn() { \
+if [ $$2 = "_" ] ; then set $$1 "" $$3 $$4 ; fi ; \
 echo $(SharedLibraryFullNameTemplate); \
 }; fn
+endef
+
+define ParseNameSpec
+set $$namespec ; \
+if [ $$2 = "_" ] ; then set $$1 "" $$3 $$4 ; fi
 endef
 
 # MakeCXXSharedLibrary- Build shared library
@@ -271,14 +277,12 @@ endef
 #       extralibs="$(OMNIORB_LIB)"
 #
 define MakeCXXSharedLibrary
-fn() { \
+ $(ParseNameSpec); \
  soname=$(SharedLibrarySoNameTemplate); \
  set -x; \
  $(RM) $@; \
  $(CXX) $(SharedLibraryPlatformLinkFlagsTemplate) -o $@ \
- $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs; \
-}; \
-fn $$namespec;
+ $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs;
 endef
 
 # ExportSharedLibrary- export sharedlibrary
@@ -287,8 +291,8 @@ endef
 #  e.g. namespec = "COS 3 0 0" --> shared library libCOS3.so.0.0
 #
 define ExportSharedLibrary
-$(ExportLibrary); \
-fn() { \
+ $(ExportLibrary); \
+ $(ParseNameSpec); \
  soname=$(SharedLibrarySoNameTemplate); \
  libname=$(SharedLibraryLibNameTemplate); \
  set -x; \
@@ -296,9 +300,7 @@ fn() { \
  $(RM) $$soname; \
  ln -s $(<F) $$soname; \
  $(RM) $$libname; \
- ln -s $$soname $$libname; \
-}; \
-fn $$namespec;
+ ln -s $$soname $$libname;
 endef
 
 define CleanSharedLibrary
@@ -318,3 +320,9 @@ static/%.o: %.cc
 
 shared/%.o: %.cc
 	$(CXX) -c $(SHAREDLIB_CPPFLAGS) $(CXXFLAGS)  -o $@ $<
+
+static/%.o: %.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+shared/%.o: %.c
+	$(CC) -c $(SHAREDLIB_CPPFLAGS) $(CFLAGS)  -o $@ $<

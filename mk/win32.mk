@@ -237,15 +237,22 @@ SharedLibrarySymbolRefLibraryTemplate = $${symrefdir:-static}/$$1$$2$${extrasuff
 
 define SharedLibraryFullName
 fn() { \
+if [ $$2 = "_" ] ; then set $$1 "" $$3 $$4 ; fi ; \
 echo $(SharedLibraryFullNameTemplate); \
 }; fn
 endef
 
 define SharedLibraryDebugFullName
 fn() { \
+if [ $$2 = "_" ] ; then set $$1 "" $$3 $$4 ; fi ; \
 extrasuffix="d"; \
 echo $(SharedLibraryFullNameTemplate); \
 }; fn
+endef
+
+define ParseNameSpec
+set $$namespec ; \
+if [ $$2 = "_" ] ; then set $$1 "" $$3 $$4 ; fi
 endef
 
 
@@ -296,7 +303,7 @@ endef
 #       extralibs="$(OMNIORB_LIB)"
 #
 define MakeCXXSharedLibrary
-fn() { \
+$(ParseNameSpec); \
 extrasuffix=$${debug:+d}; \
 targetdir=$(@D); \
 libname=$(SharedLibraryLibNameTemplate); \
@@ -308,8 +315,7 @@ set -x; \
 $(RM) $@; \
 $(CXXLINK) -out:$$dllname -DLL $(MSVC_DLL_CXXLINKNODEBUGOPTIONS) \
 -def:$$defname -IMPLIB:$@ $(IMPORT_LIBRARY_FLAGS) \
-$^ $$extralibs; \
-}; fn $$namespec; 
+$^ $$extralibs;
 endef
 
 # Export SharedLibrary
@@ -321,7 +327,7 @@ endef
 # bin/x86... directory so that it's on your PATH:
 #
 define ExportSharedLibrary
-fn() { \
+$(ParseNameSpec); \
 extrasuffix=$${debug:+d}; \
 targetdir=$(<D); \
 libname=$(SharedLibraryLibNameTemplate); \
@@ -332,8 +338,7 @@ dllname=$$targetdir/$$libname.dll; \
 (dir="$(EXPORT_TREE)/$(BINDIR)"; \
  file="$$dllname"; \
  $(ExportExecutableFileToDir); ); \
-); \
-}; fn $$namespec
+);
 endef
 
 # CleanSharedLibrary
@@ -361,7 +366,7 @@ static/%.o: %.cc
 	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_STATICLIB_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
 
 debug/%.o: %.cc
-	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_STATICLIB_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c  $(MSVC_STATICLIB_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
 
 shared/%DynSK.o: %DynSK.cc
 	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
@@ -374,13 +379,26 @@ shared/%.o: %.cc
 
 
 shareddebug/%DynSK.o: %DynSK.cc
-	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c  -DUSE_core_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
 
 shareddebug/%SK.o: %SK.cc
-	$(CXX) -c $(CXXDEBUGFLAGS) -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c  -DUSE_dyn_stub_in_nt_dll $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
 
 shareddebug/%.o: %.cc
-	$(CXX) -c $(CXXDEBUGFLAGS) $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+	$(CXX) -c  $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+
+static/%.o: %.c
+	$(CC) -c $(CDEBUGFLAGS) $(MSVC_STATICLIB_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+
+debug/%.o: %.c
+	$(CC) -c $(MSVC_STATICLIB_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+
+shared/%.o: %.c
+	$(CC) -c $(CDEBUGFLAGS) $(MSVC_DLL_CXXNODEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
+
+
+shareddebug/%.o: %.c
+	$(CC) -c  $(MSVC_DLL_CXXDEBUGFLAGS) $(CPPFLAGS) -Fo$@ $<
 
 
 #################################################################################
