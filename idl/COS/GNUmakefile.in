@@ -6,7 +6,7 @@ INSTALL=@INSTALL@
 
 INSTALLDIR = $(INSTALLIDLDIR)/omniORB/COS
 
-FILES = AttNotifyChannelAdmin.idl CosCollection.idl			\
+FILES = CosCollection.idl						\
         CosCompoundLifeCycle.idl CosConcurrencyControl.idl		\
         CosContainment.idl CosEventChannelAdmin.idl CosEventComm.idl	\
         CosExternalization.idl CosExternalizationContainment.idl	\
