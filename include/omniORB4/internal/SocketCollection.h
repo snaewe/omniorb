@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2003/02/17 01:45:50  dgrisby
+  Pipe to kick select thread (on Unix).
+
   Revision 1.1.2.15  2002/10/04 11:11:45  dgrisby
   Transport fixes: ENOTSOCK for Windows, SOMAXCONN in listen().
 
@@ -154,9 +157,16 @@ OMNI_NAMESPACE_END(omni)
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
-//             unix
+//             unix(ish)
 //
-#  include <sys/time.h>
+#  if defined(__vxWorks__)
+#    include <sockLib.h>
+#    include <hostLib.h>
+#    include <ioLib.h>
+#    include <netinet/tcp.h>
+#  else
+#    include <sys/time.h>
+#  endif
 #  include <sys/socket.h>
 #  include <netinet/in.h>
 #  include <netinet/tcp.h>
@@ -346,10 +356,13 @@ private:
   omni_tracedcondition pd_select_cond; // timedwait on if nothing to select
   unsigned long        pd_abs_sec;
   unsigned long        pd_abs_nsec;
+  int                  pd_pipe_read;
+  int                  pd_pipe_write;
+  CORBA::Boolean       pd_pipe_full;
   int                  pd_refcount;
 
 protected:
-  SocketLink**      pd_hash_table;
+  SocketLink**         pd_hash_table;
 
 };
 

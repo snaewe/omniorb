@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.13  2003/02/17 01:46:23  dgrisby
+  Pipe to kick select thread (on Unix).
+
   Revision 1.1.2.12  2003/01/28 12:17:09  dgrisby
   Bug with Select() ignoring data in buffer indications.
 
@@ -76,6 +79,12 @@
 #include <omniORB4/giopEndpoint.h>
 #include <SocketCollection.h>
 
+#if defined(__vxWorks__)
+#  include "pipeDrv.h"
+#  include "iostream.h"
+#endif
+
+
 OMNI_NAMESPACE_BEGIN(omni)
 
 #define GDB_DEBUG
@@ -112,6 +121,12 @@ SocketSetnonblocking(SocketHandle_t sock) {
     return RC_INVALID_SOCKET;
   }
   return 0;
+# elif defined(__vxWorks__)
+  int fl = TRUE;
+  if (ioctl(sock, FIONBIO, (int)&fl) == ERROR) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
 # else
   u_long v = 1;
   if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
@@ -127,6 +142,12 @@ SocketSetblocking(SocketHandle_t sock) {
 # if !defined(__WIN32__)
   int fl = 0;
   if (fcntl(sock,F_SETFL,fl) == RC_SOCKET_ERROR) {
+    return RC_INVALID_SOCKET;
+  }
+  return 0;
+# elif defined(__vxWorks__)
+  int fl = FALSE;
+  if (ioctl(sock, FIONBIO, (int)&fl) == ERROR) {
     return RC_INVALID_SOCKET;
   }
   return 0;
@@ -150,11 +171,43 @@ SocketCollection::SocketCollection() :
   pd_n_fdset_1(0), pd_n_fdset_2(0), pd_n_fdset_dib(0),
   pd_select_cond(&pd_fdset_lock),
   pd_abs_sec(0), pd_abs_nsec(0),
+  pd_pipe_read(-1), pd_pipe_write(-1), pd_pipe_full(0),
   pd_refcount(1)
 {
   FD_ZERO(&pd_fdset_1);
   FD_ZERO(&pd_fdset_2);
   FD_ZERO(&pd_fdset_dib);
+
+#ifdef UnixArchitecture
+#  ifdef __vxWorks__
+    if (pipeDrv() == OK) {
+      if (pipeDevCreate("/pipe/SocketCollection",10,sizeof(int)) == OK) {
+	pd_pipe_read = pd_pipe_write = open("/pipe/SocketCollection",
+					    O_RDWR,0);
+      }
+    }
+    if (pd_pipe_read <= 0) {
+      omniORB::logs(5, "Unable to create pipe for SocketCollection.");
+    }
+#  else
+    int filedes[2];
+    int r = pipe(filedes);
+    if (r != -1) {
+      pd_pipe_read  = filedes[0];
+      pd_pipe_write = filedes[1];
+    }
+    else {
+      omniORB::logs(5, "Unable to create pipe for SocketCollection.");
+    }
+#  endif
+#endif
+
+  if (pd_pipe_read > 0) {
+    pd_n_fdset_1++;
+    pd_n_fdset_2++;
+    FD_SET(pd_pipe_read, &pd_fdset_1);
+    FD_SET(pd_pipe_read, &pd_fdset_2);
+  }
 
   pd_hash_table = new SocketLink* [hashsize];
   for (CORBA::ULong i=0; i < hashsize; i++)
@@ -167,6 +220,15 @@ SocketCollection::~SocketCollection()
 {
   pd_refcount = -1;
   delete [] pd_hash_table;
+
+#ifdef UnixArchitecture
+#  ifdef __vxWorks__
+  // *** How do we clean up on vxWorks?
+#  else
+  close(pd_pipe_read);
+  close(pd_pipe_write);
+#  endif
+#endif
 }
 
 
@@ -195,9 +257,18 @@ SocketCollection::setSelectable(SocketHandle_t sock,
       pd_n_fdset_2++;
       FD_SET(sock,&pd_fdset_2);
     }
-    // XXX poke the thread doing select to look at the fdset immediately.
+    // Wake up the thread blocked in select() if we can.
+    if (pd_pipe_write > 0) {
+      if (!pd_pipe_full) {
+	char data = '\0';
+	pd_pipe_full = 1;
+	write(pd_pipe_write, &data, 1);
+      }
+    }
+    else {
+      pd_select_cond.signal();
+    }
   }
-
   if (!hold_lock) pd_fdset_lock.unlock();
 }
 
@@ -313,18 +384,26 @@ SocketCollection::Select() {
       while (nready) {
 	if (FD_ISSET(fd,&rfds)) {
 	  nready--;
-	  if (FD_ISSET(fd,&pd_fdset_2)) {
-	    pd_n_fdset_2--;
-	    FD_CLR(fd,&pd_fdset_2);
-	    if (FD_ISSET(fd,&pd_fdset_1)) {
-	      pd_n_fdset_1--;
-	      FD_CLR(fd,&pd_fdset_1);
+
+          if (fd == pd_pipe_read) {
+            char data;
+            read(pd_pipe_read, &data, 1);
+            pd_pipe_full = 0;
+          }
+	  else {
+	    if (FD_ISSET(fd,&pd_fdset_2)) {
+	      pd_n_fdset_2--;
+	      FD_CLR(fd,&pd_fdset_2);
+	      if (FD_ISSET(fd,&pd_fdset_1)) {
+		pd_n_fdset_1--;
+		FD_CLR(fd,&pd_fdset_1);
+	      }
+	      if (FD_ISSET(fd,&pd_fdset_dib)) {
+		pd_n_fdset_dib--;
+		FD_CLR(fd,&pd_fdset_dib);
+	      }
+	      if (!notifyReadable(fd)) return 0;
 	    }
-	    if (FD_ISSET(fd,&pd_fdset_dib)) {
-	      pd_n_fdset_dib--;
-	      FD_CLR(fd,&pd_fdset_dib);
-	    }
-	    if (!notifyReadable(fd)) return 0;
 	  }
 	}
 	fd++;
