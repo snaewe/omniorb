@@ -1,7 +1,7 @@
 Summary: Object Request Broker (ORB)
 Name:    omniORB
 Version: 4.0.3
-Release: 1
+Release: 4
 License: GPL / LGPL
 Group:   System/Libraries
 Source0: %{name}-%{version}.tar.gz
@@ -95,6 +95,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
 cp sample.cfg $RPM_BUILD_ROOT/etc/omniORB.cfg
 cp etc/init.d/omniNames $RPM_BUILD_ROOT/etc/rc.d/init.d/
+chmod +x $RPM_BUILD_ROOT/etc/rc.d/init.d/ $RPM_BUILD_ROOT/etc/rc.d/init.d/omniNames
 
 mkdir -p $RPM_BUILD_ROOT/%{prefix}/man/man{1,5}
 cp -r man/* $RPM_BUILD_ROOT/%{prefix}/man
