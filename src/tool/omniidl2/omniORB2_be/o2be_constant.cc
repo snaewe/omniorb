@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.5  1998/04/09 19:14:31  sll
+  For const integral type, specify the initializer in its declaration.
+
   Revision 1.4  1998/04/07 18:42:41  sll
   Use std::fstream instead of fstream.
   Stub code now contains workaround for MSVC++ to initialise constants properly.
@@ -56,52 +59,76 @@ o2be_constant::o2be_constant(AST_Expression::ExprType et,
 void
 o2be_constant::produce_hdr(std::fstream &s)
 {
-  IND(s); s << VarToken(*this) << " const ";
+  char *quote = "";
+  char *initializer = "_init_in_decl_( ";
+  idl_bool intfconst = 0;
+
+  if (defined_in()->scope_node_type()==AST_Decl::NT_interface) {
+    initializer = "_init_in_cldecl_( ";
+    intfconst = 1;
+  }
+
+  IND(s); s << VarToken(*this);
   AST_Expression::ExprType etype = et();
   switch (etype) {
   case AST_Expression::EV_short:
-    s << "CORBA::Short";
+    s << (!intfconst?"INT":"") << " const CORBA::Short";
     break;
   case AST_Expression::EV_ushort:
-    s << "CORBA::UShort";
+    s << (!intfconst?"INT":"") << " const CORBA::UShort";
     break;
   case AST_Expression::EV_long:
-    s <<  "CORBA::Long";
+    s << (!intfconst?"INT":"") << " const CORBA::Long";
     break;
   case AST_Expression::EV_ulong:
-    s << "CORBA::ULong";
+    s << (!intfconst?"INT":"") << " const CORBA::ULong";
     break;
   case AST_Expression::EV_float:
-    s << "CORBA::Float";
+    initializer = 0;
+    s << " const CORBA::Float";
     break;
   case AST_Expression::EV_double:
-    s << "CORBA::Double";
+    initializer = 0;
+    s << " const CORBA::Double";
     break;
   case AST_Expression::EV_char:
-    s <<  "CORBA::Char";
+    quote = "'";
+    s <<  (!intfconst?"INT":"") << " const CORBA::Char";
     break;
   case AST_Expression::EV_octet:
-    s << "CORBA::Octet";
+    s << (!intfconst?"INT":"") << " const CORBA::Octet";
     break;
   case AST_Expression::EV_bool:
-    s << "CORBA::Boolean";
+    s << (!intfconst?"INT":"") << " const CORBA::Boolean";
     break;
   case AST_Expression::EV_string:
-    s << "char *";
+    initializer = 0;
+    s << " const char *";
     break;
   default:
     throw o2be_internal_error(__FILE__,__LINE__,"unexpected type under constant class");
     break;
   }
-  s << " " << uqname() << ";\n";
+  s << " " << uqname();
+  if (initializer) {
+    s << " " << initializer << " = " << quote;
+    constant_value()->dump(s);
+    s << quote << " )";
+  }
+  s << ";\n";
   return;
 }
 
 void
 o2be_constant::produce_skel(std::fstream &s)
 {
-  char *quote = NULL;
+  char *quote = "";
+  char *initializer = "_init_in_def_( ";
   char *typestr;
+
+  if (defined_in()->scope_node_type()==AST_Decl::NT_interface) {
+    initializer = "_init_in_cldef_( ";
+  }
 
   AST_Expression::ExprType etype = et();
   switch (etype) {
@@ -118,9 +145,11 @@ o2be_constant::produce_skel(std::fstream &s)
     typestr =  "const CORBA::ULong";
     break;
   case AST_Expression::EV_float:
+    initializer = 0;
     typestr = "const CORBA::Float";
     break;
   case AST_Expression::EV_double:
+    initializer = 0;
     typestr = "const CORBA::Double";
     break;
   case AST_Expression::EV_char:
@@ -134,6 +163,7 @@ o2be_constant::produce_skel(std::fstream &s)
     typestr = "const CORBA::Boolean";
     break;
   case AST_Expression::EV_string:
+    initializer = 0;
     typestr = "const char *";
     quote = "\"";
     break;
@@ -142,9 +172,26 @@ o2be_constant::produce_skel(std::fstream &s)
     break;
   }
 
-  if (defined_in() != idl_global->root() &&
-      defined_in()->scope_node_type() == AST_Decl::NT_module)
-    {
+  if (defined_in()->scope_node_type()==AST_Decl::NT_interface) {
+    IND(s); s << typestr << " " << fqname() << " "
+	      << (initializer?initializer:"") << " = " << quote;
+    constant_value()->dump(s);
+    s << quote << (initializer?" )":"") << ";\n";
+  }
+  else if (defined_in() == idl_global->root()) {
+    IND(s); s << (initializer?initializer:"") 
+	      << typestr << " " << fqname() << " = " << quote;
+    constant_value()->dump(s);
+    s << quote << (initializer?" )":"") << ";\n";
+  }
+  else {
+    if (initializer) {
+      IND(s); s << (initializer?initializer:"") 
+		<< typestr << " " << fqname() << " = " << quote;
+      constant_value()->dump(s);
+      s << quote << " );\n";
+    }
+    else {
       s << "\n#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)\n";
       IND(s); s << "// MSVC++ does not give the constant external linkage othewise.\n";
       AST_Decl* inscope = ScopeAsDecl(defined_in());
@@ -168,20 +215,13 @@ o2be_constant::produce_skel(std::fstream &s)
       DEC_INDENT_LEVEL();
       IND(s); s << "}\n";
       s << "#else\n";
-      IND(s); s << typestr << " " << fqname() << "="
-		<< ((quote != NULL) ? quote : "");
+      IND(s); s << (initializer?initializer:"") 
+		<< typestr << " " << fqname() << " = " << quote;
       constant_value()->dump(s);
-      s << ((quote != NULL) ? quote : "") << ";\n";
+      s << quote << (initializer?" )":"") << ";\n";
       s << "#endif\n";
     }
-  else
-    {
-      IND(s); s << typestr << " " << uqname() << "="
-		<< ((quote != NULL) ? quote : "");
-      constant_value()->dump(s);
-      s << ((quote != NULL) ? quote : "") << ";\n";
-    }
-  return;
+  }
 }
 
 // Narrowing
