@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.13  1998/08/10 15:33:07  sll
+  Now catch all errors instead of letting o2be_fatal_exception to cause
+  core dump.
+
   Revision 1.12  1998/08/05 18:05:43  sll
   Version variable is changed to omniORB_2_6 (previously omniORB_2_5).
 
@@ -131,11 +135,7 @@ o2be_root::produce()
     pd_skel.close();
     return;
   }
-#if 0
   catch(...) {
-#else
-  catch(o2be_fileio_error &ex) {
-#endif
 
 #ifdef __WIN32__
 	if (pd_hdr.is_open())
