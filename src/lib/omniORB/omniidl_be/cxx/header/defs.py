@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3  1999/11/03 18:18:12  djs
+# Struct and Exception fixes
+#
 # Revision 1.2  1999/11/03 17:35:11  djs
 # Brought more of the old tmp_omniidl code into the new tree
 #
@@ -743,9 +746,17 @@ typedef _CORBA_Array_Forany<@name@_copyHelper,@name@_slice> @name@_forany;
      
 
 def visitMember(node):
-    print "[[[ visitMember ]]]"
-    print "[[[ node = " + repr(node) + " ]]]"
-    raise "Shouldn't be using the visitor pattern to visit a member!"    
+#    print "[[[ visitMember ]]]"
+    memberType = node.memberType()
+    print "memberType == " + repr(memberType)
+    print "constrType == " + repr(node.constrType())
+
+    if node.constrType():
+        # if the type was declared here, it must be an instance
+        # of idltype.Declared!
+        assert isinstance(memberType, idltype.Declared)
+        memberType.decl().accept(self)
+
 
 def visitStruct(node):
 #    print "[[[ visitStruct ]]]"
@@ -806,15 +817,15 @@ _@memtype@ @instname@;""",
             continue
 
         elif tyutil.isEnum(memberType):
-            memtype = util.mapID(memberType.identifier())
+            memtype = tyutil.mapID(memberType.identifier())
         # If it's a user declared type then remember the type we assigned?
-        elif isinstance(m.type_spec(), idltype.Declared) and \
+        elif isinstance(memberType, idltype.Declared) and \
              hasattr(m,"memtype"):
             if m.memtype != None:
 #                    print "[[[stored]]]"
                 memtype = m.memtype
             else:
-                memtype = util.typeToString(memberType)
+                memtype = tyutil.principalID(memberType)
         else:
             memtype = tyutil.principalID(memberType)                
         # FIXME: doesnt deal with eg arrays
@@ -828,7 +839,6 @@ _@memtype@ @instname@;""",
 @type@ @decls@;""",type = memtype, decls = decls)
 
     stream.out("""\
-  
   size_t _NP_alignedSize(size_t initialoffset) const;
   void operator>>= (NetBufferedStream &) const;
   void operator<<= (NetBufferedStream &);
@@ -838,13 +848,123 @@ _@memtype@ @instname@;""",
 
 typedef @name@::_var_type @name@_var;
 
-typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @outname@;
-""", outname = util.getOutName(node), type = type,name = name)
+typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
+""", type = type,name = name)
 
     node.written = name
 
 def visitException(node):
-    print "[[[ visitException ]]]"
+#    print "[[[ visitException ]]]"
+    scope = currentScope()
+
+    # if the exception has no members, inline some no-ops
+    no_members = (node.members() == [])
+    # the exception's name
+    exname = tyutil.mapID(node.identifier())
+
+    # Used to build the types for exception constructors
+    def makeConstructorArgumentType(type, scope = []):
+        # idl.type -> string
+        param_type = tyutil.principalID(type, scope)
+        isVariable = tyutil.isVariableType(type)
+        derefType = tyutil.deref(type)
+        if tyutil.isString(derefType):
+            return "const char*"
+        elif isinstance(type, idltype.Base):
+            return tyutil.principalID(type, scope)
+        elif tyutil.isEnum(derefType):
+            return param_type
+        elif tyutil.isSequence(type, 0):
+            return "const " + tyutil.sequenceTemplate(derefType, scope)
+        elif tyutil.isSequence(type, 1):
+            return "const " + param_type
+        elif tyutil.isTypedef(type):
+            return param_type
+        else:
+            return tyutil.operationArgumentType(type, scope)[1]
+
+    
+    # deal with the datamembers and constructors
+    data = util.StringStream()
+    ctor_args = []
+    for m in node.members():
+        memberType = m.memberType()
+        derefType = tyutil.deref(memberType)
+        for d in m.declarators():
+            ctor_arg_type = makeConstructorArgumentType(memberType, scope)
+
+            if tyutil.isObjRef(derefType):
+                type = tyutil.objRefTemplate(memberType, "Member", scope)
+            elif tyutil.isTypedef(memberType):
+                type = tyutil.principalID(memberType, scope)
+            elif tyutil.isSequence(derefType):
+                type = tyutil.sequenceTemplate(derefType, scope())
+            else:
+                type = tyutil.principalID(memberType, scope)
+            name = tyutil.mapID(d.identifier())
+            data.out("""\
+    @type@ @name@;""", type = type, name = name)
+            type = tyutil.operationArgumentType(memberType, scope)[1]
+            ctor_args.append(ctor_arg_type + " i_" + name)
+    ctor = ""
+    if ctor_args != []:
+        ctor = exname + "(" + util.delimitedlist(ctor_args) + ");"
+            
+    if no_members:
+        inline = "inline"
+        body = "{ }"
+        alignedSize = ""
+    else:
+        inline = ""
+        body = ";"
+        alignedSize = "size_t _NP_alignedSize(size_t) const;"
+            
+    stream.out("""\
+class @name@ : public CORBA::UserException {
+public:
+  @datamembers@
+
+  inline @name@() {
+    pd_insertToAnyFn    = insertToAnyFn;
+    pd_insertToAnyFnNCP = insertToAnyFnNCP;
+  }
+  @name@(const @name@&);
+  @constructor@
+  @name@& operator=(const @name@&);
+  virtual ~@name@();
+  virtual void _raise();
+  static @name@* _downcast(CORBA::Exception*);
+  static const @name@* _downcast(const CORBA::Exception*);
+  static inline @name@* _narrow(CORBA::Exception* e) {
+    return _downcast(e);
+  }
+  
+  @alignedSize@
+
+  @inline@ void operator>>=(NetBufferedStream&) const @body@
+  @inline@ void operator>>=(MemBufferedStream&) const @body@
+  @inline@ void operator<<=(NetBufferedStream&) @body@
+  @inline@ void operator<<=(MemBufferedStream&) @body@
+
+  static _core_attr insertExceptionToAny    insertToAnyFn;
+  static _core_attr insertExceptionToAnyNCP insertToAnyFnNCP;
+
+  static _core_attr const char* _PD_repoId;
+
+private:
+  virtual CORBA::Exception* _NP_duplicate() const;
+  virtual const char* _NP_typeId() const;
+  virtual const char* _NP_repoId(int*) const;
+  virtual void _NP_marshal(NetBufferedStream&) const;
+  virtual void _NP_marshal(MemBufferedStream&) const;
+};
+
+""",
+               name = exname, datamembers = str(data),
+               constructor = ctor,
+               inline = inline, body = body,
+               alignedSize = alignedSize)
+
 
 def visitUnion(node):
     print "[[[ visitUnion ]]]"
