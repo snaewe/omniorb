@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/07/13 15:35:57  sll
+  Enter a mapping from a socket to a giopConnection in the endpoint's hash
+  table.
+
   Revision 1.1.2.4  2001/06/29 16:26:01  dpg1
   Reinstate tracing messages for new connections and handling locate
   requests.
@@ -51,7 +55,10 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/giopEndpoint.h>
+#include <omniORB4/sslContext.h>
 #include <ssl/sslConnection.h>
+#include <ssl/sslEndpoint.h>
+#include <tcp/tcpEndpoint.h>
 #include <stdio.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -275,8 +282,9 @@ sslConnection::peeraddress() {
 }
 
 /////////////////////////////////////////////////////////////////////////
-sslConnection::sslConnection(tcpSocketHandle_t sock,::SSL* ssl) : 
-  pd_socket(sock), pd_ssl(ssl) {
+sslConnection::sslConnection(tcpSocketHandle_t sock,::SSL* ssl, 
+			     sslEndpoint* endpoint) : 
+  pd_socket(sock), pd_endpoint(endpoint), pd_ssl(ssl) {
 
   struct sockaddr_in addr;
   SOCKNAME_SIZE_T l;
@@ -298,7 +306,15 @@ sslConnection::sslConnection(tcpSocketHandle_t sock,::SSL* ssl) :
   pd_peeraddress = tcpConnection::ip4ToString(
 			       (CORBA::ULong)addr.sin_addr.s_addr,
 			       (CORBA::UShort)addr.sin_port,"giop:ssl:");
-  if (omniORB::trace(5)) {
+
+  if (endpoint) {
+    omni_tracedmutex_lock sync(endpoint->pd_fdset_lock);
+    sslConnection** head = &(endpoint->pd_hash_table[sock%tcpEndpoint::hashsize]);
+    pd_next = *head;
+    *head = this;
+  }
+
+  if (endpoint && omniORB::trace(5)) {
     omniORB::logger l;
     l << "connect from " << pd_peeraddress << "\n";
   }
@@ -317,6 +333,23 @@ sslConnection::~sslConnection() {
   }
 
   CLOSESOCKET(pd_socket);
+
+  if (pd_endpoint) {
+    omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
+    sslConnection** head = &(pd_endpoint->pd_hash_table[pd_socket % 
+						       tcpEndpoint::hashsize]);
+    while (*head) {
+      if (*head == this) {
+	*head = pd_next;
+	break;
+      }
+      head = &((*head)->pd_next);
+    }
+  }
+  if (omniORB::trace(20)) {
+    omniORB::logger log;
+    log << "close connection to peer " << peeraddress() << "\n";
+  }
 }
 
 OMNI_NAMESPACE_END(omni)

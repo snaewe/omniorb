@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/07/13 15:32:50  sll
+  Enter a mapping from a socket to a giopConnection in the endpoint's hash
+  table.
+
   Revision 1.1.2.4  2001/06/29 16:26:01  dpg1
   Reinstate tracing messages for new connections and handling locate
   requests.
@@ -82,14 +86,12 @@ tcpConnection::setnonblocking(tcpSocketHandle_t sock) {
 # if !defined(__WIN32__)
   int fl = O_NONBLOCK;
   if (fcntl(sock,F_SETFL,fl) < RC_SOCKET_ERROR) {
-    CLOSESOCKET(sock);
     return RC_INVALID_SOCKET;
   }
   return 0;
 # else
   u_long v = 1;
   if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
-    CLOSESOCKET(sock);
     return RC_INVALID_SOCKET;
   }
   return 0;
@@ -102,14 +104,12 @@ tcpConnection::setblocking(tcpSocketHandle_t sock) {
 # if !defined(__WIN32__)
   int fl = 0;
   if (fcntl(sock,F_SETFL,fl) == RC_SOCKET_ERROR) {
-    CLOSESOCKET(sock);
     return RC_INVALID_SOCKET;
   }
   return 0;
 # else
   u_long v = 0;
   if (ioctlsocket(sock,FIONBIO,&v) == RC_SOCKET_ERROR) {
-    CLOSESOCKET(sock);
     return RC_INVALID_SOCKET;
   }
   return 0;
@@ -332,7 +332,8 @@ tcpConnection::handle() const {
 }
 
 /////////////////////////////////////////////////////////////////////////
-tcpConnection::tcpConnection(tcpSocketHandle_t sock) : pd_socket(sock) {
+tcpConnection::tcpConnection(tcpSocketHandle_t sock, tcpEndpoint* endpoint) : 
+  pd_socket(sock), pd_endpoint(endpoint) {
 
   struct sockaddr_in addr;
   SOCKNAME_SIZE_T l;
@@ -352,7 +353,15 @@ tcpConnection::tcpConnection(tcpSocketHandle_t sock) : pd_socket(sock) {
   }
   pd_peeraddress = ip4ToString((CORBA::ULong)addr.sin_addr.s_addr,
 			       (CORBA::UShort)addr.sin_port,"giop:tcp:");
-  if (omniORB::trace(5)) {
+
+  if (endpoint) {
+    omni_tracedmutex_lock sync(endpoint->pd_fdset_lock);
+    tcpConnection** head = &(endpoint->pd_hash_table[sock%tcpEndpoint::hashsize]);
+    pd_next = *head;
+    *head = this;
+  }
+
+  if (endpoint && omniORB::trace(5)) {
     omniORB::logger l;
     l << "connect from " << pd_peeraddress << "\n";
   }
@@ -361,6 +370,22 @@ tcpConnection::tcpConnection(tcpSocketHandle_t sock) : pd_socket(sock) {
 /////////////////////////////////////////////////////////////////////////
 tcpConnection::~tcpConnection() {
   CLOSESOCKET(pd_socket);
+  if (pd_endpoint) {
+    omni_tracedmutex_lock sync(pd_endpoint->pd_fdset_lock);
+    tcpConnection** head = &(pd_endpoint->pd_hash_table[pd_socket % 
+						       tcpEndpoint::hashsize]);
+    while (*head) {
+      if (*head == this) {
+	*head = pd_next;
+	break;
+      }
+      head = &((*head)->pd_next);
+    }
+  }
+  if (omniORB::trace(20)) {
+    omniORB::logger log;
+    log << "close connection to peer " << peeraddress() << "\n";
+  }
 }
 
 OMNI_NAMESPACE_END(omni)
