@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/05/01 16:04:42  sll
+  Silly use of sizeof() on const char*. Should use strlen().
+
   Revision 1.1.2.1  2001/04/18 18:10:43  sll
   Big checkin with the brand new internal APIs.
 
@@ -172,9 +175,9 @@ tcpEndpoint::bind() {
   }
 
   const char* format = "giop:tcp:%s:%d";
-  pd_address_string = CORBA::string_alloc(strlen(pd_address.host)+sizeof(format)+6);
+  pd_address_string = CORBA::string_alloc(strlen(pd_address.host)+strlen(format)+6);
   sprintf((char*)pd_address_string,format,
-	  (const char*)pd_address.host,pd_address.port);
+	  (const char*)pd_address.host,(int)pd_address.port);
 
   return 1;
 }
