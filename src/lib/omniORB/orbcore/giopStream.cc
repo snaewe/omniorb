@@ -28,6 +28,11 @@
 
 /*
   $Log$
+  Revision 1.1.4.19  2001/09/26 10:48:11  sll
+  Fixed a bug which causes problems when, in a single recv(), the ORB read
+  more than one GIOP messages into its buffer and the last of these messages
+  is only partially read.
+
   Revision 1.1.4.18  2001/09/10 17:53:07  sll
   In inputMessage, if a strand is dying and has been orderly_closed, i.e. a
   GIOP CloseConnection has been received, set the retry flag in the
@@ -851,8 +856,25 @@ giopStream::inputMessage() {
       giopStream_Buffer* newbuf;
       if (sz >= 12) {
 	CORBA::ULong msz = ensureSaneHeader(__FILE__,__LINE__,buf,first);
-	if (msz < sz) sz = msz;
-	newbuf = giopStream_Buffer::newBuffer(sz);
+	if (msz <= sz) {
+	  sz = msz;
+	}
+	else {
+	  if (msz > giopStream::bufferSize)
+	    msz = giopStream::bufferSize;
+	  if (msz < sz) {
+	    // Don't think this could happen because the code at present
+	    // never allocate buffer bigger than giopStream::bufferSize
+	    // and so we will never have received data bigger than can be
+	    // accomodated in a buffer of size giopStream::bufferSize.
+	    // However, this may well change in the future and we
+	    // have to prepare for this. In this case, we allocate a
+	    // buffer that is multiple of 8 bytes in size and can
+	    // store all the data received so far.
+	    msz = omni::align_to((omni::ptr_arith_t)sz,omni::ALIGN_8);
+	  }
+	}
+	newbuf = giopStream_Buffer::newBuffer(msz);
       }
       else {
 	// incomplete header, we don't know the size of the message.
