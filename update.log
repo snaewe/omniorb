@@ -1,3 +1,11 @@
+Tue Dec  1 20:41:33 GMT 1998 sll
+================================
+
+- switch to use egcs-1.1.1(pre3), this compiler release fixed some
+  optimisation bugs
+
+mk/platforms/i586_linux_2.0_glibc.mk
+
 
 Tue Nov 24 19:10:23 GMT 1998 tjr
 ================================
