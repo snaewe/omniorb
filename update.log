@@ -1,3 +1,12 @@
+Tue Jun 19 17:23:08 BST 2001 sll
+================================
+
+- Set VPATH to a meaningful value so that gatekeeper.cc can be found in
+  the external build.
+
+external_merge/config/config.mk
+
+
 Tue Jun 19 15:17:52 BST 2001 sll
 ================================
 

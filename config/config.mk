@@ -89,7 +89,7 @@ EXPORT_TREE =  $(TOP)
 
 IMPORT_TREES = $(TOP)
 
-override VPATH := $(subst :, ,$(VPATH))
+override VPATH := .
 
 THIS_IMPORT_TREE := $(TOP)
 ifneq ($(wildcard $(THIS_IMPORT_TREE)/mk/beforedir.mk),)
