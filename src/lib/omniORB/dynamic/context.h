@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.4  1999/05/25 17:48:50  sll
+ Now use _CORBA_PseudoValue_Sequence.
+
  Revision 1.3  1999/04/21 11:22:14  djr
  CORBA::Context is a friend of ContextImpl
 
@@ -117,7 +120,7 @@ private:
     char* name;
     char* value;
   };
-  typedef _CORBA_Pseudo_Unbounded_Sequence<Entry> EntrySeq;
+  typedef _CORBA_PseudoValue_Sequence<Entry> EntrySeq;
 
   CORBA::String_var  pd_name;         // set once - never changes
   CORBA::Context_ptr pd_parent;       // set once - never changes
@@ -127,6 +130,7 @@ private:
   unsigned           pd_refCount;
 
   omni_mutex         pd_lock;
+
   // Manages access to <pd_entries>, <pd_children>, <pd_refCount> and the
   // <pd_nextSibling> pointers in its children.
 };
