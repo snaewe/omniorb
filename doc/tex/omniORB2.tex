@@ -125,10 +125,9 @@ dynamic activation and deactivation policies are not supported.
 \item OmniORB2 does not has its own Interface Repository.
 \end{itemize}
 
-These features may be implemented in the short to medium term. It is best
-to check out the latest status on the omniORB2 home page ({\tt http://intranet.cam-orl.co.uk/~omni/}).
+\sloppy{These features may be implemented in the short to medium term. It is best
+to check out the latest status on the omniORB2 home page ({\tt http://intranet.cam-orl.co.uk/$\sim$omni/}).}
 
-\newpage
 
 \section{Setting Up Your Environment}
 
@@ -141,11 +140,36 @@ If you are running omniORB2 at other sites, you (or your system
 administrator) should install omniOB2 by following the instructions in the
 installation notes. 
 
-At runtime, omniORB2 looks for the environment variable {\bf
-OMNIORB\_CONFIG}. If this variable is defined, it contains the pathname of
-the omniORB2 configuration file ({\tt omniORB.cfg}). If the variable is
-not set, omniORB2 will use the compiled-in pathname to locate the
-file. 
+\begin{itemize}
+
+\item On Unix platforms, the omniORB2 runtime looks for the environment
+variable {\tt OMNIORB\_CONFIG}. If this variable is defined, it contains
+the pathname of the omniORB2 configuration file. If the variable is not
+set, omniORB2 will use the compiled-in pathname to locate the file.
+
+\item On ARM/ATMos, the omniORB2 runtime looks for configuration
+information in the file {\tt omniORB.cfg}.
+
+\item On Win32 platforms (Windows NT, Windows '95), omniORB2 first checks the 
+environment variable ({\tt OMNIORB2\_CONFIG}) to obtain the pathname of the 
+configuration file. If this is not set, it then attempts to obtain 
+configuration data in the system registry. It searches for the data under 
+the key {\tt HKEY\_LOCAL\_MACHINE$\backslash$SOFTWARE$\backslash$ORL$\backslash$omniORB$\backslash$2.0}
+
+\end{itemize}
+
+The configuration file is used to obtain an object reference for the
+COSS Naming Service. The entry in the configuration file should be specified
+in the following form:
+
+{\tt NAMESERVICE <stringified IOR for the COSS Naming Service>}
+
+Comments in the configuration file should be prefixed with a \#.
+
+On Win32 platforms, the stringified IOR can be placed in the system registry, 
+in the (string) value {\tt NAMESERVICE}, under the key 
+{\tt HKEY\_LOCAL\_MACHINE$\backslash$SOFTWARE$\backslash$ORL$\backslash$omniORB$\backslash$2.0}.
+
 
 
 %\input{basic.tex}
@@ -956,7 +980,7 @@ standardised set of kind values.
 The initial contact with the Naming Service can be established via what we
 called the {\bf root} context. The object reference to the root context is
 provided by the ORB and can be obtained by calling
-{\tt \_resolve\_initial\_references}. The following code fragment shows how
+{\tt resolve\_initial\_references}. The following code fragment shows how
 it is used:
 
 {\small
