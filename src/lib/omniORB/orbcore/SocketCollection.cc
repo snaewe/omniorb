@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.24  2004/09/13 15:31:09  dgrisby
+  Really dumb problem with SocketCollection on Win32.
+
   Revision 1.1.2.23  2004/09/13 09:44:16  dgrisby
   Avoid theoretical (?) problem with socket limit on Windows.
 
@@ -424,6 +427,8 @@ SocketCollection::Select() {
     }
     fd++;
   }
+#else
+  fd = total;
 #endif
 
   int nready;

@@ -1,3 +1,11 @@
+Mon Sep 13 16:27:09 BST 2004 dgrisby
+====================================
+
+- Really dumb problem with SocketCollection on Win32.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
+
 Mon Sep 13 14:18:51 BST 2004 dgrisby
 ====================================
 
