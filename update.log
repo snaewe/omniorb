@@ -1,3 +1,20 @@
+Thu Mar 19 19:54:23 GMT 1998 sll
+================================
+
+- Bug fix. Delay connect() to remote address space until the first
+  send() or recv(). Previously, connect() is done inside the
+  ctor of tcpSocketStrand.
+- Bug fix. Strand::Sync::WrTimedLock() now works correctly.
+- No extern interface change. Comment added to rope.h to clarify the
+  sync. requirement of newStrand().
+- Version number is now 2.5.1
+
+include/omniORB2/rope.h
+src/lib/omniORB2/tcpSocket.h
+src/lib/omniORB2/tcpSocketMTfactory.cc
+src/lib/omniORB2/strand.cc
+src/lib/omniORB2/sharedlib/dir.mk
+
 Thu Mar 19 15:22:53 GMT 1998 sll
 ================================
 
