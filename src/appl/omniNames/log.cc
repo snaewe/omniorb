@@ -78,6 +78,9 @@
 #elif defined(__DMC__)
 #  define USE_STREAM_OPEN
 #  define OPEN(name,mode,perm) open(name,mode,perm)
+#elif defined(__ICC)
+#  define USE_STREAM_OPEN
+#  define OPEN(name,mode,perm) open(name,mode,perm)
 #endif
 
 #ifndef HAVE_STRDUP
