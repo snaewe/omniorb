@@ -13,10 +13,13 @@
 
 /*
  $Log$
- Revision 1.3  1997/01/21 14:49:15  ewc
- Added support for initial reference interface and also includes
- the COSS Naming Service Interface.
+ Revision 1.4  1997/01/23 14:55:59  sll
+ Removed non-essential template dependency
 
+ * Revision 1.3  1997/01/21  14:49:15  ewc
+ * Added support for initial reference interface and also includes
+ * the COSS Naming Service Interface.
+ *
  * Revision 1.2  1997/01/13  15:06:51  sll
  * Added marshalling routines for CORBA::Object.
  *
@@ -50,21 +53,6 @@ typedef _CORBA_ULong   ULong;
 #ifndef NO_FLOAT
 typedef _CORBA_Float   Float;
 typedef _CORBA_Double  Double;
-#endif
-
-////////////////////////////////////////////////////////////////////////
-//                   Sequence of Primitive types                      //
-////////////////////////////////////////////////////////////////////////
-typedef _CORBA_Unbounded_Sequence_Boolean Unbounded_Sequence_Boolean;
-typedef _CORBA_Unbounded_Sequence_Char    Unbounded_Sequence_Char;
-typedef _CORBA_Unbounded_Sequence_Octet   Unbounded_Sequence_Octet;
-typedef _CORBA_Unbounded_Sequence_Short   Unbounded_Sequence_Short;
-typedef _CORBA_Unbounded_Sequence_UShort  Unbounded_Sequence_UShort;
-typedef _CORBA_Unbounded_Sequence_Long    Unbounded_Sequence_Long;
-typedef _CORBA_Unbounded_Sequence_ULong   Unbounded_Sequence_ULong;
-#ifndef NO_FLOAT
-typedef _CORBA_Unbounded_Sequence_Float   Unbounded_Sequence_Float;
-typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -152,7 +140,7 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
     String_var &operator= (const String_member &s);
 
     operator ptr_t& () { return (ptr_t&) _data; }
-#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
+#ifdef __SUNPRO_CC
     operator char* () {
       return _data;
     }
@@ -253,7 +241,13 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
   //    Interface repository types                                    //
   //////////////////////////////////////////////////////////////////////
   typedef char *RepositoryId;
-  class InterfaceDef;
+  class InterfaceDef {
+  public:
+    _CORBA_Unbounded_Sequence_Octet _data;
+  private:
+    InterfaceDef();
+    // Not implemented yet
+  };
   typedef class InterfaceDef *InterfaceDef_ptr;
 
 ////////////////////////////////////////////////////////////////////////
@@ -265,9 +259,9 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
   class Any {
   public:
     Any();
+    ~Any();
     Any(const Any&);
     Any(TypeCode_ptr tc, void *value, Boolean release = 0);
-    ~Any();
 
     Any &operator=(const Any&);
 
@@ -395,11 +389,11 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
       return *this;
     }
 
-#   ifdef minor
+#ifdef minor
     // Digital Unix 3.2, and may be others as well, defines minor() as
     // a macro in its sys/types.h. Get rid of it!
-#   undef minor
-#   endif
+#undef minor
+#endif
 
     ULong minor() const { return pd_minor; }
 
@@ -463,9 +457,9 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 
   class UnknownUserException : public UserException {
   public:
-    Any &exception() { return pd_data; }
-  protected:
-    Any pd_data;
+    Any &exception();
+  private:
+    UnknownUserException(); // not implemented yet
   };
 
 ////////////////////////////////////////////////////////////////////////
@@ -544,13 +538,16 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 
     static TypeCode_ptr _duplicate();
     static TypeCode_ptr _nil();
+  private:
+    TypeCode(); // Not implemented yet
   };
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Environment                                 //
 ////////////////////////////////////////////////////////////////////////
 
-  typedef class Environment *Environment_ptr;
+  class Environment;
+  typedef Environment *Environment_ptr;
 
   class Environment {
   public:
@@ -560,6 +557,8 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 
     static Environment_ptr _duplicate();
     static Environment_ptr _nil();
+  private:
+    Environment(); // Not implemented yet
   };
 
 ////////////////////////////////////////////////////////////////////////
@@ -568,7 +567,8 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 
   enum Flags { ARG_IN, ARG_OUT, ARG_INOUT };
 
-  typedef class NamedValue *NamedValue_ptr;
+  class NamedValue;
+  typedef NamedValue* NamedValue_ptr;
 
   class NamedValue {
   public:
@@ -578,9 +578,12 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 
     static NamedValue_ptr _duplicate();
     static NamedValue_ptr _nil();
+  private:
+    NamedValue(); // Not implemented yet
   };
 
-  typedef class NVList *NVList_ptr;
+  class NVList;
+  typedef NVList *NVList_ptr;
 
   class NVList {
   public:
@@ -596,13 +599,16 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
     
     static NVList_ptr _duplicate();
     static NVList_ptr _nil();
+  private:
+    NVList(); // Not implemented yet
   };
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Context                                     //
 ////////////////////////////////////////////////////////////////////////
 
-  typedef class Context *Context_ptr;
+  class Context;
+  typedef Context *Context_ptr;
 
   class Context {
   public:
@@ -615,13 +621,34 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
     
     static Context_ptr _duplicate();
     static Context_ptr _nil();
+  private:
+    Context(); // Not implemented yet
+  };
+
+////////////////////////////////////////////////////////////////////////
+//                   PIDL ContextList                                 //
+////////////////////////////////////////////////////////////////////////
+
+  class ContextList;
+  typedef ContextList* ContextList_ptr;
+
+  class ContextList {
+  public:
+    ULong count();
+    void add(const char* ctxt);
+    void add_consume(char* ctxt);
+    const char* item(ULong index);
+    Status remove(ULong index);
+  private:
+    ContextList(); // Not implemented yet
   };
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Principal                                   //
 ////////////////////////////////////////////////////////////////////////
 
-  typedef class Principal *Principal_ptr;
+  class Principal;
+  typedef Principal* Principal_ptr;
 
   typedef _CORBA_Unbounded_Sequence_w_FixSizeElement<_CORBA_Octet,1,1> PrincipalID;
 
@@ -629,20 +656,47 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
   public:
     static Principal_ptr _duplicate();
     static Principal_ptr _nil();
+  private:
+    Principal(); // Not implemented yet
   };
+
+////////////////////////////////////////////////////////////////////////
+//                   PIDL ExceptionList                               //
+////////////////////////////////////////////////////////////////////////
+
+  class ExceptionList {
+  public:
+    ULong count();
+    void add(TypeCode_ptr tc);
+    void add_consume(TypeCode_ptr tc);
+    TypeCode_ptr item(ULong index);
+    Status remove(ULong index);
+  private:
+    ExceptionList(); // Not implemented yet
+  };
+  typedef ExceptionList* ExceptionList_ptr;
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Object                                      //
 ////////////////////////////////////////////////////////////////////////
 
   class Request;
-  typedef class Request *Request_ptr;
+  typedef Request *Request_ptr;
 
   class Object;
-  typedef class Object *Object_ptr;
-  typedef Unbounded_Sequence_Octet ReferenceData;
-  class ImplementatationDef;
-  typedef class ImplementationDef *ImplementationDef_ptr;
+  typedef Object *Object_ptr;
+
+  typedef _CORBA_Unbounded_Sequence_Octet ReferenceData;
+
+  class ImplementationDef;
+  typedef ImplementationDef* ImplementationDef_ptr;
+
+  class ImplementationDef {
+  public:
+    _CORBA_Unbounded_Sequence_Octet _data;
+  private:
+    ImplementationDef(); // Not implemented yet;
+  };
 
   class Object_Helper {
   public:
@@ -703,24 +757,21 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
     static Object_ptr unmarshalObjRef(NetBufferedStream &s);
     static void marshalObjRef(Object_ptr obj,MemBufferedStream &s);
     static Object_ptr unmarshalObjRef(MemBufferedStream &s);
-
+    static Object CORBA_Object_nil;
   private:
     omniObject *pd_obj;
   };
-
-  typedef _CORBA_ObjRef_Var<Object,Object_Helper> Object_var;
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL Request                                     //
 ////////////////////////////////////////////////////////////////////////
 
-#if defined(SUPPORT_DII)
   class Request {
   public:
     Object_ptr target() const;
     const char *operation() const;
     NVList_ptr arguments();
-    NameValue_ptr result();
+    NamedValue_ptr result();
     Environment_ptr env();
     ExceptionList_ptr exceptions();
     ContextList_ptr contexts();
@@ -736,8 +787,9 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 
     static Request_ptr _duplicate();
     static Request_ptr _nil();
+  private:
+    Request(); // Not implemented yet
   };
-#endif // SUPPORT_DII
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL BOA                                         //
@@ -768,6 +820,8 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 
     BOA();
     ~BOA();
+    
+    static BOA boa;
   };
 
 ////////////////////////////////////////////////////////////////////////
@@ -779,9 +833,6 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 
   class ORB  {
   public:
-
-    ORB();
-    ~ORB();
 
     char *object_to_string(Object_ptr) ;
     Object_ptr string_to_object(const char *) ;
@@ -807,14 +858,63 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
     
     BOA_ptr BOA_init(int &argc, char **argv, const char *boa_identifier=0) ;
 
-
     // Initial Object Reference definitions:
 
     typedef char* ObjectId;
     typedef String_var ObjectId_var;
 
     typedef _CORBA_Unbounded_Sequence<CORBA::String_member > ObjectIdList;
-    typedef _CORBA_ConstrType_Variable_Var<ObjectIdList> ObjectIdList_var;
+    class ObjectIdList_var {
+    public:
+      typedef ObjectIdList* ptr_t;
+      inline ObjectIdList_var() { pd_data = 0; }
+      inline ObjectIdList_var(ObjectIdList* p) { pd_data = p; }
+      inline ObjectIdList_var(const ObjectIdList_var& p) {
+	if (!p.pd_data) {
+	  pd_data = 0;
+	  return;
+	}
+	else {
+	  pd_data = new ObjectIdList;
+	  if (!pd_data) {
+	    _CORBA_new_operator_return_null();
+	    // never reach here
+	  }
+	  *pd_data = *p.pd_data;
+	}
+      }
+      inline ~ObjectIdList_var() {  if (pd_data) delete pd_data; }
+      inline ObjectIdList_var& operator= (ObjectIdList* p) {
+	if (pd_data) delete pd_data;
+	pd_data = p;
+	return *this;
+      }
+      inline ObjectIdList_var& operator= (const ObjectIdList_var& p) {
+	if (p.pd_data) {
+	  if (!pd_data) {
+	    pd_data = new ObjectIdList;
+	    if (!pd_data) {
+	      _CORBA_new_operator_return_null();
+	      // never reach here
+	    }
+	  }
+	  *pd_data = *p.pd_data;
+	}
+	else {
+	  if (pd_data) delete pd_data;
+	  pd_data = 0;
+	}
+	return *this;
+      }
+      inline ObjectIdList* operator->() { return pd_data; }
+      inline operator ObjectIdList& () { return *pd_data; }
+#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
+      inline operator const ptr_t () const { return pd_data; }
+#endif
+      inline operator ptr_t& () { return pd_data; }
+    private:
+      ObjectIdList* pd_data;
+    };
 
     class InvalidName : public CORBA::UserException {
     public:
@@ -834,9 +934,13 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
     ObjectIdList* list_initial_services() ;
     Object_ptr resolve_initial_references(const char *identifier) ;
 
-
     static ORB_ptr _duplicate(ORB_ptr p);
     static ORB_ptr _nil();
+
+    ORB();
+    ~ORB();
+
+    static ORB orb;
   };
 
   typedef Char *ORBid;
@@ -850,20 +954,18 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
   static Boolean is_nil(Environment_ptr);
   static Boolean is_nil(Context_ptr);
   static Boolean is_nil(Principal_ptr);
-  static Boolean is_nil(Object_ptr o) { return o->NP_is_nil(); }
+  static inline Boolean is_nil(Object_ptr o) { return o->NP_is_nil(); }
   static Boolean is_nil(BOA_ptr);
   static Boolean is_nil(ORB_ptr);
-#if defined(SUPPORT_DII)
   static Boolean is_nil(NamedValue_ptr);
   static Boolean is_nil(NVList_ptr);
   static Boolean is_nil(Request_ptr);
-#endif // SUPPORT_DII
 
   static void release(TypeCode_ptr);
   static void release(Environment_ptr);
   static void release(Context_ptr);
   static void release(Principal_ptr);
-  static void release(Object_ptr o) 
+  static inline void release(Object_ptr o) 
   { 
     // see also omniORBA::objectRelease()
     if (!CORBA::is_nil(o))
@@ -872,11 +974,9 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
   }
   static void release(BOA_ptr);
   static void release(ORB_ptr);
-#if defined(SUPPORT_DII)
   static void release(NamedValue_ptr);
   static void release(NVList_ptr);
   static void release(Request_ptr);
-#endif // SUPPORT_DII
 
 
   // omniORB2 extensions - marshalling routines for pseudo objects
@@ -897,10 +997,118 @@ typedef _CORBA_Unbounded_Sequence_Double  Unbounded_Sequence_Double;
 			    const char *repoId,
 			    size_t repoIdSize,
 			    MemBufferedStream &s);
+
+  class Object_member;
+
+  class Object_var {
+  public:
+    inline Object_var() { pd_objref = CORBA::Object::_nil(); }
+    inline Object_var(Object_ptr p) { pd_objref = p; }
+    inline ~Object_var() {  
+      if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
+    }
+    inline Object_var(const Object_var& p) {
+      if (!CORBA::is_nil(p.pd_objref)) {
+	pd_objref = CORBA::Object::_duplicate(p.pd_objref);
+      }
+      else
+	pd_objref = CORBA::Object::_nil();
+    }
+    Object_var(const Object_member& p);
+    inline Object_var& operator= (Object_ptr p) {
+      if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
+      pd_objref = p;
+      return *this;
+    }
+    inline Object_var& operator= (const Object_var& p) {
+      if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
+      if (!CORBA::is_nil(p.pd_objref)) {
+	pd_objref = CORBA::Object::_duplicate(p.pd_objref);
+      }
+      else
+	pd_objref = CORBA::Object::_nil();
+      return *this;
+    }
+    Object_var& operator= (const Object_member& p);
+    inline Object_ptr operator->() { return pd_objref; }
+    inline operator Object_ptr& () { return pd_objref; }
+#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
+    inline operator const Object_ptr () const { return pd_objref; }
+#endif
+    friend class Object_member;
+private:
+    Object_ptr pd_objref;
+  };
+
+  class Object_member {
+  public:
+    inline Object_member() { _ptr = CORBA::Object::_nil(); }
+    inline Object_member(Object_ptr p) { _ptr = p; }
+    inline Object_member(const Object_member& p) {
+      if (!CORBA::is_nil(p._ptr)) {
+	_ptr = CORBA::Object::_duplicate(p._ptr);
+      }
+      else
+	_ptr = CORBA::Object::_nil();
+    }
+    inline ~Object_member() {
+      if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+    }
+    inline Object_member& operator= (Object_ptr p) {
+      if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+      _ptr = p;
+      return *this;
+    }
+    inline Object_member& operator= (const Object_member& p) {
+      if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+      if (!CORBA::is_nil(p._ptr)) {
+	_ptr = CORBA::Object::_duplicate(p._ptr);
+      }
+      else
+	_ptr = CORBA::Object::_nil();
+      return *this;
+    }
+    inline Object_member& operator= (const Object_var& p) {
+      if (!CORBA::is_nil(_ptr)) CORBA::release(_ptr);
+      if (!CORBA::is_nil(p.pd_objref)) {
+	_ptr = CORBA::Object::_duplicate(p.pd_objref);
+      }
+      else
+	_ptr = CORBA::Object::_nil();
+      return *this;
+    }
+    inline size_t NP_alignedSize(size_t initialoffset) const {
+      return CORBA::Object_Helper::NP_alignedSize(_ptr,initialoffset);
+    }
+    inline void operator>>= (NetBufferedStream &s) const {
+      CORBA::Object_Helper::marshalObjRef(_ptr,s);
+    }
+    inline void operator<<= (NetBufferedStream &s) {
+      Object_ptr _result = CORBA::Object_Helper::unmarshalObjRef(s);
+      CORBA::release(_ptr);
+      _ptr = _result;
+    }
+    inline void operator>>= (MemBufferedStream &s) const {
+      CORBA::Object_Helper::marshalObjRef(_ptr,s);
+    }
+    inline void operator<<= (MemBufferedStream &s) {
+      Object_ptr _result = CORBA::Object_Helper::unmarshalObjRef(s);
+      CORBA::release(_ptr);
+      _ptr = _result;
+    }
+#if !defined(__GNUG__) || __GNUG__ != 2 || __GNUC_MINOR__ > 7
+    inline operator const Object_ptr () const { return _ptr; }
+#endif
+    inline operator Object_ptr& () { return _ptr; }
+    Object_ptr _ptr;
+  };
+
 };
 
+#include <omniORB2/templates.h>
+#include <omniORB2/proxyFactory.h>
 
 // Include the COSS Naming Service header:
-#include <Naming.hh>
+#include <omniORB2/Naming.hh>
 
 #endif // __CORBA_H__
