@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.7  1999/11/17 15:01:20  dpg1
+# -Wb and -Wp now support multiple arguments separated by commas.
+#
 # Revision 1.6  1999/11/17 14:33:55  dpg1
 # Clean up of usage info.
 #
@@ -70,9 +73,9 @@ The supported flags are:
   -E              Run preprocessor only, print on stdout
   -Ycmd           Set command for the preprocessor
   -N              Do not run preprocessor
-  -Wparg          Send arg to the preprocessor
+  -Wparg[,arg...] Send args to the preprocessor
   -bback_end      Select a back-end to be used. More than one permitted.
-  -Wbarg          Send arg to the back-end
+  -Wbarg[,arg...] Send args to the back-end
   -d              Dump the parsed IDL then exit
   -V              Print version info then exit
   -u              Print this usage message and exit
@@ -132,14 +135,15 @@ def parseArgs(args):
             no_preprocessor = 1
 
         elif o == "-W":
-            if   a[0] == "p": preprocessor_args.append(a[1:])
+            if a[0] == "p":
+              preprocessor_args.extend(string.split(a[1:], ","))
             elif a[0] == "b":
                 if len(backends) == 0:
                     if not quiet:
                         sys.stderr.write("Error in arguments: "
                                          "no back-ends selected")
                     sys.exit(1)
-                backends_args[-1].append(a[1:])
+                backends_args[-1].extend(string.split(a[1:], ","))
             else:
                 if not quiet:
                     sys.stderr.write("Error in arguments: option " + o + \
