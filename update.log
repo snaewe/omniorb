@@ -1,3 +1,54 @@
+Thu Nov  4 20:06:32 GMT 1999 sll
+================================
+
+- Server side stub now use a descriptor mechanism similar to the client side
+  stub. The new stub code and runtime is incompatible with the old one. 
+  Existing build tree must be cleaned 'omake veryclean' to regenerate the 
+  stubs. 
+
+- The previously incomplete rebuild of the GIOP 1.0 protocol engine has now
+  been completed. It now properly supports messages larger than the
+  strand buffer size. This can be done now because of the change above.
+  Unlike the old protocol engine in omniORB 2.8.x or older versions, the
+  message size is not pre-calculated. In fact, when the message can be
+  fitted completely in the strand buffer, no separate pass to calculate
+  message size is required. If the message cannot be fitted into the strand
+  buffer, callbacks are initiated to compute the argument size.
+
+include/omniORB2/giopDriver.h
+include/omniORB2/giopStream.h
+include/omniORB2/proxyCall.h
+
+src/lib/omniORB2/dynamic/dynamicImplementation.cc
+src/lib/omniORB2/dynamic/dynamicImplementation.h
+src/lib/omniORB2/dynamic/proxyCall.cc
+src/lib/omniORB2/dynamic/request.cc
+src/lib/omniORB2/dynamic/request.h
+src/lib/omniORB2/orbcore/corbaBoa.cc
+src/lib/omniORB2/orbcore/exception.cc
+src/lib/omniORB2/orbcore/firewallProxy.cc
+src/lib/omniORB2/orbcore/giopClient.cc
+src/lib/omniORB2/orbcore/giopServer.cc
+src/lib/omniORB2/orbcore/giopStream.cc
+src/lib/omniORB2/orbcore/giopStream10.cc
+src/lib/omniORB2/orbcore/giopStream11.cc
+src/lib/omniORB2/orbcore/giopStream12.cc
+src/lib/omniORB2/orbcore/object.cc
+src/lib/omniORB2/orbcore/proxyCall.cc
+src/lib/omniORB2/orbcore/relStream.cc
+src/lib/omniORB2/orbcore/scavenger.cc
+src/lib/omniORB2/orbcore/strand.cc
+src/lib/omniORB2/orbcore/tcpSocketAux.cc
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+src/tool/omniidl2/omniORB2_be/o2be.h
+src/tool/omniidl2/omniORB2_be/o2be_attribute.cc
+src/tool/omniidl2/omniORB2_be/o2be_call_desc.cc
+src/tool/omniidl2/omniORB2_be/o2be_exception.cc
+src/tool/omniidl2/omniORB2_be/o2be_interface.cc
+src/tool/omniidl2/omniORB2_be/o2be_operation.cc
+
+
 Tue Oct 26 20:34:57 BST 1999 sll
 ================================
 
