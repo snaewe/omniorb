@@ -38,11 +38,6 @@ linked with %{name}.
 %package servers
 Summary: Utility programs
 Group:          Development/C++
-%if "%{_vendor}" == "suse"
-Prereq:         /sbin/insserv
-%else
-Prereq:         /sbin/service /sbin/chkconfig
-%endif
 Prereq:         /usr/sbin/groupadd /usr/sbin/groupdel
 Prereq:         /usr/sbin/useradd /usr/sbin/userdel
 Requires:       %{name} = %{version}-%{release}
@@ -54,6 +49,11 @@ Provides:       libomniorb-servers = %{version}-%{release} %{name}-servers = %{v
 %package bootscripts
 Summary: Utility programs
 Group: Development/C++
+%if "%{_vendor}" == "suse"
+Prereq:         /sbin/insserv
+%else
+Prereq:         /sbin/service /sbin/chkconfig
+%endif
 Requires: %{name}-servers = %{version}-%{release} %{name}-utils = %{version}-%{release}
 Provides: %{name}-bootscripts = %{version}-%{release}
 
