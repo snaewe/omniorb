@@ -1,0 +1,1743 @@
+\documentclass[11pt,twoside,onecolumn]{book}
+\usepackage[]{fontenc}
+\usepackage{palatino}
+\usepackage{a4}
+\addtolength{\oddsidemargin}{-0.4in}
+\addtolength{\evensidemargin}{-0.4in}
+\addtolength{\textwidth}{0.5in}
+\addtolength{\headheight}{0.2in}
+
+\pagestyle{headings}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\begin{document}
+
+\pagenumbering{roman}
+\pagestyle{empty}
+
+
+\begin{center}
+
+{ \Huge
+The omniORB2 User's Guide
+}
+
+\vfill
+
+{ \Large
+Sai-Lai Lo\\
+{\normalsize ({\it email: sll@orl.co.uk})}\\
+Olivetti \& Oracle Research Laboratory\\
+}
+
+\vfill
+
+
+{\it Note: this document is very incomplete at the moment!
+More chapters will be added to document the ORB's APIs and its internals.}
+
+\vfill
+\vfill
+13 Mar, 1997
+\vfill
+
+\end{center}
+\cleardoublepage
+\tableofcontents
+\cleardoublepage
+\pagestyle{headings}
+
+\pagenumbering{arabic}
+
+%\input{intro.tex}
+\chapter{Introduction}
+
+OmniORB2 is an Object Request Broker (ORB) that implements the 2.0
+specification of the Common Object Request Broker Architecture (CORBA)~\cite{corba2-spec}.
+This user guide tells you how to use omniORB2 to develop CORBA applications.
+It assumes a basic understanding of CORBA. 
+
+In this chapter, we give an overview of the main features of omniORB2 and
+what you need to do to setup your environment to run omniORB2.
+
+\section{Features}
+
+\subsection{CORBA 2 compliant}
+
+OmniORB2 implements the Internet Inter-ORB Protocol (IIOP).
+This protocol provides omniORB2 the means of achieving interoperability
+with the ORBs implemented by other vendors. In fact, this is the
+native protocol used by omniORB2 for the communication amongst its objects
+residing in different address spaces. Moreover, the IDL to C++ language
+mapping provided by omniORB2 conforms to the latest revision of the CORBA
+specification.
+
+\subsection{Multithreading}
+
+OmniORB2 is fully multithreaded. To achieve low IIOP call overhead,
+unnecessary call-multiplexing is eliminated. At any time, there is at most
+one call in-flight in each communication channel between two address
+spaces. To do so without limiting the level of concurrency, new channels
+connecting the two address spaces are created on demand and cached when
+there are more concurrent calls in progress. Each channel is served by a
+dedicated thread. This arrangement provides maximal concurrency and
+eliminates any thread switching in either of the address spaces to process
+a call. Furthermore, to maximize the throughput in processing large call
+arguments, large data elements are sent as soon as they are processed while
+the other arguments are being marshalled.
+
+\subsection{Portability}
+
+At ORL, the ability to target a single source tree to multiple platforms is
+very important. This is difficult to achieve if the IDL to C++ mapping for
+these platforms are different. We avoid this problem by making sure that
+only one IDL to C++ mapping is used. We run several flavours of Unices, Windows
+NT, Windows 95 and our in-house developed systems for our own
+hardware. OmniORB2 have been ported to all these platforms. {\bf The IDL to
+C++ mapping for these targets are all the same}.
+
+OmniORB2 uses real C++ exceptions and nested classes. We stay with the
+CORBA specification's standard mapping as much as possible and do not use
+the alternative mappings for C++ dialects. The only exception is the
+mapping of {\bf modules} to {\bf C++ classes} instead of {\bf namespaces}.
+
+OmniORB2 relies on the native thread libraries to provide the
+multithreading capability. A small class library (omnithread~\cite{tjr96a})
+is used to encapsulated the (possibly different) APIs of the native thread
+libraries. In the application code, it is recommended but not mandatory to
+use this class library for thread management. It should be easy to port
+omnithread to any platform that either supports the POSIX thread standard
+or has a thread package that supports similar capabilities.
+
+\subsection{Missing features}
+
+OmniORB2 is not (yet) a complete implementation of the CORBA core. 
+The following is a list of the missing features. 
+
+\begin{itemize}
+
+\item The Typcode and the Any type is not supported. Support for these
+types will be added shortly.
+\item The BOA only support the persistent server activation policy. Other
+dynamic activation and deactivation policies are not supported.
+\item The Dynamic Invocation Interface is not supported.
+\item The Dynamic Skeleton Interface is not supported.
+\item OmniORB2 does not has its own Interface Repository.
+\end{itemize}
+
+These features may be implemented in the short to medium term. It is best
+to check out the latest status on the omniORB2 home page ({\tt http://intranet.cam-orl.co.uk/~omni/}).
+
+\newpage
+
+\section{Setting Up Your Environment}
+
+\sloppy{At ORL, you should use the OMNI Development Environment (ODE)~\cite{tjr96b}
+and the OMNI tree version 5.0 or above to compile your programs. If this is
+the case, there is no extra setup you have to do other than those described
+in the ODE documentation.}
+
+If you are running omniORB2 at other sites, you (or your system
+administrator) should install omniOB2 by following the instructions in the
+installation notes. 
+
+At runtime, omniORB2 looks for the environment variable {\bf
+OMNIORB\_CONFIG}. If this variable is defined, it contains the pathname of
+the omniORB2 configuration file ({\tt omniORB.cfg}). If the variable is
+not set, omniORB2 will use the compiled-in pathname to locate the
+file. 
+
+
+%\input{basic.tex}
+\chapter{The Basics}
+
+In this chapter, we go through three examples to illustrate the practical
+steps to use omniORB2. By going through the source code of each example,
+the essential concepts and APIs are introduced. If you have no previous
+experience with using CORBA, you should study this chapter in detail. There
+are pointers to other essential documents you should be familiar with.
+
+If you have experience with using other ORBs, you should still go through
+this chapter because it provides important information about the features
+and APIs that are necessarily omniORB2 specific. For instance, the object
+implementation skeleton is covered in section~\ref{stubobjimpl}.
+
+\section{The Echo Object Example}
+
+Our example is an object which has only one method. The method simply echos
+the argument string. We have to:
+
+\begin{enumerate}
+
+\item define the object interface in IDL;
+\item use the IDL compiler to generate the stub code\footnote{The stub code
+is the C++ code that provides the object mapping as defined in the CORBA 2.0
+specification.};
+\item provide the object implementation;
+\item write the client code.
+
+\end{enumerate}
+
+The source code of this example is included in the last section of this
+chapter. A makefile written to be used under the OMNI Development
+Environment (ODE)~\cite{tjr96b} is alsoincluded.
+
+\section{Specifying the Echo interface in IDL}
+
+We define an object interface, called Echo, as follows:
+
+{\small
+\begin{verbatim}
+
+interface Echo {
+    string echoString(in string mesg);
+};
+
+\end{verbatim}
+}
+
+If you are new to IDL, you can learn about its syntax in Chapter 3 of the
+CORBA specification 2.0~\cite{corba2-spec}.
+
+For the moment, you only need to know that the interface consists of a
+single operation, echoString, which takes a string as an argument and
+returns a copy of the same string.
+
+The interface is written in a file, called {\tt echo.idl}. If you are
+using ODE, all IDL files should have the same
+extension- {\tt.idl} and should be placed in the {\tt idl} directory of
+your export tree. This is done so that the stub code will be generated
+automatically and kept up-to-date with your IDL file.
+
+For simplicity, the interface is defined in the global IDL namespace. This
+practice should be avoided for the sake of object reusuability. If every
+CORBA developer defines their interfaces in the global IDL namespace, there
+is a danger of name clashes between two independently defined
+interfaces. Therefore, it is better to qualify your interfaces by defining
+them inside {\tt module} names. Of course, this does not eliminate the
+chance of a name clash unless some form of naming convention is agreed
+globally. Nevertheless, a well-chosen module name can help a lot.
+
+\section{Generating the C++ stubs}
+
+From the IDL file, we use the IDL compiler to produce the C++ mapping of
+the interface. The IDL compiler for omniORB2 is called {\tt
+omniidl2}. Given the IDL file, {\tt omniidl2} produces two stub files: a
+C++ header file and a C++ source file. For example, from the file {\tt
+echo.idl}, the following files are produced:
+
+\begin{itemize}
+\item {\tt echo.hh}
+\item {\tt echoSK.cc}
+\end{itemize}
+
+If you are using ODE, you don't need to invoke omniidl2 explicitly. In
+the example file {\tt dir.mk}, we have the following line:
+
+{\small
+\begin{verbatim}
+
+CORBA_INTERFACES = echo
+
+\end{verbatim}
+}
+
+That is all we need to instruct ODE to generate the stubs. Remember, you
+won't find the stubs in your working directory because all stubs are written
+into the {\tt stub} directory at the top level of your build tree. 
+
+\section{A Quick Tour of the C++ stubs}
+
+The C++ stubs conform to the mapping defined in the CORBA 2.0 specification
+(chapter 16-18). It is important to understand the mapping before you start
+writing any serious CORBA applications.
+
+Before going any further, it is worth knowing what the mapping looks like.
+
+\subsection{Object Reference}
+
+The use of an object interface denotes an object reference. For the
+example interface Echo, the C++ mapping for its object reference is {\tt
+Echo\_ptr}. The type is defined in echo.hh. The relevant section of the
+code is reproduced below:
+
+{\small
+\begin{verbatim}
+
+class Echo;
+typedef Echo* Echo_ptr;
+
+class Echo : public virtual omniObject, public virtual CORBA::Object {
+public:
+
+  virtual char *  echoString ( const char *  mesg ) = 0;
+  static Echo_ptr _nil();
+  static Echo_ptr _duplicate(Echo_ptr);
+  static Echo_ptr _narrow(CORBA::Object_ptr);
+
+  ... // methods generated for internal use
+};
+
+\end{verbatim}
+}
+
+In a compliant application, the operations defined in an object interface
+should {\bf only} be invoked via an object reference. This is done by using
+arrow (``$\rightarrow$'') on an object reference. For example, the call to the
+operation {\tt echoString} would be written as {\tt obj$\rightarrow$echoString(mesg)}. 
+
+It should be noted that the concrete type of an object reference is opaque,
+i.e. you must not make any assumption about how an object reference is
+implemented. In our example, even though {\tt Echo\_ptr} is implemented as
+a pointer to the class {\tt Echo}, it should not be used as a C++ pointer,
+i.e. conversion to void*, arithmetic operations, and relational operations,
+including test for equality using {\bf operation==} must not be performed
+on the type.
+
+In addition to {\tt echoString}, the mapping also defines three static
+member functions in the class Echo: {\tt \_nil}, {\tt \_duplicate}, and 
+{\tt \_narrow}. Note that these are operations on an object reference. 
+
+The {\tt \_nil} function returns a nil object reference of the Echo interface. The
+following call is guaranteed to return TRUE:
+
+{\small
+\begin{verbatim}
+
+CORBA::Boolean true_result = CORBA::is_nil(Echo::_nil());
+
+\end{verbatim}
+}
+
+Remember, {\tt CORBA::is\_nil()} is the only compliant way to check if an
+object reference is nil. You should not use the equality operator==.
+
+The {\tt \_duplicate} function returns a new object reference of the Echo
+interface. The new object reference can be used interchangeably with the old
+object reference to perform an operation on the same object.
+
+
+\sloppy{All CORBA objects inherit from the generic object {\tt CORBA::Object}.
+{\tt CORBA::Object\_ptr} is the object reference for {\tt CORBA::Object}.
+Any object reference is therefore conceptually inherited from 
+{\tt CORBA::Object\_ptr}. In other words, an object reference
+such as {\tt Echo\_ptr} can be used in places where a {\tt
+CORBA::Object\_ptr} is expected.}
+
+The {\tt \_narrow} function takes an argument of the type {\tt
+CORBA::Object\_ptr} and returns a new object reference of the Echo
+interface.  If the actual (runtime) type of the argument object reference
+can be widened to {\tt Echo\_ptr}, {\tt \_narrow} will return a valid object
+reference. Otherwise it will return a nil object reference.
+
+To indicate that an object reference will no longer be accessed, you can
+call the {\tt CORBA::release} operation. Its signature is as follows:
+
+{\small
+\begin{verbatim}
+
+class CORBA {
+   static void release(CORBA::Object_ptr obj);
+   ... // other methods
+};
+\end{verbatim}
+}
+
+You should not use an object reference once you have called {\tt
+CORBA::release}. This is because the associated resources may have been
+deallocated. Notice that we are referring to the resources associated with
+the object reference and {\bf not the object implementation}. Here is a
+concrete example, if the implementation of an object resides in a different
+address space, then a call to {\tt CORBA::release} will only caused the
+resources associated with the object reference in the current address space
+to be deallocated. The object implementation in the other address space is
+unaffected.
+
+As described above, the equality operator== should not be used on object
+references. To test if two object references are equivalent, the member
+function {\tt \_is\_equivalent} of the generic object {\tt CORBA::Object}
+can be used. Here is an example of its usage:
+
+{\small
+\begin{verbatim}
+
+Echo_ptr A;
+...            // initialized A to a valid object reference 
+Echo_ptr B = A;
+CORBA::Boolean true_result = A->_is_equivalent(B); 
+// Note: the above call is guaranteed to be TRUE
+
+\end{verbatim}
+}
+
+You have now been introduced to most of the operations that can be invoked
+via {\tt Echo\_ptr}. The generic object {\tt CORBA::Object} provides a few more
+operations and all of them can be invoked via {\tt Echo\_ptr}. These operations
+deal mainly with CORBA's dynamic interfaces. You do not have to understand
+them in order to use the C++ mapping provided via the stubs. For details,
+please read the CORBA specification~\cite{corba2-spec} chapter 17.
+
+Since object references must be released explicitly, their usage is prone
+to error and can lead to memory leakage. The mapping defines the {\bf
+object reference variable} type to make life easier. In our example, the
+variable type {\tt Echo\_var} is defined\footnote{In omniORB2, all object
+reference variable types are instantiated from the template type
+\_CORBA\_ObjRef\_Var.}.
+
+The {\tt Echo\_var} is more convenient to use because it will automatically
+release its object reference when it is deallocated or when assigned a new
+object reference. For many operations, mixing data of type {\tt Echo\_var} and
+{\tt Echo\_ptr} is possible without any explicit operations or castings
+\footnote{However, the implementation of the type conversion operator()
+between Echo\_var and Echo\_ptr varies slightly among different C++
+compilers, you may need to do an explicit casting when the compiler
+complains about the conversion being ambiguous.}. For instance, the
+operation {\tt echoString} can be called using the arrow
+(``$\rightarrow$'') on a {\tt Echo\_var}, as one can do with a {\tt Echo\_ptr}.
+
+The usage of {\tt Echo\_var} is illustrated below:
+
+{\small
+\begin{verbatim}
+
+Echo_var a;
+Echo_ptr p = ...     // somehow obtain an object reference
+
+a = p;               // a assumes ownership of p, must not use p anymore
+
+Echo_var b = a;      // implicit _duplicate
+
+p = ...              // somehow obtain another object reference
+
+a = Echo::_duplicate(p);     // release old object reference
+                             // a now holds a copy of p.
+\end{verbatim}
+}
+
+\subsection{Object Implementation}
+\label{stubobjimpl}
+
+Unlike the client side of an object, i.e. the use of object references, the
+CORBA specification 2.0 deliberately leave many of the necessary
+functionalities to implement an object unspecified. As a consequence, it is
+very unlikely the implementation code of an object on top of two different
+ORBs can be identical. However, most of the code are expected to be
+portable. In particular, the body of an operation implementation can
+normally be ported with no or little modification.
+
+OmniORB2 uses C++ inheritance to provide the skeleton code for 
+object implementation. For each object interface, a skeleton class is
+generated. In our example, the skeleton class {\tt \_sk\_Echo} is generated for
+the Echo IDL interface. An object implementation can be written by creating
+an implementation class that derives from the skeleton class. 
+
+The skeleton class {\tt \_sk\_Echo} is defined in {\tt echo.hh}. The
+relevant section of the code is reproduced below. 
+
+{\small
+\begin{verbatim}
+
+class _sk_Echo :  public virtual Echo {
+public:
+  _sk_Echo(const omniORB::objectKey& k);
+  virtual char *  echoString ( const char *  mesg ) = 0;
+  Echo_ptr        _this();
+  void            _obj_is_ready(BOA_ptr);
+  void            _dispose();
+  BOA_ptr         _boa();
+  omniORB::objectKey _key();  
+  ... // methods generated for internal use
+};
+
+\end{verbatim}
+}
+
+The code fragment shows the only member functions that can be used in the
+object implementation code. Other member functions are generated for
+internal use only. {\bf Unless specified otherwise, the description below
+is omniORB2 specific.}  The functions are:
+
+\begin{description}
+
+\item[echoString] it is through this abstract function that an
+implementation class provides the implementation of the {\tt echoString}
+operation. Notice that its signature is the same as the {\tt echoString}
+function that can be invoked via the {\tt Echo\_ptr} object reference.
+{\bf The signature of this function is specified by the CORBA specfication}.
+
+\item[\_this] this function returns an object reference for the target
+object. The returned value must be deallocated via {\tt CORBA::release}.
+See~\ref{objeg1} for an example of how this function is used.
+
+\item[\_obj\_is\_ready] this function tells the Basic Object
+Adaptor\footnote{The interface of a BOA is described in chapter 8 of the
+CORBA specification.} (BOA) that the object is ready to serve. Until this
+function is called, the BOA would not serve any incoming calls to this
+object. See~\ref{objeg1} for an example of how this function is used.
+
+\item[\_dispose] this function tells the BOA to dispose of the object.
+The BOA will stop serving incoming calls of this object and remove any
+resources associated with it.
+See~\ref{objeg1} for an example of how this function is used.
+
+\item[\_boa] this function returns a reference to the BOA that serves this
+object.
+
+\item[\_key] this function returns the key that the ORB used to identify
+this object. The type {\tt omniORB::objectKey} is opaque to application
+code. The function {\tt omniORB::keyToOctetSequence} can be used to
+convert the key to a sequence of octets.
+
+\end{description}
+
+\section{Writing the object implementation}
+\label{objimpl}
+
+You define an implementation class to provide the object
+implementation. There is little constraint on how you design your
+implementation class except that it has to inherit from the stubs' skeleton
+class and to implement all the abstract functions defined in the skeleton
+class. Each of these abstract functions corresponds to an operation of the
+interface. They are hooks for the ORB to perform upcalls to your
+implementation.
+
+Here is a simple implementation of the Echo object.
+
+{\small
+\begin{verbatim}
+class Echo_i : public virtual _sk_Echo {
+public:
+  Echo_i() {}
+  virtual ~Echo_i() {}
+  virtual char * echoString(const char *mesg);
+};
+
+char *
+Echo_i::echoString(const char *mesg) {
+  char *p = CORBA::string_dup(mesg);
+  return p;
+}
+\end{verbatim}
+}
+
+There are three points to note here:
+\begin{description}
+\item[Storage Responsibilities] A string, which is used as an IN argument
+and the return value of {\tt echoString}, is a variable size data
+type. Other examples of variable size data types include sequences, type
+``any'', etc. For these data types, you must be clear about who's
+responsibility to allocate and release their associated storage. As a rule
+of thumb, the client (or the caller to the implementation functions) owns
+the storage of all IN arguments, the object implementation (or the callee)
+must copy the data if it wants to retain a copy. For OUT arguments and
+return values, the object implementation allocates the storage and passes
+the ownership to the client. The client must release the storage when the
+variables will no longer be used.  For details, please refer to Table 24-27
+of the CORBA specification.
+
+\item[Multi-threading] As omniORB2 is fully multithreaded, multiple threads
+may perform the same upcall to your implementation concurrently. It is up
+to your implementation to synchronise the threads' accesses to shared data.
+In our simple example, we have no shared data to protect so no
+thread synchronisation is necessary.
+
+\item[Instantiation] You must not instantiate an implementation as
+automatic variables. Instead, you should always instantiate an
+implementation using the new operator, i.e. its storage is allocated on the
+heap. The reason behind this restriction will become clear in
+section~\ref{objeg1}.
+
+\end{description}
+
+\section{Writing the client}
+
+Here is an example of how a {\tt Echo\_ptr} object reference is used.
+
+{\small
+\begin{verbatim}
+void
+hello(CORBA::Object_ptr obj)
+{
+  Echo_var e = Echo::_narrow(obj);                // line 1
+
+  if (CORBA::is_nil(e)) {                         // line 2
+    cerr << "hello: cannot invoke on a nil object reference.\n" << endl;
+    return;
+  }
+
+  CORBA::String_var src = (const char*) "Hello!";  // line 3
+  CORBA::String_var dest;                          // line 4
+
+  dest = e->echoString(src);                       // line 5
+
+  cerr << "I said,\"" << src << "\"."
+       << " The Object said,\"" << dest <<"\"" << endl;
+}
+\end{verbatim}
+}
+
+Briefly, the function {\tt hello} accepts a generic object reference. The
+object reference ({\tt obj}) is narrowed to {\tt Echo\_ptr}. If the object
+reference returned by {\tt Echo::\_narrow} is not nil, the operation {\tt
+echoString} is invoked. Finally, both the argument to and the return value of
+{\tt echoString} are printed to cerr.
+
+The example also illustrates how T\_var types are used. As it was explained
+in the previous section, T\_var types take care of storage allocation and
+release automatically when variables of the type are assigned to or when
+the variables go out of scope. 
+
+In line 1, the variable {\tt e} takes over the storage responsibility of
+the object reference returned by {\tt Echo::\_narrow}. The object reference
+is released by the destructor of {\tt e}. It is called automatically when
+the function returns. Line 2 and 5 shows how a {\tt Echo\_var} variable is
+used. As said earlier, {\tt Echo\_var} type can be used interchangeably with
+{\tt Echo\_ptr} type.
+
+The argument and the return value of {\tt echoString} are stored in {\tt
+CORBA::String\_var} variable {\tt src} and {\tt dest} respectively. The
+strings managed by the variables are deallocated by the destructor of
+{\tt CORBA::String\_var}. It is called automatically when the function
+returns. Line 5 shows how {\tt CORBA::String\_var} variables are used. They
+can be used in place of a string (for which the mapping is {\tt char*
+})\footnote{A conversion operator() of CORBA::String\_var converts a
+CORBA::String\_var to a char*.}. As used in line 3, assigning a constant
+string ({\tt const char*}) to a {\tt CORBA::String\_var} causes the string
+to be copied. On the otherhand, assigning a {\tt char*} to a {\tt
+CORBA::String\_var}, as used in line 5, causes the latter to assume
+the ownership of the string\footnote{Please refer to the CORBA
+specification 16.7 for the details of the String\_var mapping. Other T\_var
+types are also covered in chapter 16.}. 
+
+Under the C++ mapping, T\_var types are provided for all the non-basic data
+types.  It is obvious that one should use automatic variables whenever
+possible both to avoid memory leak and to maximize performance. However,
+when one has to allocate data items on the heap, it is a good practice to
+use the T\_var types to manage the heap storage.
+
+\section{Example 1 - Colocated Client and Implementation}
+\label{objeg1}
+
+Having introduced the client and the object implementation, we can now
+describe how to link up the two via the ORB. In this section, we describe
+an example in which both the client and the object implementation are in
+the same address space. In the next two sections, we shall describe the
+case where the two are in different address spaces.
+
+The code for this example is reproduced below:
+
+{\small
+\begin{verbatim}
+int
+main(int argc, char **argv)
+{
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");   // line 1
+  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA"); // line 2
+
+  Echo_i *myobj = new Echo_i();                                 // line 3
+  myobj->_obj_is_ready(boa);                                    // line 4
+
+  boa->impl_is_ready(0,1);                                      // line 5
+
+  Echo_ptr myobjRef = myobj->_this();                           // line 6
+  hello(myobjRef);                                              // line 7
+  CORBA::release(myobjRef);                                     // line 8
+
+  myobj->_dispose();                                            // line 9
+  return 0;
+}
+\end{verbatim}
+}
+
+The example illustrates several important interactions among the ORB, the
+object implementation and the client. Here are the details:
+
+\subsection{ORB/BOA initialisation}
+
+\begin{description}
+
+\item[line 1] The ORB is initialised by calling the {\tt CORBA::ORB\_init} function. The function uses the 3rd argument to determine which ORB should be
+returned. To use omniORB2, this argument must either be ``omniORB2'' or
+NULL. If it is NULL, there must be an argument, -ORBid ``omniORB2'', in
+{\tt argv}. Like any command-line arguments understood by the ORB, it will
+be removed from argv when {\tt CORBA::ORB\_init} returns. Therefore, an
+application is not required to handle any command-line arguments it does
+not understand. If the ORB identifier is not ``omniORB2'', the
+initialisation will fail and a nil {\tt ORB\_ptr} will be returned. If
+supplied, omniORB2 also reads the configuration file {\tt
+omniORB.cfg}. Among other things, the file provides a list of initial
+object references. One example of these object references is the naming
+service. Its use will be discussed in section~\ref{resolveinit}. If any
+error occurs during the processing of the configuration file, the system
+exception CORBA::INITIALIZE is raised.
+
+
+\item[line 2] The BOA is initialised by calling the ORB's {\tt BOA\_init}.
+The 3rd argument must either be ``omniORB2\_BOA'' or NULL. If it
+is NULL, then {\tt argv} must contain an argument, -BOAid
+``omniORB2\_BOA''. If the BOA identifier is not ``omniORB2\_BOA'', the
+initialisation will fail and a nil BOA\_ptr will be returned. Like
+{\tt ORB\_init}, any command-line arguments understood by {\tt BOA\_init}
+will be removed from {\tt argv}.
+
+\end{description}
+
+\subsection{Object initialisation}
+
+\begin{description}
+\item[line 3] An instance of the Echo object is initialised using the {\tt
+new} operator.
+\item[line 4] The object's {\tt \_obj\_is\_ready} is called. 
+This function informs the BOA that this object is ready to serve. Until
+this function is called, the BOA will not accept any invocation on the
+object and will not perform any upcall to the object.
+\item[line 5] The BOA's {\tt impl\_is\_ready} is called. This function tells
+the BOA the implementation is ready. After this call, the BOA will accept
+IIOP requests from other address spaces. There are 2 points to note here:
+\begin{enumerate}
+\item {\tt boa$\rightarrow$impl\_is\_ready} can be called any time after
+{\tt BOA\_init} is called (line 2). In other words, object instances can be
+initialised and advertised to the BOA before or after this function is
+called. 
+\item The 2nd argument\footnote{The 1st argument is a pointer to the
+implementation definition and is always ignored by omniORB2.} to {\tt
+impl\_is\_ready} tells the ORB whether this call should be
+non-blocking. The default value of this argument is FALSE(0) and the call
+will block indefinitely within the ORB. If there are more things the main
+thread should do after it calls {\tt impl\_is\_ready}, as it is the case in
+this example, the non-blocking option (TRUE=1) should be specified. Whether
+the main thread blocks in this call or not, the ORB is not affected because
+its functions are provided by other threads spawned internally.  Notice
+that the signature of {\tt impl\_is\_ready} in the CORBA specification does
+not have the 2nd argument\footnote{The CORBA specification does not specify
+when {\tt impl\_is\_ready} should return. Many ORB vendors choose to
+implement {\tt impl\_is\_ready} as blocking until a certain time-out value
+is exceeded. In a single threaded implementation this is necessary to give
+the ORB the time to serve incoming requests.}. Therefore, calling
+{\tt impl\_is\_ready} with the non-blocking option is omniORB2 specific.
+\end{enumerate}
+\end{description}
+
+\subsection{Client invocation}
+
+\begin{description}
+
+\item[line 6] The object reference is obtained from the implementation by
+calling {\tt \_this}. Like any object reference, the return value of \_this
+must be released by {\tt CORBA::release} when it is no longer needed.
+\item[line 7] Call {\tt hello} with this object reference. The argument is
+widened implicitly to the generic object reference {\tt CORBA::Object\_ptr}.
+\item[line 8] Release the object reference.
+\end{description}
+
+One of the important characteristic of an object reference is that it is
+completely location transparent. A client can invoke on the object using
+its object reference without any need to know whether the object is
+colocated in the same address space or resided in a different address
+space. 
+
+In case of colocated client and object implementation, omniORB2 is able to
+short-circuit the client calls to direct calls on the
+implementation methods. The cost of an invocation is reduced to that of a
+function call. This optimisation is applicable {\bf not only} to object
+references returned by the \_this function but to any object references
+that are passed around within the same address space or received from other
+address spaces via IIOP calls.
+
+\subsection{Object disposal}
+
+\begin{description}
+
+\item[line 9] To dispose of an object implementation and release all the
+resources associated with it, the {\tt \_dispose} function is called.  In
+fact, this is the {\bf only} clean way to get rid of an object
+implementation. Even though the object is created using the new operator in
+the application code, the application should never call the delete operator
+on the object directly.
+
+\end{description}
+
+Once an application calls {\tt \_dispose} on an object implementation, the
+pointer to the object should not be used any more. At the time the {\tt
+\_dispose} call is made, there may be other threads invoking on the object,
+omniORB2 ensures that all these calls are completed before removing the
+object from its internal tables and releasing the resources associated with
+it. The storage associated with the object is released by omniORB2
+using the delete operator. This is why all object implementation should be
+initialised using the new operator (section~\ref{objimpl}).
+
+The disposal of an object implementation by omniORB2 may also be deferred
+when {\bf colocated} clients continue to hold on to copies of the object's
+reference\footnote{Object references held by clients in other address
+spaces will not prevent the object implementation from being disposed
+of. If these clients invoke on the object after it is disposed, the system
+exception INV\_OBJREF is raised.}. This behavior is to prevent the
+short-circuited calls from the clients to fail unpredictably.
+
+To summarise, an application can make no assumption as to when the object
+is disposed by omniORB2 after the {\tt \_dispose} call returns. If it is
+necessary to have better control on when to stop serving incoming
+requests, the work should be done by the object implementation itself, such
+as by keeping track of the current serving state.
+
+\section{Example 2 - Different Address Spaces}
+
+In this example, the client and the object implementation reside in two
+different address spaces. The code of this example is almost the same as the
+previous example. The only difference is the extra work need to be done to
+pass the object reference from the object implementation to the client.
+
+The simplest (and quite primitive) way to pass an object reference between
+two address spaces is to produce a stringified version of the object
+reference and to pass this string to the client as a command-line argument.
+The string is then converted by the client into a proper object reference.
+This method is used in this example. In the next example, we shall
+introduce a better way of passing the object reference using the COS Naming
+Service.
+
+\subsection{Object Implementation: Generating a Stringified Object Reference}
+
+The {\tt main} function of the object implementation side is reproduced
+below. The full listing ({\tt eg2\_impl.cc}) can be found at the end of
+this chapter.
+
+{\small
+\begin{verbatim}
+int
+main(int argc, char **argv)
+{
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
+  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+
+  Echo_i *myobj = new Echo_i();
+  myobj->_obj_is_ready(boa);
+
+  {
+    Echo_var myobjRef = myobj->_this();
+    CORBA::String_var p;
+
+    p = orb->object_to_string(myobjRef);            //line 1
+
+    cerr << "'" << (char*)p << "'" << endl;
+  }
+
+  boa->impl_is_ready();    // block here indefinitely
+                           // See the explanation in example 1
+  return 0;
+}
+\end{verbatim}
+}
+
+The stringified object reference is obtained by calling the ORB's function
+{\tt \_object\_to\_string} (line 1). This is a sequence starting with the
+signature ``IOR:'' and followed by a hexadecimal string. All CORBA 2.0
+compliant ORBs are able to convert the string into its internal
+representation of a so-called Interoperable Object Reference (IOR). The IOR
+contains the location information and a key to uniquely identify the object
+implementation in its own address space\footnote{Notice that the
+object key is not globally unique across address spaces.}. From the IOR, an
+object reference can be constructed.
+
+\subsection{Client: Using a Stringified Object Reference}
+\label{clnt2}
+
+The stringified object reference is passed to the client as a command-line
+argument. The client uses the ORB's function {\tt string\_to\_object} to
+convert the string into a generic object reference ({\tt
+CORBA::Object\_ptr}). The relevant section of the code is reproduced
+below. The full listing ({\tt eg2\_clt.cc}) can be found at the end of this
+chapter.
+
+{\small
+\begin{verbatim}
+try {
+  CORBA::Object_var obj = orb->string_to_object(argv[1]);
+  hello(obj);
+}
+catch(CORBA::COMM_FAILURE& ex) {
+  ... // code to handle communication failure
+}
+\end{verbatim}
+}
+
+\subsection{Catching System Exceptions}
+
+When omniORB2 detects an error condition, it may raise a system exception.
+The CORBA specification defines a series of exceptions covering most of the
+error conditions that an ORB may encounter. The client may choose to catch
+these exceptions and recover from the error condition\footnote{If a system
+exception is not caught, the C++ runtime will call the {\tt terminate}
+function. This function is defaulted to abort the whole process and on some
+system will cause a core file to be produced.}. For instance, the code
+fragment, shown in section~\ref{clnt2}, catches the system exception
+COMM\_FAILURE which indicates that communication with the object
+implementation in another address space has failed. 
+
+All system exceptions inherit from the class
+{\tt CORBA::SystemException}. With compilers that support RTTI\footnote{Run Time
+Type Identification}\footnote{A noticeable exception is the GNU C++
+compiler (version 2.7.2). It doesn't support RTTI unless the
+compilation flag -frtti is specified. The omniORB2 runtime is not compiled
+with the -frtti flag. It is said that RTTI will be properly supported in
+the upcoming version 2.8.}, a single catch {\tt CORBA::SystemException} will
+catch all the different system exceptions thrown by omniORB2. 
+
+When omniORB2 detects an internal inconsistency that is most likely to be
+caused by a bug in the runtime, it raises the exception {\tt
+omniORB::fatalException}.  When this exception is raised, it is not
+sensible to proceed with any operation that involves the ORB's runtime. It
+is best to exit the program immediately. The exception structure carries by
+{\tt omniORB::fatalException} contains the exact location (the file name
+and the line number) where the exception is raised. You are strongly
+encourage to file a bug report and point out the location.
+
+\subsection{Lifetime of an Object Implementation}
+
+It may be obvious but it has to stated that an object implementation exists
+only for the duration of the process's lifetime. When the same program is
+run again, a different instance of the object implementation is
+created. More significantly, {\bf the IOR, and hence the object reference,
+of this instance is different from that of the previous run}.
+
+For instance, if you look at the stringified object reference produced by
+the program {\tt eg2\_impl} in different runs, they are all
+different. The implication is that you cannot store away the stringified
+object reference and expect to be able to use it again later when the
+original program run has terminated.
+
+For system services and other applications, it may be desirable to have
+``persistent'' object implementations.  The objects are ``persistent'' in
+the sense that they can be contacted using the same IOR when they are
+instantiated in different program runs. To provide this functionality,
+omniORB2 needs to be provided with two pieces of information: the (network)
+location and the object key. The details of how this can be done will be
+described in the later part of this manual.
+
+Alternatively, an indirection from textual pathnames to object references
+can be used. Applications can register object implementations at runtime to
+a naming service and bind them to fixed pathnames. Clients can bind to the
+object implementations at runtime by asking the naming service to resolve
+the pathnames to the object references. CORBA defines a naming service,
+which is a component of the Common Object Services
+(COS)~\cite{corbaservices}, that can be used for this purpose. The next
+section describes an example of how to use the COS Naming Service.
+
+\section{Example 3 - Using the COS Naming Service}
+
+In this example, the object implementation uses the COS Naming
+Service~\cite{corbaservices} to
+pass on the object reference to the client.  This method is by-far more
+practical than using stringified object references. The full listing of
+the object implementation ({\tt eg3\_impl.cc}) and the client ({\tt
+eg3\_clt.cc}) can be found at the end of this chapter.
+
+The object reference is bound to the pathname ``{\bf
+test}/{\bf Echo}''\footnote{A pathname, or in the Naming Service's
+terminology- a {\it compound name}, is a sequence of textual names. Each
+name component except the last one is bound to a naming context. A naming
+context is analogous to a directory in a filing system, it can contain
+names of object references or other naming contexts. The last name
+component is bound to an object reference. Note: '/' is purely a notation
+to separate two components in the pathname. It does not appear in the {\it
+compound name} that is registered with the Naming Service.}. The pathname
+consists of the context {\bf test} and the object name {\bf Echo}. Both the
+context and the object name has an attribute {\bf kind}. This attribute is
+a string that is intended to be used to describe the name in a
+syntax-independent way. The naming service does not interpret, assign, or
+manage these values. However both the name and the kind attribute must
+match for a name lookup to succeed. In this example, the {\bf kind} values
+for {\bf test} and {\bf Echo} are chosen to be ``my\_context'' and
+``Object'' respectively. This is an arbitrary choice for there is no
+standardised set of kind values.
+
+\subsection{Obtaining the Root Context Object Reference}
+\label{resolveinit}
+
+The initial contact with the Naming Service can be established via what we
+called the {\bf root} context. The object reference to the root context is
+provided by the ORB and can be obtained by calling
+{\tt \_resolve\_initial\_references}. The following code fragment shows how
+it is used:
+
+{\small
+\begin{verbatim}
+
+CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
+
+CORBA::Object_var initServ;
+initServ = orb->resolve_initial_references("NameService");
+
+CosNaming::NamingContext_var rootContext;
+rootContext = CosNaming::NamingContext::_narrow(initServ);
+
+\end{verbatim}
+}
+
+Remember, omniORB2 constructs its internal list of initial references at
+initialisation time using the information provided in the configuration
+file {\tt omniORB.cfg}. If this file is not present, the internal list will
+be empty and {\tt resolve\_initial\_references} will raise a 
+CORBA::ORB::InvalidName exception. 
+
+\subsection{The Naming Service Interface}
+
+It is beyond the scope of this chapter to describe in detail the Naming
+Service interface. You should consult the CORBAservices
+specification~\cite{corbaservices} (chapter 3). The
+code listed in {\tt eg3\_impl.cc} and {\tt eg3\_clt.cc} are good examples
+of how the service can be used. Please spend time to study the examples
+carefully.
+
+\newpage
+\section{Source Listing}
+
+{\small
+\subsection{echo\_i.cc}
+\begin{verbatim}
+// echo_i.cc - This source code demonstrates an implmentation of the
+//             object interface Echo. It is part of the three examples
+//             used in Chapter 2 "The Basics" of the omniORB2 user guide.
+//
+#include <string.h>
+#include "echo.hh"
+
+class Echo_i : public virtual _sk_Echo {
+public:
+  Echo_i() {}
+  virtual ~Echo_i() {}
+  virtual char * echoString(const char *mesg);
+};
+
+char *
+Echo_i::echoString(const char *mesg) {
+  char *p = CORBA::string_dup(mesg);
+  return p;
+}
+\end{verbatim}
+\newpage
+
+\subsection{greeting.cc}
+\begin{verbatim}
+// greeting.cc - This source code demonstrates the use of an object
+//               reference by a client to perform an operation on an 
+//               object. It is part of the three examples used
+//               in Chapter 2 "The Basics" of the omniORB2 user guide.
+//
+#include <iostream.h>
+#include "echo.hh"
+
+void
+hello(CORBA::Object_ptr obj)
+{
+  Echo_var e = Echo::_narrow(obj);
+
+  if (CORBA::is_nil(e)) {
+    cerr << "hello: cannot invoke on a nil object reference.\n" << endl;
+    return;
+  }
+
+  CORBA::String_var src = (const char*) "Hello!";  
+  CORBA::String_var dest;
+
+  dest = e->echoString(src);
+
+  cerr << "I said,\"" << src << "\"."
+       << " The Object said,\"" << dest <<"\"" << endl;
+}
+\end{verbatim}
+\newpage
+
+\subsection{eg1.cc}
+\begin{verbatim}
+// eg1.cc - This is the source code of example 1 used in Chapter 2 
+//          "The Basics" of the omniORB2 user guide.
+//
+//          In this example, both the object implementation and the 
+//          client are in the same process.
+//
+// Usage: eg1
+//
+#include <iostream.h>
+#include "echo.hh"
+
+#include "echo_i.cc"
+#include "greeting.cc"
+
+int
+main(int argc, char **argv)
+{
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
+  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+
+  Echo_i *myobj = new Echo_i();
+  // Note: all implementation objects must be instantiated on the
+  // heap using the new operator.
+
+  myobj->_obj_is_ready(boa);
+  // Tell the BOA the object is ready to serve.
+  // This call is omniORB2 specific.
+  //
+  // This call is equivalent to the following call sequence:
+  //     Echo_ptr myobjRef = myobj->_this();
+  //     boa->obj_is_ready(myobjRef);
+  //     CORBA::release(myobjRef);
+
+  boa->impl_is_ready(0,1);
+  // Tell the BOA we are ready and to return immediately once it has
+  // done its stuff. It is omniORB2 specific to call impl_is_ready()
+  // with the extra 2nd argument- CORBA::Boolean NonBlocking,
+  // which is set to TRUE (1) in this case.
+
+  Echo_ptr myobjRef = myobj->_this();
+  // Obtain an object reference.
+  // Note: always use _this() to obtain an object reference from the
+  //       object implementation.
+
+  hello(myobjRef);
+
+  CORBA::release(myobjRef);
+  // Dispose of the object reference.
+
+  myobj->_dispose();
+  // Dispose of the object implementation.
+  // This call is omniORB2 specific.
+  // Note: *never* call the delete operator or the dtor of the object
+  //       directly because the BOA needs to be informed.
+  //
+  // This call is equivalent to the following call sequence:
+  //     Echo_ptr myobjRef = myobj->_this();
+  //     boa->dispose(myobjRef);
+  //     CORBA::release(myobjRef);
+
+  return 0;
+}
+\end{verbatim}
+\newpage
+
+\subsection{eg2\_impl.cc}
+\begin{verbatim}
+// eg2_impl.cc - This is the source code of example 2 used in Chapter 2
+//               "The Basics" of the omniORB2 user guide.
+//
+//               This is the object implementation.
+//
+// Usage: eg2_impl
+//
+//        On startup, the object reference is printed to cerr as a
+//        stringified IOR. This string should be used as the argument to 
+//        eg2_clt.
+//
+#include <iostream.h>
+#include "omnithread.h"
+#include "echo.hh"
+
+#include "echo_i.cc"
+
+int
+main(int argc, char **argv)
+{
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
+  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+
+  Echo_i *myobj = new Echo_i();
+  myobj->_obj_is_ready(boa);
+
+  {
+    Echo_var myobjRef = myobj->_this();
+    CORBA::String_var p = orb->object_to_string(myobjRef);
+    cerr << "'" << (char*)p << "'" << endl;
+  }
+
+  boa->impl_is_ready();
+  // Tell the BOA we are ready. The BOA's default behaviour is to block
+  // on this call indefinitely.
+
+  return 0;
+}
+\end{verbatim}
+\newpage
+
+\subsection{eg2\_clt.cc}
+\begin{verbatim}
+// eg2_clt.cc - This is the source code of example 2 used in Chapter 2
+//              "The Basics" of the omniORB2 user guide.
+//
+//              This is the client. The object reference is given as a
+//              stringified IOR on the command line.
+//
+// Usage: eg2_clt <object reference>
+//
+#include <iostream.h>
+#include "echo.hh"
+
+#include "greeting.cc"
+
+extern void hello(CORBA::Object_ptr obj);
+
+int
+main (int argc, char **argv) 
+{
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
+  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+
+  if (argc < 2) {
+    cerr << "usage: eg2_clt <object reference>" << endl;
+    return 1;
+  }
+
+  try {
+    CORBA::Object_var obj = orb->string_to_object(argv[1]);
+    hello(obj);
+  }
+  catch(CORBA::COMM_FAILURE& ex) {
+    cerr << "Caught system exception COMM_FAILURE, unable to contact the "
+         << "object." << endl;
+  }
+  catch(omniORB::fatalException& ex) {
+    cerr << "Caught omniORB2 fatalException. This indicates a bug is caught "
+         << "within omniORB2.\nPlease send a bug report.\n"
+         << "The exception was thrown in file: " << ex.file() << "\n"
+         << "                            line: " << ex.line() << "\n"
+         << "The error message is: " << ex.errmsg() << endl;
+  }
+  catch(...) {
+    cerr << "Caught a system exception." << endl;
+  }
+
+  return 0;
+}
+\end{verbatim}
+\newpage
+
+\subsection{eg3\_impl.cc}
+\begin{verbatim}
+// eg3_impl.cc - This is the source code of example 3 used in Chapter 2
+//               "The Basics" of the omniORB2 user guide.
+//
+//               This is the object implementation.
+//
+// Usage: eg3_impl
+//
+//        On startup, the object reference is registered with the 
+//        COS naming service. The client uses the naming service to
+//        locate this object.
+//
+//        The name which the object is bound to is as follows:
+//              root  [context]
+//               |
+//              text  [context] kind [my_context]
+//               |
+//              Echo  [object]  kind [Object]
+//
+
+#include <iostream.h>
+#include "omnithread.h"
+#include "echo.hh"
+
+#include "echo_i.cc"
+
+static CORBA::Boolean bindObjectToName(CORBA::ORB_ptr,CORBA::Object_ptr);
+
+int
+main(int argc, char **argv)
+{
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
+  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+
+  Echo_i *myobj = new Echo_i();
+  myobj->_obj_is_ready(boa);
+
+  {
+    Echo_var myobjRef = myobj->_this();
+    if (!bindObjectToName(orb,myobjRef)) {
+      return 1;
+    }
+  }
+
+  boa->impl_is_ready();
+  // Tell the BOA we are ready. The BOA's default behaviour is to block
+  // on this call indefinitely.
+
+  return 0;
+}
+
+
+static
+CORBA::Boolean
+bindObjectToName(CORBA::ORB_ptr orb,CORBA::Object_ptr obj)
+{
+  CosNaming::NamingContext_var rootContext;
+  
+  try {
+    // Obtain a reference to the root context of the Name service:
+    CORBA::Object_var initServ;
+    initServ = orb->resolve_initial_references("NameService");
+
+    // Narrow the object returned by resolve_initial_references()
+    // to a CosNaming::NamingContext object:
+    rootContext = CosNaming::NamingContext::_narrow(initServ);
+    if (CORBA::is_nil(rootContext))
+      {
+        cerr << "Failed to narrow naming context." << endl;
+        return 0;
+      }
+  }
+  catch(CORBA::ORB::InvalidName& ex) {
+    cerr << "Service required is invalid [does not exist]." << endl;
+    return 0;
+  }
+
+
+  try {
+    // Bind a context called "test" to the root context:
+
+    CosNaming::Name contextName;
+    contextName.length(1);
+    contextName[0].id   = (const char*) "test";    // string copied
+    contextName[0].kind = (const char*) "my_context"; // string copied    
+    // Note on kind: The kind field is used to indicate the type
+    // of the object. This is to avoid conventions such as that used
+    // by files (name.type -- e.g. test.ps = postscript etc.)
+
+    CosNaming::NamingContext_var testContext;
+    try {
+      // Bind the context to root, and assign testContext to it:
+      testContext = rootContext->bind_new_context(contextName);
+    }
+    catch(CosNaming::NamingContext::AlreadyBound& ex) {
+      // If the context already exists, this exception will be raised.
+      // In this case, just resolve the name and assign testContext
+      // to the object returned:
+      CORBA::Object_var tmpobj;
+      tmpobj = rootContext->resolve(contextName);
+      testContext = CosNaming::NamingContext::_narrow(tmpobj);
+      if (CORBA::is_nil(testContext)) {
+        cerr << "Failed to narrow naming context." << endl;
+        return 0;
+      }
+    } 
+
+    // Bind the object (obj) to testContext, naming it Echo:
+    CosNaming::Name objectName;
+    objectName.length(1);
+    objectName[0].id   = (const char*) "Echo";   // string copied
+    objectName[0].kind = (const char*) "Object"; // string copied
+
+
+    // Bind obj with name Echo to the testContext:
+    try {
+      testContext->bind(objectName,obj);
+    }
+    catch(CosNaming::NamingContext::AlreadyBound& ex) {
+      testContext->rebind(objectName,obj);
+    }
+    // Note: Using rebind() will overwrite any Object previously bound 
+    //       to /test/Echo with obj.
+    //       Alternatively, bind() can be used, which will raise a
+    //       CosNaming::NamingContext::AlreadyBound exception if the name
+    //       supplied is already bound to an object.
+
+    // Amendment: When using OrbixNames, it is necessary to first try bind
+    // and then rebind, as rebind on it's own will throw a NotFoundexception if
+    // the Name has not already been bound. [This is incorrect behaviour -
+    // it should just bind].
+  }
+  catch (CORBA::COMM_FAILURE& ex) {
+    cerr << "Caught system exception COMM_FAILURE, unable to contact the "
+         << "naming service." << endl;
+    return 0;
+  }
+  catch (omniORB::fatalException& ex) {
+    throw;
+  }
+  catch (...) {
+    cerr << "Caught a system exception while using the naming service."<< endl;
+    return 0;
+  }
+  return 1;
+}
+\end{verbatim}
+\newpage
+
+\subsection{eg3\_clt.cc}
+\begin{verbatim}
+// eg3_clt.cc - This is the source code of example 3 used in Chapter 2
+//              "The Basics" of the omniORB2 user guide.
+//
+//              This is the client. It uses the COSS naming service
+//              to obtain the object reference.
+//
+// Usage: eg3_clt
+//
+//
+//        On startup, the client lookup the object reference from the
+//        COS naming service.
+//
+//        The name which the object is bound to is as follows:
+//              root  [context]
+//               |
+//              text  [context] kind [my_context]
+//               |
+//              Echo  [object]  kind [Object]
+//
+
+#include <iostream.h>
+#include "echo.hh"
+
+#include "greeting.cc"
+
+extern void hello(CORBA::Object_ptr obj);
+
+static CORBA::Object_ptr getObjectReference(CORBA::ORB_ptr orb);
+
+int
+main (int argc, char **argv) 
+{
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc,argv,"omniORB2");
+  CORBA::BOA_ptr boa = orb->BOA_init(argc,argv,"omniORB2_BOA");
+
+  try {
+    CORBA::Object_var obj = getObjectReference(orb);
+    hello(obj);
+  }
+  catch(CORBA::COMM_FAILURE& ex) {
+    cerr << "Caught system exception COMM_FAILURE, unable to contact the "
+         << "object." << endl;
+  }
+  catch(omniORB::fatalException& ex) {
+    cerr << "Caught omniORB2 fatalException. This indicates a bug is caught "
+         << "within omniORB2.\nPlease send a bug report.\n"
+         << "The exception was thrown in file: " << ex.file() << "\n"
+         << "                            line: " << ex.line() << "\n"
+         << "The error message is: " << ex.errmsg() << endl;
+  }
+  catch(...) {
+    cerr << "Caught a system exception." << endl;
+  }
+
+  return 0;
+}
+
+static 
+CORBA::Object_ptr
+getObjectReference(CORBA::ORB_ptr orb)
+{
+  CosNaming::NamingContext_var rootContext;
+  
+  try {
+    // Obtain a reference to the root context of the Name service:
+    CORBA::Object_var initServ;
+    initServ = orb->resolve_initial_references("NameService");
+
+    // Narrow the object returned by resolve_initial_references()
+    // to a CosNaming::NamingContext object:
+    rootContext = CosNaming::NamingContext::_narrow(initServ);
+    if (CORBA::is_nil(rootContext)) 
+      {
+        cerr << "Failed to narrow naming context." << endl;
+        return CORBA::Object::_nil();
+      }
+  }
+  catch(CORBA::ORB::InvalidName& ex) {
+    cerr << "Service required is invalid [does not exist]." << endl;
+    return CORBA::Object::_nil();
+  }
+
+
+  // Create a name object, containing the name test/context:
+  CosNaming::Name name;
+  name.length(2);
+
+  name[0].id   = (const char*) "test";       // string copied
+  name[0].kind = (const char*) "my_context"; // string copied
+  name[1].id   = (const char*) "Echo";
+  name[1].kind = (const char*) "Object";
+  // Note on kind: The kind field is used to indicate the type
+  // of the object. This is to avoid conventions such as that used
+  // by files (name.type -- e.g. test.ps = postscript etc.)
+
+  
+  CORBA::Object_ptr obj;
+  try {
+    // Resolve the name to an object reference, and assign the reference 
+    // returned to a CORBA::Object:
+    obj = rootContext->resolve(name);
+  }
+  catch(CosNaming::NamingContext::NotFound& ex)
+    {
+      // This exception is thrown if any of the components of the
+      // path [contexts or the object] aren't found:
+      cerr << "Context not found." << endl;
+      return CORBA::Object::_nil();
+    }
+  catch (CORBA::COMM_FAILURE& ex) {
+    cerr << "Caught system exception COMM_FAILURE, unable to contact the "
+         << "naming service." << endl;
+    return CORBA::Object::_nil();
+  }
+  catch(omniORB::fatalException& ex) {
+    throw;
+  }
+  catch (...) {
+    cerr << "Caught a system exception while using the naming service."<< endl;
+    return CORBA::Object::_nil();
+  }
+  return obj;
+}
+\end{verbatim}
+\newpage
+
+
+\newpage
+\subsection{dir.mk}
+\begin{verbatim}
+# dir.mk - This is the makefile to compile all the example programs used in
+#          Chapter 2 The Basics.
+#          This makefile is to be used under the OMNI development environment.
+#
+CXXSRCS = greeting.cc eg1.cc \
+          eg2_impl.cc eg2_clt.cc \
+          eg3_impl.cc eg3_clt.cc
+
+DIR_CPPFLAGS = $(CORBA_CPPFLAGS)
+
+CORBA_INTERFACES = echo
+
+eg1        = $(patsubst %,$(BinPattern),eg1)
+eg2_impl   = $(patsubst %,$(BinPattern),eg2_impl)
+eg2_clt    = $(patsubst %,$(BinPattern),eg2_clt)
+eg3_impl   = $(patsubst %,$(BinPattern),eg3_impl)
+eg3_clt    = $(patsubst %,$(BinPattern),eg3_clt)
+
+all:: $(eg1) $(eg2_impl) $(eg2_clt)  $(eg3_impl) $(eg3_clt)
+
+clean::
+        $(RM) $(eg1) $(eg2_impl) $(eg2_clt) $(eg3_impl) $(eg3_clt)
+
+$(eg1): eg1.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
+
+$(eg2_impl): eg2_impl.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
+
+$(eg2_clt): eg2_clt.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
+
+$(eg3_impl): eg3_impl.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
+
+$(eg3_clt): eg3_clt.o $(CORBA_STUB_OBJS) $(CORBA_LIB_DEPEND)
+        @(libs="$(CORBA_LIB)"; $(CXXExecutable))
+
+\end{verbatim}
+}
+
+%\input{api.tex}
+
+\chapter{The omniORB2 API}
+
+In this chapter, we introduce the omniORB2 API. The purpose
+of this API is to provide access points to omniORB2 specific
+functionalities that are not covered by the CORBA specification.
+Obviously, if you use this API in your application, that part of your code
+is not going to be portable to run unchanged on other vendors' ORBs. To
+make it easier to identify omniORB2 dependent code, this API is defined
+under the name space ``omniORB''\footnote{omniORB is a class name if the
+C++ compiler does not support the namespace keyword.}.
+
+\section{ORB and BOA initialization options}
+
+{\tt CORBA::ORB\_init} accepts the following command-line arguments:
+
+\begin{description}
+
+\item[-ORBid ``omniORB2''] The identifier supplied must be ``omniORB2''.
+\item[-ORBtraceLevel $<$level$>$] This option is described in section~\ref{rttrace}.
+
+\end{description}
+
+{\tt BOA\_init} accepts the following command-line arguments:
+
+\begin{description}
+
+\item[-BOAid ``omniORB2\_BOA''] The identifier supplied must be ``omniORB2\_BOA''.
+\item[-BOAiiop\_port $<$port number$>$] This option tells the BOA which
+TCP/IP port to use to accept IIOP calls. If this option is not specified,
+the BOA will use an arbitrary port assigned by the operating system.
+
+
+\end{description}
+
+
+As defined in the CORBA specification, any command-line arguments
+understood by the ORB/BOA will be removed from {\tt argv} when the
+initialisation functions return. Therefore, an application is not required
+to handle any command-line arguments it does not understand.
+
+\section{Run-time Tracing and Diagnostic Messages}
+\label{rttrace}
+
+OmniORB2 uses the C++ iostream {\tt cerr} to output any tracing and
+diagnostic messages. Some or all of these messages can be turned-{on/off} by
+setting the variable {\tt omniORB::traceLevel}. The type definition of
+the variable is:
+
+{\small
+\begin{verbatim}
+CORBA::ULong omniORB::traceLevel = 1;  // The default value is 1
+\end{verbatim}
+}
+
+At the moment, the following trace levels are defined:
+
+\begin{description}
+
+\item[level 0] turn off all tracing and informational messages
+\item[level 1] informational messages only
+\item[level 2] the above plus configuration information
+\item[level 5] the above plus notifications when server threads are created
+or communication endpoints are shutdown
+\item[level 10] the above plus execution traces
+
+\end{description}
+
+The variable can be changed by assignment inside your applications. It can
+also be changed by specifying the command-line option: {\tt -ORBtraceLevel
+$<$level$>$}. For instance:
+
+{\small
+\begin{verbatim}
+$ eg2_impl -ORBtraceLevel 5
+\end{verbatim}
+}
+
+%$
+
+\section{Object Keys}
+
+OmniORB2 uses a data type {\tt omniORB::objectKey} to uniquely
+identify each object implementation. This is an opaque data type and 
+can only be manipulated by the following functions:
+
+{\small
+\begin{verbatim}
+void omniORB::generateNewKey(omniORB::objectKey &k);
+\end{verbatim}
+}
+
+{\tt omniORB::generateNewKey} returns a new {\tt objectKey}. The return
+value is guaranteed to be unique among the keys generated during this program
+run. On the platforms that have a realtime clock and unique process
+identifiers, a stronger assertion can be made, i.e. the keys are guaranteed
+to be unique among all keys ever generated on the same machine.
+
+{\small
+\begin{verbatim}
+const unsigned int omniORB::hash_table_size;
+int omniORB::hash(omniORB::objectKey& k);
+\end{verbatim}
+}
+
+{\tt omniORB::hash} returns the hash value of an {\tt objectKey}. The value
+returned by this function is always between 0 and {\tt
+omniORB:hash\_table\_size - 1} inclusively.
+
+{\small
+\begin{verbatim}
+omniORB::objectKey omniORB::nullkey();
+\end{verbatim}
+}
+
+{\tt omniORB::nullkey} always returns the same {\tt objectKey} value. This
+key is guaranteed to hash to 0.
+
+{\small
+\begin{verbatim}
+int operator==(const omniORB::objectKey &k1,const omniORB::objectKey &k2);
+int operator!=(const omniORB::objectKey &k1,const omniORB::objectKey &k2);
+\end{verbatim}
+}
+
+{\tt ObjectKeys} can be tested for equality using the overloaded {\tt
+operator==} and {\tt operator!=}.
+
+{\small
+\begin{verbatim}
+omniORB::seqOctets*
+omniORB::keyToOctetSequence(const omniORB::objectKey &k1);
+
+omniORB::objectKey
+omniORB::octetSequenceToKey(const omniORB::seqOctets& seq);
+\end{verbatim}
+}
+
+{\tt omniORB::keyToOctetSequence} takes an {\tt objectKey} and returns its
+externalised representation in the form of a sequence of octets. The same
+sequence can be converted back to an {\tt objectKey} using {\tt
+omniORB::octetSequenceToKey}. If the supplied sequence is not an {\tt
+objectKey}, {\tt omniORB::octetSequenceToKey} raises a {\tt CORBA::MARSHAL}
+exception.
+
+\section{Trapping omniORB2 Internal Errors}
+
+{\small
+\begin{verbatim}
+class fatalException {
+public:
+    const char *file() const;
+    int line() const;
+    const char *errmsg() const;
+};
+\end{verbatim}
+}
+
+When omniORB2 detects an internal inconsistency that is most likely to be
+caused by a bug in the runtime, it raises the exception {\tt
+omniORB::fatalException}.  When this exception is raised, it is not
+sensible to proceed with any operation that involves the ORB's runtime. It
+is best to exit the program immediately. The exception structure carries by
+{\tt omniORB::fatalException} contains the exact location (the file name
+and the line number) where the exception is raised. You are strongly
+encourage to file a bug report and point out the location.
+
+
+
+%\chapter{Mapping for Interfaces}
+
+%\centerline{\it [Empty]}
+
+%\chapter{Multi-Threading}
+
+%\chapter{Exceptions}
+
+%\chapter{IDL to C++ Language Mapping}
+
+%\chapter{Object Activation}
+
+%\chapter{Dynamic Interfaces}
+
+\begin{thebibliography}{tjr96}
+
+\bibitem[OMG96a]{corba2-spec} 
+{\em The Common Object Request Broker: Architecture and
+  Specification}, 
+Revision 2.0, 
+OMG,
+Updated July 1996.
+
+\bibitem[OMG96b]{corbaservices} 
+{\em CORBAservices: Common Object Services Specification},
+OMG,
+Updated July 1996.
+
+\bibitem[Richardson96a]{tjr96a}
+{\em The OMNI Thread Abstraction},
+Tristan Richardson, ORL, 22 October 1996.
+
+\bibitem[Richardson96b]{tjr96b}
+{\em The OMNI Development Environment Version 4.0},
+Tristan Richardson, ORL, 5 November 1996.
+
+\end{thebibliography}
+
+\end{document}
