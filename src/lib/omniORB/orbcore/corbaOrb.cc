@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.25  2001/08/23 16:01:43  sll
+  Added initialisers for transportRules and giopEndpoint.
+
   Revision 1.33.2.24  2001/08/21 11:02:13  sll
   orbOptions handlers are now told where an option comes from. This
   is necessary to process DefaultInitRef and InitRef correctly.
@@ -347,6 +350,8 @@ extern omniInitialiser& omni_omniTransport_initialiser_;
 extern omniInitialiser& omni_omniCurrent_initialiser_;
 extern omniInitialiser& omni_dynamiclib_initialiser_;
 extern omniInitialiser& omni_objadpt_initialiser_;
+extern omniInitialiser& omni_giopEndpoint_initialiser_;
+extern omniInitialiser& omni_transportRules_initialiser_;
 
 OMNI_NAMESPACE_END(omni)
 
@@ -539,6 +544,8 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier,
     // Call attach method of each initialiser object.
     // The order of these calls must take into account of the dependency
     // among the modules.
+    omni_giopEndpoint_initialiser_.attach();
+    omni_transportRules_initialiser_.attach();
     omni_omniInternal_initialiser_.attach();
     omni_corbaOrb_initialiser_.attach();
     omni_objadpt_initialiser_.attach();
@@ -796,6 +803,8 @@ omniOrbORB::destroy()
     omni_objadpt_initialiser_.detach();
     omni_corbaOrb_initialiser_.detach();
     omni_omniInternal_initialiser_.detach();
+    omni_transportRules_initialiser_.detach();
+    omni_giopEndpoint_initialiser_.detach();
 
     proxyObjectFactory::shutdown();
 
