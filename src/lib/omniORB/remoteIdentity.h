@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.3  2000/10/03 17:41:45  sll
+  Make sure object key is copied in ctor.
+
   Revision 1.2.2.2  2000/09/27 17:46:29  sll
   New data member pd_ior and the new ctor signature to match.
 
@@ -56,7 +59,7 @@ class omniRemoteIdentity_RefHolder;
 class omniRemoteIdentity : public omniIdentity {
 public:
   inline omniRemoteIdentity(omniIOR* ior, Rope* rope)
-    : omniIdentity(ior->iiop.object_key.get_buffer(),
+    : omniIdentity((const CORBA::Octet*)ior->iiop.object_key.get_buffer(),
 		   ior->iiop.object_key.length()),
       pd_refCount(0),
       pd_ior(ior),
