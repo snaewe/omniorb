@@ -32,6 +32,11 @@
 
 /*
  $Log$
+ Revision 1.39  1999/08/30 18:43:34  sll
+ Removed ENABLE_CLIENT_IR_SUPPORT as the default define. Application code
+ should define this macro if the code is to act as a client to an
+ interface repository.
+
  Revision 1.38  1999/08/15 13:52:40  sll
  Updated compiler defines for SGI and AIX.
 
@@ -620,6 +625,8 @@ strdup (char* str)
 #include <iostream.h>
 #endif
 
-#define ENABLE_CLIENT_IR_SUPPORT
+// #define ENABLE_CLIENT_IR_SUPPORT
+// Define ENABLE_CLIENT_IR_SUPPORT to use as client to an Interface Repository
+
 
 #endif // __CORBA_SYSDEP_H__
