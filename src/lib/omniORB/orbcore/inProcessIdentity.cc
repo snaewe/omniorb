@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.8  2003/07/03 15:54:01  dgrisby
+ Missing minor code in exception.
+
  Revision 1.1.2.7  2001/11/27 14:36:17  dpg1
  Local _is_equivalent fix.
 
@@ -234,7 +237,9 @@ omniInProcessIdentity::locateRequest(omniCallDescriptor&) {
   if (adapter && adapter->objectExists(key(), keysize()))
     return;
   
-  OMNIORB_THROW(OBJECT_NOT_EXIST, 0, CORBA::COMPLETED_NO);
+  OMNIORB_THROW(OBJECT_NOT_EXIST,
+		OBJECT_NOT_EXIST_NoMatch,
+		CORBA::COMPLETED_NO);
 }
 
 
