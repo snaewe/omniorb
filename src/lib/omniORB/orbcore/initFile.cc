@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.18  1998/01/20 17:32:01  sll
+  Added support for OpenVMS.
+
   Revision 1.17  1997/12/18 17:27:51  sll
   *** empty log message ***
 
@@ -71,7 +74,7 @@
 #include <sys/stat.h>
 #endif
 
-#ifdef UnixArchitecture
+#if defined(UnixArchitecture) || defined(__VMS)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -125,13 +128,13 @@ void initFile::initialize()
 
 // Get filename:
 
-#if defined(UnixArchitecture) || defined(NTArchitecture)
+#if defined(UnixArchitecture) || defined(NTArchitecture) || defined(__VMS)
 
   char* tmp_fname;
 
   if ((tmp_fname = getenv(INIT_ENV_VAR)) == NULL)
     {
-#if defined(UnixArchitecture)
+#if defined(UnixArchitecture) || defined(__VMS)
       config_fname = CORBA::string_dup(CONFIG_DEFAULT_LOCATION);
 #elif defined(NTArchitecture)
 
@@ -260,7 +263,7 @@ void initFile::initialize()
 int initFile::read_file(char* config_fname)
 {
   // Test if the specified file exists and is not a directory
-#ifdef UnixArchitecture
+#if defined(UnixArchitecture) || defined(__VMS)
   {
     struct stat stbuf;
     if (stat(config_fname,&stbuf) < 0 || !S_ISREG(stbuf.st_mode)) {
@@ -303,14 +306,14 @@ int initFile::read_file(char* config_fname)
   if (fData == NULL) 
     throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_NO);
 
-  fread((void*) fData,1,fsize,iFile);
+  size_t result = fread((void*) fData,1,fsize,iFile);
   fclose(iFile);
 
-  fData[fsize] = '\0';
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__VMS)
   // If file contains CRs, fsize will not be true length of string
-  fsize = strlen(fData);
+  fsize = result;
 #endif
+  fData[fsize]='\0';
 
   return 0;
 }

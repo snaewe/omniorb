@@ -59,7 +59,13 @@
 
 #if (PthreadDraftVersion <= 6)
 #define ERRNO(x) (((x) != 0) ? (errno) : 0)
+#ifdef __VMS
+// pthread_setprio returns old priority on success (draft version 4:
+// OpenVms version < 7)
+#define THROW_ERRORS(x) { if ((x) == -1) throw omni_thread_fatal(errno); }
+#else
 #define THROW_ERRORS(x) { if ((x) != 0) throw omni_thread_fatal(errno); }
+#endif
 #else
 #define ERRNO(x) (x)
 #define THROW_ERRORS(x) { int rc = (x); \
@@ -268,7 +274,7 @@ omni_thread::init_t::init_t(void)
 
 #ifdef PthreadSupportThreadPriority
 
-#if defined(__osf1__) && defined(__alpha__)
+#if defined(__osf1__) && defined(__alpha__) || defined(__VMS)
 
     lowest_priority = PRI_OTHER_MIN;
     highest_priority = PRI_OTHER_MAX;
@@ -497,7 +503,7 @@ omni_thread::start(void)
 
 #endif	/* PthreadSupportThreadPriority */
 
-#if defined(__osf1__) && defined(__alpha__)
+#if defined(__osf1__) && defined(__alpha__) || defined(__VMS)
 
     // omniORB requires a larger stack size than the default (21120)
     // on OSF/1
@@ -728,7 +734,7 @@ omni_thread::sleep(unsigned long secs, unsigned long nanosecs)
 	throw omni_thread_fatal(errno);
 #else
 
-#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10)
+#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS)
 
     if (pthread_delay_np(&rqts) != 0)
 	throw omni_thread_fatal(errno);
@@ -756,7 +762,7 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 {
     timespec abs;
 
-#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10)
+#if defined(__osf1__) && defined(__alpha__) || defined(__hpux__) && (__OSVERSION__ == 10) || defined(__VMS)
 
     timespec rel;
     rel.tv_sec = rel_sec;

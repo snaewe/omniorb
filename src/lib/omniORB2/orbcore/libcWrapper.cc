@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.11  1998/01/20 17:32:15  sll
+  Added support for OpenVMS.
+
   Revision 1.10  1997/12/23 19:24:00  sll
   gethostbyname now works properly on HPUX.
 
@@ -128,7 +131,7 @@ again:
 #else
   if ((hp = ::gethostbyname(name)) == NULL) 
     {
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__vms) && __VMS_VER < 70000000
     rc = 0;
 #else
     rc = h_errno;
