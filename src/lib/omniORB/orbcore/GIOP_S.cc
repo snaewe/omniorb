@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.20  2002/03/27 11:44:51  dpg1
+  Check in interceptors things left over from last week.
+
   Revision 1.1.4.19  2002/03/18 12:38:25  dpg1
   Lower trace(0) to trace(1), propagate fatalException.
 
@@ -121,6 +124,7 @@
 #include <GIOP_S.h>
 #include <omniORB4/minorCode.h>
 #include <omniORB4/omniInterceptors.h>
+#include <interceptors.h>
 #include <poaimpl.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
@@ -266,7 +270,7 @@ GIOP_S::handleRequest() {
 
     {
       omniInterceptors::serverReceiveRequest_T::info_T info(*this);
-      omniORB::getInterceptors()->serverReceiveRequest.visit(info);
+      omniInterceptorP::visit(info);
     }
 
     // Create a callHandle object

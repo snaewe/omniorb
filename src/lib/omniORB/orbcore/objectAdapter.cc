@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.15  2002/03/27 11:44:53  dpg1
+ Check in interceptors things left over from last week.
+
  Revision 1.2.2.14  2002/03/18 12:38:27  dpg1
  Lower trace(0) to trace(1), propagate fatalException.
 
@@ -121,6 +124,7 @@
 #include <giopServer.h>
 #include <giopRope.h>
 #include <omniORB4/omniInterceptors.h>
+#include <interceptors.h>
 #include <initialiser.h>
 #include <orbOptions.h>
 #include <orbParameters.h>
@@ -210,7 +214,7 @@ omniObjAdapter::initialise()
 
     if ( oa_servers.empty() ) {
       omniInterceptors::createORBServer_T::info_T info(oa_servers);
-      omniORB::getInterceptors()->createORBServer.visit(info);
+      omniInterceptorP::visit(info);
     }
 
     omnivector<const char*> myendpoints;

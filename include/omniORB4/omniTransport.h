@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2002/03/27 11:44:51  dpg1
+  Check in interceptors things left over from last week.
+
   Revision 1.1.4.3  2001/08/03 17:48:43  sll
   Make sure dll import spec for win32 is properly done.
 
@@ -163,4 +166,4 @@ OMNI_NAMESPACE_END(omni)
 
 #undef _core_attr
 
-#endif // __ROPE_H__
+#endif // __OMNITRANSPORT_H__

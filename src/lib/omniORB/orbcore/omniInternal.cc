@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.26  2002/03/27 11:44:53  dpg1
+  Check in interceptors things left over from last week.
+
   Revision 1.2.2.25  2002/03/18 15:13:08  dpg1
   Fix bug with old-style ORBInitRef in config file; look for
   -ORBtraceLevel arg before anything else; update Windows registry
@@ -187,6 +190,7 @@
 #include <initialiser.h>
 #include <exceptiondefs.h>
 #include <omniORB4/omniInterceptors.h>
+#include <interceptors.h>
 #include <giopRope.h>
 #include <invoker.h>
 #include <orbOptions.h>
@@ -776,7 +780,7 @@ omni::createIdentity(omniIOR* ior, const char* target, CORBA::Boolean locked)
   omniIdentity* result = 0;
   {
     omniInterceptors::createIdentity_T::info_T info(ior, result, locked);
-    omniORB::getInterceptors()->createIdentity.visit(info);
+    omniInterceptorP::visit(info);
   }
   if (result) {
     holder._retn();

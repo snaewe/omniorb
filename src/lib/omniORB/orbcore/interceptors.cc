@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2002/03/27 11:44:52  dpg1
+  Check in interceptors things left over from last week.
+
   Revision 1.1.2.4  2001/08/03 17:41:22  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -49,6 +52,7 @@
 #include <omniORB4/IOP_C.h>
 #include <omniORB4/omniServer.h>
 #include <omniORB4/omniInterceptors.h>
+#include <interceptors.h>
 #include <exceptiondefs.h>
 #include <initialiser.h>
 
@@ -57,101 +61,76 @@ OMNI_NAMESPACE_BEGIN(omni)
 omniInterceptors::omniInterceptors() {}
 omniInterceptors::~omniInterceptors() {}
 
-class omniInterceptorP {
-public:
-  struct elmT {
-    void* func;
-    elmT* next;
-  };
+omniInterceptorP::elmT* omniInterceptorP::encodeIOR              = 0;
+omniInterceptorP::elmT* omniInterceptorP::decodeIOR              = 0;
+omniInterceptorP::elmT* omniInterceptorP::clientSendRequest      = 0;
+omniInterceptorP::elmT* omniInterceptorP::clientReceiveReply     = 0;
+omniInterceptorP::elmT* omniInterceptorP::clientReceiveException = 0;
+omniInterceptorP::elmT* omniInterceptorP::serverReceiveRequest   = 0;
+omniInterceptorP::elmT* omniInterceptorP::serverSendReply        = 0;
+omniInterceptorP::elmT* omniInterceptorP::serverSendException    = 0;
+omniInterceptorP::elmT* omniInterceptorP::createIdentity         = 0;
+omniInterceptorP::elmT* omniInterceptorP::createORBServer        = 0;
 
-  void add(void* func) {
-    elmT** ep = &head;
 
-    while (*ep) {
-      if ((*ep)->func == func) return;
-      ep = &((*ep)->next);
-    }
+static void list_add(omniInterceptorP::elmT** ep, void* func)
+{
+  while (*ep) {
+    if ((*ep)->func == func) return;
+    ep = &((*ep)->next);
+  }
     
-    elmT* np = new elmT();
-    np->func = func;
-    np->next = *ep;
-    *ep = np;
-  }
+  omniInterceptorP::elmT* np = new omniInterceptorP::elmT();
+  np->func = func;
+  np->next = *ep;
+  *ep = np;
+}
 
-  void remove(void* func) {
-    elmT** ep = &head;
-
-    while (*ep) {
-      if ((*ep)->func == func) {
-	elmT* p = *ep;
-	*ep = p->next;
-	delete p;
-	return;
-      }
-      ep = &((*ep)->next);
-    }
-  }
-
-  omniInterceptorP() : head(0) {}
-  ~omniInterceptorP() {
-    elmT** ep = &head;
-
-    while (*ep) {
-      elmT* p = *ep;
+static void list_remove(omniInterceptorP::elmT** ep, void* func)
+{
+  while (*ep) {
+    if ((*ep)->func == func) {
+      omniInterceptorP::elmT* p = *ep;
       *ep = p->next;
       delete p;
+      return;
     }
+    ep = &((*ep)->next);
   }
+}
 
-  elmT* head;
-};
-
+static void list_del(omniInterceptorP::elmT** ep)
+{
+  while (*ep) {
+    omniInterceptorP::elmT* p = *ep;
+    *ep = p->next;
+    delete p;
+  }
+}
 
 #define INTERCEPTOR_IMPLEMENTATION(interceptor) \
-omniInterceptors::interceptor::interceptor() { \
-  pd_ilist = new omniInterceptorP(); \
+void omniInterceptors::interceptor##_T::add(\
+           omniInterceptors::interceptor##_T::interceptFunc f) { \
+  list_add(&omniInterceptorP::interceptor, (void*)f); \
 } \
 \
-omniInterceptors::interceptor::~interceptor() { \
-  delete pd_ilist; \
-} \
-\
-void omniInterceptors::interceptor::add(\
-           omniInterceptors::interceptor::interceptFunc f) { \
-  pd_ilist->add((void*)f); \
-} \
-\
-void omniInterceptors::interceptor::remove(\
-            omniInterceptors::interceptor::interceptFunc f) { \
-  pd_ilist->remove((void*)f); \
+void omniInterceptors::interceptor##_T::remove(\
+            omniInterceptors::interceptor##_T::interceptFunc f) { \
+  list_remove(&omniInterceptorP::interceptor, (void*)f); \
 }
 
-
-#define INTERCEPTOR_IMPLEMENTATION_1ARG(interceptor,argt,argn) \
-INTERCEPTOR_IMPLEMENTATION(interceptor) \
-void omniInterceptors::interceptor::visit(argt argn) { \
-  omniInterceptorP::elmT* ep = pd_ilist->head; \
-  while (ep) { \
-    if (!(*((omniInterceptors::interceptor::interceptFunc)(ep->func)))(argn)) \
-       return; \
-    ep = ep->next; \
-  } \
-}
-
-
-INTERCEPTOR_IMPLEMENTATION_1ARG(encodeIOR_T,encodeIOR_T::info_T&,info)
-INTERCEPTOR_IMPLEMENTATION_1ARG(decodeIOR_T,decodeIOR_T::info_T&,info)
-INTERCEPTOR_IMPLEMENTATION_1ARG(clientSendRequest_T,clientSendRequest_T::info_T&,info)
-INTERCEPTOR_IMPLEMENTATION_1ARG(clientReceiveReply_T,clientReceiveReply_T::info_T&,info)
-INTERCEPTOR_IMPLEMENTATION_1ARG(clientReceiveException_T,clientReceiveException_T::info_T&,info)
-INTERCEPTOR_IMPLEMENTATION_1ARG(serverReceiveRequest_T,serverReceiveRequest_T::info_T&,info)
-INTERCEPTOR_IMPLEMENTATION_1ARG(serverSendReply_T,serverSendReply_T::info_T&,info)
-INTERCEPTOR_IMPLEMENTATION_1ARG(serverSendException_T,serverSendException_T::info_T&,info)
-INTERCEPTOR_IMPLEMENTATION_1ARG(createIdentity_T,createIdentity_T::info_T&,info)
-INTERCEPTOR_IMPLEMENTATION_1ARG(createORBServer_T,createORBServer_T::info_T&,info)
+INTERCEPTOR_IMPLEMENTATION(encodeIOR)
+INTERCEPTOR_IMPLEMENTATION(decodeIOR)
+INTERCEPTOR_IMPLEMENTATION(clientSendRequest)
+INTERCEPTOR_IMPLEMENTATION(clientReceiveReply)
+INTERCEPTOR_IMPLEMENTATION(clientReceiveException)
+INTERCEPTOR_IMPLEMENTATION(serverReceiveRequest)
+INTERCEPTOR_IMPLEMENTATION(serverSendReply)
+INTERCEPTOR_IMPLEMENTATION(serverSendException)
+INTERCEPTOR_IMPLEMENTATION(createIdentity)
+INTERCEPTOR_IMPLEMENTATION(createORBServer)
 
 #undef INTERCEPTOR_IMPLEMENTATION
-#undef INTERCEPTOR_IMPLEMENTATION_1ARG
 
 /////////////////////////////////////////////////////////////////////////////
 //            Module initialiser                                           //
@@ -170,6 +149,16 @@ public:
     if (pd_interceptors) {
       delete pd_interceptors;
       pd_interceptors = 0;
+      list_del(&omniInterceptorP::encodeIOR);
+      list_del(&omniInterceptorP::decodeIOR);
+      list_del(&omniInterceptorP::clientSendRequest);
+      list_del(&omniInterceptorP::clientReceiveReply);
+      list_del(&omniInterceptorP::clientReceiveException);
+      list_del(&omniInterceptorP::serverReceiveRequest);
+      list_del(&omniInterceptorP::serverSendReply);
+      list_del(&omniInterceptorP::serverSendException);
+      list_del(&omniInterceptorP::createIdentity);
+      list_del(&omniInterceptorP::createORBServer);
     }
   }
 
