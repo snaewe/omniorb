@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.19  1998/04/07 19:53:38  sll
+  Replace _OMNIORB2_NTDLL_ on the whole class omni with
+  _OMNIORB_NTDLL_IMPORT on individual constants and variables.
+
   Revision 1.18  1998/02/27 14:00:17  sll
   Changed manager() to _objectManager() in class omniObject to avoid
   potential name clash with application code.
@@ -69,8 +73,6 @@
 #define __OMNIINTERNAL_H__
 
 #include <assert.h>
-#include <iostream.h>
-
 #include <stddef.h>
 
 #if !defined(__atmos__) && !defined(_WIN32)
@@ -92,7 +94,6 @@ class GIOP_C;
 class GIOPobjectLocation;
 class omniObject;
 class initFile;
-class omniORB;
 class omniObjectManager;
 
 // omniORB_x_y
@@ -103,7 +104,7 @@ class omniObjectManager;
 //   the variable name stays the same with compatible shared library, e.g.
 //   2.5.1.
 //
-extern const char* _OMNIORB2_NTDLL_ omniORB_2_5;
+extern const char* _OMNIORB_NTDLL_IMPORT omniORB_2_5;
 
 #include <omniORB2/rope.h>
 
@@ -113,7 +114,7 @@ struct omniObjectKey {
   _CORBA_ULong lo;
 };
 
-class _OMNIORB2_NTDLL_ omni {
+class omni {
 
 public:
 
@@ -125,16 +126,16 @@ public:
 #error "No suitable type to do pointer arithmetic"
 #endif
 
-  static const _CORBA_Boolean myByteOrder;
+  static _OMNIORB_NTDLL_IMPORT const _CORBA_Char myByteOrder;
 
   enum alignment_t { ALIGN_1 = 1, ALIGN_2 = 2, ALIGN_4 = 4, ALIGN_8 = 8 };
-  static const alignment_t max_alignment;  // Maximum value of alignment_t
+  static _OMNIORB_NTDLL_IMPORT const alignment_t max_alignment;  // Maximum value of alignment_t
 
   static inline ptr_arith_t align_to(ptr_arith_t p,alignment_t align) {
     return (p + ((int) align - 1)) & ~((int) align - 1);
   }
 
-  static _CORBA_Unbounded_Sequence_Octet myPrincipalID;
+  static _OMNIORB_NTDLL_IMPORT _CORBA_Unbounded_Sequence_Octet myPrincipalID;
 
   static void objectIsReady(omniObject *obj);
   static void objectDuplicate(omniObject *obj);
@@ -189,6 +190,7 @@ public:
   // would be raised.
   // If <targetRepoId> == 0, then the desired interface is the pseudo object
   // CORBA::Object from which all interfaces derived.
+
 };
 
 class omniRopeAndKey {
