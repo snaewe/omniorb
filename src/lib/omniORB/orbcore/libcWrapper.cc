@@ -11,9 +11,12 @@
 
 /*
   $Log$
-  Revision 1.1  1997/01/08 17:26:01  sll
-  Initial revision
+  Revision 1.2  1997/01/08 18:10:50  ewc
+  Added support for ATMos, added IP check function
 
+// Revision 1.1  1996/10/10  14:37:53  sll
+// Initial revision
+//
   */
 
 #include <omniORB2/CORBA.h>
@@ -65,13 +68,20 @@ again:
     return -1;
   }
 
+  
 #else
 
   // Use non-reentrant gethostbyname()
   non_reentrant.lock();
+
   struct hostent *hp;
-  if ((hp = ::gethostbyname(name)) == 0) {
+  if ((hp = ::gethostbyname(name)) <= 0) {
+#ifdef __atmos__
+    rc = 0;
+#else
     rc = h_errno;
+#endif
+
     non_reentrant.unlock();
     return -1;
   }
@@ -97,12 +107,14 @@ again:
 
   total += strlen(hp->h_name) + 1;
 
+#ifndef __atmos__
   p = hp->h_aliases;
   while (*p) {
     total += strlen(*p) + 1;
     naliases++;
     p++;
   }
+#endif
   total += naliases * sizeof(char *);
 
   p = hp->h_addr_list;
@@ -134,10 +146,10 @@ again:
   q += strlen(hp->h_name) + 1;
   strcpy((char *)h.pd_ent.h_name,hp->h_name);
 
-  int idx;
+  int idx = 0;
 
+#ifndef __atmos__
   p = hp->h_aliases;
-  idx = 0;
   while (*p) {
     h.pd_ent.h_aliases[idx] = q;
     q += strlen(*p) + 1;
@@ -145,8 +157,9 @@ again:
     idx++;
     p++;
   }
-  h.pd_ent.h_aliases[idx] = 0;
+#endif
 
+  h.pd_ent.h_aliases[idx] = 0;
   p = hp->h_addr_list;
   idx = 0;
   while (*p) {
@@ -159,7 +172,24 @@ again:
   h.pd_ent.h_addr_list[idx] = 0;
 
   non_reentrant.unlock();
-
 #endif
   return 0;
+}
+
+
+int LibcWrapper::isipaddr(const char* hname)
+{
+  // Test if string contained hname is ipaddress
+  // Return: -1: fail,  0: not ip address,  1: is ip address
+
+int hlen;
+if ((hlen = strlen(hname)) > 15) return 0;
+
+for(int count=0; count<hlen;count++)
+  {
+    if (((int)hname[count] < 48 || (int)hname[count]>57) &&
+	                     (int)hname[count] != 46) return 0;
+  }
+
+return 1;
 }
