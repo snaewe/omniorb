@@ -29,6 +29,10 @@
  
 /*
   $Log$
+  Revision 1.10.2.5  2000/11/15 17:24:45  sll
+  Added service context marshalling operators.
+  Added hooks to add TAG_CODE_SETS componment to an IOR.
+
   Revision 1.10.2.4  2000/11/03 19:12:07  sll
   Use new marshalling functions for byte, octet and char. Use get_octet_array
   instead of get_char_array and put_octet_array instead of put_char_array.
@@ -119,6 +123,19 @@ void
 IOP::TaggedComponent::operator<<= (cdrStream& s) {
   tag <<= s;
   component_data <<= s;
+}
+
+
+void
+IOP::ServiceContext::operator>>= (cdrStream& s) const {
+  context_id >>= s;
+  context_data >>= s;
+}
+
+void
+IOP::ServiceContext::operator<<= (cdrStream& s) {
+  context_id <<= s;
+  context_data <<= s;
 }
 
 void
@@ -212,11 +229,17 @@ IIOP::encodeProfile(const IIOP::ProfileBody& body,IOP::TaggedProfile& profile)
 
   CORBA::ULong bufsize;
   {
-    cdrCountingStream s;
+    cdrCountingStream s(cdrMemoryStream::default_tcs_c,
+			cdrMemoryStream::default_tcs_w);
     s.marshalOctet(omni::myByteOrder);
     s.marshalOctet(body.version.major);
     s.marshalOctet(body.version.minor);
-    body.address.host >>= s;
+    {
+      CORBA::ULong hlen = strlen(body.address.host) + 1;
+      hlen >>= s;
+      s.put_octet_array((const CORBA::Octet*)
+			(const char*)body.address.host,hlen);
+    }
     body.address.port >>= s;
     body.object_key >>= s;
 
@@ -236,7 +259,12 @@ IIOP::encodeProfile(const IIOP::ProfileBody& body,IOP::TaggedProfile& profile)
     cdrEncapsulationStream s(bufsize,1);
     s.marshalOctet(body.version.major);
     s.marshalOctet(body.version.minor);
-    body.address.host >>= s;
+    {
+      CORBA::ULong hlen = strlen(body.address.host) + 1;
+      hlen >>= s;
+      s.put_octet_array((const CORBA::Octet*)
+			(const char*)body.address.host,hlen);
+    }
     body.address.port >>= s;
     body.object_key >>= s;
 
@@ -273,7 +301,20 @@ IIOP::decodeProfile(const IOP::TaggedProfile& profile,
   if (body.version.major != 1) 
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 
-  body.address.host <<= s;
+  {
+    // Don't use unmarshalString() to unmarshal the host address because
+    // the profile is always encoded in ISO-8859-1 irrespective of the
+    // TCS or NCS setting.
+    CORBA::ULong idlen; 
+    idlen <<= s;
+    if (!s.checkInputOverrun(1,idlen))
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+    body.address.host = CORBA::string_alloc(idlen);
+    s.get_octet_array((CORBA::Octet*)((const char*)body.address.host), idlen);
+    if( ((char*)body.address.host)[idlen - 1] != '\0' )
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+  }
+
   body.address.port <<= s;
   body.object_key <<= s;
   
@@ -322,10 +363,10 @@ IIOP::decodeMultiComponentProfile(const IOP::TaggedProfile& profile,
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 }
 
+
 //////////////////////////////////////////////////////////////////////////
-static
 void
-unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent& c , omniIOR* ior)
+omniIOR::unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent& c , omniIOR* ior)
 {
   OMNIORB_ASSERT(c.tag == IOP::TAG_ORB_TYPE);
   cdrEncapsulationStream e(c.component_data.get_buffer(),
@@ -333,9 +374,9 @@ unmarshal_TAG_ORB_TYPE(const IOP::TaggedComponent& c , omniIOR* ior)
   ior->orb_type <<= e;
 }
 
-static
+
 char*
-dump_TAG_ORB_TYPE(const IOP::TaggedComponent& c)
+omniIOR::dump_TAG_ORB_TYPE(const IOP::TaggedComponent& c)
 {
   OMNIORB_ASSERT(c.tag == IOP::TAG_ORB_TYPE);
   cdrEncapsulationStream e(c.component_data.get_buffer(),
@@ -368,8 +409,15 @@ static struct {
   char* (*dump)(const IOP::TaggedComponent&);
 } componentUnmarshalHandlers[] = {
   // This table must be arranged in ascending order of IOP::ComponentId
-  { IOP::TAG_ORB_TYPE,  unmarshal_TAG_ORB_TYPE, dump_TAG_ORB_TYPE },
-  { IOP::TAG_CODE_SETS, 0, 0 },
+
+  { IOP::TAG_ORB_TYPE, 
+    omniIOR::unmarshal_TAG_ORB_TYPE, 
+    omniIOR::dump_TAG_ORB_TYPE },
+
+  { IOP::TAG_CODE_SETS, 
+    omniIOR::unmarshal_TAG_CODE_SETS,
+    omniIOR::dump_TAG_CODE_SETS },
+
   { IOP::TAG_POLICIES, 0, 0 },
   { IOP::TAG_ALTERNATE_IIOP_ADDRESS, 0, 0 },
   { IOP::TAG_COMPLETE_OBJECT_KEY, 0, 0 },
@@ -475,20 +523,27 @@ IOP::dumpComponent(const IOP::TaggedComponent& c) {
 /////////////////////////////////////////////////////////////////////////////
 static _CORBA_Unbounded_Sequence_Octet my_orb_type;
 
+void
+omniIOR::add_TAG_ORB_TYPE(IOP::TaggedComponent& component, const omniIOR*)
+{
+  component.tag = IOP::TAG_ORB_TYPE;
+  CORBA::ULong max, len;
+  max = my_orb_type.maximum();
+  len = my_orb_type.length();
+  component.component_data.replace(max,len,my_orb_type.get_buffer(),0);
+}
+
 static
 void insertSupportedComponents(omniIOR* ior)
 {
   CORBA::ULong index = ior->iiop.components.length();
-  ior->iiop.components.length(index+1);
+  ior->iiop.components.length(index+2);
 
   // Insert ORB TYPE
-  ior->iiop.components[index].tag = IOP::TAG_ORB_TYPE;
-  CORBA::ULong max, len;
-  max = my_orb_type.maximum();
-  len = my_orb_type.length();
-  ior->iiop.components[index].component_data.replace(max,len,
-						     my_orb_type.get_buffer(),
-						     0);
+  omniIOR::add_TAG_ORB_TYPE(ior->iiop.components[index],ior);
+
+  // Insert CODE SET
+  omniIOR::add_TAG_CODE_SETS(ior->iiop.components[index+1],ior);
 }
 
 static
