@@ -1,0 +1,914 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!Converted with LaTeX2HTML 95 (Thu Jan 19 1995) by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds >
+<HEAD>
+<TITLE>Footnotes</TITLE>
+</HEAD>
+<BODY>
+<meta name="description" value="Footnotes">
+<meta name="keywords" value="omniORB2">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<P>
+<DL> <A NAME=1275><DT>...[#corba2spec##1#] <DD>Most of the 2.3 features have been
+implemented. The features still missing in this release is listed
+in <A HREF="node2.html#missing">1.1.4</A>. Where possible, backward compatibility has been
+maintained up to specification 2.0.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=1276><DT>...1999 <DD>More information can be found at <em>
+http://www.opengroup.org/press/7jun99_b.htm</em></A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=95><DT>...code <DD>The stub code
+is the C++ code that provides the object mapping as defined in the CORBA 2.0
+specification.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=158><DT>...defined <DD>In omniORB2, all object
+reference variable types are instantiated from the template type
+_CORBA_ObjRef_Var.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=162><DT>...castings <DD>However, the implementation of the type conversion operator()
+between Echo_var and Echo_ptr varies slightly among different C++
+compilers, you may need to do an explicit casting when the compiler
+complains about the conversion being ambiguous.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=182><DT>...Adaptor <DD>The interface of a BOA is described in chapter 8 of the
+CORBA specification.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=217><DT>...) <DD>A conversion operator() of CORBA::String_var converts a
+CORBA::String_var to a char*.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=222><DT>...string <DD>Please refer to the CORBA
+specification 16.7 for the details of the String_var mapping. Other T_var
+types are also covered in chapter 16.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=251><DT>...argument <DD>The 1st argument is a pointer to the
+implementation definition and is always ignored by omniORB2.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=1280><DT>...argument <DD>The CORBA specification does not specify
+when <tt> impl_is_ready</tt> should return. Many ORB vendors choose to
+implement <tt> impl_is_ready</tt> as blocking until a certain time-out value
+is exceeded. In a single threaded implementation this is necessary to give
+the ORB the time to serve incoming requests.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=277><DT>...reference <DD>Object references held by clients in other address
+spaces will not prevent the object implementation from being disposed
+of. If these clients invoke on the object after it is disposed, the system
+exception INV_OBJREF is raised.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=285><DT>...space <DD>Notice that the
+object key is not globally unique across address spaces.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=1281><DT>...condition <DD>If a system
+exception is not caught, the C++ runtime will call the <tt> terminate</tt>
+function. This function is defaulted to abort the whole process and on some
+system will cause a core file to be produced.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=296><DT>...RTTI <DD>Run Time
+Type Identification</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=297><DT>...RTTI <DD>A noticeable exception is the GNU C++
+compiler (version 2.7.2). It doesn't support RTTI unless the
+compilation flag -frtti is specified. The omniORB2 runtime is not compiled
+with the -frtti flag. It is said that RTTI will be properly supported in
+the upcoming version 2.8.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=1282><DT>...Echo'' <DD>A pathname, or in the Naming Service's
+terminology- a <i> compound name</i>, is a sequence of textual names. Each
+name component except the last one is bound to a naming context. A naming
+context is analogous to a directory in a filing system, it can contain
+names of object references or other naming contexts. The last name
+component is bound to an object reference. Note: '/' is purely a notation
+to separate two components in the pathname. It does not appear in the <i>
+compound name</i> that is registered with the Naming Service.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=366><DT>...``omniORB'' <DD>omniORB is a class name if the
+C++ compiler does not support the namespace keyword.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=443><DT>...interface <DD>This interface is
+first defined by Sun's NEO and is in used in Sun's JavaIDL</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=582><DT>...Format <DD>For further details
+of the repository ID formats, see section 6.6 in the CORBA
+specification.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=1287><DT>...purpose <DD>In pre-omniORB 2.8.0 releases, omniORB2 performs an
+equality test and will ignore any alias TypeCodes (<tt> tk_alias</tt>) when
+making this comparison. The semantics is similar to the equivalent() test
+in the TypeCode interface of CORBA 2.3.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=1289><DT>...reference <DD>Testing a nil DynAny object with CORBA::is_nil()
+returns TRUE(1). The CORBA 2.2 specification does not specify what is the
+return value of this function when the current component pointer is
+invalid. To ensure portability, it is best to avoid calling <tt>
+current_component()</tt> under this condition.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=883><DT>...exception <DD>The CORBA 2.2
+specification does not define the behavior of this error condition. To
+ensure portability, it is best to avoid calling the get operations when the
+current component pointer is known to be invalid.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=915><DT>...exception <DD>The
+CORBA 2.2 specification does not define the behavior of this error
+condition. To ensure portability, it is best to avoid calling the insert
+operations when the current component pointer is known to be invalid.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=923><DT>...union <DD>In the CORBA 2.2 specification, the
+DynFixed interface is defined to handle the fixed data type. This is not
+supported in this implementation.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=947><DT>...usage <DD>This interface is
+currently an open issue with the ORB revision task force.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=1290><DT>...CORBA::release() <DD>if not managed by a <tt> _var</tt> type.</A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE><A NAME=1291><DT>...CORBA::NVList <DD>obtained by calling <tt>
+CORBA::ORB::create_list()</tt></A>
+<PRE><P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+<P>
+</PRE> </DL>
+<P><ADDRESS>
+<I>Sai Lai Lo <BR>
+Wed Sep 22 19:28:07 BST 1999</I>
+</ADDRESS>
+</BODY>

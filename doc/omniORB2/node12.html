@@ -1,0 +1,481 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!Converted with LaTeX2HTML 95 (Thu Jan 19 1995) by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds >
+<HEAD>
+<TITLE> The Dynamic Invocation Interface</TITLE>
+</HEAD>
+<BODY>
+<meta name="description" value=" The Dynamic Invocation Interface">
+<meta name="keywords" value="omniORB2">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<P>
+ <BR> <HR><A NAME=tex2html353 HREF="node13.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html351 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html345 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html355 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html354 HREF="node13.html"> The Dynamic Skeleton </A>
+<B>Up:</B> <A NAME=tex2html352 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html346 HREF="node11.html"> Dynamic Management of </A>
+<BR> <HR> <P>
+<H1><A NAME=SECTION001200000000000000000> The Dynamic Invocation Interface</A></H1>
+<P>
+
+<P>
+The Dynamic Invocation Interface (or DII) allows applications to
+invoke operations on CORBA objects about which they have no static
+information. That is to say the application has not been linked with
+stub code which performs the remote operation invocation. Thus using
+the DII applications may invoke operations on <em>any</em> CORBA object,
+possibly determining the object's interface dynamically by using an
+Interface Repository.
+
+<P>
+This chapter presents an overview of the Dynamic Invocation Interface.
+An toy example use of the DII can be found in the omniORB2 distribution in
+the <tt> &lt;top&gt;/src/examples/dii</tt> directory.
+The DII makes extensive use of the type Any, so ensure that you have read
+chapter <A HREF="node10.html#ch_any">9</A>. For more information refer to the Dynamic Invocation
+Interface and C++ Mapping sections of the CORBA 2
+specification [<A HREF="node15.html#corba2spec">OMG99a</A>].
+<P>
+<H1><A NAME=SECTION001210000000000000000> Overview</A></H1>
+<P>
+To invoke an operation on a CORBA object an application needs an object
+reference, the name of the operation and a list of the parameters. In
+addition the application must know whether the operation is one-way,
+what user-defined exceptions it may throw, any user-context
+strings which must be supplied, a 'context' to take these values from and the
+type of the returned value. This
+information is given by the IDL interface declaration, and so is normally
+made available to the application via the stub code. In the DII this
+information is encapsulated in the <tt> CORBA::Request</tt> pseudo-object.
+<P>
+To perform an operation invocation the application must obtain an instance of
+a <tt> Request</tt> object, supply the information listed above and call one of
+the methods to actually make the invocation. If the invocation causes an
+exception to be thrown then this may be retrieved and inspected, or the
+return value on success.
+<P>
+<H1><A NAME=SECTION001220000000000000000> Pseudo Objects</A></H1>
+<P>
+The DII defines a number of psuedo-object types, all defined in the CORBA
+namespace. These objects behave in many ways like CORBA objects. They
+should only be accessed by reference (through <tt> foo_ptr</tt> or
+<tt> foo_var</tt>), may not be
+instantiated directly and should be released by calling
+<tt> CORBA::release()</tt><A NAME=tex2html26 HREF="footnode.html#1290"><IMG ALIGN=BOTTOM ALT="gif" SRC="http://www.uk.research.att.com/latex2html/icons/foot_motif.gif"></A>.
+A nil reference should only be represented by <tt> foo::_nil()</tt>.
+<P>
+These pseudo objects, although defined in pseudo-IDL in the specification do
+not follow the normal mapping for CORBA objects. In particular the memory
+management rules are different - see the CORBA 2
+specification [<A HREF="node15.html#corba2spec">OMG99a</A>] for more details. New instances of these
+objects may only be created by the ORB. A number of methods are defined
+in <tt> CORBA::ORB</tt> to do this.
+<P>
+<H2><A NAME=SECTION001221000000000000000> Request</A></H2>
+<P>
+A <tt> Request</tt> encapsulates a single operation invocation. It may <em>not</em>
+be re-used - even for another call with the same arguments.
+<P>
+ <PRE>class Request {
+public:
+  virtual Object_ptr        target() const;
+  virtual const char*       operation() const;
+  virtual NVList_ptr        arguments();
+  virtual NamedValue_ptr    result();
+  virtual Environment_ptr   env();
+  virtual ExceptionList_ptr exceptions();
+  virtual ContextList_ptr   contexts();
+  virtual Context_ptr       ctxt() const;
+  virtual void              ctx(Context_ptr);
+
+  virtual Any&amp; add_in_arg();
+  virtual Any&amp; add_in_arg(const char* name);
+  virtual Any&amp; add_inout_arg();
+  virtual Any&amp; add_inout_arg(const char* name);
+  virtual Any&amp; add_out_arg();
+  virtual Any&amp; add_out_arg(const char* name);
+
+  virtual void set_return_type(TypeCode_ptr tc);
+  virtual Any&amp; return_value();
+
+  virtual Status  invoke();
+  virtual Status  send_oneway();
+  virtual Status  send_deferred();
+  virtual Status  get_response();
+  virtual Boolean poll_response();
+
+  static Request_ptr _duplicate(Request_ptr);
+  static Request_ptr _nil();
+};
+</PRE>
+<P>
+<H2><A NAME=SECTION001222000000000000000> NamedValue</A></H2>
+<P>
+A pair consisting of a string and a value - encapsulated in an Any. The
+name is optional. This type is used to encapsulate parameters and returned
+values.
+<P>
+ <PRE>class NamedValue {
+public:
+  virtual const char* name() const;
+  // Retains ownership of return value.
+
+  virtual Any* value() const;
+  // Retains ownership of return value.
+
+  virtual Flags flags() const;
+
+  static NamedValue_ptr _duplicate(NamedValue_ptr);
+  static NamedValue_ptr _nil();
+};
+</PRE>
+<P>
+<H2><A NAME=SECTION001223000000000000000> NVList</A></H2>
+<P>
+A list of <tt> NamedValue</tt> objects.
+<P>
+ <PRE>class NVList {
+public:
+  virtual ULong count() const;
+  virtual NamedValue_ptr add(Flags);
+  virtual NamedValue_ptr add_item(const char*, Flags);
+  virtual NamedValue_ptr add_value(const char*, const Any&amp;, Flags);
+  virtual NamedValue_ptr add_item_consume(char*,Flags);
+  virtual NamedValue_ptr add_value_consume(char*, Any*, Flags);
+  virtual NamedValue_ptr item(ULong index);
+  virtual Status remove (ULong);
+
+  static NVList_ptr _duplicate(NVList_ptr);
+  static NVList_ptr _nil();
+};
+</PRE>
+<P>
+<H2><A NAME=SECTION001224000000000000000> Context</A></H2>
+<P>
+Represents a set of context strings. User contexts are not supported by
+the omniidl2 IDL compiler - and so cannot be used with statically defined
+operations. However they are supported in the DII.
+<P>
+ <PRE>class Context {
+public:
+  virtual const char* context_name() const;
+  virtual CORBA::Context_ptr parent() const;
+  virtual CORBA::Status create_child(const char*, Context_out);
+  virtual CORBA::Status set_one_value(const char*, const CORBA::Any&amp;);
+  virtual CORBA::Status set_values(CORBA::NVList_ptr);
+  virtual CORBA::Status delete_values(const char*);
+  virtual CORBA::Status get_values(const char* start_scope,
+                                   CORBA::Flags op_flags,
+                                   const char* pattern,
+                                   CORBA::NVList_out values);
+  // Throws BAD_CONTEXT if &lt;start_scope&gt; is not found.
+  // Returns a nil NVList in &lt;values&gt; if no matches are found.
+
+  static Context_ptr _duplicate(Context_ptr);
+  static Context_ptr _nil();
+};
+</PRE>
+<P>
+<H2><A NAME=SECTION001225000000000000000> ContextList</A></H2>
+<P>
+A <tt> ContextList</tt> is a list of strings, and is used to specify which
+strings from the 'context' should be sent with an operation.
+<P>
+ <PRE>class ContextList {
+public:
+  virtual ULong count() const;
+  virtual void add(const char* ctxt);
+  virtual void add_consume(char* ctxt);
+  // consumes ctxt
+
+  virtual const char* item(ULong index);
+  // retains ownership of return value
+
+  virtual Status remove(ULong index);
+
+  static ContextList_ptr _duplicate(ContextList_ptr);
+  static ContextList_ptr _nil();
+};
+</PRE>
+<P>
+<H2><A NAME=SECTION001226000000000000000> ExceptionList</A></H2>
+<P>
+<tt> ExceptionList</tt>s contain a list of TypeCodes - and are used to specify
+which user-defined exceptions an operation may throw.
+<P>
+ <PRE>class ExceptionList {
+public:
+  virtual ULong count() const;
+  virtual void add(TypeCode_ptr tc);
+  virtual void add_consume(TypeCode_ptr tc);
+  // Consumes &lt;tc&gt;.
+
+  virtual TypeCode_ptr item(ULong index);
+  // Retains ownership of return value.
+
+  virtual Status remove(ULong index);
+
+  static ExceptionList_ptr _duplicate(ExceptionList_ptr);
+  static ExceptionList_ptr _nil();
+};
+</PRE>
+<P>
+<H2><A NAME=SECTION001227000000000000000> UnknownUserException</A></H2>
+<P>
+When a user-defined exception is thrown by an operation it is unmarshalled
+into a value of type Any. This is encapsulated in an
+<tt> UnknownUserException</tt>. This type follows all the usual rules for
+user-defined exceptions - it is not a pseudo object, and its resources may
+be released by using <tt> delete</tt>.
+<P>
+ <PRE>class UnknownUserException : public UserException {
+public:
+  UnknownUserException(Any* ex);
+  // Consumes &lt;ex&gt; which MUST be a UserException.
+
+  virtual ~UnknownUserException();
+
+  Any&amp; exception();
+
+  virtual void _raise();
+  static const UnknownUserException* _downcast(const Exception*);
+  static UnknownUserException* _downcast(Exception*);
+  static UnknownUserException* _narrow(Exception*); 
+  // _narrow is a deprecated function from CORBA 2.2, 
+  // use _downcast instead.
+};
+</PRE>
+<P>
+<H2><A NAME=SECTION001228000000000000000> Environment</A></H2>
+<P>
+An <tt> Environment</tt> is used to hold an instance of a system exception or
+an <tt> UnknownUserException</tt>.
+<P>
+ <PRE>class Environment {
+  virtual void exception(Exception*);
+  virtual Exception* exception() const;
+  virtual void clear();
+
+  static Environment_ptr _duplicate(Environment_ptr);
+  static Environment_ptr _nil();
+};
+</PRE>
+<P>
+<H1><A NAME=SECTION001230000000000000000> Creating Requests</A></H1>
+<P>
+<tt> CORBA::Object</tt> defines three methods which may be used to create a
+<tt> Request</tt> object which may be used to perform a single operation
+invocation on that object:
+<P>
+ <PRE>class Object {
+  ...
+  Status _create_request(Context_ptr ctx,
+                         const char* operation,
+                         NVList_ptr arg_list,
+                         NamedValue_ptr result,
+                         Request_out request,
+                         Flags req_flags);
+
+  Status _create_request(Context_ptr ctx,
+                         const char* operation,
+                         NVList_ptr arg_list,
+                         NamedValue_ptr result,
+                         ExceptionList_ptr exceptions,
+                         ContextList_ptr ctxlist,
+                         Request_out request,
+                         Flags req_flags);
+
+  Request_ptr _request(const char* operation);
+  ...
+};
+</PRE>
+<P>
+<tt> operation</tt> is the name of the operation - which is the same as the name
+given in IDL. To access attributes the name should be prefixed by
+<tt> _get_</tt> or <tt> _set_</tt>.
+<P>
+In the first two cases above the list of parameters may be supplied. If the
+parameters are not supplied in these cases, or <tt> _request()</tt> is used
+then the parameters (if any) may be specified using the <tt> add_*_arg()</tt>
+methods on the <tt> Request</tt>. You must use one method or the other - not
+a mixture of the two. For <em>in</em>/<em>inout</em> arguments the value must be
+initialised, for <em>out</em> arguments only the type need be given.
+Similarly the type of the result may be specified by
+passing a <tt> NamedValue</tt> which contains an Any which has been initialised
+to contain a value of that type, or it may be specified using the
+<tt> set_return_type()</tt> method of <tt> Request</tt>.
+<P>
+When using <tt> _create_request()</tt>, the management of any pseudo-object
+references passed in remains the responsibility of the application. That is,
+the values are not consumed - and must be released using
+<tt> CORBA::release()</tt>. The CORBA specification is unclear about when these
+values may be released, so to be sure of portability do not release them
+until after the request has been released.
+Values which are not needed need not be supplied - so if no parameters are
+specified then it defaults to an empty parameter list. If no result type is
+specified then it defaults to void. A <tt> Context</tt> need only be given if
+a non-empty <tt> ContextList</tt> is specified. The <tt> req_flags</tt> argument
+is not used in the C++ mapping.
+<P>
+<H2><A NAME=SECTION001231000000000000000> Examples</A></H2>
+<P>
+An operation might be specified in IDL as:
+<P>
+ <PRE>short anOpn(in string a);
+</PRE>
+<P>
+An operation invocation may be created as follows:
+<P>
+ <PRE>CORBA::ORB_var orb = CORBA::ORB_init(argc, argv, &quot;omniORB2&quot;);
+...
+CORBA::NVList_var args;
+orb-&gt;create_list(1, args);
+*(args-&gt;add(CORBA::ARG_IN)-&gt;value()) &lt;&lt;= (const char*) &quot;Hello World!&quot;;
+
+CORBA::NamedValue_var result;
+orb-&gt;create_named_value(result);
+result-&gt;value()-&gt;replace(CORBA::_tc_short, 0);
+
+CORBA::Request_var req = obj-&gt;_create_request(CORBA::Context::_nil(),
+                                        &quot;anOpn&quot;, args, result, 0);
+</PRE>
+<P>
+or alternatively and much more concisely:
+<P>
+ <PRE>CORBA::Request_var req = obj-&gt;_request(&quot;anOpn&quot;);
+req-&gt;add_in_arg() &lt;&lt;= (const char*) &quot;Hello World!&quot;;
+req-&gt;set_return_type(CORBA::_tc_short);
+</PRE>
+<P>
+<H1><A NAME=SECTION001240000000000000000> Invoking Operations</A></H1>
+<P>
+<A NAME=dii_invoke>&#160;</A>
+<P>
+Once the <tt> Request</tt> object has been properly constructed the operation
+may be invoked by calling one of the following methods on the request
+object:
+<P>
+<H4><A NAME=SECTION001240010000000000000> invoke()</A></H4>
+ blocks until the request has completed. The application
+should then test to see if an exception was raised. Since the CORBA spec is
+not clear about whether or not system exceptions should be thrown from this
+method, a runtime configuration variable is supplied so that you can specify
+the behavior:
+ <PRE>namespace omniORB {
+  ...
+  CORBA::Boolean diiThrowsSysExceptions;
+  ...
+};
+</PRE>
+<P>
+If this is FALSE, and the application should call the <tt> env()</tt>
+method of the request to retrieve an exception (it returns 0 (nil) if no
+exception was generated). If it is TRUE then system exceptions will be thrown
+out of <tt> invoke()</tt>. User-defined exceptions are always passed via
+<tt> env()</tt>, which will return a pointer to a
+<tt> CORBA::UnknownUserException</tt>.
+The application can determine which type of exception was returned by
+<tt> env()</tt>
+by calling the <tt> _narrow()</tt> method defined for each exception type.
+<P>
+<b> WARNING!!</b> In pre-omniORB 2.8.0 releases, the default value of <tt>
+diiThrowsSysExceptions</tt> is FALSE. From omniORB 2.8.0 onwards, the default
+value is TRUE.
+<P>
+After determining that no exception was thrown the application may retrieve
+any returned values by calling <tt> return_value()</tt> and <tt> arguments()</tt>.
+<P>
+<H4><A NAME=SECTION001240020000000000000> send_oneway()</A></H4>
+ has the same semantics as a <em>oneway</em>
+IDL operation. It is important to note that oneway operations have
+at-most-once semantics, and it is not guaranteed that they will not
+block. Any operation may be invoked 'oneway' using the DII,
+even if it was not declared as 'oneway' in IDL. A system exception may be
+generated, in which case it will either be thrown or may be retrieved
+using <tt> env()</tt> depending on <tt> diiThrowsSysExceptions</tt> as above.
+<P>
+<H4><A NAME=SECTION001240030000000000000> send_deferred()</A></H4>
+ initiates the invocation, and then returns
+without waiting for the result. At some point in the future the application
+must retrieve the result of the operation - but other than testing for
+completion of the operation the application must not call any of the
+request's methods in the meantime.
+<UL><LI> <tt> get_response()</tt> blocks until the reply is received.
+<LI> <tt> poll_response()</tt> returns TRUE if the reply has been received,
+      and FALSE if not. It does not block.
+</UL>
+Once <tt> poll_response()</tt> has returned TRUE, or <tt> get_response()</tt> has
+been called and returned, the application may test for an exception and
+retrieve returned values as above. If <tt> diiThrowsSysExceptions</tt> is true,
+then a system exception may be thrown from <tt> get_response()</tt>.  From
+omniORB 2.8.0 onwards, <tt> poll_response()</tt> will raise a system exception
+if one has occured during the invocation. Previously, <tt>
+poll_response()</tt> will not raise an exception, so if polling, the
+application must also call another method to give the request an
+opportunity to raise the exception. This can be one of the methods to
+retrieve values from the request, or <tt> get_response()</tt>.
+<P>
+<H1><A NAME=SECTION001250000000000000000> Multiple Requests</A></H1>
+<P>
+The following methods are provided by the ORB to enable multiple requests to
+be invoked asynchronously.
+<P>
+ <PRE>namespace CORBA {
+  ...
+  class ORB {
+  public:
+    ...
+    Status send_multiple_requests_oneway(const RequestSeq&amp;);
+    Status send_multiple_requests_deferred(const RequestSeq&amp;);
+    Boolean poll_next_response();
+    Status get_next_response(Request_out);
+    ...
+  };
+  ...
+};
+</PRE>
+<P>
+<H4><A NAME=SECTION001250010000000000000> send_multiple_requests_oneway()</A></H4>
+ is used to invoke a number
+of oneway requests. An attempt will be
+made to invoke each of the requests, even if one or more of the early
+requests fails.
+The application may check for failure of any of the requests by testing
+the request's <tt> env()</tt> method. System exceptions are never raised by
+this method.
+<P>
+<H4><A NAME=SECTION001250020000000000000> send_multiple_requests_deferred()</A></H4>
+ will initiate an invocation
+of each of the given requests, and return without waiting for the reply.
+At some point in the future the application must retrieve the reply by
+calling <tt> get_next_response()</tt>, which returns a completed request.
+If no requests have yet completed it will block.
+This method never throws exceptions - the request's <tt> env()</tt>
+method must be used to determine if an exception was generated. If not
+then any returned values may then be queried.
+<P>
+<tt> poll_next_response()</tt> returns TRUE if there are any completed requests,
+and FALSE otherwise, without blocking. If this returns true then the next call
+to <tt> get_next_response()</tt> will not block. However, if another
+thread may also be calling <tt> get_next_response()</tt> then it could retrieve
+the completed message first - in which case this thread might block.
+<P>
+There are no guarantee as to the order in which replies will be received.
+If multiple threads are using this interface then it is not even guaranteed
+that a thread will receive replies to the requests it sent. Any thread may
+receive replies to requests sent by any other thread. It is legal to call
+<tt> get_next_response()</tt> even if no requests have yet been invoked - in
+which case the calling thread blocks until another thread invokes a request
+and the reply is received.
+<P>
+
+<BR> <HR><A NAME=tex2html353 HREF="node13.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html351 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html345 HREF="node11.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html355 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html354 HREF="node13.html"> The Dynamic Skeleton </A>
+<B>Up:</B> <A NAME=tex2html352 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html346 HREF="node11.html"> Dynamic Management of </A>
+<BR> <HR> <P>
+<BR> <HR>
+<P><ADDRESS>
+<I>Sai Lai Lo <BR>
+Wed Sep 22 19:28:07 BST 1999</I>
+</ADDRESS>
+</BODY>

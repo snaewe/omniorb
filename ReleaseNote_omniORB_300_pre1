@@ -1,0 +1,160 @@
+
+Release Notes for omniORB 3.0.0 pre1  (22nd September 1999)
+====================================
+
+The last release was 2.8.0 pre2 (31st August 1999).
+
+Source code and binary distributions are available via anonymous CVS ...??
+
+      http://www.uk.research.att.com/omniORB/omniORB.html
+      http://www.uk.research.att.com/omniORB/cvs.html
+
+
+Introduction
+------------
+
+This version of omniORB incorporates a major re-write of the core runtime.
+Key features include:
+
+  o  support for the Portable Object Adapter (POA)
+  o  identical semantics for local and remote object invocations
+  o  location forwarding into and outof the local address space
+  o  new dynamically growing object table (improves performance
+     for applications with large numbers of objects)
+  o  legacy support for the BOA (including using both BOA and POA
+     together in the same process)
+
+By default the shared runtime libraries are built with debugging
+information and no optimisation.  ?? How change this?
+
+Please test it extensively!
+
+
+Changes since 2.8.0
+-------------------
+
+1. The POA.
+
+   Exists!
+
+   The following features are not implemented:
+
+     o AdapterActivator's
+     o PortableServer::Current
+     o DSI is incomplete (depends on Current).
+
+
+2. IDL stubs must be regenerated with the new IDL compiler to be
+   compatible with the runtime library.
+
+   The current shared runtime library versions are:
+
+   On various unices:
+
+       libomniORB3.so ---> libomniORB3.so.0 --> libomniORB3.so.0.0
+
+   On IBM AIX
+
+       libomniORB30.a
+       libomniDynamic30.a
+
+   On Windows NT/95, the omniORB runtime DLLs for this version are:
+
+       libomniORB300_rt.dll
+       libomniORB300_rt.lib
+       libomniDynamic300_rt.dll
+       libomniDynamic300_rt.lib
+
+   Make sure you update your Visual Studio to pick up the right library.
+
+
+3. New command line options and ORB configuration variables:
+
+    -ORBpoa_iiop_port <port number> to tells the POA the port number to use.
+
+    -ORBpoa_iiop_name_port <hostname[:port number]> to tells the POA the
+                  hostname and optionally the port number to use.
+
+
+    omniORB::objectTableSize
+
+      The default value is zero, and indicates that omniORB should grow
+      the object table as necassary.  It is recommended that you use
+      this facility.
+
+      Setting another value sets a fixed size for the object table,
+      thus eliminating the overhead of resizing the table if you
+      know in advance the likely number of objects.  Since an open
+      hsah table is used, performance does not suffer disasterously
+      if this number of objects is exceeded.
+
+      If set, this value must be modified before calling CORBA::ORB_init().
+
+    omniORB::poaHoldRequestTimeout
+
+      If a POA is in the HOLDING state, then this value gives the number
+      of seconds after which the POA will timeout and throw a TRANSIENT
+      exception to the client (if the POA is not transitioned to
+      another state).
+
+      The default is zero, which indicates no timeout.
+
+
+4. New omniidl3 options:
+
+    -t has been replaced by two new options:
+
+      -tp   produce tie implementation skeletons
+      -tf   generate flattened tie implementation skeletons
+
+    -b    generate BOA skeletons (_sk_foo).  By default only
+          POA skeletons are generated.
+
+
+5. The member function CORBA::ORB::NP_destroy() is deprecated.  Use
+   CORBA::ORB::destroy() instead.
+
+
+6. Location Forwarding.
+
+    An new omniORB specific exception omniORB::LOCATION_FORWARD is
+    included.  This may be thrown from an object implementation to
+    indicate to the client that the request should be re-directed
+    to another object.
+
+    For portability you are better off using
+    PortableServer::ForwardRequest within a ServantManager.
+    However omniORB::LOCATION_FORWARD is more flexible, since it
+    can be thrown from any object implementation.
+
+    See include/omniORB3/omniORB.h
+
+
+7. The omniORB2 user guide has *not* been updated!!!
+
+
+8. Things that don't work.
+
+    a) PortableServer::AdapterActivator is not supported.  You must
+       not pass TRUE to the second argument of
+       PortableServer::POA::find_POA(), and POAs will not be activated
+       on demand in response to requests.
+
+    b) The PortableServer::Current interface is not supported.  Any
+       behaviour depending per-thread context information is not
+       supported.
+
+    c) The DSI interface has changed significantly.  Old code will
+       have to be re-written to the new interface.  There is no
+       support for using the DSI with the BOA.
+        This part of the ORB is incomplete, since it depends in
+       part on PortableServer::Current.  See the example in
+       src/examples/dsi for a way to workaround this problem for
+       now.
+
+    d) The Lifecycle service has not yet been re-implemented.
+
+
+---------------------------
+David Riddoch
+<djr@uk.research.att.com>

@@ -1,0 +1,441 @@
+<!DOCTYPE HTML PUBLIC "-//W3O//DTD W3 HTML 2.0//EN">
+<!Converted with LaTeX2HTML 95 (Thu Jan 19 1995) by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds >
+<HEAD>
+<TITLE> hosts_access(5)</TITLE>
+</HEAD>
+<BODY>
+<meta name="description" value=" hosts_access(5)">
+<meta name="keywords" value="omniORB2">
+<meta name="resource-type" value="document">
+<meta name="distribution" value="global">
+<P>
+ <BR> <HR><A NAME=tex2html375 HREF="node15.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html373 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html367 HREF="node13.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html377 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html376 HREF="node15.html">References</A>
+<B>Up:</B> <A NAME=tex2html374 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html368 HREF="node13.html"> The Dynamic Skeleton </A>
+<BR> <HR> <P>
+<H1><A NAME=SECTION001400000000000000000> hosts_access(5)</A></H1>
+<P>
+
+<P>
+<H2><A NAME=SECTION001401000000000000000> DESCRIPTION</A></H2>
+<P>
+This manual page describes a simple access control language that is
+based on client (host name/address, user name), and server (process
+name, host name/address) patterns.  Examples are given at the end. The
+impatient reader is encouraged to skip to the EXAMPLES section for a
+quick introduction.
+<P>
+An extended version of the access control language is described in the
+hosts_options(5) document. The extensions are turned on at
+program build time by building with -DPROCESS_OPTIONS.
+<P>
+In the following text, <em> daemon</em> is the the process name of a
+network daemon process, and <em> client</em> is the name and/or address of
+a host requesting service. Network daemon process names are specified
+in the inetd configuration file.
+<P>
+<H2><A NAME=SECTION001402000000000000000> ACCESS CONTROL FILES</A></H2>
+<P>
+The access control software consults two files. The search stops
+at the first match:
+<P>
+<UL><LI> Access will be granted when a (daemon,client) pair matches an entry in
+the <tt> /etc/hosts.allow</tt> file.
+<P>
+<LI> Otherwise, access will be denied when a (daemon,client) pair matches an
+entry in the <tt> /etc/hosts.deny</tt> file.
+<P>
+<LI> Otherwise, access will be granted.
+<P>
+</UL>
+<P>
+A non-existing access control file is treated as if it were an empty
+file. Thus, access control can be turned off by providing no access
+control files.
+<P>
+<H2><A NAME=SECTION001403000000000000000> ACCESS CONTROL RULES</A></H2>
+<P>
+Each access control file consists of zero or more lines of text.  These
+lines are processed in order of appearance. The search terminates when a
+match is found.
+<P>
+<UL><LI> A newline character is ignored when it is preceded by a backslash
+character. This permits you to break up long lines so that they are
+easier to edit.
+<P>
+<LI> Blank lines or lines that begin with a <tt> #</tt> character are ignored.
+This permits you to insert comments and whitespace so that the tables
+are easier to read.
+<P>
+<LI> All other lines should satisfy the following format, things between []
+being optional: <tt> daemon_list : client_list [ : shell_command ] </tt>
+<P>
+</UL>
+<P>
+<tt> daemon_list</tt> is a list of one or more daemon process names
+(argv[0] values) or wildcards (see below).
+<P>
+<tt> client_list</tt> is a list
+of one or more host names, host addresses, patterns or wildcards (see
+below) that will be matched against the client host name or address.
+<P>
+The more complex forms <tt> daemon@host</tt> and <tt> user@host</tt> are
+explained in the sections on server endpoint patterns and on client
+username lookups, respectively.
+<P>
+List elements should be separated by blanks and/or commas.
+<P>
+With the exception of NIS (YP) netgroup lookups, all access control
+checks are case insensitive.
+<P>
+<H2><A NAME=SECTION001404000000000000000> PATTERNS</A></H2>
+<P>
+The access control language implements the following patterns:
+<P>
+<UL><LI> A string that begins with a <tt> .</tt> character. A host name is matched if
+the last components of its name match the specified pattern.  For
+example, the pattern <tt> .tue.nl</tt> matches the host name
+<tt> wzv.win.tue.nl</tt>.
+<P>
+<LI> A string that ends with a <tt> .</tt> character. A host address is matched if
+its first numeric fields match the given string.  For example, the
+pattern <tt> 131.155.</tt> matches the address of (almost) every host on the
+Eindhoven University network (<tt> 131.155.x.x</tt>).
+<P>
+<LI> A string that begins with an <tt> </tt> character is treated as an NIS
+(formerly YP) netgroup name. A host name is matched if it is a host
+member of the specified netgroup. Netgroup matches are not supported
+for daemon process names or for client user names.
+<P>
+<LI> An expression of the form <tt> n.n.n.n/m.m.m.m</tt> is interpreted as a
+``net/mask'' pair. A host address is matched if ``net'' is equal to the
+bitwise AND of the address and the ``mask''. For example, the net/mask
+pattern <tt> 131.155.72.0/255.255.254.0</tt> matches every address in the
+range <tt> 131.155.72.0</tt> through <tt> 131.155.73.255</tt>.
+<P>
+</UL><H2><A NAME=SECTION001405000000000000000> WILDCARDS</A></H2>
+<P>
+The access control language supports explicit wildcards:
+<P>
+<DL ><DT><tt> ALL
+<DD> The universal wildcard, always matches.
+<DT><tt> LOCAL
+<DD> Matches any host whose name does not contain a dot character.
+<DT><tt> UNKNOWN
+<DD> 
+Matches any user whose name is unknown, and matches any host whose name
+or address are unknown.  This pattern should be used with care:
+host names may be unavailable due to temporary name server problems. A
+network address will be unavailable when the software cannot figure out
+what type of network it is talking to.
+<DT><tt> KNOWN
+<DD>
+Matches any user whose name is known, and matches any host whose name
+and address are known. This pattern should be used with care:
+host names may be unavailable due to temporary name server problems.  A
+network address will be unavailable when the software cannot figure out
+what type of network it is talking to.
+<DT><tt> PARANOID
+<DD>
+Matches any host whose name does not match its address.  When tcpd is
+built with -DPARANOID (default mode), it drops requests from such
+clients even before looking at the access control tables.  Build
+without -DPARANOID when you want more control over such requests.
+<P>
+ </DL></tt></tt></tt></tt></tt><H2><A NAME=SECTION001406000000000000000> OPERATORS</A></H2>
+<P>
+<DL ><DT><tt> EXCEPT
+<DD>
+Intended use is of the form: <tt> list_1 EXCEPT list_2</tt>; this construct
+matches anything that matches <tt> list_1</tt> unless it matches
+<tt> list_2</tt>.  The <tt> EXCEPT</tt> operator can be used in <tt> daemon_lists</tt> and in
+<tt> client_lists</tt>. The <tt> EXCEPT</tt> operator can be nested: if the control
+language would permit the use of parentheses, <tt> a EXCEPT b EXCEPT c</tt>
+would parse as <tt> (a EXCEPT (b EXCEPT c))</tt>.
+<P>
+ </DL></tt><H2><A NAME=SECTION001407000000000000000> SHELL COMMANDS</A></H2>
+<P>
+If the first-matched access control rule contains a shell command, that
+command is subjected to <tt> %&lt;letter&gt;</tt> substitutions (see next section).
+The result is executed by a /bin/sh child process with standard
+input, output and error connected to /dev/null.  Specify an <tt> &amp;</tt>
+at the end of the command if you do not want to wait until it has
+completed.
+<P>
+Shell commands should not rely on the PATH setting of the inetd.
+Instead, they should use absolute path names, or they should begin with
+an explicit PATH=whatever statement.
+<P>
+The hosts_options(5) document describes an alternative language
+that uses the shell command field in a different and incompatible way.
+<P>
+<H2><A NAME=SECTION001408000000000000000>  EXPANSIONS</A></H2>
+<P>
+The following expansions are available within shell commands:
+<P>
+<DL COMPACT><DT><tt> %a (%A)
+<DD> The client (server) host address.
+<DT><tt> %c
+<DD> Client information: user@host, user@address, a host name, or just an
+address, depending on how much information is available.
+<DT><tt> %d
+<DD> The daemon process name (argv[0] value).
+<DT><tt> %h (%H)
+<DD>
+The client (server) host name or address, if the host name is
+unavailable.
+<DT><tt> %n (%N)
+<DD> The client (server) host name (or &quot;unknown&quot; or &quot;paranoid&quot;).
+<DT><tt> %p
+<DD> The daemon process id.
+<DT><tt> %s
+<DD>  Server information: daemon@host, daemon@address, or just a daemon name,
+depending on how much information is available.
+<DT><tt> %u
+<DD> The client user name (or &quot;unknown&quot;).
+<DT><tt> %%
+<DD> Expands to a single <tt> %</tt> character.
+<P>
+ </DL>
+<P>
+Characters in % expansions that may confuse the shell are replaced by
+underscores.
+<P>
+</tt></tt></tt></tt></tt></tt></tt></tt></tt><H2><A NAME=SECTION001409000000000000000> SERVER ENDPOINT PATTERNS</A></H2>
+<P>
+In order to distinguish clients by the network address that they
+connect to, use patterns of the form:
+<P>
+<tt> process_name@host_pattern : client_list ... </tt>
+<P>
+Patterns like these can be used when the machine has different internet
+addresses with different internet hostnames.  Service providers can use
+this facility to offer FTP, GOPHER or WWW archives with internet names
+that may even belong to different organisations. See also the ``twist''
+option in the hosts_options(5) document. Some systems (Solaris,
+FreeBSD) can have more than one internet address on one physical
+interface; with other systems you may have to resort to SLIP or PPP
+pseudo interfaces that live in a dedicated network address space.
+.sp
+The <tt> host_pattern</tt> obeys the same syntax rules as host names and
+addresses in <tt> client_list</tt> context. Usually, server endpoint information
+is available only with connection-oriented services.
+<P>
+<H2><A NAME=SECTION0014010000000000000000> CLIENT USERNAME LOOKUP</A></H2>
+<P>
+When the client host supports the RFC 931 protocol or one of its
+descendants (TAP, IDENT, RFC 1413) the wrapper programs can retrieve
+additional information about the owner of a connection. Client username
+information, when available, is logged together with the client host
+name, and can be used to match patterns like:
+<P>
+<tt> daemon_list : ... user_pattern@host_pattern ...</tt>
+<P>
+The daemon wrappers can be configured at compile time to perform
+rule-driven username lookups (default) or to always interrogate the
+client host.  In the case of rule-driven username lookups, the above
+rule would cause username lookup only when both the <tt> daemon_list</tt>
+and the <tt> host_pattern</tt> match.
+<P>
+A user pattern has the same syntax as a daemon process pattern, so the
+same wildcards apply (netgroup membership is not supported).  One
+should not get carried away with username lookups, though.
+<P>
+<UL><LI> The client username information cannot be trusted when it is needed
+most, i.e. when the client system has been compromised.  In general,
+ALL and (UN)KNOWN are the only user name patterns that make sense.
+<P>
+<LI> Username lookups are possible only with TCP-based services, and only
+when the client host runs a suitable daemon; in all other cases the
+result is ``unknown''.
+<P>
+<LI> A well-known UNIX kernel bug may cause loss of service when username
+lookups are blocked by a firewall. The wrapper README document
+describes a procedure to find out if your kernel has this bug.
+<P>
+<LI> Username lookups may cause noticeable delays for non-UNIX users.  The
+default timeout for username lookups is 10 seconds: too short to cope
+with slow networks, but long enough to irritate PC users.
+<P>
+</UL>
+<P>
+Selective username lookups can alleviate the last problem. For example,
+a rule like:
+<P>
+<tt> daemon_list : @pcnetgroup ALL@ALL </tt>
+<P>
+would match members of the pc netgroup without doing username lookups,
+but would perform username lookups with all other systems.
+<P>
+<H2><A NAME=SECTION0014011000000000000000> DETECTING ADDRESS SPOOFING ATTACKS</A></H2>
+<P>
+A flaw in the sequence number generator of many TCP/IP implementations
+allows intruders to easily impersonate trusted hosts and to break in
+via, for example, the remote shell service.  The IDENT (RFC931 etc.)
+service can be used to detect such and other host address spoofing
+attacks.
+<P>
+Before accepting a client request, the wrappers can use the IDENT
+service to find out that the client did not send the request at all.
+When the client host provides IDENT service, a negative IDENT lookup
+result (the client matches <tt> UNKNOWN@host</tt>) is strong evidence of a host
+spoofing attack.
+<P>
+A positive IDENT lookup result (the client matches <tt> KNOWN@host</tt>) is
+less trustworthy. It is possible for an intruder to spoof both the
+client connection and the IDENT lookup, although doing so is much
+harder than spoofing just a client connection. It may also be that
+the client's IDENT server is lying.
+<P>
+Note: IDENT lookups don't work with UDP services.
+<P>
+<H2><A NAME=SECTION0014012000000000000000> EXAMPLES</A></H2>
+<P>
+The language is flexible enough that different types of access control
+policy can be expressed with a minimum of fuss. Although the language
+uses two access control tables, the most common policies can be
+implemented with one of the tables being trivial or even empty.
+<P>
+When reading the examples below it is important to realise that the
+allow table is scanned before the deny table, that the search
+terminates when a match is found, and that access is granted when no
+match is found at all.
+<P>
+The examples use host and domain names. They can be improved by
+including address and/or network/netmask information, to reduce the
+impact of temporary name server lookup failures.
+<P>
+<H2><A NAME=SECTION0014013000000000000000> MOSTLY CLOSED</A></H2>
+<P>
+In this case, access is denied by default. Only explicitly authorised
+hosts are permitted access.
+<P>
+The default policy (no access) is implemented with a trivial deny
+file:
+<P>
+
+<PRE>/etc/hosts.deny:
+    ALL: ALL
+</PRE>
+
+<P>
+This denies all service to  all  hosts,  unless  they  are
+permitted access by entries in the allow file.
+<P>
+The  explicitly  authorised  hosts are listed in the allow file.
+For example:
+<P>
+
+<PRE>/etc/hosts.allow:
+   ALL: LOCAL @some_netgroup
+   ALL: .foobar.edu EXCEPT terminalserver.foobar.edu
+</PRE>
+
+<P>
+The first rule permits access from hosts in the local domain (no .
+in the host name) and from members of the <tt> some_netgroup</tt>
+netgroup.  The second rule permits access from all hosts in the
+<tt> foobar.edu</tt> domain (notice the leading dot), with the exception of
+<tt> terminalserver.foobar.edu</tt>.
+<P>
+<H2><A NAME=SECTION0014014000000000000000> MOSTLY OPEN</A></H2>
+<P>
+Here, access is granted by default; only explicitly specified hosts are
+refused service.
+<P>
+The default policy (access granted) makes the allow file redundant so
+that it can be omitted.  The explicitly non-authorised hosts are listed
+in the deny file. For example:
+<P>
+
+<PRE>/etc/hosts.deny:
+   ALL: some.host.name, .some.domain
+   ALL EXCEPT in.fingerd: other.host.name, .other.domain
+</PRE>
+
+<P>
+The first rule denies some hosts and domains all services; the second
+rule still permits finger requests from other hosts and domains.
+<P>
+<H2><A NAME=SECTION0014015000000000000000> BOOBY TRAPS</A></H2>
+<P>
+The next example permits tftp requests from hosts in the local domain
+(notice the leading dot).  Requests from any other hosts are denied.
+Instead of the requested file, a finger probe is sent to the offending
+host. The result is mailed to the superuser.
+<P>
+
+<PRE>/etc/hosts.allow:
+   in.tftpd: LOCAL, .my.domain
+
+/etc/hosts.deny:
+   in.tftpd: ALL: (/some/where/safe\_finger -l @%h | \
+       /usr/ucb/mail -s %d-%h root) &amp;
+</PRE>
+
+<P>
+The <tt> safe_finger</tt> command comes with the tcpd wrapper and should be
+installed in a suitable place. It limits possible damage from data sent
+by the remote finger server.  It gives better protection than the
+standard finger command.
+<P>
+The expansion of the %h (client host) and %d (service name) sequences
+is described in the section on shell commands.
+<P>
+Warning: do not booby-trap your finger daemon, unless you are prepared
+for infinite finger loops.
+<P>
+On network firewall systems this trick can be carried even further.
+The typical network firewall only provides a limited set of services to
+the outer world. All other services can be &quot;bugged&quot; just like the above
+tftp example. The result is an excellent early-warning system.
+<P>
+<H2><A NAME=SECTION0014016000000000000000> DIAGNOSTICS</A></H2>
+<P>
+An error is reported when a syntax error is found in a host access
+control rule; when the length of an access control rule exceeds the
+capacity of an internal buffer; when an access control rule is not
+terminated by a newline character; when the result of 
+expansion would overflow an internal buffer; when a system call fails
+that shouldnt.  All problems are reported via the syslog daemon.
+<P>
+<H2><A NAME=SECTION0014017000000000000000> FILES</A></H2>
+<P>
+ <tt> /etc/hosts.allow</tt>, (daemon,client) pairs that are granted access.
+<P>
+ <tt> /etc/hosts.deny</tt>, (daemon,client) pairs that are denied access.
+<P>
+<H2><A NAME=SECTION0014018000000000000000> SEE ALSO</A></H2>
+<P>
+ tcpd(8) tcp/ip daemon wrapper program.
+<P>
+ tcpdchk(8), tcpdmatch(8), test programs.
+<P>
+<H2><A NAME=SECTION0014019000000000000000> BUGS</A></H2>
+<P>
+If a name server lookup times out, the host name will not be available
+to the access control software, even though the host is registered.
+<P>
+Domain name server lookups are case insensitive; NIS (formerly YP)
+netgroup lookups are case sensitive.
+<P>
+<H2><A NAME=SECTION0014020000000000000000> AUTHOR</A></H2>
+<P>
+Wietse Venema (wietse@wzv.win.tue.nl)<BR> 
+Department of Mathematics and Computing Science<BR> 
+Eindhoven University of Technology<BR> 
+Den Dolech 2, P.O. Box 513,<BR> 
+5600 MB Eindhoven, The Netherlands<BR>
+<P>
+<BR> <HR><A NAME=tex2html375 HREF="node15.html"><IMG ALIGN=BOTTOM ALT="next" SRC="http://www.uk.research.att.com/latex2html/icons/next_motif.gif"></A>   <A NAME=tex2html373 HREF="omniORB2.html"><IMG ALIGN=BOTTOM ALT="up" SRC="http://www.uk.research.att.com/latex2html/icons/up_motif.gif"></A>   <A NAME=tex2html367 HREF="node13.html"><IMG ALIGN=BOTTOM ALT="previous" SRC="http://www.uk.research.att.com/latex2html/icons/previous_motif.gif"></A>   <A NAME=tex2html377 HREF="node1.html"><IMG ALIGN=BOTTOM ALT="contents" SRC="http://www.uk.research.att.com/latex2html/icons/contents_motif.gif"></A>      <BR>
+<B> Next:</B> <A NAME=tex2html376 HREF="node15.html">References</A>
+<B>Up:</B> <A NAME=tex2html374 HREF="omniORB2.html">No Title</A>
+<B> Previous:</B> <A NAME=tex2html368 HREF="node13.html"> The Dynamic Skeleton </A>
+<BR> <HR> <P>
+<BR> <HR>
+<P><ADDRESS>
+<I>Sai Lai Lo <BR>
+Wed Sep 22 19:28:07 BST 1999</I>
+</ADDRESS>
+</BODY>
