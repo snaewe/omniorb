@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/11/15 19:12:45  djs
+# Tidied up sequence template handling
+# Moved useful functions into separate utility module
+#
 # Revision 1.7  1999/11/12 17:18:39  djs
 # Lots of header generation bugfixes
 #
@@ -1008,13 +1012,21 @@ typedef _CORBA_ConstrType_@type@_Var<@name@> _var_type;""",
 
                 for d in m.declarators():
                     instname = tyutil.mapID(d.identifier())
-                    memtype = instname + "_seq"
-                    stream.out("""\
+                    if d.sizes() != []:
+                        dims_string = tyutil.dimsToString(d.sizes())
+                        stream.out("""\
+@sequence_template@ @instname@@dims@;""",
+                                   sequence_template = sequence_template,
+                                   instname = instname,
+                                   dims = dims_string)
+                    else:
+                        memtype = instname + "_seq"
+                        stream.out("""\
 typedef @sequence_template@ _@memtype@;
 _@memtype@ @instname@;""",
-                               sequence_template = sequence_template,
-                               memtype = memtype,
-                               instname = instname)
+                                   sequence_template = sequence_template,
+                                   memtype = memtype,
+                                   instname = instname)
                 continue
 
             elif tyutil.isEnum(memberType):
@@ -1208,56 +1220,6 @@ def visitUnion(node):
 
         return tyutil.valueString(switchType, discrimvalue, environment)
         
-    def allCaseValues(node = node):
-        list = []
-        for n in node.cases():
-            for l in n.labels():
-                if not(l.default()):
-                    list.append(l)
-        return list
-
-    # determines whether a set of cases represents an Exhaustive Match
-    def exhaustiveMatch(switchType = switchType,
-                        allCaseValues = allCaseValues):
-        # return all the used case values
-        
-        # dereference the switch_type (ie if CASE <scoped_name>)
-        switchType = tyutil.deref(switchType)
-            
-        # same as discrimValueToString
-        # CASE <integer_type>
-        if tyutil.isInteger(switchType):
-            # Assume that we can't possibly do an exhaustive match
-            # on the integers, since they're (mostly) very big.
-            # maybe should rethink this for the short ints...
-            return 0
-        # CASE <char_type>
-        elif tyutil.isChar(switchType):
-            # make a set with all the characters inside
-            s = []
-            for char in range(0,256):
-                s.append(chr(char))
-            # make a set with all the used characters
-            used = allCaseValues()
-            # subtract all the used ones from the possibilities
-            difference = util.minus(s, used)
-            # if the difference is empty, match is exhaustive
-            return (len(difference) == 0)
-        # CASE <boolean_type>
-        elif tyutil.isBoolean(switchType):
-            s = [0, 1]
-            used = map(lambda x: x.value(), allCaseValues())
-            difference = util.minus(s, used)
-            return (len(difference) == 0)
-        # CASE <enum_type>
-        elif tyutil.isEnum(switchType):
-            s = switchType.decl().enumerators()
-            used = map(lambda x: x.value(), allCaseValues())
-            difference = util.minus(s, used)
-            return (len(difference) == 0)
-        else:
-            raise "exhaustiveMatch type="+repr(switchType)+ \
-                  " val="+repr(discrimvalue)
 
     # in the case where there is no default case and an implicit default
     # member, choose a discriminator value to set. Note that attempting
@@ -1272,7 +1234,7 @@ def visitUnion(node):
     # Once this backend is trusted independantly, convert to use the
     # new mechanism?
     def chooseArbitraryDefault(switchType = switchType,
-                               allCaseValues = allCaseValues):
+                               allCaseValues = tyutil.allCaseValues(node)):
         # dereference the switch_type (ie if CASE <scoped_name>)
         switchType = tyutil.deref(switchType)
                 
@@ -1298,7 +1260,7 @@ def visitUnion(node):
         elif tyutil.isEnum(switchType):
             enums = switchType.decl().enumerators()
             # pick the first enum not already in a case
-            allcases = map(lambda x: x.value(), allCaseValues())
+            allcases = map(lambda x: x.value(), allCaseValues)
 #            print "[[[ enums = " + repr(enums) + "]]]"
 #            print "[[[ allcases = " + repr(allcases) + "]]]"
             difference = util.minus(enums, allcases)
@@ -1310,19 +1272,13 @@ def visitUnion(node):
     # does the IDL union have any default case?
     # It'll be handy to know which case is the default one later-
     # so add a new attribute to mark it
-    hasDefault = 0
-    for c in node.cases():
-        c.isDefault = 0
-        for l in c.labels():
-            if l.default():
-                hasDefault = 1
-                c.isDefault = 1
-            
+    hasDefault = tyutil.getDefaultCaseAndMark(node) != None
+        
     # CORBA 2.3 C++ Mapping 1-34
     # "A union has an implicit default member if it does not have
     # a default case and not all permissible values of the union
     # discriminant are listed"
-    exhaustive = exhaustiveMatch()
+    exhaustive = tyutil.exhaustiveMatch(switchType, tyutil.allCaseValues(node))
     implicitDefault = not(hasDefault) and not(exhaustive)
     
     name = tyutil.mapID(node.identifier())
@@ -1699,7 +1655,7 @@ private:
         dims_str = tyutil.dimsToString(decl_dims)
             
         # floats in unions are special cases
-        if tyutil.isFloating(derefType) and not(alias_array):
+        if tyutil.isFloating(derefType) and not(is_array):
             inside.out("""\
 #ifndef USING_PROXY_FLOAT
   @type@ pd_@name@@dims@;
