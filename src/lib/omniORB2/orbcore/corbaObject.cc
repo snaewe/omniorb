@@ -11,9 +11,12 @@
  
 /*
   $Log$
-  Revision 1.2  1997/01/08 18:02:32  ewc
-  Added unsigned int to remove compiler warning
+  Revision 1.3  1997/01/13 14:57:23  sll
+  Added marshalling routines for CORBA::Object.
 
+// Revision 1.2  1997/01/08  18:02:32  ewc
+// Added unsigned int to remove compiler warning
+//
 // Revision 1.1  1997/01/08  17:26:01  sll
 // Initial revision
 //
@@ -206,5 +209,102 @@ Object::_get_interface()
   throw omniORB::fatalException(__FILE__,__LINE__,
 				"CORBA::Object::_get_interface() has not been implemeted yet.");
   return 0;
+}
+
+size_t
+CORBA::
+Object::NP_alignedSize(CORBA::Object_ptr obj,size_t initialoffset)
+{
+  if (CORBA::is_nil(obj)) {
+    return CORBA::AlignedObjRef(obj,0,0,initialoffset);
+  }
+  else {
+    const char *repoId = obj->PR_getobj()->NP_IRRepositoryId();
+    return CORBA::AlignedObjRef(obj,repoId,strlen(repoId)+1,initialoffset);
+  }
+}
+
+void
+CORBA::
+Object::marshalObjRef(CORBA::Object_ptr obj,NetBufferedStream &s)
+{
+  if (CORBA::is_nil(obj)) {
+    CORBA::MarshalObjRef(obj,0,0,s);
+  }
+  else {
+    const char *repoId = obj->PR_getobj()->NP_IRRepositoryId();
+    CORBA::MarshalObjRef(obj,repoId,strlen(repoId)+1,s);
+  }
+}
+
+CORBA::Object_ptr
+CORBA::
+Object::unmarshalObjRef(NetBufferedStream &s)
+{
+  CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef(0,s);
+  return _obj;
+}
+
+void
+CORBA::
+Object::marshalObjRef(CORBA::Object_ptr obj,MemBufferedStream &s)
+{
+  if (CORBA::is_nil(obj)) {
+    CORBA::MarshalObjRef(obj,0,0,s);
+  }
+  else {
+    const char *repoId = obj->PR_getobj()->NP_IRRepositoryId();
+    CORBA::MarshalObjRef(obj,repoId,strlen(repoId)+1,s);
+  }
+}
+
+CORBA::Object_ptr
+CORBA::
+Object::unmarshalObjRef(MemBufferedStream &s)
+{
+  CORBA::Object_ptr _obj = CORBA::UnMarshalObjRef(0,s);
+  return _obj;
+}
+
+CORBA::Object_ptr
+CORBA::
+Object_Helper::_nil() 
+{
+  return CORBA::Object::_nil();
+}
+
+size_t
+CORBA::
+Object_Helper::NP_alignedSize(CORBA::Object_ptr obj,size_t initialoffset)
+{
+  return CORBA::Object::NP_alignedSize(obj,initialoffset);
+}
+
+void
+CORBA::
+Object_Helper::marshalObjRef(CORBA::Object_ptr obj,NetBufferedStream &s)
+{
+  CORBA::Object::marshalObjRef(obj,s);
+}
+
+CORBA::Object_ptr
+CORBA::
+Object_Helper::unmarshalObjRef(NetBufferedStream &s)
+{
+  return CORBA::Object::unmarshalObjRef(s);
+}
+
+void
+CORBA::
+Object_Helper::marshalObjRef(CORBA::Object_ptr obj,MemBufferedStream &s)
+{
+  CORBA::Object::marshalObjRef(obj,s);
+}
+
+CORBA::Object_ptr
+CORBA::
+Object_Helper::unmarshalObjRef(MemBufferedStream &s)
+{
+  return CORBA::Object::unmarshalObjRef(s);
 }
 
