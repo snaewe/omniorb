@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.6  1999/11/10 20:19:31  djs
+# Option to emulate scope bug in old backend
+# Array struct element fix
+# Union sequence element fix
+#
 # Revision 1.5  1999/11/08 19:28:56  djs
 # Rewrite of sequence template code
 # Fixed lots of typedef problems
@@ -155,8 +160,6 @@ def mapID(identifier):
 
 # ------------------------------------------------------------------
 
-# Basic IDL types
-#
 ttsMap = {
     # From C++ Language Mapping - Mapping for Basic Data Types - June 1999
     # 1-15
@@ -177,7 +180,9 @@ ttsMap = {
     idltype.tk_void:       "void"
     }
 
+
 def principalID(type, from_scope=[]):
+    raise "tyutil.principalID deprecated"
     assert isinstance(type, idltype.Type)
     # check if type is a basic type first
     if ttsMap.has_key(type.kind()):
@@ -335,20 +340,25 @@ def guardName(scopedName):
 
 # ------------------------------------------------------------------
 
-def objRefTemplate(type, suffix, scope = []):
+def objRefTemplate(type, suffix, environment):
     name = type.decl().scopedName()
-    name = idlutil.pruneScope(name, scope)
-    name = map(mapID, name)
-    objref_name = idlutil.ccolonName(self.scope(name) + \
-                                     ["_objref_" + self.name(name)])
-    obj_name = idlutil.ccolonName(name)
+    rel_name = environment.relName(name)
+    objref_rel_name = self.scope(rel_name) +\
+                      ["_objref_" + self.name(rel_name)]
+
+    rel_name_string = environment.nameToString(rel_name)
+    objref_rel_name_string = environment.nameToString(objref_rel_name)
+    
     return "_CORBA_ObjRef_" + suffix + \
-           "<" + objref_name + ", " + obj_name + "_Helper>"
+           "<" + objref_rel_name_string + ", " + rel_name_string + "_Helper>"
 
 # ------------------------------------------------------------------
 
-def operationArgumentType(type, scope = [], virtualFn = 0):
-    param_type = principalID(type, scope)
+def operationArgumentType(type, environment, virtualFn = 0):
+    outer_env = environment.leaveScope()
+    environment = outer_env
+    
+    param_type = environment.principalID(type)
     isVariable = isVariableType(type)
     deref_type = deref(type)
 
@@ -383,7 +393,7 @@ def operationArgumentType(type, scope = [], virtualFn = 0):
                  param_type + "& ",
                  param_type + "& " ]
     elif deref_type.kind() == idltype.tk_objref:
-        param_type =principalID(deref_type, scope)
+        param_type = environment.principalID(deref_type)
         return [ param_type + "_ptr",
                  param_type + "_ptr",
                  "_CORBA_ObjRef_OUT_arg<_objref_" + param_type + "," + \
@@ -489,16 +499,16 @@ def templateToString(template):
         return name + "<" + args_string + ">"
     return name
 
-def sequenceTemplate(sequence, scope=[]):
+def sequenceTemplate(sequence, environment):
     # returns a template instantiation suitable for the
     # sequence type
     # (similar in function to o2be_sequence::seq_template_name)
     assert isinstance(sequence, idltype.Sequence)
 
     seqType = sequence.seqType()
-    seqTypeID = principalID(seqType, scope)
+    seqTypeID = environment.principalID(seqType)
     derefSeqType = deref(seqType)
-    derefSeqTypeID = principalID(derefSeqType, scope)
+    derefSeqTypeID = environment.principalID(derefSeqType)
     seq_dims = typeDims(seqType)
     is_array = seq_dims != []
     dimension = reduce(lambda x,y: x * y, seq_dims, 1)
@@ -514,7 +524,8 @@ def sequenceTemplate(sequence, scope=[]):
 
     if is_array:
         if isSequence(derefSeqType):
-            template["derefSeqTypeID"] = sequenceTemplate(derefSeqType, scope)
+            template["derefSeqTypeID"] = sequenceTemplate(derefSeqType,
+                                                          environment)
             
     
     if isBoolean(derefSeqType):
@@ -532,9 +543,11 @@ def sequenceTemplate(sequence, scope=[]):
        scopedName = derefSeqType.decl().scopedName()
        scopedName = self.scope(scopedName) + \
                     ["_objref_" + self.name(scopedName)]
-       scopedName = idlutil.pruneScope(scopedName, scope)
-       objref_name = idlutil.ccolonName(map(mapID, scopedName))
-       objref_template = objRefTemplate(derefSeqType, "Member", scope)
+       rel_name = environment.relName(scopedName)
+       objref_name = environment.nameToString(rel_name)
+       #scopedName = idlutil.pruneScope(scopedName, scope)
+       #objref_name = idlutil.ccolonName(map(mapID, scopedName))
+       objref_template = objRefTemplate(derefSeqType, "Member", environment)
        template["objref_name"]     = objref_name
        template["objref_template"] = objref_template
        template["objref_helper"]   = seqTypeID + "_Helper"
@@ -545,147 +558,9 @@ def sequenceTemplate(sequence, scope=[]):
     return templateToString(template)
 
     
-        
-    
-def sequenceTemplate_old(sequence, scope=[]):
-    # returns a template instantiation suitable for the
-    # sequence type
-    # (similar in function to o2be_sequence::seq_template_name)
-    if not(isinstance(sequence, idltype.Sequence)):
-        raise "sequenceTemplate called with a non-sequence: " + repr(sequence)
-    base_type = deref(sequence.seqType())
-    base_type_name = principalID(base_type, scope)
-    type_name = principalID(sequence.seqType(), scope)
-    kind = base_type.kind()
-    dims = typeDims(sequence.seqType())
-    is_array = (dims != [])
-
-    dimension = reduce(lambda x,y: x * y, dims, 1)
-    
-    is_variable = isVariableType(base_type)
-    
-    template_args = []
-    template_name = "(should have a template name for " + repr(sequence) + ")"
-    if (sequence.bound()):
-        CORBA_SEQUENCE = "_CORBA_Bounded_Sequence"
-        template_args.append(str(sequence.bound()))
-    else:
-        CORBA_SEQUENCE = "_CORBA_Unbounded_Sequence"
-
-    if is_array:
-        CORBA_SEQUENCE = CORBA_SEQUENCE + "_Array"
-
-
-    # simple fixed types (char, integer types, real types, enum types)
-    def fixedSizeElements(elmsize, alignment, prefix = CORBA_SEQUENCE,
-                          type_name = type_name,
-                          args = template_args):
-        args = [type_name] + args
-        args = args + [str(elmsize), str(alignment)]
-        template = prefix + "_w_FixSizeElement"
-        return (template, args)
-    def fixedSizeArrayElements(elmsize, alignment, prefix = CORBA_SEQUENCE,
-                               type_name = type_name,
-                               dimension = dimension,
-                               base_type_name = base_type_name,
-                               args = template_args):
-        args = [type_name, type_name + "_slice",
-                base_type_name, str(dimension)] + args
-        args = args + [str(elmsize), str(alignment)]
-        template = prefix + "_w_FixSizeElement"
-        return (template, args)
-        
-
-    if not(is_array):
-        if isBoolean(base_type):
-            template_name = CORBA_SEQUENCE + "__Boolean"
-        elif isOctet(base_type):
-            template_name = CORBA_SEQUENCE + "__Octet"
-        elif isString(base_type):
-            template_name = CORBA_SEQUENCE + "__String"
-        elif isObjRef(base_type):
-            scopedName = base_type.decl().scopedName()
-            scopedName = self.scope(scopedName) + \
-                         ["_objref_" + self.name(scopedName)]
-            scopedName = idlutil.pruneScope(scopedName, scope)
-            objref_name = idlutil.ccolonName(map(mapID, scopedName))
-            template_name = CORBA_SEQUENCE + "_ObjRef"
-            template_args = [objref_name,
-                             objRefTemplate(base_type, "Member", scope),
-                             type_name + "_Helper"] +\
-                             template_args
-        # a basic type or an enum with a fixed size
-        else:
-            try:
-                (size, alignment) = typeSizeAlignMap[base_type.kind()]
-                (template_name, template_args) = \
-                                fixedSizeElements(size, alignment)
-            except KeyError:
-                template_name = CORBA_SEQUENCE
-                template_args = [type_name] + template_args
-        
-    #CORBA_SEQUENCE = CORBA_SEQUENCE + "_Array"
-    
-    # arrays of fixed length elements
-    if is_array:
-        if not(is_variable):
-            if isBoolean(base_type):
-                template_name = CORBA_SEQUENCE + "__Boolean"
-                template_args = [type_name, type_name + "_slice",
-                                 str(dimension)] + template_args
-            elif isOctet(base_type):
-                template_name = CORBA_SEQUENCE + "__Octet"
-                template_args = [type_name, type_name + "_slice",
-                                 str(dimension)] + template_args
-                # simple types go here again
-
-            else:
-                try:
-                    (size, alignment) = typeSizeAlignMap[base_type.kind()]
-                    (template_name, template_args) = \
-                                    fixedSizeArrayElements(size, alignment)
-                except KeyError:
-                    pass
-#                    raise "sequenceTemplate of an unknown non-variable " + \
-#                          "type: " + repr(base_type) + " kind = " + \
-#                          repr(base_type.kind())
-                
-        elif is_variable:
-            if isObjRef(base_type):
-                scopedName = base_type.decl().scopedName()
-                scopedName = self.scope(scopedName) + \
-                             ["_objref_" + self.name(scopedName)]
-                scopedName = idlutil.pruneScope(scopedName, scope)
-                objref_name = idlutil.ccolonName(map(mapID, scopedName))
-                template_args = [type_name, type_name + "_slice",
-                                 objRefTemplate(base_type, "Member", scope),
-                                 str(dimension)] + template_args
-            else:
-                if isString(base_type):
-                    pass
-                elif isSequence(base_type):
-                    base_type_name = sequenceTemplate(base_type, scope)
-                    pass
-                elif isTypeCode(base_type):
-                    pass
-                else:
-                    pass
-                template_name = CORBA_SEQUENCE
-                template_args = [type_name, type_name + "_slice",
-                                 base_type_name, str(dimension)] + template_args
-        
-    # any handling goes here
-#    print "[[[ args = " + repr(template_args) + "]]]"
-    template_args = util.delimitedlist(template_args)
-    if (template_args != ""):
-        return template_name + "<" + template_args + ">"
-    return template_name
-
-
-
 # ------------------------------------------------------------------
 
-def valueString(type, value, from_scope = []):
+def valueString(type, value, environment):
     type = deref(type)
     # (unsigned) short ints are themselves
     if type.kind() == idltype.tk_short     or \
@@ -710,8 +585,13 @@ def valueString(type, value, from_scope = []):
     if type.kind() == idltype.tk_enum:
         value = name(value.scopedName())
         target_scope = scope(type.decl().scopedName())
-        rel_scope = idlutil.pruneScope(target_scope, from_scope)
-        return idlutil.ccolonName(rel_scope) + str(value)
+        target_name = target_scope + [str(value)]
+        rel_name = environment.relName(target_name)
+        rel_name_string = environment.nameToString(rel_name)
+        return rel_name_string
+#        return environment.principalID(rel_name_string)
+#       rel_scope = idlutil.pruneScope(target_scope, from_scope)
+#       return idlutil.ccolonName(rel_scope) + str(value)
     if type.kind() == idltype.tk_string:
         return value
     if type.kind() == idltype.tk_octet:
@@ -721,8 +601,17 @@ def valueString(type, value, from_scope = []):
           repr(type) + " into a string."
         
         
+# ------------------------------------------------------------------
+
+
+def dimsToString(dims):
+    append = lambda x,y: x + y
+    return reduce(append,
+                  map(lambda x: "["+repr(x)+"]", dims), "")
+
 
 # ------------------------------------------------------------------
+
 
 def isInteger(type, force_deref = 0):
     if force_deref:

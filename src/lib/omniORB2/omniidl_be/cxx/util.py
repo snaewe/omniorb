@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.4  1999/11/10 20:19:32  djs
+# Option to emulate scope bug in old backend
+# Array struct element fix
+# Union sequence element fix
+#
 # Revision 1.3  1999/11/04 19:05:02  djs
 # Finished moving code from tmp_omniidl. Regression tests ok.
 #
@@ -39,6 +44,9 @@
 #
 
 """General utility functions used by the C++ backend"""
+
+from omniidl import idlutil, idltype
+from omniidl.be.cxx import config
 
 import re, string
 
@@ -200,3 +208,4 @@ def intersect(a, b):
         if x in b:
             result.append(x)
     return result
+
