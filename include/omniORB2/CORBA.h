@@ -31,9 +31,17 @@
 
 /*
  $Log$
- Revision 1.13  1997/05/21 15:01:40  sll
- Added typedef <type>_ptr <type>Ref;
+ Revision 1.14  1997/08/21 22:20:17  sll
+ - String_member copy ctor bug fix.
+ - New system exception TRANSACTION_REQUIRED, TRANSACTION_ROLLEDBACK,
+   INVALID_TRANSACTION and WRONG_TRANSACTION.
+ - Correct ORB_init() signature.
+ - CORBA::is_nil(Object_ptr) is now more sympathetic to applications
+   treating a nil pointer as a nil object reference.
 
+ * Revision 1.13  1997/05/21  15:01:40  sll
+ * Added typedef <type>_ptr <type>Ref;
+ *
  * Revision 1.12  1997/05/06  16:04:43  sll
  * Public release.
  *
@@ -182,10 +190,7 @@ typedef _CORBA_Double  Double;
     }
 
     inline String_member(const String_member &s) {
-      if (_ptr) {
-	string_free(_ptr);
-	_ptr = 0;
-      }
+      _ptr = 0;
       if (s._ptr) {
 	_ptr = string_alloc((ULong)(strlen(s._ptr)+1));
 	strcpy(_ptr,s._ptr);
@@ -492,6 +497,10 @@ typedef _CORBA_Double  Double;
   STD_EXCEPTION (BAD_CONTEXT);
   STD_EXCEPTION (OBJ_ADAPTER);
   STD_EXCEPTION (DATA_CONVERSION);
+  STD_EXCEPTION (TRANSACTION_REQUIRED);
+  STD_EXCEPTION (TRANSACTION_ROLLEDBACK);
+  STD_EXCEPTION (INVALID_TRANSACTION);
+  STD_EXCEPTION (WRONG_TRANSACTION);
 
 #undef STD_EXCEPTION
 
@@ -537,14 +546,7 @@ typedef _CORBA_Double  Double;
     tk_sequence	= 19,
     tk_array	= 20,
     tk_alias	= 21,
-    tk_except	= 22,
-    //
-    // This symbol is not defined by CORBA2.  It's used to
-    // speed up dispatch based on TCKind values, and lets
-    // many important ones just be table lookups.  It must
-    // always be the last enum value!!
-    //
-    TC_KIND_COUNT
+    tk_except	= 22
   };
   
   
@@ -1033,8 +1035,8 @@ typedef _CORBA_Double  Double;
     static ORB orb;
   };
 
-  typedef Char *ORBid;
-  static ORB_ptr ORB_init(int &argc, char **argv, const char *orb_identifier=0);
+  typedef char *ORBid;
+  static ORB_ptr ORB_init(int &argc, char **argv, const char *orb_identifier);
 
 ////////////////////////////////////////////////////////////////////////
 //                   PIDL release and is_null                         //
@@ -1044,7 +1046,19 @@ typedef _CORBA_Double  Double;
   static Boolean is_nil(Environment_ptr);
   static Boolean is_nil(Context_ptr);
   static Boolean is_nil(Principal_ptr);
-  static inline Boolean is_nil(Object_ptr o) { return o->NP_is_nil(); }
+  static inline Boolean is_nil(Object_ptr o) { 
+    if (o)
+      return o->NP_is_nil(); 
+    else {
+      // omniORB2 does not use a nil pointer to represent a nil object 
+      // reference. The program has passed in a pointer which has not
+      // been initialised by CORBA::Object::_nil() or similar functions.
+      // Some ORBs seems to be quite lax about this. We don't want to
+      // break the applications that make this assumption. Just call
+      // _CORBA_use_nil_ptr_as_nil_objref() to take note of this.
+      return _CORBA_use_nil_ptr_as_nil_objref();
+    }
+  }
   static Boolean is_nil(BOA_ptr p);
   static Boolean is_nil(ORB_ptr p);
   static Boolean is_nil(NamedValue_ptr);
