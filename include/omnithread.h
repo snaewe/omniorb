@@ -74,7 +74,10 @@ class omni_thread;
 #elif defined(__powerpc__) && defined(__aix__)
 #include <omnithread/posix.h>
 
-#elif defined(__NT__)
+#elif defined(__hpux__)
+#include <omnithread/posix.h>
+
+#elif defined(__WIN32__)
 #include <omnithread/nt.h>
 
 #ifdef _MSC_VER
@@ -115,11 +118,14 @@ class omni_thread;
 #elif defined(__linux__)
 #include <omnithread/posix.h>
 
+#elif defined(__nextstep__)
+#include <omnithread/mach.h>
+
 #else
 #error "No implementation header file"
 #endif
 
-#if !defined(__NT__)
+#if !defined(__WIN32__)
 #define _OMNITHREAD_NTDLL_
 #endif
 
