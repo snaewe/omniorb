@@ -1,3 +1,19 @@
+Mon Jun  2 14:24:32 BST 2003 dgrisby
+====================================
+
+- Silly bug in fixed division when result has leading zeros.
+
+src/lib/omniORB/orbcore/corbaFixed.cc
+
+- Configuration dump error on some platforms.
+
+src/lib/omniORB/orbcore/corbaOrb.cc
+
+- Memory leak on platforms with reentrant gethostbyname.
+
+src/lib/omniORB/orbcore/libcWrapper.cc
+
+
 Wed May 28 16:48:06 BST 2003 dgrisby
 ====================================
 
