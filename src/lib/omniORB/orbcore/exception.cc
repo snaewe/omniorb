@@ -28,6 +28,10 @@
 
 /*
   $Log$
+  Revision 1.10.2.7  2001/09/20 15:10:47  sll
+  Default Transient Handler now checks for the minor code
+  TRANSIENT_FailedOnForwarded and do a retry.
+
   Revision 1.10.2.6  2001/08/03 17:41:21  sll
   System exception minor code overhaul. When a system exeception is raised,
   a meaning minor code is provided.
@@ -110,25 +114,6 @@
 
 OMNI_USING_NAMESPACE(omni)
 
-#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
-// MSVC++ does not give the variables external linkage otherwise. Its a bug.
-namespace omniORB {
-
-CORBA::ULong defaultTransientRetryDelayMaximum = 30;
-
-CORBA::ULong defaultTransientRetryDelayIncrement = 1;
-}
-#else
-
-CORBA::ULong
-omniORB::defaultTransientRetryDelayMaximum = 30;
-
-CORBA::ULong
-omniORB::defaultTransientRetryDelayIncrement = 1;
-
-#endif
-
-
 static CORBA::Boolean
 omni_defaultTransientExcHandler(void*, CORBA::ULong n_retries,
 				const CORBA::TRANSIENT& ex);
@@ -163,9 +148,17 @@ omni_defaultTransientExcHandler(void*,
 				CORBA::ULong n_retries,
 				const CORBA::TRANSIENT& ex)
 {
-  // Set default to no retry.
-  // The normal retry due to cache connection shutdown has already been
-  // dealt with by the caller.
+  if (ex.minor() == TRANSIENT_FailedOnForwarded) {
+    if (omniORB::trace(10)) {
+      omniORB::logger log;
+      log << "Invocation on a location forwarded object has failed. Retry "
+	  << n_retries << "th times.\n";
+    }
+    unsigned long secs;
+    secs = ((n_retries < 30) ? n_retries : 30);
+    if (secs) omni_thread::sleep(secs,0);
+    return 1;
+  }
   return 0;
 }
 
