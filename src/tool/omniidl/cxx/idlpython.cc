@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.3  1999/11/01 10:05:27  dpg1
+// New file attribute to AST.
+// Fix stupid bug in module initialisation.
+//
 // Revision 1.2  1999/10/29 18:19:19  dpg1
 // Added dump() function
 //
@@ -205,7 +209,7 @@ visitAST(AST* a)
     d->accept(*this);
     PyList_SetItem(pydecls, i, result_);
   }
-  result_ = PyObject_CallMethod(idlast_, "AST", "N", pydecls);
+  result_ = PyObject_CallMethod(idlast_, "AST", "sN", a->file(), pydecls);
   ASSERT_RESULT;
 }
 
@@ -902,7 +906,8 @@ extern "C" {
 
   static PyMethodDef omniidl_methods[] = {
     {"compile",        IdlPyCompile,        METH_VARARGS},
-    {"dump",           IdlPyDump,           METH_VARARGS}
+    {"dump",           IdlPyDump,           METH_VARARGS},
+    {NULL, NULL}
   };
 
   void init_omniidl()
