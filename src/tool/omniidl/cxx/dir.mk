@@ -278,7 +278,6 @@ endif
 #   Make rules for Digital Unix                                             #
 #############################################################################
 
-# WARNING!  These make rules are untested
 
 ifdef OSF1
 ifeq ($(notdir $(CXX)),cxx)
@@ -318,19 +317,21 @@ endif
 #   Make rules for HPUX                                                     #
 #############################################################################
 
-# WARNING!  These make rules are untested
-
 ifdef HPUX
 ifeq ($(notdir $(CXX)),aCC)
 
-DIR_CPPFLAGS += +Z
+# Note: the python installation must be built to load C++ shared library
+#       this usually means that the main function of the python executable
+#       is compiled and linked with aCC.
 
+DIR_CPPFLAGS += +Z
+  
 libname = _omniidlmodule.sl
 soname = $(libname).$(IDLMODULE_MAJOR)
 lib = $(soname).$(IDLMODULE_MINOR)
-
+  
 all:: $(lib)
-
+  
 $(lib): $(OBJS) $(PYOBJS)
 	(set -x; \
          $(RM) $@; \
@@ -338,7 +339,7 @@ $(lib): $(OBJS) $(PYOBJS)
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) ; \
         )
-
+  
 clean::
 	$(RM) $(lib)
 
@@ -351,6 +352,31 @@ export:: $(lib)
           $(RM) $(libname); \
           ln -s $(soname) $(libname); \
          )
+
+# The alternative is to build omniidl as an executable by linking in the
+# python runtime library. Comment out the above and uncomment the following
+# if this is preferable.
+#
+#
+# PYLIBDIR := $(PYPREFIX)/lib
+#
+# DIR_CPPFLAGS += -DOMNIIDL_EXECUTABLE
+# CXXLINKOPTIONS += -L$(PYLIBDIR)
+#
+#
+# omniidl = $(patsubst %,$(BinPattern),omniidl)
+#
+# all:: $(omniidl)
+#
+# export:: $(omniidl)
+# 	@$(ExportExecutable)
+#
+# clean::
+# 	$(RM) $(omniidl)
+#
+# $(omniidl): $(OBJS) $(PYOBJS)
+# 	@(libs="-lpython1.5 -lpthread"; $(CXXExecutable))
+
 
 endif
 endif
@@ -400,8 +426,6 @@ endif
 #############################################################################
 #   Make rules for SGI Irix 6.2                                             #
 #############################################################################
-
-# WARNING!  These make rules are untested
 
 ifdef IRIX
 ifeq ($(notdir $(CXX)),CC)
