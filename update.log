@@ -1,4 +1,14 @@
-Mon Mar  9 14:34:04 GMT 1998
+Mon Mar  9 17:21:33 GMT 1998 ewc
+================================
+
+- Added NP_getSlice member function to _Forany template. Added to avoid 
+  explicit operator calls in stubs (these couldn't be parsed by aC++ on HPUX).
+
+include/omniORB2/templates.h
+src/tool/omniidl2/omniORB2_be/o2be_array.cc
+
+
+Mon Mar  9 14:34:04 GMT 1998 ewc
 ================================
 
 - Patches to allow compilation with aC++ on HPUX
