@@ -29,15 +29,15 @@
  
 /*
   $Log$
-  Revision 1.10  1997/09/20 16:58:34  dpg1
-  Added is_cxx_type argument to _widenFromTheMostDerivedIntf().
-  Added LifeCycle hash table initialisation to objectRef_init().
+  Revision 1.11  1997/12/09 17:17:59  sll
+  Updated to use the rope factory interfaces.
+  Full support for late binding.
 
-// Revision 1.9  1997/08/21  21:54:03  sll
-// - fixed bug in disposeObject.
-// - MarshalObjRef now always encode the repository ID of the most derived
-//   interface of the object reference.
-//
+  Revision 1.9  1997/08/21 21:54:03  sll
+  - fixed bug in disposeObject.
+  - MarshalObjRef now always encode the repository ID of the most derived
+    interface of the object reference.
+
   Revision 1.8  1997/08/08 09:34:57  sll
   MarshalObjRef now always pass the repository ID of the most derived type
   in the IOR.
@@ -49,43 +49,61 @@
 
 #include <omniORB2/CORBA.h>
 #include <omniORB2/proxyFactory.h>
+#include <ropeFactory.h>
 
-// Since this ORB does not have an interface repository yet, its ability to
-// handle IDL interface inheritance is limited.
-//
 // The points to note are:
 //
-// 1. It only knows about the interfaces that have their stubs linked in at
-//    compile time.
-//
-//    Suppose A,B,C and D are interface types, and D inherits from C, which
-//    inherits from B, which in turn inherits from A. When an interface
-//    reference on the wire identifies itself with the interface repository
-//    ID (IRid) of D, the ORB has to rely on the compiled-in stubs to decide
-//    whether the interface can be widened to its base classes.
-//
-//    If the stubs of A,B,C and D are all linked into the executable, then
-//    the ORB is able to widen the interface to D,C,B and A.
-//
-//    On the other hand, if only the stubs of A and B are linked into the
-//    executable, then the ORB is unable to infer the inheritance relation
-//    of D,B and A. Hence its attempt to widen the interface will fail.
-//    In this case, the ORB will wrongly deduce that the interface reference
-//    is invalid. Of course, the problem will be resolved if the ORB is
-//    able to query the interface repository at runtime about D.
-//
-// 2. The interface information is provided by the stubs via the
+// 1. The interface information is provided by the stubs via the
 //    proxyObjectFactory class. For an interface type A, the stub of A contains
 //    a A_proxyObjectFactory class. This class is derived from the 
 //    proxyObjectFactory class. The proxyObjectFactory is an abstract class
 //    which contains 3 virtual functions that any derived classes, e.g.
 //    A_proxyObjectFactory, have to implement. The functions allow the
-//    ORB to query the IRid of the interface, to create a proxy object of the
-//    interface and to query whether a given IRid is a base interface.
+//    runtime to query the IRid of the interface, to create a proxy object of 
+//    the interface and to query whether a given IRid is a base interface.
 //    Exactly one instance of A_proxyObjectFactory is declared as a local
 //    constant of the stub. The instance is instantiated at runtime before the
 //    main() is called. The ctor of proxyObjectFactory links the instance
 //    to the chain headed by the local variable proxyStubs in this module.
+//
+// 2. To unmarshal an IOR, the runtime has two pieces of information in hand:
+//       a. The repository ID field in the IOR which identifies the exact
+//          type of the object
+//       b. The type of the object reference this IOR is supposed to be. This
+//          is determined by the operation signature in the IDL and is
+//          identified by a "target" repository ID.
+//    The runtime matches the repository ID in the IOR to those of the 
+//    proxyFactories linked into the executable:
+//
+//       a. There is an exact match, all is well because the runtime can use
+//          the proxyFactory to check if the target object reference type
+//          is indeed identical or is the based interface of the
+//          object. A proxy object can then be instantiated.
+//
+//       b. No match. This means that the runtime has no knowledge of the 
+//          interface. An example of how this can happen is as follows:
+//
+//               Suppose A,B are interface types, and B inherits from A.
+//               If only the stubs of A is linked into the
+//               executable, the runtime would have no knowledge of B. 
+//               If the IOR identifies itself as B and the target type is A,
+//               the runtime cannot deduce the inheritance relation of B and A.
+//
+//          To sort this out, the runtime gives the IOR the benefits of
+//          doubts and use the proxyFactory of the target type to instantiate
+//          a proxy object. However, just before the proxy object is used
+//          for the first time to perform a remote invocation, the
+//          object is contacted to find out if it indeed supports the target
+//          interface.
+
+
+omni_mutex          omniObject::objectTableLock;
+omniObject*         omniObject::proxyObjectTable = 0;
+omniObject**        omniObject::localObjectTable = 0;
+omni_mutex          omniObject::wrappedObjectTableLock;
+_wrap_proxy**       omniObject::wrappedObjectTable = 0;
+proxyObjectFactory* proxyObjectFactory::proxyStubs = 0;
+
 
 proxyObjectFactory::proxyObjectFactory()
 {
@@ -130,13 +148,18 @@ public:
     omniObject(repoId,r,key,keysize,profiles,release) 
   {
     this->PR_setobj(this);
+    // We use PR_IRRepositoryId() to indicate that we don't really know
+    // anything about the interface type. Any subsequent queries about its
+    // type, such as in interface narrowing, must be answered by
+    // the object itself.
+    PR_IRRepositoryId(repoId);
     omni::objectIsReady(this);
   }
   virtual ~AnonymousObject() {}
   
 protected:
   virtual void *_widenFromTheMostDerivedIntf(const char *repoId,
-                                           CORBA::Boolean is_cxx_type_id);
+					     CORBA::Boolean is_cxx_type_id);
 
 private:
   AnonymousObject();
@@ -146,10 +169,12 @@ private:
 
 void *
 AnonymousObject::_widenFromTheMostDerivedIntf(const char *repoId,
-                                            CORBA::Boolean is_cxx_type_id)
+					      CORBA::Boolean is_cxx_type_id)
 {
-  if (!is_cxx_type_id && !repoId)
-    return (void *)((CORBA::Object_ptr)this);
+  if (is_cxx_type_id)
+    return 0;
+  if (!repoId)
+    return (void*)((CORBA::Object_ptr)this);
   else
     return 0;
 }
@@ -244,12 +269,12 @@ omni::objectRelease(omniObject *obj)
 	}
 	p = &((*p)->pd_next);
       }
-      if (obj->pd_disposed) {
-	omniObject::objectTableLock.unlock();
+      if (obj->pd_flags.disposed) {
+      omniObject::objectTableLock.unlock();
 	delete obj;   // call dtor if BOA->disposed() has been called.
       }
       else {
-	omniObject::objectTableLock.unlock();
+      omniObject::objectTableLock.unlock();
       }
     }
   }
@@ -261,10 +286,8 @@ omni::objectRelease(omniObject *obj)
 void
 omni::disposeObject(omniObject *obj)
 {
-  if (obj->is_proxy()) {
-    objectRelease(obj);
+  if (obj->is_proxy())
     return;
-  }
   omniObject::objectTableLock.lock();
   if (obj->getRefCount() <= 0) {
     omniObject::objectTableLock.unlock();
@@ -278,8 +301,8 @@ omni::disposeObject(omniObject *obj)
     omniObject **p = &omniObject::localObjectTable[omniORB::hash(obj->pd_objkey.native)];
     while (*p) {
       if (*p == obj) {
-	*p = obj->pd_next;
-	break;
+      *p = obj->pd_next;
+      break;
       }
       p = &((*p)->pd_next);
     }
@@ -287,7 +310,7 @@ omni::disposeObject(omniObject *obj)
     delete obj;
   }
   else {
-    obj->pd_disposed = 1;
+    obj->pd_flags.disposed = 1;
     omniObject::objectTableLock.unlock();
   }
   return;
@@ -295,7 +318,7 @@ omni::disposeObject(omniObject *obj)
 
 
 omniObject *
-omni::locateObject(omniObjectKey &k)
+omni::locateObject(omniObjectManager*,omniObjectKey &k)
 {
   omniObject::objectTableLock.lock();
   omniObject **p = &omniObject::localObjectTable[omniORB::hash(k)];
@@ -333,10 +356,6 @@ omni::createObjRef(const char *mostDerivedRepoId,
 	else if (!p->is_a(targetRepoId)) {
 	    // Object ref is neither the exact interface nor a derived 
 	    // interface of the one requested.
-	    // It may well be a derived interface that we have no
-	    // stub code linked into this executable.
-	    // See the restrictions of this implementation at the beginning
-	    // of this file.
 	    throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
 	}
 	else {
@@ -344,42 +363,75 @@ omni::createObjRef(const char *mostDerivedRepoId,
 	}
       }
     }
-    if (!p) {
-      // Hm.... We don't know about this interface.
-      // It may well be a derived interface of the one requested.
-      // See the restrictions of this implementation at the beginning
-      // of this file.
-      if (!targetRepoId) {
-	// Target is just the pseudo object CORBA::Object
-	// Doesn't matter if we don't know about this interface.
-	// Leave p == 0 and let the code below to create the right
-	// pseudo object.
-      }
-      else {
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-      }
-    }
   }
+
+  // Once we reach here:
+  // if (p != 0)
+  //     p points to the proxy factory that is an exact match to the
+  //     interface identified by <mostDerivedRepoId> and it has been
+  //     verified that the interface identified by <targetRepoId> is
+  //     equal or is a base class of <mostDerivedRepoId>.
+  // else
+  //     there is no proxy factory linked into this executable that
+  //     matches the interface identified by <mostDerivedRepoId>
+
+
   size_t ksize = 0;
 
-  Rope *r = omni::iopProfilesToRope(profiles,objkey,ksize);
+  Rope_var    rope;
+  omniObject* localobj = ropeFactory::iopProfilesToRope(profiles,objkey,
+							ksize,rope);
 
   try {
-    if (r) {
+    if (!localobj) {
       // Create a proxy object
       if (release) {
 	CORBA::Object_ptr objptr;
 	if (p) {
-	  objptr = p->newProxyObject(r,objkey,ksize,profiles,1);
+	  // we have a proxy factory that matches the interface exactly.
+	  objptr = p->newProxyObject(rope,objkey,ksize,profiles,1);
+	  rope._ptr = 0;
 	  return objptr->PR_getobj();
 	}
 	else {
-	  // The target is just the pseudo object CORBA::Object
-	  // And we don't have a proxyObjectFactory() for this object
-	  // (that is why p == 0).
-	  // We just make an anonymous object
-	  objptr =  new AnonymousObject(mostDerivedRepoId,r,objkey,ksize,profiles,1);
-	  return objptr->PR_getobj();
+	  // we don't have a proxy factory that matches the interface
+	  if (targetRepoId == 0) {
+	    // The target is just the pseudo object CORBA::Object
+	    // And we don't have a proxyObjectFactory() for this object
+	    // (that is why p == 0).
+	    // We just make an anonymous object
+	    objptr =  new AnonymousObject(mostDerivedRepoId,rope,
+					  objkey,ksize,profiles,1);
+	    rope._ptr = 0;
+	    return objptr->PR_getobj();
+	  }
+	  else {
+	    // we just give the object the benefit of doubts and 
+	    // instantiate a proxy object using the proxy factory
+	    // identified by the <targetRepoId>.
+
+	    // find the proxy factory for <targetRepoId>
+	    proxyObjectFactory_iterator pnext;
+	    while ((p = pnext())) {
+	      if (strcmp(p->irRepoId(),targetRepoId) == 0) {
+		break;  // got it
+	      }
+	    }
+	    
+	    if (!p) {
+	      // this is terrible, the caller just give me a <targetRepoId>
+	      // that we don't have a proxy factory for.
+	      throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	    }
+
+	    objptr = p->newProxyObject(rope,objkey,ksize,profiles,1);
+	    // The ctor of the proxy object sets its IR repository ID
+	    // to <targetRepoId>, we reset it to <mostDerivedRepoId> because
+	    // this identifies the true type of the object.
+	    objptr->PR_getobj()->PR_IRRepositoryId(mostDerivedRepoId);
+	    rope._ptr = 0;
+	    return objptr->PR_getobj();
+	  }
 	}
       }
       else {
@@ -391,16 +443,50 @@ omni::createObjRef(const char *mostDerivedRepoId,
 	try {
 	  CORBA::Object_ptr objptr;
 	  if (p) {
-	    objptr = p->newProxyObject(r,objkey,ksize,localcopy,1);
+	    // we have a proxy factory that matches the interface exactly.
+	    objptr = p->newProxyObject(rope,objkey,ksize,localcopy,1);
+	    rope._ptr = 0;
 	    return objptr->PR_getobj();
 	  }
 	  else {
-	    // The target is just the pseudo object CORBA::Object
-	    // And we don't have a proxyObjectFactory() for this object
-	    // (that is why p == 0).
-	    // We just make an anonymous object
-	    objptr =  new AnonymousObject(mostDerivedRepoId,r,objkey,ksize,localcopy,1);
-	    return objptr->PR_getobj();
+	    // we don't have a proxy factory that matches the interface
+	    if (targetRepoId == 0) {
+	      // The target is just the pseudo object CORBA::Object
+	      // And we don't have a proxyObjectFactory() for this object
+	      // (that is why p == 0).
+	      // We just make an anonymous object
+	      objptr =  new AnonymousObject(mostDerivedRepoId,rope,
+					    objkey,ksize,localcopy,1);
+	      rope._ptr = 0;
+	      return objptr->PR_getobj();
+	    }
+	    else {
+	      // we just give the object the benefit of doubts and 
+	      // instantiate a proxy object using the proxy factory
+	      // identified by the <targetRepoId>.
+
+	      // find the proxy factory for <targetRepoId>
+	      proxyObjectFactory_iterator pnext;
+	      while ((p = pnext())) {
+		if (strcmp(p->irRepoId(),targetRepoId) == 0) {
+		  break;  // got it
+		}
+	      }
+	    
+	      if (!p) {
+		// this is terrible, the caller just give me a <targetRepoId>
+		// that we don't have a proxy factory for.
+		throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+	      }
+
+	      objptr = p->newProxyObject(rope,objkey,ksize,localcopy,1);
+	      // The ctor of the proxy object sets its IR repository ID
+	      // to <targetRepoId>, we reset it to <mostDerivedRepoId> because
+	      // this identifies the true type of the object.
+	      objptr->PR_getobj()->PR_IRRepositoryId(mostDerivedRepoId);
+	      rope._ptr = 0;
+	      return objptr->PR_getobj();
+	    }
 	  }
 	}
 	catch (...) {
@@ -411,11 +497,16 @@ omni::createObjRef(const char *mostDerivedRepoId,
     }
     else {
       // A local object
-      omniObject *objptr = omni::locateObject(*((omniObjectKey *)objkey));
+      if (targetRepoId && !localobj->_real_is_a(targetRepoId)) {
+	// According to the local object, it is neither the exact interface
+	// nor a derived interface identified by <targetRepoId>
+	omni::objectRelease(localobj);
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+      }
       delete [] objkey;
       if (release)
 	delete profiles;
-      return objptr;
+      return localobj;
     }
   }
   catch (...) {
@@ -445,7 +536,7 @@ omni::stringToObject(const char *str)
   IOP::TaggedProfileList *profiles;
   
   IOP::EncapStrToIor((const CORBA::Char *)str,(CORBA::Char *&)repoId,profiles);
-  if (*repoId == '\0') {
+  if (*repoId == '\0' && profiles->length() == 0) {
     // nil object reference
     delete [] repoId;
     delete profiles;
@@ -467,19 +558,22 @@ omni::stringToObject(const char *str)
 void *
 omniObject::_widenFromTheMostDerivedIntf(const char *,CORBA::Boolean)
 {
+  
   return 0;
 }
 
 void
-objectRef_init()
+omniObject::globalInit()
 {
+  if (omniObject::localObjectTable) return;
+
   omniObject::proxyObjectTable = 0;
   omniObject::localObjectTable = new omniObject * [omniORB::hash_table_size];
   unsigned int i;
   for (i=0; i<omniORB::hash_table_size; i++)
     omniObject::localObjectTable[i] = 0;
 
-  omniObject::wrappedObjectTable = new _wrap_proxy * [omniORB::hash_table_size];
+  omniObject::wrappedObjectTable = new _wrap_proxy *[omniORB::hash_table_size];
   for (i=0; i<omniORB::hash_table_size; i++)
     omniObject::wrappedObjectTable[i] = 0;
 }
@@ -495,45 +589,48 @@ CORBA::UnMarshalObjRef(const char *repoId,
 
   try {
     idlen <<= s;
-    if (idlen <= 1) {
-      // nil object reference
-      if (!idlen) {
+
+    switch (idlen) {
+
+    case 0:
 #ifdef NO_SLOPPY_NIL_REFERENCE
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
 #else
-	// According to the CORBA specification 2.0 section 10.6.2:
-	//   Null object references are indicated by an empty set of
-	//   profiles, and by a NULL type ID (a string which contain
-	//   only *** a single terminating character ***).
-        //
-        // Therefore the idlen should be 1.
-	// Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
-	// and sends out a 0 len string.
-        // We quietly accept it here. Turn this off by defining
-	//   NO_SLOPPY_NIL_REFERENCE
-#endif
-      }
-      else {
-	CORBA::Char _id;
-	_id <<= s;
-	if ((char)_id != '\0')
-	  throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
-      CORBA::ULong _v;
-      _v <<= s;
-      if (_v != 0)
+      // According to the CORBA specification 2.0 section 10.6.2:
+      //   Null object references are indicated by an empty set of
+      //   profiles, and by a NULL type ID (a string which contain
+      //   only *** a single terminating character ***).
+      //
+      // Therefore the idlen should be 1.
+      // Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
+      // and sends out a 0 len string.
+      // We quietly accept it here. Turn this off by defining
+      //   NO_SLOPPY_NIL_REFERENCE
+      id = new CORBA::Char[1];
+      id[0] = (CORBA::Char)'\0';
+#endif	
+      break;
+
+    case 1:
+      id = new CORBA::Char[1];
+      id[0] <<= s;
+      if (id[0] != (CORBA::Char)'\0')
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      return CORBA::Object::_nil();
-    }
-    if (idlen > s.RdMessageUnRead()) {
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-    }
-    id = new CORBA::Char[idlen];
-    if (!id)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
-    s.get_char_array(id,idlen);
-    if (id[idlen-1] != '\0') {
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      idlen = 0;
+      break;
+
+    default:
+      if (idlen > s.RdMessageUnRead()) {
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      }
+      id = new CORBA::Char[idlen];
+      if (!id)
+	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+      s.get_char_array(id,idlen);
+      if (id[idlen-1] != '\0') {
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      }
+      break;
     }
     
     profiles = new IOP::TaggedProfileList();
@@ -541,11 +638,26 @@ CORBA::UnMarshalObjRef(const char *repoId,
       throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
     *profiles <<= s;
 
-    omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
-    profiles = 0;
-    delete [] id;
-    id = 0;
-    return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
+    if (profiles->length() == 0 && idlen == 0) {
+      // This is a nil object reference
+      delete profiles;
+      profiles = 0;
+      return CORBA::Object::_nil();
+    }
+    else {
+      // It is possible that we reach here with the id string = '\0'.
+      // That is alright because the actual type of the object will be
+      // verified using _is_a() at the first invocation on the object.
+      //
+      // Apparently, some ORBs such as ExperSoft's do that. Furthermore,
+      // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
+      // 
+      omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
+      profiles = 0;
+      delete [] id;
+      id = 0;
+      return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
+    }
   }
   catch (...) {
     if (id) delete [] id;
@@ -609,58 +721,75 @@ CORBA::UnMarshalObjRef(const char *repoId,
 
   try {
     idlen <<= s;
-    if (idlen <= 1) {
-      // nil object reference
-      if (!idlen) {
-#ifdef NO_SLOPPY_NIL_REFERENCE
-	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-#else
-	// According to the CORBA specification 2.0 section 10.6.2:
-	//   Null object references are indicated by an empty set of
-	//   profiles, and by a NULL type ID (a string which contain
-	//   only *** a single terminating character ***).
-        //
-        // Therefore the idlen should be 1.
-	// Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
-	// and sends out a 0 len string.
-        // We quietly accept it here. Turn this off by defining
-	//   NO_SLOPPY_NIL_REFERENCE
-#endif
-      }
-      else {
-	CORBA::Char _id;
-	_id <<= s;
-	if ((char)_id != '\0')
-	  throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      }
 
-      CORBA::ULong _v;
-      _v <<= s;
-      if (_v != 0)
+    switch (idlen) {
+
+    case 0:
+#ifdef NO_SLOPPY_NIL_REFERENCE
+      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+#else
+      // According to the CORBA specification 2.0 section 10.6.2:
+      //   Null object references are indicated by an empty set of
+      //   profiles, and by a NULL type ID (a string which contain
+      //   only *** a single terminating character ***).
+      //
+      // Therefore the idlen should be 1.
+      // Visibroker for C++ (Orbeline) 2.0 Release 1.51 gets it wrong
+      // and sends out a 0 len string.
+      // We quietly accept it here. Turn this off by defining
+      //   NO_SLOPPY_NIL_REFERENCE
+      id = new CORBA::Char[1];
+      id[0] = (CORBA::Char)'\0';
+#endif	
+      break;
+
+    case 1:
+      id = new CORBA::Char[1];
+      id[0] <<= s;
+      if (id[0] != (CORBA::Char)'\0')
 	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-      return CORBA::Object::_nil();
+      idlen = 0;
+      break;
+
+    default:
+      if (idlen > s.unRead()) {
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      }
+      id = new CORBA::Char[idlen];
+      if (!id)
+	throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
+      s.get_char_array(id,idlen);
+      if (id[idlen-1] != '\0') {
+	throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
+      }
+      break;
     }
-    if (idlen > s.unRead()) {
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-    }
-    id = new CORBA::Char[idlen];
-    if (!id)
-      throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
-    s.get_char_array(id,idlen);
-    if (id[idlen-1] != '\0') {
-      throw CORBA::MARSHAL(0,CORBA::COMPLETED_MAYBE);
-    }
-    
+
     profiles = new IOP::TaggedProfileList();
     if (!profiles)
       throw CORBA::NO_MEMORY(0,CORBA::COMPLETED_MAYBE);
     *profiles <<= s;
 
-    omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
-    profiles = 0;
-    delete [] id;
-    id = 0;
-    return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
+    if (profiles->length() == 0 && idlen == 0) {
+      // This is a nil object reference
+      delete profiles;
+      profiles = 0;
+      return CORBA::Object::_nil();
+    }
+    else {
+      // It is possible that we reach here with the id string = '\0'.
+      // That is alright because the actual type of the object will be
+      // verified using _is_a() at the first invocation on the object.
+      //
+      // Apparently, some ORBs such as ExperSoft's do that. Furthermore,
+      // this has been accepted as a valid behaviour in GIOP 1.1/IIOP 1.1.
+      // 
+      omniObject *objptr = omni::createObjRef((const char *)id,repoId,profiles,1);
+      profiles = 0;
+      delete [] id;
+      id = 0;
+      return (CORBA::Object_ptr)(objptr->_widenFromTheMostDerivedIntf(0));
+    }
   }
   catch (...) {
     if (id) delete [] id;
