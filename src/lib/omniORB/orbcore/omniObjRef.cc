@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.12  2001/05/11 14:26:29  sll
+  Use OMNIORB_THROW in rethrows to get better tracing info.
+
   Revision 1.2.2.11  2001/05/10 15:08:38  dpg1
   _compatibleServant() replaced with _localServantTarget().
   createIdentity() now takes a target string.
@@ -497,12 +500,12 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
       if (is_COMM_FAILURE_minor(ex.minor())) {
 	CORBA::COMM_FAILURE ex2(ex.minor(), ex.completed());
 	if( !_omni_callCommFailureExceptionHandler(this, retries++, ex2) )
-	  throw ex2;
+	  OMNIORB_THROW(COMM_FAILURE,ex.minor(),ex.completed());
       }
       else {
 	CORBA::TRANSIENT ex2(ex.minor(), ex.completed());
 	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
-	  throw ex2;
+	  OMNIORB_THROW(TRANSIENT,ex.minor(),ex.completed());
       }
     }
     catch(CORBA::COMM_FAILURE& ex) {
@@ -511,11 +514,11 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 	continue;
       }
       if( !_omni_callCommFailureExceptionHandler(this, retries++, ex) )
-	throw;
+	OMNIORB_THROW(COMM_FAILURE,ex.minor(),ex.completed());
     }
     catch(CORBA::TRANSIENT& ex) {
       if( !_omni_callTransientExceptionHandler(this, retries++, ex) )
-	throw;
+	OMNIORB_THROW(TRANSIENT,ex.minor(),ex.completed());
     }
     catch(CORBA::OBJECT_NOT_EXIST& ex) {
       if( fwd ) {
@@ -523,7 +526,7 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 	continue;
       }
       if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
-	throw;
+	OMNIORB_THROW(OBJECT_NOT_EXIST,ex.minor(),ex.completed());
     }
     catch(CORBA::SystemException& ex) {
       if( !_omni_callSystemExceptionHandler(this, retries++, ex) )
@@ -538,7 +541,7 @@ omniObjRef::_invoke(omniCallDescriptor& call_desc, CORBA::Boolean do_assert)
 	  omniORB::log.flush();
 	}
 	if( !_omni_callTransientExceptionHandler(this, retries++, ex2) )
-	  throw ex2;
+	  OMNIORB_THROW(TRANSIENT,ex2.minor(),ex2.completed());
       }
       omni::locationForward(this,ex.get_obj()->_PR_getobj(),ex.is_permanent());
     }
