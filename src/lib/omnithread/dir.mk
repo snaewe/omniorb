@@ -27,15 +27,14 @@ $(lib): $(OBJS)
 export:: $(lib)
 	@$(ExportLibrary)
 
+clean::
+	$(RM) $(lib)
 
 ifndef ATMosArchitecture
 
 SUBDIRS = sharedlib
 
 all::
-	@$(MakeSubdirs)
-
-clean::
 	@$(MakeSubdirs)
 
 export::
