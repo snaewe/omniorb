@@ -113,6 +113,9 @@ export:: Naming.hh
 	@(file="Naming.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
 endif
 
+export:: omniLifeCycle.hh
+	@(file="omniLifeCycle.hh"; dir="$(EXPORT_TREE)/$(INCDIR)/omniORB2"; $(ExportFileToDir))
+
 export::
 	@$(MakeSubdirs)
 
