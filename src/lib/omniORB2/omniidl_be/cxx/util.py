@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.12.2.4  2000/03/20 11:49:28  djs
+# Added a "LazyStream" class to help reduce the amount of output buffering
+# required
+#
 # Revision 1.12.2.3  2000/03/09 15:21:40  djs
 # Better handling of internal compiler exceptions (eg attempts to use
 # wide string types)
@@ -124,93 +128,6 @@ def fatalError(explanation):
 
 import re, string
 
-class Stream:
-    """IDL Compiler output stream."""
-    def __init__(self, file, indent_size = 4):
-        self.indent  = 0
-        self.file    = file
-        self.istring = " " * indent_size
-        #
-        self.__wsregex = re.compile(r"^\s*")
- 
-    regex = re.compile(r"@([^@]*)@")
-
-    def inc_indent(self): self.indent = self.indent + 1
-    def dec_indent(self): self.indent = self.indent - 1
-    def reset_indent(self): self.indent = 0
-
-    def __wscount(self, text):
-        match = self.__wsregex.match(text)
-        if (match):
-            return match.end(0)
-        return 0
-
-    def __wsstrip(self, text):
-        match = self.__wsregex.match(text)
-        if (match):
-            return text[match.end(0):]
-        return text
-
-    def write(self, text):
-        self.file.write(text + "\n")
-
-    def out(self, text, ldict={}, **dict):
-        """Output a multi-line string with indentation and @@ substitution."""
-
-        dict.update(ldict)
-
-        def doSub(self, text, dict=dict):
-            # doSub: Stream * string -> string list
-            #
-            def replace(match, dict=dict):
-                if match.group(1) == "": return "@"
-                return eval(match.group(1), globals(), dict)
-            # remove leading whitespace, but keep a note of how much
-            wsCount = self.__wscount(text)
-            strippedText = self.__wsstrip(text)
-            lines = string.split(self.regex.sub(replace, strippedText), "\n")
-            # lines now contains a list of strings (most of the time
-            # a single element list)
-
-            # if the line only had a single @subst@ expression which
-            # was evaluated to nothing, then skip the extra newline
-            if self.regex.search(strippedText) and \
-               lines == [""]:
-                return []
-            
-            indentedLines = []
-            for line in lines:
-                indentedLines.append(" "*wsCount + line)
-            return indentedLines
-
-        rawLines = string.split(text, "\n")
-        lines = []
-        for line in rawLines:
-            afterSubs = doSub(self, line)
-            lines = lines + afterSubs
-            
-        # count the preceeding whitespace
-        whitespace = self.__wscount(lines[0])
-        
-        for l in lines:
-            new_whitespace = self.__wscount(l)
-            if (new_whitespace > whitespace):
-                self.inc_indent()
-            elif (new_whitespace < whitespace):
-                self.dec_indent()
-            whitespace = new_whitespace
-            
-            self.write(self.istring * self.indent + self.__wsstrip(l))
-
-    def niout(self, text, ldict={}, **dict):
-        """Output a multi-line string without indentation."""
-
-        oldIndent = self.indent
-        self.indent = 0
-        self.out(text, ldict) # FIXME
-        self.indent = oldIndent
-        
-
 # simpler version (almost identical to dpg1s, except with the self.write
 # method):
 class Stream:
@@ -275,6 +192,40 @@ class StringStream(Stream):
 
     def __add__(self, other):
         return self.__buffer + str(other)
+
+# dummy function which exists to get a handle on its type
+def fn():
+    pass
+
+class LazyStream(Stream):
+    def __init__(self, file, indent_size = 4):
+        Stream.__init__(self, file, indent_size)
+        self._function_type = type(fn)
+        self._integer_type = type(1)
+        self._string_type = type("foo")
+
+    def out(self, text, ldict={}, **dict):
+        dict.update(ldict)
+
+        is_literal_text = 1 == 0
+        for l in string.split(text, '@'):
+            is_literal_text = not(is_literal_text)
+
+            if is_literal_text:
+                self.write(l)
+            else:
+                thing = eval(l, globals(), dict)
+                if isinstance(thing, self._string_type):
+                    self.write(thing)
+                elif isinstance(thing, self._function_type):
+                    apply(thing)
+                elif isinstance(thing, self._integer_type) or \
+                     hasattr(thing, "__str__"):
+                    self.write(str(thing))
+                else:
+                    raise "What kind of type is " + repr(thing)
+        self.write("\n")
+            
 
 
 # ------------------------------------------------------------------
