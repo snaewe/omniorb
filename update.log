@@ -1,3 +1,21 @@
+Tue Nov  7 18:16:51 GMT 2000 sll
+================================
+
+- Updated from omni3_develop so that COS library compiles
+
+include/omni4/CORBA.h
+
+- Updates to pass all the idl tests in the testsuite
+
+include/omniORB4/seqTemplatedefns.h
+
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/iface.py
+src/lib/omniORB/omniidl_be/cxx/skutil.py
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/header/def.py
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+
 Mon Nov  6 12:48:39 GMT 2000 dpg1
 =================================
 
