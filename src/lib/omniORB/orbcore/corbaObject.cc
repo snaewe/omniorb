@@ -11,9 +11,14 @@
  
 /*
   $Log$
-  Revision 1.3  1997/01/13 14:57:23  sll
-  Added marshalling routines for CORBA::Object.
+  Revision 1.4  1997/01/23 15:29:50  sll
+  Removed static object CORBA_Object_nil.
+  Added copy ctor and operator= for Object_var class because it is not
+  instantiated from the sequence template anymore.
 
+// Revision 1.3  1997/01/13  14:57:23  sll
+// Added marshalling routines for CORBA::Object.
+//
 // Revision 1.2  1997/01/08  18:02:32  ewc
 // Added unsigned int to remove compiler warning
 //
@@ -32,7 +37,6 @@ Object::Object()
   return;
 }
 
-static CORBA::Object CORBA_Object_nil;
 
 CORBA::Object_ptr
 CORBA::
@@ -308,3 +312,25 @@ Object_Helper::unmarshalObjRef(MemBufferedStream &s)
   return CORBA::Object::unmarshalObjRef(s);
 }
 
+CORBA::
+Object_var::Object_var(const CORBA::Object_member& p) 
+{
+  if (!CORBA::is_nil(p._ptr)) {
+    pd_objref = CORBA::Object::_duplicate(p._ptr);
+  }
+  else
+    pd_objref = CORBA::Object::_nil();
+}
+
+CORBA::Object_var&
+CORBA::
+Object_var::operator= (const CORBA::Object_member& p) 
+{
+  if (!CORBA::is_nil(pd_objref)) CORBA::release(pd_objref);
+  if (!CORBA::is_nil(p._ptr)) {
+    pd_objref = CORBA::Object::_duplicate(p._ptr);
+  }
+  else
+    pd_objref = CORBA::Object::_nil();
+  return *this;
+}
