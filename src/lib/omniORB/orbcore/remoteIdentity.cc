@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.15  2002/07/03 15:49:51  dgrisby
+  Correct debug flag, typos, bug report address.
+
   Revision 1.2.2.14  2001/09/19 17:26:53  dpg1
   Full clean-up after orb->destroy().
 
@@ -285,7 +288,7 @@ omniRemoteIdentity::locateRequest(omniCallDescriptor& call_desc)
       iop_client->RequestCompleted();
       if (omniORB::trace(10)) {
 	omniORB::logger log;
-	log << "Remote locatRequest: GIOP::NEEDS_ADDRESSING_MODE: "
+	log << "Remote locateRequest: GIOP::NEEDS_ADDRESSING_MODE: "
 	    << (int) v << " retry request.\n";
       }
       goto again;

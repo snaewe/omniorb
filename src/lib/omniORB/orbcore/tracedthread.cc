@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.9  2002/07/03 15:49:51  dgrisby
+  Correct debug flag, typos, bug report address.
+
   Revision 1.2.2.8  2002/03/21 11:00:05  dpg1
   Minor message tweaks.
 
@@ -93,7 +96,7 @@
 
 static const char* bug_msg =
   " This is probably a bug in omniORB. Please submit a report\n"
-  " (with stack trace if possible) to <omniorb@omniorb.org>.\n";
+  " (with stack trace if possible) to <omniorb@omniorb.net>.\n";
 
 
 omni_tracedmutex::omni_tracedmutex()

@@ -1,3 +1,21 @@
+Wed Jul  3 16:44:38 BST 2002 dpg1
+=================================
+
+- Correct suggested path for Python.
+
+mk/platforms/x86_nt_4.0.mk
+
+- Minor registry code bugfix.
+
+src/lib/omniORB/orbcore/orbOptionsReg.cc
+
+- Correct debug flag, typos, bug report address.
+
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/remoteIdentity.cc
+src/lib/omniORB/orbcore/tracedthread.cc
+
+
 Wed Jun  5 23:20:39 BST 2002 dgrisby
 ====================================
 
