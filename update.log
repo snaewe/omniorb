@@ -1,3 +1,12 @@
+Fri Sep  6 22:58:42 BST 2002 dgrisby
+====================================
+
+- Defines for codeset lib, used by omniORBpy.
+
+mk/unix.mk
+mk/win32.mk
+
+
 Fri Sep  6 22:13:24 BST 2002 dgrisby
 ====================================
 
