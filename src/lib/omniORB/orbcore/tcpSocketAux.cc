@@ -26,10 +26,14 @@
 // Description:
 //	
 
-/* $Log$
-/* Revision 1.1.4.1  2000/09/27 17:30:31  sll
-/* *** empty log message ***
 /*
+   $Log$
+   Revision 1.1.4.2  2000/11/09 12:27:59  dpg1
+   Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
+   Revision 1.1.4.1  2000/09/27 17:30:31  sll
+   *** empty log message ***
+
    Revision 1.1.2.2  1999/11/04 20:20:23  sll
    GIOP engines can now do callback to the higher layer to calculate total
    message size if necessary.

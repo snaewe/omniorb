@@ -65,7 +65,7 @@ omniORB4/ir_defs.hh omniORB4/ir_operators.hh omniORB4/ir_poa.hh: ir.idl
 
 omniORB4/corbaidl_defs.hh corbaidl_operators.hh corbaidl_poa.hh: corbaidl.idl
 	@(dir=omniORB4; $(CreateDir))
-	$(OMNIORB_IDL) -WbF -ComniORB4 $<
+	$(OMNIORB_IDL) -nf -WbF -ComniORB4 $<
 
 ciao:: $(STUBHEADERS)
 	@$(MakeSubdirs)

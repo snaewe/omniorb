@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.16.2.3  2000/11/09 12:27:56  dpg1
+  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
   Revision 1.16.2.2  2000/09/27 17:53:27  sll
   Updated to identify the ORB as omniORB4.
 
@@ -98,15 +101,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-#ifndef OMNIORB_USEHOSTNAME_VAR
-#define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
-#endif
-
 static const char* boa_ids[] = { "omniORB4_BOA",
-			       "omniORB3_BOA", 
-			       "omniORB2_BOA", 
-			       0 };
+				 "omniORB3_BOA", 
+				 "omniORB2_BOA", 
+				 0 };
 
 static omniOrbBOA*                       the_boa = 0;
 static omni_tracedmutex                  boa_lock;

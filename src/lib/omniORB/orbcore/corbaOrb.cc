@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.6  2000/11/09 12:27:56  dpg1
+  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
   Revision 1.33.2.5  2000/10/27 15:42:07  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -217,6 +220,7 @@
 #include <errno.h>
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 
 
 static const char* orb_ids[] = { "omniORB4",
@@ -224,6 +228,9 @@ static const char* orb_ids[] = { "omniORB4",
 				 "omniORB2", 
 				 0 };
 
+#ifndef OMNIORB_PRINCIPAL_VAR
+#  define OMNIORB_PRINCIPAL_VAR "OMNIORB_PRINCIPAL"
+#endif
 
 static omniOrbORB*          the_orb              = 0;
 static int                  orb_destroyed        = 0;
@@ -308,6 +315,17 @@ CORBA::ORB::_nil()
 const char*
 CORBA::ORB::_PD_repoId = "IDL:omg.org/CORBA/ORB:1.0";
 
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
+
+#include <exception.h>
+static void omni_abort()
+{
+  abort();
+}
+
+#endif
+#endif
 
 CORBA::ORB_ptr
 CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
@@ -372,6 +390,17 @@ CORBA::ORB_init(int& argc, char** argv, const char* orb_identifier)
   catch (...) {
     OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
   }
+
+#if defined(__sunos__) && defined(__sparc__) && __OSVERSION__ >= 5
+#if defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x500
+  // Sun C++ 5.0 or Forte C++ 6.0 generated code will segv occasionally
+  // when concurrent threads throw an exception. The stack trace points
+  // to a problem in the exception unwinding. The workaround seems to be
+  // to install explicitly an uncaught exception handler, which is what
+  // we do here.
+  set_terminate(omni_abort);
+#endif
+#endif
 
   the_orb = new omniOrbORB(0);
   the_orb->_NP_incrRefCount();
@@ -705,7 +734,10 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 {
   CORBA::Boolean orbId_match = 0;
 
-   if( orb_identifier && !isValidId(orb_identifier) ) {
+  if (orb_identifier && orb_identifier[0] == '\0')
+    orb_identifier = myOrbId();
+
+  if( orb_identifier && !isValidId(orb_identifier) ) {
     if( omniORB::trace(1) ) {
       omniORB::logger l;
       l << "CORBA::ORB_init failed -- the ORBid (" << orb_identifier << ")"
@@ -787,8 +819,8 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	}
 	{
 	  unsigned int slen = strlen(argv[idx+1]) + 1;
-	  CORBA::String_var id  = CORBA::string_alloc(slen);
-	  CORBA::String_var uri = CORBA::string_alloc(slen);
+	  CORBA::String_var id(CORBA::string_alloc(slen));
+	  CORBA::String_var uri(CORBA::string_alloc(slen));
 	  if (sscanf(argv[idx+1], "%[^=]=%s", (char*)id, (char*)uri) != 2) {
 	    if (omniORB::trace(1)) {
 	      omniORB::logger l;
@@ -1188,8 +1220,10 @@ parse_ORB_args(int& argc, char** argv, const char* orb_identifier)
 	  return 0;
 	}
 
+	const char* hostname = getenv(OMNIORB_USEHOSTNAME_VAR);
+	if( !hostname )  hostname = "";
 	omniObjAdapter::options.
-	  incomingPorts.push_back(omniObjAdapter::ListenPort("", port));
+	  incomingPorts.push_back(omniObjAdapter::ListenPort(hostname, port));
 
 	move_args(argc, argv, idx, 2);
 	continue;
@@ -1352,8 +1386,18 @@ public:
   void attach() {
 
     // myPrincipalID, to be used in the principal field of IIOP calls
-    CORBA::ULong l = strlen("nobody")+1;
-    CORBA::Octet *p = (CORBA::Octet *) "nobody";
+    CORBA::ULong  l;
+    CORBA::Octet* p;
+
+    char* env = getenv(OMNIORB_PRINCIPAL_VAR);
+    if (env) {
+      l = strlen(env) + 1;
+      p = (CORBA::Octet*)env;
+    }
+    else {
+      l = strlen("nobody")+1;
+      p = (CORBA::Octet *) "nobody";
+    }
     omni::myPrincipalID.length(l);
     unsigned int i;
     for (i=0; i < l; i++) {

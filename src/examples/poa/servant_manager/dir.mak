@@ -18,18 +18,18 @@
 # Where is the top of this distribution. All executable, library and include
 # directories are relative to this variable.
 #
-TOP = ..\..\..
+TOP = ..\..\..\..
 
 ##########################################################################
 # Essential flags to use omniORB.
 #
 DIR_CPPFLAGS   = -I. -I$(TOP)\include
 #
-# omniDynamic400_rt.lib is the runtime DLL to support the CORBA dynamic
+# omniDynamic301_rt.lib is the runtime DLL to support the CORBA dynamic
 # interfaces, such as Anys, typecodes, DSI and DII. In these examples, the
 # runtime library is not required as none of these features are used.
 # However, a bug in MSVC++ causes it to generate a bunch of references
-# to functions in omniDynamic400_rt.lib when compiling the stubs.
+# to functions in omniDynamic301_rt.lib when compiling the stubs.
 # So now we link the dynamic library as well.
 # An alternative is to replace the dynamic library with the much smaller 
 # library msvcstub.lib. The smaller library contains nothing but stubs
@@ -37,11 +37,11 @@ DIR_CPPFLAGS   = -I. -I$(TOP)\include
 # interfaces are used. We use the small library here. If you prefer
 # to link with the dynamic library, swap the comment on the next 2
 # lines.
-#OMNI_DYNAMIC_LIB = omniDynamic400_rt.lib
-OMNI_DYNAMIC_LIB = msvcstub.lib
+#OMNI_DYNAMIC_LIB = omniDynamic301_rt.lib
+OMNI_DYNAMIC_LIB = msvcstub.lib -NODEFAULTLIB:libcmt.lib -NODEFAULTLIB:libcmtd.lib 
 
 CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-CORBA_LIB      = omniORB400_rt.lib omnithread2_rt.lib \
+CORBA_LIB      = omniORB301_rt.lib omnithread2_rt.lib \
                  $(OMNI_DYNAMIC_LIB) \
                  wsock32.lib advapi32.lib \
                  -libpath:$(TOP)\lib\x86_win32
@@ -57,24 +57,21 @@ CXXLINKOPTIONS =
 # To build debug executables
 # Replace the above with the following:
 #
-#OMNI_DYNAMIC_LIB = omniDynamic400_rtd.lib
+#OMNI_DYNAMIC_LIB = omniDynamic301_rtd.lib
 #OMNI_DYNAMIC_LIB = msvcstubd.lib
 #CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
-#CORBA_LIB      = omniORB400_rtd.lib omnithread2_rtd.lib \
+#CORBA_LIB      = omniORB301_rtd.lib omnithread2_rtd.lib \
 #                 $(OMNI_DYNAMIC_LIB) \
 #                 wsock32.lib advapi32.lib -libpath:$(TOP)\lib\x86_win32
 #CXXFLAGS       = -MDd -GX -Z7 -Od  $(CORBA_CPPFLAGS) $(DIR_CPPFLAGS)
 #CXXLINKOPTIONS = -debug -PDB:NONE	
 
-all:: cb_client.exe cb_server.exe cb_shutdown.exe
+all:: servant_locator.exe servant_activator.exe
 
-cb_client.exe: echo_callbackSK.obj cb_client.obj
+servant_locator.exe: echoSK.obj servant_locator.obj
   link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB)
 
-cb_server.exe: echo_callbackSK.obj cb_server.obj
-  link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB)
-
-cb_shutdown.exe: echo_callbackSK.obj cb_shutdown.obj
+servant_activator.exe: echoSK.obj servant_activator.obj
   link -nologo $(CXXLINKOPTIONS) -out:$@ $** $(CORBA_LIB)
 
 clean::
@@ -84,9 +81,12 @@ clean::
 
 veryclean::
   -del *.obj
-  -del echo_callbackSK.* echo_callback.hh
+  -del echoSK.* echo.hh
   -del *.exe
 
 
-echo_callback.hh echo_callbackSK.cc: echo_callback.idl
-	$(TOP)\bin\x86_win32\omniidl -T -bcxx -Wbh=.hh -Wbs=SK.cc echo_callback.idl
+echo.hh echoSK.cc: echo.idl
+	$(TOP)\bin\x86_win32\omniidl -T -bcxx -Wbh=.hh -Wbs=SK.cc echo.idl
+
+echo.idl: $(TOP)\idl\echo.idl
+	copy $(TOP)\idl\echo.idl .

@@ -2933,6 +2933,9 @@ The following options are common to all back-ends:
 \cmdline{-N}
      \> Do not run the preprocessor.\\
 
+\cmdline{-T}
+     \> Use a temporary file, not a pipe, for preprocessor output.\\
+
 \cmdline{-Wp}\textit{arg}[,\textit{arg}\dots]
      \> Send arguments to the preprocessor.\\
 
@@ -2986,6 +2989,16 @@ current directory is not on the include search path by default---use
 specify a different preprocessor to omnicpp. Beware that line
 directives inserted by other preprocessors are likely to confuse
 omniidl.
+
+\subsubsection{Windows 9x}
+
+The output from the C preprocessor is normally fed to the omniidl
+parser through a pipe. On some Windows 98 machines (but not all!)  the
+pipe does not work, and the preprocessor output is echoed to the
+screen. When this happens, the omniidl parser sees an empty file, and
+produces useless stub files with strange long names. To avoid the
+problem, use the `\cmdline{-T}' option to create a temporary file
+between the two stages.
 
 
 \subsection{Forward-declared interfaces}
@@ -3615,6 +3628,18 @@ disable this feature, and hence achieve interoperability. The command
 line option \cmdline{-ORBverifyObjectExistsAndType} has the same
 effect.
 
+
+\section{GIOP Requesting Principal field}
+
+In versions 1.0 and 1.1 of the GIOP specification, request messages
+contain a `principal' field which was intended to identify the client.
+The meaning of the principal field was never specified, and its use is
+now deprecated. The field is not present in GIOP 1.2. omniORB normally
+uses the string `\texttt{nobody}' in the principal field. However,
+some systems (e.g.\ the GNOME desktop environment) use the principal
+field as an authentication mechanism, so omniORB allows you to
+configure the principal by setting the \envvar{OMNIORB_PRINCIPAL}
+environment variable.
 
 
 \section{Trapping omniORB Internal Errors}

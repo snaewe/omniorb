@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.6  2000/11/09 12:27:57  dpg1
+  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
   Revision 1.2.2.5  2000/11/03 19:14:03  sll
   Use _CORBA_Unbounded_Sequence_Octet instead of _CORBA_Unbounded_Sequence__Octet
 
@@ -637,6 +640,10 @@ omni::createObjRef(const char* targetRepoId,
   if( !pof ) {
     pof = proxyObjectFactory::lookup(targetRepoId);
     OMNIORB_ASSERT(pof);
+    // The assertion above will fail if your application attempts to
+    // create an object reference while another thread is shutting
+    // down the ORB.
+
     if( strcmp(targetRepoId, CORBA::Object::_PD_repoId) )
       target_intf_not_confirmed = 1;
   }
@@ -744,6 +751,10 @@ omni::createObjRef(const char* targetRepoId,
   if( !pof ) {
     pof = proxyObjectFactory::lookup(targetRepoId);
     OMNIORB_ASSERT(pof);
+    // The assertion above will fail if your application attempts to
+    // create an object reference while another thread is shutting
+    // down the ORB.
+
     target_intf_not_confirmed = 1;
   }
 
@@ -961,7 +972,9 @@ omni::assertFail(const char* file, int line, const char* expr)
 {
   if( omniORB::trace(1) ) {
     omniORB::logger l;
-    l << "Assertion failed.  This indicates a bug in omniORB.\n"
+    l << "Assertion failed.  This indicates a bug in the application using\n"
+      "omniORB, or maybe in omniORB itself. e.g. using the ORB after it has\n"
+      "been shut down.\n"
       " file: " << file << "\n"
       " line: " << line << "\n"
       " info: " << expr << '\n';

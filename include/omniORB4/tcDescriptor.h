@@ -133,13 +133,17 @@ typedef CORBA::Boolean (*tcUnionGetValueDescFn)
 // possible size of discriminator.
 union tcUnionDiscriminatorType
 {
-  CORBA::Long u_long;
-  CORBA::Short u_short;
-  CORBA::ULong u_ulong;
-  CORBA::UShort u_ushort;
-  CORBA::Char u_char;
-  CORBA::Boolean u_boolean;
-  CORBA::ULong u_enum;
+  CORBA::Long      u_long;
+  CORBA::Short     u_short;
+  CORBA::ULong     u_ulong;
+  CORBA::UShort    u_ushort;
+  CORBA::Char      u_char;
+  CORBA::Boolean   u_boolean;
+  CORBA::ULong     u_enum;
+#ifdef HAS_LongLong
+  CORBA::LongLong  u_longlong;
+  CORBA::ULongLong u_ulonglong;
+#endif
 };
 
 struct tcUnionDesc
@@ -225,16 +229,23 @@ union tcDescriptor {
   // BASIC types
   // appendItem() will read in the data pointed to
   // fetchItem() will overwrite the data pointed to with new data
-  CORBA::Short*   p_short;
-  CORBA::Long*    p_long;
-  CORBA::UShort*  p_ushort;
-  CORBA::ULong*   p_ulong;
-  CORBA::Float*   p_float;
-  CORBA::Double*  p_double;
-  CORBA::Boolean* p_boolean;
-  CORBA::Char*    p_char;
-  CORBA::Octet*   p_octet;
-  CORBA::ULong*   p_enum;
+  CORBA::Short*      p_short;
+  CORBA::Long*       p_long;
+  CORBA::UShort*     p_ushort;
+  CORBA::ULong*      p_ulong;
+  CORBA::Float*      p_float;
+  CORBA::Double*     p_double;
+  CORBA::Boolean*    p_boolean;
+  CORBA::Char*       p_char;
+  CORBA::Octet*      p_octet;
+  CORBA::ULong*      p_enum;
+#ifdef HAS_LongLong
+  CORBA::LongLong*   p_longlong;
+  CORBA::ULongLong*  p_ulonglong;
+#endif
+#ifdef HAS_LongDouble
+  CORBA::LongDouble* p_longdouble;
+#endif
 
   CORBA::Any*     p_any;
 
@@ -328,6 +339,29 @@ _0RL_buildDesc_cunsigned_plong(tcDescriptor &desc, const CORBA::ULong &data)
 {
   desc.p_ulong = (CORBA::ULong *)&data;
 }
+
+#ifdef HAS_LongLong
+inline void
+_0RL_buildDesc_clonglong(tcDescriptor &desc, const CORBA::LongLong &data)
+{
+  desc.p_longlong = (CORBA::LongLong *)&data;
+}
+
+inline void
+_0RL_buildDesc_cunsigned_plonglong(tcDescriptor &desc,
+				   const CORBA::ULongLong &data)
+{
+  desc.p_ulonglong = (CORBA::ULongLong *)&data;
+}
+
+#ifdef HAS_LongDouble
+inline void
+_0RL_buildDesc_clongdouble(tcDescriptor &desc, const CORBA::LongDouble &data)
+{
+  desc.p_longdouble = (CORBA::LongDouble *)&data;
+}
+#endif
+#endif
 
 #if !defined(NO_FLOAT)
 inline void

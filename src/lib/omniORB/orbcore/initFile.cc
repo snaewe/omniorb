@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.32.2.3  2000/11/09 12:27:57  dpg1
+  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
   Revision 1.32.2.2  2000/09/27 18:00:49  sll
   Use the helper functions in _CORBA_String_helper.
 
@@ -304,8 +307,8 @@ void initFile::initialize()
 
     if (strcmp((const char*)entryname,"ORBInitRef") == 0) {
       unsigned int slen = strlen(data) + 1;
-      CORBA::String_var id  = CORBA::string_alloc(slen);
-      CORBA::String_var uri = CORBA::string_alloc(slen);
+      CORBA::String_var id(CORBA::string_alloc(slen));
+      CORBA::String_var uri(CORBA::string_alloc(slen));
       if (sscanf(data, "%[^=]=%s", (char*)id, (char*)uri) != 2) {
 	if (omniORB::trace(1)) {
 	  omniORB::logger l;

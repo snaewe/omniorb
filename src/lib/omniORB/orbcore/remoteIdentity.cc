@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.4  2000/11/09 12:27:59  dpg1
+  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
   Revision 1.2.2.3  2000/11/03 19:12:07  sll
   Use new marshalling functions for byte, octet and char. Use get_octet_array
   instead of get_char_array and put_octet_array instead of put_char_array.
@@ -134,6 +137,7 @@ omniRemoteIdentity::dispatch(omniCallDescriptor& call_desc)
   ASSERT_OMNI_TRACEDMUTEX_HELD(*omni::internalLock, 1);
 
   omniRemoteIdentity_RefHolder rh(this);
+  // omni::internalLock has been released by RefHolder constructor
 
   if( omniORB::traceInvocations ) {
     omniORB::logger l;

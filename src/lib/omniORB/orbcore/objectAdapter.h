@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.2  2000/11/09 12:27:57  dpg1
+ Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
  Revision 1.2.2.1  2000/07/17 10:35:55  sll
  Merged from omni3_develop the diff between omni3_0_0_pre3 and omni3_0_0.
 
@@ -49,6 +52,10 @@
 #define __OMNI_OBJECTADAPTER_H__
 
 #include <omniutilities.h>
+
+#ifndef OMNIORB_USEHOSTNAME_VAR
+#define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
+#endif
 
 
 class ropeFactoryList;

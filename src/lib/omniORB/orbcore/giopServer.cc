@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.22.2.5  2000/11/09 12:27:57  dpg1
+  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
   Revision 1.22.2.4  2000/11/03 19:12:05  sll
   Use new marshalling functions for byte, octet and char. Use get_octet_array
   instead of get_char_array and put_octet_array instead of put_char_array.
@@ -481,6 +484,9 @@ GIOP_S::HandleRequest()
       // message.
       pd_state = GIOP_S::Idle;
     }
+  }
+  catch(const omniORB::fatalException& ex) {
+      throw; // don't mask bugs!
   }
   catch(...) {
     if( omniORB::traceLevel > 1 ) {

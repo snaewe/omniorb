@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2000/11/09 12:27:50  dpg1
+  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
   Revision 1.1.2.1  2000/10/27 15:42:03  dpg1
   Initial code set conversion support. Not yet enabled or fully tested.
 
@@ -133,9 +136,11 @@ public:
   }
 
   inline _CORBA_WString_var& operator=(const _CORBA_WString_var& s) {
-    _CORBA_WString_helper::free(_data);
-    _data = 0;
-    if( (const _CORBA_WChar*)s )  _data = _CORBA_WString_helper::dup(s);
+    if (&s != this) {
+      _CORBA_WString_helper::free(_data);
+      _data = 0;
+      if( (const _CORBA_WChar*)s )  _data = _CORBA_WString_helper::dup(s);
+    }
     return *this;
   }
 
@@ -223,11 +228,13 @@ public:
   }
 
   inline _CORBA_WString_member& operator=(const _CORBA_WString_member& s) {
-    _CORBA_WString_helper::free(_ptr);
-    if (s._ptr && s._ptr != _CORBA_WString_helper::empty_wstring)
-      _ptr = _CORBA_WString_helper::dup(s._ptr);
-    else
-      _ptr = s._ptr;
+    if (&s != this) {
+      _CORBA_WString_helper::free(_ptr);
+      if (s._ptr && s._ptr != _CORBA_WString_helper::empty_wstring)
+	_ptr = _CORBA_WString_helper::dup(s._ptr);
+      else
+	_ptr = s._ptr;
+    }
     return *this;
   }
 
@@ -328,14 +335,16 @@ public:
   }
 
   inline _CORBA_WString_element& operator=(const _CORBA_WString_element& s) {
-    if (pd_rel) {
-      _CORBA_WString_helper::free(pd_data);
-      if (s.pd_data && s.pd_data != _CORBA_WString_helper::empty_wstring)
-	pd_data = _CORBA_WString_helper::dup(s.pd_data);
-      else
+    if (&s != this) {
+      if (pd_rel) {
+	_CORBA_WString_helper::free(pd_data);
+	if (s.pd_data && s.pd_data != _CORBA_WString_helper::empty_wstring)
+	  pd_data = _CORBA_WString_helper::dup(s.pd_data);
+	else
+	  pd_data = (_CORBA_WChar*)s.pd_data;
+      } else
 	pd_data = (_CORBA_WChar*)s.pd_data;
-    } else
-      pd_data = (_CORBA_WChar*)s.pd_data;
+    }
     return *this;
   }
 

@@ -5,8 +5,8 @@
 static CORBA::ORB_var orb;
 static int            dying = 0;
 static int            num_active_servers = 0;
-static omni_mutex     lock;
-static omni_condition signal(&lock);
+static omni_mutex     mu;
+static omni_condition signal(&mu);
 
 //////////////////////////////////////////////////////////////////////
 
@@ -43,9 +43,9 @@ server_thread::run(void* arg)
 
   cerr << "cb_server: Worker thread is exiting." << endl;
 
-  lock.lock();
+  mu.lock();
   int do_signal = --num_active_servers == 0;
-  lock.unlock();
+  mu.unlock();
   if( do_signal )  signal.signal();
 }
 
@@ -103,9 +103,9 @@ server_i::_cxx_register(cb::CallBack_ptr cb, const char* mesg,
 
   cerr << "cb_server: Starting a new worker thread" << endl;
 
-  lock.lock();
+  mu.lock();
   num_active_servers++;
-  lock.unlock();
+  mu.unlock();
 
   server_thread* server = new server_thread(cb, mesg, period_secs);
   server->start();
@@ -115,7 +115,7 @@ server_i::_cxx_register(cb::CallBack_ptr cb, const char* mesg,
 void
 server_i::shutdown()
 {
-  omni_mutex_lock sync(lock);
+  omni_mutex_lock sync(mu);
 
   if( !dying ) {
     cerr << "cb_server: I am being shutdown!" << endl;

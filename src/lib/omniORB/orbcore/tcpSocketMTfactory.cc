@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.29.2.5  2000/11/09 12:27:59  dpg1
+  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
   Revision 1.29.2.4  2000/10/06 16:38:34  sll
   Replaced omniConnectionBroken with strand::raiseException().
 
@@ -201,9 +204,9 @@
   Revision 1.5  1998/03/04 14:44:36  sll
   Updated to use omniORB::giopServerThreadWrapper.
 
-// Revision 1.4  1998/01/20  17:32:38  sll
-// Added support for OpenVMS.
-//
+  Revision 1.4  1998/01/20  17:32:38  sll
+  Added support for OpenVMS.
+
   Revision 1.3  1997/12/18 17:27:39  sll
   Updated to work under glibc-2.0.
 
@@ -1037,7 +1040,7 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
     fds.fd = pd_socket;
     fds.events = POLLIN;
 
-    while (!(rx = poll(&fds,1,omniORB::scanGranularity()*1000) > 0)) {
+    while ((rx = poll(&fds,1,omniORB::scanGranularity()*1000)) <= 0) {
       if (rx == RC_SOCKET_ERROR && errno != EINTR) 
 	break;
     }

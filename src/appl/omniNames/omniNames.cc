@@ -175,7 +175,7 @@ main(int argc, char **argv)
   // Initialize the ORB and the object adapter.
   //
 
-  CORBA::ORB_ptr orb = CORBA::ORB_init(argc, argv, "omniORB3");
+  CORBA::ORB_ptr orb = CORBA::ORB_init(argc, argv, "omniORB4");
 
   {
     CORBA::Object_var poaref = orb->resolve_initial_references("RootPOA");

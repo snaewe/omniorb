@@ -84,6 +84,14 @@ public:
   virtual void insert_ulong(CORBA::ULong value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
+#ifdef HAS_LongLong
+  virtual void insert_longlong(CORBA::LongLong value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+  virtual void insert_ulonglong(CORBA::ULongLong value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#endif
 #ifndef NO_FLOAT
   virtual void insert_float(CORBA::Float value) {
     _CORBA_invoked_nil_pseudo_ref();
@@ -91,6 +99,11 @@ public:
   virtual void insert_double(CORBA::Double value) {
     _CORBA_invoked_nil_pseudo_ref();
   }
+#ifdef HAS_LongDouble
+  virtual void insert_longdouble(CORBA::LongDouble value) {
+    _CORBA_invoked_nil_pseudo_ref();
+  }
+#endif
 #endif
   virtual void insert_string(const char* value) {
     _CORBA_invoked_nil_pseudo_ref();
@@ -132,6 +145,16 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
+#ifdef HAS_LongLong
+  virtual CORBA::LongLong get_longlong() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+  virtual CORBA::ULongLong get_ulonglong() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0;
+  }
+#endif
 #ifndef NO_FLOAT
   virtual CORBA::Float get_float() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -141,6 +164,12 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0.0;
   }
+#ifdef HAS_LongDouble
+  virtual CORBA::LongDouble get_longdouble() {
+    _CORBA_invoked_nil_pseudo_ref();
+    return 0.0;
+  }
+#endif
 #endif
   virtual char* get_string() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -203,7 +232,7 @@ CORBA::DynAny::_nil()
 /////////////////////////// omniNilDynEnum ///////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynEnum : public CORBA::DynEnum, omniNilDynAny {
+class omniNilDynEnum : public CORBA::DynEnum, public omniNilDynAny {
 public:
   virtual char* value_as_string() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -238,7 +267,7 @@ CORBA::DynEnum::_nil()
 ////////////////////////// omniNilDynStruct //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynStruct : public CORBA::DynStruct, omniNilDynAny {
+class omniNilDynStruct : public CORBA::DynStruct, public omniNilDynAny {
 public:
   virtual char*  current_member_name() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -274,7 +303,7 @@ CORBA::DynStruct::_nil()
 /////////////////////////// omniNilDynUnion //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynUnion : public CORBA::DynUnion, omniNilDynAny {
+class omniNilDynUnion : public CORBA::DynUnion, public omniNilDynAny {
 public:
   virtual CORBA::Boolean set_as_default() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -325,7 +354,7 @@ CORBA::DynUnion::_nil()
 ///////////////////////// omniNilDynSequence /////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynSequence : public CORBA::DynSequence, omniNilDynAny {
+class omniNilDynSequence : public CORBA::DynSequence, public omniNilDynAny {
 public:
   virtual CORBA::ULong length() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -360,7 +389,7 @@ CORBA::DynSequence::_nil()
 /////////////////////////// omniNilDynArray //////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-class omniNilDynArray : public CORBA::DynArray, omniNilDynAny {
+class omniNilDynArray : public CORBA::DynArray, public omniNilDynAny {
 public:
   virtual CORBA::AnySeq* get_elements() {
     _CORBA_invoked_nil_pseudo_ref();

@@ -30,6 +30,9 @@
 
 /*
  * $Log$
+ * Revision 1.19.2.4  2000/11/09 12:27:52  dpg1
+ * Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+ *
  * Revision 1.19.2.3  2000/10/06 16:40:52  sll
  * Changed to use cdrStream.
  *
@@ -331,6 +334,24 @@ CORBA::Any::operator<<=(ULong u)
   pdAnyP()->setData(CORBA::_tc_ulong, tcd);
 }
 
+#ifdef HAS_LongLong
+void
+CORBA::Any::operator<<=(LongLong l)
+{
+  tcDescriptor tcd;
+  tcd.p_longlong = &l;
+  pdAnyP()->setData(CORBA::_tc_longlong, tcd);
+}
+
+void
+CORBA::Any::operator<<=(ULongLong u)
+{
+  tcDescriptor tcd;
+  tcd.p_ulonglong = &u;
+  pdAnyP()->setData(CORBA::_tc_ulonglong, tcd);
+}
+#endif
+
 
 #if !defined(NO_FLOAT)
 void
@@ -341,7 +362,6 @@ CORBA::Any::operator<<=(Float f)
   pdAnyP()->setData(CORBA::_tc_float, tcd);
 }
 
-
 void
 CORBA::Any::operator<<=(Double d)
 {
@@ -349,6 +369,17 @@ CORBA::Any::operator<<=(Double d)
   tcd.p_double = &d;
   pdAnyP()->setData(CORBA::_tc_double, tcd);
 }
+
+#ifdef HAS_LongDouble
+void
+CORBA::Any::operator<<=(LongDouble d)
+{
+  tcDescriptor tcd;
+  tcd.p_longdouble = &d;
+  pdAnyP()->setData(CORBA::_tc_longdouble, tcd);
+}
+#endif
+
 #endif
 
 
@@ -494,6 +525,26 @@ CORBA::Any::operator>>=(ULong& u) const
 }
 
 
+#ifdef HAS_LongLong
+CORBA::Boolean
+CORBA::Any::operator>>=(LongLong& l) const
+{
+  tcDescriptor tcd;
+  tcd.p_longlong = &l;
+  return pdAnyP()->getData(CORBA::_tc_longlong, tcd);
+}
+
+  
+CORBA::Boolean
+CORBA::Any::operator>>=(ULongLong& u) const
+{
+  tcDescriptor tcd;
+  tcd.p_ulonglong = &u;
+  return pdAnyP()->getData(CORBA::_tc_ulonglong, tcd);
+}
+#endif
+
+
 #if !defined(NO_FLOAT)
 CORBA::Boolean
 CORBA::Any::operator>>=(Float& f) const
@@ -511,6 +562,17 @@ CORBA::Any::operator>>=(Double& d) const
   tcd.p_double = &d;
   return pdAnyP()->getData(CORBA::_tc_double, tcd);
 }
+
+#ifdef HAS_LongDouble
+CORBA::Boolean
+CORBA::Any::operator>>=(LongDouble& d) const
+{
+  tcDescriptor tcd;
+  tcd.p_longdouble = &d;
+  return pdAnyP()->getData(CORBA::_tc_longdouble, tcd);
+}
+#endif
+
 #endif
 
 CORBA::Boolean CORBA::Any::operator>>=(CORBA::Any*& a) const

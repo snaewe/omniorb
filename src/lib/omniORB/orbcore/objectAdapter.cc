@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4  2000/11/09 12:27:57  dpg1
+ Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
  Revision 1.2.2.3  2000/10/03 17:39:46  sll
  DefaultLoopback now works.
 
@@ -96,11 +99,6 @@
 #define _tcpIncomingFactory tcpATMosMTincomingFactory
 #define _tcpIncomingRope    tcpATMosIncomingRope
 #define _tcpEndpoint        tcpATMosEndpoint
-#endif
-
-
-#ifndef OMNIORB_USEHOSTNAME_VAR
-#define OMNIORB_USEHOSTNAME_VAR "OMNIORB_USEHOSTNAME"
 #endif
 
 
@@ -189,7 +187,7 @@ omniObjAdapter::initialise()
       omniInitialReferences::initialise_bootstrap_agentImpl();
   }
   catch (...) {
-    throw;//?? hmm - this is probably quite bad.
+    OMNIORB_THROW(INITIALIZE,0,CORBA::COMPLETED_NO);
   }
 
   initialised = 1;

@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.4  2000/11/09 12:27:56  dpg1
+# Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+#
 # Revision 1.3.2.3  2000/11/03 19:23:53  sll
 # Replace the old set of marshalling operators in the generated code with
 # a couple of unified operators for cdrStream. Changed template to correspond
@@ -381,6 +384,8 @@ if( !strcmp(id, @inherited_name@::_PD_repoId) )
 """
 
 interface_sk = """\
+@sk_fqname@::@sk_name@(const omniOrbBoaKey& k) { pd_key = k; }
+
 @sk_fqname@::~@sk_name@() {}
 """
 

@@ -13,8 +13,8 @@ omniORB has been tested on the following Unix platforms:
 
   o Solaris 2.{5,6}/ Sun SparcCompiler C++ version 4.2
   o Windows NT / Windows 95 / Visual C++ version 5.0 (and also version 6.0)
+  o Linux 2.x (x86)/gcc-2.95/binutils-2.9.1.0.14/GNU Libc version 2
   o Linux 2.0 (x86)/ GNU C++ compiler version 2.7.2 /libc-5/ Linuxthreads 0.5
-  o Linux 2.0 (x86)/gcc-2.95/binutils-2.9.1.0.14/GNU Libc version 2
   o HPUX 11.00/ aC++
   o SGI Irix 6.x/SGI C++ compiler 7.2
 
@@ -79,8 +79,8 @@ Configuration
   compiler that comes with your platform may not be the right version.
 
 
-  2. Set the location of a Python 1.5.2 interpreter
-  -------------------------------------------------
+  2. Set the location of a Python interpreter
+  -------------------------------------------
 
   Edit ./mk/platforms/<platform>.mk, where <platform> is the platform
   name you set in config.mk.
@@ -88,8 +88,8 @@ Configuration
   Uncomment the 'PYTHON =' line, and set it to the path of your Python
   interpreter.
 
-  If you do not have Python 1.5.2, you can download the full source
-  distribution from
+  If you do not have Python 1.5.2 or higher, you can download the full
+  source distribution from
 
     http://www.python.org/download/
 
@@ -97,10 +97,10 @@ Configuration
 
     ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.tgz
 
-  Alternatively, on Solaris, Linux, IRIX and HPUX (and Windows, but this is
-  README.unix!) you can download a minimal version of Python which
-  contains just the functionality required by omniidl. Download it
-  from
+  Alternatively, on Solaris, Linux, IRIX and HPUX (and Windows, but
+  this is README.unix!) you can download a minimal version of Python
+  which contains just the functionality required by omniidl. Download
+  it from
 
     ftp://ftp.uk.research.att.com/pub/omniORB/python/
 

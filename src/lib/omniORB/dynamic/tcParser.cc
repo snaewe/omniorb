@@ -235,6 +235,17 @@ void copyUsingTC(TypeCode_base* tc, cdrStream& ibuf, cdrStream& obuf)
     case CORBA::tk_enum:
       { CORBA::ULong d;   d <<= ibuf; d >>= obuf; return; }
 
+#ifdef HAS_LongLong
+    case CORBA::tk_longlong:
+      { CORBA::LongLong d;    d <<= ibuf; d >>= obuf; return; }
+    case CORBA::tk_ulonglong:
+      { CORBA::ULongLong d;   d <<= ibuf; d >>= obuf; return; }
+#endif
+#ifdef HAS_LongDouble
+    case CORBA::tk_longdouble:
+      { CORBA::LongDouble d;  d <<= ibuf; d >>= obuf; return; }
+#endif
+
     case CORBA::tk_any:
       { CORBA::Any d;     d <<= ibuf; d >>= obuf; return; }
 
@@ -589,6 +600,20 @@ tcParser::appendSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
       *tcdata.p_enum    >>= pd_mbuf;
       break;
 
+#ifdef HAS_LongLong
+    case CORBA::tk_longlong:
+      *tcdata.p_longlong    >>= pd_mbuf;
+      break;
+    case CORBA::tk_ulonglong:
+      *tcdata.p_ulonglong   >>= pd_mbuf;
+      break;
+#endif
+#ifdef HAS_LongDouble
+    case CORBA::tk_longdouble:
+      *tcdata.p_longdouble  >>= pd_mbuf;
+      break;
+#endif
+
       // OTHER TYPES
     default:
       OMNIORB_ASSERT(0);
@@ -618,6 +643,13 @@ tcParser::appendItem(TypeCode_base* tc, tcDescriptor& tcdata)
   case CORBA::tk_char:
   case CORBA::tk_octet:
   case CORBA::tk_enum:
+#ifdef HAS_LongLong
+  case CORBA::tk_longlong:
+  case CORBA::tk_ulonglong:
+#endif
+#ifdef HAS_LongDouble
+  case CORBA::tk_longdouble:
+#endif
     appendSimpleItem(tc->NP_kind(), tcdata);
     break;
 
@@ -852,6 +884,20 @@ tcParser::fetchSimpleItem(CORBA::TCKind tck, tcDescriptor &tcdata)
       *tcdata.p_enum    <<= pd_mbuf;
       break;
 
+#ifdef HAS_LongLong
+    case CORBA::tk_longlong:
+      *tcdata.p_longlong    <<= pd_mbuf;
+      break;
+    case CORBA::tk_ulonglong:
+      *tcdata.p_ulonglong   <<= pd_mbuf;
+      break;
+#endif
+#ifdef HAS_LongDouble
+    case CORBA::tk_longdouble:
+      *tcdata.p_longdouble  <<= pd_mbuf;
+      break;
+#endif
+
       // OTHER TYPES
     default:
       OMNIORB_ASSERT(0);
@@ -881,6 +927,13 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
   case CORBA::tk_char:
   case CORBA::tk_octet:
   case CORBA::tk_enum:
+#ifdef HAS_LongLong
+  case CORBA::tk_longlong:
+  case CORBA::tk_ulonglong:
+#endif
+#ifdef HAS_LongDouble
+  case CORBA::tk_longdouble:
+#endif
     fetchSimpleItem(tc->NP_kind(), tcdata);
     break;
 
@@ -952,6 +1005,14 @@ tcParser::fetchItem(TypeCode_base* tc, tcDescriptor& tcdata)
       case CORBA::tk_enum:
 	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_enum;
 	break;
+#ifdef HAS_LongLong
+      case CORBA::tk_longlong:
+	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_longlong;
+	break;
+      case CORBA::tk_ulonglong:
+	discrim = (CORBA::PR_unionDiscriminator) *disc_desc.p_ulonglong;
+	break;
+#endif
       // case CORBA::tk_wchar:
       default:
 	OMNIORB_ASSERT(0);

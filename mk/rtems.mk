@@ -13,6 +13,9 @@
 # MODIFICATION/HISTORY:
 #
 # $Log$
+# Revision 1.2.4.2  2000/11/09 12:27:46  dpg1
+# Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+#
 # Revision 1.2.4.1  2000/08/21 13:31:47  sll
 # Merged make rules update from omni3_develop
 #
@@ -225,7 +228,7 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 #
 CorbaImplementation = OMNIORB
 
-OMNIORB_VERSION = 3.0.1
+OMNIORB_VERSION = 4.0.0
 OMNIORB_MAJOR_VERSION = $(word 1,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MINOR_VERSION = $(word 2,$(subst ., ,$(OMNIORB_VERSION)))
 OMNIORB_MICRO_VERSION = $(word 3,$(subst ., ,$(OMNIORB_VERSION)))

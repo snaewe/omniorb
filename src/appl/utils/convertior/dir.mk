@@ -10,7 +10,7 @@ all:: $(CONVERTIOR)
 clean::
 	$(RM) $(CONVERTIOR)
 
-$(CONVERTIOR): convertior.o $(CORBA_LIB_DEPEND)
+$(CONVERTIOR): convertior.o $(CORBA_LIB_NODYN_DEPEND)
 	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))
 
 export:: $(CONVERTIOR)

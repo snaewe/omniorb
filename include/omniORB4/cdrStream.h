@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/11/09 12:27:49  dpg1
+  Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
   Revision 1.1.2.3  2000/11/03 18:49:16  sll
   Separate out the marshalling of byte, octet and char into 3 set of distinct
   marshalling functions.
@@ -65,6 +68,21 @@
 #error "Swap32 has already been defined"
 #endif
 
+#ifdef HAS_LongLong
+#ifndef Swap64
+#define Swap64(l) \
+  ((((l) & _CORBA_LONGLONG_CONST(0xff00000000000000)) >> 56) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x00ff000000000000)) >> 40) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x0000ff0000000000)) >> 24) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x000000ff00000000)) >> 8)  | \
+   (((l) & _CORBA_LONGLONG_CONST(0x00000000ff000000)) << 8)  | \
+   (((l) & _CORBA_LONGLONG_CONST(0x0000000000ff0000)) << 24) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x000000000000ff00)) << 40) | \
+   (((l) & _CORBA_LONGLONG_CONST(0x00000000000000ff)) << 56))
+#else
+#error "Swap64 has already been defined"
+#endif
+#endif
 
 
 class cdrStream {
@@ -210,6 +228,38 @@ public:
     }
   }
 
+  friend inline void operator>>= (_CORBA_LongLong a, cdrStream& s) {
+    if (s.pd_marshal_byte_swap) {
+      _CORBA_LongLong t = Swap64(a);
+      a = t;
+    }
+    CdrMarshal(s,_CORBA_LongLong,omni::ALIGN_8,a);
+  }
+
+  friend inline void operator<<= (_CORBA_LongLong& a, cdrStream& s) {
+    CdrUnMarshal(s,_CORBA_LongLong,omni::ALIGN_8,a);
+    if (s.pd_unmarshal_byte_swap) {
+      _CORBA_LongLong t = Swap64(a);
+      a = t;
+    }
+  }
+
+  friend inline void operator>>= (_CORBA_ULongLong a, cdrStream& s) {
+    if (s.pd_marshal_byte_swap) {
+      _CORBA_ULongLong t = Swap64(a);
+      a = t;
+    }
+    CdrMarshal(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+  }
+
+  friend inline void operator<<= (_CORBA_ULongLong& a, cdrStream& s) {
+    CdrUnMarshal(s,_CORBA_ULongLong,omni::ALIGN_8,a);
+    if (s.pd_unmarshal_byte_swap) {
+      _CORBA_ULongLong t = Swap64(a);
+      a = t;
+    }
+  }
+
 #if !defined(NO_FLOAT)
 
   friend inline void operator>>= (_CORBA_Float a, cdrStream& s) {
@@ -255,6 +305,10 @@ public:
       ((_CORBA_ULong *)&a)[1] = tl2;
     }
   }
+
+#ifdef HAS_LongDouble
+#error "long double is not supported yet"
+#endif
 
 #endif
 
@@ -489,6 +543,28 @@ public:
       for( int i = 0; i < length; i++ )
 	a[i] = Swap32(a[i]);
   }
+
+#ifdef HAS_LongLong
+  inline void
+  unmarshalArrayLongLong(_CORBA_LongLong* a, int length)
+  {
+    get_octet_array((_CORBA_Char*) a, length * 8, omni::ALIGN_8);
+
+    if( unmarshal_byte_swap() )
+      for( int i = 0; i < length; i++ )
+	a[i] = Swap64(a[i]);
+  }
+
+  inline void
+  unmarshalArrayULongLong(_CORBA_ULongLong* a, int length)
+  {
+    get_octet_array((_CORBA_Char*) a, length * 8, omni::ALIGN_8);
+
+    if( unmarshal_byte_swap() )
+      for( int i = 0; i < length; i++ )
+	a[i] = Swap64(a[i]);
+  }
+#endif
 
 #if !defined(NO_FLOAT)
   inline void

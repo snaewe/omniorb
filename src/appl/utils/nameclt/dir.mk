@@ -12,5 +12,5 @@ clean::
 export:: $(nameclt)
 	@$(ExportExecutable)
 
-$(nameclt): nameclt.o $(CORBA_LIB_DEPEND)
+$(nameclt): nameclt.o $(CORBA_LIB_NODYN_DEPEND)
 	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))

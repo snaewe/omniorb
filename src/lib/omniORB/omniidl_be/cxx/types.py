@@ -42,7 +42,8 @@ unsupported_typecodes =[idltype.tk_Principal, idltype.tk_longdouble,
                         idltype.tk_wchar, idltype.tk_wstring,
                         idltype.tk_fixed, idltype.tk_value,
                         idltype.tk_value_box, idltype.tk_native,
-                        idltype.tk_abstract_interface]
+                        idltype.tk_abstract_interface,
+                        idltype.tk_local_interface]
 
 class Type:
     """Wrapper around an IDL type providing useful extra functionality"""

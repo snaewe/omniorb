@@ -66,8 +66,8 @@ Please read the  "Building omniORB from the source files" section, below.
 download it from our web site at 
 http://www.uk.research.att.com/omniORB/omniORB.html)
 
-omniidl requires Python 1.5.2. You can download the full Python
-distribution from
+omniidl requires Python 1.5.2 or higher. You can download the full
+Python distribution from
 
      http://www.python.org/download/download_windows.html
 
@@ -75,10 +75,10 @@ distribution from
 
      ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.exe
 
-Alternatively, for Windows on x86, you can install a minimal
-version of Python which contains just the functionality required
-by omniidl. The Win32 binary distribution of omniORB comes with this
-minimal python package. Download it from
+Alternatively, for Windows on x86, you can install a minimal version
+of Python which contains just the functionality required by omniidl.
+The Win32 binary distribution of omniORB comes with this minimal
+python package. Download it from
 
      ftp://ftp.uk.research.att.com/pub/omniORB/python/omnipython-x86_win32.zip
 
@@ -89,8 +89,8 @@ files in the bin, lib and include directories.
 Configure the naming service
 =============================
  
-  If you are upgrading from 2.2.0, please read the important information about
-  omniNames at the end of this note.
+  If you are upgrading from 2.2.0, please read the important
+  information about omniNames at the end of this note.
 
   You have to configure the omniORB runtime and the naming service,
   consult the user guides in ./doc for details. For a quick start,

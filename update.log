@@ -1,3 +1,93 @@
+Thu Nov  9 12:23:16 GMT 2000 dpg1
+=================================
+
+- Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
+doc/tex/cover.tex
+doc/tex/omniORB.bib
+doc/tex/omniORB.tex
+doc/tex/omniidl.tex
+external_merge/CREDITS
+external_merge/PORTING
+external_merge/README.FIRST
+external_merge/README.SunC++5
+external_merge/README.hpux11
+external_merge/README.unix
+external_merge/README.win32
+external_merge/config/config.mk
+external_merge/mk/rtems.mk
+external_merge/mk/platforms/alpha_osf1_3.2.mk
+external_merge/mk/platforms/alpha_osf1_4.0.mk
+external_merge/src/dir.mk
+external_merge/src/examples/dir.mak
+external_merge/src/examples/dir.mk
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/dii/dir.mak
+external_merge/src/examples/dsi/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/poa/servant_manager/GNUmakefile    NEW
+external_merge/src/examples/poa/servant_manager/dir.mak        NEW
+include/omniORB4/CORBA.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/boa.h
+include/omniORB4/cdrStream.h
+include/omniORB4/omniURI.h
+include/omniORB4/poa.h
+include/omniORB4/stringtypes.h
+include/omniORB4/tcDescriptor.h
+include/omniORB4/wstringtypes.h
+src/appl/omniMapper/dir.mk
+src/appl/omniNames/dir.mk
+src/appl/omniNames/omniNames.cc
+src/appl/utils/catior/dir.mk
+src/appl/utils/convertior/dir.mk
+src/appl/utils/genior/dir.mk
+src/appl/utils/nameclt/dir.mk
+src/examples/dir.mk
+src/examples/call_back/cb_server.cc
+src/examples/poa/dir.mk
+src/examples/poa/persistent_objref/eg2_impl.cc
+src/examples/poa/servant_manager/dir.mk                 NEW
+src/examples/poa/servant_manager/servant_activator.cc   NEW
+src/examples/poa/servant_manager/servant_locator.cc     NEW
+src/lib/omniORB/dir.mk
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/dynAny.h
+src/lib/omniORB/dynamic/dynAnyNil.cc
+src/lib/omniORB/dynamic/dynException.cc
+src/lib/omniORB/dynamic/orbMultiRequest.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/dynamic/typecode.h
+src/lib/omniORB/omniidl_be/cxx/types.py
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+src/lib/omniORB/omniidl_be/cxx/header/template.py
+src/lib/omniORB/omniidl_be/cxx/header/tie.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/giopServer.cc
+src/lib/omniORB/orbcore/initFile.cc
+src/lib/omniORB/orbcore/objectAdapter.cc
+src/lib/omniORB/orbcore/objectAdapter.h
+src/lib/omniORB/orbcore/omniInternal.cc
+src/lib/omniORB/orbcore/omniServant.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poamanager.cc
+src/lib/omniORB/orbcore/portableserver.cc
+src/lib/omniORB/orbcore/proxyFactory.cc
+src/lib/omniORB/orbcore/remoteIdentity.cc
+src/lib/omniORB/orbcore/tcpSocketAux.cc
+src/lib/omniORB/orbcore/tcpSocketMTfactory.cc
+src/lib/omniORB/orbcore/uri.cc
+
+
 Thu Nov  9 12:17:24 GMT 2000 dpg1
 =================================
 

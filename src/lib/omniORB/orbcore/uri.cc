@@ -30,6 +30,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.2.2.3  2000/11/09 12:27:59  dpg1
+// Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+//
 // Revision 1.2.2.2  2000/09/27 18:24:14  sll
 // Use omniObjRef::_toString and _fromString. Use the new omniIOR class and
 // createObjRef().
@@ -209,8 +212,8 @@ CORBA::Boolean
 iorURIHandler::supports(const char* uri)
 {
   return ((uri[0] == 'I' || uri[0] == 'i') &&
-	  (uri[1] == 'O' || uri[0] == 'o') &&
-	  (uri[2] == 'R' || uri[0] == 'r') &&
+	  (uri[1] == 'O' || uri[1] == 'o') &&
+	  (uri[2] == 'R' || uri[2] == 'r') &&
 	  (uri[3] == ':'));
 }
 

@@ -13,7 +13,7 @@ all:: $(CATIOR)
 clean::
 	$(RM) $(CATIOR)
 
-$(CATIOR): catior.o $(CORBA_LIB_DEPEND)
+$(CATIOR): catior.o $(CORBA_LIB_NODYN_DEPEND)
 	@(libs="$(CORBA_LIB_NODYN)"; $(CXXExecutable))
 
 export:: $(CATIOR)

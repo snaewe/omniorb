@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.4  2000/11/09 12:27:50  dpg1
+ Huge merge from omni3_develop, plus full long long from omni3_1_develop.
+
  Revision 1.2.2.3  2000/11/03 19:04:34  sll
  Renamed _CORBA_Unbounded_Sequence__String to _CORBA_Unbounded_Sequence_String
  and _CORBA_Bounded_Sequence__String to _CORBA_Bounded_Sequence_String
@@ -157,9 +160,11 @@ public:
   }
 
   inline _CORBA_String_var& operator=(const _CORBA_String_var& s) {
-    _CORBA_String_helper::free(_data);
-    _data = 0;
-    if( (const char*)s )  _data = _CORBA_String_helper::dup(s);
+    if (&s != this) {
+      _CORBA_String_helper::free(_data);
+      _data = 0;
+      if( (const char*)s )  _data = _CORBA_String_helper::dup(s);
+    }
     return *this;
   }
 
@@ -247,11 +252,13 @@ public:
   }
 
   inline _CORBA_String_member& operator=(const _CORBA_String_member& s) {
-    _CORBA_String_helper::free(_ptr);
-    if (s._ptr && s._ptr != _CORBA_String_helper::empty_string)
-      _ptr = _CORBA_String_helper::dup(s._ptr);
-    else
-      _ptr = s._ptr;
+    if (&s != this) {
+      _CORBA_String_helper::free(_ptr);
+      if (s._ptr && s._ptr != _CORBA_String_helper::empty_string)
+	_ptr = _CORBA_String_helper::dup(s._ptr);
+      else
+	_ptr = s._ptr;
+    }
     return *this;
   }
 
@@ -352,14 +359,16 @@ public:
   }
 
   inline _CORBA_String_element& operator=(const _CORBA_String_element& s) {
-    if (pd_rel) {
-      _CORBA_String_helper::free(pd_data);
-      if (s.pd_data && s.pd_data != _CORBA_String_helper::empty_string)
-	pd_data = _CORBA_String_helper::dup(s.pd_data);
-      else
+    if (&s != this) {
+      if (pd_rel) {
+	_CORBA_String_helper::free(pd_data);
+	if (s.pd_data && s.pd_data != _CORBA_String_helper::empty_string)
+	  pd_data = _CORBA_String_helper::dup(s.pd_data);
+	else
+	  pd_data = (char*)s.pd_data;
+      } else
 	pd_data = (char*)s.pd_data;
-    } else
-      pd_data = (char*)s.pd_data;
+    }
     return *this;
   }
 

@@ -158,7 +158,7 @@ define MakeCXXSharedLibrary
  set -x; \
  $(RM) $@; \
   ld -shared -soname $$soname -set_version $$soname -o $@ \
- $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs; \
+ $(IMPORT_LIBRARY_FLAGS) $(filter-out $(LibSuffixPattern),$^) $$extralibs \
   -lcxxstd -lcxx -lexc -lots -lc;
 endef
 
