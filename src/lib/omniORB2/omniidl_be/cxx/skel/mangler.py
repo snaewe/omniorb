@@ -30,6 +30,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.13.2.2  2000/02/16 16:30:03  djs
+# Fix to proxy call descriptor code- failed to handle special case of
+#   Object method(in string x)
+#
 # Revision 1.13.2.1  2000/02/14 18:34:53  dpg1
 # New omniidl merged in.
 #
@@ -312,9 +316,19 @@ def __init__():
     self.base_low = 0
     self.base_high = 0
     self.base_counter = 0
-    self.call_descriptor_table = {}
 
-def initialise_base(string_seed):
+    prefix = STD_PROXY_CALL_DESC_PREFIX 
+    pre = { "void": prefix + "void_call",
+            "_cCORBA_mObject_i_cstring": prefix + "_cCORBA_mObject_i_cstring" }
+    self.call_descriptor_table = pre
+
+
+
+def initialise_base(scopedName):
+    if self.base_initialised:
+        return
+    string_seed = produce_idname(scopedName)
+    
     self.base_initialised = 1
 
     # equivalent to >> only without sign extension
@@ -340,6 +354,7 @@ def initialise_base(string_seed):
                          (rshift((self.base_low & 0xfe000000), 25))
         self.base_low  = lshift(self.base_low, 7) ^ tmp
         self.base_low  = self.base_low ^ (ord(char))
+
 
 def generate_unique_name(prefix):
     # the effect of all the messing around with nibbles is the following
@@ -373,18 +388,10 @@ def generate_unique_name(prefix):
     return unique_name
     
 
-def initialise_call_descriptor_table():
-    # FIXME: name mangling by hand shouldn't be allowed-
-    # if the name mangling rules were changed....
-    self.call_descriptor_table["void"] = STD_PROXY_CALL_DESC_PREFIX +\
-                                         "void_call"
-    self.call_descriptor_table["_cCORBA_mObject_i_cstring"] = STD_PROXY_CALL_DESC_PREFIX + "_cCORBA_mobject_i_cstring"
-    
 
-def generate_descriptor(scopedName, signature):
-    if not(self.base_initialised):
-        idname = produce_idname(scopedName)
-        initialise_base(idname)
+def generate_descriptor(signature):
+    assert(self.base_initialised)
+
     if not(self.call_descriptor_table):
         initialise_call_descriptor_table()
         
@@ -392,7 +399,6 @@ def generate_descriptor(scopedName, signature):
         if not(cdt.has_key(signature)):
             class_name = generate_unique_name(self.CALL_DESC_PREFIX)
             cdt[signature] = class_name
-
             return class_name
 
     return add_to_table(signature)

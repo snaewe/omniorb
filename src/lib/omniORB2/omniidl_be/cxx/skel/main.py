@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.27.2.3  2000/02/16 16:30:02  djs
+# Fix to proxy call descriptor code- failed to handle special case of
+#   Object method(in string x)
+#
 # Revision 1.27.2.2  2000/02/15 15:28:35  djs
 # Stupid bug in powerpc aix workaround fixed
 #
@@ -242,15 +246,9 @@ def visitInterface(node):
                     break
                 prefix.append(x)
             inherits_scope_prefix = string.join(prefix, "::") + "::"
-            this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix + ")" +\
+            this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix + ")"+\
                                 this_inherits_str
             
-        #inherits_scope_prefix = tyutil.scope(inherits_objref_scopedName)
-        #if inherits_scope_prefix != []:
-        #    inherits_scope_prefix = string.join(inherits_scope_prefix, "::") + "::"
-        #    this_inherits_str = "OMNIORB_BASE_CTOR(" + inherits_scope_prefix + ")" + \
-        #                        this_inherits_str
-        
         inherits_str = inherits_str + this_inherits_str
         
 
@@ -279,9 +277,10 @@ def visitInterface(node):
         cxx_operationName = tyutil.mapID(operationName)
         
         seed = scopedName + [operation.identifier()]
+        mangler.initialise_base(seed)
 
         # try the all new proxy code!
-        Proxy.operation(operation, seed)
+        Proxy.operation(operation)
         descriptor = mangler.operation_descriptor_name(operation)
 
         parameters = operation.parameters()
@@ -324,6 +323,7 @@ def visitInterface(node):
         # static call back function
         local_call_descriptor = mangler.generate_unique_name(
             mangler.LCALL_DESC_PREFIX)
+
         impl_args = map(lambda x: "tcd->arg_" + str(x),
                         range(0, len(parameters)))
 
@@ -383,8 +383,9 @@ def visitInterface(node):
     # Attributes
     for attribute in attributes:
         seed = scopedName + [attribute.identifiers()[0]]
-
-        Proxy.attribute(attribute, seed)
+        mangler.initialise_base(seed)
+        
+        Proxy.attribute(attribute)
 
         read = mangler.attribute_read_descriptor_name(attribute)
         write = mangler.attribute_write_descriptor_name(attribute)
@@ -416,6 +417,8 @@ def visitInterface(node):
             cxx_attrib_name = tyutil.mapID(attrib_name)
 
             get_attrib_name = "_get_" + attrib_name
+            # its possible that the base hasn't been initialised yet
+            
             local_call_descriptor = mangler.generate_unique_name(
                 mangler.LCALL_DESC_PREFIX)
 
