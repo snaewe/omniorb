@@ -1,3 +1,12 @@
+Wed May  2 18:34:59 BST 2001 sll
+================================
+
+- Put back operator declarations for WrongTransaction & UnknownUserException
+  These were deleted mistakenly.
+
+include/omniORB4/corba_operators.h
+
+
 Wed May  2 17:09:59 BST 2001 sll
 ================================
 

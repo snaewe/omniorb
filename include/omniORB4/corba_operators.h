@@ -39,6 +39,8 @@ extern CORBA::Boolean operator>>=(const CORBA::Any&, CORBA::fqname*&);
 
 
 OMNIORB_FOR_EACH_SYS_EXCEPTION(EXCEPTION_OPERATORS)
+EXCEPTION_OPERATORS (UnknownUserException)
+EXCEPTION_OPERATORS (WrongTransaction)
 EXCEPTION_OPERATORS (ContextList::Bounds)
 EXCEPTION_OPERATORS (ExceptionList::Bounds)
 EXCEPTION_OPERATORS (NVList::Bounds)
