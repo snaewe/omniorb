@@ -8,10 +8,13 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/13 15:43:11  sll
-  If the exception has no member, do not generate the ctor where each
-  member is an argument.
+  Revision 1.3  1997/03/19 15:34:39  sll
+  copy ctor, operator= and args ctor now copy arrays properly.
 
+// Revision 1.2  1997/01/13  15:43:11  sll
+// If the exception has no member, do not generate the ctor where each
+// member is an argument.
+//
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -138,7 +141,65 @@ o2be_exception::produce_skel(fstream &s)
     while (!i.is_done())
       {
 	o2be_field *d = o2be_field::narrow_from_decl(i.item());
-	IND(s); s << d->uqname() << " = _s." << d->uqname() << ";\n";
+	o2be_operation::argMapping mapping;
+	o2be_operation::argType ntype;
+	ntype =  o2be_operation::ast2ArgMapping(d->field_type(),
+						o2be_operation::wIN,mapping);
+	switch (ntype) 
+	  {
+	  case o2be_operation::tArrayFixed:
+	  case o2be_operation::tArrayVariable:
+	    {
+	      IND(s); s << "{\n";
+	      INC_INDENT_LEVEL();
+	      AST_Decl* decl = d->field_type();
+	      unsigned int ndim = 0;
+	      unsigned int dimval;
+
+	      while (decl->node_type() == AST_Decl::NT_typedef)
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+
+	      o2be_array::dim_iterator next(o2be_array::narrow_from_decl(decl));
+	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		{
+		  dimval = next();
+		  IND(s); s << "for (unsigned int _i" << ndim << " =0;"
+			    << "_i" << ndim << " < " << dimval << ";"
+			    << "_i" << ndim << "++) {\n";
+		  INC_INDENT_LEVEL();
+		  ndim++;
+		}
+	      IND(s); s << d->uqname();
+	      ndim = 0;
+	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		{
+		  s << "[_i" << ndim << "]";
+		  ndim++;
+		}
+	      s << " = _s." << d->uqname();
+	      ndim = 0;
+	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		{
+		  s << "[_i" << ndim << "]";
+		  ndim++;
+		}
+	      s << ";\n";
+	      ndim = 0;
+	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		{
+		  DEC_INDENT_LEVEL();
+		  IND(s); s << "}\n";
+		  ndim++;
+		}
+	      DEC_INDENT_LEVEL();
+	      IND(s); s << "}\n";
+	      break;
+	    }
+	  
+	  default:
+	    IND(s); s << d->uqname() << " = _s." << d->uqname() << ";\n";
+	    break;
+	  }
 	i.next();
       }
   }
@@ -188,7 +249,65 @@ o2be_exception::produce_skel(fstream &s)
 	while (!ii.is_done())
 	  {
 	    o2be_field *dd = o2be_field::narrow_from_decl(ii.item());
-	    IND(s); s << dd->uqname() << " = _" << dd->uqname() << ";\n";
+	    o2be_operation::argMapping mapping;
+	    o2be_operation::argType ntype;
+	    ntype =  o2be_operation::ast2ArgMapping(dd->field_type(),
+						    o2be_operation::wIN,mapping);
+	    switch (ntype) 
+	      {
+	      case o2be_operation::tArrayFixed:
+	      case o2be_operation::tArrayVariable:
+		{
+		  IND(s); s << "{\n";
+		  INC_INDENT_LEVEL();
+		  AST_Decl* decl = dd->field_type();
+		  unsigned int ndim = 0;
+		  unsigned int dimval;
+
+		  while (decl->node_type() == AST_Decl::NT_typedef)
+		    decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+
+		  o2be_array::dim_iterator next(o2be_array::narrow_from_decl(decl));
+		  while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		    {
+		      dimval = next();
+		      IND(s); s << "for (unsigned int _i" << ndim << " =0;"
+				<< "_i" << ndim << " < " << dimval << ";"
+				<< "_i" << ndim << "++) {\n";
+		      INC_INDENT_LEVEL();
+		      ndim++;
+		    }
+		  IND(s); s << dd->uqname();
+		  ndim = 0;
+		  while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		    {
+		      s << "[_i" << ndim << "]";
+		      ndim++;
+		    }
+		  s << " = _" << dd->uqname();
+		  ndim = 0;
+		  while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		    {
+		      s << "[_i" << ndim << "]";
+		      ndim++;
+		    }
+		  s << ";\n";
+		  ndim = 0;
+		  while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		    {
+		      DEC_INDENT_LEVEL();
+		      IND(s); s << "}\n";
+		      ndim++;
+		    }
+		  DEC_INDENT_LEVEL();
+		  IND(s); s << "}\n";
+		  break;
+		}
+	  
+	      default:
+		IND(s); s << dd->uqname() << " = _" << dd->uqname() << ";\n";
+		break;
+	      }
 	    ii.next();
 	  }
       }
@@ -206,7 +325,65 @@ o2be_exception::produce_skel(fstream &s)
     while (!i.is_done())
       {
 	o2be_field *d = o2be_field::narrow_from_decl(i.item());
-	IND(s); s << d->uqname() << " = _s." << d->uqname() << ";\n";
+	o2be_operation::argMapping mapping;
+	o2be_operation::argType ntype;
+	ntype =  o2be_operation::ast2ArgMapping(d->field_type(),
+						o2be_operation::wIN,mapping);
+	switch (ntype) 
+	  {
+	  case o2be_operation::tArrayFixed:
+	  case o2be_operation::tArrayVariable:
+	    {
+	      IND(s); s << "{\n";
+	      INC_INDENT_LEVEL();
+	      AST_Decl* decl = d->field_type();
+	      unsigned int ndim = 0;
+	      unsigned int dimval;
+
+	      while (decl->node_type() == AST_Decl::NT_typedef)
+		decl = o2be_typedef::narrow_from_decl(decl)->base_type();
+
+	      o2be_array::dim_iterator next(o2be_array::narrow_from_decl(decl));
+	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		{
+		  dimval = next();
+		  IND(s); s << "for (unsigned int _i" << ndim << " =0;"
+			    << "_i" << ndim << " < " << dimval << ";"
+			    << "_i" << ndim << "++) {\n";
+		  INC_INDENT_LEVEL();
+		  ndim++;
+		}
+	      IND(s); s << d->uqname();
+	      ndim = 0;
+	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		{
+		  s << "[_i" << ndim << "]";
+		  ndim++;
+		}
+	      s << " = _s." << d->uqname();
+	      ndim = 0;
+	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		{
+		  s << "[_i" << ndim << "]";
+		  ndim++;
+		}
+	      s << ";\n";
+	      ndim = 0;
+	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
+		{
+		  DEC_INDENT_LEVEL();
+		  IND(s); s << "}\n";
+		  ndim++;
+		}
+	      DEC_INDENT_LEVEL();
+	      IND(s); s << "}\n";
+	      break;
+	    }
+	  
+	  default:
+	    IND(s); s << d->uqname() << " = _s." << d->uqname() << ";\n";
+	    break;
+	  }
 	i.next();
       }
   }
