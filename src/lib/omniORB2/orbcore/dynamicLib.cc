@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/27 11:01:11  djr
+  Modifications to logging.
+
   Revision 1.1.2.1  1999/09/22 14:26:48  djr
   Major rewrite of orbcore to support POA.
 
@@ -67,7 +70,7 @@ omniDynamicLib* omniDynamicLib::hook = 0;
 static void
 init()
 {
-  omniORB::logs(5, "The omniDynamic library is not linked.");
+  omniORB::logs(2, "The omniDynamic library is not linked.");
 }
 
 

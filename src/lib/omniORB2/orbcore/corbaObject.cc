@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.19.6.3  1999/09/27 11:01:10  djr
+  Modifications to logging.
+
   Revision 1.19.6.2  1999/09/24 10:29:33  djr
   CORBA::Object::Object now requires an argument.
 
@@ -72,6 +75,7 @@
 #include <omniORB3/omniObjRef.h>
 #include <objectAdapter.h>
 #include <ropeFactory.h>
+#include <anonObject.h>
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////// CORBA::Object ///////////////////////////
@@ -283,6 +287,11 @@ CORBA::Object::_unmarshalObjRef(MemBufferedStream& s)
 
 const char*
 CORBA::Object::_PD_repoId = "IDL:omg.org/CORBA/Object:1.0";
+
+
+// We put this here rather than in anonObject.cc to ensure that
+// it is always linked into the application.
+static const omniAnonObjRef_pof _theomniAnonObjRef_pof;
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////// CORBA::Object_Helper ////////////////////////

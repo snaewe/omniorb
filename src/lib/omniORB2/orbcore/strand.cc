@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.10.6.3  1999/09/27 11:01:12  djr
+  Modifications to logging.
+
   Revision 1.10.6.2  1999/09/24 15:01:37  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -90,12 +93,9 @@
 #include <ropeFactory.h>
 #include <initialiser.h>
 
-#define LOGMESSAGE(level,prefix,message) do {\
-   if (omniORB::trace(level)) {\
-     omniORB::logger log("strand " ## prefix ## ": ");\
-	log << message ## "\n";\
-   }\
-} while (0)
+
+#define LOGMESSAGE(level,prefix,message)  \
+  omniORB::logs(level, "strand " prefix ": " message)
 
 
 class omniORB_Ripper;
@@ -758,7 +758,8 @@ Rope_iterator::operator() ()
 	  if (rp->is_idle(1)) 
 	    {
 	      // This Rope is not used by any object reference
-	      // First close down all the strands before calling the dtor of the Rope
+	      // First close down all the strands before calling
+	      // the dtor of the Rope.
 	      LOGMESSAGE(10,"Rope_iterator","delete unused Rope.");
 	      CORBA::Boolean can_delete = 1;
 

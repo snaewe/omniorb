@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.6.3  1999/09/27 11:01:13  djr
+  Modifications to logging.
+
   Revision 1.22.6.2  1999/09/24 15:01:39  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -217,14 +220,10 @@ extern "C" int gethostname(char *name, int namelen);
 #define send(a,b,c,d) tcpSocketVaxSend(a,b,c,d)
 #endif
 
-#define LOGMESSAGE(level,prefix,message) do {\
-   if (omniORB::trace(level)) {\
-     omniORB::logger log("tcpSocketMTfactory " ## prefix ## ": ");\
-	log << message ## "\n";\
-   }\
-} while (0)
 
-#define PTRACE(prefix,message) LOGMESSAGE(15,prefix,message)
+#define PTRACE(prefix,message)  \
+  omniORB::logs(15, "tcpSocketMTfactory " prefix ": " message)
+
 
 class tcpSocketRendezvouser : public omni_thread {
 public:

@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.10.6.3  1999/09/27 11:01:11  djr
+  Modifications to logging.
+
   Revision 1.10.6.2  1999/09/24 15:01:36  djr
   Added module initialisers, and sll's new scavenger implementation.
 
@@ -97,12 +100,9 @@
 #include <initialiser.h>
 #include <limits.h>
 
-#define LOGMESSAGE(level,prefix,message) do {\
-   if (omniORB::trace(level)) {\
-     omniORB::logger log("scavenger " ## prefix ## ": ");\
-	log << message ## "\n";\
-   }\
-} while (0)
+
+#define LOGMESSAGE(level,prefix,message)  \
+  omniORB::logs(level, "scavenger " prefix ": " message)
 
 
 static CORBA::ULong ScanPeriod  = 5;		// seconds

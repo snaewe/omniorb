@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  1999/09/27 11:01:11  djr
+  Modifications to logging.
+
   Revision 1.1.2.1  1999/09/22 14:27:00  djr
   Major rewrite of orbcore to support POA.
 
@@ -46,7 +49,7 @@
 
 omniServant::~omniServant()
 {
-  if( pd_identities && omniORB::trace(1) ) {
+  if( pd_identities ) {
     omniORB::logger l;
     l << "ERROR -- A servant has been deleted that is still activated.\n"
       " repo id: " << _mostDerivedRepoId() << "\n";

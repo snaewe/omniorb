@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  1999/09/27 11:01:09  djr
+  Modifications to logging.
+
   Revision 1.1.2.3  1999/09/24 17:11:10  djr
   New option -ORBtraceInvocations and omniORB::traceInvocations.
 
@@ -121,9 +124,9 @@ _CORBA_MODULE_BEG
 
   ///////////////////////////////////////////////////////////////////////
   // Tracing level                                                     //
-  //     level 0 - turn off all tracing and informational messages     //
+  //     level 0 - critical errors only                                //
   //     level 1 - informational messages only                         //
-  //     level 2 - configuration information                           //
+  //     level 2 - configuration information and warnings              //
   //     level 5 - the above plus report server thread creation and    //
   //               communication socket shutdown                       //
   //     level 10 - the above plus execution trace messages            //
