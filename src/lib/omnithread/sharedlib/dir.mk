@@ -240,10 +240,10 @@ ifeq ($(notdir $(CXX)),xlC_r)
 $(lib): $(OBJS)
 	(set -x; \
         $(RM) $@; \
-        /usr/lpp/xlC/bin/makeC++SharedLib \
+        /usr/lpp/xlC/bin/makeC++SharedLib_r \
              -o $(soname) $(IMPORT_LIBRARY_FLAGS) \
          $(filter-out $(LibSuffixPattern),$^) \
-         -lC -lpthreads -lc_r -lc -p 40; \
+         -p 40; \
          ar cq $(lib) $(soname) ; \
          $(RM) $(soname) ; \
        )
