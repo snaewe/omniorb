@@ -27,8 +27,23 @@
 #   Simple AST dumping module for testing utility functions etc
 #   (derived from dpg1's dump.py)
 
+
+# *************************
+#
+# THIS IS BROKEN
+#
+# Don't try to use this -- it does not work. It is only left here in
+# case someone wishes to fix it.
+
+assert 0, "The showast backend is not in a working state. Do not try to use it."
+
+
+
 # $Id$
 # $Log$
+# Revision 1.2.2.2  2001/07/25 10:45:18  dpg1
+# Hack the showast.py back-end so it is clear that it's broken.
+#
 # Revision 1.2.2.1  2000/02/14 18:34:57  dpg1
 # New omniidl merged in.
 #
