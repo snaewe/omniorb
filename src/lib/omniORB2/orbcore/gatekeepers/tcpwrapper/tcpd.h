@@ -11,7 +11,7 @@
 #ifndef _TCPD_H
 #define _TCPD_H
 
-#if defined(__nextstep__)
+#if defined(__nextstep__) || defined(__osr5__)
 #include <sys/types.h>
 #endif
 
