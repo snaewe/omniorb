@@ -1,3 +1,10 @@
+Fri Sep 29 15:44:42 BST 2000 sll
+================================
+
+- Added new platform file for Redhat 7.0 (gcc-2.96)
+
+mk/platforms/i586_linux_2.0_glibc2.1_gcc2.96.mk      NEW
+ 
 Mon Sep 25 11:52:16 BST 2000 dpg1
 =================================
 
