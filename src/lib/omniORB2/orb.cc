@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.11  1997/08/26 15:29:39  sll
+  Added initFile.h include.
+
   Revision 1.10  1997/08/21 21:57:28  sll
   tcpsock_rendezvouser does fall over when accept call fails.
 
@@ -38,6 +41,7 @@
   */
 
 #include <omniORB2/CORBA.h>
+#include <initFile.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream.h>
