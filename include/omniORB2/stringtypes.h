@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.3  1999/06/03 17:10:50  sll
+ Updated String_out and String_var to CORBA 2.2
+
  Revision 1.2  1999/05/25 13:24:06  sll
  Removed unnecessary const qualifier in operator char*().
 
@@ -234,15 +237,26 @@ private:
 
 class _CORBA_String_out {
 public:
-  inline _CORBA_String_out(char*& p) : _data(p) { }
+  inline _CORBA_String_out(char*& p) : _data(p) { _data = 0; }
   inline _CORBA_String_out(_CORBA_String_var& p) : _data(p._data) { p = (char*)0; }
   inline _CORBA_String_out(_CORBA_String_member& p) : _data(p._ptr) { p = (char*)0; }
   inline ~_CORBA_String_out() {}
+  inline _CORBA_String_out(_CORBA_String_out& p) : _data(p._data) {}
+  inline _CORBA_String_out& operator=(_CORBA_String_out& p) {
+    _data = p._data; return *this;
+  }
+  inline _CORBA_String_out& operator=(char* p) { _data = p; return *this; }
+  inline _CORBA_String_out& operator=(const char* p) {
+    _data = _CORBA_String_var::string_dup(p); return *this;
+  }
+  operator char*& () { return _data; }
+  char*& ptr() { return _data; }
 
   char*& _data;
 
 private:
   _CORBA_String_out();
+  _CORBA_String_out& operator=(const _CORBA_String_var& );
 };
 
 //////////////////////////////////////////////////////////////////////
