@@ -211,17 +211,21 @@ main(argc, argv)
 			if (endmarker[0] == '\0') endmarker = "--";
 			break;
 		case 'D':
+		    {
+			int offset = 2;
 			if (argv[0][2] == '\0') {
 				argv++;
 				argc--;
+				offset = 0;
 			}
-			for (p=argv[0] + 2; *p ; p++)
+			for (p=argv[0] + offset; *p ; p++)
 				if (*p == '=') {
 					*p = ' ';
 					break;
 				}
-			define(argv[0] + 2, &maininclist);
+			define(argv[0] + offset, &maininclist);
 			break;
+		    }
 		case 'I':
 			if (incp >= includedirs + MAXDIRS)
 			    fatalerr("Too many -I flags.\n");
