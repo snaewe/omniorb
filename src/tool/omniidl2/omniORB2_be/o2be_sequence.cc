@@ -27,6 +27,9 @@
 
 /*
   $Log$
+  Revision 1.29.2.1  1999/12/07 18:19:15  djr
+  Fixed bug in omniidl2.
+
   Revision 1.29  1999/08/30 18:48:39  sll
   *** empty log message ***
 
@@ -757,7 +760,19 @@ o2be_sequence::produce_typecode_member(std::fstream& s)
   AST_Decl* base = base_type();
   size_t s_rec_offset = recursive_sequence_offset();
 
-  if (s_rec_offset) {
+  // NB. The following IDL
+  //   interface foo {
+  //     typedef sequence<foo> seq;
+  //   };
+  // is *not* a recursive sequence.  The front end interprets
+  // it as one, so we have to detect this here.  The following
+  // is a sublimely dirty hack.
+
+  AST_Decl* aebase = base;
+  while( aebase->node_type() == AST_Decl::NT_typedef )
+    aebase = o2be_typedef::narrow_from_decl(aebase)->base_type();
+
+  if( s_rec_offset && aebase->node_type() != AST_Decl::NT_interface ) {
     // Recursive sequence!
     s << "CORBA::TypeCode::PR_recursive_sequence_tc("
       << bound() << ", " << s_rec_offset << ")";
