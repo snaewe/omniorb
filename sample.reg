@@ -40,7 +40,7 @@ REGEDIT4
 ;
 ;     Valid values = 0 or 1
 ;
-"traceInvocations" = "0"
+"traceExceptions" = "0"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Trace Invocations
