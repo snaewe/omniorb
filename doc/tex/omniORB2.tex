@@ -20,7 +20,7 @@
 \vfill
 
 { \Huge
-The omniORB2 version 2.7\\[4mm]
+The omniORB2 version 2.7.1\\[4mm]
 User's Guide
 }
 
@@ -29,26 +29,25 @@ User's Guide
 { \Large
 Sai-Lai Lo\\
 {\normalsize ({\it email: slo@uk.research.att.com})}\\
-Olivetti \& Oracle Research Laboratory\\
+David Riddoch\\
+{\normalsize ({\it email: djr@uk.research.att.com})}\\
+AT\&T Laboratories Cambridge\\
 }
 
 
 \vfill
 \vfill
-14th January, 1999
+22nd February, 1999
 \vfill
 
 \end{center}
 
 \pagebreak
 
-{\Large \bf \sf Changes and Additions, 14th January 1999}
+{\Large \bf \sf Changes and Additions, 22nd February 1999}
 
 \begin{itemize}
-\item Chapter 1 - updates to features
-\item Chapter 4 - updates to command-line options
-\item New chapter - Dynamic Invocation Interface
-\item New chapter - Dynamic Skeleton Interface
+\item Chapter 11 - expanded and updated
 \end{itemize}
 
 
@@ -5417,7 +5416,9 @@ A nil reference should only be represented by {\tt foo::\_nil()}.
 These pseudo objects, although defined in pseudo-IDL in the specification do
 not follow the normal mapping for CORBA objects. In particular the memory
 management rules are different - see the CORBA 2
-specification~\cite{corba2-spec} for more details.
+specification~\cite{corba2-spec} for more details. New instances of these
+objects may only be created by the ORB. A number of methods are defined
+in {\tt CORBA::ORB} to do this.
 
 
 \subsection{Request}
@@ -5716,14 +5717,14 @@ req->set_return_type(CORBA::_tc_short);
 \label{dii_invoke}
 
 Once the {\tt Request} object has been properly constructed the operation
-may be invoked by calling {\tt invoke()} or {\tt send\_oneway()}. When this
-returns the operation has completed (in the case of {\tt invoke()}) or an
-exception has been thrown. If the
-operation generated a user-defined exception then it can be retrieved
-using {\tt env()} - otherwise this value is nil. If a system exception is
-generated then the behavior depends on the following runtime configuration
-variable:
+may be invoked by calling one of the following methods on the request
+object:
 
+\paragraph{invoke()} blocks until the request has completed. The application
+should then test to see if an exception was raised. Since the CORBA spec is
+not clear about whether or not system exceptions should be thrown from this
+method, a runtime configuration variable is supplied so that you can specify
+the behavior:
 {\small \begin{verbatim}
 namespace omniORB {
   ...
@@ -5731,28 +5732,99 @@ namespace omniORB {
   ...
 };
 \end{verbatim}}
-By default this is false, and the
-exception will be passed via the {\tt env()} mechanism as described above.
-If it is true, then the exception will be thrown. This variable may also be
-set on the command line using the option {\tt -ORBdiiThrowsSysExceptions}.
-See section~\ref{omniorbapioptions} for more details.
-If no exception was generated then the return value may be retrieved from
-{\tt return\_value()}, and out/inout arguments inspected with
-{\tt arguments()}.
+By default this is FALSE, and the application should call the {\tt env()}
+method of the request to retrieve an exception (it returns 0 (nil) if no
+exception was generated). If it is TRUE then system exceptions will be thrown
+out of {\tt invoke()}. User-defined exceptions are always passed via
+{\tt env()}, which will return a pointer to a
+{\tt CORBA::UnknownUserException}.
+The application can determine which type of exception was returned by
+{\tt env()}
+by calling the {\tt \_narrow()} method defined for each exception type.
+
+After determining that no exception was thrown the application may retrieve
+any returned values by calling {\tt return\_value()} and {\tt arguments()}.
+
+\paragraph{send\_oneway()} has the same semantics as a \emph{oneway}
+IDL operation. It is important to note that oneway operations have
+at-most-once semantics, and it is not guaranteed that they will not
+block. Any operation may be invoked 'oneway' using the DII,
+even if it was not declared as 'oneway' in IDL. A system exception may be
+generated, in which case it will either be thrown or may be retrieved
+using {\tt env()} depending on {\tt diiThrowsSysExceptions} as above.
+
+\paragraph{send\_deferred()} initiates the invocation, and then returns
+without waiting for the result. At some point in the future the application
+must retrieve the result of the operation - but other than testing for
+completion of the operation the application must not call any of the
+request's methods in the meantime.
+\begin{itemize}
+\item {\tt get\_response()} blocks until the reply is received.
+\item {\tt poll\_response()} returns TRUE if the reply has been received,
+      and FALSE if not. It does not block.
+\end{itemize}
+Once {\tt poll\_response()} has returned TRUE, or {\tt get\_response()}
+has been called and returned, the application may test for an exception
+and retrieve returned values as above. If {\tt diiThrowsSysExceptions} is
+true, then a system exception may be thrown from {\tt get\_response()}.
+It is guaranteed that {\tt poll\_response()} will not raise an
+exception, so if polling, the application must also call another method
+to give the request an opportunity to raise the exception. This can be
+one of the methods to retrieve values from the request, or
+{\tt get\_response()}.
 
 
-\subsection{Deferred Requests}
+\section{Multiple Requests}
 
-If {\tt send\_deferred()} is used then the invocation is performed
-asynchronously. A call to {\tt get\_response()} will then block until the
-reply is received (and the operation has therefore completed or thrown an
-exception), or {\tt poll\_response()} may be used, which returns true when
-the operation has completed.
+The following methods are provided by the ORB to enable multiple requests to
+be invoked asynchronously.
 
-The runtime configuration variable {\tt omniORB::diiThrowsSysExceptions}
-applies here in the same way as above. If its value is true, then
-{\tt send\_deferred()}, {\tt get\_response()} or {\tt poll\_response()} may
-throw a system exception.
+{\small \begin{verbatim}
+namespace CORBA {
+  ...
+  class ORB {
+  public:
+    ...
+    Status send_multiple_requests_oneway(const RequestSeq&);
+    Status send_multiple_requests_deferred(const RequestSeq&);
+    Boolean poll_next_response();
+    Status get_next_response(Request_out);
+    ...
+  };
+  ...
+};
+\end{verbatim}}
+
+\paragraph{send\_multiple\_requests\_oneway()} is used to invoke a number
+of oneway requests. An attempt will be
+made to invoke each of the requests, even if one or more of the early
+requests fails.
+The application may check for failure of any of the requests by testing
+the request's {\tt env()} method. System exceptions are never raised by
+this method.
+
+\paragraph{send\_multiple\_requests\_deferred()} will initiate an invocation
+of each of the given requests, and return without waiting for the reply.
+At some point in the future the application must retrieve the reply by
+calling {\tt get\_next\_response()}, which returns a completed request.
+If no requests have yet completed it will block.
+This method never throws exceptions - the request's {\tt env()}
+method must be used to determine if an exception was generated. If not
+then any returned values may then be queried.
+
+{\tt poll\_next\_response()} returns TRUE if there are any completed requests,
+and FALSE otherwise, without blocking. If this returns true then the next call
+to {\tt get\_next\_response()} will not block. However, if another
+thread may also be calling {\tt get\_next\_response()} then it could retrieve
+the completed message first - in which case this thread might block.
+
+There are no guarantee as to the order in which replies will be received.
+If multiple threads are using this interface then it is not even guaranteed
+that a thread will receive replies to the requests it sent. Any thread may
+receive replies to requests sent by any other thread. It is legal to call
+{\tt get\_next\_response()} even if no requests have yet been invoked - in
+which case the calling thread blocks until another thread invokes a request
+and the reply is received.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
