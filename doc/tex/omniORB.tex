@@ -3039,6 +3039,10 @@ arguments to.
      \> Use \textit{suffix} for generated stub files. Default
         `\file{SK.cc}.'\\
 
+\cmdline{-Wbd=}\textit{suffix}
+     \> Use \textit{suffix} for generated dynamic files. Default
+        `\file{DynSK.cc}.'\\
+
 \cmdline{-Wba}
      \> Generate stubs for TypeCode and Any.\\
 
@@ -3066,6 +3070,16 @@ arguments to.
 \cmdline{-Wbold\_prefix}
      \> Map C++ reserved words with prefix `\code{\_}' rather than
         `\code{\_cxx\_}'.\\
+
+\cmdline{-Wbkeep\_inc\_path}
+     \> Preserve IDL `\code{\#include}' paths in generated header 
+       	`\code{\#include}' directives.\\
+
+\cmdline{-Wbuse\_quotes}
+     \> Use double quotes in `\code{\#include}' directives 
+        (eg \code{``foo''} rather than \code{<foo>}.)\\
+
+
 
 \end{tabbing}
 
