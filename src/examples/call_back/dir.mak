@@ -89,4 +89,4 @@ veryclean::
 
 
 echo_callback.hh echo_callbackSK.cc: echo_callback.idl
-	$(TOP)\bin\x86_win32\omniidl -bcxx -Wbh=.hh -Wbs=SK.cc echo_callback.idl
+	$(TOP)\bin\x86_win32\omniidl -T -bcxx -Wbh=.hh -Wbs=SK.cc echo_callback.idl

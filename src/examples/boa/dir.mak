@@ -87,4 +87,4 @@ veryclean::
 
 
 becho.hh bechoSK.cc: becho.idl
-	$(TOP)\bin\x86_win32\omniidl -bcxx -Wbh=.hh -Wbs=SK.cc -WbBOA becho.idl
+	$(TOP)\bin\x86_win32\omniidl -T -bcxx -Wbh=.hh -Wbs=SK.cc -WbBOA becho.idl

@@ -8,6 +8,17 @@
 
 <buglist version="3.0.2">
 
+<bug id="5" date="Tue Nov  7 15:31:24 GMT 2000" user="dpg1">
+
+  <summary>Examples fail to build with nmake on Windows 9x</summary>
+  <text>
+  As explained in 3.0.1's <a href="bug301.html#bug9">bug 9</a>, some
+  Windows 98 machines (but not all) fail to cope with the pipe between
+  the C pre-processor and omniidl. The work-around is to use the -T
+  flag. The dir.mak files in the examples now use this flag.
+  </text>
+</bug>
+
 <bug id="4" date="Tue Oct 24 10:44:08 BST 2000" user="dpg1">
 
   <summary>omniidl system dependency clean-up</summary>

@@ -1,3 +1,17 @@
+Tue Nov  7 15:31:24 GMT 2000 dpg1
+=================================
+
+- Add -T flag to omniidl use in nmake dir.mak files.
+
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+external_merge/src/examples/poa/servant_manager/dir.mak
+
+
 Mon Nov  6 17:12:36 GMT 2000 dpg1
 =================================
 

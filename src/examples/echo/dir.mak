@@ -100,4 +100,4 @@ veryclean::
 
 
 echo.hh echoSK.cc: echo.idl
-	$(TOP)\bin\x86_win32\omniidl -bcxx -Wbh=.hh -Wbs=SK.cc -Wbtp echo.idl
+	$(TOP)\bin\x86_win32\omniidl -T -bcxx -Wbh=.hh -Wbs=SK.cc -Wbtp echo.idl

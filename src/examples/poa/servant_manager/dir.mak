@@ -86,7 +86,7 @@ veryclean::
 
 
 echo.hh echoSK.cc: echo.idl
-	$(TOP)\bin\x86_win32\omniidl -bcxx -Wbh=.hh -Wbs=SK.cc echo.idl
+	$(TOP)\bin\x86_win32\omniidl -T -bcxx -Wbh=.hh -Wbs=SK.cc echo.idl
 
 echo.idl: $(TOP)\idl\echo.idl
 	copy $(TOP)\idl\echo.idl .
