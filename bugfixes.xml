@@ -8,6 +8,23 @@
 
 <buglist>
 
+<bug id="10" date="Wed Jul 26 11:46:16 BST 2000" user="dpg1">
+
+  <summary>omniidl bug with inheriting typedef to forward declared
+           interface</summary>
+
+  <text>
+  The following IDL is valid, but omniidl flagged it as an error:
+  <pre>
+    interface I;
+    typedef I J;
+    interface I {};
+    interface K : J {};
+  </pre>
+  </text>
+
+</bug>
+
 <bug id="9" date="Mon Jul 24 16:09:20 BST 2000" user="djs">
 
   <summary>Suppressed compiler warning when an operation with no arguments
