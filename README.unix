@@ -11,8 +11,8 @@ files.
 
 omniORB has been tested on the following Unix platforms:
 
-  o Solaris 2.{5,6,7,8}/ Sun SparcCompiler C++ version 4.2, 5.x
-  o Linux 2.x (x86)/gcc-2.95/binutils-2.9.1.0.14/GNU Libc version 2
+  o Linux on x86, Alpha, Sparc, IBM zSeries.
+  o Solaris 2.{5,6,7,8,9}/ Sun SparcCompiler C++ version 4.2, 5.x, gcc.
   o HPUX 11.00/ aC++
   o SGI Irix 6.x/SGI C++ compiler 7.2
 
