@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2005/01/13 21:55:58  dgrisby
+  Turn off -g debugging; suppress some compiler warnings.
+
   Revision 1.1.2.5  2005/01/06 16:39:25  dgrisby
   DynValue and DynValueBox implementations; misc small fixes.
 
@@ -312,11 +315,11 @@ create_for_unmarshal(const char* id, CORBA::ULong hashval)
       OMNIORB_THROW(UNKNOWN, UNKNOWN_UserException, CORBA::COMPLETED_NO);
     }
     f->_remove_ref();
+    return r;
   }
   else {
     return 0;
   }
-  return r;
 }
 
 //

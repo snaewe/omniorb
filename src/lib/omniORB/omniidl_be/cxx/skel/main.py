@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.32.2.8  2005/01/13 21:55:56  dgrisby
+# Turn off -g debugging; suppress some compiler warnings.
+#
 # Revision 1.32.2.7  2005/01/06 23:10:07  dgrisby
 # Big merge from omni4_0_develop.
 #
@@ -516,6 +519,11 @@ def visitUnion(node):
         decl = c.declarator()
         decl_scopedName = id.Name(decl.scopedName())
         decl_name = decl_scopedName.simple()
+
+        # *** HERE: only output code once for each case, no matter how
+        # *** many labels; don't bother with the default check -- do
+        # *** it with the switch. Don't think we need _pd__default
+        # *** member.
 
         if defaultCase == c:
             isDefault = 1

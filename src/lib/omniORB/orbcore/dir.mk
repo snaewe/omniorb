@@ -152,7 +152,7 @@ DIR_CPPFLAGS += -DCONFIG_ENV='"$(CONFIG_ENV)"'
 
 ##########################################################################
 ifdef UnixPlatform
-  CXXDEBUGFLAGS = -g
+#  CXXDEBUGFLAGS = -g
   DIR_CPPFLAGS += -DUnixArchitecture
   ifdef SunOS
     DIR_CPPFLAGS += -DBSD_COMP   # include BSD flags in ioctl.h

@@ -1,3 +1,17 @@
+Thu Jan 13 21:50:54 GMT 2005 dgrisby
+====================================
+
+- Turn off -g debugging; suppress some compiler warnings.
+
+src/lib/omniORB/dynamic/dir.mk
+src/lib/omniORB/dynamic/valueFactory.cc
+src/lib/omniORB/omniidl_be/cxx/skel/main.py
+src/lib/omniORB/orbcore/cdrValueChunkStream.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/poastubs.cc
+
+
 Thu Jan 13 20:56:09 GMT 2005 dgrisby
 ====================================
 

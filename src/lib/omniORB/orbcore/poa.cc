@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.4.2.3  2005/01/13 21:55:56  dgrisby
+  Turn off -g debugging; suppress some compiler warnings.
+
   Revision 1.4.2.2  2005/01/06 23:10:37  dgrisby
   Big merge from omni4_0_develop.
 
@@ -1788,7 +1791,7 @@ omniOrbPOA::dispatch(omniCallHandle& handle,
 
   // Check that the key is the right size (if system generated).
   if( !pd_policy.user_assigned_id ) {
-    CORBA::ULong length_check;
+    int length_check;
 
     if (!pd_policy.transient && poaUniquePersistentSystemIds)
       length_check = SYS_ASSIGNED_ID_SIZE + TRANSIENT_SUFFIX_SIZE;

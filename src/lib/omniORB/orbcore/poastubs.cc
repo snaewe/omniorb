@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.4.2.2  2005/01/13 21:55:55  dgrisby
+  Turn off -g debugging; suppress some compiler warnings.
+
   Revision 1.4.2.1  2003/03/23 21:02:06  dgrisby
   Start of omniORB 4.1.x development branch.
 
@@ -560,8 +563,8 @@ PortableServer::_objref_ServantActivator::~_objref_ServantActivator() {}
 
 PortableServer::_objref_ServantActivator::_objref_ServantActivator(omniIOR* ior,
          omniIdentity* id)
- : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id),
-   omniObjRef(PortableServer::ServantActivator::_PD_repoId, ior, id, 1),
+ : omniObjRef(PortableServer::ServantActivator::_PD_repoId, ior, id, 1),
+   OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id),
    _shortcut(0)
 {
   _PR_setobj(this);
@@ -827,8 +830,8 @@ PortableServer::_objref_ServantLocator::~_objref_ServantLocator() {}
 
 PortableServer::_objref_ServantLocator::_objref_ServantLocator(omniIOR* ior,
          omniIdentity* id)
- : OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id),
-   omniObjRef(PortableServer::ServantLocator::_PD_repoId, ior, id, 1),
+ : omniObjRef(PortableServer::ServantLocator::_PD_repoId, ior, id, 1),
+   OMNIORB_BASE_CTOR(PortableServer::)_objref_ServantManager(ior, id),
    _shortcut(0)
 {
   _PR_setobj(this);
