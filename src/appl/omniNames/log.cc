@@ -35,7 +35,7 @@
 #include <log.h>
 #include <iomanip.h>
 
-#ifdef __NT__
+#ifdef __WIN32__
 
 #include <io.h>
 #include <winbase.h>
@@ -49,6 +49,28 @@
 #include <sys/utsname.h>
 
 #endif
+
+#if defined(__nextstep__)
+#include <libc.h>
+#include <sys/param.h>
+#endif
+
+
+#ifndef _NO_STRDUP
+
+
+// we have no strdup
+char *
+strdup (char* str)
+{
+  char *newstr;
+
+  newstr = (char *) malloc (strlen (str) + 1);
+  if (newstr)
+    strcpy (newstr, str);
+  return newstr;
+}
+#endif  // _NO_STRDUP
 
 extern void usage();
 
@@ -101,7 +123,7 @@ log::log(int& p) : port(p)
   checkpointNeeded = 1;
   line = 1;
 
-#ifdef __NT__
+#ifdef __WIN32__
   struct _stat sb;
 #else
   struct stat sb;
@@ -112,7 +134,7 @@ log::log(int& p) : port(p)
   if ((logdir = getenv(LOGDIR_ENV_VAR)) == NULL)
     logdir = strdup(DEFAULT_LOGDIR);
 
-#ifndef __NT__  
+#ifndef __WIN32__  
   if (logdir[0] != '/') {
     cerr << ts.t() << "Error: " << LOGDIR_ENV_VAR << " (" << logdir
 	 << ") is not an absolute path name." << endl;
@@ -123,6 +145,7 @@ log::log(int& p) : port(p)
     logdir[strlen(logdir)-1] = '\0';		// strip trailing '/'
   }
 
+#ifndef _USE_GETHOSTNAME
   struct utsname un;
   if (uname(&un) < 0) {
     cerr << ts.t() << "Error: cannot get the name of this host." << endl;
@@ -133,7 +156,18 @@ log::log(int& p) : port(p)
   char* logname = new char[strlen(logdir) + strlen("/omninames-")
 			   + strlen(un.nodename) + 1];
   sprintf(logname, "%s/omninames-%s", logdir, un.nodename);
+#else
+  char hostname[MAXHOSTNAMELEN+1];
 
+  if (gethostname(hostname, MAXHOSTNAMELEN) < 0) {
+    cerr << ts.t() << "Error: cannot get the name of this host." << endl;
+	
+    exit(1);
+  }
+  char* logname = new char[strlen(logdir) + strlen("/omninames-")
+			   + strlen(hostname) + 1];
+  sprintf(logname, "%s/omninames-%s", logdir, hostname);
+#endif // _USE_GETHOSTNAME
 #else
 
   // Get host name:
@@ -188,7 +222,7 @@ log::log(int& p) : port(p)
 
     firstTime = 0;
 
-#ifdef __NT__
+#ifdef __WIN32__
     ifstream initf(active,ios::in | ios::nocreate);
 #else
     ifstream initf(active);
@@ -246,7 +280,7 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
     cerr << ts.t() << "Starting omniNames for the first time." << endl;
 
     try {
-#ifdef __NT__
+#ifdef __WIN32__
       int fd = _open(active, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
 #else
       int fd = open(active, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
@@ -358,7 +392,7 @@ log::init(CORBA::ORB_ptr o, CORBA::BOA_ptr b)
 
   CORBA::release(rootContext);	// dispose of the object reference
 
-#ifdef __NT__
+#ifdef __WIN32__
   int fd = _open(active, O_WRONLY | O_APPEND);
 #else
   int fd = open(active, O_WRONLY | O_APPEND | O_SYNC);
@@ -465,7 +499,7 @@ log::checkpoint(void)
 
   ofstream ckpf;
 
-#ifdef __NT__
+#ifdef __WIN32__
   int fd = _open(checkpt, O_WRONLY | O_CREAT | O_TRUNC, _S_IWRITE);
 #else
   int fd = open(checkpt, O_WRONLY | O_CREAT | O_TRUNC | O_SYNC, 0666);
@@ -535,7 +569,7 @@ log::checkpoint(void)
 
   unlink(backup);
 
-#ifdef __NT__
+#ifdef __WIN32__
   if (!CopyFile(active,backup,TRUE)) {
 #else
   if (link(active,backup) < 0) {
@@ -554,7 +588,7 @@ log::checkpoint(void)
   }
 
 
-#ifdef __NT__
+#ifdef __WIN32__
   if (!CopyFile(checkpt,active,TRUE)) {
 #else
   if (link(checkpt,active) < 0) {
@@ -572,7 +606,7 @@ log::checkpoint(void)
     exit(1);
   }
 
-#ifdef __NT__
+#ifdef __WIN32__
   fd = _open(active, O_WRONLY | O_APPEND);
 #else
   fd = open(active, O_WRONLY | O_APPEND | O_SYNC);
