@@ -23,6 +23,11 @@ OMNINAMES=@prefix@/bin/omniNames
 OMNINAMES_DIR=/var/omniNames
 OMNIMAPPER_DIR=/var/lib/omniMapper
 
+# Make sure libraries are found if we're installed in a non-standard location
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+export LD_LIBRARY_PATH=@libdir@:$LD_LIBRARY_PATH
+
 # Registered port number for CORBA naming service is 2809.
 # Should be preferred but may conflict with other ORBs running concurrently.
 TCPPORT=2809
