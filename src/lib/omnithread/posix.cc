@@ -49,7 +49,7 @@
 #include <time.h>
 #include <omnithread.h>
 
-#if (defined(__GLIBC__) && __GLIBC__ >= 2)
+#if (defined(__GLIBC__) && __GLIBC__ >= 2) || defined(__SCO_VERSION__)
 // typedef of struct timeval and gettimeofday();
 #include <sys/time.h>
 #include <unistd.h>
@@ -267,6 +267,12 @@ static int normal_priority;
 static int highest_priority;
 #endif
 
+#if defined(__osf1__) && defined(__alpha__) || defined(__VMS)
+// omniORB requires a larger stack size than the default (21120) on OSF/1
+static size_t stack_size = 32768;
+#else
+static size_t stack_size = 0;
+#endif
 
 //
 // Initialisation function (gets called before any user code).
@@ -523,14 +529,12 @@ omni_thread::start(void)
 
 #endif	/* PthreadSupportThreadPriority */
 
-#if defined(__osf1__) && defined(__alpha__) || defined(__VMS)
+#if !defined(__linux__)
+    if (stack_size) {
+      THROW_ERRORS(pthread_attr_setstacksize(&attr, stack_size));
+    }
+#endif
 
-    // omniORB requires a larger stack size than the default (21120)
-    // on OSF/1
-
-    THROW_ERRORS(pthread_attr_setstacksize(&attr, 32768));
-
-#endif	/* __osf1__ && __alpha__ */
 
 #if (PthreadDraftVersion == 4)
     THROW_ERRORS(pthread_create(&posix_thread, attr, omni_thread_wrapper,
@@ -820,7 +824,7 @@ omni_thread::get_time(unsigned long* abs_sec, unsigned long* abs_nsec,
 
 #else
 
-#if defined(__linux__) || defined(__aix__)
+#if defined(__linux__) || defined(__aix__) || defined(__SCO_VERSION__)
 
     struct timeval tv;
     gettimeofday(&tv, NULL); 
@@ -863,4 +867,16 @@ omni_thread::posix_priority(priority_t pri)
 #endif
 
     throw omni_thread_invalid();
+}
+
+void
+omni_thread::stacksize(unsigned long sz)
+{
+  stack_size = sz;
+}
+
+unsigned long
+omni_thread::stacksize()
+{
+  return stack_size;
 }
