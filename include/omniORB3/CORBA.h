@@ -29,6 +29,10 @@
 
 /*
  $Log$
+ Revision 1.1.2.10  2000/08/04 15:26:10  dpg1
+ ORB_init() now defaults ORB id to empty string, and accepts empty
+ string as valid.
+
  Revision 1.1.2.9  2000/07/10 13:06:44  dpg1
  Initialisation of Any insertion functions was missing from system
  exceptions.
@@ -2422,7 +2426,7 @@ _CORBA_MODULE_BEG
   typedef String_var ORBid_var;
 
   _CORBA_MODULE_FN ORB_ptr ORB_init(int& argc, char** argv,
-				    const char* orb_identifier);
+				    const char* orb_identifier="");
 
 
   //////////////////////////////////////////////////////////////////////

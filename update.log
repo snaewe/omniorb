@@ -1,3 +1,13 @@
+Fri Aug  4 16:23:29 BST 2000 dpg1
+=================================
+
+- ORB_init() now defaults ORB id to empty string, and accepts empty
+  string as valid.
+
+include/omniORB3/CORBA.h
+src/lib/omniORB2/orbcore/corbaOrb.cc
+
+
 Fri Aug  4 12:33:25 BST 2000 dpg1
 =================================
 
