@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.5.2.21  2004/04/19 09:25:21  dgrisby
+# Nil object references are bound to the lifetime of the skeleton file
+# if OMNI_UNLOADABLE_STUBS is defined.
+#
 # Revision 1.5.2.20  2004/02/11 11:49:57  dgrisby
 # Generate _out types for simple typedefs.
 #
@@ -393,6 +397,8 @@ private:
   _objref_@name@(const _objref_@name@&);
   _objref_@name@& operator = (const _objref_@name@&);
   // not implemented
+
+  friend class @name@;
 };
 """
 

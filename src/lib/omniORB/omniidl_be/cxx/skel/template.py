@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.26  2004/04/19 09:25:26  dgrisby
+# Nil object references are bound to the lifetime of the skeleton file
+# if OMNI_UNLOADABLE_STUBS is defined.
+#
 # Revision 1.3.2.25  2003/07/25 16:03:06  dgrisby
 # Initialise base classes in correct order.
 #
@@ -250,6 +254,10 @@ interface_class = """\
 @name@_ptr
 @name@::_nil()
 {
+#ifdef OMNI_UNLOADABLE_STUBS
+  static @objref_name@ _the_nil_obj;
+  return &_the_nil_obj;
+#else
   static @objref_name@* _the_nil_ptr = 0;
   if( !_the_nil_ptr ) {
     omni::nilRefLock().lock();
@@ -260,6 +268,7 @@ interface_class = """\
     omni::nilRefLock().unlock();
   }
   return _the_nil_ptr;
+#endif
 }
 
 const char* @name@::_PD_repoId = "@repoID@";
