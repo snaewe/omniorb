@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.18.2.1  2000/11/23 11:33:43  sll
+  DU/Tru64 requires the buffer to be cleared before passing it to
+  gethostbyname_r().
+
   Revision 1.18  1999/06/26 18:08:17  sll
   HPUX update to separate difference between HPUX 10.20 and HPUX 11.00.
 
@@ -118,6 +122,7 @@ again:
   // Use gethostbyname_r() on Digital UNIX
   if (!h.pd_buffer) {
     h.pd_buffer = new char[sizeof(struct hostent_data)];
+    memset(h.pd_buffer,0,sizeof(struct hostent_data));
     // XXX Is it possible that the pointer h.pd_buffer is at a wrong alignment
     //     for a struct hostent_data?
     h.pd_buflen = sizeof(struct hostent_data);
