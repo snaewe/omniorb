@@ -29,6 +29,9 @@
 
 /* 
   $Log$
+  Revision 1.1.2.4  2000/09/21 16:36:24  djs
+  Set max queue length to 65536 (arbitrary)
+
   Revision 1.1.2.3  2000/09/20 13:25:29  djs
   Added Messaging::ExceptionHolder destructor
   Added omniAMICall_var type
@@ -66,7 +69,7 @@ static unsigned long  queue_length  = 0; // number of call descriptors in q
 
 const  unsigned int   maxWorkers    = 5;
 const  unsigned int   timeout       = 30;
-const  unsigned int   queueMax      = 128;
+const  unsigned int   queueMax      = 65536;
 
 ///////////////////////////////////////////////////////////////////////
 // AMI::Worker (implementation of worker thread) //////////////////////
