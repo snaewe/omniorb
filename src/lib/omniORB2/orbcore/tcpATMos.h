@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.3  1998/11/09 10:57:33  sll
+ Removed the use of the reserved C++ keyword "export".
+
  Revision 1.2  1998/03/20 12:28:49  sll
  Added delay connect to tcpATMosStrand
 
@@ -103,7 +106,7 @@ public:
   }
 
   CORBA::Boolean isIncoming(Endpoint* addr) const;
-  void instantiateIncoming(Endpoint* addr,CORBA::Boolean export);
+  void instantiateIncoming(Endpoint* addr,CORBA::Boolean exportflag);
   void startIncoming();
   void stopIncoming();
   void removeIncoming();
@@ -212,7 +215,7 @@ private:
   tcpATMosIncomingRope(tcpATMosMTincomingFactory* f,
 			unsigned int maxStrands,
 			tcpATMosEndpoint *e,
-			CORBA::Boolean export);
+			CORBA::Boolean exportflag);
   // Create a tcpATMos incoming Rope.
   //   If e->port() == 0,
   //        Create a file handle with LPORT=0 to get the ip module
