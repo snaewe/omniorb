@@ -1,3 +1,27 @@
+Thu Aug 10 11:29:11 BST 2000 djs (ci by sll)
+============================================
+
+- Support new pragma hh in the cxx omniidl backend.
+e.g.
+
+//IDL                                       // C++ stub header
+#pragma hh #ifndef __SITEDEF_H__	    #ifndef __SITEDEF_H__
+#pragma hh #define __SITEDEF_H__	    #define __SITEDEF_H__
+#pragma hh #include "sitedef.h"     -->     #include "sitedef.h"
+#pragma hh #endif			    #endif
+
+The pragmas are recognised only at the beginning of the IDL file (minus
+comments). They are ignored if they appeared in the included IDL files or
+other parts of the IDL file.
+
+- Added CPP macro guards to stub header to preserve the value of
+  USE_core_stub_in_nt_dll and USE_dyn_stub_in_nt_dll. This is useful
+  when stub headers include others which may have been compiled into DLLs.
+
+src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/header/template.py
+
+
 Thu Aug 10 11:14:19 BST 2000 sll
 ================================
 
@@ -31,7 +55,7 @@ bin/scripts/install.sh
 Wed Aug  9 16:35:37 BST 2000 sll
 ================================
 
-- Make rules overhaul (part II). 
+- Make rules overhaul (part II).
 
 external_merge/mk/platforms/alpha_linux_2.0.mk
 external_merge/mk/platforms/alpha_osf1_3.2.mk
@@ -121,7 +145,7 @@ Tue Aug  8 16:13:12 BST 2000 sll
   uses a different way to report the socket error in a select() call.
 
 src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
-  
+
 
 Tue Aug  8 15:55:35 BST 2000 dpg1
 =================================
@@ -266,7 +290,7 @@ mk/platforms/alpha_osf1_4.0_oldcxx.mk       delete
 Tue Aug  1 18:15:25 BST 2000 sll
 ================================
 
-- Make shared library rules updates. 
+- Make shared library rules updates.
   Now a single set of rules in dir.mk applies to all unix platforms that
   can build shared libraries.
 
@@ -346,7 +370,7 @@ Mon Jul 31 18:27:49 BST 2000 sll
 - New make rules for making shared library:
      MakeCXXSharedLibrary
      ExportSharedLibrary
-  
+
   For the moment, only used in services/mklib.
 
  external_merge/mk/platforms/alpha_osf1_3.2.mk
@@ -373,7 +397,7 @@ Mon Jul 31 18:27:49 BST 2000 sll
  mk/platforms/sun4_sosV_5.5.mk
  mk/platforms/sun4_sosV_5.6.mk
  mk/platforms/sun4_sosV_5.7.mk
- 
+
 
 Mon Jul 31 14:12:54 BST 2000 djr
 ================================
@@ -429,7 +453,7 @@ Wed Jul 26 16:21:09 BST 2000 djs
 - omniidl C++ backend missed forward declarations and typedefs of old
   BOA skeletons
 
-src/lib/omniORB2/omniidl_be/cxx/header/defs.py	
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
 src/lib/omniORB2/omniidl_be/cxx/header/template.py
 
 
@@ -445,7 +469,7 @@ src/tool/omniidl/cxx/idlast.cc
 Mon Jul 24 16:09:20 BST 2000 djs
 ================================
 
-- Slight typo in BOA skeleton template fix (s/fq_name/name/) 
+- Slight typo in BOA skeleton template fix (s/fq_name/name/)
 
 src/lib/omniORB2/omniidl_be/cxx/skel/template.py
 
@@ -468,7 +492,7 @@ src/lib/omniORB2/omniidl_be/cxx/header/template.py
 Mon Jul 24 11:14:00 BST 2000 djs
 ================================
 
-- Added missing constructor to BOA compatibile skeletons in omniidl C++ 
+- Added missing constructor to BOA compatibile skeletons in omniidl C++
   backend
 
 src/lib/omniORB2/omniidl_be/cxx/header/template.py
@@ -520,11 +544,11 @@ Tue Jul 18 16:32:01 BST 2000 djs
 
 - added C++ backend option
    -Wbvirtual_objref
-  which causes operation& attribute methods in the _objref to be virtual 
+  which causes operation& attribute methods in the _objref to be virtual
 
-src/lib/omniORB2/omniidl_be/cxx/__init__.py 
-src/lib/omniORB2/omniidl_be/cxx/config.py 
-src/lib/omniORB2/omniidl_be/cxx/header/defs.py 
+src/lib/omniORB2/omniidl_be/cxx/__init__.py
+src/lib/omniORB2/omniidl_be/cxx/config.py
+src/lib/omniORB2/omniidl_be/cxx/header/defs.py
 
 
 Mon Jul 17 15:20:18 BST 2000 dpg1
@@ -718,7 +742,7 @@ Tue Jul 11 20:58:59 BST 2000 sll
 
 - Create a new lib on Win32- msvcstub.lib. This can be used to resolve
   unnecessary reference from stub *SK.cc files to a few functions in
-  omniDynamic300_rt.dll. 
+  omniDynamic300_rt.dll.
 - Updated nmake examples to use the stub lib.
 
 external_merge/src/examples/boa/dir.mak
@@ -960,7 +984,7 @@ Mon Jul 02 15:55:00 BST 2000 djs
   anonymous sequences
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
- 
+
 
 Fri Jun 30 17:03:43 BST 2000 sll
 ================================
@@ -1002,7 +1026,7 @@ src/lib/omniORB2/orbcore/gatekeepers/tcpwrapper/sharedlib/dir.mk
 Fri Jun 30 10:30:00 BST 2000 djs
 ================================
 
-- Couple of minor possibilities for nameclashes with user code removed 
+- Couple of minor possibilities for nameclashes with user code removed
   from omniIDL/C++ DynSK.cc file generation templates
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
@@ -1191,7 +1215,7 @@ src/lib/omniORB2/orbcore/uri.cc
 Tue Jun 27 16:26:15 BST 2000 sll
 ================================
 
-- Fixes to library runtime build rules. 
+- Fixes to library runtime build rules.
 
 src/lib/omniORB2/dir.mk
 src/lib/omniORB2/initRefs.h
@@ -1474,7 +1498,7 @@ Mon Jun 12 14:17:00 BST 2000 djs
 
 src/lib/omniORB2/omniidl_be/cxx/header/tie.py
 
-- Nolonger claims code was generated by "omniidl3" in the headers of 
+- Nolonger claims code was generated by "omniidl3" in the headers of
   generated files- now takes responsibilty for its own actions :)
 
 src/lib/omniORB2/omniidl_be/cxx/config.py
@@ -1594,7 +1618,7 @@ Mon Jun  5 13:55:00 BST 2000 djs
 
 src/lib/omniORB2/omniidl_be/cxx/header/forward.py
 
--   Name clash caused by having union members called "x" and "pd_x" 
+-   Name clash caused by having union members called "x" and "pd_x"
     (for any value of x) in the same union
 
 src/lib/omniORB2/omniidl_be/cxx/header/defs.py
@@ -1619,7 +1643,7 @@ src/lib/omniORB2/omniidl_be/cxx/dynskel/template.py
 
 src/lib/omniORB2/omniidl_be/cxx/header/template.py
 
--   Tie template generation tidied up and now actually generates templates 
+-   Tie template generation tidied up and now actually generates templates
     for BOA non-flat templates (-WbBOA -Wbtp)
 
 src/lib/omniORB2/omniidl_be/cxx/header/__init__.py
@@ -1691,7 +1715,7 @@ src/lib/omniORB2/orbcore/corbaBoa.h
 Wed May 31 19:00:00 BST 2000 djs
 ================================
 
-- C++ back-end now indents output more correctly (including pre-processor 
+- C++ back-end now indents output more correctly (including pre-processor
   directives)
 
 src/lib/omniORB2/omniidl_be/cxx/skutil.py
@@ -1860,9 +1884,9 @@ src/lib/omniORB2/orbcore/poa.cc
 Fri May  5 17:32:00 BST 2000 djs
 ================================
 
-- Extended an existing omniIDL/C++ fix for MSVC5 to help with base class 
+- Extended an existing omniIDL/C++ fix for MSVC5 to help with base class
   initialisers with scope resolution operators (::)
-  A fix already existed for the method dispatch()ing, using a typedef with 
+  A fix already existed for the method dispatch()ing, using a typedef with
   a flattened name. This does not change the powerpc/aix workaround using
   OMNI_BASE_CTOR (no test platform to check against).
   Problem was reported on the mailing list in article:
@@ -1872,7 +1896,7 @@ src/lib/omniORB2/omniidl_be/cxx/skel/main.py
 src/lib/omniORB2/omniidl_be/cxx/skel/template.py
 
 - Removed omniIDL/C++ operation argument mapping special case:
-  A non-array typedef to a variable struct or union previously used a 
+  A non-array typedef to a variable struct or union previously used a
   dereferenced _out argument. Now the _out argument is not dereferenced.
 
 src/lib/omniORB2/omniidl_be/cxx/types.py
@@ -2106,7 +2130,7 @@ src/tool/omniidl/cxx/dir.mk
 Fri Mar 24 16:19:00 GMT 2000 djs
 ================================
 
-- omniIDL output some invalid C++ typedefs in the case of typedefs 
+- omniIDL output some invalid C++ typedefs in the case of typedefs
   to object references
 
 src/lib/omniORB2/omniidl_be/cxx/header/defs.py
@@ -2121,7 +2145,7 @@ Fri Mar 24 16:14:00 GMT 2000 djs
 ================================
 
 - Fixed C++ Any extraction operators which stopped the DynSK.cc
-  file corresponding to this IDL fragment from parsing (due to a 
+  file corresponding to this IDL fragment from parsing (due to a
   name clash)
     typedef sequence<long> a;
   (bug was copied accidentally from omniidl3)
@@ -2144,7 +2168,7 @@ Thu Mar 23 15:27:00 GMT 2000 djs
 
 - omniidl C++ backend failed to handle recursive unions where
   there was more than one node in the cycle
-  (even though it has functions specifically to handle this 
+  (even though it has functions specifically to handle this
   properly)
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/typecode.py
@@ -2203,7 +2227,7 @@ src/tool/omniidl/cxx/idlast.cc
 Thu Mar 16 16:17:00 GMT 2000 djs
 ================================
 
-- omniidl missed an extern declaration because it failed to 
+- omniidl missed an extern declaration because it failed to
   dereference a typedef chain leading to a structure defined
   in another file
 
@@ -2231,9 +2255,9 @@ src/tool/omniidl/python/scripts/omniidl
 Wed Mar 15 20:46:00 GMT 2000 djs
 ================================
 
-- Fixed IDL->C++ problem with using a typedef to an array 
-  declarator or a sequence in another file (DynSK.cc problem) 
-  within a struct or union. Some refactoring in the DynSK code 
+- Fixed IDL->C++ problem with using a typedef to an array
+  declarator or a sequence in another file (DynSK.cc problem)
+  within a struct or union. Some refactoring in the DynSK code
   is required.
 
 src/lib/omniORB2/omniidl_be/cxx/dynskel/main.py
@@ -2544,7 +2568,7 @@ src/tool/omniidl/python/scripts/omniidl.py  -- new
 Tue Feb 15 13:50:03 GMT 2000 djr
 ================================
 
-- Strip aliases from sequence elements when determining whether we can	
+- Strip aliases from sequence elements when determining whether we can
   optimise inserion into / extraction from Anys.
 
 src/tool/omniidl2/omniORB2_be/o2be_sequence.cc
@@ -2784,7 +2808,7 @@ Thu Jan 27 16:27:08 GMT 2000 djr
 ================================
 
 - Fixed bug in String_member.  It is now initialised with an
-  empty string by default (rather than null).  This reflects	
+  empty string by default (rather than null).  This reflects
   a change in the mapping.
 
 include/omniORB3/stringtypes.h

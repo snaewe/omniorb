@@ -28,6 +28,11 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.16  2000/08/10 10:38:23  sll
+# Support new pragma hh in the cxx omniidl backend.  Added CPP macro guards
+# to stub header to preserve the value of USE_core_stub_in_nt_dll and
+# USE_dyn_stub_in_nt_dll.
+#
 # Revision 1.3.2.15  2000/07/26 15:29:11  djs
 # Missing typedef and forward when generating BOA skeletons
 #
@@ -121,6 +126,15 @@ main = """\
 #include <omniORB3/CORBA.h>
 #endif
 
+#ifndef  USE_core_stub_in_nt_dll
+# define USE_core_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+#ifndef  USE_dyn_stub_in_nt_dll
+# define USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+
+@cxx_direct_include@
+
 @includes@
 
 #ifdef USE_stub_in_nt_dll
@@ -168,6 +182,16 @@ main = """\
 @operators@
 
 @marshalling@
+
+#ifdef   USE_core_stub_in_nt_dll_NOT_DEFINED_@guard@
+# undef  USE_core_stub_in_nt_dll
+# undef  USE_core_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+#ifdef   USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
+# undef  USE_dyn_stub_in_nt_dll
+# undef  USE_dyn_stub_in_nt_dll_NOT_DEFINED_@guard@
+#endif
+
 
 #endif  // __@guard@_hh__
 """
