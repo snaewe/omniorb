@@ -930,6 +930,7 @@ AST_Expression::eval_bit_op(AST_Expression::EvalKind ek)
     retval->u.lval = pd_v1->ev()->u.lval & pd_v2->ev()->u.lval;
     break;
   case EC_left:
+
     retval->u.lval = pd_v1->ev()->u.lval << pd_v2->ev()->u.lval;
     break;
   case EC_right:
@@ -1345,13 +1346,24 @@ dump_expr_val( std:: ostream &o, AST_Expression::AST_ExprValue *ev)
     o << ev->u.dval;
     break;
   case AST_Expression::EV_char:
-    o << ev->u.cval;
+    {
+      char c = ev->u.cval;
+      if (c >= ' ' && c <= '~')
+	o << "'" << c << "'";
+      else {
+	o << "'\\"
+	  << (int) ((c & 0100) >> 6)
+	  << (int) ((c & 070) >> 3)
+	  << (int) (c & 007)
+	  << "'";
+      }
+    }
     break;
   case AST_Expression::EV_octet:
-    o << ev->u.oval;
+    o << (unsigned int)ev->u.oval;
     break;
   case AST_Expression::EV_bool:
-    o << (ev->u.bval == I_TRUE) ? "TRUE" : "FALSE";
+    o << (ev->u.bval == I_TRUE) ? "1" : "0";
     break;
   case AST_Expression::EV_string:
     if (ev->u.strval != NULL)
