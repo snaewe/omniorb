@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.14  2000/01/18 17:15:05  dpg1
+// Changes for "small" distribution.
+//
 // Revision 1.13  1999/12/15 12:17:18  dpg1
 // Changes to compile with SunPro CC 5.0.
 //
@@ -1175,7 +1178,9 @@ main(int argc, char** argv)
 
   init_omniidl();
 
-  PyObject* pymain = PyImport_ImportModule("omniidl.main");
+  PyObject* mod    = PyString_FromString("omniidl.main");
+  PyObject* pymain = PyImport_Import(mod);
+  Py_DECREF(mod);
 
   if (!pymain) {
     PyErr_Print();

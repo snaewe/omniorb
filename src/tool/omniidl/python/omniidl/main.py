@@ -29,6 +29,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.13  2000/01/18 17:15:05  dpg1
+# Changes for "small" distribution.
+#
 # Revision 1.12  1999/12/21 16:03:57  dpg1
 # Warning if no back-ends are selected.
 #
@@ -200,6 +203,13 @@ def parseArgs(args):
     return files
 
 
+def my_import(name):
+    mod = __import__(name)
+    components = string.split(name, ".")
+    for comp in components[1:]:
+        mod = getattr(mod, comp)
+    return mod
+
 def main(argv=None):
     global preprocessor_args, preprocessor_only, preprocessor_cmd
     global no_preprocessor, backend, backend_args, dump_only, cd_to
@@ -223,13 +233,11 @@ def main(argv=None):
         if verbose:
             sys.stderr.write(cmdname + ": Importing back-end `" +\
                              backend + "'\n")
-
         try:
-            be = __import__("omniidl.be." + backend,
-                            globals(), locals(), backend)
+            be = my_import("omniidl.be." + backend)
         except ImportError:
             try:
-                be = __import__(backend, globals(), locals(), backend)
+                be = my_import(backend)
             except ImportError:
                 if not quiet:
                     sys.stderr.write(cmdname + \
