@@ -71,6 +71,9 @@ class omni_thread;
 #elif defined(__alpha__) && defined(__osf1__)
 #include <omnithread/posix.h>
 
+#elif defined(__powerpc__) && defined(__aix__)
+#include <omnithread/posix.h>
+
 #elif defined(__NT__)
 #include <omnithread/nt.h>
 

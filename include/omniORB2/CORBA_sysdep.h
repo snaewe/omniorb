@@ -32,9 +32,12 @@
 
 /*
  $Log$
- Revision 1.11  1997/07/21 17:07:38  tjr
- use new OS / processor macros
+ Revision 1.12  1997/08/21 22:22:12  sll
+ Support for AIX.
 
+ * Revision 1.11  1997/07/21  17:07:38  tjr
+ * use new OS / processor macros
+ *
  * Revision 1.10  1997/05/06  16:06:03  sll
  * Public release.
  *
@@ -118,11 +121,16 @@
 #elif defined(__sunos__) && defined(__sparc__)
 #define _OMNIORB_HOST_BYTE_ORDER_ 0
 #define _HAS_SIGNAL 1
+#if __OSVERSION__ == 5
+#define NEED_GETHOSTNAME_PROTOTYPE
+#endif
 #elif defined(__x86__)
 #define _OMNIORB_HOST_BYTE_ORDER_ 1
 #if !defined(__WIN32__)
 #define _HAS_SIGNAL 1
 #endif
+#elif defined(__aix__) && defined(__powerpc__)
+#define _OMNIORB_HOST_BYTE_ORDER_ 0
 #else
 #error "The byte order of this platform is unknown"
 #endif
