@@ -15,8 +15,9 @@ ifndef AIX
 LIBRARY_OPTIONS += -DGETPEERNAME_BUG
 endif
 
-DIR_CPPFLAGS = -DHOSTS_ACCESS $(LIBRARY_OPTIONS)
-DIR_CPPFLAGS += $(CORBA_CPPFLAGS)
+DIR_CPPFLAGS = -DHOSTS_ACCESS $(LIBRARY_OPTIONS) -D_REENTRANT
+
+CXXOPTIONS += $(CORBA_CPPFLAGS)
 
 SRCS = hosts_access.c options.c shell_cmd.c rfc931.c eval.c \
        hosts_ctl.c refuse.c percent_x.c clean_exit.c $(AUX_SRCS) \
