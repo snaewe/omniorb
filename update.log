@@ -1,4 +1,12 @@
 
+Thu Jan 27 18:06:52 GMT 2000 djr
+================================
+
+- Fixed bug in dumpbuf() (doh!).
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
+
 Thu Jan 27 15:01:18 GMT 2000 djr
 ================================
 

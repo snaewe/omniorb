@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22.2.7  2000/01/27 18:09:04  djr
+  Fixed bug in dumpbuf().
+
   Revision 1.22.2.6  1999/12/06 14:06:09  djr
   Fixed bug in tcpSocketMTfactory.cc:dumpbuf().
 
@@ -828,12 +831,11 @@ static void dumpbuf(unsigned char* buf, size_t sz)
   while( sz >= 16 ) {
     sprintf(row, "%02x%02x %02x%02x %02x%02x %02x%02x "
 	         "%02x%02x %02x%02x %02x%02x %02x%02x ",
-	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++,
-	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++,
-	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++,
-	    (int) *buf++, (int) *buf++, (int) *buf++, (int) *buf++);
+            (int) buf[0], (int) buf[1], (int) buf[2], (int) buf[3],
+            (int) buf[4], (int) buf[5], (int) buf[6], (int) buf[7],
+            (int) buf[8], (int) buf[9], (int) buf[10], (int) buf[11],
+            (int) buf[12], (int) buf[13], (int) buf[14], (int) buf[15]);
     fprintf(stderr, "%s", row);
-    buf -= 16;
     char* p = row;
     for( i = 0; i < 16; i++ )  *p++ = printable_char(*buf++);
     *p++ = '\0';
