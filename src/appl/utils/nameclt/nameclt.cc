@@ -504,7 +504,6 @@ main(int argc, char **argv)
     cerr << command << ": CannotProceed exception" << endl;
     return 1;
   }
-
   catch (CORBA::COMM_FAILURE) {
     cerr << command 
 	 << ": Cannot contact the Naming Service because of COMM_FAILURE."
@@ -513,10 +512,12 @@ main(int argc, char **argv)
   }
 
   catch (...) {
-    cerr << command << ": unexpected error" << endl;
-    return 1;
+    // Sigh! Cannot emit an error message here or gcc-2.7.2 gives
+    // internal compiler error.
   }
-
+  cerr << command
+       << ": Unexpected error encountered."
+       << endl;
   return 1;
 }
 
