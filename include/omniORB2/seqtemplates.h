@@ -28,6 +28,10 @@
 
 /*
  $Log$
+ Revision 1.12  1998/03/05 11:21:16  sll
+ Added NP_data() to all the derived class of Sequence_Array. This is
+ to remove the warning given by some compiler, such as HPUX C++.
+
  Revision 1.11  1998/01/28 14:29:48  ewc
  *** empty log message ***
 
@@ -539,6 +543,9 @@ public:
     _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator= (s);
     return *this;
   }
+  inline T *NP_data() const {
+      return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::NP_data();
+  }
   inline size_t NP_alignedSize(size_t initialoffset) const;
   inline void operator>>= (NetBufferedStream &s) const;
   inline void operator<<= (NetBufferedStream &s);
@@ -571,6 +578,9 @@ public:
   {
     _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::operator= (s);
     return *this;
+  }
+  inline T *NP_data() const {
+      return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::NP_data();
   }
   inline size_t NP_alignedSize(size_t initialoffset) const;
   inline void operator>>= (NetBufferedStream &s) const;
@@ -633,6 +643,9 @@ public:
   inline ~_CORBA_Bounded_Sequence_Array() {}
   inline _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max> &operator= (const _CORBA_Bounded_Sequence_Array<T,T_slice,Telm,dimension,max> &s);
   inline _CORBA_ULong length() const { return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::length(); }
+  inline T *NP_data() const {
+      return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::NP_data();
+  }
   inline void length(_CORBA_ULong len);
   inline size_t NP_alignedSize(size_t initialoffset) const;
   inline void operator>>= (NetBufferedStream &s) const;
@@ -660,6 +673,9 @@ public:
         (const 
           _CORBA_Bounded_Sequence_Array_w_FixSizeElement<T,T_slice,Telm,dimension,max,elmSize,elmAlignment>&
             s);
+  inline T *NP_data() const {
+      return _CORBA_Sequence_Array<T,T_slice,Telm,dimension>::NP_data();
+  }
   inline _CORBA_ULong length() const;
   inline void length(_CORBA_ULong len);
   // omniORB2 extensions
