@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2000/09/04 09:09:43  dpg1
+  Remove #include <iostream.h> accidentally left over from debugging.
+
   Revision 1.1.2.3  2000/08/30 10:14:39  dpg1
   BOA constructor with object key failed to set the key in the servant.
 
@@ -41,8 +44,6 @@
 
 #ifndef __OMNIORB_BOA_H__
 #define __OMNIORB_BOA_H__
-
-#include <iostream.h>
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////// omniOrbBoaServant /////////////////////////

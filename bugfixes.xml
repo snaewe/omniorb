@@ -8,6 +8,18 @@
 
 <buglist>
 
+<bug id="7" date="Mon Sep  4 10:02:41 BST 2000" user="dpg1">
+
+  <summary>#includes of iostream.h left in omniORB headers</summary>
+  <reported>Paul Nader</reported>
+  <text>
+  Several files had <code>#include&lt;iostream.h&gt;</code> left
+  behind from debugging. This causes problems for code which does
+  <code>#include &lt;iostream&gt;</code> without the <code>.h</code>.
+  </text>
+</bug>
+
+
 <bug id="6" date="Wed Aug 30 10:43:34 BST 2000" user="dpg1">
 
   <summary>BOA constructor with object key broken</summary>

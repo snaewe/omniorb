@@ -27,10 +27,11 @@
 //	*** PROPRIETARY INTERFACE ***
 //	
 
-#include <iostream.h>
-
 /*
   $Log$
+  Revision 1.1.2.6  2000/09/04 09:09:43  dpg1
+  Remove #include <iostream.h> accidentally left over from debugging.
+
   Revision 1.1.2.5  2000/06/30 14:12:07  dpg1
   Minor fixes for FreeBSD.
 

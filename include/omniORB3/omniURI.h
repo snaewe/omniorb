@@ -28,10 +28,11 @@
 //	*** PROPRIETARY INTERFACE ***
 //
 
-#include <iostream.h>
-
 // $Id$
 // $Log$
+// Revision 1.1.2.2  2000/09/04 09:09:43  dpg1
+// Remove #include <iostream.h> accidentally left over from debugging.
+//
 // Revision 1.1.2.1  2000/04/27 10:37:12  dpg1
 // Interoperable Naming Service
 //
