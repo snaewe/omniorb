@@ -1,3 +1,12 @@
+Tue Nov 21 12:20:18 GMT 2000 dpg1
+=================================
+
+- corbaloc URIs accept an empty object address, to mean localhost on
+  the default port.
+
+src/lib/omniORB2/orbcore/uri.cc
+
+
 Tue Nov 21 10:46:54 GMT 2000 dpg1
 =================================
 

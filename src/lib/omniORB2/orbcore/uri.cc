@@ -30,6 +30,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.1.2.9  2000/11/21 12:24:44  dpg1
+// corbaloc URIs accept an empty object address, to mean localhost on the
+// default port.
+//
 // Revision 1.1.2.8  2000/11/21 10:59:27  dpg1
 // Poperly throw INV_OBJREF for object references containing no profiles
 // we understand.
@@ -471,6 +475,15 @@ ParseVersionNumber(const char*& c, CORBA::Char& majver, CORBA::Char& minver)
 
 corbalocURIHandler::IiopObjAddr::IiopObjAddr(const char*& c)
 {
+  if (*c == '\0' || *c == ',' || *c == '/' || *c == '#') {
+    // Empty host name -- use localhost, default port
+    host_   = CORBA::string_dup("localhost");
+    port_   = IIOP::DEFAULT_CORBALOC_PORT;
+    majver_ = 1;
+    minver_ = 0;
+    return;
+  }
+
   const char* p;
   ParseVersionNumber(c, majver_, minver_);
 
@@ -479,6 +492,7 @@ corbalocURIHandler::IiopObjAddr::IiopObjAddr(const char*& c)
   if (p == c) OMNIORB_THROW(BAD_PARAM,
 			    MINOR_BAD_SCHEME_SPECIFIC_PART,
 			    CORBA::COMPLETED_NO);
+
   host_ = CORBA::string_alloc(1 + p - c);
   char* h = (char*)host_;
   if (!h) OMNIORB_THROW(NO_MEMORY,0,CORBA::COMPLETED_NO);
