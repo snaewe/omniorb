@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.15  1999/12/16 16:10:46  djs
+# TypeCode fixes
+#
 # Revision 1.14  1999/12/15 12:13:16  djs
 # Multiple forward declarations of interface fix
 #
@@ -480,7 +483,6 @@ def visitForward(node):
 """, guard = guard, name = name)    
 
 def visitConst(node):
-#    print "[[[ visitConst ]]]"
     scope = currentScope()
     environment = self.__environment
     
@@ -491,14 +493,13 @@ def visitConst(node):
         type_string = environment.principalID(constType)
     name = tyutil.mapID(node.identifier())
     value = tyutil.valueString(constType, node.value(), environment)
-#    value = str(node.value())
-#    if tyutil.isChar(constType):
-#        value = "'" + value + "'"
 
     representedByInteger =tyutil.const_init_in_def(constType)
-    
-    # depends on whether enclosed by an interface or not
-    if self.__insideInterface:
+
+    # depends on whether we are inside a class / in global scope
+    # etc
+    # should be rationalised with tyutil.const_qualifier
+    if self.__insideClass:
         if representedByInteger:
             stream.out("""\
   static _core_attr const @type@ @name@ _init_in_cldecl_( = @val@ );""",
@@ -1050,13 +1051,8 @@ typedef _CORBA_ConstrType_@type@_Var<@name@> _var_type;""",
     user_decls = filter(lambda x: isinstance(x.memberType(),
                                              idltype.Declared),
                         node.members())
-    # we remember the assigned type by storing it in the ast node itself
-    # the actual member instance can then access it in a mo'
     for m in user_decls:
         m.accept(self)
-#        m.memtype = defs(stream, m.type_spec().decl(),
-#                             isFragment, insideInterface, insideModule)
-#            print "[[[ just stored memtype = " + repr(m.memtype) + " ]]]"
 
     for m in node.members():
         memberType = m.memberType()
@@ -1100,7 +1096,6 @@ _@memtype@ @instname@;""",
 
             elif tyutil.isEnum(memberType):
                 memtype = tyutil.mapID(memberType.decl().identifier())
-                #            print "[[[ memtype = " + repr(memtype) + "]]]"
                 # If it's a user declared type then remember the type we assigned?
             elif isinstance(memberType, idltype.Declared) and \
                  hasattr(m,"memtype"):
@@ -1146,6 +1141,8 @@ typedef _CORBA_ConstrType_@type@_OUT_arg< @name@,@name@_var > @name@_out;
         stream.out("""\
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
                    qualifier = qualifier, name = name)
+
+
 
     node.written = name
 #    print "[[[ scope = " + repr(currentScope()) + "]]]"
@@ -1864,15 +1861,16 @@ typedef _CORBA_ConstrType_@isVariable@_OUT_arg< @Name@,@Name@_var > @Name@_out;
                isVariable = isVariable,
                Name = name)
 
+    self.__insideClass = insideClass
+
     # TypeCode and Any
     if config.TypecodeFlag():
         qualifier = tyutil.const_qualifier(self.__insideModule,
-                                          self.__insideInterface)
+                                           self.__insideClass)
         stream.out("""\
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
                    qualifier = qualifier, name = name)
 
-    self.__insideClass = insideClass
     leave()
 
 
@@ -1893,8 +1891,8 @@ typedef @name@& @name@_out;
     # TypeCode and Any
     if config.TypecodeFlag():
         insideModule = self.__insideModule
-        insideInterface = self.__insideInterface
-        qualifier = tyutil.const_qualifier(insideModule, insideInterface)
+        insideClass = self.__insideClass
+        qualifier = tyutil.const_qualifier(insideModule, insideClass)
         stream.out("""\
 @qualifier@ _dyn_attr const CORBA::TypeCode_ptr _tc_@name@;""",
                    qualifier = qualifier, name = name)
