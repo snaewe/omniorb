@@ -492,8 +492,8 @@ $(dynlib): $(DYN2_OBJS)
          aCC -b -Wl,+h$(dynsoname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
-           ../../orbcore/sharedlib/$(lib) \
-           -ldce -loodce -lcma ; \
+           -lomniORB$(major_version) \
+           -ldce -lcma ; \
         )
 
 clean::

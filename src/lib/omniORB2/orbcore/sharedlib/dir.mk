@@ -490,7 +490,7 @@ $(lib): $(ORB2_OBJS)
          aCC -b -Wl,+h$(soname) -o $@  $(IMPORT_LIBRARY_FLAGS) \
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
-           -ldce -loodce -lcma ; \
+           -ldce -lcma ; \
         )
 
 clean::

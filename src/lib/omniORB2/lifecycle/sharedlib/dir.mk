@@ -519,7 +519,7 @@ $(lclib): $(LC_OBJS)
            $(patsubst %,-L %,$(IMPORT_LIBRARY_DIRS)) \
            $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB) \
            ../../orbcore/sharedlib/$(lib) ../../dynamic/sharedlib/$(dynlib) \
-           -ldce -loodce -lcma; \
+           -ldce -lcma; \
         )
 
 clean::
