@@ -126,7 +126,6 @@ do_main() {
     date=`date`
     echo "$date $user"
     echo "================================="
-    echo
     echo "$updateLog"
     ;;
 
@@ -351,6 +350,17 @@ do_revert() {
 #
 
 do_check_in() {
+  sourceFileFromTop=`echo "$sourceDir/$base" | sed 's|^.*\.\./||; s|^/.*/version.\../||'`
+  sourceTop=`expr "$sourceDir/$base" : '\(/.*/version.\..\)/.*'`
+
+  if [ -f "$sourceTop/$updateLogName" ]; then
+    locked=`rlog -L -R -l$user $sourceTop/$updateLogName`
+    if [ -z "$locked" ]; then
+      echo "You do not hold the RCS lock on $sourceTop/$updateLogName"
+      exit 1
+    fi
+  fi
+
   echo
   echo "*************** $file **************"
   echo
@@ -439,8 +449,6 @@ do_check_in() {
 
     message="NEW FILE"
   fi
-
-  sourceFileFromTop=`echo "$sourceDir/$base" | sed 's|^.*\.\./||; s|^/.*/version.\../||'`
 
   updateLog="$updateLog
 $sourceFileFromTop - $message"
