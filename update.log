@@ -1,3 +1,21 @@
+Wed Jun 14 15:33:29 BST 2000 dme
+================================
+- Update omkdepend and the various win32 wrappers for Cygwin's new
+  "mounts v2" registry subtree.  Old Gnuwin32 mounts should still work.
+
+src/tool/omkdepend/gnuwin32.c
+src/tool/win32/clwrapper.c
+src/tool/win32/libwrapper.c
+src/tool/win32/linkwrapper.c
+src/tool/win32/oidlwrapper.c
+
+external_merge/bin/x86_win32/clwrapper.exe
+external_merge/bin/x86_win32/libwrapper.exe
+external_merge/bin/x86_win32/linkwrapper.exe
+external_merge/bin/x86_win32/oidlwrapper.exe
+external_merge/bin/x86_win32/omkdepend.exe
+
+
 Mon Jun 12 14:17:00 BST 2000 djs
 ================================
 
