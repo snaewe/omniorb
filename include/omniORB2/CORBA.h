@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.44  1999/08/24 12:36:44  djr
+ PR_structMember now uses 'const char*'.
+
  Revision 1.43  1999/08/16 19:33:24  sll
  New method NP_destroy() in class CORBA::ORB.
 
@@ -1514,7 +1517,7 @@ _CORBA_MODULE_BEG
 
   // omniORB2 specific TypeCode support structures, used in stubs.
   struct PR_structMember {
-    char* name;
+    const char*  name;
     TypeCode_ptr type;
   };
 
