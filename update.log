@@ -1,3 +1,11 @@
+Thu Sep 23 15:33:00 BST 1999 sll
+================================
+
+- Fixed a race condition which causes simple programs that exit quickly to
+  delay for a maximum of one scan period.
+
+src/lib/omniORB2/orbcore/scavanger.cc
+
 
 Thu Sep 23 12:09:25 BST 1999 djr
 ================================
