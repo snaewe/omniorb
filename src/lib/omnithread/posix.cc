@@ -599,6 +599,12 @@ int omni_thread::start(void)
 	return rc;
     }
 
+#if (PthreadDraftVersion == 4)
+    pthread_attr_delete(&attr);
+#else
+    pthread_attr_destroy(&attr);
+#endif
+
     _state = STATE_RUNNING;
 
     if (detached) {
