@@ -1,3 +1,13 @@
+Fri Nov  5 18:57:50 GMT 1999 sll
+================================
+
+- Fixed bug which cause assertion failure when the number of concurrent
+  client request to the same remote address space exceed the number of
+  connections allowed per remote address space.
+
+src/lib/omniORB2/orbcore/giopStream.cc
+
+
 Fri Nov  5 17:38:54 GMT 1999 sll
 ================================
 

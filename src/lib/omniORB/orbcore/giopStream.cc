@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  1999/11/05 19:00:14  sll
+  giopStream::is_unused() and giopStream::garbageCollect() should not
+  delete the stream object if pd_nwaiting is not zero.
+
   Revision 1.1.2.6  1999/11/05 14:44:57  sll
   Fully initialise the return value of requestInfo::targetAddress() even if
   the addressing mode is only GIOP::ProfileAddr. This is done when the target
@@ -885,10 +889,15 @@ giopStream::garbageCollect()
       switch (p->pd_state) {
       case UnUsed:
 	{
-	  giopStream* q = p;
-	  p = (giopStream*) p->pd_next;
-	  delete q;
-	  continue;
+	  if (p->pd_nwaiting) {
+	    rc = 0;
+	  }
+	  else {
+	    giopStream* q = p;
+	    p = (giopStream*) p->pd_next;
+	    delete q;
+	    continue;
+	  }
 	}	
       case OutputIdle:
       case InputIdle:
@@ -927,7 +936,7 @@ giopStream::is_unused()
 
   while (p) {
 
-    if (p->pd_state == UnUsed) {
+    if (p->pd_state == UnUsed && !p->pd_nwaiting) {
       giopStream* q = p;
       p = (giopStream*) p->pd_next;
       delete q;
