@@ -1,3 +1,16 @@
+Wed Jun 28 18:43:31 BST 2000 sll
+================================
+
+- Update example makefiles for Visual studio nmake
+
+external_merge/src/examples/anyExample/dir.mak
+external_merge/src/examples/boa/dir.mak
+external_merge/src/examples/call_back/dir.mak
+external_merge/src/examples/echo/dir.mak
+external_merge/src/examples/poa/implicit_activation/dir.mak
+external_merge/src/examples/poa/persistent_objref/dir.mak
+I
+
 Wed Jun 28 16:38:31 BST 2000 sll
 ================================
 
