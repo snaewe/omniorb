@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.12  2001/07/13 15:28:36  sll
+  Added more tracing messages.
+
   Revision 1.1.4.11  2001/07/03 12:01:16  dpg1
   Minor correction to log message for platforms without C++ bool.
 
@@ -582,6 +585,9 @@ giopStream::inputMessage(unsigned long deadline_secs,
     buf = pd_strand->head;
     pd_strand->head = buf->next;
     buf->next = 0;
+
+    omniORB::logger log;
+    log << "Got a queued message\n";
   }
   else if (pd_strand->spare) {
     buf = pd_strand->spare;
@@ -645,6 +651,12 @@ giopStream::inputMessage(unsigned long deadline_secs,
     }
   }
   else if (buf->size < (buf->last - buf->start)) {
+
+    if (omniORB::trace(40)) {
+      omniORB::logger log;
+      log << "Split input data to multiple messages\n";
+    }
+
     // Too much data in the buffer. Locate the beginning of the next
     // message header(s) and uses a separate Buffer for each message.
     CORBA::ULong first = buf->start + buf->size;
@@ -668,6 +680,13 @@ giopStream::inputMessage(unsigned long deadline_secs,
       memcpy((void*)((omni::ptr_arith_t)newbuf+newbuf->start),
 	     (void*)((omni::ptr_arith_t)buf + first),
 	     sz);
+      newbuf->last += sz; 
+
+      if (omniORB::trace(40)) {
+	omniORB::logger log;
+	log << "Split to new buffer\n";
+      }
+
       *tail = newbuf;
       tail = &(newbuf->next);
       first += sz;
