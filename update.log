@@ -1,6 +1,9 @@
 Wed Jun 28 12:50:18 BST 2000 sll
 ================================
 
+external_merge/README.FIRST
+external_merge/README.unix
+external_merge/README.win32
 external_merge/ReleaseNote_omniORB_300_pre2   Deleted
 external_merge/README.KNOWN_ISSUES            New
 external_merge/ReleaseNote_omniORB_300_pre3   New

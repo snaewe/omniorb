@@ -64,7 +64,26 @@ If you have the source-only distribution, you will need to build omniORB2.
 Please read the  "Building omniORB2 from the source files" section, below. 
 (If you want the  Win32 binary distribution, but don't have it, you can 
 download it from our web site at 
-http://www.uk.research.att.com/omniORB/omniORB.html).
+http://www.uk.research.att.com/omniORB/omniORB.html)
+
+omniidl requires Python 1.5.2. You can download the full Python
+distribution from
+
+     http://www.python.org/download/download_windows.html
+
+    or
+
+     ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.exe
+
+Alternatively, for Windows on x86, you can install a minimal
+version of Python which contains just the functionality required
+by omniidl. Download it from
+
+     ftp://ftp.uk.research.att.com/pub/omniORB/python/omnipython-x86_win32.zip
+
+Unpack the zip file at the top of the omniORB tree. It places
+files in the bin, lib and include directories.
+
 
 Configure the naming service
 =============================
