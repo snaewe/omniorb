@@ -15,9 +15,3 @@ export:: main.py
 
 export:: template.py
 	@(file="template.py"; dir="$(PYLIBDIR)"; $(ExportFileToDir))
-
-export::
-	@(set -x; \
-	cd $(PYLIBDIR); \
-	python -c 'import compileall; compileall.compile_dir(".")'; \
-	)
