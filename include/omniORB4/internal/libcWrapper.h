@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.11  2004/03/19 01:08:35  dgrisby
+  Fix Windows DLL issues.
+
   Revision 1.1.4.10  2003/11/06 10:18:39  dgrisby
   Expand FD_SETSIZE on Windows.
 
@@ -157,17 +160,15 @@ public:
 
 OMNI_NAMESPACE_END(omni)
 
-#if defined(_MSC_VER)
-#  if defined(_OMNIORB_DYNAMIC_LIBRARY)
+#if defined(_MSC_VER) && !defined(_WINSTATIC)
+#  if defined(_OMNIORB_LIBRARY)
 #    define _NT_DLL_ATTR __declspec(dllexport)
-#  elif !defined(_WINSTATIC)
-#    define _NT_DLL_ATTR __declspec(dllimport)
-#  elif defined(_OMNIORB_LIBRARY)
-#    define _NT_DLL_ATTR
 #  else
-#    define _NT_DLL_ATTR
+#    define _NT_DLL_ATTR __declspec(dllimport)
 #  endif
-#else
+#endif
+
+#ifndef _NT_DLL_ATTR
 #  define _NT_DLL_ATTR
 #endif
 

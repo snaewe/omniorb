@@ -44,6 +44,11 @@ veryclean::
               $(COS_INTERFACES:%=%.hh)
 
 
+ifdef Win32Platform
+  MSVC_STATICLIB_CXXNODEBUGFLAGS += -D_WINSTATIC
+  MSVC_STATICLIB_CXXDEBUGFLAGS += -D_WINSTATIC
+endif
+
 ifdef Cygwin
 # there's a bug in gcc 3.2 (build 20020927) that makes gcc crash
 # when optimizing these files ...
@@ -120,7 +125,7 @@ ifdef Win32Platform
 # in case of Win32 lossage:
 imps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
          $(OMNIORB_LIB))
-dynimps := $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
+dynimps := $(skshared) $(patsubst $(DLLDebugSearchPattern),$(DLLNoDebugSearchPattern), \
          $(OMNIORB_LIB))
 else
 ifdef AIX
@@ -141,7 +146,7 @@ $(skshared): $(patsubst %, shared/%, $(COS_SK_OBJS))
 	@(namespec="$(sknamespec)"; extralibs="$(imps) $(extralibs)"; \
          $(MakeCXXSharedLibrary))
 
-$(dynskshared): $(patsubst %, shared/%, $(COS_DYNSK_OBJS) $(COS_SK_OBJS))
+$(dynskshared): $(patsubst %, shared/%, $(COS_DYNSK_OBJS))
 	@(namespec="$(dynsknamespec)"; extralibs="$(dynimps)"; \
          $(MakeCXXSharedLibrary))
 
@@ -232,7 +237,7 @@ MDFLAGS += -p shareddebug/
 mkshareddbug::
 	@(dir=shareddebug; $(CreateDir))
 
-mkshareddbug:: $(skshareddbug) $(dynskshareddbug) 
+mkshareddbug:: $(skshareddbug) $(dynskshareddbug)
 
 $(skshareddbug): $(patsubst %, shareddebug/%, $(COS_SK_OBJS))
 	(namespec="$(sknamespec)"; debug=1; extralibs="$(dbugimps) $(extralibs)"; \
