@@ -8,6 +8,16 @@
 
 <buglist>
 
+<bug id="20" date="Tue Aug 15 14:11:37 BST 2000" user="dpg1">
+
+  <summary>Any insertion functions for PortableServer exceptions
+  missing</summary>
+
+  <reported>Jean François Poilpret</reported>
+
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-08/0112.html"/>
+</bug>
+
 <bug id="19" date="Mon Aug 14 20:29:57 BST 2000" user="djs">
 
   <summary>omniIDL C++ backend didn't always report unsupported IDL

@@ -1,3 +1,12 @@
+Tue Aug 15 14:11:37 BST 2000 dpg1
+=================================
+
+- Add Any insertion functions for exceptions declared in the
+  PortableServer module
+
+src/lib/omniORB2/dynamic/dynException.cc
+
+
 Tue Aug 15 12:20:54 BST 2000 sll
 ================================
 
