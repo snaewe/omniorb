@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.4  2001/11/06 15:41:37  dpg1
+  Reimplement Context. Remove CORBA::Status. Tidying up.
+
   Revision 1.1.4.3  2001/09/19 17:26:46  dpg1
   Full clean-up after orb->destroy().
 
@@ -65,6 +68,8 @@ class omniOrbORB : public CORBA::ORB {
 public:
   virtual ~omniOrbORB();
   omniOrbORB(int nil);
+
+  virtual char* id();
 
   virtual char* object_to_string(CORBA::Object_ptr);
   virtual CORBA::Object_ptr string_to_object(const char*);

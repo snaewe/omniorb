@@ -63,7 +63,7 @@ OMNI_NAMESPACE_END(omni)
 
 OMNI_USING_NAMESPACE(omni)
 
-CORBA::Status
+void
 CORBA::ORB::send_multiple_requests_oneway(const RequestSeq& rs)
 {
   for( CORBA::ULong i = 0; i < rs.length(); i++ ) {
@@ -74,12 +74,10 @@ CORBA::ORB::send_multiple_requests_oneway(const RequestSeq& rs)
       ((RequestImpl*) rs[i]._ptr)->storeExceptionInEnv();
     }
   }
-
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status
+void
 CORBA::ORB::send_multiple_requests_deferred(const RequestSeq& rs)
 {
   unsigned nwaiters;
@@ -105,8 +103,6 @@ CORBA::ORB::send_multiple_requests_deferred(const RequestSeq& rs)
   else
     for( CORBA::ULong i = 0; i < rs.length(); i++ )
       q_cv.signal();
-
-  RETURN_CORBA_STATUS;
 }
 
 
@@ -164,7 +160,7 @@ internal_get_response(CORBA::Request_ptr req)
 
 OMNI_NAMESPACE_END(omni)
 
-CORBA::Status
+void
 CORBA::ORB::get_next_response(Request_out req_out)
 {
   {
@@ -185,7 +181,7 @@ CORBA::ORB::get_next_response(Request_out req_out)
       delete incoming_q;
       incoming_q = next;
       internal_get_response(req_out._data);
-      RETURN_CORBA_STATUS;
+      return;
     }
 
     // Check the outgoing queue to see if any of them have completed.
@@ -202,7 +198,7 @@ CORBA::ORB::get_next_response(Request_out req_out)
 	  outgoing_q_tail = rlp_1;
 	delete rl;
 	internal_get_response(req_out._data);
-	RETURN_CORBA_STATUS;
+	return;
       } else {
 	rlp = &rl->next;
 	rlp_1 = rl;
@@ -218,5 +214,4 @@ CORBA::ORB::get_next_response(Request_out req_out)
 
   // This blocks until the reply is received for this message.
   internal_get_response(req_out._data);
-  RETURN_CORBA_STATUS;
 }

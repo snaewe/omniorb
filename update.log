@@ -1,3 +1,41 @@
+Tue Nov  6 15:29:48 GMT 2001 dpg1
+=================================
+
+- Reimplement Context. Remove CORBA::Status. Tidying up.
+
+include/omniORB4/CORBA_Context.h
+include/omniORB4/CORBA_ExceptionList.h
+include/omniORB4/CORBA_NamedValue.h
+include/omniORB4/CORBA_ORB.h
+include/omniORB4/CORBA_Object.h
+include/omniORB4/CORBA_Request.h
+include/omniORB4/CORBA_primitive_types.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/stringtypes.h
+include/omniORB4/wstringtypes.h
+src/examples/lifecycle/OBSOLETE    -- deleted
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/contextList.cc
+src/lib/omniORB/dynamic/context.cc
+src/lib/omniORB/dynamic/contextList.cc
+src/lib/omniORB/dynamic/dynamicLib.cc
+src/lib/omniORB/dynamic/environment.cc
+src/lib/omniORB/dynamic/exceptionList.cc
+src/lib/omniORB/dynamic/namedValue.cc
+src/lib/omniORB/dynamic/nvList.cc
+src/lib/omniORB/dynamic/orbMultiRequest.cc
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/include/context.h
+src/lib/omniORB/include/corbaOrb.h
+src/lib/omniORB/include/dynamicLib.h
+src/lib/omniORB/include/pseudo.h
+src/lib/omniORB/include/request.h
+src/lib/omniORB/omniidl_be/cxx/call.py
+src/lib/omniORB/omniidl_be/cxx/skel/template.py
+src/lib/omniORB/orbcore/corbaOrb.cc
+src/lib/omniORB/orbcore/dynamicLib.cc
+
+
 Thu Nov  1 12:02:30 GMT 2001 dpg1
 =================================
 

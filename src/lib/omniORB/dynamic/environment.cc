@@ -215,9 +215,8 @@ CORBA::release(CORBA::Environment_ptr p)
 }
 
 
-CORBA::Status
+void
 CORBA::ORB::create_environment(Environment_out new_env)
 {
   new_env = new EnvironmentImpl();
-  RETURN_CORBA_STATUS;
 }

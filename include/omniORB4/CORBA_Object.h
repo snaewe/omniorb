@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/11/06 15:41:34  dpg1
+  Reimplement Context. Remove CORBA::Status. Tidying up.
+
   Revision 1.1.2.1  2001/08/17 13:39:47  dpg1
   Split CORBA.h into separate bits.
 
@@ -61,21 +64,21 @@ public:
 
   virtual ~Object();
 
-  Status _create_request(Context_ptr ctx,
-			 const char *operation,
-			 NVList_ptr arg_list,
-			 NamedValue_ptr result,
-			 Request_out request,
-			 Flags req_flags);
+  void _create_request(Context_ptr ctx,
+		       const char *operation,
+		       NVList_ptr arg_list,
+		       NamedValue_ptr result,
+		       Request_out request,
+		       Flags req_flags);
 
-  Status _create_request(Context_ptr ctx,
-			 const char *operation,
-			 NVList_ptr arg_list,
-			 NamedValue_ptr result,
-			 ExceptionList_ptr exceptions,
-			 ContextList_ptr ctxlist,
-			 Request_out request,
-			 Flags req_flags);
+  void _create_request(Context_ptr ctx,
+		       const char *operation,
+		       NVList_ptr arg_list,
+		       NamedValue_ptr result,
+		       ExceptionList_ptr exceptions,
+		       ContextList_ptr ctxlist,
+		       Request_out request,
+		       Flags req_flags);
 
   Request_ptr _request(const char* operation);
 

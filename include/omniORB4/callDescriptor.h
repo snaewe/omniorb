@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.13  2001/11/06 15:41:35  dpg1
+ Reimplement Context. Remove CORBA::Status. Tidying up.
+
  Revision 1.2.2.12  2001/09/03 16:49:43  sll
  Added the deadline parameter and access functions.
 
@@ -105,7 +108,6 @@ public:
     : pd_localCall(lcfn),
       pd_is_oneway(oneway),
       pd_op(op), pd_oplen(op_len),
-      pd_ctxt(0),
       pd_user_excns(user_excns),
       pd_n_user_excns(n_user_excns),
       pd_is_upcall(is_upcall),
@@ -195,24 +197,6 @@ public:
   
 
   /////////////////////
-  // Context support //
-  /////////////////////
-
-  struct ContextInfo {
-    inline ContextInfo(CORBA::Context_ptr c, const char*const* cl, int n)
-      : context(c), expected(cl), num_expected(n) {}
-
-    CORBA::Context_ptr context;
-    const char*const*  expected;
-    int                num_expected;
-
-    inline ContextInfo() : context(0), expected(0), num_expected(0) {}
-  };
-
-  inline void set_context_info(const ContextInfo* ci) { pd_ctxt = ci; }
-  inline const ContextInfo* context_info() { return pd_ctxt; }
-
-  /////////////////////
   // Current support //
   /////////////////////
 
@@ -228,7 +212,6 @@ private:
   _CORBA_Boolean               pd_is_oneway;
   const char*                  pd_op;
   size_t                       pd_oplen;
-  const ContextInfo*           pd_ctxt;
   const char*const*            pd_user_excns;
   int                          pd_n_user_excns;
   _CORBA_Boolean               pd_is_upcall;

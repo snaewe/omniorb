@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.10  2001/11/06 15:41:37  dpg1
+# Reimplement Context. Remove CORBA::Status. Tidying up.
+#
 # Revision 1.1.4.9  2001/10/18 12:45:27  dpg1
 # IDL compiler tweaks.
 #
@@ -107,15 +110,15 @@ class Callable:
         self.__contexts = contexts
         self.__signature = mangler.produce_signature(returnType, parameters,
                                                      raises)
-    def interface(self): return self.__interface
+    def interface(self):      return self.__interface
     def operation_name(self): return self.__operation_name
-    def method_name(self): return self.__method_name
-    def returnType(self): return self.__returnType
-    def parameters(self): return self.__parameters
-    def oneway(self): return self.__oneway
-    def raises(self): return self.__raises
-    def contexts(self): return self.__contexts
-    def signature(self): return self.__signature
+    def method_name(self):    return self.__method_name
+    def returnType(self):     return self.__returnType
+    def parameters(self):     return self.__parameters
+    def oneway(self):         return self.__oneway
+    def raises(self):         return self.__raises
+    def contexts(self):       return self.__contexts
+    def signature(self):      return self.__signature
 
 # Utility functions to build Callables #################################
 #
@@ -220,26 +223,33 @@ class CallDescriptor:
 #
 
     def __init__(self,signature,callable):
-        self.__signature = signature
-        self.__name = descriptor.call_descriptor(signature)
-        self.__oneway = callable.oneway()
-        self.__arguments = callable.parameters()
-        self.__returntype = callable.returnType()
-        self.__exceptions = callable.raises()
-        self.__contexts = callable.contexts()
-        self.__has_in_args = 0
-        self.__has_out_args = 0
+        self.__signature        = signature
+        self.__name             = descriptor.call_descriptor(signature)
+        self.__oneway           = callable.oneway()
+        self.__arguments        = callable.parameters()
+        self.__returntype       = callable.returnType()
+        self.__exceptions       = callable.raises()
+        self.__contexts         = callable.contexts()
+        self.__has_in_args      = 0
+        self.__has_out_args     = 0
         self.__has_return_value = 0
+
         for argument in self.__arguments:
             if argument.is_in():
                 self.__has_in_args = 1
             if argument.is_out():
                 self.__has_out_args = 1
+
         if self.__returntype.kind() != idltype.tk_void:
             self.__has_return_value = 1
 
+        if self.__contexts:
+            self.__context_name = descriptor.\
+                                  context_descriptor(self.__signature)
+
     def out_desc(self, stream):
         self.__out_declaration(stream)
+        self.__out_contextDescriptor(stream)
         self.__out_marshalArgument(stream)
         self.__out_unmarshalArgument(stream)
         self.__out_marshalReturnedValues(stream)
@@ -277,15 +287,14 @@ class CallDescriptor:
         else:
             result_string = ""
         
-        # XXX context is not supported yet
-        #if self.__contexts != []:
-        #   impl_args.append("cd->context_info()->context")
+        if self.__contexts != []:
+            impl_args.append("tcd->ctxt")
 
         # If we have no return value and no arguments at all then we don't
         # need to fetch the call descriptor. This suppresses a warning in gcc
         # about an unused variable.
         if result_string != "" or impl_args != []:
-            get_cd = self.__name + "* tcd = (" + self.__name + "*) cd;"
+            get_cd = self.__name + "* tcd = (" + self.__name + "*)cd;"
         else:
             get_cd = ""
 
@@ -367,13 +376,19 @@ class CallDescriptor:
                 assign_res.append("return _call_desc.result._retn();")
             else:
                 assign_res.append("return _call_desc.result;")
-            
+
+        if self.__contexts:
+            assign_context = "_call_desc.ctxt = "\
+                             "CORBA::Context::_duplicate(_ctxt);"
+        else:
+            assign_context = ""
+        
         stream.out(template.interface_operation,
                    call_descriptor = self.__name,
                    call_desc_args = string.join(ctor_args, ", "),
                    assign_args = string.join(assign_args,"\n"),
                    assign_res = string.join(assign_res,"\n"),
-                   context = "//XXX No context support yet.")
+                   assign_context = assign_context)
 
     def out_implcall(self,stream,operation,localcall_fn):
         assert isinstance(stream, output.Stream)
@@ -405,8 +420,7 @@ class CallDescriptor:
                    idl_operation_name = operation,
                    call_descriptor = self.__name,
                    call_desc_args = string.join(ctor_args, ", "),
-                   prepare_out_args = string.join(prepare_out_args,"\n"),
-                   context = "// XXX Set context info if any");
+                   prepare_out_args = string.join(prepare_out_args,"\n"))
 
     def __out_declaration(self,stream):
         # build up the constructor argument list, the initialisation
@@ -426,7 +440,7 @@ class CallDescriptor:
 
         in_arguments_decl = ""
         out_arguments_decl = ""
-        if self.__has_in_args:
+        if self.__has_in_args or self.__contexts:
             in_arguments_decl = "void marshalArguments(cdrStream&);\n" + \
                                 "void unmarshalArguments(cdrStream&);\n"
         if self.__has_out_args or self.__has_return_value:
@@ -475,7 +489,10 @@ class CallDescriptor:
             if not s_is_holder:
                 storage_n = storage_n + "_"
             data_members.append(storage + " " + storage_n + ";")
-            
+
+        if self.__contexts:
+            data_members.append("CORBA::Context_var ctxt;");
+        
         # Write the proxy class definition
         stream.out(template.interface_proxy_class,
                    signature = self.__signature,
@@ -487,11 +504,26 @@ class CallDescriptor:
                    user_exceptions_decl = user_exceptions_decl,
                    member_data = string.join(data_members,"\n"))
 
+    def __out_contextDescriptor(self,stream):
+        if self.__contexts:
+            contexts = output.StringStream()
+            for context in self.__contexts:
+                contexts.out('"' + context + '",')
+            stream.out(template.interface_context_array,
+                       context_descriptor = self.__context_name,
+                       contexts = str(contexts))
+
 
     def __out_marshalArgument(self,stream):
-        if not self.__has_in_args: return
+        if not (self.__has_in_args or self.__contexts): return
         marshal_block = output.StringStream()
         self.__out_marshalArgument_shared(marshal_block,1)
+
+        if self.__contexts:
+            marshal_block.out(template.interface_proxy_marshal_context,
+                              name  = self.__context_name,
+                              count = str(len(self.__contexts)))
+
         stream.out(template.interface_proxy_marshal_arguments,
                    call_descriptor = self.__name,
                    marshal_block = marshal_block)
@@ -578,6 +610,9 @@ class CallDescriptor:
                     marshal_block.out(arg_n + " = &" + lvalue + ";")
                 else:
                     marshal_block.out(arg_n + " = " + lvalue + ";")
+
+        if self.__contexts:
+            marshal_block.out(template.interface_proxy_unmarshal_context)
 
         stream.out(template.interface_proxy_unmarshal_arguments,
                    call_descriptor = self.__name,

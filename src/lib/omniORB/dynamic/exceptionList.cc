@@ -107,7 +107,7 @@ ExceptionListImpl::item(CORBA::ULong index)
 }
 
 
-CORBA::Status
+void
 ExceptionListImpl::remove(CORBA::ULong index)
 {
   if (index >= pd_list.length())
@@ -120,7 +120,6 @@ ExceptionListImpl::remove(CORBA::ULong index)
     pd_list[i] = pd_list[i + 1];
 
   pd_list.length(pd_list.length() - 1);
-  RETURN_CORBA_STATUS;
 }
 
 
@@ -166,9 +165,8 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return CORBA::TypeCode::_nil();
   }
-  virtual CORBA::Status remove(CORBA::ULong index) {
+  virtual void remove(CORBA::ULong index) {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
   }
   virtual CORBA::Boolean NP_is_nil() const {
     return 1;
@@ -228,9 +226,8 @@ CORBA::release(ExceptionList_ptr p)
 }
 
 
-CORBA::Status
+void
 CORBA::ORB::create_exception_list(ExceptionList_out exclist)
 {
   exclist = new ExceptionListImpl();
-  RETURN_CORBA_STATUS;
 }

@@ -213,9 +213,8 @@ CORBA::release(NamedValue_ptr p)
 }
 
 
-CORBA::Status
+void
 CORBA::ORB::create_named_value(NamedValue_out nmval)
 {
   nmval = new NamedValueImpl((CORBA::Flags)0);
-  RETURN_CORBA_STATUS;
 }

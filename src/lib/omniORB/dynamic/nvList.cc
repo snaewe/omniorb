@@ -147,7 +147,7 @@ NVListImpl::item(CORBA::ULong index)
 }
 
 
-CORBA::Status
+void
 NVListImpl::remove(CORBA::ULong index)
 {
   if (index >= pd_list.length())
@@ -160,7 +160,6 @@ NVListImpl::remove(CORBA::ULong index)
     pd_list[i] = pd_list[i + 1];
 
   pd_list.length(pd_list.length() - 1);
-  RETURN_CORBA_STATUS;
 }
 
 
@@ -214,9 +213,8 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return CORBA::NamedValue::_nil();
   }
-  virtual CORBA::Status remove(CORBA::ULong) {
+  virtual void remove(CORBA::ULong) {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
   }
   virtual CORBA::Boolean NP_is_nil() const {
     return 1;
@@ -274,7 +272,7 @@ CORBA::release(NVList_ptr p)
 }
 
 
-CORBA::Status
+void
 CORBA::ORB::create_list(Long count, NVList_out new_list)
 {
   if (count < 0)
@@ -286,19 +284,13 @@ CORBA::ORB::create_list(Long count, NVList_out new_list)
 
   for( Long i = 0; i < count; i++ )
     new_list._data->add(CORBA::Flags(0));
-
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status
+void
 CORBA::ORB::create_operation_list(_objref_OperationDef* p, NVList_out new_list)
 {
   new_list = CORBA::NVList::_nil();
 
   throw NO_IMPLEMENT(0, CORBA::COMPLETED_NO);
-
-#ifdef NEED_DUMMY_RETURN
-  RETURN_CORBA_STATUS;
-#endif
 }

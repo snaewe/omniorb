@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/11/06 15:41:34  dpg1
+  Reimplement Context. Remove CORBA::Status. Tidying up.
+
   Revision 1.1.2.1  2001/08/17 13:39:46  dpg1
   Split CORBA.h into separate bits.
 
@@ -115,7 +118,7 @@ public:
   virtual NamedValue_ptr add_item_consume(char*,Flags) = 0;
   virtual NamedValue_ptr add_value_consume(char*, Any*, Flags) = 0;
   virtual NamedValue_ptr item(ULong index) = 0;
-  virtual Status remove (ULong) = 0;
+  virtual void remove (ULong) = 0;
 
   virtual Boolean NP_is_nil() const = 0;
   virtual NVList_ptr NP_duplicate() = 0;

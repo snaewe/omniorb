@@ -381,11 +381,11 @@ public:
   }
 
 private:
-  RequestImpl& pd_impl;
+  RequestImpl&       pd_impl;
 };
 
 				    
-CORBA::Status
+void
 RequestImpl::invoke()
 {
   if( pd_state != RS_READY && pd_state != RS_DEFERRED )
@@ -399,16 +399,6 @@ RequestImpl::invoke()
 
     omni_RequestImpl_callDesc call_desc(pd_operation,operation_len,0,*this);
 
-    omniCallDescriptor::ContextInfo ctxt_info;
-    if( !CORBA::is_nil(pd_contexts) ) {
-      ContextListImpl* context_list = (ContextListImpl*)
-	                               (CORBA::ContextList_ptr)pd_contexts;
-      ctxt_info.context = pd_context;
-      ctxt_info.expected = context_list->NP_list();
-      ctxt_info.num_expected = context_list->count();
-      call_desc.set_context_info(&ctxt_info);
-    }
-
     o->_invoke(call_desc);
   }
   // Either throw system exceptions, or store in pd_environment.
@@ -421,11 +411,10 @@ RequestImpl::invoke()
       pd_environment->exception(CORBA::Exception::_duplicate(&ex));
   }
   INVOKE_DONE();
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status
+void
 RequestImpl::send_oneway()
 {
   if( pd_state != RS_READY )
@@ -439,16 +428,6 @@ RequestImpl::send_oneway()
 
     omni_RequestImpl_callDesc call_desc(pd_operation,operation_len,1,*this);
 
-    omniCallDescriptor::ContextInfo ctxt_info;
-    if( !CORBA::is_nil(pd_contexts) ) {
-      ContextListImpl* context_list = (ContextListImpl*)
-	                              (CORBA::ContextList_ptr)pd_contexts;
-      ctxt_info.context = pd_context;
-      ctxt_info.expected = context_list->NP_list();
-      ctxt_info.num_expected = context_list->count();
-      call_desc.set_context_info(&ctxt_info);
-    }
-
     o->_invoke(call_desc);
   }
   // Either throw system exceptions, or store in pd_environment.
@@ -461,11 +440,10 @@ RequestImpl::send_oneway()
       pd_environment->exception(CORBA::Exception::_duplicate(&ex));
   }
   INVOKE_DONE();
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status
+void
 RequestImpl::send_deferred()
 {
   if( pd_state != RS_READY )
@@ -475,16 +453,15 @@ RequestImpl::send_deferred()
 
   pd_state = RS_DEFERRED;
   pd_deferredRequest = new DeferredRequest(this);
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status
+void
 RequestImpl::get_response()
 {
   if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
 
-  if( pd_state == RS_DONE )  RETURN_CORBA_STATUS;
+  if( pd_state == RS_DONE ) return;
 
   if( pd_state != RS_DEFERRED || !pd_deferredRequest )
     OMNIORB_THROW(BAD_INV_ORDER,
@@ -497,7 +474,6 @@ RequestImpl::get_response()
   pd_deferredRequest = 0;
   pd_state = RS_DONE;
   if( pd_sysExceptionToThrow )  pd_sysExceptionToThrow->_raise();
-  RETURN_CORBA_STATUS;
 }
 
 
@@ -557,6 +533,13 @@ RequestImpl::marshalArgs(cdrStream& s)
     CORBA::NamedValue_ptr arg = pd_arguments->item(i);
     if( arg->flags() & CORBA::ARG_IN || arg->flags() & CORBA::ARG_INOUT )
       arg->value()->NP_marshalDataOnly(s);
+  }
+  if( !CORBA::is_nil(pd_contexts) ) {
+    ContextListImpl* context_list = (ContextListImpl*)
+      (CORBA::ContextList_ptr)pd_contexts;
+
+    CORBA::Context::marshalContext(pd_context, context_list->NP_list(),
+				   context_list->count(), s);
   }
 }
 
@@ -681,21 +664,17 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return dummy_any;
   }
-  virtual CORBA::Status  invoke() {
+  virtual void  invoke() {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
   }
-  virtual CORBA::Status  send_oneway() {
+  virtual void  send_oneway() {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
   }
-  virtual CORBA::Status  send_deferred() {
+  virtual void  send_deferred() {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
   }
-  virtual CORBA::Status  get_response() {
+  virtual void  get_response() {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
   }
   virtual CORBA::Boolean poll_response() {
     _CORBA_invoked_nil_pseudo_ref();
@@ -759,7 +738,7 @@ CORBA::release(CORBA::Request_ptr p)
 }
 
 
-CORBA::Status
+void
 CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 			       const char* operation,
 			       CORBA::NVList_ptr arg_list,
@@ -790,11 +769,10 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 		  CORBA::COMPLETED_NO);
 
   request = new RequestImpl(this, operation, ctx, arg_list, result);
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status 
+void 
 CORBA::Object::_create_request(CORBA::Context_ptr ctx,
                                const char* operation,
 			       CORBA::NVList_ptr arg_list,
@@ -836,7 +814,6 @@ CORBA::Object::_create_request(CORBA::Context_ptr ctx,
 
   request = new RequestImpl(this, operation, ctx, arg_list, result,
 			    exceptions, ctxlist);
-  RETURN_CORBA_STATUS;
 }
 
 

@@ -70,10 +70,10 @@ public:
   virtual CORBA::Any& add_out_arg(const char* name);
   virtual void        set_return_type(CORBA::TypeCode_ptr tc);
   virtual CORBA::Any& return_value();
-  virtual CORBA::Status  invoke();
-  virtual CORBA::Status  send_oneway();
-  virtual CORBA::Status  send_deferred();
-  virtual CORBA::Status  get_response();
+  virtual void 	      invoke();
+  virtual void 	      send_oneway();
+  virtual void 	      send_deferred();
+  virtual void 	      get_response();
   virtual CORBA::Boolean poll_response();
   virtual CORBA::Boolean NP_is_nil() const;
   virtual CORBA::Request_ptr NP_duplicate();

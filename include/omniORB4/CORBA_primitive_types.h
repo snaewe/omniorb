@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/11/06 15:41:34  dpg1
+  Reimplement Context. Remove CORBA::Status. Tidying up.
+
   Revision 1.1.2.1  2001/08/17 13:39:49  dpg1
   Split CORBA.h into separate bits.
 
@@ -81,7 +84,3 @@ typedef _CORBA_Double&     Double_out;
 typedef _CORBA_LongDouble& LongDouble_out;
 # endif
 # endif
-
-// gcc can't cope with a typedef of void, so this will have to do.
-typedef void* Status;
-# define RETURN_CORBA_STATUS   return 0

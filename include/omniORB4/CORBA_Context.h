@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.2  2001/11/06 15:41:34  dpg1
+  Reimplement Context. Remove CORBA::Status. Tidying up.
+
   Revision 1.1.2.1  2001/08/17 13:39:44  dpg1
   Split CORBA.h into separate bits.
 
@@ -50,18 +53,22 @@ typedef _CORBA_PseudoObj_Out<Context,Context_var> Context_out;
 
 class Context {
 public:
+  typedef Context_ptr _ptr_type;
+  typedef Context_var _var_type;
+
   virtual ~Context();
 
   virtual const char* context_name() const = 0;
   virtual CORBA::Context_ptr parent() const = 0;
-  virtual CORBA::Status create_child(const char*, Context_out) = 0;
-  virtual CORBA::Status set_one_value(const char*, const Any&) = 0;
-  virtual CORBA::Status set_values(CORBA::NVList_ptr) = 0;
-  virtual CORBA::Status delete_values(const char*) = 0;
-  virtual CORBA::Status get_values(const char* start_scope,
-				   CORBA::Flags op_flags,
-				   const char* pattern,
-				   CORBA::NVList_out values) = 0;
+
+  virtual void create_child(const char*, Context_out) = 0;
+  virtual void set_one_value(const char*, const Any&) = 0;
+  virtual void set_values(CORBA::NVList_ptr) = 0;
+  virtual void delete_values(const char*) = 0;
+  virtual void get_values(const char* start_scope,
+			  CORBA::Flags op_flags,
+			  const char* pattern,
+			  CORBA::NVList_out values) = 0;
   // Throws BAD_CONTEXT if <start_scope> is not found.
   // Returns a nil NVList in <values> if no matches are found.
 
@@ -115,7 +122,7 @@ public:
   virtual const char* item(ULong index) = 0;
   // retains ownership of return value
 
-  virtual Status remove(ULong index) = 0;
+  virtual void remove(ULong index) = 0;
 
   virtual Boolean NP_is_nil() const = 0;
   virtual ContextList_ptr NP_duplicate() = 0;

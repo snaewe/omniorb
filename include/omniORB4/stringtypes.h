@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.9  2001/11/06 15:41:35  dpg1
+ Reimplement Context. Remove CORBA::Status. Tidying up.
+
  Revision 1.2.2.8  2001/09/19 17:26:44  dpg1
  Full clean-up after orb->destroy().
 
@@ -718,15 +721,15 @@ protected:
     : pd_max(0), pd_len(0), pd_rel(1), pd_bounded(0), pd_data(0) {}
 
   inline _CORBA_Sequence_String(_CORBA_ULong max,
-				 _CORBA_Boolean bounded=0)
+				_CORBA_Boolean bounded=0)
     : pd_max(max), pd_len(0), pd_rel(1), pd_bounded(bounded), pd_data(0) {
   }
 
   inline _CORBA_Sequence_String(_CORBA_ULong   max,
-				 _CORBA_ULong   len,
-				 char**         value,
-				 _CORBA_Boolean release = 0,
-				 _CORBA_Boolean bounded = 0)
+				_CORBA_ULong   len,
+				char**         value,
+				_CORBA_Boolean release = 0,
+				_CORBA_Boolean bounded = 0)
      : pd_max(max), pd_len(len), pd_rel(release),
        pd_bounded(bounded), pd_data(value)  { 
     if (len > max || (len && !value)) {
@@ -857,9 +860,9 @@ public:
          _CORBA_Sequence_String(max) {}
 
   inline _CORBA_Unbounded_Sequence_String(_CORBA_ULong   max,
-					   _CORBA_ULong   length,
-					   char**         value,
-					   _CORBA_Boolean release = 0)
+					  _CORBA_ULong   length,
+					  char**         value,
+					  _CORBA_Boolean release = 0)
     : _CORBA_Sequence_String(max, length, value, release) {}
 
   inline _CORBA_Unbounded_Sequence_String(const SeqT& s)

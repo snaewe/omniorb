@@ -110,7 +110,7 @@ ContextListImpl::item(CORBA::ULong index)
 }
 
 
-CORBA::Status
+void
 ContextListImpl::remove(CORBA::ULong index)
 {
   if (index >= pd_list.length())
@@ -124,7 +124,6 @@ ContextListImpl::remove(CORBA::ULong index)
     pd_list[i] = pd_list[i + 1];
 
   pd_list.length(pd_list.length() - 1);
-  RETURN_CORBA_STATUS;
 }
 
 
@@ -170,9 +169,8 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return 0;
   }
-  virtual CORBA::Status remove(CORBA::ULong index) {
+  virtual void remove(CORBA::ULong index) {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
   }
   virtual CORBA::Boolean NP_is_nil() const {
     return 1;
@@ -229,9 +227,8 @@ CORBA::release(CORBA::ContextList_ptr p)
 }
 
 
-CORBA::Status
+void
 CORBA::ORB::create_context_list(ContextList_out ctxtlist)
 {
   ctxtlist = new ContextListImpl();
-  RETURN_CORBA_STATUS;
 }

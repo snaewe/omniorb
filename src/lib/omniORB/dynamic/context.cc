@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.12.2.11  2001/11/06 15:41:35  dpg1
+ Reimplement Context. Remove CORBA::Status. Tidying up.
+
  Revision 1.12.2.10  2001/09/24 10:41:08  dpg1
  Minor codes for Dynamic library and omniORBpy.
 
@@ -168,17 +171,16 @@ ContextImpl::parent() const
 }
 
 
-CORBA::Status
+void
 ContextImpl::create_child(const char* name, CORBA::Context_out out)
 {
   out = CORBA::Context::_nil();
   // The c'tor checks that the name is legal.
   out = new ContextImpl(name, this);
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status
+void
 ContextImpl::set_one_value(const char* prop_name, const CORBA::Any& value)
 {
   // Check the property name is valid.
@@ -198,11 +200,10 @@ ContextImpl::set_one_value(const char* prop_name, const CORBA::Any& value)
   insert_single_consume(name._retn(),
 			((omniORB::omniORB_27_CompatibleAnyExtraction)?
 			 (char*)strval:CORBA::string_dup(strval)));
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status
+void
 ContextImpl::set_values(CORBA::NVList_ptr values)
 {
   if( !CORBA::NVList::PR_is_valid(values) || CORBA::is_nil(values) )
@@ -214,14 +215,13 @@ ContextImpl::set_values(CORBA::NVList_ptr values)
     CORBA::NamedValue_ptr nv = values->item(i);
     set_one_value(nv->name(), *nv->value());
   }
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status
+void
 ContextImpl::delete_values(const char* pattern)
 {
-  omni_mutex_lock lock(pd_lock);
+  omni_tracedmutex_lock lock(pd_lock);
   CORBA::ULong bottom, top;
 
   if( !matchPattern(pattern, bottom, top) )
@@ -239,14 +239,16 @@ ContextImpl::delete_values(const char* pattern)
     pd_entries[i] = pd_entries[i + nmatches];
   }
   pd_entries.length(pd_entries.length() - nmatches);
-  RETURN_CORBA_STATUS;
 }
 
 
-CORBA::Status
+void
 ContextImpl::get_values(const char* start_scope, CORBA::Flags op_flags,
 			const char* pattern, CORBA::NVList_out values_out)
 {
+  if( !pattern || !*pattern )
+    OMNIORB_THROW(BAD_PARAM,BAD_PARAM_EmptyContextPattern,CORBA::COMPLETED_NO);
+
   ContextImpl* c = this;
   if( start_scope && *start_scope ){
     // find the starting scope
@@ -272,11 +274,11 @@ ContextImpl::get_values(const char* start_scope, CORBA::Flags op_flags,
   }
   if( nvlist->count() == CORBA::ULong(0) ){
     CORBA::release(nvlist);
-    values_out = CORBA::NVList::_nil();
+    OMNIORB_THROW(BAD_CONTEXT, BAD_CONTEXT_NoMatchingProperty,
+		  CORBA::COMPLETED_NO);
   }else
     values_out = nvlist;
 
-  RETURN_CORBA_STATUS;
 }
 
 
@@ -290,25 +292,16 @@ ContextImpl::NP_is_nil() const
 CORBA::Context_ptr
 ContextImpl::NP_duplicate()
 {
-  omni_mutex_lock sync(pd_lock);
+  omni_tracedmutex_lock sync(pd_lock);
   pd_refCount++;
   return this;
-}
-
-
-const char*
-ContextImpl::lookup_single(const char* name) const
-{
-  CORBA::ULong bottom, top;
-  if( !matchPattern(name, bottom, top) )  return (const char*)0;
-  return pd_entries[bottom].value;
 }
 
 
 void
 ContextImpl::insert_single_consume(char* name, char* value)
 {
-  omni_mutex_lock lock(pd_lock);
+  omni_tracedmutex_lock lock(pd_lock);
 
   // Binary search to determine insertion point
   CORBA::ULong count = pd_entries.length();
@@ -357,7 +350,7 @@ ContextImpl::decrRefCount()
 {
   CORBA::Boolean delete_me = 0;
   {
-    omni_mutex_lock sync(pd_lock);
+    omni_tracedmutex_lock sync(pd_lock);
 
     if( !pd_refCount ) {
       if( omniORB::traceLevel > 0 ) {
@@ -397,6 +390,13 @@ ContextImpl::matchPattern(const char* pattern, CORBA::ULong& bottom_out,
   CORBA::ULong bottom = 0;
   CORBA::ULong top = count;
   int match = 0;
+
+  if (wildcard && pat_len == 0) {
+    // Match everything
+    bottom_out = bottom;
+    top_out = top;
+    return (top != bottom);
+  }
 
   // Find a match (binary search).
   while( bottom < top ){
@@ -444,9 +444,10 @@ ContextImpl::add_values(ContextImpl* c, CORBA::Flags op_flags,
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidNVList, CORBA::COMPLETED_NO);
 
   CORBA::ULong bottom, top;
-  omni_mutex_lock lock(c->pd_lock);
 
   do{
+    omni_tracedmutex_lock lock(c->pd_lock);
+
     if( c->matchPattern(pattern, bottom, top) ){
       for( CORBA::ULong i = bottom; i < top; i++ ){
 	CORBA::ULong val_list_count = val_list->count();
@@ -514,7 +515,7 @@ ContextImpl::loseChild(ContextImpl* child)
     // This lock guarentees that no other thread will be accessing the
     // list of children - as a context's list of siblings is managed by
     // its parent.
-    omni_mutex_lock sync(pd_lock);
+    omni_tracedmutex_lock sync(pd_lock);
 
     // Find the pointer to <child> in the list of dependents.
     ContextImpl** p = &pd_children;
@@ -546,29 +547,24 @@ public:
     _CORBA_invoked_nil_pseudo_ref();
     return _nil();
   }
-  virtual CORBA::Status create_child(const char*, CORBA::Context_out) {
+  virtual void create_child(const char*, CORBA::Context_out) {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
-  }
-  virtual CORBA::Status set_one_value(const char*, const CORBA::Any&) {
+    }
+  virtual void set_one_value(const char*, const CORBA::Any&) {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
-  }
-  virtual CORBA::Status set_values(CORBA::NVList_ptr) {
+    }
+  virtual void set_values(CORBA::NVList_ptr) {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
-  }
-  virtual CORBA::Status delete_values(const char*) {
+    }
+  virtual void delete_values(const char*) {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
-  }
-  virtual CORBA::Status get_values(const char* start_scope,
+    }
+  virtual void get_values(const char* start_scope,
 				   CORBA::Flags op_flags,
 				   const char* pattern,
 				   CORBA::NVList_out values) {
     _CORBA_invoked_nil_pseudo_ref();
-    RETURN_CORBA_STATUS;
-  }
+    }
   virtual CORBA::Boolean NP_is_nil() const {
     return 1;
   }
@@ -595,7 +591,7 @@ CORBA::Context::_duplicate(Context_ptr p)
     OMNIORB_THROW(BAD_PARAM, BAD_PARAM_InvalidContext, CORBA::COMPLETED_NO);
   if( !CORBA::is_nil(p) ) {
     ContextImpl* c = (ContextImpl*) p;
-    omni_mutex_lock sync(c->pd_lock);
+    omni_tracedmutex_lock sync(c->pd_lock);
     c->pd_refCount++;
     return c;
   }
@@ -628,24 +624,44 @@ CORBA::Context::marshalContext(CORBA::Context_ptr ctxt,
   }
   ContextImpl* c = (ContextImpl*) ctxt;
 
-  // First we need to count the number of context strings
-  // we actually have to pass.  This is very inefficient!
-  int n = 0;
-  for( int i = 0; i < whichlen; i++ )
-    if( c->lookup_single(which[i]) )  n++;
+  _CORBA_Unbounded_Sequence_String seq;
+  CORBA::ULong l = 0;
 
-  // The length of the sequence of strings is twice the
-  // number of context entries ...
-  CORBA::ULong(n * 2) >>= s;
+  do {
+    omni_tracedmutex_lock sync(c->pd_lock);
+    int i;
+    CORBA::ULong top, bottom, j;
 
-  for( int j = 0; j < whichlen; j++ ) {
+    for (i=0; i < whichlen; i++) {
+      CORBA::ULong curr_len = l;
 
-    const char* value = c->lookup_single(which[j]);
-    if( !value )  continue;
+      if (c->matchPattern(which[i], bottom, top)) {
+	for (; bottom < top; bottom++) {
+	  ContextImpl::Entry* e = &(c->pd_entries[bottom]);
 
-    s.marshalRawString(which[j]);
-    s.marshalRawString(value);
-  }
+	  // Very inefficiently look to see if we've already added this name
+	  for (j=0; j < curr_len; j+=2)
+	    if (!strcasecmp(seq[j], e->name))
+	      break;
+
+	  if (j == curr_len) {
+	    l += 2;
+	    if (l > seq.maximum()) seq.length(l * 6 / 5 + 2);
+	    seq.length(l);
+	    seq[l-2] = (const char*)e->name;
+	    seq[l-1] = (const char*)e->value;
+	  }
+	}
+      }
+    }
+    if (CORBA::is_nil(c->pd_parent)) break;
+    c = (ContextImpl*)c->pd_parent;
+  } while(1);
+
+  // Now marshal the sequence
+  seq.length() >>= s;
+  for (CORBA::ULong i=0; i < seq.length(); i++)
+    s.marshalRawString(seq[i]);
 }
 
 CORBA::Context_ptr
@@ -690,12 +706,11 @@ CORBA::release(CORBA::Context_ptr p)
 
 static ContextImpl* default_context = 0;
 
-CORBA::Status
+void
 CORBA::ORB::get_default_context(CORBA::Context_out context_out)
 {
   if( !default_context )
     default_context = new ContextImpl("default", CORBA::Context::_nil());
 
   context_out = CORBA::Context::_duplicate(default_context);
-  RETURN_CORBA_STATUS;
 }

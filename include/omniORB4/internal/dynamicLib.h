@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.3  2001/11/06 15:41:37  dpg1
+  Reimplement Context. Remove CORBA::Status. Tidying up.
+
   Revision 1.1.4.2  2001/08/17 17:09:39  sll
   Use LinkHack.
 
@@ -91,10 +94,6 @@ public:
   // Initialisation
   void (*init)();
   void (*deinit)();
-
-  // Marshalling contexts.
-  void (*marshal_context)(cdrStream&, CORBA::Context_ptr cxtx,
-			  const char*const* which, int how_many);
 
   // Local call call-back function for CORBA::Repository::lookup_id().
   // This is needed to support the server side of _get_interface(),

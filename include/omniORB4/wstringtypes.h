@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2001/11/06 15:41:35  dpg1
+  Reimplement Context. Remove CORBA::Status. Tidying up.
+
   Revision 1.1.2.6  2001/09/19 17:26:44  dpg1
   Full clean-up after orb->destroy().
 
@@ -833,7 +836,7 @@ public:
 
   inline _CORBA_Unbounded_Sequence_WString(_CORBA_ULong   max,
 					   _CORBA_ULong   length,
-					   _CORBA_WChar**         value,
+					   _CORBA_WChar** value,
 					   _CORBA_Boolean release = 0)
     : _CORBA_Sequence_WString(max, length, value, release) {}
 

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.33.2.31  2001/11/06 15:41:38  dpg1
+  Reimplement Context. Remove CORBA::Status. Tidying up.
+
   Revision 1.33.2.30  2001/10/19 11:06:45  dpg1
   Principal support for GIOP 1.0. Correct some spelling mistakes.
 
@@ -641,6 +644,12 @@ omniOrbORB::omniOrbORB(int nil)
     pd_shutdown(0),
     pd_shutdown_in_progress(0)
 {
+}
+
+char*
+omniOrbORB::id()
+{
+  return CORBA::string_dup("");
 }
 
 

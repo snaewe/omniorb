@@ -104,7 +104,7 @@ public:
   virtual CORBA::NamedValue_ptr add_value_consume(char*, CORBA::Any*,
 						  CORBA::Flags);
   virtual CORBA::NamedValue_ptr item(CORBA::ULong);
-  virtual CORBA::Status remove(CORBA::ULong);
+  virtual void remove(CORBA::ULong);
   virtual CORBA::Boolean NP_is_nil() const;
   virtual CORBA::NVList_ptr NP_duplicate();
 
@@ -142,7 +142,7 @@ public:
   virtual void add(const char* ctxt);
   virtual void add_consume(char* ctxt);
   virtual const char* item(CORBA::ULong index);
-  virtual CORBA::Status remove(CORBA::ULong index);
+  virtual void remove(CORBA::ULong index);
   virtual CORBA::Boolean NP_is_nil() const;
   virtual CORBA::ContextList_ptr NP_duplicate();
 
@@ -170,7 +170,7 @@ public:
   virtual void add(CORBA::TypeCode_ptr tc);
   virtual void add_consume(CORBA::TypeCode_ptr tc);
   virtual CORBA::TypeCode_ptr item(CORBA::ULong index);
-  virtual CORBA::Status remove(CORBA::ULong index);
+  virtual void remove(CORBA::ULong index);
   virtual CORBA::Boolean NP_is_nil() const;
   virtual CORBA::ExceptionList_ptr NP_duplicate();
 

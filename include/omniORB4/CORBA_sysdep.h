@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.15  2001/11/06 15:41:35  dpg1
+ Reimplement Context. Remove CORBA::Status. Tidying up.
+
  Revision 1.2.2.14  2001/10/17 16:26:50  dpg1
  Support for Sun CC > 5 in 4.x compatibility mode.
 
@@ -446,14 +449,6 @@
 
 #ifndef __cplusplus
 #error "Cannot use this C++ header file for non C++ programs."
-#endif
-
-#ifdef Status
-#error "Name conflict: Status is defined as a macro in a header file include before this."
-// X11's Xlib.h (and may be others) define Status as a macro. This name
-// conflicts with the Status type defined in the CORBA namespace.
-// To remove this error, make sure that the offending header file is included
-// after omniORB2/CORBA.h.
 #endif
 
 // Default flag values if not already overridden above

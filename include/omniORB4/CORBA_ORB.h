@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.5  2001/11/06 15:41:34  dpg1
+  Reimplement Context. Remove CORBA::Status. Tidying up.
+
   Revision 1.1.2.4  2001/10/29 17:42:35  dpg1
   Support forward-declared structs/unions, ORB::create_recursive_tc().
 
@@ -182,6 +185,8 @@ public:
   static _ptr_type _narrow(Object_ptr);
   static _ptr_type _nil();
 
+  virtual char* id() = 0;
+
   virtual char* object_to_string(Object_ptr) = 0;
   virtual Object_ptr string_to_object(const char*) = 0;
 
@@ -199,23 +204,23 @@ public:
 
   BOA_ptr BOA_init(int& argc, char** argv, const char* boa_identifier=0);
 
-  Status create_list(Long, NVList_out);
-  Status create_operation_list(_objref_OperationDef*, // OperationDef_ptr
-			       NVList_out);
-  Status create_named_value(NamedValue_out);
-  Status create_exception_list(ExceptionList_out);
-  Status create_context_list(ContextList_out);
+  void create_list(Long, NVList_out);
+  void create_operation_list(_objref_OperationDef*, // OperationDef_ptr
+			     NVList_out);
+  void create_named_value(NamedValue_out);
+  void create_exception_list(ExceptionList_out);
+  void create_context_list(ContextList_out);
 
-  Status get_default_context(Context_out context_out);
+  void get_default_context(Context_out context_out);
   // Returns a reference to the default context, which should be
   // released when finished with.
 
-  Status create_environment(Environment_out);
+  void create_environment(Environment_out);
 
-  Status send_multiple_requests_oneway(const RequestSeq&);
-  Status send_multiple_requests_deferred(const RequestSeq&);
+  void send_multiple_requests_oneway(const RequestSeq&);
+  void send_multiple_requests_deferred(const RequestSeq&);
   Boolean poll_next_response();
-  Status get_next_response(Request_out);
+  void get_next_response(Request_out);
 
   TypeCode_ptr create_struct_tc(const char* id, const char* name,
 				const StructMemberSeq& members);

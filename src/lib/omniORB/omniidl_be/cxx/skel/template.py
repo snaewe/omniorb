@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.3.2.17  2001/11/06 15:41:37  dpg1
+# Reimplement Context. Remove CORBA::Status. Tidying up.
+#
 # Revision 1.3.2.16  2001/10/29 17:42:42  dpg1
 # Support forward-declared structs/unions, ORB::create_recursive_tc().
 #
@@ -256,18 +259,6 @@ if( omni::ptrStrMatch(id, @inherits_fqname@::_PD_repoId) )
 """
 
 
-interface_context_array = """\
-static const char*const @context_descriptor@[] = {
-  @contexts@
-};
-"""
-
-interface_objref_contextinfo = """\
-omniCallDescriptor::ContextInfo _ctxt_info(_ctxt, @context_descriptor@, @n@);
-_call_desc.set_context_info(&_ctxt_info);
-"""
-
-
 interface_callback = """\
 // Local call call-back function.
 static void
@@ -315,6 +306,13 @@ public:
 };
 """
 
+interface_context_array = """\
+static const char*const @context_descriptor@[] = {
+  @contexts@
+  0
+};
+"""
+
 interface_proxy_marshal_arguments = """\
 void @call_descriptor@::marshalArguments(cdrStream& _n)
 {
@@ -322,12 +320,18 @@ void @call_descriptor@::marshalArguments(cdrStream& _n)
 }
 """
 
+interface_proxy_marshal_context = """\
+CORBA::Context::marshalContext(ctxt, @name@, @count@, _n);"""
+
 interface_proxy_unmarshal_arguments = """\
 void @call_descriptor@::unmarshalArguments(cdrStream& _n)
 {
   @marshal_block@
 }
 """
+
+interface_proxy_unmarshal_context = """\
+ctxt = CORBA::Context::unmarshalContext(_n);"""
 
 interface_proxy_marshal_returnedvalues = """\
 void @call_descriptor@::marshalReturnedValues(cdrStream& _n)
@@ -372,8 +376,8 @@ if ( omni::strMatch(repoId, @repoID_str@) ) {
 
 interface_operation = """\
 @call_descriptor@ _call_desc(@call_desc_args@);
-@context@
 @assign_args@
+@assign_context@
 _invoke(_call_desc);
 @assign_res@
 """
@@ -476,7 +480,6 @@ interface_operation_dispatch = """\
 if( omni::strMatch(op, "@idl_operation_name@") ) {
 
   @call_descriptor@ _call_desc(@call_desc_args@);
-  @context@
   @prepare_out_args@
   _handle.upcall(this,_call_desc);
   return 1;
