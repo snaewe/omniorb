@@ -252,7 +252,7 @@ OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 CorbaImplementation = OMNIORB2
 
-OMNIORB2_IDL = omniidl2
+OMNIORB2_IDL = omniidl2 -a
 OMNIORB2_CPPFLAGS = -D__OMNIORB2__ -I$(CORBA_STUB_DIR) $(OMNITHREAD_CPPFLAGS)
 OMNIORB2_LIB = $(patsubst %,$(LibSearchPattern),omniORB2) $(OMNITHREAD_LIB) $(SOCKET_LIB)
 lib_depend := $(patsubst %,$(LibPattern),omniORB2)
