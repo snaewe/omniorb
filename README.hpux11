@@ -1,0 +1,69 @@
+The idl compiler omniidl requires python. Installing python is normally a
+simple affair but on HPUX, some more work is required.
+
+If you don't want to build python yourself, you can download
+the minimal python package from:
+
+    ftp://ftp.uk.research.att.com/pub/omniORB/python/
+
+Otherwise, you have to treak the build process of python to get python to
+install properly. On HPUX 11.00 (haven't tested on 10.x), the python 1.5.2
+source from python.org does not build out of the box. Some treakings are
+required.  The source from HP Software Porting And Archive Centre
+(http://hpux.cs.utah.edu/) is a good starting point but unfortunately the
+binary package cannot load C++ shared library as python extension modules.
+
+To build a python installation that works for omniORB (and omniORBpy), you
+should compile python's main() function with aCC. (See the footnote for an
+explanation of why this is necessary) This involves changing
+<python_src>/Modules/python.c to something like this:
+
+-------------
+/* Minimal main program -- everything is loaded from the library */
+
+#include "Python.h"
+
+#ifndef __cplusplus
+extern DL_EXPORT(int) Py_Main();
+
+int
+main(argc, argv)
+        int argc;
+        char **argv;
+{
+        return Py_Main(argc, argv);
+}
+
+#else
+
+extern "C" DL_EXPORT(int) Py_Main(int argc, char** argv);
+
+int
+main(int argc, char** argv)
+{
+        return Py_Main(argc, argv);
+}
+
+#endif
+-----------------
+And compile python.o with the C++ compiler- aCC. This involves adding a
+dependency rule in Modules/Makefile to use aCC:
+
+python.o: $(srcdir)/python.c
+        aCC +DAportable $(CFLAGS) -c $(srcdir)/python.c
+
+Of course the executable python should also be linked with aCC. This is
+done by changing Modules/Makefile:
+
+LINKCC=         $(PURIFY) aCC
+
+
+Footnote:
+
+   On this platform, dlopen(3) refuses to load any library that contains 
+   Thread Local Storage (TLS) and is not loaded during program startup.
+   This creates a problem with loading the omniidl C++ support library in
+   python. When the library is built with aCC, the library requires the
+   runtime library libcl which contains TLS. dlopen refuse to load the library
+   because of this dependency.
+

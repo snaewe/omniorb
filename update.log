@@ -1,3 +1,21 @@
+Tue Jul 11 13:37:05 BST 2000 sll
+================================
+
+- Added omnipython distribution for HPUX 11.00 and IRIX 6.5. Updated
+  documentation to reflect this.
+
+external_merge/README.KNOWN_ISSUES         Deleted
+external_merge/README.hpux11               New
+external_merge/README.SunC++5
+external_merge/README.unix
+
+external_merge/mk/platforms/hppa_hpux_11.00.mk
+external_merge/mk/platforms/mips_irix_6.4_6.5_common.mk
+
+mk/platforms/hppa_hpux_11.00.mk
+mk/platforms/mips_irix_6.4_6.5_common.mk
+
+
 Tue Jul 11 11:26:48 BST 2000 dpg1
 =================================
 

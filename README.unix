@@ -97,7 +97,7 @@ Configuration
 
     ftp://ftp.uk.research.att.com/pub/omniORB/python/py152.tgz
 
-  Alternatively, on Solaris and Linux (and Windows, but this is
+  Alternatively, on Solaris, Linux, IRIX and HPUX (and Windows, but this is
   README.unix!) you can download a minimal version of Python which
   contains just the functionality required by omniidl. Download it
   from

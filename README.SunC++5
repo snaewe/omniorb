@@ -1,16 +1,12 @@
 Sun C++ 4.2 is currently what we use to compile code to put into service.
 
-We are putting Sun C++ 5.0 under testing. There were a number of problems
-with Sun C++ 5.0. These ranges from incorrect code to simply unable to
-produce linkable object code. With the latest Sun C++ compiler patch
-(107311-06 of Sep 20), the compler at least seems to produce correct
-code. *BUT* it still generates incorrect exception handling code when using
-just the -O2 flag or no optimisation at all. Strangely, "-O2 -g" produces
-correct code. At least it seems to work with simple tests. If your programs
-crashes when there are concurrent activities, try recompile with -g only.
-
-Another anonying feature of the compiler is that it has a habit of taking
-up all the CPU cycles and huge amount of memory (350M) doing who knows
-what. Sometimes compiling a moderate size omniORB stub could take 20
-minutes or so on a 300MHz UltraSparc.
+More testing with the Sun C++ 5.0 and the new Forte Workshop v6.0 has revealed
+a problem that has not been resolved. omniORB servers or clients built with
+this compiler frequently core-dump on a Solaris 2.7 SMP machine when
+simultaneously multiple connections are bloken. This can be provoked by
+running multiple threads in a client program, all poking the same remote
+object and then kill the server or the client. Looking at the stack trace
+under dbx, it seems to go wrong in the exception unwinding when more than
+one thread is in the unwinding state. Effort to reproduce the bug in a
+small test program has been unsuccessful. Investigation continues. 
 
