@@ -1,3 +1,14 @@
+Fri Nov  5 14:39:28 GMT 1999 sll
+===============================
+
+- Fully initialise the return value of
+  giopStream::requestInfo::targetAddress() even if the addressing
+  mode is only GIOP::ProfileAddr. This is done when the target object
+  is unknown. There may be a MapTargetAddressToObjectFunction registered
+  to look into targetAddress().
+
+src/lib/omniORB2/giopStream.cc
+
 Thu Nov  4 20:06:32 GMT 1999 sll
 ================================
 

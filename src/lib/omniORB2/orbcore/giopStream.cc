@@ -29,6 +29,12 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  1999/11/05 14:44:57  sll
+  Fully initialise the return value of requestInfo::targetAddress() even if
+  the addressing mode is only GIOP::ProfileAddr. This is done when the target
+  object is unknown. There may be a MapTargetAddressToObjectFunction
+  registered to look into targetAddress().
+
   Revision 1.1.2.5  1999/11/04 20:20:19  sll
   GIOP engines can now do callback to the higher layer to calculate total
   message size if necessary.
@@ -1070,6 +1076,18 @@ requestInfo::unmarshalIORAddressingInfo(cdrStream& s)
     }
     // Reach here either we have got the key of the target object
     // or we have the target address info in targetAddress().
+    if (keysize() < 0 && vp == GIOP::ProfileAddr) {
+      // The target object is not in this address space and the target
+      // addressing mode is ProfileAddr. Therefore,
+      // targetAddress().ior.type_id has not been initialised.  There may
+      // be a MapTargetAddressToObjectFunction handler registered to
+      // further decode the target address. We initialised the type id
+      // field to a zero length string just in case the handler wants to
+      // look at it.
+      PTRACE("unmarshalRequestHeader","ProfileAddr addressing to unknown target.");
+      ta.ior.type_id = CORBA::string_alloc(0);
+      *((char*)ta.ior.type_id) = '\0';
+    }
   }
 }
 
