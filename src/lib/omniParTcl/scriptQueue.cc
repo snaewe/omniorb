@@ -13,10 +13,7 @@
 // $Id$ $Author$
 //
  
-extern "C" 
-{
 #include <string.h>
-}
 #include "omnithread.h"
 
 #include "scriptQueue.h"
