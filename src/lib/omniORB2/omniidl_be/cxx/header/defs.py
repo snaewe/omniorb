@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.18  1999/12/26 16:43:06  djs
+# Enum scope fix
+# Handling default case of char discriminated switch fixed
+#
 # Revision 1.17  1999/12/25 21:47:18  djs
 # Better TypeCode support
 #
@@ -1119,7 +1123,8 @@ _@memtype@ @instname@;""",
                 continue
 
             elif tyutil.isEnum(memberType):
-                memtype = tyutil.mapID(memberType.decl().identifier())
+                memtype = environment.principalID(memberType)
+                #memtype = tyutil.mapID(memberType.decl().identifier())
                 # If it's a user declared type then remember the type we assigned?
             elif isinstance(memberType, idltype.Declared) and \
                  hasattr(m,"memtype"):
@@ -1356,7 +1361,8 @@ def visitUnion(node):
     # Once this backend is trusted independantly, convert to use the
     # new mechanism?
     def chooseArbitraryDefault(switchType = switchType,
-                               allCaseValues = tyutil.allCaseValues(node)):
+                               allCaseValues = tyutil.allCaseValues(node),
+                               environment = environment):
         # dereference the switch_type (ie if CASE <scoped_name>)
         switchType = tyutil.deref(switchType)
                 
@@ -1374,6 +1380,11 @@ def visitUnion(node):
             return "1"
         # CASE <char_type>
         elif tyutil.isChar(switchType):
+            # choose the first one not already used
+            allcases = map(lambda x: x.value(), allCaseValues)
+            possibles = map(chr, range(0, 255))
+            difference = util.minus(possibles, allcases)
+            return tyutil.valueString(switchType, difference[0], None)
             return "'\\000'"
         # CASE <boolean_type>
         elif tyutil.isBoolean(switchType):
@@ -1386,6 +1397,10 @@ def visitUnion(node):
 #            print "[[[ enums = " + repr(enums) + "]]]"
 #            print "[[[ allcases = " + repr(allcases) + "]]]"
             difference = util.minus(enums, allcases)
+            scopedName = difference[0].scopedName()
+            # need to be careful of scope
+            rel_name = environment.relName(scopedName)
+            return environment.nameToString(rel_name)
             return tyutil.name(difference[0].scopedName())
         else:
             raise "chooseArbitraryDefault type="+repr(switchType)+\
@@ -1459,11 +1474,15 @@ public:
             # FIXME: need to represent discriminator value properly
             for l in c.labels():
                 if l.default(): continue
+                # FIXME: stupid special case. An explicit discriminator
+                # value of \0 -> 0000 whereas an implicit one (valueString)
+                # \0 -> '\000'
+                discrimvalue = discrimValueToString(switchType, l, environment)
+                if tyutil.isChar(switchType) and l.value() == '\0':
+                    discrimvalue = "0000"
                 stream.out("""\
          case @discrimvalue@: @name@(_value.pd_@name@); break;""",
-                           discrimvalue = discrimValueToString(switchType,
-                                                               l,
-                                                               environment),
+                           discrimvalue = discrimvalue,
                            name = tyutil.mapID(c.declarator().identifier()))
         # Booleans are a special case (isn't everything?)
         booleanWrap = tyutil.isBoolean(switchType) \
@@ -1541,6 +1560,10 @@ public:
             else:
                 discrimvalue = discrimValueToString(switchType,
                                                     l, environment)
+
+            # FIXME: stupid special case, see above
+            if tyutil.isChar(switchType) and l.value() == '\0':
+                discrimvalue = "0000"
 
             type_str = type
 
