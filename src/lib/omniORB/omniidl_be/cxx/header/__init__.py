@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.14.2.6  2003/01/22 12:10:55  dgrisby
+# Explicitly close files in C++ backend.
+#
 # Revision 1.14.2.5  2001/10/18 12:45:28  dpg1
 # IDL compiler tweaks.
 #
@@ -302,6 +305,10 @@ def run(tree):
                        config.state['HH Suffix']
         poa_stream = output.Stream(output.createFile(poa_filename), 2)
         poa_fragment(poa_stream, tree)
+
+        defs_stream.close()
+        opers_stream.close()
+        poa_stream.close() 
     else:
         # build the full header file
         header_filename = config.state['Basename']       +\
@@ -310,3 +317,4 @@ def run(tree):
         # generate one big chunk of header
         monolithic(stream, tree)
 
+        stream.close()

@@ -1,3 +1,13 @@
+Wed Jan 22 12:07:14 GMT 2003 dgrisby
+====================================
+
+- Explicitly close files in C++ backend.
+
+src/lib/omniORB/omniidl_be/cxx/dynskel/__init__.py
+src/lib/omniORB/omniidl_be/cxx/header/__init__.py
+src/lib/omniORB/omniidl_be/cxx/impl/__init__.py
+
+
 Wed Jan 22 11:32:38 GMT 2003 dgrisby
 ====================================
 

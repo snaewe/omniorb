@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.2.2.2  2003/01/22 12:10:55  dgrisby
+# Explicitly close files in C++ backend.
+#
 # Revision 1.2.2.1  2000/10/12 15:37:52  sll
 # Updated from omni3_1_develop.
 #
@@ -49,3 +52,5 @@ def run(tree):
     main.__init__(stream, idl_filename, hh_filename)
 
     main.run(tree)
+
+    stream.close()

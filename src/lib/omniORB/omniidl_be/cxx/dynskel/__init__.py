@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.8.2.4  2003/01/22 12:10:55  dgrisby
+# Explicitly close files in C++ backend.
+#
 # Revision 1.8.2.3  2001/06/08 17:12:14  dpg1
 # Merge all the bug fixes from omni3_develop.
 #
@@ -132,3 +135,4 @@ def run(tree):
     stream = output.Stream(output.createFile(header_filename), 2)
 
     generate(stream, tree)
+    stream.close()
