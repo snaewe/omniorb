@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.32  1999/08/09 12:27:15  sll
+  Removed trace message.
+
   Revision 1.31  1999/07/23 11:27:28  djr
   Implemented efficient marshalling/unmarshalling of array of basic types.
 
@@ -2496,7 +2499,6 @@ o2be_operation::produceUnMarshalCode(std::fstream& s, AST_Decl* decl,
 	  }
 	}
 	ptr_to_first_elm += ")";
-	std::cout << "ptr_to_first_elm = " << ptr_to_first_elm << std::endl;
 
 	switch (atype)
 	  {
