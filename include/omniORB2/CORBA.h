@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.35  1999/05/26 12:21:35  sll
+ Use ENABLE_CLIENT_IR_SUPPORT alone to enable IR support.
+
  Revision 1.34  1999/05/25 13:37:44  sll
  Added missing CORBA 2.1 definitions.
  Added pd_magic field, PR_is_valid() static member functions to pseudo
@@ -1158,7 +1161,7 @@ _CORBA_MODULE_BEG
   //////////////////////// Interface Repository ////////////////////////
   //////////////////////////////////////////////////////////////////////
 
-#if defined(HAS_Cplusplus_Namespace) && defined(ENABLE_CLIENT_IR_SUPPORT)
+#if defined(ENABLE_CLIENT_IR_SUPPORT)
   // On platforms supporting namespaces we can generate the Interface
   // Repository types automatically, and include them here.
   //  The minimum set of definitions required for TypeCode are
@@ -3174,7 +3177,7 @@ extern void _omni_set_NameService(CORBA::Object_ptr);
 // If compiling the dynamic library, USE_stub_in_nt_dll should
 // not be defined.
 # include <omniORB2/Naming.hh>
-# if defined(HAS_Cplusplus_Namespace) && defined(ENABLE_CLIENT_IR_SUPPORT)
+# if defined(ENABLE_CLIENT_IR_SUPPORT)
 #  include <omniORB2/ir.hh>
 # endif
 #else
@@ -3183,13 +3186,13 @@ extern void _omni_set_NameService(CORBA::Object_ptr);
 // revert to its previous value afterwards.
 # ifdef USE_stub_in_nt_dll
 #  include <omniORB2/Naming.hh>
-#  if defined(HAS_Cplusplus_Namespace) && defined(ENABLE_CLIENT_IR_SUPPORT)
+#  if defined(ENABLE_CLIENT_IR_SUPPORT)
 #   include <omniORB2/ir.hh>
 #  endif
 # else
 #  define USE_stub_in_nt_dll
 #  include <omniORB2/Naming.hh>
-#  if defined(HAS_Cplusplus_Namespace) && defined(ENABLE_CLIENT_IR_SUPPORT)
+#  if defined(ENABLE_CLIENT_IR_SUPPORT)
 #   include <omniORB2/ir.hh>
 #  endif
 #  undef USE_stub_in_nt_dll
