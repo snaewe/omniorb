@@ -253,7 +253,16 @@ print_tagged_components(IOP::MultipleComponentProfile& components)
   for (CORBA::ULong index=0; index < total; index++) {
     CORBA::String_var content;
     content = IOP::dumpComponent(components[index]);
-    cout << "            " << (const char*) content << endl;
+    char* p = content;
+    char* q;
+    do {
+      q = strchr(p,'\n');
+      if (q) {
+	*q++ = '\0';
+      }
+      cout << "            " << (const char*) p << endl;
+      p = q;
+    } while (q);
   }
 }
 
@@ -360,6 +369,10 @@ int main(int argc, char* argv[])
 
   const char* str_ior = argv[optind];
 
+  CORBA::ORB_var orb;
+  argc = 0;
+  orb = CORBA::ORB_init(argc,0,"omniORB4");
+
   IOP::IOR ior;
 
   try {
@@ -425,5 +438,7 @@ int main(int argc, char* argv[])
     cerr << "Exception while processing stringified IOR." << endl;
     return 1;
   }
+
+  orb->destroy();
   return 0;
 }
