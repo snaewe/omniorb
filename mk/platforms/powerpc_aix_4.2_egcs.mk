@@ -99,3 +99,63 @@ OMNIORB_CONFIG_DEFAULT_LOCATION = /etc/omniORB.cfg
 
 # Default directory for the omniNames log files.
 OMNINAMES_LOG_DEFAULT_LOCATION = /var/omninames
+
+
+# MakeCXXSharedLibrary- Build shared library
+#     Expect shell varables:
+#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
+#       libname = shared library name (e.g. libfoo.so)
+#
+# ExportSharedLibrary- export sharedlibrary
+#     Expect shell varables:
+#       soname  = soname to be inserted into the library (e.g. libfoo.so.1)
+#       libname = shared library name (e.g. libfoo.so)
+#      
+SHAREDLIB_SUFFIX   = .a
+
+ifeq ($(notdir $(CXX)),xlC_r)
+
+ELF_SHARED_LIBRARY = 1
+SHAREDLIB_CPPFLAGS =
+
+define MakeCXXSharedLibrary
+(set -x; \
+ $(RM) $@; \
+ $(MAKECPPSHAREDLIB) \
+    -o $$soname $(IMPORT_LIBRARY_FLAGS) \
+    $(filter-out $(LibSuffixPattern),$^) $$extralibs \
+         -p 40; \
+         ar cq $@ $$soname; \
+         $(RM) $$soname; \
+       )
+endef
+
+endif
+
+ifeq ($(notdir $(CXX)),g++)
+
+ELF_SHARED_LIBRARY = 1
+SHAREDLIB_CPPFLAGS =
+
+define MakeCXXSharedLibrary
+(set -x; \
+ $(RM) $@; \
+   $(CXXLINK) -shared -mthreads \
+     -o $$soname $(IMPORT_LIBRARY_FLAGS) \
+    $(filter-out $(LibSuffixPattern),$^) $$extralibs ; \
+         ar cq $@ $$soname; \
+         $(RM) $$soname; \
+       )
+endef
+
+endif
+
+
+define ExportSharedLibrary
+$(ExportLibrary); \
+(set -x; \
+   cd $(EXPORT_TREE)/$(LIBDIR); \
+    $(RM) $$libname; \
+    ln -s $^ $$libname; \
+  )
+endef
