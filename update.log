@@ -1,3 +1,28 @@
+Fri Nov 17 19:05:15 GMT 2000 dpg1
+=================================
+
+- Support codeset conversion in any.
+
+include/omniORB4/CORBA.h
+include/omniORB4/tcDescriptor.h
+src/lib/omniORB/dynamic/any.cc
+src/lib/omniORB/dynamic/dynAny.cc
+src/lib/omniORB/dynamic/dynAny.h
+src/lib/omniORB/dynamic/dynAnyNil.cc
+src/lib/omniORB/dynamic/tcParser.cc
+src/lib/omniORB/dynamic/typecode.cc
+src/lib/omniORB/dynamic/typecode.h
+
+- Rename _CORBA_Sequence__WString to _CORBA_Sequence_WString.
+
+include/omniORB4/wstringtypes.h
+src/lib/omniORB/orbcore/corbaWString.cc
+
+- Better choice of exceptions in UTF-8.
+
+src/lib/omniORB/orbcore/cs-UTF-8.cc
+
+
 Thu Nov 16 12:30:58 GMT 2000 dpg1
 =================================
 
