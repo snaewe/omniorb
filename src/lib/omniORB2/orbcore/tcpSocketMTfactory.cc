@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.22  1999/08/30 16:54:24  sll
+  Wait much less time in tcpSocketStrand::shutdown. Added trace message.
+
   Revision 1.21  1999/07/09 21:03:58  sll
   removeIncoming() now waits until all tcpSocketWorker threads have exited
   before returning.
@@ -954,7 +957,7 @@ tcpSocketStrand::shutdown()
 	FD_ZERO(&wrfds);
 	FD_SET(pd_socket,&wrfds);
 #       endif
-	struct timeval t = { 5,0};
+	struct timeval t = { 0,100000};
 	int rc;
 	if ((rc = select(pd_socket+1,0,&wrfds,0,&t)) <= 0) {
 	  // Any timeout or error, we just don't border sending the message.
@@ -970,7 +973,16 @@ tcpSocketStrand::shutdown()
       }
     }
   _setStrandIsDying();
+  if (omniORB::traceLevel >= 25) {
+    omniORB::log << "tcpSocketStrand::shutdown() fd no. " << pd_socket << "\n";
+    omniORB::log.flush();
+  }
   SHUTDOWNSOCKET(pd_socket);
+  if (omniORB::traceLevel >= 25) {
+    omniORB::log << "tcpSocketStrand::shutdown() fd no. " << pd_socket 
+		 << " Done\n";
+    omniORB::log.flush();
+  }
   return;
 }
 
