@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.3  2000/10/03 17:39:46  sll
+ DefaultLoopback now works.
+
  Revision 1.2.2.2  2000/09/27 18:17:19  sll
  Use the new omniIOR class in defaultLoopBack().
 
@@ -380,7 +383,7 @@ omniObjAdapter::defaultLoopBack()
 	  Rope_iterator riter(factory);
 	  _tcpIncomingRope* r = (_tcpIncomingRope*) riter();
 	  if( r ) {
-	    Endpoint* addr;
+	    Endpoint* addr = 0;
 	    r->this_is(addr);
 	    myaddr = addr;
 	    break;
@@ -395,21 +398,21 @@ omniObjAdapter::defaultLoopBack()
       OMNIORB_THROW(COMM_FAILURE,0,CORBA::COMPLETED_MAYBE);
     }
 
+    tcpSocketEndpoint* taddr = tcpSocketEndpoint::castup(myaddr);
+    IIOP::Address addr = taddr->address();
+    
+    _CORBA_Unbounded_Sequence_Octet key;
+    key.length(1); key[0] = '\0';
+
+    omniIOR_var ior = new omniIOR("",key,&addr,1);
+
     {
-      tcpSocketEndpoint* taddr = tcpSocketEndpoint::castup(myaddr);
-      IIOP::Address addr = taddr->address();
-
-      _CORBA_Unbounded_Sequence_Octet key;
-      key.length(1); key[0] = '\0';
-
-      omniIOR ior("",key,&addr,1);
-
       ropeFactory_iterator iter(globalOutgoingRopeFactories);
       outgoingRopeFactory* factory;
 
       while( (factory = (outgoingRopeFactory*) iter()) ) {
 	if ( factory->getType() == f ) {
-	  loopback = factory->findOrCreateOutgoing(&ior);
+	  loopback = factory->findOrCreateOutgoing(ior);
 	  OMNIORB_ASSERT(loopback);
 	  break;
 	}
