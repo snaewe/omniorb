@@ -364,7 +364,7 @@ extern CORBA::Object_ptr
 _0RL_tcParser_objref_getObjectPtr(tcObjrefDesc* desc);
 
 inline void
-_0RL_buildDesc_cCORBA_sObject(tcDescriptor& desc, const CORBA::Object_member& data)
+_0RL_buildDesc_cCORBA_mObject(tcDescriptor& desc, const CORBA::Object_member& data)
 {
   desc.p_objref.opq_objref = (void*) &data._ptr;
   desc.p_objref.opq_release = data.pd_rel;
@@ -380,7 +380,7 @@ extern CORBA::Object_ptr
 _0RL_tcParser_objref2_getObjectPtr(tcObjrefDesc* desc);
 
 inline void
-_0RL_buildDesc_cCORBA_sObject(tcDescriptor& desc, const _CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>& data)
+_0RL_buildDesc_cCORBA_mObject(tcDescriptor& desc, const _CORBA_ObjRef_Member<CORBA::Object, CORBA::Object_Helper>& data)
 {
   desc.p_objref.opq_objref = (void*) &data._ptr;
   desc.p_objref.setObjectPtr = _0RL_tcParser_objref2_setObjectPtr;
