@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.28  2002/02/11 14:47:03  dpg1
+  Bug in cleanup of nil POA.
+
   Revision 1.2.2.27  2002/01/16 11:31:59  dpg1
   Race condition in use of registerNilCorbaObject/registerTrackedObject.
   (Reported by Teemu Torma).
@@ -462,17 +465,19 @@ static omniOrbPOA* theINSPOA  = 0;
 
 omniOrbPOA::~omniOrbPOA()
 {
-  switch (pd_policy.threading) {
-  case TP_ORB_CTRL:
-    break;
-  case TP_SINGLE_THREAD:
-    delete pd_call_lock;
-    break;
-  case TP_MAIN_THREAD:
-    delete pd_main_thread_sync.cond;
-    delete pd_main_thread_sync.mu;
-    break;
-  };
+  if (!_NP_is_nil()) {
+    switch (pd_policy.threading) {
+    case TP_ORB_CTRL:
+      break;
+    case TP_SINGLE_THREAD:
+      delete pd_call_lock;
+      break;
+    case TP_MAIN_THREAD:
+      delete pd_main_thread_sync.cond;
+      delete pd_main_thread_sync.mu;
+      break;
+    }
+  }
 }
 
 

@@ -1,3 +1,19 @@
+Mon Feb 11 14:43:01 GMT 2002 dpg1
+=================================
+
+- Remove warnings.
+
+include/omnithread.h
+
+- Remove unnecessary ##s in macro.
+
+src/lib/omniORB/dynamic/dynAny.cc
+
+- Bug in cleanup of nil POA.
+
+src/lib/omniORB/orbcore/poa.cc
+
+
 Fri Feb  1 09:57:31 GMT 2002 dpg1
 =================================
 
