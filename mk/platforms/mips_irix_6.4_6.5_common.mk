@@ -107,7 +107,7 @@ CorbaImplementation = OMNIORB
 # SGI linker has some peculiar requirements on the order in which share
 # libraries are specified on the command line.
 #    1. Two libraries cross reference each other, as it is the case with 
-#       -lomniORB3 and -ltcpwrapGK means that -lomniORB3 has to be
+#       -lomniORB4 and -ltcpwrapGK means that -lomniORB4 has to be
 #       repeated after -ltcpwrapGK
 #    2. Multi-threaded programs must have -lpthread as the last option
 #       on the command line.
@@ -122,13 +122,13 @@ CorbaImplementation = OMNIORB
 # Here we reset the value of OMNIORB_LIB to meet the above requirements. The
 # variable was original set in unix.mk
 
-OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB3) \
-		$(patsubst %,$(LibSearchPattern),omniDynamic3) \
-                $(patsubst %,$(LibSearchPattern),omniORB3) \
+OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB4) \
+		$(patsubst %,$(LibSearchPattern),omniDynamic4) \
+                $(patsubst %,$(LibSearchPattern),omniORB4) \
                 $(OMNITHREAD_LIB)
 
-OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB3) \
-                $(patsubst %,$(LibSearchPattern),omniORB3) \
+OMNIORB_LIB_NODYN = $(patsubst %,$(LibSearchPattern),omniORB4) \
+                $(patsubst %,$(LibSearchPattern),omniORB4) \
                 $(OMNITHREAD_LIB)
 
 
