@@ -13,9 +13,14 @@
 
 /*
   $Log$
-  Revision 1.6  1997/03/26 18:21:58  ewc
-  Added support for new -ORBtraceLevel option.
+  Revision 1.7  1997/04/23 13:16:28  sll
+  - Added code to avoid receiving data into the internal buffer that
+    might later found to be misaligned. The code is turned on by UNdefining
+    the macro DO_NOT_AVOID_MISALIGNMENT.
 
+// Revision 1.6  1997/03/26  18:21:58  ewc
+// Added support for new -ORBtraceLevel option.
+//
 // Revision 1.5  1997/03/10  13:53:46  sll
 // tcpSocketRope ctor now returns the passive endpoint created by
 // the tcpSocketRendezvous ctor. The value is returned via the argument
@@ -67,7 +72,7 @@
 #define RETRY 5   // Number of times to try to open an outgoing TCP 
                   // connection before giving up.
 
-
+#define  DO_NOT_AVOID_MISALIGNMENT    
 
 // Size of transmit and receive buffers
 const 
@@ -232,22 +237,20 @@ tcpSocketStrand::receive(size_t size,
   if (!bsz) {
     // No data left in receive buffer, fetch() and try again
     // rewind the buffer pointers to the beginning of the buffer and
-    // at the same alignment as they were previously
-    current_alignment = (omni::ptr_arith_t) pd_rx_begin &
-      ((int)omni::max_alignment - 1);
-    if (current_alignment == 0) {
-      current_alignment = (int) omni::max_alignment;
-    }
+    // at the same alignment as it is requested in <align>
     new_align_ptr = omni::align_to((omni::ptr_arith_t) pd_rx_buffer,
-				      omni::max_alignment) + 
-                    current_alignment;
+				   omni::max_alignment) + align;
     if (new_align_ptr >= ((omni::ptr_arith_t)pd_rx_buffer + 
 			  (int)omni::max_alignment)) {
       new_align_ptr -= (int) omni::max_alignment;
     }
     pd_rx_begin = pd_rx_received_end = pd_rx_end = (void *)new_align_ptr;
 
+#ifndef DO_NOT_AVOID_MISALIGNMENT    
+    fetch(size);
+#else
     fetch();
+#endif
     return receive(size,exactly,align);
   }
 
@@ -307,8 +310,11 @@ tcpSocketStrand::receive(size_t size,
 	pd_rx_begin = pd_rx_received_end = (void *)new_align_ptr;
 	pd_rx_end = (void *)(new_align_ptr + bsz);
       }
-	      
+#ifndef DO_NOT_AVOID_MISALIGNMENT
+      fetch(size-bsz);
+#else
       fetch();
+#endif
       return receive(size,exactly,align);
     }
     else {
@@ -419,10 +425,12 @@ tcpSocketStrand::skip(size_t size)
 }
 
 void
-tcpSocketStrand::fetch()
+tcpSocketStrand::fetch(CORBA::ULong max)
 {
   size_t bsz = tcpSocketStrand::buffer_size -
     ((omni::ptr_arith_t) pd_rx_end - (omni::ptr_arith_t) pd_rx_buffer);
+
+  bsz = (max != 0 && bsz > max) ? max : bsz;
 
   if (!bsz) return;
 
