@@ -28,31 +28,39 @@
 //      
 
 // $Log$
-// Revision 1.1  1997/09/20 17:04:23  dpg1
+// Revision 1.2  1997/12/10 11:39:33  sll
+// Updated life cycle runtime.
+//
+// Revision 1.1  1997/09/20  17:04:23  dpg1
+// Initial revision
+//
+// Revision 1.1  1997/09/20  17:04:23  dpg1
 // Initial revision
 //
 
 
-#include <omniORB2/omniLifeCycle.h>
+#include <omniORB2/omniLC.h>
 
 void
-_wrap_proxy::_register_wrap(omniObject *obj) {
+omniLC::_wrap_proxy::_register_wrap(omniObject *obj) {
   {
     omniRopeAndKey l;
     obj->getRopeAndKey(l);
     _wrapped_key = *((omniObjectKey *)l.key());
   }
   omniObject::wrappedObjectTableLock.lock();
-  _wrap_proxy **p = &omniObject::wrappedObjectTable[omniORB::hash(_wrapped_key)];
+  omniLC::_wrap_proxy **p = (omniLC::_wrap_proxy **)
+    (&omniObject::wrappedObjectTable[omniORB::hash(_wrapped_key)]);
   _next_wrap_proxy = *p;
   *p = this;
   omniObject::wrappedObjectTableLock.unlock();
 }
 
 void
-_wrap_proxy::_unregister_wrap() {
+omniLC::_wrap_proxy::_unregister_wrap() {
   omniObject::wrappedObjectTableLock.lock();
-  _wrap_proxy **p = &omniObject::wrappedObjectTable[omniORB::hash(_wrapped_key)];
+  omniLC::_wrap_proxy **p = (omniLC::_wrap_proxy **)
+    (&omniObject::wrappedObjectTable[omniORB::hash(_wrapped_key)]);
   while (*p) {
     if (*p == this) {
       *p = _next_wrap_proxy;
@@ -65,7 +73,7 @@ _wrap_proxy::_unregister_wrap() {
 }
 
 void
-_wrap_proxy::_reset_wraps(omniObject *obj) {
+omniLC::_wrap_proxy::_reset_wraps(omniObject *obj) {
   omniObjectKey k;
   {
     omniRopeAndKey l;
@@ -73,7 +81,8 @@ _wrap_proxy::_reset_wraps(omniObject *obj) {
     k = *((omniObjectKey *)l.key());
   }
   omniObject::wrappedObjectTableLock.lock();
-  _wrap_proxy **p = &omniObject::wrappedObjectTable[omniORB::hash(k)];
+  omniLC::_wrap_proxy **p = (omniLC::_wrap_proxy **)
+    (&omniObject::wrappedObjectTable[omniORB::hash(k)]);
   while (*p) {
     if ((*p)->_wrapped_key == k) {
       (*p)->_reset_proxy();

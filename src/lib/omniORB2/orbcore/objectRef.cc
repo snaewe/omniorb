@@ -29,10 +29,13 @@
  
 /*
   $Log$
+  Revision 1.12  1997/12/10 11:39:19  sll
+  Updated life cycle runtime.
+
   Revision 1.11  1997/12/09 17:17:59  sll
   Updated to use the rope factory interfaces.
   Full support for late binding.
-
+ 
   Revision 1.9  1997/08/21 21:54:03  sll
   - fixed bug in disposeObject.
   - MarshalObjRef now always encode the repository ID of the most derived
@@ -50,6 +53,7 @@
 #include <omniORB2/CORBA.h>
 #include <omniORB2/proxyFactory.h>
 #include <ropeFactory.h>
+#include <omniORB2/omniLC.h>
 
 // The points to note are:
 //
@@ -101,7 +105,7 @@ omni_mutex          omniObject::objectTableLock;
 omniObject*         omniObject::proxyObjectTable = 0;
 omniObject**        omniObject::localObjectTable = 0;
 omni_mutex          omniObject::wrappedObjectTableLock;
-_wrap_proxy**       omniObject::wrappedObjectTable = 0;
+void**              omniObject::wrappedObjectTable = 0;
 proxyObjectFactory* proxyObjectFactory::proxyStubs = 0;
 
 
@@ -573,7 +577,9 @@ omniObject::globalInit()
   for (i=0; i<omniORB::hash_table_size; i++)
     omniObject::localObjectTable[i] = 0;
 
-  omniObject::wrappedObjectTable = new _wrap_proxy *[omniORB::hash_table_size];
+  omniObject::wrappedObjectTable = (void **)
+    (new omniLC::_wrap_proxy *[omniORB::hash_table_size]);
+
   for (i=0; i<omniORB::hash_table_size; i++)
     omniObject::wrappedObjectTable[i] = 0;
 }

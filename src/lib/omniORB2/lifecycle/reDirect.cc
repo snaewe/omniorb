@@ -28,15 +28,21 @@
 //
 
 // $Log$
-// Revision 1.1  1997/09/20 17:06:52  dpg1
+// Revision 1.2  1997/12/10 11:39:44  sll
+// Updated life cycle runtime.
+//
+// Revision 1.1  1997/09/20  17:06:52  dpg1
+// Initial revision
+//
+// Revision 1.1  1997/09/20  17:06:52  dpg1
 // Initial revision
 //
 
 
-#include <omniORB2/reDirect.h>
+#include <omniORB2/omniLC.h>
 
-reDirect::reDirect(CORBA::Object_ptr fwdref) 
-             : pd_fwdref(fwdref) 
+omniLC::reDirect::reDirect(CORBA::Object_ptr fwdref) 
+  : pd_fwdref(fwdref) 
 {
   if (CORBA::is_nil(fwdref)) 
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
@@ -45,8 +51,9 @@ reDirect::reDirect(CORBA::Object_ptr fwdref)
   this->PR_setobj(this);
 }
 
-reDirect::reDirect(CORBA::Object_ptr fwdref, const omniORB::objectKey& mykey)
-             : pd_fwdref(fwdref)
+omniLC::reDirect::reDirect(CORBA::Object_ptr fwdref,
+			   const omniORB::objectKey& mykey)
+  : pd_fwdref(fwdref)
 {
   if (CORBA::is_nil(fwdref)) 
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
@@ -58,37 +65,37 @@ reDirect::reDirect(CORBA::Object_ptr fwdref, const omniORB::objectKey& mykey)
 }
 
 CORBA::Object_ptr
-reDirect::forwardReference() const
+omniLC::reDirect::forwardReference() const
 {
   return CORBA::Object::_duplicate(pd_fwdref);
 }
 
 CORBA::Object_ptr
-reDirect::_this()
+omniLC::reDirect::_this()
 { 
   return CORBA::Object::_duplicate(this); 
 }
 
 void 
-reDirect::_obj_is_ready(CORBA::BOA_ptr boa)
+omniLC::reDirect::_obj_is_ready(CORBA::BOA_ptr boa)
 { 
   boa->obj_is_ready(this);
 }
 
 CORBA::BOA_ptr
-reDirect::_boa()
+omniLC::reDirect::_boa()
 { 
   return CORBA::BOA::getBOA();
 }
 
 void
-reDirect::_dispose()
+omniLC::reDirect::_dispose()
 { 
   _boa()->dispose(this);
 }
   
 omniORB::objectKey
-reDirect::_key()
+omniLC::reDirect::_key()
 {
   omniRopeAndKey l;
   getRopeAndKey(l);
@@ -96,7 +103,7 @@ reDirect::_key()
 }
 
 CORBA::Boolean
-reDirect::dispatch(GIOP_S &s, const char *,CORBA::Boolean response)
+omniLC::reDirect::dispatch(GIOP_S &s, const char *,CORBA::Boolean response)
 {
   s.RequestReceived(1);
 
