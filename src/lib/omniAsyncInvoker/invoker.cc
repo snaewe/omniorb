@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2001/07/31 15:56:48  sll
+  Make sure pd_nthreads is kept in sync with the actual no. of threads
+  serving the Anytime tasks.
+
   Revision 1.1.2.3  2001/06/13 20:08:13  sll
   Minor update to make the ORB compiles with MSVC++.
 
@@ -138,6 +142,7 @@ public:
     }
 
     pd_pool->pd_totalthreads--;
+    pd_pool->pd_nthreads--;
     if (pd_pool->pd_totalthreads == 0) {
       pd_pool->pd_cond->signal();
     }
@@ -214,12 +219,14 @@ omniAsyncInvoker::insert(omniTask* t) {
       else {
 	if (pd_nthreads < pd_maxthreads) {
 	  try {
-	    omniAsyncWorker* w = new omniAsyncWorker(this,0);
 	    pd_nthreads++;
 	    pd_totalthreads++;
+	    omniAsyncWorker* w = new omniAsyncWorker(this,0);
 	  }
 	  catch (...) {
 	    // Cannot start a new thread.
+	    pd_nthreads--;
+	    pd_totalthreads--;
 	  }
 	}
 	t->enq(pd_anytime_tq);
@@ -238,11 +245,12 @@ omniAsyncInvoker::insert(omniTask* t) {
       }
       else {
 	try {
-	  omniAsyncWorker* w = new omniAsyncWorker(this,t);
 	  pd_totalthreads++;
+	  omniAsyncWorker* w = new omniAsyncWorker(this,t);
 	}
 	catch(...) {
 	  // Cannot start a new thread.
+	  pd_totalthreads--;
 	  return 0;
 	}
       }
@@ -263,7 +271,7 @@ omniAsyncInvoker::cancel(omniTask* t) {
 
   omni_mutex_lock sync(*pd_lock);
 
- 	omniTaskLink* l;
+  omniTaskLink* l;
 
   for (l = pd_anytime_tq.next; l != &pd_anytime_tq; l =l->next) {
     if ((omniTask*)l == t) {

@@ -1,3 +1,12 @@
+Tue Jul 31 16:51:49 BST 2001 sll
+================================
+
+- Fixed bug so that invoker wouldn't stop dispatching threads to do 
+  AnyTime tasks.
+ 
+src/lib/omniAsyncInvoker/invoker.cc
+
+
 Tue Jul 31 09:58:07 BST 2001 dpg1
 =================================
 
