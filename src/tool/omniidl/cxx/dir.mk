@@ -176,6 +176,7 @@ PYPREFIX  := $(subst program files,progra~1,$(subst \,/,$(PYPREFIX1)))
 PYVERSION := $(shell $(PYTHON) -c 'import sys; print sys.version[:3]')
 PYINCDIR  := $(PYPREFIX)/include
 PYLIBDIR  := $(PYPREFIX)/libs $(PYPREFIX)/lib/x86_win32
+PYLIB     := python$(subst .,,$(PYVERSION)).lib
 
 DIR_CPPFLAGS += -I$(PYINCDIR) -I$(PYINCDIR)/python$(PYVERSION) \
                 -DPYTHON_INCLUDE="<Python.h>"
@@ -193,7 +194,7 @@ clean::
 	$(RM) $(omniidl)
 
 $(omniidl): $(OBJS) $(PYOBJS)
-	@(libs="python15.lib"; $(CXXExecutable))
+	@(libs="$(PYLIB)"; $(CXXExecutable))
 
 endif
 
@@ -209,7 +210,7 @@ DIR_CPPFLAGS += -I. -I/usr/local/include -DNO_STRCASECMP
 
 lib = _omniidlmodule.so
 libinit = init_omniidl
-py_exp = /usr/local/lib/python1.5/config/python.exp
+py_exp = /usr/local/lib/python$(PYVERSION)/config/python.exp
 
 ifeq ($(notdir $(CXX)),xlC_r)
 
@@ -380,7 +381,7 @@ export:: $(lib)
 # 	$(RM) $(omniidl)
 #
 # $(omniidl): $(OBJS) $(PYOBJS)
-# 	@(libs="-lpython1.5 -lpthread"; $(CXXExecutable))
+# 	@(libs="-lpython$(PYVERSION) -lpthread"; $(CXXExecutable))
 
 
 endif
