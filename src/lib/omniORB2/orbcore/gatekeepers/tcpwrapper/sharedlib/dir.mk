@@ -165,6 +165,45 @@ endif
 endif
 
 #############################################################################
+#   Make rules for  Linux egcs                                              #
+#############################################################################
+
+ifdef Linux
+ifdef EgcsMajorVersion
+
+DIR_CPPFLAGS += -fPIC
+
+libname = libtcpwrapGK.so
+soname  = $(libname).$(minor_version)
+lib = $(soname).$(micro_version)
+
+$(lib): $(OBJS) $(CXXOBJS)
+	(set -x; \
+        $(RM) $@; \
+        $(CXX) -shared -Wl,-soname,$(soname) -o $@ $(IMPORT_LIBRARY_FLAGS) \
+         $(filter-out $(LibSuffixPattern),$^) $(OMNITHREAD_LIB); \
+       )
+
+all:: $(lib)
+
+clean::
+	$(RM) $(lib)
+
+export:: $(lib)
+	@$(ExportLibrary)
+	@(set -x; \
+          cd $(EXPORT_TREE)/$(LIBDIR); \
+          $(RM) $(soname); \
+          ln -s $(lib) $(soname); \
+          $(RM) $(libname); \
+          ln -s $(soname) $(libname); \
+         )
+
+endif
+endif
+
+
+#############################################################################
 #   Make rules for SGI Irix 6.2                                             #
 #############################################################################
 
