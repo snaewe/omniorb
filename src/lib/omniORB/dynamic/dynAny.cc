@@ -29,6 +29,10 @@
 
 /* 
    $Log$
+   Revision 1.8  1999/07/20 14:22:58  djr
+   Accept nil ref in insert_reference().
+   Allow DynAny with type tk_void.
+
    Revision 1.7  1999/06/18 21:01:11  sll
    Use TypeCode equivalent() instead of equal().
 
@@ -538,8 +542,6 @@ DynAnyImpl::insert_reference(CORBA::Object_ptr value)
 {
   if ( !CORBA::Object::PR_is_valid(value) )
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-
-  if( CORBA::is_nil(value) )  throw CORBA::DynAny::InvalidValue();
 
   Lock sync(this);
   CORBA::Object::marshalObjRef(value, doWrite(CORBA::tk_objref));
@@ -1070,8 +1072,6 @@ DynAnyConstrBase::insert_reference(CORBA::Object_ptr value)
 {
   if ( !CORBA::Object::PR_is_valid(value) )
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-
-  if( CORBA::is_nil(value) )  throw CORBA::DynAny::InvalidValue();
 
   Lock sync(this);
   CORBA::Object::marshalObjRef(value, writeCurrent(CORBA::tk_objref));
@@ -1837,8 +1837,6 @@ DynUnionImpl::insert_reference(CORBA::Object_ptr value)
 {
   if ( !CORBA::Object::PR_is_valid(value) )
     throw CORBA::BAD_PARAM(0,CORBA::COMPLETED_NO);
-
-  if( CORBA::is_nil(value) )  throw CORBA::DynAny::InvalidValue();
 
   Lock sync(this);
   CORBA::Object::marshalObjRef(value, writeCurrent(CORBA::tk_objref));
@@ -3114,6 +3112,7 @@ create_dyn_any(TypeCode_base* tc, CORBA::Boolean is_root)
 
   try {
     switch( tc->NP_kind() ) {
+    case CORBA::tk_void:
     case CORBA::tk_short:
     case CORBA::tk_long:
     case CORBA::tk_ushort:
@@ -3213,6 +3212,7 @@ CORBA::ORB::create_basic_dyn_any(TypeCode_ptr tc)
   TypeCode_base* aetc = TypeCode_base::aliasExpand(ToTcBase_Checked(tc));
 
   switch( aetc->kind() ) {
+  case CORBA::tk_void:
   case CORBA::tk_short:
   case CORBA::tk_long:
   case CORBA::tk_ushort:
