@@ -1,5 +1,14 @@
+Thu Aug 24 12:26:28 BST 2000 dpg1
+=================================
+
+- Typo in error message % format string
+
+src/tool/omniidl/cxx/idlscope.cc
+
+
 Wed Aug 23 18:26:48 BST 2000 dme
 ================================
+
 - Don't build debug DLLs on Win32 if BuildSharedLibrary is unset
 
 external_merge/mk/mklib.mk

@@ -28,6 +28,9 @@
 
 // $Id$
 // $Log$
+// Revision 1.11.2.4  2000/08/24 11:33:00  dpg1
+// Typo in error message % format string
+//
 // Revision 1.11.2.3  2000/08/04 09:10:27  dpg1
 // Fix look-up of escaped identifiers broken on 19 July. (Bug 14.)
 //
@@ -925,7 +928,7 @@ addCallable(const char* identifier, Scope* scope, Decl* decl,
       {
 	IdlError(file, line,
 		 "Declaration of %s `%s' clashes with earlier declaration "
-		 "of %2 `%s'", decl->kindAsString(), identifier,
+		 "of %s `%s'", decl->kindAsString(), identifier,
 		 clash->decl()->kindAsString(), clash->identifier());
 	IdlErrorCont(clash->file(), clash->line(), "(%s `%s' declared here)",
 		     clash->decl()->kindAsString(), clash->identifier());
