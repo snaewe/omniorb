@@ -1,3 +1,15 @@
+Thu Aug 10 11:03:13 BST 2000 sll
+================================
+
+- For those platforms which cannot be unblocked from a recv() by a shutdown(),
+  now do poll() or select() for both incoming and outgoing strands.
+  This is necessary especialy for win32 or else the server side socket will not
+  shutdown until the client side close the socket. This wasn't done previously
+  as it was thought that shutdown() does have an effect on recv() if this is
+  a passive socket. This turns out to be wrong.
+
+src/lib/omniORB2/orbcore/tcpSocketMTfactory.cc
+
 Thu Aug 10 10:07:42 BST 2000 sll
 ================================
 

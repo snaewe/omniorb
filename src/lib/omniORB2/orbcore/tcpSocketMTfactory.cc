@@ -29,6 +29,14 @@
 
 /*
   $Log$
+  Revision 1.22.6.17  2000/08/10 10:10:56  sll
+  For those platforms which cannot be unblocked from a recv() by a
+  shutdown(), now do poll() or select() for both incoming and outgoing
+  strands.  This is necessary especialy for win32 or else the server side
+  socket will not shutdown until the client side close the socket. This
+  wasn't done previously as it was thought that shutdown() does have an
+  effect on recv() if this is a passive socket. This turns out to be wrong.
+
   Revision 1.22.6.16  2000/08/08 15:22:17  sll
   In realConnect(), now checks the exception fd_set in the select() call for an
   error condition. This is necessary because win32 differs from other
@@ -983,46 +991,43 @@ tcpSocketStrand::ll_recv(void* buf, size_t sz)
   while (1) {
 
 # if defined(USE_POLL_ON_RECV)
-    if (isOutgoing()) {
-      struct pollfd fds;
-      fds.fd = pd_socket;
-      fds.events = POLLIN;
+    struct pollfd fds;
+    fds.fd = pd_socket;
+    fds.events = POLLIN;
 
-      while (!(rx = poll(&fds,1,omniORB::scanGranularity()*1000) > 0)) {
-	if (rx == RC_SOCKET_ERROR && errno != EINTR) 
-	  break;
-      }
+    while (!(rx = poll(&fds,1,omniORB::scanGranularity()*1000) > 0)) {
+      if (rx == RC_SOCKET_ERROR && errno != EINTR) 
+	break;
     }
-# elif defined(USE_SELECT_ON_RECV)
-    if (isOutgoing()) {
-      do {
-	fd_set fds, efds;
-	FD_ZERO(&fds);
-	FD_ZERO(&efds);
-	FD_SET(pd_socket,&fds);
-	FD_SET(pd_socket,&efds);
-	struct timeval t;
-	t.tv_sec = omniORB::scanGranularity();
-	t.tv_usec = 0;
-	rx = select(pd_socket+1,&fds,0,&efds,&t);
-#   ifndef __WIN32__
-	if (rx == RC_SOCKET_ERROR && errno != EINTR)
-	  break;
-#   else
-	if (rx == RC_SOCKET_ERROR && ::WSAGetLastError() != WSAEINTR)
-	  break;
 
-	// Unfortunately, select() in WIN32 does not return with an error even
-	// when the socket has been shutdown. As a workaround, we
-	// check also if the strand is dying. Notice that reading the
-	// state of the strand is not synchronised. In the worst case,
-	// we may wait for an extra omniORB::scanGranularity() period before
-	// noticing that the strand is dying.
-	if (_strandIsDying()) break;
+# elif defined(USE_SELECT_ON_RECV)
+    do {
+      fd_set fds, efds;
+      FD_ZERO(&fds);
+      FD_ZERO(&efds);
+      FD_SET(pd_socket,&fds);
+      FD_SET(pd_socket,&efds);
+      struct timeval t;
+      t.tv_sec = omniORB::scanGranularity();
+      t.tv_usec = 0;
+      rx = select(pd_socket+1,&fds,0,&efds,&t);
+#   ifndef __WIN32__
+      if (rx == RC_SOCKET_ERROR && errno != EINTR)
+	break;
+#   else
+      if (rx == RC_SOCKET_ERROR && ::WSAGetLastError() != WSAEINTR)
+	break;
+
+      // Unfortunately, select() in WIN32 does not return with an error even
+      // when the socket has been shutdown. As a workaround, we
+      // check also if the strand is dying. Notice that reading the
+      // state of the strand is not synchronised. In the worst case,
+      // we may wait for an extra omniORB::scanGranularity() period before
+      // noticing that the strand is dying.
+      if (_strandIsDying()) break;
 
 #   endif
-      } while (rx <= 0);
-    }
+    } while (rx <= 0);
 # endif
     
     if ((rx = ::recv(pd_socket,(char*)buf,sz,0)) == RC_SOCKET_ERROR) {
