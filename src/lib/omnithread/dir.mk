@@ -42,7 +42,11 @@ lib = $(patsubst %,$(LibPattern),omnithread)
 CXXOPTIONS     = $(MSVC_STATICLIB_CXXNODEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_STATICLIB_CXXLINKNODEBUGOPTIONS)
 
-SUBDIRS = debug sharedlib
+SUBDIRS = debug
+
+ifndef EmbeddedSystem
+SUBDIRS +=sharedlib
+endif
 
 else
 
