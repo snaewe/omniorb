@@ -11,13 +11,16 @@
  
 /*
   $Log$
-  Revision 1.6  1997/03/10 12:10:20  sll
-  - Support for ORB and BOA initialisation arguments.
-  -  Add runtime configurable trace messages.
-  - omni::init will only throws CORBA::INITIALIZE exception if anything goes
-    wrong.
-  - Minor cleanup to accomodate the creation of a public API for omniORB2.
+  Revision 1.7  1997/04/21 10:24:00  ewc
+  Minor cosmetic change.
 
+// Revision 1.6  1997/03/10  12:10:20  sll
+// - Support for ORB and BOA initialisation arguments.
+// -  Add runtime configurable trace messages.
+// - omni::init will only throws CORBA::INITIALIZE exception if anything goes
+//   wrong.
+// - Minor cleanup to accomodate the creation of a public API for omniORB2.
+//
 // Revision 1.5  1997/02/19  11:03:29  ewc
 // Added support for NT
 //
@@ -170,7 +173,6 @@ omni::init(int &argc,char **argv,const char *orb_identifier)
       }
 
     // Get configuration information:
-    // XXXXX: To be replaced by System Registry functions
 
     configFile = new initFile;
     configFile->initialize();
