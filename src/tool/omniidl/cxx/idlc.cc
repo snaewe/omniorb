@@ -1,9 +1,9 @@
 // -*- c++ -*-
 //                          Package   : omniidl
-// idlconfig.h              Created on: 2000/03/06
+// idlc.cc                  Created on: 1999/10/20
 //			    Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 2000 AT&T Laboratories Cambridge
+//    Copyright (C) 1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl.
 //
@@ -24,35 +24,66 @@
 //
 // Description:
 //   
-//   Global configuration for omniidl
+//   Simple main() function to test front-end
 
 // $Id$
 // $Log$
-// Revision 1.1.2.3  2000/10/24 09:53:29  dpg1
+// Revision 1.1.2.1  2000/10/24 09:53:28  dpg1
 // Clean up omniidl system dependencies. Replace use of _CORBA_ types
 // with IDL_ types.
 //
-// Revision 1.1.2.2  2000/06/05 18:13:27  dpg1
-// Comments can be attached to subsequent declarations (with -K). Better
-// idea of most recent decl in operation declarations
-//
-// Revision 1.1.2.1  2000/03/06 15:03:48  dpg1
-// Minor bug fixes to omniidl. New -nf and -k flags.
+// Revision 1.1  1999/10/27 14:05:59  dpg1
+// *** empty log message ***
 //
 
-#ifndef _idlconfig_h_
-#define _idlconfig_h_
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream.h>
 
+#include <idlerr.h>
 #include <idlutil.h>
+#include <idlrepoId.h>
+#include <idlast.h>
+#include <idlscope.h>
+#include <idldump.h>
 
+extern int yydebug;
 
-class Config {
-public:
-  static IDL_Boolean quiet;           // Don't make any output
-  static IDL_Boolean forwardWarning;  // Warn about unresolved forwards
-  static IDL_Boolean keepComments;    // Keep comments from source
-  static IDL_Boolean commentsFirst;   // Comments come before declarations
-};
+int main(int argc, char** argv)
+{
+  if (argc != 1 && argc != 2) {
+    cerr << "Usage: " << argv[0] << " [idl file]" << endl;
+    exit(2);
+  }
 
+  //  yydebug = 1;
 
-#endif // _idlconfig_h_
+  FILE*       f;
+  const char* name;
+
+  if (argc == 2) {
+    name = argv[1];
+
+    if (!((f = fopen(name, "r")))) {
+      cerr << "Can't open " << name << endl;
+      exit(2);
+    }
+  }
+  else {
+    name = "<stdin>";
+    f    = stdin;
+  }
+
+  IDL_Boolean success = AST::process(f, name);
+
+  fclose(f);
+
+  if (!success) exit(1);
+
+  DumpVisitor v;
+  AST::tree()->accept(v);
+
+  cout << "Done." << endl;
+
+  return 0;
+}

@@ -1,9 +1,10 @@
 // -*- c++ -*-
+
 //                          Package   : omniidl
-// idlconfig.cc             Created on: 2000/03/06
+// idlerr.h                 Created on: 1999/10/11
 //			    Author    : Duncan Grisby (dpg1)
 //
-//    Copyright (C) 2000 AT&T Laboratories Cambridge
+//    Copyright (C) 1999 AT&T Laboratories Cambridge
 //
 //  This file is part of omniidl.
 //
@@ -24,26 +25,39 @@
 //
 // Description:
 //   
-//   Global configuration for omniidl
+//   IDL compiler error handling
 
 // $Id$
 // $Log$
-// Revision 1.1.2.3  2000/10/24 09:53:28  dpg1
+// Revision 1.2.2.1  2000/10/24 09:53:29  dpg1
 // Clean up omniidl system dependencies. Replace use of _CORBA_ types
 // with IDL_ types.
 //
-// Revision 1.1.2.2  2000/06/05 18:13:27  dpg1
-// Comments can be attached to subsequent declarations (with -K). Better
-// idea of most recent decl in operation declarations
+// Revision 1.2  1999/10/29 15:43:44  dpg1
+// Error counts now reset when Report...() is called.
 //
-// Revision 1.1.2.1  2000/03/06 15:03:48  dpg1
-// Minor bug fixes to omniidl. New -nf and -k flags.
+// Revision 1.1  1999/10/27 14:05:57  dpg1
+// *** empty log message ***
 //
 
-#include <idlconfig.h>
+#ifndef _idlerr_h_
+#define _idlerr_h_
 
+#include <idlutil.h>
 
-IDL_Boolean Config::quiet          = 0;
-IDL_Boolean Config::forwardWarning = 1;
-IDL_Boolean Config::keepComments   = 0;
-IDL_Boolean Config::commentsFirst  = 0;
+extern int errorCount;
+extern int warningCount;
+
+// Error report and continuation
+void IdlError(const char* file, int line, const char* fmt ...);
+void IdlErrorCont(const char* file, int line, const char* fmt ...);
+
+void IdlSyntaxError(const char* file, int line, const char* mesg);
+
+// Warning report and continuation
+void IdlWarning(const char* file, int line, const char* fmt ...);
+void IdlWarningCont(const char* file, int line, const char* fmt ...);
+
+IDL_Boolean IdlReportErrors();
+
+#endif // _idlerr_h_

@@ -835,8 +835,9 @@ char *yytext;
 
 // $Id$
 // $Log$
-// Revision 1.8.2.11  2000/08/29 10:20:27  dpg1
-// Operations and attributes now have repository ids.
+// Revision 1.8.2.12  2000/10/24 09:53:31  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
 //
 // Revision 1.7.2.8  2000/08/07 15:34:35  dpg1
 // Partial back-port of long long from omni3_1_develop.
@@ -906,18 +907,18 @@ char *yytext;
 #include <y_tab.h>
 #endif
 
-char*          currentFile;
-_CORBA_Boolean mainFile  = 1; // Are we processing the main file
-int            nestDepth = 0; // #include nesting depth
+char*       currentFile;
+IDL_Boolean mainFile  = 1; // Are we processing the main file
+int         nestDepth = 0; // #include nesting depth
 
 char octalToChar(char* s);
 char hexToChar(char* s);
 char escapeToChar(char* s);
-_CORBA_UShort octalToWChar(char* s);
-_CORBA_UShort hexToWChar(char* s);
-_CORBA_UShort escapeToWChar(char* s);
+IDL_UShort octalToWChar(char* s);
+IDL_UShort hexToWChar(char* s);
+IDL_UShort escapeToWChar(char* s);
 char* escapedStringToString(char* s);
-_CORBA_UShort* escapedStringToWString(char* s);
+IDL_UShort* escapedStringToWString(char* s);
 void parseLineDirective(char* s);
 int fixed(char* s);
 
@@ -2737,7 +2738,7 @@ char escapeToChar(char* s) {
   return s[1];
 }
 
-_CORBA_UShort octalToWChar(char* s) {
+IDL_UShort octalToWChar(char* s) {
   unsigned long ret = strtoul(s+1, 0, 8);
 
   if (ret > 255) { // This really is meant to be 255
@@ -2747,13 +2748,13 @@ _CORBA_UShort octalToWChar(char* s) {
   return ret;
 }
 
-_CORBA_UShort hexToWChar(char* s) {
+IDL_UShort hexToWChar(char* s) {
   unsigned long ret = strtoul(s+2, 0, 16);
 
   return ret;
 }
 
-_CORBA_UShort escapeToWChar(char* s) {
+IDL_UShort escapeToWChar(char* s) {
   switch (s[1]) {
   case 'n':  return '\n';
   case 't':  return '\t';
@@ -2827,10 +2828,10 @@ char* escapedStringToString(char* s) {
   return ret;
 }
 
-_CORBA_UShort* escapedStringToWString(char* s) {
-  int            len = strlen(s);
-  _CORBA_UShort* ret = new _CORBA_UShort[len+1];
-  char           tmp[8];
+IDL_UShort* escapedStringToWString(char* s) {
+  int         len = strlen(s);
+  IDL_UShort* ret = new IDL_UShort[len+1];
+  char        tmp[8];
 
   int from, to, i;
 

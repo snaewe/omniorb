@@ -8,6 +8,17 @@
 
 <buglist version="3.0.2">
 
+<bug id="4" date="Tue Oct 24 10:44:08 BST 2000" user="dpg1">
+
+  <summary>omniidl system dependency clean-up</summary>
+  <text>
+  Not really a bug, but some long-standing ugliness in omniidl's
+  system dependencies has been cleaned up. It's listed here because
+  any code which uses omniidl's C++ interface may need to be slightly
+  modified.
+  </text>
+</bug>
+
 <bug id="3" date="Mon Oct 16 18:56:53 BST 2000" user="djs">
 
   <summary>omniIDL/C++ backend tie template operation mapping error</summary>

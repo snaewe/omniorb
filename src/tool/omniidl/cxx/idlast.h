@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.8.2.7  2000/10/24 09:53:28  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
+//
 // Revision 1.8.2.6  2000/08/29 10:20:26  dpg1
 // Operations and attributes now have repository ids.
 //
@@ -163,9 +167,9 @@ class AST {
 public:
   AST();
   ~AST();
-  static AST*           tree();
-  static _CORBA_Boolean process(FILE* f, const char* name);
-  static void           clear();
+  static AST*        tree();
+  static IDL_Boolean process(FILE* f, const char* name);
+  static void        clear();
 
   Decl*       declarations()              { return declarations_; }
   const char* file()                      { return file_; }
@@ -204,7 +208,7 @@ public:
     D_FACTORY, D_VALUEFORWARD, D_VALUEBOX, D_VALUEABS, D_VALUE
   };
 
-  Decl(Kind kind, const char* file, int line, _CORBA_Boolean mainFile);
+  Decl(Kind kind, const char* file, int line, IDL_Boolean mainFile);
   virtual ~Decl();
 
   // Declaration kind
@@ -214,7 +218,7 @@ public:
   // Query interface
   const char*       file()       const { return file_; }
   int               line()       const { return line_; }
-  _CORBA_Boolean    mainFile()   const { return mainFile_; }
+  IDL_Boolean       mainFile()   const { return mainFile_; }
   const Scope*      inScope()    const { return inScope_; }
   const Pragma*     pragmas()    const { return pragmas_; }
   const Comment*    comments()   const { return comments_; }
@@ -247,7 +251,7 @@ private:
   Kind              kind_;
   char*             file_;
   int               line_;
-  _CORBA_Boolean    mainFile_;
+  IDL_Boolean       mainFile_;
   const Scope*      inScope_;
   Pragma*           pragmas_;
   Pragma*           lastPragma_;
@@ -276,20 +280,20 @@ public:
   const char*       prefix()      const { return prefix_; }
 
   void setRepoId(const char* repoId, const char* file, int line);
-  void setVersion(_CORBA_Short maj, _CORBA_Short min,
+  void setVersion(IDL_Short maj, IDL_Short min,
 		  const char* file, int line);
 
   // Static set functions taking a Decl as an argument
   static void setRepoId(Decl* d, const char* repoId,
 			const char* file, int line);
-  static void setVersion(Decl* d, _CORBA_Short maj, _CORBA_Short min,
+  static void setVersion(Decl* d, IDL_Short maj, IDL_Short min,
 			 const char* file, int line);
 
-  _CORBA_Boolean repoIdSet() const { return set_; }
-  const char*    rifile()    const { return rifile_; }
-  int            riline()    const { return riline_; }
-  _CORBA_Short   rimaj()     const { return maj_; }
-  _CORBA_Short   rimin()     const { return min_; }
+  IDL_Boolean repoIdSet() const { return set_; }
+  const char* rifile()    const { return rifile_; }
+  int         riline()    const { return riline_; }
+  IDL_Short   rimaj()     const { return maj_; }
+  IDL_Short   rimin()     const { return min_; }
 
 private:
   void genRepoId();
@@ -299,18 +303,18 @@ private:
   ScopedName*    scopedName_;
   char*          repoId_;
   char*          prefix_; // Prefix in force at time of declaration
-  _CORBA_Boolean set_;    // True if repoId or version has been manually set
+  IDL_Boolean    set_;    // True if repoId or version has been manually set
   char*          rifile_; // File where repoId or version was set
   int            riline_; // Line where repoId or version was set
-  _CORBA_Short   maj_;
-  _CORBA_Short   min_;
+  IDL_Short      maj_;
+  IDL_Short      min_;
 };
 
 
 // Module
 class Module : public Decl, public DeclRepoId {
 public:
-  Module(const char* file, int line, _CORBA_Boolean mainFile,
+  Module(const char* file, int line, IDL_Boolean mainFile,
 	 const char* identifier);
 
   virtual ~Module();
@@ -362,8 +366,8 @@ protected:
 // Interface
 class Interface : public Decl, public DeclRepoId {
 public:
-  Interface(const char* file, int line, _CORBA_Boolean mainFile,
-	    const char* identifier, _CORBA_Boolean abstract,
+  Interface(const char* file, int line, IDL_Boolean mainFile,
+	    const char* identifier, IDL_Boolean abstract,
 	    InheritSpec* inherits);
 
   virtual ~Interface();
@@ -371,7 +375,7 @@ public:
   const char* kindAsString() const { return "interface"; }
 
   // Queries
-  _CORBA_Boolean abstract() const { return abstract_; }
+  IDL_Boolean    abstract() const { return abstract_; }
   InheritSpec*   inherits() const { return inherits_; }
   Decl*          contents() const { return contents_; }
   Scope*         scope()    const { return scope_;    }
@@ -382,7 +386,7 @@ public:
   void finishConstruction(Decl* decls);
 
 private:
-  _CORBA_Boolean abstract_;
+  IDL_Boolean    abstract_;
   InheritSpec*   inherits_;
   Decl*          contents_;
   Scope*         scope_;
@@ -393,17 +397,17 @@ private:
 // Forward-declared interface
 class Forward : public Decl, public DeclRepoId {
 public:
-  Forward(const char* file, int line, _CORBA_Boolean mainFile,
-	  const char* identifier, _CORBA_Boolean abstract);
+  Forward(const char* file, int line, IDL_Boolean mainFile,
+	  const char* identifier, IDL_Boolean abstract);
 
   virtual ~Forward();
 
   const char* kindAsString() const { return "forward interface"; }
 
   // Query interface
-  _CORBA_Boolean abstract()   const { return abstract_; }
+  IDL_Boolean    abstract()   const { return abstract_; }
   Interface*     definition() const;
-  _CORBA_Boolean isFirst()    const { return !firstForward_; }
+  IDL_Boolean    isFirst()    const { return !firstForward_; }
   IdlType*       thisType()   const { return thisType_; }
 
   void accept(AstVisitor& visitor) { visitor.visitForward(this); }
@@ -411,7 +415,7 @@ public:
   void setDefinition(Interface* defn);
 
 private:
-  _CORBA_Boolean abstract_;
+  IDL_Boolean    abstract_;
   Interface*     definition_;
   Forward*       firstForward_;
   IdlType*       thisType_;
@@ -421,7 +425,7 @@ private:
 // Constant
 class Const : public Decl, public DeclRepoId {
 public:
-  Const(const char* file, int line, _CORBA_Boolean mainFile,
+  Const(const char* file, int line, IDL_Boolean mainFile,
 	IdlType* constType, const char* identifier, IdlExpr* expr);
 
   virtual ~Const();
@@ -432,61 +436,61 @@ public:
   IdlType*      constType() const { return constType_; }
   IdlType::Kind constKind() const { return constKind_; }
 
-  _CORBA_Short        constAsShort()      const;
-  _CORBA_Long         constAsLong()       const;
-  _CORBA_UShort       constAsUShort()     const;
-  _CORBA_ULong        constAsULong()      const;
-  _CORBA_Float        constAsFloat()      const;
-  _CORBA_Double       constAsDouble()     const;
-  _CORBA_Boolean      constAsBoolean()    const;
-  _CORBA_Char         constAsChar()       const;
-  _CORBA_Octet        constAsOctet()      const;
-  const char*         constAsString()     const;
+  IDL_Short        constAsShort()      const;
+  IDL_Long         constAsLong()       const;
+  IDL_UShort       constAsUShort()     const;
+  IDL_ULong        constAsULong()      const;
+  IDL_Float        constAsFloat()      const;
+  IDL_Double       constAsDouble()     const;
+  IDL_Boolean      constAsBoolean()    const;
+  IDL_Char         constAsChar()       const;
+  IDL_Octet        constAsOctet()      const;
+  const char*      constAsString()     const;
 #ifdef HAS_LongLong
-  _CORBA_LongLong     constAsLongLong()   const;
-  _CORBA_ULongLong    constAsULongLong()  const;
+  IDL_LongLong     constAsLongLong()   const;
+  IDL_ULongLong    constAsULongLong()  const;
 #endif
 #ifdef HAS_LongDouble
-  _CORBA_LongDouble   constAsLongDouble() const;
+  IDL_LongDouble   constAsLongDouble() const;
 #endif
-  _CORBA_WChar        constAsWChar()      const;
-  const _CORBA_WChar* constAsWString()    const;
-  _CORBA_Fixed        constAsFixed()      const;
-  Enumerator*         constAsEnumerator() const;
+  IDL_WChar        constAsWChar()      const;
+  const IDL_WChar* constAsWString()    const;
+  IDL_Fixed        constAsFixed()      const;
+  Enumerator*      constAsEnumerator() const;
 
   void accept(AstVisitor& visitor) { visitor.visitConst(this); }
 
 private:
   IdlType*       constType_;
-  _CORBA_Boolean delType_;
+  IDL_Boolean    delType_;
   IdlType::Kind  constKind_;
   union {
-    _CORBA_Short        short_;
-    _CORBA_Long         long_;
-    _CORBA_UShort       ushort_;
-    _CORBA_ULong        ulong_;
+    IDL_Short        short_;
+    IDL_Long         long_;
+    IDL_UShort       ushort_;
+    IDL_ULong        ulong_;
 #ifndef __VMS
-    _CORBA_Float        float_;
-    _CORBA_Double       double_;
+    IDL_Float        float_;
+    IDL_Double       double_;
 #else
-    float               float_;
-    double              double_;
+    float            float_;
+    double           double_;
 #endif
-    _CORBA_Boolean      boolean_;
-    _CORBA_Char         char_;
-    _CORBA_Octet        octet_;
-    char*               string_;
+    IDL_Boolean      boolean_;
+    IDL_Char         char_;
+    IDL_Octet        octet_;
+    char*            string_;
 #ifdef HAS_LongLong
-    _CORBA_LongLong     longlong_;
-    _CORBA_ULongLong    ulonglong_;
+    IDL_LongLong     longlong_;
+    IDL_ULongLong    ulonglong_;
 #endif
 #ifdef HAS_LongDouble
-    _CORBA_LongDouble   longdouble_;
+    IDL_LongDouble   longdouble_;
 #endif
-    _CORBA_WChar        wchar_;
-    _CORBA_WChar*       wstring_;
-    _CORBA_Fixed        fixed_;
-    Enumerator*         enumerator_;
+    IDL_WChar        wchar_;
+    IDL_WChar*       wstring_;
+    IDL_Fixed        fixed_;
+    Enumerator*      enumerator_;
   } v_;
 };
 
@@ -522,7 +526,7 @@ class Attribute;
 
 class Declarator : public Decl, public DeclRepoId {
 public:
-  Declarator(const char* file, int line, _CORBA_Boolean mainFile,
+  Declarator(const char* file, int line, IDL_Boolean mainFile,
 	     const char* identifier, ArraySize* sizes);
 
   virtual ~Declarator();
@@ -553,8 +557,8 @@ private:
 
 class Typedef : public Decl {
 public:
-  Typedef(const char* file, int line, _CORBA_Boolean mainFile,
-	  IdlType* aliasType, _CORBA_Boolean constrType,
+  Typedef(const char* file, int line, IDL_Boolean mainFile,
+	  IdlType* aliasType, IDL_Boolean constrType,
 	  Declarator* declarators);
 
   virtual ~Typedef();
@@ -563,15 +567,15 @@ public:
 
   // Queries
   IdlType*       aliasType()   const { return aliasType_; }
-  _CORBA_Boolean constrType()  const { return constrType_; }
+  IDL_Boolean    constrType()  const { return constrType_; }
   Declarator*    declarators() const { return declarators_; }
 
   void accept(AstVisitor& visitor) { visitor.visitTypedef(this); }
 
 private:
   IdlType*       aliasType_;
-  _CORBA_Boolean delType_;
-  _CORBA_Boolean constrType_;
+  IDL_Boolean    delType_;
+  IDL_Boolean    constrType_;
   Declarator*    declarators_;
 };
 
@@ -579,8 +583,8 @@ private:
 // Struct member
 class Member : public Decl {
 public:
-  Member(const char* file, int line, _CORBA_Boolean mainFile,
-	 IdlType* memberType, _CORBA_Boolean constrType,
+  Member(const char* file, int line, IDL_Boolean mainFile,
+	 IdlType* memberType, IDL_Boolean constrType,
 	 Declarator* declarators);
   virtual ~Member();
 
@@ -588,15 +592,15 @@ public:
 
   // Queries
   IdlType*       memberType()  const { return memberType_; }
-  _CORBA_Boolean constrType()  const { return constrType_; }
+  IDL_Boolean    constrType()  const { return constrType_; }
   Declarator*    declarators() const { return declarators_; }
 
   void accept(AstVisitor& visitor) { visitor.visitMember(this); }
 
 private:
   IdlType*       memberType_;
-  _CORBA_Boolean delType_;
-  _CORBA_Boolean constrType_;
+  IDL_Boolean    delType_;
+  IDL_Boolean    constrType_;
   Declarator*    declarators_;
 };
 
@@ -605,7 +609,7 @@ private:
 // Struct
 class Struct : public Decl, public DeclRepoId {
 public:
-  Struct(const char* file, int line, _CORBA_Boolean mainFile,
+  Struct(const char* file, int line, IDL_Boolean mainFile,
 	 const char* identifier);
   virtual ~Struct();
 
@@ -614,8 +618,8 @@ public:
   // Queries
   Member*        members()   const { return members_; }
   IdlType*       thisType()  const { return thisType_; }
-  _CORBA_Boolean recursive() const { return recursive_; }
-  _CORBA_Boolean finished()  const { return finished_; }
+  IDL_Boolean    recursive() const { return recursive_; }
+  IDL_Boolean    finished()  const { return finished_; }
 
   void accept(AstVisitor& visitor) { visitor.visitStruct(this); }
 
@@ -626,15 +630,15 @@ public:
 private:
   Member*        members_;
   IdlType*       thisType_;
-  _CORBA_Boolean recursive_;
-  _CORBA_Boolean finished_;
+  IDL_Boolean    recursive_;
+  IDL_Boolean    finished_;
 };
 
 
 // Exception
 class Exception : public Decl, public DeclRepoId {
 public:
-  Exception(const char* file, int line, _CORBA_Boolean mainFile,
+  Exception(const char* file, int line, IDL_Boolean mainFile,
 	    const char* identifier);
   virtual ~Exception();
 
@@ -655,61 +659,61 @@ private:
 // Union case label
 class CaseLabel : public Decl {
 public:
-  CaseLabel(const char* file, int line, _CORBA_Boolean mainFile,
+  CaseLabel(const char* file, int line, IDL_Boolean mainFile,
 	    IdlExpr* value);
   virtual ~CaseLabel();
 
   const char* kindAsString() const { return "case label"; }
 
-  _CORBA_Short        labelAsShort()      const;
-  _CORBA_Long         labelAsLong()       const;
-  _CORBA_UShort       labelAsUShort()     const;
-  _CORBA_ULong        labelAsULong()      const;
-  _CORBA_Boolean      labelAsBoolean()    const;
-  _CORBA_Char         labelAsChar()       const;
+  IDL_Short        labelAsShort()      const;
+  IDL_Long         labelAsLong()       const;
+  IDL_UShort       labelAsUShort()     const;
+  IDL_ULong        labelAsULong()      const;
+  IDL_Boolean      labelAsBoolean()    const;
+  IDL_Char         labelAsChar()       const;
 #ifdef HAS_LongLong
-  _CORBA_LongLong     labelAsLongLong()   const;
-  _CORBA_ULongLong    labelAsULongLong()  const;
+  IDL_LongLong     labelAsLongLong()   const;
+  IDL_ULongLong    labelAsULongLong()  const;
 #endif
-  _CORBA_WChar        labelAsWChar()      const;
-  Enumerator*         labelAsEnumerator() const;
+  IDL_WChar        labelAsWChar()      const;
+  Enumerator*      labelAsEnumerator() const;
 
-  inline _CORBA_Boolean isDefault() const { return isDefault_; }
-  IdlType::Kind         labelKind() const { return labelKind_; }
+  inline IDL_Boolean isDefault() const { return isDefault_; }
+  IdlType::Kind      labelKind() const { return labelKind_; }
 
   void accept(AstVisitor& visitor) { visitor.visitCaseLabel(this); }
 
   void setType(IdlType* type);
-  void setDefaultShort     (_CORBA_Short     v) { v_.short_      = v; }
-  void setDefaultLong      (_CORBA_Long      v) { v_.long_       = v; }
-  void setDefaultUShort    (_CORBA_UShort    v) { v_.ushort_     = v; }
-  void setDefaultULong     (_CORBA_ULong     v) { v_.ulong_      = v; }
-  void setDefaultBoolean   (_CORBA_Boolean   v) { v_.boolean_    = v; }
-  void setDefaultChar      (_CORBA_Char      v) { v_.char_       = v; }
+  void setDefaultShort     (IDL_Short     v) { v_.short_      = v; }
+  void setDefaultLong      (IDL_Long      v) { v_.long_       = v; }
+  void setDefaultUShort    (IDL_UShort    v) { v_.ushort_     = v; }
+  void setDefaultULong     (IDL_ULong     v) { v_.ulong_      = v; }
+  void setDefaultBoolean   (IDL_Boolean   v) { v_.boolean_    = v; }
+  void setDefaultChar      (IDL_Char      v) { v_.char_       = v; }
 #ifdef HAS_LongLong
-  void setDefaultLongLong  (_CORBA_LongLong  v) { v_.longlong_   = v; }
-  void setDefaultULongLong (_CORBA_ULongLong v) { v_.ulonglong_  = v; }
+  void setDefaultLongLong  (IDL_LongLong  v) { v_.longlong_   = v; }
+  void setDefaultULongLong (IDL_ULongLong v) { v_.ulonglong_  = v; }
 #endif
-  void setDefaultWChar     (_CORBA_WChar     v) { v_.wchar_      = v; }
-  void setDefaultEnumerator(Enumerator*      v) { v_.enumerator_ = v; }
+  void setDefaultWChar     (IDL_WChar     v) { v_.wchar_      = v; }
+  void setDefaultEnumerator(Enumerator*   v) { v_.enumerator_ = v; }
 
 private:
   IdlExpr*       value_;
-  _CORBA_Boolean isDefault_;
+  IDL_Boolean isDefault_;
   IdlType::Kind  labelKind_;
   union {
-    _CORBA_Short        short_;
-    _CORBA_Long         long_;
-    _CORBA_UShort       ushort_;
-    _CORBA_ULong        ulong_;
-    _CORBA_Boolean      boolean_;
-    _CORBA_Char         char_;
+    IDL_Short        short_;
+    IDL_Long         long_;
+    IDL_UShort       ushort_;
+    IDL_ULong        ulong_;
+    IDL_Boolean      boolean_;
+    IDL_Char         char_;
 #ifdef HAS_LongLong
-    _CORBA_LongLong     longlong_;
-    _CORBA_ULongLong    ulonglong_;
+    IDL_LongLong     longlong_;
+    IDL_ULongLong    ulonglong_;
 #endif
-    _CORBA_WChar        wchar_;
-    Enumerator*         enumerator_;
+    IDL_WChar        wchar_;
+    Enumerator*      enumerator_;
   } v_;
 };
 
@@ -717,8 +721,8 @@ private:
 // Union case
 class UnionCase : public Decl {
 public:
-  UnionCase(const char* file, int line, _CORBA_Boolean mainFile,
-	    IdlType* caseType, _CORBA_Boolean constrType,
+  UnionCase(const char* file, int line, IDL_Boolean mainFile,
+	    IdlType* caseType, IDL_Boolean constrType,
 	    Declarator* declarator);
   virtual ~UnionCase();
 
@@ -727,7 +731,7 @@ public:
   // Queries
   CaseLabel*     labels()     const { return labels_; }
   IdlType*       caseType()   const { return caseType_; }
-  _CORBA_Boolean constrType() const { return constrType_; }
+  IDL_Boolean    constrType() const { return constrType_; }
   Declarator*    declarator() const { return declarator_; }
 
   void accept(AstVisitor& visitor) { visitor.visitUnionCase(this); }
@@ -737,8 +741,8 @@ public:
 private:
   CaseLabel*     labels_;
   IdlType*       caseType_;
-  _CORBA_Boolean delType_;
-  _CORBA_Boolean constrType_;
+  IDL_Boolean    delType_;
+  IDL_Boolean    constrType_;
   Declarator*    declarator_;
 };
 
@@ -746,7 +750,7 @@ private:
 // Union
 class Union : public Decl, public DeclRepoId {
 public:
-  Union(const char* file, int line, _CORBA_Boolean mainFile,
+  Union(const char* file, int line, IDL_Boolean mainFile,
 	const char* identifier);
   virtual ~Union();
 
@@ -754,25 +758,25 @@ public:
 
   // Queries
   IdlType*       switchType() const { return switchType_; }
-  _CORBA_Boolean constrType() const { return constrType_; }
+  IDL_Boolean    constrType() const { return constrType_; }
   UnionCase*     cases()      const { return cases_; }
   IdlType*       thisType()   const { return thisType_; }
-  _CORBA_Boolean recursive()  const { return recursive_; }
-  _CORBA_Boolean finished()   const { return finished_; }
+  IDL_Boolean    recursive()  const { return recursive_; }
+  IDL_Boolean    finished()   const { return finished_; }
 
   void accept(AstVisitor& visitor) { visitor.visitUnion(this); }
 
-  void finishConstruction(IdlType* switchType, _CORBA_Boolean constrType,
+  void finishConstruction(IdlType* switchType, IDL_Boolean constrType,
 			  UnionCase* cases);
   void setRecursive() { recursive_ = 1; }
 
 private:
   IdlType*       switchType_;
-  _CORBA_Boolean constrType_;
+  IDL_Boolean    constrType_;
   UnionCase*     cases_;
   IdlType*       thisType_;
-  _CORBA_Boolean recursive_;
-  _CORBA_Boolean finished_;
+  IDL_Boolean    recursive_;
+  IDL_Boolean    finished_;
 };
 
 
@@ -781,7 +785,7 @@ class Enum;
 
 class Enumerator : public Decl, public DeclRepoId {
 public:
-  Enumerator(const char* file, int line, _CORBA_Boolean mainFile,
+  Enumerator(const char* file, int line, IDL_Boolean mainFile,
 	     const char* identifier);
   virtual ~Enumerator();
 
@@ -803,7 +807,7 @@ private:
 // Enum
 class Enum : public Decl, public DeclRepoId {
 public:
-  Enum(const char* file, int line, _CORBA_Boolean mainFile,
+  Enum(const char* file, int line, IDL_Boolean mainFile,
        const char* identifier);
   virtual ~Enum();
 
@@ -827,15 +831,15 @@ private:
 // Attribute
 class Attribute : public Decl {
 public:
-  Attribute(const char* file, int line, _CORBA_Boolean mainFile,
-	    _CORBA_Boolean readonly, IdlType* attrType,
+  Attribute(const char* file, int line, IDL_Boolean mainFile,
+	    IDL_Boolean readonly, IdlType* attrType,
 	    Declarator* declarators);
   virtual ~Attribute();
 
   const char* kindAsString() const { return "attribute"; }
 
   // Queries
-  _CORBA_Boolean readonly()    const { return readonly_; }
+  IDL_Boolean    readonly()    const { return readonly_; }
   IdlType*       attrType()    const { return attrType_; }
   Declarator*    declarators() const { return declarators_; }
 				// All declarators must be simple
@@ -843,9 +847,9 @@ public:
   void accept(AstVisitor& visitor) { visitor.visitAttribute(this); }
 
 private:
-  _CORBA_Boolean readonly_;
+  IDL_Boolean    readonly_;
   IdlType*       attrType_;
-  _CORBA_Boolean delType_;
+  IDL_Boolean    delType_;
   Declarator*    declarators_;
 };
 
@@ -853,7 +857,7 @@ private:
 // Parameter
 class Parameter : public Decl {
 public:
-  Parameter(const char* file, int line, _CORBA_Boolean mainFile,
+  Parameter(const char* file, int line, IDL_Boolean mainFile,
 	    int direction, IdlType* paramType, const char* identifier);
   virtual ~Parameter();
 
@@ -870,7 +874,7 @@ public:
 private:
   int            direction_;
   IdlType*       paramType_;
-  _CORBA_Boolean delType_;
+  IDL_Boolean    delType_;
   char*          identifier_;
 };
 
@@ -924,15 +928,15 @@ protected:
 // Operation
 class Operation : public Decl, public DeclRepoId {
 public:
-  Operation(const char* file, int line, _CORBA_Boolean mainFile,
-	    _CORBA_Boolean oneway, IdlType* return_type,
+  Operation(const char* file, int line, IDL_Boolean mainFile,
+	    IDL_Boolean oneway, IdlType* return_type,
 	    const char* identifier);
   virtual ~Operation();
 
   const char* kindAsString() const { return "operation"; }
 
   // Queries
-  _CORBA_Boolean oneway()     const { return oneway_; }
+  IDL_Boolean    oneway()     const { return oneway_; }
   IdlType*       returnType() const { return returnType_; }
   Parameter*     parameters() const { return parameters_; }
   RaisesSpec*    raises()     const { return raises_; }
@@ -945,9 +949,9 @@ public:
 			  ContextSpec* contexts);
 
 private:
-  _CORBA_Boolean oneway_;
+  IDL_Boolean    oneway_;
   IdlType*       returnType_;
-  _CORBA_Boolean delType_;
+  IDL_Boolean    delType_;
   Parameter*     parameters_;
   RaisesSpec*    raises_;
   ContextSpec*   contexts_;
@@ -957,7 +961,7 @@ private:
 // Native
 class Native : public Decl, public DeclRepoId {
 public:
-  Native(const char* file, int line, _CORBA_Boolean mainFile,
+  Native(const char* file, int line, IDL_Boolean mainFile,
 	 const char* identifier);
   virtual ~Native();
 
@@ -971,9 +975,9 @@ public:
 
 class StateMember : public Decl {
 public:
-  StateMember(const char* file, int line, _CORBA_Boolean mainFile,
+  StateMember(const char* file, int line, IDL_Boolean mainFile,
 	      int memberAccess, IdlType* memberType,
-	      _CORBA_Boolean constrType, Declarator* declarators);
+	      IDL_Boolean constrType, Declarator* declarators);
   virtual ~StateMember();
 
   const char* kindAsString() const { return "state member"; }
@@ -982,7 +986,7 @@ public:
   int            memberAccess() const { return memberAccess_; }
 				// 0: public, 1: private
   IdlType*       memberType()   const { return memberType_; }
-  _CORBA_Boolean constrType()   const { return constrType_; }
+  IDL_Boolean    constrType()   const { return constrType_; }
   Declarator*    declarators()  const { return declarators_; }
 
   void accept(AstVisitor& visitor) { visitor.visitStateMember(this); }
@@ -990,14 +994,14 @@ public:
 private:
   int            memberAccess_;
   IdlType*       memberType_;
-  _CORBA_Boolean delType_;
-  _CORBA_Boolean constrType_;
+  IDL_Boolean    delType_;
+  IDL_Boolean    constrType_;
   Declarator*    declarators_;
 };
 
 class Factory : public Decl {
 public:
-  Factory(const char* file, int line, _CORBA_Boolean mainFile,
+  Factory(const char* file, int line, IDL_Boolean mainFile,
 	  const char* identifier);
   ~Factory();
 
@@ -1021,7 +1025,7 @@ private:
 // Base class for all the multifarious value types
 class ValueBase : public Decl, public DeclRepoId {
 public:
-  ValueBase(Decl::Kind k, const char* file, int line, _CORBA_Boolean mainFile,
+  ValueBase(Decl::Kind k, const char* file, int line, IDL_Boolean mainFile,
 	    const char* identifier);
   virtual ~ValueBase();
 };
@@ -1030,16 +1034,16 @@ public:
 // Forward declared value
 class ValueForward : public ValueBase {
 public:
-  ValueForward(const char* file, int line, _CORBA_Boolean mainFile,
-	       _CORBA_Boolean abstract, const char* identifier);
+  ValueForward(const char* file, int line, IDL_Boolean mainFile,
+	       IDL_Boolean abstract, const char* identifier);
   virtual ~ValueForward();
 
   const char* kindAsString() const { return "forward value"; }
 
   // Queries
-  _CORBA_Boolean abstract()   const { return abstract_; }
+  IDL_Boolean    abstract()   const { return abstract_; }
   ValueBase*     definition() const;
-  _CORBA_Boolean isFirst()    const { return !firstForward_; }
+  IDL_Boolean    isFirst()    const { return !firstForward_; }
   IdlType*       thisType()   const { return thisType_; }
 
   void accept(AstVisitor& visitor) { visitor.visitValueForward(this); }
@@ -1047,7 +1051,7 @@ public:
   void setDefinition(ValueBase* defn);
 
 private:
-  _CORBA_Boolean abstract_;
+  IDL_Boolean    abstract_;
   ValueBase*     definition_;
   ValueForward*  firstForward_;
   IdlType*       thisType_;
@@ -1056,23 +1060,23 @@ private:
 
 class ValueBox : public ValueBase {
 public:
-  ValueBox(const char* file, int line, _CORBA_Boolean mainFile,
+  ValueBox(const char* file, int line, IDL_Boolean mainFile,
 	   const char* identifier, IdlType* boxedType,
-	   _CORBA_Boolean constrType);
+	   IDL_Boolean constrType);
   virtual ~ValueBox();
 
   const char* kindAsString() const { return "value box"; }
 
   // Queries
   IdlType*       boxedType()  const { return boxedType_; }
-  _CORBA_Boolean constrType() const { return constrType_; }
+  IDL_Boolean    constrType() const { return constrType_; }
   IdlType*       thisType()   const { return thisType_; }
 
   void accept(AstVisitor& visitor) { visitor.visitValueBox(this); }
 
 private:
   IdlType*       boxedType_;
-  _CORBA_Boolean constrType_;
+  IDL_Boolean    constrType_;
   IdlType*       thisType_;
 };
 
@@ -1087,7 +1091,7 @@ public:
   Decl*             decl()        const { return decl_; }
   const Scope*      scope()       const { return scope_; }
   ValueInheritSpec* next()        const { return next_; }
-  _CORBA_Boolean    truncatable() const { return truncatable_; }
+  IDL_Boolean       truncatable() const { return truncatable_; }
 
   void append(ValueInheritSpec* is, const char* file, int line);
   void setTruncatable() { truncatable_ = 1; }
@@ -1099,7 +1103,7 @@ private:
 
 protected:
   ValueInheritSpec* next_;
-  _CORBA_Boolean    truncatable_;
+  IDL_Boolean       truncatable_;
 };
 
 
@@ -1122,7 +1126,7 @@ private:
 
 class ValueAbs : public ValueBase {
 public:
-  ValueAbs(const char* file, int line, _CORBA_Boolean mainFile,
+  ValueAbs(const char* file, int line, IDL_Boolean mainFile,
 	   const char* identifier, ValueInheritSpec* inherits,
 	   InheritSpec* supports);
   virtual ~ValueAbs();
@@ -1151,15 +1155,15 @@ private:
 
 class Value : public ValueBase {
 public:
-  Value(const char* file, int line, _CORBA_Boolean mainFile,
-	_CORBA_Boolean custom, const char* identifier,
+  Value(const char* file, int line, IDL_Boolean mainFile,
+	IDL_Boolean custom, const char* identifier,
 	ValueInheritSpec* inherits, InheritSpec* supports);
   virtual ~Value();
 
   const char* kindAsString() const { return "valuetype"; }
 
   // Queries
-  _CORBA_Boolean    custom()   const { return custom_; }
+  IDL_Boolean       custom()   const { return custom_; }
   ValueInheritSpec* inherits() const { return inherits_; }
   InheritSpec*      supports() const { return supports_; }
   Decl*             contents() const { return contents_; }
@@ -1171,7 +1175,7 @@ public:
   void finishConstruction(Decl* contents);
 
 private:
-  _CORBA_Boolean    custom_;
+  IDL_Boolean       custom_;
   ValueInheritSpec* inherits_;
   InheritSpec*      supports_;
   Decl*             contents_;

@@ -87,9 +87,9 @@
 #define YYDEBUG 1
 
 // Globals from lexer
-extern int            yylineno;
-extern char*          currentFile;
-extern _CORBA_Boolean mainFile;
+extern int         yylineno;
+extern char*       currentFile;
+extern IDL_Boolean mainFile;
 
 void yyerror(char *s) {
 }
@@ -114,7 +114,7 @@ ValueAbs* valueabs_hack = 0;
 typedef union {
   char*                    id_val;
   int                      int_val;
-  _CORBA_ULong             ulong_val;
+  IDL_ULong                ulong_val;
   IdlIntLiteral            int_literal_val;
 #ifndef __VMS
   IdlFloatLiteral          float_literal_val;
@@ -123,9 +123,9 @@ typedef union {
 #endif
   char                     char_val;
   char*                    string_val;
-  _CORBA_WChar             wchar_val;
-  _CORBA_WChar*            wstring_val;
-  _CORBA_Boolean           boolean_val;
+  IDL_WChar                wchar_val;
+  IDL_WChar*               wstring_val;
+  IDL_Boolean              boolean_val;
   int                      fixed_val; // ***
   IdlType*                 type_val;
   TypeSpec*                type_spec_val;
@@ -2233,7 +2233,7 @@ case 139:
 case 140:
 #line 878 "/local/dpg1/omni/30/src/tool/omniidl/cxx/idl.yy"
 {
-      yyval.wstring_val = new _CORBA_WChar [idl_wstrlen(yyvsp[-1].wstring_val) + idl_wstrlen(yyvsp[0].wstring_val) + 1];
+      yyval.wstring_val = new IDL_WChar [idl_wstrlen(yyvsp[-1].wstring_val) + idl_wstrlen(yyvsp[0].wstring_val) + 1];
       idl_wstrcpy(yyval.wstring_val, yyvsp[-1].wstring_val);
       idl_wstrcat(yyval.wstring_val, yyvsp[0].wstring_val);
       delete [] yyvsp[-1].wstring_val;

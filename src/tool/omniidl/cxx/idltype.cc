@@ -28,6 +28,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.5.2.2  2000/10/24 09:53:30  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
+//
 // Revision 1.5.2.1  2000/03/06 10:40:29  dpg1
 // Typo in string constant.
 //
@@ -113,7 +117,7 @@ scopedNameToType(const char* file, int line, const ScopedName* sn)
 }
 
 // Static type object pointers
-_CORBA_Boolean IdlType::initialised_             = 0;
+IDL_Boolean    IdlType::initialised_             = 0;
 BaseType*      BaseType::nullType                = 0;
 BaseType*      BaseType::voidType                = 0;
 BaseType*      BaseType::shortType               = 0;

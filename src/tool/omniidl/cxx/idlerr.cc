@@ -29,6 +29,10 @@
 
 // $Id$
 // $Log$
+// Revision 1.3.2.2  2000/10/24 09:53:29  dpg1
+// Clean up omniidl system dependencies. Replace use of _CORBA_ types
+// with IDL_ types.
+//
 // Revision 1.3.2.1  2000/03/06 15:03:48  dpg1
 // Minor bug fixes to omniidl. New -nf and -k flags.
 //
@@ -129,7 +133,7 @@ void IdlWarningCont(const char* file, int line, const char* fmt ...)
   }
 }
 
-_CORBA_Boolean
+IDL_Boolean
 IdlReportErrors()
 {
   if (!Config::quiet) {
@@ -150,8 +154,8 @@ IdlReportErrors()
       fprintf(stderr, ".\n");
   }
 
-  _CORBA_Boolean ret = (errorCount == 0);
-  errorCount         = 0;
-  warningCount       = 0;
+  IDL_Boolean ret = (errorCount == 0);
+  errorCount      = 0;
+  warningCount    = 0;
   return ret;
 }
