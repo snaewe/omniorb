@@ -146,7 +146,7 @@ int main(int argc, char **argv)
   for (i = 1; i < argc; i++) {
     makeCmd[nArgs++] = argv[i];
     if (!quiet) {
-      printf("'%s' ",makeCmd[i]);
+      printf("'%s' ",argv[i]);
     }
   }
 
