@@ -1,6 +1,12 @@
-
-Release Notes for omniORB 3.0.0 pre2  (22 February 2000)
+Release Notes for omniORB 3.0.0 pre3  (28 Jun 2000)
 ====================================
+
+For all intents and purposes, this is the release candidate for
+omniORB 3.0.0. This version has been tested on x86 Linux, Windows
+NT/2000, Solaris 2.5.1, Irix 6.5, HPUX 11.00. The purpose of producing
+this pre-release is to give our users a chance to check if there are
+any build problems remaining before we release 3.0.0. So please give
+it a try and report any build problems ASAP.
 
 The last release was 2.8.0 (31st August 1999).
 
@@ -9,6 +15,9 @@ Source code is available via anonymous CVS.  Please see:
       http://www.uk.research.att.com/omniORB/omniORB.html
       http://www.uk.research.att.com/omniORB/cvs.html
 
+
+If you have an existing build of omniORB 3, you must "make veryclean"
+or remove the tree and start again.
 
 NOTE the new section about omniidl and Python below.
 
@@ -20,6 +29,8 @@ This version of omniORB incorporates a major re-write of the core runtime.
 Key features include:
 
   o  support for the Portable Object Adapter (POA)
+  o  support for the Interoperable Naming Service (INS)
+  o  new IDL compiler
   o  identical semantics for local and remote object invocations
   o  location forwarding into and outof the local address space
   o  new dynamically growing object table (improves performance
@@ -30,33 +41,50 @@ Key features include:
       level requests and throwing of system exceptions
   o  lots of other stuff
 
-In theory I have merged all of the updates in the 2.8.0 release, and
-will continue to keep up-to-date with that.
 
-By default the shared runtime libraries are built with debugging
-information and no optimisation.  This is because I want you to find
-bugs!  The overhead is really not very great.  If you really need to
-build optimised libraries, then you need to take a number of steps to
-disable debug info:
+Changes since 3.0.0 pre 2
+-------------------------
 
-  o  comment out  '#define OMNIORB_ENABLE_LOCK_TRACES'  in
-      include/omniORB3/tracedthread.h
-  o  dissable the OMNIORB_ASSERT() macro in
-      include/omniORB3/omniInternal.h
-  o  do  'export subdir_makeflags="CXXDEBUGFLAGS=-O2"'  at
-      the command line before rebuilding all libraries and
-      applications.
+1. Support for the Interoperable Naming Service. See chapter 4 of the
+   omniORB manual for details.
 
-Note that if you don't rebuild all the libraries and applications after
-disabling the lock tracing code, you will certainly crash at some point.
-Please be very careful not to do this (I don't want it reported as a
-bug!).
+2. Added new omniIDL/C++ compiler backend flags & features:
 
-Please test it extensively!
+    -Wbd=suffix      : changes the DynSK.cc file suffix
+    -Wbkeep_inc_path : Preserves IDL #include path in generated C++ header
+    -Wbuse_quotes    : Uses "" rather than <> in C++ header #includes
+
+   Use 'omniidl -bcxx -u' to get the full list of command line options.
+
+3. Updated user manual
+
+4. Runtime thread debugging trace has been disabled. This results in a
+   noticeable performance improvement, especially in same address space
+   calls. (from 21usec to 6usec on Linux x86 PII 300).
+
+5. Fixed assignment to an element of a sequence of string and a sequence of
+   object reference. Previous version does not work if the compiler
+   does not do the obvious optimisation. Only DEC v5.6 C++ compiler is known
+   to be affected by this bug.
+
+6. Client side call timeout now works on Windows NT and HPUX 11.00.
+
+7. COMM_FAILURE exception propagated from the server side will be reported
+   as an exception to the application. This allows the invocation
+   code to distinguish between transport problems and COMM_FAILURE
+   propagated from the server side.
+
+8. Update omkdepend and the various win32 wrappers for Cygwin's new
+   "mounts v2" registry subtree.  Old Gnuwin32 mounts should still work.
+
+9. Merged OpenVMS port
+
+10. Lots of other minor changes and bug fixes. Refer to the <top>/update.log
+    file for details.
 
 
 Changes since 3.0.0 pre 1
--------------------------
+------------------------------
 
 1. New IDL compiler
 
@@ -333,3 +361,8 @@ David Riddoch
 
 Duncan Grisby
 <dgrisby@uk.research.att.com>
+
+-- 
+ -- Duncan Grisby  \  Research Engineer  --
+  -- AT&T Laboratories Cambridge          --
+   -- http://www.uk.research.att.com/~dpg1 --
