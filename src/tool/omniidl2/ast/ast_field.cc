@@ -128,7 +128,7 @@ AST_Field::AST_Field(AST_Decl::NodeType nt, AST_Type *ft,
  * Dump this AST_Field node to the ostream o
  */
 void
-AST_Field::dump(ostream &o)
+AST_Field::dump( std:: ostream &o)
 {
   pd_field_type->local_name()->dump(o);
   o << " ";

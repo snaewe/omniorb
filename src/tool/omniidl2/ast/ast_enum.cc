@@ -223,7 +223,7 @@ AST_EnumVal *AST_Enum::fe_add_enum_val(AST_EnumVal *t)
  * Dump this AST_Enum to the ostream o
  */
 void
-AST_Enum::dump(ostream &o)
+AST_Enum::dump( std:: ostream &o)
 {
   UTL_ScopeActiveIterator *i = new UTL_ScopeActiveIterator(this, IK_decls);
   AST_Decl		    *d;

@@ -90,7 +90,7 @@ public:
   DEF_NARROW_FROM_SCOPE(AST_Enum);
 
   // AST Dumping
-  virtual void			dump(ostream &);
+  virtual void			dump(std::ostream &);
 
   // Other operations
 

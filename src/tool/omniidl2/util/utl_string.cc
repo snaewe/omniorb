@@ -188,7 +188,7 @@ UTL_String::get_canonical_rep()
 
 // AST Dumping
 void
-UTL_String::dump(ostream &o)
+UTL_String::dump(std::ostream &o)
 {
   o << p_str;
 }

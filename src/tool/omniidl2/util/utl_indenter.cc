@@ -108,7 +108,7 @@ UTL_Indenter::decrease()
 
 // Produce white space to indent to current indentation level on ostream o
 void
-UTL_Indenter::skip_to(ostream &o)
+UTL_Indenter::skip_to(std::ostream &o)
 {
   long i;
 

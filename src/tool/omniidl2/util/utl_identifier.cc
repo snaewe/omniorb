@@ -133,7 +133,7 @@ Identifier::compare(Identifier *o,idl_bool ignore_case)
 // Dumping
 
 void
-Identifier::dump(ostream &o)
+Identifier::dump(std::ostream &o)
 {
   if (pv_string == NULL) return;
 

@@ -96,7 +96,7 @@ public:
   AST_Expression *label_val();
 
   // AST Dumping
-  virtual void			dump(ostream &o);
+  virtual void			dump(std::ostream &o);
 
 private:
   // Data

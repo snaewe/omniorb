@@ -293,7 +293,7 @@ AST_EnumVal *AST_Structure::fe_add_enum_val(AST_EnumVal *t)
  * Dump this AST_Structure node to the ostream o
  */
 void
-AST_Structure::dump(ostream &o)
+AST_Structure::dump( std:: ostream &o)
 {
   o << "struct ";
   AST_Decl::dump(o);

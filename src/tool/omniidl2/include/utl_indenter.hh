@@ -90,7 +90,7 @@ public:
   void increase();		// Increase indentation level
   void decrease();		// Decrease indentation level
 
-  void skip_to(ostream &o);	// Skip to indentation level stop
+  void skip_to(std::ostream &o);	// Skip to indentation level stop
 
 private:
   // Data

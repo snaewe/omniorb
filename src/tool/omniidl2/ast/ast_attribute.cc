@@ -109,7 +109,7 @@ AST_Attribute::AST_Attribute(idl_bool ro,
  * Dump this AST_Attribute to the ostream o
  */
 void
-AST_Attribute::dump(ostream &o)
+AST_Attribute::dump( std:: ostream &o)
 {
   o << (pd_readonly == I_TRUE ? "readonly" : "") << " attribute ";
   AST_Field::dump(o);

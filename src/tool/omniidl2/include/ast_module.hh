@@ -93,7 +93,7 @@ public:
   DEF_NARROW_FROM_SCOPE(AST_Module);
 
   // AST Dumping
-  virtual void			dump(ostream &o);
+  virtual void			dump(std::ostream &o);
 
 private:
   friend void fe_populate(AST_Module *m);

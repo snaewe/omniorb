@@ -78,7 +78,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 ** USE: Included from ast.hh
 */
 
-#include	<iostream.h>
 #include	<idl_fwd.hh>
 #include	<idl_narrow.hh>
 #include	<idl_bool.hh>
@@ -157,7 +156,7 @@ public:
   DEF_NARROW_FROM_DECL(AST_Decl);
 
   // AST Dumping
-  virtual void			dump(ostream &o);
+  virtual void			dump(std::ostream &o);
 
   // Other operations
 

@@ -121,7 +121,7 @@ AST_String::AST_String(AST_Expression *ms, long wide)
  * Dump this AST_String node to the ostream o
  */
 void
-AST_String::dump(ostream &o)
+AST_String::dump( std:: ostream &o)
 {
   o << "string <";
   pd_max_size->dump(o);

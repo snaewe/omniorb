@@ -151,7 +151,7 @@ AST_Root::fe_add_array(AST_Array *t)
  * Dump this AST_Root node to the ostream o
  */
 void
-AST_Root::dump(ostream &o)
+AST_Root::dump( std:: ostream &o)
 {
   UTL_Scope::dump(o);
 }

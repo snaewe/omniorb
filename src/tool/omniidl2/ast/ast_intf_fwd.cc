@@ -116,7 +116,7 @@ AST_InterfaceFwd::AST_InterfaceFwd(UTL_ScopedName *n, UTL_StrList *p)
  * Dump this AST_InterfaceFwd node to the ostream o
  */
 void
-AST_InterfaceFwd::dump(ostream &o)
+AST_InterfaceFwd::dump( std:: ostream &o)
 {
   o << "interface ";
   local_name()->dump(o);

@@ -504,7 +504,7 @@ AST_Typedef *AST_Interface::fe_add_typedef(AST_Typedef *t)
  * Dump this AST_Interface node to the ostream o
  */
 void
-AST_Interface::dump(ostream &o)
+AST_Interface::dump( std:: ostream &o)
 {
   long	i;
 

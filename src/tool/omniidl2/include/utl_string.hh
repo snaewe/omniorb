@@ -90,7 +90,7 @@ public:
   virtual ~UTL_String() {}
 
   // AST Dumping
-  virtual void		dump(ostream &o);
+  virtual void		dump(std::ostream &o);
 
   // Other Operations
 

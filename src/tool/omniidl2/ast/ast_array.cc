@@ -130,7 +130,7 @@ AST_Array::compute_dims(UTL_ExprList *ds, unsigned long nds)
  * Dump this AST_Array node to the ostream o
  */
 void
-AST_Array::dump(ostream &o)
+AST_Array::dump( std:: ostream &o)
 {
   unsigned long	i;
 

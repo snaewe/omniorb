@@ -102,7 +102,7 @@ public:
   DEF_NARROW_FROM_SCOPE(AST_Union);
 
   // AST Dumping
-  virtual void			dump(ostream &);
+  virtual void			dump(std::ostream &);
 
 private:
   // Data

@@ -129,7 +129,7 @@ AST_Argument::AST_Argument(Direction d, AST_Type *ft, UTL_ScopedName *n,
  * Dump this AST_Argument node to the ostream o
  */
 void
-AST_Argument::dump(ostream &o)
+AST_Argument::dump( std:: ostream &o)
 {
   o << direction_to_string(pd_direction) << " ";
   AST_Field::dump(o);

@@ -124,7 +124,7 @@ AST_UnionLabel::label_val()
  * Dump this AST_UnionLabel node to the ostream o
  */
 void
-AST_UnionLabel::dump(ostream &o)
+AST_UnionLabel::dump( std:: ostream &o)
 {
   if (pd_label_kind == UL_default)
     o << "default";

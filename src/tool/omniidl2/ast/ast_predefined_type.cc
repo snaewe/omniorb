@@ -109,7 +109,7 @@ AST_PredefinedType::AST_PredefinedType(PredefinedType t, UTL_ScopedName *n,
  * Dump this AST_PredefinedType node to the ostream o
  */
 void
-AST_PredefinedType::dump(ostream &o)
+AST_PredefinedType::dump( std:: ostream &o)
 {
   AST_Decl::dump(o);
 }

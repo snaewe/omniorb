@@ -106,7 +106,7 @@ AST_EnumVal::AST_EnumVal(unsigned long v, UTL_ScopedName *n, UTL_StrList *p)
  * Dump this AST_EnumVal to the ostream o
  */
 void
-AST_EnumVal::dump(ostream &o)
+AST_EnumVal::dump( std:: ostream &o)
 {
   AST_Constant::dump(o);
 }

@@ -133,7 +133,7 @@ UTL_StrList::copy()
 
 // AST Dumping
 void
-UTL_StrList::dump(ostream &o)
+UTL_StrList::dump(std::ostream &o)
 {
   char			      *s;
   UTL_StrlistActiveIterator *i = new UTL_StrlistActiveIterator(this);

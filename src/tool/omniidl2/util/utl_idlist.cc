@@ -126,7 +126,7 @@ UTL_IdList::last_component()
 
 // AST Dumping
 void
-UTL_IdList::dump(ostream &o)
+UTL_IdList::dump(std::ostream &o)
 {
   UTL_IdListActiveIterator	*i = new UTL_IdListActiveIterator(this);
   long				first = I_TRUE;

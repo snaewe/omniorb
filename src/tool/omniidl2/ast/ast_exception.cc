@@ -286,7 +286,7 @@ AST_EnumVal *AST_Exception::fe_add_enum_val(AST_EnumVal *t)
  * Dump this AST_Exception node to the ostream o
  */
 void
-AST_Exception::dump(ostream &o)
+AST_Exception::dump( std:: ostream &o)
 {
   o << "exception ";
   local_name()->dump(o);

@@ -114,7 +114,7 @@ public:
   DEF_NARROW_FROM_SCOPE(AST_Operation);
 
   // AST Dumping
-  virtual void			dump(ostream &o);
+  virtual void			dump(std::ostream &o);
 
 private:
   // Data

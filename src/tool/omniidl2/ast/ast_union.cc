@@ -519,7 +519,7 @@ AST_EnumVal *AST_Union::fe_add_enum_val(AST_EnumVal *t)
  * Dump this AST_Union node to the ostream o
  */
 void
-AST_Union::dump(ostream &o)
+AST_Union::dump( std:: ostream &o)
 {
   o << "union ";
   local_name()->dump(o);

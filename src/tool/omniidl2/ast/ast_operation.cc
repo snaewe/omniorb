@@ -249,7 +249,7 @@ AST_Argument *AST_Operation::fe_add_argument(AST_Argument *t)
  * Dump this AST_Operation node (an operation) to the ostream o
  */
 void
-AST_Operation::dump(ostream &o)
+AST_Operation::dump( std:: ostream &o)
 {
   UTL_ScopeActiveIterator   *i;
   UTL_StrlistActiveIterator *si;

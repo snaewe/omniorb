@@ -93,7 +93,7 @@ public:
   DEF_NARROW_FROM_DECL(AST_InterfaceFwd);
 
   // AST Dumping
-  virtual void		dump(ostream &);
+  virtual void		dump(std::ostream &);
 
 private:
   // Data

@@ -1126,7 +1126,7 @@ UTL_Scope::referenced(AST_Decl *e)
 
 // AST Dumping
 void
-UTL_Scope::dump(ostream &o)
+UTL_Scope::dump(std::ostream &o)
 {
   UTL_ScopeActiveIterator	*i;
   AST_Decl			*d;

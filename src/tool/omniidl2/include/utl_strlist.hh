@@ -96,7 +96,7 @@ public:
   UTL_StrList(String *s, UTL_StrList *cdr);
 
   // AST Dumping
-  virtual void		dump(ostream &o);
+  virtual void		dump(std::ostream &o);
 
   // Other Operations
 

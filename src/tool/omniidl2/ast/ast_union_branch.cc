@@ -106,7 +106,7 @@ AST_UnionBranch::AST_UnionBranch(AST_UnionLabel *fl, AST_Type *ft,
  * Dump this AST_UnionBranch node to the ostream o
  */
 void
-AST_UnionBranch::dump(ostream &o)
+AST_UnionBranch::dump( std:: ostream &o)
 {
   o << "case ";
   pd_label->dump(o);

@@ -181,7 +181,7 @@ public:
   void set_n(UTL_ScopedName *new_n);
 
   // AST Dumping
-  virtual void			dump(ostream &o);
+  virtual void			dump(std::ostream &o);
 
   // Other operations
 

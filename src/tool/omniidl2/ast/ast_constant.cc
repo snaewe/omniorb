@@ -183,7 +183,7 @@ AST_Constant::AST_Constant(AST_Expression::ExprType t,
  * Dump this AST_Constant node to the ostream o
  */
 void
-AST_Constant::dump(ostream &o)
+AST_Constant::dump( std:: ostream &o)
 {
   o << "const " << exprtype_to_string(pd_et) << " ";
   local_name()->dump(o);

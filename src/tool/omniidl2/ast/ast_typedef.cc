@@ -106,7 +106,7 @@ AST_Typedef::AST_Typedef(AST_Type *bt, UTL_ScopedName *n, UTL_StrList *p)
  * Dump this AST_Typedef node to the ostream o
  */
 void
-AST_Typedef::dump(ostream &o)
+AST_Typedef::dump( std:: ostream &o)
 {
   o << "typedef ";
   pd_base_type->dump(o);

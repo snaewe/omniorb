@@ -87,7 +87,6 @@ trademarks or registered trademarks of Sun Microsystems, Inc.
 ** USE: Included from util.hh
 */
 
-#include	<iostream.h>
 #include	<idl_fwd.hh>
 #include	<utl_list.hh>
 #include	<utl_identifier.hh>
@@ -101,7 +100,7 @@ class	UTL_IdList : public UTL_List
     virtual ~UTL_IdList() {}
 
     // AST Dumping
-    virtual void	dump(ostream &o);
+    virtual void	dump(std::ostream &o);
 
     // Other operations
 

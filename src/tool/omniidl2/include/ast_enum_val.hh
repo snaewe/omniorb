@@ -91,7 +91,7 @@ public:
   DEF_NARROW_FROM_DECL(AST_EnumVal);
 
   // AST Dumping
-  virtual void			dump(ostream &);
+  virtual void			dump(std::ostream &);
 };
 
 #endif           // _AST_ENUM_VAL_AST_ENUM_VAL_HH

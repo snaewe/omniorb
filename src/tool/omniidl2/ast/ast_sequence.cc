@@ -111,7 +111,7 @@ AST_Sequence::AST_Sequence(AST_Expression *ms, AST_Type *bt)
  * Dump this AST_Sequence node to the ostream o
  */
 void
-AST_Sequence::dump(ostream &o)
+AST_Sequence::dump( std:: ostream &o)
 {
   o << "sequence <";
   pd_base_type->dump(o);

@@ -172,7 +172,7 @@ AST_Decl::has_ancestor(AST_Decl *s)
  * Dump this AST_Decl to the ostream o
  */
 void
-AST_Decl::dump(ostream &o)
+AST_Decl::dump( std:: ostream &o)
 {
   pd_local_name->dump(o);
 }
