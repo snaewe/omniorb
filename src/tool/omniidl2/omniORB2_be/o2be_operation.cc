@@ -11,12 +11,16 @@
 
 /*
   $Log$
-  Revision 1.2  1997/01/13 15:30:24  sll
-  In server skeleton code, don't use operator->() for results and INOUT
-  arguments if the type is array_slice.
-  Bug fixed at various places to get to the true type of a typedef before
-  calling the narrow_from_decl function of the true type.
+  Revision 1.3  1997/01/23 17:06:56  sll
+  Now do the right thing to initialise typedefed arrays in result and out
+  arguments.
 
+// Revision 1.2  1997/01/13  15:30:24  sll
+// In server skeleton code, don't use operator->() for results and INOUT
+// arguments if the type is array_slice.
+// Bug fixed at various places to get to the true type of a typedef before
+// calling the narrow_from_decl function of the true type.
+//
   Revision 1.1  1997/01/08 17:32:59  sll
   Initial revision
 
@@ -290,15 +294,13 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in)
 	      {
 		ntype = ast2ArgMapping(a->field_type(),wOUT,mapping);
 		if (mapping.is_arrayslice) {
-		  IND(s); s << "_" << a->uqname() << " = new ";
-		  declareVarType(s,a->field_type(),0,1);
+		  IND(s); s << "_" << a->uqname() << " = ";
 		  AST_Decl *truetype = a->field_type();
 		  while (truetype->node_type() == AST_Decl::NT_typedef) {
 		    truetype = o2be_typedef::narrow_from_decl(truetype)->base_type();
 		  }
-		  s << "[";
-		  s << o2be_array::narrow_from_decl(truetype)->getSliceDim();
-		  s  << "];\n";
+		  s << o2be_array::narrow_from_decl(truetype)->fqname()
+		    << "_alloc();\n";
 		}
 		else if (mapping.is_reference && mapping.is_pointer) {
 		  IND(s); s << "_" << a->uqname() << " = new ";
@@ -314,15 +316,14 @@ o2be_operation::produce_proxy_skel(fstream &s,o2be_interface &defined_in)
 	  argMapping mapping;
 	  argType ntype = ast2ArgMapping(return_type(),wResult,mapping);
 	  if (mapping.is_arrayslice) {
-	    IND(s); s << "_result = new ";
-	    declareVarType(s,return_type(),0,1);
+	    IND(s); s << "_result = ";
 	    AST_Decl *truetype = return_type();
 	    while (truetype->node_type() == AST_Decl::NT_typedef) {
 	      truetype = o2be_typedef::narrow_from_decl(truetype)->base_type();
 	    }
-	    s << "[";
-	    s << o2be_array::narrow_from_decl(truetype)->getSliceDim();
-	    s  << "];\n";
+	    s << o2be_array::narrow_from_decl(truetype)->fqname()
+	      << "_alloc();\n";
+
 	  }
 	  else if (mapping.is_pointer) {
 	    IND(s); s << "_result = new ";
@@ -1780,7 +1781,7 @@ o2be_operation::produceMarshalCode(fstream &s, AST_Decl *decl,
 	      ndim = 0;
 	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
 		{
-		  s << "[_i" << ndim << "]";
+		  s << "[_i" << ndim << "]._ptr";
 		  ndim++;
 		}
 	      s << "," << netstream << ");\n";
@@ -2062,7 +2063,7 @@ o2be_operation::produceSizeCalculation(fstream &s, AST_Decl *decl,
 	      ndim = 0;
 	      while (ndim < o2be_array::narrow_from_decl(decl)->getNumOfDims())
 		{
-		  s << "[_i" << ndim << "]";
+		  s << "[_i" << ndim << "]._ptr";
 		  ndim++;
 		}
 	      s << "," << sizevar << ");\n";
