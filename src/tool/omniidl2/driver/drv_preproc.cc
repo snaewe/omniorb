@@ -149,7 +149,7 @@ DRV_cpp_init()
   // guessing from the file extension what language this file is
   char *p = strrchr(idl_global->cpp_location(),'g');
   if (p != NULL && strcmp(p,"gcc") == 0)
-    DRV_cpp_putarg("-xc");
+    DRV_cpp_putarg("-xc++");
   DRV_cpp_putarg("-E");
   DRV_cpp_putarg("-DIDL");
   DRV_cpp_putarg("-I.");
