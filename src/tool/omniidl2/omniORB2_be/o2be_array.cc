@@ -27,9 +27,13 @@
 
 /*
   $Log$
-  Revision 1.9  1998/01/27 16:33:34  ewc
-   Added support for type any and TypeCode
+  Revision 1.10  1998/03/09 17:14:39  ewc
+  Use new _Forany function to get to underlying array slice. Avoid
+  explicit operator call that caused problems for aC++ on HPUX
 
+// Revision 1.9  1998/01/27  16:33:34  ewc
+//  Added support for type any and TypeCode
+//
   Revision 1.8  1997/12/23 19:27:51  sll
   Bug fixes.
 
@@ -588,8 +592,7 @@ o2be_array::produce_skel (fstream &s, o2be_typedef *tdef)
     }
 
     IND(s); s << "_a.NP_replaceData(" << tdef->fqtcname() << ",_0RL_mbuf);\n";
-    IND(s); s << tdef->fqname() << "_free(_s.operator " << fqname() 
-	      << "_slice*());\n";
+    IND(s); s << tdef->fqname() << "_free(_s.NP_getSlice());\n";
     DEC_INDENT_LEVEL();
     IND(s); s << "}\n\n";    
 
