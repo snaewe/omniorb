@@ -30,6 +30,9 @@
 
 /*
   $Log$
+  Revision 1.19.2.10  2003/02/17 02:03:08  dgrisby
+  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
   Revision 1.19.2.9  2003/01/06 11:11:55  dgrisby
   New AddrInfo instead of gethostbyname.
 
@@ -117,6 +120,11 @@
 
 #if !defined(HAVE_STRCASECMP) || !defined(HAVE_STRNCASECMP)
 #  include <ctype.h>  //  for toupper and tolower.
+#endif
+
+#ifdef __vxWorks__
+#  include <hostLib.h>
+#  include <resolvLib.h>
 #endif
 
 #include "libcWrapper.h"

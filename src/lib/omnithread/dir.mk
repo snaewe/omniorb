@@ -31,6 +31,12 @@ CXXSRCS = mach.cc
 DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
 endif
 
+ifeq ($(ThreadSystem),vxWorks)
+CXXSRCS = vxWorks.cc
+OBJS = vxWorks.o
+DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
+endif
+
 LIB_NAME     := omnithread
 LIB_VERSION  := $(OMNITHREAD_VERSION)
 LIB_OBJS     := $(CXXSRCS:.cc=.o)

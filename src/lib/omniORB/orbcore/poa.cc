@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.37  2003/02/17 02:03:08  dgrisby
+  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
   Revision 1.2.2.36  2002/11/08 17:26:26  dgrisby
   Hang on shutdown with servant locators.
 
@@ -249,7 +252,11 @@
 #include <ctype.h>
 #include <stdio.h>
 #if defined(UnixArchitecture) || defined(__VMS)
-#  include <sys/time.h>
+#  if defined(__vxWorks__)
+#    include <time.h>
+#  else
+#    include <sys/time.h>
+#  endif
 #  include <unistd.h>
 #elif defined(NTArchitecture)
 #  include <sys/types.h>
@@ -3801,6 +3808,13 @@ generateUniqueId(CORBA::Octet* k)
     ftime(&v);
     hi = v.time;
     pid = (CORBA::Short) getpid();
+
+#elif  defined(__vxWorks__)
+    struct timespec v;
+    clock_gettime(CLOCK_REALTIME, &v);
+    hi = v.tv_sec;
+
+    pid = 0; // no processes in vxWorks
 #endif
 
     // Byte-swap the pid, so that if the counter in the lower 16

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.19  2003/02/17 02:03:10  dgrisby
+  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
   Revision 1.1.2.18  2003/01/06 11:11:55  dgrisby
   New AddrInfo instead of gethostbyname.
 
@@ -405,6 +408,14 @@ sslEndpoint::notifyReadable(SocketHandle_t fd) {
     if (sock == RC_SOCKET_ERROR) {
       return 0;
     }
+#if defined(__vxWorks__)
+    // vxWorks "forgets" socket options
+    static const int valtrue = 1;
+    if(setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,
+		  (const char*)&valtrue, sizeof(valtrue)) == ERROR) {
+      return 0;
+    }
+#endif
     pd_new_conn_socket = sock;
     setSelectable(pd_socket,1,0,1);
     return 1;

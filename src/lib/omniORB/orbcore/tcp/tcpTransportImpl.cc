@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.16  2003/02/17 02:03:11  dgrisby
+  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
   Revision 1.1.2.15  2002/11/06 11:31:21  dgrisby
   Old ETS patches that got lost; updates patches README.
 
@@ -210,7 +213,9 @@ tcpTransportImpl::addToIOR(const char* param) {
 }
 
 /////////////////////////////////////////////////////////////////////////
-#if   defined(UnixArchitecture)
+#if   defined(__vxWorks__)
+static void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs);
+#elif defined(UnixArchitecture)
 static void unix_get_ifinfo(omnivector<const char*>& ifaddrs);
 #elif defined(NTArchitecture)
 static void win32_get_ifinfo(omnivector<const char*>& ifaddrs);
@@ -221,7 +226,9 @@ void
 tcpTransportImpl::initialise() {
   if (!ifAddresses.empty()) return;
 
-#if   defined(UnixArchitecture)
+#if   defined(__vxWorks__)
+  vxworks_get_ifinfo(ifAddresses);
+#elif defined(UnixArchitecture)
   unix_get_ifinfo(ifAddresses);
 #elif defined(NTArchitecture)
   win32_get_ifinfo(ifAddresses);
@@ -240,7 +247,9 @@ const tcpTransportImpl _the_tcpTransportImpl;
 
 
 /////////////////////////////////////////////////////////////////////////
-#if   defined(UnixArchitecture)
+#if defined(UnixArchitecture)
+
+#  if !defined(__vxWorks__)
 
 static
 void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
@@ -308,7 +317,97 @@ void unix_get_ifinfo(omnivector<const char*>& ifaddrs) {
   }
 }
 
-#endif
+/////////////////////////////////////////////////////////////////////////
+#  else // __vxWorks__
+void vxworks_get_ifinfo(omnivector<const char*>& ifaddrs) {
+
+  const int iMAX_ADDRESS_ENTRIES = 50;
+  // Max. number of interface addresses.  There is 1 link layer address
+  // (AF_LINK) and at least 1 internet address (more if ifAddrAdd has been
+  // called) per configured network interface
+
+  const int iMAX_IFREQ_SIZE=36;
+  // ifreq entries have a name field (16 bytes) plus an address field,
+  // AF_LINK addresses (sockaddr_dl = 20 bytes)
+  // AF_INET addresses (sockaddr_in = 16 bytes)
+
+  // buffer into which to copy retieved configuration
+  char buffer[iMAX_ADDRESS_ENTRIES * iMAX_IFREQ_SIZE];
+
+  struct ifconf ifc; // used to retrieve interface configuration
+  struct ifreq *ifr; // interface structure pointer
+
+  int s;             // socket file descriptor
+  int entryLength;   // size of ifreq entry
+
+  char ifreqBuf[iMAX_IFREQ_SIZE]; // buffer for checking flags
+  struct sockaddr_dl *pDataLinkAddr;
+  int offset;
+
+  // create socket to issue ioctl call
+  if ((s = socket (AF_INET, SOCK_DGRAM,0)) == ERROR) {
+    if (omniORB::trace(1)) {
+      omniORB::logger log;
+      log << "Warning : socket (AF_INET, SOCK_DGRAM,0) failed. "
+	  << "Unable to obtain the list of all interface addresses.\n";
+    }
+    return;
+  }
+
+  // set up interface request structure array
+  ifc.ifc_len = sizeof (buffer);
+  ifc.ifc_buf = (char *)buffer;
+
+  // get configuration
+  if (ioctl (s, SIOCGIFCONF, (int)&ifc) < 0) {
+    if (omniORB::trace(1)) {
+      omniORB::logger log;
+      log << "Warning: ioctl SIOCGICONF failed. "
+	  << "Unable to obtain the list of all interface addresses.\n";
+    }
+    close (s);
+    return;
+  }
+
+  ifr = ifc.ifc_req;
+
+  // ioctl call changes ifc_len to the actual total bytes copied
+  entryLength = ifc.ifc_len;
+
+  for (entryLength = ifc.ifc_len; entryLength > 0;) {
+    offset = sizeof (ifr->ifr_name) + ifr->ifr_addr.sa_len;
+    bcopy ((caddr_t)ifr, ifreqBuf, offset);
+
+    if (ioctl (s, SIOCGIFFLAGS, (int)ifreqBuf) < 0) {
+      if (omniORB::trace(1)) {
+	omniORB::logger log;
+	log << "Warning: ioctl SIOCGIFFLAGS failed. "
+	    << "Unable to obtain the list of all interface addresses.\n";
+      }
+      close (s);
+      return;
+    }
+
+    if (((struct ifreq *)ifreqBuf)->ifr_flags & IFF_UP) {
+      if (ifr->ifr_addr.sa_family == AF_INET) {
+	// AF_INET entries are of type sockaddr_in = 16 bytes
+	struct sockaddr_in* iaddr = (struct sockaddr_in*) &(ifr->ifr_addr);
+	CORBA::String_var s;
+	s = tcpConnection::ip4ToString(iaddr->sin_addr.s_addr);
+	ifaddrs.push_back(s._retn());
+      }
+      
+      // ifreq structures have variable lengths
+      entryLength -= offset;
+      ifr = (struct ifreq *)((char *)ifr + offset);
+    }
+  }
+  close (s);
+}
+#  endif // __vxWorks__
+
+#endif // UnixArchitecture
+
 
 /////////////////////////////////////////////////////////////////////////
 #if defined(NTArchitecture)

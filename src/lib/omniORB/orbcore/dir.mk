@@ -47,8 +47,11 @@ CODESET_SRCS = \
 BUILTIN_STUB_SRCS = \
 	    bootstrapstub.cc \
 	    objectStub.cc \
-	    poastubs.cc \
-	    Namingstub.cc
+	    poastubs.cc 
+
+ifndef vxWorksPlatform
+BUILTIN_STUB_SRCS += Namingstub.cc
+endif
 
 ORB_SRCS =  \
 	    anonObject.cc \
@@ -127,6 +130,9 @@ else
   endif
   ifdef Win32Platform
     CONFIG_DEFAULT_LOCATION = C:\\OMNIORB.CFG
+  endif
+  ifdef vxWorksPlatform
+    CONFIG_DEFAULT_LOCATION = /a2/tmp/omniORB.cfg
   endif
 endif
 DIR_CPPFLAGS += -DCONFIG_DEFAULT_LOCATION='"$(CONFIG_DEFAULT_LOCATION)"'

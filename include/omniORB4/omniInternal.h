@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.15  2003/02/17 02:03:07  dgrisby
+  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
   Revision 1.2.2.14  2002/02/13 16:04:01  dpg1
   Rearrange includes so omnithread sees system dependencies.
 
@@ -188,7 +191,7 @@
 
 #include <stddef.h>
 
-#if !defined(__atmos__) && !defined(_WIN32) && !defined(__VMS) && !defined(__rtems__)
+#if !defined(__atmos__) && !defined(_WIN32) && !defined(__VMS) && !defined(__rtems__) && !defined(__vxWorks__)
 #include <strings.h>
 #include <string.h>
 #else

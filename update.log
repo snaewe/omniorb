@@ -1,3 +1,48 @@
+Mon Feb 17 01:19:05 GMT 2003 dgrisby
+====================================
+
+- Avoid deadlock with bidir connection shutdown.
+
+src/lib/omniORB/orbcore/giopRope.cc
+
+- Grow cdrMemoryStreams exponentially rather than linearly.
+
+src/lib/omniORB/orbcore/cdrMemoryStream.cc
+
+- Pipe to kick select thread (on Unix).
+
+include/omniORB4/internal/SocketCollection.h
+src/lib/omniORB/orbcore/SocketCollection.cc
+src/lib/omniORB/orbcore/giopServer.cc
+
+- vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
+etc/README
+etc/vxworks.zip                      -- new
+include/omnithread.h
+include/omniORB4/CORBA_sysdep.h
+include/omniORB4/CORBA_sysdep_trad.h
+include/omniORB4/linkHacks.h
+include/omniORB4/omniInternal.h
+include/omnithread/VxThread.h        -- new
+mk/vxWorks.mk                        -- new
+mk/platforms/arm_vxWorks_5.4.mk      -- new
+mk/platforms/x86_vxWorks_5.4.mk      -- new
+src/lib/omniORB/dynamic/policy.cc
+src/lib/omniORB/orbcore/corbaBoa.cc
+src/lib/omniORB/orbcore/dir.mk
+src/lib/omniORB/orbcore/libcWrapper.cc
+src/lib/omniORB/orbcore/poa.cc
+src/lib/omniORB/orbcore/tracedthread.cc
+src/lib/omniORB/orbcore/transportRules.cc
+src/lib/omniORB/orbcore/uri.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpTransportImpl.cc
+src/lib/omnithread/dir.mk
+src/lib/omnithread/vxWorks.cc        -- new
+
+
 Mon Feb  3 16:49:20 GMT 2003 dgrisby
 ====================================
 

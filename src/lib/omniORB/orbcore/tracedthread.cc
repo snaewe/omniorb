@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.11  2003/02/17 02:03:09  dgrisby
+  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
   Revision 1.2.2.10  2002/08/21 06:23:15  dgrisby
   Properly clean up bidir connections and ropes. Other small tweaks.
 
@@ -451,3 +454,9 @@ omni_tracedcondition::log(const char* name)
 
 
 #endif  // ifdef OMNIORB_ENABLE_LOCK_TRACES
+
+#if defined __vxWorks__
+#  ifndef OMNIORB_ENABLE_LOCK_TRACES
+void _dummy_TRACEDTHREAD_workaround_for_bug_in_munch_2_cdtor_c_ () {}
+#  endif  // ifndef OMNIORB_ENABLE_LOCK_TRACES
+#endif // __vxWorks__

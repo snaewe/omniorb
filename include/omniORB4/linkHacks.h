@@ -33,15 +33,50 @@
 #ifndef __LINKHACKS_H__
 #define __LINKHACKS_H__
 
+//
+// OMNI_EXPORT_LINK_FORCE_SYMBOL exports a symbol from a module
+//
+
+#if defined(__vxWorks__)
+
+#define OMNI_EXPORT_LINK_FORCE_SYMBOL(modname) \
+  int _omni_ ## modname ## _should_be_linked_but_is_not_; \
+  void _dummy_ ## modname ## _workaround_for_bug_in_munch_2_cdtor_c_ () {}
+
+#else
 
 #define OMNI_EXPORT_LINK_FORCE_SYMBOL(modname) \
   int _omni_ ## modname ## _should_be_linked_but_is_not_ = 0
 
+#endif
+
+
+//
+// OMNI_FORCE_LINK forces linking with a module
+//
+
+#if defined(OMNI_NEED_STATIC_FUNC_TO_FORCE_LINK)
+
+// Some compilers/linkers are too clever for their own good and remove
+// the unused reference to the forcelink symbol. Having a function
+// that references it seems to help.
+
+#define OMNI_FORCE_LINK(modname) \
+  extern int _omni_ ## modname ## _should_be_linked_but_is_not_; \
+  static int* _omni_ ## modname ## _forcelink_ = \
+                         &_omni_ ## modname ## _should_be_linked_but_is_not_; \
+  static int _omni_ ## modname ## _value_ () { \
+    return *(_omni_ ## modname ## _forcelink_); \
+  }
+
+#else
 
 #define OMNI_FORCE_LINK(modname) \
   extern int _omni_ ## modname ## _should_be_linked_but_is_not_; \
   static int* _omni_ ## modname ## _forcelink_ = \
                          &_omni_ ## modname ## _should_be_linked_but_is_not_
+
+#endif
 
 
 #endif // __LINKHACKS_H__

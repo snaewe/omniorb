@@ -32,6 +32,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.22  2003/02/17 02:03:07  dgrisby
+ vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
  Revision 1.2.2.21  2003/01/16 12:47:08  dgrisby
  Const cast macro. Thanks Matej Kenda.
 
@@ -159,6 +162,13 @@
 #  include <stdio.h>
 #  undef __ptr
 #endif
+
+
+#if defined(__sgi)
+#  define OMNI_NEED_STATIC_FUNC_TO_FORCE_LINK
+#endif
+
+
 
 
 //

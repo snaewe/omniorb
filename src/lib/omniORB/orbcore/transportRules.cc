@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.7  2003/02/17 02:03:09  dgrisby
+  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
   Revision 1.1.2.6  2003/01/06 11:11:55  dgrisby
   New AddrInfo instead of gethostbyname.
 
@@ -253,7 +256,7 @@ public:
     CORBA::String_var ipv4;
     ipv4 = extractIPv4(endpoint);
     if ((const char*)ipv4) {
-      CORBA::ULong address = inet_addr(ipv4);
+      CORBA::ULong address = inet_addr((const char*)ipv4);
       return (network_ == (address & netmask_));
     }
 
@@ -325,7 +328,7 @@ public:
     }
 
     if ( ! LibcWrapper::isipaddr(cp) ) return 0;
-    network = inet_addr(cp);
+    network = inet_addr((const char*)cp);
 
     if ( ! LibcWrapper::isipaddr(mask) ) return 0;
     netmask = inet_addr(mask);

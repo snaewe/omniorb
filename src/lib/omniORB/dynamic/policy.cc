@@ -28,6 +28,9 @@
  
 /*
   $Log$
+  Revision 1.1.2.5  2003/02/17 02:03:08  dgrisby
+  vxWorks port. (Thanks Michael Sturm / Acterna Eningen GmbH).
+
   Revision 1.1.2.4  2001/11/08 16:33:50  dpg1
   Local servant POA shortcut policy.
 
@@ -152,6 +155,13 @@ _init_in_def_( const PolicyErrorCode BAD_POLICY_VALUE = 3; )
 _init_in_def_( const PolicyErrorCode UNSUPPORTED_POLICY_VALUE = 4; )
 
 }
+#elif defined(__vxWorks__)
+//?? Is this really necessary?
+_init_in_decl_( const PolicyErrorCode CORBA::BAD_POLICY = 0; )
+_init_in_decl_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY = 1; )
+_init_in_decl_( const PolicyErrorCode CORBA::BAD_POLICY_TYPE = 2; )
+_init_in_decl_( const PolicyErrorCode CORBA::BAD_POLICY_VALUE = 3; )
+_init_in_decl_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY_VALUE = 4; )
 #else
 _init_in_def_( const PolicyErrorCode CORBA::BAD_POLICY = 0; )
 _init_in_def_( const PolicyErrorCode CORBA::UNSUPPORTED_POLICY = 1; )
