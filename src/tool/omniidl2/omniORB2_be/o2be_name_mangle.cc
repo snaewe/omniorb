@@ -71,57 +71,7 @@
 #pragma hdrstop
 #endif
 
-
-#define STRING_BUF_INC  32
-
-
-class StringBuf {
-public:
-  inline StringBuf(size_t size = STRING_BUF_INC) {
-    pd_current = pd_start = new char[size];
-    pd_end = pd_start + size;
-    *pd_current = '\0';
-  }
-
-  inline operator char* () { return pd_start; }
-
-  inline void operator += (const char* s) {
-    size_t len = strlen(s);
-    if( len > free_space() )  reserve(len);
-    strcpy(pd_current, s);
-    pd_current += len;
-  }
-
-  inline void operator += (char c) {
-    if( free_space() < 1 )  reserve(1);
-    *pd_current++ = c;
-    *pd_current = '\0';
-  }
-
-  void reserve(size_t n);
-
-private:
-  inline size_t free_space() { return pd_end - pd_current - 1; }
-
-  char* pd_start;
-  char* pd_current;
-  char* pd_end;
-};
-
-
-void
-StringBuf::reserve(size_t n)
-{
-  size_t extra = STRING_BUF_INC;
-  while( extra + free_space() < n )
-    extra += STRING_BUF_INC;
-  size_t newsize = (pd_end - pd_start) + extra;
-  char* newptr = new char[newsize];
-  strcpy(newptr, pd_start);
-  pd_current = newptr + (pd_current - pd_start);
-  pd_end = newptr + newsize;
-  pd_start = newptr;
-}
+#include <o2be_stringbuf.h>
 
 
 #define SCOPE_SEPARATOR             "_m"
@@ -158,7 +108,7 @@ o2be_name_mangler::produce_idname(UTL_ScopedName* n)
     id = iter.item();
   }
 
-  return result;
+  return result.release();
 }
 
 
@@ -211,7 +161,7 @@ o2be_name_mangler::produce_canonical_name(AST_Decl* decl)
 	result += CANNON_NAME_SEPARATOR;
 	result += o2be_name::narrow_and_produce__idname(decl);
 
-	return result;
+	return result.release();
       }
 
     }
@@ -289,7 +239,7 @@ o2be_name_mangler::produce_operation_signature(o2be_operation& op)
     }
   }
 
-  return op_sig;
+  return op_sig.release();
 }
 
 
@@ -309,5 +259,5 @@ o2be_name_mangler::produce_attribute_write_signature(o2be_attribute& attr)
   op_sig += IN_SEPARATOR;
   op_sig += o2be_name::narrow_and_produce_canonical_name(attr.field_type());
 
-  return op_sig;
+  return op_sig.release();
 }
