@@ -1,4 +1,12 @@
 
+Mon Mar 22 13:30:55 GMT 1999 djr
+================================
+
+- Proper conversion of pd_byte_order between Boolean and Char.
+
+include/omniORB2/bufferedStream.h
+
+
 Fri Mar 19 15:15:50 GMT 1999 djr
 ================================
 
