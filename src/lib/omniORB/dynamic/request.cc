@@ -40,6 +40,7 @@
 #include <omniORB4/callDescriptor.h>
 #include <remoteIdentity.h>
 #include <exceptiondefs.h>
+#include <omniORB4/IOP_C.h>
 
 OMNI_NAMESPACE_BEGIN(omni)
 
@@ -340,6 +341,23 @@ public:
   void unmarshalReturnedValues(cdrStream& s) {
     pd_impl.unmarshalResults(s);
   }
+
+  void userException(IOP_C& iop_c, const char* repoId) {
+    CORBA::Boolean rc = pd_impl.unmarshalUserException(iop_c.getStream(),
+						       repoId);
+    iop_c.RequestCompleted(!rc);
+    if (!rc) {
+      OMNIORB_THROW(MARSHAL,0, CORBA::COMPLETED_MAYBE);
+    }
+    else {
+      // This method is required to always throw an exception instead of
+      // simply returning. Normally the exception is the real user
+      // exception.  In this case, we fullfill the requirement by throwing
+      // an internal exception which get caught in the try loop of invoke.
+      throw RequestImpl::Completed();
+    }
+  }
+
 private:
   RequestImpl& pd_impl;
 };
@@ -378,6 +396,9 @@ RequestImpl::invoke()
       throw;
     } else
       pd_environment->exception(CORBA::Exception::_duplicate(&ex));
+  }
+  catch (const RequestImpl::Completed& ) {
+    // User exception has been unmarshalled. Do nothing.
   }
   INVOKE_DONE();
   RETURN_CORBA_STATUS;
@@ -524,6 +545,38 @@ RequestImpl::unmarshalResults(cdrStream& s)
     if( arg->flags() & CORBA::ARG_OUT || arg->flags() & CORBA::ARG_INOUT )
       arg->value()->NP_unmarshalDataOnly(s);
   }
+}
+
+
+CORBA::Boolean
+RequestImpl::unmarshalUserException(cdrStream& s, const char* repoId)
+{
+  CORBA::ULong exListLen = CORBA::is_nil(pd_exceptions) ?
+                                 0 : pd_exceptions->count();
+
+  // Search for a match in the exception list.
+  for( CORBA::ULong i = 0; i < exListLen; i++ ){
+    CORBA::TypeCode_ptr exType = pd_exceptions->item(i);
+
+    if( !strcmp(repoId, exType->id()) ){
+      // Unmarshal the exception into an Any.
+      CORBA::Any* newAny = new CORBA::Any(exType, 0);
+      try {
+	newAny->NP_unmarshalDataOnly(s);
+      }
+      catch(...) {
+	delete newAny;
+	throw;
+      }
+      // Encapsulate this in an UnknownUserException, which is
+      // placed into pd_environment.
+      CORBA::UnknownUserException* ex =
+	new CORBA::UnknownUserException(newAny);
+      pd_environment->exception(ex);
+      return 1;
+    }
+  }
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////

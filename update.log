@@ -1,3 +1,14 @@
+Tue May  8 12:42:45 BST 2001 sll
+================================
+
+- Added missing bit in the DII implementation to handle user exception
+  properly. The implementation was converted to use callDescriptor but the
+  user exception bit was missing.
+
+src/lib/omniORB/dynamic/request.cc
+src/lib/omniORB/include/request.h
+
+
 Fri May  4 14:51:20 BST 2001 sll
 ================================
 

@@ -85,6 +85,13 @@ public:
 
   void marshalArgs(cdrStream&);
   void unmarshalResults(cdrStream&);
+  CORBA::Boolean unmarshalUserException(cdrStream&, const char* repoId);
+
+  class Completed {
+  public:
+    Completed() {};
+    ~Completed() {};
+  };
 
 private:
   enum State {
