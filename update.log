@@ -1,3 +1,11 @@
+Thu Aug 10 15:58:06 BST 2000 sll
+================================
+
+- Added .mk to use COS stub library
+
+external_merge/mk/cos.mk       NEW
+mk/cos.mk                      NEW
+
 Thu Aug 10 12:04:07 BST 2000 sll
 ================================
 
