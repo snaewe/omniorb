@@ -28,9 +28,14 @@
 
 
 /* $Log$
-/* Revision 1.2  1998/04/07 19:37:54  sll
-/* Remove iostream.h
+/* Revision 1.3  1998/08/05 17:59:11  sll
+/* Added some comment to document the implementation.
+/* Fixed bug in parseUnion() which did not handle the case when a union
+/* discriminant is set to select the implicit default branch.
 /*
+ * Revision 1.2  1998/04/07 19:37:54  sll
+ * Remove iostream.h
+ *
 // Revision 1.1  1998/01/27  15:49:07  ewc
 // Initial revision
 //
@@ -61,6 +66,8 @@ tcParseEngine::parse(MemBufferedStream& outBuf, CORBA::Boolean reAlign)
       throw;
     }
 
+  // XXX - What about pd_reAlign? Shall we restore it as well?
+  //                                                   - SLL
   pd_tck = tck;
   pd_tmpParam.rewind_in_mkr();
   unsetByteOrder(bOrder);
@@ -508,7 +515,7 @@ void tcParseEngine::parseDouble(MemBufferedStream& outBuf)
 {
   if (outBuf.byteOrder() != omni::myByteOrder)
     throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
-      
+
   CORBA::ULong currAlign = (outBuf.alreadyWritten() + 4) %8;
 	  
   if (currAlign > 0)
@@ -716,10 +723,17 @@ void tcParseEngine::parseStructExcept(MemBufferedStream& outBuf)
 void tcParseEngine::parseUnion(MemBufferedStream& outBuf)
 {
   CORBA::Boolean bOrder = skipInitialStrings();
+
+  // pd_tmpParam contains complex parameter list of typecode union.
+  // The content of the parameter list is defined in CORBA spec. table 12-2.
+  //
+  // Skip repository ID and union name in pd_tmpParam
   pd_tmpParam.skip(0,omni::ALIGN_4);
-	
   CORBA::TypeCode unExpandedTC(CORBA::tk_null);
+
+  // Extract typecode of the discriminant from pd_tmpParam
   unExpandedTC <<= pd_tmpParam;
+
   CORBA::TypeCode_var discrimTCp = unExpandedTC.NP_aliasExpand();
 	
   CORBA::ULong discrimLen = 0;  
@@ -760,6 +774,7 @@ void tcParseEngine::parseUnion(MemBufferedStream& outBuf)
 
   try
     {
+      // Extract (default used) and (count) field from pd_tmpParam
       def <<= pd_tmpParam;
       if (def > 0 &&  (4+(def*(1+2*sizeof(CORBA::ULong))) > 
 		       pd_tmpParam.unRead()))
@@ -842,7 +857,14 @@ void tcParseEngine::parseUnion(MemBufferedStream& outBuf)
       setTCKind(defTCK); setTCPos(defTCpos);
       parseTC(outBuf);
     }
-  else throw CORBA::MARSHAL(0,CORBA::COMPLETED_NO);
+  else 
+    {
+      // The value of the discriminant does not correspond to any union
+      // branch and there is no default branch in the union.
+      // In this case, the union is said to contain an implicit default.
+      // Its value is composed solely of the discriminator value.
+      // Do nothing here as there is nothing to extract from the input.
+    }
 	
   setTCKind(orig_tck); setTCPos(origPos);
   unsetByteOrder(bOrder);
