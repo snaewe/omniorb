@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.8  1999/05/25 17:24:39  sll
+  CORBA::ORB::ObjectIdList and CORBA_InitialReferences::ObjIdList are
+  now different types. Previously they are the same template type instance.
+
   Revision 1.7  1999/03/11 16:25:51  djr
   Updated copyright notice
 
@@ -148,12 +152,12 @@ omniInitialReferences::get(const char* identifier)
 }
 
 
-CORBA::ORB::ObjectIdList*
+CORBA_InitialReferences::ObjIdList*
 omniInitialReferences::list()
 {
   omni_mutex_lock sync(lock);
 
-  CORBA::ORB::ObjectIdList* result = new CORBA::ORB::ObjectIdList;
+  CORBA_InitialReferences::ObjIdList* result = new CORBA_InitialReferences::ObjIdList;
 
   result->length(pd_serviceList.length());
 
@@ -271,7 +275,7 @@ omniInitialRefLister::~omniInitialRefLister()
 {
   if( !_singleton || omniORB::traceLevel < 15 )  return;
 
-  CORBA::ORB::ObjectIdList* list = _singleton->list();
+  CORBA_InitialReferences::ObjIdList* list = _singleton->list();
 
   omniORB::log << "omniORB: Initial references:\n";
 
