@@ -1,3 +1,15 @@
+Fri Nov  9 16:12:19 GMT 2001 dpg1
+=================================
+
+- No quotes around bootstrapAgentHostname.
+
+sample.cfg
+
+- Fix server-side boostrap agent.
+
+src/lib/omniORB/orbcore/initRefs.cc
+
+
 Fri Nov  9 12:44:28 GMT 2001 dpg1
 =================================
 

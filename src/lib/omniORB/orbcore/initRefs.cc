@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.2.2.12  2001/11/09 16:14:02  dpg1
+  Fix server-side boostrap agent.
+
   Revision 1.2.2.11  2001/10/17 16:44:06  dpg1
   Update DynAny to CORBA 2.5 spec, const Any exception extraction.
 
@@ -746,6 +749,11 @@ omniInitialReferences::invoke_bootstrap_agentImpl(omniCallHandle& handle)
   omni_tracedmutex_lock sync(ba_lock);
 
   if( !the_bootagentImpl )  return 0;
+
+  // The upcall asserts that a localId is set, as a sanity-check. This
+  // is the one dispatch case in which there isn't a localIdentity, so
+  // we pretend.
+  handle.localId((omniLocalIdentity*)1);
 
   ((omniServant*) the_bootagentImpl)->_dispatch(handle);
   return 1;
