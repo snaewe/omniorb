@@ -1,3 +1,10 @@
+Thu Aug  2 13:58:45 BST 2001 sll
+================================
+
+- Do not use select(0,0,0,0,&timeout), it doesn't work on win32.
+
+src/lib/omniORB/orbcore/SocketCollection.cc
+
 Wed Aug  1 19:09:50 BST 2001 sll
 ================================
 

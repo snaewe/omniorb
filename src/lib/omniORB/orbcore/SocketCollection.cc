@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.3  2001/08/02 13:00:53  sll
+  Do not use select(0,0,0,0,&timeout), it doesn't work on win32.
+
   Revision 1.1.2.2  2001/08/01 15:56:07  sll
   Workaround MSVC++ bug. It generates wrong code with FD_ISSET and FD_SET
   under certain conditions.
@@ -242,11 +245,12 @@ SocketCollection::Select() {
 #endif
   }
   else {
-#ifndef GDB_DEBUG
-    nready = select(0,0,0,0,&timeout);
-#else
-    nready = do_select(0,0,0,0,&timeout);
-#endif
+    omni_thread::sleep(pd_abs_sec,pd_abs_nsec);
+    // Alternatively we could block on a conditional variable and be woken up
+    // immediately when there is something to monitor.
+    // Also, one cannot use select(0,0,0,0,&timeout) because win32 doesn't
+    // like it.
+    nready = 0; // simulate a timeout
   }
 
   if (nready == RC_SOCKET_ERROR) {
