@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.20  1998/08/05 18:11:09  sll
+  Updated version variable to omniORB_2_6 (previously omniORB_2_5).
+
   Revision 1.19  1998/04/07 19:53:38  sll
   Replace _OMNIORB2_NTDLL_ on the whole class omni with
   _OMNIORB_NTDLL_IMPORT on individual constants and variables.
@@ -104,7 +107,7 @@ class omniObjectManager;
 //   the variable name stays the same with compatible shared library, e.g.
 //   2.5.1.
 //
-extern const char* _OMNIORB_NTDLL_IMPORT omniORB_2_5;
+extern const char* _OMNIORB_NTDLL_IMPORT omniORB_2_6;
 
 #include <omniORB2/rope.h>
 
