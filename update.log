@@ -1,3 +1,24 @@
+Fri May  5 17:32:00 BST 2000 djs
+================================
+
+- Extended an existing omniIDL/C++ fix for MSVC5 to help with base class 
+  initialisers with scope resolution operators (::)
+  A fix already existed for the method dispatch()ing, using a typedef with 
+  a flattened name. This does not change the powerpc/aix workaround using
+  OMNI_BASE_CTOR (no test platform to check against).
+  Problem was reported on the mailing list in article:
+    http://www.uk.research.att.com/omniORB/archives/2000-03/0146.html
+
+src/lib/omniORB2/omniidl_be/cxx/skel/main.py
+src/lib/omniORB2/omniidl_be/cxx/skel/template.py
+
+- Removed omniIDL/C++ operation argument mapping special case:
+  A non-array typedef to a variable struct or union previously used a 
+  dereferenced _out argument. Now the _out argument is not dereferenced.
+
+src/lib/omniORB2/omniidl_be/cxx/types.py
+
+
 Fri May  5 14:11:23 BST 2000 dpg1
 =================================
 
