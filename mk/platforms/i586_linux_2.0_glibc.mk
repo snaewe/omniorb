@@ -6,6 +6,7 @@
 Linux = 1
 x86Processor = 1
 
+ABSTOP = $(shell cd $(TOP); pwd)
 
 #
 # Python set-up
@@ -15,7 +16,7 @@ x86Processor = 1
 # Python from ftp://ftp.uk.research.att.com/pub/omniORB/python/
 # In that case, uncomment the first line below.
 
-#PYTHON = $(TOP)/$(BINDIR)/omnipython
+#PYTHON = $(ABSTOP)/$(BINDIR)/omnipython
 #PYTHON = /usr/local/bin/python
 
 
