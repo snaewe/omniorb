@@ -1,3 +1,12 @@
+Wed Mar 24 22:16:41 GMT 2004 dgrisby
+====================================
+
+- TypeCodes for sequences of forward declared structs / unions used by
+  other compilation units were broken.
+
+src/lib/omniORB/omniidl_be/cxx/dynskel/typecode.py
+
+
 Fri Mar 19 01:16:37 GMT 2004 dgrisby
 ====================================
 
