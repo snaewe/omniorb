@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.12  2002/05/07 00:28:32  dgrisby
+  Turn off Nagle's algorithm. Fixes odd Linux loopback behaviour.
+
   Revision 1.1.2.11  2002/04/29 11:52:51  dgrisby
   More fixes for FreeBSD, Darwin, Windows.
 
@@ -80,6 +83,7 @@
 #include <ssl/sslEndpoint.h>
 #include <tcp/tcpConnection.h>
 #include <openssl/err.h>
+#include <netinet/tcp.h>
 #include <omniORB4/linkHacks.h>
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(sslEndpoint);
@@ -149,6 +153,17 @@ sslEndpoint::Bind() {
   struct sockaddr_in addr;
   if ((pd_socket = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
     return 0;
+  }
+
+  {
+    // Prevent Nagle's algorithm
+    int valtrue = 1;
+    if (setsockopt(pd_socket,SOL_TCP,TCP_NODELAY,
+		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
+      CLOSESOCKET(pd_socket);
+      pd_socket = RC_INVALID_SOCKET;
+      return 0;
+    }
   }
 
   addr.sin_family = INETSOCKET;

@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2002/05/07 00:28:32  dgrisby
+  Turn off Nagle's algorithm. Fixes odd Linux loopback behaviour.
+
   Revision 1.1.2.7  2001/09/07 11:27:14  sll
   Residual changes needed for the changeover to use orbParameters.
 
@@ -65,6 +68,7 @@
 #include <ssl/sslConnection.h>
 #include <ssl/sslAddress.h>
 #include <openssl/err.h>
+#include <netinet/tcp.h>
 #include <omniORB4/linkHacks.h>
 
 OMNI_EXPORT_LINK_FORCE_SYMBOL(sslAddress);
@@ -156,6 +160,15 @@ sslAddress::Connect(unsigned long deadline_secs,
 
   if ((sock = socket(INETSOCKET,SOCK_STREAM,0)) == RC_INVALID_SOCKET) {
     return 0;
+  }
+  {
+    // Prevent Nagle's algorithm
+    int valtrue = 1;
+    if (setsockopt(sock,SOL_TCP,TCP_NODELAY,
+		   (char*)&valtrue,sizeof(int)) == RC_SOCKET_ERROR) {
+      CLOSESOCKET(sock);
+      return 0;
+    }
   }
 
   if (SocketSetnonblocking(sock) == RC_INVALID_SOCKET) {

@@ -1,3 +1,14 @@
+Tue May  7 01:22:10 BST 2002 dgrisby
+====================================
+
+- Turn off Nagle's algorithm. Fixes odd Linux loopback behaviour.
+
+src/lib/omniORB/orbcore/ssl/sslAddress.cc
+src/lib/omniORB/orbcore/ssl/sslEndpoint.cc
+src/lib/omniORB/orbcore/tcp/tcpAddress.cc
+src/lib/omniORB/orbcore/tcp/tcpEndpoint.cc
+
+
 Fri May  3 12:09:55 BST 2002 dgrisby
 ====================================
 
