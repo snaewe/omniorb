@@ -1,3 +1,25 @@
+Fri Sep 14 12:07:29 BST 2001 sll
+================================
+
+- Do the right dllimport for the ssl transport.
+
+include/omniORB4/sslContext.h
+src/lib/omniORB/orbcore/ssl/dir.mk
+
+
+Thu Sep 13 17:42:37 BST 2001 sll
+================================
+
+- Updated ssl transport shared library name.
+
+external_merge/mk/unix.mk
+
+- Changed thread id callback function for the openssl library.
+  Only provide one for non-win32 platform and use pthread_self() directly.
+
+src/lib/omniORB/orbcore/ssl/sslContext.cc
+
+
 Thu Sep 13 17:13:41 BST 2001 sll
 ================================
 
