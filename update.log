@@ -1,3 +1,12 @@
+Thu Sep 25 14:11:16 BST 2003 dgrisby
+====================================
+
+- Correctly complain if some parameters are set to zero.
+
+src/lib/omniORB/orbcore/giopRope.cc
+src/lib/omniORB/orbcore/giopStreamImpl.cc
+
+
 Sun Aug 31 21:33:52 BST 2003 dgrisby
 ====================================
 

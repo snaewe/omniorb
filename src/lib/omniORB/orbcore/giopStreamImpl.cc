@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2003/09/25 13:12:20  dgrisby
+  Correctly complain if some parameters are set to zero.
+
   Revision 1.1.4.7  2002/10/14 20:07:11  dgrisby
   Per objref / per thread timeouts.
 
@@ -417,7 +420,7 @@ public:
   void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::ULong v;
-    if (!orbOptions::getULong(value,v)) {
+    if (!orbOptions::getULong(value,v) || v < 1) {
       throw orbOptions::BadParam(key(),value,
 			 orbOptions::expect_greater_than_zero_ulong_msg);
     }

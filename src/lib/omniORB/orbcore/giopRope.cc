@@ -28,6 +28,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.25  2003/09/25 13:12:20  dgrisby
+  Correctly complain if some parameters are set to zero.
+
   Revision 1.1.4.24  2003/06/02 09:28:22  dgrisby
   Segfault in log message when throwing an exception in an interceptor.
 
@@ -796,7 +799,7 @@ public:
   void visit(const char* value,orbOptions::Source) throw (orbOptions::BadParam) {
 
     CORBA::ULong v;
-    if (!orbOptions::getULong(value,v)) {
+    if (!orbOptions::getULong(value,v) || v < 1) {
       throw orbOptions::BadParam(key(),value,
 			 orbOptions::expect_greater_than_zero_ulong_msg);
     }
