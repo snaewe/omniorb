@@ -20,6 +20,10 @@
 
 VERSION = 1.2.0
 
+major_version = $(word 1,$(subst ., ,$(VERSION)))
+minor_version = $(word 2,$(subst ., ,$(VERSION)))
+micro_version = $(word 3,$(subst ., ,$(VERSION)))
+
 #
 # For each source tree we want to search the parent directory to get source
 # files so we put these on VPATH.  However we can't put the parent build
@@ -56,11 +60,6 @@ ifeq ($(ThreadSystem),NT)
 CXXSRCS = nt.cc
 OBJS = nt.o
 DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS) -D "_OMNITHREAD_DLL"
-ifdef BuildDebugBinary
-lib = $(patsubst %,$(LibDebugPattern),omnithread)
-else
-lib = $(patsubst %,$(LibPattern),omnithread)
-endif
 endif
 
 ifeq ($(ThreadSystem),Mach)
@@ -68,10 +67,6 @@ CXXSRCS = mach.cc
 OBJS = mach.o
 DIR_CPPFLAGS = $(OMNITHREAD_CPPFLAGS)
 endif
-
-major_version = $(word 1,$(subst ., ,$(VERSION)))
-minor_version = $(word 2,$(subst ., ,$(VERSION)))
-micro_version = $(word 3,$(subst ., ,$(VERSION)))
 
 #############################################################################
 #   Make variables for Win32 platforms                                      #
@@ -81,7 +76,7 @@ ifdef Win32Platform
 
 ifndef BuildWin32DebugLibraries
 
-implib = $(patsubst %,$(DLLPattern),omnithread)
+implib = $(patsubst %,$(DLLPattern),omnithread$(minor_version))
 staticlib = ../$(patsubst %,$(LibPattern),omnithread)
 CXXOPTIONS  = $(MSVC_CXXNODEBUGFLAGS)
 CXXLINKOPTIONS = $(MSVC_CXXLINKNODEBUGOPTIONS)
@@ -95,7 +90,7 @@ else
 # this library. The BuildWin32DebugLibraries make variable is set to 1 in
 # the dir.mk generated in the debug directory.
 #
-implib = $(patsubst %,$(DLLDebugPattern),omnithread)
+implib = $(patsubst %,$(DLLDebugPattern),omnithread$(minor_version))
 staticlib = ../../debug/$(patsubst %,$(LibDebugPattern),omnithread)
 CXXDEBUGFLAGS =
 CXXOPTIONS = $(MSVC_CXXDEBUGFLAGS)
