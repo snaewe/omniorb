@@ -11,6 +11,9 @@
  
 /*
   $Log$
+  Revision 1.5  1997/01/30 19:57:48  sll
+  Added is_nil(), duplicate(), release() in Object_Helper class.
+
   Revision 1.4  1997/01/23 15:29:50  sll
   Removed static object CORBA_Object_nil.
   Added copy ctor and operator= for Object_var class because it is not
@@ -275,6 +278,27 @@ CORBA::
 Object_Helper::_nil() 
 {
   return CORBA::Object::_nil();
+}
+
+CORBA::Boolean
+CORBA::
+Object_Helper::is_nil(CORBA::Object_ptr obj)
+{
+  return CORBA::is_nil(obj);
+}
+
+void
+CORBA::
+Object_Helper::release(CORBA::Object_ptr obj)
+{
+  CORBA::release(obj);
+}
+
+void
+CORBA::
+Object_Helper::duplicate(CORBA::Object_ptr obj)
+{
+  CORBA::Object::_duplicate(obj);
 }
 
 size_t
