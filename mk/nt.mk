@@ -83,6 +83,7 @@ endef
 #
 
 LibPattern = %.lib
+LibSearchPattern = %.lib
 BinPattern = %.exe
 
 
@@ -168,5 +169,4 @@ ORBIX_EXTRA_STUB_FILES = $(CORBA_INTERFACES:%=$(CORBA_STUB_DIR)/%C.cc)
 #
 
 ThreadSystem = NT
-OMNITHREAD_LIB = omnithread.lib
-OMNITHREAD_CPPFLAGS =
+OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread)

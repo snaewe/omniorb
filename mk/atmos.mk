@@ -112,6 +112,7 @@ endef
 #
 
 LibPattern = %_lib.o
+LibSearchPattern = %_lib.o
 BinPattern = %_exe.o
 
 
@@ -260,8 +261,8 @@ ThreadSystem = Posix
 OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=6 \
 			    -DPthreadSupportThreadPriority -DNeedPthreadInit
 OMNITHREAD_CPPFLAGS =
-OMNITHREAD_LIB = omnithread_lib.o
-lib_depend := omnithread_lib.o
+OMNITHREAD_LIB = $(patsubst %,$(LibSearchPattern),omnithread)
+lib_depend := $(patsubst %,$(LibPattern),omnithread)
 OMNITHREAD_LIB_DEPEND := $(GENERATE_LIB_DEPEND)
 
 
@@ -280,8 +281,8 @@ endef
 OMNIORB_IDL = omniidl -c C.cc -s S.cc -B
 OMNIORB_CPPFLAGS = -D__OMNIORB__ -I$(CORBA_STUB_DIR) \
 		   $(patsubst %,-I%/include/omniORB,$(IMPORT_TREES))
-OMNIORB_LIB = omniORB_lib.o $(OMNITHREAD_LIB)
-lib_depend := omniORB_lib.o
+OMNIORB_LIB = $(patsubst %,$(LibSearchPattern),omniORB) $(OMNITHREAD_LIB)
+lib_depend := $(patsubst %,$(LibPattern),omniORB)
 OMNIORB_LIB_DEPEND := $(GENERATE_LIB_DEPEND) $(OMNITHREAD_LIB_DEPEND)
 OMNIORB_STUB_HDR_PATTERN = $(CORBA_STUB_DIR)/%.hh
 OMNIORB_STUB_SRC_PATTERN = $(CORBA_STUB_DIR)/%S.cc
