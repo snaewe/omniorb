@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.1.2.5  2003/01/14 11:48:15  dgrisby
+ Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
+
  Revision 1.1.2.4  2001/08/15 10:26:07  dpg1
  New object table behaviour, correct POA semantics.
 
@@ -58,10 +61,10 @@ class omniLocalIdentity;
 class omniCallHandle {
 public:
 
-  inline omniCallHandle(_OMNI_NS(IOP_S)* iop_s)
-    : pd_iop_s(iop_s),
+  inline omniCallHandle(_OMNI_NS(IOP_S)* iop_s_)
+    : pd_iop_s(iop_s_),
       pd_call_desc(0),
-      pd_op(iop_s->operation_name()),
+      pd_op(iop_s_->operation_name()),
       pd_postinvoke_hook(0),
       pd_poa(0),
       pd_localId(0),
@@ -69,16 +72,16 @@ public:
       pd_try_direct(0)
   {}
 
-  inline omniCallHandle(omniCallDescriptor* call_desc,
-			_CORBA_Boolean try_direct)
+  inline omniCallHandle(omniCallDescriptor* call_desc_,
+			_CORBA_Boolean try_direct_)
     : pd_iop_s(0),
-      pd_call_desc(call_desc),
-      pd_op(call_desc->op()),
+      pd_call_desc(call_desc_),
+      pd_op(call_desc_->op()),
       pd_postinvoke_hook(0),
       pd_poa(0),
       pd_localId(0),
       pd_mainthread_mu(0),
-      pd_try_direct(try_direct)
+      pd_try_direct(try_direct_)
   {}
 
   inline const char*         operation_name() const { return pd_op; }
@@ -105,8 +108,8 @@ public:
   // unmarshalling arguments. It skips any remaining input data so the
   // exception may be returned as soon as possible.
 
-  inline void poa(_OMNI_NS(omniOrbPOA)* poa) { pd_poa = poa; }
-  inline void localId(omniLocalIdentity* id) { pd_localId = id; }
+  inline void poa(_OMNI_NS(omniOrbPOA)* poa_) { pd_poa = poa_; }
+  inline void localId(omniLocalIdentity* id)  { pd_localId = id; }
 
   inline void mainThread(omni_tracedmutex* mu, omni_tracedcondition* cond) {
     pd_mainthread_mu   = mu;

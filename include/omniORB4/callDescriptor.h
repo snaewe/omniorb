@@ -28,6 +28,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.14  2003/01/14 11:48:15  dgrisby
+ Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
+
  Revision 1.2.2.13  2001/11/06 15:41:35  dpg1
  Reimplement Context. Remove CORBA::Status. Tidying up.
 
@@ -100,17 +103,17 @@ class omniCallDescriptor {
 public:
   typedef void (*LocalCallFn)(omniCallDescriptor*, omniServant*);
 
-  inline omniCallDescriptor(LocalCallFn lcfn, const char* op,
-			    int op_len, _CORBA_Boolean oneway,
-			    const char*const* user_excns,
-			    int n_user_excns,
-                            _CORBA_Boolean is_upcall)
+  inline omniCallDescriptor(LocalCallFn lcfn, const char* op_,
+			    int op_len_, _CORBA_Boolean oneway,
+			    const char*const* user_excns_,
+			    int n_user_excns_,
+                            _CORBA_Boolean is_upcall_)
     : pd_localCall(lcfn),
       pd_is_oneway(oneway),
-      pd_op(op), pd_oplen(op_len),
-      pd_user_excns(user_excns),
-      pd_n_user_excns(n_user_excns),
-      pd_is_upcall(is_upcall),
+      pd_op(op_), pd_oplen(op_len_),
+      pd_user_excns(user_excns_),
+      pd_n_user_excns(n_user_excns_),
+      pd_is_upcall(is_upcall_),
       pd_first_address_used(0),
       pd_current_address(0),
       pd_current(0),
@@ -202,7 +205,7 @@ public:
 
   inline void objref(omniObjRef* o)           { pd_objref = o; }
   inline omniObjRef* objref()                 { return pd_objref; }
-  inline void poa(_OMNI_NS(omniOrbPOA*) poa)  { pd_poa = poa; }
+  inline void poa(_OMNI_NS(omniOrbPOA*) poa_) { pd_poa = poa_; }
   inline _OMNI_NS(omniOrbPOA*) poa()          { return pd_poa; }
   inline void localId(omniLocalIdentity* lid) { pd_localId = lid; }
   inline omniLocalIdentity* localId()         { return pd_localId; }
@@ -276,10 +279,10 @@ public:
   // Mangled signature: _cCORBA_mObject_i_cstring
   class _cCORBA_mObject_i_cstring : public omniCallDescriptor {
   public:
-    inline _cCORBA_mObject_i_cstring(LocalCallFn lcfn, const char* op,
+    inline _cCORBA_mObject_i_cstring(LocalCallFn lcfn, const char* op_,
 		     size_t oplen, const char* a_0,
 		     _CORBA_Boolean upcall=0) :
-      omniCallDescriptor(lcfn, op, oplen, 0, 0, 0, upcall),
+      omniCallDescriptor(lcfn, op_, oplen, 0, 0, 0, upcall),
       arg_0((char*)a_0) {}
  
     inline ~_cCORBA_mObject_i_cstring() {
@@ -312,9 +315,9 @@ public:
 
 class omniLocalOnlyCallDescriptor : public omniCallDescriptor {
 public:
-  omniLocalOnlyCallDescriptor(LocalCallFn lcfn, const char* op,
-			      int op_len, _CORBA_Boolean is_oneway = 0)
-    : omniCallDescriptor(lcfn, op, op_len, is_oneway, 0, 0, 0) {}
+  omniLocalOnlyCallDescriptor(LocalCallFn lcfn, const char* op_,
+			      int op_len_, _CORBA_Boolean is_oneway_ = 0)
+    : omniCallDescriptor(lcfn, op_, op_len_, is_oneway_, 0, 0, 0) {}
 
   // Only useful as client side descriptor. No set up for server side upcall.
 

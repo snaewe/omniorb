@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.4  2003/01/14 11:48:15  dgrisby
+  Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
+
   Revision 1.1.2.3  2002/01/02 18:13:43  dpg1
   Platform fixes/additions.
 
@@ -190,7 +193,8 @@ private:
   class name : public CORBA::Policy  \
   {  \
   public:  \
-    inline name(name##Value value) : CORBA::Policy(type), pd_value(value) {}  \
+    inline name(name##Value value_) :  \
+      CORBA::Policy(type), pd_value(value_) {}  \
     inline name() {}  \
     virtual ~name();  \
     \

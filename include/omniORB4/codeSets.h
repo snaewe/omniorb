@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.8  2003/01/14 11:48:15  dgrisby
+  Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
+
   Revision 1.1.2.7  2002/12/19 13:56:58  dgrisby
   New Windows 1251 code set. (Thanks Vasily Tchekalkin).
 
@@ -199,8 +202,8 @@ public:
     // DCE code set identifier, descriptive name string, code set kind
 
   protected:
-    Base(CONV_FRAME::CodeSetId id, const char* name, Kind kind)
-      : pd_id(id), pd_name(name), pd_kind(kind), pd_next(0) {}
+    Base(CONV_FRAME::CodeSetId id_, const char* name_, Kind kind_)
+      : pd_id(id_), pd_name(name_), pd_kind(kind_), pd_next(0) {}
 
     virtual ~Base() {}
 
@@ -384,14 +387,14 @@ public:
     inline const UniChar*      toU()   const { return pd_toU; }
     inline const _CORBA_Char** fromU() const { return pd_fromU; }
 
-    NCS_C_8bit(CONV_FRAME::CodeSetId id,
-	       const char*           name,
-	       const UniChar*        toU,
-	       const _CORBA_Char**   fromU)
+    NCS_C_8bit(CONV_FRAME::CodeSetId id_,
+	       const char*           name_,
+	       const UniChar*        toU_,
+	       const _CORBA_Char**   fromU_)
 
-      : NCS_C(id, name, CS_8bit),
-	pd_toU(toU),
-	pd_fromU(fromU)
+      : NCS_C(id_, name_, CS_8bit),
+	pd_toU(toU_),
+	pd_fromU(fromU_)
     { }
 
     virtual ~NCS_C_8bit() {};
@@ -438,15 +441,15 @@ public:
     inline const UniChar*      toU()   const { return pd_toU; }
     inline const _CORBA_Char** fromU() const { return pd_fromU; }
 
-    TCS_C_8bit(CONV_FRAME::CodeSetId id,
-	       const char*           name,
-	       GIOP::Version         giopVersion,
-	       const UniChar*        toU,
-	       const _CORBA_Char**   fromU)
+    TCS_C_8bit(CONV_FRAME::CodeSetId id_,
+	       const char*           name_,
+	       GIOP::Version         giopVersion_,
+	       const UniChar*        toU_,
+	       const _CORBA_Char**   fromU_)
 
-      : TCS_C(id, name, CS_8bit, giopVersion),
-	pd_toU(toU),
-	pd_fromU(fromU)
+      : TCS_C(id_, name_, CS_8bit, giopVersion_),
+	pd_toU(toU_),
+	pd_fromU(fromU_)
     { }
 
     virtual ~TCS_C_8bit() {}
@@ -490,14 +493,14 @@ public:
     inline const UniChar**       toU()   const { return pd_toU; }
     inline const _CORBA_UShort** fromU() const { return pd_fromU; }
 
-    NCS_W_16bit(CONV_FRAME::CodeSetId id,
-		const char*           name,
-		const UniChar**       toU,
-		const _CORBA_UShort** fromU)
+    NCS_W_16bit(CONV_FRAME::CodeSetId id_,
+		const char*           name_,
+		const UniChar**       toU_,
+		const _CORBA_UShort** fromU_)
 
-      : NCS_W(id, name, CS_16bit),
-	pd_toU(toU),
-	pd_fromU(fromU)
+      : NCS_W(id_, name_, CS_16bit),
+	pd_toU(toU_),
+	pd_fromU(fromU_)
     { }
     virtual ~NCS_W_16bit() {}
 
@@ -545,15 +548,15 @@ public:
     inline const UniChar**       toU()   const { return pd_toU; }
     inline const _CORBA_UShort** fromU() const { return pd_fromU; }
 
-    TCS_W_16bit(CONV_FRAME::CodeSetId id,
-		const char*           name,
-		GIOP::Version         giopVersion,
-		const UniChar**       toU,
-		const _CORBA_UShort** fromU)
+    TCS_W_16bit(CONV_FRAME::CodeSetId id_,
+		const char*           name_,
+		GIOP::Version         giopVersion_,
+		const UniChar**       toU_,
+		const _CORBA_UShort** fromU_)
 
-      : TCS_W(id, name, CS_16bit, giopVersion),
-	pd_toU(toU),
-	pd_fromU(fromU)
+      : TCS_W(id_, name_, CS_16bit, giopVersion_),
+	pd_toU(toU_),
+	pd_fromU(fromU_)
     { }
     virtual ~TCS_W_16bit() {}
 

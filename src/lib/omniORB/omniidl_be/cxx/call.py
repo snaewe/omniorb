@@ -28,6 +28,9 @@
 
 # $Id$
 # $Log$
+# Revision 1.1.4.13  2003/01/14 11:48:16  dgrisby
+# Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
+#
 # Revision 1.1.4.12  2002/11/21 16:12:34  dgrisby
 # Oneway call descriptor bug.
 #
@@ -437,9 +440,10 @@ class CallDescriptor:
     def __out_declaration(self,stream):
         # build up the constructor argument list, the initialisation
         # list and the data members list
-        ctor_args = ["LocalCallFn lcfn", "const char* op", "size_t oplen",
+        ctor_args = ["LocalCallFn lcfn", "const char* op_", "size_t oplen",
                      "_CORBA_Boolean upcall=0" ]
-        base_ctor = "omniCallDescriptor(lcfn, op, oplen, " + str(self.__oneway)
+        base_ctor = "omniCallDescriptor(lcfn, op_, oplen, " + \
+                    str(self.__oneway)
         if self.__exceptions != []:
             base_ctor = base_ctor + ", _user_exns, "
             user_exceptions_decl = \

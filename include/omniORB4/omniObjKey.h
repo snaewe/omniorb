@@ -29,6 +29,9 @@
  
 /*
   $Log$
+  Revision 1.2.2.3  2003/01/14 11:48:15  dgrisby
+  Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
+
   Revision 1.2.2.2  2000/09/27 17:11:40  sll
   Removed reference to the obsoluted MemBufferedStream and NetBufferedStream.
 
@@ -57,19 +60,19 @@ class omniObjKey {
 public:
   inline omniObjKey() : pd_key(pd_inline_buf), pd_size(0) {}
 
-  inline omniObjKey(const _CORBA_Octet* key, int size)
-    : pd_key(pd_inline_buf), pd_size(size) {
-    if( size > INLINE_BUF_SIZE )  pd_key = new _CORBA_Octet[size];
-    memcpy(pd_key, key, size);
+  inline omniObjKey(const _CORBA_Octet* key_, int size_)
+    : pd_key(pd_inline_buf), pd_size(size_) {
+    if( size_ > INLINE_BUF_SIZE )  pd_key = new _CORBA_Octet[size_];
+    memcpy(pd_key, key_, size_);
   }
   // Copies <key>.
 
-  inline omniObjKey(_CORBA_Octet* key, int size)
-    : pd_key(key), pd_size(size) {
-    if( size <= INLINE_BUF_SIZE ) {
+  inline omniObjKey(_CORBA_Octet* key_, int size_)
+    : pd_key(key_), pd_size(size_) {
+    if( size_ <= INLINE_BUF_SIZE ) {
       pd_key = pd_inline_buf;
-      memcpy(pd_key, key, size);
-      delete[] key;
+      memcpy(pd_key, key_, size_);
+      delete[] key_;
     }
   }
   // Consumes <key>.
@@ -102,22 +105,22 @@ public:
   inline const _CORBA_Octet* key() const { return pd_key;  }
   inline int size() const                { return pd_size; }
 
-  inline int is_equal(const _CORBA_Octet* key, int keysize) const {
-    return keysize == pd_size && !memcmp(key, pd_key, keysize);
+  inline int is_equal(const _CORBA_Octet* key_, int keysize) const {
+    return keysize == pd_size && !memcmp(key_, pd_key, keysize);
   }
 
-  inline void set_size(int size) {
-    if( size > pd_size && size > INLINE_BUF_SIZE ) {
+  inline void set_size(int size_) {
+    if( size_ > pd_size && size_ > INLINE_BUF_SIZE ) {
       if( pd_key != pd_inline_buf )  delete[] pd_key;
-      pd_key = new _CORBA_Octet[size];
+      pd_key = new _CORBA_Octet[size_];
     }
-    pd_size = size;
+    pd_size = size_;
   }
   inline _CORBA_Octet* write_key() { return pd_key; }
 
-  inline void copy(const _CORBA_Octet* key, int keysize) {
+  inline void copy(const _CORBA_Octet* key_, int keysize) {
     set_size(keysize);
-    memcpy(pd_key, key, keysize);
+    memcpy(pd_key, key_, keysize);
   }
 #if 0
   inline void consume(_CORBA_Octet* key, int keysize) {

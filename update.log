@@ -1,3 +1,27 @@
+Tue Jan 14 10:56:06 GMT 2003 dgrisby
+====================================
+
+- FreeBSD 5 support.
+
+configure
+configure.ac
+
+- Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
+
+include/omniORB4/CORBA_Exception.h
+include/omniORB4/CORBA_Policy.h
+include/omniORB4/callDescriptor.h
+include/omniORB4/callHandle.h
+include/omniORB4/codeSets.h
+include/omniORB4/omniIOR.h
+include/omniORB4/omniObjKey.h
+include/omniORB4/seqTemplatedecls.h
+include/omniORB4/stringtypes.h
+include/omniORB4/templatedecls.h
+include/omniORB4/wstringtypes.h
+src/lib/omniORB/omniidl_be/cxx/call.py
+
+
 Mon Jan  6 11:05:34 GMT 2003 dgrisby
 ====================================
 

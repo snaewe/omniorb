@@ -29,6 +29,9 @@
 
 /*
  $Log$
+ Revision 1.2.2.11  2003/01/14 11:48:15  dgrisby
+ Remove warnings from gcc -Wshadow. Thanks Pablo Mejia.
+
  Revision 1.2.2.10  2002/03/11 12:23:03  dpg1
  Tweaks to avoid compiler warnings.
 
@@ -201,18 +204,18 @@ public:
   inline operator char* () const { return _data; }
 #endif
 
-  inline char& operator[] (_CORBA_ULong index) {
-    if (!_data || (_CORBA_ULong)strlen(_data) < index) {
+  inline char& operator[] (_CORBA_ULong index_) {
+    if (!_data || (_CORBA_ULong)strlen(_data) < index_) {
       _CORBA_bound_check_error();	// never return
     }
-    return _data[index];
+    return _data[index_];
   }
 
-  inline char operator[] (_CORBA_ULong index) const {
-    if (!_data || (_CORBA_ULong)strlen(_data) < index) {
+  inline char operator[] (_CORBA_ULong index_) const {
+    if (!_data || (_CORBA_ULong)strlen(_data) < index_) {
       _CORBA_bound_check_error();	// never return
     }
-    return _data[index];
+    return _data[index_];
   }
 
   inline const char* in() const { return _data; }
@@ -309,18 +312,18 @@ public:
 
   inline _CORBA_String_member& operator=(const _CORBA_String_element& s);
 
-  inline char& operator[] (_CORBA_ULong index) {
-    if (!_ptr || (_CORBA_ULong)strlen(_ptr) < index) {
+  inline char& operator[] (_CORBA_ULong index_) {
+    if (!_ptr || (_CORBA_ULong)strlen(_ptr) < index_) {
       _CORBA_bound_check_error();	// never return
     }
-    return _ptr[index];
+    return _ptr[index_];
   }
 
-  inline char operator[] (_CORBA_ULong index) const {
-    if (!_ptr || (_CORBA_ULong)strlen(_ptr) < index) {
+  inline char operator[] (_CORBA_ULong index_) const {
+    if (!_ptr || (_CORBA_ULong)strlen(_ptr) < index_) {
       _CORBA_bound_check_error();	// never return
     }
-    return _ptr[index];
+    return _ptr[index_];
   }
 
 #if ! (defined(__GNUG__) && __GNUC_MINOR__ == 95)
@@ -432,18 +435,18 @@ public:
     return *this;
   }
 
-  inline char& operator[] (_CORBA_ULong index) {
-    if (!((char*)pd_data) || (_CORBA_ULong)strlen(pd_data) < index) {
+  inline char& operator[] (_CORBA_ULong index_) {
+    if (!((char*)pd_data) || (_CORBA_ULong)strlen(pd_data) < index_) {
       _CORBA_bound_check_error();	// never return
     }
-    return pd_data[index];
+    return pd_data[index_];
   }
 
-  inline char operator[] (_CORBA_ULong index) const {
-    if (!((char*)pd_data) || (_CORBA_ULong)strlen(pd_data) < index) {
+  inline char operator[] (_CORBA_ULong index_) const {
+    if (!((char*)pd_data) || (_CORBA_ULong)strlen(pd_data) < index_) {
       _CORBA_bound_check_error();	// never return
     }
-    return pd_data[index];
+    return pd_data[index_];
   }
 
 #if ! (defined(__GNUG__) && __GNUC_MINOR__ == 95)
@@ -668,11 +671,11 @@ public:
     ptr_arith_t l = nelems;
     b[0] = (char*) ((ptr_arith_t) 0x53515354U);
     b[1] = (char*) l;
-    for (_CORBA_ULong index = 2; index < (nelems+2); index++) {
+    for (_CORBA_ULong index_ = 2; index_ < (nelems+2); index_++) {
 #ifdef HAS_Cplusplus_const_cast
-      b[index] = const_cast<char*>(_CORBA_String_helper::empty_string);
+      b[index_] = const_cast<char*>(_CORBA_String_helper::empty_string);
 #else
-      b[index] = (char*)_CORBA_String_helper::empty_string;
+      b[index_] = (char*)_CORBA_String_helper::empty_string;
 #endif
     }
     return b+2;
@@ -758,9 +761,9 @@ protected:
   inline _CORBA_Sequence_String(_CORBA_ULong   max,
 				_CORBA_ULong   len,
 				char**         value,
-				_CORBA_Boolean release = 0,
+				_CORBA_Boolean release_ = 0,
 				_CORBA_Boolean bounded = 0)
-     : pd_max(max), pd_len(len), pd_rel(release),
+     : pd_max(max), pd_len(len), pd_rel(release_),
        pd_bounded(bounded), pd_data(value)  { 
     if (len > max || (len && !value)) {
       _CORBA_bound_check_error();
@@ -785,7 +788,7 @@ protected:
 
   // CORBA 2.3 additions
   inline void replace(_CORBA_ULong max, _CORBA_ULong len, char** data,
-		      _CORBA_Boolean release = 0) {
+		      _CORBA_Boolean release_ = 0) {
     if (len > max || (len && !data)) {
       _CORBA_bound_check_error();
       // never reach here
@@ -796,7 +799,7 @@ protected:
     pd_max = max;
     pd_len = len;
     pd_data = data;
-    pd_rel = release;
+    pd_rel = release_;
   }
 
 
@@ -852,10 +855,10 @@ public:
   inline _CORBA_Bounded_Sequence_String()
     : _CORBA_Sequence_String(max,1) {}
 
-  inline _CORBA_Bounded_Sequence_String(_CORBA_ULong   length,
+  inline _CORBA_Bounded_Sequence_String(_CORBA_ULong   length_,
 					 char**         value,
-					 _CORBA_Boolean release = 0)
-    : _CORBA_Sequence_String(max, length, value, release, 1) {}
+					 _CORBA_Boolean release_ = 0)
+    : _CORBA_Sequence_String(max, length_, value, release_, 1) {}
 
   inline _CORBA_Bounded_Sequence_String(const SeqT& s)
     : _CORBA_Sequence_String(s) {}
@@ -869,8 +872,8 @@ public:
 
   // CORBA 2.3 additions
   inline void replace(_CORBA_ULong len, char** data,
-		      _CORBA_Boolean release = 0) {
-    _CORBA_Sequence_String::replace(max,len,data,release);
+		      _CORBA_Boolean release_ = 0) {
+    _CORBA_Sequence_String::replace(max,len,data,release_);
   }
 };
 
@@ -890,10 +893,10 @@ public:
          _CORBA_Sequence_String(max) {}
 
   inline _CORBA_Unbounded_Sequence_String(_CORBA_ULong   max,
-					  _CORBA_ULong   length,
+					  _CORBA_ULong   length_,
 					  char**         value,
-					  _CORBA_Boolean release = 0)
-    : _CORBA_Sequence_String(max, length, value, release) {}
+					  _CORBA_Boolean release_ = 0)
+    : _CORBA_Sequence_String(max, length_, value, release_) {}
 
   inline _CORBA_Unbounded_Sequence_String(const SeqT& s)
     : _CORBA_Sequence_String(s) {}
@@ -907,8 +910,8 @@ public:
 
   // CORBA 2.3 additions
   inline void replace(_CORBA_ULong max, _CORBA_ULong len, char** data,
-		      _CORBA_Boolean release = 0) {
-    _CORBA_Sequence_String::replace(max,len,data,release);
+		      _CORBA_Boolean release_ = 0) {
+    _CORBA_Sequence_String::replace(max,len,data,release_);
   }
 
 };

@@ -152,18 +152,19 @@ public:
   }
 
   inline _CORBA_Pseudo_Unbounded_Sequence(_CORBA_ULong max,
-					  _CORBA_ULong length,
-					  T** value, _CORBA_Boolean release = 0)
-    : pd_max(max), pd_len(length)
+					  _CORBA_ULong length_,
+					  T** value,
+					  _CORBA_Boolean release_ = 0)
+    : pd_max(max), pd_len(length_)
   {
-    if( length > max )  _CORBA_bound_check_error();
-    pd_buf = new ElemT[length];
-    if( release ) {
-      for( _CORBA_ULong i = 0; i < length; i++ )  pd_buf[i] = value[i];
+    if( length_ > max )  _CORBA_bound_check_error();
+    pd_buf = new ElemT[length_];
+    if( release_ ) {
+      for( _CORBA_ULong i = 0; i < length_; i++ )  pd_buf[i] = value[i];
       delete[] value;
     }
     else {
-      for( _CORBA_ULong i = 0; i < length; i++ )
+      for( _CORBA_ULong i = 0; i < length_; i++ )
 	pd_buf[i] = value[i];
     }
   }
@@ -199,26 +200,26 @@ public:
 
   inline _CORBA_ULong maximum() const { return pd_max; }
   inline _CORBA_ULong length() const { return pd_len; }
-  inline void length(_CORBA_ULong length) {
-    if (length > pd_max) {
-      ElemT* newbuf = new ElemT[length];
+  inline void length(_CORBA_ULong length_) {
+    if (length_ > pd_max) {
+      ElemT* newbuf = new ElemT[length_];
       if( !newbuf )  _CORBA_new_operator_return_null();
       for( unsigned long i = 0; i < pd_len; i++ )
 	newbuf[i] = pd_buf[i];
-      pd_max = length;
+      pd_max = length_;
       if( pd_rel && pd_buf )  delete[] pd_buf;
       else                    pd_rel = 1;
       pd_buf = newbuf;
     }
-    pd_len = length;
+    pd_len = length_;
   }
-  inline ElemT& operator[] (_CORBA_ULong index) {
-    if( index >= pd_len )  _CORBA_bound_check_error();
-    return pd_buf[index];
+  inline ElemT& operator[] (_CORBA_ULong index_) {
+    if( index_ >= pd_len )  _CORBA_bound_check_error();
+    return pd_buf[index_];
   }
-  inline const ElemT& operator[] (_CORBA_ULong index) const {
-    if( index >= pd_len )  _CORBA_bound_check_error();
-    return pd_buf[index];
+  inline const ElemT& operator[] (_CORBA_ULong index_) const {
+    if( index_ >= pd_len )  _CORBA_bound_check_error();
+    return pd_buf[index_];
   }
   static inline T** allocbuf(_CORBA_ULong nelems) { 
     T** v = new T*[nelems];
@@ -255,11 +256,11 @@ public:
   }
 
   inline _CORBA_PseudoValue_Sequence(_CORBA_ULong max,
-				     _CORBA_ULong length,
-				     T* value, _CORBA_Boolean release = 0)
-    : pd_max(max), pd_len(length), pd_rel(release), pd_buf(value)
+				     _CORBA_ULong length_,
+				     T* value, _CORBA_Boolean release_ = 0)
+    : pd_max(max), pd_len(length_), pd_rel(release_), pd_buf(value)
   {
-    if( length > max )  _CORBA_bound_check_error();
+    if( length_ > max )  _CORBA_bound_check_error();
   }
 
   inline _CORBA_PseudoValue_Sequence(const T_seq& s)
@@ -293,26 +294,26 @@ public:
 
   inline _CORBA_ULong maximum() const { return pd_max; }
   inline _CORBA_ULong length() const { return pd_len; }
-  inline void length(_CORBA_ULong length) {
-    if (length > pd_max) {
-      T* newbuf = allocbuf(length);
+  inline void length(_CORBA_ULong length_) {
+    if (length_ > pd_max) {
+      T* newbuf = allocbuf(length_);
       if( !newbuf )  _CORBA_new_operator_return_null();
       for( unsigned long i = 0; i < pd_len; i++ )
 	newbuf[i] = pd_buf[i];
-      pd_max = length;
+      pd_max = length_;
       if( pd_rel && pd_buf )  delete[] pd_buf;
       else                    pd_rel = 1;
       pd_buf = newbuf;
     }
-    pd_len = length;
+    pd_len = length_;
   }
-  inline T& operator[] (_CORBA_ULong index) {
-    if( index >= pd_len )  _CORBA_bound_check_error();
-    return pd_buf[index];
+  inline T& operator[] (_CORBA_ULong index_) {
+    if( index_ >= pd_len )  _CORBA_bound_check_error();
+    return pd_buf[index_];
   }
-  inline const T& operator[] (_CORBA_ULong index) const {
-    if( index >= pd_len )  _CORBA_bound_check_error();
-    return pd_buf[index];
+  inline const T& operator[] (_CORBA_ULong index_) const {
+    if( index_ >= pd_len )  _CORBA_bound_check_error();
+    return pd_buf[index_];
   }
 
   inline _CORBA_Boolean release() const { return pd_rel; }
@@ -983,11 +984,11 @@ public:
   }
 
 #if !defined(_MSC_VER)
-  inline T& operator[] (_CORBA_ULong index) {
-    return *(pd_data + index);
+  inline T& operator[] (_CORBA_ULong index_) {
+    return *(pd_data + index_);
   }
-  inline const T& operator[] (_CORBA_ULong index) const {
-    return *((const T*) (pd_data + index));
+  inline const T& operator[] (_CORBA_ULong index_) const {
+    return *((const T*) (pd_data + index_));
   }
 #endif
 
@@ -1058,11 +1059,11 @@ public:
   }
 
 #if !defined(_MSC_VER)
-  inline T& operator[] (_CORBA_ULong index) {
-    return *(pd_data + index);
+  inline T& operator[] (_CORBA_ULong index_) {
+    return *(pd_data + index_);
   }
-  inline const T& operator[] (_CORBA_ULong index) const {
-    return *((const T*) (pd_data + index));
+  inline const T& operator[] (_CORBA_ULong index_) const {
+    return *((const T*) (pd_data + index_));
   }
 #endif
 
@@ -1099,8 +1100,8 @@ public:
   inline T_out& operator=(T* p) { _data = p; return *this; }
   inline operator T*&() { return _data; }
   inline T*& ptr() { return _data; }
-  inline T& operator[] (_CORBA_ULong index) {
-    return _data[index];
+  inline T& operator[] (_CORBA_ULong index_) {
+    return _data[index_];
   }
 
   T*& _data;
@@ -1139,9 +1140,9 @@ public:
     pd_data = p;  pd_nocopy = 0;  return *this;
   }
 
-  inline T& operator[] (_CORBA_ULong index) { return *(pd_data + index); }
-  inline const T& operator[] (_CORBA_ULong index) const {
-    return *( (const T*) (pd_data + index));
+  inline T& operator[] (_CORBA_ULong index_) { return *(pd_data + index_); }
+  inline const T& operator[] (_CORBA_ULong index_) const {
+    return *( (const T*) (pd_data + index_));
   }
 
   inline operator T* () const             { return pd_data; }
@@ -1198,9 +1199,9 @@ public:
     pd_data = p;  pd_nocopy = 0;  return *this;
   }
 
-  inline T& operator[] (_CORBA_ULong index) { return *(pd_data + index); }
-  inline const T& operator[] (_CORBA_ULong index) const {
-    return *( (const T*) (pd_data + index));
+  inline T& operator[] (_CORBA_ULong index_) { return *(pd_data + index_); }
+  inline const T& operator[] (_CORBA_ULong index_) const {
+    return *( (const T*) (pd_data + index_));
   }
 
   inline operator T* () const             { return pd_data; }
