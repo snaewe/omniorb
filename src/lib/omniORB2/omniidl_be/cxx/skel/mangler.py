@@ -30,6 +30,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/12/14 11:53:23  djs
+# Support for CORBA::TypeCode and CORBA::Any
+# Exception member bugfix
+#
 # Revision 1.7  1999/12/13 10:50:07  djs
 # Treats the two call descriptors associated with an attribute separately,
 # since it can happen that one needs to be generated but not the other.
@@ -118,6 +122,8 @@ name_map = {
     idltype.tk_boolean:     "boolean",
     idltype.tk_octet:       "octet",
     idltype.tk_void:        "void",
+    idltype.tk_any:         "any",
+    idltype.tk_TypeCode:    "TypeCode",
     }
 
 # FIXME: Think of some way of better handling types. Merging

@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/12/14 11:53:23  djs
+# Support for CORBA::TypeCode and CORBA::Any
+# Exception member bugfix
+#
 # Revision 1.7  1999/12/13 10:50:07  djs
 # Treats the two call descriptors associated with an attribute separately,
 # since it can happen that one needs to be generated but not the other.
@@ -83,8 +87,8 @@ public:
      @inherits_list@ {}
   
   @marshal_arguments_decl@
-  @user_exceptions_decl@
   @unmarshal_arguments_decl@  
+  @user_exceptions_decl@
   @result_member_function@
   @member_data@
   @result_member_data@
@@ -153,7 +157,8 @@ def argmapping(type):
                                type_name + "_slice*",
                                type_name + "_slice*"]
 
-    if tyutil.isObjRef(deref_type):
+    if tyutil.isObjRef(deref_type) or \
+       tyutil.isTypeCode(deref_type):
         return [deref_type_name + "_ptr",
                 deref_type_name + "_ptr&",
                 deref_type_name + "_ptr&",
@@ -302,10 +307,13 @@ def operation(operation, seed):
             n = n + 1
             if parameter.is_in():
                 param_type = parameter.paramType()
+                is_pointer = 0
+                if tyutil.isTypeCode(param_type):
+                    is_pointer = 1
                 name = "arg_" + str(n)
                 size_calculation.out(skutil.sizeCalculation(
                     environment, param_type, None, "msgsize", name,
-                    fixme = 1, fully_scope = 1))
+                    fixme = 1, is_pointer = is_pointer, fully_scope = 1))
                 skutil.marshall(marshal_block, environment, param_type,
                                 None, name, "giop_client",
                                 fully_scope = 1)
@@ -353,6 +361,11 @@ def operation(operation, seed):
             if tyutil.isObjRef(deref_type) and not(is_array):
                 helper_name = temp_type_name + "_Helper"
                 temp_type_name = temp_type_name + "_ptr"
+            elif tyutil.isTypeCode(deref_type) and not(is_array):
+                if direction == 2:
+                    temp_type_name = temp_type_name + "_var"
+                else:
+                    temp_type_name = temp_type_name + "_ptr"
 
             if is_out:
                 pre_decls.out("""\
@@ -396,6 +409,10 @@ CORBA::string_free(@name@);
 @helper_name@::release(@name@);
 @name@ = @temp@;""", helper_name = helper_name,
                                         name = name, temp = temp)
+                elif tyutil.isTypeCode(deref_type):
+                    unmarshal_block.out("""\
+CORBA::release(@name@);
+@name@ = @temp@._retn();""", name = name, temp = temp)
                 
 
             if is_out:
@@ -421,14 +438,16 @@ CORBA::string_free(@name@);
             # we need to allocate storage if the return is an
             # array
             if return_is_array:
-                if return_is_variable or tyutil.isStruct(deref_return_type) or \
+                if return_is_variable                or \
+                   tyutil.isStruct(deref_return_type) or \
                    tyutil.isUnion(deref_return_type):
                     name = "((" + return_type_base + "_slice*) pd_result)"
                 unmarshal_block.out("""\
 pd_result = @type@_alloc();""", type = return_type_base)
             elif return_is_variable and (tyutil.isStruct(deref_return_type) or \
                                          tyutil.isUnion(deref_return_type)  or \
-                                         tyutil.isSequence(deref_return_type)):
+                                         tyutil.isSequence(deref_return_type) or \
+                                         tyutil.isAny(deref_return_type)):
                 unmarshal_block.out("""\
 pd_result = new @type@;""", type = return_type_base)
                 name = "*" + name
@@ -467,7 +486,9 @@ pd_result = new @type@;""", type = return_type_base)
             # do we unmarshal via a temporary?
             # we need to setup the temporary variables
             temp_init_value = None
-            if isinstance(deref_param_type, idltype.Base) or \
+            if (isinstance(deref_param_type, idltype.Base) and \
+                not tyutil.isAny(deref_param_type)         and \
+                not tyutil.isTypeCode(deref_param_type)) or \
                tyutil.isEnum(deref_param_type):
                 via_tmp = 0
             elif is_array:
@@ -487,9 +508,14 @@ pd_result = new @type@;""", type = return_type_base)
                     via_tmp = 1
                     temp_type_name = param_type_name
                     temp_init_value = "0"
+                elif tyutil.isTypeCode(deref_param_type):
+                    via_tmp = 1
+                    temp_type_name = param_type_name
+                    temp_init_value = "CORBA::TypeCode::_nil()"
                 elif tyutil.isStruct(deref_param_type) or \
                      tyutil.isUnion(deref_param_type)  or \
-                     tyutil.isSequence(deref_param_type):
+                     tyutil.isSequence(deref_param_type) or \
+                     tyutil.isAny(deref_param_type):
                     if is_out:
                         via_tmp = 1
                         temp_type_name = param_type_name + "*"

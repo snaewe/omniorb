@@ -28,6 +28,10 @@
 
 # $Id$
 # $Log$
+# Revision 1.8  1999/12/14 11:53:22  djs
+# Support for CORBA::TypeCode and CORBA::Any
+# Exception member bugfix
+#
 # Revision 1.7  1999/12/10 18:27:05  djs
 # Fixed bug to do with marshalling arrays of things, mirrored in the old
 # compiler
@@ -100,8 +104,9 @@ def argument_instance(type):
                    "CORBA::String_var"]
         return mapping
 
-    # all object references are _var types
-    if tyutil.isObjRef(deref_type) and not(is_array):
+    # all object references and typecodes are _var types
+    if (tyutil.isObjRef(deref_type) or \
+        tyutil.isTypeCode(deref_type)) and not(is_array):
         name = environment.principalID(deref_type, fully_scope = 0)
         mapping = [name + "_var", name + "_var", name + "_var"]
 
@@ -147,8 +152,9 @@ def method_argument(type, name):
         mapping = [name, name + ".out()", name]
         return mapping
 
-    # strings and object references
-    if tyutil.isString(deref_type) or tyutil.isObjRef(deref_type):
+    # strings and object references and typecodes
+    if tyutil.isString(deref_type) or tyutil.isObjRef(deref_type) or \
+       tyutil.isTypeCode(deref_type):
         mapping = [name + ".in()", name + ".out()", name + ".inout()"]
         return mapping
 
@@ -276,8 +282,12 @@ def operation(operation):
                 marshal_name = argument_operator_name
                 align_name = argument_operator_name
                 arg_is_pntr = 1
-                if not(tyutil.isObjRef(deref_argument_type)):
+                if not(tyutil.isObjRef(deref_argument_type)) and \
+                   not(tyutil.isTypeCode(deref_argument_type)):
                     marshal_name = "*" + marshal_name
+            if is_pntr and direction == 2 and \
+               tyutil.isTypeCode(deref_argument_type):
+                arg_is_pntr = 1
 
             skutil.marshall(put_arguments, environment, argument_type,
                             None, marshal_name, "giop_s")
@@ -326,7 +336,8 @@ def operation(operation):
         elif return_is_pointer:
             align_name = "(result.operator->())"
             marshal_name = align_name
-            if not(tyutil.isObjRef(deref_return_type)):
+            if not(tyutil.isObjRef(deref_return_type)) and \
+               not(tyutil.isTypeCode(deref_return_type)):
                 marshal_name = "*" + align_name
         # needs to be counted in the message size calculation
         size_calc_results.out(
@@ -453,7 +464,9 @@ def attribute_read(attribute, id):
         attrib_type_name = attrib_type_name + "_var"
         result_name = "(result.operator->())"
         if tyutil.isStruct(deref_attrType) or \
-           tyutil.isUnion(deref_attrType):
+           tyutil.isUnion(deref_attrType)  or \
+           tyutil.isAny(deref_attrType)    or \
+           tyutil.isTypeCode(deref_attrType):
             is_pointer = 1
 
     # ---
