@@ -30,6 +30,9 @@
 
 /* 
  * $Log$
+ * Revision 1.33.6.8  2000/02/21 10:59:13  djr
+ * Another TypeCode_union w aliased discriminator fix.
+ *
  * Revision 1.33.6.7  2000/02/17 14:43:57  djr
  * Another fix for TypeCode_union when discriminator tc contains an alias.
  *
@@ -4784,7 +4787,9 @@ TypeCode_union_helper::insertLabel(CORBA::Any& label,
 				   TypeCode_union::Discriminator c,
 				   CORBA::TypeCode_ptr tc)
 {
-  switch( tc->kind() ) {
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase(tc));
+
+  switch( aetc->NP_kind() ) {
   case CORBA::tk_char:
     label <<= CORBA::Any::from_char((CORBA::Char)c);
     break;
@@ -4811,7 +4816,7 @@ TypeCode_union_helper::insertLabel(CORBA::Any& label,
       CORBA::ULong val = c;
       tcDescriptor enumdesc;
       enumdesc.p_enum = &val;
-      label.PR_packFrom(tc, &enumdesc);
+      label.PR_packFrom((TypeCode_base*) aetc, &enumdesc);
       break;
     }
   // case CORBA::tk_wchar:
@@ -4827,7 +4832,9 @@ inline void
 internal_marshalLabel(TypeCode_union::Discriminator l,
 		      CORBA::TypeCode_ptr tc, buf_t& s)
 {
-  switch( tc->kind() ) {
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase(tc));
+
+  switch( aetc->NP_kind() ) {
   case CORBA::tk_char:
     {
       CORBA::Char c = CORBA::Char(l);
@@ -4901,9 +4908,9 @@ template <class buf_t>
 inline TypeCode_union::Discriminator
 internal_unmarshalLabel(CORBA::TypeCode_ptr tc, buf_t& s)
 {
-  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase_Checked(tc));
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase(tc));
 
-  switch( aetc->kind() ) {
+  switch( aetc->NP_kind() ) {
   case CORBA::tk_char:
     {
       CORBA::Char c;
@@ -4979,9 +4986,9 @@ size_t
 TypeCode_union_helper::labelAlignedSize(size_t initoffset,
 					CORBA::TypeCode_ptr tc)
 {
-  CORBA::TypeCode_var aetc = TypeCode_base::aliasExpand(ToTcBase(tc));
+  const TypeCode_base* aetc = TypeCode_base::NP_expand(ToTcBase(tc));
 
-  switch( ToTcBase(aetc)->NP_kind() ) {
+  switch( aetc->NP_kind() ) {
   case CORBA::tk_char:
   case CORBA::tk_octet:
   case CORBA::tk_boolean:
