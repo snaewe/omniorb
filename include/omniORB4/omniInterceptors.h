@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.2.6  2002/08/16 16:03:30  dgrisby
+  Interceptor tweaks.
+
   Revision 1.1.2.5  2002/03/27 11:44:51  dpg1
   Check in interceptors things left over from last week.
 
@@ -255,11 +258,12 @@ public:
     class info_T {
     public:
       omniIOR*            ior;
+      const char*         targetRepoId;
       omniIdentity*&      invoke_handle;
       CORBA::Boolean      held_internalLock;
 
-      info_T(omniIOR* i, omniIdentity*& id, CORBA::Boolean b) :
-	ior(i), invoke_handle(id), held_internalLock(b) {}
+      info_T(omniIOR* i, const char* t, omniIdentity*& id, CORBA::Boolean b) :
+	ior(i), targetRepoId(t), invoke_handle(id), held_internalLock(b) {}
     };
 
     typedef CORBA::Boolean (*interceptFunc)(info_T& info);
