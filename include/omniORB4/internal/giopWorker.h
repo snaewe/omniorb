@@ -29,6 +29,9 @@
 
 /*
   $Log$
+  Revision 1.1.4.2  2001/07/13 15:21:22  sll
+  Added access functions.
+
   Revision 1.1.4.1  2001/04/18 17:18:59  sll
   Big checkin with the brand new internal APIs.
 
@@ -45,14 +48,16 @@ OMNI_NAMESPACE_BEGIN(omni)
 class giopWorker : public omniTask, public giopServer::Link {
 public:
   giopWorker(giopStrand* strand, giopServer* server, 
-	     CORBA::Boolean exit_on_error=0);
+	     CORBA::Boolean singleshot=0);
 
   void execute();
 
   void terminate();
   // finish off this task, call by another thread.
 
-  giopStrand* strand();
+  giopServer* server() const { return pd_server; }
+  giopStrand* strand() const { return pd_strand; }
+  CORBA::Boolean singleshot() const { return pd_singleshot; }
 
 private:
   giopStrand*          pd_strand;
