@@ -5,7 +5,7 @@
 //
 //    Copyright (C) 1996-1999 Olivetti & Oracle Research Laboratory
 //
-//    This file is part of the omniORB library
+//    This file is part of the omniORB library.
 //
 //    The omniORB library is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Library General Public
@@ -26,6 +26,13 @@
 // Description:
 //	*** PROPRIETORY INTERFACE ***
 
+/*
+ $Log$
+ Revision 1.2  1999/04/21 13:12:17  djr
+ Added support for contexts.
+
+*/
+
 #ifndef __PROXYCALL_H__
 #define __PROXYCALL_H__
 
@@ -34,7 +41,8 @@ class OmniProxyCallDesc {
 public:
   inline OmniProxyCallDesc(const char* op, size_t op_len,
 			   CORBA::Boolean has_exceptions = 0)
-    : pd_has_user_exceptions(has_exceptions),
+    : pd_context(0), pd_contexts_expected(0), pd_num_contexts_expected(0),
+      pd_has_user_exceptions(has_exceptions),
       pd_operation(op), pd_operation_len(op_len) {}
 
   virtual CORBA::ULong alignedSize(CORBA::ULong size_in);
@@ -52,6 +60,22 @@ public:
   // cases either throw a user exception or CORBA::UNKNOWN.
   // Must call giop_client.RequestCompleted().
 
+  inline void set_context(CORBA::Context_ptr c,
+			  const char*const* contexts_expected,
+			  int length) {
+    pd_context = c;
+    pd_contexts_expected = contexts_expected;
+    pd_num_contexts_expected = length;
+  }
+  inline CORBA::Context_ptr context() const {
+    return pd_context;
+  }
+  inline const char*const* contexts_expected() const {
+    return pd_contexts_expected;
+  }
+  inline int num_contexts_expected() const {
+    return pd_num_contexts_expected;
+  }
   inline CORBA::Boolean has_user_exceptions() const {
     return pd_has_user_exceptions;
   }
@@ -59,6 +83,9 @@ public:
   inline size_t operation_len() const  { return pd_operation_len; }
 
 private:
+  CORBA::Context_ptr pd_context;
+  const char*const* pd_contexts_expected;
+  int pd_num_contexts_expected;
   CORBA::Boolean pd_has_user_exceptions;
   const char* pd_operation;
   size_t pd_operation_len;
@@ -68,7 +95,8 @@ private:
 class OmniOWProxyCallDesc {
 public:
   inline OmniOWProxyCallDesc(const char* op, size_t op_len)
-    : pd_operation(op), pd_operation_len(op_len) {}
+    : pd_context(0), pd_contexts_expected(0), pd_num_contexts_expected(0),
+      pd_operation(op), pd_operation_len(op_len) {}
 
   virtual CORBA::ULong alignedSize(CORBA::ULong size_in);
   // Defaults to no arguments.
@@ -76,10 +104,29 @@ public:
   virtual void marshalArguments(GIOP_C&);
   // Defaults to no arguments.
 
+  inline void set_context(CORBA::Context_ptr c,
+			  const char*const* contexts_expected,
+			  int length) {
+    pd_context = c;
+    pd_contexts_expected = contexts_expected;
+    pd_num_contexts_expected = length;
+  }
+  inline CORBA::Context_ptr context() const {
+    return pd_context;
+  }
+  inline const char*const* contexts_expected() const {
+    return pd_contexts_expected;
+  }
+  inline int num_contexts_expected() const {
+    return pd_num_contexts_expected;
+  }
   inline const char* operation() const { return pd_operation; }
   inline size_t operation_len() const  { return pd_operation_len; }
 
 protected:
+  CORBA::Context_ptr pd_context;
+  const char*const* pd_contexts_expected;
+  int pd_num_contexts_expected;
   const char* pd_operation;
   size_t pd_operation_len;
 };
