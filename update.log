@@ -1,8 +1,17 @@
+Tue Jan 12 16:40:50 GMT 1999 djr
+================================
+
+- RequestImpl now duplicates the references it holds, and releases them
+  when it is released.
+
+src/lib/dynamic/pseudo.h
+src/lib/dynamic/request.cc
+
 
 Tue Jan 12 15:19:17 GMT 1999 tjr
 ================================
 
-Initial check-in of new java rules and first beta version of omniORBj.
+- Initial check-in of new java rules and first beta version of omniORBj.
 
 mk/java.mk				- NEW FILE
 mk/beforedir.mk				- delete BJH's java stuff and include
@@ -361,4 +370,4 @@ src/lib/omniORB2/tcpATMosMTfactory.cc
 Thu Nov  5 18:02:53 GMT 1998 sll
 ================================
 
-Version 5.6 tree copied from version5.5 tree.
+- Version 5.6 tree copied from version5.5 tree.
