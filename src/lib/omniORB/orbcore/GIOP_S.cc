@@ -29,6 +29,10 @@
 
 /*
   $Log$
+  Revision 1.1.4.8  2001/07/13 15:22:45  sll
+  Call notifyWkPreUpCall at the right time and determine if there are
+  buffered data to be served by another thread.
+
   Revision 1.1.4.7  2001/06/29 16:26:01  dpg1
   Reinstate tracing messages for new connections and handling locate
   requests.
@@ -71,7 +75,9 @@
 #include <giopStrand.h>
 #include <giopStream.h>
 #include <giopStreamImpl.h>
+#include <invoker.h>
 #include <giopServer.h>
+#include <giopWorker.h>
 #include <GIOP_S.h>
 #include <omniORB4/minorCode.h>
 #include <omniORB4/omniInterceptors.h>
@@ -79,8 +85,8 @@
 OMNI_NAMESPACE_BEGIN(omni)
 
 ////////////////////////////////////////////////////////////////////////
-GIOP_S_Holder::GIOP_S_Holder(giopStrand* g, giopServer* serv) : pd_strand(g) {
-  pd_iop_s = g->acquireServer(serv);
+GIOP_S_Holder::GIOP_S_Holder(giopStrand* g, giopWorker* work) : pd_strand(g) {
+  pd_iop_s = g->acquireServer(work);
 }
 
 
@@ -90,23 +96,23 @@ GIOP_S_Holder::~GIOP_S_Holder() {
 }
 
 ////////////////////////////////////////////////////////////////////////
-GIOP_S::GIOP_S(giopStrand* g,giopServer*server) : giopStream(g),
-					    pd_state(UnUsed),
-					    pd_server(server),
-					    pd_calldescriptor(0),
-					    pd_requestType(GIOP::MessageError),
-		                            pd_operation((char*)pd_op_buffer),
-					    pd_principal(pd_pr_buffer),
-					    pd_principal_len(0),
-					    pd_response_expected(1),
-					    pd_result_expected(1)
+GIOP_S::GIOP_S(giopStrand* g) : giopStream(g),
+				pd_state(UnUsed),
+				pd_worker(0),
+				pd_calldescriptor(0),
+				pd_requestType(GIOP::MessageError),
+				pd_operation((char*)pd_op_buffer),
+				pd_principal(pd_pr_buffer),
+				pd_principal_len(0),
+				pd_response_expected(1),
+				pd_result_expected(1)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////
 GIOP_S::GIOP_S(const GIOP_S& src) : giopStream(src.pd_strand),
 				    pd_state(UnUsed),
-				    pd_server(src.pd_server),
+				    pd_worker(0),
 				    pd_calldescriptor(0),
 				    pd_requestType(GIOP::MessageError),
 				    pd_operation((char*)pd_op_buffer),
@@ -354,6 +360,24 @@ GIOP_S::handleLocateRequest() {
 
     pd_state = RequestIsBeingProcessed;
 
+    // Here we notify the giopServer that this thread has finished
+    // reading the request. The server may want to keep a watch on
+    // any more request coming in on the connection while this
+    // thread does the upcall.
+
+    CORBA::Boolean data_in_buffer = 0;
+    if (pd_rdlocked) {
+      // This is the thread that is reading from the connection. We
+      // check if we have previously queued giopStream_Buffers on the
+      // connection. In other words, we might have previously read
+      // too much stuff out of the connection and these data belong to
+      // other requests. If that is the case, we notify the giopServer
+      // that there are already buffers waiting to be read.
+      giopStrand& s = (giopStrand&) *this;
+      data_in_buffer = ((s.head) ? 1 : 0);
+    }
+    pd_worker->server()->notifyWkPreUpCall(pd_worker,data_in_buffer);
+
     impl()->inputMessageEnd(this,0);
     
     pd_state = WaitingForReply;
@@ -464,7 +488,19 @@ GIOP_S::ReceiveRequest(omniCallDescriptor& desc) {
   // reading the request. The server may want to keep a watch on
   // any more request coming in on the connection while this
   // thread does the upcall.
-  pd_server->notifyWkPreUpCall(pd_strand);
+
+  CORBA::Boolean data_in_buffer = 0;
+  if (pd_rdlocked) {
+    // This is the thread that is reading from the connection. We
+    // check if we have previously queued giopStream_Buffers on the
+    // connection. In other words, we might have previously read
+    // too much stuff out of the connection and these data belong to
+    // other requests. If that is the case, we notify the giopServer
+    // that there are already buffers waiting to be read.
+    giopStrand& s = (giopStrand&) *this;
+    data_in_buffer = ((s.head) ? 1 : 0);
+  }
+  pd_worker->server()->notifyWkPreUpCall(pd_worker,data_in_buffer);
 
   impl()->inputMessageEnd(this,0);
 }
