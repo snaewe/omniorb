@@ -152,7 +152,7 @@ main(int argc, char **argv)
     l.checkpoint();
     unsigned long s, n;
     omni_thread::get_time(&s, &n, idle_time_btw_chkpt);
-    c.timed_wait(s,n);
+    c.timedwait(s,n);
   }
   m.unlock();
 
