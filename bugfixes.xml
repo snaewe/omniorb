@@ -8,6 +8,17 @@
 
 <buglist>
 
+<bug id="9" date="Mon Jul 24 16:09:20 BST 2000" user="djs">
+
+  <summary>Suppressed compiler warning when an operation with no arguments
+           and no return value is encountered.</summary>
+
+  <reported>Robert Stent</reported>
+
+  <link href="http://www.uk.research.att.com/omniORB/archives/2000-07/0148.html"/>
+
+</bug>
+
 <bug id="8" date="Mon Jul 24 11:14:00 BST 2000" user="djs">
 
   <summary>Added missing constructor to BOA compatibility skeletons.</summary>
@@ -15,7 +26,7 @@
   <reported>Paul Nader</reported>
 
   <text>
-  For an interface I, the _sk_I::_sk_I(const omniOrbBoaKey&) was missing.
+  For an interface I, the _sk_I::_sk_I(const omniOrbBoaKey&amp;) was missing.
   </text>
 
 </bug>
